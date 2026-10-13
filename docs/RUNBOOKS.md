@@ -2,7 +2,7 @@
 
 # Runbooks
 
-**Baseline `BR-V3.10-2026-10-13`** · versioned with the whole set · [changelog](../CHANGELOG.md)
+**Baseline `BR-V3.13-2026-10-13`** · versioned with the whole set · [changelog](../CHANGELOG.md)
 
 
 | Runbook | When |
@@ -13,6 +13,7 @@
 | [Legal document version](#legal-document-version) | Whenever an approved privacy, terms, or declaration version changes |
 | [Deploy a release](#deploy-a-release) | Every merge to `qa`, and every promotion to `main` |
 | [Release from the phone](#release-from-the-phone) | A release with the PC off — the owner on holiday, GitHub's app in hand |
+| [Copy an event from production to QA and back](#copy-an-event-from-production-to-qa-and-back) | A change to a live event is to be tried and approved on QA first, then brought back |
 | [The domain stops answering](#the-domain-stops-answering) | The site, the backoffice and QA «cannot be found» at once; the monitor on the public name is red |
 | [Google Calendar will not add the calendar again](#google-calendar-will-not-add-the-calendar-again) | Somebody removed or hid the club's calendar, or deleted an event, and the site's buttons now do nothing |
 
@@ -1099,6 +1100,81 @@ acceptances against it.
 - Publishing a version with only one locale present when both are required.
 - Marking a declaration as accepted on a participant's behalf.
 - Describing the acceptance as a qualified electronic signature.
+
+## Copy an event from production to QA and back
+
+The owner, 2026-10-13: «I need … to export and import an event as JSON so that I can test on QA the
+changes made on PROD and I can pre-approve them» (`DECISIONS.md` §751). An Administrator takes one
+event's configuration out of a site as a file and brings it into another, as a new draft or over an
+existing event after a diff. The loop: **production → QA (as new), change and approve on QA, QA →
+production (over the event)**.
+
+Related requirements: `BR-REQ-050-02`, `BR-REQ-051-01`, `BR-REQ-060-01`.
+
+### What the file is
+
+`<slug>-<day>.json`, `format: "brasovrunners-event"`, `version: 1`: both languages' texts, the date and
+its zone, the place, the registration settings (the declaration by its key, never an id), the
+programme, the partners, the route and its maps, the bib design, the lists' switches, and each picture
+or GPX by its public address with its size and SHA-256. It never holds a registration, an invitation, a
+participant, a volunteer, an audit row, a member of staff or an address; the reader refuses a key it
+does not know, so nothing of the kind can be added by hand either.
+
+### The loop
+
+1. **On production** — `/admin/events` → the event → the card «Duplică sau șterge evenimentul» →
+   «Exportă evenimentul (JSON)». The press is recorded in the audit trail (`event.exported`: who and which event).
+2. **On QA** — `/admin/events` → «Importă un eveniment (JSON)» → choose the file → **«Ca eveniment nou»** →
+   «Creează ciorna». The result is a draft with a free page address (a number is added when the file's is
+   taken) and its pictures copied into QA's own storage. A picture the page lists as not copied was
+   unreachable or did not match its hash: add it by hand in the editor.
+3. **On QA** — change what changed, read the page («Previzualizare»), have it approved.
+4. **On QA** — export the event again.
+5. **On production** — «Importă un eveniment (JSON)» → choose QA's file → **«Peste un eveniment existent»**
+   → pick the production event → **read the diff**: every field that would change, old and new, in both
+   languages, the pictures named → tick «Am citit diferențele…» → type the event's title (production
+   asks a second time and says how many people are registered) → «Aplică peste eveniment».
+   Choosing the file and reading the diff writes nothing; only the last press does.
+
+### What an import over an event changes, and what it never touches
+
+| It changes | It never touches |
+| --- | --- |
+| The configuration the diff shows, through the editor's own save: the same validation, the same version guards (a colleague's save since the diff is a CONFLICT), the capacity under the event's lock — never below the places taken, the offers a raised capacity makes — and the editor's own audit rows | The registrations, the invitations, the race numbers already given |
+| The pictures and the GPX that differ, by the hash of their bytes (the same photograph is not copied again) | The publication state (a published event stays published), the status (a cancellation is its own act), the featured mark |
+| The cover, the bib design and the texts of both languages | A published event's page addresses, and a series' rule |
+
+**It tells nobody.** A change that reaches people already registered — a new date, another place — is
+announced from the editor's «Anunță participanții despre schimbare», which an import never presses.
+The pictures an import copied for a save that was then refused are stored pictures nothing names; the
+pictures' sweep takes them after a week.
+
+### When it refuses, and what to do
+
+- **«Fișierul nu e un fișier de eveniment…» / an unknown version** — make the file again from a site that is
+  up to date with this one.
+- **The event is published and the file would leave it incomplete** (a summary or a title missing in one
+  language, a place in neither) — complete the text on the site the file came from, export again.
+- **Capacity below the places taken** — the file asks for fewer places than people hold; change the file's
+  site, not the number of people.
+- **A picture or file cannot be copied** — over an event the import refuses whole, so nothing the event holds
+  is emptied; the page names which. The importing site's server fetches the file's addresses itself: https
+  only, a public name, and only an object of the site's own store; `http://localhost` is fetched only
+  where the importing site is a developer's.
+- **«Altcineva a salvat între timp…»** — the event or a language changed after the diff was shown; open the
+  import again.
+- **The page address belongs to another event** — change the file's, or the other event's.
+- **The declaration is not in force** — the file names `EVENT_DECLARATION` or `EVENT_DECLARATION_ROAD`; the
+  site it goes to needs an approved version of that key (`/admin/legal`) first.
+- **The public list stays off** on a new draft where the privacy notice that describes it is not in force
+  (BR-REQ-039-01); the page says so.
+
+### What must never happen
+
+- Importing over production without reading the diff. The diff is the review.
+- Adding a registration, a person or an address to a file by hand — the reader refuses it, and a file of
+  another site's registrations is a data breach however it was made.
+- Applying a series' rule from a file: it is exported for information and never applied (`DECISIONS.md` §751).
 
 ## Hotfix — a fix straight to production
 

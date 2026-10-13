@@ -2269,7 +2269,28 @@
         "headerImageSrc": "Imagine în locul benzii colorate",
         "headerImageSrcHelp": "Se întinde pe toată lățimea, sus. Când alegi una, banda colorată, sigla și textul din bandă nu se mai tipăresc — imaginea e antetul.",
         "sponsorImageSrc": "Bandă cu sponsori",
-        "sponsorImageSrcHelp": "Deasupra rândului mic de jos. Alegi partea cu sponsorii sau pui toată imaginea în bandă.",
+        "sponsorImageSrcHelp": "Jos de tot, sub rândul mic — sau deasupra lui, cum alegi mai jos. Alegi partea cu sponsorii sau pui toată imaginea în bandă.",
+        "sponsorPlace": "Locul benzii cu sponsori",
+        "sponsorPlaceHelp": "Jos de tot: ultimul rând al numărului, sub rândul mic. Deasupra subsolului: cum era înainte, între număr și rândul mic.",
+        "sponsorPlaces": {
+          "bottom": "Jos de tot, în subsol",
+          "above": "Deasupra subsolului"
+        },
+        "headerHidesTitle": "Imaginea din antet ascunde numele evenimentului: pe imagine nu se tipărește nimic din bandă. Pentru o bandă cu sponsori folosește „Bandă cu sponsori”.",
+        "showProfile": "Profilul traseului",
+        "showProfileHelp": "Bifat: pe fiecare număr, o fâșie pe toată lățimea cu altitudinea pe distanță, cu distanța și diferența de nivel alături. Cele scrise la eveniment au prioritate; altfel, din GPX.",
+        "showProfileNoGpx": "Încarcă GPX-ul traseului în „Traseul”.",
+        "showEmergency": "Telefon pentru urgențe",
+        "showEmergencyHelp": "Bifat: pe fiecare număr, mic, rândul „Urgențe: …” cu telefonul de mai jos. Debifat: fără rând. Scrie numărul organizatorilor, nu al participanților.",
+        "emergencyPhone": "Telefonul organizatorilor",
+        "emergencyPhonePlaceholder": "07xx xxx xxx",
+        "emergencyPhoneHelp": "Se tipărește pe fiecare număr, purtat în public. Cifre, spații, paranteze, puncte, linii și un + la început, de la șase la cincisprezece cifre; altfel nu se tipărește nimic.",
+        "emergencyUpsideDown": "Tipărit invers",
+        "emergencyUpsideDownHelp": "Bifat: telefonul e întors cu susul în jos, ca alergătorul să-l citească privind în jos, spre piept. Debifat: se citește normal pentru ceilalți.",
+        "showDistance": "Distanța pe număr",
+        "showDistanceHelp": "Bifat: o insignă în colțul din dreapta al antetului cu distanța evenimentului în kilometri întregi, ca 21K. Debifat: fără insignă. Nu se desenează peste o imagine din antet.",
+        "numberStubs": "Numărul și pe capetele subsolului",
+        "numberStubsHelp": "Bifat: numărul din nou, mic, la cele două capete ale rândului cu sponsori, pentru talonul care se rupe; imaginea sponsorilor îi face loc. Debifat: rândul ca până acum.",
         "noPicture": "Fără imagine",
         "picture": {
           "choose": "Încarcă o imagine",
@@ -2317,11 +2338,13 @@
           "enabledHelp": "Formularul întreabă „Vreau numărul de membru” sub bifa de membru {club}. Se tipărește doar pentru o adresă a unui cont din «Echipa». Numărul rămâne în aceeași ordine.",
           "previewAlt": "Numărul de concurs al unui membru, cu designul membrilor, pentru un alergător cu numele „Nume Prenume”",
           "previewCaption": "Previzualizare — numărul unui membru",
+          "mark": "Semn de membru pe număr",
+          "markHelp": "Bifat: fiecare număr de membru poartă o bifă ✓ sub antet. Debifat: fără bifă.",
           "style": "Fundalul numărului de membru",
-          "styleHelp": "„Tot numărul”: fundal pe tot numărul, cifre și nume albe, eticheta pe o bandă portocalie. „Doar banda de sus”: numărul obișnuit, cu altă bandă sus.",
+          "styleHelp": "„Tot numărul”: fundal pe tot numărul, cifre albe. „Același fundal ca restul numerelor”: numărul obișnuit, doar cu antet propriu și etichetă.",
           "styles": {
             "card": "Tot numărul — degradeul clubului, o culoare sau o fotografie",
-            "band": "Doar banda de sus"
+            "band": "Același fundal ca restul numerelor — doar antet propriu"
           },
           "bandOnly": "{colour} — doar pe bandă",
           "cardImageSrc": "Fotografie pe tot numărul, pentru membri",
@@ -2573,7 +2596,7 @@
         },
         "copyDelete": {
           "title": "Duplică sau șterge evenimentul",
-          "summary": "Duplică ca ciornă · ștergerea doar fără înscrieri"
+          "summary": "Duplică ca ciornă · exportă ca JSON · ștergerea doar fără înscrieri"
         },
         "recurrence": {
           "title": "Recurență",
@@ -4550,25 +4573,28 @@
     },
     "eventTodos": {
       "title": "De făcut pentru pagina evenimentului",
-      "intro": "Ce lipsește încă paginii; rândul dispare singur când completezi câmpul. Plus rândurile clubului, scrise pentru această dată. Ordine: prioritate, termen, vechime.",
+      "intro": "Ce lipsește paginii și ce are echipa de făcut.",
+      "introMore": "Un rând din „Lipsește pe pagină” dispare când completezi câmpul; apasă-l ca să ajungi la el. „Sarcini” sunt rândurile clubului, de cel mult {max} de caractere. Ordine: prioritate, termen, vechime.",
       "readOnly": "Poți citi lista; o scriu Organizatorul, Administratorul și Superadministratorul. Ce vrei schimbat le spui lor.",
       "summary": "{count} de făcut",
       "summaryNone": "nimic de făcut",
-      "fromPage": "din pagină",
+      "groupPage": "Lipsește pe pagină",
+      "groupOwn": "Sarcini",
       "fill": "Deschide câmpul",
+      "fillRow": "Deschide câmpul: {text}",
       "filterLabel": "Ce rânduri arăt",
       "filterAll": "Toate",
       "filterMine": "Ale mele",
-      "listLabel": "De făcut pentru pagina evenimentului",
       "empty": "Nimic de făcut: pagina are tot ce îi trebuie și clubul n-a scris nimic aici.",
       "emptyMine": "Nimic deschis pe numele tău.",
+      "noTasks": "Nicio sarcină deschisă. Scrie una mai sus.",
       "tick": "Bifează: {text}",
       "untick": "Debifează: {text}",
       "tickWord": "Bifează",
       "untickWord": "Debifează",
       "assignedTo": "Pentru {name}",
       "due": "Termen: {day}",
-      "overdue": "Termen depășit: {day}",
+      "overdue": "Întârziat: {day}",
       "doneBy": "Bifat de {by}, {when}",
       "doneTitle": "Gata ({count})",
       "edit": "Modifică",
@@ -4579,7 +4605,8 @@
       "deleteTitle": "Ștergi rândul?",
       "deleteBody": "„{text}” dispare de pe lista acestui eveniment și nu se poate anula. Jurnalul păstrează cine l-a șters și ce scria. Dacă e doar gata, bifează-l în loc să-l ștergi.",
       "add": {
-        "title": "Adaugă un rând",
+        "label": "Adaugă o sarcină",
+        "more": "Mai multe: cine, termen",
         "save": "Adaugă",
         "saving": "Se adaugă…"
       },
@@ -5334,6 +5361,11 @@
       "spareMark": "înscris la fața locului",
       "helpMore": "Numerele se dau în ordinea confirmării și nu se dau de două ori. Foaia are două numere A5 pe o pagină A4; un singur număr se descarcă de pe pagina înscrierii.",
       "memberLabelDefault": "Membru {club}",
+      "profileStart": "Start",
+      "profileFinish": "Sosire",
+      "profileDistance": "Distanță: {km} km",
+      "profileGain": "Diferență de nivel: +{m} m",
+      "emergencyLabel": "Urgențe",
       "memberSampleAlt": "Numărul de concurs al unui membru, cu designul membrilor",
       "memberSampleCaption": "Numărul membrilor, cum se tipărește. Pe foaia de acum: {count}.",
       "memberUnverified": "Au cerut numărul de membru, dar adresa lor nu e a unui cont de membru: {count}. Li se tipărește numărul obișnuit; dacă sunt membri, adaugă-i în «Echipa» înainte de tipărire.",
@@ -7521,6 +7553,287 @@
       "familyPending": "Încă nu e pornit pe acest mediu: baza de date păstrează o singură înscriere pe adresă la un eveniment. Până atunci, a doua trimitere cu altă persoană retrimite doar emailul primei înscrieri.",
       "network": "Salvarea nu merge de pe laptopul de la birou?",
       "networkLink": "Verifică rețeaua"
+    },
+    "eventJson": {
+      "title": "Importă un eveniment (JSON)",
+      "intro": "Aduci aici un eveniment de pe alt site, dintr-un fișier făcut cu «Exportă evenimentul (JSON)». Fișierul are doar configurarea lui și adresa imaginilor, niciodată înscrieri sau persoane.",
+      "back": "Înapoi la evenimente",
+      "listLink": "Importă un eveniment (JSON)",
+      "export": {
+        "button": "Exportă evenimentul (JSON)",
+        "help": "Descarcă configurarea evenimentului într-un fișier JSON, fără înscrieri și fără date personale. Îl aduci pe alt site din lista de evenimente. Exportul rămâne în jurnal."
+      },
+      "choose": "Alege fișierul .json",
+      "chooseAgain": "Alege alt fișier",
+      "chooseHelp": "Un fișier făcut cu «Exportă evenimentul (JSON)», de cel mult {size} KB.",
+      "reading": "Se citește…",
+      "failed": "Nu a mers. Încearcă din nou; dacă se repetă, verifică fișierul.",
+      "summary": {
+        "heading": "Ce conține fișierul",
+        "from": "Făcut în mediul {environment}, versiunea {baseline}, data {date}",
+        "when": "{day} ({zone})",
+        "whenNone": "Data se anunță mai târziu",
+        "media": {
+          "one": "{count} imagine sau fișier",
+          "few": "{count} imagini sau fișiere",
+          "other": "{count} de imagini sau fișiere"
+        },
+        "series": "Evenimentul era o dată dintr-o serie sau sursa ei. Regula seriei nu se aplică: copia e o singură dată; seria o pornești tu, din editor."
+      },
+      "mode": {
+        "heading": "Ce vrei să faci cu el?"
+      },
+      "asNew": {
+        "title": "Ca eveniment nou",
+        "help": "Creează o ciornă nouă, niciodată publicată, cu aceleași setări. Imaginile se copiază în spațiul acestui site; ce nu se poate copia rămâne gol și e arătat după.",
+        "slugs": "Adresele paginii: {ro} (RO) · {en} (EN)",
+        "suffixed": "Una dintre adrese era luată, deci are un număr la coadă.",
+        "action": "Creează ciorna",
+        "working": "Se creează…",
+        "done": "Ciorna a fost creată."
+      },
+      "over": {
+        "title": "Peste un eveniment existent",
+        "help": "Vezi mai întâi ce s-ar schimba, apoi confirmi. Se aplică prin salvarea editorului; înscrierile, invitațiile, numerele date și starea de publicare nu se ating.",
+        "pick": "Evenimentul peste care scrii",
+        "pickNone": "Alege un eveniment…",
+        "option": "{title} — {day} — {status} — {registrations}",
+        "status": {
+          "DRAFT": "ciornă",
+          "IN_REVIEW": "la verificare",
+          "PUBLISHED": "publicat",
+          "ARCHIVED": "arhivat"
+        },
+        "registrations": {
+          "one": "{count} înscriere",
+          "few": "{count} înscrieri",
+          "other": "{count} de înscrieri"
+        },
+        "diffHeading": "Ce se schimbă ({count})",
+        "nothing": "Fișierul și evenimentul sunt la fel: nu se schimbă nimic.",
+        "now": "Acum",
+        "incoming": "Din fișier",
+        "slugsKept": "Evenimentul a fost public: adresele paginii rămân cele de acum, oricare ar fi cele din fișier.",
+        "mediaHeading": "Imagini și fișiere",
+        "media": {
+          "same": "aceleași ca la eveniment, nu se copiază",
+          "copy": "se copiază",
+          "unverifiable": "nu pot fi verificate (nu se copiază)"
+        },
+        "published": "Evenimentul este publicat și rămâne publicat.",
+        "people": "Evenimentul are {count}; înscrierile nu se ating.",
+        "confirm": "Am citit diferențele de mai sus și vreau să le aplic.",
+        "production": {
+          "heading": "Aceasta este producția",
+          "body": "Evenimentul «{title}» are {count}. Scrie titlul lui mai jos ca să confirmi că vrei să-l rescrii.",
+          "label": "Titlul evenimentului"
+        },
+        "action": "Aplică peste eveniment",
+        "working": "Se aplică…",
+        "done": {
+          "one": "Gata: {count} câmp schimbat.",
+          "few": "Gata: {count} câmpuri schimbate.",
+          "other": "Gata: {count} de câmpuri schimbate."
+        },
+        "offered": "Locurile adăugate au fost oferite listei de așteptare: {count}."
+      },
+      "open": "Deschide evenimentul",
+      "problems": {
+        "heading": "Nu s-au putut copia:",
+        "refused": "adresa nu e o imagine sau un fișier al unui site de-al nostru",
+        "unverifiable": "fișierul nu are mărime și amprentă, deci nu poate fi verificat",
+        "unreachable": "adresa nu răspunde",
+        "tooLarge": "e prea mare",
+        "sizeMismatch": "mărimea nu e cea din fișier",
+        "hashMismatch": "amprenta nu e cea din fișier",
+        "notAPicture": "nu e o imagine sau un GPX valid",
+        "noStorage": "acest site nu are încă spațiu pentru imagini"
+      },
+      "notes": {
+        "slugSuffixed": "Adresa paginii în {language} era luată: s-a folosit {slug}.",
+        "publicListOff": "Lista publică a participanților a rămas oprită: nota de confidențialitate care o descrie nu e încă în vigoare aici.",
+        "seriesNotApplied": "Regula seriei din fișier nu s-a aplicat: evenimentul e o singură dată."
+      },
+      "refusals": {
+        "tooLarge": "Fișierul e prea mare pentru un fișier de eveniment.",
+        "notJson": "Fișierul nu e JSON.",
+        "notAnEventFile": "Fișierul nu e un fișier de eveniment făcut cu «Exportă evenimentul (JSON)».",
+        "unknownVersion": "Fișierul e de o versiune pe care acest site nu o citește. Fă-l din nou cu «Exportă evenimentul (JSON)» de pe un site la zi.",
+        "invalid": "Fișierul e al nostru, dar are părți care nu se potrivesc. Câmpurile:"
+      },
+      "values": {
+        "empty": "—",
+        "yes": "da",
+        "no": "nu",
+        "picture": "o imagine",
+        "pictureLoose": "o imagine (de verificat)",
+        "pictures": {
+          "one": "{count} imagine",
+          "few": "{count} imagini",
+          "other": "{count} de imagini"
+        }
+      },
+      "roles": {
+        "cover": "Coperta",
+        "bibHeader": "Număr de concurs: imaginea de sus",
+        "bibSponsors": "Număr de concurs: banda sponsorilor",
+        "bibMemberHeader": "Număr de membru: imaginea de sus",
+        "bibMemberCard": "Număr de membru: fundalul",
+        "text": "O imagine dintr-un text",
+        "gpx": "Fișierul GPX"
+      },
+      "fields": {
+        "type": "Tipul evenimentului",
+        "surface": "Suprafața",
+        "timezone": "Fusul orar",
+        "start": {
+          "date": "Data de start",
+          "time": "Ora de start"
+        },
+        "durationMinutes": "Durata (minute)",
+        "raceStartsAt": "Startul cursei",
+        "dateToBeAnnounced": "Data se anunță mai târziu",
+        "timeToBeAnnounced": "Ora se anunță mai târziu",
+        "programme": "Programul (rândurile)",
+        "place": {
+          "name": "Numele locului",
+          "address": "Adresa",
+          "toBeAnnounced": "Locația se anunță mai târziu",
+          "mapUrl": "Linkul hărții",
+          "coordinates": {
+            "latitude": "Latitudine",
+            "longitude": "Longitudine"
+          }
+        },
+        "weather": {
+          "mode": "Vremea"
+        },
+        "route": {
+          "url": "Linkul traseului",
+          "maps": "Hărțile Strava și Garmin Connect",
+          "gpx": {
+            "name": "Numele fișierului GPX",
+            "url": "Fișierul GPX"
+          }
+        },
+        "links": "Linkuri și fișiere",
+        "partners": "Parteneri",
+        "stravaEventUrl": "Evenimentul Strava",
+        "facebookEventUrl": "Evenimentul Facebook",
+        "measures": {
+          "distanceMeters": "Distanța (m)",
+          "distanceEstimated": "Distanța e aproximativă",
+          "elevationGainMeters": "Diferența de nivel (m)",
+          "elevationGainEstimated": "Diferența de nivel e estimativă"
+        },
+        "difficultyLevel": "Dificultatea (nivelul de la 1 la 15)",
+        "nightOverride": "Eveniment de noapte",
+        "cost": {
+          "type": "Costul: felul",
+          "amount": "Costul: suma",
+          "url": "Costul: linkul"
+        },
+        "offersGroupRunDeclaration": "Declarație opțională la alergarea în grup",
+        "isSpecial": "Eveniment special",
+        "membersOnly": "Doar pentru membri",
+        "cover": {
+          "url": "Coperta (imaginea)",
+          "crop": "Coperta (decupajul)"
+        },
+        "registration": {
+          "mode": "Felul înscrierii",
+          "capacity": "Locuri",
+          "waitlist": {
+            "choice": "Lista de așteptare",
+            "limit": "Lungimea listei de așteptare"
+          },
+          "waitlistAutoOffer": "Locurile libere se oferă automat",
+          "opensAt": "Înscrierile se deschid",
+          "opensSoon": "Înscrierile se deschid în curând",
+          "closesAt": "Înscrierile se închid",
+          "confirmationOpensDaysBefore": "Confirmarea se cere cu (zile înainte)",
+          "confirmationDeadlineDaysBefore": "Confirmarea se datorează cu (zile înainte)",
+          "minAge": "Vârsta minimă",
+          "reminderHoursBefore": "Reamintirea (ore înainte)",
+          "declaration": {
+            "key": "Declarația pe propria răspundere"
+          },
+          "external": {
+            "provider": "Organizatorul extern",
+            "url": "Linkul de înscriere extern"
+          },
+          "kitShirt": "Tricou în kit",
+          "askHealthNote": "Se cer informații medicale"
+        },
+        "publicList": {
+          "names": "Lista publică a participanților",
+          "waitlist": "Lista de așteptare e publică",
+          "waitlistCount": "Se arată public câți așteaptă",
+          "count": "Se arată public numărătoarea"
+        },
+        "hiddenList": {
+          "enabled": "Lista invitaților speciali",
+          "bibStart": "Numerele invitaților speciali încep de la",
+          "counted": "Numără și lista invitaților speciali",
+          "public": "Arată invitații speciali pe lista publică"
+        },
+        "bib": {
+          "startNumber": "Primul număr de concurs",
+          "colour": "Culoarea numerelor",
+          "design": {
+            "showName": "Număr: numele participantului",
+            "showEventTitle": "Număr: titlul evenimentului",
+            "showDate": "Număr: data",
+            "showLogo": "Număr: sigla",
+            "numberScale": "Număr: mărimea cifrelor",
+            "numberFormat": "Număr: felul cifrelor",
+            "namePosition": "Număr: locul numelui",
+            "headerImageSrc": "Număr: imaginea de sus",
+            "sponsorImageSrc": "Număr: banda sponsorilor",
+            "headerImageCrop": "Număr: decupajul imaginii de sus",
+            "sponsorImageCrop": "Număr: decupajul benzii",
+            "cutMarks": "Număr: semne de tăiere",
+            "showEmail": "Număr: emailul clubului",
+            "showPartners": "Număr: partenerii",
+            "showEventInFooter": "Număr: evenimentul în subsol",
+            "showWebsite": "Număr: adresa site-ului",
+            "footerText": "Număr: rândul clubului",
+            "showProfile": "Număr: profilul traseului",
+            "showDistance": "Număr: insigna distanței",
+            "showEmergency": "Număr: telefonul de urgență",
+            "emergencyPhone": "Număr: numărul de urgență",
+            "emergencyUpsideDown": "Număr: telefonul întors",
+            "numberStubs": "Număr: numărul la capetele subsolului",
+            "sponsorPlace": "Număr: locul benzii sponsorilor",
+            "member": {
+              "enabled": "Număr de membru: activ",
+              "style": "Număr de membru: stilul",
+              "bandColour": "Număr de membru: culoarea",
+              "headerImageSrc": "Număr de membru: imaginea de sus",
+              "headerImageCrop": "Număr de membru: decupajul de sus",
+              "cardImageSrc": "Număr de membru: imaginea de fundal",
+              "cardImageCrop": "Număr de membru: decupajul fundalului",
+              "label": "Număr de membru: rândul de pe bandă",
+              "mark": "Număr de membru: semnul"
+            }
+          }
+        },
+        "translations": {
+          "slug": "Adresa paginii",
+          "title": "Titlul",
+          "excerpt": "Rezumatul (text simplu)",
+          "excerptBody": "Rezumatul",
+          "checklist": "Ce să aduci",
+          "body": "Descrierea",
+          "rules": "Regulamentul",
+          "schedule": "Notele programului",
+          "routeDescription": "Descrierea traseului",
+          "seoTitle": "Titlul pentru căutare",
+          "seoDescription": "Descrierea pentru căutare",
+          "discountNote": "Reducerea clubului",
+          "weatherNote": "Textul despre vreme"
+        }
+      }
     },
     "erase": {
       "backToEvent": "Înapoi la eveniment",

@@ -2,6 +2,7 @@ import AddIcon from "@mui/icons-material/Add";
 import AddShoppingCartIcon from "@mui/icons-material/AddShoppingCart";
 import ArchiveIcon from "@mui/icons-material/Archive";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
+import ArrowOutwardIcon from "@mui/icons-material/ArrowOutward";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import CampaignIcon from "@mui/icons-material/Campaign";
 import CardMembershipIcon from "@mui/icons-material/CardMembership";
@@ -227,6 +228,8 @@ export type ActionIconName =
   // A row one place earlier or later in an editor's list (§694): the two arrows, never a verb of their own.
   | "moveUp"
   | "moveDown"
+  // A row that is a link to the place that settles it (§752): «Lipsește pe pagină» on an event's to-do card opens the field it names.
+  | "goTo"
   // The guide a page of the backoffice opens on (the design page's samples) and the titled texts of a page (§691).
   | "guide"
   | "boxes"
@@ -324,6 +327,7 @@ export const ACTION_ICONS: Record<ActionIconName, ComponentType<SvgIconProps>> =
   signOut: LogoutIcon,
   moveUp: ArrowUpwardIcon,
   moveDown: ArrowDownwardIcon,
+  goTo: ArrowOutwardIcon,
   guide: MenuBookIcon,
   boxes: ViewAgendaIcon,
   shop: StorefrontIcon,

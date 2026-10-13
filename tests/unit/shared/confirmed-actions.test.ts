@@ -224,6 +224,11 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
  */
 export const NOT_CONFIRMED: Readonly<Record<string, string>> = {
   previewEventDraftAction: "writes nothing and tells nobody: it draws the unsaved event's card and page (§579)",
+  // An event as a JSON file (§751): the import page is its own step-by-step confirmation, in a client island that calls these.
+  previewEventImportAction: "writes nothing: it reads the file and lists what it holds and the events it could go over",
+  diffEventImportAction: "writes nothing and copies nothing: it shows every field that would change, the question the next press answers",
+  importEventAsNewAction: "creates a draft nobody sees until its own publish, which asks; the page asks for the file and the choice first",
+  importEventOverAction: "asks on its own page — the diff, a ticked confirmation, and on production the event's title typed with its registrations counted — which a dialog would only repeat",
   checkInAction: "emails nobody and is undone from the same row; a dialog per runner would double the desk's taps on race morning",
   createAlbumAction: "an editorial save: a draft album nobody sees until its own publish, which asks",
   saveAlbumAction: "an editorial save, like a page's; publishing and deleting ask",

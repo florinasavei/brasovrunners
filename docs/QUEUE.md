@@ -14,13 +14,13 @@ decision or a click only the club can make · **released** — on production, wi
 The owner, 2026-10-10: «Soon I need to start a new session from the laptop … You need to save and document everything».
 This section replaces the plan of 2026-09-30; it is what a session with none of today's conversation needs to carry on.
 
-- **Production: `BR-V3.09`** (2026-10-13 midday: §747 the special guests list from the row menu, §748 the printed race
-  numbers with their zeros). Waiting for «prod»: `BR-V3.10` (§749, below), migration `0144` (expand only).
-- **QA: `BR-V3.10`** — each event's «De făcut pentru pagina evenimentului»: what its page still lacks, computed and
-  linked to the card that fills it, and the club's own to-dos with a priority («Urgentă», «Mare», «Normală», «Mică»),
-  who takes it and by when, sorted by priority, then day, then age; «N de făcut» on the events list. Building: the bib
-  designer — members' numbers with their own header and a mark, the sponsors' band at the bottom, the route's profile,
-  an emergency phone, and the elements of the owner's two example bibs.
+- **Production: `BR-V3.12`** (2026-10-13 afternoon: §751 an event as a JSON file — export, import as a draft or over
+  an event after a diff). Waiting for «prod»: `BR-V3.13` (§752, below) — no migration.
+- **QA: `BR-V3.13`** — «De făcut» on the event redrawn as a plain to-do list: «Lipsește pe pagină» as links to the
+  field, «Sarcini» with a one-line add, a tick box on each row, its priority, who and day small beside it, a pencil
+  that opens the edit in place, the ticked ones under «Gata». The owner's «nu pot să modific» did not reproduce in
+  the code (every action worked for every role on a production build): the edit was hidden by the old drawing.
+  Resumed one at a time after the weekly limit: volunteers (0145), route checkpoints (0146), the bib designer.
 - **Nothing is building.** Releases by the label `ship` reach production by themselves again: `SHIP_TOKEN` was given
   «Pull requests: Read and write» on 2026-10-12, and `BR-V3.05`'s run opened its `qa → main` pull request itself.
 - **Lanes:** the phone session took the calendar on 2026-10-12; one release at a time between
@@ -140,6 +140,9 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V3.13` | the event's to-do list redrawn, and its edits fixed (§752) |
+| `BR-V3.12` | export and import an event as JSON (§751) |
+| `BR-V3.11` | the bib designer: members, sponsors at the bottom, the profile strip, an emergency phone, a distance badge, stubs (§750) |
 | `BR-V3.10` | each event's to-do list, with priorities (§749) |
 | `BR-V3.09` | the special list from the row menu (§747) · printed race numbers with their leading zeros (§748) |
 | `BR-V3.08` | a tick to stop suspected spam, off (§744) · Tema v1 / Tema v2; the calendar's selectors match; the calendar's head under Tema v2 (§745) · contact: the feedback form first when offered (§746) |

@@ -634,6 +634,20 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
           {t("nav.events")}
         </Typography>
 
+        <Stack direction="row" sx={{ alignItems: "center", flexWrap: "wrap", gap: 1 }}>
+        {/* «Importă un eveniment (JSON)» (§751): an Administrator's, from a file made with «Exportă evenimentul (JSON)» in the editor. */}
+        {verbs.transfer && (
+          <GlyphButton
+            icon="upload"
+            href={getPathname({ locale, href: "/admin/events/import" })}
+            variant="outlined"
+            size="small"
+            sx={{ textTransform: "none", minHeight: 36 }}
+            data-testid="event-json-link"
+          >
+            {t("eventJson.listLink")}
+          </GlyphButton>
+        )}
         {verbs.create && (
           // `component="a"` with a resolved path, not `component={Link}`: MUI's Button is a
           // Client Component, and passing a component reference from a Server Component to one
@@ -651,6 +665,7 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
             {t("events.new")}
           </GlyphButton>
         )}
+        </Stack>
       </Stack>
 
       {/*

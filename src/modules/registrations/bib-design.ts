@@ -2,6 +2,7 @@ import { z } from "zod";
 import { imageCropSchema, meaningfulCrop } from "@/modules/content/rich-text/domain/schema";
 import { contrastRatio, MIN_TEXT_CONTRAST } from "@/modules/appearance/domain/tint-contrast";
 import { COLOR, GRADIENT } from "@/theme/brand";
+import { isPhoneNumberShaped } from "@/modules/contact/domain/public-phone";
 import { bibDesignValuesFromQuery } from "./bib-design-query";
 import { bibFooterText } from "./bib-footer";
 import { RACE_NUMBER_FORMATS } from "./domain/race-number";
@@ -144,7 +145,7 @@ const memberColour = z
  * How a member's bib differs (§NNN, amending §664; the owner, 2026-10-10: «I do not like the BIB
  * designer of the BVR members, I need a different design for them, different background»):
  *
- * - `band` — «Doar banda de sus»: §664's look, the members' header and a small label on it.
+ * - `band` — «Același fundal ca restul numerelor — doar antet propriu»: §664's look, the members' header and a small label on it.
  * - `card` — «Tot numărul»: the whole card above the small print is the members' background — a
  *   photograph under the navy veil, one of the bib colours that carries white at AA, or the club
  *   kit's gradient — with the number, the name, the race and the lockup in white and the label a
@@ -177,6 +178,8 @@ export const bibMemberSchema = z
       .string()
       .transform((value) => bibFooterText(value, BIB_MEMBER_LABEL_MAX))
       .catch(""),
+    /** «Semn de membru pe număr» (§750): a check mark on every member's number; off until the club ticks it. */
+    mark: z.boolean().catch(false),
   })
   .strict()
   // A crop belongs to its picture (§560), here as in the main header.
@@ -197,6 +200,7 @@ export const DEFAULT_BIB_MEMBER_DESIGN: BibMemberDesign = {
   cardImageSrc: null,
   cardImageCrop: null,
   label: "",
+  mark: false,
 };
 
 /**
@@ -274,6 +278,44 @@ export function bibMemberStripeText(label: string, locale = "ro"): string {
   return label.toLocaleUpperCase(locale);
 }
 
+/** «Locul benzii cu sponsori» (§750): under the small print, the number's last row, or above it as it was. */
+export const BIB_SPONSOR_PLACES = ["bottom", "above"] as const;
+export type BibSponsorPlace = (typeof BIB_SPONSOR_PLACES)[number];
+
+/** The longest emergency phone the bib prints: the public phone's own ceiling (§565). */
+export const BIB_EMERGENCY_PHONE_MAX = 30;
+
+/**
+ * The emergency phone as the bib keeps it (§750): trimmed, runs of spaces made one, and only a value
+ * written like a telephone number (`isPhoneNumberShaped`, the check «Telefon public» applies) — anything
+ * else reads as none, never a bib that fails to print, like every field here.
+ */
+export function bibEmergencyPhone(value: string): string {
+  const typed = value.trim().replace(/\s+/g, " ");
+  return typed.length <= BIB_EMERGENCY_PHONE_MAX && isPhoneNumberShaped(typed) ? typed : "";
+}
+
+/**
+ * The line printed on every number (§750): «Urgențe: 07xx xxx xxx» / "Emergency: …" — `label` is the
+ * sheet's language's word — or null while the tick is off or no valid number was typed. The club's
+ * organizers' number, typed here: never a participant's own emergency contact, which is personal
+ * data on a visible bib that the privacy notice does not describe.
+ */
+export function bibEmergencyLine(design: Pick<BibDesign, "showEmergency" | "emergencyPhone">, label: string): string | null {
+  if (!design.showEmergency || design.emergencyPhone === "") return null;
+  return label ? `${label}: ${design.emergencyPhone}` : design.emergencyPhone;
+}
+
+/**
+ * The distance badge's words (§750; the owner's marathon example): the event's distance in whole
+ * kilometres with a K — «21K» for a half marathon — or null when the event has none or it is under half
+ * a kilometre. Typed by the club on the event, never read from the GPX: the badge says what the page says.
+ */
+export function bibDistanceBadge(distanceMeters: number | null | undefined): string | null {
+  if (!distanceMeters || !(distanceMeters >= 500)) return null;
+  return `${Math.round(distanceMeters / 1000)}K`;
+}
+
 export const bibDesignSchema = z
   .object({
     showName: z.boolean().catch(true),
@@ -290,8 +332,14 @@ export const bibDesignSchema = z
     namePosition: z.enum(BIB_NAME_POSITIONS).catch("below"),
     /** A picture across the top instead of the coloured band, or null for the band (§249). */
     headerImageSrc: storedPicture,
-    /** A strip of sponsors above the small print, or null. */
+    /** A strip of sponsors, or null; where it sits is `sponsorPlace`. */
     sponsorImageSrc: storedPicture,
+    /**
+     * «Locul benzii cu sponsori» (§750): `bottom` — «Jos de tot, în subsol», the number's last row under
+     * the small print, the default for every event (the owner: «ar trebui normal jos de tot») — or
+     * `above`, «Deasupra subsolului», where the strip sat until then.
+     */
+    sponsorPlace: z.enum(BIB_SPONSOR_PLACES).catch("bottom"),
     /**
      * The part of each picture the bib shows (§560), drawn in the place's own shape by
      * `bib-picture-frame.ts`; null draws the picture as every bib did before crops existed.
@@ -318,6 +366,20 @@ export const bibDesignSchema = z
      * `BIB_FOOTER_TEXT_MAX` characters — normalised rather than refused, like every field here.
      */
     footerText: z.string().transform((value) => bibFooterText(value)).catch(""),
+    /**
+     * «Profilul traseului» (§750): the route's elevation over distance on every number, with the
+     * distance and the gain; off by default, and only drawn when the event has a route GPX.
+     */
+    showProfile: z.boolean().catch(false),
+    /** «Telefon pentru urgențe» (§750): the tick, and the number the club types (`bibEmergencyPhone`). */
+    showEmergency: z.boolean().catch(false),
+    emergencyPhone: z.string().transform(bibEmergencyPhone).catch(""),
+    /** «Tipărit invers» (§750): the phone printed upside down, to be read looking down at the chest; on by default, the trail practice. */
+    emergencyUpsideDown: z.boolean().catch(true),
+    /** «Distanța pe număr» (§750): the event's distance as a badge in the header's right corner («21K»). */
+    showDistance: z.boolean().catch(false),
+    /** «Numărul și pe capete» (§750): the number again, small, at both ends of the sponsors' row — tear-off stubs. */
+    numberStubs: z.boolean().catch(false),
     /** The members' race number (§664): off, or the members' own header and label. */
     member: bibMemberSchemaWithDefault,
   })
@@ -341,6 +403,7 @@ export const DEFAULT_BIB_DESIGN: BibDesign = {
   namePosition: "below",
   headerImageSrc: null,
   sponsorImageSrc: null,
+  sponsorPlace: "bottom",
   headerImageCrop: null,
   sponsorImageCrop: null,
   cutMarks: false,
@@ -349,6 +412,12 @@ export const DEFAULT_BIB_DESIGN: BibDesign = {
   showEventInFooter: false,
   showWebsite: false,
   footerText: "",
+  showProfile: false,
+  showEmergency: false,
+  emergencyPhone: "",
+  emergencyUpsideDown: true,
+  showDistance: false,
+  numberStubs: false,
   member: DEFAULT_BIB_MEMBER_DESIGN,
 };
 

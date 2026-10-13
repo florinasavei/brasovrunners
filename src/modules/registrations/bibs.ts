@@ -11,6 +11,7 @@ import { OFFERS_MEMBER_BIB } from "@/modules/events/repository";
 import { recordAuditEvent } from "@/modules/audit/repository";
 import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import { type CoHost, readCoHosts } from "@/modules/events/domain/co-hosts";
+import { type RouteGpx, readRouteGpx } from "@/modules/events/domain/route-gpx";
 import { typedStartOrNull } from "@/modules/events/domain/provisional-start";
 import { formatDay } from "@/i18n/dates";
 import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
@@ -1006,6 +1007,10 @@ export async function findEventForBibs<T extends Record<string, unknown>>(
       bibStartNumber: number;
       coHosts: CoHost[];
       design: BibDesign;
+      /** The route's GPX and the figures the club typed (§750): what «Profilul traseului» is drawn from. */
+      routeGpx: RouteGpx | null;
+      distanceMeters: number | null;
+      elevationGainMeters: number | null;
     }
   | undefined
 > {
@@ -1017,6 +1022,9 @@ export async function findEventForBibs<T extends Record<string, unknown>>(
       bibColour: events.bibColour,
       bibStartNumber: events.bibStartNumber,
       bibDesign: events.bibDesign,
+      routeGpx: events.routeGpx,
+      distanceMeters: events.distanceMeters,
+      elevationGainMeters: events.elevationGainMeters,
       coHosts: events.coHosts,
       coHostName: events.coHostName,
       coHostUrl: events.coHostUrl,
@@ -1037,5 +1045,8 @@ export async function findEventForBibs<T extends Record<string, unknown>>(
     coHosts: readCoHosts(row),
     // What the club decided this bib shows (§249); anything unreadable is the platform's own.
     design: readBibDesign(row.bibDesign),
+    routeGpx: readRouteGpx(row.routeGpx),
+    distanceMeters: row.distanceMeters,
+    elevationGainMeters: row.elevationGainMeters,
   };
 }

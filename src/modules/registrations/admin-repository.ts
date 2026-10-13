@@ -22,7 +22,7 @@ import { awaitingItsFirstEmail, familyEmailQueued, familyReservationHolds, offer
 import { promoListed } from "./sponsor-list";
 import { healthNoteShown } from "./domain/health-note";
 import { memberCanonicalEmails } from "./member-ticks";
-import { OFFERS_MEMBER_BIB, RACE_NUMBER_FORMAT } from "@/modules/events/repository";
+import { BIB_STAMP, OFFERS_MEMBER_BIB, RACE_NUMBER_FORMAT } from "@/modules/events/repository";
 import type { QueueOrder } from "./domain/waitlist";
 import { isRejectionCause, rejectionCause, type RejectionCause } from "@/modules/notifications/domain/rejection-cause";
 import { recipientRoleOf, type RecipientRole } from "@/modules/notifications/domain/email-audience";
@@ -1144,6 +1144,13 @@ export type DeskRegistration = {
   /** How the event writes the number (§735): «007» when its bib says «007». */
   raceNumberFormat: RaceNumberFormat;
   /**
+   * A stamp of everything the bib's picture is drawn from (§748, §750): the whole design, the colour,
+   * the title and date, the partners, the route's GPX and the typed figures — `BIB_STAMP`. The desk's
+   * picture address carries it, so a changed mark or element is a fresh picture, never one the
+   * browser kept for the cache hour.
+   */
+  bibStamp: string;
+  /**
    * Whether the settled number is on paper (§264), and when the row left the live states
    * (§311). Together they are what the desk says in red about a cancelled or expired runner
    * who turns up anyway: the state, the date, and — when it exists — that a printed bib with
@@ -1184,6 +1191,7 @@ const DESK_COLUMNS = {
   bibNumber: registrations.bibNumber,
   // How the event writes it (§735): «007» when its bib says «007».
   raceNumberFormat: RACE_NUMBER_FORMAT,
+  bibStamp: BIB_STAMP,
   bibPrintedAt: registrations.bibPrintedAt,
   cancelledAt: registrations.cancelledAt,
   expiredAt: registrations.expiredAt,

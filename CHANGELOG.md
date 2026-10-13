@@ -8,6 +8,15 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V3.13-2026-10-13
+
+- **«De făcut» on the event as a plain to-do list** — «Lipsește pe pagină» as links to the field, «Sarcini» with a one-line add, a tick box on each row, its priority, who and day small beside it and a pencil that opens its edit form in place, the ticked ones folded under «Gata»; «Toate» / «Ale mele» on the card's corner. §752.
+## BR-V3.12-2026-10-13
+
+- **An event as a JSON file** — «Exportă evenimentul (JSON)» in the editor and «Importă un eveniment (JSON)» on the events list: the event's configuration alone, brought into another site as a new draft or over an event after a field-by-field diff, through the editor's own save; pictures copied under a hash check, never a registration or a person. §751.
+## BR-V3.11-2026-10-13
+
+- **The bib designer: members, sponsors at the bottom, the route's profile, an emergency phone, a distance badge, stubs** — «Același fundal ca restul numerelor» (own header only) is named and «Semn de membru pe număr» puts a check mark on every member's number; the sponsors' strip is the number's last row by default («Jos de tot, în subsol») with a warning when the header image hides the event's name; «Profilul traseului» is a full-width strip with the distance and the gain, «Telefon pentru urgențe» prints «Urgențe: …» upside down by default («Tipărit invers»), «Distanța pe număr» puts a «21K» badge in the header and «Numărul și pe capetele subsolului» repeats the number small on the footer's two ends; the number's size never spills over the rows under it, and the route's file is read once — on the sheet, the picture, the desk and the editor's preview. §750.
 ## BR-V3.10-2026-10-13
 
 - **«De făcut pentru pagina evenimentului»** — each event's editor lists what its page still lacks (title, description, place, start, programme, cover, route, difficulty, places, bibs, declaration — each a link to the field, gone once filled) and the club's own to-dos with a priority (Urgentă, Mare, Normală, Mică), who takes it, a due day and a tick, sorted by priority, then day, then age; «Ale mele» filters your own; a chip with the count beside the event in the list. Backoffice only. §749.
