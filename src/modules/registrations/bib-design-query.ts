@@ -60,7 +60,7 @@ export type BibDesignFormValues = {
   /** «Cum arată numărul» (§735): `plain`, `pad3` or `pad4`; anything else is the schema's to refuse. */
   numberFormat: string;
   namePosition: string;
-  /** «Locul benzii cu sponsori» (§NNN): `bottom` or `above`; anything else is the schema's to refuse. */
+  /** «Locul benzii cu sponsori» (§750): `bottom` or `above`; anything else is the schema's to refuse. */
   sponsorPlace: string;
   headerImageSrc: string | null;
   sponsorImageSrc: string | null;
@@ -75,11 +75,11 @@ export type BibDesignFormValues = {
   showWebsite: boolean;
   /** As typed: the schema trims it, keeps it to one line and to `BIB_FOOTER_TEXT_MAX`. */
   footerText: string;
-  /** «Profilul traseului» and «Telefon pentru urgențe» (§NNN): the ticks, and the phone as typed. */
+  /** «Profilul traseului» and «Telefon pentru urgențe» (§750): the ticks, and the phone as typed. */
   showProfile: boolean;
   showEmergency: boolean;
   emergencyPhone: string;
-  /** «Tipărit invers», «Distanța pe număr» and «Numărul și pe capete» (§NNN). */
+  /** «Tipărit invers», «Distanța pe număr» and «Numărul și pe capete» (§750). */
   emergencyUpsideDown: boolean;
   showDistance: boolean;
   numberStubs: boolean;
@@ -101,7 +101,7 @@ export type BibMemberFormValues = {
   cardImageCrop: BibCropValue;
   /** As typed: the schema keeps it to one line and `BIB_MEMBER_LABEL_MAX`. */
   label: string;
-  /** «Semn de membru pe număr» (§NNN). */
+  /** «Semn de membru pe număr» (§750). */
   mark: boolean;
 };
 

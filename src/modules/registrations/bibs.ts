@@ -1007,7 +1007,7 @@ export async function findEventForBibs<T extends Record<string, unknown>>(
       bibStartNumber: number;
       coHosts: CoHost[];
       design: BibDesign;
-      /** The route's GPX and the figures the club typed (§NNN): what «Profilul traseului» is drawn from. */
+      /** The route's GPX and the figures the club typed (§750): what «Profilul traseului» is drawn from. */
       routeGpx: RouteGpx | null;
       distanceMeters: number | null;
       elevationGainMeters: number | null;

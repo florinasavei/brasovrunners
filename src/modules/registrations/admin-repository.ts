@@ -1144,7 +1144,7 @@ export type DeskRegistration = {
   /** How the event writes the number (§735): «007» when its bib says «007». */
   raceNumberFormat: RaceNumberFormat;
   /**
-   * A stamp of everything the bib's picture is drawn from (§748, §NNN): the whole design, the colour,
+   * A stamp of everything the bib's picture is drawn from (§748, §750): the whole design, the colour,
    * the title and date, the partners, the route's GPX and the typed figures — `BIB_STAMP`. The desk's
    * picture address carries it, so a changed mark or element is a fresh picture, never one the
    * browser kept for the cache hour.

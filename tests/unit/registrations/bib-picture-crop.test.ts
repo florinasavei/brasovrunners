@@ -204,7 +204,7 @@ describe("§560 the preview draws the crop (pixels of the PNG)", () => {
   it("the sponsors' band: the whole picture fitted without a crop, the cropped half filling it with one", async () => {
     const src = await halves(1000, 100);
     const photo = { width: 1000, height: 100 };
-    // The band's picture is the card's last row, under the one-line footer — «Jos de tot», the default (`bib-geometry.ts`, §NNN).
+    // The band's picture is the card's last row, under the one-line footer — «Jos de tot», the default (`bib-geometry.ts`, §750).
     const bandTop = BIB_MARGIN + BIB_CARD.height - BIB_LAYOUT.sponsorHeight + BIB_LAYOUT.sponsorTop;
     const y = px(bandTop + BIB_LAYOUT.sponsorPicture / 2);
     const wide = { left: px(BIB_MARGIN + BIB_LAYOUT.inset + 20), right: px(BIB_MARGIN + BIB_CARD.width - BIB_LAYOUT.inset - 20) };

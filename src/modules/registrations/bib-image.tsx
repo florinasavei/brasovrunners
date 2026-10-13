@@ -111,11 +111,11 @@ type BibImageInput = {
   member?: boolean;
   /** The platform's words for the members' label when the club typed none («Membru {club}»), in the picture's language. */
   memberLabelDefault?: string;
-  /** «Profilul traseului» (§NNN), already read from the event's GPX by the route (`bib-extras.ts`); drawn only while the design's tick is on. */
+  /** «Profilul traseului» (§750), already read from the event's GPX by the route (`bib-extras.ts`); drawn only while the design's tick is on. */
   profile?: BibProfileDrawing | null;
-  /** The word before the emergency phone (§NNN), in the picture's language. */
+  /** The word before the emergency phone (§750), in the picture's language. */
   emergencyLabel?: string;
-  /** «21K» for the header's badge (§NNN), from `bib-extras.ts`; drawn only while the design's tick is on. */
+  /** «21K» for the header's badge (§750), from `bib-extras.ts`; drawn only while the design's tick is on. */
   distanceBadge?: string | null;
 };
 
@@ -200,16 +200,16 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
   const memberLabel = asMember ? bibMemberLabel(design.member, input.memberLabelDefault ?? "") : "";
   // «Tot numărul» (§NNN): the members' background over the whole card, the label a stripe.
   const asCard = asMember && design.member.style === "card";
-  // The member mark (§NNN); the name set above the number steps aside for it (`bibNameReserve`).
+  // The member mark (§750); the name set above the number steps aside for it (`bibNameReserve`).
   const markDrawn = asMember && design.member.mark;
   const nameReserve = bibNameReserve(markDrawn, design.namePosition === "above");
-  // The route's profile and the emergency phone (§NNN), when ticked and available; the sponsors' place.
+  // The route's profile and the emergency phone (§750), when ticked and available; the sponsors' place.
   const profile = design.showProfile ? (input.profile ?? null) : null;
   const profilePaths = profile ? bibProfilePaths(profile.points, L.profileChartWidth, L.profileChartHeight) : null;
   const emergency = bibEmergencyLine(design, input.emergencyLabel ?? "");
   const sponsorsAtBottom = design.sponsorPlace === "bottom";
   const badge = design.showDistance ? (input.distanceBadge ?? null) : null;
-  // The stubs (§NNN) are why the sponsors' row exists with no picture.
+  // The stubs (§750) are why the sponsors' row exists with no picture.
   const stubs = design.numberStubs;
   // A picture the club uploaded (§249): the one the route read (§560), or — when the caller read
   // none — the design's own address made absolute; the band when there is none.
@@ -249,7 +249,7 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
   const cardHeight = BIB_CARD.height - footerHeight - sponsorRow;
   const stripe = asCard && memberLabel ? bibMemberStripeText(memberLabel) : "";
   // The number's size in points, the club's scale included but never more than the area the rows
-  // under the band leave it — the sheet's rule — then to pixels (§249, §NNN).
+  // under the band leave it — the sheet's rule — then to pixels (§249, §750).
   const numberArea = bibNumberArea({
     footer: footerHeight,
     name: design.showName ? L.nameBlock : 0,
@@ -314,7 +314,7 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
       )}
     </div>
   ) : null;
-  // The route's profile row and the emergency line (§NNN), at the sheet's points, under the name.
+  // The route's profile row and the emergency line (§750), at the sheet's points, under the name.
   const profileRow = profile ? (
     <div style={{ display: "flex", flexShrink: 0, position: "relative", height: px(L.profileHeight) }}>
       <svg
@@ -368,7 +368,7 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
   // The sponsors' strip (§249) and the small print (§317), in the order the design's place says.
   const sponsorsStrip = sponsors ? (
     <div style={{ display: "flex", flexShrink: 0, height: px(L.sponsorHeight), paddingTop: px(L.sponsorTop), justifyContent: "center" }}>
-      {/* With the stubs the picture is scaled whole, about its centre, to what is left between them (§NNN). */}
+      {/* With the stubs the picture is scaled whole, about its centre, to what is left between them (§750). */}
       {stubs ? (
         <div style={{ display: "flex", transform: `scale(${bibStubScale(true)})` }}>{placedPicture("sponsors", sponsors, design)}</div>
       ) : (
@@ -377,7 +377,7 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
     </div>
   ) : null;
   /*
-    The sponsors' row (§249) and, with the club's tick, the number repeated at its two ends (§NNN): the
+    The sponsors' row (§249) and, with the club's tick, the number repeated at its two ends (§750): the
     owner's tear-off stubs, small and bold in the body ink, inside the inset — the sheet's points.
   */
   const sponsorRowEl =
@@ -604,7 +604,7 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
             {memberLabel}
           </div>
         ) : null}
-        {/* The member mark (§NNN), the sheet's ring and check at the sheet's points: an SVG in the
+        {/* The member mark (§750), the sheet's ring and check at the sheet's points: an SVG in the
             number's own ink, absolute at the card's left inset under the header. */}
         {markDrawn ? (
           <svg
@@ -675,7 +675,7 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
             {stripe}
           </div>
         ) : null}
-        {/* «Jos de tot» (§NNN): the small print, then the sponsors' strip as the card's last row;
+        {/* «Jos de tot» (§750): the small print, then the sponsors' strip as the card's last row;
             «Deasupra subsolului»: the strip, then the small print, as before. */}
         {sponsorsAtBottom ? smallPrint : sponsorRowEl}
         {sponsorsAtBottom ? sponsorRowEl : smallPrint}

@@ -1,5 +1,5 @@
 /**
- * The route's profile on a race number (§NNN; the owner, 2026-10-13: the elevation over distance, with
+ * The route's profile on a race number (§750; the owner, 2026-10-13: the elevation over distance, with
  * the distance and the gain): a few dozen points computed once on the server from the event's route
  * GPX (§718), and the two facts beside them.
  *
@@ -54,7 +54,7 @@ function pointsOf(text: string, element: "trkpt" | "rtept"): TrackPoint[] {
   return found;
 }
 
-/** The profile of a GPX document's text, or null when it has none (§NNN). */
+/** The profile of a GPX document's text, or null when it has none (§750). */
 export function parseGpxProfile(text: string): BibProfile | null {
   let track = pointsOf(text, "trkpt");
   if (track.length < 2) track = pointsOf(text, "rtept");
@@ -96,7 +96,7 @@ export function parseGpxProfile(text: string): BibProfile | null {
 }
 
 /**
- * Which figures the bib prints (§NNN): **the event's own win** — «Distanță» and «Diferență de nivel»
+ * Which figures the bib prints (§750): **the event's own win** — «Distanță» and «Diferență de nivel»
  * as the club typed them (§598, §585), the numbers its page and its emails say — and the GPX's
  * computed ones fill what the club left empty. A track recorded by a watch carries its own noise;
  * a figure the club typed is a figure it stands behind, and the bib must say what the page says.

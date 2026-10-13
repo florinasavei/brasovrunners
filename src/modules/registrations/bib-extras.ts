@@ -5,7 +5,7 @@ import { type BibDesign, bibDistanceBadge } from "./bib-design";
 import { type BibProfile, type BibProfileDrawing, bibProfileDrawing, parseGpxProfile } from "./bib-profile";
 
 /**
- * What a race number prints beyond the design's own switches, read once per request (§NNN): the
+ * What a race number prints beyond the design's own switches, read once per request (§750): the
  * route's profile with its words — from the event's route GPX in the site's store (§718), only when
  * the design asks for it and the event has one — and the word before the emergency phone.
  *
@@ -19,7 +19,7 @@ export type BibExtras = {
   profile: BibProfileDrawing | null;
   /** «Urgențe» / "Emergency": the word before the phone, in the picture's language; empty while the tick is off. */
   emergencyLabel: string;
-  /** «21K»: the event's distance for the header's badge (§NNN); null while the tick is off or the event has no distance. */
+  /** «21K»: the event's distance for the header's badge (§750); null while the tick is off or the event has no distance. */
   distanceBadge: string | null;
 };
 
@@ -31,7 +31,7 @@ export type BibProfileSource = {
 };
 
 /**
- * The parsed profiles by the GPX's store key (§NNN): a new upload gets a new key, so an entry never goes
+ * The parsed profiles by the GPX's store key (§750): a new upload gets a new key, so an entry never goes
  * stale, and the 64 points are small. Without it every picture on the bibs page and the desk, and
  * every redraw of the editor's preview, downloaded the whole file (up to 4 MB) and parsed it again.
  * Only an answer is kept — a file that was read, with or without a profile in it — never a failed read,

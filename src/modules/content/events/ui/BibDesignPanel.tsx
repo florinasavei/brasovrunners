@@ -288,10 +288,10 @@ export default async function BibDesignPanel({
         </Stack>
 
         {storage && picture("header")}
-        {/* The header picture hides the event's name (§NNN): said while both are on, with the way out. */}
+        {/* The header picture hides the event's name (§750): said while both are on, with the way out. */}
         {storage && <BibHeaderWarning message={t("editor.bibDesign.headerHidesTitle")} initial={Boolean(design.headerImageSrc) && design.showEventTitle} />}
         {storage && picture("sponsors")}
-        {/* «Locul benzii cu sponsori» (§NNN): «Jos de tot, în subsol» for every event unless the club moves it. */}
+        {/* «Locul benzii cu sponsori» (§750): «Jos de tot, în subsol» for every event unless the club moves it. */}
         <RecallField
           select
           name="event.bibDesign.sponsorPlace"
@@ -308,7 +308,7 @@ export default async function BibDesignPanel({
           ))}
         </RecallField>
 
-        {/* «Profilul traseului» and «Telefon pentru urgențe» (§NNN): two rows of their own under the
+        {/* «Profilul traseului» and «Telefon pentru urgențe» (§750): two rows of their own under the
             name, off by default. The profile is drawn from the route's GPX, so its tick is greyed
             — and says why — without one; the phone's box shows only while its tick is on. */}
         <Stack spacing={1} data-testid="bib-design-extras">
@@ -407,7 +407,7 @@ export default async function BibDesignPanel({
                     }}
                   />
                 )}
-                {/* «Fundalul» (§NNN): the whole card, or «Același fundal ca restul numerelor» — the header
+                {/* «Fundalul» (§750): the whole card, or «Același fundal ca restul numerelor» — the header
                     alone, the race's own background kept. While the members' bib is off the
                     select starts on the whole card, whatever was stored; once it is on, the stored choice. */}
                 <RecallField
@@ -437,7 +437,7 @@ export default async function BibDesignPanel({
                   <option value="">{t("editor.bibDesign.member.eventColour")}</option>
                   {BIB_COLOURS.map((choice) => (
                     <option key={choice.hex} value={choice.hex}>
-                      {/* White does not read on it at AA: on the whole card it prints the club's gradient (§NNN). */}
+                      {/* White does not read on it at AA: on the whole card it prints the club's gradient (§750). */}
                       {bibMemberCardColourReadable(choice.hex)
                         ? t(`editor.bibColours.${choice.key}`)
                         : t("editor.bibDesign.member.bandOnly", { colour: t(`editor.bibColours.${choice.key}`) })}
@@ -458,7 +458,7 @@ export default async function BibDesignPanel({
                   help={t("editor.bibDesign.member.labelHelp", { max: BIB_MEMBER_LABEL_MAX, club: CLUB_NAME })}
                   countTestId="bib-member-label-count"
                 />
-                {/* «Semn de membru pe număr» (§NNN): a check mark on every member's number, off until ticked. */}
+                {/* «Semn de membru pe număr» (§750): a check mark on every member's number, off until ticked. */}
                 <CheckboxField
                   name="event.bibDesign.member.mark"
                   defaultChecked={design.member.mark}

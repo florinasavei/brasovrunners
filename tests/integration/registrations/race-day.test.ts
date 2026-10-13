@@ -368,7 +368,7 @@ describe("BR-REQ-037-08 check-in and the desk", () => {
   });
 
   /**
-   * §748, §NNN — the desk's picture address is stamped with the whole design, so a ticked mark or a
+   * §748, §750 — the desk's picture address is stamped with the whole design, so a ticked mark or a
    * new element is never served from the browser's hour of cache.
    */
   it("stamps the desk's bib picture with the event's whole design", async () => {

@@ -27,7 +27,7 @@ function digitCount(value: string): number {
   return value.replace(/\D/g, "").length;
 }
 
-/** Whether a typed value is written like a telephone number — the check «Telefon public» and the bib's emergency phone share (§NNN). */
+/** Whether a typed value is written like a telephone number — the check «Telefon public» and the bib's emergency phone share (§750). */
 export function isPhoneNumberShaped(value: string): boolean {
   return PHONE_SHAPE.test(value) && digitCount(value) >= MIN_DIGITS && digitCount(value) <= MAX_DIGITS;
 }

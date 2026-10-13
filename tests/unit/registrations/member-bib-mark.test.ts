@@ -18,7 +18,7 @@ import { renderBibSheet } from "@/modules/registrations/bibs-pdf";
 import { drawnRuns } from "../../helpers/pdf-drawn";
 
 /**
- * §NNN, BR-REQ-038-01 — «Semn de membru pe număr»: a check mark on every member's number, only when
+ * §750, BR-REQ-038-01 — «Semn de membru pe număr»: a check mark on every member's number, only when
  * ticked and only on a member's; «Același fundal ca restul numerelor» is the members' header alone
  * over the race's own background (the `band` style), the default for a design saved before.
  */
@@ -58,7 +58,7 @@ const picture = (design: BibDesign, member: boolean) =>
 
 afterEach(() => vi.restoreAllMocks());
 
-describe("§NNN the member mark in the design", () => {
+describe("§750 the member mark in the design", () => {
   it("reads off for a design saved before, and on only as a boolean", () => {
     expect(readBibDesign({ member: { enabled: true } }).member.mark).toBe(false);
     expect(readBibDesign({ member: { enabled: true, mark: true } }).member.mark).toBe(true);
@@ -79,7 +79,7 @@ describe("§NNN the member mark in the design", () => {
   });
 });
 
-describe("§NNN the member mark on the sheet", () => {
+describe("§750 the member mark on the sheet", () => {
   it("is drawn once per member's number when ticked, and not otherwise", async () => {
     const rows = [{ member: true }, { member: true }, { member: false }];
     expect(await ringsOf(rows, withMember({ mark: true }))).toBe(2);
@@ -96,7 +96,7 @@ describe("§NNN the member mark on the sheet", () => {
   });
 });
 
-describe("§NNN the member mark on the picture", () => {
+describe("§750 the member mark on the picture", () => {
   it("changes a member's picture only when ticked, never an ordinary one", async () => {
     const off = withMember({ mark: false });
     const on = withMember({ mark: true });
@@ -105,7 +105,7 @@ describe("§NNN the member mark on the picture", () => {
   });
 });
 
-describe("§NNN the name above the number steps aside for the mark", () => {
+describe("§750 the name above the number steps aside for the mark", () => {
   const LONG = "Alexandra-Maria Popescu-Ionescu Georgescu";
 
   const nameRun = async (design: BibDesign, member: boolean) => {
@@ -148,7 +148,7 @@ describe("§NNN the name above the number steps aside for the mark", () => {
   });
 });
 
-describe("§NNN the picture's stamp follows the mark", () => {
+describe("§750 the picture's stamp follows the mark", () => {
   it("changes when the tick flips, so a cached picture is not served stale", () => {
     expect(bibPictureStamp([withMember({ mark: true })])).not.toBe(bibPictureStamp([withMember({ mark: false })]));
   });

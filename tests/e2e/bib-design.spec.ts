@@ -105,7 +105,7 @@ test.describe("§560 the sponsors' band: upload, crop, preview", () => {
     await expect(preview).not.toHaveAttribute("src", /[?&]sponsorImageSrc=/, { timeout: 10_000 });
     // The band was really drawn: the stored WebP reaches the renderer as a PNG (§560). The whole
     // blue strip is fitted in the middle of the band, which is the card's last row since «Jos de tot»
-    // is the default place (§NNN): 375 to 399 points down the A5 paper's 421, 1.663 pixels to the
+    // is the default place (§750): 375 to 399 points down the A5 paper's 421, 1.663 pixels to the
     // point (`bib-geometry.ts`).
     const { data, info } = await sharp(await drawn.body()).raw().toBuffer({ resolveWithObject: true });
     const at = (Math.round(644) * info.width + Math.round(info.width / 2)) * info.channels;
@@ -152,11 +152,11 @@ test.describe("§664 the members' number, designed in the panel", () => {
     await expect(page.getByTestId("bib-member-label-count")).toHaveText("3/24");
     await expect(preview).toHaveAttribute("src", /[?&]memberLabel=BVR(&|$)/, { timeout: 10_000 });
 
-    // «Semn de membru pe număr» (§NNN): off until ticked, then it travels in the preview's address.
+    // «Semn de membru pe număr» (§750): off until ticked, then it travels in the preview's address.
     const mark = members.getByRole("checkbox", { name: "Semn de membru pe număr" });
     expect((await mark.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
     await expect(mark).not.toBeChecked();
-    // A missing key reads false, so the unticked mark is not in the address at all (§NNN).
+    // A missing key reads false, so the unticked mark is not in the address at all (§750).
     await expect(preview).not.toHaveAttribute("src", /[?&]memberMark=/);
     await mark.check();
     await expect(preview).toHaveAttribute("src", /[?&]memberMark=1(&|$)/, { timeout: 10_000 });
@@ -168,11 +168,11 @@ test.describe("§664 the members' number, designed in the panel", () => {
 });
 
 /**
- * §NNN — «Locul benzii cu sponsori», «Profilul traseului», «Telefon pentru urgențe» and the header
+ * §750 — «Locul benzii cu sponsori», «Profilul traseului», «Telefon pentru urgențe» and the header
  * picture's warning, in the panel: each follows into the preview's address before anything is saved.
  * Nothing is saved; the featured event has no route GPX, so the profile's tick is greyed and says why.
  */
-test.describe("§NNN the sponsors' place, the profile, the emergency phone and the header's warning", () => {
+test.describe("§750 the sponsors' place, the profile, the emergency phone and the header's warning", () => {
   test("each is a box of the panel and travels in the preview's address", async ({ page }) => {
     await signIn(page, "Dev Administrator");
     await ensureRegistrationIsOpen(page);

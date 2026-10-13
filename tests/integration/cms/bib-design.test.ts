@@ -172,7 +172,7 @@ describe("§249 the bib's design, saved and read back", () => {
     // What a save from the previous release wrote: every key but the footer's — and, older still
     // than the crops (§560), none of theirs either.
     // Nor the members' bib (§664), younger still, nor «Cum arată numărul» (§735), which reads `plain`.
-    // Nor the sponsors' place, the profile and the emergency phone (§NNN): they read «Jos de tot», off and none.
+    // Nor the sponsors' place, the profile and the emergency phone (§750): they read «Jos de tot», off and none.
     const footerKeys = ["showEmail", "showPartners", "showEventInFooter", "showWebsite", "footerText", "headerImageCrop", "sponsorImageCrop", "member", "numberFormat", "sponsorPlace", "showProfile", "showEmergency", "emergencyPhone", "emergencyUpsideDown", "showDistance", "numberStubs"];
     const before = Object.fromEntries(
       Object.entries({ ...DEFAULT_BIB_DESIGN, numberScale: "large" }).filter(([key]) => !footerKeys.includes(key)),

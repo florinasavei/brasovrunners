@@ -18,7 +18,7 @@ import { bibPictureStamp } from "@/modules/registrations/domain/bib-stamp";
 import { drawnRuns } from "../../helpers/pdf-drawn";
 
 /**
- * §NNN, BR-REQ-038-01 — the sponsors' band's place («Jos de tot» by default), «Profilul traseului»,
+ * §750, BR-REQ-038-01 — the sponsors' band's place («Jos de tot» by default), «Profilul traseului»,
  * «Telefon pentru urgențe» and the stamp that keeps a cached picture honest. The sheet is checked
  * through what pdfkit is asked to draw (text runs, images, lines), the picture through its bytes.
  */
@@ -52,7 +52,7 @@ const SHEET = {
 
 afterEach(() => vi.restoreAllMocks());
 
-describe("§NNN the design's new keys", () => {
+describe("§750 the design's new keys", () => {
   it("reads an old design as it printed before, the sponsors' place aside", () => {
     const old = readBibDesign({ showName: false, sponsorImageSrc: null });
     expect(old.sponsorPlace).toBe("bottom");
@@ -101,7 +101,7 @@ describe("§NNN the design's new keys", () => {
   });
 });
 
-describe("§NNN the profile from a GPX", () => {
+describe("§750 the profile from a GPX", () => {
   it("reduces the track to a few dozen points with its distance and gain", () => {
     const profile = parseGpxProfile(track())!;
     expect(profile.points).toHaveLength(PROFILE_POINTS);
@@ -184,7 +184,7 @@ async function sheet(overrides: { design: BibDesign; profile?: BibProfileDrawing
 
 const sponsorsPng = () => sharp({ create: { width: 800, height: 80, channels: 3, background: "#2255ee" } }).png().toBuffer();
 
-describe("§NNN the sponsors' band's place on the sheet", () => {
+describe("§750 the sponsors' band's place on the sheet", () => {
   it("is the card's last row with «Jos de tot», under the small print", async () => {
     const drawn = await sheet({ design: design({ sponsorPlace: "bottom" }), sponsors: await sponsorsPng() });
     const footer = drawn.runs.find((run) => run.text.includes("club@example.test"))!;
@@ -209,7 +209,7 @@ describe("§NNN the sponsors' band's place on the sheet", () => {
   });
 });
 
-describe("§NNN «Profilul traseului» on the sheet", () => {
+describe("§750 «Profilul traseului» on the sheet", () => {
   it("is drawn when ticked and read, with its distance, gain, start and finish", async () => {
     const on = await sheet({ design: design({ showProfile: true }), profile: DRAWING });
     const off = await sheet({ design: design({ showProfile: false }), profile: DRAWING });
@@ -238,7 +238,7 @@ describe("§NNN «Profilul traseului» on the sheet", () => {
   });
 });
 
-describe("§NNN «Telefon pentru urgențe» on the sheet", () => {
+describe("§750 «Telefon pentru urgențe» on the sheet", () => {
   it("prints «Urgențe: …» when ticked and typed, and nothing otherwise", async () => {
     const on = await sheet({ design: design({ showEmergency: true, emergencyPhone: "0722 000 000" }) });
     expect(on.runs.map((run) => run.text)).toContain("Urgențe: 0722 000 000");
@@ -275,7 +275,7 @@ describe("§NNN «Telefon pentru urgențe» on the sheet", () => {
   });
 });
 
-describe("§NNN the picture follows the same settings", () => {
+describe("§750 the picture follows the same settings", () => {
   const picture = (overrides: Partial<BibDesign>, extra: { profile?: BibProfileDrawing | null; sponsors?: { src: string; width: number; height: number } | null } = {}) =>
     renderBibImage({
       bibNumber: 101,
@@ -312,7 +312,7 @@ describe("§NNN the picture follows the same settings", () => {
   });
 });
 
-describe("§NNN the picture's stamp follows each new key", () => {
+describe("§750 the picture's stamp follows each new key", () => {
   const stamp = (overrides: Partial<BibDesign>) => bibPictureStamp([design(overrides)]);
   it("changes with the place, the profile tick, the phone tick and the phone", () => {
     const base = stamp({});

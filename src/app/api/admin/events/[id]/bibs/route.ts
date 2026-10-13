@@ -142,7 +142,7 @@ export async function GET(
     part,
     design: event.design,
     pictures: { header, sponsors, memberHeader, memberCard },
-    // The route's profile and the emergency phone's word (§NNN), when the design ticks them.
+    // The route's profile and the emergency phone's word (§750), when the design ticks them.
     ...(await loadBibExtras(event, event.design, locale)),
     // The members' label when the club typed none (§664), in the sheet's language.
     ...(anyMember && admin ? { memberLabelDefault: admin("bibs.memberLabelDefault", { club: CLUB_NAME }) } : {}),

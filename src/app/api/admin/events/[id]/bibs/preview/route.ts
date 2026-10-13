@@ -127,7 +127,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
       design: drawn,
       member,
       ...(member ? { memberLabelDefault: await memberLabelDefault() } : {}),
-      // The unsaved ticks' profile and phone (§NNN), read from the event's GPX like the sheet's.
+      // The unsaved ticks' profile and phone (§750), read from the event's GPX like the sheet's.
       ...(await loadBibExtras(event, drawn, locale)),
       // The pictures read here (§560): `next/og` cannot read the stored WebP, and their size makes
       // the unsaved crop exact — the same rule the sheet prints with.

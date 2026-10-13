@@ -30,7 +30,7 @@ import { bibPictureStamp } from "@/modules/registrations/domain/bib-stamp";
 import { drawnRuns } from "../../helpers/pdf-drawn";
 
 /**
- * §NNN, BR-REQ-038-01 — the owner's two example bibs: the number's size capped to the area it has, the
+ * §750, BR-REQ-038-01 — the owner's two example bibs: the number's size capped to the area it has, the
  * profile read once, and the distance badge, the upside-down phone, the profile as a strip and the
  * number on the footer's ends. The sheet through what pdfkit is asked to draw, the picture through its
  * pixels. The made-up phone is no one's.
@@ -109,7 +109,7 @@ async function sheet(input: { design: BibDesign; bib?: number; member?: boolean;
 
 afterEach(() => vi.restoreAllMocks());
 
-describe("§NNN the number is capped to the area it has", () => {
+describe("§750 the number is capped to the area it has", () => {
   it("reads Roboto Bold's digit ink and advance from the font itself", async () => {
     const doc = new PDFDocument({ size: "A4", margin: 0 });
     doc.registerFont("bold", await readFile(path.join(process.cwd(), "src", "theme", "pdf", "Roboto-Bold.ttf")));
@@ -169,7 +169,7 @@ describe("§NNN the number is capped to the area it has", () => {
   });
 });
 
-describe("§NNN the distance badge", () => {
+describe("§750 the distance badge", () => {
   it("says the distance in whole kilometres, and nothing for none", () => {
     expect(bibDistanceBadge(21_097)).toBe("21K");
     expect(bibDistanceBadge(5000)).toBe("5K");
@@ -207,7 +207,7 @@ describe("§NNN the distance badge", () => {
   });
 });
 
-describe("§NNN the emergency phone upside down", () => {
+describe("§750 the emergency phone upside down", () => {
   it("reads upside down by default, wherever the design is old", () => {
     expect(DEFAULT_BIB_DESIGN.emergencyUpsideDown).toBe(true);
     expect(readBibDesign({ showEmergency: true, emergencyPhone: "0722 000 000" }).emergencyUpsideDown).toBe(true);
@@ -234,7 +234,7 @@ describe("§NNN the emergency phone upside down", () => {
   });
 });
 
-describe("§NNN the profile as a full-width strip above the sponsors", () => {
+describe("§750 the profile as a full-width strip above the sponsors", () => {
   it("runs across the card: its chart is wider than half the card and its figures end inside the inset", () => {
     expect(BIB_LAYOUT.profileChartWidth).toBeGreaterThan(BIB_CARD.width / 2);
     expect(BIB_LAYOUT.inset + BIB_LAYOUT.profileChartWidth + BIB_LAYOUT.profileTextGap).toBeLessThan(BIB_CARD.width - BIB_LAYOUT.inset - 100);
@@ -252,7 +252,7 @@ describe("§NNN the profile as a full-width strip above the sponsors", () => {
   });
 });
 
-describe("§NNN the number on the footer's two ends", () => {
+describe("§750 the number on the footer's two ends", () => {
   it("prints it three times: the number, and a stub at each end of the sponsors' row", async () => {
     const on = await sheet({ design: design({ numberStubs: true }), sponsors: true });
     const stubs = on.runs.filter((run) => run.text === "101");
@@ -280,7 +280,7 @@ describe("§NNN the number on the footer's two ends", () => {
   });
 });
 
-describe("§NNN the stamp follows the three new keys", () => {
+describe("§750 the stamp follows the three new keys", () => {
   it("changes with each", () => {
     const stamp = (overrides: Partial<BibDesign>) => bibPictureStamp([design(overrides)]);
     const base = stamp({});
@@ -290,7 +290,7 @@ describe("§NNN the stamp follows the three new keys", () => {
   });
 });
 
-describe("§NNN the profile is read once", () => {
+describe("§750 the profile is read once", () => {
   beforeEach(() => {
     clearBibProfileCache();
     stored.get.mockReset();

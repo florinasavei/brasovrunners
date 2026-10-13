@@ -109,13 +109,13 @@ export type BibSheetInput = {
    */
   pictures?: { header?: Buffer | null; sponsors?: Buffer | null; memberHeader?: Buffer | null; memberCard?: Buffer | null };
   /**
-   * «Profilul traseului» (§NNN): the route's profile with its words, already read from the event's
+   * «Profilul traseului» (§750): the route's profile with its words, already read from the event's
    * GPX by the caller (`bib-extras.ts`). Drawn only while the design's tick is on; absent, none is.
    */
   profile?: BibProfileDrawing | null;
-  /** The word before the emergency phone (§NNN) — «Urgențe» — in the sheet's language; the phone is the design's. */
+  /** The word before the emergency phone (§750) — «Urgențe» — in the sheet's language; the phone is the design's. */
   emergencyLabel?: string;
-  /** «21K» for the header's badge (§NNN), from `bib-extras.ts`; drawn only while the design's tick is on. */
+  /** «21K» for the header's badge (§750), from `bib-extras.ts`; drawn only while the design's tick is on. */
   distanceBadge?: string | null;
   /**
    * The platform's words for the members' label when the club typed none (§664) — «Membru {club}» —
@@ -257,7 +257,7 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
   const bandText = bandTextColour(band);
   const design = input.design ?? DEFAULT_BIB_DESIGN;
   const L = BIB_LAYOUT;
-  // The two lines under the number (§NNN): the route's profile when ticked and read, the emergency phone when ticked and typed.
+  // The two lines under the number (§750): the route's profile when ticked and read, the emergency phone when ticked and typed.
   const profile = design.showProfile ? (input.profile ?? null) : null;
   const emergency = bibEmergencyLine(design, input.emergencyLabel ?? "");
   const extrasHeight = bibExtrasHeight(profile !== null, emergency !== null);
@@ -320,7 +320,7 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
     doc.image(picture, x, y, { ...(drawing.kind === "cover" ? { cover: frame } : { fit: frame }), align: "center", valign: "center" });
   };
   /** The strip of sponsors takes this much above the small print, when there is one. */
-  // The row is also there, for its two stubs, with the number repeated and no picture (§NNN).
+  // The row is also there, for its two stubs, with the number repeated and no picture (§750).
   const stubs = design.numberStubs;
   const sponsorHeight = sponsorPicture || stubs ? L.sponsorHeight : 0;
   const badge = design.showDistance ? (input.distanceBadge ?? null) : null;
@@ -406,7 +406,7 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
       }
       const headerLeft = left + (design.showLogo ? L.logoWidth + 2 * L.inset : L.inset);
       const headerWidth = BIB_CARD.width - (design.showLogo ? L.logoWidth + 3 * L.inset : 2 * L.inset) - bibHeaderReserve(badge !== null);
-      // The distance badge (§NNN): a rounded tag in the header's text colour at the right inset, the
+      // The distance badge (§750): a rounded tag in the header's text colour at the right inset, the
       // distance in the band's colour on it; the race and its date end `badgeGap` short of it.
       if (badge) {
         const badgeLeft = left + BIB_CARD.width - L.inset - L.badgeWidth;
@@ -500,7 +500,7 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
     }
 
     /*
-      The member mark (§NNN): a ring with a check in it, in the number's own ink, at the card's left
+      The member mark (§750): a ring with a check in it, in the number's own ink, at the card's left
       inset under the header (`BIB_LAYOUT.memberMark*`) — only on a member's number, only when ticked.
     */
     const markDrawn = row.member === true && design.member.enabled && design.member.mark;
@@ -538,14 +538,14 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
     const nameAbove = design.showName && design.namePosition === "above";
     // As the event writes it (§735): «007» under «Trei cifre»; its length sizes it, as ever.
     const digits = formatRaceNumber(row.bibNumber, design.numberFormat);
-    // The foot of everything above the sponsors' strip and the small print: the number's region (§NNN).
+    // The foot of everything above the sponsors' strip and the small print: the number's region (§750).
     const regionFoot = bottom - footerHeight - sponsorHeight;
-    // «Jos de tot» (§NNN): the strip is the card's last row under the small print; «Deasupra subsolului», above it.
+    // «Jos de tot» (§750): the strip is the card's last row under the small print; «Deasupra subsolului», above it.
     const sponsorsAtBottom = design.sponsorPlace === "bottom";
     const sponsorTop = sponsorsAtBottom ? bottom - sponsorHeight : regionFoot;
     const footerFoot = sponsorsAtBottom ? bottom - sponsorHeight : bottom;
     const numberArea = bibNumberArea({ footer: footerHeight, name: nameBlock, sponsors: sponsorHeight, stripe: stripeHeight, extras: extrasHeight });
-    // Never taller than the area the rows under the band leave it, nor wider than the card (§NNN).
+    // Never taller than the area the rows under the band leave it, nor wider than the card (§750).
     const numberSize = bibNumberFit(digits, numberScaleFactor(design), numberArea);
     const numberTop = top + L.bandHeight + (nameAbove ? nameBlock : 0);
 
@@ -605,7 +605,7 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
     if (design.showName && !nameAbove) drawName(regionFoot - stripeHeight - extrasHeight - L.nameBlock);
 
     /*
-      The route's profile (§NNN): a row of its own under the name, `profileHeight` points, so it cannot
+      The route's profile (§750): a row of its own under the name, `profileHeight` points, so it cannot
       cover the number or the name. The area under the line at a faint opacity and the line itself are
       vector paths in the number's own ink; «Start» and «Sosire» under the two ends, the distance and the
       gain in two lines beside the chart. All of it from `bib-geometry.ts`'s points, as the picture draws.
@@ -639,14 +639,14 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
     }
 
     /*
-      The emergency phone (§NNN): one centred line at a fixed place on every number, under the profile's
+      The emergency phone (§750): one centred line at a fixed place on every number, under the profile's
       row, in the number's ink. Typed by the club — the organizers' number — never the runner's own.
     */
     if (emergency) {
       doc.font("body").fontSize(L.emergencySize).fillColor(ink);
       const width = doc.widthOfString(emergency);
       const height = doc.heightOfString(emergency, { lineBreak: false });
-      // Upside down (§NNN): turned half a circle about the line's own centre, so the runner reads it looking down at the chest.
+      // Upside down (§750): turned half a circle about the line's own centre, so the runner reads it looking down at the chest.
       doc.save();
       if (design.emergencyUpsideDown) doc.rotate(180, { origin: [left + BIB_CARD.width / 2, emergencyTop + L.emergencyHeight / 2] });
       doc.text(emergency, left + (BIB_CARD.width - width) / 2, emergencyTop + (L.emergencyHeight - height) / 2, { lineBreak: false });
@@ -656,7 +656,7 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
     // The sponsors' strip above the small print (§249): the club's crop in the strip's shape, or
     // the whole picture with its own proportion kept (§560).
     if (sponsorPicture) {
-      // With the stubs the picture is scaled whole, about its centre, to what is left between them (§NNN).
+      // With the stubs the picture is scaled whole, about its centre, to what is left between them (§750).
       const scale = bibStubScale(stubs);
       doc.save();
       if (stubs) {
@@ -668,7 +668,7 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
       doc.restore();
     }
     /*
-      The number repeated on the footer's two ends (§NNN), the owner's tear-off stubs: small and bold at
+      The number repeated on the footer's two ends (§750), the owner's tear-off stubs: small and bold at
       each end of the sponsors' row, inside the inset, in the body ink on the paper's white.
     */
     if (stubs) {

@@ -93,7 +93,7 @@ export const OFFERS_MEMBER_BIB = sql<boolean>`coalesce((${events.bibDesign} #> '
 export const RACE_NUMBER_FORMAT = sql<RaceNumberFormat>`coalesce(${events.bibDesign} ->> 'numberFormat', 'plain')`.mapWith(readRaceNumberFormat);
 
 /**
- * A stamp of what a bib's picture is drawn from (§748, §NNN), for the desk's picture address: a hash of
+ * A stamp of what a bib's picture is drawn from (§748, §750), for the desk's picture address: a hash of
  * the event's whole design, band colour, partners, route GPX and typed figures, and its title and
  * date in the row's language — so any change of the design (the number's format, the member mark, the
  * sponsors' place, the profile, the phone) is a new address, as the bibs page's stamp of the whole

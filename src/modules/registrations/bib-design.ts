@@ -178,7 +178,7 @@ export const bibMemberSchema = z
       .string()
       .transform((value) => bibFooterText(value, BIB_MEMBER_LABEL_MAX))
       .catch(""),
-    /** «Semn de membru pe număr» (§NNN): a check mark on every member's number; off until the club ticks it. */
+    /** «Semn de membru pe număr» (§750): a check mark on every member's number; off until the club ticks it. */
     mark: z.boolean().catch(false),
   })
   .strict()
@@ -278,7 +278,7 @@ export function bibMemberStripeText(label: string, locale = "ro"): string {
   return label.toLocaleUpperCase(locale);
 }
 
-/** «Locul benzii cu sponsori» (§NNN): under the small print, the number's last row, or above it as it was. */
+/** «Locul benzii cu sponsori» (§750): under the small print, the number's last row, or above it as it was. */
 export const BIB_SPONSOR_PLACES = ["bottom", "above"] as const;
 export type BibSponsorPlace = (typeof BIB_SPONSOR_PLACES)[number];
 
@@ -286,7 +286,7 @@ export type BibSponsorPlace = (typeof BIB_SPONSOR_PLACES)[number];
 export const BIB_EMERGENCY_PHONE_MAX = 30;
 
 /**
- * The emergency phone as the bib keeps it (§NNN): trimmed, runs of spaces made one, and only a value
+ * The emergency phone as the bib keeps it (§750): trimmed, runs of spaces made one, and only a value
  * written like a telephone number (`isPhoneNumberShaped`, the check «Telefon public» applies) — anything
  * else reads as none, never a bib that fails to print, like every field here.
  */
@@ -296,7 +296,7 @@ export function bibEmergencyPhone(value: string): string {
 }
 
 /**
- * The line printed on every number (§NNN): «Urgențe: 07xx xxx xxx» / "Emergency: …" — `label` is the
+ * The line printed on every number (§750): «Urgențe: 07xx xxx xxx» / "Emergency: …" — `label` is the
  * sheet's language's word — or null while the tick is off or no valid number was typed. The club's
  * organizers' number, typed here: never a participant's own emergency contact, which is personal
  * data on a visible bib that the privacy notice does not describe.
@@ -307,7 +307,7 @@ export function bibEmergencyLine(design: Pick<BibDesign, "showEmergency" | "emer
 }
 
 /**
- * The distance badge's words (§NNN; the owner's marathon example): the event's distance in whole
+ * The distance badge's words (§750; the owner's marathon example): the event's distance in whole
  * kilometres with a K — «21K» for a half marathon — or null when the event has none or it is under half
  * a kilometre. Typed by the club on the event, never read from the GPX: the badge says what the page says.
  */
@@ -335,7 +335,7 @@ export const bibDesignSchema = z
     /** A strip of sponsors, or null; where it sits is `sponsorPlace`. */
     sponsorImageSrc: storedPicture,
     /**
-     * «Locul benzii cu sponsori» (§NNN): `bottom` — «Jos de tot, în subsol», the number's last row under
+     * «Locul benzii cu sponsori» (§750): `bottom` — «Jos de tot, în subsol», the number's last row under
      * the small print, the default for every event (the owner: «ar trebui normal jos de tot») — or
      * `above`, «Deasupra subsolului», where the strip sat until then.
      */
@@ -367,18 +367,18 @@ export const bibDesignSchema = z
      */
     footerText: z.string().transform((value) => bibFooterText(value)).catch(""),
     /**
-     * «Profilul traseului» (§NNN): the route's elevation over distance on every number, with the
+     * «Profilul traseului» (§750): the route's elevation over distance on every number, with the
      * distance and the gain; off by default, and only drawn when the event has a route GPX.
      */
     showProfile: z.boolean().catch(false),
-    /** «Telefon pentru urgențe» (§NNN): the tick, and the number the club types (`bibEmergencyPhone`). */
+    /** «Telefon pentru urgențe» (§750): the tick, and the number the club types (`bibEmergencyPhone`). */
     showEmergency: z.boolean().catch(false),
     emergencyPhone: z.string().transform(bibEmergencyPhone).catch(""),
-    /** «Tipărit invers» (§NNN): the phone printed upside down, to be read looking down at the chest; on by default, the trail practice. */
+    /** «Tipărit invers» (§750): the phone printed upside down, to be read looking down at the chest; on by default, the trail practice. */
     emergencyUpsideDown: z.boolean().catch(true),
-    /** «Distanța pe număr» (§NNN): the event's distance as a badge in the header's right corner («21K»). */
+    /** «Distanța pe număr» (§750): the event's distance as a badge in the header's right corner («21K»). */
     showDistance: z.boolean().catch(false),
-    /** «Numărul și pe capete» (§NNN): the number again, small, at both ends of the sponsors' row — tear-off stubs. */
+    /** «Numărul și pe capete» (§750): the number again, small, at both ends of the sponsors' row — tear-off stubs. */
     numberStubs: z.boolean().catch(false),
     /** The members' race number (§664): off, or the members' own header and label. */
     member: bibMemberSchemaWithDefault,
