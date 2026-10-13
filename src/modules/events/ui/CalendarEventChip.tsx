@@ -101,7 +101,7 @@ export default function CalendarEventChip({
   /**
    * The word for a date on a day already gone ("a trecut" / "past", §NNN), or null for today and
    * the days ahead. Under «Tema v2» the entry is drawn faded (`PAST_ENTRY_SX`); the word is said
-   * after the name to a screen reader, in both themes, and never drawn.
+   * after the name to a screen reader under Tema v2 only (it is passed only there), and never drawn.
    */
   past?: string | null;
 }) {

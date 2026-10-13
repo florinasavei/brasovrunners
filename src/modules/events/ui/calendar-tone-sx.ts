@@ -86,6 +86,6 @@ export function legendDotSx(tone: CalendarTone) {
  * `tests/unit/events/calendar-theme-v2-head.test.ts` holds the words at AA for large text on the fill.
  */
 export const PAST_ENTRY_SX = {
-  [UNDER_LOOK]: { bgcolor: "action.hover", color: "text.secondary", "& [data-entry-dot]": { opacity: 0.45 } },
+  [UNDER_LOOK]: { bgcolor: "action.hover", color: "text.secondary", borderRadius: "8px", "& [data-entry-dot]": { opacity: 0.45 } },
   [UNDER_LOOK_DARK]: { bgcolor: "action.hover", color: "text.secondary" },
 } as const;

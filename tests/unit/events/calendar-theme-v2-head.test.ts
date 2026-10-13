@@ -61,6 +61,14 @@ describe("the past rule: by the day in the club's zone", () => {
     expect(onPastDay(at("2026-10-14T05:00:00Z"), today)).toBe(false);
   });
 
+  it("is by the last day: a camp that began yesterday and runs today is not past, one that ended yesterday is, one earlier today is not", () => {
+    const span = (from: string, to: string | null) => ({ startsAt: new Date(from), endsAt: to ? new Date(to) : null, timezone: "Europe/Bucharest" });
+    expect(onPastDay(span("2026-10-12T07:00:00Z", "2026-10-15T15:00:00Z"), today)).toBe(false);
+    expect(onPastDay(span("2026-10-10T07:00:00Z", "2026-10-12T15:00:00Z"), today)).toBe(true);
+    expect(onPastDay(span("2026-10-13T04:00:00Z", "2026-10-13T06:00:00Z"), today)).toBe(false);
+    expect(onPastDay(span("2026-10-12T07:00:00Z", null), today)).toBe(true);
+  });
+
   it("never fades an event earlier today: the page is static for the day, so it is faded from tomorrow's page", () => {
     // 07:00 in Brașov on the 13th, long before the page's «now» of the evening: still today.
     expect(onPastDay(at("2026-10-13T04:00:00Z"), today)).toBe(false);

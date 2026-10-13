@@ -244,7 +244,7 @@ export default async function CalendarPage({ params, query: asked, period: segme
           {t("calendar.pageIntro")}
         </Typography>
       )}
-      {/* The title block under «Aspectul nou» (phase 4): the H1 above becomes the eyebrow, and the
+      {/* The title block under «Aspectul nou» (phase 4): the hidden h1 above is the page's heading and the eyebrow is not drawn, and the
           line the mock-up leads with, its last word in the accent, stands under it with the subline —
           from `sm` only, so a phone's first week stays above the fold (§569). Off, not drawn. */}
       <Box sx={{ display: "none", position: "relative", [UNDER_LOOK]: { display: { xs: "none", sm: "block" }, mb: 2 } }} data-testid="calendar-title-block">
