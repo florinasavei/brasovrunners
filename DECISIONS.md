@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.12-2026-10-13 -->
+<!-- PROJECT_BASELINE: BR-V3.13-2026-10-13 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V3.12-2026-10-13`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.13-2026-10-13`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -26081,3 +26081,15 @@ Baseline `BR-V3.11-2026-10-13`.
 **Why.** The club approves what a race page says before it is public, and production is where the real race is: a change tried on QA and approved there should reach production as the same configuration, not be typed again from memory. A file that is configuration and nothing else can leave the database without breaking BR-REQ-053-01's or §32's disclosure rules, and going through the editor's own save is what keeps every rule the editor holds — the allocator included — true of an imported event without a second copy of any of them.
 
 Baseline `BR-V3.12-2026-10-13`.
+
+## 752. «De făcut» drawn as a plain to-do list, and its changes work
+
+**The owner, 2026-10-13:** «nu pot să modific chestii» on the event's «De făcut» card (§749), and that the card should be a simple list, the way a to-do list is.
+
+**What was tried, and what failed.** On a production build, signed in as a Superadministrator, an Administrator and an Organizer, on a fresh event: add a row, open «Modifică» and change the words, the priority and who, save each, tick, untick, delete, and press «Deschide câmpul» on a computed row. Every one worked for all three roles. The theory that the redirect after a press replaced the editor under the reader's hand was tried too (mark the card, open the edit, type, wait three seconds): the card is the same element and the typed words are still there. So nothing fails in the code; what the owner met is the drawing. The edit hid behind a quiet help-style fold under every row, below a full-width «BIFEAZĂ» button and a column of chips, and a save redrew the page with only a toast to say so — a row that cannot be seen to be editable is a row that cannot be changed. The actions are therefore unchanged: they still redirect to the editor with the notice in the flash cookie, like every action of the backoffice (an in-place answer was tried and refused: the fold that closes after a save is redrawn by re-keying the form, and a form that is re-keyed, moved or removed — a saved, ticked or deleted row — takes the toast its answer carries with it; the flash cookie is read by the layout and does not).
+
+**Decision.** The card keeps its title «De făcut pentru pagina evenimentului», its «N de făcut» line, its roles, its sort, its audit and its data (§749). It is drawn as two short lists. «Lipsește pe pagină» holds the computed rows: each row is one link, a glyph with an arrow, the words and the priority's chip, 44 pixels tall, which opens the card that fills the field. «Sarcini» holds the club's own: a one-line form on top — the words, the priority (default «Normală»), «Adaugă», Enter sends it — with who and the due day behind the fold «Mai multe: cine, termen»; then each row is a real tick box at its start (a plain form submit drawn as a checkbox, 44 pixels, working with scripts off), the words, and small on the right the priority as a word with a glyph, who, the day («Întârziat: …» when it has passed), and a pencil. A press on the row's line or the pencil opens its edit form in place (words, priority, who, day, «Șterge»); a save that changed something draws it closed, and the toast says so. A ticked row moves under the folded «Gata (N)», struck through, with a box to untick. «Toate» and «Ale mele» sit small on the card's top right (the same `?mine=1` link). The long intro became one short line, with the rest behind the house's «?». At 320 pixels a row's words take the first line and its facts the second. Sorting is per list: priority, then the day, then age.
+
+**Refused:** a full-width tick button on every row, a second render by an in-place answer, and a component or element passed from the server card to a client one (the pencil's glyph is drawn by the Server Component, taken by name from the verbs' registry).
+
+Baseline `BR-V3.13-2026-10-13`.
