@@ -1,16 +1,15 @@
 /**
- * «Clubul pe lista publică» (§753, amending §32, §143 and §396): what the public list's «Club» column says.
+ * «Clubul pe lista publică» (§753 and §NNN, amending §32, §143 and §396): what the public list's «Club» column says.
  *
  * The owner, 2026-10-13: «people type stupid things there, I just want to show Brașov Runners members and
- * ignore the other clubs … but I still want to show the BVR ones». The club is free text, a public list is a
- * disclosure (`AGENTS.md` §10.10), and the privacy notice describes the typed club as "the club you wrote" —
- * so the default shows less than the person typed, never more:
+ * ignore the other clubs … but I still want to show the BVR ones». The club is free text, and a public list
+ * is a disclosure (`AGENTS.md` §10.10) — so the default shows less than the person typed, never more:
  *
- * - `members_only` — the cell holds the club's own name for a row whose person is on the club's members list
- *   (the bibs' own test, `member-ticks.ts#memberCanonicalEmails`) AND whose typed club names the club
- *   (`namesTheClub`); every other cell is blank. A member who typed nothing, or another club, shows
- *   nothing: they did not claim it on the form, and showing their membership anyway would be a disclosure
- *   the notice does not describe.
+ * - `members_only` — «Doar {club}»: the cell holds the club's own name for every row whose typed club names
+ *   the club (`namesTheClub`), whoever typed it; every other cell is blank. Since §NNN membership is no
+ *   condition: the club's runners have no accounts on «Echipa», so §753's account test left the column
+ *   empty on the live race. The cell only ever says what the person wrote, in the club's own spelling — the
+ *   list showed every typed club before §753, so nothing new is disclosed.
  * - `as_typed` — the typed club, as before the setting existed.
  * - `hidden` — no column.
  *
@@ -25,7 +24,7 @@ export const PUBLIC_LIST_CLUBS = ["members_only", "as_typed", "hidden"] as const
 
 export type PublicListClubMode = (typeof PUBLIC_LIST_CLUBS)[number];
 
-/** Every event that exists, and every one created, shows the club's own members' club only. */
+/** Every event that exists, and every one created, shows the club's own name only. */
 export const DEFAULT_PUBLIC_LIST_CLUB: PublicListClubMode = "members_only";
 
 /**
@@ -38,7 +37,7 @@ export function publicListClubOf(event: { publicListClub?: string | null } | nul
 }
 
 /**
- * Words people put around the club's name without changing whose it is: «Clubul …», «Asociația …»,
+ * Words people put around the club's name without changing whose it is: «Clubul …», «Asociația …», «ACS …»,
  * «… Team», «… Club». Folded like everything else (no case, no diacritics). Stripped wherever they stand,
  * so they never decide a match on their own: a cell of nothing but these names no club.
  */
@@ -48,6 +47,12 @@ const FILLER = new Set([
   "clubului",
   "asociatia",
   "asociatiei",
+  "asociatie",
+  "sportiv",
+  "sportiva",
+  "as",
+  "acs",
+  "cs",
   "echipa",
   "echipei",
   "team",
@@ -63,13 +68,20 @@ const FILLER = new Set([
 ]);
 
 /**
- * The club's usual nicknames that no rule derives from its name: the county's two-letter plate code
- * plus the first letter of the second word («BVR»). Whole cells after folding, spaces gone, so «B.V.R.»
- * and «bv runners» are the same cell. Nothing else is a nickname: a bare «BR» would name any club.
+ * The club's usual short forms that no rule derives from its name. `CITY_SHORT` is the county's plate code,
+ * which stands for the first word beside the rest of the name («BV Runners»); `NICKNAMES` name the club on
+ * their own («BVR»). Nothing else: a bare «BR» or «BV» would name any club.
  */
-const NICKNAMES = ["bvr", "bvrunners", "bvrunner"] as const;
+const CITY_SHORT = "bv";
+const NICKNAMES = ["bvr"] as const;
 
-/** A string folded to its letters and digits: lower case, no diacritics, no punctuation or spaces. */
+/** A cell longer than this, folded, is not a club's name: refused before any search. */
+const LONGEST_CELL = 80;
+
+/** A word of the club's own name this long or longer tolerates one typo («Brasov Runers», «Brashov»). */
+const TYPO_FROM_LETTERS = 6;
+
+/** The words of a string, folded: lower case, no diacritics; punctuation and spaces split them. */
 function wordsOf(value: string): string[] {
   return value
     .normalize("NFD")
@@ -80,48 +92,143 @@ function wordsOf(value: string): string[] {
 }
 
 /**
- * Every spelling of the club's name the list accepts, each as one string of letters and digits — derived
- * from the configured name: the words in order, the last word singular too («Runner»), the words'
- * initials with the first word («BR Brașov») in either order, and the nicknames above. Never the initials
- * alone, never a part of the name.
+ * What one piece of a typed cell may be: the club's `n`-th word (`word`, its singular counts as the word),
+ * the city's short form standing for the first word (`city`), the initials (`initials`), a nickname
+ * (`nickname`) or a filler word (`filler`, transparent).
  */
-export function clubSpellings(clubName: string = CLUB_NAME): ReadonlySet<string> {
-  const words = wordsOf(clubName).filter((word) => !FILLER.has(word));
-  const spellings = new Set<string>();
-  if (words.length === 0) return spellings;
-  spellings.add(words.join(""));
-  const last = words[words.length - 1];
-  if (words.length > 1 && last.length > 3 && last.endsWith("s")) spellings.add([...words.slice(0, -1), last.slice(0, -1)].join(""));
-  if (words.length > 1) {
-    const initials = words.map((word) => word[0]).join("");
-    spellings.add(`${initials}${words[0]}`);
-    spellings.add(`${words[0]}${initials}`);
-  }
-  for (const nickname of NICKNAMES) spellings.add(nickname);
-  return spellings;
-}
+type PieceKind = { kind: "word"; index: number } | { kind: "city" } | { kind: "initials" } | { kind: "nickname" } | { kind: "filler" };
 
-const DEFAULT_SPELLINGS = clubSpellings();
+type Piece = { text: string; typo: boolean; is: PieceKind };
+
+/** Every piece a cell may be cut into, derived from the configured name; and how many words the name has. */
+export type ClubVocabulary = { readonly pieces: readonly Piece[]; readonly words: number };
 
 /**
- * Whether a typed club names the club itself: the whole cell, once case, diacritics, punctuation, spaces
- * and the filler words above are folded away, is one of the club's spellings. Never a substring of an
- * unrelated word or name — «Brașov Runners Cluj» and «Super Brașov Runners Fans» are other clubs, and
- * «Runners» alone is nobody's.
+ * The club's vocabulary, derived from its configured name (§357): its words (the last one singular too),
+ * their initials, the city's short form, the nicknames above, and the longer filler words (a glued
+ * «clubbrasovrunners» still splits). Never a literal of the name in the code.
  */
-export function namesTheClub(typed: string | null | undefined, spellings: ReadonlySet<string> = DEFAULT_SPELLINGS): boolean {
-  if (typeof typed !== "string") return false;
+export function clubVocabulary(clubName: string = CLUB_NAME): ClubVocabulary {
+  const words = wordsOf(clubName).filter((word) => !FILLER.has(word));
+  const pieces: Piece[] = [];
+  if (words.length === 0) return { pieces, words: 0 };
+  words.forEach((word, index) => pieces.push({ text: word, typo: word.length >= TYPO_FROM_LETTERS, is: { kind: "word", index } }));
+  const lastIndex = words.length - 1;
+  const last = words[lastIndex];
+  if (words.length > 1 && last.length > 3 && last.endsWith("s")) {
+    const singular = last.slice(0, -1);
+    pieces.push({ text: singular, typo: singular.length >= TYPO_FROM_LETTERS, is: { kind: "word", index: lastIndex } });
+  }
+  if (words.length > 1) {
+    pieces.push({ text: words.map((word) => word[0]).join(""), typo: false, is: { kind: "initials" } });
+    pieces.push({ text: CITY_SHORT, typo: false, is: { kind: "city" } });
+  }
+  for (const nickname of NICKNAMES) pieces.push({ text: nickname, typo: false, is: { kind: "nickname" } });
+  for (const filler of FILLER) if (filler.length >= 3) pieces.push({ text: filler, typo: false, is: { kind: "filler" } });
+  return { pieces, words: words.length };
+}
+
+/**
+ * Whether `typed` is `target` with at most one typo — one letter added, dropped, changed, or two
+ * neighbours swapped — and the first letter right (a different first letter is a different word:
+ * «Gunners» is not «Runners»).
+ */
+function withinOneTypo(typed: string, target: string): boolean {
+  if (typed === target) return true;
+  if (typed[0] !== target[0] || Math.abs(typed.length - target.length) > 1) return false;
+  let i = 0;
+  while (i < typed.length && i < target.length && typed[i] === target[i]) i += 1;
+  const rest = (a: number, b: number) => typed.slice(a) === target.slice(b);
+  if (typed.length === target.length) {
+    return rest(i + 1, i + 1) || (typed[i] === target[i + 1] && typed[i + 1] === target[i] && rest(i + 2, i + 2));
+  }
+  return typed.length > target.length ? rest(i + 1, i) : rest(i, i + 1);
+}
+
+/** Every length of the cell from `start` that `piece` may cover. A typo is a letter: «Runners 2» is not «Runners». */
+function coverings(cell: string, start: number, piece: Piece): number[] {
+  if (!piece.typo) return cell.startsWith(piece.text, start) ? [piece.text.length] : [];
+  const lengths: number[] = [];
+  for (const length of [piece.text.length - 1, piece.text.length, piece.text.length + 1]) {
+    if (start + length > cell.length) continue;
+    const slice = cell.slice(start, start + length);
+    if (/^\p{L}+$/u.test(slice) && withinOneTypo(slice, piece.text)) lengths.push(length);
+  }
+  return lengths;
+}
+
+const DEFAULT_VOCABULARY = clubVocabulary();
+
+/**
+ * Whether a typed club names the club itself.
+ *
+ * Case, diacritics, punctuation, spaces and filler words («Clubul», «Asociația», «ACS», «Team») are folded
+ * away; what is left must split, glued or not, into pieces of the club's own vocabulary — its words (one
+ * typo allowed in a word of six letters or more), their initials with the first word, the city's short
+ * form, a nickname — with nothing else in the cell, and the pieces must name the club somewhere: the
+ * name's words in order («Brașov Runners», «BV Runners»), the initials beside the first word («BR Brașov»),
+ * or a nickname («BVR»). So «Brașov Runners (BVR)» and «brasovrunners» are the club, and «Brașov Runners
+ * Cluj», «Cluj Runners», «Runners», «BR» and «Brașov» alone are not.
+ */
+export function namesTheClub(typed: string | null | undefined, vocabulary: ClubVocabulary = DEFAULT_VOCABULARY): boolean {
+  if (typeof typed !== "string" || vocabulary.words === 0) return false;
   const cell = wordsOf(typed)
     .filter((word) => !FILLER.has(word))
     .join("");
-  return cell !== "" && spellings.has(cell);
+  if (cell === "" || cell.length > LONGEST_CELL) return false;
+
+  /*
+    A search over the ways to cut the cell, remembered by where it stands: `previous` is the last piece that
+    was not a filler, `run` how many of the name's words in order end there, `named` whether the club has
+    been named yet. True when the whole cell is cut and the club was named.
+  */
+  const seen = new Map<string, boolean>();
+  const search = (at: number, previous: PieceKind["kind"] | `word${number}` | "", run: number, named: boolean): boolean => {
+    if (at === cell.length) return named;
+    const key = `${at}|${previous}|${run}|${named}`;
+    const known = seen.get(key);
+    if (known !== undefined) return known;
+    let found = false;
+    for (const piece of vocabulary.pieces) {
+      for (const length of coverings(cell, at, piece)) {
+        let next: typeof previous = previous;
+        let nextRun = run;
+        let nextNamed = named;
+        const is = piece.is;
+        if (is.kind === "word") {
+          nextRun = is.index === 0 ? 1 : run === is.index ? run + 1 : 0;
+          if (nextRun === vocabulary.words) nextNamed = true;
+          if (is.index === 0 && previous === "initials") nextNamed = true;
+          next = `word${is.index}`;
+        } else if (is.kind === "city") {
+          nextRun = 1;
+          next = "city";
+        } else if (is.kind === "initials") {
+          if (previous === "word0") nextNamed = true;
+          nextRun = 0;
+          next = "initials";
+        } else if (is.kind === "nickname") {
+          nextNamed = true;
+          nextRun = 0;
+          next = "nickname";
+        }
+        if (search(at + length, next, nextRun, nextNamed)) {
+          found = true;
+          break;
+        }
+      }
+      if (found) break;
+    }
+    seen.set(key, found);
+    return found;
+  };
+  return search(0, "", 0, false);
 }
 
 /**
- * The cell the list draws under `members_only`, from what the query let through: the club's own name when
- * the typed text names it, otherwise nothing. The query already blanked every non-member's text, so this is
- * the second of the two conditions, never the only one.
+ * The cell the list draws under `members_only`, from the typed club: the club's own name when the typed
+ * text names it, otherwise nothing. Whoever typed it (§NNN) — the typed text itself never reaches the page.
  */
-export function memberClubCell(typedOfAMember: string | null | undefined): string | null {
-  return namesTheClub(typedOfAMember) ? CLUB_NAME : null;
+export function memberClubCell(typed: string | null | undefined): string | null {
+  return namesTheClub(typed) ? CLUB_NAME : null;
 }

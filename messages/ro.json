@@ -2812,7 +2812,7 @@
       "hiddenListPublic": "Arată invitații speciali pe lista publică",
       "hiddenListPublicHelp": "Bifat: un invitat special care a bifat „Vreau să apar” apare pe „Cine vine”, cu numărul lui. Debifat: nu apare pe nicio listă publică; locul și numărul lui rămân.",
       "publicListClub": "Clubul pe lista publică",
-      "publicListClubHelp": "Oamenii scriu clubul cum vor. „Doar {club}” arată {club} doar la membrii clubului care l-au scris; ceilalți rămân fără club.",
+      "publicListClubHelp": "Oamenii scriu clubul cum vor. „Doar {club}” arată {club} la cei care l-au scris; orice alt club rămâne ascuns.",
       "publicListClubMembersOnly": "Doar {club}",
       "publicListClubAsTyped": "Cum l-au scris",
       "publicListClubHidden": "Nu arăta clubul"
