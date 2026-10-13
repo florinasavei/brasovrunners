@@ -104,10 +104,11 @@ test.describe("§560 the sponsors' band: upload, crop, preview", () => {
     await band.getByRole("button", { name: "Fără imagine" }).click();
     await expect(preview).not.toHaveAttribute("src", /[?&]sponsorImageSrc=/, { timeout: 10_000 });
     // The band was really drawn: the stored WebP reaches the renderer as a PNG (§560). The whole
-    // blue strip is fitted in the middle of the band, which sits on the one-line footer: 353 to
-    // 377 points down the A5 paper's 421, 1.663 pixels to the point (`bib-geometry.ts`).
+    // blue strip is fitted in the middle of the band, which is the card's last row since «Jos de tot»
+    // is the default place (§750): 375 to 399 points down the A5 paper's 421, 1.663 pixels to the
+    // point (`bib-geometry.ts`).
     const { data, info } = await sharp(await drawn.body()).raw().toBuffer({ resolveWithObject: true });
-    const at = (Math.round(606) * info.width + Math.round(info.width / 2)) * info.channels;
+    const at = (Math.round(644) * info.width + Math.round(info.width / 2)) * info.channels;
     expect({ r: data[at] < 90, b: data[at + 2] > 180 }).toEqual({ r: true, b: true });
   });
 });
@@ -151,8 +152,96 @@ test.describe("§664 the members' number, designed in the panel", () => {
     await expect(page.getByTestId("bib-member-label-count")).toHaveText("3/24");
     await expect(preview).toHaveAttribute("src", /[?&]memberLabel=BVR(&|$)/, { timeout: 10_000 });
 
+    // «Semn de membru pe număr» (§750): off until ticked, then it travels in the preview's address.
+    const mark = members.getByRole("checkbox", { name: "Semn de membru pe număr" });
+    expect((await mark.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+    await expect(mark).not.toBeChecked();
+    // A missing key reads false, so the unticked mark is not in the address at all (§750).
+    await expect(preview).not.toHaveAttribute("src", /[?&]memberMark=/);
+    await mark.check();
+    await expect(preview).toHaveAttribute("src", /[?&]memberMark=1(&|$)/, { timeout: 10_000 });
+
     const picture = await page.request.get((await preview.getAttribute("src")) as string);
     expect(picture.status()).toBe(200);
     expect(picture.headers()["content-type"]).toBe("image/png");
+  });
+});
+
+/**
+ * §750 — «Locul benzii cu sponsori», «Profilul traseului», «Telefon pentru urgențe» and the header
+ * picture's warning, in the panel: each follows into the preview's address before anything is saved.
+ * Nothing is saved; the featured event has no route GPX, so the profile's tick is greyed and says why.
+ */
+test.describe("§750 the sponsors' place, the profile, the emergency phone and the header's warning", () => {
+  test("each is a box of the panel and travels in the preview's address", async ({ page }) => {
+    await signIn(page, "Dev Administrator");
+    await ensureRegistrationIsOpen(page);
+    await page.reload();
+    await hydrated(page);
+    await openEditorBox(page, "Participare și înscrieri");
+    await openEditorBox(page, "Numere de concurs (BIB)");
+    const panel = page.getByTestId("bib-design");
+    await openFold(panel);
+    const preview = page.getByTestId("bib-design-preview").locator("img");
+
+    // «Jos de tot, în subsol» is the default; «Deasupra subsolului» is today's place.
+    const place = panel.getByLabel("Locul benzii cu sponsori");
+    await expect(place).toHaveValue("bottom");
+    await expect(preview).toHaveAttribute("src", /[?&]sponsorPlace=bottom(&|$)/);
+    await place.selectOption("above");
+    await expect(preview).toHaveAttribute("src", /[?&]sponsorPlace=above(&|$)/, { timeout: 10_000 });
+
+    // «Profilul traseului»: greyed without a GPX, with the reason beside it, and nothing in the address.
+    const extras = page.getByTestId("bib-design-extras");
+    const profile = extras.getByRole("checkbox", { name: "Profilul traseului" });
+    await expect(profile).toBeDisabled();
+    await expect(extras).toContainText("Încarcă GPX-ul traseului în „Traseul”.");
+    await expect(preview).toHaveAttribute("src", /[?&]showProfile=0(&|$)/);
+
+    // «Telefon pentru urgențe»: the box shows only once ticked, and the phone joins the address.
+    const emergency = extras.getByRole("checkbox", { name: "Telefon pentru urgențe" });
+    expect((await emergency.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+    const phone = extras.getByRole("textbox", { name: "Telefonul organizatorilor" });
+    await expect(phone).toBeHidden();
+    await emergency.check();
+    await expect(phone).toBeVisible();
+    await phone.fill("0722 000 000");
+    await expect(preview).toHaveAttribute("src", /[?&]showEmergency=1(&|$)/, { timeout: 10_000 });
+    await expect(preview).toHaveAttribute("src", /[?&]emergencyPhone=0722\+000\+000(&|$)/, { timeout: 10_000 });
+
+    // «Tipărit invers»: ticked by default while the phone shows (the trail practice), and it travels too.
+    const upsideDown = extras.getByRole("checkbox", { name: "Tipărit invers" });
+    await expect(upsideDown).toBeChecked();
+    await expect(preview).toHaveAttribute("src", /[?&]emergencyUpsideDown=1(&|$)/);
+    await upsideDown.uncheck();
+    await expect(preview).toHaveAttribute("src", /[?&]emergencyUpsideDown=0(&|$)/, { timeout: 10_000 });
+    await upsideDown.check();
+
+    // The distance badge and the footer's two stubs: off until ticked, each in the address.
+    const badge = extras.getByRole("checkbox", { name: "Distanța pe număr" });
+    const stubs = extras.getByRole("checkbox", { name: "Numărul și pe capetele subsolului" });
+    await expect(badge).not.toBeChecked();
+    await expect(stubs).not.toBeChecked();
+    await expect(preview).toHaveAttribute("src", /[?&]showDistance=0(&|$)/);
+    await badge.check();
+    await stubs.check();
+    await expect(preview).toHaveAttribute("src", /[?&]showDistance=1(&|$)/, { timeout: 10_000 });
+    await expect(preview).toHaveAttribute("src", /[?&]numberStubs=1(&|$)/, { timeout: 10_000 });
+
+    const drawn = await page.request.get((await preview.getAttribute("src")) as string);
+    expect(drawn.status()).toBe(200);
+    expect(drawn.headers()["content-type"]).toBe("image/png");
+
+    // The header picture hides the event's name: said while a picture is chosen and the name is ticked.
+    const warning = page.getByTestId("bib-header-warning");
+    await expect(warning).toBeHidden();
+    const header = page.getByTestId("bib-picture-header");
+    const strip = await sharp({ create: { width: 2400, height: 400, channels: 3, background: "#2255ee" } }).jpeg().toBuffer();
+    await header.locator('input[type="file"]').setInputFiles({ name: "antet.jpg", mimeType: "image/jpeg", buffer: strip });
+    await expect(page.getByTestId("bib-picture-header-crop-surface")).toBeVisible({ timeout: 30_000 });
+    await expect(warning).toBeVisible();
+    await expect(warning).toContainText("ascunde numele evenimentului");
+    await panel.getByRole("checkbox", { name: "Numele evenimentului" }).uncheck();
+    await expect(warning).toBeHidden();
   });
 });
