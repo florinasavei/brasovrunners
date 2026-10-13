@@ -244,7 +244,9 @@ export async function changeVolunteerRole<T extends Record<string, unknown>>(
   const input = request.kind === "add" || request.kind === "edit" ? roleInputOf(request.fields) : null;
 
   const result = await db.transaction(async (tx) => {
-    const [event] = await tx.select({ id: events.id }).from(events).where(eq(events.id, request.eventId)).limit(1);
+    // The event's own row is locked first: on an event with no roles yet there is no role row to lock, and two
+    // «Adaugă rolul» presses would both take position 0 — or, at twenty-nine roles, both pass the cap.
+    const [event] = await tx.select({ id: events.id }).from(events).where(eq(events.id, request.eventId)).for("update").limit(1);
     if (!event) throw new DomainError("NOT_FOUND", "the event is not there");
     const audit = (action: AuditAction, metadata: Record<string, unknown>) =>
       recordAuditEvent(tx, { actorStaffUserId: actor.id, action, entityType: "event", entityId: request.eventId, metadata, now });
@@ -387,6 +389,19 @@ function staffInputOf(fields: Record<string, unknown>) {
   return { ...parsed.data, identity };
 }
 
+const alreadyListed = () => new DomainError("VOLUNTEER_ALREADY_LISTED", "this address is already on the event's volunteers", ["email"]);
+
+/** PostgreSQL's unique violation (23505) on one event's addresses, wherever the driver nests it. */
+function isAddressClash(error: unknown): boolean {
+  for (let cause = error, depth = 0; cause && typeof cause === "object" && depth < 5; cause = (cause as { cause?: unknown }).cause, depth++) {
+    const { code, constraint, message } = cause as { code?: unknown; constraint?: unknown; message?: unknown };
+    if (code !== "23505") continue;
+    const name = "event_volunteers_event_canonical_email_unique";
+    if (constraint === name || (typeof message === "string" && message.includes(name))) return true;
+  }
+  return false;
+}
+
 /**
  * One change to one event's volunteers, by one staff member: enter one by hand, change what was typed
  * (the name, the address, the telephone number, the role, the organizers' note), confirm or cancel, delete.
@@ -438,9 +453,7 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
 
     if (request.kind === "add" && input) {
       const role = await roleOf(input.roleId);
-      if (await holderOf(input.identity.canonicalEmail)) {
-        throw new DomainError("VOLUNTEER_ALREADY_LISTED", "this address is already on the event's volunteers", ["email"]);
-      }
+      if (await holderOf(input.identity.canonicalEmail)) throw alreadyListed();
       const [row] = await tx
         .insert(eventVolunteers)
         .values({
@@ -458,7 +471,11 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
           createdAt: now,
           updatedAt: now,
         })
+        // A public sign-up of the same address may commit between the check above and this insert: the
+        // constraint decides, and the organizer hears the same sentence, never a database error.
+        .onConflictDoNothing({ target: [eventVolunteers.eventId, eventVolunteers.canonicalEmail] })
         .returning({ id: eventVolunteers.id });
+      if (!row) throw alreadyListed();
       await audit("volunteer.added", { volunteerId: row.id, roleId: role.id, roleNameRo: role.nameRo });
       return { changed: true, volunteer: { id: row.id } };
     }
@@ -490,9 +507,7 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
     const role = await roleOf(input.roleId);
     if (input.identity.canonicalEmail !== current.canonicalEmail) {
       const holder = await holderOf(input.identity.canonicalEmail);
-      if (holder && holder.id !== current.id) {
-        throw new DomainError("VOLUNTEER_ALREADY_LISTED", "this address is already on the event's volunteers", ["email"]);
-      }
+      if (holder && holder.id !== current.id) throw alreadyListed();
     }
     const next = {
       roleId: role.id,
@@ -504,15 +519,22 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
     const before = { roleId: current.roleId, name: current.name, email: current.email, phone: current.phone, note: current.note };
     const changedFields = (Object.keys(before) as (keyof typeof before)[]).filter((key) => before[key] !== next[key]);
     if (changedFields.length === 0) return { changed: false, volunteer: summary };
-    await tx
-      .update(eventVolunteers)
-      .set({
-        ...next,
-        canonicalEmail: input.identity.canonicalEmail,
-        canonicalizationVersion: input.identity.canonicalizationVersion,
-        updatedAt: now,
-      })
-      .where(eq(eventVolunteers.id, current.id));
+    try {
+      await tx
+        .update(eventVolunteers)
+        .set({
+          ...next,
+          canonicalEmail: input.identity.canonicalEmail,
+          canonicalizationVersion: input.identity.canonicalizationVersion,
+          updatedAt: now,
+        })
+        .where(eq(eventVolunteers.id, current.id));
+    } catch (error) {
+      // The same race on a changed address: a sign-up of it committed after the check. The transaction is lost
+      // either way; the organizer hears the sentence, not the database.
+      if (isAddressClash(error)) throw alreadyListed();
+      throw error;
+    }
     await audit("volunteer.edited", { volunteerId: current.id, fields: changedFields, roleId: role.id });
     return { changed: true, volunteer: summary };
   });

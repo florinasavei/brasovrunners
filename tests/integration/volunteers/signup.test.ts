@@ -390,12 +390,16 @@ describe("§NNN the volunteers' public sign-up", () => {
   it("deletes the offers thirty days after the event began, whatever their state, and keeps the roles", async () => {
     const old = await seedEvent({ startsAt: new Date(NOW.getTime() - 31 * DAY) });
     const recent = await seedEvent({ startsAt: new Date(NOW.getTime() - 29 * DAY) });
+    // A wrong year typed in the editor: the start says long ago, the offer was made yesterday — it stays.
+    const typo = await seedEvent({ startsAt: new Date(NOW.getTime() - 365 * DAY) });
     const oldRole = await seedRole(old.id);
     const recentRole = await seedRole(recent.id);
-    for (const [event, role, state] of [
-      [old, oldRole, "CONFIRMED"],
-      [old, oldRole, "CANCELLED"],
-      [recent, recentRole, "CONFIRMED"],
+    const typoRole = await seedRole(typo.id);
+    for (const [event, role, state, createdAt] of [
+      [old, oldRole, "CONFIRMED", new Date(NOW.getTime() - 40 * DAY)],
+      [old, oldRole, "CANCELLED", new Date(NOW.getTime() - 40 * DAY)],
+      [recent, recentRole, "CONFIRMED", new Date(NOW.getTime() - 40 * DAY)],
+      [typo, typoRole, "REGISTERED", new Date(NOW.getTime() - DAY)],
     ] as const) {
       await db.insert(eventVolunteers).values({
         eventId: event.id,
@@ -407,6 +411,8 @@ describe("§NNN the volunteers' public sign-up", () => {
         phone: "+40712345678",
         state,
         source: "STAFF",
+        createdAt,
+        updatedAt: createdAt,
       });
     }
     const result = await pruneExpiredRows(db, NOW);
@@ -414,6 +420,7 @@ describe("§NNN the volunteers' public sign-up", () => {
     expect(result.volunteers).toBe(2);
     expect(await people(old.id)).toHaveLength(0);
     expect(await people(recent.id)).toHaveLength(1);
-    expect(await db.select().from(eventVolunteerRoles)).toHaveLength(2);
+    expect(await people(typo.id)).toHaveLength(1);
+    expect(await db.select().from(eventVolunteerRoles)).toHaveLength(3);
   });
 });

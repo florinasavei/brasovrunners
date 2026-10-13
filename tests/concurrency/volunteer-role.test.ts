@@ -7,9 +7,10 @@ import { emailOutbox } from "@/db/schema/email-outbox";
 import { eventVolunteerRoles, eventVolunteers } from "@/db/schema/event-volunteers";
 import { events, eventTranslations } from "@/db/schema/events";
 import { legalDocuments } from "@/db/schema/legal-documents";
+import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import { computeContentHash, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
 import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
-import { submitVolunteer } from "@/modules/volunteers/volunteers";
+import { changeVolunteer, changeVolunteerRole, submitVolunteer } from "@/modules/volunteers/volunteers";
 
 /**
  * §NNN — a volunteer role never takes more people than it needs from the public form, proven with real
@@ -21,7 +22,9 @@ import { submitVolunteer } from "@/modules/volunteers/volunteers";
  * «full» — never a second row. PGlite, one connection, serializes the posts whether or not the row is locked,
  * so `tests/integration/volunteers/signup.test.ts` cannot show it (`tests/helpers/db.ts`). And one person's
  * double tap — the same new address twice at once — is one row: the `UNIQUE (event_id, canonical_email)`
- * decides, and both presses hear the same «am primit».
+ * decides, and both presses hear the same «am primit». The organizers' side meets the same constraint: an
+ * address entered by hand while the page posts it is one row, and the organizer hears «already listed», never
+ * the database; two «Adaugă rolul» on an event with no role yet take two positions (the event's row is locked).
  */
 const DATABASE_URL = process.env.DATABASE_URL;
 if (!DATABASE_URL) throw new Error("tests/concurrency needs a real PostgreSQL: set DATABASE_URL and migrate first.");
@@ -35,8 +38,10 @@ describe("§NNN BR-REQ-031-01 ten people offer for a role's last place at once",
   const stamp = Date.now();
   const createdEventIds: string[] = [];
   let noticeId: string | undefined;
+  let admin: StaffUser | undefined;
 
   beforeAll(async () => {
+    [admin] = await db.insert(staffUsers).values({ email: `volunteers.admin.${stamp}@example.test`, displayName: "Admin", role: "ADMIN" }).returning();
     // A privacy notice naming `{{volunteers}}` in both languages, the newest version, so it is the one in force
     // (`noticeDescribesVolunteers`). Withdrawn again after the suite, so the next suite reads what it approved.
     const [{ highest }] = await db
@@ -68,6 +73,11 @@ describe("§NNN BR-REQ-031-01 ten people offer for a role's last place at once",
       await db.delete(events).where(inArray(events.id, createdEventIds));
     }
     if (noticeId) await db.delete(legalDocuments).where(eq(legalDocuments.id, noticeId));
+    if (admin) {
+      await db.delete(emailOutbox).where(eq(emailOutbox.recipientEmail, admin.email));
+      await db.delete(auditLogs).where(eq(auditLogs.actorStaffUserId, admin.id));
+      await db.delete(staffUsers).where(eq(staffUsers.id, admin.id));
+    }
     await pool.end();
   });
 
@@ -128,5 +138,31 @@ describe("§NNN BR-REQ-031-01 ten people offer for a role's last place at once",
     const results = await Promise.all([offer(event.id, role.id, "twice"), offer(event.id, role.id, "twice")]);
     expect(results).toEqual([{ outcome: "done" }, { outcome: "done" }]);
     expect(await db.select().from(eventVolunteers).where(eq(eventVolunteers.eventId, event.id))).toHaveLength(1);
+  });
+
+  it("an address entered by hand while the page posts it is one row, and the organizer hears «already listed», never the database", async () => {
+    const { event, role } = await eventWithRole(50);
+    for (let round = 0; round < 5; round++) {
+      const email = `voluntar.${stamp}.race-${round}@example.test`;
+      const [byHand] = await Promise.allSettled([
+        changeVolunteer(db, admin!, { kind: "add", eventId: event.id, fields: { roleId: role.id, name: "Ana Pop", email, phone: "+40712345678", note: "" } }, NOW),
+        submitVolunteer(db, event.id, { roleId: role.id, name: "Ana Pop", email, phone: "+40712345678", message: "", locale: "ro", consent: true, renderedAt: RENDERED }, NOW),
+      ]);
+      if (byHand.status === "rejected") expect(byHand.reason).toMatchObject({ code: "VOLUNTEER_ALREADY_LISTED", fields: ["email"] });
+      const rows = await db.select().from(eventVolunteers).where(and(eq(eventVolunteers.eventId, event.id), eq(eventVolunteers.canonicalEmail, email)));
+      expect(rows).toHaveLength(1);
+    }
+  });
+
+  it("two «Adaugă rolul» on an event with no role yet take two positions", async () => {
+    const { event, role } = await eventWithRole(1);
+    await db.delete(eventVolunteerRoles).where(eq(eventVolunteerRoles.id, role.id));
+    const fields = (name: string) => ({ nameRo: name, nameEn: name, needed: "2", descriptionRo: "", descriptionEn: "" });
+    await Promise.all([
+      changeVolunteerRole(db, admin!, { kind: "add", eventId: event.id, fields: fields("Unu") }, NOW),
+      changeVolunteerRole(db, admin!, { kind: "add", eventId: event.id, fields: fields("Doi") }, NOW),
+    ]);
+    const positions = (await db.select().from(eventVolunteerRoles).where(eq(eventVolunteerRoles.eventId, event.id))).map((row) => row.position).sort();
+    expect(positions).toEqual([0, 1]);
   });
 });

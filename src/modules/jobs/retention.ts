@@ -595,17 +595,17 @@ export async function pruneExpiredRows<T extends Record<string, unknown>>(
   /*
     A volunteer's offer (§NNN): a name, an address and a telephone number given to organize the help at one
     event, with no claim behind it. Deleted thirty days after the event's start — whatever its state,
-    «Anulat» included — and the privacy notice's section 7 says so. The roles stay with the event: they hold
-    no name. Nothing public showed a volunteer, so no cache needs telling.
+    «Anulat» included — and the privacy notice's section 7 says so; an offer entered after the start, thirty
+    days after its entry. The row's own age is asked too, so one wrong year typed in the editor (2025 for
+    2026) never takes a whole list at the next run, offers made yesterday among them. The roles stay with the
+    event: they hold no name. Nothing public showed a volunteer, so no cache needs telling.
   */
   await step("volunteers", async (tx) => {
-    const over = tx
-      .select({ id: events.id })
-      .from(events)
-      .where(lt(events.startsAt, daysBefore(now, RETENTION.volunteerDaysAfterEvent)));
+    const cutoff = daysBefore(now, RETENTION.volunteerDaysAfterEvent);
+    const over = tx.select({ id: events.id }).from(events).where(lt(events.startsAt, cutoff));
     const deleted = await tx
       .delete(eventVolunteers)
-      .where(inArray(eventVolunteers.eventId, over))
+      .where(and(inArray(eventVolunteers.eventId, over), lt(eventVolunteers.createdAt, cutoff)))
       .returning({ id: eventVolunteers.id });
     counts.volunteers = deleted.length;
   });
