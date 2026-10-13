@@ -4,6 +4,7 @@ import { type DeclarationAcceptance, declarationAcceptances } from "@/db/schema/
 import { emailOutbox } from "@/db/schema/email-outbox";
 import { eventVolunteerRoles, eventVolunteers } from "@/db/schema/event-volunteers";
 import { eventTranslations } from "@/db/schema/events";
+import { legalDocuments } from "@/db/schema/legal-documents";
 import { type Participant, participants } from "@/db/schema/participants";
 import { registrationInterests } from "@/db/schema/registration-interests";
 import { type Registration, registrations } from "@/db/schema/registrations";
@@ -109,6 +110,11 @@ export type PersonData = {
     note: string | null;
     privacyNoticeVersion: number | null;
     createdAt: Date;
+    /** The volunteer agreement (§NNN): the version accepted, how and when, and the age declared — or nulls. */
+    agreementVersion: number | null;
+    agreementMethod: (typeof eventVolunteers.$inferSelect)["agreementMethod"];
+    agreementAcceptedAt: Date | null;
+    declaredAdult: boolean;
   }>;
   auditTrail: Array<{ action: string; entityType: string; entityId: string | null; createdAt: Date; actorName: string | null; metadata: unknown }>;
 };
@@ -202,10 +208,16 @@ async function collectPersonData<T extends Record<string, unknown>>(
       note: eventVolunteers.note,
       privacyNoticeVersion: eventVolunteers.privacyNoticeVersion,
       createdAt: eventVolunteers.createdAt,
+      agreementVersion: legalDocuments.version,
+      agreementMethod: eventVolunteers.agreementMethod,
+      agreementAcceptedAt: eventVolunteers.agreementAcceptedAt,
+      declaredAdult: eventVolunteers.declaredAdult,
     })
     .from(eventVolunteers)
     .innerJoin(eventVolunteerRoles, eq(eventVolunteerRoles.id, eventVolunteers.roleId))
     .leftJoin(eventTranslations, and(eq(eventTranslations.eventId, eventVolunteers.eventId), eq(eventTranslations.locale, "ro")))
+    // The agreement's version number (§NNN), through the row's own reference.
+    .leftJoin(legalDocuments, eq(legalDocuments.id, eventVolunteers.agreementDocumentId))
     .where(eq(eventVolunteers.canonicalEmail, canonicalEmail))
     .orderBy(asc(eventVolunteers.createdAt));
 

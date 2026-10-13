@@ -2029,18 +2029,45 @@ only ones who see the names, addresses and telephone numbers.
    **both** languages the page shows no form and a post is refused; `/admin/tasks` shows the row
    «Nota de confidențialitate: voluntarii evenimentelor» while an event ahead takes volunteers. Your
    own list on the card works without it.
-3. **Take volunteers on the page.** The same card → «Primește voluntari pe pagină». The card says in a
+3. **Approve the volunteer agreement — a lawyer reads it first** (`DECISIONS.md` §NNN). `/admin/legal` →
+   the card «Contract de voluntariat» → «Regenerează din șablon» → confirm (or the one press that approves
+   every text still missing). The platform's text says, in plain words, that the help is unpaid and no
+   employment, what the volunteer does (the role's tasks, the organizers' instructions, safety and the
+   event's rules, the participants' data kept confidential, telling you when they cannot come), what the
+   club does (information about the role and its risks, the means, a contact on the day, a volunteer
+   certificate on request), that either side may end it at any time, a pointer to the privacy notice, and
+   Romania's volunteering law, **Legea nr. 78/2014**. The person, the role and what it asks, the event, its
+   date and place fill in by themselves when somebody accepts; only the club's four facts are left to
+   type. The lawyer checks it against the law: the written form and whether an electronic acceptance is
+   enough, the age (the form takes adults only, «Am cel puțin 18 ani»; minors with a parent's consent are
+   a later question), the role's description as the task sheet, insurance, and a register of volunteer
+   agreements — the platform deletes the volunteers' rows, the acceptances with them, 30 days after the
+   event, so keep the PDFs (step 5) if the club needs them longer. Until an agreement is in force in
+   **both** languages the page shows no form; `/admin/tasks` shows the row «Contractul de voluntariat»
+   while an event ahead takes volunteers. A public copy of the text in force, its blanks as dots, is at
+   `/ro/contract-voluntariat` and `/en/volunteer-agreement`.
+4. **Take volunteers on the page.** The same card → «Primește voluntari pe pagină». The card says in a
    line whether the form is on the page now and, if not, which of the conditions is missing: the event
    takes volunteers, the event is published and not for the members alone (the form is public), the
-   event is not cancelled or over, a role still needs people, and the notice describes them. The form is a fold, «Vreau să fiu voluntar», under the programme; it asks the name,
+   event is not cancelled or over, a role still needs people, the notice describes them, and a volunteer
+   agreement is in force. The form is a fold, «Vreau să fiu voluntar», under the programme; it asks the name,
    the address, the telephone number, the role (only roles that still need people), an optional
-   message and one consent tick, behind the same anti-bot checks as the registration form.
-4. **Answer the offers.** Each sign-up is «Înscris»; the person gets one email, «Ți-am primit oferta de
-   voluntar», with nothing to press, and each Organizer, Administrator and Superadministrator gets a
+   message, the consent tick, «Am citit și accept contractul de voluntariat» (linking the text in force)
+   and «Am cel puțin 18 ani», behind the same anti-bot checks as the registration form.
+5. **Answer the offers.** Each sign-up is «Înscris»; the person gets one email, «Ți-am primit oferta de
+   voluntar», with nothing to press and the agreement they accepted attached as a PDF, and each Organizer,
+   Administrator and Superadministrator gets a
    notice with who and which role (never the address or the number). On the card: «Confirmă» when you
    have spoken to the person, «Anulează», «Modifică» (the role included, and your own note — never shown
    publicly), «Șterge voluntarul» (the address and the telephone number go with it). «N din M» beside
    each role counts «Înscris» and «Confirmat». «Adaugă un voluntar de mână» enters a person yourself —
    a role may take more people than it asked. «Descarcă CSV» downloads the list, grouped by role.
-5. **A person who asks for their data** is found by address on «Toate datele unei persoane»: the offers
+   Each person's row says where they stand with the agreement: «Contract acceptat» (with the version, the
+   way and when, and «PDF contract» for their copy) or «Contract neacceptat încă». For a person you entered
+   by hand: **«Trimite linkul contractului»** emails them the agreement and a single-use link to accept it
+   (valid 14 days; a new press sends a new link that replaces the old), or print **«PDF de semnat»** — the
+   agreement filled for them, with the volunteer's and the organizer's signature lines — let them sign it
+   at the desk, keep the sheet, and press **«Semnat pe hârtie»**, which records the version in force and
+   your name as the one who recorded it.
+6. **A person who asks for their data** is found by address on «Toate datele unei persoane»: the offers
    are listed there with every column, and deleted from this card.

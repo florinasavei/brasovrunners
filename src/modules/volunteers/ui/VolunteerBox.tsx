@@ -132,7 +132,8 @@ export default async function VolunteerBox({
                   <Box component="ul" sx={{ m: 0, pl: 3 }}>
                     {refused.map((name) => (
                       <li key={name}>
-                        <a href={`#${fieldId(name)}`}>{t(`volunteers.errors.${name}`)}</a>
+                        {/* `{age}` is the age box's own value (§NNN); the other sentences take none and ignore it. */}
+                        <a href={`#${fieldId(name)}`}>{t(`volunteers.errors.${name}`, { age })}</a>
                       </li>
                     ))}
                   </Box>

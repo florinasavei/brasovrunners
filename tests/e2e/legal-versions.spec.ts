@@ -347,7 +347,7 @@ test.describe("legal documents: one card per text, filtered, and the templates' 
 
     // The page's three steps, and one card per text in the catalogue's order.
     await expect(main.getByTestId("legal-steps")).toContainText("1. Regenerează (ciornă din șablon)");
-    const keys = ["PRIVACY_NOTICE", "TERMS", "EVENT_DECLARATION", "EVENT_DECLARATION_ROAD", "GROUP_RUN_DECLARATION_ASPHALT", "GROUP_RUN_DECLARATION_TRAIL"];
+    const keys = ["PRIVACY_NOTICE", "TERMS", "EVENT_DECLARATION", "EVENT_DECLARATION_ROAD", "GROUP_RUN_DECLARATION_ASPHALT", "GROUP_RUN_DECLARATION_TRAIL", "VOLUNTEER_AGREEMENT"];
     for (const key of keys) {
       await expect(main.getByTestId(`legal-kind-${key}`).getByTestId("legal-kind-state").first()).toHaveText(
         /^(În vigoare: versiunea \d+ din .+|Nicio versiune în vigoare)$/,
