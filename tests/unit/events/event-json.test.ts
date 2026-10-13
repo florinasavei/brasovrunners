@@ -14,7 +14,7 @@ import { collectMediaRefs, isFetchableMediaUrl, mapMediaUrls, MEDIA_ROLE_KEYS, m
 import { DEFAULT_BIB_DESIGN } from "@/modules/registrations/bib-design";
 
 /**
- * An event as a JSON file (§NNN): the file's shape, the refusals of a file that is not one of ours,
+ * An event as a JSON file (§751): the file's shape, the refusals of a file that is not one of ours,
  * the pictures found in a configuration and the addresses that may be fetched, and the diff — all
  * without a database. The integration tests (`tests/integration/events/event-json.test.ts`) run
  * the same pieces against the editor's service.
@@ -110,7 +110,7 @@ function sampleFile(): EventFile {
     format: EVENT_FILE_FORMAT,
     version: EVENT_FILE_VERSION,
     exportedAt: "2026-10-13T10:00:00.000Z",
-    exportedFrom: { environment: "production", baseline: "BR-V3.11-2026-10-13" },
+    exportedFrom: { environment: "production", baseline: "BR-V3.12-2026-10-13" },
     series: { partOfASeries: false, rule: null },
     event: sampleConfig(),
     media: [{ role: "cover", url: PICTURE, contentType: "image/webp", size: 10, sha256: "a".repeat(64) }],

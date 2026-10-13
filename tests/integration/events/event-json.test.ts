@@ -24,7 +24,7 @@ import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * An event as a JSON file (§NNN): export, import as a new draft, import over an event after its diff —
+ * An event as a JSON file (§751): export, import as a new draft, import over an event after its diff —
  * through the editor's own service. Every name, address, id and token here is invented; the people on
  * the registrations are made up for the one test that walks the file for them.
  */

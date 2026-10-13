@@ -7648,6 +7648,13 @@
             "showEventInFooter": "Bib: event in the footer",
             "showWebsite": "Bib: website address",
             "footerText": "Bib: the club's own line",
+            "showProfile": "Bib: route profile",
+            "showDistance": "Bib: distance badge",
+            "showEmergency": "Bib: emergency phone",
+            "emergencyPhone": "Bib: emergency number",
+            "emergencyUpsideDown": "Bib: phone upside down",
+            "numberStubs": "Bib: number on the footer's ends",
+            "sponsorPlace": "Bib: sponsors' band place",
             "member": {
               "enabled": "Member's bib: on",
               "style": "Member's bib: style",
@@ -7656,7 +7663,8 @@
               "headerImageCrop": "Member's bib: header crop",
               "cardImageSrc": "Member's bib: background picture",
               "cardImageCrop": "Member's bib: background crop",
-              "label": "Member's bib: the line on the band"
+              "label": "Member's bib: the line on the band",
+              "mark": "Member's bib: the mark"
             }
           }
         },

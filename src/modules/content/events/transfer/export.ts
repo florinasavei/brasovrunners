@@ -40,7 +40,7 @@ import {
 import { collectMediaRefs, describeMedia, mapMediaUrls, readStoredMedium } from "./media";
 
 /**
- * Taking an event out as a JSON file (§NNN).
+ * Taking an event out as a JSON file (§751).
  *
  * `configFromRows` is the whole of what an event *is* for the file — a pure function of the event's
  * rows, the same one that reads the *target* of an import over an event, so the diff compares like
@@ -214,7 +214,7 @@ export async function readEventConfig<T extends Record<string, unknown>>(
 export type ExportEventInput = { actor: Actor; eventId: string; now?: Date };
 
 /**
- * One event as a file (§NNN): the Administrator's, asserted here on the server whatever button the
+ * One event as a file (§751): the Administrator's, asserted here on the server whatever button the
  * editor showed, and recorded — who, which event, the version and how many media the file names.
  *
  * The media are named with the size and the hash of what this environment's store holds, read now; an

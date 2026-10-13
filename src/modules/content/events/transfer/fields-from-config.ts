@@ -7,7 +7,7 @@ import { DomainError } from "@/shared/errors/domain-error";
 import type { EventConfig, TranslationConfig } from "./file-format";
 
 /**
- * A configuration back into what the editor posts (§NNN): the same names, the same strings, the same
+ * A configuration back into what the editor posts (§751): the same names, the same strings, the same
  * empty-means-not-stated, so the import goes through the editor's own validation
  * (`eventFieldsSchema`, `translationFieldsSchema`) and its own save, and a value the editor would
  * refuse is refused here for the same sentence. Nothing is written by this file and nothing is checked

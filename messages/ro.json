@@ -7648,6 +7648,13 @@
             "showEventInFooter": "Număr: evenimentul în subsol",
             "showWebsite": "Număr: adresa site-ului",
             "footerText": "Număr: rândul clubului",
+            "showProfile": "Număr: profilul traseului",
+            "showDistance": "Număr: insigna distanței",
+            "showEmergency": "Număr: telefonul de urgență",
+            "emergencyPhone": "Număr: numărul de urgență",
+            "emergencyUpsideDown": "Număr: telefonul întors",
+            "numberStubs": "Număr: numărul la capetele subsolului",
+            "sponsorPlace": "Număr: locul benzii sponsorilor",
             "member": {
               "enabled": "Număr de membru: activ",
               "style": "Număr de membru: stilul",
@@ -7656,7 +7663,8 @@
               "headerImageCrop": "Număr de membru: decupajul de sus",
               "cardImageSrc": "Număr de membru: imaginea de fundal",
               "cardImageCrop": "Număr de membru: decupajul fundalului",
-              "label": "Număr de membru: rândul de pe bandă"
+              "label": "Număr de membru: rândul de pe bandă",
+              "mark": "Număr de membru: semnul"
             }
           }
         },

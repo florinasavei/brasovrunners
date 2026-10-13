@@ -2,7 +2,7 @@ import type { EventConfig } from "./file-format";
 import { type MediaKind, mapMediaUrls, TEXT_BOXES } from "./media";
 
 /**
- * What an import over an event would change, field by field (§NNN): the file's configuration against
+ * What an import over an event would change, field by field (§751): the file's configuration against
  * the target's, both read by the one function (`export.ts#configFromRows`), so a field that is the
  * same is the same and one that differs is shown with both sides — in both languages, the pictures
  * named.
@@ -188,6 +188,13 @@ export const FIELD_LABELS = [
   "bib.design.showEventInFooter",
   "bib.design.showWebsite",
   "bib.design.footerText",
+  "bib.design.showProfile",
+  "bib.design.showDistance",
+  "bib.design.showEmergency",
+  "bib.design.emergencyPhone",
+  "bib.design.emergencyUpsideDown",
+  "bib.design.numberStubs",
+  "bib.design.sponsorPlace",
   "bib.design.member.enabled",
   "bib.design.member.style",
   "bib.design.member.bandColour",
@@ -196,6 +203,7 @@ export const FIELD_LABELS = [
   "bib.design.member.cardImageSrc",
   "bib.design.member.cardImageCrop",
   "bib.design.member.label",
+  "bib.design.member.mark",
   "translations.slug",
   "translations.title",
   "translations.excerpt",

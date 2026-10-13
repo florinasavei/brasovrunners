@@ -4,7 +4,7 @@ import { hydrated, signIn } from "./support/featured-event";
 import { openEditorBox } from "./support/fold";
 
 /**
- * An event as a JSON file (§NNN), walked through the pages: export a seeded event from its editor,
+ * An event as a JSON file (§751), walked through the pages: export a seeded event from its editor,
  * bring the file in as a new draft, then bring a changed copy over that draft after reading the diff —
  * and the role that may do none of it is refused on the page and at the route.
  *

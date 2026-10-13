@@ -70,7 +70,7 @@ const WRITES: Record<string, Expected> = {
   "src/modules/content/events/service.ts#createEvent": ["events"],
   "src/modules/content/events/service.ts#createEventAndPublish": ["events"],
   "src/modules/content/events/service.ts#duplicateEvent": { nothingPublic: "a fresh draft: publication and the featured flag are never copied" },
-  // An event as a JSON file (§NNN): both go through the editor's own verbs, which expire; the picture copy
+  // An event as a JSON file (§751): both go through the editor's own verbs, which expire; the picture copy
   // stores objects and a row nothing names until the save that points at it.
   "src/modules/content/events/transfer/import.ts#importEventAsNew": ["events"],
   "src/modules/content/events/transfer/import.ts#importEventOver": ["events"],

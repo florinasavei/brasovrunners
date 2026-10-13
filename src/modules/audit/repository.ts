@@ -354,19 +354,19 @@ export type AuditAction =
    */
   | "event.participant_count_public_changed"
   /**
-   * An event's configuration taken out as a JSON file (§NNN): the Administrator (the actor), the file's
+   * An event's configuration taken out as a JSON file (§751): the Administrator (the actor), the file's
    * format version and how many pictures and files it names — entity `event`. Never a word of the file:
    * it holds no registration and no person, and the row says only that it was made and by whom.
    */
   | "event.exported"
   /**
-   * A JSON file brought in as a new draft event (§NNN): entity `event` is the new event; the metadata is
+   * A JSON file brought in as a new draft event (§751): entity `event` is the new event; the metadata is
    * where the file came from (`{ environment, baseline }`), the file's own hash, how many pictures and
    * files were copied and how many could not be, and what was adjusted on the way (never a text).
    */
   | "event.imported_as_new"
   /**
-   * A JSON file brought in over an existing event after its diff was confirmed (§NNN): entity `event` is
+   * A JSON file brought in over an existing event after its diff was confirmed (§751): entity `event` is
    * the target; the metadata is the file's origin and hash, the names of the fields that changed (never
    * their values), the registrations the event had, and the pictures copied. The editor's own save wrote
    * its own rows beside this one (a cover, a hidden list, a raised capacity's offers).

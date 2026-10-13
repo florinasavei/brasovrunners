@@ -4,7 +4,7 @@ import type { EventFileRefusal } from "./file-format";
 import type { DiffEventImportResult, ImportNote, MediaOutcome } from "./import";
 
 /**
- * What the import page's Server Actions answer (§NNN): plain, serializable data, no words — the page
+ * What the import page's Server Actions answer (§751): plain, serializable data, no words — the page
  * says them in the reader's language from the words it was rendered with. A refusal is a code the page
  * knows (`file` for a file that is not an event file, the editor's own domain codes for a refused
  * import) and, where it helps, the names of the boxes it is about and the service's one sentence.

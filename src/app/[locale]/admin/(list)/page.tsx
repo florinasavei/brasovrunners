@@ -635,7 +635,7 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
         </Typography>
 
         <Stack direction="row" sx={{ alignItems: "center", flexWrap: "wrap", gap: 1 }}>
-        {/* «Importă un eveniment (JSON)» (§NNN): an Administrator's, from a file made with «Exportă evenimentul (JSON)» in the editor. */}
+        {/* «Importă un eveniment (JSON)» (§751): an Administrator's, from a file made with «Exportă evenimentul (JSON)» in the editor. */}
         {verbs.transfer && (
           <GlyphButton
             icon="upload"

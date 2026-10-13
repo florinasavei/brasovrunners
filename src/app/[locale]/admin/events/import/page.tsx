@@ -22,7 +22,7 @@ export const maxDuration = 60;
 const FORMS = ["one", "few", "other"] as const;
 
 /**
- * «Importă un eveniment (JSON)» (§NNN): a file made with «Exportă evenimentul (JSON)» in the editor,
+ * «Importă un eveniment (JSON)» (§751): a file made with «Exportă evenimentul (JSON)» in the editor,
  * brought in as a new draft or written over an existing event after its diff.
  *
  * The Administrator's, as the services behind it assert (`canTransferEvents`); a role that may not is

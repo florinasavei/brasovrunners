@@ -2,7 +2,7 @@
 
 # Runbooks
 
-**Baseline `BR-V3.11-2026-10-13`** · versioned with the whole set · [changelog](../CHANGELOG.md)
+**Baseline `BR-V3.12-2026-10-13`** · versioned with the whole set · [changelog](../CHANGELOG.md)
 
 
 | Runbook | When |
@@ -1104,12 +1104,12 @@ acceptances against it.
 ## Copy an event from production to QA and back
 
 The owner, 2026-10-13: «I need … to export and import an event as JSON so that I can test on QA the
-changes made on PROD and I can pre-approve them» (`DECISIONS.md` §NNN). An Administrator takes one
+changes made on PROD and I can pre-approve them» (`DECISIONS.md` §751). An Administrator takes one
 event's configuration out of a site as a file and brings it into another, as a new draft or over an
 existing event after a diff. The loop: **production → QA (as new), change and approve on QA, QA →
 production (over the event)**.
 
-Related requirements: `BR-REQ-050-01`, `BR-REQ-051-01`, `BR-REQ-060-01`.
+Related requirements: `BR-REQ-050-02`, `BR-REQ-051-01`, `BR-REQ-060-01`.
 
 ### What the file is
 
@@ -1174,7 +1174,7 @@ pictures' sweep takes them after a week.
 - Importing over production without reading the diff. The diff is the review.
 - Adding a registration, a person or an address to a file by hand — the reader refuses it, and a file of
   another site's registrations is a data breach however it was made.
-- Applying a series' rule from a file: it is exported for information and never applied (`DECISIONS.md` §NNN).
+- Applying a series' rule from a file: it is exported for information and never applied (`DECISIONS.md` §751).
 
 ## Hotfix — a fix straight to production
 

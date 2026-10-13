@@ -555,7 +555,7 @@ export function canDeleteEvent(subject: StaffSubject): boolean {
 }
 
 /**
- * **An event as a JSON file — taking one out and bringing one in (§NNN).** Exporting reads a whole
+ * **An event as a JSON file — taking one out and bringing one in (§751).** Exporting reads a whole
  * event's configuration out of the database, importing writes one in, as a draft or over an event:
  * both are the Administrator's, the rung that creates and configures events (`canCreateEvent`,
  * `canEditEventFields`). Written as the conjunction of the two so that if either boundary ever moves,

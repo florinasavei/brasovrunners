@@ -6,7 +6,7 @@ import { RACE_DECLARATION_KEYS } from "@/modules/legal-documents/domain/keys";
 import { WAITLIST_CHOICES } from "../waitlist-choice";
 
 /**
- * An event as a JSON file (§NNN; the owner, 2026-10-13: «I need to have an intermediate technical
+ * An event as a JSON file (§751; the owner, 2026-10-13: «I need to have an intermediate technical
  * release … where I can export and import an event as JSON so that I can test on QA the changes made
  * on PROD and I can pre-approve them»).
  *
@@ -211,7 +211,7 @@ export type EventConfig = z.infer<typeof eventConfigSchema>;
  * exported so the person reading the file can see it, and is never applied: a copy is one date, as a
  * duplicate is (`copiedEventValues`), and a rule that was imported would start making dates on its own at
  * the next maintenance pass, in an environment nobody meant a series in. The safer of the two answers
- * the brief offered; `DECISIONS.md` §NNN says why.
+ * the brief offered; `DECISIONS.md` §751 says why.
  */
 const seriesSchema = z
   .object({

@@ -10,7 +10,7 @@ import type { EventConfig, MediaEntry } from "./file-format";
 
 /**
  * The pictures and the file an event points to — found in its configuration, named in the file, and
- * copied into another environment's own storage on import (§NNN).
+ * copied into another environment's own storage on import (§751).
  *
  * Three rules hold everything here:
  *
@@ -209,7 +209,7 @@ export const MAX_MEDIUM_BYTES = { image: Math.max(12 * 1024 * 1024, MAX_UPLOAD_B
 const FETCH_TIMEOUT_MS = 15_000;
 
 /**
- * Whether the address may be fetched at all (§NNN): https — or http where the environment is a
+ * Whether the address may be fetched at all (§751): https — or http where the environment is a
  * developer's, `local` or `test` — and a name, never an IP literal, `localhost` or an internal suffix;
  * and of the shape this site's own objects have, so the request can only ask for a stored picture or GPX.
  */

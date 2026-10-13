@@ -1307,7 +1307,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
               {(mayChangeSeries || canDeleteEvent(staffUser.role) || canTransferEvents(staffUser.role)) && (
                 <Panel glyph="copy" collapsible tone="danger" id="box-copy-delete" title={t("editor.boxes.copyDelete.title")} aside={t("editor.boxes.copyDelete.summary")}>
                   <Stack direction="row" spacing={2} sx={{ flexWrap: "wrap", gap: 1 }}>
-                    {/* «Exportă evenimentul (JSON)» (§NNN): a plain link to the route, which asserts the role and records it. */}
+                    {/* «Exportă evenimentul (JSON)» (§751): a plain link to the route, which asserts the role and records it. */}
                     {canTransferEvents(staffUser.role) && (
                       <GlyphButton icon="download" href={`/api/admin/events/${event.id}/export`} variant="outlined" size="small" sx={{ minHeight: 44 }} data-testid="event-json-export">
                         {t("eventJson.export.button")}

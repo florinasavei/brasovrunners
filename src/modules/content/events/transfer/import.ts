@@ -34,7 +34,7 @@ import {
 } from "./media";
 
 /**
- * Bringing an event in from a JSON file (§NNN): as a new draft, or over an event after its diff.
+ * Bringing an event in from a JSON file (§751): as a new draft, or over an event after its diff.
  *
  * Both go through the editor's own service — `createEvent` and `saveEventAndTranslations`, behind the
  * posted shape of `fields-from-config.ts` — so the same validation refuses what the editor refuses, the

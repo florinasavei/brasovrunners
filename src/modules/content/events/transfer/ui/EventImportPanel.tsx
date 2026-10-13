@@ -92,7 +92,7 @@ const fill = (template: string, values: Record<string, string | number>) =>
   Object.entries(values).reduce((text, [name, value]) => text.split(`{${name}}`).join(String(value)), template);
 
 /**
- * «Importă un eveniment (JSON)» (§NNN): the file chosen, read by the server (never trusted from here),
+ * «Importă un eveniment (JSON)» (§751): the file chosen, read by the server (never trusted from here),
  * then two ways in — **«Ca eveniment nou»**, a draft with the pictures copied, and **«Peste un eveniment
  * existent»**, which shows the diff of every field that would change, both languages, the pictures
  * named, and asks for a confirmation before anything is written; on production a second one that

@@ -62,7 +62,7 @@ test.describe("§353 every island finds its words, and a public page carries onl
     for (const path of [
       "/ro/admin",
       "/ro/admin/events/new",
-      // «Importă un eveniment (JSON)» (§NNN): the one island whose words arrive as props.
+      // «Importă un eveniment (JSON)» (§751): the one island whose words arrive as props.
       "/ro/admin/events/import",
       "/ro/admin/registrations",
       "/ro/admin/registrations/new",

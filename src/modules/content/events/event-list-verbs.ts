@@ -42,7 +42,7 @@ export type EventListVerbs = {
   publish: boolean;
   switchSeries: boolean;
   readRegistrations: boolean;
-  /** «Importă un eveniment (JSON)» (§NNN): `canTransferEvents`, asserted by `exportEvent` and the imports. */
+  /** «Importă un eveniment (JSON)» (§751): `canTransferEvents`, asserted by `exportEvent` and the imports. */
   transfer: boolean;
 };
 

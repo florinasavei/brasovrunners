@@ -6,8 +6,11 @@ import { requireStaff } from "@/modules/staff-identity/session";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { isUuid } from "@/shared/ids";
 
+/** The export reads and hashes every picture the event names; the platform's ten seconds are not enough (the import page asks the same). */
+export const maxDuration = 60;
+
 /**
- * «Exportă evenimentul (JSON)» (§NNN): one event's configuration as a file — `<slug>-<day>.json` —
+ * «Exportă evenimentul (JSON)» (§751): one event's configuration as a file — `<slug>-<day>.json` —
  * for the Administrator, asserted again here whatever the editor's button showed (BR-REQ-060-01) and
  * recorded in the trail (`event.exported`: who, which event, never a word of the file).
  *
