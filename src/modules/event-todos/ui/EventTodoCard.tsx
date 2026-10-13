@@ -36,8 +36,8 @@ const PRIORITY_CHIP: Record<EventTodoPriority, { glyph: StatusGlyphName; color: 
 };
 
 /** The glyphs drawn here as components, by name from the verbs' registry (§318): a Server Component may render one, never pass one. */
-const GoToGlyph = ACTION_ICONS.goTo;
-const PencilGlyph = ACTION_ICONS.edit;
+const GoToIcon = ACTION_ICONS.goTo;
+const PencilIcon = ACTION_ICONS.edit;
 
 type Props = {
   locale: Locale;
@@ -117,10 +117,9 @@ const TICK_SX = { minWidth: 44, width: 44, height: 44, p: 0, borderRadius: 1, "&
  * each action asks the service, which decides by role (BR-REQ-060-01) whatever this draws. It sits beside
  * the editor's save form, never inside it: HTML forms cannot nest.
  *
- * A press that works does not navigate (§NNN, `todo-actions.ts`): the page is read again in place, so
- * an edit the reader has open is not replaced under their hand. A row's edit form lives in the
- * `<details>` its line is the summary of; the fold is keyed on the row's words, so a save that changed
- * them draws it closed.
+ * A press that works redirects back to the editor with the toast's notice in the flash cookie, as every
+ * action of the backoffice does (`todo-actions.ts`). A row's edit form lives in the `<details>` its line is
+ * the summary of; the fold is keyed on the row's words, so a save that changed them draws it closed.
  */
 export default async function EventTodoCard({ locale, eventId, computed, items, staff, languageNames, mayEdit, currentStaffId, mine, today, error }: Props) {
   const t = await getTranslations("Admin");
@@ -204,7 +203,7 @@ export default async function EventTodoCard({ locale, eventId, computed, items, 
           sx={{ ...LINE_SX, color: "inherit", textDecoration: "none", "&:hover": { bgcolor: "action.hover" } }}
         >
           <Box sx={{ gridArea: "words", display: "flex", alignItems: "center", gap: 1, minWidth: 0 }}>
-            <GoToGlyph aria-hidden fontSize="small" sx={{ color: "text.secondary", flexShrink: 0 }} />
+            <GoToIcon aria-hidden fontSize="small" sx={{ color: "text.secondary", flexShrink: 0 }} />
             <Typography variant="body2" sx={{ wordBreak: "break-word" }}>
               {text}
             </Typography>
@@ -276,7 +275,7 @@ export default async function EventTodoCard({ locale, eventId, computed, items, 
     return (
       <Box component="li" key={row.key} data-testid="event-todo-item" data-item-id={item.id} sx={{ ...ROW_SX, display: "flex", alignItems: "flex-start", gap: 0.5 }}>
         {/* The tick posts the state it wants, not a toggle: a form, so it works with scripts off. */}
-        <ActionForm action={setEventTodoDoneAction} style={{ flex: "none" }} data-testid="event-todo-tick-form">
+        <Box component="form" action={setEventTodoDoneAction} sx={{ flex: "none" }} data-testid="event-todo-tick-form">
           {hidden}
           <input type="hidden" name="itemId" value={item.id} />
           <input type="hidden" name="done" value={done ? "0" : "1"} />
@@ -290,7 +289,7 @@ export default async function EventTodoCard({ locale, eventId, computed, items, 
             color={done ? "success" : "inherit"}
             sx={TICK_SX}
           />
-        </ActionForm>
+        </Box>
         {/* The row's line is the summary of its edit form: a press anywhere on it, or on the pencil, opens it in place.
             Keyed on the words, so a save that changed them draws the fold closed. */}
         <Box
@@ -302,7 +301,7 @@ export default async function EventTodoCard({ locale, eventId, computed, items, 
           <Box component="summary" aria-label={t("eventTodos.editRow", { text: label })} title={t("eventTodos.edit")} data-testid="event-todo-edit-toggle" sx={SUMMARY_SX}>
             {wordsBlock}
             {facts(item, done)}
-            <PencilGlyph aria-hidden fontSize="small" sx={{ gridArea: "pen", color: "text.secondary", justifySelf: "end" }} />
+            <PencilIcon aria-hidden fontSize="small" sx={{ gridArea: "pen", color: "text.secondary", justifySelf: "end" }} />
           </Box>
           <Stack spacing={1.5} sx={{ pb: 1.5, pt: 0.5, maxWidth: 640 }}>
             <ActionForm action={editEventTodoAction} scope={`todo-${item.id}`} messages={boxMessages} data-testid="event-todo-edit-form">
@@ -420,7 +419,7 @@ export default async function EventTodoCard({ locale, eventId, computed, items, 
                 </RecallField>
                 <GlyphSubmitButton label={t("eventTodos.add.save")} pendingLabel={t("eventTodos.add.saving")} icon="add" />
               </Box>
-              <Panel variant="help" title={t("eventTodos.add.more")}>
+              <Panel glyph="add" collapsible level={3} title={t("eventTodos.add.more")}>
                 <Stack spacing={1.5} sx={{ pb: 1.5, pt: 0.5, maxWidth: 640 }}>
                   {whoAndWhen(null)}
                 </Stack>

@@ -4437,7 +4437,7 @@
     "eventTodos": {
       "title": "De făcut pentru pagina evenimentului",
       "intro": "Ce lipsește paginii și ce are echipa de făcut.",
-      "introMore": "Un rând din „Lipsește pe pagină” dispare singur când completezi câmpul; apasă pe el ca să ajungi la câmp. „Sarcini” sunt rândurile scrise de club pentru această dată, o propoziție de cel mult {max} de caractere, fără adrese de email sau parole — lista o vede toată echipa. Ordine în fiecare listă: prioritate, termen, vechime.",
+      "introMore": "Un rând din „Lipsește pe pagină” dispare când completezi câmpul; apasă-l ca să ajungi la el. „Sarcini” sunt rândurile clubului, de cel mult {max} de caractere. Ordine: prioritate, termen, vechime.",
       "readOnly": "Poți citi lista; o scriu Organizatorul, Administratorul și Superadministratorul. Ce vrei schimbat le spui lor.",
       "summary": "{count} de făcut",
       "summaryNone": "nimic de făcut",

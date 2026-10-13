@@ -4437,7 +4437,7 @@
     "eventTodos": {
       "title": "To do for the event's page",
       "intro": "What the page still lacks and what the team has to do.",
-      "introMore": "A row under “Missing from the page” goes away by itself when you fill its field; press it to reach the field. “Tasks” are the rows the club wrote for this date, one sentence of at most {max} characters, with no email addresses or passwords — the whole team sees the list. Order in each list: priority, due day, age.",
+      "introMore": "A row under “Missing from the page” goes away when you fill its field; press it to reach it. “Tasks” are the club's rows, at most {max} characters. Order: priority, due day, age.",
       "readOnly": "You can read the list; the Organizer, the Administrator and the Superadministrator write it. Ask them for any change.",
       "summary": "{count} to do",
       "summaryNone": "nothing to do",

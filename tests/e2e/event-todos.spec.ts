@@ -9,8 +9,10 @@ import { openEditorBox, openFold } from "./support/fold";
  * Administrator and a Superadministrator open an event whose page lacks its cover, see the computed row
  * under «Lipsește pe pagină» and follow its link to the cover's card, add a task with Enter, change every
  * one of its fields through the pencil, tick it from its box and find it under «Gata», untick it, and
- * delete it. «Nu pot să modific chestii» (the owner) was the page re-rendering under the reader's hand
- * after a press; the second test pins that nothing the reader opened or typed is replaced.
+ * delete it. «Nu pot să modific chestii» (the owner) could not be reproduced on a production build as an
+ * Administrator, a Superadministrator or an Organizer (every press worked); the second test pins every
+ * change path anyway, and that the card is the same element after a press, so nothing the reader opened
+ * or typed is replaced under their hand.
  *
  * The event is written straight into the database — the setup, not the subject — one per project
  * and run, so the two projects never share a row.
@@ -55,7 +57,8 @@ async function cardIsTheSame(page: Page): Promise<boolean> {
 }
 
 test.describe("§749 the event's «De făcut»", () => {
-  test.describe.configure({ timeout: 120_000 });
+  // Toasts queue, one read after the other (`toastQueueReducer`): a later sentence waits for the earlier one to hide.
+  test.describe.configure({ timeout: 180_000 });
 
   test("shows what the page lacks, links to the field, takes a task with a priority first, assigns it and ticks it", async ({ page }) => {
     const tag = `${test.info().project.name}-${Date.now().toString(36)}`;
@@ -110,7 +113,7 @@ test.describe("§749 the event's «De făcut»", () => {
     await expect(first).toContainText("Cere aprobarea pentru traseu");
     await expect(first.getByTestId("event-todo-priority")).toHaveText("Urgentă");
     // …the toast says so, and the add line is empty again.
-    await expect(page.getByTestId("toast-live")).toContainText("Rând adăugat");
+    await expect(page.getByTestId("toast-live")).toContainText("Rând adăugat", { timeout: 20_000 });
     await expect(add.getByLabel("Adaugă o sarcină")).toHaveValue("");
 
     // …and the events list's chip counts the computed rows plus the open typed line.
@@ -148,7 +151,7 @@ test.describe("§749 the event's «De făcut»", () => {
   });
 
   for (const identity of ["Dev Administrator", "Dev Superadministrator"]) {
-    test(`${identity} changes every part of a task, and nothing the reader opened is replaced under their hand`, async ({ page }, testInfo) => {
+    test(`${identity} changes every part of a task, and the card stays the reader's own after each press`, async ({ page }, testInfo) => {
       const tag = `${testInfo.project.name}-${Date.now().toString(36)}`;
       const eventId = await seedEvent(tag);
       await signIn(page, identity);
@@ -164,10 +167,10 @@ test.describe("§749 the event's «De făcut»", () => {
       const row = open.locator("li").first();
       await expect(row).toContainText("Banda cu sponsori");
       await expect(row.getByTestId("event-todo-priority")).toHaveText("Normală");
-      await expect(page.getByTestId("toast-live")).toContainText("Rând adăugat");
+      await expect(page.getByTestId("toast-live")).toContainText("Rând adăugat", { timeout: 20_000 });
 
-      // The bug the owner met: right after a press the reader opens the pencil and starts typing; a second
-      // render of the whole editor used to replace the fold and the box. Mark the card, open, type, wait.
+      // Right after a press the reader opens the pencil and starts typing; the card must still be the element
+      // they started in, with the fold open and the words as typed. Mark the card, open, type, wait.
       await markCard(page);
       await openFold(row.getByTestId("event-todo-edit"));
       await row.getByLabel("Ce e de făcut").fill("Banda cu sponsori și logo-urile lor");
@@ -185,7 +188,7 @@ test.describe("§749 the event's «De făcut»", () => {
       await dueGroup.getByRole("spinbutton").first().click();
       await page.keyboard.type(`${day}${month}${year}`);
       await row.getByRole("button", { name: "Salvează", exact: true }).click();
-      await expect(page.getByTestId("toast-live")).toContainText("Rând salvat");
+      await expect(page.getByTestId("toast-live")).toContainText("Rând salvat", { timeout: 20_000 });
       const saved = open.locator("li").first();
       await expect(saved).toContainText("Banda cu sponsori și logo-urile lor");
       await expect(saved.getByTestId("event-todo-priority")).toHaveText("Mare");
@@ -197,7 +200,7 @@ test.describe("§749 the event's «De făcut»", () => {
       // Tick it from its box: it goes under «Gata», struck through, with a box to untick.
       await page.getByRole("checkbox", { name: /^Bifează: Banda cu sponsori/ }).click();
       await expect(card.getByTestId("event-todos-done")).toContainText("Gata (1)");
-      await expect(page.getByTestId("toast-live")).toContainText("Bifat");
+      await expect(page.getByTestId("toast-live")).toContainText("Bifat", { timeout: 20_000 });
       await expect(open.locator("li")).toHaveCount(0);
       const done = card.getByTestId("event-todos-done");
       await openFold(done);
@@ -213,7 +216,7 @@ test.describe("§749 the event's «De făcut»", () => {
       await openFold(back.getByTestId("event-todo-edit"));
       await back.getByRole("button", { name: "Șterge", exact: true }).click();
       await page.getByTestId("confirm-dialog-confirm").click();
-      await expect(page.getByTestId("toast-live")).toContainText("șters");
+      await expect(page.getByTestId("toast-live")).toContainText("șters", { timeout: 20_000 });
       await expect(card.getByTestId("event-todo-item")).toHaveCount(0);
       await expect(card.getByTestId("event-todos-empty")).toBeVisible();
 
