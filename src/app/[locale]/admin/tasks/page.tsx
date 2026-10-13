@@ -480,7 +480,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
       // §683: the members' shop, described by the notice in force; the row waits only while a product is visible.
       shopDescribed: await noticeDescribesMembersShop(db, now),
       visibleShopProducts: await countVisibleProducts(db),
-      // §NNN: the event volunteers, described by the notice in force; the row waits only while an event ahead takes them.
+      // §754: the event volunteers, described by the notice in force; the row waits only while an event ahead takes them.
       volunteersDescribed: await noticeDescribesVolunteers(db, now),
       volunteeringEvents: await countVolunteeringEvents(db, now),
       gmailFallbackDescribed: await noticeDescribesGmailFallback(db, now),

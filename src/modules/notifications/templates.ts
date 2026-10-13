@@ -1008,7 +1008,7 @@ export type TemplateData = {
    */
   shopOrder?: ShopOrderFacts;
   /**
-   * A volunteer's sign-up (§NNN), read at the send: the person's name and the role in each language (the
+   * A volunteer's sign-up (§754), read at the send: the person's name and the role in each language (the
    * club typed both), so each half of the bilingual message names the role in its own words. Never the
    * address or the telephone number — the organizers read those on the card, behind the sign-in.
    */
@@ -1308,7 +1308,7 @@ function eventFacts(d: TemplateData, labels: { map: string; strava: string }) {
 }
 
 /**
- * The bold line of a volunteer's acknowledgement (§NNN): the role first — a fact of this sign-up, kept
+ * The bold line of a volunteer's acknowledgement (§754): the role first — a fact of this sign-up, kept
  * whoever wrote the message's words — then the event's start and place, with the event's own links.
  */
 function volunteerFacts(locale: EmailLocale, d: TemplateData, labels: { map: string; strava: string }) {
@@ -1764,7 +1764,7 @@ const T = {
       ],
       action: "Deschide comenzile",
     },
-    // A volunteer's sign-up (§NNN): to the person, «am primit» — nothing to press, nothing to confirm; an organizer answers.
+    // A volunteer's sign-up (§754): to the person, «am primit» — nothing to press, nothing to confirm; an organizer answers.
     volunteerReceived: {
       subject: (d: TemplateData) => `Ți-am primit oferta de voluntar pentru ${d.eventTitle ?? "eveniment"}`,
       facts: (d: TemplateData) => volunteerFacts("ro", d, { map: "Harta punctului de întâlnire", strava: "Evenimentul pe Strava" }),
@@ -1774,7 +1774,7 @@ const T = {
         `Dacă nu tu ai trimis oferta, scrie-ne din pagina de contact și o ștergem; altfel rămâne la organizatori cel mult ${volunteerDays("ro")} de la începutul evenimentului sau de la trimiterea ofertei, dacă e mai târziu.`,
       ],
     },
-    // To each Organizer and Administrator (§NNN): who offered for which role; the card «Voluntari» has the rest.
+    // To each Organizer and Administrator (§754): who offered for which role; the card «Voluntari» has the rest.
     volunteerClubNotice: {
       subject: (d: TemplateData) => `Voluntar nou la ${d.eventTitle ?? "eveniment"}`,
       greeting: () => "Salut,",
@@ -2237,7 +2237,7 @@ const T = {
     /** An invitation (§647): the club typed the name and the address to send it; nobody asked yet. */
     privacyFooterInvitation: (club: string) =>
       `Primești acest mesaj pentru că ${club} ți-a trecut numele și adresa ca să te invite la acest eveniment. Cum folosim datele tale:`,
-    /** A volunteer's sign-up (§NNN): the person offered on the event's page; no registration behind it. */
+    /** A volunteer's sign-up (§754): the person offered on the event's page; no registration behind it. */
     privacyFooterVolunteer: (club: string) =>
       `Primești acest mesaj de la ${club} pentru că te-ai oferit, pe site-ul clubului, să ajuți ca voluntar. Cum folosim datele tale:`,
     /** The same for a group run's self-declaration (§393): signed on a page, no registration behind it. */
@@ -3581,7 +3581,7 @@ export function buildTemplateContent(
         messageType === "SHOP_ORDER_PLACED" ||
         messageType === "SHOP_ORDER_PAID" ||
         messageType === "SHOP_ORDER_CLUB_NOTICE" ||
-        // …nor the organizers' notice of a volunteer's sign-up (§NNN): to colleagues, its one link is its button.
+        // …nor the organizers' notice of a volunteer's sign-up (§754): to colleagues, its one link is its button.
         messageType === "VOLUNTEER_CLUB_NOTICE"
       ) {
         return own.length > 0 ? own : undefined;
@@ -3632,7 +3632,7 @@ export function archivePeriod(locale: EmailLocale): string {
   return durationPhrase(locale, RETENTION_PERIODS.registrationsYearsAfterEvent, "years");
 }
 
-/** How long the organizers keep a volunteer's offer from the event's start (§NNN), from the sweep's own constant. */
+/** How long the organizers keep a volunteer's offer from the event's start (§754), from the sweep's own constant. */
 export function volunteerDays(locale: EmailLocale): string {
   return durationPhrase(locale, RETENTION_PERIODS.volunteerDaysAfterEvent, "days");
 }

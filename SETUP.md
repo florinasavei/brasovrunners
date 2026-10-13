@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.14-2026-10-13 -->
+<!-- PROJECT_BASELINE: BR-V3.15-2026-10-14 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V3.14-2026-10-13`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.15-2026-10-14`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -2007,7 +2007,7 @@ with its cards in the order you fill them.
 
 ## 44. Voluntari — register the people who help at a race
 
-The event's volunteers (`DECISIONS.md` §NNN) are built and closed: no event page offers «Vreau să fiu
+The event's volunteers (`DECISIONS.md` §754) are built and closed: no event page offers «Vreau să fiu
 voluntar» until the steps below are done. A volunteer is not a registration — no place of the race, no
 declaration, no row on the public list, no account — and the Organizer and the Administrators are the
 only ones who see the names, addresses and telephone numbers.

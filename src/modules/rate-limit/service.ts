@@ -92,7 +92,7 @@ export const RATE_LIMITS: Record<RateLimitScope, { limit: number; windowMs: numb
    */
   "newsletter-subscribe": { limit: 3, windowMs: 60 * 60_000 },
   /**
-   * A volunteer's sign-up on an event's page (§NNN), hashed canonical address: each post mails an unproven
+   * A volunteer's sign-up on an event's page (§754), hashed canonical address: each post mails an unproven
    * address once, and a script would otherwise spend the allowance on one mailbox.
    */
   "volunteer-signup": { limit: 3, windowMs: 60 * 60_000 },

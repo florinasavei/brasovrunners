@@ -117,7 +117,7 @@ describe("BR-REQ-070-01 everything held about a person", () => {
       canonicalizationVersion: interest.canonicalizationVersion,
       locale: "ro",
     });
-    // An offer to volunteer (§NNN) is found by the same canonical address, and is everything typed.
+    // An offer to volunteer (§754) is found by the same canonical address, and is everything typed.
     const [volunteerRole] = await db.insert(eventVolunteerRoles).values({ eventId, nameRo: "Punct de apă", nameEn: "Water point", needed: 2 }).returning();
     await db.insert(eventVolunteers).values({
       eventId,

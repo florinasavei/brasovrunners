@@ -143,7 +143,7 @@ export const FEEDBACK_FORMS_MERGE_FIELD = "feedbackForms";
 export const MEMBERS_SHOP_MERGE_FIELD = "membersShop";
 
 /**
- * The privacy notice's marker for the event volunteers (§NNN): the public form's name on an event's page,
+ * The privacy notice's marker for the event volunteers (§754): the public form's name on an event's page,
  * quoted, in the reader's language (`volunteers/notice-words.ts`) — „Vreau să fiu voluntar” / “I want to
  * volunteer” — in section 5's paragraph that says what a sign-up keeps (the name, the address, the
  * telephone number, the role, the message, the organizers' note), why (to organize the help at the event,
@@ -563,7 +563,7 @@ export function describesMembersShop(body: unknown): boolean {
 }
 
 /**
- * Whether a privacy notice describes the event volunteers (§NNN): it names `{{volunteers}}`. The gate for
+ * Whether a privacy notice describes the event volunteers (§754): it names `{{volunteers}}`. The gate for
  * the event page's «Vreau să fiu voluntar» and for every public sign-up, and what `/admin/tasks`' row
  * `volunteersNotice` reads. Pure; the caller asks it of the notice in force, in every language.
  */

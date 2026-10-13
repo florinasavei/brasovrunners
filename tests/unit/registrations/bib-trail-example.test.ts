@@ -191,7 +191,7 @@ describe("§750 the distance badge", () => {
   it("keeps the race's title clear of it", async () => {
     const on = await sheet({ design: design({ showDistance: true }), distanceBadge: "21K" });
     const off = await sheet({ design: design({ showDistance: false }) });
-    // The title is right-aligned by hand with no width (§NNN): its right edge is its x plus pdfkit's own width.
+    // The title is right-aligned by hand with no width (§755): its right edge is its x plus pdfkit's own width.
     const measure = new PDFDocument({ autoFirstPage: false });
     measure.registerFont("bold", path.join(process.cwd(), "src", "theme", "pdf", "Roboto-Bold.ttf"));
     const right = (drawn: Drawn) => {

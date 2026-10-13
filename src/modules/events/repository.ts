@@ -99,7 +99,7 @@ export const RACE_NUMBER_FORMAT = sql<RaceNumberFormat>`coalesce(${events.bibDes
  * date in the row's language — so any change of the design (the number's format, the member mark, the
  * sponsors' place, the profile, the phone) is a new address, as the bibs page's stamp of the whole
  * design is. A change detector, no security claim, like `bibPictureStamp`; it needs the event's
- * translation joined, as every desk query has it. It starts with `BIB_DRAWING_VERSION` (§NNN), so a
+ * translation joined, as every desk query has it. It starts with `BIB_DRAWING_VERSION` (§755), so a
  * change of the drawing itself — the header's lines — is a new address too.
  */
 export const BIB_STAMP = sql<string>`md5(concat_ws('|', ${String(BIB_DRAWING_VERSION)}::text, ${events.bibDesign}::text, ${events.bibColour}, ${events.coHosts}::text, ${events.coHostName}, ${events.coHostUrl}, ${events.routeGpx} ->> 'key', ${events.distanceMeters}, ${events.elevationGainMeters}, ${eventTranslations.title}, ${events.startsAt}::text))`;

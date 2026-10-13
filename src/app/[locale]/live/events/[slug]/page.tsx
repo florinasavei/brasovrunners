@@ -76,7 +76,7 @@ export default async function LiveEventDetailPage({ params, searchParams }: Prop
       query={searchParams}
       canEdit={staffUser !== null && canEditTexts(staffUser.role)}
       membersRead={membersRead}
-      // The volunteer box's sealed draft (§NNN): a cookie, so only this per-request twin reads it.
+      // The volunteer box's sealed draft (§754): a cookie, so only this per-request twin reads it.
       readVolunteerDraft={readFormDraft}
     />
   );

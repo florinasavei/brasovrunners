@@ -27,7 +27,7 @@ export const RETENTION_PERIODS = {
    */
   identityAndHealthDaysAfterEvent: 7,
   /**
-   * A volunteer's offer (§NNN): a name, an address and a telephone number given to organize the help at
+   * A volunteer's offer (§754): a name, an address and a telephone number given to organize the help at
    * one event, with no claim behind it — so it goes thirty days after the event's start, long enough to
    * thank people and settle what was promised, and the privacy notice says exactly this (section 7).
    */

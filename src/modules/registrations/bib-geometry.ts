@@ -58,7 +58,7 @@ export const BIB_LAYOUT = {
   logoWidth: 122,
   logoRatio: 2.424,
   /**
-   * The race and its date at the right of the band, laid out once by `bibHeaderLayout` (§NNN) and
+   * The race and its date at the right of the band, laid out once by `bibHeaderLayout` (§755) and
    * drawn at its points by both renderers, which is what keeps the preview the paper rather than a
    * card sized by eye. A title that fits on one line at `titleSize` sits at `titleTop` with the date
    * at `dateTop`, as every bib printed before; the date on its own sits at `dateTopAlone`. A longer
@@ -163,7 +163,7 @@ export const BIB_LAYOUT = {
   /**
    * The distance badge (§750), in the header's right corner like the owner's marathon example: a
    * rounded tag `badgeWidth` × `badgeHeight` at the card's right inset, centred on the band — or, while
-   * the members' label sits under it, on the band above the label's tag (`bibHeaderLayout`, §NNN) — in
+   * the members' label sits under it, on the band above the label's tag (`bibHeaderLayout`, §755) — in
    * the header's own text colour with the distance — «21K» — in the band's colour on it, `badgeSize`
    * points bold. The race and its date give up its width plus `badgeGap` on their right
    * (`bibHeaderReserve`).
@@ -204,7 +204,7 @@ export const BIB_TEXT_LINE = 2400 / 2048;
 
 /**
  * The room between the title's last line and the date: what a 13-point title at `titleTop` always left
- * above `dateTop` (3.77 points), so a title that fits on one line draws exactly where it did (§NNN).
+ * above `dateTop` (3.77 points), so a title that fits on one line draws exactly where it did (§755).
  */
 export const BIB_TITLE_DATE_GAP = BIB_LAYOUT.dateTop - BIB_LAYOUT.titleTop - BIB_TEXT_LINE * BIB_LAYOUT.titleSize;
 
@@ -215,7 +215,7 @@ export const BIB_TITLE_DATE_GAP = BIB_LAYOUT.dateTop - BIB_LAYOUT.titleTop - BIB
  */
 export const BIB_MEMBER_LABEL_LINE = BIB_LAYOUT.memberTagTop + (BIB_LAYOUT.memberTagHeight - BIB_TEXT_LINE * BIB_LAYOUT.memberLabelSize) / 2;
 
-/** What the header draws its words from (§NNN): a part switched off, or with nothing to say, is `null`. */
+/** What the header draws its words from (§755): a part switched off, or with nothing to say, is `null`. */
 export type BibHeaderText = {
   /** The race's title, as typed — never changed, only laid out. */
   title: string | null;
@@ -236,7 +236,7 @@ export type BibHeaderMeasure = { title: (text: string) => number; date: (text: s
 export type BibHeaderLine = { text: string; top: number };
 
 /**
- * The header's words, laid out (§NNN). `left` and `right` are the column's edges from the card's left,
+ * The header's words, laid out (§755). `left` and `right` are the column's edges from the card's left,
  * in points: every line is right-aligned on `right`, and none is wider than the column. The title's
  * lines share one `size`; `cut` says a line ends in «…», something of the title left out. The date is
  * set at `dateSize`.
@@ -260,7 +260,7 @@ const ENDS_IN_LONE_DASH = / [-‐‒–—―]+$/u;
 const HEADER_TRAILING = /[\s,;:·\-‐‒–—―]+$/u;
 
 /**
- * The race and its date on the band, laid out once for both renderers (§NNN, amending §750's header).
+ * The race and its date on the band, laid out once for both renderers (§755, amending §750's header).
  *
  * The owner, on a printed bib of a race with a long name and the distance badge on: «când bifez distanța
  * pe număr am overlap» — the sheet handed pdfkit the title with a width, pdfkit wrapped it onto a second

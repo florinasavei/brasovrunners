@@ -13,7 +13,7 @@ import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository
 import { changeVolunteer, changeVolunteerRole, submitVolunteer } from "@/modules/volunteers/volunteers";
 
 /**
- * §NNN — a volunteer role never takes more people than it needs from the public form, proven with real
+ * §754 — a volunteer role never takes more people than it needs from the public form, proven with real
  * connections racing (BR-REQ-031-01).
  *
  * Ten people press «Mă ofer voluntar» for the same role at the same moment, each on its own connection: the
@@ -29,7 +29,7 @@ import { changeVolunteer, changeVolunteerRole, submitVolunteer } from "@/modules
 const DATABASE_URL = process.env.DATABASE_URL;
 if (!DATABASE_URL) throw new Error("tests/concurrency needs a real PostgreSQL: set DATABASE_URL and migrate first.");
 
-describe("§NNN BR-REQ-031-01 ten people offer for a role's last place at once", () => {
+describe("§754 BR-REQ-031-01 ten people offer for a role's last place at once", () => {
   const pool = new pg.Pool({ connectionString: DATABASE_URL, max: 20 });
   const db = drizzle(pool);
   // The real clock: the notice inserted here must be the one in force, after whatever another suite approved.

@@ -2,7 +2,7 @@ import { CSV_BOM } from "@/modules/newsletter/subscribers-csv";
 import { csvCell } from "@/modules/registrations/csv";
 
 /**
- * «Descarcă CSV» on an event's «Voluntari» card (§NNN): one row per volunteer, grouped by role in the
+ * «Descarcă CSV» on an event's «Voluntari» card (§754): one row per volunteer, grouped by role in the
  * club's order, in the reader's language.
  *
  * The registrations export's rules (`registrations/csv.ts`), reused rather than copied: every cell

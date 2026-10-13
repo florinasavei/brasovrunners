@@ -20,7 +20,7 @@ import { type FormOutcome, refused } from "@/shared/forms/outcome";
 import { isUuid } from "@/shared/ids";
 
 /*
-  An event's volunteers (§NNN): the Server Actions behind the editor's «Voluntari» card. Each is a plain
+  An event's volunteers (§754): the Server Actions behind the editor's «Voluntari» card. Each is a plain
   form that works with scripts off; every one asks the service, which asserts the role again (the
   Organizer and the Administrators read and write, nobody else sees the card — BR-REQ-060-01), so the
   buttons the card draws are a courtesy.

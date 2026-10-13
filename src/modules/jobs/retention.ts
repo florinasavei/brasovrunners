@@ -143,7 +143,7 @@ export const RETENTION = {
    * `group-run-declarations/domain.ts`, where the signing page reads it too.
    */
   groupRunIdDocumentDaysAfterEvent: GROUP_RUN_DECLARATION_ID_DOCUMENT_DAYS,
-  /** A volunteer's offer goes thirty days after the event's start (§NNN); the privacy notice says exactly this. */
+  /** A volunteer's offer goes thirty days after the event's start (§754); the privacy notice says exactly this. */
   volunteerDaysAfterEvent: RETENTION_PERIODS.volunteerDaysAfterEvent,
   /** The log of staff actions: three years, as the notice says. */
   auditLogYears: 3,
@@ -173,7 +173,7 @@ export type PruneCounts = {
   newsletter: number;
   /** Invitations that ended unaccepted, gone after `endedInvitationDays` (§647). */
   invitations: number;
-  /** Volunteer offers, gone thirty days after the event started (§NNN). */
+  /** Volunteer offers, gone thirty days after the event started (§754). */
   volunteers: number;
 };
 
@@ -593,7 +593,7 @@ export async function pruneExpiredRows<T extends Record<string, unknown>>(
   });
 
   /*
-    A volunteer's offer (§NNN): a name, an address and a telephone number given to organize the help at one
+    A volunteer's offer (§754): a name, an address and a telephone number given to organize the help at one
     event, with no claim behind it. Deleted thirty days after the event's start — whatever its state,
     «Anulat» included — and the privacy notice's section 7 says so; an offer entered after the start, thirty
     days after its entry. The row's own age is asked too, so one wrong year typed in the editor (2025 for

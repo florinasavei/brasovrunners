@@ -258,12 +258,12 @@ export type OwnerTaskInputs = {
   /** How many products members would see in the shop (§683): the row waits only while there is one. */
   visibleShopProducts: number;
   /**
-   * Does the notice in force, in every language, describe the event volunteers (§NNN,
+   * Does the notice in force, in every language, describe the event volunteers (§754,
    * `noticeDescribesVolunteers`)? Until it does, no event page offers «Vreau să fiu voluntar» and no
    * public sign-up is kept; the club's own list works regardless.
    */
   volunteersDescribed: boolean;
-  /** How many events still ahead take volunteers (§NNN): the row waits only while there is one. */
+  /** How many events still ahead take volunteers (§754): the row waits only while there is one. */
   volunteeringEvents: number;
   /**
    * Does the notice in force, in every language, say a message may leave through the club's Gmail
@@ -565,7 +565,7 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
       });
     }
     /*
-      The event volunteers (§NNN), the shop's shape: open while an event ahead takes volunteers and the
+      The event volunteers (§754), the shop's shape: open while an event ahead takes volunteers and the
       notice in force does not name `{{volunteers}}` (the club ticked «Primește voluntari» and the page shows
       no form: the club must hear why), done by itself the day a notice naming it takes effect, and absent
       while no event takes volunteers and the notice is silent.

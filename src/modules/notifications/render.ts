@@ -340,7 +340,7 @@ async function renderRow(
   // The event comes from the registration — or, for the one message about an event and
   // nobody's registration (§146), from the payload's id, so a renamed event renders right.
   // A bulk send's club copy names its event the same way (§419).
-  // A volunteer's two messages (§NNN) name their event the same way: the payload's id, no registration behind them.
+  // A volunteer's two messages (§754) name their event the same way: the payload's id, no registration behind them.
   const payloadEventId =
     row.messageType === "REGISTRATION_OPENED" ||
     row.messageType === "VOLUNTEER_RECEIVED" ||
@@ -883,7 +883,7 @@ async function renderRow(
         : `${env.APP_BASE_URL}${getPathname({ locale, href: "/members-area/shop" })}#members-shop`;
   }
   /*
-    A volunteer's two messages (§NNN): the volunteer's id and the event's are the payload — no
+    A volunteer's two messages (§754): the volunteer's id and the event's are the payload — no
     participant, no token. The name and the role (both languages, the club typed both) are read here, at
     the send, so a role renamed after the sign-up reads right; a volunteer gone or cancelled since
     withdraws the message (nothing left to acknowledge). The person's message has no button; the

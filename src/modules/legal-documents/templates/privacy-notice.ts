@@ -111,7 +111,7 @@
  * names it in every language (`describesMembersShop`). **Open for counsel:** the accounting period in
  * years, and whether section 7's list should name it; the platform deletes no order by itself yet.
  *
- * `{{volunteers}}` in section 5 (§NNN) is the event page's form «Vreau să fiu voluntar», quoted, in the
+ * `{{volunteers}}` in section 5 (§754) is the event page's form «Vreau să fiu voluntar», quoted, in the
  * paragraph that says what an offer keeps (name, address, telephone number, role, message, the
  * organizers' note), why (consent, art. 6(1)(a), for the public form; art. 6(1)(f) for a person the
  * organizers entered), what is sent (one email of receipt to the person, one notice to the organizers

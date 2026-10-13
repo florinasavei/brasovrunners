@@ -129,7 +129,7 @@ export async function resetTables(db: TestDatabase): Promise<void> {
   await db.delete(mediaAssets);
   // An event's own to-dos (§749) cascade from it; deleted first like the translations.
   await db.delete(eventTodos);
-  // An event's volunteers (§NNN) cascade from it, and their role is `RESTRICT`: the people first, then the roles.
+  // An event's volunteers (§754) cascade from it, and their role is `RESTRICT`: the people first, then the roles.
   await db.delete(eventVolunteers);
   await db.delete(eventVolunteerRoles);
   await db.delete(eventTranslations);

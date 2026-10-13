@@ -32,7 +32,7 @@ import {
 } from "./domain/volunteer";
 
 /**
- * An event's volunteers (§NNN; the owner, 2026-10-13: «I want to register volunteers for a race and be
+ * An event's volunteers (§754; the owner, 2026-10-13: «I want to register volunteers for a race and be
  * able to define custom roles», choosing a public form on the race's page as well as the organizers' own
  * list, and roles defined per event).
  *
@@ -160,7 +160,7 @@ export type PublicVolunteerRole = {
 
 /**
  * What an event's page reads to decide whether to draw «Vreau să fiu voluntar» and which roles to list
- * (§NNN): the tick, and every role with its standing, in the club's order. Names and counts only — nothing
+ * (§754): the tick, and every role with its standing, in the club's order. Names and counts only — nothing
  * of a person — so the public cache may hold it (`public-cache/reads.ts`); expired by every write here.
  */
 export async function readPublicVolunteerRoles<T extends Record<string, unknown>>(
@@ -342,7 +342,7 @@ export async function changeVolunteerRole<T extends Record<string, unknown>>(
 }
 
 /**
- * «Primește voluntari» on or off (§NNN): the event's own tick, in the volunteers' card's own form — the
+ * «Primește voluntari» on or off (§754): the event's own tick, in the volunteers' card's own form — the
  * editor's save never writes it. Switching it off hides the public form and keeps every role and every
  * person; nothing is deleted by a switch.
  */
@@ -553,7 +553,7 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
 }
 
 /**
- * The volunteers' export (§NNN), «Descarcă CSV»: the same rows the card lists, recorded as
+ * The volunteers' export (§754), «Descarcă CSV»: the same rows the card lists, recorded as
  * `volunteer.exported` with the count and never a value — a file that leaves the application is a copy
  * the retention sweep cannot reach, which is why the trail says it was made.
  */

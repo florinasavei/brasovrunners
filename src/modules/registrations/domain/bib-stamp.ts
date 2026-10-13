@@ -1,10 +1,10 @@
 import { fnv1a } from "@/shared/hash";
 
 /**
- * The version of the bib's drawing (§NNN): raised whenever the renderers draw the same design
+ * The version of the bib's drawing (§755): raised whenever the renderers draw the same design
  * differently, so every stamped picture address changes with it. The design, the colour and the
  * title are what the club changes; this is what the platform changes. 2: the header's title in up to
- * two lines beside the badge, the date under its real height, the badge centred (§NNN). The bibs
+ * two lines beside the badge, the date under its real height, the badge centred (§755). The bibs
  * page's stamp (`bibPictureStamp`) and the desk's (`events/repository.ts#BIB_STAMP`) both carry it.
  */
 export const BIB_DRAWING_VERSION = 2;

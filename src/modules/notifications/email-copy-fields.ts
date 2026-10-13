@@ -331,7 +331,7 @@ const NO_PERSON: ReadonlySet<EmailMessageType> = new Set([
   "NEWSLETTER_CONFIRM",
   "NEWSLETTER",
   "NEW_EVENT_ALERT",
-  // The organizers' notice of a volunteer's sign-up (§NNN) greets the colleague and names the volunteer in its facts line.
+  // The organizers' notice of a volunteer's sign-up (§754) greets the colleague and names the volunteer in its facts line.
   "VOLUNTEER_CLUB_NOTICE",
 ]);
 /**
@@ -367,7 +367,7 @@ const NO_REGISTRATION: ReadonlySet<EmailMessageType> = new Set([
   "SHOP_ORDER_PLACED",
   "SHOP_ORDER_PAID",
   "SHOP_ORDER_CLUB_NOTICE",
-  // A volunteer's sign-up (§NNN): about an event and a role, never a registration.
+  // A volunteer's sign-up (§754): about an event and a role, never a registration.
   "VOLUNTEER_RECEIVED",
   "VOLUNTEER_CLUB_NOTICE",
   "REGISTRATION_OPENED",

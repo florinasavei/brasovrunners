@@ -339,7 +339,7 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
     A members' picture that could not be fetched draws the members' colour, else the event's band —
     never a failed sheet, and never the event's own picture, which would hide whose bib it is.
   */
-  // The race and its date as this header lays them out (§NNN): the same on every bib of a header, so
+  // The race and its date as this header lays them out (§755): the same on every bib of a header, so
   // laid out once; `label` while the members' label sits on the band under them.
   const headerWords = (label: boolean) =>
     bibHeader({
@@ -424,7 +424,7 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
     /*
       The lockup at the left of the band, white on whatever colour the band is; the race and its
       date at the right, in whichever of white and ink can be read on it — at the lines and points
-      `bibHeader` laid out for this header (§NNN). Each line is right-aligned by hand on the column's
+      `bibHeader` laid out for this header (§755). Each line is right-aligned by hand on the column's
       right edge and handed to pdfkit with **no width**: given one, pdfkit wraps at its own leading
       and after a hyphen, which is how a long race's second line once fell on its date. Without a
       width it cannot wrap at all, and the layout measured every line no narrower than pdfkit sets it.

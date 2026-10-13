@@ -90,7 +90,7 @@ export type PersonData = {
   }>;
   announcementRequests: Array<{ eventId: string; eventTitle: string | null; deliveryEmail: string; locale: string; createdAt: Date }>;
   /**
-   * What the person offered as a volunteer (§NNN): the event, the role, the state, where it came from and
+   * What the person offered as a volunteer (§754): the event, the role, the state, where it came from and
    * what was typed — name, address, telephone number, their message and the organizers' note, every column
    * of the row (art. 15 GDPR). Deleted by the event's «Voluntari» card, or thirty days after the event.
    */
@@ -186,7 +186,7 @@ async function collectPersonData<T extends Record<string, unknown>>(
     .where(eq(registrationInterests.canonicalEmail, canonicalEmail))
     .orderBy(asc(registrationInterests.createdAt));
 
-  // The offers to volunteer (§NNN), found by the same canonical address: the event's title in Romanian, the role as the club wrote it.
+  // The offers to volunteer (§754), found by the same canonical address: the event's title in Romanian, the role as the club wrote it.
   const volunteerOffers = await db
     .select({
       eventId: eventVolunteers.eventId,

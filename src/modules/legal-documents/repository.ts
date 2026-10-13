@@ -309,7 +309,7 @@ export async function noticeDescribesMembersShop<T extends Record<string, unknow
 }
 
 /**
- * Whether the privacy notice in force describes the event volunteers (§NNN, `describesVolunteers`) — in
+ * Whether the privacy notice in force describes the event volunteers (§754, `describesVolunteers`) — in
  * every language, like `noticeDescribesMembersShop`: one form serves both pages, and a person in either
  * was told only what their language's notice says. For the public sign-up (asked again at every post),
  * and `/admin/tasks`; the event page reads the cached twin (`cachedVolunteersDescribed`).

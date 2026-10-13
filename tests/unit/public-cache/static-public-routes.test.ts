@@ -249,7 +249,7 @@ const REQUEST_READERS_ALLOWED: Record<string, string> = {
   */
   "src/modules/resilience/last-good.ts": "the resting page's way back, on a cold miss only",
   /*
-    The sealed draft cookie (§142): the event page's volunteer box (§NNN) names a Server Action whose
+    The sealed draft cookie (§142): the event page's volunteer box (§754) names a Server Action whose
     refusal keeps what was typed (`stashDraftValues`, called by the action alone, after a post). The
     page never reads the cookie while it renders: its static copy takes no draft, and the one render
     that reads it — `readFormDraft`, for a refused box — is the live twin's, which passes it in

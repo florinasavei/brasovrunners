@@ -793,10 +793,10 @@ describe("import over an existing event", () => {
   });
 });
 
-// --- An event's volunteers are not the file's (§NNN) -------------------------------------------
+// --- An event's volunteers are not the file's (§754) -------------------------------------------
 
 /**
- * The volunteers' card (§NNN) is no part of what an event *is* for the file: the people are personal data,
+ * The volunteers' card (§754) is no part of what an event *is* for the file: the people are personal data,
  * and the roles and the tick «Primește voluntari» belong to one date — the same rule as a copy of an event
  * (`copyEvent` starts with no role and the tick off) and as the to-dos (§749). The file carries none of them,
  * an import as new starts with none, and an import over an event leaves its own untouched.

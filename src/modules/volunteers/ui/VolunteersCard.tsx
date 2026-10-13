@@ -66,7 +66,7 @@ function shortText(text: string): string {
 }
 
 /**
- * «Voluntari» (§NNN): one card in the event editor, folded, with a summary line «N din M» and open on
+ * «Voluntari» (§754): one card in the event editor, folded, with a summary line «N din M» and open on
  * arrival while anybody waits for an answer. The event's tick «Primește voluntari» and what keeps the public
  * form off the page; the event's **roles** — bilingual, how many each needs, in the order the club sets;
  * the **people** grouped by role with «N din M» each — entered by hand, changed, confirmed, cancelled,

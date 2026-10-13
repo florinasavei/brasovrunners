@@ -14,7 +14,7 @@ import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — an event's «Voluntari» card (BR-REQ-050-02, BR-REQ-060-01), through the real Server Actions:
+ * §754 — an event's «Voluntari» card (BR-REQ-050-02, BR-REQ-060-01), through the real Server Actions:
  * the roles defined per event in both languages, ordered, edited and removed; the people entered by hand,
  * changed, confirmed, cancelled and deleted; every change audited with ids and never a name, an address or a
  * telephone number; the role asserted by the service whatever the card drew (the Organizer and the
@@ -141,7 +141,7 @@ async function addPerson(roleId: string, fields: Record<string, string> = {}) {
   return rows[rows.length - 1];
 }
 
-describe("§NNN an event's volunteer roles", () => {
+describe("§754 an event's volunteer roles", () => {
   it("adds a role with both names, how many it needs and a description in both languages, and audits it", async () => {
     const role = await addRole({ nameRo: "  Punct   de apă ", descriptionRo: "Dai apă", descriptionEn: "Hand out water" });
     expect(role).toMatchObject({ eventId, nameRo: "Punct de apă", nameEn: "Water point", needed: 4, descriptionRo: "Dai apă", descriptionEn: "Hand out water", position: 0 });
@@ -233,7 +233,7 @@ describe("§NNN an event's volunteer roles", () => {
   });
 });
 
-describe("§NNN an event's volunteers, entered by hand", () => {
+describe("§754 an event's volunteers, entered by hand", () => {
   it("adds a person with the telephone number composed to E.164, «Înscris», from the staff, and audits ids only", async () => {
     const role = await addRole();
     const row = await addPerson(role.id, { note: "Prietena lui Dan" });
@@ -343,7 +343,7 @@ describe("§NNN an event's volunteers, entered by hand", () => {
   });
 });
 
-describe("§NNN «Primește voluntari»", () => {
+describe("§754 «Primește voluntari»", () => {
   it("switches the event's tick on and off through its own form, audits a change and not a repeat, and leaves the event's version alone", async () => {
     const [before] = await db.select().from(events).where(eq(events.id, eventId));
     expect(before.acceptsVolunteers).toBe(false);
@@ -367,7 +367,7 @@ describe("§NNN «Primește voluntari»", () => {
   });
 });
 
-describe("§NNN who may do what (BR-REQ-060-01) — the service asserts it, whatever the card drew", () => {
+describe("§754 who may do what (BR-REQ-060-01) — the service asserts it, whatever the card drew", () => {
   it("lets the Organizer, the Administrator and the Superadministrator write", async () => {
     const superadmin = await person("SUPERADMIN", "Sara Superadmin");
     for (const actor of [staff.MODERATOR!, staff.ADMIN!, superadmin]) {
@@ -409,7 +409,7 @@ describe("§NNN who may do what (BR-REQ-060-01) — the service asserts it, what
   });
 });
 
-describe("§NNN the CSV", () => {
+describe("§754 the CSV", () => {
   async function get(actor: StaffUser, id = eventId, lang = "ro") {
     state.actor = actor;
     return exportRoute.GET(new Request(`https://example.test/api/admin/events/${id}/volunteers?lang=${lang}`), { params: Promise.resolve({ id }) });
@@ -452,7 +452,7 @@ describe("§NNN the CSV", () => {
   });
 });
 
-describe("§NNN a copy of an event is not its volunteers", () => {
+describe("§754 a copy of an event is not its volunteers", () => {
   it("copies neither the roles nor the people nor the tick: a copy takes no volunteers until the club says so", async () => {
     const role = await addRole();
     await addPerson(role.id);
@@ -468,7 +468,7 @@ describe("§NNN a copy of an event is not its volunteers", () => {
   });
 });
 
-describe("§NNN deleting an event", () => {
+describe("§754 deleting an event", () => {
   it("takes its roles and its people with it — the role's RESTRICT never stands in the way of the event's cascade", async () => {
     const role = await addRole();
     await addPerson(role.id);

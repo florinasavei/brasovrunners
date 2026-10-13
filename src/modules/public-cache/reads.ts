@@ -562,7 +562,7 @@ export async function cachedNewsletterOffered(now: Date): Promise<boolean> {
 }
 
 /**
- * Whether an event's page may offer «Vreau să fiu voluntar» (§NNN): the privacy notice in force describes
+ * Whether an event's page may offer «Vreau să fiu voluntar» (§754): the privacy notice in force describes
  * the event volunteers (`describesVolunteers`), in every language — `cachedNewsletterOffered`'s reading,
  * so an approval opens the form the moment the notice itself changes. `noticeDescribesVolunteers` is the
  * uncached twin the sign-up asks again at every post.
@@ -573,7 +573,7 @@ export async function cachedVolunteersDescribed(now: Date): Promise<boolean> {
 }
 
 /**
- * An event's volunteer roles with how each stands (§NNN, `readPublicVolunteerRoles`): the tick, and for
+ * An event's volunteer roles with how each stands (§754, `readPublicVolunteerRoles`): the tick, and for
  * each role its names, its description and how many people it still needs — names and counts only, nothing
  * of a person. Filed under the event's and the places' tags: every write to the roles or the people
  * (`volunteers.ts`) expires it, so a role that has just filled is not offered. It is a page render and not a

@@ -25,14 +25,14 @@ import { volunteersClause, volunteersMergeValues } from "@/modules/volunteers/no
 import { parseVolunteerBoxes, parseVolunteerOutcome } from "@/modules/volunteers/ui/volunteer-box";
 
 /**
- * §NNN — volunteers for a race, the pure part: what a role and a person may be, how a role stands
+ * §754 — volunteers for a race, the pure part: what a role and a person may be, how a role stands
  * («N din M»), the three conditions that open the public form, the notice's marker, the retention
  * the notice promises, and the CSV's safety. No database.
  */
 const ID = "5d7a2f64-3b0c-4f25-9d57-0a9a6b3a1c11";
 const ROLE = { nameRo: "Punct de apă", nameEn: "Water point", needed: "4", descriptionRo: "", descriptionEn: "" };
 
-describe("§NNN a role as the club types it", () => {
+describe("§754 a role as the club types it", () => {
   it("takes both names and a number of at least one, and folds the whitespace", () => {
     const parsed = volunteerRoleInputSchema.parse({ ...ROLE, nameRo: "  Punct   de apă ", needed: " 4 " });
     expect(parsed).toMatchObject({ nameRo: "Punct de apă", nameEn: "Water point", needed: 4, descriptionRo: null, descriptionEn: null });
@@ -72,7 +72,7 @@ describe("§NNN a role as the club types it", () => {
 
 const staff = { roleId: ID, name: " Ana  Test ", email: " ana@example.test ", phone: "+40712345678", note: "" };
 
-describe("§NNN a person, entered by hand or offering on the page", () => {
+describe("§754 a person, entered by hand or offering on the page", () => {
 
   it("takes the staff's boxes: a role, a name, an address, an E.164 telephone number, an optional note", () => {
     expect(volunteerStaffInputSchema.parse(staff)).toMatchObject({ roleId: ID, name: "Ana Test", phone: "+40712345678", note: null });
@@ -109,7 +109,7 @@ describe("§NNN a person, entered by hand or offering on the page", () => {
   });
 });
 
-describe("§NNN the telephone number an organizer types — the registrations' own parser (typedPhone)", () => {
+describe("§754 the telephone number an organizer types — the registrations' own parser (typedPhone)", () => {
   // The organizers' box posts what was typed; the action reads it with `typedPhone`, the parser an
   // Administrator's correction of a registration uses, and the schema keeps only what a phone can dial.
   const staffWith = (typed: string) => volunteerStaffInputSchema.safeParse({ ...staff, phone: typedPhone(typed) });
@@ -138,7 +138,7 @@ describe("§NNN the telephone number an organizer types — the registrations' o
   });
 });
 
-describe("§NNN how a role stands: «N din M»", () => {
+describe("§754 how a role stands: «N din M»", () => {
   const role = { id: "r1", needed: 3 };
 
   it("counts «Înscris» and «Confirmat» against a role and never «Anulat»", () => {
@@ -177,7 +177,7 @@ describe("§NNN how a role stands: «N din M»", () => {
   });
 });
 
-describe("§NNN the three conditions of the public form", () => {
+describe("§754 the three conditions of the public form", () => {
   const open = { acceptsVolunteers: true, standings: [{ free: 2 }], noticeDescribes: true, eventAhead: true, published: true, membersOnly: false };
 
   it("is offered only when the event takes volunteers, a role still needs people and the notice describes them", () => {
@@ -240,7 +240,7 @@ describe("§NNN the three conditions of the public form", () => {
   });
 });
 
-describe("§NNN the privacy notice's marker {{volunteers}}", () => {
+describe("§754 the privacy notice's marker {{volunteers}}", () => {
   it("is a merge field, and a notice describes volunteers only when it names it", () => {
     expect(VOLUNTEERS_MERGE_FIELD).toBe("volunteers");
     expect(describesVolunteers({ sections: [{ heading: "5.", paragraphs: ["Voluntari ({{volunteers}}): …"] }] })).toBe(true);
@@ -280,7 +280,7 @@ describe("§NNN the privacy notice's marker {{volunteers}}", () => {
   });
 });
 
-describe("§NNN the public form's address and answer", () => {
+describe("§754 the public form's address and answer", () => {
   it("reads the answer from ?volunteer= and nothing else", () => {
     expect(parseVolunteerOutcome("1")).toBe("done");
     for (const value of ["invalid", "captcha", "limited", "full"] as const) expect(parseVolunteerOutcome(value)).toBe(value);
@@ -294,7 +294,7 @@ describe("§NNN the public form's address and answer", () => {
   });
 });
 
-describe("§NNN the CSV", () => {
+describe("§754 the CSV", () => {
   const header = { role: "Rol", name: "Nume", email: "Email", phone: "Telefon", state: "Stare", source: "Sursă", message: "Mesaj", note: "Notă", signedUpAt: "Data" };
 
   it("starts with a BOM, ends no line with a bare newline and keeps a formula a text", () => {

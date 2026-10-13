@@ -363,7 +363,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   const todoErrorCode = (["FORBIDDEN", "VALIDATION_ERROR", "CONFLICT", "NOT_FOUND"] as const).find((code) => code === query.todoError);
 
   /*
-    «Voluntari» (§NNN): the event's roles and the people on them — their addresses and telephone numbers —
+    «Voluntari» (§754): the event's roles and the people on them — their addresses and telephone numbers —
     read only for whoever may manage them (`canManageVolunteers`: the Organizer and the Administrators); the
     Tehnic role and the Redactor get no card and no query. Why the public form is not on the page is told
     from the same conditions the page reads (`volunteerOfferClosedFor`), the notice from the database, not
@@ -964,7 +964,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                 today={dayIn(now, CLUB_TIME_ZONE)}
                 error={todoErrorCode ? t(`errors.${todoErrorCode}`) : undefined}
               />
-              {/* «Voluntari» (§NNN): the roles and the people, with forms of their own beside the save form. Only for whoever may manage them. */}
+              {/* «Voluntari» (§754): the roles and the people, with forms of their own beside the save form. Only for whoever may manage them. */}
               {volunteersCard && (
                 <VolunteersCard
                   locale={locale}

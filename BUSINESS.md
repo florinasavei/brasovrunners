@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.14-2026-10-13 -->
+<!-- PROJECT_BASELINE: BR-V3.15-2026-10-14 -->
 
 # Brașov Runners — Business Guide
 
-**Baseline `BR-V3.14-2026-10-13`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.15-2026-10-14`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Club organizers, event coordinators, content contributors, sponsors, and other non-technical stakeholders.
@@ -715,7 +715,7 @@ member's or a participant's address.
 
 Participants are not application roles. Having permission to write articles does not grant access to participant data.
 
-**«Voluntar» names two different things, and the words keep them apart (`DECISIONS.md` §NNN).** The
+**«Voluntar» names two different things, and the words keep them apart (`DECISIONS.md` §754).** The
 staff role above — the **desk Volunteer** (`CONTRIBUTOR`) — is an account on «Echipa» that signs in
 and works the race-day desk. An **event's volunteer** («voluntar la eveniment», the «Voluntari» card
 of one event) is a person who offered to help at that event, or whom an organizer entered: a name,

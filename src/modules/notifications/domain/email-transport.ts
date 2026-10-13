@@ -85,7 +85,7 @@ export const EMAIL_GROUP_OF: Readonly<Record<EmailMessageType, EmailGroup>> = {
   SHOP_ORDER_PLACED: "confirmations",
   SHOP_ORDER_PAID: "confirmations",
   SHOP_ORDER_CLUB_NOTICE: "club",
-  // A volunteer's sign-up (§NNN): the person's answer to their own step, and the club's notice to its people.
+  // A volunteer's sign-up (§754): the person's answer to their own step, and the club's notice to its people.
   VOLUNTEER_RECEIVED: "confirmations",
   VOLUNTEER_CLUB_NOTICE: "club",
   NEWSLETTER_CONFIRM: "newsletter",

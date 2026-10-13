@@ -226,7 +226,7 @@ export const DECLARATION_TOKENS: readonly DeclarationToken[] = [
     messageKey: MEMBERS_SHOP_MERGE_FIELD,
     example: inBoth((locale) => membersShopClause(locale)),
   },
-  // The privacy notice's marker for the event volunteers (§NNN): the public form's name, and the switch —
+  // The privacy notice's marker for the event volunteers (§754): the public form's name, and the switch —
   // an event page offers «Vreau să fiu voluntar», and a sign-up is kept, only while it is named (`describesVolunteers`).
   {
     token: `{{${VOLUNTEERS_MERGE_FIELD}}}`,

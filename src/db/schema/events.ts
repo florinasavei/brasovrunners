@@ -490,7 +490,7 @@ export const events = pgTable(
     membersOnly: boolean("members_only").notNull().default(false),
 
     /**
-     * «Primește voluntari» (§NNN; the owner, 2026-10-13: «I want to register volunteers for a race»): the event
+     * «Primește voluntari» (§754; the owner, 2026-10-13: «I want to register volunteers for a race»): the event
      * offers a public «Vreau să fiu voluntar» form on its page — and only while a role still needs people
      * and the privacy notice in force describes volunteers. Off by default, ticked on the editor's
      * «Voluntari» card (its own form: the event's save never writes it). The roles and the people are

@@ -125,7 +125,7 @@ export const PANEL_GLYPHS = {
   todo: ChecklistIcon,
   // «Adaugă un rând» on that card (§749).
   add: AddIcon,
-  // «Voluntari» on an event's editor (§NNN): the roles and the people.
+  // «Voluntari» on an event's editor (§754): the roles and the people.
   volunteers: VolunteerActivismIcon,
   // What an event's registrations are, once it has them.
   registrations: ListAltIcon,

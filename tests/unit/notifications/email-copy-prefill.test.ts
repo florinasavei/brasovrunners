@@ -87,7 +87,7 @@ const EXPECTED: Record<EditedType, EmailCopyPlaceholder[]> = {
   SHOP_ORDER_PLACED: [],
   SHOP_ORDER_PAID: [],
   SHOP_ORDER_CLUB_NOTICE: [],
-  // A volunteer's sign-up (§NNN): the event; the person and the role are the platform's bold line, not fields.
+  // A volunteer's sign-up (§754): the event; the person and the role are the platform's bold line, not fields.
   VOLUNTEER_RECEIVED: ["eventTitle"],
   VOLUNTEER_CLUB_NOTICE: ["eventTitle"],
   REGISTRATION_OPENED: ["eventTitle"],

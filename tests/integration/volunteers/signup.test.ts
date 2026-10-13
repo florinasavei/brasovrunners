@@ -20,13 +20,13 @@ const DAY = 24 * 60 * 60_000;
 const RENDERED = new Date(NOW.getTime() - 60_000).toISOString();
 
 /**
- * §NNN — the public «Vreau să fiu voluntar» (BR-REQ-031-01 criterion 3, BR-REQ-053-01, BR-REQ-080-02):
+ * §754 — the public «Vreau să fiu voluntar» (BR-REQ-031-01 criterion 3, BR-REQ-053-01, BR-REQ-080-02):
  * the three conditions asked again at the post, the house's anti-bot gates with the form's own silence,
  * the role's capacity (its lock, under two real connections, is `tests/concurrency/volunteer-role.test.ts`), one row per person per event on the canonical address, the same
  * answer for a repeat, and the outbox's two messages — the person's «am primit» and each organizer's
  * notice — queued with the row in one transaction.
  */
-describe("§NNN the volunteers' public sign-up", () => {
+describe("§754 the volunteers' public sign-up", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   let admin: StaffUser;
@@ -38,7 +38,7 @@ describe("§NNN the volunteers' public sign-up", () => {
   });
   afterAll(async () => close());
 
-  /** The notice in force, in both languages; `describing` makes it name `{{volunteers}}` (the gate, §NNN). */
+  /** The notice in force, in both languages; `describing` makes it name `{{volunteers}}` (the gate, §754). */
   async function approveNotice(describing: boolean, version = 1) {
     const body = (text: string) => ({ sections: [{ paragraphs: [describing ? `Voluntari ({{volunteers}}): ${text}` : text] }] });
     const translations: LegalDocumentTranslationInput[] = [

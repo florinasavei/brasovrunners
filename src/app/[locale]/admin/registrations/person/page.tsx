@@ -206,7 +206,7 @@ export default async function PersonDataPage({ params, searchParams }: Props) {
                 )}
               </Box>
               <Divider />
-              {/* What the person offered as a volunteer (§NNN): every column of the row, deleted from the event's «Voluntari» card. */}
+              {/* What the person offered as a volunteer (§754): every column of the row, deleted from the event's «Voluntari» card. */}
               <Box component="section" data-testid="person-volunteer-offers">
                 <Typography variant="h3" sx={{ fontSize: "1rem", mb: 1 }}>
                   {t("person.volunteers", { count: data.volunteerOffers.length })}

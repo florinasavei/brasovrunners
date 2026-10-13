@@ -27,7 +27,7 @@ import { fnv1a } from "@/shared/hash";
 import { drawnRuns } from "../../helpers/pdf-drawn";
 
 /**
- * §NNN, BR-REQ-038-01 — the owner, on a printed number of a race with a long name: «când bifez distanța
+ * §755, BR-REQ-038-01 — the owner, on a printed number of a race with a long name: «când bifez distanța
  * pe număr am overlap». The header's words are laid out once (`bibHeaderLayout`) and both renderers draw
  * exactly those lines: a long title fits beside the lockup and the badge in at most two lines, never
  * broken inside a word, and never covers the date. The titles are made up, and so are the names.
@@ -101,7 +101,7 @@ function checkLayout(input: BibHeaderText, layout: BibHeaderLayout) {
   expect(layout.badgeTop + L.badgeHeight).toBeLessThanOrEqual(L.memberTagTop);
 }
 
-describe("§NNN the header's layout", () => {
+describe("§755 the header's layout", () => {
   it("fits every combination of title, lockup, badge, label and date inside the column and the band", () => {
     for (const input of CASES) checkLayout(input, bibHeader(input));
   });
@@ -228,7 +228,7 @@ describe("§NNN the header's layout", () => {
   });
 });
 
-describe("§NNN the title's widths are Roboto Bold's", () => {
+describe("§755 the title's widths are Roboto Bold's", () => {
   const doc = new PDFDocument({ autoFirstPage: false });
   doc.registerFont("title", path.join(process.cwd(), "src", "theme", "pdf", "Roboto-Bold.ttf"));
 
@@ -297,7 +297,7 @@ const sheetRuns = (bibDesign: BibDesign, member: boolean, title = LONG) =>
     }),
   );
 
-describe("§NNN the sheet draws the layout's lines", () => {
+describe("§755 the sheet draws the layout's lines", () => {
   const measure = new PDFDocument({ autoFirstPage: false });
   measure.registerFont("bold", path.join(process.cwd(), "src", "theme", "pdf", "Roboto-Bold.ttf"));
   measure.registerFont("body", path.join(process.cwd(), "src", "theme", "pdf", "Roboto-Regular.ttf"));
@@ -360,7 +360,7 @@ describe("§NNN the sheet draws the layout's lines", () => {
   });
 });
 
-describe("§NNN the picture draws the layout's lines", () => {
+describe("§755 the picture draws the layout's lines", () => {
   const px = (points: number) => points * BIB_IMAGE_SCALE;
 
   it("puts each line in its own one-line box at the layout's points", () => {
@@ -469,7 +469,7 @@ describe("§NNN the picture draws the layout's lines", () => {
   }
 });
 
-describe("§NNN the pictures' addresses change with the drawing", () => {
+describe("§755 the pictures' addresses change with the drawing", () => {
   it("stamps every bibs page picture with the drawing's version", () => {
     const parts = [DEFAULT_BIB_DESIGN, "#112233", LONG, DATE];
     expect(BIB_DRAWING_VERSION).toBe(2);

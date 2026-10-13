@@ -68,7 +68,7 @@ export type EventPageVisit = {
   declaratie?: string;
   lista?: string;
   /**
-   * «Vreau să fiu voluntar» (§NNN): the roles that still need people and how the form answered, or null
+   * «Vreau să fiu voluntar» (§754): the roles that still need people and how the form answered, or null
    * when the form is not offered (the event takes no volunteers, every role is full, or the privacy
    * notice in force does not describe them).
    */
@@ -317,7 +317,7 @@ export default async function EventPageView({
       {/* The programme (§96, §117), under `#schedule`: the timed rows, then the text. */}
       <EventProgramme scheduleItems={event.scheduleItems} scheduleJson={event.scheduleJson} timeZone={event.timezone} heading={t("schedule")} />
 
-      {/* «Vreau să fiu voluntar» (§NNN), after the programme and before the rules: a fold, closed on arrival
+      {/* «Vreau să fiu voluntar» (§754), after the programme and before the rules: a fold, closed on arrival
           unless the person has just answered. A visit's page only, and only while the three conditions
           hold (the page decides) — the preview before saving reads no public cache and takes no name. */}
       {visit?.volunteers && !membersOnly && (

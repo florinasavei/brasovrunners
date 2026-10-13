@@ -23,7 +23,7 @@ import type { PublicVolunteerRole } from "../volunteers";
 import { VOLUNTEER_BOX_ID, type VolunteerBox as BoxName, type VolunteerOutcome, type VolunteerTyped } from "./volunteer-box";
 
 /**
- * «Vreau să fiu voluntar» on an event's page (§NNN; the owner, 2026-10-13: «I want to register volunteers
+ * «Vreau să fiu voluntar» on an event's page (§754; the owner, 2026-10-13: «I want to register volunteers
  * for a race»): a fold with the roles that still need people, and one plain form — the name, the address, the
  * telephone number, the role, an optional message and the consent tick that names the privacy notice.
  *

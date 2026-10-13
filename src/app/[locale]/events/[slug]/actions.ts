@@ -83,7 +83,7 @@ export async function registerInterestAction(form: FormData): Promise<void> {
 }
 
 /**
- * «Mă ofer voluntar» (§NNN): a person's offer from an event's page. The registration form's defences —
+ * «Mă ofer voluntar» (§754): a person's offer from an event's page. The registration form's defences —
  * Turnstile first, then the honeypot, the timing check and the throttles in the service — and one answer
  * whatever the person turned out to be: `?volunteer=1` for a new offer, a repeat and a bot's alike
  * (BR-REQ-031-01 criterion 3) — the answer is the same (the count on the page is the residual

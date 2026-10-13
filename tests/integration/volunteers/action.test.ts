@@ -9,7 +9,7 @@ import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — «Mă ofer voluntar»'s one Server Action, `submitVolunteerAction` (BR-REQ-031-01), on the real clock
+ * §754 — «Mă ofer voluntar»'s one Server Action, `submitVolunteerAction` (BR-REQ-031-01), on the real clock
  * as the action reads it, with Next's redirect caught where the browser would follow it and the cookie jar
  * held in memory. What the service's own suite cannot see: Cloudflare's refusal answered before the service
  * is asked (no row, no email, what was typed kept), the address each answer goes back to — `?volunteer=`,
@@ -141,7 +141,7 @@ const lastDraft = () => sets.filter((set) => set.name === "br_form_draft").at(-1
 const people = () => db.select().from(eventVolunteers).where(eq(eventVolunteers.eventId, eventId));
 const outbox = () => db.select().from(emailOutbox);
 
-describe("§NNN submitVolunteerAction's redirects", () => {
+describe("§754 submitVolunteerAction's redirects", () => {
   it("answers Cloudflare's refusal before the service is asked: ?volunteer=captcha with ?since=, no row, no email, what was typed kept", async () => {
     await seedEvent(true);
     turnstile = { on: true, verdict: "failed" };

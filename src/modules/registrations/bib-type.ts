@@ -1,5 +1,5 @@
 /**
- * What the bib's two measured texts share (§317, §NNN): the small print (`bib-footer.ts`, Roboto
+ * What the bib's two measured texts share (§317, §755): the small print (`bib-footer.ts`, Roboto
  * Regular) and the header (`bib-header.ts`, Roboto Bold) are measured and cut the same way, so a fix
  * to the measure or to the cut reaches both.
  *

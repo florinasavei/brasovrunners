@@ -11,7 +11,7 @@ import { isDomainError } from "@/shared/errors/domain-error";
 import { isUuid } from "@/shared/ids";
 
 /**
- * «Descarcă CSV» on an event's «Voluntari» card (§NNN): the volunteers of one event, grouped by role, in
+ * «Descarcă CSV» on an event's «Voluntari» card (§754): the volunteers of one event, grouped by role, in
  * the reader's language (`lang`), as a UTF-8 file with a BOM.
  *
  * Whoever reads the card may take it — `canManageVolunteers`, the card's own gate, asserted here again

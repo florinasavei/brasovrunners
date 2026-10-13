@@ -190,7 +190,7 @@ const PROFILE_PAD = 2;
 const ONE_LINE = { display: "flex", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } as const;
 
 /**
- * The race and its date on the band (§NNN): each line `bibHeader` laid out, as its own one-line box at
+ * The race and its date on the band (§755): each line `bibHeader` laid out, as its own one-line box at
  * the layout's top, right-aligned on the column's right edge — the sheet's points — at the line's own
  * height (`BIB_TEXT_LINE`, the height pdfkit gives it and Satori's own normal line for Roboto, so a
  * title on one line draws pixel for pixel where it did). Nothing here wraps: the layout decided the
@@ -301,7 +301,7 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
   // The number and the name: white on a member's card, the body ink on the white paper.
   const ink = asCard ? BIB_MEMBER_CARD.text : COLOR.ink;
   const headerText = asCard ? BIB_MEMBER_CARD.text : bandText;
-  // The race and its date at the right of the band, laid out as the sheet lays them out (§NNN): the
+  // The race and its date at the right of the band, laid out as the sheet lays them out (§755): the
   // members' label on the band under them stops the column above it.
   const headerWords = bibHeader({
     title: design.showEventTitle ? input.eventTitle : null,

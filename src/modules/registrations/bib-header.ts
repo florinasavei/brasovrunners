@@ -3,7 +3,7 @@ import { type BibHeaderLayout, type BibHeaderText, bibHeaderLayout } from "./bib
 import { fontWidth } from "./bib-type";
 
 /**
- * The bib's header as both renderers draw it (§NNN): `bibHeaderLayout`'s lines, measured with the
+ * The bib's header as both renderers draw it (§755): `bibHeaderLayout`'s lines, measured with the
  * fonts the sheet and the picture embed — the title in `src/theme/pdf/Roboto-Bold.ttf` (the table
  * below), the date in Roboto Regular (`bib-footer.ts#bibFooterWidth`, the small print's table).
  *

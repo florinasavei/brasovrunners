@@ -55,7 +55,7 @@ type Props = {
    */
   membersRead?: () => Promise<PublishedEvent | undefined>;
   /**
-   * What was typed in the volunteer box before a refusal (§NNN, §142) — the sealed draft cookie, which only
+   * What was typed in the volunteer box before a refusal (§754, §142) — the sealed draft cookie, which only
    * the live twin may read: this static route reaches no cookie while it renders (§549). Asked only when the
    * address says the box was answered.
    */
@@ -69,7 +69,7 @@ type EventQuery = {
   since?: string | string[];
   lista?: string | string[];
   declaratie?: string | string[];
-  /** The volunteer box's answer and the boxes a refusal named (§NNN). */
+  /** The volunteer box's answer and the boxes a refusal named (§754). */
   volunteer?: string | string[];
   vfields?: string | string[];
 };
@@ -194,7 +194,7 @@ export default async function EventDetailPage({ params, query, canEdit = false, 
 
   const interestOutcome = parseInterestOutcome(interest);
   /*
-    «Vreau să fiu voluntar» (§NNN): drawn only while the event takes volunteers, a role still needs people and
+    «Vreau să fiu voluntar» (§754): drawn only while the event takes volunteers, a role still needs people and
     the privacy notice in force describes them (`volunteerOfferClosedFor`) — the roles and the notice from the
     public cache, expired by every write to either, and the event's own end held so the page is made again
     when it is over. The form's action asks the database again. Never on a members' event (§552): the form is

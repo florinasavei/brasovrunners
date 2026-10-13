@@ -5,7 +5,7 @@ import { locale } from "./locale";
 import { staffUsers } from "./staff-users";
 
 /**
- * A volunteer's state on one event (§NNN): «Înscris» (the person offered, nobody has answered),
+ * A volunteer's state on one event (§754): «Înscris» (the person offered, nobody has answered),
  * «Confirmat» (an organizer said yes) and «Anulat» (the offer was declined or withdrawn — the row
  * stays so the same address is not asked to start again, and so it is never counted against a
  * role). A closed set at the database, like every state here; a fourth is a migration.
@@ -16,7 +16,7 @@ export const eventVolunteerState = pgEnum("event_volunteer_state", ["REGISTERED"
 export const eventVolunteerSource = pgEnum("event_volunteer_source", ["STAFF", "PUBLIC"]);
 
 /**
- * One role an event needs people for (§NNN; the owner, 2026-10-13: «I want to register volunteers
+ * One role an event needs people for (§754; the owner, 2026-10-13: «I want to register volunteers
  * for a race and be able to define custom roles» — answering «per event», not a club-wide list).
  *
  * The club types the role's name in both languages (the bilingual rule: both or neither, never one
@@ -55,7 +55,7 @@ export const eventVolunteerRoles = pgTable(
 );
 
 /**
- * A person who offered to help at one event, or whom the club entered (§NNN).
+ * A person who offered to help at one event, or whom the club entered (§754).
  *
  * **Not a registration and not a staff account.** A volunteer does not run, takes no place of the
  * race's capacity, is on no public list and signs in nowhere: the row is a name, a way to reach the

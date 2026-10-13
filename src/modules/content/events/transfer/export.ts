@@ -48,7 +48,7 @@ import { collectMediaRefs, describeMedia, mapMediaUrls, readStoredMedium } from 
  * not read is as much the point: no registration, invitation, participant, volunteer, to-do, audit row,
  * staff member or email address is reachable from here, and nothing keyed by an id that means
  * something in one database only. Nor an event's volunteer roles or its tick «Primește voluntari»
- * (§NNN): the roles hold no person, but they belong to one date — a copy of an event starts with none
+ * (§754): the roles hold no person, but they belong to one date — a copy of an event starts with none
  * and the tick off, like the to-dos — so the file leaves them where they are on both sides.
  */
 

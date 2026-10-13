@@ -5,7 +5,7 @@ import { hydrated, signIn } from "./support/featured-event";
 import { openEditorBox } from "./support/fold";
 
 /**
- * §NNN — «Voluntari» (BR-REQ-050-02, BR-REQ-060-01, BR-REQ-031-01): an Administrator defines two roles on a
+ * §754 — «Voluntari» (BR-REQ-050-02, BR-REQ-060-01, BR-REQ-031-01): an Administrator defines two roles on a
  * published event, takes volunteers on its page, and a visitor who is nobody signs up for one through the
  * public form — behind the privacy notice the seed's sample text describes (`{{volunteers}}`). The Administrator
  * then sees «1 din 2» on the role, confirms the person, and downloads the list; a role that has all the people
@@ -41,7 +41,7 @@ async function seedEvent(tag: string): Promise<{ id: string; slug: string }> {
   }
 }
 
-test.describe("§NNN volunteers for a race", () => {
+test.describe("§754 volunteers for a race", () => {
   test.describe.configure({ timeout: 180_000 });
 
   test("an Administrator defines roles and takes volunteers; a visitor signs up; the Administrator sees «1 din 2», confirms and downloads", async ({ page, browser }) => {

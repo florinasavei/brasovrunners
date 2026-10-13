@@ -1,5 +1,5 @@
 /**
- * The public form's address on the event page (§NNN): the id its action's redirect lands on, and what
+ * The public form's address on the event page (§754): the id its action's redirect lands on, and what
  * the page says after the action, read from `?volunteer=`. Kept out of the action's module because a
  * "use server" file may export only async functions.
  */

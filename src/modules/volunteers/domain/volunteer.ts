@@ -5,7 +5,7 @@ import { isValidEmail } from "@/modules/participants/domain/canonical-email";
 import { refuseOneLanguage } from "@/shared/forms/both-languages";
 
 /**
- * Volunteers for a race (§NNN; the owner, 2026-10-13: «I want to register volunteers for a race and
+ * Volunteers for a race (§754; the owner, 2026-10-13: «I want to register volunteers for a race and
  * be able to define custom roles») — the pure part: the states, what a form may post, how a role
  * stands («N din M»), and the three conditions that open the public form.
  *

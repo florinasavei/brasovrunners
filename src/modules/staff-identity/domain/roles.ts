@@ -680,7 +680,7 @@ export function canExportSponsorList(subject: StaffSubject): boolean {
 }
 
 /**
- * **An event's volunteers (§NNN)** — the roles the club defines for one race and the people who offered
+ * **An event's volunteers (§754)** — the roles the club defines for one race and the people who offered
  * to help or whom the club entered, with their name, address and telephone number: reading and writing
  * are one set, **the Organizer, the Administrator and the Superadministrator** — whoever reads the
  * participant list (`canReadRegistrations`), written as that function so moving the line moves both.

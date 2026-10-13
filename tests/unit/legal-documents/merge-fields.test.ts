@@ -155,7 +155,7 @@ describe("the declaration's merge fields", () => {
         // and by a paragraph in section 2 for the invitations by email (§647), and by one in section 5 for
         // «Spune-ne ceva», the anonymous forms and their confidential safety branch (§676).
         // And by one more in section 5 for the members' shop: what an order keeps, why, how long, payment off the site (§683).
-        // And by one more in section 5 for the event volunteers, and a line in section 7 (§NNN).
+        // And by one more in section 5 for the event volunteers, and a line in section 7 (§754).
         const ceiling = key === "EVENT_DECLARATION" ? 10300 : key === "PRIVACY_NOTICE" ? 37500 : key === "TERMS" ? 12000 : 11000;
         expect(text.length, `${key} ${locale}`).toBeGreaterThan(key === "EVENT_DECLARATION" ? 1500 : 2500);
         expect(text.length, `${key} ${locale}`).toBeLessThan(ceiling);
