@@ -1,6 +1,7 @@
 import { and, eq, gt, inArray, isNotNull, ne, or, sql } from "drizzle-orm";
 import type { z } from "zod";
-import { eventTranslations, events } from "@/db/schema/events";
+import { eventTranslations, events, type PublicListClub } from "@/db/schema/events";
+import { DEFAULT_PUBLIC_LIST_CLUB } from "@/modules/registrations/domain/public-list-club";
 import type { StaffUser } from "@/db/schema/staff-users";
 import type { Database, Transaction } from "@/db/types";
 import { routing } from "@/i18n/routing";
@@ -676,6 +677,7 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes, option
     ...(fields.participantCountPublic === undefined ? {} : { participantCountPublic: fields.participantCountPublic }),
     ...(fields.hiddenListCounted === undefined ? {} : { hiddenListCounted: fields.hiddenListCounted }),
     ...(fields.hiddenListPublic === undefined ? {} : { hiddenListPublic: fields.hiddenListPublic }),
+    ...(fields.publicListClub === undefined ? {} : { publicListClub: fields.publicListClub }),
     externalProvider: fields.externalProvider,
     externalRegistrationUrl: fields.externalRegistrationUrl,
   };
@@ -1753,6 +1755,7 @@ export async function saveEventFields<T extends Record<string, unknown>>(
     await auditWaitlistAutoOffer(tx, input.actor, current, saved, now);
     await auditWaitlistCountPublic(tx, input.actor, current, saved, now);
     await auditHiddenList(tx, input.actor, current, saved, now);
+    await auditPublicListClub(tx, input.actor, current, saved, now);
     await auditCover(tx, input.actor, current, saved, now);
     // The holds the window gave follow it (§665): under the event lock, in this transaction.
     holdsQueued = (await moveWindowHolds(tx, { actorStaffUserId: input.actor.id, before: current, after: saved, now, deadlines })).queued;
@@ -1918,6 +1921,8 @@ const SERIES_COLUMNS = [
   "participantCountPublic",
   "hiddenListCounted",
   "hiddenListPublic",
+  // «Clubul pe lista publică» (§753) travels with the list it qualifies, like the waiting list's switch above.
+  "publicListClub",
   "externalProvider",
   "externalRegistrationUrl",
   // A recurring Strava club event and a Facebook event with several dates each keep one address
@@ -2194,6 +2199,9 @@ async function applyToSeries<T extends Record<string, unknown>>(
         await auditWaitlistCountPublic(tx, input.actor, member, { id: member.id, waitlistCountPublic: changes.waitlistCountPublic }, now);
       }
       await auditHiddenList(tx, input.actor, member, { ...hiddenListOf(member), ...hiddenListChanges(changes), id: member.id }, now);
+      if (changes.publicListClub !== undefined) {
+        await auditPublicListClub(tx, input.actor, member, { id: member.id, publicListClub: changes.publicListClub }, now);
+      }
       if (changes.coverMediaAssetId !== undefined) {
         await auditCover(tx, input.actor, member, { id: member.id, coverMediaAssetId: changes.coverMediaAssetId, coverCrop: changes.coverCrop ?? null }, now);
       }
@@ -2297,6 +2305,29 @@ async function auditWaitlistCountPublic<T extends Record<string, unknown>>(
     entityType: "event",
     entityId: after.id,
     metadata: { from: before.waitlistCountPublic, to: after.waitlistCountPublic },
+    now,
+  });
+}
+
+/**
+ * The trail of «Clubul pe lista publică» (§753): who changed what the public list's «Club» column says, on
+ * which date, from and to — in the save's transaction, only when the value moved. A display setting, but
+ * one over what the public is told about a person, so the trail says who decided it.
+ */
+async function auditPublicListClub<T extends Record<string, unknown>>(
+  tx: Database<T> | Transaction<T>,
+  actor: Actor,
+  before: { id: string; publicListClub: PublicListClub },
+  after: { id: string; publicListClub: PublicListClub },
+  now: Date,
+): Promise<void> {
+  if (before.publicListClub === after.publicListClub) return;
+  await recordAuditEvent(tx, {
+    actorStaffUserId: actor.id,
+    action: "event.public_list_club_changed",
+    entityType: "event",
+    entityId: after.id,
+    metadata: { from: before.publicListClub, to: after.publicListClub },
     now,
   });
 }
@@ -2702,6 +2733,7 @@ export async function saveEventAndTranslations<T extends Record<string, unknown>
       await auditWaitlistAutoOffer(tx, input.actor, current, savedEvent, now);
       await auditWaitlistCountPublic(tx, input.actor, current, savedEvent, now);
       await auditHiddenList(tx, input.actor, current, savedEvent, now);
+      await auditPublicListClub(tx, input.actor, current, savedEvent, now);
       await auditCover(tx, input.actor, current, savedEvent, now);
       /*
         The holds the participation window gave follow it (§665): a changed deadline, a window switched on
@@ -2954,6 +2986,7 @@ function blankEventRow(now: Date): EditableEvent {
     participantCountPublic: true,
     hiddenListCounted: false,
     hiddenListPublic: false,
+    publicListClub: DEFAULT_PUBLIC_LIST_CLUB,
     createdByStaffUserId: null,
     updatedByStaffUserId: null,
     createdAt: now,
@@ -3590,6 +3623,7 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     participantCountPublic: source.participantCountPublic,
     hiddenListCounted: source.hiddenListCounted,
     hiddenListPublic: source.hiddenListPublic,
+    publicListClub: source.publicListClub,
     externalProvider: source.externalProvider,
     externalRegistrationUrl: source.externalRegistrationUrl,
     editorialStatus: "DRAFT" as const,

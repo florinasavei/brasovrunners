@@ -354,6 +354,11 @@ export type AuditAction =
    */
   | "event.participant_count_public_changed"
   /**
+   * «Clubul pe lista publică» changed on an event (§753): `from` and `to` are the two modes
+   * (`members_only`, `as_typed`, `hidden`), on every date a save changed it.
+   */
+  | "event.public_list_club_changed"
+  /**
    * An event's configuration taken out as a JSON file (§751): the Administrator (the actor), the file's
    * format version and how many pictures and files it names — entity `event`. Never a word of the file:
    * it holds no registration and no person, and the row says only that it was made and by whom.

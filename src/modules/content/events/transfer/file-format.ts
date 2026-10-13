@@ -2,6 +2,7 @@ import { z } from "zod";
 import { EVENT_COST_TYPES } from "@/modules/events/domain/cost";
 import { EVENT_SURFACES, EVENT_TYPES } from "@/modules/events/domain/event-type";
 import { WEATHER_MODES } from "@/modules/weather/domain/mode";
+import { DEFAULT_PUBLIC_LIST_CLUB, PUBLIC_LIST_CLUBS } from "@/modules/registrations/domain/public-list-club";
 import { RACE_DECLARATION_KEYS } from "@/modules/legal-documents/domain/keys";
 import { WAITLIST_CHOICES } from "../waitlist-choice";
 
@@ -190,7 +191,16 @@ export const eventConfigSchema = z
       })
       .strict(),
     /** The public list's switches (BR-REQ-039-01): which of them are on, never a name. */
-    publicList: z.object({ names: z.boolean(), waitlist: z.boolean(), waitlistCount: z.boolean(), count: z.boolean() }).strict(),
+    publicList: z
+      .object({
+        names: z.boolean(),
+        waitlist: z.boolean(),
+        waitlistCount: z.boolean(),
+        count: z.boolean(),
+        /** «Clubul pe lista publică» (§753): a file made before the setting existed has none, and takes the default. */
+        club: z.enum(PUBLIC_LIST_CLUBS).default(DEFAULT_PUBLIC_LIST_CLUB),
+      })
+      .strict(),
     hiddenList: z.object({ enabled: z.boolean(), bibStart: z.number().int().min(1).nullable(), counted: z.boolean(), public: z.boolean() }).strict(),
     bib: z
       .object({

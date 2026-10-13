@@ -1,4 +1,5 @@
 import { getDb } from "@/db/client";
+import type { PublicListClub } from "@/db/schema/events";
 import type { LegalDocumentKey } from "@/db/schema/legal-documents";
 import { parseLocalizedPath } from "@/i18n/alternate-path";
 import { getPathname } from "@/i18n/navigation";
@@ -75,6 +76,7 @@ import { readPublicVolunteerRoles } from "@/modules/volunteers/volunteers";
 import { describesRefusal } from "@/modules/legal-documents/domain/refusal-clause";
 import { findCurrentApprovedDocument, findFirstStatesNoticeVersion, listEffectiveDates } from "@/modules/legal-documents/repository";
 import { DEFAULT_BOT_CHECK, readBotCheck } from "@/modules/registrations/bot-check";
+import { DEFAULT_PUBLIC_LIST_CLUB } from "@/modules/registrations/domain/public-list-club";
 import {
   countAnonymousStartListEntries,
   countHiddenListWithPlace,
@@ -411,11 +413,20 @@ export async function cachedStartListCounts(
  * is a change of state and expires "places" (`transitionRegistration`), and by the hand-typed
  * change and «Alocă numerele» (`setBibNumberByStaff`, `assignBibNumbers`), which expire it too.
  */
-export async function cachedStartListPage(eventId: string, offset: number, limit: number, socials = false, numbers = false, hiddenShown = false) {
+export async function cachedStartListPage(
+  eventId: string,
+  offset: number,
+  limit: number,
+  socials = false,
+  numbers = false,
+  hiddenShown = false,
+  /** «Clubul pe lista publică» (§753): in the key, so a page made for one mode is never served for another. The default is the safe one. */
+  club: PublicListClub = DEFAULT_PUBLIC_LIST_CLUB,
+) {
   return publicRead(
-    ["places.start-list", eventId, offset, limit, socials ? "socials" : "names", numbers ? "numbered" : "unnumbered", hiddenShown ? "guests-shown" : "guests-off"],
+    ["places.start-list", eventId, offset, limit, socials ? "socials" : "names", numbers ? "numbered" : "unnumbered", hiddenShown ? "guests-shown" : "guests-off", `club-${club}`],
     ["places", "events"],
-    () => listPublicStartList(getDb(), eventId, { offset, limit }, { socials, numbers, hiddenShown }),
+    () => listPublicStartList(getDb(), eventId, { offset, limit }, { socials, numbers, hiddenShown, club }),
   );
 }
 
@@ -455,6 +466,8 @@ export async function cachedStartListOthersPage(
   socials = false,
   /** «Arată invitații speciali pe lista publică» (§743), in the key like the rest. */
   hiddenShown = false,
+  /** «Clubul pe lista publică» (§753), in the key like the rest. */
+  club: PublicListClub = DEFAULT_PUBLIC_LIST_CLUB,
 ) {
   return publicRead(
     [
@@ -466,9 +479,10 @@ export async function cachedStartListOthersPage(
       limit,
       socials ? "socials" : "names",
       hiddenShown ? "guests-shown" : "guests-off",
+      `club-${club}`,
     ],
     ["places", "events"],
-    () => listPublicStartListOthers(getDb(), eventId, firstStatesNoticeVersion, includeWaitlisted, { offset, limit }, { socials, hiddenShown }),
+    () => listPublicStartListOthers(getDb(), eventId, firstStatesNoticeVersion, includeWaitlisted, { offset, limit }, { socials, hiddenShown, club }),
   );
 }
 

@@ -66,7 +66,7 @@ async function createEvent(): Promise<PublicEvent> {
   // Only `id`, `participantListVisibility` and the two dates the list's period counts from (§421)
   // are read by the component; the rest of `PublicEvent`'s shape is asserted nowhere here, so a
   // cast stands in for the full query.
-  return { id: event.id, participantListVisibility: "NAMES", startsAt: event.startsAt, endsAt: event.endsAt } as unknown as PublicEvent;
+  return { id: event.id, participantListVisibility: "NAMES", publicListClub: "as_typed", startsAt: event.startsAt, endsAt: event.endsAt } as unknown as PublicEvent;
 }
 
 async function createRegistration(

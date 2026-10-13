@@ -2845,7 +2845,12 @@
       "hiddenListCounted": "Count the special guests too",
       "hiddenListCountedHelp": "Ticked: “Who's coming” and “confirmed” count the special guests too. Unticked: the numbers count only the race's places; the special guests come on top.",
       "hiddenListPublic": "Show special guests on the public list",
-      "hiddenListPublicHelp": "Ticked: a special guest who ticked “I want to appear” appears under “Who's coming”, with their number. Unticked: they appear on no public list; their place and number stay."
+      "hiddenListPublicHelp": "Ticked: a special guest who ticked “I want to appear” appears under “Who's coming”, with their number. Unticked: they appear on no public list; their place and number stay.",
+      "publicListClub": "Club on the public list",
+      "publicListClubHelp": "People type their club however they like. “Only {club}” shows it only for club members who typed it, as {club}; everyone else is left without a club.",
+      "publicListClubMembersOnly": "Only {club}",
+      "publicListClubAsTyped": "As they typed it",
+      "publicListClubHidden": "Don't show the club"
     },
     "preview": {
       "notice": "Staff preview. The status of this text is: {status}. This page is not public and is not indexed.",
@@ -7769,7 +7774,8 @@
           "names": "Public participant list",
           "waitlist": "Waiting list is public",
           "waitlistCount": "Waiting count shown publicly",
-          "count": "Count shown publicly"
+          "count": "Count shown publicly",
+          "club": "Club on the public list"
         },
         "hiddenList": {
           "enabled": "Special guests list",

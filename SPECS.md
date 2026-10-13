@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.13-2026-10-13 -->
+<!-- PROJECT_BASELINE: BR-V3.14-2026-10-13 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V3.13-2026-10-13`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.14-2026-10-13`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -807,6 +807,10 @@ coffee is run on nothing.
 37. While an event's «Arată invitații speciali pe lista publică» is off (the default), or its «Folosește lista de invitați speciali» is off, no registration on the special guests list (`registrations.outside_capacity`) is drawn on any public list of the event — not «Cine vine»'s confirmed rows, named or anonymous, not the pending and waiting rows, not the race number, not a count of named rows — whether or not the person ticked «Vreau să apar»; with both on, the ticked ones appear as before (2026-10-13, `DECISIONS.md` §743, amending criteria 30 and 32).
 38. «Arată invitații speciali pe lista publică» is a column of the event (`hidden_list_public`, `false` by default), saved with the special guests group's marker, stored as posted whatever the switch says, audited in `event.hidden_list_changed`, shown third under the switch, and changes no count: «Numără și invitații speciali» alone decides whether the numbers include the special guests, and the capacity formula and the allocator never read it (2026-10-13, `DECISIONS.md` §743, amending criterion 31: the group has four settings, three under the switch).
 39. Where the numbers count the special guests and the event's «Arată invitații speciali pe lista publică» is off, the note under the table says none of them is in the table; with it on, it says only those who chose to appear are (2026-10-13, `DECISIONS.md` §743).
+40. Each event has a «Clubul pe lista publică» (`events.public_list_club`: `members_only` by default for every event that exists and every one created, `as_typed`, `hidden`), saved through the editor's save service with a form that carries it, left as stored by one that does not, refused when it is no mode, audited as `event.public_list_club_changed` with from and to, carried by a series, a copy and the event's JSON file (`publicList.club`; a file without it imports with the default), and the public cache is expired on the save (2026-10-13, `DECISIONS.md` §753).
+41. Under `members_only` the public list's club cell holds the club's own name only for a registration whose person is on the club's members list (the member bibs' own test) AND whose typed club names the club — case, diacritics, punctuation, spaces and filler words folded, the club's name and its usual short forms (BVR, «BR Brașov», «Brașov Runners Club»…), never a substring of another name; a member who typed another club or nothing, and a non-member who typed the club's name, show a blank cell, and the typed text of a non-member is not even selected (2026-10-13, `DECISIONS.md` §753).
+42. The «Club» column of the public list is not drawn under `members_only` when no row on the page holds a value, is drawn as it always was under `as_typed`, and is never drawn under `hidden`; the setting applies to the confirmed, pending and waiting rows alike, and leaves the backoffice, the exports, the desk and the bibs on the typed club (2026-10-13, `DECISIONS.md` §753).
+43. Adding or removing a member account expires the cached public lists (`places`), so a person who is no longer a member stops showing the club's name at once (2026-10-13, `DECISIONS.md` §753).
 
 **Verification:** integration `privacy/public-surface.test.ts`
 
