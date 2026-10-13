@@ -85,7 +85,7 @@ function checkLayout(input: BibHeaderText, layout: BibHeaderLayout) {
     const drawn = title.lines.map((line) => line.text).join(" ");
     if (title.cut) {
       expect(title.size).toBe(L.titleMinSize);
-      expect(title.lines[title.lines.length - 1].text.endsWith("…")).toBe(true);
+      expect(title.lines.some((line) => line.text.endsWith("…"))).toBe(true);
     } else {
       expect(drawn).toBe(input.title!.trim());
       expect(drawn).not.toContain("…");
@@ -135,6 +135,60 @@ describe("§NNN the header's layout", () => {
     const layout = bibHeaderLayout({ title, date: null, logo: false, badge: false, label: false }, measure);
     const [first, second] = layout.title!.lines.map((line) => line.text.length);
     expect(Math.abs(first - second)).toBeLessThanOrEqual(5);
+  });
+
+  it("breaks right after a lone dash the club typed when that break fits, and balances only when it does not", () => {
+    // The race's own shape: the break falls after «–», where the club's name ends, not inside it.
+    expect(bibHeader(text({})).title!.lines.map((line) => line.text)).toEqual(["CROSUL DE TOAMNĂ AL ALERGĂTORILOR –", "EDIȚIA A II-A 2026"]);
+    // A measure of one em per character, so the arithmetic reads plainly: «A B C – D E», the dash break lopsided.
+    const measure = { title: (value: string) => value.length, date: (value: string) => value.length };
+    const budget = Math.floor((BIB_CARD.width - 2 * L.inset) / L.titleSize);
+    const word = "AAAA";
+    const count = Math.floor((budget - 2) / (word.length + 1));
+    const head = Array.from({ length: count }, () => word).join(" ");
+    const lay = (title: string) => bibHeaderLayout({ title, date: null, logo: false, badge: false, label: false }, measure).title!;
+    const dashed = lay(`${head} – DD EE`);
+    expect(dashed.size).toBe(L.titleSize);
+    expect(dashed.lines.map((line) => line.text)).toEqual([`${head} –`, "DD EE"]);
+    // Two dashes whose breaks both fit: the more balanced of the two (26 against 33 ems on the longer line).
+    const twiceTitle = "AAAA AAAA AAAA AAAA – BBBB BBBB – CCCC CCCC CCCC";
+    expect(twiceTitle.length).toBeGreaterThan(budget);
+    expect(twiceTitle.indexOf(" CCCC")).toBeLessThanOrEqual(budget);
+    expect(lay(twiceTitle).lines.map((line) => line.text)).toEqual(["AAAA AAAA AAAA AAAA –", "BBBB BBBB – CCCC CCCC CCCC"]);
+    // A dash whose break does not fit: the balanced break, whole words on each side.
+    const tooLong = lay(`${head} ${word} ${word} – DD`);
+    const [first, second] = tooLong.lines.map((line) => line.text);
+    expect(first.endsWith("–")).toBe(false);
+    expect(Math.abs(first.length - second.length)).toBeLessThanOrEqual(word.length + 2);
+  });
+
+  it("keeps words joined by a no-break space together, and draws a narrow or figure space as a no-break space", () => {
+    const glued = "CROSUL DE TOAMNĂ AL ALERGĂTORILOR EDIȚIA A II-A 2026";
+    expect(bibHeader(text({ title: glued })).title!.lines.map((line) => line.text)).toEqual([
+      "CROSUL DE TOAMNĂ",
+      "AL ALERGĂTORILOR EDIȚIA A II-A 2026",
+    ]);
+    const narrow = bibHeader(text({ title: "CROS DE 10 KM" })).title!.lines.map((line) => line.text);
+    expect(narrow).toEqual(["CROS DE 10 KM"]);
+    expect(BIB_TITLE_ADVANCES.has(" ")).toBe(true);
+  });
+
+  it("cuts a first word wider than the column by its characters and goes on with the words after it", () => {
+    const giant = "B".repeat(60);
+    const short = bibHeader(text({ title: `${giant} CROS DE TOAMNĂ` }));
+    expect(short.title!.cut).toBe(true);
+    expect(short.title!.size).toBe(L.titleMinSize);
+    const [first, second] = short.title!.lines.map((line) => line.text);
+    expect(first).toMatch(/^B+…$/u);
+    expect(second).toBe("CROS DE TOAMNĂ");
+    // And when the words after it do not fit either, the second line keeps what fits with «…».
+    const long = bibHeader(text({ title: `${giant} ${ENDLESS}` })).title!.lines.map((line) => line.text);
+    expect(long).toHaveLength(2);
+    expect(long[0]).toMatch(/^B+…$/u);
+    expect(long[1].startsWith("ALERGAREA1 PE-DEAL")).toBe(true);
+    expect(long[1].endsWith("…")).toBe(true);
+    const layout = bibHeader(text({ title: `${giant} ${ENDLESS}` }));
+    for (const line of layout.title!.lines) expect(bibTitleWidth(line.text) * L.titleMinSize).toBeLessThanOrEqual(layout.right - layout.left + 1e-9);
   });
 
   it("draws a title that fits on one line exactly where every bib printed it before", () => {
@@ -353,6 +407,66 @@ describe("§NNN the picture draws the layout's lines", () => {
     const gapRight = Math.floor(px(BIB_MARGIN + BIB_CARD.width - L.inset - L.badgeWidth)) - 1;
     for (let y = bandTop; y <= bandFoot; y++) for (let x = gapLeft; x <= gapRight; x++) expect(white(x, y)).toBe(false);
   });
+
+  /**
+   * The members' band and a member's card, from the same layout: the ink in the column comes in one run
+   * per line of title and one for the date, separated by the band alone. On the band the scan stops a
+   * pixel above the label's line — the label reaches into the column's width — so the last run ending
+   * there is the date clear of the label; and the badge stands at its centred top above the label's tag.
+   */
+  const PICTURE_TITLE = "CROSUL DE TOAMNA AL ALERGATORILOR DIN TARA BARSEI – EDITIA A II-A 2026";
+  const PICTURE_DATE = "Sambata 21 nov 2026";
+  for (const [name, bibDesign, label] of [
+    ["the members' band, its label under the badge", withMembers(), true],
+    ["a member's whole card", withMembers({ style: "card" }), false],
+  ] as const) {
+    it(`${name}: the title's lines and the date in their own runs of ink, the badge at the layout's top`, async () => {
+      const response = await renderBibImage({
+        bibNumber: 7,
+        registeredName: "Alergator Unu",
+        eventTitle: PICTURE_TITLE,
+        eventDate: PICTURE_DATE,
+        bandColour: null,
+        design: bibDesign,
+        distanceBadge: "9K",
+        member: true,
+        memberLabelDefault: "Membru de test",
+      });
+      const { data, info } = await sharp(Buffer.from(await response.arrayBuffer())).raw().toBuffer({ resolveWithObject: true });
+      const layout = bibHeader({ title: PICTURE_TITLE, date: PICTURE_DATE, logo: true, badge: true, label });
+      expect(layout.title!.lines).toHaveLength(2);
+      const colour = (x: number, y: number) => Array.from(data.subarray((y * info.width + x) * info.channels, (y * info.width + x) * info.channels + 3));
+      const apart = (a: number[], b: number[]) => a.reduce((sum, value, index) => sum + Math.abs(value - b[index]), 0) > 150;
+      const columnLeft = Math.ceil(px(BIB_MARGIN + layout.left));
+      const columnRight = Math.floor(px(BIB_MARGIN + layout.right));
+      const bandTop = Math.ceil(px(BIB_MARGIN)) + 1;
+      // The band's own colour, in the column above every line (`headerPad` keeps the top clear).
+      const ground = colour(columnLeft, bandTop);
+      const scanFoot = label ? Math.ceil(px(BIB_MARGIN + BIB_MEMBER_LABEL_LINE)) - 1 : Math.floor(px(BIB_MARGIN + L.bandHeight)) - 1;
+      const inkRows: boolean[] = [];
+      for (let y = bandTop; y <= scanFoot; y++) {
+        let ink = false;
+        for (let x = columnLeft; x <= columnRight && !ink; x++) ink = apart(colour(x, y), ground);
+        inkRows.push(ink);
+      }
+      const runs = inkRows.reduce((count, ink, index) => count + (ink && !inkRows[index - 1] ? 1 : 0), 0);
+      expect(runs).toBe(layout.title!.lines.length + 1);
+      // The last run — the date — ends before the scan's last row: clear of the label's line on the band.
+      expect(inkRows[inkRows.length - 1]).toBe(false);
+      // The badge: its colour a point under its top, in its middle, where the race's band top would show the band.
+      const badgeMiddle = Math.round(px(BIB_MARGIN + BIB_CARD.width - L.inset - L.badgeWidth / 2));
+      const badgeRow = Math.round(px(BIB_MARGIN + layout.badgeTop + 1));
+      const badgeFoot = Math.round(px(BIB_MARGIN + layout.badgeTop + L.badgeHeight - 1));
+      const beside = colour(Math.round(px(BIB_MARGIN + layout.right)) + 2, badgeRow);
+      expect(apart(colour(badgeMiddle, badgeRow), beside)).toBe(true);
+      expect(apart(colour(badgeMiddle, badgeFoot), beside)).toBe(true);
+      if (label) {
+        expect(layout.badgeTop).toBeCloseTo((L.memberTagTop - L.badgeHeight) / 2, 9);
+        // Under the badge's foot and above the tag: the band again, the two never touching.
+        expect(apart(colour(badgeMiddle, Math.round(px(BIB_MARGIN + layout.badgeTop + L.badgeHeight)) + 2), beside)).toBe(false);
+      }
+    });
+  }
 });
 
 describe("§NNN the pictures' addresses change with the drawing", () => {

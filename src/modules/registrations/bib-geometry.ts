@@ -10,10 +10,13 @@
  * §249 promised, taken the whole way — before this the picture was 900×600 (1.5:1) over a card of
  * 1.40:1, so it was squashed, and every size in it had been chosen by eye to make up for that.
  *
- * Pure and importing nothing, like `bib-design.ts` and for the same reason: `bib-footer.ts` takes
- * its measure from here, and so do the pages that show the picture, whose `<img>` declares its
- * size so the box does not jump while the picture loads.
+ * Pure and importing nothing but `bib-type.ts` (the cut the header shares with the small print, which
+ * imports nothing at all), like `bib-design.ts` and for the same reason: `bib-footer.ts` takes its
+ * measure from here, and so do the pages that show the picture, whose `<img>` declares its size so the
+ * box does not jump while the picture loads.
  */
+
+import { ELLIPSIS, withEllipsis } from "./bib-type";
 
 /** An A4 page, portrait, in points: what the club prints on. */
 export const A4_PAGE = { width: 595.28, height: 841.89 } as const;
@@ -235,7 +238,8 @@ export type BibHeaderLine = { text: string; top: number };
 /**
  * The header's words, laid out (§NNN). `left` and `right` are the column's edges from the card's left,
  * in points: every line is right-aligned on `right`, and none is wider than the column. The title's
- * lines share one `size`; `cut` says the last one ends in «…». The date is set at `dateSize`.
+ * lines share one `size`; `cut` says a line ends in «…», something of the title left out. The date is
+ * set at `dateSize`.
  */
 export type BibHeaderLayout = {
   left: number;
@@ -248,6 +252,12 @@ export type BibHeaderLayout = {
 
 /** A dash on its own between words — «Cros – ediția a II-a» — stays at the end of the line before it, never starts one. */
 const LONE_DASH = /^[-‐‒–—―]+$/u;
+
+/** A title's unit that ends in a lone dash (`titleUnits` joined it to the word before): the break the club typed. */
+const ENDS_IN_LONE_DASH = / [-‐‒–—―]+$/u;
+
+/** What a cut header line never ends in before its «…»: spaces, punctuation, a dash. */
+const HEADER_TRAILING = /[\s,;:·\-‐‒–—―]+$/u;
 
 /**
  * The race and its date on the band, laid out once for both renderers (§NNN, amending §750's header).
@@ -262,11 +272,13 @@ const LONE_DASH = /^[-‐‒–—―]+$/u;
  * - **The title** is split at spaces only: a word is never broken, so «II-A» or «Cros-Country» is one
  *   word, and a dash standing alone stays at the end of the line before it. (A non-breaking hyphen would
  *   not do: Roboto has no U+2011, so it would print a box.) From `titleSize` down to `titleMinSize`, by
- *   `titleSizeStep`, the first size at which the title fits the column on one line or on two — the two
- *   balanced, the break that makes the longer line shortest — and the whole block, the date included,
- *   fits between `headerPad` and the foot. **Past the minimum** (9 points: about 130 characters of
- *   capitals beside the lockup and the badge), the first line takes as many words as fit and the second
- *   as many as fit with «…» after them — only then is anything left out.
+ *   `titleSizeStep`, the first size at which the title fits the column on one line or on two — on two,
+ *   right after a lone dash the club typed when that break fits (where the club's own name ends), else
+ *   the break that makes the longer line shortest — and the whole block, the date included, fits between
+ *   `headerPad` and the foot. **Past the minimum** (9 points: about 130 characters of capitals beside the
+ *   lockup and the badge), the first line takes as many words as fit and the second as many as fit with
+ *   «…» after them — only then is anything left out. A first word wider than the column by itself is cut
+ *   by its characters with «…» on the first line, and the second goes on with the words after it.
  * - **The foot** is the band's foot less `headerPad`, or the top of the members' label's line while the
  *   label is on the band (`BIB_MEMBER_LABEL_LINE`).
  * - **The place:** a block that fits from `titleTop` stays there — so a title on one line at 13 points
@@ -314,12 +326,15 @@ export function bibHeaderLayout(text: BibHeaderText, measure: BibHeaderMeasure):
 }
 
 /**
- * The title's words, the units a line is made of: split at spaces (a non-breaking space the club typed
- * stays inside its word), a hyphen kept inside its word, a lone dash joined to the word before it.
+ * The title's words, the units a line is made of: split at every white space but the no-break space
+ * (U+00A0), which the club typed to keep two words together and stays inside its word; a hyphen kept
+ * inside its word; a lone dash joined to the word before it. The narrow no-break space (U+202F) and the
+ * figure space (U+2007) become U+00A0 first: Roboto Bold has no glyph for either, so drawn as typed they
+ * would print a box.
  */
 function titleUnits(title: string): string[] {
   const units: string[] = [];
-  for (const word of title.split(/[^\S ]+/u)) {
+  for (const word of title.replace(/[\u202F\u2007]/gu, "\u00A0").split(/[^\S\u00A0]+/u)) {
     if (!word) continue;
     if (LONE_DASH.test(word) && units.length > 0) units[units.length - 1] += ` ${word}`;
     else units.push(word);
@@ -327,46 +342,54 @@ function titleUnits(title: string): string[] {
   return units;
 }
 
-/** One line when it fits, else the two that fit with the longer as short as it can be; `null` when two will not do. */
+/**
+ * One line when it fits; else two that fit — right after a lone dash the club typed when one fits, the
+ * longer line as short as it can be among the breaks of that standing; `null` when two will not do.
+ */
 function titleLines(units: readonly string[], measure: (text: string) => number, budget: number): string[] | null {
   const whole = units.join(" ");
   if (measure(whole) <= budget) return [whole];
   let best: string[] | null = null;
+  let bestRank = Infinity;
   let bestWidth = Infinity;
   for (let split = 1; split < units.length; split++) {
     const first = units.slice(0, split).join(" ");
     const second = units.slice(split).join(" ");
     const longer = Math.max(measure(first), measure(second));
-    if (longer <= budget && longer < bestWidth) {
+    if (longer > budget) continue;
+    const rank = ENDS_IN_LONE_DASH.test(units[split - 1]) ? 0 : 1;
+    if (rank < bestRank || (rank === bestRank && longer < bestWidth)) {
       best = [first, second];
+      bestRank = rank;
       bestWidth = longer;
     }
   }
   return best;
 }
 
-const ELLIPSIS = "…";
-
-/** Past the minimum size: as many words as fit, then as many as fit with «…» — a lone long word cut by its characters. */
+/**
+ * Past the minimum size: as many words as fit, then as many as fit with «…». A first word wider than a
+ * line is cut by its characters with «…», and the second line goes on with the words after it; a second
+ * line whose first word alone is too wide is cut by its characters too.
+ */
 function cutTitle(units: readonly string[], measure: (text: string) => number, budget: number): string[] {
   let taken = 0;
   while (taken < units.length && measure(units.slice(0, taken + 1).join(" ")) <= budget) taken += 1;
-  if (taken === 0) return [oneLine(units[0], measure, budget)];
-  const rest = units.slice(taken);
+  const first = taken > 0 ? units.slice(0, taken).join(" ") : oneLine(units[0], measure, budget);
+  const rest = units.slice(Math.max(taken, 1));
+  if (rest.length === 0) return [first];
+  const whole = rest.join(" ");
+  if (measure(whole) <= budget) return [first, whole];
+  const closed = (count: number) => `${rest.slice(0, count).join(" ").replace(HEADER_TRAILING, "")}${ELLIPSIS}`;
   let kept = rest.length;
-  const closed = (count: number) => `${rest.slice(0, count).join(" ").replace(/[\s,;:·\-‐‒–—―]+$/u, "")}${ELLIPSIS}`;
   while (kept > 0 && measure(closed(kept)) > budget) kept -= 1;
-  return [units.slice(0, taken).join(" "), kept > 0 ? closed(kept) : oneLine(rest.join(" "), measure, budget, true)];
+  return [first, kept > 0 ? closed(kept) : oneLine(whole, measure, budget)];
 }
 
-/** The text when it fits, else its longest beginning that fits with «…» after it; `force` always cuts. */
-function oneLine(text: string, measure: (text: string) => number, budget: number, force = false): string {
-  if (!force && measure(text) <= budget) return text;
-  const characters = Array.from(text);
-  let length = characters.length - (force ? 1 : 0);
-  const shortened = (count: number) => `${characters.slice(0, count).join("").trimEnd()}${ELLIPSIS}`;
-  while (length > 0 && measure(shortened(length)) > budget) length -= 1;
-  return shortened(Math.max(length, 0));
+/** The text when it fits, else its longest beginning that fits with «…» after it — the small print's cut (`bib-type.ts`). */
+function oneLine(text: string, measure: (text: string) => number, budget: number): string {
+  if (measure(text) <= budget) return text;
+  return withEllipsis(text, (line) => measure(line) <= budget, HEADER_TRAILING);
 }
 
 /**

@@ -1,12 +1,14 @@
 import { bibFooterWidth } from "./bib-footer";
 import { type BibHeaderLayout, type BibHeaderText, bibHeaderLayout } from "./bib-geometry";
+import { fontWidth } from "./bib-type";
 
 /**
  * The bib's header as both renderers draw it (§NNN): `bibHeaderLayout`'s lines, measured with the
  * fonts the sheet and the picture embed — the title in `src/theme/pdf/Roboto-Bold.ttf` (the table
  * below), the date in Roboto Regular (`bib-footer.ts#bibFooterWidth`, the small print's table).
  *
- * The same discipline as the small print (§317): neither renderer wraps the header's words, so a
+ * The same discipline as the small print (§317), and the same measure (`bib-type.ts#fontWidth`, which
+ * the small print's `bibFooterWidth` is made with too): neither renderer wraps the header's words, so a
  * line that fits here fits on the paper and in the picture, and breaks in the same place in both.
  * The measure is the advances plus every pair the font kerns *apart*, so it errs wide by a hair and
  * is never narrower than pdfkit or Satori sets a line: a title may take its second line a hair
@@ -16,9 +18,6 @@ import { type BibHeaderLayout, type BibHeaderText, bibHeaderLayout } from "./bib
 export function bibHeader(text: BibHeaderText): BibHeaderLayout {
   return bibHeaderLayout(text, { title: bibTitleWidth, date: bibFooterWidth });
 }
-
-/** Roboto's design grid: its advance widths below are in 2048ths of an em. */
-const UNITS_PER_EM = 2048;
 
 /**
  * What a character outside the table counts as: 1.15625 em. The widest glyph in Roboto Bold is
@@ -32,13 +31,7 @@ const UNKNOWN_UNITS = 2368;
  * Roboto Bold's advance widths, plus every pair of neighbours the font kerns apart.
  */
 export function bibTitleWidth(text: string): number {
-  let units = 0;
-  let previous = "";
-  for (const character of text) {
-    units += (BIB_TITLE_ADVANCES.get(character) ?? UNKNOWN_UNITS) + (BIB_TITLE_KERNING.get(previous + character) ?? 0);
-    previous = character;
-  }
-  return units / UNITS_PER_EM;
+  return titleWidth(text);
 }
 
 /**
@@ -123,3 +116,6 @@ export const BIB_TITLE_KERNING: ReadonlyMap<string, number> = new Map(
     Array.from(firsts).flatMap((first) => Array.from(seconds, (second) => [`${first}${second}`, units] as const)),
   ),
 );
+
+/** `bibTitleWidth`'s measure (`bib-type.ts`, shared with the small print's): the tables above, in ems. */
+const titleWidth = fontWidth(BIB_TITLE_ADVANCES, BIB_TITLE_KERNING, UNKNOWN_UNITS);
