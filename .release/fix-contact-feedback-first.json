@@ -1,0 +1,14 @@
+{
+  "branch": "fix/contact-feedback-first",
+  "decisionsTitle": "On the contact page, «Spune-ne ceva» first when it is offered",
+  "decisionsSection": "**The owner, 2026-10-13:** «on the contact page the feedback form (if active) should come first».\n\n**Decision.** When the feedback forms are offered (`offeredBranches` is not empty: a branch on, with a recipient, the notice in force describing the forms), `/contact` draws, after the intro: «Spune-ne ceva», «Trimite-ne un mesaj» with the form, «Contact direct», the newsletter, the identity line. When they are not offered the page is what §721 made it: the form first, no «Spune-ne ceva». This amends §721 (which put «Spune-ne ceva» under the form) and §698.\n\n- **The rule follows the position.** The first section draws no rule, as the page's head; the section after it opens with the rule every later section has. So «Spune-ne ceva» has none when it is first, and the form's section takes the rule only while «Spune-ne ceva» is above it. Headings and glyphs are unchanged.\n- **The intro «Scrie-ne»** does not name an order, so its words are unchanged.\n- **What does not change.** `FEEDBACK_SECTION_ID`, the chosen event in `?about=` (§716), the flashes and scroll targets of the form and the newsletter, the one `h1`, the page working with scripts off, the public cache's reads, and every state in which «Contact direct» is drawn.\n\n**Tests.** `contact-page-feedback-first.test.ts` renders the page with and without the forms offered, in both languages; `contact-page-order.test.ts` pins the source order and the rule; `feedback.spec.ts` reads the door above the form.",
+  "changelogLine": "- **Contact: «Spune-ne ceva» comes first when it is offered.** The feedback form's section moves above «Trimite-ne un mesaj»; when the forms are not offered the page is unchanged. §NNN.",
+  "specsCriteria": [
+    {
+      "requirement": "BR-REQ-070-04",
+      "text": "Amends criterion 58: given `/contact` while the feedback forms are offered, the sections come in this order: «Spune-ne ceva», the form, «Contact direct», the newsletter, then the identity line; the first section draws no rule and the one after it does. While they are not offered the order is the form, «Contact direct», the newsletter, as before (2026-10-13, `DECISIONS.md` §NNN)."
+    }
+  ],
+  "docsNotes": "",
+  "batchLine": "contact: the feedback form first when offered"
+}

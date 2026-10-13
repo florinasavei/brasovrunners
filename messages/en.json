@@ -5938,7 +5938,7 @@
       },
       "feedbackForms": {
         "title": "Tell us something",
-        "intro": "Four anonymous forms on the contact page, under the contact form, before “Reach us directly” and the newsletter. Each is off until you switch it on here, and reaches one address.",
+        "intro": "Four anonymous forms on the contact page, above the contact form, “Reach us directly” and the newsletter. Each is off until you switch it on here, and reaches one address.",
         "aside": "On: {on} of {all}",
         "noticeMissing": "The privacy notice in force does not describe the forms yet: nothing shows on the site until you approve a new notice (see “Tasks”).",
         "updatedAt": "Set {when}.",

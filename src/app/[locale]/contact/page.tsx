@@ -95,8 +95,8 @@ const fieldId = (name: string) => `c-${name}`;
 
 /**
  * The page in sections (§NNN; the owner, 2026-10-10: «I need here sections, separators and icons»):
- * «Scrie-ne» and its intro, «Trimite-ne un mesaj» with the form, «Spune-ne ceva», «Contact direct», the
- * newsletter (§721, amending §698). Each section after the form opens with a rule and a heading that wears its glyph;
+ * «Scrie-ne» and its intro, «Spune-ne ceva» when it is offered, «Trimite-ne un mesaj» with the form, «Contact direct», the
+ * newsletter (§NNN, amending §721 and §698). Each section after the form opens with a rule and a heading that wears its glyph;
  * the newsletter's box draws the same.
  */
 const SECTION_SX = { mt: { xs: DENSITY.sectionGapLg, sm: 4 }, pt: { xs: DENSITY.sectionGap, sm: 3 }, borderTop: 1, borderColor: "divider", scrollMarginTop: 16 } as const;
@@ -222,6 +222,40 @@ export default async function ContactPage({ params, searchParams }: Props) {
       (name === "message" && aboutEvent ? t("prefill.noEmail", { event: aboutEvent.title }) : undefined),
   });
 
+  /*
+    «Spune-ne ceva» (§676): one section and one button to the anonymous wizard. When it is offered it comes first,
+    right under the intro and with no rule above it, and the form follows with the rule (§NNN, amending §721 and
+    §698; the owner, 2026-10-13: «on the contact page the feedback form (if active) should come first»).
+  */
+  const feedbackSection = feedbackOpen && (
+    <Box
+      component="section"
+      id={FEEDBACK_SECTION_ID}
+      aria-labelledby="feedback-heading"
+      data-testid="feedback-section"
+    >
+      <Typography id="feedback-heading" variant="h2" sx={SECTION_HEADING_SX}>
+        <RateReviewOutlinedIcon aria-hidden="true" sx={SECTION_GLYPH_SX} />
+        {tell("title")}
+      </Typography>
+      <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
+        {tell(doorIntroKey(feedbackOffered))}
+      </Typography>
+      <Button
+        component="a"
+        href={getPathname({ locale, href: "/contact/feedback" })}
+        variant="outlined"
+        size="large"
+        fullWidth
+        sx={{ ...TAP_TARGET, ...WITH_GLYPH_SX }}
+        data-testid="feedback-door"
+      >
+        <RateReviewIcon aria-hidden="true" sx={glyphSx("large")} />
+        {tell("door.button")}
+      </Button>
+    </Box>
+  );
+
   return (
     <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
       {/* The kit-face wordmark heads this page as it heads the listing and the calendar — the
@@ -259,15 +293,20 @@ export default async function ContactPage({ params, searchParams }: Props) {
         )}
       </Typography>
 
+      {/* «Spune-ne ceva», first when it is offered (§NNN). */}
+      {feedbackSection}
+
       {/*
-        «Trimite-ne un mesaj» (§721): the form's own section, right under the intro: a heading with its glyph and
-        no rule, as the page's head. The heading only while the form is drawn: after a send the section holds the
-        confirmation, and with no form, the sentence that says so.
+        «Trimite-ne un mesaj» (§721): the form's own section, right under the intro when «Spune-ne ceva» is not
+        offered: a heading with its glyph and no rule, as the page's head; under «Spune-ne ceva» it opens with the
+        rule every later section has (§NNN). The heading only while the form is drawn: after a send the section
+        holds the confirmation, and with no form, the sentence that says so.
       */}
       <Box
         component="section"
         aria-labelledby={formDrawn ? "contact-form-heading" : undefined}
         data-testid="contact-form-section"
+        sx={feedbackOpen ? SECTION_SX : undefined}
       >
       {formDrawn && (
         <Typography id="contact-form-heading" variant="h2" sx={SECTION_HEADING_SX}>
@@ -408,38 +447,6 @@ export default async function ContactPage({ params, searchParams }: Props) {
         </>
       )}
       </Box>
-
-      {/* «Spune-ne ceva» (§676): one section and one button to the anonymous wizard, under the form, above «Contact direct» and
-          the newsletter (§679, §721). */}
-      {feedbackOpen && (
-        <Box
-          component="section"
-          id={FEEDBACK_SECTION_ID}
-          aria-labelledby="feedback-heading"
-          data-testid="feedback-section"
-          sx={SECTION_SX}
-        >
-          <Typography id="feedback-heading" variant="h2" sx={SECTION_HEADING_SX}>
-            <RateReviewOutlinedIcon aria-hidden="true" sx={SECTION_GLYPH_SX} />
-            {tell("title")}
-          </Typography>
-          <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
-            {tell(doorIntroKey(feedbackOffered))}
-          </Typography>
-          <Button
-            component="a"
-            href={getPathname({ locale, href: "/contact/feedback" })}
-            variant="outlined"
-            size="large"
-            fullWidth
-            sx={{ ...TAP_TARGET, ...WITH_GLYPH_SX }}
-            data-testid="feedback-door"
-          >
-            <RateReviewIcon aria-hidden="true" sx={glyphSx("large")} />
-            {tell("door.button")}
-          </Button>
-        </Box>
-      )}
 
       {/*
         «Contact direct» (§721; the owner, 2026-10-11: «partea de Contact Direct ar trebui să fie după
