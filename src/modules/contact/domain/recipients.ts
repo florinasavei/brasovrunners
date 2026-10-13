@@ -65,6 +65,9 @@ export const contactRecipientsSchema = z
     // Absent on a row saved before the list existed, and read as empty then — a stored setting
     // never needs a migration to grow a list (`platform_settings` is one JSON row per key).
     bcc: z.array(address).max(CONTACT_RECIPIENTS_MAX).default([]),
+    // §NNN (amends §310): a message the form marks «[posibil spam]» is not emailed, only
+    // counted. Off on a row saved before it existed — nothing changes on release.
+    holdBackSuspected: z.boolean().default(false),
   })
   .strict()
   // Stored the way it will be sent, so the boxes show the club what it actually did. One `seen`
@@ -75,12 +78,13 @@ export const contactRecipientsSchema = z
       to: withoutRepeats(value.to, seen),
       cc: withoutRepeats(value.cc, seen),
       bcc: withoutRepeats(value.bcc, seen),
+      holdBackSuspected: value.holdBackSuspected,
     };
   });
 
 export type ContactRecipients = z.infer<typeof contactRecipientsSchema>;
 
-export const DEFAULT_CONTACT_RECIPIENTS: ContactRecipients = { to: [], cc: [], bcc: [] };
+export const DEFAULT_CONTACT_RECIPIENTS: ContactRecipients = { to: [], cc: [], bcc: [], holdBackSuspected: false };
 
 /**
  * A typed line — "club@…, secretar@…" — as a list. Commas and semicolons both, because both are
@@ -158,7 +162,7 @@ export type ResolvedContactRecipients = {
  * address in Cc is not also hidden-copied.
  */
 export function resolveContactRecipients(
-  setting: ContactRecipients | null,
+  setting: Pick<ContactRecipients, "to" | "cc" | "bcc"> | null,
   environmentTo: readonly string[],
 ): ResolvedContactRecipients {
   const settingCc = setting?.cc ?? [];

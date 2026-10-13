@@ -5773,6 +5773,15 @@
         "bccHelp": "Adrese despărțite prin virgulă, spațiu sau pe rânduri. Gol: fără BCC.",
         "copiesHelp": "CC: adresele apar în email; BCC: primesc o copie fără să apară.",
         "repeats": "O adresă scrisă de două ori, sau deja la „Către”, se păstrează o singură dată.",
+        "holdBack": "Nu-mi trimite mesajele care par spam",
+        "holdBackHelp": "Bifat: un mesaj socotit „posibil spam” nu mai ajunge la voi, nici dacă e al unui om al cărui browser n-a rulat verificarea anti-bot. Debifat: vine marcat „[posibil spam]”.",
+        "holdBackOn": "Bifat: un mesaj pe care formularul îl socotește „posibil spam” nu e trimis pe email.",
+        "holdBackOff": "Debifat: un astfel de mesaj vine marcat „[posibil spam]”.",
+        "heldBack": {
+          "one": "În ultimele 30 de zile a fost oprit {count} mesaj care părea spam (nu se păstrează nimic din el).",
+          "few": "În ultimele 30 de zile au fost oprite {count} mesaje care păreau spam (nu se păstrează nimic din ele).",
+          "other": "În ultimele 30 de zile au fost oprite {count} de mesaje care păreau spam (nu se păstrează nimic din ele)."
+        },
         "save": "Salvează destinatarii",
         "readOnly": "Cine primește mesajele de contact stabilește Administratorul; tu vezi lista în vigoare.",
         "saving": "Se salvează…",

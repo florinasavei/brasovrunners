@@ -8,6 +8,7 @@ import { getDb } from "@/db/client";
 import { routing } from "@/i18n/routing";
 import { resolveContactRecipients } from "@/modules/contact/domain/recipients";
 import { configuredGmailAddress, resolveShownContactAddresses } from "@/modules/contact/domain/shown-address";
+import { countHeldBack } from "@/modules/contact/held-back";
 import { readContactRecipients } from "@/modules/contact/recipients";
 import { readPublicPhone } from "@/modules/contact/public-phone";
 import { readShownContactAddress } from "@/modules/contact/shown-address";
@@ -56,8 +57,9 @@ export default async function AdminContactSettingsPage({ params, searchParams }:
   const t = await getTranslations("Admin");
   const db = getDb();
   const now = new Date();
-  const [recipients, shownAddress, publicPhone, feedbackForms, feedbackNoticeDescribes] = await Promise.all([
+  const [recipients, heldBack, shownAddress, publicPhone, feedbackForms, feedbackNoticeDescribes] = await Promise.all([
     readContactRecipients(db),
+    countHeldBack(db, now),
     readShownContactAddress(db),
     readPublicPhone(db),
     readFeedbackSettings(db),
@@ -82,6 +84,7 @@ export default async function AdminContactSettingsPage({ params, searchParams }:
         recipients={recipients}
         resolved={resolveContactRecipients(recipients, env.CONTACT_FORM_TO)}
         mayEdit={mayEdit}
+        heldBack={heldBack}
         openWhen={{ primary: true, saved: saved === "contactRecipients" }}
       />
 

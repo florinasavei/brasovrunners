@@ -105,6 +105,7 @@ export async function submitFeedbackAction(form: FormData): Promise<void> {
           tokenPresent: token.length > 0,
           turnstileVerdict: verdict,
           clubHost: new URL(env.APP_BASE_URL).hostname,
+          holdBack: recipients.holdBackSuspected,
         },
         eventTitle: async (slug, formLocale) => (await cachedPublishedEventBySlug(formLocale, slug))?.title ?? null,
       },

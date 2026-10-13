@@ -14,6 +14,8 @@ import type { ContactRecipientsState } from "@/modules/contact/recipients";
 import type { Locale } from "@/i18n/routing";
 import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
+import CheckboxField from "@/shared/ui/CheckboxField";
+import { countForm } from "@/i18n/count-form";
 
 type Props = {
   locale: Locale;
@@ -25,6 +27,8 @@ type Props = {
    * "organizatorul nu ar trebui sa poata edita cine primeste mesajele CC si BCC".
    */
   mayEdit: boolean;
+  /** Messages the tick held back in the last 30 days (§NNN (amends §310)): a count, never a message. */
+  heldBack: number;
   /** Why the fold opens by itself, as the page knows it: this panel's save just landed (§336). */
   openWhen?: FoldOpenWhen;
 };
@@ -39,7 +43,7 @@ type Props = {
  * a Gmail app password belongs in the environment, not in a table the backoffice can read
  * (AGENTS.md §14.5) — so the panel names the two variables and shows neither's value.
  */
-export default async function ContactRecipientsPanel({ locale, recipients, resolved, mayEdit, openWhen }: Props) {
+export default async function ContactRecipientsPanel({ locale, recipients, resolved, mayEdit, heldBack, openWhen }: Props) {
   const t = await getTranslations("Admin");
   const words = await confirmWords();
 
@@ -50,6 +54,13 @@ export default async function ContactRecipientsPanel({ locale, recipients, resol
     (the owner, 2026-09-29: «trebuie să am o setare de CC și BCC și pentru mailurile trimise de pe
     pagina de contact» — the setting existed since §164 and nobody could tell from the card).
   */
+  // The 30-day count sits beside the tick: shown when the tick is on or a message was ever stopped.
+  const heldBackCount =
+    recipients.holdBackSuspected || heldBack > 0 ? (
+      <Typography variant="body2" color="text.secondary" data-testid="contact-held-back">
+        {t(`emails.contacts.heldBack.${countForm(heldBack, locale)}`, { count: heldBack })}
+      </Typography>
+    ) : null;
   const listBox = { multiline: true, minRows: 1, maxRows: 6 } as const;
   return (
     <Panel glyph="contacts"
@@ -91,9 +102,15 @@ export default async function ContactRecipientsPanel({ locale, recipients, resol
       )}
 
       {!mayEdit ? (
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 1.5 }}>
-          {t("emails.contacts.readOnly")}
-        </Typography>
+        <>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 1.5 }}>
+            {t("emails.contacts.readOnly")}
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }} data-testid="contact-hold-back-state">
+            {t(recipients.holdBackSuspected ? "emails.contacts.holdBackOn" : "emails.contacts.holdBackOff")}
+          </Typography>
+          {heldBackCount}
+        </>
       ) : (
       <Box sx={{ mt: 1.5 }}>
       {/* A refused list comes back as typed, so one mistyped address is corrected, not retyped (§315). */}
@@ -145,6 +162,11 @@ export default async function ContactRecipientsPanel({ locale, recipients, resol
           <Typography variant="caption" color="text.secondary">
             {t("emails.contacts.repeats")}
           </Typography>
+          {/* §NNN (amends §310): off by default; ticked, a «[posibil spam]» message is counted and not emailed. */}
+          <CheckboxField name="holdBackSuspected" defaultChecked={recipients.holdBackSuspected} help={t("emails.contacts.holdBackHelp")}>
+            {t("emails.contacts.holdBack")}
+          </CheckboxField>
+          {heldBackCount}
           <Box>
             <GlyphSubmitButton label={t("emails.contacts.save")} pendingLabel={t("emails.contacts.saving")} icon="save" />
           </Box>

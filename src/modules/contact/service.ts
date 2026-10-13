@@ -7,6 +7,7 @@ import { looksLikeSpam } from "@/modules/registrations/service";
 import type { TurnstileVerdict } from "@/modules/registrations/turnstile";
 import { DomainError } from "@/shared/errors/domain-error";
 import { contactSuspicion } from "./domain/suspicion";
+import { recordHeldBack, shouldHoldBack } from "./held-back";
 import { contactFields, type ContactInput } from "./fields";
 import { type ContactMessageRoute, renderContactMessage } from "./message";
 
@@ -50,6 +51,11 @@ export type ContactScreening = {
   turnstileVerdict: TurnstileVerdict;
   /** This deployment's hostname, from `APP_BASE_URL`; `null` switches the imitation rule off. */
   clubHost: string | null;
+  /**
+   * The Administrator's «Nu-mi trimite mesajele care par spam» (§NNN), read by the caller with the
+   * recipients row it already has. Absent reads as off.
+   */
+  holdBack?: boolean;
 };
 
 /** A caller that screened nothing marks nothing: the message is exactly what it always was. */
@@ -126,6 +132,15 @@ export async function submitContactMessage<T extends Record<string, unknown>>(
     message: input.message,
     honeypot: input.honeypot,
   });
+
+  // The Administrator's tick (§NNN (amends §310)): a message the check marks is counted and not
+  // emailed. The sender's answer is the same "sent" — a script learns nothing. Unticked, the
+  // code below is exactly what it was.
+  if (suspicion.suspicious && shouldHoldBack(suspicion, screening.holdBack === true)) {
+    await recordHeldBack(db, "contact", now);
+    console.info("[contact] held back as possible spam:", suspicion.reasons.map((reason) => reason.kind).join(","));
+    return { outcome: "sent" };
+  }
 
   const message = renderContactMessage(
     { name: input.name, email: input.email, message: input.message, locale: input.locale, pageUrl },

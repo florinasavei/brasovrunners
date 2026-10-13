@@ -41,7 +41,7 @@ export async function updateContactRecipientsAction(_previous: FormOutcome | nul
 
   try {
     const actor = await requireStaffCapability(canManageClubSettings);
-    await updateContactRecipients(getDb(), actor, { to: list("to"), cc: list("cc"), bcc: list("bcc") }, new Date());
+    await updateContactRecipients(getDb(), actor, { to: list("to"), cc: list("cc"), bcc: list("bcc"), holdBackSuspected: form.get("holdBackSuspected") === "on" }, new Date());
   } catch (error) {
     // Which entry is not an address, or which list is too long, in the sentence (§457).
     const outcome = refused(error, form);
