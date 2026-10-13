@@ -17,11 +17,12 @@ import { atTheClock } from "../../helpers/clock";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §753 (amending §32, §143 and §396) — «Clubul pe lista publică»: the public list's «Club» column, by the
- * event's mode. The default shows the club's own name only for a verified member (a live account on the
- * team's allowlist, the bibs' own test) whose typed club names the club; every other cell is blank, and the
- * column is not drawn when no row holds a value. «Cum l-au scris» is the list as it was; «Nu arăta clubul»
- * draws no column. Rendered end to end, as `start-list-render.test.ts` does (BR-REQ-039-01).
+ * §753 and §NNN (amending §32, §143 and §396) — «Clubul pe lista publică»: the public list's «Club» column, by
+ * the event's mode. The default shows the club's own name for every registration whose typed club names the
+ * club — whoever typed it: since §NNN an account on «Echipa» is no condition, because the club's runners have
+ * none — and every other cell is blank; the column is not drawn when no row holds a value. «Cum l-au scris»
+ * is the list as it was; «Nu arăta clubul» draws no column. Rendered end to end, as
+ * `start-list-render.test.ts` does (BR-REQ-039-01).
  */
 let db: TestDatabase;
 let close: () => Promise<void>;
@@ -141,27 +142,44 @@ describe("§753 «Clubul pe lista publică» — the migration", () => {
   });
 });
 
+describe("§NNN the owner's bug: «Doar» the club, and nobody on «Echipa»", () => {
+  it("shows the club's name for every runner who typed it, though none of them has an account", async () => {
+    const { publicEvent, id } = await createEvent("members_only");
+    const typed = ["BVR", "Brasov Runners", "Clubul Brașov Runners"];
+    for (const [index, club] of typed.entries()) {
+      await register(id, { name: `Alergator ${index}`, email: `alergator.${index}@example.org`, club, at: index + 1 });
+    }
+    expect(await db.select().from(staffUsers)).toEqual([]);
+    expect((await listPublicStartList(db, id)).map((row) => row.clubName)).toEqual([CLUB_NAME, CLUB_NAME, CLUB_NAME]);
+    const html = renderToStaticMarkup(await StartList({ event: publicEvent }));
+    expect(html).toContain(">Club</th>");
+    expect(clubCells(html)).toEqual([CLUB_NAME, CLUB_NAME, CLUB_NAME]);
+  });
+});
+
 describe("§753 «Clubul pe lista publică» — the query", () => {
-  it("under the default, selects the typed text only for a verified member and returns the club's own name only when it names the club", async () => {
+  it("under the default, returns the club's own name for whoever typed it, and nothing for any other text", async () => {
     const { id } = await createEvent();
     await seed(id);
     const rows = await listPublicStartList(db, id);
     expect(rows.map((row) => [row.displayName, row.clubName])).toEqual([
       ["Ioana Membra", CLUB_NAME], // a member who typed «BVR»: the club's name, not the nickname
-      ["Mihai Membru", null], // a member who typed something else
+      ["Mihai Membru", null], // a member who typed something else: membership shows nothing by itself
       ["Tudor Tacut", null], // a member who typed nothing: no membership is disclosed
-      ["Vlad Vizitator", null], // not a member, typed the club's name: they are not verified
-      ["Radu Rapid", null],
+      ["Vlad Vizitator", CLUB_NAME], // no account, typed the club's name: what they wrote, in the club's spelling
+      ["Radu Rapid", null], // another club
     ]);
     // The keys are the same as ever: nothing about membership leaves the query.
     expect(Object.keys(rows[0])).toEqual(["displayName", "clubName"]);
   });
 
-  it("is blank for everyone when no account is on the allowlist", async () => {
+  it("is the same whether or not anyone has an account on «Echipa»", async () => {
     const { id } = await createEvent();
     await seed(id);
+    const before = (await listPublicStartList(db, id)).map((row) => row.clubName);
     await db.delete(staffUsers);
-    expect((await listPublicStartList(db, id)).map((row) => row.clubName)).toEqual([null, null, null, null, null]);
+    expect((await listPublicStartList(db, id)).map((row) => row.clubName)).toEqual(before);
+    expect(before).toEqual([CLUB_NAME, null, null, CLUB_NAME, null]);
   });
 
   it("«Cum l-au scris» returns the typed text of everyone, and «Nu arăta clubul» of nobody", async () => {
@@ -188,7 +206,7 @@ describe("§753 «Clubul pe lista publică» — the query", () => {
     expect((await others()).map((row) => [row.displayName, row.group, row.clubName])).toEqual([
       ["Ioana Membra", "PENDING", CLUB_NAME],
       ["Mihai Membru", "WAITLISTED", null],
-      ["Vlad Vizitator", "WAITLISTED", null],
+      ["Vlad Vizitator", "WAITLISTED", CLUB_NAME],
     ]);
     expect((await others("as_typed")).map((row) => row.clubName)).toEqual(["BVR", "alergam pe tavan", "Brașov Runners"]);
     expect((await others("hidden")).map((row) => row.clubName)).toEqual([null, null, null]);
@@ -196,22 +214,22 @@ describe("§753 «Clubul pe lista publică» — the query", () => {
 });
 
 describe("§753 «Clubul pe lista publică» — the rendered list", () => {
-  it("«Doar» the club: one cell holds the club's name, the others are blank, and the header is there", async () => {
+  it("«Doar» the club: the cells of those who typed the club hold its name, the others are blank, and the header is there", async () => {
     const { publicEvent, id } = await createEvent("members_only");
     await seed(id);
     const html = renderToStaticMarkup(await StartList({ event: publicEvent }));
     expect(html).toContain(">Club</th>");
-    expect(clubCells(html)).toEqual([CLUB_NAME, "", "", "", ""]);
-    // The silly text and the claim of someone who is not a member never reach the page.
+    expect(clubCells(html)).toEqual([CLUB_NAME, "", "", CLUB_NAME, ""]);
+    // The silly text, another club and the nickname as typed never reach the page.
     expect(html).not.toContain("alergam pe tavan");
     expect(html).not.toContain("CS Rapid");
     expect(html).not.toContain("BVR");
     expect(html).toContain("Vlad Vizitator");
   });
 
-  it("a row of nothing but members who typed something else, a stranger and an empty cell: the column is not drawn", async () => {
+  it("a page of nothing but other clubs, nonsense and empty cells: the column is not drawn", async () => {
     const { publicEvent, id } = await createEvent("members_only");
-    await seed(id, ["Mihai Membru", "Tudor Tacut", "Vlad Vizitator", "Radu Rapid"]);
+    await seed(id, ["Mihai Membru", "Tudor Tacut", "Radu Rapid"]);
     const html = renderToStaticMarkup(await StartList({ event: publicEvent }));
     expect(html).toContain("Mihai Membru");
     expect(html).not.toContain(">Club</th>");
@@ -222,7 +240,7 @@ describe("§753 «Clubul pe lista publică» — the rendered list", () => {
     const { publicEvent, id } = await createEvent();
     await seed(id);
     const html = renderToStaticMarkup(await StartList({ event: { ...publicEvent, publicListClub: undefined } as unknown as PublicEvent }));
-    expect(clubCells(html)).toEqual([CLUB_NAME, "", "", "", ""]);
+    expect(clubCells(html)).toEqual([CLUB_NAME, "", "", CLUB_NAME, ""]);
   });
 
   it("«Cum l-au scris» is the list as it was: every typed club, and the column even when it is empty", async () => {

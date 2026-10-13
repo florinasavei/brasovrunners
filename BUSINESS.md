@@ -231,10 +231,10 @@ What is asked, and why each one is there:
 - **legal name** — first and last. This is the name the declaration is signed with and the name
   on any list the club must hand to an authority;
 - **club** — free text the person types (or the club's own name, filled in by the member tick). The
-  public list shows it only as the event's «Clubul pe lista publică» says (`DECISIONS.md` §753): by
-  default the club's own name for a verified member who typed it, and nothing for anyone else, so a
-  stranger's typing never appears on a page and a member's membership is never shown unless they
-  claimed it on the form. The backoffice and the exports keep what was typed;
+  public list shows it only as the event's «Clubul pe lista publică» says (`DECISIONS.md` §753,
+  §NNN): by default the club's own name for everyone who typed it, and nothing for any other text,
+  so another club or a silly line never appears on a page, and membership is never shown unless the
+  person wrote the club on the form. The backoffice and the exports keep what was typed;
 - **public display name** — what a start list or a results table shows. It is the legal name
   by default, because that is what a start list normally says and what the club prints. The
   form carries a collapsed section for changing it, so somebody who would rather appear as

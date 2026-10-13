@@ -112,10 +112,11 @@ export type ParticipantListVisibility = (typeof participantListVisibility.enumVa
 /**
  * «Clubul pe lista publică» (§753, amending §32, §143 and §396): what the public list's «Club» column
  * says. The club is free text the person typed, and a public list is a disclosure — so the default shows
- * only the club's own name, and only for a verified member who typed it.
+ * only the club's own name, for whoever typed it (§NNN).
  *
- * - `members_only` — «Doar Brașov Runners»: the cell holds the club's name for a registration whose
- *   person is on the club's members list AND whose typed club names the club; blank for every other row.
+ * - `members_only` — «Doar Brașov Runners»: the cell holds the club's name for a registration whose typed
+ *   club names the club, whoever typed it (§NNN: no account on «Echipa» is asked); blank for every other
+ *   row. The value keeps the name §753 gave it.
  * - `as_typed` — «Cum l-au scris»: the typed club, as before this setting existed.
  * - `hidden` — «Nu arăta clubul»: no column at all.
  *
@@ -795,8 +796,8 @@ export const events = pgTable(
     /**
      * `public_list_club` — «Clubul pe lista publică» (§753): what the list's «Club» column shows. The
      * default `members_only` is the rule, not a convenience: every event that exists and every one created
-     * after this column shows less than before — the club's own name for a verified member who typed it,
-     * nothing else. Display only (see `publicListClub`).
+     * after this column shows less than before — the club's own name for whoever typed it (§NNN), nothing
+     * else. Display only (see `publicListClub`).
      */
     publicListClub: publicListClub("public_list_club").notNull().default("members_only"),
 

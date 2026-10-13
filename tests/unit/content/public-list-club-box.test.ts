@@ -72,10 +72,13 @@ describe("§753 «Clubul pe lista publică» in the editor", () => {
     expect(html).toContain("Nu arăta clubul");
     expect(html).toContain('data-testid="public-list-club-help"');
     expect(html).toContain("Clubul pe lista publică");
+    // The fold says what the owner met on the live race: nobody on the page typed it, so no column (§NNN).
+    expect(html).toContain("coloana nu apare");
+    expect(html).toContain("orice alt text rămâne ascuns");
   });
 
   it("has the words in both catalogues, the help short enough to read at a glance, and the name never typed in", () => {
-    for (const key of ["publicListClub", "publicListClubHelp", "publicListClubMembersOnly", "publicListClubAsTyped", "publicListClubHidden"] as const) {
+    for (const key of ["publicListClub", "publicListClubHelp", "publicListClubHelpMore", "publicListClubMembersOnly", "publicListClubAsTyped", "publicListClubHidden"] as const) {
       expect(ro.Admin.editor[key].length, `ro ${key}`).toBeGreaterThan(0);
       expect(en.Admin.editor[key].length, `en ${key}`).toBeGreaterThan(0);
     }

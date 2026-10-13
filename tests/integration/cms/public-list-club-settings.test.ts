@@ -196,12 +196,10 @@ describe("§753 «Clubul pe lista publică» on the event", () => {
     expect(await findPublishedEventBySlug(db, "ro", "crosul-clubului")).toMatchObject({ publicListClub: "as_typed" });
   });
 
-  it("an account that comes or goes is a member that comes or goes: the cached lists expire with it", async () => {
+  it("an account that comes or goes changes nothing on the public list (§NNN): the cached lists stay", async () => {
     cache.revalidatePublicContent.mockClear();
     const member = await insertStaffUser(db, { email: "membru@example.org", displayName: "Membru", role: "MEMBER" });
-    expect(cache.revalidatePublicContent).toHaveBeenCalledWith("places");
-    cache.revalidatePublicContent.mockClear();
     await deleteStaffUser(db, member.id);
-    expect(cache.revalidatePublicContent).toHaveBeenCalledWith("places");
+    expect(cache.revalidatePublicContent).not.toHaveBeenCalled();
   });
 });
