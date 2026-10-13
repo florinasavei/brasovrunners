@@ -32,7 +32,7 @@ import { UNDER_MINIMUM_AGE } from "@/modules/registrations/fields";
 import { ANSWER_MARKERS, ANSWERS_UNCHANGED, answersRefusalCode, EDITABLE_ANSWERS } from "@/modules/registrations/answers";
 import { ADDRESS_AT_CAP, ALREADY_ON_ADDRESS } from "@/modules/registrations/domain/family";
 import { waitlistRefusalCode } from "@/modules/registrations/domain/waitlist";
-import { confirmedCapacityOf, noFreePlaceOutcome, supplementaryPlaceRefusalOutcome } from "@/modules/registrations/domain/capacity";
+import { PLACES_TAKEN_KEYS, confirmedCapacityOf, noFreePlaceOutcome, supplementaryPlaceRefusalOutcome } from "@/modules/registrations/domain/capacity";
 import { sendOutboxNow } from "@/modules/notifications/send-now";
 import { SendNowRefused, sendNowRefusalCode } from "@/modules/notifications/send-at-once";
 import { requireStaff, requireStaffCapability } from "@/modules/staff-identity/session";
@@ -252,6 +252,8 @@ export async function setOutsideCapacityAction(_previous: FormOutcome | null, fo
     // «Folosește lista ascunsă» off (§647): its own sentence, naming the switch, not "check the data".
     outcome = isDomainError(error) && error.fields.includes(HIDDEN_LIST_OFF) ? { error: HIDDEN_LIST_OFF } : (noFreePlaceOutcome(error) ?? outcomeOf(error));
   }
+  // From the list's «⋮» (§747) the form carries the list's query: back to the list, as it stands.
+  if (form.has("listQuery")) return backToList(locale, text(form, "listQuery"), outcome as Record<string, string>);
   return backTo(detailPath(locale, registrationId), outcome);
 }
 
@@ -491,7 +493,7 @@ export async function editRegistrationAnswersAction(_previous: FormOutcome | nul
  */
 async function backToList(locale: Locale, listQuery: string, outcome: Record<string, string>): Promise<never> {
   const params = new URLSearchParams(listQuery);
-  for (const key of ["erase", "memberSweep", "error", "saved", "count", "cancelled", "erased", "failed", "test", "voided"]) params.delete(key);
+  for (const key of ["erase", "memberSweep", "error", "saved", "count", "cancelled", "erased", "failed", "test", "voided", ...PLACES_TAKEN_KEYS]) params.delete(key);
   for (const [key, value] of Object.entries(outcome)) params.set(key, value);
   await flashOutcome(outcome);
   redirect(`${getPathname({ locale, href: "/admin/registrations" })}?${params.toString()}#admin-alert`);

@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.08-2026-10-13 -->
+<!-- PROJECT_BASELINE: BR-V3.09-2026-10-13 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V3.08-2026-10-13`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.09-2026-10-13`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -1746,6 +1746,7 @@ way through every step, and none of them is a way around the allocator.
 33. The invitation form takes one row per person, a name and an email address, refusing before the send a row with only one of them by its row number; «Invitații» lists the invitations before the form, with counts by state and each one's origin (a member, or added by hand); on the first page of one event's registrations list with no other filter, the invitations not accepted yet are rows above the registrations, not counted in the results; and the registrations list marks a registration accepted from an invitation «Invitat» (2026-10-12, `DECISIONS.md` §737).
 34. Pressing «Invită pe email» on one event's list opens «Invitații» and brings it into view every time, including a second press on the same address after the panel was closed, and on all events it leads to the event's panel — straight when one upcoming event the send accepts takes invitations, by a menu when several do, each event named by its title and start (2026-10-12, `DECISIONS.md` §740).
 35. «Invitații» is open on arrival while an invitation is sent and waiting or ran out unanswered while the event is still to come; every invited person is seen with the invitation's state — a row above the registrations on the event's list, and on all events a line naming each upcoming event's unanswered invitations — and no invitation is counted as a registration or changes the capacity formula (2026-10-12, `DECISIONS.md` §740).
+36. The registrations list's row menu «⋮» offers «Pune pe lista de invitați speciali» for an active row not on the list while the event's «Folosește lista de invitați speciali» is on, and «Scoate de pe lista de invitați speciali» for an active row on the list, to the Administrator alone, with the incognito glyph; each posts the registration page's `setOutsideCapacityAction` with the page's question (the body by the row's state, an email named only for a waiting or offered real row), asserted again by the action and the service, and comes back to the list on the row's own page, with its filters; the Organizer sees no entry; this amends §648 (2026-10-13, `DECISIONS.md` §747). Verification: unit `registrations/row-verbs.test.ts`; integration `registrations/outside-row-menu.test.ts`, `registrations/outside-row-menu-action.test.ts`; e2e `hidden-list.spec.ts`.
 
 **Verification:** integration `registrations/race-day.test.ts`, `registrations/staff-crud.test.ts`
 
@@ -1887,6 +1888,7 @@ way through every step, and none of them is a way around the allocator.
 69. A members' design drawn «Tot numărul» fills the card above the sponsors' strip and the small print with the members' background: their photograph under the kit's navy at 0.7, else their colour when white reads on it at 4.5 : 1 or more, else the kit's gradient `GRADIENT.deep` → `GRADIENT.mid`. The lockup, the race, the number and the name are white on it, and the label is an orange stripe in capitals with the body ink, its foot on the background's foot. The sheet and the picture draw it at the same points, and the ordinary bib is unchanged (2026-10-10, `DECISIONS.md` §695).
 70. A design saved before the members' style existed reads as «Doar banda de sus» and prints as it did. A photograph that could not be fetched prints the colour or the gradient. A colour on which white does not read at AA prints the gradient, and the editor marks it «doar pentru bandă» (2026-10-10, `DECISIONS.md` §695).
 71. An event's bib design may write race numbers with leading zeros to three or four digits («Cum arată numărul»; default as the number is); the bib, its preview, every email and page that shows the number, the desk and the backoffice write it the same way, while the stored number, typed numbers and the exports stay integers (2026-10-12, `DECISIONS.md` §735).
+72. Given an event whose bib design asks for three digits and a confirmed registration numbered 1, then the sheet's PDF prints «001», under four digits «0001», and with the setting off «1»; and the pictures of the bibs page and of the desk are asked under an address that changes with the number's format (the bibs page: the whole design), so a page printed after the choice never shows the numbers drawn before it (2026-10-13, `DECISIONS.md` §748).
 
 **Verification:** integration `registrations/bibs.test.ts`, `registrations/race-day.test.ts`, `cms/bib-design.test.ts`; unit `registrations/bibs-pdf.test.ts`, `registrations/bib-design.test.ts`; integration `registrations/void-bibs.test.ts` (16, 17); unit `registrations/race-number.test.ts` (16); unit `registrations/bib-footer.test.ts` (19); e2e `bib-design.spec.ts` (19)
 
