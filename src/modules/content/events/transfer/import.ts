@@ -237,7 +237,15 @@ export function importedCheckpoints(config: EventConfig): Omit<CheckpointInput, 
         index,
       })),
       context,
-    ).map(({ id: _id, ...row }) => row);
+    ).map((row) => ({
+      nameRo: row.nameRo,
+      nameEn: row.nameEn,
+      km: row.km,
+      kinds: row.kinds,
+      cutoff: row.cutoff,
+      noteRo: row.noteRo,
+      noteEn: row.noteEn,
+    }));
   } catch (error) {
     if (!(error instanceof CheckpointRefusal)) throw error;
     const said = Object.entries(error.values)
