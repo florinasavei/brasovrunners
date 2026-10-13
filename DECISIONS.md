@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.15-2026-10-14 -->
+<!-- PROJECT_BASELINE: BR-V3.16-2026-10-14 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V3.15-2026-10-14`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.16-2026-10-14`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -26171,3 +26171,24 @@ Baseline `BR-V3.15-2026-10-14`.
 **Not changed.** The badge's size, words and colours, the lockup, the members' label, the number, the name, the small print and the profile strip; the stored design; no migration.
 
 Baseline `BR-V3.15-2026-10-14`.
+
+## 756. «Doar Brașov Runners» shows the club for everyone who typed it, not only accounts on «Echipa»
+
+**The owner, 2026-10-13**, an hour after §753 shipped, looking at the live race's «Cine vine» with «Clubul pe lista publică» = «Doar Brașov Runners»: «there is a bug on the club visibility settings … I don't see any club now». What he had asked for in §753: «I just want to show Brașov Runners members and ignore the other clubs because it's a free text people can type stupid stuff there, but I still want to show the BVR ones».
+
+**The cause.** §753 showed the club's name only for a registration whose person had an account on «Echipa» (`memberCanonicalEmails`, the member bibs' test) **and** whose typed club named the club. The club's runners have no accounts on «Echipa» — adding the members there is still owed (CLAUDE.md «Still owed» item 18) — so nobody qualified, every cell was blank, and the column, drawn only when a row holds a value, disappeared.
+
+**Decision.** Amends §753 §2. Under «Doar {club}» the cell holds the club's own name (`CLUB_NAME`) for **every** registration whose typed club names the club, whoever typed it; every other cell is blank, and the column is still not drawn when no row on the page holds a value. Membership is no condition: the query selects the typed club for every row and `memberClubCell` turns it into the club's name or into nothing in code, before the row is cached or drawn, so the typed text itself never reaches the cache or the page. This shows only what the person wrote, in the club's own spelling — the list showed every typed club before §753 — so nothing new is disclosed. No migration: the enum value `members_only` keeps its name and the label stays «Doar {club}». The editor's help says it in plain words and promises nothing about membership: every other text stays hidden, and its fold says that an unaccented, abbreviated or mistyped name counts and that the column is not drawn when nobody on the page typed the club — the symptom the owner met. Since the list no longer reads accounts, adding or removing one on «Echipa» no longer expires the public lists (§753's criterion 43 retires). The member bibs, the backoffice, the exports and the desk are untouched: membership for the bibs is still the account test.
+
+**A more forgiving matcher**, still one tested function (`namesTheClub`). Case, diacritics, punctuation, spaces and filler words («Club», «Clubul», «Asociația», «Sportivă», «AS», «ACS», «CS», «Echipa», «Team», and «România», «ro», «com», so the club's site address typed as its club is the club) are folded away; what is left must split — glued or not — into pieces of the club's own vocabulary: the configured name's words (the last one singular too) and their initials, derived from `CLUB_NAME`, and the short forms no rule derives — the county's plate code standing for the first word («BV») and the nickname «BVR» — which belong to this club and so live beside its name in `theme/brand.ts` (`CLUB_SHORT_FORMS`), reaching no other configured name; nothing else may be in the cell, and the pieces must name the club: the name's words in order («Brașov Runners», «BV Runners»), the initials beside the first word («BR Brașov», «Brașov BR»), or the nickname. One typo — a letter added, dropped, changed or two neighbours swapped, the first letter right, never a digit — is forgiven in each word of the name six letters or longer, inside one typed word: a stray letter beside the name («Brasov Runners A», «B Brasov Runners») is not an added letter, while the exact word may be cut («Brasov R unners»). A digit refuses the cell («Brasov Runners 2024»). So «Brașov Runners (BVR)», «BVR - Brasov Runners», «brasovrunners», «CLUB BRASOV RUNNERS», «Brasov Runners Team», «Brasov Runers» and «Brashov Runners» are the club; «Brașov Runners Cluj», «Runners Brașov Marathon Club Cluj», «Cluj Runners», «Brasov Gunners», «Brașov Running», «Runners» alone, «BR» alone and «Brașov» alone are not.
+
+**Refused:**
+
+- **Keeping the account test and asking the club to add its runners on «Echipa» first.** The race is live today and the owner asked for the club's name on the list, not for a membership register; a free-text club that names the club is what the person wrote.
+- **Showing membership regardless of what was typed.** A member who typed nothing or another club still shows nothing: that would be a new disclosure (`AGENTS.md` §10.10).
+- **Renaming the enum value.** `members_only` is a stored value; renaming it would be a migration for a word nobody reads.
+- **A looser fuzzy match** (any word near the name, a substring). Another club's name that contains ours must stay another club.
+
+Amends §753.
+
+Baseline `BR-V3.16-2026-10-14`.

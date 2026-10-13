@@ -17,9 +17,9 @@ import { atTheClock } from "../../helpers/clock";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §753 and §NNN (amending §32, §143 and §396) — «Clubul pe lista publică»: the public list's «Club» column, by
+ * §753 and §756 (amending §32, §143 and §396) — «Clubul pe lista publică»: the public list's «Club» column, by
  * the event's mode. The default shows the club's own name for every registration whose typed club names the
- * club — whoever typed it: since §NNN an account on «Echipa» is no condition, because the club's runners have
+ * club — whoever typed it: since §756 an account on «Echipa» is no condition, because the club's runners have
  * none — and every other cell is blank; the column is not drawn when no row holds a value. «Cum l-au scris»
  * is the list as it was; «Nu arăta clubul» draws no column. Rendered end to end, as
  * `start-list-render.test.ts` does (BR-REQ-039-01).
@@ -142,7 +142,7 @@ describe("§753 «Clubul pe lista publică» — the migration", () => {
   });
 });
 
-describe("§NNN the owner's bug: «Doar» the club, and nobody on «Echipa»", () => {
+describe("§756 the owner's bug: «Doar» the club, and nobody on «Echipa»", () => {
   it("shows the club's name for every runner who typed it, though none of them has an account", async () => {
     const { publicEvent, id } = await createEvent("members_only");
     const typed = ["BVR", "Brasov Runners", "Clubul Brașov Runners"];

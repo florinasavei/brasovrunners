@@ -72,7 +72,7 @@ describe("§753 «Clubul pe lista publică» in the editor", () => {
     expect(html).toContain("Nu arăta clubul");
     expect(html).toContain('data-testid="public-list-club-help"');
     expect(html).toContain("Clubul pe lista publică");
-    // The fold says what the owner met on the live race: nobody on the page typed it, so no column (§NNN).
+    // The fold says what the owner met on the live race: nobody on the page typed it, so no column (§756).
     expect(html).toContain("coloana nu apare");
     expect(html).toContain("orice alt text rămâne ascuns");
   });

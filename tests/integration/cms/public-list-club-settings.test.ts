@@ -196,7 +196,7 @@ describe("§753 «Clubul pe lista publică» on the event", () => {
     expect(await findPublishedEventBySlug(db, "ro", "crosul-clubului")).toMatchObject({ publicListClub: "as_typed" });
   });
 
-  it("an account that comes or goes changes nothing on the public list (§NNN): the cached lists stay", async () => {
+  it("an account that comes or goes changes nothing on the public list (§756): the cached lists stay", async () => {
     cache.revalidatePublicContent.mockClear();
     const member = await insertStaffUser(db, { email: "membru@example.org", displayName: "Membru", role: "MEMBER" });
     await deleteStaffUser(db, member.id);

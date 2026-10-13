@@ -392,7 +392,7 @@ export const CLUB_NAME = "Brașov Runners";
 
 /**
  * The club's short forms that no rule derives from `CLUB_NAME` — they belong to this club, so they live
- * beside its name. The public list's matcher (`registrations/domain/public-list-club.ts`, §753, §NNN) reads
+ * beside its name. The public list's matcher (`registrations/domain/public-list-club.ts`, §753, §756) reads
  * them as the club's own words: `city` is the county's plate code standing for the name's first word
  * («BV Runners»), each of `nicknames` names the club on its own («BVR»). Folded: lower case, no
  * diacritics. A club renamed here renames these too.

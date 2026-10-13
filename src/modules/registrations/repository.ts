@@ -491,7 +491,7 @@ function publicSocialColumns(socials: boolean | undefined): Record<string, SQL<s
 }
 
 /**
- * What the «Club» column reads (§753 and §NNN, amending §32, §143 and §396), by the event's «Clubul pe lista publică».
+ * What the «Club» column reads (§753 and §756, amending §32, §143 and §396), by the event's «Clubul pe lista publică».
  *
  * `column` is the select's club expression and `shown` finishes each row's value in code, before the row is
  * cached or drawn:
@@ -500,7 +500,7 @@ function publicSocialColumns(socials: boolean | undefined): Record<string, SQL<s
  *   - `hidden`: nothing is selected — a constant null — so the text never leaves the database.
  *   - `members_only` (the default): the typed text of every row, and `shown` turns it into the club's own name
  *     when it names the club (`namesTheClub`) and into nothing otherwise — so the typed text itself never
- *     reaches the cache or the page. Whoever typed it (§NNN): §753 also asked for an account on «Echipa», and
+ *     reaches the cache or the page. Whoever typed it (§756): §753 also asked for an account on «Echipa», and
  *     the club's runners have none, so the column was empty on the live race.
  *
  * Every caller defaults to `members_only`: one that forgets the event's setting discloses less, never more.

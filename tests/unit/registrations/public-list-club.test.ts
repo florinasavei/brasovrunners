@@ -10,12 +10,12 @@ import {
 import { CLUB_NAME } from "@/theme/brand";
 
 /**
- * §753 and §NNN (amending §32, §143 and §396) — «Clubul pe lista publică»: the matcher that decides whether a
+ * §753 and §756 (amending §32, §143 and §396) — «Clubul pe lista publică»: the matcher that decides whether a
  * typed club names the club itself. Case, diacritics, punctuation, spaces and filler words are folded; what
  * is left must be the club's own words, initials, short forms or nicknames and nothing else, and must name
  * the club; one typo is forgiven in a long word of the club's name; another club's name never matches.
  */
-describe("§NNN namesTheClub — what is the club's own name", () => {
+describe("§756 namesTheClub — what is the club's own name", () => {
   const SPELLED_IN = [
     CLUB_NAME,
     "brasov runners",

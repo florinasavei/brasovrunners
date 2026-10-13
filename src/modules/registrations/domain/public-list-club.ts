@@ -1,12 +1,12 @@
 /**
- * «Clubul pe lista publică» (§753 and §NNN, amending §32, §143 and §396): what the public list's «Club» column says.
+ * «Clubul pe lista publică» (§753 and §756, amending §32, §143 and §396): what the public list's «Club» column says.
  *
  * The owner, 2026-10-13: «people type stupid things there, I just want to show Brașov Runners members and
  * ignore the other clubs … but I still want to show the BVR ones». The club is free text, and a public list
  * is a disclosure (`AGENTS.md` §10.10) — so the default shows less than the person typed, never more:
  *
  * - `members_only` — «Doar {club}»: the cell holds the club's own name for every row whose typed club names
- *   the club (`namesTheClub`), whoever typed it; every other cell is blank. Since §NNN membership is no
+ *   the club (`namesTheClub`), whoever typed it; every other cell is blank. Since §756 membership is no
  *   condition: the club's runners have no accounts on «Echipa», so §753's account test left the column
  *   empty on the live race. The cell only ever says what the person wrote, in the club's own spelling — the
  *   list showed every typed club before §753, so nothing new is disclosed.
@@ -251,7 +251,7 @@ export function namesTheClub(typed: string | null | undefined, vocabulary: ClubV
 
 /**
  * The cell the list draws under `members_only`, from the typed club: the club's own name when the typed
- * text names it, otherwise nothing. Whoever typed it (§NNN) — the typed text itself never reaches the page.
+ * text names it, otherwise nothing. Whoever typed it (§756) — the typed text itself never reaches the page.
  */
 export function memberClubCell(typed: string | null | undefined): string | null {
   return namesTheClub(typed) ? CLUB_NAME : null;

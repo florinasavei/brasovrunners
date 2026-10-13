@@ -5,10 +5,10 @@ import { hydrated, signIn } from "./support/featured-event";
 import { openEditorBox } from "./support/fold";
 
 /**
- * §753 and §NNN (amending §32, §143 and §396; the owner, 2026-10-13: «people type stupid things there, I just
+ * §753 and §756 (amending §32, §143 and §396; the owner, 2026-10-13: «people type stupid things there, I just
  * want to show Brașov Runners members and ignore the other clubs … but I still want to show the BVR ones») —
  * «Clubul pe lista publică»: under the default everyone who typed the club shows the club's name in «Cine
- * vine», with or without an account on «Echipa» (§NNN: the club's runners have none); a member who typed
+ * vine», with or without an account on «Echipa» (§756: the club's runners have none); a member who typed
  * nonsense shows nothing. The editor's three radios switch it, and the saved choice reaches the page.
  *
  * The runner with no account types a variant («Brasov Runers»), so the cell is seen turning it into the club's
@@ -92,7 +92,7 @@ async function seedRace(tag: string): Promise<Seeded> {
 
 const rowOf = (page: import("@playwright/test").Page, name: string) => page.getByTestId("start-list-named").filter({ hasText: name });
 
-test.describe("§753, §NNN «Clubul pe lista publică»: only the club's own name shows by default", () => {
+test.describe("§753, §756 «Clubul pe lista publică»: only the club's own name shows by default", () => {
   test.describe.configure({ timeout: 90_000 });
 
   test("the default names the club for everyone who typed it, account or not, in its own spelling, and for nobody else; the editor's radios switch it", async ({ page }) => {
