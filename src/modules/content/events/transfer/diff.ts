@@ -165,6 +165,7 @@ export const FIELD_LABELS = [
   "publicList.waitlist",
   "publicList.waitlistCount",
   "publicList.count",
+  "publicList.club",
   "hiddenList.enabled",
   "hiddenList.bibStart",
   "hiddenList.counted",
