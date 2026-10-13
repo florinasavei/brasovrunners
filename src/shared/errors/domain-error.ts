@@ -24,7 +24,11 @@ export type DomainErrorCode =
   // A volunteer role removed while people are on it (§754): move them first, so no one is deleted by a click on a role.
   | "VOLUNTEER_ROLE_HAS_PEOPLE"
   // The same address entered twice for one event's volunteers (§754): one row per person per event, so the card says so.
-  | "VOLUNTEER_ALREADY_LISTED";
+  | "VOLUNTEER_ALREADY_LISTED"
+  // «Trimite linkul contractului» or a paper acceptance while no volunteer agreement is in force (§NNN): approve one first.
+  | "VOLUNTEER_AGREEMENT_MISSING"
+  // The same, for a volunteer who has already accepted the agreement (§NNN): nothing to send, nothing to record.
+  | "VOLUNTEER_AGREEMENT_ACCEPTED";
 
 export class DomainError extends Error {
   readonly code: DomainErrorCode;

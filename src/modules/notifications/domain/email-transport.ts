@@ -88,6 +88,10 @@ export const EMAIL_GROUP_OF: Readonly<Record<EmailMessageType, EmailGroup>> = {
   // A volunteer's sign-up (§754): the person's answer to their own step, and the club's notice to its people.
   VOLUNTEER_RECEIVED: "confirmations",
   VOLUNTEER_CLUB_NOTICE: "club",
+  // The volunteer agreement (§NNN): the link to accept it is an action link, on the links' road; the accepted
+  // copy answers the person's own step, as a signed declaration's copy does.
+  VOLUNTEER_AGREEMENT_REQUEST: "links",
+  VOLUNTEER_AGREEMENT_ACCEPTED: "confirmations",
   NEWSLETTER_CONFIRM: "newsletter",
   NEWSLETTER: "newsletter",
   NEW_EVENT_ALERT: "newsletter",

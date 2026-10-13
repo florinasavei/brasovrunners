@@ -11,6 +11,8 @@ import {
   editVolunteerAction,
   editVolunteerRoleAction,
   moveVolunteerRoleAction,
+  recordPaperVolunteerAgreementAction,
+  requestVolunteerAgreementAction,
   setVolunteerStateAction,
   switchVolunteersAction,
 } from "@/app/[locale]/admin/events/[id]/volunteer-actions";
@@ -32,7 +34,9 @@ import {
   VOLUNTEER_NOTE_MAX,
   VOLUNTEER_ROLE_DESCRIPTION_MAX,
   VOLUNTEER_ROLE_NAME_MAX,
+  agreementStandingOf,
   type RoleStanding,
+  type VolunteerAgreementStanding,
   type VolunteerOfferClosed,
   type VolunteerState,
 } from "../domain/volunteer";
@@ -45,6 +49,13 @@ const STATE_CHIP: Record<VolunteerState, { glyph: StatusGlyphName; color: "warni
   CANCELLED: { glyph: "cancelled", color: "default" },
 };
 
+/** The volunteer agreement's chip (§NNN): its words, its glyph and its tone — never the colour alone. */
+const AGREEMENT_CHIP: Record<VolunteerAgreementStanding, { glyph: StatusGlyphName; color: "warning" | "success" | "default" }> = {
+  accepted: { glyph: "done", color: "success" },
+  linkSent: { glyph: "link", color: "default" },
+  notAccepted: { glyph: "open", color: "warning" },
+};
+
 type Props = {
   locale: Locale;
   eventId: string;
@@ -55,6 +66,10 @@ type Props = {
   roles: readonly VolunteerRole[];
   standings: readonly RoleStanding[];
   volunteers: readonly VolunteerItem[];
+  /** Whether a volunteer agreement is in force in every language (§NNN): the link and the paper need one. */
+  agreementInForce: boolean;
+  /** The page's clock: whether a sent link is still live. */
+  now: Date;
   /** A refused one-button form's code, already translated. */
   error?: string;
 };
@@ -78,7 +93,7 @@ function shortText(text: string): string {
  * role (BR-REQ-060-01) whatever buttons this draws. It sits beside the editor's save form, never inside
  * it: HTML forms cannot nest. A volunteer's address and telephone number are drawn here and nowhere else.
  */
-export default async function VolunteersCard({ locale, eventId, acceptsVolunteers, offerClosed, roles, standings, volunteers, error }: Props) {
+export default async function VolunteersCard({ locale, eventId, acceptsVolunteers, offerClosed, roles, standings, volunteers, agreementInForce, now, error }: Props) {
   const t = await getTranslations("Admin");
   const words = await confirmWords();
   const standingOf = new Map(standings.map((standing) => [standing.roleId, standing]));
@@ -240,6 +255,86 @@ export default async function VolunteersCard({ locale, eventId, acceptsVolunteer
     </Box>
   );
 
+  /**
+   * The volunteer agreement for one person (§NNN): when it was accepted, how and which version — and the role it
+   * names when the person has moved since; or, not accepted yet, the two ways to get it — the link by email, or
+   * the PDF to sign at the desk and «Semnat pe hârtie». Nothing to do for a cancelled person; nothing to send while
+   * no agreement is in force (the card says so, and the service refuses anyway).
+   */
+  const agreementBlock = (person: VolunteerItem) => {
+    const pdfHref = `/api/admin/events/${eventId}/volunteers/${person.id}/agreement`;
+    if (person.agreementAcceptedAt && person.agreementMethod) {
+      const currentRole = roles.find((role) => role.id === person.roleId);
+      const moved = person.agreementRoleName !== null && currentRole !== undefined && person.agreementRoleName !== currentRole.nameRo && person.agreementRoleName !== currentRole.nameEn;
+      return (
+        <Stack spacing={0.5} sx={{ mt: 0.5 }} data-testid="volunteer-agreement">
+          <Typography variant="body2" color="text.secondary">
+            {t("volunteers.agreement.acceptedLine", {
+              version: String(person.agreementVersion ?? ""),
+              how: t(`volunteers.agreement.methods.${person.agreementMethod}`),
+              when: day(person.agreementAcceptedAt),
+            })}
+          </Typography>
+          {moved && (
+            <Typography variant="body2" color="text.secondary" data-testid="volunteer-agreement-other-role">
+              {t("volunteers.agreement.otherRole", { role: person.agreementRoleName ?? "" })}
+            </Typography>
+          )}
+          <Box>
+            <GlyphButton icon="pdf" href={pdfHref} variant="outlined" sx={{ minHeight: 44 }} data-testid="volunteer-agreement-pdf">
+              {t("volunteers.agreement.pdf")}
+            </GlyphButton>
+          </Box>
+        </Stack>
+      );
+    }
+    if (person.state === "CANCELLED") return null;
+    if (!agreementInForce) {
+      return (
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }} data-testid="volunteer-agreement-missing">
+          {t("volunteers.agreement.missing")}
+        </Typography>
+      );
+    }
+    const sent = agreementStandingOf(person, now) === "linkSent" || person.agreementRequestedAt !== null;
+    const sendLabel = sent ? t("volunteers.agreement.resend") : t("volunteers.agreement.send");
+    return (
+      <Stack spacing={1} sx={{ mt: 0.5 }} data-testid="volunteer-agreement">
+        <Typography variant="body2" color="text.secondary">
+          {t("volunteers.agreement.help")}
+        </Typography>
+        {person.agreementRequestedAt && (
+          <Typography variant="caption" color="text.secondary">
+            {t("volunteers.agreement.requestedLine", { when: day(person.agreementRequestedAt) })}
+          </Typography>
+        )}
+        <Stack direction="row" sx={{ flexWrap: "wrap", gap: 1 }}>
+          <Box component="form" action={requestVolunteerAgreementAction} data-testid="volunteer-agreement-send-form">
+            {hidden}
+            <input type="hidden" name="volunteerId" value={person.id} />
+            <GlyphSubmitButton icon={sent ? "resend" : "send"} label={sendLabel} pendingLabel={sendLabel} ariaLabel={`${sendLabel}: ${shortText(person.name)}`} variant="outlined" />
+          </Box>
+          <GlyphButton icon="print" href={pdfHref} variant="outlined" sx={{ minHeight: 44 }} data-testid="volunteer-agreement-pdf">
+            {t("volunteers.agreement.pdfToSign")}
+          </GlyphButton>
+          <ActionForm
+            action={recordPaperVolunteerAgreementAction}
+            confirm={{
+              title: t("volunteers.agreement.paperTitle", { name: shortText(person.name) }),
+              body: t("volunteers.agreement.paperBody", { name: shortText(person.name) }),
+              confirmLabel: t("volunteers.agreement.paper"),
+              cancelLabel: words.cancel,
+            }}
+          >
+            {hidden}
+            <input type="hidden" name="volunteerId" value={person.id} />
+            <GlyphSubmitButton icon="declaration" label={t("volunteers.agreement.paper")} pendingLabel={t("volunteers.agreement.paper")} variant="outlined" />
+          </ActionForm>
+        </Stack>
+      </Stack>
+    );
+  };
+
   const personRow = (person: VolunteerItem) => (
     <Box component="li" key={person.id} data-testid="volunteer-row" data-volunteer-id={person.id} data-state={person.state} sx={{ border: 1, borderColor: "divider", borderRadius: 1, p: 1.5 }}>
       <Stack direction="row" sx={{ flexWrap: "wrap", alignItems: "center", gap: 0.75 }}>
@@ -248,6 +343,19 @@ export default async function VolunteersCard({ locale, eventId, acceptsVolunteer
         </Typography>
         <StatusChip glyph={STATE_CHIP[person.state].glyph} color={STATE_CHIP[person.state].color} label={t(`volunteers.states.${person.state}`)} testId="volunteer-state" />
         <StatusChip glyph={person.source === "PUBLIC" ? "link" : "club"} variant="outlined" label={t(`volunteers.sources.${person.source}`)} />
+        {/* The volunteer agreement (§NNN): accepted, a link waiting, or «contract neacceptat încă» — in words, never by colour alone. */}
+        {(() => {
+          const standing = agreementStandingOf(person, now);
+          return (
+            <StatusChip
+              glyph={AGREEMENT_CHIP[standing].glyph}
+              color={AGREEMENT_CHIP[standing].color}
+              variant="outlined"
+              label={t(`volunteers.agreement.${standing}`)}
+              testId="volunteer-agreement-state"
+            />
+          );
+        })()}
       </Stack>
       {/* The address and the telephone number: drawn here and nowhere else, as links a thumb can press. */}
       <Stack direction="row" sx={{ flexWrap: "wrap", columnGap: 2, mt: 0.5 }}>
@@ -277,6 +385,8 @@ export default async function VolunteersCard({ locale, eventId, acceptsVolunteer
       <Typography variant="caption" color="text.secondary">
         {t("volunteers.since", { when: day(person.createdAt) })}
       </Typography>
+
+      {agreementBlock(person)}
 
       <Stack spacing={1} sx={{ mt: 1 }}>
         <Stack direction="row" sx={{ flexWrap: "wrap", gap: 1 }}>

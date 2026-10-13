@@ -1,11 +1,13 @@
 import { and, asc, count, eq, gt, sql } from "drizzle-orm";
-import { eventVolunteerRoles, eventVolunteers } from "@/db/schema/event-volunteers";
+import { eventVolunteerRoles, eventVolunteers, type VolunteerAgreementMethod } from "@/db/schema/event-volunteers";
 import { events } from "@/db/schema/events";
+import { legalDocuments } from "@/db/schema/legal-documents";
 import type { StaffUser } from "@/db/schema/staff-users";
 import { staffUsers } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
 import { type AuditAction, recordAuditEvent } from "@/modules/audit/repository";
-import { findCurrentApprovedDocument, noticeDescribesVolunteers } from "@/modules/legal-documents/repository";
+import { VOLUNTEER_AGREEMENT_KEY } from "@/modules/legal-documents/domain/keys";
+import { findCurrentApprovedDocument, noticeDescribesVolunteers, volunteerAgreementInForce } from "@/modules/legal-documents/repository";
 import { enqueueEmail } from "@/modules/notifications/outbox";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
 import { revalidatePublicContent } from "@/modules/public-cache/cache";
@@ -30,6 +32,7 @@ import {
   VOLUNTEER_STATES,
   type VolunteerState,
 } from "./domain/volunteer";
+import { agreementAcceptance, readAgreementFacts } from "./agreement";
 
 /**
  * An event's volunteers (§754; the owner, 2026-10-13: «I want to register volunteers for a race and be
@@ -95,6 +98,16 @@ export type VolunteerItem = {
   note: string | null;
   createdAt: Date;
   updatedAt: Date;
+  /** The volunteer agreement (§NNN): when it was accepted and how, or nulls for «contract neacceptat încă». */
+  agreementAcceptedAt: Date | null;
+  agreementMethod: VolunteerAgreementMethod | null;
+  /** The number of the version accepted, read through the row's reference. */
+  agreementVersion: number | null;
+  /** The role's name the agreement was accepted for, in its language — differs from the row's role once moved. */
+  agreementRoleName: string | null;
+  /** Whether a link to accept is live, and when an organizer last sent one. */
+  agreementTokenExpiresAt: Date | null;
+  agreementRequestedAt: Date | null;
 };
 
 /** An event's roles, in the order the club set them. */
@@ -106,11 +119,12 @@ export async function listVolunteerRoles<T extends Record<string, unknown>>(db: 
 /** An event's volunteers, oldest first (the card groups them by role). */
 export async function listVolunteers<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<VolunteerItem[]> {
   const rows = await db
-    .select()
+    .select({ row: eventVolunteers, agreementVersion: legalDocuments.version })
     .from(eventVolunteers)
+    .leftJoin(legalDocuments, eq(legalDocuments.id, eventVolunteers.agreementDocumentId))
     .where(eq(eventVolunteers.eventId, eventId))
     .orderBy(asc(eventVolunteers.createdAt), asc(eventVolunteers.id));
-  return rows.map((row) => ({
+  return rows.map(({ row, agreementVersion }) => ({
     id: row.id,
     eventId: row.eventId,
     roleId: row.roleId,
@@ -123,6 +137,12 @@ export async function listVolunteers<T extends Record<string, unknown>>(db: Data
     note: row.note,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
+    agreementAcceptedAt: row.agreementAcceptedAt,
+    agreementMethod: row.agreementMethod,
+    agreementVersion: row.agreementAcceptedAt ? agreementVersion : null,
+    agreementRoleName: readAgreementFacts(row.agreementFacts)?.volunteerRole ?? null,
+    agreementTokenExpiresAt: row.agreementTokenExpiresAt,
+    agreementRequestedAt: row.agreementRequestedAt,
   }));
 }
 
@@ -536,6 +556,8 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
           ...next,
           canonicalEmail: input.identity.canonicalEmail,
           canonicalizationVersion: input.identity.canonicalizationVersion,
+          // A changed address kills a live agreement link (§NNN, §12.8): it went to the old one.
+          ...(changedFields.includes("email") ? { agreementTokenHash: null, agreementTokenExpiresAt: null } : {}),
           updatedAt: now,
         })
         .where(eq(eventVolunteers.id, current.id));
@@ -595,12 +617,14 @@ export type VolunteerSubmitOutcome =
 /**
  * A person's offer from an event's page. Refuses — as the person's own fix, `VALIDATION_ERROR` naming each
  * box — a malformed address or telephone number, a missing name, a role that is not this event's, or the
- * consent tick not given; and — `CONFLICT`, the page offers no form then — an event that does not take
- * volunteers, is cancelled or over, is not published, or whose privacy notice in force does not describe
- * volunteers (`volunteerOfferClosedFor`, asked again here: the page's cache is not the gate).
+ * consent, agreement or age tick not given; and — `CONFLICT`, the page offers no form then — an event that does
+ * not take volunteers, is cancelled or over, is not published, whose privacy notice in force does not describe
+ * volunteers, or while no volunteer agreement is in force (`volunteerOfferClosedFor`, asked again here: the
+ * page's cache is not the gate).
  *
  * On a new person: one row «Înscris» (`source` PUBLIC, the notice's version recorded as the consent's
- * proof), one `VOLUNTEER_RECEIVED` to them in the language of the page and one `VOLUNTEER_CLUB_NOTICE` to
+ * proof, and the agreement accepted with its version, moment and fingerprint, §NNN), one `VOLUNTEER_RECEIVED`
+ * to them in the language of the page — the agreement's PDF attached at the send — and one `VOLUNTEER_CLUB_NOTICE` to
  * each Organizer, Administrator and Superadministrator — all in the one transaction (BR-REQ-080-02). The
  * role's row is locked while its people are counted, so two people cannot take the last place together.
  */
@@ -635,12 +659,13 @@ export async function submitVolunteer<T extends Record<string, unknown>>(
     .limit(1);
   if (!event) throw new DomainError("CONFLICT", "this event takes no volunteers on its page");
   const noticeDescribes = await noticeDescribesVolunteers(db, now);
-  // Conditions (a) and (c), the event published, public and still ahead — the one rule the page and the card
-  // read; (b), a role that still needs people, is judged under the lock below.
+  // Conditions (a), (c) and (d), the event published, public and still ahead — the one rule the page and the
+  // card read; (b), a role that still needs people, is judged under the lock below.
   const closed = volunteerOfferClosedFor({
     acceptsVolunteers: event.acceptsVolunteers,
     standings: [{ free: 1 }],
     noticeDescribes,
+    agreementInForce: await volunteerAgreementInForce(db, now),
     eventAhead: volunteerEventAhead(event, now),
     published: event.editorialStatus === "PUBLISHED",
     membersOnly: event.membersOnly,
@@ -648,6 +673,9 @@ export async function submitVolunteer<T extends Record<string, unknown>>(
   if (closed) throw new DomainError("CONFLICT", `the volunteer form is closed (${closed})`);
   const notice = await findCurrentApprovedDocument(db, "PRIVACY_NOTICE", input.locale, now);
   if (!notice) throw new DomainError("CONFLICT", "no approved privacy notice in this language");
+  // The agreement the tick accepted (§NNN): the version in force in the page's language, recorded on the row.
+  const agreement = await findCurrentApprovedDocument(db, VOLUNTEER_AGREEMENT_KEY, input.locale, now);
+  if (!agreement) throw new DomainError("CONFLICT", "no approved volunteer agreement in this language");
 
   let identity;
   try {
@@ -685,6 +713,12 @@ export async function submitVolunteer<T extends Record<string, unknown>>(
       .limit(1);
     if (existing) return { outcome: "done" };
 
+    // The agreement accepted with the sign-up (§NNN): the version, the moment, the blanks and their fingerprint.
+    const acceptance = await agreementAcceptance(
+      tx,
+      { eventId, name: input.name, role, locale: input.locale, document: agreement, method: "FORM" },
+      now,
+    );
     const [row] = await tx
       .insert(eventVolunteers)
       .values({
@@ -700,6 +734,7 @@ export async function submitVolunteer<T extends Record<string, unknown>>(
         source: "PUBLIC",
         message: input.message,
         privacyNoticeVersion: notice.version,
+        ...acceptance,
         createdAt: now,
         updatedAt: now,
       })

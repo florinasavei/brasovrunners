@@ -66,6 +66,7 @@ export type TaskId =
   | "feedbackNamedNotice"
   | "shopNotice"
   | "volunteersNotice"
+  | "volunteerAgreement"
   | "gmailFallbackNotice"
   | "refusalTerms"
   | "teamPageNotice"
@@ -109,6 +110,7 @@ export const TASK_KIND: Record<TaskId, TaskKind> = {
   feedbackNamedNotice: "text",
   shopNotice: "text",
   volunteersNotice: "text",
+  volunteerAgreement: "text",
   gmailFallbackNotice: "text",
   refusalTerms: "text",
   teamPageNotice: "text",
@@ -265,6 +267,11 @@ export type OwnerTaskInputs = {
   volunteersDescribed: boolean;
   /** How many events still ahead take volunteers (§754): the row waits only while there is one. */
   volunteeringEvents: number;
+  /**
+   * Is a volunteer agreement in force in every language (§NNN, `volunteerAgreementInForce`)? Until one is, no
+   * event page offers «Vreau să fiu voluntar», and no link or paper acceptance can be recorded.
+   */
+  volunteerAgreementInForce: boolean;
   /**
    * Does the notice in force, in every language, say a message may leave through the club's Gmail
    * while Mailgun is stopped (§622, `noticeDescribesGmailFallback`)? Until it does, «Gmail preia când
@@ -585,6 +592,20 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
     push("gmailFallbackNotice", {
       owner: "club",
       state: input.gmailFallbackDescribed ? "done" : "open",
+    });
+  }
+
+  /*
+    The volunteer agreement (§NNN), the volunteers' notice's shape but its own gate — the agreement, not the
+    notice: open while an event ahead takes volunteers and no agreement is in force in every language (the club
+    ticked «Primește voluntari» and the page shows no form: the club must hear why), done by itself the day one
+    takes effect, and absent while no event takes volunteers and none was ever approved. Never blocking: the
+    club's own list, the link and the paper wait on it, nothing a runner does.
+  */
+  if (input.volunteerAgreementInForce || input.volunteeringEvents > 0) {
+    push("volunteerAgreement", {
+      owner: "club",
+      state: input.volunteerAgreementInForce ? "done" : "open",
     });
   }
 

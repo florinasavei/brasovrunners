@@ -147,6 +147,9 @@ export async function submitVolunteerAction(form: FormData): Promise<void> {
         locale,
         // The tick is the person's own act: posted as "on" only when ticked.
         consent: form.get("consent") === "on",
+        // The volunteer agreement and the age (§NNN): the same, each its own act.
+        agreement: form.get("agreement") === "on",
+        adult: form.get("adult") === "on",
         // Absent rather than empty: the service judges them as the registration form does (`classifySubmission`).
         honeypot: text(form, "honeypot") || undefined,
         renderedAt: renderedAt || undefined,

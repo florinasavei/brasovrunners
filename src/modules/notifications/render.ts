@@ -60,6 +60,8 @@ import {
 import { familyReservationHoldsAt, reservedUntilPhrase } from "@/modules/registrations/domain/family-reservation";
 import { eventInvitations } from "@/db/schema/event-invitations";
 import { eventVolunteerRoles, eventVolunteers } from "@/db/schema/event-volunteers";
+import { mintVolunteerAgreementLink } from "@/modules/volunteers/agreement";
+import { renderVolunteerAgreementPdf, VOLUNTEER_AGREEMENT_PDF_NAME } from "@/modules/volunteers/agreement-pdf";
 import { shopOrders } from "@/db/schema/shop";
 import { readShopSettings } from "@/modules/content/shop/settings";
 import { isUuid } from "@/shared/ids";
@@ -345,6 +347,8 @@ async function renderRow(
     row.messageType === "REGISTRATION_OPENED" ||
     row.messageType === "VOLUNTEER_RECEIVED" ||
     row.messageType === "VOLUNTEER_CLUB_NOTICE" ||
+    row.messageType === "VOLUNTEER_AGREEMENT_REQUEST" ||
+    row.messageType === "VOLUNTEER_AGREEMENT_ACCEPTED" ||
     bulkRecipients !== null
       ? (row.payloadJson as { eventId?: unknown } | null)?.eventId
       : undefined;
@@ -889,16 +893,24 @@ async function renderRow(
     withdraws the message (nothing left to acknowledge). The person's message has no button; the
     organizers' opens the event's «Voluntari» card behind the sign-in — from `APP_BASE_URL` (AGENTS.md §8).
   */
-  if (row.messageType === "VOLUNTEER_RECEIVED" || row.messageType === "VOLUNTEER_CLUB_NOTICE") {
+  let volunteerAgreementPdf: Buffer | undefined;
+  if (
+    row.messageType === "VOLUNTEER_RECEIVED" ||
+    row.messageType === "VOLUNTEER_CLUB_NOTICE" ||
+    row.messageType === "VOLUNTEER_AGREEMENT_REQUEST" ||
+    row.messageType === "VOLUNTEER_AGREEMENT_ACCEPTED"
+  ) {
     const volunteerId = (row.payloadJson as { volunteerId?: unknown } | null)?.volunteerId;
     const [volunteer] =
       typeof volunteerId === "string" && isUuid(volunteerId)
         ? await db
             .select({
+              id: eventVolunteers.id,
               name: eventVolunteers.name,
               state: eventVolunteers.state,
               roleRo: eventVolunteerRoles.nameRo,
               roleEn: eventVolunteerRoles.nameEn,
+              agreementAcceptedAt: eventVolunteers.agreementAcceptedAt,
             })
             .from(eventVolunteers)
             .innerJoin(eventVolunteerRoles, eq(eventVolunteerRoles.id, eventVolunteers.roleId))
@@ -910,6 +922,29 @@ async function renderRow(
     data.volunteer = { name: volunteer.name, roleRo: volunteer.roleRo, roleEn: volunteer.roleEn };
     if (row.messageType === "VOLUNTEER_CLUB_NOTICE" && eventId) {
       payloadActionUrl = `${env.APP_BASE_URL}${getPathname({ locale, href: { pathname: "/admin/events/[id]", params: { id: eventId } } })}#box-volunteers`;
+    }
+    /*
+      The volunteer agreement's link (§NNN): minted now, at the send, never at the press — the secret is in this
+      email alone (§14.5), the row keeps its SHA-256, and this newest link replaces any older one. A volunteer who
+      has accepted since (from an earlier link, or on paper at the desk) has nothing left to accept: withdrawn.
+    */
+    if (row.messageType === "VOLUNTEER_AGREEMENT_REQUEST") {
+      if (volunteer.agreementAcceptedAt) throw new OutboxMessageWithdrawn("the volunteer has accepted the agreement since");
+      const link = await mintVolunteerAgreementLink(db, volunteer.id, now);
+      if (!link) throw new OutboxMessageWithdrawn("the volunteer can no longer be asked to accept");
+      // Its lifetime is the one every link states (`timings.linkDays`, the same constant the link is minted with).
+      payloadActionUrl = `${env.APP_BASE_URL}${getPathname({ locale, href: { pathname: "/volunteers/agreement/[token]", params: { token: link.secret } } })}`;
+    }
+    /*
+      The accepted agreement as a PDF (§NNN), rendered now from the rows like a signed declaration (§95): on the
+      person's «am primit» once they accepted it on the form, and on the copy after the link.
+    */
+    if ((row.messageType === "VOLUNTEER_RECEIVED" || row.messageType === "VOLUNTEER_AGREEMENT_ACCEPTED") && volunteer.agreementAcceptedAt && !clubCopy) {
+      const rendered = await renderVolunteerAgreementPdf(db, volunteer.id, now);
+      if (rendered?.accepted) {
+        volunteerAgreementPdf = rendered.pdf;
+        data.volunteer.agreementAttached = true;
+      }
     }
   }
   // The update's one button is the event's own page (§331): public, no token — and, like every
@@ -1417,6 +1452,10 @@ async function renderRow(
       data.signedAtFormatted = formatInSentence(signed.acceptedAt, signedZone, locale);
       data.signedAtFormattedOther = formatInSentence(signed.acceptedAt, signedZone, otherLocale(locale));
     }
+  }
+  // The volunteer's accepted agreement (§NNN), beside nothing else: no calendar, no declaration rides on these.
+  if (volunteerAgreementPdf) {
+    attachments = [...(attachments ?? []), { filename: VOLUNTEER_AGREEMENT_PDF_NAME, contentType: "application/pdf", data: volunteerAgreementPdf }];
   }
   // A family's one confirmation (§519): every person's signed declaration, numbered in the family's order.
   if (familyConfirmed && pdfAudience) {

@@ -214,8 +214,20 @@ export function minimumAgeMergeValue(minAge: number, locale: string): string {
  */
 export const SERIES_MERGE_FIELDS = ["series", "seriesRhythm", "seriesPlace"] as const;
 
-/** The fields whose "" drops the paragraph that names them (see `MINIMUM_AGE_MERGE_FIELD`, `SERIES_MERGE_FIELDS`). */
-export const PARAGRAPH_MERGE_FIELDS: ReadonlySet<string> = new Set([MINIMUM_AGE_MERGE_FIELD, ...SERIES_MERGE_FIELDS]);
+/**
+ * The volunteer agreement's own blanks (§NNN, amending §754): `{{volunteer}}` — the person's name as the row
+ * holds it —, `{{volunteerRole}}` — the role's name in the text's language — and `{{volunteerTasks}}` — what
+ * the club typed the role asks («descrierea rolului»), in that language. Filled when the person accepts, kept
+ * on the volunteer's row (`agreement_facts`) beside the event's own fields (`{{event}}`, `{{eventDate}}`,
+ * `{{eventLocation}}`), so the PDF prints what was accepted whatever the role is renamed to afterwards.
+ *
+ * A role with no description answers `{{volunteerTasks}}` with "", and the sentence naming it is left out
+ * whole (`PARAGRAPH_MERGE_FIELDS`) — never «Atribuțiile rolului: .».
+ */
+export const VOLUNTEER_MERGE_FIELDS = ["volunteer", "volunteerRole", "volunteerTasks"] as const;
+
+/** The fields whose "" drops the paragraph that names them (see `MINIMUM_AGE_MERGE_FIELD`, `SERIES_MERGE_FIELDS`, `VOLUNTEER_MERGE_FIELDS`). */
+export const PARAGRAPH_MERGE_FIELDS: ReadonlySet<string> = new Set([MINIMUM_AGE_MERGE_FIELD, ...SERIES_MERGE_FIELDS, "volunteerTasks"]);
 
 const SERIES_FIELD_SET: ReadonlySet<string> = new Set(SERIES_MERGE_FIELDS);
 
@@ -361,6 +373,7 @@ export const MERGE_FIELDS = [
   "signedAt",
   MINIMUM_AGE_MERGE_FIELD,
   ...SERIES_MERGE_FIELDS,
+  ...VOLUNTEER_MERGE_FIELDS,
   ...DEADLINE_MERGE_FIELDS,
   LIST_STATES_MERGE_FIELD,
   LIST_SOCIALS_MERGE_FIELD,

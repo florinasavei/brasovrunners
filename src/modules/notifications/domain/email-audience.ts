@@ -65,6 +65,10 @@ export const EMAIL_AUDIENCE = {
   // registration — the public's, with its privacy line, like an invitation's; the organizers' notice is the staff's.
   VOLUNTEER_RECEIVED: "public",
   VOLUNTEER_CLUB_NOTICE: "staff",
+  // The volunteer agreement (§NNN): the link and the accepted copy go to the volunteer — no registration
+  // behind them, the public's road like the volunteer's «am primit».
+  VOLUNTEER_AGREEMENT_REQUEST: "public",
+  VOLUNTEER_AGREEMENT_ACCEPTED: "public",
 } as const satisfies Record<EmailMessageType, EmailAudience>;
 
 export function audienceOf(messageType: EmailMessageType): EmailAudience {

@@ -92,6 +92,14 @@ export const routing = defineRouting({
       en: "/registrations/invitation/[token]",
     },
     /**
+     * The volunteer agreement's link (§NNN): the page an organizer's «Trimite linkul contractului» opens —
+     * the agreement filled for the person, two ticks and one button. The GET reads; only the button writes.
+     */
+    "/volunteers/agreement/[token]": {
+      ro: "/voluntari/contract/[token]",
+      en: "/volunteers/agreement/[token]",
+    },
+    /**
      * "Send me that link again" (§19.4's second surface). No token in the path — this is the
      * route somebody reaches precisely because they have no token, so it takes an address and
      * answers the same way whatever that address turns out to mean.
@@ -164,6 +172,8 @@ export const routing = defineRouting({
     /** The two public legal routes (§9.2), linked from the footer in both locales. */
     "/legal/privacy": { ro: "/confidentialitate", en: "/privacy" },
     "/legal/terms": { ro: "/termeni", en: "/terms" },
+    /** The volunteer agreement in force (§NNN), linked from «Vreau să fiu voluntar»'s tick — its blanks as dots. */
+    "/legal/volunteer-agreement": { ro: "/contract-voluntariat", en: "/volunteer-agreement" },
 
     /**
      * Staff routes. Localized like everything else (AGENTS.md §9.2) but never in public

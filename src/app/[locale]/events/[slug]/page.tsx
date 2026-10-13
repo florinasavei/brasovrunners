@@ -14,6 +14,7 @@ import {
   cachedCurrentApprovedDocument,
   cachedPublishedEventBySlug,
   cachedPublishedTranslations,
+  cachedVolunteerAgreementInForce,
   cachedVolunteerRoles,
   cachedVolunteersDescribed,
 } from "@/modules/public-cache/reads";
@@ -194,8 +195,9 @@ export default async function EventDetailPage({ params, query, canEdit = false, 
 
   const interestOutcome = parseInterestOutcome(interest);
   /*
-    «Vreau să fiu voluntar» (§754): drawn only while the event takes volunteers, a role still needs people and
-    the privacy notice in force describes them (`volunteerOfferClosedFor`) — the roles and the notice from the
+    «Vreau să fiu voluntar» (§754): drawn only while the event takes volunteers, a role still needs people, the
+    privacy notice in force describes them and a volunteer agreement is in force (§NNN; `volunteerOfferClosedFor`)
+    — the roles, the notice and the agreement from the
     public cache, expired by every write to either, and the event's own end held so the page is made again
     when it is over. The form's action asks the database again. Never on a members' event (§552): the form is
     public. While the database is away the box is simply not drawn.
@@ -210,6 +212,7 @@ export default async function EventDetailPage({ params, query, canEdit = false, 
           acceptsVolunteers,
           standings: roles,
           noticeDescribes: await cachedVolunteersDescribed(now),
+          agreementInForce: await cachedVolunteerAgreementInForce(now),
           eventAhead: volunteerEventAhead(event, now),
           // This page is the published, public one: the members' twin never gets here (above).
           published: true,

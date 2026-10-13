@@ -573,6 +573,16 @@ export async function cachedVolunteersDescribed(now: Date): Promise<boolean> {
 }
 
 /**
+ * Whether a volunteer agreement is in force in every language (§NNN) — the event page's fourth condition for
+ * «Vreau să fiu voluntar», through the legal texts' own cached read, so an approval opens the form the moment
+ * the text takes effect. `volunteerAgreementInForce` is the uncached read the action asks again.
+ */
+export async function cachedVolunteerAgreementInForce(now: Date): Promise<boolean> {
+  const versions = await Promise.all(routing.locales.map((locale) => cachedCurrentApprovedDocument("VOLUNTEER_AGREEMENT", locale, now)));
+  return versions.every((version) => version !== undefined);
+}
+
+/**
  * An event's volunteer roles with how each stands (§754, `readPublicVolunteerRoles`): the tick, and for
  * each role its names, its description and how many people it still needs — names and counts only, nothing
  * of a person. Filed under the event's and the places' tags: every write to the roles or the people

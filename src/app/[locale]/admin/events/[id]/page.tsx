@@ -19,7 +19,7 @@ import EventTodoCard from "@/modules/event-todos/ui/EventTodoCard";
 import { volunteerEventAhead, volunteerOfferClosedFor } from "@/modules/volunteers/domain/volunteer";
 import VolunteersCard from "@/modules/volunteers/ui/VolunteersCard";
 import { listVolunteerRoles, listVolunteers, volunteerStandings } from "@/modules/volunteers/volunteers";
-import { noticeDescribesVolunteers } from "@/modules/legal-documents/repository";
+import { noticeDescribesVolunteers, volunteerAgreementInForce } from "@/modules/legal-documents/repository";
 import { listStaffUsers } from "@/modules/staff-identity/repository";
 import { dayIn } from "@/modules/registrations/domain/age";
 import { editionDifference, usualOf } from "@/modules/events/domain/series";
@@ -374,14 +374,18 @@ export default async function EditEventPage({ params, searchParams }: Props) {
         const roles = await listVolunteerRoles(db, event.id);
         const people = await listVolunteers(db, event.id);
         const standings = volunteerStandings(roles, people);
+        // The volunteer agreement in force (§NNN): the form's fourth condition, and what the link and the paper need.
+        const agreementInForce = await volunteerAgreementInForce(db, now);
         return {
           roles,
           people,
           standings,
+          agreementInForce,
           offerClosed: volunteerOfferClosedFor({
             acceptsVolunteers: event.acceptsVolunteers,
             standings,
             noticeDescribes: await noticeDescribesVolunteers(db, now),
+            agreementInForce,
             eventAhead: volunteerEventAhead(event, now),
             // The public page draws no form on an unpublished event or one for the members alone, and the
             // service refuses its posts: the card says so rather than promising a form that is not there.
@@ -391,7 +395,9 @@ export default async function EditEventPage({ params, searchParams }: Props) {
         };
       })()
     : null;
-  const volunteerErrorCode = (["FORBIDDEN", "VALIDATION_ERROR", "CONFLICT", "NOT_FOUND", "VOLUNTEER_ROLE_HAS_PEOPLE", "VOLUNTEER_ALREADY_LISTED"] as const).find(
+  const volunteerErrorCode = (
+    ["FORBIDDEN", "VALIDATION_ERROR", "CONFLICT", "NOT_FOUND", "VOLUNTEER_ROLE_HAS_PEOPLE", "VOLUNTEER_ALREADY_LISTED", "VOLUNTEER_AGREEMENT_MISSING", "VOLUNTEER_AGREEMENT_ACCEPTED"] as const
+  ).find(
     (code) => code === query.volunteerError,
   );
 
@@ -974,6 +980,8 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                   roles={volunteersCard.roles}
                   standings={volunteersCard.standings}
                   volunteers={volunteersCard.people}
+                  agreementInForce={volunteersCard.agreementInForce}
+                  now={now}
                   error={volunteerErrorCode ? t(`errors.${volunteerErrorCode}`) : undefined}
                 />
               )}

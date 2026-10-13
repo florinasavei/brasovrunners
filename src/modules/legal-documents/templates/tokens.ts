@@ -127,6 +127,15 @@ export const DECLARATION_TOKENS: readonly DeclarationToken[] = [
     example: inBoth((locale) => seriesRhythmPhrase(TOKEN_EXAMPLE_SERIES_DATES, CLUB_TIME_ZONE, locale)),
   },
   { token: "{{seriesPlace}}", messageKey: "seriesPlace", example: same("Parcul Nicolae Titulescu") },
+  // The volunteer agreement's blanks (§NNN): the person, the role and what it asks, filled when the person
+  // accepts; a role with no description leaves its sentence out.
+  { token: "{{volunteer}}", messageKey: "volunteer", example: same("Ana Popescu") },
+  { token: "{{volunteerRole}}", messageKey: "volunteerRole", example: { ro: "Punct de hidratare", en: "Water station" } },
+  {
+    token: "{{volunteerTasks}}",
+    messageKey: "volunteerTasks",
+    example: { ro: "Împarte apă la kilometrul 5 și strânge paharele", en: "Hands out water at kilometre 5 and picks up the cups" },
+  },
   // The club's deadlines (§377) and the public list's period after the event (§421), in any of the three texts, filled from "Termene" when the text is
   // shown — the examples are what an unset setting fills in, in the words it is filled with.
   // Each language's example in its own words, as the text in that language is filled (§369).
