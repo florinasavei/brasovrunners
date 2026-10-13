@@ -247,6 +247,9 @@ describe("§369 the club's name leaves the platform only through the constant", 
           "Site.followOn.strava",
           // The calendar's subscribe box under «Tema v2» (the facelift's phase 4): «Adaugă calendarul {club} …».
           "Events.calendar.look.subscribe.intro",
+          // «Clubul pe lista publică» (§NNN): the editor's help and the first mode, «Doar {club}».
+          "Admin.editor.publicListClubHelp",
+          "Admin.editor.publicListClubMembersOnly",
         ].sort(),
       );
     }
@@ -273,6 +276,9 @@ describe("§369 the club's name leaves the platform only through the constant", 
       "meta.title": 1,
       // The home page's numbers band (§714).
       "numbers.title": 1,
+      // «Clubul pe lista publică» (§NNN): the editor's help and the first mode.
+      "editor.publicListClubHelp": 1,
+      "editor.publicListClubMembersOnly": 1,
     };
     const sources = sourceFiles(path.join(process.cwd(), "src")).map((file) => readFileSync(file, "utf8"));
     for (const [key, expected] of Object.entries(calls)) {

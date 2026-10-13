@@ -2,7 +2,8 @@ import { and, asc, count, desc, eq, exists, gt, gte, inArray, isNotNull, lte, no
 import { alias } from "drizzle-orm/pg-core";
 import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import { emailOutbox } from "@/db/schema/email-outbox";
-import { events } from "@/db/schema/events";
+import { events, type PublicListClub } from "@/db/schema/events";
+import { participants } from "@/db/schema/participants";
 import { familyPlaceHolds } from "@/db/schema/family-entries";
 import { eventInvitations } from "@/db/schema/event-invitations";
 import { eventsWithLapsedInvitations, expireLapsedInvitations, invitationHoldsCount, invitationOpen } from "./invitation-repository";
@@ -23,6 +24,8 @@ import { env } from "@/shared/config/env";
 import { DomainError } from "@/shared/errors/domain-error";
 import { computeOccupied, wantedLapsedHoldReleases } from "./domain/capacity";
 import { registrationNameKey } from "./domain/name-key";
+import { DEFAULT_PUBLIC_LIST_CLUB, memberClubCell } from "./domain/public-list-club";
+import { memberCanonicalEmails } from "./member-ticks";
 import { PENDING_LIST_STATUSES, WAITLISTED_LIST_STATUSES } from "./domain/public-list-states";
 import { allowedFromStatuses } from "./domain/state-machine";
 import { queueHoldLapsedEmails } from "./hold-lapsed-email";
@@ -490,6 +493,34 @@ function publicSocialColumns(socials: boolean | undefined): Record<string, SQL<s
 }
 
 /**
+ * What the «Club» column reads (§NNN, amending §32, §143 and §396), by the event's «Clubul pe lista publică».
+ *
+ * `column` is the select's club expression and `shown` finishes each row's value in code:
+ *
+ *   - `as_typed`: the typed club, as before the setting existed.
+ *   - `hidden`: nothing is selected — a constant null — so the text never leaves the database.
+ *   - `members_only` (the default): the typed text is selected only for a registration whose participant's
+ *     canonical address is a member account's (the bibs' own test, `memberCanonicalEmails`) — `case when` in
+ *     the SQL, so a non-member's text never leaves the database either — and `shown` then keeps it only when
+ *     it names the club (`namesTheClub`), writing the club's own name in its place. Every other cell is null.
+ *
+ * Every caller defaults to `members_only`: one that forgets the event's setting discloses less, never more.
+ */
+async function publicClubReading<T extends Record<string, unknown>>(
+  db: Database<T>,
+  mode: PublicListClub,
+): Promise<{ column: SQL<string | null>; shown: (selected: string | null) => string | null }> {
+  if (mode === "as_typed") return { column: sql<string | null>`${registrations.clubName}`, shown: (selected) => selected };
+  if (mode === "hidden") return { column: sql<string | null>`null`, shown: () => null };
+  const members = [...(await memberCanonicalEmails(db))];
+  if (members.length === 0) return { column: sql<string | null>`null`, shown: () => null };
+  return {
+    column: sql<string | null>`case when exists (select 1 from ${participants} where ${participants.id} = ${registrations.participantId} and ${inArray(participants.canonicalEmail, members)}) then ${registrations.clubName} end`,
+    shown: memberClubCell,
+  };
+}
+
+/**
  * The race-number column a public list may add (§613, amending §396), or none.
  *
  * Asked for only by `StartList`, only while the privacy notice in force names
@@ -539,15 +570,16 @@ export async function listPublicStartList<T extends Record<string, unknown>>(
    * Only behind the notice's gates: the socials (§500, `publicSocialColumns`) and the race number
    * (§613, `publicNumberColumns`). Without either, the select is exactly the name and the club.
    */
-  options: { socials?: boolean; numbers?: boolean; hiddenShown?: boolean } = {},
+  options: { socials?: boolean; numbers?: boolean; hiddenShown?: boolean; club?: PublicListClub } = {},
 ): Promise<PublicStartListRow[]> {
+  const club = await publicClubReading(db, options.club ?? DEFAULT_PUBLIC_LIST_CLUB);
   const query = db
     // BR-REQ-039-02: the display name, never the legal one, and the club they wrote (§85).
     // The select list is the guarantee — widening it is what
     // tests/privacy/public-surface.test.ts refuses.
     .select({
       displayName: registrations.displayName,
-      clubName: registrations.clubName,
+      clubName: club.column,
       ...publicSocialColumns(options.socials),
       ...publicNumberColumns(options.numbers),
     })
@@ -568,7 +600,7 @@ export async function listPublicStartList<T extends Record<string, unknown>>(
   const rows = await (page ? query.limit(page.limit).offset(page.offset) : query);
   // The gated spreads widen Drizzle's inferred row to an index signature; the select above is
   // exactly `PublicStartListRow`'s keys, the two socials and the number present only when asked for.
-  return rows as unknown as PublicStartListRow[];
+  return (rows as unknown as PublicStartListRow[]).map((row) => ({ ...row, clubName: club.shown(row.clubName) }));
 }
 
 /**
@@ -738,13 +770,14 @@ export async function listPublicStartListOthers<T extends Record<string, unknown
   includeWaitlisted: boolean,
   page?: { offset: number; limit: number },
   /** Only behind the notice's gate (§500): see `publicSocialColumns`. `hiddenShown`: as `listPublicStartList` (§743). */
-  options: { socials?: boolean; hiddenShown?: boolean } = {},
+  options: { socials?: boolean; hiddenShown?: boolean; club?: PublicListClub } = {},
 ): Promise<Array<PublicStartListRow & { group: "PENDING" | "WAITLISTED" }>> {
+  const club = await publicClubReading(db, options.club ?? DEFAULT_PUBLIC_LIST_CLUB);
   const waiting = inArray(registrations.status, [...WAITLISTED_LIST_STATUSES]);
   const query = db
     .select({
       displayName: registrations.displayName,
-      clubName: registrations.clubName,
+      clubName: club.column,
       group: sql<"PENDING" | "WAITLISTED">`case when ${waiting} then 'WAITLISTED' else 'PENDING' end`,
       ...publicSocialColumns(options.socials),
     })
@@ -766,7 +799,7 @@ export async function listPublicStartListOthers<T extends Record<string, unknown
     );
   const rows = await (page ? query.limit(page.limit).offset(page.offset) : query);
   // As `listPublicStartList`: the select is exactly these keys, the socials only when asked for.
-  return rows as unknown as Array<PublicStartListRow & { group: "PENDING" | "WAITLISTED" }>;
+  return (rows as unknown as Array<PublicStartListRow & { group: "PENDING" | "WAITLISTED" }>).map((row) => ({ ...row, clubName: club.shown(row.clubName) }));
 }
 
 /**

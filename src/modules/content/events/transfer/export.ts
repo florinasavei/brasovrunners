@@ -163,6 +163,7 @@ export function configFromRows(event: EditableEvent, rows: readonly EditableTran
       waitlist: event.waitlistPublic,
       waitlistCount: event.waitlistCountPublic,
       count: event.participantCountPublic,
+      club: event.publicListClub,
     },
     hiddenList: { enabled: event.hiddenListEnabled, bibStart: event.hiddenListBibStart, counted: event.hiddenListCounted, public: event.hiddenListPublic },
     bib: { startNumber: event.bibStartNumber, colour: event.bibColour, design: readBibDesign(event.bibDesign) as unknown as Record<string, unknown> },

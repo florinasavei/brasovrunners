@@ -18,6 +18,7 @@ import {
   cachedStartListPage,
 } from "@/modules/public-cache/reads";
 import { hiddenListCounting, hiddenListShownPublicly } from "@/modules/registrations/domain/hidden-list";
+import { publicListClubOf } from "@/modules/registrations/domain/public-list-club";
 import { LIST_STATE_KEYS, type PublicListGroup } from "@/modules/registrations/domain/public-list-states";
 import { START_LIST_PAGE_SIZE, startListPage } from "@/modules/registrations/domain/start-list-page";
 import { DISCLOSURE_OPEN_ARROW, DISCLOSURE_SUMMARY_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
@@ -258,12 +259,24 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
   */
   const hiddenHeldCounted = door.kind === "KNOWN" && door.fill?.confirmed !== undefined ? hidden.held : 0;
   const countedNotListed = countPublic && countHidden && hidden.confirmed + hiddenHeldCounted > 0;
+  /*
+    «Clubul pe lista publică» (§NNN): what the «Club» column says. The rows below already carry what the mode
+    lets through — the club's own name for a verified member who typed it, the typed text, or nothing — so
+    the table only decides whether the column is there at all.
+  */
+  const clubMode = publicListClubOf(event);
   const [participants, otherRows] = await Promise.all([
-    view.namedLimit > 0 ? cachedStartListPage(event.id, view.namedOffset, view.namedLimit, socialsOn, numbersOn, hiddenShown) : [],
+    view.namedLimit > 0 ? cachedStartListPage(event.id, view.namedOffset, view.namedLimit, socialsOn, numbersOn, hiddenShown, clubMode) : [],
     firstStatesNotice !== null && view.othersLimit > 0
-      ? cachedStartListOthersPage(event.id, firstStatesNotice, waitlistOn, view.othersOffset, view.othersLimit, socialsOn, hiddenShown)
+      ? cachedStartListOthersPage(event.id, firstStatesNotice, waitlistOn, view.othersOffset, view.othersLimit, socialsOn, hiddenShown, clubMode)
       : [],
   ]);
+  /*
+    The column: never under «Nu arăta clubul»; as it always was under «Cum l-au scris»; and under the default
+    only when a row on this page holds a value — a column of blanks says nothing to a reader.
+  */
+  const clubShown =
+    clubMode === "as_typed" || (clubMode === "members_only" && [...participants, ...otherRows].some((row) => typeof row.clubName === "string" && row.clubName !== ""));
   /** The marks beside a name — only behind the gate, and only what the row carries. */
   const socialsOf = (row: { displayName: string; stravaUrl?: string | null; instagramHandle?: string | null }) =>
     socialsOn ? (
@@ -425,9 +438,11 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
                   <Box component="th" scope="col">
                     {t("startList.columnName")}
                   </Box>
-                  <Box component="th" scope="col">
-                    {t("startList.columnClub")}
-                  </Box>
+                  {clubShown && (
+                    <Box component="th" scope="col" data-col="club">
+                      {t("startList.columnClub")}
+                    </Box>
+                  )}
                 </Box>
               </Box>
               <Box component="tbody">
@@ -442,9 +457,11 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
                       {socialsOf(participant)}
                       {stateOf("CONFIRMED")}
                     </Box>
-                    <Box component="td" sx={{ color: "text.secondary" }}>
-                      {participant.clubName ?? ""}
-                    </Box>
+                    {clubShown && (
+                      <Box component="td" data-col="club" sx={{ color: "text.secondary" }}>
+                        {participant.clubName ?? ""}
+                      </Box>
+                    )}
                   </Box>
                 ))}
                 {/*
@@ -466,7 +483,7 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
                       {t("startList.anonymous")}
                       {stateOf("CONFIRMED")}
                     </Box>
-                    <Box component="td" />
+                    {clubShown && <Box component="td" data-col="club" />}
                   </Box>
                 ))}
                 {/*
@@ -490,9 +507,11 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
                       {socialsOf(row)}
                       {stateOf(row.group)}
                     </Box>
-                    <Box component="td" sx={{ color: "text.secondary" }}>
-                      {row.clubName ?? ""}
-                    </Box>
+                    {clubShown && (
+                      <Box component="td" data-col="club" sx={{ color: "text.secondary" }}>
+                        {row.clubName ?? ""}
+                      </Box>
+                    )}
                   </Box>
                 ))}
               </Box>

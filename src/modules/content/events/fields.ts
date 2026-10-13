@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { bibDesignSchema } from "@/modules/registrations/bib-design";
 import { MIN_PARTICIPANT_AGE } from "@/modules/registrations/domain/age";
+import { PUBLIC_LIST_CLUBS } from "@/modules/registrations/domain/public-list-club";
 import { EVENT_REMINDER_MAX_HOURS } from "@/modules/deadlines/domain/deadlines";
 import { parseTypedCoordinates } from "@/modules/weather/domain/place";
 import { isFacebookLink, isStravaLink } from "@/modules/events/domain/event-type";
@@ -1050,6 +1051,8 @@ export const eventFieldsSchema = z
     hiddenListCounted: z.boolean().optional(),
     // «Arată invitații speciali pe lista publică» (§743): the group's fourth, by the same discipline.
     hiddenListPublic: z.boolean().optional(),
+    // «Clubul pe lista publică» (§NNN): absent leaves it as stored (a form without the box, an older client).
+    publicListClub: z.enum(PUBLIC_LIST_CLUBS).optional(),
     externalProvider: optionalText(120),
     externalRegistrationUrl: httpsUrl("an external registration link must start with https://"),
   })

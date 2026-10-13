@@ -1,0 +1,2 @@
+CREATE TYPE "public"."public_list_club" AS ENUM('members_only', 'as_typed', 'hidden');--> statement-breakpoint
+ALTER TABLE "events" ADD COLUMN "public_list_club" "public_list_club" DEFAULT 'members_only' NOT NULL;

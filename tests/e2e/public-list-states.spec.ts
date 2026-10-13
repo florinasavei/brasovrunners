@@ -458,10 +458,11 @@ test.describe("BR-REQ-039-01 the public list's states, behind the privacy notice
 
       await test.step("nobody listed wears a race number: no «BIB» column, whatever the notice names (§613)", async () => {
         const ro = await readList(page, `/ro/evenimente/${event.slug}-ro`, tag);
-        await expect(ro.list.getByRole("columnheader")).toHaveText(["#", "Nume", "Club"]);
+        // No row names the club (§NNN, «Clubul pe lista publică» by default): the «Club» column is not drawn.
+        await expect(ro.list.getByRole("columnheader")).toHaveText(["#", "Nume"]);
         await expect(ro.list.locator('[data-col="number"]')).toHaveCount(0);
         const en = await readList(page, `/en/events/${event.slug}-en`, tag);
-        await expect(en.list.getByRole("columnheader")).toHaveText(["#", "Name", "Club"]);
+        await expect(en.list.getByRole("columnheader")).toHaveText(["#", "Name"]);
       });
 
       await test.step("the form's «Vreau să apar» says what the list will show beside the name", async () => {

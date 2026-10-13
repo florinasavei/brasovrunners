@@ -2810,7 +2810,12 @@
       "hiddenListCounted": "Numără și invitații speciali",
       "hiddenListCountedHelp": "Bifat: „Cine vine” și „confirmați” îi numără și pe invitații speciali. Debifat: numerele spun doar locurile cursei; invitații speciali sunt pe deasupra.",
       "hiddenListPublic": "Arată invitații speciali pe lista publică",
-      "hiddenListPublicHelp": "Bifat: un invitat special care a bifat „Vreau să apar” apare pe „Cine vine”, cu numărul lui. Debifat: nu apare pe nicio listă publică; locul și numărul lui rămân."
+      "hiddenListPublicHelp": "Bifat: un invitat special care a bifat „Vreau să apar” apare pe „Cine vine”, cu numărul lui. Debifat: nu apare pe nicio listă publică; locul și numărul lui rămân.",
+      "publicListClub": "Clubul pe lista publică",
+      "publicListClubHelp": "Oamenii scriu clubul cum vor. „Doar {club}” îl arată doar membrilor clubului care l-au scris, ca {club}; ceilalți rămân fără club.",
+      "publicListClubMembersOnly": "Doar {club}",
+      "publicListClubAsTyped": "Cum l-au scris",
+      "publicListClubHidden": "Nu arăta clubul"
     },
     "preview": {
       "notice": "Previzualizare pentru echipă. Starea acestui text este: {status}. Pagina nu este publică și nu este indexată.",
@@ -7623,7 +7628,8 @@
           "names": "Lista publică a participanților",
           "waitlist": "Lista de așteptare e publică",
           "waitlistCount": "Se arată public câți așteaptă",
-          "count": "Se arată public numărătoarea"
+          "count": "Se arată public numărătoarea",
+          "club": "Clubul pe lista publică"
         },
         "hiddenList": {
           "enabled": "Lista invitaților speciali",

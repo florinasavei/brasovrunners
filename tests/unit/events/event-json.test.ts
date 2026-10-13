@@ -98,7 +98,7 @@ function sampleConfig(): EventConfig {
       kitShirt: false,
       askHealthNote: false,
     },
-    publicList: { names: false, waitlist: false, waitlistCount: true, count: true },
+    publicList: { names: false, waitlist: false, waitlistCount: true, count: true, club: "members_only" },
     hiddenList: { enabled: false, bibStart: null, counted: false, public: false },
     bib: { startNumber: 100, colour: "#1a73e8", design: { ...DEFAULT_BIB_DESIGN, headerImageSrc: PICTURE } as unknown as Record<string, unknown> },
     translations: { ro: translation("ro", doc("Bun venit.", PICTURE)), en: translation("en") },
