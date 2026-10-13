@@ -10,13 +10,29 @@ import {
   bibMemberBandColour,
   bibMemberCardBackground,
   bibMemberLabel,
+  bibEmergencyLine,
   bibMemberStripeText,
   DEFAULT_BIB_DESIGN,
   numberScaleFactor,
 } from "./bib-design";
+import type { BibProfileDrawing } from "./bib-profile";
 import { bibFooterLines, bibFooterParts } from "./bib-footer";
 import { BIB_PICTURE_BOX, type BibPictureSlot, bibPictureDrawing } from "./bib-picture-frame";
-import { A4_PAGE, BIB_CARD, BIB_FOOTER_LINE, BIB_LAYOUT, BIB_MARGIN, BIB_PAPER, bibNumberPoints } from "./bib-geometry";
+import {
+  A4_PAGE,
+  BIB_CARD,
+  BIB_FOOTER_LINE,
+  BIB_LAYOUT,
+  BIB_MARGIN,
+  BIB_PAPER,
+  bibExtrasHeight,
+  bibHeaderReserve,
+  bibNameReserve,
+  bibNumberArea,
+  bibNumberFit,
+  bibStubScale,
+  MEMBER_MARK_CHECK,
+} from "./bib-geometry";
 import type { BibRow } from "./bibs";
 import { formatRaceNumber } from "./domain/race-number";
 
@@ -92,6 +108,15 @@ export type BibSheetInput = {
    * coloured band exactly as before (§249).
    */
   pictures?: { header?: Buffer | null; sponsors?: Buffer | null; memberHeader?: Buffer | null; memberCard?: Buffer | null };
+  /**
+   * «Profilul traseului» (§NNN): the route's profile with its words, already read from the event's
+   * GPX by the caller (`bib-extras.ts`). Drawn only while the design's tick is on; absent, none is.
+   */
+  profile?: BibProfileDrawing | null;
+  /** The word before the emergency phone (§NNN) — «Urgențe» — in the sheet's language; the phone is the design's. */
+  emergencyLabel?: string;
+  /** «21K» for the header's badge (§NNN), from `bib-extras.ts`; drawn only while the design's tick is on. */
+  distanceBadge?: string | null;
   /**
    * The platform's words for the members' label when the club typed none (§664) — «Membru {club}» —
    * in the sheet's language, from the caller's catalogue. Absent, a member's bib carries no label
@@ -232,6 +257,10 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
   const bandText = bandTextColour(band);
   const design = input.design ?? DEFAULT_BIB_DESIGN;
   const L = BIB_LAYOUT;
+  // The two lines under the number (§NNN): the route's profile when ticked and read, the emergency phone when ticked and typed.
+  const profile = design.showProfile ? (input.profile ?? null) : null;
+  const emergency = bibEmergencyLine(design, input.emergencyLabel ?? "");
+  const extrasHeight = bibExtrasHeight(profile !== null, emergency !== null);
 
   const doc = new PDFDocument({
     size: "A4",
@@ -291,7 +320,10 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
     doc.image(picture, x, y, { ...(drawing.kind === "cover" ? { cover: frame } : { fit: frame }), align: "center", valign: "center" });
   };
   /** The strip of sponsors takes this much above the small print, when there is one. */
-  const sponsorHeight = sponsorPicture ? L.sponsorHeight : 0;
+  // The row is also there, for its two stubs, with the number repeated and no picture (§NNN).
+  const stubs = design.numberStubs;
+  const sponsorHeight = sponsorPicture || stubs ? L.sponsorHeight : 0;
+  const badge = design.showDistance ? (input.distanceBadge ?? null) : null;
   // The same on every bib of the sheet, so laid out once (§317), and told which header the sheet
   // really draws. A second line takes its height from the number's area, never from the small
   // print's size.
@@ -368,12 +400,21 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
     */
     // The lockup at the left of the band, white on whatever colour the band is; the race and its
     // date at the right, in whichever of white and ink can be read on it.
-    const drawHeaderWords = (textColour: string) => {
+    const drawHeaderWords = (textColour: string, badgeInk: string) => {
       if (design.showLogo) {
         doc.image(lockup, left + L.inset, top + (L.bandHeight - L.logoWidth / L.logoRatio) / 2, { width: L.logoWidth });
       }
       const headerLeft = left + (design.showLogo ? L.logoWidth + 2 * L.inset : L.inset);
-      const headerWidth = BIB_CARD.width - (design.showLogo ? L.logoWidth + 3 * L.inset : 2 * L.inset);
+      const headerWidth = BIB_CARD.width - (design.showLogo ? L.logoWidth + 3 * L.inset : 2 * L.inset) - bibHeaderReserve(badge !== null);
+      // The distance badge (§NNN): a rounded tag in the header's text colour at the right inset, the
+      // distance in the band's colour on it; the race and its date end `badgeGap` short of it.
+      if (badge) {
+        const badgeLeft = left + BIB_CARD.width - L.inset - L.badgeWidth;
+        doc.roundedRect(badgeLeft, top + L.badgeTop, L.badgeWidth, L.badgeHeight, L.badgeRadius).fill(textColour);
+        doc.font("bold").fontSize(L.badgeSize).fillColor(badgeInk);
+        const badgeTextHeight = doc.heightOfString(badge, { lineBreak: false });
+        doc.text(badge, badgeLeft + (L.badgeWidth - doc.widthOfString(badge)) / 2, top + L.badgeTop + (L.badgeHeight - badgeTextHeight) / 2, { lineBreak: false });
+      }
       if (design.showEventTitle) {
         doc
           .font("bold")
@@ -416,7 +457,7 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
         ramp.stop(0, background.stops[0]).stop(1, background.stops[1]);
         doc.rect(left, top, BIB_CARD.width, cardHeight).fill(ramp);
       }
-      drawHeaderWords(BIB_MEMBER_CARD.text);
+      drawHeaderWords(BIB_MEMBER_CARD.text, COLOR.ink);
       /*
         The stripe across the card, its foot on the background's foot, the label in capitals, bold,
         letter-spaced and centred by hand without a width so pdfkit cannot wrap it (§317's lesson).
@@ -436,7 +477,7 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
       // The band first, across the card: it is what says which race this is before anybody is
       // close enough to read a word of it.
       doc.rect(left, top, BIB_CARD.width, L.bandHeight).fill(header.band);
-      drawHeaderWords(header.bandText);
+      drawHeaderWords(header.bandText, header.band);
     }
 
     /*
@@ -459,6 +500,26 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
     }
 
     /*
+      The member mark (§NNN): a ring with a check in it, in the number's own ink, at the card's left
+      inset under the header (`BIB_LAYOUT.memberMark*`) — only on a member's number, only when ticked.
+    */
+    const markDrawn = row.member === true && design.member.enabled && design.member.mark;
+    if (markDrawn) {
+      const size = L.memberMarkSize;
+      const markLeft = left + L.inset;
+      const markTop = top + L.bandHeight + L.memberMarkTop;
+      doc.save();
+      doc.lineWidth(L.memberMarkWeight).strokeColor(ink).lineJoin("round").lineCap("round");
+      doc.circle(markLeft + size / 2, markTop + size / 2, size / 2 - L.memberMarkWeight / 2).stroke();
+      MEMBER_MARK_CHECK.forEach(([x, y], index) => {
+        if (index === 0) doc.moveTo(markLeft + x * size, markTop + y * size);
+        else doc.lineTo(markLeft + x * size, markTop + y * size);
+      });
+      doc.stroke();
+      doc.restore();
+    }
+
+    /*
       The number: everything the card has left under the header, in the body ink — a number is
       read at distance, and ink on white is the highest contrast the paper can carry. Its size
       is the club's choice as a multiple of that (§249), so the preview on the screen and this
@@ -477,9 +538,15 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
     const nameAbove = design.showName && design.namePosition === "above";
     // As the event writes it (§735): «007» under «Trei cifre»; its length sizes it, as ever.
     const digits = formatRaceNumber(row.bibNumber, design.numberFormat);
-    const numberSize = bibNumberPoints(digits, numberScaleFactor(design));
-    const sponsorTop = bottom - footerHeight - sponsorHeight;
-    const numberArea = BIB_CARD.height - L.bandHeight - footerHeight - nameBlock - sponsorHeight - stripeHeight;
+    // The foot of everything above the sponsors' strip and the small print: the number's region (§NNN).
+    const regionFoot = bottom - footerHeight - sponsorHeight;
+    // «Jos de tot» (§NNN): the strip is the card's last row under the small print; «Deasupra subsolului», above it.
+    const sponsorsAtBottom = design.sponsorPlace === "bottom";
+    const sponsorTop = sponsorsAtBottom ? bottom - sponsorHeight : regionFoot;
+    const footerFoot = sponsorsAtBottom ? bottom - sponsorHeight : bottom;
+    const numberArea = bibNumberArea({ footer: footerHeight, name: nameBlock, sponsors: sponsorHeight, stripe: stripeHeight, extras: extrasHeight });
+    // Never taller than the area the rows under the band leave it, nor wider than the card (§NNN).
+    const numberSize = bibNumberFit(digits, numberScaleFactor(design), numberArea);
     const numberTop = top + L.bandHeight + (nameAbove ? nameBlock : 0);
 
     /*
@@ -487,6 +554,7 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
       centred in the same strip, at the name's baseline, so the handwritten name sits where a
       printed one would. `stripTop` is the strip's top; the name is set `nameTop` into it.
     */
+    const nameReserve = bibNameReserve(markDrawn, nameAbove);
     const drawName = (stripTop: number) => {
       if (row.registeredName === null) {
         const lineY = stripTop + L.blankLineTop;
@@ -502,8 +570,8 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
             .font("body")
             .fontSize(L.blankMarkSize)
             .fillColor(COLOR.inkMuted)
-            .text(input.blankMark, left + L.inset, stripTop + L.blankMarkTop, {
-              width: BIB_CARD.width - 2 * L.inset,
+            .text(input.blankMark, left + L.inset + nameReserve, stripTop + L.blankMarkTop, {
+              width: BIB_CARD.width - 2 * (L.inset + nameReserve),
               align: "center",
               lineBreak: false,
               ellipsis: true,
@@ -515,8 +583,8 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
         .font("bold")
         .fontSize(L.nameSize)
         .fillColor(ink)
-        .text(row.registeredName, left + L.inset, stripTop + L.nameTop, {
-          width: BIB_CARD.width - 2 * L.inset,
+        .text(row.registeredName, left + L.inset + nameReserve, stripTop + L.nameTop, {
+          width: BIB_CARD.width - 2 * (L.inset + nameReserve),
           align: "center",
           lineBreak: false,
           ellipsis: true,
@@ -534,11 +602,83 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
     });
 
     // The name under the number, large enough to read at a finish line.
-    if (design.showName && !nameAbove) drawName(sponsorTop - stripeHeight - L.nameBlock);
+    if (design.showName && !nameAbove) drawName(regionFoot - stripeHeight - extrasHeight - L.nameBlock);
+
+    /*
+      The route's profile (§NNN): a row of its own under the name, `profileHeight` points, so it cannot
+      cover the number or the name. The area under the line at a faint opacity and the line itself are
+      vector paths in the number's own ink; «Start» and «Sosire» under the two ends, the distance and the
+      gain in two lines beside the chart. All of it from `bib-geometry.ts`'s points, as the picture draws.
+    */
+    const emergencyTop = regionFoot - stripeHeight - (emergency !== null ? L.emergencyHeight : 0);
+    if (profile) {
+      const rowTop = emergencyTop - L.profileHeight;
+      const chartLeft = left + L.inset;
+      const chartTop = rowTop + L.profileChartTop;
+      const at = (point: readonly [number, number]) => [chartLeft + point[0] * L.profileChartWidth, chartTop + (1 - point[1]) * L.profileChartHeight] as const;
+      const first = at(profile.points[0]);
+      const last = at(profile.points[profile.points.length - 1]);
+      doc.save();
+      doc.moveTo(first[0], chartTop + L.profileChartHeight);
+      profile.points.forEach((point) => doc.lineTo(...at(point)));
+      doc.lineTo(last[0], chartTop + L.profileChartHeight).closePath().fillOpacity(L.profileAreaOpacity).fill(ink);
+      doc.fillOpacity(1);
+      doc.lineWidth(L.profileLineWeight).strokeColor(ink).lineJoin("round").lineCap("round");
+      profile.points.forEach((point, index) => (index === 0 ? doc.moveTo(...at(point)) : doc.lineTo(...at(point))));
+      doc.stroke();
+      doc.circle(first[0], first[1], 1.8).fill(ink);
+      doc.circle(last[0], last[1], 1.8).fill(ink);
+      doc.restore();
+      doc.font("body").fontSize(L.profileLabelSize).fillColor(ink);
+      doc.text(profile.start, chartLeft, rowTop + L.profileLabelTop, { lineBreak: false });
+      doc.text(profile.finish, chartLeft + L.profileChartWidth - doc.widthOfString(profile.finish), rowTop + L.profileLabelTop, { lineBreak: false });
+      doc.fontSize(L.profileTextSize);
+      const textLeft = chartLeft + L.profileChartWidth + L.profileTextGap;
+      doc.text(profile.distance, textLeft, rowTop + L.profileDistanceTop, { lineBreak: false });
+      doc.text(profile.gain, textLeft, rowTop + L.profileGainTop, { lineBreak: false });
+    }
+
+    /*
+      The emergency phone (§NNN): one centred line at a fixed place on every number, under the profile's
+      row, in the number's ink. Typed by the club — the organizers' number — never the runner's own.
+    */
+    if (emergency) {
+      doc.font("body").fontSize(L.emergencySize).fillColor(ink);
+      const width = doc.widthOfString(emergency);
+      const height = doc.heightOfString(emergency, { lineBreak: false });
+      // Upside down (§NNN): turned half a circle about the line's own centre, so the runner reads it looking down at the chest.
+      doc.save();
+      if (design.emergencyUpsideDown) doc.rotate(180, { origin: [left + BIB_CARD.width / 2, emergencyTop + L.emergencyHeight / 2] });
+      doc.text(emergency, left + (BIB_CARD.width - width) / 2, emergencyTop + (L.emergencyHeight - height) / 2, { lineBreak: false });
+      doc.restore();
+    }
 
     // The sponsors' strip above the small print (§249): the club's crop in the strip's shape, or
     // the whole picture with its own proportion kept (§560).
-    if (sponsorPicture) drawPicture("sponsors", sponsorPicture, left + L.inset, sponsorTop + L.sponsorTop);
+    if (sponsorPicture) {
+      // With the stubs the picture is scaled whole, about its centre, to what is left between them (§NNN).
+      const scale = bibStubScale(stubs);
+      doc.save();
+      if (stubs) {
+        const centreX = left + BIB_CARD.width / 2;
+        const centreY = sponsorTop + L.sponsorTop + L.sponsorPicture / 2;
+        doc.translate(centreX, centreY).scale(scale).translate(-centreX, -centreY);
+      }
+      drawPicture("sponsors", sponsorPicture, left + L.inset, sponsorTop + L.sponsorTop);
+      doc.restore();
+    }
+    /*
+      The number repeated on the footer's two ends (§NNN), the owner's tear-off stubs: small and bold at
+      each end of the sponsors' row, inside the inset, in the body ink on the paper's white.
+    */
+    if (stubs) {
+      doc.font("bold").fontSize(L.stubSize).fillColor(COLOR.ink);
+      const stubWidth = doc.widthOfString(digits);
+      const stubHeight = doc.heightOfString(digits, { lineBreak: false });
+      const stubY = sponsorTop + L.sponsorTop + (L.sponsorPicture - stubHeight) / 2;
+      doc.text(digits, left + L.inset, stubY, { lineBreak: false });
+      doc.text(digits, left + BIB_CARD.width - L.inset - stubWidth, stubY, { lineBreak: false });
+    }
 
     /*
       The small print, as the club composed it (§317): one line, or two with the last where the
@@ -556,7 +696,7 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
       doc.text(
         line,
         left + L.inset + (BIB_SHEET_FOOTER.width - doc.widthOfString(line)) / 2,
-        bottom - BIB_SHEET_FOOTER.lastLineTop - (footerLines.length - 1 - index) * BIB_SHEET_FOOTER.lineHeight,
+        footerFoot - BIB_SHEET_FOOTER.lastLineTop - (footerLines.length - 1 - index) * BIB_SHEET_FOOTER.lineHeight,
         { lineBreak: false },
       );
     });

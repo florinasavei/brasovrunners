@@ -11,6 +11,7 @@ import {
   bibBandColour,
   bibMemberBandColour,
   bibMemberCardBackground,
+  bibEmergencyLine,
   bibMemberLabel,
   bibMemberStripeText,
   bibPictureUrl,
@@ -18,6 +19,7 @@ import {
   numberScaleFactor,
 } from "./bib-design";
 import { BIB_FOOTER_EMS, bibFooterLines, bibFooterParts } from "./bib-footer";
+import { type BibProfileDrawing, bibProfilePaths } from "./bib-profile";
 import { BIB_PICTURE_BOX, type BibPictureSlot, bibPictureDrawing } from "./bib-picture-frame";
 import {
   BIB_CARD,
@@ -26,7 +28,13 @@ import {
   BIB_IMAGE_SCALE,
   BIB_LAYOUT,
   BIB_MARGIN,
-  bibNumberPoints,
+  bibExtrasHeight,
+  bibHeaderReserve,
+  bibNameReserve,
+  bibNumberArea,
+  bibNumberFit,
+  bibStubScale,
+  MEMBER_MARK_CHECK,
 } from "./bib-geometry";
 import { formatRaceNumber } from "./domain/race-number";
 
@@ -103,6 +111,12 @@ type BibImageInput = {
   member?: boolean;
   /** The platform's words for the members' label when the club typed none («Membru {club}»), in the picture's language. */
   memberLabelDefault?: string;
+  /** «Profilul traseului» (§NNN), already read from the event's GPX by the route (`bib-extras.ts`); drawn only while the design's tick is on. */
+  profile?: BibProfileDrawing | null;
+  /** The word before the emergency phone (§NNN), in the picture's language. */
+  emergencyLabel?: string;
+  /** «21K» for the header's badge (§NNN), from `bib-extras.ts`; drawn only while the design's tick is on. */
+  distanceBadge?: string | null;
 };
 
 /** One picture as the renderer takes it: something `next/og` can load, and its size in pixels. */
@@ -167,6 +181,9 @@ function logo(): Promise<string> {
   return logoDataUrl;
 }
 
+/** The room the profile's SVG keeps round its chart so the line's stroke and the end dots are not clipped, in points. */
+const PROFILE_PAD = 2;
+
 /** One line of text that never wraps and is cut with "…" where the sheet's would be. */
 const ONE_LINE = { display: "flex", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } as const;
 
@@ -176,8 +193,6 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
   const design = input.design ?? DEFAULT_BIB_DESIGN;
   // As the event writes it (§735): «007» under «Trei cifre»; its length sizes it, as ever.
   const digits = formatRaceNumber(input.bibNumber, design.numberFormat);
-  // The sheet's size in points, the club's scale included, then to pixels (§249).
-  const numberSize = px(bibNumberPoints(digits, numberScaleFactor(design)));
   // The members' header (§664) only while the switch is on; everything under it is the one design.
   const asMember = input.member === true && design.member.enabled;
   const band = asMember ? bibMemberBandColour(design.member, input.bandColour) : bibBandColour(input.bandColour);
@@ -185,6 +200,17 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
   const memberLabel = asMember ? bibMemberLabel(design.member, input.memberLabelDefault ?? "") : "";
   // «Tot numărul» (§NNN): the members' background over the whole card, the label a stripe.
   const asCard = asMember && design.member.style === "card";
+  // The member mark (§NNN); the name set above the number steps aside for it (`bibNameReserve`).
+  const markDrawn = asMember && design.member.mark;
+  const nameReserve = bibNameReserve(markDrawn, design.namePosition === "above");
+  // The route's profile and the emergency phone (§NNN), when ticked and available; the sponsors' place.
+  const profile = design.showProfile ? (input.profile ?? null) : null;
+  const profilePaths = profile ? bibProfilePaths(profile.points, L.profileChartWidth, L.profileChartHeight) : null;
+  const emergency = bibEmergencyLine(design, input.emergencyLabel ?? "");
+  const sponsorsAtBottom = design.sponsorPlace === "bottom";
+  const badge = design.showDistance ? (input.distanceBadge ?? null) : null;
+  // The stubs (§NNN) are why the sponsors' row exists with no picture.
+  const stubs = design.numberStubs;
   // A picture the club uploaded (§249): the one the route read (§560), or — when the caller read
   // none — the design's own address made absolute; the band when there is none.
   const pictureOf = (slot: BibPictureSlot, src: string | null): BibImagePicture | null => {
@@ -219,8 +245,19 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
   const footerLines = bibImageFooterLines(input, header !== null);
   const footerHeight = L.footerHeight + Math.max(0, footerLines.length - 1) * BIB_FOOTER_LINE.lineHeight;
   // A member's card's coloured part: everything above the sponsors' strip and the small print (§NNN).
-  const cardHeight = BIB_CARD.height - footerHeight - (sponsors ? L.sponsorHeight : 0);
+  const sponsorRow = sponsors || stubs ? L.sponsorHeight : 0;
+  const cardHeight = BIB_CARD.height - footerHeight - sponsorRow;
   const stripe = asCard && memberLabel ? bibMemberStripeText(memberLabel) : "";
+  // The number's size in points, the club's scale included but never more than the area the rows
+  // under the band leave it — the sheet's rule — then to pixels (§249, §NNN).
+  const numberArea = bibNumberArea({
+    footer: footerHeight,
+    name: design.showName ? L.nameBlock : 0,
+    sponsors: sponsorRow,
+    stripe: stripe ? L.memberStripeHeight : 0,
+    extras: bibExtrasHeight(profile !== null, emergency !== null),
+  });
+  const numberSize = px(bibNumberFit(digits, numberScaleFactor(design), numberArea));
   // The background's own box: under an opaque stripe it stops half-way, so the flow's sub-pixel
   // rounding never shows a line of it between the stripe and the small print.
   const backgroundHeight = px(cardHeight - (stripe ? L.memberStripeHeight / 2 : 0));
@@ -228,7 +265,9 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
   const ink = asCard ? BIB_MEMBER_CARD.text : COLOR.ink;
   const headerText = asCard ? BIB_MEMBER_CARD.text : bandText;
   // The race and its date at the right of the band, in what the lockup leaves — the sheet's width.
-  const headerTextWidth = BIB_CARD.width - (design.showLogo ? L.logoWidth + 3 * L.inset : 2 * L.inset);
+  const headerTextWidth = BIB_CARD.width - (design.showLogo ? L.logoWidth + 3 * L.inset : 2 * L.inset) - bibHeaderReserve(badge !== null);
+  // The badge: the header's text colour as the tag, the band's colour on it (the card's white tag takes the body ink).
+  const badgeInk = asCard ? COLOR.ink : band;
   /**
    * The name, above the number or below it — and nowhere when the club switched it off — in the
    * strip the sheet gives it, at the sheet's size, cut with "…" where the sheet cuts it.
@@ -239,7 +278,7 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
         display: "flex",
         flexShrink: 0,
         height: px(L.nameBlock),
-        padding: `${px(L.nameTop)}px ${px(L.inset)}px 0 ${px(L.inset)}px`,
+        padding: `${px(L.nameTop)}px ${px(L.inset + nameReserve)}px 0 ${px(L.inset + nameReserve)}px`,
         justifyContent: "center",
       }}
     >
@@ -275,6 +314,129 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
       )}
     </div>
   ) : null;
+  // The route's profile row and the emergency line (§NNN), at the sheet's points, under the name.
+  const profileRow = profile ? (
+    <div style={{ display: "flex", flexShrink: 0, position: "relative", height: px(L.profileHeight) }}>
+      <svg
+        width={px(L.profileChartWidth + 2 * PROFILE_PAD)}
+        height={px(L.profileChartHeight + 2 * PROFILE_PAD)}
+        viewBox={`${-PROFILE_PAD} ${-PROFILE_PAD} ${L.profileChartWidth + 2 * PROFILE_PAD} ${L.profileChartHeight + 2 * PROFILE_PAD}`}
+        data-testid="bib-profile"
+        style={{ position: "absolute", left: px(L.inset - PROFILE_PAD), top: px(L.profileChartTop - PROFILE_PAD) }}
+      >
+        <path d={profilePaths?.area} fill={ink} fillOpacity={L.profileAreaOpacity} stroke="none" />
+        <path d={profilePaths?.line} fill="none" stroke={ink} strokeWidth={L.profileLineWeight} strokeLinecap="round" strokeLinejoin="round" />
+        <circle cx={profile.points[0][0] * L.profileChartWidth} cy={(1 - profile.points[0][1]) * L.profileChartHeight} r={1.8} fill={ink} />
+        <circle
+          cx={profile.points[profile.points.length - 1][0] * L.profileChartWidth}
+          cy={(1 - profile.points[profile.points.length - 1][1]) * L.profileChartHeight}
+          r={1.8}
+          fill={ink}
+        />
+      </svg>
+      <div
+        style={{
+          display: "flex",
+          position: "absolute",
+          left: px(L.inset),
+          top: px(L.profileLabelTop),
+          width: px(L.profileChartWidth),
+          justifyContent: "space-between",
+          fontSize: px(L.profileLabelSize),
+          color: ink,
+        }}
+      >
+        <div style={{ display: "flex" }}>{profile.start}</div>
+        <div style={{ display: "flex" }}>{profile.finish}</div>
+      </div>
+      <div style={{ ...ONE_LINE, position: "absolute", left: px(L.inset + L.profileChartWidth + L.profileTextGap), top: px(L.profileDistanceTop), fontSize: px(L.profileTextSize), color: ink }}>
+        {profile.distance}
+      </div>
+      <div style={{ ...ONE_LINE, position: "absolute", left: px(L.inset + L.profileChartWidth + L.profileTextGap), top: px(L.profileGainTop), fontSize: px(L.profileTextSize), color: ink }}>
+        {profile.gain}
+      </div>
+    </div>
+  ) : null;
+  const emergencyRow = emergency ? (
+    <div
+      data-testid="bib-emergency"
+      style={{ display: "flex", flexShrink: 0, height: px(L.emergencyHeight), alignItems: "center", justifyContent: "center", fontSize: px(L.emergencySize), color: ink, whiteSpace: "nowrap", ...(design.emergencyUpsideDown ? { transform: "rotate(180deg)" } : {}) }}
+    >
+      {emergency}
+    </div>
+  ) : null;
+  // The sponsors' strip (§249) and the small print (§317), in the order the design's place says.
+  const sponsorsStrip = sponsors ? (
+    <div style={{ display: "flex", flexShrink: 0, height: px(L.sponsorHeight), paddingTop: px(L.sponsorTop), justifyContent: "center" }}>
+      {/* With the stubs the picture is scaled whole, about its centre, to what is left between them (§NNN). */}
+      {stubs ? (
+        <div style={{ display: "flex", transform: `scale(${bibStubScale(true)})` }}>{placedPicture("sponsors", sponsors, design)}</div>
+      ) : (
+        placedPicture("sponsors", sponsors, design)
+      )}
+    </div>
+  ) : null;
+  /*
+    The sponsors' row (§249) and, with the club's tick, the number repeated at its two ends (§NNN): the
+    owner's tear-off stubs, small and bold in the body ink, inside the inset — the sheet's points.
+  */
+  const sponsorRowEl =
+    sponsors || stubs ? (
+      <div style={{ display: "flex", flexDirection: "column", flexShrink: 0, position: "relative", height: px(L.sponsorHeight) }}>
+        {sponsorsStrip}
+        {stubs
+          ? (["left", "right"] as const).map((side) => (
+              <div
+                key={side}
+                data-testid="bib-stub"
+                style={{
+                  display: "flex",
+                  position: "absolute",
+                  [side]: px(L.inset),
+                  top: px(L.sponsorTop),
+                  height: px(L.sponsorPicture),
+                  alignItems: "center",
+                  fontSize: px(L.stubSize),
+                  fontWeight: 700,
+                  color: COLOR.ink,
+                  lineHeight: 1,
+                }}
+              >
+                {digits}
+              </div>
+            ))
+          : null}
+      </div>
+    ) : null;
+  /*
+    The small print as the club composed it (§317), in the lines `bib-footer.ts` laid out for the
+    sheet too: each its own row with wrapping off, so the picture breaks where the paper breaks, the
+    last line as far above the strip's foot as the sheet sets it. `pre`, because the separator's two
+    spaces are two on the paper and Satori would otherwise collapse them into one. The overflow rule
+    is a safety net, never the rule.
+  */
+  const smallPrint = (
+    <div
+      style={{
+        display: "flex",
+        flexShrink: 0,
+        flexDirection: "column",
+        justifyContent: "flex-end",
+        alignItems: "center",
+        height: px(footerHeight),
+        paddingBottom: px(BIB_FOOTER_LINE.lastLineTop - BIB_FOOTER_LINE.lineHeight),
+        fontSize: BIB_IMAGE_FOOTER.size,
+        lineHeight: `${px(BIB_FOOTER_LINE.lineHeight)}px`,
+        color: COLOR.inkMuted,
+      }}
+    >
+      {footerLines.map((line, index) => (
+        <div key={index} style={{ display: "flex", maxWidth: BIB_IMAGE_FOOTER.width, whiteSpace: "pre", overflow: "hidden" }}>
+          {line}
+        </div>
+      ))}
+    </div>
+  );
   return new ImageResponse(
     (
       <div
@@ -364,13 +526,36 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
               band as a group, which is what let the preview drift from the paper it is meant to
               be a picture of.
             */}
+            {badge ? (
+              <div
+                data-testid="bib-badge"
+                style={{
+                  display: "flex",
+                  position: "absolute",
+                  top: px(L.badgeTop),
+                  right: px(L.inset),
+                  width: px(L.badgeWidth),
+                  height: px(L.badgeHeight),
+                  alignItems: "center",
+                  justifyContent: "center",
+                  borderRadius: px(L.badgeRadius),
+                  background: headerText,
+                  color: badgeInk,
+                  fontSize: px(L.badgeSize),
+                  fontWeight: 700,
+                  lineHeight: 1,
+                }}
+              >
+                {badge}
+              </div>
+            ) : null}
             {design.showEventTitle && (
               <div
                 style={{
                   ...ONE_LINE,
                   position: "absolute",
                   top: px(L.titleTop),
-                  right: px(L.inset),
+                  right: px(L.inset + bibHeaderReserve(badge !== null)),
                   maxWidth: px(headerTextWidth),
                   color: headerText,
                   fontWeight: 700,
@@ -386,7 +571,7 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
                   ...ONE_LINE,
                   position: "absolute",
                   top: px(design.showEventTitle ? L.dateTop : L.dateTopAlone),
-                  right: px(L.inset),
+                  right: px(L.inset + bibHeaderReserve(badge !== null)),
                   maxWidth: px(headerTextWidth),
                   color: headerText,
                   fontSize: px(L.dateSize),
@@ -419,6 +604,38 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
             {memberLabel}
           </div>
         ) : null}
+        {/* The member mark (§NNN), the sheet's ring and check at the sheet's points: an SVG in the
+            number's own ink, absolute at the card's left inset under the header. */}
+        {markDrawn ? (
+          <svg
+            width={px(L.memberMarkSize)}
+            height={px(L.memberMarkSize)}
+            viewBox={`0 0 ${L.memberMarkSize} ${L.memberMarkSize}`}
+            data-testid="bib-member-mark"
+            style={{
+              position: "absolute",
+              top: px(BIB_MARGIN + L.bandHeight + L.memberMarkTop) - PAPER_EDGE,
+              left: px(BIB_MARGIN + L.inset) - PAPER_EDGE,
+            }}
+          >
+            <circle
+              cx={L.memberMarkSize / 2}
+              cy={L.memberMarkSize / 2}
+              r={L.memberMarkSize / 2 - L.memberMarkWeight / 2}
+              fill="none"
+              stroke={ink}
+              strokeWidth={L.memberMarkWeight}
+            />
+            <path
+              d={MEMBER_MARK_CHECK.map(([x, y], index) => `${index === 0 ? "M" : "L"}${x * L.memberMarkSize} ${y * L.memberMarkSize}`).join(" ")}
+              fill="none"
+              stroke={ink}
+              strokeWidth={L.memberMarkWeight}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        ) : null}
         {design.namePosition === "above" ? name : null}
         {/* The number, centred on what the card has left, as the sheet centres it. */}
         <div
@@ -436,6 +653,8 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
           {digits}
         </div>
         {design.namePosition === "below" ? name : null}
+        {profileRow}
+        {emergencyRow}
         {/* A member's card's stripe (§NNN): its foot on the background's foot, the label in capitals. */}
         {stripe ? (
           <div
@@ -456,39 +675,10 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
             {stripe}
           </div>
         ) : null}
-        {/* The sponsors' strip, when the club has one (§249): above the small print, across
-            the card less its inset: the club's crop in the strip's shape, or the whole picture
-            fitted with its own proportion kept (§560). */}
-        {sponsors ? (
-          <div style={{ display: "flex", flexShrink: 0, height: px(L.sponsorHeight), paddingTop: px(L.sponsorTop), justifyContent: "center" }}>
-            {placedPicture("sponsors", sponsors, design)}
-          </div>
-        ) : null}
-        {/* The small print as the club composed it (§317), in the lines `bib-footer.ts` laid out
-            for the sheet too: each its own row with wrapping off, so the picture breaks where
-            the paper breaks, the last line as far above the card's foot as the sheet sets it.
-            `pre`, because the separator's two spaces are two on the paper and Satori would
-            otherwise collapse them into one. The overflow rule is a safety net, never the rule. */}
-        <div
-          style={{
-            display: "flex",
-            flexShrink: 0,
-            flexDirection: "column",
-            justifyContent: "flex-end",
-            alignItems: "center",
-            height: px(footerHeight),
-            paddingBottom: px(BIB_FOOTER_LINE.lastLineTop - BIB_FOOTER_LINE.lineHeight),
-            fontSize: BIB_IMAGE_FOOTER.size,
-            lineHeight: `${px(BIB_FOOTER_LINE.lineHeight)}px`,
-            color: COLOR.inkMuted,
-          }}
-        >
-          {footerLines.map((line, index) => (
-            <div key={index} style={{ display: "flex", maxWidth: BIB_IMAGE_FOOTER.width, whiteSpace: "pre", overflow: "hidden" }}>
-              {line}
-            </div>
-          ))}
-        </div>
+        {/* «Jos de tot» (§NNN): the small print, then the sponsors' strip as the card's last row;
+            «Deasupra subsolului»: the strip, then the small print, as before. */}
+        {sponsorsAtBottom ? smallPrint : sponsorRowEl}
+        {sponsorsAtBottom ? sponsorRowEl : smallPrint}
       </div>
     ),
     { width, height, fonts: await brandFonts() },

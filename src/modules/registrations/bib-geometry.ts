@@ -108,7 +108,141 @@ export const BIB_LAYOUT = {
   memberStripeHeight: 20,
   memberStripeSize: 10,
   memberStripeSpacing: 1.2,
+  /**
+   * The member mark (§NNN): a ring `memberMarkSize` points across with a check mark in it, stroked
+   * `memberMarkWeight` thick, at the card's left inset, `memberMarkTop` under the header's foot —
+   * clear of the number below it (a number of up to five digits at the largest size still reaches
+   * about 44 points from the card's edge, 26 from the inset, so the number sits lower than the mark
+   * only by its own centring, never by width) and of the name set above the number, whose box is
+   * narrowed on both sides by `memberMarkSize + memberMarkGap` while the mark is drawn
+   * (`bibNameReserve`). Large enough to read at A5 and at a half of it.
+   */
+  memberMarkSize: 26,
+  memberMarkGap: 10,
+  memberMarkTop: 12,
+  memberMarkWeight: 2.4,
+  /**
+   * The route's profile (§NNN): a full-width strip `profileHeight` points tall across the card less its
+   * inset, between the name under the number and the small print — a row of its own, so it can never
+   * cover the number (which keeps the area that is left) or the name; the chart takes the strip's width
+   * but for the figures' room at its right (the owner's trail example, §NNN). At the left, the chart: a box
+   * `profileChartWidth` × `profileChartHeight`, `profileChartTop` into the row, the line stroked
+   * `profileLineWeight` thick over a faint area, with «Start» and «Sosire» under its two ends at
+   * `profileLabelSize` points, `profileLabelTop` into the row. At its right, `profileTextGap` away,
+   * the distance and the elevation gain in two lines of `profileTextSize` points, their tops
+   * `profileDistanceTop` and `profileGainTop` into the row. Both renderers place them at these points.
+   */
+  profileHeight: 38,
+  profileChartWidth: 380,
+  profileChartHeight: 24,
+  profileChartTop: 3,
+  profileLineWeight: 1.2,
+  profileAreaOpacity: 0.14,
+  profileLabelSize: 6.5,
+  profileLabelTop: 28.5,
+  profileTextSize: 8,
+  profileTextGap: 12,
+  profileDistanceTop: 9,
+  profileGainTop: 20,
+  /**
+   * The emergency phone (§NNN): one centred line `emergencyHeight` points tall under the profile's
+   * row (or where it would be), `emergencySize` points — a fixed place on every number, never over
+   * the number or the name, which keep the area that is left.
+   */
+  emergencyHeight: 14,
+  emergencySize: 9,
+  /**
+   * The distance badge (§NNN), in the header's right corner like the owner's marathon example: a
+   * rounded tag `badgeWidth` × `badgeHeight` at the card's right inset, `badgeTop` from its top, in the
+   * header's own text colour with the distance — «21K» — in the band's colour on it, `badgeSize` points
+   * bold. The race and its date give up its width plus `badgeGap` on their right (`bibHeaderReserve`);
+   * the members' label sits under it (`memberTagTop`).
+   */
+  badgeWidth: 46,
+  badgeHeight: 28,
+  badgeTop: 14,
+  badgeGap: 10,
+  badgeSize: 15,
+  badgeRadius: 6,
+  /**
+   * The number repeated on the footer's two ends (§NNN), the owner's tear-off stubs: `stubSize` points
+   * bold at each end of the sponsors' row, inside the card's inset, in a `stubWidth` of room. While
+   * they show, the sponsors' picture is scaled to what is left between them (`bibStubScale`), whole.
+   */
+  stubWidth: 40,
+  stubSize: 11,
 } as const;
+
+/**
+ * What the profile's row and the emergency line take from the number's area (§NNN): their heights
+ * when drawn, nothing when not — so a design with neither keeps every number as it was.
+ */
+export function bibExtrasHeight(profileDrawn: boolean, emergencyDrawn: boolean): number {
+  return (profileDrawn ? BIB_LAYOUT.profileHeight : 0) + (emergencyDrawn ? BIB_LAYOUT.emergencyHeight : 0);
+}
+
+/** What the header's race and date give up on their right while the distance badge is drawn (§NNN). */
+export function bibHeaderReserve(badgeDrawn: boolean): number {
+  return badgeDrawn ? BIB_LAYOUT.badgeWidth + BIB_LAYOUT.badgeGap : 0;
+}
+
+/**
+ * How much the sponsors' picture shrinks, about its centre, so it stays clear of the two stubs (§NNN):
+ * the strip's width less a stub's room at each end, over the strip's width — 1 with no stubs. The
+ * picture is scaled whole, so its crop and its proportion stay exact in both renderers.
+ */
+export function bibStubScale(stubsDrawn: boolean): number {
+  if (!stubsDrawn) return 1;
+  const strip = BIB_CARD.width - 2 * BIB_LAYOUT.inset;
+  return (strip - 2 * BIB_LAYOUT.stubWidth) / strip;
+}
+
+/**
+ * The room the number has (§NNN): the card less the band and every row under it — the small print, the
+ * name's strip, the sponsors' row, the members' stripe, the profile and the phone.
+ */
+export function bibNumberArea(rows: { footer: number; name: number; sponsors: number; stripe: number; extras: number }): number {
+  return BIB_CARD.height - BIB_LAYOUT.bandHeight - rows.footer - rows.name - rows.sponsors - rows.stripe - rows.extras;
+}
+
+/**
+ * Roboto Bold's digits, as fractions of the size (read from the font: 2048 units to the em): the
+ * tallest ink of any digit, from the lowest descent of a round one to the highest top, and the one
+ * advance every digit has. What the number's size is capped by (`bibNumberFit`).
+ */
+export const BIB_DIGIT = { height: 1497 / 2048, advance: 1175 / 2048 } as const;
+
+/**
+ * What the digits of a number are drawn at (§NNN): the club's size (`bibNumberPoints`), but never taller
+ * than the area the rows under the band leave it, nor wider than the card less its inset — so the
+ * profile, the phone and a stripe, which take their height from that area, make the number smaller
+ * rather than spilling it over the name or the foot. In points; the picture multiplies it.
+ */
+export function bibNumberFit(digits: string, scale: number, areaHeight: number): number {
+  const byHeight = areaHeight / BIB_DIGIT.height;
+  const byWidth = (BIB_CARD.width - 2 * BIB_LAYOUT.inset) / (Math.max(1, digits.length) * BIB_DIGIT.advance);
+  return Math.max(12, Math.floor(Math.min(bibNumberPoints(digits, scale), byHeight, byWidth)));
+}
+
+/**
+ * What the name set above the number gives up on each side while the member mark is drawn (§NNN):
+ * the mark's width and a gap, so a long name is cut (ellipsis) at the mark's right edge plus the
+ * gap rather than running over the ring. 0 when no mark is drawn; the name below the number is
+ * nowhere near the mark and keeps the whole inset-to-inset box.
+ */
+export function bibNameReserve(markDrawn: boolean, nameAbove: boolean): number {
+  return markDrawn && nameAbove ? BIB_LAYOUT.memberMarkSize + BIB_LAYOUT.memberMarkGap : 0;
+}
+
+/**
+ * The check inside the member mark, as fractions of the mark's box: three points of one stroke,
+ * drawn by the sheet with lines and by the picture with an SVG path, so the two cannot differ.
+ */
+export const MEMBER_MARK_CHECK = [
+  [0.27, 0.53],
+  [0.43, 0.69],
+  [0.74, 0.33],
+] as const;
 
 /**
  * The small print's line (§317): across the card less the inset on each side — 595.28 − 2 × 18 −

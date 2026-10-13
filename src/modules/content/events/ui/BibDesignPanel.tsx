@@ -11,10 +11,12 @@ import { shownContactAddressesOrDefault } from "@/modules/contact/shown-address"
 import { richTextEditorLabels } from "@/modules/content/rich-text/ui/labels";
 import { isStorageConfigured } from "@/modules/media/storage";
 import {
+  BIB_EMERGENCY_PHONE_MAX,
   BIB_MEMBER_LABEL_MAX,
   BIB_MEMBER_STYLES,
   BIB_NAME_POSITIONS,
   BIB_NUMBER_SCALES,
+  BIB_SPONSOR_PLACES,
   type BibDesign,
   bibMemberCardColourReadable,
   DEFAULT_BIB_DESIGN,
@@ -27,8 +29,10 @@ import { readBibPictureFacts } from "@/modules/registrations/bib-pictures";
 import { env } from "@/shared/config/env";
 import Panel from "@/shared/ui/Panel";
 import BibDesignPreview from "./BibDesignPreview";
+import BibHeaderWarning from "./BibHeaderWarning";
 import BibPictureField, { type BibPictureLabels } from "./BibPictureField";
 import BibFooterTextField from "./BibFooterTextField";
+import OnlyWhenTicked from "./OnlyWhenTicked";
 import { BIB_COLOURS } from "./bib-colours";
 
 /**
@@ -71,6 +75,7 @@ export default async function BibDesignPanel({
   design = DEFAULT_BIB_DESIGN,
   bibStartNumber,
   bibColour,
+  hasRouteGpx = false,
   summary,
 }: {
   /**
@@ -83,6 +88,8 @@ export default async function BibDesignPanel({
   /** The stored start number and band colour (§173), for the preview's first address. */
   bibStartNumber: number;
   bibColour: string | null;
+  /** Whether the event has a route GPX in the store (§718): «Profilul traseului» is drawn from it, greyed without one. */
+  hasRouteGpx?: boolean;
   /** The card's closed line: what is printed, from the saved design. */
   summary?: string;
 }) {
@@ -281,7 +288,64 @@ export default async function BibDesignPanel({
         </Stack>
 
         {storage && picture("header")}
+        {/* The header picture hides the event's name (§NNN): said while both are on, with the way out. */}
+        {storage && <BibHeaderWarning message={t("editor.bibDesign.headerHidesTitle")} initial={Boolean(design.headerImageSrc) && design.showEventTitle} />}
         {storage && picture("sponsors")}
+        {/* «Locul benzii cu sponsori» (§NNN): «Jos de tot, în subsol» for every event unless the club moves it. */}
+        <RecallField
+          select
+          name="event.bibDesign.sponsorPlace"
+          label={t("editor.bibDesign.sponsorPlace")}
+          helperText={t("editor.bibDesign.sponsorPlaceHelp")}
+          defaultValue={design.sponsorPlace}
+          slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}
+          sx={{ width: { sm: 360 } }}
+        >
+          {BIB_SPONSOR_PLACES.map((place) => (
+            <option key={place} value={place}>
+              {t(`editor.bibDesign.sponsorPlaces.${place}`)}
+            </option>
+          ))}
+        </RecallField>
+
+        {/* «Profilul traseului» and «Telefon pentru urgențe» (§NNN): two rows of their own under the
+            name, off by default. The profile is drawn from the route's GPX, so its tick is greyed
+            — and says why — without one; the phone's box shows only while its tick is on. */}
+        <Stack spacing={1} data-testid="bib-design-extras">
+          <CheckboxField
+            name="event.bibDesign.showProfile"
+            defaultChecked={hasRouteGpx && design.showProfile}
+            disabled={!hasRouteGpx}
+            help={hasRouteGpx ? t("editor.bibDesign.showProfileHelp") : t("editor.bibDesign.showProfileNoGpx")}
+          >
+            {t("editor.bibDesign.showProfile")}
+          </CheckboxField>
+          <CheckboxField name="event.bibDesign.showDistance" defaultChecked={design.showDistance} help={t("editor.bibDesign.showDistanceHelp")}>
+            {t("editor.bibDesign.showDistance")}
+          </CheckboxField>
+          <CheckboxField name="event.bibDesign.numberStubs" defaultChecked={design.numberStubs} help={t("editor.bibDesign.numberStubsHelp")}>
+            {t("editor.bibDesign.numberStubs")}
+          </CheckboxField>
+          <CheckboxField name="event.bibDesign.showEmergency" defaultChecked={design.showEmergency} help={t("editor.bibDesign.showEmergencyHelp")}>
+            {t("editor.bibDesign.showEmergency")}
+          </CheckboxField>
+          <OnlyWhenTicked name="event.bibDesign.showEmergency" initiallyTicked={design.showEmergency}>
+            <RecallField
+              name="event.bibDesign.emergencyPhone"
+              type="tel"
+              label={t("editor.bibDesign.emergencyPhone")}
+              helperText={t("editor.bibDesign.emergencyPhoneHelp")}
+              placeholder={t("editor.bibDesign.emergencyPhonePlaceholder")}
+              defaultValue={design.emergencyPhone}
+              autoComplete="off"
+              slotProps={{ htmlInput: { maxLength: BIB_EMERGENCY_PHONE_MAX, inputMode: "tel" }, inputLabel: { shrink: true } }}
+              sx={{ width: { sm: 280 } }}
+            />
+            <CheckboxField name="event.bibDesign.emergencyUpsideDown" defaultChecked={design.emergencyUpsideDown} help={t("editor.bibDesign.emergencyUpsideDownHelp")}>
+              {t("editor.bibDesign.emergencyUpsideDown")}
+            </CheckboxField>
+          </OnlyWhenTicked>
+        </Stack>
 
         {/* The small print, the club's to compose (§317), in the order it prints: the event,
             the partners, the club's own line, the website, the mailbox. */}
@@ -326,69 +390,84 @@ export default async function BibDesignPanel({
             >
               {t("editor.bibDesign.member.enabled")}
             </CheckboxField>
-            {eventId && memberSrc && (
-              <BibDesignPreview
-                eventId={eventId}
-                locale={locale}
-                initialSrc={memberSrc}
-                member
-                labels={{
-                  alt: t("editor.bibDesign.member.previewAlt"),
-                  caption: t("editor.bibDesign.member.previewCaption"),
-                  pending: t("editor.bibDesign.previewPending"),
-                }}
-              />
-            )}
-            {/* «Fundalul» (§NNN): the whole card, or the header alone. While the members' bib is off the
-                select starts on the whole card, whatever was stored; once it is on, the stored choice. */}
-            <RecallField
-              select
-              name="event.bibDesign.member.style"
-              label={t("editor.bibDesign.member.style")}
-              helperText={t("editor.bibDesign.member.styleHelp")}
-              defaultValue={design.member.enabled ? design.member.style : "card"}
-              slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}
-              sx={{ width: { sm: 360 } }}
-            >
-              {BIB_MEMBER_STYLES.map((style) => (
-                <option key={style} value={style}>
-                  {t(`editor.bibDesign.member.styles.${style}`)}
-                </option>
-              ))}
-            </RecallField>
-            <RecallField
-              select
-              name="event.bibDesign.member.bandColour"
-              label={t("editor.bibDesign.member.bandColour")}
-              helperText={t("editor.bibDesign.member.bandColourHelp")}
-              defaultValue={design.member.bandColour ?? ""}
-              slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}
-              sx={{ width: { sm: 280 } }}
-            >
-              <option value="">{t("editor.bibDesign.member.eventColour")}</option>
-              {BIB_COLOURS.map((choice) => (
-                <option key={choice.hex} value={choice.hex}>
-                  {/* White does not read on it at AA: on the whole card it prints the club's gradient (§NNN). */}
-                  {bibMemberCardColourReadable(choice.hex)
-                    ? t(`editor.bibColours.${choice.key}`)
-                    : t("editor.bibDesign.member.bandOnly", { colour: t(`editor.bibColours.${choice.key}`) })}
-                </option>
-              ))}
-              {design.member.bandColour && !BIB_COLOURS.some((choice) => choice.hex === design.member.bandColour) && (
-                <option value={design.member.bandColour}>{design.member.bandColour}</option>
-              )}
-            </RecallField>
-            {storage && picture("memberCard", "member")}
-            {storage && picture("header", "member")}
-            <BibFooterTextField
-              name="event.bibDesign.member.label"
-              defaultValue={design.member.label}
-              maxLength={BIB_MEMBER_LABEL_MAX}
-              label={t("editor.bibDesign.member.label")}
-              placeholder={t("bibs.memberLabelDefault", { club: CLUB_NAME })}
-              help={t("editor.bibDesign.member.labelHelp", { max: BIB_MEMBER_LABEL_MAX, club: CLUB_NAME })}
-              countTestId="bib-member-label-count"
-            />
+            {/* Everything the members' number decides shows only while it is on (the house's
+                OnlyWhenTicked: hidden, still posted), the preview with it. */}
+            <OnlyWhenTicked name="event.bibDesign.member.enabled" initiallyTicked={design.member.enabled}>
+              <Stack spacing={1}>
+                {eventId && memberSrc && (
+                  <BibDesignPreview
+                    eventId={eventId}
+                    locale={locale}
+                    initialSrc={memberSrc}
+                    member
+                    labels={{
+                      alt: t("editor.bibDesign.member.previewAlt"),
+                      caption: t("editor.bibDesign.member.previewCaption"),
+                      pending: t("editor.bibDesign.previewPending"),
+                    }}
+                  />
+                )}
+                {/* «Fundalul» (§NNN): the whole card, or «Același fundal ca restul numerelor» — the header
+                    alone, the race's own background kept. While the members' bib is off the
+                    select starts on the whole card, whatever was stored; once it is on, the stored choice. */}
+                <RecallField
+                  select
+                  name="event.bibDesign.member.style"
+                  label={t("editor.bibDesign.member.style")}
+                  helperText={t("editor.bibDesign.member.styleHelp")}
+                  defaultValue={design.member.enabled ? design.member.style : "card"}
+                  slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}
+                  sx={{ width: { sm: 360 } }}
+                >
+                  {BIB_MEMBER_STYLES.map((style) => (
+                    <option key={style} value={style}>
+                      {t(`editor.bibDesign.member.styles.${style}`)}
+                    </option>
+                  ))}
+                </RecallField>
+                <RecallField
+                  select
+                  name="event.bibDesign.member.bandColour"
+                  label={t("editor.bibDesign.member.bandColour")}
+                  helperText={t("editor.bibDesign.member.bandColourHelp")}
+                  defaultValue={design.member.bandColour ?? ""}
+                  slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}
+                  sx={{ width: { sm: 280 } }}
+                >
+                  <option value="">{t("editor.bibDesign.member.eventColour")}</option>
+                  {BIB_COLOURS.map((choice) => (
+                    <option key={choice.hex} value={choice.hex}>
+                      {/* White does not read on it at AA: on the whole card it prints the club's gradient (§NNN). */}
+                      {bibMemberCardColourReadable(choice.hex)
+                        ? t(`editor.bibColours.${choice.key}`)
+                        : t("editor.bibDesign.member.bandOnly", { colour: t(`editor.bibColours.${choice.key}`) })}
+                    </option>
+                  ))}
+                  {design.member.bandColour && !BIB_COLOURS.some((choice) => choice.hex === design.member.bandColour) && (
+                    <option value={design.member.bandColour}>{design.member.bandColour}</option>
+                  )}
+                </RecallField>
+                {storage && picture("memberCard", "member")}
+                {storage && picture("header", "member")}
+                <BibFooterTextField
+                  name="event.bibDesign.member.label"
+                  defaultValue={design.member.label}
+                  maxLength={BIB_MEMBER_LABEL_MAX}
+                  label={t("editor.bibDesign.member.label")}
+                  placeholder={t("bibs.memberLabelDefault", { club: CLUB_NAME })}
+                  help={t("editor.bibDesign.member.labelHelp", { max: BIB_MEMBER_LABEL_MAX, club: CLUB_NAME })}
+                  countTestId="bib-member-label-count"
+                />
+                {/* «Semn de membru pe număr» (§NNN): a check mark on every member's number, off until ticked. */}
+                <CheckboxField
+                  name="event.bibDesign.member.mark"
+                  defaultChecked={design.member.mark}
+                  help={t("editor.bibDesign.member.markHelp")}
+                >
+                  {t("editor.bibDesign.member.mark")}
+                </CheckboxField>
+              </Stack>
+            </OnlyWhenTicked>
           </Stack>
         </Box>
 
