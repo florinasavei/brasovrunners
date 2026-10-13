@@ -9,6 +9,7 @@ import { CLUB_TIME_ZONE, formatDay, formatTime } from "@/i18n/dates";
 import type { Locale } from "@/i18n/routing";
 import type { DeskRegistration } from "@/modules/registrations/admin-repository";
 import { BIB_IMAGE } from "@/modules/registrations/bib-geometry";
+import { bibPictureSrc } from "@/modules/registrations/domain/bib-stamp";
 import { identityDocumentsOf } from "@/modules/registrations/domain/identity-documents";
 import { formatRaceNumber, raceNumberOf } from "@/modules/registrations/domain/race-number";
 import { isTerminalStatus } from "@/modules/registrations/domain/state-machine";
@@ -256,7 +257,7 @@ export default async function DeskRow({
               {/* The picture draws the paper's edge itself (A5 bibs, §338): no second frame round it. */}
               {/* eslint-disable-next-line @next/next/no-img-element -- our own PNG, drawn at a fixed size */}
               <img
-                src={`/api/admin/events/${row.eventId}/bibs/preview?registration=${row.id}&locale=${locale}`}
+                src={bibPictureSrc({ eventId: row.eventId, registrationId: row.id, locale, stamp: row.raceNumberFormat })}
                 alt={t("desk.bibAlt", { number: written(number) })}
                 width={BIB_IMAGE.width}
                 height={BIB_IMAGE.height}

@@ -27,7 +27,9 @@ describe("§338 one edge round a bib's picture", () => {
 
   it("is not drawn again at the desk", () => {
     const desk = read("src/modules/registrations/ui/DeskRow.tsx");
-    const start = desk.indexOf("bibs/preview?registration=");
+    // The desk asks its picture through `bibPictureSrc` (§748: the address carries the number's format).
+    const start = desk.indexOf("src={bibPictureSrc(");
+    expect(start).toBeGreaterThan(-1);
     const img = desk.slice(start, desk.indexOf("/>", start));
     expect(img).toContain("style={{");
     expect(img).not.toMatch(/\bborder\b/);
