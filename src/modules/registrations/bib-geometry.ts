@@ -145,17 +145,22 @@ export const BIB_LAYOUT = {
   profileDistanceTop: 9,
   profileGainTop: 20,
   /**
-   * The checkpoints on the profile (§NNN, `bib-checkpoints.ts`): at each one's kilometre a ring
-   * `checkpointRing` points in radius, stroked `checkpointRingWeight`, on the line, and a tick down to
-   * the chart's foot stroked `checkpointTickWeight`; the cut-off in the labels' row, `profileLabelSize`
-   * points, centred under the tick. Two marks closer than `checkpointMinGap` points keep only the first;
-   * two cut-offs closer than `checkpointTimeGap` points — or one over «Start» or «Sosire» — and every
-   * cut-off goes (the marks stay). Both renderers place them at these points.
+   * The checkpoints on the profile (§NNN, `bib-checkpoints.ts`): at each one's kilometre an aid
+   * station's glyph — a cup, a fork — `checkpointGlyphWidth` × `checkpointGlyphHeight` points, stroked
+   * `checkpointGlyphWeight`, `checkpointGlyphGap` points above the line (under it where the line runs
+   * too high), or for any other point a dot `checkpointDot` points in radius on the line; a tick down to
+   * the chart's foot stroked `checkpointTickWeight`; «km 12» (and «· 11:30») in the labels' row,
+   * `profileLabelSize` points, centred under the tick. Two marks closer than `checkpointMinGap` points
+   * keep one; two labels closer than `checkpointTimeGap` points, or one over «Start» or «Sosire», are
+   * the crowding rule's to settle. Both renderers place them at these points.
    */
-  checkpointRing: 2.2,
-  checkpointRingWeight: 0.9,
-  checkpointTickWeight: 0.7,
-  checkpointMinGap: 4,
+  checkpointDot: 1.3,
+  checkpointGlyphWidth: 3.6,
+  checkpointGlyphHeight: 4.6,
+  checkpointGlyphGap: 1.2,
+  checkpointGlyphWeight: 0.8,
+  checkpointTickWeight: 0.6,
+  checkpointMinGap: 6,
   checkpointTimeGap: 3,
   /**
    * The emergency phone (§750): one centred line `emergencyHeight` points tall under the profile's

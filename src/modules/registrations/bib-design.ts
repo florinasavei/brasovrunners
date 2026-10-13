@@ -379,6 +379,12 @@ export const bibDesignSchema = z
      * checkpoints shows them without a second tick.
      */
     showCheckpoints: z.boolean().catch(true),
+    /**
+     * «…cu timpii limită» (§NNN): beside each checkpoint on the strip, its cut-off — «km 12 · 11:30» —
+     * where **every** one fits (the crowding rule, `bib-checkpoints.ts`). Off by default: a time printed
+     * on a number is a promise the club cannot change after the sheet is printed.
+     */
+    showCheckpointTimes: z.boolean().catch(false),
     /** «Telefon pentru urgențe» (§750): the tick, and the number the club types (`bibEmergencyPhone`). */
     showEmergency: z.boolean().catch(false),
     emergencyPhone: z.string().transform(bibEmergencyPhone).catch(""),
@@ -422,6 +428,7 @@ export const DEFAULT_BIB_DESIGN: BibDesign = {
   footerText: "",
   showProfile: false,
   showCheckpoints: true,
+  showCheckpointTimes: false,
   showEmergency: false,
   emergencyPhone: "",
   emergencyUpsideDown: true,

@@ -79,6 +79,8 @@ export type BibDesignFormValues = {
   showProfile: boolean;
   /** «Punctele de control pe profil» (§NNN): on by default, drawn only with the profile and the event's checkpoints. */
   showCheckpoints: boolean;
+  /** «…cu timpii limită» (§NNN): the cut-offs beside the points; off by default. */
+  showCheckpointTimes: boolean;
   showEmergency: boolean;
   emergencyPhone: string;
   /** «Tipărit invers», «Distanța pe număr» and «Numărul și pe capete» (§750). */
@@ -122,6 +124,7 @@ const SWITCHES = [
   "showWebsite",
   "showProfile",
   "showCheckpoints",
+  "showCheckpointTimes",
   "showEmergency",
   "emergencyUpsideDown",
   "showDistance",
@@ -170,6 +173,7 @@ export function readBibDesignForm(get: (name: string) => string | null): BibDesi
     footerText: field("footerText") ?? "",
     showProfile: field("showProfile") === "on",
     showCheckpoints: field("showCheckpoints") === "on",
+    showCheckpointTimes: field("showCheckpointTimes") === "on",
     showEmergency: field("showEmergency") === "on",
     emergencyPhone: field("emergencyPhone") ?? "",
     emergencyUpsideDown: field("emergencyUpsideDown") === "on",

@@ -340,6 +340,17 @@ export default async function BibDesignPanel({
             {t("editor.bibDesign.showCheckpoints")}
           </CheckboxField>
           {!hasCheckpoints && design.showCheckpoints && <input type="hidden" name="event.bibDesign.showCheckpoints" value="on" />}
+          {/* «…cu timpii limită» (§NNN): off by default; the cut-offs beside the points where every one fits. Greyed with
+              the tick above while the event has no checkpoints, its stored tick carried the same way. */}
+          <CheckboxField
+            name="event.bibDesign.showCheckpointTimes"
+            defaultChecked={design.showCheckpointTimes}
+            disabled={!hasCheckpoints}
+            help={hasCheckpoints ? t("editor.bibDesign.showCheckpointTimesHelp") : t("editor.bibDesign.showCheckpointsNone")}
+          >
+            {t("editor.bibDesign.showCheckpointTimes")}
+          </CheckboxField>
+          {!hasCheckpoints && design.showCheckpointTimes && <input type="hidden" name="event.bibDesign.showCheckpointTimes" value="on" />}
           <CheckboxField name="event.bibDesign.showDistance" defaultChecked={design.showDistance} help={t("editor.bibDesign.showDistanceHelp")}>
             {t("editor.bibDesign.showDistance")}
           </CheckboxField>

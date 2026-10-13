@@ -19,6 +19,7 @@ import {
   numberScaleFactor,
 } from "./bib-design";
 import { BIB_FOOTER_EMS, bibFooterLines, bibFooterParts } from "./bib-footer";
+import { checkpointGlyphLines } from "./bib-checkpoints";
 import { type BibProfileDrawing, bibProfilePaths } from "./bib-profile";
 import { BIB_PICTURE_BOX, type BibPictureSlot, bibPictureDrawing } from "./bib-picture-frame";
 import {
@@ -183,6 +184,8 @@ function logo(): Promise<string> {
 
 /** The room the profile's SVG keeps round its chart so the line's stroke and the end dots are not clipped, in points. */
 const PROFILE_PAD = 2;
+/** The box a checkpoint's words are centred in, in points: wider than any label the crowding rule keeps (`bib-checkpoints.ts`). */
+const CHECKPOINT_LABEL_BOX = 90;
 
 /** One line of text that never wraps and is cut with "…" where the sheet's would be. */
 const ONE_LINE = { display: "flex", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } as const;
@@ -333,20 +336,31 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
           r={1.8}
           fill={ink}
         />
-        {/* The route's checkpoints (§NNN, `bib-checkpoints.ts`), at the sheet's points: a tick to the chart's foot, a ring on the line. */}
-        {(profile.checkpoints?.marks ?? []).map((mark) => (
-          <g key={mark.x}>
-            <line
-              x1={mark.x * L.profileChartWidth}
-              y1={(1 - mark.y) * L.profileChartHeight + L.checkpointRing}
-              x2={mark.x * L.profileChartWidth}
-              y2={L.profileChartHeight}
-              stroke={ink}
-              strokeWidth={L.checkpointTickWeight}
-            />
-            <circle cx={mark.x * L.profileChartWidth} cy={(1 - mark.y) * L.profileChartHeight} r={L.checkpointRing} fill="none" stroke={ink} strokeWidth={L.checkpointRingWeight} />
-          </g>
-        ))}
+        {/* The route's checkpoints (§NNN, `bib-checkpoints.ts`), at the sheet's points: a tick to the chart's foot, and
+            an aid station's cup or fork beside the line — any other point a dot on it. */}
+        {(profile.checkpoints?.marks ?? []).map((mark) => {
+          const markX = mark.x * L.profileChartWidth;
+          return (
+            <g key={mark.x} data-testid="bib-checkpoint-mark" data-glyph={mark.glyph ?? "dot"}>
+              <line x1={markX} y1={mark.tickFrom} x2={markX} y2={L.profileChartHeight} stroke={ink} strokeWidth={L.checkpointTickWeight} />
+              {mark.glyph === null || mark.glyphY === null ? (
+                <circle cx={markX} cy={(1 - mark.y) * L.profileChartHeight} r={L.checkpointDot} fill={ink} />
+              ) : (
+                checkpointGlyphLines(mark.glyph).map((stroke, at) => (
+                  <polyline
+                    key={at}
+                    points={stroke.map(([x, y]) => `${(markX + x).toFixed(2)},${((mark.glyphY ?? 0) + y).toFixed(2)}`).join(" ")}
+                    fill="none"
+                    stroke={ink}
+                    strokeWidth={L.checkpointGlyphWeight}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                ))
+              )}
+            </g>
+          );
+        })}
       </svg>
       <div
         style={{
@@ -363,27 +377,27 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
         <div style={{ display: "flex" }}>{profile.start}</div>
         <div style={{ display: "flex" }}>{profile.finish}</div>
       </div>
-      {/* Their cut-offs (§NNN), centred under the ticks in the labels' row — only when every one has room. */}
-      {(profile.checkpoints?.marks ?? [])
-        .filter((mark) => mark.time)
-        .map((mark) => (
+      {/* Their words (§NNN), «km 12» or «km 12 · 11:30», centred under the ticks in the labels' row — where the crowding rule kept them. */}
+      {(profile.checkpoints?.marks ?? []).map((mark) =>
+        mark.label ? (
           <div
             key={mark.x}
-            data-testid="bib-checkpoint-time"
+            data-testid="bib-checkpoint-label"
             style={{
-              display: "flex",
+              ...ONE_LINE,
               position: "absolute",
-              left: px(L.inset + mark.x * L.profileChartWidth - 20),
+              left: px(L.inset + mark.x * L.profileChartWidth - CHECKPOINT_LABEL_BOX / 2),
               top: px(L.profileLabelTop),
-              width: px(40),
+              width: px(CHECKPOINT_LABEL_BOX),
               justifyContent: "center",
               fontSize: px(L.profileLabelSize),
               color: ink,
             }}
           >
-            {mark.time}
+            {mark.label}
           </div>
-        ))}
+        ) : null,
+      )}
       <div style={{ ...ONE_LINE, position: "absolute", left: px(L.inset + L.profileChartWidth + L.profileTextGap), top: px(L.profileDistanceTop), fontSize: px(L.profileTextSize), color: ink }}>
         {profile.distance}
       </div>

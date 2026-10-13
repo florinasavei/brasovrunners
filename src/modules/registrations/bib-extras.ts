@@ -4,7 +4,7 @@ import { listCheckpoints } from "@/modules/event-checkpoints/checkpoints";
 import type { RouteGpx } from "@/modules/events/domain/route-gpx";
 import { getStorage } from "@/modules/media/storage";
 import { type BibDesign, bibDistanceBadge } from "./bib-design";
-import { bibCheckpointMarks } from "./bib-checkpoints";
+import { type BibCheckpointSource, bibCheckpointMarks } from "./bib-checkpoints";
 import { type BibProfile, type BibProfileDrawing, bibProfileDrawing, bibProfileFigures, parseGpxProfile } from "./bib-profile";
 
 /**
@@ -35,7 +35,7 @@ export type BibProfileSource = {
    * The route's checkpoints (§NNN), read by the caller only when the design asks for the profile and
    * for them (`bibNeedsCheckpoints`); absent draws the strip as it was.
    */
-  checkpoints?: ReadonlyArray<{ km: number; cutoff: string | null }>;
+  checkpoints?: readonly BibCheckpointSource[];
 };
 
 /** Whether a design's strip carries the checkpoints, so a caller reads them from the database only then. */
@@ -91,7 +91,7 @@ async function profileOf(key: string): Promise<BibProfile | null> {
 
 export async function loadBibExtras(
   event: BibProfileSource,
-  design: Pick<BibDesign, "showProfile" | "showEmergency" | "showDistance"> & Partial<Pick<BibDesign, "showCheckpoints">>,
+  design: Pick<BibDesign, "showProfile" | "showEmergency" | "showDistance"> & Partial<Pick<BibDesign, "showCheckpoints" | "showCheckpointTimes">>,
   locale: string,
 ): Promise<BibExtras> {
   const distanceBadge = design.showDistance ? bibDistanceBadge(event.distanceMeters) : null;
@@ -112,15 +112,22 @@ export async function loadBibExtras(
                 : admin("bibs.profileGain", { m: values?.m ?? "" }),
         );
         // The route's checkpoints (§NNN) on the strip, where the design asks and the event has some:
-        // placed by the figure the bib prints, the club's own distance first, as the strip's right end is.
+        // placed by the figure the bib prints, the club's own distance first, as the strip's right end is;
+        // «km 12» in the sheet's language, «km 12 · 11:30» with «…cu timpii limită».
+        const kmWords = new Intl.NumberFormat(locale, { maximumFractionDigits: 1 });
         const marks =
           design.showCheckpoints !== false && event.checkpoints && event.checkpoints.length > 0
             ? bibCheckpointMarks({
                 checkpoints: event.checkpoints,
                 routeKm: bibProfileFigures(parsed, event).distanceMeters / 1000,
                 points: parsed.points,
+                showTimes: design.showCheckpointTimes === true,
                 startWord: drawing.start,
                 finishWord: drawing.finish,
+                label: (row, withTime) =>
+                  withTime && row.cutoff
+                    ? admin("bibs.checkpointKmTime", { km: kmWords.format(row.km), time: row.cutoff })
+                    : admin("bibs.checkpointKm", { km: kmWords.format(row.km) }),
               })
             : null;
         profile = { ...drawing, checkpoints: marks };
