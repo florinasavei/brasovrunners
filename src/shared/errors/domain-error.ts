@@ -20,7 +20,11 @@ export type DomainErrorCode =
   | "DECLARATION_HELD"
   // A shop size unticked while an order names it (§697): the order's variant would dangle and its
   // stock would have nowhere to go back to, so the save says which box rather than "not valid".
-  | "SHOP_SIZE_HAS_ORDERS";
+  | "SHOP_SIZE_HAS_ORDERS"
+  // A volunteer role removed while people are on it (§NNN): move them first, so no one is deleted by a click on a role.
+  | "VOLUNTEER_ROLE_HAS_PEOPLE"
+  // The same address entered twice for one event's volunteers (§NNN): one row per person per event, so the card says so.
+  | "VOLUNTEER_ALREADY_LISTED";
 
 export class DomainError extends Error {
   readonly code: DomainErrorCode;

@@ -61,6 +61,10 @@ export const EMAIL_AUDIENCE = {
   SHOP_ORDER_PLACED: "staff",
   SHOP_ORDER_PAID: "staff",
   SHOP_ORDER_CLUB_NOTICE: "staff",
+  // A volunteer's sign-up (§NNN): the person's «am primit» goes to an address nobody has confirmed and about no
+  // registration — the public's, with its privacy line, like an invitation's; the organizers' notice is the staff's.
+  VOLUNTEER_RECEIVED: "public",
+  VOLUNTEER_CLUB_NOTICE: "staff",
 } as const satisfies Record<EmailMessageType, EmailAudience>;
 
 export function audienceOf(messageType: EmailMessageType): EmailAudience {

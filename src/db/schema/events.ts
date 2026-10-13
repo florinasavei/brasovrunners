@@ -474,6 +474,15 @@ export const events = pgTable(
     membersOnly: boolean("members_only").notNull().default(false),
 
     /**
+     * «Primește voluntari» (§NNN; the owner, 2026-10-13: «I want to register volunteers for a race»): the event
+     * offers a public «Vreau să fiu voluntar» form on its page — and only while a role still needs people
+     * and the privacy notice in force describes volunteers. Off by default, ticked on the editor's
+     * «Voluntari» card (its own form: the event's save never writes it). The roles and the people are
+     * `event_volunteer_roles` and `event_volunteers`; none of it is a registration.
+     */
+    acceptsVolunteers: boolean("accepts_volunteers").notNull().default(false),
+
+    /**
      * The two facts that stopped being free text in migration `0018`.
      *
      * Null means the club has not said, and the page then omits the row rather than guessing —

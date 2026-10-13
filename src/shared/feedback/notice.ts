@@ -139,6 +139,8 @@ const NOTHING_HAPPENED: ReadonlySet<string> = new Set([
   "clubTodoUnchanged",
   // The same on an event's own to-dos (§749).
   "eventTodoUnchanged",
+  // The same on an event's volunteers (§NNN).
+  "volunteerUnchanged",
   // The newsletter (§445): the same form pressed twice, and an address that was not on the list.
   "newsletterDuplicate",
   "newsletterNotFound",

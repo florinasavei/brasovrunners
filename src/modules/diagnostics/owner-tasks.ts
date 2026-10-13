@@ -65,6 +65,7 @@ export type TaskId =
   | "feedbackNotice"
   | "feedbackNamedNotice"
   | "shopNotice"
+  | "volunteersNotice"
   | "gmailFallbackNotice"
   | "refusalTerms"
   | "teamPageNotice"
@@ -107,6 +108,7 @@ export const TASK_KIND: Record<TaskId, TaskKind> = {
   feedbackNotice: "text",
   feedbackNamedNotice: "text",
   shopNotice: "text",
+  volunteersNotice: "text",
   gmailFallbackNotice: "text",
   refusalTerms: "text",
   teamPageNotice: "text",
@@ -255,6 +257,14 @@ export type OwnerTaskInputs = {
   shopDescribed: boolean;
   /** How many products members would see in the shop (§683): the row waits only while there is one. */
   visibleShopProducts: number;
+  /**
+   * Does the notice in force, in every language, describe the event volunteers (§NNN,
+   * `noticeDescribesVolunteers`)? Until it does, no event page offers «Vreau să fiu voluntar» and no
+   * public sign-up is kept; the club's own list works regardless.
+   */
+  volunteersDescribed: boolean;
+  /** How many events still ahead take volunteers (§NNN): the row waits only while there is one. */
+  volunteeringEvents: number;
   /**
    * Does the notice in force, in every language, say a message may leave through the club's Gmail
    * while Mailgun is stopped (§622, `noticeDescribesGmailFallback`)? Until it does, «Gmail preia când
@@ -552,6 +562,18 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
       push("shopNotice", {
         owner: "club",
         state: input.shopDescribed ? "done" : "open",
+      });
+    }
+    /*
+      The event volunteers (§NNN), the shop's shape: open while an event ahead takes volunteers and the
+      notice in force does not name `{{volunteers}}` (the club ticked «Primește voluntari» and the page shows
+      no form: the club must hear why), done by itself the day a notice naming it takes effect, and absent
+      while no event takes volunteers and the notice is silent.
+    */
+    if (input.volunteersDescribed || input.volunteeringEvents > 0) {
+      push("volunteersNotice", {
+        owner: "club",
+        state: input.volunteersDescribed ? "done" : "open",
       });
     }
     /*

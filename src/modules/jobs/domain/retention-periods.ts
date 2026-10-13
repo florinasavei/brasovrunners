@@ -26,4 +26,10 @@ export const RETENTION_PERIODS = {
    * keeps the PDF that was emailed with the number in it.
    */
   identityAndHealthDaysAfterEvent: 7,
+  /**
+   * A volunteer's offer (§NNN): a name, an address and a telephone number given to organize the help at
+   * one event, with no claim behind it — so it goes thirty days after the event's start, long enough to
+   * thank people and settle what was promised, and the privacy notice says exactly this (section 7).
+   */
+  volunteerDaysAfterEvent: 30,
 } as const;

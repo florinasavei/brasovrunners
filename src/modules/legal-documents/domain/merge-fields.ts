@@ -143,6 +143,18 @@ export const FEEDBACK_FORMS_MERGE_FIELD = "feedbackForms";
 export const MEMBERS_SHOP_MERGE_FIELD = "membersShop";
 
 /**
+ * The privacy notice's marker for the event volunteers (§NNN): the public form's name on an event's page,
+ * quoted, in the reader's language (`volunteers/notice-words.ts`) — „Vreau să fiu voluntar” / “I want to
+ * volunteer” — in section 5's paragraph that says what a sign-up keeps (the name, the address, the
+ * telephone number, the role, the message, the organizers' note), why (to organize the help at the event,
+ * art. 6(1)(a) for the public form and 6(1)(f) for a person the club enters), who sees it, how long it
+ * stays (thirty days after the event) and the right to withdraw. The gate, §562's, §613's and §683's
+ * pattern: the event page draws the form, and the action keeps a name, only while the notice in force
+ * names it in every language (`describesVolunteers`); the club's own list works without it.
+ */
+export const VOLUNTEERS_MERGE_FIELD = "volunteers";
+
+/**
  * The privacy notice's marker for «Spune-ne ceva»'s named mode (§678): the radio's own words,
  * quoted — „Cu nume și prenume” / “With my name” (`feedback/notice-words.ts`) — in the same
  * paragraph, which then says the forms are anonymous unless the person chooses to give a name, what
@@ -363,6 +375,7 @@ export const MERGE_FIELDS = [
   FEEDBACK_FORMS_MERGE_FIELD,
   FEEDBACK_FORMS_NAMED_MERGE_FIELD,
   MEMBERS_SHOP_MERGE_FIELD,
+  VOLUNTEERS_MERGE_FIELD,
 ] as const;
 
 /**
@@ -547,6 +560,15 @@ export function describesFeedbackForms(body: unknown): boolean {
  */
 export function describesMembersShop(body: unknown): boolean {
   return mergeFieldsIn(body).has(MEMBERS_SHOP_MERGE_FIELD);
+}
+
+/**
+ * Whether a privacy notice describes the event volunteers (§NNN): it names `{{volunteers}}`. The gate for
+ * the event page's «Vreau să fiu voluntar» and for every public sign-up, and what `/admin/tasks`' row
+ * `volunteersNotice` reads. Pure; the caller asks it of the notice in force, in every language.
+ */
+export function describesVolunteers(body: unknown): boolean {
+  return mergeFieldsIn(body).has(VOLUNTEERS_MERGE_FIELD);
 }
 
 /**

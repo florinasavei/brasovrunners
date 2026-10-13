@@ -249,6 +249,14 @@ const REQUEST_READERS_ALLOWED: Record<string, string> = {
   */
   "src/modules/resilience/last-good.ts": "the resting page's way back, on a cold miss only",
   /*
+    The sealed draft cookie (§142): the event page's volunteer box (§NNN) names a Server Action whose
+    refusal keeps what was typed (`stashDraftValues`, called by the action alone, after a post). The
+    page never reads the cookie while it renders: its static copy takes no draft, and the one render
+    that reads it — `readFormDraft`, for a refused box — is the live twin's, which passes it in
+    (`readVolunteerDraft`), exactly as the twin alone reads the session.
+  */
+  "src/modules/registrations/form-draft.ts": "the volunteer box's draft, written by its action and read only by the live twin",
+  /*
     The session: every static page reaches it only through a Server Action it names as a form's
     `action` (the interest box, the newsletter pop-up), never by calling it while it renders.
   */

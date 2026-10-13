@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { auditLogs } from "@/db/schema/audit-logs";
 import { emailOutbox } from "@/db/schema/email-outbox";
+import { eventVolunteerRoles, eventVolunteers } from "@/db/schema/event-volunteers";
 import { events } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
 import { registrationInterests } from "@/db/schema/registration-interests";
@@ -116,6 +117,20 @@ describe("BR-REQ-070-01 everything held about a person", () => {
       canonicalizationVersion: interest.canonicalizationVersion,
       locale: "ro",
     });
+    // An offer to volunteer (§NNN) is found by the same canonical address, and is everything typed.
+    const [volunteerRole] = await db.insert(eventVolunteerRoles).values({ eventId, nameRo: "Punct de apă", nameEn: "Water point", needed: 2 }).returning();
+    await db.insert(eventVolunteers).values({
+      eventId,
+      roleId: volunteerRole.id,
+      name: "Ana Pop",
+      email: interest.deliveryEmail,
+      canonicalEmail: interest.canonicalEmail,
+      canonicalizationVersion: interest.canonicalizationVersion,
+      phone: "+40712345678",
+      source: "PUBLIC",
+      message: "Sunt liberă sâmbătă",
+      privacyNoticeVersion: 3,
+    });
   });
 
   it("finds the person by the canonical address, whichever spelling was typed", async () => {
@@ -140,6 +155,10 @@ describe("BR-REQ-070-01 everything held about a person", () => {
     expect(Object.keys(data.messages[0])).not.toContain("providerDetail");
     // The "Anunță-mă" address is matched the same way, and it is its own row: no participant.
     expect(data.announcementRequests).toHaveLength(1);
+    // …and so is an offer to volunteer, with every column the platform keeps of it.
+    expect(data.volunteerOffers).toMatchObject([
+      { roleName: "Punct de apă", state: "REGISTERED", source: "PUBLIC", name: "Ana Pop", phone: "+40712345678", message: "Sunt liberă sâmbătă", privacyNoticeVersion: 3 },
+    ]);
 
     // Viewing is a read of the emergency details, recorded for each registration shown.
     const trail = await db.select().from(auditLogs).where(eq(auditLogs.action, "registration.health_viewed"));
@@ -156,7 +175,7 @@ describe("BR-REQ-070-01 everything held about a person", () => {
     expect(data.registrations).toHaveLength(1);
     const [entry] = await db.select().from(auditLogs).where(eq(auditLogs.action, "participant.data_exported"));
     expect([entry.actorStaffUserId, entry.entityType, entry.entityId]).toEqual([admin.id, "participant", participantId]);
-    expect(entry.metadataJson).toEqual({ registrations: 1, declarationAcceptances: 0, messages: 1, announcementRequests: 1, auditRows: 0 });
+    expect(entry.metadataJson).toEqual({ registrations: 1, declarationAcceptances: 0, messages: 1, announcementRequests: 1, volunteerOffers: 1, auditRows: 0 });
     expect(JSON.stringify(entry.metadataJson)).not.toMatch(/astm|gmail|Ana/);
   });
 

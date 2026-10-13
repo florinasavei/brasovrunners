@@ -2913,6 +2913,8 @@ function blankEventRow(now: Date): EditableEvent {
     dateToBeAnnounced: false,
     timeToBeAnnounced: false,
     membersOnly: false,
+    // «Primește voluntari» (§NNN): off until the «Voluntari» card ticks it; a copy of an event never inherits it.
+    acceptsVolunteers: false,
     difficulty: null,
     difficultyLevel: null,
     costType: COST_TYPE_ON_CREATE,

@@ -37,6 +37,8 @@ const CLUB_MAIL: readonly EmailMessageType[] = [
   "SHOP_ORDER_PLACED",
   "SHOP_ORDER_PAID",
   "SHOP_ORDER_CLUB_NOTICE",
+  // The organizers' notice of a volunteer's sign-up (§NNN): to colleagues; the volunteer's own receipt keeps its line.
+  "VOLUNTEER_CLUB_NOTICE",
 ];
 
 const noticeUrl = (locale: "ro" | "en") => `${env.APP_BASE_URL}${getPathname({ locale, href: "/legal/privacy" })}`;

@@ -16,6 +16,10 @@ import { eventPageTodos } from "@/modules/content/events/domain/page-todos";
 import { canEditEventTodos, canReadEventTodos } from "@/modules/event-todos/domain/event-todo";
 import { listEventTodos } from "@/modules/event-todos/event-todos";
 import EventTodoCard from "@/modules/event-todos/ui/EventTodoCard";
+import { volunteerEventAhead, volunteerOfferClosedFor } from "@/modules/volunteers/domain/volunteer";
+import VolunteersCard from "@/modules/volunteers/ui/VolunteersCard";
+import { listVolunteerRoles, listVolunteers, volunteerStandings } from "@/modules/volunteers/volunteers";
+import { noticeDescribesVolunteers } from "@/modules/legal-documents/repository";
 import { listStaffUsers } from "@/modules/staff-identity/repository";
 import { dayIn } from "@/modules/registrations/domain/age";
 import { editionDifference, usualOf } from "@/modules/events/domain/series";
@@ -62,6 +66,7 @@ import {
   canMessageParticipants,
   canReadContent,
   canReadRegistrations,
+  canManageVolunteers,
   canManageTestRegistrations,
   canPreviewEventDraft,
   isBackofficeRole,
@@ -145,7 +150,7 @@ import { startBoxValues, typedStartOrNull } from "@/modules/events/domain/provis
 
 type Props = {
   params: Promise<{ locale: string; id: string }>;
-  searchParams: Promise<{ error?: string; saved?: string; assigned?: string; total?: string; created?: string; applied?: string; offered?: string; notConfirmed?: string; test?: string; notPublished?: string; announced?: string; notice?: string; queued?: string; moved?: string; movedTo?: string; movedSent?: string; count?: string; from?: string; to?: string; erased?: string; recent?: string; limited?: string; testQueued?: string; mine?: string; todoError?: string } & Partial<Record<keyof PlacesTaken, string>>>;
+  searchParams: Promise<{ error?: string; saved?: string; assigned?: string; total?: string; created?: string; applied?: string; offered?: string; notConfirmed?: string; test?: string; notPublished?: string; announced?: string; notice?: string; queued?: string; moved?: string; movedTo?: string; movedSent?: string; count?: string; from?: string; to?: string; erased?: string; recent?: string; limited?: string; testQueued?: string; mine?: string; todoError?: string; volunteerError?: string } & Partial<Record<keyof PlacesTaken, string>>>;
 };
 
 export const dynamic = "force-dynamic";
@@ -355,6 +360,35 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   });
   // A refused one-button form's code (`?todoError=`), matched against the codes there are — a query string is typed by anybody.
   const todoErrorCode = (["FORBIDDEN", "VALIDATION_ERROR", "CONFLICT", "NOT_FOUND"] as const).find((code) => code === query.todoError);
+
+  /*
+    «Voluntari» (§NNN): the event's roles and the people on them — their addresses and telephone numbers —
+    read only for whoever may manage them (`canManageVolunteers`: the Organizer and the Administrators); the
+    Tehnic role and the Redactor get no card and no query. Why the public form is not on the page is told
+    from the same conditions the page reads (`volunteerOfferClosedFor`), the notice from the database, not
+    the cache. Every verb asks the service for the role again.
+  */
+  const volunteersCard = canManageVolunteers(staffUser.role)
+    ? await (async () => {
+        const roles = await listVolunteerRoles(db, event.id);
+        const people = await listVolunteers(db, event.id);
+        const standings = volunteerStandings(roles, people);
+        return {
+          roles,
+          people,
+          standings,
+          offerClosed: volunteerOfferClosedFor({
+            acceptsVolunteers: event.acceptsVolunteers,
+            standings,
+            noticeDescribes: await noticeDescribesVolunteers(db, now),
+            eventAhead: volunteerEventAhead(event, now),
+          }),
+        };
+      })()
+    : null;
+  const volunteerErrorCode = (["FORBIDDEN", "VALIDATION_ERROR", "CONFLICT", "NOT_FOUND", "VOLUNTEER_ROLE_HAS_PEOPLE", "VOLUNTEER_ALREADY_LISTED"] as const).find(
+    (code) => code === query.volunteerError,
+  );
 
   // A standing series (§122): the rule on the source, and every date of it.
   const source = event.repeatOf ? ((await findEventForEditing(db, event.repeatOf))?.event ?? null) : event;
@@ -925,6 +959,19 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                 today={dayIn(now, CLUB_TIME_ZONE)}
                 error={todoErrorCode ? t(`errors.${todoErrorCode}`) : undefined}
               />
+              {/* «Voluntari» (§NNN): the roles and the people, with forms of their own beside the save form. Only for whoever may manage them. */}
+              {volunteersCard && (
+                <VolunteersCard
+                  locale={locale}
+                  eventId={event.id}
+                  acceptsVolunteers={event.acceptsVolunteers}
+                  offerClosed={volunteersCard.offerClosed}
+                  roles={volunteersCard.roles}
+                  standings={volunteersCard.standings}
+                  volunteers={volunteersCard.people}
+                  error={volunteerErrorCode ? t(`errors.${volunteerErrorCode}`) : undefined}
+                />
+              )}
               {/* Settings and texts: one form, one save — and a refusal that keeps every box (§315). */}
               <ActionForm action={saveEventAndTranslationsAction} messages={refusal} confirm={saveConfirm} id="event-save-form" data-testid="event-save-form">
                 <input type="hidden" name="uiLocale" value={locale} />
