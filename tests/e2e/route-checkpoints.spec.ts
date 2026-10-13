@@ -141,10 +141,14 @@ test.describe("§NNN the route's checkpoints and the race's time limit", () => {
     await expect(rows).toHaveCount(2);
     await expect(rows.nth(0)).toContainText("7,5 km");
     await expect(rows.nth(0)).toContainText("Apă la cabană");
-    await expect(rows.nth(0)).toContainText("Apă");
-    await expect(rows.nth(0)).toContainText("Mâncare");
+    // What is there, read from its own cell: the point's name «Apă la cabană» says «Apă» too, so the name's cell proves nothing.
+    // «Apă» was ticked before the refusal and kept by it; «Mâncare» was ticked after.
+    const kindsOf = (row: Locator) => row.locator('td[data-label="Ce găsești aici"]');
+    await expect(kindsOf(rows.nth(0)).getByText("Apă", { exact: true })).toBeVisible();
+    await expect(kindsOf(rows.nth(0)).getByText("Mâncare", { exact: true })).toBeVisible();
     await expect(rows.nth(0)).toContainText("Ora limită 11:00");
-    await expect(rows.nth(1)).toContainText("Cronometrare");
+    await expect(kindsOf(rows.nth(1)).getByText("Cronometrare", { exact: true })).toBeVisible();
+    await expect(kindsOf(rows.nth(1)).getByText("Apă", { exact: true })).toHaveCount(0);
     await expect(rows.nth(1)).toContainText("Ora limită 12:00");
     const finish = table.getByTestId("checkpoint-finish");
     await expect(finish).toContainText("Sosire");
