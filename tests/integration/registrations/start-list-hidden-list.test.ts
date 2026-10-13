@@ -203,8 +203,8 @@ describe("§647 «Cine vine» and the hidden list's two ticks", () => {
     // Ana, and Elena's hold among «în curs de confirmare», which only a capped event's known counts add.
     expect(html).toContain("Cine vine (2)");
     expect(summary(html)).toMatch(/^2 înscriși — 1 confirma\S* \(1 cu numele afișat\), 1 în curs de confirmare$/);
-    // The title counts somebody the table does not show, so the note says so.
-    expect(html).toContain(ro.Event.startList.outsideCountedNote);
+    // The title counts somebody the table does not show (the event's guests tick is off: none of them), so the note says so.
+    expect(html).toContain(ro.Event.startList.outsideCountedNoteNoRows);
     expect(html).not.toContain(ro.Event.startList.outsideNote);
     expect(html).not.toContain("Elena Organizator");
     expect(rows(html)).toBe(1);
@@ -234,7 +234,7 @@ describe("§647 «Cine vine» and the hidden list's two ticks", () => {
     expect(html).toContain("Cine vine (2)");
     expect(html).toContain("2 participanți confirmați");
     expect(html).toContain(`>${ro.Event.startList.columnPosition}<`);
-    // With the switch off no row of the hidden list is on the public list (§743), whatever it is still holding.
+    // With the switch off no row of the hidden list is on the public list (§NNN), whatever it is still holding.
     expect(rows(html)).toBe(2);
   });
 
@@ -247,7 +247,7 @@ describe("§647 «Cine vine» and the hidden list's two ticks", () => {
     expect(html).not.toContain("participanți confirmați");
     expect(html).not.toContain(`>${ro.Event.startList.columnPosition}<`);
     expect(html).toContain("Ana Popescu");
-    // …and the switch being off, the guest is on no public list either (§743).
+    // …and the switch being off, the guest is on no public list either (§NNN).
     expect(html).not.toContain("Ioana Pacemaker");
     expect(rows(html)).toBe(2);
   });
@@ -276,7 +276,7 @@ describe("§647 «Cine vine» and the hidden list's two ticks", () => {
   });
 });
 
-describe("§743 «Arată invitații speciali pe lista publică»: off by default, no row of the hidden list is on any public list", () => {
+describe("§NNN «Arată invitații speciali pe lista publică»: off by default, no row of the hidden list is on any public list", () => {
   it("tick off (the switch on): the ticked guest, the unticked one and the hold are on no list; the counts follow «Numără…» alone", async () => {
     const id = await seeded();
     const html = await render(asPublic(id, { hiddenListEnabled: true, participantCountPublic: true, hiddenListCounted: false, hiddenListPublic: false }));
@@ -297,6 +297,9 @@ describe("§743 «Arată invitații speciali pe lista publică»: off by default
     expect(html).not.toContain("Ioana Pacemaker");
     expect(rows(html)).toBe(2);
     expect(html).toContain("Cine vine (4)");
+    // Counted and none in the table: the note says so, not «only those who chose to appear».
+    expect(html).toContain(ro.Event.startList.outsideCountedNoteNoRows);
+    expect(html).not.toContain(ro.Event.startList.outsideCountedNote);
   });
 
   it("tick on: today's list — the ticked guest is a row, the unticked one is not", async () => {
@@ -305,6 +308,14 @@ describe("§743 «Arată invitații speciali pe lista publică»: off by default
     expect(html).toContain("Ioana Pacemaker");
     expect(html).not.toContain("Dan Invitat");
     expect(rows(html)).toBe(3);
+    expect(html).not.toContain(ro.Event.startList.outsideCountedNoteNoRows);
+  });
+
+  it("tick on and counted: the old note, «only those who chose to appear»", async () => {
+    const id = await seeded();
+    const html = await render(asPublic(id, { hiddenListEnabled: true, participantCountPublic: true, hiddenListCounted: true, hiddenListPublic: true }));
+    expect(html).toContain(ro.Event.startList.outsideCountedNote);
+    expect(html).not.toContain(ro.Event.startList.outsideCountedNoteNoRows);
   });
 
   it("the switch off: the tick does nothing, and a guest still on the list stays off the public list (the safe side of a disclosure)", async () => {

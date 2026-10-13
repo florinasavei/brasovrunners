@@ -231,7 +231,7 @@ describe("§647 «Lista ascunsă» on the event", () => {
     expect((await trail(source.id)).at(-1)?.metadataJson).toEqual({ from: { hiddenListEnabled: true }, to: { hiddenListEnabled: false } });
   });
 
-  it("§743 «Arată invitații speciali pe lista publică»: off by default, saved with the group, stored as posted, audited, and read by the public query", async () => {
+  it("§NNN «Arată invitații speciali pe lista publică»: off by default, saved with the group, stored as posted, audited, and read by the public query", async () => {
     const sql = readFileSync(join(process.cwd(), "src/db/migrations/0143_hidden_list_public.sql"), "utf8");
     expect(sql.trim()).toBe('ALTER TABLE "events" ADD COLUMN "hidden_list_public" boolean DEFAULT false NOT NULL;');
     const source = await createEvent(db, { actor: admin, fields: { ...FIELDS, translations: TRANSLATIONS }, now: NOW });

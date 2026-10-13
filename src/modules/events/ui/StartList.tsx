@@ -187,7 +187,7 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
   // leaving the list expires them, so a name is never shown after its owner withdrew it. The
   // hidden rows (§346) are drawn from the anonymous count alone — the cache holds a number for
   // them, never a row, a position or an initial.
-  // «Arată invitații speciali pe lista publică» (§743): off, no row on the hidden list is on any list below.
+  // «Arată invitații speciali pe lista publică» (§NNN): off, no row on the hidden list is on any list below.
   const hiddenShown = hiddenListShownPublicly(event);
   const { named, anonymous, outsideNamed, hidden } = await cachedStartListCounts(event.id, hiddenShown);
   /*
@@ -552,7 +552,7 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
             {/* Only while the table holds somebody seated outside the places (§643): one sentence, no row marked. */}
             {outsideShown ? ` ${t("startList.outsideNote")}` : null}
             {/* Counted, and not every one of them listed (§647): one sentence, no row marked. */}
-            {countedNotListed ? ` ${t("startList.outsideCountedNote")}` : null}
+            {countedNotListed ? ` ${t(hiddenShown ? "startList.outsideCountedNote" : "startList.outsideCountedNoteNoRows")}` : null}
           </Typography>
         </>
       )}

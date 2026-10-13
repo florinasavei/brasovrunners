@@ -35,7 +35,7 @@ describe("§647 the event's settings, as read", () => {
   });
 });
 
-describe("§743 «Arată invitații speciali pe lista publică»", () => {
+describe("§NNN «Arată invitații speciali pe lista publică»", () => {
   it("shows the special guests only while the switch is on AND the tick is on; anything else is off", () => {
     expect(hiddenListShownPublicly({ hiddenListEnabled: true, hiddenListPublic: true })).toBe(true);
     expect(hiddenListShownPublicly({ hiddenListEnabled: true, hiddenListPublic: false })).toBe(false);
