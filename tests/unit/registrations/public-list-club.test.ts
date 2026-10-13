@@ -62,8 +62,9 @@ describe("§NNN namesTheClub — what is the club's own name", () => {
     "brasovruners", // glued, with a typo
     "Brasov  R unners", // the club's exact word, only cut
     "Brasov Runners Romania",
-    "Brasovrunners.ro",
-    "brasovrunners.com",
+    // The site's address typed as the club folds the same: a dot splits words like a space (no hostname here).
+    "Brasovrunners ro",
+    "brasovrunners / com",
     "Brașov Runners RO",
   ];
 

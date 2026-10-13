@@ -65,7 +65,7 @@ const FILLER = new Set([
   "of",
   "membru",
   "member",
-  // Where the club is, or its site's ending: «Brasov Runners Romania», «brasovrunners.ro».
+  // Where the club is, or its site's ending typed after the name: «Brasov Runners Romania», «… ro», «… com».
   "romania",
   "ro",
   "com",
