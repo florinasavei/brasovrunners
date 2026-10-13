@@ -2,11 +2,14 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import { EVENT_TYPES, takesRegistrations } from "@/modules/events/domain/event-type";
+import { PUBLIC_LIST_CLUBS, publicListClubOf } from "@/modules/registrations/domain/public-list-club";
+import { CLUB_NAME } from "@/theme/brand";
 import { textFieldConstraints } from "@/shared/forms/constraints";
 import RecallField from "@/shared/forms/recall";
 import CheckboxField from "@/shared/ui/CheckboxField";
 import IncognitoIcon from "@/shared/ui/IncognitoIcon";
 import Panel from "@/shared/ui/Panel";
+import RadioField from "@/shared/ui/RadioField";
 import { startListSummary } from "../box-summaries";
 import OnlyForMode from "../OnlyForMode";
 import OnlyForType from "../OnlyForType";
@@ -34,6 +37,12 @@ import { BoxNote, type BoxProps, summaryWords } from "./box-kit";
 export default async function StartListBox({ event, mayEditSettings }: Pick<BoxProps, "event" | "mayEditSettings">) {
   const t = await getTranslations("Admin");
   const { words } = await summaryWords();
+  // The words of each mode of «Clubul pe lista publică» (§753); the club's name is the platform's constant.
+  const clubChoices = {
+    members_only: t("editor.publicListClubMembersOnly", { club: CLUB_NAME }),
+    as_typed: t("editor.publicListClubAsTyped"),
+    hidden: t("editor.publicListClubHidden"),
+  };
   const initialType = event?.type ?? "GROUP_RUN";
   const initialMode = event?.registrationMode ?? "NONE";
   const card = {
@@ -65,6 +74,23 @@ export default async function StartListBox({ event, mayEditSettings }: Pick<BoxP
                 </CheckboxField>
                 <BoxNote more={t("editor.waitlistPublicHelpMore")}>{t("editor.waitlistPublicHelp")}</BoxNote>
               </Box>
+              {/*
+                «Clubul pe lista publică» (§753; the owner, 2026-10-13: «people type stupid things there, I just want
+                to show the club's members and ignore the other clubs»): what the list's «Club» column says — the
+                club's own name for a member who typed it (the default), the text as typed, or no column. A card of
+                its own under the list's switches, three native radios; the service keeps the stored mode when a
+                form carries none.
+              */}
+              <Panel level={4} static glyph="startList" title={t("editor.publicListClub")} data-testid="public-list-club">
+                <Box role="radiogroup" aria-label={t("editor.publicListClub")} data-testid="public-list-club-choices">
+                  {PUBLIC_LIST_CLUBS.map((mode) => (
+                    <RadioField key={mode} name="event.publicListClub" value={mode} defaultChecked={publicListClubOf(event) === mode}>
+                      {clubChoices[mode]}
+                    </RadioField>
+                  ))}
+                </Box>
+                <BoxNote testId="public-list-club-help">{t("editor.publicListClubHelp", { club: CLUB_NAME })}</BoxNote>
+              </Panel>
               {/*
                 «Arată public numărătoarea» (§647, §668): every number on the event's public pages — the places
                 line, the card's counts, «Cine vine»'s «(N)» — on every event, whatever the hidden list's switch
