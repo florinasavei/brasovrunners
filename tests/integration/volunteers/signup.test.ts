@@ -22,7 +22,7 @@ const RENDERED = new Date(NOW.getTime() - 60_000).toISOString();
 /**
  * §NNN — the public «Vreau să fiu voluntar» (BR-REQ-031-01 criterion 3, BR-REQ-053-01, BR-REQ-080-02):
  * the three conditions asked again at the post, the house's anti-bot gates with the form's own silence,
- * the role's capacity under its lock, one row per person per event on the canonical address, the same
+ * the role's capacity (its lock, under two real connections, is `tests/concurrency/volunteer-role.test.ts`), one row per person per event on the canonical address, the same
  * answer for a repeat, and the outbox's two messages — the person's «am primit» and each organizer's
  * notice — queued with the row in one transaction.
  */
@@ -307,7 +307,9 @@ describe("§NNN the volunteers' public sign-up", () => {
     expect(await people(other.id)).toHaveLength(60);
   });
 
-  it("lets two people take the last place at once only once: the role is locked while its people are counted", async () => {
+  // PGlite runs one transaction at a time, so this shows the count, not the lock: two connections racing for the
+  // last place are `tests/concurrency/volunteer-role.test.ts`.
+  it("answers the next post for a role filled by one post with «full», and keeps one row", async () => {
     const event = await seedEvent();
     const role = await seedRole(event.id, { needed: 1 });
     const results = await Promise.all([
