@@ -75,6 +75,8 @@ const NOT_A_BOX = new Set([
   "hiddenListCounted",
   // «Arată invitații speciali pe lista publică» (§743): the group's fourth tick.
   "hiddenListPublic",
+  // «Clubul pe lista publică» (§NNN): three radios of three valid answers, under the public list's own.
+  "publicListClub",
 ]);
 
 describe("the event form's constraints are the schema's (§315)", () => {

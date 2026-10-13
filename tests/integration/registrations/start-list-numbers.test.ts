@@ -100,7 +100,7 @@ async function createEvent(): Promise<PublicEvent> {
     { eventId: event.id, locale: "ro", slug: "cros-numere", title: "Cros" },
     { eventId: event.id, locale: "en", slug: "cross-numbers", title: "Cross" },
   ]);
-  return { id: event.id, participantListVisibility: "NAMES", waitlistPublic: true, startsAt: event.startsAt, endsAt: event.endsAt } as unknown as PublicEvent;
+  return { id: event.id, participantListVisibility: "NAMES", publicListClub: "as_typed", waitlistPublic: true, startsAt: event.startsAt, endsAt: event.endsAt } as unknown as PublicEvent;
 }
 
 async function register(

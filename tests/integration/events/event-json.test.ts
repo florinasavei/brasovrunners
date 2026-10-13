@@ -433,6 +433,28 @@ describe("import as a new event", () => {
     expect(created.dateToBeAnnounced).toBe((await reload(event.id)).dateToBeAnnounced);
   });
 
+  it("§NNN carries «Clubul pe lista publică» in the file (publicList.club); a file made before it existed imports with the default", async () => {
+    const { event } = await seedRace({ publicListClub: "hidden" }, {}, false);
+    expect((await reload(event.id)).publicListClub).toBe("hidden");
+    const file = await fileOf(event.id);
+    expect(file.event.publicList.club).toBe("hidden");
+
+    const created = await importEventAsNew(db, { actor: admin, file, fetchImpl: serving(), now: NOW });
+    expect((await reload(created.eventId)).publicListClub).toBe("hidden");
+
+    // A file written before the setting existed has no `club`: it still reads, and takes the default.
+    const old = JSON.parse(JSON.stringify(file)) as { event: { publicList: Record<string, unknown> } };
+    delete old.event.publicList.club;
+    const read = readEventFile(JSON.stringify(old));
+    if (!read.ok) throw new Error(`an older file did not read: ${read.refusal} ${read.detail ?? ""}`);
+    expect(read.file.event.publicList.club).toBe("members_only");
+    const older = await importEventAsNew(db, { actor: admin, file: read.file, fetchImpl: serving(), now: NOW });
+    expect((await reload(older.eventId)).publicListClub).toBe("members_only");
+
+    // The diff names the setting when the two sides differ in it.
+    expect(diffConfigs(read.file.event, file.event).map((change) => change.key)).toContain("publicList.club");
+  });
+
   it("keeps a design saved as the platform's own as the platform's own (null), not as an explicit copy of it", async () => {
     const { event } = await seedRace({ bibDesign: undefined }, {}, false);
     expect((await reload(event.id)).bibDesign).toBeNull();
