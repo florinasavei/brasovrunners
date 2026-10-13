@@ -14,13 +14,14 @@ import {
   type CheckpointContext,
   type CheckpointInput,
   checkpointContext,
+  CheckpointRefusal,
   clockMinutes,
   type PostedCheckpoint,
   prepareCheckpoints,
   readClockTime,
   sortedByKm,
 } from "./domain/checkpoint";
-import { type GpxProposal } from "./domain/gpx-waypoints";
+import { offerableProposals } from "./domain/gpx-waypoints";
 import { checkpointStart } from "./domain/start";
 import { loadGpxWaypoints } from "./gpx-file";
 
@@ -36,6 +37,10 @@ import { loadGpxWaypoints } from "./gpx-file";
  * the only rows removed are the ones the form marks «Scoate», the rest are updated or added, and
  * the rules (the cut-offs against each other, the count) are checked over the whole list that will
  * be there, not over the part of it this form knew.
+ *
+ * **Nothing is fetched under the event's lock** (§403): the GPX is read from the store before the
+ * transaction opens, and the transaction refuses (CONFLICT) when the route's file or typed distance
+ * moved in between — every registration for the event waits on that same row lock.
  */
 
 const toCheckpoint = (row: EventCheckpointRow): Checkpoint => ({
@@ -62,34 +67,51 @@ export async function listCheckpoints<T extends Record<string, unknown>>(db: Dat
 /** What the rules measure a checkpoint against: the event's own columns. */
 export type CheckpointEvent = {
   distanceMeters: number | null;
-  routeGpx: unknown;
   startsAt: Date;
   raceStartsAt: Date | null;
   endsAt: Date | null;
   timezone: string;
 };
 
-/** The event's start-and-length facts as the rules want them; the GPX is read only when no distance was typed. */
-export async function eventCheckpointContext(event: CheckpointEvent): Promise<CheckpointContext> {
-  const typed = event.distanceMeters && event.distanceMeters > 0 ? event.distanceMeters : null;
-  const gpxMeters = typed ? null : ((await loadGpxWaypoints(readRouteGpx(event.routeGpx)?.key))?.trackMeters ?? null);
+/** Whether the club typed a distance: then the GPX's own length is never needed. */
+export const hasTypedDistance = (event: Pick<CheckpointEvent, "distanceMeters">): boolean => event.distanceMeters !== null && event.distanceMeters > 0;
+
+/**
+ * The event's start-and-length facts as the rules want them, with the GPX's length in metres when the
+ * caller read it (`routeGpxMeters`, before any transaction) — used only when no distance was typed.
+ */
+export function eventCheckpointContext(event: CheckpointEvent, gpxMeters: number | null): CheckpointContext {
+  const typed = hasTypedDistance(event) ? event.distanceMeters : null;
   return checkpointContext({
     distanceMeters: typed,
-    gpxMeters,
+    gpxMeters: typed ? null : gpxMeters,
     start: checkpointStart(event),
     endsAt: event.endsAt,
     wallMinutesOf: (instant) => clockMinutes(toWallTimeInput(instant, event.timezone).slice(11, 16)),
   });
 }
 
+/**
+ * The length of the route's GPX in metres, read from the store — **never inside a transaction**
+ * (§403) — and only when the event has no typed distance; null when there is no file or it cannot be read.
+ */
+export async function routeGpxMeters(event: Pick<CheckpointEvent, "distanceMeters"> & { routeGpx: unknown }): Promise<number | null> {
+  if (hasTypedDistance(event)) return null;
+  return (await loadGpxWaypoints(readRouteGpx(event.routeGpx)?.key))?.trackMeters ?? null;
+}
+
+/** One proposal picked in the GPX's preview, with the names the club gave it there in both languages. */
+export type PickedProposal = { at: number; nameRo: string; nameEn: string };
+
 /** What a form posts, before it is an operation: this service validates, the action only reads fields. */
 export type CheckpointRequest =
   | { kind: "save"; eventId: string; rows: readonly PostedCheckpoint[] }
-  /** «Adaugă punctele alese» on the GPX's preview: the file the preview was made from, and which of its proposals to add. */
-  | { kind: "addFromGpx"; eventId: string; gpxKey: string; picked: readonly number[] };
+  /** «Adaugă punctele alese» on the GPX's preview: the file the preview was made from, and which of its proposals to add, named. */
+  | { kind: "addFromGpx"; eventId: string; gpxKey: string; picked: readonly PickedProposal[] };
 
 export type CheckpointResult = { changed: boolean; added: number; edited: number; removed: number };
 
+/** A saved row as the form would post it, numbered past every box a form draws (so a refusal names no box of the form). */
 const toPosted = (row: Checkpoint, index: number): PostedCheckpoint => ({
   id: row.id,
   nameRo: row.nameRo,
@@ -119,8 +141,70 @@ function sameWords(a: Omit<CheckpointInput, "id">, b: Omit<Checkpoint, "id">): b
   );
 }
 
-/** The proposals the editor may offer: placed within reach of the track, in the order along it. */
-export const offerable = (proposals: readonly GpxProposal[]): GpxProposal[] => proposals.filter((proposal) => !proposal.tooFar);
+/**
+ * The event's saved list no longer holds against the event as a save leaves it (§NNN): a moved start
+ * or gun, a shorter «Timp limită», a shorter route. The event save is refused naming «Puncte de
+ * control» and the rule's own sentence (`refusal`), so the page and the bib never publish a cut-off
+ * before the start or after the finish, nor a point past the route. `date` names another date of a
+ * series the save reached.
+ */
+export class SavedCheckpointsRefusal extends DomainError {
+  constructor(
+    readonly refusal: CheckpointRefusal,
+    readonly date: string | null,
+  ) {
+    super("VALIDATION_ERROR", `checkpoints: the event's saved checkpoints would break ${refusal.reason}`, ["checkpoints"]);
+    this.name = "SavedCheckpointsRefusal";
+  }
+}
+
+/**
+ * The event's saved checkpoints held to the card's rules against `event` — the row as a save or an
+ * import leaves it, read inside that save's transaction — or a `SavedCheckpointsRefusal`. Reads the
+ * list only; the GPX's length is the caller's, read before the transaction (`routeGpxMeters`).
+ */
+export async function assertSavedCheckpointsHold<T extends Record<string, unknown>>(
+  db: Database<T>,
+  event: CheckpointEvent & { id: string },
+  gpxMeters: number | null,
+  date: string | null = null,
+): Promise<void> {
+  const saved = await listCheckpoints(db, event.id);
+  if (saved.length === 0) return;
+  try {
+    prepareCheckpoints(
+      saved.map((row, at) => toPosted(row, 1000 + at)),
+      eventCheckpointContext(event, gpxMeters),
+    );
+  } catch (error) {
+    if (error instanceof CheckpointRefusal) throw new SavedCheckpointsRefusal(error, date);
+    throw error;
+  }
+}
+
+/**
+ * Every checkpoint of one event copied onto another (§NNN) — «Duplică» and a series' new dates: the
+ * cut-offs are times of the day, so they follow the new date. Run in the caller's transaction; no
+ * audit row of its own, the copy's own row («event.duplicated», a series' date) says it.
+ */
+export async function copyCheckpoints<T extends Record<string, unknown>>(db: Database<T>, fromEventId: string, toEventId: string, now: Date): Promise<number> {
+  const rows = await listCheckpoints(db, fromEventId);
+  for (const [position, row] of rows.entries()) {
+    await db.insert(eventCheckpoints).values({
+      eventId: toEventId,
+      position,
+      nameRo: row.nameRo,
+      nameEn: row.nameEn,
+      km: row.km.toFixed(2),
+      kinds: [...row.kinds],
+      cutoffTime: row.cutoff,
+      noteRo: row.noteRo,
+      noteEn: row.noteEn,
+      createdAt: now,
+    });
+  }
+  return rows.length;
+}
 
 /**
  * An event's whole list replaced by `rows` — already held to the rules (`prepareCheckpoints`) by the
@@ -176,8 +260,8 @@ export async function replaceCheckpoints<T extends Record<string, unknown>>(
  * One change to one event's checkpoints, by one staff member. Refuses a role that may only read the
  * list (FORBIDDEN), a row typed wrong (a `CheckpointRefusal`, a VALIDATION_ERROR naming the box and
  * carrying the sentence's own code), an event that is not there (NOT_FOUND) and a GPX that is not the
- * one the preview was made from (CONFLICT). A press that changes nothing writes nothing and records
- * nothing: the trail records changes, not presses.
+ * one the preview was made from — or a route that changed while the file was read (CONFLICT). A press
+ * that changes nothing writes nothing and records nothing: the trail records changes, not presses.
  */
 export async function changeCheckpoints<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -190,6 +274,15 @@ export async function changeCheckpoints<T extends Record<string, unknown>>(
   }
   // A forged form's malformed id is the refusal an unknown one gets, not a database error.
   if (!isUuid(request.eventId)) throw new DomainError("NOT_FOUND", "the event is not there");
+
+  // The route as it is now, and its GPX read from the store — before any lock is taken (§403).
+  const [seen] = await db.select({ distanceMeters: events.distanceMeters, routeGpx: events.routeGpx }).from(events).where(eq(events.id, request.eventId));
+  if (!seen) throw new DomainError("NOT_FOUND", "the event is not there");
+  const seenKey = readRouteGpx(seen.routeGpx)?.key ?? null;
+  if (request.kind === "addFromGpx" && (!seenKey || seenKey !== request.gpxKey)) {
+    throw new DomainError("CONFLICT", "the route's GPX changed since the preview was made");
+  }
+  const waypoints = request.kind === "addFromGpx" || !hasTypedDistance(seen) ? await loadGpxWaypoints(seenKey) : null;
 
   return db.transaction(async (tx) => {
     // The event row is locked for the change: two saves on one event take turns, each seeing the other's list.
@@ -207,6 +300,11 @@ export async function changeCheckpoints<T extends Record<string, unknown>>(
       .where(eq(events.id, request.eventId))
       .for("update");
     if (!event) throw new DomainError("NOT_FOUND", "the event is not there");
+    // The file read above is the one the event still names, and the length it was read for still applies.
+    if ((readRouteGpx(event.routeGpx)?.key ?? null) !== seenKey || event.distanceMeters !== seen.distanceMeters) {
+      throw new DomainError("CONFLICT", "the route changed while this save was being prepared");
+    }
+    const context = eventCheckpointContext(event, waypoints?.trackMeters ?? null);
 
     const current = await listCheckpoints(tx, event.id);
     const known = new Set(current.map((row) => row.id));
@@ -214,35 +312,44 @@ export async function changeCheckpoints<T extends Record<string, unknown>>(
     // The list that will be there: what the form posted, and every saved point it did not name.
     let wanted: PostedCheckpoint[];
     if (request.kind === "save") {
-      const named = new Set(request.rows.map((row) => row.id).filter((id) => id !== ""));
-      wanted = [...request.rows, ...current.filter((row) => !named.has(row.id)).map((row, at) => toPosted(row, 1000 + at))];
+      /*
+        A posted id that is not among this event's rows any more — a colleague removed the point while
+        this form was open, or the id is another event's — is dropped, never written as a new point:
+        a stale form must not bring back what somebody took off the page and the bib.
+      */
+      const posted = request.rows.filter((row) => row.id === "" || known.has(row.id));
+      const named = new Set(posted.map((row) => row.id).filter((id) => id !== ""));
+      wanted = [...posted, ...current.filter((row) => !named.has(row.id)).map((row, at) => toPosted(row, 1000 + at))];
     } else {
-      const key = readRouteGpx(event.routeGpx)?.key ?? null;
-      if (!key || key !== request.gpxKey) throw new DomainError("CONFLICT", "the route's GPX changed since the preview was made");
-      const proposals = offerable((await loadGpxWaypoints(key))?.proposals ?? []);
-      const picked = [...new Set(request.picked)].filter((at) => Number.isInteger(at) && at >= 0 && at < proposals.length);
+      const proposals = offerableProposals(waypoints?.proposals ?? [], context.routeKm).offered;
+      const seenAt = new Set<number>();
+      const picked = request.picked.filter((pick) => {
+        const fresh = Number.isInteger(pick.at) && pick.at >= 0 && pick.at < proposals.length && !seenAt.has(pick.at);
+        seenAt.add(pick.at);
+        return fresh;
+      });
       if (picked.length === 0) return { changed: false, added: 0, edited: 0, removed: 0 };
       const added: PostedCheckpoint[] = picked
-        .map((at) => proposals[at])
+        .map((pick) => ({ pick, proposal: proposals[pick.at] }))
         // A waypoint already on the list — the same words at the same kilometre — is not added twice.
-        .filter((proposal) => !current.some((row) => row.km === proposal.km && (row.nameRo === proposal.name || row.nameEn === proposal.name)))
-        .map((proposal, at) => ({
+        .filter(({ proposal }) => !current.some((row) => row.km === proposal.km && (row.nameRo === proposal.name || row.nameEn === proposal.name)))
+        // The names the club gave in the preview, one box per language: never the file's one name copied into both (§NNN).
+        .map(({ pick, proposal }) => ({
           id: "",
-          nameRo: proposal.name,
-          nameEn: proposal.name,
+          nameRo: pick.nameRo,
+          nameEn: pick.nameEn,
           km: String(proposal.km),
           kinds: proposal.kinds,
           cutoff: "",
           noteRo: "",
           noteEn: "",
           remove: false,
-          index: 2000 + at,
+          index: pick.at,
         }));
       if (added.length === 0) return { changed: false, added: 0, edited: 0, removed: 0 };
-      wanted = [...current.map(toPosted), ...added];
+      wanted = [...current.map((row, at) => toPosted(row, 1000 + at)), ...added];
     }
 
-    const context = await eventCheckpointContext(event);
     const prepared = prepareCheckpoints(wanted, context);
 
     const keptIds = new Set(prepared.map((row) => row.id).filter((id): id is string => id !== null && known.has(id)));

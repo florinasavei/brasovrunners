@@ -6,7 +6,7 @@ import { getDb } from "@/db/client";
 import { getPathname } from "@/i18n/navigation";
 import { type Locale, routing } from "@/i18n/routing";
 import { changeCheckpoints, type CheckpointRequest } from "@/modules/event-checkpoints/checkpoints";
-import { CheckpointRefusal } from "@/modules/event-checkpoints/domain/checkpoint";
+import { CheckpointRefusal, checkpointBox } from "@/modules/event-checkpoints/domain/checkpoint";
 import { postedCheckpoints } from "@/modules/event-checkpoints/posted";
 import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import { requireStaff } from "@/modules/staff-identity/session";
@@ -50,10 +50,10 @@ async function backToCard(form: FormData, saved: string): Promise<never> {
   redirect(`${path}#box-checkpoints`);
 }
 
-/** What a refused submit comes back as: the box the rule names, and the rule's own sentence with its numbers. */
+/** What a refused submit comes back as: the box the rule names, and the rule's own sentence with its names and numbers in the page's language. */
 function refusal(error: unknown, form: FormData): FormOutcome {
   const outcome = refused(error, form);
-  if (error instanceof CheckpointRefusal) return { ...outcome, error: error.reason, errorValues: error.values };
+  if (error instanceof CheckpointRefusal) return { ...outcome, error: error.reason, errorValues: error.valuesIn(localeOf(form)) };
   return outcome;
 }
 
@@ -81,10 +81,12 @@ export async function saveCheckpointsAction(_previous: FormOutcome | null, form:
 export async function addGpxCheckpointsAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   let changed: boolean;
   try {
+    // Each ticked proposal with the two names the preview's boxes hold for it (`cp[<at>].nameRo`, `cp[<at>].nameEn`).
     const picked = form
       .getAll("pick")
       .filter((value): value is string => typeof value === "string" && /^\d{1,3}$/.test(value))
-      .map(Number);
+      .map(Number)
+      .map((at) => ({ at, nameRo: field(form, checkpointBox(at, "nameRo")), nameEn: field(form, checkpointBox(at, "nameEn")) }));
     changed = (await run({ kind: "addFromGpx", eventId: eventIdOf(form), gpxKey: field(form, "gpxKey"), picked })).changed;
   } catch (error) {
     if (!isDomainError(error)) throw error;

@@ -1,4 +1,5 @@
 import Box from "@mui/material/Box";
+import Link from "@mui/material/Link";
 import Stack from "@mui/material/Stack";
 import { getLocale, getTranslations } from "next-intl/server";
 import { calendarDayWords } from "@/i18n/dates";
@@ -238,20 +239,16 @@ export default async function CourseBox({
           maxRows={4}
           {...textFieldConstraints(eventInputConstraints("routeStrava"), { spellCheck: false, autoCapitalize: "off", autoCorrect: "off" })}
         />
-        {/* «Puncte de control» (§NNN) are their own card, beside this form and not in it (HTML forms cannot nest): a
-            plain in-page link, which the browser's own hash change opens the folds around (`OpenFoldFromHash`, §336). */}
+        {/* «Puncte de control» (§NNN) are their own card, beside this form and not in it (HTML forms cannot nest): the
+            house's in-page link (MUI Link, as `MissingForPublish`), which the browser's own hash change opens the folds
+            around (`OpenFoldFromHash`, §336). */}
         {event && (
           <Box>
             <BoxNote>{t("checkpoints.courseNote")}</BoxNote>
-            <Box
-              component="a"
-              href="#box-checkpoints"
-              data-testid="course-checkpoints-link"
-              sx={{ display: "inline-flex", alignItems: "center", gap: 0.75, minHeight: 44, fontSize: "0.875rem", fontWeight: 500 }}
-            >
+            <Link href="#box-checkpoints" variant="body2" data-testid="course-checkpoints-link" sx={{ display: "inline-flex", alignItems: "center", gap: 0.75, minHeight: 44 }}>
               <CheckpointsGlyph aria-hidden fontSize="small" />
               {t("checkpoints.courseLink")}
-            </Box>
+            </Link>
           </Box>
         )}
         {routeDescription}

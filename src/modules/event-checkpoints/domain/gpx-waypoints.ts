@@ -172,3 +172,41 @@ export function parseGpxWaypoints(text: string): GpxWaypoints {
   // In the order a runner meets them; a tie keeps the file's.
   return { trackMeters, waypointCount: waypoints.length, proposals: proposals.map((p, at) => ({ p, at })).sort((a, b) => a.p.km - b.p.km || a.at - b.at).map(({ p }) => p) };
 }
+
+/**
+ * How far past the route's end a waypoint may sit and still be the finish (§NNN): a watch's track
+ * often runs a few tens of metres longer than the distance the club typed (21.13 km against 21 097 m),
+ * and the «Sosire» waypoint at its end must not refuse the whole «Adaugă punctele alese».
+ */
+export const PAST_FINISH_TOLERANCE_KM = 0.3;
+
+/** What the preview offers of a file's proposals, measured against the route's length. */
+export type OfferedProposals = {
+  /** On the track and within the route, in order along it — the indexes the form's `pick` boxes post. */
+  offered: GpxProposal[];
+  /** Farther than `MAX_OFF_TRACK_METERS` from the track. */
+  tooFar: number;
+  /** Past the route's end by more than `PAST_FINISH_TOLERANCE_KM`. */
+  beyondRoute: number;
+};
+
+/**
+ * The proposals the editor may offer for adding, given the route's length in kilometres (the typed
+ * distance, else the GPX's; null while neither is known): a waypoint off the track is left out, one
+ * just past the route's end is placed at its end (the finish, as the rules round the length up to the
+ * hundredth), one farther past it is left out — each counted, so the preview says why. One function
+ * for the page and the service, so the indexes a form posts mean the same row in both.
+ */
+export function offerableProposals(proposals: readonly GpxProposal[], routeKm: number | null): OfferedProposals {
+  const end = routeKm === null ? null : Math.ceil(routeKm * 100) / 100;
+  const offered: GpxProposal[] = [];
+  let tooFar = 0;
+  let beyondRoute = 0;
+  for (const proposal of proposals) {
+    if (proposal.tooFar) tooFar += 1;
+    else if (end === null || proposal.km <= end) offered.push(proposal);
+    else if (proposal.km <= end + PAST_FINISH_TOLERANCE_KM + 1e-9) offered.push({ ...proposal, km: end });
+    else beyondRoute += 1;
+  }
+  return { offered, tooFar, beyondRoute };
+}

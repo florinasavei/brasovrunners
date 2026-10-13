@@ -106,20 +106,43 @@ export const CHECKPOINT_REASONS = [
 ] as const;
 export type CheckpointReason = (typeof CHECKPOINT_REASONS)[number];
 
+/** A placeholder said in each language: a point's name, a kilometre with the language's decimal mark. */
+export type RefusalWords = { ro: string; en: string };
+
 /**
  * A validation error that knows which sentence of the catalogue says it and what that sentence
  * needs filled in (`{max}`, `{name}`): the action returns `reason` as the form's error code and
- * `values` as its placeholders (`FormOutcome.errorValues`), the boxes it names as its fields.
+ * `valuesIn(locale)` as its placeholders (`FormOutcome.errorValues`), the boxes it names as its
+ * fields. A point's name and a kilometre are carried in both languages, so the English backoffice
+ * names the point in English and writes «21.1», the Romanian one «21,1».
  */
 export class CheckpointRefusal extends DomainError {
+  readonly words: Readonly<Record<string, string | RefusalWords>>;
   constructor(
     readonly reason: CheckpointReason,
-    readonly values: Readonly<Record<string, string>>,
+    words: Readonly<Record<string, string | RefusalWords>>,
     fields: readonly string[],
   ) {
     super("VALIDATION_ERROR", reason, fields);
     this.name = "CheckpointRefusal";
+    this.words = words;
   }
+
+  /** The placeholders in one language. */
+  valuesIn(locale: "ro" | "en"): Record<string, string> {
+    return Object.fromEntries(Object.entries(this.words).map(([key, value]) => [key, typeof value === "string" ? value : value[locale]]));
+  }
+
+  /** The placeholders in Romanian, the platform's default language. */
+  get values(): Record<string, string> {
+    return this.valuesIn("ro");
+  }
+}
+
+/** A minute of the day as `HH:MM`, wrapping past midnight. */
+export function clockTimeOf(minutes: number): string {
+  const wrapped = ((Math.round(minutes) % 1440) + 1440) % 1440;
+  return `${String(Math.floor(wrapped / 60)).padStart(2, "0")}:${String(wrapped % 60).padStart(2, "0")}`;
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -194,10 +217,22 @@ export function checkpointContext(input: {
   wallMinutesOf: (instant: Date) => number;
 }): CheckpointContext {
   const meters = input.distanceMeters && input.distanceMeters > 0 ? input.distanceMeters : input.gpxMeters && input.gpxMeters > 0 ? input.gpxMeters : null;
-  const limit = input.start && input.endsAt ? Math.round((input.endsAt.getTime() - input.start.getTime()) / 60_000) : null;
+  const startMinutes = input.start ? input.wallMinutesOf(input.start) : null;
+  let limit: number | null = null;
+  if (input.start && input.endsAt && startMinutes !== null) {
+    const real = Math.round((input.endsAt.getTime() - input.start.getTime()) / 60_000);
+    /*
+      On the clock, not in elapsed minutes: the cut-offs are times of the day, so the end is too. On
+      the night the clocks go back (or forward) the two differ by the hour moved, and a cut-off after
+      the finish closes would otherwise pass (§NNN). The wall-clock span is the one nearest the real
+      one whose minute of the day is the end's.
+    */
+    const drift = (((input.wallMinutesOf(input.endsAt) - startMinutes - real) % 1440) + 1440 + 720) % 1440 - 720;
+    limit = real + drift;
+  }
   return {
     routeKm: meters === null ? null : meters / 1000,
-    startMinutes: input.start ? input.wallMinutesOf(input.start) : null,
+    startMinutes,
     limitMinutes: limit !== null && limit > 0 ? limit : null,
   };
 }
@@ -257,11 +292,11 @@ export function prepareCheckpoints(posted: readonly PostedCheckpoint[], context:
   if (rows.length > CHECKPOINTS_MAX) {
     throw new CheckpointRefusal("CHECKPOINT_TOO_MANY", { max: String(CHECKPOINTS_MAX) }, []);
   }
-  const prepared: (CheckpointInput & { index: number })[] = [];
+  const prepared: (CheckpointInput & { index: number; label: RefusalWords })[] = [];
   for (const row of rows) {
-    const label = oneLine(row.nameRo) || oneLine(row.nameEn) || `#${row.index + 1}`;
     const nameRo = oneLine(row.nameRo);
     const nameEn = oneLine(row.nameEn);
+    const label = labelOf(nameRo, nameEn, row.km);
     const missing = [nameRo === "" ? checkpointBox(row.index, "nameRo") : null, nameEn === "" ? checkpointBox(row.index, "nameEn") : null].filter(
       (box): box is string => box !== null,
     );
@@ -277,7 +312,7 @@ export function prepareCheckpoints(posted: readonly PostedCheckpoint[], context:
     // The route's length is said to the hundredth of a kilometre, rounded up: a distance typed in
     // metres (21 097) must not refuse the 21.10 the finish stands at.
     if (context.routeKm !== null && km > Math.ceil(context.routeKm * 100) / 100) {
-      throw new CheckpointRefusal("CHECKPOINT_KM_BEYOND_ROUTE", { name: label, km: formatKm(km), max: formatKm(context.routeKm) }, [checkpointBox(row.index, "km")]);
+      throw new CheckpointRefusal("CHECKPOINT_KM_BEYOND_ROUTE", { name: label, km: kmWords(km), max: kmWords(context.routeKm) }, [checkpointBox(row.index, "km")]);
     }
     const kinds = kindsOf(row.kinds);
     if (kinds === null) throw new CheckpointRefusal("CHECKPOINT_KIND_UNKNOWN", { name: label }, [checkpointBox(row.index, "kinds")]);
@@ -302,21 +337,22 @@ export function prepareCheckpoints(posted: readonly PostedCheckpoint[], context:
       noteRo: noteRo === "" ? null : noteRo,
       noteEn: noteEn === "" ? null : noteEn,
       index: row.index,
+      label,
     });
   }
 
   // The cut-offs, against the start, the end and each other — in the order a runner meets the points.
   const along = sortedByKm(prepared).filter((row) => row.cutoff !== null);
-  let previous: { offset: number; name: string; index: number } | null = null;
+  let previous: { offset: number; name: RefusalWords; index: number } | null = null;
   for (const row of along) {
     const cutoff = row.cutoff as string;
     const offset = cutoffOffset(cutoff, context.startMinutes, context.limitMinutes);
-    const name = row.nameRo;
+    const name = row.label;
     if (context.startMinutes !== null && offset <= 0) {
-      throw new CheckpointRefusal("CHECKPOINT_CUTOFF_BEFORE_START", { name, cutoff }, [checkpointBox(row.index, "cutoff")]);
+      throw new CheckpointRefusal("CHECKPOINT_CUTOFF_BEFORE_START", { name, cutoff, start: clockTimeOf(context.startMinutes) }, [checkpointBox(row.index, "cutoff")]);
     }
     if (context.startMinutes !== null && context.limitMinutes !== null && offset > context.limitMinutes) {
-      throw new CheckpointRefusal("CHECKPOINT_CUTOFF_AFTER_END", { name, cutoff }, [checkpointBox(row.index, "cutoff")]);
+      throw new CheckpointRefusal("CHECKPOINT_CUTOFF_AFTER_END", { name, cutoff, end: clockTimeOf(context.startMinutes + context.limitMinutes) }, [checkpointBox(row.index, "cutoff")]);
     }
     if (previous && offset < previous.offset) {
       // The earlier point's limit is later than this one's: the earlier point's box is the one linked.
@@ -336,9 +372,22 @@ export function prepareCheckpoints(posted: readonly PostedCheckpoint[], context:
   }));
 }
 
-/** A kilometre as the sentences and the page say it: up to two decimals, a comma in Romanian is the catalogue's job — digits and a point here. */
-function formatKm(km: number): string {
-  return String(Math.round(km * 100) / 100);
+/** A kilometre as each language writes it: up to two decimals, a comma in Romanian, a point in English. */
+function kmWords(km: number): RefusalWords {
+  const said = (locale: "ro" | "en") => new Intl.NumberFormat(locale, { maximumFractionDigits: 2, useGrouping: false }).format(km);
+  return { ro: said("ro"), en: said("en") };
+}
+
+/**
+ * What a refusal calls a row: its name in each language (the other language's while one is empty),
+ * else its kilometre as typed — the box the club sees beside it — else «nou», a row with neither.
+ */
+function labelOf(nameRo: string, nameEn: string, typedKm: string): RefusalWords {
+  if (nameRo !== "" || nameEn !== "") return { ro: nameRo || nameEn, en: nameEn || nameRo };
+  const km = readKm(typedKm);
+  if (km === null) return { ro: "nou", en: "new" };
+  const said = kmWords(km);
+  return { ro: `km ${said.ro}`, en: `km ${said.en}` };
 }
 
 // ---------------------------------------------------------------------------------------------

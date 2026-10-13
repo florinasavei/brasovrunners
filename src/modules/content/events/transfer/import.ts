@@ -641,6 +641,8 @@ export async function importEventOver<T extends Record<string, unknown>>(db: Dat
     scope: "this",
     // The names are the file's, exactly: an older event's English must not follow its Romanian (§362).
     placeNamesAsTyped: true,
+    // The file's list replaces the saved one below, held to the rules already; else the saved list is held to them against the file's event (§NNN).
+    checkpointsReplaced: checkpointsChanged,
     now,
     fetchImpl: input.fetchImpl,
   });

@@ -44,7 +44,7 @@ type Props = {
    * The route's GPX waypoints that can be placed on its track, or null while the file has none (or
    * is not readable): offers «Ia punctele din GPX». `key` is the file the preview is made from.
    */
-  gpx: { key: string; offered: readonly GpxProposal[]; ignored: number } | null;
+  gpx: { key: string; offered: readonly GpxProposal[]; ignored: number; beyondRoute?: number } | null;
   /** The GPX's preview is open (`?checkpointsGpx=1`). */
   previewOpen: boolean;
 };
@@ -183,12 +183,14 @@ export default async function CheckpointsCard({ locale, eventId, checkpoints, ma
         <Box component="ul" sx={{ m: 0, pl: 2.5 }} data-testid="checkpoints-read-only">
           {checkpoints.map((row) => (
             <li key={row.id}>
-              {t("checkpoints.line", {
-                km: km(row.km),
-                name: locale === "ro" ? row.nameRo : row.nameEn,
-                kinds: row.kinds.map((kind) => t(`checkpoints.kinds.${kind}`)).join(", ") || "—",
-                cutoff: row.cutoff ?? "—",
-              })}
+              {/* Only what the point has: no bare dash for no kinds, and «fără oră limită» as the public table says it. */}
+              {[
+                t("checkpoints.rowTitle", { km: km(row.km), name: locale === "ro" ? row.nameRo : row.nameEn }),
+                row.kinds.map((kind) => t(`checkpoints.kinds.${kind}`)).join(", "),
+                row.cutoff ? t("checkpoints.cutoffAside", { time: row.cutoff }) : t("checkpoints.noCutoff"),
+              ]
+                .filter((part) => part !== "")
+                .join(" · ")}
             </li>
           ))}
         </Box>
@@ -212,19 +214,40 @@ export default async function CheckpointsCard({ locale, eventId, checkpoints, ma
             </Typography>
             <Box component="ul" sx={{ listStyle: "none", m: 0, p: 0 }}>
               {gpx.offered.map((proposal, at) => (
-                <Box component="li" key={`${proposal.km}-${proposal.name}`} data-testid="checkpoints-gpx-row">
+                <Box component="li" key={`${proposal.km}-${proposal.name}`} data-testid="checkpoints-gpx-row" sx={{ py: 0.5 }}>
                   {alreadyThere(proposal) ? (
                     <Typography variant="body2" color="text.secondary" sx={{ py: 1.25 }}>
                       {t("checkpoints.gpx.already", { km: km(proposal.km), name: proposal.name })}
                     </Typography>
                   ) : (
-                    <CheckboxField name="pick" value={String(at)} defaultChecked>
-                      {t("checkpoints.gpx.row", {
-                        km: km(proposal.km),
-                        name: proposal.name,
-                        kinds: proposal.kinds.map((kind) => t(`checkpoints.kinds.${kind}`)).join(", ") || t("checkpoints.gpx.noKinds"),
-                      })}
-                    </CheckboxField>
+                    <Stack spacing={1}>
+                      <CheckboxField name="pick" value={String(at)} defaultChecked>
+                        {t("checkpoints.gpx.row", {
+                          km: km(proposal.km),
+                          name: proposal.name,
+                          kinds: proposal.kinds.map((kind) => t(`checkpoints.kinds.${kind}`)).join(", ") || t("checkpoints.gpx.noKinds"),
+                        })}
+                      </CheckboxField>
+                      {/* A name in each language (§352): the file's one name goes in the Romanian box, the English one is the club's to write. */}
+                      <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} sx={{ pl: { sm: 4 } }}>
+                        <RecallField
+                          name={checkpointBox(at, "nameRo")}
+                          label={t("checkpoints.field.nameRo")}
+                          defaultValue={proposal.name}
+                          size="small"
+                          sx={{ flex: 1 }}
+                          slotProps={{ htmlInput: { maxLength: CHECKPOINT_NAME_MAX } }}
+                        />
+                        <RecallField
+                          name={checkpointBox(at, "nameEn")}
+                          label={t("checkpoints.field.nameEn")}
+                          defaultValue=""
+                          size="small"
+                          sx={{ flex: 1 }}
+                          slotProps={{ htmlInput: { maxLength: CHECKPOINT_NAME_MAX } }}
+                        />
+                      </Stack>
+                    </Stack>
                   )}
                 </Box>
               ))}
@@ -232,6 +255,11 @@ export default async function CheckpointsCard({ locale, eventId, checkpoints, ma
             {gpx.ignored > 0 && (
               <Typography variant="caption" color="text.secondary">
                 {t(`checkpoints.gpx.ignored.${countForm(gpx.ignored, locale)}`, { count: gpx.ignored, meters: MAX_OFF_TRACK_METERS })}
+              </Typography>
+            )}
+            {(gpx.beyondRoute ?? 0) > 0 && routeKm !== null && (
+              <Typography variant="caption" color="text.secondary" data-testid="checkpoints-gpx-beyond">
+                {t(`checkpoints.gpx.beyond.${countForm(gpx.beyondRoute ?? 0, locale)}`, { count: gpx.beyondRoute ?? 0, km: km(routeKm) })}
               </Typography>
             )}
             <Stack direction="row" sx={{ flexWrap: "wrap", gap: 1 }}>
@@ -252,7 +280,7 @@ export default async function CheckpointsCard({ locale, eventId, checkpoints, ma
     ) : (
       <Box>
         <GlyphButtonLink
-          icon="download"
+          icon="template"
           href={{ pathname: "/admin/events/[id]", params: { id: eventId }, query: { checkpointsGpx: "1" }, hash: "box-checkpoints-gpx" }}
           variant="outlined"
           size="small"

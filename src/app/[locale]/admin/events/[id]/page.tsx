@@ -13,7 +13,8 @@ import { getPathname, Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { findEventForEditing, findEventTitle, listSeriesDates } from "@/modules/content/events/repository";
 import { eventPageTodos } from "@/modules/content/events/domain/page-todos";
-import { eventCheckpointContext, listCheckpoints, offerable } from "@/modules/event-checkpoints/checkpoints";
+import { eventCheckpointContext, listCheckpoints } from "@/modules/event-checkpoints/checkpoints";
+import { offerableProposals } from "@/modules/event-checkpoints/domain/gpx-waypoints";
 import { canEditCheckpoints } from "@/modules/event-checkpoints/domain/checkpoint";
 import { loadGpxWaypoints } from "@/modules/event-checkpoints/gpx-file";
 import { readRouteGpx } from "@/modules/events/domain/route-gpx";
@@ -365,12 +366,13 @@ export default async function EditEventPage({ params, searchParams }: Props) {
     role that opens the editor; the forms ask the service for the role again.
   */
   const checkpoints = await listCheckpoints(db, event.id);
-  const checkpointRouteKm = (await eventCheckpointContext(event)).routeKm;
   const gpxWaypoints = await loadGpxWaypoints(readRouteGpx(event.routeGpx)?.key);
-  const gpxOffered = gpxWaypoints ? offerable(gpxWaypoints.proposals) : [];
+  const checkpointRouteKm = eventCheckpointContext(event, gpxWaypoints?.trackMeters ?? null).routeKm;
+  // The service offers the same list by the same function, so the `pick` indexes the preview posts mean the same rows.
+  const gpxPlaced = gpxWaypoints ? offerableProposals(gpxWaypoints.proposals, checkpointRouteKm) : null;
   const checkpointsGpx =
-    gpxWaypoints && gpxOffered.length > 0
-      ? { key: readRouteGpx(event.routeGpx)?.key ?? "", offered: gpxOffered, ignored: gpxWaypoints.proposals.length - gpxOffered.length }
+    gpxPlaced && gpxPlaced.offered.length > 0
+      ? { key: readRouteGpx(event.routeGpx)?.key ?? "", offered: gpxPlaced.offered, ignored: gpxPlaced.tooFar, beyondRoute: gpxPlaced.beyondRoute }
       : null;
   // A refused one-button form's code (`?todoError=`), matched against the codes there are — a query string is typed by anybody.
   const todoErrorCode = (["FORBIDDEN", "VALIDATION_ERROR", "CONFLICT", "NOT_FOUND"] as const).find((code) => code === query.todoError);
