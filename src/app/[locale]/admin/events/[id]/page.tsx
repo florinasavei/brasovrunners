@@ -60,6 +60,7 @@ import {
   canEditTranslation,
   canManageRegistrations,
   canMessageParticipants,
+  canTransferEvents,
   canReadContent,
   canReadRegistrations,
   canManageTestRegistrations,
@@ -1303,9 +1304,15 @@ export default async function EditEventPage({ params, searchParams }: Props) {
               )}
 
               {/* 17 — commands, not edits: their own forms, outside the save; Administrator and up. */}
-              {(mayChangeSeries || canDeleteEvent(staffUser.role)) && (
+              {(mayChangeSeries || canDeleteEvent(staffUser.role) || canTransferEvents(staffUser.role)) && (
                 <Panel glyph="copy" collapsible tone="danger" id="box-copy-delete" title={t("editor.boxes.copyDelete.title")} aside={t("editor.boxes.copyDelete.summary")}>
                   <Stack direction="row" spacing={2} sx={{ flexWrap: "wrap", gap: 1 }}>
+                    {/* «Exportă evenimentul (JSON)» (§751): a plain link to the route, which asserts the role and records it. */}
+                    {canTransferEvents(staffUser.role) && (
+                      <GlyphButton icon="download" href={`/api/admin/events/${event.id}/export`} variant="outlined" size="small" sx={{ minHeight: 44 }} data-testid="event-json-export">
+                        {t("eventJson.export.button")}
+                      </GlyphButton>
+                    )}
                     {mayChangeSeries && (
                       <ActionForm
                         action={duplicateEventAction}
@@ -1345,6 +1352,11 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                   <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
                     {t("editor.deleteHelp")}
                   </Typography>
+                  {canTransferEvents(staffUser.role) && (
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                      {t("eventJson.export.help")}
+                    </Typography>
+                  )}
                 </Panel>
               )}
             </Stack>

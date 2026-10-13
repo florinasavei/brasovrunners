@@ -70,6 +70,11 @@ const WRITES: Record<string, Expected> = {
   "src/modules/content/events/service.ts#createEvent": ["events"],
   "src/modules/content/events/service.ts#createEventAndPublish": ["events"],
   "src/modules/content/events/service.ts#duplicateEvent": { nothingPublic: "a fresh draft: publication and the featured flag are never copied" },
+  // An event as a JSON file (§751): both go through the editor's own verbs, which expire; the picture copy
+  // stores objects and a row nothing names until the save that points at it.
+  "src/modules/content/events/transfer/import.ts#importEventAsNew": ["events"],
+  "src/modules/content/events/transfer/import.ts#importEventOver": ["events"],
+  "src/modules/content/events/transfer/media.ts#storeCopiedPicture": { nothingPublic: "stores a picture and its row, which no page names until the save that points at it expires the events" },
   "src/modules/content/events/service.ts#repeatEvent": ["events"],
   // «Traseul»'s GPX (§718): the stored file goes only once no event row names it, so no page links to it.
   "src/modules/content/events/route-gpx.ts#releaseRouteGpx": { nothingPublic: "deletes a stored GPX only after the save that let go of it expired the events; no event row names it" },

@@ -5,6 +5,7 @@ import {
   canEditTexts,
   canHardDeleteEvent,
   canReadRegistrations,
+  canTransferEvents,
   canTransitionEvent,
   type StaffRole,
 } from "@/modules/staff-identity/domain/roles";
@@ -41,6 +42,8 @@ export type EventListVerbs = {
   publish: boolean;
   switchSeries: boolean;
   readRegistrations: boolean;
+  /** «Importă un eveniment (JSON)» (§751): `canTransferEvents`, asserted by `exportEvent` and the imports. */
+  transfer: boolean;
 };
 
 export function eventListVerbs(role: StaffRole): EventListVerbs {
@@ -56,5 +59,6 @@ export function eventListVerbs(role: StaffRole): EventListVerbs {
     publish,
     switchSeries: create && publish,
     readRegistrations: canReadRegistrations(role),
+    transfer: canTransferEvents(role),
   };
 }
