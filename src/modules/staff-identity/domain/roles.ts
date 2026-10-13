@@ -685,7 +685,9 @@ export function canExportSponsorList(subject: StaffSubject): boolean {
  * are one set, **the Organizer, the Administrator and the Superadministrator** — whoever reads the
  * participant list (`canReadRegistrations`), written as that function so moving the line moves both.
  * The Tehnic role is out (a volunteer's address is personal data, and `DEV` never receives it, §289), and
- * so are the Redactor, the volunteer and a member. Asserted in the service, the actions and the export
+ * so are the Redactor, the desk Volunteer (`CONTRIBUTOR` — an account, not one of the event's volunteers,
+ * who have none) and a member. Unlike a registration (§289), the Organizer writes here too: a volunteer
+ * holds no place and binds no declaration. Asserted in the service, the actions and the export
  * route, never by hiding the card.
  */
 export function canManageVolunteers(subject: StaffSubject): boolean {

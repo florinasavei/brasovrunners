@@ -1,6 +1,6 @@
 import { z } from "zod";
 import type { EventVolunteerSource, EventVolunteerState } from "@/db/schema/event-volunteers";
-import { composePhone, E164_PHONE } from "@/modules/registrations/phone";
+import { E164_PHONE } from "@/modules/registrations/phone";
 import { isValidEmail } from "@/modules/participants/domain/canonical-email";
 import { refuseOneLanguage } from "@/shared/forms/both-languages";
 
@@ -97,7 +97,7 @@ export const volunteerStaffInputSchema = z.object({
     .trim()
     .max(320)
     .refine((value) => isValidEmail(value)),
-  /** E.164, composed from the country and the national number by the action (`composePhone`). */
+  /** E.164, read from what the organizer typed by the registrations' own parser (`typedPhone`, in the action). */
   phone: z.string().regex(E164_PHONE),
   note: optionalLine(VOLUNTEER_NOTE_MAX),
 });
@@ -123,19 +123,6 @@ export const volunteerPublicInputSchema = z.object({
 });
 
 export type VolunteerPublicInput = z.infer<typeof volunteerPublicInputSchema>;
-
-/**
- * A telephone number as the organizers' boxes post it (no country list there): typed with its country code
- * (`+44 7911 123456`, `0044 …`) it is that country's; typed without one it is a Romanian number, as
- * `composePhone` reads it (the trunk zero dropped). One E.164 string, or "" for what cannot be dialled — which
- * the schema then refuses on `phone`. The public form has its country box and composes through the same function.
- */
-export function composeVolunteerPhone(typed: string): string {
-  const compact = typed.replace(/[\s().-]/g, "");
-  const international = compact.startsWith("00") ? `+${compact.slice(2)}` : compact;
-  if (international.startsWith("+")) return E164_PHONE.test(international) ? international : "";
-  return composePhone("RO", typed) ?? "";
-}
 
 /** The field names a Zod refusal is about, in the form's own words (names only, never values). */
 export function refusedFields(error: z.ZodError): string[] {
@@ -182,19 +169,26 @@ export type VolunteerOfferInputs = {
   noticeDescribes: boolean;
   /** The event is neither cancelled nor over: nobody offers to help at a race that is gone. */
   eventAhead: boolean;
+  /** The event's page is published: an unpublished event has no public page to carry the form. */
+  published: boolean;
+  /** The event is for the members alone (§552): the form is public, so such a page never draws it. */
+  membersOnly: boolean;
 };
 
 /** Why the form is not offered, in the order the page checks; null when it is. */
-export type VolunteerOfferClosed = "off" | "eventOver" | "noRoleNeeds" | "noNotice";
+export type VolunteerOfferClosed = "off" | "notPublished" | "membersOnly" | "eventOver" | "noRoleNeeds" | "noNotice";
 
 /**
- * The form's conditions as one pure rule, so the page, the action and the tests read the same: the
- * event offers volunteering (a), at least one role still needs people (b), and the privacy notice in
- * force describes volunteers (c) — plus the event still being ahead. The page draws the form only when
- * this says null; the action asks it again before it keeps a name.
+ * The form's conditions as one pure rule, so the page, the action, the editor's card and the tests read the
+ * same: the event offers volunteering (a), at least one role still needs people (b), and the privacy notice
+ * in force describes volunteers (c) — plus the event being published, public (not for the members alone)
+ * and still ahead. The page draws the form only when this says null; the action asks it again before it
+ * keeps a name; the card names the first condition missing.
  */
 export function volunteerOfferClosedFor(inputs: VolunteerOfferInputs): VolunteerOfferClosed | null {
   if (!inputs.acceptsVolunteers) return "off";
+  if (!inputs.published) return "notPublished";
+  if (inputs.membersOnly) return "membersOnly";
   if (!inputs.eventAhead) return "eventOver";
   if (!someRoleNeedsPeople(inputs.standings)) return "noRoleNeeds";
   if (!inputs.noticeDescribes) return "noNotice";
@@ -204,8 +198,9 @@ export function volunteerOfferClosedFor(inputs: VolunteerOfferInputs): Volunteer
 /**
  * Which roles the page's box lists, or null for no box at all: the roles that still need people while the form
  * is open; and, when the form closed only because the last place has just gone, an empty list for a person
- * whose page is the answer to their own post («am primit», or «the role filled») — that answer is still owed to
- * them, with no form to fill. Every other closed form draws nothing.
+ * whose page is the answer to their own post — «am primit», «the role filled», or a refusal they came back to
+ * correct (invalid, captcha, limited) while the last role filled — so the box says «toate rolurile s-au umplut»
+ * rather than vanishing without a sentence. A plain visit, and every other closed form, draws nothing.
  */
 export function volunteerBoxRoles<R extends Pick<RoleStanding, "free">>(
   closed: VolunteerOfferClosed | null,
@@ -213,7 +208,7 @@ export function volunteerBoxRoles<R extends Pick<RoleStanding, "free">>(
   answer: "done" | "full" | "invalid" | "captcha" | "limited" | null,
 ): R[] | null {
   if (closed === null) return roles.filter((role) => role.free > 0);
-  return closed === "noRoleNeeds" && (answer === "done" || answer === "full") ? [] : null;
+  return closed === "noRoleNeeds" && answer !== null ? [] : null;
 }
 
 /**

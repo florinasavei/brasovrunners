@@ -2017,7 +2017,9 @@ only ones who see the names, addresses and telephone numbers.
    people the role needs, and optionally a line saying what the person does (also in both languages).
    Roles belong to **one date**: a weekly run's dates, and a copy of an event, start with none. ↑ / ↓
    set the order the page lists them in; a role with people on it — cancelled ones too — cannot be
-   deleted: move them to another role or delete them first.
+   deleted: move them to another role or delete them first. An event's volunteers are not accounts:
+   whoever works the race-day desk also needs an account on «Echipa», with the role Voluntar (§34) — the
+   staff role of the same name, which this card neither gives nor needs.
 2. **Approve the privacy notice that names volunteers** — before the form can show. `/admin/legal` →
    the «GDPR» card → «Regenerează din șablon» → confirm. Section 5 gains the volunteers' paragraph (what
    an offer keeps, why — consent for the public form, the club's legitimate interest for a person an
@@ -2029,8 +2031,8 @@ only ones who see the names, addresses and telephone numbers.
    own list on the card works without it.
 3. **Take volunteers on the page.** The same card → «Primește voluntari pe pagină». The card says in a
    line whether the form is on the page now and, if not, which of the conditions is missing: the event
-   takes volunteers, a role still needs people, the notice describes them, and the event is not
-   cancelled or over. The form is a fold, «Vreau să fiu voluntar», under the programme; it asks the name,
+   takes volunteers, the event is published and not for the members alone (the form is public), the
+   event is not cancelled or over, a role still needs people, and the notice describes them. The form is a fold, «Vreau să fiu voluntar», under the programme; it asks the name,
    the address, the telephone number, the role (only roles that still need people), an optional
    message and one consent tick, behind the same anti-bot checks as the registration form.
 4. **Answer the offers.** Each sign-up is «Înscris»; the person gets one email, «Ți-am primit oferta de

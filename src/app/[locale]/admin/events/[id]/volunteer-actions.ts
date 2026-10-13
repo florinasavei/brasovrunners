@@ -6,7 +6,7 @@ import { getDb } from "@/db/client";
 import { getPathname } from "@/i18n/navigation";
 import { type Locale, routing } from "@/i18n/routing";
 import { requireStaff } from "@/modules/staff-identity/session";
-import { composeVolunteerPhone } from "@/modules/volunteers/domain/volunteer";
+import { typedPhone } from "@/modules/registrations/answers";
 import {
   changeVolunteer,
   changeVolunteerRole,
@@ -56,9 +56,13 @@ async function backToCard(form: FormData, outcome: { saved?: string; error?: str
   redirect(`${path}${query}#box-volunteers`);
 }
 
-/** The telephone as the staff box posts it: typed with the country code, or as a Romanian number — one E.164 or nothing. */
+/**
+ * The telephone as the staff box posts it, read by the parser an Administrator's correction of a registration
+ * uses (`typedPhone`): typed with the country code, or as a Romanian number — one E.164, or what was typed for
+ * the schema to refuse on `phone`.
+ */
 function phoneOf(form: FormData): string {
-  return composeVolunteerPhone(field(form, "phone"));
+  return typedPhone(field(form, "phone").trim());
 }
 
 const staffFields = (form: FormData) => ({

@@ -4,12 +4,12 @@ import en from "../../../messages/en.json";
 import { RETENTION_PERIODS } from "@/modules/jobs/domain/retention-periods";
 import { RETENTION } from "@/modules/jobs/retention";
 import { describesVolunteers, mergeText, VOLUNTEERS_MERGE_FIELD } from "@/modules/legal-documents/domain/merge-fields";
+import { typedPhone } from "@/modules/registrations/answers";
 import { privacyNoticeEn, privacyNoticeRo } from "@/modules/legal-documents/templates/privacy-notice";
 import { DECLARATION_TOKENS } from "@/modules/legal-documents/templates/tokens";
 import { buildVolunteersCsv } from "@/modules/volunteers/csv";
 import {
   compareRoles,
-  composeVolunteerPhone,
   countsAgainstRole,
   refusedFields,
   someRoleNeedsPeople,
@@ -70,8 +70,9 @@ describe("§NNN a role as the club types it", () => {
   });
 });
 
+const staff = { roleId: ID, name: " Ana  Test ", email: " ana@example.test ", phone: "+40712345678", note: "" };
+
 describe("§NNN a person, entered by hand or offering on the page", () => {
-  const staff = { roleId: ID, name: " Ana  Test ", email: " ana@example.test ", phone: "+40712345678", note: "" };
 
   it("takes the staff's boxes: a role, a name, an address, an E.164 telephone number, an optional note", () => {
     expect(volunteerStaffInputSchema.parse(staff)).toMatchObject({ roleId: ID, name: "Ana Test", phone: "+40712345678", note: null });
@@ -108,17 +109,32 @@ describe("§NNN a person, entered by hand or offering on the page", () => {
   });
 });
 
-describe("§NNN the telephone number an organizer types", () => {
-  it("reads a number with its country code as that country's, and one without as a Romanian number", () => {
-    expect(composeVolunteerPhone("+40 712 345 678")).toBe("+40712345678");
-    expect(composeVolunteerPhone("0040712345678")).toBe("+40712345678");
-    expect(composeVolunteerPhone("+44 (7911) 123-456")).toBe("+447911123456");
-    expect(composeVolunteerPhone("0712 345 678")).toBe("+40712345678");
-    expect(composeVolunteerPhone("712345678")).toBe("+40712345678");
+describe("§NNN the telephone number an organizer types — the registrations' own parser (typedPhone)", () => {
+  // The organizers' box posts what was typed; the action reads it with `typedPhone`, the parser an
+  // Administrator's correction of a registration uses, and the schema keeps only what a phone can dial.
+  const staffWith = (typed: string) => volunteerStaffInputSchema.safeParse({ ...staff, phone: typedPhone(typed) });
+
+  it("keeps a number with its country code as that country's, and one without as a Romanian number", () => {
+    for (const [typed, kept] of [
+      ["+40 712 345 678", "+40712345678"],
+      ["0040712345678", "+40712345678"],
+      ["+44 7911 123456", "+447911123456"],
+      ["0712 345 678", "+40712345678"],
+      // An edit posts back the number as it was kept.
+      ["+40712345678", "+40712345678"],
+    ] as const) {
+      const verdict = staffWith(typed);
+      expect(verdict.success, typed).toBe(true);
+      if (verdict.success) expect(verdict.data.phone, typed).toBe(kept);
+    }
   });
 
-  it("gives nothing for what cannot be dialled, so the schema refuses it on the box", () => {
-    for (const typed of ["", "abc", "+", "+0123456", "+44", "12"]) expect(composeVolunteerPhone(typed), typed).toBe("");
+  it("refuses on the telephone box what cannot be dialled", () => {
+    for (const typed of ["", "abc", "+", "12"]) {
+      const verdict = staffWith(typed);
+      expect(verdict.success, typed).toBe(false);
+      if (!verdict.success) expect(refusedFields(verdict.error), typed).toEqual(["phone"]);
+    }
   });
 });
 
@@ -162,7 +178,7 @@ describe("§NNN how a role stands: «N din M»", () => {
 });
 
 describe("§NNN the three conditions of the public form", () => {
-  const open = { acceptsVolunteers: true, standings: [{ free: 2 }], noticeDescribes: true, eventAhead: true };
+  const open = { acceptsVolunteers: true, standings: [{ free: 2 }], noticeDescribes: true, eventAhead: true, published: true, membersOnly: false };
 
   it("is offered only when the event takes volunteers, a role still needs people and the notice describes them", () => {
     expect(volunteerOfferClosedFor(open)).toBeNull();
@@ -176,6 +192,19 @@ describe("§NNN the three conditions of the public form", () => {
     expect(volunteerOfferClosedFor({ ...open, eventAhead: false })).toBe("eventOver");
     // The tick's own refusal is named first: a form that is off says «off», not «over».
     expect(volunteerOfferClosedFor({ ...open, acceptsVolunteers: false, eventAhead: false })).toBe("off");
+  });
+
+  it("is not offered on an unpublished event, nor on one for the members alone — the card names which (the page draws no form, the service refuses)", () => {
+    expect(volunteerOfferClosedFor({ ...open, published: false })).toBe("notPublished");
+    expect(volunteerOfferClosedFor({ ...open, membersOnly: true })).toBe("membersOnly");
+    // The tick first, then the page's own state, then the rest.
+    expect(volunteerOfferClosedFor({ ...open, published: false, acceptsVolunteers: false })).toBe("off");
+    expect(volunteerOfferClosedFor({ ...open, membersOnly: true, eventAhead: false, noticeDescribes: false })).toBe("membersOnly");
+    // Every reason has its line on the card, in both languages.
+    for (const reason of ["off", "notPublished", "membersOnly", "eventOver", "noRoleNeeds", "noNotice"] as const) {
+      expect(ro.Admin.volunteers.offer.closed[reason], reason).toBeTruthy();
+      expect(en.Admin.volunteers.offer.closed[reason], reason).toBeTruthy();
+    }
   });
 
   it("calls an event ahead while it is scheduled and not past its end (or its start, with no end), and one with no date ahead", () => {
@@ -201,9 +230,13 @@ describe("§NNN the three conditions of the public form", () => {
     expect(volunteerBoxRoles("noRoleNeeds", [], "done")).toEqual([]);
     expect(volunteerBoxRoles("noRoleNeeds", [], "full")).toEqual([]);
     expect(volunteerBoxRoles("noRoleNeeds", [], null)).toBeNull();
-    expect(volunteerBoxRoles("noRoleNeeds", [], "invalid")).toBeNull();
+    // A person back to correct a refusal while the last role filled: the box stays, saying every role filled.
+    for (const answer of ["invalid", "captcha", "limited"] as const) expect(volunteerBoxRoles("noRoleNeeds", [], answer), answer).toEqual([]);
     // Any other closed form draws nothing, whatever the address asks.
-    for (const closed of ["off", "eventOver", "noNotice"] as const) expect(volunteerBoxRoles(closed, roles, "done")).toBeNull();
+    for (const closed of ["off", "notPublished", "membersOnly", "eventOver", "noNotice"] as const) {
+      expect(volunteerBoxRoles(closed, roles, "done"), closed).toBeNull();
+      expect(volunteerBoxRoles(closed, roles, "invalid"), closed).toBeNull();
+    }
   });
 });
 

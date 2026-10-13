@@ -211,6 +211,9 @@ export default async function EventDetailPage({ params, query, canEdit = false, 
           standings: roles,
           noticeDescribes: await cachedVolunteersDescribed(now),
           eventAhead: volunteerEventAhead(event, now),
+          // This page is the published, public one: the members' twin never gets here (above).
+          published: true,
+          membersOnly,
         });
         // The last place just taken — by this very person, or by someone else while they typed — still owes them
         // the answer: the box stays, with no role and no form (`volunteerBoxRoles`).

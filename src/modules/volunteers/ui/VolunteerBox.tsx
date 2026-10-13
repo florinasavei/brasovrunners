@@ -7,16 +7,16 @@ import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import { submitVolunteerAction } from "@/app/[locale]/events/[slug]/actions";
 import { countForm } from "@/i18n/count-form";
-import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { BOT_CHECK_SLOT_SX } from "@/modules/registrations/domain/turnstile-widget";
 import { phoneCountryLabels, phoneCountryOrder } from "@/modules/registrations/phone";
 import { turnstileSiteKey } from "@/modules/registrations/turnstile";
 import BotCheck from "@/modules/registrations/ui/BotCheck";
 import PhoneField from "@/modules/registrations/ui/PhoneField";
+import CheckboxField from "@/shared/ui/CheckboxField";
 import { DISCLOSURE_OPEN_ARROW, DISCLOSURE_SUMMARY_SX, FOLD_GLYPH_INLINE_SX } from "@/shared/ui/disclosure";
+import LegalLink from "@/shared/ui/LegalLink";
 import SubmitButton from "@/shared/ui/SubmitButton";
-import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { DENSITY } from "@/theme/density";
 import { VOLUNTEER_MESSAGE_MAX, VOLUNTEER_NAME_MAX } from "../domain/volunteer";
 import type { PublicVolunteerRole } from "../volunteers";
@@ -232,30 +232,25 @@ export default async function VolunteerBox({
               </Box>
             )}
 
-            {/* The consent itself: one tick, the person's own act, naming the notice it rests on. */}
-            <Box
-              component="label"
-              id={fieldId("consent")}
-              data-testid="volunteer-consent"
-              sx={{
-                display: "flex",
-                alignItems: "flex-start",
-                gap: 1.5,
-                minHeight: TAP_TARGET.minHeight,
-                py: 0.75,
-                cursor: "pointer",
-                color: invalid.has("consent") ? "error.main" : undefined,
-                "& input": { width: 22, height: 22, mt: 0.25, flexShrink: 0, accentColor: "var(--mui-palette-primary-main)" },
-              }}
-            >
-              <input type="checkbox" name="consent" required aria-invalid={invalid.has("consent") || undefined} />
-              <Box component="span">
+            {/*
+              The consent itself: one tick, the person's own act, naming the notice it rests on — the house's
+              CheckboxField (the refusal said at the box, §616) and LegalLink (the notice in a new tab, so this
+              form, which keeps nothing until it is sent, is still there when the reader comes back, §197).
+            */}
+            <Box data-testid="volunteer-consent">
+              <CheckboxField
+                name="consent"
+                id={fieldId("consent")}
+                required
+                error={invalid.has("consent") ? t("volunteers.errors.consent") : undefined}
+                requiredMessage={t("volunteers.errors.consent")}
+              >
                 {t("volunteers.consent")}{" "}
-                <Link href="/legal/privacy" style={{ textDecoration: "underline" }}>
+                <LegalLink href="/legal/privacy" newTabLabel={tForm("opensInNewTab")}>
                   {t("volunteers.privacyLinkLabel")}
-                </Link>
+                </LegalLink>
                 .
-              </Box>
+              </CheckboxField>
             </Box>
 
             <SubmitButton label={t("volunteers.submit")} pendingLabel={t("volunteers.submitting")} size="large">

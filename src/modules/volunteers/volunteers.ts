@@ -601,16 +601,17 @@ export async function submitVolunteer<T extends Record<string, unknown>>(
     .from(events)
     .where(eq(events.id, eventId))
     .limit(1);
-  if (!event || event.editorialStatus !== "PUBLISHED" || event.membersOnly) {
-    throw new DomainError("CONFLICT", "this event takes no volunteers on its page");
-  }
+  if (!event) throw new DomainError("CONFLICT", "this event takes no volunteers on its page");
   const noticeDescribes = await noticeDescribesVolunteers(db, now);
-  // Conditions (a) and (c) and the event still ahead; (b), a role that still needs people, is judged under the lock below.
+  // Conditions (a) and (c), the event published, public and still ahead — the one rule the page and the card
+  // read; (b), a role that still needs people, is judged under the lock below.
   const closed = volunteerOfferClosedFor({
     acceptsVolunteers: event.acceptsVolunteers,
     standings: [{ free: 1 }],
     noticeDescribes,
     eventAhead: volunteerEventAhead(event, now),
+    published: event.editorialStatus === "PUBLISHED",
+    membersOnly: event.membersOnly,
   });
   if (closed) throw new DomainError("CONFLICT", `the volunteer form is closed (${closed})`);
   const notice = await findCurrentApprovedDocument(db, "PRIVACY_NOTICE", input.locale, now);

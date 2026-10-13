@@ -383,6 +383,10 @@ export default async function EditEventPage({ params, searchParams }: Props) {
             standings,
             noticeDescribes: await noticeDescribesVolunteers(db, now),
             eventAhead: volunteerEventAhead(event, now),
+            // The public page draws no form on an unpublished event or one for the members alone, and the
+            // service refuses its posts: the card says so rather than promising a form that is not there.
+            published: event.editorialStatus === "PUBLISHED",
+            membersOnly: event.membersOnly,
           }),
         };
       })()

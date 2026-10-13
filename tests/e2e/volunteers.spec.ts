@@ -140,6 +140,9 @@ test.describe("§NNN volunteers for a race", () => {
       await submit.click();
       await expect(guest.getByTestId("volunteer-invalid")).toBeVisible({ timeout: 30_000 });
       await expect(guest.getByTestId("volunteer-invalid")).toContainText("Bifează căsuța de acord");
+      // The sentence is said at the box too (CheckboxField, §616), and the notice opens in a new tab (LegalLink, §197).
+      await expect(guest.getByTestId("volunteer-consent").getByTestId("checkbox-error")).toContainText("Bifează căsuța de acord");
+      await expect(guest.getByTestId("volunteer-consent").getByRole("link", { name: /nota de confidențialitate/ })).toHaveAttribute("target", "_blank");
       await expect(guest.getByLabel("Numele tău")).toHaveValue("Maria Test");
       await expect(guest.getByLabel("Adresa ta de email")).toHaveValue(maria);
 

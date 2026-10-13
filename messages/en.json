@@ -557,8 +557,8 @@
       "phoneHelp": "An organizer may ring you about the event.",
       "message": "A message for the organizers (optional)",
       "messageHelp": "At most {max} characters: when you are free, what you can do.",
-      "consent": "I agree that my name, email address and telephone number are kept to contact me about this event, as the privacy notice says.",
-      "privacyLinkLabel": "Privacy notice",
+      "consent": "I agree that the details in this form are kept to contact me about this event, as described in the",
+      "privacyLinkLabel": "privacy notice",
       "submit": "Offer to volunteer",
       "submitting": "Sending…",
       "done": "Thank you! We received your offer. An organizer will confirm it and get in touch by email or phone if anything else is needed.",
@@ -4490,6 +4490,7 @@
     "volunteers": {
       "title": "Volunteers",
       "intro": "The people who help at this event and the roles it needs them for. Roles are set here, per event, in both languages. Addresses and telephone numbers are never shown on a public page.",
+      "notAccounts": "The volunteers here are not accounts: whoever works the race-day desk gets an account on “Echipa”, with the role Voluntar.",
       "summary": "{taken} of {needed}",
       "summaryNone": "No roles yet",
       "summaryPending": "{count} to confirm",
@@ -4498,6 +4499,8 @@
         "open": "The “I want to volunteer” form is on the event's page.",
         "closed": {
           "off": "The public form is off: press “Take volunteers on the page” below for the event's page to offer it. Your own list works either way.",
+          "notPublished": "The public form is not shown: the event is not published. It appears on the page once the event is.",
+          "membersOnly": "The public form is not shown: the event is for members only, and the form is public. Your own list works either way.",
           "eventOver": "The public form is not shown: the event is cancelled or over.",
           "noRoleNeeds": "The public form is not shown: every role has all the people it needs (or there is no role yet).",
           "noNotice": "The public form is not shown: the privacy notice in force does not describe volunteers yet. /admin/tasks says what to approve."
@@ -4538,7 +4541,6 @@
         "name": "Name",
         "email": "Email address",
         "phone": "Telephone",
-        "phoneHelp": "With the country code (+40…), or a Romanian number.",
         "note": "Your note (organizers only)",
         "noteHelp": "At most {max} characters. Never shown on any public page.",
         "messageLabel": "Their message",

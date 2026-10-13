@@ -197,7 +197,7 @@ export default async function VolunteersCard({ locale, eventId, acceptsVolunteer
         name="phone"
         type="tel"
         label={t("volunteers.person.phone")}
-        helperText={t("volunteers.person.phoneHelp")}
+        helperText={t("registrations.answers.phoneHelp")}
         defaultValue={person?.phone ?? ""}
         required
         size="small"
@@ -402,6 +402,10 @@ export default async function VolunteersCard({ locale, eventId, acceptsVolunteer
         <Typography variant="body2" color="text.secondary">
           {t("volunteers.intro")}
         </Typography>
+        {/* «Voluntar» is also the desk's staff role: the card says these people are not it (BUSINESS.md, BR-BUS-060). */}
+        <Typography variant="body2" color="text.secondary" data-testid="volunteer-not-accounts">
+          {t("volunteers.notAccounts")}
+        </Typography>
         {error && <Alert severity="error">{error}</Alert>}
 
         {/* The tick, and what keeps the public form off the page: its three conditions in words. */}
@@ -436,7 +440,7 @@ export default async function VolunteersCard({ locale, eventId, acceptsVolunteer
                 {roles.map(roleRow)}
               </Stack>
             )}
-            <Panel glyph="volunteers" collapsible level={3} title={t("volunteers.role.addTitle")} data-testid="volunteer-role-add">
+            <Panel glyph="add" collapsible level={3} title={t("volunteers.role.addTitle")} data-testid="volunteer-role-add">
               <ActionForm action={addVolunteerRoleAction} scope="role-new" messages={roleBoxes}>
                 {hidden}
                 {roleFields(null)}
@@ -478,7 +482,7 @@ export default async function VolunteersCard({ locale, eventId, acceptsVolunteer
 
         {/* A person the club enters by hand: the same boxes as the public form, and the organizers' note. */}
         {roles.length > 0 && (
-          <Panel glyph="volunteers" collapsible level={3} title={t("volunteers.person.addTitle")} data-testid="volunteer-add">
+          <Panel glyph="add" collapsible level={3} title={t("volunteers.person.addTitle")} data-testid="volunteer-add">
             <ActionForm action={addVolunteerAction} scope="volunteer-new" messages={personBoxes}>
               {hidden}
               {personFields(null)}
