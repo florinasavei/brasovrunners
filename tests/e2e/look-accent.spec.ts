@@ -6,7 +6,7 @@ import { openFold } from "./support/fold";
 
 /**
  * BR-REQ-070-02, `DECISIONS.md` §723 — the new look's accent colour is the club's setting, walked as
- * the club walks it: «Setări» → «Aspect» → «Aspectul nou» → «Culoarea de accent», a preset or a
+ * the club walks it: «Setări» → «Aspect» → «Tema v2» → «Culoarea de accent», a preset or a
  * colour typed into «Personalizat», saved behind the question. A public page then wears it as MUI's
  * primary and the band's variable; the backoffice, which shares the layout, never does; a grey is
  * refused in words. The setting is switched through the screen, never written directly (that would
@@ -33,8 +33,8 @@ async function lookPanel(page: Page): Promise<Locator> {
 }
 
 async function save(page: Page, panel: Locator): Promise<void> {
-  await panel.getByRole("button", { name: "Salvează aspectul" }).click();
-  await confirmDialog(page, "Schimbi aspectul site-ului?");
+  await panel.getByRole("button", { name: "Salvează tema" }).click();
+  await confirmDialog(page, "Schimbi tema site-ului?");
 }
 
 /** The look and its accent, saved through the screen in a context of its own. */
@@ -47,7 +47,7 @@ async function setLook(browser: Browser, look: "on" | "off", accent: "pink" | "b
     await panel.getByTestId(`site-look-option-${look}`).click();
     await panel.getByTestId(`site-look-accent-option-${accent}`).click();
     await save(page, panel);
-    await expect(page.locator("#admin-alert").getByText("Aspectul site-ului a fost salvat", { exact: false })).toBeVisible();
+    await expect(page.locator("#admin-alert").getByText("Tema site-ului a fost salvată", { exact: false })).toBeVisible();
   } finally {
     await context.close();
   }
@@ -105,7 +105,7 @@ test.describe("§723 the new look's accent colour", () => {
       const [, accentInk] = shades.match(/#[0-9a-f]{6}/g) ?? [];
       expect(accentInk).toMatch(/^#[0-9a-f]{6}$/);
       await save(page, panel);
-      await expect(page.locator("#admin-alert").getByText("Aspectul site-ului a fost salvat", { exact: false })).toBeVisible();
+      await expect(page.locator("#admin-alert").getByText("Tema site-ului a fost salvată", { exact: false })).toBeVisible();
       await expect(page.getByTestId("site-look-accent-current")).toContainText("#1f6feb");
 
       // The backoffice carries the look's attribute (one layout) and none of its colours.

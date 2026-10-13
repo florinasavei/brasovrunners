@@ -14,7 +14,7 @@ import { CALENDAR_TONE_TOKENS } from "@/theme/brand-pairs";
 import { LOOK_ACCENT_TINT, UNDER_LOOK, UNDER_LOOK_DARK } from "@/theme/look";
 
 /**
- * The facelift's phase 4 — the calendar under «Aspectul nou» (`docs/REDESIGN.md`): the kind as a
+ * The facelift's phase 4 — the calendar under «Tema v2» (`docs/REDESIGN.md`): the kind as a
  * filter of the address, the three colours by kind and their tokens, the next-event panel's date,
  * the live twin for a kind, the chips as GET links that keep every other filter, the subscribe
  * box's two Outlook rows, and the page's rule that with the setting off nothing new is read or drawn.
@@ -250,7 +250,7 @@ describe("SubscribeBox", () => {
 describe("the calendar page under the look", () => {
   const page = readFileSync(path.join(ROOT, "src/app/[locale]/calendar/page.tsx"), "utf8");
 
-  it("reads the next event only while «Aspectul nou» is on", () => {
+  it("reads the next event only while «Tema v2» is on", () => {
     expect(page).toMatch(/const next = look\.on \? await readNextEvent\(/);
   });
 

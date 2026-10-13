@@ -1644,8 +1644,8 @@
       "siteTintBody": "Every public page of the site opens with the chosen background from now on, for every visitor. The dark theme and the backoffice stay as they are. You can go back to “White” at any time.",
       "siteFontSizeTitle": "Change the text size?",
       "siteFontSizeBody": "Every public page of the site now opens with its text at the chosen size, for every visitor, in both themes. The backoffice stays as it is. You can go back to «Normal» at any time.",
-      "siteLookTitle": "Change the site's look?",
-      "siteLookBody": "Every public page now opens in the chosen look, for every visitor. The backoffice, the emails and the PDFs stay as they are. You can go back to «Today's look» at any time.",
+      "siteLookTitle": "Change the site's theme?",
+      "siteLookBody": "Every public page now opens in the chosen theme, for every visitor. The backoffice, the emails and the PDFs stay as they are. You can go back to «Theme v1» at any time.",
       "homePageTitle": "Save the home page?",
       "homePageBody": "From now on the site's address opens what you chose, for every visitor: the home page or the events list. You can go back at any time.",
       "translationBudgetTitle": "Save the translation budget?",
@@ -1720,7 +1720,7 @@
       "LEGAL_TERMS_ACCEPTED": "Nothing was deleted: someone registered or signed while this version was in force. You can withdraw it instead — it stays on the record and is no longer offered.",
       "SITE_TINT_UNREADABLE": "The colour was not saved: on it, the page's text or the secondary text would have a contrast under 4.5 : 1 (level AA). Choose a lighter colour.",
       "SITE_TINT_TOO_DARK": "The colour was not saved: it is too dark for a light page, and the white cards would no longer stand out. Choose a lighter colour.",
-      "SITE_ACCENT_TOO_GREY": "The look was not saved: the accent colour is too close to grey, and the buttons and links would not stand out from the text. Choose a colour.",
+      "SITE_ACCENT_TOO_GREY": "The theme was not saved: the accent colour is too close to grey, and the buttons and links would not stand out from the text. Choose a colour.",
       "UNDER_MINIMUM_AGE": "Nothing was registered: by the birth date typed, this person is not yet {age} old on the day of the race, the minimum age for this event. Check the date with them.",
       "NEON_QUOTA_BELOW_USAGE": "The limit was not sent: it must be above what has been spent so far, or it would stop the database the moment it is saved.",
       "NEON_QUOTA_UNCONFIRMED": "Nothing changed: a new or changed limit on production needs the confirmation box ticked — when it is reached, the site stops until the next period.",
@@ -1841,10 +1841,10 @@
       "special": "A special edition",
       "specialHelp": "An edition apart, such as an anniversary or a charity run, with a badge on the card and the page. In a series, the badge stays on this date only.",
       "cover": {
-        "intro": "The event's top photo, kept for the new look; no page shows it yet. Real photos of the club only. In a series, you also choose at Save which dates get it.",
+        "intro": "The event's top photo, kept for Theme v2; no page shows it yet. Real photos of the club only. In a series, you also choose at Save which dates get it.",
         "legend": "Cover photo",
-        "help": "Once you choose the photo, you choose the part of it for the new look. It is kept when you save the event.",
-        "cropTitle": "Crop — the part for the new look",
+        "help": "Once you choose the photo, you choose the part of it for Theme v2. It is kept when you save the event.",
+        "cropTitle": "Crop — the part for Theme v2",
         "cropHelp": "It starts at the largest 16:9 rectangle. You can choose another shape or drag a rectangle over the photo.",
         "set": "chosen",
         "missing": "missing",
@@ -4813,32 +4813,32 @@
       }
     },
     "look": {
-      "title": "The new look",
-      "intro": "The public pages' new look: an accent colour beside the logo blue (pink, unless you choose another), bolder headings, rounded buttons, «Follow us» with the socials in the header.",
-      "introMore": "Off until the club approves it on QA; then it is the one-press way back. The page tint and the text size stay as you chose them, under both looks.",
+      "title": "Theme",
+      "intro": "Theme v2 of the public pages: an accent colour beside the logo blue (pink, unless you choose another), bolder headings, rounded buttons, «Follow us» with the socials in the header.",
+      "introMore": "Off until the club approves it on QA; then it is the one-press way back. The page tint and the text size stay as you chose them, under both themes.",
       "current": "Now: {look}",
       "updatedAt": "Set {when}.",
-      "legend": "The public pages' look",
+      "legend": "Theme",
       "default": "default",
-      "save": "Save the look",
+      "save": "Save the theme",
       "saving": "Saving…",
-      "saved": "The site's look was saved.",
-      "readOnly": "The Administrator chooses the look; here you see the choice in force.",
+      "saved": "The site's theme was saved.",
+      "readOnly": "The Administrator chooses the theme; here you see the choice in force.",
       "compare": "See them side by side",
       "scope": "Public pages only. The backoffice, the emails, the PDFs, the race numbers and the share pictures stay blue.",
       "choices": {
         "off": {
-          "name": "Today's look",
-          "help": "The logo blue, today's headings, today's buttons."
+          "name": "Theme v1",
+          "help": "The site as it has been: the logo blue, today's headings, today's buttons."
         },
         "on": {
-          "name": "The new look",
-          "help": "The accent colour below and Inter headings, rounded buttons with an arrow, «Follow us» and the socials in the header, both languages in the footer, the mountains at the foot of the page."
+          "name": "Theme v2",
+          "help": "The facelift: the accent colour below, Inter headings, a new header, home page and calendar."
         }
       },
       "accent": {
         "legend": "The accent colour",
-        "intro": "The colour of the buttons, the links and the bands under the new look. The logo stays blue.",
+        "intro": "The colour of the buttons, the links and the bands under Theme v2. The logo stays blue.",
         "current": "Accent colour: {accent}",
         "presets": {
           "pink": {
@@ -4847,7 +4847,7 @@
           },
           "blue": {
             "name": "Blue",
-            "help": "The club's blue, the one today's look wears."
+            "help": "The club's blue, the one Theme v1 wears."
           },
           "orange": {
             "name": "Orange",
@@ -6018,33 +6018,33 @@
     "design": {
       "title": "Design system",
       "intro": "The site's colours, type, shapes, buttons, pills and glyphs, read from the code at every render — the page cannot fall behind it. For whoever reads the club's content.",
-      "sideBySide": "Today's look and the new one are drawn side by side under «The new look», by the same components.",
+      "sideBySide": "Theme v1 and Theme v2 are drawn side by side under «Theme v2», by the same components.",
       "contents": "On this page",
       "look": {
-        "intro": "Today's look and the new one, drawn by the same components: they differ only in what the new look changes. On the site it is switched on under «Settings» → «Appearance» → «The new look».",
+        "intro": "Theme v1 and Theme v2, drawn by the same components: they differ only in what Theme v2 changes. On the site it is chosen under «Settings» → «Appearance» → «Theme».",
         "sideBySide": "Side by side",
-        "sideBySideNote": "The same code twice; only the box on the right wears the new look.",
-        "today": "Today's look",
-        "new": "The new look",
+        "sideBySideNote": "The same code twice; only the box on the right wears Theme v2.",
+        "today": "Theme v1",
+        "new": "Theme v2",
         "heading": "We run together through Brașov",
         "body": "A paragraph of the site, at the text size, with",
         "link": "a link",
         "primary": "See the runs",
         "secondary": "How it works",
         "socials": "The header's right end, on a computer:",
-        "primaryTitle": "The primary colour under the new look",
-        "primaryNote": "MUI's primary colour variables, redefined on the public pages only while the new look is on.",
+        "primaryTitle": "The primary colour under Theme v2",
+        "primaryNote": "MUI's primary colour variables, redefined on the public pages only while Theme v2 is on.",
         "variable": "Variable",
         "lightScheme": "Light theme",
         "darkScheme": "Dark theme",
         "markTitle": "The mountains",
-        "markNote": "An inline drawing under 2 KB, in the colour of the text around it: the mark at the foot of the public pages under the new look.",
+        "markNote": "An inline drawing under 2 KB, in the colour of the text around it: the mark at the foot of the public pages under Theme v2.",
         "accentsTitle": "The accent colours",
-        "accentsNote": "The club chooses it in «Settings» → «Appearance» → «The new look» → «The accent colour»: four shades, day and night; a typed colour too. The box above shows the pink.",
+        "accentsNote": "The club chooses it in «Settings» → «Appearance» → «Theme» → «The accent colour»: four shades, day and night; a typed colour too. The box above shows the pink.",
         "shade": "Shade"
       },
       "sections": {
-        "look": "The new look",
+        "look": "Theme v2",
         "colours": "Colours",
         "type": "Type",
         "shape": "Shape and shadow",
@@ -6069,9 +6069,9 @@
         "pairsDark": "Dark scheme",
         "pairsHero": "Over the featured event's gradient",
         "pairsAccent": "Over the pressed button's gradient",
-        "pairsLook": "The new look, light theme",
-        "pairsLookDark": "The new look, dark theme",
-        "pairsLookAccents": "The new look, the other accent colours (blue, orange), by day and at night",
+        "pairsLook": "Theme v2, light variant",
+        "pairsLookDark": "Theme v2, dark variant",
+        "pairsLookAccents": "Theme v2, the other accent colours (blue, orange), by day and at night",
         "sample": "Sample",
         "foreground": "Text",
         "background": "Background",
@@ -6093,7 +6093,7 @@
         "faceNames": {
           "roboto": "Roboto — body and headings",
           "inter": "Inter — the theme lab",
-          "interHeading": "Inter 800 — the new look's headings",
+          "interHeading": "Inter 800 — Theme v2's headings",
           "nunito": "Nunito — the theme lab",
           "signature": "Caveat — the declaration's signature",
           "facon": "Facón — the kit's logotype"
@@ -6102,7 +6102,7 @@
         "rolesNote": "Two roles, not one family: a club typeface changes the headings and leaves the body alone.",
         "display": "Headings (display)",
         "body": "Body (body)",
-        "lookDisplay": "Headings, the new look (lookDisplay)",
+        "lookDisplay": "Headings, Theme v2 (lookDisplay)",
         "wordmark": "Logotype (wordmark)",
         "fallback": "Fallback (fallback)"
       },
@@ -6164,8 +6164,8 @@
         "intro": "The site's components, drawn from the sample rows — the very code that draws them on the site.",
         "cards": "The listing's cards · EventCard, SeriesCard",
         "cardsNote": "A single-date event and a series; the data is made up and names nobody.",
-        "calendarLook": "The calendar, under the new look",
-        "calendarLookNote": "KindChips, the colours' legend, NextEventPanel and SubscribeBox, with made-up data, drawn under the new look.",
+        "calendarLook": "The calendar, under Theme v2",
+        "calendarLookNote": "KindChips, the colours' legend, NextEventPanel and SubscribeBox, with made-up data, drawn under Theme v2.",
         "homeTop": "Home page · Hero, RunSection",
         "homeTopNote": "The home page from sample data: the headline with its photograph (here the empty slot), then the run sections, drawn with the cards of «Alergări» (ListingCard).",
         "featured": "The featured event · featuredCard",
@@ -6194,7 +6194,7 @@
         "foldSummary": "A closed fold",
         "foldBody": "What is inside shows after a press on the bar.",
         "home": "The home page · StepsBand, WhyList, PhotoStrip, NumbersBand",
-        "homeNote": "The four sections, in the new look, with the starting words and sample figures. The strip's empty places show here only: on the site a strip without photos is not drawn."
+        "homeNote": "The four sections, in Theme v2, with the starting words and sample figures. The strip's empty places show here only: on the site a strip without photos is not drawn."
       },
       "icons": {
         "intro": "The two glyph registries, read whole; a name added there appears here.",
@@ -6226,7 +6226,7 @@
           "lightDefault": "The site starts light; dark only from the footer's button, never from the phone's setting.",
           "pageTint": "The public pages' tint is the club's setting, with a contrast guard: readable text on any tint.",
           "fontSize": "The text size on public pages is a club setting, from a bounded scale.",
-          "newLook": "The new look is drawn only under its attribute, on the public pages; off, no rule matches.",
+          "newLook": "Theme v2 is drawn only under its attribute, on the public pages; off, no rule matches.",
           "colourLiterals": "No colour written straight into code: colours come from the theme, and the exceptions sit in a list that can only shrink.",
           "iconImports": "Icons come from the registries, by name; the backoffice never imports one directly and a public page imports one file per icon, never the whole package.",
           "primitives": "A button or a pill is the house's own (GlyphButton, ButtonLink, GlyphChip, StatusChip), not a bare MUI Button, IconButton or Chip written again.",
@@ -6236,7 +6236,7 @@
       },
       "plan": {
         "intro1": "The plan's full text, in English, is kept by the dispatcher in the repository:",
-        "intro2": "The side-by-side of today's look and the new one is now at the top of the page, under «The new look».",
+        "intro2": "The side-by-side of Theme v1 and Theme v2 is now at the top of the page, under «Theme v2».",
         "decisionsTitle": "The club's decisions",
         "decisionsNote": "Twelve choices; each has the default the dispatcher builds if nobody objects.",
         "phasesTitle": "The phases",
@@ -6256,7 +6256,7 @@
           "released": "released"
         },
         "decisions": {
-          "1": { "title": "The accent colour", "default": "A hot pink beside the logo blue, or the blue, the orange or a colour the club chooses under «The new look»; emails, PDFs, race numbers and share cards stay blue." },
+          "1": { "title": "The accent colour", "default": "A hot pink beside the logo blue, or the blue, the orange or a colour the club chooses under «Theme v2»; emails, PDFs, race numbers and share cards stay blue." },
           "2": { "title": "The heading face", "default": "Inter 800 for headings, self-hosted with ș ț ă â î; the body stays Roboto." },
           "3": { "title": "A real home page", "default": "A real home page at `/ro` and `/en`, reached from the logo — never a menu entry — switchable on and off in «Aspect» → «Pagina principală»." },
           "4": { "title": "The four menu words", "default": "«Alergări», «Calendar», «Comunitatea» — a club page linking the team, the gallery, the FAQ and the members' zone — and «Despre noi»." },
@@ -6267,7 +6267,7 @@
           "9": { "title": "What «Evenimente speciale» means", "default": "Everything that is not a weekly series; the chip «Ediție specială» keeps its meaning." },
           "10": { "title": "The round arrow on cards", "default": "None: the home page shows the very cards of «Alergări», with their text door, «Descrierea completă a evenimentului»." },
           "11": { "title": "Icons", "default": "The filled Material family stays; the lighter look comes from colour, weight and spacing." },
-          "12": { "title": "How it ships", "default": "Behind one setting, «Aspectul nou»: on for QA, off on production until the club approves; the old look deleted one release after the flip." }
+          "12": { "title": "How it ships", "default": "Behind one setting, «Theme v2»: on for QA, off on production until the club approves; Theme v1 deleted one release after the flip." }
         },
         "phases": {
           "0": { "title": "Decisions and assets — no code", "gate": "The answers in writing, the photos uploaded." },
@@ -9919,7 +9919,7 @@
       "feedbackForms": "The “Tell us something” forms were saved.",
       "siteTint": "The site's background was saved.",
       "siteFontSize": "The site's text size was saved.",
-      "siteLook": "The site's look was saved.",
+      "siteLook": "The site's theme was saved.",
       "homePage": "The home page was saved.",
       "homeStrip": "The photo strip was saved.",
       "clubTodoAdded": "Added to the list.",

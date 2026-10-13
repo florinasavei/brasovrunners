@@ -58,7 +58,7 @@ const XS_DENSITY = new RegExp(`${PROP_THEN_XS}DENSITY\\.(\\w+),\\s*sm:\\s*(-?[\\
  * never excuses a literal in another.
  */
 const ALLOWED: Array<{ file: string; line: string; reason: string }> = [
-  // The facelift's phase 4: under «Aspectul nou» the chips row takes 44 pixels on a phone, and these three zeros give it back so the first week stays above the fold (§569).
+  // The facelift's phase 4: under «Tema v2» the chips row takes 44 pixels on a phone, and these three zeros give it back so the first week stays above the fold (§569).
   {
     file: "src/app/[locale]/calendar/page.tsx",
     line: "mb: { xs: 0, sm: 0.5 },",

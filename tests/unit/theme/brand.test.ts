@@ -165,7 +165,7 @@ describe("BR-REQ-070-02 the palette is readable", () => {
 });
 
 /**
- * BR-REQ-070-02 criterion 4, for «Aspectul nou» (§708): the facelift's tokens, each with its dark
+ * BR-REQ-070-02 criterion 4, for «Tema v2» (§708): the facelift's tokens, each with its dark
  * twin, and every pair the new look draws held at AA — and the pink that carries words held under
  * every page tint the club may choose, because it is never lighter than the muted ink §488 already
  * holds there.

@@ -119,7 +119,7 @@ describe("the panel offers «Eveniment special» only where it narrows", () => {
   });
 });
 
-describe("under «Aspectul nou» the calendar's chips carry the kind, so the box and the chips never contradict", () => {
+describe("under «Tema v2» the calendar's chips carry the kind, so the box and the chips never contradict", () => {
   const offer = offeredFilters(ROWS, parseListingFilter({}), facts);
 
   it("does not offer «Eveniment special» in the panel's «Tipul» under the look, and the listing's offer keeps it", () => {

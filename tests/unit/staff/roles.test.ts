@@ -628,7 +628,7 @@ describe("BR-REQ-060-01 the batch's own settings ask the right predicate (§450)
     expect(source("src/app/[locale]/admin/settings/appearance/page.tsx")).toMatch(/<SiteFontSizePanel [^>]*mayEdit=\{canManageClubSettings\(actor\.role\)\}/);
   });
 
-  it("«Aspectul nou» (§708) is a club setting: the Administrator's, form included", () => {
+  it("«Tema v2» (§708) is a club setting: the Administrator's, form included", () => {
     expect(action("src/app/[locale]/admin/settings/appearance/actions.ts", "updateSiteLookAction")).toContain("requireStaffCapability(canManageClubSettings)");
     expect(source("src/modules/appearance/site-look.ts")).toMatch(/if \(!canManageClubSettings\(actor\.role\)\)/);
     expect(source("src/app/[locale]/admin/settings/appearance/page.tsx")).toMatch(/<SiteLookPanel [^>]*mayEdit=\{canManageClubSettings\(actor\.role\)\}/);

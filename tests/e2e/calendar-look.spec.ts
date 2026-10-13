@@ -4,7 +4,7 @@ import { signIn } from "./support/featured-event";
 import { openFold } from "./support/fold";
 
 /**
- * The facelift's phase 4 — the calendar under «Aspectul nou» (`docs/REDESIGN.md`, BR-REQ-041-01,
+ * The facelift's phase 4 — the calendar under «Tema v2» (`docs/REDESIGN.md`, BR-REQ-041-01,
  * BR-REQ-070-02). The gate the plan names: at 320 px the first calendar week is above the fold, the
  * filters work with scripts off, one `h1`, 44-pixel targets, both languages. And off, nothing new is
  * drawn: no chip, no legend, no next event, no subscribe box, today's «Adaugă în calendarul tău».
@@ -22,15 +22,15 @@ async function setLook(browser: Browser, choice: "on" | "off"): Promise<void> {
     const panel = page.locator("#main").getByTestId("site-look");
     if (await panel.evaluate((element) => element.tagName === "DETAILS")) await openFold(panel);
     await panel.getByTestId(`site-look-option-${choice}`).click();
-    await panel.getByRole("button", { name: "Salvează aspectul" }).click();
-    await confirmDialog(page, "Schimbi aspectul site-ului?");
-    await expect(page.locator("#admin-alert").getByText("Aspectul site-ului a fost salvat", { exact: false })).toBeVisible();
+    await panel.getByRole("button", { name: "Salvează tema" }).click();
+    await confirmDialog(page, "Schimbi tema site-ului?");
+    await expect(page.locator("#admin-alert").getByText("Tema site-ului a fost salvată", { exact: false })).toBeVisible();
   } finally {
     await context.close();
   }
 }
 
-test.describe("phase 4: the calendar under «Aspectul nou»", () => {
+test.describe("phase 4: the calendar under «Tema v2»", () => {
   test.describe.configure({ mode: "serial" });
   test.beforeEach(() => {
     test.skip(test.info().project.name !== "desktop", "one shared platform_settings row");
@@ -141,6 +141,50 @@ test.describe("phase 4: the calendar under «Aspectul nou»", () => {
       await context.close();
       await setLook(browser, "off");
     }
+  });
+
+  /** The picker's outline box, the segmented «Lună | An» group and «Azi»: height and radius as the page computes them. */
+  const headMeasures = (page: import("@playwright/test").Page) =>
+    page.evaluate(() => {
+      const root = document.querySelector("[data-testid=calendar-period-row] .MuiOutlinedInput-root") as HTMLElement;
+      const group = document.querySelector("[data-testid=calendar-chip-row] [role=group]") as HTMLElement;
+      const today = Array.from(document.querySelectorAll("[data-testid=calendar-period-row] a")).find((a) => !a.getAttribute("aria-label")) as HTMLElement;
+      const label = document.querySelector("[data-testid=calendar-period-row] label") as HTMLElement;
+      const of = (el: HTMLElement) => ({ height: Math.round(el.getBoundingClientRect().height), radius: getComputedStyle(el).borderTopLeftRadius });
+      return { select: of(root), group: of(group), today: of(today), labelWidth: Math.round(label.getBoundingClientRect().width), head: Math.round(document.querySelector("[data-testid=calendar-period-row]")!.getBoundingClientRect().height) };
+    });
+
+  test("on: «Luna» and «Anul» are the segmented group's and «Azi»'s height and radius, the label hidden but the name kept; at 320 px the row is no taller", async ({ page, browser }) => {
+    test.slow();
+    await setLook(browser, "on");
+    try {
+      for (const viewport of [{ width: 1280, height: 900 }, { width: 320, height: 568 }]) {
+        await page.setViewportSize(viewport);
+        await page.goto("/ro/calendar");
+        const m = await headMeasures(page);
+        expect(m.select.height, `the selects stand as high as the group at ${viewport.width}`).toBe(m.group.height);
+        expect(m.select.height, "a thumb's target").toBeGreaterThanOrEqual(44);
+        expect(m.select.radius, "the group's radius").toBe(m.group.radius);
+        expect(m.today.radius, "Azi's radius").toBe(m.group.radius);
+        expect(m.labelWidth, "the label is visually hidden").toBeLessThanOrEqual(2);
+        await expect(page.getByRole("combobox", { name: "Luna" })).toBeVisible();
+        await expect(page.getByRole("combobox", { name: "Anul" })).toBeVisible();
+        if (viewport.width === 320) expect(m.head, "the period row stays one 44-pixel row").toBeLessThanOrEqual(48);
+      }
+    } finally {
+      await setLook(browser, "off");
+    }
+  });
+
+  test("off: the head is today's — outlined selects with their floating labels, 34 pixels from sm", async ({ page, browser }) => {
+    test.slow();
+    await setLook(browser, "off");
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.goto("/ro/calendar");
+    const m = await headMeasures(page);
+    expect(m.labelWidth, "the label is drawn").toBeGreaterThan(8);
+    expect(m.select.height).toBeLessThanOrEqual(36);
+    expect(m.select.radius).not.toBe(m.group.radius);
   });
 
   test("on: the next event and the subscribe box beside the month on a desktop, in both languages", async ({ page, browser }) => {
