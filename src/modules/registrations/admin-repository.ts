@@ -49,7 +49,7 @@ export type RegistrationListRow = {
   kind: RegistrationKind;
   /** «În afara locurilor» (§643): seated outside the event's places — the row's chip and the export's column. */
   outsideCapacity: boolean;
-  /** «Folosește lista de invitați speciali» of the row's event (§647): the «⋮» offers «Pune pe listă» only while it is on (§NNN). */
+  /** «Folosește lista de invitați speciali» of the row's event (§647): the «⋮» offers «Pune pe listă» only while it is on (§747). */
   eventHiddenListEnabled: boolean;
   /** Registered through an invitation by email (§737): the list marks it «Invitat». */
   invited: boolean;

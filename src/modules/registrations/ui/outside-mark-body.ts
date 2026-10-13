@@ -16,7 +16,7 @@ type OutsideMarkKey =
 
 /**
  * The body of «Pune pe lista de invitați speciali»'s question, by the row's state (§643, §648): the one
- * the registration's page and the list's «⋮» (§NNN) both show. A waiting runner, or an open offer, is
+ * the registration's page and the list's «⋮» (§747) both show. A waiting runner, or an open offer, is
  * seated now with the declaration's email; a TEST row's body names no email (§384).
  */
 export function outsideMarkBody(
@@ -36,7 +36,7 @@ export function outsideMarkBody(
 }
 
 /**
- * The whole question «Pune pe» / «Scoate de pe lista de invitați speciali» asks (§643, §648, §NNN), for
+ * The whole question «Pune pe» / «Scoate de pe lista de invitați speciali» asks (§643, §648, §747), for
  * the registration's page and the list's «⋮» alike: its title, the body by the row's state, the bold email
  * line only for a real waiting or offered row (a TEST row names none, §384), and the two buttons' words.
  */

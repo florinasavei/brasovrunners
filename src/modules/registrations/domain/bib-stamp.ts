@@ -1,7 +1,7 @@
 import { fnv1a } from "@/shared/hash";
 
 /**
- * A short, stable stamp of what a bib's picture is drawn from (§NNN, amending §735).
+ * A short, stable stamp of what a bib's picture is drawn from (§748, amending §735).
  *
  * The preview route lets the browser keep an answer for an hour, and the address used to name the
  * registration and nothing else, so a change of the event's design — «Cum arată numărul» from «1»

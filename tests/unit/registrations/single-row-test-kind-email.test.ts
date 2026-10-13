@@ -57,7 +57,7 @@ describe("§384 a TEST row's dialog names no participant email", () => {
     email line was dropped — the dialog contradicting itself. A TEST row gets a body that names none.
   */
   it("a TEST row seated outside the places is told of no email in the dialog's body either", () => {
-    // One function since §NNN: the registration's page and the list's «⋮» both call it.
+    // One function since §747: the registration's page and the list's «⋮» both call it.
     const helper = read("src/modules/registrations/ui/outside-mark-body.ts");
     expect(helper).toContain('...(seatedNow && row.kind !== "TEST" ? { email: words.emailLine } : {})');
     for (const key of ["outsideMarkBodyWaitlistedTest", "outsideMarkBodyOfferedTest"] as const) {

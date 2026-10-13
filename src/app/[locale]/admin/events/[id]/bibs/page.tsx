@@ -62,7 +62,7 @@ export default async function EventBibsPage({ params }: Props) {
     when the sheet holds one, and the grid shows the paper's order — the members' pile, then the rest.
   */
   const memberBibs = memberBibOn ? bibs.filter((bib) => bib.member).length : 0;
-  // What the pictures are drawn from, in their address: the browser keeps each an hour, so a new «Cum arată numărul» must be a new address (§NNN).
+  // What the pictures are drawn from, in their address: the browser keeps each an hour, so a new «Cum arată numărul» must be a new address (§748).
   const pictureStamp = event ? bibPictureStamp([event.design, event.bibColour, event.title, bibEventDate(event, locale), event.coHosts]) : "";
   const shown = memberBibs > 0 ? [...bibs.filter((bib) => bib.member), ...bibs.filter((bib) => !bib.member)] : bibs;
   const unverifiedHref = `${getPathname({ locale, href: "/admin/registrations" })}?${new URLSearchParams({ eventId: id, status: "CONFIRMED", memberBib: "asked" }).toString()}`;

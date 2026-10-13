@@ -8,6 +8,10 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V3.09-2026-10-13
+
+- **«Pune pe» / «Scoate de pe lista de invitați speciali» in the registrations list's «⋮»** — the registration page's verb, its question and its refusals, from the row menu; the Administrator's alone. §747.
+- **Printed race numbers with their leading zeros** — the bibs page asked each bib's picture under an address that did not change when «Cum arată numărul» did, so the browser printed the bare numbers it had kept; the address now carries what the picture is drawn from, and the sheet's PDF is tested for «001». §748.
 ## BR-V3.08-2026-10-13
 
 - **A tick to stop messages that look like spam** — «Pagini» → «Contact» → «Nu-mi trimite mesajele care par spam», off by default; ticked, a message the form marks «[posibil spam]» is not emailed (contact and «Spune-ne ceva», not the safety branch) and the card only counts how many were stopped in 30 days; nothing of the message is kept. §744.

@@ -327,7 +327,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     perPage: current.perPage,
   };
   const listQueryString = buildListHref("", listParams, {}).replace(/^\?/, "");
-  // A press on a row comes back to the row's page (§NNN), every filter kept, so the row's new chip is in view.
+  // A press on a row comes back to the row's page (§747), every filter kept, so the row's new chip is in view.
   const rowReturnQueryString = buildListHref("", listParams, { page: current.page }).replace(/^\?/, "");
   /*
     The export's query names the scope the screen resolved, never the automatic one (§312,
@@ -1765,7 +1765,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                 checkedIn: row.checkedInAt !== null,
                 // A number is printable once the registration is confirmed (§264, §548).
                 bib: { settled: row.bibNumber !== null, printed: row.bibPrintedAt !== null },
-                // The special guests list (§648, §NNN): the registration page's predicate, in `rowVerbsFor`.
+                // The special guests list (§648, §747): the registration page's predicate, in `rowVerbsFor`.
                 outside: { onList: row.outsideCapacity, enabled: row.eventHiddenListEnabled },
               });
               const hidden = (
@@ -1906,7 +1906,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
                       id={`outside-${row.id}`}
                       action={setOutsideCapacityAction}
                       hidden
-                      // The registration page's dialog, word for word (§643, §648, §NNN): one function for both screens.
+                      // The registration page's dialog, word for word (§643, §648, §747): one function for both screens.
                       confirm={outsideMarkConfirm(t, row, { cancel: words.cancel, emailLine: words.email(1) })}
                     >
                       {hidden}

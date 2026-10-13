@@ -11,7 +11,7 @@ import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-037-07 (§648, §NNN): the registrations list's «⋮» offers «Pune pe lista de invitați speciali» /
+ * BR-REQ-037-07 (§648, §747): the registrations list's «⋮» offers «Pune pe lista de invitați speciali» /
  * «Scoate de pe lista de invitați speciali» by the registration page's own predicate: the Administrator's,
  * an active row, putting on only while the event's switch is on, taking off for any row on the list. The
  * hidden form posts the same action with the page's dialog and the list's query; the Organizer sees nothing.
@@ -162,7 +162,7 @@ beforeEach(async () => {
   await resetTables(db);
 });
 
-describe("BR-REQ-037-07: the list's «⋮» and the special guests list (§NNN)", () => {
+describe("BR-REQ-037-07: the list's «⋮» and the special guests list (§747)", () => {
   it("offers «Pune pe lista…» only while the event's switch is on, and «Scoate de pe…» for a row on the list even with it off", async () => {
     const on = await createRace("Cu lista", true);
     const off = await createRace("Fara lista", false);
