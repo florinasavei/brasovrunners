@@ -2023,8 +2023,8 @@ only ones who see the names, addresses and telephone numbers.
 2. **Approve the privacy notice that names volunteers** — before the form can show. `/admin/legal` →
    the «GDPR» card → «Regenerează din șablon» → confirm. Section 5 gains the volunteers' paragraph (what
    an offer keeps, why — consent for the public form, the club's legitimate interest for a person an
-   organizer enters — who sees it) and section 7 the period: **30 days after the event's start**, then
-   the maintenance job deletes the offers. A lawyer should read both. Open the draft, fill in what is
+   organizer enters — who sees it) and section 7 the period: **30 days after the event's start** (an offer
+   entered after the start, 30 days after its entry), then the maintenance job deletes the offers. A lawyer should read both. Open the draft, fill in what is
    left, «Salvează ciorna», «Aprobă și publică». Until a notice naming `{{volunteers}}` is in force in
    **both** languages the page shows no form and a post is refused; `/admin/tasks` shows the row
    «Nota de confidențialitate: voluntarii evenimentelor» while an event ahead takes volunteers. Your

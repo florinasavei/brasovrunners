@@ -86,7 +86,8 @@ export async function registerInterestAction(form: FormData): Promise<void> {
  * «Mă ofer voluntar» (§NNN): a person's offer from an event's page. The registration form's defences —
  * Turnstile first, then the honeypot, the timing check and the throttles in the service — and one answer
  * whatever the person turned out to be: `?volunteer=1` for a new offer, a repeat and a bot's alike
- * (BR-REQ-031-01 criterion 3), so the box cannot be used to ask who volunteers.
+ * (BR-REQ-031-01 criterion 3) — the answer is the same (the count on the page is the residual
+ * `volunteers.ts` accepts and says why).
  *
  * Always a redirect back to the event's page, to the box: `invalid` (with `vfields`, the boxes to fix,
  * and what was typed in the sealed draft, never in the URL, §14.5), `captcha`, `limited` or `full` (the

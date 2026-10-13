@@ -57,8 +57,13 @@ import {
  *
  * **A repeated sign-up** (the same address for the same event, whatever the role and whatever the row's
  * state — an organizer's «Anulat» included) changes nothing, sends nothing, and gets the answer a new one
- * gets — «am primit», or «full» when the role it names has filled, judged first for everybody — so the
- * form is no oracle for who volunteers (BR-REQ-031-01 criterion 3).
+ * gets — «am primit», or «full» when the role it names has filled, judged first for everybody: the answer
+ * itself never tells a listed address from a new one (BR-REQ-031-01 criterion 3). **An accepted residual,
+ * like the registration form's places line:** a new address adds a row, so the public «mai e nevoie de N»
+ * drops by one, and a listed one does not — a stranger who posts an address and reloads the page can tell.
+ * The probe is loud (it puts a row in the person's name before the organizers and mails the person), and
+ * the throttles bound it; hiding the number would cost every visitor the one line that says how much help
+ * is still wanted.
  */
 
 // ---------------------------------------------------------------------------------------------

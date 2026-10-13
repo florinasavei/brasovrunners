@@ -62,7 +62,7 @@ export const eventVolunteerRoles = pgTable(
  * person, the role and a state. The address goes through the versioned canonicalizer (AGENTS.md
  * §10.4) and `UNIQUE (event_id, canonical_email)` is the identity — one row per person per event,
  * whoever typed it and whatever the role — so a repeated public sign-up finds the row and says the same
- * «am primit» a new one gets (no oracle, BR-REQ-031-01 criterion 3).
+ * «am primit» a new one gets (the same answer, BR-REQ-031-01 criterion 3).
  *
  * `message` is what the person wrote on the public form (at most 300 characters); `note` is the
  * organizers' own line and never leaves the backoffice. `privacy_notice_version` is the notice in force
