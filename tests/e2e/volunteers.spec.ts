@@ -244,11 +244,14 @@ test.describe("§754 volunteers for a race", () => {
     await hydrated(page);
 
     async function addByHand(name: string, email: string) {
+      // A fresh load each time: the card's folds as a person finds them after the previous press.
+      await page.goto(`/ro/admin/events/${event.id}`);
+      await hydrated(page);
       await openEditorBox(page, "Adaugă un voluntar de mână");
       const add = page.getByTestId("volunteer-add");
-      await add.getByLabel("Nume", { exact: true }).fill(name);
-      await add.getByLabel("Adresa de email", { exact: true }).fill(email);
-      await add.getByLabel("Telefon", { exact: true }).fill("0712 345 678");
+      await add.getByRole("textbox", { name: "Nume", exact: true }).fill(name);
+      await add.getByRole("textbox", { name: "Adresa de email", exact: true }).fill(email);
+      await add.getByRole("textbox", { name: "Telefon", exact: true }).fill("0712 345 678");
       await add.getByRole("button", { name: "Adaugă voluntarul", exact: true }).click();
       await page.waitForURL(/#box-volunteers$/);
       await hydrated(page);
