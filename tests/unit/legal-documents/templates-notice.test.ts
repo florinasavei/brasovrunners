@@ -183,6 +183,10 @@ describe("§639 whom the email asks a lawyer to read", () => {
     expect(lawyerReads("en", ["TERMS", "EVENT_DECLARATION"])).toBe("Before approving, a lawyer should read the declarations and the terms.");
     expect(lawyerReads("ro", ["PRIVACY_NOTICE", "TERMS"])).toBe("Înainte de aprobare, un jurist ar trebui să citească textele schimbate, mai ales termenii.");
     expect(lawyerReads("en", ["PRIVACY_NOTICE", "EVENT_DECLARATION", "TERMS"])).toBe("Before approving, a lawyer should read the changed texts, above all the declarations and the terms.");
+    // The volunteer agreement (§NNN) is named as itself, never as a declaration.
+    expect(lawyerReads("ro", ["VOLUNTEER_AGREEMENT"])).toBe("Înainte de aprobare, un jurist ar trebui să citească contractul de voluntariat.");
+    expect(lawyerReads("en", ["EVENT_DECLARATION", "TERMS", "VOLUNTEER_AGREEMENT"])).toBe("Before approving, a lawyer should read the declarations, the terms and the volunteer agreement.");
+    expect(lawyerReads("ro", ["PRIVACY_NOTICE", "VOLUNTEER_AGREEMENT"])).toBe("Înainte de aprobare, un jurist ar trebui să citească textele schimbate, mai ales contractul de voluntariat.");
     // A key the catalogue does not know is ignored, as on the bold line; no section of any text is named.
     expect(lawyerReads("ro", ["NOT_A_TEXT"])).toBe("Înainte de aprobare, un jurist ar trebui să citească textele schimbate.");
     for (const locale of ["ro", "en"] as const) {

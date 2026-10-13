@@ -1423,12 +1423,15 @@ function legalTemplatesFacts(locale: EmailLocale, d: TemplateData): TemplateCont
  */
 export function lawyerReads(locale: EmailLocale, keys: readonly string[]): string {
   const moved = LEGAL_DOCUMENT_KEYS.filter((key) => keys.includes(key));
-  const declarations = moved.some((key) => key !== "TERMS" && key !== "PRIVACY_NOTICE");
+  const declarations = moved.some((key) => key !== "TERMS" && key !== "PRIVACY_NOTICE" && key !== "VOLUNTEER_AGREEMENT");
   const terms = moved.includes("TERMS");
+  // The volunteer agreement (§NNN) is a contract, not a declaration: named as itself, for the lawyer to read too.
+  const agreement = moved.includes("VOLUNTEER_AGREEMENT");
   const words = locale === "ro"
-    ? { declarations: "declarațiile", terms: "termenii", and: " și ", changed: "textele schimbate", first: "mai ales", lead: "Înainte de aprobare, un jurist ar trebui să citească" }
-    : { declarations: "the declarations", terms: "the terms", and: " and ", changed: "the changed texts", first: "above all", lead: "Before approving, a lawyer should read" };
-  const named = [declarations ? words.declarations : null, terms ? words.terms : null].filter((w): w is string => w !== null).join(words.and);
+    ? { declarations: "declarațiile", terms: "termenii", agreement: "contractul de voluntariat", and: " și ", changed: "textele schimbate", first: "mai ales", lead: "Înainte de aprobare, un jurist ar trebui să citească" }
+    : { declarations: "the declarations", terms: "the terms", agreement: "the volunteer agreement", and: " and ", changed: "the changed texts", first: "above all", lead: "Before approving, a lawyer should read" };
+  const items = [declarations ? words.declarations : null, terms ? words.terms : null, agreement ? words.agreement : null].filter((w): w is string => w !== null);
+  const named = items.length <= 2 ? items.join(words.and) : `${items.slice(0, -1).join(", ")}${words.and}${items[items.length - 1]}`;
   const nothingElse = moved.every((key) => key !== "PRIVACY_NOTICE");
   if (!named) return `${words.lead} ${words.changed}.`;
   if (nothingElse) return `${words.lead} ${named}.`;
