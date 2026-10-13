@@ -76,7 +76,7 @@ export default async function VolunteerAgreementLinkPage({ params, searchParams 
           <Typography>{t("agreement.intro", { name: view.name, event: view.eventTitle, role: view.roleName })}</Typography>
 
           {/* The text in force, filled for this person; the moment of acceptance stays a blank until it happens. */}
-          <Box component="section" aria-label={view.document.title} sx={{ border: 1, borderColor: "divider", borderRadius: 2, p: { xs: 2, sm: 3 } }} data-testid="volunteer-agreement-text">
+          <Box component="section" aria-label={view.document.title} sx={{ border: 1, borderColor: "divider", borderRadius: 2, p: 2 }} data-testid="volunteer-agreement-text">
             <Typography component="h2" variant="h2" sx={{ fontSize: "1.25rem" }} gutterBottom>
               {view.document.title}
             </Typography>
