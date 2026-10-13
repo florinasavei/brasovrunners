@@ -68,7 +68,16 @@ function sampleConfig(): EventConfig {
       coordinates: { latitude: 45.6, longitude: 25.58 },
     },
     weather: { mode: "forecast" },
-    route: { url: null, maps: [{ provider: "garmin", id: "987654321" }], gpx: { name: "traseu.gpx", url: GPX } },
+    route: {
+      url: null,
+      maps: [{ provider: "garmin", id: "987654321" }],
+      gpx: { name: "traseu.gpx", url: GPX },
+      // The route's checkpoints (§NNN): one with a cut-off and a note, one without either.
+      checkpoints: [
+        { km: 7.5, name: { ro: "Apă la cabană", en: "Water at the hut" }, kinds: ["WATER", "FOOD"], cutoff: "10:45", note: { ro: "Și banane", en: "Bananas too" } },
+        { km: 15, name: { ro: "Cronometrare", en: "Timing" }, kinds: ["TIMING"], cutoff: null, note: { ro: null, en: null } },
+      ],
+    },
     links: [],
     partners: [],
     stravaEventUrl: null,

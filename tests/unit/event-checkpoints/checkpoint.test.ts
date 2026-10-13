@@ -233,6 +233,7 @@ describe("§NNN what the event says the points are measured against", () => {
 
   it("gives the finish row its limit on the event's own clock, and the route's length when typed", () => {
     const event = {
+      type: "RACE",
       startsAt: new Date("2026-11-21T07:00:00Z"), // 09:00 in Bucharest
       raceStartsAt: null,
       endsAt: new Date("2026-11-21T10:00:00Z"), // 12:00
@@ -242,6 +243,9 @@ describe("§NNN what the event says the points are measured against", () => {
     expect(checkpointFinish(event)).toEqual({ km: 21.1, limit: "12:00" });
     expect(checkpointFinish({ ...event, endsAt: null, distanceMeters: null })).toEqual({ km: null, limit: null });
     expect(checkpointFinish({ ...event, endsAt: new Date("2026-11-21T06:00:00Z") }).limit).toBeNull();
+    // Only a race closes its finish: a group run's end is when it ends, no limit — no finish row.
+    expect(checkpointFinish({ ...event, type: "GROUP_RUN" })).toEqual({ km: 21.1, limit: null });
+    expect(checkpointFinish({ ...event, type: "HIKE" }).limit).toBeNull();
   });
 });
 
@@ -286,7 +290,7 @@ describe("§NNN the picture stamp covers the checkpoints", () => {
     expect(checkpointsStampPart([{ ...base, kinds: ["WATER", "FOOD"] }])).not.toBe(stamp);
     expect(checkpointsStampPart([{ ...base, cutoff: "10:05" }])).not.toBe(stamp);
     expect(checkpointsStampPart([{ ...base, cutoff: null }])).not.toBe(stamp);
-    expect(checkpointsStampPart([{ ...base, nameRo: "Alt nume", id: "b" }])).toBe(stamp);
+    expect(checkpointsStampPart([{ ...base, nameRo: "Alt nume", id: "b" } as Checkpoint])).toBe(stamp);
     expect(checkpointsStampPart([])).toBe("");
   });
 

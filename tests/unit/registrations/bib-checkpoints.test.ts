@@ -5,11 +5,19 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const stored = vi.hoisted(() => ({ get: vi.fn() }));
 vi.mock("@/modules/media/storage", () => ({ getStorage: () => ({ get: stored.get }) }));
 vi.mock("next-intl/server", () => ({
-  getTranslations: async () => (key: string, values?: { km?: string; m?: string }) => `${key}${values?.km ?? values?.m ?? ""}`,
+  getTranslations: async () => (key: string, values?: { km?: string; m?: string; time?: string }) =>
+    key === "bibs.checkpointKm" ? `km ${values?.km}` : key === "bibs.checkpointKmTime" ? `km ${values?.km} · ${values?.time}` : `${key}${values?.km ?? values?.m ?? ""}`,
 }));
 
-import { type BibDesign, DEFAULT_BIB_DESIGN } from "@/modules/registrations/bib-design";
-import { bibCheckpointMarks, profileHeightAt } from "@/modules/registrations/bib-checkpoints";
+import { type BibDesign, bibDesignSchema, DEFAULT_BIB_DESIGN } from "@/modules/registrations/bib-design";
+import {
+  type BibCheckpointSource,
+  bibCheckpointMarks,
+  bibLabelWidth,
+  checkpointGlyph,
+  checkpointGlyphLines,
+  profileHeightAt,
+} from "@/modules/registrations/bib-checkpoints";
 import { bibNeedsCheckpoints, clearBibProfileCache, loadBibExtras } from "@/modules/registrations/bib-extras";
 import { BIB_LAYOUT } from "@/modules/registrations/bib-geometry";
 import { renderBibImage } from "@/modules/registrations/bib-image";
@@ -18,28 +26,31 @@ import { renderBibSheet } from "@/modules/registrations/bibs-pdf";
 import { drawnRuns } from "../../helpers/pdf-drawn";
 
 /**
- * §NNN, BR-REQ-011-01 — the route's checkpoints on the bib's profile strip: where each mark stands,
- * which cut-offs are written, and the crowding rule (the times go first, all of them, before a mark
- * does; a mark too close to the one before it is not drawn). The sheet through what pdfkit is asked to
- * draw, the picture through its pixels; both from the one answer `bibCheckpointMarks` gives.
+ * §NNN (amending §750), BR-REQ-011-01 — the route's checkpoints on the bib's profile strip: where each
+ * mark stands, an aid station's glyph (a cup for water, a fork for food) and every other point's dot,
+ * the words under the ticks («km 12», «km 12 · 11:30» with the second tick), and the crowding rule —
+ * the times go first, all of them; then the kilometres that do not fit; the marks stay (a mark too
+ * close to the one before it gives way, to an aid station first). The sheet through what pdfkit is
+ * asked to draw, the picture through its pixels; both from the one answer `bibCheckpointMarks` gives.
  */
 
-/** A flat-ish profile: 64 points rising and falling, so a mark's height is easy to check. */
+/** A profile rising to the middle and falling, so a mark's height is easy to check. */
 const POINTS = Array.from({ length: 64 }, (_, i) => [i / 63, i <= 31 ? i / 31 : 1 - (i - 31) / 32] as const);
 
-const base = { routeKm: 21.1, points: POINTS, startWord: "Start", finishWord: "Sosire" };
-const at = (km: number, cutoff: string | null = null) => ({ km, cutoff });
+const label = (row: BibCheckpointSource, withTime: boolean) => (withTime && row.cutoff ? `km ${row.km} · ${row.cutoff}` : `km ${row.km}`);
+const base = { routeKm: 21.1, points: POINTS, startWord: "Start", finishWord: "Sosire", showTimes: false, label };
+const at = (km: number, cutoff: string | null = null, kinds: readonly string[] = []): BibCheckpointSource => ({ km, cutoff, kinds });
+const width = BIB_LAYOUT.profileChartWidth;
+/** The kilometre `points` points along the strip of a 21.1 km route. */
+const kmAt = (points: number) => (points / width) * 21.1;
 
 describe("§NNN the marks on the strip", () => {
   it("places each point by its share of the route's distance, on the profile's own line", () => {
-    const drawing = bibCheckpointMarks({ ...base, checkpoints: [at(5, "09:45"), at(10.55, "10:30")] })!;
+    const drawing = bibCheckpointMarks({ ...base, checkpoints: [at(5), at(10.55)] })!;
     expect(drawing.marks).toHaveLength(2);
     expect(drawing.marks[0].x).toBeCloseTo(5 / 21.1, 3);
     expect(drawing.marks[1].x).toBeCloseTo(0.5, 3);
-    // The line's height at that share, from the points the strip draws.
     expect(drawing.marks[1].y).toBeCloseTo(profileHeightAt(POINTS, 0.5), 3);
-    expect(drawing.marks.map((m) => m.time)).toEqual(["09:45", "10:30"]);
-    expect(drawing.timesShown).toBe(true);
   });
 
   it("draws nothing without a route to place them by, or when none is within it", () => {
@@ -50,70 +61,132 @@ describe("§NNN the marks on the strip", () => {
   });
 
   it("drops a point beyond the printed distance and keeps the rest", () => {
-    const drawing = bibCheckpointMarks({ ...base, checkpoints: [at(5), at(22)] })!;
-    expect(drawing.marks).toHaveLength(1);
+    expect(bibCheckpointMarks({ ...base, checkpoints: [at(5), at(22)] })!.marks).toHaveLength(1);
   });
 
   it("reads the points in distance order whatever order they come in", () => {
-    const drawing = bibCheckpointMarks({ ...base, checkpoints: [at(15, "11:00"), at(5, "09:45")] })!;
-    expect(drawing.marks.map((m) => m.time)).toEqual(["09:45", "11:00"]);
-  });
-
-  it("writes no time for a point that has no cut-off, and the others' times still fit", () => {
-    const drawing = bibCheckpointMarks({ ...base, checkpoints: [at(5), at(12, "10:30")] })!;
-    expect(drawing.marks.map((m) => m.time)).toEqual([null, "10:30"]);
-    expect(drawing.timesShown).toBe(true);
-  });
-
-  it("has no times at all while no point has a cut-off, and keeps the marks", () => {
-    const drawing = bibCheckpointMarks({ ...base, checkpoints: [at(5), at(12)] })!;
-    expect(drawing.timesShown).toBe(false);
-    expect(drawing.marks).toHaveLength(2);
+    const drawing = bibCheckpointMarks({ ...base, checkpoints: [at(15), at(5)] })!;
+    expect(drawing.marks.map((m) => m.label)).toEqual(["km 5", "km 15"]);
   });
 });
 
-describe("§NNN the crowding rule", () => {
-  const width = BIB_LAYOUT.profileChartWidth;
+describe("§NNN an aid station is a glyph, every other point a dot", () => {
+  it("gives water a cup, food alone a fork, and first aid, timing or nothing a dot", () => {
+    expect(checkpointGlyph(["WATER"])).toBe("water");
+    expect(checkpointGlyph(["WATER", "FOOD"])).toBe("water");
+    expect(checkpointGlyph(["FOOD"])).toBe("food");
+    expect(checkpointGlyph(["FOOD", "FIRST_AID"])).toBe("food");
+    expect(checkpointGlyph(["FIRST_AID", "TIMING"])).toBeNull();
+    expect(checkpointGlyph([])).toBeNull();
+  });
 
-  it("drops every time, not one, when one cut-off has no room next to the next — the marks stay", () => {
-    // Two points 8 points apart on the strip: marks 4 or more apart stay, their times (about 20 wide) collide.
-    const km = (points: number) => (points / width) * 21.1;
-    const drawing = bibCheckpointMarks({ ...base, checkpoints: [at(5, "09:45"), at(5 + km(8), "09:50"), at(15, "11:00")] })!;
-    expect(drawing.marks).toHaveLength(3);
+  it("draws the glyphs inside their box", () => {
+    for (const glyph of ["water", "food"] as const) {
+      for (const stroke of checkpointGlyphLines(glyph)) {
+        for (const [x, y] of stroke) {
+          expect(Math.abs(x)).toBeLessThanOrEqual(BIB_LAYOUT.checkpointGlyphWidth / 2 + 1e-9);
+          expect(Math.abs(y)).toBeLessThanOrEqual(BIB_LAYOUT.checkpointGlyphHeight / 2 + 1e-9);
+        }
+      }
+    }
+  });
+
+  it("stands the glyph above the line, and under it where the line runs too high — never out of the chart", () => {
+    const drawing = bibCheckpointMarks({ ...base, checkpoints: [at(1, null, ["WATER"]), at(10.55, null, ["FOOD"]), at(15, null, ["TIMING"])] })!;
+    const [low, top, dot] = drawing.marks;
+    const lineY = (y: number) => (1 - y) * BIB_LAYOUT.profileChartHeight;
+    // Low on the profile: the cup stands above the line.
+    expect(low.glyph).toBe("water");
+    expect(low.glyphY!).toBeLessThan(lineY(low.y));
+    // At the profile's top: the fork goes under the line, and the tick starts under the fork.
+    expect(top.glyph).toBe("food");
+    expect(top.glyphY!).toBeGreaterThan(lineY(top.y));
+    expect(top.tickFrom).toBeGreaterThan(top.glyphY!);
+    for (const mark of [low, top]) {
+      expect(mark.glyphY! - BIB_LAYOUT.checkpointGlyphHeight / 2).toBeGreaterThanOrEqual(-1e-9);
+      expect(mark.glyphY! + BIB_LAYOUT.checkpointGlyphHeight / 2).toBeLessThanOrEqual(BIB_LAYOUT.profileChartHeight + 1e-9);
+    }
+    // Timing: a dot, no glyph, its tick from the line.
+    expect(dot.glyph).toBeNull();
+    expect(dot.glyphY).toBeNull();
+    expect(dot.tickFrom).toBeCloseTo(lineY(dot.y) + BIB_LAYOUT.checkpointDot, 2);
+  });
+
+  it("keeps the aid station when two marks stand too close, whichever comes first", () => {
+    const close = kmAt(BIB_LAYOUT.checkpointMinGap - 1);
+    const timingFirst = bibCheckpointMarks({ ...base, checkpoints: [at(5, null, ["TIMING"]), at(5 + close, null, ["WATER"])] })!;
+    expect(timingFirst.marks).toHaveLength(1);
+    expect(timingFirst.marks[0].glyph).toBe("water");
+    const waterFirst = bibCheckpointMarks({ ...base, checkpoints: [at(5, null, ["WATER"]), at(5 + close, null, ["TIMING"])] })!;
+    expect(waterFirst.marks).toHaveLength(1);
+    expect(waterFirst.marks[0].glyph).toBe("water");
+  });
+});
+
+describe("§NNN the words under the ticks, and the crowding rule", () => {
+  it("says «km» under each point, and the cut-off beside it only with the second tick", () => {
+    const checkpoints = [at(5, "09:45"), at(12, "10:30"), at(16)];
+    expect(bibCheckpointMarks({ ...base, checkpoints })!.marks.map((m) => m.label)).toEqual(["km 5", "km 12", "km 16"]);
+    const timed = bibCheckpointMarks({ ...base, showTimes: true, checkpoints })!;
+    expect(timed.timesShown).toBe(true);
+    expect(timed.marks.map((m) => m.label)).toEqual(["km 5 · 09:45", "km 12 · 10:30", "km 16"]);
+  });
+
+  it("has no times while no point has a cut-off, even with the tick", () => {
+    const drawing = bibCheckpointMarks({ ...base, showTimes: true, checkpoints: [at(5), at(12)] })!;
     expect(drawing.timesShown).toBe(false);
-    expect(drawing.marks.every((m) => m.time === null)).toBe(true);
+    expect(drawing.marks.map((m) => m.label)).toEqual(["km 5", "km 12"]);
   });
 
-  it("keeps the first of two marks closer than the minimum gap, with its time, and draws the second not at all", () => {
-    const km = (points: number) => (points / width) * 21.1;
-    const drawing = bibCheckpointMarks({ ...base, checkpoints: [at(5, "09:45"), at(5 + km(BIB_LAYOUT.checkpointMinGap - 1), "09:46")] })!;
-    expect(drawing.marks).toHaveLength(1);
-    expect(drawing.marks[0].time).toBe("09:45");
+  it("drops every time, not one, when one label with its time has no room — and keeps the kilometres that fit", () => {
+    // About 40 points apart: «km 5 · 09:45» (about 47 points wide) collides with the next; «km 5» (about 16) does not.
+    const checkpoints = [at(5, "09:45"), at(7.25, "09:55"), at(15, "11:00")];
+    const drawing = bibCheckpointMarks({ ...base, showTimes: true, checkpoints })!;
+    expect(drawing.timesShown).toBe(false);
+    expect(drawing.marks).toHaveLength(3);
+    expect(drawing.marks.every((m) => m.label === null || !m.label.includes("·"))).toBe(true);
+    expect(drawing.marks.map((m) => m.label)).toEqual(["km 5", "km 7.25", "km 15"]);
   });
 
-  it("takes the times away when one would sit over «Start» or «Sosire»", () => {
-    // Kilometre 0 is the strip's left end, where «Start» is; the last kilometre is where «Sosire» is.
-    expect(bibCheckpointMarks({ ...base, checkpoints: [at(0, "09:00"), at(10, "10:00")] })!.timesShown).toBe(false);
-    expect(bibCheckpointMarks({ ...base, checkpoints: [at(10, "10:00"), at(21, "12:00")] })!.timesShown).toBe(false);
-    expect(bibCheckpointMarks({ ...base, checkpoints: [at(10, "10:00")] })!.timesShown).toBe(true);
+  it("then leaves out a kilometre that would touch the one kept before it, and keeps the mark", () => {
+    // 15 points apart: both marks stay (more than the minimum gap), the second's «km» would touch the first's.
+    const near = Math.round((5 + kmAt(15)) * 100) / 100;
+    const drawing = bibCheckpointMarks({ ...base, checkpoints: [at(5), at(near), at(15)] })!;
+    expect(drawing.marks).toHaveLength(3);
+    expect(drawing.marks.map((m) => m.label)).toEqual(["km 5", null, "km 15"]);
   });
 
-  it("fits the times of a dozen evenly spread points and none of thirty", () => {
-    // From kilometre 3 to 18 of 21.1, clear of the words at the two ends: 12 points are about 25 points apart, 30 about 10.
-    const spread = (count: number) => Array.from({ length: count }, (_, i) => at(3 + (i * 15) / (count - 1), "10:00"));
-    expect(bibCheckpointMarks({ ...base, checkpoints: spread(12) })!.timesShown).toBe(true);
-    const crowded = bibCheckpointMarks({ ...base, checkpoints: spread(30) })!;
-    expect(crowded.timesShown).toBe(false);
-    // The times went before the marks did: thirty points about ten points apart all stay.
-    expect(crowded.marks).toHaveLength(30);
+  it("never prints a label over «Start» or «Sosire»", () => {
+    const drawing = bibCheckpointMarks({ ...base, showTimes: true, checkpoints: [at(0, "09:00"), at(10, "10:00"), at(21, "12:00")] })!;
+    expect(drawing.timesShown).toBe(false);
+    expect(drawing.marks.map((m) => m.label)).toEqual([null, "km 10", null]);
+  });
+
+  it("keeps every label clear of the next and of the end words, whatever the crowd", () => {
+    const startEnds = bibLabelWidth("Start") + BIB_LAYOUT.checkpointTimeGap;
+    const finishFrom = width - bibLabelWidth("Sosire") - BIB_LAYOUT.checkpointTimeGap;
+    for (const count of [3, 8, 12, 30]) {
+      const checkpoints = Array.from({ length: count }, (_, i) => at(Math.round((1 + (i * 19) / (count - 1)) * 100) / 100, "10:00", i % 2 ? ["WATER"] : []));
+      for (const showTimes of [false, true]) {
+        const drawing = bibCheckpointMarks({ ...base, showTimes, checkpoints })!;
+        const boxes = drawing.marks
+          .filter((m) => m.label)
+          .map((m) => ({ from: m.x * width - bibLabelWidth(m.label!) / 2, to: m.x * width + bibLabelWidth(m.label!) / 2 }));
+        boxes.forEach((box, i) => {
+          expect(box.from).toBeGreaterThanOrEqual(startEnds - 0.01);
+          expect(box.to).toBeLessThanOrEqual(finishFrom + 0.01);
+          if (i > 0) expect(box.from - boxes[i - 1].to).toBeGreaterThanOrEqual(BIB_LAYOUT.checkpointTimeGap - 0.01);
+        });
+      }
+    }
   });
 
   it("drops marks only when they stand closer together than the minimum gap", () => {
-    const dense = Array.from({ length: 200 }, (_, i) => at((i * 21) / 199, "10:00"));
+    const dense = Array.from({ length: 200 }, (_, i) => at((i * 21) / 199));
     const drawing = bibCheckpointMarks({ ...base, checkpoints: dense })!;
     expect(drawing.marks.length).toBeLessThan(200);
     for (let i = 1; i < drawing.marks.length; i++) {
-      expect((drawing.marks[i].x - drawing.marks[i - 1].x) * width).toBeGreaterThanOrEqual(BIB_LAYOUT.checkpointMinGap - 1e-6);
+      expect((drawing.marks[i].x - drawing.marks[i - 1].x) * width).toBeGreaterThanOrEqual(BIB_LAYOUT.checkpointMinGap - 1e-3);
     }
   });
 });
@@ -156,14 +229,17 @@ const PROFILE: BibProfileDrawing = bibProfileDrawing(
 );
 
 const SHEET = {
-  eventTitle: "Crosul Brașov Runners",
+  eventTitle: "Crosul de toamnă",
   eventDate: "21 noiembrie 2026",
   generatedAt: new Date("2026-10-10T12:00:00Z"),
   replyTo: "club@example.test",
 };
 
 const withMarks = (checkpoints: BibProfileDrawing["checkpoints"]): BibProfileDrawing => ({ ...PROFILE, checkpoints });
-const MARKS = bibCheckpointMarks({ routeKm: 3.1, points: PROFILE.points, startWord: "Start", finishWord: "Sosire", checkpoints: [at(1, "09:45"), at(2, "10:30")] });
+const marksOf = (checkpoints: BibCheckpointSource[], showTimes: boolean) =>
+  bibCheckpointMarks({ routeKm: 3.1, points: PROFILE.points, startWord: "Start", finishWord: "Sosire", showTimes, label, checkpoints });
+/** A water station at km 1 and a timing mat at km 2, both with a cut-off. */
+const AID_AND_MAT = [at(1, "09:45", ["WATER"]), at(2, "10:30", ["TIMING"])];
 
 async function sheet(profile: BibProfileDrawing, overrides: Partial<BibDesign> = {}) {
   let circles = 0;
@@ -195,52 +271,50 @@ const picture = async (profile: BibProfileDrawing, overrides: Partial<BibDesign>
 
 afterEach(() => vi.restoreAllMocks());
 
-describe("§NNN the sheet draws the marks and the times", () => {
-  it("writes the cut-offs under the ticks, and draws a ring and a tick for each mark", async () => {
-    expect(MARKS?.timesShown).toBe(true);
+describe("§NNN the sheet draws the marks and their words", () => {
+  it("draws a cup for the water and a dot for the mat, a tick under each, and «km» under the ticks", async () => {
+    const marks = marksOf(AID_AND_MAT, false)!;
     const plain = await sheet(PROFILE);
-    const marked = await sheet(withMarks(MARKS));
-    expect(plain.runs).not.toContain("09:45");
-    expect(marked.runs).toEqual(expect.arrayContaining(["09:45", "10:30"]));
-    // A ring is a circle, a tick a line: one of each more per mark.
-    expect(marked.circles - plain.circles).toBe(2);
-    expect(marked.lines - plain.lines).toBe(2);
+    const marked = await sheet(withMarks(marks));
+    expect(plain.runs).not.toContain("km 1");
+    expect(marked.runs).toEqual(expect.arrayContaining(["km 1", "km 2"]));
+    expect(marked.runs.join(" ")).not.toContain("09:45");
+    // One dot (a circle) for the mat; the cup is three segments and each tick one.
+    expect(marked.circles - plain.circles).toBe(1);
+    expect(marked.lines - plain.lines).toBe(2 + checkpointGlyphLines("water")[0].length - 1);
   });
 
-  it("draws the marks and no time when the times did not fit", async () => {
-    const crowded = bibCheckpointMarks({ routeKm: 3.1, points: PROFILE.points, startWord: "Start", finishWord: "Sosire", checkpoints: [at(0, "09:00"), at(2, "10:30")] })!;
-    expect(crowded.timesShown).toBe(false);
-    const drawn = await sheet(withMarks(crowded));
-    expect(drawn.runs).not.toContain("09:00");
-    expect(drawn.runs).not.toContain("10:30");
-    expect(drawn.circles - (await sheet(PROFILE)).circles).toBe(2);
+  it("prints the cut-offs beside the points with the second tick", async () => {
+    const marked = await sheet(withMarks(marksOf(AID_AND_MAT, true)));
+    expect(marked.runs).toEqual(expect.arrayContaining(["km 1 · 09:45", "km 2 · 10:30"]));
   });
 
   it("draws none of it without the profile: the marks live on the strip", async () => {
-    const off = await sheet(withMarks(MARKS), { showProfile: false });
-    expect(off.runs).not.toContain("09:45");
+    const off = await sheet(withMarks(marksOf(AID_AND_MAT, true)), { showProfile: false });
+    expect(off.runs.join(" ")).not.toContain("km 1");
   });
 });
 
 describe("§NNN the picture draws them too", () => {
   it("is a different picture with the marks, and the same with the marks empty", async () => {
     const plain = await picture(PROFILE);
-    expect((await picture(withMarks(MARKS))).equals(plain)).toBe(false);
+    expect((await picture(withMarks(marksOf(AID_AND_MAT, false)))).equals(plain)).toBe(false);
     expect((await picture(withMarks(null))).equals(plain)).toBe(true);
     expect((await picture(withMarks({ marks: [], timesShown: false }))).equals(plain)).toBe(true);
   });
 
-  it("is a different picture with the times than with the marks alone", async () => {
-    const aloneMarks = { marks: MARKS!.marks.map((mark) => ({ ...mark, time: null })), timesShown: false };
-    expect((await picture(withMarks(MARKS))).equals(await picture(withMarks(aloneMarks)))).toBe(false);
+  it("is a different picture with the times than without, and with a cup than with a dot", async () => {
+    expect((await picture(withMarks(marksOf(AID_AND_MAT, true)))).equals(await picture(withMarks(marksOf(AID_AND_MAT, false))))).toBe(false);
+    const dots = marksOf([at(1, null, ["TIMING"]), at(2, null, ["TIMING"])], false);
+    const cups = marksOf([at(1, null, ["WATER"]), at(2, null, ["TIMING"])], false);
+    expect((await picture(withMarks(dots))).equals(await picture(withMarks(cups)))).toBe(false);
   });
 
-  it("changes a different amount of the card for a mark: only the strip's row", async () => {
-    const [plain, marked] = [await picture(PROFILE), await picture(withMarks(MARKS))];
+  it("changes only the strip's row of the card: never the number, the name or the header", async () => {
+    const [plain, marked] = [await picture(PROFILE), await picture(withMarks(marksOf(AID_AND_MAT, true)))];
     const a = await sharp(plain).raw().toBuffer({ resolveWithObject: true });
     const b = await sharp(marked).raw().toBuffer({ resolveWithObject: true });
     expect(a.info.width).toBe(b.info.width);
-    // Rows that differ lie inside one band of the card: the profile's row, never the header or the number's middle.
     const rows = new Set<number>();
     for (let y = 0; y < a.info.height; y++) {
       const from = y * a.info.width * a.info.channels;
@@ -259,26 +333,34 @@ describe("§NNN the extras read the checkpoints only where the design asks", () 
     stored.get.mockResolvedValue(new TextEncoder().encode(track()));
   });
 
-  const event = { routeGpx: { key: "route/a.gpx" } as never, distanceMeters: 3100, elevationGainMeters: null, checkpoints: [at(1, "09:45"), at(2, "10:30")] };
+  const event = { routeGpx: { key: "route/a.gpx" } as never, distanceMeters: 3100, elevationGainMeters: null, checkpoints: AID_AND_MAT };
+  const ticks = { showProfile: true, showEmergency: false, showDistance: false } as const;
 
-  it("puts the marks on the profile by the printed distance", async () => {
-    const extras = await loadBibExtras(event, { showProfile: true, showCheckpoints: true, showEmergency: false, showDistance: false }, "ro");
-    expect(extras.profile?.checkpoints?.marks).toHaveLength(2);
-    expect(extras.profile?.checkpoints?.marks[0].x).toBeCloseTo(1 / 3.1, 3);
-    expect(extras.profile?.checkpoints?.marks.map((m) => m.time)).toEqual(["09:45", "10:30"]);
+  it("puts the marks on the profile by the printed distance, with «km» in the sheet's words", async () => {
+    const extras = await loadBibExtras(event, { ...ticks, showCheckpoints: true }, "ro");
+    const marks = extras.profile?.checkpoints?.marks ?? [];
+    expect(marks).toHaveLength(2);
+    expect(marks[0].x).toBeCloseTo(1 / 3.1, 3);
+    expect(marks.map((m) => m.glyph)).toEqual(["water", null]);
+    expect(marks.map((m) => m.label)).toEqual(["km 1", "km 2"]);
+  });
+
+  it("adds the cut-offs only with «…cu timpii limită»", async () => {
+    const extras = await loadBibExtras(event, { ...ticks, showCheckpoints: true, showCheckpointTimes: true }, "ro");
+    expect(extras.profile?.checkpoints?.marks.map((m) => m.label)).toEqual(["km 1 · 09:45", "km 2 · 10:30"]);
   });
 
   it("puts none when the tick is off, with no checkpoints, or without the profile", async () => {
-    const off = await loadBibExtras(event, { showProfile: true, showCheckpoints: false, showEmergency: false, showDistance: false }, "ro");
+    const off = await loadBibExtras(event, { ...ticks, showCheckpoints: false }, "ro");
     expect(off.profile?.checkpoints ?? null).toBeNull();
-    const none = await loadBibExtras({ ...event, checkpoints: [] }, { showProfile: true, showCheckpoints: true, showEmergency: false, showDistance: false }, "ro");
+    const none = await loadBibExtras({ ...event, checkpoints: [] }, { ...ticks, showCheckpoints: true }, "ro");
     expect(none.profile?.checkpoints ?? null).toBeNull();
-    const noProfile = await loadBibExtras(event, { showProfile: false, showCheckpoints: true, showEmergency: false, showDistance: false }, "ro");
+    const noProfile = await loadBibExtras(event, { ...ticks, showProfile: false, showCheckpoints: true }, "ro");
     expect(noProfile.profile).toBeNull();
   });
 
-  it("reads the tick as on when the design says nothing: the default", async () => {
-    const extras = await loadBibExtras(event, { showProfile: true, showEmergency: false, showDistance: false }, "ro");
+  it("reads the first tick as on when the design says nothing: the default", async () => {
+    const extras = await loadBibExtras(event, ticks, "ro");
     expect(extras.profile?.checkpoints?.marks).toHaveLength(2);
   });
 
@@ -288,7 +370,11 @@ describe("§NNN the extras read the checkpoints only where the design asks", () 
     expect(bibNeedsCheckpoints({ showProfile: false, showCheckpoints: true })).toBe(false);
   });
 
-  it("is on by default in the design, and a design saved before the key reads on", () => {
+  it("has the marks on and the times off by default, and a design saved before the keys reads the same", () => {
     expect(DEFAULT_BIB_DESIGN.showCheckpoints).toBe(true);
+    expect(DEFAULT_BIB_DESIGN.showCheckpointTimes).toBe(false);
+    const old = bibDesignSchema.parse({});
+    expect(old.showCheckpoints).toBe(true);
+    expect(old.showCheckpointTimes).toBe(false);
   });
 });

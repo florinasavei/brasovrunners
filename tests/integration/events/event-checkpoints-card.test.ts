@@ -116,7 +116,8 @@ describe("§NNN the card «Puncte de control»", () => {
     const add = html.slice(html.indexOf('data-testid="checkpoint-add"'));
     expect(add.match(/data-testid="checkpoint-new-row"/g)).toHaveLength(3);
     for (const index of [1, 2, 3]) expect(add).toContain(`name="cp[${index}].km"`);
-    expect(add).not.toContain("remove");
+    // No «Scoate» box on a spare row (React's own inline script says `removeChild`, so the box's name is what is looked for).
+    expect(add).not.toMatch(/name="cp\[\d+\]\.remove"/);
     expect(add).toContain('name="cp[1].id" value=""');
   });
 
@@ -131,7 +132,7 @@ describe("§NNN the card «Puncte de control»", () => {
   it("has a save button with its glyph and its words, tall enough for a thumb", async () => {
     const html = await render();
     expect(html).toContain("Salvează punctele");
-    expect(html).toMatch(/<button[^>]*type="submit"[^>]*>.*Salvează punctele/s);
+    expect(html).toMatch(/<button[^>]*type="submit"[^>]*>[^]*Salvează punctele/);
   });
 
   it("is a reader's list with no form for a role that cannot write", async () => {

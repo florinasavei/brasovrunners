@@ -17,6 +17,8 @@ import { storeKeyOfUrl } from "@/modules/content/events/transfer/media";
 import { storeRouteGpx } from "@/modules/content/events/route-gpx";
 import { computeContentHash, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
 import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
+import { changeCheckpoints, listCheckpoints } from "@/modules/event-checkpoints/checkpoints";
+import type { PostedCheckpoint } from "@/modules/event-checkpoints/domain/checkpoint";
 import { DEFAULT_BIB_DESIGN } from "@/modules/registrations/bib-design";
 import { uploadBodyImage } from "@/modules/media/service";
 import { getStorage } from "@/modules/media/storage";
@@ -789,5 +791,159 @@ describe("import over an existing event", () => {
     expect(read?.config.registration.capacity).toBe(100);
     const after = await diffEventImport(db, { actor: admin, file, eventId: target.id });
     expect(after.changes).toEqual([]);
+  });
+});
+
+// --- The route's checkpoints (§NNN) ---------------------------------------------------------------
+
+/** Two checkpoints on the seeded race (start 09:00, gun 10:00, «Timp limită» 2 h 30 min — the finish closes at 12:30, 21 km). */
+async function seedCheckpoints(eventId: string) {
+  const row = (index: number, over: Partial<PostedCheckpoint>): PostedCheckpoint => ({
+    id: "",
+    nameRo: "",
+    nameEn: "",
+    km: "",
+    kinds: [],
+    cutoff: "",
+    noteRo: "",
+    noteEn: "",
+    remove: false,
+    index,
+    ...over,
+  });
+  await changeCheckpoints(
+    db,
+    admin,
+    {
+      kind: "save",
+      eventId,
+      rows: [
+        row(0, { nameRo: "Cronometrare", nameEn: "Timing", km: "15", kinds: ["TIMING"], cutoff: "12:00" }),
+        row(1, { nameRo: "Apă la cabană", nameEn: "Water at the hut", km: "7,5", kinds: ["WATER", "FOOD"], cutoff: "11:00", noteRo: "Și banane", noteEn: "Bananas too" }),
+      ],
+    },
+    NOW,
+  );
+}
+
+describe("§NNN the route's checkpoints travel in the file", () => {
+  it("are exported by distance with no id, imported as new as they were, and the round trip is the same", async () => {
+    const { event } = await seedRace({}, {}, false);
+    await seedCheckpoints(event.id);
+    const file = await fileOf(event.id);
+    expect(file.event.route.checkpoints).toEqual([
+      { km: 7.5, name: { ro: "Apă la cabană", en: "Water at the hut" }, kinds: ["WATER", "FOOD"], cutoff: "11:00", note: { ro: "Și banane", en: "Bananas too" } },
+      { km: 15, name: { ro: "Cronometrare", en: "Timing" }, kinds: ["TIMING"], cutoff: "12:00", note: { ro: null, en: null } },
+    ]);
+    expect(JSON.stringify(file.event.route.checkpoints)).not.toMatch(/"id"/);
+
+    const created = await importEventAsNew(db, { actor: admin, file, fetchImpl: serving(), now: NOW });
+    const copied = await listCheckpoints(db, created.eventId);
+    expect(copied.map((row) => [row.km, row.nameRo, row.nameEn, row.kinds, row.cutoff, row.noteRo, row.noteEn])).toEqual([
+      [7.5, "Apă la cabană", "Water at the hut", ["WATER", "FOOD"], "11:00", "Și banane", "Bananas too"],
+      [15, "Cronometrare", "Timing", ["TIMING"], "12:00", null, null],
+    ]);
+    const back = await fileOf(created.eventId);
+    expect(diffConfigs(back.event, file.event).map((change) => change.key).sort()).toEqual(["translations.en.slug", "translations.ro.slug"]);
+    // Written as the card writes them, and audited as an import.
+    const trail = await db.select().from(auditLogs).where(and(eq(auditLogs.action, "event_checkpoints.changed"), eq(auditLogs.entityId, created.eventId)));
+    expect(trail).toHaveLength(1);
+    expect(trail[0].metadataJson).toMatchObject({ source: "import", added: 2, removed: 0 });
+  });
+
+  it("carries the race's time limit, counted from the gun, and the two bib ticks", async () => {
+    const { event } = await seedRace({ bibDesign: { ...DEFAULT_BIB_DESIGN, showProfile: true, showCheckpoints: false, showCheckpointTimes: true } }, {}, false);
+    // The gun is at 10:00 and the box said 150 minutes: the finish closes at 12:30 (10:30 UTC).
+    expect((await reload(event.id)).endsAt?.toISOString()).toBe("2026-11-21T10:30:00.000Z");
+    const file = await fileOf(event.id);
+    expect(file.event.durationMinutes).toBe(150);
+    expect(file.event.bib.design).toMatchObject({ showCheckpoints: false, showCheckpointTimes: true });
+    const created = await importEventAsNew(db, { actor: admin, file, fetchImpl: serving(), now: NOW });
+    expect((await reload(created.eventId)).endsAt?.toISOString()).toBe("2026-11-21T10:30:00.000Z");
+  });
+
+  it("imports a file made before checkpoints existed with none", async () => {
+    const { event } = await seedRace({}, {}, false);
+    await seedCheckpoints(event.id);
+    const old = JSON.parse(JSON.stringify(await fileOf(event.id))) as { event: { route: Record<string, unknown> } };
+    delete old.event.route.checkpoints;
+    const read = readEventFile(JSON.stringify(old));
+    if (!read.ok) throw new Error(`an older file did not read: ${read.refusal} ${read.detail ?? ""}`);
+    expect(read.file.event.route.checkpoints).toEqual([]);
+    const created = await importEventAsNew(db, { actor: admin, file: read.file, fetchImpl: serving(), now: NOW });
+    expect(await listCheckpoints(db, created.eventId)).toEqual([]);
+  });
+
+  it("shows the list in the diff of an import over an event, and writes the file's list on confirmation", async () => {
+    const { event } = await seedRace();
+    await seedCheckpoints(event.id);
+    const file = await fileOf(event.id);
+    const { target } = await seedTarget();
+
+    const diff = await diffEventImport(db, { actor: admin, file, eventId: target.id });
+    const change = diff.changes.find((entry) => entry.key === "route.checkpoints");
+    expect(change).toMatchObject({ label: "route.checkpoints", locale: null, from: { type: "text", value: "[]" } });
+    expect(change?.to.type).toBe("text");
+
+    await importEventOver(db, await overInput(file, target.id));
+    expect((await listCheckpoints(db, target.id)).map((row) => [row.km, row.nameRo, row.cutoff])).toEqual([
+      [7.5, "Apă la cabană", "11:00"],
+      [15, "Cronometrare", "12:00"],
+    ]);
+    // Nothing left to change: the list is not in the diff any more.
+    expect((await diffEventImport(db, { actor: admin, file, eventId: target.id })).changes).toEqual([]);
+    const trail = await db.select().from(auditLogs).where(and(eq(auditLogs.action, "event_checkpoints.changed"), eq(auditLogs.entityId, target.id)));
+    expect(trail).toHaveLength(1);
+    expect(trail[0].metadataJson).toMatchObject({ source: "import" });
+  });
+
+  it("empties the target's list for a file with none, as the diff says", async () => {
+    const { event } = await seedRace({}, {}, false);
+    const file = await fileOf(event.id);
+    const { target } = await seedTarget();
+    await seedCheckpoints(target.id);
+    const diff = await diffEventImport(db, { actor: admin, file, eventId: target.id });
+    expect(diff.changes.find((entry) => entry.key === "route.checkpoints")?.to).toEqual({ type: "text", value: "[]" });
+    await importEventOver(db, await overInput(file, target.id));
+    expect(await listCheckpoints(db, target.id)).toEqual([]);
+  });
+
+  it("refuses a file whose list the card would refuse — beyond the route, a cut-off before the gun, out of order, after the finish — and writes nothing", async () => {
+    const { event } = await seedRace({}, {}, false);
+    await seedCheckpoints(event.id);
+    const file = await fileOf(event.id);
+    const eventsBefore = (await db.select().from(events)).length;
+    const edited = (change: (list: EventFile["event"]["route"]["checkpoints"]) => void): EventFile => {
+      const copy = JSON.parse(JSON.stringify(file)) as EventFile;
+      change(copy.event.route.checkpoints);
+      return copy;
+    };
+    const cases = [
+      // 30 km on a 21 km route.
+      edited((list) => {
+        list[1].km = 30;
+      }),
+      // 09:30 is before the gun at 10:00.
+      edited((list) => {
+        list[0].cutoff = "09:30";
+      }),
+      // The nearer point closes after the farther one.
+      edited((list) => {
+        list[0].cutoff = "12:15";
+      }),
+      // After the finish closes at 12:30.
+      edited((list) => {
+        list[1].cutoff = "12:45";
+      }),
+    ];
+    for (const bad of cases) {
+      expect(await codeOf(importEventAsNew(db, { actor: admin, file: bad, fetchImpl: serving(), now: NOW }))).toBe("VALIDATION_ERROR");
+    }
+    expect((await db.select().from(events)).length).toBe(eventsBefore);
+
+    const { target } = await seedTarget();
+    expect(await codeOf(importEventOver(db, await overInput(cases[0], target.id)))).toBe("VALIDATION_ERROR");
+    expect(await listCheckpoints(db, target.id)).toEqual([]);
+    expect((await reload(target.id)).capacity).toBe(50);
   });
 });

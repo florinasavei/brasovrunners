@@ -51,6 +51,8 @@ const EVERYTHING_OFF: BibDesign = {
   showProfile: true,
   // «Punctele de control pe profil» (§NNN): off, the other way from its default (on).
   showCheckpoints: false,
+  // «…cu timpii limită» (§NNN): on, the other way from its default (off).
+  showCheckpointTimes: true,
   showEmergency: true,
   emergencyPhone: "+40 722 000 000",
   // The trail practice off, the badge and the stubs on: each the other way from its default (§750).
@@ -266,6 +268,7 @@ describe("§249 the form, read the same way for the save and for the preview", (
       showProfile: false,
       // An unposted box is an unticked one, the checkpoints' too (§NNN).
       showCheckpoints: false,
+      showCheckpointTimes: false,
       showEmergency: false,
       emergencyPhone: "",
       // An unposted box is an unticked one: no upside-down phone, no badge, no stubs (§750).

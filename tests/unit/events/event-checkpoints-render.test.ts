@@ -32,7 +32,7 @@ const point = (id: string, km: number, over: Partial<Checkpoint> = {}): Checkpoi
   ...over,
 });
 
-async function render(checkpoints: Checkpoint[], finish = { km: 21.1, limit: null as string | null }, locale: "ro" | "en" = "ro") {
+async function render(checkpoints: Checkpoint[], finish: { km: number | null; limit: string | null } = { km: 21.1, limit: null }, locale: "ro" | "en" = "ro") {
   const element = await EventCheckpoints({ checkpoints, finish, locale });
   return element ? renderToStaticMarkup(element) : "";
 }
@@ -80,14 +80,15 @@ describe("§NNN the checkpoints' table on the event page", () => {
     expect(withLimit[1]).toContain('data-testid="checkpoint-finish"');
     expect(withLimit[1]).toContain(ro.Event.checkpoints.finish);
     expect(withLimit[1]).toContain("21,1 km");
-    expect(withLimit[1]).toContain("Ora limită 12:00");
+    expect(withLimit[1]).toContain("se închide la 12:00");
+    expect(withLimit[1]).not.toContain("Ora limită 12:00");
     expect(rowsOf(await render([point("a", 5)], { km: 21.1, limit: null }))).toHaveLength(1);
   });
 
   it("shows the finish without a distance as a dash", async () => {
     const rows = rowsOf(await render([point("a", 5)], { km: null, limit: "12:00" }));
     expect(rows[1]).toContain("—");
-    expect(rows[1]).toContain("Ora limită 12:00");
+    expect(rows[1]).toContain("se închide la 12:00");
   });
 
   it("shows the note under the name, in this language only", async () => {

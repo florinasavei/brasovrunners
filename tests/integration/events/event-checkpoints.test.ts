@@ -92,7 +92,7 @@ beforeEach(async () => {
   state.flashed.length = 0;
 });
 
-type Row = { id?: string; nameRo?: string; nameEn?: string; km?: string; kinds?: string[]; cutoff?: string; noteRo?: string; noteEn?: string; remove?: boolean };
+type Row = { id?: string; nameRo?: string; nameEn?: string; km?: string; kinds?: readonly string[]; cutoff?: string; noteRo?: string | null; noteEn?: string | null; remove?: boolean };
 
 /** The card's form: one row per entry, numbered from 0, with the boxes' own names. */
 function form(rows: Row[], extra: Record<string, string> = {}, forEvent = eventId): FormData {
