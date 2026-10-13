@@ -3,7 +3,6 @@ import { alias } from "drizzle-orm/pg-core";
 import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import { emailOutbox } from "@/db/schema/email-outbox";
 import { events, type PublicListClub } from "@/db/schema/events";
-import { participants } from "@/db/schema/participants";
 import { familyPlaceHolds } from "@/db/schema/family-entries";
 import { eventInvitations } from "@/db/schema/event-invitations";
 import { eventsWithLapsedInvitations, expireLapsedInvitations, invitationHoldsCount, invitationOpen } from "./invitation-repository";

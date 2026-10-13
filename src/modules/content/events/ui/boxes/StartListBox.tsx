@@ -77,7 +77,7 @@ export default async function StartListBox({ event, mayEditSettings }: Pick<BoxP
               {/*
                 «Clubul pe lista publică» (§753; the owner, 2026-10-13: «people type stupid things there, I just want
                 to show the club's members and ignore the other clubs»): what the list's «Club» column says — the
-                club's own name for a member who typed it (the default), the text as typed, or no column. A card of
+                club's own name for whoever typed it (the default; §NNN), the text as typed, or no column. A card of
                 its own under the list's switches, three native radios; the service keeps the stored mode when a
                 form carries none.
               */}

@@ -5,11 +5,11 @@ import { hydrated, signIn } from "./support/featured-event";
 import { openEditorBox } from "./support/fold";
 
 /**
- * §753 (amending §32, §143 and §396; the owner, 2026-10-13: «people type stupid things there, I just want
- * to show Brașov Runners members and ignore the other clubs … but I still want to show the BVR ones») —
- * «Clubul pe lista publică»: under the default only a verified member who typed the club shows the club's
- * name in «Cine vine»; a member who typed nonsense and a stranger who typed the club's name show nothing.
- * The editor's three radios switch it, and the saved choice reaches the page.
+ * §753 and §NNN (amending §32, §143 and §396; the owner, 2026-10-13: «people type stupid things there, I just
+ * want to show Brașov Runners members and ignore the other clubs … but I still want to show the BVR ones») —
+ * «Clubul pe lista publică»: under the default everyone who typed the club shows the club's name in «Cine
+ * vine», with or without an account on «Echipa» (§NNN: the club's runners have none); a member who typed
+ * nonsense shows nothing. The editor's three radios switch it, and the saved choice reaches the page.
  *
  * The event, the three runners and the two member accounts are written straight into the database — the
  * setup, not the subject (`hidden-list.spec.ts`) — one set per project and run, so the two projects never
@@ -80,20 +80,21 @@ async function seedRace(tag: string): Promise<Seeded> {
 
 const rowOf = (page: import("@playwright/test").Page, name: string) => page.getByTestId("start-list-named").filter({ hasText: name });
 
-test.describe("§753 «Clubul pe lista publică»: only the club's own members' club shows by default", () => {
+test.describe("§753, §NNN «Clubul pe lista publică»: only the club's own name shows by default", () => {
   test.describe.configure({ timeout: 90_000 });
 
-  test("the default names the club for the member who typed BVR and for nobody else; the editor's radios switch it", async ({ page }) => {
+  test("the default names the club for everyone who typed it, account or not, and for nobody else; the editor's radios switch it", async ({ page }) => {
     const stamp = `${test.info().project.name}-${Date.now().toString(36)}`;
     const seeded = await seedRace(stamp);
 
-    // The default: one cell holds the club's name, the other two are blank, and the silly text is nowhere.
+    // The default: the member who typed «BVR» and the runner with no account who typed the club's name both
+    // show it; the nonsense is blank and nowhere on the page.
     await page.goto(`/ro/evenimente/${seeded.slug}`);
     await expect(page.getByTestId("start-list")).toHaveCount(1);
     const list = page.getByTestId("start-list");
     await expect(rowOf(page, seeded.names.nickname).locator('td[data-col="club"]')).toHaveText("Brașov Runners");
     await expect(rowOf(page, seeded.names.silly).locator('td[data-col="club"]')).toHaveText("");
-    await expect(rowOf(page, seeded.names.stranger).locator('td[data-col="club"]')).toHaveText("");
+    await expect(rowOf(page, seeded.names.stranger).locator('td[data-col="club"]')).toHaveText("Brașov Runners");
     await expect(list).not.toContainText(SILLY);
     await expect(list).not.toContainText("BVR");
     await expect(list.locator('th[data-col="club"]')).toHaveCount(1);
