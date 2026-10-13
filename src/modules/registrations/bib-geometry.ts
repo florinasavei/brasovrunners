@@ -264,7 +264,7 @@ const LONE_DASH = /^[-‐‒–—―]+$/u;
  *   not do: Roboto has no U+2011, so it would print a box.) From `titleSize` down to `titleMinSize`, by
  *   `titleSizeStep`, the first size at which the title fits the column on one line or on two — the two
  *   balanced, the break that makes the longer line shortest — and the whole block, the date included,
- *   fits between `headerPad` and the foot. **Past the minimum** (9 points: about 120 characters of
+ *   fits between `headerPad` and the foot. **Past the minimum** (9 points: about 130 characters of
  *   capitals beside the lockup and the badge), the first line takes as many words as fit and the second
  *   as many as fit with «…» after them — only then is anything left out.
  * - **The foot** is the band's foot less `headerPad`, or the top of the members' label's line while the

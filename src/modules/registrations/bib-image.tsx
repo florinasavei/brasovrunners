@@ -192,7 +192,8 @@ const ONE_LINE = { display: "flex", whiteSpace: "nowrap", overflow: "hidden", te
 /**
  * The race and its date on the band (§NNN): each line `bibHeader` laid out, as its own one-line box at
  * the layout's top, right-aligned on the column's right edge — the sheet's points — at the line's own
- * height (`BIB_TEXT_LINE`, the height pdfkit gives it). Nothing here wraps: the layout decided the
+ * height (`BIB_TEXT_LINE`, the height pdfkit gives it and Satori's own normal line for Roboto, so a
+ * title on one line draws pixel for pixel where it did). Nothing here wraps: the layout decided the
  * lines, measured never narrower than Satori sets them, and the box's width is only a safety net.
  * Exported so the test can hold the markup to the layout without reading pixels.
  */
