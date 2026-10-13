@@ -10,7 +10,7 @@ import { COLOR, COLOR_DARK } from "@/theme/brand";
 import { UNDER_LOOK, UNDER_LOOK_DARK } from "@/theme/look";
 
 /**
- * «Tema v2», the calendar's head and its entries (§NNN, amending §292, §413, §487): the visible
+ * «Tema v2», the calendar's head and its entries (§745, amending §292, §413, §487): the visible
  * «Calendar» title and the wordmark's band go (one `h1` stays, hidden), the «?» stands under the
  * controls, «Filtre» is on the chips' line, and a date on a day gone is faded. The page itself needs
  * a database, so its structure is read from the source and the pieces are rendered; the computed

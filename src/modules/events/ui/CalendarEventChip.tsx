@@ -99,7 +99,7 @@ export default function CalendarEventChip({
    */
   tone?: CalendarTone;
   /**
-   * The word for a date on a day already gone ("a trecut" / "past", §NNN), or null for today and
+   * The word for a date on a day already gone ("a trecut" / "past", §745), or null for today and
    * the days ahead. Under «Tema v2» the entry is drawn faded (`PAST_ENTRY_SX`); the word is said
    * after the name to a screen reader under Tema v2 only (it is passed only there), and never drawn.
    */
@@ -107,7 +107,7 @@ export default function CalendarEventChip({
 }) {
   const lines = calendarEntryLines({ time, title, note, night, partner });
   const name = calendarEntryName(lines);
-  // A date on a day gone says so after its sentence, for a screen reader (§NNN): one more, ended like the others.
+  // A date on a day gone says so after its sentence, for a screen reader (§745): one more, ended like the others.
   const label = past ? calendarEntryName([...lines, past]) : name;
   // A past date wears the faded look in place of its kind's colours; a date from today on, its kind's.
   const lookSx = past ? PAST_ENTRY_SX : toneEntrySx(tone);

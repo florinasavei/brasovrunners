@@ -160,7 +160,7 @@ export async function submitFeedback<T extends Record<string, unknown>>(
         : "failed"
       : await sendOrdinary(db, deps.smtp as FeedbackSmtpRoad, recipients, email, input, deps.screening, now);
   if (sent === "held") {
-    // Held back by the Administrator's tick (§NNN): it reached nobody, so it is not one of the branch's
+    // Held back by the Administrator's tick (§744): it reached nobody, so it is not one of the branch's
     // thirty an hour either. The bucket is keyed on the branch, and a bot flood held back in silence
     // must not lock real people out of it. The sender is answered «trimis», as ever; the log says «held».
     await refundRateLimit(db, "feedback", branch, now);
@@ -223,7 +223,7 @@ async function sendOrdinary<T extends Record<string, unknown>>(
     message: input.message,
     honeypot: input.honeypot,
   });
-  // The contact form's tick (§NNN (amends §310)): counted, not emailed, answered «trimis». The safety
+  // The contact form's tick (§744 (amends §310)): counted, not emailed, answered «trimis». The safety
   // branch is never held back — a lost report costs more than a marked one.
   if (input.branch !== "safety" && suspicion.suspicious && shouldHoldBack(suspicion, screening.holdBack === true)) {
     await recordHeldBack(db, input.branch, now);

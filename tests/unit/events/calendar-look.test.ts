@@ -254,7 +254,7 @@ describe("the calendar page under the look", () => {
     expect(page).toMatch(/const next = look\.on \? await readNextEvent\(/);
   });
 
-  it("keeps one h1, the wordmark before it, and today's intro drawn only off the look (§NNN)", () => {
+  it("keeps one h1, the wordmark before it, and today's intro drawn only off the look (§745)", () => {
     expect(page.match(/variant="h1"/g)).toHaveLength(1);
     expect(page.indexOf("<Wordmark />")).toBeLessThan(page.indexOf('variant="h1"'));
     // Under the look the title is hidden and the sentence not drawn, by the page's own reading of the setting.

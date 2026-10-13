@@ -71,7 +71,7 @@ export default async function CalendarSection({
   /** The period's rows, already read and narrowed by the page (§413). */
   events: PublicEvent[];
   /**
-   * «Tema v2» is on (§NNN): the «?» help stands here, at the end of a row of its own under the
+   * «Tema v2» is on (§745): the «?» help stands here, at the end of a row of its own under the
    * controls, instead of in the page's head, and the dates on days gone are faded. Off, neither:
    * the page draws the head's fold on a phone, and nothing is marked.
    */
@@ -91,7 +91,7 @@ export default async function CalendarSection({
             with the grid's edges. Off, and on a phone, no card: the controls and the grid as before. */}
         <Box sx={MONTH_CARD_SX} data-testid="calendar-month-card">
           <CalendarHeader view={view} now={now} query={query} layout={layout} />
-          {/* Under «Tema v2» the «?» (§487, §NNN): just under the controls, at the row's end, its
+          {/* Under «Tema v2» the «?» (§487, §745): just under the controls, at the row's end, its
               panel opening from here over the month. The page's head carries it off the look, on a
               phone only; never both. A native fold, so it opens with scripts off. */}
           {lookOn && (

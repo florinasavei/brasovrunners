@@ -76,7 +76,7 @@ export default async function EventCalendar({
   /** What the month links keep — the filters (§89, §413; a group ticked twice is an array). A month's own link goes to its path on the calendar (§251, §574). */
   query?: Record<string, string | string[]>;
   layout?: CalendarLayout;
-  /** «Tema v2» is on (§NNN): a date on a day gone is marked past — faded by the look's rule, said to a screen reader. Off, nothing is marked. */
+  /** «Tema v2» is on (§745): a date on a day gone is marked past — faded by the look's rule, said to a screen reader. Off, nothing is marked. */
   fadePast?: boolean;
 }) {
   const t = await getTranslations("Events");
@@ -141,7 +141,7 @@ export default async function EventCalendar({
         partner={partnerPhrase(tEvent, readCoHosts(event).length > 0)}
         dense={dense}
         tone={calendarTone(event)}
-        // A date on a day already gone, faded under «Tema v2» (§NNN): by the day in the club's zone, so earlier today is not past.
+        // A date on a day already gone, faded under «Tema v2» (§745): by the day in the club's zone, so earlier today is not past.
         past={fadePast && onPastDay(event, today) ? t("calendar.past") : null}
       />
     );

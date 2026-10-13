@@ -129,7 +129,7 @@ describe("§261 the calendar chip's tooltip", () => {
     // line the grid's tooltip shows — the note and the partner too — and
     // `tests/unit/events/partner-marker.test.ts` renders it.
     expect(SOURCE).toContain("aria-label={label}");
-    // A date on a day gone adds «a trecut» as one more sentence (§NNN); every other keeps the name as it was.
+    // A date on a day gone adds «a trecut» as one more sentence (§745); every other keeps the name as it was.
     expect(SOURCE).toContain("const label = past ? calendarEntryName([...lines, past]) : name;");
     expect(SOURCE).toContain("const name = calendarEntryName(lines);");
   });

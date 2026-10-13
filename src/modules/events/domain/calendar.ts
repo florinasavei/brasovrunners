@@ -123,7 +123,7 @@ export function dayKey(at: Date, timeZone: string): string {
 
 /**
  * Whether an event stands on a day already gone, for the calendar's faded entries under «Tema v2»
- * (§NNN). Decided by the day, never by the hour: `today` is the page's own day in the club's time
+ * (§745). Decided by the day, never by the hour: `today` is the page's own day in the club's time
  * zone (`dayKey(now, CLUB_TIME_ZONE)`), and the period pages are static for that day (§574, held
  * to Brașov's midnight, §549), so a finer rule would be stale within the hour it was drawn. An
  * event earlier today is therefore not past: it is faded from tomorrow's page, never this one's.

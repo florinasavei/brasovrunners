@@ -14,7 +14,7 @@ const jsx = body.slice(body.indexOf("return ("));
 
 describe("BR-REQ-070-04 the contact page's sections, in order (§679)", () => {
   it("draws «Spune-ne ceva» (when offered), then the form, then «Contact direct», then the newsletter, then only the identity line", () => {
-    // «Spune-ne ceva» first when offered (§NNN, amending §721), the form, «Contact direct» (§721, amending §698), the newsletter.
+    // «Spune-ne ceva» first when offered (§746, amending §721), the form, «Contact direct» (§721, amending §698), the newsletter.
     expect(page).toContain("id={FEEDBACK_SECTION_ID}");
     const ways = jsx.indexOf('data-testid="contact-ways"');
     const form = jsx.indexOf("<form action={submitContactAction}>");
@@ -38,7 +38,7 @@ describe("BR-REQ-070-04 the contact page's sections, in order (§679)", () => {
       return body.slice(body.lastIndexOf("<Box", at), body.indexOf(">", at) + 1);
     };
     expect(openingTag("contact-ways")).toContain("sx={SECTION_SX}");
-    // The form's section is the page's head, with no rule, unless «Spune-ne ceva» is drawn above it (§NNN).
+    // The form's section is the page's head, with no rule, unless «Spune-ne ceva» is drawn above it (§746).
     expect(openingTag("contact-form-section")).toContain("sx={feedbackOpen ? SECTION_SX : undefined}");
     expect(openingTag("feedback-section")).not.toContain("sx=");
   });

@@ -52,7 +52,7 @@ export type ContactScreening = {
   /** This deployment's hostname, from `APP_BASE_URL`; `null` switches the imitation rule off. */
   clubHost: string | null;
   /**
-   * The Administrator's «Nu-mi trimite mesajele care par spam» (§NNN), read by the caller with the
+   * The Administrator's «Nu-mi trimite mesajele care par spam» (§744), read by the caller with the
    * recipients row it already has. Absent reads as off.
    */
   holdBack?: boolean;
@@ -133,7 +133,7 @@ export async function submitContactMessage<T extends Record<string, unknown>>(
     honeypot: input.honeypot,
   });
 
-  // The Administrator's tick (§NNN (amends §310)): a message the check marks is counted and not
+  // The Administrator's tick (§744 (amends §310)): a message the check marks is counted and not
   // emailed. The sender's answer is the same "sent" — a script learns nothing. Unticked, the
   // code below is exactly what it was.
   if (suspicion.suspicious && shouldHoldBack(suspicion, screening.holdBack === true)) {

@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import ro from "../../../messages/ro.json";
 
 /**
- * BR-REQ-070-04, `DECISIONS.md` §NNN (amends §310) — the settings card, rendered: the tick beside its
+ * BR-REQ-070-04, `DECISIONS.md` §744 (amends §310) — the settings card, rendered: the tick beside its
  * help line and the 30-day count for the Administrator; the read-only view says whether the tick is on.
  */
 vi.mock("next-intl/server", () => ({

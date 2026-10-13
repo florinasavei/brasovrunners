@@ -3,7 +3,7 @@ import { renderToReadableStream } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 /**
- * BR-REQ-070-04, `DECISIONS.md` §NNN (amending §721, §698) — the owner, 2026-10-13: «on the contact page
+ * BR-REQ-070-04, `DECISIONS.md` §746 (amending §721, §698) — the owner, 2026-10-13: «on the contact page
  * the feedback form (if active) should come first». Rendered on the server with the real catalogues:
  * with the feedback forms offered the order is «Spune-ne ceva», «Trimite-ne un mesaj», «Contact direct»;
  * without, the form is first and no «Spune-ne ceva» is drawn; one `h1`. The rules are pinned at source
@@ -80,7 +80,7 @@ afterEach(() => {
   offered = true;
 });
 
-describe("BR-REQ-070-04 «Spune-ne ceva» first when it is offered (§NNN)", () => {
+describe("BR-REQ-070-04 «Spune-ne ceva» first when it is offered (§746)", () => {
   it.each(["ro", "en"] as const)("draws «Spune-ne ceva», the form, «Contact direct», in that order (%s)", async (lang) => {
     locale = lang;
     const html = await render();

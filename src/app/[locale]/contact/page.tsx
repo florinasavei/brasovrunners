@@ -96,7 +96,7 @@ const fieldId = (name: string) => `c-${name}`;
 /**
  * The page in sections (§NNN; the owner, 2026-10-10: «I need here sections, separators and icons»):
  * «Scrie-ne» and its intro, «Spune-ne ceva» when it is offered, «Trimite-ne un mesaj» with the form, «Contact direct», the
- * newsletter (§NNN, amending §721 and §698). Each section after the form opens with a rule and a heading that wears its glyph;
+ * newsletter (§746, amending §721 and §698). Each section after the form opens with a rule and a heading that wears its glyph;
  * the newsletter's box draws the same.
  */
 const SECTION_SX = { mt: { xs: DENSITY.sectionGapLg, sm: 4 }, pt: { xs: DENSITY.sectionGap, sm: 3 }, borderTop: 1, borderColor: "divider", scrollMarginTop: 16 } as const;
@@ -224,7 +224,7 @@ export default async function ContactPage({ params, searchParams }: Props) {
 
   /*
     «Spune-ne ceva» (§676): one section and one button to the anonymous wizard. When it is offered it comes first,
-    right under the intro and with no rule above it, and the form follows with the rule (§NNN, amending §721 and
+    right under the intro and with no rule above it, and the form follows with the rule (§746, amending §721 and
     §698; the owner, 2026-10-13: «on the contact page the feedback form (if active) should come first»).
   */
   const feedbackSection = feedbackOpen && (
@@ -293,13 +293,13 @@ export default async function ContactPage({ params, searchParams }: Props) {
         )}
       </Typography>
 
-      {/* «Spune-ne ceva», first when it is offered (§NNN). */}
+      {/* «Spune-ne ceva», first when it is offered (§746). */}
       {feedbackSection}
 
       {/*
         «Trimite-ne un mesaj» (§721): the form's own section, right under the intro when «Spune-ne ceva» is not
         offered: a heading with its glyph and no rule, as the page's head; under «Spune-ne ceva» it opens with the
-        rule every later section has (§NNN). The heading only while the form is drawn: after a send the section
+        rule every later section has (§746). The heading only while the form is drawn: after a send the section
         holds the confirmation, and with no form, the sentence that says so.
       */}
       <Box

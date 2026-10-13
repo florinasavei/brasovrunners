@@ -78,7 +78,7 @@ export function legendDotSx(tone: CalendarTone) {
 }
 
 /**
- * A past entry under the look (§NNN), faded the way Google Calendar fades a day gone: the lighter
+ * A past entry under the look (§745), faded the way Google Calendar fades a day gone: the lighter
  * fill (`action.hover`, a few percent of the ink over the cell) and the softer words
  * (`text.secondary`), whatever the entry's kind. Tokens of the theme only, never a colour literal,
  * and never a blur or an opacity on the words — they stay readable and the link stays a link.

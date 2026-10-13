@@ -5,7 +5,7 @@ import { z } from "zod";
 import type { ContactSuspicion } from "./domain/suspicion";
 
 /**
- * «Nu-mi trimite mesajele care par spam» (`DECISIONS.md` §NNN (amends §310)): what happens to a
+ * «Nu-mi trimite mesajele care par spam» (`DECISIONS.md` §744 (amends §310)): what happens to a
  * message the existing check marks «[posibil spam]» when the Administrator has ticked the box.
  *
  * It is not delivered. What is kept is a *count*: one timestamp and the form's name per held

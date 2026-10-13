@@ -167,7 +167,7 @@ const WRITES: Record<string, Expected> = {
   // The settings a public page reads.
   "src/modules/contact/recipients.ts#updateContactRecipients": ["settings"],
   "src/modules/contact/shown-address.ts#updateShownContactAddress": ["settings"],
-  // The held-back count (§NNN (amends §310)): a settings row only the card reads; a held message changes no public page.
+  // The held-back count (§744 (amends §310)): a settings row only the card reads; a held message changes no public page.
   "src/modules/contact/held-back.ts#recordHeldBack": {
     nothingPublic: "counts a held-back message in a settings row that only the backoffice card reads",
   },

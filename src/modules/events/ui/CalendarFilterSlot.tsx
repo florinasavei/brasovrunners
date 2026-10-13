@@ -24,7 +24,7 @@ import { UNDER_LOOK } from "@/theme/look";
  * whether it does, and the look's rule holds or shows the same box by it. Unset, it is `shown`.
  */
 export default function CalendarFilterSlot({ shown, shownUnderLook = shown, children }: { shown: boolean; shownUnderLook?: boolean; children?: ReactNode }) {
-  // Under the look the slot is on the chips' line (§NNN): its box steps aside (`display: contents`) so the «Filtre» fold is the line's
+  // Under the look the slot is on the chips' line (§745): its box steps aside (`display: contents`) so the «Filtre» fold is the line's
   // own item, and the line carries the gap the slot had (§569). `visibility` is inherited through it, so a held slot is still held,
   // and the fold still keeps its place in the line.
   const look = { [UNDER_LOOK]: { display: "contents", ...(shownUnderLook === shown ? {} : { visibility: shownUnderLook ? "visible" : "hidden" }) } };

@@ -78,7 +78,7 @@ test.describe("phase 4: the calendar under «Tema v2»", () => {
       await page.setViewportSize({ width: 320, height: 568 });
       await page.goto("/ro/calendar");
       await expect(page.locator("html")).toHaveAttribute("data-look", "2026");
-      // One `h1`, «Calendar», kept for the page's name and not drawn (§NNN).
+      // One `h1`, «Calendar», kept for the page's name and not drawn (§745).
       await expect(page.locator("#main h1")).toHaveCount(1);
       await expect(page.locator("#main h1")).toHaveText("Calendar");
       expect(await hiddenHeading(page), "the h1 is visually hidden").toBe(true);
@@ -140,7 +140,7 @@ test.describe("phase 4: the calendar under «Tema v2»", () => {
     }
   });
 
-  test("on: no visible «Calendar» above the chips, the wordmark without its band, one h1 (§NNN)", async ({ page, browser }) => {
+  test("on: no visible «Calendar» above the chips, the wordmark without its band, one h1 (§745)", async ({ page, browser }) => {
     test.slow();
     await setLook(browser, "on");
     try {
@@ -282,7 +282,7 @@ test.describe("phase 4: the calendar under «Tema v2»", () => {
     }
   });
 
-  test("on: a date on a day gone is faded and says it; off, nothing is marked (§NNN)", async ({ page, browser }) => {
+  test("on: a date on a day gone is faded and says it; off, nothing is marked (§745)", async ({ page, browser }) => {
     test.slow();
     // The seed's weekly run stands on the last Sunday: one to seven days ago, so on that day's month.
     const day = new Date(Date.now() - (((new Date().getUTCDay() + 7) % 7) || 7) * 86_400_000);

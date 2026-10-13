@@ -225,7 +225,7 @@ export default async function CalendarPage({ params, query: asked, period: segme
           The fold's panel is anchored to this row (`position: relative`). From `sm` the sentence
           stands under the heading as before and the «?» is not drawn — never both. Half the room
           above it on a phone (§569), where the wordmark is not drawn. */}
-      {/* «Tema v2» (§NNN, amending §292, §487): «Calendar» is redundant beside the wordmark and the month's name, so no
+      {/* «Tema v2» (§745, amending §292, §487): «Calendar» is redundant beside the wordmark and the month's name, so no
           title is drawn — the page keeps its one `h1`, visually hidden as the home page's is without its hero, and the
           «?» stands under the calendar's controls (`CalendarSection`), not here; the intro sentence is not drawn either,
           as before. Tema v1: the title, with the «?» beside it on a phone, as ever. */}
@@ -283,7 +283,7 @@ export default async function CalendarPage({ params, query: asked, period: segme
           (§575): the arrows under it must not move when the next month has something to offer.
           The period is the path's (§574), so the panel posts to it and keeps nothing else. */}
       {/* The always-visible chips under «Aspectul nou» (phase 4): the kind and the surface, GET links. */}
-      {/* Under «Tema v2» (§NNN, amending §413) the chips and «Filtre» are one line: «Filtre» at its end, outside the
+      {/* Under «Tema v2» (§745, amending §413) the chips and «Filtre» are one line: «Filtre» at its end, outside the
           sideways scroller so it stays in sight while the chips scroll, its panel opening under the whole line, full
           width. The slot and the panel's own box step aside (`display: contents`) so the fold is the line's item, and
           the panel is positioned from the line. Off, two blocks one under the other, as before. */}
@@ -342,7 +342,7 @@ async function readNextEvent(locale: Locale, now: Date, filter: ListingFilter, k
 const VISUALLY_HIDDEN = { position: "absolute", width: "1px", height: "1px", p: 0, m: "-1px", overflow: "hidden", clip: "rect(0 0 0 0)", whiteSpace: "nowrap", border: 0 } as const;
 
 /**
- * The chips' line under «Tema v2» (§NNN): the chips take what is left, «Filtre» sits at the end. The slot
+ * The chips' line under «Tema v2» (§745): the chips take what is left, «Filtre» sits at the end. The slot
  * and the panel's box are `display: contents` there (`CalendarFilterSlot`, `ListingFilterPanel`), so the fold
  * and the ticked-filters row are the line's own items: the fold never shrinks, the ticked row wraps to a line of
  * its own, and the open panel hangs from the line's bottom edge, over the month, as the «?»'s does.

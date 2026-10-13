@@ -27,7 +27,7 @@ type Props = {
    * "organizatorul nu ar trebui sa poata edita cine primeste mesajele CC si BCC".
    */
   mayEdit: boolean;
-  /** Messages the tick held back in the last 30 days (§NNN (amends §310)): a count, never a message. */
+  /** Messages the tick held back in the last 30 days (§744 (amends §310)): a count, never a message. */
   heldBack: number;
   /** Why the fold opens by itself, as the page knows it: this panel's save just landed (§336). */
   openWhen?: FoldOpenWhen;
@@ -162,7 +162,7 @@ export default async function ContactRecipientsPanel({ locale, recipients, resol
           <Typography variant="caption" color="text.secondary">
             {t("emails.contacts.repeats")}
           </Typography>
-          {/* §NNN (amends §310): off by default; ticked, a «[posibil spam]» message is counted and not emailed. */}
+          {/* §744 (amends §310): off by default; ticked, a «[posibil spam]» message is counted and not emailed. */}
           <CheckboxField name="holdBackSuspected" defaultChecked={recipients.holdBackSuspected} help={t("emails.contacts.holdBackHelp")}>
             {t("emails.contacts.holdBack")}
           </CheckboxField>
