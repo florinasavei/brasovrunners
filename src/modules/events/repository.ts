@@ -1,3 +1,4 @@
+import { BIB_DRAWING_VERSION } from "@/modules/registrations/domain/bib-stamp";
 import { readRaceNumberFormat, type RaceNumberFormat } from "@/modules/registrations/domain/race-number";
 import { type AnyColumn, and, asc, desc, eq, gte, inArray, isNull, lt, or, type SQL, sql } from "drizzle-orm";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
@@ -98,9 +99,10 @@ export const RACE_NUMBER_FORMAT = sql<RaceNumberFormat>`coalesce(${events.bibDes
  * date in the row's language — so any change of the design (the number's format, the member mark, the
  * sponsors' place, the profile, the phone) is a new address, as the bibs page's stamp of the whole
  * design is. A change detector, no security claim, like `bibPictureStamp`; it needs the event's
- * translation joined, as every desk query has it.
+ * translation joined, as every desk query has it. It starts with `BIB_DRAWING_VERSION` (§755), so a
+ * change of the drawing itself — the header's lines — is a new address too.
  */
-export const BIB_STAMP = sql<string>`md5(concat_ws('|', ${events.bibDesign}::text, ${events.bibColour}, ${events.coHosts}::text, ${events.coHostName}, ${events.coHostUrl}, ${events.routeGpx} ->> 'key', ${events.distanceMeters}, ${events.elevationGainMeters}, ${eventTranslations.title}, ${events.startsAt}::text))`;
+export const BIB_STAMP = sql<string>`md5(concat_ws('|', ${String(BIB_DRAWING_VERSION)}::text, ${events.bibDesign}::text, ${events.bibColour}, ${events.coHosts}::text, ${events.coHostName}, ${events.coHostUrl}, ${events.routeGpx} ->> 'key', ${events.distanceMeters}, ${events.elevationGainMeters}, ${eventTranslations.title}, ${events.startsAt}::text))`;
 
 /**
  * «Copertă» (the facelift's phase 2, §709) as a page draws it: the stored picture's key prefix and

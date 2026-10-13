@@ -1,0 +1,225 @@
+import { eq } from "drizzle-orm";
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { emailOutbox } from "@/db/schema/email-outbox";
+import { eventVolunteerRoles, eventVolunteers } from "@/db/schema/event-volunteers";
+import { eventTranslations, events } from "@/db/schema/events";
+import { staffUsers } from "@/db/schema/staff-users";
+import { computeContentHash, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
+import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
+import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
+
+/**
+ * §754 — «Mă ofer voluntar»'s one Server Action, `submitVolunteerAction` (BR-REQ-031-01), on the real clock
+ * as the action reads it, with Next's redirect caught where the browser would follow it and the cookie jar
+ * held in memory. What the service's own suite cannot see: Cloudflare's refusal answered before the service
+ * is asked (no row, no email, what was typed kept), the address each answer goes back to — `?volunteer=`,
+ * `&vfields=` the boxes by name, `&since=` the render the corrected form is timed from, the box's anchor —, a
+ * closed form sent to the plain page, and the draft cleared after a kept offer. Every address is made up.
+ */
+
+let db: TestDatabase;
+let close: () => Promise<void>;
+
+type Set = { name: string; value: string; options: { path?: string; maxAge?: number } };
+const jar = new Map<string, string>();
+const sets: Set[] = [];
+let turnstile: { on: boolean; verdict: string } = { on: false, verdict: "not_configured" };
+
+vi.mock("@/db/client", () => ({ getDb: () => db }));
+vi.mock("next/cache", async () => (await import("../../helpers/next-cache")).fakeNextCache.module);
+vi.mock("next/headers", () => ({
+  headers: async () => new Headers(),
+  cookies: async () => ({
+    get: (name: string) => (jar.has(name) ? { name, value: jar.get(name) } : undefined),
+    set: (name: string, value: string, options: Set["options"] = {}) => {
+      sets.push({ name, value, options });
+      jar.set(name, value);
+    },
+    delete: (name: string) => jar.delete(name),
+  }),
+}));
+vi.mock("next/navigation", async (importOriginal) => ({
+  ...(await importOriginal<Record<string, unknown>>()),
+  redirect: (url: string) => {
+    throw Object.assign(new Error("NEXT_REDIRECT"), { redirectTo: url });
+  },
+}));
+vi.mock("@/modules/registrations/bot-check", () => ({ botCheckIsOn: async () => turnstile.on, honeypotIsOn: async () => true }));
+vi.mock("@/modules/registrations/turnstile", async (importOriginal) => ({
+  ...(await importOriginal<Record<string, unknown>>()),
+  verifyTurnstile: async () => turnstile.verdict,
+}));
+
+const { submitVolunteerAction } = await import("@/app/[locale]/events/[slug]/actions");
+const { openFormDraft } = await import("@/modules/registrations/form-draft");
+
+const DAY = 24 * 60 * 60_000;
+
+beforeAll(async () => {
+  ({ db, close } = await createTestDatabase());
+});
+afterAll(async () => close());
+
+let slug: string;
+let roleId: string;
+let eventId: string;
+
+/** An event ahead that takes volunteers, published in both languages, with one role needing `needed`. */
+async function seedEvent(acceptsVolunteers: boolean, needed = 2) {
+  const now = Date.now();
+  const [event] = await db
+    .insert(events)
+    .values({ type: "RACE", startsAt: new Date(now + 30 * DAY), editorialStatus: "PUBLISHED", publishedAt: new Date(now - DAY), acceptsVolunteers })
+    .returning();
+  await db.insert(eventTranslations).values([
+    { eventId: event.id, locale: "ro", slug: `crosul-${event.id.slice(0, 8)}`, title: "Crosul" },
+    { eventId: event.id, locale: "en", slug: `cross-${event.id.slice(0, 8)}`, title: "The cross" },
+  ]);
+  const [role] = await db.insert(eventVolunteerRoles).values({ eventId: event.id, nameRo: "Punct de apă", nameEn: "Water point", needed }).returning();
+  eventId = event.id;
+  slug = `crosul-${event.id.slice(0, 8)}`;
+  roleId = role.id;
+}
+
+beforeEach(async () => {
+  await resetTables(db);
+  jar.clear();
+  sets.length = 0;
+  turnstile = { on: false, verdict: "not_configured" };
+  await db.insert(staffUsers).values({ email: "admin@example.test", displayName: "Admin", role: "ADMIN" });
+  // The notice in force names `{{volunteers}}` in both languages: the form is open.
+  const body = (text: string) => ({ sections: [{ paragraphs: [`Voluntari ({{volunteers}}): ${text}`] }] });
+  const translations: LegalDocumentTranslationInput[] = [
+    { locale: "ro", title: "Confidențialitate", body: body("păstrăm numele") },
+    { locale: "en", title: "Privacy", body: body("we keep the name") },
+  ];
+  await insertLegalDocumentVersion(db, {
+    key: "PRIVACY_NOTICE",
+    version: 1,
+    effectiveAt: new Date(Date.now() - DAY),
+    isApproved: true,
+    contentSha256: computeContentHash(translations),
+    translations,
+    now: new Date(),
+  });
+});
+
+/** A post as the page's form makes it, rendered a minute before the press. */
+function post(fields: Record<string, string> = {}): FormData {
+  const form = new FormData();
+  const all: Record<string, string> = {
+    locale: "ro",
+    slug,
+    roleId,
+    name: "Maria Test",
+    email: "maria@example.test",
+    phoneCountry: "RO",
+    phone: "0712 345 678",
+    message: "Pot toată ziua",
+    consent: "on",
+    honeypot: "",
+    renderedAt: new Date(Date.now() - 60_000).toISOString(),
+    ...fields,
+  };
+  for (const [name, value] of Object.entries(all)) form.append(name, value);
+  return form;
+}
+
+/** Where the action sent the browser. */
+async function pressed(form: FormData): Promise<URL> {
+  try {
+    await submitVolunteerAction(form);
+  } catch (error) {
+    const to = (error as { redirectTo?: string }).redirectTo;
+    if (to) return new URL(to, "http://club.test");
+    throw error;
+  }
+  throw new Error("the action returned without a redirect");
+}
+
+const lastDraft = () => sets.filter((set) => set.name === "br_form_draft").at(-1);
+const people = () => db.select().from(eventVolunteers).where(eq(eventVolunteers.eventId, eventId));
+const outbox = () => db.select().from(emailOutbox);
+
+describe("§754 submitVolunteerAction's redirects", () => {
+  it("answers Cloudflare's refusal before the service is asked: ?volunteer=captcha with ?since=, no row, no email, what was typed kept", async () => {
+    await seedEvent(true);
+    turnstile = { on: true, verdict: "failed" };
+    const renderedAt = new Date(Date.now() - 60_000).toISOString();
+    const url = await pressed(post({ renderedAt }));
+    expect(url.pathname.endsWith(`/${slug}`)).toBe(true);
+    expect(url.searchParams.get("volunteer")).toBe("captcha");
+    expect(url.searchParams.get("since")).toBe(renderedAt);
+    expect(url.hash).toBe("#volunteers");
+    expect(await people()).toHaveLength(0);
+    expect(await outbox()).toHaveLength(0);
+
+    const draft = lastDraft();
+    expect(draft?.options.path).toBe(url.pathname);
+    const kept = openFormDraft(draft?.value ?? "");
+    expect(kept).toMatchObject({ name: "Maria Test", email: "maria@example.test", phoneCountry: "RO", phone: "0712 345 678", roleId, message: "Pot toată ziua" });
+    // Never the consent tick (the person's own act each time), the trap or the clock.
+    expect(kept).not.toHaveProperty("consent");
+    expect(kept).not.toHaveProperty("honeypot");
+    expect(kept).not.toHaveProperty("renderedAt");
+  });
+
+  it("lets a passed check through to the service", async () => {
+    await seedEvent(true);
+    turnstile = { on: true, verdict: "passed" };
+    const url = await pressed(post());
+    expect(url.searchParams.get("volunteer")).toBe("1");
+    expect(await people()).toHaveLength(1);
+  });
+
+  it("sends a post to a form that is closed (CONFLICT) to the plain page, where the box is gone", async () => {
+    await seedEvent(false);
+    const url = await pressed(post());
+    expect(url.pathname.endsWith(`/${slug}`)).toBe(true);
+    expect(url.search).toBe("");
+    expect(url.hash).toBe("");
+    expect(await people()).toHaveLength(0);
+  });
+
+  it("names a malformed address as the box to fix: ?volunteer=invalid&vfields=email, the address in the draft and never in the URL", async () => {
+    await seedEvent(true);
+    const url = await pressed(post({ email: "maria-at-example" }));
+    expect(url.searchParams.get("volunteer")).toBe("invalid");
+    expect(url.searchParams.get("vfields")).toBe("email");
+    expect(url.hash).toBe("#volunteers");
+    expect(url.toString()).not.toContain("maria-at-example");
+    expect(openFormDraft(lastDraft()?.value ?? "")).toMatchObject({ email: "maria-at-example" });
+    expect(await people()).toHaveLength(0);
+  });
+
+  it("answers a role that filled while the form was open with ?volunteer=full, keeping what was typed", async () => {
+    await seedEvent(true, 1);
+    await db.insert(eventVolunteers).values({
+      eventId,
+      roleId,
+      name: "Ion Primul",
+      email: "ion@example.test",
+      canonicalEmail: "ion@example.test",
+      canonicalizationVersion: 1,
+      phone: "+40712345679",
+      locale: "ro",
+      state: "REGISTERED",
+      source: "STAFF",
+    });
+    const url = await pressed(post());
+    expect(url.searchParams.get("volunteer")).toBe("full");
+    expect(url.hash).toBe("#volunteers");
+    expect(openFormDraft(lastDraft()?.value ?? "")).toMatchObject({ name: "Maria Test" });
+    expect(await people()).toHaveLength(1);
+  });
+
+  it("thanks a kept offer with ?volunteer=1 and clears the draft", async () => {
+    await seedEvent(true);
+    const url = await pressed(post());
+    expect(url.searchParams.get("volunteer")).toBe("1");
+    expect(url.hash).toBe("#volunteers");
+    const [row] = await people();
+    expect(row).toMatchObject({ name: "Maria Test", phone: "+40712345678", source: "PUBLIC" });
+    expect(lastDraft()?.options.maxAge).toBe(0);
+  });
+});

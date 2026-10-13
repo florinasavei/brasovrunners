@@ -67,6 +67,7 @@ import TitleIcon from "@mui/icons-material/Title";
 import TranslateIcon from "@mui/icons-material/Translate";
 import UpdateIcon from "@mui/icons-material/Update";
 import VisibilityIcon from "@mui/icons-material/Visibility";
+import VolunteerActivismIcon from "@mui/icons-material/VolunteerActivism";
 import type { SvgIconProps } from "@mui/material/SvgIcon";
 import type { ComponentType } from "react";
 
@@ -124,6 +125,8 @@ export const PANEL_GLYPHS = {
   todo: ChecklistIcon,
   // «Adaugă un rând» on that card (§749).
   add: AddIcon,
+  // «Voluntari» on an event's editor (§754): the roles and the people.
+  volunteers: VolunteerActivismIcon,
   // What an event's registrations are, once it has them.
   registrations: ListAltIcon,
   queue: HourglassTopIcon,

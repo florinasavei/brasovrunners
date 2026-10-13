@@ -6,6 +6,7 @@ import { SHARE_SHAPES } from "@/modules/events/share-image";
 import { membersEventBySlug } from "@/modules/events/members-only";
 import { routing } from "@/i18n/routing";
 import { readOrWhileAway } from "@/modules/resilience/optional-read";
+import { readFormDraft } from "@/modules/registrations/form-draft";
 import { canEditTexts } from "@/modules/staff-identity/domain/roles";
 import { getCurrentStaffUser } from "@/modules/staff-identity/session";
 import { env } from "@/shared/config/env";
@@ -70,7 +71,14 @@ export default async function LiveEventDetailPage({ params, searchParams }: Prop
   // A members' event, for a members' session only (§552); asked by the page only when the public read found nothing.
   const membersRead = hasLocale(routing.locales, locale) ? () => membersEventBySlug(locale, slug) : undefined;
   return (
-    <EventDetailPage params={params} query={searchParams} canEdit={staffUser !== null && canEditTexts(staffUser.role)} membersRead={membersRead} />
+    <EventDetailPage
+      params={params}
+      query={searchParams}
+      canEdit={staffUser !== null && canEditTexts(staffUser.role)}
+      membersRead={membersRead}
+      // The volunteer box's sealed draft (§754): a cookie, so only this per-request twin reads it.
+      readVolunteerDraft={readFormDraft}
+    />
   );
 }
 

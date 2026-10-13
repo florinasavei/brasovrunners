@@ -23,6 +23,7 @@ import { gmailFallbackMergeValues } from "@/modules/notifications/fallback-notic
 import { eventInvitationsMergeValues } from "@/modules/registrations/invitation-words";
 import { feedbackFormsMergeValues } from "@/modules/feedback/notice-words";
 import { membersShopMergeValues } from "@/modules/content/shop/notice-words";
+import { volunteersMergeValues } from "@/modules/volunteers/notice-words";
 import { newsletterMergeValues } from "@/modules/newsletter/topic-words";
 import { maskIdDocument, renderDeclarationPdf, type DeclarationEntry, type DeclarationPdfInput } from "./declaration-pdf";
 
@@ -219,7 +220,7 @@ export async function eventMergeValues<T extends Record<string, unknown>>(
       ...deadlineMergeValues(locale, await currentDeadlines(db)),
       // The list-states marker is a general merge field (§396) and the declaration editor accepts
       // it, so a declaration that names it is filled here too rather than signed with a blank.
-      ...listStatesMergeValues(locale), ...listSocialsMergeValues(locale), ...listNumbersMergeValues(locale), ...gmailFallbackMergeValues(locale), ...eventInvitationsMergeValues(locale), ...feedbackFormsMergeValues(locale), ...membersShopMergeValues(locale), ...promotionalMaterialsMergeValues(locale),
+      ...listStatesMergeValues(locale), ...listSocialsMergeValues(locale), ...listNumbersMergeValues(locale), ...gmailFallbackMergeValues(locale), ...eventInvitationsMergeValues(locale), ...feedbackFormsMergeValues(locale), ...membersShopMergeValues(locale), ...volunteersMergeValues(locale), ...promotionalMaterialsMergeValues(locale),
       ...newsletterMergeValues(locale),
     },
     title: event.title,

@@ -10,10 +10,13 @@
  * §249 promised, taken the whole way — before this the picture was 900×600 (1.5:1) over a card of
  * 1.40:1, so it was squashed, and every size in it had been chosen by eye to make up for that.
  *
- * Pure and importing nothing, like `bib-design.ts` and for the same reason: `bib-footer.ts` takes
- * its measure from here, and so do the pages that show the picture, whose `<img>` declares its
- * size so the box does not jump while the picture loads.
+ * Pure and importing nothing but `bib-type.ts` (the cut the header shares with the small print, which
+ * imports nothing at all), like `bib-design.ts` and for the same reason: `bib-footer.ts` takes its
+ * measure from here, and so do the pages that show the picture, whose `<img>` declares its size so the
+ * box does not jump while the picture loads.
  */
+
+import { ELLIPSIS, withEllipsis } from "./bib-type";
 
 /** An A4 page, portrait, in points: what the club prints on. */
 export const A4_PAGE = { width: 595.28, height: 841.89 } as const;
@@ -55,16 +58,22 @@ export const BIB_LAYOUT = {
   logoWidth: 122,
   logoRatio: 2.424,
   /**
-   * The race and its date at the right of the band, each at a fixed offset from the card's top
-   * rather than centred on the band as a group — `titleTop` when both show, `dateTop` for the
-   * date under a title, `dateTopAlone` for the date on its own. Both renderers place them at
-   * these same points, which is what keeps the preview the paper rather than a card sized by eye.
+   * The race and its date at the right of the band, laid out once by `bibHeaderLayout` (§755) and
+   * drawn at its points by both renderers, which is what keeps the preview the paper rather than a
+   * card sized by eye. A title that fits on one line at `titleSize` sits at `titleTop` with the date
+   * at `dateTop`, as every bib printed before; the date on its own sits at `dateTopAlone`. A longer
+   * title takes two lines, shrinking by `titleSizeStep` down to `titleMinSize` until two lines fit the
+   * column and the band; the date goes under the title's real height. Nothing of the column comes
+   * nearer the band's top or foot than `headerPad`.
    */
   titleSize: 13,
+  titleMinSize: 9,
+  titleSizeStep: 0.5,
   dateSize: 10.5,
   titleTop: 15,
   dateTop: 34,
   dateTopAlone: 22,
+  headerPad: 4,
   /** The name: its size, the strip it takes above or below the number, and its offset in the strip. */
   nameSize: 24,
   nameBlock: 44,
@@ -153,14 +162,14 @@ export const BIB_LAYOUT = {
   emergencySize: 9,
   /**
    * The distance badge (§750), in the header's right corner like the owner's marathon example: a
-   * rounded tag `badgeWidth` × `badgeHeight` at the card's right inset, `badgeTop` from its top, in the
-   * header's own text colour with the distance — «21K» — in the band's colour on it, `badgeSize` points
-   * bold. The race and its date give up its width plus `badgeGap` on their right (`bibHeaderReserve`);
-   * the members' label sits under it (`memberTagTop`).
+   * rounded tag `badgeWidth` × `badgeHeight` at the card's right inset, centred on the band — or, while
+   * the members' label sits under it, on the band above the label's tag (`bibHeaderLayout`, §755) — in
+   * the header's own text colour with the distance — «21K» — in the band's colour on it, `badgeSize`
+   * points bold. The race and its date give up its width plus `badgeGap` on their right
+   * (`bibHeaderReserve`).
    */
   badgeWidth: 46,
   badgeHeight: 28,
-  badgeTop: 14,
   badgeGap: 10,
   badgeSize: 15,
   badgeRadius: 6,
@@ -184,6 +193,203 @@ export function bibExtrasHeight(profileDrawn: boolean, emergencyDrawn: boolean):
 /** What the header's race and date give up on their right while the distance badge is drawn (§750). */
 export function bibHeaderReserve(badgeDrawn: boolean): number {
   return badgeDrawn ? BIB_LAYOUT.badgeWidth + BIB_LAYOUT.badgeGap : 0;
+}
+
+/**
+ * One line of Roboto, as a fraction of its size: the font's ascender and descender, 1900 + 500 of its
+ * 2048 units, the same in both faces — the height pdfkit gives a line (`heightOfString`) and the one the
+ * picture sets (`lineHeight`). What a line of the header takes.
+ */
+export const BIB_TEXT_LINE = 2400 / 2048;
+
+/**
+ * The room between the title's last line and the date: what a 13-point title at `titleTop` always left
+ * above `dateTop` (3.77 points), so a title that fits on one line draws exactly where it did (§755).
+ */
+export const BIB_TITLE_DATE_GAP = BIB_LAYOUT.dateTop - BIB_LAYOUT.titleTop - BIB_TEXT_LINE * BIB_LAYOUT.titleSize;
+
+/**
+ * Where the members' label's own line begins inside its tag (§664): the tag's top plus half of what its
+ * line leaves of it — 46.8 points. While the label is drawn on the band, under the badge or at the
+ * column's right, no line of the race or its date reaches below this.
+ */
+export const BIB_MEMBER_LABEL_LINE = BIB_LAYOUT.memberTagTop + (BIB_LAYOUT.memberTagHeight - BIB_TEXT_LINE * BIB_LAYOUT.memberLabelSize) / 2;
+
+/** What the header draws its words from (§755): a part switched off, or with nothing to say, is `null`. */
+export type BibHeaderText = {
+  /** The race's title, as typed — never changed, only laid out. */
+  title: string | null;
+  /** The date as the bib prints it. */
+  date: string | null;
+  /** The lockup at the band's left. */
+  logo: boolean;
+  /** The distance badge at the band's right (§750). */
+  badge: boolean;
+  /** The members' label on the band itself, under the badge (§664); never on a picture or a card's stripe. */
+  label: boolean;
+};
+
+/** How wide a text is in ems of its own type: the title's bold, the date's regular — the font tables both renderers' text is measured by. */
+export type BibHeaderMeasure = { title: (text: string) => number; date: (text: string) => number };
+
+/** One line of the header: its words, and its top from the card's top, in points. */
+export type BibHeaderLine = { text: string; top: number };
+
+/**
+ * The header's words, laid out (§755). `left` and `right` are the column's edges from the card's left,
+ * in points: every line is right-aligned on `right`, and none is wider than the column. The title's
+ * lines share one `size`; `cut` says a line ends in «…», something of the title left out. The date is
+ * set at `dateSize`.
+ */
+export type BibHeaderLayout = {
+  left: number;
+  right: number;
+  title: { size: number; lines: BibHeaderLine[]; cut: boolean } | null;
+  date: BibHeaderLine | null;
+  /** The badge's top from the card's top, whether or not one is drawn. */
+  badgeTop: number;
+};
+
+/** A dash on its own between words — «Cros – ediția a II-a» — stays at the end of the line before it, never starts one. */
+const LONE_DASH = /^[-‐‒–—―]+$/u;
+
+/** A title's unit that ends in a lone dash (`titleUnits` joined it to the word before): the break the club typed. */
+const ENDS_IN_LONE_DASH = / [-‐‒–—―]+$/u;
+
+/** What a cut header line never ends in before its «…»: spaces, punctuation, a dash. */
+const HEADER_TRAILING = /[\s,;:·\-‐‒–—―]+$/u;
+
+/**
+ * The race and its date on the band, laid out once for both renderers (§755, amending §750's header).
+ *
+ * The owner, on a printed bib of a race with a long name and the distance badge on: «când bifez distanța
+ * pe număr am overlap» — the sheet handed pdfkit the title with a width, pdfkit wrapped it onto a second
+ * line at its own leading, broke it after the hyphen of «II-A», and the second line fell on the date set
+ * at a fixed offset. Now neither renderer wraps: this decides the lines and both draw exactly those.
+ *
+ * - **The column** runs from the lockup's right plus the inset (or the card's inset with no lockup) to the
+ *   card's right inset less the badge and its gap (`bibHeaderReserve`), so no line can touch either.
+ * - **The title** is split at spaces only: a word is never broken, so «II-A» or «Cros-Country» is one
+ *   word, and a dash standing alone stays at the end of the line before it. (A non-breaking hyphen would
+ *   not do: Roboto has no U+2011, so it would print a box.) From `titleSize` down to `titleMinSize`, by
+ *   `titleSizeStep`, the first size at which the title fits the column on one line or on two — on two,
+ *   right after a lone dash the club typed when that break fits (where the club's own name ends), else
+ *   the break that makes the longer line shortest — and the whole block, the date included, fits between
+ *   `headerPad` and the foot. **Past the minimum** (9 points: about 130 characters of capitals beside the
+ *   lockup and the badge), the first line takes as many words as fit and the second as many as fit with
+ *   «…» after them — only then is anything left out. A first word wider than the column by itself is cut
+ *   by its characters with «…» on the first line, and the second goes on with the words after it.
+ * - **The foot** is the band's foot less `headerPad`, or the top of the members' label's line while the
+ *   label is on the band (`BIB_MEMBER_LABEL_LINE`).
+ * - **The place:** a block that fits from `titleTop` stays there — so a title on one line at 13 points
+ *   and its date print exactly as before — and a taller one is centred between `headerPad` and the foot.
+ *   The date goes under the title's real height plus `BIB_TITLE_DATE_GAP`; alone, at `dateTopAlone`. A
+ *   date wider than the column is cut with «…».
+ * - **The badge** is centred on the band, or on the band above the members' label's tag while one is
+ *   under it, so it never touches the label.
+ *
+ * Pure: the widths come from `measure`, which the renderers pass as the tables of the font they embed
+ * (`bib-header.ts`), measured never narrower than either sets the text.
+ */
+export function bibHeaderLayout(text: BibHeaderText, measure: BibHeaderMeasure): BibHeaderLayout {
+  const L = BIB_LAYOUT;
+  const left = text.logo ? L.inset + L.logoWidth + L.inset : L.inset;
+  const right = BIB_CARD.width - L.inset - bibHeaderReserve(text.badge);
+  const width = right - left;
+  const foot = text.label ? BIB_MEMBER_LABEL_LINE : L.bandHeight - L.headerPad;
+  const badgeTop = ((text.label ? L.memberTagTop : L.bandHeight) - L.badgeHeight) / 2;
+  const dateText = text.date?.trim() ? oneLine(text.date.trim(), measure.date, width / L.dateSize) : null;
+  const units = titleUnits(text.title ?? "");
+  if (units.length === 0) {
+    return { left, right, title: null, date: dateText ? { text: dateText, top: L.dateTopAlone } : null, badgeTop };
+  }
+  const dateRoom = dateText ? BIB_TITLE_DATE_GAP + BIB_TEXT_LINE * L.dateSize : 0;
+  const blockHeight = (lines: number, size: number) => lines * BIB_TEXT_LINE * size + dateRoom;
+  let chosen: { size: number; lines: string[]; cut: boolean } | null = null;
+  const steps = Math.round((L.titleSize - L.titleMinSize) / L.titleSizeStep);
+  for (let step = 0; step <= steps && chosen === null; step++) {
+    const size = L.titleSize - step * L.titleSizeStep;
+    const lines = titleLines(units, measure.title, width / size);
+    if (lines && blockHeight(lines.length, size) <= foot - L.headerPad) chosen = { size, lines, cut: false };
+  }
+  chosen ??= { size: L.titleMinSize, lines: cutTitle(units, measure.title, width / L.titleMinSize), cut: true };
+  const height = blockHeight(chosen.lines.length, chosen.size);
+  const top = L.titleTop + height <= foot ? L.titleTop : Math.max(L.headerPad, L.headerPad + (foot - L.headerPad - height) / 2);
+  const lineHeight = BIB_TEXT_LINE * chosen.size;
+  return {
+    left,
+    right,
+    title: { size: chosen.size, cut: chosen.cut, lines: chosen.lines.map((line, index) => ({ text: line, top: top + index * lineHeight })) },
+    date: dateText ? { text: dateText, top: top + chosen.lines.length * lineHeight + BIB_TITLE_DATE_GAP } : null,
+    badgeTop,
+  };
+}
+
+/**
+ * The title's words, the units a line is made of: split at every white space but the no-break space
+ * (U+00A0), which the club typed to keep two words together and stays inside its word; a hyphen kept
+ * inside its word; a lone dash joined to the word before it. The narrow no-break space (U+202F) and the
+ * figure space (U+2007) become U+00A0 first: Roboto Bold has no glyph for either, so drawn as typed they
+ * would print a box.
+ */
+function titleUnits(title: string): string[] {
+  const units: string[] = [];
+  for (const word of title.replace(/[\u202F\u2007]/gu, "\u00A0").split(/[^\S\u00A0]+/u)) {
+    if (!word) continue;
+    if (LONE_DASH.test(word) && units.length > 0) units[units.length - 1] += ` ${word}`;
+    else units.push(word);
+  }
+  return units;
+}
+
+/**
+ * One line when it fits; else two that fit — right after a lone dash the club typed when one fits, the
+ * longer line as short as it can be among the breaks of that standing; `null` when two will not do.
+ */
+function titleLines(units: readonly string[], measure: (text: string) => number, budget: number): string[] | null {
+  const whole = units.join(" ");
+  if (measure(whole) <= budget) return [whole];
+  let best: string[] | null = null;
+  let bestRank = Infinity;
+  let bestWidth = Infinity;
+  for (let split = 1; split < units.length; split++) {
+    const first = units.slice(0, split).join(" ");
+    const second = units.slice(split).join(" ");
+    const longer = Math.max(measure(first), measure(second));
+    if (longer > budget) continue;
+    const rank = ENDS_IN_LONE_DASH.test(units[split - 1]) ? 0 : 1;
+    if (rank < bestRank || (rank === bestRank && longer < bestWidth)) {
+      best = [first, second];
+      bestRank = rank;
+      bestWidth = longer;
+    }
+  }
+  return best;
+}
+
+/**
+ * Past the minimum size: as many words as fit, then as many as fit with «…». A first word wider than a
+ * line is cut by its characters with «…», and the second line goes on with the words after it; a second
+ * line whose first word alone is too wide is cut by its characters too.
+ */
+function cutTitle(units: readonly string[], measure: (text: string) => number, budget: number): string[] {
+  let taken = 0;
+  while (taken < units.length && measure(units.slice(0, taken + 1).join(" ")) <= budget) taken += 1;
+  const first = taken > 0 ? units.slice(0, taken).join(" ") : oneLine(units[0], measure, budget);
+  const rest = units.slice(Math.max(taken, 1));
+  if (rest.length === 0) return [first];
+  const whole = rest.join(" ");
+  if (measure(whole) <= budget) return [first, whole];
+  const closed = (count: number) => `${rest.slice(0, count).join(" ").replace(HEADER_TRAILING, "")}${ELLIPSIS}`;
+  let kept = rest.length;
+  while (kept > 0 && measure(closed(kept)) > budget) kept -= 1;
+  return [first, kept > 0 ? closed(kept) : oneLine(whole, measure, budget)];
+}
+
+/** The text when it fits, else its longest beginning that fits with «…» after it — the small print's cut (`bib-type.ts`). */
+function oneLine(text: string, measure: (text: string) => number, budget: number): string {
+  if (measure(text) <= budget) return text;
+  return withEllipsis(text, (line) => measure(line) <= budget, HEADER_TRAILING);
 }
 
 /**

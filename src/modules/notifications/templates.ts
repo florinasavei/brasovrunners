@@ -1008,6 +1008,12 @@ export type TemplateData = {
    */
   shopOrder?: ShopOrderFacts;
   /**
+   * A volunteer's sign-up (§754), read at the send: the person's name and the role in each language (the
+   * club typed both), so each half of the bilingual message names the role in its own words. Never the
+   * address or the telephone number — the organizers read those on the card, behind the sign-in.
+   */
+  volunteer?: { name: string; roleRo: string; roleEn: string };
+  /**
    * "Detalii actualizate" (§331): which facts the save changed — the place, the start, the
    * programme, the event on again. The values are the event's as it stands at send time, in the
    * fields above; this says which of them to name as new.
@@ -1299,6 +1305,17 @@ function eventFacts(d: TemplateData, labels: { map: string; strava: string }) {
     ...(d.eventStravaEventUrl ? [{ label: labels.strava, url: d.eventStravaEventUrl }] : []),
   ];
   return { line, links };
+}
+
+/**
+ * The bold line of a volunteer's acknowledgement (§754): the role first — a fact of this sign-up, kept
+ * whoever wrote the message's words — then the event's start and place, with the event's own links.
+ */
+function volunteerFacts(locale: EmailLocale, d: TemplateData, labels: { map: string; strava: string }) {
+  const role = locale === "ro" ? d.volunteer?.roleRo : d.volunteer?.roleEn;
+  const event = eventFacts(d, labels);
+  const line = [role ? `${locale === "ro" ? "Rol" : "Role"}: ${role}` : undefined, event?.line].filter(Boolean).join(" · ");
+  return line ? { line, links: event?.links ?? [] } : undefined;
 }
 
 /**
@@ -1746,6 +1763,27 @@ const T = {
         "Comenzile, cu „Marchează plătită” și „Marchează predată”, sunt în backoffice, la „Magazin”, în bara de sus. Plata nu trece prin site.",
       ],
       action: "Deschide comenzile",
+    },
+    // A volunteer's sign-up (§754): to the person, «am primit» — nothing to press, nothing to confirm; an organizer answers.
+    volunteerReceived: {
+      subject: (d: TemplateData) => `Ți-am primit oferta de voluntar pentru ${d.eventTitle ?? "eveniment"}`,
+      facts: (d: TemplateData) => volunteerFacts("ro", d, { map: "Harta punctului de întâlnire", strava: "Evenimentul pe Strava" }),
+      body: (d: TemplateData) => [
+        `Mulțumim! Am primit oferta ta de a ajuta ca voluntar la ${d.eventTitle ?? "eveniment"}; rolul ales e scris mai sus, lângă data și locul.`,
+        "Un organizator o confirmă și te caută pe email sau la telefon dacă mai trebuie ceva. Până atunci nu ai nimic de făcut: oferta nu e o înscriere la cursă și nu ține loc.",
+        `Dacă nu tu ai trimis oferta, scrie-ne din pagina de contact și o ștergem; altfel rămâne la organizatori cel mult ${volunteerDays("ro")} de la începutul evenimentului sau de la trimiterea ofertei, dacă e mai târziu.`,
+      ],
+    },
+    // To each Organizer and Administrator (§754): who offered for which role; the card «Voluntari» has the rest.
+    volunteerClubNotice: {
+      subject: (d: TemplateData) => `Voluntar nou la ${d.eventTitle ?? "eveniment"}`,
+      greeting: () => "Salut,",
+      facts: (d: TemplateData) => (d.volunteer ? { line: `${d.volunteer.name} — ${d.volunteer.roleRo}`, links: [] } : undefined),
+      body: (d: TemplateData) => [
+        `O persoană s-a oferit voluntar la ${d.eventTitle ?? "eveniment"}; numele ei și rolul ales sunt scrise mai sus.`,
+        "Oferta are starea «Înscris»: o confirmi sau o anulezi din cardul «Voluntari» al evenimentului (butonul de mai jos). Adresa și telefonul sunt acolo, nu aici.",
+      ],
+      action: "Deschide «Voluntari»",
     },
     registrationOpened: {
       // To an address, not a participant (§146): the greeting names nobody.
@@ -2199,6 +2237,9 @@ const T = {
     /** An invitation (§647): the club typed the name and the address to send it; nobody asked yet. */
     privacyFooterInvitation: (club: string) =>
       `Primești acest mesaj pentru că ${club} ți-a trecut numele și adresa ca să te invite la acest eveniment. Cum folosim datele tale:`,
+    /** A volunteer's sign-up (§754): the person offered on the event's page; no registration behind it. */
+    privacyFooterVolunteer: (club: string) =>
+      `Primești acest mesaj de la ${club} pentru că te-ai oferit, pe site-ul clubului, să ajuți ca voluntar. Cum folosim datele tale:`,
     /** The same for a group run's self-declaration (§393): signed on a page, no registration behind it. */
     privacyFooterDeclaration: (club: string) =>
       `Primești acest mesaj de la ${club} pentru că ai semnat o declarație pe site-ul clubului. Cum folosim datele tale:`,
@@ -2450,6 +2491,25 @@ const T = {
         "The orders, with “Mark paid” and “Mark handed over”, are in the backoffice, under “Shop”, in the top bar. Payment does not go through the site.",
       ],
       action: "Open the orders",
+    },
+    volunteerReceived: {
+      subject: (d: TemplateData) => `We received your offer to volunteer for ${d.eventTitle ?? "the event"}`,
+      facts: (d: TemplateData) => volunteerFacts("en", d, { map: "Map of the meeting point", strava: "The event on Strava" }),
+      body: (d: TemplateData) => [
+        `Thank you! We received your offer to help as a volunteer at ${d.eventTitle ?? "the event"}; the role you chose is written above, with the date and place.`,
+        "An organizer will confirm it and get in touch by email or phone if anything else is needed. Until then there is nothing for you to do: the offer is not a race registration and holds no place.",
+        `If you did not send the offer, write to us from the contact page and we will delete it; otherwise the organizers keep it at most ${volunteerDays("en")} from the event's start or from the offer, whichever is later.`,
+      ],
+    },
+    volunteerClubNotice: {
+      subject: (d: TemplateData) => `New volunteer for ${d.eventTitle ?? "the event"}`,
+      greeting: () => "Hello,",
+      facts: (d: TemplateData) => (d.volunteer ? { line: `${d.volunteer.name} — ${d.volunteer.roleEn}`, links: [] } : undefined),
+      body: (d: TemplateData) => [
+        `Someone offered to volunteer at ${d.eventTitle ?? "the event"}; their name and the role they chose are written above.`,
+        "The offer's state is «Registered»: confirm or cancel it on the event's «Volunteers» card (the button below). The address and the telephone number are there, not here.",
+      ],
+      action: "Open «Volunteers»",
     },
     registrationOpened: {
       subject: (d: TemplateData) => `Registration for ${d.eventTitle ?? "the event"} is open`,
@@ -2818,6 +2878,7 @@ const T = {
     privacyFooter: (club: string) => `You are receiving this message from ${club} about a registration made with this email address. How we use the data:`,
     privacyFooterInterest: (club: string) => `This message comes from ${club} because you asked to be told. How we use your data:`,
     privacyFooterInvitation: (club: string) => `This message comes because ${club} entered your name and address to invite you to this event. How we use your data:`,
+    privacyFooterVolunteer: (club: string) => `This message comes from ${club} because you offered, on the club's website, to help as a volunteer. How we use your data:`,
     privacyFooterDeclaration: (club: string) => `This message comes from ${club} because you signed a declaration on the club's website. How we use your data:`,
     privacyFooterNewsletter: (club: string) =>
       `This message comes from ${club} because you asked for the club's news at this address. Unsubscribe at any time from the link above. How we use your data:`,
@@ -2861,6 +2922,8 @@ const KEY_BY_MESSAGE_TYPE: Record<EmailMessageType, keyof typeof T.ro> = {
   SHOP_ORDER_PLACED: "shopOrderPlaced",
   SHOP_ORDER_PAID: "shopOrderPaid",
   SHOP_ORDER_CLUB_NOTICE: "shopOrderClubNotice",
+  VOLUNTEER_RECEIVED: "volunteerReceived",
+  VOLUNTEER_CLUB_NOTICE: "volunteerClubNotice",
 };
 
 /** The newsletter's three messages (§445): to an address, never about a registration. */
@@ -3517,7 +3580,9 @@ export function buildTemplateContent(
         // …nor the members' shop's three (§683): about an order, no event and no registration.
         messageType === "SHOP_ORDER_PLACED" ||
         messageType === "SHOP_ORDER_PAID" ||
-        messageType === "SHOP_ORDER_CLUB_NOTICE"
+        messageType === "SHOP_ORDER_CLUB_NOTICE" ||
+        // …nor the organizers' notice of a volunteer's sign-up (§754): to colleagues, its one link is its button.
+        messageType === "VOLUNTEER_CLUB_NOTICE"
       ) {
         return own.length > 0 ? own : undefined;
       }
@@ -3539,6 +3604,8 @@ export function buildTemplateContent(
               ? copy.privacyFooterDeclaration
               : messageType === "EVENT_INVITATION"
                 ? copy.privacyFooterInvitation
+              : messageType === "VOLUNTEER_RECEIVED"
+                ? copy.privacyFooterVolunteer
               : NEWSLETTER_MESSAGES.has(messageType)
                 ? copy.privacyFooterNewsletter
                 : copy.privacyFooter)(controllerName()),
@@ -3563,6 +3630,11 @@ function defaultLinkLifetime(locale: EmailLocale): string {
  */
 export function archivePeriod(locale: EmailLocale): string {
   return durationPhrase(locale, RETENTION_PERIODS.registrationsYearsAfterEvent, "years");
+}
+
+/** How long the organizers keep a volunteer's offer from the event's start (§754), from the sweep's own constant. */
+export function volunteerDays(locale: EmailLocale): string {
+  return durationPhrase(locale, RETENTION_PERIODS.volunteerDaysAfterEvent, "days");
 }
 
 /** How long the backoffice keeps the whole identity document after the event (§95), from the same constants. */

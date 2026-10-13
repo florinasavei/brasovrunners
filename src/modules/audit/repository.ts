@@ -457,6 +457,24 @@ export type AuditAction =
   | "event_todo.done"
   | "event_todo.reopened"
   | "event_todo.deleted"
+  /**
+   * An event's volunteers (§754), entity `event`: the switch «Primește voluntari», a role added, changed,
+   * moved or removed (the club's own words), and a volunteer entered, changed, confirmed, cancelled,
+   * deleted or signed up on the page (`volunteer.signed_up`, no actor). The metadata holds ids, the roles'
+   * names, states and the names of the fields changed — never a volunteer's name, address, telephone
+   * number or message, so deleting a volunteer leaves nothing of the person in the trail.
+   */
+  | "event.volunteers_switched"
+  | "volunteer_role.added"
+  | "volunteer_role.edited"
+  | "volunteer_role.moved"
+  | "volunteer_role.deleted"
+  | "volunteer.added"
+  | "volunteer.edited"
+  | "volunteer.state_changed"
+  | "volunteer.deleted"
+  | "volunteer.signed_up"
+  | "volunteer.exported"
   /** A message's own words, rewritten by the club (§247). */
   | "email_copy.changed"
   /** Who at the club receives the declaration copies and the confirmation notices (§244, §245). */

@@ -149,6 +149,8 @@ describe("§623 judgeEmailDelay", () => {
       "SHOP_ORDER_PLACED",
       "SHOP_ORDER_PAID",
       "SHOP_ORDER_CLUB_NOTICE",
+      "VOLUNTEER_RECEIVED",
+      "VOLUNTEER_CLUB_NOTICE",
     ] as const) {
       expect(isWaitedFor(type, false), type).toBe(false);
     }

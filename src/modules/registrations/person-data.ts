@@ -2,6 +2,7 @@ import { and, asc, desc, eq, inArray, or } from "drizzle-orm";
 import { auditLogs } from "@/db/schema/audit-logs";
 import { type DeclarationAcceptance, declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import { emailOutbox } from "@/db/schema/email-outbox";
+import { eventVolunteerRoles, eventVolunteers } from "@/db/schema/event-volunteers";
 import { eventTranslations } from "@/db/schema/events";
 import { type Participant, participants } from "@/db/schema/participants";
 import { registrationInterests } from "@/db/schema/registration-interests";
@@ -88,6 +89,27 @@ export type PersonData = {
     laterDeliveredAt: Date | null;
   }>;
   announcementRequests: Array<{ eventId: string; eventTitle: string | null; deliveryEmail: string; locale: string; createdAt: Date }>;
+  /**
+   * What the person offered as a volunteer (§754): the event, the role, the state, where it came from and
+   * what was typed — name, address, telephone number, their message and the organizers' note, every column
+   * of the row (art. 15 GDPR). Deleted by the event's «Voluntari» card, or thirty days after the event.
+   */
+  volunteerOffers: Array<{
+    eventId: string;
+    eventTitle: string | null;
+    /** The role's name in both languages: the page shows the one of its own locale. */
+    roleNameRo: string;
+    roleNameEn: string;
+    state: (typeof eventVolunteers.$inferSelect)["state"];
+    source: (typeof eventVolunteers.$inferSelect)["source"];
+    name: string;
+    deliveryEmail: string;
+    phone: string;
+    message: string | null;
+    note: string | null;
+    privacyNoticeVersion: number | null;
+    createdAt: Date;
+  }>;
   auditTrail: Array<{ action: string; entityType: string; entityId: string | null; createdAt: Date; actorName: string | null; metadata: unknown }>;
 };
 
@@ -164,6 +186,29 @@ async function collectPersonData<T extends Record<string, unknown>>(
     .where(eq(registrationInterests.canonicalEmail, canonicalEmail))
     .orderBy(asc(registrationInterests.createdAt));
 
+  // The offers to volunteer (§754), found by the same canonical address: the event's title in Romanian, the role as the club wrote it.
+  const volunteerOffers = await db
+    .select({
+      eventId: eventVolunteers.eventId,
+      eventTitle: eventTranslations.title,
+      roleNameRo: eventVolunteerRoles.nameRo,
+      roleNameEn: eventVolunteerRoles.nameEn,
+      state: eventVolunteers.state,
+      source: eventVolunteers.source,
+      name: eventVolunteers.name,
+      deliveryEmail: eventVolunteers.email,
+      phone: eventVolunteers.phone,
+      message: eventVolunteers.message,
+      note: eventVolunteers.note,
+      privacyNoticeVersion: eventVolunteers.privacyNoticeVersion,
+      createdAt: eventVolunteers.createdAt,
+    })
+    .from(eventVolunteers)
+    .innerJoin(eventVolunteerRoles, eq(eventVolunteerRoles.id, eventVolunteers.roleId))
+    .leftJoin(eventTranslations, and(eq(eventTranslations.eventId, eventVolunteers.eventId), eq(eventTranslations.locale, "ro")))
+    .where(eq(eventVolunteers.canonicalEmail, canonicalEmail))
+    .orderBy(asc(eventVolunteers.createdAt));
+
   const aboutThePerson = [
     ...(participant ? [eq(auditLogs.participantId, participant.id)] : []),
     ...(registrationIds.length > 0 ? [and(eq(auditLogs.entityType, "registration"), inArray(auditLogs.entityId, registrationIds))] : []),
@@ -194,6 +239,7 @@ async function collectPersonData<T extends Record<string, unknown>>(
     declarationAcceptances: acceptances,
     messages,
     announcementRequests,
+    volunteerOffers,
     auditTrail,
   };
 }
@@ -250,6 +296,7 @@ export async function exportPersonData<T extends Record<string, unknown>>(
       declarationAcceptances: data.declarationAcceptances.length,
       messages: data.messages.length,
       announcementRequests: data.announcementRequests.length,
+      volunteerOffers: data.volunteerOffers.length,
       auditRows: data.auditTrail.length,
     },
     now,

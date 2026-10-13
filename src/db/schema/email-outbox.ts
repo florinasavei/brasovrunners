@@ -116,6 +116,13 @@ export const emailMessageType = pgEnum("email_message_type", [
   // One per order to «Cine primește comenzile» on «Magazin» (its own section since §687), when the club set an address:
   // who ordered what. No token; the club opens the list behind the sign-in.
   "SHOP_ORDER_CLUB_NOTICE",
+  // A volunteer's sign-up on an event's page (§754): «Ți-am primit oferta de voluntar» to the person, in the
+  // language of the page. The volunteer's id in the payload; no token and no link that acts — the organizers
+  // confirm, the person does nothing — which is why no confirmation of the address is asked first.
+  "VOLUNTEER_RECEIVED",
+  // One per sign-up to each Organizer, Administrator and Superadministrator (§754): who offered for which role
+  // of which event. No token; the button opens the event's «Voluntari» card behind the sign-in.
+  "VOLUNTEER_CLUB_NOTICE",
 ]);
 
 export type EmailMessageType = (typeof emailMessageType.enumValues)[number];

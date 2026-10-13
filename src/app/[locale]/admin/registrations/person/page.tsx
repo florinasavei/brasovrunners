@@ -125,7 +125,7 @@ export default async function PersonDataPage({ params, searchParams }: Props) {
             </GlyphButton>
           </Stack>
 
-          {!data.participant && data.announcementRequests.length === 0 ? (
+          {!data.participant && data.announcementRequests.length === 0 && data.volunteerOffers.length === 0 ? (
             <Alert severity="info">{t("person.notFound")}</Alert>
           ) : (
             <>
@@ -201,6 +201,24 @@ export default async function PersonDataPage({ params, searchParams }: Props) {
                   data.announcementRequests.map((request, index) => (
                     <Typography key={index} variant="body2" color="text.secondary">
                       {show(request.createdAt)} · {request.eventTitle ?? request.eventId} · {request.deliveryEmail} · {request.locale}
+                    </Typography>
+                  ))
+                )}
+              </Box>
+              <Divider />
+              {/* What the person offered as a volunteer (§754): every column of the row, deleted from the event's «Voluntari» card. */}
+              <Box component="section" data-testid="person-volunteer-offers">
+                <Typography variant="h3" sx={{ fontSize: "1rem", mb: 1 }}>
+                  {t("person.volunteers", { count: data.volunteerOffers.length })}
+                </Typography>
+                {data.volunteerOffers.length === 0 ? (
+                  <Typography variant="body2">{t("person.none")}</Typography>
+                ) : (
+                  data.volunteerOffers.map((offer, index) => (
+                    <Typography key={index} variant="body2" color="text.secondary" sx={{ overflowWrap: "anywhere" }}>
+                      {show(offer.createdAt)} · {offer.eventTitle ?? offer.eventId} · {locale === "en" ? offer.roleNameEn : offer.roleNameRo} · {t(`volunteers.states.${offer.state}`)} · {t(`volunteers.sources.${offer.source}`)} · {offer.name} · {offer.deliveryEmail} · {offer.phone}
+                      {offer.message ? ` · ${offer.message}` : ""}
+                      {offer.note ? ` · ${offer.note}` : ""}
                     </Typography>
                   ))
                 )}

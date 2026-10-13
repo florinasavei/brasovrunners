@@ -230,6 +230,8 @@ const PUBLIC_PREFIXES = [
 const BACKOFFICE_FILES: ReadonlySet<string> = new Set([
   "src/modules/newsletter/ui/NewsletterPreview.tsx",
   "src/modules/newsletter/ui/SubscriberListFields.tsx",
+  // The event editor's «Voluntari» card (§754): the staff's; the public form beside it, `VolunteerBox`, stays public.
+  "src/modules/volunteers/ui/VolunteersCard.tsx",
   "src/modules/registrations/ui/DeskRow.tsx",
   "src/modules/registrations/ui/InviteForm.tsx",
   "src/modules/registrations/ui/QueuePanel.tsx",

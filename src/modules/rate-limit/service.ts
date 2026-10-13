@@ -23,6 +23,8 @@ export type RateLimitScope =
   | "feedback"
   | "group-run-declaration"
   | "newsletter-subscribe"
+  | "volunteer-signup"
+  | "volunteer-event"
   | "content-translate"
   | "bot-check-signal";
 
@@ -89,6 +91,17 @@ export const RATE_LIMITS: Record<RateLimitScope, { limit: number; windowMs: numb
    * together still put at most three messages an hour in one mailbox.
    */
   "newsletter-subscribe": { limit: 3, windowMs: 60 * 60_000 },
+  /**
+   * A volunteer's sign-up on an event's page (§754), hashed canonical address: each post mails an unproven
+   * address once, and a script would otherwise spend the allowance on one mailbox.
+   */
+  "volunteer-signup": { limit: 3, windowMs: 60 * 60_000 },
+  /**
+   * The same form, keyed on the event's id: every sign-up also mails each organizer, so this bounds how many
+   * messages one event's page can cause an hour whatever the addresses typed. Sixty is more sign-ups than a
+   * club gets in a season, and a refused post is told plainly, because a person is not a bot.
+   */
+  "volunteer-event": { limit: 60, windowMs: 60 * 60_000 },
   /** «Tradu din română» (§464), per staff id; the daily character budget bounds the cost. */
   "content-translate": { limit: 60, windowMs: 60 * 60_000 },
   /**
