@@ -508,6 +508,8 @@ describe("BR-REQ-060-01 every capability × every role", () => {
     canShowFaqItem: /*        */ [false, false, false, false, false, true, true],
     canDeleteEvent: /*        */ [false, false, false, false, false, true, true],
     canHardDeleteEvent: /*    */ [false, false, false, false, false, true, true],
+    // An event as a JSON file (§NNN): taking one out and bringing one in is the Administrator's.
+    canTransferEvents: /*     */ [false, false, false, false, false, true, true],
     canReadRegistrations: /*  */ [false, false, false, true, false, true, true],
     canMessageParticipants: /**/ [false, false, false, true, false, true, true],
     canSendNewsletter: /*     */ [false, false, false, true, false, true, true],

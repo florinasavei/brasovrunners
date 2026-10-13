@@ -23,8 +23,11 @@ import { WAITLIST_CHOICES } from "../waitlist-choice";
  * sentence before anything else is looked at (`readEventFile`).
  */
 
-/** The `format` every file carries, and the only one this release reads. */
-export const EVENT_FILE_FORMAT = "brasovrunners.event";
+/**
+ * The `format` every file carries, and the only one this release reads. Hyphenated, not dotted:
+ * `docs:check` reads the club's name followed by a dot and a word as the club's own hostname.
+ */
+export const EVENT_FILE_FORMAT = "brasovrunners-event";
 
 /** The version this release writes and reads. A later release that changes the shape raises it. */
 export const EVENT_FILE_VERSION = 1;

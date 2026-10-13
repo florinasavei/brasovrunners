@@ -1,4 +1,3 @@
-import { hasRichTextContent, readRichText, richTextToPlainText } from "@/modules/content/rich-text/domain/schema";
 import type { EventConfig } from "./file-format";
 import { type MediaKind, mapMediaUrls, TEXT_BOXES } from "./media";
 
@@ -66,6 +65,18 @@ function picturesIn(node: unknown): number {
   return (record.type === "image" ? 1 : 0) + Object.values(record).reduce<number>((sum, child) => sum + picturesIn(child), 0);
 }
 
+/** Every run of text in a document, in order, wherever it is nested. */
+function wordsIn(node: unknown, found: string[] = []): string[] {
+  if (Array.isArray(node)) {
+    for (const child of node) wordsIn(child, found);
+  } else if (typeof node === "object" && node !== null) {
+    const record = node as Record<string, unknown>;
+    if (record.type === "text" && typeof record.text === "string") found.push(record.text);
+    for (const [key, child] of Object.entries(record)) if (key !== "attrs" && typeof child === "object") wordsIn(child, found);
+  }
+  return found;
+}
+
 const MAX_TEXT = 240;
 const clip = (text: string) => (text.length > MAX_TEXT ? `${text.slice(0, MAX_TEXT - 1)}…` : text);
 
@@ -74,10 +85,11 @@ export function changeValueOf(path: string, value: unknown): ChangeValue {
   if (value === null || value === undefined || value === "") return { type: "empty" };
   if (typeof value === "boolean") return { type: "boolean", value };
   if (DOCUMENT_PATH.test(path)) {
-    const document = readRichText(value);
-    return hasRichTextContent(document)
-      ? { type: "document", text: clip(richTextToPlainText(document).replace(/\s+/g, " ").trim()), pictures: picturesIn(value) }
-      : { type: "empty" };
+    // Read as it is, never through the editor's schema: while two configurations are compared a
+    // picture's address is its digest, which that schema would refuse, and a diff must still say the words.
+    const text = wordsIn(value).join(" ").replace(/\s+/g, " ").trim();
+    const pictures = picturesIn(value);
+    return text === "" && pictures === 0 ? { type: "empty" } : { type: "document", text: clip(text), pictures };
   }
   if (typeof value === "string" && (value.startsWith(PICTURE_PREFIX.digest) || value.startsWith(PICTURE_PREFIX.address))) {
     return { type: "picture", known: value.startsWith(PICTURE_PREFIX.digest) };
@@ -86,6 +98,118 @@ export function changeValueOf(path: string, value: unknown): ChangeValue {
   if (typeof value === "number") return { type: "text", value: String(value) };
   return { type: "text", value: clip(JSON.stringify(value)) };
 }
+
+/**
+ * Every label a change can carry — the leaves of a whole configuration with the language taken out —
+ * so the page can say each in both languages (`Admin.eventJson.fields.<label>`). A test holds the list to
+ * the configuration's own shape (a leaf with no label, a label with no leaf) and to the catalogues.
+ */
+export const FIELD_LABELS = [
+  "type",
+  "surface",
+  "timezone",
+  "start.date",
+  "start.time",
+  "durationMinutes",
+  "raceStartsAt",
+  "dateToBeAnnounced",
+  "timeToBeAnnounced",
+  "programme",
+  "place.name",
+  "place.address",
+  "place.toBeAnnounced",
+  "place.mapUrl",
+  "place.coordinates.latitude",
+  "place.coordinates.longitude",
+  "weather.mode",
+  "route.url",
+  "route.maps",
+  "route.gpx.name",
+  "route.gpx.url",
+  "links",
+  "partners",
+  "stravaEventUrl",
+  "facebookEventUrl",
+  "measures.distanceMeters",
+  "measures.distanceEstimated",
+  "measures.elevationGainMeters",
+  "measures.elevationGainEstimated",
+  "difficultyLevel",
+  "nightOverride",
+  "cost.type",
+  "cost.amount",
+  "cost.url",
+  "offersGroupRunDeclaration",
+  "isSpecial",
+  "membersOnly",
+  "cover.url",
+  "cover.crop",
+  "registration.mode",
+  "registration.capacity",
+  "registration.waitlist.choice",
+  "registration.waitlist.limit",
+  "registration.waitlistAutoOffer",
+  "registration.opensAt",
+  "registration.opensSoon",
+  "registration.closesAt",
+  "registration.confirmationOpensDaysBefore",
+  "registration.confirmationDeadlineDaysBefore",
+  "registration.minAge",
+  "registration.reminderHoursBefore",
+  "registration.declaration.key",
+  "registration.external.provider",
+  "registration.external.url",
+  "registration.kitShirt",
+  "registration.askHealthNote",
+  "publicList.names",
+  "publicList.waitlist",
+  "publicList.waitlistCount",
+  "publicList.count",
+  "hiddenList.enabled",
+  "hiddenList.bibStart",
+  "hiddenList.counted",
+  "hiddenList.public",
+  "bib.startNumber",
+  "bib.colour",
+  "bib.design.showName",
+  "bib.design.showEventTitle",
+  "bib.design.showDate",
+  "bib.design.showLogo",
+  "bib.design.numberScale",
+  "bib.design.numberFormat",
+  "bib.design.namePosition",
+  "bib.design.headerImageSrc",
+  "bib.design.sponsorImageSrc",
+  "bib.design.headerImageCrop",
+  "bib.design.sponsorImageCrop",
+  "bib.design.cutMarks",
+  "bib.design.showEmail",
+  "bib.design.showPartners",
+  "bib.design.showEventInFooter",
+  "bib.design.showWebsite",
+  "bib.design.footerText",
+  "bib.design.member.enabled",
+  "bib.design.member.style",
+  "bib.design.member.bandColour",
+  "bib.design.member.headerImageSrc",
+  "bib.design.member.headerImageCrop",
+  "bib.design.member.cardImageSrc",
+  "bib.design.member.cardImageCrop",
+  "bib.design.member.label",
+  "translations.slug",
+  "translations.title",
+  "translations.excerpt",
+  "translations.excerptBody",
+  "translations.checklist",
+  "translations.body",
+  "translations.rules",
+  "translations.schedule",
+  "translations.routeDescription",
+  "translations.seoTitle",
+  "translations.seoDescription",
+  "translations.discountNote",
+  "translations.weatherNote",
+] as const;
 
 /** The message key and the language of a leaf's label: `translations.ro.title` is `translations.title` in `ro`. */
 export function labelOf(path: string): { label: string; locale: "ro" | "en" | null } {

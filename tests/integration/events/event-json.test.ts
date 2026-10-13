@@ -261,7 +261,7 @@ describe("the file an event is exported as", () => {
     const { event } = await seedRace();
     const { file, fileName } = await exportEvent(db, { actor: admin, eventId: event.id, now: NOW });
 
-    expect(file.format).toBe("brasovrunners.event");
+    expect(file.format).toBe("brasovrunners-event");
     expect(file.version).toBe(1);
     expect(file.exportedAt).toBe(NOW.toISOString());
     expect(file.exportedFrom.environment).toBe("test");
@@ -486,7 +486,7 @@ describe("import as a new event", () => {
     hostile.media = hostile.media.map((entry) => (entry.url === cover.url ? { ...entry, url: "https://files.example.test/some/other/path.png" } : entry));
     hostile.event.cover = { url: "https://files.example.test/some/other/path.png", crop: null };
     const result = await importEventAsNew(db, { actor: admin, file: hostile, fetchImpl: serving({ "https://files.example.test/some/other/path.png": pictureBytes }), now: NOW });
-    expect(result.media.problems).toContainEqual({ role: "cover", reason: "refused" });
+    expect(result.media.problems).toContainEqual({ role: "cover", roleKey: "cover", reason: "refused" });
     expect((await reload(result.eventId)).coverMediaAssetId).toBeNull();
   });
 

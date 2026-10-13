@@ -180,6 +180,8 @@ export const routing = defineRouting({
      */
     "/devs": "/devs",
     "/admin/events/new": "/admin/events/new",
+    // «Importă un eveniment (JSON)» (§NNN): a static segment, which wins over `[id]`.
+    "/admin/events/import": "/admin/events/import",
     "/admin/events/[id]": "/admin/events/[id]",
     /** Every bib of the event as a picture (`DECISIONS.md` §94). */
     "/admin/events/[id]/bibs": "/admin/events/[id]/bibs",

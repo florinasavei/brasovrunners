@@ -12,6 +12,7 @@ import {
   canReadContent,
   canReadRegistrations,
   canSendNewsletter,
+  canTransferEvents,
   canTransitionEvent,
   canWorkTheDesk,
   eventEditorTransitions,
@@ -48,6 +49,7 @@ const EVENT_VERBS: Record<string, { gate: (role: StaffRole) => boolean; row: Row
   "bring back from the archive (ARCHIVED → DRAFT)": { gate: (role) => canTransitionEvent(role, "ARCHIVED", "DRAFT", false), row: [false, false, false, false, false, true, true] },
   "delete (deleteEvent)": { gate: canDeleteEvent, row: [false, false, false, false, false, true, true] },
   "erase with its registrations (hardDeleteEvent)": { gate: canHardDeleteEvent, row: [false, false, false, false, false, true, true] },
+  "export, import as new, import over an event as JSON (§NNN)": { gate: canTransferEvents, row: [false, false, false, false, false, true, true] },
   // What the Organizer keeps (§289, §67, §364, §445), unchanged by §542.
   "read the event (the editor, read-only)": { gate: canReadContent, row: [false, false, true, true, true, true, true] },
   "read the registrations, the export, the numbers, the queue (§289)": { gate: canReadRegistrations, row: [false, false, false, true, false, true, true] },
@@ -90,6 +92,7 @@ describe("BR-REQ-060-01 §542 the events list offers each role only what its ser
       publish: false,
       switchSeries: false,
       readRegistrations: true,
+      transfer: false,
     });
   });
 
@@ -114,6 +117,7 @@ describe("BR-REQ-060-01 §542 the events list offers each role only what its ser
       expect(verbs.hardDelete, role).toBe(canHardDeleteEvent(role));
       expect(verbs.publish, role).toBe(canTransitionEvent(role, "IN_REVIEW", "PUBLISHED", false));
       expect(verbs.readRegistrations, role).toBe(canReadRegistrations(role));
+      expect(verbs.transfer, role).toBe(canTransferEvents(role));
     }
   });
 

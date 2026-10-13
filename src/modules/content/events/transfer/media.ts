@@ -43,7 +43,30 @@ const BIB_PICTURES = [
   { role: "bib.member.card", path: ["member", "cardImageSrc"] },
 ] as const;
 
-const IMAGE_TAIL = /(?:^|\/)([a-z]+\/[0-9a-f-]{36}\/web\.webp)$/;
+/** The words' key of a medium's role (`Admin.eventJson.roles.<key>`): the five places a picture sits, and the GPX. */
+export type MediaRoleKey = "cover" | "bibHeader" | "bibSponsors" | "bibMemberHeader" | "bibMemberCard" | "text" | "gpx";
+export const MEDIA_ROLE_KEYS: readonly MediaRoleKey[] = ["cover", "bibHeader", "bibSponsors", "bibMemberHeader", "bibMemberCard", "text", "gpx"];
+
+export function mediaRoleKey(role: string): MediaRoleKey {
+  switch (role) {
+    case "cover":
+      return "cover";
+    case "bib.header":
+      return "bibHeader";
+    case "bib.sponsors":
+      return "bibSponsors";
+    case "bib.member.header":
+      return "bibMemberHeader";
+    case "bib.member.card":
+      return "bibMemberCard";
+    case "route.gpx":
+      return "gpx";
+    default:
+      return "text";
+  }
+}
+
+const IMAGE_TAIL =/(?:^|\/)([a-z]+\/[0-9a-f-]{36}\/web\.webp)$/;
 const GPX_TAIL = /(?:^|\/)([a-z]+\/route-gpx\/[0-9a-f-]{36}\/[a-z0-9-]{1,60}\.gpx)$/;
 
 /** The store key behind a public address, or null when the address is none of this site's. */
@@ -176,7 +199,7 @@ export async function describeMedia(refs: readonly MediaRef[], read: (ref: Media
 // --- Fetching a medium from another environment ------------------------------------------------
 
 /** What a medium that was not copied is listed with — the words are `Admin.eventJson.media.<reason>`. */
-export type MediaFailure = "refused" | "unverifiable" | "unreachable" | "tooLarge" | "sizeMismatch" | "hashMismatch" | "notAPicture";
+export type MediaFailure = "refused" | "unverifiable" | "unreachable" | "tooLarge" | "sizeMismatch" | "hashMismatch" | "notAPicture" | "noStorage";
 
 export type FetchedMedium = { ok: true; bytes: Buffer } | { ok: false; reason: MediaFailure };
 

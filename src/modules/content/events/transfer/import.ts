@@ -27,6 +27,8 @@ import {
   fetchVerifiedMedium,
   type MediaFailure,
   mapMediaUrls,
+  mediaRoleKey,
+  type MediaRoleKey,
   readStoredMedium,
   storeCopiedPicture,
 } from "./media";
@@ -50,7 +52,7 @@ import {
 type Actor = Pick<StaffUser, "id" | "role">;
 
 /** Why a medium was left out, with the place that named it. */
-export type MediaProblem = { role: string; reason: MediaFailure };
+export type MediaProblem = { role: string; roleKey: MediaRoleKey; reason: MediaFailure };
 
 export type MediaOutcome = { copied: number; reused: number; problems: MediaProblem[] };
 
@@ -61,10 +63,6 @@ export type ImportNote =
   | { code: "seriesNotApplied" };
 
 const allowsHttp = () => env.APP_ENV === "local" || env.APP_ENV === "test";
-
-function storageOrThrow(): Storage {
-  return getStorage();
-}
 
 // --- Media -------------------------------------------------------------------------------------
 
@@ -120,7 +118,7 @@ async function resolveMedia<T extends Record<string, unknown>>(
   const { file } = input;
   const reuse = input.reuse ?? NO_REUSE;
   const refs = collectMediaRefs(file.event);
-  const storage = refs.length > 0 ? storageOrThrow() : null;
+  const storage = refs.length > 0 ? storageOrNull() : null;
   const srcByUrl = new Map<string, string | null>();
   const assetByUrl = new Map<string, string | null>();
   const gpxByUrl = new Map<string, RouteGpx | null>();
@@ -150,9 +148,16 @@ async function resolveMedia<T extends Record<string, unknown>>(
         continue;
       }
     }
+    // A deployed environment without its bucket (SETUP.md §32) can copy nothing: said, not thrown.
+    if (!storage) {
+      problems.push({ role: ref.role, roleKey: mediaRoleKey(ref.role), reason: "noStorage" });
+      if (ref.kind === "gpx") gpxByUrl.set(ref.url, null);
+      else srcByUrl.set(ref.url, null);
+      continue;
+    }
     const fetched = await fetchVerifiedMedium(entry, ref, { allowHttp: allowsHttp(), fetchImpl: input.fetchImpl });
     if (!fetched.ok) {
-      problems.push({ role: ref.role, reason: fetched.reason });
+      problems.push({ role: ref.role, roleKey: mediaRoleKey(ref.role), reason: fetched.reason });
       if (ref.kind === "gpx") gpxByUrl.set(ref.url, null);
       else srcByUrl.set(ref.url, null);
       continue;
@@ -163,14 +168,14 @@ async function resolveMedia<T extends Record<string, unknown>>(
         copied += 1;
       } catch {
         gpxByUrl.set(ref.url, null);
-        problems.push({ role: ref.role, reason: "notAPicture" });
+        problems.push({ role: ref.role, roleKey: mediaRoleKey(ref.role), reason: "notAPicture" });
       }
       continue;
     }
     const stored = await storeCopiedPicture(db, storage as Storage, { actorId: input.actor.id, bytes: fetched.bytes, originalFilename: `${ref.role}.webp`, now: input.now });
     if ("refused" in stored) {
       srcByUrl.set(ref.url, null);
-      problems.push({ role: ref.role, reason: stored.refused });
+      problems.push({ role: ref.role, roleKey: mediaRoleKey(ref.role), reason: stored.refused });
     } else {
       srcByUrl.set(ref.url, stored.src);
       assetByUrl.set(ref.url, stored.assetId);
@@ -406,7 +411,7 @@ async function assertSlugsFree<T extends Record<string, unknown>>(db: Database<T
 export type DiffEventImportResult = {
   changes: ConfigChange[];
   /** What the file names, and whether each medium is already on the event (same bytes) or would be copied. */
-  media: Array<{ role: string; state: "same" | "copy" | "unverifiable" }>;
+  media: Array<{ role: string; roleKey: MediaRoleKey; state: "same" | "copy" | "unverifiable" }>;
   target: {
     id: string;
     version: number;
@@ -437,6 +442,7 @@ export async function diffEventImport<T extends Record<string, unknown>>(db: Dat
   const sameHashes = new Set(targetDigests.values());
   const media = input.file.media.map((entry) => ({
     role: entry.role,
+    roleKey: mediaRoleKey(entry.role),
     state: entry.sha256 === null ? ("unverifiable" as const) : sameHashes.has(entry.sha256) ? ("same" as const) : ("copy" as const),
   }));
   const slugs = slugsOver(target.event, target.translations, input.file.event);
