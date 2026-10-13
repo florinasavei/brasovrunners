@@ -208,6 +208,7 @@ const BACKOFFICE_PREFIXES = [
   "src/app/[locale]/admin/",
   "src/app/[locale]/devs/",
   "src/modules/club-todo/",
+  "src/modules/event-todos/",
   "src/modules/content/",
   "src/modules/design/",
   "src/modules/diagnostics/",
