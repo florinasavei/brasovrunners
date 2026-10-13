@@ -2,7 +2,6 @@ import { and, asc, eq, getTableColumns, inArray, ne, sql } from "drizzle-orm";
 import { staffUserPermissions } from "@/db/schema/staff-user-permissions";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
-import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import { STAFF_PERMISSIONS, type StaffPermission, type StaffRole } from "./domain/roles";
 
 /**
@@ -131,12 +130,6 @@ export async function insertStaffUser<T extends Record<string, unknown>>(
       preferredLocale: input.preferredLocale ?? "ro",
     })
     .returning();
-  /*
-    An account is a club member (`member-ticks.ts#memberCanonicalEmails`), and the public list's «Club»
-    column shows the club's name for a member (§753): a new account changes the cached lists, so they expire
-    with the rows (a no-op outside a Next server).
-  */
-  revalidatePublicContent("places");
   return row;
 }
 
@@ -158,8 +151,6 @@ export async function deleteStaffUser<T extends Record<string, unknown>>(
   id: string,
 ): Promise<void> {
   await db.delete(staffUsers).where(eq(staffUsers.id, id));
-  // A removed account is no longer a member: the public list stops showing the club for it at once (§753).
-  revalidatePublicContent("places");
 }
 
 /**

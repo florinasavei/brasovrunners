@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.15-2026-10-14 -->
+<!-- PROJECT_BASELINE: BR-V3.16-2026-10-14 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V3.15-2026-10-14`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.16-2026-10-14`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -811,6 +811,8 @@ coffee is run on nothing.
 41. Under `members_only` the public list's club cell holds the club's own name only for a registration whose person is on the club's members list (the member bibs' own test) AND whose typed club names the club — case, diacritics, punctuation, spaces and filler words folded, the club's name and its usual short forms (BVR, «BR Brașov», «Brașov Runners Club»…), never a substring of another name; a member who typed another club or nothing, and a non-member who typed the club's name, show a blank cell, and the typed text of a non-member is not even selected (2026-10-13, `DECISIONS.md` §753).
 42. The «Club» column of the public list is not drawn under `members_only` when no row on the page holds a value, is drawn as it always was under `as_typed`, and is never drawn under `hidden`; the setting applies to the confirmed, pending and waiting rows alike, and leaves the backoffice, the exports, the desk and the bibs on the typed club (2026-10-13, `DECISIONS.md` §753).
 43. Adding or removing a member account expires the cached public lists (`places`), so a person who is no longer a member stops showing the club's name at once (2026-10-13, `DECISIONS.md` §753).
+44. Criteria 41 and 43 amended: under `members_only` the public list's club cell holds the club's own name for every registration whose typed club names the club, whoever typed it — an account on «Echipa» is no condition — and is blank for every other text; the typed text is turned into the club's name or into nothing before the row is cached or drawn, and adding or removing an account no longer expires the public lists (2026-10-14, `DECISIONS.md` §756).
+45. A typed club names the club when, with case, diacritics, punctuation, spaces and filler words («Clubul», «Asociația», «ACS», «Team», «România», «ro», «com»…) folded, it splits — glued or not — into the club's own words, initials, plate-code short form and nicknames and nothing else, and names the club (its words in order, the initials beside the first word, or «BVR»); one typo is forgiven in each of its words of six letters or more, inside one typed word, never a digit; the plate code and the nickname belong to the club's constants beside its name and name no other configured club; «Brașov Runners Cluj», «Cluj Runners», «Brasov Runners A», «Brasov Runners 2024», «Runners», «BR» and «Brașov» alone never match (2026-10-14, `DECISIONS.md` §756).
 
 **Verification:** integration `privacy/public-surface.test.ts`
 

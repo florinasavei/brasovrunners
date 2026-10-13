@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V3.16-2026-10-14
+
+- **The public list's club shows for everyone who typed it** — under «Doar Brașov Runners» the list now writes «Brașov Runners» for every runner whose club names it, with or without an account on «Echipa», so the live race's list shows the club again; the matcher forgives «Brasov Runers», «BVR - Brasov Runners» and «brasovrunners», and still hides every other club. §756.
 ## BR-V3.15-2026-10-14
 
 - **Volunteers for a race** — an event's editor gets a card «Voluntari»: the organizers define the event's own roles in Română and English (how many people each needs, in the order they choose), enter people by hand, confirm or cancel them and download the list, and tick «Primește voluntari» for the event's page to show «Vreau să fiu voluntar» — name, address, telephone, role, message and a consent tick, behind the registration form's anti-bot checks, shown only while a role still needs people and the privacy notice in force describes volunteers (the template's new `{{volunteers}}`, to be approved; `/admin/tasks` has the row). The person gets one email of receipt, each Organizer and Administrator a notice; a repeat gets the same answer; a volunteer is not a registration, takes no place and is on no public list; the offers go thirty days after the event. §754.
