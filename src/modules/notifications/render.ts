@@ -59,6 +59,7 @@ import {
 } from "@/modules/registrations/family-entries";
 import { familyReservationHoldsAt, reservedUntilPhrase } from "@/modules/registrations/domain/family-reservation";
 import { eventInvitations } from "@/db/schema/event-invitations";
+import { eventVolunteerRoles, eventVolunteers } from "@/db/schema/event-volunteers";
 import { shopOrders } from "@/db/schema/shop";
 import { readShopSettings } from "@/modules/content/shop/settings";
 import { isUuid } from "@/shared/ids";
@@ -339,8 +340,14 @@ async function renderRow(
   // The event comes from the registration — or, for the one message about an event and
   // nobody's registration (§146), from the payload's id, so a renamed event renders right.
   // A bulk send's club copy names its event the same way (§419).
+  // A volunteer's two messages (§754) name their event the same way: the payload's id, no registration behind them.
   const payloadEventId =
-    row.messageType === "REGISTRATION_OPENED" || bulkRecipients !== null ? (row.payloadJson as { eventId?: unknown } | null)?.eventId : undefined;
+    row.messageType === "REGISTRATION_OPENED" ||
+    row.messageType === "VOLUNTEER_RECEIVED" ||
+    row.messageType === "VOLUNTEER_CLUB_NOTICE" ||
+    bulkRecipients !== null
+      ? (row.payloadJson as { eventId?: unknown } | null)?.eventId
+      : undefined;
   const eventId = registration?.eventId ?? (typeof payloadEventId === "string" ? payloadEventId : undefined);
   // Every language's texts of the event, from the batch's one read of it (`createOutboxRenderer`).
   const eventTexts = eventId ? await eventRows(db, eventId) : [];
@@ -874,6 +881,36 @@ async function renderRow(
       row.messageType === "SHOP_ORDER_CLUB_NOTICE"
         ? `${env.APP_BASE_URL}${getPathname({ locale, href: "/admin/shop/orders" })}#shop-orders`
         : `${env.APP_BASE_URL}${getPathname({ locale, href: "/members-area/shop" })}#members-shop`;
+  }
+  /*
+    A volunteer's two messages (§754): the volunteer's id and the event's are the payload — no
+    participant, no token. The name and the role (both languages, the club typed both) are read here, at
+    the send, so a role renamed after the sign-up reads right; a volunteer gone or cancelled since
+    withdraws the message (nothing left to acknowledge). The person's message has no button; the
+    organizers' opens the event's «Voluntari» card behind the sign-in — from `APP_BASE_URL` (AGENTS.md §8).
+  */
+  if (row.messageType === "VOLUNTEER_RECEIVED" || row.messageType === "VOLUNTEER_CLUB_NOTICE") {
+    const volunteerId = (row.payloadJson as { volunteerId?: unknown } | null)?.volunteerId;
+    const [volunteer] =
+      typeof volunteerId === "string" && isUuid(volunteerId)
+        ? await db
+            .select({
+              name: eventVolunteers.name,
+              state: eventVolunteers.state,
+              roleRo: eventVolunteerRoles.nameRo,
+              roleEn: eventVolunteerRoles.nameEn,
+            })
+            .from(eventVolunteers)
+            .innerJoin(eventVolunteerRoles, eq(eventVolunteerRoles.id, eventVolunteers.roleId))
+            .where(eq(eventVolunteers.id, volunteerId))
+            .limit(1)
+        : [];
+    if (!volunteer || volunteer.state === "CANCELLED") throw new OutboxMessageWithdrawn("the volunteer is gone or was cancelled");
+    data.participantName = row.messageType === "VOLUNTEER_CLUB_NOTICE" ? "" : volunteer.name;
+    data.volunteer = { name: volunteer.name, roleRo: volunteer.roleRo, roleEn: volunteer.roleEn };
+    if (row.messageType === "VOLUNTEER_CLUB_NOTICE" && eventId) {
+      payloadActionUrl = `${env.APP_BASE_URL}${getPathname({ locale, href: { pathname: "/admin/events/[id]", params: { id: eventId } } })}#box-volunteers`;
+    }
   }
   // The update's one button is the event's own page (§331): public, no token — and, like every
   // action, absent from a club copy.

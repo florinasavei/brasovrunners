@@ -70,7 +70,9 @@ import {
   describesNewsletter,
   describesPromotionalMaterials,
   describesPromotionalMaterialsShared,
+  describesVolunteers,
 } from "@/modules/legal-documents/domain/merge-fields";
+import { readPublicVolunteerRoles } from "@/modules/volunteers/volunteers";
 import { describesRefusal } from "@/modules/legal-documents/domain/refusal-clause";
 import { findCurrentApprovedDocument, findFirstStatesNoticeVersion, listEffectiveDates } from "@/modules/legal-documents/repository";
 import { DEFAULT_BOT_CHECK, readBotCheck } from "@/modules/registrations/bot-check";
@@ -557,6 +559,28 @@ export async function cachedPromotionalMaterialsShared(now: Date): Promise<boole
 export async function cachedNewsletterOffered(now: Date): Promise<boolean> {
   const notices = await Promise.all(routing.locales.map((locale) => cachedCurrentApprovedDocument("PRIVACY_NOTICE", locale, now)));
   return notices.every((notice) => notice !== undefined && describesNewsletter(notice.body));
+}
+
+/**
+ * Whether an event's page may offer «Vreau să fiu voluntar» (§754): the privacy notice in force describes
+ * the event volunteers (`describesVolunteers`), in every language — `cachedNewsletterOffered`'s reading,
+ * so an approval opens the form the moment the notice itself changes. `noticeDescribesVolunteers` is the
+ * uncached twin the sign-up asks again at every post.
+ */
+export async function cachedVolunteersDescribed(now: Date): Promise<boolean> {
+  const notices = await Promise.all(routing.locales.map((locale) => cachedCurrentApprovedDocument("PRIVACY_NOTICE", locale, now)));
+  return notices.every((notice) => notice !== undefined && describesVolunteers(notice.body));
+}
+
+/**
+ * An event's volunteer roles with how each stands (§754, `readPublicVolunteerRoles`): the tick, and for
+ * each role its names, its description and how many people it still needs — names and counts only, nothing
+ * of a person. Filed under the event's and the places' tags: every write to the roles or the people
+ * (`volunteers.ts`) expires it, so a role that has just filled is not offered. It is a page render and not a
+ * decision: the sign-up counts again under the role's lock.
+ */
+export async function cachedVolunteerRoles(eventId: string) {
+  return publicRead(["volunteers.roles", eventId], ["places", "events"], () => readPublicVolunteerRoles(getDb(), eventId));
 }
 
 /**

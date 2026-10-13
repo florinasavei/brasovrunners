@@ -37,6 +37,8 @@ const LAUNCHED: OwnerTaskInputs = {
   feedbackNamedDescribed: true,
   shopDescribed: true,
   visibleShopProducts: 1,
+  volunteersDescribed: true,
+  volunteeringEvents: 1,
   gmailFallbackDescribed: true,
   refusalDescribed: true,
   teamPageDescribed: true,
@@ -136,6 +138,19 @@ describe("owner tasks", () => {
     expect(stateOf(LAUNCHED, "feedbackNamedNotice")).toBe("done");
     // Its own answer, not the forms': a notice naming the forms and not the named mode leaves it open.
     expect(stateOf({ ...LAUNCHED, feedbackNamedDescribed: false }, "feedbackNotice")).toBe("done");
+  });
+
+  it("§754: the volunteers' notice row is open while an event ahead takes volunteers and the notice is silent, done once it names them, absent otherwise", () => {
+    expect(stateOf({ ...LAUNCHED, volunteersDescribed: false }, "volunteersNotice")).toBe("open");
+    expect(stateOf(LAUNCHED, "volunteersNotice")).toBe("done");
+    expect(stateOf({ ...LAUNCHED, volunteeringEvents: 0 }, "volunteersNotice")).toBe("done");
+    expect(ownerTasks({ ...LAUNCHED, volunteersDescribed: false, volunteeringEvents: 0 }).some((task) => task.id === "volunteersNotice")).toBe(false);
+    expect(ownerTasks({ ...LAUNCHED, hasApprovedPrivacyNotice: false }).some((task) => task.id === "volunteersNotice")).toBe(false);
+    for (const catalogue of [ro, en]) {
+      const item = catalogue.Admin.tasks.items.volunteersNotice;
+      expect(item.title && item.todo && item.done).toBeTruthy();
+      expect(item.how.join("\n")).toContain("/admin/legal");
+    }
   });
 
   it("§683: the shop's notice row is open while a product is visible and the notice is silent, done once it names the shop, absent otherwise", () => {
@@ -408,6 +423,7 @@ describe("owner tasks", () => {
       "feedbackNotice",
       "feedbackNamedNotice",
       "shopNotice",
+      "volunteersNotice",
       "gmailFallbackNotice",
       "refusalTerms",
       "teamPageNotice",

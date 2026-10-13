@@ -20,6 +20,7 @@ import {
   describesFeedbackForms,
   describesFeedbackFormsNamed,
   describesMembersShop,
+  describesVolunteers,
   describesListNumbers,
   describesGmailFallback,
   describesListSocials,
@@ -305,6 +306,17 @@ export async function noticeDescribesFeedbackFormsNamed<T extends Record<string,
 export async function noticeDescribesMembersShop<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<boolean> {
   const notices = await Promise.all(routing.locales.map((locale) => findCurrentApprovedDocument(db, "PRIVACY_NOTICE", locale, now)));
   return notices.every((notice) => notice !== undefined && describesMembersShop(notice.body));
+}
+
+/**
+ * Whether the privacy notice in force describes the event volunteers (§754, `describesVolunteers`) — in
+ * every language, like `noticeDescribesMembersShop`: one form serves both pages, and a person in either
+ * was told only what their language's notice says. For the public sign-up (asked again at every post),
+ * and `/admin/tasks`; the event page reads the cached twin (`cachedVolunteersDescribed`).
+ */
+export async function noticeDescribesVolunteers<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<boolean> {
+  const notices = await Promise.all(routing.locales.map((locale) => findCurrentApprovedDocument(db, "PRIVACY_NOTICE", locale, now)));
+  return notices.every((notice) => notice !== undefined && describesVolunteers(notice.body));
 }
 
 /**

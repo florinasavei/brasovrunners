@@ -23,6 +23,7 @@ import {
   bibNumberFit,
   bibNumberPoints,
 } from "@/modules/registrations/bib-geometry";
+import { bibHeader } from "@/modules/registrations/bib-header";
 import { renderBibImage } from "@/modules/registrations/bib-image";
 import { type BibProfileDrawing, bibProfileDrawing, parseGpxProfile } from "@/modules/registrations/bib-profile";
 import { bibSheetFooterLines, renderBibSheet } from "@/modules/registrations/bibs-pdf";
@@ -190,12 +191,19 @@ describe("§750 the distance badge", () => {
   it("keeps the race's title clear of it", async () => {
     const on = await sheet({ design: design({ showDistance: true }), distanceBadge: "21K" });
     const off = await sheet({ design: design({ showDistance: false }) });
-    const title = (drawn: Drawn) => drawn.runs.find((run) => run.text === SHEET.eventTitle)!;
-    expect(title(off).width! - title(on).width!).toBe(BIB_LAYOUT.badgeWidth + BIB_LAYOUT.badgeGap);
+    // The title is right-aligned by hand with no width (§755): its right edge is its x plus pdfkit's own width.
+    const measure = new PDFDocument({ autoFirstPage: false });
+    measure.registerFont("bold", path.join(process.cwd(), "src", "theme", "pdf", "Roboto-Bold.ttf"));
+    const right = (drawn: Drawn) => {
+      const run = drawn.runs.find((candidate) => candidate.text === SHEET.eventTitle)!;
+      return run.x! + measure.font("bold").fontSize(run.size!).widthOfString(run.text);
+    };
+    expect(right(off) - right(on)).toBeCloseTo(BIB_LAYOUT.badgeWidth + BIB_LAYOUT.badgeGap, 6);
+    expect(right(on)).toBeLessThanOrEqual(BIB_MARGIN + BIB_CARD.width - BIB_LAYOUT.inset - BIB_LAYOUT.badgeWidth - BIB_LAYOUT.badgeGap + 1e-6);
   });
 
   it("is drawn in the picture in the header's text colour: white on the band", async () => {
-    const badgeAt = { x: Math.round((BIB_MARGIN + BIB_CARD.width - BIB_LAYOUT.inset - BIB_LAYOUT.badgeWidth + 5) * BIB_IMAGE_SCALE), y: Math.round((BIB_MARGIN + BIB_LAYOUT.badgeTop + BIB_LAYOUT.badgeHeight / 2) * BIB_IMAGE_SCALE) };
+    const badgeAt = { x: Math.round((BIB_MARGIN + BIB_CARD.width - BIB_LAYOUT.inset - BIB_LAYOUT.badgeWidth + 5) * BIB_IMAGE_SCALE), y: Math.round((BIB_MARGIN + bibHeader({ title: null, date: null, logo: true, badge: true, label: false }).badgeTop + BIB_LAYOUT.badgeHeight / 2) * BIB_IMAGE_SCALE) };
     const pixel = async (overrides: Partial<BibDesign>) => {
       const response = await renderBibImage({ bibNumber: 101, registeredName: "A", ...SHEET, bandColour: null, design: design(overrides), distanceBadge: "21K" });
       const { data, info } = await sharp(Buffer.from(await response.arrayBuffer())).raw().toBuffer({ resolveWithObject: true });

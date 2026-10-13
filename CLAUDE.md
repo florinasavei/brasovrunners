@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.14-2026-10-13 -->
+<!-- PROJECT_BASELINE: BR-V3.15-2026-10-14 -->
 
 # CLAUDE.md — start here if you are an AI coding agent
 
-**Baseline `BR-V3.14-2026-10-13`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
+**Baseline `BR-V3.15-2026-10-14`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
 
 Brașov Runners: a bilingual website and free event-registration platform for a small running
 club in Brașov, Romania. One Next.js App Router monolith, PostgreSQL, Material UI.
@@ -246,6 +246,7 @@ it is the authority, this is the summary):
     Since §636 the owner decided it must: once terms carrying that paragraph's grounds word for word are in force in both languages, the form's box also names «refuzarea sau anularea unei înscrieri de către club» and the fold «Cum funcționează înscrierea» says the club may refuse — until then `/admin/tasks` carries the row `refusalTerms`.
     Since §646 the terms' and the privacy notice's templates also describe the waiting list in both modes — freed places offered in order of confirmation when the event offers them automatically, otherwise by the organizers to one person on objective grounds they can state — and the places the club may seat outside the advertised ones; approve the terms and the notice from the new templates on production, in the same sitting, like every text.
     Since §741 the notice's template says that an event's route map loads with the page, and when an event has both a Strava and a Garmin Connect map only the chosen tab's loads (Strava first), the other when its tab is chosen, each provider seeing the visitor's IP address — approve the notice from the new template before relying on the maps opening by themselves, a lawyer reading that paragraph first (whether loading a provider's frame that may set cookies without a press needs the visitor's consent under Legea nr. 506/2004 art. 4(5) is the lawyer's question, not decided here).
+    Since §754 the notice's template also describes the event volunteers (`{{volunteers}}`: what a sign-up keeps, why, who sees it, thirty days after the event) — approve the notice from the new template before an event's page can offer «Vreau să fiu voluntar», a lawyer reading section 5's paragraph and section 7's thirty days first; until then the form is not on any page and `/admin/tasks` carries the row `volunteersNotice` while an event ahead takes volunteers.
 17. **Re-grade every event's difficulty** — migration `0104` put each event in the middle step of its old band (§526). Open each
     event in `/admin/events` and choose the band and «Nivelul» (one of the band's three levels, 1–15 in order); the guide («Ghid») explains the scale.
 18. **Open the members' zone and the FAQ** — approve the members' zone address, `/ro/zona-membri` (it sits outside the backoffice,

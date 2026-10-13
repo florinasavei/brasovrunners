@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.14-2026-10-13 -->
+<!-- PROJECT_BASELINE: BR-V3.15-2026-10-14 -->
 
 # Brașov Runners — Business Guide
 
-**Baseline `BR-V3.14-2026-10-13`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.15-2026-10-14`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Club organizers, event coordinators, content contributors, sponsors, and other non-technical stakeholders.
@@ -714,6 +714,14 @@ not hold it takes it away. A permission opens the job and nothing more: it is ne
 member's or a participant's address.
 
 Participants are not application roles. Having permission to write articles does not grant access to participant data.
+
+**«Voluntar» names two different things, and the words keep them apart (`DECISIONS.md` §754).** The
+staff role above — the **desk Volunteer** (`CONTRIBUTOR`) — is an account on «Echipa» that signs in
+and works the race-day desk. An **event's volunteer** («voluntar la eveniment», the «Voluntari» card
+of one event) is a person who offered to help at that event, or whom an organizer entered: a name,
+an address, a telephone number and a role the club defined for that event. An event's volunteer has
+no account, signs in nowhere, holds no place of the race and is not a participant; whoever works at
+the desk also needs an account on «Echipa», with the role Voluntar.
 
 An administrator can also fill an event's queue with clearly labelled **test registrations**, so
 the waiting list can be watched working without ten real mailboxes, and remove them again so the

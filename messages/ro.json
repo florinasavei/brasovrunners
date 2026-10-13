@@ -541,6 +541,41 @@
       "invalid": "Adresa de email nu pare validă. Verific-o și încearcă din nou.",
       "captcha": "Verificarea anti-bot nu a reușit. Bifează din nou căsuța „Nu sunt robot” și retrimite."
     },
+    "volunteers": {
+      "title": "Vreau să fiu voluntar",
+      "intro": "Evenimentul are nevoie de ajutor. Alege un rol, spune-ne cum te găsim și un organizator te confirmă. Nu e o înscriere la cursă și nu ține loc.",
+      "rolesLabel": "Rolurile care mai au nevoie de oameni",
+      "needs": {
+        "one": "mai e nevoie de 1 persoană",
+        "few": "mai sunt necesare {count} persoane",
+        "other": "mai sunt necesare {count} de persoane"
+      },
+      "role": "Rolul pe care îl poți prelua",
+      "name": "Numele tău",
+      "email": "Adresa ta de email",
+      "emailHelp": "Îți trimitem aici un singur email de primire, fără nimic de apăsat.",
+      "phoneHelp": "Un organizator te poate suna în legătură cu evenimentul.",
+      "message": "Un mesaj pentru organizatori (opțional)",
+      "messageHelp": "Cel mult {max} de caractere: când ești liber, ce știi să faci.",
+      "consent": "Sunt de acord să păstrați datele din acest formular ca să mă contactați despre acest eveniment, așa cum spune",
+      "privacyLinkLabel": "nota de confidențialitate",
+      "submit": "Mă ofer voluntar",
+      "submitting": "Se trimite…",
+      "done": "Mulțumim! Am primit oferta ta. Un organizator o confirmă și te caută pe email sau la telefon dacă mai trebuie ceva.",
+      "invalid": "Ceva din formular mai cere o privire:",
+      "captcha": "Verificarea anti-bot nu a reușit. Bifează din nou căsuța „Nu sunt robot” și retrimite.",
+      "limited": "Sunt multe încercări pentru o adresă sau pentru un eveniment într-o oră. Așteaptă puțin și încearcă din nou.",
+      "full": "Rolul ales tocmai s-a umplut. Alege altul mai jos sau revino mai târziu.",
+      "allFull": "Mulțumim! Între timp toate rolurile s-au umplut, așa că oferta ta nu a fost păstrată. Dacă vrei să ajuți, scrie-ne din pagina de contact.",
+      "errors": {
+        "name": "Scrie-ți numele.",
+        "email": "Adresa de email nu pare validă.",
+        "phone": "Numărul de telefon nu este valid.",
+        "roleId": "Alege unul dintre roluri.",
+        "message": "Mesajul are prea multe caractere: scurtează-l.",
+        "consent": "Bifează căsuța de acord, altfel nu putem păstra oferta ta."
+      }
+    },
     "calendar": {
       "feedName": "🏃 BVR",
       "page": "Pagina evenimentului",
@@ -1716,6 +1751,8 @@
       "CONFLICT": "Altcineva a salvat între timp. Reîncarcă pagina și aplică din nou modificările tale — nimic nu a fost suprascris.",
       "DECLARATION_HELD": "Nu s-a șters nimic: o declarație e păstrată pentru o reclamație sau un litigiu. Un Administrator scoate întâi păstrarea, din pagina înscrierii sau din semnăturile alergării.",
       "SHOP_SIZE_HAS_ORDERS": "Nu s-a salvat: o mărime debifată are comenzi. Las-o bifată — poți pune stocul 0 ca să nu se mai comande.",
+      "VOLUNTEER_ROLE_HAS_PEOPLE": "Rolul nu s-a șters: are oameni pe el, și cei anulați. Mută-i întâi pe alt rol sau șterge-i.",
+      "VOLUNTEER_ALREADY_LISTED": "Adresa e deja pe voluntarii acestui eveniment: un rând pe persoană. Găsește-o în listă și modifică acel rând.",
       "ERASE_NAME_MISMATCH": "Numele scris nu este numele înscrisului. Nu s-a șters nimic — scrie numele exact așa cum apare pe rând.",
       "LEGAL_CONFIRMATION_MISMATCH": "Confirmarea scrisă nu este a acestei versiuni. Nu s-a șters nimic — scrie exact textul cerut, de exemplu „GDPR 2”.",
       "LEGAL_DELETE_NEEDS_REASON": "Scrie un motiv. Este singurul lucru care rămâne după ștergere.",
@@ -3145,7 +3182,8 @@
         "eventInvitations": "Doar în nota de confidențialitate: numele secțiunii Invitații, între ghilimele. Cu el în nota în vigoare, /admin/tasks consideră invitațiile descrise",
         "feedbackForms": "Doar în nota de confidențialitate: numele formularelor „Spune-ne ceva”, între ghilimele. Cu el în nota în vigoare, pagina de contact arată formularele pornite",
         "feedbackFormsNamed": "Doar în nota de confidențialitate: alegerea „Cu nume și prenume” din formularele „Spune-ne ceva”, între ghilimele. Fără el în nota în vigoare, formularele sunt doar anonime",
-        "membersShop": "Doar în nota de confidențialitate: numele secțiunii „Magazinul clubului”, între ghilimele. Cu el în nota în vigoare, zona membrilor arată magazinul și primește comenzi"
+        "membersShop": "Doar în nota de confidențialitate: numele secțiunii „Magazinul clubului”, între ghilimele. Cu el în nota în vigoare, zona membrilor arată magazinul și primește comenzi",
+        "volunteers": "Doar în nota de confidențialitate: numele formularului „Vreau să fiu voluntar”, între ghilimele. Cu el în nota în vigoare, un eveniment cu voluntari își arată formularul și păstrează ofertele"
       },
       "removeBlockedReferenced": "Nu se poate nici retrage, nici șterge definitiv: {signatures}, {events} și {acknowledgements} depind de ea. «Șterge» de pe rândul ei o scoate din listă.",
       "removeBlockedCurrent": "În vigoare acum — nu se poate nici retrage, nici șterge. Aprobă întâi versiunea următoare; apoi aceasta se poate scoate.",
@@ -4021,6 +4059,16 @@
             "Un jurist ar trebui să citească paragraful: cât timp se păstrează comenzile ca evidență contabilă.",
             "Deschide ciorna, citește, completează ce a rămas, „Salvează ciorna”, apoi „Aprobă și publică”. Odată în vigoare în ambele limbi, magazinul apare în zona membrilor."
           ]
+        },
+        "volunteersNotice": {
+          "title": "Nota de confidențialitate: voluntarii evenimentelor",
+          "todo": "Un eveniment viitor primește voluntari, dar nota în vigoare nu îi descrie încă: pagina lui nu arată formularul până când clubul aprobă o notă care îi descrie. Lista ta funcționează între timp.",
+          "done": "Nota în vigoare descrie voluntarii evenimentelor: un eveniment care primește voluntari arată formularul pe pagina lui cât timp un rol mai are nevoie de oameni.",
+          "how": [
+            "/admin/legal → cardul „GDPR” → „Regenerează din șablon” → confirmă. Secțiunea 5 are paragraful despre voluntari; secțiunea 7 spune că se păstrează 30 de zile de la începutul evenimentului.",
+            "Un jurist ar trebui să citească paragraful: temeiul (consimțământul pentru formularul public, interesul legitim pentru o persoană trecută de un organizator) și cele 30 de zile.",
+            "Deschide ciorna, citește, completează ce a rămas, „Salvează ciorna”, apoi „Aprobă și publică”. Odată în vigoare în ambele limbi, formularul apare pe paginile evenimentelor care primesc voluntari."
+          ]
         }
       },
       "freeVerdict": {
@@ -4438,6 +4486,99 @@
       },
       "currencyNoteMore": "Nu le transformăm în lei: niciuna nu facturează în lei, iar un curs scris azi ar fi greșit mâine.",
       "servicesIntroMore": "Pe ce plan suntem, cât costă azi, ce primim gratuit, limita pe care o vom atinge prima, cât de aproape suntem acum, ce se întâmplă când o depășim și cât costă pasul următor."
+    },
+    "volunteers": {
+      "title": "Voluntari",
+      "intro": "Oamenii care ajută la acest eveniment și rolurile pentru care e nevoie de ei. Rolurile se definesc aici, pe eveniment, în ambele limbi. Adresele și telefoanele nu apar pe nicio pagină publică.",
+      "notAccounts": "Voluntarii de aici nu sunt conturi: cine lucrează la masa de ridicare primește un cont din „Echipa”, cu rolul Voluntar.",
+      "summary": "{taken} din {needed}",
+      "summaryNone": "Încă niciun rol",
+      "summaryPending": "{count} de confirmat",
+      "standing": "{taken} din {needed}",
+      "offer": {
+        "open": "Formularul „Vreau să fiu voluntar” e pe pagina evenimentului.",
+        "closed": {
+          "off": "Formularul public e oprit: apasă mai jos „Primește voluntari pe pagină” ca pagina evenimentului să-l ofere. Lista ta funcționează oricum.",
+          "notPublished": "Formularul public nu se arată: evenimentul nu e publicat. Apare pe pagină după publicare.",
+          "membersOnly": "Formularul public nu se arată: evenimentul e doar pentru membri, iar formularul e public. Lista ta funcționează oricum.",
+          "eventOver": "Formularul public nu se arată: evenimentul e anulat sau s-a terminat.",
+          "noRoleNeeds": "Formularul public nu se arată: fiecare rol are toți oamenii de care are nevoie (sau încă nu există niciun rol).",
+          "noNotice": "Formularul public nu se arată: nota de confidențialitate în vigoare nu descrie încă voluntarii. «Sarcini» spune ce trebuie aprobat."
+        }
+      },
+      "switchOn": "Primește voluntari pe pagină",
+      "switchOff": "Nu mai primi voluntari pe pagină",
+      "rolesTitle": "Roluri",
+      "rolesCount": "Roluri: {count}",
+      "rolesIntro": "Un rol are nevoie de un nume în română și în engleză și de câți oameni îi trebuie. Ordinea de aici e ordinea în care le arată pagina.",
+      "rolesEmpty": "Încă niciun rol. Adaugă-l pe primul mai jos: de exemplu „Punct de apă” — 4 persoane.",
+      "role": {
+        "nameRo": "Numele rolului (Română)",
+        "nameEn": "Numele rolului (English)",
+        "needed": "Câți oameni trebuie",
+        "neededHelp": "Cel puțin 1. Formularul public se închide pentru un rol când atâția oameni s-au oferit sau au fost confirmați.",
+        "descriptionRo": "Ce face persoana (Română, opțional)",
+        "descriptionEn": "Ce face persoana (English, opțional)",
+        "descriptionHelp": "O linie, cel mult {max} de caractere; în ambele limbi sau în niciuna.",
+        "addTitle": "Adaugă un rol",
+        "add": "Adaugă rolul",
+        "adding": "Se adaugă…",
+        "delete": "Șterge rolul",
+        "deleting": "Se șterge…",
+        "deleteTitle": "Ștergi acest rol?",
+        "deleteBody": "Rolul „{name}” se șterge. Un rol cu oameni pe el nu poate fi șters: mută-i sau șterge-i mai întâi."
+      },
+      "move": {
+        "up": "Mută mai sus",
+        "down": "Mută mai jos"
+      },
+      "edit": "Modifică",
+      "save": "Salvează",
+      "saving": "Se salvează…",
+      "nobody": "Încă nimeni.",
+      "person": {
+        "role": "Rol",
+        "name": "Nume",
+        "email": "Adresa de email",
+        "phone": "Telefon",
+        "note": "Nota ta (doar organizatorii)",
+        "noteHelp": "Cel mult {max} de caractere. Nu apare pe nicio pagină publică.",
+        "messageLabel": "Mesajul trimis",
+        "noteLabel": "Notă",
+        "addTitle": "Adaugă un voluntar de mână",
+        "add": "Adaugă voluntarul",
+        "adding": "Se adaugă…"
+      },
+      "states": {
+        "REGISTERED": "Înscris",
+        "CONFIRMED": "Confirmat",
+        "CANCELLED": "Anulat"
+      },
+      "sources": {
+        "STAFF": "Adăugat de un organizator",
+        "PUBLIC": "Din formular"
+      },
+      "confirm": "Confirmă",
+      "cancel": "Anulează",
+      "reopen": "Înapoi la înscris",
+      "delete": "Șterge voluntarul",
+      "deleting": "Se șterge…",
+      "deleteTitle": "Ștergi acest voluntar?",
+      "deleteBody": "{name} se șterge de pe lista evenimentului, cu adresa și telefonul. Nu se poate desface.",
+      "since": "Din {when}",
+      "csv": "Descarcă CSV",
+      "csvHelp": "Un rând pe voluntar, grupat pe roluri. Fișierul conține adrese și telefoane: păstrează-l la fel de atent ca lista.",
+      "csvColumns": {
+        "role": "Rol",
+        "name": "Nume",
+        "email": "Email",
+        "phone": "Telefon",
+        "state": "Stare",
+        "source": "Sursă",
+        "message": "Mesaj",
+        "note": "Notă",
+        "signedUpAt": "Data"
+      }
     },
     "eventTodos": {
       "title": "De făcut pentru pagina evenimentului",
@@ -5270,6 +5411,7 @@
       "acceptances": "Declarații acceptate ({count})",
       "messages": "Mesaje ({count})",
       "interests": "Cereri „Anunță-mă” ({count})",
+      "volunteers": "Oferte de voluntar ({count})",
       "audit": "Jurnal ({count})",
       "none": "Niciuna.",
       "newSearch": "Altă căutare"
@@ -5410,7 +5552,9 @@
         "EVENT_INVITATION": "Invitația la un eveniment",
         "SHOP_ORDER_PLACED": "Comanda ta a fost primită",
         "SHOP_ORDER_PAID": "Comanda ta e plătită",
-        "SHOP_ORDER_CLUB_NOTICE": "Comandă nouă în magazin"
+        "SHOP_ORDER_CLUB_NOTICE": "Comandă nouă în magazin",
+        "VOLUNTEER_RECEIVED": "Ți-am primit oferta de voluntar",
+        "VOLUNTEER_CLUB_NOTICE": "Voluntar nou"
       },
       "typesShort": {
         "VERIFY_REGISTRATION_EMAIL": "Confirmă adresa",
@@ -5473,7 +5617,9 @@
         "EVENT_INVITATION": "Când un administrator trimite invitații din lista înscrierilor unui eveniment, și la Retrimite. Un link spre formular, cu numele și adresa completate; locul e păstrat până la termen.",
         "SHOP_ORDER_PLACED": "Când un membru comandă din magazinul membrilor: comanda și cum se plătește. Butonul duce în zona membrilor.",
         "SHOP_ORDER_PAID": "Când un administrator marchează comanda plătită: membrului care a comandat. Butonul duce în zona membrilor.",
-        "SHOP_ORDER_CLUB_NOTICE": "La fiecare comandă din magazin, la adresa din «Magazin» → «Cine primește comenzile», dacă e scrisă."
+        "SHOP_ORDER_CLUB_NOTICE": "La fiecare comandă din magazin, la adresa din «Magazin» → «Cine primește comenzile», dacă e scrisă.",
+        "VOLUNTEER_RECEIVED": "Când cineva se oferă voluntar pe pagina unui eveniment: singurul mesaj către el — rolul, evenimentul și faptul că un organizator confirmă. Nimic de apăsat.",
+        "VOLUNTEER_CLUB_NOTICE": "La fiecare ofertă, către fiecare Organizator, Administrator și Superadministrator. Butonul deschide cardul «Voluntari» al evenimentului."
       },
       "whenShort": {
         "VERIFY_REGISTRATION_EMAIL": "după trimiterea formularului",
@@ -5511,7 +5657,9 @@
         "EVENT_INVITATION": "când un administrator invită pe cineva",
         "SHOP_ORDER_PLACED": "când un membru comandă",
         "SHOP_ORDER_PAID": "când comanda e marcată plătită",
-        "SHOP_ORDER_CLUB_NOTICE": "la fiecare comandă, clubului"
+        "SHOP_ORDER_CLUB_NOTICE": "la fiecare comandă, clubului",
+        "VOLUNTEER_RECEIVED": "când cineva se oferă voluntar",
+        "VOLUNTEER_CLUB_NOTICE": "la fiecare ofertă, organizatorilor"
       },
       "clubNotices": {
         "title": "Copiile clubului",
@@ -6129,7 +6277,9 @@
         "UNREACHABLE_WINDOW_CLOSED": "Termenele se mută cu cât a durat întreruperea, cel mult cât spune «Termene». Cine își pierduse locul între timp e numit în email; un administrator decide.",
         "SHOP_ORDER_PLACED": "Comanda și cuvintele despre plată se adaugă singure după text, oricum l-ai scrie. Plata nu trece prin site.",
         "SHOP_ORDER_PAID": "Comanda se adaugă singură după text, oricum l-ai scrie.",
-        "SHOP_ORDER_CLUB_NOTICE": "Fără adresă, nu pleacă nimic: comenzile sunt oricum în lista din backoffice."
+        "SHOP_ORDER_CLUB_NOTICE": "Fără adresă, nu pleacă nimic: comenzile sunt oricum în lista din backoffice.",
+        "VOLUNTEER_RECEIVED": "Rolul și startul și locul evenimentului se adaugă singure, oricum ai scrie textul. Mesajul nu are niciun link care să facă ceva.",
+        "VOLUNTEER_CLUB_NOTICE": "Cine s-a oferit și pentru ce rol se adaugă singur, oricum ai scrie textul. Adresa și telefonul nu sunt niciodată în email: sunt pe card, după autentificare."
       },
       "confirmationRetry": "Cui nu a confirmat, linkul pleacă singur din nou la {retry} după ultimul email, cel mult {times}; se socotește și «Retrimite». Termenul nu se mută.",
       "confirmationRetryOff": "Nu se retrimite singur: în „Termene”, numărul de retrimiteri e 0."
@@ -10333,6 +10483,19 @@
       "eventTodoAdded": "Rând adăugat pe lista evenimentului.",
       "eventTodoSaved": "Rând salvat.",
       "eventTodoUnchanged": "Rândul spunea deja asta; nimic de schimbat.",
+      "volunteersOn": "Evenimentul primește acum voluntari pe pagina lui, cât timp un rol mai are nevoie de oameni.",
+      "volunteersOff": "Evenimentul nu mai primește voluntari pe pagina lui. Rolurile și oamenii rămân.",
+      "volunteerRoleAdded": "Rol adăugat.",
+      "volunteerRoleSaved": "Rol salvat.",
+      "volunteerRoleMoved": "Rol mutat.",
+      "volunteerRoleDeleted": "Rol șters.",
+      "volunteerAdded": "Voluntar adăugat.",
+      "volunteerSaved": "Voluntar salvat.",
+      "volunteerConfirmed": "Voluntar confirmat.",
+      "volunteerCancelled": "Voluntar anulat.",
+      "volunteerReopened": "Voluntar înapoi la înscris.",
+      "volunteerDeleted": "Voluntar șters.",
+      "volunteerUnchanged": "Era deja așa; nimic de schimbat.",
       "eventTodoDone": "Bifat. Rândul e la „Gata”.",
       "eventTodoReopened": "Debifat: rândul e din nou de făcut.",
       "eventTodoDeleted": "Rând șters de pe lista evenimentului.",

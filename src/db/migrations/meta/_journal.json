@@ -1002,6 +1002,13 @@
       "when": 1791904176356,
       "tag": "0145_public_list_club",
       "breakpoints": true
+    },
+    {
+      "idx": 143,
+      "version": "7",
+      "when": 1791908339017,
+      "tag": "0146_event_volunteers",
+      "breakpoints": true
     }
   ]
 }

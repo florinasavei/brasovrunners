@@ -8,6 +8,10 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V3.15-2026-10-14
+
+- **Volunteers for a race** — an event's editor gets a card «Voluntari»: the organizers define the event's own roles in Română and English (how many people each needs, in the order they choose), enter people by hand, confirm or cancel them and download the list, and tick «Primește voluntari» for the event's page to show «Vreau să fiu voluntar» — name, address, telephone, role, message and a consent tick, behind the registration form's anti-bot checks, shown only while a role still needs people and the privacy notice in force describes volunteers (the template's new `{{volunteers}}`, to be approved; `/admin/tasks` has the row). The person gets one email of receipt, each Organizer and Administrator a notice; a repeat gets the same answer; a volunteer is not a registration, takes no place and is on no public list; the offers go thirty days after the event. §754.
+- **A long race title no longer covers the date on the bib** — with «Distanța pe număr» on, the title takes up to two lines beside the badge, smaller only when it must, never broken inside a word such as «II-A», with the date under it, on the printed sheet and the picture alike; every bib picture is redrawn once. §755.
 ## BR-V3.14-2026-10-13
 
 - **The public list shows only the club's own club** — the new «Clubul pe lista publică» of each event is «Doar Brașov Runners» by default: the «Club» column shows the club's name for a member who typed it (BVR, the full name, any usual spelling) and nothing else, and is not drawn when empty; «Cum l-au scris» keeps today's list, «Nu arăta clubul» removes the column. The backoffice and the exports keep what was typed. §753.
