@@ -2812,7 +2812,8 @@
       "hiddenListPublic": "Show special guests on the public list",
       "hiddenListPublicHelp": "Ticked: a special guest who ticked “I want to appear” appears under “Who's coming”, with their number. Unticked: they appear on no public list; their place and number stay.",
       "publicListClub": "Club on the public list",
-      "publicListClubHelp": "People type their club however they like. “Only {club}” shows {club} for everyone who typed it; any other club stays hidden.",
+      "publicListClubHelp": "People type their club however they like. “Only {club}” shows {club} for everyone who typed it; any other text stays hidden.",
+      "publicListClubHelpMore": "Without diacritics, abbreviated or with one typo counts too. If nobody on the page typed it, the column is not shown.",
       "publicListClubMembersOnly": "Only {club}",
       "publicListClubAsTyped": "As they typed it",
       "publicListClubHidden": "Don't show the club"

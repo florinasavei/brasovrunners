@@ -89,7 +89,9 @@ export default async function StartListBox({ event, mayEditSettings }: Pick<BoxP
                     </RadioField>
                   ))}
                 </Box>
-                <BoxNote testId="public-list-club-help">{t("editor.publicListClubHelp", { club: CLUB_NAME })}</BoxNote>
+                <BoxNote testId="public-list-club-help" more={t("editor.publicListClubHelpMore")}>
+                  {t("editor.publicListClubHelp", { club: CLUB_NAME })}
+                </BoxNote>
               </Panel>
               {/*
                 «Arată public numărătoarea» (§647, §668): every number on the event's public pages — the places
