@@ -11,7 +11,10 @@ import { openEditorBox } from "./support/fold";
  * vine», with or without an account on «Echipa» (§NNN: the club's runners have none); a member who typed
  * nonsense shows nothing. The editor's three radios switch it, and the saved choice reaches the page.
  *
- * The event, the three runners and the two member accounts are written straight into the database — the
+ * The runner with no account types a variant («Brasov Runers»), so the cell is seen turning it into the club's
+ * name rather than passing it through; another with no account types another club, which stays blank.
+ *
+ * The event, the four runners and the two member accounts are written straight into the database — the
  * setup, not the subject (`hidden-list.spec.ts`) — one set per project and run, so the two projects never
  * share a row.
  */
@@ -33,13 +36,21 @@ async function withDatabase<T>(work: (client: pg.Client) => Promise<T>): Promise
 }
 
 const SILLY = "alergam pe tavan";
+/** The club's name as a runner without an account mistyped it: the list writes the club's own spelling. */
+const VARIANT = "Brasov Runers";
+const OTHER_CLUB = "CS Rapid";
 
-type Seeded = { eventId: string; slug: string; names: { nickname: string; silly: string; stranger: string } };
+type Seeded = { eventId: string; slug: string; names: { nickname: string; silly: string; stranger: string; rival: string } };
 
-/** A published race whose list names its runners, and three confirmed runners with their clubs. */
+/** A published race whose list names its runners, and four confirmed runners with their clubs. */
 async function seedRace(tag: string): Promise<Seeded> {
   const compact = tag.replace(/[^a-z0-9]/gi, "");
-  const names = { nickname: `Membra Bvr ${compact}`, silly: `Membru Tavan ${compact}`, stranger: `Vizitator Club ${compact}` };
+  const names = {
+    nickname: `Membra Bvr ${compact}`,
+    silly: `Membru Tavan ${compact}`,
+    stranger: `Vizitator Club ${compact}`,
+    rival: `Vizitator Rival ${compact}`,
+  };
   const slug = `lista-club-${tag}`;
   let eventId = "";
   await withDatabase(async (client) => {
@@ -55,7 +66,8 @@ async function seedRace(tag: string): Promise<Seeded> {
     const people = [
       { name: names.nickname, club: "BVR", member: true },
       { name: names.silly, club: SILLY, member: true },
-      { name: names.stranger, club: "Brașov Runners", member: false },
+      { name: names.stranger, club: VARIANT, member: false },
+      { name: names.rival, club: OTHER_CLUB, member: false },
     ];
     for (const [index, person] of people.entries()) {
       const email = `club-col-${index}-${tag}@test.invalid`.toLowerCase();
@@ -83,20 +95,23 @@ const rowOf = (page: import("@playwright/test").Page, name: string) => page.getB
 test.describe("§753, §NNN «Clubul pe lista publică»: only the club's own name shows by default", () => {
   test.describe.configure({ timeout: 90_000 });
 
-  test("the default names the club for everyone who typed it, account or not, and for nobody else; the editor's radios switch it", async ({ page }) => {
+  test("the default names the club for everyone who typed it, account or not, in its own spelling, and for nobody else; the editor's radios switch it", async ({ page }) => {
     const stamp = `${test.info().project.name}-${Date.now().toString(36)}`;
     const seeded = await seedRace(stamp);
 
-    // The default: the member who typed «BVR» and the runner with no account who typed the club's name both
-    // show it; the nonsense is blank and nowhere on the page.
+    // The default: the member who typed «BVR» and the runner with no account who mistyped the club's name
+    // both show it, in the club's own spelling; the nonsense and the other club are blank and nowhere on the page.
     await page.goto(`/ro/evenimente/${seeded.slug}`);
     await expect(page.getByTestId("start-list")).toHaveCount(1);
     const list = page.getByTestId("start-list");
     await expect(rowOf(page, seeded.names.nickname).locator('td[data-col="club"]')).toHaveText("Brașov Runners");
     await expect(rowOf(page, seeded.names.silly).locator('td[data-col="club"]')).toHaveText("");
     await expect(rowOf(page, seeded.names.stranger).locator('td[data-col="club"]')).toHaveText("Brașov Runners");
+    await expect(rowOf(page, seeded.names.rival).locator('td[data-col="club"]')).toHaveText("");
     await expect(list).not.toContainText(SILLY);
     await expect(list).not.toContainText("BVR");
+    await expect(list).not.toContainText(VARIANT);
+    await expect(list).not.toContainText(OTHER_CLUB);
     await expect(list.locator('th[data-col="club"]')).toHaveCount(1);
 
     // The editor: three radios, each a 44-pixel row, «Doar …» checked.
@@ -125,7 +140,8 @@ test.describe("§753, §NNN «Clubul pe lista publică»: only the club's own na
     await page.goto(`/ro/evenimente/${seeded.slug}`);
     await expect(rowOf(page, seeded.names.silly).locator('td[data-col="club"]')).toHaveText(SILLY);
     await expect(rowOf(page, seeded.names.nickname).locator('td[data-col="club"]')).toHaveText("BVR");
-    await expect(rowOf(page, seeded.names.stranger).locator('td[data-col="club"]')).toHaveText("Brașov Runners");
+    await expect(rowOf(page, seeded.names.stranger).locator('td[data-col="club"]')).toHaveText(VARIANT);
+    await expect(rowOf(page, seeded.names.rival).locator('td[data-col="club"]')).toHaveText(OTHER_CLUB);
 
     // «Nu arăta clubul»: no column at all.
     await page.goto(`/ro/admin/events/${seeded.eventId}`);
@@ -139,5 +155,6 @@ test.describe("§753, §NNN «Clubul pe lista publică»: only the club's own na
     await expect(page.getByTestId("start-list").locator('th[data-col="club"]')).toHaveCount(0);
     await expect(page.getByTestId("start-list").locator('td[data-col="club"]')).toHaveCount(0);
     await expect(page.getByTestId("start-list")).not.toContainText(SILLY);
+    await expect(page.getByTestId("start-list")).not.toContainText(OTHER_CLUB);
   });
 });
