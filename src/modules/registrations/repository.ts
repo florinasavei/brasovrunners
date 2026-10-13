@@ -572,7 +572,7 @@ export async function listPublicStartList<T extends Record<string, unknown>>(
 }
 
 /**
- * The condition that keeps the hidden list off a public list (§NNN, amending §648 and §643): a row seated
+ * The condition that keeps the hidden list off a public list (§743, amending §648 and §643): a row seated
  * «În afara locurilor» is drawn only where the event shows its special guests (`hiddenListShownPublicly`).
  * Every public list query takes it, defaulting to «not shown», so a caller that forgets it discloses less,
  * never more. Display only: no capacity count reads it.
@@ -591,7 +591,7 @@ function offThePublicListUnlessShown(hiddenShown: boolean | undefined) {
 export async function countPublicStartList<T extends Record<string, unknown>>(
   db: Database<T>,
   eventId: string,
-  /** As `listPublicStartList` (§NNN): absent, the special guests are not counted among the named. */
+  /** As `listPublicStartList` (§743): absent, the special guests are not counted among the named. */
   hiddenShown = false,
 ): Promise<number> {
   const [row] = await db
@@ -648,7 +648,7 @@ export async function countAnonymousStartListEntries<T extends Record<string, un
 export async function countOutsideOnPublicStartList<T extends Record<string, unknown>>(
   db: Database<T>,
   eventId: string,
-  /** As `listPublicStartList` (§NNN): not shown, none of them is on the table, so none is counted out of it. */
+  /** As `listPublicStartList` (§743): not shown, none of them is on the table, so none is counted out of it. */
   hiddenShown = false,
 ): Promise<number> {
   if (!hiddenShown) return 0;
@@ -737,7 +737,7 @@ export async function listPublicStartListOthers<T extends Record<string, unknown
    */
   includeWaitlisted: boolean,
   page?: { offset: number; limit: number },
-  /** Only behind the notice's gate (§500): see `publicSocialColumns`. `hiddenShown`: as `listPublicStartList` (§NNN). */
+  /** Only behind the notice's gate (§500): see `publicSocialColumns`. `hiddenShown`: as `listPublicStartList` (§743). */
   options: { socials?: boolean; hiddenShown?: boolean } = {},
 ): Promise<Array<PublicStartListRow & { group: "PENDING" | "WAITLISTED" }>> {
   const waiting = inArray(registrations.status, [...WAITLISTED_LIST_STATUSES]);
@@ -780,7 +780,7 @@ export async function countPublicStartListOthers<T extends Record<string, unknow
   firstStatesNoticeVersion: number,
   /** As `listPublicStartListOthers` (§628): false, and the waiting list is not counted either — `waitlisted` is 0. */
   includeWaitlisted: boolean,
-  /** As `listPublicStartList` (§NNN): absent, a special guest is neither listed nor counted among the pending or waiting. */
+  /** As `listPublicStartList` (§743): absent, a special guest is neither listed nor counted among the pending or waiting. */
   hiddenShown = false,
 ): Promise<{ pending: number; waitlisted: number; outsidePending: number }> {
   const [row] = await db

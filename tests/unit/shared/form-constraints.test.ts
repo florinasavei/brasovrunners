@@ -73,7 +73,7 @@ const NOT_A_BOX = new Set([
   "hiddenListEnabled",
   "participantCountPublic",
   "hiddenListCounted",
-  // «Arată invitații speciali pe lista publică» (§NNN): the group's fourth tick.
+  // «Arată invitații speciali pe lista publică» (§743): the group's fourth tick.
   "hiddenListPublic",
 ]);
 

@@ -386,7 +386,7 @@ export type PublicAvailability = {
  */
 export async function cachedStartListCounts(
   eventId: string,
-  /** The event's «Arată invitații speciali pe lista publică» (§NNN), in the key: a count made without them is never served with them. */
+  /** The event's «Arată invitații speciali pe lista publică» (§743), in the key: a count made without them is never served with them. */
   hiddenShown = false,
 ): Promise<{ named: number; anonymous: number; outsideNamed: number; hidden: { confirmed: number; held: number } }> {
   return publicRead(["places.start-list-counts", eventId, "outside", "hidden-list", hiddenShown ? "guests-shown" : "guests-off"], ["places", "events"], async () => {
@@ -429,7 +429,7 @@ export async function cachedStartListOthersCounts(
   firstStatesNoticeVersion: number,
   /** The event's «Lista de așteptare e publică» (§628): in the key, so a count with the waiting list is never served without it. */
   includeWaitlisted: boolean,
-  /** «Arată invitații speciali pe lista publică» (§NNN), in the key like the rest. */
+  /** «Arată invitații speciali pe lista publică» (§743), in the key like the rest. */
   hiddenShown = false,
 ): Promise<{ pending: number; waitlisted: number; outsidePending: number }> {
   return publicRead(
@@ -451,7 +451,7 @@ export async function cachedStartListOthersPage(
   offset: number,
   limit: number,
   socials = false,
-  /** «Arată invitații speciali pe lista publică» (§NNN), in the key like the rest. */
+  /** «Arată invitații speciali pe lista publică» (§743), in the key like the rest. */
   hiddenShown = false,
 ) {
   return publicRead(

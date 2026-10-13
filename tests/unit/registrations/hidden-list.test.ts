@@ -35,7 +35,7 @@ describe("§647 the event's settings, as read", () => {
   });
 });
 
-describe("§NNN «Arată invitații speciali pe lista publică»", () => {
+describe("§743 «Arată invitații speciali pe lista publică»", () => {
   it("shows the special guests only while the switch is on AND the tick is on; anything else is off", () => {
     expect(hiddenListShownPublicly({ hiddenListEnabled: true, hiddenListPublic: true })).toBe(true);
     expect(hiddenListShownPublicly({ hiddenListEnabled: true, hiddenListPublic: false })).toBe(false);
@@ -77,13 +77,11 @@ describe("§649 the name, in both languages: «Lista de invitați speciali»", (
     expect(ro.Admin.registrations.outside.hint).toBe("Invitat special: nu ocupă unul dintre locurile anunțate");
     expect(en.Admin.registrations.outside.hint).toBe("Special guest: takes none of the announced places");
     // The caption under the radios says all three facts, not only the place: the declaration and number kept,
-    // the public list unchanged, the public count only with the event's tick.
+    // the public list and the public count only with the event's ticks.
     expect(ro.Admin.registrations.outside.help).toContain("își păstrează declarația și numărul");
-    expect(ro.Admin.registrations.outside.help).toContain("rămâne pe lista publică dacă a bifat");
-    expect(ro.Admin.registrations.outside.help).toContain("intră în numărătoarea publică doar cu bifa evenimentului");
+    expect(ro.Admin.registrations.outside.help).toContain("Pe lista publică și în numărătoare apare doar cu bifele evenimentului");
     expect(en.Admin.registrations.outside.help).toContain("keeps the declaration and the race number");
-    expect(en.Admin.registrations.outside.help).toContain("stays on the public list if they ticked it");
-    expect(en.Admin.registrations.outside.help).toContain("enters the public count only with the event's tick");
+    expect(en.Admin.registrations.outside.help).toContain("The public list and the count show them only with the event's ticks");
     for (const help of [ro.Admin.registrations.outside.help, en.Admin.registrations.outside.help]) expect(help.length).toBeLessThan(200);
     expect(ro.Admin.editor.boxes.received.outside).toBe("invitați speciali: {count}");
     expect(ro.Admin.guide.sections[4].tasks[10].title).toBe("Invitați speciali: organizatori, pacemakeri, voluntari");

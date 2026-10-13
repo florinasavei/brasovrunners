@@ -67,7 +67,7 @@ async function seed(tag: string): Promise<{ eventId: string; registrationId: str
 
 /**
  * A published race whose «Cine vine» names its runners, with one special guest who ticked «Vreau să apar»
- * (§NNN): `shown` is the event's «Arată invitații speciali pe lista publică». One event per call, so the
+ * (§743): `shown` is the event's «Arată invitații speciali pe lista publică». One event per call, so the
  * page's cache never holds another's state. Returns the Romanian slug and the guest's name.
  */
 async function seedPublishedWithGuest(tag: string, shown: boolean): Promise<{ eventId: string; slug: string; guest: string }> {
@@ -102,7 +102,7 @@ async function seedPublishedWithGuest(tag: string, shown: boolean): Promise<{ ev
   return { eventId, slug, guest };
 }
 
-test.describe("§NNN «Arată invitații speciali pe lista publică»: off by default, a guest who ticked «Vreau să apar» is on no public list", () => {
+test.describe("§743 «Arată invitații speciali pe lista publică»: off by default, a guest who ticked «Vreau să apar» is on no public list", () => {
   test.describe.configure({ timeout: 60_000 });
 
   test("the event page's «Cine vine» leaves the guest out by default, and names them after the editor's tick is saved", async ({ page }) => {
@@ -215,7 +215,7 @@ test.describe("§647 «Lista de invitați speciali» (named so since) as a radio
     await expect(shownTick).toBeHidden();
     await group.getByRole("checkbox", { name: "Folosește lista de invitați speciali" }).check();
     await expect(start).toBeVisible();
-    // §NNN: the third tick under the switch, off by default, with its «Bifat … Debifat» line.
+    // §743: the third tick under the switch, off by default, with its «Bifat … Debifat» line.
     await expect(shownTick).toBeVisible();
     await expect(shownTick).not.toBeChecked();
     await expect(group.getByTestId("hidden-list-public-help")).toContainText("Debifat: nu apare pe nicio listă publică");

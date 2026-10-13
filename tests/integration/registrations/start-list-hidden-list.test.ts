@@ -234,7 +234,7 @@ describe("§647 «Cine vine» and the hidden list's two ticks", () => {
     expect(html).toContain("Cine vine (2)");
     expect(html).toContain("2 participanți confirmați");
     expect(html).toContain(`>${ro.Event.startList.columnPosition}<`);
-    // With the switch off no row of the hidden list is on the public list (§NNN), whatever it is still holding.
+    // With the switch off no row of the hidden list is on the public list (§743), whatever it is still holding.
     expect(rows(html)).toBe(2);
   });
 
@@ -247,7 +247,7 @@ describe("§647 «Cine vine» and the hidden list's two ticks", () => {
     expect(html).not.toContain("participanți confirmați");
     expect(html).not.toContain(`>${ro.Event.startList.columnPosition}<`);
     expect(html).toContain("Ana Popescu");
-    // …and the switch being off, the guest is on no public list either (§NNN).
+    // …and the switch being off, the guest is on no public list either (§743).
     expect(html).not.toContain("Ioana Pacemaker");
     expect(rows(html)).toBe(2);
   });
@@ -276,7 +276,7 @@ describe("§647 «Cine vine» and the hidden list's two ticks", () => {
   });
 });
 
-describe("§NNN «Arată invitații speciali pe lista publică»: off by default, no row of the hidden list is on any public list", () => {
+describe("§743 «Arată invitații speciali pe lista publică»: off by default, no row of the hidden list is on any public list", () => {
   it("tick off (the switch on): the ticked guest, the unticked one and the hold are on no list; the counts follow «Numără…» alone", async () => {
     const id = await seeded();
     const html = await render(asPublic(id, { hiddenListEnabled: true, participantCountPublic: true, hiddenListCounted: false, hiddenListPublic: false }));

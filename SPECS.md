@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.06-2026-10-12 -->
+<!-- PROJECT_BASELINE: BR-V3.07-2026-10-13 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V3.06-2026-10-12`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.07-2026-10-13`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -799,6 +799,9 @@ coffee is run on nothing.
 34. Given an event whose «Arată public numărătoarea» (`events.participant_count_public`, true by default) is off, then «Cine vine» shows no number (criterion 32) and every other public surface of the event says no number derived from its capacity or its registrations — the event page's door, the listing card, the hero, the calendar's and the series card's registration line and the register page's full state carry no places line, no free places, no capacity, no room on the waiting list and no offered or waiting count, whatever «Arată public câți așteaptă» says — while the state words stay (the register button, «Locurile se dau din lista de așteptare», the full, waiting-list-full and no-waiting-list sentences, the waiting list's button); the admin side and the emails are unchanged; ticked, every page and card is byte for byte as before (2026-10-06, `DECISIONS.md` §668).
 35. The editor draws «Arată public câți așteaptă» under «Arată public numărătoarea», indented, shown only while the parent is ticked and still posted (its value and marker) while hidden; criterion 29's placement under «Lista de așteptare e publică» and criterion 31's «beside» are amended (2026-10-06, `DECISIONS.md` §669).
 36. Given an event whose «Arată public numărătoarea» is off and «Arată public câți așteaptă» on, then no public surface says how many wait, and the waiting person's own page, «Toate înscrierile mele», the `WAITLIST_JOINED` email and «Ce îi spui» say the private count's sentence — no length and no place (`waitlistCountShown`); this amends criterion 34's "the admin side and the emails are unchanged" for the waiting count, everything else in it standing (2026-10-06, `DECISIONS.md` §669).
+37. While an event's «Arată invitații speciali pe lista publică» is off (the default), or its «Folosește lista de invitați speciali» is off, no registration on the special guests list (`registrations.outside_capacity`) is drawn on any public list of the event — not «Cine vine»'s confirmed rows, named or anonymous, not the pending and waiting rows, not the race number, not a count of named rows — whether or not the person ticked «Vreau să apar»; with both on, the ticked ones appear as before (2026-10-13, `DECISIONS.md` §743, amending criteria 30 and 32).
+38. «Arată invitații speciali pe lista publică» is a column of the event (`hidden_list_public`, `false` by default), saved with the special guests group's marker, stored as posted whatever the switch says, audited in `event.hidden_list_changed`, shown third under the switch, and changes no count: «Numără și invitații speciali» alone decides whether the numbers include the special guests, and the capacity formula and the allocator never read it (2026-10-13, `DECISIONS.md` §743, amending criterion 31: the group has four settings, three under the switch).
+39. Where the numbers count the special guests and the event's «Arată invitații speciali pe lista publică» is off, the note under the table says none of them is in the table; with it on, it says only those who chose to appear are (2026-10-13, `DECISIONS.md` §743).
 
 **Verification:** integration `privacy/public-surface.test.ts`
 

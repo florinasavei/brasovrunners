@@ -85,7 +85,7 @@ export function hiddenListCounting(event: Partial<HiddenListSettings> | null | u
 }
 
 /**
- * Whether the special guests may appear on the event's public lists (§NNN, amending §648 and §643): only
+ * Whether the special guests may appear on the event's public lists (§743, amending §648 and §643): only
  * while the switch is on AND «Arată invitații speciali pe lista publică» is ticked. Off, or with no row, no
  * registration on the hidden list is drawn on any public list — a row still on the list after the switch
  * was turned off stays off too, the safe side of a disclosure. Display only: counts follow

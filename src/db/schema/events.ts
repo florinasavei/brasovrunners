@@ -759,7 +759,7 @@ export const events = pgTable(
     participantCountPublic: boolean("participant_count_public").notNull().default(true),
     hiddenListCounted: boolean("hidden_list_counted").notNull().default(false),
     /**
-     * `hidden_list_public` — «Arată invitații speciali pe lista publică» (§NNN, amending §648 and §643): off
+     * `hidden_list_public` — «Arată invitații speciali pe lista publică» (§743, amending §648 and §643): off
      * by default, the special guests are on no public list — not «Cine vine», not the pending or waiting
      * rows, not the race-number column — whether or not they ticked «Vreau să apar»; on, today's rule (the
      * tick alone decides). Acts only while `hidden_list_enabled` is on. Display only: the capacity formula,
