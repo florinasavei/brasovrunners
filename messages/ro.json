@@ -326,6 +326,7 @@
       "socialsNote": "Strava și Instagram apar doar lângă numele celor care au ales asta la înscriere.",
       "outsideNote": "Cei la start în afara locurilor anunțate (organizatori, voluntari, sportivi invitați) apar în tabel fără să fie numărați: numerele de mai sus numără locurile.",
       "outsideCountedNote": "Numerele de mai sus îi numără și pe cei la start în afara locurilor anunțate (organizatori, voluntari, sportivi invitați); dintre ei, în tabel apar doar cei care au ales să apară.",
+      "outsideCountedNoteNoRows": "Numerele de mai sus îi numără și pe cei la start în afara locurilor anunțate (organizatori, voluntari, sportivi invitați); niciunul dintre ei nu apare în tabel.",
       "noteNamesOnly": "În tabel apar confirmații. Numele apare doar pentru cei care au bifat „Vreau să apar pe lista de participanți & rezultate”; ceilalți apar ca „Participant (nume ascuns)”, fără niciun alt detaliu. Alegerea se poate schimba oricând din emailul de confirmare sau din „Înscrierile mele”.",
       "noteStatesNamesOnly": "Numele apare doar pentru cei care au bifat „Vreau să apar pe lista de participanți & rezultate”; ceilalți confirmați apar ca „Participant (nume ascuns)”, fără niciun alt detaliu. Cei înscriși care nu au confirmat încă și cei de pe lista de așteptare apar doar dacă au bifat, cu stadiul înscrierii lângă nume; o înscriere anulată sau expirată nu apare. Alegerea se poate schimba oricând din emailul de confirmare sau din „Înscrierile mele”.",
       "noteStatesNoWaitlistNamesOnly": "Numele apare doar pentru cei care au bifat „Vreau să apar pe lista de participanți & rezultate”; ceilalți confirmați apar ca „Participant (nume ascuns)”, fără niciun alt detaliu. Cei înscriși care nu au confirmat încă apar doar dacă au bifat, cu stadiul înscrierii lângă nume; lista de așteptare nu e publică la acest eveniment, iar o înscriere anulată sau expirată nu apare. Alegerea se poate schimba oricând din emailul de confirmare sau din „Înscrierile mele”.",
@@ -2774,7 +2775,7 @@
       "hiddenListEnabled": "Folosește lista de invitați speciali",
       "hiddenListEnabledHelp": "Bifat: pe înscrieri apare «Invitat special — nu ocupă un loc». Debifat: nimeni nou nu intră pe listă; cei de pe ea rămân, iar pagina îi anunță cât timp au loc.",
       "hiddenListEnabledMoreFor": "Pentru organizatori, voluntari, pacemakeri și sportivi invitați: sunt la start fără să ocupe unul dintre locurile anunțate. Un participant obișnuit nu se pune aici.",
-      "hiddenListEnabledMoreSettings": "Bifată, lista mai are două setări: o serie proprie de numere de concurs și «Numără și invitații speciali» pentru numerele publice. Debifată, amândouă se opresc.",
+      "hiddenListEnabledMoreSettings": "Bifată, lista mai are trei setări: o serie proprie de numere, «Numără și invitații speciali» și «Arată invitații speciali pe lista publică». Debifată, toate se opresc.",
       "hiddenListEnabledMoreEmail": "O invitație pe email e felul în care cineva primește un link ca să se înscrie.",
       "hiddenListEnabledMoreDifference": "Lista de invitați speciali spune doar dacă înscrierea ocupă sau nu unul dintre locurile anunțate; o invitație pe email se poate trimite și «Pe lista de invitați speciali».",
       "hiddenListBibStart": "Numerele invitaților speciali încep de la",
@@ -2783,7 +2784,9 @@
       "participantCountPublic": "Arată public numărătoarea",
       "participantCountPublicHelp": "Bifat: pagina spune câte locuri are, câți vin și câți sunt confirmați. Debifat: nicio cifră pe paginile publice, nici câți așteaptă — doar dacă mai sunt locuri.",
       "hiddenListCounted": "Numără și invitații speciali",
-      "hiddenListCountedHelp": "Bifat: „Cine vine” și „confirmați” îi numără și pe invitații speciali. Debifat: numerele spun doar locurile cursei; invitații speciali sunt pe deasupra."
+      "hiddenListCountedHelp": "Bifat: „Cine vine” și „confirmați” îi numără și pe invitații speciali. Debifat: numerele spun doar locurile cursei; invitații speciali sunt pe deasupra.",
+      "hiddenListPublic": "Arată invitații speciali pe lista publică",
+      "hiddenListPublicHelp": "Bifat: un invitat special care a bifat „Vreau să apar” apare pe „Cine vine”, cu numărul lui. Debifat: nu apare pe nicio listă publică; locul și numărul lui rămân."
     },
     "preview": {
       "notice": "Previzualizare pentru echipă. Starea acestui text este: {status}. Pagina nu este publică și nu este indexată.",

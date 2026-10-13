@@ -65,6 +65,71 @@ async function seed(tag: string): Promise<{ eventId: string; registrationId: str
   });
 }
 
+/**
+ * A published race whose «Cine vine» names its runners, with one special guest who ticked «Vreau să apar»
+ * (§NNN): `shown` is the event's «Arată invitații speciali pe lista publică». One event per call, so the
+ * page's cache never holds another's state. Returns the Romanian slug and the guest's name.
+ */
+async function seedPublishedWithGuest(tag: string, shown: boolean): Promise<{ eventId: string; slug: string; guest: string }> {
+  const guest = `Invitat Probă ${tag.replace(/[^a-z0-9]/gi, "")}`;
+  const slug = `lista-invitati-${tag}`;
+  let eventId = "";
+  await withDatabase(async (client) => {
+    const { rows: eventRows } = await client.query<{ id: string }>(
+      `INSERT INTO events (type, starts_at, registration_mode, capacity, location_name, hidden_list_enabled, hidden_list_public,
+         editorial_status, published_at, participant_list_visibility)
+       VALUES ('RACE', now() + interval '30 days', 'INTERNAL', 10, 'Parcul Tractorul', true, $1, 'PUBLISHED', now(), 'NAMES') RETURNING id`,
+      [shown],
+    );
+    eventId = eventRows[0].id;
+    await client.query(
+      `INSERT INTO event_translations (event_id, locale, slug, title) VALUES ($1, 'ro', $2, $3), ($1, 'en', $4, $5)`,
+      [eventId, slug, `Crosul invitaților ${tag}`, `guests-${tag}`, `The guests race ${tag}`],
+    );
+    const email = `guest-list-${tag}@test.invalid`;
+    const { rows: participantRows } = await client.query<{ id: string }>(
+      `INSERT INTO participants (delivery_email, normalized_email, canonical_email, canonicalization_version, default_name)
+       VALUES ($1, $1, $1, 1, $2) RETURNING id`,
+      [email, guest],
+    );
+    await client.query(
+      `INSERT INTO registrations (event_id, participant_id, status, locale, registered_name, display_name,
+         privacy_notice_version, privacy_acknowledged_at, results_name_consent, results_consent_version, list_opt_out, outside_capacity, confirmed_at)
+       VALUES ($1, $2, 'CONFIRMED', 'ro', $3, $3, 1, now(), false, 1, false, true, now())`,
+      [eventId, participantRows[0].id, guest],
+    );
+  });
+  return { eventId, slug, guest };
+}
+
+test.describe("§NNN «Arată invitații speciali pe lista publică»: off by default, a guest who ticked «Vreau să apar» is on no public list", () => {
+  test.describe.configure({ timeout: 60_000 });
+
+  test("the event page's «Cine vine» leaves the guest out by default, and names them after the editor's tick is saved", async ({ page }) => {
+    const stamp = `${test.info().project.name}-${Date.now().toString(36)}`;
+    const seeded = await seedPublishedWithGuest(stamp, false);
+
+    await page.goto(`/ro/evenimente/${seeded.slug}`);
+    await expect(page.getByTestId("start-list")).toHaveCount(1);
+    await expect(page.getByTestId("start-list")).not.toContainText(seeded.guest);
+
+    // The same event: tick «Arată invitații speciali pe lista publică» in the editor and save.
+    await signIn(page, "Dev Administrator");
+    await page.goto(`/ro/admin/events/${seeded.eventId}`);
+    await hydrated(page);
+    const box = await openEditorBox(page, "Lista publică a participanților");
+    await box.getByTestId("hidden-list-settings").getByRole("checkbox", { name: "Arată invitații speciali pe lista publică" }).check();
+    // Live (published): saving a change asks for the acknowledgement first.
+    await page.getByRole("checkbox", { name: "Am înțeles că modific conținut publicat." }).check();
+    await page.getByRole("button", { name: "Salvează", exact: true }).click();
+    await page.waitForURL(/saved=event/);
+
+    // The saved tick expires the public cache: the same page now names the guest.
+    await page.goto(`/ro/evenimente/${seeded.slug}`);
+    await expect(page.getByTestId("start-list")).toContainText(seeded.guest);
+  });
+});
+
 test.describe("§647 «Lista de invitați speciali» (named so since) as a radio", () => {
   test.describe.configure({ timeout: 60_000 });
 
@@ -146,8 +211,14 @@ test.describe("§647 «Lista de invitați speciali» (named so since) as a radio
     await expect(waitingTick).toBeHidden();
     await countTick.check();
     await expect(waitingTick).toBeVisible();
+    const shownTick = group.getByRole("checkbox", { name: "Arată invitații speciali pe lista publică" });
+    await expect(shownTick).toBeHidden();
     await group.getByRole("checkbox", { name: "Folosește lista de invitați speciali" }).check();
     await expect(start).toBeVisible();
+    // §NNN: the third tick under the switch, off by default, with its «Bifat … Debifat» line.
+    await expect(shownTick).toBeVisible();
+    await expect(shownTick).not.toBeChecked();
+    await expect(group.getByTestId("hidden-list-public-help")).toContainText("Debifat: nu apare pe nicio listă publică");
     await expect(group.getByRole("checkbox", { name: "Numără și invitații speciali" })).not.toBeChecked();
     // Inside the screen at every width the projects use, 320 pixels included.
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);

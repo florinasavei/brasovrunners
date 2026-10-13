@@ -175,6 +175,7 @@ function hiddenListFrom(form: FormData, value: (field: string) => string) {
     hiddenListEnabled: form.get("event.hiddenListEnabled") === "on",
     hiddenListBibStart: value("hiddenListBibStart"),
     hiddenListCounted: form.get("event.hiddenListCounted") === "on",
+    hiddenListPublic: form.get("event.hiddenListPublic") === "on",
   };
 }
 

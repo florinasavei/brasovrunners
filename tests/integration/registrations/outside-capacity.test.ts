@@ -343,8 +343,11 @@ describe("§643 the counts: public apart, backoffice joined apart", () => {
     await setOutsideCapacity(db, admin, (await rowOf("Ioana")).id, true, at(10));
     await setOutsideCapacity(db, admin, (await rowOf("Mihai")).id, true, at(11));
     // The table pages over every ticked confirmed row; the title and the summary line subtract the outside ones.
-    expect(await countPublicStartList(db, event.id)).toBe(2);
-    expect(await countOutsideOnPublicStartList(db, event.id)).toBe(1);
+    expect(await countPublicStartList(db, event.id, true)).toBe(2);
+    expect(await countOutsideOnPublicStartList(db, event.id, true)).toBe(1);
+    // …and with the event's «Arată invitații speciali pe lista publică» off (§NNN), none of them is on the table.
+    expect(await countPublicStartList(db, event.id)).toBe(1);
+    expect(await countOutsideOnPublicStartList(db, event.id)).toBe(0);
     // Mihai did not tick and is outside: not even «Participant (nume ascuns)».
     expect(await countAnonymousStartListEntries(db, event.id)).toBe(0);
     expect(await countOutsideCapacity(db, event.id)).toBe(2);

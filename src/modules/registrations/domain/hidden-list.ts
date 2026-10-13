@@ -68,6 +68,7 @@ export type HiddenListSettings = {
   hiddenListBibStart?: number | null;
   participantCountPublic: boolean;
   hiddenListCounted: boolean;
+  hiddenListPublic: boolean;
 };
 
 /**
@@ -81,6 +82,17 @@ export function hiddenListCounting(event: Partial<HiddenListSettings> | null | u
   // The one rule for every public number of the event (§668): the places line and the door ask it too.
   const countPublic = publicNumbersShown(event);
   return { countPublic, countHidden: event?.hiddenListEnabled === true && event.hiddenListCounted === true };
+}
+
+/**
+ * Whether the special guests may appear on the event's public lists (§NNN, amending §648 and §643): only
+ * while the switch is on AND «Arată invitații speciali pe lista publică» is ticked. Off, or with no row, no
+ * registration on the hidden list is drawn on any public list — a row still on the list after the switch
+ * was turned off stays off too, the safe side of a disclosure. Display only: counts follow
+ * `hiddenListCounting`, never this.
+ */
+export function hiddenListShownPublicly(event: Partial<HiddenListSettings> | null | undefined): boolean {
+  return event?.hiddenListEnabled === true && event.hiddenListPublic === true;
 }
 
 /**

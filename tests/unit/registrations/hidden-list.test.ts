@@ -5,7 +5,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
-import { hiddenListBibStartOf, hiddenListCounting } from "@/modules/registrations/domain/hidden-list";
+import { hiddenListBibStartOf, hiddenListCounting, hiddenListShownPublicly } from "@/modules/registrations/domain/hidden-list";
 import HiddenListChip from "@/modules/registrations/ui/HiddenListChip";
 import HiddenListRadio from "@/modules/registrations/ui/HiddenListRadio";
 import IncognitoIcon from "@/shared/ui/IncognitoIcon";
@@ -32,6 +32,29 @@ describe("§647 the event's settings, as read", () => {
     expect(hiddenListBibStartOf({ hiddenListEnabled: true, hiddenListBibStart: 900, participantCountPublic: true, hiddenListCounted: false })).toBe(900);
     expect(hiddenListBibStartOf({ hiddenListEnabled: false, hiddenListBibStart: 900, participantCountPublic: true, hiddenListCounted: false })).toBeNull();
     expect(hiddenListBibStartOf({ hiddenListEnabled: true, hiddenListBibStart: null, participantCountPublic: true, hiddenListCounted: false })).toBeNull();
+  });
+});
+
+describe("§NNN «Arată invitații speciali pe lista publică»", () => {
+  it("shows the special guests only while the switch is on AND the tick is on; anything else is off", () => {
+    expect(hiddenListShownPublicly({ hiddenListEnabled: true, hiddenListPublic: true })).toBe(true);
+    expect(hiddenListShownPublicly({ hiddenListEnabled: true, hiddenListPublic: false })).toBe(false);
+    expect(hiddenListShownPublicly({ hiddenListEnabled: false, hiddenListPublic: true })).toBe(false);
+    expect(hiddenListShownPublicly({ hiddenListEnabled: true })).toBe(false);
+    expect(hiddenListShownPublicly(null)).toBe(false);
+    expect(hiddenListShownPublicly(undefined)).toBe(false);
+  });
+
+  it("is off by default and never changes what the counts say", () => {
+    expect(hiddenListCounting({ hiddenListEnabled: true, participantCountPublic: true, hiddenListCounted: true, hiddenListPublic: false })).toEqual({ countPublic: true, countHidden: true });
+  });
+
+  it("says the tick in both languages, with its «Bifat … Debifat» line", () => {
+    expect(ro.Admin.editor.hiddenListPublic).toBe("Arată invitații speciali pe lista publică");
+    expect(en.Admin.editor.hiddenListPublic).toBe("Show special guests on the public list");
+    expect(ro.Admin.editor.hiddenListPublicHelp).toMatch(/^Bifat: .* Debifat: /);
+    expect(en.Admin.editor.hiddenListPublicHelp).toMatch(/^Ticked: .* Unticked: /);
+    for (const text of [ro.Admin.editor.hiddenListPublicHelp, en.Admin.editor.hiddenListPublicHelp]) expect(text.length).toBeLessThan(200);
   });
 });
 
