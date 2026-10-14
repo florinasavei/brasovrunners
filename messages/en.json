@@ -9262,7 +9262,7 @@
         "typed": "Another colour",
         "choice": "The band's colour",
         "typedLabel": "The typed colour",
-        "typedHelp": "A hash and six hexadecimal digits. A new colour typed here is the one kept.",
+        "typedHelp": "A hash and six hexadecimal digits, like #1b8a3a. It is kept only if white or black text reads on it, at a contrast of at least 4.5 to 1. A new colour typed here is the one kept.",
         "state": "Now: {colour}, contrast {ratio} to 1",
         "save": "Save the colours",
         "saving": "Saving…",

@@ -12,6 +12,7 @@ import type { StaffRole } from "@/modules/staff-identity/domain/roles";
 import { DEFAULT_BADGE_DESIGN, readBadgeDesign } from "@/modules/volunteers/badges/badge-design";
 import { readBadgeDesignForm } from "@/modules/volunteers/badges/badge-query";
 import { BADGE_COUNT_MAX, badgePrintDefault, listBadgeRoles, readPrintCounts, saveBadgeDesign, saveBadgeRoleColours } from "@/modules/volunteers/badges/badges";
+import { changeVolunteerRole } from "@/modules/volunteers/volunteers";
 import { DomainError } from "@/shared/errors/domain-error";
 import type { FormOutcome } from "@/shared/forms/outcome";
 import en from "../../../messages/en.json";
@@ -293,6 +294,45 @@ describe("§NNN «Culorile rolurilor»", () => {
 
   it("refuses the Tehnic role on the server", async () => {
     await expect(saveBadgeRoleColours(db, staff.DEV!, eventId, [{ roleId: waterId, choice: "#c62828", typed: "" }], NOW)).rejects.toMatchObject({ code: "FORBIDDEN" });
+  });
+});
+
+describe("§NNN a role's colour in the role's own form («Voluntari»)", () => {
+  const fields = (extra: Record<string, string> = {}) => ({ nameRo: "Start", nameEn: "Start", needed: "2", descriptionRo: "", descriptionEn: "", ...extra });
+
+  it("adds a role with its colour, audited, and a role added without the boxes starts with the club's orange", async () => {
+    const withColour = await changeVolunteerRole(db, staff.MODERATOR!, { kind: "add", eventId, fields: fields({ colourChoice: "#c62828", colourTyped: "" }) }, NOW);
+    const without = await changeVolunteerRole(db, staff.MODERATOR!, { kind: "add", eventId, fields: fields({ nameRo: "Sosire", nameEn: "Finish" }) }, NOW);
+    const roles = await listBadgeRoles(db, eventId);
+    expect(roles.find((role) => role.id === withColour.role.id)?.colour).toBe("#c62828");
+    expect(roles.find((role) => role.id === without.role.id)?.colour).toBeNull();
+    expect((await trail("volunteer_role.added"))[0].metadataJson).toMatchObject({ roleId: withColour.role.id, colour: "#c62828" });
+  });
+
+  it("changes a colour through «Salvează» — audited with the colour from and to — and leaves it alone when the form draws no boxes", async () => {
+    const save = (extra: Record<string, string>) => changeVolunteerRole(db, staff.ADMIN!, { kind: "edit", eventId, id: waterId, fields: fields({ nameRo: "Punct de apă", nameEn: "Water point", needed: "3", ...extra }) }, NOW);
+    expect(await save({ colourChoice: "typed", colourTyped: "#0d47a1" })).toMatchObject({ changed: true });
+    expect((await listBadgeRoles(db, eventId))[0].colour).toBe("#0d47a1");
+    expect((await trail("volunteer_role.edited"))[0].metadataJson).toMatchObject({ fields: ["colour"], colourFrom: null, colourTo: "#0d47a1" });
+    // No boxes posted: nothing changes, and nothing is recorded.
+    expect(await save({})).toMatchObject({ changed: false });
+    expect((await listBadgeRoles(db, eventId))[0].colour).toBe("#0d47a1");
+    // The same colour again changes nothing.
+    expect(await save({ colourChoice: "typed", colourTyped: "#0D47A1" })).toMatchObject({ changed: false });
+    expect(await trail("volunteer_role.edited")).toHaveLength(1);
+  });
+
+  it("refuses a colour no word reads on, or one that is not a colour, naming the form's own box, and writes nothing", async () => {
+    await expect(changeVolunteerRole(db, staff.ADMIN!, { kind: "edit", eventId, id: waterId, fields: fields({ colourChoice: "typed", colourTyped: "#808080" }) }, NOW)).rejects.toMatchObject({
+      code: "BADGE_COLOUR_UNREADABLE",
+      fields: ["colourTyped"],
+    });
+    await expect(changeVolunteerRole(db, staff.ADMIN!, { kind: "add", eventId, fields: fields({ colourChoice: "typed", colourTyped: "rosu" }) }, NOW)).rejects.toMatchObject({
+      code: "VALIDATION_ERROR",
+      fields: ["colourTyped"],
+    });
+    expect((await listBadgeRoles(db, eventId)).map((role) => role.colour)).toEqual([null, null]);
+    expect(await db.select().from(eventVolunteerRoles).where(eq(eventVolunteerRoles.eventId, eventId))).toHaveLength(2);
   });
 });
 

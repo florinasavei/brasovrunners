@@ -125,7 +125,8 @@ describe("§NNN the badges' sheet", () => {
         dashed = false;
         return undash.apply(this);
       });
-      vi.spyOn(PDFDocument.prototype, "moveTo").mockImplementation(function (this: PDFKit.PDFDocument, x: number, y: number) {
+      vi.spyOn(PDFDocument.prototype, "moveTo").mockImplementation(function (this: PDFKit.PDFDocument, ...args: unknown[]) {
+        const [x, y] = args as [number, number];
         if (dashed) onDash.push([x, y]);
         else if (outside(x, y, rows)) marks.push([x, y]);
         return moveTo.call(this, x, y);

@@ -9262,7 +9262,7 @@
         "typed": "Altă culoare",
         "choice": "Culoarea benzii",
         "typedLabel": "Culoarea scrisă",
-        "typedHelp": "Diez și șase cifre hexazecimale. O culoare nouă scrisă aici e cea care se păstrează.",
+        "typedHelp": "Diez și șase cifre hexazecimale, ca #1b8a3a. Se păstrează doar dacă textul alb sau negru se citește pe ea, la un contrast de cel puțin 4,5 la 1. O culoare nouă scrisă aici e cea care se păstrează.",
         "state": "Acum: {colour}, contrast {ratio} la 1",
         "save": "Salvează culorile",
         "saving": "Se salvează…",

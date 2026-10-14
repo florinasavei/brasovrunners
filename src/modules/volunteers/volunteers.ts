@@ -42,6 +42,7 @@ import {
   type VolunteerState,
 } from "./domain/volunteer";
 import { agreementAcceptance, readAgreementFacts } from "./agreement";
+import { checkedRoleColour } from "./badges/badges";
 
 /**
  * An event's volunteers (§754; the owner, 2026-10-13: «I want to register volunteers for a race and be
@@ -87,6 +88,8 @@ export type VolunteerRole = {
   needed: number;
   descriptionRo: string | null;
   descriptionEn: string | null;
+  /** The role's band on the volunteer badges (§NNN): a hex, or null for the club's orange. */
+  colour: string | null;
   position: number;
   createdAt: Date;
 };
@@ -296,6 +299,13 @@ function roleInputOf(fields: Record<string, unknown>): VolunteerRoleInput {
   return parsed.data;
 }
 
+/**
+ * The boxes of a role's band colour inside the role's own form (§NNN): «Culoarea benzii» and «Culoarea scrisă».
+ * A form that posts neither leaves the colour as it is — the saves that predate the colour, and any caller
+ * that does not draw the boxes, never reset it.
+ */
+export const ROLE_FORM_COLOUR_BOXES = { choice: "colourChoice", typed: "colourTyped" } as const;
+
 export type VolunteerRoleRequest =
   | { kind: "add"; eventId: string; fields: Record<string, unknown> }
   | { kind: "edit"; eventId: string; id: string; fields: Record<string, unknown> }
@@ -320,6 +330,16 @@ export async function changeVolunteerRole<T extends Record<string, unknown>>(
   assertMayManage(actor);
   assertIds(request.eventId, ...(request.kind === "add" ? [] : [request.id]));
   const input = request.kind === "add" || request.kind === "edit" ? roleInputOf(request.fields) : null;
+  // The band's colour, when the form drew its boxes: «Culoarea benzii» and the colour typed beside «Altă culoare».
+  const postedColour =
+    request.kind === "add" || request.kind === "edit"
+      ? typeof request.fields[ROLE_FORM_COLOUR_BOXES.choice] === "string"
+        ? {
+            choice: request.fields[ROLE_FORM_COLOUR_BOXES.choice] as string,
+            typed: typeof request.fields[ROLE_FORM_COLOUR_BOXES.typed] === "string" ? (request.fields[ROLE_FORM_COLOUR_BOXES.typed] as string) : "",
+          }
+        : null
+      : null;
 
   const result = await db.transaction(async (tx) => {
     // The event's own row is locked first: on an event with no roles yet there is no role row to lock, and two
@@ -344,6 +364,7 @@ export async function changeVolunteerRole<T extends Record<string, unknown>>(
       if (roles.length >= VOLUNTEER_ROLES_MAX) {
         throw new DomainError("VALIDATION_ERROR", `an event takes at most ${VOLUNTEER_ROLES_MAX} roles`, ["nameRo"]);
       }
+      const colour = postedColour ? checkedRoleColour(postedColour, null, ROLE_FORM_COLOUR_BOXES) : null;
       const [row] = await tx
         .insert(eventVolunteerRoles)
         .values({
@@ -353,11 +374,12 @@ export async function changeVolunteerRole<T extends Record<string, unknown>>(
           needed: input.needed,
           descriptionRo: input.descriptionRo,
           descriptionEn: input.descriptionEn,
+          colour,
           position: roles.length === 0 ? 0 : Math.max(...roles.map((role) => role.position)) + 1,
           createdAt: now,
         })
         .returning({ id: eventVolunteerRoles.id });
-      await audit("volunteer_role.added", { roleId: row.id, nameRo: input.nameRo, nameEn: input.nameEn, needed: input.needed });
+      await audit("volunteer_role.added", { roleId: row.id, nameRo: input.nameRo, nameEn: input.nameEn, needed: input.needed, colour });
       return { changed: true, role: { id: row.id, nameRo: input.nameRo } };
     }
 
@@ -392,14 +414,17 @@ export async function changeVolunteerRole<T extends Record<string, unknown>>(
 
     // «Salvează» on a role: both names, how many it needs, and its description.
     if (!input) throw new DomainError("VALIDATION_ERROR", "nothing to save");
+    const colour = postedColour ? checkedRoleColour(postedColour, current.colour, ROLE_FORM_COLOUR_BOXES) : current.colour;
     const before = {
       nameRo: current.nameRo,
       nameEn: current.nameEn,
       needed: current.needed,
       descriptionRo: current.descriptionRo,
       descriptionEn: current.descriptionEn,
+      colour: current.colour,
     };
-    const changedFields = (Object.keys(before) as (keyof typeof before)[]).filter((key) => before[key] !== input[key]);
+    const after = { ...input, colour };
+    const changedFields = (Object.keys(before) as (keyof typeof before)[]).filter((key) => before[key] !== after[key]);
     if (changedFields.length === 0) return { changed: false, role: summary };
     await tx
       .update(eventVolunteerRoles)
@@ -409,9 +434,16 @@ export async function changeVolunteerRole<T extends Record<string, unknown>>(
         needed: input.needed,
         descriptionRo: input.descriptionRo,
         descriptionEn: input.descriptionEn,
+        colour,
       })
       .where(eq(eventVolunteerRoles.id, current.id));
-    await audit("volunteer_role.edited", { roleId: current.id, fields: changedFields, nameRo: input.nameRo, needed: input.needed });
+    await audit("volunteer_role.edited", {
+      roleId: current.id,
+      fields: changedFields,
+      nameRo: input.nameRo,
+      needed: input.needed,
+      ...(changedFields.includes("colour") ? { colourFrom: current.colour, colourTo: colour } : {}),
+    });
     return { changed: true, role: { id: current.id, nameRo: input.nameRo } };
   });
   // The public page lists the roles and what each still needs: it is told once the write has committed.

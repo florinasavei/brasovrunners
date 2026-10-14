@@ -225,10 +225,7 @@ export async function saveBadgeRoleColours<T extends Record<string, unknown>>(
     for (const entry of posted) {
       const role = byId.get(entry.roleId);
       if (!role) throw new DomainError("NOT_FOUND", "no such role on this event");
-      const { colour, box } = postedRoleColour(entry, role.colour);
-      if (colour && !badgeColourReadable(colour)) {
-        throw new DomainError("BADGE_COLOUR_UNREADABLE", "the role's colour does not carry its words at AA", [box]);
-      }
+      const colour = checkedRoleColour(entry, role.colour);
       if (colour !== role.colour) wanted.push({ role, colour });
     }
     let changed = 0;
@@ -264,8 +261,13 @@ export async function saveBadgeRoleColours<T extends Record<string, unknown>>(
  * different things, and the server will not guess which one the person meant. The typed box still holding
  * the saved colour (it is prefilled with it) says nothing new.
  */
-export function postedRoleColour(entry: Pick<PostedRoleColour, "roleId" | "choice" | "typed">, stored: string | null): { colour: string | null; box: string } {
-  const boxes = roleColourBoxes(entry.roleId);
+export function postedRoleColour(
+  entry: Pick<PostedRoleColour, "choice" | "typed"> & { roleId?: string },
+  stored: string | null,
+  /** The boxes' names when the colour is posted from somewhere else than the badges' page: the role's own form (§NNN). */
+  named: { choice: string; typed: string } = roleColourBoxes(entry.roleId ?? ""),
+): { colour: string | null; box: string } {
+  const boxes = named;
   const typedText = entry.typed.trim();
   const typed = typedColour(typedText);
   if (entry.choice === TYPED_COLOUR) {
@@ -280,6 +282,23 @@ export function postedRoleColour(entry: Pick<PostedRoleColour, "roleId" | "choic
   // The select untouched (it still says the saved colour): the typed one is the change.
   if (chosen === stored) return { colour: typed, box: boxes.typed };
   throw new DomainError("VALIDATION_ERROR", "a colour was chosen and another typed; choose «Altă culoare» to keep the typed one", [boxes.choice]);
+}
+
+/**
+ * The colour a role's boxes ask for, held to the rule every colour of a band obeys: a typed colour is `#rrggbb`
+ * and carries its words at AA (`BADGE_COLOUR_UNREADABLE`, naming the box). The badges' page and the role's own
+ * form in the «Voluntari» card (§NNN) both save a colour through this one function.
+ */
+export function checkedRoleColour(
+  entry: Pick<PostedRoleColour, "choice" | "typed"> & { roleId?: string },
+  stored: string | null,
+  named?: { choice: string; typed: string },
+): string | null {
+  const { colour, box } = postedRoleColour(entry, stored, named);
+  if (colour && !badgeColourReadable(colour)) {
+    throw new DomainError("BADGE_COLOUR_UNREADABLE", "the role's colour does not carry its words at AA", [box]);
+  }
+  return colour;
 }
 
 // --- The print -------------------------------------------------------------------------------
