@@ -224,6 +224,9 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
  */
 export const NOT_CONFIRMED: Readonly<Record<string, string>> = {
   previewEventDraftAction: "writes nothing and tells nobody: it draws the unsaved event's card and page (§579)",
+  // «Ecusoane pentru voluntari» (§NNN): the club's own look of a printed strip, seen in the preview before the save.
+  saveBadgeDesignAction: "an editorial save of the badges' look, undone by saving the old one; it tells nobody and prints nothing",
+  saveBadgeRoleColoursAction: "an editorial save of the roles' band colours, undone by choosing again; it tells nobody",
   // An event as a JSON file (§751): the import page is its own step-by-step confirmation, in a client island that calls these.
   previewEventImportAction: "writes nothing: it reads the file and lists what it holds and the events it could go over",
   diffEventImportAction: "writes nothing and copies nothing: it shows every field that would change, the question the next press answers",
