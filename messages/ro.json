@@ -2644,7 +2644,7 @@
         },
         "startList": {
           "title": "Lista publică a participanților",
-          "onlyHere": "Lista publică există doar la înscrierile pe site: alege „Pe site” mai sus, în același card.",
+          "onlyHere": "Lista publică există doar la înscrierile pe site: alege «Înscrieri pe site» mai sus, în același card.",
           "onlyRegisteringTypes": "O alergare de grup nu are înscrieri, deci nici listă publică: schimbă tipul la „Ce fel de eveniment”."
         },
         "status": {
@@ -2762,6 +2762,7 @@
             "noDeclaration": "lipsește declarația",
             "listHidden": "listă nepublică",
             "listShown": "lista publică",
+            "listShownWithWaitlist": "lista publică, cu lista de așteptare",
             "external": "La organizator: {provider}",
             "externalUnnamed": "La organizator"
           },
@@ -7082,7 +7083,7 @@
               "title": "Descarcă și tipărește numerele de concurs",
               "steps": [
                 "«Alergări» → «Deschide» pe cursă.",
-                "Deschide cardul «Participare, înscrieri și regulament», apoi «Numere de concurs (BIB)» și «Alocare și tipărire».",
+                "Deschide cardul «Participare, înscrieri și regulament», apoi «Alocare și tipărire».",
                 "«Vezi numerele» ca să le verifici pe ecran.",
                 "«Descarcă toate numerele (PDF)»: câte două numere A5 pe o foaie A4, cu linia de tăiere. «Câte unul pe pagină» dacă vrei unul singur, centrat pe A4.",
                 "Tipărește la mărimea reală (100%) și taie pe linie.",
@@ -7262,7 +7263,7 @@
                 "«Număr de locuri» și, lângă el, «Lista de așteptare»: «Nelimitată», «Limitată la un număr de locuri», cu câte persoane scrii tu, sau «Fără listă de așteptare». Sub «Limitată…», gol sau 0 o face nelimitată; doar «Fără listă de așteptare» închide lista. Sub ele, «Locurile din lista de așteptare se alocă automat»: «Da» dă fiecare loc eliberat sau adăugat primului de pe listă; «Nu», dacă vrei să alegi tu (vezi „Alege tu cine primește un loc eliberat”).",
                 "«Perioada de înscriere»: «Înscrierile se deschid» și «Înscrierile se închid».",
                 "«Fereastra de confirmare»: «Confirmarea participării: cu câte zile înainte se cere» și, în căsuța de lângă, cu câte zile înainte expiră (0 = locul nu expiră până la start).",
-                "«Participare, înscrieri și regulament» → «Regulamentul»: «Vârsta minimă de participare» (14 dacă nu o schimbi, niciodată sub 14), la orice tip de eveniment. Declarația, chiar sub el: «Declarația pe propria răspundere» → «Declarația pe care o semnează participantul».",
+                "«Participare, înscrieri și regulament» → «Regulamentul»: «Vârsta minimă de participare» (14 dacă nu o schimbi, niciodată sub 14), la orice tip de eveniment. Declarația, chiar sub «Regulamentul»: «Declarația pe propria răspundere» → «Declarația pe care o semnează participantul».",
                 "«Numere de concurs (BIB)»: «Numerele de concurs (BIB) încep de la».",
                 "Apasă «Salvează», apoi publică evenimentul. Nimeni nu se poate înscrie cât termenii, nota de confidențialitate și declarația nu sunt aprobate."
               ]
@@ -9091,8 +9092,13 @@
       "full": "Sunt deja {max} de puncte, cât încape pe un traseu.",
       "save": "Salvează punctele",
       "saving": "Se salvează…",
-      "courseNote": "Punctele de control și orele limită se scriu în „Puncte de control”, chiar sub acest card.",
+      "courseNote": "Punctele de control și orele limită se scriu în cardul „Puncte de control”, deasupra cardului 1.",
       "courseLink": "Deschide punctele de control",
+      "inCourse": {
+        "one": "{count} punct de control",
+        "few": "{count} puncte de control",
+        "other": "{count} de puncte de control"
+      },
       "gpx": {
         "take": "Ia punctele din GPX",
         "title": "Punctele din fișierul GPX",

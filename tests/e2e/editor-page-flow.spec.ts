@@ -283,27 +283,31 @@ test.describe.serial("§406 the editor is the page, top to bottom", () => {
   });
 
   /*
-    §NNN — «Puncte de control» (§757) stands right under «Traseul» on the screen, joined to it, while
-    its forms stay beside the save form; «Voluntari» (§754) is with the registrations, below the grid.
+    §NNN — «Puncte de control» (§757) stands where the document has it, after the to-do card and
+    above card 1, its forms beside the save form: no CSS `order`, so the screen, the tab key and a
+    screen reader meet the cards in one order (WCAG 2.4.3, 1.3.2). «Traseul» links to it and counts
+    its points. «Voluntari» (§754) is with the registrations, below the grid.
   */
-  test("«Puncte de control» under «Traseul», set in and joined to it; «Voluntari» below the grid", async ({ page }) => {
+  test("«Puncte de control» where the document has it; «Voluntari» below the grid", async ({ page }) => {
     test.skip(!editorUrl, "the create step did not run");
     await signIn(page, "Dev Administrator");
     await page.goto(editorUrl);
     await hydrated(page);
-    const course = (await page.locator("#box-course").boundingBox())!;
+    const kind = (await page.locator("#box-kind").boundingBox())!;
     const checkpoints = (await page.locator("#box-checkpoints").boundingBox())!;
-    const registration = (await page.locator("#box-registration").boundingBox())!;
-    // Under «Traseul», above card 6, 8 pixels below it, and set in on the left.
-    expect(checkpoints.y).toBeGreaterThan(course.y + course.height - 1);
-    expect(checkpoints.y - (course.y + course.height)).toBeLessThanOrEqual(12);
-    expect(registration.y).toBeGreaterThan(checkpoints.y + checkpoints.height - 1);
-    expect(checkpoints.x).toBeGreaterThan(course.x);
+    // Above card 1 on the screen, and before it in the document: the same order for every reader.
+    expect(checkpoints.y + checkpoints.height).toBeLessThanOrEqual(kind.y);
+    const before = await page.evaluate(() => {
+      const card = document.getElementById("box-checkpoints");
+      const first = document.getElementById("box-kind");
+      return Boolean(card && first && card.compareDocumentPosition(first) & Node.DOCUMENT_POSITION_FOLLOWING);
+    });
+    expect(before).toBe(true);
     // Its forms are never inside the save form: HTML forms cannot nest.
     await expect(page.locator("#event-save-form #box-checkpoints")).toHaveCount(0);
     await expect(page.locator("#box-checkpoints form").first()).toBeAttached();
-    // A card of «Traseul»: a level-3 heading.
-    await expect(page.locator("#box-checkpoints > summary h3")).toHaveCount(1);
+    // A card of the column like the others: a level-2 heading.
+    await expect(page.locator("#box-checkpoints > summary h2")).toHaveCount(1);
     // «Voluntari» under the save, with the registrations' operations, outside the save form.
     const save = (await page.locator("#box-save").boundingBox())!;
     const volunteers = (await page.locator("#box-volunteers").boundingBox())!;

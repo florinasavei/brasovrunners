@@ -9,7 +9,7 @@ import { isStorageConfigured } from "@/modules/media/storage";
 import Panel from "@/shared/ui/Panel";
 import { type CoverPicture, findCoverPicture } from "../../repository";
 import { coverPhotoLabels } from "../cover-labels";
-import { BoxNote, type BoxProps } from "./box-kit";
+import { BoxNote, type BoxProps, SettingsReadOnly } from "./box-kit";
 
 /** The cover's crop box starts at the card's own frame (§454): the largest 16∶9 of the picture. */
 export const COVER_SHAPE = "16:9" as const;
@@ -26,8 +26,9 @@ export const COVER_SHAPE = "16:9" as const;
  * mai puține carduri și mai mult nesting»): the cover travels with the title wherever the event is
  * shown as a card or shared. It was a card of its own among those not on the page (§406); no public
  * page shows it yet, so it promises nothing a visitor sees today. The same field, names and id
- * `#box-cover`. A settings card: a role that may not change the event row reads its heading and its
- * line, and the server asks again.
+ * `#box-cover`. A settings card: a role that may not change the event row (the Redactor, who works in
+ * card 2) opens it on the house's one sentence that the settings are not theirs (`SettingsReadOnly`,
+ * as before §NNN), and the server asks again.
  */
 export default async function CoverBox({ event, mayEditSettings, picture: given }: BoxProps & { picture?: CoverPicture | null }) {
   const t = await getTranslations("Admin");
@@ -41,7 +42,12 @@ export default async function CoverBox({ event, mayEditSettings, picture: given 
     aside: picture ? t("editor.cover.set") : t("editor.cover.missing"),
     "data-testid": "cover-box",
   } as const;
-  if (!mayEditSettings) return <Panel {...card} />;
+  if (!mayEditSettings)
+    return (
+      <Panel collapsible {...card}>
+        <SettingsReadOnly />
+      </Panel>
+    );
   return (
     <Panel collapsible {...card}>
       <Stack spacing={1.5}>

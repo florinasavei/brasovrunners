@@ -13,7 +13,7 @@ import { describe, expect, it } from "vitest";
  *
  *   Pagina evenimentului, de sus în jos — the type (with the status, the cost and, since §NNN, the
  *   promotion), title and summary (with, since §NNN, the page's address and the cover), description,
- *   when and where (§481), the course (with its checkpoints under it, §757, §NNN), participation,
+ *   when and where (§481), the course (its checkpoints a card of their own above card 1, §757, §NNN), participation,
  *   registration and rules (§NNN: what were cards 6 and 9), partners, (the share links, automatic),
  *   links and files: the page's sections in `PAGE_SECTIONS`' order, which
  *   `events/page-sections.test.ts` holds both the page and these pages to — eight cards;

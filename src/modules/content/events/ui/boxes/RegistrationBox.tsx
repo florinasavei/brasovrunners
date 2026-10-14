@@ -35,6 +35,7 @@ import {
   bibDesignSummary,
   bibsSummary,
   confirmationSummary,
+  healthNoteSummary,
   kitSummary,
   minAgeSummary,
   programmeSummary,
@@ -235,9 +236,11 @@ export default async function RegistrationBox({
 
   /*
     The closed line, short (§NNN): the registration's own line — the mode, the places, the
-    declaration's version and the list where the club registers people — then the declaration a
-    group run offers (the registration's line names a race's), the programme's line, the rules'
-    and the minimum age. Each named card inside says the rest on its own line.
+    declaration's version and the list where the club registers people, with its waiting list when
+    that is public too (§628) — then the declaration a group run offers (the registration's line
+    names a race's), whether the form asks for medical information (§557, a disclosure old card 9's
+    line said), the programme's line, the rules' and the minimum age. Each named card inside says
+    the rest on its own line.
   */
   const summary = [
     registrationSummary(words, event, {
@@ -248,6 +251,7 @@ export default async function RegistrationBox({
       creating: event === null,
     }),
     !(registers && event?.registrationMode === "INTERNAL") ? line.text : null,
+    registers && event?.registrationMode === "INTERNAL" ? healthNoteSummary(words, event.askHealthNote ?? false) : null,
     programmeSummary(words, event, hasProgramme(initialType), translations, locale),
     t("editor.boxes.registration.rulesLine", { state: rulesSummary(words, translations) }),
     minAgeSummary(words, effectiveMinimumAge(event?.minAge), locale),

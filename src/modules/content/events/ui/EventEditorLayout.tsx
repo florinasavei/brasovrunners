@@ -38,61 +38,15 @@ export default function EventEditorLayout({ side, main, below }: { side: ReactNo
 }
 
 /**
- * Where each part of the editor's main column stands on the screen (§NNN), by `order` in one flex
- * column: the card that has forms of its own and stands **under «Traseul»** — «Puncte de control»
- * (§757) — cannot sit inside the save form, because HTML forms cannot nest, so it is drawn beside
- * the form in the document and moved between the cards on the screen. The save form takes no box of
- * its own (`display: contents`): its two runs of cards, up to «Traseul» and from card 6 on, are this
- * column's items, and «Puncte de control» goes between them. What has no place here keeps the
- * column's start (the to-do card, a refusal's summary), in the document's order; the bib card's small
- * forms are `hidden` and take no place at all.
- *
- * Only the screen moves: a keyboard and a screen reader meet «Puncte de control» where the document
- * has it, after the to-do card and before the save form's first card, as before §NNN.
+ * The editor's main column: one column, 16 pixels between its items, drawn in the document's order —
+ * the to-do card, «Puncte de control», then the save form's cards. No CSS `order` (§NNN, as the
+ * footer, §372): what a keyboard and a screen reader meet is what the screen shows. «Puncte de
+ * control» has forms of its own, so it stands beside the save form, never inside it (HTML forms
+ * cannot nest), and «Traseul» links to it rather than holding it.
  */
-export const EDITOR_MAIN_ORDER = { top: 0, upToCourse: 1, underCourse: 2, fromRegistration: 3 } as const;
-
-/** The style the save form takes on the editor so its runs of cards are the column's items (§NNN). */
-export const FORM_WITHOUT_BOX = { display: "contents" } as const;
-
-/** The editor's main column (§NNN): one flex column, 16 pixels between its items, ordered by `EDITOR_MAIN_ORDER`. */
 export function EditorMainColumn({ children }: { children: ReactNode }) {
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0 }} data-testid="editor-main">
-      {children}
-    </Box>
-  );
-}
-
-/** A run of the save form's cards, at its place in the column (§NNN). */
-export function EditorCardRun({ place, children, testId }: { place: "upToCourse" | "fromRegistration"; children: ReactNode; testId?: string }) {
-  return (
-    <Stack spacing={2} sx={{ order: EDITOR_MAIN_ORDER[place], minWidth: 0 }} data-testid={testId}>
-      {children}
-    </Stack>
-  );
-}
-
-/**
- * A card that belongs to «Traseul» but posts forms of its own (§NNN; «Puncte de control», §757):
- * drawn right under «Traseul» and joined to it — half the column's gap above, set in by a step on the
- * left, with a rule down that side, the way a named card sits inside its card — while in the document
- * it stays beside the save form. Its own heading is a level-3 heading, a card of «Traseul».
- */
-export function UnderCourse({ children }: { children: ReactNode }) {
-  return (
-    <Box
-      data-testid="under-course"
-      sx={{
-        order: EDITOR_MAIN_ORDER.underCourse,
-        mt: -1,
-        ml: { xs: 1, sm: 2 },
-        pl: { xs: 1, sm: 1.5 },
-        borderLeft: 2,
-        borderColor: "divider",
-        minWidth: 0,
-      }}
-    >
       {children}
     </Box>
   );

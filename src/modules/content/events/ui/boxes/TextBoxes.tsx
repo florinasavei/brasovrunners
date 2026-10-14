@@ -5,6 +5,7 @@ import { capitalizeFirst } from "@/i18n/dates";
 import { getPathname } from "@/i18n/navigation";
 import { type Locale, routing } from "@/i18n/routing";
 import { effectiveMinimumAge, MIN_PARTICIPANT_AGE } from "@/modules/registrations/domain/age";
+import { isStorageConfigured } from "@/modules/media/storage";
 import { textFieldConstraints } from "@/shared/forms/constraints";
 import RecallField from "@/shared/forms/recall";
 import LocaleTabPanels, { type RequiredCountWords, type TabWatch } from "@/shared/ui/LocaleTabPanels";
@@ -183,13 +184,16 @@ export async function TitleSummaryBox({
   const address = await AddressBox({ languages, slugLocked, creating });
   const picture = await coverPicture(event);
   const cover = await CoverBox({ event, mayEditSettings, picture });
-  const coverState = t("editor.boxes.titleSummary.coverLine", { state: picture ? t("editor.cover.set") : t("editor.cover.missing") });
+  // Only where a cover can be chosen: with no media store the card says so, and «De făcut» asks for none (§749, §NNN).
+  const coverState = isStorageConfigured()
+    ? t("editor.boxes.titleSummary.coverLine", { state: picture ? t("editor.cover.set") : t("editor.cover.missing") })
+    : null;
   return (
     <Panel glyph="title"
       collapsible
       id="box-title"
       title={heading ?? t("editor.boxes.titleSummary.title")}
-      aside={lineOf(required, creating ? undefined : [titleSummarySummary(words, translations), coverState].join(words.separator))}
+      aside={lineOf(required, creating ? undefined : [titleSummarySummary(words, translations), coverState].filter(Boolean).join(words.separator))}
       openWhen={{ primary: creating, attention: !creating && (incomplete.length > 0 || blankAddress.length > 0) }}
     >
       <Stack spacing={2}>

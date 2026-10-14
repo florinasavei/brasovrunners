@@ -109,41 +109,70 @@ describe("§NNN «Participare, înscrieri și regulament»: cards 6 and 9 in one
     expect(CREATE).toContain("<RegistrationBox {...box} heading={flow.headings.registration} languages={languages}");
   });
 
+  it("sends the Organizer only to what an Organizer sees: «Alocare și tipărire» is in the card itself, «Numere de concurs (BIB)» is the Administrator's", () => {
+    // `canEditEventFields` is the Administrator's: for the Organizer `RegistrationBox` draws `bibPrint` straight in the card.
+    expect(REGISTRATION).toMatch(/\{mayEditSettings\s*\?\s*kitAndBibs\s*:[\s\S]*?bibPrint\}/);
+    for (const locale of ["ro", "en"] as const) {
+      const sections = JSON.parse(read(`messages/${locale}.json`)).Admin.guide.sections;
+      // The Organizer's own section (the role's code is MODERATOR).
+      const organizer = sections.find((section: { roles?: string[] }) => section.roles?.length === 1 && section.roles[0] === "MODERATOR");
+      expect(organizer, locale).toBeDefined();
+      const steps = JSON.stringify(organizer.tasks);
+      expect(steps, locale).not.toMatch(/Numere de concurs \(BIB\)|Race numbers \(bibs\)/);
+      expect(steps, locale).toMatch(/«Alocare și tipărire»|«Allocate and print»/);
+    }
+  });
+
+  it("calls the mode by the select's own words, and names «Regulamentul» rather than «el»", () => {
+    const ro = JSON.parse(read("messages/ro.json")).Admin;
+    const en = JSON.parse(read("messages/en.json")).Admin;
+    expect(ro.editor.boxes.startList.onlyHere).toContain("alege «Înscrieri pe site» mai sus");
+    expect(en.editor.boxes.startList.onlyHere).toContain("choose “Înscrieri pe site” higher up");
+    expect(JSON.stringify(ro.guide)).not.toContain("Declarația, chiar sub el:");
+    expect(JSON.stringify(en.guide)).not.toContain("The declaration, right under it:");
+  });
+
   it("names its title in both catalogues", () => {
     expect(JSON.parse(read("messages/ro.json")).Admin.editor.boxes.registration.title).toBe("Participare, înscrieri și regulament");
     expect(JSON.parse(read("messages/en.json")).Admin.editor.boxes.registration.title).toBe("Taking part, registration and rules");
   });
 });
 
-describe("§NNN «Puncte de control» under «Traseul», «Voluntari» with the registrations", () => {
-  it("keeps the checkpoints' forms beside the save form in the document, never inside it", () => {
+describe("§NNN «Puncte de control» where the document has it, «Voluntari» with the registrations", () => {
+  it("keeps the checkpoints' forms beside the save form, before it, never inside it", () => {
     const saveStart = at(EDIT, 'id="event-save-form"');
     const saveEnd = at(EDIT, "</ActionForm>", saveStart);
     const card = at(EDIT, "<CheckpointsCard");
-    expect(card < saveStart || card > saveEnd).toBe(true);
-    expect(EDIT.slice(at(EDIT, "<UnderCourse>"), at(EDIT, "</UnderCourse>"))).toContain("<CheckpointsCard");
+    expect(card).toBeLessThan(saveStart);
+    expect(card).toBeGreaterThan(at(EDIT, "<EventTodoCard"));
+    expect(EDIT.slice(saveStart, saveEnd)).not.toContain("<CheckpointsCard");
   });
 
-  it("draws it right under «Traseul» on the screen: the save form takes no box, and the column orders the runs around it", () => {
-    expect(EDIT).toContain("style={FORM_WITHOUT_BOX}");
-    expect(LAYOUT).toContain('export const FORM_WITHOUT_BOX = { display: "contents" } as const;');
-    expect(LAYOUT).toContain("export const EDITOR_MAIN_ORDER = { top: 0, upToCourse: 1, underCourse: 2, fromRegistration: 3 } as const;");
-    // The first run ends with «Traseul»; the second starts with card 6.
-    const first = EDIT.slice(at(EDIT, '<EditorCardRun place="upToCourse">'), at(EDIT, "</EditorCardRun>"));
-    expect(first.trimEnd().endsWith("/>")).toBe(true);
-    expect(first.lastIndexOf("<CourseBox ")).toBeGreaterThan(first.lastIndexOf("<WhenBox "));
-    const second = EDIT.slice(at(EDIT, '<EditorCardRun place="fromRegistration">'));
-    expect(second.indexOf("<RegistrationBox")).toBeLessThan(second.indexOf("<CoHostsBox"));
-    expect(second.indexOf('id="box-save"')).toBeGreaterThan(second.indexOf("<LinksBox"));
-    // Joined to «Traseul»: the column's order, half its gap above, set in with a rule on the left.
-    const underCourse = LAYOUT.slice(at(LAYOUT, "export function UnderCourse"));
-    expect(underCourse).toContain("order: EDITOR_MAIN_ORDER.underCourse");
-    expect(underCourse).toContain("mt: -1");
-    expect(underCourse).toContain("borderLeft: 2");
-    // A card of «Traseul»: a level-3 heading, its own cards a level below.
+  it("moves nothing on the screen with CSS order: what the tab and a screen reader meet is what the screen shows (WCAG 2.4.3, 1.3.2)", () => {
+    const main = EDIT.slice(at(EDIT, "main={"), at(EDIT, "below={"));
+    expect(main).not.toMatch(/\border\s*:/);
+    expect(main).not.toContain("display: \"contents\"");
+    expect(LAYOUT).not.toContain("UnderCourse");
+    expect(LAYOUT).not.toContain("EDITOR_MAIN_ORDER");
+    expect(LAYOUT).not.toContain("FORM_WITHOUT_BOX");
+    // The cards stay in the page's order inside the one save form: «Traseul» before card 6.
+    const form = EDIT.slice(at(EDIT, 'id="event-save-form"'));
+    expect(at(form, "<CourseBox ")).toBeGreaterThan(at(form, "<WhenBox "));
+    expect(at(form, "<RegistrationBox")).toBeGreaterThan(at(form, "<CourseBox "));
+    // A card of the column like the to-do card: its default level, its own cards a level below.
     const checkpoints = read("src/modules/content/events/ui/CheckpointsCard.tsx");
-    expect(checkpoints).toMatch(/<Panel glyph="checkpoints" collapsible level=\{3\} id="box-checkpoints"/);
-    expect(checkpoints).not.toMatch(/level=\{[12]\}/);
+    expect(checkpoints).toMatch(/<Panel glyph="checkpoints" collapsible id="box-checkpoints"/);
+  });
+
+  it("says where the card is in words the screen bears out, and counts it on «Traseul»'s closed line", () => {
+    for (const locale of ["ro", "en"] as const) {
+      const words = JSON.parse(read(`messages/${locale}.json`)).Admin.checkpoints;
+      expect(words.courseNote, locale).not.toMatch(/chiar sub acest card|right under this card/);
+      expect(Object.keys(words.inCourse).sort(), locale).toEqual(["few", "one", "other"]);
+    }
+    expect(EDIT).toContain("checkpointCount={checkpoints.length}");
+    const course = read(`${BOXES}/CourseBox.tsx`);
+    expect(course).toContain("checkpoints: checkpointCount > 0 ? t(`checkpoints.inCourse.${countForm(checkpointCount, locale)}`, { count: checkpointCount }) : null,");
   });
 
   it("draws «Voluntari» under «Înscrierile primite», below the grid, outside the save form", () => {

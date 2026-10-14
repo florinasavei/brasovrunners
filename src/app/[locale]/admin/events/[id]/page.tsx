@@ -49,14 +49,7 @@ import RegistrationBox from "@/modules/content/events/ui/boxes/RegistrationBox";
 import { DescriptionBox, TitleSummaryBox } from "@/modules/content/events/ui/boxes/TextBoxes";
 import WhenBox from "@/modules/content/events/ui/boxes/WhenBox";
 import { summaryDate, summaryDateTime } from "@/modules/content/events/ui/box-summaries";
-import EventEditorLayout, {
-  AutomaticSection,
-  EditorCardRun,
-  EditorGroup,
-  EditorMainColumn,
-  FORM_WITHOUT_BOX,
-  UnderCourse,
-} from "@/modules/content/events/ui/EventEditorLayout";
+import EventEditorLayout, { AutomaticSection, EditorGroup, EditorMainColumn } from "@/modules/content/events/ui/EventEditorLayout";
 import { IdenticalTextsList, RevealLink } from "@/modules/content/events/ui/MissingForPublish";
 import { pageFlow } from "@/modules/content/events/ui/page-flow";
 import { PublishCheckProvider, PublishGapsSummary, PublishGateButton } from "@/modules/content/events/ui/PublishCheck";
@@ -185,7 +178,7 @@ export const dynamic = "force-dynamic";
  * share links named where the page puts them — eight cards since §NNN (the owner, 2026-10-13: «mai
  * puține carduri și mai mult nesting»), what is not a section of the page nested in the card it
  * belongs with: the promotion in «Ce fel de eveniment», the cover and the page's address in «Titlu și
- * rezumat», the checkpoints under «Traseul»; then the preview and the always-open Salvare. Each box answers one
+ * rezumat»; then the preview and the always-open Salvare. Each box answers one
  * question and its closed line shows the answer — and, for a box publication needs, what it still
  * lacks, per language — so the editor opens as a fact sheet and one opens only the box to change. Every box with per-language
  * text has its own Română | English tabs; there is no page-wide language switch, so a shared
@@ -197,7 +190,8 @@ export const dynamic = "force-dynamic";
  * column's publication moves and recurrence actions are forms of their own, **siblings** of the
  * save form — HTML forms cannot nest — and so are the two small forms the bib card's immediate
  * actions post (`form="bib-assign"`, `form="bib-download"`), and so is «Puncte de control», which
- * the main column draws under «Traseul» by its order (§NNN, `UnderCourse`). Below the grid, what is
+ * stands after the to-do card, above the save form's first card, where the document has it — no CSS
+ * `order` (§NNN); «Traseul» links to it. Below the grid, what is
  * operations rather than settings: the registrations received, the volunteers (§754, §NNN), and
  * duplicate or delete.
  *
@@ -1029,25 +1023,23 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                 error={todoErrorCode ? t(`errors.${todoErrorCode}`) : undefined}
               />
               {/*
-                «Puncte de control» (§757), part of «Traseul» (nested in the page's sections, no number): its
-                forms are its own, so in the document it stands beside the save form, never inside it — HTML
-                forms cannot nest. On the screen it stands right under «Traseul», joined to it as its card
-                (§NNN: `UnderCourse`, the column's `order`); «Traseul» links to it.
+                «Puncte de control» (§757), part of «Traseul» in the page's sections (nested, no number): its
+                forms are its own, so it stands beside the save form, never inside it — HTML forms cannot nest.
+                It stands here on the screen too, where the document has it: no CSS `order` moving it under
+                «Traseul» (§NNN), so the tab order and a screen reader meet what the screen shows. «Traseul»
+                links to it, and its closed line counts the points.
               */}
-              <UnderCourse>
-                <CheckpointsCard
-                  locale={locale}
-                  eventId={event.id}
-                  checkpoints={checkpoints}
-                  mayEdit={canEditCheckpoints(staffUser.role)}
-                  routeKm={checkpointRouteKm}
-                  gpx={checkpointsGpx}
-                  previewOpen={query.checkpointsGpx === "1"}
-                />
-              </UnderCourse>
-              {/* Settings and texts: one form, one save — and a refusal that keeps every box (§315). The
-                  form draws no box of its own, so its two runs of cards take their places in the column (§NNN). */}
-              <ActionForm action={saveEventAndTranslationsAction} messages={refusal} confirm={saveConfirm} id="event-save-form" data-testid="event-save-form" style={FORM_WITHOUT_BOX}>
+              <CheckpointsCard
+                locale={locale}
+                eventId={event.id}
+                checkpoints={checkpoints}
+                mayEdit={canEditCheckpoints(staffUser.role)}
+                routeKm={checkpointRouteKm}
+                gpx={checkpointsGpx}
+                previewOpen={query.checkpointsGpx === "1"}
+              />
+              {/* Settings and texts: one form, one save — and a refusal that keeps every box (§315). */}
+              <ActionForm action={saveEventAndTranslationsAction} messages={refusal} confirm={saveConfirm} id="event-save-form" data-testid="event-save-form">
                 <input type="hidden" name="uiLocale" value={locale} />
                 <input type="hidden" name="eventId" value={event.id} />
                 {/* The event row's version — and its presence is the signal that this save touches the
@@ -1059,7 +1051,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                   <TranslationHiddenFields key={entry.translation.locale} translation={entry.translation} />
                 ))}
 
-                <EditorCardRun place="upToCourse">
+                <Stack spacing={2}>
                   {/* "Publică" pressed while the saved event lacks what publication needs (§406). */}
                   <PublishGapsSummary
                     id="publish-gaps"
@@ -1081,10 +1073,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                   <TitleSummaryBox {...box} languages={languages} creating={false} slugLocked={slugLocked} heading={flow.headings.title} />
                   <DescriptionBox languages={languages} heading={flow.headings.description} />
                   <WhenBox {...box} risk={risk} languages={languages} inSeries={inSeries} heading={flow.headings.when} />
-                  <CourseBox {...box} languages={languages} inSeries={inSeries} heading={flow.headings.course} />
-                </EditorCardRun>
-                {/* «Puncte de control» stands here on the screen, under «Traseul» (`UnderCourse`, above). Card 6 on, in the same form (§NNN). */}
-                <EditorCardRun place="fromRegistration">
+                  <CourseBox {...box} languages={languages} inSeries={inSeries} heading={flow.headings.course} checkpointCount={checkpoints.length} />
                   <RegistrationBox
                     {...box}
                     heading={flow.headings.registration}
@@ -1170,7 +1159,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                       </Stack>
                     </Panel>
                   )}
-                </EditorCardRun>
+                </Stack>
               </ActionForm>
               {/* The bib card's two immediate actions post these, never the save above (hidden: no place in the column). */}
               {bibCounts && <BibPrintForms eventId={event.id} locale={locale} mayAssign={canManageRegistrations(staffUser.role)} assignAction={assignBibNumbersAction} sparesAction={reserveSpareBibsAction} sparesFrom={spares?.nextFrom ?? null} cancelLabel={words.cancel} />}

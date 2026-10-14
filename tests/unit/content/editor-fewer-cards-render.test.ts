@@ -26,8 +26,9 @@ vi.mock("@/i18n/navigation", async () => {
 
 // The bib's design reads the club's settings from the database; not what this reads.
 vi.mock("@/modules/content/events/ui/BibDesignPanel", () => ({ default: () => null }));
-// No picture store here: the cover reads as none, and nothing asks the database.
-vi.mock("@/modules/media/storage", async (importOriginal) => ({ ...(await importOriginal<object>()), isStorageConfigured: () => false }));
+// A picture store on or off per test; with one on, the event has no cover, so nothing asks the database.
+const storage = vi.hoisted(() => ({ configured: false }));
+vi.mock("@/modules/media/storage", async (importOriginal) => ({ ...(await importOriginal<object>()), isStorageConfigured: () => storage.configured }));
 
 const { default: RegistrationBox } = await import("@/modules/content/events/ui/boxes/RegistrationBox");
 const { default: KindBox } = await import("@/modules/content/events/ui/boxes/KindBox");
@@ -148,6 +149,37 @@ describe("§NNN «Participare, înscrieri și regulament»", () => {
     expect(closed).toContain("regulamentul:");
     expect(closed).toContain("14");
     expect(closed.length).toBeLessThan(260);
+    // No medical information asked: said, as old card 9's line said it (§557).
+    expect(closed).toContain(ro.Admin.editor.boxes.summary.health.notAsked);
+    expect(closed).toContain(ro.Admin.editor.boxes.summary.registration.listHidden);
+  });
+
+  it("keeps old card 9's disclosures on its closed line: the waiting list public too, and the medical question asked", async () => {
+    const markup = await html(
+      (await RegistrationBox({
+        event: { ...RACE, declarationDocumentId: declarations[0].id, participantListVisibility: "NAMES", waitlistPublic: true, askHealthNote: true } as EditableEvent,
+        mayEditSettings: true,
+        languages: [language("ro"), language("en")],
+        declarations,
+        locale: "ro",
+        clubDeadlines: deadlines,
+      })) as ReactElement,
+    );
+    const closed = line(markup, "box-registration");
+    expect(closed).toContain(ro.Admin.editor.boxes.summary.registration.listShownWithWaitlist);
+    expect(closed).toContain(ro.Admin.editor.boxes.summary.health.asked);
+    // Not for a group run: no form, no medical question.
+    const groupRun = await html(
+      (await RegistrationBox({
+        event: { ...RACE, type: "GROUP_RUN", registrationMode: "NONE", askHealthNote: true } as EditableEvent,
+        mayEditSettings: true,
+        languages: [language("ro"), language("en")],
+        declarations,
+        locale: "ro",
+        clubDeadlines: deadlines,
+      })) as ReactElement,
+    );
+    expect(line(groupRun, "box-registration")).not.toContain(ro.Admin.editor.boxes.summary.health.asked);
   });
 
   it("opens itself while a race registering here has no declaration, and keeps its cards for a reader", async () => {
@@ -197,8 +229,30 @@ describe("§NNN «Titlu și rezumat» holds the page's address and «Copertă»"
       expect(card.open).toBe(false);
       expect(card.heading).toBe("h3");
     }
-    expect(line(markup, "box-title")).toContain("copertă: lipsește");
     expect(markup.split('name="translations.ro.slug"').length - 1).toBe(1);
+  });
+
+  it("says the cover on its line only where a cover can be chosen, as «De făcut» asks for one", async () => {
+    const titleBox = async () =>
+      html((await TitleSummaryBox({ languages: [language("ro"), language("en")], creating: false, event: RACE, mayEditSettings: true, slugLocked: false })) as ReactElement);
+    // No media store (local, CI): the card says so inside, and the closed line promises nothing.
+    storage.configured = false;
+    expect(line(await titleBox(), "box-title")).not.toContain("copertă:");
+    storage.configured = true;
+    try {
+      expect(line(await titleBox(), "box-title")).toContain("copertă: lipsește");
+    } finally {
+      storage.configured = false;
+    }
+  });
+
+  it("tells a reader who may not change the settings, inside «Copertă», that they are not theirs", async () => {
+    const markup = await html(
+      (await TitleSummaryBox({ languages: [language("ro"), language("en")], creating: false, event: RACE, mayEditSettings: false, slugLocked: false })) as ReactElement,
+    );
+    const cover = markup.slice(fold(markup, "box-cover").at);
+    expect(cover).toContain(ro.Admin.editor.boxes.settingsReadOnly);
+    expect(cover).not.toContain('name="event.coverAssetId"');
   });
 
   it("names a missing address on its own line and opens for it, as the address card did", async () => {
