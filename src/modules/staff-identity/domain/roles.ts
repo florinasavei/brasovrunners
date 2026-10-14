@@ -702,6 +702,19 @@ export function canManageVolunteers(subject: StaffSubject): boolean {
 }
 
 /**
+ * **An event's volunteer badges (§NNN)** — «Ecusoane pentru voluntari»: designing the badge, giving each
+ * role its band's colour and downloading the sheet. Whoever runs the event's volunteers
+ * (`canManageVolunteers`): the Organizer, the Administrator and the Superadministrator — the owner's three
+ * for this page — written as that function so the two lines move together. A badge carries no person's
+ * data, but the page reads the roles the volunteers' card defines and is the same people's work. The
+ * Tehnic role, the Redactor, the desk Volunteer and a member are out. Asserted in the page, the actions,
+ * the service and both routes, never by hiding the link.
+ */
+export function canDesignVolunteerBadges(subject: StaffSubject): boolean {
+  return canManageVolunteers(subject);
+}
+
+/**
  * «Tradu din română» (§464): whoever writes words the club publishes or sends — the Redactor's
  * texts (`canEditTexts`) and the Organizer's notes, reasons and messages to the participants
  * (`canMessageParticipants`). So the Redactor, the Organizer, the Administrator and the
