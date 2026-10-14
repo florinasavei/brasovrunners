@@ -4,6 +4,7 @@ import { type DeclarationAcceptance, declarationAcceptances } from "@/db/schema/
 import { emailOutbox } from "@/db/schema/email-outbox";
 import { eventVolunteerRoleChoices, eventVolunteerRoles, eventVolunteers } from "@/db/schema/event-volunteers";
 import { eventTranslations } from "@/db/schema/events";
+import { groupRunDeclarations } from "@/db/schema/group-run-declarations";
 import { legalDocuments } from "@/db/schema/legal-documents";
 import { type Participant, participants } from "@/db/schema/participants";
 import { registrationInterests } from "@/db/schema/registration-interests";
@@ -130,6 +131,32 @@ export type PersonData = {
     guardianEmail: string | null;
     guardianAcceptedAt: Date | null;
     guardianMethod: (typeof eventVolunteers.$inferSelect)["guardianMethod"];
+    /**
+     * The trace of the electronic acceptance (§771): the IP address and browser of the press — the volunteer's own on
+     * the form or the link, the guardian's on theirs. Null for «PAPER» and for a row from before it (art. 15 GDPR).
+     */
+    agreementIp: string | null;
+    agreementUserAgent: string | null;
+    guardianIp: string | null;
+    guardianUserAgent: string | null;
+  }>;
+  /**
+   * The group-run declarations signed with this address (§393, §769) — the signer's own and, for a minor, the minor's
+   * name beside the parent's: every personal column of the row, the electronic signature's trace (§771: the IP address
+   * and browser) among them. Found through the canonicalizer like every other part of this page (AGENTS.md §10.4).
+   */
+  groupRunDeclarations: Array<{
+    eventId: string;
+    eventTitle: string | null;
+    version: number;
+    locale: string;
+    typedName: string;
+    minorTypedName: string | null;
+    idDocument: string | null;
+    deliveryEmail: string;
+    acceptedAt: Date;
+    ip: string | null;
+    userAgent: string | null;
   }>;
   auditTrail: Array<{ action: string; entityType: string; entityId: string | null; createdAt: Date; actorName: string | null; metadata: unknown }>;
 };
@@ -238,6 +265,10 @@ async function collectPersonData<T extends Record<string, unknown>>(
       guardianEmail: eventVolunteers.guardianEmail,
       guardianAcceptedAt: eventVolunteers.guardianAcceptedAt,
       guardianMethod: eventVolunteers.guardianMethod,
+      agreementIp: eventVolunteers.agreementIp,
+      agreementUserAgent: eventVolunteers.agreementUserAgent,
+      guardianIp: eventVolunteers.guardianIp,
+      guardianUserAgent: eventVolunteers.guardianUserAgent,
     })
     .from(eventVolunteers)
     // The role given, when there is one (§761: an offer nobody placed has none).
@@ -266,6 +297,8 @@ async function collectPersonData<T extends Record<string, unknown>>(
     const chosen = choiceRows.filter((choice) => choice.volunteerId === id);
     return { ...offer, chosenRolesRo: chosen.map((choice) => choice.nameRo), chosenRolesEn: chosen.map((choice) => choice.nameEn) };
   });
+
+  const groupRuns = await groupRunDeclarationsOf(db, canonicalEmail);
 
   const aboutThePerson = [
     ...(participant ? [eq(auditLogs.participantId, participant.id)] : []),
@@ -298,8 +331,48 @@ async function collectPersonData<T extends Record<string, unknown>>(
     messages,
     announcementRequests,
     volunteerOffers,
+    groupRunDeclarations: groupRuns,
     auditTrail,
   };
+}
+
+/**
+ * The group-run declarations signed with this person's address (§393, §769): the rows keep the address as typed, so each
+ * is read through the canonicalizer and matched on the canonical form — `Ana.Pop+club@Gmail.com` and `ana.pop@gmail.com` are
+ * one person, as everywhere on this page (AGENTS.md §10.4). The table is a club's signatures (a few thousand rows at most) and
+ * an access request is rare, so the addresses are read and compared here rather than indexed twice. Every personal column is
+ * returned, the trace of the electronic signature (§771) with them.
+ */
+async function groupRunDeclarationsOf<T extends Record<string, unknown>>(db: Database<T>, canonicalEmail: string): Promise<PersonData["groupRunDeclarations"]> {
+  const addresses = await db.select({ id: groupRunDeclarations.id, email: groupRunDeclarations.email }).from(groupRunDeclarations);
+  const ids = addresses
+    .filter(({ email }) => {
+      try {
+        return canonicalizeEmail(email).canonicalEmail === canonicalEmail;
+      } catch {
+        return false;
+      }
+    })
+    .map(({ id }) => id);
+  if (ids.length === 0) return [];
+  return db
+    .select({
+      eventId: groupRunDeclarations.eventId,
+      eventTitle: eventTranslations.title,
+      version: groupRunDeclarations.declarationVersion,
+      locale: groupRunDeclarations.locale,
+      typedName: groupRunDeclarations.typedName,
+      minorTypedName: groupRunDeclarations.minorTypedName,
+      idDocument: groupRunDeclarations.idDocument,
+      deliveryEmail: groupRunDeclarations.email,
+      acceptedAt: groupRunDeclarations.acceptedAt,
+      ip: groupRunDeclarations.ip,
+      userAgent: groupRunDeclarations.userAgent,
+    })
+    .from(groupRunDeclarations)
+    .leftJoin(eventTranslations, and(eq(eventTranslations.eventId, groupRunDeclarations.eventId), eq(eventTranslations.locale, "ro")))
+    .where(inArray(groupRunDeclarations.id, ids))
+    .orderBy(asc(groupRunDeclarations.acceptedAt));
 }
 
 /**
@@ -355,6 +428,7 @@ export async function exportPersonData<T extends Record<string, unknown>>(
       messages: data.messages.length,
       announcementRequests: data.announcementRequests.length,
       volunteerOffers: data.volunteerOffers.length,
+      groupRunDeclarations: data.groupRunDeclarations.length,
       auditRows: data.auditTrail.length,
     },
     now,

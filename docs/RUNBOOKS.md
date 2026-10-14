@@ -2,7 +2,7 @@
 
 # Runbooks
 
-**Baseline `BR-V3.29-2026-10-15`** · versioned with the whole set · [changelog](../CHANGELOG.md)
+**Baseline `BR-V3.30-2026-10-15`** · versioned with the whole set · [changelog](../CHANGELOG.md)
 
 
 | Runbook | When |
@@ -1025,6 +1025,32 @@ the minor signs for themselves, the parent approves in advance (Codul civil art.
 risks and the waiver for the minor «în limitele permise de lege», never for harm the club causes (art. 1355). The
 Administrators are told by email that the templates changed (§639). A run saved with the default fourteen takes minors
 from fourteen; set the box to 18 (or more) on a run that is for adults only.
+
+### Five more clauses in the race declaration, and the signature's trace: approve the texts again (§771)
+
+Since §771 the two race declarations (the rough terrain's and the road's, both languages) carry five more
+clauses among the runner's duties — valid medical insurance or the medical costs borne in full; the marked route
+followed and the instructions of the organiser and the volunteers respected, the organiser being able to stop or
+disqualify; disqualification without appeal, «în limitele permise de lege», for leaving the marked route, unsporting
+behaviour or breaking the rules — on those objective grounds only, which the organiser tells; litter in the event's area
+a ground of disqualification; no vehicle of any kind in its perimeter — and, in the closing, one sentence: the name typed
+when signing electronically is the person's electronic signature, equivalent between them and the organiser to a
+handwritten one, and ticking the box accepts that mode. The privacy notice's template says, in the declaration's paragraph
+(and the group run's, and the volunteers'), that the IP address and the browser at the moment of signing are kept with
+the signed declaration as proof of the signature, as long as the declaration; it no longer says the IP address is not kept.
+**Template only:** the texts in force do not move, a registration is neither refused nor changed, and nothing is gated, so
+`/admin/tasks` carries no new row; every Administrator is emailed «Șabloanele textelor legale s-au schimbat» once (§639),
+and `/admin/legal` marks the declarations and the notice «Șablon nou». Until the club approves them the signed PDFs
+carry the new line (the IP address and the browser are kept from the first signing after this release, whatever text is
+in force), but the declaration and the notice a person read do not mention it — **approve the notice from the new template on production the same day this release
+reaches production, first in the sitting and before the declarations** (the race is live with real registrations, and the
+notice in force still says «nu și adresa IP»): `/admin/legal` → the card → «Regenerează din șablon» → read
+the draft, fill the four facts, «Aprobă și publică». A Romanian lawyer reads the disqualification clause, the signature
+sentence and the notice's section 10 sentence («singura adresă IP pe care o păstrăm este cea a unei semnături electronice»,
+which replaced «platforma nu stochează nicio adresă IP») first (an electronic signature «ca o semnătură olografă» is the parties' agreement, eIDAS art. 25 and Legea nr.
+214/2024), and the notice's sentence on the IP address (GDPR art. 6(1)(f), the proof of the signature, kept as long as the
+declaration). The trace is on the signed PDF — «Semnat electronic la … · IP … · …» under the signature — and in «Toate
+datele unei persoane»; a paper signature keeps none.
 
 ### After a race: the declarations and the export
 

@@ -26,6 +26,7 @@ import { registrationNameKey } from "./domain/name-key";
 import { DEFAULT_PUBLIC_LIST_CLUB, memberClubCell } from "./domain/public-list-club";
 import { PENDING_LIST_STATUSES, WAITLISTED_LIST_STATUSES } from "./domain/public-list-states";
 import { allowedFromStatuses } from "./domain/state-machine";
+import { type SignatureTrace, traceColumns } from "@/modules/legal-documents/domain/signature-trace";
 import { queueHoldLapsedEmails } from "./hold-lapsed-email";
 import { resolveDisplayName, type RegistrationEntryDetails } from "./names";
 
@@ -1659,9 +1660,17 @@ export async function insertDeclarationAcceptance<T extends Record<string, unkno
     attestedByStaffUserId?: string | null;
     /** The SHA-256 of the exact text signed (§556, `acceptanceTextHash`), computed in the caller's transaction. */
     textHash: string | null;
+    /**
+     * The IP address and browser of the electronic signature (§771). Kept only with the email-link method: whatever a
+     * caller passes beside `PAPER` is dropped here, so a paper record never carries the staff member's own.
+     */
+    trace?: SignatureTrace;
   },
 ): Promise<void> {
+  const trace = traceColumns(input.trace, (input.method ?? "EMAIL_LINK") === "EMAIL_LINK");
   await db.insert(declarationAcceptances).values({
+    ip: trace.ip,
+    userAgent: trace.userAgent,
     registrationId: input.registrationId,
     legalDocumentId: input.legalDocumentId,
     declarationVersion: input.declarationVersion,

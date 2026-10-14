@@ -14,16 +14,16 @@ decision or a click only the club can make · **released** — on production, wi
 The owner, 2026-10-10: «Soon I need to start a new session from the laptop … You need to save and document everything».
 This section replaces the plan of 2026-09-30; it is what a session with none of today's conversation needs to carry on.
 
-- **Production: `BR-V3.28`** (2026-10-14 23:40: §769 a minor signs the group-run declaration, migration `0155`).
-  Waiting for «prod»: `BR-V3.29` (§770, below), migrations `0156` and `0157` (expand only).
-- **QA: `BR-V3.29`** — a fifth checkpoint kind, «Direcționare»; a checkpoint's cut-off is a «Timp limită» counted from
-  the start (hours + minutes, the race's own boxes), the clock on the page and the bib following the start; old
-  cut-offs backfilled from the time of day.
-  Building: five more clauses in the declaration and the signature's trace (IP, browser, a signature block in the
-  PDF); the small asks (the Girl Zone slug, Mailgun/Gmail per form, an optional email, the calendar fold). Next: the
-  volunteers' follow-ups (new tab, the counts tick, the date of birth, a kinder note), role categories with a contact
-  person each.
-- **Nothing is building.** Releases by the label `ship` reach production by themselves again: `SHIP_TOKEN` was given
+- **Production: `BR-V3.29`** (2026-10-15 01:20: §770 «Direcționare», «Timp limită», migrations `0156`/`0157`). Waiting
+  for «prod»: `BR-V3.30` (§771, below), migration `0158` (expand only).
+- **QA: `BR-V3.30`** — five more clauses in the race declaration's template (insurance, disqualification, litter, no
+  vehicles, the marked route) and the e-signature sentence; the IP address and the browser kept with every electronic
+  acceptance (the race declaration, the group-run declaration, the volunteer's and the guardian's agreement), never on
+  paper, listed in «Toate datele unei persoane», named by the notice's template; one small trace line under the
+  signature on every PDF.
+  Building: the small asks (the Girl Zone slug, Mailgun/Gmail per form, an optional email, the calendar fold); the
+  volunteers' follow-ups (new tab, the counts tick, the date of birth, a kinder note). Next: role categories with a
+  contact person each.
   «Pull requests: Read and write» on 2026-10-12, and `BR-V3.05`'s run opened its `qa → main` pull request itself.
 - **Lanes:** the phone session took the calendar on 2026-10-12; one release at a time between
   sessions — no label `ship` while a `release.yml` or `migrate.yml` run is in progress.
@@ -142,6 +142,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V3.30` | five more clauses in the declaration; the signature's trace (§771) |
 | `BR-V3.29` | a «Direcționare» checkpoint; its cut-off as a time limit from the gun (§770) |
 | `BR-V3.28` | a minor signs the group-run declaration with a parent (§769) |
 | `BR-V3.27` | volunteers from 14 with a guardian's consent, on their own page (§768) |

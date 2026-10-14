@@ -1,5 +1,6 @@
 "use server";
 
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { getDb } from "@/db/client";
@@ -28,6 +29,7 @@ import {
   readFamilySigningPass,
   writeFamilySigningPass,
 } from "@/modules/registrations/family-signing";
+import { readSignatureTrace } from "@/modules/legal-documents/domain/signature-trace";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { flashPublic } from "@/shared/feedback/flash";
 import { idDocumentFrom } from "@/modules/registrations/id-document-input";
@@ -86,6 +88,8 @@ export async function signDeclarationAction(form: FormData): Promise<void> {
       contentSha256: String(form.get("contentSha256") ?? ""),
       // The signer's own yes to offers and benefits (§562), optional; ignored unless the notice in force describes them.
       promoConsent: form.get("promoConsent") === "on",
+      // The IP address and browser of this press (§771), from the request itself — the electronic signature's trace.
+      trace: readSignatureTrace(await headers()),
     };
     const result = familyRegistrationId
       ? await consumeAndSignFamilyDeclaration(token, pass, familyRegistrationId, input, now)

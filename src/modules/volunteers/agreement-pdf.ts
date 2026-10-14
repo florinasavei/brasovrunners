@@ -7,6 +7,7 @@ import type { Database } from "@/db/types";
 import { formatDay } from "@/i18n/dates";
 import type { Locale } from "@/i18n/routing";
 import { VOLUNTEER_AGREEMENT_KEY } from "@/modules/legal-documents/domain/keys";
+import { traceColumns } from "@/modules/legal-documents/domain/signature-trace";
 import { findCurrentApprovedDocument, findVersionWithTranslations } from "@/modules/legal-documents/repository";
 import { declarationWords } from "@/modules/registrations/declaration-labels";
 import { type DeclarationEntry, renderDeclarationPdf } from "@/modules/registrations/declaration-pdf";
@@ -150,6 +151,9 @@ type OwnAcceptance = {
   textHash: string | null;
   facts: unknown;
   recordedBy: string | null;
+  /** The electronic acceptance's trace (§771): the IP address and browser of the press; null for «PAPER» and for a row from before it. */
+  ip: string | null;
+  userAgent: string | null;
 };
 
 /**
@@ -186,6 +190,8 @@ async function ownAcceptanceEntry<T extends Record<string, unknown>>(db: Databas
       signedAt,
       signedAtInline,
       acceptedAt: own.acceptedAt,
+      // Only an electronic acceptance has a trace (§771); «PAPER» prints today's block.
+      trace: traceColumns({ ip: own.ip, userAgent: own.userAgent }, own.method !== "PAPER"),
       method: [acceptedHowWords(locale, own.method, signedAtInline, own.recordedBy), pending].filter(Boolean).join("\n"),
     },
   };
@@ -222,6 +228,10 @@ export async function renderVolunteerAgreementPdf<T extends Record<string, unkno
       textHash: eventVolunteers.agreementTextHash,
       facts: eventVolunteers.agreementFacts,
       recordedBy: staffUsers.displayName,
+      ip: eventVolunteers.agreementIp,
+      userAgent: eventVolunteers.agreementUserAgent,
+      guardianIp: eventVolunteers.guardianIp,
+      guardianUserAgent: eventVolunteers.guardianUserAgent,
       timezone: events.timezone,
       roleId: eventVolunteers.roleId,
       age: eventVolunteers.age,
@@ -274,6 +284,8 @@ export async function renderVolunteerAgreementPdf<T extends Record<string, unkno
             textHash: row.textHash,
             facts: row.facts,
             recordedBy: row.recordedBy,
+            ip: row.ip,
+            userAgent: row.userAgent,
           }
         : null;
     const own = ownRow ? await ownAcceptanceEntry(db, ownRow, null) : undefined;
@@ -297,6 +309,8 @@ export async function renderVolunteerAgreementPdf<T extends Record<string, unkno
         signedAt,
         signedAtInline,
         acceptedAt: row.guardianAcceptedAt,
+        // The guardian's own press, when it was one (§771): «LINK» has a trace, «PAPER» none.
+        trace: traceColumns({ ip: row.guardianIp, userAgent: row.guardianUserAgent }, row.guardianMethod !== "PAPER"),
         method: guardianHowWords(locale, row.guardianMethod, signedAtInline, guardianName, row.guardianRecordedBy),
       },
     };
@@ -324,6 +338,8 @@ export async function renderVolunteerAgreementPdf<T extends Record<string, unkno
         textHash: row.textHash,
         facts: row.facts,
         recordedBy: row.recordedBy,
+        ip: row.ip,
+        userAgent: row.userAgent,
       },
       guardianName !== null ? guardianPendingWords(row.agreementLocale, guardianName) : null,
     );
