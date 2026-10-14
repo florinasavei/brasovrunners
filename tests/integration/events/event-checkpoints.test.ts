@@ -5,6 +5,7 @@ import { eventCheckpoints } from "@/db/schema/event-checkpoints";
 import { eventTranslations, events } from "@/db/schema/events";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import type { StaffRole } from "@/modules/staff-identity/domain/roles";
+import type { BibProfileSource } from "@/modules/registrations/bib-extras";
 import type { FormOutcome } from "@/shared/forms/outcome";
 import { expectViolation, SQLSTATE } from "../../helpers/constraints";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
@@ -49,6 +50,8 @@ const { addGpxCheckpointsAction, saveCheckpointsAction } = await import("@/app/[
 const { listCheckpoints } = await import("@/modules/event-checkpoints/checkpoints");
 const { clearGpxWaypointsCache, loadGpxWaypoints } = await import("@/modules/event-checkpoints/gpx-file");
 const { BIB_STAMP } = await import("@/modules/events/repository");
+const { withBibCheckpoints } = await import("@/modules/registrations/bib-extras");
+const { withCutoffClocks } = await import("@/modules/event-checkpoints/domain/start");
 const { getStorage } = await import("@/modules/media/storage");
 const { storeRouteGpx } = await import("@/modules/content/events/route-gpx");
 
@@ -399,6 +402,18 @@ describe("§757 an event's checkpoints", () => {
     }
     expect(await listCheckpoints(db, eventId)).toHaveLength(2);
     expect((await actions()).filter((action) => action === "event_checkpoints.changed")).toHaveLength(2);
+  });
+
+  it("hands the bib's strip and the event page the same clock: one converter, the gun's hour plus the limit (§769)", async () => {
+    await save([WATER, FOOD]);
+    const source: BibProfileSource = { routeGpx: { key: "route/a.gpx" } as never, distanceMeters: 21_100, elevationGainMeters: null };
+    const strip = await withBibCheckpoints(db, eventId, source, { showProfile: true, showCheckpoints: true });
+    expect(strip.checkpoints?.map((row) => [row.km, row.cutoffClock])).toEqual([
+      [5, "10:00"],
+      [12.5, "11:15"],
+    ]);
+    const [event] = await db.select().from(events).where(eq(events.id, eventId));
+    expect(withCutoffClocks(await listCheckpoints(db, eventId), event).map((row) => row.cutoffClock)).toEqual(["10:00", "11:15"]);
   });
 
   it("goes with its event, and the database holds the same rules: no negative kilometre, a note in one language, an empty name, a time limit of a positive time within a week", async () => {

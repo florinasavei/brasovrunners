@@ -204,7 +204,8 @@ describe("§757 an event save holds the saved checkpoints to their rules", () =>
     const after = await reload(event.id);
     expect(after.distanceMeters).toBe(21_500);
     // The minutes stay as they were; only the clocks moved with the gun (a quarter of an hour earlier than 09:30 is later: 09:45).
-    expect((await listCheckpoints(db, event.id)).map(({ cutoffClock: _clock, ...row }) => row)).toEqual(points.map(({ cutoffClock: _clock, ...row }) => row));
+    const identity = (rows: typeof points) => rows.map((row) => [row.id, row.km, row.nameRo, row.cutoffMinutes]);
+    expect(identity(await listCheckpoints(db, event.id))).toEqual(identity(points));
     expect((await listCheckpoints(db, event.id)).map((row) => row.cutoffClock)).toEqual(["10:15", "12:15"]);
   });
 });

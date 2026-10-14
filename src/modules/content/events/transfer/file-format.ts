@@ -362,8 +362,8 @@ export function upgradeCheckpoints(file: EventFile): { file: EventFile; notes: F
       cutoffMinutes = startMinutes === null ? null : minutesFromClock(row.cutoff, startMinutes, event.durationMinutes);
       if (cutoffMinutes === null) limitsDropped += 1;
     }
-    const { cutoff: _legacy, ...rest } = row;
-    return { ...rest, kinds, cutoffMinutes };
+    // The time of day is read and gone: what comes out has minutes and no `cutoff`.
+    return { km: row.km, name: row.name, kinds, cutoffMinutes, note: row.note };
   });
   const notes: FileNote[] = [];
   if (kindsDropped > 0) notes.push({ code: "checkpointKindsDropped", count: kindsDropped });

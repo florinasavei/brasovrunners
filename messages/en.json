@@ -2369,7 +2369,7 @@
         "showCheckpoints": "Checkpoints on the profile",
         "showCheckpointsHelp": "Ticked: on the profile, at each point, a cup for water, a fork for food, a dot for the rest. Under it, “km 12” where it fits. Drawn only with the route's profile.",
         "showCheckpointTimes": "…with the cut-off times",
-        "showCheckpointTimesHelp": "Ticked: beside each point, the time it closes too, “km 12 · 11:30” (from the point's time limit and the start's time). If not every time fits, none is printed; then the kilometres that do not fit go. The marks always stay.",
+        "showCheckpointTimesHelp": "Ticked: beside each point, the time it closes too, “km 12 · 11:30”. If not every time fits, none is printed; then the kilometres that do not fit go. The marks always stay.",
         "showCheckpointsNone": "The event has no checkpoints: add them in “The course” › “Checkpoints”.",
         "showEmergency": "Emergency phone",
         "showEmergencyHelp": "Ticked: every number carries a small line with the label and one or two phones. Type the organizers' numbers, never a participant's.",
@@ -8063,7 +8063,7 @@
         "publicListOff": "The public participant list stayed off: the privacy notice that describes it is not yet in force here.",
         "seriesNotApplied": "The series' rule in the file was not applied: the event is a single date.",
         "checkpointKindsDropped": "In the file's checkpoints, the kinds this version does not know were left out (in all: {count}).",
-        "checkpointLimitsDropped": "In the file's checkpoints, the cut-off times that could not be counted from the start were left out: the file does not say the start's time, or the time is before the start (in all: {count}). Write them again as “Time limit”."
+        "checkpointLimitsDropped": "In the file's checkpoints, the cut-off times that could not be counted from the start were left out (in all: {count}). Write them again as “Time limit”."
       },
       "refusals": {
         "tooLarge": "The file is too large for an event file.",
@@ -9245,7 +9245,7 @@
     },
     "checkpoints": {
       "title": "Checkpoints",
-      "intro": "Where there is water, food, first aid, timing or someone showing the way, and how long after the start the last runner passes. Shown as a table on the event's page and on the number's profile, by kilometre.",
+      "intro": "Where there is water, food, first aid, timing or someone showing the way, and how long after the start the last runner passes. Shown as a table on the event's page and on the number's profile.",
       "saveNote": "The points are saved only with “Save the points”, not with the page's “Save”.",
       "routeLength": "The route is {km} km long. No point can be beyond it.",
       "summaryNone": "no points",
