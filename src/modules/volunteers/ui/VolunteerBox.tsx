@@ -314,7 +314,7 @@ export default async function VolunteerBox({
                   The parent or guardian of a person under eighteen (§NNN): drawn hidden (open when the age typed before a refusal says
                   a minor) with no box `required` and no asterisk — an adult is never shown it, scripts off open it with a
                   `<noscript>` rule — and the island follows the age typed, marking the three boxes required while it shows them;
-                  the server refuses a minor's post without them either way (`checkGuardian`).
+                  the server refuses a minor's post without them either way (`refuseGuardianBoxes`).
                 */}
                 {minors && (
                   <GuardianFields ageInputId={fieldId("age")} minimumAge={VOLUNTEER_MINIMUM_AGE} adultAge={VOLUNTEER_ADULT_AGE} startOpen={ageDigits && typedAge >= VOLUNTEER_MINIMUM_AGE && typedAge < VOLUNTEER_ADULT_AGE}>

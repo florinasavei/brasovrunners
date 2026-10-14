@@ -229,7 +229,7 @@ const tick = z.boolean().optional().default(false);
 
 /**
  * The guardian of a volunteer under eighteen (§NNN), as a form posts the two boxes: whatever was typed, judged together
- * with the age by `checkGuardian` — an adult's boxes (or no age) are dropped, never kept.
+ * with the age by `refuseGuardianBoxes` — an adult's boxes (or no age) are dropped, never kept.
  */
 const guardianNameBox = z.string().optional().default("");
 const guardianEmailBox = z.string().optional().default("");

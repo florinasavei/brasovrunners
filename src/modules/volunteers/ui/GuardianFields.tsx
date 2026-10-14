@@ -24,7 +24,7 @@ function saysMinor(typed: string, minimumAge: number, adultAge: number): boolean
  * The server draws the block hidden (open only when the age typed back after a refusal says a minor, `startOpen`) and with
  * no box `required`, so an adult never sees it flash before this island hydrates, and a visitor with scripts off — whose
  * `<noscript>` rule opens it — finds every box and fills those that apply: an adult leaves them empty and the server drops
- * them (`checkGuardian`). With scripts on, this island watches the age box by its id: it shows the block while the age
+ * them (`refuseGuardianBoxes`). With scripts on, this island watches the age box by its id: it shows the block while the age
  * says a minor, and marks the three boxes `required` while it is shown, so the browser asks them of a minor only. The block is a native `fieldset` the server renders as `children` (never a component or an element as a prop
  * across the boundary); this island only decides whether it is seen and whether its boxes are required. The server
  * refuses a minor's post without them in any case — hiding is a courtesy, never the rule.
