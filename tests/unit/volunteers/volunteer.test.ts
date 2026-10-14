@@ -42,7 +42,16 @@ const ROLE = { nameRo: "Punct de apă", nameEn: "Water point", needed: "4", desc
 describe("§754 a role as the club types it", () => {
   it("takes both names and a number of at least one, and folds the whitespace", () => {
     const parsed = volunteerRoleInputSchema.parse({ ...ROLE, nameRo: "  Punct   de apă ", needed: " 4 " });
-    expect(parsed).toMatchObject({ nameRo: "Punct de apă", nameEn: "Water point", needed: 4, descriptionRo: null, descriptionEn: null });
+    // No description: the document and its plain words are null in both languages (§765).
+    expect(parsed).toMatchObject({
+      nameRo: "Punct de apă",
+      nameEn: "Water point",
+      needed: 4,
+      descriptionRoJson: null,
+      descriptionEnJson: null,
+      descriptionWordsRo: null,
+      descriptionWordsEn: null,
+    });
   });
 
   it("refuses a missing name in either language, naming the box", () => {
@@ -71,8 +80,9 @@ describe("§754 a role as the club types it", () => {
     if (!onlyEn.success) expect(refusedFields(onlyEn.error)).toEqual(["descriptionRo"]);
   });
 
-  it("holds a description to the bound the database holds", () => {
-    const long = "x".repeat(201);
+  it("holds a description to the bound the database holds: 2000 characters of words per language (§765)", () => {
+    expect(volunteerRoleInputSchema.safeParse({ ...ROLE, descriptionRo: "x".repeat(2000), descriptionEn: "x".repeat(2000) }).success).toBe(true);
+    const long = "x".repeat(2001);
     expect(volunteerRoleInputSchema.safeParse({ ...ROLE, descriptionRo: long, descriptionEn: long }).success).toBe(false);
   });
 });
@@ -393,7 +403,24 @@ describe("§754 the public form's address and answer", () => {
 });
 
 describe("§754 the CSV", () => {
-  const header = { role: "Rolul dat", choices: "S-a oferit pentru", name: "Nume", email: "Email", phone: "Telefon", state: "Stare", source: "Sursă", message: "Mesaj", note: "Notă", signedUpAt: "Data" };
+  const header = {
+    role: "Rolul dat",
+    choices: "S-a oferit pentru",
+    name: "Nume",
+    email: "Email",
+    phone: "Telefon",
+    state: "Stare",
+    source: "Sursă",
+    message: "Mesaj",
+    note: "Notă",
+    signedUpAt: "Data",
+    age: "Vârsta",
+    sex: "Sex",
+    city: "Orașul",
+    volunteeredBefore: "A mai fost voluntar",
+    clubMember: "Din grupul clubului",
+    shirtSize: "Mărime tricou",
+  };
 
   it("starts with a BOM, ends no line with a bare newline and keeps a formula a text", () => {
     const csv = buildVolunteersCsv(header, [
@@ -408,6 +435,12 @@ describe("§754 the CSV", () => {
         message: "Sunt liber sâmbătă, toată ziua",
         note: null,
         signedUpAt: new Date("2026-10-13T10:00:00.000Z"),
+        age: 34,
+        sex: "Female",
+        city: "Brașov, centru",
+        volunteeredBefore: "Da",
+        clubMember: "Nu",
+        shirtSize: "M",
       },
     ]);
     expect(csv.startsWith("﻿Rolul dat,S-a oferit pentru,Nume")).toBe(true);
@@ -419,6 +452,33 @@ describe("§754 the CSV", () => {
     expect(lines[1]).toContain("2026-10-13T10:00:00.000Z");
     // §761: the role given, then the roles chosen — a comma inside them quoted.
     expect(lines[1].startsWith('Punct de apă,"Punct de apă, Sosire",')).toBe(true);
+    // §765: what the person said about themselves comes after the moment, so no earlier column moves; a comma in the city is quoted.
+    expect(csv.split("\r\n")[0].endsWith("Data,Vârsta,Sex,Orașul,A mai fost voluntar,Din grupul clubului,Mărime tricou")).toBe(true);
+    expect(lines[1].endsWith('2026-10-13T10:00:00.000Z,34,Female,"Brașov, centru",Da,Nu,M')).toBe(true);
+  });
+
+  it("§765 leaves an unanswered box empty, never «null» or 0", () => {
+    const csv = buildVolunteersCsv(header, [
+      {
+        role: "",
+        choices: "",
+        name: "Ion",
+        email: "ion@example.test",
+        phone: "+40712345678",
+        state: "Înscris",
+        source: "Adăugat de organizator",
+        message: null,
+        note: null,
+        signedUpAt: new Date("2026-10-13T10:00:00.000Z"),
+        age: null,
+        sex: "",
+        city: null,
+        volunteeredBefore: "Nu",
+        clubMember: "Nu",
+        shirtSize: "",
+      },
+    ]);
+    expect(csv.split("\r\n")[1].endsWith("2026-10-13T10:00:00.000Z,,,,Nu,Nu,")).toBe(true);
   });
 });
 

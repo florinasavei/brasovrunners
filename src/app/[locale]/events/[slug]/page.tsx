@@ -17,6 +17,7 @@ import {
   cachedPublishedTranslations,
   cachedVolunteerAgreementDescribed,
   cachedVolunteerAgreementInForce,
+  cachedVolunteerProfileDescribed,
   cachedVolunteerRoles,
   cachedVolunteersDescribed,
 } from "@/modules/public-cache/reads";
@@ -205,10 +206,10 @@ export default async function EventDetailPage({ params, query, canEdit = false, 
     public. While the database is away the box is simply not drawn.
   */
   await holdPageUntil([event.endsAt ?? event.startsAt], now);
-  const volunteerRoles = membersOnly
+  const volunteerOffer = membersOnly
     ? null
     : await readOrWhileAway(async () => {
-        const { acceptsVolunteers, roles } = await cachedVolunteerRoles(event.id);
+        const { acceptsVolunteers, shirts, roles } = await cachedVolunteerRoles(event.id);
         if (!acceptsVolunteers) return null;
         const closed = volunteerOfferClosedFor({
           acceptsVolunteers,
@@ -223,8 +224,13 @@ export default async function EventDetailPage({ params, query, canEdit = false, 
         });
         // The last place given by the organizers while this person typed (an offer takes none, §761) still owes
         // them the answer: the box stays, with no role and no form (`volunteerBoxRoles`).
-        return volunteerBoxRoles(closed, roles, parseVolunteerOutcome(one(asked.volunteer)));
+        const boxRoles = volunteerBoxRoles(closed, roles, parseVolunteerOutcome(one(asked.volunteer)));
+        if (boxRoles === null) return null;
+        // Which form (§765): the profile's boxes — age, sex, city, experience, group, and the T-shirt while the event gives
+        // one — while the notice in force names them, §758's tick «Am cel puțin 18 ani» while it does not. The action asks again.
+        return { roles: boxRoles, shirts, profile: await cachedVolunteerProfileDescribed(now) };
       }, null);
+  const volunteerRoles = volunteerOffer?.roles ?? null;
   const volunteerOutcome = volunteerRoles ? parseVolunteerOutcome(one(asked.volunteer)) : null;
   // What was typed before a refusal (§142), read only when the page is the answer to one — by the twin, which may read the cookie.
   const volunteerTyped: VolunteerTyped =
@@ -277,9 +283,11 @@ export default async function EventDetailPage({ params, query, canEdit = false, 
           interestRenderedAt: (interestOutcome === "invalid" && parseInterestSince(since, now)) || now,
           declaratie,
           lista,
-          volunteers: volunteerRoles
+          volunteers: volunteerOffer
             ? {
-                roles: volunteerRoles,
+                roles: volunteerOffer.roles,
+                shirts: volunteerOffer.shirts,
+                profile: volunteerOffer.profile,
                 outcome: volunteerOutcome,
                 refused: parseVolunteerBoxes(one(asked.vfields)),
                 typed: volunteerTyped,

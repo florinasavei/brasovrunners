@@ -167,6 +167,22 @@ export const VOLUNTEERS_MERGE_FIELD = "volunteers";
 export const VOLUNTEER_AGREEMENT_NOTICE_MERGE_FIELD = "volunteerAgreement";
 
 /**
+ * The privacy notice's marker for what a volunteer says about themselves (§765; the owner, 2026-10-14: «vârstă, sex,
+ * oraș și o bifă dacă a mai fost voluntar sau nu»): the public form's boxes, quoted, in the reader's language
+ * (`volunteers/notice-words.ts`) — „Vârsta”, „Sex”, „Orașul”, „Am mai fost voluntar în trecut la alte curse” — inside the
+ * volunteers' paragraph's sentence that says what those answers are kept for (placing the volunteers in roles and
+ * preparing the event; the club's group tick as the person's own claim and the T-shirt size, only while the club gives
+ * T-shirts, said in the sentence's own words, never quoted: the tick would name the club in the approved text). Its own marker, §562's, §613's and §758's pattern: a notice
+ * approved from an earlier template names `{{volunteers}}` and `{{volunteerAgreement}}` but says none of this, so the
+ * public form asks those boxes — and keeps their answers — only while the notice in force names this marker too
+ * (`describesVolunteerProfile`); until then it is the form of §758, with its tick «Am cel puțin 18 ani», and
+ * `/admin/tasks` carries the row `volunteerProfileNotice`. The club's own list is gated by the same marker: the
+ * template's sentence also covers the answers an organizer notes for a person they enter, so the card draws those
+ * boxes, and `changeVolunteer` keeps their answers, only while the notice in force names it.
+ */
+export const VOLUNTEER_PROFILE_NOTICE_MERGE_FIELD = "volunteerProfile";
+
+/**
  * The privacy notice's marker for «Spune-ne ceva»'s named mode (§678): the radio's own words,
  * quoted — „Cu nume și prenume” / “With my name” (`feedback/notice-words.ts`) — in the same
  * paragraph, which then says the forms are anonymous unless the person chooses to give a name, what
@@ -423,6 +439,7 @@ export const MERGE_FIELDS = [
   MEMBERS_SHOP_MERGE_FIELD,
   VOLUNTEERS_MERGE_FIELD,
   VOLUNTEER_AGREEMENT_NOTICE_MERGE_FIELD,
+  VOLUNTEER_PROFILE_NOTICE_MERGE_FIELD,
 ] as const;
 
 /**
@@ -625,6 +642,16 @@ export function describesVolunteers(body: unknown): boolean {
  */
 export function describesVolunteerAgreement(body: unknown): boolean {
   return mergeFieldsIn(body).has(VOLUNTEER_AGREEMENT_NOTICE_MERGE_FIELD);
+}
+
+/**
+ * Whether a privacy notice describes what a volunteer says about themselves (§765): it names
+ * `{{volunteerProfile}}`. The gate for the public form's age, sex, city, experience, group and T-shirt boxes — and for
+ * keeping what is typed in them — and what `/admin/tasks`' row `volunteerProfileNotice` reads. Pure; the caller asks it
+ * of the notice in force, in every language.
+ */
+export function describesVolunteerProfile(body: unknown): boolean {
+  return mergeFieldsIn(body).has(VOLUNTEER_PROFILE_NOTICE_MERGE_FIELD);
 }
 
 /**

@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V3.24-2026-10-14
+
+- **Volunteers give their age, sex, city and experience; the role has a rich description** — the sign-up asks «Vârsta» (18 or more), «Sex», «Orașul», «Am mai fost voluntar în trecut la alte curse», «Fac parte din grupul clubului» and, only while the event gives them, the T-shirt's size, once the notice in force names them; the card, the CSV and the person's data carry the answers; a role's «Descrierea rolului» is written in the rich-text editor in both languages, with «Copiază și tradu tot», and read under its tick; «Primește voluntari pe pagină» and «Oferim tricouri voluntarilor» are real tick boxes. §765.
 ## BR-V3.23-2026-10-14
 
 - **Volunteer badges, designed like the bibs and printed per role** — «Ecusoane pentru voluntari», linked from the «Voluntari» card: a small, long strip (90 × 35 mm, 100 × 40 mm or the club's own size) with the logo, the event's short title, «VOLUNTAR», the role on its coloured band and a white space for the name written by hand, optionally the coordinator's telephone; each role's colour from the palette or typed, checked for contrast; «Câte ecusoane» per role with spares and badges without a role, packed on A4 with cut marks. No volunteer's name is ever printed. §764.

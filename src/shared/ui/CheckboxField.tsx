@@ -59,6 +59,7 @@ export default function CheckboxField({
   dense = false,
   help,
   helpTestId,
+  describedBy: moreDescribedBy,
   optional,
   error,
   requiredMessage,
@@ -81,6 +82,8 @@ export default function CheckboxField({
   /** One helper line under the label, a caption, and the box's description for a screen reader. */
   help?: string;
   helpTestId?: string;
+  /** The id of another element that describes the box (a role's description beside its tick, §765), added to `aria-describedby`. */
+  describedBy?: string;
   /**
    * An optional box's word (`Registration.optionalSuffix`), written after the label as « — opțional»
    * in the label's own flow (round 2 of §570): the same words on every optional box of the block.
@@ -105,7 +108,7 @@ export default function CheckboxField({
   const [flagged, setFlagged] = useState(Boolean(error));
   const errorMessage = error ?? requiredMessage;
   const showError = flagged && Boolean(errorMessage);
-  const describedBy = [help ? helpId : null, showError ? errorId : null].filter(Boolean).join(" ");
+  const describedBy = [help ? helpId : null, moreDescribedBy ?? null, showError ? errorId : null].filter(Boolean).join(" ");
   const checked =
     recall.has && !disabled ? (recall.all(name)?.includes(value ?? "on") ?? false) : defaultChecked;
   // A single box the refusal named carries the id its summary links to (§47, §315) — "confirm

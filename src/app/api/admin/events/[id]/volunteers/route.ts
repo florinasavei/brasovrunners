@@ -3,6 +3,8 @@ import { getTranslations } from "next-intl/server";
 import { getDb } from "@/db/client";
 import { CLUB_TIME_ZONE } from "@/i18n/dates";
 import { routing, type Locale } from "@/i18n/routing";
+import { sexCell } from "@/modules/registrations/domain/sex";
+import { shirtSizeShown } from "@/modules/registrations/domain/kit";
 import { buildVolunteersCsv, volunteersCsvFileName } from "@/modules/volunteers/csv";
 import { exportVolunteers } from "@/modules/volunteers/volunteers";
 import { canManageVolunteers } from "@/modules/staff-identity/domain/roles";
@@ -63,6 +65,12 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
       message: t("volunteers.csvColumns.message"),
       note: t("volunteers.csvColumns.note"),
       signedUpAt: t("volunteers.csvColumns.signedUpAt"),
+      age: t("volunteers.csvColumns.age"),
+      sex: t("volunteers.csvColumns.sex"),
+      city: t("volunteers.csvColumns.city"),
+      volunteeredBefore: t("volunteers.csvColumns.volunteeredBefore"),
+      clubMember: t("volunteers.csvColumns.clubMember"),
+      shirtSize: t("volunteers.csvColumns.shirtSize"),
     },
     volunteers.map((person) => ({
       role: person.roleId === null ? "" : (roleNames.get(person.roleId) ?? ""),
@@ -75,6 +83,13 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
       message: person.message,
       note: person.note,
       signedUpAt: person.createdAt,
+      age: person.age,
+      sex: sexCell(person.sex),
+      city: person.city,
+      volunteeredBefore: t(person.volunteeredBefore ? "volunteers.yes" : "volunteers.no"),
+      clubMember: t(person.clubMember ? "volunteers.yes" : "volunteers.no"),
+      // Only while the event gives T-shirts (§765): a size left from before is exported as nothing.
+      shirtSize: shirtSizeShown(data.shirts, person.shirtSize) ?? "",
     })),
   );
 
