@@ -24,7 +24,7 @@ export default function BibHeaderWarning({
 }: {
   message: string;
   initial: boolean;
-  /** The picture's field and the title's tick it reads; a volunteer badge's designer passes its own (§NNN). */
+  /** The picture's field and the title's tick it reads; a volunteer badge's designer passes its own (§764). */
   fields?: { picture: string; title: string };
   testId?: string;
 }) {

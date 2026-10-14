@@ -44,7 +44,7 @@ function Legend({ children }: { children: string }) {
 const PAIR = { direction: { xs: "column", sm: "row" }, spacing: 1.5 } as const;
 
 /**
- * «Cum arată ecusonul» (§NNN): the volunteer badge's designer, the bib designer's twin (§759) — named
+ * «Cum arată ecusonul» (§764): the volunteer badge's designer, the bib designer's twin (§759) — named
  * sections top to bottom as the badge prints, each a fold of its own (`Panel`, level 5) with its glyph and
  * a line saying what it holds; the live preview at the top (`BibDesignPreview` with `kind="badge"`, the
  * same island), sticky on a wide screen; the header's picture through the bib's own control

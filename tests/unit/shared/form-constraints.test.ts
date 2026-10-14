@@ -41,7 +41,7 @@ const NOT_A_BOX = new Set([
   "offersGroupRunDeclaration",
   "participantListVisibility",
   "bibDesign",
-  // The volunteer badges' look (§NNN): never a box of the editor — its own page, and an event file's import.
+  // The volunteer badges' look (§764): never a box of the editor — its own page, and an event file's import.
   "badgeDesign",
   "scheduleRows",
   "coHosts",

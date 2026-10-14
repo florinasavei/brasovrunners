@@ -13,7 +13,7 @@ import { isDomainError } from "@/shared/errors/domain-error";
 import { isUuid } from "@/shared/ids";
 
 /**
- * «Descarcă ecusoanele (PDF)» (§NNN): an event's volunteer badges as a printable A4 sheet, **per role**.
+ * «Descarcă ecusoanele (PDF)» (§764): an event's volunteer badges as a printable A4 sheet, **per role**.
  * `GET /api/admin/events/<id>/badges?locale=ro&n.<role>=6&x.<role>=2&none=4` — for each role «Câte
  * ecusoane» (`n.`, by default the people the role needs) and «În plus» (`x.`, none by default), and
  * «Ecusoane fără rol» (`none`), the badges with «VOLUNTAR» alone. `locale` is the badge's language, the
@@ -47,7 +47,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
   const roles = await listBadgeRoles(db, id);
   const counts = readPrintCounts(url.searchParams, roles);
   if ("refused" in counts) {
-    // The form (§NNN) says which page it came from: a refusal is told there, with the limits, not as bare JSON
+    // The form (§764) says which page it came from: a refusal is told there, with the limits, not as bare JSON
     // that would replace the page. A caller that sends no `from` is a script, and gets the 400.
     const from = url.searchParams.get(BADGE_FROM_BOX);
     if (from !== null && hasLocale(routing.locales, from)) {

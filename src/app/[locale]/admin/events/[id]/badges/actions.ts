@@ -14,7 +14,7 @@ import { type FormOutcome, refused } from "@/shared/forms/outcome";
 import { isUuid } from "@/shared/ids";
 
 /*
-  «Ecusoane pentru voluntari» (§NNN): the two Server Actions of the page — «Salvează ecusonul» (the
+  «Ecusoane pentru voluntari» (§764): the two Server Actions of the page — «Salvează ecusonul» (the
   designer) and «Salvează culorile» (each role's band). Plain forms that work with scripts off; each asks
   its service, which asserts `canDesignVolunteerBadges` again (BR-REQ-060-01), so the page's buttons are a
   courtesy. A refusal comes back to the form with what was typed (§315); a save goes back to the page

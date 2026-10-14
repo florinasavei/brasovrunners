@@ -15,7 +15,7 @@ import RoleColourFields from "./RoleColourFields";
 import RoleColourSample from "./RoleColourSample";
 
 /**
- * «Culorile rolurilor» (§NNN): each role's band colour on the badge — «Portocaliul clubului» (the kit's
+ * «Culorile rolurilor» (§764): each role's band colour on the badge — «Portocaliul clubului» (the kit's
  * orange), one of the bib's palette, or a colour typed in «Culoarea scrisă» and refused when its words
  * would not read at AA. A new colour typed there is the one kept even when the select still shows the saved
  * choice (`badges.ts#saveBadgeRoleColours`), so nobody types a colour and saves the old one. The same colour

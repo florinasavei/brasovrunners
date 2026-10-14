@@ -7,7 +7,7 @@ import { badgeColourReadable, badgeRoleColour, badgeTextOn } from "../badge-desi
 import { roleColourChoice } from "./RoleColourFields";
 
 /**
- * A role's band as the badge prints it (§NNN): a sample of the colour with «VOLUNTAR» in the ink the badge
+ * A role's band as the badge prints it (§764): a sample of the colour with «VOLUNTAR» in the ink the badge
  * sets on it, then the colour's name and its contrast in words — so the state is never told by colour alone.
  * Drawn on the role's row in the «Voluntari» card and on the badges' page, from one rule: a stored colour no
  * word reads on (written by hand) prints the club's orange, and the line says so.

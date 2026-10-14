@@ -628,7 +628,7 @@ export const events = pgTable(
     bibDesign: jsonb("bib_design"),
 
     /**
-     * What the event's volunteer badges look like (§NNN; the owner, 2026-10-14: «Și trebuie să putem
+     * What the event's volunteer badges look like (§764; the owner, 2026-10-14: «Și trebuie să putem
      * face design și printa ecusoane de voluntari (similar cu BIB-urile)»): the size of the strip, the
      * header band or its picture, the logo, the short title, the word «VOLUNTAR», the writing area for
      * the name and the coordinator's telephone. One JSON column for the reason `bib_design` is one: it

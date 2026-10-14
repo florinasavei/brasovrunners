@@ -145,7 +145,7 @@ export const PANEL_GLYPHS = {
   add: AddIcon,
   // «Voluntari» on an event's editor (§754): the roles and the people.
   volunteers: VolunteerActivismIcon,
-  // «Ecusoane pentru voluntari» (§NNN): the page's designer, and its sections top to bottom as the badge
+  // «Ecusoane pentru voluntari» (§764): the page's designer, and its sections top to bottom as the badge
   // prints — the size of the strip, the header («bibHeader», the bib's own), the role's band and its
   // word, the writing area for the name, the coordinator's telephone («publicPhone»), the cut lines
   // («badgeCut», the scissors — never the print card's own glyph), the print («print»).

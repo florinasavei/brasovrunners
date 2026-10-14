@@ -5,7 +5,7 @@ import { hydrated, signIn } from "./support/featured-event";
 import { openEditorBox, openFold } from "./support/fold";
 
 /**
- * §NNN — «Ecusoane pentru voluntari» (BR-REQ-050-02, BR-REQ-060-01): the Organizer opens the badges' page
+ * §764 — «Ecusoane pentru voluntari» (BR-REQ-050-02, BR-REQ-060-01): the Organizer opens the badges' page
  * from the event's «Voluntari» card, chooses the larger strip in «Cum arată ecusonul» and saves it — the
  * preview follows before the save, the choice is there after it — then prints per role: one role's count
  * typed with its spares, the other's left at the people it needs, and a few badges «fără rol». The PDF
@@ -44,7 +44,7 @@ async function seedEvent(tag: string): Promise<{ id: string; water: string; fini
   }
 }
 
-test.describe("§NNN volunteer badges, designed and printed per role", () => {
+test.describe("§764 volunteer badges, designed and printed per role", () => {
   test.describe.configure({ timeout: 180_000 });
 
   test("the Organizer saves a design from the volunteers' card, and the PDF holds the badges asked for", async ({ page }) => {

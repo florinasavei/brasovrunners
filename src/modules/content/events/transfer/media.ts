@@ -44,7 +44,7 @@ const BIB_PICTURES = [
   { role: "bib.member.card", path: ["member", "cardImageSrc"] },
 ] as const;
 
-/** The volunteer badge's one picture place (§NNN): its header, inside `badges.design`. */
+/** The volunteer badge's one picture place (§764): its header, inside `badges.design`. */
 const BADGE_PICTURES = [{ role: "badge.header", path: ["headerImageSrc"] }] as const;
 
 /** The words' key of a medium's role (`Admin.eventJson.roles.<key>`): the places a picture sits, and the GPX. */
@@ -153,7 +153,7 @@ export function mapMediaUrls(config: EventConfig, replace: (url: string, kind: M
     if (!parent || typeof parent[key] !== "string" || parent[key] === "") continue;
     parent[key] = replace(parent[key] as string, "image");
   }
-  // The volunteer badge's header (§NNN), the same rule: `null` takes the picture out.
+  // The volunteer badge's header (§764), the same rule: `null` takes the picture out.
   const badgeDesign = structuredClone(config.badges.design) as Record<string, unknown>;
   for (const { path } of BADGE_PICTURES) {
     const key = path[0];

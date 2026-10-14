@@ -495,7 +495,7 @@ export type AuditAction =
   /** The agreement's PDF downloaded from the card (§758): a file with a name in it leaves the site; who and when. */
   | "volunteer.agreement_downloaded"
   /**
-   * The volunteer badges (§NNN), entity `event`: «Cum arată ecusonul» saved (the names of the settings that
+   * The volunteer badges (§764), entity `event`: «Cum arată ecusonul» saved (the names of the settings that
    * changed, and the design before and after — the club's own words and a picture's address, never a
    * person's), and a role's badge colour changed (the role's id and name, the colour from and to).
    */

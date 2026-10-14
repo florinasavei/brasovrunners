@@ -51,7 +51,7 @@ export const eventVolunteerRoles = pgTable(
     position: integer("position").notNull().default(0),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     /**
-     * The colour of the role's band on a volunteer badge (§NNN), a hex triplet read for contrast
+     * The colour of the role's band on a volunteer badge (§764), a hex triplet read for contrast
      * before it is saved (`badge-design.ts#badgeColourReadable`); null is the theme's own colour.
      */
     colour: text("colour"),

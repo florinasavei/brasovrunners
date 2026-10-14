@@ -111,7 +111,7 @@ function sampleConfig(): EventConfig {
     publicList: { names: false, waitlist: false, waitlistCount: true, count: true, club: "members_only" },
     hiddenList: { enabled: false, bibStart: null, counted: false, public: false },
     bib: { startNumber: 100, colour: "#1a73e8", design: { ...DEFAULT_BIB_DESIGN, headerImageSrc: PICTURE } as unknown as Record<string, unknown> },
-    // The volunteer badges' look (§NNN): a design, never a volunteer nor a role.
+    // The volunteer badges' look (§764): a design, never a volunteer nor a role.
     badges: { design: { ...DEFAULT_BADGE_DESIGN } as unknown as Record<string, unknown> },
     translations: { ro: translation("ro", doc("Bun venit.", PICTURE)), en: translation("en") },
   };
@@ -122,7 +122,7 @@ function sampleFile(): EventFile {
     format: EVENT_FILE_FORMAT,
     version: EVENT_FILE_VERSION,
     exportedAt: "2026-10-13T10:00:00.000Z",
-    exportedFrom: { environment: "production", baseline: "BR-V3.22-2026-10-14" },
+    exportedFrom: { environment: "production", baseline: "BR-V3.23-2026-10-14" },
     series: { partOfASeries: false, rule: null },
     event: sampleConfig(),
     media: [{ role: "cover", url: PICTURE, contentType: "image/webp", size: 10, sha256: "a".repeat(64) }],
@@ -255,7 +255,7 @@ describe("the pictures in a configuration", () => {
       type: "doc",
       content: [{ type: "table", content: [{ type: "tableRow", content: [{ type: "tableCell", content: [{ type: "image", attrs: { src: OTHER_PICTURE } }] }] }] }],
     };
-    // The volunteer badge's header (§NNN) is a place too.
+    // The volunteer badge's header (§764) is a place too.
     config.badges.design = { ...config.badges.design, headerImageSrc: OTHER_PICTURE };
     const refs = collectMediaRefs(config);
     expect(refs.map((ref) => ref.role)).toEqual(["cover", "bib.header", "bib.sponsors", "bib.profile", "bib.member.card", "badge.header", "text.ro.body", "text.en.body", "route.gpx"]);

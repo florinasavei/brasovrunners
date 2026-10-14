@@ -88,7 +88,7 @@ export type VolunteerRole = {
   needed: number;
   descriptionRo: string | null;
   descriptionEn: string | null;
-  /** The role's band on the volunteer badges (§NNN): a hex, or null for the club's orange. */
+  /** The role's band on the volunteer badges (§764): a hex, or null for the club's orange. */
   colour: string | null;
   position: number;
   createdAt: Date;
@@ -300,7 +300,7 @@ function roleInputOf(fields: Record<string, unknown>): VolunteerRoleInput {
 }
 
 /**
- * The boxes of a role's band colour inside the role's own form (§NNN): «Culoarea benzii» and «Culoarea scrisă».
+ * The boxes of a role's band colour inside the role's own form (§764): «Culoarea benzii» and «Culoarea scrisă».
  * A form that posts neither leaves the colour as it is — the saves that predate the colour, and any caller
  * that does not draw the boxes, never reset it.
  */

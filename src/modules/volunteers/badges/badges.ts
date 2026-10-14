@@ -22,7 +22,7 @@ import { BADGE_CUSTOM_BOUNDS, BADGE_SIZES } from "./badge-geometry";
 import { BADGE_DESIGN_FORM_PREFIX, type BadgeDesignFormValues } from "./badge-query";
 
 /**
- * The volunteer badges' reads and writes (§NNN): an event's badge design, its roles' band colours, and
+ * The volunteer badges' reads and writes (§764): an event's badge design, its roles' band colours, and
  * the print's counts. Every write asserts `canDesignVolunteerBadges` here, whatever the page drew — the
  * Organizer, the Administrator and the Superadministrator (BR-REQ-060-01) — and is audited with the
  * club's own words only: a badge carries no person, and nothing here reads one.
@@ -267,7 +267,7 @@ export async function saveBadgeRoleColours<T extends Record<string, unknown>>(
 export function postedRoleColour(
   entry: Pick<PostedRoleColour, "choice" | "typed"> & { roleId?: string },
   stored: string | null,
-  /** The boxes' names when the colour is posted from somewhere else than the badges' page: the role's own form (§NNN). */
+  /** The boxes' names when the colour is posted from somewhere else than the badges' page: the role's own form (§764). */
   named: { choice: string; typed: string } = roleColourBoxes(entry.roleId ?? ""),
 ): { colour: string | null; box: string } {
   const boxes = named;
@@ -290,7 +290,7 @@ export function postedRoleColour(
 /**
  * The colour a role's boxes ask for, held to the rule every colour of a band obeys: a typed colour is `#rrggbb`
  * and carries its words at AA (`BADGE_COLOUR_UNREADABLE`, naming the box) — when it differs from the stored one. The badges' page and the role's own
- * form in the «Voluntari» card (§NNN) both save a colour through this one function.
+ * form in the «Voluntari» card (§764) both save a colour through this one function.
  */
 export function checkedRoleColour(
   entry: Pick<PostedRoleColour, "choice" | "typed"> & { roleId?: string },

@@ -1,5 +1,5 @@
 /**
- * The volunteer badge's geometry, in points, decided once for both renderers (§NNN) — the bib's
+ * The volunteer badge's geometry, in points, decided once for both renderers (§764) — the bib's
  * discipline (§338, §755): the sheet (`badges-pdf.ts`, pdfkit) draws these numbers as they are, the
  * picture (`badge-image.tsx`, Satori) multiplies each by its own scale, and neither wraps a word by
  * itself: every line of text is fitted here, shrunk step by step and only then cut with «…», measured
@@ -31,7 +31,7 @@ import { withEllipsis } from "@/modules/registrations/bib-type";
 /** Points in a millimetre. */
 export const MM = 72 / 25.4;
 
-/** The sizes a badge comes in (§NNN): the default strip, a larger one, and the club's own. */
+/** The sizes a badge comes in (§764): the default strip, a larger one, and the club's own. */
 export const BADGE_SIZES = ["strip90", "strip100", "custom"] as const;
 export type BadgeSize = (typeof BADGE_SIZES)[number];
 
@@ -221,7 +221,7 @@ export type BadgeLayout = {
 };
 
 /**
- * One badge, laid out (§NNN). The header's column runs from the logo's right plus the pad (or the pad
+ * One badge, laid out (§764). The header's column runs from the logo's right plus the pad (or the pad
  * alone) to the content's right less the pad, and the title is fitted to it at up to `titleShare` of the
  * band, down to `titleMinSize`, then cut. The role's name is fitted to the band's width less the pad on
  * each side at up to `roleNameShare` of the band, down to `roleMinSize`, then cut; «VOLUNTAR» above it is
@@ -290,7 +290,7 @@ export const BADGE_PAGE_MARGIN = 5 * MM;
 const EPSILON = 1e-6;
 
 /**
- * How badges of one size are packed on an A4 portrait page (§NNN): as many columns and rows as fit
+ * How badges of one size are packed on an A4 portrait page (§764): as many columns and rows as fit
  * inside the margin, butted edge to edge so one cut separates two (each keeps its own white border),
  * the grid centred on the page. 90 × 35 mm: 2 × 8 = 16 a sheet; 100 × 40 mm: 2 × 7 = 14.
  */

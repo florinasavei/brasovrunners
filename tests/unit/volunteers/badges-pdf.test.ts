@@ -9,7 +9,7 @@ import { badgeSheetOrder, renderBadgeSheet } from "@/modules/volunteers/badges/b
 import { COLOR } from "@/theme/brand";
 
 /**
- * §NNN — the volunteer badges' two renderers (BR-REQ-050-02): the sheet prints per role, as many badges
+ * §764 — the volunteer badges' two renderers (BR-REQ-050-02): the sheet prints per role, as many badges
  * as asked, packed on as many A4 pages as they take, each badge's words at the layout's sizes, and no
  * volunteer's name anywhere; the picture is the same badge at its own scale.
  *
@@ -50,7 +50,7 @@ afterEach(() => vi.restoreAllMocks());
 const sheet = (design: BadgeDesign = DEFAULT_BADGE_DESIGN, entries = ENTRIES) =>
   renderBadgeSheet({ design, locale: "ro", words: WORDS, entries, eventTitle: "Brașov Trail Race", generatedAt: new Date("2026-10-14T08:00:00Z") });
 
-describe("§NNN the badges' sheet", () => {
+describe("§764 the badges' sheet", () => {
   it("prints as many badges as asked, per role, on as many A4 pages as they take", async () => {
     const { runs, pages, pdf } = await drawn(() => sheet());
     expect(pdf.subarray(0, 5).toString()).toBe("%PDF-");
@@ -175,7 +175,7 @@ describe("§NNN the badges' sheet", () => {
   }, 60_000);
 });
 
-describe("§NNN the badge's picture", () => {
+describe("§764 the badge's picture", () => {
   it("draws the sheet's badge: the same lines, at its own scale, the role's band in its colour", () => {
     const input = { design: DEFAULT_BADGE_DESIGN, locale: "ro" as const, words: WORDS, role: { name: "Punct de apă", colour: "#c62828" } };
     const layout = badgeImageLayout(input);

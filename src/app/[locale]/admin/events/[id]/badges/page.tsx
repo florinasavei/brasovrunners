@@ -19,7 +19,7 @@ import { isUuid } from "@/shared/ids";
 type Props = { params: Promise<{ locale: string; id: string }>; searchParams: Promise<{ [BADGE_REFUSED_PARAM]?: string }> };
 
 /**
- * «Ecusoane pentru voluntari» (§NNN; the owner, 2026-10-14: «Și trebuie să putem face design și printa
+ * «Ecusoane pentru voluntari» (§764; the owner, 2026-10-14: «Și trebuie să putem face design și printa
  * ecusoane de voluntari (similar cu BIB-urile)», then «Badge-urile sunt de obicei mai mici și mai lungi și
  * fără nume, numele îl scriem manual cu markerul»): an event's volunteer badges, on a page of their own
  * under the event like its bibs — the event editor is long enough, and the «Voluntari» card links here

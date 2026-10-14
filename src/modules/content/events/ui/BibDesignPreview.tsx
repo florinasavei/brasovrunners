@@ -9,7 +9,7 @@ import { BADGE_SIZES, type BadgeSize, badgeImageSize } from "@/modules/volunteer
 import { badgePreviewUrl, isBadgeDesignInput, readBadgeDesignForm } from "@/modules/volunteers/badges/badge-query";
 
 /**
- * The picture's size for a badge's boxes as they are (§NNN): the paper's own proportion, so the box keeps
+ * The picture's size for a badge's boxes as they are (§764): the paper's own proportion, so the box keeps
  * its height while the new picture loads. A size that is not one of the sizes, or a custom box that holds
  * no number yet, reads as the default strip — what the schema draws for it.
  */
@@ -67,7 +67,7 @@ export default function BibDesignPreview({
   /** What the sample is drawn from beside the form — the saved checkpoints (§757) — in every address this rebuilds. */
   version?: string;
   /**
-   * `badge`: a volunteer badge's designer (§NNN) — the same island over the badge's boxes
+   * `badge`: a volunteer badge's designer (§764) — the same island over the badge's boxes
    * (`badge.design.*`), its address (`badgePreviewUrl`) and its paper, whose proportion follows the size
    * chosen. One preview for both, never a second copy.
    */

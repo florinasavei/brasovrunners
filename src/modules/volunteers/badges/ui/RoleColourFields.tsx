@@ -15,7 +15,7 @@ export function roleColourChoice(colour: string | null): { choice: string; palet
 }
 
 /**
- * The two boxes of a role's band colour (§NNN): «Culoarea benzii» — the club's orange, one of the bib's
+ * The two boxes of a role's band colour (§764): «Culoarea benzii» — the club's orange, one of the bib's
  * palette that reads at AA, or «Altă culoare» — and «Culoarea scrisă», the colour typed beside it, whose help
  * says the limits in words (a hash and six digits; white or black text must read on it, contrast 4.5 to 1).
  * One pair of boxes for the role's own form in the «Voluntari» card and for the badges' page, which save

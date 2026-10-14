@@ -18,7 +18,7 @@ import {
 import { BADGE_LAYOUT, BADGE_PAGE_MARGIN, type BadgeLayout, badgeLayout, badgePaper, badgeSheetGrid, badgeSheetSlots } from "./badge-geometry";
 
 /**
- * The volunteer badges as a sheet to print (§NNN): every badge one strip of the club's size, packed
+ * The volunteer badges as a sheet to print (§764): every badge one strip of the club's size, packed
  * edge to edge on A4 portrait pages (`badgeSheetGrid`), a dashed hairline on every cut and — with the
  * design's «Semne de tăiere» — a short solid mark in the page's margin at each end of every cut, what a
  * guillotine is lined up on (the bib's §249 marks).

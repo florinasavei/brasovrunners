@@ -2,7 +2,7 @@ import { getTranslations } from "next-intl/server";
 import { type BadgeDefaultWords, type BadgeDesign, type BadgeLocale, badgeLabelText, badgeWords } from "./badge-design";
 
 /**
- * The platform's words on a badge when the club typed none (§NNN) — «VOLUNTAR», «Nume:», «Coordonator» —
+ * The platform's words on a badge when the club typed none (§764) — «VOLUNTAR», «Nume:», «Coordonator» —
  * in the badge's language, from the catalogue (`Admin.badges.defaults`), never a literal: the two routes
  * and the page read them here, so the sheet and the picture say the same.
  */

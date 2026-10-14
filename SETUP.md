@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.22-2026-10-14 -->
+<!-- PROJECT_BASELINE: BR-V3.23-2026-10-14 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V3.22-2026-10-14`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.23-2026-10-14`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -2099,7 +2099,7 @@ only ones who see the names, addresses and telephone numbers.
 6. **A person who asks for their data** is found by address on «Toate datele unei persoane»: the offers
    are listed there with every column, and deleted from this card.
 
-7. **Print the volunteers' badges** (§NNN). The «Voluntari» card → **«Ecusoane pentru voluntari»** opens a
+7. **Print the volunteers' badges** (§764). The «Voluntari» card → **«Ecusoane pentru voluntari»** opens a
    page of its own for the event, for the Organizer and the Administrators. A badge is a small, long strip
    — 90 × 35 mm (16 on an A4 sheet) or 100 × 40 mm (14), or your own width × height in whole millimetres,
    60–200 by 30–100 — with the club's logo, the event's short title, «VOLUNTAR», the role on its coloured

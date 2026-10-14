@@ -46,7 +46,7 @@ import { fnv1a } from "@/shared/hash";
 import { COLOR } from "@/theme/brand";
 
 /**
- * §NNN — the volunteer badge's one geometry (BR-REQ-050-02): a small, long strip with no printed name;
+ * §764 — the volunteer badge's one geometry (BR-REQ-050-02): a small, long strip with no printed name;
  * the role's name fits its band, shrinking before it is cut; the writing area keeps the height a name in
  * marker needs at every size; the packing on A4 for each size; the colours read at AA; the stamp follows
  * what the picture is drawn from. Pure, no database, no renderer.
@@ -60,7 +60,7 @@ const WORDS: BadgeLayoutWords = { title: "Brașov Trail Race", label: "VOLUNTAR"
 const layoutOf = (size: BadgeSizeChoice, words: Partial<BadgeLayoutWords> = {}) =>
   badgeLayout({ ...size, headerPicture: false, showLogo: true, writingLine: true }, { ...WORDS, ...words }, MEASURE);
 
-describe("§NNN the badge's size", () => {
+describe("§764 the badge's size", () => {
   it("is 90 × 35 mm by default and 100 × 40 mm as the second preset, in points", () => {
     expect(badgePaper(STRIP90).width).toBeCloseTo(90 * MM, 6);
     expect(badgePaper(STRIP90).height).toBeCloseTo(35 * MM, 6);
@@ -79,7 +79,7 @@ describe("§NNN the badge's size", () => {
   });
 });
 
-describe("§NNN the rows of a badge", () => {
+describe("§764 the rows of a badge", () => {
   const heights = [];
   for (let height = BADGE_CUSTOM_BOUNDS.height.min; height <= BADGE_CUSTOM_BOUNDS.height.max; height += 5) heights.push(height);
 
@@ -112,7 +112,7 @@ describe("§NNN the rows of a badge", () => {
   });
 });
 
-describe("§NNN a line fitted to its room", () => {
+describe("§764 a line fitted to its room", () => {
   it("keeps its largest size when it fits", () => {
     const fitted = badgeFit("APĂ", MEASURE.bold, 200, 12, 6);
     expect(fitted).toEqual({ text: "APĂ", size: 12, cut: false });
@@ -137,7 +137,7 @@ describe("§NNN a line fitted to its room", () => {
   });
 });
 
-describe("§NNN the role's name on its band", () => {
+describe("§764 the role's name on its band", () => {
   const sizes = [STRIP90, STRIP100, custom(60, 30), custom(200, 100)];
 
   it.each(sizes.map((size) => [`${size.size} ${size.customWidthMm}×${size.customHeightMm}`, size] as const))("fits the band's width and height at %s", (_name, size) => {
@@ -184,7 +184,7 @@ describe("§NNN the role's name on its band", () => {
   });
 });
 
-describe("§NNN the header and the writing area", () => {
+describe("§764 the header and the writing area", () => {
   it("keeps the title clear of the logo and inside the band", () => {
     const layout = layoutOf(STRIP90, { title: "Maratonul Internațional al Munților Bucegi — ediția a XX-a" });
     expect(layout.logo).not.toBeNull();
@@ -217,7 +217,7 @@ describe("§NNN the header and the writing area", () => {
   });
 });
 
-describe("§NNN the sheet: badges packed on A4", () => {
+describe("§764 the sheet: badges packed on A4", () => {
   it("fits 16 strips of 90 × 35 mm and 14 of 100 × 40 mm on a sheet", () => {
     expect(badgeSheetGrid(badgePaper(STRIP90))).toMatchObject({ columns: 2, rows: 8, perSheet: 16 });
     expect(badgeSheetGrid(badgePaper(STRIP100))).toMatchObject({ columns: 2, rows: 7, perSheet: 14 });
@@ -247,7 +247,7 @@ describe("§NNN the sheet: badges packed on A4", () => {
   });
 });
 
-describe("§NNN the colours", () => {
+describe("§764 the colours", () => {
   it("read every band of the palette offered at AA, the words white or ink as reads better", () => {
     for (const choice of BIB_COLOURS.filter((option) => badgeColourReadable(option.hex))) {
       expect(contrastRatio(badgeTextOn(choice.hex), choice.hex)).toBeGreaterThanOrEqual(MIN_TEXT_CONTRAST);
@@ -281,7 +281,7 @@ describe("§NNN the colours", () => {
   });
 });
 
-describe("§NNN the design as stored, posted and carried", () => {
+describe("§764 the design as stored, posted and carried", () => {
   it("reads anything as a design, never a throw — a key it does not know is ignored, a crop without its picture dropped", () => {
     expect(readBadgeDesign(null)).toEqual(DEFAULT_BADGE_DESIGN);
     expect(readBadgeDesign("nonsense")).toEqual(DEFAULT_BADGE_DESIGN);
@@ -328,7 +328,7 @@ describe("§NNN the design as stored, posted and carried", () => {
   });
 });
 
-describe("§NNN the picture's stamp", () => {
+describe("§764 the picture's stamp", () => {
   it("is stable for the same design and changes with the design, the role or the drawing", () => {
     const parts = [DEFAULT_BADGE_DESIGN, "Crosul", ["Apă", "Water", null]];
     expect(badgePictureStamp(parts)).toBe(badgePictureStamp(structuredClone(parts)));

@@ -978,7 +978,7 @@ export const eventFieldsSchema = z
      */
     bibDesign: bibDesignSchema.optional(),
     /**
-     * The volunteer badges' look (§NNN), by the same discipline: absent means "this caller is not editing
+     * The volunteer badges' look (§764), by the same discipline: absent means "this caller is not editing
      * it" — the editor never posts it (the badges' page writes it, `volunteers/badges/badges.ts`); only an
      * import of an event file does (§751).
      */

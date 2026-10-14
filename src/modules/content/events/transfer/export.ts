@@ -183,7 +183,7 @@ export function configFromRows(event: EditableEvent, rows: readonly EditableTran
     },
     hiddenList: { enabled: event.hiddenListEnabled, bibStart: event.hiddenListBibStart, counted: event.hiddenListCounted, public: event.hiddenListPublic },
     bib: { startNumber: event.bibStartNumber, colour: event.bibColour, design: readBibDesign(event.bibDesign) as unknown as Record<string, unknown> },
-    // The volunteer badges' look (§NNN), never a volunteer nor a role: as `readBadgeDesign` answers.
+    // The volunteer badges' look (§764), never a volunteer nor a role: as `readBadgeDesign` answers.
     badges: { design: readBadgeDesign(event.badgeDesign) as unknown as Record<string, unknown> },
     translations: { ro: translationConfig(row("ro")), en: translationConfig(row("en")) },
   };

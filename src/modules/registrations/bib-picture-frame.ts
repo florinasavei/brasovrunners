@@ -89,7 +89,7 @@ export function bibPictureDrawing(
 }
 
 /**
- * The same rule for a place whose shape is not one of the bib's — a volunteer badge's header (§NNN),
+ * The same rule for a place whose shape is not one of the bib's — a volunteer badge's header (§764),
  * whose shape follows the size the club chose: `ratio` is the place's width over its height, `uncropped`
  * what it does with no crop. A crop drawn at another size is trimmed to this one, centred, never squashed.
  */

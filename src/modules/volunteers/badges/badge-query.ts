@@ -1,5 +1,5 @@
 /**
- * A volunteer badge's design as the form posts it and as the preview's address carries it (§NNN) —
+ * A volunteer badge's design as the form posts it and as the preview's address carries it (§764) —
  * the wire shapes of `badge-design.ts`, as `bib-design-query.ts` is the bib's.
  *
  * The designer «Cum arată ecusonul» has a live preview: an `<img>` whose `src` is the picture route

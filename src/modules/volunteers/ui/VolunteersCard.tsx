@@ -211,7 +211,7 @@ export default async function VolunteersCard({
         size="small"
         slotProps={{ htmlInput: { maxLength: VOLUNTEER_ROLE_DESCRIPTION_MAX } }}
       />
-      {/* The role's band on its volunteer badge (§NNN): the same two boxes as the badges' page, saved by the same rule. */}
+      {/* The role's band on its volunteer badge (§764): the same two boxes as the badges' page, saved by the same rule. */}
       <RoleColourFields names={ROLE_FORM_COLOUR_BOXES} colour={role?.colour ?? null} />
     </Stack>
   );
@@ -602,7 +602,7 @@ export default async function VolunteersCard({
         </Typography>
         {standingChip(role)}
       </Stack>
-      {/* The band's colour on the volunteer badge (§NNN): the sample and its name in words, never the colour alone. */}
+      {/* The band's colour on the volunteer badge (§764): the sample and its name in words, never the colour alone. */}
       <Box sx={{ mt: 0.75 }}>
         <RoleColourSample colour={role.colour} label={badgeRoleText(roleName(role), locale)} locale={locale} testId="volunteer-role-colour" />
       </Box>
@@ -736,7 +736,7 @@ export default async function VolunteersCard({
           </Stack>
         </Panel>
 
-        {/* «Ecusoane pentru voluntari» (§NNN): the badges are designed and printed per role on a page of their own. */}
+        {/* «Ecusoane pentru voluntari» (§764): the badges are designed and printed per role on a page of their own. */}
         <GlyphButton
           icon="badges"
           href={getPathname({ locale, href: { pathname: "/admin/events/[id]/badges", params: { id: eventId } } })}

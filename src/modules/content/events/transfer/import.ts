@@ -330,7 +330,7 @@ export async function importEventAsNew<T extends Record<string, unknown>>(db: Da
     declarationDocumentId,
     featured: false,
     includeBibDesign: JSON.stringify(design) !== JSON.stringify(DEFAULT_BIB_DESIGN),
-    // The volunteer badges' look (§NNN), by the bib's rule: a new event's column stays null on the platform's own.
+    // The volunteer badges' look (§764), by the bib's rule: a new event's column stays null on the platform's own.
     includeBadgeDesign: JSON.stringify(readBadgeDesign(resolved.config.badges.design)) !== JSON.stringify(DEFAULT_BADGE_DESIGN),
     participantListNames: names && noticeInForce,
     eventStatus: "SCHEDULED",

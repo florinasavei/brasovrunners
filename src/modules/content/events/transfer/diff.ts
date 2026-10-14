@@ -217,7 +217,7 @@ export const FIELD_LABELS = [
   "bib.design.member.label",
   "bib.design.member.mark",
   "bib.design.member.markShape",
-  // The volunteer badges' look (§NNN); never a volunteer and never a role.
+  // The volunteer badges' look (§764); never a volunteer and never a role.
   "badges.design.size",
   "badges.design.customWidthMm",
   "badges.design.customHeightMm",

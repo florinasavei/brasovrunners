@@ -8,7 +8,7 @@ import { DEFAULT_BADGE_DESIGN } from "@/modules/volunteers/badges/badge-design";
 import type { BadgeRole } from "@/modules/volunteers/badges/badges";
 
 /**
- * §NNN — «Ecusoane pentru voluntari», its three cards as the server draws them (BR-REQ-050-02): the designer's
+ * §764 — «Ecusoane pentru voluntari», its three cards as the server draws them (BR-REQ-050-02): the designer's
  * named folds top to bottom with the live preview's first address; each role's band colour with its state in
  * words, never by colour alone, and no palette colour that does not read; the print per role with the people
  * each needs, its spares, the badges «fără rol», the language and the download — in both languages.
@@ -55,7 +55,7 @@ async function html(draw: () => Promise<unknown>, language: "ro" | "en" = "ro"):
   return new Response(stream).text();
 }
 
-describe("§NNN «Cum arată ecusonul»", () => {
+describe("§764 «Cum arată ecusonul»", () => {
   it("draws its six sections top to bottom as the badge prints, the preview's first address, and the save", async () => {
     const page = await html(() => BadgeDesignPanel({ eventId: EVENT, locale: "ro", design: DEFAULT_BADGE_DESIGN, sampleRole: ROLES[0].id, version: "abc" }));
     const order = ["badge-section-size", "badge-section-header", "badge-section-role", "badge-section-writing", "badge-section-phone", "badge-section-cut"].map((id) => page.indexOf(`data-testid="${id}"`));
@@ -115,7 +115,7 @@ describe("§NNN «Cum arată ecusonul»", () => {
   });
 });
 
-describe("§NNN «Culorile rolurilor»", () => {
+describe("§764 «Culorile rolurilor»", () => {
   it("says each role's colour in words with its contrast, offers no colour that does not read, and says when a stored one does not", async () => {
     const page = await html(() => BadgeRoleColours({ eventId: EVENT, locale: "ro", roles: ROLES, design: DEFAULT_BADGE_DESIGN }));
     expect(page.match(/data-testid="badge-colour-row"/g)).toHaveLength(3);
@@ -146,7 +146,7 @@ describe("§NNN «Culorile rolurilor»", () => {
   });
 });
 
-describe("§NNN «Tipărire»", () => {
+describe("§764 «Tipărire»", () => {
   it("posts its page's language, and says so when there is nothing to print", async () => {
     const page = await html(() => BadgePrintPanel({ eventId: EVENT, locale: "en", design: DEFAULT_BADGE_DESIGN, roles: [], eventTitle: "Crosul" }), "en");
     expect(page).toMatch(/<input[^>]*name="from"[^>]*value="en"|<input[^>]*value="en"[^>]*name="from"/);

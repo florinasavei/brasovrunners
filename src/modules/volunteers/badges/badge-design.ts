@@ -8,7 +8,7 @@ import { BADGE_CUSTOM_BOUNDS, BADGE_SIZE_PRESETS, BADGE_SIZES } from "./badge-ge
 import { badgeDesignValuesFromQuery } from "./badge-query";
 
 /**
- * What a volunteer badge looks like, decided once for both renderers (§NNN; the owner, 2026-10-14:
+ * What a volunteer badge looks like, decided once for both renderers (§764; the owner, 2026-10-14:
  * «Și trebuie să putem face design și printa ecusoane de voluntari (similar cu BIB-urile)», then
  * «Badge-urile sunt de obicei mai mici și mai lungi și fără nume, numele îl scriem manual cu markerul»).
  *

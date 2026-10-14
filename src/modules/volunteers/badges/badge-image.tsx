@@ -19,7 +19,7 @@ import {
 import { BADGE_LAYOUT, type BadgeLayout, type BadgeTextLine, badgeImageSize, badgeLayout, badgeLineHeight } from "./badge-geometry";
 
 /**
- * One volunteer badge as a picture (§NNN): **the paper `badges-pdf.ts` prints, at a screen's size**, the
+ * One volunteer badge as a picture (§764): **the paper `badges-pdf.ts` prints, at a screen's size**, the
  * bib's rule (§180, §338). Both draw `badgeLayout`'s points — this one multiplied by the picture's own
  * scale (`badgeImageSize`: the paper at 960 pixels across, whatever the size) — so the designer's preview
  * and the print section's pictures are previews of the sheet, never a card sized by eye. The logo is the

@@ -253,7 +253,7 @@ export type ActionIconName =
   | "intro"
   // «Tabelul de mărimi» (§697): the ruler on the product editor's size chart fold — the measures per size in centimetres.
   | "sizeChart"
-  // «Ecusoane pentru voluntari» (§NNN): the name badge, on the «Voluntari» card's link to the badges' page.
+  // «Ecusoane pentru voluntari» (§764): the name badge, on the «Voluntari» card's link to the badges' page.
   | "badges";
 // No runner here: the public send buttons wear it through `SubmitButton`'s own `runner` flag,
 // because this table must never reach a public page (above).

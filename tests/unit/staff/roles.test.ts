@@ -517,7 +517,7 @@ describe("BR-REQ-060-01 every capability × every role", () => {
     canExportSponsorList: /*  */ [false, false, false, true, false, true, true],
     // §754: an event's volunteers, with their addresses and telephone numbers — read and written by the Organizer and the Administrators; never Tehnic.
     canManageVolunteers: /*   */ [false, false, false, true, false, true, true],
-    // §NNN: the volunteer badges — the Organizer and the Administrators, as the volunteers; never Tehnic.
+    // §764: the volunteer badges — the Organizer and the Administrators, as the volunteers; never Tehnic.
     canDesignVolunteerBadges: [false, false, false, true, false, true, true],
     canTranslateTexts: /*     */ [false, false, true, true, false, true, true],
     canManageRegistrations: /**/ [false, false, false, false, false, true, true],

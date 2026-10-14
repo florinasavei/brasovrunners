@@ -68,19 +68,19 @@ type Props = {
   /**
    * `member`: the members' header (§664) — the header's place and shape, under the members' own
    * field names, so one control serves both headers and there is no second copy of it. `badge`: a
-   * volunteer badge's header (§NNN), under the badge designer's field names, in `ratio`'s shape.
+   * volunteer badge's header (§764), under the badge designer's field names, in `ratio`'s shape.
    */
   place?: "member" | "badge";
   /**
    * The place's shape, width over height, when it is not one of the bib's fixed ones — a badge's header,
-   * whose shape follows the size the club chose (§NNN). Absent, the slot's own (`BIB_PICTURE_RATIO`).
+   * whose shape follows the size the club chose (§764). Absent, the slot's own (`BIB_PICTURE_RATIO`).
    */
   ratio?: number;
 };
 
 /** The form's field names for a place: the picture's address, its crop, and what a refused save brings back. */
 export function bibPictureFieldNames(slot: BibPictureSlot, place?: "member" | "badge") {
-  // A volunteer badge's header (§NNN): the badge designer's own boxes.
+  // A volunteer badge's header (§764): the badge designer's own boxes.
   if (place === "badge") {
     return {
       src: `${BADGE_DESIGN_FORM_PREFIX}headerImageSrc`,

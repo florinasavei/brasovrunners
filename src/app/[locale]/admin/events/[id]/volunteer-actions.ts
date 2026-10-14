@@ -83,7 +83,7 @@ const roleFields = (form: FormData) => ({
   needed: field(form, "needed"),
   descriptionRo: field(form, "descriptionRo"),
   descriptionEn: field(form, "descriptionEn"),
-  // The band's colour (§NNN): only when the form drew its boxes — a form without them leaves the colour as it is.
+  // The band's colour (§764): only when the form drew its boxes — a form without them leaves the colour as it is.
   ...(form.has(ROLE_FORM_COLOUR_BOXES.choice)
     ? {
         [ROLE_FORM_COLOUR_BOXES.choice]: field(form, ROLE_FORM_COLOUR_BOXES.choice),
@@ -131,7 +131,7 @@ export async function editVolunteerRoleAction(_previous: FormOutcome | null, for
   try {
     changed = (await runRole({ kind: "edit", eventId: eventIdOf(form), id: field(form, "roleId"), fields: roleFields(form) })).changed;
   } catch (error) {
-    // A colour no word reads on is a box to correct, like a name left empty (§NNN).
+    // A colour no word reads on is a box to correct, like a name left empty (§764).
     if (isDomainError(error) && (error.code === "VALIDATION_ERROR" || error.code === "BADGE_COLOUR_UNREADABLE")) return refused(error, form);
     if (!isDomainError(error)) throw error;
     return backToCard(form, { error: error.code });

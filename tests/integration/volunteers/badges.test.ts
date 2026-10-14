@@ -20,7 +20,7 @@ import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — the volunteer badges against the real schema (migration 0150, PGlite) and through the real Server
+ * §764 — the volunteer badges against the real schema (migration 0150, PGlite) and through the real Server
  * Actions and routes (BR-REQ-050-02, BR-REQ-060-01): the design kept on the event and audited; each role's
  * band colour, refused below AA and only on the event's own roles; the sheet per role with its spares and
  * the badges «fără rol», as many badges as asked; the picture of one badge; the Organizer and the
@@ -145,7 +145,7 @@ async function post(action: Stateful, data: FormData): Promise<FormOutcome | "re
 const stored = async (id = eventId) => (await db.select({ badgeDesign: events.badgeDesign }).from(events).where(eq(events.id, id)))[0].badgeDesign;
 const trail = (action: string) => db.select().from(auditLogs).where(eq(auditLogs.action, action as never));
 
-describe("§NNN migration 0150 on PGlite", () => {
+describe("§764 migration 0150 on PGlite", () => {
   it("adds a nullable design on the event and a nullable colour on a role, the colour held to a hex triplet", async () => {
     expect(await stored()).toBeNull();
     const roles = await listBadgeRoles(db, eventId);
@@ -156,7 +156,7 @@ describe("§NNN migration 0150 on PGlite", () => {
   });
 });
 
-describe("§NNN «Salvează ecusonul»", () => {
+describe("§764 «Salvează ecusonul»", () => {
   it("keeps the design on the event, audited with the settings that changed, and goes back to the page", async () => {
     const result = await post(actions.saveBadgeDesignAction, designForm({ "badge.design.size": "strip100", "badge.design.titleRo": "Crosul", "badge.design.titleEn": "The cross" }));
     expect(result).toBe("redirected");
@@ -226,7 +226,7 @@ describe("§NNN «Salvează ecusonul»", () => {
   });
 });
 
-describe("§NNN «Culorile rolurilor»", () => {
+describe("§764 «Culorile rolurilor»", () => {
   function coloursForm(rows: Array<[string, string, string?]>): FormData {
     const data = new FormData();
     data.set("uiLocale", "ro");
@@ -310,7 +310,7 @@ describe("§NNN «Culorile rolurilor»", () => {
   });
 });
 
-describe("§NNN a role's colour in the role's own form («Voluntari»)", () => {
+describe("§764 a role's colour in the role's own form («Voluntari»)", () => {
   const fields = (extra: Record<string, string> = {}) => ({ nameRo: "Start", nameEn: "Start", needed: "2", descriptionRo: "", descriptionEn: "", ...extra });
 
   it("adds a role with its colour, audited, and a role added without the boxes starts with the club's orange", async () => {
@@ -362,7 +362,7 @@ describe("§NNN a role's colour in the role's own form («Voluntari»)", () => {
   });
 });
 
-describe("§NNN «Descarcă ecusoanele (PDF)»", () => {
+describe("§764 «Descarcă ecusoanele (PDF)»", () => {
   const get = (query: string, id = eventId) => sheetRoute.GET(new Request(`http://localhost/api/admin/events/${id}/badges?${query}`), { params: Promise.resolve({ id }) });
 
   it("starts a role that needs more than a pile holds at the most a pile prints, typed or not", () => {
@@ -470,7 +470,7 @@ describe("§NNN «Descarcă ecusoanele (PDF)»", () => {
   });
 });
 
-describe("§NNN one badge's picture", () => {
+describe("§764 one badge's picture", () => {
   const get = (query: string, id = eventId) => previewRoute.GET(new Request(`http://localhost/api/admin/events/${id}/badges/preview?${query}`), { params: Promise.resolve({ id }) });
 
   it("draws a role's badge as saved, kept an hour, and the designer's sample unsaved, never kept", async () => {
@@ -497,7 +497,7 @@ describe("§NNN one badge's picture", () => {
   });
 });
 
-describe("§NNN the badge design travels with the event, never a role", () => {
+describe("§764 the badge design travels with the event, never a role", () => {
   it("is in the event's file as `readBadgeDesign` answers, and the file names no role", async () => {
     await post(actions.saveBadgeDesignAction, designForm({ "badge.design.size": "strip100", "badge.design.cutMarks": "__off" }));
     const read = await readEventConfig(db, eventId);

@@ -32,7 +32,7 @@ export type PostedFieldsContext = {
   featured: boolean;
   /** Left out entirely when it equals what the event holds (a null column stays null). */
   includeBibDesign: boolean;
-  /** The volunteer badges' design (§NNN), by the same rule: left out when it equals what the event holds. */
+  /** The volunteer badges' design (§764), by the same rule: left out when it equals what the event holds. */
   includeBadgeDesign?: boolean;
   /** The public list's switch as it is to be stored — the file's, or off where the notice that describes it is not in force. */
   participantListNames: boolean;

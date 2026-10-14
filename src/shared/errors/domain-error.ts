@@ -21,7 +21,7 @@ export type DomainErrorCode =
   // A shop size unticked while an order names it (§697): the order's variant would dangle and its
   // stock would have nowhere to go back to, so the save says which box rather than "not valid".
   | "SHOP_SIZE_HAS_ORDERS"
-  // A volunteer badge's colour whose words would not read at AA on it (§NNN): the save names the box and asks for another.
+  // A volunteer badge's colour whose words would not read at AA on it (§764): the save names the box and asks for another.
   | "BADGE_COLOUR_UNREADABLE"
   // A volunteer role removed while people are on it (§754): move them first, so no one is deleted by a click on a role.
   | "VOLUNTEER_ROLE_HAS_PEOPLE"

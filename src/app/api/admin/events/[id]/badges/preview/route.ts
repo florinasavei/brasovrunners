@@ -13,7 +13,7 @@ import { isDomainError } from "@/shared/errors/domain-error";
 import { isUuid } from "@/shared/ids";
 
 /**
- * One volunteer badge as a PNG (§NNN), for «Ecusoane pentru voluntari»: the designer's live preview and
+ * One volunteer badge as a PNG (§764), for «Ecusoane pentru voluntari»: the designer's live preview and
  * the print section's picture of each role's badge. `GET /api/admin/events/<id>/badges/preview?locale=ro&role=<id>|none`.
  * A GET that reads and writes nothing.
  *

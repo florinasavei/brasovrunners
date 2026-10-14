@@ -243,7 +243,7 @@ export const eventConfigSchema = z
       })
       .strict(),
     /**
-     * The volunteer badges' design (§NNN) as `readBadgeDesign` answers — its header picture's address among
+     * The volunteer badges' design (§764) as `readBadgeDesign` answers — its header picture's address among
      * `media` (role `badge.header`). Never a volunteer and never a role: the roles stay with their event
      * (§754), and their badge colours with them. A file made before the badges existed has none, and reads
      * as the platform's own design, so an import over an event shows that difference before anything is kept.

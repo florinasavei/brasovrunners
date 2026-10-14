@@ -284,7 +284,7 @@ describe("§754 §761 BR-REQ-031-01 people offer for a role's last place at once
     expect(ticks).toHaveLength(100);
   });
 
-  it("§NNN «Salvează culorile» on the badges' page, racing sign-ups ticking both roles in opposite orders and a role move: all settle, no deadlock", async () => {
+  it("§764 «Salvează culorile» on the badges' page, racing sign-ups ticking both roles in opposite orders and a role move: all settle, no deadlock", async () => {
     // The press locks the event's roles FOR UPDATE like a sign-up does — in the order of their ids (a role's id is a
     // random uuid, so the table's own scan order differs from it on about half of all events). Without the order, the
     // press held the role a sign-up still needed and waited on the one the sign-up held (40P01, one side aborted).

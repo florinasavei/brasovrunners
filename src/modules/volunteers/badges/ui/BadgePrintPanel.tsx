@@ -16,7 +16,7 @@ import { BADGE_COUNT_MAX, BADGE_FROM_BOX, BADGE_TOTAL_MAX, type BadgeRole, badge
 import { badgeLabelIn } from "../badge-words";
 
 /**
- * «Tipărire» (§NNN): the badges printed **per role**, never per person — for each role «Câte ecusoane»
+ * «Tipărire» (§764): the badges printed **per role**, never per person — for each role «Câte ecusoane»
  * (the people it needs, by default) and «În plus» (spares the club types), and «Ecusoane fără rol», the
  * badges with «VOLUNTAR» alone for whoever comes without one. The badges' language is chosen like the
  * bib's: the sheet prints in one.

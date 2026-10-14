@@ -459,7 +459,7 @@ describe("import as a new event", () => {
     expect(diffConfigs(read.file.event, file.event).map((change) => change.key)).toContain("publicList.club");
   });
 
-  it("§NNN carries the volunteer badges' design, never a role: as a new event, over one, and from a file made before it", async () => {
+  it("§764 carries the volunteer badges' design, never a role: as a new event, over one, and from a file made before it", async () => {
     const { event } = await seedRace({}, {}, false);
     const badge = { ...DEFAULT_BADGE_DESIGN, size: "strip100", titleRo: "Crosul", titleEn: "The cross", cutMarks: false };
     await db.update(events).set({ badgeDesign: badge }).where(eq(events.id, event.id));
@@ -487,7 +487,7 @@ describe("import as a new event", () => {
     expect((await reload(older.eventId)).badgeDesign).toBeNull();
   });
 
-  it("§NNN reads an imported badge design forgivingly: an unreadable band colour and a key from a later release neither throw nor refuse", async () => {
+  it("§764 reads an imported badge design forgivingly: an unreadable band colour and a key from a later release neither throw nor refuse", async () => {
     const { event } = await seedRace({}, {}, false);
     const file = await fileOf(event.id);
     // Hand-edited, or written by a later release: a grey no word reads on, and a setting this release has never heard of.
