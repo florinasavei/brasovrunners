@@ -97,6 +97,71 @@ describe("§NNN the badges' sheet", () => {
     expect(runs.filter((run) => run.text === "Nume:" && run.page === 0)).toHaveLength(14);
   });
 
+  /**
+   * The cuts, counted from the PDF's own calls (the bib sheet's «the club's cut marks»): a dashed stroke
+   * along every line of the grid that holds badges — one `dash()` per page — and, while «Semne de tăiere
+   * pe margine» is ticked, a solid mark in the page's margin at both ends of each. The writing line inside
+   * a badge is a stroke too, so a stroke is told apart by where it is: on the dash, or outside the grid.
+   */
+  describe("the cuts", () => {
+    const paper = badgePaper(DEFAULT_BADGE_DESIGN);
+    const grid = badgeSheetGrid(paper);
+    const outside = (x: number, y: number, rows: number) =>
+      x < grid.left || y < grid.top || x > grid.left + grid.columns * paper.width || y > grid.top + rows * paper.height;
+
+    /** Every `moveTo` drawn while the dash is on, and every one outside the grid, with the dashes asked for. */
+    async function cuts(design: BadgeDesign, count: number, rows: number) {
+      let dashed = false;
+      const onDash: Array<[number, number]> = [];
+      const marks: Array<[number, number]> = [];
+      const dash = PDFDocument.prototype.dash;
+      const undash = PDFDocument.prototype.undash;
+      const moveTo = PDFDocument.prototype.moveTo;
+      const dashes = vi.spyOn(PDFDocument.prototype, "dash").mockImplementation(function (this: PDFKit.PDFDocument, ...args: unknown[]) {
+        dashed = true;
+        return (dash as (...a: unknown[]) => PDFKit.PDFDocument).apply(this, args);
+      });
+      vi.spyOn(PDFDocument.prototype, "undash").mockImplementation(function (this: PDFKit.PDFDocument) {
+        dashed = false;
+        return undash.apply(this);
+      });
+      vi.spyOn(PDFDocument.prototype, "moveTo").mockImplementation(function (this: PDFKit.PDFDocument, x: number, y: number) {
+        if (dashed) onDash.push([x, y]);
+        else if (outside(x, y, rows)) marks.push([x, y]);
+        return moveTo.call(this, x, y);
+      });
+      await sheet(design, [{ role: null, count }]);
+      return { dashes: dashes.mock.calls.length, onDash, marks };
+    }
+
+    it("dashes every line of a full page's grid, and marks both ends of each in the margin", async () => {
+      expect(grid).toMatchObject({ columns: 2, rows: 8 });
+      const { dashes, onDash, marks } = await cuts({ ...DEFAULT_BADGE_DESIGN, cutMarks: true }, 16, 8);
+      expect(dashes).toBe(1);
+      // (columns + 1) vertical cuts and (rows + 1) horizontal ones.
+      expect(onDash).toHaveLength(grid.columns + 1 + (8 + 1));
+      // Each vertical cut starts at the grid's top, each horizontal one at its left.
+      expect(onDash.filter(([, y]) => y === grid.top)).toHaveLength(grid.columns + 1 + 1);
+      expect(onDash.filter(([x]) => x === grid.left)).toHaveLength(1 + 8 + 1);
+      // Two marks per cut line.
+      expect(marks).toHaveLength(2 * (grid.columns + 1 + (8 + 1)));
+    });
+
+    it("cuts only the rows a part page uses", async () => {
+      const { onDash, marks } = await cuts({ ...DEFAULT_BADGE_DESIGN, cutMarks: true }, 3, 2);
+      expect(onDash).toHaveLength(grid.columns + 1 + (2 + 1));
+      expect(marks).toHaveLength(2 * (grid.columns + 1 + (2 + 1)));
+    });
+
+    it("draws no mark in the margin without «Semne de tăiere pe margine», and still every dashed cut", async () => {
+      const { dashes, onDash, marks } = await cuts({ ...DEFAULT_BADGE_DESIGN, cutMarks: false }, 20, 8);
+      // Two pages: 16 on the first, 4 (two rows) on the second.
+      expect(dashes).toBe(2);
+      expect(onDash).toHaveLength(grid.columns + 1 + (8 + 1) + (grid.columns + 1 + (2 + 1)));
+      expect(marks).toHaveLength(0);
+    });
+  });
+
   it("writes a sample to look at, when asked", async () => {
     const folder = process.env.BADGE_SAMPLE_DIR;
     if (!folder) return;

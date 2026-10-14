@@ -11,7 +11,7 @@ import { readEventConfig } from "@/modules/content/events/transfer/export";
 import type { StaffRole } from "@/modules/staff-identity/domain/roles";
 import { DEFAULT_BADGE_DESIGN, readBadgeDesign } from "@/modules/volunteers/badges/badge-design";
 import { readBadgeDesignForm } from "@/modules/volunteers/badges/badge-query";
-import { listBadgeRoles, saveBadgeDesign, saveBadgeRoleColours } from "@/modules/volunteers/badges/badges";
+import { BADGE_COUNT_MAX, badgePrintDefault, listBadgeRoles, readPrintCounts, saveBadgeDesign, saveBadgeRoleColours } from "@/modules/volunteers/badges/badges";
 import { DomainError } from "@/shared/errors/domain-error";
 import type { FormOutcome } from "@/shared/forms/outcome";
 import en from "../../../messages/en.json";
@@ -182,6 +182,21 @@ describe("§NNN «Salvează ecusonul»", () => {
     expect(await stored(otherEventId)).toBeNull();
   });
 
+  it("keeps a band colour from outside the palette that the form posts back untouched, and reads an unreadable one as the club's blue", async () => {
+    // As an imported file leaves it: a readable colour that is not one of the palette's.
+    await db.update(events).set({ badgeDesign: { ...readBadgeDesign(null), bandColour: "#0d47a1" } }).where(eq(events.id, eventId));
+    // The designer offers it as its own selected choice, so the form posts it back with the other boxes.
+    expect(await saveBadgeDesign(db, staff.ADMIN!, eventId, readBadgeDesignForm((name) => (designForm({ "badge.design.bandColour": "#0d47a1" }).get(name) as string | null) ?? null), NOW)).toEqual({
+      changed: false,
+    });
+    expect(await trail("event.badge_design_changed")).toHaveLength(0);
+    expect(readBadgeDesign(await stored()).bandColour).toBe("#0d47a1");
+    // A colour no word reads on, written by hand: read as the club's blue, so the designer's «Culoarea clubului» saves as no change.
+    await db.update(events).set({ badgeDesign: { ...readBadgeDesign(null), bandColour: "#777777" } }).where(eq(events.id, eventId));
+    expect(readBadgeDesign(await stored()).bandColour).toBeNull();
+    expect(await saveBadgeDesign(db, staff.ADMIN!, eventId, readBadgeDesignForm((name) => (designForm().get(name) as string | null) ?? null), NOW)).toEqual({ changed: false });
+  });
+
   it.each([
     ["a text in one language only", { "badge.design.titleRo": "Crosul" }, "badge.design.titleEn", "VALIDATION_ERROR"],
     ["«VOLUNTAR» in one language only", { "badge.design.labelEn": "HELPER" }, "badge.design.labelRo", "VALIDATION_ERROR"],
@@ -234,6 +249,34 @@ describe("§NNN «Culorile rolurilor»", () => {
     expect(await trail("volunteer_role.badge_colour_changed")).toHaveLength(3);
   });
 
+  it("keeps a new colour typed while the select still shows the saved choice, never drops it without a word", async () => {
+    // The theme's on the select (as saved), a colour typed: the typed one is the change.
+    expect(await post(actions.saveBadgeRoleColoursAction, coloursForm([[waterId, "", "#0d47a1"]]))).toBe("redirected");
+    expect((await listBadgeRoles(db, eventId))[0].colour).toBe("#0d47a1");
+    // A palette colour saved, the select left on it, another typed: the typed one again.
+    await saveBadgeRoleColours(db, staff.ADMIN!, eventId, [{ roleId: marshalId, choice: "#c62828", typed: "" }], NOW);
+    expect(await post(actions.saveBadgeRoleColoursAction, coloursForm([[marshalId, "#c62828", "6a1b9a"]]))).toBe("redirected");
+    expect((await listBadgeRoles(db, eventId))[1].colour).toBe("#6a1b9a");
+    expect(await trail("volunteer_role.badge_colour_changed")).toHaveLength(3);
+  });
+
+  it("refuses a colour typed beside a select changed to another one, naming the select, and changes nothing", async () => {
+    const both = (await post(actions.saveBadgeRoleColoursAction, coloursForm([[waterId, "#c62828", "#0d47a1"]]))) as FormOutcome;
+    expect(both).toMatchObject({ error: "VALIDATION_ERROR", fields: [`role.${waterId}.colour`] });
+    expect((await listBadgeRoles(db, eventId))[0].colour).toBeNull();
+    // The typed box still holding the saved colour says nothing new: the select decides.
+    await saveBadgeRoleColours(db, staff.ADMIN!, eventId, [{ roleId: waterId, choice: "typed", typed: "#0d47a1" }], NOW);
+    expect(await post(actions.saveBadgeRoleColoursAction, coloursForm([[waterId, "#c62828", "#0D47A1"]]))).toBe("redirected");
+    expect((await listBadgeRoles(db, eventId))[0].colour).toBe("#c62828");
+  });
+
+  it("writes every role's colour or none: a refusal on the second row leaves the first unchanged and unaudited", async () => {
+    const refused = (await post(actions.saveBadgeRoleColoursAction, coloursForm([[waterId, "#c62828"], [marshalId, "typed", "#808080"]]))) as FormOutcome;
+    expect(refused).toMatchObject({ error: "BADGE_COLOUR_UNREADABLE" });
+    expect((await listBadgeRoles(db, eventId)).map((role) => role.colour)).toEqual([null, null]);
+    expect(await trail("volunteer_role.badge_colour_changed")).toHaveLength(0);
+  });
+
   it("refuses a typed colour that is not one, or that no word reads on, naming its box", async () => {
     const notOne = (await post(actions.saveBadgeRoleColoursAction, coloursForm([[waterId, "typed", "rosu"]]))) as FormOutcome;
     expect(notOne).toMatchObject({ error: "VALIDATION_ERROR", fields: [`role.${waterId}.typedColour`] });
@@ -255,6 +298,13 @@ describe("§NNN «Culorile rolurilor»", () => {
 
 describe("§NNN «Descarcă ecusoanele (PDF)»", () => {
   const get = (query: string, id = eventId) => sheetRoute.GET(new Request(`http://localhost/api/admin/events/${id}/badges?${query}`), { params: Promise.resolve({ id }) });
+
+  it("starts a role that needs more than a pile holds at the most a pile prints, typed or not", () => {
+    const many = { id: "a", needed: 500 };
+    expect(badgePrintDefault(many)).toBe(BADGE_COUNT_MAX);
+    expect(readPrintCounts(new URLSearchParams(), [many])?.roles.get("a")).toEqual({ count: BADGE_COUNT_MAX, spares: 0 });
+    expect(badgePrintDefault({ needed: 3 })).toBe(3);
+  });
 
   /** The badges a sheet draws: one «Nume:» (or «Name:») each, caught on its way into pdfkit. */
   async function badgesIn(query: string) {

@@ -5,10 +5,13 @@ import { bibFooterWidth } from "@/modules/registrations/bib-footer";
 import { A4_PAGE } from "@/modules/registrations/bib-geometry";
 import { bibTitleWidth } from "@/modules/registrations/bib-header";
 import {
+  BADGE_BAND_FALLBACK,
   BADGE_DRAWING_VERSION,
   BADGE_ROLE_FALLBACK,
   type BadgeDesign,
+  badgeBandColour,
   badgeColourReadable,
+  badgeDesignSchema,
   badgeDesignFromQuery,
   badgeLabelText,
   badgePictureStamp,
@@ -39,6 +42,7 @@ import {
   MM,
 } from "@/modules/volunteers/badges/badge-geometry";
 import { badgeDesignQuery, readBadgeDesignForm } from "@/modules/volunteers/badges/badge-query";
+import { fnv1a } from "@/shared/hash";
 import { COLOR } from "@/theme/brand";
 
 /**
@@ -262,6 +266,19 @@ describe("§NNN the colours", () => {
     // The bib palette's green carries neither white nor ink at AA: never offered for a band, never printed.
     expect(badgeColourReadable("#1b8a3a")).toBe(false);
   });
+
+  it("never prints a header band no word reads on, from an imported file or a column written by hand", () => {
+    // White on #777777 is 4.48 : 1, ink less: under AA.
+    expect(badgeColourReadable("#777777")).toBe(false);
+    expect(badgeBandColour({ bandColour: "#777777" })).toBe(BADGE_BAND_FALLBACK);
+    // The reader turns it into the club's blue, so the designer shows that and a save changes nothing.
+    expect(readBadgeDesign({ bandColour: "#777777" }).bandColour).toBeNull();
+    expect(badgeDesignSchema.parse({ ...DEFAULT_BADGE_DESIGN, bandColour: "#777777" }).bandColour).toBeNull();
+    // A readable colour from outside the palette is kept as it is.
+    expect(readBadgeDesign({ bandColour: "#0D47A1" }).bandColour).toBe("#0d47a1");
+    expect(badgeBandColour({ bandColour: "#0d47a1" })).toBe("#0d47a1");
+    expect(badgeBandColour({ bandColour: null })).toBe(BADGE_BAND_FALLBACK);
+  });
 });
 
 describe("§NNN the design as stored, posted and carried", () => {
@@ -318,6 +335,9 @@ describe("§NNN the picture's stamp", () => {
     expect(badgePictureStamp(parts)).not.toBe(badgePictureStamp([{ ...DEFAULT_BADGE_DESIGN, size: "strip100" }, "Crosul", ["Apă", "Water", null]]));
     expect(badgePictureStamp(parts)).not.toBe(badgePictureStamp([DEFAULT_BADGE_DESIGN, "Crosul", ["Apă", "Water", "#c62828"]]));
     expect(badgePictureStamp(parts)).toMatch(/^[0-9a-f]{8}$/);
-    expect(BADGE_DRAWING_VERSION).toBeGreaterThanOrEqual(1);
+    // The drawing's version is part of what is stamped: raising it changes every address.
+    expect(badgePictureStamp(parts)).toBe(fnv1a(JSON.stringify([BADGE_DRAWING_VERSION, parts])));
+    expect(badgePictureStamp(parts)).not.toBe(fnv1a(JSON.stringify([BADGE_DRAWING_VERSION + 1, parts])));
+    expect(badgePictureStamp(parts)).not.toBe(fnv1a(JSON.stringify(parts)));
   });
 });
