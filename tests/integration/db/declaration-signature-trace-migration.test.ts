@@ -8,7 +8,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { auditMigration } from "../../../scripts/migration-check.mjs";
 
 /**
- * Migration `0156_declaration_signature_trace` (§NNN, amending §418, §330, §758, §768 and §769; the owner,
+ * Migration `0158_declaration_signature_trace` (§NNN, amending §418, §330, §758, §768 and §769; the owner,
  * 2026-10-14), proven on real PostgreSQL (PGlite): `ip` and `user_agent` — text, nullable — on
  * `declaration_acceptances` and `group_run_declarations`, and `agreement_ip` / `agreement_user_agent` and
  * `guardian_ip` / `guardian_user_agent` on `event_volunteers` (the volunteer's acceptance is columns of the volunteer's own
@@ -16,7 +16,7 @@ import { auditMigration } from "../../../scripts/migration-check.mjs";
  * lists it last, later than every migration before it.
  */
 const MIGRATIONS = "src/db/migrations";
-const TAG = "0156_declaration_signature_trace";
+const TAG = "0158_declaration_signature_trace";
 
 type Journal = { entries: Array<{ idx: number; tag: string; when: number }> };
 
@@ -55,7 +55,7 @@ afterAll(async () => {
   if (folder) rmSync(folder, { recursive: true, force: true });
 });
 
-describe("migration 0156_declaration_signature_trace — the electronic signature's trace", () => {
+describe("migration 0158_declaration_signature_trace — the electronic signature's trace", () => {
   it("adds the two nullable text columns to the race declaration's acceptance and to the group run's", async () => {
     for (const table of ["declaration_acceptances", "group_run_declarations"]) {
       const result = await client.query<{ column_name: string; data_type: string; is_nullable: string }>(
