@@ -42,7 +42,7 @@ export default async function RoleColourFields({
         slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}
         sx={{ width: { sm: 260 } }}
       >
-        <option value="">{t("badges.colours.theme")}</option>
+        <option value="">{t("badges.colours.themeOption")}</option>
         {READABLE_ROLE_COLOURS.map((option) => (
           <option key={option.hex} value={option.hex}>
             {t(`editor.bibColours.${option.key}`)}

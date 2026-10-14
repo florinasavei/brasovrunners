@@ -9226,6 +9226,7 @@
         "bothLanguages": "Scrie-l în ambele limbi sau în niciuna.",
         "headerPicture": "Imagine în locul benzii colorate",
         "headerPictureHelp": "O poză sau un logo pe toată banda de sus. Atunci sigla și titlul nu se mai tipăresc.",
+        "headerPictureCropHelp": "Trage dreptunghiul peste partea care vrei să apară pe banda de sus, pe toată lățimea ecusonului.",
         "headerPictureShape": "Forma benzii: {ratio} la 1, la dimensiunea salvată.",
         "headerHidesTitle": "Imaginea acoperă titlul evenimentului: pe ecuson se vede doar imaginea.",
         "roleHelp": "Rolul se tipărește mare, pe banda lui colorată. Culorile se aleg mai jos, în „Culorile rolurilor”.",
@@ -9260,10 +9261,11 @@
         "typedOf": "Culoarea scrisă pentru rolul {role}",
         "theme": "Portocaliul clubului",
         "typed": "Altă culoare",
-        "choice": "Culoarea benzii",
+        "choice": "Culoarea benzii pe ecuson",
+        "themeOption": "Implicit: portocaliul clubului",
         "typedLabel": "Culoarea scrisă",
-        "typedHelp": "Diez și șase cifre hexazecimale, ca #1b8a3a. Se păstrează doar dacă textul alb sau negru se citește pe ea, la un contrast de cel puțin 4,5 la 1. O culoare nouă scrisă aici e cea care se păstrează.",
-        "state": "Acum: {colour}, contrast {ratio} la 1",
+        "typedHelp": "Culoarea benzii de pe ecuson: diez și șase cifre hexazecimale, ca #1b8a3a. Se păstrează doar dacă textul alb sau negru se citește pe ea, la un contrast de cel puțin 4,5 la 1. O culoare nouă scrisă aici e cea care se păstrează.",
+        "state": "Banda pe ecuson: {colour}, contrast {ratio} la 1",
         "save": "Salvează culorile",
         "saving": "Se salvează…",
         "unreadable": "{colour}, care nu se citește: se tipărește portocaliul clubului"
@@ -9271,7 +9273,7 @@
       "print": {
         "title": "Tipărire",
         "aside": "{perSheet} pe o foaie A4 · {width} × {height} mm",
-        "intro": "Ecusoanele se tipăresc pe roluri, nu pe persoane. Pe o foaie încap {perSheet}. Rolurile cer în total: {needed}. Cel mult {max} pe un rol și {total} într-un fișier.",
+        "intro": "Ecusoanele se tipăresc pe roluri, nu pe persoane. Pe o foaie A4 încap {perSheet} ecusoane. Rolurile cer în total: {needed}. Cel mult {max} pe un rol și {total} într-un fișier.",
         "introMore": "Foaia nu are niciun nume și nicio dată a vreunui voluntar. Numele se scrie de mână, la masa de primire.",
         "language": "Limba ecusoanelor",
         "languages": {
@@ -9286,6 +9288,9 @@
         "noRoleHelp": "Doar „{label}”, pentru cine vine fără rol.",
         "pictureAlt": "Ecusonul rolului {role}",
         "pictureAltNone": "Ecusonul fără rol",
+        "nothing": "Nimic de tipărit: alege cel puțin un ecuson.",
+        "refusedNumber": "Fișierul nu s-a făcut: fiecare număr trebuie să fie întreg, de la 0 la {max}.",
+        "refusedTotal": "Fișierul nu s-a făcut: sunt prea multe ecusoane. Cel mult {total} într-un fișier, iar acum sunt mai multe. Scade numerele.",
         "download": "Descarcă ecusoanele (PDF)",
         "savedOnly": "Foaia folosește designul salvat. Salvează întâi schimbările de mai sus."
       }

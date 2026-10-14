@@ -1,3 +1,4 @@
+import Alert from "@mui/material/Alert";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { hasLocale } from "next-intl";
@@ -9,13 +10,13 @@ import { routing } from "@/i18n/routing";
 import { canDesignVolunteerBadges } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { badgePictureStamp } from "@/modules/volunteers/badges/badge-design";
-import { findEventForBadges, listBadgeRoles } from "@/modules/volunteers/badges/badges";
+import { BADGE_COUNT_MAX, BADGE_REFUSED_PARAM, BADGE_TOTAL_MAX, findEventForBadges, listBadgeRoles } from "@/modules/volunteers/badges/badges";
 import BadgeDesignPanel from "@/modules/volunteers/badges/ui/BadgeDesignPanel";
 import BadgePrintPanel from "@/modules/volunteers/badges/ui/BadgePrintPanel";
 import BadgeRoleColours from "@/modules/volunteers/badges/ui/BadgeRoleColours";
 import { isUuid } from "@/shared/ids";
 
-type Props = { params: Promise<{ locale: string; id: string }> };
+type Props = { params: Promise<{ locale: string; id: string }>; searchParams: Promise<{ [BADGE_REFUSED_PARAM]?: string }> };
 
 /**
  * «Ecusoane pentru voluntari» (§NNN; the owner, 2026-10-14: «Și trebuie să putem face design și printa
@@ -28,10 +29,11 @@ type Props = { params: Promise<{ locale: string; id: string }> };
  * role's band) and «Tipărire» (per role, with spares and the badges «fără rol»). Whoever designs the
  * badges — the Organizer, the Administrator and the Superadministrator (`canDesignVolunteerBadges`),
  * asserted here, in the actions, the service and both routes; anyone else meets the 404 an unknown page
- * gets. No volunteer is read on this page: a badge carries a role, never a person.
+ * gets. A print the route refused comes back here with `?refused=` and an alert that says why. No volunteer is read on this page: a badge carries a role, never a person.
  */
-export default async function EventBadgesPage({ params }: Props) {
+export default async function EventBadgesPage({ params, searchParams }: Props) {
   const { locale, id } = await params;
+  const { [BADGE_REFUSED_PARAM]: refused } = await searchParams;
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
   const staffUser = await requireStaff();
@@ -58,9 +60,14 @@ export default async function EventBadgesPage({ params }: Props) {
       <Typography variant="body2" color="text.secondary">
         {t("badges.intro")}
       </Typography>
+      {(refused === "number" || refused === "total") && (
+        <Alert severity="error" data-testid="badge-print-refused">
+          {refused === "number" ? t("badges.print.refusedNumber", { max: String(BADGE_COUNT_MAX) }) : t("badges.print.refusedTotal", { total: String(BADGE_TOTAL_MAX) })}
+        </Alert>
+      )}
       <BadgeDesignPanel eventId={id} locale={locale} design={event.design} sampleRole={sampleRole} version={version} />
       <BadgeRoleColours eventId={id} locale={locale} roles={roles} design={event.design} />
-      <BadgePrintPanel eventId={id} locale={locale} design={event.design} roles={roles} eventTitle={event.title} />
+      <BadgePrintPanel eventId={id} locale={locale} design={event.design} roles={roles} eventTitle={event.title} refused={refused === "number" || refused === "total"} />
     </Stack>
   );
 }

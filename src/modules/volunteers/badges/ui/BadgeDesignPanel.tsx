@@ -130,7 +130,7 @@ export default async function BadgeDesignPanel({
     quality: { ...rich.imageQuality, help: t("editor.bibDesign.picture.qualityHelp") },
     crop: {
       title: t("editor.bibDesign.picture.cropTitle"),
-      help: t("editor.bibDesign.picture.cropHelp.header"),
+      help: t("badges.design.headerPictureCropHelp"),
       reset: t("editor.bibDesign.picture.cropReset.header"),
       position: rich.imageCropPosition,
       ...rich.imageShapes,
@@ -161,7 +161,17 @@ export default async function BadgeDesignPanel({
   const cutAside = design.cutMarks ? t("badges.design.cutMarks") : t("badges.design.cutLinesOnly");
 
   return (
-    <Panel glyph="badges" collapsible level={2} id="box-badge-design" title={t("badges.design.title")} aside={sizeAside} data-testid="badge-design">
+    <Panel
+      glyph="badges"
+      collapsible
+      level={2}
+      id="box-badge-design"
+      title={t("badges.design.title")}
+      aside={sizeAside}
+      // The live preview is the page's own verb (`fold.ts`, §336): open on every arrival.
+      openWhen={{ primary: true }}
+      data-testid="badge-design"
+    >
       <ActionForm action={saveBadgeDesignAction} scope="badge-design" messages={messages} data-testid="badge-design-form">
         <input type="hidden" name="uiLocale" value={locale} />
         <input type="hidden" name="eventId" value={eventId} />

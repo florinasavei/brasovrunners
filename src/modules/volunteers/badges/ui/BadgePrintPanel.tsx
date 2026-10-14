@@ -12,7 +12,7 @@ import RadioField from "@/shared/ui/RadioField";
 import { type BadgeDesign, badgePictureStamp } from "../badge-design";
 import { badgeImageSize, badgePaper, badgeSheetGrid, badgeSizeMm } from "../badge-geometry";
 import { badgePictureSrc } from "../badge-query";
-import { BADGE_COUNT_MAX, BADGE_TOTAL_MAX, type BadgeRole, badgePrintDefault, badgeRoleName, printBoxes } from "../badges";
+import { BADGE_COUNT_MAX, BADGE_FROM_BOX, BADGE_TOTAL_MAX, type BadgeRole, badgePrintDefault, badgeRoleName, printBoxes } from "../badges";
 import { badgeLabelIn } from "../badge-words";
 
 /**
@@ -32,6 +32,7 @@ export default async function BadgePrintPanel({
   design,
   roles,
   eventTitle,
+  refused = false,
 }: {
   eventId: string;
   locale: Locale;
@@ -39,12 +40,17 @@ export default async function BadgePrintPanel({
   roles: readonly BadgeRole[];
   /** The event's title in the page's language, part of each picture's stamp. */
   eventTitle: string;
+  /** The page came back with the route's refusal of the numbers: the card opens, its boxes in view. */
+  refused?: boolean;
 }) {
   const t = await getTranslations("Admin");
   const grid = badgeSheetGrid(badgePaper(design));
   const { widthMm, heightMm } = badgeSizeMm(design);
   const image = badgeImageSize(design);
   const needed = roles.reduce((sum, role) => sum + role.needed, 0);
+  // What the boxes start at, and so what a press without a change prints: a page whose defaults add up to
+  // nothing (an event with no roles yet) says so, rather than offering a download of an empty sheet.
+  const startsAt = roles.reduce((sum, role) => sum + badgePrintDefault(role), 0);
   // «VOLUNTAR» as the page's language prints it: the club's own word when it typed one.
   const label = await badgeLabelIn(design, locale);
   const pictureOf = (role: BadgeRole | null) =>
@@ -103,6 +109,7 @@ export default async function BadgePrintPanel({
     <Panel
       glyph="print"
       collapsible
+      openWhen={{ refused }}
       level={2}
       id="box-badge-print"
       title={t("badges.print.title")}
@@ -110,6 +117,8 @@ export default async function BadgePrintPanel({
       data-testid="badge-print"
     >
       <Box component="form" method="get" action={`/api/admin/events/${eventId}/badges`} data-testid="badge-print-form">
+        {/* The page's language, so a refusal of the numbers comes back to this page and says why. */}
+        <input type="hidden" name={BADGE_FROM_BOX} value={locale} />
         <Stack spacing={2}>
           <Typography variant="body2" color="text.secondary">
             {t("badges.print.intro", { perSheet: String(grid.perSheet), needed: String(needed), max: String(BADGE_COUNT_MAX), total: String(BADGE_TOTAL_MAX) })}
@@ -131,6 +140,11 @@ export default async function BadgePrintPanel({
             {roles.map((role) => pile(role))}
             {pile(null)}
           </Stack>
+          {startsAt === 0 && (
+            <Typography variant="body2" color="text.secondary" data-testid="badge-print-nothing">
+              {t("badges.print.nothing")}
+            </Typography>
+          )}
           <Box>
             <GlyphButton icon="pdf" type="submit" variant="contained" sx={{ minHeight: 44 }} data-testid="badge-download">
               {t("badges.print.download")}

@@ -9226,6 +9226,7 @@
         "bothLanguages": "Write it in both languages, or in neither.",
         "headerPicture": "A picture instead of the coloured band",
         "headerPictureHelp": "A photo or a logo across the whole top band. The logo and the title are then not printed.",
+        "headerPictureCropHelp": "Drag the rectangle over the part you want on the top band, across the whole badge.",
         "headerPictureShape": "The band's shape: {ratio} to 1, at the saved size.",
         "headerHidesTitle": "The picture covers the event's title: the badge shows only the picture.",
         "roleHelp": "The role prints large, on its coloured band. The colours are chosen below, in “The roles' colours”.",
@@ -9260,10 +9261,11 @@
         "typedOf": "The typed colour for the role {role}",
         "theme": "The club's orange",
         "typed": "Another colour",
-        "choice": "The band's colour",
+        "choice": "The band's colour on the badge",
+        "themeOption": "Default: the club's orange",
         "typedLabel": "The typed colour",
-        "typedHelp": "A hash and six hexadecimal digits, like #1b8a3a. It is kept only if white or black text reads on it, at a contrast of at least 4.5 to 1. A new colour typed here is the one kept.",
-        "state": "Now: {colour}, contrast {ratio} to 1",
+        "typedHelp": "The band's colour on the badge: a hash and six hexadecimal digits, like #1b8a3a. It is kept only if white or black text reads on it, at a contrast of at least 4.5 to 1. A new colour typed here is the one kept.",
+        "state": "Badge band: {colour}, contrast {ratio} to 1",
         "save": "Save the colours",
         "saving": "Saving…",
         "unreadable": "{colour}, which does not read: the club's orange prints"
@@ -9271,7 +9273,7 @@
       "print": {
         "title": "Printing",
         "aside": "{perSheet} on an A4 sheet · {width} × {height} mm",
-        "intro": "Badges are printed per role, not per person. A sheet holds {perSheet}. The roles need in all: {needed}. At most {max} for a role and {total} in one file.",
+        "intro": "Badges are printed per role, not per person. An A4 sheet holds {perSheet} badges. The roles need in all: {needed}. At most {max} for a role and {total} in one file.",
         "introMore": "The sheet holds no name and nothing about any volunteer. The name is written by hand at the welcome desk.",
         "language": "The badges' language",
         "languages": {
@@ -9286,6 +9288,9 @@
         "noRoleHelp": "Only “{label}”, for whoever comes without a role.",
         "pictureAlt": "The badge of the role {role}",
         "pictureAltNone": "The badge without a role",
+        "nothing": "Nothing to print: choose at least one badge.",
+        "refusedNumber": "The file was not made: every number must be whole, from 0 to {max}.",
+        "refusedTotal": "The file was not made: there are too many badges. At most {total} in one file, and there are more now. Lower the numbers.",
         "download": "Download the badges (PDF)",
         "savedOnly": "The sheet uses the saved design. Save the changes above first."
       }

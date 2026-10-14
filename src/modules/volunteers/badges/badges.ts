@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, asc, eq } from "drizzle-orm";
 import { eventVolunteerRoles } from "@/db/schema/event-volunteers";
 import { eventTranslations, events } from "@/db/schema/events";
 import type { StaffUser } from "@/db/schema/staff-users";
@@ -210,8 +210,9 @@ export async function saveBadgeRoleColours<T extends Record<string, unknown>>(
   assertMay(actor);
   if (!isUuid(eventId)) throw new DomainError("NOT_FOUND", "no such event");
   // One transaction: every role's colour and its audit row, or none of them. The locks in the volunteers'
-  // order (`volunteers.ts`): the event's row first, NO KEY UPDATE, then its roles — so a sign-up, which
-  // holds its role and takes a KEY SHARE on the event, never deadlocks against this press.
+  // order (`volunteers.ts`): the event's row first, NO KEY UPDATE, then its roles **in the order of their
+  // ids** (`changeVolunteerRole`'s rule, which a sign-up and a hand entry keep too) — so two presses that
+  // lock the same roles never wait on each other in a circle, whichever order the table scans them in.
   return db.transaction(async (tx) => {
     const [event] = await tx.select({ id: events.id }).from(events).where(eq(events.id, eventId)).for("no key update").limit(1);
     if (!event) throw new DomainError("NOT_FOUND", "no such event");
@@ -219,6 +220,7 @@ export async function saveBadgeRoleColours<T extends Record<string, unknown>>(
       .select({ id: eventVolunteerRoles.id, nameRo: eventVolunteerRoles.nameRo, nameEn: eventVolunteerRoles.nameEn, colour: eventVolunteerRoles.colour })
       .from(eventVolunteerRoles)
       .where(eq(eventVolunteerRoles.eventId, eventId))
+      .orderBy(asc(eventVolunteerRoles.id))
       .for("update");
     const byId = new Map(roles.map((role) => [role.id, role]));
     const wanted: Array<{ role: (typeof roles)[number]; colour: string | null }> = [];
@@ -286,7 +288,7 @@ export function postedRoleColour(
 
 /**
  * The colour a role's boxes ask for, held to the rule every colour of a band obeys: a typed colour is `#rrggbb`
- * and carries its words at AA (`BADGE_COLOUR_UNREADABLE`, naming the box). The badges' page and the role's own
+ * and carries its words at AA (`BADGE_COLOUR_UNREADABLE`, naming the box) — when it differs from the stored one. The badges' page and the role's own
  * form in the «Voluntari» card (§NNN) both save a colour through this one function.
  */
 export function checkedRoleColour(
@@ -295,7 +297,9 @@ export function checkedRoleColour(
   named?: { choice: string; typed: string },
 ): string | null {
   const { colour, box } = postedRoleColour(entry, stored, named);
-  if (colour && !badgeColourReadable(colour)) {
+  // Only a colour that changes is checked: one written by hand and kept as it is — the form pre-fills it —
+  // must not make every save of its role refuse.
+  if (colour && colour !== stored && !badgeColourReadable(colour)) {
     throw new DomainError("BADGE_COLOUR_UNREADABLE", "the role's colour does not carry its words at AA", [box]);
   }
   return colour;
@@ -323,6 +327,10 @@ export function badgePrintDefault(role: Pick<BadgeRole, "needed">): number {
   return Math.min(Math.max(0, role.needed), BADGE_COUNT_MAX);
 }
 
+/** The print form's hidden box naming the page's language, and the page's query that carries a refusal back to it. */
+export const BADGE_FROM_BOX = "from";
+export const BADGE_REFUSED_PARAM = "refused";
+
 /** The print form's box names, for the page and the route. */
 export const printBoxes = {
   count: (roleId: string) => `n.${roleId}`,
@@ -330,15 +338,21 @@ export const printBoxes = {
   none: "none",
 } as const;
 
+/** Why a print form was refused: a box that is not a whole number in range, or a total past the file's ceiling. */
+export type BadgePrintRefusal = { refused: "number" | "total" };
+
 /**
  * The print form's numbers, read from its query: a role's «Câte ecusoane» defaults to the people it
- * needs (`badgePrintDefault`), «În plus» and «Ecusoane fără rol» to none. Null — the whole request refused — for a number that
- * is not a whole number from 0 to `BADGE_COUNT_MAX`, or a total past `BADGE_TOTAL_MAX`.
+ * needs (`badgePrintDefault`), «În plus» and «Ecusoane fără rol» to none — when the box is **absent**; a box
+ * posted empty means none, so clearing «Câte ecusoane» prints no badge of that role. A refusal — the whole
+ * request — for a number that is not a whole number from 0 to `BADGE_COUNT_MAX` (`"number"`), or a total past
+ * `BADGE_TOTAL_MAX` (`"total"`); the route says which on the page.
  */
-export function readPrintCounts(params: URLSearchParams, roles: readonly Pick<BadgeRole, "id" | "needed">[]): BadgePrintCounts | null {
+export function readPrintCounts(params: URLSearchParams, roles: readonly Pick<BadgeRole, "id" | "needed">[]): BadgePrintCounts | BadgePrintRefusal {
   const number = (name: string, fallback: number): number | null => {
     const raw = params.get(name);
-    if (raw === null || raw.trim() === "") return fallback;
+    if (raw === null) return fallback;
+    if (raw.trim() === "") return 0;
     const value = Number(raw.trim());
     return Number.isInteger(value) && value >= 0 && value <= BADGE_COUNT_MAX ? value : null;
   };
@@ -346,13 +360,13 @@ export function readPrintCounts(params: URLSearchParams, roles: readonly Pick<Ba
   for (const role of roles) {
     const count = number(printBoxes.count(role.id), badgePrintDefault(role));
     const spares = number(printBoxes.spares(role.id), 0);
-    if (count === null || spares === null) return null;
+    if (count === null || spares === null) return { refused: "number" };
     counts.set(role.id, { count, spares });
   }
   const none = number(printBoxes.none, 0);
-  if (none === null) return null;
+  if (none === null) return { refused: "number" };
   const total = [...counts.values()].reduce((sum, entry) => sum + entry.count + entry.spares, none);
-  return total > BADGE_TOTAL_MAX ? null : { roles: counts, none };
+  return total > BADGE_TOTAL_MAX ? { refused: "total" } : { roles: counts, none };
 }
 
 /** The sheet's piles in the club's order: each role's badges with its spares, then the badges «fără rol». */

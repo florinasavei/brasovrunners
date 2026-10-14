@@ -7,7 +7,7 @@ import { canDesignVolunteerBadges } from "@/modules/staff-identity/domain/roles"
 import { requireStaff } from "@/modules/staff-identity/session";
 import { type BadgeLocale, badgeWords } from "@/modules/volunteers/badges/badge-design";
 import { badgeDefaultWords } from "@/modules/volunteers/badges/badge-words";
-import { badgePrintEntries, findEventForBadges, listBadgeRoles, readPrintCounts } from "@/modules/volunteers/badges/badges";
+import { BADGE_FROM_BOX, BADGE_REFUSED_PARAM, badgePrintEntries, findEventForBadges, listBadgeRoles, readPrintCounts } from "@/modules/volunteers/badges/badges";
 import { renderBadgeSheet } from "@/modules/volunteers/badges/badges-pdf";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { isUuid } from "@/shared/ids";
@@ -46,7 +46,16 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
   if (!event) return NextResponse.json({ error: "NOT_FOUND" }, { status: 404 });
   const roles = await listBadgeRoles(db, id);
   const counts = readPrintCounts(url.searchParams, roles);
-  if (!counts) return NextResponse.json({ error: "VALIDATION_ERROR" }, { status: 400 });
+  if ("refused" in counts) {
+    // The form (§NNN) says which page it came from: a refusal is told there, with the limits, not as bare JSON
+    // that would replace the page. A caller that sends no `from` is a script, and gets the 400.
+    const from = url.searchParams.get(BADGE_FROM_BOX);
+    if (from !== null && hasLocale(routing.locales, from)) {
+      // A path alone, no host: the browser resolves it against the address it asked.
+      return new Response(null, { status: 303, headers: { Location: `/${from}/admin/events/${id}/badges?${BADGE_REFUSED_PARAM}=${counts.refused}`, "Cache-Control": "private, no-store" } });
+    }
+    return NextResponse.json({ error: "VALIDATION_ERROR" }, { status: 400 });
+  }
 
   // The header's picture as PNG bytes (`bib-pictures.ts`): pdfkit embeds no WebP; a failure prints the band.
   const loaded = await loadBibPictures({ headerImageSrc: event.design.headerImageSrc, sponsorImageSrc: null }, BIB_PICTURE_WIDTH.sheet);

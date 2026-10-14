@@ -271,6 +271,18 @@ describe("§NNN «Culorile rolurilor»", () => {
     expect((await listBadgeRoles(db, eventId))[0].colour).toBe("#c62828");
   });
 
+  it("checks only a colour that changes: one written by hand and kept as it is does not stop another role's save", async () => {
+    // A stored colour no word reads on, as a hand-written row (or an old file) can leave it.
+    await db.update(eventVolunteerRoles).set({ colour: "#808080" }).where(eq(eventVolunteerRoles.id, waterId));
+    // The page pre-fills the box with it and selects «Altă culoare»; a new colour on the other role is saved.
+    expect(await post(actions.saveBadgeRoleColoursAction, coloursForm([[waterId, "typed", "#808080"], [marshalId, "#c62828"]]))).toBe("redirected");
+    expect((await listBadgeRoles(db, eventId)).map((role) => role.colour)).toEqual(["#808080", "#c62828"]);
+    expect(await trail("volunteer_role.badge_colour_changed")).toHaveLength(1);
+    // Changing that colour to another unreadable one is still refused.
+    const refused = (await post(actions.saveBadgeRoleColoursAction, coloursForm([[waterId, "typed", "#777777"]]))) as FormOutcome;
+    expect(refused).toMatchObject({ error: "BADGE_COLOUR_UNREADABLE" });
+  });
+
   it("writes every role's colour or none: a refusal on the second row leaves the first unchanged and unaudited", async () => {
     const refused = (await post(actions.saveBadgeRoleColoursAction, coloursForm([[waterId, "#c62828"], [marshalId, "typed", "#808080"]]))) as FormOutcome;
     expect(refused).toMatchObject({ error: "BADGE_COLOUR_UNREADABLE" });
@@ -322,6 +334,19 @@ describe("§NNN a role's colour in the role's own form («Voluntari»)", () => {
     expect(await trail("volunteer_role.edited")).toHaveLength(1);
   });
 
+  it("saves the role's other fields when its stored colour is one no word reads on and is left as it is", async () => {
+    await db.update(eventVolunteerRoles).set({ colour: "#808080" }).where(eq(eventVolunteerRoles.id, waterId));
+    const result = await changeVolunteerRole(
+      db,
+      staff.ADMIN!,
+      { kind: "edit", eventId, id: waterId, fields: fields({ nameRo: "Punct de apă", nameEn: "Water point", needed: "4", colourChoice: "typed", colourTyped: "#808080" }) },
+      NOW,
+    );
+    expect(result).toMatchObject({ changed: true });
+    const [role] = await db.select().from(eventVolunteerRoles).where(eq(eventVolunteerRoles.id, waterId));
+    expect(role).toMatchObject({ needed: 4, colour: "#808080" });
+  });
+
   it("refuses a colour no word reads on, or one that is not a colour, naming the form's own box, and writes nothing", async () => {
     await expect(changeVolunteerRole(db, staff.ADMIN!, { kind: "edit", eventId, id: waterId, fields: fields({ colourChoice: "typed", colourTyped: "#808080" }) }, NOW)).rejects.toMatchObject({
       code: "BADGE_COLOUR_UNREADABLE",
@@ -342,8 +367,29 @@ describe("§NNN «Descarcă ecusoanele (PDF)»", () => {
   it("starts a role that needs more than a pile holds at the most a pile prints, typed or not", () => {
     const many = { id: "a", needed: 500 };
     expect(badgePrintDefault(many)).toBe(BADGE_COUNT_MAX);
-    expect(readPrintCounts(new URLSearchParams(), [many])?.roles.get("a")).toEqual({ count: BADGE_COUNT_MAX, spares: 0 });
+    expect(readPrintCounts(new URLSearchParams(), [many])).toMatchObject({ roles: new Map([["a", { count: BADGE_COUNT_MAX, spares: 0 }]]) });
     expect(badgePrintDefault({ needed: 3 })).toBe(3);
+  });
+
+  it("reads a box left out as its default and a box posted empty as none", () => {
+    const role = { id: "a", needed: 4 };
+    expect(readPrintCounts(new URLSearchParams("x.a=1"), [role])).toMatchObject({ roles: new Map([["a", { count: 4, spares: 1 }]]) });
+    // «Câte ecusoane» cleared means none, not the people the role needs; the other boxes the same.
+    expect(readPrintCounts(new URLSearchParams("n.a=&x.a=&none="), [role])).toMatchObject({ roles: new Map([["a", { count: 0, spares: 0 }]]), none: 0 });
+    expect(readPrintCounts(new URLSearchParams("n.a=%20&none=2"), [role])).toMatchObject({ roles: new Map([["a", { count: 0, spares: 0 }]]), none: 2 });
+  });
+
+  it("says which way a form was refused: a number that is not one, or a total past the ceiling", () => {
+    const role = { id: "a", needed: 4 };
+    expect(readPrintCounts(new URLSearchParams("n.a=2.5"), [role])).toEqual({ refused: "number" });
+    expect(readPrintCounts(new URLSearchParams(`n.a=${BADGE_COUNT_MAX + 1}`), [role])).toEqual({ refused: "number" });
+    expect(readPrintCounts(new URLSearchParams("n.a=300&x.a=300&n.b=300&none=101"), [role, { id: "b", needed: 1 }])).toEqual({ refused: "total" });
+    expect(readPrintCounts(new URLSearchParams("n.a=300&x.a=300&n.b=300&none=100"), [role, { id: "b", needed: 1 }])).toMatchObject({ none: 100 });
+    expect(readPrintCounts(new URLSearchParams(`n.a=300&x.a=300&none=301`), [role])).toEqual({ refused: "number" });
+    expect(readPrintCounts(new URLSearchParams(`n.a=300&x.a=300&none=300`), [role])).toMatchObject({ none: 300 });
+    const many = Array.from({ length: 5 }, (_, index) => ({ id: String(index), needed: 300 }));
+    // The page's own defaults can pass the ceiling: five roles that need 300 each.
+    expect(readPrintCounts(new URLSearchParams(), many)).toEqual({ refused: "total" });
   });
 
   /** The badges a sheet draws: one «Nume:» (or «Name:») each, caught on its way into pdfkit. */
@@ -391,6 +437,25 @@ describe("§NNN «Descarcă ecusoanele (PDF)»", () => {
     expect((await get("locale=xx")).status).toBe(400);
   });
 
+  it("sends a refusal from the page's own form back to the page, with the reason, and a script still gets the 400", async () => {
+    const over = `none=300&n.${waterId}=300&n.${marshalId}=300&x.${marshalId}=300`;
+    const total = await get(`locale=en&from=ro&${over}`);
+    expect(total.status).toBe(303);
+    expect(total.headers.get("location")).toBe(`/ro/admin/events/${eventId}/badges?refused=total`);
+    const number = await get(`locale=ro&from=en&n.${waterId}=-1`);
+    expect(number.status).toBe(303);
+    expect(number.headers.get("location")).toBe(`/en/admin/events/${eventId}/badges?refused=number`);
+    // A page that is not a language of the site is not a place to send anyone.
+    expect((await get(`locale=ro&from=//elsewhere&${over}`)).status).toBe(400);
+    expect((await get(`locale=ro&${over}`)).status).toBe(400);
+  });
+
+  it("prints nothing of a role whose «Câte ecusoane» was cleared", async () => {
+    const cleared = await badgesIn(`locale=ro&n.${waterId}=&n.${marshalId}=2&none=`);
+    expect(cleared.words.filter((word) => word === "Nume:")).toHaveLength(2);
+    expect(cleared.words).not.toContain("PUNCT DE APĂ");
+  });
+
   it.each(["DEV", "COPYWRITER", "CONTRIBUTOR"] as const)("refuses the %s role, and a stranger", async (role) => {
     state.actor = staff[role];
     expect((await get("locale=ro")).status).toBe(403);
@@ -417,11 +482,17 @@ describe("§NNN one badge's picture", () => {
     expect(sample.headers.get("cache-control")).toBe("private, no-store");
   }, 60_000);
 
-  it("refuses another event's role, a malformed role and the Tehnic role", async () => {
+  it("refuses another event's role and a malformed role", async () => {
     expect((await get(`locale=ro&role=${otherRoleId}`)).status).toBe(404);
     expect((await get("locale=ro&role=nope")).status).toBe(400);
-    state.actor = staff.DEV;
+  });
+
+  it.each(["DEV", "COPYWRITER", "CONTRIBUTOR"] as const)("refuses the %s role, and a stranger (BR-REQ-060-01)", async (role) => {
+    state.actor = staff[role];
     expect((await get(`locale=ro&role=${waterId}`)).status).toBe(403);
+    expect((await get("locale=ro&role=none&sample=1")).status).toBe(403);
+    state.actor = undefined;
+    expect((await get(`locale=ro&role=${waterId}`)).status).toBe(401);
   });
 });
 
