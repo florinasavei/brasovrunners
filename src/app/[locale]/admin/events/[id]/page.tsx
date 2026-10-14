@@ -35,17 +35,21 @@ import { BibPrintCard, BibPrintForms } from "@/modules/content/events/ui/boxes/B
 import { riskMark } from "@/modules/content/events/ui/boxes/box-kit";
 import CourseBox from "@/modules/content/events/ui/boxes/CourseBox";
 import CoHostsBox from "@/modules/content/events/ui/boxes/CoHostsBox";
-import CoverBox from "@/modules/content/events/ui/boxes/CoverBox";
 import KindBox from "@/modules/content/events/ui/boxes/KindBox";
 import LinksBox from "@/modules/content/events/ui/boxes/LinksBox";
-import ProgrammeRulesBox from "@/modules/content/events/ui/boxes/ProgrammeRulesBox";
 import PreviewBox from "@/modules/content/events/ui/boxes/PreviewBox";
-import PromotionBox from "@/modules/content/events/ui/boxes/PromotionBox";
 import RegistrationBox from "@/modules/content/events/ui/boxes/RegistrationBox";
-import { AddressBox, DescriptionBox, TitleSummaryBox } from "@/modules/content/events/ui/boxes/TextBoxes";
+import { DescriptionBox, TitleSummaryBox } from "@/modules/content/events/ui/boxes/TextBoxes";
 import WhenBox from "@/modules/content/events/ui/boxes/WhenBox";
 import { summaryDate, summaryDateTime } from "@/modules/content/events/ui/box-summaries";
-import EventEditorLayout, { AutomaticSection, EditorGroup } from "@/modules/content/events/ui/EventEditorLayout";
+import EventEditorLayout, {
+  AutomaticSection,
+  EditorCardRun,
+  EditorGroup,
+  EditorMainColumn,
+  FORM_WITHOUT_BOX,
+  UnderCourse,
+} from "@/modules/content/events/ui/EventEditorLayout";
 import { IdenticalTextsList, RevealLink } from "@/modules/content/events/ui/MissingForPublish";
 import { pageFlow } from "@/modules/content/events/ui/page-flow";
 import { PublishCheckProvider, PublishGapsSummary, PublishGateButton } from "@/modules/content/events/ui/PublishCheck";
@@ -171,8 +175,10 @@ export const dynamic = "force-dynamic";
  * **the public page, top to bottom** (§406; the owner: "am nevoie de mai multe căsuțe la editor ca
  * să văd exact ce flow am în pagină"): one card per section the page draws, in the page's order
  * (`events/domain/page-sections.ts`), each numbered and headed by whether the page shows it, the
- * share links named where the page puts them; then, apart, what is not a section of the page — the
- * status, the promotion, the page address; then the always-open Salvare. Each box answers one
+ * share links named where the page puts them — eight cards since §NNN (the owner, 2026-10-13: «mai
+ * puține carduri și mai mult nesting»), what is not a section of the page nested in the card it
+ * belongs with: the promotion in «Ce fel de eveniment», the cover and the page's address in «Titlu și
+ * rezumat», the checkpoints under «Traseul»; then the preview and the always-open Salvare. Each box answers one
  * question and its closed line shows the answer — and, for a box publication needs, what it still
  * lacks, per language — so the editor opens as a fact sheet and one opens only the box to change. Every box with per-language
  * text has its own Română | English tabs; there is no page-wide language switch, so a shared
@@ -183,8 +189,10 @@ export const dynamic = "force-dynamic";
  * each input sits in; a stale version anywhere fails the whole save as a CONFLICT. The side
  * column's publication moves and recurrence actions are forms of their own, **siblings** of the
  * save form — HTML forms cannot nest — and so are the two small forms the bib card's immediate
- * actions post (`form="bib-assign"`, `form="bib-download"`). Below the grid, what is operations
- * rather than settings: the registrations received, and duplicate or delete.
+ * actions post (`form="bib-assign"`, `form="bib-download"`), and so is «Puncte de control», which
+ * the main column draws under «Traseul» by its order (§NNN, `UnderCourse`). Below the grid, what is
+ * operations rather than settings: the registrations received, the volunteers (§754, §NNN), and
+ * duplicate or delete.
  *
  * **Once people have registered** (real ones: a test row is counted nowhere the club looks,
  * §12.6), the five boxes whose change reaches them — date, place, programme, registration, and
@@ -976,7 +984,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
             </>
           }
           main={
-            <>
+            <EditorMainColumn>
               {/* «De făcut pentru pagina evenimentului» (§749): near the top, beside the save form — it has forms of its own, and HTML forms cannot nest. */}
               <EventTodoCard
                 locale={locale}
@@ -991,31 +999,26 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                 today={dayIn(now, CLUB_TIME_ZONE)}
                 error={todoErrorCode ? t(`errors.${todoErrorCode}`) : undefined}
               />
-              {/* «Voluntari» (§754): the roles and the people, with forms of their own beside the save form. Only for whoever may manage them. */}
-              {volunteersCard && (
-                <VolunteersCard
+              {/*
+                «Puncte de control» (§757), part of «Traseul» (nested in the page's sections, no number): its
+                forms are its own, so in the document it stands beside the save form, never inside it — HTML
+                forms cannot nest. On the screen it stands right under «Traseul», joined to it as its card
+                (§NNN: `UnderCourse`, the column's `order`); «Traseul» links to it.
+              */}
+              <UnderCourse>
+                <CheckpointsCard
                   locale={locale}
                   eventId={event.id}
-                  acceptsVolunteers={event.acceptsVolunteers}
-                  offerClosed={volunteersCard.offerClosed}
-                  roles={volunteersCard.roles}
-                  standings={volunteersCard.standings}
-                  volunteers={volunteersCard.people}
-                  error={volunteerErrorCode ? t(`errors.${volunteerErrorCode}`) : undefined}
+                  checkpoints={checkpoints}
+                  mayEdit={canEditCheckpoints(staffUser.role)}
+                  routeKm={checkpointRouteKm}
+                  gpx={checkpointsGpx}
+                  previewOpen={query.checkpointsGpx === "1"}
                 />
-              )}
-              {/* «Puncte de control» (§757), part of «Traseul» in the page's sections (nested, no number): its forms are its own, beside the save form like the card above; «Traseul» links to it. */}
-              <CheckpointsCard
-                locale={locale}
-                eventId={event.id}
-                checkpoints={checkpoints}
-                mayEdit={canEditCheckpoints(staffUser.role)}
-                routeKm={checkpointRouteKm}
-                gpx={checkpointsGpx}
-                previewOpen={query.checkpointsGpx === "1"}
-              />
-              {/* Settings and texts: one form, one save — and a refusal that keeps every box (§315). */}
-              <ActionForm action={saveEventAndTranslationsAction} messages={refusal} confirm={saveConfirm} id="event-save-form" data-testid="event-save-form">
+              </UnderCourse>
+              {/* Settings and texts: one form, one save — and a refusal that keeps every box (§315). The
+                  form draws no box of its own, so its two runs of cards take their places in the column (§NNN). */}
+              <ActionForm action={saveEventAndTranslationsAction} messages={refusal} confirm={saveConfirm} id="event-save-form" data-testid="event-save-form" style={FORM_WITHOUT_BOX}>
                 <input type="hidden" name="uiLocale" value={locale} />
                 <input type="hidden" name="eventId" value={event.id} />
                 {/* The event row's version — and its presence is the signal that this save touches the
@@ -1027,7 +1030,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                   <TranslationHiddenFields key={entry.translation.locale} translation={entry.translation} />
                 ))}
 
-                <Stack spacing={2}>
+                <EditorCardRun place="upToCourse">
                   {/* "Publică" pressed while the saved event lacks what publication needs (§406). */}
                   <PublishGapsSummary
                     id="publish-gaps"
@@ -1046,14 +1049,18 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                       `PAGE_SECTIONS`, which `events/page-sections.test.ts` holds this page to. */}
                   <EditorGroup label={t("editor.groups.page")} />
                   <KindBox {...box} heading={flow.headings.kind} languages={languages} registered={realCount} risk={risk} notice={notice} />
-                  <TitleSummaryBox languages={languages} creating={false} heading={flow.headings.title} />
+                  <TitleSummaryBox {...box} languages={languages} creating={false} slugLocked={slugLocked} heading={flow.headings.title} />
                   <DescriptionBox languages={languages} heading={flow.headings.description} />
                   <WhenBox {...box} risk={risk} languages={languages} inSeries={inSeries} heading={flow.headings.when} />
                   <CourseBox {...box} languages={languages} inSeries={inSeries} heading={flow.headings.course} />
+                </EditorCardRun>
+                {/* «Puncte de control» stands here on the screen, under «Traseul» (`UnderCourse`, above). Card 6 on, in the same form (§NNN). */}
+                <EditorCardRun place="fromRegistration">
                   <RegistrationBox
                     {...box}
                     heading={flow.headings.registration}
                     risk={risk}
+                    languages={languages}
                     declarations={declarations}
                     waiting={waiting}
                     bibCounts={bibCounts}
@@ -1078,16 +1085,10 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                   <CoHostsBox {...box} locale={locale} heading={flow.headings.coHosts} />
                   <AutomaticSection testId="automatic-share">{flow.automaticLine}</AutomaticSection>
                   <LinksBox {...box} locale={locale} heading={flow.headings.links} />
-                  <ProgrammeRulesBox {...box} risk={risk} languages={languages} heading={flow.headings.programme} declarations={declarations} />
 
-                  {/* What makes the page without being a section of it: the marks, the address. The
-                      status is in the first card since §448 (a notice over the title only once
-                      cancelled or finished). */}
-                  <EditorGroup label={t("editor.groups.offPage")} />
-                  {/* «Copertă» (§709): the card's photo under the new look — not on today's page, so here. */}
-                  <CoverBox {...box} />
-                  <PromotionBox {...box} />
-                  <AddressBox languages={languages} slugLocked={slugLocked} creating={false} />
+                  {/* No group «Nu sunt secțiuni ale paginii» since §NNN: «Evidențiere pe site» is a card of
+                      «Ce fel de eveniment», «Copertă» and «Adresa paginii și motoarele de căutare» cards of
+                      «Titlu și rezumat» — eight cards, the page's own, then the preview and Salvare. */}
                   {/* «Previzualizare» (§579): the card and the page from these boxes as they stand, before
                       «Salvează» — for the roles that may preview; the action asks the role again. */}
                   {canPreviewEventDraft(staffUser.role) && <PreviewBox formId="event-save-form" refusal={refusal} />}
@@ -1140,11 +1141,11 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                       </Stack>
                     </Panel>
                   )}
-                </Stack>
+                </EditorCardRun>
               </ActionForm>
-              {/* The bib card's two immediate actions post these, never the save above. */}
+              {/* The bib card's two immediate actions post these, never the save above (hidden: no place in the column). */}
               {bibCounts && <BibPrintForms eventId={event.id} locale={locale} mayAssign={canManageRegistrations(staffUser.role)} assignAction={assignBibNumbersAction} sparesAction={reserveSpareBibsAction} sparesFrom={spares?.nextFrom ?? null} cancelLabel={words.cancel} />}
-            </>
+            </EditorMainColumn>
           }
           below={
             <Stack spacing={2}>
@@ -1165,9 +1166,9 @@ export default async function EditEventPage({ params, searchParams }: Props) {
               )}
               {/* 16 — who registered, and what to do with them now: operations, never "Salvează".
                   Organizer and up read (§289); the verbs inside ask for the Administrator. */}
+              {((canReadRegistrations(staffUser.role) && internal) || volunteersCard) && <EditorGroup label={t("editor.immediateActions")} />}
               {canReadRegistrations(staffUser.role) && internal && (
                 <>
-                  <EditorGroup label={t("editor.immediateActions")} />
                   <Panel glyph="registrations"
                     collapsible
                     id="box-received"
@@ -1389,6 +1390,25 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                     </Stack>
                   </Panel>
                 </>
+              )}
+
+              {/*
+                «Voluntari» (§754) — since §NNN here, right under «Înscrierile primite»: the people who
+                help on the day, beside the people who run, where an organizer goes for who is coming and
+                what to do with them now. Its roles and people post forms of their own, never «Salvează»,
+                like everything under this heading. Only for whoever may manage them.
+              */}
+              {volunteersCard && (
+                <VolunteersCard
+                  locale={locale}
+                  eventId={event.id}
+                  acceptsVolunteers={event.acceptsVolunteers}
+                  offerClosed={volunteersCard.offerClosed}
+                  roles={volunteersCard.roles}
+                  standings={volunteersCard.standings}
+                  volunteers={volunteersCard.people}
+                  error={volunteerErrorCode ? t(`errors.${volunteerErrorCode}`) : undefined}
+                />
               )}
 
               {/* 17 — commands, not edits: their own forms, outside the save; Administrator and up. */}

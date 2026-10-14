@@ -27,9 +27,14 @@ export async function eventFormFieldLabels(): Promise<Record<string, string>> {
   const inStatus = (label: string) => inBox("kind", `${t("editor.boxes.status.title")} › ${label}`);
   // «Când și unde» holds the date, the place and the time zone since §481: one card, its fields named by it.
   const inWhenWhere = (label: string) => inBox("whenWhere", label);
-  // «Program, regulament și declarație» holds three cards since §481, and the public list since §512: a field is named by the card and its card.
-  const inProgrammeRules = (card: "programme" | "rules" | "declaration" | "startList", label: string) =>
-    inBox("programmeRules", `${t(`editor.boxes.${card}.title`)} › ${label}`);
+  // «Participare, înscrieri și regulament» (§NNN) holds what «Program, regulament și declarație» held
+  // (§481, §512) as named cards: such a field is named by the card and its card.
+  const inParticipation = (card: "programme" | "rules" | "declaration" | "startList", label: string) =>
+    inBox("registration", `${t(`editor.boxes.${card}.title`)} › ${label}`);
+  // The named cards that were cards of their own among those not on the page (§NNN): «Evidențiere pe
+  // site» in «Ce fel de eveniment», «Copertă» and the page's address in «Titlu și rezumat».
+  const inCardOf = (outer: "kind" | "titleSummary", card: "promotion" | "cover" | "address", label: string) =>
+    inBox(outer, `${t(`editor.boxes.${card}.title`)} › ${label}`);
 
   const labels: Record<string, string> = {
     "event.type": inBox("kind", t("editor.type")),
@@ -62,7 +67,7 @@ export async function eventFormFieldLabels(): Promise<Record<string, string>> {
     "event.waitlistCapacity": inBox("registration", `${t("editor.waitlistMode")} › ${t("editor.waitlistCapacity")}`),
     // One box for every type, in «Regulamentul» since §505 (was «Condiții de participare», and a
     // group run's own in «Traseul», §440).
-    "event.minAge": inProgrammeRules("rules", t("editor.minAge")),
+    "event.minAge": inParticipation("rules", t("editor.minAge")),
     "event.registrationOpensAtDate": inBox("registrationWindow", t("editor.registrationOpensAt")),
     "event.registrationOpensAtTime": inBox("registrationWindow", t("editor.registrationOpensAt")),
     "event.registrationClosesAtDate": inBox("registrationWindow", t("editor.registrationClosesAt")),
@@ -74,16 +79,16 @@ export async function eventFormFieldLabels(): Promise<Record<string, string>> {
     "event.bibStartNumber": inBox("bibs", t("editor.bibStartNumber")),
     "event.bibColour": inBox("bibs", t("editor.bibColour")),
     "event.bibDesign": inBox("bibs", t("editor.bibDesign.title")),
-    "event.declarationDocumentId": inProgrammeRules("declaration", t("editor.declarationDocument")),
-    "event.participantListVisibility": inProgrammeRules("startList", t("editor.participantList")),
+    "event.declarationDocumentId": inParticipation("declaration", t("editor.declarationDocument")),
+    "event.participantListVisibility": inParticipation("startList", t("editor.participantList")),
     // «Lista de așteptare e publică» (§628), under the list it narrows.
-    "event.waitlistPublic": inProgrammeRules("startList", t("editor.waitlistPublic")),
+    "event.waitlistPublic": inParticipation("startList", t("editor.waitlistPublic")),
     // «Clubul pe lista publică» (§753), in the same card.
-    "event.publicListClub": inProgrammeRules("startList", t("editor.publicListClub")),
+    "event.publicListClub": inParticipation("startList", t("editor.publicListClub")),
     // «Arată public câți așteaptă» (§634), under it, in the same card.
-    "event.waitlistCountPublic": inProgrammeRules("startList", t("editor.waitlistCountPublic")),
+    "event.waitlistCountPublic": inParticipation("startList", t("editor.waitlistCountPublic")),
     // «Lista ascunsă» (§647): the hidden list's own series, refused when it overlaps the race's or the spares.
-    "event.hiddenListBibStart": inProgrammeRules("startList", t("editor.hiddenListBibStart")),
+    "event.hiddenListBibStart": inParticipation("startList", t("editor.hiddenListBibStart")),
     "event.externalProvider": inBox("registration", t("editor.externalProvider")),
     "event.externalRegistrationUrl": inBox("registration", t("editor.externalRegistrationUrl")),
     // Both in «Ce fel de eveniment», side by side (§526).
@@ -102,21 +107,21 @@ export async function eventFormFieldLabels(): Promise<Record<string, string>> {
     "event.distanceMeters": inBox("course", t("editor.distanceMeters")),
     "event.elevationGainMeters": inBox("course", t("editor.elevationGainMeters")),
     "event.nightOverride": inBox("course", t("editor.night.label")),
-    "event.offersGroupRunDeclaration": inProgrammeRules("declaration", t("editor.groupRunDeclaration.label")),
+    "event.offersGroupRunDeclaration": inParticipation("declaration", t("editor.groupRunDeclaration.label")),
     "event.stravaEventUrl": inBox("links", t("editor.stravaEventUrl")),
     "event.facebookEventUrl": inBox("links", t("editor.facebookEventUrl")),
     // The route's GPX file is uploaded in this card, above the rows (§718): a refused one names «Linkuri și fișiere».
     "event.routeGpx": inBox("links", t("editor.routeGpx.label")),
-    "event.featured": inBox("promotion", t("editor.featured")),
-    "event.isSpecial": inBox("promotion", t("editor.special")),
+    "event.featured": inCardOf("kind", "promotion", t("editor.featured")),
+    "event.isSpecial": inCardOf("kind", "promotion", t("editor.special")),
     // «Copertă» (§709): a refused picture or crop names the picture's box.
-    "event.coverAssetId": inBox("cover", t("editor.cover.legend")),
-    "event.schedule[].date": inProgrammeRules("programme", t("editor.programmeRows.date")),
-    "event.schedule[].time": inProgrammeRules("programme", t("editor.programmeRows.time")),
-    "event.schedule[].endTime": inProgrammeRules("programme", t("editor.programmeRows.endTime")),
-    "event.schedule[].ro": inProgrammeRules("programme", t("editor.programmeRows.ro")),
-    "event.schedule[].en": inProgrammeRules("programme", t("editor.programmeRows.en")),
-    "event.schedule[].place": inProgrammeRules("programme", t("editor.programmeRows.place")),
+    "event.coverAssetId": inCardOf("titleSummary", "cover", t("editor.cover.legend")),
+    "event.schedule[].date": inParticipation("programme", t("editor.programmeRows.date")),
+    "event.schedule[].time": inParticipation("programme", t("editor.programmeRows.time")),
+    "event.schedule[].endTime": inParticipation("programme", t("editor.programmeRows.endTime")),
+    "event.schedule[].ro": inParticipation("programme", t("editor.programmeRows.ro")),
+    "event.schedule[].en": inParticipation("programme", t("editor.programmeRows.en")),
+    "event.schedule[].place": inParticipation("programme", t("editor.programmeRows.place")),
     /*
       In the Salvare box (§331): what changed; in the status box: why the event is cancelled — one
       box per language (§354, bilingual everywhere), each named with its language and what it
@@ -218,9 +223,14 @@ export async function eventFormFieldLabels(): Promise<Record<string, string>> {
   for (const locale of routing.locales) {
     const language = tSite(`languageName.${locale}`);
     for (const [field, [box, label]] of Object.entries(perLanguage)) {
-      // The programme's and the rules' texts are cards inside «Program, regulament și declarație» (§481).
+      // The programme's and the rules' texts are cards inside «Participare, înscrieri și regulament» (§NNN),
+      // the address's inside «Titlu și rezumat» (§NNN).
       labels[`translations.${locale}.${field}`] =
-        box === "programme" || box === "rules" ? inProgrammeRules(box, `${language} › ${label}`) : inBox(box, `${language} › ${label}`);
+        box === "programme" || box === "rules"
+          ? inParticipation(box, `${language} › ${label}`)
+          : box === "address"
+            ? inCardOf("titleSummary", "address", `${language} › ${label}`)
+            : inBox(box, `${language} › ${label}`);
     }
   }
 

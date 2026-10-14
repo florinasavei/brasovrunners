@@ -10,14 +10,11 @@ import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import CourseBox from "@/modules/content/events/ui/boxes/CourseBox";
 import CoHostsBox from "@/modules/content/events/ui/boxes/CoHostsBox";
-import CoverBox from "@/modules/content/events/ui/boxes/CoverBox";
 import KindBox from "@/modules/content/events/ui/boxes/KindBox";
 import LinksBox from "@/modules/content/events/ui/boxes/LinksBox";
-import ProgrammeRulesBox from "@/modules/content/events/ui/boxes/ProgrammeRulesBox";
 import PreviewBox from "@/modules/content/events/ui/boxes/PreviewBox";
-import PromotionBox from "@/modules/content/events/ui/boxes/PromotionBox";
 import RegistrationBox from "@/modules/content/events/ui/boxes/RegistrationBox";
-import { AddressBox, DescriptionBox, TitleSummaryBox } from "@/modules/content/events/ui/boxes/TextBoxes";
+import { DescriptionBox, TitleSummaryBox } from "@/modules/content/events/ui/boxes/TextBoxes";
 import WhenBox from "@/modules/content/events/ui/boxes/WhenBox";
 import CreateAndPublishButton from "@/modules/content/events/ui/CreateAndPublishButton";
 import CreateDraftLine, { TickedLine } from "@/modules/content/events/ui/CreateDraftLine";
@@ -62,7 +59,8 @@ export const dynamic = "force-dynamic";
  * (`EventEditorLayout`): the side column with Publicare, Recurență and the page's map, first on a
  * phone, and the main column's cards in the page's own order (§406), numbered and headed by
  * whether the page will show each, under the same titles, with the same field names and the same
- * Română | English tabs; then the cards that are not on the page. The status card, inside the
+ * Română | English tabs — eight cards since §NNN, what is not a section of the page nested in the
+ * card it belongs with, as on the editor; then the preview and Salvare. The status card, inside the
  * first box, is the editor's same select, starting at "Programat" (§448): an event already called
  * off is created "Anulat" with its reason in both languages, and one that already took place
  * "Încheiat" — and neither sends an email, since nobody is registered yet. What
@@ -230,23 +228,17 @@ export default async function NewEventPage({ params, searchParams }: Props) {
               {/* The page, top to bottom (§406): the editor's same cards, in the same order. */}
               <EditorGroup label={t("editor.groups.page")} />
               <KindBox {...box} heading={flow.headings.kind} languages={languages} />
-              <TitleSummaryBox languages={languages} creating heading={flow.headings.title} />
+              <TitleSummaryBox {...box} languages={languages} creating slugLocked={false} heading={flow.headings.title} />
               <DescriptionBox languages={languages} heading={flow.headings.description} />
               <WhenBox {...box} languages={languages} heading={flow.headings.when} />
               <CourseBox {...box} languages={languages} heading={flow.headings.course} />
-              <RegistrationBox {...box} heading={flow.headings.registration} declarations={declarations} locale={locale} clubDeadlines={deadlines} />
+              <RegistrationBox {...box} heading={flow.headings.registration} languages={languages} declarations={declarations} locale={locale} clubDeadlines={deadlines} />
               <CoHostsBox {...box} locale={locale} heading={flow.headings.coHosts} />
               <AutomaticSection testId="automatic-share">{flow.automaticLine}</AutomaticSection>
               <LinksBox {...box} locale={locale} heading={flow.headings.links} />
-              <ProgrammeRulesBox {...box} languages={languages} heading={flow.headings.programme} declarations={declarations} />
 
-              {/* Not a section of the page: the marks, the address. The status is in the first
-                  card since §448 — "Programat", "Anulat" or "Încheiat", as on the editor. */}
-              <EditorGroup label={t("editor.groups.offPage")} />
-              {/* «Copertă» (§709): the card's photo under the new look — not on today's page, so here. */}
-              <CoverBox {...box} />
-              <PromotionBox {...box} />
-              <AddressBox languages={languages} slugLocked={false} creating />
+              {/* No group «Nu sunt secțiuni ale paginii» since §NNN, as on the editor: «Evidențiere pe site»
+                  is a card of «Ce fel de eveniment», «Copertă» and the page's address cards of «Titlu și rezumat». */}
               {/* «Previzualizare» (§579): the card and the page from these boxes, before «Creează». */}
               <PreviewBox formId="event-create-form" refusal={messages} />
 

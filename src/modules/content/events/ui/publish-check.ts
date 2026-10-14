@@ -21,6 +21,14 @@ import { MAX_CO_HOSTS } from "@/modules/events/domain/co-hosts";
  * `FormData` in the browser, a plain object in a test.
  */
 export type PublishGapBox = "titleSummary" | "place" | "address";
+/**
+ * The boxes one card answers for: one, or several when the card holds another's box as a named
+ * card inside it — «Titlu și rezumat» holds «Adresa paginii și motoarele de căutare» since §NNN, so
+ * its closed line and its chip name the address's gaps too.
+ */
+export type PublishGapBoxes = PublishGapBox | readonly PublishGapBox[];
+/** The boxes as a list, whichever way they were given. */
+export const gapBoxesOf = (boxes: PublishGapBoxes): readonly PublishGapBox[] => (typeof boxes === "string" ? [boxes] : boxes);
 export type PublishGapField = "title" | "excerpt" | "locationName" | "slug";
 export type PublishGap = { box: PublishGapBox; locale?: string; field: PublishGapField; name: string };
 
@@ -82,11 +90,15 @@ export const PUBLISH_GAP_CARD: Readonly<Record<PublishGapBox, `box-${string}`>> 
 /** One card's missing fields, each with the languages it is missing in, in the order of the gaps. */
 export type CardGap = { field: PublishGapField; locales: string[] };
 
-/** The gaps of one card, field by field: `[{ field: "title", locales: ["ro", "en"] }, …]`. */
-export function cardGaps(gaps: readonly PublishGap[], box: PublishGapBox): CardGap[] {
+/**
+ * The gaps of one card, field by field: `[{ field: "title", locales: ["ro", "en"] }, …]` — of each
+ * box it answers for, in the order of the gaps (the title's before the address's, §NNN).
+ */
+export function cardGaps(gaps: readonly PublishGap[], box: PublishGapBoxes): CardGap[] {
+  const boxes = gapBoxesOf(box);
   const byField: CardGap[] = [];
   for (const gap of gaps) {
-    if (gap.box !== box) continue;
+    if (!boxes.includes(gap.box)) continue;
     const locale = gap.locale ?? "";
     const entry = byField.find((item) => item.field === gap.field);
     if (!entry) byField.push({ field: gap.field, locales: [locale] });
@@ -108,7 +120,7 @@ export type CardGapWords = {
  * the name its box wears, each language by its code, as every closed line on the editor writes a
  * language (`box-summaries.ts`).
  */
-export function cardGapLine(gaps: readonly PublishGap[], box: PublishGapBox, words: CardGapWords): string {
+export function cardGapLine(gaps: readonly PublishGap[], box: PublishGapBoxes, words: CardGapWords): string {
   const missing = cardGaps(gaps, box);
   if (missing.length === 0) return words.complete;
   const list = missing

@@ -5,7 +5,7 @@ import Box from "@mui/material/Box";
 import type { PageSectionGlyph, PageSectionId } from "@/modules/events/domain/page-sections";
 import { openFoldsAround } from "@/shared/ui/fold";
 import { useCardMissing } from "./PublishCheck";
-import type { PublishGapBox } from "./publish-check";
+import type { PublishGapBoxes } from "./publish-check";
 import { SECTION_GLYPHS } from "./section-glyphs";
 
 /** One chip of the map, as the server hands it: strings, numbers and names only. */
@@ -19,8 +19,8 @@ export type SectionMapEntry = {
   drawn: boolean;
   /** The card's id (`box-title`), or null for an automatic section, which has no card. */
   card: string | null;
-  /** The publication gaps that belong to its card, when it holds a box publication needs. */
-  gapBox: PublishGapBox | null;
+  /** The publication gaps that belong to its card, when it holds a box publication needs (two for «Titlu și rezumat», §NNN). */
+  gapBox: PublishGapBoxes | null;
 };
 
 export type SectionMapWords = {

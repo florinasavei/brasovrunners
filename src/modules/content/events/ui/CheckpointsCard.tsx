@@ -56,8 +56,10 @@ type Props = {
  * optional cut-off and an optional note — and, when the route's GPX has waypoints, the one press
  * that takes them («Ia punctele din GPX»: a preview first, then what the club ticks is added).
  *
- * It belongs to «Traseul» (the page's sections list it nested there, and «Traseul» links to it) and it sits **beside the editor's save form, never
- * inside it**: HTML forms cannot nest, and a refusal here (a kilometre beyond the route, a cut-off
+ * It belongs to «Traseul» (the page's sections list it nested there, and «Traseul» links to it): on
+ * the screen it stands right under «Traseul», joined to it as its card — a level-3 heading, its own
+ * cards a level below (§NNN, `EventEditorLayout#UnderCourse`). In the document it sits **beside the
+ * editor's save form, never inside it**: HTML forms cannot nest, and a refusal here (a kilometre beyond the route, a cut-off
  * before the start or after a later point's) must keep what was typed here and nothing of the
  * event's other boxes — the same shape as «De făcut pentru pagina evenimentului» (§749). Its own
  * forms are plain posts that work with scripts off, and their own save: «Salvează punctele».
@@ -204,7 +206,7 @@ export default async function CheckpointsCard({ locale, eventId, checkpoints, ma
   const gpxOffer =
     gpx &&
     (previewOpen ? (
-      <Panel glyph="checkpoints" collapsible level={3} id="box-checkpoints-gpx" title={t("checkpoints.gpx.title")} openWhen={{ primary: true }} data-testid="checkpoints-gpx-preview">
+      <Panel glyph="checkpoints" collapsible level={4} id="box-checkpoints-gpx" title={t("checkpoints.gpx.title")} openWhen={{ primary: true }} data-testid="checkpoints-gpx-preview">
         <ActionForm action={addGpxCheckpointsAction} scope="checkpoints-gpx" messages={boxMessages}>
           {hidden}
           <input type="hidden" name="gpxKey" value={gpx.key} />
@@ -293,7 +295,7 @@ export default async function CheckpointsCard({ locale, eventId, checkpoints, ma
     ));
 
   return (
-    <Panel glyph="checkpoints" collapsible id="box-checkpoints" title={t("checkpoints.title")} aside={summary} openWhen={{ primary: count === 0 && mayEdit }} data-testid="event-checkpoints-card">
+    <Panel glyph="checkpoints" collapsible level={3} id="box-checkpoints" title={t("checkpoints.title")} aside={summary} openWhen={{ primary: count === 0 && mayEdit }} data-testid="event-checkpoints-card">
       <Stack spacing={2}>
         <Typography variant="body2" color="text.secondary">
           {t("checkpoints.intro")}
@@ -316,7 +318,7 @@ export default async function CheckpointsCard({ locale, eventId, checkpoints, ma
                     key={row.id}
                     glyph="checkpoints"
                     collapsible
-                    level={3}
+                    level={4}
                     title={t("checkpoints.rowTitle", { km: km(row.km), name: locale === "ro" ? row.nameRo : row.nameEn })}
                     aside={row.cutoff ? t("checkpoints.cutoffAside", { time: row.cutoff }) : undefined}
                     data-testid="checkpoint-card"
@@ -325,7 +327,7 @@ export default async function CheckpointsCard({ locale, eventId, checkpoints, ma
                   </Panel>
                 ))}
                 {count < CHECKPOINTS_MAX ? (
-                  <Panel glyph="add" collapsible level={3} title={t("checkpoints.add.title")} openWhen={{ primary: count === 0 }} data-testid="checkpoint-add">
+                  <Panel glyph="add" collapsible level={4} title={t("checkpoints.add.title")} openWhen={{ primary: count === 0 }} data-testid="checkpoint-add">
                     <Stack spacing={2.5}>
                       {Array.from({ length: Math.min(SPARE_ROWS, CHECKPOINTS_MAX - count) }, (_, spare) => (
                         <Box key={spare} sx={{ borderTop: spare > 0 ? 1 : 0, borderColor: "divider", pt: spare > 0 ? 2 : 0 }}>
