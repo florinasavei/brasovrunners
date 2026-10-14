@@ -31,6 +31,8 @@ export type PostedFieldsContext = {
   featured: boolean;
   /** Left out entirely when it equals what the event holds (a null column stays null). */
   includeBibDesign: boolean;
+  /** The volunteer badges' design (§NNN), by the same rule: left out when it equals what the event holds. */
+  includeBadgeDesign?: boolean;
   /** The public list's switch as it is to be stored — the file's, or off where the notice that describes it is not in force. */
   participantListNames: boolean;
   /** The event's status as it stands: never imported, a cancellation being its own act (§331). */
@@ -128,6 +130,7 @@ export function eventFieldsFromConfig(context: PostedFieldsContext): Record<stri
     bibStartNumber: String(config.bib.startNumber),
     bibColour: asText(config.bib.colour),
     ...(context.includeBibDesign ? { bibDesign: config.bib.design } : {}),
+    ...(context.includeBadgeDesign ? { badgeDesign: config.badges.design } : {}),
     confirmationOpensDaysBefore: String(config.registration.confirmationOpensDaysBefore),
     confirmationDeadlineDaysBefore: String(config.registration.confirmationDeadlineDaysBefore),
     minAge: String(config.registration.minAge),

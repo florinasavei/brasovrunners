@@ -16,7 +16,18 @@ import { BIB_DESIGN_FORM_PREFIX } from "@/modules/registrations/bib-design-query
  * server gives it the stored state, so the line is right before any script runs. Text, no element, is
  * what crosses from the Server Component.
  */
-export default function BibHeaderWarning({ message, initial }: { message: string; initial: boolean }) {
+export default function BibHeaderWarning({
+  message,
+  initial,
+  fields = { picture: `${BIB_DESIGN_FORM_PREFIX}headerImageSrc`, title: `${BIB_DESIGN_FORM_PREFIX}showEventTitle` },
+  testId = "bib-header-warning",
+}: {
+  message: string;
+  initial: boolean;
+  /** The picture's field and the title's tick it reads; a volunteer badge's designer passes its own (§NNN). */
+  fields?: { picture: string; title: string };
+  testId?: string;
+}) {
   const root = useRef<HTMLDivElement>(null);
   const [shown, setShown] = useState(initial);
 
@@ -25,8 +36,8 @@ export default function BibHeaderWarning({ message, initial }: { message: string
     if (!form) return;
     const read = () => {
       const data = new FormData(form);
-      const picture = data.get(`${BIB_DESIGN_FORM_PREFIX}headerImageSrc`);
-      setShown(typeof picture === "string" && picture.trim() !== "" && data.get(`${BIB_DESIGN_FORM_PREFIX}showEventTitle`) === "on");
+      const picture = data.get(fields.picture);
+      setShown(typeof picture === "string" && picture.trim() !== "" && data.get(fields.title) === "on");
     };
     read();
     form.addEventListener("input", read);
@@ -35,10 +46,10 @@ export default function BibHeaderWarning({ message, initial }: { message: string
       form.removeEventListener("input", read);
       form.removeEventListener("change", read);
     };
-  }, []);
+  }, [fields.picture, fields.title]);
 
   return (
-    <div ref={root} data-testid="bib-header-warning" hidden={!shown}>
+    <div ref={root} data-testid={testId} hidden={!shown}>
       <Alert severity="warning" variant="outlined" sx={{ py: 0 }}>
         {message}
       </Alert>

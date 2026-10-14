@@ -647,6 +647,8 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes, option
       silently redesign a bib nobody had touched.
     */
     ...(fields.bibDesign === undefined ? {} : { bibDesign: fields.bibDesign }),
+    // The volunteer badges' look (§NNN), by the same discipline: only an event file's import posts it.
+    ...(fields.badgeDesign === undefined ? {} : { badgeDesign: fields.badgeDesign }),
     confirmationOpensDaysBefore: fields.confirmationOpensDaysBefore,
     confirmationDeadlineDaysBefore: fields.confirmationDeadlineDaysBefore,
     // Who may enter, counted on the event's day at every door (§329).

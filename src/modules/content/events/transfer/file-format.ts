@@ -6,6 +6,7 @@ import { DEFAULT_PUBLIC_LIST_CLUB, PUBLIC_LIST_CLUBS } from "@/modules/registrat
 import { RACE_DECLARATION_KEYS } from "@/modules/legal-documents/domain/keys";
 import { CHECKPOINT_KINDS, CHECKPOINT_KM_MAX, CHECKPOINT_NAME_MAX, CHECKPOINT_NOTE_MAX, CHECKPOINTS_MAX } from "@/modules/event-checkpoints/domain/checkpoint";
 import { fromWallTimeInput } from "@/modules/events/domain/zoned-time";
+import { DEFAULT_BADGE_DESIGN } from "@/modules/volunteers/badges/badge-design";
 import { WAITLIST_CHOICES } from "../waitlist-choice";
 
 /**
@@ -241,6 +242,16 @@ export const eventConfigSchema = z
         design: z.record(z.string(), z.unknown()),
       })
       .strict(),
+    /**
+     * The volunteer badges' design (§NNN) as `readBadgeDesign` answers — its header picture's address among
+     * `media` (role `badge.header`). Never a volunteer and never a role: the roles stay with their event
+     * (§754), and their badge colours with them. A file made before the badges existed has none, and reads
+     * as the platform's own design, so an import over an event shows that difference before anything is kept.
+     */
+    badges: z
+      .object({ design: z.record(z.string(), z.unknown()) })
+      .strict()
+      .default(() => ({ design: { ...DEFAULT_BADGE_DESIGN } })),
     translations: z.object({ ro: translationSchema, en: translationSchema }).strict(),
   })
   .strict();

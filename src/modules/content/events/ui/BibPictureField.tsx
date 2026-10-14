@@ -29,6 +29,7 @@ import {
 import { uploadPicture } from "@/modules/media/ui/upload-picture";
 import { BIB_PICTURE_RATIO, BIB_PICTURE_UNCROPPED, type BibPictureSlot } from "@/modules/registrations/bib-picture-frame";
 import { BIB_DESIGN_FORM_PREFIX } from "@/modules/registrations/bib-design-query";
+import { BADGE_DESIGN_FORM_PREFIX } from "@/modules/volunteers/badges/badge-query";
 import { recalledJson, useRecall } from "@/shared/forms/recall";
 import GlyphButton from "@/shared/ui/GlyphButton";
 
@@ -66,13 +67,27 @@ type Props = {
   labels: BibPictureLabels;
   /**
    * `member`: the members' header (§664) — the header's place and shape, under the members' own
-   * field names, so one control serves both headers and there is no second copy of it.
+   * field names, so one control serves both headers and there is no second copy of it. `badge`: a
+   * volunteer badge's header (§NNN), under the badge designer's field names, in `ratio`'s shape.
    */
-  place?: "member";
+  place?: "member" | "badge";
+  /**
+   * The place's shape, width over height, when it is not one of the bib's fixed ones — a badge's header,
+   * whose shape follows the size the club chose (§NNN). Absent, the slot's own (`BIB_PICTURE_RATIO`).
+   */
+  ratio?: number;
 };
 
 /** The form's field names for a place: the picture's address, its crop, and what a refused save brings back. */
-export function bibPictureFieldNames(slot: BibPictureSlot, place?: "member") {
+export function bibPictureFieldNames(slot: BibPictureSlot, place?: "member" | "badge") {
+  // A volunteer badge's header (§NNN): the badge designer's own boxes.
+  if (place === "badge") {
+    return {
+      src: `${BADGE_DESIGN_FORM_PREFIX}headerImageSrc`,
+      crop: `${BADGE_DESIGN_FORM_PREFIX}headerImageCrop`,
+      picture: `${BADGE_DESIGN_FORM_PREFIX}headerImagePicture`,
+    };
+  }
   // A member's card («Tot numărul») is a place of its own, always the members'; so is the profile's picture (§759).
   const key =
     slot === "memberCard"
@@ -92,8 +107,8 @@ export function bibPictureFieldNames(slot: BibPictureSlot, place?: "member") {
 }
 
 /** The crop a newly chosen picture starts with: the place's shape, as large as it goes, in the middle. */
-export function initialBibCrop(slot: BibPictureSlot, intrinsic: { width: number; height: number }): ImageCrop | null {
-  return intrinsic.width > 0 && intrinsic.height > 0 ? ratioCrop(BIB_PICTURE_RATIO[slot], intrinsic) : null;
+export function initialBibCrop(slot: BibPictureSlot, intrinsic: { width: number; height: number }, ratio: number = BIB_PICTURE_RATIO[slot]): ImageCrop | null {
+  return intrinsic.width > 0 && intrinsic.height > 0 ? ratioCrop(ratio, intrinsic) : null;
 }
 
 /**
@@ -125,7 +140,8 @@ function recalledPicture(raw: string | undefined, src: string | undefined, fallb
   return fallback && fallback.src === src ? fallback : { ...EMPTY, src };
 }
 
-function PictureField({ slot, picture: initial, crop: initialCrop, scope, labels, place }: Props) {
+function PictureField({ slot, picture: initial, crop: initialCrop, scope, labels, place, ratio: ratioOverride }: Props) {
+  const ratio = ratioOverride ?? BIB_PICTURE_RATIO[slot];
   const recall = useRecall();
   const names = bibPictureFieldNames(slot, place);
   const [picture, setPicture] = useState<BibPictureValue>(() => recalledPicture(recall.value(names.picture), recall.value(names.src), initial));
@@ -144,7 +160,8 @@ function PictureField({ slot, picture: initial, crop: initialCrop, scope, labels
   const cropInput = useRef<HTMLInputElement>(null);
   const first = useRef(true);
   const lang = typeof document === "undefined" ? "ro" : document.documentElement.lang || "ro";
-  const inputId = slot === "memberCard" ? "bib-picture-member-card" : place === "member" ? "bib-picture-member-header" : `bib-picture-${slot}`;
+  const inputId =
+    place === "badge" ? "badge-picture-header" : slot === "memberCard" ? "bib-picture-member-card" : place === "member" ? "bib-picture-member-header" : `bib-picture-${slot}`;
   // The profile's picture is fitted whole, never cropped (§759): no crop box, and no crop posted.
   const croppable = slot !== "profile";
   const sized = croppable && picture.src !== "" && picture.width > 0 && picture.height > 0;
@@ -163,7 +180,7 @@ function PictureField({ slot, picture: initial, crop: initialCrop, scope, labels
   /** A new picture starts in the place's shape, as large as it goes, in the middle. */
   const take = (next: BibPictureValue) => {
     setPicture(next);
-    setCrop(initialBibCrop(slot, next));
+    setCrop(initialBibCrop(slot, next, ratio));
   };
 
   const onChoose = async (event: ChangeEvent<HTMLInputElement>) => {
@@ -315,7 +332,7 @@ function PictureField({ slot, picture: initial, crop: initialCrop, scope, labels
             intrinsic={{ width: picture.width, height: picture.height }}
             crop={crop}
             onChange={setCrop}
-            shape={{ ratio: BIB_PICTURE_RATIO[slot], label: labels.shape, reset: BIB_PICTURE_UNCROPPED[slot] === "fit" ? "whole" : "centre" }}
+            shape={{ ratio, label: labels.shape, reset: BIB_PICTURE_UNCROPPED[slot] === "fit" ? "whole" : "centre" }}
             labels={labels.crop}
             testId={`${inputId}-crop-surface`}
           />

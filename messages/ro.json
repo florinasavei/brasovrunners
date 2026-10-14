@@ -1854,7 +1854,8 @@
       "VOLUNTEER_AGREEMENT_MISSING": "Niciun contract de voluntariat nu e în vigoare. Aprobă-l întâi în «Documente legale»: șablonul e gata.",
       "VOLUNTEER_AGREEMENT_ACCEPTED": "Persoana a acceptat deja contractul: nu mai e nimic de trimis sau de înregistrat.",
       "VOLUNTEER_AGREEMENT_NOTICE": "Nota de confidențialitate în vigoare nu descrie încă acceptarea contractului de voluntariat. Aprobă întâi o notă nouă din șablon, în «Documente legale»; «Sarcini» spune cum.",
-      "VOLUNTEER_AGREEMENT_REPRINT": "Nu s-a înregistrat: de la tipărire s-a schimbat versiunea contractului sau rolul persoanei. Tipărește din nou PDF-ul de semnat și cere o semnătură pe foaia nouă."
+      "VOLUNTEER_AGREEMENT_REPRINT": "Nu s-a înregistrat: de la tipărire s-a schimbat versiunea contractului sau rolul persoanei. Tipărește din nou PDF-ul de semnat și cere o semnătură pe foaia nouă.",
+      "BADGE_COLOUR_UNREADABLE": "Nu s-a salvat: textul nu se citește bine pe culoarea aleasă. Alege o culoare mai închisă sau mai deschisă."
     },
     "editor": {
       "draftPreview": {
@@ -4739,7 +4740,8 @@
         "message": "Mesaj",
         "note": "Notă",
         "signedUpAt": "Data"
-      }
+      },
+      "badgesLink": "Ecusoane pentru voluntari"
     },
     "eventTodos": {
       "title": "De făcut pentru pagina evenimentului",
@@ -7922,7 +7924,8 @@
         "bibMemberCard": "Număr de membru: fundalul",
         "text": "O imagine dintr-un text",
         "gpx": "Fișierul GPX",
-        "bibProfile": "Număr de concurs: poza profilului"
+        "bibProfile": "Număr de concurs: poza profilului",
+        "badgeHeader": "Ecuson de voluntar: imaginea de sus"
       },
       "fields": {
         "type": "Tipul evenimentului",
@@ -8087,6 +8090,28 @@
           "seoDescription": "Descrierea pentru căutare",
           "discountNote": "Reducerea clubului",
           "weatherNote": "Textul despre vreme"
+        },
+        "badges": {
+          "design": {
+            "size": "Ecuson: dimensiunea",
+            "customWidthMm": "Ecuson: lățimea (mm)",
+            "customHeightMm": "Ecuson: înălțimea (mm)",
+            "bandColour": "Ecuson: culoarea benzii",
+            "headerImageSrc": "Ecuson: imaginea de sus",
+            "headerImageCrop": "Ecuson: decuparea imaginii de sus",
+            "showLogo": "Ecuson: sigla clubului",
+            "showTitle": "Ecuson: titlul evenimentului",
+            "titleRo": "Ecuson: titlul scurt (română)",
+            "titleEn": "Ecuson: titlul scurt (engleză)",
+            "labelRo": "Ecuson: cuvântul de pe bandă (română)",
+            "labelEn": "Ecuson: cuvântul de pe bandă (engleză)",
+            "writingLine": "Ecuson: linia pentru nume",
+            "showPhone": "Ecuson: telefonul coordonatorului",
+            "phone": "Ecuson: numărul de telefon",
+            "phoneLabelRo": "Ecuson: eticheta telefonului (română)",
+            "phoneLabelEn": "Ecuson: eticheta telefonului (engleză)",
+            "cutMarks": "Ecuson: semnele de tăiere"
+          }
         }
       }
     },
@@ -9119,6 +9144,113 @@
         "add": "Adaugă punctele alese",
         "adding": "Se adaugă…",
         "close": "Închide previzualizarea"
+      }
+    },
+    "badges": {
+      "backToEvent": "← Înapoi la eveniment",
+      "title": "Ecusoane pentru voluntari — {event}",
+      "intro": "Ecusoanele sunt benzi mici și lungi, fără nume tipărit: numele se scrie cu markerul. Se tipăresc pe roluri, fiecare rol pe banda lui colorată.",
+      "defaults": {
+        "label": "VOLUNTAR",
+        "labelEn": "VOLUNTEER",
+        "name": "Nume:",
+        "phoneLabel": "Coordonator",
+        "phoneLabelEn": "Coordinator"
+      },
+      "design": {
+        "title": "Cum arată ecusonul",
+        "intro": "Fiecare parte are secțiunea ei, de sus în jos, cum se tipărește. Imaginea de mai sus se schimbă pe măsură ce alegi.",
+        "previewAlt": "Ecusonul, așa cum se tipărește",
+        "previewCaption": "Un ecuson de probă, cu primul rol al evenimentului.",
+        "sections": {
+          "size": "Dimensiunea",
+          "header": "Antet",
+          "role": "Rolul",
+          "writing": "Locul pentru nume",
+          "phone": "Telefon coordonator",
+          "cut": "Tăiere"
+        },
+        "size": "Dimensiunea ecusonului",
+        "sizes": {
+          "preset": "{width} × {height} mm — {perSheet} pe o foaie A4",
+          "custom": "Altă dimensiune"
+        },
+        "customWidth": "Lățimea (mm)",
+        "customHeight": "Înălțimea (mm)",
+        "customBounds": "Un număr întreg, între {min} și {max}.",
+        "perSheet": "Pe o foaie A4 încap {count} ecusoane de {width} × {height} mm.",
+        "sizeAside": "{width} × {height} mm · {perSheet} pe foaie",
+        "bandColour": "Culoarea benzii de sus",
+        "bandColourHelp": "Culoarea clubului, sau una dintre culorile numerelor de concurs.",
+        "showLogo": "Sigla clubului",
+        "showTitle": "Titlul evenimentului",
+        "titleRo": "Titlul scurt (română)",
+        "titleEn": "Titlul scurt (engleză)",
+        "titleHelp": "Gol în ambele limbi: titlul evenimentului, micșorat sau tăiat ca să încapă. Cel mult {max} caractere.",
+        "bothLanguages": "Scrie-l în ambele limbi sau în niciuna.",
+        "headerPicture": "Imagine în locul benzii colorate",
+        "headerPictureHelp": "O poză sau un logo pe toată banda de sus. Atunci sigla și titlul nu se mai tipăresc.",
+        "headerPictureShape": "Forma benzii: {ratio} la 1, la dimensiunea salvată.",
+        "headerHidesTitle": "Imaginea acoperă titlul evenimentului: pe ecuson se vede doar imaginea.",
+        "roleHelp": "Rolul se tipărește mare, pe banda lui colorată. Culorile se aleg mai jos, în „Culorile rolurilor”.",
+        "labelRo": "Cuvântul de deasupra rolului (română)",
+        "labelEn": "Cuvântul de deasupra rolului (engleză)",
+        "labelHelp": "Gol în ambele limbi: VOLUNTAR și VOLUNTEER. Cel mult {max} caractere.",
+        "labelDefaultAside": "VOLUNTAR",
+        "writingHelp": "Nu se tipărește niciun nume. Rămâne o zonă albă cu „Nume:”, unde numele se scrie de mână.",
+        "writingLine": "O linie subțire pentru nume",
+        "writingPlain": "Doar „Nume:”",
+        "showPhone": "Telefonul coordonatorului",
+        "showPhoneHelp": "Un rând mic jos, cu numărul la care sună voluntarii. Numărul clubului, niciodată al unui voluntar.",
+        "phone": "Numărul de telefon",
+        "phoneHelp": "Scris ca un număr de telefon, de exemplu 07xx xxx xxx.",
+        "phoneLabelRo": "Eticheta (română)",
+        "phoneLabelEn": "Eticheta (engleză)",
+        "phoneLabelHelp": "Gol în ambele limbi: Coordonator și Coordinator. Cel mult {max} caractere.",
+        "phoneOff": "Fără telefon",
+        "cutMarks": "Semne de tăiere pe margine",
+        "cutMarksHelp": "Liniile punctate dintre ecusoane se tipăresc mereu. Semnele de pe margine ajută la tăierea cu ghilotina.",
+        "cutLinesOnly": "Doar liniile punctate",
+        "save": "Salvează ecusonul",
+        "saving": "Se salvează…"
+      },
+      "colours": {
+        "title": "Culorile rolurilor",
+        "intro": "Fiecare rol are banda lui pe ecuson. Textul de pe bandă se tipărește alb sau negru, cum se citește mai bine.",
+        "none": "Niciun rol încă",
+        "aside": "{count} din {total} cu culoare proprie",
+        "empty": "Evenimentul nu are încă roluri. Adaugă-le în cardul „Voluntari” al evenimentului.",
+        "choiceOf": "Culoarea rolului {role}",
+        "typedOf": "Culoarea scrisă pentru rolul {role}",
+        "theme": "Culoarea temei (portocaliu)",
+        "typed": "Altă culoare (scrisă alături)",
+        "choice": "Culoarea benzii",
+        "typedLabel": "Altă culoare",
+        "typedHelp": "Diez și șase cifre hexazecimale. Folosită doar cu „Altă culoare”.",
+        "state": "Acum: {colour}, contrast {ratio} la 1",
+        "save": "Salvează culorile",
+        "saving": "Se salvează…"
+      },
+      "print": {
+        "title": "Tipărire",
+        "aside": "{perSheet} pe o foaie A4 · {width} × {height} mm",
+        "intro": "Ecusoanele se tipăresc pe roluri, nu pe persoane. Pe o foaie încap {perSheet}. Rolurile cer în total: {needed}.",
+        "introMore": "Foaia nu are niciun nume și nicio dată a vreunui voluntar. Numele se scrie de mână, la masa de primire.",
+        "language": "Limba ecusoanelor",
+        "languages": {
+          "ro": "Română",
+          "en": "Engleză"
+        },
+        "count": "Câte ecusoane",
+        "spares": "În plus",
+        "countHelp": "Rolul are nevoie de {needed}. „În plus” sunt rezerve.",
+        "noRole": "Ecusoane fără rol",
+        "noRoleCount": "Câte ecusoane fără rol",
+        "noRoleHelp": "Doar „VOLUNTAR”, pentru cine vine fără rol.",
+        "pictureAlt": "Ecusonul rolului {role}",
+        "pictureAltNone": "Ecusonul fără rol",
+        "download": "Descarcă ecusoanele (PDF)",
+        "savedOnly": "Foaia folosește designul salvat. Salvează întâi schimbările de mai sus."
       }
     }
   },
@@ -10984,7 +11116,11 @@
       "checkpointsAdded": "Punctele din GPX au fost adăugate.",
       "checkpointsUnchanged": "Nimic de schimbat la punctele de control.",
       "volunteerAgreementRequested": "Linkul contractului pleacă pe email.",
-      "volunteerAgreementRecorded": "Contract înregistrat ca semnat pe hârtie."
+      "volunteerAgreementRecorded": "Contract înregistrat ca semnat pe hârtie.",
+      "badgeDesignSaved": "Ecusonul a fost salvat.",
+      "badgeDesignUnchanged": "Nimic de schimbat la ecuson.",
+      "badgeColoursSaved": "Culorile rolurilor au fost salvate.",
+      "badgeColoursUnchanged": "Nimic de schimbat la culori."
     }
   },
   "Network": {

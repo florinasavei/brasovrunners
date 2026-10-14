@@ -17,6 +17,7 @@ import {
   switchVolunteersAction,
 } from "@/app/[locale]/admin/events/[id]/volunteer-actions";
 import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
+import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { formatPhone } from "@/modules/registrations/phone";
 import { confirmWords } from "@/shared/feedback/confirm-words";
@@ -605,6 +606,17 @@ export default async function VolunteersCard({
             </Panel>
           </Stack>
         </Panel>
+
+        {/* «Ecusoane pentru voluntari» (§NNN): the badges are designed and printed per role on a page of their own. */}
+        <GlyphButton
+          icon="badges"
+          href={getPathname({ locale, href: { pathname: "/admin/events/[id]/badges", params: { id: eventId } } })}
+          variant="outlined"
+          sx={{ minHeight: 44, alignSelf: "flex-start" }}
+          data-testid="volunteer-badges-link"
+        >
+          {t("volunteers.badgesLink")}
+        </GlyphButton>
 
         {/* The people, grouped by role with «N din M». */}
         {roles.length > 0 && (

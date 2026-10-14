@@ -4,6 +4,7 @@ import AlternateEmailIcon from "@mui/icons-material/AlternateEmail";
 import AnnouncementIcon from "@mui/icons-material/Announcement";
 import BadgeIcon from "@mui/icons-material/Badge";
 import BarChartIcon from "@mui/icons-material/BarChart";
+import BorderColorIcon from "@mui/icons-material/BorderColor";
 import BrushIcon from "@mui/icons-material/Brush";
 import CampaignIcon from "@mui/icons-material/Campaign";
 import CardMembershipIcon from "@mui/icons-material/CardMembership";
@@ -33,6 +34,7 @@ import HourglassTopIcon from "@mui/icons-material/HourglassTop";
 import HowToRegIcon from "@mui/icons-material/HowToReg";
 import HubIcon from "@mui/icons-material/Hub";
 import ImageIcon from "@mui/icons-material/Image";
+import LabelIcon from "@mui/icons-material/Label";
 import LinkIcon from "@mui/icons-material/Link";
 import ListAltIcon from "@mui/icons-material/ListAlt";
 import MailIcon from "@mui/icons-material/Mail";
@@ -63,6 +65,7 @@ import ScheduleSendIcon from "@mui/icons-material/ScheduleSend";
 import ScienceIcon from "@mui/icons-material/Science";
 import ShareIcon from "@mui/icons-material/Share";
 import SpeedIcon from "@mui/icons-material/Speed";
+import StraightenIcon from "@mui/icons-material/Straighten";
 import StorageIcon from "@mui/icons-material/Storage";
 import TaskAltIcon from "@mui/icons-material/TaskAlt";
 import TimerIcon from "@mui/icons-material/Timer";
@@ -141,6 +144,13 @@ export const PANEL_GLYPHS = {
   add: AddIcon,
   // «Voluntari» on an event's editor (§754): the roles and the people.
   volunteers: VolunteerActivismIcon,
+  // «Ecusoane pentru voluntari» (§NNN): the page's designer, and its sections top to bottom as the badge
+  // prints — the size of the strip, the header («bibHeader», the bib's own), the role's band and its
+  // word, the writing area for the name, the coordinator's telephone («publicPhone»), the print («print»).
+  badges: BadgeIcon,
+  badgeSize: StraightenIcon,
+  badgeRole: LabelIcon,
+  badgeWriting: BorderColorIcon,
   // «Puncte de control» (§757): the points of the route, a pin on the ground.
   checkpoints: PinDropIcon,
   // What an event's registrations are, once it has them.
