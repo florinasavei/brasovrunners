@@ -16,7 +16,7 @@ import { datedOrNull } from "@/modules/events/domain/dated";
 import { EVENT_LINK_KINDS, type EventLinkKind } from "@/modules/events/domain/links";
 import { registrationState } from "@/modules/events/domain/registration-window";
 import type { Checkpoint } from "@/modules/event-checkpoints/domain/checkpoint";
-import { checkpointFinish } from "@/modules/event-checkpoints/domain/start";
+import { checkpointFinish, withCutoffClocks } from "@/modules/event-checkpoints/domain/start";
 import { hasRouteSection } from "@/modules/events/domain/route-section";
 import { isStorageConfigured } from "@/modules/media/storage";
 import type { RouteMapWords } from "@/modules/events/ui/EventRoute";
@@ -308,8 +308,8 @@ export default async function EventPageView({
           what there is and the cut-off of each point, and the finish when the event has a time limit.
           Nothing at all when the club has put none. */}
       <EventCheckpoints
-        checkpoints={checkpoints}
-        finish={dated ? checkpointFinish(dated) : { km: null, limit: null }}
+        checkpoints={withCutoffClocks(checkpoints, dated)}
+        finish={dated ? checkpointFinish(dated) : { km: null, limit: null, minutes: null }}
         locale={locale}
       />
 

@@ -7,7 +7,7 @@ import { formatDay } from "@/i18n/dates";
 import { getPathname } from "@/i18n/navigation";
 import { type Locale, routing } from "@/i18n/routing";
 import { countRegistrationsByEvent, listEventsForBackoffice } from "@/modules/content/events/repository";
-import { type EventFile, readEventFile } from "@/modules/content/events/transfer/file-format";
+import { type EventFile, type FileNote, readEventFile } from "@/modules/content/events/transfer/file-format";
 import { diffEventImport, importEventAsNew, importEventOver, slugsForNewEvent } from "@/modules/content/events/transfer/import";
 import type { AsNewOutcome, DiffOutcome, ImportRefusal, ImportTarget, OverOutcome, PreviewOutcome } from "@/modules/content/events/transfer/outcomes";
 import { typedStartShape } from "@/modules/events/domain/provisional-start";
@@ -35,11 +35,11 @@ function refusal(error: unknown): ImportRefusal {
   return { ok: false, kind: "domain", code: error.code, fields: [...error.fields], detail: error.message };
 }
 
-/** The file's text read again, or the refusal that says why it is not an event file. */
-function readFile(json: unknown): { file: EventFile } | ImportRefusal {
+/** The file's text read again — with what reading left out of it, said in words (§770) — or the refusal that says why it is not an event file. */
+function readFile(json: unknown): { file: EventFile; notes: FileNote[] } | ImportRefusal {
   if (typeof json !== "string") return { ok: false, kind: "file", refusal: "notJson" };
   const read = readEventFile(json);
-  return read.ok ? { file: read.file } : { ok: false, kind: "file", refusal: read.refusal, detail: read.detail };
+  return read.ok ? { file: read.file, notes: read.notes } : { ok: false, kind: "file", refusal: read.refusal, detail: read.detail };
 }
 
 /** Whoever is calling, or the refusal: not signed in, or not an Administrator. */
@@ -97,6 +97,7 @@ export async function previewEventImportAction(json: string, localeArgument: str
         baseline: file.exportedFrom.baseline,
         media: file.media.length,
         seriesNotApplied: file.series.partOfASeries || file.series.rule !== null,
+        fileNotes: read.notes,
       },
       newEvent: { slugs, suffixed: routing.locales.some((language) => slugs[language] !== file.event.translations[language].slug) },
       targets: await targetsFor(locale),
@@ -118,7 +119,7 @@ export async function diffEventImportAction(json: string, targetId: string): Pro
   if (!id.success) return refusal(new DomainError("NOT_FOUND", "no such event"));
   try {
     const diff = await diffEventImport(getDb(), { actor: asked.actor, file: read.file, eventId: id.data });
-    return { ok: true, ...diff };
+    return { ok: true, ...diff, fileNotes: read.notes };
   } catch (error) {
     return refusal(error);
   }
@@ -132,7 +133,7 @@ export async function importEventAsNewAction(json: string, localeArgument: strin
   if ("ok" in read) return read;
   try {
     const result = await importEventAsNew(getDb(), { actor: asked.actor, file: read.file });
-    return { ok: true, eventId: result.eventId, path: editorPath(localeOf(localeArgument), result.eventId), slugs: result.slugs, media: result.media, notes: result.notes };
+    return { ok: true, eventId: result.eventId, path: editorPath(localeOf(localeArgument), result.eventId), slugs: result.slugs, media: result.media, notes: [...read.notes, ...result.notes] };
   } catch (error) {
     return refusal(error);
   }
