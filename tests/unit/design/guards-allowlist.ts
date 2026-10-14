@@ -12,7 +12,7 @@ import type { Entry } from "./scan";
  * and the pages that edit them (`admin/pages/team/page.tsx`, `admin/pages/members/ShopCard.tsx`), are
  * never listed: they were fixed with a token, a registry name or a primitive, and stay so.
  */
-export const ALLOWED: { colours: Entry[]; icons: Entry[]; primitives: Entry[] } = {
+export const ALLOWED: { colours: Entry[]; icons: Entry[]; primitives: Entry[]; toggles: Entry[] } = {
   colours: [
     { path: "src/app/api/resting/route.ts", reason: "the resting page is static HTML outside the theme provider; its hairline is a translucent grey that reads on both modes", count: 1 },
     { path: "src/app/global-error.tsx", reason: "the last-resort error page renders without the theme provider (it replaces the root layout), so it carries its own plain colours", count: 5 },
@@ -62,7 +62,6 @@ export const ALLOWED: { colours: Entry[]; icons: Entry[]; primitives: Entry[] } 
     { path: "src/modules/media/ui/GalleryPicker.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§694) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 7 },
     { path: "src/modules/newsletter/ui/NewsletterPreview.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§694) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 1 },
     { path: "src/modules/newsletter/ui/SubscriberListFields.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§694) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 3 },
-    { path: "src/modules/notifications/ui/DeliveryTimingSwitch.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§694) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 1 },
     { path: "src/modules/registrations/ui/DeskRow.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§694) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 1 },
     { path: "src/modules/registrations/ui/QueuePanel.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§694) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 2 },
     { path: "src/modules/registrations/ui/RegistrationRowMenu.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§694) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 1 },
@@ -158,13 +157,16 @@ export const ALLOWED: { colours: Entry[]; icons: Entry[]; primitives: Entry[] } 
     { path: "src/modules/registrations/ui/registration-form.tsx", reason: "a bare MUI Button: backoffice: GlyphButton / GlyphButtonLink by an action-icons name; public: ButtonLink, or SubmitButton with a glyph named in events/ui/glyphs.ts when the file is next touched", count: 1 },
     { path: "src/modules/staff-identity/ui/ColumnVisibility.tsx", reason: "a bare MUI IconButton: the house has no icon-only primitive yet, add one before migrating", count: 1 },
   ],
+  // §766: no toggle glyph and no Material switch, ever. Empty on purpose: a setting is a tick box (`TickButton`, `CheckboxField`); this list has no entry to shrink and none to add.
+  toggles: [],
 };
 
 /** Per rule, the entries and the hits (the sum of the counts): lower them in the same edit that removes an entry or a count. */
 export const PINNED = {
   colours: { entries: 13, hits: 28 },
-  icons: { entries: 39, hits: 142 },
+  icons: { entries: 38, hits: 141 },
   primitives: { entries: 87, hits: 94 },
+  toggles: { entries: 0, hits: 0 },
 } as const;
 
 /**

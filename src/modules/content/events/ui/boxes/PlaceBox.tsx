@@ -74,8 +74,8 @@ export default async function PlaceFields({ event, mayEditSettings, languages }:
       <PlaceToBeAnnounced
         defaultChecked={event?.locationToBeAnnounced ?? false}
         labels={{
-          toggle: t("editor.placeToBeAnnounced"),
-          toggleHelp: t("editor.placeToBeAnnouncedHelp"),
+          tick: t("editor.placeToBeAnnounced"),
+          tickHelp: t("editor.placeToBeAnnouncedHelp"),
           meetingPoint: t("editor.fields.locationName"),
           ro: tSite("languageName.ro"),
           en: tSite("languageName.en"),

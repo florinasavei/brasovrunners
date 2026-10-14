@@ -39,6 +39,7 @@ import {
   setStaffPermissionAction,
 } from "../actions";
 import GlyphButton from "@/shared/ui/GlyphButton";
+import TickButton from "@/shared/ui/TickButton";
 import { isZitadelInviteConfigured } from "@/modules/staff-identity/zitadel-users";
 import { checkInviteKey, hasNoAccount } from "@/modules/diagnostics/invite-key";
 import { refusedInvitations } from "@/modules/notifications/delivery-evidence";
@@ -470,8 +471,8 @@ export default async function StaffPage({ params, searchParams }: Props) {
 
               {/*
                 «Gestionează magazinul» (§687): a permission on top of the role, after the role
-                select. A press that asks first and then toasts, like the row's other verbs — the
-                box drawn ticked or empty — offered only where the service would accept it
+                select. A press that asks first and then toasts, like the row's other verbs — a
+                `TickButton` (§766), drawn ticked or empty — offered only where the service would accept it
                 (`canGrantPermission`): never a club member's row; an Administrator's or a
                 Superadministrator's has it by rank, drawn ticked and greyed, «inclus în rol».
               */}
@@ -489,12 +490,7 @@ export default async function StaffPage({ params, searchParams }: Props) {
                   <input type="hidden" name="staffUserId" value={member.id} />
                   <input type="hidden" name="permission" value="shop.manage" />
                   <input type="hidden" name="on" value={holdsGrant(member, "shop.manage") ? "0" : "1"} />
-                  <GlyphSubmitButton
-                    label={t("staff.permissions.shopManage")}
-                    pendingLabel={t("staff.permissions.saving")}
-                    icon={holdsGrant(member, "shop.manage") ? "tickOn" : "tickOff"}
-                    variant="text"
-                  />
+                  <TickButton checked={holdsGrant(member, "shop.manage")}>{t("staff.permissions.shopManage")}</TickButton>
                 </ActionForm>
               ) : impliesPermission(member.role, "shop.manage") ? (
                 <GlyphButton icon="tickOn" variant="text" disabled sx={{ minHeight: 44 }} data-testid="staff-permission-shop-implied">

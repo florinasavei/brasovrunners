@@ -96,6 +96,25 @@ describe("§351 SeriesDraftLine — the words, the dates and the fix on one line
     expect(auto.html).toContain(">Publică automat de acum</button>");
   });
 
+  it("draws «Publică automat de acum» as an empty tick box, never the toggle glyph (§766)", () => {
+    const html = render({ autoPublish: { action: async () => null, sourceId: "source-id", label: "Publică automat de acum", ...confirmed } });
+    const tick = html.match(/<button[^>]*data-testid="series-auto-publish-tick"[^>]*>[\s\S]*?<\/button>/)?.[0] ?? "";
+    // A submit, drawn as a checkbox: its role and state are said, and its words are its accessible name.
+    expect(tick).toContain('type="submit"');
+    expect(tick).toContain('role="checkbox"');
+    expect(tick).toContain('aria-checked="false"');
+    expect(tick).toContain('data-testid="CheckBoxOutlineBlankIcon"');
+    expect(tick).not.toMatch(/Toggle/);
+    expect(tick).toContain("Publică automat de acum</button>");
+    // A thumb's size, and it is a plain submit of the form (it works with scripts off).
+    expect(tick).toMatch(/MuiButton-root/);
+    expect(html).not.toContain("ToggleOffIcon");
+    expect(html).not.toContain("ToggleOnIcon");
+    // «Publică» beside it stays a button: it publishes the dates, once.
+    const publish = render({ publish: { action: noop, refs: ["d1:1"], label: "Publică", ...confirmed } });
+    expect(publish).not.toContain('role="checkbox"');
+  });
+
   it("opens the source's editor with a link, and posts nothing, when the source is not published", () => {
     const html = render({ openSource: { href: "/ro/admin/evenimente/source-id", label: "Deschide seria" } });
     expect(forms(html)).toEqual([]);
