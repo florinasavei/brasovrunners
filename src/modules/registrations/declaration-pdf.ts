@@ -2,6 +2,7 @@ import { readFile } from "node:fs/promises";
 import { dropsParagraph, mergeTextSegments, type MergeValues } from "@/modules/legal-documents/domain/merge-fields";
 import { runText } from "@/modules/legal-documents/domain/signed-text";
 import { formatSigningInstant } from "@/i18n/dates";
+import { type SignatureTrace, signatureTraceLine } from "@/modules/legal-documents/domain/signature-trace";
 import path from "node:path";
 import PDFDocument from "pdfkit";
 import type { LegalDocumentBody } from "@/modules/legal-documents/domain/content-hash";
@@ -59,6 +60,14 @@ export type DeclarationEntry = {
     acceptedAt: Date;
     /** "Signed electronically from the link sent by email" or "Signed on paper, recorded by X". */
     method: string;
+    /**
+     * The trace of an electronic signature (§NNN, amending §418, §330 and §769): the IP address and browser the row
+     * kept when the typed name was posted, printed small under the signature — «Semnat electronic la … · IP … · …».
+     * Null for a paper acceptance (nothing was kept, and the staff member's own would say nothing about the signer),
+     * for an electronic one from before the trace, and for one that arrived without the headers; absent is null.
+     * One line for the one press, also when a minor and a parent signed together (§330).
+     */
+    trace?: SignatureTrace | null;
   };
   /**
    * The blank form a minor signs with a parent or guardian (§330): two signature lines, two
@@ -119,6 +128,13 @@ export type DeclarationPdfInput = {
      * the hash part left out when the row has none.
      */
     proofLine: (version: number, signedAt: string, textHash: string | null) => string;
+    /**
+     * «Semnat electronic la 24.09.2026, 18:05:12 (ora României)» (§NNN): the head of the trace line under an
+     * electronic signature, the instant to the second as the proof line prints it; the address and the browser follow.
+     */
+    signedElectronically: (when: string) => string;
+    /** «IP» (§NNN): the word before the address in the trace line. */
+    ip: string;
   };
 };
 
@@ -204,6 +220,22 @@ export function declarationProofLine(
 ): string | undefined {
   if (!entry?.signature) return undefined;
   return labels.proofLine(entry.version, formatSigningInstant(entry.signature.acceptedAt), entry.textHash ?? null);
+}
+
+/**
+ * The trace of an electronic signature as one small line under the signature (§NNN): «Semnat electronic la
+ * 24.09.2026, 18:05:12 (ora României) · IP 203.0.113.9 · Mozilla/5.0 …», or «Signed electronically on …» — the
+ * instant to the second, the caller's address and browser as the row kept them. Undefined when there is nothing to
+ * say: a paper acceptance, a row from before the trace, one that arrived without either header, the blank form.
+ * Pure, for its test.
+ */
+export function declarationTraceLine(
+  entry: { signature?: Pick<NonNullable<DeclarationEntry["signature"]>, "acceptedAt" | "trace"> } | undefined,
+  labels: Pick<DeclarationPdfInput["labels"], "signedElectronically" | "ip">,
+): string | undefined {
+  const signature = entry?.signature;
+  if (!signature?.trace || (!signature.trace.ip && !signature.trace.userAgent)) return undefined;
+  return signatureTraceLine(signature.trace, { signedElectronically: labels.signedElectronically, ip: labels.ip }, formatSigningInstant(signature.acceptedAt));
 }
 
 /**
@@ -397,7 +429,10 @@ function drawEntry(doc: PDFKit.PDFDocument, entry: DeclarationEntry, labels: Dec
   */
   const signature = entry.signature;
   const twoSigners = signature ? signature.minor !== null : Boolean(entry.forMinor);
-  const blockHeight = twoSigners ? 260 : 170;
+  // The trace of an electronic signature (§NNN) is one more small line, or two with a long browser string: the room is asked for with the block.
+  const traceLine = declarationTraceLine(entry, labels);
+  const traceHeight = traceLine ? doc.font("body").fontSize(8).heightOfString(traceLine, { width: TEXT_WIDTH }) + 8 : 0;
+  const blockHeight = (twoSigners ? 260 : 170) + traceHeight;
   if (doc.y + blockHeight > PAGE.height - MARGIN.bottom) doc.addPage();
   doc.moveDown(1);
   doc.font("bold").fontSize(11).fillColor(COLOR.ink).text(twoSigners ? labels.whereuponTogether : labels.whereupon, MARGIN.left, doc.y, { width: TEXT_WIDTH });
@@ -446,6 +481,11 @@ function drawEntry(doc: PDFKit.PDFDocument, entry: DeclarationEntry, labels: Dec
   }
   row(labels.date, signature ? signature.signedAt : null);
   doc.moveDown(0.4);
+  // The electronic signature's trace, small, straight under the signature and its date: when, from which address, in which browser (§NNN).
+  if (traceLine) {
+    doc.font("body").fontSize(8).fillColor(COLOR.inkMuted).text(traceLine, MARGIN.left, doc.y, { width: TEXT_WIDTH });
+    doc.moveDown(0.4);
+  }
   // How it was signed, and against which text: the version and the hash a printed copy is
   // checked against the stored version with.
   doc

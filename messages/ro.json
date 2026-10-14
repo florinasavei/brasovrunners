@@ -5767,6 +5767,9 @@
       "messages": "Mesaje ({count})",
       "interests": "Cereri „Anunță-mă” ({count})",
       "volunteers": "Oferte de voluntar ({count})",
+      "groupRuns": "Declarații de alergare de grup ({count})",
+      "traceVolunteer": "Urma semnăturii voluntarului: IP {ip} · browser {browser}",
+      "traceGuardian": "Urma semnăturii părintelui sau tutorelui: IP {ip} · browser {browser}",
       "audit": "Jurnal ({count})",
       "none": "Niciuna.",
       "newSearch": "Altă căutare"

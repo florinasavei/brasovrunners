@@ -8,6 +8,7 @@ import { recordAuditEvent } from "@/modules/audit/repository";
 import { VOLUNTEER_AGREEMENT_KEY } from "@/modules/legal-documents/domain/keys";
 import { type MergeValues, namesVolunteerGuardian } from "@/modules/legal-documents/domain/merge-fields";
 import { signedTextHash } from "@/modules/legal-documents/domain/signed-text";
+import { type SignatureTrace, traceColumns } from "@/modules/legal-documents/domain/signature-trace";
 import { findCurrentApprovedDocument, volunteerMinorsOpen } from "@/modules/legal-documents/repository";
 import { DEFAULT_TOKEN_HOURS } from "@/modules/notifications/domain/token-lifetime";
 import { enqueueEmail } from "@/modules/notifications/outbox";
@@ -70,6 +71,9 @@ export type GuardianAcceptanceColumns = {
   guardianTextHash: string;
   guardianFacts: AgreementFacts;
   guardianTypedName: string | null;
+  /** The guardian's electronic acceptance's trace (§NNN): the IP address and browser of the press; null for «PAPER». */
+  guardianIp: string | null;
+  guardianUserAgent: string | null;
   guardianRecordedByStaffUserId: string | null;
   guardianTokenHash: null;
   guardianTokenExpiresAt: null;
@@ -92,6 +96,8 @@ export async function guardianAcceptance<T extends Record<string, unknown>>(
     method: "LINK" | "PAPER";
     typedName: string | null;
     recordedBy?: string | null;
+    /** The IP address and browser of the press (§NNN), kept for «LINK» and dropped for «PAPER», whatever is passed. */
+    trace?: SignatureTrace;
   },
   now: Date,
 ): Promise<GuardianAcceptanceColumns> {
@@ -104,6 +110,7 @@ export async function guardianAcceptance<T extends Record<string, unknown>>(
     guardianName: input.guardianName,
   });
   const facts: AgreementFacts = { ...blanks.facts, signedAt: acceptedAtWords(now, input.locale, blanks.timezone) };
+  const trace = traceColumns(input.trace, input.method !== "PAPER");
   return {
     guardianDocumentId: input.document.id,
     guardianAcceptedAt: now,
@@ -112,6 +119,8 @@ export async function guardianAcceptance<T extends Record<string, unknown>>(
     guardianTextHash: signedTextHash({ title: input.document.title, body: agreementBody(input.document.body), values: facts }),
     guardianFacts: facts,
     guardianTypedName: input.typedName,
+    guardianIp: trace.ip,
+    guardianUserAgent: trace.userAgent,
     guardianRecordedByStaffUserId: input.recordedBy ?? null,
     guardianTokenHash: null,
     guardianTokenExpiresAt: null,
@@ -268,6 +277,8 @@ export async function acceptVolunteerGuardianByLink<T extends Record<string, unk
   secret: string,
   rawInput: unknown,
   now: Date,
+  /** The IP address and browser of the press (§NNN), read by the action: the guardian's electronic acceptance's trace. */
+  trace?: SignatureTrace,
 ): Promise<GuardianAcceptOutcome> {
   const parsed = volunteerGuardianAcceptSchema.safeParse(rawInput);
   if (!parsed.success) throw new DomainError("VALIDATION_ERROR", "the guardian's acceptance is incomplete", refusedFields(parsed.error));
@@ -293,6 +304,7 @@ export async function acceptVolunteerGuardianByLink<T extends Record<string, unk
         document,
         method: "LINK",
         typedName: input.typedName,
+        trace,
       },
       now,
     );

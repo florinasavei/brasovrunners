@@ -126,7 +126,7 @@ export default async function PersonDataPage({ params, searchParams }: Props) {
             </GlyphButton>
           </Stack>
 
-          {!data.participant && data.announcementRequests.length === 0 && data.volunteerOffers.length === 0 ? (
+          {!data.participant && data.announcementRequests.length === 0 && data.volunteerOffers.length === 0 && data.groupRunDeclarations.length === 0 ? (
             <Alert severity="info">{t("person.notFound")}</Alert>
           ) : (
             <>
@@ -234,8 +234,33 @@ export default async function PersonDataPage({ params, searchParams }: Props) {
                             when: show(offer.agreementAcceptedAt),
                           })})`
                         : t("volunteers.agreement.notAccepted")}
+                      {/* The electronic acceptance's trace (§NNN): the IP address and browser of each press, the volunteer's and the guardian's. */}
+                      {offer.agreementIp || offer.agreementUserAgent
+                        ? ` · ${t("person.traceVolunteer", { ip: show(offer.agreementIp), browser: show(offer.agreementUserAgent) })}`
+                        : ""}
+                      {offer.guardianIp || offer.guardianUserAgent
+                        ? ` · ${t("person.traceGuardian", { ip: show(offer.guardianIp), browser: show(offer.guardianUserAgent) })}`
+                        : ""}
                     </Typography>
                   ))
+                )}
+              </Box>
+              <Divider />
+              {/* The group-run declarations signed with this address (§393): every personal column, the signature's IP address and browser (§NNN) among them. */}
+              <Box component="section" data-testid="person-group-run-declarations">
+                <Typography variant="h3" sx={{ fontSize: "1rem", mb: 1 }}>
+                  {t("person.groupRuns", { count: data.groupRunDeclarations.length })}
+                </Typography>
+                {data.groupRunDeclarations.length === 0 ? (
+                  <Typography variant="body2">{t("person.none")}</Typography>
+                ) : (
+                  <Stack spacing={2}>
+                    {data.groupRunDeclarations.map((declaration, index) => (
+                      <Box key={index} sx={{ border: 1, borderColor: "divider", borderRadius: 1, p: 1.5 }}>
+                        {fields(declaration)}
+                      </Box>
+                    ))}
+                  </Stack>
                 )}
               </Box>
               <Divider />

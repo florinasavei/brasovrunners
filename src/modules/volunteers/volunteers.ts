@@ -12,6 +12,7 @@ import { sexShown, type SexChoice } from "@/modules/registrations/domain/sex";
 import type { RegistrationTshirtSize } from "@/db/schema/registrations";
 import { type AuditAction, recordAuditEvent } from "@/modules/audit/repository";
 import { VOLUNTEER_AGREEMENT_KEY } from "@/modules/legal-documents/domain/keys";
+import type { SignatureTrace } from "@/modules/legal-documents/domain/signature-trace";
 import {
   findCurrentApprovedDocument,
   noticeDescribesVolunteerAgreement,
@@ -1028,6 +1029,8 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
           guardianFacts: null,
           guardianTypedName: null,
           guardianRecordedByStaffUserId: null,
+          guardianIp: null,
+          guardianUserAgent: null,
           guardianTokenHash: null,
           guardianTokenExpiresAt: null,
           guardianRequestedAt: null,
@@ -1134,6 +1137,8 @@ export async function submitVolunteer<T extends Record<string, unknown>>(
   eventId: string,
   rawInput: unknown,
   now: Date,
+  /** The IP address and browser of the press (§NNN), read by the action from the request: the agreement's tick is an electronic acceptance, and this is its trace. */
+  trace?: SignatureTrace,
 ): Promise<VolunteerSubmitOutcome> {
   assertIds(eventId);
   // What the form asked depends on the notice in force (§765): the profile's boxes while it names them, §758's tick otherwise.
@@ -1240,7 +1245,7 @@ export async function submitVolunteer<T extends Record<string, unknown>>(
     // naming the roles chosen, since nobody has given the person one yet (§761).
     const acceptance = await agreementAcceptance(
       tx,
-      { eventId, name: input.name, roles: { assigned: null, chosen }, locale: input.locale, document: agreement, method: "FORM", guardianName: guardian?.name ?? null },
+      { eventId, name: input.name, roles: { assigned: null, chosen }, locale: input.locale, document: agreement, method: "FORM", guardianName: guardian?.name ?? null, trace },
       now,
     );
     const [row] = await tx

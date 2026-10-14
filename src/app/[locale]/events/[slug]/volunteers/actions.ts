@@ -13,6 +13,7 @@ import { composePhone } from "@/modules/registrations/phone";
 import { verifyTurnstile } from "@/modules/registrations/turnstile";
 import { flashPublic } from "@/shared/feedback/flash";
 import { isDomainError } from "@/shared/errors/domain-error";
+import { readSignatureTrace } from "@/modules/legal-documents/domain/signature-trace";
 import { VOLUNTEER_ROLES_MAX } from "@/modules/volunteers/domain/volunteer";
 import { VOLUNTEER_BOX_ID } from "@/modules/volunteers/ui/volunteer-box";
 import { submitVolunteer } from "@/modules/volunteers/volunteers";
@@ -135,6 +136,8 @@ export async function submitVolunteerAction(form: FormData): Promise<void> {
         renderedAt: renderedAt || undefined,
       },
       new Date(),
+      // The agreement's tick is an electronic acceptance: this request's IP address and browser are its trace (§NNN).
+      readSignatureTrace(requestHeaders),
     );
   } catch (error) {
     if (isDomainError(error) && error.code === "VALIDATION_ERROR") {

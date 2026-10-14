@@ -1,9 +1,11 @@
 "use server";
 
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { getDb } from "@/db/client";
 import { getPathname } from "@/i18n/navigation";
 import { type Locale, routing } from "@/i18n/routing";
+import { readSignatureTrace } from "@/modules/legal-documents/domain/signature-trace";
 import { acceptVolunteerAgreementByLink } from "@/modules/volunteers/agreement";
 import { isDomainError } from "@/shared/errors/domain-error";
 
@@ -28,6 +30,8 @@ export async function acceptVolunteerAgreementAction(form: FormData): Promise<vo
       token,
       { agreement: form.get("agreement") === "on", adult: form.get("adult") === "on", locale },
       new Date(),
+      // The press is the acceptance: its IP address and browser are the signature's trace (§NNN).
+      readSignatureTrace(await headers()),
     );
   } catch (error) {
     if (isDomainError(error) && error.code === "VALIDATION_ERROR") {

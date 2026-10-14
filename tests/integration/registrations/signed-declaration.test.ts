@@ -55,6 +55,8 @@ const LABELS = {
   attesterRemoved: "un membru al echipei",
   // The proof of signing (§556), plain so a test reads it.
   proofLine: (version: number, when: string, hash: string | null) => `Versiunea ${version} · Semnat la ${when}${hash ? ` · SHA-256 ${hash}` : ""}`,
+  signedElectronically: (when: string) => `Semnat electronic la ${when}`,
+  ip: "IP",
 };
 
 async function approve(db: TestDatabase, declaration: LegalDocumentTranslationInput[]) {
@@ -422,7 +424,8 @@ describe("the club's declaration (§95)", () => {
     for (const [name, pdf] of Object.entries(pdfs)) {
       const pages = textLinesByPage(pdf!);
       expect(pages.length, name).toBeGreaterThanOrEqual(2);
-      expect(pages.length, name).toBeLessThanOrEqual(3);
+      // A fourth since §NNN: five more clauses and the typed name's sentence, and the trace line under the signature.
+      expect(pages.length, name).toBeLessThanOrEqual(4);
       expect(pdf!.toString("latin1").match(/\/Type \/Page\b/g)?.length, name).toBe(pages.length);
       for (const [index, lines] of pages.entries()) {
         const page = `${name} page ${index + 1}`;
