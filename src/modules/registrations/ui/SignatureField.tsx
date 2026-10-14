@@ -75,6 +75,7 @@ export default function SignatureField({
   defaultValue,
   refused,
   help,
+  required = true,
 }: {
   id: string;
   /** What the box posts: `typedName` for the declarant (adult or parent), `minorTypedName` for the minor (§330). */
@@ -105,6 +106,11 @@ export default function SignatureField({
    * Absent: the race's own words.
    */
   help?: string;
+  /**
+   * Whether the browser refuses an empty box. Always, but for a group run's minor box (§769), which sits in a
+   * block a browser with scripts off shows to every signer: there the server asks for it, and names the box.
+   */
+  required?: boolean;
 }) {
   const t = useTranslations("Registrations");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -198,7 +204,7 @@ export default function SignatureField({
           hint
         )
       }
-      required
+      required={required}
       /*
         Off: a phone offering a saved name here would be filled in by reflex, and this is the one
         field on the site where typing it is the act itself (BR-REQ-031-04 criterion 6).

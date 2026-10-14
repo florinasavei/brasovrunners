@@ -49,6 +49,7 @@ const LAUNCHED: OwnerTaskInputs = {
   teamPageDescribed: true,
   raceDeclarationsCurrent: true,
   groupRunSeriesTextsCurrent: true,
+  groupRunMinorTextsCurrent: true,
   legalTextIsSample: false,
   emailDeliveryMode: "live",
   appEnv: "production",
@@ -513,6 +514,7 @@ describe("owner tasks", () => {
       "teamPageNotice",
       "raceDeclarations",
       "groupRunSeriesTexts",
+      "groupRunMinorText",
       "emailFailSafe",
       "liveEmail",
       "inviteStaff",
@@ -594,6 +596,23 @@ describe("owner tasks", () => {
     expect(ownerTasks({ ...LAUNCHED, groupRunSeriesTextsCurrent: false }).find((task) => task.id === "groupRunSeriesTexts")).toMatchObject({ owner: "club", kind: "text" });
     for (const catalogue of [ro, en]) {
       const item = catalogue.Admin.tasks.items.groupRunSeriesTexts;
+      expect(item.how.length).toBeGreaterThan(0);
+      expect(item.todo).not.toBe("");
+      expect(item.done).not.toBe("");
+    }
+  });
+
+  // §769: the group-run declarations for a minor and a parent — the row waits for the text that names `{{minor}}`.
+  it("asks for the group-run declarations once more while one in force has no minor's paragraph, and says nothing while none is in force", () => {
+    expect(stateOf({ ...LAUNCHED, groupRunMinorTextsCurrent: false }, "groupRunMinorText")).toBe("open");
+    expect(stateOf(LAUNCHED, "groupRunMinorText")).toBe("done");
+    expect(ownerTasks({ ...LAUNCHED, groupRunMinorTextsCurrent: null }).some((task) => task.id === "groupRunMinorText")).toBe(false);
+    const row = ownerTasks({ ...LAUNCHED, groupRunMinorTextsCurrent: false }).find((task) => task.id === "groupRunMinorText");
+    // The club's own to approve, a text, never blocking: an adult signs as before and nothing is refused.
+    expect(row).toMatchObject({ owner: "club", kind: "text" });
+    expect(row?.state).not.toBe("blocking");
+    for (const catalogue of [ro, en]) {
+      const item = catalogue.Admin.tasks.items.groupRunMinorText;
       expect(item.how.length).toBeGreaterThan(0);
       expect(item.todo).not.toBe("");
       expect(item.done).not.toBe("");

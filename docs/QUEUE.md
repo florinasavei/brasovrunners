@@ -14,15 +14,16 @@ decision or a click only the club can make · **released** — on production, wi
 The owner, 2026-10-10: «Soon I need to start a new session from the laptop … You need to save and document everything».
 This section replaces the plan of 2026-09-30; it is what a session with none of today's conversation needs to carry on.
 
-- **Production: `BR-V3.26`** (2026-10-14 20:10: §767 share pills, every calendar). Waiting for «prod»: `BR-V3.27`
-  (§768, below), migration `0152` (expand only).
-- **QA: `BR-V3.27`** — volunteers from 14 with a parent's or guardian's agreement (a single-use link, or paper at the
-  desk; «Confirmă» refused until then), on a page of their own under the event (`/evenimente/<slug>/voluntari`), the
-  event page keeping one line and one button; the texts decide the age — the under-18 path opens only once a notice
-  naming `{{volunteerMinors}}` and an agreement naming `{{volunteerGuardian}}` are in force (`/admin/tasks` row
-  `volunteerMinorsTexts`; a lawyer reads both against Legea nr. 78/2014).
-  Building: the group-run declaration signed by a minor and a parent; a «Direcționare» checkpoint and its cut-off as a
-  time limit from the gun. Next: five more clauses in the declaration and the signature's trace.
+- **Production: `BR-V3.27`** (2026-10-14 22:20: §768 volunteers from 14 + guardian, own page, migration `0152`). Waiting
+  for «prod»: `BR-V3.28` (§769, below), migration `0153` (expand only).
+- **QA: `BR-V3.28`** — a minor signs a group run's declaration beside a parent: the tick «Semnez pentru un minor (sub
+  18 ani)», the minor's own signature and birth date, the parent's tick, both on one row, the PDF and both emails with
+  both signatures, the backoffice row «minor · părinte: …»; offered only while the group-run text in force names
+  `{{minor}}` in every language (`/admin/tasks` row `groupRunMinorText`).
+  Building: a «Direcționare» checkpoint and its cut-off as a time limit from the gun; five more clauses in the
+  declaration and the signature's trace. Next: the volunteers' follow-ups (new tab, the counts tick, the date of
+  birth), role categories with a contact person each, the small asks (the Girl Zone slug, Mailgun/Gmail per form,
+  an optional email, the calendar fold).
 - **Nothing is building.** Releases by the label `ship` reach production by themselves again: `SHIP_TOKEN` was given
   «Pull requests: Read and write» on 2026-10-12, and `BR-V3.05`'s run opened its `qa → main` pull request itself.
 - **Lanes:** the phone session took the calendar on 2026-10-12; one release at a time between
@@ -142,6 +143,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V3.28` | a minor signs the group-run declaration with a parent (§769) |
 | `BR-V3.27` | volunteers from 14 with a guardian's consent, on their own page (§768) |
 | `BR-V3.26` | smaller share buttons; every calendar on the event page (§767) |
 | `BR-V3.25` | tick boxes instead of toggle buttons; «Runners Brașov» counts as the club (§766) |
