@@ -63,10 +63,10 @@ vi.mock("@/modules/public-cache/reads", () => ({
   cachedFeedbackFormsDescribed: async () => true,
   cachedFeedbackFormsNamedDescribed: async () => false,
   cachedFeedbackOffer: async () => ({
-    howItWent: { on: true, to: "club@example.org" },
-    suggestion: { on: second, to: second ? "club@example.org" : null },
-    complaint: { on: false, to: null },
-    safety: { on: safetyOn, to: safetyOn ? "club@example.org" : null, name: safetyOn ? "Ana" : null },
+    howItWent: { on: true, to: "club@example.org", via: "gmail" },
+    suggestion: { on: second, to: second ? "club@example.org" : null, via: "gmail" },
+    complaint: { on: false, to: null, via: "gmail" },
+    safety: { on: safetyOn, to: safetyOn ? "club@example.org" : null, via: "mailgun", name: safetyOn ? "Ana" : null },
   }),
   cachedPublishedEventsBetween: async () => rows,
 }));
@@ -234,7 +234,7 @@ describe("BR-REQ-070-04 «Evenimentul»: the native select stays, the island sta
     second = true;
     safetyOn = true;
     const asked = { eveniment: "happy-monday-1", data: "2026-10-04", filtru: "grup" };
-    for (const tip of ["sugestie", "siguranta"]) {
+    for (const tip of ["sugestie", "girl-zone"]) {
       expect(switchHref(await render({ tip, ...asked })), tip).toBe("/ro/contact/feedback?eveniment=happy-monday-1&data=2026-10-04&filtru=grup");
     }
     // Unread: the slug is not looked up here — the form that reads it will.
@@ -266,7 +266,7 @@ describe("BR-REQ-070-04 «Evenimentul»: the native select stays, the island sta
     expect(islandProps).toHaveLength(1);
     expect(syncProps).toEqual([{ formId: "feedback-form" }, { formId: "feedback-form" }]);
     syncProps.length = 0;
-    for (const tip of ["sugestie", "siguranta"]) await render({ tip });
+    for (const tip of ["sugestie", "girl-zone"]) await render({ tip });
     expect(syncProps).toHaveLength(0);
   });
 

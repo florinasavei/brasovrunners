@@ -56,7 +56,8 @@ export const FEEDBACK_QUERY = { branch: "tip", ...ADDRESS_QUERY } as const;
 
 export function branchFromSlug(value: string | null | undefined): FeedbackBranch | null {
   if (typeof value !== "string") return null;
-  return FEEDBACK_BRANCHES.find((branch) => BRANCH_SLUG[branch] === value) ?? BRANCH_SLUG_ALIASES[value] ?? null;
+  // `isBranchAlias` is an own-property test: `toString` and `__proto__` are not an old name of any branch.
+  return FEEDBACK_BRANCHES.find((branch) => BRANCH_SLUG[branch] === value) ?? (isBranchAlias(value) ? BRANCH_SLUG_ALIASES[value] : null);
 }
 
 /** Whether `value` is a name the branch had before and no longer has (`BRANCH_SLUG_ALIASES`). */

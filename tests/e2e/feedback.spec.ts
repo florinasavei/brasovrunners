@@ -374,11 +374,11 @@ test.describe("BR-REQ-070-04 «Spune-ne ceva», the anonymous wizard (§676)", (
       const choose = page.getByTestId("feedback-choose");
       await expect(choose).toBeVisible();
       await expect(choose.locator('input[name="tip"]')).toHaveCount(2);
-      const safetyCard = page.getByTestId("feedback-choice-siguranta");
+      const safetyCard = page.getByTestId("feedback-choice-girl-zone");
       await expect(page.getByTestId("feedback-choice-cum-a-fost").locator('input[name="tip"]')).toBeChecked();
       await expect(safetyCard).toContainText("Girl Zone");
       await expect(safetyCard).toContainText("provocări în plus");
-      for (const [slug, card] of [["cum-a-fost", page.getByTestId("feedback-choice-cum-a-fost")], ["siguranta", safetyCard]] as const) {
+      for (const [slug, card] of [["cum-a-fost", page.getByTestId("feedback-choice-cum-a-fost")], ["girl-zone", safetyCard]] as const) {
         await expect(card.getByTestId(`feedback-glyph-${slug}`)).toBeVisible();
         await expect(card.locator('input[name="tip"]')).toBeVisible();
         expect((await card.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
@@ -398,8 +398,8 @@ test.describe("BR-REQ-070-04 «Spune-ne ceva», the anonymous wizard (§676)", (
       await safetyCard.getByText("Girl Zone").click();
       await expect(safetyCard.locator('input[name="tip"]')).toBeChecked();
       await choose.getByRole("button", { name: "Continuă" }).click();
-      await expect(page).toHaveURL(/\/ro\/contact\/spune-ne\?tip=siguranta$/);
-      await expect(page.getByTestId("feedback-glyph-siguranta")).toBeVisible();
+      await expect(page).toHaveURL(/\/ro\/contact\/spune-ne\?tip=girl-zone$/);
+      await expect(page.getByTestId("feedback-glyph-girl-zone")).toBeVisible();
       await expect(page.getByRole("heading", { level: 2, name: "Girl Zone" })).toBeVisible();
       await expect(page.getByRole("heading", { level: 2, name: "Girl Zone" })).toHaveAttribute("lang", "en");
       // Above the form, in the page's language: who reads it, by the first name the club set.
@@ -407,10 +407,10 @@ test.describe("BR-REQ-070-04 «Spune-ne ceva», the anonymous wizard (§676)", (
       await expect(page.getByTestId("feedback-safety-reader")).toHaveText(
         `Anonim, mesajul ajunge doar la ${SAFETY_NAME}; cu nume și prenume, alegi tu cine află. Site-ul nu păstrează nimic din el.`,
       );
-      await expect(page.getByTestId("feedback-form-siguranta")).toBeVisible();
+      await expect(page.getByTestId("feedback-form-girl-zone")).toBeVisible();
       // The form opens with «Anonim» / «Cu nume și prenume» (§678): anonymous by default, the name and the
       // way back hidden until the name is chosen — CSS alone.
-      const safetyForm = page.getByTestId("feedback-form-siguranta");
+      const safetyForm = page.getByTestId("feedback-form-girl-zone");
       const identity = safetyForm.getByTestId("feedback-identity");
       expect(await safetyForm.locator('input:not([type="hidden"]):not([name="honeypot"])').first().getAttribute("name")).toBe("identity");
       await expect(identity.getByRole("radio", { name: "Anonim" })).toBeChecked();
