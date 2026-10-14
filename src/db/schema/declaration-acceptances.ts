@@ -77,6 +77,15 @@ export const declarationAcceptances = pgTable(
     minorIdDocument: text("minor_id_document"),
 
     method: declarationMethod("method").notNull().default("EMAIL_LINK"),
+    /**
+     * The trace of the electronic signature (§771, amending §418 and §330; the owner, 2026-10-14): the caller's IP
+     * address and browser at the moment the typed name was posted — the proof, printed small under the signature
+     * of the PDF, that it was typed in a session. Written only for `EMAIL_LINK`; a `PAPER` row keeps neither (the
+     * staff member's browser says nothing about the person who signed the sheet), and a row from before it has none.
+     * Kept as long as the row, deleted with it: the retention is the declaration's own (§95), unchanged.
+     */
+    ip: text("ip"),
+    userAgent: text("user_agent"),
     /** Who recorded a paper signature. Required for `PAPER`, absent otherwise. */
     attestedByStaffUserId: uuid("attested_by_staff_user_id").references(() => staffUsers.id, {
       onDelete: "set null",

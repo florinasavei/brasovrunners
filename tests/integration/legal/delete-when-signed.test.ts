@@ -72,6 +72,8 @@ const LABELS = {
   signedOnPaper: (who: string, when: string) => `Semnat pe hârtie; înregistrat de ${who} pe ${when}`,
   attesterRemoved: "un membru al echipei",
   proofLine: (version: number, when: string, hash: string | null) => `Versiunea ${version} · Semnat la ${when}${hash ? ` · SHA-256 ${hash}` : ""}`,
+  signedElectronically: (when: string) => `Semnat electronic la ${when}`,
+  ip: "IP",
 };
 
 describe("BR-REQ-053-02 «Șterge» on a version somebody relied on (§567)", () => {

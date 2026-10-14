@@ -62,6 +62,7 @@ import { isUuid } from "@/shared/ids";
 import { isActiveStatus } from "./domain/state-machine";
 import type { CancelReason } from "./domain/cancel-reason";
 import { familyOf } from "./family-marker";
+import type { SignatureTrace } from "@/modules/legal-documents/domain/signature-trace";
 
 /**
  * Wiring the email-token boundary (§13.2) to the registration lifecycle (§15).
@@ -318,6 +319,8 @@ export async function consumeAndSignDeclaration(
     contentSha256: string;
     /** «Vreau să primesc oferte și beneficii», ticked while signing (§562); the service decides whether it is kept. */
     promoConsent?: boolean;
+    /** The IP address and browser of the press (§771), kept as the trace of the electronic signature; the action reads it from the request. */
+    trace?: SignatureTrace;
   },
   now: Date,
 ) {
