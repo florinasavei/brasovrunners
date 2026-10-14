@@ -21,6 +21,9 @@ import {
   deadlineMergeValues,
   LIST_NUMBERS_MERGE_FIELD,
   GMAIL_FALLBACK_MERGE_FIELD,
+  GROUP_RUN_ALONE_MERGE_FIELD,
+  GROUP_RUN_MINOR_AGE_MERGE_FIELD,
+  GROUP_RUN_MINOR_MERGE_FIELD,
   LIST_SOCIALS_MERGE_FIELD,
   LIST_STATES_MERGE_FIELD,
   MINIMUM_AGE_MERGE_FIELD,
@@ -129,6 +132,11 @@ export const DECLARATION_TOKENS: readonly DeclarationToken[] = [
     example: inBoth((locale) => seriesRhythmPhrase(TOKEN_EXAMPLE_SERIES_DATES, CLUB_TIME_ZONE, locale)),
   },
   { token: "{{seriesPlace}}", messageKey: "seriesPlace", example: same("Parcul Nicolae Titulescu") },
+  // A group run's declaration for a minor (§NNN): the minor's own name in the paragraph only a minor's
+  // declaration keeps, and the adult's own name in the sentence only an adult's keeps.
+  { token: `{{${GROUP_RUN_MINOR_MERGE_FIELD}}}`, messageKey: GROUP_RUN_MINOR_MERGE_FIELD, example: same("Ion Popescu") },
+  { token: `{{${GROUP_RUN_ALONE_MERGE_FIELD}}}`, messageKey: GROUP_RUN_ALONE_MERGE_FIELD, example: same("Ana Popescu") },
+  { token: `{{${GROUP_RUN_MINOR_AGE_MERGE_FIELD}}}`, messageKey: GROUP_RUN_MINOR_AGE_MERGE_FIELD, example: inBoth((locale) => yearsPhrase(14, locale)) },
   // The volunteer agreement's blanks (§758): the person, the role and what it asks, filled when the person
   // accepts; a role with no description leaves its sentence out.
   { token: "{{volunteer}}", messageKey: "volunteer", example: same("Ana Popescu") },

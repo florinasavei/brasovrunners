@@ -2,9 +2,10 @@ import type { Database } from "@/db/types";
 import { formatDay } from "@/i18n/dates";
 import type { Locale } from "@/i18n/routing";
 import { isLegalDocumentBody, type LegalDocumentBody } from "@/modules/legal-documents/domain/content-hash";
-import type { MergeValues } from "@/modules/legal-documents/domain/merge-fields";
+import { GROUP_RUN_MINOR_AGE_MERGE_FIELD, type MergeValues, mergeFieldsIn, minimumAgeMergeValue } from "@/modules/legal-documents/domain/merge-fields";
 import { signedTextHash } from "@/modules/legal-documents/domain/signed-text";
-import { eventMergeValues } from "@/modules/registrations/signed-declaration";
+import { declarantValues, eventMergeValues, identityDocumentValues } from "@/modules/registrations/signed-declaration";
+import { groupRunMinorMinimumAge, groupRunTakesMinors } from "./domain";
 import { findRunSeries } from "./repository";
 import { readSignedFacts, type RunSeries, seriesMergeValues, seriesRhythmPhrase, signatureCoversSeries } from "./series";
 
@@ -21,6 +22,10 @@ import { readSignedFacts, type RunSeries, seriesMergeValues, seriesRhythmPhrase,
  * The series' name is the date's title in that language (§113 groups by the title); its usual place
  * is the date's own place — the text says «de obicei» / «usually» and sends a differing date to its
  * page — and its rhythm is read off every date the grouping gives it (`seriesRhythmPhrase`).
+ *
+ * **The minor's minimum (§NNN).** A text that names `{{minorMinimumAge}}` is given the run's own minimum under
+ * eighteen, with its unit — or "" when the run has none (`groupRunTakesMinors`), which drops the minor's
+ * paragraph; a text that names it not is given nothing, as for the series.
  *
  * `seriesKey` is the series a signature of `body` covers: the run's, only while the run has other
  * dates AND the text names `{{series}}` (`signatureCoversSeries`). Under a text that does not — the
@@ -40,7 +45,10 @@ export async function groupRunMergeValues<T extends Record<string, unknown>>(
     ? { key: run.key, title: event.title, rhythm: seriesRhythmPhrase(run.dates, event.timezone, locale), place: event.values.eventLocation ?? "" }
     : null;
   const seriesKey = run.key !== null && signatureCoversSeries(body) ? run.key : null;
-  return { values: { ...event.values, ...seriesMergeValues(body, series) }, title: event.title, timezone: event.timezone, seriesKey };
+  const minor = mergeFieldsIn(body).has(GROUP_RUN_MINOR_AGE_MERGE_FIELD)
+    ? { minorMinimumAge: groupRunTakesMinors(event.minAge) ? minimumAgeMergeValue(groupRunMinorMinimumAge(event.minAge), locale) : "" }
+    : {};
+  return { values: { ...event.values, ...minor, ...seriesMergeValues(body, series) }, title: event.title, timezone: event.timezone, seriesKey };
 }
 
 /**
@@ -65,24 +73,51 @@ export async function groupRunSignedFacts<T extends Record<string, unknown>>(
 }
 
 /**
- * The blanks a signed group-run declaration fills beside the run's (§393): the signer declares for
- * themselves (adults only), so `{{participant}}` and `{{declarant}}` are the signer and `{{guardian}}`
- * an em dash; the identity document as the caller passes it (masked for the club's copy, §320); the
- * moment of signing inside its sentence, in the run's zone.
+ * The blanks a signed group-run declaration fills beside the run's (§393), for the two ways it is signed.
+ *
+ * **For oneself** (`minorTypedName` null): `{{participant}}` and `{{declarant}}` are the signer and
+ * `{{guardian}}` an em dash; `{{signerAlone}}` is the signer, which keeps the adult's sentence, and
+ * `{{minor}}` is "", which drops the minor's paragraphs (§NNN).
+ *
+ * **For a minor** (§NNN, as the race's §330 and §108 read it, through the same `declarantValues` and
+ * `identityDocumentValues`): `typedName` is the parent's or guardian's, the declarant; `minorTypedName`
+ * is the minor's own signature, the participant. `{{participant}}` is the minor, `{{guardian}}` and
+ * `{{declarant}}` name the parent; `{{minor}}` keeps the minor's paragraphs and `{{signerAlone}}` is
+ * "", which drops the adult's sentence; the adult's age sentence (`{{minimumAge}}`) is "" too — the minor's
+ * minimum is `{{minorMinimumAge}}`, in their own paragraph.
+ *
+ * The identity document as the caller passes it (masked for the club's copy, §320) — the declarant's, as on
+ * the race's; a minor's is never asked. The moment of signing inside its sentence, in the run's zone.
  */
 export function groupRunSignedValues(
   event: { values: MergeValues; timezone: string },
-  signer: { typedName: string; idDocument: string | null; locale: Locale; acceptedAt: Date },
+  signer: { typedName: string; minorTypedName?: string | null; idDocument: string | null; locale: Locale; acceptedAt: Date },
 ): MergeValues {
+  const minor = signer.minorTypedName ?? null;
+  const signedAt = formatDay(signer.acceptedAt, { locale: signer.locale, timeZone: event.timezone, style: "long", withTime: true, position: "inline" });
+  if (minor === null) {
+    return {
+      ...event.values,
+      participant: signer.typedName,
+      declarant: signer.typedName,
+      guardian: "—",
+      idDocument: signer.idDocument ?? undefined,
+      participantIdDocument: signer.idDocument ?? undefined,
+      guardianIdDocument: "—",
+      signerAlone: signer.typedName,
+      minor: "",
+      signedAt,
+    };
+  }
   return {
     ...event.values,
-    participant: signer.typedName,
-    declarant: signer.typedName,
-    guardian: "—",
-    idDocument: signer.idDocument ?? undefined,
-    participantIdDocument: signer.idDocument ?? undefined,
-    guardianIdDocument: "—",
-    signedAt: formatDay(signer.acceptedAt, { locale: signer.locale, timeZone: event.timezone, style: "long", withTime: true, position: "inline" }),
+    participant: minor,
+    ...declarantValues(minor, signer.typedName, signer.locale),
+    ...identityDocumentValues(signer.typedName, { idDocument: signer.idDocument, minorIdDocument: null }),
+    signerAlone: "",
+    minor,
+    minimumAge: "",
+    signedAt,
   };
 }
 
@@ -97,7 +132,7 @@ export async function groupRunTextHash<T extends Record<string, unknown>>(
     eventId: string;
     document: { title: string; body: unknown };
     signedFacts: unknown;
-    signer: { typedName: string; idDocument: string | null; locale: Locale; acceptedAt: Date };
+    signer: { typedName: string; minorTypedName?: string | null; idDocument: string | null; locale: Locale; acceptedAt: Date };
   },
 ): Promise<string | null> {
   const event = await groupRunSignedFacts(db, { eventId: input.eventId, locale: input.signer.locale, body: input.document.body, signedFacts: input.signedFacts });
