@@ -13,7 +13,7 @@ import { describe, expect, it } from "vitest";
  *
  *   Pagina evenimentului, de sus în jos — the type (with the status, the cost and, since §760, the
  *   promotion), title and summary (with, since §760, the page's address and the cover), description,
- *   when and where (§481), the course (its checkpoints a named card inside it, §757, §NNN), participation,
+ *   when and where (§481), the course (its checkpoints a named card inside it, §757, §763), participation,
  *   registration and rules (§760: what were cards 6 and 9), partners, (the share links, automatic),
  *   links and files: the page's sections in `PAGE_SECTIONS`' order, which
  *   `events/page-sections.test.ts` holds both the page and these pages to — eight cards;
@@ -98,7 +98,7 @@ describe("§350 the editor's boxes, in order (§406: the page's)", () => {
       expect(source, file).not.toContain("level: 3");
       expect(source, file).toContain("<Panel collapsible {...card}>");
       // The course card keeps its fold for a reader who may write a language's route description
-      // (§387) or whose card holds the checkpoints (§757, §NNN — every role on the editor), and is its
+      // (§387) or whose card holds the checkpoints (§757, §763 — every role on the editor), and is its
       // heading alone for one who may write neither the settings nor the texts and has no points to read.
       expect(source, file).toContain(
         file === "CourseBox" ? "if (!mayWriteWords && !checkpoints) return <Panel {...card} />;" : "if (!mayEditSettings) return <Panel {...card} />;",

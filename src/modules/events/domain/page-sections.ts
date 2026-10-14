@@ -239,7 +239,7 @@ export const PAGE_SECTIONS: readonly PageSection[] = [
   /*
     «Puncte de control» (`#checkpoints`, §757): the table right under the route's maps, drawn while the
     event has a checkpoint. Part of «Traseul»: the card «Puncte de control» is a named card inside it
-    (§NNN), whose boxes post with forms of their own beside the save form (forms cannot nest), so it
+    (§763), whose boxes post with forms of their own beside the save form (forms cannot nest), so it
     has no number and no chip.
   */
   {

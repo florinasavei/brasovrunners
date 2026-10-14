@@ -59,7 +59,7 @@ async function render(props: Partial<Parameters<typeof CheckpointsCard>[0]> = {}
 }
 
 describe("§757 the card «Puncte de control»", () => {
-  it("is a named card of «Traseul» (§NNN): closed by default, a level-3 heading, its closed line saying there is none", async () => {
+  it("is a named card of «Traseul» (§763): closed by default, a level-3 heading, its closed line saying there is none", async () => {
     const html = await render();
     expect(html).toContain("Puncte de control");
     expect(html).toContain("niciun punct");
@@ -203,7 +203,7 @@ describe("§757 «Ia punctele din GPX» on the card", () => {
     expect(html).toContain("Închide previzualizarea");
     // The ones too far from the track are counted, not offered.
     expect(html).toContain("1 punct din fișier e la peste 300 m de traseu");
-    // The preview's form is its own, apart from the list's: each of its boxes and its button name it (§NNN).
+    // The preview's form is its own, apart from the list's: each of its boxes and its button name it (§763).
     const preview = html.slice(html.indexOf('id="box-checkpoints-gpx"'), html.indexOf('data-testid="checkpoints-fields"'));
     const named = [...preview.matchAll(/<input\b[^>]*\sname="[^"]*"[^>]*>|<button\b[^>]*type="submit"[^>]*>/g)].map((match) => match[0]);
     expect(named.length).toBeGreaterThan(3);

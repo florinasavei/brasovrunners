@@ -223,7 +223,7 @@ describe("§436 the island offers the simple way and never sends it on its own",
   });
 
   it("the button sends: the replay runs only from the notice's button, with the form as it stands", () => {
-    // In `useKeptForm` since §NNN, which `ActionForm` and the detached form (`DetachedActionForm`) share.
+    // In `useKeptForm` since §763, which `ActionForm` and the detached form (`DetachedActionForm`) share.
     expect(island).toMatch(/const sendSimple = useCallback\(async \(\): Promise<boolean> => \{[\s\S]*?return replayNatively\(describeSubmission\(element, lastSubmitter\.current\)\);/);
     expect(island).toContain("<SaveBlockedNotice onSend={sendSimple} />");
     expect(island.match(/replayNatively\(/g)).toHaveLength(1);
@@ -231,7 +231,7 @@ describe("§436 the island offers the simple way and never sends it on its own",
     expect(notice).toContain("void onSend()");
   });
 
-  it("the detached form (the checkpoints card inside «Traseul», §NNN) draws the same notice, from the same hook", () => {
+  it("the detached form (the checkpoints card inside «Traseul», §763) draws the same notice, from the same hook", () => {
     const detached = read("src/shared/forms/DetachedActionFormIsland.tsx");
     expect(detached).toContain("useKeptForm(");
     expect(detached).toContain("{kept?.blocked && <SaveBlockedNotice onSend={kept.sendSimple} />}");

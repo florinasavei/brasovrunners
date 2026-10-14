@@ -1023,7 +1023,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                 error={todoErrorCode ? t(`errors.${todoErrorCode}`) : undefined}
               />
               {/*
-                «Puncte de control» (§757) is a named card of «Traseul», inside it in the document (§NNN). Its
+                «Puncte de control» (§757) is a named card of «Traseul», inside it in the document (§763). Its
                 two forms are detached (`CheckpointForms`): their state wraps the save form, their `<form>`
                 elements stand right after it — HTML forms cannot nest — and every box of the card names its
                 form, so neither save posts the other's boxes.

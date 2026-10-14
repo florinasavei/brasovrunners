@@ -7,7 +7,7 @@ import { type Recall, RecallProvider } from "./recall";
 import SaveBlockedNotice from "./SaveBlockedNotice";
 
 /**
- * A kept form (§315) whose boxes are drawn inside another form's markup (§NNN): «Puncte de control»
+ * A kept form (§315) whose boxes are drawn inside another form's markup (§763): «Puncte de control»
  * inside «Traseul», a card of the event editor's one save form. HTML forms cannot nest, so it is
  * three pieces where `ActionForm` is one:
  *

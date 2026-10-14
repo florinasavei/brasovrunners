@@ -252,7 +252,7 @@ export default function SubmitButton({
 }: SubmitButtonProps) {
   const status = useFormStatus();
   /*
-    Drawn inside another form's markup (`useFormOwner`, §NNN): the button submits the form it names
+    Drawn inside another form's markup (`useFormOwner`, §763): the button submits the form it names
     (`form=`), and is busy while *that* form's request is in flight — `useFormStatus` reads the form
     around the button in the tree, which here is the event's save form, not this button's.
   */

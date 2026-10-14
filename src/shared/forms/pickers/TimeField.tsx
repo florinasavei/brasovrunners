@@ -117,7 +117,7 @@ export default function TimeField({ name, label, defaultValue = "", required = f
           pattern: TIME_PATTERN,
           placeholder: t("pickers.timePlaceholder"),
           title: t("pickers.timeTyped"),
-          // Drawn inside another form's markup, the box posts with the form it names (`useFormOwner`, §NNN).
+          // Drawn inside another form's markup, the box posts with the form it names (`useFormOwner`, §763).
           form: owner?.id,
         },
         input: {

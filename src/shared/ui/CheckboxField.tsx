@@ -121,7 +121,7 @@ export default function CheckboxField({
     browser's check, the missing-fields list and the error summary read the same `required` input.
   */
   const inputSlot = {
-    // Drawn inside another form's markup, the box posts with the form it names (`useFormOwner`, §NNN).
+    // Drawn inside another form's markup, the box posts with the form it names (`useFormOwner`, §763).
     ...(owner ? { form: owner.id } : {}),
     ...(describedBy ? { "aria-describedby": describedBy } : {}),
     ...(showError ? { "aria-invalid": true } : {}),

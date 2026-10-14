@@ -21,7 +21,7 @@ import { isUuid } from "@/shared/ids";
   it) and «Adaugă punctele alese» (what the GPX's preview offered) — and each asks
   `changeCheckpoints`, which asserts the role again (the Organizer and the Administrators write, the
   Tehnic and the Redactor read — BR-REQ-060-01), so the buttons the card draws are a courtesy.
-  The card is a named card of «Traseul», inside the editor's save form in the document (§NNN). HTML
+  The card is a named card of «Traseul», inside the editor's save form in the document (§763). HTML
   forms cannot nest, so its two forms are detached (`DetachedActionForm`, the `form` attribute): a
   refusal here keeps only what was typed here, and «Salvează» of the event never posts a point.
 */

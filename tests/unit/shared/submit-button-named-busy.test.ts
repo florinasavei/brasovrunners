@@ -17,7 +17,7 @@ describe("SubmitButton with a name", () => {
     );
   });
 
-  it("drawn inside another form's markup, submits the form it names and is busy with that form's request (§NNN)", () => {
+  it("drawn inside another form's markup, submits the form it names and is busy with that form's request (§763)", () => {
     expect(source).toContain("const owner = useFormOwner();");
     expect(source).toMatch(/type="submit"\s+form=\{owner\?\.id\}/);
   });

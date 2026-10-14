@@ -87,7 +87,7 @@ function sentenceFor(template: string, values: Readonly<Record<string, string>> 
  * What a kept form holds between its presses (§315, §371, §436): the Server Action's outcome
  * (`useActionState`), the action as the browser runs it — a transport failure caught and offered the
  * simple way rather than thrown (§436) —, the generation islands key on, and the recall its boxes
- * read. `ActionFormIsland` holds it for the form it draws; `DetachedActionFormIsland` (§NNN) for a
+ * read. `ActionFormIsland` holds it for the form it draws; `DetachedActionFormIsland` (§763) for a
  * form whose boxes are drawn inside another form's markup. One hook, so the two cannot drift.
  *
  * `form` is the `<form>` element's ref and `pressed` is called from its `submit` with the button

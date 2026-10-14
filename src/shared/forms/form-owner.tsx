@@ -3,7 +3,7 @@
 import { createContext, type ReactNode, useContext } from "react";
 
 /**
- * The form a box belongs to when it is drawn inside another form's markup (§NNN).
+ * The form a box belongs to when it is drawn inside another form's markup (§763).
  *
  * HTML forms cannot nest, so a card with a save of its own that must stand *inside* a card of the
  * event editor's one save form — «Puncte de control» inside «Traseul» — keeps its `<form>` element

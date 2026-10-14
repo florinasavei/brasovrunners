@@ -283,7 +283,7 @@ test.describe.serial("§406 the editor is the page, top to bottom", () => {
   });
 
   /*
-    §NNN, amending §757 and §760 — the owner, with a screenshot of the editor on production: «Partea cu
+    §763, amending §757 and §760 — the owner, with a screenshot of the editor on production: «Partea cu
     „Puncte de control” ar trebui să fie băgată în cardul cu traseu (nested)». §760 drew the card above
     card 1, and this test then measured exactly that — so it passed while the owner saw it at the top.
     Now it measures what he asked: the card inside «Traseul» in the document AND on the screen (its box

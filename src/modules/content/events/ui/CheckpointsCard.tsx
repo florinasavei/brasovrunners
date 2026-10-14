@@ -35,13 +35,13 @@ const SPARE_ROWS = 3;
 /**
  * The card's two forms, by id: «Salvează punctele» and «Adaugă punctele alese». Every box and
  * button of the card names one of them (`form=`), so none of them posts with the event's save form
- * it is drawn inside, and none of the save form's boxes posts with them (§NNN).
+ * it is drawn inside, and none of the save form's boxes posts with them (§763).
  */
 export const CHECKPOINTS_FORM = "checkpoints-form";
 export const CHECKPOINTS_GPX_FORM = "checkpoints-gpx-form";
 
 /**
- * The card's two kept forms (§315), around the editor's save form (§NNN): their state wraps it, so
+ * The card's two kept forms (§315), around the editor's save form (§763): their state wraps it, so
  * the boxes drawn inside «Traseul» recall what a refusal kept and draw its summary there; their
  * `<form>` elements stand right after it, beside it and never in it — HTML forms cannot nest. For a
  * role that may only read the points there is nothing to post, and the save form is drawn alone.
@@ -100,7 +100,7 @@ type Props = {
  * optional cut-off and an optional note — and, when the route's GPX has waypoints, the one press
  * that takes them («Ia punctele din GPX»: a preview first, then what the club ticks is added).
  *
- * **Inside «Traseul», in the document** (§NNN; the owner, of §760's card at the top of the editor:
+ * **Inside «Traseul», in the document** (§763; the owner, of §760's card at the top of the editor:
  * «Partea cu „Puncte de control” ar trebui să fie băgată în cardul cu traseu (nested)»): a level-3
  * card after the route's fields, closed with its line like every named card. «Traseul» is a card of
  * the event's one save form, and HTML forms cannot nest, so the card's forms are *detached*
@@ -326,7 +326,7 @@ export default async function CheckpointsCard({ locale, eventId, checkpoints, ma
     ));
 
   return (
-    // A named card of «Traseul» (§NNN): level 3, closed with its line; open while the GPX's preview is the page's subject.
+    // A named card of «Traseul» (§763): level 3, closed with its line; open while the GPX's preview is the page's subject.
     <Panel
       glyph="checkpoints"
       collapsible

@@ -5,7 +5,7 @@ import { DetachedFields } from "@/shared/forms/DetachedActionFormIsland";
 import RecallField, { NeverKeptField, RecallCheckbox, RecallHidden, RecallRadio } from "@/shared/forms/recall";
 
 /**
- * §NNN (BR-REQ-050-02) — the house primitives write `form=` on their own control when they are
+ * §763 (BR-REQ-050-02) — the house primitives write `form=` on their own control when they are
  * drawn under `DetachedFields`, and only then: «Puncte de control» inside «Traseul» posts with a
  * form of its own through that attribute (`form-owner.tsx`). The card itself uses some of these;
  * the rest are what another detached card would reach for, and nothing else pins them.
@@ -24,7 +24,7 @@ const primitives = () => [
   createElement(RecallRadio, { key: "e", name: "recall.radio", value: "x" }),
 ];
 
-describe("§NNN the primitives name the detached form", () => {
+describe("§763 the primitives name the detached form", () => {
   it("every named control carries form=<id> under DetachedFields", () => {
     const markup = renderToStaticMarkup(createElement(DetachedFields as ComponentType<{ form: string }>, { form: FORM }, ...primitives()));
     const named = controlsOf(markup).filter((tag) => /\sname="/.test(tag));

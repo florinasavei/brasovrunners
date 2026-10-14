@@ -102,7 +102,7 @@ test.describe("§757 the route's checkpoints and the race's time limit", () => {
     await page.waitForURL(/saved=event/);
     await hydrated(page);
 
-    // «Puncte de control»: a named card of «Traseul» (§NNN), opened the way a person does, with three spare rows.
+    // «Puncte de control»: a named card of «Traseul» (§763), opened the way a person does, with three spare rows.
     const card = page.getByTestId("event-checkpoints-card");
     await expect(page.locator("#box-course").getByTestId("event-checkpoints-card")).toHaveCount(1);
     await openEditorBox(page, "Puncte de control");
@@ -166,7 +166,7 @@ test.describe("§757 the route's checkpoints and the race's time limit", () => {
   });
 
   /*
-    §NNN — every verb of the card, from inside «Traseul» (the owner: «Partea cu „Puncte de control” ar
+    §763 — every verb of the card, from inside «Traseul» (the owner: «Partea cu „Puncte de control” ar
     trebui să fie băgată în cardul cu traseu (nested)»): the GPX's points previewed, a refusal that keeps
     what was typed, the ticked ones added, a point changed, one removed — each posting the card's own
     form from inside the event's save form, and none of it saving the event.
@@ -235,7 +235,7 @@ test.describe("§757 the route's checkpoints and the race's time limit", () => {
   });
 
   /*
-    §NNN — with scripts off, the card inside «Traseul» is a plain form of its own: a refused POST
+    §763 — with scripts off, the card inside «Traseul» is a plain form of its own: a refused POST
     renders the page with the reason in the card and the typed boxes kept, and nothing is saved.
   */
   test("with scripts off, a refusal from inside «Traseul» comes back with the reason and the typed boxes", async ({ browser }) => {

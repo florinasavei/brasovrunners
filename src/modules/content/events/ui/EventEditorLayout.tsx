@@ -41,7 +41,7 @@ export default function EventEditorLayout({ side, main, below }: { side: ReactNo
  * The editor's main column: one column, 16 pixels between its items, drawn in the document's order —
  * the to-do card, then the save form's cards. No CSS `order` (§760, as the footer, §372): what a
  * keyboard and a screen reader meet is what the screen shows. «Puncte de control» is a named card of
- * «Traseul», inside it in the document (§NNN): its forms are detached (`DetachedActionForm`), their
+ * «Traseul», inside it in the document (§763): its forms are detached (`DetachedActionForm`), their
  * `<form>` elements right after the save form — hidden, so they take no place in the column.
  */
 export function EditorMainColumn({ children }: { children: ReactNode }) {

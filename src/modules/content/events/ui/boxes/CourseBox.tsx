@@ -46,7 +46,7 @@ import { LanguageTabs } from "./TextBoxes";
  * the reader may write a language's texts (the Redactor): then it opens on the description's tabs
  * alone, since those words are theirs. The type's box has already said the settings are not.
  *
- * Last in the card, after the route's fields, its named card «Puncte de control» (§757, §NNN): the
+ * Last in the card, after the route's fields, its named card «Puncte de control» (§757, §763): the
  * Organizer writes it although the settings above are not theirs, every other role reads it, so it
  * is drawn whatever the settings. Its boxes post with forms of their own (`CheckpointsCard`).
  */
@@ -64,10 +64,10 @@ export default async function CourseBox({
   inSeries?: boolean;
   /** How many «Puncte de control» the saved route has (§757): said on the closed line when above 0 (§760). */
   checkpointCount?: number;
-  /** The GPX's preview is open inside the card (§NNN): the card opens, and with it «Traseul», for a render that runs no script. */
+  /** The GPX's preview is open inside the card (§763): the card opens, and with it «Traseul», for a render that runs no script. */
   checkpointsOpen?: boolean;
   /**
-   * «Puncte de control» (§757), the card's named card after the route's fields (§NNN): `CheckpointsCard`,
+   * «Puncte de control» (§757), the card's named card after the route's fields (§763): `CheckpointsCard`,
    * whose boxes post with forms of their own beside the save form (`DetachedActionForm`). Absent on
    * the create page, where there is no event to hold points yet.
    */
