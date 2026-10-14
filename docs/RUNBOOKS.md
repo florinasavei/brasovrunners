@@ -1042,10 +1042,12 @@ the signed declaration as proof of the signature, as long as the declaration; it
 `/admin/tasks` carries no new row; every Administrator is emailed «Șabloanele textelor legale s-au schimbat» once (§639),
 and `/admin/legal` marks the declarations and the notice «Șablon nou». Until the club approves them the signed PDFs
 carry the new line (the IP address and the browser are kept from the first signing after this release, whatever text is
-in force), but the declaration and the notice a person read do not mention it — **approve the notice before the declarations
-are signed in volume, in the same sitting as the declarations**: `/admin/legal` → the card → «Regenerează din șablon» → read
-the draft, fill the four facts, «Aprobă și publică». A Romanian lawyer reads the disqualification clause and the signature
-sentence first (an electronic signature «ca o semnătură olografă» is the parties' agreement, eIDAS art. 25 and Legea nr.
+in force), but the declaration and the notice a person read do not mention it — **approve the notice from the new template on production the same day this release
+reaches production, first in the sitting and before the declarations** (the race is live with real registrations, and the
+notice in force still says «nu și adresa IP»): `/admin/legal` → the card → «Regenerează din șablon» → read
+the draft, fill the four facts, «Aprobă și publică». A Romanian lawyer reads the disqualification clause, the signature
+sentence and the notice's section 10 sentence («singura adresă IP pe care o păstrăm este cea a unei semnături electronice»,
+which replaced «platforma nu stochează nicio adresă IP») first (an electronic signature «ca o semnătură olografă» is the parties' agreement, eIDAS art. 25 and Legea nr.
 214/2024), and the notice's sentence on the IP address (GDPR art. 6(1)(f), the proof of the signature, kept as long as the
 declaration). The trace is on the signed PDF — «Semnat electronic la … · IP … · …» under the signature — and in «Toate
 datele unei persoane»; a paper signature keeps none.
