@@ -51,7 +51,7 @@ const PUBLIC = {
   locale: "ro",
   consent: true,
   agreement: true,
-  age: "34",
+  birthDate: aged(34),
   sex: "FEMALE",
   city: " Brașov ",
 };
@@ -84,15 +84,15 @@ describe("§765 the public form's age, sex and city (the notice names them)", ()
       expect(under.success, age).toBe(false);
       if (!under.success) expect(refusedFields(under.error), age).toEqual(["age"]);
     }
-    const closed = volunteerPublicProfileSchema.safeParse({ ...PUBLIC, age: "17" });
+    const closed = volunteerPublicProfileSchema.safeParse({ ...PUBLIC, birthDate: aged(17) });
     expect(closed.success).toBe(false);
     if (!closed.success) expect(refusedFields(closed.error)).toEqual(["age"]);
     // The age is named together with the other boxes that failed, never held back until they are mended.
-    const several = volunteerPublicProfileSchema.safeParse({ ...PUBLIC, age: "13", sex: "", city: "", roleIds: [] });
+    const several = volunteerPublicProfileSchema.safeParse({ ...PUBLIC, birthDate: aged(13), sex: "", city: "", roleIds: [] });
     if (!several.success) expect(refusedFields(several.error).sort()).toEqual(["age", "city", "roleIds", "sex"]);
     expect(several.success).toBe(false);
-    expect(volunteerStaffInputSchema.safeParse({ roleIds: [ID], assignedRoleId: "", name: "Ana", email: "ana@example.test", phone: "+40712345678", age: "13" }).success).toBe(false);
-    expect(volunteerPublicProfileSchema.parse({ ...PUBLIC, age: "18" }).age).toBe(18);
+    expect(volunteerStaffInputSchema.safeParse({ roleIds: [ID], assignedRoleId: "", name: "Ana", email: "ana@example.test", phone: "+40712345678", birthDate: aged(13) }).success).toBe(false);
+    expect(volunteerPublicProfileSchema.parse({ ...PUBLIC, birthDate: aged(18) }).age).toBe(18);
     expect(volunteerPublicProfileSchema.parse({ ...PUBLIC, age: String(VOLUNTEER_AGE_MAX) }).age).toBe(VOLUNTEER_AGE_MAX);
     expect(volunteerPublicProfileSchema.parse({ ...PUBLIC, age: " 042 " }).age).toBe(42);
   });
@@ -154,10 +154,10 @@ describe("§765 the public form's age, sex and city (the notice names them)", ()
     // §758's form takes no age and no guardian, whatever the minors' texts say: adults only, by its own tick.
     expect(volunteerPublicSchemaFor({ profile: false, minors: true })).toBe(volunteerPublicInputSchema);
     // The profile's, with or without the minors' path: the same adult, a different verdict on a minor.
-    const adult = { ...PUBLIC, age: "34" };
+    const adult = { ...PUBLIC, birthDate: aged(34) };
     expect(volunteerPublicSchemaFor({ profile: true, minors: false }).safeParse(adult).success).toBe(true);
     expect(volunteerPublicSchemaFor({ profile: true, minors: true }).safeParse(adult).success).toBe(true);
-    const minor = { ...PUBLIC, age: "15" };
+    const minor = { ...PUBLIC, birthDate: aged(15) };
     expect(volunteerPublicSchemaFor({ profile: true, minors: false }).safeParse(minor).success).toBe(false);
     expect(volunteerPublicSchemaFor({ profile: true, minors: true }).safeParse(minor).success).toBe(false);
   });
@@ -175,7 +175,7 @@ describe("§765 the organizers' entry takes the same answers, all optional", () 
   });
 
   it("takes the answers when given, and refuses an age under the minimum or a sex that is no answer", () => {
-    expect(volunteerStaffInputSchema.parse({ ...staff, age: "52", sex: "MALE", city: " Râșnov ", volunteeredBefore: true, clubMember: true, shirtSize: "S" })).toMatchObject({
+    expect(volunteerStaffInputSchema.parse({ ...staff, birthDate: aged(52), sex: "MALE", city: " Râșnov ", volunteeredBefore: true, clubMember: true, shirtSize: "S" })).toMatchObject({
       age: 52,
       sex: "MALE",
       city: "Râșnov",
