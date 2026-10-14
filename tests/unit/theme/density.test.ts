@@ -208,6 +208,9 @@ const CONVERTED_SITES: Array<{ file: string; prop: string; step: DensityStep; sm
   { file: "src/app/[locale]/legal/volunteer-agreement/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2 },
   // The volunteer agreement's link (§758): born on the scale, like every link page.
   { file: "src/app/[locale]/volunteers/agreement/[token]/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2 },
+  // The volunteers' own page (§NNN) and the guardian's link page, form pages like the registration's.
+  { file: "src/app/[locale]/events/[slug]/volunteers/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2 },
+  { file: "src/app/[locale]/volunteers/guardian/[token]/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2 },
   { file: "src/app/[locale]/preview/events/[id]/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2 },
   // The editor's preview frame (§579): the listing's and the event page's own container. New, so xsBefore is sm.
   { file: "src/app/[locale]/preview/draft/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 3 },

@@ -94,6 +94,8 @@ const PER_REQUEST: Record<string, string> = {
   "src/app/[locale]/preview/draft/page.tsx": "staff only: the editor's preview frame, for the roles the session says may preview (§579)",
   "src/app/[locale]/events/[slug]/register/page.tsx": "the registration form: the draft cookie, the family cookie, the render time (§97, §389)",
   "src/app/[locale]/events/[slug]/declaration/page.tsx": "the group run's signing form (§393)",
+  // The volunteers' own page (§NNN): the registration page's model — a form, so its render time is the bot check's clock, its refusals come back from the draft cookie, its answer is in the address.
+  "src/app/[locale]/events/[slug]/volunteers/page.tsx": "the volunteers' form: the draft cookie, the render time, ?volunteer= and ?vfields= (§NNN)",
   "src/app/[locale]/registrations/mine/page.tsx": "a form that takes an address: ?sent= says its outcome (BR-REQ-036-04)",
   "src/app/[locale]/registrations/resend/page.tsx": "a form that takes an address: ?sent= and ?event= (BR-REQ-036-02)",
   "src/app/[locale]/registrations/confirm/[token]/page.tsx": TOKEN_PAGE,
@@ -103,8 +105,9 @@ const PER_REQUEST: Record<string, string> = {
   "src/app/[locale]/registrations/invitation/[token]/page.tsx": TOKEN_PAGE,
   "src/app/[locale]/registrations/list/[token]/page.tsx": TOKEN_PAGE,
   "src/app/[locale]/registrations/manage/[token]/page.tsx": TOKEN_PAGE,
-  // The volunteer agreement's link (§758), like every link page.
+  // The volunteer agreement's link (§758) and the guardian's (§NNN), like every link page.
   "src/app/[locale]/volunteers/agreement/[token]/page.tsx": TOKEN_PAGE,
+  "src/app/[locale]/volunteers/guardian/[token]/page.tsx": TOKEN_PAGE,
   "src/app/[locale]/registrations/mine/[token]/page.tsx": TOKEN_PAGE,
   "src/app/[locale]/newsletter/confirm/[token]/page.tsx": TOKEN_PAGE,
   "src/app/[locale]/newsletter/manage/[token]/page.tsx": TOKEN_PAGE,
@@ -253,13 +256,10 @@ const REQUEST_READERS_ALLOWED: Record<string, string> = {
   */
   "src/modules/resilience/last-good.ts": "the resting page's way back, on a cold miss only",
   /*
-    The sealed draft cookie (§142): the event page's volunteer box (§754) names a Server Action whose
-    refusal keeps what was typed (`stashDraftValues`, called by the action alone, after a post). The
-    page never reads the cookie while it renders: its static copy takes no draft, and the one render
-    that reads it — `readFormDraft`, for a refused box — is the live twin's, which passes it in
-    (`readVolunteerDraft`), exactly as the twin alone reads the session.
+    The sealed draft cookie (§142) was here while the event page's volunteer box named a Server Action that kept what was
+    typed (§754): the form moved to its own per-request page (§NNN), so no static page reaches `form-draft.ts` any more —
+    the entry is gone, which is what this list is for.
   */
-  "src/modules/registrations/form-draft.ts": "the volunteer box's draft, written by its action and read only by the live twin",
   /*
     The session: every static page reaches it only through a Server Action it names as a form's
     `action` (the interest box, the newsletter pop-up), never by calling it while it renders.

@@ -2008,7 +2008,8 @@ with its cards in the order you fill them.
 ## 44. Voluntari — register the people who help at a race
 
 The event's volunteers (`DECISIONS.md` §754) are built and closed: no event page offers «Vreau să fiu
-voluntar» until the steps below are done. A volunteer is not a registration — no place of the race, no
+voluntar» until the steps below are done. Since §NNN the form is a **page of its own**, `/ro/evenimente/<slug>/voluntari`
+(`/en/events/<slug>/volunteers`); the event's page keeps only one line, «Căutăm voluntari: …», and one button to it. A volunteer is not a registration — no place of the race, no
 declaration, no row on the public list, no account — and the Organizer and the Administrators are the
 only ones who see the names, addresses and telephone numbers.
 
@@ -2056,8 +2057,8 @@ only ones who see the names, addresses and telephone numbers.
    Romania's volunteering law, **Legea nr. 78/2014**. The person, the role and what it asks, the event, its
    date and place fill in by themselves when somebody accepts; only the club's four facts are left to
    type. The lawyer checks it against the law: the written form and whether an electronic acceptance is
-   enough, the age (the form takes adults only, «Am cel puțin 18 ani»; minors with a parent's consent are
-   a later question), the role's description as the task sheet, insurance, and a register of volunteer
+   enough, the age (the platform takes volunteers from **14 years**; under 18 a parent or guardian accepts the same
+   text too — step 8, whose clause the lawyer reads here as well), the role's description as the task sheet, insurance, and a register of volunteer
    agreements. The platform deletes the volunteers' rows, the acceptances with them, 30 days after the
    event; whether the club must keep a record of the agreements longer, and how (a narrowed acceptance
    record, or an archive copy to the club's mailbox as the declarations have), is the owner's and the
@@ -2071,12 +2072,16 @@ only ones who see the names, addresses and telephone numbers.
    line whether the form is on the page now and, if not, which of the conditions is missing: the event
    takes volunteers, the event is published and not for the members alone (the form is public), the
    event is not cancelled or over, a role still needs people, the notice describes them, a volunteer
-   agreement is in force, and the notice describes its acceptance. The form is a fold, «Vreau să fiu voluntar», under the programme; it asks the name,
+   agreement is in force, and the notice describes its acceptance. While they all hold, the event's page says «Căutăm voluntari:» and the names of the
+   roles that still need people, with the button «Vreau să fiu voluntar»; the page it opens — «Vreau să fiu voluntar la …», the event's date and
+   place, the roles with their descriptions and how many places each still has — asks the name,
    the address, the telephone number, «Ce ești dispus(ă) să faci» — one box per role that still needs
    people, as many ticked as the person would do, at least one (§761) —, an optional
    message, the consent tick, «Am citit și accept contractul de voluntariat» (linking the text in force)
-   and — once the notice of step 2 names them — «Vârsta» (18 or more; it replaces the tick «Am cel puțin 18 ani»), «Sex», «Orașul», the optional ticks «Am mai fost voluntar în trecut la alte curse»
-   and «Fac parte din grupul …», behind the same anti-bot checks as the registration form. **«Oferim tricouri voluntarilor»** (a tick on the card, off by
+   and — once the notice of step 2 names them — «Vârsta» (14 or more; it replaces the tick «Am cel puțin 18 ani»), «Sex», «Orașul», the optional ticks «Am mai fost voluntar în trecut la alte curse»
+   and «Fac parte din grupul …», behind the same anti-bot checks as the registration form. The page answers **404** while the form could not be sent —
+   the same conditions as the line above — never a form that cannot work, and after a send it says «Am primit oferta ta» on that page, with a toast;
+   it is never in the sitemap or a search index, like the registration page. **«Oferim tricouri voluntarilor»** (a tick on the card, off by
    default, one press like «Primește voluntari pe pagină») adds «Mărimea tricoului» to the form and to every row; the club gives no T-shirts today.
 5. **Answer the offers.** Each sign-up is «Înscris», with **no role yet**: it waits under **«De repartizat»**
    at the top of the card, with the roles the person ticked as chips. The person gets one email, «Ți-am primit
@@ -2091,7 +2096,7 @@ only ones who see the names, addresses and telephone numbers.
    voluntarul» (the address and the telephone number go with it). «N din M» beside each role counts only the
    people **given** that role («Înscris» and «Confirmat»); the page stops offering a role once it has them.
    «Adaugă un voluntar de mână» enters a person yourself — tick what they would do, and give a role if you
-   already know it; a role may take more people than it asked; the age, sex, city and ticks are optional there (an age below 18 is refused), and drawn only once the notice of step 2 names them.
+   already know it; a role may take more people than it asked; the age, sex, city and ticks are optional there (an age below 14 is refused, and one of 14–17 asks the parent's name, step 8), and drawn only once the notice of step 2 names them.
    A row shows «A mai fost voluntar» and «Din grupul …» as small chips and the rest in one line. «Descarcă CSV» downloads the list, grouped by
    the role given, with a column of the roles each person offered for. A role somebody was given or ticked
    cannot be deleted until you change their roles.
@@ -2134,3 +2139,39 @@ only ones who see the names, addresses and telephone numbers.
      **«Descarcă ecusoanele (PDF)»**: at most 300 of a pile and 1 000 in a file; a box you empty means none
      of that pile, and a number the file cannot take brings you back to the page with the reason. Print at
      100 %, cut along the dashed lines.
+
+8. **Volunteers from 14, with a parent's or guardian's agreement** (`DECISIONS.md` §NNN; the owner, 2026-10-14: «voluntarii
+   trebuie să aibă cel puțin 14 ani, nu 18»). The age is one constant of the platform, `VOLUNTEER_MINIMUM_AGE` = 14 (no club
+   setting: a different number is Legea nr. 78/2014's question and one line of code). A person of 14–17 is taken **only with a parent or
+   guardian who accepts the same agreement in their own name**; an adult goes alone, as ever. **Until both texts below are in force in
+   both languages, the club takes nobody under 18**: the form refuses a typed age under 18 with a sentence that says so, the
+   organizers' entry refuses it too, and `/admin/tasks` shows the row «Textele pentru voluntarii sub 18 ani».
+   - **Approve the two texts again from the platform's templates, a lawyer reading them first** (`/admin/legal` → «GDPR» and «Contract de
+     voluntariat» → «Regenerează din șablon» → confirm). The notice's volunteers paragraph now names minors, the guardian's name and email
+     (`{{volunteerMinors}}`), why they are kept (to ask the guardian's agreement) and that they go with the volunteer's row, 30 days after the
+     event. The agreement gains four sentences that name the guardian (`{{volunteerGuardian}}`) and drop whole for an adult: the guardian's
+     consent by accepting this same text in their own name — and that the minor is confirmed only after it —, activities suited to the age and no
+     night or dangerous posts, the guardian's data, and how the guardian accepts. **For the lawyer, not decided here:** Legea nr. 78/2014 has its
+     own rules on the age and the consent of minors who volunteer — whether 14 is the right floor, whether a parent's typed name is the consent form it
+     asks, what «activități potrivite vârstei» must exclude, whether the club must keep the guardian's consent beyond the 30 days, and whether the
+     guardian, who is not on any list, is told enough by the email's footer (art. 14 GDPR).
+   - **What a person of 15 sees**: on the volunteers' page, as soon as the age typed is under 18, the block «Dacă ai sub 18 ani» — «Numele
+     părintelui sau tutorelui», «Emailul părintelui sau tutorelui» and the tick «Părintele sau tutorele meu știe și e de acord» (always shown without scripts,
+     the server asks them of a minor only). Sent, the offer is «Înscris» and the parent gets an email with a **single-use link** (valid 14 days, hashed at rest;
+     opening it changes nothing) to a page with the agreement filled for the volunteer, where they tick, type their name — the acceptance — and press
+     «Îmi dau acordul». The volunteer then gets their copy again, with both acceptances on the PDF.
+   - **On the card**: a minor shows «Acordul părintelui lipsește» until the parent accepts («Link trimis părintelui» while a link is live,
+     «Acordul părintelui primit» after), with the parent's name beside the age. **«Confirmă» is refused** with that sentence until the parent has accepted.
+     «Trimite linkul părintelui» sends the email again (only with an address); **«PDF de semnat de părinte»** is the sheet for the desk — the volunteer's line
+     and the parent's — and **«Acordul părintelui pe hârtie»** records that the parent signed it (after a question), naming you; the sheet is kept
+     by the club. A volunteer entered by hand under 18 needs the parent's name (the address only if you have it: the consent may be on paper); a
+     person's age changed to 18 or more clears the parent's data. The CSV and «Toate datele unei persoane» carry the parent too.
+     A person already «Confirmat» cannot be changed to an age under 18 in one save: the card says «Acordul părintelui lipsește», and you move them
+     back to «Înscris» first, so no minor stays confirmed without the parent. A parent's address that is the volunteer's own mailbox is no refusal
+     (a family on one address), but the row says «Aceeași adresă ca a voluntarului», so your «Confirmă» is the check. Once the parent accepted,
+     the PDF shows two signers, each with their own version and fingerprint, which may differ when the club approved a newer text between.
+   - **A parent's own request to see or erase what is kept** (art. 15 and 17 GDPR): «Toate datele unei persoane» finds a row by the **volunteer's**
+     address, never the parent's, and the parent's name and address live only on the minor's row (30 days after the event, they go with it).
+     So for a parent's request, find the minor's row on the event's «Voluntari» card (the parent's address is on it, and the CSV lists it), read or
+     export it from there, and erase by deleting the row — that is the manual route; no tool searches by a guardian's address, because the platform
+     keeps no list of guardians (a table of them was refused, `DECISIONS.md` §NNN).

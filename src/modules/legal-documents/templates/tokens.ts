@@ -16,6 +16,7 @@ import {
   MEMBERS_SHOP_MERGE_FIELD,
   VOLUNTEERS_MERGE_FIELD,
   VOLUNTEER_AGREEMENT_NOTICE_MERGE_FIELD,
+  VOLUNTEER_MINORS_NOTICE_MERGE_FIELD,
   VOLUNTEER_PROFILE_NOTICE_MERGE_FIELD,
   DEADLINE_MERGE_FIELDS,
   deadlineMergeValues,
@@ -35,7 +36,7 @@ import { gmailFallbackClause } from "@/modules/notifications/fallback-notice-wor
 import { eventInvitationsClause } from "@/modules/registrations/invitation-words";
 import { feedbackFormsClause, feedbackFormsNamedClause } from "@/modules/feedback/notice-words";
 import { membersShopClause } from "@/modules/content/shop/notice-words";
-import { volunteerAgreementClause, volunteerProfileClause, volunteersClause } from "@/modules/volunteers/notice-words";
+import { volunteerAgreementClause, volunteerMinorsClause, volunteerProfileClause, volunteersClause } from "@/modules/volunteers/notice-words";
 
 /**
  * The declaration's merge fields, in one list (`DECISIONS.md` §190).
@@ -146,6 +147,8 @@ export const DECLARATION_TOKENS: readonly DeclarationToken[] = [
     messageKey: "volunteerChoiceTasks",
     example: { ro: "Punct de hidratare — împarte apă la kilometrul 5; Sosire — dă medaliile", en: "Water station — hands out water at kilometre 5; Finish — hands out the medals" },
   },
+  // The parent or guardian of a volunteer under eighteen (§NNN): their name, in the minors' clause — the clause is left out for an adult.
+  { token: "{{volunteerGuardian}}", messageKey: "volunteerGuardian", example: same("Maria Popescu") },
   // The club's deadlines (§377) and the public list's period after the event (§421), in any of the three texts, filled from "Termene" when the text is
   // shown — the examples are what an unset setting fills in, in the words it is filled with.
   // Each language's example in its own words, as the text in that language is filled (§369).
@@ -265,6 +268,13 @@ export const DECLARATION_TOKENS: readonly DeclarationToken[] = [
     token: `{{${VOLUNTEER_PROFILE_NOTICE_MERGE_FIELD}}}`,
     messageKey: VOLUNTEER_PROFILE_NOTICE_MERGE_FIELD,
     example: inBoth((locale) => volunteerProfileClause(locale)),
+  },
+  // The privacy notice's marker for volunteers under eighteen and their guardian (§NNN): the guardian's boxes, and the switch —
+  // a person under eighteen is taken only while it is named, with the agreement's `{{volunteerGuardian}}` (`describesVolunteerMinors`).
+  {
+    token: `{{${VOLUNTEER_MINORS_NOTICE_MERGE_FIELD}}}`,
+    messageKey: VOLUNTEER_MINORS_NOTICE_MERGE_FIELD,
+    example: inBoth((locale) => volunteerMinorsClause(locale)),
   },
 ];
 

@@ -26,6 +26,7 @@ import {
   VOLUNTEER_ROLE_DESCRIPTION_MAX,
   volunteerPublicInputSchema,
   volunteerPublicProfileSchema,
+  volunteerPublicProfileSchemaFor,
   volunteerPublicSchemaFor,
   volunteerRoleInputSchema,
   volunteerStaffInputSchema,
@@ -75,16 +76,22 @@ describe("§765 the public form's age, sex and city (the notice names them)", ()
     if (!missing.success) expect(refusedFields(missing.error)).toEqual(["adult"]);
   });
 
-  it("holds the age to the minimum: 17 is refused on the age's own box, 18 and the top bound are taken", () => {
-    expect(VOLUNTEER_MINIMUM_AGE).toBe(18);
-    const under = volunteerPublicProfileSchema.safeParse({ ...PUBLIC, age: "17" });
-    expect(under.success).toBe(false);
-    if (!under.success) expect(refusedFields(under.error)).toEqual(["age"]);
+  it("holds the age to the minimum: 13 is refused on the age's own box; with minors closed 17 is too, 18 and the top bound are taken", () => {
+    // §NNN: fourteen, not eighteen — a person of fourteen to seventeen needs a guardian (below), and only while the texts allow it.
+    expect(VOLUNTEER_MINIMUM_AGE).toBe(14);
+    for (const age of ["13", "1"]) {
+      const under = volunteerPublicProfileSchemaFor(true).safeParse({ ...PUBLIC, age });
+      expect(under.success, age).toBe(false);
+      if (!under.success) expect(refusedFields(under.error), age).toEqual(["age"]);
+    }
+    const closed = volunteerPublicProfileSchema.safeParse({ ...PUBLIC, age: "17" });
+    expect(closed.success).toBe(false);
+    if (!closed.success) expect(refusedFields(closed.error)).toEqual(["age"]);
     // The age is named together with the other boxes that failed, never held back until they are mended.
-    const several = volunteerPublicProfileSchema.safeParse({ ...PUBLIC, age: "17", sex: "", city: "", roleIds: [] });
+    const several = volunteerPublicProfileSchema.safeParse({ ...PUBLIC, age: "13", sex: "", city: "", roleIds: [] });
     if (!several.success) expect(refusedFields(several.error).sort()).toEqual(["age", "city", "roleIds", "sex"]);
     expect(several.success).toBe(false);
-    expect(volunteerStaffInputSchema.safeParse({ roleIds: [ID], assignedRoleId: "", name: "Ana", email: "ana@example.test", phone: "+40712345678", age: "15" }).success).toBe(false);
+    expect(volunteerStaffInputSchema.safeParse({ roleIds: [ID], assignedRoleId: "", name: "Ana", email: "ana@example.test", phone: "+40712345678", age: "13" }).success).toBe(false);
     expect(volunteerPublicProfileSchema.parse({ ...PUBLIC, age: "18" }).age).toBe(18);
     expect(volunteerPublicProfileSchema.parse({ ...PUBLIC, age: String(VOLUNTEER_AGE_MAX) }).age).toBe(VOLUNTEER_AGE_MAX);
     expect(volunteerPublicProfileSchema.parse({ ...PUBLIC, age: " 042 " }).age).toBe(42);
@@ -143,8 +150,16 @@ describe("§765 the public form's age, sex and city (the notice names them)", ()
   });
 
   it("picks the schema by the notice: the profile's while it names it, §758's otherwise", () => {
-    expect(volunteerPublicSchemaFor(true)).toBe(volunteerPublicProfileSchema);
-    expect(volunteerPublicSchemaFor(false)).toBe(volunteerPublicInputSchema);
+    expect(volunteerPublicSchemaFor({ profile: false, minors: false })).toBe(volunteerPublicInputSchema);
+    // §758's form takes no age and no guardian, whatever the minors' texts say: adults only, by its own tick.
+    expect(volunteerPublicSchemaFor({ profile: false, minors: true })).toBe(volunteerPublicInputSchema);
+    // The profile's, with or without the minors' path: the same adult, a different verdict on a minor.
+    const adult = { ...PUBLIC, age: "34" };
+    expect(volunteerPublicSchemaFor({ profile: true, minors: false }).safeParse(adult).success).toBe(true);
+    expect(volunteerPublicSchemaFor({ profile: true, minors: true }).safeParse(adult).success).toBe(true);
+    const minor = { ...PUBLIC, age: "15" };
+    expect(volunteerPublicSchemaFor({ profile: true, minors: false }).safeParse(minor).success).toBe(false);
+    expect(volunteerPublicSchemaFor({ profile: true, minors: true }).safeParse(minor).success).toBe(false);
   });
 
   it("names the boxes a refusal can point at, in the form's order, including the new ones", () => {
@@ -169,7 +184,7 @@ describe("§765 the organizers' entry takes the same answers, all optional", () 
       shirtSize: "S",
     });
     for (const [field, value] of [
-      ["age", "17"],
+      ["age", "13"],
       ["age", "abc"],
       ["age", "101"],
       ["sex", "UNSPECIFIED"],

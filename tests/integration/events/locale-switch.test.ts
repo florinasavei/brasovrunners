@@ -1,3 +1,4 @@
+import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { eventTranslations, events } from "@/db/schema/events";
 import { resolveLocaleSwitch } from "@/modules/events/locale-switch";
@@ -67,6 +68,21 @@ describe("BR-REQ-040-01 where a language switch lands", () => {
     expect(await resolveLocaleSwitch(db, "/en/events/tampa-trail", "ro")).toBe(
       "/ro/evenimente/tura-pe-tampa",
     );
+  });
+
+  it("§NNN keeps the volunteers' page and the guardian's link on their own address in the other language", async () => {
+    await seedEvent({ withEnglish: true });
+
+    // The volunteers' page is the event's own page in the other language: its slug is that language's, not this one's.
+    expect(await resolveLocaleSwitch(db, "/ro/evenimente/tura-pe-tampa/voluntari", "en")).toBe("/en/events/tampa-trail/volunteers");
+    expect(await resolveLocaleSwitch(db, "/en/events/tampa-trail/volunteers", "ro")).toBe("/ro/evenimente/tura-pe-tampa/voluntari");
+    // No English translation: the listing, never a 404 (BR-REQ-040-02).
+    await db.delete(eventTranslations).where(eq(eventTranslations.slug, "tampa-trail"));
+    expect(await resolveLocaleSwitch(db, "/ro/evenimente/tura-pe-tampa/voluntari", "en")).toBe("/en/events");
+    // The guardian's link is opaque and the same secret in either language: the switch changes the prefix, never the secret.
+    const secret = "a".repeat(43);
+    expect(await resolveLocaleSwitch(db, `/ro/voluntari/parinte/${secret}`, "en")).toBe(`/en/volunteers/guardian/${secret}`);
+    expect(await resolveLocaleSwitch(db, `/en/volunteers/guardian/${secret}`, "ro")).toBe(`/ro/voluntari/parinte/${secret}`);
   });
 
   it("falls back to the listing when the event has no translation in the other language", async () => {

@@ -4,6 +4,7 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import ConstructionIcon from "@mui/icons-material/Construction";
 import EventBusyIcon from "@mui/icons-material/EventBusy";
 import EventRepeatIcon from "@mui/icons-material/EventRepeat";
+import FamilyRestroomIcon from "@mui/icons-material/FamilyRestroom";
 import GroupsIcon from "@mui/icons-material/Groups";
 import HelpIcon from "@mui/icons-material/Help";
 import HistoryIcon from "@mui/icons-material/History";
@@ -54,6 +55,8 @@ export const STATUS_GLYPHS = {
   offered: VolunteerActivismIcon,
   // «A mai fost voluntar» on the same row (§765): what the person did before, not what they offer now.
   experience: HistoryIcon,
+  // A guardian's address that is the volunteer's own (§NNN): a family on one address, marked on the card, never refused.
+  family: FamilyRestroomIcon,
 } satisfies Record<string, ComponentType<SvgIconProps>>;
 
 export type StatusGlyphName = keyof typeof STATUS_GLYPHS;

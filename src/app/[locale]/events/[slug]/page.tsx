@@ -15,15 +15,9 @@ import {
   cachedEventCheckpoints,
   cachedPublishedEventBySlug,
   cachedPublishedTranslations,
-  cachedVolunteerAgreementDescribed,
-  cachedVolunteerAgreementInForce,
-  cachedVolunteerProfileDescribed,
-  cachedVolunteerRoles,
-  cachedVolunteersDescribed,
 } from "@/modules/public-cache/reads";
 import { parseInterestOutcome, parseInterestSince } from "@/modules/registrations/interest-box";
-import { volunteerBoxRoles, volunteerEventAhead, volunteerOfferClosedFor } from "@/modules/volunteers/domain/volunteer";
-import { parseVolunteerBoxes, parseVolunteerOutcome, type VolunteerTyped } from "@/modules/volunteers/ui/volunteer-box";
+import { readVolunteerOffer } from "@/modules/volunteers/offer";
 import { CLUB_TIME_ZONE } from "@/i18n/dates";
 import { nextWallMidnight } from "@/modules/events/domain/page-clock";
 import { holdPageUntil } from "@/modules/public-cache/page-lifetime";
@@ -58,12 +52,6 @@ type Props = {
    * CDN's copy, get the 404 an unpublished page gives (§28).
    */
   membersRead?: () => Promise<PublishedEvent | undefined>;
-  /**
-   * What was typed in the volunteer box before a refusal (§754, §142) — the sealed draft cookie, which only
-   * the live twin may read: this static route reaches no cookie while it renders (§549). Asked only when the
-   * address says the box was answered.
-   */
-  readVolunteerDraft?: () => Promise<VolunteerTyped | null>;
 };
 
 type PublishedEvent = NonNullable<Awaited<ReturnType<typeof cachedPublishedEventBySlug>>>;
@@ -73,9 +61,6 @@ type EventQuery = {
   since?: string | string[];
   lista?: string | string[];
   declaratie?: string | string[];
-  /** The volunteer box's answer and the boxes a refusal named (§754). */
-  volunteer?: string | string[];
-  vfields?: string | string[];
 };
 
 /** One value of a query key, as the page's readers expect it: the first, when the address repeats it. */
@@ -142,7 +127,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default async function EventDetailPage({ params, query, canEdit = false, membersRead, readVolunteerDraft }: Props) {
+export default async function EventDetailPage({ params, query, canEdit = false, membersRead }: Props) {
   const { locale, slug } = await params;
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
@@ -198,43 +183,19 @@ export default async function EventDetailPage({ params, query, canEdit = false, 
 
   const interestOutcome = parseInterestOutcome(interest);
   /*
-    «Vreau să fiu voluntar» (§754): drawn only while the event takes volunteers, a role still needs people, the
-    privacy notice in force describes them and a volunteer agreement is in force (§758; `volunteerOfferClosedFor`)
-    — the roles, the notice and the agreement from the
-    public cache, expired by every write to either, and the event's own end held so the page is made again
-    when it is over. The form's action asks the database again. Never on a members' event (§552): the form is
-    public. While the database is away the box is simply not drawn.
+    «Căutăm voluntari: …» and «Vreau să fiu voluntar» (§754, §NNN): a short box that links to the volunteers' own page
+    (`/evenimente/<slug>/voluntari`), drawn only where that page would answer 200 — the event takes volunteers, a role still
+    needs people, the privacy notice in force describes them and a volunteer agreement is in force (§758;
+    `readVolunteerOffer`, the one read the page shares) — from the public cache, expired by every write to the roles, the
+    people and the texts, and the event's own end held so the page is made again when it is over. The form is not here any
+    more, and neither is its draft or its answer: this page reads no query for it, so it stays static. Never on a members'
+    event (§552): the page is public. While the database is away the box is simply not drawn.
   */
   await holdPageUntil([event.endsAt ?? event.startsAt], now);
-  const volunteerOffer = membersOnly
-    ? null
-    : await readOrWhileAway(async () => {
-        const { acceptsVolunteers, shirts, roles } = await cachedVolunteerRoles(event.id);
-        if (!acceptsVolunteers) return null;
-        const closed = volunteerOfferClosedFor({
-          acceptsVolunteers,
-          standings: roles,
-          noticeDescribes: await cachedVolunteersDescribed(now),
-          agreementInForce: await cachedVolunteerAgreementInForce(now),
-          noticeDescribesAgreement: await cachedVolunteerAgreementDescribed(now),
-          eventAhead: volunteerEventAhead(event, now),
-          // This page is the published, public one: the members' twin never gets here (above).
-          published: true,
-          membersOnly,
-        });
-        // The last place given by the organizers while this person typed (an offer takes none, §761) still owes
-        // them the answer: the box stays, with no role and no form (`volunteerBoxRoles`).
-        const boxRoles = volunteerBoxRoles(closed, roles, parseVolunteerOutcome(one(asked.volunteer)));
-        if (boxRoles === null) return null;
-        // Which form (§765): the profile's boxes — age, sex, city, experience, group, and the T-shirt while the event gives
-        // one — while the notice in force names them, §758's tick «Am cel puțin 18 ani» while it does not. The action asks again.
-        return { roles: boxRoles, shirts, profile: await cachedVolunteerProfileDescribed(now) };
-      }, null);
-  const volunteerRoles = volunteerOffer?.roles ?? null;
-  const volunteerOutcome = volunteerRoles ? parseVolunteerOutcome(one(asked.volunteer)) : null;
-  // What was typed before a refusal (§142), read only when the page is the answer to one — by the twin, which may read the cookie.
-  const volunteerTyped: VolunteerTyped =
-    volunteerOutcome !== null && volunteerOutcome !== "done" && readVolunteerDraft ? ((await readVolunteerDraft()) ?? {}) : {};
+  const volunteerOffer = membersOnly ? null : await readOrWhileAway(() => readVolunteerOffer(event, now), null);
+  const volunteerRoleNames = volunteerOffer
+    ? volunteerOffer.roles.filter((role) => role.free > 0).map((role) => (locale === "en" ? role.nameEn : role.nameRo))
+    : [];
   // A staff member who may edit the words gets the way into the editor from here (§135; the
   // owner: "when I am signed in … I should be able to edit events from the event page"). The live
   // twin reads the session and says so (§549); the editor asserts the role again for itself
@@ -283,18 +244,7 @@ export default async function EventDetailPage({ params, query, canEdit = false, 
           interestRenderedAt: (interestOutcome === "invalid" && parseInterestSince(since, now)) || now,
           declaratie,
           lista,
-          volunteers: volunteerOffer
-            ? {
-                roles: volunteerOffer.roles,
-                shirts: volunteerOffer.shirts,
-                profile: volunteerOffer.profile,
-                outcome: volunteerOutcome,
-                refused: parseVolunteerBoxes(one(asked.vfields)),
-                typed: volunteerTyped,
-                // A corrected form is timed from the render it corrects, like the interest box's (§146).
-                renderedAt: (volunteerOutcome !== null && volunteerOutcome !== "done" && parseInterestSince(since, now)) || now,
-              }
-            : null,
+          volunteers: volunteerRoleNames.length > 0 ? { roleNames: volunteerRoleNames } : null,
         }}
       />
     </Container>

@@ -19,8 +19,12 @@ import { isUuid } from "@/shared/ids";
  * volunteer must be this event's (NOT_FOUND otherwise, never another event's person through a forged address).
  * A file with a person's name leaves the site, so the download is audited as the declaration's is (§324): who and
  * when, never what it holds. A GET that mutates nothing else.
+ *
+ * `?for=guardian` (§NNN) is the desk's sheet for the parent or guardian of a volunteer under eighteen whose consent is
+ * still to come: the text to sign, with the volunteer's line and the guardian's, even though the volunteer accepted their
+ * own — read by «Acordul părintelui pe hârtie». For anybody else it is the same file as without it.
  */
-export async function GET(_request: Request, context: { params: Promise<{ id: string; volunteerId: string }> }): Promise<Response> {
+export async function GET(request: Request, context: { params: Promise<{ id: string; volunteerId: string }> }): Promise<Response> {
   let actor;
   try {
     actor = await requireStaff();
@@ -41,7 +45,7 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
   if (!volunteer) return NextResponse.json({ error: "NOT_FOUND" }, { status: 404 });
 
   const now = new Date();
-  const rendered = await renderVolunteerAgreementPdf(db, volunteer.id, now);
+  const rendered = await renderVolunteerAgreementPdf(db, volunteer.id, now, { sheet: new URL(request.url).searchParams.get("for") === "guardian" });
   // Not accepted and no agreement in force: there is no text to print.
   if (!rendered) return NextResponse.json({ error: "NOT_FOUND" }, { status: 404 });
   await recordAuditEvent(db, {

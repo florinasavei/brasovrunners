@@ -47,6 +47,12 @@ export const routing = defineRouting({
     "/events/[slug]/register": { ro: "/evenimente/[slug]/inscriere", en: "/events/[slug]/register" },
     // A group run's optional self-declaration (§393): the page that signs it, never a registration.
     "/events/[slug]/declaration": { ro: "/evenimente/[slug]/declaratie", en: "/events/[slug]/declaration" },
+    /**
+     * The event's volunteers page (§NNN, amending §754; the owner, 2026-10-14: «formularul trebuie să fie pagină separată, nu
+     * embedded în pagina evenimentului»): «Vreau să fiu voluntar la …» — the roles, the form, the agreement's links. A form page
+     * like the registration's, never a registration; it answers 404 while the form could not be sent.
+     */
+    "/events/[slug]/volunteers": { ro: "/evenimente/[slug]/voluntari", en: "/events/[slug]/volunteers" },
 
     /**
      * The three email-token landing pages (AGENTS.md §13.2, §13.3 scopes verify/complete/
@@ -98,6 +104,14 @@ export const routing = defineRouting({
     "/volunteers/agreement/[token]": {
       ro: "/voluntari/contract/[token]",
       en: "/volunteers/agreement/[token]",
+    },
+    /**
+     * The guardian's link (§NNN, amending §758): the page the email to a minor volunteer's parent or guardian opens — the
+     * agreement filled for the volunteer, a typed name, one tick, one button. The GET reads; only the button writes.
+     */
+    "/volunteers/guardian/[token]": {
+      ro: "/voluntari/parinte/[token]",
+      en: "/volunteers/guardian/[token]",
     },
     /**
      * "Send me that link again" (§19.4's second surface). No token in the path — this is the

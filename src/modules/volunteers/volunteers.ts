@@ -1,4 +1,5 @@
 import { and, asc, count, eq, gt, inArray, notInArray, sql } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 import { eventVolunteerRoleChoices, eventVolunteerRoles, eventVolunteers, type VolunteerAgreementMethod } from "@/db/schema/event-volunteers";
 import { events } from "@/db/schema/events";
 import { legalDocuments } from "@/db/schema/legal-documents";
@@ -17,6 +18,7 @@ import {
   noticeDescribesVolunteerProfile,
   noticeDescribesVolunteers,
   volunteerAgreementInForce,
+  volunteerMinorsOpen,
 } from "@/modules/legal-documents/repository";
 import { enqueueEmail } from "@/modules/notifications/outbox";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
@@ -31,12 +33,15 @@ import {
   acceptedRoleNames,
   choicesWithAssigned,
   compareRoles,
+  guardianAllowsConfirm,
+  isVolunteerMinor,
   openChoices,
   refusedFields,
   type RoleStanding,
   sameDescription,
   standingOf,
   type VolunteerRoleInput,
+  VOLUNTEER_MINIMUM_AGE,
   volunteerEventAhead,
   volunteerOfferClosedFor,
   volunteerPublicSchemaFor,
@@ -46,7 +51,7 @@ import {
   VOLUNTEER_STATES,
   type VolunteerState,
 } from "./domain/volunteer";
-import { agreementAcceptance, readAgreementFacts } from "./agreement";
+import { agreementAcceptance, canonicalOrNull, readAgreementFacts } from "./agreement";
 import { checkedRoleColour } from "./badges/badges";
 
 /**
@@ -152,6 +157,19 @@ export type VolunteerItem = {
   /** Whether a link to accept is live, and when an organizer last sent one. */
   agreementTokenExpiresAt: Date | null;
   agreementRequestedAt: Date | null;
+  /**
+   * The parent or guardian of a volunteer under eighteen (§NNN): their name and address (null for an adult, and for a
+   * guardian with no address — the consent is taken on paper), and how and when they accepted the agreement.
+   */
+  guardianName: string | null;
+  guardianEmail: string | null;
+  guardianAcceptedAt: Date | null;
+  guardianMethod: "LINK" | "PAPER" | null;
+  /** The number of the version the guardian accepted, read through the row's reference. */
+  guardianVersion: number | null;
+  /** Whether a link to the guardian is live, and when it was last asked for. */
+  guardianTokenExpiresAt: Date | null;
+  guardianRequestedAt: Date | null;
 };
 
 /** An event's roles, in the order the club set them. */
@@ -207,14 +225,16 @@ async function choicesOf<T extends Record<string, unknown>>(db: Database<T>, eve
 
 /** An event's volunteers, oldest first (the card groups them by the role given, «De repartizat» first). */
 export async function listVolunteers<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<VolunteerItem[]> {
+  const guardianDocument = alias(legalDocuments, "guardian_document");
   const rows = await db
-    .select({ row: eventVolunteers, agreementVersion: legalDocuments.version })
+    .select({ row: eventVolunteers, agreementVersion: legalDocuments.version, guardianVersion: guardianDocument.version })
     .from(eventVolunteers)
     .leftJoin(legalDocuments, eq(legalDocuments.id, eventVolunteers.agreementDocumentId))
+    .leftJoin(guardianDocument, eq(guardianDocument.id, eventVolunteers.guardianDocumentId))
     .where(eq(eventVolunteers.eventId, eventId))
     .orderBy(asc(eventVolunteers.createdAt), asc(eventVolunteers.id));
   const choices = await choicesOf(db, eventId);
-  return rows.map(({ row, agreementVersion }) => {
+  return rows.map(({ row, agreementVersion, guardianVersion }) => {
     const facts = readAgreementFacts(row.agreementFacts);
     return {
       id: row.id,
@@ -246,6 +266,13 @@ export async function listVolunteers<T extends Record<string, unknown>>(db: Data
       locale: row.locale,
       agreementTokenExpiresAt: row.agreementTokenExpiresAt,
       agreementRequestedAt: row.agreementRequestedAt,
+      guardianName: row.guardianName,
+      guardianEmail: row.guardianEmail,
+      guardianAcceptedAt: row.guardianAcceptedAt,
+      guardianMethod: row.guardianMethod,
+      guardianVersion: row.guardianAcceptedAt ? guardianVersion : null,
+      guardianTokenExpiresAt: row.guardianTokenExpiresAt,
+      guardianRequestedAt: row.guardianRequestedAt,
     };
   });
 }
@@ -584,7 +611,7 @@ export async function setVolunteersShirts<T extends Record<string, unknown>>(
   return result;
 }
 
-const STAFF_FIELDS = ["assignedRoleId", "name", "email", "phone", "note", "age", "sex", "city", "shirtSize"] as const;
+const STAFF_FIELDS = ["assignedRoleId", "name", "email", "phone", "note", "age", "sex", "city", "shirtSize", "guardianName", "guardianEmail"] as const;
 
 export type VolunteerRequest =
   | { kind: "add"; eventId: string; fields: Record<string, unknown> }
@@ -620,6 +647,31 @@ function staffInputOf(fields: Record<string, unknown>) {
     throw new DomainError("VALIDATION_ERROR", "the address is not valid", ["email"]);
   }
   return { ...parsed.data, choiceIds: choicesWithAssigned(parsed.data), identity };
+}
+
+/**
+ * An age under eighteen typed on the card while the club cannot take a minor (§NNN), when the parse refused the parent's boxes: the
+ * card draws those boxes only while minors are open or the person already is one, so the refusal is on `age` — the box the organizer
+ * can see — with the minors-closed sentence, never on a box that is not there. Null when the refusal is something else.
+ */
+async function minorsClosedRefusal<T extends Record<string, unknown>>(
+  db: Database<T>,
+  request: Extract<VolunteerRequest, { kind: "add" | "edit" }>,
+  error: unknown,
+  now: Date,
+): Promise<DomainError | null> {
+  if (!(error instanceof DomainError) || error.code !== "VALIDATION_ERROR") return null;
+  if (!error.fields.some((field) => field === "guardianName" || field === "guardianEmail")) return null;
+  const typed = typeof request.fields.age === "string" ? request.fields.age.trim() : "";
+  const age = /^\d{1,3}$/.test(typed) ? Number(typed) : null;
+  if (age === null || age < VOLUNTEER_MINIMUM_AGE || !isVolunteerMinor(age)) return null;
+  if (request.kind === "edit" && isUuid(request.id)) {
+    // A person who already is under eighteen has the boxes drawn: their refusal is the boxes'.
+    const [held] = await db.select({ age: eventVolunteers.age }).from(eventVolunteers).where(eq(eventVolunteers.id, request.id)).limit(1);
+    if (held && isVolunteerMinor(held.age)) return null;
+  }
+  if (await volunteerMinorsOpen(db, now)) return null;
+  return new DomainError("VALIDATION_ERROR", "the club cannot take volunteers under eighteen yet", ["age", ...error.fields.filter((field) => field !== "guardianName" && field !== "guardianEmail")]);
 }
 
 /** The answers a person says about themselves, which only a privacy notice that names them (`{{volunteerProfile}}`) lets the platform keep (§765). */
@@ -715,9 +767,19 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
 ): Promise<VolunteerResult> {
   assertMayManage(actor);
   assertIds(request.eventId, ...(request.kind === "add" ? [] : [request.id]));
-  const input = request.kind === "add" || request.kind === "edit" ? staffInputOf(request.fields) : null;
+  let input: ReturnType<typeof staffInputOf> | null = null;
+  if (request.kind === "add" || request.kind === "edit") {
+    try {
+      input = staffInputOf(request.fields);
+    } catch (error) {
+      throw (await minorsClosedRefusal(db, request, error, now)) ?? error;
+    }
+  }
   // Whether the notice in force names the profile answers (§765): read before the transaction, like the public sign-up does.
   const profileDescribed = input ? await noticeDescribesVolunteerProfile(db, now) : true;
+  // Whether the club may take a person under eighteen (§NNN): asked only when this entry says one — a card save of a person already
+  // under eighteen is never held up by a text withdrawn since, but nobody new is put under eighteen without the texts.
+  const minorsOpen = input?.guardian ? await volunteerMinorsOpen(db, now) : true;
   const state =
     request.kind === "setState"
       ? (VOLUNTEER_STATES as readonly unknown[]).includes(request.state)
@@ -787,6 +849,7 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
       if (input.assignedRoleId) await assertEventRoles([input.assignedRoleId], "assignedRoleId");
       if (await holderOf(input.identity.canonicalEmail)) throw alreadyListed();
       if (!profileDescribed) refuseUnnamedProfile(input, null, event.shirts);
+      if (input.guardian && !minorsOpen) throw new DomainError("VALIDATION_ERROR", "the club cannot take volunteers under eighteen yet", ["age"]);
       const [row] = await tx
         .insert(eventVolunteers)
         .values({
@@ -807,6 +870,9 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
           clubMember: input.clubMember,
           // A size only while the event gives a shirt (§765); a stale form posting one for an event without is ignored.
           shirtSize: event.shirts ? input.shirtSize : null,
+          // The parent or guardian of a person under eighteen (§NNN): their name, and the address when the organizer has one.
+          guardianName: input.guardian?.name ?? null,
+          guardianEmail: input.guardian?.email ?? null,
           createdByStaffUserId: actor.id,
           createdAt: now,
           updatedAt: now,
@@ -840,6 +906,10 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
 
     if (request.kind === "setState" && state) {
       if (current.state === state) return { changed: false, volunteer: summary };
+      // A volunteer under eighteen is confirmed only once their parent or guardian has accepted the agreement (§NNN): «Acordul părintelui lipsește».
+      if (state === "CONFIRMED" && !guardianAllowsConfirm(current)) {
+        throw new DomainError("VOLUNTEER_GUARDIAN_MISSING", "the parent's or guardian's agreement is missing", ["guardian"]);
+      }
       await tx.update(eventVolunteers).set({ state, updatedAt: now }).where(eq(eventVolunteers.id, current.id));
       await audit("volunteer.state_changed", { volunteerId: current.id, roleId: current.roleId, from: current.state, to: state });
       // A cancelled person reopened with a role given is told it: the email queued when it was given was withdrawn at
@@ -918,12 +988,59 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
     ).map((row) => row.roleId);
     const changedFields: string[] = (Object.keys(before) as (keyof typeof before)[]).filter((key) => before[key] !== next[key]);
     if (!sameIds(choicesBefore, input.choiceIds)) changedFields.push("roleIds");
+
+    // The parent or guardian follows the age typed (§NNN): a person under eighteen has one — the name, and the address if
+    // the organizer has it; an age of eighteen or more (or none) keeps no third person's data, so the guardian's columns,
+    // an acceptance included, are cleared. While the notice names no profile the age is not drawn and the guardian stays as it is.
+    // A guardian who has accepted is not renamed or readdressed under their acceptance.
+    let guardianSet: Partial<typeof eventVolunteers.$inferInsert> = {};
+    if (profileDescribed) {
+      if (input.guardian) {
+        if (!minorsOpen && !isVolunteerMinor(current.age)) throw new DomainError("VALIDATION_ERROR", "the club cannot take volunteers under eighteen yet", ["age"]);
+        // «Confirmat» is the guardian's consent's state (setState's rule): a confirmed person who becomes a minor is refused, not
+        // quietly demoted — the organizer moves them back to «Înscris» first, then the consent is asked.
+        if (current.state === "CONFIRMED" && current.guardianAcceptedAt === null) {
+          throw new DomainError("VOLUNTEER_GUARDIAN_MISSING", "the parent's or guardian's agreement is missing", ["age"]);
+        }
+        const nameChanged = input.guardian.name !== current.guardianName;
+        const emailChanged = canonicalOrNull(input.guardian.email ?? "") !== canonicalOrNull(current.guardianEmail ?? "");
+        if (current.guardianAcceptedAt && (nameChanged || emailChanged)) {
+          throw new DomainError("VALIDATION_ERROR", "the guardian has accepted: their name and address are fixed", ["guardianName", "guardianEmail"]);
+        }
+        if (nameChanged) changedFields.push("guardianName");
+        if (emailChanged) changedFields.push("guardianEmail");
+        guardianSet = {
+          guardianName: input.guardian.name,
+          guardianEmail: input.guardian.email,
+          // A changed guardian address kills a live guardian link (§12.8): it went to the old one.
+          ...(emailChanged ? { guardianTokenHash: null, guardianTokenExpiresAt: null } : {}),
+        };
+      } else if (current.guardianName !== null) {
+        changedFields.push("guardianCleared");
+        guardianSet = {
+          guardianName: null,
+          guardianEmail: null,
+          guardianDocumentId: null,
+          guardianAcceptedAt: null,
+          guardianMethod: null,
+          guardianLocale: null,
+          guardianTextHash: null,
+          guardianFacts: null,
+          guardianTypedName: null,
+          guardianRecordedByStaffUserId: null,
+          guardianTokenHash: null,
+          guardianTokenExpiresAt: null,
+          guardianRequestedAt: null,
+        };
+      }
+    }
     if (changedFields.length === 0) return { changed: false, volunteer: summary };
     try {
       await tx
         .update(eventVolunteers)
         .set({
           ...next,
+          ...guardianSet,
           canonicalEmail: input.identity.canonicalEmail,
           canonicalizationVersion: input.identity.canonicalizationVersion,
           // A changed address kills a live agreement link (§758, §12.8): it went to the old one.
@@ -1021,7 +1138,9 @@ export async function submitVolunteer<T extends Record<string, unknown>>(
   assertIds(eventId);
   // What the form asked depends on the notice in force (§765): the profile's boxes while it names them, §758's tick otherwise.
   const profileMode = await noticeDescribesVolunteerProfile(db, now);
-  const parsed = volunteerPublicSchemaFor(profileMode).safeParse(rawInput);
+  // A person under eighteen is taken only while the notice and the agreement in force both describe minors (§NNN).
+  const minorsMode = profileMode && (await volunteerMinorsOpen(db, now));
+  const parsed = volunteerPublicSchemaFor({ profile: profileMode, minors: minorsMode }).safeParse(rawInput);
   if (!parsed.success) {
     const fields = refusedFields(parsed.error);
     throw new DomainError("VALIDATION_ERROR", "the volunteer form is malformed", fields.length > 0 ? fields : ["name"]);
@@ -1032,6 +1151,8 @@ export async function submitVolunteer<T extends Record<string, unknown>>(
     "age" in input
       ? { age: input.age, sex: input.sex, city: input.city, volunteeredBefore: input.volunteeredBefore, clubMember: input.clubMember, shirtSize: input.shirtSize }
       : null;
+  // The parent or guardian of a person under eighteen (§NNN): the name and the address, or none for an adult.
+  const guardian = "guardian" in input ? input.guardian : null;
   // The spam defences answer like a success: nothing is kept, nothing says so.
   if (looksLikeSpam(input, now)) return { outcome: "done" };
 
@@ -1079,7 +1200,10 @@ export async function submitVolunteer<T extends Record<string, unknown>>(
 
   const byAddress = await consumeRateLimit(db, "volunteer-signup", emailBucketKey("volunteer-signup", identity.canonicalEmail), now);
   const byEvent = await consumeRateLimit(db, "volunteer-event", eventId, now);
-  if (!byAddress.allowed || !byEvent.allowed) return { outcome: "limited" };
+  // The guardian's address is mailed too, unproven (§NNN): the same three an hour, in its own bucket — a script cannot spend the allowance on one parent's mailbox.
+  const guardianAddress = guardian?.email ? canonicalOrNull(guardian.email) : null;
+  const byGuardian = guardianAddress ? await consumeRateLimit(db, "volunteer-signup", emailBucketKey("volunteer-guardian", guardianAddress), now) : { allowed: true };
+  if (!byAddress.allowed || !byEvent.allowed || !byGuardian.allowed) return { outcome: "limited" };
 
   const outcome = await db.transaction(async (tx): Promise<VolunteerSubmitOutcome & { added?: string; dropped?: boolean }> => {
     // The roles ticked, locked in the order of their ids — the order a role change locks them — while their people
@@ -1116,7 +1240,7 @@ export async function submitVolunteer<T extends Record<string, unknown>>(
     // naming the roles chosen, since nobody has given the person one yet (§761).
     const acceptance = await agreementAcceptance(
       tx,
-      { eventId, name: input.name, roles: { assigned: null, chosen }, locale: input.locale, document: agreement, method: "FORM" },
+      { eventId, name: input.name, roles: { assigned: null, chosen }, locale: input.locale, document: agreement, method: "FORM", guardianName: guardian?.name ?? null },
       now,
     );
     const [row] = await tx
@@ -1147,6 +1271,8 @@ export async function submitVolunteer<T extends Record<string, unknown>>(
               shirtSize: event.volunteersShirts ? profile.shirtSize : null,
             }
           : {}),
+        // The parent or guardian of a person under eighteen (§NNN): kept with the row, and asked by email below.
+        ...(guardian ? { guardianName: guardian.name, guardianEmail: guardian.email, guardianRequestedAt: now } : {}),
         ...acceptance,
         createdAt: now,
         updatedAt: now,
@@ -1167,6 +1293,20 @@ export async function submitVolunteer<T extends Record<string, unknown>>(
       idempotencyKey: `volunteer:${row.id}:received`,
       now,
     });
+    // A person under eighteen: their parent or guardian is asked, at the address the form took, in the language of the
+    // page — the same single-use link flow as the volunteer's own agreement (§NNN, §758). Minted when the email leaves.
+    if (guardian?.email) {
+      await enqueueEmail(tx, {
+        participantId: null,
+        registrationId: null,
+        messageType: "VOLUNTEER_GUARDIAN_REQUEST",
+        locale: input.locale,
+        recipientEmail: guardian.email,
+        payload: { eventId, volunteerId: row.id },
+        idempotencyKey: `volunteer:${row.id}:guardian-request:${now.getTime()}`,
+        now,
+      });
+    }
     // Each Organizer, Administrator and Superadministrator, in the language of their own row.
     const colleagues = await tx
       .select({ id: staffUsers.id, email: staffUsers.email, role: staffUsers.role, preferredLocale: staffUsers.preferredLocale })
@@ -1189,7 +1329,7 @@ export async function submitVolunteer<T extends Record<string, unknown>>(
       action: "volunteer.signed_up",
       entityType: "event",
       entityId: eventId,
-      metadata: { volunteerId: row.id, roleIds: chosen.map((role) => role.id) },
+      metadata: { volunteerId: row.id, roleIds: chosen.map((role) => role.id), ...(guardian ? { minor: true } : {}) },
       now,
     });
     return { outcome: "done", added: row.id, dropped };

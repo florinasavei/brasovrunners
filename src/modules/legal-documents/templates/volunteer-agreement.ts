@@ -28,9 +28,21 @@ import type { LegalDocumentBody } from "../domain/content-hash";
  * rows (§754) would not be — so the text promises only what the platform does: the volunteer's copy by email
  * (after the form, the link and the paper alike) and the proof kept «cât timp spune nota de confidențialitate»;
  * whether to keep a narrowed acceptance record longer, or to send the club an archive copy as the declarations do,
- * is the owner's and the lawyer's to decide before the club approves the text; and the age: the text states the platform's minimum, eighteen
- * (`VOLUNTEER_MINIMUM_AGE`, through `{{minimumAge}}`) — a minor's volunteering with a parent's consent is a
- * later question, and the form refuses a person who does not tick «Am cel puțin 18 ani».
+ * is the owner's and the lawyer's to decide before the club approves the text; and the age: the text states the platform's minimum, fourteen
+ * (`VOLUNTEER_MINIMUM_AGE`, through `{{minimumAge}}`) — and, since §NNN, a person of fourteen to seventeen volunteers with a parent's or
+ * guardian's agreement (see the minors' clause below).
+ *
+ * **The minors' clause (§NNN, amending §758; the owner, 2026-10-14: «voluntarii trebuie să aibă cel puțin 14 ani, nu 18» and
+ * «fă cu acord ceva»).** Four sentences name `{{volunteerGuardian}}` — the parent's or guardian's name — and so drop whole for an
+ * adult (`PARAGRAPH_MERGE_FIELDS`): the guardian's consent given by accepting this same text in their own name, from a link or
+ * on paper, and the minor's confirmation only after it (§1); the activities suited to the age and no night or dangerous posts
+ * (§6); the guardian's data, kept for the same purpose (§8); and how the guardian accepts (§9). A text that names the marker is
+ * what lets the club take a person under eighteen (`namesVolunteerGuardian`, with the notice's `{{volunteerMinors}}`);
+ * until both are in force in every language the form refuses an age under eighteen. **For the lawyer, not decided here:**
+ * Legea nr. 78/2014 has its own rules on the age and the consent of minors who volunteer — whether fourteen is the right
+ * floor, whether a parent's electronic acceptance of this text is the form of consent it asks, what «activități potrivite
+ * vârstei» must exclude, and whether the club must keep the guardian's consent beyond the thirty days — and the wording of the
+ * four sentences is the lawyer's to confirm before the club approves them.
  *
  * **Several roles (§761, amending §758).** A volunteer ticks every role they would do and the organizers give one
  * afterwards, so a person accepting on the form has no role yet. The text says it in its own sentences: «Voluntarul
@@ -49,12 +61,15 @@ const partiesRo = [
   "Voluntarul este {{volunteer}}.",
   // The platform's minimum age for a volunteer (§758): the one sentence of age, filled from the code.
   "Voluntarul declară că are cel puțin {{minimumAge}} împliniți.",
+  // The minors' clause (§NNN): dropped whole for an adult, whose `{{volunteerGuardian}}` is "".
+  "Voluntarul fiind minor, părintele sau tutorele său, {{volunteerGuardian}}, își dă acordul ca el să fie voluntar la acest eveniment, în condițiile acestui contract, acceptându-l separat, în nume propriu, din legătura primită pe e-mail sau pe hârtie, la organizatori. Voluntarul minor este confirmat numai după acest acord.",
 ];
 
 const partiesEn = [
   "The host organisation is <THE CLUB'S FULL LEGAL NAME>, with its registered seat at <REGISTERED ADDRESS>, <REGISTRATION NUMBER>, which can be contacted at <CONTACT EMAIL> (below, “the organiser”).",
   "The volunteer is {{volunteer}}.",
   "The volunteer declares that they are at least {{minimumAge}} old.",
+  "The volunteer being a minor, their parent or guardian, {{volunteerGuardian}}, agrees that they volunteer at this event, under this agreement, by accepting it separately, in their own name, from the link received by email or on paper, with the organisers. A minor volunteer is confirmed only after this consent.",
 ];
 
 const activityRo = [
@@ -132,10 +147,12 @@ const clubDutiesEn = [
 
 const safetyRo = [
   "Voluntarul poate refuza o sarcină pe care o consideră nesigură; spune acest lucru persoanei de contact, care îi dă altă sarcină sau îl înlocuiește. În caz de urgență sună la 112 și anunță organizatorii.",
+  "Voluntarului minor organizatorul îi dă numai activități potrivite vârstei sale și nu îl pune pe posturi de noapte sau periculoase, de exemplu pe un drum circulat fără un adult responsabil lângă el. Părintele sau tutorele, {{volunteerGuardian}}, poate retrage oricând acordul, anunțând organizatorul; voluntarul minor încetează atunci activitatea.",
 ];
 
 const safetyEn = [
   "The volunteer may refuse a task they consider unsafe; they tell the contact person, who gives them another task or replaces them. In an emergency they call 112 and tell the organisers.",
+  "The organiser gives a minor volunteer only activities suited to their age and puts them on no night or dangerous posts, for example on a road with traffic without a responsible adult beside them. The parent or guardian, {{volunteerGuardian}}, may withdraw the consent at any time by telling the organiser; the minor volunteer then stops the activity.",
 ];
 
 const durationRo = [
@@ -150,21 +167,25 @@ const durationEn = [
 
 const dataRo = [
   "Datele voluntarului — numele, adresa de email, numărul de telefon și rolul — sunt prelucrate de organizator pentru organizarea ajutorului la eveniment și ca dovadă a acestui contract, conform Regulamentului (UE) 2016/679 (GDPR) și notei de confidențialitate a clubului, publicată pe site-ul clubului, care spune cât timp se păstrează și ce drepturi are voluntarul. Pentru ele, voluntarul scrie la <EMAIL DE CONTACT>.",
+  "Datele părintelui sau tutorelui, {{volunteerGuardian}} — numele, adresa de email și acceptarea contractului — sunt prelucrate de organizator pentru același scop, în aceleași condiții, iar părintele sau tutorele are aceleași drepturi, pe care le exercită scriind la <EMAIL DE CONTACT>.",
 ];
 
 const dataEn = [
   "The volunteer's data — their name, email address, telephone number and role — is processed by the organiser to organise the help at the event and as evidence of this agreement, under Regulation (EU) 2016/679 (GDPR) and the club's privacy notice, published on the club's website, which says how long it is kept and what rights the volunteer has. For them, the volunteer writes to <CONTACT EMAIL>.",
+  "The data of the parent or guardian, {{volunteerGuardian}} — their name, email address and acceptance of the agreement — is processed by the organiser for the same purpose, on the same terms, and the parent or guardian has the same rights, which they exercise by writing to <CONTACT EMAIL>.",
 ];
 
 const lawRo = [
   "Contractul se încheie potrivit Legii nr. 78/2014 privind reglementarea activității de voluntariat în România și se completează cu prevederile Codului civil.",
   // «Momentul acceptării» as the platform records it (§534's words for the declarations), never a time stamp.
   "Voluntarul acceptă contractul electronic — numele, bifa de acceptare, momentul acceptării ({{signedAt}}) și amprenta textului citit sunt înregistrate împreună de platforma clubului — sau îl semnează pe hârtie, la organizatori. Voluntarul primește pe email o copie a contractului acceptat, ca PDF. Clubul păstrează dovada acceptării cât timp spune nota de confidențialitate.",
+  "Părintele sau tutorele, {{volunteerGuardian}}, acceptă contractul în nume propriu, electronic — numele scris, bifa de acceptare, momentul acceptării ({{signedAt}}) și amprenta textului citit sunt înregistrate împreună de platforma clubului — sau îl semnează pe hârtie, la organizatori.",
 ];
 
 const lawEn = [
   "The agreement is made under Romanian Law no. 78/2014 on volunteering in Romania and is completed by the Romanian Civil Code.",
   "The volunteer accepts the agreement electronically — the name, the acceptance tick, the moment of acceptance ({{signedAt}}) and the fingerprint of the text read are recorded together by the club's platform — or signs it on paper, with the organisers. The volunteer receives a copy of the accepted agreement by email, as a PDF. The club keeps the proof of acceptance for as long as the privacy notice says.",
+  "The parent or guardian, {{volunteerGuardian}}, accepts the agreement in their own name, electronically — the typed name, the acceptance tick, the moment of acceptance ({{signedAt}}) and the fingerprint of the text read are recorded together by the club's platform — or signs it on paper, with the organisers.",
 ];
 
 export const volunteerAgreementRo: LegalDocumentBody = {

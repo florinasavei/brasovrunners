@@ -28,9 +28,7 @@ import DeclarationOffer from "@/modules/group-run-declarations/ui/DeclarationOff
 import GroupRunSafetyRules from "@/modules/group-run-declarations/ui/GroupRunSafetyRules";
 import { confirmationWindow } from "@/modules/registrations/domain/hold-deadlines";
 import type { parseInterestOutcome } from "@/modules/registrations/interest-box";
-import type { parseVolunteerBoxes, parseVolunteerOutcome, VolunteerTyped } from "@/modules/volunteers/ui/volunteer-box";
-import VolunteerBox from "@/modules/volunteers/ui/VolunteerBox";
-import type { PublicVolunteerRole } from "@/modules/volunteers/volunteers";
+import VolunteerCallout from "@/modules/volunteers/ui/VolunteerCallout";
 import RegistrationInterestForm from "@/modules/registrations/ui/RegistrationInterestForm";
 import RegistrationSteps from "@/modules/registrations/ui/RegistrationSteps";
 import type { EventForecast } from "@/modules/weather/domain/forecast";
@@ -71,22 +69,11 @@ export type EventPageVisit = {
   declaratie?: string;
   lista?: string;
   /**
-   * «Vreau să fiu voluntar» (§754): the roles that still need people and how the form answered, or null
-   * when the form is not offered (the event takes no volunteers, every role is full, or the privacy
-   * notice in force does not describe them).
+   * «Căutăm voluntari: …» and the button to the volunteers' own page (§NNN, amending §754): the names of the roles that
+   * still need people, in the page's language, or null when that page would answer 404 — the event takes no volunteers,
+   * every role is full, or the privacy notice or the volunteer agreement in force does not describe them.
    */
-  volunteers?: {
-    roles: readonly PublicVolunteerRole[];
-    /** «Oferim tricouri voluntarilor» (§765): the form asks the T-shirt's size. */
-    shirts: boolean;
-    /** The notice in force names what a volunteer says about themselves (§765): the form asks it — else §758's tick. */
-    profile: boolean;
-    outcome: ReturnType<typeof parseVolunteerOutcome>;
-    refused: ReturnType<typeof parseVolunteerBoxes>;
-    typed: VolunteerTyped;
-    /** When the render a corrected form is timed from was made (§146). */
-    renderedAt: Date;
-  } | null;
+  volunteers?: { roleNames: readonly string[] } | null;
 };
 
 /**
@@ -341,23 +328,11 @@ export default async function EventPageView({
       {/* The programme (§96, §117), under `#schedule`: the timed rows, then the text. */}
       <EventProgramme scheduleItems={event.scheduleItems} scheduleJson={event.scheduleJson} timeZone={event.timezone} heading={t("schedule")} />
 
-      {/* «Vreau să fiu voluntar» (§754), after the programme and before the rules: a fold, closed on arrival
-          unless the person has just answered. A visit's page only, and only while the three conditions
-          hold (the page decides) — the preview before saving reads no public cache and takes no name. */}
-      {visit?.volunteers && !membersOnly && (
-        <VolunteerBox
-          locale={locale}
-          slug={slug}
-          roles={visit.volunteers.roles}
-          shirts={visit.volunteers.shirts}
-          profile={visit.volunteers.profile}
-          outcome={visit.volunteers.outcome}
-          refused={visit.volunteers.refused}
-          typed={visit.volunteers.typed}
-          renderedAt={visit.volunteers.renderedAt}
-          attempt={now.toISOString()}
-        />
-      )}
+      {/* «Căutăm voluntari: …» and «Vreau să fiu voluntar» (§754, §NNN), after the programme and before the rules: one line
+          and one button to the volunteers' own page — the form is no longer here. A visit's page only, and only where that
+          page would answer 200 (the page decides, from the one read both share) — the preview before saving reads no
+          public cache and takes no name. */}
+      {visit?.volunteers && !membersOnly && <VolunteerCallout slug={slug} roleNames={visit.volunteers.roleNames} />}
 
       {/*
         «Condiții de participare» / "Participation rules" (§498; the owner, 2026-09-27): the
