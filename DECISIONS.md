@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.24-2026-10-14 -->
+<!-- PROJECT_BASELINE: BR-V3.25-2026-10-14 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V3.24-2026-10-14`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.25-2026-10-14`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -26386,3 +26386,17 @@ Baseline `BR-V3.23-2026-10-14`.
 **Refused.** A second vocabulary for sex or sizes (the registration form's are reused); two radios for «Am mai fost voluntar» (one tick, unticked is no); checking the club-group tick against «Echipa» (it is the person's claim); a hidden toggle button for either switch (the standing rule); editing the texts in force from the code.
 
 Baseline `BR-V3.24-2026-10-14`.
+
+## 766. Settings are tick boxes, never toggle buttons; the club's name reversed counts
+
+**The owner, 2026-10-14, a standing rule** (of a button with the toggle glyph whose press flips a setting): «nu-mi place deloc acest tip de „bifă”, nu mai folosi niciodată acest tip de element». **And, the same evening, «Yes»** to the follow-up of §753: the reversed «Runners Brașov» and the glued «Runnersbrasov» count as the club on the public list's club chip.
+
+**Decision, the rule.** A setting that is on or off is a real tick box, never a button wearing `turnOn` / `turnOff` and never a sliding Material switch (the same element under another name). Two shapes, no third: inside a save form, the house's `CheckboxField` (or MUI's `Checkbox` in an island that already holds the state); for a press that saves at once and may ask first, `TickButton` (`src/shared/ui/TickButton.tsx`) — the to-do tick of §752, made one component: a plain submit drawn as the checkbox, `role="checkbox"`, `aria-checked`, the glyph `tickOn` / `tickOff`, 44 pixels, the words beside it, working with scripts off, inside a form (an `ActionForm` with `confirm` where the setting deserves the question) that posts the state it wants. The words name the setting and are the same ticked or not («Verificarea anti-bot pornită», «Honeypot pornit», «Trimite la trecerea programată»); the confirm button carries the verb («Oprește verificarea»), and the sentence above the tick still says the state in force. A choice among several stays a radio. The actions behind every control are the ones they always were; authorization is unchanged.
+
+**What was swept.** The anti-bot check and the honeypot (`BotCheckPanel`: two ticks, still asking first, the Superadministrator's, §450); «Când pleacă emailurile» on the email queue (a Material switch with a scripts-off button beside it, §529, §540 — now one tick, which needs no island and no fallback, so `DeliveryTimingSwitch` is deleted); «Publică automat de acum» on a series' draft line (§351: a setting, the series rule's `publish`, drawn empty because the line is only there while the rule is off — «Publică» beside it stays a button, it publishes dates once); and «Locația se anunță mai târziu» in the event editor (a Material switch, §328 — now a checkbox in the save form, the state, the name posted and the dependants' `required` unchanged). «Gestionează magazinul» on a colleague's row of «Echipa» (§687), which was a third, unlabelled shape of the one-press tick, is a `TickButton` now. The `turnOn` and `turnOff` glyphs are removed from `action-icons.ts`; `tickOn` and `tickOff` stay. `tests/unit/design/no-toggle-glyphs.test.ts`, on the house's allowlist ratchet with an empty list, fails on a toggle glyph's name, a Toggle icon import or a `Switch` import anywhere in `src/`. `VolunteersCard` already did this in §765 and is untouched; it and the to-do card keep their own copy of the tick's styles until next touched.
+
+**Decision, the club's name** (amends §753). A typed club names the club also when the name's words come in the opposite order — «Runners Brașov», «Runnersbrasov», «RUNNERS-BRAȘOV» — beside «Brașov Runners», «BV Runners», «BR Brașov» and «BVR»; «Brasovrunners» (glued, in order) already counted. The rule is derived, not listed: the matcher tracks the name's words in the opposite order as it tracks them in order, so another club's configured name reverses the same way, and for a name of three words all three must come back reversed. The one-typo forgiveness (a word of six letters or more, the right first letter, inside one typed word) is unchanged: «Runers Brașov» counts, «Gunners Brasov» and «Brasov Gunners» do not. A lone word, an extra word, a digit and «Runners BV» (the plate code stands for the first word only before the rest) still do not. Still only a rule about a typed text, which becomes the club's own name or nothing before the row is cached: nothing new is disclosed.
+
+**Refused.** Keeping the Material switch for the two settings that already had one because the brief named only the buttons: the owner's sentence is about the element, and a switch is the toggle. Giving the tick its own pending state or a second «Salvează» beside it: the press is the save, and the toast and the redirect say it worked. A toggle-glyph exception in the allowlist: it is empty on purpose.
+
+Baseline `BR-V3.25-2026-10-14`.
