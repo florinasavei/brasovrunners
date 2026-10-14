@@ -66,6 +66,24 @@ describe("§756 namesTheClub — what is the club's own name", () => {
     "Brasovrunners ro",
     "brasovrunners / com",
     "Brașov Runners RO",
+    // §766 (the owner's «Yes», 2026-10-14): the reversed order and the glued forms count as the club.
+    "Runners Brașov",
+    "Runners Brasov",
+    "RUNNERS BRAȘOV",
+    "Runners-Brașov",
+    "Runnersbrasov",
+    "runnersbrasov",
+    "RunnersBrașov",
+    "Brasovrunners",
+    "BRASOVRUNNERS",
+    "Runners Brașov Club",
+    "Clubul Runners Brasov",
+    "Runners Brașov (BVR)",
+    "Runnersbrasov ro",
+    "Runner Brasov", // the singular, as in the forward order
+    "Runers Brașov", // one letter dropped
+    "Runners Brashov", // one letter added
+    "Runnres Brasov", // two letters swapped
   ];
 
   for (const typed of SPELLED_IN) {
@@ -102,8 +120,17 @@ describe("§756 namesTheClub — what is the club's own name", () => {
     "Bravo Runners",
     "BVRS",
     "bvr2",
-    "Runnersbrasov",
-    "Runners Brașov",
+    // The words the other way round name the club (§766), but not another club, a lone word or a stray digit.
+    "Gunners Brasov", // one letter off in the first-typed word, like «Brasov Gunners»
+    "Runners Cluj",
+    "Runners Brașov Cluj",
+    "Runners Brasov 2",
+    "Runners Brasov Brasov Cluj",
+    "Cluj Runners Brașov",
+    "Runners Rangers",
+    "Runners Bravo",
+    "Runners BV", // the city's plate code stands for the first word only beside the rest, never after «Runners»
+    "Runners",
     "Club",
     "Clubul",
     "Asociația Sportivă",
@@ -135,6 +162,15 @@ describe("§756 namesTheClub — what is the club's own name", () => {
     const vocabulary = clubVocabulary("Alba Joggers");
     expect(namesTheClub("Alba Joggers", vocabulary)).toBe(true);
     expect(namesTheClub("alba jogger", vocabulary)).toBe(true);
+    // The reversed order is derived the same way (§766), for a name of any length.
+    expect(namesTheClub("Joggers Alba", vocabulary)).toBe(true);
+    expect(namesTheClub("Joggers", vocabulary)).toBe(false);
+    const three = clubVocabulary("Alba Iulia Joggers");
+    expect(namesTheClub("Alba Iulia Joggers", three)).toBe(true);
+    expect(namesTheClub("Joggers Iulia Alba", three)).toBe(true);
+    expect(namesTheClub("Joggersiuliaalba", three)).toBe(true);
+    expect(namesTheClub("Joggers Alba Iulia", three)).toBe(false);
+    expect(namesTheClub("Joggers Iulia", three)).toBe(false);
     expect(namesTheClub("AJ Alba", vocabulary)).toBe(true);
     expect(namesTheClub("Alba Jogers", vocabulary)).toBe(true);
     expect(namesTheClub("Joggers", vocabulary)).toBe(false);

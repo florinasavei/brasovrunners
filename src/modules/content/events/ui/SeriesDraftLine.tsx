@@ -6,6 +6,7 @@ import ActionForm, { type ActionFormAction } from "@/shared/forms/ActionForm";
 import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import Hint from "@/shared/ui/Hint";
+import TickButton from "@/shared/ui/TickButton";
 import { actionKeyOf } from "@/shared/forms/action-key";
 
 type Action = (form: FormData) => Promise<void>;
@@ -29,8 +30,9 @@ type Confirmed = { label: string; confirmTitle: string; confirmBody: string; con
  *   the version guard and the both-languages rule (BR-REQ-040-02) are the ones publication
  *   always has. It asks first: publishing puts the dates on the site and opens their
  *   registration.
- * - **Publică automat de acum** — switches the series' rule on (`setRepeatPublishAction`, aimed at
- *   the source, `returnTo=list`) and comes back to this list. Its confirmation says it acts on the
+ * - **Publică automat de acum** — a tick box (§766: a setting is never a toggle button) that
+ *   switches the series' rule on (`setRepeatPublishAction`, aimed at the source, `returnTo=list`)
+ *   and comes back to this list. Its confirmation says it acts on the
  *   dates the series creates from now on, and that the ones listed still need "Publică".
  * - **Deschide seria** — for a series whose source is not published: the source's editor, where it
  *   is published. The switch is not offered there, because it cannot take effect until then.
@@ -121,9 +123,12 @@ export default function SeriesDraftLine({ uiLocale, text, dates, more, hint, pub
               <input type="hidden" name="eventId" value={autoPublish.sourceId} />
               <input type="hidden" name="publish" value="on" />
               <input type="hidden" name="returnTo" value="list" />
-              <GlyphButton icon="turnOn" type="submit" variant="outlined" size="small" sx={{ minHeight: 44 }}>
+              {/* A setting, not an action — the series rule's «publish» — so a tick box (§766; the owner, 2026-10-14: «nu mai folosi
+                  niciodată» a button with the toggle glyph): drawn empty, because the line is only here while the rule is off; ticking it
+                  asks first and posts `publish=on`. «Publică» beside it stays a button: it publishes the dates, once. */}
+              <TickButton checked={false} data-testid="series-auto-publish-tick">
                 {autoPublish.label}
-              </GlyphButton>
+              </TickButton>
             </ActionForm>
           )}
           {openSource && (

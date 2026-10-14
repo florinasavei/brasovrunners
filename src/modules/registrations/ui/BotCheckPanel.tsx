@@ -9,16 +9,18 @@ import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import type { BotCheckState } from "@/modules/registrations/bot-check";
 import { confirmWords } from "@/shared/feedback/confirm-words";
 import ActionForm from "@/shared/forms/ActionForm";
-import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
+import TickButton from "@/shared/ui/TickButton";
 
 /**
  * The anti-bot challenge, on or off, from the backoffice (`DECISIONS.md` §254; the owner: "I
  * wanna be able to enable/disable the captcha from the backoffice").
  *
- * One button, because there are two states and naming the one you are going to is clearer than
- * a switch that has to be read: "oprește verificarea" when it is running, "pornește-o" when it
- * is not. The sentence above it says what is actually in force, including the case the club
- * cannot fix from here — no keys on this deployment, so there is nothing to switch on.
+ * Two tick boxes (§766; the owner, 2026-10-14: «nu mai folosi niciodată» a button that flips a
+ * setting — it was «oprește verificarea» / «pornește-o» with a toggle glyph): a plain submit drawn
+ * as the checkbox, its words naming the setting and never the verb. A press asks first, in the
+ * words of what it does, and the confirm button says «Oprește verificarea» or «Pornește verificarea». The
+ * sentence above says what is actually in force, including the case the club cannot fix from
+ * here — no keys on this deployment, so there is nothing to switch on.
  *
  * The warning is not decoration either. Turning it off is the right move on the day the widget
  * is refusing real people (§216, §205: "trebuie să lăsăm oamenii să se înscrie cu orice preț"),
@@ -66,8 +68,8 @@ export default async function BotCheckPanel({
       )}
 
       {/*
-        The hidden field's own switch (§282), outside the `keysPresent` gate above: the trap
-        needs no keys and no third party, so it can be switched on a deployment that has no
+        The hidden field's own tick (§282), outside the `keysPresent` gate above: the trap
+        needs no keys and no third party, so it can be ticked on a deployment that has no
         Turnstile at all. Its own sentence, because "off" means something different here — the
         field is still rendered and still logged, and it simply stops refusing anybody.
       */}
@@ -88,13 +90,9 @@ export default async function BotCheckPanel({
           <input type="hidden" name="uiLocale" value={locale} />
           <input type="hidden" name="which" value="honeypot" />
           <input type="hidden" name="enabled" value={state.honeypot ? "0" : "1"} />
-          <GlyphSubmitButton
-            label={t(state.honeypot ? "botCheck.honeypot.turnOff" : "botCheck.honeypot.turnOn")}
-            pendingLabel={t("botCheck.saving")}
-            icon={state.honeypot ? "turnOff" : "turnOn"}
-            color={state.honeypot ? "warning" : "primary"}
-            variant={state.honeypot ? "outlined" : "contained"}
-          />
+          <TickButton checked={state.honeypot} data-testid="honeypot-tick">
+            {t("botCheck.honeypot.tick")}
+          </TickButton>
         </ActionForm>
         )}
       </Stack>
@@ -119,13 +117,9 @@ export default async function BotCheckPanel({
           >
             <input type="hidden" name="uiLocale" value={locale} />
             <input type="hidden" name="enabled" value={state.enabled ? "0" : "1"} />
-            <GlyphSubmitButton
-              label={t(state.enabled ? "botCheck.turnOff" : "botCheck.turnOn")}
-              pendingLabel={t("botCheck.saving")}
-              icon={state.enabled ? "turnOff" : "turnOn"}
-              color={state.enabled ? "warning" : "primary"}
-              variant={state.enabled ? "outlined" : "contained"}
-            />
+            <TickButton checked={state.enabled} data-testid="bot-check-tick">
+              {t("botCheck.tick")}
+            </TickButton>
           </ActionForm>
         </Stack>
       )}
