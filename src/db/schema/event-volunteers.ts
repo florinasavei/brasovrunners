@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm";
-import { check, index, integer, pgEnum, pgTable, text, timestamp, unique, uuid } from "drizzle-orm/pg-core";
+import { boolean, check, index, integer, jsonb, pgEnum, pgTable, text, timestamp, unique, uuid } from "drizzle-orm/pg-core";
 import { events } from "./events";
+import { legalDocuments } from "./legal-documents";
 import { locale } from "./locale";
 import { staffUsers } from "./staff-users";
 
@@ -14,6 +15,13 @@ export const eventVolunteerState = pgEnum("event_volunteer_state", ["REGISTERED"
 
 /** Who put the row there: a staff member's hand («staff») or the event page's public form («public»). */
 export const eventVolunteerSource = pgEnum("event_volunteer_source", ["STAFF", "PUBLIC"]);
+
+/**
+ * How a volunteer accepted the volunteer agreement (§758, amending §754): ticked on the event page's public
+ * form («FORM»), from the single-use link an organizer sent by email («LINK»), or signed on a printed copy at
+ * the desk and recorded by a staff member («PAPER»). A closed set, like every state here.
+ */
+export const volunteerAgreementMethod = pgEnum("volunteer_agreement_method", ["FORM", "LINK", "PAPER"]);
 
 /**
  * One role an event needs people for (§754; the owner, 2026-10-13: «I want to register volunteers
@@ -101,6 +109,35 @@ export const eventVolunteers = pgTable(
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
     /** The staff member who entered the row; null for the public form, and after that account is removed. */
     createdByStaffUserId: uuid("created_by_staff_user_id").references(() => staffUsers.id, { onDelete: "set null" }),
+
+    /*
+      The volunteer agreement (§758, amending §754; the owner, 2026-10-13: «un document gen „contract de
+      voluntariat” simplu, unde zicem că nu sunt plătiți, că trebuie să respecte atribuțiunile»): the approved
+      version accepted (`VOLUNTEER_AGREEMENT`), when, how, in which language, the SHA-256 of the exact text read
+      with its blanks filled (§556's `signedTextHash`) and the blanks themselves as they were filled — the
+      person, the role and what it asks, the event, its date and place — so a role renamed or an event moved
+      since never changes what the volunteer accepted. All null until accepted, all set together (the CHECK
+      below). `RESTRICT`: a version somebody accepted is never removed under them (§567 retires it instead).
+    */
+    agreementDocumentId: uuid("agreement_document_id").references(() => legalDocuments.id, { onDelete: "restrict" }),
+    agreementAcceptedAt: timestamp("agreement_accepted_at", { withTimezone: true }),
+    agreementMethod: volunteerAgreementMethod("agreement_method"),
+    agreementLocale: locale("agreement_locale"),
+    agreementTextHash: text("agreement_text_hash"),
+    agreementFacts: jsonb("agreement_facts"),
+    /** The staff member who recorded a paper acceptance at the desk; null otherwise, and after that account is removed. */
+    agreementRecordedByStaffUserId: uuid("agreement_recorded_by_staff_user_id").references(() => staffUsers.id, { onDelete: "set null" }),
+    /** «Am cel puțin 18 ani», the person's own tick on the form or the link's page, or the paper they signed, which states it. */
+    declaredAdult: boolean("declared_adult").notNull().default(false),
+    /*
+      The single-use link to accept the agreement (AGENTS.md §12.8): only the SHA-256 of its secret is kept,
+      minted when the email is sent; a newer link replaces it, accepting clears it, and it dies at its expiry.
+      The secret itself exists in the email alone.
+    */
+    agreementTokenHash: text("agreement_token_hash").unique("event_volunteers_agreement_token_hash_unique"),
+    agreementTokenExpiresAt: timestamp("agreement_token_expires_at", { withTimezone: true }),
+    /** When an organizer last asked for the link to be sent: the card's «link trimis …». */
+    agreementRequestedAt: timestamp("agreement_requested_at", { withTimezone: true }),
   },
   (t) => [
     unique("event_volunteers_event_canonical_email_unique").on(t.eventId, t.canonicalEmail),
@@ -108,9 +145,20 @@ export const eventVolunteers = pgTable(
     index("event_volunteers_role_idx").on(t.roleId),
     // The retention sweep and the person lookup.
     index("event_volunteers_canonical_email_idx").on(t.canonicalEmail),
+    // `/admin/legal`'s count of the people who accepted a version, and the RESTRICT's check on a delete.
+    index("event_volunteers_agreement_document_idx").on(t.agreementDocumentId).where(sql`${t.agreementDocumentId} IS NOT NULL`),
     check("event_volunteers_name_length", sql`char_length(${t.name}) BETWEEN 1 AND 120`),
     check("event_volunteers_message_length", sql`${t.message} IS NULL OR char_length(${t.message}) BETWEEN 1 AND 300`),
     check("event_volunteers_note_length", sql`${t.note} IS NULL OR char_length(${t.note}) BETWEEN 1 AND 500`),
+    // An acceptance is the version, the moment, the way and the language together, or nothing.
+    check(
+      "event_volunteers_agreement_complete",
+      sql`(${t.agreementDocumentId} IS NULL) = (${t.agreementAcceptedAt} IS NULL) AND (${t.agreementDocumentId} IS NULL) = (${t.agreementMethod} IS NULL) AND (${t.agreementDocumentId} IS NULL) = (${t.agreementLocale} IS NULL)`,
+    ),
+    check("event_volunteers_agreement_text_hash_sha256", sql`${t.agreementTextHash} IS NULL OR ${t.agreementTextHash} ~ '^[0-9a-f]{64}$'`),
+    // Never the raw secret: a base64url secret cannot match a lower-case hex digest (§12.8, the action tokens' own CHECK).
+    check("event_volunteers_agreement_token_sha256", sql`${t.agreementTokenHash} IS NULL OR ${t.agreementTokenHash} ~ '^[0-9a-f]{64}$'`),
+    check("event_volunteers_agreement_token_expiry", sql`(${t.agreementTokenHash} IS NULL) = (${t.agreementTokenExpiresAt} IS NULL)`),
   ],
 );
 
@@ -118,3 +166,4 @@ export type EventVolunteerRoleRow = typeof eventVolunteerRoles.$inferSelect;
 export type EventVolunteerRow = typeof eventVolunteers.$inferSelect;
 export type EventVolunteerState = (typeof eventVolunteerState.enumValues)[number];
 export type EventVolunteerSource = (typeof eventVolunteerSource.enumValues)[number];
+export type VolunteerAgreementMethod = (typeof volunteerAgreementMethod.enumValues)[number];

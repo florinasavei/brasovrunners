@@ -10,7 +10,7 @@ import { notFound, redirect } from "next/navigation";
 import { CLUB_TIME_ZONE, formatCalendarDay, formatDay } from "@/i18n/dates";
 import { getDb } from "@/db/client";
 import { getPathname, Link } from "@/i18n/navigation";
-import { routing } from "@/i18n/routing";
+import { type Locale, routing } from "@/i18n/routing";
 import { findEventForEditing, findEventTitle, listSeriesDates } from "@/modules/content/events/repository";
 import { eventPageTodos } from "@/modules/content/events/domain/page-todos";
 import { eventCheckpointContext, listCheckpoints } from "@/modules/event-checkpoints/checkpoints";
@@ -25,7 +25,14 @@ import EventTodoCard from "@/modules/event-todos/ui/EventTodoCard";
 import { volunteerEventAhead, volunteerOfferClosedFor } from "@/modules/volunteers/domain/volunteer";
 import VolunteersCard from "@/modules/volunteers/ui/VolunteersCard";
 import { listVolunteerRoles, listVolunteers, volunteerStandings } from "@/modules/volunteers/volunteers";
-import { noticeDescribesVolunteers } from "@/modules/legal-documents/repository";
+import {
+  findCurrentApprovedDocument,
+  noticeDescribesVolunteerAgreement,
+  noticeDescribesVolunteers,
+  volunteerAgreementInForce,
+} from "@/modules/legal-documents/repository";
+import { VOLUNTEER_AGREEMENT_KEY } from "@/modules/legal-documents/domain/keys";
+import { eventMergeValues } from "@/modules/registrations/signed-declaration";
 import { listStaffUsers } from "@/modules/staff-identity/repository";
 import { dayIn } from "@/modules/registrations/domain/age";
 import { editionDifference, usualOf } from "@/modules/events/domain/series";
@@ -394,14 +401,34 @@ export default async function EditEventPage({ params, searchParams }: Props) {
         const roles = await listVolunteerRoles(db, event.id);
         const people = await listVolunteers(db, event.id);
         const standings = volunteerStandings(roles, people);
+        // The volunteer agreement in force (§758): the form's fourth condition, and what the link and the paper need.
+        const agreementInForce = await volunteerAgreementInForce(db, now);
+        // The notice describing its acceptance (§758): the form's fifth condition, and the link's and the paper's.
+        const agreementNoticeDescribes = await noticeDescribesVolunteerAgreement(db, now);
+        // The version each language's «PDF de semnat» prints, posted back by «Semnat pe hârtie» (§758).
+        const agreementDocumentIds: Partial<Record<Locale, string>> = {};
+        // The event's date and place as an acceptance names them now, per language: a moved race says so (§758).
+        const agreementEvent: Partial<Record<Locale, { eventDate: string; eventLocation: string }>> = {};
+        for (const language of routing.locales) {
+          const version = await findCurrentApprovedDocument(db, VOLUNTEER_AGREEMENT_KEY, language, now);
+          if (version) agreementDocumentIds[language] = version.id;
+          const facts = await eventMergeValues(db, event.id, language);
+          if (facts) agreementEvent[language] = { eventDate: facts.values.eventDate ?? "", eventLocation: facts.values.eventLocation ?? "" };
+        }
         return {
           roles,
           people,
           standings,
+          agreementInForce,
+          agreementNoticeDescribes,
+          agreementDocumentIds,
+          agreementEvent,
           offerClosed: volunteerOfferClosedFor({
             acceptsVolunteers: event.acceptsVolunteers,
             standings,
             noticeDescribes: await noticeDescribesVolunteers(db, now),
+            agreementInForce,
+            noticeDescribesAgreement: agreementNoticeDescribes,
             eventAhead: volunteerEventAhead(event, now),
             // The public page draws no form on an unpublished event or one for the members alone, and the
             // service refuses its posts: the card says so rather than promising a form that is not there.
@@ -411,7 +438,9 @@ export default async function EditEventPage({ params, searchParams }: Props) {
         };
       })()
     : null;
-  const volunteerErrorCode = (["FORBIDDEN", "VALIDATION_ERROR", "CONFLICT", "NOT_FOUND", "VOLUNTEER_ROLE_HAS_PEOPLE", "VOLUNTEER_ALREADY_LISTED"] as const).find(
+  const volunteerErrorCode = (
+    ["FORBIDDEN", "VALIDATION_ERROR", "CONFLICT", "NOT_FOUND", "VOLUNTEER_ROLE_HAS_PEOPLE", "VOLUNTEER_ALREADY_LISTED", "VOLUNTEER_AGREEMENT_MISSING", "VOLUNTEER_AGREEMENT_ACCEPTED", "VOLUNTEER_AGREEMENT_NOTICE", "VOLUNTEER_AGREEMENT_REPRINT"] as const
+  ).find(
     (code) => code === query.volunteerError,
   );
 
@@ -1001,6 +1030,11 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                   roles={volunteersCard.roles}
                   standings={volunteersCard.standings}
                   volunteers={volunteersCard.people}
+                  agreementInForce={volunteersCard.agreementInForce}
+                  agreementNoticeDescribes={volunteersCard.agreementNoticeDescribes}
+                  agreementDocumentIds={volunteersCard.agreementDocumentIds}
+                  agreementEvent={volunteersCard.agreementEvent}
+                  now={now}
                   error={volunteerErrorCode ? t(`errors.${volunteerErrorCode}`) : undefined}
                 />
               )}

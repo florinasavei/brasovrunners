@@ -56,6 +56,8 @@ const EVERY_MESSAGE: Record<EmailMessageType, { button: boolean; why: string }> 
   // A volunteer's sign-up (§754): about an event and a role, never a registration.
   VOLUNTEER_RECEIVED: { button: false, why: "no registration" },
   VOLUNTEER_CLUB_NOTICE: { button: false, why: "no registration" },
+  VOLUNTEER_AGREEMENT_REQUEST: { button: false, why: "no registration" },
+  VOLUNTEER_AGREEMENT_ACCEPTED: { button: false, why: "no registration" },
 };
 
 const TYPES = Object.keys(EVERY_MESSAGE) as EmailMessageType[];

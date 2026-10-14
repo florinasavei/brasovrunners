@@ -123,6 +123,12 @@ export const emailMessageType = pgEnum("email_message_type", [
   // One per sign-up to each Organizer, Administrator and Superadministrator (§754): who offered for which role
   // of which event. No token; the button opens the event's «Voluntari» card behind the sign-in.
   "VOLUNTEER_CLUB_NOTICE",
+  // The volunteer agreement (§758): an organizer's «Trimite linkul contractului» for a volunteer entered by hand —
+  // the agreement in force, and the single-use link to accept it (minted at the send; only its hash is kept, on the
+  // volunteer's row, §12.8). The volunteer's id in the payload.
+  "VOLUNTEER_AGREEMENT_REQUEST",
+  // «Ai acceptat contractul de voluntariat», after the link: the person's copy, the agreement as a PDF attached.
+  "VOLUNTEER_AGREEMENT_ACCEPTED",
 ]);
 
 export type EmailMessageType = (typeof emailMessageType.enumValues)[number];

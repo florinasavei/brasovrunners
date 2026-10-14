@@ -159,6 +159,8 @@ describe("BR-REQ-070-01 everything held about a person", () => {
     expect(data.volunteerOffers).toMatchObject([
       { roleNameRo: "Punct de apă", roleNameEn: "Water point", state: "REGISTERED", source: "PUBLIC", name: "Ana Pop", phone: "+40712345678", message: "Sunt liberă sâmbătă", privacyNoticeVersion: 3 },
     ]);
+    // The volunteer agreement's columns are hers too (§758): here none was accepted, and it says so.
+    expect(data.volunteerOffers[0]).toMatchObject({ agreementVersion: null, agreementMethod: null, agreementAcceptedAt: null, declaredAdult: false });
 
     // Viewing is a read of the emergency details, recorded for each registration shown.
     const trail = await db.select().from(auditLogs).where(eq(auditLogs.action, "registration.health_viewed"));

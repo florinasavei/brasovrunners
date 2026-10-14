@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V3.18-2026-10-14
+
+- **A volunteer agreement («Contract de voluntariat»)** — a new legal text the club approves in «Documente legale» from the platform's template: unpaid help, what the volunteer and the club each do, ending at any time, Legea nr. 78/2014. «Vreau să fiu voluntar» opens only while it is in force and asks to accept it and «Am cel puțin 18 ani»; a person entered by hand is «Contract neacceptat încă» until they accept from an emailed single-use link or sign the printed copy at the desk; the accepted agreement comes as a PDF by email and from the card. The privacy notice's template names the acceptance with a marker of its own: approve the notice in the same sitting. §758.
 ## BR-V3.17-2026-10-14
 
 - **Checkpoints and the race's «Timp limită»** — «Puncte de control», a card of its own beside the editor's save form, linked from «Traseul» (water, food, first aid, timing, a cut-off; from the GPX's waypoints in one press, a name in each language), a table on the event page with the finish closing time, «Timp limită: 2 h 30 min» for a race, counted from the gun, and the aid stations marked on the bib's profile strip with «km 12» and, ticked, the cut-offs. An event save that would break a saved checkpoint is refused; the event's file is version 2 and a version 1 file keeps its race's end. Every race already saved shows «Timp limită» from its saved end: confirm each upcoming race's box. §757.

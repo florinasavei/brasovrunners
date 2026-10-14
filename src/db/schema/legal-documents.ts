@@ -34,6 +34,9 @@ export const legalDocumentKey = pgEnum("legal_document_key", [
   "GROUP_RUN_DECLARATION_ASPHALT",
   "GROUP_RUN_DECLARATION_TRAIL",
   "EVENT_DECLARATION_ROAD",
+  // The volunteer agreement (§758, amending §754): what every volunteer of an event accepts before being listed —
+  // unpaid help, the role's tasks, the club's duties, Romania's volunteering law (Legea nr. 78/2014).
+  "VOLUNTEER_AGREEMENT",
 ]);
 
 export type LegalDocumentKey = (typeof legalDocumentKey.enumValues)[number];

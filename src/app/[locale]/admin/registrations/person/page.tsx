@@ -219,6 +219,15 @@ export default async function PersonDataPage({ params, searchParams }: Props) {
                       {show(offer.createdAt)} · {offer.eventTitle ?? offer.eventId} · {locale === "en" ? offer.roleNameEn : offer.roleNameRo} · {t(`volunteers.states.${offer.state}`)} · {t(`volunteers.sources.${offer.source}`)} · {offer.name} · {offer.deliveryEmail} · {offer.phone}
                       {offer.message ? ` · ${offer.message}` : ""}
                       {offer.note ? ` · ${offer.note}` : ""}
+                      {/* The volunteer agreement (§758): accepted — which version, how, when — or not yet. */}
+                      {" · "}
+                      {offer.agreementAcceptedAt && offer.agreementMethod
+                        ? `${t("volunteers.agreement.accepted")} (${t("volunteers.agreement.acceptedLine", {
+                            version: String(offer.agreementVersion ?? ""),
+                            how: t(`volunteers.agreement.methods.${offer.agreementMethod}`),
+                            when: show(offer.agreementAcceptedAt),
+                          })})`
+                        : t("volunteers.agreement.notAccepted")}
                     </Typography>
                   ))
                 )}

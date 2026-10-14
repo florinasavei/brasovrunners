@@ -115,7 +115,9 @@ export async function resolveLocaleSwitch(
     parsed.route === "/newsletter/manage/[token]" ||
     parsed.route === "/registrations/family/[token]" ||
     // An invitation's link (§647), the same rule.
-    parsed.route === "/registrations/invitation/[token]"
+    parsed.route === "/registrations/invitation/[token]" ||
+    // The volunteer agreement's link (§758), the same rule.
+    parsed.route === "/volunteers/agreement/[token]"
   ) {
     const token = parsed.params.token;
     if (!token) return listing;

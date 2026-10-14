@@ -10,6 +10,7 @@ import { legalDocuments } from "@/db/schema/legal-documents";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import { computeContentHash, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
 import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
+import { LEGAL_TEMPLATES } from "@/modules/legal-documents/templates/catalogue";
 import { changeVolunteer, changeVolunteerRole, submitVolunteer } from "@/modules/volunteers/volunteers";
 
 /**
@@ -38,19 +39,20 @@ describe("§754 BR-REQ-031-01 ten people offer for a role's last place at once",
   const stamp = Date.now();
   const createdEventIds: string[] = [];
   let noticeId: string | undefined;
+  let agreementId: string | undefined;
   let admin: StaffUser | undefined;
 
   beforeAll(async () => {
     [admin] = await db.insert(staffUsers).values({ email: `volunteers.admin.${stamp}@example.test`, displayName: "Admin", role: "ADMIN" }).returning();
-    // A privacy notice naming `{{volunteers}}` in both languages, the newest version, so it is the one in force
-    // (`noticeDescribesVolunteers`). Withdrawn again after the suite, so the next suite reads what it approved.
+    // A privacy notice naming `{{volunteers}}` and `{{volunteerAgreement}}` (§758) in both languages, the newest
+    // version, so it is the one in force (`noticeDescribesVolunteers`, `noticeDescribesVolunteerAgreement`). Withdrawn again after the suite, so the next suite reads what it approved.
     const [{ highest }] = await db
       .select({ highest: sql<number>`coalesce(max(${legalDocuments.version}), 0)::int` })
       .from(legalDocuments)
       .where(eq(legalDocuments.key, "PRIVACY_NOTICE"));
     const translations: LegalDocumentTranslationInput[] = [
-      { locale: "ro", title: "Confidențialitate", body: { sections: [{ paragraphs: ["Voluntari ({{volunteers}}): păstrăm numele."] }] } },
-      { locale: "en", title: "Privacy", body: { sections: [{ paragraphs: ["Volunteers ({{volunteers}}): we keep the name."] }] } },
+      { locale: "ro", title: "Confidențialitate", body: { sections: [{ paragraphs: ["Voluntari ({{volunteers}}, {{volunteerAgreement}}): păstrăm numele."] }] } },
+      { locale: "en", title: "Privacy", body: { sections: [{ paragraphs: ["Volunteers ({{volunteers}}, {{volunteerAgreement}}): we keep the name."] }] } },
     ];
     noticeId = await insertLegalDocumentVersion(db, {
       key: "PRIVACY_NOTICE",
@@ -59,6 +61,22 @@ describe("§754 BR-REQ-031-01 ten people offer for a role's last place at once",
       isApproved: true,
       contentSha256: computeContentHash(translations),
       translations,
+      now: NOW,
+    });
+    // The volunteer agreement in force (§758), the newest version, from the platform's template: the form's
+    // fourth condition. Deleted again after the suite, once the events (and the acceptances on them) are gone.
+    const [{ highestAgreement }] = await db
+      .select({ highestAgreement: sql<number>`coalesce(max(${legalDocuments.version}), 0)::int` })
+      .from(legalDocuments)
+      .where(eq(legalDocuments.key, "VOLUNTEER_AGREEMENT"));
+    const agreement: LegalDocumentTranslationInput[] = (["ro", "en"] as const).map((locale) => ({ locale, ...LEGAL_TEMPLATES.VOLUNTEER_AGREEMENT[locale] }));
+    agreementId = await insertLegalDocumentVersion(db, {
+      key: "VOLUNTEER_AGREEMENT",
+      version: highestAgreement + 1,
+      effectiveAt: new Date("2020-01-01T00:00:00.000Z"),
+      isApproved: true,
+      contentSha256: computeContentHash(agreement),
+      translations: agreement,
       now: NOW,
     });
   });
@@ -73,6 +91,7 @@ describe("§754 BR-REQ-031-01 ten people offer for a role's last place at once",
       await db.delete(events).where(inArray(events.id, createdEventIds));
     }
     if (noticeId) await db.delete(legalDocuments).where(eq(legalDocuments.id, noticeId));
+    if (agreementId) await db.delete(legalDocuments).where(eq(legalDocuments.id, agreementId));
     if (admin) {
       await db.delete(emailOutbox).where(eq(emailOutbox.recipientEmail, admin.email));
       await db.delete(auditLogs).where(eq(auditLogs.actorStaffUserId, admin.id));
@@ -113,6 +132,8 @@ describe("§754 BR-REQ-031-01 ten people offer for a role's last place at once",
         message: "",
         locale: "ro",
         consent: true,
+        agreement: true,
+        adult: true,
         renderedAt: RENDERED,
       },
       NOW,
