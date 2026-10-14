@@ -25,9 +25,14 @@ import { type ReactNode, useCallback, useSyncExternalStore } from "react";
  * hydration, and with scripts off, the fieldset is enabled and open: nothing in it is `required` (the
  * server decides, and names the box), or an adult could not send the form that shows every box.
  *
- * `forceOpen` is the server's own verdict: a refusal that named the tick or one of the minor's boxes (or
- * a draft with the tick ticked) renders the block open whatever the tick now holds, so an error never points
- * at something invisible.
+ * This is not `OnlyWhenTicked` (events/ui): that one keeps its hidden children in the form and still posts
+ * them, which is right for a field a person may fill and un-tick; here a closed block must post nothing, and
+ * the page is a plain form with no `ActionForm` recall whose generation it would have to follow.
+ *
+ * `forceOpen` is the server's own verdict, and it holds until the page is interactive: a refusal that named the
+ * tick or one of the minor's boxes (or a draft with the tick ticked) renders the block open whatever the tick
+ * held, so an error never points at something invisible. Once hydrated the tick decides — a parent who changes
+ * their mind after a refusal and un-ticks closes and disables the block, so nothing of the minor's is posted.
  */
 export default function MinorSigningFields({ tickId, forceOpen = false, children }: { tickId: string; forceOpen?: boolean; children: ReactNode }) {
   const ticked = useTickedBox(tickId);
@@ -36,7 +41,7 @@ export default function MinorSigningFields({ tickId, forceOpen = false, children
     () => true,
     () => false,
   );
-  const open = forceOpen || ticked;
+  const open = hydrated ? ticked : forceOpen || ticked;
 
   return (
     <>

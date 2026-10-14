@@ -659,9 +659,9 @@
         "emailHelp": "Aici îți trimitem declarația semnată, în PDF.",
         "languageNote": "Declarația se semnează în limba acestei pagini, iar PDF-ul și emailul sunt tot în ea. Pentru cealaltă limbă, schimbă limba (RO / EN) înainte să semnezi.",
         "adultsOnly": "O semnezi doar pentru tine, dacă ai împlinit {age} în ziua alergării; nu o semnezi în numele altcuiva, nici al unui minor.",
-        "adultsOrMinor": "O semnezi pentru tine, dacă ai împlinit {age} în ziua alergării. Pentru un minor de cel puțin {minorAge} bifezi mai jos: o semnați amândoi, minorul și părintele sau tutorele lui.",
+        "adultsOrMinor": "O semnezi pentru tine, dacă ai împlinit {age} în ziua alergării. Pentru un minor de cel puțin {minorAge} bifezi mai jos: o semnați amândoi, minorul și părintele sau tutorele lui. Paragrafele despre minor se aplică doar dacă bifezi; altfel se aplică propoziția „Eu, …, semnez … doar pentru mine”.",
         "accept": "Am cel puțin {age} împliniți, am citit declarația de mai sus și o semnez pe propria răspundere",
-        "acceptAny": "Am citit declarația de mai sus și o semnez pe propria răspundere, pentru mine sau pentru minorul bifat mai jos",
+        "acceptAny": "Am citit declarația de mai sus și o semnez pe propria răspundere: pentru mine, având cel puțin {age} împliniți, sau pentru minorul bifat mai sus",
         "acceptInline": "Bifează această casetă ca să poți semna.",
         "acceptSummary": "Bifează caseta de acceptare a declarației ca să poți semna.",
         "minorTickHelp": "Pentru un participant sub 18 ani și de cel puțin {age}: minorul și părintele sau tutorele lui semnează, fiecare cu numele lui.",
@@ -673,6 +673,7 @@
         "typedNameMinorHelp": "Scrie numele tău complet. Dacă semnezi pentru un minor, e numele tău de părinte sau tutore: apare ca a doua semnătură.",
         "birthDateHelp": "Pentru vârsta minimă a alergării: {age}, împliniți în ziua alergării. Nu o păstrăm și nu apare în declarație.",
         "tooYoung": "Vârsta minimă pentru această alergare este {age}, împliniți în ziua alergării. Declarația nu se poate semna.",
+        "tooOld": "Minorul trebuie să aibă sub 18 ani în ziua alergării. O persoană majoră își semnează propria declarație, fără bifa pentru minor.",
         "captcha": "Verificarea anti-bot nu a trecut. Încearcă din nou.",
         "action": "Semnează declarația"
       }
@@ -2926,7 +2927,7 @@
       },
       "groupRunDeclaration": {
         "label": "Declarație opțională pe propria răspundere",
-        "help": "Opțională, o dată pentru toate datele; semnatarul și clubul primesc o copie. Cere nota GDPR aprobată. Declarația se semnează de la 18 ani; sub 18, minorul semnează cu un părinte.",
+        "help": "Opțională, o dată pentru toate datele; semnatarul și clubul primesc o copie. Cere nota GDPR aprobată. Sub 18, minorul semnează cu un părinte, dacă textul și vârsta minimă a alergării o permit.",
         "notGroupSurface": "Doar pentru o alergare de grup pe asfalt sau pe teren accidentat: alege suprafața în cardul «Traseul».",
         "missing": "Clubul nu are încă o versiune aprobată pentru „{document}”. Aprob-o în Documente legale, împreună cu o notă de confidențialitate nouă, apoi bifează aici.",
         "surface": "Suprafața, din cardul «Traseul»: {surface}",
@@ -3247,7 +3248,7 @@
       "noTranslations": "Această versiune nu are încă niciun text.",
       "newTitle": "Versiune nouă",
       "newFromTemplateIntro": "Precompletat cu textul din șablon. Mai rămân de completat, în ambele limbi, între paranteze unghiulare: {blanks}. Salvează ciorna, apoi aprob-o din pagina ei.",
-      "tokensHelp": "Numai în declarație, câmpurile de mai jos se completează automat pentru fiecare persoană și eveniment: '{{participant}}' (numele înscris), '{{participantIdDocument}}' (actul lui de identitate, tastat la semnare), '{{guardian}}' și '{{guardianIdDocument}}' (părintele sau tutorele unui minor și actul lui; la un adult, o liniuță), '{{idDocument}}' (actul celui care declară — al părintelui, pentru un minor), '{{event}}' (titlul evenimentului), '{{eventDate}}' (data), '{{eventLocation}}' (locul), '{{minimumAge}}' (vârsta minimă a evenimentului, cu unitatea), '{{signedAt}}' (momentul semnării). Se scriu exact așa, cu acolade duble.",
+      "tokensHelp": "Numai în declarație, câmpurile de mai jos se completează automat pentru fiecare persoană și eveniment: '{{participant}}' (numele înscris), '{{participantIdDocument}}' (actul lui de identitate, tastat la semnare), '{{guardian}}' și '{{guardianIdDocument}}' (părintele sau tutorele unui minor și actul lui; la un adult, o liniuță), '{{idDocument}}' (actul celui care declară — al părintelui, pentru un minor), '{{event}}' (titlul evenimentului), '{{eventDate}}' (data), '{{eventLocation}}' (locul), '{{minimumAge}}' (vârsta minimă a evenimentului, cu unitatea), '{{minor}}' (paragraful minorului la o alergare de grup: apare doar pe calea minorului), '{{signerAlone}}' (propoziția adultului, care dispare la declarația unui minor), '{{minorMinimumAge}}' (vârsta minimă a minorului, cu unitatea; goală la o alergare doar pentru adulți), '{{signedAt}}' (momentul semnării). Se scriu exact așa, cu acolade duble.",
       "newIntro": "Scrii o versiune nouă, nu o modifici pe cea existentă. Se salvează ca ciornă și nu apare public până nu o aprobi.",
       "newVersion": "Versiune nouă",
       "saveDraft": "Salvează ciorna",
@@ -3324,7 +3325,7 @@
         "holdMinutes": "Cât e ținut un loc pentru semnare, din „Termene”",
         "offerHours": "Cât stă deschisă o ofertă de pe lista de așteptare, din „Termene”",
         "reminderClause": "Reminderul, ca o propoziție cu virgula ei, din „Termene”; fără număr când clubul nu trimite reminder implicit",
-        "minimumAge": "Vârsta minimă a evenimentului, cu unitatea („16 ani”): la un concurs cel puțin 14 ani, la o alergare de grup cel puțin 18. Fiecare declarație o spune într-o propoziție a ei",
+        "minimumAge": "Vârsta minimă a evenimentului, cu unitatea („16 ani”): la un concurs cel puțin 14 ani, la o alergare de grup cel puțin 18. La declarația unui minor, propoziția adultului dispare",
         "participantListStates": "Doar în nota de confidențialitate: cele trei stadii de lângă nume pe lista publică. Fără el în nota în vigoare, doar numele confirmate",
         "participantListSocials": "Doar în nota de confidențialitate: bifa cu care cineva își arată Strava și Instagram pe lista publică. Fără el în nota în vigoare, niciodată",
         "participantListNumbers": "Doar în nota de confidențialitate (și în termeni): numărul de concurs de lângă numele celor confirmați pe lista publică. Fără el în nota în vigoare, lista nu arată niciun număr",
@@ -7814,7 +7815,7 @@
               "title": "Minori și vârsta minimă",
               "steps": [
                 "Un participant sub 18 ani e înscris de părinte sau tutore, care își scrie numele în secțiunea pentru minori a formularului; la masă și în export apare „Minor — părinte/tutore”.",
-                "Vârsta minimă e a fiecărui eveniment, de orice tip: «Vârsta minimă de participare», în «Participare, înscrieri și regulament» → «Regulamentul». Pagina evenimentului o spune. Se socotește în ziua evenimentului, la orice ușă — formularul, masa, o înscriere adăugată de echipă. Declarația se semnează de la 18 ani; sub 18, minorul semnează cu un părinte."
+                "Vârsta minimă e a fiecărui eveniment, de orice tip: «Vârsta minimă de participare», în «Participare, înscrieri și regulament» → «Regulamentul». Pagina evenimentului o spune. Se socotește în ziua evenimentului, la orice ușă — formularul, masa, o înscriere adăugată de echipă. Declarația se semnează de la 18 ani. Sub 18, minorul semnează cu un părinte, dar numai dacă textul în vigoare o prevede și vârsta minimă a alergării e sub 18."
               ]
             },
             {

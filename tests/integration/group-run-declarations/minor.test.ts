@@ -190,6 +190,32 @@ describe("§NNN the two names: required when ticked, none when not", () => {
     expect(await db.select().from(groupRunDeclarations)).toHaveLength(0);
   });
 
+  it("refuses a minor's birth date of eighteen or more on the run's day — the tick says «sub 18 ani» — and writes nothing", async () => {
+    await approveTexts();
+    const event = await trailRun();
+    // The run is on 7 October 2026: born 1986, or on the 18th birthday itself, is an adult.
+    for (const birthDate of ["1986-01-01", "2008-10-07"]) {
+      await expect(signGroupRunDeclaration(db, await forMinor(event.id, { birthDate }), NOW)).rejects.toMatchObject({
+        code: "VALIDATION_ERROR",
+        fields: ["birthDate", "tooOld"],
+      });
+    }
+    expect(await db.select().from(groupRunDeclarations)).toHaveLength(0);
+    // The day after the 18th birthday's date is still seventeen: signed, and the date is not kept.
+    await expect(signGroupRunDeclaration(db, await forMinor(event.id, { birthDate: "2008-10-08" }), NOW)).resolves.toMatchObject({ outcome: "signed" });
+    expect(await db.select().from(groupRunDeclarations)).toHaveLength(1);
+  });
+
+  it("refuses a minor's name made only of invisible characters, which would fold to the adult's own signer key", async () => {
+    await approveTexts();
+    const event = await trailRun();
+    await expect(signGroupRunDeclaration(db, await forMinor(event.id, { minorTypedName: "​​" }), NOW)).rejects.toMatchObject({
+      code: "VALIDATION_ERROR",
+      fields: ["minorTypedName"],
+    });
+    expect(await db.select().from(groupRunDeclarations)).toHaveLength(0);
+  });
+
   it("asks neither name of an adult, and refuses a minor's box filled while the tick is not ticked", async () => {
     await approveTexts();
     const event = await trailRun();

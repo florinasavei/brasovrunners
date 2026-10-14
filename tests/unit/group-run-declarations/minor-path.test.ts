@@ -7,9 +7,11 @@ import {
   groupRunTakesMinors,
   keptSignature,
   minorSigningRefusal,
+  oldestMinorBirthDate,
   type SeriesSignature,
   signerIdentity,
 } from "@/modules/group-run-declarations/domain";
+import { birthDateHelper, birthDateValidity } from "@/modules/registrations/ui/BirthDateField";
 import { groupRunSignedValues } from "@/modules/group-run-declarations/facts";
 import { GROUP_RUN_DRAFT_FIELDS, GROUP_RUN_FORM_FIELDS, GROUP_RUN_MINOR_FIELDS, parseGroupRunInvalid } from "@/modules/group-run-declarations/form";
 import { factsToKeep, readSignedFacts } from "@/modules/group-run-declarations/series";
@@ -194,6 +196,8 @@ describe("§NNN the rules of the boxes", () => {
     expect(minorSigningRefusal({ ...ok, minorTypedName: "x".repeat(201) })).toEqual(["minorTypedName"]);
     expect(minorSigningRefusal({ ...ok, guardianAgrees: false })).toEqual(["guardianAgrees"]);
     expect(minorSigningRefusal({ ...ok, minorTypedName: "", guardianAgrees: false })).toEqual(["minorTypedName", "guardianAgrees"]);
+    // A name nobody can see is no name: it folds to "" in the signer's key, which would be the adult's own.
+    expect(minorSigningRefusal({ ...ok, minorTypedName: "​­﻿" })).toEqual(["minorTypedName"]);
     // Not ticked: nothing asked.
     expect(minorSigningRefusal({ offered: true, minor: false, minorTypedName: "", guardianAgrees: false })).toEqual([]);
     expect(minorSigningRefusal({ offered: false, minor: false, minorTypedName: "", guardianAgrees: false })).toEqual([]);
@@ -210,9 +214,32 @@ describe("§NNN the rules of the boxes", () => {
     expect(birthDateRefusal(RUN, "2012-10-08", true)).toEqual(["birthDate", "tooYoung"]);
     expect(birthDateRefusal(RUN, undefined, true)).toEqual(["birthDate"]);
     expect(birthDateRefusal(RUN, "not a date", true)).toEqual(["birthDate"]);
+    // The date is a minor's: under eighteen on the run's day. The 18th birthday on the day is an adult, the day before is not.
+    expect(birthDateRefusal(RUN, "2008-10-07", true)).toEqual(["birthDate", "tooOld"]);
+    expect(birthDateRefusal(RUN, "2008-10-08", true)).toEqual([]);
+    expect(birthDateRefusal(RUN, "1986-01-01", true)).toEqual(["birthDate", "tooOld"]);
+    expect(oldestMinorBirthDate("2026-10-07")).toBe("2008-10-08");
+    // A run's own minimum of seventeen: eighteen and over is still refused as too old, under seventeen as too young.
+    expect(birthDateRefusal({ ...RUN, minAge: 17 }, "2009-10-07", true)).toEqual([]);
+    expect(birthDateRefusal({ ...RUN, minAge: 17 }, "2009-10-08", true)).toEqual(["birthDate", "tooYoung"]);
+    expect(birthDateRefusal({ ...RUN, minAge: 17 }, "2008-10-07", true)).toEqual(["birthDate", "tooOld"]);
     // The adult's path: a run at fourteen asks no date (it reads it at eighteen), one above eighteen asks.
     expect(birthDateRefusal(RUN, undefined)).toEqual([]);
     expect(birthDateRefusal({ ...RUN, minAge: 21 }, undefined)).toEqual(["birthDate"]);
+  });
+
+  it("says live, in the minor's box, that a date of eighteen or more is no minor's (the box's bound is the oldest minor's birth date)", () => {
+    const words = { unreadable: "no date", tooYoung: "too young", tooOld: "too old" };
+    const [min, max] = [oldestMinorBirthDate("2026-10-07"), "2012-10-07"];
+    expect(birthDateValidity("07.10.2008", min, max, words)).toBe("too old");
+    expect(birthDateValidity("08.10.2008", min, max, words)).toBe("");
+    expect(birthDateValidity("08.10.2012", min, max, words)).toBe("too young");
+    expect(birthDateValidity("31.02.2010", min, max, words)).toBe("no date");
+    // Without its words a date before the bound reads as it always did, unreadable.
+    expect(birthDateValidity("07.10.2008", min, max, { unreadable: "no date", tooYoung: "too young" })).toBe("no date");
+    const helper = (text: string) => birthDateHelper({ text, typedAgain: true, min, max, error: false, echo: "", tooYoung: "too young", tooOld: "too old" });
+    expect(helper("2008-10-07")).toEqual({ lines: ["too old"], error: true });
+    expect(helper("2010-05-05")).toEqual({ lines: [], error: false });
   });
 
   it("knows who signed: a parent's two children and the parent's own are three signatures", () => {

@@ -3,9 +3,9 @@
  * signing page and the service, with no database behind them.
  */
 import { canonicalizeEmail, InvalidEmailError } from "@/modules/participants/domain/canonical-email";
-import { ADULT_AGE, ageOn, dayIn, effectiveMinimumAge, isUnderMinimumAge } from "@/modules/registrations/domain/age";
+import { ADULT_AGE, ageOn, dayIn, effectiveMinimumAge, isUnderMinimumAge, latestBirthDateFor } from "@/modules/registrations/domain/age";
 import { foldName } from "@/modules/registrations/domain/name-fold";
-import { GROUP_RUN_TOO_YOUNG } from "./form";
+import { GROUP_RUN_TOO_OLD, GROUP_RUN_TOO_YOUNG } from "./form";
 
 /** How long after the start the page still takes a signature: somebody at the meeting point, late. */
 export const SIGNING_GRACE_MINUTES = 60;
@@ -69,10 +69,11 @@ export function groupRunMinorMinimumAge(minAge: number): number {
  * Names only (§14.5), in the order the summary lists them.
  */
 export function minorSigningRefusal(input: { offered: boolean; minor: boolean; minorTypedName: string; guardianAgrees: boolean }): string[] {
-  const name = input.minorTypedName.trim();
+  // Judged as the signer key judges it (`foldName`): a name of invisible characters is no name, or it would fold to the adult's key.
+  const name = foldName(input.minorTypedName);
   if (!input.minor) return name !== "" || input.guardianAgrees ? ["minor"] : [];
   if (!input.offered) return ["minor"];
-  return [...(name === "" || name.length > TYPED_NAME_MAX ? ["minorTypedName"] : []), ...(input.guardianAgrees ? [] : ["guardianAgrees"])];
+  return [...(name === "" || input.minorTypedName.trim().length > TYPED_NAME_MAX ? ["minorTypedName"] : []), ...(input.guardianAgrees ? [] : ["guardianAgrees"])];
 }
 
 /**
@@ -95,7 +96,10 @@ export function groupRunAsksBirthDate(minAge: number): boolean {
 export function birthDateRefusal(
   event: { minAge: number; startsAt: Date; timezone: string },
   birthDate: string | undefined,
-  /** The date is the minor's, counted against the run's own minimum under eighteen (§NNN): always asked on that path. */
+  /**
+   * The date is the minor's (§NNN): always asked on that path, counted against the run's own minimum under eighteen
+   * and refused at eighteen or more on the run's day (`GROUP_RUN_TOO_OLD`).
+   */
   minor = false,
 ): string[] {
   if (!minor && !groupRunAsksBirthDate(event.minAge)) return [];
@@ -103,7 +107,21 @@ export function birthDateRefusal(
   const day = dayIn(event.startsAt, event.timezone);
   const value = (birthDate ?? "").trim();
   if (ageOn(value, day) === null) return ["birthDate"];
-  return isUnderMinimumAge(value, day, minAge) ? ["birthDate", GROUP_RUN_TOO_YOUNG] : [];
+  if (isUnderMinimumAge(value, day, minAge)) return ["birthDate", GROUP_RUN_TOO_YOUNG];
+  // A minor is under eighteen on the run's day (§NNN): the tick's own words, and the race's rule (`isMinorOn`).
+  // An adult signs their own declaration, with no tick.
+  const age = ageOn(value, day);
+  return minor && age !== null && age >= ADULT_AGE ? ["birthDate", GROUP_RUN_TOO_OLD] : [];
+}
+
+/**
+ * The oldest birth date a minor may have on the run's day (§NNN): the day after the latest birth date that is
+ * already eighteen (`latestBirthDateFor`), so the minor's box can say «sub 18 ani» as it is typed, with the very
+ * arithmetic `birthDateRefusal` refuses with.
+ */
+export function oldestMinorBirthDate(runDay: string): string {
+  const eighteen = new Date(`${latestBirthDateFor(ADULT_AGE, runDay)}T00:00:00Z`);
+  return new Date(eighteen.getTime() + 86_400_000).toISOString().slice(0, 10);
 }
 
 /** The longest name a signature box takes, as the race's does. */

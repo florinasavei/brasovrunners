@@ -198,13 +198,16 @@ describe("§440 the age gate: one rule, the race's", () => {
  * editor's help under «Declarație opțională pe propria răspundere» and the guide say it in words.
  */
 describe("§520 the run declaration's 18 is said where the box used to be", () => {
-  // Since §NNN: signed from 18; under 18 the minor signs with a parent.
-  const RO = "Declarația se semnează de la 18 ani; sub 18, minorul semnează cu un părinte.";
-  const EN = "The declaration is signed from 18; under 18, the minor signs with a parent.";
+  // Since §NNN: signed from 18; under 18 the minor signs with a parent — in the guide on two conditions, in the
+  // editor's one-line help (200 characters) said shortly.
+  const RO = "Declarația se semnează de la 18 ani. Sub 18, minorul semnează cu un părinte, dar numai dacă textul în vigoare o prevede și vârsta minimă a alergării e sub 18.";
+  const EN = "The declaration is signed from 18. Under 18, the minor signs with a parent, but only if the text in force provides for it and the run's minimum age is under 18.";
+  const RO_HELP = "Sub 18, minorul semnează cu un părinte, dacă textul și vârsta minimă a alergării o permit.";
+  const EN_HELP = "Under 18, the minor signs with a parent, if the text and the run allow it.";
 
   it("in the editor's help under the declaration's box and in the guide, both languages", () => {
-    expect(ro.Admin.editor.groupRunDeclaration.help).toContain(RO);
-    expect(en.Admin.editor.groupRunDeclaration.help).toContain(EN);
+    expect(ro.Admin.editor.groupRunDeclaration.help).toContain(RO_HELP);
+    expect(en.Admin.editor.groupRunDeclaration.help).toContain(EN_HELP);
     expect(JSON.stringify(ro.Admin.guide)).toContain(RO);
     expect(JSON.stringify(en.Admin.guide)).toContain(EN);
   });

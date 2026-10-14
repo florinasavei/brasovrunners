@@ -27,9 +27,10 @@ import {
   groupRunMinimumAge,
   groupRunMinorMinimumAge,
   groupRunTakesMinors,
+  oldestMinorBirthDate,
   signingOpen,
 } from "@/modules/group-run-declarations/domain";
-import { GROUP_RUN_FORM_FIELDS, GROUP_RUN_MINOR_FIELDS, parseGroupRunInvalid, refusedTooYoung } from "@/modules/group-run-declarations/form";
+import { GROUP_RUN_FORM_FIELDS, GROUP_RUN_MINOR_FIELDS, parseGroupRunInvalid, refusedTooOld, refusedTooYoung } from "@/modules/group-run-declarations/form";
 import MinorSigningFields from "@/modules/group-run-declarations/ui/MinorSigningFields";
 import { offeredGroupRunDeclarationKey } from "@/modules/legal-documents/domain/keys";
 import { asksForIdDocument, deadlineMergeValues } from "@/modules/legal-documents/domain/merge-fields";
@@ -208,8 +209,12 @@ export default async function GroupRunDeclarationPage({ params, searchParams }: 
   const minorMinimumAge = { age: yearsPhrase(minorAge, locale) };
   const youngestMinor = latestBirthDateFor(minorAge, runDay);
   const latestMinorBirthDate = youngestMinor < today ? youngestMinor : today;
+  // The oldest date the minor's box takes: under eighteen on the run's day, the arithmetic the service refuses with.
+  const oldestMinorBirth = oldestMinorBirthDate(runDay);
   const minorTicked = minorOffered && draft?.minor === "on";
   const tooYoungMinor = minorOffered && refusedTooYoung(invalid);
+  const tooOldMinor = minorOffered && refusedTooOld(invalid);
+  const minorTooOldWords = t("groupRunDeclaration.page.tooOld");
   const minorForcedOpen = minorTicked || refused.some((field) => (GROUP_RUN_MINOR_FIELDS as readonly string[]).includes(field));
   const minorTooYoungWords = t("groupRunDeclaration.page.tooYoung", minorMinimumAge);
   const minorBirthDateHelp = t("groupRunDeclaration.page.birthDateHelp", minorMinimumAge);
@@ -291,7 +296,8 @@ export default async function GroupRunDeclarationPage({ params, searchParams }: 
           {refused.map((field) => (
             <Box key={field} sx={{ mt: 0.5 }}>
               <MuiLink href={`#${field}`}>{labelOf(field)}</MuiLink>
-              {field === "birthDate" && (tooYoung || tooYoungMinor) && <>: {minorTicked ? minorTooYoungWords : tooYoungWords}</>}
+              {field === "birthDate" && tooOldMinor && <>: {minorTooOldWords}</>}
+              {field === "birthDate" && !tooOldMinor && (tooYoung || tooYoungMinor) && <>: {minorTicked ? minorTooYoungWords : tooYoungWords}</>}
               {field === "minor" && <>: {t("groupRunDeclaration.page.minorRefused")}</>}
             </Box>
           ))}
@@ -374,17 +380,6 @@ export default async function GroupRunDeclarationPage({ params, searchParams }: 
             required
             autoComplete="email"
           />
-          {/* The consent box repeats the run's age, the one the text states through {{minimumAge}} (§515). */}
-          <CheckboxField
-            id="accepted"
-            name="accepted"
-            required
-            defaultChecked={draft?.accepted === "on"}
-            error={refused.includes("accepted") ? t("groupRunDeclaration.page.acceptInline") : undefined}
-            requiredMessage={t("groupRunDeclaration.page.acceptInline")}
-          >
-            {minorOffered ? t("groupRunDeclaration.page.acceptAny") : t("groupRunDeclaration.page.accept", minimumAge)}
-          </CheckboxField>
           {/*
             «Semnez pentru un minor (sub 18 ani)» (§NNN, the race's §330 on a group run): ticked, the minor's own
             signature and the parent's tick appear — the parent's own name is the signature below, the minor's
@@ -413,9 +408,10 @@ export default async function GroupRunDeclarationPage({ params, searchParams }: 
                     label={t("groupRunDeclaration.page.fields.minorBirthDate")}
                     defaultValue={draft?.birthDate ?? ""}
                     error={refused.includes("birthDate")}
-                    errorText={tooYoungMinor ? minorTooYoungWords : minorBirthDateHelp}
+                    errorText={tooOldMinor ? minorTooOldWords : tooYoungMinor ? minorTooYoungWords : minorBirthDateHelp}
                     help={minorBirthDateHelp}
-                    min={earliestBirthDate}
+                    autoComplete="off"
+                    min={oldestMinorBirth}
                     max={latestMinorBirthDate}
                     eventDay={runDay}
                     locale={locale}
@@ -423,6 +419,7 @@ export default async function GroupRunDeclarationPage({ params, searchParams }: 
                     placeholder={formCopy("birthDatePlaceholder")}
                     unreadable={formCopy("birthDateUnreadable")}
                     tooYoung={minorTooYoungWords}
+                    tooOld={minorTooOldWords}
                   />
                   <SignatureField
                     id="minorTypedName"
@@ -451,6 +448,17 @@ export default async function GroupRunDeclarationPage({ params, searchParams }: 
               </MinorSigningFields>
             </Stack>
           )}
+          {/* The consent box repeats the run's age, the one the text states through {{minimumAge}} (§515). */}
+          <CheckboxField
+            id="accepted"
+            name="accepted"
+            required
+            defaultChecked={draft?.accepted === "on"}
+            error={refused.includes("accepted") ? t("groupRunDeclaration.page.acceptInline") : undefined}
+            requiredMessage={t("groupRunDeclaration.page.acceptInline")}
+          >
+            {minorOffered ? t("groupRunDeclaration.page.acceptAny", minimumAge) : t("groupRunDeclaration.page.accept", minimumAge)}
+          </CheckboxField>
           {/* The signature in a hand (§86): the name typed is the signature itself. */}
           <SignatureField
             id="typedName"

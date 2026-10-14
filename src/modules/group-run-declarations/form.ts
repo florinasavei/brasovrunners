@@ -24,6 +24,13 @@ export type GroupRunFormField = (typeof GROUP_RUN_FORM_FIELDS)[number];
  */
 export const GROUP_RUN_TOO_YOUNG = "tooYoung";
 
+/**
+ * The marker beside `birthDate` when a minor's date is eighteen or more on the run's day (§NNN): the tick says
+ * «sub 18 ani», and the race decides who is a minor from the date (`isMinorOn`), so an adult's date is refused
+ * on the minor's path with its own words, never as «unreadable» or «too young».
+ */
+export const GROUP_RUN_TOO_OLD = "tooOld";
+
 /** The refused boxes the address names, known ones only, in the form's order. */
 export function parseGroupRunInvalid(value: string | undefined): GroupRunFormField[] {
   const named = new Set((value ?? "").split(","));
@@ -40,6 +47,11 @@ export const GROUP_RUN_MINOR_FIELDS = ["minor", "minorTypedName", "guardianAgree
 /** Whether the refusal was the run's minimum age (`GROUP_RUN_TOO_YOUNG`). */
 export function refusedTooYoung(value: string | undefined): boolean {
   return (value ?? "").split(",").includes(GROUP_RUN_TOO_YOUNG);
+}
+
+/** Whether the refusal was a minor's date of eighteen or more (`GROUP_RUN_TOO_OLD`). */
+export function refusedTooOld(value: string | undefined): boolean {
+  return (value ?? "").split(",").includes(GROUP_RUN_TOO_OLD);
 }
 
 /**
