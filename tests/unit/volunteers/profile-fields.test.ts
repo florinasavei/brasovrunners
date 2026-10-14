@@ -304,12 +304,14 @@ describe("§NNN the privacy notice's marker {{volunteerProfile}}", () => {
     }
   });
 
-  it("is in the token legend, and filled with the form's own labels, quoted, the club named as the form names it", () => {
+  it("is in the token legend, and filled with the form's own labels, quoted — the club's name nowhere in it", () => {
     expect(DECLARATION_TOKENS.some((entry) => entry.token === "{{volunteerProfile}}")).toBe(true);
     expect(ro.Admin.legal.tokens.volunteerProfile).toBeTruthy();
     expect(en.Admin.legal.tokens.volunteerProfile).toBeTruthy();
-    expect(volunteerProfileClause("ro")).toBe(`„Vârsta”, „Sex”, „Orașul”, „Am mai fost voluntar în trecut la alte curse”, „Fac parte din grupul ${CLUB_NAME}”, „Mărimea tricoului”`);
-    expect(volunteerProfileClause("en")).toBe(`“Age”, “Sex”, “City”, “I have volunteered at other races before”, “I belong to the ${CLUB_NAME} group”, “T-shirt size”`);
+    expect(volunteerProfileClause("ro")).toBe("„Vârsta”, „Sex”, „Orașul”, „Am mai fost voluntar în trecut la alte curse”");
+    expect(volunteerProfileClause("en")).toBe("“Age”, “Sex”, “City”, “I have volunteered at other races before”");
+    // The approved text never names the club: the group tick and the size are said in the paragraph's words.
+    for (const locale of ["ro", "en"]) expect(volunteerProfileClause(locale)).not.toContain(CLUB_NAME);
     expect(volunteersMergeValues("ro").volunteerProfile).toBe(volunteerProfileClause("ro"));
     expect(mergeText("({{volunteerProfile}})", volunteersMergeValues("en"))).toContain("“Age”");
   });

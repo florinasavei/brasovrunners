@@ -169,10 +169,10 @@ export const VOLUNTEER_AGREEMENT_NOTICE_MERGE_FIELD = "volunteerAgreement";
 /**
  * The privacy notice's marker for what a volunteer says about themselves (§NNN; the owner, 2026-10-14: «vârstă, sex,
  * oraș și o bifă dacă a mai fost voluntar sau nu»): the public form's boxes, quoted, in the reader's language
- * (`volunteers/notice-words.ts`) — „Vârsta”, „Sex”, „Orașul”, „Am mai fost voluntar în trecut la alte curse”, „Fac
- * parte din grupul …”, „Mărimea tricoului” — inside the volunteers' paragraph's sentence that says what those answers
- * are kept for (placing the volunteers in roles and preparing the event; the T-shirt size only while the club gives
- * T-shirts; the group tick as the person's own claim). Its own marker, §562's, §613's and §758's pattern: a notice
+ * (`volunteers/notice-words.ts`) — „Vârsta”, „Sex”, „Orașul”, „Am mai fost voluntar în trecut la alte curse” — inside the
+ * volunteers' paragraph's sentence that says what those answers are kept for (placing the volunteers in roles and
+ * preparing the event; the club's group tick as the person's own claim and the T-shirt size, only while the club gives
+ * T-shirts, said in the sentence's own words, never quoted: the tick would name the club in the approved text). Its own marker, §562's, §613's and §758's pattern: a notice
  * approved from an earlier template names `{{volunteers}}` and `{{volunteerAgreement}}` but says none of this, so the
  * public form asks those boxes — and keeps their answers — only while the notice in force names this marker too
  * (`describesVolunteerProfile`); until then it is the form of §758, with its tick «Am cel puțin 18 ani», and

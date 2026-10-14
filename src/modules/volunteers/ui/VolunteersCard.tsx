@@ -33,6 +33,7 @@ import RoleColourFields from "../badges/ui/RoleColourFields";
 import RoleColourSample from "../badges/ui/RoleColourSample";
 import { CLUB_NAME } from "@/theme/brand";
 import { confirmWords } from "@/shared/feedback/confirm-words";
+import { ACTION_ICONS } from "@/shared/ui/action-icons";
 import ActionForm from "@/shared/forms/ActionForm";
 import RecallField from "@/shared/forms/recall";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
@@ -61,7 +62,9 @@ import {
 } from "../domain/volunteer";
 import { ROLE_FORM_COLOUR_BOXES, type VolunteerItem, type VolunteerRole } from "../volunteers";
 import { DISCLOSURE_OPEN_ARROW, DISCLOSURE_SUMMARY_SX, FOLD_GLYPH_INLINE_SX } from "@/shared/ui/disclosure";
-import NotesIcon from "@mui/icons-material/Notes";
+
+/** The glyph of the role header's «Tot textul» fold, by name from the registry (§694). */
+const MoreIcon = ACTION_ICONS.intro;
 
 /** A state's chip: its word, its glyph and its tone — never the colour alone. */
 const STATE_CHIP: Record<VolunteerState, { glyph: StatusGlyphName; color: "warning" | "success" | "default" }> = {
@@ -759,7 +762,7 @@ export default async function VolunteersCard({
             {head.rest !== null && (
               <Box component="details" sx={{ "& > summary": { ...DISCLOSURE_SUMMARY_SX, py: 0.5 }, ...DISCLOSURE_OPEN_ARROW }}>
                 <Box component="summary">
-                  <NotesIcon aria-hidden sx={FOLD_GLYPH_INLINE_SX} />
+                  <MoreIcon aria-hidden sx={FOLD_GLYPH_INLINE_SX} />
                   {t("volunteers.role.more")}
                 </Box>
                 <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: "pre-line", wordBreak: "break-word" }}>
