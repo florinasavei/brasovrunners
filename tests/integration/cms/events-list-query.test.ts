@@ -215,7 +215,12 @@ describe("§527 the backoffice events list over seeded events and a series", () 
     it("is one line on the first page, counted once", async () => {
       const lines = arrangeEventList(await listEventsForBackoffice(db), parseEventListQuery({ state: "ALL" }), NOW, "ro");
       expect(lines).toHaveLength(countEventLines(await listEventsForBackoffice(db)));
-      expect(lines.slice(0, 3).map(({ key }) => key)).toContain(lines[0].key);
+      // Paged by two, the marked date (third by its date) is on the first page and on no other.
+      const pages = [];
+      for (let from = 0; from < lines.length; from += 2) pages.push(lines.slice(from, from + 2).map(({ key }) => key));
+      expect(pages.length).toBeGreaterThan(1);
+      expect(pages[0][0]).toBe(lines[0].key);
+      expect(pages.slice(1).flat()).not.toContain(lines[0].key);
       expect(new Set(lines.map(({ key }) => key)).size).toBe(lines.length);
     });
   });
