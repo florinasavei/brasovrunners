@@ -19,8 +19,12 @@ import {
   switchVolunteersAction,
 } from "@/app/[locale]/admin/events/[id]/volunteer-actions";
 import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
+import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { formatPhone } from "@/modules/registrations/phone";
+import { badgeRoleText } from "../badges/badge-design";
+import RoleColourFields from "../badges/ui/RoleColourFields";
+import RoleColourSample from "../badges/ui/RoleColourSample";
 import { confirmWords } from "@/shared/feedback/confirm-words";
 import ActionForm from "@/shared/forms/ActionForm";
 import RecallField from "@/shared/forms/recall";
@@ -45,7 +49,7 @@ import {
   type VolunteerOfferClosed,
   type VolunteerState,
 } from "../domain/volunteer";
-import type { VolunteerItem, VolunteerRole } from "../volunteers";
+import { ROLE_FORM_COLOUR_BOXES, type VolunteerItem, type VolunteerRole } from "../volunteers";
 
 /** A state's chip: its word, its glyph and its tone — never the colour alone. */
 const STATE_CHIP: Record<VolunteerState, { glyph: StatusGlyphName; color: "warning" | "success" | "default" }> = {
@@ -144,6 +148,8 @@ export default async function VolunteersCard({
     needed: t("volunteers.role.needed"),
     descriptionRo: t("volunteers.role.descriptionRo"),
     descriptionEn: t("volunteers.role.descriptionEn"),
+    [ROLE_FORM_COLOUR_BOXES.choice]: t("badges.colours.choice"),
+    [ROLE_FORM_COLOUR_BOXES.typed]: t("badges.colours.typedLabel"),
   });
   const personBoxes = await refusalMessages({
     roleIds: t("volunteers.person.choices"),
@@ -161,7 +167,7 @@ export default async function VolunteersCard({
     </>
   );
 
-  /** The five boxes of «Adaugă un rol» and every role's «Modifică». */
+  /** The boxes of «Adaugă un rol» and every role's «Modifică»: the names, the number, the descriptions and the badge's colour. */
   const roleFields = (role: VolunteerRole | null) => (
     <Stack spacing={1.5} sx={{ maxWidth: 640 }}>
       <RecallField
@@ -205,6 +211,8 @@ export default async function VolunteersCard({
         size="small"
         slotProps={{ htmlInput: { maxLength: VOLUNTEER_ROLE_DESCRIPTION_MAX } }}
       />
+      {/* The role's band on its volunteer badge (§764): the same two boxes as the badges' page, saved by the same rule. */}
+      <RoleColourFields names={ROLE_FORM_COLOUR_BOXES} colour={role?.colour ?? null} />
     </Stack>
   );
 
@@ -594,6 +602,10 @@ export default async function VolunteersCard({
         </Typography>
         {standingChip(role)}
       </Stack>
+      {/* The band's colour on the volunteer badge (§764): the sample and its name in words, never the colour alone. */}
+      <Box sx={{ mt: 0.75 }}>
+        <RoleColourSample colour={role.colour} label={badgeRoleText(roleName(role), locale)} locale={locale} testId="volunteer-role-colour" />
+      </Box>
       {(role.descriptionRo || role.descriptionEn) && (
         <Typography variant="body2" color="text.secondary" sx={{ wordBreak: "break-word" }}>
           {[role.descriptionRo, role.descriptionEn].filter(Boolean).join(" / ")}
@@ -723,6 +735,17 @@ export default async function VolunteersCard({
             </Panel>
           </Stack>
         </Panel>
+
+        {/* «Ecusoane pentru voluntari» (§764): the badges are designed and printed per role on a page of their own. */}
+        <GlyphButton
+          icon="badges"
+          href={getPathname({ locale, href: { pathname: "/admin/events/[id]/badges", params: { id: eventId } } })}
+          variant="outlined"
+          sx={{ minHeight: 44, alignSelf: "flex-start" }}
+          data-testid="volunteer-badges-link"
+        >
+          {t("volunteers.badgesLink")}
+        </GlyphButton>
 
         {/* The people: first the offers nobody has given a role yet, then each role's people with «N din M». */}
         {roles.length > 0 && (

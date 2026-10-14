@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V3.23-2026-10-14
+
+- **Volunteer badges, designed like the bibs and printed per role** — «Ecusoane pentru voluntari», linked from the «Voluntari» card: a small, long strip (90 × 35 mm, 100 × 40 mm or the club's own size) with the logo, the event's short title, «VOLUNTAR», the role on its coloured band and a white space for the name written by hand, optionally the coordinator's telephone; each role's colour from the palette or typed, checked for contrast; «Câte ecusoane» per role with spares and badges without a role, packed on A4 with cut marks. No volunteer's name is ever printed. §764.
 ## BR-V3.22-2026-10-14
 
 - **«Puncte de control» inside «Traseul»** — the event editor's checkpoints card is now a named card of «Traseul», after the route's fields, in the document and on the screen, instead of standing above card 1; its forms post on their own (the HTML `form` attribute), so saving the points never saves the event and «Salvează» never saves a point, with scripts on or off. §763.

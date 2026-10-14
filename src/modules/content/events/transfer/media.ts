@@ -44,9 +44,12 @@ const BIB_PICTURES = [
   { role: "bib.member.card", path: ["member", "cardImageSrc"] },
 ] as const;
 
-/** The words' key of a medium's role (`Admin.eventJson.roles.<key>`): the six places a picture sits, and the GPX. */
-export type MediaRoleKey = "cover" | "bibHeader" | "bibSponsors" | "bibProfile" | "bibMemberHeader" | "bibMemberCard" | "text" | "gpx";
-export const MEDIA_ROLE_KEYS: readonly MediaRoleKey[] = ["cover", "bibHeader", "bibSponsors", "bibProfile", "bibMemberHeader", "bibMemberCard", "text", "gpx"];
+/** The volunteer badge's one picture place (§764): its header, inside `badges.design`. */
+const BADGE_PICTURES = [{ role: "badge.header", path: ["headerImageSrc"] }] as const;
+
+/** The words' key of a medium's role (`Admin.eventJson.roles.<key>`): the places a picture sits, and the GPX. */
+export type MediaRoleKey = "cover" | "bibHeader" | "bibSponsors" | "bibProfile" | "bibMemberHeader" | "bibMemberCard" | "badgeHeader" | "text" | "gpx";
+export const MEDIA_ROLE_KEYS: readonly MediaRoleKey[] = ["cover", "bibHeader", "bibSponsors", "bibProfile", "bibMemberHeader", "bibMemberCard", "badgeHeader", "text", "gpx"];
 
 export function mediaRoleKey(role: string): MediaRoleKey {
   switch (role) {
@@ -62,6 +65,8 @@ export function mediaRoleKey(role: string): MediaRoleKey {
       return "bibMemberHeader";
     case "bib.member.card":
       return "bibMemberCard";
+    case "badge.header":
+      return "badgeHeader";
     case "route.gpx":
       return "gpx";
     default:
@@ -115,6 +120,10 @@ export function collectMediaRefs(config: EventConfig): MediaRef[] {
     const url = bibPictureAt(config.bib.design, path);
     if (url) refs.push({ role, url, kind: "image" });
   }
+  for (const { role, path } of BADGE_PICTURES) {
+    const url = bibPictureAt(config.badges.design, path);
+    if (url) refs.push({ role, url, kind: "image" });
+  }
   for (const locale of LOCALES) {
     for (const box of TEXT_BOXES) {
       for (const src of imageSources(config.translations[locale][box])) refs.push({ role: `text.${locale}.${box}`, url: src, kind: "image" });
@@ -144,6 +153,13 @@ export function mapMediaUrls(config: EventConfig, replace: (url: string, kind: M
     if (!parent || typeof parent[key] !== "string" || parent[key] === "") continue;
     parent[key] = replace(parent[key] as string, "image");
   }
+  // The volunteer badge's header (§764), the same rule: `null` takes the picture out.
+  const badgeDesign = structuredClone(config.badges.design) as Record<string, unknown>;
+  for (const { path } of BADGE_PICTURES) {
+    const key = path[0];
+    if (typeof badgeDesign[key] !== "string" || badgeDesign[key] === "") continue;
+    badgeDesign[key] = replace(badgeDesign[key] as string, "image");
+  }
 
   const translations = { ...config.translations };
   for (const locale of LOCALES) {
@@ -157,7 +173,7 @@ export function mapMediaUrls(config: EventConfig, replace: (url: string, kind: M
 
   const cover = config.cover ? (replace(config.cover.url, "image") === null ? null : { ...config.cover, url: replace(config.cover.url, "image") as string }) : null;
   const gpx = config.route.gpx ? (replace(config.route.gpx.url, "gpx") === null ? null : { ...config.route.gpx, url: replace(config.route.gpx.url, "gpx") as string }) : null;
-  return { ...config, cover, route: { ...config.route, gpx }, bib: { ...config.bib, design }, translations };
+  return { ...config, cover, route: { ...config.route, gpx }, bib: { ...config.bib, design }, badges: { design: badgeDesign }, translations };
 }
 
 function isImageFigure(node: unknown): node is { type: "image"; attrs: { src: string } } {

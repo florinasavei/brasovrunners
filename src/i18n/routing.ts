@@ -195,6 +195,8 @@ export const routing = defineRouting({
     "/admin/events/[id]": "/admin/events/[id]",
     /** Every bib of the event as a picture (`DECISIONS.md` §94). */
     "/admin/events/[id]/bibs": "/admin/events/[id]/bibs",
+    /** «Ecusoane pentru voluntari» (§764): the volunteer badges designed and printed per role. */
+    "/admin/events/[id]/badges": "/admin/events/[id]/badges",
     /**
      * The hard delete's own screen: what would be destroyed, and the typed confirmation
      * (BR-REQ-037-06). A page rather than a dialog, so it works with JavaScript switched off

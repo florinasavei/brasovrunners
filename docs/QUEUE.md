@@ -14,13 +14,14 @@ decision or a click only the club can make · **released** — on production, wi
 The owner, 2026-10-10: «Soon I need to start a new session from the laptop … You need to save and document everything».
 This section replaces the plan of 2026-09-30; it is what a session with none of today's conversation needs to carry on.
 
-- **Production: `BR-V3.21`** (2026-10-14 10:45: §761 volunteers choose several roles, migration `0149`; §762 the main
-  event first). Waiting for «prod»: `BR-V3.22` (§763, below) — no migration.
-- **QA: `BR-V3.22`** — «Puncte de control» is a card inside «Traseul», its forms detached (the HTML `form` attribute),
-  so saving the points never saves the event and «Salvează» never saves a point, scripts on or off.
-  Next, one lane at a time: volunteer badges (migration `0150`), the volunteers' own data (age, sex, city, experience,
-  the club group, the role's description, a tick box for the switch), their own page with a guardian from 14, then
-  tick boxes for every switch.
+- **Production: `BR-V3.22`** (2026-10-14 13:30: §763 the checkpoints inside «Traseul»). Waiting for «prod»: `BR-V3.23`
+  (§764, below), migration `0150` (expand only).
+- **QA: `BR-V3.23`** — volunteer badges («Ecusoane»): a designer on its own page, strips of 90 × 35 or 100 × 40 mm with
+  no name (a writing area for the marker), printed per role on its coloured band, packed on A4 with cut marks; the
+  colour lives in the role's definition.
+  Next, one lane at a time: the volunteers' own data (age, sex, city, experience, the club group), the role's
+  description as rich text with a translate button, a tick box for the switch (migration `0151`); their own page with
+  a guardian from 14; tick boxes for every switch; five more clauses in the declaration and the signature's trace.
 - **Nothing is building.** Releases by the label `ship` reach production by themselves again: `SHIP_TOKEN` was given
   «Pull requests: Read and write» on 2026-10-12, and `BR-V3.05`'s run opened its `qa → main` pull request itself.
 - **Lanes:** the phone session took the calendar on 2026-10-12; one release at a time between
@@ -140,6 +141,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V3.23` | volunteer badges (§764) |
 | `BR-V3.22` | the checkpoints inside the route card (§763) |
 | `BR-V3.21` | volunteers choose several roles (§761) · the main event first in the backoffice list (§762) |
 | `BR-V3.20` | the event editor in fewer cards (§760) |

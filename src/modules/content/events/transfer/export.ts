@@ -19,6 +19,7 @@ import { readScheduleItems } from "@/modules/events/domain/schedule";
 import { placeNameIn } from "@/modules/events/domain/place";
 import { isRaceDeclarationKey, type RaceDeclarationKey } from "@/modules/legal-documents/domain/keys";
 import { readBibDesign } from "@/modules/registrations/bib-design";
+import { readBadgeDesign } from "@/modules/volunteers/badges/badge-design";
 import { effectiveMinimumAge } from "@/modules/registrations/domain/age";
 import { canTransferEvents } from "@/modules/staff-identity/domain/roles";
 import type { StaffUser } from "@/db/schema/staff-users";
@@ -182,6 +183,8 @@ export function configFromRows(event: EditableEvent, rows: readonly EditableTran
     },
     hiddenList: { enabled: event.hiddenListEnabled, bibStart: event.hiddenListBibStart, counted: event.hiddenListCounted, public: event.hiddenListPublic },
     bib: { startNumber: event.bibStartNumber, colour: event.bibColour, design: readBibDesign(event.bibDesign) as unknown as Record<string, unknown> },
+    // The volunteer badges' look (§764), never a volunteer nor a role: as `readBadgeDesign` answers.
+    badges: { design: readBadgeDesign(event.badgeDesign) as unknown as Record<string, unknown> },
     translations: { ro: translationConfig(row("ro")), en: translationConfig(row("en")) },
   };
   // Every picture's address absolute, so the file reads the same wherever it is opened.

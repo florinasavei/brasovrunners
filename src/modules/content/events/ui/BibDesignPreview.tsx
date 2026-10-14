@@ -5,6 +5,20 @@ import Typography from "@mui/material/Typography";
 import { useEffect, useRef, useState } from "react";
 import { bibPreviewUrl, isBibDesignInput, readBibDesignForm } from "@/modules/registrations/bib-design-query";
 import { BIB_IMAGE } from "@/modules/registrations/bib-geometry";
+import { BADGE_SIZES, type BadgeSize, badgeImageSize } from "@/modules/volunteers/badges/badge-geometry";
+import { badgePreviewUrl, isBadgeDesignInput, readBadgeDesignForm } from "@/modules/volunteers/badges/badge-query";
+
+/**
+ * The picture's size for a badge's boxes as they are (§764): the paper's own proportion, so the box keeps
+ * its height while the new picture loads. A size that is not one of the sizes, or a custom box that holds
+ * no number yet, reads as the default strip — what the schema draws for it.
+ */
+function badgeBox(values: { size: string; customWidthMm: number; customHeightMm: number }): { width: number; height: number } {
+  const size: BadgeSize = (BADGE_SIZES as readonly string[]).includes(values.size) ? (values.size as BadgeSize) : "strip90";
+  const custom = size === "custom" && Number.isFinite(values.customWidthMm) && Number.isFinite(values.customHeightMm) && values.customWidthMm > 0 && values.customHeightMm > 0;
+  const { width, height } = badgeImageSize(custom ? { size, customWidthMm: values.customWidthMm, customHeightMm: values.customHeightMm } : { size: size === "custom" ? "strip90" : size, customWidthMm: 0, customHeightMm: 0 });
+  return { width, height };
+}
 
 /** How long the boxes may keep changing before the picture is asked for again. */
 const SETTLE_MS = 300;
@@ -39,6 +53,9 @@ export default function BibDesignPreview({
   labels,
   member = false,
   version,
+  kind = "bib",
+  role = "none",
+  initialBox,
 }: {
   eventId: string;
   locale: string;
@@ -49,9 +66,20 @@ export default function BibDesignPreview({
   member?: boolean;
   /** What the sample is drawn from beside the form — the saved checkpoints (§757) — in every address this rebuilds. */
   version?: string;
+  /**
+   * `badge`: a volunteer badge's designer (§764) — the same island over the badge's boxes
+   * (`badge.design.*`), its address (`badgePreviewUrl`) and its paper, whose proportion follows the size
+   * chosen. One preview for both, never a second copy.
+   */
+  kind?: "bib" | "badge";
+  /** The badge's role the sample is drawn for: a role's id, or `none` for «fără rol». */
+  role?: string;
+  /** The badge's picture size as saved, so the first paint keeps its proportion. */
+  initialBox?: { width: number; height: number };
 }) {
   const root = useRef<HTMLElement>(null);
   const [src, setSrc] = useState(initialSrc);
+  const [box, setBox] = useState(kind === "badge" && initialBox ? initialBox : BIB_IMAGE);
   /** A change is on its way: dimmed until the new picture loads (or the address did not move). */
   const [pending, setPending] = useState(false);
   const shown = useRef(initialSrc);
@@ -66,15 +94,22 @@ export default function BibDesignPreview({
         const value = data.get(name);
         return typeof value === "string" ? value : null;
       };
-      const next = bibPreviewUrl({
-        eventId,
-        locale,
-        number: get("event.bibStartNumber"),
-        colour: get("event.bibColour"),
-        design: readBibDesignForm(get),
-        member,
-        version,
-      });
+      let next: string;
+      if (kind === "badge") {
+        const design = readBadgeDesignForm(get);
+        next = badgePreviewUrl({ eventId, locale, role, design, version });
+        setBox(badgeBox(design));
+      } else {
+        next = bibPreviewUrl({
+          eventId,
+          locale,
+          number: get("event.bibStartNumber"),
+          colour: get("event.bibColour"),
+          design: readBibDesignForm(get),
+          member,
+          version,
+        });
+      }
       // The same address loads nothing, so nothing would ever say it arrived.
       if (next === shown.current) setPending(false);
       shown.current = next;
@@ -83,7 +118,7 @@ export default function BibDesignPreview({
     const onChange = (event: Event) => {
       const target = event.target;
       if (!(target instanceof HTMLInputElement || target instanceof HTMLSelectElement)) return;
-      if (!isBibDesignInput(target.name)) return;
+      if (!(kind === "badge" ? isBadgeDesignInput(target.name) : isBibDesignInput(target.name))) return;
       setPending(true);
       clearTimeout(timer);
       timer = setTimeout(redraw, SETTLE_MS);
@@ -95,10 +130,11 @@ export default function BibDesignPreview({
       form.removeEventListener("input", onChange);
       form.removeEventListener("change", onChange);
     };
-  }, [eventId, locale, member, version]);
+  }, [eventId, locale, member, version, kind, role]);
 
+  const testId = kind === "badge" ? "badge-design-preview" : member ? "bib-design-preview-member" : "bib-design-preview";
   return (
-    <Box ref={root} component="figure" sx={{ m: 0, maxWidth: 320 }} data-testid={member ? "bib-design-preview-member" : "bib-design-preview"} aria-busy={pending || undefined}>
+    <Box ref={root} component="figure" sx={{ m: 0, maxWidth: kind === "badge" ? 400 : 320 }} data-testid={testId} aria-busy={pending || undefined}>
       {/* The paper's own proportion (A5, 990×700, §338) is declared, so the box keeps its height
           while a fresh picture is on its way and the panel below does not jump. No border and no
           rounded corner of its own: the picture draws the paper's edge itself (`bib-image.tsx`,
@@ -108,8 +144,8 @@ export default function BibDesignPreview({
         component="img"
         src={src}
         alt={labels.alt}
-        width={BIB_IMAGE.width}
-        height={BIB_IMAGE.height}
+        width={box.width}
+        height={box.height}
         loading="lazy"
         decoding="async"
         onLoad={() => setPending(false)}
