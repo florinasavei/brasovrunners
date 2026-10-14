@@ -7,6 +7,7 @@ import ro from "../../../messages/ro.json";
 import TranslateProvider, { type TranslateAction } from "@/modules/translate/ui/TranslateProvider";
 import type { PublicVolunteerRole, VolunteerItem, VolunteerRole } from "@/modules/volunteers/volunteers";
 import { CLUB_NAME } from "@/theme/brand";
+import { bornAgedOn } from "../../helpers/volunteer-birth";
 
 /**
  * §765 — the «Voluntari» card and the public form «Vreau să fiu voluntar» as the server draws them: the card's
@@ -46,6 +47,7 @@ vi.mock("@/app/[locale]/admin/events/[id]/volunteer-actions", () => {
     setVolunteerStateAction: noop,
     switchVolunteersAction: noop,
     switchVolunteersShirtsAction: noop,
+    switchVolunteersCountsAction: noop,
   };
 });
 vi.mock("@/app/[locale]/events/[slug]/volunteers/actions", () => ({ submitVolunteerAction: async () => {} }));
@@ -61,6 +63,10 @@ const { default: VolunteerBox } = await import("@/modules/volunteers/ui/Voluntee
 const translate: TranslateAction = async () => ({ ok: false, reason: "notConfigured" });
 const EVENT = "11111111-1111-4111-8111-111111111111";
 const WATER = "22222222-2222-4222-8222-222222222222";
+/** The day the ages are counted on (§NNN): the event's. */
+const EVENT_DAY = "2026-11-21";
+/** The last day of being `years` old on it, typed as the form posts it back. */
+const aged = (years: number) => bornAgedOn(years, EVENT_DAY);
 const FINISH = "33333333-3333-4333-8333-333333333333";
 
 const para = (text: string) => ({ type: "paragraph" as const, content: [{ type: "text" as const, text }] });
@@ -108,6 +114,7 @@ const PEOPLE: VolunteerItem[] = [
     message: null,
     note: null,
     age: 34,
+    dateOfBirth: "1992-03-12",
     sex: "FEMALE",
     city: "Brașov",
     volunteeredBefore: true,
@@ -146,6 +153,7 @@ const PEOPLE: VolunteerItem[] = [
     message: null,
     note: null,
     age: null,
+    dateOfBirth: null,
     sex: null,
     city: null,
     volunteeredBefore: false,
@@ -192,6 +200,8 @@ async function drawCard(over: Partial<ComponentProps<typeof VolunteersCard>> = {
     eventId: EVENT,
     acceptsVolunteers: false,
     volunteersShirts: false,
+    volunteersShowCounts: false,
+    eventDay: EVENT_DAY,
     profileDescribed: true,
     minorsOpen: false,
     offerClosed: "off",
@@ -229,6 +239,8 @@ async function drawBox(over: Partial<ComponentProps<typeof VolunteerBox>> = {}, 
     slug: "cursa",
     roles: [publicRole(ROLE), publicRole(FINISH_ROLE), publicRole(NO_DESCRIPTION)],
     shirts: false,
+    showCounts: true,
+    eventDay: EVENT_DAY,
     profile: true,
     minors: false,
     outcome: null,
@@ -305,12 +317,12 @@ describe("§765 «Oferim tricouri voluntarilor» is the same tick as «Primește
 });
 
 describe("§765 the organizers' entry draws the profile boxes only while the notice in force names them", () => {
-  it("draws the age, the sex, the city, the two ticks and the size while it does, and none of them while it does not", async () => {
+  it("draws the date of birth, the sex, the city, the two ticks and the size while it does, and none of them while it does not", async () => {
     const named = await drawCard({ profileDescribed: true, volunteersShirts: true });
-    for (const box of ["age", "city", "volunteeredBefore", "clubMember"]) expect(named, box).toContain(`name="${box}"`);
+    for (const box of ["birthDate", "city", "volunteeredBefore", "clubMember"]) expect(named, box).toContain(`name="${box}"`);
     expect(named).toContain('name="shirtSize"');
     const unnamed = await drawCard({ profileDescribed: false, volunteersShirts: true });
-    for (const box of ["age", "city", "volunteeredBefore", "clubMember", "shirtSize"]) expect(unnamed, box).not.toContain(`name="${box}"`);
+    for (const box of ["birthDate", "age", "city", "volunteeredBefore", "clubMember", "shirtSize"]) expect(unnamed, box).not.toContain(`name="${box}"`);
     // The rest of the entry is there as ever.
     expect(unnamed).toContain('name="phone"');
     expect(unnamed).toContain(ro.Admin.volunteers.offer.profileOff);
@@ -367,7 +379,7 @@ describe("§765 the people: small chips for the two claims, one line of the rest
     expect(maria).toContain("A mai fost voluntar");
     expect(maria).toContain('data-testid="volunteer-club"');
     expect(maria).toContain(`Din grupul ${CLUB_NAME}`);
-    expect(maria).toMatch(/data-testid="volunteer-facts"[^>]*>Vârsta: 34 · Feminin · Oraș: Brașov · Tricou: M</);
+    expect(maria).toMatch(/data-testid="volunteer-facts"[^>]*>34 de ani \(12\.03\.1992\) · Feminin · Oraș: Brașov · Tricou: M</);
     // Someone who said nothing has neither the chips nor the line.
     const ion = /<li[^>]*data-testid="volunteer-row"[^>]*data-volunteer-id="66666666[\s\S]*?<\/li>/.exec(page)?.[0] ?? "";
     expect(ion).not.toContain("volunteer-claims");
@@ -375,19 +387,19 @@ describe("§765 the people: small chips for the two claims, one line of the rest
     // Without shirts the size is shown nowhere.
     const none = await drawCard({ volunteersShirts: false });
     expect(none).not.toContain("Tricou: M");
-    expect(none).toMatch(/Vârsta: 34 · Feminin · Oraș: Brașov</);
+    expect(none).toMatch(/34 de ani \(12\.03\.1992\) · Feminin · Oraș: Brașov</);
   });
 
   it("speaks English", async () => {
     const page = await drawCard({ volunteersShirts: true }, "en");
     expect(page).toContain("Volunteered before");
     expect(page).toContain(`From the ${CLUB_NAME} group`);
-    expect(page).toMatch(/Age: 34 · Female · City: Brașov · T-shirt: M/);
+    expect(page).toMatch(/34 years \(12\.03\.1992\) · Female · City: Brașov · T-shirt: M/);
   });
 
-  it("offers the entry's boxes: age, sex, city, the two claims — and the size only while the event gives shirts", async () => {
+  it("offers the entry's boxes: date of birth, sex, city, the two claims — and the size only while the event gives shirts", async () => {
     const without = await drawCard({ volunteersShirts: false });
-    for (const name of ["age", "sex", "city", "volunteeredBefore", "clubMember"]) expect(without, name).toContain(`name="${name}"`);
+    for (const name of ["birthDate", "sex", "city", "volunteeredBefore", "clubMember"]) expect(without, name).toContain(`name="${name}"`);
     expect(without).not.toContain('name="shirtSize"');
     const withShirts = await drawCard({ volunteersShirts: true });
     expect(withShirts).toContain('name="shirtSize"');
@@ -403,18 +415,24 @@ describe("§765 the people: small chips for the two claims, one line of the rest
 });
 
 describe("§765 the public form while the notice names the profile", () => {
-  it("asks the age, the sex (the registration form's own box), the city and the two ticks, and no tick «Am cel puțin 18 ani»", async () => {
+  it("asks the date of birth (the registration form's own box), the sex (its own box), the city and the two ticks, and no tick «Am cel puțin 18 ani»", async () => {
     const page = await drawBox();
-    const age = tagOf(page, "input", "age");
-    expect(age).toContain("required");
-    expect(age).toContain('inputMode="numeric"');
-    expect(age).toContain('id="volunteer-age"');
+    const birth = tagOf(page, "input", "birthDate");
+    expect(birth).toContain("required");
+    expect(birth).toContain('inputMode="numeric"');
+    expect(birth).toContain('id="volunteer-birthDate"');
+    // Typed day first, the registration form's own placeholder and plain-text pattern (the box works with scripts off), and no age box.
+    expect(birth).toContain('placeholder="ZZ.LL.AAAA"');
+    expect(birth).toMatch(/pattern="[^"]*\\d\{4\}-\\d\{2\}-\\d\{2\}/);
+    expect(birth).toContain('autoComplete="bday"');
+    expect(page).not.toContain('name="age"');
     const sex = tagOf(page, "select", "sex");
     expect(sex).toContain("required");
     expect(page).toContain('<option value="FEMALE">Feminin</option>');
     expect(page).toContain('<option value="MALE">Masculin</option>');
     expect(tagOf(page, "input", "city")).toContain("required");
-    expect(page).toContain("Vârsta");
+    expect(page).toContain("Data nașterii");
+    expect(page).not.toContain("Vârsta");
     expect(page).toContain("Orașul");
     // The owner's own sentences, the club's name from the constant.
     expect(page).toContain("Am mai fost voluntar în trecut la alte curse");
@@ -448,14 +466,15 @@ describe("§765 the public form while the notice names the profile", () => {
     const page = await drawBox({ profile: false, shirts: true });
     expect(page).toContain('name="adult"');
     expect(page).toContain("Am cel puțin 18 ani");
-    for (const name of ["age", "sex", "city", "volunteeredBefore", "clubMember", "shirtSize"]) expect(page, name).not.toContain(`name="${name}"`);
+    for (const name of ["birthDate", "age", "sex", "city", "volunteeredBefore", "clubMember", "shirtSize"]) expect(page, name).not.toContain(`name="${name}"`);
   });
 
-  it("brings back what was typed after a refusal, and says one of three sentences for the age: no minors yet, «cel puțin 14 ani», «scrie vârsta»", async () => {
-    const typed = { name: "Maria", age: "17", sex: "FEMALE", city: "Brașov", volunteeredBefore: "on", clubMember: "on", shirtSize: "L" };
+  it("brings back what was typed after a refusal, and says one of three sentences for the date: no minors yet, «cel puțin 14 ani», «scrie data nașterii»", async () => {
+    const typed = { name: "Maria", birthDate: aged(17), sex: "FEMALE", city: "Brașov", volunteeredBefore: "on", clubMember: "on", shirtSize: "L" };
     // Seventeen while the notice and the agreement do not describe minors: the club says it cannot take them yet (§768).
-    const under = await drawBox({ outcome: "invalid", refused: ["age"], typed, shirts: true });
-    expect(tagOf(under, "input", "age")).toContain('value="17"');
+    const under = await drawBox({ outcome: "invalid", refused: ["birthDate"], typed, shirts: true });
+    // Shown day first, as the registration form shows what it was given back.
+    expect(tagOf(under, "input", "birthDate")).toContain('value="21.11.2009"');
     expect(under).toMatch(/<option value="FEMALE" selected/);
     expect(tagOf(under, "input", "city")).toContain('value="Brașov"');
     expect(tagOf(under, "input", "volunteeredBefore")).toContain("checked");
@@ -463,15 +482,15 @@ describe("§765 the public form while the notice names the profile", () => {
     expect(under).toMatch(/<option value="L" selected/);
     expect(under).toContain("Clubul nu primește încă voluntari sub 18 ani.");
     // Thirteen, where minors are taken: the floor is fourteen.
-    const young = await drawBox({ outcome: "invalid", refused: ["age"], typed: { ...typed, age: "13" }, minors: true });
-    expect(young).toContain("Voluntarii trebuie să aibă cel puțin 14 ani.");
+    const young = await drawBox({ outcome: "invalid", refused: ["birthDate"], typed: { ...typed, birthDate: aged(13) }, minors: true });
+    expect(young).toContain("Voluntarii trebuie să aibă cel puțin 14 ani în ziua evenimentului.");
     expect(young).not.toContain("Clubul nu primește încă");
-    const typo = await drawBox({ outcome: "invalid", refused: ["age"], typed: { ...typed, age: "abc" } });
-    expect(typo).toContain("Scrie vârsta în ani întregi, de exemplu 34.");
+    const typo = await drawBox({ outcome: "invalid", refused: ["birthDate"], typed: { ...typed, birthDate: "abc" } });
+    expect(typo).toContain("Scrie data nașterii ca zi, lună, an: 11.05.1990.");
     expect(typo).not.toContain("Voluntarii trebuie să aibă cel puțin");
     expect(typo).not.toContain("Clubul nu primește încă");
     // The summary links to the box.
-    expect(under).toContain('href="#volunteer-age"');
+    expect(under).toContain('href="#volunteer-birthDate"');
     const missing = await drawBox({ outcome: "invalid", refused: ["sex", "city"], typed: {} });
     expect(missing).toContain("Alege sexul din listă.");
     expect(missing).toContain("Scrie orașul tău.");
@@ -539,13 +558,13 @@ describe("§765 «Toate datele unei persoane» lists the six answers of a volunt
   it("writes the age, the sex, the city, the two claims and the size after the organizers' note, in the reader's language", async () => {
     const { default: VolunteerAnswers } = await import("@/modules/volunteers/ui/VolunteerAnswers");
     const noGuardian = { guardianName: null, guardianEmail: null, guardianAcceptedAt: null, guardianMethod: null };
-    const all = { age: 34, sex: "FEMALE" as const, city: "Brașov", volunteeredBefore: true, clubMember: true, shirtSize: "M" as const, ...noGuardian };
+    const all = { age: 34, dateOfBirth: "1992-03-12", sex: "FEMALE" as const, city: "Brașov", volunteeredBefore: true, clubMember: true, shirtSize: "M" as const, ...noGuardian };
     locale = "ro";
     const page = await html(createElement("p", null, (await VolunteerAnswers({ offer: all })) as ReactElement));
-    expect(page).toContain(" · Vârsta: 34 · Feminin · Oraș: Brașov · A mai fost voluntar · Din grupul " + CLUB_NAME + " · Tricou: M");
+    expect(page).toContain(" · Vârsta: 34 · Data nașterii: 12.03.1992 · Feminin · Oraș: Brașov · A mai fost voluntar · Din grupul " + CLUB_NAME + " · Tricou: M");
     locale = "en";
     const english = await html(createElement("p", null, (await VolunteerAnswers({ offer: all })) as ReactElement));
-    expect(english).toContain("Age: 34");
+    expect(english).toContain("Age: 34 · Date of birth: 12.03.1992");
     expect(english).toContain("Female");
     expect(english).toContain("T-shirt: M");
   });
@@ -553,7 +572,7 @@ describe("§765 «Toate datele unei persoane» lists the six answers of a volunt
   it("writes nothing for a row from before, for the retired «Prefer să nu spun» and for «Fără tricou»", async () => {
     const { default: VolunteerAnswers } = await import("@/modules/volunteers/ui/VolunteerAnswers");
     locale = "ro";
-    const empty = { age: null, sex: null, city: null, volunteeredBefore: false, clubMember: false, shirtSize: null, guardianName: null, guardianEmail: null, guardianAcceptedAt: null, guardianMethod: null };
+    const empty = { age: null, dateOfBirth: null, sex: null, city: null, volunteeredBefore: false, clubMember: false, shirtSize: null, guardianName: null, guardianEmail: null, guardianAcceptedAt: null, guardianMethod: null };
     expect(await html(createElement("p", null, (await VolunteerAnswers({ offer: empty })) as ReactElement))).toBe("<p></p>");
     const retired = await html(createElement("p", null, (await VolunteerAnswers({ offer: { ...empty, sex: "UNSPECIFIED", shirtSize: "NONE" } })) as ReactElement));
     expect(retired).toBe("<p></p>");
@@ -567,12 +586,13 @@ const MINOR: VolunteerItem = {
   name: "Dan Tânărul",
   email: "dan@example.test",
   age: 15,
+  dateOfBirth: aged(15),
   guardianName: "Maria Popescu",
   guardianEmail: "maria@example.test",
 };
 
 describe("§768 the public form's block for a parent or guardian", () => {
-  it("is drawn hidden — an adult never sees it flash — with no box required and no asterisk, a noscript rule opening it, inside the island that follows the age", async () => {
+  it("is drawn hidden — an adult never sees it flash — with no box required and no asterisk, a noscript rule opening it, inside the island that follows the date of birth", async () => {
     const page = await drawBox({ minors: true });
     expect(page).toContain('data-testid="volunteer-guardian-block"');
     expect(page).toContain('data-testid="volunteer-guardian"');
@@ -580,13 +600,13 @@ describe("§768 the public form's block for a parent or guardian", () => {
     expect(/<div[^>]*data-testid="volunteer-guardian-block"[^>]*>/.exec(page)?.[0]).toContain("hidden");
     // (The helper strips every <style>, so the noscript rule is read from the island drawn on its own.)
     const GuardianFields = (await import("@/modules/volunteers/ui/GuardianFields")).default;
-    const island = renderToStaticMarkup(createElement(GuardianFields, { ageInputId: "age", minimumAge: 14, adultAge: 18, startOpen: false } as ComponentProps<typeof GuardianFields>, "x"));
+    const island = renderToStaticMarkup(createElement(GuardianFields, { birthDateId: "volunteer-birthDate", eventDay: EVENT_DAY, minimumAge: 14, adultAge: 18, startOpen: false } as ComponentProps<typeof GuardianFields>, "x"));
     expect(island).toContain('<noscript><style>[data-testid="volunteer-guardian-block"]{display:block !important}</style></noscript>');
     expect(page).toContain("<noscript>");
     // A minor's age typed back after a refusal draws it open from the first byte: nothing to hydrate into.
-    const back = await drawBox({ minors: true, typed: { age: "16" } });
+    const back = await drawBox({ minors: true, typed: { birthDate: aged(16) } });
     expect(/<div[^>]*data-testid="volunteer-guardian-block"[^>]*>/.exec(back)?.[0]).not.toContain("hidden");
-    const adultBack = await drawBox({ minors: true, typed: { age: "30" } });
+    const adultBack = await drawBox({ minors: true, typed: { birthDate: aged(30) } });
     expect(/<div[^>]*data-testid="volunteer-guardian-block"[^>]*>/.exec(adultBack)?.[0]).toContain("hidden");
     // The server draws no asterisk: an adult must ignore none of the three boxes.
     expect(/<label[^>]*for="volunteer-guardianName"[^>]*>[\s\S]*?<\/label>/.exec(page)?.[0]).not.toContain("*");
@@ -602,15 +622,15 @@ describe("§768 the public form's block for a parent or guardian", () => {
     for (const words of ["Dacă ai sub 18 ani", "Numele părintelui sau tutorelui", "Emailul părintelui sau tutorelui", "Părintele sau tutorele meu știe și e de acord"]) {
       expect(page, words).toContain(words);
     }
-    expect(page).toContain("Vârsta");
-    expect(page).toContain("cel puțin 14 ani");
+    expect(page).toContain("Data nașterii");
+    expect(page).toContain("Cel puțin 14 ani în ziua evenimentului");
   });
 
   it("is not drawn while the club cannot take minors, and the age then says eighteen", async () => {
     const page = await drawBox({ minors: false });
     expect(page).not.toContain("volunteer-guardian-block");
     for (const name of ["guardianName", "guardianEmail", "guardianAware"]) expect(page, name).not.toContain(`name="${name}"`);
-    expect(page).toContain("trebuie să ai cel puțin 18 ani");
+    expect(page).toContain("Trebuie să ai cel puțin 18 ani în ziua evenimentului");
   });
 
   it("is not drawn on §758's form, which asks no age: the tick says eighteen, never fourteen", async () => {
@@ -621,7 +641,7 @@ describe("§768 the public form's block for a parent or guardian", () => {
   });
 
   it("brings back the parent's name and address after a refusal — never the tick, the person's own act — and names the boxes it refused", async () => {
-    const typed = { name: "Dan", age: "15", sex: "MALE", city: "Brașov", guardianName: "Maria Popescu", guardianEmail: "maria@example.test" };
+    const typed = { name: "Dan", birthDate: aged(15), sex: "MALE", city: "Brașov", guardianName: "Maria Popescu", guardianEmail: "maria@example.test" };
     const page = await drawBox({ minors: true, outcome: "invalid", refused: ["guardianEmail", "guardianAware"], typed });
     expect(tagOf(page, "input", "guardianName")).toContain('value="Maria Popescu"');
     expect(tagOf(page, "input", "guardianEmail")).toContain('value="maria@example.test"');
@@ -640,12 +660,12 @@ describe("§768 the public form's block for a parent or guardian", () => {
     }
   });
 
-  it("says «clubul nu primește încă» for an age under eighteen while minors are closed, and «cel puțin 14 ani» below fourteen where they are taken", async () => {
-    const closed = await drawBox({ minors: false, outcome: "invalid", refused: ["age"], typed: { age: "15" } });
+  it("says «clubul nu primește încă» for a date that gives under eighteen on the event's day while minors are closed, and «cel puțin 14 ani» below fourteen where they are taken", async () => {
+    const closed = await drawBox({ minors: false, outcome: "invalid", refused: ["birthDate"], typed: { birthDate: aged(15) } });
     expect(closed).toContain("Clubul nu primește încă voluntari sub 18 ani.");
-    const young = await drawBox({ minors: true, outcome: "invalid", refused: ["age"], typed: { age: "13" } });
-    expect(young).toContain("Voluntarii trebuie să aibă cel puțin 14 ani.");
-    const english = await drawBox({ minors: false, outcome: "invalid", refused: ["age"], typed: { age: "15" } }, "en");
+    const young = await drawBox({ minors: true, outcome: "invalid", refused: ["birthDate"], typed: { birthDate: aged(13) } });
+    expect(young).toContain("Voluntarii trebuie să aibă cel puțin 14 ani în ziua evenimentului.");
+    const english = await drawBox({ minors: false, outcome: "invalid", refused: ["birthDate"], typed: { birthDate: aged(15) } }, "en");
     expect(english).toContain("The club does not take volunteers under 18 yet.");
   });
 });

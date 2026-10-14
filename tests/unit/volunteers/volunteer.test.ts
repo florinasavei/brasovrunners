@@ -26,7 +26,7 @@ import {
   volunteerOfferClosedFor,
   volunteerPublicInputSchema,
   volunteerRoleInputSchema,
-  volunteerStaffInputSchema,
+  volunteerStaffInputSchemaFor,
 } from "@/modules/volunteers/domain/volunteer";
 import { volunteersClause, volunteersMergeValues } from "@/modules/volunteers/notice-words";
 import { parseVolunteerBoxes, parseVolunteerOutcome } from "@/modules/volunteers/ui/volunteer-box";
@@ -37,6 +37,7 @@ import { parseVolunteerBoxes, parseVolunteerOutcome } from "@/modules/volunteers
  * the notice promises, and the CSV's safety. No database.
  */
 const ID = "5d7a2f64-3b0c-4f25-9d57-0a9a6b3a1c11";
+const volunteerStaffInputSchema = volunteerStaffInputSchemaFor("2026-11-21");
 const ROLE = { nameRo: "Punct de apă", nameEn: "Water point", needed: "4", descriptionRo: "", descriptionEn: "" };
 
 describe("§754 a role as the club types it", () => {
@@ -415,6 +416,7 @@ describe("§754 the CSV", () => {
     note: "Notă",
     signedUpAt: "Data",
     age: "Vârsta",
+    dateOfBirth: "Data nașterii",
     sex: "Sex",
     city: "Orașul",
     volunteeredBefore: "A mai fost voluntar",
@@ -439,6 +441,7 @@ describe("§754 the CSV", () => {
         note: null,
         signedUpAt: new Date("2026-10-13T10:00:00.000Z"),
         age: 34,
+        dateOfBirth: "1992-03-12",
         sex: "Female",
         city: "Brașov, centru",
         volunteeredBefore: "Da",
@@ -459,10 +462,11 @@ describe("§754 the CSV", () => {
     // §761: the role given, then the roles chosen — a comma inside them quoted.
     expect(lines[1].startsWith('Punct de apă,"Punct de apă, Sosire",')).toBe(true);
     // §765: what the person said about themselves comes after the moment, so no earlier column moves; a comma in the city is quoted.
-    expect(csv.split("\r\n")[0].includes("Data,Vârsta,Sex,Orașul,A mai fost voluntar,Din grupul clubului,Mărime tricou")).toBe(true);
+    // §NNN: the date of birth the age came from is beside it, `YYYY-MM-DD`, and empty for a row from before.
+    expect(csv.split("\r\n")[0].includes("Data,Vârsta,Data nașterii,Sex,Orașul,A mai fost voluntar,Din grupul clubului,Mărime tricou")).toBe(true);
     // §768: the parent or guardian of a volunteer under eighteen, appended after the T-shirt: name, address, and the consent as «Da» / «Nu».
     expect(csv.split("\r\n")[0].endsWith("Mărime tricou,Părinte sau tutore,Email părinte sau tutore,Acordul părintelui")).toBe(true);
-    expect(lines[1].endsWith('2026-10-13T10:00:00.000Z,34,Female,"Brașov, centru",Da,Nu,M,Maria Popescu,maria@example.test,Nu')).toBe(true);
+    expect(lines[1].endsWith('2026-10-13T10:00:00.000Z,34,1992-03-12,Female,"Brașov, centru",Da,Nu,M,Maria Popescu,maria@example.test,Nu')).toBe(true);
   });
 
   it("§765 leaves an unanswered box empty, never «null» or 0", () => {
@@ -479,6 +483,7 @@ describe("§754 the CSV", () => {
         note: null,
         signedUpAt: new Date("2026-10-13T10:00:00.000Z"),
         age: null,
+        dateOfBirth: null,
         sex: "",
         city: null,
         volunteeredBefore: "Nu",
@@ -490,7 +495,7 @@ describe("§754 the CSV", () => {
       },
     ]);
     // An adult: the three guardian columns are empty — never «null».
-    expect(csv.split("\r\n")[1].endsWith("2026-10-13T10:00:00.000Z,,,,Nu,Nu,,,,")).toBe(true);
+    expect(csv.split("\r\n")[1].endsWith("2026-10-13T10:00:00.000Z,,,,,Nu,Nu,,,,")).toBe(true);
   });
 });
 
