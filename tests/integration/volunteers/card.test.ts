@@ -219,7 +219,9 @@ describe("§754 an event's volunteer roles", () => {
     // A cancelled person still holds the role: the row is kept, and so is the role.
     await press(actions.setVolunteerStateAction, form({ volunteerId: maria.id, state: "CANCELLED" }));
     expect(await pressStateful(actions.deleteVolunteerRoleAction, form({ roleId: water.id }))).toContain("VOLUNTEER_ROLE_HAS_PEOPLE");
-    // Moved to another role, and the role given no longer ticked by them: the role goes.
+    // Reopened (a cancelled person is given no new role), moved to another role, and the role given no longer
+    // ticked by them: the role goes.
+    await press(actions.setVolunteerStateAction, form({ volunteerId: maria.id, state: "REGISTERED" }));
     expect(await post(actions.editVolunteerAction, form({ ...PERSON, volunteerId: maria.id, roleIds: [finish.id], assignedRoleId: finish.id }))).toBe("redirected");
     expect(await pressStateful(actions.deleteVolunteerRoleAction, form({ roleId: water.id }))).not.toContain("volunteerError");
     expect((await listVolunteerRoles(db, eventId)).map((role) => role.id)).toEqual([finish.id]);
@@ -494,8 +496,45 @@ describe("§NNN «Dă-i rolul …»: the organizers give each volunteer one role
     const [message] = await told();
     await post(actions.editVolunteerAction, form({ ...PERSON, volunteerId: maria.id, roleIds: [water.id], assignedRoleId: water.id, email: "alta@example.test" }));
     await expect(render(message)).rejects.toThrow(/address changed/);
+    // The role kept, the address corrected: the corrected address is told the role once, and that message leaves.
+    const toCorrected = (await told()).filter((row) => row.recipientEmail === "alta@example.test");
+    expect(toCorrected).toHaveLength(1);
+    expect(toCorrected[0].payloadJson).toEqual({ eventId, volunteerId: maria.id, roleId: water.id });
+    expect((await render(toCorrected[0])).text).toContain("Rol: Punct de apă");
+    // A save that changes neither the role nor the address tells nobody again.
+    await post(actions.editVolunteerAction, form({ ...PERSON, volunteerId: maria.id, roleIds: [water.id], assignedRoleId: water.id, email: "alta@example.test", note: "Sună după 18" }));
+    expect(await told()).toHaveLength(2);
     await press(actions.setVolunteerStateAction, form({ volunteerId: maria.id, state: "CANCELLED" }));
     await expect(render(message)).rejects.toThrow(/cancelled/);
+    await expect(render(toCorrected[0])).rejects.toThrow(/cancelled/);
+  });
+
+  it("tells a cancelled person their role again when they are reopened, and gives a cancelled person no new role by «Modifică» either", async () => {
+    const water = await addRole();
+    const finish = await addRole({ nameRo: "Sosire", nameEn: "Finish" });
+    const maria = await addPerson(water.id, { assignedRoleId: "" });
+    await press(actions.assignVolunteerAction, form({ volunteerId: maria.id, roleId: water.id }));
+    await press(actions.setVolunteerStateAction, form({ volunteerId: maria.id, state: "CANCELLED" }));
+    // «Modifică» while cancelled: a new role is refused (reopen first) — the same line «Dă-i rolul» holds.
+    const refused = await pressStateful(actions.editVolunteerAction, form({ ...PERSON, volunteerId: maria.id, roleIds: [water.id], assignedRoleId: finish.id }));
+    expect(refused).toContain("volunteerError=CONFLICT");
+    expect((await listVolunteers(db, eventId))[0].roleId).toBe(water.id);
+    // Keeping the role, or taking it back, is still an edit.
+    expect(await post(actions.editVolunteerAction, form({ ...PERSON, volunteerId: maria.id, roleIds: [water.id], assignedRoleId: water.id, note: "Revine poate" }))).toBe("redirected");
+    expect(await told()).toHaveLength(1);
+    // Reopened: one more message, naming the role that stands, and it leaves.
+    await press(actions.setVolunteerStateAction, form({ volunteerId: maria.id, state: "REGISTERED" }));
+    const messages = await told();
+    expect(messages).toHaveLength(2);
+    const reopened = messages.find((row) => row.idempotencyKey.includes(":reopened:"))!;
+    expect(reopened.payloadJson).toEqual({ eventId, volunteerId: maria.id, roleId: water.id });
+    expect((await render(reopened)).text).toContain("Rol: Punct de apă");
+    // Confirming afterwards tells nothing more; reopening a person with no role given tells nothing.
+    await press(actions.setVolunteerStateAction, form({ volunteerId: maria.id, state: "CONFIRMED" }));
+    const ion = await addPerson(water.id, { assignedRoleId: "", name: "Ion Test", email: "ion@example.test" });
+    await press(actions.setVolunteerStateAction, form({ volunteerId: ion.id, state: "CANCELLED" }));
+    await press(actions.setVolunteerStateAction, form({ volunteerId: ion.id, state: "REGISTERED" }));
+    expect(await told()).toHaveLength(2);
   });
 });
 

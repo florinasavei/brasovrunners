@@ -568,7 +568,7 @@
       "invalid": "Ceva din formular mai cere o privire:",
       "captcha": "Verificarea anti-bot nu a reușit. Bifează din nou căsuța „Nu sunt robot” și retrimite.",
       "limited": "Sunt multe încercări pentru o adresă sau pentru un eveniment într-o oră. Așteaptă puțin și încearcă din nou.",
-      "full": "Rolurile bifate tocmai s-au umplut. Alege altele mai jos sau revino mai târziu.",
+      "full": "Ce ai bifat tocmai s-a umplut. Alege mai jos din rolurile care mai au nevoie de oameni sau revino mai târziu.",
       "allFull": "Mulțumim! Între timp toate rolurile s-au umplut, așa că oferta ta nu a fost păstrată. Dacă vrei să ajuți, scrie-ne din pagina de contact.",
       "errors": {
         "name": "Scrie-ți numele.",
@@ -4636,7 +4636,7 @@
     },
     "volunteers": {
       "title": "Voluntari",
-      "intro": "Oamenii care ajută la eveniment: fiecare bifează ce ar face, voi îi dați un rol. Rolurile se definesc aici, în ambele limbi. Adresele și telefoanele nu apar pe nicio pagină publică.",
+      "intro": "Oamenii care ajută la eveniment: fiecare bifează ce ar face, tu îi dai un rol. Rolurile se definesc aici, în ambele limbi. Adresele și telefoanele nu apar pe nicio pagină publică.",
       "notAccounts": "Voluntarii de aici nu sunt conturi: cine lucrează la masa de ridicare primește un cont din „Echipa”, cu rolul Voluntar.",
       "summary": "{taken} din {needed}",
       "summaryNone": "Încă niciun rol",
@@ -4666,7 +4666,7 @@
         "nameRo": "Numele rolului (Română)",
         "nameEn": "Numele rolului (English)",
         "needed": "Câți oameni trebuie",
-        "neededHelp": "Cel puțin 1. Se numără doar oamenii cărora le-ați dat rolul. Când are atâția, formularul public nu-l mai oferă.",
+        "neededHelp": "Cel puțin 1. Se numără doar oamenii cărora le-ai dat rolul. Când are atâția, formularul public nu-l mai oferă.",
         "descriptionRo": "Ce face persoana (Română, opțional)",
         "descriptionEn": "Ce face persoana (English, opțional)",
         "descriptionHelp": "O linie, cel mult {max} de caractere; în ambele limbi sau în niciuna.",
@@ -4700,6 +4700,7 @@
       "person": {
         "role": "Rol",
         "choices": "Ce e dispus(ă) să facă",
+        "offeredFor": "S-a oferit pentru",
         "choicesHelp": "Bifează rolurile pe care persoana le-ar face. Cel puțin unul, sau dă-i un rol mai jos.",
         "assigned": "Rolul dat",
         "assignedNone": "Încă niciunul (de repartizat)",
@@ -4743,7 +4744,7 @@
           "LINK": "din linkul trimis pe email",
           "PAPER": "semnat pe hârtie"
         },
-        "otherRole": "Contractul acceptat numește: „{role}”. Rolul s-a schimbat de atunci.",
+        "otherRole": "Contractul acceptat numește: {role}. Rolurile s-au schimbat de atunci.",
         "otherPlace": "Acceptat pentru {date}, în {place}; data sau locul evenimentului s-au schimbat de atunci.",
         "requestedLine": "Ultimul link trimis: {when}",
         "help": "Trimite-i linkul pe email sau tipărește PDF-ul: persoana îl semnează la voi, apoi apeși „Semnat pe hârtie”.",
@@ -5819,7 +5820,7 @@
         "SHOP_ORDER_PLACED": "Când un membru comandă din magazinul membrilor: comanda și cum se plătește. Butonul duce în zona membrilor.",
         "SHOP_ORDER_PAID": "Când un administrator marchează comanda plătită: membrului care a comandat. Butonul duce în zona membrilor.",
         "SHOP_ORDER_CLUB_NOTICE": "La fiecare comandă din magazin, la adresa din «Magazin» → «Cine primește comenzile», dacă e scrisă.",
-        "VOLUNTEER_RECEIVED": "Când cineva se oferă voluntar pe pagina unui eveniment: singurul mesaj către el — rolul, evenimentul și faptul că un organizator confirmă, cu contractul acceptat atașat ca PDF. Nimic de apăsat.",
+        "VOLUNTEER_RECEIVED": "Când cineva se oferă voluntar pe pagina unui eveniment: confirmarea primirii — rolurile pentru care s-a oferit, evenimentul și faptul că organizatorii îi aleg rolul, cu contractul acceptat atașat ca PDF. Nimic de apăsat.",
         "VOLUNTEER_CLUB_NOTICE": "La fiecare ofertă, către fiecare Organizator, Administrator și Superadministrator. Butonul deschide cardul «Voluntari» al evenimentului.",
         "VOLUNTEER_AGREEMENT_REQUEST": "Când un organizator apasă „Trimite linkul contractului” la un voluntar care nu l-a acceptat încă: contractul și linkul de acceptare.",
         "VOLUNTEER_AGREEMENT_ACCEPTED": "Când un voluntar acceptă contractul din link sau un organizator apasă „Semnat pe hârtie”: copia lui, cu contractul atașat ca PDF.",
@@ -6485,8 +6486,8 @@
         "SHOP_ORDER_PLACED": "Comanda și cuvintele despre plată se adaugă singure după text, oricum l-ai scrie. Plata nu trece prin site.",
         "SHOP_ORDER_PAID": "Comanda se adaugă singură după text, oricum l-ai scrie.",
         "SHOP_ORDER_CLUB_NOTICE": "Fără adresă, nu pleacă nimic: comenzile sunt oricum în lista din backoffice.",
-        "VOLUNTEER_RECEIVED": "Rolul și startul și locul evenimentului se adaugă singure, oricum ai scrie textul. Mesajul nu are niciun link care să facă ceva.",
-        "VOLUNTEER_CLUB_NOTICE": "Cine s-a oferit și pentru ce rol se adaugă singur, oricum ai scrie textul. Adresa și telefonul nu sunt niciodată în email: sunt pe card, după autentificare.",
+        "VOLUNTEER_RECEIVED": "Rolurile pentru care s-a oferit (sau rolul dat), startul și locul evenimentului se adaugă singure, oricum ai scrie textul. Mesajul nu are niciun link care să facă ceva.",
+        "VOLUNTEER_CLUB_NOTICE": "Cine s-a oferit și pentru ce roluri se adaugă singur, oricum ai scrie textul. Adresa și telefonul nu sunt niciodată în email: sunt pe card, după autentificare.",
         "VOLUNTEER_AGREEMENT_REQUEST": "Rolul și evenimentul se adaugă singure. Linkul e doar pentru persoana aceasta, se folosește o singură dată, iar unul nou îl înlocuiește pe cel vechi.",
         "VOLUNTEER_AGREEMENT_ACCEPTED": "Rolul și evenimentul se adaugă singure. PDF-ul arată textul acceptat, cu numele, rolul, momentul și amprenta lui.",
         "VOLUNTEER_ROLE_ASSIGNED": "Rolul, data și locul evenimentului se adaugă singure, oricum ai scrie textul. Mesajul nu are niciun link care să facă ceva."

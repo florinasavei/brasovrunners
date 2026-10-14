@@ -246,4 +246,40 @@ describe("§754 §NNN BR-REQ-031-01 people offer for a role's last place at once
     }
     expect(await db.select().from(eventVolunteers).where(eq(eventVolunteers.eventId, event.id))).toHaveLength(100);
   });
+
+  it("§NNN a hand entry and an edit naming two roles and a role given, racing sign-ups ticking both and a role move: all settle, no deadlock", async () => {
+    // Before the fix a staff add took KEY SHARE on the role given (the row's foreign key) and then on each ticked role
+    // in the order posted, while a sign-up locks the roles FOR UPDATE in the order of their ids: with the role given
+    // the higher id, the two waited on each other (40P01). Every writer of a role reference now locks the event's
+    // roles first, in the order of their ids.
+    const { event, role } = await eventWithRole(80);
+    const [other] = await db.insert(eventVolunteerRoles).values({ eventId: event.id, nameRo: "Start", nameEn: "Start", needed: 80, position: 1 }).returning();
+    const [low, high] = [role.id, other.id].sort();
+    const person = (round: number, what: string) => ({
+      // The higher id posted first and given: the order that closed the cycle.
+      roleIds: [high, low],
+      assignedRoleId: high,
+      name: "Dan Pop",
+      email: `voluntar.${stamp}.${what}-${round}@example.test`,
+      phone: "+40712345678",
+      note: "",
+    });
+    for (let round = 0; round < 25; round++) {
+      const edited = await changeVolunteer(db, admin!, { kind: "add", eventId: event.id, fields: { ...person(round, "edited"), roleIds: [low], assignedRoleId: low } }, NOW);
+      const results = await Promise.allSettled([
+        changeVolunteer(db, admin!, { kind: "add", eventId: event.id, fields: person(round, "both") }, NOW),
+        offer(event.id, [low, high], `both-a-${round}`),
+        offer(event.id, [high, low], `both-b-${round}`),
+        changeVolunteer(db, admin!, { kind: "edit", eventId: event.id, id: edited.volunteer.id, fields: person(round, "edited") }, NOW),
+        changeVolunteerRole(db, admin!, { kind: "move", eventId: event.id, id: other.id, direction: round % 2 === 0 ? "up" : "down" }, NOW),
+      ]);
+      expect(results.map((result) => (result.status === "rejected" ? String(result.reason) : "ok"))).toEqual(["ok", "ok", "ok", "ok", "ok"]);
+    }
+    expect(await db.select().from(eventVolunteers).where(eq(eventVolunteers.eventId, event.id))).toHaveLength(100);
+    // Each hand entry and each edit kept both ticks.
+    const hand = await db.select({ id: eventVolunteers.id }).from(eventVolunteers).where(and(eq(eventVolunteers.eventId, event.id), eq(eventVolunteers.roleId, high)));
+    expect(hand).toHaveLength(50);
+    const ticks = await db.select().from(eventVolunteerRoleChoices).where(inArray(eventVolunteerRoleChoices.volunteerId, hand.map((row) => row.id)));
+    expect(ticks).toHaveLength(100);
+  });
 });

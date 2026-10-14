@@ -534,7 +534,7 @@ export default async function VolunteersCard({
       {person.choiceIds.length > 0 && (
         <Stack direction="row" sx={{ flexWrap: "wrap", alignItems: "center", gap: 0.5, mt: 0.5 }} data-testid="volunteer-choices">
           <Typography component="span" variant="body2" color="text.secondary">
-            {t("volunteers.person.choices")}:
+            {t("volunteers.person.offeredFor")}:
           </Typography>
           {rolesOf(person).chosen.map((role) => (
             <StatusChip key={role.id} glyph="offered" variant="outlined" label={roleName(role)} testId="volunteer-choice" />

@@ -211,7 +211,12 @@ test.describe("§754 volunteers for a race", () => {
       await expect(group("Sosire").getByTestId("volunteer-role-standing")).toHaveText("0 din 1");
 
       const give = row.getByRole("button", { name: /^Dă-i rolul Sosire/ });
+      // The press says how the role stands before it fills it.
+      await expect(give).toContainText("Sosire · 0 din 1");
       expect((await give.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+      // She ticked both of the event's roles: each has its own button, and «Alt rol», which offers only the others, is not drawn.
+      await expect(row.getByTestId("volunteer-assign-form")).toHaveCount(2);
+      await expect(row.getByTestId("volunteer-assign-other")).toHaveCount(0);
       await give.click();
       await page.waitForURL(/#box-volunteers$/);
       await hydrated(page);
@@ -223,6 +228,8 @@ test.describe("§754 volunteers for a race", () => {
       await expect(card.locator("summary").first()).toContainText("1 din 3");
       // Her choices stay what she offered.
       await expect(finishGroup.getByTestId("volunteer-choice")).toHaveText(["Punct de apă", "Sosire"]);
+      // Placed: no press on her row moves her by mistake — a change of role is «Modifică» → «Rolul dat».
+      await expect(finishGroup.getByTestId("volunteer-assign")).toHaveCount(0);
       // The one short email that names the role is queued for her.
       const client = new pg.Client({ connectionString: databaseUrl() });
       await client.connect();

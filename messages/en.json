@@ -568,7 +568,7 @@
       "invalid": "Something in the form needs another look:",
       "captcha": "The anti-bot check did not pass. Tick the “I am not a robot” box again and resend.",
       "limited": "That is a lot of attempts for one address or one event in an hour. Wait a little and try again.",
-      "full": "The roles you ticked have just been filled. Pick others below, or come back later.",
+      "full": "What you ticked has just filled. Pick from the roles below that still need people, or come back later.",
       "allFull": "Thank you! Every role has been filled in the meantime, so your offer was not kept. If you want to help, write to us from the contact page.",
       "errors": {
         "name": "Write your name.",
@@ -4700,6 +4700,7 @@
       "person": {
         "role": "Role",
         "choices": "What they are willing to do",
+        "offeredFor": "Offered for",
         "choicesHelp": "Tick the roles the person would do. At least one, or give them a role below.",
         "assigned": "Role given",
         "assignedNone": "None yet (to place)",
@@ -4743,7 +4744,7 @@
           "LINK": "from the link sent by email",
           "PAPER": "signed on paper"
         },
-        "otherRole": "The accepted agreement names: “{role}”. The role has changed since.",
+        "otherRole": "The accepted agreement names: {role}. The roles have changed since.",
         "otherPlace": "Accepted for {date}, at {place}; the event's date or place has changed since.",
         "requestedLine": "Last link sent: {when}",
         "help": "Send them the link by email, or print the PDF: they sign it with you, then you press “Signed on paper”.",
@@ -5819,7 +5820,7 @@
         "SHOP_ORDER_PLACED": "When a member orders from the members' shop: the order and how to pay. The button opens the members' area.",
         "SHOP_ORDER_PAID": "When an administrator marks the order paid: to the member who ordered. The button opens the members' area.",
         "SHOP_ORDER_CLUB_NOTICE": "On every order in the shop, to the address in «Magazin» → “Who receives the orders”, if one is written.",
-        "VOLUNTEER_RECEIVED": "When a person offers to volunteer on an event's page: the one acknowledgement to them — the role, the event, that an organizer will confirm, and the accepted agreement as a PDF. Nothing to press.",
+        "VOLUNTEER_RECEIVED": "When a person offers to volunteer on an event's page: the acknowledgement — the roles they offered for, the event, that the organizers choose their role, and the accepted agreement as a PDF. Nothing to press.",
         "VOLUNTEER_CLUB_NOTICE": "On every sign-up, to each Organizer, Administrator and Superadministrator. The button opens the event's «Volunteers» card.",
         "VOLUNTEER_AGREEMENT_REQUEST": "When an organizer presses “Send the agreement link” for a volunteer who has not accepted it yet: the agreement and the link to accept it.",
         "VOLUNTEER_AGREEMENT_ACCEPTED": "When a volunteer accepts the agreement from the link, or an organizer presses “Signed on paper”: their copy, with the agreement attached as a PDF.",
@@ -6485,8 +6486,8 @@
         "SHOP_ORDER_PLACED": "The order and the payment words are added after the text by themselves, however you write it. Payment does not go through the site.",
         "SHOP_ORDER_PAID": "The order is added after the text by itself, however you write it.",
         "SHOP_ORDER_CLUB_NOTICE": "Without an address nothing is sent: the orders are in the backoffice list either way.",
-        "VOLUNTEER_RECEIVED": "The role and the event's start and place are added by themselves, however you write the text. The message carries no link that does anything.",
-        "VOLUNTEER_CLUB_NOTICE": "Who offered and for which role is added by itself, however you write the text. The address and the telephone number are never in the email: they are on the card, behind the sign-in.",
+        "VOLUNTEER_RECEIVED": "The roles they offered for (or the role given) and the event's start and place are added by themselves, however you write the text. The message carries no link that does anything.",
+        "VOLUNTEER_CLUB_NOTICE": "Who offered and for which roles is added by itself, however you write the text. The address and the telephone number are never in the email: they are on the card, behind the sign-in.",
         "VOLUNTEER_AGREEMENT_REQUEST": "The role and the event are added by themselves. The link is for this person only, works once, and a new one replaces the old.",
         "VOLUNTEER_AGREEMENT_ACCEPTED": "The role and the event are added by themselves. The PDF shows the accepted text, with the name, the role, the moment and its fingerprint.",
         "VOLUNTEER_ROLE_ASSIGNED": "The role and the event's date and place are added by themselves, however you write the text. The message has no link that does anything."

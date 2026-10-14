@@ -75,9 +75,29 @@ describe("§758 the volunteer agreement", () => {
     });
   }
 
-  /** The agreement in force from the platform's template, its club facts filled as a club would. */
-  async function approveAgreement(version = 1, locales: readonly ("ro" | "en")[] = ["ro", "en"]) {
-    const translations: LegalDocumentTranslationInput[] = locales.map((locale) => ({ locale, ...LEGAL_TEMPLATES.VOLUNTEER_AGREEMENT[locale] }));
+  /**
+   * A text approved before §NNN: the template's, with its one role sentence of §758 — «… în rolul {{volunteerRole}}.»
+   * and «Ce presupune rolul: …» — and none of the sentences for the roles offered for.
+   */
+  const EARLIER_ACTIVITY: Record<"ro" | "en", string> = {
+    ro: "Voluntarul ajută la evenimentul {{event}}, care are loc {{eventDate}}, în {{eventLocation}}, în rolul {{volunteerRole}}.",
+    en: "The volunteer helps at the event {{event}}, which takes place on {{eventDate}}, at {{eventLocation}}, in the role {{volunteerRole}}.",
+  };
+  const earlierTemplate = (locale: "ro" | "en") => {
+    const template = LEGAL_TEMPLATES.VOLUNTEER_AGREEMENT[locale];
+    const sections = template.body.sections.map((section) => ({
+      ...section,
+      paragraphs: section.paragraphs.flatMap((paragraph) => {
+        if (paragraph.includes("{{volunteerRoleChoices}}") || paragraph.includes("{{volunteerChoiceTasks}}") || paragraph.includes("{{volunteerRole}}")) return [];
+        return paragraph.includes("{{event}}") ? [EARLIER_ACTIVITY[locale]] : [paragraph];
+      }),
+    }));
+    return { ...template, body: { ...template.body, sections } };
+  };
+
+  /** The agreement in force from the platform's template (or one approved before §NNN), its club facts filled as a club would. */
+  async function approveAgreement(version = 1, locales: readonly ("ro" | "en")[] = ["ro", "en"], earlier = false) {
+    const translations: LegalDocumentTranslationInput[] = locales.map((locale) => ({ locale, ...(earlier ? earlierTemplate(locale) : LEGAL_TEMPLATES.VOLUNTEER_AGREEMENT[locale]) }));
     return insertLegalDocumentVersion(db, {
       key: "VOLUNTEER_AGREEMENT",
       version,
@@ -198,9 +218,11 @@ describe("§758 the volunteer agreement", () => {
       const facts = readAgreementFacts(person.agreementFacts);
       expect(facts).toMatchObject({
         volunteer: "Mary Test",
-        // §NNN: nobody gave a role yet — the agreement names the role the person chose, fitted to «in the role …».
-        volunteerRole: "assigned by the organisers; the volunteer is available for: Water point",
-        volunteerTasks: "Hands out water at kilometre 5",
+        // §NNN: nobody gave a role yet — the template's own sentence names the role the person chose; the role's is left out.
+        volunteerRole: "",
+        volunteerTasks: "",
+        volunteerRoleChoices: "Water point",
+        volunteerChoiceTasks: "Water point — Hands out water at kilometre 5",
         event: "The cross",
         eventLocation: "Central park",
         minimumAge: "18 years",
@@ -212,7 +234,7 @@ describe("§758 the volunteer agreement", () => {
       expect(person.agreementTextHash).toMatch(/^[0-9a-f]{64}$/);
       // The person's card line: accepted, on the form.
       const [listed] = await listVolunteers(db, event.id);
-      expect(listed).toMatchObject({ agreementMethod: "FORM", agreementVersion: 1, agreementRoleName: "assigned by the organisers; the volunteer is available for: Water point" });
+      expect(listed).toMatchObject({ agreementMethod: "FORM", agreementVersion: 1, agreementRoleName: "Water point" });
       expect(agreementStandingOf(listed, NOW)).toBe("accepted");
     });
 
@@ -590,11 +612,15 @@ describe("§758 the volunteer agreement", () => {
       await submitVolunteer(db, event.id, form([finish.id, role.id]), NOW);
       const [maria] = await db.select().from(eventVolunteers);
       expect(readAgreementFacts(maria.agreementFacts)).toMatchObject({
-        volunteerRole: "stabilit de organizatori; voluntarul este disponibil pentru: Punct de apă, Sosire",
-        volunteerTasks: "Punct de apă — Împarte apă la kilometrul 5",
+        volunteerRole: "",
+        volunteerTasks: "",
+        volunteerRoleChoices: "Punct de apă, Sosire",
+        volunteerChoiceTasks: "Punct de apă — Împarte apă la kilometrul 5",
       });
       const pdf = (await drawnRuns(() => renderVolunteerAgreementPdf(db, maria.id, NOW))).map((run) => run.text).join(" ");
-      expect(pdf).toContain("disponibil pentru: Punct de apă, Sosire");
+      expect(pdf).toContain("Punct de apă, Sosire");
+      expect(pdf).toContain("Ce presupune fiecare rol");
+      expect(pdf).not.toContain("stabilit de organizatori");
       // Given one of the roles offered, the accepted text still describes the person; given another, the card says so.
       const roles = await listVolunteerRoles(db, event.id);
       const wordsOf = (id: string) => roles.find((candidate) => candidate.id === id)!;
@@ -620,7 +646,26 @@ describe("§758 the volunteer agreement", () => {
       await edit(event.id, ionId, { roleIds: [role.id], assignedRoleId: "", name: "Ion Popescu", email: "ion@example.test", phone: "+40712345679" });
       await expect(recordPaperVolunteerAgreement(db, admin, { eventId: event.id, id: ionId, printed }, NOW)).rejects.toMatchObject({ code: "VOLUNTEER_AGREEMENT_REPRINT" });
       await paper(event.id, ionId);
-      expect(readAgreementFacts((await row(ionId)).agreementFacts)?.volunteerRole).toBe("stabilit de organizatori; voluntarul este disponibil pentru: Punct de apă");
+      expect(readAgreementFacts((await row(ionId)).agreementFacts)).toMatchObject({ volunteerRole: "", volunteerRoleChoices: "Punct de apă" });
+    });
+
+    it("§NNN under a text approved before, fills the role's blank with the chosen roles' names alone — no words of the code's own", async () => {
+      await approveAgreement(1, ["ro", "en"], true);
+      const { event, role } = await seedEvent();
+      const [finish] = await db.insert(eventVolunteerRoles).values({ eventId: event.id, nameRo: "Sosire", nameEn: "Finish", needed: 2, position: 1 }).returning();
+      await submitVolunteer(db, event.id, form([finish.id, role.id]), NOW);
+      const [maria] = await db.select().from(eventVolunteers);
+      const facts = readAgreementFacts(maria.agreementFacts);
+      expect(facts).toMatchObject({ volunteerRole: "Punct de apă, Sosire", volunteerRoleChoices: "", volunteerChoiceTasks: "" });
+      const pdf = (await drawnRuns(() => renderVolunteerAgreementPdf(db, maria.id, NOW))).map((run) => run.text).join(" ");
+      expect(pdf).toContain("în rolul");
+      expect(pdf).toContain("Punct de apă, Sosire");
+      expect(pdf).not.toMatch(/stabilit de organizatori|disponibil pentru/);
+      // The card reads the names it accepted, whichever blank held them.
+      const [listed] = await listVolunteers(db, event.id);
+      expect(listed.agreementRoleName).toBe("Punct de apă, Sosire");
+      // A row accepted before the new blanks existed reads them as "".
+      expect(readAgreementFacts({ ...facts, volunteerRoleChoices: undefined, volunteerChoiceTasks: undefined })).toMatchObject({ volunteerRoleChoices: "", volunteerChoiceTasks: "" });
     });
 
     it("clears a link whose email the provider refused for good — nobody holds it — and keeps one a retry will replace", async () => {

@@ -509,7 +509,8 @@ function sameIds(a: readonly string[], b: readonly string[]): boolean {
  * The one short email that names the role the organizers gave a volunteer (§NNN), through the outbox in the same
  * transaction as the change, in the person's language. Never to a cancelled person (nothing to do), and withdrawn at
  * the send when the role was changed again or the person cancelled meanwhile (`render.ts`), so only the role that
- * stands is ever announced. Each assignment is its own message: the moment is in the key.
+ * stands is ever announced. Each assignment is its own message: the moment and why it is sent are in the key —
+ * `given`, `readdressed` (the role kept, the address corrected) or `reopened` (a cancelled person back with a role).
  */
 async function queueRoleAssigned<T extends Record<string, unknown>>(
   tx: Transaction<T>,
@@ -517,6 +518,7 @@ async function queueRoleAssigned<T extends Record<string, unknown>>(
   roleId: string,
   actorId: string,
   now: Date,
+  why: "given" | "readdressed" | "reopened" = "given",
 ): Promise<void> {
   if (volunteer.state === "CANCELLED") return;
   await enqueueEmail(tx, {
@@ -526,7 +528,7 @@ async function queueRoleAssigned<T extends Record<string, unknown>>(
     locale: volunteer.locale,
     recipientEmail: volunteer.email,
     payload: { eventId: volunteer.eventId, volunteerId: volunteer.id, roleId },
-    idempotencyKey: `volunteer:${volunteer.id}:assigned:${roleId}:${now.getTime()}`,
+    idempotencyKey: `volunteer:${volunteer.id}:assigned:${roleId}:${why}:${now.getTime()}`,
     requestedByStaffUserId: actorId,
     now,
   });
@@ -670,7 +672,7 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
       await audit("volunteer.state_changed", { volunteerId: current.id, roleId: current.roleId, from: current.state, to: state });
       // A cancelled person reopened with a role given is told it: the email queued when it was given was withdrawn at
       // the send while they were cancelled, or never queued (`queueRoleAssigned`), and the receipt promised one.
-      if (current.state === "CANCELLED" && current.roleId) await queueRoleAssigned(tx, { ...current, state }, current.roleId, actor.id, now);
+      if (current.state === "CANCELLED" && current.roleId) await queueRoleAssigned(tx, { ...current, state }, current.roleId, actor.id, now, "reopened");
       return { changed: true, volunteer: summary };
     }
 
@@ -735,7 +737,8 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
     // address was corrected: the earlier email went to the old address (or is withdrawn at the send for it).
     const addressCorrected = input.identity.canonicalEmail !== current.canonicalEmail;
     if (input.assignedRoleId && (input.assignedRoleId !== current.roleId || addressCorrected)) {
-      await queueRoleAssigned(tx, { ...current, email: next.email }, input.assignedRoleId, actor.id, now);
+      const why = input.assignedRoleId !== current.roleId ? "given" : "readdressed";
+      await queueRoleAssigned(tx, { ...current, email: next.email }, input.assignedRoleId, actor.id, now, why);
     }
     return { changed: true, volunteer: summary };
   });
