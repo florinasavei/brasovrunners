@@ -2901,12 +2901,12 @@
       },
       "groupRunDeclaration": {
         "label": "Optional self-declaration",
-        "help": "Optional, signed once for every date; the signer and the club each get a copy. It needs an approved privacy notice. The run declaration is signed from 18, whatever the run's minimum age.",
+        "help": "Optional, signed once for every date; the signer and the club each get a copy. It needs an approved privacy notice. The declaration is signed from 18; under 18, the minor signs with a parent.",
         "notGroupSurface": "Only for a group run on asphalt or on a trail: choose the surface in “The course” card.",
         "missing": "The club has no approved version of “{document}” yet. Approve one in Legal documents, together with a new privacy notice, then tick it here.",
         "surface": "Surface, from “The course” card: {surface}",
         "inForce": "The text in force for {surface}: “{document}”, v{version}.",
-        "minAgeHelp": "Reached by the day of the run. Under 18 (14 to 17), the signing page also offers “I am signing for a minor”, once the declaration in force carries the minor's paragraph; from 18, adults only. Above 18, for example 21, the signing page asks for the birth date."
+        "minAgeHelp": "Reached by the day of the run. Under 18, the signing page also offers “I am signing for a minor”, if the text in force allows it. Above 18, for example 21, the page asks for the birth date."
       },
       "pageFlow": {
         "title": "The page, top to bottom",
@@ -3309,7 +3309,7 @@
         "series": "Only in the group-run declarations: the series' name, when the run repeats. The sentence that names it shows only for a series; a one-day run keeps the sentence with '{{event}}' and '{{eventDate}}'",
         "seriesRhythm": "Only in the group-run declarations: how often the series repeats, read off its dates (“every Tuesday at 18:30”)",
         "seriesPlace": "Only in the group-run declarations: the series' usual starting place",
-        "minor": "Only in the group-run declarations: the minor's name, in the paragraphs that only a declaration signed for a minor keeps. With it in the text in force, the signing page offers the tick “I am signing for a minor”",
+        "minor": "Only in the group-run declarations: the minor's name, in the paragraphs of a declaration signed for a minor. With it in the text in force, the page offers the tick “I am signing for a minor”",
         "signerAlone": "Only in the group-run declarations: the name of the person signing for themselves, in the sentence that only an adult's declaration keeps",
         "minorMinimumAge": "Only in the group-run declarations: the run's minimum age, with its unit (“14 years”), when it is under 18, in the minor's paragraph; on a run for adults only the paragraph goes",
         "promotionalMaterials": "Only in the privacy notice: the optional box for offers and benefits from the club and its partners. Without it in the notice in force, the form does not offer it",
@@ -7740,7 +7740,7 @@
               "title": "Minors and the minimum age",
               "steps": [
                 "A participant under 18 is registered by a parent or guardian, who writes their name in the form's section for minors; the desk and the export show “Minor — parent/guardian”.",
-                "The minimum age is each event's own, of any type: «Minimum age to take part», under «Taking part, registration and rules» → «Rules». The event's page says it. It is counted on the day of the event, at every door — the form, the desk, a registration entered by staff. The run declaration is signed from 18, whatever the run's minimum age."
+                "The minimum age is each event's own, of any type: «Minimum age to take part», under «Taking part, registration and rules» → «Rules». The event's page says it. It is counted on the day of the event, at every door — the form, the desk, a registration entered by staff. The declaration is signed from 18; under 18, the minor signs with a parent."
               ]
             },
             {

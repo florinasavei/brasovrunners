@@ -175,14 +175,16 @@ describe("§440 the age gate: one rule, the race's", () => {
 
   /*
     §495, then §515: the box used to start at the club's minimum for a race, and the help led with
-    "18 or less changes nothing". Since §515 the box starts and stops at 18 (the save refuses less),
-    so the help leads with that bound — at least 18, the declaration covers no minor — and names
-    neither the race's minimum (a constant that may change) nor anything but 18 and an example above it.
+    "18 or less changes nothing". Since §515 the help led with the bound — at least 18, the declaration
+    covers no minor. Since §NNN a minor signs with a parent, so the help says what a number under 18
+    does — the page also offers «Semnez pentru un minor», when the text in force allows it — and when a
+    higher one is worth setting; it names neither the race's minimum (a constant that may change) nor
+    anything but 18 and an example above it.
   */
-  it("the editor's help says first that the age is at least 18, and when a higher one is worth setting", () => {
+  it("the editor's help says what a number under 18 does, and when a higher one is worth setting", () => {
     const help = { ro: ro.Admin.editor.groupRunDeclaration.minAgeHelp, en: en.Admin.editor.groupRunDeclaration.minAgeHelp };
-    expect(help.ro).toMatch(/^Împlinită în ziua alergării, cel puțin 18 ani: declarația nu acoperă minorii/);
-    expect(help.en).toMatch(/^Reached by the day of the run, at least 18: the declaration covers no minor/);
+    expect(help.ro).toMatch(/^Împlinită în ziua alergării\. Sub 18 ani, pagina de semnare oferă și „Semnez pentru un minor”/);
+    expect(help.en).toMatch(/^Reached by the day of the run\. Under 18, the signing page also offers “I am signing for a minor”/);
     for (const sentence of Object.values(help)) {
       expect(sentence).not.toContain(String(MIN_PARTICIPANT_AGE));
       expect(sentence).toContain("21");
@@ -196,8 +198,9 @@ describe("§440 the age gate: one rule, the race's", () => {
  * editor's help under «Declarație opțională pe propria răspundere» and the guide say it in words.
  */
 describe("§520 the run declaration's 18 is said where the box used to be", () => {
-  const RO = "Declarația de la alergări se semnează de la 18 ani, oricare ar fi vârsta minimă a alergării.";
-  const EN = "The run declaration is signed from 18, whatever the run's minimum age.";
+  // Since §NNN: signed from 18; under 18 the minor signs with a parent.
+  const RO = "Declarația se semnează de la 18 ani; sub 18, minorul semnează cu un părinte.";
+  const EN = "The declaration is signed from 18; under 18, the minor signs with a parent.";
 
   it("in the editor's help under the declaration's box and in the guide, both languages", () => {
     expect(ro.Admin.editor.groupRunDeclaration.help).toContain(RO);

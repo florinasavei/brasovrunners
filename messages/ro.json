@@ -2901,12 +2901,12 @@
       },
       "groupRunDeclaration": {
         "label": "Declarație opțională pe propria răspundere",
-        "help": "Opțională, o dată pentru toate datele; semnatarul și clubul primesc o copie. Cere nota GDPR aprobată. Declarația de la alergări se semnează de la 18 ani, oricare ar fi vârsta minimă a alergării.",
+        "help": "Opțională, o dată pentru toate datele; semnatarul și clubul primesc o copie. Cere nota GDPR aprobată. Declarația se semnează de la 18 ani; sub 18, minorul semnează cu un părinte.",
         "notGroupSurface": "Doar pentru o alergare de grup pe asfalt sau pe teren accidentat: alege suprafața în cardul «Traseul».",
         "missing": "Clubul nu are încă o versiune aprobată pentru „{document}”. Aprob-o în Documente legale, împreună cu o notă de confidențialitate nouă, apoi bifează aici.",
         "surface": "Suprafața, din cardul «Traseul»: {surface}",
         "inForce": "Textul în vigoare pentru {surface}: „{document}”, v{version}.",
-        "minAgeHelp": "Împlinită în ziua alergării. Sub 18 ani (între 14 și 17), pagina de semnare oferă și „Semnez pentru un minor”, când declarația în vigoare are paragraful pentru minori; de la 18 ani, doar adulți. Peste 18, de exemplu 21, pagina de semnare cere data nașterii."
+        "minAgeHelp": "Împlinită în ziua alergării. Sub 18 ani, pagina de semnare oferă și „Semnez pentru un minor”, dacă textul în vigoare o prevede. Peste 18, de exemplu 21, pagina cere data nașterii."
       },
       "pageFlow": {
         "title": "Pagina, de sus în jos",
@@ -3309,7 +3309,7 @@
         "series": "Doar în declarațiile alergărilor de grup: numele seriei, când alergarea se repetă. Propoziția care îl conține apare doar la o serie; la o alergare de o zi rămâne propoziția cu '{{event}}' și '{{eventDate}}'",
         "seriesRhythm": "Doar în declarațiile alergărilor de grup: cât de des se repetă seria, citit din datele ei („în fiecare marți, la 18:30”)",
         "seriesPlace": "Doar în declarațiile alergărilor de grup: locul de plecare obișnuit al seriei",
-        "minor": "Doar în declarațiile alergărilor de grup: numele minorului, în paragrafele pe care le păstrează doar o declarație semnată pentru un minor. Cu el în textul în vigoare, pagina de semnare oferă bifa „Semnez pentru un minor”",
+        "minor": "Doar în declarațiile alergărilor de grup: numele minorului, în paragrafele unei declarații semnate pentru un minor. Cu el în textul în vigoare, pagina oferă bifa „Semnez pentru un minor”",
         "signerAlone": "Doar în declarațiile alergărilor de grup: numele celui care semnează pentru el însuși, în propoziția pe care o păstrează doar o declarație de adult",
         "minorMinimumAge": "Doar în declarațiile alergărilor de grup: vârsta minimă a alergării, cu unitatea („14 ani”), când e sub 18, în paragraful pentru minor; la o alergare doar pentru adulți paragraful dispare",
         "promotionalMaterials": "Doar în nota de confidențialitate: bifa opțională pentru oferte și beneficii de la club și de la partenerii săi. Fără el în nota în vigoare, formularul nu o oferă",
@@ -7740,7 +7740,7 @@
               "title": "Minori și vârsta minimă",
               "steps": [
                 "Un participant sub 18 ani e înscris de părinte sau tutore, care își scrie numele în secțiunea pentru minori a formularului; la masă și în export apare „Minor — părinte/tutore”.",
-                "Vârsta minimă e a fiecărui eveniment, de orice tip: «Vârsta minimă de participare», în «Participare, înscrieri și regulament» → «Regulamentul». Pagina evenimentului o spune. Se socotește în ziua evenimentului, la orice ușă — formularul, masa, o înscriere adăugată de echipă. Declarația de la alergări se semnează de la 18 ani, oricare ar fi vârsta minimă a alergării."
+                "Vârsta minimă e a fiecărui eveniment, de orice tip: «Vârsta minimă de participare», în «Participare, înscrieri și regulament» → «Regulamentul». Pagina evenimentului o spune. Se socotește în ziua evenimentului, la orice ușă — formularul, masa, o înscriere adăugată de echipă. Declarația se semnează de la 18 ani; sub 18, minorul semnează cu un părinte."
               ]
             },
             {
