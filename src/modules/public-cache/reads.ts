@@ -72,6 +72,7 @@ import {
   describesPromotionalMaterials,
   describesPromotionalMaterialsShared,
   describesVolunteerAgreement,
+  describesVolunteerProfile,
   describesVolunteers,
 } from "@/modules/legal-documents/domain/merge-fields";
 import { readPublicVolunteerRoles } from "@/modules/volunteers/volunteers";
@@ -591,6 +592,17 @@ export async function cachedVolunteersDescribed(now: Date): Promise<boolean> {
 export async function cachedVolunteerAgreementDescribed(now: Date): Promise<boolean> {
   const notices = await Promise.all(routing.locales.map((locale) => cachedCurrentApprovedDocument("PRIVACY_NOTICE", locale, now)));
   return notices.every((notice) => notice !== undefined && describesVolunteerAgreement(notice.body));
+}
+
+/**
+ * Whether the privacy notice in force describes what a volunteer says about themselves (§765,
+ * `describesVolunteerProfile`), in every language — which form the event page draws: the profile's boxes while it
+ * does, §758's tick «Am cel puțin 18 ani» while it does not. `noticeDescribesVolunteerProfile` is the uncached read
+ * the sign-up asks again.
+ */
+export async function cachedVolunteerProfileDescribed(now: Date): Promise<boolean> {
+  const notices = await Promise.all(routing.locales.map((locale) => cachedCurrentApprovedDocument("PRIVACY_NOTICE", locale, now)));
+  return notices.every((notice) => notice !== undefined && describesVolunteerProfile(notice.body));
 }
 
 /**

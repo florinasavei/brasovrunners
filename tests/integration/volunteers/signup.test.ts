@@ -14,6 +14,7 @@ import { pruneExpiredRows } from "@/modules/jobs/retention";
 import { countVolunteeringEvents, listVolunteers, readPublicVolunteerRoles, submitVolunteer } from "@/modules/volunteers/volunteers";
 import { env } from "@/shared/config/env";
 import { isDomainError } from "@/shared/errors/domain-error";
+import { roleDescription } from "../../helpers/role-description";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 const NOW = new Date("2026-10-13T10:00:00.000Z");
@@ -442,7 +443,7 @@ describe("§754 the volunteers' public sign-up", () => {
 
   it("reads the public roles with how each stands — the people given each role, never the offers — and nothing of a person", async () => {
     const event = await seedEvent();
-    const water = await seedRole(event.id, { needed: 2, descriptionRo: "Dai apă", descriptionEn: "Hand out water" });
+    const water = await seedRole(event.id, { needed: 2, ...roleDescription("Dai apă", "Hand out water") });
     await seedRole(event.id, { nameRo: "Sosire", nameEn: "Finish", needed: 1, position: 1 });
     await submitVolunteer(db, event.id, form(water.id), NOW);
     await seedAssigned(event.id, water.id, "dat@example.test");
@@ -455,7 +456,7 @@ describe("§754 the volunteers' public sign-up", () => {
     expect(JSON.stringify(read)).not.toMatch(/Maria|maria@|\+4071|dat@/);
     // Off: no roles are handed out at all.
     await db.update(events).set({ acceptsVolunteers: false });
-    expect(await readPublicVolunteerRoles(db, event.id)).toEqual({ acceptsVolunteers: false, roles: [] });
+    expect(await readPublicVolunteerRoles(db, event.id)).toEqual({ acceptsVolunteers: false, shirts: false, roles: [] });
   });
 
   it("lists each volunteer with the role given and the roles chosen, in the club's order", async () => {

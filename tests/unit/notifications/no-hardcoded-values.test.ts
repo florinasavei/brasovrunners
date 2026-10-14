@@ -250,6 +250,10 @@ describe("§369 the club's name leaves the platform only through the constant", 
           // «Clubul pe lista publică» (§753): the editor's help and the first mode, «Doar {club}».
           "Admin.editor.publicListClubHelp",
           "Admin.editor.publicListClubMembersOnly",
+          // The volunteers' club-group tick (§765): the public form's, the entry's and the row's chip — the person's own claim, like the member tick.
+          "Event.volunteers.profile.club",
+          "Admin.volunteers.person.club",
+          "Admin.volunteers.chips.club",
         ].sort(),
       );
     }
@@ -279,6 +283,10 @@ describe("§369 the club's name leaves the platform only through the constant", 
       // «Clubul pe lista publică» (§753): the editor's help and the first mode.
       "editor.publicListClubHelp": 1,
       "editor.publicListClubMembersOnly": 1,
+      // The volunteers' club-group tick (§765): the form's, the entry's, and the row's chip (the card's and the person's page).
+      "volunteers.profile.club": 1,
+      "volunteers.person.club": 1,
+      "volunteers.chips.club": 2,
     };
     const sources = sourceFiles(path.join(process.cwd(), "src")).map((file) => readFileSync(file, "utf8"));
     for (const [key, expected] of Object.entries(calls)) {

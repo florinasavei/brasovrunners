@@ -6,6 +6,7 @@ import EventBusyIcon from "@mui/icons-material/EventBusy";
 import EventRepeatIcon from "@mui/icons-material/EventRepeat";
 import GroupsIcon from "@mui/icons-material/Groups";
 import HelpIcon from "@mui/icons-material/Help";
+import HistoryIcon from "@mui/icons-material/History";
 import LinkIcon from "@mui/icons-material/Link";
 import PriorityHighIcon from "@mui/icons-material/PriorityHigh";
 import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
@@ -51,6 +52,8 @@ export const STATUS_GLYPHS = {
   priorityLow: ArrowDownwardIcon,
   // A role a volunteer offered to do (§761): «S-a oferit pentru» on the «Voluntari» card.
   offered: VolunteerActivismIcon,
+  // «A mai fost voluntar» on the same row (§765): what the person did before, not what they offer now.
+  experience: HistoryIcon,
 } satisfies Record<string, ComponentType<SvgIconProps>>;
 
 export type StatusGlyphName = keyof typeof STATUS_GLYPHS;

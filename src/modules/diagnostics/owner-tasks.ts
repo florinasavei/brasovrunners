@@ -67,6 +67,7 @@ export type TaskId =
   | "shopNotice"
   | "volunteersNotice"
   | "volunteerAgreementNotice"
+  | "volunteerProfileNotice"
   | "volunteerAgreement"
   | "volunteerRoleChoicesAgreement"
   | "gmailFallbackNotice"
@@ -113,6 +114,7 @@ export const TASK_KIND: Record<TaskId, TaskKind> = {
   shopNotice: "text",
   volunteersNotice: "text",
   volunteerAgreementNotice: "text",
+  volunteerProfileNotice: "text",
   volunteerAgreement: "text",
   volunteerRoleChoicesAgreement: "text",
   gmailFallbackNotice: "text",
@@ -287,6 +289,12 @@ export type OwnerTaskInputs = {
    * `noticeDescribesVolunteerAgreement`)? Until it does, the form, the link and «Semnat pe hârtie» wait.
    */
   volunteerAgreementDescribed: boolean;
+  /**
+   * Does the notice in force, in every language, describe what a volunteer says about themselves (§765,
+   * `noticeDescribesVolunteerProfile`)? Until it does, the form asks no age, sex, city or T-shirt and keeps no such
+   * answer: it is §758's form, with its tick «Am cel puțin 18 ani».
+   */
+  volunteerProfileDescribed: boolean;
   /**
    * Does the notice in force, in every language, say a message may leave through the club's Gmail
    * while Mailgun is stopped (§622, `noticeDescribesGmailFallback`)? Until it does, «Gmail preia când
@@ -608,6 +616,18 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
       push("volunteerAgreementNotice", {
         owner: "club",
         state: input.volunteerAgreementDescribed ? "done" : "open",
+      });
+    }
+    /*
+      What a volunteer says about themselves in the notice (§765), the same shape: open while an event ahead takes
+      volunteers and the notice in force does not name `{{volunteerProfile}}` — the form asks no age, sex, city or
+      T-shirt and keeps no such answer, and nothing else is refused — done by itself the day one naming it takes
+      effect, absent while no event takes volunteers and the notice is silent.
+    */
+    if (input.volunteerProfileDescribed || input.volunteeringEvents > 0) {
+      push("volunteerProfileNotice", {
+        owner: "club",
+        state: input.volunteerProfileDescribed ? "done" : "open",
       });
     }
     /*

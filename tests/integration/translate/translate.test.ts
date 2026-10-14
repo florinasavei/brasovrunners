@@ -96,6 +96,37 @@ describe("§464 «Tradu din română»", () => {
     expect(await charactersTranslatedToday(db, NOW)).toBe(outcome.characters);
   });
 
+  // §765 — a volunteer role's own form: the name as words, the description as a rich text whose layout survives.
+  it("translates a volunteer role's name and description, the list and its layout kept, and audits the boxes without the words", async () => {
+    const admin = await staff("ADMIN");
+    const { translator, requests } = fakeTranslator();
+    const description = {
+      type: "doc",
+      content: [
+        { type: "paragraph", content: [{ type: "text", text: "Stai la masa cu apă." }] },
+        { type: "bulletList", content: [{ type: "listItem", content: [{ type: "paragraph", content: [{ type: "text", text: "Umpli paharele." }] }] }] },
+      ],
+    };
+    const outcome = await translateClubTexts(
+      db,
+      admin,
+      { items: [{ field: "nameEn", kind: "text", text: "Punct de apă" }, { field: "descriptionEnBody", kind: "rich", doc: description }] },
+      { translator, now: NOW },
+    );
+    expect(outcome.ok).toBe(true);
+    if (!outcome.ok) return;
+    expect(outcome.items[0]).toEqual({ field: "nameEn", kind: "text", text: "EN:Punct de apă" });
+    const body = JSON.stringify(outcome.items[1]);
+    expect(body).toContain('"type":"bulletList"');
+    expect(body).toContain("EN:Umpli paharele.");
+    expect(body).toContain("EN:Stai la masa cu apă.");
+    expect(requests.every((request) => request.from === "ro" && request.to === "en")).toBe(true);
+    const audit = await db.select().from(auditLogs);
+    expect(audit).toHaveLength(1);
+    expect(audit[0]?.metadataJson).toMatchObject({ fields: ["nameEn", "descriptionEnBody"], outcome: "ok" });
+    expect(JSON.stringify(audit[0]?.metadataJson)).not.toContain("Punct de apă");
+  });
+
   it("refuses without a translator, and refuses the volunteer and Tehnic, sending nothing", async () => {
     const copywriter = await staff("COPYWRITER");
     const input = { items: [{ field: "translations.en.title", kind: "text", text: "Tura" }] };
