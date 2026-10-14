@@ -14,7 +14,7 @@ import { staffUsers } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
 import { routing, type Locale } from "@/i18n/routing";
 import type { LegalDocumentTranslationInput } from "./domain/content-hash";
-import { GROUP_RUN_DECLARATION_KEYS, raceDeclarationKeysFor, RACE_DECLARATION_KEYS } from "./domain/keys";
+import { GROUP_RUN_DECLARATION_KEYS, type GroupRunDeclarationKey, raceDeclarationKeysFor, RACE_DECLARATION_KEYS } from "./domain/keys";
 import {
   asksForMinorSignature,
   describesEventInvitations,
@@ -37,6 +37,7 @@ import {
   describesTeamPage,
   MINIMUM_AGE_MERGE_FIELD,
   mergeFieldsIn,
+  namesGroupRunMinor,
 } from "./domain/merge-fields";
 import { describesRefusal } from "./domain/refusal-clause";
 
@@ -210,6 +211,33 @@ export async function groupRunDeclarationsSeriesCurrent<T extends Record<string,
   const inForce = texts.filter((document) => document !== undefined);
   if (inForce.length === 0) return null;
   return inForce.every((document) => mergeFieldsIn(document.body).has("series"));
+}
+
+/**
+ * Whether the group-run declaration of one kind that is in force names the minor's paragraph (§769,
+ * `namesGroupRunMinor`) in every language: the gate of the signing page's «Semnez pentru un minor» and of the
+ * service's acceptance of it, as the race's second signature waits on `asksForMinorSignature` (§330), and the
+ * privacy-notice markers on `describesListNumbers` (§613). Every language, because the page is signed in the
+ * language it is read in and a tick offered in one language only would hand half its visitors a text without
+ * the minor's paragraph. The run's own minimum age is the caller's second question (`groupRunTakesMinors`).
+ */
+export async function groupRunMinorPathOffered<T extends Record<string, unknown>>(db: Database<T>, key: GroupRunDeclarationKey, now: Date): Promise<boolean> {
+  const versions = await Promise.all(routing.locales.map((locale) => findCurrentApprovedDocument(db, key, locale, now)));
+  return versions.every((version) => version !== undefined && namesGroupRunMinor(version.body));
+}
+
+/**
+ * Whether every group-run declaration in force names the minor's paragraph (§769), in every language: what
+ * `/admin/tasks`' row `groupRunMinorText` reads. Null while none is in force (the editor asks for approving
+ * one, §393); false while one in force is older and so offers no tick. Nothing waits on it beyond the tick.
+ */
+export async function groupRunDeclarationsNameMinor<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<boolean | null> {
+  const texts = await Promise.all(
+    GROUP_RUN_DECLARATION_KEYS.flatMap((key) => routing.locales.map((locale) => findCurrentApprovedDocument(db, key, locale, now))),
+  );
+  const inForce = texts.filter((document) => document !== undefined);
+  if (inForce.length === 0) return null;
+  return inForce.every((document) => namesGroupRunMinor(document.body));
 }
 
 /** `declarationAsksMinorToSign` for each language, for a list whose rows are in either (§330). */

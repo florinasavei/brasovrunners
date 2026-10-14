@@ -95,7 +95,7 @@ export function withCutoffClocks<T extends { cutoffMinutes: number | null }>(
  * the start's minute of the day on the event's clock; `limitMinutes` the minutes from the start to the
  * event's end, when it has one. **A clock earlier than the start's is the next day's only for an event
  * that runs past midnight** (its end, counted from the start, is on the next day); any other event's is
- * before the start. Null for a clock at or before the start — a limit nobody could meet. Migration 0154
+ * before the start. Null for a clock at or before the start — a limit nobody could meet. Migration 0157
  * computes the same in SQL, and a test holds the two to the same answers.
  */
 export function minutesFromClock(clock: string, startMinutes: number, limitMinutes: number | null = null): number | null {

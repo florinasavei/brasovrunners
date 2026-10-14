@@ -1,6 +1,6 @@
 {
-  "id": "ce7da4e9-d011-4b0e-afae-72bc6b640cf3",
-  "prevId": "eb39dba8-0a4b-4935-9822-116423da9def",
+  "id": "eb39dba8-0a4b-4935-9822-116423da9def",
+  "prevId": "82b3a547-1d37-4294-9fed-115779fc097c",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -1069,12 +1069,6 @@
           "primaryKey": false,
           "notNull": false
         },
-        "cutoff_minutes": {
-          "name": "cutoff_minutes",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
         "note_ro": {
           "name": "note_ro",
           "type": "text",
@@ -1134,10 +1128,6 @@
         "event_checkpoints_km_not_negative": {
           "name": "event_checkpoints_km_not_negative",
           "value": "\"event_checkpoints\".\"km\" >= 0"
-        },
-        "event_checkpoints_cutoff_minutes_range": {
-          "name": "event_checkpoints_cutoff_minutes_range",
-          "value": "\"event_checkpoints\".\"cutoff_minutes\" IS NULL OR \"event_checkpoints\".\"cutoff_minutes\" BETWEEN 1 AND 10080"
         },
         "event_checkpoints_name_length": {
           "name": "event_checkpoints_name_length",
@@ -4795,6 +4785,12 @@
         "retention_hold_by_staff_user_id": {
           "name": "retention_hold_by_staff_user_id",
           "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "minor_typed_name": {
+          "name": "minor_typed_name",
+          "type": "text",
           "primaryKey": false,
           "notNull": false
         }

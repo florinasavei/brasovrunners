@@ -107,20 +107,25 @@ describe("§393 the two templates", () => {
   it("carry the race declaration's tokens for an adult signer, and ask for no identity document (§418)", () => {
     for (const body of [groupRunAsphaltRo, groupRunAsphaltEn, groupRunTrailRo, groupRunTrailEn]) {
       // `minimumAge` since §440: the run's own minimum, in a sentence of its own; the series
-      // sentence's three since §523.
+      // sentence's three since §523; since §769 the minor's path: who signs (`guardian`, `minor`), the minor's
+      // minimum (`minorMinimumAge`) and the adult's own sentence (`signerAlone`).
       expect([...mergeFieldsIn(body)].sort()).toEqual([
         "event",
         "eventDate",
         "eventLocation",
+        "guardian",
         "minimumAge",
+        "minor",
+        "minorMinimumAge",
         "participant",
         "series",
         "seriesPlace",
         "seriesRhythm",
         "signedAt",
+        "signerAlone",
       ]);
       expect(asksForIdDocument(body)).toBe(false);
-      // Adults only for now: no minor's second signature is asked (§330 is the race's flow).
+      // The race's second signature (§330) is the race's: it waits on the minor's own document, which no group-run text names.
       expect(asksForMinorSignature(body)).toBe(false);
     }
   });
@@ -420,9 +425,9 @@ describe("§393 the two templates", () => {
       // On the day of each run (§523): the text covers every date of the run.
       expect(TEXTS[surface].ro).toContain("Declar că am cel puțin {{minimumAge}} împliniți la data fiecărei alergări la care particip.");
       expect(TEXTS[surface].en).toContain("I declare that I am at least {{minimumAge}} old on the day of each run I take part in.");
-      // Signed personally, for oneself: it covers nobody else, no minor.
-      expect(TEXTS[surface].ro.join(" ")).toContain("Semnez această declarație personal, doar pentru mine.");
-      expect(TEXTS[surface].en.join(" ")).toContain("I sign this declaration personally, for myself only.");
+      // Signed personally, for oneself, on the adult's path; a minor's own paragraphs are behind `{{minor}}` (§769).
+      expect(TEXTS[surface].ro).toContain("Eu, {{signerAlone}}, semnez această declarație personal, doar pentru mine.");
+      expect(TEXTS[surface].en).toContain("I, {{signerAlone}}, sign this declaration personally, for myself only.");
     }
     for (const catalogue of [ro, en]) {
       expect(catalogue.Event.groupRunDeclaration.page.accept).toContain("{age}");

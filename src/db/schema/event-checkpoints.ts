@@ -26,7 +26,7 @@ export const eventCheckpointKind = pgEnum("event_checkpoint_kind", ["WATER", "FO
  * (`domain/start.ts#cutoffClockOf`). The minutes count from the gun a race has (§71), else the
  * event's start — the instant the race's own «Timp limită» counts from — so a point's limit and the
  * finish's are compared as minutes against minutes. `cutoff_time`, the first answer's column, stays
- * until a later contract release and is no longer written or read; migration 0154 filled
+ * until a later contract release and is no longer written or read; migration 0157 filled
  * `cutoff_minutes` from it where the event's start was known.
  *
  * Both languages for every word the club typed (the owner's rule): the name is required in each;

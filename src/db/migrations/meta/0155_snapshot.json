@@ -1,5 +1,5 @@
 {
-  "id": "eb39dba8-0a4b-4935-9822-116423da9def",
+  "id": "82b3a547-1d37-4294-9fed-115779fc097c",
   "prevId": "671afa73-f042-423a-ae3a-dd612a16520f",
   "version": "7",
   "dialect": "postgresql",
@@ -4787,6 +4787,12 @@
           "type": "uuid",
           "primaryKey": false,
           "notNull": false
+        },
+        "minor_typed_name": {
+          "name": "minor_typed_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "indexes": {
@@ -8872,8 +8878,7 @@
         "WATER",
         "FOOD",
         "FIRST_AID",
-        "TIMING",
-        "DIRECTION"
+        "TIMING"
       ]
     },
     "public.event_todo_priority": {

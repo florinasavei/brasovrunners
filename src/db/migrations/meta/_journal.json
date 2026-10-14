@@ -1055,15 +1055,22 @@
     {
       "idx": 150,
       "version": "7",
-      "when": 1792003434379,
-      "tag": "0153_direction_checkpoint_kind",
+      "when": 1792003600000,
+      "tag": "0155_group_run_declaration_minor",
       "breakpoints": true
     },
     {
       "idx": 151,
       "version": "7",
-      "when": 1792003494261,
-      "tag": "0154_checkpoint_cutoff_minutes",
+      "when": 1792003700000,
+      "tag": "0156_direction_checkpoint_kind",
+      "breakpoints": true
+    },
+    {
+      "idx": 152,
+      "version": "7",
+      "when": 1792003760000,
+      "tag": "0157_checkpoint_cutoff_minutes",
       "breakpoints": true
     }
   ]

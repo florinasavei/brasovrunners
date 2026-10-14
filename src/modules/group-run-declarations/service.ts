@@ -9,7 +9,7 @@ import { startHeldBack } from "@/modules/events/domain/dated";
 import { recordAuditEvent } from "@/modules/audit/repository";
 import { offeredGroupRunDeclarationKey } from "@/modules/legal-documents/domain/keys";
 import { asksForIdDocument } from "@/modules/legal-documents/domain/merge-fields";
-import { findCurrentApprovedDocument } from "@/modules/legal-documents/repository";
+import { findCurrentApprovedDocument, groupRunMinorPathOffered } from "@/modules/legal-documents/repository";
 import { readClubNotices } from "@/modules/notifications/club-notices";
 import { resolveDeclarationCopies } from "@/modules/notifications/domain/club-notices";
 import { enqueueEmail } from "@/modules/notifications/outbox";
@@ -22,7 +22,17 @@ import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { env } from "@/shared/config/env";
 import { DomainError } from "@/shared/errors/domain-error";
 import { isUuid } from "@/shared/ids";
-import { birthDateRefusal, ERASE_REASON_MAX, ID_DOCUMENT_MAX, keptSignature, signerIdentity, signingOpen, TYPED_NAME_MAX } from "./domain";
+import {
+  birthDateRefusal,
+  ERASE_REASON_MAX,
+  groupRunTakesMinors,
+  ID_DOCUMENT_MAX,
+  keptSignature,
+  minorSigningRefusal,
+  signerIdentity,
+  signingOpen,
+  TYPED_NAME_MAX,
+} from "./domain";
 import { groupRunMergeValues, groupRunTextHash } from "./facts";
 import { insertGroupRunDeclaration, listCoveringSignatures, listSeriesDatesOf } from "./repository";
 import { factsToKeep } from "./series";
@@ -51,6 +61,15 @@ import { factsToKeep } from "./series";
  * deletes a signature — only the Administrator's audited erase does. Nothing on the page tells a
  * kept signature from a new one.
  *
+ * **A minor signs, with a parent (§769, amending §393, §523 and §330).** The tick «Semnez pentru un minor» posts
+ * `minor`; then `typedName` is the parent's or guardian's — the declarant, as on the race's row —,
+ * `minorTypedName` the minor's own signature, `guardianAgrees` the parent's tick, and `birthDate` the minor's,
+ * counted against the run's own minimum under eighteen and dropped (`birthDateRefusal`). Both names are required
+ * when ticked, and none may be filled in when not (`minorSigningRefusal`); the tick is taken only while the run
+ * takes minors and the text in force names `{{minor}}` in every language (`groupRunMinorPathOffered`), else it is
+ * refused on its own box. One row: `typed_name` the parent, `minor_typed_name` the minor, the signer's key
+ * carrying the minor's name so a parent's two children are two signatures; no second table, no identity document.
+ *
  * **Bound to the text that was read (§57).** The page posts the version's id and hash; a different
  * version in force at the press is refused with `CONFLICT` (`DECLARATION_CHANGED`) and nothing is
  * written. A version's hash covers both languages (§46), so the signer may ask for the PDF in the
@@ -62,7 +81,17 @@ export type GroupRunSigningInput = {
   documentId: string;
   contentSha256: string;
   accepted: boolean;
+  /** The signature: the signer's own name, or — when `minor` — the parent's or guardian's (§769). */
   typedName: string;
+  /**
+   * «Semnez pentru un minor» (§769): the minor's own signature, the parent's tick and the minor's name
+   * follow. Absent or false for an adult's own declaration.
+   */
+  minor?: boolean;
+  /** The minor's own typed name, their signature (§330's `minorTypedName`); read only when `minor`. */
+  minorTypedName?: string;
+  /** «Sunt părintele sau tutorele legal și sunt de acord» (§769): the parent's tick, required when `minor`. */
+  guardianAgrees?: boolean;
   /** The kind and the series and number, composed by the action (§283); absent or empty when not typed. */
   idDocument?: string;
   /**
@@ -182,6 +211,10 @@ export async function signGroupRunDeclaration<T extends Record<string, unknown>>
   const typedName = input.typedName.trim();
   const idDocument = (input.idDocument ?? "").trim();
   const needsDocument = asksForIdDocument(document.body);
+  // A minor's path (§769): offered while the run takes minors and the text in force carries its paragraph, in every language.
+  const minorOffered = groupRunTakesMinors(event.minAge) && (await groupRunMinorPathOffered(db, key, now));
+  const minorTicked = input.minor === true;
+  const minorTypedName = (input.minorTypedName ?? "").trim();
   let canonicalEmail: string | null = null;
   try {
     canonicalEmail = canonicalizeEmail(input.email).canonicalEmail;
@@ -190,10 +223,11 @@ export async function signGroupRunDeclaration<T extends Record<string, unknown>>
   }
   const invalid = [
     ...(needsDocument && (idDocument === "" || idDocument.length > ID_DOCUMENT_MAX) ? ["idDocument"] : []),
-    ...birthDateRefusal(event, input.birthDate),
+    ...birthDateRefusal(event, input.birthDate, minorTicked && minorOffered),
     ...(typedName === "" || typedName.length > TYPED_NAME_MAX ? ["typedName"] : []),
     ...(canonicalEmail === null ? ["email"] : []),
     ...(input.accepted ? [] : ["accepted"]),
+    ...minorSigningRefusal({ offered: minorOffered, minor: minorTicked, minorTypedName, guardianAgrees: input.guardianAgrees === true }),
   ];
   if (invalid.length > 0) throw new DomainError("VALIDATION_ERROR", `${invalid.join(", ")}: the declaration is incomplete`, invalid);
 
@@ -203,7 +237,9 @@ export async function signGroupRunDeclaration<T extends Record<string, unknown>>
 
   // The blanks as the signer read them, kept on the row for the PDF (§523): the run's and the series'.
   const facts = await groupRunMergeValues(db, event.id, input.locale, document.body);
-  const signerKey = signerIdentity(input.email, typedName) as string;
+  // A minor's declaration keeps the minor's name beside the parent's; an adult's keeps none (§769).
+  const minorName = minorTicked ? minorTypedName : null;
+  const signerKey = signerIdentity(input.email, typedName, minorName) as string;
 
   return db.transaction(async (tx) => {
     const txDb = tx as unknown as Database<T>;
@@ -214,7 +250,7 @@ export async function signGroupRunDeclaration<T extends Record<string, unknown>>
       version's signature stays beside the new one, as the evidence for the runs it covered (§53).
     */
     const dates = (await listSeriesDatesOf(txDb, event.id)).map((date) => date.id);
-    const existing = keptSignature(await listCoveringSignatures(txDb, event.id, dates, document.id), { email: input.email, typedName }, document.id);
+    const existing = keptSignature(await listCoveringSignatures(txDb, event.id, dates, document.id), { email: input.email, typedName, minorTypedName: minorName }, document.id);
     const resend = async (kept: { id: string; email: string }) => {
       // Their copy again, to the address the row keeps (the same mailbox, canonically): no second
       // row, no second archive copy, and the page answers as it does to a signature (§39's rule).
@@ -239,7 +275,7 @@ export async function signGroupRunDeclaration<T extends Record<string, unknown>>
         eventId: event.id,
         document,
         signedFacts,
-        signer: { typedName, idDocument: storedDocument, locale: input.locale, acceptedAt: now },
+        signer: { typedName, minorTypedName: minorName, idDocument: storedDocument, locale: input.locale, acceptedAt: now },
       }),
       eventId: event.id,
       legalDocumentId: document.id,
@@ -247,6 +283,8 @@ export async function signGroupRunDeclaration<T extends Record<string, unknown>>
       contentSha256: document.contentSha256,
       locale: input.locale,
       typedName,
+      // The minor's own signature on the same row (§769, §330's column); null for an adult's own declaration.
+      minorTypedName: minorName,
       idDocument: storedDocument,
       email: input.email.trim(),
       acceptedAt: now,
@@ -261,7 +299,7 @@ export async function signGroupRunDeclaration<T extends Record<string, unknown>>
         unique index refused this one, and nothing was written. Theirs is the signature; send it.
       */
       const [raced] = await listCoveringSignatures(txDb, event.id, dates, document.id).then((rows) =>
-        rows.filter((candidate) => signerIdentity(candidate.email, candidate.typedName) === signerKey),
+        rows.filter((candidate) => signerIdentity(candidate.email, candidate.typedName, candidate.minorTypedName) === signerKey),
       );
       if (!raced) throw new Error("the declaration was not written");
       return resend(raced);

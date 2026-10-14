@@ -33,14 +33,22 @@ export type BirthDateFieldProps = {
   unreadable: string;
   /** And for a date after `max`: too young on the race day (a future date is that too). */
   tooYoung: string;
+  /**
+   * What the box says for a whole date before `min` when `min` is a real age ceiling and not just the
+   * hundred-and-twenty-years bound (§769): a group run's minor must be under eighteen, so the minor's box
+   * gives its `min` as the oldest birth date allowed and these words for an older one. Without them a date
+   * before `min` reads as `unreadable`, as it always did.
+   */
+  tooOld?: string;
   autoComplete?: string;
 };
 
 /** The box's own refusal: "" when it holds a date in range, or nothing at all (`required` says the rest). */
-export function birthDateValidity(text: string, min: string, max: string, words: { unreadable: string; tooYoung: string }): string {
+export function birthDateValidity(text: string, min: string, max: string, words: { unreadable: string; tooYoung: string; tooOld?: string }): string {
   if (text.trim() === "") return "";
   const date = readTypedDate(text);
-  if (!date || date < min) return words.unreadable;
+  if (!date) return words.unreadable;
+  if (date < min) return words.tooOld ?? words.unreadable;
   return date > max ? words.tooYoung : "";
 }
 
@@ -56,29 +64,35 @@ export function birthDateValidity(text: string, min: string, max: string, words:
 export function birthDateHelper({
   text,
   typedAgain,
+  min,
   max,
   error,
   errorText,
   help,
   echo,
   tooYoung,
+  tooOld,
 }: {
   text: string;
   /** The box no longer holds what the page was drawn with. */
   typedAgain: boolean;
+  /** With `tooOld`: a whole date before it is refused live with those words (§769). */
+  min?: string;
   max: string;
   error: boolean;
   errorText?: string;
   help?: string;
   echo: string;
   tooYoung: string;
+  tooOld?: string;
 }): { lines: string[]; error: boolean } {
   const date = readTypedDate(text);
   const underAge = date !== "" && date > max;
+  const overAge = tooOld !== undefined && min !== undefined && date !== "" && date < min;
   const serverSays = error && !typedAgain;
-  const refusal = underAge ? tooYoung : serverSays ? (errorText ?? "") : "";
+  const refusal = underAge ? tooYoung : overAge ? (tooOld ?? "") : serverSays ? (errorText ?? "") : "";
   const lines = refusal ? [refusal, echo] : [help ?? "", echo];
-  return { lines: lines.filter(Boolean), error: underAge || serverSays };
+  return { lines: lines.filter(Boolean), error: underAge || overAge || serverSays };
 }
 
 /**
@@ -135,6 +149,7 @@ export default function BirthDateField({
   placeholder,
   unreadable,
   tooYoung,
+  tooOld,
   autoComplete,
 }: BirthDateFieldProps) {
   const drawn = shownTypedDate(defaultValue);
@@ -149,7 +164,7 @@ export default function BirthDateField({
     },
     [mask],
   );
-  const validity = birthDateValidity(text, min, max, { unreadable, tooYoung });
+  const validity = birthDateValidity(text, min, max, { unreadable, tooYoung, tooOld });
   // The desk's bounds move with the event select; the keystroke's own handler covers the rest.
   useEffect(() => {
     input.current?.setCustomValidity(validity);
@@ -160,12 +175,14 @@ export default function BirthDateField({
   const { lines, error: red } = birthDateHelper({
     text,
     typedAgain: text !== drawn,
+    min,
     max,
     error,
     errorText,
     help,
     echo,
     tooYoung,
+    tooOld,
   });
 
   return (
@@ -211,7 +228,7 @@ export default function BirthDateField({
           // After Maskito's own `input` listener: the text read here is the masked one.
           onInput: (event: FormEvent<HTMLInputElement>) => {
             const box = event.currentTarget;
-            box.setCustomValidity(birthDateValidity(box.value, min, max, { unreadable, tooYoung }));
+            box.setCustomValidity(birthDateValidity(box.value, min, max, { unreadable, tooYoung, tooOld }));
             setText(box.value);
           },
         },

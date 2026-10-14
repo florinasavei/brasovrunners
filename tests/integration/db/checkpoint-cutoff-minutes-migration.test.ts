@@ -11,7 +11,7 @@ import { checkpointStart, minutesFromClock } from "@/modules/event-checkpoints/d
 import { toWallTimeInput } from "@/modules/events/domain/zoned-time";
 
 /**
- * Migrations `0153_direction_checkpoint_kind` and `0154_checkpoint_cutoff_minutes` (§NNN), proven on real
+ * Migrations `0156_direction_checkpoint_kind` and `0157_checkpoint_cutoff_minutes` (§NNN), proven on real
  * PostgreSQL (PGlite): the fifth kind is a value of the enum and no row written before it changes; a
  * cut-off written as a time of the day (§757) becomes minutes after the event's start — the gun on a race
  * that has one, else the event's start, on the event's own clock — with a point before and after the gun,
@@ -20,8 +20,8 @@ import { toWallTimeInput } from "@/modules/events/domain/zoned-time";
  * was; the backfill is safe to run twice; the checks hold; and both files only expand.
  */
 const MIGRATIONS = "src/db/migrations";
-const ENUM_TAG = "0153_direction_checkpoint_kind";
-const COLUMN_TAG = "0154_checkpoint_cutoff_minutes";
+const ENUM_TAG = "0156_direction_checkpoint_kind";
+const COLUMN_TAG = "0157_checkpoint_cutoff_minutes";
 
 type Journal = { entries: Array<{ idx: number; tag: string; when: number }> };
 
@@ -106,7 +106,7 @@ const minutesOf = async () => {
   return Object.fromEntries(rows.map((row) => [row.name_ro, row]));
 };
 
-describe("migration 0153_direction_checkpoint_kind — the fifth kind", () => {
+describe("migration 0156_direction_checkpoint_kind — the fifth kind", () => {
   it("makes DIRECTION a kind of the enum, after the four, and leaves every row written before it as it was", async () => {
     const { rows } = await client.query<{ label: string }>(
       `SELECT e.enumlabel AS label FROM pg_enum e JOIN pg_type t ON t.oid = e.enumtypid WHERE t.typname = 'event_checkpoint_kind' ORDER BY e.enumsortorder`,
@@ -126,7 +126,7 @@ describe("migration 0153_direction_checkpoint_kind — the fifth kind", () => {
   });
 });
 
-describe("migration 0154_checkpoint_cutoff_minutes — the time of the day becomes minutes from the start", () => {
+describe("migration 0157_checkpoint_cutoff_minutes — the time of the day becomes minutes from the start", () => {
   it("counts a point after the gun from the gun, and leaves one before it, or at it, with no limit", async () => {
     const rows = await minutesOf();
     // The gun is at 10:00 on the event's clock.
