@@ -85,9 +85,24 @@ export function bibPictureDrawing(
   intrinsic: Intrinsic | null,
   box: { width: number; height: number } = BIB_PICTURE_BOX[slot],
 ): BibPictureDrawing {
-  if (!crop) return { kind: BIB_PICTURE_UNCROPPED[slot] };
-  const frame = intrinsic && intrinsic.width > 0 && intrinsic.height > 0 ? frameCrop(crop, null, intrinsic, BIB_PICTURE_RATIO[slot]) : crop;
-  if (frame.w <= 0 || frame.h <= 0) return { kind: BIB_PICTURE_UNCROPPED[slot] };
+  return pictureDrawingIn(box, BIB_PICTURE_RATIO[slot], BIB_PICTURE_UNCROPPED[slot], crop, intrinsic);
+}
+
+/**
+ * The same rule for a place whose shape is not one of the bib's — a volunteer badge's header (§764),
+ * whose shape follows the size the club chose: `ratio` is the place's width over its height, `uncropped`
+ * what it does with no crop. A crop drawn at another size is trimmed to this one, centred, never squashed.
+ */
+export function pictureDrawingIn(
+  box: { width: number; height: number },
+  ratio: number,
+  uncropped: "cover" | "fit",
+  crop: ImageCrop | null,
+  intrinsic: Intrinsic | null,
+): BibPictureDrawing {
+  if (!crop) return { kind: uncropped };
+  const frame = intrinsic && intrinsic.width > 0 && intrinsic.height > 0 ? frameCrop(crop, null, intrinsic, ratio) : crop;
+  if (frame.w <= 0 || frame.h <= 0) return { kind: uncropped };
   const width = box.width / frame.w;
   const height = box.height / frame.h;
   return { kind: "crop", left: -frame.x * width, top: -frame.y * height, width, height };

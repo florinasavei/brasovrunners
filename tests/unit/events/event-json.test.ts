@@ -12,6 +12,7 @@ import {
 } from "@/modules/content/events/transfer/file-format";
 import { collectMediaRefs, isFetchableMediaUrl, mapMediaUrls, MEDIA_ROLE_KEYS, mediaRoleKey, sha256Hex, storeKeyOfUrl } from "@/modules/content/events/transfer/media";
 import { DEFAULT_BIB_DESIGN } from "@/modules/registrations/bib-design";
+import { DEFAULT_BADGE_DESIGN } from "@/modules/volunteers/badges/badge-design";
 
 /**
  * An event as a JSON file (§751): the file's shape, the refusals of a file that is not one of ours,
@@ -110,6 +111,8 @@ function sampleConfig(): EventConfig {
     publicList: { names: false, waitlist: false, waitlistCount: true, count: true, club: "members_only" },
     hiddenList: { enabled: false, bibStart: null, counted: false, public: false },
     bib: { startNumber: 100, colour: "#1a73e8", design: { ...DEFAULT_BIB_DESIGN, headerImageSrc: PICTURE } as unknown as Record<string, unknown> },
+    // The volunteer badges' look (§764): a design, never a volunteer nor a role.
+    badges: { design: { ...DEFAULT_BADGE_DESIGN } as unknown as Record<string, unknown> },
     translations: { ro: translation("ro", doc("Bun venit.", PICTURE)), en: translation("en") },
   };
 }
@@ -119,7 +122,7 @@ function sampleFile(): EventFile {
     format: EVENT_FILE_FORMAT,
     version: EVENT_FILE_VERSION,
     exportedAt: "2026-10-13T10:00:00.000Z",
-    exportedFrom: { environment: "production", baseline: "BR-V3.22-2026-10-14" },
+    exportedFrom: { environment: "production", baseline: "BR-V3.23-2026-10-14" },
     series: { partOfASeries: false, rule: null },
     event: sampleConfig(),
     media: [{ role: "cover", url: PICTURE, contentType: "image/webp", size: 10, sha256: "a".repeat(64) }],
@@ -252,9 +255,30 @@ describe("the pictures in a configuration", () => {
       type: "doc",
       content: [{ type: "table", content: [{ type: "tableRow", content: [{ type: "tableCell", content: [{ type: "image", attrs: { src: OTHER_PICTURE } }] }] }] }],
     };
+    // The volunteer badge's header (§764) is a place too.
+    config.badges.design = { ...config.badges.design, headerImageSrc: OTHER_PICTURE };
     const refs = collectMediaRefs(config);
-    expect(refs.map((ref) => ref.role)).toEqual(["cover", "bib.header", "bib.sponsors", "bib.profile", "bib.member.card", "text.ro.body", "text.en.body", "route.gpx"]);
-    expect(refs.map((ref) => ref.kind)).toEqual(["image", "image", "image", "image", "image", "image", "image", "gpx"]);
+    expect(refs.map((ref) => ref.role)).toEqual(["cover", "bib.header", "bib.sponsors", "bib.profile", "bib.member.card", "badge.header", "text.ro.body", "text.en.body", "route.gpx"]);
+    expect(refs.map((ref) => ref.kind)).toEqual(["image", "image", "image", "image", "image", "image", "image", "image", "gpx"]);
+    expect(mediaRoleKey("badge.header")).toBe("badgeHeader");
+    // Replaced and taken out by the same rule as the bib's places.
+    const mapped = mapMediaUrls(config, (url) => (url === OTHER_PICTURE ? "/api/media/test/badge/web.webp" : url));
+    expect((mapped.badges.design as { headerImageSrc: string }).headerImageSrc).toBe("/api/media/test/badge/web.webp");
+    expect((mapMediaUrls(config, () => null).badges.design as { headerImageSrc: unknown }).headerImageSrc).toBeNull();
+  });
+
+  it("reads a file made before the badges existed as the platform's own badge, so the diff shows it", () => {
+    const old = sampleFile() as unknown as { event: Record<string, unknown> };
+    delete old.event.badges;
+    const read = readEventFile(JSON.stringify(old));
+    expect(read.ok).toBe(true);
+    if (read.ok) expect(read.file.event.badges.design).toEqual(DEFAULT_BADGE_DESIGN);
+  });
+
+  it("refuses a volunteer or a role riding along with the badges", () => {
+    const smuggled = sampleFile() as unknown as { event: { badges: Record<string, unknown> } };
+    smuggled.event.badges.roles = [{ nameRo: "Marshal" }];
+    expect(readEventFile(JSON.stringify(smuggled)).ok).toBe(false);
   });
 
   it("are replaced address by address, and one that is taken out leaves the rest of its text", () => {

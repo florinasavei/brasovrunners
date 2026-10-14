@@ -628,6 +628,17 @@ export const events = pgTable(
     bibDesign: jsonb("bib_design"),
 
     /**
+     * What the event's volunteer badges look like (§764; the owner, 2026-10-14: «Și trebuie să putem
+     * face design și printa ecusoane de voluntari (similar cu BIB-urile)»): the size of the strip, the
+     * header band or its picture, the logo, the short title, the word «VOLUNTAR», the writing area for
+     * the name and the coordinator's telephone. One JSON column for the reason `bib_design` is one: it
+     * is drawn, never queried. Null is the platform's own design; `readBadgeDesign` in
+     * `modules/volunteers/badges/badge-design.ts` is the only reader and never throws. No volunteer's
+     * data is in it, nor printed from it: a badge carries a role, never a name.
+     */
+    badgeDesign: jsonb("badge_design"),
+
+    /**
      * When this event's race numbers were settled at the close (`DECISIONS.md` §214). **Retired
      * since §548; nothing reads or writes it**: a number is drawn by each confirmation, so there is
      * no settle. It stays, expand-only, until a contract release drops it.

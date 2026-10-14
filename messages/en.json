@@ -1854,7 +1854,8 @@
       "VOLUNTEER_AGREEMENT_MISSING": "No volunteer agreement is in force. Approve one first in «Legal documents»: the template is ready.",
       "VOLUNTEER_AGREEMENT_ACCEPTED": "The person has already accepted the agreement: there is nothing left to send or record.",
       "VOLUNTEER_AGREEMENT_NOTICE": "The privacy notice in force does not describe the volunteer agreement's acceptance yet. Approve one from the template in «Legal documents» first; «Tasks» says how.",
-      "VOLUNTEER_AGREEMENT_REPRINT": "Not recorded: the agreement's version or the person's role changed since it was printed. Print the PDF to sign again and ask for a signature on the new sheet."
+      "VOLUNTEER_AGREEMENT_REPRINT": "Not recorded: the agreement's version or the person's role changed since it was printed. Print the PDF to sign again and ask for a signature on the new sheet.",
+      "BADGE_COLOUR_UNREADABLE": "Not saved: the text does not read well on the chosen colour. Choose a darker or a lighter colour."
     },
     "editor": {
       "draftPreview": {
@@ -4771,7 +4772,8 @@
         "message": "Message",
         "note": "Note",
         "signedUpAt": "Date"
-      }
+      },
+      "badgesLink": "Volunteer badges"
     },
     "eventTodos": {
       "title": "To do for the event's page",
@@ -7958,7 +7960,8 @@
         "bibMemberCard": "Member's number: the background",
         "text": "A picture in a text",
         "gpx": "The GPX file",
-        "bibProfile": "Race number: the profile picture"
+        "bibProfile": "Race number: the profile picture",
+        "badgeHeader": "Volunteer badge: the top picture"
       },
       "fields": {
         "type": "Event type",
@@ -8123,6 +8126,28 @@
           "seoDescription": "Search description",
           "discountNote": "The club's discount",
           "weatherNote": "Weather text"
+        },
+        "badges": {
+          "design": {
+            "size": "Badge: the size",
+            "customWidthMm": "Badge: the width (mm)",
+            "customHeightMm": "Badge: the height (mm)",
+            "bandColour": "Badge: the band's colour",
+            "headerImageSrc": "Badge: the top picture",
+            "headerImageCrop": "Badge: the top picture's crop",
+            "showLogo": "Badge: the club's logo",
+            "showTitle": "Badge: the event's title",
+            "titleRo": "Badge: the short title (Romanian)",
+            "titleEn": "Badge: the short title (English)",
+            "labelRo": "Badge: the word on the band (Romanian)",
+            "labelEn": "Badge: the word on the band (English)",
+            "writingLine": "Badge: the line for the name",
+            "showPhone": "Badge: the coordinator's phone",
+            "phone": "Badge: the phone number",
+            "phoneLabelRo": "Badge: the phone's label (Romanian)",
+            "phoneLabelEn": "Badge: the phone's label (English)",
+            "cutMarks": "Badge: the cut marks"
+          }
         }
       }
     },
@@ -9154,6 +9179,120 @@
         "add": "Add the chosen points",
         "adding": "Adding…",
         "close": "Close the preview"
+      }
+    },
+    "badges": {
+      "backToEvent": "← Back to the event",
+      "title": "Volunteer badges — {event}",
+      "intro": "Badges are small, long strips with no printed name: the name is written with a marker. They are printed per role, each role on its coloured band.",
+      "defaults": {
+        "label": "VOLUNTEER",
+        "name": "Name:",
+        "phoneLabel": "Coordinator"
+      },
+      "design": {
+        "title": "What the badge looks like",
+        "intro": "Each part has its own section, top to bottom, as it prints. The picture below changes as you choose. The badge is kept for this date: each date of a series has its own.",
+        "previewAlt": "The badge, as it prints",
+        "previewCaption": "A sample badge, with the event's first role.",
+        "previewCaptionNone": "A sample badge, without a role.",
+        "sections": {
+          "size": "Size",
+          "header": "Header",
+          "role": "Role",
+          "writing": "Space for the name",
+          "phone": "Coordinator's phone",
+          "cut": "Cutting"
+        },
+        "size": "The badge's size",
+        "sizes": {
+          "preset": "{width} × {height} mm — {perSheet} on an A4 sheet",
+          "custom": "Another size"
+        },
+        "customWidth": "Width (mm)",
+        "customHeight": "Height (mm)",
+        "customBounds": "A whole number, from {min} to {max}.",
+        "customHeightBounds": "A whole number, from {min} to {max}. Under {small} mm, the small print on the badge comes out very small.",
+        "perSheet": "An A4 sheet holds {count} badges of {width} × {height} mm.",
+        "sizeAside": "{width} × {height} mm · {perSheet} a sheet",
+        "bandColour": "The top band's colour",
+        "bandColourHelp": "The club's colour or one of the race numbers' colours that read on a badge.",
+        "keptColour": "The kept colour ({colour})",
+        "showLogo": "The club's logo",
+        "showTitle": "The event's title",
+        "titleRo": "Short title (Romanian)",
+        "titleEn": "Short title (English)",
+        "titleHelp": "Empty in both languages: the event's title, made smaller or cut to fit. At most {max} characters.",
+        "bothLanguages": "Write it in both languages, or in neither.",
+        "headerPicture": "A picture instead of the coloured band",
+        "headerPictureHelp": "A photo or a logo across the whole top band. The logo and the title are then not printed.",
+        "headerPictureCropHelp": "Drag the rectangle over the part you want on the top band, across the whole badge.",
+        "headerPictureShape": "The band's shape: {ratio} to 1, at the saved size.",
+        "headerHidesTitle": "The picture covers the event's title: the badge shows only the picture.",
+        "roleHelp": "The role prints large, on its coloured band. The colours are chosen below, in “The roles' colours”.",
+        "labelRo": "The word above the role (Romanian)",
+        "labelEn": "The word above the role (English)",
+        "labelHelp": "Empty in both languages: VOLUNTAR and VOLUNTEER. At most {max} characters.",
+        "labelDefaultAside": "VOLUNTEER",
+        "writingHelp": "No name is printed. A white area with “Name:” is left, where the name is written by hand.",
+        "writingLine": "A thin line for the name",
+        "writingPlain": "Only “Name:”",
+        "showPhone": "The coordinator's phone",
+        "showPhoneHelp": "A small line at the foot, with the number volunteers call. The club's number, never a volunteer's.",
+        "phone": "Phone number",
+        "phoneHelp": "Written as a phone number, for example 07xx xxx xxx.",
+        "phoneLabelRo": "Label (Romanian)",
+        "phoneLabelEn": "Label (English)",
+        "phoneLabelHelp": "Empty in both languages: Coordonator and Coordinator. At most {max} characters.",
+        "phoneOff": "No phone",
+        "cutMarks": "Cut marks in the margin",
+        "cutMarksHelp": "The dashed lines between the badges always print. The marks in the margin help a guillotine.",
+        "cutLinesOnly": "Dashed lines only",
+        "save": "Save the badge",
+        "saving": "Saving…"
+      },
+      "colours": {
+        "title": "The roles' colours",
+        "intro": "Each role has its own band on the badge. The words on the band print in white or black, whichever reads better.",
+        "none": "No role yet",
+        "aside": "{count} of {total} with a colour of their own",
+        "empty": "The event has no roles yet. Add them in the event's “Volunteers” card.",
+        "choiceOf": "The colour of the role {role}",
+        "typedOf": "The typed colour for the role {role}",
+        "theme": "The club's orange",
+        "typed": "Another colour",
+        "choice": "The band's colour on the badge",
+        "themeOption": "Default: the club's orange",
+        "typedLabel": "The typed colour",
+        "typedHelp": "For the badge's band: a hash and six digits, like #1b8a3a. Kept only if white or black text reads on it, at a contrast of at least 4.5 to 1. A new colour typed here is the one kept.",
+        "state": "Badge band: {colour}, contrast {ratio} to 1",
+        "save": "Save the colours",
+        "saving": "Saving…",
+        "unreadable": "{colour}, which does not read: the club's orange prints"
+      },
+      "print": {
+        "title": "Printing",
+        "aside": "{perSheet} on an A4 sheet · {width} × {height} mm",
+        "intro": "Badges are printed per role, not per person. An A4 sheet holds {perSheet} badges. The roles need in all: {needed}. At most {max} for a role and {total} in one file.",
+        "introMore": "The sheet holds no name and nothing about any volunteer. The name is written by hand at the welcome desk.",
+        "language": "The badges' language",
+        "languages": {
+          "ro": "Romanian",
+          "en": "English"
+        },
+        "count": "How many badges",
+        "spares": "Spares",
+        "countHelp": "The role needs {needed}. “Spares” are extra badges.",
+        "noRole": "Badges without a role",
+        "noRoleCount": "How many badges without a role",
+        "noRoleHelp": "Only “{label}”, for whoever comes without a role.",
+        "pictureAlt": "The badge of the role {role}",
+        "pictureAltNone": "The badge without a role",
+        "nothing": "Nothing to print: choose at least one badge.",
+        "refusedNumber": "The file was not made: every number must be whole, from 0 to {max}.",
+        "refusedTotal": "The file was not made: there are too many badges. At most {total} in one file, and there are more now. Lower the numbers.",
+        "download": "Download the badges (PDF)",
+        "savedOnly": "The sheet uses the saved design. Save the changes above first."
       }
     }
   },
@@ -11020,7 +11159,11 @@
       "checkpointsAdded": "The points from the GPX were added.",
       "checkpointsUnchanged": "Nothing to change in the checkpoints.",
       "volunteerAgreementRequested": "The agreement link is on its way by email.",
-      "volunteerAgreementRecorded": "Agreement recorded as signed on paper."
+      "volunteerAgreementRecorded": "Agreement recorded as signed on paper.",
+      "badgeDesignSaved": "The badge was saved.",
+      "badgeDesignUnchanged": "Nothing to change on the badge.",
+      "badgeColoursSaved": "The roles' colours were saved.",
+      "badgeColoursUnchanged": "Nothing to change in the colours."
     }
   },
   "Network": {
