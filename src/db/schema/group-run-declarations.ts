@@ -82,6 +82,14 @@ export const groupRunDeclarations = pgTable(
      * `id_document`. Kept as long as the row; it leaves with it, by the Administrator's erase.
      */
     minorTypedName: text("minor_typed_name"),
+    /**
+     * The trace of the electronic signature (§NNN, amending §769): the caller's IP address and browser when the
+     * typed name was posted on the run's page, printed under the signature of the PDF. A group-run declaration is
+     * always signed electronically, so a row has them unless it is from before them or arrived without the headers.
+     * Kept as long as the row, deleted with it.
+     */
+    ip: text("ip"),
+    userAgent: text("user_agent"),
     /** Where the signer's copy was sent, and whom a request to delete it is checked against. Kept as long as the row. */
     email: text("email").notNull(),
 

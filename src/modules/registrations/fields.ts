@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { DomainError } from "@/shared/errors/domain-error";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
+import { signatureTraceSchema } from "@/modules/legal-documents/domain/signature-trace";
 import { effectiveMinimumAge, isMinorOn, isUnderMinimumAge } from "./domain/age";
 import { SEX_CHOICES } from "./domain/sex";
 import { E164_PHONE } from "./phone";
@@ -633,6 +634,12 @@ export const declarationSigningSchema = z.object({
    * does not cover is ignored, the signature goes on.
    */
   promoConsent: z.boolean().default(false),
+  /**
+   * The IP address and browser of the request that carries the signature (§NNN), read by the action from the
+   * request's headers — never from a form box — and kept on the acceptance as the proof that the typed name was
+   * typed in a session. Optional: a script or a test passes none and the row keeps null.
+   */
+  trace: signatureTraceSchema,
 });
 
 export type DeclarationSigningInput = z.infer<typeof declarationSigningSchema>;

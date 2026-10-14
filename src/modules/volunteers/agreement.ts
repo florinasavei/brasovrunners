@@ -11,6 +11,7 @@ import { isLegalDocumentBody, type LegalDocumentBody } from "@/modules/legal-doc
 import { VOLUNTEER_AGREEMENT_KEY } from "@/modules/legal-documents/domain/keys";
 import { MINIMUM_AGE_MERGE_FIELD, mergeFieldsIn, minimumAgeMergeValue, namesVolunteerRoleChoices, type MergeValues } from "@/modules/legal-documents/domain/merge-fields";
 import { signedTextHash } from "@/modules/legal-documents/domain/signed-text";
+import { type SignatureTrace, traceColumns } from "@/modules/legal-documents/domain/signature-trace";
 import { findCurrentApprovedDocument, noticeDescribesVolunteerAgreement, volunteerAgreementInForce } from "@/modules/legal-documents/repository";
 import { DEFAULT_TOKEN_HOURS } from "@/modules/notifications/domain/token-lifetime";
 import { enqueueEmail } from "@/modules/notifications/outbox";
@@ -199,6 +200,9 @@ export type AgreementAcceptanceColumns = {
   agreementLocale: Locale;
   agreementTextHash: string;
   agreementFacts: AgreementFacts;
+  /** The electronic acceptance's trace (§NNN): the IP address and browser of the press; null for «PAPER». */
+  agreementIp: string | null;
+  agreementUserAgent: string | null;
   agreementRecordedByStaffUserId: string | null;
   declaredAdult: boolean;
   agreementTokenHash: null;
@@ -225,11 +229,14 @@ export async function agreementAcceptance<T extends Record<string, unknown>>(
     recordedBy?: string | null;
     /** A volunteer under eighteen (§768): the guardian's name in the text's `{{volunteerGuardian}}`, and no «declared of age» whatever the way. */
     guardianName?: string | null;
+    /** The IP address and browser of the press (§NNN), kept for «FORM» and «LINK» and dropped for «PAPER», whatever is passed. */
+    trace?: SignatureTrace;
   },
   now: Date,
 ): Promise<AgreementAcceptanceColumns> {
   const blanks = await agreementBlanks(db, { ...input, body: input.document.body });
   const facts: AgreementFacts = { ...blanks.facts, signedAt: acceptedAtWords(now, input.locale, blanks.timezone) };
+  const trace = traceColumns(input.trace, input.method !== "PAPER");
   return {
     agreementDocumentId: input.document.id,
     agreementAcceptedAt: now,
@@ -237,6 +244,8 @@ export async function agreementAcceptance<T extends Record<string, unknown>>(
     agreementLocale: input.locale,
     agreementTextHash: signedTextHash({ title: input.document.title, body: agreementBody(input.document.body), values: facts }),
     agreementFacts: facts,
+    agreementIp: trace.ip,
+    agreementUserAgent: trace.userAgent,
     agreementRecordedByStaffUserId: input.recordedBy ?? null,
     // «Am cel puțin 18 ani»: never for a volunteer under eighteen — their parent accepts beside them (§768).
     declaredAdult: !input.guardianName && (input.method !== "PAPER" || mergeFieldsIn(input.document.body).has(MINIMUM_AGE_MERGE_FIELD)),
@@ -391,6 +400,8 @@ export async function acceptVolunteerAgreementByLink<T extends Record<string, un
   secret: string,
   rawInput: unknown,
   now: Date,
+  /** The IP address and browser of the press (§NNN), read by the action: the electronic acceptance's trace. */
+  trace?: SignatureTrace,
 ): Promise<AgreementAcceptOutcome> {
   const parsed = volunteerAgreementAcceptSchema.safeParse(rawInput);
   if (!parsed.success) throw new DomainError("VALIDATION_ERROR", "the agreement's ticks are missing", refusedFields(parsed.error));
@@ -410,7 +421,7 @@ export async function acceptVolunteerAgreementByLink<T extends Record<string, un
     if (!roles.assigned && roles.chosen.length === 0) return { outcome: "invalid" };
     const acceptance = await agreementAcceptance(
       tx,
-      { eventId: row.eventId, name: row.name, roles, locale: input.locale, document, method: "LINK", guardianName: minor ? row.guardianName : null },
+      { eventId: row.eventId, name: row.name, roles, locale: input.locale, document, method: "LINK", guardianName: minor ? row.guardianName : null, trace },
       now,
     );
     const [written] = await tx

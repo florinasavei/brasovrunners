@@ -33,6 +33,7 @@ import {
   signingOpen,
   TYPED_NAME_MAX,
 } from "./domain";
+import { type SignatureTrace, traceColumns } from "@/modules/legal-documents/domain/signature-trace";
 import { groupRunMergeValues, groupRunTextHash } from "./facts";
 import { insertGroupRunDeclaration, listCoveringSignatures, listSeriesDatesOf } from "./repository";
 import { factsToKeep } from "./series";
@@ -109,6 +110,13 @@ export type GroupRunSigningInput = {
    * run is the members' alone, which takes a signature only from one, as its page opens only for one.
    */
   membersSession?: () => Promise<boolean>;
+  /**
+   * The IP address and browser of the press (§NNN, amending §769), read by the action from the request's
+   * headers: the electronic signature's trace, kept on the row and printed under the signature of the PDF.
+   * Every group-run declaration is signed on the run's page, so there is no paper road that must drop it;
+   * absent, the row keeps null.
+   */
+  trace?: SignatureTrace;
 };
 
 export type GroupRunSigningOutcome =
@@ -287,6 +295,8 @@ export async function signGroupRunDeclaration<T extends Record<string, unknown>>
       minorTypedName: minorName,
       idDocument: storedDocument,
       email: input.email.trim(),
+      // The electronic signature's trace (§NNN): this press's IP address and browser, null when the headers were absent.
+      ...traceColumns(input.trace, true),
       acceptedAt: now,
       createdAt: now,
       seriesKey: facts?.seriesKey ?? null,

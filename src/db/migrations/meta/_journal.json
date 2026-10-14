@@ -1058,6 +1058,13 @@
       "when": 1792003600000,
       "tag": "0155_group_run_declaration_minor",
       "breakpoints": true
+    },
+    {
+      "idx": 151,
+      "version": "7",
+      "when": 1792009022267,
+      "tag": "0156_declaration_signature_trace",
+      "breakpoints": true
     }
   ]
 }

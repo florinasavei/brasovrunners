@@ -1,10 +1,12 @@
 "use server";
 
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { getDb } from "@/db/client";
 import { getPathname } from "@/i18n/navigation";
 import { type Locale, routing } from "@/i18n/routing";
 import { flashPublic } from "@/shared/feedback/flash";
+import { readSignatureTrace } from "@/modules/legal-documents/domain/signature-trace";
 import { acceptVolunteerGuardianByLink } from "@/modules/volunteers/guardian";
 import { isDomainError } from "@/shared/errors/domain-error";
 
@@ -30,6 +32,8 @@ export async function acceptVolunteerGuardianAction(form: FormData): Promise<voi
       token,
       { agreement: form.get("agreement") === "on", typedName: typeof form.get("typedName") === "string" ? String(form.get("typedName")) : "", locale },
       new Date(),
+      // The press is the acceptance: its IP address and browser are the guardian's signature's trace (§NNN).
+      readSignatureTrace(await headers()),
     );
   } catch (error) {
     if (isDomainError(error) && error.code === "VALIDATION_ERROR") {

@@ -3410,6 +3410,8 @@ export async function signDeclaration<T extends Record<string, unknown>>(
       minorTypedName: signedByMinorToo ? (parsed.data.minorTypedName ?? null) : null,
       minorIdDocument,
       acceptedAt: now,
+      // The IP address and browser of this press (§NNN): the electronic signature's trace, kept with the row.
+      trace: parsed.data.trace,
       // The proof of signing (§556): the exact text this signer's PDF prints, hashed in this transaction.
       textHash: await acceptanceTextHash(tx, {
         eventId: current.eventId,

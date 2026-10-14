@@ -183,6 +183,14 @@ export const eventVolunteers = pgTable(
     agreementTextHash: text("agreement_text_hash"),
     agreementFacts: jsonb("agreement_facts"),
     /** The staff member who recorded a paper acceptance at the desk; null otherwise, and after that account is removed. */
+    /**
+     * The trace of the electronic acceptance (§NNN, amending §758 and §768): the caller's IP address and browser when
+     * the volunteer ticked on the form («FORM») or pressed «Accept» on the emailed link («LINK»). Null for «PAPER»,
+     * which a member of staff records from a sheet signed by hand, and for a row from before it. Deleted with the row
+     * (thirty days after the event, §754).
+     */
+    agreementIp: text("agreement_ip"),
+    agreementUserAgent: text("agreement_user_agent"),
     agreementRecordedByStaffUserId: uuid("agreement_recorded_by_staff_user_id").references(() => staffUsers.id, { onDelete: "set null" }),
     /** «Am cel puțin 18 ani», the person's own tick on the form or the link's page, or the paper they signed, which states it. */
     declaredAdult: boolean("declared_adult").notNull().default(false),
@@ -220,6 +228,9 @@ export const eventVolunteers = pgTable(
     guardianTextHash: text("guardian_text_hash"),
     guardianFacts: jsonb("guardian_facts"),
     guardianTypedName: text("guardian_typed_name"),
+    /** The same trace of the guardian's own electronic acceptance (§NNN): «LINK» only, never «PAPER». */
+    guardianIp: text("guardian_ip"),
+    guardianUserAgent: text("guardian_user_agent"),
     guardianRecordedByStaffUserId: uuid("guardian_recorded_by_staff_user_id").references(() => staffUsers.id, { onDelete: "set null" }),
     /** The guardian's single-use link (AGENTS.md §12.8), the agreement link's own pattern: only the SHA-256, minted at the send, dead at its expiry or once used. */
     guardianTokenHash: text("guardian_token_hash").unique("event_volunteers_guardian_token_hash_unique"),
