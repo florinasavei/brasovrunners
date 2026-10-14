@@ -204,6 +204,7 @@ describe("§NNN «Salvează ecusonul»", () => {
     ["a custom size outside its bounds", { "badge.design.size": "custom", "badge.design.customWidthMm": "250" }, "badge.design.customWidthMm", "VALIDATION_ERROR"],
     ["a custom size that is no number", { "badge.design.size": "custom", "badge.design.customHeightMm": "" }, "badge.design.customHeightMm", "VALIDATION_ERROR"],
     ["a telephone that is not one", { "badge.design.showPhone": "on", "badge.design.phone": "call me" }, "badge.design.phone", "VALIDATION_ERROR"],
+    ["a telephone typed and not one, with its tick off", { "badge.design.phone": "call me" }, "badge.design.phone", "VALIDATION_ERROR"],
     ["a band colour no word reads on", { "badge.design.bandColour": "#808080" }, "badge.design.bandColour", "BADGE_COLOUR_UNREADABLE"],
   ])("refuses %s, naming the box and keeping what was typed", async (_name, fields, box, code) => {
     const result = (await post(actions.saveBadgeDesignAction, designForm(fields))) as FormOutcome;

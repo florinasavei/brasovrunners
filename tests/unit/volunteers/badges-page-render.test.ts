@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { type ComponentProps, createElement, type ReactElement } from "react";
 import { renderToReadableStream } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
@@ -68,6 +69,20 @@ describe("§NNN «Cum arată ecusonul»", () => {
     expect(page).toContain("Salvează ecusonul");
     // The badge prints no name: the writing area says so.
     expect(page).toContain("Nu se tipărește niciun nume.");
+    // The design is kept per date, and the page says so.
+    expect(page).toContain("fiecare dată a unei serii are ecusonul ei");
+    // The preview is the page's own verb: the card opens by itself.
+    expect(page).toMatch(/<details[^>]*id="box-badge-design"[^>]* open=""|<details[^>]* open=""[^>]*id="box-badge-design"/);
+  });
+
+  it("tells the picture's crop in the badge's words, never the race number's", () => {
+    // The crop box lives in the client island and opens on a press, so what the page hands it is read from the source and the words.
+    const source = readFileSync("src/modules/volunteers/badges/ui/BadgeDesignPanel.tsx", "utf8");
+    expect(source).toContain('help: t("badges.design.headerPictureCropHelp")');
+    expect(source).not.toContain("bibDesign.picture.cropHelp");
+    expect(ro.Admin.badges.design.headerPictureCropHelp).toContain("pe toată lățimea ecusonului");
+    expect(en.Admin.badges.design.headerPictureCropHelp).toContain("across the whole badge");
+    for (const words of [ro.Admin.badges.design.headerPictureCropHelp, en.Admin.badges.design.headerPictureCropHelp]) expect(words).not.toMatch(/numărului|of the number/);
   });
 
   it("speaks English", async () => {
@@ -104,8 +119,12 @@ describe("§NNN «Culorile rolurilor»", () => {
   it("says each role's colour in words with its contrast, offers no colour that does not read, and says when a stored one does not", async () => {
     const page = await html(() => BadgeRoleColours({ eventId: EVENT, locale: "ro", roles: ROLES, design: DEFAULT_BADGE_DESIGN }));
     expect(page.match(/data-testid="badge-colour-row"/g)).toHaveLength(3);
-    expect(page).toContain("Acum: Roșu, contrast");
-    expect(page).toContain("Acum: Portocaliul clubului, contrast");
+    // Every line says the band is the badge's, so a contrast ratio on a role's row is never a riddle.
+    expect(page).toContain("Banda pe ecuson: Roșu, contrast");
+    expect(page).toContain("Banda pe ecuson: Portocaliul clubului, contrast");
+    expect(page).toContain("Culoarea benzii pe ecuson");
+    // The empty choice says it is the default, and is not mistaken for the palette's own orange.
+    expect(page).toContain(">Implicit: portocaliul clubului</option>");
     expect(page).toContain("#808080, care nu se citește");
     // The palette's green does not carry its words at AA: not a choice.
     expect(page).not.toContain('value="#1b8a3a"');
@@ -128,6 +147,25 @@ describe("§NNN «Culorile rolurilor»", () => {
 });
 
 describe("§NNN «Tipărire»", () => {
+  it("posts its page's language, and says so when there is nothing to print", async () => {
+    const page = await html(() => BadgePrintPanel({ eventId: EVENT, locale: "en", design: DEFAULT_BADGE_DESIGN, roles: [], eventTitle: "Crosul" }), "en");
+    expect(page).toMatch(/<input[^>]*name="from"[^>]*value="en"|<input[^>]*value="en"[^>]*name="from"/);
+    expect(page).toContain('data-testid="badge-print-nothing"');
+    expect(page).toContain("Nothing to print: choose at least one badge.");
+    expect(page).toContain("An A4 sheet holds 16 badges.");
+    // With a role that needs people the boxes start above none: no such line.
+    const withRoles = await html(() => BadgePrintPanel({ eventId: EVENT, locale: "ro", design: DEFAULT_BADGE_DESIGN, roles: ROLES, eventTitle: "Crosul" }));
+    expect(withRoles).not.toContain('data-testid="badge-print-nothing"');
+    expect(withRoles).toContain("Pe o foaie A4 încap 16 ecusoane.");
+  });
+
+  it("opens by itself when the route sent the numbers back refused", async () => {
+    const opened = await html(() => BadgePrintPanel({ eventId: EVENT, locale: "ro", design: DEFAULT_BADGE_DESIGN, roles: ROLES, eventTitle: "Crosul", refused: true }));
+    expect(opened).toMatch(/<details[^>]*id="box-badge-print"[^>]* open=""|<details[^>]* open=""[^>]*id="box-badge-print"/);
+    const closed = await html(() => BadgePrintPanel({ eventId: EVENT, locale: "ro", design: DEFAULT_BADGE_DESIGN, roles: ROLES, eventTitle: "Crosul" }));
+    expect(closed).not.toMatch(/<details[^>]*id="box-badge-print"[^>]* open=""/);
+  });
+
   it("asks per role for the people it needs and its spares, the badges «fără rol» and the language, and posts to the sheet", async () => {
     const page = await html(() => BadgePrintPanel({ eventId: EVENT, locale: "ro", design: DEFAULT_BADGE_DESIGN, roles: ROLES, eventTitle: "Crosul" }));
     expect(page).toContain(`action="/api/admin/events/${EVENT}/badges"`);

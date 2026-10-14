@@ -123,7 +123,8 @@ export function parseBadgeDesignPost(values: BadgeDesignFormValues): BadgeDesign
     return missing ? [box(missing === "ro" ? ro : en)] : [];
   });
   if (oneLanguage.length > 0) throw invalid("a text is written in one language only; write it in both, or in neither", oneLanguage);
-  if (values.showPhone && bibEmergencyPhone(values.phone) === "") throw invalid("phone: not written like a telephone number", [box("phone")]);
+  // Whatever the tick says: a number typed and not readable as one is refused, never kept as nothing while the box is off.
+  if ((values.showPhone || values.phone.trim() !== "") && bibEmergencyPhone(values.phone) === "") throw invalid("phone: not written like a telephone number", [box("phone")]);
   if (values.bandColour !== null && !badgeColourReadable(values.bandColour)) {
     throw new DomainError("BADGE_COLOUR_UNREADABLE", "the band's colour does not carry its words at AA", [box("bandColour")]);
   }
@@ -138,8 +139,8 @@ export function parseBadgeDesignPost(values: BadgeDesignFormValues): BadgeDesign
 
 /**
  * «Salvează ecusonul»: the design kept on the event, audited with the names of the settings that changed
- * and the design before and after (the club's words and a picture's address — no person's data is ever
- * in it). The same design saved again changes nothing and records nothing.
+ * and the design before and after (the club's words, the coordinator's number and a picture's address — never a
+ * volunteer's data). The same design saved again changes nothing and records nothing.
  */
 export async function saveBadgeDesign<T extends Record<string, unknown>>(
   db: Database<T>,

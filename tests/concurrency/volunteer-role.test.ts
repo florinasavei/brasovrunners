@@ -11,6 +11,7 @@ import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import { computeContentHash, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
 import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
 import { LEGAL_TEMPLATES } from "@/modules/legal-documents/templates/catalogue";
+import { saveBadgeRoleColours } from "@/modules/volunteers/badges/badges";
 import { changeVolunteer, changeVolunteerRole, submitVolunteer } from "@/modules/volunteers/volunteers";
 
 /**
@@ -281,5 +282,34 @@ describe("§754 §761 BR-REQ-031-01 people offer for a role's last place at once
     expect(hand).toHaveLength(50);
     const ticks = await db.select().from(eventVolunteerRoleChoices).where(inArray(eventVolunteerRoleChoices.volunteerId, hand.map((row) => row.id)));
     expect(ticks).toHaveLength(100);
+  });
+
+  it("§NNN «Salvează culorile» on the badges' page, racing sign-ups ticking both roles in opposite orders and a role move: all settle, no deadlock", async () => {
+    // The press locks the event's roles FOR UPDATE like a sign-up does — in the order of their ids (a role's id is a
+    // random uuid, so the table's own scan order differs from it on about half of all events). Without the order, the
+    // press held the role a sign-up still needed and waited on the one the sign-up held (40P01, one side aborted).
+    const { event, role } = await eventWithRole(60);
+    const [other] = await db.insert(eventVolunteerRoles).values({ eventId: event.id, nameRo: "Start", nameEn: "Start", needed: 50, position: 1 }).returning();
+    const colours = ["#c62828", "#0d47a1"];
+    for (let round = 0; round < 25; round++) {
+      const results = await Promise.allSettled([
+        offer(event.id, [role.id, other.id], `colour-a-${round}`),
+        offer(event.id, [other.id, role.id], `colour-b-${round}`),
+        saveBadgeRoleColours(
+          db,
+          admin!,
+          event.id,
+          [
+            { roleId: role.id, choice: colours[round % 2], typed: "" },
+            { roleId: other.id, choice: colours[(round + 1) % 2], typed: "" },
+          ],
+          NOW,
+        ),
+        changeVolunteerRole(db, admin!, { kind: "move", eventId: event.id, id: other.id, direction: round % 2 === 0 ? "up" : "down" }, NOW),
+      ]);
+      expect(results.map((result) => (result.status === "rejected" ? String(result.reason) : "ok"))).toEqual(["ok", "ok", "ok", "ok"]);
+    }
+    const kept = await db.select({ id: eventVolunteerRoles.id, colour: eventVolunteerRoles.colour }).from(eventVolunteerRoles).where(eq(eventVolunteerRoles.eventId, event.id));
+    expect(kept.every((row) => row.colour !== null)).toBe(true);
   });
 });

@@ -487,6 +487,32 @@ describe("import as a new event", () => {
     expect((await reload(older.eventId)).badgeDesign).toBeNull();
   });
 
+  it("§NNN reads an imported badge design forgivingly: an unreadable band colour and a key from a later release neither throw nor refuse", async () => {
+    const { event } = await seedRace({}, {}, false);
+    const file = await fileOf(event.id);
+    // Hand-edited, or written by a later release: a grey no word reads on, and a setting this release has never heard of.
+    const edited = JSON.parse(JSON.stringify(file)) as { event: { badges: { design: Record<string, unknown> } } };
+    edited.event.badges.design = { ...DEFAULT_BADGE_DESIGN, size: "strip100", bandColour: "#777777", laterSetting: "x" };
+    const read = readEventFile(JSON.stringify(edited));
+    if (!read.ok) throw new Error(`a forgiving file did not read: ${read.refusal} ${read.detail ?? ""}`);
+
+    const created = await importEventAsNew(db, { actor: admin, file: read.file, fetchImpl: serving(), now: NOW });
+    const stored = readBadgeDesign((await reload(created.eventId)).badgeDesign);
+    expect(stored).toMatchObject({ size: "strip100", bandColour: null });
+    expect(JSON.stringify((await reload(created.eventId)).badgeDesign)).not.toContain("laterSetting");
+
+    // Over another event: the diff names the settings it understands and nothing for the one it does not.
+    const { target } = await seedTarget();
+    const diff = await diffEventImport(db, { actor: admin, file: read.file, eventId: target.id });
+    const keys = diff.changes.map((change) => change.key);
+    expect(keys).toContain("badges.design.size");
+    expect(keys).not.toContain("badges.design.bandColour");
+    expect(keys.filter((key) => key.startsWith("badges.design.") && key.includes("later"))).toEqual([]);
+    const over = await importEventOver(db, await overInput(read.file, target.id));
+    expect(over.changed).toContain("badges.design.size");
+    expect(readBadgeDesign((await reload(target.id)).badgeDesign)).toMatchObject({ size: "strip100", bandColour: null });
+  });
+
   it("keeps a design saved as the platform's own as the platform's own (null), not as an explicit copy of it", async () => {
     const { event } = await seedRace({ bibDesign: undefined }, {}, false);
     expect((await reload(event.id)).bibDesign).toBeNull();

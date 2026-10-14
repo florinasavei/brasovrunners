@@ -123,6 +123,18 @@ test.describe("§NNN volunteer badges, designed and printed per role", () => {
     // 4 + 2 for the water point, 2 at the finish, 5 «fără rol»: 13 — one sheet of 14 at 100 × 40 mm.
     expect(bytes.toString("latin1")).toContain("(13 badges)");
     expect(bytes.toString("latin1").match(/\/Type \/Page\b/g)).toHaveLength(1);
+
+    // A total the file cannot take comes back to this page with the reason, not as a bare JSON answer.
+    await water.getByTestId("badge-count").fill("300");
+    await water.getByTestId("badge-spares").fill("300");
+    await finish.getByTestId("badge-count").fill("300");
+    await finish.getByTestId("badge-spares").fill("300");
+    await print.getByTestId("badge-none").fill("300");
+    await Promise.all([page.waitForURL(/badges\?refused=total$/), download.click()]);
+    await hydrated(page);
+    await expect(page.getByTestId("badge-print-refused")).toContainText("prea multe ecusoane");
+    // The card with the boxes opens by itself.
+    await expect(page.getByTestId("badge-print")).toHaveAttribute("open", "");
   });
 
   test("the Tehnic role meets the 404 an unknown page gets, and the sheet refuses it", async ({ page }) => {

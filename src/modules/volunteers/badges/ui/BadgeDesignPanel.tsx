@@ -226,7 +226,7 @@ export default async function BadgeDesignPanel({
                     name={box("customHeightMm")}
                     type="number"
                     label={t("badges.design.customHeight")}
-                    helperText={t("badges.design.customBounds", { min: String(BADGE_CUSTOM_BOUNDS.height.min), max: String(BADGE_CUSTOM_BOUNDS.height.max) })}
+                    helperText={t("badges.design.customHeightBounds", { min: String(BADGE_CUSTOM_BOUNDS.height.min), max: String(BADGE_CUSTOM_BOUNDS.height.max), small: String(BADGE_SIZE_PRESETS.strip90.heightMm) })}
                     defaultValue={String(design.customHeightMm)}
                     slotProps={{ htmlInput: { min: BADGE_CUSTOM_BOUNDS.height.min, max: BADGE_CUSTOM_BOUNDS.height.max, step: 1, inputMode: "numeric" }, inputLabel: { shrink: true } }}
                     sx={{ width: { sm: 220 } }}
