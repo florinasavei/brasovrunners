@@ -2166,3 +2166,12 @@ only ones who see the names, addresses and telephone numbers.
      and the parent's — and **«Acordul părintelui pe hârtie»** records that the parent signed it (after a question), naming you; the sheet is kept
      by the club. A volunteer entered by hand under 18 needs the parent's name (the address only if you have it: the consent may be on paper); a
      person's age changed to 18 or more clears the parent's data. The CSV and «Toate datele unei persoane» carry the parent too.
+     A person already «Confirmat» cannot be changed to an age under 18 in one save: the card says «Acordul părintelui lipsește», and you move them
+     back to «Înscris» first, so no minor stays confirmed without the parent. A parent's address that is the volunteer's own mailbox is no refusal
+     (a family on one address), but the row says «Aceeași adresă ca a voluntarului», so your «Confirmă» is the check. Once the parent accepted,
+     the PDF shows two signers, each with their own version and fingerprint, which may differ when the club approved a newer text between.
+   - **A parent's own request to see or erase what is kept** (art. 15 and 17 GDPR): «Toate datele unei persoane» finds a row by the **volunteer's**
+     address, never the parent's, and the parent's name and address live only on the minor's row (30 days after the event, they go with it).
+     So for a parent's request, find the minor's row on the event's «Voluntari» card (the parent's address is on it, and the CSV lists it), read or
+     export it from there, and erase by deleting the row — that is the manual route; no tool searches by a guardian's address, because the platform
+     keeps no list of guardians (a table of them was refused, `DECISIONS.md` §NNN).
