@@ -1,7 +1,7 @@
 import { BIB_LAYOUT } from "./bib-geometry";
 
 /**
- * «Semnul de membru» (§NNN, amending §750; the owner, 2026-10-13: «semnul BVR de pe număr trebuie să
+ * «Semnul de membru» (§759, amending §750; the owner, 2026-10-13: «semnul BVR de pe număr trebuie să
  * fie altceva, nu doar o bifă, o steluță, sau să aleg eu o iconiță»): the shape a member's number
  * carries under its header, chosen by the club.
  *

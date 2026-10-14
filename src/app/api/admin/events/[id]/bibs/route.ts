@@ -122,7 +122,7 @@ export async function GET(
   const sponsors = loaded.sponsors?.png ?? null;
   const memberHeader = loaded.memberHeader?.png ?? null;
   const memberCard = loaded.memberCard?.png ?? null;
-  // The club's picture of the route's profile (§NNN), read only while the design draws it.
+  // The club's picture of the route's profile (§759), read only while the design draws it.
   const profile = loaded.profile?.png ?? null;
   // The sheet's own words, in its language: read only when the sheet prints them (§444, §664).
   const admin = spares || anyMember ? await getTranslations({ locale, namespace: "Admin" }) : null;

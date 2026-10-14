@@ -119,7 +119,7 @@ function sampleFile(): EventFile {
     format: EVENT_FILE_FORMAT,
     version: EVENT_FILE_VERSION,
     exportedAt: "2026-10-13T10:00:00.000Z",
-    exportedFrom: { environment: "production", baseline: "BR-V3.18-2026-10-14" },
+    exportedFrom: { environment: "production", baseline: "BR-V3.19-2026-10-14" },
     series: { partOfASeries: false, rule: null },
     event: sampleConfig(),
     media: [{ role: "cover", url: PICTURE, contentType: "image/webp", size: 10, sha256: "a".repeat(64) }],
@@ -246,7 +246,7 @@ describe("the labels a diff speaks in", () => {
 describe("the pictures in a configuration", () => {
   it("are found wherever they sit: the cover, the bib's places, a text's figures — a table's cell too — and the GPX", () => {
     const config = sampleConfig();
-    // The profile's picture (§NNN) is one of the bib's places too.
+    // The profile's picture (§759) is one of the bib's places too.
     config.bib.design = { ...config.bib.design, sponsorImageSrc: OTHER_PICTURE, profileImageSrc: OTHER_PICTURE, member: { ...DEFAULT_BIB_DESIGN.member, cardImageSrc: OTHER_PICTURE } };
     config.translations.en.body = {
       type: "doc",

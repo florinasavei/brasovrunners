@@ -31,12 +31,12 @@ import {
 export type BibExtras = {
   profile: BibProfileDrawing | null;
   /**
-   * The figures beside the club's picture of the profile (§NNN, «O poză încărcată»): the event's typed
+   * The figures beside the club's picture of the profile (§759, «O poză încărcată»): the event's typed
    * distance and gain, else the GPX's, in the sheet's language; null when neither is known or the club
    * turned them off — then the picture takes the strip's whole width.
    */
   profileFigures: BibProfileFigureLines | null;
-  /** «Urgențe» / "Emergency": the word before the phone when the club typed none (§NNN), in the picture's language; empty while the tick is off. */
+  /** «Urgențe» / "Emergency": the word before the phone when the club typed none (§759), in the picture's language; empty while the tick is off. */
   emergencyLabel: string;
   /** «21K»: the event's distance for the header's badge (§750); null while the tick is off or the event has no distance. */
   distanceBadge: string | null;
@@ -56,7 +56,7 @@ export type BibProfileSource = {
 
 /**
  * Whether a design's strip carries the checkpoints, so a caller reads them from the database only then:
- * a profile drawn from the GPX — never the club's picture of it (§NNN) — with the tick on.
+ * a profile drawn from the GPX — never the club's picture of it (§759) — with the tick on.
  */
 export function bibNeedsCheckpoints(design: Pick<BibDesign, "showProfile" | "showCheckpoints"> & Partial<Pick<BibDesign, "profileSource">>): boolean {
   return design.showProfile && design.showCheckpoints && design.profileSource !== "picture";
@@ -128,7 +128,7 @@ export async function loadBibExtras(
   let profile: BibProfileDrawing | null = null;
   let profileFigures: BibProfileFigureLines | null = null;
   /*
-    «O poză încărcată» (§NNN): no line to draw, only the figures beside the picture, while the club wants
+    «O poză încărcată» (§759): no line to draw, only the figures beside the picture, while the club wants
     them — the event's own first (§750), the GPX's filling what it left empty when there is a GPX.
   */
   if (design.showProfile && design.profileSource === "picture") {
@@ -164,7 +164,7 @@ export async function loadBibExtras(
                 checkpoints: event.checkpoints,
                 routeKm: bibProfileFigures(parsed, event).distanceMeters / 1000,
                 points: parsed.points,
-                // Measured in the chart's own width: the whole strip with the figures off (§NNN).
+                // Measured in the chart's own width: the whole strip with the figures off (§759).
                 chartWidth: bibProfileChartWidth(design.showProfileFigures !== false),
                 showTimes: design.showCheckpointTimes === true,
                 startWord: drawing.start,

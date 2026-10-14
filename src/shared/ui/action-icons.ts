@@ -174,12 +174,12 @@ export type ActionIconName =
   | "checkIn"
   | "undo"
   | "number"
-  // The bib designer's two choices for the route's profile (§NNN): drawn from the GPX (the route) or
+  // The bib designer's two choices for the route's profile (§759): drawn from the GPX (the route) or
   // a picture («picture», above); and its orientation, read the right way up or turned for the runner.
   | "route"
   | "upright"
   | "turned"
-  // The tick beside them, «Arată distanța și diferența de nivel lângă profil» (§NNN): up and down, the gain.
+  // The tick beside them, «Arată distanța și diferența de nivel lângă profil» (§759): up and down, the gain.
   | "profileFigures"
   // The people on the waiting list (§626): the hourglass «Coada» wears on its panel (`panel-glyphs.ts`) and the queue's line title, beside the «Înscrieri» tab's badge.
   | "waiting"

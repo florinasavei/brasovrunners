@@ -2341,6 +2341,86 @@
         "showDistanceHelp": "Ticked: a badge in the header's right corner with the event's distance in whole kilometres, like 21K. Unticked: no badge. Not drawn over a header picture.",
         "numberStubs": "The number on the foot's two ends",
         "numberStubsHelp": "Ticked: the number again, small, at both ends of the sponsors' row, for a tear-off stub; the sponsors' picture makes room. Unticked: the row as it is.",
+        "noPicture": "No picture",
+        "picture": {
+          "choose": "Upload a picture",
+          "replace": "Replace",
+          "uploading": "Uploading…",
+          "failed": "The picture did not upload. Try again.",
+          "fromGallery": "From the gallery",
+          "cropTitle": "The part that prints",
+          "cropHelp": {
+            "header": "Drag the rectangle over the part you want across the top of the number.",
+            "sponsors": "Drag the rectangle over the sponsors. “The whole picture” puts all of it in the strip.",
+            "memberCard": "Drag the rectangle over the part you want behind the digits, across the whole number.",
+            "profile": "The picture is fitted whole, never cropped."
+          },
+          "cropReset": {
+            "header": "Back to the middle",
+            "sponsors": "The whole picture",
+            "memberCard": "Back to the middle",
+            "profile": "The whole picture"
+          },
+          "shape": {
+            "header": "Shape: {ratio} to 1, the size of the number's top strip.",
+            "sponsors": "Shape: {ratio} to 1, the size of the sponsors' strip.",
+            "memberCard": "Shape: {ratio} to 1, the whole number less its bottom line.",
+            "profile": "Shape: {ratio} to 1, the profile's strip."
+          },
+          "qualityHelp": "Large for logos and text, Medium for photographs."
+        },
+        "footer": {
+          "title": "Footer",
+          "intro": "The small print at the foot, in the order below. What does not fit on one line goes onto a second; what does not fit there either is cut with “…” — the preview shows exactly where.",
+          "showEventInFooter": "The event's name and date, when the header does not show them",
+          "showPartners": "The partners",
+          "footerText": "The club's own line",
+          "footerTextPlaceholder": "e.g. Timing: … · Organiser emergencies: 07xx xxx xxx",
+          "footerTextHelp": "It is printed on every number and worn in public — do not write participants' personal data.",
+          "showWebsite": "The club's website",
+          "showEmail": "The club's email address",
+          "notConfigured": "not set on this environment"
+        },
+        "previewCaption": "Preview — this is how it prints",
+        "previewPending": "Redrawing…",
+        "previewAlt": "The race number as it would look with the current choices, for a runner named “Nume Prenume”",
+        "previewNote": "The preview above changes at once; the “Numbers” page and the PDF follow a save.",
+        "member": {
+          "title": "The members' number",
+          "summary": "members' number",
+          "enabled": "Members get a race number with their own design",
+          "enabledHelp": "The form asks “I want the members' number” under the {club} member tick. It prints only for an address of an account on «Staff». The number keeps its order.",
+          "previewAlt": "A member's race number, in the members' design, for a runner named “Nume Prenume”",
+          "previewCaption": "Preview — a member's number",
+          "mark": "Member mark on the number",
+          "markHelp": "Ticked: every member's number carries the mark chosen below, under the header. Unticked: no mark.",
+          "style": "The members' number background",
+          "styleHelp": "\"The whole card\": a background across the number, white digits. \"Same background as the other numbers\": the ordinary number, only its own header and label.",
+          "styles": {
+            "card": "The whole card — the club's gradient, a colour or a photograph",
+            "band": "Same background as the other numbers — own header only"
+          },
+          "bandOnly": "{colour} — band only",
+          "cardImageSrc": "Photograph across the whole card, for members",
+          "cardImageSrcHelp": "Only with \"The whole card\". It sits under a navy veil so the white digits read. Without one: the chosen colour or the club kit's gradient.",
+          "bandColour": "The members' colour",
+          "bandColourHelp": "On a band: the band's colour. On the whole card: the background when there is no photograph; empty means the kit's gradient. Green and orange stay band only.",
+          "eventColour": "Default: the event's, or the club's gradient",
+          "headerImageSrc": "Picture instead of the band, for members",
+          "headerImageSrcHelp": "Only with \"Top band only\". Like the number's top picture, on members' numbers only. Without one, the band takes the colour chosen above.",
+          "label": "Label",
+          "labelHelp": "One short line, at most {max} characters, on the band or in capitals on the orange stripe. Empty: «{club} member».",
+          "markShape": "The member mark",
+          "markShapes": {
+            "star": "Star",
+            "logo": "The club's logo",
+            "heart": "Heart",
+            "bolt": "Lightning bolt",
+            "runner": "Runner",
+            "check": "Check mark"
+          },
+          "markShapeHelp": "The logo stays blue, on its own white ground. The other marks take the digits' colour."
+        },
         "sections": {
           "header": "Header",
           "number": "The number",
@@ -2383,87 +2463,7 @@
         "emergencyPhoneLabelHelp": "Optional, at most {max} characters: a name or a role, “Coordinator” for example.",
         "emergencyPhone2": "A second phone (optional)",
         "emergencyPhone2Help": "On the same line, after the first, with a “/” between. Checked like the first.",
-        "emergencyPhone2Label": "Name beside the second phone",
-        "noPicture": "No picture",
-        "picture": {
-          "choose": "Upload a picture",
-          "replace": "Replace",
-          "uploading": "Uploading…",
-          "failed": "The picture did not upload. Try again.",
-          "fromGallery": "From the gallery",
-          "qualityHelp": "Large for logos and text, Medium for photographs.",
-          "cropTitle": "The part that prints",
-          "cropHelp": {
-            "header": "Drag the rectangle over the part you want across the top of the number.",
-            "sponsors": "Drag the rectangle over the sponsors. “The whole picture” puts all of it in the strip.",
-            "memberCard": "Drag the rectangle over the part you want behind the digits, across the whole number.",
-            "profile": "The picture is fitted whole, never cropped."
-          },
-          "cropReset": {
-            "header": "Back to the middle",
-            "sponsors": "The whole picture",
-            "memberCard": "Back to the middle",
-            "profile": "The whole picture"
-          },
-          "shape": {
-            "header": "Shape: {ratio} to 1, the size of the number's top strip.",
-            "sponsors": "Shape: {ratio} to 1, the size of the sponsors' strip.",
-            "memberCard": "Shape: {ratio} to 1, the whole number less its bottom line.",
-            "profile": "Shape: {ratio} to 1, the profile's strip."
-          }
-        },
-        "footer": {
-          "title": "Footer",
-          "intro": "The small print at the foot, in the order below. What does not fit on one line goes onto a second; what does not fit there either is cut with “…” — the preview shows exactly where.",
-          "showEventInFooter": "The event's name and date, when the header does not show them",
-          "showPartners": "The partners",
-          "footerText": "The club's own line",
-          "footerTextPlaceholder": "e.g. Timing: … · Organiser emergencies: 07xx xxx xxx",
-          "footerTextHelp": "It is printed on every number and worn in public — do not write participants' personal data.",
-          "showWebsite": "The club's website",
-          "showEmail": "The club's email address",
-          "notConfigured": "not set on this environment"
-        },
-        "previewCaption": "Preview — this is how it prints",
-        "previewPending": "Redrawing…",
-        "previewAlt": "The race number as it would look with the current choices, for a runner named “Nume Prenume”",
-        "previewNote": "The preview above changes at once; the “Numbers” page and the PDF follow a save.",
-        "member": {
-          "title": "The members' number",
-          "summary": "members' number",
-          "enabled": "Members get a race number with their own design",
-          "enabledHelp": "The form asks “I want the members' number” under the {club} member tick. It prints only for an address of an account on «Staff». The number keeps its order.",
-          "previewAlt": "A member's race number, in the members' design, for a runner named “Nume Prenume”",
-          "previewCaption": "Preview — a member's number",
-          "mark": "Member mark on the number",
-          "markHelp": "Ticked: every member's number carries the mark chosen below, under the header. Unticked: no mark.",
-          "markShape": "The member mark",
-          "markShapes": {
-            "star": "Star",
-            "logo": "The club's logo",
-            "heart": "Heart",
-            "bolt": "Lightning bolt",
-            "runner": "Runner",
-            "check": "Check mark"
-          },
-          "markShapeHelp": "The logo stays blue, on its own white ground. The other marks take the digits' colour.",
-          "style": "The members' number background",
-          "styleHelp": "\"The whole card\": a background across the number, white digits. \"Same background as the other numbers\": the ordinary number, only its own header and label.",
-          "styles": {
-            "card": "The whole card — the club's gradient, a colour or a photograph",
-            "band": "Same background as the other numbers — own header only"
-          },
-          "bandOnly": "{colour} — band only",
-          "cardImageSrc": "Photograph across the whole card, for members",
-          "cardImageSrcHelp": "Only with \"The whole card\". It sits under a navy veil so the white digits read. Without one: the chosen colour or the club kit's gradient.",
-          "bandColour": "The members' colour",
-          "bandColourHelp": "On a band: the band's colour. On the whole card: the background when there is no photograph; empty means the kit's gradient. Green and orange stay band only.",
-          "eventColour": "Default: the event's, or the club's gradient",
-          "headerImageSrc": "Picture instead of the band, for members",
-          "headerImageSrcHelp": "Only with \"Top band only\". Like the number's top picture, on members' numbers only. Without one, the band takes the colour chosen above.",
-          "label": "Label",
-          "labelHelp": "One short line, at most {max} characters, on the band or in capitals on the orange stripe. Empty: «{club} member»."
-        }
+        "emergencyPhone2Label": "Name beside the second phone"
       },
       "bibColour": "Colour of the race numbers (BIB)",
       "bibColourHelp": "The band across the top of the printed number, the one carrying the club's logo and the race. “The club's colour” unless you want a specific one.",
@@ -5499,10 +5499,6 @@
     "bibs": {
       "title": "Race numbers (BIB)",
       "assign": "Assign numbers",
-      "assignHelp": "Gives a number to every real, confirmed registration without one, in order of confirmation, from the race's first free number; special guests, from their own series. Nobody gets a second.",
-      "assignHelpMore": "Numbers come by themselves at confirmation. The button catches up on registrations left without one: confirmed before numbers existed or after the first number changed. Test registrations get none.",
-      "rangeTitle": "Print the numbers (PDF)",
-      "rangeHelp": "From / To: only part of them, 1–50 for example. Empty: all.",
       "assigned": "{assigned} numbers assigned ({total} in total).",
       "thanksSent": "The thank-you went out: {recipients} emails.",
       "from": "From",
@@ -5544,7 +5540,11 @@
       "memberSampleAlt": "A member's race number, in the members' design",
       "memberSampleCaption": "The members' number, as it prints. On the sheet now: {count}.",
       "memberUnverified": "Asked for the members' number, but their address is no member account's: {count}. They print the ordinary number; if they are members, add them on «Staff» before printing.",
-      "memberUnverifiedLink": "See them in the list"
+      "memberUnverifiedLink": "See them in the list",
+      "assignHelp": "Gives a number to every real, confirmed registration without one, in order of confirmation, from the race's first free number; special guests, from their own series. Nobody gets a second.",
+      "assignHelpMore": "Numbers come by themselves at confirmation. The button catches up on registrations left without one: confirmed before numbers existed or after the first number changed. Test registrations get none.",
+      "rangeTitle": "Print the numbers (PDF)",
+      "rangeHelp": "From / To: only part of them, 1–50 for example. Empty: all."
     },
     "emergency": {
       "title": "Emergency sheet — confidential. Destroy after the event.",
@@ -7917,11 +7917,11 @@
         "cover": "The cover",
         "bibHeader": "Race number: the header picture",
         "bibSponsors": "Race number: the sponsors' strip",
-        "bibProfile": "Race number: the profile picture",
         "bibMemberHeader": "Member's number: the header picture",
         "bibMemberCard": "Member's number: the background",
         "text": "A picture in a text",
-        "gpx": "The GPX file"
+        "gpx": "The GPX file",
+        "bibProfile": "Race number: the profile picture"
       },
       "fields": {
         "type": "Event type",
@@ -8042,19 +8042,11 @@
             "showWebsite": "Bib: website address",
             "footerText": "Bib: the club's own line",
             "showProfile": "Bib: route profile",
-            "profileSource": "Bib: where the profile comes from",
-            "profileImageSrc": "Bib: profile picture",
-            "showProfileFigures": "Bib: distance and elevation gain beside the profile",
-            "profileOrientation": "Bib: profile orientation",
             "showCheckpoints": "Bib: checkpoints on the profile",
             "showCheckpointTimes": "Bib: cut-off times on the profile",
             "showDistance": "Bib: distance badge",
             "showEmergency": "Bib: emergency phone",
             "emergencyPhone": "Bib: emergency number",
-            "emergencyLabel": "Bib: phone label",
-            "emergencyPhoneLabel": "Bib: first phone's name",
-            "emergencyPhone2": "Bib: second phone",
-            "emergencyPhone2Label": "Bib: second phone's name",
             "emergencyUpsideDown": "Bib: phone upside down",
             "numberStubs": "Bib: number on the footer's ends",
             "sponsorPlace": "Bib: sponsors' band place",
@@ -8069,7 +8061,15 @@
               "label": "Member's bib: the line on the band",
               "mark": "Member's bib: the mark",
               "markShape": "Member's bib: the mark's shape"
-            }
+            },
+            "profileSource": "Bib: where the profile comes from",
+            "profileImageSrc": "Bib: profile picture",
+            "showProfileFigures": "Bib: distance and elevation gain beside the profile",
+            "profileOrientation": "Bib: profile orientation",
+            "emergencyLabel": "Bib: phone label",
+            "emergencyPhoneLabel": "Bib: first phone's name",
+            "emergencyPhone2": "Bib: second phone",
+            "emergencyPhone2Label": "Bib: second phone's name"
           }
         },
         "translations": {

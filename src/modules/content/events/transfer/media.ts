@@ -35,7 +35,7 @@ export type MediaRef = { role: string; url: string; kind: MediaKind };
 export const TEXT_BOXES = ["excerptBody", "body", "rules", "schedule", "routeDescription"] as const;
 const LOCALES = ["ro", "en"] as const;
 
-/** The bib design's five picture places, by their dotted path inside the design (the profile's since §NNN). */
+/** The bib design's five picture places, by their dotted path inside the design (the profile's since §759). */
 const BIB_PICTURES = [
   { role: "bib.header", path: ["headerImageSrc"] },
   { role: "bib.sponsors", path: ["sponsorImageSrc"] },

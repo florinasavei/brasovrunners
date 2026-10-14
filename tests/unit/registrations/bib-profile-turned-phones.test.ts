@@ -51,7 +51,7 @@ import { BIB_STAMP } from "@/modules/events/repository";
 import { drawnRuns } from "../../helpers/pdf-drawn";
 
 /**
- * BR-REQ-038-01, §NNN (amending §750 and §755) — the route's profile from the GPX or from a picture the
+ * BR-REQ-038-01, §759 (amending §750 and §755) — the route's profile from the GPX or from a picture the
  * club uploads, the figures beside it or not, the profile turned for the runner (with the phone, as one
  * block, when the phone is turned too), and the emergency line's label and two numbers. The sheet is
  * read through what pdfkit is asked to draw; the picture through its markup and its bytes. No real
@@ -111,7 +111,7 @@ async function rotations(input: Parameters<typeof renderBibSheet>[0]) {
   return calls;
 }
 
-describe("§NNN the profile's new keys read their defaults from an old design", () => {
+describe("§759 the profile's new keys read their defaults from an old design", () => {
   it("draws from the GPX, with its figures, the right way up, one number with the platform's word", () => {
     const old = readBibDesign({ showProfile: true, showEmergency: true, emergencyPhone: PHONE_A });
     expect(old).toMatchObject({
@@ -149,7 +149,7 @@ describe("§NNN the profile's new keys read their defaults from an old design", 
   });
 });
 
-describe("§NNN the profile's row: the GPX drawn, or the club's picture, the figures beside it or not", () => {
+describe("§759 the profile's row: the GPX drawn, or the club's picture, the figures beside it or not", () => {
   const extras = { profile: DRAWING, profileFigures: { distance: "Distanță: 21,0 km", gain: null } };
 
   it("decides once, for both renderers, what the row holds and how wide its chart is", () => {
@@ -236,7 +236,7 @@ async function widthOf(text: string): Promise<number> {
   return doc.font("body").fontSize(BIB_LAYOUT.profileLabelSize).widthOfString(text);
 }
 
-describe("§NNN the profile turned for the runner, and with the phone as one block", () => {
+describe("§759 the profile turned for the runner, and with the phone as one block", () => {
   const rows = [{ bibNumber: 7, registeredName: "Alergător Unu" }];
   const phone = { showEmergency: true, emergencyPhone: PHONE_A };
   /** Where the block under the name starts on the upper bib: the region's foot less the rows. */
@@ -330,7 +330,7 @@ describe("§NNN the profile turned for the runner, and with the phone as one blo
   });
 });
 
-describe("§NNN «Eticheta telefonului» and two numbers on one line", () => {
+describe("§759 «Eticheta telefonului» and two numbers on one line", () => {
   it("prints the club's label, each number with its own name, one line, «/» between", () => {
     const line = bibEmergencyLine(
       design({ showEmergency: true, emergencyLabel: "Număr de urgență", emergencyPhoneLabel: "Coordonator", emergencyPhone: PHONE_A, emergencyPhone2Label: "Medic", emergencyPhone2: PHONE_B }),
@@ -379,7 +379,7 @@ describe("§NNN «Eticheta telefonului» and two numbers on one line", () => {
   });
 });
 
-describe("§NNN the extras for a picture of the profile", () => {
+describe("§759 the extras for a picture of the profile", () => {
   beforeEach(() => {
     clearBibProfileCache();
     stored.get.mockReset();
@@ -410,7 +410,7 @@ describe("§NNN the extras for a picture of the profile", () => {
   });
 });
 
-describe("§NNN every new key changes the picture's address and the desk's stamp", () => {
+describe("§759 every new key changes the picture's address and the desk's stamp", () => {
   const changes: Array<Partial<BibDesign>> = [
     { profileSource: "picture" },
     { profileImageSrc: "/api/media/local/3f2a1b4c-0000-4000-8000-000000000000/web.webp" },

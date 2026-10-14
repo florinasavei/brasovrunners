@@ -14,7 +14,7 @@ import { BIB_CARD, BIB_LAYOUT, bibProfileChartWidth } from "./bib-geometry";
  * - **memberCard** — a member's bib drawn «Tot numărul» (§NNN): the card's whole width by its height
  *   less the small print's one line, 559.28 × 362.95 points, about 1.54 : 1. A footer of two lines or
  *   a sponsors' strip covers the photograph's foot in white; the shape stays the same.
- * - **profile** — «O poză încărcată» for the route's profile (§NNN): the strip's whole width by the
+ * - **profile** — «O poză încărcată» for the route's profile (§759): the strip's whole width by the
  *   picture's height, 523.28 × 36 points. Never cropped: the picture is fitted whole, across the strip
  *   or beside the figures (`bibProfileChartWidth`), so the place's shape is only its largest box.
  *
@@ -46,7 +46,7 @@ export const BIB_PICTURE_RATIO: Record<BibPictureSlot, number> = {
 };
 
 /**
- * The profile's picture box, width over height (§NNN): the strip alone, about 14.5, and beside the
+ * The profile's picture box, width over height (§759): the strip alone, about 14.5, and beside the
  * distance and the elevation gain, about 10.6. The picture is never cropped, so the editor names both
  * shapes in the place's help — the crop box's own «Forma» line never shows for it.
  */

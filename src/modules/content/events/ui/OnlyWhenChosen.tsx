@@ -10,7 +10,7 @@ function chosen(name: string): string | null {
 }
 
 /**
- * Shows its children while the form's radio group `name` says `value` (§NNN: the bib's «O poză încărcată»
+ * Shows its children while the form's radio group `name` says `value` (§759: the bib's «O poză încărcată»
  * and the picture field that means something only with it). `OnlyWhenTicked`'s twin over a native radio
  * group (`RadioField`): the same `ShownWhen`, so the children stay in the DOM — hidden, never removed,
  * still posted, read-only while hidden — and a refusal about one of them reveals the block.

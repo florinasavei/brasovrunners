@@ -47,7 +47,7 @@ import OnlyWhenChosen from "./OnlyWhenChosen";
 import OnlyWhenTicked from "./OnlyWhenTicked";
 import { BIB_COLOURS } from "./bib-colours";
 
-/** The radios' glyphs, by name from the registry (§318, §NNN): the GPX's route, a picture, the right way up, turned; the figures' ruler. */
+/** The radios' glyphs, by name from the registry (§318, §759): the GPX's route, a picture, the right way up, turned; the figures' ruler. */
 const FiguresGlyph = ACTION_ICONS.profileFigures;
 const RouteGlyph = ACTION_ICONS.route;
 const PictureGlyph = ACTION_ICONS.picture;
@@ -79,7 +79,7 @@ function Legend({ children }: { children: string }) {
  * upload or «Din galerie», then (but for the profile's) the crop box in the place's one shape, the
  * address and the crop in hidden fields the save posts with the rest.
  *
- * **In named sections, top to bottom as the number prints** (§NNN, amending §750; the owner,
+ * **In named sections, top to bottom as the number prints** (§759, amending §750; the owner,
  * 2026-10-13: «Aici am nevoie de separatoare și iconițe, că nu mai înțeleg nimic...»): «Antet» (the
  * band's colour, its picture, the lockup, the race and its date, the distance badge), «Numărul»
  * (its size, how it is written, the sheet's cut marks), «Numele» (whether and where), «Profilul și
@@ -210,7 +210,7 @@ export default async function BibDesignPanel({
         : place === "member"
           ? t("editor.bibDesign.member.headerImageSrcHelp")
           : slot === "profile"
-            ? // Never cropped, so no crop box says its shape: the help names both of the strip's (§NNN).
+            ? // Never cropped, so no crop box says its shape: the help names both of the strip's (§759).
               t("editor.bibDesign.profileImageSrcHelp", {
                 alone: ratioWords.format(BIB_PROFILE_PICTURE_RATIOS.alone),
                 beside: ratioWords.format(BIB_PROFILE_PICTURE_RATIOS.beside),
@@ -233,7 +233,7 @@ export default async function BibDesignPanel({
         sources: rich.imageGallerySources,
         here: rich.imageGalleryHere.event,
       },
-      // The «Calitate» row's line, shorter here (§NNN): what a bib's pictures are — logos and text, or photographs.
+      // The «Calitate» row's line, shorter here (§759): what a bib's pictures are — logos and text, or photographs.
       quality: { ...rich.imageQuality, help: t("editor.bibDesign.picture.qualityHelp") },
       crop: {
         title: t("editor.bibDesign.picture.cropTitle"),
@@ -262,7 +262,7 @@ export default async function BibDesignPanel({
   };
 
   /*
-    Each section's closed line (§NNN): what it holds as saved, in a few words — a closed fold that says
+    Each section's closed line (§759): what it holds as saved, in a few words — a closed fold that says
     nothing is a fold nobody opens (`Panel`).
   */
   const words = (...parts: Array<string | null | false>) => parts.filter((part): part is string => Boolean(part)).join(" · ");
@@ -312,7 +312,7 @@ export default async function BibDesignPanel({
 
         {/* The bib as it would print with the boxes as they are now, redrawn as they change —
             once the event exists: the picture route draws an event's title and date. In sight on a
-            wide screen while the sections below scroll (§NNN). */}
+            wide screen while the sections below scroll (§759). */}
         {eventId && initialSrc && (
           <Box sx={{ position: { md: "sticky" }, top: { md: HEADER_CLEARANCE_PX.sm }, zIndex: 1, bgcolor: "background.paper", py: 0.5 }}>
             <BibDesignPreview
@@ -329,7 +329,7 @@ export default async function BibDesignPanel({
           </Box>
         )}
 
-        {/* «Antet» (§NNN): the band — its colour or the club's picture — the lockup, the race, its date and the badge. */}
+        {/* «Antet» (§759): the band — its colour or the club's picture — the lockup, the race, its date and the badge. */}
         <Panel glyph="bibHeader" collapsible level={5} title={t("editor.bibDesign.sections.header")} aside={headerAside} data-testid="bib-section-header">
           <Stack spacing={1.5}>
             {/* A palette, not a colour picker (§177): the club's own is the empty choice. */}
@@ -364,7 +364,7 @@ export default async function BibDesignPanel({
           </Stack>
         </Panel>
 
-        {/* «Numărul» (§NNN): its size, how it is written (§735), and the sheet's cut marks. */}
+        {/* «Numărul» (§759): its size, how it is written (§735), and the sheet's cut marks. */}
         <Panel glyph="bibNumber" collapsible level={5} title={t("editor.bibDesign.sections.number")} aside={numberAside} data-testid="bib-section-number">
           <Stack spacing={1.5}>
             <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5}>
@@ -403,7 +403,7 @@ export default async function BibDesignPanel({
           </Stack>
         </Panel>
 
-        {/* «Numele» (§NNN): whether the runner's name prints, and above or below the number. */}
+        {/* «Numele» (§759): whether the runner's name prints, and above or below the number. */}
         <Panel glyph="bibName" collapsible level={5} title={t("editor.bibDesign.sections.name")} aside={nameAside} data-testid="bib-section-name">
           <Stack spacing={1.5}>
             {designTick("showName", t("editor.bibDesign.showName"))}
@@ -424,7 +424,7 @@ export default async function BibDesignPanel({
           </Stack>
         </Panel>
 
-        {/* «Profilul și urgențele» (§750, amended §NNN): the route's profile — from the GPX or a picture,
+        {/* «Profilul și urgențele» (§750, amended §759): the route's profile — from the GPX or a picture,
             its figures, its orientation, the checkpoints on the drawn one — and the emergency phones. */}
         <Panel glyph="bibProfile" collapsible level={5} title={t("editor.bibDesign.sections.profile")} aside={profileAside} data-testid="bib-section-profile">
           <Stack spacing={1.5} data-testid="bib-design-extras">
@@ -434,7 +434,7 @@ export default async function BibDesignPanel({
             {/* Everything the profile decides shows only while it is ticked (the house's OnlyWhenTicked: hidden, still posted). */}
             <OnlyWhenTicked name="event.bibDesign.showProfile" initiallyTicked={design.showProfile}>
               <Stack spacing={1.5} sx={{ pl: { sm: 2 }, borderLeft: { sm: 2 }, borderColor: { sm: "divider" } }}>
-                {/* «De unde vine profilul» (§NNN): the GPX, drawn — the default — or the club's picture. */}
+                {/* «De unde vine profilul» (§759): the GPX, drawn — the default — or the club's picture. */}
                 <Box component="fieldset" sx={{ border: 0, p: 0, m: 0, minWidth: 0 }} data-testid="bib-profile-source">
                   <Legend>{t("editor.bibDesign.profileSource")}</Legend>
                   {BIB_PROFILE_SOURCES.map((source) => {
@@ -463,7 +463,7 @@ export default async function BibDesignPanel({
                     {t("editor.bibDesign.showProfileFigures")}
                   </Box>
                 </CheckboxField>
-                {/* «Orientarea profilului» (§NNN): normal, or turned half a circle for the runner — with the phone, as one block, when it is turned too. */}
+                {/* «Orientarea profilului» (§759): normal, or turned half a circle for the runner — with the phone, as one block, when it is turned too. */}
                 <Box component="fieldset" sx={{ border: 0, p: 0, m: 0, minWidth: 0 }} data-testid="bib-profile-orientation">
                   <Legend>{t("editor.bibDesign.profileOrientation")}</Legend>
                   {BIB_PROFILE_ORIENTATIONS.map((orientation) => {
@@ -510,7 +510,7 @@ export default async function BibDesignPanel({
               </Stack>
             </OnlyWhenTicked>
 
-            {/* «Telefon pentru urgențe» (§750, amended §NNN): its label and up to two numbers, each with its own name, on one line. */}
+            {/* «Telefon pentru urgențe» (§750, amended §759): its label and up to two numbers, each with its own name, on one line. */}
             <Box sx={{ borderTop: 1, borderColor: "divider", pt: 1.5 }}>
               <CheckboxField name="event.bibDesign.showEmergency" defaultChecked={design.showEmergency} help={t("editor.bibDesign.showEmergencyHelp")}>
                 {t("editor.bibDesign.showEmergency")}
@@ -580,7 +580,7 @@ export default async function BibDesignPanel({
           </Stack>
         </Panel>
 
-        {/* «Subsol și sponsori» (§NNN): the sponsors' band and its place (§750), the stubs, and the small print (§317). */}
+        {/* «Subsol și sponsori» (§759): the sponsors' band and its place (§750), the stubs, and the small print (§317). */}
         <Panel glyph="bibFooter" collapsible level={5} title={t("editor.bibDesign.sections.footer")} aside={footerAside} data-testid="bib-section-footer">
           <Stack spacing={1.5}>
             {storage && picture("sponsors")}
@@ -722,7 +722,7 @@ export default async function BibDesignPanel({
                   <CheckboxField name="event.bibDesign.member.mark" defaultChecked={design.member.mark} help={t("editor.bibDesign.member.markHelp")}>
                     {t("editor.bibDesign.member.mark")}
                   </CheckboxField>
-                  {/* «Semnul de membru» (§NNN): the star by default, the club's logo, or a registry glyph — each radio
+                  {/* «Semnul de membru» (§759): the star by default, the club's logo, or a registry glyph — each radio
                       shows the mark itself, drawn from the one path the sheet and the picture draw (`bib-member-mark.ts`). */}
                   <OnlyWhenTicked name="event.bibDesign.member.mark" initiallyTicked={design.member.mark}>
                     <Box component="fieldset" sx={{ border: 0, p: 0, m: 0, minWidth: 0 }} data-testid="bib-member-mark-shape">

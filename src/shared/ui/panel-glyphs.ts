@@ -123,7 +123,7 @@ export const PANEL_GLYPHS = {
   // «Condiții de participare» (§557): what the form asks beyond the person — for now, the health note.
   conditions: MedicalServicesIcon,
   bibDesign: BrushIcon,
-  // The bib designer's sections (§NNN), top to bottom as the number prints: the header, the number, the
+  // The bib designer's sections (§759), top to bottom as the number prints: the header, the number, the
   // name, the profile with the emergency phone, the foot with the sponsors, and the members' number.
   bibHeader: VerticalAlignTopIcon,
   bibNumber: NumbersIcon,

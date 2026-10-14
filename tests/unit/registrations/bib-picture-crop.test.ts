@@ -35,7 +35,7 @@ describe("§560 the two places' fixed shapes", () => {
     expect(Math.round(BIB_PICTURE_RATIO.sponsors)).toBe(22);
   });
 
-  it("§NNN the profile's picture has two shapes, both said in the editor: the strip alone and beside the figures", () => {
+  it("§759 the profile's picture has two shapes, both said in the editor: the strip alone and beside the figures", () => {
     // 523.28 × 36 points alone, 380 × 36 beside the distance and the elevation gain: about 15 and 11 to 1.
     expect(BIB_PROFILE_PICTURE_RATIOS.alone).toBeCloseTo(BIB_PICTURE_RATIO.profile, 6);
     expect(BIB_PROFILE_PICTURE_RATIOS.alone).toBeCloseTo(523.28 / 36, 4);
@@ -68,7 +68,7 @@ describe("§560 the two places' fixed shapes", () => {
 
   it("leaves a picture without a crop as every bib drew it: the header covers, the sponsors fit whole", () => {
     // A member's card's photograph (§NNN) covers the card, as the header covers its strip.
-    // The profile's picture (§NNN) is never cropped: it fits whole, as the sponsors' strip does.
+    // The profile's picture (§759) is never cropped: it fits whole, as the sponsors' strip does.
     expect(BIB_PICTURE_UNCROPPED).toEqual({ header: "cover", sponsors: "fit", memberCard: "cover", profile: "fit" });
     expect(bibPictureDrawing("header", null, { width: 2000, height: 1000 })).toEqual({ kind: "cover" });
     expect(bibPictureDrawing("sponsors", null, { width: 2000, height: 1000 })).toEqual({ kind: "fit" });
