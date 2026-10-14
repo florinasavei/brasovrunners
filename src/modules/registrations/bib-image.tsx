@@ -331,7 +331,7 @@ function profileRowElement(row: BibProfileRow, ink: string, picture: BibImagePic
           r={1.8}
           fill={ink}
         />
-        {/* The route's checkpoints (§NNN, `bib-checkpoints.ts`), at the sheet's points: a tick to the chart's foot, and
+        {/* The route's checkpoints (`bib-checkpoints.ts`), at the sheet's points: a tick to the chart's foot, and
             an aid station's cup or fork beside the line — any other point a dot on it. */}
         {(profile.checkpoints?.marks ?? []).map((mark) => {
           const markX = mark.x * chartWidth;

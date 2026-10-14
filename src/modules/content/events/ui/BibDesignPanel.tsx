@@ -510,7 +510,7 @@ export default async function BibDesignPanel({
                     {t("editor.bibDesign.profileOrientationHelp")}
                   </Typography>
                 </Box>
-                {/* «Punctele de control pe profil» (§NNN): on the line drawn from the GPX only, so offered with that source. On by
+                {/* «Punctele de control pe profil» (`bib-checkpoints.ts`): on the line drawn from the GPX only, so offered with that source. On by
                     default, drawn only with the event's checkpoints; greyed — and says why — while the event has none: a greyed
                     box posts nothing, so its stored tick is carried in a hidden field and adding checkpoints later finds it. */}
                 <OnlyWhenChosen name="event.bibDesign.profileSource" value="gpx" initial={design.profileSource}>
@@ -524,7 +524,7 @@ export default async function BibDesignPanel({
                       {t("editor.bibDesign.showCheckpoints")}
                     </CheckboxField>
                     {!hasCheckpoints && design.showCheckpoints && <input type="hidden" name="event.bibDesign.showCheckpoints" value="on" />}
-                    {/* «…cu orele limită» (§NNN): off by default; the cut-offs beside the points where every one fits. */}
+                    {/* «…cu orele limită» (`bib-checkpoints.ts`): off by default; the cut-offs beside the points where every one fits. */}
                     <CheckboxField
                       name="event.bibDesign.showCheckpointTimes"
                       defaultChecked={design.showCheckpointTimes}

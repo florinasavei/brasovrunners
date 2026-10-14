@@ -346,7 +346,7 @@ export function bibEmergencyLine(design: BibEmergencyDesign, fallback: string): 
  * «Profilul traseului» from where (§NNN; the owner, 2026-10-13: «la profilul traseului pe număr ar trebui
  * să pot alege dacă iau din Strava sau vreau poză»): `gpx` — «Desenat din traseul evenimentului (GPX)», the
  * strip drawn from the route's file (§750), the default — or `picture`, «O poză încărcată», a picture of
- * the profile the club uploads, fitted whole in the same strip. The checkpoints' marks (§NNN) are drawn on
+ * the profile the club uploads, fitted whole in the same strip. The checkpoints' marks (`bib-checkpoints.ts`) are drawn on
  * the GPX's line only: on a picture the club drew what it wanted.
  */
 export const BIB_PROFILE_SOURCES = ["gpx", "picture"] as const;

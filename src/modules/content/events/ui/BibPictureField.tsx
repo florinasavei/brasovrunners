@@ -73,7 +73,7 @@ type Props = {
 
 /** The form's field names for a place: the picture's address, its crop, and what a refused save brings back. */
 export function bibPictureFieldNames(slot: BibPictureSlot, place?: "member") {
-  // A member's card (§NNN) is a place of its own, always the members'; so is the profile's picture (§NNN).
+  // A member's card («Tot numărul») is a place of its own, always the members'; so is the profile's picture (§NNN).
   const key =
     slot === "memberCard"
       ? "member.cardImage"
