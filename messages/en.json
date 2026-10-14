@@ -3314,7 +3314,7 @@
         "volunteerTasks": "In the volunteer agreement only: what the role does, from its description. Without one, the sentence naming it is left out",
         "volunteerRoleChoices": "In the volunteer agreement only: the roles the volunteer ticked, while no role is given. Once one is, the sentence naming them is left out",
         "volunteerChoiceTasks": "In the volunteer agreement only: what each ticked role does, from their descriptions. With a role given or no descriptions, the sentence is left out",
-        "volunteerProfile": "Privacy notice only: the volunteers' form boxes about the person (age, sex, city, experience, group, T-shirt), in quotes. Without it in the notice in force, the form asks only the tick “I am at least 18” and keeps none of these answers"
+        "volunteerProfile": "Privacy notice only: the volunteers' form boxes about the person, in quotes. Without it in the notice in force, the form asks only the tick “I am at least 18”"
       },
       "removeBlockedReferenced": "Can neither be withdrawn nor deleted permanently: {signatures}, {events} and {acknowledgements} depend on it. “Delete” on its row takes it off the list.",
       "removeBlockedCurrent": "In force right now — it can neither be withdrawn nor deleted. Approve its successor first; then this one can go.",
@@ -4236,11 +4236,11 @@
         },
         "volunteerProfileNotice": {
           "title": "Privacy notice: what volunteers say about themselves",
-          "todo": "An event ahead takes volunteers, but the notice in force does not describe the age, sex, city, experience, group and T-shirt yet. For now the form asks only the tick “I am at least 18” and keeps none of these answers.",
+          "todo": "An event ahead takes volunteers, but the notice in force does not describe their age, sex and city yet. The form asks only the tick “I am at least 18”.",
           "done": "The notice in force describes what volunteers say about themselves: the form asks for the age, sex and city.",
           "how": [
             "/admin/legal → the “GDPR” card → “Regenerate from the template” → confirm. Section 5's paragraph about volunteers names the volunteers' answers and what they are for.",
-            "A lawyer should read the paragraph: the basis, the purpose (placing volunteers in roles), the T-shirt only while the club gives T-shirts, and that the “group” is the person's own statement, not a check.",
+            "A lawyer should read the paragraph: the basis, the purpose (placing volunteers in roles), the T-shirt only while the club gives them, and that the “group” is the person's own claim.",
             "Open the draft, read it, fill in what is left, “Save draft”, then “Approve and publish” — in the same sitting as the volunteers' other texts."
           ]
         }
@@ -4682,7 +4682,7 @@
           "noAgreement": "The public form is not shown: no volunteer agreement is in force. Approve one in «Legal documents»; «Tasks» says how.",
           "noAgreementNotice": "The public form is not shown: the privacy notice in force does not describe the volunteer agreement's acceptance yet. «Tasks» says what to approve."
         },
-        "profileOff": "For now the public form asks only for the tick “I am at least 18”: the privacy notice in force does not describe the volunteers' age, sex, city and other answers yet. “Tasks” says what to approve."
+        "profileOff": "The public form asks only the tick “I am at least 18”: the notice in force does not describe the volunteers' age, sex and city yet. “Tasks” says what to approve."
       },
       "switchOn": "Take volunteers on the page",
       "rolesTitle": "Roles",

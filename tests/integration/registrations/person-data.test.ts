@@ -132,6 +132,13 @@ describe("BR-REQ-070-01 everything held about a person", () => {
       source: "PUBLIC",
       message: "Sunt liberă sâmbătă",
       privacyNoticeVersion: 3,
+      // What she said about herself (§NNN): every answer is hers to see, as stored.
+      age: 34,
+      sex: "FEMALE",
+      city: "Brașov",
+      volunteeredBefore: true,
+      clubMember: true,
+      shirtSize: "M",
     }).returning();
     await db.insert(eventVolunteerRoleChoices).values([
       { volunteerId: offer.id, roleId: finishRole.id },
@@ -175,6 +182,12 @@ describe("BR-REQ-070-01 everything held about a person", () => {
         phone: "+40712345678",
         message: "Sunt liberă sâmbătă",
         privacyNoticeVersion: 3,
+        age: 34,
+        sex: "FEMALE",
+        city: "Brașov",
+        volunteeredBefore: true,
+        clubMember: true,
+        shirtSize: "M",
       },
     ]);
     // The volunteer agreement's columns are hers too (§758): here none was accepted, and it says so.

@@ -3314,7 +3314,7 @@
         "volunteerTasks": "Doar în contractul de voluntariat: ce face rolul, din descrierea lui. Fără descriere, propoziția care îl numește dispare",
         "volunteerRoleChoices": "Doar în contractul de voluntariat: rolurile pe care voluntarul le-a bifat, cât încă nu are un rol dat. Cu rol dat, propoziția care le numește dispare",
         "volunteerChoiceTasks": "Doar în contractul de voluntariat: ce face fiecare rol bifat, din descrierile lor. Cu rol dat sau fără descrieri, propoziția dispare",
-        "volunteerProfile": "Doar în nota de confidențialitate: casetele formularului de voluntari despre persoană (vârsta, sexul, orașul, experiența, grupul, tricoul), între ghilimele. Fără el în nota în vigoare, formularul cere doar bifa „Am cel puțin 18 ani” și nu păstrează aceste răspunsuri"
+        "volunteerProfile": "Doar în nota de confidențialitate: casetele formularului de voluntari despre persoană, între ghilimele. Fără el în nota în vigoare, formularul cere doar bifa „Am cel puțin 18 ani”"
       },
       "removeBlockedReferenced": "Nu se poate nici retrage, nici șterge definitiv: {signatures}, {events} și {acknowledgements} depind de ea. «Șterge» de pe rândul ei o scoate din listă.",
       "removeBlockedCurrent": "În vigoare acum — nu se poate nici retrage, nici șterge. Aprobă întâi versiunea următoare; apoi aceasta se poate scoate.",
@@ -4236,7 +4236,7 @@
         },
         "volunteerProfileNotice": {
           "title": "Nota de confidențialitate: ce spun voluntarii despre ei",
-          "todo": "Un eveniment viitor primește voluntari, dar nota în vigoare nu descrie încă vârsta, sexul, orașul, experiența, grupul și tricoul. Formularul cere deocamdată doar bifa „Am cel puțin 18 ani” și nu păstrează aceste răspunsuri.",
+          "todo": "Un eveniment viitor primește voluntari, dar nota în vigoare nu descrie încă vârsta, sexul și orașul lor. Formularul cere doar bifa „Am cel puțin 18 ani”.",
           "done": "Nota în vigoare descrie ce spun voluntarii despre ei: formularul cere vârsta, sexul și orașul.",
           "how": [
             "/admin/legal → cardul „GDPR” → „Regenerează din șablon” → confirmă. Paragraful despre voluntari din secțiunea 5 numește răspunsurile voluntarilor și la ce folosesc.",
@@ -4682,7 +4682,7 @@
           "noAgreement": "Formularul public nu se arată: niciun contract de voluntariat nu e în vigoare. Aprobă-l în «Documente legale»; «Sarcini» spune cum.",
           "noAgreementNotice": "Formularul public nu se arată: nota de confidențialitate în vigoare nu descrie încă acceptarea contractului de voluntariat. «Sarcini» spune ce trebuie aprobat."
         },
-        "profileOff": "Formularul public cere deocamdată doar bifa „Am cel puțin 18 ani”: nota de confidențialitate în vigoare nu descrie încă vârsta, sexul, orașul și celelalte răspunsuri ale voluntarilor. «Sarcini» spune ce trebuie aprobat."
+        "profileOff": "Formularul public cere doar bifa „Am cel puțin 18 ani”: nota în vigoare nu descrie încă vârsta, sexul și orașul voluntarilor. «Sarcini» spune ce trebuie aprobat."
       },
       "switchOn": "Primește voluntari pe pagină",
       "rolesTitle": "Roluri",

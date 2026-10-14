@@ -33,6 +33,9 @@
  *   until §572, so «Copiază și tradu tot» above them found no English box it could fill and said
  *   «Nu e nimic de tradus» over a Romanian text already written.
  *
+ * - An event's volunteer roles (§NNN): the role's name (`nameEn`) and its description — a rich text,
+ *   `descriptionRoBody` / `descriptionEnBody` — one form per role, in the «Voluntari» card;
+ *
  * **Deliberately not on it:** a page's address (`slug` — an address, not words); anything under
  * `/admin/legal` (counsel-reviewed, §418, and the legal editor posts other names anyway); and
  * every registration, participant and staff field. None of those has a button, and a request
@@ -91,6 +94,8 @@ const ENGLISH_FIELD_PATTERNS: readonly RegExp[] = [
   /^newsletterBodyEn$/,
   // «Membri» (§524, §572): the public page's benefits and the members' zone, one rich text each.
   /^(benefits|zone)EnBody$/,
+  // An event's volunteer role (§NNN): its name (its description is `descriptionEnBody`, above) — one form per role.
+  /^nameEn$/,
 ];
 
 /** The newsletter composer's body (§550): a rich text posting as `newsletterBodyRo` / `newsletterBodyEn`. */

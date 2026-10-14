@@ -27,6 +27,7 @@ import { renderVolunteerAgreementPdf, VOLUNTEER_AGREEMENT_PDF_NAME } from "@/mod
 import { agreementRolesStamp, agreementStandingOf, agreementStillNamesRole } from "@/modules/volunteers/domain/volunteer";
 import { changeVolunteer, listVolunteerRoles, listVolunteers, submitVolunteer } from "@/modules/volunteers/volunteers";
 import { env } from "@/shared/config/env";
+import { roleDescription } from "../../helpers/role-description";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 import { drawnRuns } from "../../helpers/pdf-drawn";
 
@@ -120,7 +121,7 @@ describe("§758 the volunteer agreement", () => {
     ]);
     const [role] = await db
       .insert(eventVolunteerRoles)
-      .values({ eventId: event.id, nameRo: "Punct de apă", nameEn: "Water point", needed: 5, descriptionRo: "Împarte apă la kilometrul 5", descriptionEn: "Hands out water at kilometre 5" })
+      .values({ eventId: event.id, nameRo: "Punct de apă", nameEn: "Water point", needed: 5, ...roleDescription("Împarte apă la kilometrul 5", "Hands out water at kilometre 5") })
       .returning();
     return { event, role };
   }
@@ -595,7 +596,7 @@ describe("§758 the volunteer agreement", () => {
     it("freezes a role's description without a doubled full stop", async () => {
       await approveAgreement();
       const { event, role } = await seedEvent();
-      await db.update(eventVolunteerRoles).set({ descriptionRo: "Împarte apă la kilometrul 5." }).where(eq(eventVolunteerRoles.id, role.id));
+      await db.update(eventVolunteerRoles).set(roleDescription("Împarte apă la kilometrul 5.", "Hands out water at kilometre 5.")).where(eq(eventVolunteerRoles.id, role.id));
       const id = await byHand(event.id, role.id);
       await paper(event.id, id);
       expect(readAgreementFacts((await row(id)).agreementFacts)?.volunteerTasks).toBe("Împarte apă la kilometrul 5");

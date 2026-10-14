@@ -7,7 +7,6 @@ import { staffUsers } from "@/db/schema/staff-users";
 import type { Database, Transaction } from "@/db/types";
 import type { Locale } from "@/i18n/routing";
 import { hasRichTextContent, readRichText, type RichTextDoc } from "@/modules/content/rich-text/domain/schema";
-import { SHIRT_SIZES } from "@/modules/registrations/domain/kit";
 import { sexShown, type SexChoice } from "@/modules/registrations/domain/sex";
 import type { RegistrationTshirtSize } from "@/db/schema/registrations";
 import { type AuditAction, recordAuditEvent } from "@/modules/audit/repository";
@@ -1060,7 +1059,8 @@ export async function submitVolunteer<T extends Record<string, unknown>>(
     const kept = openChoices(input.roleIds, new Map(ticked.map((role) => [role.id, standingOf(role, people)])));
     if (kept.length === 0) return { outcome: "full", dropped: true };
     const dropped = kept.length < input.roleIds.length;
-    const chosen = ticked.filter((role) => kept.includes(role.id)).sort(compareRoles);
+    // The roles as the agreement names them (§NNN): the plain words of «Descrierea rolului», never the old one-line column.
+    const chosen = ticked.filter((role) => kept.includes(role.id)).map(roleOf).sort(compareRoles);
 
     // A repeat of the same person: the same answer a new one gets, nothing changed, nothing sent — whatever the row's state is.
     const [existing] = await tx
