@@ -16,7 +16,7 @@ import { LanguageTabs } from "./TextBoxes";
 
 /**
  * "Programul zilei și ce să aduci" (§350), a named card of «Participare, înscrieri și regulament»
- * since §NNN (`RegistrationBox`; of «Program, regulament și declarație» from §481), after what a
+ * since §760 (`RegistrationBox`; of «Program, regulament și declarație» from §481), after what a
  * participant agrees to (`#box-schedule`, after the page's own `#schedule`):
  * the timed rows first (§117) — one list for both
  * languages, one calendar entry each, repeated in the reminder, with "Ce (română)" and "Ce

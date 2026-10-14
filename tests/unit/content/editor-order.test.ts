@@ -11,10 +11,10 @@ import { describe, expect, it } from "vitest";
  * what drifts — the next field added lands in whichever box is nearest unless something says where
  * boxes go:
  *
- *   Pagina evenimentului, de sus în jos — the type (with the status, the cost and, since §NNN, the
- *   promotion), title and summary (with, since §NNN, the page's address and the cover), description,
- *   when and where (§481), the course (its checkpoints a card of their own above card 1, §757, §NNN), participation,
- *   registration and rules (§NNN: what were cards 6 and 9), partners, (the share links, automatic),
+ *   Pagina evenimentului, de sus în jos — the type (with the status, the cost and, since §760, the
+ *   promotion), title and summary (with, since §760, the page's address and the cover), description,
+ *   when and where (§481), the course (its checkpoints a card of their own above card 1, §757, §760), participation,
+ *   registration and rules (§760: what were cards 6 and 9), partners, (the share links, automatic),
  *   links and files: the page's sections in `PAGE_SECTIONS`' order, which
  *   `events/page-sections.test.ts` holds both the page and these pages to — eight cards;
  *   then the preview, and Salvare, always open.
@@ -48,13 +48,13 @@ const EDITOR_ORDER = [
   "<CoHostsBox",
   "<AutomaticSection",
   "<LinksBox",
-  // No group of cards not on the page since §NNN: the preview, then Salvare.
+  // No group of cards not on the page since §760: the preview, then Salvare.
   "<PreviewBox",
   'id="box-save"',
 ];
 
 describe("§350 the editor's boxes, in order (§406: the page's)", () => {
-  it("renders the page's eight cards in the page's order, then the preview, then Salvare (§NNN)", () => {
+  it("renders the page's eight cards in the page's order, then the preview, then Salvare (§760)", () => {
     const positions = EDITOR_ORDER.map((needle) => at(EDIT, needle));
     for (let index = 1; index < positions.length; index += 1) {
       expect(positions[index], `${EDITOR_ORDER[index]} after ${EDITOR_ORDER[index - 1]}`).toBeGreaterThan(positions[index - 1]);
@@ -77,7 +77,7 @@ describe("§350 the editor's boxes, in order (§406: the page's)", () => {
         expect(source.split(card).length - 1, `${page}: ${card} once`).toBe(1);
       }
       // No film card (§481); the place, the rules and the public list (§512) are drawn by the cards that
-      // hold them — since §NNN «Participare, înscrieri și regulament», which also holds the programme —
+      // hold them — since §760 «Participare, înscrieri și regulament», which also holds the programme —
       // and the promotion, the cover and the page's address by «Ce fel de eveniment» and «Titlu și rezumat».
       for (const gone of ["<VideoBox", "<PlaceBox", "<RulesBox", "<ProgrammeBox ", "<StartListBox", "<ProgrammeRulesBox", "<PromotionBox", "<CoverBox", "<AddressBox", "editor.groups.offPage"]) {
         expect(source, `${page}: ${gone}`).not.toContain(gone);
@@ -144,7 +144,7 @@ describe("§350 the editor's boxes, in order (§406: the page's)", () => {
 
   it("marks the five boxes a change reaches — date, place, programme, registration, status — and no other", () => {
     // The date and the place are one card since §481, «Când și unde»; the programme is inside
-    // «Participare, înscrieri și regulament» since §NNN, which wears the mark for both.
+    // «Participare, înscrieri și regulament» since §760, which wears the mark for both.
     for (const box of ["<WhenBox", "<RegistrationBox", "<KindBox"]) {
       const start = at(EDIT, box);
       expect(EDIT.slice(start, EDIT.indexOf("/>", start) + 2), box).toContain("risk={risk}");
@@ -155,7 +155,7 @@ describe("§350 the editor's boxes, in order (§406: the page's)", () => {
       const start = at(EDIT, box);
       expect(EDIT.slice(start, EDIT.indexOf(">", start) + 1), box).not.toContain("risk=");
     }
-    // The public list is the last card of «Participare, înscrieri și regulament» (§512, §NNN), and
+    // The public list is the last card of «Participare, înscrieri și regulament» (§512, §760), and
     // reaches nobody: the card wears the mark for the registration and the programme.
     const registration = read("src/modules/content/events/ui/boxes/RegistrationBox.tsx");
     expect(registration).toContain("await StartListBox({ event, mayEditSettings })");

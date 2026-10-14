@@ -7,7 +7,7 @@ import type { LanguageEntry } from "@/modules/content/events/ui/boxes/box-kit";
 import { blankTranslation } from "@/modules/content/events/ui/TranslationFields";
 
 /**
- * §NNN — the event editor in fewer cards, rendered: the cards are the HTML the server sends, so what
+ * §760 — the event editor in fewer cards, rendered: the cards are the HTML the server sends, so what
  * is pinned here is what the markup holds — each named card a `<details>` inside its card's, with its
  * id, closed by default, its heading a level below, and the parent's closed line short.
  */
@@ -98,7 +98,7 @@ function line(markup: string, id: string): string {
 const deadlines = { reminderHours: 48, holdMinutes: 30, offerHours: 24, raceWeekDays: 7 };
 const declarations = [{ id: "22222222-2222-2222-2222-222222222222", key: "EVENT_DECLARATION_ROAD" as const, version: 3, title: "Declarație" }];
 
-describe("§NNN «Participare, înscrieri și regulament»", () => {
+describe("§760 «Participare, înscrieri și regulament»", () => {
   it("holds what were cards 6 and 9 as closed named cards, in the order a registration happens", async () => {
     const markup = await html(
       (await RegistrationBox({
@@ -198,7 +198,7 @@ describe("§NNN «Participare, înscrieri și regulament»", () => {
   });
 });
 
-describe("§NNN «Ce fel de eveniment» holds «Evidențiere pe site»", () => {
+describe("§760 «Ce fel de eveniment» holds «Evidențiere pe site»", () => {
   it("draws it as its last named card, closed, and names its marks on the closed line while one is on", async () => {
     const plain = await html((await KindBox({ event: RACE, mayEditSettings: true, languages: [language("ro"), language("en")] })) as ReactElement);
     const promotion = fold(plain, "box-promotion");
@@ -214,7 +214,7 @@ describe("§NNN «Ce fel de eveniment» holds «Evidențiere pe site»", () => {
   });
 });
 
-describe("§NNN «Titlu și rezumat» holds the page's address and «Copertă»", () => {
+describe("§760 «Titlu și rezumat» holds the page's address and «Copertă»", () => {
   it("draws both as closed named cards after the title's tabs, and says the cover on its line", async () => {
     const markup = await html(
       (await TitleSummaryBox({ languages: [language("ro"), language("en")], creating: false, event: RACE, mayEditSettings: true, slugLocked: false })) as ReactElement,

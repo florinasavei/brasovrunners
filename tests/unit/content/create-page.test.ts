@@ -49,7 +49,7 @@ describe("the create page is the editor's page", () => {
     }
   });
 
-  it("puts Recurență first, then the page's eight cards in its own order, then the preview and Salvare (§NNN)", () => {
+  it("puts Recurență first, then the page's eight cards in its own order, then the preview and Salvare (§760)", () => {
     // The page's order itself is `events/page-sections.test.ts`'s to hold (§406); this is the frame.
     const order = [
       'id="box-recurrence"',
@@ -59,13 +59,13 @@ describe("the create page is the editor's page", () => {
       "<TitleSummaryBox",
       "<DescriptionBox",
       // «Când și unde» holds the place (§481); «Participare, înscrieri și regulament» the programme, the
-      // rules and the public list (§NNN: what were cards 6 and 9).
+      // rules and the public list (§760: what were cards 6 and 9).
       "<WhenBox",
       "<CourseBox",
       "<RegistrationBox",
       "<CoHostsBox",
       "<LinksBox",
-      // No group of cards not on the page since §NNN: the cover and the page's address are cards of
+      // No group of cards not on the page since §760: the cover and the page's address are cards of
       // «Titlu și rezumat», the promotion of «Ce fel de eveniment» — on both pages.
       "<PreviewBox",
       'id="box-save"',

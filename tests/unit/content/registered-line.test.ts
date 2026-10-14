@@ -97,7 +97,7 @@ describe("§408 the count is said nowhere else in the editor", () => {
 
   it("keeps the outline on the same five boxes, from the same predicate", () => {
     // The date and the place share «Când și unde» since §481; the programme's card and the card
-    // that holds it since §NNN, «Participare, înscrieri și regulament», both wear it.
+    // that holds it since §760, «Participare, înscrieri și regulament», both wear it.
     for (const box of ["WhenBox", "RegistrationBox", "ProgrammeBox", "StatusBox", "KindBox"]) {
       expect(read(`src/modules/content/events/ui/boxes/${box}.tsx`), box).toMatch(/tone[=:] ?\{? ?risk \? "risk" : "default"/);
     }

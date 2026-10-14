@@ -78,7 +78,7 @@ export function CardRequiredLine({ box, initial, words }: { box: PublishGapBoxes
   const gaps = usePublishCheck(initial);
   const missing = cardGaps(gaps, box).length > 0;
   return (
-    // Named by the card's own box, the first (§NNN: «Titlu și rezumat» answers for the address too).
+    // Named by the card's own box, the first (§760: «Titlu și rezumat» answers for the address too).
     <Box component="span" data-testid={`required-${gapBoxesOf(box)[0]}`} data-missing={missing ? "true" : "false"} sx={{ color: missing ? "warning.dark" : "text.secondary" }}>
       {missing && <WarningAmberIcon aria-hidden fontSize="inherit" sx={{ verticalAlign: "-0.15em", mr: 0.5 }} />}
       {cardGapLine(gaps, box, words)}

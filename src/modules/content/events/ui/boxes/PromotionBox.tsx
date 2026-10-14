@@ -10,7 +10,7 @@ import { BoxNote, type BoxProps, summaryWords } from "./box-kit";
  * «Evidențiere pe site» (§350): the two marks that make an event stand out — the site's lead event,
  * one at a time, and a special edition (§168), any number of them, on one date of a series too.
  *
- * A named card inside card 1 «Ce fel de eveniment» since §NNN (the owner, 2026-10-13: «„evidențierea
+ * A named card inside card 1 «Ce fel de eveniment» since §760 (the owner, 2026-10-13: «„evidențierea
  * pe site” ar putea fi în același card cu „ce fel de eveniment”… nu trebuie să fie un card separat»):
  * what kind of event it is and how the site marks it, read together. It was a card of its own among
  * those not on the page (§406). The same two ticks, the same names, the same id `#box-promotion`, so a

@@ -3,7 +3,7 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 /**
- * §NNN — the event editor in fewer cards (the owner, 2026-10-13: «cardurile 6 și 9 se pot uni sincer,
+ * §760 — the event editor in fewer cards (the owner, 2026-10-13: «cardurile 6 și 9 se pot uni sincer,
  * sunt chestii oarecum related»; and «„evidențierea pe site” ar putea fi în același card cu „ce fel de
  * eveniment” și următoarele, practic vreau mai puține carduri și mai mult nesting, nu trebuie să fie un
  * card separat»).
@@ -28,7 +28,7 @@ const at = (source: string, needle: string, from = 0) => {
   return index;
 };
 
-describe("§NNN «Ce fel de eveniment» holds «Evidențiere pe site»", () => {
+describe("§760 «Ce fel de eveniment» holds «Evidențiere pe site»", () => {
   it("draws the promotion card itself, last, after the status and the cost, for every role", () => {
     expect(KIND).toContain("const promotion = await PromotionBox({ event, mayEditSettings });");
     const body = KIND.slice(at(KIND, "<Panel glyph=\"kind\""));
@@ -52,7 +52,7 @@ describe("§NNN «Ce fel de eveniment» holds «Evidențiere pe site»", () => {
   });
 });
 
-describe("§NNN «Titlu și rezumat» holds the page's address and «Copertă»", () => {
+describe("§760 «Titlu și rezumat» holds the page's address and «Copertă»", () => {
   const title = TEXTS.slice(at(TEXTS, "export async function TitleSummaryBox"), at(TEXTS, "export async function DescriptionBox"));
 
   it("draws the address card, then the cover, after the title's own tabs", () => {
@@ -75,7 +75,7 @@ describe("§NNN «Titlu și rezumat» holds the page's address and «Copertă»"
   });
 });
 
-describe("§NNN «Participare, înscrieri și regulament»: cards 6 and 9 in one", () => {
+describe("§760 «Participare, înscrieri și regulament»: cards 6 and 9 in one", () => {
   const body = REGISTRATION.slice(at(REGISTRATION, "  return (\n    <Panel glyph=\"registration\""));
 
   it("holds its named cards in the order a registration happens, the public list last", () => {
@@ -138,7 +138,7 @@ describe("§NNN «Participare, înscrieri și regulament»: cards 6 and 9 in one
   });
 });
 
-describe("§NNN «Puncte de control» where the document has it, «Voluntari» with the registrations", () => {
+describe("§760 «Puncte de control» where the document has it, «Voluntari» with the registrations", () => {
   it("keeps the checkpoints' forms beside the save form, before it, never inside it", () => {
     const saveStart = at(EDIT, 'id="event-save-form"');
     const saveEnd = at(EDIT, "</ActionForm>", saveStart);

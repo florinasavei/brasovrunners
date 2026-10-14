@@ -154,7 +154,7 @@ export type PageSection = {
    * place, but the editor asks it inside another card, so it has no number and no chip on the map —
    * the cost inside «Ce fel de eveniment», the place inside «Când și unde», the checkpoints inside
    * «Traseul» (§757), and the programme, the rules and the public list inside «Participare, înscrieri
-   * și regulament» (§NNN). The holding card is drawn when any is (`cardStates`).
+   * și regulament» (§760). The holding card is drawn when any is (`cardStates`).
    */
   nestedIn?: PageSectionId;
 };
@@ -264,7 +264,7 @@ export const PAGE_SECTIONS: readonly PageSection[] = [
   },
   /*
     The programme (`#schedule`, §96, §117): the timed rows, or the text. §481 gave it, the rules and
-    the declaration one card, «Program, regulament și declarație»; since §NNN (the owner, 2026-10-13:
+    the declaration one card, «Program, regulament și declarație»; since §760 (the owner, 2026-10-13:
     «cardurile 6 și 9 se pot uni sincer, sunt chestii oarecum related») that card is part of card 6,
     «Participare, înscrieri și regulament», and the programme is its named card «Programul zilei și ce
     să aduci» (`#box-schedule`): no number and no chip of its own, the page still drawing it here.
@@ -278,7 +278,7 @@ export const PAGE_SECTIONS: readonly PageSection[] = [
     nestedIn: "registration",
     drawn: (data) => readScheduleItems(data.event.scheduleItems).length > 0 || inSomeLanguage(data, (text) => hasDoc(text.scheduleJson)),
   },
-  // The rules (`#rules`), a card inside «Participare, înscrieri și regulament» since §NNN (inside «Program, regulament și declarație» from §481).
+  // The rules (`#rules`), a card inside «Participare, înscrieri și regulament» since §760 (inside «Program, regulament și declarație» from §481).
   {
     id: "rules",
     card: "box-rules",
@@ -297,7 +297,7 @@ export const PAGE_SECTIONS: readonly PageSection[] = [
   // public page, the way every other still-true fact does. Wiring the deadlines through here
   // would tell the editor something the public page already tells a visitor more plainly.
   //
-  // Asked inside «Program, regulament și declarație» from §512 and, since §NNN, inside «Participare,
+  // Asked inside «Program, regulament și declarație» from §512 and, since §760, inside «Participare,
   // înscrieri și regulament» — the last of its cards, as the page draws the list last: no number and
   // no chip of its own.
   {
@@ -333,7 +333,7 @@ export function pageSectionStates(data: PageSectionData): Array<NumberedPageSect
 /**
  * Each editor card — every section not nested in another's card — with whether the page draws
  * anything it holds (§481): «Când și unde» is drawn when the date or the place is, «Participare,
- * înscrieri și regulament» (§NNN) when the registration row, the programme, the rules or the public
+ * înscrieri și regulament» (§760) when the registration row, the programme, the rules or the public
  * list is. The card's heading and its chip on
  * the map read this; a nested section's own `isDrawn` stays in `pageSectionStates`.
  */

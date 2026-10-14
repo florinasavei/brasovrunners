@@ -175,7 +175,7 @@ export const dynamic = "force-dynamic";
  * **the public page, top to bottom** (§406; the owner: "am nevoie de mai multe căsuțe la editor ca
  * să văd exact ce flow am în pagină"): one card per section the page draws, in the page's order
  * (`events/domain/page-sections.ts`), each numbered and headed by whether the page shows it, the
- * share links named where the page puts them — eight cards since §NNN (the owner, 2026-10-13: «mai
+ * share links named where the page puts them — eight cards since §760 (the owner, 2026-10-13: «mai
  * puține carduri și mai mult nesting»), what is not a section of the page nested in the card it
  * belongs with: the promotion in «Ce fel de eveniment», the cover and the page's address in «Titlu și
  * rezumat»; then the preview and the always-open Salvare. Each box answers one
@@ -191,8 +191,8 @@ export const dynamic = "force-dynamic";
  * save form — HTML forms cannot nest — and so are the two small forms the bib card's immediate
  * actions post (`form="bib-assign"`, `form="bib-download"`), and so is «Puncte de control», which
  * stands after the to-do card, above the save form's first card, where the document has it — no CSS
- * `order` (§NNN); «Traseul» links to it. Below the grid, what is
- * operations rather than settings: the registrations received, the volunteers (§754, §NNN), and
+ * `order` (§760); «Traseul» links to it. Below the grid, what is
+ * operations rather than settings: the registrations received, the volunteers (§754, §760), and
  * duplicate or delete.
  *
  * **Once people have registered** (real ones: a test row is counted nowhere the club looks,
@@ -1026,7 +1026,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                 «Puncte de control» (§757), part of «Traseul» in the page's sections (nested, no number): its
                 forms are its own, so it stands beside the save form, never inside it — HTML forms cannot nest.
                 It stands here on the screen too, where the document has it: no CSS `order` moving it under
-                «Traseul» (§NNN), so the tab order and a screen reader meet what the screen shows. «Traseul»
+                «Traseul» (§760), so the tab order and a screen reader meet what the screen shows. «Traseul»
                 links to it, and its closed line counts the points.
               */}
               <CheckpointsCard
@@ -1104,7 +1104,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                   <AutomaticSection testId="automatic-share">{flow.automaticLine}</AutomaticSection>
                   <LinksBox {...box} locale={locale} heading={flow.headings.links} />
 
-                  {/* No group «Nu sunt secțiuni ale paginii» since §NNN: «Evidențiere pe site» is a card of
+                  {/* No group «Nu sunt secțiuni ale paginii» since §760: «Evidențiere pe site» is a card of
                       «Ce fel de eveniment», «Copertă» and «Adresa paginii și motoarele de căutare» cards of
                       «Titlu și rezumat» — eight cards, the page's own, then the preview and Salvare. */}
                   {/* «Previzualizare» (§579): the card and the page from these boxes as they stand, before
@@ -1411,7 +1411,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
               )}
 
               {/*
-                «Voluntari» (§754) — since §NNN here, right under «Înscrierile primite»: the people who
+                «Voluntari» (§754) — since §760 here, right under «Înscrierile primite»: the people who
                 help on the day, beside the people who run, where an organizer goes for who is coming and
                 what to do with them now. Its roles and people post forms of their own, never «Salvează»,
                 like everything under this heading. Only for whoever may manage them.

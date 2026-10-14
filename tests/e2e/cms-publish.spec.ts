@@ -453,7 +453,7 @@ test.describe("BR-REQ-050-02 an Administrator creates an event without a develop
     // no button at all). The English tab is empty, and the closed card and its tabs say so.
     const publish = page.getByRole("button", { name: "Creează și publică" });
     await expect(publish).toHaveCSS("opacity", "1");
-    // The page's address is a card of «Titlu și rezumat» since §NNN: its English gap is on the same line.
+    // The page's address is a card of «Titlu și rezumat» since §760: its English gap is on the same line.
     await expect(editorBox(page, "Titlu și rezumat").getByTestId("required-titleSummary")).toHaveText("lipsesc: Titlu (EN) · Rezumat (EN) · Adresa paginii (EN)");
     await expect(languageTab(page, "title", "ro")).toHaveText("Română · complet");
     await expect(languageTab(page, "title", "en")).toHaveText("English · 2 obligatorii lipsă");

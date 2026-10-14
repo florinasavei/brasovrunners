@@ -60,7 +60,7 @@ export default async function CourseBox({
 }: BoxProps & {
   languages: readonly LanguageEntry[];
   inSeries?: boolean;
-  /** How many «Puncte de control» the saved route has (§757): said on the closed line when above 0 (§NNN). */
+  /** How many «Puncte de control» the saved route has (§757): said on the closed line when above 0 (§760). */
   checkpointCount?: number;
 }) {
   const t = await getTranslations("Admin");
@@ -90,7 +90,7 @@ export default async function CourseBox({
         // The automatic answer for the event's own date (§394), read by the same function as the pill.
         // Nothing for a date or an hour left blank (§545): there is no sunset to compare them with.
         night: event && start.date && start.time ? clubNightEvent({ ...event, nightOverride: null }).night : false,
-        // «Puncte de control» is «Traseul»'s card with forms of its own (§757): its count, briefly (§NNN).
+        // «Puncte de control» is «Traseul»'s card with forms of its own (§757): its count, briefly (§760).
         checkpoints: checkpointCount > 0 ? t(`checkpoints.inCourse.${countForm(checkpointCount, locale)}`, { count: checkpointCount }) : null,
       },
       languages.map((entry) => entry.translation),

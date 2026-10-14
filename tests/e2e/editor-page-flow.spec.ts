@@ -29,7 +29,7 @@ test.describe.serial("§406 the editor is the page, top to bottom", () => {
 
     // The map: eight cards and the share links (the cost is inside card 1, §466; the place inside
     // «Când și unde», §481; the programme, the rules and the public list inside «Participare, înscrieri
-    // și regulament», §NNN), in the page's order, the share links named as automatic.
+    // și regulament», §760), in the page's order, the share links named as automatic.
     const map = page.getByTestId("section-map");
     await expect(map).toBeVisible();
     await expect(map.getByRole("listitem")).toHaveCount(9);
@@ -53,7 +53,7 @@ test.describe.serial("§406 the editor is the page, top to bottom", () => {
     await expect(page.locator("#box-kind #box-cost")).toHaveCount(1);
     await expect(page.getByRole("heading", { name: /^\d+ · Cost/ })).toHaveCount(0);
     await expect(page.getByRole("heading", { name: /^6 · Participare, înscrieri și regulament — gol, nu apare pe pagină/ })).toBeVisible();
-    // No group of cards not on the page (§NNN): each is a card of the page's own.
+    // No group of cards not on the page (§760): each is a card of the page's own.
     await expect(page.getByText("Nu sunt secțiuni ale paginii")).toHaveCount(0);
     await expect(page.locator("#box-kind #box-promotion")).toHaveCount(1);
     await expect(page.locator("#box-title #box-address")).toHaveCount(1);
@@ -67,7 +67,7 @@ test.describe.serial("§406 the editor is the page, top to bottom", () => {
     await expect(page).toHaveURL(/#box-links$/);
 
     // What publication needs, from outside the cards: every language on the title card — the page's
-    // address with it, a card inside it since §NNN — the title's chip marked the same, and each tab
+    // address with it, a card inside it since §760 — the title's chip marked the same, and each tab
     // counting its own.
     const titleLine = editorBox(page, "Titlu și rezumat").getByTestId("required-titleSummary").first();
     await expect(titleLine).toHaveText("lipsesc: Titlu (RO, EN) · Rezumat (RO, EN) · Adresa paginii (RO, EN)");
@@ -106,7 +106,7 @@ test.describe.serial("§406 the editor is the page, top to bottom", () => {
     await page.goto(editorUrl);
     await hydrated(page);
 
-    // The same map, now from what is saved: eight cards to open, the public list inside card 6 (§NNN).
+    // The same map, now from what is saved: eight cards to open, the public list inside card 6 (§760).
     await expect(page.getByTestId("section-map").getByRole("link")).toHaveCount(8);
     await expect(chip(page, /^2 · Titlul — apare pe pagină/)).toBeVisible();
     await expect(chip(page, /^4 · Când și unde — apare pe pagină/)).toBeVisible();
@@ -261,7 +261,7 @@ test.describe.serial("§406 the editor is the page, top to bottom", () => {
     await expect(when.locator("#box-place")).toHaveCount(1);
     await expect(when.locator("#box-timezone")).toHaveCount(1);
     await expect(when.locator('[name="event.locationName"]')).toHaveCount(1);
-    // What were cards 6 and 9, one card since §NNN: the registration's life, what a participant
+    // What were cards 6 and 9, one card since §760: the registration's life, what a participant
     // agrees to, the day, the public list last (§512) — each a card of its own inside it.
     const cards = await page.locator("#box-registration details[id^='box-']").evaluateAll((nodes) => nodes.map((node) => node.id));
     const inside = ["box-registration-window", "box-confirmation", "box-reminder", "box-rules", "box-declaration", "box-conditions", "box-schedule", "box-kit", "box-bibs", "box-start-list"];
@@ -273,8 +273,8 @@ test.describe.serial("§406 the editor is the page, top to bottom", () => {
     // No card of its own any more: no number, no chip.
     await expect(page.getByRole("heading", { name: /^\d+ · Lista publică/ })).toHaveCount(0);
     await expect(page.getByTestId("section-map").locator('[data-section="startList"]')).toHaveCount(0);
-    // The status (§448), the cost (§466) and the promotion (§NNN) are cards inside the first box; the
-    // page's address and the cover inside «Titlu și rezumat» (§NNN).
+    // The status (§448), the cost (§466) and the promotion (§760) are cards inside the first box; the
+    // page's address and the cover inside «Titlu și rezumat» (§760).
     await expect(page.locator("#box-kind #box-status")).toHaveCount(1);
     await expect(page.locator("#box-kind #box-cost")).toHaveCount(1);
     await expect(page.locator("#box-kind #box-promotion")).toHaveCount(1);
@@ -283,7 +283,7 @@ test.describe.serial("§406 the editor is the page, top to bottom", () => {
   });
 
   /*
-    §NNN — «Puncte de control» (§757) stands where the document has it, after the to-do card and
+    §760 — «Puncte de control» (§757) stands where the document has it, after the to-do card and
     above card 1, its forms beside the save form: no CSS `order`, so the screen, the tab key and a
     screen reader meet the cards in one order (WCAG 2.4.3, 1.3.2). «Traseul» links to it and counts
     its points. «Voluntari» (§754) is with the registrations, below the grid.
@@ -320,7 +320,7 @@ test.describe.serial("§406 the editor is the page, top to bottom", () => {
 });
 
 /*
-  §554 — «Kit de participare» in card 6 «Participare, înscrieri și regulament» (§NNN): a fold of its own, closed, its
+  §554 — «Kit de participare» in card 6 «Participare, înscrieri și regulament» (§760): a fold of its own, closed, its
   line saying «Tricou: nu» until the box is ticked, and only for a type that takes registrations
   with registration on the site — a group run takes none (§111).
 */
@@ -359,7 +359,7 @@ test.describe("§554 the race kit card", () => {
 });
 
 /*
-  §557 — «Condiții de participare» inside «Participare, înscrieri și regulament» (§NNN; the owner, 2026-09-29:
+  §557 — «Condiții de participare» inside «Participare, înscrieri și regulament» (§760; the owner, 2026-09-29:
   «e mai bine să avem o bifă în backoffice la Condiții de participare»): a closed fold whose line says
   «Informații medicale: nu» until the box is ticked, on a saved event registering on the site; the tick only for a type that registers on the
   site, a group run getting a sentence in its place (§111).

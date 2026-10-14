@@ -22,13 +22,13 @@ export const COVER_SHAPE = "16:9" as const;
  * `event.coverAssetId` and `event.coverCrop` with the event's one save; nothing is kept until then,
  * and an unkept upload is swept after a week (§73).
  *
- * A named card inside card 2 «Titlu și rezumat» since §NNN (the owner, 2026-10-13: «practic vreau
+ * A named card inside card 2 «Titlu și rezumat» since §760 (the owner, 2026-10-13: «practic vreau
  * mai puține carduri și mai mult nesting»): the cover travels with the title wherever the event is
  * shown as a card or shared. It was a card of its own among those not on the page (§406); no public
  * page shows it yet, so it promises nothing a visitor sees today. The same field, names and id
  * `#box-cover`. A settings card: a role that may not change the event row (the Redactor, who works in
  * card 2) opens it on the house's one sentence that the settings are not theirs (`SettingsReadOnly`,
- * as before §NNN), and the server asks again.
+ * as before §760), and the server asks again.
  */
 export default async function CoverBox({ event, mayEditSettings, picture: given }: BoxProps & { picture?: CoverPicture | null }) {
   const t = await getTranslations("Admin");
@@ -74,7 +74,7 @@ export default async function CoverBox({ event, mayEditSettings, picture: given 
 /**
  * The stored picture's facts — the master for the crop box, the small file for the preview, the
  * size — read only when a store is configured; an id that names nothing reads as no cover. Read once
- * by «Titlu și rezumat», whose closed line says whether there is one (§NNN), and handed to the card.
+ * by «Titlu și rezumat», whose closed line says whether there is one (§760), and handed to the card.
  */
 export async function coverPicture(event: BoxProps["event"]): Promise<CoverPicture | null> {
   return isStorageConfigured() && event?.coverMediaAssetId ? findCoverPicture(getDb(), event.coverMediaAssetId) : null;

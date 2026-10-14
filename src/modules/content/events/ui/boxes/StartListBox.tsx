@@ -19,7 +19,7 @@ import { BoxNote, type BoxProps, summaryWords } from "./box-kit";
 
 /**
  * "Lista publică a participanților" (BR-REQ-039-01, §32, §406): a level-3 card inside «Participare,
- * înscrieri și regulament» since §NNN, the last of its cards — the page draws the list last, under
+ * înscrieri și regulament» since §760, the last of its cards — the page draws the list last, under
  * the rules (it was card 8.5 inside "Participare și înscrieri" until §406, then card 10 of its own,
  * then from §512 the last card of «Program, regulament și declarație»; it moved whole each time: the
  * same checkbox, the same name, the same id `#box-start-list`, the same help).

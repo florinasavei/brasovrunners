@@ -14,11 +14,11 @@ decision or a click only the club can make · **released** — on production, wi
 The owner, 2026-10-10: «Soon I need to start a new session from the laptop … You need to save and document everything».
 This section replaces the plan of 2026-09-30; it is what a session with none of today's conversation needs to carry on.
 
-- **Production: `BR-V3.18`** (2026-10-14 early morning: §758 the volunteer agreement; migration `0148`). Waiting for
-  «prod»: `BR-V3.19` (§759, below) — no migration.
-- **QA: `BR-V3.19`** — the bib designer in six named sections; the member mark a star, the club's logo or an icon;
-  the route's profile from the GPX or a picture, normal or turned for the runner (with the phone, as one block); two
-  labelled emergency numbers; the distance box's tick; «Alocă numerele» explained. Next: the editor in fewer cards.
+- **Production: `BR-V3.19`** (2026-10-14 morning: §759 the bib designer). Waiting for «prod»: `BR-V3.20` (§760,
+  below) — no migration.
+- **QA: `BR-V3.20`** — the event editor in eight cards: «Participare, înscrieri și regulament» holds what cards 6
+  and 9 held; «Evidențiere pe site» sits in card 1, «Adresa paginii…» and «Copertă» in card 2; «Puncte de control»
+  stands under «Traseul»; «Voluntari» under «Înscrierile primite». The night's queue is done.
 - **Nothing is building.** Releases by the label `ship` reach production by themselves again: `SHIP_TOKEN` was given
   «Pull requests: Read and write» on 2026-10-12, and `BR-V3.05`'s run opened its `qa → main` pull request itself.
 - **Lanes:** the phone session took the calendar on 2026-10-12; one release at a time between
@@ -138,6 +138,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V3.20` | the event editor in fewer cards (§760) |
 | `BR-V3.19` | the bib designer in sections, with a profile picture, a turned profile and labelled emergency phones (§759) |
 | `BR-V3.18` | a volunteer agreement (§758) |
 | `BR-V3.17` | route checkpoints, cut-offs and the race's time limit (file v2) (§757) |

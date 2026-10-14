@@ -91,7 +91,7 @@ const ONE_LANGUAGE_LABEL = { ...EVENT, links: [{ kind: "GPX", url: GPX, labelRo:
 /** 23 real registrations: the amber outline a box that reaches people wears (§350, §408). */
 const RISK: RiskMark = { count: 23 };
 
-/** The markup without its glyphs: an SVG's path may hold a «23» that is no count (the promotion's star, §NNN). */
+/** The markup without its glyphs: an SVG's path may hold a «23» that is no count (the promotion's star, §760). */
 const words = (html: string): string => html.replace(/<svg[\s\S]*?<\/svg>/g, "");
 
 const NOTICE = {
@@ -170,9 +170,9 @@ function chain(folds: (string | null)[]): { node: FoldNode & { dispatchEvent: ()
 }
 
 describe("§448 the first box holds the type and the status, and its line says both", () => {
-  it("holds the status, the cost and the promotion as named cards inside it — and neither the course nor the links (§466, §NNN)", async () => {
+  it("holds the status, the cost and the promotion as named cards inside it — and neither the course nor the links (§466, §760)", async () => {
     const { kind } = await boxes(EVENT);
-    // «Evidențiere pe site» is the first box's last card since §NNN.
+    // «Evidențiere pe site» is the first box's last card since §760.
     expect(namedFolds(kind)).toEqual(["box-kind", "box-status", "box-cost", "box-promotion"]);
     expect(foldsAround(kind, "box-status")).toEqual(["box-kind"]);
     expect(foldsAround(kind, "box-cost")).toEqual(["box-kind"]);

@@ -59,7 +59,7 @@ export const dynamic = "force-dynamic";
  * (`EventEditorLayout`): the side column with Publicare, Recurență and the page's map, first on a
  * phone, and the main column's cards in the page's own order (§406), numbered and headed by
  * whether the page will show each, under the same titles, with the same field names and the same
- * Română | English tabs — eight cards since §NNN, what is not a section of the page nested in the
+ * Română | English tabs — eight cards since §760, what is not a section of the page nested in the
  * card it belongs with, as on the editor; then the preview and Salvare. The status card, inside the
  * first box, is the editor's same select, starting at "Programat" (§448): an event already called
  * off is created "Anulat" with its reason in both languages, and one that already took place
@@ -237,7 +237,7 @@ export default async function NewEventPage({ params, searchParams }: Props) {
               <AutomaticSection testId="automatic-share">{flow.automaticLine}</AutomaticSection>
               <LinksBox {...box} locale={locale} heading={flow.headings.links} />
 
-              {/* No group «Nu sunt secțiuni ale paginii» since §NNN, as on the editor: «Evidențiere pe site»
+              {/* No group «Nu sunt secțiuni ale paginii» since §760, as on the editor: «Evidențiere pe site»
                   is a card of «Ce fel de eveniment», «Copertă» and the page's address cards of «Titlu și rezumat». */}
               {/* «Previzualizare» (§579): the card and the page from these boxes, before «Creează». */}
               <PreviewBox formId="event-create-form" refusal={messages} />

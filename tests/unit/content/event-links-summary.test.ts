@@ -70,7 +70,7 @@ describe("the cost amount and the donation link are named, not left as their own
     catalogue = ro;
     locale = "ro";
     const labels = await eventFormFieldLabels();
-    // The cost's card is in «Ce fel de eveniment» since §466: its fields are named by both (§NNN).
+    // The cost's card is in «Ce fel de eveniment» since §466: its fields are named by both (§760).
     expect(labels["event.costAmount"]).toBe("Ce fel de eveniment › Cost › Suma");
     expect(labels["event.costUrl"]).toBe("Ce fel de eveniment › Cost › Link pentru donație");
   });

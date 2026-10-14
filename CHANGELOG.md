@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V3.20-2026-10-14
+
+- **The event editor in fewer cards** — eight instead of twelve: «Participare și înscrieri» and «Program, regulament și declarație» are one card, «Participare, înscrieri și regulament», with the minimum age right above the declaration; «Evidențiere pe site» is inside «Ce fel de eveniment», «Copertă» and the page's address inside «Titlu și rezumat», each a closed card with its line; «Traseul»'s closed line counts its checkpoints, and «Voluntari» moved below the grid with the registrations. Nothing about saving changed. §760.
 ## BR-V3.19-2026-10-14
 
 - **The bib designer in sections, with a profile picture, a turned profile and labelled emergency phones** — «Cum arată numărul de concurs» is six named folds top to bottom as the number prints, each picture place a sub-card with its quality row; the member mark is a star by default, the club's logo or a glyph; «Alocă numerele» explains itself and the print range sits by the PDF buttons under «Tipărește numerele (PDF)»; the route's profile comes from the GPX or an uploaded picture, with or without the distance and gain beside it, and can be turned for the runner together with the emergency phone, which takes a label and a second number. §759.

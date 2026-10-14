@@ -113,7 +113,7 @@ describe("§749 eventPageTodos", () => {
 
   it("asks a race for a programme when it has no timed rows and no programme text, and only a race", () => {
     const noRows = eventPageTodos(complete({ scheduleItems: null }), texts, context);
-    // The programme's own card inside «Participare, înscrieri și regulament» (§NNN); the fold around it opens with it.
+    // The programme's own card inside «Participare, înscrieri și regulament» (§760); the fold around it opens with it.
     expect(only(noRows, "programme")).toMatchObject({ priority: "NORMAL", anchor: "box-schedule" });
     // A programme text in one language is a programme.
     expect(rules(eventPageTodos(complete({ scheduleItems: [] }), [translation("ro", { scheduleJson: body }), translation("en")], context))).not.toContain("programme");

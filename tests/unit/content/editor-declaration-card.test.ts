@@ -77,14 +77,14 @@ async function rules(event: EditableEvent | null, options: { mayEditSettings?: b
 }
 
 describe("§448 the declaration card sits with «Regulamentul» (in one card since §481)", () => {
-  it("is a named level-3 card, on the create page too, drawn right after «Regulamentul» in «Participare, înscrieri și regulament» (§481, §NNN)", async () => {
+  it("is a named level-3 card, on the create page too, drawn right after «Regulamentul» in «Participare, înscrieri și regulament» (§481, §760)", async () => {
     for (const event of [TRAIL_RUN, RACE, null]) {
       const html = await rules(event);
       expect(namedFolds(html)).toEqual(["box-declaration"]);
       expect(html).toMatch(/<h3[^>]*>(?:<svg[\s\S]*?<\/svg>)?Declarația pe propria răspundere<span/);
     }
     expect(await rules(TRAIL_RUN, { locale: "en" })).toMatch(/<h3[^>]*>(?:<svg[\s\S]*?<\/svg>)?Self-declaration<span/);
-    // The card that holds them since §NNN, «Participare, înscrieri și regulament», awaits each and
+    // The card that holds them since §760, «Participare, înscrieri și regulament», awaits each and
     // draws the declaration right after the rules and their minimum age, open while it is missing.
     const box = readFileSync(path.join(process.cwd(), "src/modules/content/events/ui/boxes/RegistrationBox.tsx"), "utf8");
     expect(box).toContain("await DeclarationCard({");

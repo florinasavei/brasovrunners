@@ -43,7 +43,7 @@ export type BoxProps = {
  *
  * A function the box awaits rather than a component it nests, so the element it hands the heading
  * is ready when the box is (a string renderer cannot wait for an async component inside a tree).
- * Several boxes for a card that holds another's as a named card (§NNN: the title's and the address's).
+ * Several boxes for a card that holds another's as a named card (§760: the title's and the address's).
  */
 export async function requiredLine(
   box: PublishGapBoxes,

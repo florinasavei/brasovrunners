@@ -51,7 +51,7 @@ import StatusCard, { type StatusNotice } from "./StatusBox";
  * from `sm`: with the type, what kind of outing this is. The closed line names it last, «Mediu 5»,
  * and says nothing while the club has not said.
  *
- * **«Evidențiere pe site» is a named card in here since §NNN** (the owner, 2026-10-13: «„evidențierea
+ * **«Evidențiere pe site» is a named card in here since §760** (the owner, 2026-10-13: «„evidențierea
  * pe site” ar putea fi în același card cu „ce fel de eveniment”… practic vreau mai puține carduri și
  * mai mult nesting»): `PromotionBox`, last, with its id `box-promotion`. The closed line names its
  * marks while one is on — «… · Eveniment principal · Ediție specială» — and nothing while none is.
@@ -95,7 +95,7 @@ export default async function KindBox({
   // The type, the status and the cost (§466), and the difficulty when stated (§526): what this box asks, on its closed line.
   // For the members alone (§552), said on the closed line too: it decides who sees the event at all.
   const membersLine = event?.membersOnly ? t("editor.membersOnlyShort") : null;
-  // «Evidențiere pe site» inside this card since §NNN: its marks on the closed line while one is on, nothing otherwise.
+  // «Evidențiere pe site» inside this card since §760: its marks on the closed line while one is on, nothing otherwise.
   const promotionLine = event?.featured || event?.isSpecial ? promotionSummary(words, event) : null;
   const aside = [tEvent(`type.${initialType}`), EVENT_STATUS_LABEL[event?.eventStatus ?? "SCHEDULED"], await costLine(event, languages), difficultyLine, membersLine, promotionLine]
     .filter((part): part is string => Boolean(part))
@@ -111,7 +111,7 @@ export default async function KindBox({
         : null;
   // The cost card (§466), awaited for the same reason as the status card.
   const cost = await CostBox({ event, mayEditSettings, languages });
-  // «Evidențiere pe site» (§NNN), the same way: a named card, last.
+  // «Evidențiere pe site» (§760), the same way: a named card, last.
   const promotion = await PromotionBox({ event, mayEditSettings });
 
   return (
@@ -197,7 +197,7 @@ export default async function KindBox({
           {status}
           {/* 1.2 — the cost (§466): the page draws it after the course; the editor asks it here. */}
           {cost}
-          {/* 1.3 — «Evidențiere pe site» (§NNN): how the site marks the event, beside what kind it is. */}
+          {/* 1.3 — «Evidențiere pe site» (§760): how the site marks the event, beside what kind it is. */}
           {promotion}
         </Stack>
       ) : (

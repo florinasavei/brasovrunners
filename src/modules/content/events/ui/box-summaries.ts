@@ -66,7 +66,7 @@ export type SummaryWords = {
     noDeclaration: string;
     listHidden: string;
     listShown: string;
-    /** The list public with its waiting list too (§628): said on the merged card's closed line (§NNN). */
+    /** The list public with its waiting list too (§628): said on the merged card's closed line (§760). */
     listShownWithWaitlist: string;
     external: string;
     externalUnnamed: string;
@@ -394,7 +394,7 @@ export function registrationSummary(
     words.registration.internal,
     event?.capacity === null || event?.capacity === undefined ? words.registration.unlimited : counted(words.registration.places, event.capacity, options.locale),
     options.declarationVersion !== null ? fillIn(words.registration.declaration, { version: options.declarationVersion }) : words.registration.noDeclaration,
-    // The waiting list public too (§628) is a disclosure of its own, said where the list is (§NNN).
+    // The waiting list public too (§628) is a disclosure of its own, said where the list is (§760).
     event?.participantListVisibility === "NAMES"
       ? event.waitlistPublic === true
         ? words.registration.listShownWithWaitlist
@@ -560,7 +560,7 @@ function distanceSummary(words: SummaryWords, distanceMeters: number | null | un
  * own date, which the caller computes). The route / training description (§387) adds `cu descriere` when
  * written in every language, `descriere într-o singură limbă` when in one only — the text the next
  * save refuses (§352), said the way the partners' line says it — and `EN identic cu RO` (§354).
- * `labels.checkpoints` — `3 puncte de control`, said after the maps when the route has any (§NNN):
+ * `labels.checkpoints` — `3 puncte de control`, said after the maps when the route has any (§760):
  * «Puncte de control» is a card of «Traseul», and a closed «Traseul» says it briefly.
  */
 export function courseSummary(

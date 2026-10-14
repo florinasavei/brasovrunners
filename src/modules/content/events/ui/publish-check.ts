@@ -23,7 +23,7 @@ import { MAX_CO_HOSTS } from "@/modules/events/domain/co-hosts";
 export type PublishGapBox = "titleSummary" | "place" | "address";
 /**
  * The boxes one card answers for: one, or several when the card holds another's box as a named
- * card inside it — «Titlu și rezumat» holds «Adresa paginii și motoarele de căutare» since §NNN, so
+ * card inside it — «Titlu și rezumat» holds «Adresa paginii și motoarele de căutare» since §760, so
  * its closed line and its chip name the address's gaps too.
  */
 export type PublishGapBoxes = PublishGapBox | readonly PublishGapBox[];
@@ -92,7 +92,7 @@ export type CardGap = { field: PublishGapField; locales: string[] };
 
 /**
  * The gaps of one card, field by field: `[{ field: "title", locales: ["ro", "en"] }, …]` — of each
- * box it answers for, in the order of the gaps (the title's before the address's, §NNN).
+ * box it answers for, in the order of the gaps (the title's before the address's, §760).
  */
 export function cardGaps(gaps: readonly PublishGap[], box: PublishGapBoxes): CardGap[] {
   const boxes = gapBoxesOf(box);

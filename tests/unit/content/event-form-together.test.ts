@@ -39,7 +39,7 @@ const FIELD_BOXES = [
   "TitleSummaryBox",
   "DescriptionBox",
   // The date and the place in one card (§481); registration with the programme, the rules and the
-  // declaration in another (§NNN: what were cards 6 and 9).
+  // declaration in another (§760: what were cards 6 and 9).
   "WhenBox",
   "RegistrationBox",
   "CourseBox",

@@ -69,7 +69,7 @@ function box(field: EventFieldName, extra: Record<string, unknown> = {}) {
 }
 
 /**
- * Card 6, «Participare, înscrieri și regulament» (§NNN; the owner, 2026-10-13: «cardurile 6 și 9 se
+ * Card 6, «Participare, înscrieri și regulament» (§760; the owner, 2026-10-13: «cardurile 6 și 9 se
  * pot uni sincer, sunt chestii oarecum related»): what were two cards — «Participare și înscrieri»
  * (§350) and «Program, regulament și declarație» (§481, §512) — in one, the same fields with the same
  * names and ids, only held together. On the page, who may enter and the button, under the cost row;
@@ -124,7 +124,7 @@ export default async function RegistrationBox({
   clubDeadlines,
   windowHolds = null,
 }: BoxProps & {
-  /** Every language's row, for the programme's and the rules' texts (§NNN: their cards are in here). */
+  /** Every language's row, for the programme's and the rules' texts (§760: their cards are in here). */
   languages: readonly LanguageEntry[];
   /**
    * The reserved places the participation window gave, as a save would treat them (§665,
@@ -235,7 +235,7 @@ export default async function RegistrationBox({
   const startList = await StartListBox({ event, mayEditSettings });
 
   /*
-    The closed line, short (§NNN): the registration's own line — the mode, the places, the
+    The closed line, short (§760): the registration's own line — the mode, the places, the
     declaration's version and the list where the club registers people, with its waiting list when
     that is public too (§628) — then the declaration a group run offers (the registration's line
     names a race's), whether the form asks for medical information (§557, a disclosure old card 9's
@@ -411,7 +411,7 @@ export default async function RegistrationBox({
                   </Panel>
 
                   {/* 6.1.2 — the participation window (§104). The minimum age and the declaration are
-                      named cards of this same card since §NNN, «Regulamentul» and «Declarația pe
+                      named cards of this same card since §760, «Regulamentul» and «Declarația pe
                       propria răspundere» below: the sentence that sent the reader to them is gone. */}
                   <Panel glyph="confirmation"
                     collapsible

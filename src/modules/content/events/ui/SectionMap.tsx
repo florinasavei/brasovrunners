@@ -19,7 +19,7 @@ export type SectionMapEntry = {
   drawn: boolean;
   /** The card's id (`box-title`), or null for an automatic section, which has no card. */
   card: string | null;
-  /** The publication gaps that belong to its card, when it holds a box publication needs (two for «Titlu și rezumat», §NNN). */
+  /** The publication gaps that belong to its card, when it holds a box publication needs (two for «Titlu și rezumat», §760). */
   gapBox: PublishGapBoxes | null;
 };
 

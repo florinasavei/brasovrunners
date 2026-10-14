@@ -14,8 +14,8 @@ import type { SectionMapEntry, SectionMapWords } from "./SectionMap";
  * and the page's order are one thing.
  *
  * A card that holds more than one of the page's sections (§481: the date and the place; §466: the
- * type and the cost; §NNN: registration with the programme, the rules and the public list) is one
- * chip and one number, drawn when any section it holds is drawn. Eight cards since §NNN.
+ * type and the cost; §760: registration with the programme, the rules and the public list) is one
+ * chip and one number, drawn when any section it holds is drawn. Eight cards since §760.
  *
  * The card's own words stay its name — the name a refusal, a gap in Publicare and every e2e spec
  * already use (`editorBox` finds a card by it, after the number). The chips use the page's own
@@ -33,7 +33,7 @@ const CARD_TITLE_KEY: Record<HeadedSectionId, string> = {
   // «Când și unde» (§481): the date, the place and the time zone.
   when: "whenWhere",
   course: "course",
-  // «Participare, înscrieri și regulament» (§NNN): how people register, the programme, the rules,
+  // «Participare, înscrieri și regulament» (§760): how people register, the programme, the rules,
   // the declaration and the public list — what were cards 6 and 9, one card.
   registration: "registration",
   coHosts: "coHosts",
@@ -42,7 +42,7 @@ const CARD_TITLE_KEY: Record<HeadedSectionId, string> = {
 
 /**
  * The card whose closed line names a publication gap, by the section it writes: «Titlu și rezumat»
- * answers for the page's address too since §NNN (the address is not on the page, and its card is a
+ * answers for the page's address too since §760 (the address is not on the page, and its card is a
  * named card inside the title's).
  */
 const GAP_BOX: Partial<Record<PageSectionId, PublishGapBoxes>> = { title: ["titleSummary", "address"], when: "place" };

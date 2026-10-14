@@ -143,7 +143,7 @@ function lineOf(required: ReactNode, summary: string | undefined): ReactNode {
  * asked — the page's own verb (`primary`, fold.ts), not a warning — and on the editor while a
  * language lacks either (`attention`: something inside asks for action).
  *
- * **Two named cards in it since §NNN** (the owner, 2026-10-13: «practic vreau mai puține carduri și
+ * **Two named cards in it since §760** (the owner, 2026-10-13: «practic vreau mai puține carduri și
  * mai mult nesting, nu trebuie să fie un card separat»), after the title's own tabs: «Adresa paginii și
  * motoarele de căutare» (`AddressBox`, `#box-address`) — the address and the search title are made
  * from the title — and «Copertă» (`CoverBox`, `#box-cover`), the picture that travels with the title
@@ -151,7 +151,7 @@ function lineOf(required: ReactNode, summary: string | undefined): ReactNode {
  * the page (§406); their fields, names and ids are as they were.
  *
  * Its closed line starts with what publication still needs from it (§406) — the title's and the
- * summary's, and since §NNN the address's, which is inside it now («lipsesc: Titlu (EN) · Adresa
+ * summary's, and since §760 the address's, which is inside it now («lipsesc: Titlu (EN) · Adresa
  * paginii (EN)») — then the titles and whether there is a cover. It opens itself while an address is
  * blank too, as the address card did, so the card that asks for it is never shut around it.
  */
@@ -168,7 +168,7 @@ export async function TitleSummaryBox({
   heading?: string;
   /** The event, for its cover (null on the create page). */
   event: EditableEvent | null;
-  /** Whether the reader may change the event row: the cover is a setting (§NNN). */
+  /** Whether the reader may change the event row: the cover is a setting (§760). */
   mayEditSettings: boolean;
   /** The address is kept once the page was published (§36). */
   slugLocked: boolean;
@@ -178,13 +178,13 @@ export async function TitleSummaryBox({
   const translations = languages.map(summaryOf);
   const incomplete = incompleteLocales(translations, "required", BLANK.titleSummary);
   const blankAddress = incompleteLocales(translations, "required", BLANK.address);
-  // The title's gaps and the address's, in one line: the address is a card of this one (§NNN).
+  // The title's gaps and the address's, in one line: the address is a card of this one (§760).
   const required = await requiredLine(["titleSummary", "address"], null, languages);
   // Awaited, not nested: each element is ready when the card is (`requiredLine` does the same).
   const address = await AddressBox({ languages, slugLocked, creating });
   const picture = await coverPicture(event);
   const cover = await CoverBox({ event, mayEditSettings, picture });
-  // Only where a cover can be chosen: with no media store the card says so, and «De făcut» asks for none (§749, §NNN).
+  // Only where a cover can be chosen: with no media store the card says so, and «De făcut» asks for none (§749, §760).
   const coverState = isStorageConfigured()
     ? t("editor.boxes.titleSummary.coverLine", { state: picture ? t("editor.cover.set") : t("editor.cover.missing") })
     : null;
@@ -206,9 +206,9 @@ export async function TitleSummaryBox({
           required="titleSummary"
           render={(entry) => <TitleSummaryFields translation={entry.translation} mayEdit={entry.mayEdit} />}
         />
-        {/* 2.1 — the page's address and the search engines' title, made from the title (§NNN). */}
+        {/* 2.1 — the page's address and the search engines' title, made from the title (§760). */}
         {address}
-        {/* 2.2 — the cover (§709), the picture that goes with the title (§NNN). */}
+        {/* 2.2 — the cover (§709), the picture that goes with the title (§760). */}
         {cover}
       </Stack>
     </Panel>
@@ -234,7 +234,7 @@ export async function DescriptionBox({ languages, heading }: { languages: readon
 }
 
 /**
- * "Regulamentul" (`#box-rules`), a named card of «Participare, înscrieri și regulament» since §NNN
+ * "Regulamentul" (`#box-rules`), a named card of «Participare, înscrieri și regulament» since §760
  * (`RegistrationBox`; of «Program, regulament și declarație» from §481): the rules in each language,
  * on their own tabs. The declaration (§448) is the card right after it — the minimum age below and
  * the declaration under it, read together.
@@ -298,7 +298,7 @@ export async function RulesBox({
  * "Adresa paginii și motoarele de căutare": open while any address is blank — so open on create,
  * where the address also fills itself from the title until it is typed (`SlugFromTitle`). Not a
  * section of the page — it is the page's address — so it sat with the cards that are not (§406);
- * since §NNN it is a named card of «Titlu și rezumat» (`TitleSummaryBox`), whose title it is made
+ * since §760 it is a named card of «Titlu și rezumat» (`TitleSummaryBox`), whose title it is made
  * from, and that card opens with it while an address is blank.
  */
 export async function AddressBox({
