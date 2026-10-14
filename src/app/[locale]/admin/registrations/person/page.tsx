@@ -216,7 +216,10 @@ export default async function PersonDataPage({ params, searchParams }: Props) {
                 ) : (
                   data.volunteerOffers.map((offer, index) => (
                     <Typography key={index} variant="body2" color="text.secondary" sx={{ overflowWrap: "anywhere" }}>
-                      {show(offer.createdAt)} · {offer.eventTitle ?? offer.eventId} · {locale === "en" ? offer.roleNameEn : offer.roleNameRo} · {t(`volunteers.states.${offer.state}`)} · {t(`volunteers.sources.${offer.source}`)} · {offer.name} · {offer.deliveryEmail} · {offer.phone}
+                      {show(offer.createdAt)} · {offer.eventTitle ?? offer.eventId} ·{" "}
+                      {/* The role given, or «De repartizat» (§NNN), then the roles the person offered for. */}
+                      {(locale === "en" ? offer.roleNameEn : offer.roleNameRo) ?? t("volunteers.unassigned.title")} ·{" "}
+                      {t("volunteers.person.choicesLine", { roles: (locale === "en" ? offer.chosenRolesEn : offer.chosenRolesRo).join(", ") || "—" })} · {t(`volunteers.states.${offer.state}`)} · {t(`volunteers.sources.${offer.source}`)} · {offer.name} · {offer.deliveryEmail} · {offer.phone}
                       {offer.message ? ` · ${offer.message}` : ""}
                       {offer.note ? ` · ${offer.note}` : ""}
                       {/* The volunteer agreement (§758): accepted — which version, how, when — or not yet. */}

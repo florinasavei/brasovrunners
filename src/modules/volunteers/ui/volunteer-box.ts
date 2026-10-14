@@ -15,7 +15,7 @@ export function parseVolunteerOutcome(value: string | undefined): VolunteerOutco
 }
 
 /** The boxes a refusal can name, in the order the form draws them (the service's own field names). */
-export const VOLUNTEER_BOXES = ["roleId", "name", "email", "phone", "message", "consent", "agreement", "adult"] as const;
+export const VOLUNTEER_BOXES = ["roleIds", "name", "email", "phone", "message", "consent", "agreement", "adult"] as const;
 export type VolunteerBox = (typeof VOLUNTEER_BOXES)[number];
 
 /** The boxes `?vfields=` names — names only, never a value (§14.5); a query string is typed by anybody. */
@@ -34,6 +34,7 @@ export type VolunteerTyped = {
   email?: string;
   phoneCountry?: string;
   phone?: string;
-  roleId?: string;
+  /** The roles ticked (§NNN), their ids joined by commas: the sealed draft keeps one string a name. */
+  roleIds?: string;
   message?: string;
 };

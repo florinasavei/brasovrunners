@@ -92,6 +92,8 @@ export const EMAIL_GROUP_OF: Readonly<Record<EmailMessageType, EmailGroup>> = {
   // copy answers the person's own step, as a signed declaration's copy does.
   VOLUNTEER_AGREEMENT_REQUEST: "links",
   VOLUNTEER_AGREEMENT_ACCEPTED: "confirmations",
+  // The role given (§NNN): the organizers' answer to the person's offer, as a confirmation answers a runner's step.
+  VOLUNTEER_ROLE_ASSIGNED: "confirmations",
   NEWSLETTER_CONFIRM: "newsletter",
   NEWSLETTER: "newsletter",
   NEW_EVENT_ALERT: "newsletter",

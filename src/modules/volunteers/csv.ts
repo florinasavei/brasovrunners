@@ -2,8 +2,9 @@ import { CSV_BOM } from "@/modules/newsletter/subscribers-csv";
 import { csvCell } from "@/modules/registrations/csv";
 
 /**
- * «Descarcă CSV» on an event's «Voluntari» card (§754): one row per volunteer, grouped by role in the
- * club's order, in the reader's language.
+ * «Descarcă CSV» on an event's «Voluntari» card (§754): one row per volunteer, grouped by the role given in the
+ * club's order — the offers nobody has placed first — in the reader's language; since §NNN a column for the role
+ * given (empty while none) and one for the roles the person offered for, joined by «, ».
  *
  * The registrations export's rules (`registrations/csv.ts`), reused rather than copied: every cell
  * through the one `csvCell`, so a name or a message starting with `=`, `+`, `-` or `@` opens as text and
@@ -13,7 +14,10 @@ import { csvCell } from "@/modules/registrations/csv";
  */
 
 export type VolunteerCsvRow = {
+  /** The role the organizers gave, or "" while none (§NNN). */
   role: string;
+  /** The roles the person said they would do, in the club's order, joined by «, » (§NNN). */
+  choices: string;
   name: string;
   email: string;
   phone: string;
@@ -28,6 +32,7 @@ export type VolunteerCsvRow = {
 
 export type VolunteerCsvHeader = {
   role: string;
+  choices: string;
   name: string;
   email: string;
   phone: string;
@@ -40,9 +45,9 @@ export type VolunteerCsvHeader = {
 
 export function buildVolunteersCsv(header: VolunteerCsvHeader, rows: readonly VolunteerCsvRow[]): string {
   const lines = [
-    [header.role, header.name, header.email, header.phone, header.state, header.source, header.message, header.note, header.signedUpAt].map(csvCell).join(","),
+    [header.role, header.choices, header.name, header.email, header.phone, header.state, header.source, header.message, header.note, header.signedUpAt].map(csvCell).join(","),
     ...rows.map((row) =>
-      [row.role, row.name, row.email, row.phone, row.state, row.source, row.message ?? "", row.note ?? "", row.signedUpAt.toISOString()].map(csvCell).join(","),
+      [row.role, row.choices, row.name, row.email, row.phone, row.state, row.source, row.message ?? "", row.note ?? "", row.signedUpAt.toISOString()].map(csvCell).join(","),
     ),
   ];
   return `${CSV_BOM}${lines.join("\r\n")}`;
