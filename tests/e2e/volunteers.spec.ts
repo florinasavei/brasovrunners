@@ -364,7 +364,7 @@ test.describe("§754 volunteers for a race", () => {
         await hydrated(ion);
         await expect(ion.getByRole("heading", { level: 1 })).toHaveText("Contractul de voluntariat");
         await expect(ion.getByTestId("volunteer-agreement-text")).toContainText("Voluntarul este Ion Link.");
-        await expect(ion.getByTestId("volunteer-agreement-text")).toContainText("în rolul Punct de apă");
+        await expect(ion.getByTestId("volunteer-agreement-text")).toContainText("Voluntarul are rolul Punct de apă.");
         // Opening the page wrote nothing: the link is still unspent.
         const unspent = await client.query(`SELECT agreement_accepted_at FROM event_volunteers WHERE id = $1`, [ionId]);
         expect(unspent.rows[0].agreement_accepted_at).toBeNull();
