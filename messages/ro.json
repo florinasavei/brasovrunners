@@ -578,7 +578,22 @@
         "message": "Mesajul are prea multe caractere: scurtează-l.",
         "consent": "Bifează căsuța de acord, altfel nu putem păstra oferta ta.",
         "agreement": "Bifează că accepți contractul de voluntariat, altfel nu putem păstra oferta ta.",
-        "adult": "Formularul e pentru persoane de cel puțin {age}: bifează căsuța dacă ai această vârstă."
+        "adult": "Formularul e pentru persoane de cel puțin {age}: bifează căsuța dacă ai această vârstă.",
+        "age": "Scrie vârsta în ani întregi, de exemplu 34.",
+        "ageMinimum": "Voluntarii trebuie să aibă cel puțin {age}.",
+        "sex": "Alege sexul din listă.",
+        "city": "Scrie orașul tău.",
+        "shirtSize": "Alege o mărime din listă."
+      },
+      "details": "Detalii",
+      "profile": {
+        "age": "Vârsta",
+        "ageHelp": "În ani împliniți; trebuie să ai cel puțin {age}.",
+        "city": "Orașul",
+        "before": "Am mai fost voluntar în trecut la alte curse",
+        "club": "Fac parte din grupul {club}",
+        "shirt": "Mărimea tricoului",
+        "shirtHelp": "Evenimentul dă tricouri voluntarilor. Alege mărimea ta sau „Fără tricou”."
       }
     },
     "calendar": {
@@ -3298,7 +3313,8 @@
         "volunteerRole": "Doar în contractul de voluntariat: numele rolului dat de organizatori, în limba textului. Fără rol dat, propoziția care îl numește dispare",
         "volunteerTasks": "Doar în contractul de voluntariat: ce face rolul, din descrierea lui. Fără descriere, propoziția care îl numește dispare",
         "volunteerRoleChoices": "Doar în contractul de voluntariat: rolurile pe care voluntarul le-a bifat, cât încă nu are un rol dat. Cu rol dat, propoziția care le numește dispare",
-        "volunteerChoiceTasks": "Doar în contractul de voluntariat: ce face fiecare rol bifat, din descrierile lor. Cu rol dat sau fără descrieri, propoziția dispare"
+        "volunteerChoiceTasks": "Doar în contractul de voluntariat: ce face fiecare rol bifat, din descrierile lor. Cu rol dat sau fără descrieri, propoziția dispare",
+        "volunteerProfile": "Doar în nota de confidențialitate: casetele formularului de voluntari despre persoană (vârsta, sexul, orașul, experiența, grupul, tricoul), între ghilimele. Fără el în nota în vigoare, formularul cere doar bifa „Am cel puțin 18 ani” și nu păstrează aceste răspunsuri"
       },
       "removeBlockedReferenced": "Nu se poate nici retrage, nici șterge definitiv: {signatures}, {events} și {acknowledgements} depind de ea. «Șterge» de pe rândul ei o scoate din listă.",
       "removeBlockedCurrent": "În vigoare acum — nu se poate nici retrage, nici șterge. Aprobă întâi versiunea următoare; apoi aceasta se poate scoate.",
@@ -4217,6 +4233,16 @@
             "Un jurist ar trebui să citească întâi cele două propoziții noi: rolul dat și rolurile pentru care s-a oferit voluntarul.",
             "Deschide ciorna, completează ce a rămas, „Salvează ciorna”, apoi „Aprobă și publică”. Contractele deja acceptate rămân cum au fost acceptate."
           ]
+        },
+        "volunteerProfileNotice": {
+          "title": "Nota de confidențialitate: ce spun voluntarii despre ei",
+          "todo": "Un eveniment viitor primește voluntari, dar nota în vigoare nu descrie încă vârsta, sexul, orașul, experiența, grupul și tricoul. Formularul cere deocamdată doar bifa „Am cel puțin 18 ani” și nu păstrează aceste răspunsuri.",
+          "done": "Nota în vigoare descrie ce spun voluntarii despre ei: formularul cere vârsta, sexul și orașul.",
+          "how": [
+            "/admin/legal → cardul „GDPR” → „Regenerează din șablon” → confirmă. Paragraful despre voluntari din secțiunea 5 numește răspunsurile voluntarilor și la ce folosesc.",
+            "Un jurist ar trebui să citească paragraful: temeiul, scopul (repartizarea pe roluri), tricoul doar cât clubul dă tricouri și faptul că „grupul” e declarația persoanei, nu o verificare.",
+            "Deschide ciorna, citește, completează ce a rămas, „Salvează ciorna”, apoi „Aprobă și publică” — în aceeași ședință cu celelalte texte ale voluntarilor."
+          ]
         }
       },
       "freeVerdict": {
@@ -4647,7 +4673,7 @@
       "offer": {
         "open": "Formularul „Vreau să fiu voluntar” e pe pagina evenimentului.",
         "closed": {
-          "off": "Formularul public e oprit: apasă mai jos „Primește voluntari pe pagină” ca pagina evenimentului să-l ofere. Lista ta funcționează oricum.",
+          "off": "Formularul public e oprit: bifează mai jos „Primește voluntari pe pagină” ca pagina evenimentului să-l ofere. Lista ta funcționează oricum.",
           "notPublished": "Formularul public nu se arată: evenimentul nu e publicat. Apare pe pagină după publicare.",
           "membersOnly": "Formularul public nu se arată: evenimentul e doar pentru membri, iar formularul e public. Lista ta funcționează oricum.",
           "eventOver": "Formularul public nu se arată: evenimentul e anulat sau s-a terminat.",
@@ -4655,10 +4681,10 @@
           "noNotice": "Formularul public nu se arată: nota de confidențialitate în vigoare nu descrie încă voluntarii. «Sarcini» spune ce trebuie aprobat.",
           "noAgreement": "Formularul public nu se arată: niciun contract de voluntariat nu e în vigoare. Aprobă-l în «Documente legale»; «Sarcini» spune cum.",
           "noAgreementNotice": "Formularul public nu se arată: nota de confidențialitate în vigoare nu descrie încă acceptarea contractului de voluntariat. «Sarcini» spune ce trebuie aprobat."
-        }
+        },
+        "profileOff": "Formularul public cere deocamdată doar bifa „Am cel puțin 18 ani”: nota de confidențialitate în vigoare nu descrie încă vârsta, sexul, orașul și celelalte răspunsuri ale voluntarilor. «Sarcini» spune ce trebuie aprobat."
       },
       "switchOn": "Primește voluntari pe pagină",
-      "switchOff": "Nu mai primi voluntari pe pagină",
       "rolesTitle": "Roluri",
       "rolesCount": "Roluri: {count}",
       "rolesIntro": "Un rol are nevoie de un nume în română și în engleză și de câți oameni îi trebuie. Ordinea de aici e ordinea în care le arată pagina.",
@@ -4668,16 +4694,18 @@
         "nameEn": "Numele rolului (English)",
         "needed": "Câți oameni trebuie",
         "neededHelp": "Cel puțin 1. Se numără doar oamenii cărora le-ai dat rolul. Când are atâția, formularul public nu-l mai oferă.",
-        "descriptionRo": "Ce face persoana (Română, opțional)",
-        "descriptionEn": "Ce face persoana (English, opțional)",
-        "descriptionHelp": "O linie, cel mult {max} de caractere; în ambele limbi sau în niciuna.",
+        "descriptionRo": "Descrierea rolului (Română, opțional)",
+        "descriptionEn": "Descrierea rolului (English, opțional)",
+        "descriptionHelp": "Ce presupune rolul: unde stă voluntarul, ce are de făcut, de la ce oră. Cel mult {max} de caractere de text în fiecare limbă; în ambele limbi sau în niciuna.",
         "addTitle": "Adaugă un rol",
         "add": "Adaugă rolul",
         "adding": "Se adaugă…",
         "delete": "Șterge rolul",
         "deleting": "Se șterge…",
         "deleteTitle": "Ștergi acest rol?",
-        "deleteBody": "Rolul „{name}” se șterge. Un rol dat cuiva sau bifat de cineva nu poate fi șters: schimbă-le întâi rolurile sau șterge-i."
+        "deleteBody": "Rolul „{name}” se șterge. Un rol dat cuiva sau bifat de cineva nu poate fi șters: schimbă-le întâi rolurile sau șterge-i.",
+        "descriptionEmpty": "Încă nicio descriere.",
+        "more": "Tot textul"
       },
       "move": {
         "up": "Mută mai sus",
@@ -4716,7 +4744,19 @@
         "noteLabel": "Notă",
         "addTitle": "Adaugă un voluntar de mână",
         "add": "Adaugă voluntarul",
-        "adding": "Se adaugă…"
+        "adding": "Se adaugă…",
+        "age": "Vârsta",
+        "ageHelp": "Opțional. Ani întregi; un voluntar are cel puțin vârsta cerută de contract.",
+        "sex": "Sex",
+        "sexNone": "Nespecificat",
+        "city": "Orașul",
+        "shirt": "Mărimea tricoului",
+        "shirtNone": "Fără tricou",
+        "before": "A mai fost voluntar în trecut la alte curse",
+        "club": "Face parte din grupul {club}",
+        "ageValue": "Vârsta: {age}",
+        "cityValue": "Oraș: {city}",
+        "shirtValue": "Tricou: {size}"
       },
       "states": {
         "REGISTERED": "Înscris",
@@ -4771,9 +4811,26 @@
         "source": "Sursă",
         "message": "Mesaj",
         "note": "Notă",
-        "signedUpAt": "Data"
+        "signedUpAt": "Data",
+        "age": "Vârsta",
+        "sex": "Sex",
+        "city": "Orașul",
+        "volunteeredBefore": "A mai fost voluntar",
+        "clubMember": "Din grupul clubului",
+        "shirtSize": "Mărime tricou"
       },
-      "badgesLink": "Ecusoane pentru voluntari"
+      "badgesLink": "Ecusoane pentru voluntari",
+      "switchHelp": "Bifat, pagina evenimentului arată formularul „Vreau să fiu voluntar”. Debifat, nu se șterge nimic: rolurile și oamenii rămân.",
+      "shirts": {
+        "label": "Oferim tricouri voluntarilor",
+        "help": "Bifat, formularul public cere mărimea tricoului și o vezi pe fiecare rând. Debifat, formularul nu cere nicio mărime."
+      },
+      "chips": {
+        "before": "A mai fost voluntar",
+        "club": "Din grupul {club}"
+      },
+      "yes": "Da",
+      "no": "Nu"
     },
     "eventTodos": {
       "title": "De făcut pentru pagina evenimentului",
@@ -11163,7 +11220,9 @@
       "badgeDesignSaved": "Ecusonul a fost salvat.",
       "badgeDesignUnchanged": "Nimic de schimbat la ecuson.",
       "badgeColoursSaved": "Culorile rolurilor au fost salvate.",
-      "badgeColoursUnchanged": "Nimic de schimbat la culori."
+      "badgeColoursUnchanged": "Nimic de schimbat la culori.",
+      "volunteersShirtsOn": "Formularul public cere acum mărimea tricoului.",
+      "volunteersShirtsOff": "Formularul public nu mai cere mărimea tricoului. Mărimile deja date se păstrează."
     }
   },
   "Network": {

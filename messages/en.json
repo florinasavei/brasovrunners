@@ -578,7 +578,22 @@
         "message": "The message is too long: shorten it.",
         "consent": "Tick the box to agree, or we cannot keep your offer.",
         "agreement": "Tick the box to accept the volunteer agreement, or we cannot keep your offer.",
-        "adult": "The form is for people of at least {age}: tick the box if you are."
+        "adult": "The form is for people of at least {age}: tick the box if you are.",
+        "age": "Type your age in whole years, for example 34.",
+        "ageMinimum": "Volunteers must be at least {age}.",
+        "sex": "Choose your sex from the list.",
+        "city": "Type your city.",
+        "shirtSize": "Choose a size from the list."
+      },
+      "details": "Details",
+      "profile": {
+        "age": "Age",
+        "ageHelp": "In whole years; you must be at least {age}.",
+        "city": "City",
+        "before": "I have volunteered at other races before",
+        "club": "I belong to the {club} group",
+        "shirt": "T-shirt size",
+        "shirtHelp": "The event gives volunteers a T-shirt. Choose your size, or “No t-shirt”."
       }
     },
     "calendar": {
@@ -3298,7 +3313,8 @@
         "volunteerRole": "In the volunteer agreement only: the name of the role the organisers gave, in the text's language. With no role given, the sentence naming it is left out",
         "volunteerTasks": "In the volunteer agreement only: what the role does, from its description. Without one, the sentence naming it is left out",
         "volunteerRoleChoices": "In the volunteer agreement only: the roles the volunteer ticked, while no role is given. Once one is, the sentence naming them is left out",
-        "volunteerChoiceTasks": "In the volunteer agreement only: what each ticked role does, from their descriptions. With a role given or no descriptions, the sentence is left out"
+        "volunteerChoiceTasks": "In the volunteer agreement only: what each ticked role does, from their descriptions. With a role given or no descriptions, the sentence is left out",
+        "volunteerProfile": "Privacy notice only: the volunteers' form boxes about the person (age, sex, city, experience, group, T-shirt), in quotes. Without it in the notice in force, the form asks only the tick “I am at least 18” and keeps none of these answers"
       },
       "removeBlockedReferenced": "Can neither be withdrawn nor deleted permanently: {signatures}, {events} and {acknowledgements} depend on it. “Delete” on its row takes it off the list.",
       "removeBlockedCurrent": "In force right now — it can neither be withdrawn nor deleted. Approve its successor first; then this one can go.",
@@ -4217,6 +4233,16 @@
             "A lawyer should first read the two new sentences: the role given and the roles the volunteer offered for.",
             "Open the draft, fill in what is left, “Save draft”, then “Approve and publish”. Agreements already accepted stay as they were accepted."
           ]
+        },
+        "volunteerProfileNotice": {
+          "title": "Privacy notice: what volunteers say about themselves",
+          "todo": "An event ahead takes volunteers, but the notice in force does not describe the age, sex, city, experience, group and T-shirt yet. For now the form asks only the tick “I am at least 18” and keeps none of these answers.",
+          "done": "The notice in force describes what volunteers say about themselves: the form asks for the age, sex and city.",
+          "how": [
+            "/admin/legal → the “GDPR” card → “Regenerate from the template” → confirm. Section 5's paragraph about volunteers names the volunteers' answers and what they are for.",
+            "A lawyer should read the paragraph: the basis, the purpose (placing volunteers in roles), the T-shirt only while the club gives T-shirts, and that the “group” is the person's own statement, not a check.",
+            "Open the draft, read it, fill in what is left, “Save draft”, then “Approve and publish” — in the same sitting as the volunteers' other texts."
+          ]
         }
       },
       "freeVerdict": {
@@ -4647,7 +4673,7 @@
       "offer": {
         "open": "The “I want to volunteer” form is on the event's page.",
         "closed": {
-          "off": "The public form is off: press “Take volunteers on the page” below for the event's page to offer it. Your own list works either way.",
+          "off": "The public form is off: tick “Take volunteers on the page” below for the event's page to offer it. Your own list works either way.",
           "notPublished": "The public form is not shown: the event is not published. It appears on the page once the event is.",
           "membersOnly": "The public form is not shown: the event is for members only, and the form is public. Your own list works either way.",
           "eventOver": "The public form is not shown: the event is cancelled or over.",
@@ -4655,10 +4681,10 @@
           "noNotice": "The public form is not shown: the privacy notice in force does not describe volunteers yet. /admin/tasks says what to approve.",
           "noAgreement": "The public form is not shown: no volunteer agreement is in force. Approve one in «Legal documents»; «Tasks» says how.",
           "noAgreementNotice": "The public form is not shown: the privacy notice in force does not describe the volunteer agreement's acceptance yet. «Tasks» says what to approve."
-        }
+        },
+        "profileOff": "For now the public form asks only for the tick “I am at least 18”: the privacy notice in force does not describe the volunteers' age, sex, city and other answers yet. “Tasks” says what to approve."
       },
       "switchOn": "Take volunteers on the page",
-      "switchOff": "Stop taking volunteers on the page",
       "rolesTitle": "Roles",
       "rolesCount": "Roles: {count}",
       "rolesIntro": "A role needs a name in Romanian and in English, and how many people it needs. The order here is the order the page lists them in.",
@@ -4668,16 +4694,18 @@
         "nameEn": "Role name (English)",
         "needed": "People needed",
         "neededHelp": "At least 1. Only the people you gave the role count. Once it has that many, the public form stops offering it.",
-        "descriptionRo": "What the person does (Română, optional)",
-        "descriptionEn": "What the person does (English, optional)",
-        "descriptionHelp": "A line, at most {max} characters; in both languages or in neither.",
+        "descriptionRo": "Role description (Română, optional)",
+        "descriptionEn": "Role description (English, optional)",
+        "descriptionHelp": "What the role involves: where the volunteer stands, what they do, from what hour. At most {max} characters of text in each language; in both languages or neither.",
         "addTitle": "Add a role",
         "add": "Add the role",
         "adding": "Adding…",
         "delete": "Delete the role",
         "deleting": "Deleting…",
         "deleteTitle": "Delete this role?",
-        "deleteBody": "The role “{name}” is removed. A role given to someone, or ticked by someone, cannot be deleted: change their roles or delete them first."
+        "deleteBody": "The role “{name}” is removed. A role given to someone, or ticked by someone, cannot be deleted: change their roles or delete them first.",
+        "descriptionEmpty": "No description yet.",
+        "more": "The rest"
       },
       "move": {
         "up": "Move up",
@@ -4716,7 +4744,19 @@
         "noteLabel": "Note",
         "addTitle": "Add a volunteer by hand",
         "add": "Add the volunteer",
-        "adding": "Adding…"
+        "adding": "Adding…",
+        "age": "Age",
+        "ageHelp": "Optional. Whole years; a volunteer is at least the age the agreement asks.",
+        "sex": "Sex",
+        "sexNone": "Not given",
+        "city": "City",
+        "shirt": "T-shirt size",
+        "shirtNone": "No t-shirt",
+        "before": "Has volunteered at other races before",
+        "club": "Belongs to the {club} group",
+        "ageValue": "Age: {age}",
+        "cityValue": "City: {city}",
+        "shirtValue": "T-shirt: {size}"
       },
       "states": {
         "REGISTERED": "Registered",
@@ -4771,9 +4811,26 @@
         "source": "Source",
         "message": "Message",
         "note": "Note",
-        "signedUpAt": "Date"
+        "signedUpAt": "Date",
+        "age": "Age",
+        "sex": "Sex",
+        "city": "City",
+        "volunteeredBefore": "Volunteered before",
+        "clubMember": "From the club's group",
+        "shirtSize": "T-shirt size"
       },
-      "badgesLink": "Volunteer badges"
+      "badgesLink": "Volunteer badges",
+      "switchHelp": "Ticked, the event's page shows the “I want to volunteer” form. Unticked, nothing is deleted: the roles and the people stay.",
+      "shirts": {
+        "label": "We give volunteers T-shirts",
+        "help": "Ticked, the public form asks for the T-shirt size and you see it on each row. Unticked, the form asks for no size."
+      },
+      "chips": {
+        "before": "Volunteered before",
+        "club": "From the {club} group"
+      },
+      "yes": "Yes",
+      "no": "No"
     },
     "eventTodos": {
       "title": "To do for the event's page",
@@ -11163,7 +11220,9 @@
       "badgeDesignSaved": "The badge was saved.",
       "badgeDesignUnchanged": "Nothing to change on the badge.",
       "badgeColoursSaved": "The roles' colours were saved.",
-      "badgeColoursUnchanged": "Nothing to change in the colours."
+      "badgeColoursUnchanged": "Nothing to change in the colours.",
+      "volunteersShirtsOn": "The public form now asks for the T-shirt size.",
+      "volunteersShirtsOff": "The public form no longer asks for the T-shirt size. Sizes already given are kept."
     }
   },
   "Network": {

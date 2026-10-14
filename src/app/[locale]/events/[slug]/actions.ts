@@ -128,6 +128,13 @@ export async function submitVolunteerAction(form: FormData): Promise<void> {
         // The roles ticked (§761), one string in the draft: their ids joined by commas.
         roleIds: roleIdsOf(form).join(","),
         message: text(form, "message"),
+        // What the person said about themselves (§NNN) comes back too — never the consent, the agreement or the age tick.
+        age: text(form, "age").trim(),
+        sex: text(form, "sex"),
+        city: text(form, "city").trim(),
+        shirtSize: text(form, "shirtSize"),
+        volunteeredBefore: form.get("volunteeredBefore") === "on" ? "on" : "",
+        clubMember: form.get("clubMember") === "on" ? "on" : "",
       },
       path,
     );
@@ -161,6 +168,14 @@ export async function submitVolunteerAction(form: FormData): Promise<void> {
         // The volunteer agreement and the age (§758): the same, each its own act.
         agreement: form.get("agreement") === "on",
         adult: form.get("adult") === "on",
+        // What the person says about themselves (§NNN), read by the service only while the notice in force names it:
+        // the age as typed, the sex, the city, the size, and the two optional ticks — posted as "on" only when ticked.
+        age: text(form, "age"),
+        sex: text(form, "sex"),
+        city: text(form, "city"),
+        shirtSize: text(form, "shirtSize"),
+        volunteeredBefore: form.get("volunteeredBefore") === "on",
+        clubMember: form.get("clubMember") === "on",
         // Absent rather than empty: the service judges them as the registration form does (`classifySubmission`).
         honeypot: text(form, "honeypot") || undefined,
         renderedAt: renderedAt || undefined,

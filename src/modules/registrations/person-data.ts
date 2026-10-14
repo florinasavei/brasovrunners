@@ -111,6 +111,13 @@ export type PersonData = {
     phone: string;
     message: string | null;
     note: string | null;
+    /** What the person said about themselves (§NNN), every answer as stored: nulls and false for a row from before. */
+    age: number | null;
+    sex: (typeof eventVolunteers.$inferSelect)["sex"];
+    city: string | null;
+    volunteeredBefore: boolean;
+    clubMember: boolean;
+    shirtSize: (typeof eventVolunteers.$inferSelect)["shirtSize"];
     privacyNoticeVersion: number | null;
     createdAt: Date;
     /** The volunteer agreement (§758): the version accepted, how and when, and the age declared — or nulls. */
@@ -210,6 +217,12 @@ async function collectPersonData<T extends Record<string, unknown>>(
       phone: eventVolunteers.phone,
       message: eventVolunteers.message,
       note: eventVolunteers.note,
+      age: eventVolunteers.age,
+      sex: eventVolunteers.sex,
+      city: eventVolunteers.city,
+      volunteeredBefore: eventVolunteers.volunteeredBefore,
+      clubMember: eventVolunteers.clubMember,
+      shirtSize: eventVolunteers.shirtSize,
       privacyNoticeVersion: eventVolunteers.privacyNoticeVersion,
       createdAt: eventVolunteers.createdAt,
       agreementVersion: legalDocuments.version,

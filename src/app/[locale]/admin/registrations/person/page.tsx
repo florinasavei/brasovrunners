@@ -18,6 +18,7 @@ import { requireStaff } from "@/modules/staff-identity/session";
 import { lookUpPersonAction } from "./actions";
 import { actionKeyOf } from "@/shared/forms/action-key";
 import GlyphButton from "@/shared/ui/GlyphButton";
+import { CLUB_NAME } from "@/theme/brand";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -222,6 +223,13 @@ export default async function PersonDataPage({ params, searchParams }: Props) {
                       {t("volunteers.person.choicesLine", { roles: (locale === "en" ? offer.chosenRolesEn : offer.chosenRolesRo).join(", ") || "—" })} · {t(`volunteers.states.${offer.state}`)} · {t(`volunteers.sources.${offer.source}`)} · {offer.name} · {offer.deliveryEmail} · {offer.phone}
                       {offer.message ? ` · ${offer.message}` : ""}
                       {offer.note ? ` · ${offer.note}` : ""}
+                      {/* What the person said about themselves (§NNN): every column of the row, art. 15 GDPR. */}
+                      {offer.age !== null ? ` · ${t("volunteers.person.ageValue", { age: String(offer.age) })}` : ""}
+                      {offer.sex && offer.sex !== "UNSPECIFIED" ? ` · ${t(`registrations.answers.sex.${offer.sex}`)}` : ""}
+                      {offer.city ? ` · ${t("volunteers.person.cityValue", { city: offer.city })}` : ""}
+                      {offer.volunteeredBefore ? ` · ${t("volunteers.chips.before")}` : ""}
+                      {offer.clubMember ? ` · ${t("volunteers.chips.club", { club: CLUB_NAME })}` : ""}
+                      {offer.shirtSize && offer.shirtSize !== "NONE" ? ` · ${t("volunteers.person.shirtValue", { size: offer.shirtSize })}` : ""}
                       {/* The volunteer agreement (§758): accepted — which version, how, when — or not yet. */}
                       {" · "}
                       {offer.agreementAcceptedAt && offer.agreementMethod

@@ -1,8 +1,9 @@
 import { sql } from "drizzle-orm";
-import { boolean, check, index, integer, jsonb, pgEnum, pgTable, primaryKey, text, timestamp, unique, uuid } from "drizzle-orm/pg-core";
+import { boolean, check, index, integer, jsonb, pgEnum, pgTable, primaryKey, smallint, text, timestamp, unique, uuid } from "drizzle-orm/pg-core";
 import { events } from "./events";
 import { legalDocuments } from "./legal-documents";
 import { locale } from "./locale";
+import { registrationSex, registrationTshirtSize } from "./registrations";
 import { staffUsers } from "./staff-users";
 
 /**
@@ -46,8 +47,25 @@ export const eventVolunteerRoles = pgTable(
     nameEn: text("name_en").notNull(),
     /** How many people the role needs, at least one: «N din M» on the card and the form's «still needs people». */
     needed: integer("needed").notNull(),
+    /**
+     * The one-line description of §754 (at most 200 characters), **kept only until a later contract release** (§NNN):
+     * migration `0151` turned each value into the document below, and nothing reads or writes these two columns
+     * any more. Code still serving while the migration runs reads them; they are dropped when no such code can be.
+     */
     descriptionRo: text("description_ro"),
     descriptionEn: text("description_en"),
+    /**
+     * «Descrierea rolului» (§NNN; the owner, 2026-10-14: «I need the rich text editor here for responsibilities»): what
+     * the person does in the role — where they stand, what they do, from what hour — in the editor every page uses,
+     * one document per language, kept the FAQ's way: the document (`description_ro_json`) and its plain words
+     * (`description_words_ro`, `richTextToPlainText`, written by every save). The words are what the agreement's
+     * «Ce presupune rolul», its PDF and the emails say; the document is what the public form and the editor draw.
+     * Both languages or neither (checked by the service, `resolveRichPair`); null is no description.
+     */
+    descriptionRoJson: jsonb("description_ro_json"),
+    descriptionEnJson: jsonb("description_en_json"),
+    descriptionWordsRo: text("description_words_ro"),
+    descriptionWordsEn: text("description_words_en"),
     position: integer("position").notNull().default(0),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     /**
@@ -64,6 +82,11 @@ export const eventVolunteerRoles = pgTable(
     check(
       "event_volunteer_roles_description_length",
       sql`(${t.descriptionRo} IS NULL OR char_length(${t.descriptionRo}) BETWEEN 1 AND 200) AND (${t.descriptionEn} IS NULL OR char_length(${t.descriptionEn}) BETWEEN 1 AND 200)`,
+    ),
+    // The description's words: a document has its words and the words their document, within the bound the editor says (§NNN).
+    check(
+      "event_volunteer_roles_description_words",
+      sql`(${t.descriptionRoJson} IS NULL) = (${t.descriptionWordsRo} IS NULL) AND (${t.descriptionEnJson} IS NULL) = (${t.descriptionWordsEn} IS NULL) AND (${t.descriptionWordsRo} IS NULL OR char_length(${t.descriptionWordsRo}) BETWEEN 1 AND 2000) AND (${t.descriptionWordsEn} IS NULL OR char_length(${t.descriptionWordsEn}) BETWEEN 1 AND 2000)`,
     ),
   ],
 );
@@ -114,6 +137,23 @@ export const eventVolunteers = pgTable(
     message: text("message"),
     /** The organizers' own line; backoffice only. */
     note: text("note"),
+    /*
+      What the person says about themselves (§NNN; the owner, 2026-10-14: «când se înregistrează voluntarul trebuie să
+      pună măcar vârstă, sex, oraș și o bifă dacă a mai fost voluntar sau nu»): asked on the public form only while the
+      privacy notice in force names it (`describesVolunteerProfile`), optional on the organizers' own entry, null on a
+      row from before. The person's own answers, never checked against anything. Kept and deleted with the row.
+    */
+    /** Whole years, as typed; the minimum (`VOLUNTEER_MINIMUM_AGE`) is the code's rule, so a lower one is no migration. */
+    age: smallint("age"),
+    /** The registration form's own two answers (`domain/sex.ts`); the retired `UNSPECIFIED` is never written here. */
+    sex: registrationSex("sex"),
+    city: text("city"),
+    /** «Am mai fost voluntar în trecut la alte curse»: ticked or not — unticked is «nu», not unknown. */
+    volunteeredBefore: boolean("volunteered_before").notNull().default(false),
+    /** «Fac parte din grupul {club}»: the person's own claim, checked against nothing (like the registration form's, §48). */
+    clubMember: boolean("club_member").notNull().default(false),
+    /** The T-shirt's size, only while the event gives one (`events.volunteers_shirts`); null is none asked or none wanted. */
+    shirtSize: registrationTshirtSize("shirt_size"),
     privacyNoticeVersion: integer("privacy_notice_version"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
@@ -160,6 +200,10 @@ export const eventVolunteers = pgTable(
     check("event_volunteers_name_length", sql`char_length(${t.name}) BETWEEN 1 AND 120`),
     check("event_volunteers_message_length", sql`${t.message} IS NULL OR char_length(${t.message}) BETWEEN 1 AND 300`),
     check("event_volunteers_note_length", sql`${t.note} IS NULL OR char_length(${t.note}) BETWEEN 1 AND 500`),
+    check("event_volunteers_age_range", sql`${t.age} IS NULL OR ${t.age} BETWEEN 1 AND 120`),
+    check("event_volunteers_city_length", sql`${t.city} IS NULL OR char_length(${t.city}) BETWEEN 1 AND 80`),
+    // «Fără tricou» is no size: it is null (the registration enum's `NONE` is a registration's own answer).
+    check("event_volunteers_shirt_is_a_size", sql`${t.shirtSize} IS NULL OR ${t.shirtSize} <> 'NONE'`),
     // An acceptance is the version, the moment, the way and the language together, or nothing.
     check(
       "event_volunteers_agreement_complete",

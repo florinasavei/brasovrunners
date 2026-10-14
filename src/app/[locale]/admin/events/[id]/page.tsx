@@ -29,6 +29,7 @@ import {
   findCurrentApprovedDocument,
   noticeDescribesVolunteerAgreement,
   noticeDescribesVolunteers,
+  noticeDescribesVolunteerProfile,
   volunteerAgreementInForce,
 } from "@/modules/legal-documents/repository";
 import { VOLUNTEER_AGREEMENT_KEY } from "@/modules/legal-documents/domain/keys";
@@ -425,6 +426,8 @@ export default async function EditEventPage({ params, searchParams }: Props) {
           agreementNoticeDescribes,
           agreementDocumentIds,
           agreementEvent,
+          // Which form the public page draws (§NNN): the card says so beside the tick.
+          profileDescribed: await noticeDescribesVolunteerProfile(db, now),
           offerClosed: volunteerOfferClosedFor({
             acceptsVolunteers: event.acceptsVolunteers,
             standings,
@@ -1426,6 +1429,8 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                   locale={locale}
                   eventId={event.id}
                   acceptsVolunteers={event.acceptsVolunteers}
+                  volunteersShirts={event.volunteersShirts}
+                  profileDescribed={volunteersCard.profileDescribed}
                   offerClosed={volunteersCard.offerClosed}
                   roles={volunteersCard.roles}
                   standings={volunteersCard.standings}

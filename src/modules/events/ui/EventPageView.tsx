@@ -77,6 +77,10 @@ export type EventPageVisit = {
    */
   volunteers?: {
     roles: readonly PublicVolunteerRole[];
+    /** «Oferim tricouri voluntarilor» (§NNN): the form asks the T-shirt's size. */
+    shirts: boolean;
+    /** The notice in force names what a volunteer says about themselves (§NNN): the form asks it — else §758's tick. */
+    profile: boolean;
     outcome: ReturnType<typeof parseVolunteerOutcome>;
     refused: ReturnType<typeof parseVolunteerBoxes>;
     typed: VolunteerTyped;
@@ -340,6 +344,8 @@ export default async function EventPageView({
           locale={locale}
           slug={slug}
           roles={visit.volunteers.roles}
+          shirts={visit.volunteers.shirts}
+          profile={visit.volunteers.profile}
           outcome={visit.volunteers.outcome}
           refused={visit.volunteers.refused}
           typed={visit.volunteers.typed}
