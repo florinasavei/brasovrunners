@@ -344,7 +344,7 @@ test.describe.serial("§393 a group run's optional self-declaration", () => {
       await expect(page.getByRole("checkbox", { name: /Semnez pentru un minor|I am signing for a minor/ })).toHaveCount(0);
       await expect(page.getByTestId("group-run-minor")).toHaveCount(0);
       await expect(page.getByTestId("group-run-minor-fields")).toHaveCount(0);
-      await expect(page.getByTestId("group-run-declaration-adults")).toContainText(locale === "en" ? "You sign it only for yourself" : "O semnezi doar pentru tine");
+      await expect(page.getByTestId("group-run-declaration-adults")).toContainText(locale === "en" ? "Sign it only for yourself" : "O semnezi doar pentru tine");
       // Without a minor in the picture the consent box is the adult's own: nothing points at a tick.
       await expect(page.getByRole("checkbox", { name: locale === "en" ? ACCEPT_ANY_EN : ACCEPT_ANY_RO })).toHaveCount(0);
     }
