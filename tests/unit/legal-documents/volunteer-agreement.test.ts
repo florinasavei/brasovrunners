@@ -9,7 +9,7 @@ import { LEGAL_TEMPLATES, templatePrefill } from "@/modules/legal-documents/temp
 import { clubFactsFromEnv, remainingPlaceholders } from "@/modules/legal-documents/templates/club-facts";
 import { DECLARATION_TOKENS } from "@/modules/legal-documents/templates/tokens";
 import { volunteerAgreementEn, volunteerAgreementRo } from "@/modules/legal-documents/templates/volunteer-agreement";
-import { AGREEMENT_FACT_FIELDS } from "@/modules/volunteers/agreement";
+import { AGREEMENT_FACT_FIELDS, tasksWords } from "@/modules/volunteers/agreement";
 import { acceptedHowWords, volunteerAgreementLabels } from "@/modules/volunteers/agreement-pdf";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
@@ -92,6 +92,16 @@ describe("§NNN what the agreement says, in the owner's terms", () => {
     expect(roText).toContain("Legii nr. 78/2014");
     expect(enText).toContain("Law no. 78/2014");
   });
+
+  it("promises only the copies the platform makes: the volunteer's by email, the proof kept as the notice says", () => {
+    expect(roText).toContain("Voluntarul primește pe email o copie a contractului acceptat, ca PDF.");
+    expect(roText).toContain("Clubul păstrează dovada acceptării cât timp spune nota de confidențialitate.");
+    expect(enText).toContain("The volunteer receives a copy of the accepted agreement by email, as a PDF.");
+    expect(enText).toContain("The club keeps the proof of acceptance for as long as the privacy notice says.");
+    // Never a copy «that stays with the club» the platform deletes thirty days after the event.
+    expect(roText).not.toContain("una rămâne la club");
+    expect(enText).not.toContain("one stays with the club");
+  });
 });
 
 describe("§NNN the agreement's blanks", () => {
@@ -143,6 +153,17 @@ describe("§NNN the agreement's blanks", () => {
     const noTasks = text(mergeLegalBody(volunteerAgreementRo, { ...values, volunteerTasks: "" }));
     expect(noTasks).not.toContain("Ce presupune rolul");
     expect(noTasks).toContain("în rolul Punct de apă");
+    // A description typed as a sentence keeps one full stop, never two (`tasksWords`, applied before the facts freeze).
+    const typed = text(mergeLegalBody(volunteerAgreementRo, { ...values, volunteerTasks: tasksWords("Împarte apă la kilometrul 5. ") }));
+    expect(typed).toContain("Ce presupune rolul: Împarte apă la kilometrul 5.");
+    expect(typed).not.toContain("5..");
+    expect(tasksWords("Hands out water!")).toBe("Hands out water");
+    expect(tasksWords("Ține steagul…")).toBe("Ține steagul");
+    expect(tasksWords("No mark")).toBe("No mark");
+    // Only the one closing mark: the club's own words inside stay as typed.
+    expect(tasksWords("Ora 8. Apoi la km 5.")).toBe("Ora 8. Apoi la km 5");
+    // Punctuation alone is no description: the sentence is left out.
+    expect(tasksWords(" . ")).toBe("");
     // Unfilled, as the public page shows it: dotted blanks, never a sentence lost.
     expect(text(mergeLegalBody(volunteerAgreementRo, { minimumAge: "18 ani" }))).toContain(`Voluntarul este ${BLANK}.`);
   });

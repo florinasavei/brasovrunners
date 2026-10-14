@@ -4087,13 +4087,23 @@
             "Open the draft, read it, fill in what is left, “Save draft”, then “Approve and publish”. Once in force in both languages, the form appears on the pages of the events that take volunteers."
           ]
         },
+        "volunteerAgreementNotice": {
+          "title": "Privacy notice: the volunteer agreement",
+          "todo": "An event ahead takes volunteers, but the notice in force does not describe the agreement's acceptance yet. The volunteers' form, the agreement's link and “Signed on paper” wait for it.",
+          "done": "The notice in force describes the volunteer agreement's acceptance: what is kept, why, the PDF and the link.",
+          "how": [
+            "/admin/legal → the “GDPR” card → “Regenerate from the template” → confirm. Section 5's paragraph about volunteers names the agreement's acceptance and the age statement.",
+            "A lawyer should read the paragraph with the volunteer agreement: the legal basis (performing the agreement) and how long the club keeps the acceptances.",
+            "Open the draft, read it, fill in what is left, “Save draft”, then “Approve and publish” — in the same sitting as the volunteer agreement."
+          ]
+        },
         "volunteerAgreement": {
           "title": "The volunteer agreement",
           "todo": "An event ahead takes volunteers, but no volunteer agreement is in force: its page shows no form. Your own list works meanwhile.",
           "done": "The volunteer agreement is in force: whoever offers on a page accepts it, and people entered by hand get it by link or sign it on paper.",
           "how": [
             "/admin/legal → the “Volunteer agreement” card → “Regenerate from the template” → confirm. Or the button that approves the missing texts in one step.",
-            "A lawyer should read the text first, against Law no. 78/2014: the written form and the electronic acceptance, the age of 18, the role's task sheet, the volunteers' insurance and register.",
+            "A lawyer should read the text first, against Law no. 78/2014: the written form and the electronic acceptance, the age of 18, the role's task sheet, the volunteers' insurance and register, and how long the club keeps the acceptances: the platform deletes them 30 days after the event.",
             "Open the draft, fill in what is left, “Save draft”, then “Approve and publish”. Once in force in both languages, the form appears on the pages of the events that take volunteers."
           ]
         }
@@ -5673,10 +5683,10 @@
         "SHOP_ORDER_PLACED": "When a member orders from the members' shop: the order and how to pay. The button opens the members' area.",
         "SHOP_ORDER_PAID": "When an administrator marks the order paid: to the member who ordered. The button opens the members' area.",
         "SHOP_ORDER_CLUB_NOTICE": "On every order in the shop, to the address in «Magazin» → “Who receives the orders”, if one is written.",
-        "VOLUNTEER_RECEIVED": "When a person offers to volunteer on an event's page: the one acknowledgement to them — the role, the event, and that an organizer will confirm. Nothing to press.",
+        "VOLUNTEER_RECEIVED": "When a person offers to volunteer on an event's page: the one acknowledgement to them — the role, the event, and that an organizer will confirm, with the accepted agreement attached as a PDF. Nothing to press.",
         "VOLUNTEER_CLUB_NOTICE": "On every sign-up, to each Organizer, Administrator and Superadministrator. The button opens the event's «Volunteers» card.",
-        "VOLUNTEER_AGREEMENT_REQUEST": "When an organizer presses “Send the agreement link” for a volunteer entered by hand: the agreement and the link to accept it.",
-        "VOLUNTEER_AGREEMENT_ACCEPTED": "When a volunteer accepts the agreement from the link: their copy, with the agreement attached as a PDF."
+        "VOLUNTEER_AGREEMENT_REQUEST": "When an organizer presses “Send the agreement link” for a volunteer who has not accepted it yet: the agreement and the link to accept it.",
+        "VOLUNTEER_AGREEMENT_ACCEPTED": "When a volunteer accepts the agreement from the link, or an organizer presses “Signed on paper”: their copy, with the agreement attached as a PDF."
       },
       "whenShort": {
         "VERIFY_REGISTRATION_EMAIL": "after the form is sent",
@@ -5718,7 +5728,7 @@
         "VOLUNTEER_RECEIVED": "when someone offers to volunteer",
         "VOLUNTEER_CLUB_NOTICE": "on every sign-up, to the organizers",
         "VOLUNTEER_AGREEMENT_REQUEST": "on “Send the agreement link”",
-        "VOLUNTEER_AGREEMENT_ACCEPTED": "when the volunteer accepts from the link"
+        "VOLUNTEER_AGREEMENT_ACCEPTED": "after the link or “Signed on paper”"
       },
       "clubNotices": {
         "title": "The club's copies",
@@ -11158,7 +11168,7 @@
   "Volunteers": {
     "agreement": {
       "title": "The volunteer agreement",
-      "intro": "{name}, the organizers have put you on the volunteers' list for {event}, in the role “{role}”. Read the agreement and, if you agree, accept it below.",
+      "intro": "{name}, you are on the volunteers' list for {event}, in the role “{role}”. Read the agreement and, if you agree, accept it below.",
       "accept": "I have read and accept the volunteer agreement.",
       "adult": "I am at least {age} old.",
       "submit": "Accept the agreement",

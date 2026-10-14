@@ -40,6 +40,7 @@ const LAUNCHED: OwnerTaskInputs = {
   volunteersDescribed: true,
   volunteeringEvents: 1,
   volunteerAgreementInForce: true,
+  volunteerAgreementDescribed: true,
   gmailFallbackDescribed: true,
   refusalDescribed: true,
   teamPageDescribed: true,
@@ -169,6 +170,20 @@ describe("owner tasks", () => {
       expect(item.how.join("\n")).toContain("/admin/legal");
       // The lawyer reads it first, against the volunteering law (the owner's brief).
       expect(item.how.join("\n")).toContain("78/2014");
+    }
+  });
+
+  it("§NNN: the notice's row for the agreement's acceptance is open while an event ahead takes volunteers and the notice is silent, done once it names it", () => {
+    expect(stateOf({ ...LAUNCHED, volunteerAgreementDescribed: false }, "volunteerAgreementNotice")).toBe("open");
+    expect(stateOf(LAUNCHED, "volunteerAgreementNotice")).toBe("done");
+    expect(stateOf({ ...LAUNCHED, volunteeringEvents: 0 }, "volunteerAgreementNotice")).toBe("done");
+    expect(ownerTasks({ ...LAUNCHED, volunteerAgreementDescribed: false, volunteeringEvents: 0 }).some((task) => task.id === "volunteerAgreementNotice")).toBe(false);
+    // A notice row: there is nothing to describe until a notice is approved at all.
+    expect(ownerTasks({ ...LAUNCHED, hasApprovedPrivacyNotice: false }).some((task) => task.id === "volunteerAgreementNotice")).toBe(false);
+    for (const catalogue of [ro, en]) {
+      const item = catalogue.Admin.tasks.items.volunteerAgreementNotice;
+      expect(item.title && item.todo && item.done).toBeTruthy();
+      expect(item.how.join("\n")).toContain("/admin/legal");
     }
   });
 
@@ -443,6 +458,7 @@ describe("owner tasks", () => {
       "feedbackNamedNotice",
       "shopNotice",
       "volunteersNotice",
+      "volunteerAgreementNotice",
       "gmailFallbackNotice",
       "volunteerAgreement",
       "refusalTerms",

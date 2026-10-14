@@ -66,6 +66,7 @@ export type TaskId =
   | "feedbackNamedNotice"
   | "shopNotice"
   | "volunteersNotice"
+  | "volunteerAgreementNotice"
   | "volunteerAgreement"
   | "gmailFallbackNotice"
   | "refusalTerms"
@@ -110,6 +111,7 @@ export const TASK_KIND: Record<TaskId, TaskKind> = {
   feedbackNamedNotice: "text",
   shopNotice: "text",
   volunteersNotice: "text",
+  volunteerAgreementNotice: "text",
   volunteerAgreement: "text",
   gmailFallbackNotice: "text",
   refusalTerms: "text",
@@ -272,6 +274,11 @@ export type OwnerTaskInputs = {
    * event page offers «Vreau să fiu voluntar», and no link or paper acceptance can be recorded.
    */
   volunteerAgreementInForce: boolean;
+  /**
+   * Does the notice in force, in every language, describe the agreement's acceptance (§NNN,
+   * `noticeDescribesVolunteerAgreement`)? Until it does, the form, the link and «Semnat pe hârtie» wait.
+   */
+  volunteerAgreementDescribed: boolean;
   /**
    * Does the notice in force, in every language, say a message may leave through the club's Gmail
    * while Mailgun is stopped (§622, `noticeDescribesGmailFallback`)? Until it does, «Gmail preia când
@@ -581,6 +588,18 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
       push("volunteersNotice", {
         owner: "club",
         state: input.volunteersDescribed ? "done" : "open",
+      });
+    }
+    /*
+      The volunteer agreement's acceptance in the notice (§NNN), the same shape: open while an event ahead takes
+      volunteers and the notice in force does not name `{{volunteerAgreement}}` — a notice approved from §754's
+      template says nothing of the acceptance, the age statement, the PDF or the link — done by itself the day one
+      naming it takes effect, absent while no event takes volunteers and the notice is silent.
+    */
+    if (input.volunteerAgreementDescribed || input.volunteeringEvents > 0) {
+      push("volunteerAgreementNotice", {
+        owner: "club",
+        state: input.volunteerAgreementDescribed ? "done" : "open",
       });
     }
     /*

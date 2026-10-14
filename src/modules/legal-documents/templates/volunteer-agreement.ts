@@ -25,7 +25,10 @@ import type { LegalDocumentBody } from "../domain/content-hash";
  * signature the declarations already use, §556) or needs the paper copy the desk prints; whether the role's
  * description is enough as the volunteer's task sheet; whether the club must insure its volunteers; whether it
  * must keep a register of volunteer agreements, which the platform's thirty-day deletion of the volunteers'
- * rows (§754) would not be; and the age: the text states the platform's minimum, eighteen
+ * rows (§754) would not be — so the text promises only what the platform does: the volunteer's copy by email
+ * (after the form, the link and the paper alike) and the proof kept «cât timp spune nota de confidențialitate»;
+ * whether to keep a narrowed acceptance record longer, or to send the club an archive copy as the declarations do,
+ * is the owner's and the lawyer's to decide before the club approves the text; and the age: the text states the platform's minimum, eighteen
  * (`VOLUNTEER_MINIMUM_AGE`, through `{{minimumAge}}`) — a minor's volunteering with a parent's consent is a
  * later question, and the form refuses a person who does not tick «Am cel puțin 18 ani».
  *
@@ -141,12 +144,12 @@ const dataEn = [
 const lawRo = [
   "Contractul se încheie potrivit Legii nr. 78/2014 privind reglementarea activității de voluntariat în România și se completează cu prevederile Codului civil.",
   // «Momentul acceptării» as the platform records it (§534's words for the declarations), never a time stamp.
-  "Voluntarul acceptă contractul electronic — numele, bifa de acceptare, momentul acceptării ({{signedAt}}) și amprenta textului citit sunt înregistrate împreună de platforma clubului — sau îl semnează pe hârtie, la organizatori. Voluntarul primește o copie a contractului, iar una rămâne la club.",
+  "Voluntarul acceptă contractul electronic — numele, bifa de acceptare, momentul acceptării ({{signedAt}}) și amprenta textului citit sunt înregistrate împreună de platforma clubului — sau îl semnează pe hârtie, la organizatori. Voluntarul primește pe email o copie a contractului acceptat, ca PDF. Clubul păstrează dovada acceptării cât timp spune nota de confidențialitate.",
 ];
 
 const lawEn = [
   "The agreement is made under Romanian Law no. 78/2014 on volunteering in Romania and is completed by the Romanian Civil Code.",
-  "The volunteer accepts the agreement electronically — the name, the acceptance tick, the moment of acceptance ({{signedAt}}) and the fingerprint of the text read are recorded together by the club's platform — or signs it on paper, with the organisers. The volunteer receives a copy of the agreement, and one stays with the club.",
+  "The volunteer accepts the agreement electronically — the name, the acceptance tick, the moment of acceptance ({{signedAt}}) and the fingerprint of the text read are recorded together by the club's platform — or signs it on paper, with the organisers. The volunteer receives a copy of the accepted agreement by email, as a PDF. The club keeps the proof of acceptance for as long as the privacy notice says.",
 ];
 
 export const volunteerAgreementRo: LegalDocumentBody = {

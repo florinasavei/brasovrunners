@@ -4087,13 +4087,23 @@
             "Deschide ciorna, citește, completează ce a rămas, „Salvează ciorna”, apoi „Aprobă și publică”. Odată în vigoare în ambele limbi, formularul apare pe paginile evenimentelor care primesc voluntari."
           ]
         },
+        "volunteerAgreementNotice": {
+          "title": "Nota de confidențialitate: contractul de voluntariat",
+          "todo": "Un eveniment viitor primește voluntari, dar nota în vigoare nu descrie încă acceptarea contractului. Formularul de voluntari, linkul contractului și „Semnat pe hârtie” așteaptă până atunci.",
+          "done": "Nota în vigoare descrie acceptarea contractului de voluntariat: ce se păstrează, de ce, PDF-ul și linkul.",
+          "how": [
+            "/admin/legal → cardul „GDPR” → „Regenerează din șablon” → confirmă. Paragraful despre voluntari din secțiunea 5 numește acceptarea contractului și declarația de vârstă.",
+            "Un jurist ar trebui să citească paragraful odată cu contractul de voluntariat: temeiul (executarea contractului) și cât timp păstrează clubul acceptările.",
+            "Deschide ciorna, citește, completează ce a rămas, „Salvează ciorna”, apoi „Aprobă și publică” — în aceeași ședință cu contractul de voluntariat."
+          ]
+        },
         "volunteerAgreement": {
           "title": "Contractul de voluntariat",
           "todo": "Un eveniment viitor primește voluntari, dar niciun contract de voluntariat nu e în vigoare: pagina lui nu arată formularul. Lista ta funcționează între timp.",
           "done": "Contractul de voluntariat e în vigoare: cine se oferă pe pagină îl acceptă, iar cei trecuți de mână îl primesc prin link sau îl semnează pe hârtie.",
           "how": [
             "/admin/legal → cardul „Contract de voluntariat” → „Regenerează din șablon” → confirmă. Sau butonul care aprobă într-un pas textele care lipsesc.",
-            "Un jurist ar trebui să citească textul întâi, după Legea nr. 78/2014: forma scrisă și acceptarea electronică, vârsta de 18 ani, fișa rolului, asigurarea voluntarilor și registrul lor.",
+            "Un jurist ar trebui să citească textul întâi, după Legea nr. 78/2014: forma scrisă și acceptarea electronică, vârsta de 18 ani, fișa rolului, asigurarea voluntarilor și registrul lor, și cât timp păstrează clubul acceptările: platforma le șterge la 30 de zile după eveniment.",
             "Deschide ciorna, completează ce a rămas, „Salvează ciorna”, apoi „Aprobă și publică”. Odată în vigoare în ambele limbi, formularul apare pe paginile evenimentelor care primesc voluntari."
           ]
         }
@@ -5673,10 +5683,10 @@
         "SHOP_ORDER_PLACED": "Când un membru comandă din magazinul membrilor: comanda și cum se plătește. Butonul duce în zona membrilor.",
         "SHOP_ORDER_PAID": "Când un administrator marchează comanda plătită: membrului care a comandat. Butonul duce în zona membrilor.",
         "SHOP_ORDER_CLUB_NOTICE": "La fiecare comandă din magazin, la adresa din «Magazin» → «Cine primește comenzile», dacă e scrisă.",
-        "VOLUNTEER_RECEIVED": "Când cineva se oferă voluntar pe pagina unui eveniment: singurul mesaj către el — rolul, evenimentul și faptul că un organizator confirmă. Nimic de apăsat.",
+        "VOLUNTEER_RECEIVED": "Când cineva se oferă voluntar pe pagina unui eveniment: singurul mesaj către el — rolul, evenimentul și faptul că un organizator confirmă, cu contractul acceptat atașat ca PDF. Nimic de apăsat.",
         "VOLUNTEER_CLUB_NOTICE": "La fiecare ofertă, către fiecare Organizator, Administrator și Superadministrator. Butonul deschide cardul «Voluntari» al evenimentului.",
-        "VOLUNTEER_AGREEMENT_REQUEST": "Când un organizator apasă „Trimite linkul contractului” la un voluntar trecut de mână: contractul și linkul de acceptare.",
-        "VOLUNTEER_AGREEMENT_ACCEPTED": "Când un voluntar acceptă contractul din link: copia lui, cu contractul atașat ca PDF."
+        "VOLUNTEER_AGREEMENT_REQUEST": "Când un organizator apasă „Trimite linkul contractului” la un voluntar care nu l-a acceptat încă: contractul și linkul de acceptare.",
+        "VOLUNTEER_AGREEMENT_ACCEPTED": "Când un voluntar acceptă contractul din link sau un organizator apasă „Semnat pe hârtie”: copia lui, cu contractul atașat ca PDF."
       },
       "whenShort": {
         "VERIFY_REGISTRATION_EMAIL": "după trimiterea formularului",
@@ -5718,7 +5728,7 @@
         "VOLUNTEER_RECEIVED": "când cineva se oferă voluntar",
         "VOLUNTEER_CLUB_NOTICE": "la fiecare ofertă, organizatorilor",
         "VOLUNTEER_AGREEMENT_REQUEST": "la „Trimite linkul contractului”",
-        "VOLUNTEER_AGREEMENT_ACCEPTED": "când voluntarul acceptă din link"
+        "VOLUNTEER_AGREEMENT_ACCEPTED": "după link sau „Semnat pe hârtie”"
       },
       "clubNotices": {
         "title": "Copiile clubului",
@@ -11158,7 +11168,7 @@
   "Volunteers": {
     "agreement": {
       "title": "Contractul de voluntariat",
-      "intro": "{name}, organizatorii te-au trecut pe lista voluntarilor pentru {event}, în rolul „{role}”. Citește contractul și, dacă ești de acord, acceptă-l mai jos.",
+      "intro": "{name}, ești pe lista voluntarilor pentru {event}, în rolul „{role}”. Citește contractul și, dacă ești de acord, acceptă-l mai jos.",
       "accept": "Am citit și accept contractul de voluntariat.",
       "adult": "Am cel puțin {age}.",
       "submit": "Accept contractul",

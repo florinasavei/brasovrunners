@@ -1785,18 +1785,19 @@ const T = {
         `Dacă nu tu ai trimis oferta, scrie-ne din pagina de contact și o ștergem; altfel rămâne la organizatori cel mult ${volunteerDays("ro")} de la începutul evenimentului sau de la trimiterea ofertei, dacă e mai târziu.`,
       ],
     },
-    // The volunteer agreement (§NNN): to a volunteer an organizer entered by hand — the link to read and accept it.
+    // The volunteer agreement (§NNN): to a volunteer who has not accepted it — entered by hand, or an offer made on the
+    // page before the agreement existed — the link to read and accept it. Its words are true for both.
     volunteerAgreementRequest: {
       subject: (d: TemplateData) => `Contractul de voluntariat pentru ${d.eventTitle ?? "eveniment"}`,
       facts: (d: TemplateData) => volunteerFacts("ro", d, { map: "Harta punctului de întâlnire", strava: "Evenimentul pe Strava" }),
       body: (d: TemplateData) => [
-        `Mulțumim că ne ajuți ca voluntar la ${d.eventTitle ?? "eveniment"}! Organizatorii te-au trecut pe lista voluntarilor, în rolul scris mai sus.`,
+        `Mulțumim că ne ajuți ca voluntar la ${d.eventTitle ?? "eveniment"}! Ești pe lista voluntarilor, în rolul scris mai sus.`,
         "Înainte de eveniment, te rugăm să citești și să accepți contractul de voluntariat: spune că ajutorul e neplătit, ce face voluntarul și ce face clubul. Îl deschizi cu butonul de mai jos.",
         `Linkul este valabil **${d.linkLifetime ?? defaultLinkLifetime("ro")}** și doar pentru tine. Dacă preferi hârtia, îl poți semna și la organizatori.`,
       ],
       action: "Citește și acceptă contractul",
     },
-    // …and the person's copy, after the link: the accepted agreement as a PDF.
+    // …and the person's copy, after the link or after «Semnat pe hârtie» at the desk: the accepted agreement as a PDF.
     volunteerAgreementAccepted: {
       subject: (d: TemplateData) => `Ai acceptat contractul de voluntariat pentru ${d.eventTitle ?? "eveniment"}`,
       facts: (d: TemplateData) => volunteerFacts("ro", d, { map: "Harta punctului de întâlnire", strava: "Evenimentul pe Strava" }),
@@ -2541,7 +2542,7 @@ const T = {
       subject: (d: TemplateData) => `The volunteer agreement for ${d.eventTitle ?? "the event"}`,
       facts: (d: TemplateData) => volunteerFacts("en", d, { map: "Map of the meeting point", strava: "The event on Strava" }),
       body: (d: TemplateData) => [
-        `Thank you for helping as a volunteer at ${d.eventTitle ?? "the event"}! The organizers have put you on the volunteers' list, in the role written above.`,
+        `Thank you for helping as a volunteer at ${d.eventTitle ?? "the event"}! You are on the volunteers' list, in the role written above.`,
         "Before the event, please read and accept the volunteer agreement: it says the help is unpaid, what the volunteer does and what the club does. Open it with the button below.",
         `The link is valid for **${d.linkLifetime ?? defaultLinkLifetime("en")}** and only for you. If you prefer paper, you can also sign it with the organizers.`,
       ],

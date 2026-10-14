@@ -11,7 +11,9 @@ import { computeContentHash, type LegalDocumentTranslationInput } from "@/module
 import { signedTextHash } from "@/modules/legal-documents/domain/signed-text";
 import { findCurrentApprovedDocument, insertLegalDocumentVersion, listVersionsForBackoffice } from "@/modules/legal-documents/repository";
 import { LEGAL_TEMPLATES } from "@/modules/legal-documents/templates/catalogue";
-import type { OutboxRow } from "@/modules/notifications/outbox";
+import { type OutboxRow, processOutboxBatch } from "@/modules/notifications/outbox";
+import type { SendResult } from "@/infrastructure/email/adapter";
+import type { EmailSender } from "@/infrastructure/email/delivery";
 import { renderOutboxMessage } from "@/modules/notifications/render";
 import {
   acceptVolunteerAgreementByLink,
@@ -456,6 +458,137 @@ describe("§NNN the volunteer agreement", () => {
       const text = await words(id);
       expect(text).toContain("Semnat pe hârtie");
       expect(text).toContain("Ana Admin");
+    });
+  });
+
+  describe("after the review (§NNN)", () => {
+    it("withdraws a request queued before the address was corrected, and mints nothing for the old mailbox", async () => {
+      await approveAgreement();
+      const { event, role } = await seedEvent();
+      const id = await byHand(event.id, role.id);
+      await requestVolunteerAgreement(db, admin, { eventId: event.id, id }, NOW);
+      // While the email waits (a retry, the day's allowance), the organizer corrects the address.
+      await changeVolunteer(db, admin, { kind: "edit", eventId: event.id, id, fields: { roleId: role.id, name: "Ion Popescu", email: "ion.nou@example.test", phone: "+40712345679", note: "" } }, NOW);
+      const [queued] = await outboxOf("VOLUNTEER_AGREEMENT_REQUEST");
+      expect(queued.recipientEmail).toBe("ion@example.test");
+      await expect(render(queued, LATER)).rejects.toThrow(/address changed/i);
+      expect(await row(id)).toMatchObject({ agreementTokenHash: null, agreementTokenExpiresAt: null, agreementAcceptedAt: null });
+      // A new press goes to the new address, and its link works.
+      await requestVolunteerAgreement(db, admin, { eventId: event.id, id }, LATER);
+      const fresh = (await outboxOf("VOLUNTEER_AGREEMENT_REQUEST")).find((candidate) => candidate.recipientEmail === "ion.nou@example.test")!;
+      const message = await render(fresh, LATER);
+      expect((await row(id)).agreementTokenHash).toBe(createHash("sha256").update(secretIn(message.text), "utf8").digest("hex"));
+    });
+
+    it("sends a receipt queued to an address corrected since without the agreement's PDF", async () => {
+      await approveAgreement();
+      const { event, role } = await seedEvent();
+      await submitVolunteer(db, event.id, form(role.id), NOW);
+      const [person] = await db.select().from(eventVolunteers);
+      await changeVolunteer(db, admin, { kind: "edit", eventId: event.id, id: person.id, fields: { roleId: role.id, name: "Maria Test", email: "maria.noua@example.test", phone: "+40712345678", note: "" } }, NOW);
+      const [receipt] = await outboxOf("VOLUNTEER_RECEIVED");
+      const message = await render(receipt);
+      expect(message.attachments ?? []).toEqual([]);
+      expect(message.text).not.toContain("Contractul de voluntariat pe care l-ai acceptat e atașat");
+    });
+
+    it("keeps the form, the link and the paper shut while the notice in force is §754's, silent on the acceptance", async () => {
+      await approveAgreement();
+      await approveNotice(2, false);
+      const { event, role } = await seedEvent();
+      await expect(submitVolunteer(db, event.id, form(role.id), NOW)).rejects.toMatchObject({ code: "CONFLICT" });
+      expect(await db.select().from(eventVolunteers)).toHaveLength(0);
+      const id = await byHand(event.id, role.id);
+      await expect(requestVolunteerAgreement(db, admin, { eventId: event.id, id }, NOW)).rejects.toMatchObject({ code: "VOLUNTEER_AGREEMENT_NOTICE" });
+      await expect(paper(event.id, id)).rejects.toMatchObject({ code: "VOLUNTEER_AGREEMENT_NOTICE" });
+      expect(await outboxOf("VOLUNTEER_AGREEMENT_REQUEST")).toHaveLength(0);
+      expect(await row(id)).toMatchObject({ agreementAcceptedAt: null, agreementRequestedAt: null });
+      // A notice naming the acceptance too: both open.
+      await approveNotice(3);
+      await requestVolunteerAgreement(db, admin, { eventId: event.id, id }, NOW);
+      expect(await outboxOf("VOLUNTEER_AGREEMENT_REQUEST")).toHaveLength(1);
+    });
+
+    it("emails the paper signer their copy, the PDF attached, as after the link", async () => {
+      await approveAgreement();
+      const { event, role } = await seedEvent();
+      const id = await byHand(event.id, role.id);
+      await paper(event.id, id);
+      const [copy] = await outboxOf("VOLUNTEER_AGREEMENT_ACCEPTED");
+      expect(copy).toMatchObject({ recipientEmail: "ion@example.test", locale: "ro", requestedByStaffUserId: admin.id, idempotencyKey: `volunteer:${id}:agreement-accepted` });
+      const message = await render(copy);
+      expect(message.attachments?.map((file) => file.filename)).toEqual([VOLUNTEER_AGREEMENT_PDF_NAME]);
+      expect(message.text).toContain("Contractul e atașat, ca PDF.");
+    });
+
+    it("refuses «Semnat pe hârtie» when the version in force or the role changed since the sheet was printed", async () => {
+      await approveAgreement();
+      const { event, role } = await seedEvent();
+      const id = await byHand(event.id, role.id);
+      const printed = await printedFor(id);
+      // A new version approved between the print and the press.
+      await approveAgreement(2);
+      await expect(recordPaperVolunteerAgreement(db, admin, { eventId: event.id, id, printed }, NOW)).rejects.toMatchObject({ code: "VOLUNTEER_AGREEMENT_REPRINT" });
+      // The person moved to another role since.
+      const [other] = await db.insert(eventVolunteerRoles).values({ eventId: event.id, nameRo: "Sosire", nameEn: "Finish", needed: 2 }).returning();
+      const reprinted = await printedFor(id);
+      await changeVolunteer(db, admin, { kind: "edit", eventId: event.id, id, fields: { roleId: other.id, name: "Ion Popescu", email: "ion@example.test", phone: "+40712345679", note: "" } }, NOW);
+      await expect(recordPaperVolunteerAgreement(db, admin, { eventId: event.id, id, printed: reprinted }, NOW)).rejects.toMatchObject({ code: "VOLUNTEER_AGREEMENT_REPRINT" });
+      expect((await row(id)).agreementAcceptedAt).toBeNull();
+      expect(await outboxOf("VOLUNTEER_AGREEMENT_ACCEPTED")).toHaveLength(0);
+      // The sheet printed now: recorded, with the version and the role on it.
+      await paper(event.id, id);
+      expect(readAgreementFacts((await row(id)).agreementFacts)?.volunteerRole).toBe("Sosire");
+    });
+
+    it("records the age on paper only when the signed version states it", async () => {
+      const en = LEGAL_TEMPLATES.VOLUNTEER_AGREEMENT.en;
+      const ro = LEGAL_TEMPLATES.VOLUNTEER_AGREEMENT.ro;
+      // The club edited the age sentence out of its approved text.
+      const withoutAge = (body: typeof ro.body) => ({ sections: body.sections.map((section) => ({ ...section, paragraphs: section.paragraphs.filter((paragraph) => !paragraph.includes("{{minimumAge}}")) })) });
+      const translations: LegalDocumentTranslationInput[] = [
+        { locale: "ro", title: ro.title, body: withoutAge(ro.body) },
+        { locale: "en", title: en.title, body: withoutAge(en.body) },
+      ];
+      await insertLegalDocumentVersion(db, { key: "VOLUNTEER_AGREEMENT", version: 1, effectiveAt: new Date("2026-01-01T00:00:00.000Z"), isApproved: true, contentSha256: computeContentHash(translations), translations, now: NOW });
+      const { event, role } = await seedEvent();
+      const id = await byHand(event.id, role.id);
+      await paper(event.id, id);
+      expect(await row(id)).toMatchObject({ agreementMethod: "PAPER", declaredAdult: false });
+      // The platform's own text states it: declared.
+      const other = await byHand(event.id, role.id, "dana@example.test");
+      await approveAgreement(2);
+      await paper(event.id, other);
+      expect(await row(other)).toMatchObject({ agreementMethod: "PAPER", declaredAdult: true });
+    });
+
+    it("freezes a role's description without a doubled full stop", async () => {
+      await approveAgreement();
+      const { event, role } = await seedEvent();
+      await db.update(eventVolunteerRoles).set({ descriptionRo: "Împarte apă la kilometrul 5." }).where(eq(eventVolunteerRoles.id, role.id));
+      const id = await byHand(event.id, role.id);
+      await paper(event.id, id);
+      expect(readAgreementFacts((await row(id)).agreementFacts)?.volunteerTasks).toBe("Împarte apă la kilometrul 5");
+      const text = (await drawnRuns(() => renderVolunteerAgreementPdf(db, id, NOW))).map((run) => run.text).join(" ");
+      expect(text).toContain("kilometrul 5");
+      expect(text).not.toContain("5..");
+    });
+
+    it("clears a link whose email the provider refused for good — nobody holds it — and keeps one a retry will replace", async () => {
+      await approveAgreement();
+      const { event, role } = await seedEvent();
+      const id = await byHand(event.id, role.id);
+      await requestVolunteerAgreement(db, admin, { eventId: event.id, id }, NOW);
+      const refusing = (result: SendResult): EmailSender => ({ send: async () => result });
+      // A transient refusal: the hash minted stays (the retry mints a newer one).
+      await processOutboxBatch(db, { sender: refusing({ outcome: "transient_failure", error: "502 bad gateway" }), render: renderOutboxMessage, now: LATER, recordRun: false });
+      expect((await row(id)).agreementTokenHash).not.toBeNull();
+      // Refused for good: the hash goes, and the card no longer says «Link trimis».
+      const retryAt = new Date(LATER.getTime() + DAY);
+      await processOutboxBatch(db, { sender: refusing({ outcome: "permanent_failure", error: "550 5.1.1 no such user" }), render: renderOutboxMessage, now: retryAt, recordRun: false });
+      const after = await row(id);
+      expect(after).toMatchObject({ agreementTokenHash: null, agreementTokenExpiresAt: null });
+      expect(agreementStandingOf(after, retryAt)).toBe("notAccepted");
     });
   });
 });
