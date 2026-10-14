@@ -27,17 +27,18 @@ test.describe.serial("§406 the editor is the page, top to bottom", () => {
     await hydrated(page);
     const field = (name: string) => page.locator(`[name="${name}"]`);
 
-    // The map: nine cards and the share links (the cost is inside card 1, §466; the place inside
-    // «Când și unde» and the rules inside «Program, regulament și declarație», §481, the public list
-    // with them, §512), in the page's order, the share links named as automatic.
+    // The map: eight cards and the share links (the cost is inside card 1, §466; the place inside
+    // «Când și unde», §481; the programme, the rules and the public list inside «Participare, înscrieri
+    // și regulament», §NNN), in the page's order, the share links named as automatic.
     const map = page.getByTestId("section-map");
     await expect(map).toBeVisible();
-    await expect(map.getByRole("listitem")).toHaveCount(10);
-    await expect(map.getByRole("link")).toHaveCount(9);
-    for (const nested of ["cost", "place", "rules", "startList", "video"]) await expect(map.locator(`[data-section="${nested}"]`)).toHaveCount(0);
+    await expect(map.getByRole("listitem")).toHaveCount(9);
+    await expect(map.getByRole("link")).toHaveCount(8);
+    for (const nested of ["cost", "place", "programme", "rules", "startList", "video"]) await expect(map.locator(`[data-section="${nested}"]`)).toHaveCount(0);
     await expect(map.locator('[data-section="share"]')).toHaveAttribute("aria-label", "Distribuie — automat, fără card");
     await expect(chip(page, /^1 · Tipul — apare pe pagină$/)).toHaveAttribute("href", "#box-kind");
-    await expect(chip(page, /^9 · Program și regulament — gol, nu apare pe pagină$/)).toHaveAttribute("href", "#box-programme");
+    await expect(chip(page, /^6 · Înscriere și regulament — gol, nu apare pe pagină$/)).toHaveAttribute("href", "#box-registration");
+    await expect(chip(page, /^8 · Linkuri și fișiere/)).toHaveAttribute("href", "#box-links");
     // A thumb's target, every one of them.
     for (const link of await map.getByRole("link").all()) {
       expect((await link.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
@@ -51,7 +52,12 @@ test.describe.serial("§406 the editor is the page, top to bottom", () => {
     // The cost is a plain card inside card 1 since §466: no number, no chip; the cards after it renumber.
     await expect(page.locator("#box-kind #box-cost")).toHaveCount(1);
     await expect(page.getByRole("heading", { name: /^\d+ · Cost/ })).toHaveCount(0);
-    await expect(page.getByRole("heading", { name: /^6 · Participare și înscrieri — gol, nu apare pe pagină/ })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /^6 · Participare, înscrieri și regulament — gol, nu apare pe pagină/ })).toBeVisible();
+    // No group of cards not on the page (§NNN): each is a card of the page's own.
+    await expect(page.getByText("Nu sunt secțiuni ale paginii")).toHaveCount(0);
+    await expect(page.locator("#box-kind #box-promotion")).toHaveCount(1);
+    await expect(page.locator("#box-title #box-address")).toHaveCount(1);
+    await expect(page.locator("#box-title #box-cover")).toHaveCount(1);
 
     // A chip opens its card (§336): shut on arrival, open after the press, and the address names it.
     const links = editorBox(page, "Linkuri și fișiere");
@@ -60,10 +66,11 @@ test.describe.serial("§406 the editor is the page, top to bottom", () => {
     await expect(links).toHaveAttribute("open", "");
     await expect(page).toHaveURL(/#box-links$/);
 
-    // What publication needs, from outside the cards: every language on the title card, the
-    // title's chip marked the same, and each tab counting its own.
-    const titleLine = editorBox(page, "Titlu și rezumat").getByTestId("required-titleSummary");
-    await expect(titleLine).toHaveText("lipsesc: Titlu (RO, EN) · Rezumat (RO, EN)");
+    // What publication needs, from outside the cards: every language on the title card — the page's
+    // address with it, a card inside it since §NNN — the title's chip marked the same, and each tab
+    // counting its own.
+    const titleLine = editorBox(page, "Titlu și rezumat").getByTestId("required-titleSummary").first();
+    await expect(titleLine).toHaveText("lipsesc: Titlu (RO, EN) · Rezumat (RO, EN) · Adresa paginii (RO, EN)");
     await expect(chip(page, /^2 · Titlul/).getByTestId("section-map-missing")).toBeVisible();
     await expect(languageTab(page, "title", "ro")).toHaveText("Română · 2 obligatorii lipsă");
     // The meeting point's gap is on «Când și unde», and on its chip (§481).
@@ -99,11 +106,11 @@ test.describe.serial("§406 the editor is the page, top to bottom", () => {
     await page.goto(editorUrl);
     await hydrated(page);
 
-    // The same map, now from what is saved: nine cards to open, the public list inside card 9 (§512).
-    await expect(page.getByTestId("section-map").getByRole("link")).toHaveCount(9);
+    // The same map, now from what is saved: eight cards to open, the public list inside card 6 (§NNN).
+    await expect(page.getByTestId("section-map").getByRole("link")).toHaveCount(8);
     await expect(chip(page, /^2 · Titlul — apare pe pagină/)).toBeVisible();
     await expect(chip(page, /^4 · Când și unde — apare pe pagină/)).toBeVisible();
-    await expect(chip(page, /^9 · Program și regulament — gol, nu apare pe pagină/)).toBeVisible();
+    await expect(chip(page, /^6 · Înscriere și regulament — gol, nu apare pe pagină/)).toBeVisible();
     await expect(page.getByRole("heading", { name: /^2 · Titlu și rezumat — apare pe pagină/ })).toBeVisible();
     await expect(page.getByRole("heading", { name: /^5 · Traseul — gol, nu apare pe pagină/ })).toBeVisible();
 
@@ -114,7 +121,7 @@ test.describe.serial("§406 the editor is the page, top to bottom", () => {
     await expect(course).toHaveAttribute("open", "");
 
     // Only the summaries are missing, in both languages, on the closed card and on its tabs.
-    await expect(editorBox(page, "Titlu și rezumat").getByTestId("required-titleSummary")).toHaveText("lipsesc: Rezumat (RO, EN)");
+    await expect(editorBox(page, "Titlu și rezumat").getByTestId("required-titleSummary").first()).toHaveText("lipsesc: Rezumat (RO, EN)");
     await expect(languageTab(page, "title", "en")).toHaveText("English · 1 obligatoriu lipsă");
 
     // A full save still works, the course with it — the card moved, its names did not.
@@ -238,7 +245,7 @@ test.describe.serial("§406 the editor is the page, top to bottom", () => {
     await fresh.close();
   });
 
-  test("the grouped cards: «Când și unde», «Program, regulament și declarație» with the start list last in it, no film card", async ({ page }) => {
+  test("the grouped cards: «Când și unde», «Participare, înscrieri și regulament» with the start list last in it, no film card", async ({ page }) => {
     test.skip(!editorUrl, "the create step did not run");
     await signIn(page, "Dev Administrator");
     await page.goto(editorUrl);
@@ -254,23 +261,66 @@ test.describe.serial("§406 the editor is the page, top to bottom", () => {
     await expect(when.locator("#box-place")).toHaveCount(1);
     await expect(when.locator("#box-timezone")).toHaveCount(1);
     await expect(when.locator('[name="event.locationName"]')).toHaveCount(1);
-    // The programme, the rules, the declaration and the public list (§512) as four cards in one, in the page's order.
-    const cards = await page.locator("#box-programme details[id^='box-']").evaluateAll((nodes) => nodes.map((node) => node.id));
-    const inside = ["box-schedule", "box-rules", "box-declaration", "box-start-list"];
+    // What were cards 6 and 9, one card since §NNN: the registration's life, what a participant
+    // agrees to, the day, the public list last (§512) — each a card of its own inside it.
+    const cards = await page.locator("#box-registration details[id^='box-']").evaluateAll((nodes) => nodes.map((node) => node.id));
+    const inside = ["box-registration-window", "box-confirmation", "box-reminder", "box-rules", "box-declaration", "box-conditions", "box-schedule", "box-kit", "box-bibs", "box-start-list"];
     expect(cards.filter((id) => inside.includes(id))).toEqual(inside);
+    await expect(page.locator("#box-programme")).toHaveCount(0);
     await expect(page.locator("#box-rules #box-declaration")).toHaveCount(0);
     await expect(page.locator("#box-declaration #box-start-list")).toHaveCount(0);
+    await expect(page.getByTestId("declaration-moved")).toHaveCount(0);
     // No card of its own any more: no number, no chip.
     await expect(page.getByRole("heading", { name: /^\d+ · Lista publică/ })).toHaveCount(0);
     await expect(page.getByTestId("section-map").locator('[data-section="startList"]')).toHaveCount(0);
-    // The status (§448) and the cost (§466) are cards inside the first box.
+    // The status (§448), the cost (§466) and the promotion (§NNN) are cards inside the first box; the
+    // page's address and the cover inside «Titlu și rezumat» (§NNN).
     await expect(page.locator("#box-kind #box-status")).toHaveCount(1);
     await expect(page.locator("#box-kind #box-cost")).toHaveCount(1);
+    await expect(page.locator("#box-kind #box-promotion")).toHaveCount(1);
+    await expect(page.locator("#box-title #box-address")).toHaveCount(1);
+    await expect(page.locator("#box-title #box-cover")).toHaveCount(1);
+  });
+
+  /*
+    §NNN — «Puncte de control» (§757) stands where the document has it, after the to-do card and
+    above card 1, its forms beside the save form: no CSS `order`, so the screen, the tab key and a
+    screen reader meet the cards in one order (WCAG 2.4.3, 1.3.2). «Traseul» links to it and counts
+    its points. «Voluntari» (§754) is with the registrations, below the grid.
+  */
+  test("«Puncte de control» where the document has it; «Voluntari» below the grid", async ({ page }) => {
+    test.skip(!editorUrl, "the create step did not run");
+    await signIn(page, "Dev Administrator");
+    await page.goto(editorUrl);
+    await hydrated(page);
+    const kind = (await page.locator("#box-kind").boundingBox())!;
+    const checkpoints = (await page.locator("#box-checkpoints").boundingBox())!;
+    // Above card 1 on the screen, and before it in the document: the same order for every reader.
+    expect(checkpoints.y + checkpoints.height).toBeLessThanOrEqual(kind.y);
+    const before = await page.evaluate(() => {
+      const card = document.getElementById("box-checkpoints");
+      const first = document.getElementById("box-kind");
+      return Boolean(card && first && card.compareDocumentPosition(first) & Node.DOCUMENT_POSITION_FOLLOWING);
+    });
+    expect(before).toBe(true);
+    // Its forms are never inside the save form: HTML forms cannot nest.
+    await expect(page.locator("#event-save-form #box-checkpoints")).toHaveCount(0);
+    await expect(page.locator("#box-checkpoints form").first()).toBeAttached();
+    // A card of the column like the others: a level-2 heading.
+    await expect(page.locator("#box-checkpoints > summary h2")).toHaveCount(1);
+    // «Voluntari» under the save, with the registrations' operations, outside the save form.
+    const save = (await page.locator("#box-save").boundingBox())!;
+    const volunteers = (await page.locator("#box-volunteers").boundingBox())!;
+    expect(volunteers.y).toBeGreaterThan(save.y + save.height);
+    await expect(page.locator("#event-save-form #box-volunteers")).toHaveCount(0);
+    // A full save from the form whose box moved still lands (the names did not move).
+    await page.getByRole("button", { name: "Salvează", exact: true }).click();
+    await page.waitForURL(/saved=event/);
   });
 });
 
 /*
-  §554 — «Kit de participare» in card 6 «Participanți și înscrieri»: a fold of its own, closed, its
+  §554 — «Kit de participare» in card 6 «Participare, înscrieri și regulament» (§NNN): a fold of its own, closed, its
   line saying «Tricou: nu» until the box is ticked, and only for a type that takes registrations
   with registration on the site — a group run takes none (§111).
 */
@@ -282,7 +332,7 @@ test.describe("§554 the race kit card", () => {
     const kit = page.locator("#box-kit");
 
     // A new event is a group run: no registration here, and no kit card to see.
-    await openEditorBox(page, "Participare și înscrieri");
+    await openEditorBox(page, "Participare, înscrieri și regulament");
     await expect(kit).toBeHidden();
 
     await page.getByRole("combobox", { name: /Tip eveniment/ }).click();
@@ -309,7 +359,7 @@ test.describe("§554 the race kit card", () => {
 });
 
 /*
-  §557 — «Condiții de participare» inside «Program, regulament și declarație» (the owner, 2026-09-29:
+  §557 — «Condiții de participare» inside «Participare, înscrieri și regulament» (§NNN; the owner, 2026-09-29:
   «e mai bine să avem o bifă în backoffice la Condiții de participare»): a closed fold whose line says
   «Informații medicale: nu» until the box is ticked, on a saved event registering on the site; the tick only for a type that registers on the
   site, a group run getting a sentence in its place (§111).
@@ -328,7 +378,7 @@ test.describe("§557 the participation conditions card", () => {
     // Nor does its line name the note, as the outer card's does not: the line is drawn from the saved type.
     await expect(conditions.locator(":scope > summary")).not.toContainText("Informații medicale");
 
-    await openEditorBox(page, "Participare și înscrieri");
+    await openEditorBox(page, "Participare, înscrieri și regulament");
     await page.getByRole("combobox", { name: /Tip eveniment/ }).click();
     await page.getByRole("option", { name: "Concurs" }).click();
     await page.getByRole("combobox", { name: "Modul de înscriere" }).click();

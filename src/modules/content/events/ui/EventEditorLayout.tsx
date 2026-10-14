@@ -38,11 +38,26 @@ export default function EventEditorLayout({ side, main, below }: { side: ReactNo
 }
 
 /**
+ * The editor's main column: one column, 16 pixels between its items, drawn in the document's order —
+ * the to-do card, «Puncte de control», then the save form's cards. No CSS `order` (§NNN, as the
+ * footer, §372): what a keyboard and a screen reader meet is what the screen shows. «Puncte de
+ * control» has forms of its own, so it stands beside the save form, never inside it (HTML forms
+ * cannot nest), and «Traseul» links to it rather than holding it.
+ */
+export function EditorMainColumn({ children }: { children: ReactNode }) {
+  return (
+    <Box sx={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0 }} data-testid="editor-main">
+      {children}
+    </Box>
+  );
+}
+
+/**
  * A group's plain overline — "Pagina evenimentului, de sus în jos" over the cards in the page's
- * order, "Nu sunt secțiuni ale paginii" over the rest (§406; it was three groups by subject,
- * §350, §358) — two of the three under it (the special-edition chip, a cancelled or finished
- * notice) still draw on the page, just never as a numbered section of it —
- * not a box: it says what the boxes under it are about.
+ * order (§406; it was three groups by subject, §350, §358). The second group, "Nu sunt secțiuni ale
+ * paginii", is gone since §NNN: its three cards are named cards of the page's own («Evidențiere pe
+ * site» in «Ce fel de eveniment», «Copertă» and the page's address in «Titlu și rezumat»). Not a box:
+ * it says what the boxes under it are about.
  */
 export function EditorGroup({ label }: { label: string }) {
   return (

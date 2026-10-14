@@ -2,6 +2,7 @@ import Box from "@mui/material/Box";
 import Link from "@mui/material/Link";
 import Stack from "@mui/material/Stack";
 import { getLocale, getTranslations } from "next-intl/server";
+import { countForm } from "@/i18n/count-form";
 import { calendarDayWords } from "@/i18n/dates";
 import { EVENT_SURFACES } from "@/modules/events/domain/event-type";
 import { nightChoiceOf } from "@/modules/events/domain/night";
@@ -55,7 +56,13 @@ export default async function CourseBox({
   languages,
   heading,
   inSeries = false,
-}: BoxProps & { languages: readonly LanguageEntry[]; inSeries?: boolean }) {
+  checkpointCount = 0,
+}: BoxProps & {
+  languages: readonly LanguageEntry[];
+  inSeries?: boolean;
+  /** How many «Puncte de control» the saved route has (§757): said on the closed line when above 0 (§NNN). */
+  checkpointCount?: number;
+}) {
   const t = await getTranslations("Admin");
   const tEvent = await getTranslations("Event");
   const locale = await getLocale();
@@ -83,6 +90,8 @@ export default async function CourseBox({
         // The automatic answer for the event's own date (§394), read by the same function as the pill.
         // Nothing for a date or an hour left blank (§545): there is no sunset to compare them with.
         night: event && start.date && start.time ? clubNightEvent({ ...event, nightOverride: null }).night : false,
+        // «Puncte de control» is «Traseul»'s card with forms of its own (§757): its count, briefly (§NNN).
+        checkpoints: checkpointCount > 0 ? t(`checkpoints.inCourse.${countForm(checkpointCount, locale)}`, { count: checkpointCount }) : null,
       },
       languages.map((entry) => entry.translation),
     ),

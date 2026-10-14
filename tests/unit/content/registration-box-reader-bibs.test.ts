@@ -52,6 +52,7 @@ async function render(mayEditSettings: boolean, bibPrint: ReactElement | null) {
     event: RACE,
     mayEditSettings,
     declarations: [],
+    languages: [],
     bibCounts: bibPrint ? { total: 3, unprinted: 1 } : null,
     bibPrint,
     locale: "ro",

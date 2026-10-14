@@ -5,6 +5,7 @@ import { capitalizeFirst } from "@/i18n/dates";
 import { getPathname } from "@/i18n/navigation";
 import { type Locale, routing } from "@/i18n/routing";
 import { effectiveMinimumAge, MIN_PARTICIPANT_AGE } from "@/modules/registrations/domain/age";
+import { isStorageConfigured } from "@/modules/media/storage";
 import { textFieldConstraints } from "@/shared/forms/constraints";
 import RecallField from "@/shared/forms/recall";
 import LocaleTabPanels, { type RequiredCountWords, type TabWatch } from "@/shared/ui/LocaleTabPanels";
@@ -28,6 +29,7 @@ import { missingForPublish, missingInLanguage, type PublishGapBox, storedPublish
 import SlugFromTitle from "../SlugFromTitle";
 import { AddressFields, DescriptionFields, RulesFields, TitleSummaryFields } from "../TranslationFields";
 import { BoxNote, type LanguageEntry, requiredLine, summaryWords } from "./box-kit";
+import CoverBox, { coverPicture } from "./CoverBox";
 
 /**
  * The four boxes of the event editor that are only words (§350): the title and summary, the
@@ -137,34 +139,78 @@ function lineOf(required: ReactNode, summary: string | undefined): ReactNode {
 }
 
 /**
- * "Titlu și rezumat" (§350): open on create, where it is the first thing a new event is asked —
- * the page's own verb (`primary`, fold.ts), not a warning — and on the editor while a language
- * lacks either (`attention`: something inside asks for action). Its closed line starts with what
- * publication still needs from it (§406).
+ * Card 2, "Titlu și rezumat" (§350): open on create, where it is the first thing a new event is
+ * asked — the page's own verb (`primary`, fold.ts), not a warning — and on the editor while a
+ * language lacks either (`attention`: something inside asks for action).
+ *
+ * **Two named cards in it since §NNN** (the owner, 2026-10-13: «practic vreau mai puține carduri și
+ * mai mult nesting, nu trebuie să fie un card separat»), after the title's own tabs: «Adresa paginii și
+ * motoarele de căutare» (`AddressBox`, `#box-address`) — the address and the search title are made
+ * from the title — and «Copertă» (`CoverBox`, `#box-cover`), the picture that travels with the title
+ * wherever the event is shown as a card or shared. Both were cards of their own among those not on
+ * the page (§406); their fields, names and ids are as they were.
+ *
+ * Its closed line starts with what publication still needs from it (§406) — the title's and the
+ * summary's, and since §NNN the address's, which is inside it now («lipsesc: Titlu (EN) · Adresa
+ * paginii (EN)») — then the titles and whether there is a cover. It opens itself while an address is
+ * blank too, as the address card did, so the card that asks for it is never shut around it.
  */
-export async function TitleSummaryBox({ languages, creating, heading }: { languages: readonly LanguageEntry[]; creating: boolean; heading?: string }) {
+export async function TitleSummaryBox({
+  languages,
+  creating,
+  heading,
+  event,
+  mayEditSettings,
+  slugLocked,
+}: {
+  languages: readonly LanguageEntry[];
+  creating: boolean;
+  heading?: string;
+  /** The event, for its cover (null on the create page). */
+  event: EditableEvent | null;
+  /** Whether the reader may change the event row: the cover is a setting (§NNN). */
+  mayEditSettings: boolean;
+  /** The address is kept once the page was published (§36). */
+  slugLocked: boolean;
+}) {
   const t = await getTranslations("Admin");
   const { words } = await summaryWords();
   const translations = languages.map(summaryOf);
   const incomplete = incompleteLocales(translations, "required", BLANK.titleSummary);
-  const required = await requiredLine("titleSummary", null, languages);
+  const blankAddress = incompleteLocales(translations, "required", BLANK.address);
+  // The title's gaps and the address's, in one line: the address is a card of this one (§NNN).
+  const required = await requiredLine(["titleSummary", "address"], null, languages);
+  // Awaited, not nested: each element is ready when the card is (`requiredLine` does the same).
+  const address = await AddressBox({ languages, slugLocked, creating });
+  const picture = await coverPicture(event);
+  const cover = await CoverBox({ event, mayEditSettings, picture });
+  // Only where a cover can be chosen: with no media store the card says so, and «De făcut» asks for none (§749, §NNN).
+  const coverState = isStorageConfigured()
+    ? t("editor.boxes.titleSummary.coverLine", { state: picture ? t("editor.cover.set") : t("editor.cover.missing") })
+    : null;
   return (
     <Panel glyph="title"
       collapsible
       id="box-title"
       title={heading ?? t("editor.boxes.titleSummary.title")}
-      aside={lineOf(required, creating ? undefined : titleSummarySummary(words, translations))}
-      openWhen={{ primary: creating, attention: !creating && incomplete.length > 0 }}
+      aside={lineOf(required, creating ? undefined : [titleSummarySummary(words, translations), coverState].filter(Boolean).join(words.separator))}
+      openWhen={{ primary: creating, attention: !creating && (incomplete.length > 0 || blankAddress.length > 0) }}
     >
-      <LanguageTabs
-        idPrefix="title"
-        languages={languages}
-        watch={{ names: ["title", "excerptBody"], rule: "required" }}
-        blank={BLANK.titleSummary}
-        identical={["excerptBody"]}
-        required="titleSummary"
-        render={(entry) => <TitleSummaryFields translation={entry.translation} mayEdit={entry.mayEdit} />}
-      />
+      <Stack spacing={2}>
+        <LanguageTabs
+          idPrefix="title"
+          languages={languages}
+          watch={{ names: ["title", "excerptBody"], rule: "required" }}
+          blank={BLANK.titleSummary}
+          identical={["excerptBody"]}
+          required="titleSummary"
+          render={(entry) => <TitleSummaryFields translation={entry.translation} mayEdit={entry.mayEdit} />}
+        />
+        {/* 2.1 — the page's address and the search engines' title, made from the title (§NNN). */}
+        {address}
+        {/* 2.2 — the cover (§709), the picture that goes with the title (§NNN). */}
+        {cover}
+      </Stack>
     </Panel>
   );
 }
@@ -188,10 +234,10 @@ export async function DescriptionBox({ languages, heading }: { languages: readon
 }
 
 /**
- * "Regulamentul" (`#box-rules`), the second of the three cards of «Program, regulament și
- * declarație» since §481 (`ProgrammeRulesBox`): the rules in each language, on their own tabs. The
- * declaration (§448) is the card after it, no longer inside it — the three are siblings, in the
- * order the page reads them.
+ * "Regulamentul" (`#box-rules`), a named card of «Participare, înscrieri și regulament» since §NNN
+ * (`RegistrationBox`; of «Program, regulament și declarație» from §481): the rules in each language,
+ * on their own tabs. The declaration (§448) is the card right after it — the minimum age below and
+ * the declaration under it, read together.
  *
  * **The minimum age is here, one box for every type** (§505). It was two boxes — the race's in
  * «Participare și înscrieri» › «Condiții de participare» (§329), a group run's own in «Traseul»
@@ -251,7 +297,9 @@ export async function RulesBox({
 /**
  * "Adresa paginii și motoarele de căutare": open while any address is blank — so open on create,
  * where the address also fills itself from the title until it is typed (`SlugFromTitle`). Not a
- * section of the page — it is the page's address — so it sits with the cards that are not (§406).
+ * section of the page — it is the page's address — so it sat with the cards that are not (§406);
+ * since §NNN it is a named card of «Titlu și rezumat» (`TitleSummaryBox`), whose title it is made
+ * from, and that card opens with it while an address is blank.
  */
 export async function AddressBox({
   languages,
@@ -278,6 +326,7 @@ export async function AddressBox({
   return (
     <Panel glyph="address"
       collapsible
+      level={3}
       id="box-address"
       title={t("editor.boxes.address.title")}
       aside={lineOf(required, addressSummary(words, translations, paths, slugLocked))}

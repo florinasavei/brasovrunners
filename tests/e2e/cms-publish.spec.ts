@@ -140,9 +140,9 @@ test.describe("BR-REQ-051-01 a copywriter writes and may not publish; a voluntee
     const linksHeading = page.getByRole("heading", { level: 2, name: /^(?:\d+ · )?Linkuri și fișiere/ });
     await expect(linksHeading).toBeVisible();
     await expect(page.locator("section").filter({ has: linksHeading })).toHaveCount(1);
-    // The public list is a card inside «Program, regulament și declarație» since §512: for this
+    // The public list is a card inside «Participare, înscrieri și regulament» since §512: for this
     // reader its level-3 heading and its line, nothing to open.
-    const programme = await openEditorBox(page, "Program, regulament și declarație");
+    const programme = await openEditorBox(page, "Participare, înscrieri și regulament");
     const list = programme.locator("#box-start-list");
     await expect(list.getByRole("heading", { level: 3, name: /Lista publică a participanților/ })).toBeVisible();
     await expect(list.locator("summary")).toHaveCount(0);
@@ -453,7 +453,8 @@ test.describe("BR-REQ-050-02 an Administrator creates an event without a develop
     // no button at all). The English tab is empty, and the closed card and its tabs say so.
     const publish = page.getByRole("button", { name: "Creează și publică" });
     await expect(publish).toHaveCSS("opacity", "1");
-    await expect(editorBox(page, "Titlu și rezumat").getByTestId("required-titleSummary")).toHaveText("lipsesc: Titlu (EN) · Rezumat (EN)");
+    // The page's address is a card of «Titlu și rezumat» since §NNN: its English gap is on the same line.
+    await expect(editorBox(page, "Titlu și rezumat").getByTestId("required-titleSummary")).toHaveText("lipsesc: Titlu (EN) · Rezumat (EN) · Adresa paginii (EN)");
     await expect(languageTab(page, "title", "ro")).toHaveText("Română · complet");
     await expect(languageTab(page, "title", "en")).toHaveText("English · 2 obligatorii lipsă");
     // Pressed now, it posts nothing: the §47 summary takes the focus and names each gap per

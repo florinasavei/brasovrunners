@@ -1,21 +1,21 @@
 import { getTranslations } from "next-intl/server";
 import { cardStates, type PageSectionData, type PageSectionId } from "@/modules/events/domain/page-sections";
-import type { PublishGapBox } from "./publish-check";
+import type { PublishGapBoxes } from "./publish-check";
 import type { SectionMapEntry, SectionMapWords } from "./SectionMap";
 
 /**
  * The event editor as the page it makes (§406; the owner, 2026-09-25: "am nevoie de mai multe
  * căsuțe la editor ca să văd exact ce flow am în pagină"): every card that writes a section of the
  * public page is headed by the section's number and whether the page shows it — "4 · Când și unde
- * — apare pe pagină", "9 · Program, regulament și declarație — gol, nu apare pe pagină" — and the
+ * — apare pe pagină", "6 · Participare, înscrieri și regulament — gol, nu apare pe pagină" — and the
  * map under Publicare and Recurență lists the same cards as chips. Both read `cardStates`, the
  * page's order, as a list (`events/domain/page-sections.ts`) — the page is drawn by hand and
  * `tests/unit/events/page-sections.test.ts` holds the two equal — so a number on a card, a chip
  * and the page's order are one thing.
  *
- * A card that holds more than one of the page's sections (§481: the date and the place, the
- * programme and the rules; §512: the public list with them; §466: the type and the cost) is one chip and one number, drawn when
- * any section it holds is drawn.
+ * A card that holds more than one of the page's sections (§481: the date and the place; §466: the
+ * type and the cost; §NNN: registration with the programme, the rules and the public list) is one
+ * chip and one number, drawn when any section it holds is drawn. Eight cards since §NNN.
  *
  * The card's own words stay its name — the name a refusal, a gap in Publicare and every e2e spec
  * already use (`editorBox` finds a card by it, after the number). The chips use the page's own
@@ -23,7 +23,7 @@ import type { SectionMapEntry, SectionMapWords } from "./SectionMap";
  */
 
 /** The sections with a numbered card of their own: not the automatic share links, not a section asked inside another card. */
-type HeadedSectionId = Exclude<PageSectionId, "share" | "cost" | "place" | "checkpoints" | "rules" | "startList">;
+type HeadedSectionId = Exclude<PageSectionId, "share" | "cost" | "place" | "checkpoints" | "programme" | "rules" | "startList">;
 
 /** The box title each section's card wears (`Admin.editor.boxes.<key>.title`). */
 const CARD_TITLE_KEY: Record<HeadedSectionId, string> = {
@@ -33,16 +33,19 @@ const CARD_TITLE_KEY: Record<HeadedSectionId, string> = {
   // «Când și unde» (§481): the date, the place and the time zone.
   when: "whenWhere",
   course: "course",
+  // «Participare, înscrieri și regulament» (§NNN): how people register, the programme, the rules,
+  // the declaration and the public list — what were cards 6 and 9, one card.
   registration: "registration",
   coHosts: "coHosts",
   links: "links",
-  // «Program, regulament și declarație» (§481): the programme, the rules, the declaration and,
-  // since §512, the public list — four cards in one.
-  programme: "programmeRules",
 };
 
-/** The card whose closed line names a publication gap, by the section it writes (the address is not on the page). */
-const GAP_BOX: Partial<Record<PageSectionId, PublishGapBox>> = { title: "titleSummary", when: "place" };
+/**
+ * The card whose closed line names a publication gap, by the section it writes: «Titlu și rezumat»
+ * answers for the page's address too since §NNN (the address is not on the page, and its card is a
+ * named card inside the title's).
+ */
+const GAP_BOX: Partial<Record<PageSectionId, PublishGapBoxes>> = { title: ["titleSummary", "address"], when: "place" };
 
 export type PageFlow = {
   /** Each card's heading, by section. */

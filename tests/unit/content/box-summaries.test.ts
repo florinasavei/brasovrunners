@@ -211,6 +211,12 @@ describe("§350 each box's summary, empty and filled", () => {
     );
     expect(registrationSummary(words, null, { ...options, creating: true })).toBe(words.registration.noneInvite);
     expect(registrationSummary(words, internal as never, { ...options, takesRegistrations: false })).toBe("Alergare de grup — fără înscrieri");
+    // §NNN: the merged card's line keeps old card 9's disclosure that the waiting list is public too (§628).
+    expect(registrationSummary(words, { ...internal, participantListVisibility: "NAMES", waitlistPublic: true } as never, options)).toBe(
+      "Pe site · 150 de locuri · declarația v3 · lista publică, cu lista de așteptare",
+    );
+    expect(registrationSummary(words, { ...internal, participantListVisibility: "NAMES", waitlistPublic: false } as never, options)).toMatch(/lista publică$/);
+    expect(registrationSummary(words, { ...internal, participantListVisibility: "HIDDEN", waitlistPublic: true } as never, options)).toMatch(/listă nepublică$/);
   });
 
   it("the registration box's cards", () => {
@@ -267,6 +273,12 @@ describe("§350 each box's summary, empty and filled", () => {
     expect(courseSummary(words, { distanceMeters: 21_100, elevationGainMeters: null, routeUrl: null, nightOverride: null }, { surface: null })).toBe(
       "21,1 km · de zi (automat)",
     );
+    // §NNN: «Puncte de control» is «Traseul»'s card, so a closed «Traseul» counts its points — and says nothing of none.
+    expect(
+      courseSummary(words, { distanceMeters: 12_000, elevationGainMeters: null, routeUrl: "https://x.test", nightOverride: null }, { surface: "Trail", checkpoints: "3 puncte de control" }),
+    ).toBe("Trail · 12 km · de zi (automat) · traseu · 3 puncte de control");
+    expect(courseSummary(words, null, { surface: null, checkpoints: "1 punct de control" })).toBe("1 punct de control");
+    expect(courseSummary(words, null, { surface: null, checkpoints: null })).toBe("Nimic completat");
     expect(linksSummary(words, null, {}, "ro")).toBe("Niciun link");
     expect(
       linksSummary(

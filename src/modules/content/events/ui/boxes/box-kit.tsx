@@ -7,7 +7,7 @@ import QuietHelp from "@/shared/ui/QuietHelp";
 import type { EditableEvent } from "../../repository";
 import type { SummaryWords } from "../box-summaries";
 import { CardRequiredLine } from "../PublishCheck";
-import { type CardGapWords, missingForPublish, type PublishGapBox, storedPublishReader } from "../publish-check";
+import { type CardGapWords, gapBoxesOf, missingForPublish, type PublishGapBoxes, storedPublishReader } from "../publish-check";
 import type { TranslationDraft } from "../TranslationFields";
 
 /**
@@ -43,9 +43,10 @@ export type BoxProps = {
  *
  * A function the box awaits rather than a component it nests, so the element it hands the heading
  * is ready when the box is (a string renderer cannot wait for an async component inside a tree).
+ * Several boxes for a card that holds another's as a named card (§NNN: the title's and the address's).
  */
 export async function requiredLine(
-  box: PublishGapBox,
+  box: PublishGapBoxes,
   event: Pick<EditableEvent, "locationName" | "locationToBeAnnounced"> | null,
   languages: readonly LanguageEntry[],
 ): Promise<ReactElement> {
@@ -53,7 +54,8 @@ export async function requiredLine(
     event ?? { locationName: null, locationToBeAnnounced: false },
     languages.map((entry) => entry.translation),
   );
-  const initial = missingForPublish(read, routing.locales).filter((gap) => gap.box === box);
+  const boxes = gapBoxesOf(box);
+  const initial = missingForPublish(read, routing.locales).filter((gap) => boxes.includes(gap.box));
   return <CardRequiredLine box={box} initial={initial} words={await cardGapWords()} />;
 }
 

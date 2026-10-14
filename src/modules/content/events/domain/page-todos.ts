@@ -58,7 +58,7 @@ export type PageTodoAnchor =
   | "box-when"
   | "box-place"
   | "box-address"
-  | "box-programme"
+  | "box-schedule"
   | "box-cover"
   | "box-course"
   | "box-kind"
@@ -164,7 +164,7 @@ export function eventPageTodos(event: PageTodoEvent, translations: readonly Page
     in some language (`PAGE_SECTIONS`' «programme» drawn rule). A hike or a meetup is not expected to have one.
   */
   if (isRace && hasProgramme(event.type) && readScheduleItems(event.scheduleItems).length === 0 && !translations.some((row) => hasDoc(row.scheduleJson))) {
-    add("programme", "NORMAL", "box-programme");
+    add("programme", "NORMAL", "box-schedule");
   }
 
   /*
