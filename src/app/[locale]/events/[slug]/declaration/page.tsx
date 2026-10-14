@@ -21,11 +21,19 @@ import { durationPhrase } from "@/modules/deadlines/domain/duration-words";
 import { datedOrNull } from "@/modules/events/domain/dated";
 import { groupRunMergeValues } from "@/modules/group-run-declarations/facts";
 import { signatureCoversSeries } from "@/modules/group-run-declarations/series";
-import { GROUP_RUN_DECLARATION_ID_DOCUMENT_DAYS, groupRunAsksBirthDate, groupRunMinimumAge, signingOpen } from "@/modules/group-run-declarations/domain";
-import { GROUP_RUN_FORM_FIELDS, parseGroupRunInvalid, refusedTooYoung } from "@/modules/group-run-declarations/form";
+import {
+  GROUP_RUN_DECLARATION_ID_DOCUMENT_DAYS,
+  groupRunAsksBirthDate,
+  groupRunMinimumAge,
+  groupRunMinorMinimumAge,
+  groupRunTakesMinors,
+  signingOpen,
+} from "@/modules/group-run-declarations/domain";
+import { GROUP_RUN_FORM_FIELDS, GROUP_RUN_MINOR_FIELDS, parseGroupRunInvalid, refusedTooYoung } from "@/modules/group-run-declarations/form";
+import MinorSigningFields from "@/modules/group-run-declarations/ui/MinorSigningFields";
 import { offeredGroupRunDeclarationKey } from "@/modules/legal-documents/domain/keys";
 import { asksForIdDocument, deadlineMergeValues } from "@/modules/legal-documents/domain/merge-fields";
-import { findCurrentApprovedDocument } from "@/modules/legal-documents/repository";
+import { findCurrentApprovedDocument, groupRunMinorPathOffered } from "@/modules/legal-documents/repository";
 import LegalDocumentBody from "@/modules/legal-documents/ui/LegalDocumentBody";
 import { cachedBotCheckSiteKey, cachedCurrentApprovedDocument, cachedDeadlines } from "@/modules/public-cache/reads";
 import { readOrWhileAway } from "@/modules/resilience/optional-read";
@@ -157,6 +165,12 @@ export default async function GroupRunDeclarationPage({ params, searchParams }: 
   */
   const facts = await groupRunMergeValues(db, event.id, locale, document.body);
   const needsDocument = asksForIdDocument(document.body);
+  /*
+    A minor may sign, with a parent (§NNN, the race's §330 on a group run): only while the run takes minors — its
+    own minimum is under eighteen — and the text in force names the minor's paragraph in every language. The club's
+    approval of a text is the switch (`groupRunMinorPathOffered`); `/admin/tasks` carries the row `groupRunMinorText`.
+  */
+  const minorOffered = groupRunTakesMinors(event.minAge) && (await groupRunMinorPathOffered(db, key, now));
   const siteKey = await cachedBotCheckSiteKey();
   // What the refused press had typed, sealed for ten minutes (§142, §314): read only after a refusal.
   const refused = parseGroupRunInvalid(invalid);
@@ -184,6 +198,23 @@ export default async function GroupRunDeclarationPage({ params, searchParams }: 
   const earliestBirthDate = new Date(Date.UTC(now.getUTCFullYear() - 120, now.getUTCMonth(), now.getUTCDate())).toISOString().slice(0, 10);
   const tooYoungWords = t("groupRunDeclaration.page.tooYoung", minimumAge);
   const birthDateHelp = t("groupRunDeclaration.page.birthDateHelp", minimumAge);
+  /*
+    The minor's birth date (§NNN): counted against the run's own minimum under eighteen, on the run's day, with the
+    same bound the service refuses with (`latestBirthDateFor`), and dropped. The page draws the minor's block open
+    when the server's verdict names one of its boxes or the draft had the tick ticked, so an error never points at
+    something hidden.
+  */
+  const minorAge = groupRunMinorMinimumAge(event.minAge);
+  const minorMinimumAge = { age: yearsPhrase(minorAge, locale) };
+  const youngestMinor = latestBirthDateFor(minorAge, runDay);
+  const latestMinorBirthDate = youngestMinor < today ? youngestMinor : today;
+  const minorTicked = minorOffered && draft?.minor === "on";
+  const tooYoungMinor = minorOffered && refusedTooYoung(invalid);
+  const minorForcedOpen = minorTicked || refused.some((field) => (GROUP_RUN_MINOR_FIELDS as readonly string[]).includes(field));
+  const minorTooYoungWords = t("groupRunDeclaration.page.tooYoung", minorMinimumAge);
+  const minorBirthDateHelp = t("groupRunDeclaration.page.birthDateHelp", minorMinimumAge);
+  // The summary names the minor's own date by its own label once the tick was ticked.
+  const labelOf = (field: (typeof GROUP_RUN_FORM_FIELDS)[number]) => (field === "birthDate" && minorTicked ? t("groupRunDeclaration.page.fields.minorBirthDate") : fieldLabel(field));
 
   return (
     <Container id="main" component="main" maxWidth="md" sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
@@ -198,7 +229,9 @@ export default async function GroupRunDeclarationPage({ params, searchParams }: 
       {/* For oneself, from the run's age — never under eighteen (§515) — and the text is this page's language:
           what is signed is what is shown (§57); the header's switch brings the other language's text. */}
       <Typography variant="body2" sx={{ mb: 1 }} data-testid="group-run-declaration-adults">
-        {t("groupRunDeclaration.page.adultsOnly", minimumAge)}
+        {minorOffered
+          ? t("groupRunDeclaration.page.adultsOrMinor", { age: minimumAge.age, minorAge: minorMinimumAge.age })
+          : t("groupRunDeclaration.page.adultsOnly", minimumAge)}
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
         {t("groupRunDeclaration.page.languageNote")}
@@ -218,8 +251,15 @@ export default async function GroupRunDeclarationPage({ params, searchParams }: 
         values={{
           // The run's facts, its minimum age among them (§440): "" on a run with none drops that sentence.
           ...(facts?.values ?? {}),
-          guardian: "—",
+          /*
+            Both ways of signing are on the page while a minor may sign (§NNN): the adult's own sentence and the
+            minor's paragraphs, with their names left as dotted blanks — nobody has typed one yet — so each
+            signer reads the paragraphs that apply to them, and the signed PDF keeps only those (`groupRunSignedValues`).
+            Where no minor may sign, the minor's paragraphs a text may carry are dropped.
+          */
+          guardian: minorOffered ? undefined : "—",
           guardianIdDocument: "—",
+          ...(minorOffered ? {} : { minor: "" }),
           ...deadlineMergeValues(locale, await cachedDeadlines()),
         }}
       />
@@ -250,8 +290,9 @@ export default async function GroupRunDeclarationPage({ params, searchParams }: 
           <Box>{t("groupRunDeclaration.page.refusedNothingRecorded")}</Box>
           {refused.map((field) => (
             <Box key={field} sx={{ mt: 0.5 }}>
-              <MuiLink href={`#${field}`}>{fieldLabel(field)}</MuiLink>
-              {field === "birthDate" && tooYoung && <>: {tooYoungWords}</>}
+              <MuiLink href={`#${field}`}>{labelOf(field)}</MuiLink>
+              {field === "birthDate" && (tooYoung || tooYoungMinor) && <>: {minorTicked ? minorTooYoungWords : tooYoungWords}</>}
+              {field === "minor" && <>: {t("groupRunDeclaration.page.minorRefused")}</>}
             </Box>
           ))}
         </Alert>
@@ -342,8 +383,74 @@ export default async function GroupRunDeclarationPage({ params, searchParams }: 
             error={refused.includes("accepted") ? t("groupRunDeclaration.page.acceptInline") : undefined}
             requiredMessage={t("groupRunDeclaration.page.acceptInline")}
           >
-            {t("groupRunDeclaration.page.accept", minimumAge)}
+            {minorOffered ? t("groupRunDeclaration.page.acceptAny") : t("groupRunDeclaration.page.accept", minimumAge)}
           </CheckboxField>
+          {/*
+            «Semnez pentru un minor (sub 18 ani)» (§NNN, the race's §330 on a group run): ticked, the minor's own
+            signature and the parent's tick appear — the parent's own name is the signature below, the minor's
+            birth date is counted against the run's minimum and dropped. Always on the page with scripts off, and
+            the same refusal summary and kept-form recall as every other box (§47, §314).
+          */}
+          {minorOffered && (
+            <Stack spacing={2} data-testid="group-run-minor">
+              <CheckboxField
+                id="minor"
+                name="minor"
+                defaultChecked={minorTicked}
+                help={t("groupRunDeclaration.page.minorTickHelp", minorMinimumAge)}
+                error={refused.includes("minor") ? t("groupRunDeclaration.page.minorRefused") : undefined}
+              >
+                {fieldLabel("minor")}
+              </CheckboxField>
+              <MinorSigningFields tickId="minor" forceOpen={minorForcedOpen}>
+                <Stack spacing={2} sx={{ borderLeft: 3, borderColor: "divider", pl: 2 }}>
+                  <Typography variant="subtitle2" component="p">
+                    {t("groupRunDeclaration.page.minorBlockTitle")}
+                  </Typography>
+                  <BirthDateField
+                    id="birthDate"
+                    name="birthDate"
+                    label={t("groupRunDeclaration.page.fields.minorBirthDate")}
+                    defaultValue={draft?.birthDate ?? ""}
+                    error={refused.includes("birthDate")}
+                    errorText={tooYoungMinor ? minorTooYoungWords : minorBirthDateHelp}
+                    help={minorBirthDateHelp}
+                    min={earliestBirthDate}
+                    max={latestMinorBirthDate}
+                    eventDay={runDay}
+                    locale={locale}
+                    echoTemplate={formCopy("birthDateEcho", { date: "{date}", age: "{age}" })}
+                    placeholder={formCopy("birthDatePlaceholder")}
+                    unreadable={formCopy("birthDateUnreadable")}
+                    tooYoung={minorTooYoungWords}
+                  />
+                  <SignatureField
+                    id="minorTypedName"
+                    name="minorTypedName"
+                    signer="minor"
+                    label={fieldLabel("minorTypedName")}
+                    expectedName={null}
+                    participantName={null}
+                    contactHref={getPathname({ locale, href: "/contact" })}
+                    myRegistrationsHref={getPathname({ locale, href: "/registrations/mine" })}
+                    canReply={false}
+                    defaultValue={draft?.minorTypedName}
+                    refused={refused.includes("minorTypedName")}
+                    help={t("groupRunDeclaration.page.minorTypedNameHelp")}
+                    required={false}
+                  />
+                  <CheckboxField
+                    id="guardianAgrees"
+                    name="guardianAgrees"
+                    defaultChecked={draft?.guardianAgrees === "on"}
+                    error={refused.includes("guardianAgrees") ? t("groupRunDeclaration.page.guardianAgreesInline") : undefined}
+                  >
+                    {fieldLabel("guardianAgrees")}
+                  </CheckboxField>
+                </Stack>
+              </MinorSigningFields>
+            </Stack>
+          )}
           {/* The signature in a hand (§86): the name typed is the signature itself. */}
           <SignatureField
             id="typedName"
@@ -357,7 +464,7 @@ export default async function GroupRunDeclarationPage({ params, searchParams }: 
             canReply={false}
             defaultValue={draft?.typedName}
             refused={refused.includes("typedName")}
-            help={t("groupRunDeclaration.page.typedNameHelp")}
+            help={t(minorOffered ? "groupRunDeclaration.page.typedNameMinorHelp" : "groupRunDeclaration.page.typedNameHelp")}
           />
           {/* Cloudflare Turnstile, when the club switched it on (§97). */}
           {siteKey && (
