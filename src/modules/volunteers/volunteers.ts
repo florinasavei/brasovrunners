@@ -1136,7 +1136,7 @@ export async function submitVolunteer<T extends Record<string, unknown>>(
         message: input.message,
         privacyNoticeVersion: notice.version,
         // The person's own words about themselves (§NNN), kept only when the notice in force names them; the size only
-        // while the event gives a shirt. A form posted for the other mode (a page cached before the notice changed) is ignored.
+        // while the event gives a shirt. A form posted for the other mode (a page cached before the notice changed) is refused at the top, naming its missing boxes; the redirect then draws the form now in force.
         ...(profile
           ? {
               age: profile.age,

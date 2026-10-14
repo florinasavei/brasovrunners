@@ -319,12 +319,12 @@ describe("§NNN the role's form: «Descrierea rolului» in the rich-text editor,
     expect(off).toContain(ro.Translate.off);
   });
 
-  it("shows the role's first line on the card and folds the rest behind a glyphed «Tot textul»", async () => {
+  it("shows the role's first line on the card and folds the rest behind a glyphed «Restul»", async () => {
     const page = await drawCard();
     const header = /<li[^>]*data-testid="volunteer-role"[^>]*data-role-id="22222222[\s\S]*?<details[\s\S]*?<\/details>/.exec(page)?.[0] ?? "";
     expect(header).toContain('data-testid="volunteer-role-description-first"');
     expect(header).toContain("Stai la km 5.");
-    expect(header).toMatch(/<summary[^>]*>.*Tot textul<\/summary>/);
+    expect(header).toMatch(/<summary[^>]*>.*Restul<\/summary>/);
     // A one-line description has nothing to fold; none says nothing.
     const finish = /<li[^>]*data-testid="volunteer-role"[^>]*data-role-id="33333333[\s\S]*?<\/li>/.exec(page)?.[0] ?? "";
     expect(finish).toContain("Aplauze la sosire");
@@ -488,9 +488,44 @@ describe("§NNN each role's description under its tick on the public form", () =
     expect(english).toContain(">Details</summary>");
   });
 
+  it("ties the description to the role's tick: the box names the description's id in aria-describedby, folded or not, and a role with none names nothing", async () => {
+    const page = await drawBox();
+    const [water, finish, desk] = page.split('data-testid="volunteer-role-option"').slice(1);
+    for (const block of [water, finish]) {
+      const id = /id="(volunteer-role-[^"]+-description)"/.exec(block)?.[1] ?? "";
+      expect(id).not.toBe("");
+      expect(/<input[^>]*type="checkbox"[^>]*>/.exec(block)?.[0] ?? "").toContain(id);
+    }
+    expect(/<input[^>]*type="checkbox"[^>]*>/.exec(desk)?.[0] ?? "").not.toContain("-description");
+  });
+
   it("keeps the role's own count beside the box, as help", async () => {
     const page = await drawBox();
     expect(page).toContain("mai sunt necesare 3 persoane");
     expect(page).toContain("mai e nevoie de 1 persoană");
+  });
+});
+
+describe("§NNN «Toate datele unei persoane» lists the six answers of a volunteer", () => {
+  it("writes the age, the sex, the city, the two claims and the size after the organizers' note, in the reader's language", async () => {
+    const { default: VolunteerAnswers } = await import("@/modules/volunteers/ui/VolunteerAnswers");
+    const all = { age: 34, sex: "FEMALE" as const, city: "Brașov", volunteeredBefore: true, clubMember: true, shirtSize: "M" as const };
+    locale = "ro";
+    const page = await html(createElement("p", null, (await VolunteerAnswers({ offer: all })) as ReactElement));
+    expect(page).toContain(" · Vârsta: 34 · Feminin · Oraș: Brașov · A mai fost voluntar · Din grupul " + CLUB_NAME + " · Tricou: M");
+    locale = "en";
+    const english = await html(createElement("p", null, (await VolunteerAnswers({ offer: all })) as ReactElement));
+    expect(english).toContain("Age: 34");
+    expect(english).toContain("Female");
+    expect(english).toContain("T-shirt: M");
+  });
+
+  it("writes nothing for a row from before, for the retired «Prefer să nu spun» and for «Fără tricou»", async () => {
+    const { default: VolunteerAnswers } = await import("@/modules/volunteers/ui/VolunteerAnswers");
+    locale = "ro";
+    const empty = { age: null, sex: null, city: null, volunteeredBefore: false, clubMember: false, shirtSize: null };
+    expect(await html(createElement("p", null, (await VolunteerAnswers({ offer: empty })) as ReactElement))).toBe("<p></p>");
+    const retired = await html(createElement("p", null, (await VolunteerAnswers({ offer: { ...empty, sex: "UNSPECIFIED", shirtSize: "NONE" } })) as ReactElement));
+    expect(retired).toBe("<p></p>");
   });
 });

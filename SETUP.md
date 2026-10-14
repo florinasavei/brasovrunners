@@ -2091,7 +2091,7 @@ only ones who see the names, addresses and telephone numbers.
    voluntarul» (the address and the telephone number go with it). «N din M» beside each role counts only the
    people **given** that role («Înscris» and «Confirmat»); the page stops offering a role once it has them.
    «Adaugă un voluntar de mână» enters a person yourself — tick what they would do, and give a role if you
-   already know it; a role may take more people than it asked; the age, sex, city and ticks are optional there (an age below 18 is refused).
+   already know it; a role may take more people than it asked; the age, sex, city and ticks are optional there (an age below 18 is refused), and drawn only once the notice of step 2 names them.
    A row shows «A mai fost voluntar» and «Din grupul …» as small chips and the rest in one line. «Descarcă CSV» downloads the list, grouped by
    the role given, with a column of the roles each person offered for. A role somebody was given or ticked
    cannot be deleted until you change their roles.

@@ -24,6 +24,7 @@ import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import LazyRichTextEditor from "@/modules/content/rich-text/ui/LazyRichTextEditor";
 import { richTextEditorLabels } from "@/modules/content/rich-text/ui/labels";
+import { yearsPhrase } from "@/modules/registrations/domain/age";
 import { shirtSizeShown, SHIRT_SIZES } from "@/modules/registrations/domain/kit";
 import { SEX_CHOICES } from "@/modules/registrations/domain/sex";
 import { formatPhone } from "@/modules/registrations/phone";
@@ -46,6 +47,7 @@ import type { StatusGlyphName } from "@/shared/ui/status-glyphs";
 import {
   VOLUNTEER_AGE_MAX,
   VOLUNTEER_CITY_MAX,
+  VOLUNTEER_MINIMUM_AGE,
   VOLUNTEER_NAME_MAX,
   VOLUNTEER_NEEDED_MAX,
   VOLUNTEER_NOTE_MAX,
@@ -63,7 +65,7 @@ import {
 import { ROLE_FORM_COLOUR_BOXES, type VolunteerItem, type VolunteerRole } from "../volunteers";
 import { DISCLOSURE_OPEN_ARROW, DISCLOSURE_SUMMARY_SX, FOLD_GLYPH_INLINE_SX } from "@/shared/ui/disclosure";
 
-/** The glyph of the role header's «Tot textul» fold, by name from the registry (§694). */
+/** The glyph of the role header's «Restul» fold, by name from the registry (§694). */
 const MoreIcon = ACTION_ICONS.intro;
 
 /** A state's chip: its word, its glyph and its tone — never the colour alone. */
@@ -348,7 +350,7 @@ export default async function VolunteersCard({
           <RecallField
             name="age"
             label={t("volunteers.person.age")}
-            helperText={t("volunteers.person.ageHelp")}
+            helperText={t("volunteers.person.ageHelp", { age: yearsPhrase(VOLUNTEER_MINIMUM_AGE, locale) })}
             defaultValue={person?.age !== null && person?.age !== undefined ? String(person.age) : ""}
             size="small"
             fullWidth
@@ -640,7 +642,7 @@ export default async function VolunteersCard({
           and one line of the rest in the row's details. Nothing for a person who said nothing. */}
       {(person.volunteeredBefore || person.clubMember) && (
         <Stack direction="row" sx={{ flexWrap: "wrap", gap: 0.5, mt: 0.5 }} data-testid="volunteer-claims">
-          {person.volunteeredBefore && <StatusChip glyph="offered" variant="outlined" label={t("volunteers.chips.before")} testId="volunteer-before" />}
+          {person.volunteeredBefore && <StatusChip glyph="experience" variant="outlined" label={t("volunteers.chips.before")} testId="volunteer-before" />}
           {person.clubMember && <StatusChip glyph="club" variant="outlined" label={t("volunteers.chips.club", { club: CLUB_NAME })} testId="volunteer-club" />}
         </Stack>
       )}

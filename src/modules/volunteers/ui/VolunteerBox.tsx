@@ -198,17 +198,28 @@ export default async function VolunteerBox({
                 </FormHelperText>
               )}
               <Stack sx={{ mt: 0.5 }}>
-                {roles.map((role) => (
-                  <Box key={role.id} data-testid="volunteer-role-option">
-                    <CheckboxField name="roleIds" value={role.id} id={`volunteer-role-${role.id}`} defaultChecked={ticked.has(role.id)} help={needs(role)}>
-                      <Box component="span" sx={{ fontWeight: 600 }}>
-                        {roleName(role)}
-                      </Box>
-                    </CheckboxField>
-                    {/* «Descrierea rolului» (§NNN): the editor's document under the tick, folded «Detalii» past about three lines. */}
-                    <RoleDescription doc={roleDoc(role)} words={roleWords(role)} detailsLabel={t("volunteers.details")} />
-                  </Box>
-                ))}
+                {roles.map((role) => {
+                  const described = roleDoc(role) != null && (roleWords(role) ?? "").trim() !== "";
+                  const descriptionId = `volunteer-role-${role.id}-description`;
+                  return (
+                    <Box key={role.id} data-testid="volunteer-role-option">
+                      <CheckboxField
+                        name="roleIds"
+                        value={role.id}
+                        id={`volunteer-role-${role.id}`}
+                        defaultChecked={ticked.has(role.id)}
+                        help={needs(role)}
+                        describedBy={described ? descriptionId : undefined}
+                      >
+                        <Box component="span" sx={{ fontWeight: 600 }}>
+                          {roleName(role)}
+                        </Box>
+                      </CheckboxField>
+                      {/* «Descrierea rolului» (§NNN): the editor's document under the tick, folded «Detalii» past about three lines. */}
+                      <RoleDescription doc={roleDoc(role)} words={roleWords(role)} detailsLabel={t("volunteers.details")} bodyId={descriptionId} />
+                    </Box>
+                  );
+                })}
               </Stack>
             </Box>
 

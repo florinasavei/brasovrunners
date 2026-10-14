@@ -382,7 +382,8 @@ export function tasksWords(description: string): string {
  * lines of plain words (a paragraph or a list item each) or more than `ROLE_DESCRIPTION_FOLD_CHARS` characters.
  * The plain words are the rule's input — a document's JSON says nothing about how long it reads.
  */
-export const ROLE_DESCRIPTION_FOLD_CHARS = 200;
+// About three lines on a 320-pixel phone, where a line of body text holds about forty characters.
+export const ROLE_DESCRIPTION_FOLD_CHARS = 120;
 export const ROLE_DESCRIPTION_FOLD_LINES = 3;
 
 export function descriptionNeedsFold(words: string | null | undefined): boolean {

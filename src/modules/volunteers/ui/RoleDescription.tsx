@@ -18,6 +18,7 @@ export default function RoleDescription({
   doc,
   words,
   detailsLabel,
+  bodyId,
   testId = "volunteer-role-description",
 }: {
   /** The stored document for the page's language, or null. */
@@ -26,6 +27,8 @@ export default function RoleDescription({
   words: string | null;
   /** «Detalii» / "Details". */
   detailsLabel: string;
+  /** The id of the words' box, so the role's tick can name it in `aria-describedby` (it is read with the box, folded or not). */
+  bodyId?: string;
   testId?: string;
 }) {
   if (doc === null || doc === undefined || words === null || words.trim() === "") return null;
@@ -41,6 +44,7 @@ export default function RoleDescription({
         "& p": { my: 0.5 },
         "& ul, & ol": { my: 0.5, pl: 2.5 },
       }}
+      id={bodyId}
       data-testid={`${testId}-body`}
     >
       <RichText body={doc} />
