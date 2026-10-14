@@ -369,7 +369,8 @@ test.describe("§754 volunteers for a race", () => {
       expect(file).toContain(maria);
       // Six columns after the moment (§765): the age, the sex (the registrations' own word), the city, the two ticks as «Da»/«Nu», the size (empty: no T-shirts).
       expect(file).toContain("Data,Vârsta,Sex,Orașul,A mai fost voluntar,Din grupul clubului,Mărime tricou");
-      expect(file).toMatch(/,34,Female,Brașov,Da,Da,(\r?\n|$)/);
+      // …then the parent's three (§NNN), empty for an adult.
+      expect(file).toMatch(/,34,Female,Brașov,Da,Da,,,,(\r?\n|$)/);
 
       // --- «Oferim tricouri voluntarilor»: a tick of the card's own, and the form asks the size from then on ---
       // Nobody waits any more, so the card is shut: open it, as a person does.
@@ -410,7 +411,7 @@ test.describe("§754 volunteers for a race", () => {
       await expect(ionRow.getByTestId("volunteer-claims")).toHaveCount(0);
       await expect(ionRow.getByTestId("volunteer-facts")).toHaveText(/^Vârsta: 52 · .+ · Oraș: Cluj-Napoca · Tricou: L$/);
       const withShirts = await (await page.request.get(`/api/admin/events/${event.id}/volunteers?lang=ro`)).text();
-      expect(withShirts).toMatch(/,52,Male,Cluj-Napoca,Nu,Nu,L(\r?\n|$)/);
+      expect(withShirts).toMatch(/,52,Male,Cluj-Napoca,Nu,Nu,L,,,(\r?\n|$)/);
 
       // The organizers give «Punct de apă» to both: «2 din 2», and the page offers no form any more.
       for (const name of ["Ion Test", "Dana Test"]) {
@@ -677,14 +678,21 @@ test.describe("§754 volunteers for a race", () => {
       await expect(page.getByRole("alert").filter({ hasText: "Acordul părintelui lipsește" })).toBeVisible();
       await expect(row.getByTestId("volunteer-state")).toHaveText("Înscris");
       // «Trimite linkul părintelui»: one more email, a press never a secret.
-      await row.getByRole("button", { name: /^Retrimite linkul părintelui|^Trimite linkul părintelui/ }).click();
-      await page.waitForURL(/#box-volunteers$/);
+      await row.getByRole("button", { name: /^Trimite (din nou )?linkul părintelui/ }).click();
+      // The address already ends in the card's anchor after the refusal, so the press is waited for by what it wrote: a second queued email.
+      await expect
+        .poll(async () => (await client.query(`SELECT 1 FROM email_outbox WHERE message_type = 'VOLUNTEER_GUARDIAN_REQUEST' AND payload_json->>'volunteerId' = $1`, [danId])).rowCount, { timeout: 30_000 })
+        .toBe(2);
       await hydrated(page);
-      expect((await client.query(`SELECT 1 FROM email_outbox WHERE message_type = 'VOLUNTEER_GUARDIAN_REQUEST' AND payload_json->>'volunteerId' = $1`, [danId])).rowCount).toBe(2);
 
       // --- The parent: the link's page reads and never writes; one press accepts; the link is spent ----------
       const { createHash, randomBytes } = await import("node:crypto");
       const secret = randomBytes(32).toString("base64url");
+      // The real outbox drains after each response and mints a newer link when it sends (newest wins): let it finish and park what is left, so only this test's link is live.
+      await expect
+        .poll(async () => (await client.query(`SELECT 1 FROM email_outbox WHERE message_type = 'VOLUNTEER_GUARDIAN_REQUEST' AND payload_json->>'volunteerId' = $1 AND status = 'PROCESSING'`, [danId])).rowCount, { timeout: 30_000 })
+        .toBe(0);
+      await client.query(`UPDATE email_outbox SET status = 'FAILED' WHERE message_type = 'VOLUNTEER_GUARDIAN_REQUEST' AND payload_json->>'volunteerId' = $1 AND status = 'PENDING'`, [danId]);
       await client.query(`UPDATE event_volunteers SET guardian_token_hash = $1, guardian_token_expires_at = now() + interval '14 days' WHERE id = $2`, [
         createHash("sha256").update(secret, "utf8").digest("hex"),
         danId,

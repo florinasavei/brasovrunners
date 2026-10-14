@@ -5954,7 +5954,7 @@
         "VOLUNTEER_AGREEMENT_REQUEST": "Când un organizator apasă „Trimite linkul contractului” la un voluntar care nu l-a acceptat încă: contractul și linkul de acceptare.",
         "VOLUNTEER_AGREEMENT_ACCEPTED": "Când un voluntar acceptă contractul din link sau un organizator apasă „Semnat pe hârtie”: copia lui, cu contractul atașat ca PDF.",
         "VOLUNTEER_ROLE_ASSIGNED": "Când organizatorii îi dau unui voluntar un rol, din cardul «Voluntari» al evenimentului: un mesaj scurt care numește rolul, data și locul. Nimic de apăsat.",
-        "VOLUNTEER_GUARDIAN_REQUEST": "Când un voluntar sub 18 ani se oferă pe pagina evenimentului, sau un organizator apasă „Trimite linkul părintelui”: contractul și linkul prin care părintele sau tutorele îl acceptă în numele lui."
+        "VOLUNTEER_GUARDIAN_REQUEST": "Când un voluntar sub 18 ani se oferă pe pagina de voluntari, sau un organizator apasă „Trimite linkul părintelui”: contractul și linkul prin care părintele sau tutorele îl acceptă în numele lui."
       },
       "whenShort": {
         "VERIFY_REGISTRATION_EMAIL": "după trimiterea formularului",

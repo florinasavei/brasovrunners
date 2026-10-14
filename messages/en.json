@@ -5954,7 +5954,7 @@
         "VOLUNTEER_AGREEMENT_REQUEST": "When an organizer presses “Send the agreement link” for a volunteer who has not accepted it yet: the agreement and the link to accept it.",
         "VOLUNTEER_AGREEMENT_ACCEPTED": "When a volunteer accepts the agreement from the link, or an organizer presses “Signed on paper”: their copy, with the agreement attached as a PDF.",
         "VOLUNTEER_ROLE_ASSIGNED": "When the organizers give a volunteer a role, from the event's «Volunteers» card: a short message naming the role, the date and the place. Nothing to press.",
-        "VOLUNTEER_GUARDIAN_REQUEST": "When a volunteer under 18 offers on the event's page, or an organizer presses “Send the parent's link”: the agreement and the link where the parent or guardian accepts it in their own name."
+        "VOLUNTEER_GUARDIAN_REQUEST": "When a volunteer under 18 offers on the volunteers' page, or an organizer presses “Send the parent's link”: the agreement and the link where the parent or guardian accepts it in their own name."
       },
       "whenShort": {
         "VERIFY_REGISTRATION_EMAIL": "after the form is sent",
