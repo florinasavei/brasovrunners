@@ -82,11 +82,6 @@ const ALLOWED: Array<{ file: string; line: string; reason: string }> = [
     reason: "a chip's tap padding, larger on a phone than on a desktop on purpose",
   },
   {
-    file: "src/modules/events/ui/share-pill.ts",
-    line: "px: { xs: 1.5, sm: 1.25 },",
-    reason: "a chip's tap padding, larger on a phone than on a desktop on purpose",
-  },
-  {
     file: "src/modules/events/ui/CalendarHeader.tsx",
     line: "rowGap: { xs: 0, sm: 1 }",
     reason: "zero on a phone: the period row and the chip row are each 44 pixels of tap target already (§487)",

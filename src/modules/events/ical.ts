@@ -751,6 +751,61 @@ export function googleCalendarUrl(event: CalendarEvent, labels: CalendarLabels):
   return `https://calendar.google.com/calendar/render?${params.toString()}`;
 }
 
+/**
+ * An instant as the wall clock of `timeZone` with its offset, `2026-11-21T08:00:00+02:00`: the shape
+ * Outlook's compose window reads in `startdt` and `enddt` (§NNN). The offset is read from `Intl`
+ * (the zone's own rules for that day, summer time included), never assumed.
+ */
+export function isoInZone(date: Date, timeZone: string): string {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    hourCycle: "h23",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  }).formatToParts(date);
+  const of = (type: Intl.DateTimeFormatPartTypes) => Number(parts.find((part) => part.type === type)?.value);
+  const wall = Date.UTC(of("year"), of("month") - 1, of("day"), of("hour"), of("minute"), of("second"));
+  const minutes = Math.round((wall - Math.floor(date.getTime() / 1000) * 1000) / 60_000);
+  const pad = (value: number) => String(value).padStart(2, "0");
+  const sign = minutes < 0 ? "-" : "+";
+  const offset = `${sign}${pad(Math.floor(Math.abs(minutes) / 60))}:${pad(Math.abs(minutes) % 60)}`;
+  return `${String(of("year")).padStart(4, "0")}-${pad(of("month"))}-${pad(of("day"))}T${pad(of("hour"))}:${pad(of("minute"))}:${pad(of("second"))}${offset}`;
+}
+
+/**
+ * Outlook on the web's "new event" window with this one event filled in (§NNN: the event page's
+ * «Adaugă în calendar» row names the same five doors as the subscription panel, §733). A personal
+ * account (outlook.com, hotmail, live) is on `outlook.live.com`, a work or school one (Microsoft 365)
+ * on `outlook.office.com`. The format — `path=/calendar/action/compose`, `rru=addevent`, `subject`,
+ * `startdt`, `enddt`, `body`, `location` — is the one the add-to-calendar-button library sends
+ * (`src/generators/outlook.ts`). Microsoft documents no such link and outlook.com refuses automated
+ * requests (HTTP 417), so no test can open it: the unit test pins the format. Both hosts are in
+ * `PROVIDER_HOSTS` (`scripts/docs-check.mjs`): Microsoft's, fixed, nothing loaded from them.
+ *
+ * The times are the event's own wall clock with its offset (`isoInZone`), the `+` encoded; the title,
+ * place and description are the ones Google's link carries (the description's HTML links and the same
+ * budget, §159), so the doors never differ.
+ */
+export function outlookCalendarUrl(event: CalendarEvent, labels: CalendarLabels, account: "personal" | "work"): string {
+  const host = account === "work" ? "outlook.office.com" : "outlook.live.com";
+  const timeZone = event.timezone ?? CLUB_TIME_ZONE;
+  const place = calendarPlace(event, labels);
+  const parts = [
+    "path=/calendar/action/compose",
+    "rru=addevent",
+    `startdt=${encodeURIComponent(isoInZone(event.startsAt, timeZone))}`,
+    `enddt=${encodeURIComponent(isoInZone(event.endsAt ?? event.startsAt, timeZone))}`,
+    `subject=${encodeURIComponent(event.title)}`,
+    `body=${encodeURIComponent(googleCalendarDetails(event, labels))}`,
+  ];
+  if (place.location) parts.push(`location=${encodeURIComponent(place.location)}`);
+  return `https://${host}/calendar/0/deeplink/compose?${parts.join("&")}`;
+}
+
 /** `webcal://…`, the scheme calendar apps subscribe to; the same file over HTTPS. */
 export function webcalUrl(httpsUrl: string): string {
   return httpsUrl.replace(/^https?:\/\//, "webcal://");

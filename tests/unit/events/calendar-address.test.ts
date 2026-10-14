@@ -112,7 +112,13 @@ describe("the event page draws its own file's address (§674)", () => {
     title: "Crosul",
     imageHref: "/ro/events/crosul/share-image",
     fileName: "crosul.png",
-    calendar: { icsHref: "/ro/events/crosul/calendar.ics", googleUrl: "https://calendar.google.com/calendar/render?action=TEMPLATE", fileAddress },
+    calendar: {
+      icsHref: "/ro/events/crosul/calendar.ics",
+      googleUrl: "https://calendar.google.com/calendar/render?action=TEMPLATE",
+      outlookUrl: "https://outlook.live.com/calendar/0/deeplink/compose?rru=addevent",
+      outlookWorkUrl: "https://outlook.office.com/calendar/0/deeplink/compose?rru=addevent",
+      fileAddress,
+    },
   });
 
   it.each(["ro", "en"] as const)("in a fold under the calendar row, with the Bin's sentence (%s)", async (locale) => {
