@@ -9229,7 +9229,8 @@
         "typedHelp": "Diez și șase cifre hexazecimale. Folosită doar cu „Altă culoare”.",
         "state": "Acum: {colour}, contrast {ratio} la 1",
         "save": "Salvează culorile",
-        "saving": "Se salvează…"
+        "saving": "Se salvează…",
+        "unreadable": "{colour}, care nu se citește: se tipărește culoarea temei"
       },
       "print": {
         "title": "Tipărire",

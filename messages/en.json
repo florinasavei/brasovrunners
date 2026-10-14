@@ -9229,7 +9229,8 @@
         "typedHelp": "A hash and six hexadecimal digits. Used only with “Another colour”.",
         "state": "Now: {colour}, contrast {ratio} to 1",
         "save": "Save the colours",
-        "saving": "Saving…"
+        "saving": "Saving…",
+        "unreadable": "{colour}, which does not read: the theme's colour prints"
       },
       "print": {
         "title": "Printing",

@@ -60,7 +60,15 @@ export default async function BadgeRoleColours({ eventId, locale, roles }: { eve
                 const ink = badgeTextOn(shown);
                 const palette = READABLE.find((choice) => choice.hex === role.colour);
                 const choice = role.colour === null ? "" : palette ? palette.hex : TYPED_COLOUR;
-                const colourName = role.colour === null ? t("badges.colours.theme") : palette ? t(`editor.bibColours.${palette.key}`) : role.colour;
+                // A stored colour no word reads on (written by hand) prints the theme's, and the line says so.
+                const colourName =
+                  role.colour === null
+                    ? t("badges.colours.theme")
+                    : palette
+                      ? t(`editor.bibColours.${palette.key}`)
+                      : badgeColourReadable(role.colour)
+                        ? role.colour
+                        : t("badges.colours.unreadable", { colour: role.colour });
                 return (
                   <Box component="li" key={role.id} data-testid="badge-colour-row" data-role-id={role.id}>
                     <input type="hidden" name="roleId" value={role.id} />

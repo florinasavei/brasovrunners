@@ -3,6 +3,7 @@ import { difficultyBandOf, difficultyStepOf } from "@/modules/events/domain/diff
 import { routeMapFieldValue, type RouteMap } from "@/modules/events/domain/route-maps";
 import { toWallTimeInput } from "@/modules/events/domain/zoned-time";
 import type { RouteGpx } from "@/modules/events/domain/route-gpx";
+import { readBadgeDesign } from "@/modules/volunteers/badges/badge-design";
 import { DomainError } from "@/shared/errors/domain-error";
 import type { EventConfig, TranslationConfig } from "./file-format";
 
@@ -130,7 +131,8 @@ export function eventFieldsFromConfig(context: PostedFieldsContext): Record<stri
     bibStartNumber: String(config.bib.startNumber),
     bibColour: asText(config.bib.colour),
     ...(context.includeBibDesign ? { bibDesign: config.bib.design } : {}),
-    ...(context.includeBadgeDesign ? { badgeDesign: config.badges.design } : {}),
+    // Read through the one forgiving reader first: a key a later release added is left out, never a refusal of the file.
+    ...(context.includeBadgeDesign ? { badgeDesign: readBadgeDesign(config.badges.design) } : {}),
     confirmationOpensDaysBefore: String(config.registration.confirmationOpensDaysBefore),
     confirmationDeadlineDaysBefore: String(config.registration.confirmationDeadlineDaysBefore),
     minAge: String(config.registration.minAge),
