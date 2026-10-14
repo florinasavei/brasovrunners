@@ -2314,15 +2314,15 @@
         },
         "headerHidesTitle": "The header image hides the event's name: nothing of the band is printed over a picture. For a sponsors' strip use \"A sponsors' strip\".",
         "showProfile": "The route's profile",
-        "showProfileHelp": "Ticked: every number carries a full-width strip of elevation over distance, with the distance and gain at its side. Those typed on the event win; otherwise, the GPX's.",
-        "showProfileNoGpx": "Upload the route's GPX in \"The route\".",
+        "showProfileHelp": "Ticked: every number carries a strip with the route's profile, under the name. Choose below where it comes from and how it sits.",
+        "showProfileNoGpx": "The event has no GPX: upload it in “The route” or choose a picture.",
         "showCheckpoints": "Checkpoints on the profile",
         "showCheckpointsHelp": "Ticked: on the profile, at each point, a cup for water, a fork for food, a dot for the rest. Under it, “km 12” where it fits. Drawn only with the route's profile.",
         "showCheckpointTimes": "…with the cut-off times",
         "showCheckpointTimesHelp": "Ticked: beside each point, its cut-off too, “km 12 · 11:30”. If not every time fits, none is printed; then the kilometres that do not fit go. The marks always stay.",
         "showCheckpointsNone": "The event has no checkpoints: add them in the “Checkpoints” card.",
         "showEmergency": "Emergency phone",
-        "showEmergencyHelp": "Ticked: every number carries a small \"Emergency: …\" line with the phone below. Unticked: no line. Type the organizers' number, never a participant's.",
+        "showEmergencyHelp": "Ticked: every number carries a small line with the label and one or two phones. Type the organizers' numbers, never a participant's.",
         "emergencyPhone": "The organizers' phone",
         "emergencyPhonePlaceholder": "07xx xxx xxx",
         "emergencyPhoneHelp": "Printed on every number, worn in public. Digits, spaces, brackets, dots, dashes and a leading +, six to fifteen digits; anything else prints nothing.",
@@ -2332,6 +2332,49 @@
         "showDistanceHelp": "Ticked: a badge in the header's right corner with the event's distance in whole kilometres, like 21K. Unticked: no badge. Not drawn over a header picture.",
         "numberStubs": "The number on the foot's two ends",
         "numberStubsHelp": "Ticked: the number again, small, at both ends of the sponsors' row, for a tear-off stub; the sponsors' picture makes room. Unticked: the row as it is.",
+        "sections": {
+          "header": "Header",
+          "number": "The number",
+          "name": "The name",
+          "footer": "Footer and sponsors",
+          "profile": "Profile and emergencies",
+          "members": "Members"
+        },
+        "sectionSummary": {
+          "headerPicture": "a picture instead of the band",
+          "nameOff": "no name",
+          "sponsors": "sponsors: {place}",
+          "sponsorsNone": "no sponsors' strip",
+          "phone": "emergency phone",
+          "pictureMissing": "An uploaded picture — none yet",
+          "gpxMissing": "Drawn from the GPX — the event has none",
+          "nothing": "nothing",
+          "membersOn": "on",
+          "membersOff": "off"
+        },
+        "profileSource": "Where the profile comes from",
+        "profileSources": {
+          "gpx": "Drawn from the event's route (GPX)",
+          "picture": "An uploaded picture"
+        },
+        "profileSourceHelp": "The drawing comes from the event's GPX file, not from Strava: the site cannot read a Strava map. With a picture you put what you want on the strip, the food stations for example.",
+        "profileImageSrc": "The profile picture",
+        "profileImageSrcHelp": "Fitted whole, never cropped, in a strip of about {alone} to 1; with the distance and the elevation gain beside it, {beside} to 1. Best: a picture just as wide, on a white background.",
+        "showProfileFigures": "Show the distance and the elevation gain beside the profile",
+        "showProfileFiguresHelp": "Ticked: the two figures at the profile's right. Unticked: the profile or the picture takes the whole width.",
+        "profileOrientation": "The profile's orientation",
+        "profileOrientations": {
+          "normal": "Normal",
+          "turned": "Turned, for the runner to read"
+        },
+        "profileOrientationHelp": "Turned: the profile is upside down, so the runner reads it looking down at the chest. When the phone is printed upside down too, the two turn together, as one block.",
+        "emergencyLabel": "The phone's label",
+        "emergencyLabelHelp": "Printed before the numbers, at most {max} characters. Empty: “Emergency”, or “Urgențe” on the Romanian numbers.",
+        "emergencyPhoneLabel": "Name beside the first phone",
+        "emergencyPhoneLabelHelp": "Optional, at most {max} characters: a name or a role, “Coordinator” for example.",
+        "emergencyPhone2": "A second phone (optional)",
+        "emergencyPhone2Help": "On the same line, after the first, with a “/” between. Checked like the first.",
+        "emergencyPhone2Label": "Name beside the second phone",
         "noPicture": "No picture",
         "picture": {
           "choose": "Upload a picture",
@@ -2339,21 +2382,25 @@
           "uploading": "Uploading…",
           "failed": "The picture did not upload. Try again.",
           "fromGallery": "From the gallery",
+          "qualityHelp": "Large for logos and text, Medium for photographs.",
           "cropTitle": "The part that prints",
           "cropHelp": {
             "header": "Drag the rectangle over the part you want across the top of the number.",
             "sponsors": "Drag the rectangle over the sponsors. “The whole picture” puts all of it in the strip.",
-            "memberCard": "Drag the rectangle over the part you want behind the digits, across the whole number."
+            "memberCard": "Drag the rectangle over the part you want behind the digits, across the whole number.",
+            "profile": "The picture is fitted whole, never cropped."
           },
           "cropReset": {
             "header": "Back to the middle",
             "sponsors": "The whole picture",
-            "memberCard": "Back to the middle"
+            "memberCard": "Back to the middle",
+            "profile": "The whole picture"
           },
           "shape": {
             "header": "Shape: {ratio} to 1, the size of the number's top strip.",
             "sponsors": "Shape: {ratio} to 1, the size of the sponsors' strip.",
-            "memberCard": "Shape: {ratio} to 1, the whole number less its bottom line."
+            "memberCard": "Shape: {ratio} to 1, the whole number less its bottom line.",
+            "profile": "Shape: {ratio} to 1, the profile's strip."
           }
         },
         "footer": {
@@ -2380,7 +2427,17 @@
           "previewAlt": "A member's race number, in the members' design, for a runner named “Nume Prenume”",
           "previewCaption": "Preview — a member's number",
           "mark": "Member mark on the number",
-          "markHelp": "Ticked: every member's number carries a check mark ✓ under the header. Unticked: no mark.",
+          "markHelp": "Ticked: every member's number carries the mark chosen below, under the header. Unticked: no mark.",
+          "markShape": "The member mark",
+          "markShapes": {
+            "star": "Star",
+            "logo": "The club's logo",
+            "heart": "Heart",
+            "bolt": "Lightning bolt",
+            "runner": "Runner",
+            "check": "Check mark"
+          },
+          "markShapeHelp": "The logo stays blue, on its own white ground. The other marks take the digits' colour.",
           "style": "The members' number background",
           "styleHelp": "\"The whole card\": a background across the number, white digits. \"Same background as the other numbers\": the ordinary number, only its own header and label.",
           "styles": {
@@ -5384,6 +5441,10 @@
     "bibs": {
       "title": "Race numbers (BIB)",
       "assign": "Assign numbers",
+      "assignHelp": "Gives a number to every real, confirmed registration without one, in order of confirmation, from the race's first free number; special guests, from their own series. Nobody gets a second.",
+      "assignHelpMore": "Numbers come by themselves at confirmation. The button catches up on registrations left without one: confirmed before numbers existed or after the first number changed. Test registrations get none.",
+      "rangeTitle": "Print the numbers (PDF)",
+      "rangeHelp": "From / To: only part of them, 1–50 for example. Empty: all.",
       "assigned": "{assigned} numbers assigned ({total} in total).",
       "thanksSent": "The thank-you went out: {recipients} emails.",
       "from": "From",
@@ -7790,6 +7851,7 @@
         "cover": "The cover",
         "bibHeader": "Race number: the header picture",
         "bibSponsors": "Race number: the sponsors' strip",
+        "bibProfile": "Race number: the profile picture",
         "bibMemberHeader": "Member's number: the header picture",
         "bibMemberCard": "Member's number: the background",
         "text": "A picture in a text",
@@ -7914,11 +7976,19 @@
             "showWebsite": "Bib: website address",
             "footerText": "Bib: the club's own line",
             "showProfile": "Bib: route profile",
+            "profileSource": "Bib: where the profile comes from",
+            "profileImageSrc": "Bib: profile picture",
+            "showProfileFigures": "Bib: distance and elevation gain beside the profile",
+            "profileOrientation": "Bib: profile orientation",
             "showCheckpoints": "Bib: checkpoints on the profile",
             "showCheckpointTimes": "Bib: cut-off times on the profile",
             "showDistance": "Bib: distance badge",
             "showEmergency": "Bib: emergency phone",
             "emergencyPhone": "Bib: emergency number",
+            "emergencyLabel": "Bib: phone label",
+            "emergencyPhoneLabel": "Bib: first phone's name",
+            "emergencyPhone2": "Bib: second phone",
+            "emergencyPhone2Label": "Bib: second phone's name",
             "emergencyUpsideDown": "Bib: phone upside down",
             "numberStubs": "Bib: number on the footer's ends",
             "sponsorPlace": "Bib: sponsors' band place",
@@ -7931,7 +8001,8 @@
               "cardImageSrc": "Member's bib: background picture",
               "cardImageCrop": "Member's bib: background crop",
               "label": "Member's bib: the line on the band",
-              "mark": "Member's bib: the mark"
+              "mark": "Member's bib: the mark",
+              "markShape": "Member's bib: the mark's shape"
             }
           }
         },

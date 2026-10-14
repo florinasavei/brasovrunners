@@ -246,14 +246,15 @@ describe("the labels a diff speaks in", () => {
 describe("the pictures in a configuration", () => {
   it("are found wherever they sit: the cover, the bib's places, a text's figures — a table's cell too — and the GPX", () => {
     const config = sampleConfig();
-    config.bib.design = { ...config.bib.design, sponsorImageSrc: OTHER_PICTURE, member: { ...DEFAULT_BIB_DESIGN.member, cardImageSrc: OTHER_PICTURE } };
+    // The profile's picture (§NNN) is one of the bib's places too.
+    config.bib.design = { ...config.bib.design, sponsorImageSrc: OTHER_PICTURE, profileImageSrc: OTHER_PICTURE, member: { ...DEFAULT_BIB_DESIGN.member, cardImageSrc: OTHER_PICTURE } };
     config.translations.en.body = {
       type: "doc",
       content: [{ type: "table", content: [{ type: "tableRow", content: [{ type: "tableCell", content: [{ type: "image", attrs: { src: OTHER_PICTURE } }] }] }] }],
     };
     const refs = collectMediaRefs(config);
-    expect(refs.map((ref) => ref.role)).toEqual(["cover", "bib.header", "bib.sponsors", "bib.member.card", "text.ro.body", "text.en.body", "route.gpx"]);
-    expect(refs.map((ref) => ref.kind)).toEqual(["image", "image", "image", "image", "image", "image", "gpx"]);
+    expect(refs.map((ref) => ref.role)).toEqual(["cover", "bib.header", "bib.sponsors", "bib.profile", "bib.member.card", "text.ro.body", "text.en.body", "route.gpx"]);
+    expect(refs.map((ref) => ref.kind)).toEqual(["image", "image", "image", "image", "image", "image", "image", "gpx"]);
   });
 
   it("are replaced address by address, and one that is taken out leaves the rest of its text", () => {
@@ -283,11 +284,12 @@ describe("the pictures in a configuration", () => {
     expect(storeKeyOfUrl("not a url", "image")).toBeNull();
   });
 
-  it("have a role whose words exist for each of the six places and the text", () => {
-    expect(["cover", "bib.header", "bib.sponsors", "bib.member.header", "bib.member.card", "route.gpx", "text.ro.rules"].map(mediaRoleKey)).toEqual([
+  it("have a role whose words exist for each of the seven places and the text", () => {
+    expect(["cover", "bib.header", "bib.sponsors", "bib.profile", "bib.member.header", "bib.member.card", "route.gpx", "text.ro.rules"].map(mediaRoleKey)).toEqual([
       "cover",
       "bibHeader",
       "bibSponsors",
+      "bibProfile",
       "bibMemberHeader",
       "bibMemberCard",
       "gpx",

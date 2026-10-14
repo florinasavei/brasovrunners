@@ -42,6 +42,7 @@ const MEMBER_QUERY = {
   cardImageCrop: "memberCardImageCrop",
   label: "memberLabel",
   mark: "memberMark",
+  markShape: "memberMarkShape",
 } as const;
 
 /**
@@ -77,12 +78,25 @@ export type BibDesignFormValues = {
   footerText: string;
   /** «Profilul traseului» and «Telefon pentru urgențe» (§750): the ticks, and the phone as typed. */
   showProfile: boolean;
+  /** «Desenat din traseul evenimentului (GPX)» or «O poză încărcată» (§NNN): `gpx` or `picture`; anything else is the schema's to refuse. */
+  profileSource: string;
+  /** The profile's picture (§NNN): its address, or null; never cropped. */
+  profileImageSrc: string | null;
+  /** «Arată distanța și diferența de nivel lângă profil» (§NNN): on by default. */
+  showProfileFigures: boolean;
+  /** «Orientarea profilului» (§NNN): `normal` or `turned`. */
+  profileOrientation: string;
   /** «Punctele de control pe profil» (§757): on by default, drawn only with the profile and the event's checkpoints. */
   showCheckpoints: boolean;
   /** «…cu orele limită» (§757): the cut-offs beside the points; off by default. */
   showCheckpointTimes: boolean;
   showEmergency: boolean;
   emergencyPhone: string;
+  /** «Eticheta telefonului», each number's own label and the second number (§NNN), as typed. */
+  emergencyLabel: string;
+  emergencyPhoneLabel: string;
+  emergencyPhone2: string;
+  emergencyPhone2Label: string;
   /** «Tipărit invers», «Distanța pe număr» and «Numărul și pe capete» (§750). */
   emergencyUpsideDown: boolean;
   showDistance: boolean;
@@ -107,6 +121,8 @@ export type BibMemberFormValues = {
   label: string;
   /** «Semn de membru pe număr» (§750). */
   mark: boolean;
+  /** «Semnul de membru» (§NNN): `star`, `logo` or a registry glyph; anything else is the schema's to refuse. */
+  markShape: string;
 };
 
 /** The members' fields' prefix inside the panel's (§664): `event.bibDesign.member.*`. */
@@ -123,6 +139,7 @@ const SWITCHES = [
   "showEventInFooter",
   "showWebsite",
   "showProfile",
+  "showProfileFigures",
   "showCheckpoints",
   "showCheckpointTimes",
   "showEmergency",
@@ -130,15 +147,16 @@ const SWITCHES = [
   "showDistance",
   "numberStubs",
 ] as const;
-const CHOICES = ["numberScale", "numberFormat", "namePosition", "sponsorPlace"] as const;
-const PICTURES = ["headerImageSrc", "sponsorImageSrc"] as const;
+const CHOICES = ["numberScale", "numberFormat", "namePosition", "sponsorPlace", "profileSource", "profileOrientation"] as const;
+/** The pictures' addresses; the profile's is never cropped, so it has no crop beside it (§NNN). */
+const PICTURES = ["headerImageSrc", "sponsorImageSrc", "profileImageSrc"] as const;
 /** Each picture's crop, beside the picture it belongs to: absent with no picture or no crop (§560). */
 const CROPS = [
   ["headerImageCrop", "headerImageSrc"],
   ["sponsorImageCrop", "sponsorImageSrc"],
 ] as const;
 /** Free text: absent from the address when empty, so the platform's design has no such key. */
-const TEXTS = ["footerText", "emergencyPhone"] as const;
+const TEXTS = ["footerText", "emergencyPhone", "emergencyLabel", "emergencyPhoneLabel", "emergencyPhone2", "emergencyPhone2Label"] as const;
 
 /**
  * The panel's boxes as the browser would post them, read through one `get`.
@@ -172,10 +190,19 @@ export function readBibDesignForm(get: (name: string) => string | null): BibDesi
     // A text box always posts, empty or not; what it may say is the schema's to decide.
     footerText: field("footerText") ?? "",
     showProfile: field("showProfile") === "on",
+    // A radio posts its value; none chosen reads the platform's choice, as a select does.
+    profileSource: field("profileSource")?.trim() || "gpx",
+    profileImageSrc: field("profileImageSrc")?.trim() || null,
+    showProfileFigures: field("showProfileFigures") === "on",
+    profileOrientation: field("profileOrientation")?.trim() || "normal",
     showCheckpoints: field("showCheckpoints") === "on",
     showCheckpointTimes: field("showCheckpointTimes") === "on",
     showEmergency: field("showEmergency") === "on",
     emergencyPhone: field("emergencyPhone") ?? "",
+    emergencyLabel: field("emergencyLabel") ?? "",
+    emergencyPhoneLabel: field("emergencyPhoneLabel") ?? "",
+    emergencyPhone2: field("emergencyPhone2") ?? "",
+    emergencyPhone2Label: field("emergencyPhone2Label") ?? "",
     emergencyUpsideDown: field("emergencyUpsideDown") === "on",
     showDistance: field("showDistance") === "on",
     numberStubs: field("numberStubs") === "on",
@@ -189,6 +216,7 @@ export function readBibDesignForm(get: (name: string) => string | null): BibDesi
       cardImageCrop: field("member.cardImageCrop")?.trim() || null,
       label: field("member.label") ?? "",
       mark: field("member.mark") === "on",
+      markShape: field("member.markShape")?.trim() || "star",
     },
   };
 }
@@ -235,8 +263,12 @@ export function bibDesignSearchParams(values: BibDesignFormValues, into = new UR
     if (crop) into.set(MEMBER_QUERY.cardImageCrop, typeof crop === "string" ? crop : JSON.stringify({ x: crop.x, y: crop.y, w: crop.w, h: crop.h }));
   }
   if (member.label.trim()) into.set(MEMBER_QUERY.label, member.label);
-  // Only when ticked: a missing key reads false, so the ordinary preview's address stays as it was.
-  if (member.mark) into.set(MEMBER_QUERY.mark, "1");
+  // Only when ticked: a missing key reads false, so the ordinary preview's address stays as it was —
+  // and the mark's shape with it (§NNN), which means nothing without the mark.
+  if (member.mark) {
+    into.set(MEMBER_QUERY.mark, "1");
+    into.set(MEMBER_QUERY.markShape, member.markShape);
+  }
   return into;
 }
 
@@ -284,6 +316,7 @@ export function bibDesignValuesFromQuery(params: URLSearchParams): Partial<BibDe
     cardImageCrop: params.get(MEMBER_QUERY.cardImageCrop) || null,
     label: params.get(MEMBER_QUERY.label) ?? "",
     mark: params.get(MEMBER_QUERY.mark) === "1",
+    markShape: params.get(MEMBER_QUERY.markShape) || "star",
   };
   return values;
 }

@@ -144,10 +144,16 @@ export function bibCheckpointMarks(input: {
   startWord: string;
   finishWord: string;
   label: (row: BibCheckpointSource, withTime: boolean) => string;
+  /**
+   * The chart's width in points (§NNN): `profileChartWidth` beside the figures, the strip's whole width
+   * with «Arată distanța și diferența de nivel lângă profil» off (`bib-geometry.ts#bibProfileChartWidth`)
+   * — the crowding rule measures in it. Absent, the chart beside the figures.
+   */
+  chartWidth?: number;
 }): BibCheckpointsDrawing | null {
   const L = BIB_LAYOUT;
   if (!(input.routeKm > 0) || input.points.length < 2) return null;
-  const width = L.profileChartWidth;
+  const width = input.chartWidth ?? L.profileChartWidth;
   const sorted = input.checkpoints
     .filter((row) => row.km >= 0 && row.km <= input.routeKm)
     .map((row, at) => ({ row, at }))

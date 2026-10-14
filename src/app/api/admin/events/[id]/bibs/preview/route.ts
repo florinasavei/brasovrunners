@@ -64,6 +64,8 @@ async function imagePictures(design: BibDesign, member = false) {
     sponsors: bibPictureForImage(loaded.sponsors),
     memberHeader: bibPictureForImage(loaded.memberHeader),
     memberCard: bibPictureForImage(loaded.memberCard),
+    // The club's picture of the route's profile (§NNN), read only while the design draws it.
+    profile: bibPictureForImage(loaded.profile),
   };
 }
 
