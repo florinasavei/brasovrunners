@@ -110,12 +110,16 @@ async function loadOne(src: string | null, maxWidth: number): Promise<LoadedBibP
  * Both places' pictures for a renderer, each `null` where there is none or it could not be read —
  * and the members' own (§664), read only when `members` says a member's bib will be drawn and the
  * members' switch is on: their header for «Același fundal ca restul numerelor», their card's photograph for «Tot
- * numărul» (§NNN), never both. A sheet of no member's bib fetches nothing more than before.
+ * numărul» (§NNN), never both. A sheet of no member's bib fetches nothing more than before. The
+ * profile's picture (§NNN) is read only while the profile is ticked and drawn from «O poză încărcată».
  */
 export async function loadBibPictures(
   design: {
     headerImageSrc: string | null;
     sponsorImageSrc: string | null;
+    showProfile?: boolean;
+    profileSource?: "gpx" | "picture";
+    profileImageSrc?: string | null;
     member?: { enabled: boolean; style?: "band" | "card"; headerImageSrc: string | null; cardImageSrc?: string | null };
   },
   maxWidth: number,
@@ -124,13 +128,15 @@ export async function loadBibPictures(
   const member = members && design.member?.enabled ? design.member : null;
   const memberHeaderSrc = member && member.style !== "card" ? member.headerImageSrc : null;
   const memberCardSrc = member && member.style === "card" ? (member.cardImageSrc ?? null) : null;
-  const [header, sponsors, memberHeader, memberCard] = await Promise.all([
+  const profileSrc = design.showProfile && design.profileSource === "picture" ? (design.profileImageSrc ?? null) : null;
+  const [header, sponsors, memberHeader, memberCard, profile] = await Promise.all([
     loadOne(design.headerImageSrc, maxWidth),
     loadOne(design.sponsorImageSrc, maxWidth),
     loadOne(memberHeaderSrc, maxWidth),
     loadOne(memberCardSrc, maxWidth),
+    loadOne(profileSrc, maxWidth),
   ]);
-  return { header, sponsors, memberHeader, memberCard };
+  return { header, sponsors, memberHeader, memberCard, profile };
 }
 
 /** A loaded picture as `next/og` takes it: an inline PNG, with its size. */

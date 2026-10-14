@@ -18,9 +18,11 @@ import {
   DEFAULT_BIB_DESIGN,
   numberScaleFactor,
 } from "./bib-design";
-import { BIB_FOOTER_EMS, bibFooterLines, bibFooterParts } from "./bib-footer";
+import { BIB_FOOTER_EMS, bibFooterLines, bibFooterParts, bibFooterWidth } from "./bib-footer";
 import { checkpointGlyphLines } from "./bib-checkpoints";
-import { type BibProfileDrawing, bibProfilePaths } from "./bib-profile";
+import { type BibProfileDrawing, type BibProfileFigureLines, bibProfilePaths } from "./bib-profile";
+import { type BibProfileRow, bibProfileRow } from "./bib-profile-row";
+import { BIB_MEMBER_MARK_PATHS, BIB_MEMBER_MARK_VIEWBOX, type BibMemberMark, bibMemberMarkBox, isVectorMark } from "./bib-member-mark";
 import { BIB_PICTURE_BOX, type BibPictureSlot, bibPictureDrawing } from "./bib-picture-frame";
 import {
   BIB_CARD,
@@ -31,12 +33,13 @@ import {
   BIB_MARGIN,
   BIB_TEXT_LINE,
   type BibHeaderLayout,
+  bibEmergencyFit,
   bibExtrasHeight,
+  bibExtrasTurn,
   bibNameReserve,
   bibNumberArea,
   bibNumberFit,
   bibStubScale,
-  MEMBER_MARK_CHECK,
 } from "./bib-geometry";
 import { bibHeader } from "./bib-header";
 import { formatRaceNumber } from "./domain/race-number";
@@ -116,7 +119,9 @@ type BibImageInput = {
   memberLabelDefault?: string;
   /** «Profilul traseului» (§750), already read from the event's GPX by the route (`bib-extras.ts`); drawn only while the design's tick is on. */
   profile?: BibProfileDrawing | null;
-  /** The word before the emergency phone (§750), in the picture's language. */
+  /** The figures beside the club's picture of the profile (§NNN), from `bib-extras.ts`; null draws the picture across the strip. */
+  profileFigures?: BibProfileFigureLines | null;
+  /** The word before the emergency phone when the club typed none (§750, §NNN), in the picture's language. */
   emergencyLabel?: string;
   /** «21K» for the header's badge (§750), from `bib-extras.ts`; drawn only while the design's tick is on. */
   distanceBadge?: string | null;
@@ -227,6 +232,222 @@ export function bibHeaderLines(words: BibHeaderLayout, colour: string) {
   ];
 }
 
+let clubLogoDataUrl: Promise<string> | undefined;
+/** The club's blue lockup (`src/theme/pdf/logo.png`, the file the sheet embeds for the same mark), as `next/og` loads it. */
+function clubLogo(): Promise<string> {
+  clubLogoDataUrl ??= readFile(path.join(process.cwd(), "src", "theme", "pdf", "logo.png")).then(
+    (buffer) => `data:image/png;base64,${buffer.toString("base64")}`,
+  );
+  return clubLogoDataUrl;
+}
+
+/**
+ * The member mark (§750; its shape the club's, §NNN) at the sheet's points: absolute at the card's left
+ * inset under the header. A star or a registry glyph is the one path of `bib-member-mark.ts`, in its
+ * 24-unit box, filled in the number's ink — the very string the sheet hands pdfkit; the club's logo is
+ * the blue lockup the sheet prints, never recoloured. Exported so the test reads the markup.
+ */
+export function bibMemberMarkElement(shape: BibMemberMark, ink: string, logoSrc: string | null) {
+  const L = BIB_LAYOUT;
+  const box = bibMemberMarkBox(shape);
+  // From inside the paper's drawn edge, as Satori places an absolute box: less `PAPER_EDGE`.
+  const place = { position: "absolute", top: px(BIB_MARGIN + L.bandHeight + L.memberMarkTop) - PAPER_EDGE, left: px(BIB_MARGIN + L.inset) - PAPER_EDGE } as const;
+  if (isVectorMark(shape)) {
+    return (
+      <svg
+        width={px(box.width)}
+        height={px(box.height)}
+        viewBox={`0 0 ${BIB_MEMBER_MARK_VIEWBOX} ${BIB_MEMBER_MARK_VIEWBOX}`}
+        data-testid="bib-member-mark"
+        data-mark={shape}
+        style={place}
+      >
+        <path d={BIB_MEMBER_MARK_PATHS[shape]} fill={ink} />
+      </svg>
+    );
+  }
+  if (!logoSrc) return null;
+  // eslint-disable-next-line @next/next/no-img-element -- Satori draws the data URI
+  return <img src={logoSrc} alt="" width={px(box.width)} height={px(box.height)} data-testid="bib-member-mark" data-mark="logo" style={{ ...place, objectFit: "contain" }} />;
+}
+
+/**
+ * The profile's row (§750) at the sheet's points: the line drawn from the GPX with its words and the
+ * checkpoints' marks, or the club's picture fitted whole (§NNN) — either in the chart's width the row
+ * decided (`bib-profile-row.ts`), with the figures beside it when the club shows them.
+ */
+function profileRowElement(row: BibProfileRow, ink: string, picture: BibImagePicture | null) {
+  const L = BIB_LAYOUT;
+  const chartWidth = row.chartWidth;
+  const figures = row.figures
+    ? [
+        row.figures.distance ? (
+          <div key="distance" style={{ ...ONE_LINE, position: "absolute", left: px(L.inset + chartWidth + L.profileTextGap), top: px(L.profileDistanceTop), fontSize: px(L.profileTextSize), color: ink }}>
+            {row.figures.distance}
+          </div>
+        ) : null,
+        row.figures.gain ? (
+          <div key="gain" style={{ ...ONE_LINE, position: "absolute", left: px(L.inset + chartWidth + L.profileTextGap), top: px(L.profileGainTop), fontSize: px(L.profileTextSize), color: ink }}>
+            {row.figures.gain}
+          </div>
+        ) : null,
+      ]
+    : null;
+  if (row.kind === "picture") {
+    return (
+      <div data-testid="bib-profile-row" data-source="picture" style={{ display: "flex", flexShrink: 0, position: "relative", height: px(L.profileHeight) }}>
+        {picture ? (
+          // eslint-disable-next-line @next/next/no-img-element -- Satori draws it
+          <img
+            src={picture.src}
+            alt=""
+            width={px(chartWidth)}
+            height={px(L.profilePictureHeight)}
+            data-testid="bib-profile-picture"
+            style={{ position: "absolute", left: px(L.inset), top: px(L.profilePictureTop), objectFit: "contain" }}
+          />
+        ) : null}
+        {figures}
+      </div>
+    );
+  }
+  const profile = row.drawing;
+  const paths = bibProfilePaths(profile.points, chartWidth, L.profileChartHeight);
+  return (
+    <div data-testid="bib-profile-row" data-source="gpx" style={{ display: "flex", flexShrink: 0, position: "relative", height: px(L.profileHeight) }}>
+      <svg
+        width={px(chartWidth + 2 * PROFILE_PAD)}
+        height={px(L.profileChartHeight + 2 * PROFILE_PAD)}
+        viewBox={`${-PROFILE_PAD} ${-PROFILE_PAD} ${chartWidth + 2 * PROFILE_PAD} ${L.profileChartHeight + 2 * PROFILE_PAD}`}
+        data-testid="bib-profile"
+        style={{ position: "absolute", left: px(L.inset - PROFILE_PAD), top: px(L.profileChartTop - PROFILE_PAD) }}
+      >
+        <path d={paths.area} fill={ink} fillOpacity={L.profileAreaOpacity} stroke="none" />
+        <path d={paths.line} fill="none" stroke={ink} strokeWidth={L.profileLineWeight} strokeLinecap="round" strokeLinejoin="round" />
+        <circle cx={profile.points[0][0] * chartWidth} cy={(1 - profile.points[0][1]) * L.profileChartHeight} r={1.8} fill={ink} />
+        <circle
+          cx={profile.points[profile.points.length - 1][0] * chartWidth}
+          cy={(1 - profile.points[profile.points.length - 1][1]) * L.profileChartHeight}
+          r={1.8}
+          fill={ink}
+        />
+        {/* The route's checkpoints (`bib-checkpoints.ts`), at the sheet's points: a tick to the chart's foot, and
+            an aid station's cup or fork beside the line — any other point a dot on it. */}
+        {(profile.checkpoints?.marks ?? []).map((mark) => {
+          const markX = mark.x * chartWidth;
+          return (
+            <g key={mark.x} data-testid="bib-checkpoint-mark" data-glyph={mark.glyph ?? "dot"}>
+              <line x1={markX} y1={mark.tickFrom} x2={markX} y2={L.profileChartHeight} stroke={ink} strokeWidth={L.checkpointTickWeight} />
+              {mark.glyph === null || mark.glyphY === null ? (
+                <circle cx={markX} cy={(1 - mark.y) * L.profileChartHeight} r={L.checkpointDot} fill={ink} />
+              ) : (
+                checkpointGlyphLines(mark.glyph).map((stroke, at) => (
+                  <polyline
+                    key={at}
+                    points={stroke.map(([x, y]) => `${(markX + x).toFixed(2)},${((mark.glyphY ?? 0) + y).toFixed(2)}`).join(" ")}
+                    fill="none"
+                    stroke={ink}
+                    strokeWidth={L.checkpointGlyphWeight}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                ))
+              )}
+            </g>
+          );
+        })}
+      </svg>
+      <div
+        style={{
+          display: "flex",
+          position: "absolute",
+          left: px(L.inset),
+          top: px(L.profileLabelTop),
+          width: px(chartWidth),
+          justifyContent: "space-between",
+          fontSize: px(L.profileLabelSize),
+          color: ink,
+        }}
+      >
+        <div style={{ display: "flex" }}>{profile.start}</div>
+        <div style={{ display: "flex" }}>{profile.finish}</div>
+      </div>
+      {/* Their words (§757), «km 12» or «km 12 · 11:30», centred under the ticks in the labels' row — where the crowding rule kept them. */}
+      {(profile.checkpoints?.marks ?? []).map((mark) =>
+        mark.label ? (
+          <div
+            key={mark.x}
+            data-testid="bib-checkpoint-label"
+            style={{
+              ...ONE_LINE,
+              position: "absolute",
+              left: px(L.inset + mark.x * chartWidth - CHECKPOINT_LABEL_BOX / 2),
+              top: px(L.profileLabelTop),
+              width: px(CHECKPOINT_LABEL_BOX),
+              justifyContent: "center",
+              fontSize: px(L.profileLabelSize),
+              color: ink,
+            }}
+          >
+            {mark.label}
+          </div>
+        ) : null,
+      )}
+      {figures}
+    </div>
+  );
+}
+
+/** Half a circle, for what the runner reads looking down at the chest (§750, §NNN). */
+const TURNED = { transform: "rotate(180deg)" } as const;
+
+/**
+ * The block under the name (§750, amending it §NNN): the profile's row, then the emergency line — its
+ * label and numbers set at the size that fits (`bibEmergencyFit`) — turned as `bibExtrasTurn` decides:
+ * both turned is **one** block turned about its own centre (the phone comes out above the profile, and
+ * reads right under it for the runner), else each row alone. Null when neither is drawn. Exported so
+ * the test reads the markup.
+ */
+export function bibExtrasBlock(input: {
+  row: BibProfileRow | null;
+  picture: BibImagePicture | null;
+  emergency: { text: string; size: number } | null;
+  turn: { block: boolean; profile: boolean; phone: boolean };
+  ink: string;
+}) {
+  const L = BIB_LAYOUT;
+  if (!input.row && !input.emergency) return null;
+  const profileRow = input.row ? profileRowElement(input.row, input.ink, input.picture) : null;
+  const emergencyRow = input.emergency ? (
+    <div
+      data-testid="bib-emergency"
+      style={{
+        display: "flex",
+        flexShrink: 0,
+        height: px(L.emergencyHeight),
+        alignItems: "center",
+        justifyContent: "center",
+        fontSize: px(input.emergency.size),
+        color: input.ink,
+        whiteSpace: "nowrap",
+        ...(input.turn.phone ? TURNED : {}),
+      }}
+    >
+      {input.emergency.text}
+    </div>
+  ) : null;
+  return (
+    <div
+      data-testid="bib-extras"
+      data-turn={input.turn.block ? "block" : input.turn.profile ? "profile" : input.turn.phone ? "phone" : "none"}
+      style={{ display: "flex", flexDirection: "column", flexShrink: 0, ...(input.turn.block ? TURNED : {}) }}
+    >
+      {profileRow && input.turn.profile ? <div style={{ display: "flex", flexDirection: "column", flexShrink: 0, ...TURNED }}>{profileRow}</div> : profileRow}
+      {emergencyRow}
+    </div>
+  );
+}
+
 export async function renderBibImage(input: BibImageInput): Promise<ImageResponse> {
   const { width, height } = BIB_IMAGE;
   const L = BIB_LAYOUT;
@@ -240,13 +461,27 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
   const memberLabel = asMember ? bibMemberLabel(design.member, input.memberLabelDefault ?? "") : "";
   // «Tot numărul» (§NNN): the members' background over the whole card, the label a stripe.
   const asCard = asMember && design.member.style === "card";
-  // The member mark (§750); the name set above the number steps aside for it (`bibNameReserve`).
+  // The member mark (§750, its shape §NNN); the name set above the number steps aside for its width (`bibNameReserve`).
   const markDrawn = asMember && design.member.mark;
-  const nameReserve = bibNameReserve(markDrawn, design.namePosition === "above");
-  // The route's profile and the emergency phone (§750), when ticked and available; the sponsors' place.
-  const profile = design.showProfile ? (input.profile ?? null) : null;
-  const profilePaths = profile ? bibProfilePaths(profile.points, L.profileChartWidth, L.profileChartHeight) : null;
-  const emergency = bibEmergencyLine(design, input.emergencyLabel ?? "");
+  const markShape = design.member.markShape;
+  const nameReserve = bibNameReserve(markDrawn ? bibMemberMarkBox(markShape).width : null, design.namePosition === "above");
+  /*
+    The route's profile — from the GPX or the club's picture of it (§NNN) — and the emergency phone with
+    its label and numbers (§750, §NNN), when ticked and available, decided as the sheet decides them.
+  */
+  const profilePicture = design.showProfile && design.profileSource === "picture" ? (input.pictures ? (input.pictures.profile ?? null) : (() => {
+        const address = bibPictureUrl(design.profileImageSrc, env.APP_BASE_URL);
+        return address ? { src: address, width: 0, height: 0 } : null;
+      })()) : null;
+  const profileRow = bibProfileRow(design, { profile: input.profile ?? null, profileFigures: input.profileFigures ?? null }, profilePicture !== null);
+  const emergencyText = bibEmergencyLine(design, input.emergencyLabel ?? "");
+  const emergency = emergencyText ? bibEmergencyFit(emergencyText, bibFooterWidth) : null;
+  const turn = bibExtrasTurn({
+    profile: profileRow !== null,
+    profileTurned: design.profileOrientation === "turned",
+    phone: emergency !== null,
+    phoneTurned: design.emergencyUpsideDown,
+  });
   const sponsorsAtBottom = design.sponsorPlace === "bottom";
   const badge = design.showDistance ? (input.distanceBadge ?? null) : null;
   // The stubs (§750) are why the sponsors' row exists with no picture.
@@ -295,7 +530,7 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
     name: design.showName ? L.nameBlock : 0,
     sponsors: sponsorRow,
     stripe: stripe ? L.memberStripeHeight : 0,
-    extras: bibExtrasHeight(profile !== null, emergency !== null),
+    extras: bibExtrasHeight(profileRow !== null, emergency !== null),
   });
   const numberSize = px(bibNumberFit(digits, numberScaleFactor(design), numberArea));
   // The background's own box: under an opaque stripe it stops half-way, so the flow's sub-pixel
@@ -661,38 +896,8 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
             {memberLabel}
           </div>
         ) : null}
-        {/* The member mark (§750), the sheet's ring and check at the sheet's points: an SVG in the
-            number's own ink, absolute at the card's left inset under the header. */}
-        {markDrawn ? (
-          <svg
-            width={px(L.memberMarkSize)}
-            height={px(L.memberMarkSize)}
-            viewBox={`0 0 ${L.memberMarkSize} ${L.memberMarkSize}`}
-            data-testid="bib-member-mark"
-            style={{
-              position: "absolute",
-              top: px(BIB_MARGIN + L.bandHeight + L.memberMarkTop) - PAPER_EDGE,
-              left: px(BIB_MARGIN + L.inset) - PAPER_EDGE,
-            }}
-          >
-            <circle
-              cx={L.memberMarkSize / 2}
-              cy={L.memberMarkSize / 2}
-              r={L.memberMarkSize / 2 - L.memberMarkWeight / 2}
-              fill="none"
-              stroke={ink}
-              strokeWidth={L.memberMarkWeight}
-            />
-            <path
-              d={MEMBER_MARK_CHECK.map(([x, y], index) => `${index === 0 ? "M" : "L"}${x * L.memberMarkSize} ${y * L.memberMarkSize}`).join(" ")}
-              fill="none"
-              stroke={ink}
-              strokeWidth={L.memberMarkWeight}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        ) : null}
+        {/* The member mark (§750; its shape the club's, §NNN), the sheet's at the sheet's points. */}
+        {markDrawn ? bibMemberMarkElement(markShape, ink, markShape === "logo" ? await clubLogo() : null) : null}
         {design.namePosition === "above" ? name : null}
         {/* The number, centred on what the card has left, as the sheet centres it. */}
         <div
@@ -710,8 +915,7 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
           {digits}
         </div>
         {design.namePosition === "below" ? name : null}
-        {profileRow}
-        {emergencyRow}
+        {bibExtrasBlock({ row: profileRow, picture: profilePicture, emergency, turn, ink })}
         {/* A member's card's stripe (§NNN): its foot on the background's foot, the label in capitals. */}
         {stripe ? (
           <div

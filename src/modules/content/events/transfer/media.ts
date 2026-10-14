@@ -35,17 +35,18 @@ export type MediaRef = { role: string; url: string; kind: MediaKind };
 export const TEXT_BOXES = ["excerptBody", "body", "rules", "schedule", "routeDescription"] as const;
 const LOCALES = ["ro", "en"] as const;
 
-/** The bib design's four picture places, by their dotted path inside the design. */
+/** The bib design's five picture places, by their dotted path inside the design (the profile's since §NNN). */
 const BIB_PICTURES = [
   { role: "bib.header", path: ["headerImageSrc"] },
   { role: "bib.sponsors", path: ["sponsorImageSrc"] },
+  { role: "bib.profile", path: ["profileImageSrc"] },
   { role: "bib.member.header", path: ["member", "headerImageSrc"] },
   { role: "bib.member.card", path: ["member", "cardImageSrc"] },
 ] as const;
 
-/** The words' key of a medium's role (`Admin.eventJson.roles.<key>`): the five places a picture sits, and the GPX. */
-export type MediaRoleKey = "cover" | "bibHeader" | "bibSponsors" | "bibMemberHeader" | "bibMemberCard" | "text" | "gpx";
-export const MEDIA_ROLE_KEYS: readonly MediaRoleKey[] = ["cover", "bibHeader", "bibSponsors", "bibMemberHeader", "bibMemberCard", "text", "gpx"];
+/** The words' key of a medium's role (`Admin.eventJson.roles.<key>`): the six places a picture sits, and the GPX. */
+export type MediaRoleKey = "cover" | "bibHeader" | "bibSponsors" | "bibProfile" | "bibMemberHeader" | "bibMemberCard" | "text" | "gpx";
+export const MEDIA_ROLE_KEYS: readonly MediaRoleKey[] = ["cover", "bibHeader", "bibSponsors", "bibProfile", "bibMemberHeader", "bibMemberCard", "text", "gpx"];
 
 export function mediaRoleKey(role: string): MediaRoleKey {
   switch (role) {
@@ -55,6 +56,8 @@ export function mediaRoleKey(role: string): MediaRoleKey {
       return "bibHeader";
     case "bib.sponsors":
       return "bibSponsors";
+    case "bib.profile":
+      return "bibProfile";
     case "bib.member.header":
       return "bibMemberHeader";
     case "bib.member.card":
