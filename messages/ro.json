@@ -1930,7 +1930,7 @@
       "locationCopyToEnglish": "Același nume și în engleză",
       "locationEnglishLeftBehind": "În engleză scrie tot „{place}”. Dacă s-a mutat locul, schimbă-l și aici.",
       "placeToBeAnnounced": "Locația se anunță mai târziu",
-      "placeToBeAnnouncedHelp": "Pornit, peste tot scrie „Locația se anunță în curând”, iar locul și harta nu apar. Ce completezi rămâne nepublicat până oprești comutatorul.",
+      "placeToBeAnnouncedHelp": "Bifat, peste tot scrie „Locația se anunță în curând”, iar locul și harta nu apar. Ce completezi rămâne nepublicat până debifezi.",
       "placeUnpublished": "Nepublicat cât timp locația se anunță mai târziu.",
       "dateToBeAnnounced": "Data se anunță mai târziu",
       "dateToBeAnnouncedHelp": "Bifat, peste tot scrie „Data se anunță în curând”. Data și ora de mai sus pot rămâne goale; ce scrii acolo nu se publică. Înscrierile rămân „se deschid în curând”.",

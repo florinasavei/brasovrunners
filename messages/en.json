@@ -1930,7 +1930,7 @@
       "locationCopyToEnglish": "Same name in English",
       "locationEnglishLeftBehind": "The English box still says “{place}”. If the place has moved, change it here too.",
       "placeToBeAnnounced": "Location to be announced",
-      "placeToBeAnnouncedHelp": "On, everywhere says “Location to be announced soon” and the place and the map stay hidden. What you fill in stays unpublished until you turn it off.",
+      "placeToBeAnnouncedHelp": "Ticked, everywhere says “Location to be announced soon” and the place and the map stay hidden. What you fill in stays unpublished until you untick it.",
       "placeUnpublished": "Not published while the location is to be announced.",
       "dateToBeAnnounced": "Date to be announced later",
       "dateToBeAnnouncedHelp": "Ticked, every page says “Date to be announced soon”. The date and time above may stay empty; nothing typed there is published. Registration stays “opening soon”.",
