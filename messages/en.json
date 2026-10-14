@@ -6585,13 +6585,27 @@
           "howItWent": "The event, the date, a rating from 1 to 5, what happened and why someone stopped coming. Also from the thank-you email.",
           "suggestion": "One text box.",
           "complaint": "What happened, optionally the event and the date.",
-          "safety": "For women who did not feel safe: it reaches only the person below, through Mailgun."
+          "safety": "For women who did not feel safe: it reaches only the person below."
         },
         "switch": "On",
         "to": "Who receives it",
         "toOf": "Who receives it — {branch}",
-        "toHelp": "One address. The message leaves through the club's Gmail, like “Write to us”.",
-        "toHelpSafety": "The designated person's own address. It leaves only through Mailgun, never through the club's Gmail.",
+        "toHelp": "One address.",
+        "toHelpSafety": "The designated person's own address.",
+        "via": {
+          "legend": "How we send it",
+          "legendOf": "How we send it — {branch}",
+          "gmail": "The club's Gmail (“Write to us”)",
+          "mailgun": "Mailgun",
+          "gmailHint": "From the club's mailbox; the message also stays in its Sent folder.",
+          "mailgunHint": "From the platform's email service; no copy stays in any mailbox.",
+          "gmailMissing": "Gmail is not ready here: the club's account and its app password are missing.",
+          "mailgunMissing": "Mailgun does not send here: emails are not switched on in this environment.",
+          "steps": "See the steps",
+          "safetyNote": "Through Gmail, a Girl Zone message stays in the club's mailbox and whoever reads it sees it; through Mailgun it reaches only the person above.",
+          "stateGmail": "Gmail",
+          "stateMailgun": "Mailgun"
+        },
         "safetyName": "First name shown",
         "safetyNameHelp": "The form says: “The message reaches … only”. At most 40 characters.",
         "stateOn": "on",
@@ -6600,7 +6614,7 @@
         "save": "Save the forms",
         "saving": "Saving…",
         "saved": "The “Tell us something” forms were saved.",
-        "roads": "The site keeps no message. How it was, suggestions and complaints leave through the club's Gmail (CONTACT_SMTP_USER); Girl Zone only through Mailgun."
+        "roads": "The site keeps no message. The way it is sent is chosen for each form on its own: the club's Gmail (CONTACT_SMTP_USER) or Mailgun."
       },
       "perSendNewsletter": "The newsletter's text is written per send, on the backoffice's “Newsletter” page, so it has no words to edit here.",
       "newsletterLink": "Newsletter →",

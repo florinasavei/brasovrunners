@@ -20,13 +20,14 @@ import Typography from "@mui/material/Typography";
 import type { Metadata } from "next";
 import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { notFound, unstable_rethrow } from "next/navigation";
+import { notFound, redirect, unstable_rethrow } from "next/navigation";
 import type { ComponentType } from "react";
 import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import { getPathname, Link } from "@/i18n/navigation";
 import { type Locale, routing } from "@/i18n/routing";
-import { contactSmtpRoadExists } from "@/modules/contact/delivery";
+import { feedbackRoads } from "@/modules/feedback/roads";
 import {
+  aliasRedirect,
   BRANCH_SLUG,
   BRANCH_FIELDS,
   defaultAudience,
@@ -144,13 +145,17 @@ export default async function FeedbackPage({ params, searchParams }: Props) {
   setRequestLocale(locale);
 
   const search = await searchParams;
+  // A link from before Girl Zone's address was `girl-zone` (§NNN: `?tip=siguranta`, a sent email's, a
+  // printed one) lands on the same form at the new address — a GET only, every other word of the query kept.
+  const moved = aliasRedirect(getPathname({ locale, href: "/contact/feedback" }), search);
+  if (moved) redirect(moved);
   const now = new Date();
   const t = await getTranslations("Tell");
 
   // Tolerant of an outage like every read on the contact page (§281): no answer is no door.
   const [offer, described] = await Promise.all([orNull(() => cachedFeedbackOffer()), orNull(() => cachedFeedbackFormsDescribed(now))]);
   // The three ordinary branches only where the SMTP road exists (`CONTACT_FORM_MODE`), as «Scrie-ne» draws no form without one.
-  const offered = offer ? offeredBranches(offer, described === true, contactSmtpRoadExists()) : [];
+  const offered = offer ? offeredBranches(offer, described === true, feedbackRoads()) : [];
   const query = readFeedbackQuery(search);
   const sentBranch = Object.entries(BRANCH_SLUG).find(([, slug]) => slug === search.sent)?.[0] as FeedbackBranch | undefined;
   const step = wizardStep(offered, sentBranch ?? query.branch);
@@ -165,7 +170,7 @@ export default async function FeedbackPage({ params, searchParams }: Props) {
   if (step.kind === "form" && offer) {
     const namedDescribed = (await orNull(() => cachedFeedbackFormsNamedDescribed(now))) === true;
     const clubFallback = namedDescribed && step.branch === "safety" ? (await orNull(() => cachedContactFormReaches())) === true : false;
-    identity = namedModeFor(step.branch, offer, namedDescribed, { smtp: contactSmtpRoadExists(), clubFallback });
+    identity = namedModeFor(step.branch, offer, namedDescribed, { ...feedbackRoads(), clubFallback });
   }
 
   return (

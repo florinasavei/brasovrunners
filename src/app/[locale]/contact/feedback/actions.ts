@@ -7,6 +7,7 @@ import { createEmailSenderForEnvironment } from "@/infrastructure/email/sender";
 import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { contactDelivery, contactSmtpRoad } from "@/modules/contact/delivery";
+import { feedbackRoads } from "@/modules/feedback/roads";
 import { readContactRecipients } from "@/modules/contact/recipients";
 import {
   FEEDBACK_BRANCHES,
@@ -97,8 +98,9 @@ export async function submitFeedbackAction(form: FormData): Promise<void> {
         // «Clubul» for a named safety report when «O reclamație» has no recipient (§678): the contact form's own.
         clubFallback: contactDelivery(recipients)?.to ?? [],
         smtp: contactSmtpRoad(),
-        // Mailgun's road alone for the safety branch: the environment's sender with no Gmail road at all.
-        mailgun: createEmailSenderForEnvironment(env).sender,
+        // Mailgun's road (§NNN): the environment's sender with no Gmail road at all — none where the email
+        // service does not transmit (`feedbackRoads`), so a form the club pointed at it is not offered.
+        mailgun: feedbackRoads().mailgun ? createEmailSenderForEnvironment(env).sender : null,
         appEnv: env.APP_ENV,
         screening: {
           botCheckOn: verdict !== "not_configured",

@@ -6585,13 +6585,27 @@
           "howItWent": "Evenimentul, data, o notă de la 1 la 5, ce s-a întâmplat și de ce nu mai vine cineva. Și din emailul de mulțumire.",
           "suggestion": "O singură casetă de text.",
           "complaint": "Ce s-a întâmplat, opțional evenimentul și data.",
-          "safety": "Pentru femeile care nu s-au simțit în siguranță: ajunge doar la persoana de mai jos, prin Mailgun."
+          "safety": "Pentru femeile care nu s-au simțit în siguranță: ajunge doar la persoana de mai jos."
         },
         "switch": "Pornit",
         "to": "Cine primește",
         "toOf": "Cine primește — {branch}",
-        "toHelp": "O singură adresă. Mesajul pleacă prin Gmail-ul clubului, ca „Scrie-ne”.",
-        "toHelpSafety": "Adresa proprie a persoanei desemnate. Pleacă doar prin Mailgun, niciodată prin Gmail-ul clubului.",
+        "toHelp": "O singură adresă.",
+        "toHelpSafety": "Adresa proprie a persoanei desemnate.",
+        "via": {
+          "legend": "Prin ce trimitem",
+          "legendOf": "Prin ce trimitem — {branch}",
+          "gmail": "Gmail-ul clubului („Scrie-ne”)",
+          "mailgun": "Mailgun",
+          "gmailHint": "Din căsuța clubului; mesajul rămâne și în folderul ei Trimise.",
+          "mailgunHint": "Din serviciul de email al platformei; nu rămâne nicio copie într-o căsuță.",
+          "gmailMissing": "Gmail-ul nu e pregătit aici: lipsesc contul clubului și parola lui de aplicație.",
+          "mailgunMissing": "Mailgun nu trimite aici: emailurile nu sunt pornite pe acest mediu.",
+          "steps": "Vezi pașii",
+          "safetyNote": "Prin Gmail, mesajul Girl Zone rămâne în căsuța clubului și îl văd cei care o citesc; prin Mailgun ajunge doar la persoana de mai sus.",
+          "stateGmail": "Gmail",
+          "stateMailgun": "Mailgun"
+        },
         "safetyName": "Prenumele afișat",
         "safetyNameHelp": "Formularul spune: „Mesajul ajunge doar la …”. Cel mult 40 de caractere.",
         "stateOn": "pornit",
@@ -6600,7 +6614,7 @@
         "save": "Salvează formularele",
         "saving": "Se salvează…",
         "saved": "Formularele „Spune-ne ceva” au fost salvate.",
-        "roads": "Site-ul nu păstrează niciun mesaj. Cum a fost, sugestiile și reclamațiile pleacă prin Gmail-ul clubului (CONTACT_SMTP_USER); Girl Zone doar prin Mailgun."
+        "roads": "Site-ul nu păstrează niciun mesaj. Calea de trimitere se alege pentru fiecare formular în parte: Gmail-ul clubului (CONTACT_SMTP_USER) sau Mailgun."
       },
       "perSendNewsletter": "Textul newsletterului se scrie la fiecare trimitere, pe pagina „Newsletter” a backoffice-ului, așa că nu are cuvinte de editat aici.",
       "newsletterLink": "Newsletter →",

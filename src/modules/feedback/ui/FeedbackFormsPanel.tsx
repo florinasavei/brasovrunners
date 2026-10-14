@@ -1,6 +1,7 @@
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Divider from "@mui/material/Divider";
+import MuiLink from "@mui/material/Link";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
@@ -9,7 +10,8 @@ import { updateFeedbackFormsAction } from "@/app/[locale]/admin/pages/contact/ac
 import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import type { Locale } from "@/i18n/routing";
 import { FEEDBACK_BRANCH_GLYPH } from "@/modules/feedback/ui/branch-glyph";
-import { branchesSwitchedOn, FEEDBACK_BRANCHES, type FeedbackBranch } from "@/modules/feedback/domain/branches";
+import { getPathname } from "@/i18n/navigation";
+import { branchesSwitchedOn, FEEDBACK_BRANCHES, FEEDBACK_VIAS, type FeedbackBranch, type FeedbackRoads, type FeedbackVia } from "@/modules/feedback/domain/branches";
 import { SAFETY_NAME_MAX, type FeedbackSettingsState } from "@/modules/feedback/settings";
 import { confirmWords } from "@/shared/feedback/confirm-words";
 import ActionForm from "@/shared/forms/ActionForm";
@@ -19,6 +21,8 @@ import CheckboxField from "@/shared/ui/CheckboxField";
 import type { FoldOpenWhen } from "@/shared/ui/fold";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import Panel from "@/shared/ui/Panel";
+import RadioField from "@/shared/ui/RadioField";
+import { INLINE_TAP_TARGET } from "@/shared/ui/tap-target";
 
 type Props = {
   locale: Locale;
@@ -27,8 +31,13 @@ type Props = {
   noticeDescribes: boolean;
   /** Administrator only (§450); the service refuses anybody else. */
   mayEdit: boolean;
+  /** Which roads this deployment has (`feedbackRoads`): a road it lacks is greyed, with the steps that give it. */
+  roads: FeedbackRoads;
   openWhen?: FoldOpenWhen;
 };
+
+/** Where the steps of each road are: the row of «Sarcini» that carries them (`contactForm`: the club's Gmail, `liveEmail`: Mailgun). */
+const STEPS_ROW: Readonly<Record<FeedbackVia, string>> = { gmail: "task-contactForm", mailgun: "task-liveEmail" };
 
 /**
  * «Spune-ne ceva» (§676) on «Pagini» → «Contact», under who receives «Scrie-ne»: per branch a switch
@@ -36,15 +45,24 @@ type Props = {
  * the name the confidential form shows («Mesajul ajunge doar la {name}»). The contact recipients'
  * shape (§164): a Server Component, one form, a Save behind the §384 confirmation; read by everybody
  * who reads the club's content, written by the Administrator. The summary counts what is on.
+ *
+ * Beside each form's recipient, «Prin ce trimitem» (§NNN): two native radios (`RadioField`) — the club's
+ * Gmail or Mailgun — whose default is what §676 fixed in code. A road this deployment lacks is greyed
+ * with a sentence and a link to the steps in «Sarcini»; it stays checked when it is what was saved, so
+ * the card shows what the form does, and a save leaves it as it was (`keepUnpostedVia`).
  */
-export default async function FeedbackFormsPanel({ locale, state, noticeDescribes, mayEdit, openWhen }: Props) {
+export default async function FeedbackFormsPanel({ locale, state, noticeDescribes, mayEdit, roads, openWhen }: Props) {
   const t = await getTranslations("Admin");
   const words = await confirmWords();
   const on = branchesSwitchedOn(state).length;
   const label = (branch: FeedbackBranch) => t(`emails.feedbackForms.branches.${branch}`);
+  const tasksPath = getPathname({ locale, href: "/admin/tasks" });
 
   const boxLabels: Record<string, string> = { safetyName: t("emails.feedbackForms.safetyName") };
-  for (const branch of FEEDBACK_BRANCHES) boxLabels[`${branch}To`] = t("emails.feedbackForms.toOf", { branch: label(branch) });
+  for (const branch of FEEDBACK_BRANCHES) {
+    boxLabels[`${branch}To`] = t("emails.feedbackForms.toOf", { branch: label(branch) });
+    boxLabels[`${branch}Via`] = t("emails.feedbackForms.via.legendOf", { branch: label(branch) });
+  }
 
   return (
     <Panel
@@ -75,7 +93,8 @@ export default async function FeedbackFormsPanel({ locale, state, noticeDescribe
           <Box component="ul" sx={{ m: 0, mt: 1.5, pl: 3 }}>
             {FEEDBACK_BRANCHES.map((branch) => (
               <Typography component="li" variant="body2" key={branch}>
-                {label(branch)}: {state[branch].on ? t("emails.feedbackForms.stateOn") : t("emails.feedbackForms.stateOff")}
+                {label(branch)}: {state[branch].on ? t("emails.feedbackForms.stateOn") : t("emails.feedbackForms.stateOff")} ·{" "}
+                {t(`emails.feedbackForms.via.state${state[branch].via === "gmail" ? "Gmail" : "Mailgun"}`)}
               </Typography>
             ))}
           </Box>
@@ -137,6 +156,35 @@ export default async function FeedbackFormsPanel({ locale, state, noticeDescribe
                           />
                         )}
                       </Stack>
+                      {/* «Prin ce trimitem» (§NNN): a radio pair, never a toggle; the default is the form's own (§676). */}
+                      <Box component="fieldset" sx={{ border: 0, m: 0, mt: 1.5, p: 0, minWidth: 0 }} data-testid={`feedback-via-${branch}`}>
+                        <Typography component="legend" variant="body2" sx={{ fontWeight: 600, p: 0 }} data-via-legend="">
+                          {t("emails.feedbackForms.via.legend")}
+                        </Typography>
+                        {FEEDBACK_VIAS.map((via) => (
+                          <Box key={via} data-testid={`feedback-via-${branch}-${via}`}>
+                            <RadioField name={`${branch}Via`} value={via} defaultChecked={state[branch].via === via} disabled={!roads[via]}>
+                              {t(`emails.feedbackForms.via.${via}`)}
+                            </RadioField>
+                            <Typography variant="caption" color="text.secondary" sx={{ display: "block", ml: 6, mt: -0.5 }}>
+                              {t(`emails.feedbackForms.via.${via}Hint`)}
+                            </Typography>
+                            {!roads[via] && (
+                              <Typography variant="caption" color="text.secondary" sx={{ display: "block", ml: 6 }} data-testid={`feedback-via-${branch}-${via}-missing`}>
+                                {t(`emails.feedbackForms.via.${via}Missing`)}{" "}
+                                <MuiLink href={`${tasksPath}#${STEPS_ROW[via]}`} sx={INLINE_TAP_TARGET}>
+                                  {t("emails.feedbackForms.via.steps")}
+                                </MuiLink>
+                              </Typography>
+                            )}
+                          </Box>
+                        ))}
+                        {branch === "safety" && (
+                          <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }} data-testid="feedback-via-safety-note">
+                            {t("emails.feedbackForms.via.safetyNote")}
+                          </Typography>
+                        )}
+                      </Box>
                     </Box>
                   </Fragment>
                 );

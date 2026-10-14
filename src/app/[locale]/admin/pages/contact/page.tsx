@@ -15,6 +15,7 @@ import { readShownContactAddress } from "@/modules/contact/shown-address";
 import ContactRecipientsPanel from "@/modules/contact/ui/ContactRecipientsPanel";
 import PublicPhonePanel from "@/modules/contact/ui/PublicPhonePanel";
 import ShownAddressPanel from "@/modules/contact/ui/ShownAddressPanel";
+import { feedbackRoads } from "@/modules/feedback/roads";
 import { readFeedbackSettings } from "@/modules/feedback/settings";
 import FeedbackFormsPanel from "@/modules/feedback/ui/FeedbackFormsPanel";
 import { noticeDescribesFeedbackForms } from "@/modules/legal-documents/repository";
@@ -94,6 +95,7 @@ export default async function AdminContactSettingsPage({ params, searchParams }:
         state={feedbackForms}
         noticeDescribes={feedbackNoticeDescribes}
         mayEdit={mayEdit}
+        roads={feedbackRoads()}
         openWhen={{ primary: true, saved: saved === "feedbackForms" }}
       />
 

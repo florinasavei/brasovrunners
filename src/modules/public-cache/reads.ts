@@ -684,10 +684,10 @@ export async function cachedFeedbackOffer(): Promise<FeedbackSettings> {
 function withoutAddresses(settings: FeedbackSettings): FeedbackSettings {
   const someone = (to: string | null) => (to ? "set" : null);
   return {
-    howItWent: { on: settings.howItWent.on, to: someone(settings.howItWent.to) },
-    suggestion: { on: settings.suggestion.on, to: someone(settings.suggestion.to) },
-    complaint: { on: settings.complaint.on, to: someone(settings.complaint.to) },
-    safety: { on: settings.safety.on, to: someone(settings.safety.to), name: settings.safety.name },
+    howItWent: { on: settings.howItWent.on, to: someone(settings.howItWent.to), via: settings.howItWent.via },
+    suggestion: { on: settings.suggestion.on, to: someone(settings.suggestion.to), via: settings.suggestion.via },
+    complaint: { on: settings.complaint.on, to: someone(settings.complaint.to), via: settings.complaint.via },
+    safety: { on: settings.safety.on, to: someone(settings.safety.to), via: settings.safety.via, name: settings.safety.name },
   };
 }
 

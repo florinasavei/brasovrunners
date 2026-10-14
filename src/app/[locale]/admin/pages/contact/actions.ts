@@ -8,6 +8,7 @@ import { routing, type Locale } from "@/i18n/routing";
 import { addressListRefusal, CONTACT_RECIPIENTS_MAX, parseAddressList } from "@/modules/contact/domain/recipients";
 import { updateContactRecipients } from "@/modules/contact/recipients";
 import { updatePublicPhone } from "@/modules/contact/public-phone";
+import { feedbackRoads } from "@/modules/feedback/roads";
 import { updateFeedbackSettings } from "@/modules/feedback/settings";
 import { updateShownContactAddress } from "@/modules/contact/shown-address";
 import { requireStaffCapability } from "@/modules/staff-identity/session";
@@ -105,7 +106,7 @@ export async function updateFeedbackFormsAction(_previous: FormOutcome | null, f
   const locale = localeOf(form);
   const path = getPathname({ locale, href: "/admin/pages/contact" });
   const value = (name: string) => (typeof form.get(name) === "string" ? String(form.get(name)) : "");
-  const branch = (name: string) => ({ on: form.get(`${name}On`) === "on", to: value(`${name}To`) });
+  const branch = (name: string) => ({ on: form.get(`${name}On`) === "on", to: value(`${name}To`), via: value(`${name}Via`) });
 
   try {
     const actor = await requireStaffCapability(canManageClubSettings);
@@ -119,6 +120,7 @@ export async function updateFeedbackFormsAction(_previous: FormOutcome | null, f
         safety: { ...branch("safety"), name: value("safetyName") },
       },
       new Date(),
+      feedbackRoads(),
     );
   } catch (error) {
     return refused(error, form);

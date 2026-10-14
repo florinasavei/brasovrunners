@@ -18,11 +18,17 @@ export default function RadioField({
   name,
   value,
   defaultChecked,
+  disabled,
   children,
 }: {
   name: string;
   value: string;
   defaultChecked?: boolean;
+  /**
+   * A choice that cannot be made now, greyed (§NNN): the browser does not post it and takes no click on it,
+   * so it can stay checked to show what is saved. Never alone: the caller says why, in words beside it.
+   */
+  disabled?: boolean;
   /** The label, which may contain a link. */
   children: ReactNode;
 }) {
@@ -34,12 +40,13 @@ export default function RadioField({
         display: "flex",
         alignItems: "center",
         gap: 1.5,
-        cursor: "pointer",
-        "& input": { flex: "none", width: 24, height: 24, m: 0, ml: 1.5, accentColor: "var(--mui-palette-primary-main)", cursor: "pointer" },
+        cursor: disabled ? "not-allowed" : "pointer",
+        ...(disabled ? { color: "text.disabled" } : {}),
+        "& input": { flex: "none", width: 24, height: 24, m: 0, ml: 1.5, accentColor: "var(--mui-palette-primary-main)", cursor: disabled ? "not-allowed" : "pointer" },
         "&:has(input:focus-visible)": { outline: "2px solid var(--mui-palette-primary-main)", outlineOffset: "-2px", borderRadius: 1 },
       }}
     >
-      <input type="radio" name={name} value={value} defaultChecked={defaultChecked} />
+      <input type="radio" name={name} value={value} defaultChecked={defaultChecked} disabled={disabled} />
       <Box component="span">{children}</Box>
     </Box>
   );
