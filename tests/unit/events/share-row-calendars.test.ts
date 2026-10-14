@@ -10,7 +10,7 @@ import { SHARE_PILL_BAND, SHARE_PILL_SX, SHARE_ROW_GAP } from "@/modules/events/
 
 /**
  * The event page's «Adaugă în calendar» row names the five doors of the subscription panel, and
- * both rows of the share block are small pills (§NNN, amending §140, §170 and §733; the owner,
+ * both rows of the share block are small pills (§767, amending §140, §170 and §733; the owner,
  * 2026-10-14: «These buttons are way too big, and I am missing Google Calendar, Apple, Outlook like
  * on the other calendar»). BR-REQ-020-01 (the calendar), BR-REQ-052-02 criterion 8 (the share row).
  *
@@ -265,7 +265,7 @@ describe("the small pill", () => {
     expect(SHARE_PILL_SX.minHeight).toBeGreaterThanOrEqual(24);
     expect(SHARE_PILL_SX.minHeight).toBeLessThanOrEqual(32);
     expect(JSON.stringify(SHARE_PILL_SX)).not.toMatch(/44/);
-    // The tap area is an invisible band, not a taller pill (§NNN).
+    // The tap area is an invisible band, not a taller pill (§767).
     expect(SHARE_PILL_SX["&::after"]).toMatchObject({ top: -(SHARE_PILL_BAND + 1), bottom: -(SHARE_PILL_BAND + 1) }); // + the outlined button's 1-pixel border, inside which the band is measured
     expect(SHARE_PILL_SX.minHeight + 2 * SHARE_PILL_BAND).toBeGreaterThanOrEqual(24);
   });

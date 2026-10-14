@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V3.26-2026-10-14
+
+- **Smaller share buttons; every calendar on the event page** — the event page's share and calendar rows are small pills, and «Adaugă în calendar» offers Google Calendar, Apple Calendar, Outlook.com, Outlook for work or school and the .ics, in the subscription panel's words. §767.
 ## BR-V3.25-2026-10-14
 
 - **Settings are tick boxes, never toggle buttons** — the anti-bot check and the honeypot, «Când pleacă emailurile», «Publică automat de acum» on a series' draft line and «Locația se anunță mai târziu» are real tick boxes with their words beside them (the toggle glyphs and the Material switches are gone, a design guard keeps them out); and on the public list «Runners Brașov» and «Runnersbrasov» count as the club. §766.

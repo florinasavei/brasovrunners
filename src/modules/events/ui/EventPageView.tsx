@@ -286,7 +286,7 @@ export default async function EventPageView({
             dated && calendarEntry ? {
               // A members' file is the twin's, per request (§552): the static one reads the public row alone.
               icsHref: membersOnly ? `/${locale}/${LIVE_SEGMENT}/events/${slug}/calendar.ics` : `/${locale}/events/${slug}/calendar.ics`,
-              // The event's own five doors (§NNN): Google's and the two Outlooks' add links, built from `calendarEntry`.
+              // The event's own five doors (§767): Google's and the two Outlooks' add links, built from `calendarEntry`.
               googleUrl: googleCalendarUrl(calendarEntry, { locale, t }),
               outlookUrl: outlookCalendarUrl(calendarEntry, { locale, t }, "personal"),
               outlookWorkUrl: outlookCalendarUrl(calendarEntry, { locale, t }, "work"),

@@ -12,7 +12,7 @@ const SHARE_PILL_BORDER = 1;
  * renders and the two islands beside them, so a network's button, the phone's own sheet and
  * the Instagram picture read as one row — and the «Adaugă în calendar» row under it.
  *
- * Small at every width (§NNN, amending §140 and §170; the owner, 2026-10-14, of the two rows:
+ * Small at every width (§767, amending §140 and §170; the owner, 2026-10-14, of the two rows:
  * «These buttons are way too big»). MUI's small outlined button trimmed to 28 pixels, the 0.8125rem
  * word and an 18-pixel glyph: the same small pill the listing card's route pills and the
  * calendar's chips wear (§449, §733), where a phone's 44 was the loudest thing on the event page.

@@ -21,7 +21,7 @@ import { SHARE_PILL_SX, SHARE_ROW_GAP } from "./share-pill";
  * `opengraph-image.tsx`; Instagram takes no link, so its button hands the same card as a
  * square picture to the share sheet where a phone can take one, and offers it as a download
  * everywhere else (`InstagramShareButton`). Beside them, "add to calendar" (§107): the same five
- * doors as the subscription panel (§NNN, `calendar-targets.tsx` — one source for their words and
+ * doors as the subscription panel (§767, `calendar-targets.tsx` — one source for their words and
  * marks): Google's own add-event address, the `.ics` for Apple Calendar, Outlook.com and Outlook
  * for work or school (each its own compose window, `outlookCalendarUrl`), and the `.ics` to download.
  *
@@ -29,7 +29,7 @@ import { SHARE_PILL_SX, SHARE_ROW_GAP } from "./share-pill";
  * address built from `APP_BASE_URL` (`../share-links.ts`): a plain `<a target="_blank">` is
  * what every browser opens on a tap, where iOS Safari refuses a popup opened by script.
  * Buttons rather than a line of text links (the owner: "share should look nicer"), small ones
- * (`share-pill.ts`, §NNN: «way too big»); the icons are children, never a prop across the
+ * (`share-pill.ts`, §767: «way too big»); the icons are children, never a prop across the
  * boundary (`AGENTS.md` §14.1).
  */
 type Props = {

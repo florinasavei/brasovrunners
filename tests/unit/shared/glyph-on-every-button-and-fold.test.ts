@@ -200,7 +200,7 @@ describe("§521 a glyph on every button", () => {
       if (entry.wrapper !== "anchor") expect(BUTTONS.has(entry.wrapper), entry.wrapper).toBe(true);
     }
     // The share row's local helper: every call hands it an icon element — or, for the five calendar
-    // doors drawn in one loop, the shared mark (`calendar-targets.tsx`, §NNN) of the door.
+    // doors drawn in one loop, the shared mark (`calendar-targets.tsx`, §767) of the door.
     const share = read("src/modules/events/ui/ShareLinks.tsx");
     const calls = [...share.matchAll(/\banchor\(([\s\S]*?)\)\}/g)];
     expect(calls.length).toBe(3);

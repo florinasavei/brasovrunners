@@ -44,7 +44,7 @@ test.describe("BR-REQ-052-02 criterion 8 — the share buttons", () => {
     const main = page.locator("#main");
     // The server renders the download ("Descarcă poza"); a browser that can share a file from
     // a touch screen turns it into a button once hydrated, labelled "Instagram". Either is the
-    // card, and either is a small pill like its neighbours (§NNN).
+    // card, and either is a small pill like its neighbours (§767).
     const control = main.getByRole("link", { name: /Descarcă poza/ }).or(main.getByRole("button", { name: /Instagram/ }));
     await expect(control).toBeVisible();
     const href = await control.getAttribute("href");
@@ -57,7 +57,7 @@ test.describe("BR-REQ-052-02 criterion 8 — the share buttons", () => {
     expect(height).toBeLessThanOrEqual(36);
   });
 
-  test("offer the event's own five calendar doors, in the subscription panel's words and order (§NNN)", async ({ page }) => {
+  test("offer the event's own five calendar doors, in the subscription panel's words and order (§767)", async ({ page }) => {
     await page.goto(EVENT);
     const row = page.locator("#main").getByText("Adaugă în calendar:").locator("..");
     const links = row.getByRole("link");
@@ -89,7 +89,7 @@ test.describe("BR-REQ-052-02 criterion 8 — the share buttons", () => {
     for (const index of [0, 2, 3]) await expect(links.nth(index)).toHaveAttribute("target", "_blank");
   });
 
-  test("are small pills at 320 pixels, a row that wraps, nothing wider than the page (§NNN)", async ({ page }) => {
+  test("are small pills at 320 pixels, a row that wraps, nothing wider than the page (§767)", async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 720 });
     await page.goto(EVENT);
     const row = page.locator("#main").getByRole("link", { name: /^(Facebook|WhatsApp|Google Calendar|Apple Calendar|Outlook.*|Descarcă fișierul \.ics)$/ });
@@ -106,7 +106,7 @@ test.describe("BR-REQ-052-02 criterion 8 — the share buttons", () => {
     expect(overflow).toBeLessThanOrEqual(0);
   });
 
-  test("keep a tap band around the small pill that never covers a neighbour: above and below, two pixels inside an edge is the pill's own (§NNN)", async ({ page }) => {
+  test("keep a tap band around the small pill that never covers a neighbour: above and below, two pixels inside an edge is the pill's own (§767)", async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 720 });
     await page.goto(EVENT);
     const main = page.locator("#main");

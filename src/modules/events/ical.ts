@@ -753,7 +753,7 @@ export function googleCalendarUrl(event: CalendarEvent, labels: CalendarLabels):
 
 /**
  * An instant as the wall clock of `timeZone` with its offset, `2026-11-21T08:00:00+02:00`: the shape
- * Outlook's compose window reads in `startdt` and `enddt` (§NNN). The offset is read from `Intl`
+ * Outlook's compose window reads in `startdt` and `enddt` (§767). The offset is read from `Intl`
  * (the zone's own rules for that day, summer time included), never assumed.
  */
 export function isoInZone(date: Date, timeZone: string): string {
@@ -777,7 +777,7 @@ export function isoInZone(date: Date, timeZone: string): string {
 }
 
 /**
- * Outlook on the web's "new event" window with this one event filled in (§NNN: the event page's
+ * Outlook on the web's "new event" window with this one event filled in (§767: the event page's
  * «Adaugă în calendar» row names the same five doors as the subscription panel, §733). A personal
  * account (outlook.com, hotmail, live) is on `outlook.live.com`, a work or school one (Microsoft 365)
  * on `outlook.office.com`. The format — `path=/calendar/action/compose`, `rru=addevent`, `subject`,

@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { AppleLogo, GoogleLogo, OutlookLogo } from "./calendar-app-logos";
 
 /**
- * The five doors into a person's calendar, named once (§NNN, amending §733 and §720): the
+ * The five doors into a person's calendar, named once (§767, amending §733 and §720): the
  * subscription panel's rows (`SubscribeBox`, the whole feed) and the event page's «Adaugă în
  * calendar» pills (`ShareLinks`, one event) say the same five things in the same order, with the
  * same words and the same mark before them — so neither keeps a list of names of its own.
