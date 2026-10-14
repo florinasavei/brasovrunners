@@ -19,11 +19,14 @@ import type { CurrentLegalDocument } from "./repository";
  * only to the languages that have a text too.
  */
 
-/** The legal documents that have a public page; the declaration is signed, never browsed. */
-export type PublicLegalKey = "TERMS" | "PRIVACY_NOTICE";
+/**
+ * The legal documents that have a public page; the declaration is signed, never browsed. The volunteer
+ * agreement (§758) has one: «Vreau să fiu voluntar»'s tick links the text it accepts, its blanks as dots.
+ */
+export type PublicLegalKey = "TERMS" | "PRIVACY_NOTICE" | "VOLUNTEER_AGREEMENT";
 
 /** Where each one lives — the internal route, localized by `getPathname`. */
-export const LEGAL_PAGE_ROUTE = { TERMS: "/legal/terms", PRIVACY_NOTICE: "/legal/privacy" } as const;
+export const LEGAL_PAGE_ROUTE = { TERMS: "/legal/terms", PRIVACY_NOTICE: "/legal/privacy", VOLUNTEER_AGREEMENT: "/legal/volunteer-agreement" } as const;
 
 /** The version in force in each locale that has one. */
 export type LegalInForce = Partial<Record<Locale, Pick<CurrentLegalDocument, "title" | "effectiveAt">>>;

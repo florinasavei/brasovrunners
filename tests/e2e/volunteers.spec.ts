@@ -124,6 +124,9 @@ test.describe("§754 volunteers for a race", () => {
         await page2.locator('[name="phone"]').fill("712345678");
         await page2.getByLabel("Un mesaj pentru organizatori (opțional)").fill("Sunt liber toată ziua");
         await page2.locator('input[name="consent"]').check();
+        // The volunteer agreement and the age (§758): the person's own two ticks.
+        await page2.locator('input[name="agreement"]').check();
+        await page2.locator('input[name="adult"]').check();
         // A person takes a moment: the form's timing check refuses a post within the second of its render.
         await page2.waitForTimeout(1_200);
         await page2.getByTestId("volunteer-box").getByRole("button", { name: "Mă ofer voluntar", exact: true }).click();
@@ -135,7 +138,9 @@ test.describe("§754 volunteers for a race", () => {
       await guest.getByLabel("Numele tău").fill("Maria Test");
       await guest.getByLabel("Adresa ta de email").fill(maria);
       await guest.locator('[name="phone"]').fill("712345678");
-      await guest.locator('input[name="consent"]').evaluate((input: HTMLInputElement) => input.removeAttribute("required"));
+      for (const tick of ["consent", "agreement", "adult"]) {
+        await guest.locator(`input[name="${tick}"]`).evaluate((input: HTMLInputElement) => input.removeAttribute("required"));
+      }
       await guest.waitForTimeout(1_200);
       await submit.click();
       await expect(guest.getByTestId("volunteer-invalid")).toBeVisible({ timeout: 30_000 });
@@ -143,6 +148,15 @@ test.describe("§754 volunteers for a race", () => {
       // The sentence is said at the box too (CheckboxField, §616), and the notice opens in a new tab (LegalLink, §197).
       await expect(guest.getByTestId("volunteer-consent").getByTestId("checkbox-error")).toContainText("Bifează căsuța de acord");
       await expect(guest.getByTestId("volunteer-consent").getByRole("link", { name: /nota de confidențialitate/ })).toHaveAttribute("target", "_blank");
+      // The volunteer agreement and the age (§758): each refusal named in the summary and at its own box, and the
+      // agreement in force one press away, in a new tab, so what was typed stays.
+      await expect(guest.getByTestId("volunteer-invalid")).toContainText("contractul de voluntariat");
+      await expect(guest.getByTestId("volunteer-agreement").getByTestId("checkbox-error")).toContainText("Bifează că accepți contractul de voluntariat");
+      await expect(guest.getByTestId("volunteer-adult").getByTestId("checkbox-error")).toContainText("cel puțin 18 ani");
+      const agreementLink = guest.getByTestId("volunteer-agreement").getByRole("link", { name: /contractul de voluntariat/ });
+      await expect(agreementLink).toHaveAttribute("target", "_blank");
+      await expect(agreementLink).toHaveAttribute("href", "/ro/contract-voluntariat");
+      expect((await guest.request.get("/ro/contract-voluntariat")).status()).toBe(200);
       await expect(guest.getByLabel("Numele tău")).toHaveValue("Maria Test");
       await expect(guest.getByLabel("Adresa ta de email")).toHaveValue(maria);
 
@@ -164,6 +178,12 @@ test.describe("§754 volunteers for a race", () => {
       await expect(row.getByTestId("volunteer-phone")).toContainText("712 345 678");
       await expect(row).toContainText("Sunt liber toată ziua");
       await expect(row).toContainText("Din formular");
+      // The agreement she accepted with the offer (§758): the version, the way, and her copy as a PDF.
+      await expect(row.getByTestId("volunteer-agreement-state")).toHaveText("Contract acceptat");
+      await expect(row.getByTestId("volunteer-agreement")).toContainText("în formularul de pe pagină");
+      const accepted = await page.request.get(`/api/admin/events/${event.id}/volunteers/${await row.getAttribute("data-volunteer-id")}/agreement`);
+      expect(accepted.status()).toBe(200);
+      expect(accepted.headers()["content-type"]).toBe("application/pdf");
       await row.getByRole("button", { name: /^Confirmă/ }).click();
       await page.waitForURL(/#box-volunteers$/);
       await hydrated(page);
@@ -206,6 +226,113 @@ test.describe("§754 volunteers for a race", () => {
     } finally {
       await visitor.close();
     }
+  });
+
+  test("§758 a person entered by hand has «Contract neacceptat încă», accepts from the link's page once, and another signs on paper", async ({ page, browser }) => {
+    const tag = `${test.info().project.name}-${Date.now().toString(36)}-agr`;
+    const event = await seedEvent(tag);
+    await signIn(page, "Dev Administrator");
+    await page.goto(`/ro/admin/events/${event.id}`);
+    await hydrated(page);
+    await openEditorBox(page, "Adaugă un rol");
+    const addRole = page.getByTestId("volunteer-role-add");
+    await addRole.getByLabel("Numele rolului (Română)").fill("Punct de apă");
+    await addRole.getByLabel("Numele rolului (English)").fill("Water point");
+    await addRole.getByLabel("Câți oameni trebuie").fill("3");
+    await addRole.getByRole("button", { name: "Adaugă rolul", exact: true }).click();
+    await page.waitForURL(/#box-volunteers$/);
+    await hydrated(page);
+
+    async function addByHand(name: string, email: string) {
+      // A fresh load each time: the card's folds as a person finds them after the previous press.
+      await page.goto(`/ro/admin/events/${event.id}`);
+      await hydrated(page);
+      await openEditorBox(page, "Adaugă un voluntar de mână");
+      const add = page.getByTestId("volunteer-add");
+      await add.getByRole("textbox", { name: "Nume", exact: true }).fill(name);
+      await add.getByRole("textbox", { name: "Adresa de email", exact: true }).fill(email);
+      await add.getByRole("textbox", { name: "Telefon", exact: true }).fill("0712 345 678");
+      await add.getByRole("button", { name: "Adaugă voluntarul", exact: true }).click();
+      await page.waitForURL(/#box-volunteers$/);
+      await hydrated(page);
+    }
+    await addByHand("Ion Link", `ion.${tag}@example.test`);
+    await addByHand("Dana Hartie", `dana.${tag}@example.test`);
+    const ionRow = page.locator('[data-testid="volunteer-row"]', { hasText: "Ion Link" });
+    const danaRow = page.locator('[data-testid="volunteer-row"]', { hasText: "Dana Hartie" });
+    await expect(ionRow.getByTestId("volunteer-agreement-state")).toHaveText("Contract neacceptat încă");
+    await expect(danaRow.getByTestId("volunteer-agreement-state")).toHaveText("Contract neacceptat încă");
+
+    // «Trimite linkul contractului»: one email queued, the card says so, the row says a link was sent.
+    const send = ionRow.getByRole("button", { name: /^Trimite linkul contractului/ });
+    expect((await send.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+    await send.click();
+    await page.waitForURL(/#box-volunteers$/);
+    await hydrated(page);
+    await expect(ionRow.getByTestId("volunteer-agreement")).toContainText("Ultimul link trimis");
+    const client = new pg.Client({ connectionString: databaseUrl() });
+    await client.connect();
+    try {
+      const ionId = await ionRow.getAttribute("data-volunteer-id");
+      const queued = await client.query(`SELECT 1 FROM email_outbox WHERE message_type = 'VOLUNTEER_AGREEMENT_REQUEST' AND payload_json->>'volunteerId' = $1`, [ionId]);
+      expect(queued.rowCount).toBe(1);
+      /*
+        The link as the send would mint it (the outbox may not have drained here): a secret only this test knows,
+        its SHA-256 on the row — what `mintVolunteerAgreementLink` writes — so the page is reached as the person
+        reaches it from the email.
+      */
+      const { createHash, randomBytes } = await import("node:crypto");
+      const secret = randomBytes(32).toString("base64url");
+      await client.query(
+        `UPDATE event_volunteers SET agreement_token_hash = $1, agreement_token_expires_at = now() + interval '14 days' WHERE id = $2`,
+        [createHash("sha256").update(secret, "utf8").digest("hex"), ionId],
+      );
+
+      // The link's page, as the person opens it: the agreement filled for them, two ticks, one button.
+      const visitor = await browser.newContext({ baseURL: test.info().project.use.baseURL, viewport: test.info().project.use.viewport ?? undefined });
+      try {
+        const ion = await visitor.newPage();
+        await ion.goto(`/ro/voluntari/contract/${secret}`);
+        await hydrated(ion);
+        await expect(ion.getByRole("heading", { level: 1 })).toHaveText("Contractul de voluntariat");
+        await expect(ion.getByTestId("volunteer-agreement-text")).toContainText("Voluntarul este Ion Link.");
+        await expect(ion.getByTestId("volunteer-agreement-text")).toContainText("în rolul Punct de apă");
+        // Opening the page wrote nothing: the link is still unspent.
+        const unspent = await client.query(`SELECT agreement_accepted_at FROM event_volunteers WHERE id = $1`, [ionId]);
+        expect(unspent.rows[0].agreement_accepted_at).toBeNull();
+        expect(await ion.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+        await ion.getByLabel("Am citit și accept contractul de voluntariat.").check();
+        await ion.getByLabel("Am cel puțin 18 ani.").check();
+        const accept = ion.getByRole("button", { name: "Accept contractul", exact: true });
+        expect((await accept.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+        await accept.click();
+        await expect(ion.getByTestId("volunteer-agreement-accepted")).toBeVisible({ timeout: 30_000 });
+        // Single use: the same link again finds nothing.
+        await ion.goto(`/ro/voluntari/contract/${secret}`);
+        await expect(ion.getByTestId("volunteer-agreement-invalid")).toBeVisible();
+      } finally {
+        await visitor.close();
+      }
+      const accepted = await client.query(`SELECT agreement_method, agreement_token_hash FROM event_volunteers WHERE id = $1`, [ionId]);
+      expect(accepted.rows[0]).toEqual({ agreement_method: "LINK", agreement_token_hash: null });
+    } finally {
+      await client.end();
+    }
+
+    // The card: Ion accepted from the link; Dana's paper copy, then «Semnat pe hârtie» after the question.
+    await page.goto(`/ro/admin/events/${event.id}`);
+    await hydrated(page);
+    await expect(ionRow.getByTestId("volunteer-agreement-state")).toHaveText("Contract acceptat");
+    await expect(ionRow.getByTestId("volunteer-agreement")).toContainText("din linkul trimis pe email");
+    const toSign = await page.request.get(`/api/admin/events/${event.id}/volunteers/${await danaRow.getAttribute("data-volunteer-id")}/agreement`);
+    expect(toSign.status()).toBe(200);
+    expect(toSign.headers()["content-type"]).toBe("application/pdf");
+    await danaRow.getByRole("button", { name: "Semnat pe hârtie", exact: true }).click();
+    await page.getByRole("dialog").getByRole("button", { name: "Semnat pe hârtie", exact: true }).click();
+    await page.waitForURL(/#box-volunteers$/);
+    await hydrated(page);
+    await expect(danaRow.getByTestId("volunteer-agreement-state")).toHaveText("Contract acceptat");
+    await expect(danaRow.getByTestId("volunteer-agreement")).toContainText("semnat pe hârtie");
   });
 
   test("the event's page shows no form while the event does not take volunteers", async ({ page }) => {

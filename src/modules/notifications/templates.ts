@@ -1012,7 +1012,13 @@ export type TemplateData = {
    * club typed both), so each half of the bilingual message names the role in its own words. Never the
    * address or the telephone number — the organizers read those on the card, behind the sign-in.
    */
-  volunteer?: { name: string; roleRo: string; roleEn: string };
+  volunteer?: {
+    name: string;
+    roleRo: string;
+    roleEn: string;
+    /** The volunteer agreement's PDF rides along (§758): the person accepted it, and their copy is attached. */
+    agreementAttached?: boolean;
+  };
   /**
    * "Detalii actualizate" (§331): which facts the save changed — the place, the start, the
    * programme, the event on again. The values are the event's as it stands at send time, in the
@@ -1417,12 +1423,15 @@ function legalTemplatesFacts(locale: EmailLocale, d: TemplateData): TemplateCont
  */
 export function lawyerReads(locale: EmailLocale, keys: readonly string[]): string {
   const moved = LEGAL_DOCUMENT_KEYS.filter((key) => keys.includes(key));
-  const declarations = moved.some((key) => key !== "TERMS" && key !== "PRIVACY_NOTICE");
+  const declarations = moved.some((key) => key !== "TERMS" && key !== "PRIVACY_NOTICE" && key !== "VOLUNTEER_AGREEMENT");
   const terms = moved.includes("TERMS");
+  // The volunteer agreement (§758) is a contract, not a declaration: named as itself, for the lawyer to read too.
+  const agreement = moved.includes("VOLUNTEER_AGREEMENT");
   const words = locale === "ro"
-    ? { declarations: "declarațiile", terms: "termenii", and: " și ", changed: "textele schimbate", first: "mai ales", lead: "Înainte de aprobare, un jurist ar trebui să citească" }
-    : { declarations: "the declarations", terms: "the terms", and: " and ", changed: "the changed texts", first: "above all", lead: "Before approving, a lawyer should read" };
-  const named = [declarations ? words.declarations : null, terms ? words.terms : null].filter((w): w is string => w !== null).join(words.and);
+    ? { declarations: "declarațiile", terms: "termenii", agreement: "contractul de voluntariat", and: " și ", changed: "textele schimbate", first: "mai ales", lead: "Înainte de aprobare, un jurist ar trebui să citească" }
+    : { declarations: "the declarations", terms: "the terms", agreement: "the volunteer agreement", and: " and ", changed: "the changed texts", first: "above all", lead: "Before approving, a lawyer should read" };
+  const items = [declarations ? words.declarations : null, terms ? words.terms : null, agreement ? words.agreement : null].filter((w): w is string => w !== null);
+  const named = items.length <= 2 ? items.join(words.and) : `${items.slice(0, -1).join(", ")}${words.and}${items[items.length - 1]}`;
   const nothingElse = moved.every((key) => key !== "PRIVACY_NOTICE");
   if (!named) return `${words.lead} ${words.changed}.`;
   if (nothingElse) return `${words.lead} ${named}.`;
@@ -1771,7 +1780,31 @@ const T = {
       body: (d: TemplateData) => [
         `Mulțumim! Am primit oferta ta de a ajuta ca voluntar la ${d.eventTitle ?? "eveniment"}; rolul ales e scris mai sus, lângă data și locul.`,
         "Un organizator o confirmă și te caută pe email sau la telefon dacă mai trebuie ceva. Până atunci nu ai nimic de făcut: oferta nu e o înscriere la cursă și nu ține loc.",
+        // The agreement accepted with the offer (§758): the person's copy, attached — said only when it is.
+        ...(d.volunteer?.agreementAttached ? ["Contractul de voluntariat pe care l-ai acceptat e atașat, ca PDF. Păstrează-l: e copia ta."] : []),
         `Dacă nu tu ai trimis oferta, scrie-ne din pagina de contact și o ștergem; altfel rămâne la organizatori cel mult ${volunteerDays("ro")} de la începutul evenimentului sau de la trimiterea ofertei, dacă e mai târziu.`,
+      ],
+    },
+    // The volunteer agreement (§758): to a volunteer who has not accepted it — entered by hand, or an offer made on the
+    // page before the agreement existed — the link to read and accept it. Its words are true for both.
+    volunteerAgreementRequest: {
+      subject: (d: TemplateData) => `Contractul de voluntariat pentru ${d.eventTitle ?? "eveniment"}`,
+      facts: (d: TemplateData) => volunteerFacts("ro", d, { map: "Harta punctului de întâlnire", strava: "Evenimentul pe Strava" }),
+      body: (d: TemplateData) => [
+        `Mulțumim că ne ajuți ca voluntar la ${d.eventTitle ?? "eveniment"}! Ești pe lista voluntarilor, în rolul scris mai sus.`,
+        "Înainte de eveniment, te rugăm să citești și să accepți contractul de voluntariat: spune că ajutorul e neplătit, ce face voluntarul și ce face clubul. Îl deschizi cu butonul de mai jos.",
+        `Linkul este valabil **${d.linkLifetime ?? defaultLinkLifetime("ro")}** și doar pentru tine. Dacă preferi hârtia, îl poți semna și la organizatori.`,
+      ],
+      action: "Citește și acceptă contractul",
+    },
+    // …and the person's copy, after the link or after «Semnat pe hârtie» at the desk: the accepted agreement as a PDF.
+    volunteerAgreementAccepted: {
+      subject: (d: TemplateData) => `Ai acceptat contractul de voluntariat pentru ${d.eventTitle ?? "eveniment"}`,
+      facts: (d: TemplateData) => volunteerFacts("ro", d, { map: "Harta punctului de întâlnire", strava: "Evenimentul pe Strava" }),
+      body: (d: TemplateData) => [
+        `Mulțumim! Ai acceptat contractul de voluntariat pentru ${d.eventTitle ?? "eveniment"}.`,
+        ...(d.volunteer?.agreementAttached ? ["Contractul e atașat, ca PDF. Păstrează-l: e copia ta."] : []),
+        "Dacă nu tu ai acceptat contractul, scrie-ne din pagina de contact.",
       ],
     },
     // To each Organizer and Administrator (§754): who offered for which role; the card «Voluntari» has the rest.
@@ -2240,6 +2273,9 @@ const T = {
     /** A volunteer's sign-up (§754): the person offered on the event's page; no registration behind it. */
     privacyFooterVolunteer: (club: string) =>
       `Primești acest mesaj de la ${club} pentru că te-ai oferit, pe site-ul clubului, să ajuți ca voluntar. Cum folosim datele tale:`,
+    /** The volunteer agreement (§758): whether the person offered on the page or an organizer entered them, they are on the list. */
+    privacyFooterVolunteerAgreement: (club: string) =>
+      `Primești acest mesaj de la ${club} pentru că ești pe lista voluntarilor unui eveniment al clubului. Cum folosim datele tale:`,
     /** The same for a group run's self-declaration (§393): signed on a page, no registration behind it. */
     privacyFooterDeclaration: (club: string) =>
       `Primești acest mesaj de la ${club} pentru că ai semnat o declarație pe site-ul clubului. Cum folosim datele tale:`,
@@ -2498,7 +2534,27 @@ const T = {
       body: (d: TemplateData) => [
         `Thank you! We received your offer to help as a volunteer at ${d.eventTitle ?? "the event"}; the role you chose is written above, with the date and place.`,
         "An organizer will confirm it and get in touch by email or phone if anything else is needed. Until then there is nothing for you to do: the offer is not a race registration and holds no place.",
+        ...(d.volunteer?.agreementAttached ? ["The volunteer agreement you accepted is attached as a PDF. Keep it: it is your copy."] : []),
         `If you did not send the offer, write to us from the contact page and we will delete it; otherwise the organizers keep it at most ${volunteerDays("en")} from the event's start or from the offer, whichever is later.`,
+      ],
+    },
+    volunteerAgreementRequest: {
+      subject: (d: TemplateData) => `The volunteer agreement for ${d.eventTitle ?? "the event"}`,
+      facts: (d: TemplateData) => volunteerFacts("en", d, { map: "Map of the meeting point", strava: "The event on Strava" }),
+      body: (d: TemplateData) => [
+        `Thank you for helping as a volunteer at ${d.eventTitle ?? "the event"}! You are on the volunteers' list, in the role written above.`,
+        "Before the event, please read and accept the volunteer agreement: it says the help is unpaid, what the volunteer does and what the club does. Open it with the button below.",
+        `The link is valid for **${d.linkLifetime ?? defaultLinkLifetime("en")}** and only for you. If you prefer paper, you can also sign it with the organizers.`,
+      ],
+      action: "Read and accept the agreement",
+    },
+    volunteerAgreementAccepted: {
+      subject: (d: TemplateData) => `You accepted the volunteer agreement for ${d.eventTitle ?? "the event"}`,
+      facts: (d: TemplateData) => volunteerFacts("en", d, { map: "Map of the meeting point", strava: "The event on Strava" }),
+      body: (d: TemplateData) => [
+        `Thank you! You accepted the volunteer agreement for ${d.eventTitle ?? "the event"}.`,
+        ...(d.volunteer?.agreementAttached ? ["The agreement is attached as a PDF. Keep it: it is your copy."] : []),
+        "If you did not accept the agreement, write to us from the contact page.",
       ],
     },
     volunteerClubNotice: {
@@ -2879,6 +2935,7 @@ const T = {
     privacyFooterInterest: (club: string) => `This message comes from ${club} because you asked to be told. How we use your data:`,
     privacyFooterInvitation: (club: string) => `This message comes because ${club} entered your name and address to invite you to this event. How we use your data:`,
     privacyFooterVolunteer: (club: string) => `This message comes from ${club} because you offered, on the club's website, to help as a volunteer. How we use your data:`,
+    privacyFooterVolunteerAgreement: (club: string) => `This message comes from ${club} because you are on the volunteers' list of one of the club's events. How we use your data:`,
     privacyFooterDeclaration: (club: string) => `This message comes from ${club} because you signed a declaration on the club's website. How we use your data:`,
     privacyFooterNewsletter: (club: string) =>
       `This message comes from ${club} because you asked for the club's news at this address. Unsubscribe at any time from the link above. How we use your data:`,
@@ -2924,6 +2981,8 @@ const KEY_BY_MESSAGE_TYPE: Record<EmailMessageType, keyof typeof T.ro> = {
   SHOP_ORDER_CLUB_NOTICE: "shopOrderClubNotice",
   VOLUNTEER_RECEIVED: "volunteerReceived",
   VOLUNTEER_CLUB_NOTICE: "volunteerClubNotice",
+  VOLUNTEER_AGREEMENT_REQUEST: "volunteerAgreementRequest",
+  VOLUNTEER_AGREEMENT_ACCEPTED: "volunteerAgreementAccepted",
 };
 
 /** The newsletter's three messages (§445): to an address, never about a registration. */
@@ -3606,6 +3665,8 @@ export function buildTemplateContent(
                 ? copy.privacyFooterInvitation
               : messageType === "VOLUNTEER_RECEIVED"
                 ? copy.privacyFooterVolunteer
+              : messageType === "VOLUNTEER_AGREEMENT_REQUEST" || messageType === "VOLUNTEER_AGREEMENT_ACCEPTED"
+                ? copy.privacyFooterVolunteerAgreement
               : NEWSLETTER_MESSAGES.has(messageType)
                 ? copy.privacyFooterNewsletter
                 : copy.privacyFooter)(controllerName()),

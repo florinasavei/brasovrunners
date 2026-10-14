@@ -553,12 +553,15 @@
       "role": "Rolul pe care îl poți prelua",
       "name": "Numele tău",
       "email": "Adresa ta de email",
-      "emailHelp": "Îți trimitem aici un singur email de primire, fără nimic de apăsat.",
+      "emailHelp": "Îți trimitem aici un singur email de primire, cu contractul acceptat atașat, fără nimic de apăsat.",
       "phoneHelp": "Un organizator te poate suna în legătură cu evenimentul.",
       "message": "Un mesaj pentru organizatori (opțional)",
       "messageHelp": "Cel mult {max} de caractere: când ești liber, ce știi să faci.",
       "consent": "Sunt de acord să păstrați datele din acest formular ca să mă contactați despre acest eveniment, așa cum spune",
       "privacyLinkLabel": "nota de confidențialitate",
+      "agreement": "Am citit și accept",
+      "agreementLinkLabel": "contractul de voluntariat",
+      "adult": "Am cel puțin {age}.",
       "submit": "Mă ofer voluntar",
       "submitting": "Se trimite…",
       "done": "Mulțumim! Am primit oferta ta. Un organizator o confirmă și te caută pe email sau la telefon dacă mai trebuie ceva.",
@@ -573,7 +576,9 @@
         "phone": "Numărul de telefon nu este valid.",
         "roleId": "Alege unul dintre roluri.",
         "message": "Mesajul are prea multe caractere: scurtează-l.",
-        "consent": "Bifează căsuța de acord, altfel nu putem păstra oferta ta."
+        "consent": "Bifează căsuța de acord, altfel nu putem păstra oferta ta.",
+        "agreement": "Bifează că accepți contractul de voluntariat, altfel nu putem păstra oferta ta.",
+        "adult": "Formularul e pentru persoane de cel puțin {age}: bifează căsuța dacă ai această vârstă."
       }
     },
     "calendar": {
@@ -1845,7 +1850,11 @@
       "CHECKPOINTS_NO_LONGER_HOLD": "Salvarea ar strica „Puncte de control”: {detail} Schimbă întâi punctul în cardul lui, apoi salvează din nou. Nu s-a salvat nimic.",
       "CHECKPOINTS_NO_LONGER_HOLD_DATED": "La una dintre date ({date}), salvarea ar strica „Puncte de control”: {detail} Schimbă întâi punctul la acea dată sau salvează fără ea. Nu s-a salvat nimic, la nicio dată.",
       "CHECKPOINT_NOTE_ONE_LANGUAGE": "Nota punctului „{name}” se scrie în ambele limbi sau în niciuna, de cel mult {max} de caractere.",
-      "CHECKPOINT_TOO_MANY": "Sunt prea multe puncte: cel mult {max} pe un traseu."
+      "CHECKPOINT_TOO_MANY": "Sunt prea multe puncte: cel mult {max} pe un traseu.",
+      "VOLUNTEER_AGREEMENT_MISSING": "Niciun contract de voluntariat nu e în vigoare. Aprobă-l întâi în «Documente legale»: șablonul e gata.",
+      "VOLUNTEER_AGREEMENT_ACCEPTED": "Persoana a acceptat deja contractul: nu mai e nimic de trimis sau de înregistrat.",
+      "VOLUNTEER_AGREEMENT_NOTICE": "Nota de confidențialitate în vigoare nu descrie încă acceptarea contractului de voluntariat. Aprobă întâi o notă nouă din șablon, în «Documente legale»; «Sarcini» spune cum.",
+      "VOLUNTEER_AGREEMENT_REPRINT": "Nu s-a înregistrat: de la tipărire s-a schimbat versiunea contractului sau rolul persoanei. Tipărește din nou PDF-ul de semnat și cere o semnătură pe foaia nouă."
     },
     "editor": {
       "draftPreview": {
@@ -3095,7 +3104,8 @@
         "EVENT_DECLARATION": "Declarația unui eveniment montan, pe trasee de munte sau de pădure: vârsta, minorii, riscurile traseului, sănătatea. Se semnează la confirmarea locului.",
         "GROUP_RUN_DECLARATION_ASPHALT": "Opțională, pentru o alergare de grup pe asfalt; se semnează pe pagina alergării, o dată pentru toate datele ei. Aprob-o împreună cu o notă de confidențialitate nouă.",
         "GROUP_RUN_DECLARATION_TRAIL": "Opțională, pentru o alergare de grup pe teren accidentat; se semnează pe pagina alergării, o dată pentru toate datele ei. Aprob-o împreună cu o notă de confidențialitate nouă.",
-        "EVENT_DECLARATION_ROAD": "Declarația unui eveniment pe șosea sau în parc, cu riscurile asfaltului și ale traficului. Până o aprobi, aceste evenimente semnează declarația pentru eveniment montan."
+        "EVENT_DECLARATION_ROAD": "Declarația unui eveniment pe șosea sau în parc, cu riscurile asfaltului și ale traficului. Până o aprobi, aceste evenimente semnează declarația pentru eveniment montan.",
+        "VOLUNTEER_AGREEMENT": "Contractul pe care îl acceptă fiecare voluntar al unui eveniment: ajutor neplătit, ce face voluntarul, ce face clubul. Până îl aprobi, paginile nu arată formularul de voluntari."
       },
       "empty": "Nu există niciun document legal. Înscrierile sunt refuzate până când există o notă de confidențialitate aprobată.",
       "emptyCanCreate": "Nu există încă niciun document legal, așa că înscrierile sunt refuzate. Începe cu nota de confidențialitate: Versiune nouă.",
@@ -3113,7 +3123,8 @@
         "EVENT_DECLARATION": "Declarație pe propria răspundere — eveniment montan",
         "GROUP_RUN_DECLARATION_ASPHALT": "Declarație pe propria răspundere (alergare de grup, asfalt)",
         "GROUP_RUN_DECLARATION_TRAIL": "Declarație pe propria răspundere (alergare de grup, teren accidentat)",
-        "EVENT_DECLARATION_ROAD": "Declarație pe propria răspundere — eveniment pe asfalt / în parc"
+        "EVENT_DECLARATION_ROAD": "Declarație pe propria răspundere — eveniment pe asfalt / în parc",
+        "VOLUNTEER_AGREEMENT": "Contract de voluntariat"
       },
       "referenced": "{signatures} semnături · {events} evenimente",
       "unreferenced": "Nefolosit încă",
@@ -3228,7 +3239,11 @@
         "feedbackForms": "Doar în nota de confidențialitate: numele formularelor „Spune-ne ceva”, între ghilimele. Cu el în nota în vigoare, pagina de contact arată formularele pornite",
         "feedbackFormsNamed": "Doar în nota de confidențialitate: alegerea „Cu nume și prenume” din formularele „Spune-ne ceva”, între ghilimele. Fără el în nota în vigoare, formularele sunt doar anonime",
         "membersShop": "Doar în nota de confidențialitate: numele secțiunii „Magazinul clubului”, între ghilimele. Cu el în nota în vigoare, zona membrilor arată magazinul și primește comenzi",
-        "volunteers": "Doar în nota de confidențialitate: numele formularului „Vreau să fiu voluntar”, între ghilimele. Cu el în nota în vigoare, un eveniment cu voluntari își arată formularul și păstrează ofertele"
+        "volunteers": "Doar în nota de confidențialitate: numele formularului „Vreau să fiu voluntar”, între ghilimele. Cu el în nota în vigoare, un eveniment cu voluntari își arată formularul și păstrează ofertele",
+        "volunteerAgreement": "Doar în nota de confidențialitate: titlul „Contract de voluntariat”, între ghilimele. Fără el în nota în vigoare, formularul de voluntari, linkul contractului și „Semnat pe hârtie” sunt oprite",
+        "volunteer": "Doar în contractul de voluntariat: numele voluntarului, cum e pe lista evenimentului",
+        "volunteerRole": "Doar în contractul de voluntariat: numele rolului, în limba textului",
+        "volunteerTasks": "Doar în contractul de voluntariat: ce face rolul, din descrierea lui. Fără descriere, propoziția care îl numește dispare"
       },
       "removeBlockedReferenced": "Nu se poate nici retrage, nici șterge definitiv: {signatures}, {events} și {acknowledgements} depind de ea. «Șterge» de pe rândul ei o scoate din listă.",
       "removeBlockedCurrent": "În vigoare acum — nu se poate nici retrage, nici șterge. Aprobă întâi versiunea următoare; apoi aceasta se poate scoate.",
@@ -3349,7 +3364,8 @@
       "groups": {
         "general": "Documente generale",
         "race": "Declarații de cursă",
-        "groupRun": "Declarații pentru alergările de grup"
+        "groupRun": "Declarații pentru alergările de grup",
+        "volunteers": "Contractul voluntarilor"
       },
       "shortKeys": {
         "PRIVACY_NOTICE": "GDPR",
@@ -3357,7 +3373,8 @@
         "EVENT_DECLARATION": "Eveniment montan",
         "EVENT_DECLARATION_ROAD": "Eveniment asfalt / parc",
         "GROUP_RUN_DECLARATION_ASPHALT": "Grup asfalt",
-        "GROUP_RUN_DECLARATION_TRAIL": "Grup teren accidentat"
+        "GROUP_RUN_DECLARATION_TRAIL": "Grup teren accidentat",
+        "VOLUNTEER_AGREEMENT": "Voluntari"
       },
       "filter": {
         "label": "Filtrează versiunile",
@@ -4114,6 +4131,27 @@
             "Un jurist ar trebui să citească paragraful: temeiul (consimțământul pentru formularul public, interesul legitim pentru o persoană trecută de un organizator) și cele 30 de zile.",
             "Deschide ciorna, citește, completează ce a rămas, „Salvează ciorna”, apoi „Aprobă și publică”. Odată în vigoare în ambele limbi, formularul apare pe paginile evenimentelor care primesc voluntari."
           ]
+        },
+        "volunteerAgreementNotice": {
+          "title": "Nota de confidențialitate: contractul de voluntariat",
+          "todo": "Un eveniment viitor primește voluntari, dar nota în vigoare nu descrie încă acceptarea contractului. Formularul de voluntari, linkul contractului și „Semnat pe hârtie” așteaptă până atunci.",
+          "done": "Nota în vigoare descrie acceptarea contractului de voluntariat: ce se păstrează, de ce, PDF-ul și linkul.",
+          "how": [
+            "/admin/legal → cardul „GDPR” → „Regenerează din șablon” → confirmă. Paragraful despre voluntari din secțiunea 5 numește acceptarea contractului și declarația de vârstă.",
+            "Un jurist ar trebui să citească paragraful odată cu contractul de voluntariat: temeiul (executarea contractului) și cât timp păstrează clubul acceptările.",
+            "Deschide ciorna, citește, completează ce a rămas, „Salvează ciorna”, apoi „Aprobă și publică” — în aceeași ședință cu contractul de voluntariat."
+          ]
+        },
+        "volunteerAgreement": {
+          "title": "Contractul de voluntariat",
+          "todo": "Un eveniment viitor primește voluntari, dar niciun contract de voluntariat nu e în vigoare: pagina lui nu arată formularul. Lista ta funcționează între timp.",
+          "done": "Contractul de voluntariat e în vigoare: cine se oferă pe pagină îl acceptă, iar cei trecuți de mână îl primesc prin link sau îl semnează pe hârtie.",
+          "how": [
+            "/admin/legal → cardul „Contract de voluntariat” → „Regenerează din șablon” → confirmă. Sau butonul care aprobă într-un pas textele care lipsesc.",
+            "Un jurist ar trebui să citească textul întâi, după Legea nr. 78/2014: forma scrisă și acceptarea electronică, vârsta de 18 ani, fișa rolului, asigurarea voluntarilor și registrul lor.",
+            "Juristul și tu hotărâți cât timp păstrează clubul acceptările. Site-ul le șterge la 30 de zile după eveniment.",
+            "Deschide ciorna, completează ce a rămas, „Salvează ciorna”, apoi „Aprobă și publică”. Odată în vigoare în ambele limbi, formularul apare pe paginile evenimentelor care primesc voluntari."
+          ]
         }
       },
       "freeVerdict": {
@@ -4548,7 +4586,9 @@
           "membersOnly": "Formularul public nu se arată: evenimentul e doar pentru membri, iar formularul e public. Lista ta funcționează oricum.",
           "eventOver": "Formularul public nu se arată: evenimentul e anulat sau s-a terminat.",
           "noRoleNeeds": "Formularul public nu se arată: fiecare rol are toți oamenii de care are nevoie (sau încă nu există niciun rol).",
-          "noNotice": "Formularul public nu se arată: nota de confidențialitate în vigoare nu descrie încă voluntarii. «Sarcini» spune ce trebuie aprobat."
+          "noNotice": "Formularul public nu se arată: nota de confidențialitate în vigoare nu descrie încă voluntarii. «Sarcini» spune ce trebuie aprobat.",
+          "noAgreement": "Formularul public nu se arată: niciun contract de voluntariat nu e în vigoare. Aprobă-l în «Documente legale»; «Sarcini» spune cum.",
+          "noAgreementNotice": "Formularul public nu se arată: nota de confidențialitate în vigoare nu descrie încă acceptarea contractului de voluntariat. «Sarcini» spune ce trebuie aprobat."
         }
       },
       "switchOn": "Primește voluntari pe pagină",
@@ -4611,6 +4651,30 @@
       "deleteTitle": "Ștergi acest voluntar?",
       "deleteBody": "{name} se șterge de pe lista evenimentului, cu adresa și telefonul. Nu se poate desface.",
       "since": "Din {when}",
+      "agreement": {
+        "accepted": "Contract acceptat",
+        "notAccepted": "Contract neacceptat încă",
+        "linkSent": "Link trimis",
+        "acceptedLine": "Versiunea {version} · {how} · {when}",
+        "methods": {
+          "FORM": "în formularul de pe pagină",
+          "LINK": "din linkul trimis pe email",
+          "PAPER": "semnat pe hârtie"
+        },
+        "otherRole": "Acceptat pentru rolul „{role}”; rolul s-a schimbat de atunci.",
+        "otherPlace": "Acceptat pentru {date}, în {place}; data sau locul evenimentului s-au schimbat de atunci.",
+        "requestedLine": "Ultimul link trimis: {when}",
+        "help": "Trimite-i linkul pe email sau tipărește PDF-ul: persoana îl semnează la voi, apoi apeși „Semnat pe hârtie”.",
+        "send": "Trimite linkul contractului",
+        "resend": "Trimite din nou linkul",
+        "pdf": "PDF contract",
+        "pdfToSign": "PDF de semnat",
+        "paper": "Semnat pe hârtie",
+        "paperTitle": "{name} a semnat contractul pe hârtie?",
+        "paperBody": "Se înregistrează că {name} a semnat contractul tipărit, versiunea în vigoare, și că tu ai înregistrat semnătura. {name} primește o copie pe email. Păstrează foaia semnată.",
+        "missing": "Niciun contract de voluntariat nu e în vigoare: nu se poate trimite sau tipări încă. Aprobă-l în «Documente legale».",
+        "noticeMissing": "Nota de confidențialitate în vigoare nu descrie încă acceptarea contractului: linkul și „Semnat pe hârtie” așteaptă. «Sarcini» spune ce trebuie aprobat."
+      },
       "csv": "Descarcă CSV",
       "csvHelp": "Un rând pe voluntar, grupat pe roluri. Fișierul conține adrese și telefoane: păstrează-l la fel de atent ca lista.",
       "csvColumns": {
@@ -5601,7 +5665,9 @@
         "SHOP_ORDER_PAID": "Comanda ta e plătită",
         "SHOP_ORDER_CLUB_NOTICE": "Comandă nouă în magazin",
         "VOLUNTEER_RECEIVED": "Ți-am primit oferta de voluntar",
-        "VOLUNTEER_CLUB_NOTICE": "Voluntar nou"
+        "VOLUNTEER_CLUB_NOTICE": "Voluntar nou",
+        "VOLUNTEER_AGREEMENT_REQUEST": "Contractul de voluntariat",
+        "VOLUNTEER_AGREEMENT_ACCEPTED": "Ai acceptat contractul de voluntariat"
       },
       "typesShort": {
         "VERIFY_REGISTRATION_EMAIL": "Confirmă adresa",
@@ -5665,8 +5731,10 @@
         "SHOP_ORDER_PLACED": "Când un membru comandă din magazinul membrilor: comanda și cum se plătește. Butonul duce în zona membrilor.",
         "SHOP_ORDER_PAID": "Când un administrator marchează comanda plătită: membrului care a comandat. Butonul duce în zona membrilor.",
         "SHOP_ORDER_CLUB_NOTICE": "La fiecare comandă din magazin, la adresa din «Magazin» → «Cine primește comenzile», dacă e scrisă.",
-        "VOLUNTEER_RECEIVED": "Când cineva se oferă voluntar pe pagina unui eveniment: singurul mesaj către el — rolul, evenimentul și faptul că un organizator confirmă. Nimic de apăsat.",
-        "VOLUNTEER_CLUB_NOTICE": "La fiecare ofertă, către fiecare Organizator, Administrator și Superadministrator. Butonul deschide cardul «Voluntari» al evenimentului."
+        "VOLUNTEER_RECEIVED": "Când cineva se oferă voluntar pe pagina unui eveniment: singurul mesaj către el — rolul, evenimentul și faptul că un organizator confirmă, cu contractul acceptat atașat ca PDF. Nimic de apăsat.",
+        "VOLUNTEER_CLUB_NOTICE": "La fiecare ofertă, către fiecare Organizator, Administrator și Superadministrator. Butonul deschide cardul «Voluntari» al evenimentului.",
+        "VOLUNTEER_AGREEMENT_REQUEST": "Când un organizator apasă „Trimite linkul contractului” la un voluntar care nu l-a acceptat încă: contractul și linkul de acceptare.",
+        "VOLUNTEER_AGREEMENT_ACCEPTED": "Când un voluntar acceptă contractul din link sau un organizator apasă „Semnat pe hârtie”: copia lui, cu contractul atașat ca PDF."
       },
       "whenShort": {
         "VERIFY_REGISTRATION_EMAIL": "după trimiterea formularului",
@@ -5706,7 +5774,9 @@
         "SHOP_ORDER_PAID": "când comanda e marcată plătită",
         "SHOP_ORDER_CLUB_NOTICE": "la fiecare comandă, clubului",
         "VOLUNTEER_RECEIVED": "când cineva se oferă voluntar",
-        "VOLUNTEER_CLUB_NOTICE": "la fiecare ofertă, organizatorilor"
+        "VOLUNTEER_CLUB_NOTICE": "la fiecare ofertă, organizatorilor",
+        "VOLUNTEER_AGREEMENT_REQUEST": "la „Trimite linkul contractului”",
+        "VOLUNTEER_AGREEMENT_ACCEPTED": "după link sau „Semnat pe hârtie”"
       },
       "clubNotices": {
         "title": "Copiile clubului",
@@ -6326,7 +6396,9 @@
         "SHOP_ORDER_PAID": "Comanda se adaugă singură după text, oricum l-ai scrie.",
         "SHOP_ORDER_CLUB_NOTICE": "Fără adresă, nu pleacă nimic: comenzile sunt oricum în lista din backoffice.",
         "VOLUNTEER_RECEIVED": "Rolul și startul și locul evenimentului se adaugă singure, oricum ai scrie textul. Mesajul nu are niciun link care să facă ceva.",
-        "VOLUNTEER_CLUB_NOTICE": "Cine s-a oferit și pentru ce rol se adaugă singur, oricum ai scrie textul. Adresa și telefonul nu sunt niciodată în email: sunt pe card, după autentificare."
+        "VOLUNTEER_CLUB_NOTICE": "Cine s-a oferit și pentru ce rol se adaugă singur, oricum ai scrie textul. Adresa și telefonul nu sunt niciodată în email: sunt pe card, după autentificare.",
+        "VOLUNTEER_AGREEMENT_REQUEST": "Rolul și evenimentul se adaugă singure. Linkul e doar pentru persoana aceasta, se folosește o singură dată, iar unul nou îl înlocuiește pe cel vechi.",
+        "VOLUNTEER_AGREEMENT_ACCEPTED": "Rolul și evenimentul se adaugă singure. PDF-ul arată textul acceptat, cu numele, rolul, momentul și amprenta lui."
       },
       "confirmationRetry": "Cui nu a confirmat, linkul pleacă singur din nou la {retry} după ultimul email, cel mult {times}; se socotește și «Retrimite». Termenul nu se mută.",
       "confirmationRetryOff": "Nu se retrimite singur: în „Termene”, numărul de retrimiteri e 0."
@@ -9012,7 +9084,9 @@
     "botCheckNotice": "Verificarea „nu sunt robot” e făcută de Cloudflare (vede IP-ul și date tehnice ale browserului).",
     "inForce": "Versiunea {version}, în vigoare din {date}",
     "termsTitle": "Termeni și condiții",
-    "privacyTitle": "Notă de confidențialitate"
+    "privacyTitle": "Notă de confidențialitate",
+    "volunteerAgreementTitle": "Contract de voluntariat",
+    "volunteerAgreementBlanks": "Un singur text pentru toate evenimentele: numele, rolul, evenimentul, data și locul se completează când accepți, iar PDF-ul pe care îl primești le arată."
   },
   "Registration": {
     "title": "Înscriere: {event}",
@@ -10837,7 +10911,9 @@
       "teamBoxDeleted": "Caseta a fost ștearsă.",
       "checkpointsSaved": "Punctele de control au fost salvate.",
       "checkpointsAdded": "Punctele din GPX au fost adăugate.",
-      "checkpointsUnchanged": "Nimic de schimbat la punctele de control."
+      "checkpointsUnchanged": "Nimic de schimbat la punctele de control.",
+      "volunteerAgreementRequested": "Linkul contractului pleacă pe email.",
+      "volunteerAgreementRecorded": "Contract înregistrat ca semnat pe hârtie."
     }
   },
   "Network": {
@@ -11263,6 +11339,24 @@
       "free": {
         "figure": "{count}%",
         "label": "alergările de grup, gratuite"
+      }
+    }
+  },
+  "Volunteers": {
+    "agreement": {
+      "title": "Contractul de voluntariat",
+      "intro": "{name}, ești pe lista voluntarilor pentru {event}, în rolul „{role}”. Citește contractul și, dacă ești de acord, acceptă-l mai jos.",
+      "accept": "Am citit și accept contractul de voluntariat.",
+      "adult": "Am cel puțin {age}.",
+      "submit": "Accept contractul",
+      "submitting": "Se trimite…",
+      "paper": "Preferi hârtia? Îl poți semna și la organizatori.",
+      "accepted": "Mulțumim! Ai acceptat contractul. Copia ta, ca PDF, pleacă pe email.",
+      "invalid": "Linkul nu mai este valabil: a fost folosit, a expirat sau a fost înlocuit de unul mai nou. Scrie-ne din pagina de contact dacă ai nevoie de altul.",
+      "noAgreement": "Contractul nu este disponibil acum. Încearcă mai târziu sau scrie-ne din pagina de contact.",
+      "errors": {
+        "agreement": "Bifează că accepți contractul.",
+        "adult": "Contractul e pentru persoane de cel puțin {age}: bifează căsuța dacă ai această vârstă."
       }
     }
   }

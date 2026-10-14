@@ -72,6 +72,10 @@ const NOT_WAITED_FOR: ReadonlySet<EmailMessageType> = new Set<EmailMessageType>(
   // promises no email, so nobody on a public page waits for the «am primit».
   "VOLUNTEER_RECEIVED",
   "VOLUNTEER_CLUB_NOTICE",
+  // The volunteer agreement (§758): the link leaves at an organizer's press, to somebody on no page; the accepted
+  // page says the copy follows by email, but the acceptance is already recorded — nobody waits on it to act.
+  "VOLUNTEER_AGREEMENT_REQUEST",
+  "VOLUNTEER_AGREEMENT_ACCEPTED",
 ]);
 
 /** Whether somebody on a public page may be waiting for a message of this type (not a club copy). */

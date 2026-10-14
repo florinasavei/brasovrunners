@@ -90,6 +90,8 @@ const EXPECTED: Record<EditedType, EmailCopyPlaceholder[]> = {
   // A volunteer's sign-up (§754): the event; the person and the role are the platform's bold line, not fields.
   VOLUNTEER_RECEIVED: ["eventTitle"],
   VOLUNTEER_CLUB_NOTICE: ["eventTitle"],
+  VOLUNTEER_AGREEMENT_REQUEST: ["eventTitle"],
+  VOLUNTEER_AGREEMENT_ACCEPTED: ["eventTitle"],
   REGISTRATION_OPENED: ["eventTitle"],
   // An invitation (§647): the event, its start and until when the place is kept.
   EVENT_INVITATION: ["eventTitle", "eventStartsAtFormatted", "holdExpiresAtFormatted"],

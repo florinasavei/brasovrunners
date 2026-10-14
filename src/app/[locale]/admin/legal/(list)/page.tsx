@@ -88,6 +88,8 @@ const KIND_GLYPH: Record<LegalDocumentKey, PanelGlyphName> = {
   EVENT_DECLARATION_ROAD: "declaration",
   GROUP_RUN_DECLARATION_ASPHALT: "declaration",
   GROUP_RUN_DECLARATION_TRAIL: "declaration",
+  // The volunteer agreement (§758): the volunteers' own picture, the one their card in the editor wears.
+  VOLUNTEER_AGREEMENT: "volunteers",
 };
 
 type Props = {

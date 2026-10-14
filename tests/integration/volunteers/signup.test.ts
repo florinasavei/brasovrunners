@@ -7,6 +7,7 @@ import { eventTranslations, events } from "@/db/schema/events";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import { computeContentHash, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
 import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
+import { LEGAL_TEMPLATES } from "@/modules/legal-documents/templates/catalogue";
 import { renderOutboxMessage } from "@/modules/notifications/render";
 import type { OutboxRow } from "@/modules/notifications/outbox";
 import { pruneExpiredRows } from "@/modules/jobs/retention";
@@ -38,15 +39,33 @@ describe("§754 the volunteers' public sign-up", () => {
   });
   afterAll(async () => close());
 
-  /** The notice in force, in both languages; `describing` makes it name `{{volunteers}}` (the gate, §754). */
-  async function approveNotice(describing: boolean, version = 1) {
-    const body = (text: string) => ({ sections: [{ paragraphs: [describing ? `Voluntari ({{volunteers}}): ${text}` : text] }] });
+  /**
+   * The notice in force, in both languages; `describing` makes it name `{{volunteers}}` (the gate, §754) and, unless
+   * `agreement` is false — a notice approved from §754's template — `{{volunteerAgreement}}` too (§758).
+   */
+  async function approveNotice(describing: boolean, version = 1, agreement = true) {
+    const marker = agreement ? "Voluntari ({{volunteers}}, {{volunteerAgreement}})" : "Voluntari ({{volunteers}})";
+    const body = (text: string) => ({ sections: [{ paragraphs: [describing ? `${marker}: ${text}` : text] }] });
     const translations: LegalDocumentTranslationInput[] = [
       { locale: "ro", title: "Confidențialitate", body: body("păstrăm numele") },
       { locale: "en", title: "Privacy", body: body("we keep the name") },
     ];
     await insertLegalDocumentVersion(db, {
       key: "PRIVACY_NOTICE",
+      version,
+      effectiveAt: new Date("2026-01-01T00:00:00.000Z"),
+      isApproved: true,
+      contentSha256: computeContentHash(translations),
+      translations,
+      now: NOW,
+    });
+  }
+
+  /** The volunteer agreement in force, from the platform's template (§758): the form's fourth condition. */
+  async function approveAgreement(version = 1) {
+    const translations: LegalDocumentTranslationInput[] = (["ro", "en"] as const).map((locale) => ({ locale, ...LEGAL_TEMPLATES.VOLUNTEER_AGREEMENT[locale] }));
+    return insertLegalDocumentVersion(db, {
+      key: "VOLUNTEER_AGREEMENT",
       version,
       effectiveAt: new Date("2026-01-01T00:00:00.000Z"),
       isApproved: true,
@@ -93,6 +112,7 @@ describe("§754 the volunteers' public sign-up", () => {
   beforeEach(async () => {
     await resetTables(db);
     await approveNotice(true);
+    await approveAgreement();
     admin = await person("ADMIN", "Ana Admin");
     organizer = await person("MODERATOR", "Oana Organizator");
     technician = await person("DEV", "Tudor Tehnic");
@@ -106,6 +126,9 @@ describe("§754 the volunteers' public sign-up", () => {
     message: "",
     locale: "ro",
     consent: true,
+    // The volunteer agreement and the age (§758): both the person's own ticks.
+    agreement: true,
+    adult: true,
     renderedAt: RENDERED,
     ...extra,
   });
@@ -264,15 +287,26 @@ describe("§754 the volunteers' public sign-up", () => {
     const quiet = await seedEvent();
     expect(await closedWith(quiet, (await seedRole(quiet.id)).id)).toBe("CONFLICT");
     expect(await db.select().from(eventVolunteers)).toHaveLength(0);
-    // Approved from the template (a notice that names it in force, in both languages): it opens.
-    await approveNotice(true, 2);
+    // A notice that names it in force, in both languages — and still no volunteer agreement (§758): shut.
+    await approveNotice(true, 2, false);
+    expect(await closedWith(quiet, (await db.select().from(eventVolunteerRoles))[0].id)).toBe("CONFLICT");
+    expect(await db.select().from(eventVolunteers)).toHaveLength(0);
+    // (d) The agreement approved from the template — but (e) the notice in force is §754's, naming the volunteers
+    // and not the agreement's acceptance (`{{volunteerAgreement}}`): still shut, nothing kept.
+    await approveAgreement();
+    expect(await closedWith(quiet, (await db.select().from(eventVolunteerRoles))[0].id)).toBe("CONFLICT");
+    expect(await db.select().from(eventVolunteers)).toHaveLength(0);
+    // A notice naming both, in both languages: it opens.
+    await approveNotice(true, 3);
     expect(await closedWith(quiet, (await db.select().from(eventVolunteerRoles))[0].id)).toBe("accepted");
   });
 
   it("needs the notice in every language, not one: a notice that describes volunteers in Romanian alone keeps the form shut", async () => {
     await resetTables(db);
+    // The agreement in force (§758), so the notice alone is what shuts the form here.
+    await approveAgreement();
     const translations: LegalDocumentTranslationInput[] = [
-      { locale: "ro", title: "Confidențialitate", body: { sections: [{ paragraphs: ["Voluntari ({{volunteers}})"] }] } },
+      { locale: "ro", title: "Confidențialitate", body: { sections: [{ paragraphs: ["Voluntari ({{volunteers}}, {{volunteerAgreement}})"] }] } },
       { locale: "en", title: "Privacy", body: { sections: [{ paragraphs: ["Nothing about it"] }] } },
     ];
     await insertLegalDocumentVersion(db, {

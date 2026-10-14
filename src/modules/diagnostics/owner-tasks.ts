@@ -66,6 +66,8 @@ export type TaskId =
   | "feedbackNamedNotice"
   | "shopNotice"
   | "volunteersNotice"
+  | "volunteerAgreementNotice"
+  | "volunteerAgreement"
   | "gmailFallbackNotice"
   | "refusalTerms"
   | "teamPageNotice"
@@ -109,6 +111,8 @@ export const TASK_KIND: Record<TaskId, TaskKind> = {
   feedbackNamedNotice: "text",
   shopNotice: "text",
   volunteersNotice: "text",
+  volunteerAgreementNotice: "text",
+  volunteerAgreement: "text",
   gmailFallbackNotice: "text",
   refusalTerms: "text",
   teamPageNotice: "text",
@@ -265,6 +269,16 @@ export type OwnerTaskInputs = {
   volunteersDescribed: boolean;
   /** How many events still ahead take volunteers (§754): the row waits only while there is one. */
   volunteeringEvents: number;
+  /**
+   * Is a volunteer agreement in force in every language (§758, `volunteerAgreementInForce`)? Until one is, no
+   * event page offers «Vreau să fiu voluntar», and no link or paper acceptance can be recorded.
+   */
+  volunteerAgreementInForce: boolean;
+  /**
+   * Does the notice in force, in every language, describe the agreement's acceptance (§758,
+   * `noticeDescribesVolunteerAgreement`)? Until it does, the form, the link and «Semnat pe hârtie» wait.
+   */
+  volunteerAgreementDescribed: boolean;
   /**
    * Does the notice in force, in every language, say a message may leave through the club's Gmail
    * while Mailgun is stopped (§622, `noticeDescribesGmailFallback`)? Until it does, «Gmail preia când
@@ -577,6 +591,18 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
       });
     }
     /*
+      The volunteer agreement's acceptance in the notice (§758), the same shape: open while an event ahead takes
+      volunteers and the notice in force does not name `{{volunteerAgreement}}` — a notice approved from §754's
+      template says nothing of the acceptance, the age statement, the PDF or the link — done by itself the day one
+      naming it takes effect, absent while no event takes volunteers and the notice is silent.
+    */
+    if (input.volunteerAgreementDescribed || input.volunteeringEvents > 0) {
+      push("volunteerAgreementNotice", {
+        owner: "club",
+        state: input.volunteerAgreementDescribed ? "done" : "open",
+      });
+    }
+    /*
       Gmail carrying while Mailgun is stopped (§622), the same shape: open, never blocking — nothing is
       refused, a Mailgun stop simply holds the mail as it always did — and done by itself the day a
       notice naming `{{gmailFallback}}` takes effect. Its words say what to approve and why: a
@@ -585,6 +611,20 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
     push("gmailFallbackNotice", {
       owner: "club",
       state: input.gmailFallbackDescribed ? "done" : "open",
+    });
+  }
+
+  /*
+    The volunteer agreement (§758), the volunteers' notice's shape but its own gate — the agreement, not the
+    notice: open while an event ahead takes volunteers and no agreement is in force in every language (the club
+    ticked «Primește voluntari» and the page shows no form: the club must hear why), done by itself the day one
+    takes effect, and absent while no event takes volunteers and none was ever approved. Never blocking: the
+    club's own list, the link and the paper wait on it, nothing a runner does.
+  */
+  if (input.volunteerAgreementInForce || input.volunteeringEvents > 0) {
+    push("volunteerAgreement", {
+      owner: "club",
+      state: input.volunteerAgreementInForce ? "done" : "open",
     });
   }
 
