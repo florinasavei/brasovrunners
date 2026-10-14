@@ -82,11 +82,6 @@ const ALLOWED: Array<{ file: string; line: string; reason: string }> = [
     reason: "a chip's tap padding, larger on a phone than on a desktop on purpose",
   },
   {
-    file: "src/modules/events/ui/share-pill.ts",
-    line: "px: { xs: 1.5, sm: 1.25 },",
-    reason: "a chip's tap padding, larger on a phone than on a desktop on purpose",
-  },
-  {
     file: "src/modules/events/ui/CalendarHeader.tsx",
     line: "rowGap: { xs: 0, sm: 1 }",
     reason: "zero on a phone: the period row and the chip row are each 44 pixels of tap target already (§487)",
@@ -267,7 +262,6 @@ const CONVERTED_SITES: Array<{ file: string; prop: string; step: DensityStep; sm
   { file: "src/modules/events/ui/EventCard.tsx", prop: "mt", step: "gapSm", sm: 1.5, xsBefore: 1.5 },
   { file: "src/modules/events/ui/SeriesCard.tsx", prop: "mt", step: "gapSm", sm: 1.5, xsBefore: 1.5 },
   { file: "src/modules/events/ui/RoutePills.tsx", prop: "gap", step: "gapXs", sm: 1, xsBefore: 1 },
-  { file: "src/modules/events/ui/ShareLinks.tsx", prop: "gap", step: "gapXs", sm: 1, xsBefore: 1, count: 2 },
   // The calendar.
   { file: "src/app/[locale]/calendar/page.tsx", prop: "mb", step: "gapSm", sm: 2, xsBefore: 2 },
   { file: "src/modules/events/ui/CalendarSection.tsx", prop: "mt", step: "gapSm", sm: 2, xsBefore: 2 },

@@ -3,7 +3,7 @@
 import IosShareIcon from "@mui/icons-material/IosShare";
 import Button from "@mui/material/Button";
 import { useSyncExternalStore } from "react";
-import { SHARE_ICON_SX, SHARE_PILL_SX } from "./share-pill";
+import { SHARE_PILL_SX } from "./share-pill";
 
 /**
  * The phone's own share sheet (`DECISIONS.md` §140): where `navigator.share` exists — every
@@ -36,7 +36,7 @@ export default function NativeShareButton({ url, title, text, label }: { url: st
         });
       }}
     >
-      <IosShareIcon sx={SHARE_ICON_SX} aria-hidden="true" />
+      <IosShareIcon aria-hidden="true" />
       {label}
     </Button>
   );
