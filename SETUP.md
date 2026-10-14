@@ -2098,3 +2098,22 @@ only ones who see the names, addresses and telephone numbers.
    provider refuses for good leaves the row «Contract neacceptat încă» again.
 6. **A person who asks for their data** is found by address on «Toate datele unei persoane»: the offers
    are listed there with every column, and deleted from this card.
+
+7. **Print the volunteers' badges** (§NNN). The «Voluntari» card → **«Ecusoane pentru voluntari»** opens a
+   page of its own for the event, for the Organizer and the Administrators. A badge is a small, long strip
+   — 90 × 35 mm (16 on an A4 sheet) or 100 × 40 mm (14), or your own width × height in whole millimetres,
+   60–200 by 30–100 — with the club's logo, the event's short title, «VOLUNTAR», the role on its coloured
+   band and a white space with «Nume:» and one faint line: **no name is printed**, the volunteer writes it
+   with a marker, so the file holds no personal data.
+   - **«Cum arată ecusonul»** — the designer, with its preview: the size, the header (the club's blue, a
+     colour or a picture), «VOLUNTAR» and the short title in Română **and** English, the writing area, the
+     coordinator's telephone (the club's number, with its label in both languages) and the cut marks.
+     «Salvează ecusonul» keeps it on the event; the event's JSON file (§751) carries it too.
+   - **A role's colour** is part of the role: «Adaugă un rol» and each role's «Modifică» in the card, or
+     all the roles at once under «Culorile rolurilor» on the badges' page. «Portocaliul clubului», one of
+     the palette, or «Altă culoare» typed as `#rrggbb`; it is kept only when white or black text reads on
+     it at a contrast of 4.5 to 1, and the page says each role's contrast in words.
+   - **«Tipărire»** — «Câte ecusoane» per role (it starts at the people the role needs), «În plus» for
+     spares, «Ecusoane fără rol» for whoever comes without one, the language the badges print in, then
+     **«Descarcă ecusoanele (PDF)»**: at most 300 of a pile and 1 000 in a file. Print at 100 %, cut along the
+     dashed lines.
