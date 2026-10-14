@@ -14,15 +14,14 @@ decision or a click only the club can make · **released** — on production, wi
 The owner, 2026-10-10: «Soon I need to start a new session from the laptop … You need to save and document everything».
 This section replaces the plan of 2026-09-30; it is what a session with none of today's conversation needs to carry on.
 
-- **Production: `BR-V3.23`** (2026-10-14 14:25: §764 volunteer badges, migration `0150`). Waiting for «prod»:
-  `BR-V3.24` (§765, below), migration `0151` (expand only).
-- **QA: `BR-V3.24`** — a volunteer gives their age, sex, city, «Am mai fost voluntar în trecut la alte curse» and the
-  club group (the T-shirt size only while «Oferim tricouri voluntarilor» is on); the role has «Descrierea rolului» as
-  rich text with «Copiază și tradu»; «Primește voluntari pe pagină» is a tick box. The new boxes wait for a notice
-  naming `{{volunteerProfile}}` (`/admin/tasks` → `volunteerProfileNotice`).
-  Next, one lane at a time: the volunteers' own page with a guardian from 14; tick boxes for every switch; a
-  «Direcționare» checkpoint and its cut-off as a time limit from the gun; five more clauses in the declaration and the
-  signature's trace.
+- **Production: `BR-V3.24`** (2026-10-14 16:40: §765 volunteer profile fields, migration `0151`). Waiting for «prod»:
+  `BR-V3.25` (§766, below) — no migration.
+- **QA: `BR-V3.25`** — settings are tick boxes, never toggle buttons (the anti-bot panel, the outbox's timing, the series
+  line, «Locația se anunță mai târziu»), a guard test bans the toggle glyphs and `Switch`; «Runners Brașov» and
+  «Runnersbrasov» count as the club on the public list.
+  Building: the volunteers' own page with a guardian from 14 (migration `0152`); the share row small with every calendar.
+  Next: a «Direcționare» checkpoint and its cut-off as a time limit from the gun; five more clauses in the declaration
+  and the signature's trace; the group-run declaration signed by a minor and a parent.
 - **Nothing is building.** Releases by the label `ship` reach production by themselves again: `SHIP_TOKEN` was given
   «Pull requests: Read and write» on 2026-10-12, and `BR-V3.05`'s run opened its `qa → main` pull request itself.
 - **Lanes:** the phone session took the calendar on 2026-10-12; one release at a time between
@@ -142,6 +141,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V3.25` | tick boxes instead of toggle buttons; «Runners Brașov» counts as the club (§766) |
 | `BR-V3.24` | volunteers give their age, sex, city and experience; the role's description (§765) |
 | `BR-V3.23` | volunteer badges (§764) |
 | `BR-V3.22` | the checkpoints inside the route card (§763) |

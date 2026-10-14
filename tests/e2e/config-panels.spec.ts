@@ -149,6 +149,19 @@ test.describe("§265 the configuration panels", () => {
     await page.goto("/ro/admin/settings/platform");
     await expect(main.getByTestId("honeypot-form")).toBeVisible();
     await expect(main.getByTestId("bot-check-read-only")).toHaveCount(0);
+    // Tick boxes, not toggle buttons (§766): the honeypot's is a real checkbox with its words, a thumb's size, and the question
+    // the press asks says what it does — the tick is left as it was when the question is cancelled.
+    const honeypot = main.getByRole("checkbox", { name: "Honeypot pornit" });
+    await hydrated(page);
+    await expect(honeypot).toBeVisible();
+    await expect(honeypot).toBeChecked();
+    expect((await honeypot.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+    await honeypot.click();
+    const dialog = page.getByRole("dialog", { name: "Oprești honeypot-ul?" });
+    await expect(dialog).toBeVisible();
+    await dialog.getByRole("button", { name: "Renunță" }).click();
+    await expect(dialog).toHaveCount(0);
+    await expect(honeypot).toBeChecked();
   });
 
   test("divides the system screen into status, general and email", async ({ page }) => {

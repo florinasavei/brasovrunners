@@ -132,10 +132,10 @@ test.describe("BR-REQ-080-02 the Mailgun plan on «Setări» → «Emailuri»", 
     // registrations (§289) — so the Organizer has them now, where a Moderator had neither.
     await expect(main.getByRole("heading", { name: "Coada de trimitere" })).toBeVisible();
     await expect(main.getByRole("button", { name: "Trimite acum", exact: false })).toHaveCount(0);
-    // When the queue leaves (§529) is read by whoever reads the queue; the switch is the Administrator's.
+    // When the queue leaves (§529) is read by whoever reads the queue; the tick is the Administrator's.
     await expect(main.getByTestId("outbox-when-state")).toContainText(/Emailurile pleacă (la trecerea programată; următoarea:|imediat după cererea)/);
     await expect(main.getByTestId("outbox-timing-form")).toHaveCount(0);
-    await expect(main.getByTestId("outbox-when").getByRole("switch")).toHaveCount(0);
+    await expect(main.getByTestId("outbox-when").getByRole("checkbox")).toHaveCount(0);
     await expect(main.getByRole("heading", { name: "Copiile clubului" })).toBeVisible();
     // Where the calendar's answers go (§672): read by every reader of the page, changed by the Administrator.
     await expect(main.getByRole("heading", { name: "Răspunsurile din calendar" })).toBeVisible();
@@ -163,13 +163,13 @@ test.describe("BR-REQ-080-02 the Mailgun plan on «Setări» → «Emailuri»", 
     /*
       The owner, 2026-09-28: "vreau să pot vedea exact când pleacă emailurile și să pot face on/off
       la acea setare". The queue panel opens with the timing, the next round and what holds it back;
-      every row says its departure; the switch is «Termene»'s «Când pleacă emailurile», both values,
-      asking first — a Material switch labelled «Trimite la trecerea programată», checked while the
+      every row says its departure; the tick is «Termene»'s «Când pleacă emailurile», both values,
+      asking first — a tick box labelled «Trimite la trecerea programată» (§766; a Material switch until then), checked while the
       round holds the mail, with one sentence under it saying the mode in force (§540).
 
       `data-timing` is the setting in force: the stored choice, else the environment's default —
       scheduled on QA and production, immediate on a laptop and on this suite's server, where no
-      pinger runs (§513, `defaultDeliveryTiming`). So the test reads where it starts, switches to the
+      pinger runs (§513, `defaultDeliveryTiming`). So the test reads where it starts, ticks to the
       other value, reads both, and puts it back where it found it, for the next test on this database.
     */
     await signIn(page, "Dev Administrator");
@@ -182,27 +182,28 @@ test.describe("BR-REQ-080-02 the Mailgun plan on «Setări» → «Emailuri»", 
     const next = main.getByTestId("outbox-when-next");
     const holds = main.getByTestId("outbox-when-holds");
     const form = main.getByTestId("outbox-timing-form");
-    const toggle = form.getByRole("switch", { name: "Trimite la trecerea programată" });
+    const tick = form.getByRole("checkbox", { name: "Trimite la trecerea programată" });
     const says = {
       scheduled: async () => {
         await expect(state).toHaveAttribute("data-timing", "scheduled");
         await expect(state).toContainText("Emailurile pleacă la trecerea programată; următoarea:");
-        await expect(toggle).toBeChecked();
+        await expect(tick).toBeChecked();
         await expect(next).toContainText("Un email pus în coadă acum așteaptă cel mult");
         await expect(holds).toContainText("monitorul care apelează site-ul");
       },
       immediate: async () => {
         await expect(state).toHaveAttribute("data-timing", "immediate");
         await expect(state).toContainText("Emailurile pleacă imediat după cererea care le-a pus în coadă.");
-        await expect(toggle).not.toBeChecked();
+        await expect(tick).not.toBeChecked();
         await expect(next).toContainText("Ce rămâne (o nouă încercare, o amânare)");
       },
     };
-    const switchTo = async (timing: "scheduled" | "immediate") => {
-      // The page is running: the switch is enabled and the no-JavaScript button is gone.
-      await expect(toggle).toBeEnabled();
-      await expect(form.getByRole("button", { name: /Trimite (imediat după cerere|la trecerea programată)/ })).toHaveCount(0);
-      await toggle.click();
+    const tickTo = async (timing: "scheduled" | "immediate") => {
+      // One tick, a thumb's size, and no second button beside it: the tick is the submit (§766).
+      await expect(tick).toBeEnabled();
+      expect((await tick.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+      await expect(form.getByRole("button")).toHaveCount(0);
+      await tick.click();
       await confirmDialog(page, timing === "immediate" ? "Emailurile să plece imediat după cerere?" : "Emailurile să plece la trecerea programată?");
       await says[timing]();
     };
@@ -217,8 +218,34 @@ test.describe("BR-REQ-080-02 the Mailgun plan on «Setări» → «Emailuri»", 
       await expect(row).toHaveText(/^(Pleacă:|Pleacă acum|Întârziat:|Ținut până |Se trimite acum|Nu mai pleacă)/);
     }
 
-    await switchTo(from === "scheduled" ? "immediate" : "scheduled");
-    await switchTo(from);
+    await tickTo(from === "scheduled" ? "immediate" : "scheduled");
+    await tickTo(from);
+
+    // With scripts off the tick is still the submit: it posts the state it wants, without the
+    // question (the confirmation is a script's), and the page comes back with the other timing
+    // in force. Pressed twice, it puts the setting back (§766).
+    const { baseURL, viewport } = test.info().project.use;
+    const scriptless = await page.context().browser()!.newContext({
+      baseURL,
+      viewport,
+      javaScriptEnabled: false,
+      storageState: await page.context().storageState(),
+    });
+    try {
+      const bare = await scriptless.newPage();
+      const other = from === "scheduled" ? "immediate" : "scheduled";
+      for (const want of [other, from]) {
+        await bare.goto("/ro/admin/settings/emails");
+        const bareQueue = bare.locator("#main").getByTestId("outbox-queue");
+        await openFold(bareQueue);
+        await bareQueue.getByRole("checkbox", { name: "Trimite la trecerea programată" }).click();
+        await bare.waitForLoadState("load");
+        await bare.goto("/ro/admin/settings/emails");
+        await expect(bare.locator("#main").getByTestId("outbox-when-state")).toHaveAttribute("data-timing", want);
+      }
+    } finally {
+      await scriptless.close();
+    }
   });
 
   test("an Administrator finds «Gmail preia când Mailgun se oprește», greyed with its reason where Gmail is not configured or the notice does not name it (§622)", async ({ page }) => {

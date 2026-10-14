@@ -73,8 +73,6 @@ import StraightenIcon from "@mui/icons-material/Straighten";
 import SubjectIcon from "@mui/icons-material/Subject";
 import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 import TextRotationNoneIcon from "@mui/icons-material/TextRotationNone";
-import ToggleOffIcon from "@mui/icons-material/ToggleOff";
-import ToggleOnIcon from "@mui/icons-material/ToggleOn";
 import TranslateIcon from "@mui/icons-material/Translate";
 import UndoIcon from "@mui/icons-material/Undo";
 import UploadIcon from "@mui/icons-material/Upload";
@@ -230,10 +228,9 @@ export type ActionIconName =
   // People and settings.
   | "revoke"
   | "role"
-  | "turnOn"
-  | "turnOff"
-  // A permission on a colleague's row of «Echipa» (§687): the box ticked or empty — a press that
-  // asks first, never a bare checkbox, so the tick needs no client island of its own.
+  // A setting's box, ticked or empty (§687, §752, §766): a plain submit drawn as the checkbox (`TickButton`), a press
+  // that may ask first, so the tick needs no client island of its own. There is no toggle glyph (§766): a setting is
+  // never a button with «on»/«off» drawn on it (`tests/unit/design/no-toggle-glyphs.test.ts`).
   | "tickOn"
   | "tickOff"
   | "signOut"
@@ -338,8 +335,6 @@ export const ACTION_ICONS: Record<ActionIconName, ComponentType<SvgIconProps>> =
 
   revoke: PersonOffIcon,
   role: ManageAccountsIcon,
-  turnOn: ToggleOnIcon,
-  turnOff: ToggleOffIcon,
   tickOn: CheckBoxIcon,
   tickOff: CheckBoxOutlineBlankIcon,
   signOut: LogoutIcon,

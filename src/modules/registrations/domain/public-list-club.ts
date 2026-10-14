@@ -185,9 +185,10 @@ const DEFAULT_VOCABULARY = clubVocabulary();
  * away; what is left must split, glued or not, into pieces of the club's own vocabulary — its words (one
  * typo allowed in a word of six letters or more, inside one typed word), their initials with the first
  * word, the city's short form, a nickname — with nothing else in the cell, and the pieces must name the club somewhere: the
- * name's words in order («Brașov Runners», «BV Runners»), the initials beside the first word («BR Brașov»),
- * or a nickname («BVR»). So «Brașov Runners (BVR)» and «brasovrunners» are the club, and «Brașov Runners
- * Cluj», «Cluj Runners», «Runners», «BR» and «Brașov» alone are not.
+ * name's words in order («Brașov Runners», «BV Runners») or in the opposite order («Runners Brașov»,
+ * «Runnersbrasov» — §766, amending §753: the owner's «Yes» of 2026-10-14), the initials beside the first word
+ * («BR Brașov»), or a nickname («BVR»). So «Brașov Runners (BVR)», «brasovrunners» and «Runners Brașov» are the
+ * club, and «Brașov Runners Cluj», «Cluj Runners», «Runners», «BR» and «Brașov» alone are not.
  */
 export function namesTheClub(typed: string | null | undefined, vocabulary: ClubVocabulary = DEFAULT_VOCABULARY): boolean {
   if (typeof typed !== "string" || vocabulary.words === 0) return false;
@@ -203,13 +204,14 @@ export function namesTheClub(typed: string | null | undefined, vocabulary: ClubV
 
   /*
     A search over the ways to cut the cell, remembered by where it stands: `previous` is the last piece that
-    was not a filler, `run` how many of the name's words in order end there, `named` whether the club has
-    been named yet. True when the whole cell is cut and the club was named.
+    was not a filler, `run` how many of the name's words in order end there, `reversed` how many of them
+    in the opposite order (§766), `named` whether the club has been named yet. True when the whole cell is cut and the club was named.
   */
   const seen = new Map<string, boolean>();
-  const search = (at: number, previous: PieceKind["kind"] | `word${number}` | "", run: number, named: boolean): boolean => {
+  const lastWord = vocabulary.words - 1;
+  const search = (at: number, previous: PieceKind["kind"] | `word${number}` | "", run: number, reversed: number, named: boolean): boolean => {
     if (at === cell.length) return named;
-    const key = `${at}|${previous}|${run}|${named}`;
+    const key = `${at}|${previous}|${run}|${reversed}|${named}`;
     const known = seen.get(key);
     if (known !== undefined) return known;
     let found = false;
@@ -217,26 +219,33 @@ export function namesTheClub(typed: string | null | undefined, vocabulary: ClubV
       for (const length of coverings(cell, at, piece, boundaries)) {
         let next: typeof previous = previous;
         let nextRun = run;
+        let nextReversed = reversed;
         let nextNamed = named;
         const is = piece.is;
         if (is.kind === "word") {
           nextRun = is.index === 0 ? 1 : run === is.index ? run + 1 : 0;
           if (nextRun === vocabulary.words) nextNamed = true;
+          // The same words the other way round (§766): «Runners Brașov», «Runnersbrasov».
+          nextReversed = is.index === lastWord - reversed ? reversed + 1 : is.index === lastWord ? 1 : 0;
+          if (nextReversed === vocabulary.words) nextNamed = true;
           if (is.index === 0 && previous === "initials") nextNamed = true;
           next = `word${is.index}`;
         } else if (is.kind === "city") {
           nextRun = 1;
+          nextReversed = 0;
           next = "city";
         } else if (is.kind === "initials") {
           if (previous === "word0") nextNamed = true;
           nextRun = 0;
+          nextReversed = 0;
           next = "initials";
         } else if (is.kind === "nickname") {
           nextNamed = true;
           nextRun = 0;
+          nextReversed = 0;
           next = "nickname";
         }
-        if (search(at + length, next, nextRun, nextNamed)) {
+        if (search(at + length, next, nextRun, nextReversed, nextNamed)) {
           found = true;
           break;
         }
@@ -246,7 +255,7 @@ export function namesTheClub(typed: string | null | undefined, vocabulary: ClubV
     seen.set(key, found);
     return found;
   };
-  return search(0, "", 0, false);
+  return search(0, "", 0, 0, false);
 }
 
 /**

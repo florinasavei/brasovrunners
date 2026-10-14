@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V3.25-2026-10-14
+
+- **Settings are tick boxes, never toggle buttons** — the anti-bot check and the honeypot, «Când pleacă emailurile», «Publică automat de acum» on a series' draft line and «Locația se anunță mai târziu» are real tick boxes with their words beside them (the toggle glyphs and the Material switches are gone, a design guard keeps them out); and on the public list «Runners Brașov» and «Runnersbrasov» count as the club. §766.
 ## BR-V3.24-2026-10-14
 
 - **Volunteers give their age, sex, city and experience; the role has a rich description** — the sign-up asks «Vârsta» (18 or more), «Sex», «Orașul», «Am mai fost voluntar în trecut la alte curse», «Fac parte din grupul clubului» and, only while the event gives them, the T-shirt's size, once the notice in force names them; the card, the CSV and the person's data carry the answers; a role's «Descrierea rolului» is written in the rich-text editor in both languages, with «Copiază și tradu tot», and read under its tick; «Primește voluntari pe pagină» and «Oferim tricouri voluntarilor» are real tick boxes. §765.

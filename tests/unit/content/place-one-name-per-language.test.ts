@@ -256,8 +256,8 @@ describe("BR-REQ-011-01 criterion 30 the closed Locul box", () => {
 describe("BR-REQ-011-01 criterion 30 the two boxes and the copy button", () => {
   const box = textFieldConstraints(eventInputConstraints("locationName"));
   const labels = {
-    toggle: "Locația se anunță mai târziu",
-    toggleHelp: "Ajutor.",
+    tick: "Locația se anunță mai târziu",
+    tickHelp: "Ajutor.",
     meetingPoint: "Punct de întâlnire",
     ro: "Română",
     en: "English",
