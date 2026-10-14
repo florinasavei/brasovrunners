@@ -12,7 +12,16 @@ export function volunteersClause(locale: string): string {
   return locale === "en" ? `“${en.Event.volunteers.title}”` : `„${ro.Event.volunteers.title}”`;
 }
 
-/** The notice's merge value, beside the other features' on the legal pages. */
-export function volunteersMergeValues(locale: string): { volunteers: string } {
-  return { volunteers: volunteersClause(locale) };
+/**
+ * What the privacy notice's `{{volunteerAgreement}}` becomes (§758): the agreement's own title, quoted, in that
+ * language — „Contract de voluntariat” / “Volunteer agreement” — read from the catalogue its public page's heading
+ * reads (`Legal.volunteerAgreementTitle`), so the approved sentence names the text a volunteer accepts.
+ */
+export function volunteerAgreementClause(locale: string): string {
+  return locale === "en" ? `“${en.Legal.volunteerAgreementTitle}”` : `„${ro.Legal.volunteerAgreementTitle}”`;
+}
+
+/** The notice's merge values, beside the other features' on the legal pages. */
+export function volunteersMergeValues(locale: string): { volunteers: string; volunteerAgreement: string } {
+  return { volunteers: volunteersClause(locale), volunteerAgreement: volunteerAgreementClause(locale) };
 }

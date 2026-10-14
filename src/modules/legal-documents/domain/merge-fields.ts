@@ -155,6 +155,18 @@ export const MEMBERS_SHOP_MERGE_FIELD = "membersShop";
 export const VOLUNTEERS_MERGE_FIELD = "volunteers";
 
 /**
+ * The privacy notice's marker for the volunteer agreement (§758, amending §754): the agreement's own title,
+ * quoted, in the reader's language (`volunteers/notice-words.ts`) — „Contract de voluntariat” / “Volunteer
+ * agreement” — inside the volunteers' paragraph's sentence that says what an acceptance keeps (the version, the
+ * moment, the way, the fingerprint, the age statement), why (art. 6(1)(b)), the PDF on the receipt and the
+ * single-use link email to a person entered by hand. Its own marker, §562's, §613's and §754's pattern: a notice
+ * approved from §754's template names `{{volunteers}}` but says none of this, so the public form, the link and the
+ * paper record wait for a notice naming this one too (`describesVolunteerAgreement`); `/admin/tasks` carries the
+ * row `volunteerAgreementNotice` meanwhile.
+ */
+export const VOLUNTEER_AGREEMENT_NOTICE_MERGE_FIELD = "volunteerAgreement";
+
+/**
  * The privacy notice's marker for «Spune-ne ceva»'s named mode (§678): the radio's own words,
  * quoted — „Cu nume și prenume” / “With my name” (`feedback/notice-words.ts`) — in the same
  * paragraph, which then says the forms are anonymous unless the person chooses to give a name, what
@@ -214,8 +226,20 @@ export function minimumAgeMergeValue(minAge: number, locale: string): string {
  */
 export const SERIES_MERGE_FIELDS = ["series", "seriesRhythm", "seriesPlace"] as const;
 
-/** The fields whose "" drops the paragraph that names them (see `MINIMUM_AGE_MERGE_FIELD`, `SERIES_MERGE_FIELDS`). */
-export const PARAGRAPH_MERGE_FIELDS: ReadonlySet<string> = new Set([MINIMUM_AGE_MERGE_FIELD, ...SERIES_MERGE_FIELDS]);
+/**
+ * The volunteer agreement's own blanks (§758, amending §754): `{{volunteer}}` — the person's name as the row
+ * holds it —, `{{volunteerRole}}` — the role's name in the text's language — and `{{volunteerTasks}}` — what
+ * the club typed the role asks («descrierea rolului»), in that language. Filled when the person accepts, kept
+ * on the volunteer's row (`agreement_facts`) beside the event's own fields (`{{event}}`, `{{eventDate}}`,
+ * `{{eventLocation}}`), so the PDF prints what was accepted whatever the role is renamed to afterwards.
+ *
+ * A role with no description answers `{{volunteerTasks}}` with "", and the sentence naming it is left out
+ * whole (`PARAGRAPH_MERGE_FIELDS`) — never «Atribuțiile rolului: .».
+ */
+export const VOLUNTEER_MERGE_FIELDS = ["volunteer", "volunteerRole", "volunteerTasks"] as const;
+
+/** The fields whose "" drops the paragraph that names them (see `MINIMUM_AGE_MERGE_FIELD`, `SERIES_MERGE_FIELDS`, `VOLUNTEER_MERGE_FIELDS`). */
+export const PARAGRAPH_MERGE_FIELDS: ReadonlySet<string> = new Set([MINIMUM_AGE_MERGE_FIELD, ...SERIES_MERGE_FIELDS, "volunteerTasks"]);
 
 const SERIES_FIELD_SET: ReadonlySet<string> = new Set(SERIES_MERGE_FIELDS);
 
@@ -361,6 +385,7 @@ export const MERGE_FIELDS = [
   "signedAt",
   MINIMUM_AGE_MERGE_FIELD,
   ...SERIES_MERGE_FIELDS,
+  ...VOLUNTEER_MERGE_FIELDS,
   ...DEADLINE_MERGE_FIELDS,
   LIST_STATES_MERGE_FIELD,
   LIST_SOCIALS_MERGE_FIELD,
@@ -376,6 +401,7 @@ export const MERGE_FIELDS = [
   FEEDBACK_FORMS_NAMED_MERGE_FIELD,
   MEMBERS_SHOP_MERGE_FIELD,
   VOLUNTEERS_MERGE_FIELD,
+  VOLUNTEER_AGREEMENT_NOTICE_MERGE_FIELD,
 ] as const;
 
 /**
@@ -569,6 +595,15 @@ export function describesMembersShop(body: unknown): boolean {
  */
 export function describesVolunteers(body: unknown): boolean {
   return mergeFieldsIn(body).has(VOLUNTEERS_MERGE_FIELD);
+}
+
+/**
+ * Whether a privacy notice describes the volunteer agreement's acceptance (§758): it names
+ * `{{volunteerAgreement}}`. With `describesVolunteers`, the gate for the public form, «Trimite linkul
+ * contractului» and «Semnat pe hârtie», and what `/admin/tasks`' row `volunteerAgreementNotice` reads. Pure.
+ */
+export function describesVolunteerAgreement(body: unknown): boolean {
+  return mergeFieldsIn(body).has(VOLUNTEER_AGREEMENT_NOTICE_MERGE_FIELD);
 }
 
 /**

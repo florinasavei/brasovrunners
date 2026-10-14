@@ -14,6 +14,7 @@ import {
   type VolunteerRequest,
   type VolunteerRoleRequest,
 } from "@/modules/volunteers/volunteers";
+import { recordPaperVolunteerAgreement, requestVolunteerAgreement } from "@/modules/volunteers/agreement";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { flashOutcome } from "@/shared/feedback/flash";
 import { type FormOutcome, refused } from "@/shared/forms/outcome";
@@ -184,6 +185,47 @@ export async function setVolunteerStateAction(form: FormData): Promise<void> {
     if (!isDomainError(error)) throw error;
     return backToCard(form, { error: error.code });
   }
+}
+
+/**
+ * «Trimite linkul contractului» (§758): one email with the volunteer agreement and a single-use link to accept it,
+ * for a person entered by hand. The service refuses while no agreement is in force, and for a person who has
+ * accepted or was cancelled — each said in the card's banner.
+ */
+export async function requestVolunteerAgreementAction(form: FormData): Promise<void> {
+  try {
+    const actor = await requireStaff();
+    await requestVolunteerAgreement(getDb(), actor, { eventId: eventIdOf(form), id: field(form, "volunteerId") }, new Date());
+  } catch (error) {
+    if (!isDomainError(error)) throw error;
+    return backToCard(form, { error: error.code });
+  }
+  return backToCard(form, { saved: "volunteerAgreementRequested" });
+}
+
+/**
+ * «Semnat pe hârtie» (§758): asks first (§384), then records that the person signed the printed agreement at the
+ * desk — the version in force, and who recorded it. A staff member records the person's signature, never gives one.
+ */
+export async function recordPaperVolunteerAgreementAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  try {
+    const actor = await requireStaff();
+    await recordPaperVolunteerAgreement(
+      getDb(),
+      actor,
+      {
+        eventId: eventIdOf(form),
+        id: field(form, "volunteerId"),
+        // What the card's «PDF de semnat» printed: the service refuses when either changed since (§758).
+        printed: { documentId: field(form, "agreementDocumentId"), roleId: field(form, "roleId") },
+      },
+      new Date(),
+    );
+  } catch (error) {
+    if (!isDomainError(error)) throw error;
+    return backToCard(form, { error: error.code });
+  }
+  return backToCard(form, { saved: "volunteerAgreementRecorded" });
 }
 
 /** «Șterge»: asks first (§384) — a deleted volunteer is gone, and the audit row keeps no name. */

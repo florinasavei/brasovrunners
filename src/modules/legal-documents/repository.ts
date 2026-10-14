@@ -1,6 +1,7 @@
 import { and, desc, eq, isNull, lte, sql } from "drizzle-orm";
 import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import { events } from "@/db/schema/events";
+import { eventVolunteers } from "@/db/schema/event-volunteers";
 import { groupRunDeclarations } from "@/db/schema/group-run-declarations";
 import {
   legalDocumentNumbering,
@@ -20,6 +21,7 @@ import {
   describesFeedbackForms,
   describesFeedbackFormsNamed,
   describesMembersShop,
+  describesVolunteerAgreement,
   describesVolunteers,
   describesListNumbers,
   describesGmailFallback,
@@ -317,6 +319,29 @@ export async function noticeDescribesMembersShop<T extends Record<string, unknow
 export async function noticeDescribesVolunteers<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<boolean> {
   const notices = await Promise.all(routing.locales.map((locale) => findCurrentApprovedDocument(db, "PRIVACY_NOTICE", locale, now)));
   return notices.every((notice) => notice !== undefined && describesVolunteers(notice.body));
+}
+
+/**
+ * Whether the privacy notice in force describes the volunteer agreement's acceptance (§758,
+ * `describesVolunteerAgreement`) — in every language, like `noticeDescribesVolunteers`. For the public sign-up,
+ * «Trimite linkul contractului», «Semnat pe hârtie», the editor's card and `/admin/tasks`; the event page reads
+ * the cached twin (`cachedVolunteerAgreementDescribed`).
+ */
+export async function noticeDescribesVolunteerAgreement<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<boolean> {
+  const notices = await Promise.all(routing.locales.map((locale) => findCurrentApprovedDocument(db, "PRIVACY_NOTICE", locale, now)));
+  return notices.every((notice) => notice !== undefined && describesVolunteerAgreement(notice.body));
+}
+
+/**
+ * Whether a volunteer agreement is in force in every language (§758): the gate of the event page's
+ * «Vreau să fiu voluntar», of the organizers' «Trimite linkul contractului» and of a paper acceptance, and
+ * what `/admin/tasks`' row `volunteerAgreement` reads. Every language, like the notice's markers above: a
+ * person accepts in the language of the page, and a form open in one language only would refuse half its
+ * visitors. A public page asks through the public cache (`cachedVolunteerAgreementInForce`).
+ */
+export async function volunteerAgreementInForce<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<boolean> {
+  const versions = await Promise.all(routing.locales.map((locale) => findCurrentApprovedDocument(db, "VOLUNTEER_AGREEMENT", locale, now)));
+  return versions.every((version) => version !== undefined);
 }
 
 /**
@@ -742,11 +767,13 @@ export async function listVersionsForBackoffice<T extends Record<string, unknown
       deletedByName: sql<string | null>`(select ${staffUsers.displayName} from ${staffUsers} where ${staffUsers.id} = ${legalDocuments.deletedByStaffUserId})`,
       deletedReason: legalDocuments.deletedReason,
       locales: sql<string[]>`coalesce(array_agg(distinct ${legalDocumentTranslations.locale}::text) filter (where ${legalDocumentTranslations.locale} is not null), '{}')`,
-      // Every signature against this version: a race's acceptances, and a group run's optional
-      // self-declarations (§393) — both are somebody relying on these exact words.
+      // Every signature against this version: a race's acceptances, a group run's optional
+      // self-declarations (§393) and a volunteer's accepted agreement (§758) — each is somebody
+      // relying on these exact words.
       acceptanceCount: sql<number>`(
         (select count(*)::int from ${declarationAcceptances} where ${declarationAcceptances.legalDocumentId} = ${legalDocuments.id})
         + (select count(*)::int from ${groupRunDeclarations} where ${groupRunDeclarations.legalDocumentId} = ${legalDocuments.id})
+        + (select count(*)::int from ${eventVolunteers} where ${eventVolunteers.agreementDocumentId} = ${legalDocuments.id})
       )`,
       eventCount: sql<number>`(select count(*)::int from ${events} where ${events.declarationDocumentId} = ${legalDocuments.id})`,
       // Matched on the version *number*, per key, because that is the only shape this reference

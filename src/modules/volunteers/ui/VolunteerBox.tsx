@@ -18,14 +18,16 @@ import { DISCLOSURE_OPEN_ARROW, DISCLOSURE_SUMMARY_SX, FOLD_GLYPH_INLINE_SX } fr
 import LegalLink from "@/shared/ui/LegalLink";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import { DENSITY } from "@/theme/density";
-import { VOLUNTEER_MESSAGE_MAX, VOLUNTEER_NAME_MAX } from "../domain/volunteer";
+import { yearsPhrase } from "@/modules/registrations/domain/age";
+import { VOLUNTEER_MESSAGE_MAX, VOLUNTEER_MINIMUM_AGE, VOLUNTEER_NAME_MAX } from "../domain/volunteer";
 import type { PublicVolunteerRole } from "../volunteers";
 import { VOLUNTEER_BOX_ID, type VolunteerBox as BoxName, type VolunteerOutcome, type VolunteerTyped } from "./volunteer-box";
 
 /**
  * «Vreau să fiu voluntar» on an event's page (§754; the owner, 2026-10-13: «I want to register volunteers
  * for a race»): a fold with the roles that still need people, and one plain form — the name, the address, the
- * telephone number, the role, an optional message and the consent tick that names the privacy notice.
+ * telephone number, the role, an optional message, the consent tick that names the privacy notice, and — since
+ * §758 — the tick that accepts the volunteer agreement in force and the one that says the person is of age.
  *
  * A Server Component around a Server Action, like the «Anunță-mă» box beside it: it works with scripts
  * off (a native `<details>` and a native `<select>`; the only islands are the telephone box and the
@@ -75,6 +77,8 @@ export default async function VolunteerBox({
     close: tForm("countrySearch.close"),
   };
   const fieldId = (name: string) => `volunteer-${name}`;
+  // «18 ani» / «18 years», the unit in the words every age is said with (§440).
+  const age = yearsPhrase(VOLUNTEER_MINIMUM_AGE, locale);
 
   return (
     <Box id={VOLUNTEER_BOX_ID} component="section" aria-labelledby={`${VOLUNTEER_BOX_ID}-title`} data-testid="volunteer-box" sx={{ mt: { xs: DENSITY.sectionGap, sm: 4 }, scrollMarginTop: 16 }}>
@@ -128,7 +132,8 @@ export default async function VolunteerBox({
                   <Box component="ul" sx={{ m: 0, pl: 3 }}>
                     {refused.map((name) => (
                       <li key={name}>
-                        <a href={`#${fieldId(name)}`}>{t(`volunteers.errors.${name}`)}</a>
+                        {/* `{age}` is the age box's own value (§758); the other sentences take none and ignore it. */}
+                        <a href={`#${fieldId(name)}`}>{t(`volunteers.errors.${name}`, { age })}</a>
                       </li>
                     ))}
                   </Box>
@@ -250,6 +255,38 @@ export default async function VolunteerBox({
                   {t("volunteers.privacyLinkLabel")}
                 </LegalLink>
                 .
+              </CheckboxField>
+            </Box>
+
+            {/*
+              The volunteer agreement (§758): the person's acceptance of the text in force, linked in a new tab like the
+              notice — its blanks (the name, the role, the event) are filled in the copy the email carries — and the
+              platform's age, eighteen (`VOLUNTEER_MINIMUM_AGE`). Both required; the service refuses either missing.
+            */}
+            <Box data-testid="volunteer-agreement">
+              <CheckboxField
+                name="agreement"
+                id={fieldId("agreement")}
+                required
+                error={invalid.has("agreement") ? t("volunteers.errors.agreement") : undefined}
+                requiredMessage={t("volunteers.errors.agreement")}
+              >
+                {t("volunteers.agreement")}{" "}
+                <LegalLink href="/legal/volunteer-agreement" newTabLabel={tForm("opensInNewTab")}>
+                  {t("volunteers.agreementLinkLabel")}
+                </LegalLink>
+                .
+              </CheckboxField>
+            </Box>
+            <Box data-testid="volunteer-adult">
+              <CheckboxField
+                name="adult"
+                id={fieldId("adult")}
+                required
+                error={invalid.has("adult") ? t("volunteers.errors.adult", { age }) : undefined}
+                requiredMessage={t("volunteers.errors.adult", { age })}
+              >
+                {t("volunteers.adult", { age })}
               </CheckboxField>
             </Box>
 

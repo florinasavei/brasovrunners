@@ -66,6 +66,11 @@ export type DeclarationEntry = {
    */
   forMinor?: boolean;
   /**
+   * A text that asks for no identity document draws no line for one (§758): the volunteer agreement is signed by
+   * the volunteer and the organizer, neither with a document. Absent, the lines are drawn as they always were.
+   */
+  noIdDocument?: boolean;
+  /**
    * The SHA-256 of the exact text signed (§556, `signedTextHash`), from the row; null on a row from
    * before it, whose proof line then prints no hash — never one computed now, which would prove only
    * what the text says today. Absent on the blank form, which nobody has signed.
@@ -425,13 +430,13 @@ function drawEntry(doc: PDFKit.PDFDocument, entry: DeclarationEntry, labels: Dec
     // with them. A document line only where a document was asked (or on the blank form).
     const minor = signature?.minor ?? null;
     row(labels.minorSignature, minor ? minor.typedName : null, Boolean(minor));
-    if (signature ? minor !== null && minor.idDocument !== null : true) row(labels.idDocument, minor ? minor.idDocument : null);
+    if (!entry.noIdDocument && (signature ? minor !== null && minor.idDocument !== null : true)) row(labels.idDocument, minor ? minor.idDocument : null);
     doc.moveDown(0.4);
     row(labels.guardianSignature, signature ? signature.typedName : null, Boolean(signature));
-    if (signature ? signature.idDocument !== null : true) row(labels.idDocument, signature ? signature.idDocument : null);
+    if (!entry.noIdDocument && (signature ? signature.idDocument !== null : true)) row(labels.idDocument, signature ? signature.idDocument : null);
   } else {
     row(labels.signature, signature ? signature.typedName : null, Boolean(signature));
-    if (signature ? signature.idDocument !== null : true) row(labels.idDocument, signature ? signature.idDocument : null);
+    if (!entry.noIdDocument && (signature ? signature.idDocument !== null : true)) row(labels.idDocument, signature ? signature.idDocument : null);
   }
   row(labels.date, signature ? signature.signedAt : null);
   doc.moveDown(0.4);

@@ -28,6 +28,14 @@ export const VOLUNTEER_NOTE_MAX = 500;
 /** How many roles one event may define: a list a person can read, and a bound on a forged form. */
 export const VOLUNTEER_ROLES_MAX = 30;
 
+/**
+ * How old a volunteer must be (§758; the owner's brief of 2026-10-13: «volunteers must be 18 or older unless the
+ * club decides otherwise»): the form's and the link page's «Am cel puțin 18 ani» and the agreement's
+ * `{{minimumAge}}`. Romania's volunteering law lets a minor volunteer with a parent's consent; how the club
+ * would take that consent is the lawyer's later question, so until then the platform takes adults only.
+ */
+export const VOLUNTEER_MINIMUM_AGE = 18;
+
 /** «Înscris» and «Confirmat» count against a role; «Anulat» never does. */
 export function countsAgainstRole(state: VolunteerState): boolean {
   return state !== "CANCELLED";
@@ -118,6 +126,10 @@ export const volunteerPublicInputSchema = z.object({
   locale: z.enum(["ro", "en"]),
   /** The one consent tick, naming the privacy notice: the person's own act, required (art. 7 GDPR). */
   consent: z.literal(true),
+  /** «Am citit și accept contractul de voluntariat» (§758): the person's acceptance of the agreement in force, required. */
+  agreement: z.literal(true),
+  /** «Am cel puțin 18 ani» (§758, `VOLUNTEER_MINIMUM_AGE`): required; a minor's volunteering is a later question for the lawyer. */
+  adult: z.literal(true),
   honeypot: z.string().max(2000).optional(),
   renderedAt: z.iso.datetime().optional(),
 });
@@ -167,6 +179,14 @@ export type VolunteerOfferInputs = {
   standings: readonly Pick<RoleStanding, "free">[];
   /** (c) The privacy notice in force names `{{volunteers}}` in every language. */
   noticeDescribes: boolean;
+  /** (d) A volunteer agreement is in force in every language (§758): nobody is listed without accepting one. */
+  agreementInForce: boolean;
+  /**
+   * (e) The privacy notice in force also names `{{volunteerAgreement}}` in every language (§758): the acceptance
+   * the form records — the version, the moment, the fingerprint, the age statement — is processing a notice from
+   * §754's template does not describe.
+   */
+  noticeDescribesAgreement: boolean;
   /** The event is neither cancelled nor over: nobody offers to help at a race that is gone. */
   eventAhead: boolean;
   /** The event's page is published: an unpublished event has no public page to carry the form. */
@@ -176,14 +196,15 @@ export type VolunteerOfferInputs = {
 };
 
 /** Why the form is not offered, in the order the page checks; null when it is. */
-export type VolunteerOfferClosed = "off" | "notPublished" | "membersOnly" | "eventOver" | "noRoleNeeds" | "noNotice";
+export type VolunteerOfferClosed = "off" | "notPublished" | "membersOnly" | "eventOver" | "noRoleNeeds" | "noNotice" | "noAgreement" | "noAgreementNotice";
 
 /**
  * The form's conditions as one pure rule, so the page, the action, the editor's card and the tests read the
- * same: the event offers volunteering (a), at least one role still needs people (b), and the privacy notice
- * in force describes volunteers (c) — plus the event being published, public (not for the members alone)
- * and still ahead. The page draws the form only when this says null; the action asks it again before it
- * keeps a name; the card names the first condition missing.
+ * same: the event offers volunteering (a), at least one role still needs people (b), the privacy notice
+ * in force describes volunteers (c), a volunteer agreement is in force (d, §758) and the notice describes its
+ * acceptance (e, §758) — plus the event being
+ * published, public (not for the members alone) and still ahead. The page draws the form only when this says
+ * null; the action asks it again before it keeps a name; the card names the first condition missing.
  */
 export function volunteerOfferClosedFor(inputs: VolunteerOfferInputs): VolunteerOfferClosed | null {
   if (!inputs.acceptsVolunteers) return "off";
@@ -192,8 +213,38 @@ export function volunteerOfferClosedFor(inputs: VolunteerOfferInputs): Volunteer
   if (!inputs.eventAhead) return "eventOver";
   if (!someRoleNeedsPeople(inputs.standings)) return "noRoleNeeds";
   if (!inputs.noticeDescribes) return "noNotice";
+  if (!inputs.agreementInForce) return "noAgreement";
+  if (!inputs.noticeDescribesAgreement) return "noAgreementNotice";
   return null;
 }
+
+// ---------------------------------------------------------------------------------------------
+// The volunteer agreement (§758)
+// ---------------------------------------------------------------------------------------------
+
+/**
+ * Where a volunteer stands with the agreement, as the organizers' card says it:
+ * - `accepted` — accepted (on the form, from the link, or on paper at the desk);
+ * - `linkSent` — not yet, and a link to accept it is live in the person's mailbox;
+ * - `notAccepted` — not yet, and no live link: «contract neacceptat încă».
+ */
+export type VolunteerAgreementStanding = "accepted" | "linkSent" | "notAccepted";
+
+export function agreementStandingOf(
+  volunteer: { agreementAcceptedAt: Date | null; agreementTokenExpiresAt: Date | null },
+  now: Date,
+): VolunteerAgreementStanding {
+  if (volunteer.agreementAcceptedAt) return "accepted";
+  if (volunteer.agreementTokenExpiresAt && volunteer.agreementTokenExpiresAt.getTime() > now.getTime()) return "linkSent";
+  return "notAccepted";
+}
+
+/** The link page's two ticks: the agreement and the age, both the person's own act each time. */
+export const volunteerAgreementAcceptSchema = z.object({
+  agreement: z.literal(true),
+  adult: z.literal(true),
+  locale: z.enum(["ro", "en"]),
+});
 
 /**
  * Which roles the page's box lists, or null for no box at all: the roles that still need people while the form

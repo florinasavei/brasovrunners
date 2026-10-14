@@ -482,6 +482,16 @@ export type AuditAction =
    * never a participant.
    */
   | "event_checkpoints.changed"
+  /**
+   * The volunteer agreement (§758), entity `event`: an organizer's «Trimite linkul contractului» (requested),
+   * the person's acceptance from the link (accepted, no actor) and a paper acceptance recorded at the desk
+   * (recorded). The metadata holds the volunteer's id, the version and the way — never the person's words.
+   */
+  | "volunteer.agreement_requested"
+  | "volunteer.agreement_accepted"
+  | "volunteer.agreement_recorded"
+  /** The agreement's PDF downloaded from the card (§758): a file with a name in it leaves the site; who and when. */
+  | "volunteer.agreement_downloaded"
   /** A message's own words, rewritten by the club (§247). */
   | "email_copy.changed"
   /** Who at the club receives the declaration copies and the confirmation notices (§244, §245). */
