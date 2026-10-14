@@ -1065,6 +1065,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                   <DescriptionBox languages={languages} heading={flow.headings.description} />
                   <WhenBox {...box} risk={risk} languages={languages} inSeries={inSeries} heading={flow.headings.when} />
                   <CourseBox {...box} languages={languages} inSeries={inSeries} heading={flow.headings.course} checkpointCount={checkpoints.length}
+                    checkpointsOpen={query.checkpointsGpx === "1" && Boolean(checkpointsGpx) && canEditCheckpoints(staffUser.role)}
                     checkpoints={
                       <CheckpointsCard
                         locale={locale}

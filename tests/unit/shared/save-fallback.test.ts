@@ -231,6 +231,13 @@ describe("§436 the island offers the simple way and never sends it on its own",
     expect(notice).toContain("void onSend()");
   });
 
+  it("the detached form (the checkpoints card inside «Traseul», §NNN) draws the same notice, from the same hook", () => {
+    const detached = read("src/shared/forms/DetachedActionFormIsland.tsx");
+    expect(detached).toContain("useKeptForm(");
+    expect(detached).toContain("{kept?.blocked && <SaveBlockedNotice onSend={kept.sendSimple} />}");
+    expect(detached).not.toContain("replayNatively");
+  });
+
   it("sets the cookie only inside the replay — so only when that button was pressed", () => {
     expect(fallback.match(/document\.cookie = `\$\{SAVE_FALLBACK_COOKIE\}=1/g)).toHaveLength(1);
     expect(fallback.slice(fallback.indexOf("export async function replayNatively"))).toContain("document.cookie = `${SAVE_FALLBACK_COOKIE}=1");

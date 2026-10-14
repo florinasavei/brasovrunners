@@ -341,6 +341,11 @@ export default async function CheckpointsCard({ locale, eventId, checkpoints, ma
         <Typography variant="body2" color="text.secondary">
           {t("checkpoints.intro")}
         </Typography>
+        {mayEdit && (
+          <Typography variant="body2" color="text.secondary" data-testid="checkpoints-save-note">
+            {t("checkpoints.saveNote")}
+          </Typography>
+        )}
         {routeKm !== null && (
           <Typography variant="body2" data-testid="checkpoints-route-length">
             {t("checkpoints.routeLength", { km: km(routeKm) })}

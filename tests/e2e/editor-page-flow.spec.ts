@@ -1,4 +1,4 @@
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Page, type Request, test } from "@playwright/test";
 import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featured-event";
 import { editorBox, languageTab, openEditorBox } from "./support/fold";
 
@@ -341,7 +341,11 @@ test.describe.serial("§406 the editor is the page, top to bottom", () => {
     await spare.getByLabel("Kilometrul").fill("3");
     await spare.getByLabel("Numele (română)").fill("Nu se salvează cu evenimentul");
     await spare.getByLabel("Numele (engleză)").fill("Not saved with the event");
+    // The request itself is read, not only what is kept: a box that lost its `form` would still be "not kept" (the event's save never reads the points).
+    const eventPress = page.waitForRequest((request) => request.method() === "POST" && postedNames(request).includes("event.distanceMeters"));
     await page.getByRole("button", { name: "Salvează", exact: true }).click();
+    const eventNames = postedNames(await eventPress);
+    expect(eventNames.filter((name) => name.startsWith("cp["))).toEqual([]);
     await page.waitForURL(/saved=event/);
     await hydrated(page);
     await expect(page.getByTestId("checkpoint-card")).toHaveCount(0);
@@ -356,7 +360,10 @@ test.describe.serial("§406 the editor is the page, top to bottom", () => {
     await row.getByLabel("Kilometrul").fill("2");
     await row.getByLabel("Numele (română)").fill("Izvorul");
     await row.getByLabel("Numele (engleză)").fill("The spring");
+    const pointsPress = page.waitForRequest((request) => request.method() === "POST" && postedNames(request).some((name) => name.startsWith("cp[")));
     await cardAgain.getByRole("button", { name: "Salvează punctele" }).click();
+    const pointNames = postedNames(await pointsPress);
+    expect(pointNames.filter((name) => name.startsWith("event.") || name.startsWith("translations."))).toEqual([]);
     await expect(page.getByTestId("toast-live")).toContainText("Punctele de control au fost salvate.", { timeout: 20_000 });
     await page.goto(editorUrl);
     await hydrated(page);
@@ -370,6 +377,15 @@ test.describe.serial("§406 the editor is the page, top to bottom", () => {
     await expect(page.locator("#event-save-form #box-volunteers")).toHaveCount(0);
   });
 });
+
+/** The field names a request posted: a Server Action's multipart body, or a plain form's urlencoded one. */
+function postedNames(request: Request): string[] {
+  const body = request.postData() ?? "";
+  // A Server Action posts the FormData as parts named `_<n>_<field>`; the prefix is React's, not the form's.
+  const multipart = [...body.matchAll(/name="([^"]+)"/g)].map((match) => match[1].replace(/^_?\d+_/, ""));
+  if (multipart.length > 0) return multipart;
+  return [...new URLSearchParams(body).keys()];
+}
 
 /*
   §554 — «Kit de participare» in card 6 «Participare, înscrieri și regulament» (§760): a fold of its own, closed, its

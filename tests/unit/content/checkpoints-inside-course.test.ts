@@ -91,6 +91,7 @@ async function editor(options: { mayEditSettings?: boolean; mayEditCheckpoints?:
     mayEditSettings,
     languages: mayEditSettings ? [language("ro"), language("en")] : [],
     checkpointCount: 1,
+    checkpointsOpen: gpx,
     checkpoints: card,
   });
   const saveForm = createElement(
@@ -143,7 +144,28 @@ function controls(markup: string): string[] {
   return [...named, ...submits];
 }
 
+const openingOf = (markup: string, id: string) => markup.slice(markup.lastIndexOf("<", markup.indexOf(`id="${id}"`)), markup.indexOf(">", markup.indexOf(`id="${id}"`)) + 1);
+
 describe("§NNN «Puncte de control» is a card of «Traseul», in the document", () => {
+  it("says the points are saved only by «Salvează punctele», to a role that writes them and to no other", async () => {
+    const writer = await editor();
+    expect(writer).toContain('data-testid="checkpoints-save-note"');
+    expect(writer).toContain(ro.Admin.checkpoints.saveNote);
+    expect(ro.Admin.checkpoints.saveNote).toContain("Salvează punctele");
+    const reader = await editor({ mayEditSettings: false, mayEditCheckpoints: false });
+    expect(reader).not.toContain("checkpoints-save-note");
+  });
+
+  it("opens «Traseul» and the card when the GPX's preview is open, so a render with no script shows it", async () => {
+    const isOpen = /\sopen(=|\s|>)/;
+    const open = await editor({ gpx: true });
+    expect(openingOf(open, "box-course")).toMatch(isOpen);
+    expect(openingOf(open, "box-checkpoints")).toMatch(isOpen);
+    const closed = await editor();
+    expect(openingOf(closed, "box-course")).not.toMatch(isOpen);
+    expect(openingOf(closed, "box-checkpoints")).not.toMatch(isOpen);
+  });
+
   it("draws the card inside #box-course, inside the save form, as a closed level-3 card after the route's fields", async () => {
     const markup = await editor();
     const at = markup.indexOf('id="box-checkpoints"');

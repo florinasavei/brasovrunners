@@ -57,12 +57,15 @@ export default async function CourseBox({
   heading,
   inSeries = false,
   checkpointCount = 0,
+  checkpointsOpen = false,
   checkpoints,
 }: BoxProps & {
   languages: readonly LanguageEntry[];
   inSeries?: boolean;
   /** How many «Puncte de control» the saved route has (§757): said on the closed line when above 0 (§760). */
   checkpointCount?: number;
+  /** The GPX's preview is open inside the card (§NNN): the card opens, and with it «Traseul», for a render that runs no script. */
+  checkpointsOpen?: boolean;
   /**
    * «Puncte de control» (§757), the card's named card after the route's fields (§NNN): `CheckpointsCard`,
    * whose boxes post with forms of their own beside the save form (`DetachedActionForm`). Absent on
@@ -87,6 +90,7 @@ export default async function CourseBox({
   });
   const card = {
     id: "box-course",
+    openWhen: { inUse: checkpointsOpen },
     glyph: "course",
     title: heading ?? t("editor.boxes.course.title"),
     aside: courseSummary(
