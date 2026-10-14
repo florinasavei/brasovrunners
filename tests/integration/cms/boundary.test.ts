@@ -183,6 +183,8 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       // The design system page (§692), by hand.
       "/admin/design",
       "/admin/events/[id]",
+      // The volunteer badges (§NNN), designed and printed per role: by hand, like the bibs' page beside it.
+      "/admin/events/[id]/badges",
       "/admin/events/[id]/bibs",
       // The hard delete's confirmation screen (BR-REQ-037-06): written here by hand, like
       // every other one, which is the property this test exists to keep.
