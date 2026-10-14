@@ -31,6 +31,8 @@ describe("§NNN reading the caller's address and browser from the request", () =
     expect(callerIp(headers({ "x-forwarded-for": "203.0.113.9:4711" }))).toBeNull();
     expect(callerIp(headers({ "x-forwarded-for": "<script>alert(1)</script>" }))).toBeNull();
     expect(callerIp(headers({ "x-forwarded-for": ", 203.0.113.9" }))).toBeNull();
+    // An IPv6 address with a zone id longer than the schema allows is dropped, so the writer never throws on a header.
+    expect(callerIp(headers({ "x-forwarded-for": `fe80::1%${"a".repeat(80)}` }))).toBeNull();
   });
 
   it("keeps the browser string as printable ASCII, on one line, bounded", () => {

@@ -156,4 +156,21 @@ describe("§NNN one renderer draws the block for all three signed documents", ()
       expect(source(file), file).not.toContain("Semnat electronic la");
     }
   });
+
+  // The writers take the trace as an optional argument, so a dropped one would type-check and every writer-level test would
+  // still pass: the five electronic roads each read the request's headers, and none passes a literal.
+  it("each of the five electronic actions reads the trace from the request's headers", () => {
+    const actions = [
+      "src/app/[locale]/registrations/declare/[token]/actions.ts",
+      "src/app/[locale]/events/[slug]/declaration/actions.ts",
+      "src/app/[locale]/events/[slug]/volunteers/actions.ts",
+      "src/app/[locale]/volunteers/agreement/[token]/actions.ts",
+      "src/app/[locale]/volunteers/guardian/[token]/actions.ts",
+    ];
+    for (const file of actions) {
+      const text = source(file);
+      expect(text, file).toContain("readSignatureTrace(");
+      expect(text, file).toMatch(/readSignatureTrace\((await headers\(\)|requestHeaders)\)/);
+    }
+  });
 });

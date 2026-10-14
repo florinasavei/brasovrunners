@@ -24,6 +24,9 @@ import { z } from "zod";
 /** The longest browser string kept: real ones are 100–250 characters; the rest is a script's. */
 export const USER_AGENT_MAX = 300;
 
+/** The longest address kept: an IPv6 address with a zone id fits well inside it. */
+export const IP_MAX = 64;
+
 export type SignatureTrace = { ip: string | null; userAgent: string | null };
 
 /** No trace: what a paper acceptance, and an electronic one that arrived without the headers, keep. */
@@ -31,7 +34,7 @@ export const NO_TRACE: SignatureTrace = { ip: null, userAgent: null };
 
 /** The shape an action may hand a service; both parts optional, so a test or a script passes nothing. */
 export const signatureTraceSchema = z
-  .object({ ip: z.string().max(64).nullable(), userAgent: z.string().max(USER_AGENT_MAX).nullable() })
+  .object({ ip: z.string().max(IP_MAX).nullable(), userAgent: z.string().max(USER_AGENT_MAX).nullable() })
   .optional();
 
 type HeaderReader = { get(name: string): string | null };
@@ -40,7 +43,8 @@ type HeaderReader = { get(name: string): string | null };
 export function callerIp(headers: HeaderReader): string | null {
   const first = headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "";
   // `isIP` accepts v4 and v6 and nothing else — no port, no brackets, no label — so only an address is kept.
-  return first !== "" && isIP(first) !== 0 ? first : null;
+  // Bounded by the column and the schema alike: an IPv6 address with a very long zone id passes `isIP` and would be refused later.
+  return first !== "" && first.length <= IP_MAX && isIP(first) !== 0 ? first : null;
 }
 
 /**

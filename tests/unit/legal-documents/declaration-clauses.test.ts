@@ -177,6 +177,14 @@ describe("§NNN the privacy notice's template says the trace is kept", () => {
     expect(volunteersEn).toContain("the IP address and browser they accept from");
   });
 
+  it("no longer says in section 10 that the platform stores no IP address, which the same text contradicts", () => {
+    const all = (locale: Locale) => notice(locale).join(" ");
+    expect(all("ro")).not.toContain("nu stochează nicio adresă IP");
+    expect(all("en")).not.toContain("stores no IP address");
+    expect(all("ro")).toContain("singura adresă IP pe care o păstrăm este cea a unei semnături electronice");
+    expect(all("en")).toContain("the only IP address we keep is that of an electronic signature");
+  });
+
   it("gates nothing: no merge field or marker was added for it, so no /admin/tasks row waits on it", () => {
     for (const locale of LOCALES) {
       const fields = [...mergeFieldsIn({ sections: [{ paragraphs: [declarationParagraph(locale)] }] })];
