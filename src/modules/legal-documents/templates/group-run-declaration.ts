@@ -36,7 +36,7 @@ import type { LegalDocumentBody } from "../domain/content-hash";
  * within the same limits; the waiver leaves out the harm caused through their fault and the
  * organiser's safety duties. The text never says the club does not answer for a death it causes:
  * art. 1355(1) (intent, gross fault) and art. 1355(3) (bodily harm or death, whatever the fault) would
- * make that clause void. Until §NNN only adults signed here, so there was no guardian's sentence; now a minor
+ * make that clause void. Until §769 only adults signed here, so there was no guardian's sentence; now a minor
  * signs beside a parent (the paragraph below, behind `{{minor}}`).
  *
  * **No identity document (§418, the counsel review of 2026-09-25).** A group run hands out no kit
@@ -83,7 +83,7 @@ import type { LegalDocumentBody } from "../domain/content-hash";
  * (`groupRunAsksBirthDate`, §440) and refuses one under the minimum on the run's day
  * (`isUnderMinimumAge`, the race's rule).
  *
- * **A minor signs, with a parent (§NNN, amending §393, §523 and §330).** The owner, 2026-10-14: «pt alergările de
+ * **A minor signs, with a parent (§769, amending §393, §523 and §330).** The owner, 2026-10-14: «pt alergările de
  * grup trebuie să facem declarația să suporte și un minor, o bifă nouă și să semneze minorul + părintele». One text
  * serves both paths and the page and the PDF keep the paragraphs that apply (`PARAGRAPH_MERGE_FIELDS`):
  * `{{signerAlone}}` is the adult's own name in «Eu, …, semnez această declarație personal, doar pentru mine» and is
@@ -178,7 +178,7 @@ const openingEn = (service: string) => [
 ];
 
 /*
-  The minor's path (§NNN, amending §393, §523 and §330; the owner, 2026-10-14: «pt alergările de grup trebuie să
+  The minor's path (§769, amending §393, §523 and §330; the owner, 2026-10-14: «pt alergările de grup trebuie să
   facem declarația să suporte și un minor, o bifă nouă și să semneze minorul + părintele»). Two paragraphs a
   minor's declaration keeps and an adult's loses — both name `{{minor}}`, which is "" for an adult
   (`PARAGRAPH_MERGE_FIELDS`) and is the marker the signing page's tick waits for (`namesGroupRunMinor`) —, in
@@ -205,11 +205,11 @@ const closingRo = [
   "Sunt informat/ă că datele din această declarație — numele și adresa de email — sunt prelucrate de organizator*, conform Regulamentului (UE) 2016/679 (GDPR) și notei de confidențialitate a clubului, ca dovadă că am fost informat/ă despre riscurile acestor alergări și că le-am acceptat, în temeiul interesului legitim al organizatorului (art. 6 alin. (1) lit. f) GDPR), iar afirmația despre sănătate, doar pentru constatarea, exercitarea sau apărarea unui drept în instanță (art. 9 alin. (2) lit. f) GDPR). O copie îmi este trimisă pe adresa de email pe care am dat-o, iar una ajunge în arhiva clubului. Declarația activă se păstrează cât timp este necesară pentru gestionarea participării mele la alergările la care se aplică. Dacă cer retragerea ei, la adresa de contact a clubului, nu mai este folosită pentru participările viitoare. O copie poate fi păstrată și după aceea, pe durata necesară constatării, exercitării sau apărării unor drepturi, inclusiv ținând seama de termenul general de prescripție de trei ani prevăzut de art. 2517 din Codul civil. Dacă există o reclamație, un litigiu sau o procedură în curs, documentul poate fi păstrat până la soluționarea definitivă a acesteia. Am dreptul de acces, de rectificare, de ștergere, de restricționare și de opoziție, precum și dreptul de a depune plângere la Autoritatea Națională de Supraveghere a Prelucrării Datelor cu Caracter Personal (ANSPDCP); pentru ele scriu la <EMAIL DE CONTACT>.",
   // «Momentul semnării» as the platform records it (§534, point 14): never called a time stamp, and no
   // law's title beside it that could read as one — the Romanian law is cited by its number.
-  // The minor's data (§NNN): kept only on a minor's declaration (`{{minor}}`), the data paragraph's twin.
+  // The minor's data (§769): kept only on a minor's declaration (`{{minor}}`), the data paragraph's twin.
   MINOR_DATA_RO,
-  // The two who sign for a minor (§NNN, §330's pattern): kept only on a minor's declaration.
+  // The two who sign for a minor (§769, §330's pattern): kept only on a minor's declaration.
   MINOR_SIGNS_RO,
-  // The adult's own sentence (§NNN): kept only on an adult's declaration (`{{signerAlone}}`).
+  // The adult's own sentence (§769): kept only on an adult's declaration (`{{signerAlone}}`).
   "Eu, {{signerAlone}}, semnez această declarație personal, doar pentru mine.",
   "Semnarea este electronică: numele scris mai jos — al fiecărui semnatar, când semnează două persoane —, bifa de acceptare, momentul semnării ({{signedAt}}) și amprenta textului citit sunt înregistrate împreună de platforma clubului. Este o semnătură electronică simplă, căreia nu i se poate refuza efectul juridic doar pentru că este electronică (art. 25 alin. (1) din Regulamentul (UE) nr. 910/2014 (eIDAS); Legea nr. 214/2024).",
   "*Prin Organizator se înțelege <DENUMIREA JURIDICĂ COMPLETĂ A CLUBULUI>, cu sediul în <ADRESA SEDIULUI>, <NUMĂR DE ÎNREGISTRARE / CUI>.",

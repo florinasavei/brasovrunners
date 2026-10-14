@@ -157,7 +157,7 @@ describe("the declaration's merge fields", () => {
         // And by one more in section 5 for the members' shop: what an order keeps, why, how long, payment off the site (§683).
         // And by one more in section 5 for the event volunteers, and a line in section 7 (§754).
         // And by the volunteers' minors in that paragraph: fourteen to seventeen, the guardian's boxes, why and how (§768).
-        // And by two sentences in section 5 for the minor who signs a group run's declaration beside a parent (§NNN).
+        // And by two sentences in section 5 for the minor who signs a group run's declaration beside a parent (§769).
         // And the race declaration by five clauses and the typed name's sentence, the notice by the signature's trace in four paragraphs (§NNN).
         const ceiling = key === "EVENT_DECLARATION" || key === "EVENT_DECLARATION_ROAD" ? 11700 : key === "PRIVACY_NOTICE" ? 39500 + 1500 : key === "TERMS" ? 12000 : 11000;
         expect(text.length, `${key} ${locale}`).toBeGreaterThan(key === "EVENT_DECLARATION" ? 1500 : 2500);

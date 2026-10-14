@@ -8,6 +8,12 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V3.29-2026-10-15
+
+- **A «Direcționare» checkpoint, and the cut-off as «Timp limită»** — a fifth kind for the person who shows the way, with a road-sign glyph; a point's cut-off is now typed as hours and minutes from the start, in the race's own boxes, and the page says «Timp limită: 1 h 30 min · se închide la 11:30», so moving the start moves every clock. §770.
+## BR-V3.28-2026-10-14
+
+- **A minor signs a group run's declaration, with a parent** — a new tick «Semnez pentru un minor (sub 18 ani)» on the signing page opens the minor's own signature and the parent's tick; both names are kept on the one row, the PDF carries both signatures, and a minor's row in the backoffice reads «minor · părinte: …». It appears only on a run whose minimum age is under 18, once a group-run declaration naming the minor's paragraph is in force — approve the new templates; `/admin/tasks` says when. §769.
 ## BR-V3.27-2026-10-14
 
 - **Volunteers from 14, with a parent's consent, on a page of their own** — the age floor is 14; a person of 14–17 offers with a parent's or guardian's name and address and is confirmed only after the parent accepts the agreement from a single-use link or on paper («Acordul părintelui lipsește» until then), once a privacy notice and an agreement that describe minors are approved; the form is `/evenimente/<slug>/voluntari` (404 while it could not be sent) and the event's page keeps one line and one button. §768.

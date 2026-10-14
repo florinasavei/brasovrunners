@@ -258,7 +258,7 @@ export function minimumAgeMergeValue(minAge: number, locale: string): string {
 export const SERIES_MERGE_FIELDS = ["series", "seriesRhythm", "seriesPlace"] as const;
 
 /**
- * A group run's declaration signed for a minor (§NNN, amending §393, §523 and §330; the owner, 2026-10-14:
+ * A group run's declaration signed for a minor (§769, amending §393, §523 and §330; the owner, 2026-10-14:
  * «pt alergările de grup trebuie să facem declarația să suporte și un minor, o bifă nouă și să semneze
  * minorul + părintele»): three fields that tell the signing paths apart inside one approved text.
  *
@@ -629,7 +629,7 @@ export function asksForMinorSignature(body: unknown): boolean {
 }
 
 /**
- * Whether a group-run declaration is written for a minor (§NNN): it names `{{minor}}`, the minor's own
+ * Whether a group-run declaration is written for a minor (§769): it names `{{minor}}`, the minor's own
  * signature paragraph. The gate of the signing page's «Semnez pentru un minor» tick — every language of the
  * text in force, asked by `groupRunMinorPathOffered` — and of the service's refusal of a post that ticks it
  * against another text; the shape of `asksForMinorSignature` (§330) for the race. Pure.

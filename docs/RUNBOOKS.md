@@ -2,7 +2,7 @@
 
 # Runbooks
 
-**Baseline `BR-V3.27-2026-10-14`** · versioned with the whole set · [changelog](../CHANGELOG.md)
+**Baseline `BR-V3.29-2026-10-15`** · versioned with the whole set · [changelog](../CHANGELOG.md)
 
 
 | Runbook | When |
@@ -1009,9 +1009,9 @@ email), read it, save, open the PDF, approve. The declaration's text carries tok
 `{{participant}}`, `{{idDocument}}`, `{{event}}`, `{{eventDate}}`, `{{eventLocation}}`,
 `{{signedAt}}` — that are filled per person and per event; leave them as they are.
 
-### A minor on a group run: approve the group-run declarations again (§NNN)
+### A minor on a group run: approve the group-run declarations again (§769)
 
-Since §NNN the group-run declarations (asphalt and the rough terrain) carry a paragraph for a minor who
+Since §769 the group-run declarations (asphalt and the rough terrain) carry a paragraph for a minor who
 signs beside a parent — the template names `{{minor}}`, `{{signerAlone}}` and `{{minorMinimumAge}}` — and the
 signing page offers «Semnez pentru un minor (sub 18 ani)» **only while** the declaration in force of the run's
 kind names `{{minor}}` in both languages **and** the run's own «Vârsta minimă» (the «Regulamentul» card) is under

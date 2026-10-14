@@ -106,9 +106,9 @@ function coversDate(eventId: string, seriesDates: readonly string[]) {
 export type GroupRunDeclarationListRow = {
   id: string;
   eventId: string;
-  /** The declarant: the adult's own name, the parent's or guardian's when a minor signed beside them (§NNN). */
+  /** The declarant: the adult's own name, the parent's or guardian's when a minor signed beside them (§769). */
   typedName: string;
-  /** The minor's own signature (§NNN, §330), kept on the same row; null for an adult's own declaration. */
+  /** The minor's own signature (§769, §330), kept on the same row; null for an adult's own declaration. */
   minorTypedName: string | null;
   acceptedAt: Date;
   locale: Locale;
@@ -227,7 +227,7 @@ export async function findSignedGroupRunDeclaration<T extends Record<string, unk
       effectiveAt: legalDocuments.effectiveAt,
       locale: groupRunDeclarations.locale,
       typedName: groupRunDeclarations.typedName,
-      // The minor's own signature, when a parent signed beside them (§NNN); null for an adult's own.
+      // The minor's own signature, when a parent signed beside them (§769); null for an adult's own.
       minorTypedName: groupRunDeclarations.minorTypedName,
       idDocument: groupRunDeclarations.idDocument,
       email: groupRunDeclarations.email,

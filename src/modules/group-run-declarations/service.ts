@@ -62,7 +62,7 @@ import { factsToKeep } from "./series";
  * deletes a signature — only the Administrator's audited erase does. Nothing on the page tells a
  * kept signature from a new one.
  *
- * **A minor signs, with a parent (§NNN, amending §393, §523 and §330).** The tick «Semnez pentru un minor» posts
+ * **A minor signs, with a parent (§769, amending §393, §523 and §330).** The tick «Semnez pentru un minor» posts
  * `minor`; then `typedName` is the parent's or guardian's — the declarant, as on the race's row —,
  * `minorTypedName` the minor's own signature, `guardianAgrees` the parent's tick, and `birthDate` the minor's,
  * counted against the run's own minimum under eighteen and dropped (`birthDateRefusal`). Both names are required
@@ -82,16 +82,16 @@ export type GroupRunSigningInput = {
   documentId: string;
   contentSha256: string;
   accepted: boolean;
-  /** The signature: the signer's own name, or — when `minor` — the parent's or guardian's (§NNN). */
+  /** The signature: the signer's own name, or — when `minor` — the parent's or guardian's (§769). */
   typedName: string;
   /**
-   * «Semnez pentru un minor» (§NNN): the minor's own signature, the parent's tick and the minor's name
+   * «Semnez pentru un minor» (§769): the minor's own signature, the parent's tick and the minor's name
    * follow. Absent or false for an adult's own declaration.
    */
   minor?: boolean;
   /** The minor's own typed name, their signature (§330's `minorTypedName`); read only when `minor`. */
   minorTypedName?: string;
-  /** «Sunt părintele sau tutorele legal și sunt de acord» (§NNN): the parent's tick, required when `minor`. */
+  /** «Sunt părintele sau tutorele legal și sunt de acord» (§769): the parent's tick, required when `minor`. */
   guardianAgrees?: boolean;
   /** The kind and the series and number, composed by the action (§283); absent or empty when not typed. */
   idDocument?: string;
@@ -219,7 +219,7 @@ export async function signGroupRunDeclaration<T extends Record<string, unknown>>
   const typedName = input.typedName.trim();
   const idDocument = (input.idDocument ?? "").trim();
   const needsDocument = asksForIdDocument(document.body);
-  // A minor's path (§NNN): offered while the run takes minors and the text in force carries its paragraph, in every language.
+  // A minor's path (§769): offered while the run takes minors and the text in force carries its paragraph, in every language.
   const minorOffered = groupRunTakesMinors(event.minAge) && (await groupRunMinorPathOffered(db, key, now));
   const minorTicked = input.minor === true;
   const minorTypedName = (input.minorTypedName ?? "").trim();
@@ -245,7 +245,7 @@ export async function signGroupRunDeclaration<T extends Record<string, unknown>>
 
   // The blanks as the signer read them, kept on the row for the PDF (§523): the run's and the series'.
   const facts = await groupRunMergeValues(db, event.id, input.locale, document.body);
-  // A minor's declaration keeps the minor's name beside the parent's; an adult's keeps none (§NNN).
+  // A minor's declaration keeps the minor's name beside the parent's; an adult's keeps none (§769).
   const minorName = minorTicked ? minorTypedName : null;
   const signerKey = signerIdentity(input.email, typedName, minorName) as string;
 
@@ -291,7 +291,7 @@ export async function signGroupRunDeclaration<T extends Record<string, unknown>>
       contentSha256: document.contentSha256,
       locale: input.locale,
       typedName,
-      // The minor's own signature on the same row (§NNN, §330's column); null for an adult's own declaration.
+      // The minor's own signature on the same row (§769, §330's column); null for an adult's own declaration.
       minorTypedName: minorName,
       idDocument: storedDocument,
       email: input.email.trim(),

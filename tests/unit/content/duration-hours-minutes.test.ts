@@ -95,8 +95,8 @@ describe("§433 the duration's two boxes, joined into minutes", () => {
 describe("§433 the editor asks two boxes and the action joins them", () => {
   it("the Data și ora box posts the hours and the minutes, never the old single box", () => {
     const box = read("src/modules/content/events/ui/boxes/WhenBox.tsx");
-    expect(box).toContain('name="event.durationHours"');
-    expect(box).toContain('name="event.durationMinutesPart"');
+    expect(box).toContain('hoursName="event.durationHours"');
+    expect(box).toContain('minutesName="event.durationMinutesPart"');
     expect(box).not.toContain('name="event.durationMinutes"');
   });
 

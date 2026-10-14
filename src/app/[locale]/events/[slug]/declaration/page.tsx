@@ -167,7 +167,7 @@ export default async function GroupRunDeclarationPage({ params, searchParams }: 
   const facts = await groupRunMergeValues(db, event.id, locale, document.body);
   const needsDocument = asksForIdDocument(document.body);
   /*
-    A minor may sign, with a parent (§NNN, the race's §330 on a group run): only while the run takes minors — its
+    A minor may sign, with a parent (§769, the race's §330 on a group run): only while the run takes minors — its
     own minimum is under eighteen — and the text in force names the minor's paragraph in every language. The club's
     approval of a text is the switch (`groupRunMinorPathOffered`); `/admin/tasks` carries the row `groupRunMinorText`.
   */
@@ -200,7 +200,7 @@ export default async function GroupRunDeclarationPage({ params, searchParams }: 
   const tooYoungWords = t("groupRunDeclaration.page.tooYoung", minimumAge);
   const birthDateHelp = t("groupRunDeclaration.page.birthDateHelp", minimumAge);
   /*
-    The minor's birth date (§NNN): counted against the run's own minimum under eighteen, on the run's day, with the
+    The minor's birth date (§769): counted against the run's own minimum under eighteen, on the run's day, with the
     same bound the service refuses with (`latestBirthDateFor`), and dropped. The page draws the minor's block open
     when the server's verdict names one of its boxes or the draft had the tick ticked, so an error never points at
     something hidden.
@@ -257,7 +257,7 @@ export default async function GroupRunDeclarationPage({ params, searchParams }: 
           // The run's facts, its minimum age among them (§440): "" on a run with none drops that sentence.
           ...(facts?.values ?? {}),
           /*
-            Both ways of signing are on the page while a minor may sign (§NNN): the adult's own sentence and the
+            Both ways of signing are on the page while a minor may sign (§769): the adult's own sentence and the
             minor's paragraphs, with their names left as dotted blanks — nobody has typed one yet — so each
             signer reads the paragraphs that apply to them, and the signed PDF keeps only those (`groupRunSignedValues`).
             Where no minor may sign, the minor's paragraphs a text may carry are dropped.
@@ -381,7 +381,7 @@ export default async function GroupRunDeclarationPage({ params, searchParams }: 
             autoComplete="email"
           />
           {/*
-            «Semnez pentru un minor (sub 18 ani)» (§NNN, the race's §330 on a group run): ticked, the minor's own
+            «Semnez pentru un minor (sub 18 ani)» (§769, the race's §330 on a group run): ticked, the minor's own
             signature and the parent's tick appear — the parent's own name is the signature below, the minor's
             birth date is counted against the run's minimum and dropped. Always on the page with scripts off, and
             the same refusal summary and kept-form recall as every other box (§47, §314).

@@ -170,8 +170,8 @@ export async function loadBibExtras(
                 startWord: drawing.start,
                 finishWord: drawing.finish,
                 label: (row, withTime) =>
-                  withTime && row.cutoff
-                    ? admin("bibs.checkpointKmTime", { km: kmWords.format(row.km), time: row.cutoff })
+                  withTime && row.cutoffClock
+                    ? admin("bibs.checkpointKmTime", { km: kmWords.format(row.km), time: row.cutoffClock })
                     : admin("bibs.checkpointKm", { km: kmWords.format(row.km) }),
               })
             : null;

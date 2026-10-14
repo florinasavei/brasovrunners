@@ -5,15 +5,16 @@ import { eventCheckpoints } from "@/db/schema/event-checkpoints";
 import { eventTranslations, events } from "@/db/schema/events";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import type { StaffRole } from "@/modules/staff-identity/domain/roles";
+import type { BibProfileSource } from "@/modules/registrations/bib-extras";
 import type { FormOutcome } from "@/shared/forms/outcome";
 import { expectViolation, SQLSTATE } from "../../helpers/constraints";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §757, BR-REQ-011-01 and BR-REQ-060-01 — an event's checkpoints, through the real Server Actions:
+ * §757, §770, BR-REQ-011-01 and BR-REQ-060-01 — an event's checkpoints, through the real Server Actions:
  * saved as the card posts them (added, changed, ticked «Scoate»), a kilometre beyond the route and a
- * cut-off before the start or after a later point's refused naming the box with the sentence's own
- * numbers, every change audited, a save that never deletes a point it was not told about, the role
+ * time limit longer than the event's or than a later point's, or with no start to count from, refused
+ * naming the box with the sentence's own numbers, the five kinds («Direcționare» among them), every change audited, a save that never deletes a point it was not told about, the role
  * asserted by the service whatever the card drew (the Administrator and the Organizer write, the
  * Tehnic, the Redactor and the volunteer are refused), the GPX's waypoints taken as a preview and then
  * as what the club ticked, and the picture stamp moving with every one. The session and navigation
@@ -49,6 +50,8 @@ const { addGpxCheckpointsAction, saveCheckpointsAction } = await import("@/app/[
 const { listCheckpoints } = await import("@/modules/event-checkpoints/checkpoints");
 const { clearGpxWaypointsCache, loadGpxWaypoints } = await import("@/modules/event-checkpoints/gpx-file");
 const { BIB_STAMP } = await import("@/modules/events/repository");
+const { withBibCheckpoints } = await import("@/modules/registrations/bib-extras");
+const { withCutoffClocks } = await import("@/modules/event-checkpoints/domain/start");
 const { getStorage } = await import("@/modules/media/storage");
 const { storeRouteGpx } = await import("@/modules/content/events/route-gpx");
 
@@ -92,7 +95,20 @@ beforeEach(async () => {
   state.flashed.length = 0;
 });
 
-type Row = { id?: string; nameRo?: string; nameEn?: string; km?: string; kinds?: readonly string[]; cutoff?: string; noteRo?: string | null; noteEn?: string | null; remove?: boolean };
+type Row = {
+  id?: string;
+  nameRo?: string;
+  nameEn?: string;
+  km?: string;
+  kinds?: readonly string[];
+  /** The time limit in minutes from the start, posted as the card's two boxes: hours and minutes. */
+  limit?: number;
+  /** The two boxes as typed, for what the card's boxes would refuse. */
+  boxes?: readonly [string, string];
+  noteRo?: string | null;
+  noteEn?: string | null;
+  remove?: boolean;
+};
 
 /** The card's form: one row per entry, numbered from 0, with the boxes' own names. */
 function form(rows: Row[], extra: Record<string, string> = {}, forEvent = eventId): FormData {
@@ -105,7 +121,9 @@ function form(rows: Row[], extra: Record<string, string> = {}, forEvent = eventI
     data.set(`cp[${index}].nameEn`, row.nameEn ?? "");
     data.set(`cp[${index}].km`, row.km ?? "");
     for (const kind of row.kinds ?? []) data.append(`cp[${index}].kinds`, kind);
-    data.set(`cp[${index}].cutoff`, row.cutoff ?? "");
+    const [hours, minutes] = row.boxes ?? (row.limit === undefined ? ["", ""] : [String(Math.floor(row.limit / 60)), String(row.limit % 60)]);
+    data.set(`cp[${index}].cutoffHours`, hours);
+    data.set(`cp[${index}].cutoffMinutesPart`, minutes);
     data.set(`cp[${index}].noteRo`, row.noteRo ?? "");
     data.set(`cp[${index}].noteEn`, row.noteEn ?? "");
     if (row.remove) data.set(`cp[${index}].remove`, "on");
@@ -114,8 +132,8 @@ function form(rows: Row[], extra: Record<string, string> = {}, forEvent = eventI
   return data;
 }
 
-const WATER: Row = { nameRo: "Apă", nameEn: "Water", km: "5", kinds: ["WATER"], cutoff: "10:00" };
-const FOOD: Row = { nameRo: "Mâncare", nameEn: "Food", km: "12,5", kinds: ["FOOD", "WATER"], cutoff: "11:15", noteRo: "Banane", noteEn: "Bananas" };
+const WATER: Row = { nameRo: "Apă", nameEn: "Water", km: "5", kinds: ["WATER"], limit: 60 };
+const FOOD: Row = { nameRo: "Mâncare", nameEn: "Food", km: "12,5", kinds: ["FOOD", "WATER"], limit: 135, noteRo: "Banane", noteEn: "Bananas" };
 
 /** Runs an action that redirects on success and returns its refusal otherwise. */
 async function post(action: (previous: FormOutcome | null, form: FormData) => Promise<FormOutcome | null>, data: FormData) {
@@ -130,15 +148,17 @@ const trail = () => db.select().from(auditLogs).where(eq(auditLogs.entityId, eve
 const actions = async () => (await trail()).map((row) => row.action);
 
 describe("§757 an event's checkpoints", () => {
-  it("adds two points with a cut-off each, in distance order, and audits it", async () => {
+  it("adds two points with a time limit each, in distance order, and audits it", async () => {
     // Typed out of order, with a comma and spare blank rows at the foot, as the card posts them.
     expect(await save([FOOD, WATER, {}, {}])).toBe("redirected");
     expect(state.redirected[0]).toContain("#box-checkpoints");
     const rows = await listCheckpoints(db, eventId);
-    expect(rows.map((row) => [row.km, row.nameRo, row.nameEn, row.cutoff])).toEqual([
-      [5, "Apă", "Water", "10:00"],
-      [12.5, "Mâncare", "Food", "11:15"],
+    expect(rows.map((row) => [row.km, row.nameRo, row.nameEn, row.cutoffMinutes])).toEqual([
+      [5, "Apă", "Water", 60],
+      [12.5, "Mâncare", "Food", 135],
     ]);
+    // The clock follows the start: 09:00 on the event's own clock, so one hour is 10:00 and two hours and a quarter 11:15.
+    expect(rows.map((row) => row.cutoffClock)).toEqual(["10:00", "11:15"]);
     // The closed set's own order, whatever order the boxes were ticked in; the note in both languages.
     expect(rows[1].kinds).toEqual(["WATER", "FOOD"]);
     expect(rows[1]).toMatchObject({ noteRo: "Banane", noteEn: "Bananas" });
@@ -151,17 +171,18 @@ describe("§757 an event's checkpoints", () => {
       removed: 0,
       source: "form",
       to: [
-        { km: 5, name: "Apă", cutoff: "10:00" },
-        { km: 12.5, name: "Mâncare", cutoff: "11:15" },
+        { km: 5, name: "Apă", cutoffMinutes: 60 },
+        { km: 12.5, name: "Mâncare", cutoffMinutes: 135 },
       ],
     });
     expect(state.flashed.join("|")).toContain("checkpointsSaved");
   });
 
-  it("stores the cut-off as a time of the day and the position as the order by distance", async () => {
+  it("stores the time limit as minutes and never writes the old time of the day, and the position as the order by distance", async () => {
     await save([FOOD, WATER]);
     const stored = await db.select().from(eventCheckpoints).where(eq(eventCheckpoints.eventId, eventId));
-    expect(stored.map((row) => row.cutoffTime).sort()).toEqual(["10:00:00", "11:15:00"]);
+    expect(stored.map((row) => row.cutoffMinutes ?? 0).sort((a, b) => a - b)).toEqual([60, 135]);
+    expect(stored.map((row) => row.cutoffTime)).toEqual([null, null]);
     expect([...stored].sort((a, b) => a.position - b.position).map((row) => row.nameRo)).toEqual(["Apă", "Mâncare"]);
   });
 
@@ -184,42 +205,94 @@ describe("§757 an event's checkpoints", () => {
   it("measures the kilometre against the GPX's length when the club typed no distance", async () => {
     await db.update(events).set({ distanceMeters: null, routeGpx: await uploadTrack("") }).where(eq(events.id, eventId));
     // The track is 3.11 km long.
-    expect(await save([{ ...WATER, km: "3,2", cutoff: "" }])).toMatchObject({ error: "CHECKPOINT_KM_BEYOND_ROUTE", errorValues: { max: "3,11" } });
-    expect(await save([{ ...WATER, km: "3", cutoff: "" }])).toBe("redirected");
+    expect(await save([{ ...WATER, km: "3,2", limit: undefined }])).toMatchObject({ error: "CHECKPOINT_KM_BEYOND_ROUTE", errorValues: { max: "3,11" } });
+    expect(await save([{ ...WATER, km: "3", limit: undefined }])).toBe("redirected");
   });
 
-  it("refuses a cut-off at or before the start, one that is not a time, and one after the event's end", async () => {
-    expect(await save([{ ...WATER, cutoff: "08:30" }])).toMatchObject({ error: "CHECKPOINT_CUTOFF_BEFORE_START", fields: ["cp[0].cutoff"] });
-    expect(await save([{ ...WATER, cutoff: "09:00" }])).toMatchObject({ error: "CHECKPOINT_CUTOFF_BEFORE_START", errorValues: { cutoff: "09:00" } });
-    expect(await save([{ ...WATER, cutoff: "noon" }])).toMatchObject({ error: "CHECKPOINT_CUTOFF_INVALID" });
-    expect(await save([{ ...WATER, cutoff: "12:30" }])).toMatchObject({ error: "CHECKPOINT_CUTOFF_AFTER_END" });
-    expect(await listCheckpoints(db, eventId)).toEqual([]);
+  it("refuses a time limit that is not a duration and one longer than the event's, naming the box and saying both durations", async () => {
+    expect(await save([{ ...WATER, boxes: ["0", "0"] }])).toMatchObject({ error: "CHECKPOINT_CUTOFF_INVALID", fields: ["cp[0].cutoffHours"] });
+    expect(await save([{ ...WATER, boxes: ["1", "60"] }])).toMatchObject({ error: "CHECKPOINT_CUTOFF_INVALID", fields: ["cp[0].cutoffMinutesPart"] });
+    expect(await save([{ ...WATER, boxes: ["noon", ""] }])).toMatchObject({ error: "CHECKPOINT_CUTOFF_INVALID" });
+    // The race's «Timp limită» is three hours (09:00 to 12:00): three and a half is longer.
+    const refusal = await save([{ ...WATER, limit: 210 }]);
+    expect(refusal).toMatchObject({ error: "CHECKPOINT_CUTOFF_AFTER_END", errorValues: { cutoff: "3 h 30 min", limit: "3 h" }, fields: ["cp[0].cutoffHours"] });
+    // What was typed stays in the two boxes.
+    expect((refusal as FormOutcome).values["cp[0].cutoffHours"]).toEqual(["3"]);
+    expect((refusal as FormOutcome).values["cp[0].cutoffMinutesPart"]).toEqual(["30"]);
+    expect(await save([{ ...WATER, limit: 180 }])).toBe("redirected");
+    expect(await listCheckpoints(db, eventId)).toHaveLength(1);
   });
 
-  it("counts the cut-offs from the race's gun when the race has one", async () => {
+  it("counts the time limits from the race's gun when the race has one, minutes against minutes", async () => {
+    // The event starts at 09:00 and ends at 12:00, but the gun is at 10:00: the race's «Timp limită» is two hours.
     await db.update(events).set({ raceStartsAt: new Date("2026-11-21T08:00:00.000Z") }).where(eq(events.id, eventId));
-    // The event starts at 09:00 but the gun is at 10:00: 09:30 is before it.
-    expect(await save([{ ...WATER, cutoff: "09:30" }])).toMatchObject({ error: "CHECKPOINT_CUTOFF_BEFORE_START" });
-    expect(await save([{ ...WATER, cutoff: "10:30" }])).toBe("redirected");
+    expect(await save([{ ...WATER, limit: 150 }])).toMatchObject({ error: "CHECKPOINT_CUTOFF_AFTER_END", errorValues: { limit: "2 h" } });
+    expect(await save([{ ...WATER, limit: 90 }])).toBe("redirected");
+    // Ninety minutes after the gun is 11:30 on the event's clock.
+    expect((await listCheckpoints(db, eventId)).map((row) => [row.cutoffMinutes, row.cutoffClock])).toEqual([[90, "11:30"]]);
   });
 
-  it("refuses a cut-off after the one of a point further along, naming the earlier point's box", async () => {
+  it("moves every clock with the start and keeps the minutes: the time limit is a duration", async () => {
+    await save([WATER, FOOD]);
+    expect((await listCheckpoints(db, eventId)).map((row) => row.cutoffClock)).toEqual(["10:00", "11:15"]);
+    // The club moves the race to start at 10:30 (08:30Z) — with the same three hours, ending at 13:30.
+    await db.update(events).set({ startsAt: new Date("2026-11-21T08:30:00.000Z"), endsAt: new Date("2026-11-21T11:30:00.000Z") }).where(eq(events.id, eventId));
+    const moved = await listCheckpoints(db, eventId);
+    expect(moved.map((row) => row.cutoffMinutes)).toEqual([60, 135]);
+    expect(moved.map((row) => row.cutoffClock)).toEqual(["11:30", "12:45"]);
+    // And a gun later than the meeting time takes the clocks with it.
+    await db.update(events).set({ raceStartsAt: new Date("2026-11-21T09:00:00.000Z") }).where(eq(events.id, eventId));
+    expect((await listCheckpoints(db, eventId)).map((row) => row.cutoffClock)).toEqual(["12:00", "13:15"]);
+  });
+
+  it("refuses a time limit while the start has no hour to count it from, and keeps a saved limit that is posted unchanged", async () => {
+    await save([WATER]);
+    const [water] = await listCheckpoints(db, eventId);
+    // «Ora se anunță mai târziu»: the stored start has the provisional second past noon (§545), and the event no end.
+    await db.update(events).set({ startsAt: new Date("2026-11-21T10:00:01.000Z"), endsAt: null }).where(eq(events.id, eventId));
+    expect((await listCheckpoints(db, eventId))[0]).toMatchObject({ cutoffMinutes: 60, cutoffClock: null });
+    // A new point with a limit has nothing to count from…
+    expect(await save([{ ...WATER, id: water.id }, { nameRo: "Nou", nameEn: "New", km: "9", limit: 90 }])).toMatchObject({
+      error: "CHECKPOINT_CUTOFF_NO_START",
+      fields: ["cp[1].cutoffHours"],
+    });
+    // …as does a changed one; the one posted as it was, with a note added, is saved.
+    expect(await save([{ ...WATER, id: water.id, limit: 70 }])).toMatchObject({ error: "CHECKPOINT_CUTOFF_NO_START" });
+    expect(await save([{ ...WATER, id: water.id, noteRo: "Banane", noteEn: "Bananas" }, { nameRo: "Fără limită", nameEn: "No limit", km: "9" }])).toBe("redirected");
+    expect((await listCheckpoints(db, eventId)).map((row) => [row.nameRo, row.cutoffMinutes])).toEqual([
+      ["Apă", 60],
+      ["Fără limită", null],
+    ]);
+  });
+
+  it("saves «Direcționare» as the fifth kind, with the others in the closed set's order, and reads it back", async () => {
+    expect(await save([{ ...WATER, kinds: ["DIRECTION", "WATER"] }, { nameRo: "Voluntar", nameEn: "Marshal", km: "9", kinds: ["DIRECTION"] }])).toBe("redirected");
+    const rows = await listCheckpoints(db, eventId);
+    expect(rows.map((row) => row.kinds)).toEqual([["WATER", "DIRECTION"], ["DIRECTION"]]);
+    const stored = await db.select({ kinds: eventCheckpoints.kinds }).from(eventCheckpoints).where(eq(eventCheckpoints.eventId, eventId));
+    expect(stored.flatMap((row) => row.kinds).sort()).toEqual(["DIRECTION", "DIRECTION", "WATER"]);
+    // All five values round-trip through the column.
+    await db.insert(eventCheckpoints).values({ eventId, nameRo: "Toate", nameEn: "All", km: "20.00", kinds: ["WATER", "FOOD", "FIRST_AID", "TIMING", "DIRECTION"] });
+    expect((await listCheckpoints(db, eventId)).at(-1)?.kinds).toEqual(["WATER", "FOOD", "FIRST_AID", "TIMING", "DIRECTION"]);
+  });
+
+  it("refuses a time limit longer than the one of a point further along, naming the earlier point's box", async () => {
     const refusal = await save([
-      { ...WATER, nameRo: "Prima", cutoff: "11:00" },
-      { ...FOOD, nameRo: "A doua", cutoff: "10:30" },
+      { ...WATER, nameRo: "Prima", limit: 120 },
+      { ...FOOD, nameRo: "A doua", limit: 90 },
     ]);
     expect(refusal).toMatchObject({
       error: "CHECKPOINT_CUTOFF_AFTER_LATER",
-      errorValues: { name: "Prima", later: "A doua", laterCutoff: "10:30" },
-      fields: ["cp[0].cutoff"],
+      errorValues: { name: "Prima", cutoff: "2 h", later: "A doua", laterCutoff: "1 h 30 min" },
+      fields: ["cp[0].cutoffHours"],
     });
     expect(await listCheckpoints(db, eventId)).toEqual([]);
   });
 
   it("holds the rules to the whole list that will be there, not only the rows the form named", async () => {
     await save([WATER, FOOD]);
-    // A stale form that only knows a new point at km 8 with a cut-off after the saved point at km 12.5.
-    expect(await save([{ nameRo: "Nou", nameEn: "New", km: "8", cutoff: "11:30" }])).toMatchObject({ error: "CHECKPOINT_CUTOFF_AFTER_LATER" });
+    // A stale form that only knows a new point at km 8 with a time limit longer than the saved point's at km 12.5.
+    expect(await save([{ nameRo: "Nou", nameEn: "New", km: "8", limit: 150 }])).toMatchObject({ error: "CHECKPOINT_CUTOFF_AFTER_LATER" });
     expect(await listCheckpoints(db, eventId)).toHaveLength(2);
   });
 
@@ -234,11 +307,11 @@ describe("§757 an event's checkpoints", () => {
     await save([WATER, FOOD]);
     const [water, food] = await listCheckpoints(db, eventId);
     await save([
-      { ...WATER, id: water.id, cutoff: "10:10" },
+      { ...WATER, id: water.id, limit: 70 },
       { ...FOOD, id: food.id },
     ]);
     const after = await listCheckpoints(db, eventId);
-    expect(after.map((row) => row.cutoff)).toEqual(["10:10", "11:15"]);
+    expect(after.map((row) => row.cutoffMinutes)).toEqual([70, 135]);
     expect(after.map((row) => row.id)).toEqual([water.id, food.id]);
     const changed = (await trail()).filter((row) => row.action === "event_checkpoints.changed");
     expect(changed).toHaveLength(2);
@@ -246,11 +319,11 @@ describe("§757 an event's checkpoints", () => {
       added: 0,
       edited: 1,
       removed: 0,
-      from: [{ km: 5, cutoff: "10:00" }, { km: 12.5 }],
-      to: [{ km: 5, cutoff: "10:10" }, { km: 12.5 }],
+      from: [{ km: 5, cutoffMinutes: 60 }, { km: 12.5 }],
+      to: [{ km: 5, cutoffMinutes: 70 }, { km: 12.5 }],
     });
     // Pressing «Salvează punctele» on the list as it is changes nothing and records nothing.
-    expect(await save([{ ...WATER, id: water.id, cutoff: "10:10" }, { ...FOOD, id: food.id }])).toBe("redirected");
+    expect(await save([{ ...WATER, id: water.id, limit: 70 }, { ...FOOD, id: food.id }])).toBe("redirected");
     expect(await actions()).toEqual(["event_checkpoints.changed", "event_checkpoints.changed"]);
     expect(state.flashed.at(-1)).toContain("checkpointsUnchanged");
   });
@@ -258,7 +331,7 @@ describe("§757 an event's checkpoints", () => {
   it("reorders by distance: moving a point's kilometre moves it in the list and keeps its id", async () => {
     await save([WATER, FOOD]);
     const [water, food] = await listCheckpoints(db, eventId);
-    await save([{ ...WATER, id: water.id, km: "14", cutoff: "11:30" }, { ...FOOD, id: food.id }]);
+    await save([{ ...WATER, id: water.id, km: "14", limit: 150 }, { ...FOOD, id: food.id }]);
     const after = await listCheckpoints(db, eventId);
     expect(after.map((row) => row.id)).toEqual([food.id, water.id]);
     const stored = await db.select().from(eventCheckpoints).where(eq(eventCheckpoints.eventId, eventId));
@@ -279,14 +352,14 @@ describe("§757 an event's checkpoints", () => {
     await save([WATER]);
     const [water] = await listCheckpoints(db, eventId);
     // A colleague adds a point while this form is open.
-    await save([{ ...water, id: water.id, nameRo: water.nameRo, nameEn: water.nameEn, km: String(water.km), cutoff: water.cutoff ?? "" }, FOOD]);
+    await save([{ ...water, id: water.id, nameRo: water.nameRo, nameEn: water.nameEn, km: String(water.km), limit: water.cutoffMinutes ?? undefined }, FOOD]);
     expect(await listCheckpoints(db, eventId)).toHaveLength(2);
-    // The stale form knows only the first point and changes its cut-off.
-    await save([{ ...WATER, id: water.id, cutoff: "10:05" }]);
+    // The stale form knows only the first point and changes its time limit.
+    await save([{ ...WATER, id: water.id, limit: 65 }]);
     const rows = await listCheckpoints(db, eventId);
-    expect(rows.map((row) => [row.nameRo, row.cutoff])).toEqual([
-      ["Apă", "10:05"],
-      ["Mâncare", "11:15"],
+    expect(rows.map((row) => [row.nameRo, row.cutoffMinutes])).toEqual([
+      ["Apă", 65],
+      ["Mâncare", 135],
     ]);
   });
 
@@ -301,13 +374,13 @@ describe("§757 an event's checkpoints", () => {
   it("never brings back a point a colleague removed: a stale form's row for it is dropped, not added again", async () => {
     await save([WATER, FOOD]);
     const [water, food] = await listCheckpoints(db, eventId);
-    const asPosted = (row: typeof water): Row => ({ id: row.id, nameRo: row.nameRo, nameEn: row.nameEn, km: String(row.km), kinds: row.kinds, cutoff: row.cutoff ?? "", noteRo: row.noteRo, noteEn: row.noteEn });
+    const asPosted = (row: typeof water): Row => ({ id: row.id, nameRo: row.nameRo, nameEn: row.nameEn, km: String(row.km), kinds: row.kinds, limit: row.cutoffMinutes ?? undefined, noteRo: row.noteRo, noteEn: row.noteEn });
     // A colleague removes the food point.
     await save([asPosted(water), { ...asPosted(food), remove: true }]);
     expect((await listCheckpoints(db, eventId)).map((row) => row.nameRo)).toEqual(["Apă"]);
     // This form was drawn before that, still shows the food point, and retimes the water.
-    expect(await save([{ ...asPosted(water), cutoff: "10:05" }, asPosted(food)])).toBe("redirected");
-    expect((await listCheckpoints(db, eventId)).map((row) => [row.nameRo, row.cutoff])).toEqual([["Apă", "10:05"]]);
+    expect(await save([{ ...asPosted(water), limit: 65 }, asPosted(food)])).toBe("redirected");
+    expect((await listCheckpoints(db, eventId)).map((row) => [row.nameRo, row.cutoffMinutes])).toEqual([["Apă", 65]]);
   });
 
   it("refuses a malformed event id and an event that is not there, as the service's own refusals", async () => {
@@ -331,13 +404,29 @@ describe("§757 an event's checkpoints", () => {
     expect((await actions()).filter((action) => action === "event_checkpoints.changed")).toHaveLength(2);
   });
 
-  it("goes with its event, and the database holds the same rules: no negative kilometre, a note in one language, an empty name", async () => {
+  it("hands the bib's strip and the event page the same clock: one converter, the gun's hour plus the limit (§770)", async () => {
+    await save([WATER, FOOD]);
+    const source: BibProfileSource = { routeGpx: { key: "route/a.gpx" } as never, distanceMeters: 21_100, elevationGainMeters: null };
+    const strip = await withBibCheckpoints(db, eventId, source, { showProfile: true, showCheckpoints: true });
+    expect(strip.checkpoints?.map((row) => [row.km, row.cutoffClock])).toEqual([
+      [5, "10:00"],
+      [12.5, "11:15"],
+    ]);
+    const [event] = await db.select().from(events).where(eq(events.id, eventId));
+    expect(withCutoffClocks(await listCheckpoints(db, eventId), event).map((row) => row.cutoffClock)).toEqual(["10:00", "11:15"]);
+  });
+
+  it("goes with its event, and the database holds the same rules: no negative kilometre, a note in one language, an empty name, a time limit of a positive time within a week", async () => {
     await save([WATER]);
     const insert = (values: Partial<typeof eventCheckpoints.$inferInsert>) =>
       db.insert(eventCheckpoints).values({ eventId, nameRo: "A", nameEn: "A", km: "1.00", ...values });
     await expectViolation(insert({ km: "-1.00" }), { code: SQLSTATE.CHECK_VIOLATION, constraint: "event_checkpoints_km_not_negative" });
     await expectViolation(insert({ noteRo: "doar română" }), { code: SQLSTATE.CHECK_VIOLATION, constraint: "event_checkpoints_note_both_languages" });
     await expectViolation(insert({ nameEn: "" }), { code: SQLSTATE.CHECK_VIOLATION, constraint: "event_checkpoints_name_length" });
+    await expectViolation(insert({ cutoffMinutes: 0 }), { code: SQLSTATE.CHECK_VIOLATION, constraint: "event_checkpoints_cutoff_minutes_range" });
+    await expectViolation(insert({ cutoffMinutes: -5 }), { code: SQLSTATE.CHECK_VIOLATION, constraint: "event_checkpoints_cutoff_minutes_range" });
+    await expectViolation(insert({ cutoffMinutes: 10_081 }), { code: SQLSTATE.CHECK_VIOLATION, constraint: "event_checkpoints_cutoff_minutes_range" });
+    await insert({ cutoffMinutes: 10_080 });
     await expectViolation(insert({ kinds: ["PIZZA" as never] }), { code: SQLSTATE.INVALID_ENUM_INPUT });
     await db.delete(events).where(and(eq(events.id, eventId)));
     expect(await db.select().from(eventCheckpoints)).toEqual([]);
@@ -391,7 +480,7 @@ describe("§757 «Ia punctele din GPX»", () => {
     ]);
     expect(await post(addGpxCheckpointsAction, data)).toBe("redirected");
     const rows = await listCheckpoints(db, eventId);
-    expect(rows.map((row) => [row.nameRo, row.nameEn, row.cutoff, row.kinds])).toEqual([
+    expect(rows.map((row) => [row.nameRo, row.nameEn, row.cutoffMinutes, row.kinds])).toEqual([
       ["Izvor", "Spring", null, ["WATER"]],
       ["Cabana", "The hut", null, []],
     ]);
@@ -504,17 +593,26 @@ describe("§757 the picture stamp covers the checkpoints", () => {
     const one = await stamp();
     expect(one).not.toBe(none);
     const [water] = await listCheckpoints(db, eventId);
-    await save([{ ...WATER, id: water.id, cutoff: "10:05" }]);
+    await save([{ ...WATER, id: water.id, limit: 65 }]);
     const retimed = await stamp();
     expect(retimed).not.toBe(one);
-    await save([{ ...WATER, id: water.id, cutoff: "10:05", km: "6" }]);
+    await save([{ ...WATER, id: water.id, limit: 65, km: "6" }]);
     const moved = await stamp();
     expect(moved).not.toBe(retimed);
-    await save([{ ...WATER, id: water.id, cutoff: "10:05", km: "6", kinds: ["WATER", "FOOD"] }]);
+    await save([{ ...WATER, id: water.id, limit: 65, km: "6", kinds: ["WATER", "FOOD"] }]);
     const kinds = await stamp();
     expect(kinds).not.toBe(moved);
-    await save([{ ...WATER, id: water.id, cutoff: "10:05", km: "6", kinds: ["WATER", "FOOD"], nameRo: "Alt nume", nameEn: "Other name" }]);
-    expect(await stamp()).toBe(kinds);
+    await save([{ ...WATER, id: water.id, limit: 65, km: "6", kinds: ["WATER", "FOOD", "DIRECTION"] }]);
+    const direction = await stamp();
+    expect(direction).not.toBe(kinds);
+    await save([{ ...WATER, id: water.id, limit: 65, km: "6", kinds: ["WATER", "FOOD", "DIRECTION"], nameRo: "Alt nume", nameEn: "Other name" }]);
+    expect(await stamp()).toBe(direction);
+    // A moved start moves the clock a limit closes at, so the pictures that print it are new addresses.
+    await db.update(events).set({ raceStartsAt: new Date("2026-11-21T08:00:00.000Z"), endsAt: new Date("2026-11-21T11:00:00.000Z") }).where(eq(events.id, eventId));
+    const gun = await stamp();
+    expect(gun).not.toBe(direction);
+    await db.update(events).set({ raceStartsAt: new Date("2026-11-21T08:15:00.000Z"), endsAt: new Date("2026-11-21T11:15:00.000Z") }).where(eq(events.id, eventId));
+    expect(await stamp()).not.toBe(gun);
     await save([{ ...WATER, id: water.id, remove: true }]);
     expect(await stamp()).toBe(none);
   });

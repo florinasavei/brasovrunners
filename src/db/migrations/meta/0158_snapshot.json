@@ -1,6 +1,6 @@
 {
-  "id": "e12caf9f-cac6-4bc8-bc91-5385849ccfb8",
-  "prevId": "82b3a547-1d37-4294-9fed-115779fc097c",
+  "id": "f8d8928b-9072-4502-a916-35d4d2a74267",
+  "prevId": "ce7da4e9-d011-4b0e-afae-72bc6b640cf3",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -1081,6 +1081,12 @@
           "primaryKey": false,
           "notNull": false
         },
+        "cutoff_minutes": {
+          "name": "cutoff_minutes",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
         "note_ro": {
           "name": "note_ro",
           "type": "text",
@@ -1140,6 +1146,10 @@
         "event_checkpoints_km_not_negative": {
           "name": "event_checkpoints_km_not_negative",
           "value": "\"event_checkpoints\".\"km\" >= 0"
+        },
+        "event_checkpoints_cutoff_minutes_range": {
+          "name": "event_checkpoints_cutoff_minutes_range",
+          "value": "\"event_checkpoints\".\"cutoff_minutes\" IS NULL OR \"event_checkpoints\".\"cutoff_minutes\" BETWEEN 1 AND 10080"
         },
         "event_checkpoints_name_length": {
           "name": "event_checkpoints_name_length",
@@ -8926,7 +8936,8 @@
         "WATER",
         "FOOD",
         "FIRST_AID",
-        "TIMING"
+        "TIMING",
+        "DIRECTION"
       ]
     },
     "public.event_todo_priority": {

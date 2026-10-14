@@ -98,7 +98,7 @@ describe("§757 the page's «Timp limită» and the finish row", () => {
   });
 
   it("closes the finish at the event's end on its own clock, for a race only", () => {
-    expect(checkpointFinish(race)).toEqual({ km: 21, limit: "12:30" });
+    expect(checkpointFinish(race)).toEqual({ km: 21, limit: "12:30", minutes: 150 });
     expect(checkpointFinish({ ...race, type: "GROUP_RUN" }).limit).toBeNull();
   });
 
@@ -108,6 +108,8 @@ describe("§757 the page's «Timp limită» and the finish row", () => {
     expect(facts).toContain("durationShort(timeLimit)");
     expect(ro.Event.timeLimit).toBe("Timp limită");
     expect(en.Event.timeLimit).toBe("Time limit");
-    expect(ro.Event.checkpoints.finishCloses).toBe("se închide la {time}");
+    // The finish row says the same words as a point (§770): the duration from the gun, and the clock the finish closes at.
+    expect(ro.Event.checkpoints.cutoff).toBe("Timp limită: {duration} · se închide la {time}");
+    expect(en.Event.checkpoints.cutoff).toBe("Time limit: {duration} · closes at {time}");
   });
 });

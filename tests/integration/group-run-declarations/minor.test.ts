@@ -19,7 +19,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 import { drawnRuns } from "../../helpers/pdf-drawn";
 
 /**
- * A minor signs a group run's declaration, with a parent (§NNN, amending §393, §523 and §330; the owner,
+ * A minor signs a group run's declaration, with a parent (§769, amending §393, §523 and §330; the owner,
  * 2026-10-14: «pt alergările de grup trebuie să facem declarația să suporte și un minor, o bifă nouă și să
  * semneze minorul + părintele»).
  *
@@ -124,7 +124,7 @@ async function forMinor(eventId: string, overrides: Partial<GroupRunSigningInput
 
 const claimed = (row: OutboxRow): OutboxRow => ({ ...row, status: "PROCESSING", attemptCount: 1, lockedAt: NOW });
 
-describe("§NNN the minor's path is offered only while a text names it, and only on a run that takes minors", () => {
+describe("§769 the minor's path is offered only while a text names it, and only on a run that takes minors", () => {
   it("is offered when the trail text in force names {{minor}} in every language and the row's check is green", async () => {
     await approveTexts();
     expect(await groupRunMinorPathOffered(db, KEY, NOW)).toBe(true);
@@ -165,7 +165,7 @@ describe("§NNN the minor's path is offered only while a text names it, and only
   });
 });
 
-describe("§NNN the two names: required when ticked, none when not", () => {
+describe("§769 the two names: required when ticked, none when not", () => {
   it("names both boxes of the minor's path when the tick is ticked and they are empty", async () => {
     await approveTexts();
     const event = await trailRun();
@@ -234,7 +234,7 @@ describe("§NNN the two names: required when ticked, none when not", () => {
   });
 });
 
-describe("§NNN the storage: one row, §330's columns", () => {
+describe("§769 the storage: one row, §330's columns", () => {
   it("keeps the parent's name in typed_name and the minor's own signature in minor_typed_name, with no document", async () => {
     await approveTexts();
     const event = await trailRun();
@@ -267,7 +267,7 @@ describe("§NNN the storage: one row, §330's columns", () => {
   });
 });
 
-describe("§NNN the signed PDF carries both signatures, as the race's does (§330)", () => {
+describe("§769 the signed PDF carries both signatures, as the race's does (§330)", () => {
   it("fills the text for the minor and the parent, keeps the minor's paragraphs and drops the adult's sentence", async () => {
     await approveTexts();
     const event = await trailRun();
@@ -324,7 +324,7 @@ describe("§NNN the signed PDF carries both signatures, as the race's does (§33
   });
 });
 
-describe("§NNN the backoffice and the emails name both", () => {
+describe("§769 the backoffice and the emails name both", () => {
   it("lists a minor's declaration under the minor's name, the parent beside it, and an adult's as before", async () => {
     await approveTexts();
     const event = await trailRun();

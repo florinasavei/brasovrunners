@@ -3523,7 +3523,7 @@ export async function duplicateEvent<T extends Record<string, unknown>>(
         copiedTranslationValues(translation, copy.id, slugs.get(translation.id) as string, input.actor, now),
       ),
     );
-    // The route's checkpoints go with the route (§757): its cut-offs are times of the day, so they hold on the copy's date.
+    // The route's checkpoints go with the route (§757): its limits are minutes from the start, so they hold on the copy's date.
     await copyCheckpoints(tx, source.id, copy.id, now);
 
     return copy;
@@ -3895,7 +3895,7 @@ async function materializeSeries<T extends Record<string, unknown>>(
           authorStaffUserId: by,
         })),
       );
-      // A new date carries the source's checkpoints (§757), like its route: the cut-offs are times of the day.
+      // A new date carries the source's checkpoints (§757), like its route: the limits are minutes from the start.
       await copyCheckpoints(tx, source.id, copy.id, now);
     }
   });

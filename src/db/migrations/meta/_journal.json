@@ -1062,6 +1062,20 @@
     {
       "idx": 151,
       "version": "7",
+      "when": 1792003700000,
+      "tag": "0156_direction_checkpoint_kind",
+      "breakpoints": true
+    },
+    {
+      "idx": 152,
+      "version": "7",
+      "when": 1792003760000,
+      "tag": "0157_checkpoint_cutoff_minutes",
+      "breakpoints": true
+    },
+    {
+      "idx": 153,
+      "version": "7",
       "when": 1792009022267,
       "tag": "0158_declaration_signature_trace",
       "breakpoints": true

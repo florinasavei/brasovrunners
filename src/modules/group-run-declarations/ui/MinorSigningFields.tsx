@@ -4,7 +4,7 @@ import Box from "@mui/material/Box";
 import { type ReactNode, useCallback, useSyncExternalStore } from "react";
 
 /**
- * The minor's boxes on a group run's signing page, shown when «Semnez pentru un minor» is ticked (§NNN;
+ * The minor's boxes on a group run's signing page, shown when «Semnez pentru un minor» is ticked (§769;
  * the owner, 2026-10-14: «o bifă nouă și să semneze minorul + părintele»). The shape of `GuardianForMinor`
  * (§188), with a tick instead of a birth date to read.
  *

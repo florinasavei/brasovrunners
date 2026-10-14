@@ -61,8 +61,12 @@ export type BibCheckpointMark = {
 
 export type BibCheckpointsDrawing = { marks: BibCheckpointMark[]; timesShown: boolean };
 
-/** A checkpoint as the strip reads it: where, what, and by when. */
-export type BibCheckpointSource = { km: number; kinds: readonly string[]; cutoff: string | null };
+/**
+ * A checkpoint as the strip reads it: where, what, and by when — the clock its time limit closes at (§770),
+ * `HH:MM` on the event's clock, the same one the event page prints (`start.ts#cutoffClockOf`), null with no
+ * limit or no start to count it from.
+ */
+export type BibCheckpointSource = { km: number; kinds: readonly string[]; cutoffClock: string | null };
 
 /** Roboto's digits and letters, about: the average advance of a small-type character as a share of its size. */
 const CHARACTER_EM = 0.6;
@@ -178,11 +182,11 @@ export function bibCheckpointMarks(input: {
   const startEnds = bibLabelWidth(input.startWord) + L.checkpointTimeGap;
   const finishFrom = width - bibLabelWidth(input.finishWord) - L.checkpointTimeGap;
   const boxOf = (x: number, text: string): Box => ({ from: x * width - bibLabelWidth(text) / 2, to: x * width + bibLabelWidth(text) / 2 });
-  const anyTime = kept.some((mark) => mark.row.cutoff !== null);
+  const anyTime = kept.some((mark) => mark.row.cutoffClock !== null);
   let labels: (string | null)[] = kept.map(() => null);
   let timesShown = false;
   if (input.showTimes && anyTime) {
-    const withTimes = kept.map((mark) => input.label(mark.row, mark.row.cutoff !== null));
+    const withTimes = kept.map((mark) => input.label(mark.row, mark.row.cutoffClock !== null));
     if (allFit(withTimes.map((text, at) => boxOf(kept[at].x, text)), startEnds, finishFrom)) {
       labels = withTimes;
       timesShown = true;

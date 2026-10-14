@@ -704,14 +704,15 @@
         "WATER": "Apă",
         "FOOD": "Mâncare",
         "FIRST_AID": "Prim ajutor",
-        "TIMING": "Cronometrare"
+        "TIMING": "Cronometrare",
+        "DIRECTION": "Direcționare"
       },
-      "cutoff": "Ora limită {time}",
-      "noCutoff": "fără oră limită",
+      "cutoff": "Timp limită: {duration} · se închide la {time}",
+      "cutoffNoClock": "Timp limită: {duration}",
+      "noCutoff": "fără timp limită",
       "noKinds": "nimic marcat",
       "kmUnknown": "distanța nu e scrisă",
-      "finish": "Sosire",
-      "finishCloses": "se închide la {time}"
+      "finish": "Sosire"
     }
   },
   "Admin": {
@@ -1891,10 +1892,10 @@
       "CHECKPOINT_KM_INVALID": "Kilometrul punctului „{name}” nu e un număr: scrie de la 0, cu cel mult două zecimale.",
       "CHECKPOINT_KM_BEYOND_ROUTE": "Punctul „{name}” e la {km} km, dar traseul are doar {max} km. Alege un kilometru până la {max}.",
       "CHECKPOINT_KIND_UNKNOWN": "La punctul „{name}”, ce găsești aici nu e una dintre variante.",
-      "CHECKPOINT_CUTOFF_INVALID": "Ora limită a punctului „{name}” nu e o oră: scrie, de exemplu, 11:30.",
-      "CHECKPOINT_CUTOFF_BEFORE_START": "Ora limită {cutoff} a punctului „{name}” nu e după start, la {start}. Alege o oră de după {start}.",
-      "CHECKPOINT_CUTOFF_AFTER_LATER": "Ora limită a punctului „{name}” e după cea a punctului „{later}” ({laterCutoff}), care e mai departe pe traseu. Alergătorii trec pe la „{name}” înaintea celuilalt: ora limită de aici trebuie să fie mai devreme.",
-      "CHECKPOINT_CUTOFF_AFTER_END": "Ora limită {cutoff} a punctului „{name}” e după {finishTime}, ora la care se închide sosirea. Alege o oră până la {finishTime} sau mărește „Timp limită”.",
+      "CHECKPOINT_CUTOFF_INVALID": "Timpul limită al punctului „{name}” nu e o durată: scrie orele și minutele (minutele de la 0 la 59), de exemplu 1 oră și 15 minute.",
+      "CHECKPOINT_CUTOFF_NO_START": "Timpul limită al punctului „{name}” se numără de la start, iar startul nu are încă o oră. Scrie întâi ora startului (sau a startului cursei) și salvează evenimentul, apoi pune timpul limită.",
+      "CHECKPOINT_CUTOFF_AFTER_LATER": "Timpul limită al punctului „{name}” ({cutoff}) e mai lung decât cel al punctului „{later}” ({laterCutoff}), care e mai departe pe traseu. Alergătorii trec întâi pe la „{name}”: timpul de aici trebuie să fie mai scurt.",
+      "CHECKPOINT_CUTOFF_AFTER_END": "Timpul limită {cutoff} al punctului „{name}” e mai lung decât {limit}, cât durează evenimentul de la start până la sosire. Alege un timp până la {limit} sau mărește „Timp limită” al evenimentului.",
       "CHECKPOINTS_NO_LONGER_HOLD": "Salvarea ar strica „Puncte de control”: {detail} Schimbă întâi punctul în cardul lui, apoi salvează din nou. Nu s-a salvat nimic.",
       "CHECKPOINTS_NO_LONGER_HOLD_DATED": "La una dintre date ({date}), salvarea ar strica „Puncte de control”: {detail} Schimbă întâi punctul la acea dată sau salvează fără ea. Nu s-a salvat nimic, la nicio dată.",
       "CHECKPOINT_NOTE_ONE_LANGUAGE": "Nota punctului „{name}” se scrie în ambele limbi sau în niciuna, de cel mult {max} de caractere.",
@@ -2381,7 +2382,7 @@
         "showCheckpoints": "Punctele de control pe profil",
         "showCheckpointsHelp": "Bifat: pe profil, la fiecare punct, o cană unde e apă, o furculiță unde e mâncare, o bulină la celelalte. Dedesubt, „km 12” unde încape. Apare doar cu profilul traseului.",
         "showCheckpointTimes": "…cu orele limită",
-        "showCheckpointTimesHelp": "Bifat: lângă fiecare punct, și ora limită, „km 12 · 11:30”. Dacă nu încap toate orele, nu se scrie niciuna; apoi pleacă kilometrii care nu încap. Semnele rămân mereu.",
+        "showCheckpointTimesHelp": "Bifat: lângă fiecare punct, și ora la care se închide, „km 12 · 11:30”. Dacă nu încap toate orele, nu se scrie niciuna; apoi pleacă kilometrii care nu încap. Semnele rămân mereu.",
         "showCheckpointsNone": "Evenimentul nu are puncte de control: adaugă-le în „Traseul” › „Puncte de control”.",
         "showEmergency": "Telefon pentru urgențe",
         "showEmergencyHelp": "Bifat: pe fiecare număr, mic, un rând cu eticheta și unul sau două telefoane. Scrie numerele organizatorilor, nu ale participanților.",
@@ -8091,7 +8092,9 @@
       "notes": {
         "slugSuffixed": "Adresa paginii în {language} era luată: s-a folosit {slug}.",
         "publicListOff": "Lista publică a participanților a rămas oprită: nota de confidențialitate care o descrie nu e încă în vigoare aici.",
-        "seriesNotApplied": "Regula seriei din fișier nu s-a aplicat: evenimentul e o singură dată."
+        "seriesNotApplied": "Regula seriei din fișier nu s-a aplicat: evenimentul e o singură dată.",
+        "checkpointKindsDropped": "La punctele de control din fișier s-au lăsat deoparte tipurile pe care această versiune nu le știe (în total: {count}).",
+        "checkpointLimitsDropped": "La punctele de control din fișier s-au lăsat deoparte orele limită care nu se puteau număra de la start (în total: {count}). Scrie-le din nou ca „Timp limită”."
       },
       "refusals": {
         "tooLarge": "Fișierul e prea mare pentru un fișier de eveniment.",
@@ -9274,7 +9277,7 @@
     },
     "checkpoints": {
       "title": "Puncte de control",
-      "intro": "Unde e apă, mâncare, prim ajutor sau cronometrare și până la ce oră trece ultimul alergător. Apar într-un tabel pe pagina evenimentului și pe profilul de pe număr, în ordinea kilometrilor.",
+      "intro": "Unde e apă, mâncare, prim ajutor, cronometrare sau cine arată drumul, și în cât timp de la start trece ultimul alergător. Apar în tabelul de pe pagina evenimentului și pe profilul de pe număr.",
       "saveNote": "Punctele se salvează doar cu „Salvează punctele”, nu cu „Salvează” din pagină.",
       "routeLength": "Lungimea traseului: {km} km. Niciun punct nu poate fi dincolo de ea.",
       "summaryNone": "niciun punct",
@@ -9286,8 +9289,9 @@
       "empty": "Niciun punct de control.",
       "readOnly": "Poți citi lista; Organizatorul, Administratorul și Superadministratorul o scriu. Cere-le orice schimbare.",
       "rowTitle": "{km} km — {name}",
-      "cutoffAside": "ora limită {time}",
-      "noCutoff": "fără oră limită",
+      "cutoffAside": "timp limită {duration}",
+      "cutoffAsideClock": "timp limită {duration} · se închide la {time}",
+      "noCutoff": "fără timp limită",
       "field": {
         "km": "Kilometrul",
         "kmHelp": "De la start, până la {max} km (lungimea traseului). Poți scrie și cu virgulă.",
@@ -9295,8 +9299,8 @@
         "nameRo": "Numele (română)",
         "nameEn": "Numele (engleză)",
         "kinds": "Ce găsești aici",
-        "cutoff": "Ora limită",
-        "cutoffHelp": "Ora zilei, pe ceasul evenimentului: până atunci trebuie să treacă ultimul alergător. Lasă gol dacă nu e limită.",
+        "cutoff": "Timp limită",
+        "cutoffHelp": "De la start: până atunci trebuie să treacă ultimul alergător. Lasă gol dacă nu e limită.",
         "noteRo": "Notă (română)",
         "noteEn": "Notă (engleză)",
         "noteHelp": "Opțională, în ambele limbi sau în niciuna; cel mult {max} de caractere."
@@ -9305,7 +9309,8 @@
         "WATER": "Apă",
         "FOOD": "Mâncare",
         "FIRST_AID": "Prim ajutor",
-        "TIMING": "Cronometrare"
+        "TIMING": "Cronometrare",
+        "DIRECTION": "Direcționare"
       },
       "remove": "Scoate acest punct",
       "removeHelp": "Se șterge la „Salvează punctele”.",

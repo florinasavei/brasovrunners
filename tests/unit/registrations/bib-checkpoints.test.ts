@@ -37,9 +37,9 @@ import { drawnRuns } from "../../helpers/pdf-drawn";
 /** A profile rising to the middle and falling, so a mark's height is easy to check. */
 const POINTS = Array.from({ length: 64 }, (_, i) => [i / 63, i <= 31 ? i / 31 : 1 - (i - 31) / 32] as const);
 
-const label = (row: BibCheckpointSource, withTime: boolean) => (withTime && row.cutoff ? `km ${row.km} · ${row.cutoff}` : `km ${row.km}`);
+const label = (row: BibCheckpointSource, withTime: boolean) => (withTime && row.cutoffClock ? `km ${row.km} · ${row.cutoffClock}` : `km ${row.km}`);
 const base = { routeKm: 21.1, points: POINTS, startWord: "Start", finishWord: "Sosire", showTimes: false, label };
-const at = (km: number, cutoff: string | null = null, kinds: readonly string[] = []): BibCheckpointSource => ({ km, cutoff, kinds });
+const at = (km: number, cutoffClock: string | null = null, kinds: readonly string[] = []): BibCheckpointSource => ({ km, cutoffClock, kinds });
 const width = BIB_LAYOUT.profileChartWidth;
 /** The kilometre `points` points along the strip of a 21.1 km route. */
 const kmAt = (points: number) => (points / width) * 21.1;
@@ -78,6 +78,16 @@ describe("§757 an aid station is a glyph, every other point a dot", () => {
     expect(checkpointGlyph(["FOOD", "FIRST_AID"])).toBe("food");
     expect(checkpointGlyph(["FIRST_AID", "TIMING"])).toBeNull();
     expect(checkpointGlyph([])).toBeNull();
+  });
+
+  it("draws «Direcționare» (§770) as a dot, like first aid and timing: a person showing the way is not something a runner takes, so no glyph", () => {
+    expect(checkpointGlyph(["DIRECTION"])).toBeNull();
+    expect(checkpointGlyph(["DIRECTION", "FIRST_AID"])).toBeNull();
+    // Beside an aid station the aid station's glyph is the point's.
+    expect(checkpointGlyph(["WATER", "DIRECTION"])).toBe("water");
+    const drawing = bibCheckpointMarks({ ...base, checkpoints: [at(5, null, ["DIRECTION"]), at(12, null, ["WATER", "DIRECTION"])] })!;
+    expect(drawing.marks.map((m) => m.glyph)).toEqual([null, "water"]);
+    expect(drawing.marks.map((m) => m.label)).toEqual(["km 5", "km 12"]);
   });
 
   it("draws the glyphs inside their box", () => {
@@ -345,7 +355,7 @@ describe("§757 the extras read the checkpoints only where the design asks", () 
     expect(marks.map((m) => m.label)).toEqual(["km 1", "km 2"]);
   });
 
-  it("adds the cut-offs only with «…cu timpii limită»", async () => {
+  it("adds the clock each limit closes at only with «…cu orele limită» — the clock the event page prints (§770)", async () => {
     const extras = await loadBibExtras(event, { ...ticks, showCheckpoints: true, showCheckpointTimes: true }, "ro");
     expect(extras.profile?.checkpoints?.marks.map((m) => m.label)).toEqual(["km 1 · 09:45", "km 2 · 10:30"]);
   });

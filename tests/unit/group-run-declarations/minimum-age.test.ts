@@ -176,7 +176,7 @@ describe("§440 the age gate: one rule, the race's", () => {
   /*
     §495, then §515: the box used to start at the club's minimum for a race, and the help led with
     "18 or less changes nothing". Since §515 the help led with the bound — at least 18, the declaration
-    covers no minor. Since §NNN a minor signs with a parent, so the help says what a number under 18
+    covers no minor. Since §769 a minor signs with a parent, so the help says what a number under 18
     does — the page also offers «Semnez pentru un minor», when the text in force allows it — and when a
     higher one is worth setting; it names neither the race's minimum (a constant that may change) nor
     anything but 18 and an example above it.
@@ -198,7 +198,7 @@ describe("§440 the age gate: one rule, the race's", () => {
  * editor's help under «Declarație opțională pe propria răspundere» and the guide say it in words.
  */
 describe("§520 the run declaration's 18 is said where the box used to be", () => {
-  // Since §NNN: signed from 18; under 18 the minor signs with a parent — in the guide on two conditions, in the
+  // Since §769: signed from 18; under 18 the minor signs with a parent — in the guide on two conditions, in the
   // editor's one-line help (200 characters) said shortly.
   const RO = "Declarația se semnează de la 18 ani. Sub 18, minorul semnează cu un părinte, dar numai dacă textul în vigoare o prevede și vârsta minimă a alergării e sub 18.";
   const EN = "The declaration is signed from 18. Under 18, the minor signs with a parent, but only if the text in force provides for it and the run's minimum age is under 18.";

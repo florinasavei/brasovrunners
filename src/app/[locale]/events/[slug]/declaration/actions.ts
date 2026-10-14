@@ -80,7 +80,7 @@ async function signOrRefuse(form: FormData, locale: Locale, path: string): Promi
         contentSha256: text(form, "contentSha256"),
         accepted: form.get("accepted") === "on",
         typedName: text(form, "typedName"),
-        // The minor's path (§NNN, the race's §330 on a group run): the tick, the minor's own signature, the
+        // The minor's path (§769, the race's §330 on a group run): the tick, the minor's own signature, the
         // parent's tick; the parent's name is `typedName` above and the minor's birth date `birthDate` below.
         minor: form.get("minor") === "on",
         minorTypedName: text(form, "minorTypedName"),

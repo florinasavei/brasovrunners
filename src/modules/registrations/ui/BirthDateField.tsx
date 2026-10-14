@@ -35,7 +35,7 @@ export type BirthDateFieldProps = {
   tooYoung: string;
   /**
    * What the box says for a whole date before `min` when `min` is a real age ceiling and not just the
-   * hundred-and-twenty-years bound (§NNN): a group run's minor must be under eighteen, so the minor's box
+   * hundred-and-twenty-years bound (§769): a group run's minor must be under eighteen, so the minor's box
    * gives its `min` as the oldest birth date allowed and these words for an older one. Without them a date
    * before `min` reads as `unreadable`, as it always did.
    */
@@ -76,7 +76,7 @@ export function birthDateHelper({
   text: string;
   /** The box no longer holds what the page was drawn with. */
   typedAgain: boolean;
-  /** With `tooOld`: a whole date before it is refused live with those words (§NNN). */
+  /** With `tooOld`: a whole date before it is refused live with those words (§769). */
   min?: string;
   max: string;
   error: boolean;

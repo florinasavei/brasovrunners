@@ -335,7 +335,7 @@ export type OwnerTaskInputs = {
    */
   groupRunSeriesTextsCurrent: boolean | null;
   /**
-   * Whether the group-run declarations in force carry the minor's paragraph (§NNN,
+   * Whether the group-run declarations in force carry the minor's paragraph (§769,
    * `groupRunDeclarationsNameMinor`): true when every one names `{{minor}}`, false while one in force is older —
    * the signing page then offers no «Semnez pentru un minor» — and null while none is in force.
    */
@@ -747,7 +747,7 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
       });
     }
     /*
-      The group-run declarations for a minor (§NNN): the signing page's «Semnez pentru un minor» waits for a text
+      The group-run declarations for a minor (§769): the signing page's «Semnez pentru un minor» waits for a text
       that names `{{minor}}`, in every language, as the race's second signature waits for one that names the
       minor's document (§330). Open, never blocking — an adult signs as before and nothing is refused — and done by
       itself the day every group-run text in force carries the paragraph. Only while one is in force.

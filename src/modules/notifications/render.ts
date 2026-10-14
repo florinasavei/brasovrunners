@@ -1585,7 +1585,7 @@ async function renderGroupRunDeclarationRow(
 
   const data: TemplateData = {
     participantName: signed.typedName,
-    // A minor's declaration: the parent is `participantName`, the minor is named beside them (§NNN, §330).
+    // A minor's declaration: the parent is `participantName`, the minor is named beside them (§769, §330).
     ...(signed.minorTypedName !== null ? { groupRunMinorName: signed.minorTypedName } : {}),
     eventTitle: eventDetails?.title,
     eventLocationName: placeLater ? placeToBeAnnouncedWords(locale) : (eventDetails?.locationName ?? undefined),
