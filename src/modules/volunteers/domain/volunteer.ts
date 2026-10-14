@@ -237,48 +237,70 @@ export function tasksWords(description: string): string {
   return description.trim().replace(/[.!?…;]$/u, "").trimEnd();
 }
 
-/** The words before the chosen roles when nobody gave the person one yet — fitted to «… în rolul {{volunteerRole}}.». */
-const OFFERED_FOR: Record<"ro" | "en", string> = {
-  ro: "stabilit de organizatori; voluntarul este disponibil pentru: ",
-  en: "assigned by the organisers; the volunteer is available for: ",
-};
+/** The agreement's role blanks for one person: the role given and its tasks, or the roles chosen and what each asks. */
+export type AgreementRoleValues = { role: string; tasks: string; choices: string; choiceTasks: string };
 
 /**
- * The agreement's `{{volunteerRole}}` and `{{volunteerTasks}}` for one person (§NNN, amending §758): the role the
- * organizers gave them when there is one — its name and what it asks —, else the roles they chose, «stabilit de
- * organizatori; voluntarul este disponibil pentru: Masă, Traseu» (the sentence of the approved text reads «… în rolul
- * {{volunteerRole}}.», so the words fit it whatever version is in force) and what each asks, «Masă — dă numerele;
- * Traseu — arată drumul» (one chosen role: its description alone). A role with no description adds nothing; none —
- * "" — and the tasks' sentence is left out (`PARAGRAPH_MERGE_FIELDS`).
+ * The agreement's role blanks for one person (§NNN, amending §758), filled with the club's words only — the roles'
+ * names and descriptions —, never a clause of the code's own: the sentences are the approved text's.
+ *
+ * - A role given: `{{volunteerRole}}` its name, `{{volunteerTasks}}` what it asks; the choices' fields "" (their
+ *   sentences drop).
+ * - None given, and the text in force names `{{volunteerRoleChoices}}` (`textNamesChoices`, the platform's template
+ *   since §NNN): `{{volunteerRoleChoices}}` the chosen roles' names, «Masă, Traseu», `{{volunteerChoiceTasks}}` what
+ *   each asks, «Masă — dă numerele; Traseu — arată drumul»; the role's fields "" (their sentences drop).
+ * - None given under a text that does not (every version approved before): the chosen roles' names alone in
+ *   `{{volunteerRole}}` — «… în rolul Masă, Traseu.» — and their tasks in `{{volunteerTasks}}` (one role: its
+ *   description alone). `/admin/tasks`' row `volunteerRoleChoicesAgreement` asks the club for the new text meanwhile.
+ *
+ * A role with no description adds nothing to the tasks; none at all is "" and that sentence is left out.
  */
-export function agreementRoleWords(roles: { assigned: RoleWords | null; chosen: readonly RoleWords[] }, locale: "ro" | "en"): { role: string; tasks: string } {
+export function agreementRoleWords(
+  roles: { assigned: RoleWords | null; chosen: readonly RoleWords[] },
+  locale: "ro" | "en",
+  textNamesChoices: boolean,
+): AgreementRoleValues {
   const name = (role: RoleWords) => (locale === "en" ? role.nameEn : role.nameRo);
   const description = (role: RoleWords) => tasksWords((locale === "en" ? role.descriptionEn : role.descriptionRo) ?? "");
-  if (roles.assigned) return { role: name(roles.assigned), tasks: description(roles.assigned) };
-  const role = roles.chosen.length > 0 ? `${OFFERED_FOR[locale]}${roles.chosen.map(name).join(", ")}` : "";
-  if (roles.chosen.length === 1) return { role, tasks: description(roles.chosen[0]) };
-  const tasks = roles.chosen
+  if (roles.assigned) return { role: name(roles.assigned), tasks: description(roles.assigned), choices: "", choiceTasks: "" };
+  const names = roleNames(roles.chosen, locale);
+  const eachTasks = roles.chosen
     .filter((chosen) => description(chosen) !== "")
     .map((chosen) => `${name(chosen)} — ${description(chosen)}`)
     .join("; ");
-  return { role, tasks };
+  if (textNamesChoices) return { role: "", tasks: "", choices: names, choiceTasks: eachTasks };
+  const tasks = roles.chosen.length === 1 ? description(roles.chosen[0]) : eachTasks;
+  return { role: names, tasks, choices: "", choiceTasks: "" };
+}
+
+/** Roles' names as the agreement and the card name them: «Masă, Traseu», in the order given. */
+export function roleNames(roles: readonly RoleWords[], locale: "ro" | "en"): string {
+  return roles.map((role) => (locale === "en" ? role.nameEn : role.nameRo)).join(", ");
 }
 
 /**
- * Whether the role an accepted agreement names (`agreement_facts.volunteerRole`) still describes the person: the
- * words the agreement would carry now; or the words of their choices — what a sign-up on the form accepts — while
- * nobody gave them a role or the role given is one they chose. Otherwise the card says the accepted text named
- * another role (§758): the acceptance stays valid, the organizers talk it over.
+ * The roles an accepted agreement named, from its blanks (`agreement_facts`): the roles chosen when the text named
+ * them in their own sentence, else the role's blank — the role given, or the chosen roles' names under an earlier
+ * text. Names only, so the card can show them and compare them.
+ */
+export function acceptedRoleNames(facts: { volunteerRole: string; volunteerRoleChoices?: string }): string {
+  return facts.volunteerRoleChoices && facts.volunteerRoleChoices !== "" ? facts.volunteerRoleChoices : facts.volunteerRole;
+}
+
+/**
+ * Whether the roles an accepted agreement names (`acceptedRoleNames`) still describe the person: the role given, by
+ * name; or — while nobody gave them a role, or the role given is one they chose — the names of their choices as
+ * they stand. Otherwise the card says the accepted text named other roles (§758): the acceptance stays valid, the
+ * organizers talk it over.
  */
 export function agreementStillNamesRole(
   accepted: string,
   person: { assigned: (RoleWords & { id: string }) | null; chosen: readonly (RoleWords & { id: string })[] },
   locale: "ro" | "en",
 ): boolean {
-  if (accepted === agreementRoleWords(person, locale).role) return true;
-  const offered = agreementRoleWords({ assigned: null, chosen: person.chosen }, locale).role;
+  if (person.assigned && accepted === roleNames([person.assigned], locale)) return true;
   const assignedChosen = person.assigned === null || person.chosen.some((role) => role.id === person.assigned?.id);
-  return assignedChosen && accepted === offered;
+  return assignedChosen && person.chosen.length > 0 && accepted === roleNames(person.chosen, locale);
 }
 
 /**
@@ -370,9 +392,9 @@ export const volunteerAgreementAcceptSchema = z.object({
 
 /**
  * Which roles the page's box lists, or null for no box at all: the roles that still need people while the form
- * is open; and, when the form closed only because the last place has just gone, an empty list for a person
- * whose page is the answer to their own post — «am primit», «the role filled», or a refusal they came back to
- * correct (invalid, captcha, limited) while the last role filled — so the box says «toate rolurile s-au umplut»
+ * is open; and, when the form closed only because the organizers gave the last place while the person typed (an
+ * offer takes none, §NNN), an empty list for a person whose page is the answer to their own post — «am primit»,
+ * «the role filled», or a refusal they came back to correct (invalid, captcha, limited) — so the box says «toate rolurile s-au umplut»
  * rather than vanishing without a sentence. A plain visit, and every other closed form, draws nothing.
  */
 export function volunteerBoxRoles<R extends Pick<RoleStanding, "free">>(

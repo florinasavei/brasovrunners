@@ -3294,8 +3294,10 @@
         "volunteers": "Doar în nota de confidențialitate: numele formularului „Vreau să fiu voluntar”, între ghilimele. Cu el în nota în vigoare, un eveniment cu voluntari își arată formularul și păstrează ofertele",
         "volunteerAgreement": "Doar în nota de confidențialitate: titlul „Contract de voluntariat”, între ghilimele. Fără el în nota în vigoare, formularul de voluntari, linkul contractului și „Semnat pe hârtie” sunt oprite",
         "volunteer": "Doar în contractul de voluntariat: numele voluntarului, cum e pe lista evenimentului",
-        "volunteerRole": "Doar în contractul de voluntariat: numele rolului, în limba textului",
-        "volunteerTasks": "Doar în contractul de voluntariat: ce face rolul, din descrierea lui. Fără descriere, propoziția care îl numește dispare"
+        "volunteerRole": "Doar în contractul de voluntariat: numele rolului dat de organizatori, în limba textului. Fără rol dat, propoziția care îl numește dispare",
+        "volunteerTasks": "Doar în contractul de voluntariat: ce face rolul, din descrierea lui. Fără descriere, propoziția care îl numește dispare",
+        "volunteerRoleChoices": "Doar în contractul de voluntariat: rolurile pe care voluntarul le-a bifat, cât încă nu are un rol dat. Cu rol dat, propoziția care le numește dispare",
+        "volunteerChoiceTasks": "Doar în contractul de voluntariat: ce face fiecare rol bifat, din descrierile lor. Cu rol dat sau fără descrieri, propoziția dispare"
       },
       "removeBlockedReferenced": "Nu se poate nici retrage, nici șterge definitiv: {signatures}, {events} și {acknowledgements} depind de ea. «Șterge» de pe rândul ei o scoate din listă.",
       "removeBlockedCurrent": "În vigoare acum — nu se poate nici retrage, nici șterge. Aprobă întâi versiunea următoare; apoi aceasta se poate scoate.",
@@ -4203,6 +4205,16 @@
             "Un jurist ar trebui să citească textul întâi, după Legea nr. 78/2014: forma scrisă și acceptarea electronică, vârsta de 18 ani, fișa rolului, asigurarea voluntarilor și registrul lor.",
             "Juristul și tu hotărâți cât timp păstrează clubul acceptările. Site-ul le șterge la 30 de zile după eveniment.",
             "Deschide ciorna, completează ce a rămas, „Salvează ciorna”, apoi „Aprobă și publică”. Odată în vigoare în ambele limbi, formularul apare pe paginile evenimentelor care primesc voluntari."
+          ]
+        },
+        "volunteerRoleChoicesAgreement": {
+          "title": "Contractul de voluntariat: mai multe roluri",
+          "todo": "Voluntarii bifează acum toate rolurile pe care le-ar face, iar tu le dai unul după. Contractul în vigoare are loc pentru un singur rol, așa că cine se oferă pe pagină acceptă „în rolul Masă, Traseu”.",
+          "done": "Contractul în vigoare spune că organizatorii aleg rolul dintre cele bifate și ce presupune fiecare.",
+          "how": [
+            "/admin/legal → cardul „Contract de voluntariat” → „Regenerează din șablon” → confirmă.",
+            "Un jurist ar trebui să citească întâi cele două propoziții noi: rolul dat și rolurile pentru care s-a oferit voluntarul.",
+            "Deschide ciorna, completează ce a rămas, „Salvează ciorna”, apoi „Aprobă și publică”. Contractele deja acceptate rămân cum au fost acceptate."
           ]
         }
       },

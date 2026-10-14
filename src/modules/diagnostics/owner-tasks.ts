@@ -68,6 +68,7 @@ export type TaskId =
   | "volunteersNotice"
   | "volunteerAgreementNotice"
   | "volunteerAgreement"
+  | "volunteerRoleChoicesAgreement"
   | "gmailFallbackNotice"
   | "refusalTerms"
   | "teamPageNotice"
@@ -113,6 +114,7 @@ export const TASK_KIND: Record<TaskId, TaskKind> = {
   volunteersNotice: "text",
   volunteerAgreementNotice: "text",
   volunteerAgreement: "text",
+  volunteerRoleChoicesAgreement: "text",
   gmailFallbackNotice: "text",
   refusalTerms: "text",
   teamPageNotice: "text",
@@ -274,6 +276,12 @@ export type OwnerTaskInputs = {
    * event page offers «Vreau să fiu voluntar», and no link or paper acceptance can be recorded.
    */
   volunteerAgreementInForce: boolean;
+  /**
+   * Does the volunteer agreement in force, in every language, name the roles a person offered for (§NNN,
+   * `volunteerAgreementNamesRoleChoices`)? Until it does, an agreement accepted before a role is given names the
+   * roles ticked in the role's own blank, «în rolul Masă, Traseu», and nothing says the organizers choose.
+   */
+  volunteerRoleChoicesAgreement: boolean;
   /**
    * Does the notice in force, in every language, describe the agreement's acceptance (§758,
    * `noticeDescribesVolunteerAgreement`)? Until it does, the form, the link and «Semnat pe hârtie» wait.
@@ -625,6 +633,20 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
     push("volunteerAgreement", {
       owner: "club",
       state: input.volunteerAgreementInForce ? "done" : "open",
+    });
+  }
+
+  /*
+    The agreement's sentences for several roles (§NNN): open while an agreement is in force, an event ahead takes
+    volunteers and the text in force does not name `{{volunteerRoleChoices}}` — a sign-up then accepts «în rolul
+    Masă, Traseu», the roles ticked in the one role's blank — done by itself the day a text naming it takes effect in
+    every language. Absent while no agreement is in force: the row above asks for one, and approving it from the
+    template answers both. Never blocking: nothing waits on it.
+  */
+  if (input.volunteerAgreementInForce && (input.volunteerRoleChoicesAgreement || input.volunteeringEvents > 0)) {
+    push("volunteerRoleChoicesAgreement", {
+      owner: "club",
+      state: input.volunteerRoleChoicesAgreement ? "done" : "open",
     });
   }
 

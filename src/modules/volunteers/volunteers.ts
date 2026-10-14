@@ -24,6 +24,7 @@ import { canManageVolunteers, isBackofficeRole } from "@/modules/staff-identity/
 import { DomainError } from "@/shared/errors/domain-error";
 import { isUuid } from "@/shared/ids";
 import {
+  acceptedRoleNames,
   choicesWithAssigned,
   compareRoles,
   openChoices,
@@ -68,13 +69,10 @@ import { agreementAcceptance, readAgreementFacts } from "./agreement";
  *
  * **A repeated sign-up** (the same address for the same event, whatever the role and whatever the row's
  * state — an organizer's «Anulat» included) changes nothing, sends nothing, and gets the answer a new one
- * gets — «am primit», or «full» when the role it names has filled, judged first for everybody: the answer
- * itself never tells a listed address from a new one (BR-REQ-031-01 criterion 3). **An accepted residual,
- * like the registration form's places line:** a new address adds a row, so the public «mai e nevoie de N»
- * drops by one, and a listed one does not — a stranger who posts an address and reloads the page can tell.
- * The probe is loud (it puts a row in the person's name before the organizers and mails the person), and
- * the throttles bound it; hiding the number would cost every visitor the one line that says how much help
- * is still wanted.
+ * gets — «am primit», or «full» when every role it ticks has filled, judged first for everybody: the answer
+ * itself never tells a listed address from a new one (BR-REQ-031-01 criterion 3). §754's accepted residual —
+ * a new address lowered the public «mai e nevoie de N» and a listed one did not — ended with §NNN: an offer
+ * takes no place, only a role the organizers give counts, so a sign-up never moves the number.
  */
 
 // ---------------------------------------------------------------------------------------------
@@ -114,7 +112,10 @@ export type VolunteerItem = {
   agreementMethod: VolunteerAgreementMethod | null;
   /** The number of the version accepted, read through the row's reference. */
   agreementVersion: number | null;
-  /** The role's name the agreement was accepted for, in its language — differs from the row's role once moved. */
+  /**
+   * The roles' names the accepted agreement named, in its language (`acceptedRoleNames`): the role given, or the
+   * roles chosen while none was — they differ from the row's once the roles change.
+   */
   agreementRoleName: string | null;
   /**
    * The event's date and place as the accepted text named them (`agreement_facts`), in the acceptance's language
@@ -184,7 +185,7 @@ export async function listVolunteers<T extends Record<string, unknown>>(db: Data
       agreementAcceptedAt: row.agreementAcceptedAt,
       agreementMethod: row.agreementMethod,
       agreementVersion: row.agreementAcceptedAt ? agreementVersion : null,
-      agreementRoleName: facts?.volunteerRole ?? null,
+      agreementRoleName: facts ? acceptedRoleNames(facts) : null,
       agreementLocale: row.agreementAcceptedAt ? row.agreementLocale : null,
       agreementEventDate: facts?.eventDate ?? null,
       agreementEventLocation: facts?.eventLocation ?? null,
@@ -567,6 +568,19 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
     const audit = (action: AuditAction, metadata: Record<string, unknown>) =>
       recordAuditEvent(tx, { actorStaffUserId: actor.id, action, entityType: "event", entityId: request.eventId, metadata, now });
 
+    // A verb that writes a reference to a role — the role given, the roles ticked — locks the event's roles first, in
+    // the order of their ids: the order a sign-up locks the roles it ticked and a role change locks them all (§NNN).
+    // Without it the insert's foreign keys take KEY SHARE on each role in the order posted, and a hand entry naming
+    // two roles against a sign-up ticking both waits in a circle (40P01) — one side aborted, someone's typing lost.
+    if (request.kind === "add" || request.kind === "edit" || request.kind === "assign") {
+      await tx
+        .select({ id: eventVolunteerRoles.id })
+        .from(eventVolunteerRoles)
+        .where(eq(eventVolunteerRoles.eventId, request.eventId))
+        .orderBy(asc(eventVolunteerRoles.id))
+        .for("update");
+    }
+
     /** Every id this event's role, or the refusal naming the box it came from. */
     const assertEventRoles = async (ids: readonly string[], box: string) => {
       if (ids.length === 0) return;
@@ -596,7 +610,8 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
       if (ids.length > 0) {
         await tx
           .insert(eventVolunteerRoleChoices)
-          .values(ids.map((roleId) => ({ volunteerId, roleId, createdAt: now })))
+          // In the order of the ids, as the roles were locked above.
+          .values([...ids].sort().map((roleId) => ({ volunteerId, roleId, createdAt: now })))
           .onConflictDoNothing();
       }
     };
@@ -653,6 +668,9 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
       if (current.state === state) return { changed: false, volunteer: summary };
       await tx.update(eventVolunteers).set({ state, updatedAt: now }).where(eq(eventVolunteers.id, current.id));
       await audit("volunteer.state_changed", { volunteerId: current.id, roleId: current.roleId, from: current.state, to: state });
+      // A cancelled person reopened with a role given is told it: the email queued when it was given was withdrawn at
+      // the send while they were cancelled, or never queued (`queueRoleAssigned`), and the receipt promised one.
+      if (current.state === "CANCELLED" && current.roleId) await queueRoleAssigned(tx, { ...current, state }, current.roleId, actor.id, now);
       return { changed: true, volunteer: summary };
     }
 
@@ -670,6 +688,11 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
     if (!input) throw new DomainError("VALIDATION_ERROR", "nothing to save");
     await assertEventRoles(input.roleIds, "roleIds");
     if (input.assignedRoleId) await assertEventRoles([input.assignedRoleId], "assignedRoleId");
+    // The same line «Dă-i rolul» holds: a cancelled person is given no new role — reopen them first. Taking a role
+    // back, or keeping the one they had, is still an edit.
+    if (current.state === "CANCELLED" && input.assignedRoleId && input.assignedRoleId !== current.roleId) {
+      throw new DomainError("CONFLICT", "a cancelled volunteer is given no role: reopen them first");
+    }
     if (input.identity.canonicalEmail !== current.canonicalEmail) {
       const holder = await holderOf(input.identity.canonicalEmail);
       if (holder && holder.id !== current.id) throw alreadyListed();
@@ -708,8 +731,10 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
     }
     if (changedFields.includes("roleIds")) await writeChoices(current.id, input.choiceIds);
     await audit("volunteer.edited", { volunteerId: current.id, fields: changedFields, roleId: input.assignedRoleId });
-    // A role newly given is told to the person, at the address the row now holds.
-    if (input.assignedRoleId && input.assignedRoleId !== current.roleId) {
+    // A role newly given is told to the person, at the address the row now holds — and so is a role kept when the
+    // address was corrected: the earlier email went to the old address (or is withdrawn at the send for it).
+    const addressCorrected = input.identity.canonicalEmail !== current.canonicalEmail;
+    if (input.assignedRoleId && (input.assignedRoleId !== current.roleId || addressCorrected)) {
       await queueRoleAssigned(tx, { ...current, email: next.email }, input.assignedRoleId, actor.id, now);
     }
     return { changed: true, volunteer: summary };
@@ -900,7 +925,7 @@ export async function submitVolunteer<T extends Record<string, unknown>>(
       .onConflictDoNothing({ target: [eventVolunteers.eventId, eventVolunteers.canonicalEmail] })
       .returning({ id: eventVolunteers.id });
     if (!row) return { outcome: "done", dropped };
-    await tx.insert(eventVolunteerRoleChoices).values(chosen.map((role) => ({ volunteerId: row.id, roleId: role.id, createdAt: now })));
+    await tx.insert(eventVolunteerRoleChoices).values([...kept].sort().map((roleId) => ({ volunteerId: row.id, roleId, createdAt: now })));
 
     await enqueueEmail(tx, {
       participantId: null,

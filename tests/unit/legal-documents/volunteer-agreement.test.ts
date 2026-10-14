@@ -110,7 +110,7 @@ describe("§758 the agreement's blanks", () => {
       for (const match of text(body).matchAll(/\{\{\s*([a-zA-Z]+)\s*\}\}/g)) expect(isMergeField(match[1]), match[1]).toBe(true);
       expect([...mergeFieldsIn(body)].sort()).toEqual([...AGREEMENT_FACT_FIELDS].sort());
     }
-    expect([...VOLUNTEER_MERGE_FIELDS]).toEqual(["volunteer", "volunteerRole", "volunteerTasks"]);
+    expect([...VOLUNTEER_MERGE_FIELDS]).toEqual(["volunteer", "volunteerRole", "volunteerTasks", "volunteerRoleChoices", "volunteerChoiceTasks"]);
     // Each has a line in the editor's legend, in both languages.
     for (const field of VOLUNTEER_MERGE_FIELDS) {
       expect(DECLARATION_TOKENS.some((token) => token.token === `{{${field}}}`), field).toBe(true);
@@ -137,6 +137,8 @@ describe("§758 the agreement's blanks", () => {
       volunteer: "Ana Popescu",
       volunteerRole: "Punct de apă",
       volunteerTasks: "Împarte apă",
+      volunteerRoleChoices: "",
+      volunteerChoiceTasks: "",
       event: "Crosul",
       eventDate: "sâmbătă, 21 nov. 2026",
       eventLocation: "Parcul central",
@@ -146,13 +148,17 @@ describe("§758 the agreement's blanks", () => {
     const merged = text(mergeLegalBody(volunteerAgreementRo, values));
     expect(merged).toContain("Voluntarul este Ana Popescu.");
     expect(merged).toContain("Voluntarul declară că are cel puțin 18 ani împliniți.");
-    expect(merged).toContain("la evenimentul Crosul, care are loc sâmbătă, 21 nov. 2026, în Parcul central, în rolul Punct de apă.");
+    expect(merged).toContain("la evenimentul Crosul, care are loc sâmbătă, 21 nov. 2026, în Parcul central.");
+    expect(merged).toContain("Voluntarul are rolul Punct de apă.");
+    // A role given: the choices' sentences are left out.
+    expect(merged).not.toContain("Rolul îl stabilesc organizatorii");
+    expect(merged).not.toContain("Ce presupune fiecare rol");
     expect(merged).toContain("Ce presupune rolul: Împarte apă.");
     expect(merged).not.toContain(BLANK);
     expect(PARAGRAPH_MERGE_FIELDS.has("volunteerTasks")).toBe(true);
     const noTasks = text(mergeLegalBody(volunteerAgreementRo, { ...values, volunteerTasks: "" }));
     expect(noTasks).not.toContain("Ce presupune rolul");
-    expect(noTasks).toContain("în rolul Punct de apă");
+    expect(noTasks).toContain("Voluntarul are rolul Punct de apă.");
     // A description typed as a sentence keeps one full stop, never two (`tasksWords`, applied before the facts freeze).
     const typed = text(mergeLegalBody(volunteerAgreementRo, { ...values, volunteerTasks: tasksWords("Împarte apă la kilometrul 5. ") }));
     expect(typed).toContain("Ce presupune rolul: Împarte apă la kilometrul 5.");
@@ -187,5 +193,54 @@ describe("§758 the PDF's own words", () => {
     );
     // A recording account removed since: said, never a blank.
     expect(acceptedHowWords("en", "PAPER", "Tuesday", null)).toContain("a team member (account removed)");
+  });
+});
+
+describe("§NNN the agreement before a role is given", () => {
+  const base = {
+    volunteer: "Ana Popescu",
+    event: "Crosul",
+    eventDate: "sâmbătă, 21 nov. 2026",
+    eventLocation: "Parcul central",
+    minimumAge: "18 ani",
+    signedAt: "marți, 13 oct. 2026, la 13:00",
+  };
+
+  it("names the roles offered for in the template's own sentence, and leaves out the role's, in both languages", () => {
+    const ro = text(
+      mergeLegalBody(volunteerAgreementRo, {
+        ...base,
+        volunteerRole: "",
+        volunteerTasks: "",
+        volunteerRoleChoices: "Masă, Traseu",
+        volunteerChoiceTasks: "Masă — dă numerele; Traseu — arată drumul",
+      }),
+    );
+    expect(ro).toContain("Rolul îl stabilesc organizatorii dintre cele pentru care voluntarul s-a oferit — Masă, Traseu — și i-l comunică pe email.");
+    expect(ro).toContain("Ce presupune fiecare rol: Masă — dă numerele; Traseu — arată drumul.");
+    expect(ro).not.toContain("Voluntarul are rolul");
+    expect(ro).not.toContain("Ce presupune rolul:");
+    // The event's sentence stays whole: it names no role field.
+    expect(ro).toContain("la evenimentul Crosul, care are loc sâmbătă, 21 nov. 2026, în Parcul central.");
+    expect(ro).not.toContain(BLANK);
+    const en = text(
+      mergeLegalBody(volunteerAgreementEn, { ...base, volunteerRole: "", volunteerTasks: "", volunteerRoleChoices: "Desk, Course", volunteerChoiceTasks: "" }),
+    );
+    expect(en).toContain("The organisers choose the role from those the volunteer offered to do — Desk, Course — and tell the volunteer by email.");
+    expect(en).not.toContain("What each role involves");
+    expect(en).not.toContain("The volunteer's role is");
+  });
+
+  it("keeps every role sentence out of the code: the template carries the words, the fields only names and descriptions", () => {
+    for (const field of ["volunteerRole", "volunteerTasks", "volunteerRoleChoices", "volunteerChoiceTasks"]) expect(PARAGRAPH_MERGE_FIELDS.has(field), field).toBe(true);
+    for (const body of [volunteerAgreementRo, volunteerAgreementEn]) {
+      const paragraphs = body.sections.flatMap((section) => section.paragraphs);
+      // Each role field in a paragraph of its own, so dropping one never takes the event's sentence with it.
+      for (const field of ["volunteerRole", "volunteerTasks", "volunteerRoleChoices", "volunteerChoiceTasks"]) {
+        const naming = paragraphs.filter((paragraph) => paragraph.includes(`{{${field}}}`));
+        expect(naming, field).toHaveLength(1);
+        expect(naming[0], field).not.toContain("{{event}}");
+      }
+    }
   });
 });

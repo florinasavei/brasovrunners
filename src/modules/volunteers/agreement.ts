@@ -9,7 +9,7 @@ import { generateTokenSecret, hashTokenSecret, isWellFormedTokenSecret } from "@
 import { recordAuditEvent } from "@/modules/audit/repository";
 import { isLegalDocumentBody, type LegalDocumentBody } from "@/modules/legal-documents/domain/content-hash";
 import { VOLUNTEER_AGREEMENT_KEY } from "@/modules/legal-documents/domain/keys";
-import { MINIMUM_AGE_MERGE_FIELD, mergeFieldsIn, minimumAgeMergeValue, type MergeValues } from "@/modules/legal-documents/domain/merge-fields";
+import { MINIMUM_AGE_MERGE_FIELD, mergeFieldsIn, minimumAgeMergeValue, namesVolunteerRoleChoices, type MergeValues } from "@/modules/legal-documents/domain/merge-fields";
 import { signedTextHash } from "@/modules/legal-documents/domain/signed-text";
 import { findCurrentApprovedDocument, noticeDescribesVolunteerAgreement, volunteerAgreementInForce } from "@/modules/legal-documents/repository";
 import { DEFAULT_TOKEN_HOURS } from "@/modules/notifications/domain/token-lifetime";
@@ -64,11 +64,16 @@ function assertMayManage(actor: Actor): void {
 // The blanks
 // ---------------------------------------------------------------------------------------------
 
-/** The agreement's blanks as one acceptance fills them: the person, the role, the event, the age and the moment. */
+/**
+ * The agreement's blanks as one acceptance fills them: the person, the role given or the roles chosen (§NNN), the
+ * event, the age and the moment.
+ */
 export const AGREEMENT_FACT_FIELDS = [
   "volunteer",
   "volunteerRole",
   "volunteerTasks",
+  "volunteerRoleChoices",
+  "volunteerChoiceTasks",
   "event",
   "eventDate",
   "eventLocation",
@@ -78,7 +83,15 @@ export const AGREEMENT_FACT_FIELDS = [
 
 export type AgreementFacts = Record<(typeof AGREEMENT_FACT_FIELDS)[number], string>;
 
-const agreementFactsSchema = z.object(Object.fromEntries(AGREEMENT_FACT_FIELDS.map((field) => [field, z.string()])) as Record<(typeof AGREEMENT_FACT_FIELDS)[number], z.ZodString>);
+/** The blanks added after acceptances were already kept (§NNN): a row accepted before reads them as "" — its text named neither. */
+const LATER_FACT_FIELDS: ReadonlySet<string> = new Set(["volunteerRoleChoices", "volunteerChoiceTasks"]);
+
+const agreementFactsSchema = z.object(
+  Object.fromEntries(AGREEMENT_FACT_FIELDS.map((field) => [field, LATER_FACT_FIELDS.has(field) ? z.string().default("") : z.string()])) as Record<
+    (typeof AGREEMENT_FACT_FIELDS)[number],
+    z.ZodString
+  >,
+);
 
 /** The row's `agreement_facts`, or null for a row with none (not accepted) or one nobody could read. */
 export function readAgreementFacts(value: unknown): AgreementFacts | null {
@@ -125,22 +138,25 @@ export async function volunteerRoles<T extends Record<string, unknown>>(
  * The agreement's blanks for one person, their roles and one event, in one language — everything but the moment
  * of acceptance. The event's facts as a race's declaration fills them (`eventMergeValues`: its title, its date
  * in words, its place — the city while the place is to be announced, §328); the age is the platform's
- * (`VOLUNTEER_MINIMUM_AGE`), never the event's; the role is the one given, else the roles chosen
- * (`agreementRoleWords`, §NNN); no description in this language answers `{{volunteerTasks}}` with "", which leaves
- * its sentence out. The values are the facts alone, so the text a person reads before accepting, the fingerprint
+ * (`VOLUNTEER_MINIMUM_AGE`), never the event's; the role is the one given, else the roles chosen — in their own
+ * sentence when the text read (`body`) names `{{volunteerRoleChoices}}`, else their names alone in the role's blank
+ * (`agreementRoleWords`, §NNN); no description in this language answers its tasks' field with "", which leaves its
+ * sentence out. The values are the facts alone, so the text a person reads before accepting, the fingerprint
  * and the PDF are filled from one set and cannot differ.
  */
 export async function agreementBlanks<T extends Record<string, unknown>>(
   db: Database<T>,
-  input: { eventId: string; name: string; roles: Pick<AgreementRoles, "assigned"> & { chosen: readonly RoleWords[] }; locale: Locale },
+  input: { eventId: string; name: string; roles: Pick<AgreementRoles, "assigned"> & { chosen: readonly RoleWords[] }; locale: Locale; body: unknown },
 ): Promise<{ facts: Omit<AgreementFacts, "signedAt">; timezone: string }> {
   const event = await eventMergeValues(db, input.eventId, input.locale);
-  const role = agreementRoleWords(input.roles, input.locale);
+  const role = agreementRoleWords(input.roles, input.locale, namesVolunteerRoleChoices(input.body));
   return {
     facts: {
       volunteer: input.name,
       volunteerRole: role.role,
       volunteerTasks: role.tasks,
+      volunteerRoleChoices: role.choices,
+      volunteerChoiceTasks: role.choiceTasks,
       event: event?.values.event ?? "",
       eventDate: event?.values.eventDate ?? "",
       eventLocation: event?.values.eventLocation ?? "",
@@ -195,7 +211,7 @@ export async function agreementAcceptance<T extends Record<string, unknown>>(
   },
   now: Date,
 ): Promise<AgreementAcceptanceColumns> {
-  const blanks = await agreementBlanks(db, input);
+  const blanks = await agreementBlanks(db, { ...input, body: input.document.body });
   const facts: AgreementFacts = { ...blanks.facts, signedAt: acceptedAtWords(now, input.locale, blanks.timezone) };
   return {
     agreementDocumentId: input.document.id,
@@ -322,7 +338,7 @@ export async function readVolunteerAgreementLink<T extends Record<string, unknow
   if (!document) return { status: "noAgreement" };
   const roles = await volunteerRoles(db, row);
   if (!roles.assigned && roles.chosen.length === 0) return { status: "invalid" };
-  const blanks = await agreementBlanks(db, { eventId: row.eventId, name: row.name, roles, locale });
+  const blanks = await agreementBlanks(db, { eventId: row.eventId, name: row.name, roles, locale, body: document.body });
   const nameOf = (role: RoleWords) => (locale === "en" ? role.nameEn : role.nameRo);
   return {
     status: "open",

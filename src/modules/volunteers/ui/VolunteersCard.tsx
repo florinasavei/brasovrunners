@@ -412,20 +412,25 @@ export default async function VolunteersCard({
     );
   };
 
+  /** A role's name with how it stands, «Sosire · 1 din 1»: what the organizer sees before one press fills it. */
+  const roleStanding = (role: VolunteerRole) =>
+    t("volunteers.assign.standing", { role: roleName(role), taken: String(standingOf.get(role.id)?.taken ?? 0), needed: String(role.needed) });
+
   /**
-   * «Dă-i rolul …» (§NNN): one press per role the person ticked and has not been given, and any role of the event
-   * from the select beside them — each a plain form posting the role it wants (`assignVolunteerAction`), audited and
-   * told to the person by email. Nothing for a cancelled person: reopen them first.
+   * «Dă-i rolul …» (§NNN), on the offers «De repartizat» only — a person given a role changes it in «Modifică» →
+   * «Rolul dat», so no press on their row moves them by mistake: one press per role the person ticked, with how it
+   * stands, and the event's other roles in the select beside them — each a plain form posting the role it wants
+   * (`assignVolunteerAction`), audited and told to the person by email. Nothing for a cancelled person: reopen them first.
    */
   const assignBlock = (person: VolunteerItem) => {
-    if (person.state === "CANCELLED") return null;
-    const quick = rolesOf(person).chosen.filter((role) => role.id !== person.roleId);
-    const others = roles.filter((role) => role.id !== person.roleId);
+    if (person.state === "CANCELLED" || person.roleId !== null) return null;
+    const quick = rolesOf(person).chosen;
+    const others = roles.filter((role) => !quick.some((chosen) => chosen.id === role.id));
     if (quick.length === 0 && others.length === 0) return null;
     return (
       <Stack direction="row" sx={{ flexWrap: "wrap", alignItems: "center", gap: 1, mt: 1 }} data-testid="volunteer-assign">
         {quick.map((role) => {
-          const label = t("volunteers.assign.button", { role: roleName(role) });
+          const label = t("volunteers.assign.button", { role: roleStanding(role) });
           return (
             <Box component="form" action={assignVolunteerAction} key={role.id} data-testid="volunteer-assign-form">
               {hidden}
@@ -453,14 +458,11 @@ export default async function VolunteersCard({
               slotProps={{ select: { native: true }, inputLabel: { shrink: true }, htmlInput: { "aria-label": `${t("volunteers.assign.other")}: ${shortText(person.name)}` } }}
               sx={{ minWidth: 200 }}
             >
-              {others.map((role) => {
-                const standing = standingOf.get(role.id);
-                return (
-                  <option key={role.id} value={role.id}>
-                    {t("volunteers.assign.standing", { role: roleName(role), taken: String(standing?.taken ?? 0), needed: String(role.needed) })}
-                  </option>
-                );
-              })}
+              {others.map((role) => (
+                <option key={role.id} value={role.id}>
+                  {roleStanding(role)}
+                </option>
+              ))}
             </TextField>
             <GlyphSubmitButton
               icon="role"

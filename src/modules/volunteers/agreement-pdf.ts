@@ -165,7 +165,7 @@ export async function renderVolunteerAgreementPdf<T extends Record<string, unkno
   const document = await findCurrentApprovedDocument(db, VOLUNTEER_AGREEMENT_KEY, row.locale, now);
   if (!document) return undefined;
   const roles = await volunteerRoles(db, { id: volunteerId, roleId: row.roleId });
-  const blanks = await agreementBlanks(db, { eventId: row.eventId, name: row.name, roles, locale: row.locale });
+  const blanks = await agreementBlanks(db, { eventId: row.eventId, name: row.name, roles, locale: row.locale, body: document.body });
   const entry: DeclarationEntry = {
     title: document.title,
     body: agreementBody(document.body),

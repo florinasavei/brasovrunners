@@ -3294,8 +3294,10 @@
         "volunteers": "Privacy notice only: the form's name “I want to volunteer”, in quotes. With it in the notice in force, an event that takes volunteers shows its form and keeps the offers",
         "volunteerAgreement": "Privacy notice only: the title “Volunteer agreement”, in quotes. Without it in the notice in force, the volunteers' form, the agreement's link and “Signed on paper” are off",
         "volunteer": "In the volunteer agreement only: the volunteer's name, as on the event's list",
-        "volunteerRole": "In the volunteer agreement only: the role's name, in the text's language",
-        "volunteerTasks": "In the volunteer agreement only: what the role does, from its description. Without one, the sentence naming it is left out"
+        "volunteerRole": "In the volunteer agreement only: the name of the role the organisers gave, in the text's language. With no role given, the sentence naming it is left out",
+        "volunteerTasks": "In the volunteer agreement only: what the role does, from its description. Without one, the sentence naming it is left out",
+        "volunteerRoleChoices": "In the volunteer agreement only: the roles the volunteer ticked, while no role is given. Once one is, the sentence naming them is left out",
+        "volunteerChoiceTasks": "In the volunteer agreement only: what each ticked role does, from their descriptions. With a role given or no descriptions, the sentence is left out"
       },
       "removeBlockedReferenced": "Can neither be withdrawn nor deleted permanently: {signatures}, {events} and {acknowledgements} depend on it. “Delete” on its row takes it off the list.",
       "removeBlockedCurrent": "In force right now — it can neither be withdrawn nor deleted. Approve its successor first; then this one can go.",
@@ -4203,6 +4205,16 @@
             "A lawyer should read the text first, against Law no. 78/2014: the written form and the electronic acceptance, the age of 18, the role's task sheet, the volunteers' insurance and register.",
             "You and the lawyer decide how long the club keeps the acceptances. The site deletes them 30 days after the event.",
             "Open the draft, fill in what is left, “Save draft”, then “Approve and publish”. Once in force in both languages, the form appears on the pages of the events that take volunteers."
+          ]
+        },
+        "volunteerRoleChoicesAgreement": {
+          "title": "The volunteer agreement: several roles",
+          "todo": "Volunteers now tick every role they would do, and you give them one afterwards. The agreement in force has room for one role, so a person offering on the page accepts “in the role Desk, Course”.",
+          "done": "The agreement in force says the organisers choose the role among those ticked, and what each involves.",
+          "how": [
+            "/admin/legal → the “Volunteer agreement” card → “Regenerate from the template” → confirm.",
+            "A lawyer should first read the two new sentences: the role given and the roles the volunteer offered for.",
+            "Open the draft, fill in what is left, “Save draft”, then “Approve and publish”. Agreements already accepted stay as they were accepted."
           ]
         }
       },
