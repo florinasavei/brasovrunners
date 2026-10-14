@@ -3,6 +3,7 @@ import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
+import type { ReactNode } from "react";
 import { addGpxCheckpointsAction, saveCheckpointsAction } from "@/app/[locale]/admin/events/[id]/checkpoint-actions";
 import { countForm } from "@/i18n/count-form";
 import type { Locale } from "@/i18n/routing";
@@ -15,7 +16,7 @@ import {
   checkpointBox,
 } from "@/modules/event-checkpoints/domain/checkpoint";
 import { type GpxProposal, MAX_OFF_TRACK_METERS } from "@/modules/event-checkpoints/domain/gpx-waypoints";
-import ActionForm from "@/shared/forms/ActionForm";
+import DetachedActionForm, { DetachedFields, DetachedForm } from "@/shared/forms/DetachedActionForm";
 import TimeField from "@/shared/forms/pickers/TimeField";
 import RecallField from "@/shared/forms/recall";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
@@ -30,6 +31,49 @@ const RemoveGlyph = ACTION_ICONS.delete;
 
 /** How many empty rows the card draws under the saved ones, for points to be typed in this sitting. */
 const SPARE_ROWS = 3;
+
+/**
+ * The card's two forms, by id: «Salvează punctele» and «Adaugă punctele alese». Every box and
+ * button of the card names one of them (`form=`), so none of them posts with the event's save form
+ * it is drawn inside, and none of the save form's boxes posts with them (§763).
+ */
+export const CHECKPOINTS_FORM = "checkpoints-form";
+export const CHECKPOINTS_GPX_FORM = "checkpoints-gpx-form";
+
+/**
+ * The card's two kept forms (§315), around the editor's save form (§763): their state wraps it, so
+ * the boxes drawn inside «Traseul» recall what a refusal kept and draw its summary there; their
+ * `<form>` elements stand right after it, beside it and never in it — HTML forms cannot nest. For a
+ * role that may only read the points there is nothing to post, and the save form is drawn alone.
+ */
+export async function CheckpointForms({ locale, eventId, mayEdit, children }: { locale: Locale; eventId: string; mayEdit: boolean; children?: ReactNode }) {
+  if (!mayEdit) return children;
+  const t = await getTranslations("Admin");
+  const messages = await refusalMessages({
+    "cp[].nameRo": t("checkpoints.field.nameRo"),
+    "cp[].nameEn": t("checkpoints.field.nameEn"),
+    "cp[].km": t("checkpoints.field.km"),
+    "cp[].kinds": t("checkpoints.field.kinds"),
+    "cp[].cutoff": t("checkpoints.field.cutoff"),
+    "cp[].noteRo": t("checkpoints.field.noteRo"),
+    "cp[].noteEn": t("checkpoints.field.noteEn"),
+  });
+  const hidden = (
+    <>
+      <input type="hidden" name="uiLocale" value={locale} />
+      <input type="hidden" name="eventId" value={eventId} />
+    </>
+  );
+  return (
+    <DetachedActionForm id={CHECKPOINTS_FORM} action={saveCheckpointsAction} scope="checkpoints" messages={messages}>
+      <DetachedActionForm id={CHECKPOINTS_GPX_FORM} action={addGpxCheckpointsAction} scope="checkpoints-gpx" messages={messages}>
+        {children}
+        <DetachedForm id={CHECKPOINTS_FORM}>{hidden}</DetachedForm>
+        <DetachedForm id={CHECKPOINTS_GPX_FORM}>{hidden}</DetachedForm>
+      </DetachedActionForm>
+    </DetachedActionForm>
+  );
+}
 
 type Props = {
   locale: Locale;
@@ -51,16 +95,22 @@ type Props = {
 
 /**
  * «Puncte de control» (§757; the owner, 2026-10-13: «other things for the route: I need to put
- * checkpoints and limit times»): the card of the event editor where the route's points are kept —
+ * checkpoints and limit times»): the named card of «Traseul» where the route's points are kept —
  * a name in both languages, the kilometre, what is there (water, food, first aid, timing), an
  * optional cut-off and an optional note — and, when the route's GPX has waypoints, the one press
  * that takes them («Ia punctele din GPX»: a preview first, then what the club ticks is added).
  *
- * It belongs to «Traseul» (the page's sections list it nested there, and «Traseul» links to it) and it sits **beside the editor's save form, never
- * inside it**: HTML forms cannot nest, and a refusal here (a kilometre beyond the route, a cut-off
- * before the start or after a later point's) must keep what was typed here and nothing of the
- * event's other boxes — the same shape as «De făcut pentru pagina evenimentului» (§749). Its own
- * forms are plain posts that work with scripts off, and their own save: «Salvează punctele».
+ * **Inside «Traseul», in the document** (§763; the owner, of §760's card at the top of the editor:
+ * «Partea cu „Puncte de control” ar trebui să fie băgată în cardul cu traseu (nested)»): a level-3
+ * card after the route's fields, closed with its line like every named card. «Traseul» is a card of
+ * the event's one save form, and HTML forms cannot nest, so the card's forms are *detached*
+ * (`DetachedActionForm`): their `<form>` elements stand beside the save form (`CheckpointForms`),
+ * and every box and button here names its form with the `form` attribute (`DetachedFields`, which
+ * the house's primitives read). So «Salvează punctele» posts the points and nothing of the event,
+ * «Salvează» posts the event and none of the points, and a refusal here — a kilometre beyond the
+ * route, a cut-off before the start or after a later point's — keeps what was typed here, says why
+ * above these boxes, and leaves the event's other boxes as they were (§757's shape, §749's card).
+ * Plain posts, so it works with scripts off.
  *
  * The list is in distance order — the club never orders it, it types the kilometre. A saved point is
  * removed by ticking «Scoate» on it; the rows left empty at the foot are for new ones.
@@ -70,27 +120,10 @@ export default async function CheckpointsCard({ locale, eventId, checkpoints, ma
   const count = checkpoints.length;
   const km = (value: number) => new Intl.NumberFormat(locale, { maximumFractionDigits: 2 }).format(value);
 
-  const boxMessages = await refusalMessages({
-    "cp[].nameRo": t("checkpoints.field.nameRo"),
-    "cp[].nameEn": t("checkpoints.field.nameEn"),
-    "cp[].km": t("checkpoints.field.km"),
-    "cp[].kinds": t("checkpoints.field.kinds"),
-    "cp[].cutoff": t("checkpoints.field.cutoff"),
-    "cp[].noteRo": t("checkpoints.field.noteRo"),
-    "cp[].noteEn": t("checkpoints.field.noteEn"),
-  });
-
-  const hidden = (
-    <>
-      <input type="hidden" name="uiLocale" value={locale} />
-      <input type="hidden" name="eventId" value={eventId} />
-    </>
-  );
-
   /** One point's boxes: a saved row (with «Scoate») or a spare one. */
   const rowFields = (index: number, saved: Checkpoint | null) => (
     <Stack spacing={1.5} data-testid={saved ? "checkpoint-edit-row" : "checkpoint-new-row"}>
-      <input type="hidden" name={checkpointBox(index, "id")} value={saved?.id ?? ""} />
+      <input type="hidden" name={checkpointBox(index, "id")} value={saved?.id ?? ""} form={CHECKPOINTS_FORM} />
       <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5}>
         <RecallField
           name={checkpointBox(index, "km")}
@@ -204,10 +237,10 @@ export default async function CheckpointsCard({ locale, eventId, checkpoints, ma
   const gpxOffer =
     gpx &&
     (previewOpen ? (
-      <Panel glyph="checkpoints" collapsible level={3} id="box-checkpoints-gpx" title={t("checkpoints.gpx.title")} openWhen={{ primary: true }} data-testid="checkpoints-gpx-preview">
-        <ActionForm action={addGpxCheckpointsAction} scope="checkpoints-gpx" messages={boxMessages}>
-          {hidden}
-          <input type="hidden" name="gpxKey" value={gpx.key} />
+      <Panel glyph="checkpoints" collapsible level={4} id="box-checkpoints-gpx" title={t("checkpoints.gpx.title")} openWhen={{ primary: true }} data-testid="checkpoints-gpx-preview">
+        {/* Its own form, apart from the list's: «Adaugă punctele alese» posts only the ticks and the names here. */}
+        <DetachedFields form={CHECKPOINTS_GPX_FORM}>
+          <input type="hidden" name="gpxKey" value={gpx.key} form={CHECKPOINTS_GPX_FORM} />
           <Stack spacing={1.5}>
             <Typography variant="body2" color="text.secondary">
               {t("checkpoints.gpx.intro")}
@@ -275,7 +308,7 @@ export default async function CheckpointsCard({ locale, eventId, checkpoints, ma
               </GlyphButtonLink>
             </Stack>
           </Stack>
-        </ActionForm>
+        </DetachedFields>
       </Panel>
     ) : (
       <Box>
@@ -293,11 +326,26 @@ export default async function CheckpointsCard({ locale, eventId, checkpoints, ma
     ));
 
   return (
-    <Panel glyph="checkpoints" collapsible id="box-checkpoints" title={t("checkpoints.title")} aside={summary} openWhen={{ primary: count === 0 && mayEdit }} data-testid="event-checkpoints-card">
+    // A named card of «Traseul» (§763): level 3, closed with its line; open while the GPX's preview is the page's subject.
+    <Panel
+      glyph="checkpoints"
+      collapsible
+      level={3}
+      id="box-checkpoints"
+      title={t("checkpoints.title")}
+      aside={summary}
+      openWhen={{ inUse: Boolean(gpx) && previewOpen && mayEdit }}
+      data-testid="event-checkpoints-card"
+    >
       <Stack spacing={2}>
         <Typography variant="body2" color="text.secondary">
           {t("checkpoints.intro")}
         </Typography>
+        {mayEdit && (
+          <Typography variant="body2" color="text.secondary" data-testid="checkpoints-save-note">
+            {t("checkpoints.saveNote")}
+          </Typography>
+        )}
         {routeKm !== null && (
           <Typography variant="body2" data-testid="checkpoints-route-length">
             {t("checkpoints.routeLength", { km: km(routeKm) })}
@@ -308,15 +356,14 @@ export default async function CheckpointsCard({ locale, eventId, checkpoints, ma
         ) : (
           <>
             {gpxOffer}
-            <ActionForm action={saveCheckpointsAction} scope="checkpoints" messages={boxMessages} data-testid="checkpoints-form">
-              {hidden}
-              <Stack spacing={2}>
+            <DetachedFields form={CHECKPOINTS_FORM}>
+              <Stack spacing={2} data-testid="checkpoints-fields">
                 {checkpoints.map((row, index) => (
                   <Panel
                     key={row.id}
                     glyph="checkpoints"
                     collapsible
-                    level={3}
+                    level={4}
                     title={t("checkpoints.rowTitle", { km: km(row.km), name: locale === "ro" ? row.nameRo : row.nameEn })}
                     aside={row.cutoff ? t("checkpoints.cutoffAside", { time: row.cutoff }) : undefined}
                     data-testid="checkpoint-card"
@@ -325,7 +372,7 @@ export default async function CheckpointsCard({ locale, eventId, checkpoints, ma
                   </Panel>
                 ))}
                 {count < CHECKPOINTS_MAX ? (
-                  <Panel glyph="add" collapsible level={3} title={t("checkpoints.add.title")} openWhen={{ primary: count === 0 }} data-testid="checkpoint-add">
+                  <Panel glyph="add" collapsible level={4} title={t("checkpoints.add.title")} openWhen={{ primary: count === 0 }} data-testid="checkpoint-add">
                     <Stack spacing={2.5}>
                       {Array.from({ length: Math.min(SPARE_ROWS, CHECKPOINTS_MAX - count) }, (_, spare) => (
                         <Box key={spare} sx={{ borderTop: spare > 0 ? 1 : 0, borderColor: "divider", pt: spare > 0 ? 2 : 0 }}>
@@ -343,7 +390,7 @@ export default async function CheckpointsCard({ locale, eventId, checkpoints, ma
                   <GlyphSubmitButton label={t("checkpoints.save")} pendingLabel={t("checkpoints.saving")} icon="save" />
                 </Box>
               </Stack>
-            </ActionForm>
+            </DetachedFields>
           </>
         )}
       </Stack>

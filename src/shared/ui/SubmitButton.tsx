@@ -18,6 +18,7 @@ import {
   TURNSTILE_TOKEN_EVENT,
 } from "@/modules/registrations/domain/turnstile-widget";
 import { paintedScheduler } from "@/shared/forms/after-paint";
+import { useFormOwner } from "@/shared/forms/form-owner";
 import { HELD_PRESS_OVER_EVENT, holdPress, isPressHeld, releaseHeldPress } from "./held-press";
 import { isRefused, labelOf, type MissingControl, missingControls, sameEntries, type WatchedControl } from "./missing-controls";
 import RunnerLoader, { RunnerLoaderStyles } from "./RunnerLoader";
@@ -250,9 +251,15 @@ export default function SubmitButton({
   value,
 }: SubmitButtonProps) {
   const status = useFormStatus();
+  /*
+    Drawn inside another form's markup (`useFormOwner`, §763): the button submits the form it names
+    (`form=`), and is busy while *that* form's request is in flight — `useFormStatus` reads the form
+    around the button in the tree, which here is the event's save form, not this button's.
+  */
+  const owner = useFormOwner();
   // One of several named submits of a form (the FAQ's moves): busy only when it is the one pressed,
   // read from the submission's own entries, not every button of the form at once.
-  const pending = name === undefined ? status.pending : status.pending && status.data?.get(name) === value;
+  const pending = owner ? owner.pending : name === undefined ? status.pending : status.pending && status.data?.get(name) === value;
   const ref = useRef<HTMLButtonElement>(null);
   // Complete until measured: the first paint and a no-JavaScript render must not dim a button
   // that nothing has yet found fault with.
@@ -581,6 +588,7 @@ export default function SubmitButton({
       <Button
         ref={ref}
         type="submit"
+        form={owner?.id}
         name={name}
         value={value}
         color={color}

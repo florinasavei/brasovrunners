@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.21-2026-10-14 -->
+<!-- PROJECT_BASELINE: BR-V3.22-2026-10-14 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V3.21-2026-10-14`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.22-2026-10-14`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -2177,6 +2177,8 @@ way through every step, and none of them is a way around the allocator.
 137. Given a hand entry or a «Modifică» naming several roles and a role given, racing public sign-ups ticking the same roles and a role edited or moved on two connections, then every writer locks the event's roles in the order of their ids and all of them settle, none aborted by a deadlock (2026-10-14, `DECISIONS.md` §761).
 138. Migration `0149_volunteer_role_choices` is expand-only: the message type `VOLUNTEER_ROLE_ASSIGNED`, the table `event_volunteer_role_choices` (the volunteer and the role each `ON DELETE CASCADE`, the pair the primary key) and `event_volunteers.role_id` relaxed to accept NULL; each existing volunteer's role becomes their one choice and stays the role given; an event with offers still deletes whole (2026-10-14, `DECISIONS.md` §761).
 139. Amends criterion 130. «Semnat pe hârtie» is refused (`VOLUNTEER_AGREEMENT_REPRINT`) when the version in force, the role given or the roles chosen changed since the sheet was printed; the card's «Contractul acceptat numește …» names the roles' names the accepted text held and shows only when they no longer describe the person (2026-10-14, `DECISIONS.md` §761).
+140. Amends criterion 135. On the event editor «Puncte de control» (`#box-checkpoints`) is a closed level-3 card inside «Traseul» (`#box-course`), after the route's fields, inside the save form in the document and inside «Traseul»'s box on the screen at 320 and 1280 pixels, with no CSS `order`; its forms' `<form>` elements stand outside the save form and no form is inside another; every box and button of the card names its form with the `form` attribute, so «Salvează» posts no checkpoint field and «Salvează punctele» and «Adaugă punctele alese» post no field of the event; «Traseul» has no link or note sending the reader elsewhere for the points, and its closed line counts them («3 puncte de control») while there are any (2026-10-14, `DECISIONS.md` §763).
+141. Amends criteria 123, 124 and 128. From inside «Traseul», a refused save or GPX add keeps what was typed in the card and says the reason above its boxes, with scripts on and with scripts off; the GPX's points are previewed and added, a saved point is changed and one ticked «Scoate» is removed, and none of these presses changes the event's own fields (2026-10-14, `DECISIONS.md` §763).
 - only the lines with a date whose title, page address or place contains every typed word in either language (accents and case ignored) and whose state matches are listed;
 - the state is an editorial state, «Anulat» (the event's own status), «Viitoare» or «Trecute»;
 - a series is narrowed to its matching dates before it is grouped;
