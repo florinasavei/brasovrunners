@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { type ComponentProps, createElement, type ReactElement } from "react";
-import { renderToReadableStream } from "react-dom/server";
+import { renderToReadableStream, renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
@@ -572,12 +572,25 @@ const MINOR: VolunteerItem = {
 };
 
 describe("§NNN the public form's block for a parent or guardian", () => {
-  it("is drawn open, with no box required — scripts off and an adult both send the form — inside the island that follows the age", async () => {
+  it("is drawn hidden — an adult never sees it flash — with no box required and no asterisk, a noscript rule opening it, inside the island that follows the age", async () => {
     const page = await drawBox({ minors: true });
     expect(page).toContain('data-testid="volunteer-guardian-block"');
     expect(page).toContain('data-testid="volunteer-guardian"');
-    // Open on the server (the island hides it from the age typed, after it hydrates), never `hidden` in the markup.
-    expect(/<div[^>]*data-testid="volunteer-guardian-block"[^>]*>/.exec(page)?.[0]).not.toContain("hidden");
+    // Hidden in the markup before any age is typed (the island shows it from the age, after it hydrates), and scripts off open it.
+    expect(/<div[^>]*data-testid="volunteer-guardian-block"[^>]*>/.exec(page)?.[0]).toContain("hidden");
+    // (The helper strips every <style>, so the noscript rule is read from the island drawn on its own.)
+    const GuardianFields = (await import("@/modules/volunteers/ui/GuardianFields")).default;
+    const island = renderToStaticMarkup(createElement(GuardianFields, { ageInputId: "age", minimumAge: 14, adultAge: 18, startOpen: false }, "x"));
+    expect(island).toContain('<noscript><style>[data-testid="volunteer-guardian-block"]{display:block !important}</style></noscript>');
+    expect(page).toContain("<noscript>");
+    // A minor's age typed back after a refusal draws it open from the first byte: nothing to hydrate into.
+    const back = await drawBox({ minors: true, typed: { age: "16" } });
+    expect(/<div[^>]*data-testid="volunteer-guardian-block"[^>]*>/.exec(back)?.[0]).not.toContain("hidden");
+    const adultBack = await drawBox({ minors: true, typed: { age: "30" } });
+    expect(/<div[^>]*data-testid="volunteer-guardian-block"[^>]*>/.exec(adultBack)?.[0]).toContain("hidden");
+    // The server draws no asterisk: an adult must ignore none of the three boxes.
+    expect(/<label[^>]*for="volunteer-guardianName"[^>]*>[\s\S]*?<\/label>/.exec(page)?.[0]).not.toContain("*");
+    expect(/<label[^>]*for="volunteer-guardianEmail"[^>]*>[\s\S]*?<\/label>/.exec(page)?.[0]).not.toContain("*");
     for (const name of ["guardianName", "guardianEmail", "guardianAware"]) {
       const tag = tagOf(page, "input", name);
       expect(tag, name).not.toBe("");

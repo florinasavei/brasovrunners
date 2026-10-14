@@ -21,11 +21,11 @@ function saysMinor(typed: string, minimumAge: number, adultAge: number): boolean
  * volunteer under 18): shown while the age typed is from the minimum to seventeen, hidden otherwise — and **always shown
  * without scripts**.
  *
- * The server draws the block open and with no box `required`: a visitor with scripts off, or before this island
- * hydrates, finds every box and fills those that apply — an adult leaves them empty and the server drops them
- * (`checkGuardian`). With scripts on, this island watches the age box by its id: it hides the block while the age says
- * nothing of a minor, and marks the three boxes `required` while it is shown, so the browser asks them of a minor
- * only. The block is a native `fieldset` the server renders as `children` (never a component or an element as a prop
+ * The server draws the block hidden (open only when the age typed back after a refusal says a minor, `startOpen`) and with
+ * no box `required`, so an adult never sees it flash before this island hydrates, and a visitor with scripts off — whose
+ * `<noscript>` rule opens it — finds every box and fills those that apply: an adult leaves them empty and the server drops
+ * them (`checkGuardian`). With scripts on, this island watches the age box by its id: it shows the block while the age
+ * says a minor, and marks the three boxes `required` while it is shown, so the browser asks them of a minor only. The block is a native `fieldset` the server renders as `children` (never a component or an element as a prop
  * across the boundary); this island only decides whether it is seen and whether its boxes are required. The server
  * refuses a minor's post without them in any case — hiding is a courtesy, never the rule.
  *
@@ -36,15 +36,18 @@ export default function GuardianFields({
   ageInputId,
   minimumAge,
   adultAge,
+  startOpen,
   children,
 }: {
   ageInputId: string;
   minimumAge: number;
   adultAge: number;
+  /** Whether the age the server knows (typed before a refusal) says a minor: the first render, which hydrates as it was sent. */
+  startOpen: boolean;
   children: ReactNode;
 }) {
-  // Open on the server and on the first client render, so what hydrates is what was sent; the effect then follows the age.
-  const [open, setOpen] = useState(true);
+  // What the server sent is what hydrates; the effect then follows the age typed.
+  const [open, setOpen] = useState(startOpen);
   const box = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -65,8 +68,14 @@ export default function GuardianFields({
   }, [open]);
 
   return (
-    <Box ref={box} hidden={!open} data-open={open ? "true" : "false"} data-testid="volunteer-guardian-block">
-      {children}
-    </Box>
+    <>
+      <Box ref={box} hidden={!open} data-open={open ? "true" : "false"} data-testid="volunteer-guardian-block">
+        {children}
+      </Box>
+      {/* Scripts off: nothing decides from the age, so the block is open — the server drops what an adult typed. */}
+      <noscript>
+        <style>{`[data-testid="volunteer-guardian-block"]{display:block !important}`}</style>
+      </noscript>
+    </>
   );
 }

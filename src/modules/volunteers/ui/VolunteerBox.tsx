@@ -311,12 +311,13 @@ export default async function VolunteerBox({
                   />
                 </Stack>
                 {/*
-                  The parent or guardian of a person under eighteen (§NNN): drawn open and with no box `required`, so scripts off
-                  and an adult both work — the island follows the age typed and marks the three boxes required while it shows
-                  them; the server refuses a minor's post without them either way (`checkGuardian`).
+                  The parent or guardian of a person under eighteen (§NNN): drawn hidden (open when the age typed before a refusal says
+                  a minor) with no box `required` and no asterisk — an adult is never shown it, scripts off open it with a
+                  `<noscript>` rule — and the island follows the age typed, marking the three boxes required while it shows them;
+                  the server refuses a minor's post without them either way (`checkGuardian`).
                 */}
                 {minors && (
-                  <GuardianFields ageInputId={fieldId("age")} minimumAge={VOLUNTEER_MINIMUM_AGE} adultAge={VOLUNTEER_ADULT_AGE}>
+                  <GuardianFields ageInputId={fieldId("age")} minimumAge={VOLUNTEER_MINIMUM_AGE} adultAge={VOLUNTEER_ADULT_AGE} startOpen={ageDigits && typedAge >= VOLUNTEER_MINIMUM_AGE && typedAge < VOLUNTEER_ADULT_AGE}>
                     <Box component="fieldset" sx={{ border: 0, m: 0, p: 0, minWidth: 0 }} data-testid="volunteer-guardian">
                       <Typography component="legend" sx={{ fontWeight: 600, p: 0 }}>
                         <FamilyRestroomIcon aria-hidden sx={FOLD_GLYPH_INLINE_SX} />
@@ -335,7 +336,7 @@ export default async function VolunteerBox({
                           defaultValue={typed.guardianName}
                           error={invalid.has("guardianName")}
                           helperText={invalid.has("guardianName") ? t("volunteers.errors.guardianName") : undefined}
-                          slotProps={{ htmlInput: { maxLength: VOLUNTEER_GUARDIAN_NAME_MAX }, inputLabel: { required: true } }}
+                          slotProps={{ htmlInput: { maxLength: VOLUNTEER_GUARDIAN_NAME_MAX } }}
                         />
                         <TextField
                           id={fieldId("guardianEmail")}
@@ -347,7 +348,7 @@ export default async function VolunteerBox({
                           defaultValue={typed.guardianEmail}
                           error={invalid.has("guardianEmail")}
                           helperText={invalid.has("guardianEmail") ? t("volunteers.errors.guardianEmail") : t("volunteers.guardian.emailHelp")}
-                          slotProps={{ htmlInput: { maxLength: 320 }, inputLabel: { required: true } }}
+                          slotProps={{ htmlInput: { maxLength: 320 } }}
                         />
                         <CheckboxField
                           name="guardianAware"
@@ -450,7 +451,8 @@ export default async function VolunteerBox({
             {/*
               The volunteer agreement (§758): the person's acceptance of the text in force, linked in a new tab like the
               notice — its blanks (the name, the role, the event) are filled in the copy the email carries — and the
-              platform's age, eighteen (`VOLUNTEER_MINIMUM_AGE`). Both required; the service refuses either missing.
+              platform's minimum age, fourteen, with a parent or guardian under eighteen (`VOLUNTEER_MINIMUM_AGE`,
+              `VOLUNTEER_ADULT_AGE`). Both required; the service refuses either missing.
             */}
             <Box data-testid="volunteer-agreement">
               <CheckboxField

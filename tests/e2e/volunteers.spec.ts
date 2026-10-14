@@ -179,6 +179,9 @@ test.describe("§754 volunteers for a race", () => {
       await expect(guest.getByRole("heading", { level: 1 })).toHaveText(`Vreau să fiu voluntar la Alergarea cu voluntari ${tag}`);
       await expect(guest.getByTestId("volunteers-when-where")).toContainText("Parcul Tractorul");
       await expect(guest.getByTestId("volunteers-back")).toHaveAttribute("href", `/ro/evenimente/${event.slug}`);
+      // The house's back link: a left arrow before the words, a thumb's height.
+      await expect(guest.getByTestId("volunteers-back-arrow")).toBeVisible();
+      expect((await guest.getByTestId("volunteers-back").boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
       expect(await guest.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
       const box = guest.getByTestId("volunteer-box");
       await expect(box).toBeVisible();
@@ -592,6 +595,15 @@ test.describe("§754 volunteers for a race", () => {
         const block = guest.getByTestId("volunteer-guardian-block");
         const age = guest.locator('input[name="age"]');
         await expect(block).toBeHidden();
+        // Scripts off: nothing can decide from the age, so the parent's boxes are open — the server drops what an adult typed.
+        const bareContext = await browser.newContext({ baseURL: test.info().project.use.baseURL, javaScriptEnabled: false });
+        try {
+          const bare = await bareContext.newPage();
+          await bare.goto(`/ro/evenimente/${event.slug}/voluntari`);
+          await expect(bare.getByTestId("volunteer-guardian-block")).toBeVisible();
+        } finally {
+          await bareContext.close();
+        }
         // Under the floor of fourteen: told the floor, not asked for a parent.
         await age.fill("13");
         await expect(block).toBeHidden();
