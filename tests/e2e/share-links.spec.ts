@@ -106,19 +106,32 @@ test.describe("BR-REQ-052-02 criterion 8 — the share buttons", () => {
     expect(overflow).toBeLessThanOrEqual(0);
   });
 
-  test("keep a 44-pixel tap area around the small pill: an invisible band above and below (§NNN)", async ({ page }) => {
+  test("keep a tap band around the small pill that never covers a neighbour: above and below, two pixels inside an edge is the pill's own (§NNN)", async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 720 });
     await page.goto(EVENT);
-    const facebook = page.locator("#main").getByRole("link", { name: "Facebook" });
-    await facebook.evaluate((link) => link.scrollIntoView({ block: "center" }));
-    const box = (await facebook.boundingBox())!;
-    const landed = await facebook.evaluate(
-      (link, point) => {
-        const found = document.elementFromPoint(point.x, point.y);
-        return found !== null && (found === link || link.contains(found));
-      },
-      { x: box.x + box.width / 2, y: box.y - 6 },
-    );
-    expect(landed, "a press six pixels above the pill still lands on it").toBe(true);
+    const main = page.locator("#main");
+    const probe = async (name: RegExp | string, offset: "above" | "below" | "insideTop" | "insideBottom") => {
+      // The Instagram control is a link until the browser can share a file, then a button.
+      const link = main.getByRole("link", { name }).or(main.getByRole("button", { name })).first();
+      await link.evaluate((el) => el.scrollIntoView({ block: "center" }));
+      const box = (await link.boundingBox())!;
+      const y = { above: box.y - 3, below: box.y + box.height + 3, insideTop: box.y + 2, insideBottom: box.y + box.height - 2 }[offset];
+      return link.evaluate(
+        (el, point) => {
+          const found = document.elementFromPoint(point.x, point.y);
+          return found !== null && (found === el || el.contains(found));
+        },
+        { x: box.x + box.width / 2, y },
+      );
+    };
+    // Inside the band, just outside the pill: still the pill.
+    expect(await probe("Facebook", "above"), "three pixels above Facebook").toBe(true);
+    expect(await probe("Facebook", "below"), "three pixels below Facebook").toBe(true);
+    // Two pixels inside any edge of any pill, the share row's last line included (it sits right above the
+    // calendar row's first): that pill's own, so the band of the pill beside it never takes the press.
+    for (const name of ["Facebook", "WhatsApp", /^(Descarcă poza|Instagram)$/, "Google Calendar", "Apple Calendar", /^Outlook\.com/, /^Outlook la serviciu/, /^Descarcă fișierul \.ics$/]) {
+      expect(await probe(name, "insideTop"), `two pixels inside the top of ${String(name)}`).toBe(true);
+      expect(await probe(name, "insideBottom"), `two pixels inside the bottom of ${String(name)}`).toBe(true);
+    }
   });
 });

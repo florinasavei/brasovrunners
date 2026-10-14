@@ -6,7 +6,7 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 import { googleCalendarDetails, googleCalendarUrl, isoInZone, outlookCalendarUrl, type CalendarEvent, type CalendarLabels } from "@/modules/events/ical";
 import { CALENDAR_TARGET_NAMESPACE, CALENDAR_TARGETS } from "@/modules/events/ui/calendar-targets";
-import { SHARE_PILL_SX } from "@/modules/events/ui/share-pill";
+import { SHARE_PILL_BAND, SHARE_PILL_SX, SHARE_ROW_GAP } from "@/modules/events/ui/share-pill";
 
 /**
  * The event page's «Adaugă în calendar» row names the five doors of the subscription panel, and
@@ -265,9 +265,18 @@ describe("the small pill", () => {
     expect(SHARE_PILL_SX.minHeight).toBeGreaterThanOrEqual(24);
     expect(SHARE_PILL_SX.minHeight).toBeLessThanOrEqual(32);
     expect(JSON.stringify(SHARE_PILL_SX)).not.toMatch(/44/);
-    // The 44-pixel tap area is an invisible band, not a taller pill.
-    expect(SHARE_PILL_SX["&::after"]).toMatchObject({ top: -8, bottom: -8 });
-    expect(SHARE_PILL_SX.minHeight + 16).toBeGreaterThanOrEqual(44);
+    // The tap area is an invisible band, not a taller pill (§NNN).
+    expect(SHARE_PILL_SX["&::after"]).toMatchObject({ top: -SHARE_PILL_BAND, bottom: -SHARE_PILL_BAND });
+    expect(SHARE_PILL_SX.minHeight + 2 * SHARE_PILL_BAND).toBeGreaterThanOrEqual(24);
+  });
+
+  it("never lets a band reach a visible neighbour: it is at most half the gap beside it", () => {
+    // Spacing unit is 8 pixels. Two bands of neighbouring lines then meet inside the gap, never on a pill.
+    expect(SHARE_PILL_BAND * 2).toBeLessThanOrEqual(SHARE_ROW_GAP * 8);
+    const share = read("src/modules/events/ui/ShareLinks.tsx");
+    // The two rows, the lines of a wrapped row and the pills in a line all keep that one gap.
+    expect(share).toContain("<Stack spacing={SHARE_ROW_GAP}>");
+    expect(share.match(/gap: SHARE_ROW_GAP/g)).toHaveLength(2);
   });
 
   it("is worn by every pill of both rows, the islands included", () => {

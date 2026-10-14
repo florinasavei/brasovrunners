@@ -4,7 +4,6 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import { DENSITY } from "@/theme/density";
 import { getTranslations } from "next-intl/server";
 import { Fragment, type ReactNode } from "react";
 import { DISCLOSURE_SUMMARY_SX, DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
@@ -14,7 +13,7 @@ import { facebookShareUrl, whatsappShareUrl } from "../share-links";
 import { CALENDAR_TARGET_NAMESPACE, CALENDAR_TARGETS, calendarTargetMark, type CalendarTarget } from "./calendar-targets";
 import InstagramShareButton from "./InstagramShareButton";
 import NativeShareButton from "./NativeShareButton";
-import { SHARE_PILL_SX } from "./share-pill";
+import { SHARE_PILL_SX, SHARE_ROW_GAP } from "./share-pill";
 
 /**
  * Share this event (`DECISIONS.md` §90, §140): the phone's own share sheet where there is
@@ -55,26 +54,29 @@ type Props = {
   shareable?: boolean;
 };
 
-/** Where each of the five doors goes for this event: Apple's and the download's is the one file. */
-function calendarHref(calendar: NonNullable<Props["calendar"]>, id: CalendarTarget): string {
+/** How a link opens: `blank`: another site, in a new tab; `self`: our own file, left to the browser (Apple's phones open it in Calendar); `download`: saved. */
+type Open = "blank" | "self" | "download";
+
+/** Where each of the five doors goes for this event, and how it opens: Apple's and the download's is the one file. */
+function calendarDoor(calendar: NonNullable<Props["calendar"]>, id: CalendarTarget): { href: string; open: Open } {
   switch (id) {
     case "google":
-      return calendar.googleUrl;
+      return { href: calendar.googleUrl, open: "blank" };
     case "outlook":
-      return calendar.outlookUrl;
+      return { href: calendar.outlookUrl, open: "blank" };
     case "outlookWork":
-      return calendar.outlookWorkUrl;
+      return { href: calendar.outlookWorkUrl, open: "blank" };
     case "apple":
+      return { href: calendar.icsHref, open: "self" };
     case "ics":
-      return calendar.icsHref;
+      return { href: calendar.icsHref, open: "download" };
   }
 }
 
 export default async function ShareLinks({ url, title, imageHref, fileName, calendar, shareable = true }: Props) {
   const t = await getTranslations("Event");
   const doors = await getTranslations(CALENDAR_TARGET_NAMESPACE);
-  /** `blank`: another site, in a new tab; `self`: our own file, left to the browser (Apple's phones open it in Calendar); `download`: saved. */
-  const anchor = (href: string, label: string, icon: ReactNode, open: "blank" | "self" | "download" = "blank") => (
+  const anchor = (href: string, label: string, icon: ReactNode, open: Open = "blank") => (
     <Button
       component="a"
       href={href}
@@ -99,9 +101,9 @@ export default async function ShareLinks({ url, title, imageHref, fileName, cale
     </Typography>
   );
   return (
-    <Stack spacing={0.5}>
+    <Stack spacing={SHARE_ROW_GAP}>
       {shareable && (
-      <Stack direction="row" sx={{ flexWrap: "wrap", alignItems: "center", gap: { xs: DENSITY.gapXs, sm: 1 } }}>
+      <Stack direction="row" sx={{ flexWrap: "wrap", alignItems: "center", gap: SHARE_ROW_GAP }}>
         {caption(t("share.title"))}
         <NativeShareButton url={url} title={title} text={title} label={t("share.native")} />
         {anchor(facebookShareUrl(url), t("share.facebook"), <SocialIcon network="facebook" size={18} />)}
@@ -119,11 +121,12 @@ export default async function ShareLinks({ url, title, imageHref, fileName, cale
       </Stack>
       )}
       {calendar && (
-        <Stack direction="row" sx={{ flexWrap: "wrap", alignItems: "center", gap: { xs: DENSITY.gapXs, sm: 1 } }}>
+        <Stack direction="row" sx={{ flexWrap: "wrap", alignItems: "center", gap: SHARE_ROW_GAP }}>
           {caption(t("share.calendarTitle"))}
-          {CALENDAR_TARGETS.map((id) => (
-            <Fragment key={id}>{anchor(calendarHref(calendar, id), doors(id), calendarTargetMark(id), id === "ics" ? "download" : id === "apple" ? "self" : "blank")}</Fragment>
-          ))}
+          {CALENDAR_TARGETS.map((id) => {
+            const { href, open } = calendarDoor(calendar, id);
+            return <Fragment key={id}>{anchor(href, doors(id), calendarTargetMark(id), open)}</Fragment>;
+          })}
         </Stack>
       )}
       {calendar && (
