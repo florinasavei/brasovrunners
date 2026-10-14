@@ -64,8 +64,9 @@ test.describe("§754 volunteers for a race", () => {
     const card = page.getByTestId("event-volunteers");
     await expect(card).toBeVisible();
     await expect(card.locator("summary").first()).toContainText("Voluntari");
-    // A role's group by its own heading: a person's chips and the role select name the other roles too.
-    const group = (name: string) => page.getByTestId("volunteer-group").filter({ has: page.getByRole("heading", { level: 3, name, exact: true }) });
+    // A role's group by its own heading — a person's chips and the role select name the other roles too — found by
+    // its text, so a folded card (nobody waiting) still answers.
+    const group = (name: string) => page.getByTestId("volunteer-group").filter({ has: page.locator("h3").getByText(name, { exact: true }) });
 
     async function addRole(nameRo: string, nameEn: string, needed: string) {
       await openEditorBox(page, "Adaugă un rol");
@@ -231,7 +232,10 @@ test.describe("§754 volunteers for a race", () => {
       } finally {
         await client.end();
       }
-      await finishGroup.getByRole("button", { name: /^Confirmă/ }).click();
+      // A fresh load first: the address already ends in the card's anchor, so the press's own redirect is what is waited for.
+      await page.goto(`/ro/admin/events/${event.id}`);
+      await hydrated(page);
+      await group("Sosire").getByRole("button", { name: /^Confirmă/ }).click();
       await page.waitForURL(/#box-volunteers$/);
       await hydrated(page);
       await expect(group("Sosire").getByTestId("volunteer-state")).toHaveText("Confirmat");
@@ -262,6 +266,8 @@ test.describe("§754 volunteers for a race", () => {
 
       // The organizers give «Punct de apă» to both: «2 din 2», and the page offers no form any more.
       for (const name of ["Ion Test", "Dana Test"]) {
+        await page.goto(`/ro/admin/events/${event.id}`);
+        await hydrated(page);
         await page.locator('[data-testid="volunteer-unassigned"] [data-testid="volunteer-row"]', { hasText: name }).getByRole("button", { name: /^Dă-i rolul Punct de apă/ }).click();
         await page.waitForURL(/#box-volunteers$/);
         await hydrated(page);
@@ -309,7 +315,7 @@ test.describe("§754 volunteers for a race", () => {
     }
     await addByHand("Ion Link", `ion.${tag}@example.test`, true);
     await addByHand("Dana Hartie", `dana.${tag}@example.test`, false);
-    const group = (name: string) => page.getByTestId("volunteer-group").filter({ has: page.getByRole("heading", { level: 3, name, exact: true }) });
+    const group = (name: string) => page.getByTestId("volunteer-group").filter({ has: page.locator("h3").getByText(name, { exact: true }) });
     const ionRow = page.locator('[data-testid="volunteer-row"]', { hasText: "Ion Link" });
     const danaRow = page.locator('[data-testid="volunteer-row"]', { hasText: "Dana Hartie" });
     await expect(ionRow.getByTestId("volunteer-agreement-state")).toHaveText("Contract neacceptat încă");
