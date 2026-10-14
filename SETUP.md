@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.20-2026-10-14 -->
+<!-- PROJECT_BASELINE: BR-V3.21-2026-10-14 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V3.20-2026-10-14`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.21-2026-10-14`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -2062,7 +2062,7 @@ only ones who see the names, addresses and telephone numbers.
    event is not cancelled or over, a role still needs people, the notice describes them, a volunteer
    agreement is in force, and the notice describes its acceptance. The form is a fold, «Vreau să fiu voluntar», under the programme; it asks the name,
    the address, the telephone number, «Ce ești dispus(ă) să faci» — one box per role that still needs
-   people, as many ticked as the person would do, at least one (§NNN) —, an optional
+   people, as many ticked as the person would do, at least one (§761) —, an optional
    message, the consent tick, «Am citit și accept contractul de voluntariat» (linking the text in force)
    and «Am cel puțin 18 ani», behind the same anti-bot checks as the registration form.
 5. **Answer the offers.** Each sign-up is «Înscris», with **no role yet**: it waits under **«De repartizat»**

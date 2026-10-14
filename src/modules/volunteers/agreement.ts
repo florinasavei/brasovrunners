@@ -65,7 +65,7 @@ function assertMayManage(actor: Actor): void {
 // ---------------------------------------------------------------------------------------------
 
 /**
- * The agreement's blanks as one acceptance fills them: the person, the role given or the roles chosen (§NNN), the
+ * The agreement's blanks as one acceptance fills them: the person, the role given or the roles chosen (§761), the
  * event, the age and the moment.
  */
 export const AGREEMENT_FACT_FIELDS = [
@@ -83,7 +83,7 @@ export const AGREEMENT_FACT_FIELDS = [
 
 export type AgreementFacts = Record<(typeof AGREEMENT_FACT_FIELDS)[number], string>;
 
-/** The blanks added after acceptances were already kept (§NNN): a row accepted before reads them as "" — its text named neither. */
+/** The blanks added after acceptances were already kept (§761): a row accepted before reads them as "" — its text named neither. */
 const LATER_FACT_FIELDS: ReadonlySet<string> = new Set(["volunteerRoleChoices", "volunteerChoiceTasks"]);
 
 const agreementFactsSchema = z.object(
@@ -108,7 +108,7 @@ export type AgreementRoles = { assigned: (RoleWords & { id: string }) | null; ch
 export { tasksWords };
 
 /**
- * One volunteer's roles as the agreement names them (§NNN): the role given (`event_volunteers.role_id`) and the
+ * One volunteer's roles as the agreement names them (§761): the role given (`event_volunteers.role_id`) and the
  * roles chosen (`event_volunteer_role_choices`), in the club's order — read in the caller's transaction.
  */
 export async function volunteerRoles<T extends Record<string, unknown>>(
@@ -140,7 +140,7 @@ export async function volunteerRoles<T extends Record<string, unknown>>(
  * in words, its place — the city while the place is to be announced, §328); the age is the platform's
  * (`VOLUNTEER_MINIMUM_AGE`), never the event's; the role is the one given, else the roles chosen — in their own
  * sentence when the text read (`body`) names `{{volunteerRoleChoices}}`, else their names alone in the role's blank
- * (`agreementRoleWords`, §NNN); no description in this language answers its tasks' field with "", which leaves its
+ * (`agreementRoleWords`, §761); no description in this language answers its tasks' field with "", which leaves its
  * sentence out. The values are the facts alone, so the text a person reads before accepting, the fingerprint
  * and the PDF are filled from one set and cannot differ.
  */
@@ -308,7 +308,7 @@ export type AgreementLinkView =
       status: "open";
       name: string;
       eventTitle: string;
-      /** The role the organizers gave the person, in the page's language, or null while nobody has (§NNN). */
+      /** The role the organizers gave the person, in the page's language, or null while nobody has (§761). */
       roleName: string | null;
       /** The roles the person chose, in the page's language and the club's order: the page names them while no role is given. */
       chosenRoleNames: string[];
@@ -487,7 +487,7 @@ async function assertNoticeDescribesAgreement<T extends Record<string, unknown>>
 
 /**
  * What the desk printed: the version the «PDF de semnat» carried and the roles it named — the role given, or the
- * roles chosen (`agreementRolesStamp`, §NNN) — the card posts both.
+ * roles chosen (`agreementRolesStamp`, §761) — the card posts both.
  */
 export type PrintedAgreement = { documentId: string; roles: string };
 

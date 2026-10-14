@@ -1014,13 +1014,13 @@ export type TemplateData = {
    */
   volunteer?: {
     name: string;
-    /** The role the organizers gave the person, in each language — or null while nobody has (§NNN). */
+    /** The role the organizers gave the person, in each language — or null while nobody has (§761). */
     roleRo: string | null;
     roleEn: string | null;
     /** What the given role asks, in each language, when the club wrote it (the role-given message says it). */
     roleDescriptionRo?: string | null;
     roleDescriptionEn?: string | null;
-    /** The roles the person said they would do (§NNN), in the club's order, in each language. */
+    /** The roles the person said they would do (§761), in the club's order, in each language. */
     chosenRo: string[];
     chosenEn: string[];
     /** The volunteer agreement's PDF rides along (§758): the person accepted it, and their copy is attached. */
@@ -1323,7 +1323,7 @@ function eventFacts(d: TemplateData, labels: { map: string; strava: string }) {
 /**
  * The bold line of a volunteer's messages (§754): the role first — a fact of this person, kept whoever wrote the
  * message's words — then the event's start and place, with the event's own links. The role is the one the
- * organizers gave; while nobody has, the roles the person offered for (§NNN): «Te-ai oferit pentru: Masă, Traseu».
+ * organizers gave; while nobody has, the roles the person offered for (§761): «Te-ai oferit pentru: Masă, Traseu».
  */
 function volunteerFacts(locale: EmailLocale, d: TemplateData, labels: { map: string; strava: string }) {
   const role = locale === "ro" ? d.volunteer?.roleRo : d.volunteer?.roleEn;
@@ -1338,7 +1338,7 @@ function volunteerFacts(locale: EmailLocale, d: TemplateData, labels: { map: str
   return line ? { line, links: event?.links ?? [] } : undefined;
 }
 
-/** The organizers' line about a volunteer (§754): the name and the roles the person offered for (§NNN). */
+/** The organizers' line about a volunteer (§754): the name and the roles the person offered for (§761). */
 function volunteerClubLine(d: TemplateData, locale: EmailLocale): string | undefined {
   if (!d.volunteer) return undefined;
   const chosen = locale === "ro" ? d.volunteer.chosenRo : d.volunteer.chosenEn;
@@ -1844,7 +1844,7 @@ const T = {
       ],
       action: "Deschide «Voluntari»",
     },
-    // The role the organizers gave a volunteer (§NNN): one short message naming it — nothing to press.
+    // The role the organizers gave a volunteer (§761): one short message naming it — nothing to press.
     volunteerRoleAssigned: {
       subject: (d: TemplateData) => `Rolul tău de voluntar la ${d.eventTitle ?? "eveniment"}`,
       facts: (d: TemplateData) => volunteerFacts("ro", d, { map: "Harta punctului de întâlnire", strava: "Evenimentul pe Strava" }),

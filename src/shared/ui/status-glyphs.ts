@@ -49,7 +49,7 @@ export const STATUS_GLYPHS = {
   priorityHigh: ArrowUpwardIcon,
   priorityNormal: RemoveIcon,
   priorityLow: ArrowDownwardIcon,
-  // A role a volunteer offered to do (§NNN): «S-a oferit pentru» on the «Voluntari» card.
+  // A role a volunteer offered to do (§761): «S-a oferit pentru» on the «Voluntari» card.
   offered: VolunteerActivismIcon,
 } satisfies Record<string, ComponentType<SvgIconProps>>;
 

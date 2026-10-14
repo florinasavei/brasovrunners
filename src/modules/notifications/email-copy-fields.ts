@@ -373,7 +373,7 @@ const NO_REGISTRATION: ReadonlySet<EmailMessageType> = new Set([
   // The volunteer agreement (§758): the same — a volunteer's, never a registration's.
   "VOLUNTEER_AGREEMENT_REQUEST",
   "VOLUNTEER_AGREEMENT_ACCEPTED",
-  // The role given to a volunteer (§NNN): the same.
+  // The role given to a volunteer (§761): the same.
   "VOLUNTEER_ROLE_ASSIGNED",
   "REGISTRATION_OPENED",
   // An invitation (§647): to an address, before any registration exists.

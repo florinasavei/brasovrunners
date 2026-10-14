@@ -3,7 +3,7 @@ import { csvCell } from "@/modules/registrations/csv";
 
 /**
  * «Descarcă CSV» on an event's «Voluntari» card (§754): one row per volunteer, grouped by the role given in the
- * club's order — the offers nobody has placed first — in the reader's language; since §NNN a column for the role
+ * club's order — the offers nobody has placed first — in the reader's language; since §761 a column for the role
  * given (empty while none) and one for the roles the person offered for, joined by «, ».
  *
  * The registrations export's rules (`registrations/csv.ts`), reused rather than copied: every cell
@@ -14,9 +14,9 @@ import { csvCell } from "@/modules/registrations/csv";
  */
 
 export type VolunteerCsvRow = {
-  /** The role the organizers gave, or "" while none (§NNN). */
+  /** The role the organizers gave, or "" while none (§761). */
   role: string;
-  /** The roles the person said they would do, in the club's order, joined by «, » (§NNN). */
+  /** The roles the person said they would do, in the club's order, joined by «, » (§761). */
   choices: string;
   name: string;
   email: string;

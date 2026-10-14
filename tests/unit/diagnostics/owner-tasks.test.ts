@@ -174,7 +174,7 @@ describe("owner tasks", () => {
     }
   });
 
-  it("§NNN: the agreement's row for several roles is open while one in force names no {{volunteerRoleChoices}} and an event takes volunteers", () => {
+  it("§761: the agreement's row for several roles is open while one in force names no {{volunteerRoleChoices}} and an event takes volunteers", () => {
     expect(stateOf({ ...LAUNCHED, volunteerRoleChoicesAgreement: false }, "volunteerRoleChoicesAgreement")).toBe("open");
     expect(stateOf(LAUNCHED, "volunteerRoleChoicesAgreement")).toBe("done");
     expect(ownerTasks({ ...LAUNCHED, volunteerRoleChoicesAgreement: false, volunteeringEvents: 0 }).some((task) => task.id === "volunteerRoleChoicesAgreement")).toBe(false);

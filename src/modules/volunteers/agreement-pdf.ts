@@ -161,7 +161,7 @@ export async function renderVolunteerAgreementPdf<T extends Record<string, unkno
   }
 
   // Not accepted: the copy to sign at the desk, in the person's language, filled for them and their roles — the one
-  // given, else the ones chosen (§NNN); «Semnat pe hârtie» posts the same back (`agreementRolesStamp`).
+  // given, else the ones chosen (§761); «Semnat pe hârtie» posts the same back (`agreementRolesStamp`).
   const document = await findCurrentApprovedDocument(db, VOLUNTEER_AGREEMENT_KEY, row.locale, now);
   if (!document) return undefined;
   const roles = await volunteerRoles(db, { id: volunteerId, roleId: row.roleId });

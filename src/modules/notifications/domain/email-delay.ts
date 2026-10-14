@@ -76,7 +76,7 @@ const NOT_WAITED_FOR: ReadonlySet<EmailMessageType> = new Set<EmailMessageType>(
   // page says the copy follows by email, but the acceptance is already recorded — nobody waits on it to act.
   "VOLUNTEER_AGREEMENT_REQUEST",
   "VOLUNTEER_AGREEMENT_ACCEPTED",
-  // The role given (§NNN): it leaves at an organizer's press, to somebody on no page.
+  // The role given (§761): it leaves at an organizer's press, to somebody on no page.
   "VOLUNTEER_ROLE_ASSIGNED",
 ]);
 

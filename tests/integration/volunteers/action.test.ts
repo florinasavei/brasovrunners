@@ -116,7 +116,7 @@ beforeEach(async () => {
   });
 });
 
-/** A post as the page's form makes it, rendered a minute before the press; a list is the boxes ticked under one name (§NNN). */
+/** A post as the page's form makes it, rendered a minute before the press; a list is the boxes ticked under one name (§761). */
 function post(fields: Record<string, string | readonly string[]> = {}): FormData {
   const form = new FormData();
   const all: Record<string, string | readonly string[]> = {
@@ -231,7 +231,7 @@ describe("§754 submitVolunteerAction's redirects", () => {
     expect(await people()).toHaveLength(1);
   });
 
-  it("§NNN keeps every role ticked as the person's choices, and names the box when none is ticked — the ticks kept in the draft, never in the URL", async () => {
+  it("§761 keeps every role ticked as the person's choices, and names the box when none is ticked — the ticks kept in the draft, never in the URL", async () => {
     await seedEvent(true);
     const [finish] = await db.insert(eventVolunteerRoles).values({ eventId, nameRo: "Sosire", nameEn: "Finish", needed: 1, position: 1 }).returning();
     const none = await pressed(post({ roleIds: [] }));

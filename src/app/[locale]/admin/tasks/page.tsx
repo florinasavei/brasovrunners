@@ -488,7 +488,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
       volunteeringEvents: await countVolunteeringEvents(db, now),
       // §758: a volunteer agreement in force in every language; the row waits only while an event ahead takes volunteers.
       volunteerAgreementInForce: await volunteerAgreementInForce(db, now),
-      // §NNN: the agreement in force names the roles a person offered for (`{{volunteerRoleChoices}}`), in every language.
+      // §761: the agreement in force names the roles a person offered for (`{{volunteerRoleChoices}}`), in every language.
       volunteerRoleChoicesAgreement: await volunteerAgreementNamesRoleChoices(db, now),
       // §758: the notice in force describes the agreement's acceptance (`{{volunteerAgreement}}`), in every language.
       volunteerAgreementDescribed: await noticeDescribesVolunteerAgreement(db, now),

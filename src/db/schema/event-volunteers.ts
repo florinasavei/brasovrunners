@@ -88,7 +88,7 @@ export const eventVolunteers = pgTable(
       .notNull()
       .references(() => events.id, { onDelete: "cascade" }),
     /**
-     * The role the organizers gave the person (§754; since §NNN the *assigned* role). Null for an offer nobody
+     * The role the organizers gave the person (§754; since §761 the *assigned* role). Null for an offer nobody
      * has placed yet — every public sign-up, which ticks the roles the person would do
      * (`event_volunteer_role_choices`) and leaves the choice to the organizers. Only an assigned role counts
      * against its need («N din M»). Nullable since migration `0149`: a relaxing change, expand only.
@@ -167,7 +167,7 @@ export const eventVolunteers = pgTable(
 );
 
 /**
- * The roles a volunteer is willing to do (§NNN, amending §754; the owner, 2026-10-14: «Când se înscrie un voluntar,
+ * The roles a volunteer is willing to do (§761, amending §754; the owner, 2026-10-14: «Când se înscrie un voluntar,
  * poate bifa mai multe atribuțiuni din ce e dispus să facă (definite de noi), de exemplu: stă la masă, stă pe
  * traseu, stă în punctele de alimentare etc.»). One row per ticked role: the public form's «Ce ești dispus(ă) să
  * faci» or the organizers' own ticks. The person's offer, not a place: nothing here counts against a role's need —

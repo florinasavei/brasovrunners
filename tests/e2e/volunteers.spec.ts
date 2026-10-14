@@ -9,7 +9,7 @@ import { openEditorBox } from "./support/fold";
  * published event, takes volunteers on its page, and a visitor who is nobody offers through the public form —
  * behind the privacy notice the seed's sample text describes (`{{volunteers}}`).
  *
- * §NNN — «Ce ești dispus(ă) să faci»: the visitor ticks two roles; the Administrator finds the offer under
+ * §761 — «Ce ești dispus(ă) să faci»: the visitor ticks two roles; the Administrator finds the offer under
  * «De repartizat», gives one role with one press and sees «1 din N» on it; a role with all the people it needs is
  * no longer offered; a repeated sign-up gets the same answer; once every role is given away the page offers no form.
  *
@@ -46,7 +46,7 @@ async function seedEvent(tag: string): Promise<{ id: string; slug: string }> {
 test.describe("§754 volunteers for a race", () => {
   test.describe.configure({ timeout: 180_000 });
 
-  test("§NNN a visitor ticks two roles; the Administrator finds the offer under «De repartizat», gives one role and sees «1 din N»; a full role is no longer offered", async ({
+  test("§761 a visitor ticks two roles; the Administrator finds the offer under «De repartizat», gives one role and sees «1 din N»; a full role is no longer offered", async ({
     page,
     browser,
   }) => {
@@ -304,7 +304,7 @@ test.describe("§754 volunteers for a race", () => {
     await page.waitForURL(/#box-volunteers$/);
     await hydrated(page);
 
-    /** A person entered by hand (§NNN): the role ticked as what they would do and, when `give`, given too. */
+    /** A person entered by hand (§761): the role ticked as what they would do and, when `give`, given too. */
     async function addByHand(name: string, email: string, give: boolean) {
       // A fresh load each time: the card's folds as a person finds them after the previous press.
       await page.goto(`/ro/admin/events/${event.id}`);

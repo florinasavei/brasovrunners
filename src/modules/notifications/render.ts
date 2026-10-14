@@ -890,7 +890,7 @@ async function renderRow(
   /*
     A volunteer's messages (§754): the volunteer's id and the event's are the payload — no
     participant, no token. The name, the role given and the roles chosen (both languages, the club typed
-    both; §NNN) are read here, at the send, so a role renamed after the sign-up reads right; a volunteer gone
+    both; §761) are read here, at the send, so a role renamed after the sign-up reads right; a volunteer gone
     or cancelled since withdraws the message (nothing left to acknowledge). The person's message has no
     button; the organizers' opens the event's «Voluntari» card behind the sign-in — from `APP_BASE_URL`
     (AGENTS.md §8).
@@ -921,7 +921,7 @@ async function renderRow(
             .limit(1)
         : [];
     if (!volunteer || volunteer.state === "CANCELLED") throw new OutboxMessageWithdrawn("the volunteer is gone or was cancelled");
-    // The role given (§NNN): only the one that stands is announced — a role changed again, or taken back, since
+    // The role given (§761): only the one that stands is announced — a role changed again, or taken back, since
     // the press withdraws the message; the newer press queued its own.
     if (row.messageType === "VOLUNTEER_ROLE_ASSIGNED" && (volunteer.roleId === null || volunteer.roleId !== payload?.roleId)) {
       throw new OutboxMessageWithdrawn("the volunteer's role was changed since it was given");

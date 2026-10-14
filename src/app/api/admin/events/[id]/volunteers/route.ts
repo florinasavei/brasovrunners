@@ -12,7 +12,7 @@ import { isUuid } from "@/shared/ids";
 
 /**
  * «Descarcă CSV» on an event's «Voluntari» card (§754): the volunteers of one event, grouped by the role given,
- * with the roles each offered for (§NNN), in the reader's language (`lang`), as a UTF-8 file with a BOM.
+ * with the roles each offered for (§761), in the reader's language (`lang`), as a UTF-8 file with a BOM.
  *
  * Whoever reads the card may take it — `canManageVolunteers`, the card's own gate, asserted here again
  * (BR-REQ-060-01): the Tehnic role, a Redactor, a volunteer and a member are refused whatever the link.
@@ -47,7 +47,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
   const t = await getTranslations({ locale, namespace: "Admin" });
   const roleNames = new Map(data.roles.map((role) => [role.id, locale === "en" ? role.nameEn : role.nameRo]));
   const order = new Map(data.roles.map((role, index) => [role.id, index]));
-  // Grouped by the role given in the club's order — the offers nobody placed yet first (§NNN) — then oldest first
+  // Grouped by the role given in the club's order — the offers nobody placed yet first (§761) — then oldest first
   // (the list is already oldest first, and the sort is stable).
   const rank = (roleId: string | null) => (roleId === null ? -1 : (order.get(roleId) ?? 0));
   const volunteers = [...data.volunteers].sort((a, b) => rank(a.roleId) - rank(b.roleId));

@@ -97,7 +97,7 @@ export type VolunteerRoleInput = z.infer<typeof volunteerRoleInputSchema>;
 const uuidField = z.uuid();
 
 /**
- * The roles a person ticked (§NNN): each an id, trimmed, the same one twice kept once, in the order posted — never
+ * The roles a person ticked (§761): each an id, trimmed, the same one twice kept once, in the order posted — never
  * more than an event may define. Whether each is this event's is the service's question (it reads the event).
  */
 const roleIdsField = z
@@ -148,7 +148,7 @@ export function choicesWithAssigned(input: Pick<VolunteerStaffInput, "roleIds" |
 
 /**
  * The public form: a person offering, with the consent tick that names the privacy notice. «Ce ești dispus(ă) să
- * faci» (§NNN): every role the person would do, at least one — the box `roleIds` in the refusal.
+ * faci» (§761): every role the person would do, at least one — the box `roleIds` in the refusal.
  */
 export const volunteerPublicInputSchema = z.object({
   roleIds: roleIdsField.pipe(z.array(z.string()).min(1)),
@@ -184,7 +184,7 @@ export function refusedFields(error: z.ZodError): string[] {
 
 /**
  * One role with the people counted against it: «N din M», what is still needed, and who is already confirmed.
- * Since §NNN only the people the organizers **gave** the role count (`roleId`, the assigned role): an offer that
+ * Since §761 only the people the organizers **gave** the role count (`roleId`, the assigned role): an offer that
  * merely ticked it holds nothing — the card and the public form's «mai e nevoie de N» read the same number.
  */
 export type RoleStanding = {
@@ -210,7 +210,7 @@ export function someRoleNeedsPeople(standings: readonly Pick<RoleStanding, "free
 }
 
 // ---------------------------------------------------------------------------------------------
-// The roles a person chooses (§NNN)
+// The roles a person chooses (§761)
 // ---------------------------------------------------------------------------------------------
 
 /**
@@ -241,13 +241,13 @@ export function tasksWords(description: string): string {
 export type AgreementRoleValues = { role: string; tasks: string; choices: string; choiceTasks: string };
 
 /**
- * The agreement's role blanks for one person (§NNN, amending §758), filled with the club's words only — the roles'
+ * The agreement's role blanks for one person (§761, amending §758), filled with the club's words only — the roles'
  * names and descriptions —, never a clause of the code's own: the sentences are the approved text's.
  *
  * - A role given: `{{volunteerRole}}` its name, `{{volunteerTasks}}` what it asks; the choices' fields "" (their
  *   sentences drop).
  * - None given, and the text in force names `{{volunteerRoleChoices}}` (`textNamesChoices`, the platform's template
- *   since §NNN): `{{volunteerRoleChoices}}` the chosen roles' names, «Masă, Traseu», `{{volunteerChoiceTasks}}` what
+ *   since §761): `{{volunteerRoleChoices}}` the chosen roles' names, «Masă, Traseu», `{{volunteerChoiceTasks}}` what
  *   each asks, «Masă — dă numerele; Traseu — arată drumul»; the role's fields "" (their sentences drop).
  * - None given under a text that does not (every version approved before): the chosen roles' names alone in
  *   `{{volunteerRole}}` — «… în rolul Masă, Traseu.» — and their tasks in `{{volunteerTasks}}` (one role: its
@@ -393,7 +393,7 @@ export const volunteerAgreementAcceptSchema = z.object({
 /**
  * Which roles the page's box lists, or null for no box at all: the roles that still need people while the form
  * is open; and, when the form closed only because the organizers gave the last place while the person typed (an
- * offer takes none, §NNN), an empty list for a person whose page is the answer to their own post — «am primit»,
+ * offer takes none, §761), an empty list for a person whose page is the answer to their own post — «am primit»,
  * «the role filled», or a refusal they came back to correct (invalid, captcha, limited) — so the box says «toate rolurile s-au umplut»
  * rather than vanishing without a sentence. A plain visit, and every other closed form, draws nothing.
  */

@@ -346,7 +346,7 @@ export async function volunteerAgreementInForce<T extends Record<string, unknown
 }
 
 /**
- * Whether the volunteer agreement in force names the roles a person offered for (§NNN, `namesVolunteerRoleChoices`)
+ * Whether the volunteer agreement in force names the roles a person offered for (§761, `namesVolunteerRoleChoices`)
  * in every language: what `/admin/tasks`' row `volunteerRoleChoicesAgreement` reads. Nothing waits on it — a text
  * that does not is filled with the roles' names alone (`agreementRoleWords`).
  */

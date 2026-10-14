@@ -34,7 +34,7 @@ export type VolunteerTyped = {
   email?: string;
   phoneCountry?: string;
   phone?: string;
-  /** The roles ticked (§NNN), their ids joined by commas: the sealed draft keeps one string a name. */
+  /** The roles ticked (§761), their ids joined by commas: the sealed draft keeps one string a name. */
   roleIds?: string;
   message?: string;
 };

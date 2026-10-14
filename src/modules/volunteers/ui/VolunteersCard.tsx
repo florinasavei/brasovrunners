@@ -128,12 +128,12 @@ export default async function VolunteersCard({
   const totalTaken = standings.reduce((sum, standing) => sum + standing.taken, 0);
   const roleName = (role: Pick<VolunteerRole, "nameRo" | "nameEn">) => (locale === "en" ? role.nameEn : role.nameRo);
   const roleById = new Map(roles.map((role) => [role.id, role]));
-  /** A person's roles as the agreement names them (§NNN): the one given and the ones chosen, in the club's order. */
+  /** A person's roles as the agreement names them (§761): the one given and the ones chosen, in the club's order. */
   const rolesOf = (person: VolunteerItem) => ({
     assigned: (person.roleId ? roleById.get(person.roleId) : undefined) ?? null,
     chosen: person.choiceIds.flatMap((id) => roleById.get(id) ?? []),
   });
-  // Offers nobody has given a role yet (§NNN): «De repartizat», above the roles; the cancelled ones wait for nothing.
+  // Offers nobody has given a role yet (§761): «De repartizat», above the roles; the cancelled ones wait for nothing.
   const unassigned = volunteers.filter((volunteer) => volunteer.roleId === null);
   const waitingForRole = unassigned.filter((volunteer) => volunteer.state !== "CANCELLED").length;
   const day = (at: Date) => formatDay(at, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true, position: "inline" });
@@ -209,7 +209,7 @@ export default async function VolunteersCard({
   );
 
   /**
-   * The boxes of «Adaugă un voluntar» and every person's «Modifică»: what the person would do (§NNN) — one box per
+   * The boxes of «Adaugă un voluntar» and every person's «Modifică»: what the person would do (§761) — one box per
    * role, the house's `CheckboxField` posting `roleIds` once per tick — and the role given, any of the event's or
    * none yet. The service holds the rule: at least one ticked, or a role given.
    */
@@ -317,7 +317,7 @@ export default async function VolunteersCard({
   const agreementBlock = (person: VolunteerItem) => {
     const pdfHref = `/api/admin/events/${eventId}/volunteers/${person.id}/agreement`;
     if (person.agreementAcceptedAt && person.agreementMethod) {
-      // The role the accepted text names, against the person's roles now (§NNN): the one given, or what they chose.
+      // The role the accepted text names, against the person's roles now (§761): the one given, or what they chose.
       const moved =
         person.agreementRoleName !== null &&
         !agreementStillNamesRole(person.agreementRoleName, rolesOf(person), person.agreementLocale ?? person.locale);
@@ -417,7 +417,7 @@ export default async function VolunteersCard({
     t("volunteers.assign.standing", { role: roleName(role), taken: String(standingOf.get(role.id)?.taken ?? 0), needed: String(role.needed) });
 
   /**
-   * «Dă-i rolul …» (§NNN), on the offers «De repartizat» only — a person given a role changes it in «Modifică» →
+   * «Dă-i rolul …» (§761), on the offers «De repartizat» only — a person given a role changes it in «Modifică» →
    * «Rolul dat», so no press on their row moves them by mistake: one press per role the person ticked, with how it
    * stands, and the event's other roles in the select beside them — each a plain form posting the role it wants
    * (`assignVolunteerAction`), audited and told to the person by email. Nothing for a cancelled person: reopen them first.
@@ -530,7 +530,7 @@ export default async function VolunteersCard({
         {t("volunteers.since", { when: day(person.createdAt) })}
       </Typography>
 
-      {/* What the person would do (§NNN): the roles they ticked, as chips — a word and a glyph, never colour alone. */}
+      {/* What the person would do (§761): the roles they ticked, as chips — a word and a glyph, never colour alone. */}
       {person.choiceIds.length > 0 && (
         <Stack direction="row" sx={{ flexWrap: "wrap", alignItems: "center", gap: 0.5, mt: 0.5 }} data-testid="volunteer-choices">
           <Typography component="span" variant="body2" color="text.secondary">

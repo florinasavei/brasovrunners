@@ -221,7 +221,7 @@ export default async function EventDetailPage({ params, query, canEdit = false, 
           published: true,
           membersOnly,
         });
-        // The last place given by the organizers while this person typed (an offer takes none, §NNN) still owes
+        // The last place given by the organizers while this person typed (an offer takes none, §761) still owes
         // them the answer: the box stays, with no role and no form (`volunteerBoxRoles`).
         return volunteerBoxRoles(closed, roles, parseVolunteerOutcome(one(asked.volunteer)));
       }, null);

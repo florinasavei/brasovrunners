@@ -76,7 +76,7 @@ describe("§758 the volunteer agreement", () => {
   }
 
   /**
-   * A text approved before §NNN: the template's, with its one role sentence of §758 — «… în rolul {{volunteerRole}}.»
+   * A text approved before §761: the template's, with its one role sentence of §758 — «… în rolul {{volunteerRole}}.»
    * and «Ce presupune rolul: …» — and none of the sentences for the roles offered for.
    */
   const EARLIER_ACTIVITY: Record<"ro" | "en", string> = {
@@ -95,7 +95,7 @@ describe("§758 the volunteer agreement", () => {
     return { ...template, body: { ...template.body, sections } };
   };
 
-  /** The agreement in force from the platform's template (or one approved before §NNN), its club facts filled as a club would. */
+  /** The agreement in force from the platform's template (or one approved before §761), its club facts filled as a club would. */
   async function approveAgreement(version = 1, locales: readonly ("ro" | "en")[] = ["ro", "en"], earlier = false) {
     const translations: LegalDocumentTranslationInput[] = locales.map((locale) => ({ locale, ...(earlier ? earlierTemplate(locale) : LEGAL_TEMPLATES.VOLUNTEER_AGREEMENT[locale]) }));
     return insertLegalDocumentVersion(db, {
@@ -139,13 +139,13 @@ describe("§758 the volunteer agreement", () => {
     ...extra,
   });
 
-  /** A person an organizer entered by hand, given the role (§NNN: ticked and given): no acceptance yet. */
+  /** A person an organizer entered by hand, given the role (§761: ticked and given): no acceptance yet. */
   async function byHand(eventId: string, roleId: string, email = "ion@example.test") {
     const result = await changeVolunteer(db, admin, { kind: "add", eventId, fields: { roleIds: [roleId], assignedRoleId: roleId, name: "Ion Popescu", email, phone: "+40712345679", note: "" } }, NOW);
     return result.volunteer.id;
   }
 
-  /** An organizer's «Salvează» on a person: the roles ticked, the role given ("" for none) and the boxes (§NNN). */
+  /** An organizer's «Salvează» on a person: the roles ticked, the role given ("" for none) and the boxes (§761). */
   const edit = (eventId: string, id: string, fields: { roleIds: string[]; assignedRoleId: string; name: string; email: string; phone: string }) =>
     changeVolunteer(db, admin, { kind: "edit", eventId, id, fields: { ...fields, note: "" } }, NOW);
 
@@ -218,7 +218,7 @@ describe("§758 the volunteer agreement", () => {
       const facts = readAgreementFacts(person.agreementFacts);
       expect(facts).toMatchObject({
         volunteer: "Mary Test",
-        // §NNN: nobody gave a role yet — the template's own sentence names the role the person chose; the role's is left out.
+        // §761: nobody gave a role yet — the template's own sentence names the role the person chose; the role's is left out.
         volunteerRole: "",
         volunteerTasks: "",
         volunteerRoleChoices: "Water point",
@@ -604,7 +604,7 @@ describe("§758 the volunteer agreement", () => {
       expect(text).not.toContain("5..");
     });
 
-    it("§NNN names the roles a person chose while none is given — on the form, the link's page and the desk's sheet — and a stamp that sees them change", async () => {
+    it("§761 names the roles a person chose while none is given — on the form, the link's page and the desk's sheet — and a stamp that sees them change", async () => {
       await approveAgreement();
       const { event, role } = await seedEvent();
       const [finish] = await db.insert(eventVolunteerRoles).values({ eventId: event.id, nameRo: "Sosire", nameEn: "Finish", needed: 2, position: 1 }).returning();
@@ -649,7 +649,7 @@ describe("§758 the volunteer agreement", () => {
       expect(readAgreementFacts((await row(ionId)).agreementFacts)).toMatchObject({ volunteerRole: "", volunteerRoleChoices: "Punct de apă" });
     });
 
-    it("§NNN under a text approved before, fills the role's blank with the chosen roles' names alone — no words of the code's own", async () => {
+    it("§761 under a text approved before, fills the role's blank with the chosen roles' names alone — no words of the code's own", async () => {
       await approveAgreement(1, ["ro", "en"], true);
       const { event, role } = await seedEvent();
       const [finish] = await db.insert(eventVolunteerRoles).values({ eventId: event.id, nameRo: "Sosire", nameEn: "Finish", needed: 2, position: 1 }).returning();

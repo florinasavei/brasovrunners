@@ -8,6 +8,10 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V3.21-2026-10-14
+
+- **Volunteers tick every role they would do** — «Ce ești dispus(ă) să faci» on the event's page takes several roles; the organizers find each offer under «De repartizat» on the «Voluntari» card, give one role with one press («Dă-i rolul …», showing how the role stands) and the person is told by a short email; «N din M» counts only the roles given; the CSV names the roles offered for. The volunteer agreement's template names the roles offered for in its own sentences — approve it again (`/admin/tasks` says so). §761.
+- **The main event first in the backoffice's events list** — the date marked «Principal» (or its series line) stands at the top in every order and filter that still matches it, the other rows keeping the chosen order. §762.
 ## BR-V3.20-2026-10-14
 
 - **The event editor in fewer cards** — eight instead of twelve: «Participare și înscrieri» and «Program, regulament și declarație» are one card, «Participare, înscrieri și regulament», with the minimum age right above the declaration; «Evidențiere pe site» is inside «Ce fel de eveniment», «Copertă» and the page's address inside «Titlu și rezumat», each a closed card with its line; «Traseul»'s closed line counts its checkpoints, and «Voluntari» moved below the grid with the registrations. Nothing about saving changed. §760.

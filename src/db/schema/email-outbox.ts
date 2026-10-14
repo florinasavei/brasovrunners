@@ -129,7 +129,7 @@ export const emailMessageType = pgEnum("email_message_type", [
   "VOLUNTEER_AGREEMENT_REQUEST",
   // «Ai acceptat contractul de voluntariat», after the link: the person's copy, the agreement as a PDF attached.
   "VOLUNTEER_AGREEMENT_ACCEPTED",
-  // «Rolul tău la …» (§NNN): the organizers gave a volunteer a role — one short message naming it, in the person's
+  // «Rolul tău la …» (§761): the organizers gave a volunteer a role — one short message naming it, in the person's
   // language. The volunteer's and the role's ids in the payload; withdrawn at the send when the role was changed
   // again since, or the person cancelled. No token, no link that acts.
   "VOLUNTEER_ROLE_ASSIGNED",

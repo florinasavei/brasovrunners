@@ -113,9 +113,9 @@
  *
  * `{{volunteers}}` in section 5 (§754) is the event page's form «Vreau să fiu voluntar», quoted, in the
  * paragraph that says what an offer keeps (name, address, telephone number, the roles ticked and the role
- * given — §NNN —, message, the organizers' note), why (consent, art. 6(1)(a), for the public form; art. 6(1)(f)
+ * given — §761 —, message, the organizers' note), why (consent, art. 6(1)(a), for the public form; art. 6(1)(f)
  * for a person the organizers entered), what is sent (one email of receipt to the person, one notice to the
- * organizers with neither address nor telephone, and — §NNN — a short email naming the role when the organizers
+ * organizers with neither address nor telephone, and — §761 — a short email naming the role when the organizers
  * give one), that it is no race registration and on no public list, and who
  * sees it; section 7 says thirty days after the event's start (`RETENTION_PERIODS.volunteerDaysAfterEvent`,
  * which the sweep reads). And the switch — an event page offers the form, and a sign-up is kept, only

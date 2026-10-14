@@ -69,7 +69,7 @@ export const EMAIL_AUDIENCE = {
   // behind them, the public's road like the volunteer's «am primit».
   VOLUNTEER_AGREEMENT_REQUEST: "public",
   VOLUNTEER_AGREEMENT_ACCEPTED: "public",
-  // The role the organizers gave a volunteer (§NNN): to the volunteer, the public's road like their «am primit».
+  // The role the organizers gave a volunteer (§761): to the volunteer, the public's road like their «am primit».
   VOLUNTEER_ROLE_ASSIGNED: "public",
 } as const satisfies Record<EmailMessageType, EmailAudience>;
 

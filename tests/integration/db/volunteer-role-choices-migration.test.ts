@@ -8,7 +8,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { auditMigration } from "../../../scripts/migration-check.mjs";
 
 /**
- * Migration `0149_volunteer_role_choices` (§NNN, amending §754), proven on real PostgreSQL (PGlite): a volunteer
+ * Migration `0149_volunteer_role_choices` (§761, amending §754), proven on real PostgreSQL (PGlite): a volunteer
  * listed before it — one role, `role_id NOT NULL` — keeps that role as the one given and gets it as their one choice;
  * afterwards an offer may have no role given (the column accepts NULL) and several choices; a volunteer's choices go
  * with the volunteer, and an event goes whole — roles, people and choices (both references CASCADE: a RESTRICT on the

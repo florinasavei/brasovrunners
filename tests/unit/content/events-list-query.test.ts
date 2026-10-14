@@ -239,7 +239,7 @@ describe("arrangeEventList — a series is one line, sorted by its next date", (
   });
 });
 
-describe("arrangeEventList — the main event stands first in every order (§NNN, amending §527)", () => {
+describe("arrangeEventList — the main event stands first in every order (§762, amending §527)", () => {
   let counter = 0;
   const row = (title: string, startsAt: string, over: Partial<ListedEvent> = {}, featured = false): ListedRow => ({
     event: { id: `f${++counter}`, type: "GROUP_RUN", featured, ...event({ startsAt: new Date(startsAt), ...over }) },

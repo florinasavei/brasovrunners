@@ -161,7 +161,7 @@ describe("BR-REQ-033-02 criterion 12 the club's hidden copy of every participant
       // The volunteer agreement's two (§758): to the volunteer, no registration behind them.
       "VOLUNTEER_AGREEMENT_REQUEST",
       "VOLUNTEER_AGREEMENT_ACCEPTED",
-      // The role given to a volunteer (§NNN): to the volunteer, no registration behind it.
+      // The role given to a volunteer (§761): to the volunteer, no registration behind it.
       "VOLUNTEER_ROLE_ASSIGNED",
       "REGISTRATION_OPENED",
       // An invitation (§647): to an address the club named, before any registration.

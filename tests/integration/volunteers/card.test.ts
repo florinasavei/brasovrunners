@@ -90,7 +90,7 @@ beforeEach(async () => {
   state.redirected.length = 0;
 });
 
-/** A posted form; a list is a group of boxes posting one name several times (the roles ticked, §NNN). */
+/** A posted form; a list is a group of boxes posting one name several times (the roles ticked, §761). */
 function form(fields: Record<string, string | readonly string[]>, event = eventId): FormData {
   const data = new FormData();
   data.set("uiLocale", "ro");
@@ -142,7 +142,7 @@ async function addRole(fields: Record<string, string> = {}) {
   return roles[roles.length - 1];
 }
 
-/** A person entered by hand who would do `roleId` and is given it — unless `fields` say otherwise (§NNN). */
+/** A person entered by hand who would do `roleId` and is given it — unless `fields` say otherwise (§761). */
 async function addPerson(roleId: string, fields: Record<string, string | readonly string[]> = {}) {
   expect(await post(actions.addVolunteerAction, form({ ...PERSON, roleIds: [roleId], assignedRoleId: roleId, ...fields }))).toBe("redirected");
   const rows = await listVolunteers(db, eventId);
@@ -228,7 +228,7 @@ describe("§754 an event's volunteer roles", () => {
     expect(await actionsOf()).toContain("volunteer_role.deleted");
   });
 
-  it("§NNN never removes a role somebody only ticked, given no role yet — their offer names it", async () => {
+  it("§761 never removes a role somebody only ticked, given no role yet — their offer names it", async () => {
     const water = await addRole();
     const finish = await addRole({ nameRo: "Sosire", nameEn: "Finish" });
     const dana = await addPerson(water.id, { roleIds: [water.id, finish.id], assignedRoleId: "" });
@@ -307,7 +307,7 @@ describe("§754 an event's volunteers, entered by hand", () => {
     expect(await listVolunteers(db, eventId)).toHaveLength(0);
   });
 
-  it("§NNN enters a person with the roles they would do and no role given, or with a role given alone — kept as their one choice — and tells only a role given", async () => {
+  it("§761 enters a person with the roles they would do and no role given, or with a role given alone — kept as their one choice — and tells only a role given", async () => {
     const water = await addRole();
     const finish = await addRole({ nameRo: "Sosire", nameEn: "Finish" });
     const ticked = await addPerson(water.id, { roleIds: [finish.id, water.id], assignedRoleId: "" });
@@ -408,7 +408,7 @@ describe("§754 an event's volunteers, entered by hand", () => {
   });
 });
 
-describe("§NNN «Dă-i rolul …»: the organizers give each volunteer one role", () => {
+describe("§761 «Dă-i rolul …»: the organizers give each volunteer one role", () => {
   const told = () => db.select().from(emailOutbox).where(eq(emailOutbox.messageType, "VOLUNTEER_ROLE_ASSIGNED"));
   const render = async (row: typeof emailOutbox.$inferSelect) =>
     renderOutboxMessage({ ...(row as unknown as OutboxRow), status: "PROCESSING", lockedAt: NOW }, db, NOW);
@@ -589,7 +589,7 @@ describe("§754 who may do what (BR-REQ-060-01) — the service asserts it, what
       for (const [name, action, fields] of [
         ["move", actions.moveVolunteerRoleAction, { roleId: role.id, direction: "down" }],
         ["state", actions.setVolunteerStateAction, { volunteerId: maria.id, state: "CONFIRMED" }],
-        // «Dă-i rolul …» (§NNN): the same set of roles may, nobody else.
+        // «Dă-i rolul …» (§761): the same set of roles may, nobody else.
         ["assign", actions.assignVolunteerAction, { volunteerId: maria.id, roleId: role.id }],
         ["switch", actions.switchVolunteersAction, { on: "1" }],
       ] as const) {

@@ -73,7 +73,7 @@ export default async function VolunteerAgreementLinkPage({ params, searchParams 
         </Alert>
       ) : (
         <Stack spacing={2}>
-          {/* The role the organizers gave, or — none yet — the roles the person chose (§NNN). */}
+          {/* The role the organizers gave, or — none yet — the roles the person chose (§761). */}
           <Typography>
             {view.roleName !== null
               ? t("agreement.intro", { name: view.name, event: view.eventTitle, role: view.roleName })

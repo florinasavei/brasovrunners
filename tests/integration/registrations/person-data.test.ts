@@ -120,7 +120,7 @@ describe("BR-REQ-070-01 everything held about a person", () => {
     // An offer to volunteer (§754) is found by the same canonical address, and is everything typed.
     const [volunteerRole] = await db.insert(eventVolunteerRoles).values({ eventId, nameRo: "Punct de apă", nameEn: "Water point", needed: 2 }).returning();
     const [finishRole] = await db.insert(eventVolunteerRoles).values({ eventId, nameRo: "Sosire", nameEn: "Finish", needed: 1, position: 1 }).returning();
-    // §NNN: an offer nobody has given a role yet, with the two roles she ticked.
+    // §761: an offer nobody has given a role yet, with the two roles she ticked.
     const [offer] = await db.insert(eventVolunteers).values({
       eventId,
       roleId: null,
@@ -164,7 +164,7 @@ describe("BR-REQ-070-01 everything held about a person", () => {
     // …and so is an offer to volunteer, with every column the platform keeps of it.
     expect(data.volunteerOffers).toMatchObject([
       {
-        // No role given yet, and every role she ticked, in the club's order (§NNN).
+        // No role given yet, and every role she ticked, in the club's order (§761).
         roleNameRo: null,
         roleNameEn: null,
         chosenRolesRo: ["Punct de apă", "Sosire"],

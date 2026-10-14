@@ -71,7 +71,7 @@ import { agreementAcceptance, readAgreementFacts } from "./agreement";
  * state — an organizer's «Anulat» included) changes nothing, sends nothing, and gets the answer a new one
  * gets — «am primit», or «full» when every role it ticks has filled, judged first for everybody: the answer
  * itself never tells a listed address from a new one (BR-REQ-031-01 criterion 3). §754's accepted residual —
- * a new address lowered the public «mai e nevoie de N» and a listed one did not — ended with §NNN: an offer
+ * a new address lowered the public «mai e nevoie de N» and a listed one did not — ended with §761: an offer
  * takes no place, only a role the organizers give counts, so a sign-up never moves the number.
  */
 
@@ -94,9 +94,9 @@ export type VolunteerRole = {
 export type VolunteerItem = {
   id: string;
   eventId: string;
-  /** The role the organizers gave the person, or null while nobody has (§NNN): «De repartizat» on the card. */
+  /** The role the organizers gave the person, or null while nobody has (§761): «De repartizat» on the card. */
   roleId: string | null;
-  /** The roles the person said they would do, in the club's order (§NNN): their chips on the card. */
+  /** The roles the person said they would do, in the club's order (§761): their chips on the card. */
   choiceIds: string[];
   name: string;
   email: string;
@@ -138,7 +138,7 @@ export async function listVolunteerRoles<T extends Record<string, unknown>>(db: 
 }
 
 /**
- * The roles each of an event's volunteers chose (§NNN), volunteer → role ids in the club's order (`compareRoles`):
+ * The roles each of an event's volunteers chose (§761), volunteer → role ids in the club's order (`compareRoles`):
  * one read for the whole list.
  */
 async function choicesOf<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<Map<string, string[]>> {
@@ -198,7 +198,7 @@ export async function listVolunteers<T extends Record<string, unknown>>(db: Data
 
 /**
  * The roles of one event with how each stands, in the club's order: «N din M» and what is still needed — the people
- * given each role, never those who only ticked it (§NNN).
+ * given each role, never those who only ticked it (§761).
  */
 export function volunteerStandings(roles: readonly VolunteerRole[], volunteers: readonly Pick<VolunteerItem, "roleId" | "state">[]): RoleStanding[] {
   return roles.map((role) => standingOf(role, volunteers));
@@ -334,7 +334,7 @@ export async function changeVolunteerRole<T extends Record<string, unknown>>(
       recordAuditEvent(tx, { actorStaffUserId: actor.id, action, entityType: "event", entityId: request.eventId, metadata, now });
 
     // Every verb is about this event's list: locked for the change, so two presses cannot both take a position.
-    // In the order of the ids — the order a sign-up locks the roles it ticked (§NNN) — so the two never wait on
+    // In the order of the ids — the order a sign-up locks the roles it ticked (§761) — so the two never wait on
     // each other in a circle.
     const roles = (
       await tx.select().from(eventVolunteerRoles).where(eq(eventVolunteerRoles.eventId, request.eventId)).orderBy(asc(eventVolunteerRoles.id)).for("update")
@@ -366,7 +366,7 @@ export async function changeVolunteerRole<T extends Record<string, unknown>>(
     const summary = { id: current.id, nameRo: current.nameRo };
 
     if (request.kind === "delete") {
-      // Anybody given the role, or who ticked it (§NNN) — cancelled people too: the people are asked to move first,
+      // Anybody given the role, or who ticked it (§761) — cancelled people too: the people are asked to move first,
       // never dropped from a role under them (the choices' own reference cascades only for an event's delete).
       const [people] = await tx.select({ n: count() }).from(eventVolunteers).where(eq(eventVolunteers.roleId, current.id));
       const [choosers] = await tx.select({ n: count() }).from(eventVolunteerRoleChoices).where(eq(eventVolunteerRoleChoices.roleId, current.id));
@@ -459,7 +459,7 @@ export type VolunteerRequest =
   | { kind: "add"; eventId: string; fields: Record<string, unknown> }
   | { kind: "edit"; eventId: string; id: string; fields: Record<string, unknown> }
   | { kind: "setState"; eventId: string; id: string; state: unknown }
-  /** «Dă-i rolul …» (§NNN): the organizers give the person one role of the event, ticked by them or not. */
+  /** «Dă-i rolul …» (§761): the organizers give the person one role of the event, ticked by them or not. */
   | { kind: "assign"; eventId: string; id: string; roleId: unknown }
   | { kind: "delete"; eventId: string; id: string };
 
@@ -506,7 +506,7 @@ function sameIds(a: readonly string[], b: readonly string[]): boolean {
 }
 
 /**
- * The one short email that names the role the organizers gave a volunteer (§NNN), through the outbox in the same
+ * The one short email that names the role the organizers gave a volunteer (§761), through the outbox in the same
  * transaction as the change, in the person's language. Never to a cancelled person (nothing to do), and withdrawn at
  * the send when the role was changed again or the person cancelled meanwhile (`render.ts`), so only the role that
  * stands is ever announced. Each assignment is its own message: the moment and why it is sent are in the key —
@@ -537,7 +537,7 @@ async function queueRoleAssigned<T extends Record<string, unknown>>(
 /**
  * One change to one event's volunteers, by one staff member: enter one by hand, change what was typed
  * (the name, the address, the telephone number, the roles they would do, the role given, the organizers' note),
- * give them a role («Dă-i rolul …», §NNN), confirm or cancel, delete. The address goes through the canonicalizer
+ * give them a role («Dă-i rolul …», §761), confirm or cancel, delete. The address goes through the canonicalizer
  * and is unique per event (`VOLUNTEER_ALREADY_LISTED`, naming the box); every role ticked or given must be this
  * event's (VALIDATION_ERROR naming `roleIds`, `assignedRoleId` or `roleId`); a person who is not there, or is on
  * another event, is NOT_FOUND; a cancelled person is given no role (CONFLICT: reopen first). A role may be given to
@@ -571,7 +571,7 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
       recordAuditEvent(tx, { actorStaffUserId: actor.id, action, entityType: "event", entityId: request.eventId, metadata, now });
 
     // A verb that writes a reference to a role — the role given, the roles ticked — locks the event's roles first, in
-    // the order of their ids: the order a sign-up locks the roles it ticked and a role change locks them all (§NNN).
+    // the order of their ids: the order a sign-up locks the roles it ticked and a role change locks them all (§761).
     // Without it the insert's foreign keys take KEY SHARE on each role in the order posted, and a hand entry naming
     // two roles against a sign-up ticking both waits in a circle (40P01) — one side aborted, someone's typing lost.
     if (request.kind === "add" || request.kind === "edit" || request.kind === "assign") {
@@ -794,7 +794,7 @@ export type VolunteerSubmitOutcome =
  * not describe volunteers, while no volunteer agreement is in force, or while that notice does not describe the
  * agreement's acceptance (`volunteerOfferClosedFor`, asked again here: the page's cache is not the gate).
  *
- * «Ce ești dispus(ă) să faci» (§NNN): the person ticks every role they would do. The ones that still need people are
+ * «Ce ești dispus(ă) să faci» (§761): the person ticks every role they would do. The ones that still need people are
  * kept as their choices (`openChoices`) — a role that filled while the form was open is dropped and the others stay;
  * none left is «full», for everybody, before the repeat is looked for (no oracle). The offer holds no place: the row
  * has no role until the organizers give one (`assign`), and only a role given counts against its need.
@@ -898,7 +898,7 @@ export async function submitVolunteer<T extends Record<string, unknown>>(
     if (existing) return { outcome: "done", dropped };
 
     // The agreement accepted with the sign-up (§758): the version, the moment, the blanks and their fingerprint —
-    // naming the roles chosen, since nobody has given the person one yet (§NNN).
+    // naming the roles chosen, since nobody has given the person one yet (§761).
     const acceptance = await agreementAcceptance(
       tx,
       { eventId, name: input.name, roles: { assigned: null, chosen }, locale: input.locale, document: agreement, method: "FORM" },
@@ -908,7 +908,7 @@ export async function submitVolunteer<T extends Record<string, unknown>>(
       .insert(eventVolunteers)
       .values({
         eventId,
-        // No role until the organizers give one (§NNN): the offer holds no place.
+        // No role until the organizers give one (§761): the offer holds no place.
         roleId: null,
         name: input.name,
         email: identity.deliveryEmail,

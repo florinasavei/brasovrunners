@@ -67,7 +67,7 @@ function phoneOf(form: FormData): string {
 }
 
 const staffFields = (form: FormData) => ({
-  // What the person would do (§NNN): every box ticked, one name, several values; and the role given, or "".
+  // What the person would do (§761): every box ticked, one name, several values; and the role given, or "".
   roleIds: form.getAll("roleIds").filter((value): value is string => typeof value === "string"),
   assignedRoleId: field(form, "assignedRoleId"),
   name: field(form, "name"),
@@ -190,7 +190,7 @@ export async function setVolunteerStateAction(form: FormData): Promise<void> {
 }
 
 /**
- * «Dă-i rolul …» (§NNN): one press gives a volunteer one role of the event — one of those they ticked, or another from
+ * «Dă-i rolul …» (§761): one press gives a volunteer one role of the event — one of those they ticked, or another from
  * the select beside them. The form posts the role it wants, never a toggle; the service checks the role is this
  * event's, refuses a cancelled person, audits the change and emails the person the role.
  */

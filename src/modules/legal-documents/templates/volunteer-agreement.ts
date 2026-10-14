@@ -32,7 +32,7 @@ import type { LegalDocumentBody } from "../domain/content-hash";
  * (`VOLUNTEER_MINIMUM_AGE`, through `{{minimumAge}}`) — a minor's volunteering with a parent's consent is a
  * later question, and the form refuses a person who does not tick «Am cel puțin 18 ani».
  *
- * **Several roles (§NNN, amending §758).** A volunteer ticks every role they would do and the organizers give one
+ * **Several roles (§761, amending §758).** A volunteer ticks every role they would do and the organizers give one
  * afterwards, so a person accepting on the form has no role yet. The text says it in its own sentences: «Voluntarul
  * are rolul {{volunteerRole}}.» when a role is given, «Rolul îl stabilesc organizatorii dintre cele pentru care
  * voluntarul s-a oferit — {{volunteerRoleChoices}} — și i-l comunică pe email.» while none is, each dropped whole when
@@ -59,7 +59,7 @@ const partiesEn = [
 
 const activityRo = [
   "Voluntarul ajută la evenimentul {{event}}, care are loc {{eventDate}}, în {{eventLocation}}.",
-  // The role given and the roles offered for (§NNN): each sentence is dropped whole when its field is "" (`PARAGRAPH_MERGE_FIELDS`) —
+  // The role given and the roles offered for (§761): each sentence is dropped whole when its field is "" (`PARAGRAPH_MERGE_FIELDS`) —
   // a role given keeps the first and its tasks, none given keeps the choices and what each asks.
   "Voluntarul are rolul {{volunteerRole}}.",
   "Rolul îl stabilesc organizatorii dintre cele pentru care voluntarul s-a oferit — {{volunteerRoleChoices}} — și i-l comunică pe email.",

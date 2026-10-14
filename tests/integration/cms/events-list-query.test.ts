@@ -156,7 +156,7 @@ describe("§527 the backoffice events list over seeded events and a series", () 
     expect(await titles({ state: "Încheiate" })).toEqual(["Tură pe Tâmpa", "Alergare de marți ×2", "Crosul de toamnă"]);
   });
 
-  /** Marks one date as the club's main event, as the editor's «Evidențiere pe site» box does (§NNN). */
+  /** Marks one date as the club's main event, as the editor's «Evidențiere pe site» box does (§762). */
   async function feature(ro: string, startsAt?: string) {
     const rows = await listEventsForBackoffice(db);
     const row = rows.find(
@@ -168,7 +168,7 @@ describe("§527 the backoffice events list over seeded events and a series", () 
     await db.update(events).set({ featured: true }).where(eq(events.id, row.event.id));
   }
 
-  describe("§NNN the main event stands first", () => {
+  describe("§762 the main event stands first", () => {
     // «Crosul de toamnă» is the last date still to come (21 November, a draft): by the nearest date it is third of three.
     beforeEach(async () => {
       await feature("Crosul de toamnă");
@@ -225,7 +225,7 @@ describe("§527 the backoffice events list over seeded events and a series", () 
     });
   });
 
-  it("lifts a series' line when the marked date is one of its dates still shown (§NNN)", async () => {
+  it("lifts a series' line when the marked date is one of its dates still shown (§762)", async () => {
     await feature("Alergare de marți", "2026-10-06T15:00:00Z");
     expect((await titles({ state: "ALL" }))[0]).toBe("Alergare de marți ×4");
     expect((await titles({}))[0]).toBe("Alergare de marți ×2");

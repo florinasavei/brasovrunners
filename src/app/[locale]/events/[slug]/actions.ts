@@ -27,7 +27,7 @@ function text(form: FormData, name: string): string {
   return typeof value === "string" ? value : "";
 }
 
-/** The volunteer form's ticked roles (§NNN): every value posted as `roleIds`, strings only, at most what an event may define. */
+/** The volunteer form's ticked roles (§761): every value posted as `roleIds`, strings only, at most what an event may define. */
 function roleIdsOf(form: FormData): string[] {
   return form
     .getAll("roleIds")
@@ -125,7 +125,7 @@ export async function submitVolunteerAction(form: FormData): Promise<void> {
         email: text(form, "email").trim(),
         phoneCountry: country,
         phone: national,
-        // The roles ticked (§NNN), one string in the draft: their ids joined by commas.
+        // The roles ticked (§761), one string in the draft: their ids joined by commas.
         roleIds: roleIdsOf(form).join(","),
         message: text(form, "message"),
       },
@@ -148,7 +148,7 @@ export async function submitVolunteerAction(form: FormData): Promise<void> {
       db,
       event.id,
       {
-        // «Ce ești dispus(ă) să faci» (§NNN): every box ticked posts its role's id under the one name.
+        // «Ce ești dispus(ă) să faci» (§761): every box ticked posts its role's id under the one name.
         roleIds: roleIdsOf(form),
         name: text(form, "name"),
         email: text(form, "email"),

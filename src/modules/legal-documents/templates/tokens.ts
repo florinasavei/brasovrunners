@@ -137,7 +137,7 @@ export const DECLARATION_TOKENS: readonly DeclarationToken[] = [
     messageKey: "volunteerTasks",
     example: { ro: "Împarte apă la kilometrul 5 și strânge paharele", en: "Hands out water at kilometre 5 and picks up the cups" },
   },
-  // The roles a person ticked while no role is given (§NNN), and what each asks: each sentence is left out once a
+  // The roles a person ticked while no role is given (§761), and what each asks: each sentence is left out once a
   // role is given — or, for the tasks, when no ticked role has a description.
   { token: "{{volunteerRoleChoices}}", messageKey: "volunteerRoleChoices", example: { ro: "Punct de hidratare, Sosire", en: "Water station, Finish" } },
   {

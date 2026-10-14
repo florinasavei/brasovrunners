@@ -236,7 +236,7 @@ export const SERIES_MERGE_FIELDS = ["series", "seriesRhythm", "seriesPlace"] as 
  * A role with no description answers `{{volunteerTasks}}` with "", and the sentence naming it is left out
  * whole (`PARAGRAPH_MERGE_FIELDS`) — never «Atribuțiile rolului: .».
  *
- * **The roles a person offered for (§NNN, amending §758).** A volunteer ticks every role they would do and the
+ * **The roles a person offered for (§761, amending §758).** A volunteer ticks every role they would do and the
  * organizers give one later, so an agreement accepted on the form names no role given. The platform's template
  * says so in its own approved sentences, never in words the code adds: `{{volunteerRoleChoices}}` — the names of the
  * roles the person ticked, «Masă, Traseu» — in «Rolul îl stabilesc organizatorii dintre cele pentru care voluntarul
@@ -628,7 +628,7 @@ export function describesVolunteerAgreement(body: unknown): boolean {
 }
 
 /**
- * Whether a volunteer agreement names the roles a person offered for (§NNN): it names `{{volunteerRoleChoices}}`.
+ * Whether a volunteer agreement names the roles a person offered for (§761): it names `{{volunteerRoleChoices}}`.
  * Asked of the one version a person reads (`agreementRoleWords`: its own sentences, else the names alone in
  * `{{volunteerRole}}`), and in every language for `/admin/tasks`' row `volunteerRoleChoicesAgreement`. Pure.
  */

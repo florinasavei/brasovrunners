@@ -98,10 +98,10 @@ export type PersonData = {
   volunteerOffers: Array<{
     eventId: string;
     eventTitle: string | null;
-    /** The role the organizers gave, in both languages (the page shows the one of its own locale) — null while none (§NNN). */
+    /** The role the organizers gave, in both languages (the page shows the one of its own locale) — null while none (§761). */
     roleNameRo: string | null;
     roleNameEn: string | null;
-    /** The roles the person said they would do (§NNN), in both languages, in the club's order. */
+    /** The roles the person said they would do (§761), in both languages, in the club's order. */
     chosenRolesRo: string[];
     chosenRolesEn: string[];
     state: (typeof eventVolunteers.$inferSelect)["state"];
@@ -218,14 +218,14 @@ async function collectPersonData<T extends Record<string, unknown>>(
       declaredAdult: eventVolunteers.declaredAdult,
     })
     .from(eventVolunteers)
-    // The role given, when there is one (§NNN: an offer nobody placed has none).
+    // The role given, when there is one (§761: an offer nobody placed has none).
     .leftJoin(eventVolunteerRoles, eq(eventVolunteerRoles.id, eventVolunteers.roleId))
     .leftJoin(eventTranslations, and(eq(eventTranslations.eventId, eventVolunteers.eventId), eq(eventTranslations.locale, "ro")))
     // The agreement's version number (§758), through the row's own reference.
     .leftJoin(legalDocuments, eq(legalDocuments.id, eventVolunteers.agreementDocumentId))
     .where(eq(eventVolunteers.canonicalEmail, canonicalEmail))
     .orderBy(asc(eventVolunteers.createdAt));
-  // The roles each offer chose (§NNN), every one of them: an access request is complete (art. 15 GDPR).
+  // The roles each offer chose (§761), every one of them: an access request is complete (art. 15 GDPR).
   const choiceRows =
     offerRows.length > 0
       ? await db

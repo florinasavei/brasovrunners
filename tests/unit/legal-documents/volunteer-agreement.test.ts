@@ -196,7 +196,7 @@ describe("§758 the PDF's own words", () => {
   });
 });
 
-describe("§NNN the agreement before a role is given", () => {
+describe("§761 the agreement before a role is given", () => {
   const base = {
     volunteer: "Ana Popescu",
     event: "Crosul",

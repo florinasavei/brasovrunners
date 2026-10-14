@@ -14,9 +14,9 @@ import { LEGAL_TEMPLATES } from "@/modules/legal-documents/templates/catalogue";
 import { changeVolunteer, changeVolunteerRole, submitVolunteer } from "@/modules/volunteers/volunteers";
 
 /**
- * §754, §NNN — the volunteers' public form and the organizers' card under real connections racing (BR-REQ-031-01).
+ * §754, §761 — the volunteers' public form and the organizers' card under real connections racing (BR-REQ-031-01).
  *
- * Since §NNN an offer holds no place: the person ticks every role they would do and the organizers give one. So ten
+ * Since §761 an offer holds no place: the person ticks every role they would do and the organizers give one. So ten
  * people ticking a role's one place at once are ten offers, none of them on the role. What the locks still decide:
  * a sign-up locks the roles it ticked (`SELECT … FOR UPDATE`, in the order of their ids — the order a role change
  * locks them) while it counts the people **given** each role, so an organizer giving the role's last place at the
@@ -32,7 +32,7 @@ import { changeVolunteer, changeVolunteerRole, submitVolunteer } from "@/modules
 const DATABASE_URL = process.env.DATABASE_URL;
 if (!DATABASE_URL) throw new Error("tests/concurrency needs a real PostgreSQL: set DATABASE_URL and migrate first.");
 
-describe("§754 §NNN BR-REQ-031-01 people offer for a role's last place at once", () => {
+describe("§754 §761 BR-REQ-031-01 people offer for a role's last place at once", () => {
   const pool = new pg.Pool({ connectionString: DATABASE_URL, max: 20 });
   const db = drizzle(pool);
   // The real clock: the notice inserted here must be the one in force, after whatever another suite approved.
@@ -146,7 +146,7 @@ describe("§754 §NNN BR-REQ-031-01 people offer for a role's last place at once
       NOW,
     );
 
-  it("§NNN ten people ticking a role's one place at once are ten offers kept — none given the role, which still needs its one", async () => {
+  it("§761 ten people ticking a role's one place at once are ten offers kept — none given the role, which still needs its one", async () => {
     const { event, role } = await eventWithRole(1);
     const results = await Promise.all(Array.from({ length: 10 }, (_, index) => offer(event.id, role.id, `one-${index}`)));
     expect(results.filter((result) => result.outcome === "done")).toHaveLength(10);
@@ -156,7 +156,7 @@ describe("§754 §NNN BR-REQ-031-01 people offer for a role's last place at once
     expect(await db.select().from(eventVolunteerRoleChoices).where(eq(eventVolunteerRoleChoices.roleId, role.id))).toHaveLength(10);
   });
 
-  it("§NNN an organizer gives a role's last place while ten people post for it alone: an offer is kept only while the role had room, never after", async () => {
+  it("§761 an organizer gives a role's last place while ten people post for it alone: an offer is kept only while the role had room, never after", async () => {
     const { event, role } = await eventWithRole(1);
     const [waiting] = await db
       .insert(eventVolunteers)
@@ -215,7 +215,7 @@ describe("§754 §NNN BR-REQ-031-01 people offer for a role's last place at once
   it("a role edited and moved while the page posts two sign-ups ticking both roles in opposite orders, an organizer adds one by hand and gives another a role: all settle, no deadlock", async () => {
     // The event's row is locked NO KEY UPDATE by a role change, never FOR UPDATE: a sign-up holding its roles' locks
     // takes KEY SHARE on the event for its foreign key, and FOR UPDATE there closed a cycle (40P01, one side aborted).
-    // A sign-up locks the roles it ticked in the order of their ids, as a role change locks the event's roles (§NNN):
+    // A sign-up locks the roles it ticked in the order of their ids, as a role change locks the event's roles (§761):
     // two sign-ups ticking A, B and B, A never hold one each and wait on the other.
     const { event, role } = await eventWithRole(60);
     const [other] = await db.insert(eventVolunteerRoles).values({ eventId: event.id, nameRo: "Start", nameEn: "Start", needed: 50, position: 1 }).returning();
@@ -247,7 +247,7 @@ describe("§754 §NNN BR-REQ-031-01 people offer for a role's last place at once
     expect(await db.select().from(eventVolunteers).where(eq(eventVolunteers.eventId, event.id))).toHaveLength(100);
   });
 
-  it("§NNN a hand entry and an edit naming two roles and a role given, racing sign-ups ticking both and a role move: all settle, no deadlock", async () => {
+  it("§761 a hand entry and an edit naming two roles and a role given, racing sign-ups ticking both and a role move: all settle, no deadlock", async () => {
     // Before the fix a staff add took KEY SHARE on the role given (the row's foreign key) and then on each ticked role
     // in the order posted, while a sign-up locks the roles FOR UPDATE in the order of their ids: with the role given
     // the higher id, the two waited on each other (40P01). Every writer of a role reference now locks the event's

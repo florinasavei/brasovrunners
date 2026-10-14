@@ -1,4 +1,4 @@
--- A volunteer ticks every role they would do; the organizers give each one a role (§NNN, amending §754 and §758).
+-- A volunteer ticks every role they would do; the organizers give each one a role (§761, amending §754 and §758).
 -- Expand only: a new message type, a new table, and `event_volunteers.role_id` relaxed to accept NULL (an offer
 -- nobody has placed yet) — dropping NOT NULL refuses nothing that was accepted before, so the code serving while
 -- this runs is not broken by it. The backfill makes each existing volunteer's role both their one choice and their

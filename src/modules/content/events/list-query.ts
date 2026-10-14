@@ -34,7 +34,7 @@ import { foldForSearch } from "@/modules/registrations/country-search";
  *   in the editor's order (Ciornă, În verificare, Publicat, Arhivat), then the called-off, then
  *   the completed. Every order breaks a tie on `date-near`, then on the fetch's order.
  *
- * The main event stands first in every order (§NNN, amending §527 — the owner, 2026-10-14: «și în
+ * The main event stands first in every order (§762, amending §527 — the owner, 2026-10-14: «și în
  * lista asta, evenimentul principal ar trebui să apară primul»): the date marked «Principal» in
  * «Evidențiere pe site», or the series line holding it, is lifted above the others whenever the
  * search and the state still match it, and the rest keep the chosen order (`pinFeaturedLine`).
@@ -243,7 +243,7 @@ export function sortEventLines<T>(
 
 /** What the list reads of one fetched date: the event and its translations. */
 export type ListedRow = {
-  /** `featured` is the club's one main event (§NNN); a row that does not say is not it. */
+  /** `featured` is the club's one main event (§762); a row that does not say is not it. */
   event: ListedEvent & { id: string; type: string; featured?: boolean };
   translations: readonly ListedTranslation[];
 };
@@ -298,13 +298,13 @@ export function arrangeEventList<T extends ListedRow>(rows: readonly T[], query:
   return pinFeaturedLine(ordered);
 }
 
-/** Whether a line holds the club's main event — any of its dates the list still shows (§NNN). */
+/** Whether a line holds the club's main event — any of its dates the list still shows (§762). */
 function holdsFeatured(line: ArrangedLine<ListedRow>): boolean {
   return line.members.some((member) => member.event.featured === true);
 }
 
 /**
- * The main event first (§NNN — the owner, 2026-10-14: «și în lista asta, evenimentul principal
+ * The main event first (§762 — the owner, 2026-10-14: «și în lista asta, evenimentul principal
  * ar trebui să apară primul»): the line that holds it stands at the top in every order, the rest
  * keep the order they were given. A stable partition, run after the order and the filter, so a
  * search or a state that does not match the main event never shows it, and the list's paging

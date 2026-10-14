@@ -72,12 +72,12 @@ test.describe("§527 the backoffice events list: search, state, order", () => {
 });
 
 /**
- * BR-REQ-051-01 (`DECISIONS.md` §NNN, amending §527) — the main event, the one marked «Principal»,
+ * BR-REQ-051-01 (`DECISIONS.md` §762, amending §527) — the main event, the one marked «Principal»,
  * stands first in the backoffice list in every order. The seed's anniversary race is the main
  * event and the last of the dates still to come, so by its date alone it would be third; reads
  * the seed only, so the two projects sharing a database cannot collide.
  */
-test.describe("§NNN the backoffice events list puts the main event first", () => {
+test.describe("§762 the backoffice events list puts the main event first", () => {
   /** The first line of the list as the viewport draws it (a table row, or a card on a phone). */
   const firstRow = (page: import("@playwright/test").Page) =>
     page

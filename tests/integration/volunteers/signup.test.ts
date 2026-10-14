@@ -26,7 +26,7 @@ const RENDERED = new Date(NOW.getTime() - 60_000).toISOString();
  * one row per person per event on the canonical address, the same answer for a repeat, and the outbox's two
  * messages — the person's «am primit» and each organizer's notice — queued with the row in one transaction.
  *
- * §NNN — «Ce ești dispus(ă) să faci»: the person ticks every role they would do; the ones that still need people
+ * §761 — «Ce ești dispus(ă) să faci»: the person ticks every role they would do; the ones that still need people
  * are kept as their choices, a role that filled while the form was open is dropped, and none left is the polite
  * «full», for everybody. An offer holds no place: the row has no role until the organizers give one, and only a
  * role given counts against its need. (The ticked roles' locks under two real connections are
@@ -114,7 +114,7 @@ describe("§754 the volunteers' public sign-up", () => {
     return role;
   }
 
-  /** Somebody the organizers already gave a role (§NNN): the people a role counts. */
+  /** Somebody the organizers already gave a role (§761): the people a role counts. */
   async function seedAssigned(eventId: string, roleId: string, email: string, state: "REGISTERED" | "CONFIRMED" | "CANCELLED" = "CONFIRMED") {
     const [row] = await db
       .insert(eventVolunteers)
@@ -161,7 +161,7 @@ describe("§754 the volunteers' public sign-up", () => {
     expect(result).toEqual({ outcome: "done" });
     const [row] = await people(event.id);
     expect(row).toMatchObject({
-      // §NNN: an offer has no role until the organizers give one.
+      // §761: an offer has no role until the organizers give one.
       roleId: null,
       name: "Maria Test",
       email: "maria@example.test",
@@ -189,7 +189,7 @@ describe("§754 the volunteers' public sign-up", () => {
     expect(JSON.stringify(signedUp.metadataJson)).not.toMatch(/Maria|maria@|\+4071/);
   });
 
-  it("§NNN an offer holds no place: ten people ticking the one role it needs are all kept, and the role still needs its one", async () => {
+  it("§761 an offer holds no place: ten people ticking the one role it needs are all kept, and the role still needs its one", async () => {
     const event = await seedEvent();
     const role = await seedRole(event.id, { needed: 1 });
     for (let index = 0; index < 10; index += 1) {
@@ -228,7 +228,7 @@ describe("§754 the volunteers' public sign-up", () => {
     expect(await people(second.id)).toHaveLength(1);
   });
 
-  it("§NNN keeps the ticked roles that still need people and drops the one that filled; refuses politely only when none is left; «Anulat» frees the place again", async () => {
+  it("§761 keeps the ticked roles that still need people and drops the one that filled; refuses politely only when none is left; «Anulat» frees the place again", async () => {
     const event = await seedEvent();
     const water = await seedRole(event.id, { needed: 1 });
     const finish = await seedRole(event.id, { nameRo: "Sosire", nameEn: "Finish", needed: 1, position: 1 });

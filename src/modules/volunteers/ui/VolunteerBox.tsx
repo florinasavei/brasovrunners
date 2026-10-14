@@ -28,7 +28,7 @@ import { VOLUNTEER_BOX_ID, type VolunteerBox as BoxName, type VolunteerOutcome, 
 /**
  * «Vreau să fiu voluntar» on an event's page (§754; the owner, 2026-10-13: «I want to register volunteers
  * for a race»): a fold with one plain form — «Ce ești dispus(ă) să faci», one box per role that still needs
- * people, as many ticked as the person would do (§NNN; the owner, 2026-10-14: «poate bifa mai multe atribuțiuni
+ * people, as many ticked as the person would do (§761; the owner, 2026-10-14: «poate bifa mai multe atribuțiuni
  * din ce e dispus să facă»), the name, the address, the telephone number, an optional message, the consent tick
  * that names the privacy notice, and — since §758 — the tick that accepts the volunteer agreement in force and the
  * one that says the person is of age. The organizers then give the person one role.
@@ -148,7 +148,7 @@ export default async function VolunteerBox({
             )}
 
             {/*
-              «Ce ești dispus(ă) să faci» (§NNN): one box per role that still needs people — its name, what it asks and
+              «Ce ești dispus(ă) să faci» (§761): one box per role that still needs people — its name, what it asks and
               how many it still needs, in plain words — ticked as many as the person would do. Native checkboxes
               posting one name (`roleIds`) with several values, so it works with scripts off; at least one is the
               service's rule, said at the group after a refused post (and in the summary above, linking here).
