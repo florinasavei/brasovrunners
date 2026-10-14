@@ -1,7 +1,7 @@
 import Box from "@mui/material/Box";
-import Link from "@mui/material/Link";
 import Stack from "@mui/material/Stack";
 import { getLocale, getTranslations } from "next-intl/server";
+import type { ReactNode } from "react";
 import { countForm } from "@/i18n/count-form";
 import { calendarDayWords } from "@/i18n/dates";
 import { EVENT_SURFACES } from "@/modules/events/domain/event-type";
@@ -15,7 +15,6 @@ import { env } from "@/shared/config/env";
 import { textFieldConstraints } from "@/shared/forms/constraints";
 import RecallField from "@/shared/forms/recall";
 import CheckboxField from "@/shared/ui/CheckboxField";
-import { ACTION_ICONS } from "@/shared/ui/action-icons";
 import Panel from "@/shared/ui/Panel";
 import { eventInputConstraints } from "../../constraints";
 import { savedDurationMinutes } from "../../duration";
@@ -27,9 +26,6 @@ import { DEFAULT_TIMEZONE } from "./WhenBox";
 import { RouteDescriptionFields } from "../TranslationFields";
 import { BoxNote, type BoxProps, type LanguageEntry, summaryWords } from "./box-kit";
 import { LanguageTabs } from "./TextBoxes";
-
-/** The glyph before «Deschide puncte de control»: the edit verb's, as the to-do card's «Deschide câmpul» wears it (§318). */
-const CheckpointsGlyph = ACTION_ICONS.edit;
 
 /**
  * "Traseul" (§350, §358, §406): its own card, where the page first draws what it holds — the
@@ -49,6 +45,10 @@ const CheckpointsGlyph = ACTION_ICONS.edit;
  * For a role that may only read the settings, the card is its heading and its line (§358) — unless
  * the reader may write a language's texts (the Redactor): then it opens on the description's tabs
  * alone, since those words are theirs. The type's box has already said the settings are not.
+ *
+ * Last in the card, after the route's fields, its named card «Puncte de control» (§757, §NNN): the
+ * Organizer writes it although the settings above are not theirs, every other role reads it, so it
+ * is drawn whatever the settings. Its boxes post with forms of their own (`CheckpointsCard`).
  */
 export default async function CourseBox({
   event,
@@ -57,11 +57,21 @@ export default async function CourseBox({
   heading,
   inSeries = false,
   checkpointCount = 0,
+  checkpointsOpen = false,
+  checkpoints,
 }: BoxProps & {
   languages: readonly LanguageEntry[];
   inSeries?: boolean;
   /** How many «Puncte de control» the saved route has (§757): said on the closed line when above 0 (§760). */
   checkpointCount?: number;
+  /** The GPX's preview is open inside the card (§NNN): the card opens, and with it «Traseul», for a render that runs no script. */
+  checkpointsOpen?: boolean;
+  /**
+   * «Puncte de control» (§757), the card's named card after the route's fields (§NNN): `CheckpointsCard`,
+   * whose boxes post with forms of their own beside the save form (`DetachedActionForm`). Absent on
+   * the create page, where there is no event to hold points yet.
+   */
+  checkpoints?: ReactNode;
 }) {
   const t = await getTranslations("Admin");
   const tEvent = await getTranslations("Event");
@@ -80,6 +90,7 @@ export default async function CourseBox({
   });
   const card = {
     id: "box-course",
+    openWhen: { inUse: checkpointsOpen },
     glyph: "course",
     title: heading ?? t("editor.boxes.course.title"),
     aside: courseSummary(
@@ -109,10 +120,15 @@ export default async function CourseBox({
       />
     ) : null;
   if (!mayEditSettings) {
-    if (!languages.some((entry) => entry.mayEdit)) return <Panel {...card} />;
+    // The checkpoints are the Organizer's to write (§757's exception to §542) and every other role's to read: the card holds them whatever the settings.
+    const mayWriteWords = languages.some((entry) => entry.mayEdit);
+    if (!mayWriteWords && !checkpoints) return <Panel {...card} />;
     return (
       <Panel collapsible {...card}>
-        {routeDescription}
+        <Stack spacing={2}>
+          {mayWriteWords && routeDescription}
+          {checkpoints}
+        </Stack>
       </Panel>
     );
   }
@@ -248,19 +264,8 @@ export default async function CourseBox({
           maxRows={4}
           {...textFieldConstraints(eventInputConstraints("routeStrava"), { spellCheck: false, autoCapitalize: "off", autoCorrect: "off" })}
         />
-        {/* «Puncte de control» (§757) are their own card, beside this form and not in it (HTML forms cannot nest): the
-            house's in-page link (MUI Link, as `MissingForPublish`), which the browser's own hash change opens the folds
-            around (`OpenFoldFromHash`, §336). */}
-        {event && (
-          <Box>
-            <BoxNote>{t("checkpoints.courseNote")}</BoxNote>
-            <Link href="#box-checkpoints" variant="body2" data-testid="course-checkpoints-link" sx={{ display: "inline-flex", alignItems: "center", gap: 0.75, minHeight: 44 }}>
-              <CheckpointsGlyph aria-hidden fontSize="small" />
-              {t("checkpoints.courseLink")}
-            </Link>
-          </Box>
-        )}
         {routeDescription}
+        {checkpoints}
       </Stack>
     </Panel>
   );

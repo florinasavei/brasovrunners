@@ -123,7 +123,7 @@ describe("§406 the page's sections, one list", () => {
   it("gives every card section the id of the card the editor draws for it", () => {
     const boxes = ["KindBox", "TextBoxes", "WhenBox", "PlaceBox", "CourseBox", "CostBox", "RegistrationBox", "CoHostsBox", "LinksBox", "ProgrammeBox", "StartListBox"]
       .map((file) => read(`src/modules/content/events/ui/boxes/${file}.tsx`))
-      // «Puncte de control» (§757) is a card of its own forms, beside the save form, not one of its boxes.
+      // «Puncte de control» (§757) is drawn by its own file, a named card of «Traseul» (§NNN).
       .concat(read("src/modules/content/events/ui/CheckpointsCard.tsx"))
       .join("\n");
     for (const section of PAGE_SECTIONS) {

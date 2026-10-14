@@ -13,8 +13,13 @@ const source = readFileSync(path.join(ROOT, "src/shared/ui/SubmitButton.tsx"), "
 describe("SubmitButton with a name", () => {
   it("is pending only when the form's pending data carries its own name and value", () => {
     expect(source).toMatch(
-      /const pending = name === undefined \? status\.pending : status\.pending && status\.data\?\.get\(name\) === value;/,
+      /const pending = owner \? owner\.pending : name === undefined \? status\.pending : status\.pending && status\.data\?\.get\(name\) === value;/,
     );
+  });
+
+  it("drawn inside another form's markup, submits the form it names and is busy with that form's request (§NNN)", () => {
+    expect(source).toContain("const owner = useFormOwner();");
+    expect(source).toMatch(/type="submit"\s+form=\{owner\?\.id\}/);
   });
 
   it("the valve restores the caller's name and value instead of removing them", () => {

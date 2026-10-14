@@ -2329,7 +2329,7 @@
         "showCheckpointsHelp": "Ticked: on the profile, at each point, a cup for water, a fork for food, a dot for the rest. Under it, “km 12” where it fits. Drawn only with the route's profile.",
         "showCheckpointTimes": "…with the cut-off times",
         "showCheckpointTimesHelp": "Ticked: beside each point, its cut-off too, “km 12 · 11:30”. If not every time fits, none is printed; then the kilometres that do not fit go. The marks always stay.",
-        "showCheckpointsNone": "The event has no checkpoints: add them in the “Checkpoints” card.",
+        "showCheckpointsNone": "The event has no checkpoints: add them in “The course” › “Checkpoints”.",
         "showEmergency": "Emergency phone",
         "showEmergencyHelp": "Ticked: every number carries a small line with the label and one or two phones. Type the organizers' numbers, never a participant's.",
         "emergencyPhone": "The organizers' phone",
@@ -9089,6 +9089,7 @@
     "checkpoints": {
       "title": "Checkpoints",
       "intro": "Where there is water, food, first aid or timing, and by when the last runner passes. Shown as a table on the event's page and on the number's profile, by kilometre.",
+      "saveNote": "The points are saved only with “Save the points”, not with the page's “Save”.",
       "routeLength": "The route is {km} km long. No point can be beyond it.",
       "summaryNone": "no points",
       "summary": {
@@ -9128,8 +9129,6 @@
       "full": "There are already {max} points, as many as fit on a route.",
       "save": "Save the points",
       "saving": "Saving…",
-      "courseNote": "Checkpoints and their cut-offs are written in the “Checkpoints” card, above card 1.",
-      "courseLink": "Open the checkpoints",
       "inCourse": {
         "one": "{count} checkpoint",
         "few": "{count} checkpoints",

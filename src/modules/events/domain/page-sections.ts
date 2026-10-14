@@ -238,8 +238,9 @@ export const PAGE_SECTIONS: readonly PageSection[] = [
   { id: "share", card: null, anchor: null, glyph: "share", automatic: true, drawn: () => true },
   /*
     «Puncte de control» (`#checkpoints`, §757): the table right under the route's maps, drawn while the
-    event has a checkpoint. Part of «Traseul»: the card «Puncte de control» is its own form beside the
-    save form (forms cannot nest) and the course card links to it, so it has no number and no chip.
+    event has a checkpoint. Part of «Traseul»: the card «Puncte de control» is a named card inside it
+    (§NNN), whose boxes post with forms of their own beside the save form (forms cannot nest), so it
+    has no number and no chip.
   */
   {
     id: "checkpoints",
