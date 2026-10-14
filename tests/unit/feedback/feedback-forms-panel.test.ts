@@ -42,8 +42,8 @@ const state = {
 
 const BOTH = { gmail: true, mailgun: true };
 
-async function html(roads = BOTH, mayEdit = true): Promise<string> {
-  const element = await FeedbackFormsPanel({ locale: "ro", state, noticeDescribes: true, mayEdit, roads, safetyGmailDescribed: true });
+async function html(roads = BOTH, mayEdit = true, safetyGmailDescribed = true, saved: typeof state = state): Promise<string> {
+  const element = await FeedbackFormsPanel({ locale: "ro", state: saved, noticeDescribes: true, mayEdit, roads, safetyGmailDescribed });
   return renderToStaticMarkup(element).replace(/<style[\s\S]*?<\/style>/g, "");
 }
 
@@ -105,6 +105,27 @@ describe("§NNN «Prin ce trimitem» under each form", () => {
     expect(checked("suggestion")).toEqual(["mailgun"]);
     expect(checked("complaint")).toEqual(["gmail"]);
     expect(checked("safety")).toEqual(["mailgun"]);
+  });
+
+  it("greys Girl Zone's Gmail alone until the notice in force names {{feedbackSafetyGmail}}, with a link to «Texte legale» — the other forms' Gmail is never gated (§NNN)", async () => {
+    const out = await html(BOTH, true, false);
+    const [gmail, mailgun] = radios(viaGroup(out, "safety"));
+    expect(gmail).toMatch(/\sdisabled(=|\s|\/|>)/);
+    expect(mailgun).not.toMatch(/\sdisabled(=|\s|\/|>)/);
+    const group = viaGroup(out, "safety");
+    expect(group).toContain(ro.Admin.emails.feedbackForms.via.gmailNotice);
+    expect(group).toContain('href="/ro/admin/legal"');
+    expect(group).not.toContain(ro.Admin.emails.feedbackForms.via.gmailMissing);
+    for (const branch of ["howItWent", "suggestion", "complaint"]) {
+      expect(radios(viaGroup(out, branch))[0], branch).not.toMatch(/\sdisabled(=|\s|\/|>)/);
+    }
+    // Named in the notice: nothing greyed, nothing explained.
+    expect(await html(BOTH, true, true)).not.toContain("feedback-via-safety-gmail-notice");
+    // A saved Gmail stays checked while greyed, so the card shows what the form does (and a save keeps it).
+    const saved = { ...state, safety: { ...state.safety, via: "gmail" } } as typeof state;
+    const kept = viaGroup(await html(BOTH, true, false, saved), "safety");
+    expect(radios(kept)[0]).toMatch(/\schecked(=|\s|\/|>)/);
+    expect(radios(kept)[0]).toMatch(/\sdisabled(=|\s|\/|>)/);
   });
 
   it("greys a road the deployment lacks, says why in words, and links the steps in «Sarcini» — never by colour alone", async () => {

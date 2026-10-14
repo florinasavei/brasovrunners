@@ -3345,7 +3345,7 @@
         "eventInvitations": "Privacy notice only: the Invitations section's name, in quotation marks. With it in the notice in force, /admin/tasks counts the invitations as described",
         "feedbackForms": "Privacy notice only: the “Tell us something” forms’ name, in quotation marks. With it in the notice in force, the contact page shows the forms switched on",
         "feedbackFormsNamed": "Privacy notice only: the “With my name” choice of the “Tell us something” forms, in quotation marks. Without it in the notice in force, the forms are anonymous only",
-        "feedbackSafetyGmail": "Privacy notice only: “the club's Gmail”, in the sentence that says Girl Zone messages do not pass through the club's mailbox unless the club chooses Gmail. Without it in the notice in force, Girl Zone messages leave by Mailgun only",
+        "feedbackSafetyGmail": "Privacy notice only: “the club's Gmail”, in the sentence about Girl Zone messages. Without it in the notice in force, they leave by Mailgun only",
         "membersShop": "Privacy notice only: the section name “The club's shop”, in quotes. With it in the notice in force, the members' area shows the shop and takes orders",
         "volunteers": "Privacy notice only: the form's name “I want to volunteer”, in quotes. With it in the notice in force, an event that takes volunteers shows its form and keeps the offers",
         "volunteerAgreement": "Privacy notice only: the title “Volunteer agreement”, in quotes. Without it in the notice in force, the volunteers' form, the agreement's link and “Signed on paper” are off",

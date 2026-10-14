@@ -3345,7 +3345,7 @@
         "eventInvitations": "Doar în nota de confidențialitate: numele secțiunii Invitații, între ghilimele. Cu el în nota în vigoare, /admin/tasks consideră invitațiile descrise",
         "feedbackForms": "Doar în nota de confidențialitate: numele formularelor „Spune-ne ceva”, între ghilimele. Cu el în nota în vigoare, pagina de contact arată formularele pornite",
         "feedbackFormsNamed": "Doar în nota de confidențialitate: alegerea „Cu nume și prenume” din formularele „Spune-ne ceva”, între ghilimele. Fără el în nota în vigoare, formularele sunt doar anonime",
-        "feedbackSafetyGmail": "Doar în nota de confidențialitate: „Gmail-ul clubului”, în propoziția care spune că mesajele Girl Zone nu trec prin căsuța clubului, afară de cazul în care clubul alege Gmail. Fără el în nota în vigoare, mesajele Girl Zone pleacă doar prin Mailgun",
+        "feedbackSafetyGmail": "Doar în nota de confidențialitate: „Gmail-ul clubului”, în propoziția despre mesajele Girl Zone. Fără el în nota în vigoare, ele pleacă doar prin Mailgun",
         "membersShop": "Doar în nota de confidențialitate: numele secțiunii „Magazinul clubului”, între ghilimele. Cu el în nota în vigoare, zona membrilor arată magazinul și primește comenzi",
         "volunteers": "Doar în nota de confidențialitate: numele formularului „Vreau să fiu voluntar”, între ghilimele. Cu el în nota în vigoare, un eveniment cu voluntari își arată formularul și păstrează ofertele",
         "volunteerAgreement": "Doar în nota de confidențialitate: titlul „Contract de voluntariat”, între ghilimele. Fără el în nota în vigoare, formularul de voluntari, linkul contractului și „Semnat pe hârtie” sunt oprite",

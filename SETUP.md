@@ -1476,10 +1476,16 @@ Gmail and «Email către participanți reali» for Mailgun). On each deployment 
    on, with the neutral subject; one from another form says which on its line «Din formularul: „…”».
    **Girl Zone by Gmail** puts her messages in the club's mailbox and its Sent folder, which everybody
    who reads that mailbox sees: the card says so under the radios, and the confidentiality of her form is
-   then the club's choice. Approve the privacy notice from the template of this release first
-   (§NNN: it says so too). The optional «E-mail (opțional)» beside the name becomes the message's
-   `Reply-To` on either road (on Girl Zone's form, the way-back line when it is an address) and is kept
-   nowhere.
+   then the club's choice. **Gmail for Girl Zone is greyed until the privacy notice in force says so**
+   (§NNN): the notice's feedback paragraph promises her messages never pass through the club's mailbox
+   unless the club chooses Gmail, and names that road with the marker `{{feedbackSafetyGmail}}`. Approve
+   the notice from the template of this release first (item 1), in both languages; until then her
+   messages leave by Mailgun whatever the card says, the form's sentences keep saying «doar la …», and
+   `/admin/tasks` carries the row «Girl Zone prin Gmail» if Gmail was already saved. Once it is in force,
+   the form's sentences stop saying «doar» and say the message reaches her through the club's mailbox.
+   The optional «E-mail (opțional)» beside the name becomes the message's `Reply-To` on either road
+   and is kept nowhere; Girl Zone's form has it too, with a «Telefon (opțional)» box beside it
+   (the telephone goes in the message and is no `Reply-To`).
 3. Check: `/ro/contact` shows «Spune-ne ceva» under the contact form, above «Contact direct» and the newsletter (the newsletter last); a message sent from QA arrives
    with `[QA]` in front of its subject, its first line «Nume: (anonim)» or the name the person gave. The site keeps no copy of any message, so the inbox is the
    only place to look.

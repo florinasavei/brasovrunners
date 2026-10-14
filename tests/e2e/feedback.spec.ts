@@ -45,12 +45,12 @@ import { HUMAN_PAUSE_MS, hydrated, signIn } from "./support/featured-event";
  */
 
 const LOCK_KEY = 390_039_001;
-/** The forms' marker (§676) and the named mode's (§678): without the second, every form is anonymous only. */
-const MARKERS = ["{{feedbackForms}}", "{{feedbackFormsNamed}}"] as const;
+/** The forms' marker (§676), the named mode's (§678) and Girl Zone's Gmail road's (§NNN): without the second, every form is anonymous only; without the third, Girl Zone's Gmail is greyed. */
+const MARKERS = ["{{feedbackForms}}", "{{feedbackFormsNamed}}", "{{feedbackSafetyGmail}}"] as const;
 const SAFETY_NAME = "Maria";
 const ADDED_PARAGRAPH = {
-  ro: `Formularele ${MARKERS[0]} de pe pagina de contact sunt anonime, dacă nu alegi ${MARKERS[1]}; platforma nu păstrează nicio copie.`,
-  en: `The ${MARKERS[0]} forms on the contact page are anonymous unless you choose ${MARKERS[1]}; the platform keeps no copy.`,
+  ro: `Formularele ${MARKERS[0]} de pe pagina de contact sunt anonime, dacă nu alegi ${MARKERS[1]}; platforma nu păstrează nicio copie (${MARKERS[2]}).`,
+  en: `The ${MARKERS[0]} forms on the contact page are anonymous unless you choose ${MARKERS[1]}; the platform keeps no copy (${MARKERS[2]}).`,
 } as const;
 
 function databaseUrl(): string {
@@ -473,6 +473,7 @@ test.describe("BR-REQ-070-04 «Spune-ne ceva», the anonymous wizard (§676)", (
       await expect(identity.getByRole("radio", { name: "Anonim" })).toBeChecked();
       await expect(safetyForm.locator('[name="name"]')).toBeHidden();
       await expect(safetyForm.locator('[name="contact"]')).toBeHidden();
+      await expect(safetyForm.locator('[name="email"]')).toBeHidden();
       await expect(identity).toContainText("Cum vrei să trimiți?");
       await expect(identity).toContainText("Nu ne spui cine ești.");
       // «We love icons» (§679): the incognito hat and glasses before «Anonim», a person before the named
@@ -499,7 +500,10 @@ test.describe("BR-REQ-070-04 «Spune-ne ceva», the anonymous wizard (§676)", (
       await expect(identity.locator('input[name="identity"]:checked')).toHaveCount(1);
       await expect(safetyForm.locator('[name="name"]')).toBeVisible();
       await expect(safetyForm.locator('[name="name"]')).toHaveAttribute("maxlength", "80");
+      // Girl Zone's named mode has the optional email beside the telephone, one box each (§NNN).
       await expect(safetyForm.locator('[name="contact"]')).toBeVisible();
+      await expect(safetyForm.getByLabel("E-mail (opțional)")).toBeVisible();
+      await expect(safetyForm.getByLabel("Telefon (opțional)")).toBeVisible();
       // «Cine să afle?» (§678): the club or the safety person by her first name — on her own form, she is
       // checked — and never an address on the page.
       const audience = safetyForm.getByTestId("feedback-audience");
