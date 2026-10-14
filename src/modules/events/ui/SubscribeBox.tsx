@@ -78,7 +78,7 @@ const ROW_SX = {
 export default async function SubscribeBox({ locale, baseUrl, addressId = "calendar-feed-address-box" }: SubscribeBoxProps) {
   const t = await getTranslations("Events");
   // The five doors' words and marks are the event page's too (`calendar-targets.tsx`): one source.
-  const target = await getTranslations(CALENDAR_TARGET_NAMESPACE);
+  const doors = await getTranslations(CALENDAR_TARGET_NAMESPACE);
   const links = calendarFeedLinks(baseUrl, locale);
 
   return (
@@ -112,35 +112,35 @@ export default async function SubscribeBox({ locale, baseUrl, addressId = "calen
         <li>
           <Box component="a" href={links.google} target="_blank" rel="noopener noreferrer" sx={ROW_SX} data-testid="subscribe-google">
             {calendarTargetMark("google")}
-            {target("google")}
+            {doors("google")}
             <ChevronRightIcon data-row-end aria-hidden="true" />
           </Box>
         </li>
         <li>
           <Box component="a" href={links.webcal} sx={ROW_SX} data-testid="subscribe-apple">
             {calendarTargetMark("apple")}
-            {target("apple")}
+            {doors("apple")}
             <ChevronRightIcon data-row-end aria-hidden="true" />
           </Box>
         </li>
         <li>
           <Box component="a" href={outlookSubscribeUrl(links.feed, "personal")} target="_blank" rel="noopener noreferrer" sx={ROW_SX} data-testid="subscribe-outlook">
             {calendarTargetMark("outlook")}
-            {target("outlook")}
+            {doors("outlook")}
             <ChevronRightIcon data-row-end aria-hidden="true" />
           </Box>
         </li>
         <li>
           <Box component="a" href={outlookSubscribeUrl(links.feed, "work")} target="_blank" rel="noopener noreferrer" sx={ROW_SX} data-testid="subscribe-outlook-work">
             {calendarTargetMark("outlookWork")}
-            {target("outlookWork")}
+            {doors("outlookWork")}
             <ChevronRightIcon data-row-end aria-hidden="true" />
           </Box>
         </li>
         <li>
           <Box component="a" href={`/${locale}/events/calendar.ics`} sx={ROW_SX} data-testid="subscribe-ics">
             {calendarTargetMark("ics")}
-            {target("ics")}
+            {doors("ics")}
             <ChevronRightIcon data-row-end aria-hidden="true" />
           </Box>
         </li>

@@ -72,7 +72,7 @@ function calendarHref(calendar: NonNullable<Props["calendar"]>, id: CalendarTarg
 
 export default async function ShareLinks({ url, title, imageHref, fileName, calendar, shareable = true }: Props) {
   const t = await getTranslations("Event");
-  const targets = await getTranslations(CALENDAR_TARGET_NAMESPACE);
+  const doors = await getTranslations(CALENDAR_TARGET_NAMESPACE);
   /** `blank`: another site, in a new tab; `self`: our own file, left to the browser (Apple's phones open it in Calendar); `download`: saved. */
   const anchor = (href: string, label: string, icon: ReactNode, open: "blank" | "self" | "download" = "blank") => (
     <Button
@@ -122,7 +122,7 @@ export default async function ShareLinks({ url, title, imageHref, fileName, cale
         <Stack direction="row" sx={{ flexWrap: "wrap", alignItems: "center", gap: { xs: DENSITY.gapXs, sm: 1 } }}>
           {caption(t("share.calendarTitle"))}
           {CALENDAR_TARGETS.map((id) => (
-            <Fragment key={id}>{anchor(calendarHref(calendar, id), targets(id), calendarTargetMark(id), id === "ics" ? "download" : id === "apple" ? "self" : "blank")}</Fragment>
+            <Fragment key={id}>{anchor(calendarHref(calendar, id), doors(id), calendarTargetMark(id), id === "ics" ? "download" : id === "apple" ? "self" : "blank")}</Fragment>
           ))}
         </Stack>
       )}
