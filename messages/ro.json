@@ -2533,8 +2533,7 @@
       "repeatRuleLiveUntil": " — până la {until}.",
       "repeatRuleLiveHorizon": "Se creează acum datele din următoarele {horizon}.",
       "groups": {
-        "page": "Pagina evenimentului, de sus în jos",
-        "offPage": "Nu sunt secțiuni ale paginii"
+        "page": "Pagina evenimentului, de sus în jos"
       },
       "publication": {
         "missingTitle": "Ce lipsește pentru publicare",
@@ -2572,7 +2571,8 @@
           "groupRunWarning": "Are înscrieri ({count}) — o alergare de grup nu primește înscrieri, iar lista lor dispare de pe pagină."
         },
         "titleSummary": {
-          "title": "Titlu și rezumat"
+          "title": "Titlu și rezumat",
+          "coverLine": "copertă: {state}"
         },
         "description": {
           "title": "Descrierea evenimentului"
@@ -2589,11 +2589,6 @@
         "place": {
           "title": "Locul"
         },
-        "programmeRules": {
-          "title": "Program, regulament și declarație",
-          "rulesLine": "regulamentul: {state}",
-          "startListLine": "lista publică: {state}"
-        },
         "programme": {
           "title": "Programul zilei și ce să aduci"
         },
@@ -2604,7 +2599,8 @@
           "title": "Cost"
         },
         "registration": {
-          "title": "Participare și înscrieri"
+          "title": "Participare, înscrieri și regulament",
+          "rulesLine": "regulamentul: {state}"
         },
         "registrationWindow": {
           "title": "Perioada de înscriere",
@@ -2614,8 +2610,7 @@
           "title": "Condiții de participare",
           "onlyHere": "Se cer doar când înscrierea e aici, pe site.",
           "onlyRegisteringTypes": "Alergarea de grup nu are formular de înscriere, deci nu cere nimic.",
-          "legalLink": "Documente legale — unde se aprobă o versiune nouă a declarației",
-          "declarationUnderRules": "Vârsta minimă și declarația pe care o semnează participantul se aleg în «Program, regulament și declarație»: vârsta în «Regulamentul», declarația în «Declarația pe propria răspundere»."
+          "legalLink": "Documente legale — unde se aprobă o versiune nouă a declarației"
         },
         "reminder": {
           "title": "Reminderul dinaintea startului"
@@ -2649,7 +2644,7 @@
         },
         "startList": {
           "title": "Lista publică a participanților",
-          "onlyHere": "Lista publică există doar la înscrierile pe site: alege „Pe site” la Participare și înscrieri.",
+          "onlyHere": "Lista publică există doar la înscrierile pe site: alege «Înscrieri pe site» mai sus, în același card.",
           "onlyRegisteringTypes": "O alergare de grup nu are înscrieri, deci nici listă publică: schimbă tipul la „Ce fel de eveniment”."
         },
         "status": {
@@ -2767,6 +2762,7 @@
             "noDeclaration": "lipsește declarația",
             "listHidden": "listă nepublică",
             "listShown": "lista publică",
+            "listShownWithWaitlist": "lista publică, cu lista de așteptare",
             "external": "La organizator: {provider}",
             "externalUnnamed": "La organizator"
           },
@@ -2865,7 +2861,7 @@
         "declaration": {
           "title": "Declarația pe propria răspundere",
           "newest": "{kind}: cea mai nouă versiune aprobată e v{version} · {title}. Participantul o semnează la confirmarea înscrierii.",
-          "notOnSite": "Nu se cere nicio declarație: evenimentul nu primește înscrieri pe site. Alege «Înscrieri pe site» în «Participare și înscrieri» ca să alegi declarația.",
+          "notOnSite": "Nu se cere nicio declarație: evenimentul nu primește înscrieri pe site. Alege «Înscrieri pe site» mai sus, în același card, ca să alegi declarația.",
           "roadFallback": "{kind}: nicio versiune aprobată încă, așa că un concurs pe șosea sau în parc semnează declarația pentru eveniment montan. Aprob-o în Documente legale → Versiune nouă → Pornește de la șablon.",
           "mismatch": "Traseul e pe «{surface}», iar varianta aleasă e «{chosen}»: pentru el se potrivește «{wanted}». Alege-o mai sus, dacă traseul e cel corect."
         }
@@ -2900,11 +2896,10 @@
           "description": "Descrierea",
           "when": "Când și unde",
           "course": "Traseul",
-          "registration": "Înscrierea",
+          "registration": "Înscriere și regulament",
           "coHosts": "Împreună cu",
           "share": "Distribuie",
-          "links": "Linkuri și fișiere",
-          "programme": "Program și regulament"
+          "links": "Linkuri și fișiere"
         }
       },
       "required": {
@@ -5592,7 +5587,7 @@
       "title": "Masa de ridicare a numerelor",
       "howTitle": "Cum merge ziua cursei, pas cu pas",
       "how": [
-        "Înainte de cursă (organizator): pe pagina evenimentului, în „Participare și înscrieri” → „Alocare și tipărire”, apasă „Descarcă toate numerele (PDF)” și tipărește-le — două pe o foaie A4.",
+        "Înainte de cursă (organizator): în „Participare, înscrieri și regulament” → „Alocare și tipărire”, apasă „Descarcă toate numerele (PDF)” și tipărește-le — două pe o foaie A4.",
         "Tipărește și câteva „Formular declarație pe hârtie (PDF)”, pentru cine semnează pe loc.",
         "Un administrator tipărește din „Numere de rezervă pentru înscrierile de la fața locului” numere goale pentru cine se înscrie la masă.",
         "Voluntarii: un Administrator le face conturi din „Echipa”, cu rolul Voluntar. Cu contul lor deschid această pagină pe telefon. Atât văd: nume, stare, număr.",
@@ -6255,7 +6250,7 @@
           "confirmationHours": "Cât are cineva ca să apese linkul din primul email; după, înscrierea expiră.",
           "holdMinutes": "Pentru un eveniment fără fereastră de confirmare, sau aflat deja în ea. O cursă mai departe de fereastră ține locul până la termenul ales pe eveniment.",
           "offerHours": "Cât are primul de pe listă ca să semneze; niciodată după închiderea înscrierilor sau după start.",
-          "reminderHours": "0 = fără reminder. Un eveniment își poate alege altceva, în editor, la „Participare și înscrieri”.",
+          "reminderHours": "0 = fără reminder. Un eveniment își poate alege altceva, în editor, la „Participare, înscrieri și regulament”.",
           "lastCallHours": "Cu câte ore înaintea termenului ferestrei pleacă ultima chemare la semnat. 0 = niciuna înaintea termenului.",
           "selfCheckinHours": "Butonul din pagina participantului, „Am ajuns — marchează-mă prezent”.",
           "raceWeekDays": "0 = doar în ziua cursei. Din aceeași zi, cardul de tipărire a numerelor din editor se deschide singur.",
@@ -6970,7 +6965,7 @@
               "title": "Corectează textul unui eveniment",
               "steps": [
                 "«Alergări» → «Editează» pe rândul evenimentului.",
-                "Deschide cardul cu textul: «Titlu și rezumat», «Descrierea evenimentului» sau «Program, regulament și declarație» (apoi «Programul zilei și ce să aduci» ori «Regulamentul»).",
+                "Deschide cardul cu textul: «Titlu și rezumat», «Descrierea evenimentului» sau «Participare, înscrieri și regulament» (apoi «Programul zilei și ce să aduci» ori «Regulamentul»).",
                 "Scrie în tabul «Română» și în tabul «English».",
                 "Jos, la un eveniment publicat, bifează «Am înțeles că modific conținut publicat.».",
                 "Apasă «Salvează». Apare imediat pe site, în ambele limbi."
@@ -7088,7 +7083,7 @@
               "title": "Descarcă și tipărește numerele de concurs",
               "steps": [
                 "«Alergări» → «Deschide» pe cursă.",
-                "Deschide cardul «Participare și înscrieri», apoi «Alocare și tipărire».",
+                "Deschide cardul «Participare, înscrieri și regulament», apoi «Alocare și tipărire».",
                 "«Vezi numerele» ca să le verifici pe ecran.",
                 "«Descarcă toate numerele (PDF)»: câte două numere A5 pe o foaie A4, cu linia de tăiere. «Câte unul pe pagină» dacă vrei unul singur, centrat pe A4.",
                 "Tipărește la mărimea reală (100%) și taie pe linie.",
@@ -7189,7 +7184,7 @@
                 "«Ce fel de eveniment» → «Tip eveniment» (Concurs, Alergare de grup și celelalte).",
                 "«Titlu și rezumat»: «Titlu» și «Rezumat», în tabul «Română» și în tabul «English».",
                 "«Când și unde»: data și ora, apoi punctul de întâlnire în ambele limbi, adresa, linkul de hartă. Locul nu e știut încă? Bifează «Locația se anunță mai târziu».",
-                "Restul cardurilor după nevoie: «Descrierea evenimentului» (un film de pe YouTube se pune aici, cu butonul «Adaugă un film de pe YouTube»), «Traseul», «Participare și înscrieri», «Program, regulament și declarație».",
+                "Restul cardurilor după nevoie: «Descrierea evenimentului» (un film de pe YouTube se pune aici, cu butonul «Adaugă un film de pe YouTube»), «Traseul», «Participare, înscrieri și regulament».",
                 "«Creează evenimentul» îl salvează ca ciornă (nu apare pe site). «Creează și publică» îl pune direct pe site.",
                 "Lipsește ceva obligatoriu? Sus apare «Nu se poate publica încă», cu fiecare lipsă ca link: completează și apasă din nou.",
                 "Greșeala obișnuită: tabul «English» necompletat lasă evenimentul fără engleză; sau apeși «Creează evenimentul» crezând că a intrat pe site — rămâne ciornă, nu «Creează și publică»."
@@ -7263,12 +7258,12 @@
             {
               "title": "Deschide înscrierile la o cursă",
               "steps": [
-                "«Alergări» → «Editează» → cardul «Participare și înscrieri».",
+                "«Alergări» → «Editează» → cardul «Participare, înscrieri și regulament».",
                 "«Modul de înscriere» → «Înscrieri pe site».",
                 "«Număr de locuri» și, lângă el, «Lista de așteptare»: «Nelimitată», «Limitată la un număr de locuri», cu câte persoane scrii tu, sau «Fără listă de așteptare». Sub «Limitată…», gol sau 0 o face nelimitată; doar «Fără listă de așteptare» închide lista. Sub ele, «Locurile din lista de așteptare se alocă automat»: «Da» dă fiecare loc eliberat sau adăugat primului de pe listă; «Nu», dacă vrei să alegi tu (vezi „Alege tu cine primește un loc eliberat”).",
                 "«Perioada de înscriere»: «Înscrierile se deschid» și «Înscrierile se închid».",
                 "«Fereastra de confirmare»: «Confirmarea participării: cu câte zile înainte se cere» și, în căsuța de lângă, cu câte zile înainte expiră (0 = locul nu expiră până la start).",
-                "«Program, regulament și declarație» → «Regulamentul»: «Vârsta minimă de participare» (14 dacă nu o schimbi, niciodată sub 14), la orice tip de eveniment. Declarația: «Program, regulament și declarație» → «Declarația pe propria răspundere» → «Declarația pe care o semnează participantul».",
+                "«Participare, înscrieri și regulament» → «Regulamentul»: «Vârsta minimă de participare» (14 dacă nu o schimbi, niciodată sub 14), la orice tip de eveniment. Declarația, chiar sub «Regulamentul»: «Declarația pe propria răspundere» → «Declarația pe care o semnează participantul».",
                 "«Numere de concurs (BIB)»: «Numerele de concurs (BIB) încep de la».",
                 "Apasă «Salvează», apoi publică evenimentul. Nimeni nu se poate înscrie cât termenii, nota de confidențialitate și declarația nu sunt aprobate."
               ]
@@ -7276,7 +7271,7 @@
             {
               "title": "Alege tu cine primește un loc eliberat",
               "steps": [
-                "«Alergări» → «Editează» pe rândul cursei → cardul «Participare și înscrieri».",
+                "«Alergări» → «Editează» pe rândul cursei → cardul «Participare, înscrieri și regulament».",
                 "La «Locurile din lista de așteptare se alocă automat» alege «Nu» și apasă «Salvează». Pe «Nu», un loc eliberat sau adăugat rămâne liber până îl dai tu.",
                 "Nu e nevoie să mărești «Număr de locuri»: dacă nu e niciun loc liber, «Trimite-i oferta» adaugă un loc suplimentar, după ce confirmi (capacitatea crește cu unu, iar jurnalul înscrierii spune cine l-a adăugat și pentru cine).",
                 "Cardul «Înscrierile primite» → «Coada de înscrieri»: pe rândul persoanei numite din lista de așteptare apasă «Trimite-i oferta». Același buton e și pe pagina înscrierii ei.",
@@ -7404,7 +7399,7 @@
             {
               "title": "Alocă numerele și marchează-le tipărite",
               "steps": [
-                "«Alergări» → «Editează» → «Participare și înscrieri» → «Alocare și tipărire».",
+                "«Alergări» → «Editează» → «Participare, înscrieri și regulament» → «Numere de concurs (BIB)» → «Alocare și tipărire».",
                 "Apasă «Alocă numerele» și confirmă: fiecare înscriere confirmată fără număr primește următorul număr liber; numerele date rămân.",
                 "«Înscrieri» → alege cursa → «Filtrează». Pe aceeași pagină descarci numerele netipărite, le tipărești, apoi apeși butonul care le marchează ca printate.",
                 "Numerele pentru tipar sunt câte două A5 pe o foaie A4 (vezi „Descarcă și tipărește numerele de concurs” la Organizator)."
@@ -7413,7 +7408,7 @@
             {
               "title": "Numere de rezervă pentru cine se înscrie la masă",
               "steps": [
-                "«Alergări» → «Editează» → «Participare și înscrieri» → «Alocare și tipărire» → «Numere de rezervă pentru înscrierile de la fața locului».",
+                "«Alergări» → «Editează» → «Participare, înscrieri și regulament» → «Numere de concurs (BIB)» → «Alocare și tipărire» → «Numere de rezervă pentru înscrierile de la fața locului».",
                 "La «Câte» scrie câte numere goale vrei, apoi apasă «Tipărește» și confirmă. Fereastra spune de la ce număr încep: de atunci nimeni înscris online nu le mai primește.",
                 "Apasă «Descarcă foaia» și tipărește-o. Fiecare număr are linia pentru nume goală; la masă se scrie numele cu markerul, iar formularul propune următorul număr liber.",
                 "Ai nevoie de ele din nou? «Retipărește rezervele libere (PDF)» pune pe foaie doar numerele încă nedate și nu rezervă altele."
@@ -7625,7 +7620,7 @@
               "title": "Minori și vârsta minimă",
               "steps": [
                 "Un participant sub 18 ani e înscris de părinte sau tutore, care își scrie numele în secțiunea pentru minori a formularului; la masă și în export apare „Minor — părinte/tutore”.",
-                "Vârsta minimă e a fiecărui eveniment, de orice tip: «Vârsta minimă de participare», în «Program, regulament și declarație» → «Regulamentul». Pagina evenimentului o spune. Se socotește în ziua evenimentului, la orice ușă — formularul, masa, o înscriere adăugată de echipă. Declarația de la alergări se semnează de la 18 ani, oricare ar fi vârsta minimă a alergării."
+                "Vârsta minimă e a fiecărui eveniment, de orice tip: «Vârsta minimă de participare», în «Participare, înscrieri și regulament» → «Regulamentul». Pagina evenimentului o spune. Se socotește în ziua evenimentului, la orice ușă — formularul, masa, o înscriere adăugată de echipă. Declarația de la alergări se semnează de la 18 ani, oricare ar fi vârsta minimă a alergării."
               ]
             },
             {
@@ -9097,8 +9092,13 @@
       "full": "Sunt deja {max} de puncte, cât încape pe un traseu.",
       "save": "Salvează punctele",
       "saving": "Se salvează…",
-      "courseNote": "Punctele de control și orele limită se scriu în cardul „Puncte de control”.",
+      "courseNote": "Punctele de control și orele limită se scriu în cardul „Puncte de control”, deasupra cardului 1.",
       "courseLink": "Deschide punctele de control",
+      "inCourse": {
+        "one": "{count} punct de control",
+        "few": "{count} puncte de control",
+        "other": "{count} de puncte de control"
+      },
       "gpx": {
         "take": "Ia punctele din GPX",
         "title": "Punctele din fișierul GPX",

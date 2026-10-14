@@ -30,7 +30,7 @@ test.describe("BR-REQ-050-02 a confirmation deadline of zero is «la start»", (
     await fillTimeField(page, "Ora", "09:00");
     await field("event.locationName").fill(`Parcul Noua ${suffix}`);
     await field("event.locationNameEn").fill(`Noua Park ${suffix}`);
-    await openEditorBox(page, "Participare și înscrieri");
+    await openEditorBox(page, "Participare, înscrieri și regulament");
     await page.getByRole("combobox", { name: "Modul de înscriere" }).click();
     await page.getByRole("option", { name: "Înscrieri pe site" }).click();
     await field("event.capacity").fill("20");

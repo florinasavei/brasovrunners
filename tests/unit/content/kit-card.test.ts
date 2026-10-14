@@ -54,6 +54,7 @@ async function render(event: EditableEvent | null) {
     event,
     mayEditSettings: true,
     declarations: [],
+    languages: [],
     bibCounts: null,
     locale: "ro",
     now: new Date("2026-10-01T08:00:00Z"),

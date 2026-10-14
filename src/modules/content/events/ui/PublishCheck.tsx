@@ -10,7 +10,17 @@ import { revealField } from "@/shared/forms/ActionFormIsland";
 import { fieldId } from "@/shared/forms/outcome";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import { usePublishGaps } from "./MissingForPublish";
-import { type CardGapWords, cardGapLine, cardGaps, PUBLISH_GAP_CARD, type PublishGap, type PublishGapBox, publishGapLabel, type PublishGapLabels } from "./publish-check";
+import {
+  type CardGapWords,
+  cardGapLine,
+  cardGaps,
+  gapBoxesOf,
+  PUBLISH_GAP_CARD,
+  type PublishGap,
+  type PublishGapBoxes,
+  publishGapLabel,
+  type PublishGapLabels,
+} from "./publish-check";
 
 /**
  * What publication still needs, seen from outside every card (§406; the owner, 2026-09-25, of a
@@ -64,11 +74,12 @@ function usePublishCheck(fallback: readonly PublishGap[]): readonly PublishGap[]
  * warning glyph, or «complet» (`cardGapLine`). `initial` is the card's own answer from the server,
  * read until a provider has one.
  */
-export function CardRequiredLine({ box, initial, words }: { box: PublishGapBox; initial: readonly PublishGap[]; words: CardGapWords }) {
+export function CardRequiredLine({ box, initial, words }: { box: PublishGapBoxes; initial: readonly PublishGap[]; words: CardGapWords }) {
   const gaps = usePublishCheck(initial);
   const missing = cardGaps(gaps, box).length > 0;
   return (
-    <Box component="span" data-testid={`required-${box}`} data-missing={missing ? "true" : "false"} sx={{ color: missing ? "warning.dark" : "text.secondary" }}>
+    // Named by the card's own box, the first (§760: «Titlu și rezumat» answers for the address too).
+    <Box component="span" data-testid={`required-${gapBoxesOf(box)[0]}`} data-missing={missing ? "true" : "false"} sx={{ color: missing ? "warning.dark" : "text.secondary" }}>
       {missing && <WarningAmberIcon aria-hidden fontSize="inherit" sx={{ verticalAlign: "-0.15em", mr: 0.5 }} />}
       {cardGapLine(gaps, box, words)}
     </Box>
@@ -76,7 +87,7 @@ export function CardRequiredLine({ box, initial, words }: { box: PublishGapBox; 
 }
 
 /** Whether a card is missing a box publication needs, as the provider reads it now. */
-export function useCardMissing(box: PublishGapBox | null): boolean {
+export function useCardMissing(box: PublishGapBoxes | null): boolean {
   const gaps = usePublishCheck(NO_GAPS);
   return box !== null && cardGaps(gaps, box).length > 0;
 }

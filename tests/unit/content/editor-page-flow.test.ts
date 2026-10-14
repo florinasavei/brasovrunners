@@ -140,7 +140,8 @@ describe("§406 the closed card says what it lacks, with the warning glyph", () 
 
   it("draws the line on the three cards that hold a box publication needs, and on no other", () => {
     const text = read("src/modules/content/events/ui/boxes/TextBoxes.tsx");
-    expect(text).toContain('await requiredLine("titleSummary", null, languages)');
+    // «Titlu și rezumat» answers for the address too since §760: the address is a card inside it.
+    expect(text).toContain('await requiredLine(["titleSummary", "address"], null, languages)');
     expect(text).toContain('await requiredLine("address", null, languages)');
     // The meeting point's line is on «Când și unde», the card that holds the place since §481.
     expect(read("src/modules/content/events/ui/boxes/WhenBox.tsx")).toContain('await requiredLine("place", event, languages)');
@@ -202,12 +203,12 @@ describe("§406 the cards' headings and the map", () => {
     // «Când și unde» holds the date and the place since §481: one card, one number.
     expect(flow.headings.when).toBe("4 · Când și unde — apare pe pagină");
     expect(flow.headings.description).toBe("3 · Descrierea evenimentului — gol, nu apare pe pagină");
-    // The cost is asked inside card 1 since §466, the place and the rules inside their cards since
-    // §481: no heading of their own, the cards after them renumber. No film card at all.
-    // The public list inside «Program, regulament și declarație» since §512.
-    for (const nested of ["cost", "place", "rules", "startList", "video"]) expect(nested in flow.headings, nested).toBe(false);
-    expect(flow.headings.registration).toBe("6 · Participare și înscrieri — gol, nu apare pe pagină");
-    expect(flow.headings.programme).toBe("9 · Program, regulament și declarație — gol, nu apare pe pagină");
+    // The cost is asked inside card 1 since §466, the place inside its card since §481: no heading
+    // of their own, the cards after them renumber. No film card at all. The programme, the rules and
+    // the public list inside «Participare, înscrieri și regulament» since §760 — eight cards.
+    for (const nested of ["cost", "place", "programme", "rules", "startList", "video"]) expect(nested in flow.headings, nested).toBe(false);
+    expect(flow.headings.registration).toBe("6 · Participare, înscrieri și regulament — gol, nu apare pe pagină");
+    expect(Object.keys(flow.headings)).toHaveLength(8);
     expect("share" in flow.headings).toBe(false);
     // 1..n with no gap.
     const numbers = Object.values(flow.headings).map((heading) => Number(heading.split(" · ")[0])).sort((a, b) => a - b);
@@ -216,16 +217,17 @@ describe("§406 the cards' headings and the map", () => {
     currentLocale = "en";
     const en = await pageFlow(saved());
     expect(en.headings.when).toBe("4 · When and where — on the page");
-    expect(en.headings.programme).toBe("9 · Programme, rules and declaration — empty, not on the page");
+    expect(en.headings.registration).toBe("6 · Taking part, registration and rules — empty, not on the page");
     expect(en.headings.description).toBe("3 · Event description — empty, not on the page");
   });
 
-  it("heads a card holding two sections as drawn when either is (§481): the programme card from the rules alone", async () => {
+  it("heads a card holding several sections as drawn when any is (§481, §760): card 6 from the rules alone, on a group run", async () => {
     const withRules = saved();
     withRules.texts = [{ ...withRules.texts[0], rulesJson: { type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: "Reguli" }] }] } }];
     const flow = await pageFlow(withRules);
-    expect(flow.headings.programme).toBe("9 · Program, regulament și declarație — apare pe pagină");
-    expect(flow.entries.find((entry) => entry.id === "programme")?.drawn).toBe(true);
+    expect(flow.headings.registration).toBe("6 · Participare, înscrieri și regulament — apare pe pagină");
+    expect(flow.entries.find((entry) => entry.id === "registration")?.drawn).toBe(true);
+    expect(flow.entries.find((entry) => entry.id === "programme")).toBeUndefined();
   });
 
   it("links every chip to its card's anchor at 44 pixels, and names the share links as automatic", async () => {
@@ -242,7 +244,6 @@ describe("§406 the cards' headings and the map", () => {
       "box-registration",
       "box-cohosts",
       "box-links",
-      "box-programme",
     ]);
     // No Cost chip (§466), no place or rules chip (§481): each is asked inside another card.
     for (const nested of ["cost", "place", "rules", "startList"]) expect(flow.entries.some((entry) => entry.id === nested), nested).toBe(false);

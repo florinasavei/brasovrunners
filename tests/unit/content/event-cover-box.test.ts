@@ -25,8 +25,10 @@ describe("§709 «Copertă» in the editor", () => {
     expect(BOX).toContain('fieldPrefix="event.cover"');
     expect(BOX).toContain("shape={COVER_SHAPE}");
     expect(COVER_SHAPE).toBe("16:9");
-    // A settings card: a reader who may not change the event row is told so, and the server asks again.
-    expect(BOX).toContain("<SettingsReadOnly />");
+    // A settings card: a reader who may not change the event row — the Redactor, who works in «Titlu și
+    // rezumat», which holds it since §760 — opens it on the one sentence that the settings are not theirs,
+    // and the server asks again.
+    expect(BOX).toMatch(/if \(!mayEditSettings\)\s+return \(\s+<Panel collapsible \{\.\.\.card\}>\s+<SettingsReadOnly \/>/);
     // Nothing offered where no picture can be stored.
     expect(BOX).toContain("isStorageConfigured()");
   });
@@ -35,7 +37,8 @@ describe("§709 «Copertă» in the editor", () => {
     expect(ACTIONS).toContain('coverAssetId: form.has("event.coverAssetId") ? value("coverAssetId") : undefined,');
     expect(ACTIONS).toContain('coverCrop: form.has("event.coverAssetId") ? value("coverCrop") : undefined,');
     expect(eventFormFieldName("coverAssetId")).toBe("event.coverAssetId");
-    expect(LABELS).toContain('"event.coverAssetId": inBox("cover", t("editor.cover.legend")),');
+    // «Titlu și rezumat › Copertă › Fotografia de copertă» since §760.
+    expect(LABELS).toContain('"event.coverAssetId": inCardOf("titleSummary", "cover", t("editor.cover.legend")),');
   });
 
   it("writes nothing for a form without the box, clears both for an empty one, keeps a crop only with its picture", () => {

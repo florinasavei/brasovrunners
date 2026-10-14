@@ -91,6 +91,9 @@ const ONE_LANGUAGE_LABEL = { ...EVENT, links: [{ kind: "GPX", url: GPX, labelRo:
 /** 23 real registrations: the amber outline a box that reaches people wears (§350, §408). */
 const RISK: RiskMark = { count: 23 };
 
+/** The markup without its glyphs: an SVG's path may hold a «23» that is no count (the promotion's star, §760). */
+const words = (html: string): string => html.replace(/<svg[\s\S]*?<\/svg>/g, "");
+
 const NOTICE = {
   labels: {
     notify: "Anunță participanții",
@@ -167,11 +170,13 @@ function chain(folds: (string | null)[]): { node: FoldNode & { dispatchEvent: ()
 }
 
 describe("§448 the first box holds the type and the status, and its line says both", () => {
-  it("holds the status and the cost as named cards inside it — and neither the course nor the links (§466)", async () => {
+  it("holds the status, the cost and the promotion as named cards inside it — and neither the course nor the links (§466, §760)", async () => {
     const { kind } = await boxes(EVENT);
-    expect(namedFolds(kind)).toEqual(["box-kind", "box-status", "box-cost"]);
+    // «Evidențiere pe site» is the first box's last card since §760.
+    expect(namedFolds(kind)).toEqual(["box-kind", "box-status", "box-cost", "box-promotion"]);
     expect(foldsAround(kind, "box-status")).toEqual(["box-kind"]);
     expect(foldsAround(kind, "box-cost")).toEqual(["box-kind"]);
+    expect(foldsAround(kind, "box-promotion")).toEqual(["box-kind"]);
     expect(kind).toContain('name="event.costType"');
     // A plain «Cost» card, never a page-numbered one (§466).
     expect(kind).toMatch(/<h3[^>]*>(?:<svg[\s\S]*?<\/svg>)?Cost<span/);
@@ -255,7 +260,7 @@ describe("§448 with people registered, the status card says so, and the first b
     expect(foldsAround(drawn.kind, "box-status")).toEqual(["box-kind"]);
     expect(drawn.kind.indexOf('data-testid="risk-line"')).toBeGreaterThan(drawn.kind.indexOf('id="box-status"'));
     // The number is said once, under the page map (§408) — on no box, shut or open.
-    for (const key of ["kind", "course", "links"] as const) expect(drawn[key], key).not.toMatch(/\b23\b/);
+    for (const key of ["kind", "course", "links"] as const) expect(words(drawn[key]), key).not.toMatch(/\b23\b/);
     for (const key of ["course", "links"] as const) expect(drawn[key], key).not.toContain('data-testid="risk-line"');
     expect(read("src/modules/content/events/ui/boxes/StatusBox.tsx")).toContain('tone: risk ? "risk" : "default"');
     expect(read("src/modules/content/events/ui/boxes/KindBox.tsx")).toContain('tone={risk ? "risk" : "default"}');
@@ -290,7 +295,7 @@ describe("§358 a role that may only read the settings", () => {
       expect(section.replace(/<h2[\s\S]*<\/h2>/, ""), id).toBe("");
     }
     // No number anywhere — the page's one line says it (§408); nothing is posted or offered.
-    expect(Object.values(drawn).join("")).not.toMatch(/\b23\b/);
+    expect(words(Object.values(drawn).join(""))).not.toMatch(/\b23\b/);
     expect(Object.values(drawn).join("")).not.toMatch(/name="event\./);
   });
 });

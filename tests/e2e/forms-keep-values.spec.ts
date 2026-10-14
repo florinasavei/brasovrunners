@@ -154,7 +154,7 @@ test.describe("§315 a refusal inside a closed card opens it", () => {
     // The addresses fill themselves from the titles (`SlugFromTitle`).
     await expect(field("translations.en.slug")).toHaveValue(`no-declaration-${suffix}`);
 
-    const registration = await openEditorBox(page, "Participare și înscrieri");
+    const registration = await openEditorBox(page, "Participare, înscrieri și regulament");
     await page.getByRole("combobox", { name: "Modul de înscriere" }).click();
     await page.getByRole("option", { name: "Înscrieri pe site" }).click();
     await field("event.capacity").fill("40");
@@ -164,7 +164,7 @@ test.describe("§315 a refusal inside a closed card opens it", () => {
 
     // §515: a race with no declaration chosen starts on the one its course calls for — the trail
     // text here, no surface being stated — so the refusal needs the select cleared by hand.
-    const programme = await openEditorBox(page, "Program, regulament și declarație");
+    const programme = await openEditorBox(page, "Participare, înscrieri și regulament");
     const declarationCard = await openEditorBox(page, "Declarația pe propria răspundere");
     const declaration = page.getByRole("combobox", { name: "Declarația pe care o semnează participantul" });
     await expect(declaration).toContainText("Eveniment montan");
@@ -178,9 +178,9 @@ test.describe("§315 a refusal inside a closed card opens it", () => {
     await page.getByRole("button", { name: "Creează evenimentul" }).click();
     const refusal = page.getByTestId("form-refusal");
     await expect(refusal).toBeVisible();
-    await expect(refusal.getByRole("link", { name: "Program, regulament și declarație › Declarația pe propria răspundere › Declarația pe care o semnează participantul" })).toBeVisible();
+    await expect(refusal.getByRole("link", { name: "Participare, înscrieri și regulament › Declarația pe propria răspundere › Declarația pe care o semnează participantul" })).toBeVisible();
     await expect(page).toHaveURL(/\/admin\/events\/new$/);
-    await expect(editorBox(page, "Program, regulament și declarație")).toHaveAttribute("open", "");
+    await expect(editorBox(page, "Participare, înscrieri și regulament")).toHaveAttribute("open", "");
     await expect(editorBox(page, "Declarația pe propria răspundere")).toHaveAttribute("open", "");
     await expect(field("event.capacity")).toHaveValue("40");
     await expect(field("event.registrationMode")).toHaveValue("INTERNAL");
@@ -202,7 +202,7 @@ test.describe("§515 the race's declaration follows the course", () => {
     const field = (name: string) => page.locator(`[name="${name}"]`);
     await page.getByRole("combobox", { name: /Tip eveniment/ }).click();
     await page.getByRole("option", { name: "Concurs" }).click();
-    await openEditorBox(page, "Participare și înscrieri");
+    await openEditorBox(page, "Participare, înscrieri și regulament");
     await page.getByRole("combobox", { name: "Modul de înscriere" }).click();
     await page.getByRole("option", { name: "Înscrieri pe site" }).click();
 
@@ -322,7 +322,7 @@ test.describe("§350 a wrong value in a hidden registration mode", () => {
     await field("translations.en.title").fill(`Hidden mode ${suffix}`);
     await expect(field("translations.en.slug")).toHaveValue(`hidden-mode-${suffix}`);
 
-    await openEditorBox(page, "Participare și înscrieri");
+    await openEditorBox(page, "Participare, înscrieri și regulament");
     const mode = page.getByRole("combobox", { name: "Modul de înscriere" });
     await mode.click();
     await page.getByRole("option", { name: "Înscrieri la organizator" }).click();

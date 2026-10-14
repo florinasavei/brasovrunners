@@ -77,26 +77,28 @@ async function rules(event: EditableEvent | null, options: { mayEditSettings?: b
 }
 
 describe("§448 the declaration card sits with «Regulamentul» (in one card since §481)", () => {
-  it("is a named level-3 card, on the create page too, drawn right after «Regulamentul» in «Program, regulament și declarație» (§481)", async () => {
+  it("is a named level-3 card, on the create page too, drawn right after «Regulamentul» in «Participare, înscrieri și regulament» (§481, §760)", async () => {
     for (const event of [TRAIL_RUN, RACE, null]) {
       const html = await rules(event);
       expect(namedFolds(html)).toEqual(["box-declaration"]);
       expect(html).toMatch(/<h3[^>]*>(?:<svg[\s\S]*?<\/svg>)?Declarația pe propria răspundere<span/);
     }
     expect(await rules(TRAIL_RUN, { locale: "en" })).toMatch(/<h3[^>]*>(?:<svg[\s\S]*?<\/svg>)?Self-declaration<span/);
-    // The card that holds the three awaits each and draws them in the page's order — the programme,
-    // the rules, the declaration — its line joined to theirs, open while the declaration is missing.
-    const box = readFileSync(path.join(process.cwd(), "src/modules/content/events/ui/boxes/ProgrammeRulesBox.tsx"), "utf8");
+    // The card that holds them since §760, «Participare, înscrieri și regulament», awaits each and
+    // draws the declaration right after the rules and their minimum age, open while it is missing.
+    const box = readFileSync(path.join(process.cwd(), "src/modules/content/events/ui/boxes/RegistrationBox.tsx"), "utf8");
     expect(box).toContain("await DeclarationCard({");
-    expect(box.indexOf("{programme}")).toBeLessThan(box.indexOf("{rules}"));
-    expect(box.indexOf("{rules}")).toBeLessThan(box.indexOf("{declaration}"));
+    const body = box.slice(box.indexOf('<Panel glyph="registration"'));
+    expect(body.indexOf("{rules}")).toBeGreaterThan(-1);
+    expect(body.indexOf("{rules}")).toBeLessThan(body.indexOf("{declarationCard}"));
+    expect(body.indexOf("{declarationCard}")).toBeLessThan(body.indexOf("{programme}"));
     expect(box).toContain("openWhen={{ attention: line.missing }}");
     // «Regulamentul» is a level-3 card of its own now, the declaration no longer inside it.
     const text = readFileSync(path.join(process.cwd(), "src/modules/content/events/ui/boxes/TextBoxes.tsx"), "utf8");
     const rulesCard = text.slice(text.indexOf("export async function RulesBox"), text.indexOf("export async function AddressBox"));
     expect(rulesCard).toContain('level={3} id="box-rules"');
     expect(rulesCard).not.toContain("DeclarationCard");
-    // Neither «Traseul» nor «Condiții de participare» asks any more.
+    // Neither «Traseul» nor the registration's own fields ask any more: only the declaration card does.
     const course = readFileSync(path.join(process.cwd(), "src/modules/content/events/ui/boxes/CourseBox.tsx"), "utf8");
     const registration = readFileSync(path.join(process.cwd(), "src/modules/content/events/ui/boxes/RegistrationBox.tsx"), "utf8");
     expect(course).not.toContain("<GroupRunDeclarationField");

@@ -38,17 +38,13 @@ const FIELD_BOXES = [
   "KindBox",
   "TitleSummaryBox",
   "DescriptionBox",
-  // The date and the place in one card, the programme, rules and declaration in another (§481).
+  // The date and the place in one card (§481); registration with the programme, the rules and the
+  // declaration in another (§760: what were cards 6 and 9).
   "WhenBox",
-  "ProgrammeRulesBox",
   "RegistrationBox",
   "CourseBox",
   "LinksBox",
   "CoHostsBox",
-  // «Copertă» (§709): the picture field posts `event.coverAssetId` and `event.coverCrop`.
-  "CoverBox",
-  "PromotionBox",
-  "AddressBox",
 ];
 
 describe("§347 one event form for five features, on both pages", () => {
@@ -181,7 +177,7 @@ describe("§505 the minimum age is one box in «Regulamentul» for every type", 
   });
 
   it("a refusal of the age names «Regulamentul»'s box, and no form posts a second age box", () => {
-    expect(read(`${UI_DIR}/field-labels.ts`)).toContain('"event.minAge": inProgrammeRules("rules", t("editor.minAge"))');
+    expect(read(`${UI_DIR}/field-labels.ts`)).toContain('"event.minAge": inParticipation("rules", t("editor.minAge"))');
     expect(UI).not.toContain("groupRunMinAge");
     // Posted once, by the rules card, outside any type- or mode-only block.
     expect(EVENT_FORM.match(/name="event\.minAge"/g)?.length ?? 0).toBe(1);

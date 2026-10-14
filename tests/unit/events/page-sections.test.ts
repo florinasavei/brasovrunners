@@ -91,23 +91,26 @@ describe("§406 the page's sections, one list", () => {
     expect(firstAppearances(pageSequence())).toEqual(ids);
   });
 
-  it("numbers the cards 1 to 9 in that order, and gives the automatic share links and the nested sections none (§466, §481, §512)", () => {
+  it("numbers the cards 1 to 8 in that order, and gives the automatic share links and the nested sections none (§466, §481, §512, §760)", () => {
     const numbered = numberedPageSections();
-    expect(numbered.filter((section) => section.number !== null).map((section) => section.number)).toEqual(Array.from({ length: 9 }, (_, index) => index + 1));
+    // Eight cards since §760 (the owner, 2026-10-13: «mai puține carduri și mai mult nesting»).
+    expect(numbered.filter((section) => section.number !== null).map((section) => section.number)).toEqual(Array.from({ length: 8 }, (_, index) => index + 1));
     expect(numbered.find((section) => section.id === "share")).toMatchObject({ automatic: true, card: null, number: null });
     expect(numbered.find((section) => section.id === "cost")).toMatchObject({ card: "box-cost", nestedIn: "kind", number: null });
-    // «Când și unde» holds the place, «Program, regulament și declarație» the rules (§481).
+    // «Când și unde» holds the place (§481); «Participare, înscrieri și regulament» the programme, the
+    // rules and the public list since §760 — what was «Program, regulament și declarație» (§481, §512).
     expect(numbered.find((section) => section.id === "place")).toMatchObject({ card: "box-place", nestedIn: "when", number: null });
-    expect(numbered.find((section) => section.id === "rules")).toMatchObject({ card: "box-rules", nestedIn: "programme", number: null });
-    // The public list is the last card of «Program, regulament și declarație» since §512.
-    expect(numbered.find((section) => section.id === "startList")).toMatchObject({ card: "box-start-list", nestedIn: "programme", number: null });
+    expect(numbered.find((section) => section.id === "programme")).toMatchObject({ card: "box-schedule", anchor: "schedule", nestedIn: "registration", number: null });
+    expect(numbered.find((section) => section.id === "rules")).toMatchObject({ card: "box-rules", nestedIn: "registration", number: null });
+    expect(numbered.find((section) => section.id === "startList")).toMatchObject({ card: "box-start-list", nestedIn: "registration", number: null });
     expect(pageSectionNumber("kind")).toBe(1);
     expect(pageSectionNumber("when")).toBe(4);
     expect(pageSectionNumber("place")).toBe(null);
     expect(pageSectionNumber("cost")).toBe(null);
     expect(pageSectionNumber("registration")).toBe(6);
+    expect(pageSectionNumber("coHosts")).toBe(7);
     expect(pageSectionNumber("links")).toBe(8);
-    expect(pageSectionNumber("programme")).toBe(9);
+    expect(pageSectionNumber("programme")).toBe(null);
     expect(pageSectionNumber("rules")).toBe(null);
     expect(pageSectionNumber("startList")).toBe(null);
   });
@@ -118,7 +121,7 @@ describe("§406 the page's sections, one list", () => {
   });
 
   it("gives every card section the id of the card the editor draws for it", () => {
-    const boxes = ["KindBox", "TextBoxes", "WhenBox", "PlaceBox", "CourseBox", "CostBox", "RegistrationBox", "CoHostsBox", "LinksBox", "ProgrammeRulesBox", "ProgrammeBox", "StartListBox"]
+    const boxes = ["KindBox", "TextBoxes", "WhenBox", "PlaceBox", "CourseBox", "CostBox", "RegistrationBox", "CoHostsBox", "LinksBox", "ProgrammeBox", "StartListBox"]
       .map((file) => read(`src/modules/content/events/ui/boxes/${file}.tsx`))
       // «Puncte de control» (§757) is a card of its own forms, beside the save form, not one of its boxes.
       .concat(read("src/modules/content/events/ui/CheckpointsCard.tsx"))
@@ -141,7 +144,6 @@ const EDITOR_CARDS: Array<[string, PageSectionId]> = [
   ["<CoHostsBox ", "coHosts"],
   ["<AutomaticSection ", "share"],
   ["<LinksBox ", "links"],
-  ["<ProgrammeRulesBox ", "programme"],
 ];
 
 /** The sections asked inside another card (§466, §481): no card of their own on either page. */
@@ -163,15 +165,22 @@ describe("§406 the editor lays its cards out in the page's order, on both pages
       // rules inside «Program, regulament și declarație» since §481: the page still draws each in its place.
       // The public list inside the same card since §512.
       // «Puncte de control» inside «Traseul» (§757): its own forms, linked from the course card.
-      expect(NESTED).toEqual(["place", "cost", "checkpoints", "rules", "startList"]);
+      // The programme, the rules and the public list inside «Participare, înscrieri și regulament» (§760).
+      expect(NESTED).toEqual(["place", "cost", "checkpoints", "programme", "rules", "startList"]);
       expect(positions.sort((a, b) => a.index - b.index).map((entry) => entry.id)).toEqual(ids.filter((id) => !NESTED.includes(id)));
       for (const gone of [
         "<CostBox",
         "<PlaceBox",
         "<RulesBox",
         "<ProgrammeBox ",
+        "<ProgrammeRulesBox",
         "<StartListBox",
         "<VideoBox",
+        // Cards of the page's own since §760: drawn by «Ce fel de eveniment» and «Titlu și rezumat».
+        "<PromotionBox",
+        "<CoverBox",
+        "<AddressBox",
+        "flow.headings.programme",
         "flow.headings.cost",
         "flow.headings.place",
         "flow.headings.rules",
@@ -190,13 +199,12 @@ describe("§406 the editor lays its cards out in the page's order, on both pages
       expect(source).toContain('<AutomaticSection testId="automatic-share">{flow.automaticLine}</AutomaticSection>');
     });
 
-    it(`${name}: the cards that are not on the page come after, in a group of their own`, () => {
-      const offPage = source.indexOf('t("editor.groups.offPage")');
-      expect(offPage).toBeGreaterThan(source.indexOf("<ProgrammeRulesBox "));
-      for (const card of ["<PromotionBox ", "<AddressBox "]) {
-        expect(source.indexOf(card), `${name}: ${card}`).toBeGreaterThan(offPage);
-      }
+    it(`${name}: no group of cards that are not on the page — each is a card of the page's own (§760)`, () => {
+      expect(source).not.toContain('t("editor.groups.offPage")');
       expect(source.indexOf('t("editor.groups.page")')).toBeLessThan(source.indexOf("<KindBox "));
+      // After the eight cards, the preview, then Salvare.
+      expect(source.indexOf("<PreviewBox ")).toBeGreaterThan(source.indexOf("<LinksBox "));
+      expect(source.indexOf('id="box-save"')).toBeGreaterThan(source.indexOf("<PreviewBox "));
     });
 
     it(`${name}: the map sits under Publicare and Recurență`, () => {
@@ -307,22 +315,28 @@ describe("§406 whether the page draws each section", () => {
 
   it("draws a card holding two sections when either is drawn (§481): the programme card from the rules alone", () => {
     const cards = (data: PageSectionData) => Object.fromEntries(cardStates(data).map((card) => [card.id, card.isDrawn]));
-    expect(cards(bare())).toMatchObject({ when: true, programme: false });
+    expect(cards(bare())).toMatchObject({ when: true, registration: false });
     const withRules = bare();
     withRules.texts = [{ ...withRules.texts[0], rulesJson: doc("Reguli") }];
-    expect(drawn(withRules)).toMatchObject({ programme: false, rules: true });
-    expect(cards(withRules)).toMatchObject({ programme: true });
+    expect(drawn(withRules)).toMatchObject({ registration: false, programme: false, rules: true });
+    // «Participare, înscrieri și regulament» (§760) is drawn from the rules alone, on a group run too.
+    expect(cards(withRules)).toMatchObject({ registration: true });
+    const withProgramme = bare();
+    withProgramme.texts = [{ ...withProgramme.texts[0], scheduleJson: doc("Start la 9") }];
+    expect(cards(withProgramme)).toMatchObject({ registration: true });
     // A nested section has no card of its own.
     expect(cards(withRules)).not.toHaveProperty("place");
-    expect(cardStates(withRules).map((card) => card.id)).toEqual(ids.filter((id) => !["place", "cost", "checkpoints", "rules", "startList"].includes(id)));
+    expect(cards(withRules)).not.toHaveProperty("programme");
+    expect(cardStates(withRules).map((card) => card.id)).toEqual(ids.filter((id) => !["place", "cost", "checkpoints", "programme", "rules", "startList"].includes(id)));
   });
 
-  it("draws «Program, regulament și declarație» from the public list alone (§512)", () => {
+  it("draws «Participare, înscrieri și regulament» from the public list alone (§512, §760)", () => {
     const cards = (data: PageSectionData) => Object.fromEntries(cardStates(data).map((card) => [card.id, card.isDrawn]));
     const listed = bare();
-    listed.event = { ...listed.event, type: "RACE", registrationMode: "INTERNAL", participantListVisibility: "NAMES" };
-    expect(drawn(listed)).toMatchObject({ programme: false, rules: false, startList: true });
-    expect(cards(listed)).toMatchObject({ programme: true });
+    // A race's registration row is drawn whatever its mode; a group run's is not, so the list alone is read on it.
+    listed.event = { ...listed.event, participantListVisibility: "NAMES" };
+    expect(drawn(listed)).toMatchObject({ registration: false, programme: false, rules: false, startList: true });
+    expect(cards(listed)).toMatchObject({ registration: true });
     expect(cards(listed)).not.toHaveProperty("startList");
   });
 
