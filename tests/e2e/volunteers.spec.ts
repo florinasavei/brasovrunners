@@ -140,11 +140,12 @@ test.describe("§754 volunteers for a race", () => {
     expect((await acceptTick.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
     await expect(page.getByRole("button", { name: "Primește voluntari pe pagină", exact: true })).toHaveCount(0);
     await acceptTick.click();
-    await page.waitForURL(/#box-volunteers$/);
-    await hydrated(page);
-    await expect(page.getByRole("checkbox", { name: "Primește voluntari pe pagină", exact: true })).toHaveAttribute("aria-checked", "true");
+    // The address already ends in the card's anchor, so the redirect is waited for by what it draws: the card's sentence, then the tick.
     // With the seed's sample notice describing volunteers, the form is on the page.
-    await expect(page.getByTestId("volunteer-offer-state")).toContainText("e pe pagina evenimentului");
+    await expect(page.getByTestId("volunteer-offer-state")).toContainText("e pe pagina evenimentului", { timeout: 30_000 });
+    await hydrated(page);
+    // The card may be shut after the redirect: its tick is still the same checkbox, with the state in `aria-checked`.
+    await expect(page.getByRole("checkbox", { name: "Primește voluntari pe pagină", exact: true, includeHidden: true })).toHaveAttribute("aria-checked", "true");
 
     // --- A visitor, who is nobody: the form, behind the notice --------------------------------
     const visitor = await browser.newContext({ baseURL: test.info().project.use.baseURL, viewport: test.info().project.use.viewport ?? undefined });

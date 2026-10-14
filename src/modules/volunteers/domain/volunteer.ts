@@ -125,8 +125,9 @@ const uuidField = z.uuid();
 
 /**
  * What a person says about themselves (§NNN; the owner, 2026-10-14: «vârstă, sex, oraș și o bifă dacă a mai fost
- * voluntar sau nu»): the age in whole years — digits only, one to `VOLUNTEER_AGE_MAX`; whether it reaches
- * `VOLUNTEER_MINIMUM_AGE` is `refuseUnderage`, a second rule so the page can say which one failed — the sex as the
+ * voluntar sau nu»): the age in whole years — digits only, one to `VOLUNTEER_AGE_MAX` and at least
+ * `VOLUNTEER_MINIMUM_AGE` (the last a rule of the box itself, so a refusal names the age together with the other boxes
+ * that failed; the page says «cel puțin 18 ani» rather than «scrie vârsta» by reading the typed age) — the sex as the
  * registration form's two answers, the city as one short line. Required on the public form, optional on the
  * organizers' entry (an empty box is null).
  */
@@ -135,7 +136,14 @@ const ageDigits = z
   .transform((value) => value.trim())
   .pipe(z.string().regex(/^\d{1,3}$/))
   .transform((value) => Number(value))
-  .pipe(z.number().int().min(1).max(VOLUNTEER_AGE_MAX));
+  .pipe(
+    z
+      .number()
+      .int()
+      .min(1)
+      .max(VOLUNTEER_AGE_MAX)
+      .refine((age) => age >= VOLUNTEER_MINIMUM_AGE, { message: `volunteers must be at least ${VOLUNTEER_MINIMUM_AGE} years old` }),
+  );
 const requiredAge = z.string().optional().default("").pipe(ageDigits);
 const optionalAge = z
   .string()
@@ -162,16 +170,6 @@ const shirtField = z
   .transform((value) => (value === "" ? null : value));
 /** A tick as the action reads it from the form: true only when posted. */
 const tick = z.boolean().optional().default(false);
-
-/**
- * A person typed younger than the platform takes (§NNN): one issue on the age's own box, so the refusal's summary
- * links to it; the page says «cel puțin 18 ani» rather than «scrie vârsta» by reading the typed age.
- */
-export function refuseUnderage(ctx: z.RefinementCtx, age: number | null): void {
-  if (age !== null && age < VOLUNTEER_MINIMUM_AGE) {
-    ctx.addIssue({ code: "custom", path: ["age"], message: `volunteers must be at least ${VOLUNTEER_MINIMUM_AGE} years old` });
-  }
-}
 
 /**
  * The roles a person ticked (§761): each an id, trimmed, the same one twice kept once, in the order posted — never
@@ -221,7 +219,6 @@ export const volunteerStaffInputSchema = z
     if (value.roleIds.length === 0 && value.assignedRoleId === null) {
       ctx.addIssue({ code: "custom", path: ["roleIds"], message: "tick at least one role, or give the person a role" });
     }
-    refuseUnderage(ctx, value.age);
   });
 
 export type VolunteerStaffInput = z.infer<typeof volunteerStaffInputSchema>;
@@ -280,8 +277,7 @@ export const volunteerPublicProfileSchema = z
     volunteeredBefore: tick,
     clubMember: tick,
     shirtSize: shirtField,
-  })
-  .superRefine((value, ctx) => refuseUnderage(ctx, value.age));
+  });
 
 export type VolunteerPublicProfileInput = z.infer<typeof volunteerPublicProfileSchema>;
 

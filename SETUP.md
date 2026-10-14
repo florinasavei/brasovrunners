@@ -2014,7 +2014,13 @@ only ones who see the names, addresses and telephone numbers.
 
 1. **Define the roles.** The event's editor → the card **«Voluntari»** → «Roluri» → «Adaugă un rol»:
    the name in Română **and** English (both or neither, like every text the club types), how many
-   people the role needs, and optionally a line saying what the person does (also in both languages).
+   people the role needs, and optionally «Descrierea rolului» — what the person does, where they stand, from
+   what hour — written in the same editor the pages use, in both languages or neither (about 2000 characters
+   of words each; lists and paragraphs, no tables or pictures; `DECISIONS.md` §NNN). **«Copiază și tradu tot:
+   RO → EN»** at the top of the role's form fills the English name and description from the Romanian ones
+   (greyed, with the steps, until the translation key of `/admin/tasks` is set). The description is read under the
+   role's tick on the public form (folded «Detalii» when long), on the card's role header, and — in plain
+   words — in the agreement's «Ce presupune rolul», its PDF and the emails.
    Roles belong to **one date**: a weekly run's dates, and a copy of an event, start with none. ↑ / ↓
    set the order the page lists them in; a role with people on it — cancelled ones too — cannot be
    deleted: move them to another role or delete them first. An event's volunteers are not accounts:
@@ -2034,7 +2040,12 @@ only ones who see the names, addresses and telephone numbers.
    the template **in the same sitting as step 3**. A notice approved before that names `{{volunteers}}` only,
    and until one naming both is in force in **both** languages the form, «Trimite linkul contractului» and
    «Semnat pe hârtie» wait; `/admin/tasks` shows the row «Nota de confidențialitate: contractul de
-   voluntariat» meanwhile.
+   voluntariat» meanwhile. **Since §NNN the paragraph also names what a volunteer says about themselves**
+   (`{{volunteerProfile}}`: the age, the sex, the city, whether they have volunteered before, their own claim to belong to the club's group and,
+   only while the club gives T-shirts, the size): approve the notice from the template again, in the same sitting. Until a notice that names it is in
+   force in **both** languages the public form stays as it was — «Am cel puțin 18 ani», no age, sex, city or size — and nothing of it is
+   kept; `/admin/tasks` shows the row «Nota de confidențialitate: ce spun voluntarii despre ei» and the card says so in a line. A lawyer reads whether the
+   sex, which the registration form also asks, needs more than the purpose written there.
 3. **Approve the volunteer agreement — a lawyer reads it first** (`DECISIONS.md` §758). `/admin/legal` →
    the card «Contract de voluntariat» → «Regenerează din șablon» → confirm (or the one press that approves
    every text still missing). The platform's text says, in plain words, that the help is unpaid and no
@@ -2056,7 +2067,7 @@ only ones who see the names, addresses and telephone numbers.
    **both** languages the page shows no form; `/admin/tasks` shows the row «Contractul de voluntariat»
    while an event ahead takes volunteers. A public copy of the text in force, its blanks as dots, is at
    `/ro/contract-voluntariat` and `/en/volunteer-agreement`.
-4. **Take volunteers on the page.** The same card → «Primește voluntari pe pagină». The card says in a
+4. **Take volunteers on the page.** The same card → tick «Primește voluntari pe pagină» (a real tick box: press the row, the box fills). The card says in a
    line whether the form is on the page now and, if not, which of the conditions is missing: the event
    takes volunteers, the event is published and not for the members alone (the form is public), the
    event is not cancelled or over, a role still needs people, the notice describes them, a volunteer
@@ -2064,7 +2075,9 @@ only ones who see the names, addresses and telephone numbers.
    the address, the telephone number, «Ce ești dispus(ă) să faci» — one box per role that still needs
    people, as many ticked as the person would do, at least one (§761) —, an optional
    message, the consent tick, «Am citit și accept contractul de voluntariat» (linking the text in force)
-   and «Am cel puțin 18 ani», behind the same anti-bot checks as the registration form.
+   and — once the notice of step 2 names them — «Vârsta» (18 or more; it replaces the tick «Am cel puțin 18 ani»), «Sex», «Orașul», the optional ticks «Am mai fost voluntar în trecut la alte curse»
+   and «Fac parte din grupul …», behind the same anti-bot checks as the registration form. **«Oferim tricouri voluntarilor»** (the card, off by
+   default, with its own «Salvează») adds «Mărimea tricoului» to the form and to every row; the club gives no T-shirts today.
 5. **Answer the offers.** Each sign-up is «Înscris», with **no role yet**: it waits under **«De repartizat»**
    at the top of the card, with the roles the person ticked as chips. The person gets one email, «Ți-am primit
    oferta de voluntar», with nothing to press and the agreement they accepted attached as a PDF, and each
@@ -2078,7 +2091,8 @@ only ones who see the names, addresses and telephone numbers.
    voluntarul» (the address and the telephone number go with it). «N din M» beside each role counts only the
    people **given** that role («Înscris» and «Confirmat»); the page stops offering a role once it has them.
    «Adaugă un voluntar de mână» enters a person yourself — tick what they would do, and give a role if you
-   already know it; a role may take more people than it asked. «Descarcă CSV» downloads the list, grouped by
+   already know it; a role may take more people than it asked; the age, sex, city and ticks are optional there (an age below 18 is refused).
+   A row shows «A mai fost voluntar» and «Din grupul …» as small chips and the rest in one line. «Descarcă CSV» downloads the list, grouped by
    the role given, with a column of the roles each person offered for. A role somebody was given or ticked
    cannot be deleted until you change their roles.
    Each person's row says where they stand with the agreement: «Contract acceptat» (with the version, the

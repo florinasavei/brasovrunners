@@ -80,6 +80,11 @@ describe("§NNN the public form's age, sex and city (the notice names them)", ()
     const under = volunteerPublicProfileSchema.safeParse({ ...PUBLIC, age: "17" });
     expect(under.success).toBe(false);
     if (!under.success) expect(refusedFields(under.error)).toEqual(["age"]);
+    // The age is named together with the other boxes that failed, never held back until they are mended.
+    const several = volunteerPublicProfileSchema.safeParse({ ...PUBLIC, age: "17", sex: "", city: "", roleIds: [] });
+    if (!several.success) expect(refusedFields(several.error).sort()).toEqual(["age", "city", "roleIds", "sex"]);
+    expect(several.success).toBe(false);
+    expect(volunteerStaffInputSchema.safeParse({ roleIds: [ID], assignedRoleId: "", name: "Ana", email: "ana@example.test", phone: "+40712345678", age: "15" }).success).toBe(false);
     expect(volunteerPublicProfileSchema.parse({ ...PUBLIC, age: "18" }).age).toBe(18);
     expect(volunteerPublicProfileSchema.parse({ ...PUBLIC, age: String(VOLUNTEER_AGE_MAX) }).age).toBe(VOLUNTEER_AGE_MAX);
     expect(volunteerPublicProfileSchema.parse({ ...PUBLIC, age: " 042 " }).age).toBe(42);
