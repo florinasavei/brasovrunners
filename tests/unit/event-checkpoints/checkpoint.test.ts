@@ -19,6 +19,7 @@ import {
   readTimeLimit,
   sortedByKm,
 } from "@/modules/event-checkpoints/domain/checkpoint";
+import { savedDurationMinutes } from "@/modules/content/events/duration";
 import { checkpointClock, checkpointFinish, checkpointStart, cutoffClockOf, minutesFromClock, withCutoffClocks } from "@/modules/event-checkpoints/domain/start";
 import { STAFF_ROLES } from "@/modules/staff-identity/domain/roles";
 
@@ -33,7 +34,7 @@ import { STAFF_ROLES } from "@/modules/staff-identity/domain/roles";
 const CONTEXT: CheckpointContext = { routeKm: 21.1, startKnown: true, limitMinutes: 180 };
 
 /** A time limit in minutes as the race's two boxes carry it: hours and minutes. */
-const limit = (minutes: number) => ({ cutoffHours: String(Math.floor(minutes / 60)), cutoffMinutes: String(minutes % 60) });
+const limit = (minutes: number) => ({ cutoffHours: String(Math.floor(minutes / 60)), cutoffMinutesPart: String(minutes % 60) });
 
 const row = (index: number, over: Partial<PostedCheckpoint> = {}): PostedCheckpoint => ({
   index,
@@ -43,7 +44,7 @@ const row = (index: number, over: Partial<PostedCheckpoint> = {}): PostedCheckpo
   km: String(index + 1),
   kinds: [],
   cutoffHours: "",
-  cutoffMinutes: "",
+  cutoffMinutesPart: "",
   noteRo: "",
   noteEn: "",
   remove: false,
@@ -89,12 +90,14 @@ describe("§757 a kilometre, a time of the day and a time limit, as typed", () =
     ["0", "30", 30],
     ["", "", null],
     [" ", " ", null],
+    // The hours cleared on a whole-hour limit leaves its «0» minutes behind: the limit is removed, not refused as a zero.
+    ["", "0", null],
+    ["", "00", null],
     ["168", "0", 10080],
   ])("reads the limit %j h %j min as %s, the race's own two boxes' way", (hours, minutes, expected) => expect(readTimeLimit(hours, minutes)).toBe(expected));
 
   it.each([
     ["0", "0", "hours"],
-    ["", "0", "hours"],
     ["1", "60", "minutes"],
     ["1", "x", "minutes"],
     ["x", "30", "hours"],
@@ -211,18 +214,21 @@ describe("§757 the rules a checkpoint is held to", () => {
   });
 
   it("reads a time limit typed as hours and minutes, and keeps it as minutes (§NNN)", () => {
-    const rows = prepareCheckpoints([row(0, { cutoffHours: "1", cutoffMinutes: "30" }), row(1, { km: "9", ...limit(150) })], CONTEXT);
+    const rows = prepareCheckpoints([row(0, { cutoffHours: "1", cutoffMinutesPart: "30" }), row(1, { km: "9", ...limit(150) })], CONTEXT);
     expect(rows.map((r) => r.cutoffMinutes)).toEqual([90, 150]);
     expect(prepareCheckpoints([row(0)], CONTEXT)[0].cutoffMinutes).toBeNull();
   });
 
   it("refuses a limit that is not a duration, naming the hours box or the minutes box", () => {
-    const zero = refusal([row(0, { cutoffHours: "0", cutoffMinutes: "0" })]);
+    // The hours box cleared on a whole-hour limit leaves «0» in the minutes box: that is no limit, not a «0».
+    expect(prepareCheckpoints([row(0, { cutoffHours: "", cutoffMinutesPart: "0" })], CONTEXT)[0].cutoffMinutes).toBeNull();
+    expect(readTimeLimit("", "0")).toBeNull();
+    const zero = refusal([row(0, { cutoffHours: "0", cutoffMinutesPart: "0" })]);
     expect(zero.reason).toBe("CHECKPOINT_CUTOFF_INVALID");
     expect(zero.fields).toEqual(["cp[0].cutoffHours"]);
-    const sixty = refusal([row(0, { cutoffHours: "1", cutoffMinutes: "60" })]);
+    const sixty = refusal([row(0, { cutoffHours: "1", cutoffMinutesPart: "60" })]);
     expect(sixty.reason).toBe("CHECKPOINT_CUTOFF_INVALID");
-    expect(sixty.fields).toEqual(["cp[0].cutoffMinutes"]);
+    expect(sixty.fields).toEqual(["cp[0].cutoffMinutesPart"]);
     expect(refusal([row(0, { cutoffHours: "noon" })]).reason).toBe("CHECKPOINT_CUTOFF_INVALID");
   });
 
@@ -253,7 +259,7 @@ describe("§757 the rules a checkpoint is held to", () => {
   });
 
   it("refuses a limit longer than the event's own, minutes against minutes", () => {
-    const late = refusal([row(0, { cutoffHours: "3", cutoffMinutes: "30" })]);
+    const late = refusal([row(0, { cutoffHours: "3", cutoffMinutesPart: "30" })]);
     expect(late.reason).toBe("CHECKPOINT_CUTOFF_AFTER_END");
     expect(late.fields).toEqual(["cp[0].cutoffHours"]);
     // The sentence says the event's limit, to choose up to.
@@ -306,7 +312,7 @@ describe("§757 what the event says the points are measured against", () => {
   const at = (hours: number, minutes = 0) => new Date(Date.UTC(2026, 10, 21, hours, minutes));
 
   it("takes the typed distance first, the track's second, and nothing when there is none", () => {
-    const base = { start: at(9), endsAt: null };
+    const base = { start: at(9), limitMinutes: null };
     expect(checkpointContext({ ...base, distanceMeters: 21097, gpxMeters: 25000 }).routeKm).toBeCloseTo(21.097);
     expect(checkpointContext({ ...base, distanceMeters: null, gpxMeters: 25000 }).routeKm).toBe(25);
     expect(checkpointContext({ ...base, distanceMeters: null, gpxMeters: null }).routeKm).toBeNull();
@@ -316,19 +322,28 @@ describe("§757 what the event says the points are measured against", () => {
   it("measures the limit in elapsed minutes, so the night the clocks change moves nothing (§NNN)", () => {
     // 24 October 2026, 22:00 summer time (19:00Z), six real hours: the finish closes at 03:00 winter time, six hours of limit.
     const start = new Date("2026-10-24T19:00:00Z");
-    const context = checkpointContext({ distanceMeters: 50_000, gpxMeters: null, start, endsAt: new Date("2026-10-25T01:00:00Z") });
+    const context = checkpointContext({
+      distanceMeters: 50_000,
+      gpxMeters: null,
+      start,
+      limitMinutes: savedDurationMinutes(start, new Date("2026-10-25T01:00:00Z")),
+    });
     expect(context).toMatchObject({ startKnown: true, limitMinutes: 360 });
     // Six elapsed hours is the most a point may have, whatever the wall clock says on the way.
-    expect(refusal([row(0, { km: "40", cutoffHours: "6", cutoffMinutes: "1" })], context).reason).toBe("CHECKPOINT_CUTOFF_AFTER_END");
+    expect(refusal([row(0, { km: "40", cutoffHours: "6", cutoffMinutesPart: "1" })], context).reason).toBe("CHECKPOINT_CUTOFF_AFTER_END");
     expect(prepareCheckpoints([row(0, { km: "40", cutoffHours: "6" })], context)).toHaveLength(1);
   });
 
   it("reads whether the start is known and the span to the event's end", () => {
-    const context = checkpointContext({ distanceMeters: 10_000, gpxMeters: null, start: at(9, 30), endsAt: at(12, 30) });
+    const context = checkpointContext({ distanceMeters: 10_000, gpxMeters: null, start: at(9, 30), limitMinutes: 180 });
     expect(context).toEqual({ routeKm: 10, startKnown: true, limitMinutes: 180, savedMinutes: undefined });
-    expect(checkpointContext({ distanceMeters: null, gpxMeters: null, start: null, endsAt: at(12) })).toMatchObject({ startKnown: false, limitMinutes: null });
-    // An end that is not after the start is no limit.
-    expect(checkpointContext({ distanceMeters: null, gpxMeters: null, start: at(9), endsAt: at(8) }).limitMinutes).toBeNull();
+    // The event's «Timp limită» is a duration: it is true while the hour is unsaid, and a point's limit is held to it then too.
+    const unsaid = checkpointContext({ distanceMeters: null, gpxMeters: null, start: null, limitMinutes: 60 });
+    expect(unsaid).toMatchObject({ startKnown: false, limitMinutes: 60 });
+    expect(refusal([row(0, limit(150))], { ...unsaid, startKnown: true }).reason).toBe("CHECKPOINT_CUTOFF_AFTER_END");
+    // A limit that is not positive is no limit.
+    expect(checkpointContext({ distanceMeters: null, gpxMeters: null, start: at(9), limitMinutes: 0 }).limitMinutes).toBeNull();
+    expect(checkpointContext({ distanceMeters: null, gpxMeters: null, start: at(9), limitMinutes: null }).limitMinutes).toBeNull();
   });
 
   it("counts from the race's gun when there is one, and from nothing while the start's hour is blank", () => {

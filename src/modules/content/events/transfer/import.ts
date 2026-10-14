@@ -219,11 +219,9 @@ export function importedCheckpoints(config: EventConfig): Omit<CheckpointInput, 
   const eventStart = config.start.date && config.start.time ? fromWallTimeInput(`${config.start.date}T${config.start.time}`, zone) : null;
   const gun = config.type === "RACE" && config.raceStartsAt ? new Date(config.raceStartsAt) : null;
   const start = gun ?? eventStart;
-  // «Durata» counts from the gun on a race that has one (`duration.ts#durationBase`), as the save stores the end.
-  const endsAt = start && config.durationMinutes ? new Date(start.getTime() + config.durationMinutes * 60_000) : null;
   // A time limit is a duration, true with or without an hour to count it from: a file made from an event whose hour is
   // «se anunță mai târziu» carries its saved limits, and an import must give them back (the round trip, §NNN).
-  const context = { ...checkpointContext({ distanceMeters: config.measures.distanceMeters, gpxMeters: null, start, endsAt }), startKnown: true };
+  const context = { ...checkpointContext({ distanceMeters: config.measures.distanceMeters, gpxMeters: null, start, limitMinutes: config.durationMinutes }), startKnown: true };
   try {
     return prepareCheckpoints(
       config.route.checkpoints.map((row, index) => ({
@@ -233,7 +231,7 @@ export function importedCheckpoints(config: EventConfig): Omit<CheckpointInput, 
         km: String(row.km),
         kinds: row.kinds,
         cutoffHours: splitDuration(row.cutoffMinutes).hours,
-        cutoffMinutes: splitDuration(row.cutoffMinutes).minutes,
+        cutoffMinutesPart: splitDuration(row.cutoffMinutes).minutes,
         noteRo: row.note.ro ?? "",
         noteEn: row.note.en ?? "",
         remove: false,

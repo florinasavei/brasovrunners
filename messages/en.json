@@ -1880,7 +1880,7 @@
       "CHECKPOINT_KM_BEYOND_ROUTE": "The point “{name}” is at {km} km, but the route is only {max} km long. Choose a kilometre up to {max}.",
       "CHECKPOINT_KIND_UNKNOWN": "At the point “{name}”, what is there is not one of the options.",
       "CHECKPOINT_CUTOFF_INVALID": "The time limit of the point “{name}” is not a duration: write the hours and the minutes (minutes from 0 to 59), for example 1 hour and 15 minutes.",
-      "CHECKPOINT_CUTOFF_NO_START": "The time limit of the point “{name}” counts from the start, and the start has no time yet. Write the start's time (or the race's start) first, then set the time limit.",
+      "CHECKPOINT_CUTOFF_NO_START": "The time limit of the point “{name}” counts from the start, and the start has no time yet. Write the start's time (or the race's start) and save the event first, then set the time limit.",
       "CHECKPOINT_CUTOFF_AFTER_LATER": "The time limit of the point “{name}” ({cutoff}) is longer than the one of “{later}” ({laterCutoff}), which is further along the route. Runners reach “{name}” first: its time limit has to be shorter.",
       "CHECKPOINT_CUTOFF_AFTER_END": "The time limit {cutoff} of the point “{name}” is longer than {limit}, how long the event lasts from the start to the finish. Choose a time up to {limit} or lengthen the event's “Time limit”.",
       "CHECKPOINTS_NO_LONGER_HOLD": "This save would break “Checkpoints”: {detail} Change the point in its card first, then save again. Nothing was saved.",

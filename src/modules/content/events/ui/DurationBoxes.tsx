@@ -19,6 +19,7 @@ export default function DurationBoxes({
   minutesLabel,
   defaults,
   size,
+  describedBy,
 }: {
   hoursName: string;
   minutesName: string;
@@ -27,7 +28,10 @@ export default function DurationBoxes({
   /** What the boxes show before anything is typed: "" and "" for none (`splitDuration`). */
   defaults: { hours: string; minutes: string };
   size?: "small" | "medium";
+  /** The id of the caller's help line, so both boxes are read together with it. */
+  describedBy?: string;
 }) {
+  const numeric = { inputMode: "numeric", ...(describedBy ? { "aria-describedby": describedBy } : {}) };
   return (
     <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.5, alignItems: "flex-start" }}>
       <RecallField
@@ -35,7 +39,7 @@ export default function DurationBoxes({
         label={hoursLabel}
         defaultValue={defaults.hours}
         size={size}
-        {...textFieldConstraints(DURATION_HOURS_CONSTRAINTS, { inputMode: "numeric" })}
+        {...textFieldConstraints(DURATION_HOURS_CONSTRAINTS, numeric)}
         sx={{ flex: "0 0 120px" }}
       />
       <RecallField
@@ -43,7 +47,7 @@ export default function DurationBoxes({
         label={minutesLabel}
         defaultValue={defaults.minutes}
         size={size}
-        {...textFieldConstraints(DURATION_MINUTES_CONSTRAINTS, { inputMode: "numeric" })}
+        {...textFieldConstraints(DURATION_MINUTES_CONSTRAINTS, numeric)}
         sx={{ flex: "0 0 120px" }}
       />
     </Box>

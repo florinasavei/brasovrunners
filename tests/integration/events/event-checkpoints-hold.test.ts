@@ -88,7 +88,7 @@ const posted = (index: number, over: Partial<PostedCheckpoint>): PostedCheckpoin
   km: "",
   kinds: [],
   cutoffHours: "",
-  cutoffMinutes: "",
+  cutoffMinutesPart: "",
   noteRo: "",
   noteEn: "",
   remove: false,
@@ -97,7 +97,7 @@ const posted = (index: number, over: Partial<PostedCheckpoint>): PostedCheckpoin
 });
 
 /** A time limit in minutes as the card's two boxes post it. */
-const limit = (minutes: number) => ({ cutoffHours: String(Math.floor(minutes / 60)), cutoffMinutes: String(minutes % 60) });
+const limit = (minutes: number) => ({ cutoffHours: String(Math.floor(minutes / 60)), cutoffMinutesPart: String(minutes % 60) });
 
 /** The race, with water at km 5 closing 30 minutes after the gun (10:00) and timing at km 20 closing 150 minutes after it (12:00). */
 async function raceWithCheckpoints() {
@@ -195,6 +195,20 @@ describe("§757 an event save holds the saved checkpoints to their rules", () =>
       [minutes[0], null],
       [minutes[1], null],
     ]);
+  });
+
+  it("still holds the saved limits to a shortened «Timp limită» while the start's hour is to be announced: minutes against minutes", async () => {
+    const event = await raceWithCheckpoints();
+    await save(event.id, { startsAtWallTime: "2026-11-21", raceStartsAtWallTime: "", timeToBeAnnounced: true });
+    const unsaid = await reload(event.id);
+    // No hour, no gun: nothing to say a clock from, yet one hour is shorter than the timing point's two and a half.
+    const refused = await refusalOf(save(event.id, { startsAtWallTime: "2026-11-21", raceStartsAtWallTime: "", timeToBeAnnounced: true, durationMinutes: "60" }));
+    expect(refused.refusal.reason).toBe("CHECKPOINT_CUTOFF_AFTER_END");
+    expect(refused.refusal.values).toMatchObject({ name: "Cronometrare", cutoff: "2 h 30 min", limit: "1 h" });
+    expect((await reload(event.id)).endsAt?.toISOString()).toBe(unsaid.endsAt?.toISOString());
+    // A limit that still covers the longest point is accepted.
+    await save(event.id, { startsAtWallTime: "2026-11-21", raceStartsAtWallTime: "", timeToBeAnnounced: true, durationMinutes: "150" });
+    expect((await listCheckpoints(db, event.id)).map((row) => row.cutoffMinutes)).toEqual([30, 150]);
   });
 
   it("lets every save through that keeps the points true, and never touches them", async () => {

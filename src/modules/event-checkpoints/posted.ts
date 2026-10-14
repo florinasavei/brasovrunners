@@ -25,7 +25,7 @@ export function postedCheckpoints(form: FormData): PostedCheckpoint[] {
       km: text(checkpointBox(index, "km")),
       kinds: form.getAll(checkpointBox(index, "kinds")).filter((kind): kind is string => typeof kind === "string"),
       cutoffHours: text(checkpointBox(index, "cutoffHours")),
-      cutoffMinutes: text(checkpointBox(index, "cutoffMinutes")),
+      cutoffMinutesPart: text(checkpointBox(index, "cutoffMinutesPart")),
       noteRo: text(checkpointBox(index, "noteRo")),
       noteEn: text(checkpointBox(index, "noteEn")),
       remove: text(checkpointBox(index, "remove")) === "on",

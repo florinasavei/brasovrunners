@@ -123,7 +123,7 @@ function form(rows: Row[], extra: Record<string, string> = {}, forEvent = eventI
     for (const kind of row.kinds ?? []) data.append(`cp[${index}].kinds`, kind);
     const [hours, minutes] = row.boxes ?? (row.limit === undefined ? ["", ""] : [String(Math.floor(row.limit / 60)), String(row.limit % 60)]);
     data.set(`cp[${index}].cutoffHours`, hours);
-    data.set(`cp[${index}].cutoffMinutes`, minutes);
+    data.set(`cp[${index}].cutoffMinutesPart`, minutes);
     data.set(`cp[${index}].noteRo`, row.noteRo ?? "");
     data.set(`cp[${index}].noteEn`, row.noteEn ?? "");
     if (row.remove) data.set(`cp[${index}].remove`, "on");
@@ -211,14 +211,14 @@ describe("§757 an event's checkpoints", () => {
 
   it("refuses a time limit that is not a duration and one longer than the event's, naming the box and saying both durations", async () => {
     expect(await save([{ ...WATER, boxes: ["0", "0"] }])).toMatchObject({ error: "CHECKPOINT_CUTOFF_INVALID", fields: ["cp[0].cutoffHours"] });
-    expect(await save([{ ...WATER, boxes: ["1", "60"] }])).toMatchObject({ error: "CHECKPOINT_CUTOFF_INVALID", fields: ["cp[0].cutoffMinutes"] });
+    expect(await save([{ ...WATER, boxes: ["1", "60"] }])).toMatchObject({ error: "CHECKPOINT_CUTOFF_INVALID", fields: ["cp[0].cutoffMinutesPart"] });
     expect(await save([{ ...WATER, boxes: ["noon", ""] }])).toMatchObject({ error: "CHECKPOINT_CUTOFF_INVALID" });
     // The race's «Timp limită» is three hours (09:00 to 12:00): three and a half is longer.
     const refusal = await save([{ ...WATER, limit: 210 }]);
     expect(refusal).toMatchObject({ error: "CHECKPOINT_CUTOFF_AFTER_END", errorValues: { cutoff: "3 h 30 min", limit: "3 h" }, fields: ["cp[0].cutoffHours"] });
     // What was typed stays in the two boxes.
     expect((refusal as FormOutcome).values["cp[0].cutoffHours"]).toEqual(["3"]);
-    expect((refusal as FormOutcome).values["cp[0].cutoffMinutes"]).toEqual(["30"]);
+    expect((refusal as FormOutcome).values["cp[0].cutoffMinutesPart"]).toEqual(["30"]);
     expect(await save([{ ...WATER, limit: 180 }])).toBe("redirected");
     expect(await listCheckpoints(db, eventId)).toHaveLength(1);
   });

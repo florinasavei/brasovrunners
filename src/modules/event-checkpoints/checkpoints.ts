@@ -20,7 +20,7 @@ import {
 } from "./domain/checkpoint";
 import { offerableProposals } from "./domain/gpx-waypoints";
 import { checkpointClock, checkpointStart } from "./domain/start";
-import { splitDuration } from "@/modules/content/events/duration";
+import { savedDurationMinutes, splitDuration } from "@/modules/content/events/duration";
 import { loadGpxWaypoints } from "./gpx-file";
 
 /**
@@ -90,7 +90,8 @@ export function eventCheckpointContext(event: CheckpointEvent, gpxMeters: number
     distanceMeters: typed,
     gpxMeters: typed ? null : gpxMeters,
     start: checkpointStart(event),
-    endsAt: event.endsAt,
+    // «Timp limită» counts from the gun, else the event's start, and is true while the hour is to be announced (`duration.ts#durationBase`).
+    limitMinutes: savedDurationMinutes(event.raceStartsAt ?? event.startsAt, event.endsAt),
     savedMinutes: new Map(saved.map((row) => [row.id, row.cutoffMinutes])),
   });
 }
@@ -125,7 +126,7 @@ const toPosted = (row: Checkpoint, index: number): PostedCheckpoint => {
     km: String(row.km),
     kinds: row.kinds,
     cutoffHours: limit.hours,
-    cutoffMinutes: limit.minutes,
+    cutoffMinutesPart: limit.minutes,
     noteRo: row.noteRo ?? "",
     noteEn: row.noteEn ?? "",
     remove: false,
@@ -152,8 +153,8 @@ function sameWords(a: Omit<CheckpointInput, "id">, b: Pick<Checkpoint, "nameRo" 
 /**
  * The event's saved list no longer holds against the event as a save leaves it (§757): a moved start
  * or gun, a shorter «Timp limită», a shorter route. The event save is refused naming «Puncte de
- * control» and the rule's own sentence (`refusal`), so the page and the bib never publish a cut-off
- * before the start or after the finish, nor a point past the route. `date` names another date of a
+ * control» and the rule's own sentence (`refusal`), so the page and the bib never publish a limit
+ * longer than the race's own, nor a point past the route. `date` names another date of a
  * series the save reached.
  */
 export class SavedCheckpointsRefusal extends DomainError {
@@ -182,7 +183,8 @@ export async function assertSavedCheckpointsHold<T extends Record<string, unknow
   try {
     prepareCheckpoints(
       saved.map((row, at) => toPosted(row, 1000 + at)),
-      // A saved limit keeps holding while the start's hour is unsaid: only its length against the event's is asked.
+      // A saved limit keeps holding while the start's hour is unsaid: only its length against the event's «Timp limită» is asked,
+      // and that is minutes against minutes, known without an hour.
       { ...eventCheckpointContext(event, gpxMeters, saved), startKnown: true },
     );
   } catch (error) {
@@ -193,8 +195,9 @@ export async function assertSavedCheckpointsHold<T extends Record<string, unknow
 
 /**
  * Every checkpoint of one event copied onto another (§757) — «Duplică» and a series' new dates: the
- * cut-offs are times of the day, so they follow the new date. Run in the caller's transaction; no
- * audit row of its own, the copy's own row («event.duplicated», a series' date) says it.
+ * limits are minutes from the start, so a copy on another date keeps them and the clocks follow that
+ * date's start. Run in the caller's transaction; no audit row of its own, the copy's own row
+ * («event.duplicated», a series' date) says it.
  */
 export async function copyCheckpoints<T extends Record<string, unknown>>(db: Database<T>, fromEventId: string, toEventId: string, now: Date): Promise<number> {
   const rows = await listCheckpoints(db, fromEventId);
@@ -349,7 +352,7 @@ export async function changeCheckpoints<T extends Record<string, unknown>>(
           km: String(proposal.km),
           kinds: proposal.kinds,
           cutoffHours: "",
-          cutoffMinutes: "",
+          cutoffMinutesPart: "",
           noteRo: "",
           noteEn: "",
           remove: false,

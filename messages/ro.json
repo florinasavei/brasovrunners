@@ -1880,7 +1880,7 @@
       "CHECKPOINT_KM_BEYOND_ROUTE": "Punctul „{name}” e la {km} km, dar traseul are doar {max} km. Alege un kilometru până la {max}.",
       "CHECKPOINT_KIND_UNKNOWN": "La punctul „{name}”, ce găsești aici nu e una dintre variante.",
       "CHECKPOINT_CUTOFF_INVALID": "Timpul limită al punctului „{name}” nu e o durată: scrie orele și minutele (minutele de la 0 la 59), de exemplu 1 oră și 15 minute.",
-      "CHECKPOINT_CUTOFF_NO_START": "Timpul limită al punctului „{name}” se numără de la start, iar startul nu are încă o oră. Scrie întâi ora startului (sau a startului cursei), apoi pune timpul limită.",
+      "CHECKPOINT_CUTOFF_NO_START": "Timpul limită al punctului „{name}” se numără de la start, iar startul nu are încă o oră. Scrie întâi ora startului (sau a startului cursei) și salvează evenimentul, apoi pune timpul limită.",
       "CHECKPOINT_CUTOFF_AFTER_LATER": "Timpul limită al punctului „{name}” ({cutoff}) e mai lung decât cel al punctului „{later}” ({laterCutoff}), care e mai departe pe traseu. Alergătorii trec întâi pe la „{name}”: timpul de aici trebuie să fie mai scurt.",
       "CHECKPOINT_CUTOFF_AFTER_END": "Timpul limită {cutoff} al punctului „{name}” e mai lung decât {limit}, cât durează evenimentul de la start până la sosire. Alege un timp până la {limit} sau mărește „Timp limită” al evenimentului.",
       "CHECKPOINTS_NO_LONGER_HOLD": "Salvarea ar strica „Puncte de control”: {detail} Schimbă întâi punctul în cardul lui, apoi salvează din nou. Nu s-a salvat nimic.",

@@ -51,7 +51,7 @@ const EVERYTHING_OFF: BibDesign = {
   showProfile: true,
   // «Punctele de control pe profil» (§757): off, the other way from its default (on).
   showCheckpoints: false,
-  // «…cu timpii limită» (§757): on, the other way from its default (off).
+  // «…cu orele limită» (§757): on, the other way from its default (off).
   showCheckpointTimes: true,
   // The profile from the club's picture, the figures off and the strip turned (§759): each away from its default.
   profileSource: "picture",

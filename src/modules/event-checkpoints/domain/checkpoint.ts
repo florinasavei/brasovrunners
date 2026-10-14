@@ -68,7 +68,7 @@ export type PostedCheckpoint = {
   kinds: readonly string[];
   /** «Timp limită», the race's own two boxes: hours and minutes as typed, both empty for no limit. */
   cutoffHours: string;
-  cutoffMinutes: string;
+  cutoffMinutesPart: string;
   noteRo: string;
   noteEn: string;
   /** «Scoate» ticked on a saved row. */
@@ -162,7 +162,7 @@ export class CheckpointRefusal extends DomainError {
 /** The boxes' names: `cp[3].km` — the row's number in the form, so a refusal links to the box. */
 export const checkpointBox = (
   index: number,
-  field: "id" | "nameRo" | "nameEn" | "km" | "kinds" | "cutoffHours" | "cutoffMinutes" | "noteRo" | "noteEn" | "remove",
+  field: "id" | "nameRo" | "nameEn" | "km" | "kinds" | "cutoffHours" | "cutoffMinutesPart" | "noteRo" | "noteEn" | "remove",
 ): string => `cp[${index}].${field}`;
 
 /** The whole of a row's text, folded: one line, no run of spaces. */
@@ -201,6 +201,8 @@ export function readTimeLimit(hours: string, minutes: string): number | null | "
   const joined = joinDuration(hours, minutes);
   if (joined === "") return null;
   const m = minutes.trim();
+  // Only the minutes box left behind, a zero («1 h 0 min» with the hours cleared): the limit is removed, not a «0».
+  if (hours.trim() === "" && /^0+$/.test(m)) return null;
   if (m !== "" && (!/^\d+$/.test(m) || Number(m) > (DURATION_MINUTES_CONSTRAINTS.max ?? 59))) return "minutes";
   if (!/^\d+$/.test(joined)) return "hours";
   const total = Number(joined);
@@ -211,7 +213,7 @@ export function readTimeLimit(hours: string, minutes: string): number | null | "
 export function isBlankPosted(row: PostedCheckpoint): boolean {
   return (
     row.id === "" &&
-    [row.nameRo, row.nameEn, row.km, row.cutoffHours, row.cutoffMinutes, row.noteRo, row.noteEn].every((value) => value.trim() === "") &&
+    [row.nameRo, row.nameEn, row.km, row.cutoffHours, row.cutoffMinutesPart, row.noteRo, row.noteEn].every((value) => value.trim() === "") &&
     row.kinds.length === 0
   );
 }
@@ -243,8 +245,10 @@ export type CheckpointContext = {
 
 /**
  * The context an event gives: the route's length in kilometres from the typed distance (§598) or the
- * track's, whether the start is known and the elapsed minutes to the event's end. Minutes are elapsed
- * minutes, the same measure the race's «Timp limită» is stored in (`duration.ts#durationBase`), so a
+ * track's, whether the start is known, and the event's «Timp limită» in minutes. The limit is a
+ * duration, so it is true with or without an hour on the start (`duration.ts#savedDurationMinutes` from
+ * `durationBase`, or the file's own minutes): a point's limit is held to it even while the hour is to be
+ * announced. Minutes are elapsed minutes, the same measure the race's «Timp limită» is stored in, so a
  * night the clocks change moves no limit and no comparison.
  */
 export function checkpointContext(input: {
@@ -252,15 +256,15 @@ export function checkpointContext(input: {
   gpxMeters: number | null;
   /** The start the limits count from — the gun's, else the event's — or null while its hour is not typed. */
   start: Date | null;
-  endsAt: Date | null;
+  /** The event's «Timp limită» in minutes — known whether or not the start has an hour — or null when it has none. */
+  limitMinutes: number | null;
   savedMinutes?: ReadonlyMap<string, number | null>;
 }): CheckpointContext {
   const meters = input.distanceMeters && input.distanceMeters > 0 ? input.distanceMeters : input.gpxMeters && input.gpxMeters > 0 ? input.gpxMeters : null;
-  const real = input.start && input.endsAt ? Math.round((input.endsAt.getTime() - input.start.getTime()) / 60_000) : null;
   return {
     routeKm: meters === null ? null : meters / 1000,
     startKnown: input.start !== null,
-    limitMinutes: real !== null && real > 0 ? real : null,
+    limitMinutes: input.limitMinutes !== null && input.limitMinutes > 0 ? input.limitMinutes : null,
     savedMinutes: input.savedMinutes,
   };
 }
@@ -328,9 +332,9 @@ export function prepareCheckpoints(posted: readonly PostedCheckpoint[], context:
     }
     const kinds = kindsOf(row.kinds);
     if (kinds === null) throw new CheckpointRefusal("CHECKPOINT_KIND_UNKNOWN", { name: label }, [checkpointBox(row.index, "kinds")]);
-    const limit = readTimeLimit(row.cutoffHours, row.cutoffMinutes);
+    const limit = readTimeLimit(row.cutoffHours, row.cutoffMinutesPart);
     if (limit === "hours" || limit === "minutes") {
-      throw new CheckpointRefusal("CHECKPOINT_CUTOFF_INVALID", { name: label }, [checkpointBox(row.index, limit === "hours" ? "cutoffHours" : "cutoffMinutes")]);
+      throw new CheckpointRefusal("CHECKPOINT_CUTOFF_INVALID", { name: label }, [checkpointBox(row.index, limit === "hours" ? "cutoffHours" : "cutoffMinutesPart")]);
     }
     // A limit counts from the start: with no date or hour on it there is nothing to count from — unless this row keeps the limit it had.
     if (limit !== null && !context.startKnown && !(row.id !== "" && context.savedMinutes?.get(row.id) === limit)) {

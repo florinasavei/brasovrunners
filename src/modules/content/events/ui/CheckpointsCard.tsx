@@ -61,7 +61,7 @@ export async function CheckpointForms({ locale, eventId, mayEdit, children }: { 
     "cp[].km": t("checkpoints.field.km"),
     "cp[].kinds": t("checkpoints.field.kinds"),
     "cp[].cutoffHours": t("checkpoints.field.cutoff"),
-    "cp[].cutoffMinutes": t("checkpoints.field.cutoff"),
+    "cp[].cutoffMinutesPart": t("checkpoints.field.cutoff"),
     "cp[].noteRo": t("checkpoints.field.noteRo"),
     "cp[].noteEn": t("checkpoints.field.noteEn"),
   });
@@ -115,7 +115,7 @@ type Props = {
  * and every box and button here names its form with the `form` attribute (`DetachedFields`, which
  * the house's primitives read). So «Salvează punctele» posts the points and nothing of the event,
  * «Salvează» posts the event and none of the points, and a refusal here — a kilometre beyond the
- * route, a cut-off before the start or after a later point's — keeps what was typed here, says why
+ * route, a time limit longer than the race's or than a later point's — keeps what was typed here, says why
  * above these boxes, and leaves the event's other boxes as they were (§757's shape, §749's card).
  * Plain posts, so it works with scripts off.
  *
@@ -179,13 +179,14 @@ export default async function CheckpointsCard({ locale, eventId, checkpoints, ma
           </Typography>
           <DurationBoxes
             hoursName={checkpointBox(index, "cutoffHours")}
-            minutesName={checkpointBox(index, "cutoffMinutes")}
+            minutesName={checkpointBox(index, "cutoffMinutesPart")}
             hoursLabel={t("editor.durationHours")}
             minutesLabel={t("editor.durationMinutesPart")}
             defaults={splitDuration(saved?.cutoffMinutes)}
             size="small"
+            describedBy={`checkpoint-cutoff-help-${index}`}
           />
-          <Typography variant="caption" color="text.secondary" sx={{ px: 1.75, maxWidth: 280 }}>
+          <Typography id={`checkpoint-cutoff-help-${index}`} variant="caption" color="text.secondary" sx={{ px: 1.75, maxWidth: 280 }}>
             {t("checkpoints.field.cutoffHelp")}
           </Typography>
         </Stack>
@@ -241,7 +242,7 @@ export default async function CheckpointsCard({ locale, eventId, checkpoints, ma
         <Box component="ul" sx={{ m: 0, pl: 2.5 }} data-testid="checkpoints-read-only">
           {checkpoints.map((row) => (
             <li key={row.id}>
-              {/* Only what the point has: no bare dash for no kinds, and «fără oră limită» as the public table says it. */}
+              {/* Only what the point has: no bare dash for no kinds, and «fără timp limită» as the public table says it. */}
               {[
                 t("checkpoints.rowTitle", { km: km(row.km), name: locale === "ro" ? row.nameRo : row.nameEn }),
                 row.kinds.map((kind) => t(`checkpoints.kinds.${kind}`)).join(", "),

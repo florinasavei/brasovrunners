@@ -355,7 +355,7 @@ describe("§757 the extras read the checkpoints only where the design asks", () 
     expect(marks.map((m) => m.label)).toEqual(["km 1", "km 2"]);
   });
 
-  it("adds the clock each limit closes at only with «…cu timpii limită» — the clock the event page prints (§NNN)", async () => {
+  it("adds the clock each limit closes at only with «…cu orele limită» — the clock the event page prints (§NNN)", async () => {
     const extras = await loadBibExtras(event, { ...ticks, showCheckpoints: true, showCheckpointTimes: true }, "ro");
     expect(extras.profile?.checkpoints?.marks.map((m) => m.label)).toEqual(["km 1 · 09:45", "km 2 · 10:30"]);
   });

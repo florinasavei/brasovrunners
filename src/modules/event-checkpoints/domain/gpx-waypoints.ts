@@ -75,7 +75,7 @@ function trackOf(text: string): LatLon[] {
 }
 
 /** A waypoint as the file gives it. */
-type Waypoint = LatLon & { name: string; hint: string };
+type Waypoint = LatLon & { name: string; hint: string; symbol: string };
 
 function waypointsOf(text: string): Waypoint[] {
   const found: Waypoint[] = [];
@@ -86,13 +86,18 @@ function waypointsOf(text: string): Waypoint[] {
     if (lat === null || lon === null || Math.abs(lat) > 90 || Math.abs(lon) > 180) continue;
     const inner = match[2] ?? "";
     const name = elementText(inner, "name");
-    found.push({ lat, lon, name, hint: `${name} ${elementText(inner, "sym")} ${elementText(inner, "type")}` });
+    const symbol = `${elementText(inner, "sym")} ${elementText(inner, "type")}`;
+    found.push({ lat, lon, name, hint: `${name} ${symbol}`, symbol });
   }
   return found;
 }
 
-/** What a waypoint's words say it offers, from its name, symbol and type — a guess the club may change before adding. */
-export function kindsFromWords(words: string): CheckpointKind[] {
+/**
+ * What a waypoint's words say it offers, from its name, symbol and type — a guess the club may change before adding.
+ * `symbols` is the `<sym>` and `<type>` alone, which `words` also carries: a mapping tool's «Crossing» symbol is a
+ * junction, but the word in a name is as often a river or a stream.
+ */
+export function kindsFromWords(words: string, symbols = ""): CheckpointKind[] {
   const text = words.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
   const kinds: CheckpointKind[] = [];
   // Whole words, or a stem with its ending (`cronometraj`, `ambulanta`), never a word that merely begins with a short one (`apare`).
@@ -101,7 +106,15 @@ export function kindsFromWords(words: string): CheckpointKind[] {
   if (/\b(?:first aid|prim ajutor|medical\w*|medic\w*|ambulan\w*|salvamont\w*|doctor)\b/.test(text)) kinds.push("FIRST_AID");
   if (/\b(?:timing|chrono\w*|cronometr\w*|checkpoint\w*|punct de control|control point|timer)\b/.test(text)) kinds.push("TIMING");
   // «Direcționare» (§NNN): a junction, a turn, a signpost or a marshal who shows the way — a watch's turn points and a mapping tool's «Crossing», «Turn», «Signpost» symbols.
-  if (/\b(?:directi\w*|turn|turnaround|junction\w*|intersec\w*|bifurca\w*|fork|crossroad\w*|crossing|signpost\w*|waymark\w*|marshal\w*|ghid\w*|indicator\w*)\b/.test(text)) kinds.push("DIRECTION");
+  // Not «crossing» in a name (a river crossing is a hazard), not «fork» alone (a fork and knife is food), not «ghid»
+  // (a mountain guide's book): those need their context — «crossing» comes from the symbol only.
+  const symbolText = symbols.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+  if (
+    /\b(?:directi\w*|turn|turnaround|junction\w*|intersec\w*|bifurca\w*|fork in the (?:road|trail|path)|crossroad\w*|signpost\w*|waymark\w*|marshal\w*|indicator\w*)\b/.test(text) ||
+    /\bcrossing\b/.test(symbolText)
+  ) {
+    kinds.push("DIRECTION");
+  }
   return kinds;
 }
 
@@ -166,7 +179,7 @@ export function parseGpxWaypoints(text: string): GpxWaypoints {
     proposals.push({
       name,
       km,
-      kinds: kindsFromWords(waypoint.hint),
+      kinds: kindsFromWords(waypoint.hint, waypoint.symbol),
       offMeters: Math.round(best.distance),
       tooFar: best.distance > MAX_OFF_TRACK_METERS,
     });

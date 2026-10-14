@@ -99,7 +99,7 @@ describe("§757 the card «Puncte de control»", () => {
     const html = await render({ checkpoints: [point("a", 5, { cutoffMinutes: 75, cutoffClock: "10:15", kinds: ["WATER", "FOOD"] }), point("b", 12.5)] });
     expect(html.match(/data-testid="checkpoint-edit-row"/g)).toHaveLength(2);
     for (const index of [0, 1]) {
-      for (const field of ["km", "nameRo", "nameEn", "cutoffHours", "cutoffMinutes", "noteRo", "noteEn"]) expect(html).toContain(`name="cp[${index}].${field}"`);
+      for (const field of ["km", "nameRo", "nameEn", "cutoffHours", "cutoffMinutesPart", "noteRo", "noteEn"]) expect(html).toContain(`name="cp[${index}].${field}"`);
       expect(html).toContain(`name="cp[${index}].kinds"`);
       expect(html).toContain(`name="cp[${index}].remove"`);
     }
@@ -108,10 +108,10 @@ describe("§757 the card «Puncte de control»", () => {
     // The saved values, as typed back: the kilometre with its point, the time limit as hours and minutes.
     expect(html).toMatch(/name="cp\[0\]\.km"[^>]*value="5"/);
     expect(html).toMatch(/name="cp\[0\]\.cutoffHours"[^>]*value="1"/);
-    expect(html).toMatch(/name="cp\[0\]\.cutoffMinutes"[^>]*value="15"/);
+    expect(html).toMatch(/name="cp\[0\]\.cutoffMinutesPart"[^>]*value="15"/);
     // A point with no limit has two empty boxes.
     expect(html).toMatch(/name="cp\[1\]\.cutoffHours"[^>]*value=""/);
-    expect(html).toMatch(/name="cp\[1\]\.cutoffMinutes"[^>]*value=""/);
+    expect(html).toMatch(/name="cp\[1\]\.cutoffMinutesPart"[^>]*value=""/);
     expect(html).toMatch(/name="cp\[1\]\.km"[^>]*value="12.5"/);
   });
 
@@ -121,7 +121,7 @@ describe("§757 the card «Puncte de control»", () => {
     expect(fieldset.slice(0, fieldset.indexOf("</fieldset>"))).toContain("Timp limită");
     const input = (name: string) => html.match(new RegExp(`<input[^>]*name="${name.replace(/[[\]]/g, "\\$&")}"[^>]*>`))?.[0] ?? "";
     const hours = input("cp[0].cutoffHours");
-    const minutes = input("cp[0].cutoffMinutes");
+    const minutes = input("cp[0].cutoffMinutesPart");
     // The race's boxes: a whole number of hours up to a week's worth, minutes up to 59 (`duration.ts`).
     expect(hours).toContain('max="168"');
     expect(minutes).toContain('max="59"');

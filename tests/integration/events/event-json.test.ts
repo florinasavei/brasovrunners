@@ -921,7 +921,7 @@ async function seedCheckpoints(eventId: string) {
     km: "",
     kinds: [],
     cutoffHours: "",
-    cutoffMinutes: "",
+    cutoffMinutesPart: "",
     noteRo: "",
     noteEn: "",
     remove: false,
@@ -929,7 +929,7 @@ async function seedCheckpoints(eventId: string) {
     ...over,
   });
   /** A time limit in minutes as the card's two boxes post it. */
-  const limit = (minutes: number) => ({ cutoffHours: String(Math.floor(minutes / 60)), cutoffMinutes: String(minutes % 60) });
+  const limit = (minutes: number) => ({ cutoffHours: String(Math.floor(minutes / 60)), cutoffMinutesPart: String(minutes % 60) });
   await changeCheckpoints(
     db,
     admin,
@@ -1053,6 +1053,32 @@ describe("§757 the route's checkpoints travel in the file", () => {
     expect((await listCheckpoints(db, created.eventId)).map((row) => [row.km, row.cutoffMinutes, row.cutoffClock])).toEqual([
       [7.5, 60, null],
       [15, 120, null],
+    ]);
+  });
+
+  it("refuses a point's time limit longer than the race's own even while the start hour is to be announced: minutes against minutes (§NNN)", async () => {
+    const { event } = await seedRace({}, {}, false);
+    await seedCheckpoints(event.id);
+    const file = await fileOf(event.id);
+    const undecided = JSON.parse(JSON.stringify(file)) as EventFile;
+    undecided.event.raceStartsAt = null;
+    undecided.event.start.time = null;
+    undecided.event.timeToBeAnnounced = true;
+    undecided.event.registration.opensAt = null;
+    undecided.event.registration.closesAt = null;
+    // The file's points close after one and after two hours; the race lasts one hour, with no hour to say a clock.
+    undecided.event.durationMinutes = 60;
+    const reason = await importEventAsNew(db, { actor: admin, file: undecided, fetchImpl: serving(), now: NOW }).then(
+      () => "",
+      (error: unknown) => String((error as Error).message),
+    );
+    expect(reason).toContain("CHECKPOINT_CUTOFF_AFTER_END");
+    // Two hours of limit cover both points: accepted, the clocks still unsaid.
+    undecided.event.durationMinutes = 120;
+    const created = await importEventAsNew(db, { actor: admin, file: undecided, fetchImpl: serving(), now: NOW });
+    expect((await listCheckpoints(db, created.eventId)).map((row) => [row.cutoffMinutes, row.cutoffClock])).toEqual([
+      [60, null],
+      [120, null],
     ]);
   });
 
