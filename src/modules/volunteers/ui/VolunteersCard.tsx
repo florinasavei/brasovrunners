@@ -49,7 +49,7 @@ const STATE_CHIP: Record<VolunteerState, { glyph: StatusGlyphName; color: "warni
   CANCELLED: { glyph: "cancelled", color: "default" },
 };
 
-/** The volunteer agreement's chip (§NNN): its words, its glyph and its tone — never the colour alone. */
+/** The volunteer agreement's chip (§758): its words, its glyph and its tone — never the colour alone. */
 const AGREEMENT_CHIP: Record<VolunteerAgreementStanding, { glyph: StatusGlyphName; color: "warning" | "success" | "default" }> = {
   accepted: { glyph: "done", color: "success" },
   linkSent: { glyph: "link", color: "default" },
@@ -66,11 +66,11 @@ type Props = {
   roles: readonly VolunteerRole[];
   standings: readonly RoleStanding[];
   volunteers: readonly VolunteerItem[];
-  /** Whether a volunteer agreement is in force in every language (§NNN): the link and the paper need one. */
+  /** Whether a volunteer agreement is in force in every language (§758): the link and the paper need one. */
   agreementInForce: boolean;
-  /** Whether the privacy notice in force describes the agreement's acceptance (§NNN): the link and the paper need it too. */
+  /** Whether the privacy notice in force describes the agreement's acceptance (§758): the link and the paper need it too. */
   agreementNoticeDescribes: boolean;
-  /** The version in force per language: what «PDF de semnat» prints, posted back by «Semnat pe hârtie» (§NNN). */
+  /** The version in force per language: what «PDF de semnat» prints, posted back by «Semnat pe hârtie» (§758). */
   agreementDocumentIds: Partial<Record<Locale, string>>;
   /** The event's date and place as an acceptance would name them now, per language (`eventMergeValues`). */
   agreementEvent: Partial<Record<Locale, { eventDate: string; eventLocation: string }>>;
@@ -276,7 +276,7 @@ export default async function VolunteersCard({
   );
 
   /**
-   * The volunteer agreement for one person (§NNN): when it was accepted, how and which version — and the role it
+   * The volunteer agreement for one person (§758): when it was accepted, how and which version — and the role it
    * names when the person has moved since; or, not accepted yet, the two ways to get it — the link by email, or
    * the PDF to sign at the desk and «Semnat pe hârtie». Nothing to do for a cancelled person; nothing to send while
    * no agreement is in force (the card says so, and the service refuses anyway).
@@ -367,7 +367,7 @@ export default async function VolunteersCard({
           >
             {hidden}
             <input type="hidden" name="volunteerId" value={person.id} />
-            {/* What the PDF beside it prints (§NNN): the service refuses the record if either changed since. */}
+            {/* What the PDF beside it prints (§758): the service refuses the record if either changed since. */}
             <input type="hidden" name="agreementDocumentId" value={agreementDocumentIds[person.locale] ?? ""} />
             <input type="hidden" name="roleId" value={person.roleId} />
             <GlyphSubmitButton icon="declaration" label={t("volunteers.agreement.paper")} pendingLabel={t("volunteers.agreement.paper")} variant="outlined" />
@@ -385,7 +385,7 @@ export default async function VolunteersCard({
         </Typography>
         <StatusChip glyph={STATE_CHIP[person.state].glyph} color={STATE_CHIP[person.state].color} label={t(`volunteers.states.${person.state}`)} testId="volunteer-state" />
         <StatusChip glyph={person.source === "PUBLIC" ? "link" : "club"} variant="outlined" label={t(`volunteers.sources.${person.source}`)} />
-        {/* The volunteer agreement (§NNN): accepted, a link waiting, or «contract neacceptat încă» — in words, never by colour alone.
+        {/* The volunteer agreement (§758): accepted, a link waiting, or «contract neacceptat încă» — in words, never by colour alone.
             A cancelled person who never accepted is asked nothing: no chip to act on. */}
         {(() => {
           const standing = agreementStandingOf(person, now);

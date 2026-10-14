@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.17-2026-10-14 -->
+<!-- PROJECT_BASELINE: BR-V3.18-2026-10-14 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V3.17-2026-10-14`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.18-2026-10-14`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -2028,14 +2028,14 @@ only ones who see the names, addresses and telephone numbers.
    left, «Salvează ciorna», «Aprobă și publică». Until a notice naming `{{volunteers}}` is in force in
    **both** languages the page shows no form and a post is refused; `/admin/tasks` shows the row
    «Nota de confidențialitate: voluntarii evenimentelor» while an event ahead takes volunteers. Your
-   own list on the card works without it. **Since the volunteer agreement (§NNN) the same paragraph also
+   own list on the card works without it. **Since the volunteer agreement (§758) the same paragraph also
    names its acceptance** (`{{volunteerAgreement}}`: the version, the moment, the way, the text's
    fingerprint, the age statement, the PDF on the receipt and the link's email): approve this notice from
    the template **in the same sitting as step 3**. A notice approved before that names `{{volunteers}}` only,
    and until one naming both is in force in **both** languages the form, «Trimite linkul contractului» and
    «Semnat pe hârtie» wait; `/admin/tasks` shows the row «Nota de confidențialitate: contractul de
    voluntariat» meanwhile.
-3. **Approve the volunteer agreement — a lawyer reads it first** (`DECISIONS.md` §NNN). `/admin/legal` →
+3. **Approve the volunteer agreement — a lawyer reads it first** (`DECISIONS.md` §758). `/admin/legal` →
    the card «Contract de voluntariat» → «Regenerează din șablon» → confirm (or the one press that approves
    every text still missing). The platform's text says, in plain words, that the help is unpaid and no
    employment, what the volunteer does (the role's tasks, the organizers' instructions, safety and the

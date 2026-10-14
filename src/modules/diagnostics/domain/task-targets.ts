@@ -37,7 +37,7 @@ export const TASK_TARGETS: Partial<Record<TaskId, TaskTarget>> = {
   shopNotice: { kind: "section", section: "legal" },
   volunteersNotice: { kind: "section", section: "legal" },
   volunteerAgreementNotice: { kind: "section", section: "legal" },
-  // The volunteer agreement (§NNN) is approved on «Documente legale» too.
+  // The volunteer agreement (§758) is approved on «Documente legale» too.
   volunteerAgreement: { kind: "section", section: "legal" },
   gmailFallbackNotice: { kind: "section", section: "legal" },
   refusalTerms: { kind: "section", section: "legal" },

@@ -12,7 +12,7 @@ import { DomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — the volunteer agreement's PDF route (BR-REQ-060-01, BR-REQ-053-03): «PDF contract» and «PDF de semnat»
+ * §758 — the volunteer agreement's PDF route (BR-REQ-060-01, BR-REQ-053-03): «PDF contract» and «PDF de semnat»
  * on the event's «Voluntari» card. The PDF carries a person's name and the text they accepted, so the route asks
  * the role again on the server (`canManageVolunteers`: the Organizer and the Administrators) whatever the card
  * drew, refuses a stranger, answers NOT_FOUND for another event's volunteer or a malformed id — never a person
@@ -110,7 +110,7 @@ async function get(actor: StaffUser | undefined, id = eventId, person = voluntee
 
 const downloads = () => db.select().from(auditLogs).where(eq(auditLogs.action, "volunteer.agreement_downloaded"));
 
-describe("§NNN the volunteer agreement's PDF route", () => {
+describe("§758 the volunteer agreement's PDF route", () => {
   it("refuses every role that may not manage volunteers with a 403 and a stranger with a 401, writing no audit row", async () => {
     for (const key of ["DEV", "COPYWRITER", "CONTRIBUTOR", "MEMBER"] as const) expect((await get(staff[key]!)).status, key).toBe(403);
     expect((await get(undefined)).status).toBe(401);

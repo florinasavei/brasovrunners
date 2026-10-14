@@ -35,7 +35,7 @@ export const DOCUMENT_CODES: Record<LegalDocumentKey, string> = {
   // The group runs' optional declarations (§393): the surface in the code, so the two are told apart.
   GROUP_RUN_DECLARATION_ASPHALT: "ASPHALT",
   GROUP_RUN_DECLARATION_TRAIL: "TRAIL",
-  // The volunteer agreement (§NNN): one word, the same in both languages.
+  // The volunteer agreement (§758): one word, the same in both languages.
   VOLUNTEER_AGREEMENT: "VOLUNTEER",
 };
 

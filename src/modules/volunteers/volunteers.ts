@@ -104,7 +104,7 @@ export type VolunteerItem = {
   note: string | null;
   createdAt: Date;
   updatedAt: Date;
-  /** The volunteer agreement (§NNN): when it was accepted and how, or nulls for «contract neacceptat încă». */
+  /** The volunteer agreement (§758): when it was accepted and how, or nulls for «contract neacceptat încă». */
   agreementAcceptedAt: Date | null;
   agreementMethod: VolunteerAgreementMethod | null;
   /** The number of the version accepted, read through the row's reference. */
@@ -578,7 +578,7 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
           ...next,
           canonicalEmail: input.identity.canonicalEmail,
           canonicalizationVersion: input.identity.canonicalizationVersion,
-          // A changed address kills a live agreement link (§NNN, §12.8): it went to the old one.
+          // A changed address kills a live agreement link (§758, §12.8): it went to the old one.
           ...(changedFields.includes("email") ? { agreementTokenHash: null, agreementTokenExpiresAt: null } : {}),
           updatedAt: now,
         })
@@ -645,7 +645,7 @@ export type VolunteerSubmitOutcome =
  * acceptance (`volunteerOfferClosedFor`, asked again here: the page's cache is not the gate).
  *
  * On a new person: one row «Înscris» (`source` PUBLIC, the notice's version recorded as the consent's
- * proof, and the agreement accepted with its version, moment and fingerprint, §NNN), one `VOLUNTEER_RECEIVED`
+ * proof, and the agreement accepted with its version, moment and fingerprint, §758), one `VOLUNTEER_RECEIVED`
  * to them in the language of the page — the agreement's PDF attached at the send — and one `VOLUNTEER_CLUB_NOTICE` to
  * each Organizer, Administrator and Superadministrator — all in the one transaction (BR-REQ-080-02). The
  * role's row is locked while its people are counted, so two people cannot take the last place together.
@@ -696,7 +696,7 @@ export async function submitVolunteer<T extends Record<string, unknown>>(
   if (closed) throw new DomainError("CONFLICT", `the volunteer form is closed (${closed})`);
   const notice = await findCurrentApprovedDocument(db, "PRIVACY_NOTICE", input.locale, now);
   if (!notice) throw new DomainError("CONFLICT", "no approved privacy notice in this language");
-  // The agreement the tick accepted (§NNN): the version in force in the page's language, recorded on the row.
+  // The agreement the tick accepted (§758): the version in force in the page's language, recorded on the row.
   const agreement = await findCurrentApprovedDocument(db, VOLUNTEER_AGREEMENT_KEY, input.locale, now);
   if (!agreement) throw new DomainError("CONFLICT", "no approved volunteer agreement in this language");
 
@@ -736,7 +736,7 @@ export async function submitVolunteer<T extends Record<string, unknown>>(
       .limit(1);
     if (existing) return { outcome: "done" };
 
-    // The agreement accepted with the sign-up (§NNN): the version, the moment, the blanks and their fingerprint.
+    // The agreement accepted with the sign-up (§758): the version, the moment, the blanks and their fingerprint.
     const acceptance = await agreementAcceptance(
       tx,
       { eventId, name: input.name, role, locale: input.locale, document: agreement, method: "FORM" },

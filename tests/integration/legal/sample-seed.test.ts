@@ -25,7 +25,7 @@ const { SAMPLE_DOCUMENTS, seedSampleLegalDocuments } = await import("@/db/seeds/
  * gets the text only when the club approves it in `/admin/legal`.
  */
 const NOW = new Date("2026-09-24T12:00:00.000Z");
-// The volunteer agreement too (§NNN, BR-REQ-053-01): the volunteers' form needs a sample in force on dev and QA.
+// The volunteer agreement too (§758, BR-REQ-053-01): the volunteers' form needs a sample in force on dev and QA.
 const KEYS: readonly LegalDocumentKey[] = ["PRIVACY_NOTICE", "TERMS", "EVENT_DECLARATION", "VOLUNTEER_AGREEMENT"];
 
 const texts = (body: LegalDocumentBody) => body.sections.flatMap((section) => [section.heading ?? "", ...section.paragraphs]);

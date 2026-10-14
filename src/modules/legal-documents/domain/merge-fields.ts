@@ -155,7 +155,7 @@ export const MEMBERS_SHOP_MERGE_FIELD = "membersShop";
 export const VOLUNTEERS_MERGE_FIELD = "volunteers";
 
 /**
- * The privacy notice's marker for the volunteer agreement (§NNN, amending §754): the agreement's own title,
+ * The privacy notice's marker for the volunteer agreement (§758, amending §754): the agreement's own title,
  * quoted, in the reader's language (`volunteers/notice-words.ts`) — „Contract de voluntariat” / “Volunteer
  * agreement” — inside the volunteers' paragraph's sentence that says what an acceptance keeps (the version, the
  * moment, the way, the fingerprint, the age statement), why (art. 6(1)(b)), the PDF on the receipt and the
@@ -227,7 +227,7 @@ export function minimumAgeMergeValue(minAge: number, locale: string): string {
 export const SERIES_MERGE_FIELDS = ["series", "seriesRhythm", "seriesPlace"] as const;
 
 /**
- * The volunteer agreement's own blanks (§NNN, amending §754): `{{volunteer}}` — the person's name as the row
+ * The volunteer agreement's own blanks (§758, amending §754): `{{volunteer}}` — the person's name as the row
  * holds it —, `{{volunteerRole}}` — the role's name in the text's language — and `{{volunteerTasks}}` — what
  * the club typed the role asks («descrierea rolului»), in that language. Filled when the person accepts, kept
  * on the volunteer's row (`agreement_facts`) beside the event's own fields (`{{event}}`, `{{eventDate}}`,
@@ -598,7 +598,7 @@ export function describesVolunteers(body: unknown): boolean {
 }
 
 /**
- * Whether a privacy notice describes the volunteer agreement's acceptance (§NNN): it names
+ * Whether a privacy notice describes the volunteer agreement's acceptance (§758): it names
  * `{{volunteerAgreement}}`. With `describesVolunteers`, the gate for the public form, «Trimite linkul
  * contractului» and «Semnat pe hârtie», and what `/admin/tasks`' row `volunteerAgreementNotice` reads. Pure.
  */

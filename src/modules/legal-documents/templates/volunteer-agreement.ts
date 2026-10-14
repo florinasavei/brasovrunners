@@ -1,7 +1,7 @@
 import type { LegalDocumentBody } from "../domain/content-hash";
 
 /**
- * The volunteer agreement («Contract de voluntariat», §NNN, amending §754).
+ * The volunteer agreement («Contract de voluntariat», §758, amending §754).
  *
  * The owner, 2026-10-13, right after the volunteers feature shipped: «trebuie să avem și un document gen
  * „contract de voluntariat” simplu, unde zicem că nu sunt plătiți, că trebuie să respecte atribuțiunile, bla
@@ -40,7 +40,7 @@ import type { LegalDocumentBody } from "../domain/content-hash";
 const partiesRo = [
   "Organizația gazdă este <DENUMIREA JURIDICĂ COMPLETĂ A CLUBULUI>, cu sediul în <ADRESA SEDIULUI>, <NUMĂR DE ÎNREGISTRARE / CUI>, care poate fi contactată la <EMAIL DE CONTACT> (numită mai jos „organizatorul”).",
   "Voluntarul este {{volunteer}}.",
-  // The platform's minimum age for a volunteer (§NNN): the one sentence of age, filled from the code.
+  // The platform's minimum age for a volunteer (§758): the one sentence of age, filled from the code.
   "Voluntarul declară că are cel puțin {{minimumAge}} împliniți.",
 ];
 

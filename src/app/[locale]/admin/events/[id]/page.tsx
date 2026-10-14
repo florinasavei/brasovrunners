@@ -401,13 +401,13 @@ export default async function EditEventPage({ params, searchParams }: Props) {
         const roles = await listVolunteerRoles(db, event.id);
         const people = await listVolunteers(db, event.id);
         const standings = volunteerStandings(roles, people);
-        // The volunteer agreement in force (§NNN): the form's fourth condition, and what the link and the paper need.
+        // The volunteer agreement in force (§758): the form's fourth condition, and what the link and the paper need.
         const agreementInForce = await volunteerAgreementInForce(db, now);
-        // The notice describing its acceptance (§NNN): the form's fifth condition, and the link's and the paper's.
+        // The notice describing its acceptance (§758): the form's fifth condition, and the link's and the paper's.
         const agreementNoticeDescribes = await noticeDescribesVolunteerAgreement(db, now);
-        // The version each language's «PDF de semnat» prints, posted back by «Semnat pe hârtie» (§NNN).
+        // The version each language's «PDF de semnat» prints, posted back by «Semnat pe hârtie» (§758).
         const agreementDocumentIds: Partial<Record<Locale, string>> = {};
-        // The event's date and place as an acceptance names them now, per language: a moved race says so (§NNN).
+        // The event's date and place as an acceptance names them now, per language: a moved race says so (§758).
         const agreementEvent: Partial<Record<Locale, { eventDate: string; eventLocation: string }>> = {};
         for (const language of routing.locales) {
           const version = await findCurrentApprovedDocument(db, VOLUNTEER_AGREEMENT_KEY, language, now);

@@ -128,7 +128,7 @@ export const DECLARATION_TOKENS: readonly DeclarationToken[] = [
     example: inBoth((locale) => seriesRhythmPhrase(TOKEN_EXAMPLE_SERIES_DATES, CLUB_TIME_ZONE, locale)),
   },
   { token: "{{seriesPlace}}", messageKey: "seriesPlace", example: same("Parcul Nicolae Titulescu") },
-  // The volunteer agreement's blanks (§NNN): the person, the role and what it asks, filled when the person
+  // The volunteer agreement's blanks (§758): the person, the role and what it asks, filled when the person
   // accepts; a role with no description leaves its sentence out.
   { token: "{{volunteer}}", messageKey: "volunteer", example: same("Ana Popescu") },
   { token: "{{volunteerRole}}", messageKey: "volunteerRole", example: { ro: "Punct de hidratare", en: "Water station" } },
@@ -243,7 +243,7 @@ export const DECLARATION_TOKENS: readonly DeclarationToken[] = [
     messageKey: VOLUNTEERS_MERGE_FIELD,
     example: inBoth((locale) => volunteersClause(locale)),
   },
-  // The privacy notice's marker for the volunteer agreement (§NNN): its title, and the switch — the form, the link
+  // The privacy notice's marker for the volunteer agreement (§758): its title, and the switch — the form, the link
   // and the paper record wait, with `{{volunteers}}`, for a notice naming it (`describesVolunteerAgreement`).
   {
     token: `{{${VOLUNTEER_AGREEMENT_NOTICE_MERGE_FIELD}}}`,

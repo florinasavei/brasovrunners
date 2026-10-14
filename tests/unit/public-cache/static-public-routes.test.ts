@@ -56,7 +56,7 @@ const STATIC_PAGES = [
   "src/app/[locale]/pages/[slug]/page.tsx",
   "src/app/[locale]/legal/terms/page.tsx",
   "src/app/[locale]/legal/privacy/page.tsx",
-  // The volunteer agreement in force (§NNN), the terms' arrangement.
+  // The volunteer agreement in force (§758), the terms' arrangement.
   "src/app/[locale]/legal/volunteer-agreement/page.tsx",
 ] as const;
 
@@ -103,7 +103,7 @@ const PER_REQUEST: Record<string, string> = {
   "src/app/[locale]/registrations/invitation/[token]/page.tsx": TOKEN_PAGE,
   "src/app/[locale]/registrations/list/[token]/page.tsx": TOKEN_PAGE,
   "src/app/[locale]/registrations/manage/[token]/page.tsx": TOKEN_PAGE,
-  // The volunteer agreement's link (§NNN), like every link page.
+  // The volunteer agreement's link (§758), like every link page.
   "src/app/[locale]/volunteers/agreement/[token]/page.tsx": TOKEN_PAGE,
   "src/app/[locale]/registrations/mine/[token]/page.tsx": TOKEN_PAGE,
   "src/app/[locale]/newsletter/confirm/[token]/page.tsx": TOKEN_PAGE,

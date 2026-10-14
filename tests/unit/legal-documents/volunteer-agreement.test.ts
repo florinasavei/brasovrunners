@@ -15,7 +15,7 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
 /**
- * §NNN (amending §754) — the volunteer agreement's template, as the owner asked for it on 2026-10-13: «un
+ * §758 (amending §754) — the volunteer agreement's template, as the owner asked for it on 2026-10-13: «un
  * document gen „contract de voluntariat” simplu, unde zicem că nu sunt plătiți, că trebuie să respecte
  * atribuțiunile». What it must say, in both languages; that its blanks are the four club facts and the merge
  * fields an acceptance fills (never a value of its own, §357); that the facts kept on a volunteer's row are
@@ -31,7 +31,7 @@ const FACTS = clubFactsFromEnv({
   EMAIL_REPLY_TO: "contact@example.test",
 });
 
-describe("§NNN the volunteer agreement is a legal document of the platform", () => {
+describe("§758 the volunteer agreement is a legal document of the platform", () => {
   it("is a key of its own, last in the enum and in the backoffice's list, in a group of its own, approved by the one press too", () => {
     expect(VOLUNTEER_AGREEMENT_KEY).toBe("VOLUNTEER_AGREEMENT");
     expect(legalDocumentKey.enumValues.at(-1)).toBe("VOLUNTEER_AGREEMENT");
@@ -51,7 +51,7 @@ describe("§NNN the volunteer agreement is a legal document of the platform", ()
   });
 });
 
-describe("§NNN what the agreement says, in the owner's terms", () => {
+describe("§758 what the agreement says, in the owner's terms", () => {
   const roText = text(volunteerAgreementRo);
   const enText = text(volunteerAgreementEn);
 
@@ -104,7 +104,7 @@ describe("§NNN what the agreement says, in the owner's terms", () => {
   });
 });
 
-describe("§NNN the agreement's blanks", () => {
+describe("§758 the agreement's blanks", () => {
   it("names only fields the merge knows: the volunteer's three, the event's three, the age and the moment — the facts a row keeps", () => {
     for (const body of [volunteerAgreementRo, volunteerAgreementEn]) {
       for (const match of text(body).matchAll(/\{\{\s*([a-zA-Z]+)\s*\}\}/g)) expect(isMergeField(match[1]), match[1]).toBe(true);
@@ -169,7 +169,7 @@ describe("§NNN the agreement's blanks", () => {
   });
 });
 
-describe("§NNN the PDF's own words", () => {
+describe("§758 the PDF's own words", () => {
   it("signs as the volunteer and, on paper, the organizer — never with an identity document", () => {
     const labels = volunteerAgreementLabels("ro", new Date("2026-10-13T10:00:00Z"));
     expect(labels.signature).toBe("Semnătura voluntarului");

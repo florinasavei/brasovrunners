@@ -583,7 +583,7 @@ export async function cachedVolunteersDescribed(now: Date): Promise<boolean> {
 }
 
 /**
- * Whether the privacy notice in force describes the volunteer agreement's acceptance (§NNN,
+ * Whether the privacy notice in force describes the volunteer agreement's acceptance (§758,
  * `describesVolunteerAgreement`), in every language — the event page's fifth condition for «Vreau să fiu
  * voluntar», `cachedVolunteersDescribed`'s twin. `noticeDescribesVolunteerAgreement` is the uncached read the
  * sign-up asks again.
@@ -594,7 +594,7 @@ export async function cachedVolunteerAgreementDescribed(now: Date): Promise<bool
 }
 
 /**
- * Whether a volunteer agreement is in force in every language (§NNN) — the event page's fourth condition for
+ * Whether a volunteer agreement is in force in every language (§758) — the event page's fourth condition for
  * «Vreau să fiu voluntar», through the legal texts' own cached read, so an approval opens the form the moment
  * the text takes effect. `volunteerAgreementInForce` is the uncached read the action asks again.
  */

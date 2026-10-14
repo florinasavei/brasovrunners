@@ -17,7 +17,7 @@ export const eventVolunteerState = pgEnum("event_volunteer_state", ["REGISTERED"
 export const eventVolunteerSource = pgEnum("event_volunteer_source", ["STAFF", "PUBLIC"]);
 
 /**
- * How a volunteer accepted the volunteer agreement (§NNN, amending §754): ticked on the event page's public
+ * How a volunteer accepted the volunteer agreement (§758, amending §754): ticked on the event page's public
  * form («FORM»), from the single-use link an organizer sent by email («LINK»), or signed on a printed copy at
  * the desk and recorded by a staff member («PAPER»). A closed set, like every state here.
  */
@@ -111,7 +111,7 @@ export const eventVolunteers = pgTable(
     createdByStaffUserId: uuid("created_by_staff_user_id").references(() => staffUsers.id, { onDelete: "set null" }),
 
     /*
-      The volunteer agreement (§NNN, amending §754; the owner, 2026-10-13: «un document gen „contract de
+      The volunteer agreement (§758, amending §754; the owner, 2026-10-13: «un document gen „contract de
       voluntariat” simplu, unde zicem că nu sunt plătiți, că trebuie să respecte atribuțiunile»): the approved
       version accepted (`VOLUNTEER_AGREEMENT`), when, how, in which language, the SHA-256 of the exact text read
       with its blanks filled (§556's `signedTextHash`) and the blanks themselves as they were filled — the

@@ -322,7 +322,7 @@ export async function noticeDescribesVolunteers<T extends Record<string, unknown
 }
 
 /**
- * Whether the privacy notice in force describes the volunteer agreement's acceptance (§NNN,
+ * Whether the privacy notice in force describes the volunteer agreement's acceptance (§758,
  * `describesVolunteerAgreement`) — in every language, like `noticeDescribesVolunteers`. For the public sign-up,
  * «Trimite linkul contractului», «Semnat pe hârtie», the editor's card and `/admin/tasks`; the event page reads
  * the cached twin (`cachedVolunteerAgreementDescribed`).
@@ -333,7 +333,7 @@ export async function noticeDescribesVolunteerAgreement<T extends Record<string,
 }
 
 /**
- * Whether a volunteer agreement is in force in every language (§NNN): the gate of the event page's
+ * Whether a volunteer agreement is in force in every language (§758): the gate of the event page's
  * «Vreau să fiu voluntar», of the organizers' «Trimite linkul contractului» and of a paper acceptance, and
  * what `/admin/tasks`' row `volunteerAgreement` reads. Every language, like the notice's markers above: a
  * person accepts in the language of the page, and a form open in one language only would refuse half its
@@ -768,7 +768,7 @@ export async function listVersionsForBackoffice<T extends Record<string, unknown
       deletedReason: legalDocuments.deletedReason,
       locales: sql<string[]>`coalesce(array_agg(distinct ${legalDocumentTranslations.locale}::text) filter (where ${legalDocumentTranslations.locale} is not null), '{}')`,
       // Every signature against this version: a race's acceptances, a group run's optional
-      // self-declarations (§393) and a volunteer's accepted agreement (§NNN) — each is somebody
+      // self-declarations (§393) and a volunteer's accepted agreement (§758) — each is somebody
       // relying on these exact words.
       acceptanceCount: sql<number>`(
         (select count(*)::int from ${declarationAcceptances} where ${declarationAcceptances.legalDocumentId} = ${legalDocuments.id})

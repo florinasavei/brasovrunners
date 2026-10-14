@@ -124,7 +124,7 @@ test.describe("§754 volunteers for a race", () => {
         await page2.locator('[name="phone"]').fill("712345678");
         await page2.getByLabel("Un mesaj pentru organizatori (opțional)").fill("Sunt liber toată ziua");
         await page2.locator('input[name="consent"]').check();
-        // The volunteer agreement and the age (§NNN): the person's own two ticks.
+        // The volunteer agreement and the age (§758): the person's own two ticks.
         await page2.locator('input[name="agreement"]').check();
         await page2.locator('input[name="adult"]').check();
         // A person takes a moment: the form's timing check refuses a post within the second of its render.
@@ -148,7 +148,7 @@ test.describe("§754 volunteers for a race", () => {
       // The sentence is said at the box too (CheckboxField, §616), and the notice opens in a new tab (LegalLink, §197).
       await expect(guest.getByTestId("volunteer-consent").getByTestId("checkbox-error")).toContainText("Bifează căsuța de acord");
       await expect(guest.getByTestId("volunteer-consent").getByRole("link", { name: /nota de confidențialitate/ })).toHaveAttribute("target", "_blank");
-      // The volunteer agreement and the age (§NNN): each refusal named in the summary and at its own box, and the
+      // The volunteer agreement and the age (§758): each refusal named in the summary and at its own box, and the
       // agreement in force one press away, in a new tab, so what was typed stays.
       await expect(guest.getByTestId("volunteer-invalid")).toContainText("contractul de voluntariat");
       await expect(guest.getByTestId("volunteer-agreement").getByTestId("checkbox-error")).toContainText("Bifează că accepți contractul de voluntariat");
@@ -178,7 +178,7 @@ test.describe("§754 volunteers for a race", () => {
       await expect(row.getByTestId("volunteer-phone")).toContainText("712 345 678");
       await expect(row).toContainText("Sunt liber toată ziua");
       await expect(row).toContainText("Din formular");
-      // The agreement she accepted with the offer (§NNN): the version, the way, and her copy as a PDF.
+      // The agreement she accepted with the offer (§758): the version, the way, and her copy as a PDF.
       await expect(row.getByTestId("volunteer-agreement-state")).toHaveText("Contract acceptat");
       await expect(row.getByTestId("volunteer-agreement")).toContainText("în formularul de pe pagină");
       const accepted = await page.request.get(`/api/admin/events/${event.id}/volunteers/${await row.getAttribute("data-volunteer-id")}/agreement`);
@@ -228,7 +228,7 @@ test.describe("§754 volunteers for a race", () => {
     }
   });
 
-  test("§NNN a person entered by hand has «Contract neacceptat încă», accepts from the link's page once, and another signs on paper", async ({ page, browser }) => {
+  test("§758 a person entered by hand has «Contract neacceptat încă», accepts from the link's page once, and another signs on paper", async ({ page, browser }) => {
     const tag = `${test.info().project.name}-${Date.now().toString(36)}-agr`;
     const event = await seedEvent(tag);
     await signIn(page, "Dev Administrator");

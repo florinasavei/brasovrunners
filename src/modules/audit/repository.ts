@@ -483,14 +483,14 @@ export type AuditAction =
    */
   | "event_checkpoints.changed"
   /**
-   * The volunteer agreement (§NNN), entity `event`: an organizer's «Trimite linkul contractului» (requested),
+   * The volunteer agreement (§758), entity `event`: an organizer's «Trimite linkul contractului» (requested),
    * the person's acceptance from the link (accepted, no actor) and a paper acceptance recorded at the desk
    * (recorded). The metadata holds the volunteer's id, the version and the way — never the person's words.
    */
   | "volunteer.agreement_requested"
   | "volunteer.agreement_accepted"
   | "volunteer.agreement_recorded"
-  /** The agreement's PDF downloaded from the card (§NNN): a file with a name in it leaves the site; who and when. */
+  /** The agreement's PDF downloaded from the card (§758): a file with a name in it leaves the site; who and when. */
   | "volunteer.agreement_downloaded"
   /** A message's own words, rewritten by the club (§247). */
   | "email_copy.changed"

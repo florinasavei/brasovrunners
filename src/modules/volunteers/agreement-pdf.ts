@@ -14,7 +14,7 @@ import { isUuid } from "@/shared/ids";
 import { agreementBlanks, agreementBody, agreementMergeValues, readAgreementFacts } from "./agreement";
 
 /**
- * The volunteer agreement as a PDF (§NNN), drawn by the race declaration's own renderer (§95, §515): the club's
+ * The volunteer agreement as a PDF (§758), drawn by the race declaration's own renderer (§95, §515): the club's
  * lockup, the title, the text with its blanks filled in bold (§225), the version line, and at the foot the
  * signature block — rendered from the rows on request, never stored as a file.
  *
@@ -25,7 +25,7 @@ import { agreementBlanks, agreementBody, agreementMergeValues, readAgreementFact
  *   the person's email carries and the backoffice row downloads.
  * - **to sign on paper** — not accepted yet: the version in force in the person's language, filled for them and
  *   their role, with two signature lines, the volunteer's and the organizer's, and a date line, nothing typed in
- *   them. What the desk prints for a person entered by hand who signs there (§NNN's third way).
+ *   them. What the desk prints for a person entered by hand who signs there (§758's third way).
  *
  * Neither line asks for an identity document: the agreement names none (`noIdDocument`).
  */

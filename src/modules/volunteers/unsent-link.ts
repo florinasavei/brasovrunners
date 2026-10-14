@@ -5,7 +5,7 @@ import { DEFAULT_TOKEN_HOURS } from "@/modules/notifications/domain/token-lifeti
 import { isUuid } from "@/shared/ids";
 
 /**
- * A volunteer agreement link that never left (§NNN). The link is minted while its email renders
+ * A volunteer agreement link that never left (§758). The link is minted while its email renders
  * (`mintVolunteerAgreementLink`, at the batch's clock), before the provider is asked; when the provider then
  * refuses the message for good (FAILED or BOUNCED), nobody holds the secret, yet the row would keep a live hash
  * and the card would say «Link trimis» for fourteen days. This clears it — only the hash minted at this batch's

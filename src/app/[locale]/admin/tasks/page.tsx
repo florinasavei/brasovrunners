@@ -485,9 +485,9 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
       // §754: the event volunteers, described by the notice in force; the row waits only while an event ahead takes them.
       volunteersDescribed: await noticeDescribesVolunteers(db, now),
       volunteeringEvents: await countVolunteeringEvents(db, now),
-      // §NNN: a volunteer agreement in force in every language; the row waits only while an event ahead takes volunteers.
+      // §758: a volunteer agreement in force in every language; the row waits only while an event ahead takes volunteers.
       volunteerAgreementInForce: await volunteerAgreementInForce(db, now),
-      // §NNN: the notice in force describes the agreement's acceptance (`{{volunteerAgreement}}`), in every language.
+      // §758: the notice in force describes the agreement's acceptance (`{{volunteerAgreement}}`), in every language.
       volunteerAgreementDescribed: await noticeDescribesVolunteerAgreement(db, now),
       gmailFallbackDescribed: await noticeDescribesGmailFallback(db, now),
       // §636: the terms in force carry the club's right to refuse a registration, in every language.

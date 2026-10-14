@@ -12,7 +12,7 @@ function toLocale(value: FormDataEntryValue | null): Locale {
 }
 
 /**
- * «Accept contractul» (§NNN): the link page's one POST, and the only write the link leads to (AGENTS.md §12.8:
+ * «Accept contractul» (§758): the link page's one POST, and the only write the link leads to (AGENTS.md §12.8:
  * the GET never mutates). The service spends the link in the statement that records the acceptance; the answer
  * comes back to the same address as a word — `accepted`, `invalid` (spent, expired, replaced, cancelled: one
  * answer) or `refused` with the ticks to give — never a value of the person's.

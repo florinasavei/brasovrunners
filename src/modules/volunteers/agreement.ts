@@ -22,7 +22,7 @@ import { isUuid } from "@/shared/ids";
 import { refusedFields, VOLUNTEER_MINIMUM_AGE, volunteerAgreementAcceptSchema } from "./domain/volunteer";
 
 /**
- * The volunteer agreement (§NNN, amending §754; the owner, 2026-10-13: «trebuie să avem și un document gen
+ * The volunteer agreement (§758, amending §754; the owner, 2026-10-13: «trebuie să avem și un document gen
  * „contract de voluntariat” simplu, unde zicem că nu sunt plătiți, că trebuie să respecte atribuțiunile»).
  *
  * One approved legal text (`VOLUNTEER_AGREEMENT`, `legal-documents/templates/volunteer-agreement.ts`) that every
@@ -388,7 +388,7 @@ function assertIds(...ids: readonly string[]): void {
 }
 
 /**
- * «Trimite linkul contractului» (§NNN): one email to a volunteer who has not accepted the agreement, with the
+ * «Trimite linkul contractului» (§758): one email to a volunteer who has not accepted the agreement, with the
  * agreement in force and the single-use link to accept it — minted at the send, so a press queues a message and
  * never a secret (§14.5). Refuses an actor who may not (FORBIDDEN), a volunteer not of this event (NOT_FOUND), one
  * who has accepted (`VOLUNTEER_AGREEMENT_ACCEPTED`) or was cancelled (CONFLICT), and any press while no agreement
@@ -434,7 +434,7 @@ export async function requestVolunteerAgreement<T extends Record<string, unknown
   });
 }
 
-/** The privacy notice in force names `{{volunteerAgreement}}` in every language, or the verb is refused (§NNN). */
+/** The privacy notice in force names `{{volunteerAgreement}}` in every language, or the verb is refused (§758). */
 async function assertNoticeDescribesAgreement<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<void> {
   if (!(await noticeDescribesVolunteerAgreement(db, now))) {
     throw new DomainError("VOLUNTEER_AGREEMENT_NOTICE", "the privacy notice in force does not describe the volunteer agreement");
@@ -445,7 +445,7 @@ async function assertNoticeDescribesAgreement<T extends Record<string, unknown>>
 export type PrintedAgreement = { documentId: string; roleId: string };
 
 /**
- * «Semnat pe hârtie» (§NNN): the person signed the printed agreement at the desk, and an organizer records it —
+ * «Semnat pe hârtie» (§758): the person signed the printed agreement at the desk, and an organizer records it —
  * the version in force in the row's language (the one the desk's PDF prints), the moment of the press, `PAPER`,
  * and who recorded it; the signed sheet stays with the club, and the person is sent their copy by email
  * (`VOLUNTEER_AGREEMENT_ACCEPTED`, the PDF attached at the send), as after the link. Refuses as
@@ -481,7 +481,7 @@ export async function recordPaperVolunteerAgreement<T extends Record<string, unk
       now,
     );
     await tx.update(eventVolunteers).set({ ...acceptance, updatedAt: now }).where(eq(eventVolunteers.id, row.id));
-    // The person's copy (§NNN): the agreement they signed, by email — the club keeps the sheet.
+    // The person's copy (§758): the agreement they signed, by email — the club keeps the sheet.
     await enqueueEmail(tx, {
       participantId: null,
       registrationId: null,

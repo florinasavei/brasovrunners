@@ -282,7 +282,7 @@ test.describe("legal documents: every text at once", () => {
     await expect(page.getByTestId("legal-versions-TERMS")).toHaveAttribute("open", "");
 
     // Regenerate the rest: the dialog names the texts, nothing is in force, the toast counts the drafts.
-    // «din 7»: the catalogue's seven texts, the volunteer agreement the seventh (§NNN).
+    // «din 7»: the catalogue's seven texts, the volunteer agreement the seventh (§758).
     const regenerateRest = tools.getByRole("button", { name: /^Regenerează din șabloane \(\d+ din 7\)$/ });
     if ((await regenerateRest.count()) > 0) {
       // «N din 7» and the rule beside it (§555): only the texts wearing «Șablon nou» are regenerated.

@@ -3,7 +3,7 @@ import type { LegalDocumentKey } from "@/db/schema/legal-documents";
 /**
  * Every legal document key, in the order the backoffice lists them (§393): the three a
  * registration rests on (BR-REQ-053-01) with the road race's declaration beside the trail one
- * (§515), then the group runs' two optional self-declarations, then the volunteer agreement (§NNN).
+ * (§515), then the group runs' two optional self-declarations, then the volunteer agreement (§758).
  *
  * Written out here rather than read off the enum, so a client component (the legal editor's
  * select) can import the list without the database schema; `tests/unit/legal-documents/group-run-declaration.test.ts`
@@ -39,7 +39,7 @@ export const REGISTRATION_LEGAL_KEYS = ["PRIVACY_NOTICE", "TERMS", "EVENT_DECLAR
 export const PLATFORM_APPROVAL_KEYS = LEGAL_DOCUMENT_KEYS;
 
 /**
- * The volunteer agreement (§NNN, amending §754; the owner, 2026-10-13: «trebuie să avem și un document gen
+ * The volunteer agreement (§758, amending §754; the owner, 2026-10-13: «trebuie să avem și un document gen
  * „contract de voluntariat” simplu, unde zicem că nu sunt plătiți, că trebuie să respecte atribuțiunile»):
  * what a person accepts before being listed as an event's volunteer — on the event page's form, from an
  * organizer's emailed link, or on paper at the desk. One text for every event and role; the person, the role,

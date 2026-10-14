@@ -44,7 +44,7 @@ describe("§754 BR-REQ-031-01 ten people offer for a role's last place at once",
 
   beforeAll(async () => {
     [admin] = await db.insert(staffUsers).values({ email: `volunteers.admin.${stamp}@example.test`, displayName: "Admin", role: "ADMIN" }).returning();
-    // A privacy notice naming `{{volunteers}}` and `{{volunteerAgreement}}` (§NNN) in both languages, the newest
+    // A privacy notice naming `{{volunteers}}` and `{{volunteerAgreement}}` (§758) in both languages, the newest
     // version, so it is the one in force (`noticeDescribesVolunteers`, `noticeDescribesVolunteerAgreement`). Withdrawn again after the suite, so the next suite reads what it approved.
     const [{ highest }] = await db
       .select({ highest: sql<number>`coalesce(max(${legalDocuments.version}), 0)::int` })
@@ -63,7 +63,7 @@ describe("§754 BR-REQ-031-01 ten people offer for a role's last place at once",
       translations,
       now: NOW,
     });
-    // The volunteer agreement in force (§NNN), the newest version, from the platform's template: the form's
+    // The volunteer agreement in force (§758), the newest version, from the platform's template: the form's
     // fourth condition. Deleted again after the suite, once the events (and the acceptances on them) are gone.
     const [{ highestAgreement }] = await db
       .select({ highestAgreement: sql<number>`coalesce(max(${legalDocuments.version}), 0)::int` })

@@ -55,7 +55,7 @@ export const LEGAL_TEMPLATES: Record<LegalDocumentKey, Record<Locale, { title: s
     ro: { title: "Declarație pe propria răspundere (alergare de grup, teren accidentat)", body: groupRunTrailRo },
     en: { title: "Self-declaration (group run, trail)", body: groupRunTrailEn },
   },
-  // The volunteer agreement (§NNN, amending §754): unpaid help, the role's tasks, the club's duties, Legea nr. 78/2014.
+  // The volunteer agreement (§758, amending §754): unpaid help, the role's tasks, the club's duties, Legea nr. 78/2014.
   VOLUNTEER_AGREEMENT: {
     ro: { title: "Contract de voluntariat", body: volunteerAgreementRo },
     en: { title: "Volunteer agreement", body: volunteerAgreementEn },

@@ -27,7 +27,7 @@ import { VOLUNTEER_BOX_ID, type VolunteerBox as BoxName, type VolunteerOutcome, 
  * «Vreau să fiu voluntar» on an event's page (§754; the owner, 2026-10-13: «I want to register volunteers
  * for a race»): a fold with the roles that still need people, and one plain form — the name, the address, the
  * telephone number, the role, an optional message, the consent tick that names the privacy notice, and — since
- * §NNN — the tick that accepts the volunteer agreement in force and the one that says the person is of age.
+ * §758 — the tick that accepts the volunteer agreement in force and the one that says the person is of age.
  *
  * A Server Component around a Server Action, like the «Anunță-mă» box beside it: it works with scripts
  * off (a native `<details>` and a native `<select>`; the only islands are the telephone box and the
@@ -132,7 +132,7 @@ export default async function VolunteerBox({
                   <Box component="ul" sx={{ m: 0, pl: 3 }}>
                     {refused.map((name) => (
                       <li key={name}>
-                        {/* `{age}` is the age box's own value (§NNN); the other sentences take none and ignore it. */}
+                        {/* `{age}` is the age box's own value (§758); the other sentences take none and ignore it. */}
                         <a href={`#${fieldId(name)}`}>{t(`volunteers.errors.${name}`, { age })}</a>
                       </li>
                     ))}
@@ -259,7 +259,7 @@ export default async function VolunteerBox({
             </Box>
 
             {/*
-              The volunteer agreement (§NNN): the person's acceptance of the text in force, linked in a new tab like the
+              The volunteer agreement (§758): the person's acceptance of the text in force, linked in a new tab like the
               notice — its blanks (the name, the role, the event) are filled in the copy the email carries — and the
               platform's age, eighteen (`VOLUNTEER_MINIMUM_AGE`). Both required; the service refuses either missing.
             */}

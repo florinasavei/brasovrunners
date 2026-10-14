@@ -66,7 +66,7 @@ export type DeclarationEntry = {
    */
   forMinor?: boolean;
   /**
-   * A text that asks for no identity document draws no line for one (§NNN): the volunteer agreement is signed by
+   * A text that asks for no identity document draws no line for one (§758): the volunteer agreement is signed by
    * the volunteer and the organizer, neither with a document. Absent, the lines are drawn as they always were.
    */
   noIdDocument?: boolean;

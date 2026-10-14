@@ -925,13 +925,13 @@ async function renderRow(
       payloadActionUrl = `${env.APP_BASE_URL}${getPathname({ locale, href: { pathname: "/admin/events/[id]", params: { id: eventId } } })}#box-volunteers`;
     }
     /*
-      The volunteer agreement's link (§NNN): minted now, at the send, never at the press — the secret is in this
+      The volunteer agreement's link (§758): minted now, at the send, never at the press — the secret is in this
       email alone (§14.5), the row keeps its SHA-256, and this newest link replaces any older one. A volunteer who
       has accepted since (from an earlier link, or on paper at the desk) has nothing left to accept: withdrawn.
     */
     /*
       The address the message goes to is the one queued (`recipientEmail`); an organizer may have corrected the
-      volunteer's since (§NNN). The link, and the accepted agreement's PDF, are the person's: neither leaves to a
+      volunteer's since (§758). The link, and the accepted agreement's PDF, are the person's: neither leaves to a
       mailbox the row no longer names — the request is withdrawn (the mint refuses it too, in its own statement),
       and a receipt or a copy leaves without the attachment.
     */
@@ -945,7 +945,7 @@ async function renderRow(
       payloadActionUrl = `${env.APP_BASE_URL}${getPathname({ locale, href: { pathname: "/volunteers/agreement/[token]", params: { token: link.secret } } })}`;
     }
     /*
-      The accepted agreement as a PDF (§NNN), rendered now from the rows like a signed declaration (§95): on the
+      The accepted agreement as a PDF (§758), rendered now from the rows like a signed declaration (§95): on the
       person's «am primit» once they accepted it on the form, and on the copy after the link.
     */
     if ((row.messageType === "VOLUNTEER_RECEIVED" || row.messageType === "VOLUNTEER_AGREEMENT_ACCEPTED") && volunteer.agreementAcceptedAt && !clubCopy && addressCurrent) {
@@ -1462,7 +1462,7 @@ async function renderRow(
       data.signedAtFormattedOther = formatInSentence(signed.acceptedAt, signedZone, otherLocale(locale));
     }
   }
-  // The volunteer's accepted agreement (§NNN), beside nothing else: no calendar, no declaration rides on these.
+  // The volunteer's accepted agreement (§758), beside nothing else: no calendar, no declaration rides on these.
   if (volunteerAgreementPdf) {
     attachments = [...(attachments ?? []), { filename: VOLUNTEER_AGREEMENT_PDF_NAME, contentType: "application/pdf", data: volunteerAgreementPdf }];
   }

@@ -31,7 +31,7 @@ export type StaticPublicRoute =
   | "/contact"
   | "/legal/privacy"
   | "/legal/terms"
-  // The volunteer agreement in force (§NNN).
+  // The volunteer agreement in force (§758).
   | "/legal/volunteer-agreement";
 
 /** The public pages addressed by a per-locale slug — editorial data only the database pairs. */

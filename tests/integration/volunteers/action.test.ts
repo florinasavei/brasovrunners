@@ -88,7 +88,7 @@ beforeEach(async () => {
   sets.length = 0;
   turnstile = { on: false, verdict: "not_configured" };
   await db.insert(staffUsers).values({ email: "admin@example.test", displayName: "Admin", role: "ADMIN" });
-  // The notice in force names `{{volunteers}}` and `{{volunteerAgreement}}` (§NNN) in both languages: the form is open.
+  // The notice in force names `{{volunteers}}` and `{{volunteerAgreement}}` (§758) in both languages: the form is open.
   const body = (text: string) => ({ sections: [{ paragraphs: [`Voluntari ({{volunteers}}, {{volunteerAgreement}}): ${text}`] }] });
   const translations: LegalDocumentTranslationInput[] = [
     { locale: "ro", title: "Confidențialitate", body: body("păstrăm numele") },
@@ -103,7 +103,7 @@ beforeEach(async () => {
     translations,
     now: new Date(),
   });
-  // The volunteer agreement in force (§NNN), from the platform's template: the form's fourth condition.
+  // The volunteer agreement in force (§758), from the platform's template: the form's fourth condition.
   const agreement: LegalDocumentTranslationInput[] = (["ro", "en"] as const).map((locale) => ({ locale, ...LEGAL_TEMPLATES.VOLUNTEER_AGREEMENT[locale] }));
   await insertLegalDocumentVersion(db, {
     key: "VOLUNTEER_AGREEMENT",
@@ -129,7 +129,7 @@ function post(fields: Record<string, string> = {}): FormData {
     phone: "0712 345 678",
     message: "Pot toată ziua",
     consent: "on",
-    // The volunteer agreement and the age (§NNN), ticked as a person ticks them.
+    // The volunteer agreement and the age (§758), ticked as a person ticks them.
     agreement: "on",
     adult: "on",
     honeypot: "",

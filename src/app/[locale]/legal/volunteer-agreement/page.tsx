@@ -37,7 +37,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 /**
- * The volunteer agreement in force (§NNN) — the text «Vreau să fiu voluntar»'s tick «Am citit și accept contractul
+ * The volunteer agreement in force (§758) — the text «Vreau să fiu voluntar»'s tick «Am citit și accept contractul
  * de voluntariat» links, opened in a new tab so the form keeps what was typed (§197). One text for every event and
  * role: the person's name, the role, the event, its date and place are blanks here, filled when the person accepts
  * (the PDF they receive prints them); the age is the platform's own, so it is filled. Never a 404 — the terms'

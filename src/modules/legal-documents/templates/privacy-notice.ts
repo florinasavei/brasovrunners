@@ -120,7 +120,7 @@
  * which the sweep reads). And the switch — an event page offers the form, and a sign-up is kept, only
  * while the notice in force names it in every language (`describesVolunteers`). **Open for counsel:**
  * whether art. 6(1)(a) alone suits the public form and (f) the entered person, and the thirty days.
- * Since §NNN the same paragraph names the volunteer agreement's acceptance (its version, moment, way and
+ * Since §758 the same paragraph names the volunteer agreement's acceptance (its version, moment, way and
  * text fingerprint) and the age statement, kept to conclude and perform the agreement (art. 6(1)(b)), the
  * agreement attached to the receipt and the single-use link a hand-entered person may receive — with its own
  * marker, `{{volunteerAgreement}}` (the agreement's title, quoted): a notice approved from §754's template says

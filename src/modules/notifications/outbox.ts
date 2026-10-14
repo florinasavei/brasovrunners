@@ -751,7 +751,7 @@ export async function processOutboxBatch(
           continue;
         }
         await recordFailure(db, row.id, "FAILED", sanitizeProviderError(error));
-        // A volunteer agreement link minted by this render never leaves (§NNN): no live hash nobody holds.
+        // A volunteer agreement link minted by this render never leaves (§758): no live hash nobody holds.
         await forgetUnsentVolunteerAgreementLink(db, row, now);
         summary.failed += 1;
         continue;
@@ -972,7 +972,7 @@ export async function processOutboxBatch(
           a refusal of the account or the message (bad credentials, an unverified or closed domain, a
           malformed message) is FAILED — the club's to fix, then «Reîncearcă emailurile eșuate».
         */
-        // The message is refused for good: a volunteer agreement link it carried was never delivered (§NNN).
+        // The message is refused for good: a volunteer agreement link it carried was never delivered (§758).
         await forgetUnsentVolunteerAgreementLink(db, row, now);
         if (result.notTheAddress) {
           await recordFailure(db, row.id, "FAILED", error);

@@ -92,7 +92,7 @@ export const routing = defineRouting({
       en: "/registrations/invitation/[token]",
     },
     /**
-     * The volunteer agreement's link (§NNN): the page an organizer's «Trimite linkul contractului» opens —
+     * The volunteer agreement's link (§758): the page an organizer's «Trimite linkul contractului» opens —
      * the agreement filled for the person, two ticks and one button. The GET reads; only the button writes.
      */
     "/volunteers/agreement/[token]": {
@@ -172,7 +172,7 @@ export const routing = defineRouting({
     /** The two public legal routes (§9.2), linked from the footer in both locales. */
     "/legal/privacy": { ro: "/confidentialitate", en: "/privacy" },
     "/legal/terms": { ro: "/termeni", en: "/terms" },
-    /** The volunteer agreement in force (§NNN), linked from «Vreau să fiu voluntar»'s tick — its blanks as dots. */
+    /** The volunteer agreement in force (§758), linked from «Vreau să fiu voluntar»'s tick — its blanks as dots. */
     "/legal/volunteer-agreement": { ro: "/contract-voluntariat", en: "/volunteer-agreement" },
 
     /**

@@ -28,7 +28,7 @@ export const PREFETCHED_PATHNAMES: ReadonlySet<string> = new Set([
   "/pages/[slug]",
   "/legal/terms",
   "/legal/privacy",
-  // The volunteer agreement in force (§NNN): static like the other two legal texts.
+  // The volunteer agreement in force (§758): static like the other two legal texts.
   "/legal/volunteer-agreement",
 ]);
 

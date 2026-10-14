@@ -13,7 +13,7 @@ export function volunteersClause(locale: string): string {
 }
 
 /**
- * What the privacy notice's `{{volunteerAgreement}}` becomes (§NNN): the agreement's own title, quoted, in that
+ * What the privacy notice's `{{volunteerAgreement}}` becomes (§758): the agreement's own title, quoted, in that
  * language — „Contract de voluntariat” / “Volunteer agreement” — read from the catalogue its public page's heading
  * reads (`Legal.volunteerAgreementTitle`), so the approved sentence names the text a volunteer accepts.
  */

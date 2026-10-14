@@ -27,7 +27,7 @@ export function parseVolunteerBoxes(value: string | undefined): VolunteerBox[] {
 
 /**
  * What was typed before a refusal, from the sealed draft (§142): never the consent tick, the agreement's or the
- * age's (§NNN) — each is the person's own act each time.
+ * age's (§758) — each is the person's own act each time.
  */
 export type VolunteerTyped = {
   name?: string;

@@ -188,7 +188,7 @@ export async function setVolunteerStateAction(form: FormData): Promise<void> {
 }
 
 /**
- * «Trimite linkul contractului» (§NNN): one email with the volunteer agreement and a single-use link to accept it,
+ * «Trimite linkul contractului» (§758): one email with the volunteer agreement and a single-use link to accept it,
  * for a person entered by hand. The service refuses while no agreement is in force, and for a person who has
  * accepted or was cancelled — each said in the card's banner.
  */
@@ -204,7 +204,7 @@ export async function requestVolunteerAgreementAction(form: FormData): Promise<v
 }
 
 /**
- * «Semnat pe hârtie» (§NNN): asks first (§384), then records that the person signed the printed agreement at the
+ * «Semnat pe hârtie» (§758): asks first (§384), then records that the person signed the printed agreement at the
  * desk — the version in force, and who recorded it. A staff member records the person's signature, never gives one.
  */
 export async function recordPaperVolunteerAgreementAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
@@ -216,7 +216,7 @@ export async function recordPaperVolunteerAgreementAction(_previous: FormOutcome
       {
         eventId: eventIdOf(form),
         id: field(form, "volunteerId"),
-        // What the card's «PDF de semnat» printed: the service refuses when either changed since (§NNN).
+        // What the card's «PDF de semnat» printed: the service refuses when either changed since (§758).
         printed: { documentId: field(form, "agreementDocumentId"), roleId: field(form, "roleId") },
       },
       new Date(),

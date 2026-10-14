@@ -11,7 +11,7 @@ import { isDomainError } from "@/shared/errors/domain-error";
 import { isUuid } from "@/shared/ids";
 
 /**
- * One volunteer's agreement as a PDF (§NNN), from the event's «Voluntari» card: the accepted copy — the version,
+ * One volunteer's agreement as a PDF (§758), from the event's «Voluntari» card: the accepted copy — the version,
  * the blanks as accepted, the moment, the way, the fingerprint — or, for a person who has not accepted yet, the
  * copy to sign at the desk, filled for them with two signature lines. Rendered from the rows, never stored.
  *

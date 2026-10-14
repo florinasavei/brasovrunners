@@ -155,7 +155,7 @@ describe("owner tasks", () => {
     }
   });
 
-  it("§NNN: the volunteer agreement's row is open while an event ahead takes volunteers and none is in force, done once one is, absent otherwise", () => {
+  it("§758: the volunteer agreement's row is open while an event ahead takes volunteers and none is in force, done once one is, absent otherwise", () => {
     expect(stateOf({ ...LAUNCHED, volunteerAgreementInForce: false }, "volunteerAgreement")).toBe("open");
     expect(stateOf(LAUNCHED, "volunteerAgreement")).toBe("done");
     expect(stateOf({ ...LAUNCHED, volunteeringEvents: 0 }, "volunteerAgreement")).toBe("done");
@@ -173,7 +173,7 @@ describe("owner tasks", () => {
     }
   });
 
-  it("§NNN: the notice's row for the agreement's acceptance is open while an event ahead takes volunteers and the notice is silent, done once it names it", () => {
+  it("§758: the notice's row for the agreement's acceptance is open while an event ahead takes volunteers and the notice is silent, done once it names it", () => {
     expect(stateOf({ ...LAUNCHED, volunteerAgreementDescribed: false }, "volunteerAgreementNotice")).toBe("open");
     expect(stateOf(LAUNCHED, "volunteerAgreementNotice")).toBe("done");
     expect(stateOf({ ...LAUNCHED, volunteeringEvents: 0 }, "volunteerAgreementNotice")).toBe("done");

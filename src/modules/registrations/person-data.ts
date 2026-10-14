@@ -110,7 +110,7 @@ export type PersonData = {
     note: string | null;
     privacyNoticeVersion: number | null;
     createdAt: Date;
-    /** The volunteer agreement (§NNN): the version accepted, how and when, and the age declared — or nulls. */
+    /** The volunteer agreement (§758): the version accepted, how and when, and the age declared — or nulls. */
     agreementVersion: number | null;
     agreementMethod: (typeof eventVolunteers.$inferSelect)["agreementMethod"];
     agreementAcceptedAt: Date | null;
@@ -216,7 +216,7 @@ async function collectPersonData<T extends Record<string, unknown>>(
     .from(eventVolunteers)
     .innerJoin(eventVolunteerRoles, eq(eventVolunteerRoles.id, eventVolunteers.roleId))
     .leftJoin(eventTranslations, and(eq(eventTranslations.eventId, eventVolunteers.eventId), eq(eventTranslations.locale, "ro")))
-    // The agreement's version number (§NNN), through the row's own reference.
+    // The agreement's version number (§758), through the row's own reference.
     .leftJoin(legalDocuments, eq(legalDocuments.id, eventVolunteers.agreementDocumentId))
     .where(eq(eventVolunteers.canonicalEmail, canonicalEmail))
     .orderBy(asc(eventVolunteers.createdAt));

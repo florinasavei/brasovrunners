@@ -1016,7 +1016,7 @@ export type TemplateData = {
     name: string;
     roleRo: string;
     roleEn: string;
-    /** The volunteer agreement's PDF rides along (§NNN): the person accepted it, and their copy is attached. */
+    /** The volunteer agreement's PDF rides along (§758): the person accepted it, and their copy is attached. */
     agreementAttached?: boolean;
   };
   /**
@@ -1425,7 +1425,7 @@ export function lawyerReads(locale: EmailLocale, keys: readonly string[]): strin
   const moved = LEGAL_DOCUMENT_KEYS.filter((key) => keys.includes(key));
   const declarations = moved.some((key) => key !== "TERMS" && key !== "PRIVACY_NOTICE" && key !== "VOLUNTEER_AGREEMENT");
   const terms = moved.includes("TERMS");
-  // The volunteer agreement (§NNN) is a contract, not a declaration: named as itself, for the lawyer to read too.
+  // The volunteer agreement (§758) is a contract, not a declaration: named as itself, for the lawyer to read too.
   const agreement = moved.includes("VOLUNTEER_AGREEMENT");
   const words = locale === "ro"
     ? { declarations: "declarațiile", terms: "termenii", agreement: "contractul de voluntariat", and: " și ", changed: "textele schimbate", first: "mai ales", lead: "Înainte de aprobare, un jurist ar trebui să citească" }
@@ -1780,12 +1780,12 @@ const T = {
       body: (d: TemplateData) => [
         `Mulțumim! Am primit oferta ta de a ajuta ca voluntar la ${d.eventTitle ?? "eveniment"}; rolul ales e scris mai sus, lângă data și locul.`,
         "Un organizator o confirmă și te caută pe email sau la telefon dacă mai trebuie ceva. Până atunci nu ai nimic de făcut: oferta nu e o înscriere la cursă și nu ține loc.",
-        // The agreement accepted with the offer (§NNN): the person's copy, attached — said only when it is.
+        // The agreement accepted with the offer (§758): the person's copy, attached — said only when it is.
         ...(d.volunteer?.agreementAttached ? ["Contractul de voluntariat pe care l-ai acceptat e atașat, ca PDF. Păstrează-l: e copia ta."] : []),
         `Dacă nu tu ai trimis oferta, scrie-ne din pagina de contact și o ștergem; altfel rămâne la organizatori cel mult ${volunteerDays("ro")} de la începutul evenimentului sau de la trimiterea ofertei, dacă e mai târziu.`,
       ],
     },
-    // The volunteer agreement (§NNN): to a volunteer who has not accepted it — entered by hand, or an offer made on the
+    // The volunteer agreement (§758): to a volunteer who has not accepted it — entered by hand, or an offer made on the
     // page before the agreement existed — the link to read and accept it. Its words are true for both.
     volunteerAgreementRequest: {
       subject: (d: TemplateData) => `Contractul de voluntariat pentru ${d.eventTitle ?? "eveniment"}`,
@@ -2273,7 +2273,7 @@ const T = {
     /** A volunteer's sign-up (§754): the person offered on the event's page; no registration behind it. */
     privacyFooterVolunteer: (club: string) =>
       `Primești acest mesaj de la ${club} pentru că te-ai oferit, pe site-ul clubului, să ajuți ca voluntar. Cum folosim datele tale:`,
-    /** The volunteer agreement (§NNN): whether the person offered on the page or an organizer entered them, they are on the list. */
+    /** The volunteer agreement (§758): whether the person offered on the page or an organizer entered them, they are on the list. */
     privacyFooterVolunteerAgreement: (club: string) =>
       `Primești acest mesaj de la ${club} pentru că ești pe lista voluntarilor unui eveniment al clubului. Cum folosim datele tale:`,
     /** The same for a group run's self-declaration (§393): signed on a page, no registration behind it. */

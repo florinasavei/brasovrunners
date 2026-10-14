@@ -102,7 +102,7 @@ describe("§754 a person, entered by hand or offering on the page", () => {
     }
   });
 
-  it("§NNN requires the agreement's tick and the age's, each literally true and each named in the refusal", () => {
+  it("§758 requires the agreement's tick and the age's, each literally true and each named in the refusal", () => {
     for (const tick of ["agreement", "adult"] as const) {
       for (const value of [false, undefined, "on"]) {
         const verdict = volunteerPublicInputSchema.safeParse({ ...pub, [tick]: value });
@@ -201,14 +201,14 @@ describe("§754 the three conditions of the public form", () => {
     expect(volunteerOfferClosedFor({ ...open, noticeDescribes: false })).toBe("noNotice");
   });
 
-  it("§NNN is not offered while no volunteer agreement is in force — named after the notice, the card's last reason", () => {
+  it("§758 is not offered while no volunteer agreement is in force — named after the notice, the card's last reason", () => {
     expect(volunteerOfferClosedFor({ ...open, agreementInForce: false })).toBe("noAgreement");
     // The notice is asked first: both missing, the card names the notice, which the club approves first.
     expect(volunteerOfferClosedFor({ ...open, agreementInForce: false, noticeDescribes: false })).toBe("noNotice");
     expect(volunteerOfferClosedFor({ ...open, agreementInForce: false, acceptsVolunteers: false })).toBe("off");
   });
 
-  it("§NNN is not offered while the notice in force does not describe the agreement's acceptance — after the agreement itself", () => {
+  it("§758 is not offered while the notice in force does not describe the agreement's acceptance — after the agreement itself", () => {
     expect(volunteerOfferClosedFor({ ...open, noticeDescribesAgreement: false })).toBe("noAgreementNotice");
     // The agreement first: without one there is nothing whose acceptance the notice could describe.
     expect(volunteerOfferClosedFor({ ...open, noticeDescribesAgreement: false, agreementInForce: false })).toBe("noAgreement");
@@ -284,7 +284,7 @@ describe("§754 the privacy notice's marker {{volunteers}}", () => {
     expect(mergeText("Voluntari ({{volunteers}})", volunteersMergeValues("en"))).toBe("Voluntari (“I want to volunteer”)");
   });
 
-  it("§NNN has a twin, {{volunteerAgreement}}, in the same paragraph: a notice naming only {{volunteers}} does not describe the agreement", () => {
+  it("§758 has a twin, {{volunteerAgreement}}, in the same paragraph: a notice naming only {{volunteers}} does not describe the agreement", () => {
     // A notice approved from §754's template: it names the volunteers, and says nothing of the acceptance.
     const before = { sections: [{ heading: "5.", paragraphs: ["Voluntari ({{volunteers}}): un singur e-mail de primire, fără nicio legătură care să facă ceva."] }] };
     expect(describesVolunteers(before)).toBe(true);

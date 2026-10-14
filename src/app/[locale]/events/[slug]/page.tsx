@@ -198,7 +198,7 @@ export default async function EventDetailPage({ params, query, canEdit = false, 
   const interestOutcome = parseInterestOutcome(interest);
   /*
     «Vreau să fiu voluntar» (§754): drawn only while the event takes volunteers, a role still needs people, the
-    privacy notice in force describes them and a volunteer agreement is in force (§NNN; `volunteerOfferClosedFor`)
+    privacy notice in force describes them and a volunteer agreement is in force (§758; `volunteerOfferClosedFor`)
     — the roles, the notice and the agreement from the
     public cache, expired by every write to either, and the event's own end held so the page is made again
     when it is over. The form's action asks the database again. Never on a members' event (§552): the form is

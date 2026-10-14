@@ -270,12 +270,12 @@ export type OwnerTaskInputs = {
   /** How many events still ahead take volunteers (§754): the row waits only while there is one. */
   volunteeringEvents: number;
   /**
-   * Is a volunteer agreement in force in every language (§NNN, `volunteerAgreementInForce`)? Until one is, no
+   * Is a volunteer agreement in force in every language (§758, `volunteerAgreementInForce`)? Until one is, no
    * event page offers «Vreau să fiu voluntar», and no link or paper acceptance can be recorded.
    */
   volunteerAgreementInForce: boolean;
   /**
-   * Does the notice in force, in every language, describe the agreement's acceptance (§NNN,
+   * Does the notice in force, in every language, describe the agreement's acceptance (§758,
    * `noticeDescribesVolunteerAgreement`)? Until it does, the form, the link and «Semnat pe hârtie» wait.
    */
   volunteerAgreementDescribed: boolean;
@@ -591,7 +591,7 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
       });
     }
     /*
-      The volunteer agreement's acceptance in the notice (§NNN), the same shape: open while an event ahead takes
+      The volunteer agreement's acceptance in the notice (§758), the same shape: open while an event ahead takes
       volunteers and the notice in force does not name `{{volunteerAgreement}}` — a notice approved from §754's
       template says nothing of the acceptance, the age statement, the PDF or the link — done by itself the day one
       naming it takes effect, absent while no event takes volunteers and the notice is silent.
@@ -615,7 +615,7 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
   }
 
   /*
-    The volunteer agreement (§NNN), the volunteers' notice's shape but its own gate — the agreement, not the
+    The volunteer agreement (§758), the volunteers' notice's shape but its own gate — the agreement, not the
     notice: open while an event ahead takes volunteers and no agreement is in force in every language (the club
     ticked «Primește voluntari» and the page shows no form: the club must hear why), done by itself the day one
     takes effect, and absent while no event takes volunteers and none was ever approved. Never blocking: the

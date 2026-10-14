@@ -36,13 +36,13 @@ const DAY = 24 * 60 * 60_000;
 const RENDERED = new Date(NOW.getTime() - 60_000).toISOString();
 
 /**
- * §NNN (amending §754) — the volunteer agreement, accepted by every volunteer before they are listed
+ * §758 (amending §754) — the volunteer agreement, accepted by every volunteer before they are listed
  * (BR-REQ-053-01's gate for the volunteers' form, BR-REQ-036-02's link rules for its email link):
  * the form's fourth condition and the acceptance it records, the hand-entered person's «contract neacceptat
  * încă», the organizers' link — minted at the send, hashed at rest, single use, its page a read — the paper
  * acceptance at the desk, the copies by email, the PDF's words, and the legal list counting the acceptances.
  */
-describe("§NNN the volunteer agreement", () => {
+describe("§758 the volunteer agreement", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   let admin: StaffUser;
@@ -54,7 +54,7 @@ describe("§NNN the volunteer agreement", () => {
   afterAll(async () => close());
 
   /**
-   * The notice in force names `{{volunteers}}` (§754's gate) and `{{volunteerAgreement}}` (§NNN's), in both
+   * The notice in force names `{{volunteers}}` (§754's gate) and `{{volunteerAgreement}}` (§758's), in both
    * languages; `agreement: false` is a notice approved from §754's template, silent on the acceptance.
    */
   async function approveNotice(version = 1, agreement = true) {
@@ -352,7 +352,7 @@ describe("§NNN the volunteer agreement", () => {
       await changeVolunteer(db, admin, { kind: "edit", eventId: event.id, id, fields: { roleId: role.id, name: "Ion Popescu", email: "ion.nou@example.test", phone: "+40712345679", note: "" } }, NOW);
       expect(await accept(second.secret, NOW)).toEqual({ outcome: "invalid" });
       // Cancelled: no link is minted, none is honoured.
-      // A request queued to the old address mints nothing (§NNN): its link would reach the wrong mailbox.
+      // A request queued to the old address mints nothing (§758): its link would reach the wrong mailbox.
       expect(await mintVolunteerAgreementLink(db, id, "ion@example.test", NOW)).toBeNull();
       const third = (await mintVolunteerAgreementLink(db, id, "ion.nou@example.test", NOW))!;
       await changeVolunteer(db, admin, { kind: "setState", eventId: event.id, id, state: "CANCELLED" }, NOW);
@@ -461,7 +461,7 @@ describe("§NNN the volunteer agreement", () => {
     });
   });
 
-  describe("after the review (§NNN)", () => {
+  describe("after the review (§758)", () => {
     it("withdraws a request queued before the address was corrected, and mints nothing for the old mailbox", async () => {
       await approveAgreement();
       const { event, role } = await seedEvent();

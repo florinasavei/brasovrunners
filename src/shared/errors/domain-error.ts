@@ -25,13 +25,13 @@ export type DomainErrorCode =
   | "VOLUNTEER_ROLE_HAS_PEOPLE"
   // The same address entered twice for one event's volunteers (§754): one row per person per event, so the card says so.
   | "VOLUNTEER_ALREADY_LISTED"
-  // «Trimite linkul contractului» or a paper acceptance while no volunteer agreement is in force (§NNN): approve one first.
+  // «Trimite linkul contractului» or a paper acceptance while no volunteer agreement is in force (§758): approve one first.
   | "VOLUNTEER_AGREEMENT_MISSING"
-  // The same, for a volunteer who has already accepted the agreement (§NNN): nothing to send, nothing to record.
+  // The same, for a volunteer who has already accepted the agreement (§758): nothing to send, nothing to record.
   | "VOLUNTEER_AGREEMENT_ACCEPTED"
-  // The link or a paper acceptance while the privacy notice in force does not describe the acceptance (§NNN).
+  // The link or a paper acceptance while the privacy notice in force does not describe the acceptance (§758).
   | "VOLUNTEER_AGREEMENT_NOTICE"
-  // «Semnat pe hârtie» after the version in force or the person's role changed since the sheet was printed (§NNN).
+  // «Semnat pe hârtie» after the version in force or the person's role changed since the sheet was printed (§758).
   | "VOLUNTEER_AGREEMENT_REPRINT";
 
 export class DomainError extends Error {

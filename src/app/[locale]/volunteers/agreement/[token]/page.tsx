@@ -30,7 +30,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = { robots: { index: false, follow: false } };
 
 /**
- * The volunteer agreement's link (§NNN): the page an organizer's «Trimite linkul contractului» opens, for a person
+ * The volunteer agreement's link (§758): the page an organizer's «Trimite linkul contractului» opens, for a person
  * they entered by hand — the agreement in force in the page's language, filled for this person (their name, the
  * role and what it asks, the event, its date and place), the two ticks (the agreement, the age) and one button.
  *

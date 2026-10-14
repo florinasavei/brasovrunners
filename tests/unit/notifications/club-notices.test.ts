@@ -158,7 +158,7 @@ describe("BR-REQ-033-02 criterion 12 the club's hidden copy of every participant
       // A volunteer's sign-up (§754): to an address nobody confirmed and to the organizers; no registration behind it.
       "VOLUNTEER_RECEIVED",
       "VOLUNTEER_CLUB_NOTICE",
-      // The volunteer agreement's two (§NNN): to the volunteer, no registration behind them.
+      // The volunteer agreement's two (§758): to the volunteer, no registration behind them.
       "VOLUNTEER_AGREEMENT_REQUEST",
       "VOLUNTEER_AGREEMENT_ACCEPTED",
       "REGISTRATION_OPENED",
