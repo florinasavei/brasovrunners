@@ -237,7 +237,7 @@ async function publishOpenRace(page: Page, created: Created): Promise<{ ro: stri
   await field("event.locationName").fill("Stadionul Tineretului");
   await field("event.locationNameEn").fill("Youth Stadium");
   // Everything about registration is one box, and the declaration is in its own card (§350).
-  await openEditorBox(page, "Participare și înscrieri");
+  await openEditorBox(page, "Participare, înscrieri și regulament");
   await page.getByRole("combobox", { name: "Modul de înscriere" }).click();
   await page.getByRole("option", { name: "Înscrieri pe site" }).click();
   await field("event.capacity").fill("12");

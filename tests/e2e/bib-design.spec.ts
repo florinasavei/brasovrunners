@@ -23,8 +23,8 @@ test.describe("§317 the footer, composed in the designer", () => {
 
     // The editor renders at all: the first version of this panel failed the whole page on the
     // client (a shared `sx` object, see `BibDesignPanel`), which no unit test could see. It is
-    // a card inside a card now: Participare și înscrieri › Numere de concurs (BIB) › this.
-    await openEditorBox(page, "Participare și înscrieri");
+    // a card inside a card now: Participare, înscrieri și regulament › Numere de concurs (BIB) › this.
+    await openEditorBox(page, "Participare, înscrieri și regulament");
     await openEditorBox(page, "Numere de concurs (BIB)");
     const panel = page.getByTestId("bib-design");
     await openFold(panel);
@@ -66,7 +66,7 @@ test.describe("§560 the sponsors' band: upload, crop, preview", () => {
     await page.reload();
     await hydrated(page);
 
-    await openEditorBox(page, "Participare și înscrieri");
+    await openEditorBox(page, "Participare, înscrieri și regulament");
     await openEditorBox(page, "Numere de concurs (BIB)");
     const panel = page.getByTestId("bib-design");
     await openFold(panel);
@@ -129,7 +129,7 @@ test.describe("§664 the members' number, designed in the panel", () => {
     await ensureRegistrationIsOpen(page);
     await page.reload();
     await hydrated(page);
-    await openEditorBox(page, "Participare și înscrieri");
+    await openEditorBox(page, "Participare, înscrieri și regulament");
     await openEditorBox(page, "Numere de concurs (BIB)");
     await openFold(page.getByTestId("bib-design"));
     // «Membrii» (§NNN), the designer's last section.
@@ -197,7 +197,7 @@ test.describe("§750 §NNN the designer's sections: header, footer, the profile 
     await ensureRegistrationIsOpen(page);
     await page.reload();
     await hydrated(page);
-    await openEditorBox(page, "Participare și înscrieri");
+    await openEditorBox(page, "Participare, înscrieri și regulament");
     await openEditorBox(page, "Numere de concurs (BIB)");
     const panel = page.getByTestId("bib-design");
     await openFold(panel);
@@ -324,7 +324,7 @@ test.describe("§NNN the assign button's «?» never covers the button", () => {
     await ensureRegistrationIsOpen(page);
     await page.reload();
     await hydrated(page);
-    await openEditorBox(page, "Participare și înscrieri");
+    await openEditorBox(page, "Participare, înscrieri și regulament");
     await openEditorBox(page, "Numere de concurs (BIB)");
     await openFold(page.getByTestId("bib-print"));
     const row = page.getByTestId("bib-assign-row");
