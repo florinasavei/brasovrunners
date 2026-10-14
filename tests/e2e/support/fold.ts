@@ -31,7 +31,7 @@ export function editorBox(scope: Page | Locator, title: string): Locator {
  * Open a box of the event editor by its title, the way a person does (`openFold`), and return it.
  *
  * Every box around it first, outermost first — a card inside a closed box cannot be pressed until
- * the box is open (the cards of "Participare și înscrieri"; §358's cards inside "Ce fel de
+ * the box is open (the cards of "Participare, înscrieri și regulament"; §358's cards inside "Ce fel de
  * eveniment" are boxes of their own since §406).
  */
 export async function openEditorBox(scope: Page | Locator, title: string): Promise<Locator> {

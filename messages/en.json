@@ -2533,8 +2533,7 @@
       "repeatRuleLiveUntil": " — until {until}.",
       "repeatRuleLiveHorizon": "The dates of the next {horizon} are created now.",
       "groups": {
-        "page": "The event page, top to bottom",
-        "offPage": "Not sections of the page"
+        "page": "The event page, top to bottom"
       },
       "publication": {
         "missingTitle": "Missing before publishing",
@@ -2572,7 +2571,8 @@
           "groupRunWarning": "It has registrations ({count}) — a group run takes none, and their list leaves the page."
         },
         "titleSummary": {
-          "title": "Title and summary"
+          "title": "Title and summary",
+          "coverLine": "cover: {state}"
         },
         "description": {
           "title": "Event description"
@@ -2589,11 +2589,6 @@
         "place": {
           "title": "The place"
         },
-        "programmeRules": {
-          "title": "Programme, rules and declaration",
-          "rulesLine": "rules: {state}",
-          "startListLine": "public list: {state}"
-        },
         "programme": {
           "title": "The day's programme and what to bring"
         },
@@ -2604,7 +2599,8 @@
           "title": "Cost"
         },
         "registration": {
-          "title": "Taking part and registration"
+          "title": "Taking part, registration and rules",
+          "rulesLine": "rules: {state}"
         },
         "registrationWindow": {
           "title": "Registration period",
@@ -2614,8 +2610,7 @@
           "title": "Participation conditions",
           "onlyHere": "Asked only when registration is here, on the site.",
           "onlyRegisteringTypes": "A group run has no registration form, so it asks nothing.",
-          "legalLink": "Legal documents — where a new version of the declaration is approved",
-          "declarationUnderRules": "The minimum age and the declaration a participant signs are chosen under “Programme, rules and declaration”: the age in “Rules”, the declaration in “Self-declaration”."
+          "legalLink": "Legal documents — where a new version of the declaration is approved"
         },
         "reminder": {
           "title": "The reminder before the start"
@@ -2649,7 +2644,7 @@
         },
         "startList": {
           "title": "Public participant list",
-          "onlyHere": "A public list exists only for registration on the site: choose “On the site” under Taking part and registration.",
+          "onlyHere": "A public list exists only for registration on the site: choose “Înscrieri pe site” higher up, in this same card.",
           "onlyRegisteringTypes": "A group run has no registration, so no public list either: change the type under “What kind of event”."
         },
         "status": {
@@ -2767,6 +2762,7 @@
             "noDeclaration": "declaration missing",
             "listHidden": "public list off",
             "listShown": "list public",
+            "listShownWithWaitlist": "list public, with the waiting list",
             "external": "With the organiser: {provider}",
             "externalUnnamed": "With the organiser"
           },
@@ -2865,7 +2861,7 @@
         "declaration": {
           "title": "Self-declaration",
           "newest": "{kind}: the newest approved version is v{version} · {title}. The participant signs it when confirming the registration.",
-          "notOnSite": "No declaration is asked: the event takes no registrations on the site. Choose “Înscrieri pe site” under “Taking part and registration” to choose the declaration.",
+          "notOnSite": "No declaration is asked: the event takes no registrations on the site. Choose “Înscrieri pe site” higher up, in this same card, to choose the declaration.",
           "roadFallback": "{kind}: no approved version yet, so a road or park race signs the mountain event declaration. Approve one under Legal documents → New version → Start from the template.",
           "mismatch": "The course is on “{surface}” and the kind chosen is “{chosen}”: “{wanted}” fits it. Choose it above, if the course is right."
         }
@@ -2900,11 +2896,10 @@
           "description": "Description",
           "when": "When and where",
           "course": "The course",
-          "registration": "Registration",
+          "registration": "Registration and rules",
           "coHosts": "Together with",
           "share": "Share",
-          "links": "Links and files",
-          "programme": "Programme and rules"
+          "links": "Links and files"
         }
       },
       "required": {
@@ -5611,7 +5606,7 @@
       "title": "Number pickup desk",
       "howTitle": "How race day works, step by step",
       "how": [
-        "Before the race (organizer): on the event page, under “Taking part and registration” → “Allocate and print”, press “Download every number (PDF)” and print them — two to an A4 sheet.",
+        "Before the race (organizer): under “Taking part, registration and rules” → “Allocate and print”, press “Download every number (PDF)” and print them — two to an A4 sheet.",
         "Print a few “Paper declaration form (PDF)” too, for anyone who signs on the spot.",
         "An administrator prints blank numbers from “Spare bibs for on-the-spot entries” for people who register at the desk.",
         "Volunteers: an Administrator makes their accounts from “Staff”, with the Volunteer role. With their account they open this page on their phone. That is all they see: name, state, number.",
@@ -6277,7 +6272,7 @@
           "confirmationHours": "How long somebody has to press the link in the first email; after it, the registration lapses.",
           "holdMinutes": "For an event with no confirmation window, or already inside it. A race further away than its window holds the place until the deadline set on the event.",
           "offerHours": "How long the first in line has to sign; never past the registration close or the start.",
-          "reminderHours": "0 = no reminder. An event can choose otherwise in the editor, under “Taking part and registration”.",
+          "reminderHours": "0 = no reminder. An event can choose otherwise in the editor, under “Taking part, registration and rules”.",
           "lastCallHours": "How many hours before the window's deadline the last call to sign goes. 0 = none before the deadline.",
           "selfCheckinHours": "The button on the participant's page, “I have arrived — mark me as here”.",
           "raceWeekDays": "0 = on race day only. From the same day, the editor's bib printing card opens by itself.",
@@ -6993,7 +6988,7 @@
               "title": "Correct an event's text",
               "steps": [
                 "«Events» → «Edit» on the event's row.",
-                "Open the card with the text: «Title and summary», «Event description» or «Programme, rules and declaration» (then «The day's programme and what to bring» or «Rules»).",
+                "Open the card with the text: «Title and summary», «Event description» or «Taking part, registration and rules» (then «The day's programme and what to bring» or «Rules»).",
                 "Write in the «Română» tab and in the «English» tab.",
                 "At the bottom, on a published event, tick «I understand that I am editing published content.».",
                 "Press «Save». It is on the site at once, in both languages."
@@ -7111,7 +7106,7 @@
               "title": "Download and print the race numbers",
               "steps": [
                 "«Events» → «Open» on the race.",
-                "Open the «Taking part and registration» card, then «Allocate and print».",
+                "Open the «Taking part, registration and rules» card, then «Allocate and print».",
                 "«See the bibs» to check them on screen.",
                 "«Download every number (PDF)»: two A5 numbers on each A4 sheet, with the cut line. «One per page» for a single one, centred on A4.",
                 "Print at actual size (100%) and cut on the line.",
@@ -7212,7 +7207,7 @@
                 "«What kind of event» → «Event type» (Race, Group run and the others).",
                 "«Title and summary»: «Title» and «Summary», in the «Română» tab and in the «English» tab.",
                 "«When and where»: the date and time, then the meeting point in both languages, the address, the map link. Place not known yet? Tick «Location to be announced».",
-                "The other cards as needed: «Event description» (a YouTube film goes here, with the «Add a YouTube film» button), «The course», «Taking part and registration», «Programme, rules and declaration».",
+                "The other cards as needed: «Event description» (a YouTube film goes here, with the «Add a YouTube film» button), «The course», «Taking part, registration and rules».",
                 "«Create the event» saves it as a draft (not on the site). «Create and publish» puts it on the site at once.",
                 "Something required missing? «Cannot publish yet» appears at the top, each gap a link: fill it in and press again.",
                 "The usual mistake: leaving the «English» tab empty leaves the event with no English half; or pressing «Create the event» thinking it went live — it stays a draft, unlike «Create and publish»."
@@ -7286,12 +7281,12 @@
             {
               "title": "Open registration for a race",
               "steps": [
-                "«Events» → «Edit» → the «Taking part and registration» card.",
+                "«Events» → «Edit» → the «Taking part, registration and rules» card.",
                 "«Registration mode» → «Înscrieri pe site» (registration on the site).",
                 "«Capacity» and, beside it, «Waiting list»: «Unlimited», «Limited to a number of places», with as many people as you type, or «No waiting list». Under «Limited…», empty or 0 makes it unlimited; only «No waiting list» closes the list. Below them, «Places from the waiting list are allocated automatically»: «Yes» gives every freed or added place to the first on the list; «No» if you want to choose (see “Choose who gets a freed place”).",
                 "«Registration period»: «Registration opens» and «Registration closes».",
                 "«Confirmation window»: «Participation confirmation: asked how many days before» and, in the box beside it, how many days before it is due (0 = the place never lapses before the start).",
-                "«Programme, rules and declaration» → «Rules»: «Minimum age to take part» (14 unless you change it, never under 14), on every type of event. The declaration: «Programme, rules and declaration» → «Self-declaration» → «Declaration a participant signs».",
+                "«Taking part, registration and rules» → «Rules»: «Minimum age to take part» (14 unless you change it, never under 14), on every type of event. The declaration, right under «Rules»: «Self-declaration» → «Declaration a participant signs».",
                 "«Race numbers (bibs)»: «Race numbers (BIB) start at».",
                 "Press «Save», then publish the event. Nobody can register while the terms, the privacy notice and the declaration are not approved."
               ]
@@ -7299,7 +7294,7 @@
             {
               "title": "Choose who gets a freed place",
               "steps": [
-                "«Events» → «Edit» on the race's row → the «Taking part and registration» card.",
+                "«Events» → «Edit» on the race's row → the «Taking part, registration and rules» card.",
                 "Under «Places from the waiting list are allocated automatically» choose «No» and press «Save». On «No», a freed or added place stays free until you hand it out.",
                 "No need to raise «Capacity»: when no place is free, «Send them the offer» adds one supplementary place once you confirm (the capacity grows by one, and the registration's trail says who added it and for whom).",
                 "The «Registrations received» card → «Registration queue»: on the named person's waiting-list row press «Send them the offer». The same button is on their registration's page too.",
@@ -7427,7 +7422,7 @@
             {
               "title": "Assign the numbers and mark them printed",
               "steps": [
-                "«Events» → «Edit» → «Taking part and registration» → «Allocate and print».",
+                "«Events» → «Edit» → «Taking part, registration and rules» → «Race numbers (bibs)» → «Allocate and print».",
                 "Press «Assign numbers» and confirm: every confirmed registration without a number gets the next free one; numbers already given stay.",
                 "«Registrations» → pick the race → «Filter». On the same page you download the unprinted numbers, print them, then press the button that marks them printed.",
                 "The numbers for printing are two A5 on each A4 sheet (see “Download and print the race numbers” under Organizer)."
@@ -7436,7 +7431,7 @@
             {
               "title": "Spare numbers for people who register at the desk",
               "steps": [
-                "«Events» → «Edit» → «Taking part and registration» → «Allocate and print» → «Spare bibs for on-the-spot entries».",
+                "«Events» → «Edit» → «Taking part, registration and rules» → «Race numbers (bibs)» → «Allocate and print» → «Spare bibs for on-the-spot entries».",
                 "In «How many» type how many blank numbers you want, then press «Print» and confirm. The window says which number they start from: from then on nobody who registers online gets them.",
                 "Press «Download the sheet» and print it. Each number has an empty name line; at the desk the name is written on in marker, and the form suggests the next free number.",
                 "Need them again? «Reprint the free spares (PDF)» puts only the numbers not yet given on the sheet and reserves no more."
@@ -7648,7 +7643,7 @@
               "title": "Minors and the minimum age",
               "steps": [
                 "A participant under 18 is registered by a parent or guardian, who writes their name in the form's section for minors; the desk and the export show “Minor — parent/guardian”.",
-                "The minimum age is each event's own, of any type: «Minimum age to take part», under «Programme, rules and declaration» → «Rules». The event's page says it. It is counted on the day of the event, at every door — the form, the desk, a registration entered by staff. The run declaration is signed from 18, whatever the run's minimum age."
+                "The minimum age is each event's own, of any type: «Minimum age to take part», under «Taking part, registration and rules» → «Rules». The event's page says it. It is counted on the day of the event, at every door — the form, the desk, a registration entered by staff. The run declaration is signed from 18, whatever the run's minimum age."
               ]
             },
             {
@@ -9120,8 +9115,13 @@
       "full": "There are already {max} points, as many as fit on a route.",
       "save": "Save the points",
       "saving": "Saving…",
-      "courseNote": "Checkpoints and their cut-offs are written in the “Checkpoints” card.",
+      "courseNote": "Checkpoints and their cut-offs are written in the “Checkpoints” card, above card 1.",
       "courseLink": "Open the checkpoints",
+      "inCourse": {
+        "one": "{count} checkpoint",
+        "few": "{count} checkpoints",
+        "other": "{count} checkpoints"
+      },
       "gpx": {
         "take": "Take the points from the GPX",
         "title": "The points in the GPX file",

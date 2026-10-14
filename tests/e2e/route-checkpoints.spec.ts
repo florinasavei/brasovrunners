@@ -58,7 +58,7 @@ async function publish(eventId: string) {
 
 /** The bib designer's preview picture, its fold opened the way a person does. */
 async function bibPreview(page: Page): Promise<Locator> {
-  await openEditorBox(page, "Participare și înscrieri");
+  await openEditorBox(page, "Participare, înscrieri și regulament");
   await openEditorBox(page, "Numere de concurs (BIB)");
   await openFold(page.getByTestId("bib-design"));
   return page.getByTestId("bib-design-preview").locator("img");

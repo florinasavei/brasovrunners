@@ -116,7 +116,7 @@ async function SpareBibsSection({ spares, mayReserve }: { spares: SpareCard; may
  * sheet to print — the one card for race numbers now holds what they look like and whether they
  * exist, where it used to be a section below the page.
  *
- * **Immediate actions inside the save form.** The card sits in "Participare și înscrieri", inside
+ * **Immediate actions inside the save form.** The card sits in «Participare, înscrieri și regulament» (§760), inside
  * the one `<form>` that saves the event, and HTML forms cannot nest. So every control here names
  * the form it belongs to — `form="bib-assign"` for the POST that gives the numbers, `form=
  * "bib-download"` for the GET that prints them — and those two forms are rendered after the save

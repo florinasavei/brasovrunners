@@ -40,7 +40,7 @@ test.describe("§331 the participants hear about a change when the organizer ask
     await field("event.locationName").fill(`Parcul Tractorul ${suffix}`);
     await field("event.locationNameEn").fill(`Tractorul Park ${suffix}`);
     // Everything about registration is one box, and the declaration is in its own card (§350).
-    await openEditorBox(page, "Participare și înscrieri");
+    await openEditorBox(page, "Participare, înscrieri și regulament");
     await page.getByRole("combobox", { name: "Modul de înscriere" }).click();
     await page.getByRole("option", { name: "Înscrieri pe site" }).click();
     await field("event.capacity").fill("10");

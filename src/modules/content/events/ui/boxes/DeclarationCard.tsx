@@ -17,8 +17,8 @@ const SURFACES_WITH_TEXT = ["ASPHALT", "TRAIL"] as const;
 
 /**
  * The card's closed line — «declarație pentru Trail», «fără declarație», «declarația v3» — and
- * whether a saved event that registers on the site lacks its declaration (the card and «Program,
- * regulament și declarație» around it open themselves then), or a group run offering its
+ * whether a saved event that registers on the site lacks its declaration (the card and «Participare,
+ * înscrieri și regulament» around it open themselves then, §760), or a group run offering its
  * self-declaration has no approved, not-withdrawn text for its surface (§483). Null text: the event asks for no
  * declaration at all.
  */
@@ -53,8 +53,9 @@ export async function declarationLine(
 }
 
 /**
- * «Declarația pe propria răspundere» (§448) — since §481 the third card of «Program, regulament și
- * declarație», right after «Regulamentul» (it was inside it: the owner, 2026-09-27, "Programul,
+ * «Declarația pe propria răspundere» (§448) — a card of «Participare, înscrieri și regulament» since
+ * §760 (of «Program, regulament și declarație» from §481), right after «Regulamentul» and its minimum
+ * age (it was inside it: the owner, 2026-09-27, "Programul,
  * regulamentul și declarația la fel pe același card"), the one place in
  * the editor where an organizer chooses what a runner signs (the owner, 2026-09-26: "declarația la
  * alergările de grup ar trebui să apară sub secțiunea «Regulament»; momentan nu văd unde selectez
