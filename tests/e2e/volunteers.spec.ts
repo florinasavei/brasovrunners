@@ -1,8 +1,9 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Locator } from "@playwright/test";
 import { existsSync } from "node:fs";
 import pg from "pg";
 import { hydrated, signIn } from "./support/featured-event";
-import { openEditorBox } from "./support/fold";
+import { openEditorBox, openFold } from "./support/fold";
+import { chooseSex } from "./support/sex-choice";
 
 /**
  * §754 — «Voluntari» (BR-REQ-050-02, BR-REQ-060-01, BR-REQ-031-01): an Administrator defines two roles on a
@@ -12,6 +13,12 @@ import { openEditorBox } from "./support/fold";
  * §761 — «Ce ești dispus(ă) să faci»: the visitor ticks two roles; the Administrator finds the offer under
  * «De repartizat», gives one role with one press and sees «1 din N» on it; a role with all the people it needs is
  * no longer offered; a repeated sign-up gets the same answer; once every role is given away the page offers no form.
+ *
+ * §NNN — the volunteer's own data and the role's description: «Primește voluntari pe pagină» is a real tick (role
+ * checkbox, `aria-checked`, 44 pixels); a role's «Descrierea rolului» is typed in the rich-text editor in both
+ * languages and read under its tick on the public form (folded «Detalii» when long); the form asks the age (17 is
+ * refused, the tick «Am cel puțin 18 ani» is gone), the sex, the city, the two optional ticks, and the T-shirt's
+ * size only while «Oferim tricouri voluntarilor» is ticked; the card's row, the CSV and the person's data carry them.
  *
  * The event is written straight into the database — the setup, not the subject — one per project and run, so
  * the two projects never share a row.
@@ -68,18 +75,40 @@ test.describe("§754 volunteers for a race", () => {
     // its text, so a folded card (nobody waiting) still answers.
     const group = (name: string) => page.getByTestId("volunteer-group").filter({ has: page.locator("h3").getByText(name, { exact: true }) });
 
-    async function addRole(nameRo: string, nameEn: string, needed: string) {
+    /** «Descrierea rolului»: one paragraph per line, typed into the house's editor — Romanian and English (both or neither). */
+    async function describeRole(scope: Locator, ro: readonly string[], en: readonly string[]) {
+      for (const [name, lines] of [
+        ["descriptionRoBody", ro],
+        ["descriptionEnBody", en],
+      ] as const) {
+        const fold = scope.locator(`details[data-rich-text-fold="${name}"]`);
+        await openFold(fold);
+        const editor = fold.locator(".ProseMirror");
+        await editor.click();
+        for (const [index, line] of lines.entries()) {
+          if (index > 0) await page.keyboard.press("Enter");
+          await page.keyboard.type(line);
+        }
+      }
+    }
+
+    async function addRole(nameRo: string, nameEn: string, needed: string, description?: { ro: readonly string[]; en: readonly string[] }) {
       await openEditorBox(page, "Adaugă un rol");
       const add = page.getByTestId("volunteer-role-add");
       await add.getByLabel("Numele rolului (Română)").fill(nameRo);
       await add.getByLabel("Numele rolului (English)").fill(nameEn);
       await add.getByLabel("Câți oameni trebuie").fill(needed);
+      if (description) await describeRole(add, description.ro, description.en);
       await add.getByRole("button", { name: "Adaugă rolul", exact: true }).click();
       await page.waitForURL(/#box-volunteers$/);
       await hydrated(page);
     }
-    await addRole("Punct de apă", "Water point", "2");
-    await addRole("Sosire", "Finish", "1");
+    // «Punct de apă» has a long description (four lines: it folds behind «Detalii»); «Sosire» a one-line one.
+    await addRole("Punct de apă", "Water point", "2", {
+      ro: ["Stai la masa cu apă, la kilometrul 5.", "Umpli paharele înainte de primii alergători.", "Dai paharul în mână, nu pe masă.", "Strângi paharele goale la final."],
+      en: ["You stand at the water table at kilometre 5.", "You fill the cups before the first runners.", "You hand over the cup, not leave it on the table.", "You collect the empty cups at the end."],
+    });
+    await addRole("Sosire", "Finish", "1", { ro: ["Stai la linia de sosire."], en: ["You stand at the finish line."] });
     // Open on arrival? The card keeps its closed line: «0 din 3».
     await expect(card.locator("summary").first()).toContainText("0 din 3");
 
@@ -87,6 +116,9 @@ test.describe("§754 volunteers for a race", () => {
     await openEditorBox(page, "Roluri");
     const roles = page.getByTestId("volunteer-role-name");
     await expect(roles).toHaveText(["Punct de apă", "Sosire"]);
+    // The role's header: the first line of its description's plain words, the rest folded (§NNN).
+    await expect(page.getByTestId("volunteer-role").nth(0).getByTestId("volunteer-role-description-first")).toHaveText("Stai la masa cu apă, la kilometrul 5.");
+    await expect(page.getByTestId("volunteer-role").nth(1).getByTestId("volunteer-role-description-first")).toHaveText("Stai la linia de sosire.");
     const moveUp = page.getByTestId("volunteer-role").nth(1).getByRole("button", { name: /Mută mai sus/ });
     expect((await moveUp.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
     await moveUp.click();
@@ -102,9 +134,15 @@ test.describe("§754 volunteers for a race", () => {
 
     // The form is off until the event takes volunteers: the card says why.
     await expect(page.getByTestId("volunteer-offer-state")).toContainText("Formularul public e oprit");
-    await page.getByRole("button", { name: "Primește voluntari pe pagină", exact: true }).click();
+    // «Primește voluntari pe pagină» is a real tick (§NNN): a checkbox with its words, its state in `aria-checked`, a row a thumb can press.
+    const acceptTick = page.getByRole("checkbox", { name: "Primește voluntari pe pagină", exact: true });
+    await expect(acceptTick).toHaveAttribute("aria-checked", "false");
+    expect((await acceptTick.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+    await expect(page.getByRole("button", { name: "Primește voluntari pe pagină", exact: true })).toHaveCount(0);
+    await acceptTick.click();
     await page.waitForURL(/#box-volunteers$/);
     await hydrated(page);
+    await expect(page.getByRole("checkbox", { name: "Primește voluntari pe pagină", exact: true })).toHaveAttribute("aria-checked", "true");
     // With the seed's sample notice describing volunteers, the form is on the page.
     await expect(page.getByTestId("volunteer-offer-state")).toContainText("e pe pagina evenimentului");
 
@@ -127,22 +165,51 @@ test.describe("§754 volunteers for a race", () => {
       const finishBox = choices.getByRole("checkbox", { name: "Sosire" });
       await expect(waterBox).toBeVisible();
       await expect(finishBox).toBeVisible();
+      // «Descrierea rolului» under each tick: the long one folded behind «Detalii», the one-line one simply there (§NNN).
+      const waterDescription = choices.getByTestId("volunteer-role-option").filter({ hasText: "Punct de apă" }).getByTestId("volunteer-role-description");
+      await expect(waterDescription).toHaveAttribute("data-folded", "true");
+      await expect(waterDescription.locator("summary")).toHaveText("Detalii");
+      await expect(waterDescription.getByTestId("volunteer-role-description-body")).toBeHidden();
+      await waterDescription.locator("summary").click();
+      await expect(waterDescription.getByTestId("volunteer-role-description-body")).toContainText("Umpli paharele înainte de primii alergători.");
+      expect(await waterDescription.getByTestId("volunteer-role-description-body").locator("p").count()).toBe(4);
+      const finishDescription = choices.getByTestId("volunteer-role-option").filter({ hasText: "Sosire" }).getByTestId("volunteer-role-description");
+      await expect(finishDescription).not.toHaveAttribute("data-folded", "true");
+      await expect(finishDescription).toContainText("Stai la linia de sosire.");
+      // No T-shirt box while the event gives none; the club's group tick carries the club's name.
+      await expect(guest.locator('[name="shirtSize"]')).toHaveCount(0);
+      await expect(guest.getByTestId("volunteer-profile").getByRole("checkbox", { name: "Am mai fost voluntar în trecut la alte curse" })).toBeVisible();
+      await expect(guest.getByTestId("volunteer-profile").getByRole("checkbox", { name: /^Fac parte din grupul .+/ })).toBeVisible();
+      // The age answers «Am cel puțin 18 ani»: that tick is gone.
+      await expect(guest.locator('input[name="adult"]')).toHaveCount(0);
       // A row a thumb can press; no horizontal scroll at the project's width.
       expect((await choices.locator("label").first().boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
       expect(await guest.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
       const submit = box.getByRole("button", { name: "Mă ofer voluntar", exact: true });
       expect((await submit.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
 
-      async function offer(page2: typeof guest, name: string, email: string, ticked: readonly string[]) {
+      async function offer(
+        page2: typeof guest,
+        name: string,
+        email: string,
+        ticked: readonly string[],
+        about: { age: string; sex?: "FEMALE" | "MALE"; city: string; before?: boolean; club?: boolean; shirt?: string } = { age: "34", city: "Brașov" },
+      ) {
         for (const role of ticked) await page2.getByTestId("volunteer-roles").getByRole("checkbox", { name: role }).check();
         await page2.getByLabel("Numele tău").fill(name);
         await page2.getByLabel("Adresa ta de email").fill(email);
         await page2.locator('[name="phone"]').fill("712345678");
+        // What the person says about themselves (§NNN): the age, the sex, the city, two optional ticks and, while the event gives T-shirts, the size.
+        await page2.locator('input[name="age"]').fill(about.age);
+        await chooseSex(page2, about.sex ?? "FEMALE");
+        await page2.locator('input[name="city"]').fill(about.city);
+        if (about.before) await page2.locator('input[name="volunteeredBefore"]').check();
+        if (about.club) await page2.locator('input[name="clubMember"]').check();
+        if (about.shirt) await page2.locator('select[name="shirtSize"]').selectOption(about.shirt);
         await page2.getByLabel("Un mesaj pentru organizatori (opțional)").fill("Sunt liber toată ziua");
         await page2.locator('input[name="consent"]').check();
-        // The volunteer agreement and the age (§758): the person's own two ticks.
+        // The volunteer agreement (§758): the person's own tick; the age they typed answers «Am cel puțin 18 ani».
         await page2.locator('input[name="agreement"]').check();
-        await page2.locator('input[name="adult"]').check();
         // A person takes a moment: the form's timing check refuses a post within the second of its render.
         await page2.waitForTimeout(1_200);
         await page2.getByTestId("volunteer-box").getByRole("button", { name: "Mă ofer voluntar", exact: true }).click();
@@ -154,8 +221,14 @@ test.describe("§754 volunteers for a race", () => {
       await guest.getByLabel("Numele tău").fill("Maria Test");
       await guest.getByLabel("Adresa ta de email").fill(maria);
       await guest.locator('[name="phone"]').fill("712345678");
-      for (const tick of ["consent", "agreement", "adult"]) {
+      // Seventeen, no sex and no city: each named (§NNN). The browser's own `required` is lifted so the server's refusal is what is read.
+      await guest.locator('input[name="age"]').fill("17");
+      await guest.locator('input[name="volunteeredBefore"]').check();
+      for (const tick of ["consent", "agreement"]) {
         await guest.locator(`input[name="${tick}"]`).evaluate((input: HTMLInputElement) => input.removeAttribute("required"));
+      }
+      for (const box of ["age", "sex", "city"]) {
+        await guest.locator(`[name="${box}"]`).evaluate((input) => input.removeAttribute("required"));
       }
       await guest.waitForTimeout(1_200);
       await submit.click();
@@ -171,7 +244,14 @@ test.describe("§754 volunteers for a race", () => {
       // agreement in force one press away, in a new tab, so what was typed stays.
       await expect(guest.getByTestId("volunteer-invalid")).toContainText("contractul de voluntariat");
       await expect(guest.getByTestId("volunteer-agreement").getByTestId("checkbox-error")).toContainText("Bifează că accepți contractul de voluntariat");
-      await expect(guest.getByTestId("volunteer-adult").getByTestId("checkbox-error")).toContainText("cel puțin 18 ani");
+      // The age says «cel puțin 18 ani» for a number below it (the tick «Am cel puțin 18 ani» is gone), the other two their own sentence.
+      await expect(guest.getByTestId("volunteer-invalid")).toContainText("Voluntarii trebuie să aibă cel puțin 18 ani.");
+      await expect(guest.getByTestId("volunteer-invalid")).toContainText("Alege sexul din listă.");
+      await expect(guest.getByTestId("volunteer-invalid")).toContainText("Scrie orașul tău.");
+      await expect(guest.getByTestId("volunteer-profile")).toContainText("Voluntarii trebuie să aibă cel puțin 18 ani.");
+      await expect(guest.locator('input[name="age"]')).toHaveValue("17");
+      await expect(guest.locator('input[name="volunteeredBefore"]')).toBeChecked();
+      await expect(guest.locator('input[name="clubMember"]')).not.toBeChecked();
       const agreementLink = guest.getByTestId("volunteer-agreement").getByRole("link", { name: /contractul de voluntariat/ });
       await expect(agreementLink).toHaveAttribute("target", "_blank");
       await expect(agreementLink).toHaveAttribute("href", "/ro/contract-voluntariat");
@@ -180,7 +260,7 @@ test.describe("§754 volunteers for a race", () => {
       await expect(guest.getByLabel("Adresa ta de email")).toHaveValue(maria);
 
       // She would do both.
-      await offer(guest, "Maria Test", maria, ["Punct de apă", "Sosire"]);
+      await offer(guest, "Maria Test", maria, ["Punct de apă", "Sosire"], { age: "34", sex: "FEMALE", city: "Brașov", before: true, club: true });
 
       // --- The Administrator: «De repartizat», one press, «1 din 1» ----------------------------
       await page.goto(`/ro/admin/events/${event.id}`);
@@ -197,6 +277,11 @@ test.describe("§754 volunteers for a race", () => {
       await expect(row.getByTestId("volunteer-state")).toHaveText("Înscris");
       // What she would do, as chips — words, never the colour alone.
       await expect(row.getByTestId("volunteer-choice")).toHaveText(["Punct de apă", "Sosire"]);
+      // What she said about herself (§NNN): two small chips in words, and one line of the rest — no T-shirt while the event gives none.
+      await expect(row.getByTestId("volunteer-before")).toHaveText("A mai fost voluntar");
+      await expect(row.getByTestId("volunteer-club")).toContainText("Din grupul");
+      await expect(row.getByTestId("volunteer-facts")).toHaveText(/^Vârsta: 34 · .+ · Oraș: Brașov$/);
+      await expect(row.getByTestId("volunteer-facts")).not.toContainText("Tricou");
       await expect(row.getByTestId("volunteer-email")).toHaveText(maria);
       await expect(row.getByTestId("volunteer-phone")).toContainText("712 345 678");
       await expect(row).toContainText("Sunt liber toată ziua");
@@ -255,12 +340,33 @@ test.describe("§754 volunteers for a race", () => {
       expect(file).toContain("Rolul dat,S-a oferit pentru,Nume");
       expect(file).toContain(`Sosire,"Punct de apă, Sosire",Maria Test`);
       expect(file).toContain(maria);
+      // Six columns after the moment (§NNN): the age, the sex (the registrations' own word), the city, the two ticks as «Da»/«Nu», the size (empty: no T-shirts).
+      expect(file).toContain("Data,Vârsta,Sex,Orașul,A mai fost voluntar,Din grupul clubului,Mărime tricou");
+      expect(file).toMatch(/,34,Female,Brașov,Da,Da,(\r?\n|$)/);
+
+      // --- «Oferim tricouri voluntarilor»: a tick of the card's own, and the form asks the size from then on ---
+      const shirtsForm = page.getByTestId("volunteer-shirts-form");
+      const shirtsTick = shirtsForm.getByRole("checkbox", { name: "Oferim tricouri voluntarilor" });
+      await expect(shirtsTick).not.toBeChecked();
+      expect((await shirtsForm.locator("label").first().boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+      await shirtsTick.check();
+      await shirtsForm.getByRole("button", { name: "Salvează", exact: true }).click();
+      await page.waitForURL(/#box-volunteers$/);
+      await hydrated(page);
+      await expect(page.getByTestId("volunteer-shirts-form").getByRole("checkbox", { name: "Oferim tricouri voluntarilor" })).toBeChecked();
 
       // --- A role with all its people is no longer offered; a repeat gets the same answer -------
       await openBox();
       await expect(guest.getByTestId("volunteer-roles").getByRole("checkbox", { name: "Punct de apă" })).toBeVisible();
       await expect(guest.getByTestId("volunteer-roles").getByRole("checkbox", { name: "Sosire" })).toHaveCount(0);
-      await offer(guest, "Ion Test", ion, ["Punct de apă"]);
+      // The size is asked now (the public page is cached for a moment: a fresh load until it is).
+      await expect(async () => {
+        await guest.reload();
+        await expect(guest.locator('select[name="shirtSize"]')).toHaveCount(1, { timeout: 3_000 });
+      }).toPass({ timeout: 60_000 });
+      await guest.getByTestId("volunteer-box").getByRole("heading", { name: "Vreau să fiu voluntar" }).click();
+      await expect(guest.getByLabel("Mărimea tricoului")).toBeVisible();
+      await offer(guest, "Ion Test", ion, ["Punct de apă"], { age: "52", sex: "MALE", city: "Cluj-Napoca", shirt: "L" });
       // Maria again: the same «am primit», and one row still.
       await openBox();
       await offer(guest, "Maria Din Nou", maria.replace("maria", "Maria").replace("@example", "@Example"), ["Punct de apă"]);
@@ -270,6 +376,12 @@ test.describe("§754 volunteers for a race", () => {
       await hydrated(page);
       await expect(page.getByTestId("volunteer-row")).toHaveCount(3);
       await expect(page.getByTestId("volunteer-unassigned").getByTestId("volunteer-name")).toHaveText(["Ion Test", "Dana Test"]);
+      // Ion ticked neither optional box and chose a size: no chips, and the T-shirt in the row's line (§NNN).
+      const ionRow = page.getByTestId("volunteer-row").filter({ hasText: "Ion Test" });
+      await expect(ionRow.getByTestId("volunteer-claims")).toHaveCount(0);
+      await expect(ionRow.getByTestId("volunteer-facts")).toHaveText(/^Vârsta: 52 · .+ · Oraș: Cluj-Napoca · Tricou: L$/);
+      const withShirts = await (await page.request.get(`/api/admin/events/${event.id}/volunteers?lang=ro`)).text();
+      expect(withShirts).toMatch(/,52,Male,Cluj-Napoca,Nu,Nu,L(\r?\n|$)/);
 
       // The organizers give «Punct de apă» to both: «2 din 2», and the page offers no form any more.
       for (const name of ["Ion Test", "Dana Test"]) {
@@ -305,7 +417,7 @@ test.describe("§754 volunteers for a race", () => {
     await hydrated(page);
 
     /** A person entered by hand (§761): the role ticked as what they would do and, when `give`, given too. */
-    async function addByHand(name: string, email: string, give: boolean) {
+    async function fillByHand(name: string, email: string, give: boolean, about: { age?: string; city?: string; before?: boolean } = {}) {
       // A fresh load each time: the card's folds as a person finds them after the previous press.
       await page.goto(`/ro/admin/events/${event.id}`);
       await hydrated(page);
@@ -316,15 +428,32 @@ test.describe("§754 volunteers for a race", () => {
       await add.getByRole("textbox", { name: "Nume", exact: true }).fill(name);
       await add.getByRole("textbox", { name: "Adresa de email", exact: true }).fill(email);
       await add.getByRole("textbox", { name: "Telefon", exact: true }).fill("0712 345 678");
+      // What the person told the organizers (§NNN): every box optional here, no T-shirt box while the event gives none.
+      await expect(add.getByLabel("Mărimea tricoului")).toHaveCount(0);
+      if (about.age) await add.locator('input[name="age"]').fill(about.age);
+      if (about.city) await add.locator('input[name="city"]').fill(about.city);
+      if (about.before) await add.getByRole("checkbox", { name: "A mai fost voluntar în trecut la alte curse" }).check();
       await add.getByRole("button", { name: "Adaugă voluntarul", exact: true }).click();
+      return add;
+    }
+    async function addByHand(name: string, email: string, give: boolean, about: { age?: string; city?: string; before?: boolean } = {}) {
+      await fillByHand(name, email, give, about);
       await page.waitForURL(/#box-volunteers$/);
       await hydrated(page);
     }
-    await addByHand("Ion Link", `ion.${tag}@example.test`, true);
+    // Fifteen is below the platform's minimum: refused where it was typed, nothing added.
+    const underage = await fillByHand("Prea Tanar", `tanar.${tag}@example.test`, false, { age: "15" });
+    await expect(underage.getByTestId("form-refusal")).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByTestId("volunteer-row")).toHaveCount(0);
+    await addByHand("Ion Link", `ion.${tag}@example.test`, true, { age: "40", city: "Sibiu", before: true });
     await addByHand("Dana Hartie", `dana.${tag}@example.test`, false);
     const group = (name: string) => page.getByTestId("volunteer-group").filter({ has: page.locator("h3").getByText(name, { exact: true }) });
     const ionRow = page.locator('[data-testid="volunteer-row"]', { hasText: "Ion Link" });
     const danaRow = page.locator('[data-testid="volunteer-row"]', { hasText: "Dana Hartie" });
+    await expect(ionRow.getByTestId("volunteer-before")).toHaveText("A mai fost voluntar");
+    await expect(ionRow.getByTestId("volunteer-facts")).toHaveText("Vârsta: 40 · Oraș: Sibiu");
+    await expect(danaRow.getByTestId("volunteer-claims")).toHaveCount(0);
+    await expect(danaRow.getByTestId("volunteer-facts")).toHaveCount(0);
     await expect(ionRow.getByTestId("volunteer-agreement-state")).toHaveText("Contract neacceptat încă");
     await expect(danaRow.getByTestId("volunteer-agreement-state")).toHaveText("Contract neacceptat încă");
     // Ion was given the role; Dana only offered it, and waits under «De repartizat».
