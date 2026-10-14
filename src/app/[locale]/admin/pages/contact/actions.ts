@@ -98,8 +98,9 @@ export async function updatePublicPhoneAction(_previous: FormOutcome | null, for
 }
 
 /**
- * «Spune-ne ceva» (§676): per branch a switch and the address that receives it, and the safety
- * branch's first name. Administrator at the door, the service asserting it again and validating
+ * «Spune-ne ceva» (§676): per branch a switch, the address that receives it and «Prin ce trimitem»
+ * (§NNN: `<branch>Via`, absent when its radio was greyed, which keeps the road already saved), and the
+ * safety branch's first name. Administrator at the door, the service asserting it again and validating
  * each address; a refused save comes back as typed, the boxes it names marked.
  */
 export async function updateFeedbackFormsAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {

@@ -6598,7 +6598,7 @@
           "gmail": "The club's Gmail (“Write to us”)",
           "mailgun": "Mailgun",
           "gmailHint": "From the club's mailbox; the message also stays in its Sent folder.",
-          "mailgunHint": "From the platform's email service; no copy stays in any mailbox.",
+          "mailgunHint": "From the club's email service; no copy stays in any mailbox.",
           "gmailMissing": "Gmail is not ready here: the club's account and its app password are missing.",
           "mailgunMissing": "Mailgun does not send here: emails are not switched on in this environment.",
           "steps": "See the steps",

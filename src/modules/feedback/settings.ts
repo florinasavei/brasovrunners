@@ -18,8 +18,9 @@ import {
 } from "./domain/branches";
 
 /**
- * «Spune-ne ceva» on «Pagini» → «Contact» (§676): per branch a switch and the address that receives
- * it, and the safety branch's first name — one `platform_settings` row (the table is a key-value
+ * «Spune-ne ceva» on «Pagini» → «Contact» (§676): per branch a switch, the address that receives
+ * it and — §NNN — the road it leaves by (Gmail or Mailgun, defaulting to what §676 fixed in code), and
+ * the safety branch's first name — one `platform_settings` row (the table is a key-value
  * store, so no migration), the contact recipients' shape (§164). Read by everybody who reads the
  * club's content; written by an Administrator (`canManageClubSettings`), audited — which branch moved
  * and in which direction, and whether a recipient changed, never an address.

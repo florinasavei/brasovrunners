@@ -121,8 +121,9 @@ test.describe("BR-REQ-052-02 criterion 8 — the share buttons", () => {
     await expect(fold).toHaveAttribute("open", "");
     const doors = fold.getByTestId("event-calendar-doors").getByRole("link");
     await expect(doors).toHaveCount(5);
-    // Under the pill, never beside it or above it, and each door's own small pill.
-    const pillBottom = closedBox.y + closedBox.height;
+    // Under the pill (measured again: the page may have scrolled to the focused pill), never beside it or above it, and each door's own small pill.
+    const openBox = (await toggle.boundingBox())!;
+    const pillBottom = openBox.y + openBox.height;
     for (let index = 0; index < 5; index += 1) {
       const box = (await doors.nth(index).boundingBox())!;
       expect(box.y, `door ${index} under the pill`).toBeGreaterThanOrEqual(pillBottom - 1);

@@ -6598,7 +6598,7 @@
           "gmail": "Gmail-ul clubului („Scrie-ne”)",
           "mailgun": "Mailgun",
           "gmailHint": "Din căsuța clubului; mesajul rămâne și în folderul ei Trimise.",
-          "mailgunHint": "Din serviciul de email al platformei; nu rămâne nicio copie într-o căsuță.",
+          "mailgunHint": "Din serviciul de email al clubului; nu rămâne nicio copie într-o căsuță.",
           "gmailMissing": "Gmail-ul nu e pregătit aici: lipsesc contul clubului și parola lui de aplicație.",
           "mailgunMissing": "Mailgun nu trimite aici: emailurile nu sunt pornite pe acest mediu.",
           "steps": "Vezi pașii",
