@@ -34,9 +34,13 @@ import { foldForSearch } from "@/modules/registrations/country-search";
  *   in the editor's order (Ciornă, În verificare, Publicat, Arhivat), then the called-off, then
  *   the completed. Every order breaks a tie on `date-near`, then on the fetch's order.
  *
- * The club's former default — featured first, then soonest — is no longer the list's order: the
+ * The main event stands first in every order (§762, amending §527 — the owner, 2026-10-14: «și în
+ * lista asta, evenimentul principal ar trebui să apară primul»): the date marked «Principal» in
+ * «Evidențiere pe site», or the series line holding it, is lifted above the others whenever the
+ * search and the state still match it, and the rest keep the chosen order (`pinFeaturedLine`).
+ * §527 had dropped the club's former «featured first, then soonest» default: the
  * brief's default is the nearest date, and a featured race is at most a few weeks out, so it sits
- * at or near the top anyway; the star still marks it on its line.
+ * at or near the top anyway — true only until a nearer run is scheduled before the race.
  *
  * The filter narrows the *dates* before they are grouped into a series (§113), so a series
  * filtered to «Ciorne» is the line of its draft dates, and «Viitoare» folds only the dates still
@@ -239,7 +243,8 @@ export function sortEventLines<T>(
 
 /** What the list reads of one fetched date: the event and its translations. */
 export type ListedRow = {
-  event: ListedEvent & { id: string; type: string };
+  /** `featured` is the club's one main event (§762); a row that does not say is not it. */
+  event: ListedEvent & { id: string; type: string; featured?: boolean };
   translations: readonly ListedTranslation[];
 };
 
@@ -278,7 +283,7 @@ export function arrangeEventList<T extends ListedRow>(rows: readonly T[], query:
     const next = members.find((member) => member.event.startsAt.getTime() >= now.getTime()) ?? members[members.length - 1];
     return { key: series.key, members, next };
   });
-  return sortEventLines(
+  const ordered = sortEventLines(
     lines,
     ({ next }) => ({
       title: titleOf(next, locale),
@@ -290,4 +295,24 @@ export function arrangeEventList<T extends ListedRow>(rows: readonly T[], query:
     locale,
     now,
   );
+  return pinFeaturedLine(ordered);
+}
+
+/** Whether a line holds the club's main event — any of its dates the list still shows (§762). */
+function holdsFeatured(line: ArrangedLine<ListedRow>): boolean {
+  return line.members.some((member) => member.event.featured === true);
+}
+
+/**
+ * The main event first (§762 — the owner, 2026-10-14: «și în lista asta, evenimentul principal
+ * ar trebui să apară primul»): the line that holds it stands at the top in every order, the rest
+ * keep the order they were given. A stable partition, run after the order and the filter, so a
+ * search or a state that does not match the main event never shows it, and the list's paging
+ * (a slice of this array) counts its line once, on the first page. At most one date carries the
+ * mark (the database's partial unique index), so at most one line is lifted; it is the series
+ * line when the main event is one date of a series.
+ */
+export function pinFeaturedLine<T extends ListedRow>(lines: readonly ArrangedLine<T>[]): ArrangedLine<T>[] {
+  const pinned = lines.filter((line) => holdsFeatured(line));
+  return pinned.length === 0 ? [...lines] : [...pinned, ...lines.filter((line) => !holdsFeatured(line))];
 }

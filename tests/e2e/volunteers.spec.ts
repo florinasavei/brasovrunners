@@ -6,10 +6,12 @@ import { openEditorBox } from "./support/fold";
 
 /**
  * §754 — «Voluntari» (BR-REQ-050-02, BR-REQ-060-01, BR-REQ-031-01): an Administrator defines two roles on a
- * published event, takes volunteers on its page, and a visitor who is nobody signs up for one through the
- * public form — behind the privacy notice the seed's sample text describes (`{{volunteers}}`). The Administrator
- * then sees «1 din 2» on the role, confirms the person, and downloads the list; a role that has all the people
- * it needs is no longer offered; a repeated sign-up gets the same answer.
+ * published event, takes volunteers on its page, and a visitor who is nobody offers through the public form —
+ * behind the privacy notice the seed's sample text describes (`{{volunteers}}`).
+ *
+ * §761 — «Ce ești dispus(ă) să faci»: the visitor ticks two roles; the Administrator finds the offer under
+ * «De repartizat», gives one role with one press and sees «1 din N» on it; a role with all the people it needs is
+ * no longer offered; a repeated sign-up gets the same answer; once every role is given away the page offers no form.
  *
  * The event is written straight into the database — the setup, not the subject — one per project and run, so
  * the two projects never share a row.
@@ -44,12 +46,16 @@ async function seedEvent(tag: string): Promise<{ id: string; slug: string }> {
 test.describe("§754 volunteers for a race", () => {
   test.describe.configure({ timeout: 180_000 });
 
-  test("an Administrator defines roles and takes volunteers; a visitor signs up; the Administrator sees «1 din 2», confirms and downloads", async ({ page, browser }) => {
+  test("§761 a visitor ticks two roles; the Administrator finds the offer under «De repartizat», gives one role and sees «1 din N»; a full role is no longer offered", async ({
+    page,
+    browser,
+  }) => {
     const tag = `${test.info().project.name}-${Date.now().toString(36)}`;
     const event = await seedEvent(tag);
     // One address per run: the form's hourly throttle is per address, whatever the event, and the runs share a database.
     const maria = `maria.${tag}@example.test`;
     const ion = `ion.${tag}@example.test`;
+    const dana = `dana.${tag}@example.test`;
 
     // --- The Administrator: two roles, then «Primește voluntari» ------------------------------
     await signIn(page, "Dev Administrator");
@@ -58,6 +64,9 @@ test.describe("§754 volunteers for a race", () => {
     const card = page.getByTestId("event-volunteers");
     await expect(card).toBeVisible();
     await expect(card.locator("summary").first()).toContainText("Voluntari");
+    // A role's group by its own heading — a person's chips and the role select name the other roles too — found by
+    // its text, so a folded card (nobody waiting) still answers.
+    const group = (name: string) => page.getByTestId("volunteer-group").filter({ has: page.locator("h3").getByText(name, { exact: true }) });
 
     async function addRole(nameRo: string, nameEn: string, needed: string) {
       await openEditorBox(page, "Adaugă un rol");
@@ -103,22 +112,29 @@ test.describe("§754 volunteers for a race", () => {
     const visitor = await browser.newContext({ baseURL: test.info().project.use.baseURL, viewport: test.info().project.use.viewport ?? undefined });
     try {
       const guest = await visitor.newPage();
-      await guest.goto(`/ro/evenimente/${event.slug}`);
-      await hydrated(guest);
+      const openBox = async () => {
+        await guest.goto(`/ro/evenimente/${event.slug}`);
+        await hydrated(guest);
+        await guest.getByTestId("volunteer-box").getByRole("heading", { name: "Vreau să fiu voluntar" }).click();
+      };
+      await openBox();
       const box = guest.getByTestId("volunteer-box");
-      await expect(box).toBeVisible();
-      await box.getByRole("heading", { name: "Vreau să fiu voluntar" }).click();
-      // The roles that still need people, with how many.
-      await expect(guest.getByTestId("volunteer-roles")).toContainText("Punct de apă");
-      await expect(guest.getByTestId("volunteer-roles")).toContainText("mai sunt necesare 2 persoane");
-      await expect(guest.getByTestId("volunteer-roles")).toContainText("Sosire");
-      // No horizontal scroll at the project's width; the submit is a thumb's target.
+      // «Ce ești dispus(ă) să faci»: one box per role that still needs people, with what it still needs.
+      const choices = guest.getByTestId("volunteer-roles");
+      await expect(choices).toContainText("Ce ești dispus(ă) să faci");
+      await expect(choices).toContainText("mai sunt necesare 2 persoane");
+      const waterBox = choices.getByRole("checkbox", { name: "Punct de apă" });
+      const finishBox = choices.getByRole("checkbox", { name: "Sosire" });
+      await expect(waterBox).toBeVisible();
+      await expect(finishBox).toBeVisible();
+      // A row a thumb can press; no horizontal scroll at the project's width.
+      expect((await choices.locator("label").first().boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
       expect(await guest.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
       const submit = box.getByRole("button", { name: "Mă ofer voluntar", exact: true });
       expect((await submit.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
 
-      async function offer(page2: typeof guest, name: string, email: string, role: string) {
-        await page2.getByLabel("Rolul pe care îl poți prelua").selectOption({ label: role });
+      async function offer(page2: typeof guest, name: string, email: string, ticked: readonly string[]) {
+        for (const role of ticked) await page2.getByTestId("volunteer-roles").getByRole("checkbox", { name: role }).check();
         await page2.getByLabel("Numele tău").fill(name);
         await page2.getByLabel("Adresa ta de email").fill(email);
         await page2.locator('[name="phone"]').fill("712345678");
@@ -134,7 +150,7 @@ test.describe("§754 volunteers for a race", () => {
         await expect(page2.getByTestId("volunteer-done")).toContainText("Am primit oferta ta");
       }
 
-      // Refusal first: the consent tick is the person's own act, and what was typed comes back.
+      // Refusal first: no role ticked and no tick of consent — each named, and what was typed comes back.
       await guest.getByLabel("Numele tău").fill("Maria Test");
       await guest.getByLabel("Adresa ta de email").fill(maria);
       await guest.locator('[name="phone"]').fill("712345678");
@@ -144,6 +160,9 @@ test.describe("§754 volunteers for a race", () => {
       await guest.waitForTimeout(1_200);
       await submit.click();
       await expect(guest.getByTestId("volunteer-invalid")).toBeVisible({ timeout: 30_000 });
+      // «Bifează cel puțin un rol», in the summary and at the group itself.
+      await expect(guest.getByTestId("volunteer-invalid")).toContainText("Bifează cel puțin un rol");
+      await expect(guest.getByTestId("volunteer-roles-error")).toContainText("Bifează cel puțin un rol");
       await expect(guest.getByTestId("volunteer-invalid")).toContainText("Bifează căsuța de acord");
       // The sentence is said at the box too (CheckboxField, §616), and the notice opens in a new tab (LegalLink, §197).
       await expect(guest.getByTestId("volunteer-consent").getByTestId("checkbox-error")).toContainText("Bifează căsuța de acord");
@@ -160,20 +179,24 @@ test.describe("§754 volunteers for a race", () => {
       await expect(guest.getByLabel("Numele tău")).toHaveValue("Maria Test");
       await expect(guest.getByLabel("Adresa ta de email")).toHaveValue(maria);
 
-      await offer(guest, "Maria Test", maria, "Punct de apă");
+      // She would do both.
+      await offer(guest, "Maria Test", maria, ["Punct de apă", "Sosire"]);
 
-      // --- The Administrator: «1 din 2», the person, confirm, the file ------------------------
+      // --- The Administrator: «De repartizat», one press, «1 din 1» ----------------------------
       await page.goto(`/ro/admin/events/${event.id}`);
       await hydrated(page);
-      // Somebody is waiting for an answer: the card opens by itself, and its closed line counts them.
+      // Somebody waits for a role and an answer: the card opens by itself, and its closed line counts them.
       await expect(card.locator("xpath=self::details")).toHaveAttribute("open", "");
-      await expect(card.locator("summary").first()).toContainText("1 din 3");
+      await expect(card.locator("summary").first()).toContainText("0 din 3");
+      await expect(card.locator("summary").first()).toContainText("1 de repartizat");
       await expect(card.locator("summary").first()).toContainText("1 de confirmat");
-      const group = page.locator('[data-testid="volunteer-group"]', { hasText: "Punct de apă" });
-      await expect(group.getByTestId("volunteer-role-standing")).toHaveText("1 din 2");
-      const row = group.getByTestId("volunteer-row");
+      const unassigned = page.getByTestId("volunteer-unassigned");
+      await expect(unassigned).toContainText("De repartizat");
+      const row = unassigned.getByTestId("volunteer-row");
       await expect(row.getByTestId("volunteer-name")).toHaveText("Maria Test");
       await expect(row.getByTestId("volunteer-state")).toHaveText("Înscris");
+      // What she would do, as chips — words, never the colour alone.
+      await expect(row.getByTestId("volunteer-choice")).toHaveText(["Punct de apă", "Sosire"]);
       await expect(row.getByTestId("volunteer-email")).toHaveText(maria);
       await expect(row.getByTestId("volunteer-phone")).toContainText("712 345 678");
       await expect(row).toContainText("Sunt liber toată ziua");
@@ -184,42 +207,80 @@ test.describe("§754 volunteers for a race", () => {
       const accepted = await page.request.get(`/api/admin/events/${event.id}/volunteers/${await row.getAttribute("data-volunteer-id")}/agreement`);
       expect(accepted.status()).toBe(200);
       expect(accepted.headers()["content-type"]).toBe("application/pdf");
-      await row.getByRole("button", { name: /^Confirmă/ }).click();
+      // Nobody was given a role yet: each role still counts nobody.
+      await expect(group("Sosire").getByTestId("volunteer-role-standing")).toHaveText("0 din 1");
+
+      const give = row.getByRole("button", { name: /^Dă-i rolul Sosire/ });
+      // The press says how the role stands before it fills it.
+      await expect(give).toContainText("Sosire · 0 din 1");
+      expect((await give.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+      // She ticked both of the event's roles: each has its own button, and «Alt rol», which offers only the others, is not drawn.
+      await expect(row.getByTestId("volunteer-assign-form")).toHaveCount(2);
+      await expect(row.getByTestId("volunteer-assign-other")).toHaveCount(0);
+      await give.click();
       await page.waitForURL(/#box-volunteers$/);
       await hydrated(page);
-      await expect(page.locator('[data-testid="volunteer-group"]', { hasText: "Punct de apă" }).getByTestId("volunteer-state")).toHaveText("Confirmat");
-      await expect(page.locator('[data-testid="volunteer-group"]', { hasText: "Punct de apă" }).getByTestId("volunteer-role-standing")).toHaveText("1 din 2");
+      // «Sosire» has its one: «1 din 1», Maria in its group, nobody left to place.
+      const finishGroup = group("Sosire");
+      await expect(finishGroup.getByTestId("volunteer-role-standing")).toHaveText("1 din 1");
+      await expect(finishGroup.getByTestId("volunteer-name")).toHaveText("Maria Test");
+      await expect(page.getByTestId("volunteer-unassigned").getByTestId("volunteer-row")).toHaveCount(0);
+      await expect(card.locator("summary").first()).toContainText("1 din 3");
+      // Her choices stay what she offered.
+      await expect(finishGroup.getByTestId("volunteer-choice")).toHaveText(["Punct de apă", "Sosire"]);
+      // Placed: no press on her row moves her by mistake — a change of role is «Modifică» → «Rolul dat».
+      await expect(finishGroup.getByTestId("volunteer-assign")).toHaveCount(0);
+      // The one short email that names the role is queued for her.
+      const client = new pg.Client({ connectionString: databaseUrl() });
+      await client.connect();
+      try {
+        const queued = await client.query(`SELECT recipient_email FROM email_outbox WHERE message_type = 'VOLUNTEER_ROLE_ASSIGNED' AND payload_json->>'eventId' = $1`, [event.id]);
+        expect(queued.rows).toEqual([{ recipient_email: maria }]);
+      } finally {
+        await client.end();
+      }
+      // A fresh load first: the address already ends in the card's anchor, so the press's own redirect is what is waited for.
+      await page.goto(`/ro/admin/events/${event.id}`);
+      await hydrated(page);
+      await group("Sosire").getByRole("button", { name: /^Confirmă/ }).click();
+      await page.waitForURL(/#box-volunteers$/);
+      await hydrated(page);
+      await expect(group("Sosire").getByTestId("volunteer-state")).toHaveText("Confirmat");
 
-      // The file: the whole list, for whoever may read it, with the address in it.
+      // The file: the whole list, for whoever may read it, with the role given and the roles offered.
       const csv = await page.request.get(`/api/admin/events/${event.id}/volunteers?lang=ro`);
       expect(csv.status()).toBe(200);
       expect(csv.headers()["content-type"]).toContain("text/csv");
-      expect(await csv.text()).toContain(maria);
+      const file = await csv.text();
+      expect(file).toContain("Rolul dat,S-a oferit pentru,Nume");
+      expect(file).toContain(`Sosire,"Punct de apă, Sosire",Maria Test`);
+      expect(file).toContain(maria);
 
       // --- A role with all its people is no longer offered; a repeat gets the same answer -------
-      await guest.goto(`/ro/evenimente/${event.slug}`);
-      await hydrated(guest);
-      await guest.getByTestId("volunteer-box").getByRole("heading", { name: "Vreau să fiu voluntar" }).click();
-      await guest.getByTestId("volunteer-box").getByLabel("Rolul pe care îl poți prelua").selectOption({ label: "Sosire" });
-      await offer(guest, "Ion Test", ion, "Sosire");
-      await guest.goto(`/ro/evenimente/${event.slug}`);
-      await hydrated(guest);
-      await guest.getByTestId("volunteer-box").getByRole("heading", { name: "Vreau să fiu voluntar" }).click();
-      await expect(guest.getByTestId("volunteer-roles")).toContainText("Punct de apă");
-      await expect(guest.getByTestId("volunteer-roles")).not.toContainText("Sosire");
-      // Maria again, for the role that still needs people: the same «am primit», and one row still.
-      await offer(guest, "Maria Din Nou", maria.replace("maria", "Maria").replace("@example", "@Example"), "Punct de apă");
+      await openBox();
+      await expect(guest.getByTestId("volunteer-roles").getByRole("checkbox", { name: "Punct de apă" })).toBeVisible();
+      await expect(guest.getByTestId("volunteer-roles").getByRole("checkbox", { name: "Sosire" })).toHaveCount(0);
+      await offer(guest, "Ion Test", ion, ["Punct de apă"]);
+      // Maria again: the same «am primit», and one row still.
+      await openBox();
+      await offer(guest, "Maria Din Nou", maria.replace("maria", "Maria").replace("@example", "@Example"), ["Punct de apă"]);
+      await openBox();
+      await offer(guest, "Dana Test", dana, ["Punct de apă"]);
       await page.goto(`/ro/admin/events/${event.id}`);
       await hydrated(page);
-      await expect(page.getByTestId("volunteer-row")).toHaveCount(2);
-      await expect(page.getByTestId("volunteer-name")).toHaveText(["Maria Test", "Ion Test"]);
+      await expect(page.getByTestId("volunteer-row")).toHaveCount(3);
+      await expect(page.getByTestId("volunteer-unassigned").getByTestId("volunteer-name")).toHaveText(["Ion Test", "Dana Test"]);
 
-      // The very last place: the person who takes it is still thanked in the box, and then the page offers no form.
-      await guest.goto(`/ro/evenimente/${event.slug}`);
-      await hydrated(guest);
-      await guest.getByTestId("volunteer-box").getByRole("heading", { name: "Vreau să fiu voluntar" }).click();
-      await offer(guest, "Dana Test", `dana.${tag}@example.test`, "Punct de apă");
-      await expect(guest.getByTestId("volunteer-form")).toHaveCount(0);
+      // The organizers give «Punct de apă» to both: «2 din 2», and the page offers no form any more.
+      for (const name of ["Ion Test", "Dana Test"]) {
+        await page.goto(`/ro/admin/events/${event.id}`);
+        await hydrated(page);
+        await page.locator('[data-testid="volunteer-unassigned"] [data-testid="volunteer-row"]', { hasText: name }).getByRole("button", { name: /^Dă-i rolul Punct de apă/ }).click();
+        await page.waitForURL(/#box-volunteers$/);
+        await hydrated(page);
+      }
+      await expect(group("Punct de apă").getByTestId("volunteer-role-standing")).toHaveText("2 din 2");
+      await expect(card.locator("summary").first()).toContainText("3 din 3");
       await guest.goto(`/ro/evenimente/${event.slug}`);
       await hydrated(guest);
       await expect(guest.getByTestId("volunteer-box")).toHaveCount(0);
@@ -243,12 +304,15 @@ test.describe("§754 volunteers for a race", () => {
     await page.waitForURL(/#box-volunteers$/);
     await hydrated(page);
 
-    async function addByHand(name: string, email: string) {
+    /** A person entered by hand (§761): the role ticked as what they would do and, when `give`, given too. */
+    async function addByHand(name: string, email: string, give: boolean) {
       // A fresh load each time: the card's folds as a person finds them after the previous press.
       await page.goto(`/ro/admin/events/${event.id}`);
       await hydrated(page);
       await openEditorBox(page, "Adaugă un voluntar de mână");
       const add = page.getByTestId("volunteer-add");
+      await add.getByRole("checkbox", { name: "Punct de apă" }).check();
+      if (give) await add.getByLabel("Rolul dat").selectOption({ label: "Punct de apă" });
       await add.getByRole("textbox", { name: "Nume", exact: true }).fill(name);
       await add.getByRole("textbox", { name: "Adresa de email", exact: true }).fill(email);
       await add.getByRole("textbox", { name: "Telefon", exact: true }).fill("0712 345 678");
@@ -256,12 +320,16 @@ test.describe("§754 volunteers for a race", () => {
       await page.waitForURL(/#box-volunteers$/);
       await hydrated(page);
     }
-    await addByHand("Ion Link", `ion.${tag}@example.test`);
-    await addByHand("Dana Hartie", `dana.${tag}@example.test`);
+    await addByHand("Ion Link", `ion.${tag}@example.test`, true);
+    await addByHand("Dana Hartie", `dana.${tag}@example.test`, false);
+    const group = (name: string) => page.getByTestId("volunteer-group").filter({ has: page.locator("h3").getByText(name, { exact: true }) });
     const ionRow = page.locator('[data-testid="volunteer-row"]', { hasText: "Ion Link" });
     const danaRow = page.locator('[data-testid="volunteer-row"]', { hasText: "Dana Hartie" });
     await expect(ionRow.getByTestId("volunteer-agreement-state")).toHaveText("Contract neacceptat încă");
     await expect(danaRow.getByTestId("volunteer-agreement-state")).toHaveText("Contract neacceptat încă");
+    // Ion was given the role; Dana only offered it, and waits under «De repartizat».
+    await expect(group("Punct de apă").getByTestId("volunteer-name")).toHaveText(["Ion Link"]);
+    await expect(page.getByTestId("volunteer-unassigned").getByTestId("volunteer-name")).toHaveText(["Dana Hartie"]);
 
     // «Trimite linkul contractului»: one email queued, the card says so, the row says a link was sent.
     const send = ionRow.getByRole("button", { name: /^Trimite linkul contractului/ });
@@ -296,7 +364,7 @@ test.describe("§754 volunteers for a race", () => {
         await hydrated(ion);
         await expect(ion.getByRole("heading", { level: 1 })).toHaveText("Contractul de voluntariat");
         await expect(ion.getByTestId("volunteer-agreement-text")).toContainText("Voluntarul este Ion Link.");
-        await expect(ion.getByTestId("volunteer-agreement-text")).toContainText("în rolul Punct de apă");
+        await expect(ion.getByTestId("volunteer-agreement-text")).toContainText("Voluntarul are rolul Punct de apă.");
         // Opening the page wrote nothing: the link is still unspent.
         const unspent = await client.query(`SELECT agreement_accepted_at FROM event_volunteers WHERE id = $1`, [ionId]);
         expect(unspent.rows[0].agreement_accepted_at).toBeNull();

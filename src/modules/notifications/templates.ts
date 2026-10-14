@@ -1014,8 +1014,15 @@ export type TemplateData = {
    */
   volunteer?: {
     name: string;
-    roleRo: string;
-    roleEn: string;
+    /** The role the organizers gave the person, in each language — or null while nobody has (§761). */
+    roleRo: string | null;
+    roleEn: string | null;
+    /** What the given role asks, in each language, when the club wrote it (the role-given message says it). */
+    roleDescriptionRo?: string | null;
+    roleDescriptionEn?: string | null;
+    /** The roles the person said they would do (§761), in the club's order, in each language. */
+    chosenRo: string[];
+    chosenEn: string[];
     /** The volunteer agreement's PDF rides along (§758): the person accepted it, and their copy is attached. */
     agreementAttached?: boolean;
   };
@@ -1314,14 +1321,30 @@ function eventFacts(d: TemplateData, labels: { map: string; strava: string }) {
 }
 
 /**
- * The bold line of a volunteer's acknowledgement (§754): the role first — a fact of this sign-up, kept
- * whoever wrote the message's words — then the event's start and place, with the event's own links.
+ * The bold line of a volunteer's messages (§754): the role first — a fact of this person, kept whoever wrote the
+ * message's words — then the event's start and place, with the event's own links. The role is the one the
+ * organizers gave; while nobody has, the roles the person offered for (§761): «Te-ai oferit pentru: Masă, Traseu».
  */
 function volunteerFacts(locale: EmailLocale, d: TemplateData, labels: { map: string; strava: string }) {
   const role = locale === "ro" ? d.volunteer?.roleRo : d.volunteer?.roleEn;
+  const chosen = (locale === "ro" ? d.volunteer?.chosenRo : d.volunteer?.chosenEn) ?? [];
   const event = eventFacts(d, labels);
-  const line = [role ? `${locale === "ro" ? "Rol" : "Role"}: ${role}` : undefined, event?.line].filter(Boolean).join(" · ");
+  const roleLine = role
+    ? `${locale === "ro" ? "Rol" : "Role"}: ${role}`
+    : chosen.length > 0
+      ? `${locale === "ro" ? "Te-ai oferit pentru" : "You offered for"}: ${chosen.join(", ")}`
+      : undefined;
+  const line = [roleLine, event?.line].filter(Boolean).join(" · ");
   return line ? { line, links: event?.links ?? [] } : undefined;
+}
+
+/** The organizers' line about a volunteer (§754): the name and the roles the person offered for (§761). */
+function volunteerClubLine(d: TemplateData, locale: EmailLocale): string | undefined {
+  if (!d.volunteer) return undefined;
+  const chosen = locale === "ro" ? d.volunteer.chosenRo : d.volunteer.chosenEn;
+  const role = locale === "ro" ? d.volunteer.roleRo : d.volunteer.roleEn;
+  const words = chosen.length > 0 ? chosen.join(", ") : (role ?? "");
+  return words ? `${d.volunteer.name} — ${words}` : d.volunteer.name;
 }
 
 /**
@@ -1778,8 +1801,8 @@ const T = {
       subject: (d: TemplateData) => `Ți-am primit oferta de voluntar pentru ${d.eventTitle ?? "eveniment"}`,
       facts: (d: TemplateData) => volunteerFacts("ro", d, { map: "Harta punctului de întâlnire", strava: "Evenimentul pe Strava" }),
       body: (d: TemplateData) => [
-        `Mulțumim! Am primit oferta ta de a ajuta ca voluntar la ${d.eventTitle ?? "eveniment"}; rolul ales e scris mai sus, lângă data și locul.`,
-        "Un organizator o confirmă și te caută pe email sau la telefon dacă mai trebuie ceva. Până atunci nu ai nimic de făcut: oferta nu e o înscriere la cursă și nu ține loc.",
+        `Mulțumim! Am primit oferta ta de a ajuta ca voluntar la ${d.eventTitle ?? "eveniment"}; ce ești dispus(ă) să faci e scris mai sus, lângă data și locul.`,
+        "Organizatorii îți aleg rolul, îți scriu când ți l-au dat și te caută pe email sau la telefon dacă mai trebuie ceva. Până atunci nu ai nimic de făcut: oferta nu e o înscriere la cursă și nu ține loc.",
         // The agreement accepted with the offer (§758): the person's copy, attached — said only when it is.
         ...(d.volunteer?.agreementAttached ? ["Contractul de voluntariat pe care l-ai acceptat e atașat, ca PDF. Păstrează-l: e copia ta."] : []),
         `Dacă nu tu ai trimis oferta, scrie-ne din pagina de contact și o ștergem; altfel rămâne la organizatori cel mult ${volunteerDays("ro")} de la începutul evenimentului sau de la trimiterea ofertei, dacă e mai târziu.`,
@@ -1791,7 +1814,7 @@ const T = {
       subject: (d: TemplateData) => `Contractul de voluntariat pentru ${d.eventTitle ?? "eveniment"}`,
       facts: (d: TemplateData) => volunteerFacts("ro", d, { map: "Harta punctului de întâlnire", strava: "Evenimentul pe Strava" }),
       body: (d: TemplateData) => [
-        `Mulțumim că ne ajuți ca voluntar la ${d.eventTitle ?? "eveniment"}! Ești pe lista voluntarilor, în rolul scris mai sus.`,
+        `Mulțumim că ne ajuți ca voluntar la ${d.eventTitle ?? "eveniment"}! Ești pe lista voluntarilor; rolul tău, sau rolurile pentru care te-ai oferit, sunt scrise mai sus.`,
         "Înainte de eveniment, te rugăm să citești și să accepți contractul de voluntariat: spune că ajutorul e neplătit, ce face voluntarul și ce face clubul. Îl deschizi cu butonul de mai jos.",
         `Linkul este valabil **${d.linkLifetime ?? defaultLinkLifetime("ro")}** și doar pentru tine. Dacă preferi hârtia, îl poți semna și la organizatori.`,
       ],
@@ -1811,12 +1834,25 @@ const T = {
     volunteerClubNotice: {
       subject: (d: TemplateData) => `Voluntar nou la ${d.eventTitle ?? "eveniment"}`,
       greeting: () => "Salut,",
-      facts: (d: TemplateData) => (d.volunteer ? { line: `${d.volunteer.name} — ${d.volunteer.roleRo}`, links: [] } : undefined),
+      facts: (d: TemplateData) => {
+        const line = volunteerClubLine(d, "ro");
+        return line ? { line, links: [] } : undefined;
+      },
       body: (d: TemplateData) => [
-        `O persoană s-a oferit voluntar la ${d.eventTitle ?? "eveniment"}; numele ei și rolul ales sunt scrise mai sus.`,
-        "Oferta are starea «Înscris»: o confirmi sau o anulezi din cardul «Voluntari» al evenimentului (butonul de mai jos). Adresa și telefonul sunt acolo, nu aici.",
+        `O persoană s-a oferit voluntar la ${d.eventTitle ?? "eveniment"}; numele ei și rolurile pentru care s-a oferit sunt scrise mai sus.`,
+        "Oferta are starea «Înscris» și încă niciun rol: îi dai unul, o confirmi sau o anulezi din cardul «Voluntari» al evenimentului (butonul de mai jos). Adresa și telefonul sunt acolo, nu aici.",
       ],
       action: "Deschide «Voluntari»",
+    },
+    // The role the organizers gave a volunteer (§761): one short message naming it — nothing to press.
+    volunteerRoleAssigned: {
+      subject: (d: TemplateData) => `Rolul tău de voluntar la ${d.eventTitle ?? "eveniment"}`,
+      facts: (d: TemplateData) => volunteerFacts("ro", d, { map: "Harta punctului de întâlnire", strava: "Evenimentul pe Strava" }),
+      body: (d: TemplateData) => [
+        `Mulțumim că ne ajuți! Organizatorii ți-au dat un rol la ${d.eventTitle ?? "eveniment"}: ${d.volunteer?.roleRo ?? "cel scris mai sus"}. Data și locul sunt scrise mai sus.`,
+        ...(d.volunteer?.roleDescriptionRo ? [`Ce presupune rolul: ${d.volunteer.roleDescriptionRo}`] : []),
+        "Ora de întâlnire și ce mai e de știut le afli de la organizatori, înainte de eveniment. Dacă nu mai poți veni, scrie-ne din pagina de contact.",
+      ],
     },
     registrationOpened: {
       // To an address, not a participant (§146): the greeting names nobody.
@@ -2532,8 +2568,8 @@ const T = {
       subject: (d: TemplateData) => `We received your offer to volunteer for ${d.eventTitle ?? "the event"}`,
       facts: (d: TemplateData) => volunteerFacts("en", d, { map: "Map of the meeting point", strava: "The event on Strava" }),
       body: (d: TemplateData) => [
-        `Thank you! We received your offer to help as a volunteer at ${d.eventTitle ?? "the event"}; the role you chose is written above, with the date and place.`,
-        "An organizer will confirm it and get in touch by email or phone if anything else is needed. Until then there is nothing for you to do: the offer is not a race registration and holds no place.",
+        `Thank you! We received your offer to help as a volunteer at ${d.eventTitle ?? "the event"}; what you are willing to do is written above, with the date and place.`,
+        "The organizers choose your role, write to you when they have given it, and get in touch by email or phone if anything else is needed. Until then there is nothing for you to do: the offer is not a race registration and holds no place.",
         ...(d.volunteer?.agreementAttached ? ["The volunteer agreement you accepted is attached as a PDF. Keep it: it is your copy."] : []),
         `If you did not send the offer, write to us from the contact page and we will delete it; otherwise the organizers keep it at most ${volunteerDays("en")} from the event's start or from the offer, whichever is later.`,
       ],
@@ -2542,7 +2578,7 @@ const T = {
       subject: (d: TemplateData) => `The volunteer agreement for ${d.eventTitle ?? "the event"}`,
       facts: (d: TemplateData) => volunteerFacts("en", d, { map: "Map of the meeting point", strava: "The event on Strava" }),
       body: (d: TemplateData) => [
-        `Thank you for helping as a volunteer at ${d.eventTitle ?? "the event"}! You are on the volunteers' list, in the role written above.`,
+        `Thank you for helping as a volunteer at ${d.eventTitle ?? "the event"}! You are on the volunteers' list; your role, or the roles you offered for, are written above.`,
         "Before the event, please read and accept the volunteer agreement: it says the help is unpaid, what the volunteer does and what the club does. Open it with the button below.",
         `The link is valid for **${d.linkLifetime ?? defaultLinkLifetime("en")}** and only for you. If you prefer paper, you can also sign it with the organizers.`,
       ],
@@ -2560,12 +2596,24 @@ const T = {
     volunteerClubNotice: {
       subject: (d: TemplateData) => `New volunteer for ${d.eventTitle ?? "the event"}`,
       greeting: () => "Hello,",
-      facts: (d: TemplateData) => (d.volunteer ? { line: `${d.volunteer.name} — ${d.volunteer.roleEn}`, links: [] } : undefined),
+      facts: (d: TemplateData) => {
+        const line = volunteerClubLine(d, "en");
+        return line ? { line, links: [] } : undefined;
+      },
       body: (d: TemplateData) => [
-        `Someone offered to volunteer at ${d.eventTitle ?? "the event"}; their name and the role they chose are written above.`,
-        "The offer's state is «Registered»: confirm or cancel it on the event's «Volunteers» card (the button below). The address and the telephone number are there, not here.",
+        `Someone offered to volunteer at ${d.eventTitle ?? "the event"}; their name and the roles they offered for are written above.`,
+        "The offer's state is «Registered» and it has no role yet: give it one, confirm or cancel it on the event's «Volunteers» card (the button below). The address and the telephone number are there, not here.",
       ],
       action: "Open «Volunteers»",
+    },
+    volunteerRoleAssigned: {
+      subject: (d: TemplateData) => `Your volunteer role at ${d.eventTitle ?? "the event"}`,
+      facts: (d: TemplateData) => volunteerFacts("en", d, { map: "Map of the meeting point", strava: "The event on Strava" }),
+      body: (d: TemplateData) => [
+        `Thank you for helping! The organizers have given you a role at ${d.eventTitle ?? "the event"}: ${d.volunteer?.roleEn ?? "the one written above"}. The date and place are written above.`,
+        ...(d.volunteer?.roleDescriptionEn ? [`What the role involves: ${d.volunteer.roleDescriptionEn}`] : []),
+        "The meeting time and anything else you need to know come from the organizers, before the event. If you can no longer come, write to us from the contact page.",
+      ],
     },
     registrationOpened: {
       subject: (d: TemplateData) => `Registration for ${d.eventTitle ?? "the event"} is open`,
@@ -2983,6 +3031,7 @@ const KEY_BY_MESSAGE_TYPE: Record<EmailMessageType, keyof typeof T.ro> = {
   VOLUNTEER_CLUB_NOTICE: "volunteerClubNotice",
   VOLUNTEER_AGREEMENT_REQUEST: "volunteerAgreementRequest",
   VOLUNTEER_AGREEMENT_ACCEPTED: "volunteerAgreementAccepted",
+  VOLUNTEER_ROLE_ASSIGNED: "volunteerRoleAssigned",
 };
 
 /** The newsletter's three messages (§445): to an address, never about a registration. */
@@ -3665,7 +3714,7 @@ export function buildTemplateContent(
                 ? copy.privacyFooterInvitation
               : messageType === "VOLUNTEER_RECEIVED"
                 ? copy.privacyFooterVolunteer
-              : messageType === "VOLUNTEER_AGREEMENT_REQUEST" || messageType === "VOLUNTEER_AGREEMENT_ACCEPTED"
+              : messageType === "VOLUNTEER_AGREEMENT_REQUEST" || messageType === "VOLUNTEER_AGREEMENT_ACCEPTED" || messageType === "VOLUNTEER_ROLE_ASSIGNED"
                 ? copy.privacyFooterVolunteerAgreement
               : NEWSLETTER_MESSAGES.has(messageType)
                 ? copy.privacyFooterNewsletter

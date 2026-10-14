@@ -1,6 +1,6 @@
 import { and, eq, isNull, ne } from "drizzle-orm";
 import { z } from "zod";
-import { eventVolunteerRoles, eventVolunteers, type VolunteerAgreementMethod } from "@/db/schema/event-volunteers";
+import { eventVolunteerRoleChoices, eventVolunteerRoles, eventVolunteers, type VolunteerAgreementMethod } from "@/db/schema/event-volunteers";
 import type { StaffUser } from "@/db/schema/staff-users";
 import type { Database, Transaction } from "@/db/types";
 import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
@@ -9,7 +9,7 @@ import { generateTokenSecret, hashTokenSecret, isWellFormedTokenSecret } from "@
 import { recordAuditEvent } from "@/modules/audit/repository";
 import { isLegalDocumentBody, type LegalDocumentBody } from "@/modules/legal-documents/domain/content-hash";
 import { VOLUNTEER_AGREEMENT_KEY } from "@/modules/legal-documents/domain/keys";
-import { MINIMUM_AGE_MERGE_FIELD, mergeFieldsIn, minimumAgeMergeValue, type MergeValues } from "@/modules/legal-documents/domain/merge-fields";
+import { MINIMUM_AGE_MERGE_FIELD, mergeFieldsIn, minimumAgeMergeValue, namesVolunteerRoleChoices, type MergeValues } from "@/modules/legal-documents/domain/merge-fields";
 import { signedTextHash } from "@/modules/legal-documents/domain/signed-text";
 import { findCurrentApprovedDocument, noticeDescribesVolunteerAgreement, volunteerAgreementInForce } from "@/modules/legal-documents/repository";
 import { DEFAULT_TOKEN_HOURS } from "@/modules/notifications/domain/token-lifetime";
@@ -19,7 +19,16 @@ import { eventMergeValues } from "@/modules/registrations/signed-declaration";
 import { canManageVolunteers } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
 import { isUuid } from "@/shared/ids";
-import { refusedFields, VOLUNTEER_MINIMUM_AGE, volunteerAgreementAcceptSchema } from "./domain/volunteer";
+import {
+  agreementRolesStamp,
+  agreementRoleWords,
+  compareRoles,
+  refusedFields,
+  type RoleWords,
+  tasksWords,
+  VOLUNTEER_MINIMUM_AGE,
+  volunteerAgreementAcceptSchema,
+} from "./domain/volunteer";
 
 /**
  * The volunteer agreement (§758, amending §754; the owner, 2026-10-13: «trebuie să avem și un document gen
@@ -55,11 +64,16 @@ function assertMayManage(actor: Actor): void {
 // The blanks
 // ---------------------------------------------------------------------------------------------
 
-/** The agreement's blanks as one acceptance fills them: the person, the role, the event, the age and the moment. */
+/**
+ * The agreement's blanks as one acceptance fills them: the person, the role given or the roles chosen (§761), the
+ * event, the age and the moment.
+ */
 export const AGREEMENT_FACT_FIELDS = [
   "volunteer",
   "volunteerRole",
   "volunteerTasks",
+  "volunteerRoleChoices",
+  "volunteerChoiceTasks",
   "event",
   "eventDate",
   "eventLocation",
@@ -69,7 +83,15 @@ export const AGREEMENT_FACT_FIELDS = [
 
 export type AgreementFacts = Record<(typeof AGREEMENT_FACT_FIELDS)[number], string>;
 
-const agreementFactsSchema = z.object(Object.fromEntries(AGREEMENT_FACT_FIELDS.map((field) => [field, z.string()])) as Record<(typeof AGREEMENT_FACT_FIELDS)[number], z.ZodString>);
+/** The blanks added after acceptances were already kept (§761): a row accepted before reads them as "" — its text named neither. */
+const LATER_FACT_FIELDS: ReadonlySet<string> = new Set(["volunteerRoleChoices", "volunteerChoiceTasks"]);
+
+const agreementFactsSchema = z.object(
+  Object.fromEntries(AGREEMENT_FACT_FIELDS.map((field) => [field, LATER_FACT_FIELDS.has(field) ? z.string().default("") : z.string()])) as Record<
+    (typeof AGREEMENT_FACT_FIELDS)[number],
+    z.ZodString
+  >,
+);
 
 /** The row's `agreement_facts`, or null for a row with none (not accepted) or one nobody could read. */
 export function readAgreementFacts(value: unknown): AgreementFacts | null {
@@ -78,37 +100,63 @@ export function readAgreementFacts(value: unknown): AgreementFacts | null {
 }
 
 /** A role as the agreement names it: its words in both languages. */
-export type AgreementRole = { nameRo: string; nameEn: string; descriptionRo: string | null; descriptionEn: string | null };
+export type AgreementRole = RoleWords;
+
+/** The roles one person's agreement names: the one the organizers gave them, or null, and the ones they chose. */
+export type AgreementRoles = { assigned: (RoleWords & { id: string }) | null; chosen: (RoleWords & { id: string })[] };
+
+export { tasksWords };
 
 /**
- * A role's description as the agreement's sentence takes it: «Ce presupune rolul: {{volunteerTasks}}.» ends with
- * its own full stop, so the club's text — typed in the editor as a sentence, often with one — loses one closing
- * mark (after its spaces), never «…kilometrul 5..». The facts are frozen at acceptance, so this happens before
- * they are written. A text that is only punctuation reads as none, and its sentence is left out.
+ * One volunteer's roles as the agreement names them (§761): the role given (`event_volunteers.role_id`) and the
+ * roles chosen (`event_volunteer_role_choices`), in the club's order — read in the caller's transaction.
  */
-export function tasksWords(description: string): string {
-  return description.trim().replace(/[.!?…;]$/u, "").trimEnd();
+export async function volunteerRoles<T extends Record<string, unknown>>(
+  db: Database<T>,
+  volunteer: { id: string; roleId: string | null },
+): Promise<AgreementRoles> {
+  const columns = {
+    id: eventVolunteerRoles.id,
+    nameRo: eventVolunteerRoles.nameRo,
+    nameEn: eventVolunteerRoles.nameEn,
+    descriptionRo: eventVolunteerRoles.descriptionRo,
+    descriptionEn: eventVolunteerRoles.descriptionEn,
+    position: eventVolunteerRoles.position,
+    createdAt: eventVolunteerRoles.createdAt,
+  };
+  const chosen = await db
+    .select(columns)
+    .from(eventVolunteerRoleChoices)
+    .innerJoin(eventVolunteerRoles, eq(eventVolunteerRoles.id, eventVolunteerRoleChoices.roleId))
+    .where(eq(eventVolunteerRoleChoices.volunteerId, volunteer.id));
+  const [assigned] = volunteer.roleId ? await db.select(columns).from(eventVolunteerRoles).where(eq(eventVolunteerRoles.id, volunteer.roleId)).limit(1) : [];
+  const words = ({ id, nameRo, nameEn, descriptionRo, descriptionEn }: (typeof chosen)[number]) => ({ id, nameRo, nameEn, descriptionRo, descriptionEn });
+  return { assigned: assigned ? words(assigned) : null, chosen: chosen.sort(compareRoles).map(words) };
 }
 
 /**
- * The agreement's blanks for one person, one role and one event, in one language — everything but the moment
+ * The agreement's blanks for one person, their roles and one event, in one language — everything but the moment
  * of acceptance. The event's facts as a race's declaration fills them (`eventMergeValues`: its title, its date
  * in words, its place — the city while the place is to be announced, §328); the age is the platform's
- * (`VOLUNTEER_MINIMUM_AGE`), never the event's; a role with no description in this language answers
- * `{{volunteerTasks}}` with "", which leaves its sentence out. The values are the facts alone, so the text a
- * person reads before accepting, the fingerprint and the PDF are filled from one set and cannot differ.
+ * (`VOLUNTEER_MINIMUM_AGE`), never the event's; the role is the one given, else the roles chosen — in their own
+ * sentence when the text read (`body`) names `{{volunteerRoleChoices}}`, else their names alone in the role's blank
+ * (`agreementRoleWords`, §761); no description in this language answers its tasks' field with "", which leaves its
+ * sentence out. The values are the facts alone, so the text a person reads before accepting, the fingerprint
+ * and the PDF are filled from one set and cannot differ.
  */
 export async function agreementBlanks<T extends Record<string, unknown>>(
   db: Database<T>,
-  input: { eventId: string; name: string; role: AgreementRole; locale: Locale },
+  input: { eventId: string; name: string; roles: Pick<AgreementRoles, "assigned"> & { chosen: readonly RoleWords[] }; locale: Locale; body: unknown },
 ): Promise<{ facts: Omit<AgreementFacts, "signedAt">; timezone: string }> {
   const event = await eventMergeValues(db, input.eventId, input.locale);
-  const en = input.locale === "en";
+  const role = agreementRoleWords(input.roles, input.locale, namesVolunteerRoleChoices(input.body));
   return {
     facts: {
       volunteer: input.name,
-      volunteerRole: en ? input.role.nameEn : input.role.nameRo,
-      volunteerTasks: tasksWords((en ? input.role.descriptionEn : input.role.descriptionRo) ?? ""),
+      volunteerRole: role.role,
+      volunteerTasks: role.tasks,
+      volunteerRoleChoices: role.choices,
+      volunteerChoiceTasks: role.choiceTasks,
       event: event?.values.event ?? "",
       eventDate: event?.values.eventDate ?? "",
       eventLocation: event?.values.eventLocation ?? "",
@@ -155,7 +203,7 @@ export async function agreementAcceptance<T extends Record<string, unknown>>(
   input: {
     eventId: string;
     name: string;
-    role: AgreementRole;
+    roles: Pick<AgreementRoles, "assigned"> & { chosen: readonly RoleWords[] };
     locale: Locale;
     document: { id: string; title: string; body: unknown };
     method: VolunteerAgreementMethod;
@@ -163,7 +211,7 @@ export async function agreementAcceptance<T extends Record<string, unknown>>(
   },
   now: Date,
 ): Promise<AgreementAcceptanceColumns> {
-  const blanks = await agreementBlanks(db, input);
+  const blanks = await agreementBlanks(db, { ...input, body: input.document.body });
   const facts: AgreementFacts = { ...blanks.facts, signedAt: acceptedAtWords(now, input.locale, blanks.timezone) };
   return {
     agreementDocumentId: input.document.id,
@@ -254,22 +302,16 @@ async function liveLinkRow<T extends Record<string, unknown>>(db: Database<T>, s
   return row;
 }
 
-async function roleOf<T extends Record<string, unknown>>(db: Database<T>, roleId: string): Promise<AgreementRole | undefined> {
-  const [role] = await db
-    .select({ nameRo: eventVolunteerRoles.nameRo, nameEn: eventVolunteerRoles.nameEn, descriptionRo: eventVolunteerRoles.descriptionRo, descriptionEn: eventVolunteerRoles.descriptionEn })
-    .from(eventVolunteerRoles)
-    .where(eq(eventVolunteerRoles.id, roleId))
-    .limit(1);
-  return role;
-}
-
 export type AgreementLinkView =
   /** The link is good: the person, the role, the event, and the agreement in force in this language, filled. */
   | {
       status: "open";
       name: string;
       eventTitle: string;
-      roleName: string;
+      /** The role the organizers gave the person, in the page's language, or null while nobody has (§761). */
+      roleName: string | null;
+      /** The roles the person chose, in the page's language and the club's order: the page names them while no role is given. */
+      chosenRoleNames: string[];
       document: { id: string; version: number; effectiveAt: Date; title: string; body: unknown };
       /** The blanks as accepting now would fill them; the moment stays a blank until it happens. */
       values: MergeValues;
@@ -294,14 +336,16 @@ export async function readVolunteerAgreementLink<T extends Record<string, unknow
   if (!row) return { status: "invalid" };
   const document = await findCurrentApprovedDocument(db, VOLUNTEER_AGREEMENT_KEY, locale, now);
   if (!document) return { status: "noAgreement" };
-  const role = await roleOf(db, row.roleId);
-  if (!role) return { status: "invalid" };
-  const blanks = await agreementBlanks(db, { eventId: row.eventId, name: row.name, role, locale });
+  const roles = await volunteerRoles(db, row);
+  if (!roles.assigned && roles.chosen.length === 0) return { status: "invalid" };
+  const blanks = await agreementBlanks(db, { eventId: row.eventId, name: row.name, roles, locale, body: document.body });
+  const nameOf = (role: RoleWords) => (locale === "en" ? role.nameEn : role.nameRo);
   return {
     status: "open",
     name: row.name,
     eventTitle: blanks.facts.event,
-    roleName: blanks.facts.volunteerRole,
+    roleName: roles.assigned ? nameOf(roles.assigned) : null,
+    chosenRoleNames: roles.chosen.map(nameOf),
     document: { id: document.id, version: document.version, effectiveAt: document.effectiveAt, title: document.title, body: document.body },
     values: agreementMergeValues(blanks.facts),
   };
@@ -335,9 +379,9 @@ export async function acceptVolunteerAgreementByLink<T extends Record<string, un
     if (!row) return { outcome: "invalid" };
     const document = await findCurrentApprovedDocument(tx, VOLUNTEER_AGREEMENT_KEY, input.locale, now);
     if (!document) return { outcome: "noAgreement" };
-    const role = await roleOf(tx, row.roleId);
-    if (!role) return { outcome: "invalid" };
-    const acceptance = await agreementAcceptance(tx, { eventId: row.eventId, name: row.name, role, locale: input.locale, document, method: "LINK" }, now);
+    const roles = await volunteerRoles(tx, row);
+    if (!roles.assigned && roles.chosen.length === 0) return { outcome: "invalid" };
+    const acceptance = await agreementAcceptance(tx, { eventId: row.eventId, name: row.name, roles, locale: input.locale, document, method: "LINK" }, now);
     const [written] = await tx
       .update(eventVolunteers)
       .set({ ...acceptance, updatedAt: now })
@@ -441,8 +485,11 @@ async function assertNoticeDescribesAgreement<T extends Record<string, unknown>>
   }
 }
 
-/** What the desk printed: the version the «PDF de semnat» carried and the role it named (the card posts both). */
-export type PrintedAgreement = { documentId: string; roleId: string };
+/**
+ * What the desk printed: the version the «PDF de semnat» carried and the roles it named — the role given, or the
+ * roles chosen (`agreementRolesStamp`, §761) — the card posts both.
+ */
+export type PrintedAgreement = { documentId: string; roles: string };
 
 /**
  * «Semnat pe hârtie» (§758): the person signed the printed agreement at the desk, and an organizer records it —
@@ -470,14 +517,15 @@ export async function recordPaperVolunteerAgreement<T extends Record<string, unk
     if (row.state === "CANCELLED") throw new DomainError("CONFLICT", "a cancelled volunteer is not recorded");
     const document = await findCurrentApprovedDocument(tx, VOLUNTEER_AGREEMENT_KEY, row.locale, now);
     if (!document) throw new DomainError("VOLUNTEER_AGREEMENT_MISSING", "no volunteer agreement is in force");
-    if (document.id !== request.printed.documentId || row.roleId !== request.printed.roleId) {
-      throw new DomainError("VOLUNTEER_AGREEMENT_REPRINT", "the version in force or the role changed since the sheet was printed");
+    const roles = await volunteerRoles(tx, row);
+    const stamp = agreementRolesStamp(roles.assigned?.id ?? null, roles.chosen.map((role) => role.id));
+    if (document.id !== request.printed.documentId || stamp !== request.printed.roles) {
+      throw new DomainError("VOLUNTEER_AGREEMENT_REPRINT", "the version in force or the roles changed since the sheet was printed");
     }
-    const role = await roleOf(tx, row.roleId);
-    if (!role) throw new DomainError("NOT_FOUND", "the volunteer's role is not there");
+    if (!roles.assigned && roles.chosen.length === 0) throw new DomainError("NOT_FOUND", "the volunteer has no role");
     const acceptance = await agreementAcceptance(
       tx,
-      { eventId: row.eventId, name: row.name, role, locale: row.locale, document, method: "PAPER", recordedBy: actor.id },
+      { eventId: row.eventId, name: row.name, roles, locale: row.locale, document, method: "PAPER", recordedBy: actor.id },
       now,
     );
     await tx.update(eventVolunteers).set({ ...acceptance, updatedAt: now }).where(eq(eventVolunteers.id, row.id));

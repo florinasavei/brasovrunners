@@ -9,8 +9,15 @@ import { privacyNoticeEn, privacyNoticeRo } from "@/modules/legal-documents/temp
 import { DECLARATION_TOKENS } from "@/modules/legal-documents/templates/tokens";
 import { buildVolunteersCsv } from "@/modules/volunteers/csv";
 import {
+  acceptedRoleNames,
+  agreementRolesStamp,
+  agreementRoleWords,
+  agreementStillNamesRole,
+  choicesWithAssigned,
   compareRoles,
   countsAgainstRole,
+  openChoices,
+  VOLUNTEER_ROLES_MAX,
   refusedFields,
   someRoleNeedsPeople,
   standingOf,
@@ -70,28 +77,53 @@ describe("§754 a role as the club types it", () => {
   });
 });
 
-const staff = { roleId: ID, name: " Ana  Test ", email: " ana@example.test ", phone: "+40712345678", note: "" };
+const ID2 = "6e8b3075-4c1d-4a36-8e68-1b0b7c4b2d22";
+const staff = { roleIds: [ID], assignedRoleId: "", name: " Ana  Test ", email: " ana@example.test ", phone: "+40712345678", note: "" };
 
 describe("§754 a person, entered by hand or offering on the page", () => {
 
-  it("takes the staff's boxes: a role, a name, an address, an E.164 telephone number, an optional note", () => {
-    expect(volunteerStaffInputSchema.parse(staff)).toMatchObject({ roleId: ID, name: "Ana Test", phone: "+40712345678", note: null });
+  it("takes the staff's boxes: the roles ticked, the role given or none, a name, an address, an E.164 telephone number, an optional note", () => {
+    expect(volunteerStaffInputSchema.parse(staff)).toMatchObject({ roleIds: [ID], assignedRoleId: null, name: "Ana Test", phone: "+40712345678", note: null });
+    expect(volunteerStaffInputSchema.parse({ ...staff, assignedRoleId: ` ${ID2} ` })).toMatchObject({ roleIds: [ID], assignedRoleId: ID2 });
   });
 
   it("refuses a malformed address, a telephone number that is not E.164, a role that is no id and a blank name", () => {
-    for (const [field, value] of [
-      ["email", "not-an-address"],
-      ["phone", "0712345678"],
-      ["roleId", "abc"],
-      ["name", "   "],
+    for (const [field, value, box] of [
+      ["email", "not-an-address", "email"],
+      ["phone", "0712345678", "phone"],
+      ["roleIds", ["abc"], "roleIds"],
+      ["assignedRoleId", "abc", "assignedRoleId"],
+      ["name", "   ", "name"],
     ] as const) {
       const verdict = volunteerStaffInputSchema.safeParse({ ...staff, [field]: value });
       expect(verdict.success, field).toBe(false);
-      if (!verdict.success) expect(refusedFields(verdict.error), field).toEqual([field]);
+      if (!verdict.success) expect(refusedFields(verdict.error), field).toEqual([box]);
     }
   });
 
-  const pub = { ...staff, message: "", locale: "ro", consent: true, agreement: true, adult: true };
+  it("§761 takes a person entered by hand with roles ticked, a role given, or both — never with neither — and keeps a role given alone as the one choice", () => {
+    const neither = volunteerStaffInputSchema.safeParse({ ...staff, roleIds: [], assignedRoleId: "" });
+    expect(neither.success).toBe(false);
+    if (!neither.success) expect(refusedFields(neither.error)).toEqual(["roleIds"]);
+    const given = volunteerStaffInputSchema.parse({ ...staff, roleIds: [], assignedRoleId: ID2 });
+    expect(choicesWithAssigned(given)).toEqual([ID2]);
+    // Ticked and given: the ticks are the person's offer, whatever role the organizers chose — ticked or not.
+    expect(choicesWithAssigned(volunteerStaffInputSchema.parse({ ...staff, assignedRoleId: ID2 }))).toEqual([ID]);
+    // The same role ticked twice is one choice; more than an event may define is refused.
+    expect(volunteerStaffInputSchema.parse({ ...staff, roleIds: [ID, ` ${ID} `, ID2] }).roleIds).toEqual([ID, ID2]);
+    expect(volunteerStaffInputSchema.safeParse({ ...staff, roleIds: Array.from({ length: VOLUNTEER_ROLES_MAX + 1 }, () => ID) }).success).toBe(false);
+  });
+
+  const pub = { roleIds: [ID], name: " Ana  Test ", email: " ana@example.test ", phone: "+40712345678", message: "", locale: "ro", consent: true, agreement: true, adult: true };
+
+  it("§761 takes every role the person ticks on the public form, at least one — the box «Ce ești dispus(ă) să faci» named in the refusal", () => {
+    expect(volunteerPublicInputSchema.parse({ ...pub, roleIds: [ID2, ID, ID2] }).roleIds).toEqual([ID2, ID]);
+    for (const roleIds of [[], undefined, "nope", ["nope"], [ID, "nope"]]) {
+      const verdict = volunteerPublicInputSchema.safeParse({ ...pub, roleIds });
+      expect(verdict.success, JSON.stringify(roleIds)).toBe(false);
+      if (!verdict.success) expect(refusedFields(verdict.error), JSON.stringify(roleIds)).toEqual(["roleIds"]);
+    }
+  });
 
   it("requires the consent tick on the public form — the person's own act, literally true", () => {
     expect(volunteerPublicInputSchema.safeParse(pub).success).toBe(true);
@@ -153,6 +185,15 @@ describe("§754 the telephone number an organizer types — the registrations' o
 
 describe("§754 how a role stands: «N din M»", () => {
   const role = { id: "r1", needed: 3 };
+
+  it("§761 counts only the people given the role: an offer that ticked it, with no role yet, holds nothing", () => {
+    const standing = standingOf(role, [
+      { roleId: "r1", state: "REGISTERED" },
+      { roleId: null, state: "REGISTERED" },
+      { roleId: null, state: "CONFIRMED" },
+    ]);
+    expect(standing).toEqual({ roleId: "r1", needed: 3, taken: 1, confirmed: 0, free: 2 });
+  });
 
   it("counts «Înscris» and «Confirmat» against a role and never «Anulat»", () => {
     expect(countsAgainstRole("REGISTERED")).toBe(true);
@@ -302,6 +343,16 @@ describe("§754 the privacy notice's marker {{volunteers}}", () => {
     expect(volunteersMergeValues("en").volunteerAgreement).toBe(`“${en.Legal.volunteerAgreementTitle}”`);
   });
 
+  it("§761: the volunteers' paragraph names the roles ticked, the role given and the short email naming it, in both languages", () => {
+    for (const [body, phrases] of [
+      [privacyNoticeRo, ["rolurile pe care le-ai bifat", "rolul pe care ți-l dau organizatorii", "când organizatorii îți dau un rol, primești un e-mail scurt care îl numește"]],
+      [privacyNoticeEn, ["the roles you ticked", "the role the organizers give you", "when the organizers give you a role, you receive a short email that names it"]],
+    ] as const) {
+      const paragraph = body.sections.flatMap((section) => section.paragraphs).find((candidate) => candidate.includes("{{volunteers}}")) ?? "";
+      for (const phrase of phrases) expect(paragraph, phrase).toContain(phrase);
+    }
+  });
+
   it("says in section 7, in both languages, the number of days the sweep deletes by", () => {
     const days = String(RETENTION_PERIODS.volunteerDaysAfterEvent);
     expect(RETENTION.volunteerDaysAfterEvent).toBe(RETENTION_PERIODS.volunteerDaysAfterEvent);
@@ -334,18 +385,21 @@ describe("§754 the public form's address and answer", () => {
 
   it("reads the refused boxes as names only, in the form's order, dropping anything else", () => {
     expect(parseVolunteerBoxes("email,name,<b>,consent,email")).toEqual(["name", "email", "consent"]);
-    expect(parseVolunteerBoxes("message,roleId")).toEqual(["roleId", "message"]);
+    expect(parseVolunteerBoxes("message,roleIds")).toEqual(["roleIds", "message"]);
+    // The single role's old box is no box any more (§761).
+    expect(parseVolunteerBoxes("roleId")).toEqual([]);
     expect(parseVolunteerBoxes(undefined)).toEqual([]);
   });
 });
 
 describe("§754 the CSV", () => {
-  const header = { role: "Rol", name: "Nume", email: "Email", phone: "Telefon", state: "Stare", source: "Sursă", message: "Mesaj", note: "Notă", signedUpAt: "Data" };
+  const header = { role: "Rolul dat", choices: "S-a oferit pentru", name: "Nume", email: "Email", phone: "Telefon", state: "Stare", source: "Sursă", message: "Mesaj", note: "Notă", signedUpAt: "Data" };
 
   it("starts with a BOM, ends no line with a bare newline and keeps a formula a text", () => {
     const csv = buildVolunteersCsv(header, [
       {
         role: "Punct de apă",
+        choices: "Punct de apă, Sosire",
         name: "=HYPERLINK(\"x\")",
         email: "ana@example.test",
         phone: "+40712345678",
@@ -356,12 +410,103 @@ describe("§754 the CSV", () => {
         signedUpAt: new Date("2026-10-13T10:00:00.000Z"),
       },
     ]);
-    expect(csv.startsWith("﻿Rol,Nume")).toBe(true);
+    expect(csv.startsWith("﻿Rolul dat,S-a oferit pentru,Nume")).toBe(true);
     const lines = csv.split("\r\n");
     expect(lines).toHaveLength(2);
     // A cell starting with «=» is neutralized, and a comma in a message is quoted.
     expect(lines[1]).not.toMatch(/^[^,]*,=/);
     expect(lines[1]).toContain('"Sunt liber sâmbătă, toată ziua"');
     expect(lines[1]).toContain("2026-10-13T10:00:00.000Z");
+    // §761: the role given, then the roles chosen — a comma inside them quoted.
+    expect(lines[1].startsWith('Punct de apă,"Punct de apă, Sosire",')).toBe(true);
+  });
+});
+
+describe("§761 a volunteer ticks every role they would do; the organizers give one", () => {
+  const water = { id: "w", nameRo: "Punct de apă", nameEn: "Water point", descriptionRo: "Dai apă la km 5.", descriptionEn: "Hand out water at km 5." };
+  const finish = { id: "f", nameRo: "Sosire", nameEn: "Finish", descriptionRo: null, descriptionEn: null };
+  const table = { id: "t", nameRo: "Masă", nameEn: "Desk", descriptionRo: "Dai numerele", descriptionEn: "Hand out the bibs" };
+
+  it("keeps the ticked roles that still need people, in the order ticked, and drops the ones that filled", () => {
+    const standings = new Map([
+      ["w", { free: 2 }],
+      ["f", { free: 0 }],
+      ["t", { free: 1 }],
+    ]);
+    expect(openChoices(["t", "f", "w"], standings)).toEqual(["t", "w"]);
+    // Every one filled: nothing is kept — the polite «full», with the roles still open.
+    expect(openChoices(["f"], standings)).toEqual([]);
+    // A role the map does not know is no open role.
+    expect(openChoices(["x"], standings)).toEqual([]);
+  });
+
+  it("names in the agreement the role given — its name and what it asks — whatever was ticked, under any text", () => {
+    for (const textNamesChoices of [true, false]) {
+      expect(agreementRoleWords({ assigned: water, chosen: [finish, table] }, "ro", textNamesChoices)).toEqual({
+        role: "Punct de apă",
+        tasks: "Dai apă la km 5",
+        choices: "",
+        choiceTasks: "",
+      });
+      expect(agreementRoleWords({ assigned: finish, chosen: [water] }, "en", textNamesChoices)).toEqual({ role: "Finish", tasks: "", choices: "", choiceTasks: "" });
+    }
+  });
+
+  it("§761: under a text naming {{volunteerRoleChoices}}, names the roles chosen in their own blanks and leaves the role's empty", () => {
+    const several = agreementRoleWords({ assigned: null, chosen: [water, finish, table] }, "en", true);
+    expect(several).toEqual({
+      role: "",
+      tasks: "",
+      choices: "Water point, Finish, Desk",
+      // What each asks, by name; a role with no description adds nothing.
+      choiceTasks: "Water point — Hand out water at km 5; Desk — Hand out the bibs",
+    });
+    expect(agreementRoleWords({ assigned: null, chosen: [water] }, "ro", true)).toEqual({ role: "", tasks: "", choices: "Punct de apă", choiceTasks: "Punct de apă — Dai apă la km 5" });
+    expect(agreementRoleWords({ assigned: null, chosen: [finish] }, "ro", true).choiceTasks).toBe("");
+  });
+
+  it("§761: under an earlier text, fills «… în rolul {{volunteerRole}}.» with the chosen roles' names alone — never a clause of the code's own", () => {
+    const one = agreementRoleWords({ assigned: null, chosen: [water] }, "ro", false);
+    expect(one).toEqual({ role: "Punct de apă", tasks: "Dai apă la km 5", choices: "", choiceTasks: "" });
+    const several = agreementRoleWords({ assigned: null, chosen: [water, finish, table] }, "en", false);
+    expect(several.role).toBe("Water point, Finish, Desk");
+    expect(several.tasks).toBe("Water point — Hand out water at km 5; Desk — Hand out the bibs");
+    // The club's words only: the roles' names and descriptions, nothing about who decides.
+    for (const words of [several, agreementRoleWords({ assigned: null, chosen: [table, water] }, "ro", false)]) {
+      expect(`${words.role} ${words.tasks}`).not.toMatch(/organizator|organiser|disponibil|available|stabilit|assigned/i);
+    }
+    expect(agreementRoleWords({ assigned: null, chosen: [finish] }, "ro", false).tasks).toBe("");
+    expect(agreementRoleWords({ assigned: null, chosen: [] }, "ro", false)).toEqual({ role: "", tasks: "", choices: "", choiceTasks: "" });
+  });
+
+  it("reads the roles an accepted agreement named from its blanks: the choices' own, else the role's", () => {
+    expect(acceptedRoleNames({ volunteerRole: "", volunteerRoleChoices: "Masă, Sosire" })).toBe("Masă, Sosire");
+    expect(acceptedRoleNames({ volunteerRole: "Masă", volunteerRoleChoices: "" })).toBe("Masă");
+    // A row accepted before the field existed.
+    expect(acceptedRoleNames({ volunteerRole: "Masă" })).toBe("Masă");
+  });
+
+  it("tells the card when the accepted text names another role than the person's now — and not when the role given is one they offered", () => {
+    const offered = agreementRoleWords({ assigned: null, chosen: [water, table] }, "ro", true).choices;
+    // The same names under an earlier text, in the role's blank.
+    expect(agreementRoleWords({ assigned: null, chosen: [water, table] }, "ro", false).role).toBe(offered);
+    // Accepted on the form, nothing given yet: the same words.
+    expect(agreementStillNamesRole(offered, { assigned: null, chosen: [water, table] }, "ro")).toBe(true);
+    // Then given one of the roles offered: still what was accepted.
+    expect(agreementStillNamesRole(offered, { assigned: table, chosen: [water, table] }, "ro")).toBe(true);
+    // Given a role the person never offered for: the card says so.
+    expect(agreementStillNamesRole(offered, { assigned: finish, chosen: [water, table] }, "ro")).toBe(false);
+    // The choices changed since: so did the words.
+    expect(agreementStillNamesRole(offered, { assigned: null, chosen: [water] }, "ro")).toBe(false);
+    // Accepted for a role given, still given; then moved.
+    expect(agreementStillNamesRole("Punct de apă", { assigned: water, chosen: [] }, "ro")).toBe(true);
+    expect(agreementStillNamesRole("Punct de apă", { assigned: finish, chosen: [water] }, "ro")).toBe(false);
+  });
+
+  it("stamps what a printed agreement names — the role given, else the roles chosen, in any order — so a change since the print is seen", () => {
+    expect(agreementRolesStamp("w", ["t", "f"])).toBe("role:w");
+    expect(agreementRolesStamp(null, ["t", "f"])).toBe(agreementRolesStamp(null, ["f", "t"]));
+    expect(agreementRolesStamp(null, ["t"])).not.toBe(agreementRolesStamp(null, ["t", "f"]));
+    expect(agreementRolesStamp(null, ["w"])).not.toBe(agreementRolesStamp("w", ["w"]));
   });
 });
