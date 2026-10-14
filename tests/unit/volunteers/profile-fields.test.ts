@@ -224,6 +224,20 @@ describe("§NNN «Descrierea rolului», a document per language with its plain w
     if (!withTable.success) expect(refusedFields(withTable.error).sort()).toEqual(["descriptionEnBody", "descriptionRoBody"]);
   });
 
+  it("refuses a picture or a video, alone or beside words — a refusal, never the table's CHECK", () => {
+    const image = { type: "image", attrs: { src: "/api/media/6f1c2a9e-0000-4000-8000-000000000001/web.webp", alt: "", caption: "" } };
+    const only = JSON.stringify({ type: "doc", content: [image] });
+    const mixed = JSON.stringify({ type: "doc", content: [paragraph("Stai la km 5."), image] });
+    const imageOnly = volunteerRoleInputSchema.safeParse({ ...ROLE, descriptionRoBody: only, descriptionEnBody: only });
+    expect(imageOnly.success).toBe(false);
+    if (!imageOnly.success) expect(refusedFields(imageOnly.error).sort()).toEqual(["descriptionEnBody", "descriptionRoBody"]);
+    const withWords = volunteerRoleInputSchema.safeParse({ ...ROLE, descriptionRoBody: mixed, descriptionEnBody: doc("Stand at km 5.") });
+    expect(withWords.success).toBe(false);
+    if (!withWords.success) expect(refusedFields(withWords.error)).toEqual(["descriptionRoBody"]);
+    const video = JSON.stringify({ type: "doc", content: [{ type: "youtube", attrs: { src: "https://www.youtube-nocookie.com/embed/abcdefghijk" } }] });
+    expect(volunteerRoleInputSchema.safeParse({ ...ROLE, descriptionRoBody: video, descriptionEnBody: doc("ok") }).success).toBe(false);
+  });
+
   it("refuses a body that is not the editor's document, and lets the posted document win over the plain box", () => {
     const bad = volunteerRoleInputSchema.safeParse({ ...ROLE, descriptionRoBody: "{not json", descriptionEnBody: doc("ok") });
     expect(bad.success).toBe(false);

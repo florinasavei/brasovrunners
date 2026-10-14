@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { EventVolunteerSource, EventVolunteerState } from "@/db/schema/event-volunteers";
+import type { RichTextDoc } from "@/modules/content/rich-text/domain/schema";
 import { normalizeTeamText, resolveRichPair, richTextBox } from "@/modules/content/team/fields";
 import { E164_PHONE } from "@/modules/registrations/phone";
 import { SHIRT_SIZES } from "@/modules/registrations/domain/kit";
@@ -102,22 +103,41 @@ export const volunteerRoleInputSchema = z
     descriptionEnBody: richTextBox,
   })
   .transform((fields, ctx) => {
+    // No picture and no video: the description is read on a phone, under a tick (and a picture-only body has no plain
+    // words, which the table's CHECK refuses — a forged post must be a refusal here, never a 500 there).
+    for (const [body, name] of [
+      [fields.descriptionRoBody, "descriptionRoBody"],
+      [fields.descriptionEnBody, "descriptionEnBody"],
+    ] as const) {
+      if (body !== undefined && hasMedia(body)) {
+        ctx.addIssue({ code: "custom", path: [name], message: "the role's description may not hold a picture or a video" });
+      }
+    }
     const description = resolveRichPair(
       ctx,
       { ro: { plain: fields.descriptionRo, body: fields.descriptionRoBody }, en: { plain: fields.descriptionEn, body: fields.descriptionEnBody } },
       { ro: { plain: "descriptionRo", body: "descriptionRoBody" }, en: { plain: "descriptionEn", body: "descriptionEnBody" } },
       { max: VOLUNTEER_ROLE_DESCRIPTION_MAX, tables: false, what: "the role's description" },
     );
+    // A side with no plain words is no description: the document and the words are both set or both null (the CHECK).
+    const kept = (side: { doc: RichTextDoc | null; plain: string | null }) => (side.plain === null ? { doc: null, plain: null } : side);
+    const ro = kept(description.ro);
+    const en = kept(description.en);
     return {
       nameRo: fields.nameRo,
       nameEn: fields.nameEn,
       needed: fields.needed,
-      descriptionRoJson: description.ro.doc,
-      descriptionEnJson: description.en.doc,
-      descriptionWordsRo: description.ro.plain,
-      descriptionWordsEn: description.en.plain,
+      descriptionRoJson: ro.doc,
+      descriptionEnJson: en.doc,
+      descriptionWordsRo: ro.plain,
+      descriptionWordsEn: en.plain,
     };
   });
+
+/** Whether a document holds a picture or a video block (top-level blocks, `schema.ts`). */
+function hasMedia(doc: RichTextDoc): boolean {
+  return (doc.content ?? []).some((block) => block.type === "image" || block.type === "youtube");
+}
 
 export type VolunteerRoleInput = z.infer<typeof volunteerRoleInputSchema>;
 
