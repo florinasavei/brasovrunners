@@ -43,11 +43,13 @@ export function callerIp(headers: HeaderReader): string | null {
   return first !== "" && isIP(first) !== 0 ? first : null;
 }
 
-/** The browser string, printable characters only, bounded; null when absent or empty. */
+/**
+ * The browser string, printable ASCII only (RFC 9110 gives a product token no other), bounded; null when absent or empty.
+ * A control character (a line feed in a header a proxy let through) would break a PDF line and a log line alike, and
+ * a letter outside the PDF's subset of Roboto would print as a box.
+ */
 export function callerUserAgent(headers: HeaderReader): string | null {
-  // A control character (a line feed in a header a proxy let through) would break a PDF line and a log line alike.
-  // eslint-disable-next-line no-control-regex
-  const cleaned = (headers.get("user-agent") ?? "").replace(/[\u0000-\u001f\u007f]+/g, " ").replace(/\s+/g, " ").trim();
+  const cleaned = (headers.get("user-agent") ?? "").replace(/[^\x20-\x7e]+/g, " ").replace(/\s+/g, " ").trim();
   return cleaned === "" ? null : cleaned.slice(0, USER_AGENT_MAX);
 }
 

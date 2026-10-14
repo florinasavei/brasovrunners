@@ -14,6 +14,7 @@ import { asksForMinorSignature, deadlineMergeValues, type MergeValues, minimumAg
 import { isLegalDocumentBody, type LegalDocumentBody } from "@/modules/legal-documents/domain/content-hash";
 import { findEventDeclaration } from "@/modules/legal-documents/repository";
 import { signedTextHash } from "@/modules/legal-documents/domain/signed-text";
+import { traceColumns } from "@/modules/legal-documents/domain/signature-trace";
 import { effectiveMinimumAge } from "./domain/age";
 import { listStatesMergeValues } from "./list-state-words";
 import { listSocialsMergeValues } from "./list-socials-words";
@@ -78,6 +79,9 @@ export type SignedDeclaration = {
   minorTypedName: string | null;
   minorIdDocument: string | null;
   method: "EMAIL_LINK" | "PAPER";
+  /** The electronic signature's trace (§NNN): the IP address and browser of the press; null on a paper row and on one from before it. */
+  ip: string | null;
+  userAgent: string | null;
   attestedByName: string | null;
   version: number;
   contentSha256: string;
@@ -143,6 +147,8 @@ function signedDeclarationQuery<T extends Record<string, unknown>>(db: Database<
       minorTypedName: declarationAcceptances.minorTypedName,
       minorIdDocument: declarationAcceptances.minorIdDocument,
       method: declarationAcceptances.method,
+      ip: declarationAcceptances.ip,
+      userAgent: declarationAcceptances.userAgent,
       attestedByName: staffUsers.displayName,
       version: declarationAcceptances.declarationVersion,
       contentSha256: declarationAcceptances.contentSha256,
@@ -322,6 +328,8 @@ function signedEntry(
       signedAt: whenStart,
       signedAtInline: when,
       acceptedAt: signed.acceptedAt,
+      // Only an electronic signature has a trace (§NNN); a paper row prints today's block.
+      trace: traceColumns({ ip: signed.ip, userAgent: signed.userAgent }, signed.method === "EMAIL_LINK"),
       method:
         signed.method === "PAPER"
           ? labels.signedOnPaper(signed.attestedByName ?? labels.attesterRemoved, when)

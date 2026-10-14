@@ -55,6 +55,8 @@ const LABELS = {
   attesterRemoved: "un membru al echipei",
   // The proof of signing (§556), plain so a test reads it.
   proofLine: (version: number, when: string, hash: string | null) => `Versiunea ${version} · Semnat la ${when}${hash ? ` · SHA-256 ${hash}` : ""}`,
+  signedElectronically: (when: string) => `Semnat electronic la ${when}`,
+  ip: "IP",
 };
 
 async function approve(db: TestDatabase, declaration: LegalDocumentTranslationInput[]) {

@@ -2,6 +2,7 @@ import type { Database } from "@/db/types";
 import { formatDay } from "@/i18n/dates";
 import type { Locale } from "@/i18n/routing";
 import { isLegalDocumentBody, type LegalDocumentBody } from "@/modules/legal-documents/domain/content-hash";
+import { traceColumns } from "@/modules/legal-documents/domain/signature-trace";
 import { declarationWords } from "@/modules/registrations/declaration-labels";
 import { maskIdDocument, renderDeclarationPdf } from "@/modules/registrations/declaration-pdf";
 import type { DeclarationAudience } from "@/modules/registrations/signed-declaration";
@@ -92,6 +93,8 @@ export async function renderGroupRunDeclarationPdf<T extends Record<string, unkn
           signedAt: whenStart,
           signedAtInline: when,
           acceptedAt: signed.acceptedAt,
+          // The press's IP address and browser (§NNN, amending §769); a group run is always signed on its page.
+          trace: traceColumns({ ip: signed.ip, userAgent: signed.userAgent }, true),
           method: signedOnPageWords(signed.locale, when, signed.minorTypedName !== null),
         },
       },

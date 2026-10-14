@@ -5766,6 +5766,9 @@
       "messages": "Messages ({count})",
       "interests": "“Tell me” requests ({count})",
       "volunteers": "Volunteer offers ({count})",
+      "groupRuns": "Group-run declarations ({count})",
+      "traceVolunteer": "The volunteer's signature trace: IP {ip} · browser {browser}",
+      "traceGuardian": "The parent's or guardian's signature trace: IP {ip} · browser {browser}",
       "audit": "Audit trail ({count})",
       "none": "None.",
       "newSearch": "Another lookup"

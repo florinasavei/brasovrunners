@@ -56,6 +56,8 @@ const LABELS = {
   signedOnPaper: (who: string, when: string) => `Pe hârtie; ${who} ${when}`,
   attesterRemoved: "un membru al echipei",
   proofLine: (version: number, when: string, hash: string | null) => `Versiunea ${version} · ${when}${hash ? ` · ${hash}` : ""}`,
+  signedElectronically: (when: string) => `Semnat electronic la ${when}`,
+  ip: "IP",
 };
 
 /**
