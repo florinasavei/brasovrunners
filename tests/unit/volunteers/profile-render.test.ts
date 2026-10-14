@@ -580,7 +580,7 @@ describe("§NNN the public form's block for a parent or guardian", () => {
     expect(/<div[^>]*data-testid="volunteer-guardian-block"[^>]*>/.exec(page)?.[0]).toContain("hidden");
     // (The helper strips every <style>, so the noscript rule is read from the island drawn on its own.)
     const GuardianFields = (await import("@/modules/volunteers/ui/GuardianFields")).default;
-    const island = renderToStaticMarkup(createElement(GuardianFields, { ageInputId: "age", minimumAge: 14, adultAge: 18, startOpen: false, children: "x" }));
+    const island = renderToStaticMarkup(createElement(GuardianFields, { ageInputId: "age", minimumAge: 14, adultAge: 18, startOpen: false } as ComponentProps<typeof GuardianFields>, "x"));
     expect(island).toContain('<noscript><style>[data-testid="volunteer-guardian-block"]{display:block !important}</style></noscript>');
     expect(page).toContain("<noscript>");
     // A minor's age typed back after a refusal draws it open from the first byte: nothing to hydrate into.

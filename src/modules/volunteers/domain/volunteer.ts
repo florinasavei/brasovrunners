@@ -425,7 +425,9 @@ export function volunteerPublicProfileSchemaFor(minors: boolean) {
       })
     : volunteerPublicProfileBase.refine((value) => !minor(value), { path: ["age"], message: "the club cannot take volunteers under eighteen yet", when: always });
   return refused.transform((value) => {
-    const { guardianName, guardianEmail, guardianAware: _aware, ...rest } = value;
+    const { guardianName, guardianEmail, guardianAware, ...rest } = value;
+    // The tick was read by the refinement above; it leaves the result with the two boxes.
+    void guardianAware;
     return { ...rest, guardian: minors ? guardianOf({ age: value.age, guardianName, guardianEmail }, "required") : null };
   });
 }
