@@ -35,7 +35,9 @@ import { isVolunteerMinor } from "./domain/volunteer";
  * signature block has a second signer: the volunteer's own acceptance and the guardian's — the typed name from the link,
  * or the paper — under one date, the guardian's version, blanks and fingerprint when they accepted, and a line that says
  * the consent is still to come while it is. The sheet to sign on paper has the volunteer's line and the guardian's, in
- * place of the organizer's. The PDF for adults is unchanged.
+ * place of the organizer's. The PDF for adults is unchanged. Once the guardian accepted, the PDF draws **two entries** —
+ * the volunteer's own acceptance (their version, blanks and fingerprint) and the guardian's (theirs, which may be a
+ * newer version) — so neither person's fingerprint is replaced by the other's.
  */
 
 /** The PDF's own words, plain copy like the declaration's: the outbox renders it outside any request. */
@@ -63,7 +65,7 @@ const WORDS: Record<
     whereupon: "DREPT PENTRU CARE SEMNEZ,",
     whereuponTogether: "DREPT PENTRU CARE SEMNĂM,",
     acceptedOnForm:
-      "Acceptat electronic {when}, pe pagina evenimentului de pe site-ul clubului: numele, bifa explicită de acceptare, momentul acceptării, așa cum l-a înregistrat platforma clubului, și amprenta SHA-256 a textului citit — semnătură electronică simplă în sensul Regulamentului (UE) nr. 910/2014 (eIDAS) și al Legii nr. 214/2024.",
+      "Acceptat electronic {when}, pe pagina de voluntari a evenimentului, pe site-ul clubului: numele, bifa explicită de acceptare, momentul acceptării, așa cum l-a înregistrat platforma clubului, și amprenta SHA-256 a textului citit — semnătură electronică simplă în sensul Regulamentului (UE) nr. 910/2014 (eIDAS) și al Legii nr. 214/2024.",
     acceptedByLink:
       "Acceptat electronic {when}, din linkul unic trimis pe adresa de email a voluntarului: numele, bifa explicită de acceptare, momentul acceptării, așa cum l-a înregistrat platforma clubului, și amprenta SHA-256 a textului citit — semnătură electronică simplă în sensul Regulamentului (UE) nr. 910/2014 (eIDAS) și al Legii nr. 214/2024.",
     acceptedOnPaper: "Semnat pe hârtie, la organizatori; înregistrat de {who}, {when}. Originalul semnat este păstrat de club.",
@@ -80,7 +82,7 @@ const WORDS: Record<
     whereupon: "IN WITNESS WHEREOF, I SIGN,",
     whereuponTogether: "IN WITNESS WHEREOF, WE SIGN,",
     acceptedOnForm:
-      "Accepted electronically on {when}, on the event's page on the club's website: the name, the explicit acceptance tick, the moment of acceptance as the club's platform recorded it, and the SHA-256 fingerprint of the text read — a simple electronic signature under Regulation (EU) 910/2014 (eIDAS) and Romanian Law no. 214/2024.",
+      "Accepted electronically on {when}, on the event's volunteers' page on the club's website: the name, the explicit acceptance tick, the moment of acceptance as the club's platform recorded it, and the SHA-256 fingerprint of the text read — a simple electronic signature under Regulation (EU) 910/2014 (eIDAS) and Romanian Law no. 214/2024.",
     acceptedByLink:
       "Accepted electronically on {when}, from the single-use link sent to the volunteer's email address: the name, the explicit acceptance tick, the moment of acceptance as the club's platform recorded it, and the SHA-256 fingerprint of the text read — a simple electronic signature under Regulation (EU) 910/2014 (eIDAS) and Romanian Law no. 214/2024.",
     acceptedOnPaper: "Signed on paper, with the organisers; recorded by {who} on {when}. The club keeps the signed original.",
@@ -135,6 +137,58 @@ export function guardianHowWords(
 /** The line that says the guardian's consent is still to come (§NNN), under the volunteer's own acceptance. */
 export function guardianPendingWords(locale: Locale, guardianName: string): string {
   return WORDS[locale].guardianPending.replace("{guardian}", guardianName);
+}
+
+/** What a volunteer's own acceptance keeps on the row (§758) — the version, the way, the blanks as accepted and the fingerprint. */
+type OwnAcceptance = {
+  name: string;
+  timezone: string;
+  acceptedAt: Date;
+  documentId: string;
+  method: "FORM" | "LINK" | "PAPER";
+  agreementLocale: Locale;
+  textHash: string | null;
+  facts: unknown;
+  recordedBy: string | null;
+};
+
+/**
+ * The entry for the volunteer's own acceptance: the version they accepted in the language they accepted it in, filled with the
+ * blanks kept on their row — the values the fingerprint was taken over (§556) — with their name, the moment and the way.
+ * `pending` is the line that says a guardian's consent is still to come (§NNN), under it; none once it came, when the guardian's
+ * own entry follows. Undefined when the version is gone.
+ */
+async function ownAcceptanceEntry<T extends Record<string, unknown>>(db: Database<T>, own: OwnAcceptance, pending: string | null): Promise<DeclarationEntry | undefined> {
+  const version = await findVersionWithTranslations(db, own.documentId);
+  if (!version) return undefined;
+  const locale = own.agreementLocale;
+  const translation = version.translations.find((candidate) => candidate.locale === locale) ?? version.translations[0];
+  if (!translation) return undefined;
+  const facts = readAgreementFacts(own.facts);
+  // Under the «Data» label the moment starts the value; inside the method's sentence it continues it (§349).
+  const signedAt = formatDay(own.acceptedAt, { locale, timeZone: own.timezone, style: "long", withTime: true });
+  const signedAtInline = facts?.signedAt ?? formatDay(own.acceptedAt, { locale, timeZone: own.timezone, style: "long", withTime: true, position: "inline" });
+  return {
+    title: translation.title,
+    body: agreementBody(translation.body),
+    // The blanks as the person accepted them — the values the fingerprint was taken over (§556).
+    values: agreementMergeValues(facts ?? {}),
+    eventTitle: facts?.event ?? "",
+    version: version.version,
+    contentSha256: version.contentSha256,
+    effectiveAt: version.effectiveAt,
+    textHash: own.textHash,
+    noIdDocument: true,
+    signature: {
+      typedName: facts?.volunteer ?? own.name,
+      idDocument: null,
+      minor: null,
+      signedAt,
+      signedAtInline,
+      acceptedAt: own.acceptedAt,
+      method: [acceptedHowWords(locale, own.method, signedAtInline, own.recordedBy), pending].filter(Boolean).join("\n"),
+    },
+  };
 }
 
 /** The file's name, the same in both languages: plain ASCII travels through every mail client. */
@@ -196,8 +250,9 @@ export async function renderVolunteerAgreementPdf<T extends Record<string, unkno
   // The desk's sheet for the guardian: the text to sign though the volunteer accepted, while the guardian's consent is to come.
   const sheet = options.sheet === true && guardianName !== null && !guardianDone;
 
-  // The guardian accepted (§NNN): the text THEY read — their version, their blanks, their fingerprint — with both signers on it:
-  // the volunteer's own acceptance when they gave it, and the guardian's, under the guardian's date.
+  // The guardian accepted (§NNN): two entries, each the text its signer read — the volunteer's own acceptance when they gave it
+  // (their version, blanks and fingerprint, as an adult's) and the guardian's (theirs, under the guardian's date). The guardian
+  // reads the version in force when they pressed, which may be newer than the volunteer's: one entry could not carry both proofs.
   if (guardianName !== null && guardianDone && row.guardianDocumentId && row.guardianAcceptedAt && row.guardianMethod && row.guardianLocale) {
     const version = await findVersionWithTranslations(db, row.guardianDocumentId);
     if (!version) return undefined;
@@ -207,12 +262,25 @@ export async function renderVolunteerAgreementPdf<T extends Record<string, unkno
     const facts = readAgreementFacts(row.guardianFacts);
     const signedAt = formatDay(row.guardianAcceptedAt, { locale, timeZone: row.timezone, style: "long", withTime: true });
     const signedAtInline = facts?.signedAt ?? formatDay(row.guardianAcceptedAt, { locale, timeZone: row.timezone, style: "long", withTime: true, position: "inline" });
-    const volunteerAccepted = row.acceptedAt !== null && row.method !== null;
-    const volunteerSentence =
-      row.acceptedAt && row.method
-        ? acceptedHowWords(locale, row.method, formatDay(row.acceptedAt, { locale, timeZone: row.timezone, style: "long", withTime: true, position: "inline" }), row.recordedBy)
+    const ownRow =
+      row.acceptedAt && row.documentId && row.method && row.agreementLocale
+        ? {
+            name: row.name,
+            timezone: row.timezone,
+            acceptedAt: row.acceptedAt,
+            documentId: row.documentId,
+            method: row.method,
+            agreementLocale: row.agreementLocale,
+            textHash: row.textHash,
+            facts: row.facts,
+            recordedBy: row.recordedBy,
+          }
         : null;
+    const own = ownRow ? await ownAcceptanceEntry(db, ownRow, null) : undefined;
+    // An acceptance the row holds whole whose text is gone cannot be drawn truthfully (the adult branch's rule).
+    if (ownRow && !own) return undefined;
     const entry: DeclarationEntry = {
+      signatureLabel: WORDS[locale].guardianSignature,
       title: translation.title,
       body: agreementBody(translation.body),
       values: agreementMergeValues(facts ?? {}),
@@ -225,53 +293,47 @@ export async function renderVolunteerAgreementPdf<T extends Record<string, unkno
       signature: {
         typedName: row.guardianTypedName ?? guardianName,
         idDocument: null,
-        // The volunteer's own line, when they accepted theirs; the guardian's alone otherwise.
-        minor: volunteerAccepted ? { typedName: readAgreementFacts(row.facts)?.volunteer ?? row.name, idDocument: null } : null,
+        minor: null,
         signedAt,
         signedAtInline,
         acceptedAt: row.guardianAcceptedAt,
-        method: [volunteerSentence, guardianHowWords(locale, row.guardianMethod, signedAtInline, guardianName, row.guardianRecordedBy)].filter(Boolean).join("\n"),
+        method: guardianHowWords(locale, row.guardianMethod, signedAtInline, guardianName, row.guardianRecordedBy),
       },
     };
-    const pdf = await renderDeclarationPdf({ entries: [entry], locale, generatedAt: now, labels: volunteerAgreementLabels(locale, now, true) });
+    const pdfLocale = ownRow ? ownRow.agreementLocale : locale;
+    const pdf = await renderDeclarationPdf({
+      entries: own ? [own, entry] : [entry],
+      locale: pdfLocale,
+      generatedAt: now,
+      labels: volunteerAgreementLabels(pdfLocale, now, false),
+    });
     return { pdf, accepted: true };
   }
 
   if (!sheet && row.acceptedAt && row.documentId && row.method && row.agreementLocale) {
-    const version = await findVersionWithTranslations(db, row.documentId);
-    if (!version) return undefined;
-    const locale = row.agreementLocale;
-    const translation = version.translations.find((candidate) => candidate.locale === locale) ?? version.translations[0];
-    if (!translation) return undefined;
-    const facts = readAgreementFacts(row.facts);
-    // Under the «Data» label the moment starts the value; inside the method's sentence it continues it (§349).
-    const signedAt = formatDay(row.acceptedAt, { locale, timeZone: row.timezone, style: "long", withTime: true });
-    const signedAtInline = facts?.signedAt ?? formatDay(row.acceptedAt, { locale, timeZone: row.timezone, style: "long", withTime: true, position: "inline" });
-    const entry: DeclarationEntry = {
-      title: translation.title,
-      body: agreementBody(translation.body),
-      // The blanks as the person accepted them — the values the fingerprint was taken over (§556).
-      values: agreementMergeValues(facts ?? {}),
-      eventTitle: facts?.event ?? "",
-      version: version.version,
-      contentSha256: version.contentSha256,
-      effectiveAt: version.effectiveAt,
-      textHash: row.textHash,
-      noIdDocument: true,
-      signature: {
-        typedName: facts?.volunteer ?? row.name,
-        idDocument: null,
-        minor: null,
-        signedAt,
-        signedAtInline,
+    // A volunteer under eighteen whose guardian has not accepted yet says so under their own acceptance (§NNN).
+    const entry = await ownAcceptanceEntry(
+      db,
+      {
+        name: row.name,
+        timezone: row.timezone,
         acceptedAt: row.acceptedAt,
-        // A volunteer under eighteen whose guardian has not accepted yet says so under their own acceptance (§NNN).
-        method: [acceptedHowWords(locale, row.method, signedAtInline, row.recordedBy), guardianName !== null ? guardianPendingWords(locale, guardianName) : null]
-          .filter(Boolean)
-          .join("\n"),
+        documentId: row.documentId,
+        method: row.method,
+        agreementLocale: row.agreementLocale,
+        textHash: row.textHash,
+        facts: row.facts,
+        recordedBy: row.recordedBy,
       },
-    };
-    const pdf = await renderDeclarationPdf({ entries: [entry], locale, generatedAt: now, labels: volunteerAgreementLabels(locale, now) });
+      guardianName !== null ? guardianPendingWords(row.agreementLocale, guardianName) : null,
+    );
+    if (!entry) return undefined;
+    const pdf = await renderDeclarationPdf({
+      entries: [entry],
+      locale: row.agreementLocale,
+      generatedAt: now,
+      labels: volunteerAgreementLabels(row.agreementLocale, now),
+    });
     return { pdf, accepted: true };
   }
 

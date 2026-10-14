@@ -822,12 +822,14 @@ export async function listVersionsForBackoffice<T extends Record<string, unknown
       deletedReason: legalDocuments.deletedReason,
       locales: sql<string[]>`coalesce(array_agg(distinct ${legalDocumentTranslations.locale}::text) filter (where ${legalDocumentTranslations.locale} is not null), '{}')`,
       // Every signature against this version: a race's acceptances, a group run's optional
-      // self-declarations (§393) and a volunteer's accepted agreement (§758) — each is somebody
-      // relying on these exact words.
+      // self-declarations (§393), a volunteer's accepted agreement (§758) and a guardian's (§NNN: the version
+      // in force when the parent pressed, which may not be the volunteer's own) — each is somebody
+      // relying on these exact words, and the guardian's column is a RESTRICT foreign key too.
       acceptanceCount: sql<number>`(
         (select count(*)::int from ${declarationAcceptances} where ${declarationAcceptances.legalDocumentId} = ${legalDocuments.id})
         + (select count(*)::int from ${groupRunDeclarations} where ${groupRunDeclarations.legalDocumentId} = ${legalDocuments.id})
         + (select count(*)::int from ${eventVolunteers} where ${eventVolunteers.agreementDocumentId} = ${legalDocuments.id})
+        + (select count(*)::int from ${eventVolunteers} where ${eventVolunteers.guardianDocumentId} = ${legalDocuments.id})
       )`,
       eventCount: sql<number>`(select count(*)::int from ${events} where ${events.declarationDocumentId} = ${legalDocuments.id})`,
       // Matched on the version *number*, per key, because that is the only shape this reference

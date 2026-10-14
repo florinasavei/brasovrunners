@@ -6,7 +6,7 @@ import type { Locale } from "@/i18n/routing";
 import { generateTokenSecret, hashTokenSecret, isWellFormedTokenSecret } from "@/modules/action-tokens/domain/token-secret";
 import { recordAuditEvent } from "@/modules/audit/repository";
 import { VOLUNTEER_AGREEMENT_KEY } from "@/modules/legal-documents/domain/keys";
-import type { MergeValues } from "@/modules/legal-documents/domain/merge-fields";
+import { type MergeValues, namesVolunteerGuardian } from "@/modules/legal-documents/domain/merge-fields";
 import { signedTextHash } from "@/modules/legal-documents/domain/signed-text";
 import { findCurrentApprovedDocument, volunteerMinorsOpen } from "@/modules/legal-documents/repository";
 import { DEFAULT_TOKEN_HOURS } from "@/modules/notifications/domain/token-lifetime";
@@ -228,7 +228,9 @@ export async function readVolunteerGuardianLink<T extends Record<string, unknown
   const row = await liveGuardianRow(db, secret, now, false);
   if (!row) return { status: "invalid" };
   const document = await findCurrentApprovedDocument(db, VOLUNTEER_AGREEMENT_KEY, locale, now);
-  if (!document) return { status: "noAgreement" };
+  // A version without the minors' clause is no text for a guardian to accept (the same gate as `volunteerMinorsOpen`): a link
+  // minted before the club approved such a version finds nothing to accept, and nothing is recorded against words that never name them.
+  if (!document || !namesVolunteerGuardian(document.body)) return { status: "noAgreement" };
   const roles = await volunteerRoles(db, row);
   if (!roles.assigned && roles.chosen.length === 0) return { status: "invalid" };
   const blanks = await agreementBlanks(db, {
@@ -277,7 +279,7 @@ export async function acceptVolunteerGuardianByLink<T extends Record<string, unk
     const row = await liveGuardianRow(tx, secret, now, true);
     if (!row) return { outcome: "invalid" };
     const document = await findCurrentApprovedDocument(tx, VOLUNTEER_AGREEMENT_KEY, input.locale, now);
-    if (!document) return { outcome: "noAgreement" };
+    if (!document || !namesVolunteerGuardian(document.body)) return { outcome: "noAgreement" };
     const roles = await volunteerRoles(tx, row);
     if (!roles.assigned && roles.chosen.length === 0) return { outcome: "invalid" };
     const acceptance = await guardianAcceptance(
@@ -332,7 +334,7 @@ async function queueVolunteerCopy<T extends Record<string, unknown>>(
     locale: row.locale,
     recipientEmail: row.email,
     payload: { eventId: row.eventId, volunteerId: row.id },
-    idempotencyKey: `volunteer:${row.id}:guardian-accepted`,
+    idempotencyKey: `volunteer:${row.id}:guardian-accepted:${now.getTime()}`,
     ...(actorId ? { requestedByStaffUserId: actorId } : {}),
     now,
   });

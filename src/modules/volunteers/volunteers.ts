@@ -964,6 +964,11 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
     if (profileDescribed) {
       if (input.guardian) {
         if (!minorsOpen && !isVolunteerMinor(current.age)) throw new DomainError("VALIDATION_ERROR", "the club cannot take volunteers under eighteen yet", ["age"]);
+        // «Confirmat» is the guardian's consent's state (setState's rule): a confirmed person who becomes a minor is refused, not
+        // quietly demoted — the organizer moves them back to «Înscris» first, then the consent is asked.
+        if (current.state === "CONFIRMED" && current.guardianAcceptedAt === null) {
+          throw new DomainError("VOLUNTEER_GUARDIAN_MISSING", "the parent's or guardian's agreement is missing", ["age"]);
+        }
         const nameChanged = input.guardian.name !== current.guardianName;
         const emailChanged = canonicalOrNull(input.guardian.email ?? "") !== canonicalOrNull(current.guardianEmail ?? "");
         if (current.guardianAcceptedAt && (nameChanged || emailChanged)) {

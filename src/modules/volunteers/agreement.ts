@@ -20,6 +20,7 @@ import { canManageVolunteers } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
 import { isUuid } from "@/shared/ids";
 import {
+  agreementMinimumAge,
   agreementRolesStamp,
   agreementRoleWords,
   compareRoles,
@@ -27,7 +28,6 @@ import {
   refusedFields,
   type RoleWords,
   tasksWords,
-  VOLUNTEER_MINIMUM_AGE,
   volunteerAgreementAcceptSchema,
 } from "./domain/volunteer";
 
@@ -144,7 +144,7 @@ export async function volunteerRoles<T extends Record<string, unknown>>(
  * The agreement's blanks for one person, their roles and one event, in one language — everything but the moment
  * of acceptance. The event's facts as a race's declaration fills them (`eventMergeValues`: its title, its date
  * in words, its place — the city while the place is to be announced, §328); the age is the platform's
- * (`VOLUNTEER_MINIMUM_AGE`), never the event's; the role is the one given, else the roles chosen — in their own
+ * (`agreementMinimumAge` of the text read: 14, or 18 for a text approved before the minors' clause), never the event's; the role is the one given, else the roles chosen — in their own
  * sentence when the text read (`body`) names `{{volunteerRoleChoices}}`, else their names alone in the role's blank
  * (`agreementRoleWords`, §761); no description in this language answers its tasks' field with "", which leaves its
  * sentence out. The values are the facts alone, so the text a person reads before accepting, the fingerprint
@@ -175,7 +175,7 @@ export async function agreementBlanks<T extends Record<string, unknown>>(
       event: event?.values.event ?? "",
       eventDate: event?.values.eventDate ?? "",
       eventLocation: event?.values.eventLocation ?? "",
-      minimumAge: minimumAgeMergeValue(VOLUNTEER_MINIMUM_AGE, input.locale),
+      minimumAge: minimumAgeMergeValue(agreementMinimumAge(input.body), input.locale),
     },
     timezone: event?.timezone ?? CLUB_TIME_ZONE,
   };

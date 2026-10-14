@@ -7,13 +7,15 @@ import { eventVolunteerRoleChoices, eventVolunteerRoles, eventVolunteers } from 
 import { eventTranslations, events } from "@/db/schema/events";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import { computeContentHash, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
-import { findCurrentApprovedDocument, insertLegalDocumentVersion, volunteerMinorsOpen } from "@/modules/legal-documents/repository";
+import { removalPlan } from "@/modules/legal-documents/domain/deletability";
+import { findCurrentApprovedDocument, insertLegalDocumentVersion, listVersionsForBackoffice, volunteerMinorsOpen } from "@/modules/legal-documents/repository";
+import { readDeletionFacts } from "@/modules/legal-documents/service";
 import { LEGAL_TEMPLATES } from "@/modules/legal-documents/templates/catalogue";
 import type { OutboxRow } from "@/modules/notifications/outbox";
 import { renderOutboxMessage } from "@/modules/notifications/render";
-import { acceptVolunteerAgreementByLink, mintVolunteerAgreementLink, readVolunteerAgreementLink } from "@/modules/volunteers/agreement";
+import { acceptVolunteerAgreementByLink, mintVolunteerAgreementLink, readVolunteerAgreementLink, readAgreementFacts } from "@/modules/volunteers/agreement";
 import { renderVolunteerAgreementPdf } from "@/modules/volunteers/agreement-pdf";
-import { agreementRolesStamp, guardianStandingOf } from "@/modules/volunteers/domain/volunteer";
+import { agreementMinimumAge, agreementRolesStamp, guardianStandingOf } from "@/modules/volunteers/domain/volunteer";
 import {
   acceptVolunteerGuardianByLink,
   mintVolunteerGuardianLink,
@@ -207,6 +209,55 @@ describe("§NNN volunteers under eighteen and their guardian", () => {
         changeVolunteer(db, admin, { kind: "add", eventId: event.id, fields: { roleIds: [role.id], assignedRoleId: "", name: "Dan", email: "dan@example.test", phone: "+40712345679", note: "", age: "15", guardianName: "Maria Popescu" } }, NOW),
       ).rejects.toMatchObject({ code: "VALIDATION_ERROR", fields: ["age"] });
       expect(await db.select().from(eventVolunteers)).toHaveLength(0);
+    });
+  });
+
+  describe("the text in force decides what a guardian may accept and what the blanks say", () => {
+    it("answers «nothing to accept» to a link minted before the club approved a version with no clause for the guardian — and records nothing", async () => {
+      const { event, role } = await seedEvent();
+      await submitVolunteer(db, event.id, form(role.id), NOW);
+      const [person] = await db.select().from(eventVolunteers);
+      const secret = (await mintVolunteerGuardianLink(db, person.id, "maria@example.test", NOW))!.secret;
+      expect(await readVolunteerGuardianLink(db, secret, "ro", NOW)).toMatchObject({ status: "open" });
+      await approveAgreement(2, false);
+      expect(await readVolunteerGuardianLink(db, secret, "ro", LATER)).toEqual({ status: "noAgreement" });
+      expect(await acceptVolunteerGuardianByLink(db, secret, { agreement: true, typedName: "Maria Popescu", locale: "ro" }, LATER)).toEqual({ outcome: "noAgreement" });
+      expect(await row(person.id)).toMatchObject({ guardianAcceptedAt: null, guardianDocumentId: null, guardianTextHash: null });
+      expect(await changeVolunteer(db, admin, { kind: "setState", eventId: event.id, id: person.id, state: "CONFIRMED" }, LATER).catch((error) => error.code)).toBe("VOLUNTEER_GUARDIAN_MISSING");
+      // The clause comes back with a newer version: the same link, still live, is a text to accept again.
+      await approveAgreement(3, true);
+      expect(await acceptVolunteerGuardianByLink(db, secret, { agreement: true, typedName: "Maria Popescu", locale: "ro" }, LATER)).toMatchObject({ outcome: "accepted" });
+    });
+
+    it("keeps saying eighteen in a text approved before the minors' clause, and fourteen in one that carries it", async () => {
+      await approveAgreement(2, false);
+      const { event, role } = await seedEvent();
+      // An adult signs under the old text: its blanks, its fingerprint and the page it read all say eighteen.
+      expect(await submitVolunteer(db, event.id, form(role.id, { age: "30", guardianName: "", guardianEmail: "", guardianAware: false }), NOW)).toEqual({ outcome: "done" });
+      const [adult] = await db.select().from(eventVolunteers);
+      expect(readAgreementFacts(adult.agreementFacts)?.minimumAge).toBe("18 ani");
+      const old = await findCurrentApprovedDocument(db, "VOLUNTEER_AGREEMENT", "ro", NOW);
+      expect(agreementMinimumAge(old!.body)).toBe(18);
+      await approveAgreement(3, true);
+      const current = await findCurrentApprovedDocument(db, "VOLUNTEER_AGREEMENT", "ro", NOW);
+      expect(agreementMinimumAge(current!.body)).toBe(14);
+    });
+
+    it("counts a guardian's acceptance as a signature on the version they read: a version only a parent accepted is retired, never hard-deleted", async () => {
+      const { event, role } = await seedEvent();
+      await submitVolunteer(db, event.id, form(role.id), NOW);
+      const [person] = await db.select().from(eventVolunteers);
+      // The parent reads a newer version than the volunteer did.
+      const second = await approveAgreement(2);
+      const secret = (await mintVolunteerGuardianLink(db, person.id, "maria@example.test", NOW))!.secret;
+      await acceptVolunteerGuardianByLink(db, secret, { agreement: true, typedName: "Maria Popescu", locale: "ro" }, LATER);
+      // Superseded by a third: the second is no longer in force.
+      await approveAgreement(3);
+      const versions = await listVersionsForBackoffice(db);
+      const mine = versions.find((version) => version.id === second)!;
+      expect(mine.acceptanceCount).toBe(1);
+      const [facts] = await readDeletionFacts(db, [mine], versions, LATER);
+      expect(removalPlan(facts)).toMatchObject({ kind: "retire", reliance: { signatures: 1 } });
     });
   });
 
@@ -548,6 +599,19 @@ describe("§NNN volunteers under eighteen and their guardian", () => {
       expect((audit.metadataJson as { fields: string[] }).fields).toEqual(expect.arrayContaining(["age", "guardianCleared"]));
     });
 
+    it("refuses to turn a confirmed adult into a minor with no consent — «Confirmat» is not kept without the parent's agreement", async () => {
+      const { event, role } = await seedEvent();
+      const id = await minorByHand(event.id, role.id, { age: "20", guardianName: "", guardianEmail: "" });
+      await changeVolunteer(db, admin, { kind: "setState", eventId: event.id, id, state: "CONFIRMED" }, NOW);
+      const base = { roleIds: [role.id], assignedRoleId: role.id, name: "Dan Tânărul", email: "dan@example.test", phone: "+40712345679", note: "", age: "16", guardianName: "Maria Popescu", guardianEmail: "maria@example.test" };
+      await expect(changeVolunteer(db, admin, { kind: "edit", eventId: event.id, id, fields: base }, NOW)).rejects.toMatchObject({ code: "VOLUNTEER_GUARDIAN_MISSING", fields: ["age"] });
+      expect(await row(id)).toMatchObject({ age: 20, state: "CONFIRMED", guardianName: null });
+      // Moved back to «Înscris» first, the same edit is taken: the consent is then asked as for any minor.
+      await changeVolunteer(db, admin, { kind: "setState", eventId: event.id, id, state: "REGISTERED" }, NOW);
+      expect(await changeVolunteer(db, admin, { kind: "edit", eventId: event.id, id, fields: base }, NOW)).toMatchObject({ changed: true });
+      expect(await row(id)).toMatchObject({ age: 16, state: "REGISTERED", guardianName: "Maria Popescu", guardianAcceptedAt: null });
+    });
+
     it("keeps an accepted guardian's name and address fixed under their acceptance, and a changed address kills a live link", async () => {
       const { event, role } = await seedEvent();
       const id = await minorByHand(event.id, role.id);
@@ -644,9 +708,30 @@ describe("§NNN volunteers under eighteen and their guardian", () => {
       expect(text).toContain("Acordul părintelui sau tutorelui, Maria Popescu, acceptat electronic");
       expect(text).toContain("din linkul unic trimis pe adresa lui de email");
       // The volunteer's own acceptance is told too, and the proof is the guardian's text.
-      expect(text).toContain("pe pagina evenimentului");
+      expect(text).toContain("pe pagina de voluntari a evenimentului");
       expect(text).toContain(accepted.guardianTextHash!);
       expect(text).not.toContain("încă neprimit");
+    });
+
+    it("keeps BOTH fingerprints on the copy when the parent read a newer version than the volunteer — each signer's own text, never the one's under the other's line", async () => {
+      const { event, role } = await seedEvent();
+      await submitVolunteer(db, event.id, form(role.id), NOW);
+      const [person] = await db.select().from(eventVolunteers);
+      // The club approves a new version between the sign-up and the parent's press.
+      await approveAgreement(2);
+      const secret = (await mintVolunteerGuardianLink(db, person.id, "maria@example.test", NOW))!.secret;
+      await acceptVolunteerGuardianByLink(db, secret, { agreement: true, typedName: "Maria Popescu", locale: "ro" }, LATER);
+      const accepted = await row(person.id);
+      expect(accepted.agreementDocumentId).not.toBe(accepted.guardianDocumentId);
+      expect(accepted.agreementTextHash).not.toBe(accepted.guardianTextHash);
+      const text = await words(person.id, {}, LATER);
+      expect(text).toContain(accepted.agreementTextHash!);
+      expect(text).toContain(accepted.guardianTextHash!);
+      // Each signer on their own line; the volunteer's acceptance is the form's, the parent's the link's.
+      expect(text).toContain("Semnătura voluntarului:");
+      expect(text).toContain("Semnătura părintelui sau tutorelui:");
+      expect(text).toContain("pe pagina de voluntari a evenimentului");
+      expect(text).toContain("Acordul părintelui sau tutorelui, Maria Popescu, acceptat electronic");
     });
 
     it("prints a paper consent with who recorded it", async () => {

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { namesVolunteerGuardian } from "@/modules/legal-documents/domain/merge-fields";
 import type { EventVolunteerSource, EventVolunteerState } from "@/db/schema/event-volunteers";
 import type { RichTextDoc } from "@/modules/content/rich-text/domain/schema";
 import { normalizeTeamText, resolveRichPair, richTextBox } from "@/modules/content/team/fields";
@@ -48,6 +49,17 @@ export const VOLUNTEER_ROLES_MAX = 30;
 export const VOLUNTEER_MINIMUM_AGE = 14;
 /** Of age: a volunteer under it needs a parent or guardian (§NNN); the agreement link's tick «Am cel puțin 18 ani» says it for a person with no age typed. */
 export const VOLUNTEER_ADULT_AGE = 18;
+
+/**
+ * The age `{{minimumAge}}` says in a volunteer agreement being read (§NNN). A text that carries the minors' clause
+ * (`{{volunteerGuardian}}`) is one the club approved knowing a person from fourteen volunteers with a parent: it says
+ * `VOLUNTEER_MINIMUM_AGE`. A text approved under §758 says nothing of a guardian and the platform takes only adults
+ * under it, so it keeps saying eighteen until the club approves a version from the new template — a text in force
+ * never moves under the people who accept it. Pure.
+ */
+export function agreementMinimumAge(body: unknown): number {
+  return namesVolunteerGuardian(body) ? VOLUNTEER_MINIMUM_AGE : VOLUNTEER_ADULT_AGE;
+}
 
 /** Whether an age typed says a minor: a number under eighteen. No age (an adult's hand entry, a row from before) is never a minor. */
 export function isVolunteerMinor(age: number | null | undefined): boolean {
