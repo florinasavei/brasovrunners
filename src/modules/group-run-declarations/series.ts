@@ -11,6 +11,7 @@ import { recurrenceOf } from "@/modules/events/domain/series";
 import { wallClockWeekday } from "@/modules/events/domain/zoned-time";
 import { isLegalDocumentBody } from "@/modules/legal-documents/domain/content-hash";
 import {
+  GROUP_RUN_MINOR_AGE_MERGE_FIELD,
   isPlacelessSeriesSentence,
   MERGE_FIELDS,
   mergeFieldsIn,
@@ -84,7 +85,7 @@ export function seriesMergeValues(body: unknown, series: RunSeries): MergeValues
 }
 
 /** The fields a signature keeps as they were filled (§523): the run's facts and the series'. */
-const KEPT: ReadonlySet<MergeField> = new Set<MergeField>(["event", "eventDate", "eventLocation", "minimumAge", ...SERIES_MERGE_FIELDS]);
+const KEPT: ReadonlySet<MergeField> = new Set<MergeField>(["event", "eventDate", "eventLocation", "minimumAge", GROUP_RUN_MINOR_AGE_MERGE_FIELD, ...SERIES_MERGE_FIELDS]);
 
 /** What `signed_facts` keeps of the values the signer read: the run's and the series' facts, nothing personal. */
 export function factsToKeep(values: MergeValues): Record<string, string> {
