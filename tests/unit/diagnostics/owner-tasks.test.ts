@@ -40,6 +40,7 @@ const LAUNCHED: OwnerTaskInputs = {
   volunteersDescribed: true,
   volunteeringEvents: 1,
   volunteerAgreementInForce: true,
+  volunteerRoleChoicesAgreement: true,
   volunteerAgreementDescribed: true,
   gmailFallbackDescribed: true,
   refusalDescribed: true,
@@ -170,6 +171,20 @@ describe("owner tasks", () => {
       expect(item.how.join("\n")).toContain("/admin/legal");
       // The lawyer reads it first, against the volunteering law (the owner's brief).
       expect(item.how.join("\n")).toContain("78/2014");
+    }
+  });
+
+  it("§761: the agreement's row for several roles is open while one in force names no {{volunteerRoleChoices}} and an event takes volunteers", () => {
+    expect(stateOf({ ...LAUNCHED, volunteerRoleChoicesAgreement: false }, "volunteerRoleChoicesAgreement")).toBe("open");
+    expect(stateOf(LAUNCHED, "volunteerRoleChoicesAgreement")).toBe("done");
+    expect(ownerTasks({ ...LAUNCHED, volunteerRoleChoicesAgreement: false, volunteeringEvents: 0 }).some((task) => task.id === "volunteerRoleChoicesAgreement")).toBe(false);
+    // No agreement in force: the agreement's own row asks for one, and approving it from the template answers both.
+    expect(ownerTasks({ ...LAUNCHED, volunteerAgreementInForce: false, volunteerRoleChoicesAgreement: false }).some((task) => task.id === "volunteerRoleChoicesAgreement")).toBe(false);
+    expect(ownerTasks({ ...LAUNCHED, volunteerRoleChoicesAgreement: false }).find((task) => task.id === "volunteerRoleChoicesAgreement")?.state).not.toBe("blocking");
+    for (const catalogue of [ro, en]) {
+      const item = catalogue.Admin.tasks.items.volunteerRoleChoicesAgreement;
+      expect(item.title && item.todo && item.done).toBeTruthy();
+      expect(item.how.join(" ")).toContain("/admin/legal");
     }
   });
 
@@ -461,6 +476,7 @@ describe("owner tasks", () => {
       "volunteerAgreementNotice",
       "gmailFallbackNotice",
       "volunteerAgreement",
+      "volunteerRoleChoicesAgreement",
       "refusalTerms",
       "teamPageNotice",
       "raceDeclarations",

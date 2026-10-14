@@ -2,7 +2,7 @@ import { and, asc, desc, eq, inArray, or } from "drizzle-orm";
 import { auditLogs } from "@/db/schema/audit-logs";
 import { type DeclarationAcceptance, declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import { emailOutbox } from "@/db/schema/email-outbox";
-import { eventVolunteerRoles, eventVolunteers } from "@/db/schema/event-volunteers";
+import { eventVolunteerRoleChoices, eventVolunteerRoles, eventVolunteers } from "@/db/schema/event-volunteers";
 import { eventTranslations } from "@/db/schema/events";
 import { legalDocuments } from "@/db/schema/legal-documents";
 import { type Participant, participants } from "@/db/schema/participants";
@@ -98,9 +98,12 @@ export type PersonData = {
   volunteerOffers: Array<{
     eventId: string;
     eventTitle: string | null;
-    /** The role's name in both languages: the page shows the one of its own locale. */
-    roleNameRo: string;
-    roleNameEn: string;
+    /** The role the organizers gave, in both languages (the page shows the one of its own locale) — null while none (§761). */
+    roleNameRo: string | null;
+    roleNameEn: string | null;
+    /** The roles the person said they would do (§761), in both languages, in the club's order. */
+    chosenRolesRo: string[];
+    chosenRolesEn: string[];
     state: (typeof eventVolunteers.$inferSelect)["state"];
     source: (typeof eventVolunteers.$inferSelect)["source"];
     name: string;
@@ -193,8 +196,9 @@ async function collectPersonData<T extends Record<string, unknown>>(
     .orderBy(asc(registrationInterests.createdAt));
 
   // The offers to volunteer (§754), found by the same canonical address: the event's title in Romanian, the role as the club wrote it.
-  const volunteerOffers = await db
+  const offerRows = await db
     .select({
+      id: eventVolunteers.id,
       eventId: eventVolunteers.eventId,
       eventTitle: eventTranslations.title,
       roleNameRo: eventVolunteerRoles.nameRo,
@@ -214,12 +218,32 @@ async function collectPersonData<T extends Record<string, unknown>>(
       declaredAdult: eventVolunteers.declaredAdult,
     })
     .from(eventVolunteers)
-    .innerJoin(eventVolunteerRoles, eq(eventVolunteerRoles.id, eventVolunteers.roleId))
+    // The role given, when there is one (§761: an offer nobody placed has none).
+    .leftJoin(eventVolunteerRoles, eq(eventVolunteerRoles.id, eventVolunteers.roleId))
     .leftJoin(eventTranslations, and(eq(eventTranslations.eventId, eventVolunteers.eventId), eq(eventTranslations.locale, "ro")))
     // The agreement's version number (§758), through the row's own reference.
     .leftJoin(legalDocuments, eq(legalDocuments.id, eventVolunteers.agreementDocumentId))
     .where(eq(eventVolunteers.canonicalEmail, canonicalEmail))
     .orderBy(asc(eventVolunteers.createdAt));
+  // The roles each offer chose (§761), every one of them: an access request is complete (art. 15 GDPR).
+  const choiceRows =
+    offerRows.length > 0
+      ? await db
+          .select({
+            volunteerId: eventVolunteerRoleChoices.volunteerId,
+            nameRo: eventVolunteerRoles.nameRo,
+            nameEn: eventVolunteerRoles.nameEn,
+            position: eventVolunteerRoles.position,
+          })
+          .from(eventVolunteerRoleChoices)
+          .innerJoin(eventVolunteerRoles, eq(eventVolunteerRoles.id, eventVolunteerRoleChoices.roleId))
+          .where(inArray(eventVolunteerRoleChoices.volunteerId, offerRows.map((offer) => offer.id)))
+          .orderBy(asc(eventVolunteerRoles.position), asc(eventVolunteerRoles.createdAt), asc(eventVolunteerRoles.id))
+      : [];
+  const volunteerOffers = offerRows.map(({ id, ...offer }) => {
+    const chosen = choiceRows.filter((choice) => choice.volunteerId === id);
+    return { ...offer, chosenRolesRo: chosen.map((choice) => choice.nameRo), chosenRolesEn: chosen.map((choice) => choice.nameEn) };
+  });
 
   const aboutThePerson = [
     ...(participant ? [eq(auditLogs.participantId, participant.id)] : []),
