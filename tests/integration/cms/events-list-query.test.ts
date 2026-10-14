@@ -1,3 +1,4 @@
+import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { events, eventTranslations } from "@/db/schema/events";
 import { arrangeEventList, countEventLines, parseEventListQuery } from "@/modules/content/events/list-query";
@@ -153,6 +154,85 @@ describe("§527 the backoffice events list over seeded events and a series", () 
     expect(await titles({ state: "PUBLISHED" })).toHaveLength(4);
     // The label typed for the key is the default list, «Viitoare», never an error (§555).
     expect(await titles({ state: "Încheiate" })).toEqual(["Tură pe Tâmpa", "Alergare de marți ×2", "Crosul de toamnă"]);
+  });
+
+  /** Marks one date as the club's main event, as the editor's «Evidențiere pe site» box does (§NNN). */
+  async function feature(ro: string, startsAt?: string) {
+    const rows = await listEventsForBackoffice(db);
+    const row = rows.find(
+      ({ event, translations }) =>
+        translations.some((translation) => translation.locale === "ro" && translation.title === ro) &&
+        (startsAt === undefined || event.startsAt.toISOString() === new Date(startsAt).toISOString()),
+    );
+    if (!row) throw new Error(`no seeded date ${ro}`);
+    await db.update(events).set({ featured: true }).where(eq(events.id, row.event.id));
+  }
+
+  describe("§NNN the main event stands first", () => {
+    // «Crosul de toamnă» is the last date still to come (21 November, a draft): by the nearest date it is third of three.
+    beforeEach(async () => {
+      await feature("Crosul de toamnă");
+    });
+
+    it("is first in the default list, the others keeping the nearest-date order", async () => {
+      expect(await titles({})).toEqual(["Crosul de toamnă", "Tură pe Tâmpa", "Alergare de marți ×2"]);
+      expect(await titles({ state: "ALL" })).toEqual([
+        "Crosul de toamnă",
+        "Semimaratonul",
+        "Tură pe Tâmpa",
+        "Alergare de marți ×4",
+        "Maratonul",
+        "Ștafeta de vară ×2",
+        "Crosul de primăvară",
+      ]);
+    });
+
+    it("is first in every order", async () => {
+      for (const sort of ["date-near", "date-old", "title-asc", "title-desc", "state"]) {
+        expect((await titles({ state: "ALL", sort }))[0]).toBe("Crosul de toamnă");
+      }
+      expect(await titles({ state: "ALL", sort: "title-asc" })).toEqual([
+        "Crosul de toamnă",
+        "Alergare de marți ×4",
+        "Crosul de primăvară",
+        "Maratonul",
+        "Semimaratonul",
+        "Ștafeta de vară ×2",
+        "Tură pe Tâmpa",
+      ]);
+    });
+
+    it("is listed only where the state and the search match it", async () => {
+      expect(await titles({ state: "DRAFT" })).toEqual(["Crosul de toamnă", "Alergare de marți"]);
+      expect(await titles({ state: "PUBLISHED" })).not.toContain("Crosul de toamnă");
+      expect(await titles({ state: "PAST" })).not.toContain("Crosul de toamnă");
+      expect(await titles({ state: "ARCHIVED" })).toEqual(["Crosul de primăvară"]);
+      expect(await titles({ q: "tampa" })).toEqual(["Tură pe Tâmpa"]);
+      // «cros» finds it, and it leads the other «Cros» (archived) when both are shown.
+      expect(await titles({ q: "cros", state: "ALL" })).toEqual(["Crosul de toamnă", "Crosul de primăvară"]);
+    });
+
+    it("is one line on the first page, counted once", async () => {
+      const lines = arrangeEventList(await listEventsForBackoffice(db), parseEventListQuery({ state: "ALL" }), NOW, "ro");
+      expect(lines).toHaveLength(countEventLines(await listEventsForBackoffice(db)));
+      // Paged by two, the marked date (third by its date) is on the first page and on no other.
+      const pages = [];
+      for (let from = 0; from < lines.length; from += 2) pages.push(lines.slice(from, from + 2).map(({ key }) => key));
+      expect(pages.length).toBeGreaterThan(1);
+      expect(pages[0][0]).toBe(lines[0].key);
+      expect(pages.slice(1).flat()).not.toContain(lines[0].key);
+      expect(new Set(lines.map(({ key }) => key)).size).toBe(lines.length);
+    });
+  });
+
+  it("lifts a series' line when the marked date is one of its dates still shown (§NNN)", async () => {
+    await feature("Alergare de marți", "2026-10-06T15:00:00Z");
+    expect((await titles({ state: "ALL" }))[0]).toBe("Alergare de marți ×4");
+    expect((await titles({}))[0]).toBe("Alergare de marți ×2");
+    // «Ciorne» holds only the 13 October draft, not the marked date: nothing is lifted.
+    expect(await titles({ state: "DRAFT" })).toEqual(["Alergare de marți", "Crosul de toamnă"]);
+    // «Încheiate» holds the two dates gone, not the marked one (6 October is still to come).
+    expect((await titles({ state: "PAST" }))[0]).toBe("Semimaratonul");
   });
 
   it("searches either language, the address and the place, accents ignored", async () => {

@@ -70,3 +70,41 @@ test.describe("§527 the backoffice events list: search, state, order", () => {
     await expect(page.getByRole("combobox", { name: "Starea" })).toHaveValue("UPCOMING");
   });
 });
+
+/**
+ * BR-REQ-051-01 (`DECISIONS.md` §NNN, amending §527) — the main event, the one marked «Principal»,
+ * stands first in the backoffice list in every order. The seed's anniversary race is the main
+ * event and the last of the dates still to come, so by its date alone it would be third; reads
+ * the seed only, so the two projects sharing a database cannot collide.
+ */
+test.describe("§NNN the backoffice events list puts the main event first", () => {
+  /** The first line of the list as the viewport draws it (a table row, or a card on a phone). */
+  const firstRow = (page: import("@playwright/test").Page) =>
+    page
+      .locator('#main a[href*="/admin/events/"]:not([href$="/new"]):not([href$="/import"])')
+      .filter({ visible: true })
+      .first()
+      .locator("xpath=ancestor::*[self::tr or self::li][1]");
+
+  test("is the first row by date, by name both ways and by state, and only where it matches", async ({ page }) => {
+    await signIn(page, "Dev Superadministrator");
+
+    for (const query of ["", "?sort=date-old", "?sort=title-asc", "?sort=title-desc", "?sort=state", "?state=ALL"]) {
+      await page.goto(`/ro/admin${query}`);
+      await expect(page.getByRole("search", { name: "Caută și filtrează evenimentele" })).toBeVisible();
+      await expect(firstRow(page), query || "the plain address").toContainText("Crosul aniversar Brașov Runners");
+      await expect(firstRow(page), query || "the plain address").toContainText("Principal");
+      // One main event, one mark, on the one line.
+      await expect(page.getByText("Principal", { exact: true }).filter({ visible: true })).toHaveCount(1);
+    }
+
+    // A search that does not match it does not show it, and nothing else is marked.
+    await page.goto("/ro/admin?q=tampa");
+    await expect(firstRow(page)).toContainText("Tură pe Tâmpa");
+    await expect(page.getByText("Principal", { exact: true }).filter({ visible: true })).toHaveCount(0);
+
+    // A state that does not hold it: a published date is not in «Ciorne».
+    await page.goto("/ro/admin?state=DRAFT");
+    await expect(page.getByText("Crosul aniversar Brașov Runners")).toHaveCount(0);
+  });
+});

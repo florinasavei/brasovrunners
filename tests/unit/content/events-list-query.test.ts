@@ -13,6 +13,7 @@ import {
   type ListedTranslation,
   matchesEventList,
   parseEventListQuery,
+  pinFeaturedLine,
   type SortableLine,
   sortEventLines,
 } from "@/modules/content/events/list-query";
@@ -235,6 +236,86 @@ describe("arrangeEventList — a series is one line, sorted by its next date", (
   it("counts the unfiltered lines for «N din M evenimente»", () => {
     expect(countEventLines(rows)).toBe(3);
     expect(arrange({ q: "stafeta" })).toHaveLength(1);
+  });
+});
+
+describe("arrangeEventList — the main event stands first in every order (§NNN, amending §527)", () => {
+  let counter = 0;
+  const row = (title: string, startsAt: string, over: Partial<ListedEvent> = {}, featured = false): ListedRow => ({
+    event: { id: `f${++counter}`, type: "GROUP_RUN", featured, ...event({ startsAt: new Date(startsAt), ...over }) },
+    translations: [tr(title, title.toLowerCase().replace(/\s+/g, "-"), null, "ro")],
+  });
+  // The race is the fifth line by date, as on the owner's screenshot (2026-10-14); the weekly run
+  // is a series of three of which one date is not the race.
+  const rows: ListedRow[] = [
+    row("Alergare de marți", "2026-10-06T15:00:00Z"),
+    row("Alergare de marți", "2026-10-13T15:00:00Z"),
+    row("Alergare de marți", "2026-10-20T15:00:00Z"),
+    row("Tura Tâmpei", "2026-10-03T08:00:00Z"),
+    row("Crosul de toamnă", "2026-10-25T08:00:00Z"),
+    row("Ștafeta", "2026-11-08T08:00:00Z"),
+    row("Cursa principală", "2026-11-21T08:00:00Z", { editorialStatus: "DRAFT" }, true),
+    row("Crosul de primăvară", "2026-04-01T08:00:00Z", { editorialStatus: "ARCHIVED" }),
+  ];
+  const titles = (params: Record<string, string>) =>
+    arrangeEventList(rows, parseEventListQuery({ state: "ALL", ...params }), NOW, "ro").map((line) => line.next.translations[0].title);
+
+  it("is first with the default order, the others keeping it", () => {
+    expect(titles({})).toEqual(["Cursa principală", "Tura Tâmpei", "Alergare de marți", "Crosul de toamnă", "Ștafeta", "Crosul de primăvară"]);
+    // «Viitoare» is the default state: the draft race is a date still to come.
+    expect(titles({ state: "UPCOMING" })[0]).toBe("Cursa principală");
+  });
+
+  it("is first in every order, and the rest keep the order that order gives", () => {
+    expect(titles({ sort: "date-old" })).toEqual(["Cursa principală", "Crosul de primăvară", "Tura Tâmpei", "Alergare de marți", "Crosul de toamnă", "Ștafeta"]);
+    expect(titles({ sort: "title-asc" })).toEqual(["Cursa principală", "Alergare de marți", "Crosul de primăvară", "Crosul de toamnă", "Ștafeta", "Tura Tâmpei"]);
+    expect(titles({ sort: "title-desc" })).toEqual(["Cursa principală", "Tura Tâmpei", "Ștafeta", "Crosul de toamnă", "Crosul de primăvară", "Alergare de marți"]);
+    // «Stare»: the race is a draft, which is also first by state; the archived one is last.
+    expect(titles({ sort: "state" })[0]).toBe("Cursa principală");
+    expect(titles({ sort: "state" }).at(-1)).toBe("Crosul de primăvară");
+  });
+
+  it("leaves a list without it as the order gives it", () => {
+    const plain = rows.map((r) => ({ ...r, event: { ...r.event, featured: false } }));
+    const order = arrangeEventList(plain, parseEventListQuery({ state: "ALL" }), NOW, "ro").map((line) => line.next.translations[0].title);
+    expect(order).toEqual(["Tura Tâmpei", "Alergare de marți", "Crosul de toamnă", "Ștafeta", "Cursa principală", "Crosul de primăvară"]);
+  });
+
+  it("is not shown by a search or a state that does not match it", () => {
+    expect(titles({ q: "cros" })).toEqual(["Crosul de toamnă", "Crosul de primăvară"]);
+    expect(titles({ state: "PUBLISHED" })).not.toContain("Cursa principală");
+    expect(titles({ state: "PUBLISHED" })[0]).toBe("Tura Tâmpei");
+    expect(titles({ state: "PAST" })).toEqual(["Crosul de primăvară"]);
+    // A search that matches it brings it first.
+    expect(titles({ q: "principala" })).toEqual(["Cursa principală"]);
+    expect(titles({ q: "cursa" })[0]).toBe("Cursa principală");
+  });
+
+  it("lifts the series line that holds the marked date, whole, and only while that date matches", () => {
+    const series = rows.map((r, index) => (index === 2 ? { ...r, event: { ...r.event, featured: true } } : { ...r, event: { ...r.event, featured: false } }));
+    const lines = arrangeEventList(series, parseEventListQuery({ state: "ALL" }), NOW, "ro");
+    expect(lines[0].members).toHaveLength(3);
+    expect(lines[0].next.translations[0].title).toBe("Alergare de marți");
+    // A filter that drops the marked date (a draft one-off) leaves the series line unpinned.
+    const drafted = series.map((r, index) => (index === 1 ? { ...r, event: { ...r.event, editorialStatus: "DRAFT" as const } } : r));
+    const draftLines = arrangeEventList(drafted, parseEventListQuery({ state: "DRAFT" }), NOW, "ro");
+    expect(draftLines.map((line) => line.next.translations[0].title)).toEqual(["Alergare de marți", "Cursa principală"]);
+  });
+
+  it("is counted once and pages as the first line, so «N din M» and the slices agree", () => {
+    const lines = arrangeEventList(rows, parseEventListQuery({ state: "ALL" }), NOW, "ro");
+    expect(lines).toHaveLength(countEventLines(rows));
+    const pages = [lines.slice(0, 2), lines.slice(2, 4), lines.slice(4, 6)];
+    expect(pages[0][0].next.translations[0].title).toBe("Cursa principală");
+    const flat = pages.flat().map((line) => line.key);
+    expect(new Set(flat).size).toBe(flat.length);
+  });
+
+  it("pinFeaturedLine keeps a stable order and copies the list rather than changing it", () => {
+    const lines = arrangeEventList(rows, parseEventListQuery({ state: "ALL" }), NOW, "ro");
+    const again = pinFeaturedLine(lines);
+    expect(again.map((line) => line.key)).toEqual(lines.map((line) => line.key));
+    expect(again).not.toBe(lines);
   });
 });
 
