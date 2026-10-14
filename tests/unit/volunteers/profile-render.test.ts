@@ -829,3 +829,224 @@ describe("§768 the event page keeps one line and one button", () => {
     expect(readFileSync("src/i18n/live-twin.ts", "utf8")).not.toMatch(/"volunteer", "vfields"/);
   });
 });
+
+describe("§NNN «Arată public câți voluntari mai sunt necesari» is the card's third tick, the same as the other two", () => {
+  it("is a submit drawn as the checkbox with its one-line help, the state it wants posted, and no «Salvează» beside it", async () => {
+    const off = await drawCard({ volunteersShowCounts: false });
+    const form = /<form[^>]*data-testid="volunteer-counts-form"[\s\S]*?<\/form>/.exec(off)?.[0] ?? "";
+    expect(form).toContain('type="submit"');
+    expect(form).toContain('role="checkbox"');
+    expect(form).toContain('aria-checked="false"');
+    expect(form).toMatch(/<button[^>]*data-testid="volunteer-counts-tick"[^>]*>[\s\S]*Arată public câți voluntari mai sunt necesari<\/button>/);
+    expect(form).toMatch(/data-testid="CheckBoxOutlineBlankIcon"/);
+    expect(form).toContain('name="on" value="1"');
+    expect(form).toContain(ro.Admin.volunteers.counts.help);
+    expect(form).not.toContain("Salvează");
+    // Scripts off: nothing but a form and a submit.
+    expect(form).not.toContain("onclick");
+    const on = await drawCard({ volunteersShowCounts: true });
+    const ticked = /<form[^>]*data-testid="volunteer-counts-form"[\s\S]*?<\/form>/.exec(on)?.[0] ?? "";
+    expect(ticked).toContain('aria-checked="true"');
+    expect(ticked).toMatch(/data-testid="CheckBoxIcon"/);
+    expect(ticked).toContain('name="on" value="0"');
+    const english = await drawCard({ volunteersShowCounts: true }, "en");
+    expect(english).toContain("Show publicly how many volunteers are still needed");
+  });
+
+  it("sits in the «Voluntari» card's own switches, after the T-shirts' tick, and the card still shows the numbers whichever way it is", async () => {
+    for (const volunteersShowCounts of [false, true]) {
+      const page = await drawCard({ volunteersShowCounts });
+      expect(page.indexOf('data-testid="volunteer-shirts-form"')).toBeGreaterThan(0);
+      expect(page.indexOf('data-testid="volunteer-counts-form"')).toBeGreaterThan(page.indexOf('data-testid="volunteer-shirts-form"'));
+      // The backoffice always has the counts: «0 din 3» on a role's chip, whatever the public page says.
+      expect(page, String(volunteersShowCounts)).toMatch(/data-testid="volunteer-role-standing"[^>]*>[\s\S]*?0 din 3/);
+    }
+  });
+
+  it("is a button with no toggle glyph: the card's source and the tick's markup carry none", async () => {
+    const source = readFileSync("src/modules/volunteers/ui/VolunteersCard.tsx", "utf8");
+    expect(source).not.toMatch(/turnOn|turnOff|ToggleOn|ToggleOff|\bSwitch\b/);
+    expect(source).toMatch(/switchVolunteersCountsAction/);
+  });
+});
+
+describe("§NNN the public page says how many people a role needs only while the club ticked it", () => {
+  it("says only that a role still takes people while the tick is off, in both languages — and no number anywhere on the page", async () => {
+    for (const [language, open, counted] of [
+      ["ro", "mai sunt locuri", /mai sunt necesare|mai e nevoie de/],
+      ["en", "spots still open", /more people needed|more person needed/],
+    ] as const) {
+      const page = await drawBox({ showCounts: false }, language);
+      expect((page.match(new RegExp(open, "g")) ?? []).length, language).toBe(3);
+      expect(page, language).not.toMatch(counted);
+      // No number is said about a role: no figure in any role's help line.
+      for (const help of page.split('data-testid="volunteer-role-option"').slice(1)) {
+        expect(/<span[^>]*class="[^"]*MuiFormHelperText[^"]*"[^>]*>([^<]*)</.exec(help)?.[1] ?? "", language).not.toMatch(/\d/);
+      }
+    }
+  });
+
+  it("says the number while the tick is on, as it always did: «mai sunt necesare 3 persoane», «mai e nevoie de 1 persoană»", async () => {
+    const page = await drawBox({ showCounts: true });
+    expect(page).toContain("mai sunt necesare 3 persoane");
+    expect(page).toContain("mai e nevoie de 1 persoană");
+    expect(page).not.toContain("mai sunt locuri");
+    const english = await drawBox({ showCounts: true }, "en");
+    expect(english).toContain("3 more people needed");
+    expect(english).toContain("1 more person needed");
+    expect(english).not.toContain("spots still open");
+  });
+
+  it("offers the same roles either way: a role that is full is not on the page, with the number said or not", async () => {
+    const full: PublicVolunteerRole = { id: FINISH, nameRo: "Sosire", nameEn: "Finish", descriptionRo: null, descriptionEn: null, descriptionRoJson: null, descriptionEnJson: null, needed: 1, taken: 1, free: 0 };
+    // The page hands the form only the roles that still need people (`volunteerBoxRoles`); the form never invents one.
+    for (const showCounts of [false, true]) {
+      const page = await drawBox({ showCounts, roles: [{ ...full, id: WATER, nameRo: "Punct de apă", nameEn: "Water point", needed: 3, taken: 1, free: 2 }] });
+      expect(page.split('data-testid="volunteer-role-option"')).toHaveLength(2);
+      expect(page).not.toContain("Sosire");
+    }
+  });
+
+  it("keeps the line in the source one flag: the form asks `showCounts` and nothing else says a number about volunteers publicly", () => {
+    const box = readFileSync("src/modules/volunteers/ui/VolunteerBox.tsx", "utf8");
+    expect(box).toMatch(/showCounts \?/);
+    // The callout names the roles only; the page and the callout never print `free`, `taken` or `needed` on their own.
+    const callout = readFileSync("src/modules/volunteers/ui/VolunteerCallout.tsx", "utf8");
+    expect(callout).not.toMatch(/\.free|\.taken|\.needed|countForm/);
+    const page = readFileSync("src/app/[locale]/events/[slug]/volunteers/page.tsx", "utf8");
+    expect(page).not.toMatch(/\.free|\.taken|\.needed|countForm/);
+  });
+});
+
+describe("§NNN the owner's note under the roles' list", () => {
+  const NOTE_RO = "În funcție de numărul de doritori, există posibilitatea să fie nevoie să acoperi o altă responsabilitate. Mulțumim pentru dorința de a ajuta. Te vom contacta curând.";
+  const NOTE_EN = "Depending on how many people sign up, you may be asked to cover a different responsibility. Thank you for wanting to help. We will contact you soon.";
+
+  it("carries the owner's words, verbatim with diacritics and the typo fixed, in both catalogues", () => {
+    expect(ro.Event.volunteers.choicesNote).toBe(NOTE_RO);
+    expect(en.Event.volunteers.choicesNote).toBe(NOTE_EN);
+    // The short instruction stays as it was, above the roles.
+    expect(ro.Event.volunteers.choicesHelp).toBe("Bifează tot ce ai face, cel puțin un rol. Organizatorii îți aleg unul și îți scriu.");
+  });
+
+  it("is drawn right under the last role's box, before the next field, and the short instruction stays above the roles", async () => {
+    for (const [language, note, instruction] of [
+      ["ro", NOTE_RO, "Bifează tot ce ai face, cel puțin un rol."],
+      ["en", NOTE_EN, "Tick everything you would do, at least one role."],
+    ] as const) {
+      const page = await drawBox({}, language);
+      const at = page.indexOf('data-testid="volunteer-roles-note"');
+      expect(at, language).toBeGreaterThan(0);
+      expect(page.slice(at)).toContain(note.replace("'", "&#x27;"));
+      // After the last role's block and before the name box.
+      expect(at).toBeGreaterThan(page.lastIndexOf('data-testid="volunteer-role-option"'));
+      expect(at).toBeLessThan(page.indexOf('name="name"'));
+      // The instruction is above the roles, not the note.
+      const help = page.indexOf(instruction);
+      expect(help, language).toBeGreaterThan(0);
+      expect(help).toBeLessThan(page.indexOf('data-testid="volunteer-role-option"'));
+      // A caption in the form's own style, read with the group: the fieldset names it.
+      expect(page).toMatch(/<fieldset[^>]*aria-describedby="[^"]*volunteer-roleIds-note/);
+      expect(/<p[^>]*id="volunteer-roleIds-note"[^>]*class="[^"]*MuiTypography-body2/.test(page) || /<p[^>]*class="[^"]*MuiTypography-body2[^"]*"[^>]*id="volunteer-roleIds-note"/.test(page)).toBe(true);
+    }
+  });
+
+  it("is on the form while it is asked and not on the answer pages", async () => {
+    expect(await drawBox({ outcome: "done" })).not.toContain('data-testid="volunteer-roles-note"');
+    expect(await drawBox({ outcome: "invalid", refused: ["roleIds"] })).toContain('data-testid="volunteer-roles-note"');
+    expect(await drawBox({ roles: [] })).not.toContain('data-testid="volunteer-roles-note"');
+  });
+});
+
+describe("§NNN the event page's button opens the volunteers' page in a new tab", () => {
+  async function drawCallout(language: "ro" | "en") {
+    const { default: VolunteerCallout } = await import("@/modules/volunteers/ui/VolunteerCallout");
+    const { NextIntlClientProvider } = await import("next-intl");
+    locale = language;
+    const slug = language === "ro" ? "crosul" : "the-cross";
+    const drawn = (await VolunteerCallout({ slug, roleNames: language === "ro" ? ["Punct de apă", "Sosire"] : ["Water point", "Finish"] })) as ReactElement;
+    const intl = { locale: language, messages: { Event: messages[language].Event } } as unknown as ComponentProps<typeof NextIntlClientProvider>;
+    return html(createElement(NextIntlClientProvider, intl, drawn));
+  }
+
+  it("is a link with target _blank and rel noopener, the house's new-tab mark and the words that say it — in both languages", async () => {
+    for (const language of ["ro", "en"] as const) {
+      const page = await drawCallout(language);
+      const link = /<a\b[^>]*data-testid="volunteer-callout-button"[^>]*>/.exec(page)?.[0] ?? "";
+      expect(link, language).toContain('target="_blank"');
+      expect(link, language).toContain('rel="noopener"');
+      expect(link, language).toContain(language === "ro" ? 'href="/ro/evenimente/crosul/voluntari"' : 'href="/en/events/the-cross/volunteers"');
+      // The words of the button, then the new-tab mark; the accessible name says where it goes, like the legal links'.
+      expect(link, language).toContain(language === "ro" ? 'aria-label="Vreau să fiu voluntar — se deschide într-o filă nouă"' : 'aria-label="I want to volunteer — opens in a new tab"');
+      const button = /<a\b[^>]*data-testid="volunteer-callout-button"[\s\S]*?<\/a>/.exec(page)?.[0] ?? "";
+      expect(button, language).toMatch(/VolunteerActivismIcon[\s\S]*Vreau să fiu voluntar|VolunteerActivismIcon[\s\S]*I want to volunteer/);
+      expect(button, language).toMatch(/<svg[^>]*aria-hidden="true"[^>]*data-testid="volunteer-callout-new-tab"|<svg[^>]*data-testid="volunteer-callout-new-tab"[^>]*aria-hidden="true"/);
+    }
+  });
+
+  it("keeps the glyph before the words, the 44 pixels, and says no number: the line names the roles only", async () => {
+    const page = await drawCallout("ro");
+    expect(page).toContain("Căutăm voluntari: Punct de apă, Sosire");
+    expect(/data-testid="volunteer-callout-line"[^>]*>([^<]*)</.exec(page)?.[1] ?? "").not.toMatch(/\d/);
+    expect(readFileSync("src/modules/volunteers/ui/VolunteerCallout.tsx", "utf8")).toMatch(/TAP_TARGET/);
+    // Not the volunteers' own page's back link: that one stays in the same tab.
+    expect(readFileSync("src/app/[locale]/events/[slug]/volunteers/page.tsx", "utf8")).not.toMatch(/target="_blank"/);
+  });
+});
+
+describe("§NNN the date of birth on the card's entry and on the public form", () => {
+  it("draws the registration form's own box on the entry: day first, its placeholder, the echo's template, no age box — and a row's date as it was typed", async () => {
+    const page = await drawCard({ profileDescribed: true });
+    const box = tagOf(page, "input", "birthDate");
+    expect(box).not.toBe("");
+    expect(box).toContain('placeholder="ZZ.LL.AAAA"');
+    expect(box).toContain('inputMode="numeric"');
+    expect(page).not.toContain('name="age"');
+    // Maria's row: her date, shown day first.
+    const maria = /<li[^>]*data-testid="volunteer-row"[^>]*data-volunteer-id="55555555[\s\S]*?<\/li>/.exec(page)?.[0] ?? "";
+    expect(tagOf(maria, "input", "birthDate")).toContain('value="12.03.1992"');
+    // Ion's row has no date: an empty box.
+    const ion = /<li[^>]*data-testid="volunteer-row"[^>]*data-volunteer-id="66666666[\s\S]*?<\/li>/.exec(page)?.[0] ?? "";
+    expect(tagOf(ion, "input", "birthDate")).not.toMatch(/value="[^"]/);
+  });
+
+  it("says a row from before the date keeps its age until a date is typed, and shows «16 ani» alone for it", async () => {
+    const old: VolunteerItem = { ...PEOPLE[1], id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa", name: "Vlad Vechi", age: 16, dateOfBirth: null, guardianName: "Maria Popescu" };
+    const page = await drawCard({ minorsOpen: true, volunteers: [old] });
+    const row = /<li[^>]*data-testid="volunteer-row"[^>]*data-volunteer-id="aaaaaaaa[\s\S]*?<\/li>/.exec(page)?.[0] ?? "";
+    expect(row).toContain("Rândul are doar vârsta: 16 ani");
+    expect(row).toMatch(/data-testid="volunteer-facts"[^>]*>16 ani</);
+    expect(tagOf(row, "input", "birthDate")).not.toMatch(/value="[^"]/);
+  });
+
+  it("shows «17 ani (12.03.2009)» on a row with its date, in both languages", async () => {
+    const minor: VolunteerItem = { ...PEOPLE[1], id: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb", name: "Dan Tânăr", age: 17, dateOfBirth: "2009-03-12", sex: null, city: null };
+    const ro_ = await drawCard({ minorsOpen: true, volunteers: [minor] });
+    expect(ro_).toMatch(/data-testid="volunteer-facts"[^>]*>17 ani \(12\.03\.2009\)</);
+    const en_ = await drawCard({ minorsOpen: true, volunteers: [minor] }, "en");
+    expect(en_).toMatch(/data-testid="volunteer-facts"[^>]*>17 years \(12\.03\.2009\)</);
+  });
+
+  it("draws the public box with the registration form's words and nothing hand-rolled: the box, its label, the echo and the unreadable sentence are the registration form's own", async () => {
+    const page = await drawBox({ profile: true });
+    expect(page).toContain(ro.Registration.birthDate);
+    expect(tagOf(page, "input", "birthDate")).toContain('placeholder="' + ro.Registration.birthDatePlaceholder + '"');
+    const source = readFileSync("src/modules/volunteers/ui/VolunteerBox.tsx", "utf8");
+    expect(source).toMatch(/from "@\/modules\/registrations\/ui\/BirthDateField"/);
+    expect(source).not.toMatch(/maskito|inputMode: "numeric", pattern: "\[0-9\]\*"/i);
+    const card = readFileSync("src/modules/volunteers/ui/VolunteerBirthDateField.tsx", "utf8");
+    expect(card).toMatch(/from "@\/modules\/registrations\/ui\/BirthDateField"/);
+    // The mask is Maskito's, in the one place the registration form keeps it.
+    expect(readFileSync("src/modules/registrations/ui/BirthDateField.tsx", "utf8")).toMatch(/useMaskito/);
+  });
+
+  it("works with scripts off: the box is a plain text box with the plain date pattern, and the guardian's block is opened by a noscript rule", async () => {
+    const page = await drawBox({ profile: true, minors: true });
+    const box = tagOf(page, "input", "birthDate");
+    // The registration form's pattern: day first, eight digits or the posted shape — the server reads every one of them.
+    expect(box).toContain('pattern="');
+    expect(box).toContain('type="text"');
+    expect(box).not.toContain('type="date"');
+    expect(page).toContain("<noscript>");
+  });
+});
