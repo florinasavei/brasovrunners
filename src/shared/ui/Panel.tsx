@@ -88,9 +88,10 @@ type CommonProps = {
    * The heading's level: 2 for a panel on the screen, 3 for a fold inside one — the message
    * cards inside "Emailurile trimise participanților" — 4 for a card inside that (the event
    * editor's "Numere de concurs (BIB)" › "Cum arată numărul de concurs"), so the heading list a
-   * screen reader navigates by has the same shape as the screen.
+   * screen reader navigates by has the same shape as the screen — and 5 for a section inside that
+   * one (the bib designer's «Antet», «Numărul», … since §759).
    */
-  level?: 2 | 3 | 4;
+  level?: 2 | 3 | 4 | 5;
   /** The border's meaning (`PanelTone`); the plain box when absent. */
   tone?: PanelTone;
   /**
@@ -239,9 +240,9 @@ export default function Panel({
         ...toneSx(tone),
       } as const);
 
-  const headingTag = level === 4 ? "h4" : level === 3 ? "h3" : "h2";
+  const headingTag = level === 5 ? "h5" : level === 4 ? "h4" : level === 3 ? "h3" : "h2";
   // A fold inside a panel reads a step smaller, so the card and its cards are told apart.
-  const headingSize = level === 4 ? "0.95rem" : level === 3 ? "1rem" : "1.1rem";
+  const headingSize = level === 5 ? "0.9rem" : level === 4 ? "0.95rem" : level === 3 ? "1rem" : "1.1rem";
 
   const Glyph = glyph ? PANEL_GLYPHS[glyph] : null;
   const heading = (

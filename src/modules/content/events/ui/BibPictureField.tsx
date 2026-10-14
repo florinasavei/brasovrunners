@@ -4,6 +4,9 @@ import UploadIcon from "@mui/icons-material/Upload";
 import { ACTION_ICONS } from "@/shared/ui/action-icons";
 
 const ReplaceGlyph = ACTION_ICONS.replace;
+// The sub-card's own glyph before its title (§759): the sponsors' handshake on their band, a picture on every other place.
+const SponsorsGlyph = ACTION_ICONS.sponsors;
+const PictureGlyph = ACTION_ICONS.picture;
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
@@ -70,8 +73,17 @@ type Props = {
 
 /** The form's field names for a place: the picture's address, its crop, and what a refused save brings back. */
 export function bibPictureFieldNames(slot: BibPictureSlot, place?: "member") {
-  // A member's card (§NNN) is a place of its own, always the members'.
-  const key = slot === "memberCard" ? "member.cardImage" : place === "member" ? "member.headerImage" : slot === "header" ? "headerImage" : "sponsorImage";
+  // A member's card («Tot numărul») is a place of its own, always the members'; so is the profile's picture (§759).
+  const key =
+    slot === "memberCard"
+      ? "member.cardImage"
+      : slot === "profile"
+        ? "profileImage"
+        : place === "member"
+          ? "member.headerImage"
+          : slot === "header"
+            ? "headerImage"
+            : "sponsorImage";
   return {
     src: `${BIB_DESIGN_FORM_PREFIX}${key}Src`,
     crop: `${BIB_DESIGN_FORM_PREFIX}${key}Crop`,
@@ -133,7 +145,10 @@ function PictureField({ slot, picture: initial, crop: initialCrop, scope, labels
   const first = useRef(true);
   const lang = typeof document === "undefined" ? "ro" : document.documentElement.lang || "ro";
   const inputId = slot === "memberCard" ? "bib-picture-member-card" : place === "member" ? "bib-picture-member-header" : `bib-picture-${slot}`;
-  const sized = picture.src !== "" && picture.width > 0 && picture.height > 0;
+  // The profile's picture is fitted whole, never cropped (§759): no crop box, and no crop posted.
+  const croppable = slot !== "profile";
+  const sized = croppable && picture.src !== "" && picture.width > 0 && picture.height > 0;
+  const Glyph = slot === "sponsors" ? SponsorsGlyph : PictureGlyph;
 
   // The preview listens to the form's `change` (`BibDesignPreview`); a hidden field set by React
   // fires none, so the field says it changed — after the new value is in the page.
@@ -180,8 +195,18 @@ function PictureField({ slot, picture: initial, crop: initialCrop, scope, labels
   };
 
   return (
-    <Box component="fieldset" sx={{ border: 0, p: 0, m: 0, minWidth: 0 }} data-testid={inputId}>
-      <Typography component="legend" variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+    /*
+      A named sub-card of its own (§759; the owner: «Aici am nevoie de separatoare și iconițe»): a
+      bordered box with the place's glyph before its title, its one line of help, the buttons, and its
+      «Calitate» row inside it — so two picture places one under the other never run together.
+    */
+    <Box
+      component="fieldset"
+      sx={{ border: 1, borderColor: "divider", borderRadius: 1, px: { xs: 1.5, sm: 2 }, pt: 0.5, pb: 1.5, m: 0, minWidth: 0 }}
+      data-testid={inputId}
+    >
+      <Typography component="legend" variant="body2" sx={{ px: 0.5, fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 0.75 }}>
+        <Glyph aria-hidden fontSize="small" sx={{ color: "text.secondary" }} />
         {labels.legend}
       </Typography>
       <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 1 }}>
@@ -189,7 +214,7 @@ function PictureField({ slot, picture: initial, crop: initialCrop, scope, labels
       </Typography>
       {/* What «Salvează» posts: the web variant's address (the design's rule, §249) and the crop. */}
       <input type="hidden" name={names.src} value={picture.src} />
-      <input ref={cropInput} type="hidden" name={names.crop} value={picture.src && crop ? JSON.stringify(crop) : ""} />
+      <input ref={cropInput} type="hidden" name={names.crop} value={croppable && picture.src && crop ? JSON.stringify(crop) : ""} />
       <input
         type="hidden"
         name={names.picture}

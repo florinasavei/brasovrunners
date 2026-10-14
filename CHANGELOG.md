@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V3.19-2026-10-14
+
+- **The bib designer in sections, with a profile picture, a turned profile and labelled emergency phones** — «Cum arată numărul de concurs» is six named folds top to bottom as the number prints, each picture place a sub-card with its quality row; the member mark is a star by default, the club's logo or a glyph; «Alocă numerele» explains itself and the print range sits by the PDF buttons under «Tipărește numerele (PDF)»; the route's profile comes from the GPX or an uploaded picture, with or without the distance and gain beside it, and can be turned for the runner together with the emergency phone, which takes a label and a second number. §759.
 ## BR-V3.18-2026-10-14
 
 - **A volunteer agreement («Contract de voluntariat»)** — a new legal text the club approves in «Documente legale» from the platform's template: unpaid help, what the volunteer and the club each do, ending at any time, Legea nr. 78/2014. «Vreau să fiu voluntar» opens only while it is in force and asks to accept it and «Am cel puțin 18 ani»; a person entered by hand is «Contract neacceptat încă» until they accept from an emailed single-use link or sign the printed copy at the desk; the accepted agreement comes as a PDF by email and from the card. The privacy notice's template names the acceptance with a marker of its own: approve the notice in the same sitting. §758.

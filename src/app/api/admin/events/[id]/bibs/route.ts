@@ -122,6 +122,8 @@ export async function GET(
   const sponsors = loaded.sponsors?.png ?? null;
   const memberHeader = loaded.memberHeader?.png ?? null;
   const memberCard = loaded.memberCard?.png ?? null;
+  // The club's picture of the route's profile (§759), read only while the design draws it.
+  const profile = loaded.profile?.png ?? null;
   // The sheet's own words, in its language: read only when the sheet prints them (§444, §664).
   const admin = spares || anyMember ? await getTranslations({ locale, namespace: "Admin" }) : null;
 
@@ -141,7 +143,7 @@ export async function GET(
     layout,
     part,
     design: event.design,
-    pictures: { header, sponsors, memberHeader, memberCard },
+    pictures: { header, sponsors, memberHeader, memberCard, profile },
     // The route's profile and the emergency phone's word (§750), when the design ticks them.
     ...(await loadBibExtras(await withBibCheckpoints(db, id, event, event.design), event.design, locale)),
     // The members' label when the club typed none (§664), in the sheet's language.

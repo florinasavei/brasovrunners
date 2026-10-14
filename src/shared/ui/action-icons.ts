@@ -31,6 +31,7 @@ import FamilyRestroomIcon from "@mui/icons-material/FamilyRestroom";
 import ForwardToInboxIcon from "@mui/icons-material/ForwardToInbox";
 import GridOnIcon from "@mui/icons-material/GridOn";
 import HandshakeIcon from "@mui/icons-material/Handshake";
+import HeightIcon from "@mui/icons-material/Height";
 import HourglassTopIcon from "@mui/icons-material/HourglassTop";
 import HowToRegIcon from "@mui/icons-material/HowToReg";
 import ImageIcon from "@mui/icons-material/Image";
@@ -59,7 +60,9 @@ import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 import RemoveCircleIcon from "@mui/icons-material/RemoveCircle";
 import RemoveDoneIcon from "@mui/icons-material/RemoveDone";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
+import RouteIcon from "@mui/icons-material/Route";
 import SaveIcon from "@mui/icons-material/Save";
+import ScreenRotationAltIcon from "@mui/icons-material/ScreenRotationAlt";
 import SearchIcon from "@mui/icons-material/Search";
 import SendIcon from "@mui/icons-material/Send";
 import SmartToyIcon from "@mui/icons-material/SmartToy";
@@ -68,6 +71,7 @@ import StorefrontIcon from "@mui/icons-material/Storefront";
 import StraightenIcon from "@mui/icons-material/Straighten";
 import SubjectIcon from "@mui/icons-material/Subject";
 import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
+import TextRotationNoneIcon from "@mui/icons-material/TextRotationNone";
 import ToggleOffIcon from "@mui/icons-material/ToggleOff";
 import ToggleOnIcon from "@mui/icons-material/ToggleOn";
 import TranslateIcon from "@mui/icons-material/Translate";
@@ -170,6 +174,13 @@ export type ActionIconName =
   | "checkIn"
   | "undo"
   | "number"
+  // The bib designer's two choices for the route's profile (§759): drawn from the GPX (the route) or
+  // a picture («picture», above); and its orientation, read the right way up or turned for the runner.
+  | "route"
+  | "upright"
+  | "turned"
+  // The tick beside them, «Arată distanța și diferența de nivel lângă profil» (§759): up and down, the gain.
+  | "profileFigures"
   // The people on the waiting list (§626): the hourglass «Coada» wears on its panel (`panel-glyphs.ts`) and the queue's line title, beside the «Înscrieri» tab's badge.
   | "waiting"
   // Those holding a place who still have to finish (§632): the pen the participant's own declaration step wears (`RegistrationSteps`), in the «Înscrieri» tab's pill.
@@ -292,6 +303,10 @@ export const ACTION_ICONS: Record<ActionIconName, ComponentType<SvgIconProps>> =
   checkIn: HowToRegIcon,
   undo: UndoIcon,
   number: ConfirmationNumberIcon,
+  route: RouteIcon,
+  upright: TextRotationNoneIcon,
+  turned: ScreenRotationAltIcon,
+  profileFigures: HeightIcon,
   waiting: HourglassTopIcon,
   declaration: DrawIcon,
   emailConfirmation: MarkEmailReadIcon,
