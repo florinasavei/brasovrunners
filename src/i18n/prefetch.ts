@@ -28,6 +28,8 @@ export const PREFETCHED_PATHNAMES: ReadonlySet<string> = new Set([
   "/pages/[slug]",
   "/legal/terms",
   "/legal/privacy",
+  // The volunteer agreement in force (§NNN): static like the other two legal texts.
+  "/legal/volunteer-agreement",
 ]);
 
 /** A locale-aware `href`, as `Link` from `@/i18n/navigation` takes it: a route's pathname, or an object naming one. */

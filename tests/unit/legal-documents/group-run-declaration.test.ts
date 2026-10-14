@@ -41,7 +41,8 @@ describe("§393 the kinds and their names", () => {
   it("lists every enum value, the road race's beside the trail one (§515), and the two optional kinds after them", () => {
     // The enum appends a value; the backoffice lists the road declaration beside the trail one.
     expect([...LEGAL_DOCUMENT_KEYS].sort()).toEqual([...legalDocumentKey.enumValues].sort());
-    expect([...LEGAL_DOCUMENT_KEYS]).toEqual(["PRIVACY_NOTICE", "TERMS", "EVENT_DECLARATION", "EVENT_DECLARATION_ROAD", "GROUP_RUN_DECLARATION_ASPHALT", "GROUP_RUN_DECLARATION_TRAIL"]);
+    // …and the volunteer agreement last (§NNN).
+    expect([...LEGAL_DOCUMENT_KEYS]).toEqual(["PRIVACY_NOTICE", "TERMS", "EVENT_DECLARATION", "EVENT_DECLARATION_ROAD", "GROUP_RUN_DECLARATION_ASPHALT", "GROUP_RUN_DECLARATION_TRAIL", "VOLUNTEER_AGREEMENT"]);
     expect([...REGISTRATION_LEGAL_KEYS]).toEqual(["PRIVACY_NOTICE", "TERMS", "EVENT_DECLARATION"]);
     expect([...GROUP_RUN_DECLARATION_KEYS]).toEqual(["GROUP_RUN_DECLARATION_ASPHALT", "GROUP_RUN_DECLARATION_TRAIL"]);
   });

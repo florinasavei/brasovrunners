@@ -6,6 +6,7 @@ import { eventTranslations, events } from "@/db/schema/events";
 import { staffUsers } from "@/db/schema/staff-users";
 import { computeContentHash, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
 import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
+import { LEGAL_TEMPLATES } from "@/modules/legal-documents/templates/catalogue";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
@@ -87,8 +88,8 @@ beforeEach(async () => {
   sets.length = 0;
   turnstile = { on: false, verdict: "not_configured" };
   await db.insert(staffUsers).values({ email: "admin@example.test", displayName: "Admin", role: "ADMIN" });
-  // The notice in force names `{{volunteers}}` in both languages: the form is open.
-  const body = (text: string) => ({ sections: [{ paragraphs: [`Voluntari ({{volunteers}}): ${text}`] }] });
+  // The notice in force names `{{volunteers}}` and `{{volunteerAgreement}}` (§NNN) in both languages: the form is open.
+  const body = (text: string) => ({ sections: [{ paragraphs: [`Voluntari ({{volunteers}}, {{volunteerAgreement}}): ${text}`] }] });
   const translations: LegalDocumentTranslationInput[] = [
     { locale: "ro", title: "Confidențialitate", body: body("păstrăm numele") },
     { locale: "en", title: "Privacy", body: body("we keep the name") },
@@ -100,6 +101,17 @@ beforeEach(async () => {
     isApproved: true,
     contentSha256: computeContentHash(translations),
     translations,
+    now: new Date(),
+  });
+  // The volunteer agreement in force (§NNN), from the platform's template: the form's fourth condition.
+  const agreement: LegalDocumentTranslationInput[] = (["ro", "en"] as const).map((locale) => ({ locale, ...LEGAL_TEMPLATES.VOLUNTEER_AGREEMENT[locale] }));
+  await insertLegalDocumentVersion(db, {
+    key: "VOLUNTEER_AGREEMENT",
+    version: 1,
+    effectiveAt: new Date(Date.now() - DAY),
+    isApproved: true,
+    contentSha256: computeContentHash(agreement),
+    translations: agreement,
     now: new Date(),
   });
 });
@@ -117,6 +129,9 @@ function post(fields: Record<string, string> = {}): FormData {
     phone: "0712 345 678",
     message: "Pot toată ziua",
     consent: "on",
+    // The volunteer agreement and the age (§NNN), ticked as a person ticks them.
+    agreement: "on",
+    adult: "on",
     honeypot: "",
     renderedAt: new Date(Date.now() - 60_000).toISOString(),
     ...fields,

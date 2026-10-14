@@ -3,7 +3,7 @@ import type { LegalDocumentKey } from "@/db/schema/legal-documents";
 /**
  * Every legal document key, in the order the backoffice lists them (§393): the three a
  * registration rests on (BR-REQ-053-01) with the road race's declaration beside the trail one
- * (§515), then the group runs' two optional self-declarations.
+ * (§515), then the group runs' two optional self-declarations, then the volunteer agreement (§NNN).
  *
  * Written out here rather than read off the enum, so a client component (the legal editor's
  * select) can import the list without the database schema; `tests/unit/legal-documents/group-run-declaration.test.ts`
@@ -16,6 +16,7 @@ export const LEGAL_DOCUMENT_KEYS = [
   "EVENT_DECLARATION_ROAD",
   "GROUP_RUN_DECLARATION_ASPHALT",
   "GROUP_RUN_DECLARATION_TRAIL",
+  "VOLUNTEER_AGREEMENT",
 ] as const satisfies readonly LegalDocumentKey[];
 
 /**
@@ -36,6 +37,16 @@ export const REGISTRATION_LEGAL_KEYS = ["PRIVACY_NOTICE", "TERMS", "EVENT_DECLAR
  * The page and its messages count this list; no sentence says a number of its own.
  */
 export const PLATFORM_APPROVAL_KEYS = LEGAL_DOCUMENT_KEYS;
+
+/**
+ * The volunteer agreement (§NNN, amending §754; the owner, 2026-10-13: «trebuie să avem și un document gen
+ * „contract de voluntariat” simplu, unde zicem că nu sunt plătiți, că trebuie să respecte atribuțiunile»):
+ * what a person accepts before being listed as an event's volunteer — on the event page's form, from an
+ * organizer's emailed link, or on paper at the desk. One text for every event and role; the person, the role,
+ * the event, its date and place are its blanks (`VOLUNTEER_MERGE_FIELDS`). The public form opens only while a
+ * version is in force (`volunteerOfferClosedFor`), like a race's registration and its declaration.
+ */
+export const VOLUNTEER_AGREEMENT_KEY = "VOLUNTEER_AGREEMENT" as const satisfies LegalDocumentKey;
 
 /**
  * The race's two declarations (§515; the owner's review of 2026-09-27: "Două tipuri:

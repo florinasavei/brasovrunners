@@ -282,9 +282,10 @@ test.describe("legal documents: every text at once", () => {
     await expect(page.getByTestId("legal-versions-TERMS")).toHaveAttribute("open", "");
 
     // Regenerate the rest: the dialog names the texts, nothing is in force, the toast counts the drafts.
-    const regenerateRest = tools.getByRole("button", { name: /^Regenerează din șabloane \(\d+ din 6\)$/ });
+    // «din 7»: the catalogue's seven texts, the volunteer agreement the seventh (§NNN).
+    const regenerateRest = tools.getByRole("button", { name: /^Regenerează din șabloane \(\d+ din 7\)$/ });
     if ((await regenerateRest.count()) > 0) {
-      // «N din 6» and the rule beside it (§555): only the texts wearing «Șablon nou» are regenerated.
+      // «N din 7» and the rule beside it (§555): only the texts wearing «Șablon nou» are regenerated.
       await expect(tools.getByTestId("legal-regenerate-rule")).toHaveText(
         "Doar textele cu «Șablon nou» se regenerează; celelalte au deja cuvintele șablonului.",
       );
@@ -347,7 +348,7 @@ test.describe("legal documents: one card per text, filtered, and the templates' 
 
     // The page's three steps, and one card per text in the catalogue's order.
     await expect(main.getByTestId("legal-steps")).toContainText("1. Regenerează (ciornă din șablon)");
-    const keys = ["PRIVACY_NOTICE", "TERMS", "EVENT_DECLARATION", "EVENT_DECLARATION_ROAD", "GROUP_RUN_DECLARATION_ASPHALT", "GROUP_RUN_DECLARATION_TRAIL"];
+    const keys = ["PRIVACY_NOTICE", "TERMS", "EVENT_DECLARATION", "EVENT_DECLARATION_ROAD", "GROUP_RUN_DECLARATION_ASPHALT", "GROUP_RUN_DECLARATION_TRAIL", "VOLUNTEER_AGREEMENT"];
     for (const key of keys) {
       await expect(main.getByTestId(`legal-kind-${key}`).getByTestId("legal-kind-state").first()).toHaveText(
         /^(În vigoare: versiunea \d+ din .+|Nicio versiune în vigoare)$/,

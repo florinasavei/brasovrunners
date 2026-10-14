@@ -208,6 +208,11 @@ const CONVERTED_SITES: Array<{ file: string; prop: string; step: DensityStep; sm
   { file: "src/app/[locale]/gallery/[slug]/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2 },
   { file: "src/app/[locale]/legal/privacy/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2 },
   { file: "src/app/[locale]/legal/terms/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2 },
+  // The volunteer agreement in force (§NNN): born on the terms' scale — the version line and the blanks' line, the page.
+  { file: "src/app/[locale]/legal/volunteer-agreement/page.tsx", prop: "mb", step: "gapSm", sm: 2, xsBefore: 2, count: 2 },
+  { file: "src/app/[locale]/legal/volunteer-agreement/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2 },
+  // The volunteer agreement's link (§NNN): born on the scale, like every link page.
+  { file: "src/app/[locale]/volunteers/agreement/[token]/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2 },
   { file: "src/app/[locale]/preview/events/[id]/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2 },
   // The editor's preview frame (§579): the listing's and the event page's own container. New, so xsBefore is sm.
   { file: "src/app/[locale]/preview/draft/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 3 },

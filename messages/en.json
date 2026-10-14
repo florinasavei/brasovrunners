@@ -553,12 +553,15 @@
       "role": "The role you can take",
       "name": "Your name",
       "email": "Your email address",
-      "emailHelp": "We send one email of receipt here, with nothing to press.",
+      "emailHelp": "We send one email of receipt here, with the accepted agreement attached and nothing to press.",
       "phoneHelp": "An organizer may ring you about the event.",
       "message": "A message for the organizers (optional)",
       "messageHelp": "At most {max} characters: when you are free, what you can do.",
       "consent": "I agree that the details in this form are kept to contact me about this event, as described in the",
       "privacyLinkLabel": "privacy notice",
+      "agreement": "I have read and accept the",
+      "agreementLinkLabel": "volunteer agreement",
+      "adult": "I am at least {age} old.",
       "submit": "Offer to volunteer",
       "submitting": "Sending…",
       "done": "Thank you! We received your offer. An organizer will confirm it and get in touch by email or phone if anything else is needed.",
@@ -573,7 +576,9 @@
         "phone": "That telephone number is not valid.",
         "roleId": "Pick one of the roles.",
         "message": "The message is too long: shorten it.",
-        "consent": "Tick the box to agree, or we cannot keep your offer."
+        "consent": "Tick the box to agree, or we cannot keep your offer.",
+        "agreement": "Tick the box to accept the volunteer agreement, or we cannot keep your offer.",
+        "adult": "The form is for people of at least {age}: tick the box if you are."
       }
     },
     "calendar": {
@@ -1845,7 +1850,11 @@
       "CHECKPOINTS_NO_LONGER_HOLD": "This save would break “Checkpoints”: {detail} Change the point in its card first, then save again. Nothing was saved.",
       "CHECKPOINTS_NO_LONGER_HOLD_DATED": "On one of the dates ({date}), this save would break “Checkpoints”: {detail} Change the point on that date first, or save without it. Nothing was saved, on any date.",
       "CHECKPOINT_NOTE_ONE_LANGUAGE": "The note of the point “{name}” is written in both languages or in neither, at most {max} characters.",
-      "CHECKPOINT_TOO_MANY": "Too many points: at most {max} on a route."
+      "CHECKPOINT_TOO_MANY": "Too many points: at most {max} on a route.",
+      "VOLUNTEER_AGREEMENT_MISSING": "No volunteer agreement is in force. Approve one first in «Legal documents»: the template is ready.",
+      "VOLUNTEER_AGREEMENT_ACCEPTED": "The person has already accepted the agreement: there is nothing left to send or record.",
+      "VOLUNTEER_AGREEMENT_NOTICE": "The privacy notice in force does not describe the volunteer agreement's acceptance yet. Approve one from the template in «Legal documents» first; «Tasks» says how.",
+      "VOLUNTEER_AGREEMENT_REPRINT": "Not recorded: the agreement's version or the person's role changed since it was printed. Print the PDF to sign again and ask for a signature on the new sheet."
     },
     "editor": {
       "draftPreview": {
@@ -3095,7 +3104,8 @@
         "EVENT_DECLARATION": "The declaration of a mountain event, on mountain or forest trails: age, minors, the course's risks, health. Signed when the place is confirmed.",
         "GROUP_RUN_DECLARATION_ASPHALT": "Optional, for a group run on asphalt; signed on the run's page, once for every date of it. Approve it together with a new privacy notice.",
         "GROUP_RUN_DECLARATION_TRAIL": "Optional, for a group run on a trail; signed on the run's page, once for every date of it. Approve it together with a new privacy notice.",
-        "EVENT_DECLARATION_ROAD": "The declaration of a road or park event, with the risks of asphalt and traffic. Until you approve it, these events sign the mountain event declaration."
+        "EVENT_DECLARATION_ROAD": "The declaration of a road or park event, with the risks of asphalt and traffic. Until you approve it, these events sign the mountain event declaration.",
+        "VOLUNTEER_AGREEMENT": "The agreement every volunteer of an event accepts: unpaid help, what the volunteer does, what the club does. Until you approve it, no page shows the volunteer form."
       },
       "empty": "No legal document exists. Registration is refused until an approved privacy notice exists.",
       "emptyCanCreate": "No legal document exists yet, so registration is refused. Start with the privacy notice: New version.",
@@ -3113,7 +3123,8 @@
         "EVENT_DECLARATION": "Self-declaration — mountain event",
         "GROUP_RUN_DECLARATION_ASPHALT": "Self-declaration (group run, asphalt)",
         "GROUP_RUN_DECLARATION_TRAIL": "Self-declaration (group run, trail)",
-        "EVENT_DECLARATION_ROAD": "Self-declaration — road / park event"
+        "EVENT_DECLARATION_ROAD": "Self-declaration — road / park event",
+        "VOLUNTEER_AGREEMENT": "Volunteer agreement"
       },
       "referenced": "{signatures} signatures · {events} events",
       "unreferenced": "Not yet used",
@@ -3228,7 +3239,11 @@
         "feedbackForms": "Privacy notice only: the “Tell us something” forms’ name, in quotation marks. With it in the notice in force, the contact page shows the forms switched on",
         "feedbackFormsNamed": "Privacy notice only: the “With my name” choice of the “Tell us something” forms, in quotation marks. Without it in the notice in force, the forms are anonymous only",
         "membersShop": "Privacy notice only: the section name “The club's shop”, in quotes. With it in the notice in force, the members' area shows the shop and takes orders",
-        "volunteers": "Privacy notice only: the form's name “I want to volunteer”, in quotes. With it in the notice in force, an event that takes volunteers shows its form and keeps the offers"
+        "volunteers": "Privacy notice only: the form's name “I want to volunteer”, in quotes. With it in the notice in force, an event that takes volunteers shows its form and keeps the offers",
+        "volunteerAgreement": "Privacy notice only: the title “Volunteer agreement”, in quotes. Without it in the notice in force, the volunteers' form, the agreement's link and “Signed on paper” are off",
+        "volunteer": "In the volunteer agreement only: the volunteer's name, as on the event's list",
+        "volunteerRole": "In the volunteer agreement only: the role's name, in the text's language",
+        "volunteerTasks": "In the volunteer agreement only: what the role does, from its description. Without one, the sentence naming it is left out"
       },
       "removeBlockedReferenced": "Can neither be withdrawn nor deleted permanently: {signatures}, {events} and {acknowledgements} depend on it. “Delete” on its row takes it off the list.",
       "removeBlockedCurrent": "In force right now — it can neither be withdrawn nor deleted. Approve its successor first; then this one can go.",
@@ -3349,7 +3364,8 @@
       "groups": {
         "general": "General documents",
         "race": "Race declarations",
-        "groupRun": "Group run declarations"
+        "groupRun": "Group run declarations",
+        "volunteers": "The volunteers' agreement"
       },
       "shortKeys": {
         "PRIVACY_NOTICE": "GDPR",
@@ -3357,7 +3373,8 @@
         "EVENT_DECLARATION": "Mountain event",
         "EVENT_DECLARATION_ROAD": "Road / park event",
         "GROUP_RUN_DECLARATION_ASPHALT": "Group asphalt",
-        "GROUP_RUN_DECLARATION_TRAIL": "Group trail"
+        "GROUP_RUN_DECLARATION_TRAIL": "Group trail",
+        "VOLUNTEER_AGREEMENT": "Volunteers"
       },
       "filter": {
         "label": "Filter the versions",
@@ -4114,6 +4131,27 @@
             "A lawyer should read the paragraph: the legal basis (consent for the public form, legitimate interest for a person an organizer enters) and the thirty days.",
             "Open the draft, read it, fill in what is left, “Save draft”, then “Approve and publish”. Once in force in both languages, the form appears on the pages of the events that take volunteers."
           ]
+        },
+        "volunteerAgreementNotice": {
+          "title": "Privacy notice: the volunteer agreement",
+          "todo": "An event ahead takes volunteers, but the notice in force does not describe the agreement's acceptance yet. The volunteers' form, the agreement's link and “Signed on paper” wait for it.",
+          "done": "The notice in force describes the volunteer agreement's acceptance: what is kept, why, the PDF and the link.",
+          "how": [
+            "/admin/legal → the “GDPR” card → “Regenerate from the template” → confirm. Section 5's paragraph about volunteers names the agreement's acceptance and the age statement.",
+            "A lawyer should read the paragraph with the volunteer agreement: the legal basis (performing the agreement) and how long the club keeps the acceptances.",
+            "Open the draft, read it, fill in what is left, “Save draft”, then “Approve and publish” — in the same sitting as the volunteer agreement."
+          ]
+        },
+        "volunteerAgreement": {
+          "title": "The volunteer agreement",
+          "todo": "An event ahead takes volunteers, but no volunteer agreement is in force: its page shows no form. Your own list works meanwhile.",
+          "done": "The volunteer agreement is in force: whoever offers on a page accepts it, and people entered by hand get it by link or sign it on paper.",
+          "how": [
+            "/admin/legal → the “Volunteer agreement” card → “Regenerate from the template” → confirm. Or the button that approves the missing texts in one step.",
+            "A lawyer should read the text first, against Law no. 78/2014: the written form and the electronic acceptance, the age of 18, the role's task sheet, the volunteers' insurance and register.",
+            "You and the lawyer decide how long the club keeps the acceptances. The site deletes them 30 days after the event.",
+            "Open the draft, fill in what is left, “Save draft”, then “Approve and publish”. Once in force in both languages, the form appears on the pages of the events that take volunteers."
+          ]
         }
       },
       "freeVerdict": {
@@ -4548,7 +4586,9 @@
           "membersOnly": "The public form is not shown: the event is for members only, and the form is public. Your own list works either way.",
           "eventOver": "The public form is not shown: the event is cancelled or over.",
           "noRoleNeeds": "The public form is not shown: every role has all the people it needs (or there is no role yet).",
-          "noNotice": "The public form is not shown: the privacy notice in force does not describe volunteers yet. /admin/tasks says what to approve."
+          "noNotice": "The public form is not shown: the privacy notice in force does not describe volunteers yet. /admin/tasks says what to approve.",
+          "noAgreement": "The public form is not shown: no volunteer agreement is in force. Approve one in «Legal documents»; «Tasks» says how.",
+          "noAgreementNotice": "The public form is not shown: the privacy notice in force does not describe the volunteer agreement's acceptance yet. «Tasks» says what to approve."
         }
       },
       "switchOn": "Take volunteers on the page",
@@ -4611,6 +4651,30 @@
       "deleteTitle": "Delete this volunteer?",
       "deleteBody": "{name} is deleted from the event's list, with the address and the telephone number. It cannot be undone.",
       "since": "Since {when}",
+      "agreement": {
+        "accepted": "Agreement accepted",
+        "notAccepted": "Agreement not accepted yet",
+        "linkSent": "Link sent",
+        "acceptedLine": "Version {version} · {how} · {when}",
+        "methods": {
+          "FORM": "on the page's form",
+          "LINK": "from the link sent by email",
+          "PAPER": "signed on paper"
+        },
+        "otherRole": "Accepted for the role “{role}”; the role has changed since.",
+        "otherPlace": "Accepted for {date}, at {place}; the event's date or place has changed since.",
+        "requestedLine": "Last link sent: {when}",
+        "help": "Send them the link by email, or print the PDF: they sign it with you, then you press “Signed on paper”.",
+        "send": "Send the agreement link",
+        "resend": "Send the link again",
+        "pdf": "Agreement PDF",
+        "pdfToSign": "PDF to sign",
+        "paper": "Signed on paper",
+        "paperTitle": "Did {name} sign the agreement on paper?",
+        "paperBody": "This records that {name} signed the printed agreement, the version in force, and that you recorded the signature. {name} gets a copy by email. Keep the signed sheet.",
+        "missing": "No volunteer agreement is in force: nothing can be sent or printed yet. Approve one in «Legal documents».",
+        "noticeMissing": "The privacy notice in force does not describe the agreement's acceptance yet: the link and “Signed on paper” wait. «Tasks» says what to approve."
+      },
       "csv": "Download CSV",
       "csvHelp": "One row per volunteer, grouped by role. The file holds addresses and telephone numbers: keep it as carefully as the list.",
       "csvColumns": {
@@ -5601,7 +5665,9 @@
         "SHOP_ORDER_PAID": "Your order is paid",
         "SHOP_ORDER_CLUB_NOTICE": "New order in the shop",
         "VOLUNTEER_RECEIVED": "We received your offer to volunteer",
-        "VOLUNTEER_CLUB_NOTICE": "New volunteer"
+        "VOLUNTEER_CLUB_NOTICE": "New volunteer",
+        "VOLUNTEER_AGREEMENT_REQUEST": "The volunteer agreement",
+        "VOLUNTEER_AGREEMENT_ACCEPTED": "You accepted the volunteer agreement"
       },
       "typesShort": {
         "VERIFY_REGISTRATION_EMAIL": "Confirm your address",
@@ -5665,8 +5731,10 @@
         "SHOP_ORDER_PLACED": "When a member orders from the members' shop: the order and how to pay. The button opens the members' area.",
         "SHOP_ORDER_PAID": "When an administrator marks the order paid: to the member who ordered. The button opens the members' area.",
         "SHOP_ORDER_CLUB_NOTICE": "On every order in the shop, to the address in «Magazin» → “Who receives the orders”, if one is written.",
-        "VOLUNTEER_RECEIVED": "When a person offers to volunteer on an event's page: the one acknowledgement to them — the role, the event, and that an organizer will confirm. Nothing to press.",
-        "VOLUNTEER_CLUB_NOTICE": "On every sign-up, to each Organizer, Administrator and Superadministrator. The button opens the event's «Volunteers» card."
+        "VOLUNTEER_RECEIVED": "When a person offers to volunteer on an event's page: the one acknowledgement to them — the role, the event, that an organizer will confirm, and the accepted agreement as a PDF. Nothing to press.",
+        "VOLUNTEER_CLUB_NOTICE": "On every sign-up, to each Organizer, Administrator and Superadministrator. The button opens the event's «Volunteers» card.",
+        "VOLUNTEER_AGREEMENT_REQUEST": "When an organizer presses “Send the agreement link” for a volunteer who has not accepted it yet: the agreement and the link to accept it.",
+        "VOLUNTEER_AGREEMENT_ACCEPTED": "When a volunteer accepts the agreement from the link, or an organizer presses “Signed on paper”: their copy, with the agreement attached as a PDF."
       },
       "whenShort": {
         "VERIFY_REGISTRATION_EMAIL": "after the form is sent",
@@ -5706,7 +5774,9 @@
         "SHOP_ORDER_PAID": "when the order is marked paid",
         "SHOP_ORDER_CLUB_NOTICE": "on every order, to the club",
         "VOLUNTEER_RECEIVED": "when someone offers to volunteer",
-        "VOLUNTEER_CLUB_NOTICE": "on every sign-up, to the organizers"
+        "VOLUNTEER_CLUB_NOTICE": "on every sign-up, to the organizers",
+        "VOLUNTEER_AGREEMENT_REQUEST": "on “Send the agreement link”",
+        "VOLUNTEER_AGREEMENT_ACCEPTED": "after the link or “Signed on paper”"
       },
       "clubNotices": {
         "title": "The club's copies",
@@ -6326,7 +6396,9 @@
         "SHOP_ORDER_PAID": "The order is added after the text by itself, however you write it.",
         "SHOP_ORDER_CLUB_NOTICE": "Without an address nothing is sent: the orders are in the backoffice list either way.",
         "VOLUNTEER_RECEIVED": "The role and the event's start and place are added by themselves, however you write the text. The message carries no link that does anything.",
-        "VOLUNTEER_CLUB_NOTICE": "Who offered and for which role is added by itself, however you write the text. The address and the telephone number are never in the email: they are on the card, behind the sign-in."
+        "VOLUNTEER_CLUB_NOTICE": "Who offered and for which role is added by itself, however you write the text. The address and the telephone number are never in the email: they are on the card, behind the sign-in.",
+        "VOLUNTEER_AGREEMENT_REQUEST": "The role and the event are added by themselves. The link is for this person only, works once, and a new one replaces the old.",
+        "VOLUNTEER_AGREEMENT_ACCEPTED": "The role and the event are added by themselves. The PDF shows the accepted text, with the name, the role, the moment and its fingerprint."
       },
       "confirmationRetry": "To whoever has not confirmed, the link goes again by itself {retry} after the last email, at most {times}; “Resend” counts too. The deadline does not move.",
       "confirmationRetryOff": "It is not re-sent by itself: in “Deadlines”, the number of resends is 0."
@@ -9012,7 +9084,9 @@
     "botCheckNotice": "The “not a robot” check is done by Cloudflare (it sees the IP and technical browser data).",
     "inForce": "Version {version}, in force since {date}",
     "termsTitle": "Terms and conditions",
-    "privacyTitle": "Privacy notice"
+    "privacyTitle": "Privacy notice",
+    "volunteerAgreementTitle": "Volunteer agreement",
+    "volunteerAgreementBlanks": "One text for every event: the name, the role, the event, its date and place are filled in when you accept, and the PDF you receive shows them."
   },
   "Registration": {
     "title": "Register: {event}",
@@ -10837,7 +10911,9 @@
       "teamBoxDeleted": "The box was deleted.",
       "checkpointsSaved": "The checkpoints were saved.",
       "checkpointsAdded": "The points from the GPX were added.",
-      "checkpointsUnchanged": "Nothing to change in the checkpoints."
+      "checkpointsUnchanged": "Nothing to change in the checkpoints.",
+      "volunteerAgreementRequested": "The agreement link is on its way by email.",
+      "volunteerAgreementRecorded": "Agreement recorded as signed on paper."
     }
   },
   "Network": {
@@ -11263,6 +11339,24 @@
       "free": {
         "figure": "{count}%",
         "label": "the group runs, free"
+      }
+    }
+  },
+  "Volunteers": {
+    "agreement": {
+      "title": "The volunteer agreement",
+      "intro": "{name}, you are on the volunteers' list for {event}, in the role “{role}”. Read the agreement and, if you agree, accept it below.",
+      "accept": "I have read and accept the volunteer agreement.",
+      "adult": "I am at least {age} old.",
+      "submit": "Accept the agreement",
+      "submitting": "Sending…",
+      "paper": "Prefer paper? You can also sign it with the organizers.",
+      "accepted": "Thank you! You accepted the agreement. Your copy, as a PDF, is on its way by email.",
+      "invalid": "This link no longer works: it was used, it expired, or a newer one replaced it. Write to us from the contact page if you need another.",
+      "noAgreement": "The agreement is not available right now. Try again later or write to us from the contact page.",
+      "errors": {
+        "agreement": "Tick the box to accept the agreement.",
+        "adult": "The agreement is for people of at least {age}: tick the box if you are."
       }
     }
   }

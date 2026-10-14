@@ -6,6 +6,7 @@ import { declarationRoadEn, declarationRoadRo, declarationTrailEn, declarationTr
 import { groupRunAsphaltEn, groupRunAsphaltRo, groupRunTrailEn, groupRunTrailRo } from "./group-run-declaration";
 import { privacyNoticeEn, privacyNoticeRo } from "./privacy-notice";
 import { termsEn, termsRo } from "./terms";
+import { volunteerAgreementEn, volunteerAgreementRo } from "./volunteer-agreement";
 
 /**
  * The platform's own texts for the three documents (`DECISIONS.md` §95): a privacy notice
@@ -53,6 +54,11 @@ export const LEGAL_TEMPLATES: Record<LegalDocumentKey, Record<Locale, { title: s
   GROUP_RUN_DECLARATION_TRAIL: {
     ro: { title: "Declarație pe propria răspundere (alergare de grup, teren accidentat)", body: groupRunTrailRo },
     en: { title: "Self-declaration (group run, trail)", body: groupRunTrailEn },
+  },
+  // The volunteer agreement (§NNN, amending §754): unpaid help, the role's tasks, the club's duties, Legea nr. 78/2014.
+  VOLUNTEER_AGREEMENT: {
+    ro: { title: "Contract de voluntariat", body: volunteerAgreementRo },
+    en: { title: "Volunteer agreement", body: volunteerAgreementEn },
   },
 };
 

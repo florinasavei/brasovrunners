@@ -263,6 +263,8 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       "/gallery/[slug]",
       "/legal/privacy",
       "/legal/terms",
+      // The volunteer agreement in force (§NNN): a legal text, read here, never written by the CMS.
+      "/legal/volunteer-agreement",
       // «Beneficiile membrilor» and the members' zone behind the sign-in (§524), by hand.
       "/members",
       "/members-area",
@@ -291,6 +293,8 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       "/sign-in",
       // «Echipa» (§459): a platform page like the contact form, never one the CMS makes.
       "/team",
+      // The volunteer agreement's link (§NNN): read, then one press.
+      "/volunteers/agreement/[token]",
     ]);
   });
 
