@@ -36,8 +36,8 @@ import type { LegalDocumentBody } from "../domain/content-hash";
  * within the same limits; the waiver leaves out the harm caused through their fault and the
  * organiser's safety duties. The text never says the club does not answer for a death it causes:
  * art. 1355(1) (intent, gross fault) and art. 1355(3) (bodily harm or death, whatever the fault) would
- * make that clause void. Only adults
- * sign here, so there is no guardian's sentence.
+ * make that clause void. Until §NNN only adults signed here, so there was no guardian's sentence; now a minor
+ * signs beside a parent (the paragraph below, behind `{{minor}}`).
  *
  * **No identity document (§418, the counsel review of 2026-09-25).** A group run hands out no kit
  * and the email is not verified, so a typed number proves nothing and is data the club need not
@@ -82,6 +82,19 @@ import type { LegalDocumentBody } from "../domain/content-hash";
  * page's consent box repeats the run's age. The page asks for a birth date only above eighteen
  * (`groupRunAsksBirthDate`, §440) and refuses one under the minimum on the run's day
  * (`isUnderMinimumAge`, the race's rule).
+ *
+ * **A minor signs, with a parent (§NNN, amending §393, §523 and §330).** The owner, 2026-10-14: «pt alergările de
+ * grup trebuie să facem declarația să suporte și un minor, o bifă nouă și să semneze minorul + părintele». One text
+ * serves both paths and the page and the PDF keep the paragraphs that apply (`PARAGRAPH_MERGE_FIELDS`):
+ * `{{signerAlone}}` is the adult's own name in «Eu, …, semnez această declarație personal, doar pentru mine» and is
+ * "" for a minor, which drops that sentence; `{{minor}}` is the minor's own name in two paragraphs — who signs, and
+ * the minor's data — and is "" for an adult, which drops both; `{{minorMinimumAge}}` is the run's minimum under
+ * eighteen, "" when it has none (no minor may take part: no paragraph). The adult's age sentence (`{{minimumAge}}`)
+ * is "" on a minor's declaration. `{{participant}}` is the minor on a minor's declaration and `{{guardian}}` the
+ * parent, as on the race's (§108). The signing page offers «Semnez pentru un minor» only while the text in force names
+ * `{{minor}}`, in every language (`namesGroupRunMinor`, §562's and §613's pattern); the platform's text is the
+ * template, a text in force never moves, and `/admin/tasks` carries the row `groupRunMinorText`. A Romanian lawyer
+ * should read the two paragraphs first.
  *
  * **No hardcoded value (§357).** One approved text serves every group run of its surface, so
  * nothing names a run, a place, a date or a distance — those are merge fields — and the club is
@@ -164,6 +177,27 @@ const openingEn = (service: string) => [
   whatItIsEn(service),
 ];
 
+/*
+  The minor's path (§NNN, amending §393, §523 and §330; the owner, 2026-10-14: «pt alergările de grup trebuie să
+  facem declarația să suporte și un minor, o bifă nouă și să semneze minorul + părintele»). Two paragraphs a
+  minor's declaration keeps and an adult's loses — both name `{{minor}}`, which is "" for an adult
+  (`PARAGRAPH_MERGE_FIELDS`) and is the marker the signing page's tick waits for (`namesGroupRunMinor`) —, in
+  the pattern of the race declaration's §330 paragraph: the minor signs for themselves, and the parent or
+  guardian approves in advance and signs beside them (Codul civil art. 41 alin. (2)); the parent accepts the risks
+  and the waiver for the minor «în limitele permise de lege», never for harm the organiser causes (art. 1355). The
+  minimum age is its own field, `{{minorMinimumAge}}`: the run's number, under eighteen — "" when the run has
+  none, which drops the paragraph. The minor's age is counted on the signing page and dropped; neither the
+  minor's birth date nor an identity document is kept (GDPR art. 5(1)(c)).
+*/
+const MINOR_SIGNS_RO =
+  "Pentru un participant minor, declarația este semnată de minor, {{minor}}, pentru sine, și încuviințată de părintele sau tutorele legal, care o semnează alături de el: {{guardian}}. Minorul declară că la data fiecărei alergări la care participă a împlinit vârsta minimă a alergării, {{minorMinimumAge}}. Prin semnătura sa, părintele sau tutorele legal își dă încuviințarea prealabilă ca minorul să participe la aceste alergări și să semneze această declarație (art. 41 alin. (2) din Codul civil). Părintele sau tutorele legal care semnează alături de minor acceptă pentru el riscurile de mai sus, inclusiv pe cel de deces, și renunțarea de mai sus, în limitele permise de lege. Renunțarea nu privește prejudiciile cauzate din vina organizatorului, a echipei lui, a voluntarilor sau a partenerilor lui și nu înlătură obligațiile de siguranță ale organizatorului (art. 1355 din Codul civil). Persoanele care nu au împlinit vârsta minimă a alergării nu pot participa.";
+const MINOR_SIGNS_EN =
+  "For a participant who is a minor, this declaration is signed by the minor, {{minor}}, for themselves, and approved by the parent or legal guardian, who signs it beside them: {{guardian}}. The minor declares that on the day of each run they take part in they have reached the run's minimum age, {{minorMinimumAge}}. By signing, the parent or legal guardian gives prior approval to the minor taking part in these runs and signing this declaration (art. 41(2) of the Romanian Civil Code). The parent or legal guardian who signs beside the minor accepts for them the risks above, death included, and the waiver above, to the extent the law allows. The waiver does not cover harm caused through the fault of the organiser, its team, its volunteers or its partners, and it does not remove the organiser's safety duties (art. 1355 of the Civil Code). Persons who have not reached the minimum age of the run may not take part.";
+const MINOR_DATA_RO =
+  "Când declarația este semnată pentru un minor, datele minorului {{minor}} — numele scris de el ca semnătură și, doar pentru verificarea vârstei minime, data nașterii, pe care platforma nu o păstrează — sunt prelucrate de organizator în același scop și pe același temei ca ale celorlalți semnatari. Părintele sau tutorele legal care semnează alături de minor primește copia pe adresa lui de email, iar la adresa de contact a clubului poate cere pentru minor drepturile de mai sus.";
+const MINOR_DATA_EN =
+  "When the declaration is signed for a minor, the data of the minor {{minor}} — the name they write as their signature and, only to check the minimum age, the date of birth, which the platform does not keep — is processed by the organiser for the same purpose and on the same basis as that of the other signers. The parent or legal guardian who signs beside the minor receives the copy at their email address, and may exercise the rights above for the minor at the club's contact address.";
+
 /** What both surfaces close with: ownership, what the text is and is not, the data, the signature, who the organiser is. */
 const closingRo = [
   "Îmi asum responsabilitatea pentru propria siguranță, pentru echipamentul meu și pentru deciziile pe care le iau pe traseu.",
@@ -171,7 +205,13 @@ const closingRo = [
   "Sunt informat/ă că datele din această declarație — numele și adresa de email — sunt prelucrate de organizator*, conform Regulamentului (UE) 2016/679 (GDPR) și notei de confidențialitate a clubului, ca dovadă că am fost informat/ă despre riscurile acestor alergări și că le-am acceptat, în temeiul interesului legitim al organizatorului (art. 6 alin. (1) lit. f) GDPR), iar afirmația despre sănătate, doar pentru constatarea, exercitarea sau apărarea unui drept în instanță (art. 9 alin. (2) lit. f) GDPR). O copie îmi este trimisă pe adresa de email pe care am dat-o, iar una ajunge în arhiva clubului. Declarația activă se păstrează cât timp este necesară pentru gestionarea participării mele la alergările la care se aplică. Dacă cer retragerea ei, la adresa de contact a clubului, nu mai este folosită pentru participările viitoare. O copie poate fi păstrată și după aceea, pe durata necesară constatării, exercitării sau apărării unor drepturi, inclusiv ținând seama de termenul general de prescripție de trei ani prevăzut de art. 2517 din Codul civil. Dacă există o reclamație, un litigiu sau o procedură în curs, documentul poate fi păstrat până la soluționarea definitivă a acesteia. Am dreptul de acces, de rectificare, de ștergere, de restricționare și de opoziție, precum și dreptul de a depune plângere la Autoritatea Națională de Supraveghere a Prelucrării Datelor cu Caracter Personal (ANSPDCP); pentru ele scriu la <EMAIL DE CONTACT>.",
   // «Momentul semnării» as the platform records it (§534, point 14): never called a time stamp, and no
   // law's title beside it that could read as one — the Romanian law is cited by its number.
-  "Semnez această declarație personal, doar pentru mine. Este semnată electronic: numele scris mai jos, bifa de acceptare, momentul semnării ({{signedAt}}) și amprenta textului citit sunt înregistrate împreună de platforma clubului. Este o semnătură electronică simplă, căreia nu i se poate refuza efectul juridic doar pentru că este electronică (art. 25 alin. (1) din Regulamentul (UE) nr. 910/2014 (eIDAS); Legea nr. 214/2024).",
+  // The minor's data (§NNN): kept only on a minor's declaration (`{{minor}}`), the data paragraph's twin.
+  MINOR_DATA_RO,
+  // The two who sign for a minor (§NNN, §330's pattern): kept only on a minor's declaration.
+  MINOR_SIGNS_RO,
+  // The adult's own sentence (§NNN): kept only on an adult's declaration (`{{signerAlone}}`).
+  "Eu, {{signerAlone}}, semnez această declarație personal, doar pentru mine.",
+  "Semnarea este electronică: numele scris mai jos — al fiecărui semnatar, când semnează două persoane —, bifa de acceptare, momentul semnării ({{signedAt}}) și amprenta textului citit sunt înregistrate împreună de platforma clubului. Este o semnătură electronică simplă, căreia nu i se poate refuza efectul juridic doar pentru că este electronică (art. 25 alin. (1) din Regulamentul (UE) nr. 910/2014 (eIDAS); Legea nr. 214/2024).",
   "*Prin Organizator se înțelege <DENUMIREA JURIDICĂ COMPLETĂ A CLUBULUI>, cu sediul în <ADRESA SEDIULUI>, <NUMĂR DE ÎNREGISTRARE / CUI>.",
 ];
 
@@ -179,7 +219,10 @@ const closingEn = [
   "I take responsibility for my own safety, my equipment and the decisions I make on the course.",
   "I take part of my own free will and at my own risk. The risks above are inherent in running: they come from the ground, the weather, my own health, the other participants, animals and traffic, where the course uses or crosses roads. These risks can lead to injury, to serious injury or even to death. This declaration shows that I have been informed of these risks and that I accept them, including the risk of serious injury or death, together with my own obligations. Accepting the risks is not, by itself, a waiver of my right to compensation (art. 1355(4) of the Romanian Civil Code), and it does not take away any right the law gives me. I do, however, separately and expressly waive, to the extent the law allows, my claims for harm arising solely from the inherent risks, without the organiser's fault, serious injury or death included. The waiver covers my claims against the organiser, its organising team, its volunteers and its partners. It does not cover harm caused through their fault, and it does not remove the organiser's safety duties. This waiver also binds my heirs, to the extent the law allows. The organiser is liable, under the law, for harm attributable to it; it cannot be held liable, to the extent the law allows, for harm not attributable to it, such as the consequences of my own choices on the course, and my own conduct may reduce or remove its liability, under the law (art. 1371 of the Civil Code).",
   "I am informed that the data in this declaration — my name and my email address — is processed by the organiser*, under Regulation (EU) 2016/679 (GDPR) and the club's privacy notice, as evidence that I was informed of the risks of these runs and accepted them, on the basis of the organiser's legitimate interest (art. 6(1)(f) GDPR), and the statement about my health only for the establishment, exercise or defence of legal claims (art. 9(2)(f) GDPR). A copy is sent to the email address I gave, and one to the club's archive. The active declaration is kept as long as it is needed to manage my taking part in the runs it applies to. If I ask for its withdrawal, at the club's contact address, it is no longer used for any later run. A copy may be kept after that, for as long as needed to establish, exercise or defend rights, including with regard to the general three-year limitation period set by art. 2517 of the Romanian Civil Code. If a complaint, a dispute or proceedings are under way, the document may be kept until they are finally settled. I have the rights of access, rectification, erasure, restriction and objection, and the right to complain to the Romanian supervisory authority (ANSPDCP); for them I write to <CONTACT EMAIL>.",
-  "I sign this declaration personally, for myself only. It is signed electronically: the name written below, the acceptance tick, the moment of signing ({{signedAt}}) and the fingerprint of the text read are recorded together by the club's platform. It is a simple electronic signature, which cannot be denied legal effect solely because it is electronic (art. 25(1) of Regulation (EU) No 910/2014 (eIDAS); Romanian Law no. 214/2024).",
+  MINOR_DATA_EN,
+  MINOR_SIGNS_EN,
+  "I, {{signerAlone}}, sign this declaration personally, for myself only.",
+  "Signing is electronic: the name written below — each signer's, when two people sign —, the acceptance tick, the moment of signing ({{signedAt}}) and the fingerprint of the text read are recorded together by the club's platform. It is a simple electronic signature, which cannot be denied legal effect solely because it is electronic (art. 25(1) of Regulation (EU) No 910/2014 (eIDAS); Romanian Law no. 214/2024).",
   "*Organiser means <THE CLUB'S FULL LEGAL NAME>, with its registered seat at <REGISTERED ADDRESS>, <REGISTRATION NUMBER>.",
 ];
 

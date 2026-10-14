@@ -1215,6 +1215,11 @@ export type TemplateData = {
    */
   minorSigns?: boolean;
   /**
+   * A group run's declaration signed by a minor beside a parent (§NNN, §330's two signatures): the minor's name.
+   * `participantName` is then the parent's or guardian's, the declarant, and both messages say both signed.
+   */
+  groupRunMinorName?: string;
+  /**
    * A bulk send's one club copy (§419; `enqueueBulkClubCopies`): how many real participants the
    * send reached. The copy then greets the club, names nobody and says the count.
    */
@@ -1677,7 +1682,7 @@ const T = {
     groupRunDeclarationArchive: {
       // The club's archive copy (§393, §99): searchable by who and for what; the document masked (§320).
       subject: (d: TemplateData) =>
-        `Declarație semnată (alergare de grup): ${d.participantName || "alergător"} — ${d.groupRunSeries ? `seria ${d.eventTitle ?? ""}` : (d.eventTitle ?? "eveniment")}`,
+        `Declarație semnată (alergare de grup): ${d.participantName || "alergător"}${d.groupRunMinorName ? ` (pentru minorul ${d.groupRunMinorName})` : ""} — ${d.groupRunSeries ? `seria ${d.eventTitle ?? ""}` : (d.eventTitle ?? "eveniment")}`,
       greeting: () => "Salut,",
       body: (d: TemplateData) => [
         d.groupRunSeries
@@ -2314,6 +2319,11 @@ const T = {
     groupRunMasked: "În copia ta, seria și numărul actului de identitate apar mascate, pentru siguranță: adresa de e-mail nu a fost verificată înainte de trimitere.",
     groupRunNotYou: (contactUrl?: string) =>
       `Dacă nu tu ai semnat această declarație, scrie-ne din pagina de contact${contactUrl ? ` (${contactUrl})` : ""} și o ștergem.`,
+    /** A group run's declaration signed for a minor (§NNN): who signed, in the signer's copy and in the club's archive copy. */
+    groupRunMinor: (parent: string, minor: string, archive: boolean) =>
+      archive
+        ? `Declarația este a minorului ${minor}: a semnat-o minorul, pentru el, și ${parent}, ca părinte sau tutore legal.`
+        : `Declarația este a minorului ${minor}: a semnat-o minorul, pentru el, și tu, ca părinte sau tutore legal. Copia este pentru amândoi.`,
     /**
      * Who sends it, and the notice (§323); the address follows the sentence. Neutral since §419: the
      * registration may be somebody else's made with this address — a child's, a family member's (§389).
@@ -2484,7 +2494,7 @@ const T = {
     },
     groupRunDeclarationArchive: {
       subject: (d: TemplateData) =>
-        `Signed declaration (group run): ${d.participantName || "runner"} — ${d.groupRunSeries ? `${d.eventTitle ?? ""} (series)` : (d.eventTitle ?? "event")}`,
+        `Signed declaration (group run): ${d.participantName || "runner"}${d.groupRunMinorName ? ` (for the minor ${d.groupRunMinorName})` : ""} — ${d.groupRunSeries ? `${d.eventTitle ?? ""} (series)` : (d.eventTitle ?? "event")}`,
       greeting: () => "Hello,",
       body: (d: TemplateData) => [
         d.groupRunSeries
@@ -3016,6 +3026,10 @@ const T = {
     groupRunMasked: "In your copy, your identity document's series and number are masked, for safety: the email address was not verified before sending.",
     groupRunNotYou: (contactUrl?: string) =>
       `If you did not sign this declaration, write to us from the contact page${contactUrl ? ` (${contactUrl})` : ""} and we will delete it.`,
+    groupRunMinor: (parent: string, minor: string, archive: boolean) =>
+      archive
+        ? `The declaration is the minor ${minor}'s: the minor signed it for themselves, and ${parent} signed it as parent or legal guardian.`
+        : `The declaration is the minor ${minor}'s: the minor signed it for themselves, and you signed it as parent or legal guardian. The copy is for both of you.`,
     privacyFooter: (club: string) => `You are receiving this message from ${club} about a registration made with this email address. How we use the data:`,
     privacyFooterInterest: (club: string) => `This message comes from ${club} because you asked to be told. How we use your data:`,
     privacyFooterInvitation: (club: string) => `This message comes because ${club} entered your name and address to invite you to this event. How we use your data:`,
@@ -3625,6 +3639,9 @@ export function buildTemplateContent(
         for one, and always how to have a declaration one did not sign deleted — the address was
         never confirmed, so the message may have reached somebody who signed nothing.
       */
+      ...((messageType === "GROUP_RUN_DECLARATION_SIGNED" || messageType === "GROUP_RUN_DECLARATION_ARCHIVE") && data.groupRunMinorName
+        ? [copy.groupRunMinor(data.participantName, data.groupRunMinorName, messageType === "GROUP_RUN_DECLARATION_ARCHIVE")]
+        : []),
       ...(messageType === "GROUP_RUN_DECLARATION_SIGNED"
         ? [...(data.idDocumentMasked ? [copy.groupRunMasked] : []), copy.groupRunNotYou(data.contactUrl)]
         : []),

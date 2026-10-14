@@ -71,6 +71,17 @@ export const groupRunDeclarations = pgTable(
     typedName: text("typed_name").notNull(),
     /** "Carte de identitate BV 123456", as typed at signing (§95, §283). Null when the text names no document. */
     idDocument: text("id_document"),
+    /**
+     * The minor's own signature (§330, applied to a group run by §NNN): the name a minor typed for
+     * themselves when a parent or guardian signs beside them — the parent's tick on the page, the
+     * parent's name in `typed_name`, the declarant exactly as on the race's `declaration_acceptances`
+     * row, whose `minor_typed_name` this mirrors. Null for an adult's own declaration (the only kind
+     * before §NNN) and so for every row written earlier. A group run never takes the minor's
+     * identity document: no text of this kind names one (§418), and a child's identity number has no
+     * business here (GDPR art. 5(1)(c)); the parent's, where an older text still asks, stays in
+     * `id_document`. Kept as long as the row; it leaves with it, by the Administrator's erase.
+     */
+    minorTypedName: text("minor_typed_name"),
     /** Where the signer's copy was sent, and whom a request to delete it is checked against. Kept as long as the row. */
     email: text("email").notNull(),
 

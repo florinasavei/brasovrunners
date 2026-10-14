@@ -258,6 +258,31 @@ export function minimumAgeMergeValue(minAge: number, locale: string): string {
 export const SERIES_MERGE_FIELDS = ["series", "seriesRhythm", "seriesPlace"] as const;
 
 /**
+ * A group run's declaration signed for a minor (§NNN, amending §393, §523 and §330; the owner, 2026-10-14:
+ * «pt alergările de grup trebuie să facem declarația să suporte și un minor, o bifă nouă și să semneze
+ * minorul + părintele»): three fields that tell the signing paths apart inside one approved text.
+ *
+ * - `{{minor}}` — the minor's own typed name, in the paragraph that says the minor signs for themselves
+ *   and the parent or guardian signs beside them. "" on an adult's declaration, which drops that paragraph
+ *   (`PARAGRAPH_MERGE_FIELDS`). **It is also the marker of the gate**: the signing page offers «Semnez pentru
+ *   un minor» only while the group-run declaration in force names it, in every language
+ *   (`namesGroupRunMinor`), as `{{participantIdDocument}}` gates the race's second signature (§330) — the
+ *   club's approval of a text is the switch, and `/admin/tasks` carries the row `groupRunMinorText`.
+ * - `{{signerAlone}}` — the adult's own typed name, in the sentence «Eu, …, semnez această declarație
+ *   personal, doar pentru mine». "" on a minor's declaration, which drops that sentence.
+ * - `{{minorMinimumAge}}` — the run's own minimum age when it is under eighteen ("14 ani"), in the minor's
+ *   paragraph; "" when the run has none, which drops it (no minor may take part).
+ *
+ * The page shows the text before anybody has typed a name or ticked anything, with both left as dotted
+ * blanks, so both paragraphs are read; the signed PDF keeps the one that applies. A text with neither (every
+ * version approved before) is given neither value and reads as it always did.
+ */
+export const GROUP_RUN_MINOR_MERGE_FIELD = "minor";
+export const GROUP_RUN_ALONE_MERGE_FIELD = "signerAlone";
+/** `{{minorMinimumAge}}`: the run's own minimum under eighteen, with its unit; "" when the run has none, which drops the minor's paragraph. */
+export const GROUP_RUN_MINOR_AGE_MERGE_FIELD = "minorMinimumAge";
+
+/**
  * The volunteer agreement's own blanks (§758, amending §754): `{{volunteer}}` — the person's name as the row
  * holds it —, `{{volunteerRole}}` — the role's name in the text's language — and `{{volunteerTasks}}` — what
  * the club typed the role asks («descrierea rolului»), in that language. Filled when the person accepts, kept
@@ -305,6 +330,9 @@ export const VOLUNTEER_MERGE_FIELDS = [
 export const PARAGRAPH_MERGE_FIELDS: ReadonlySet<string> = new Set([
   MINIMUM_AGE_MERGE_FIELD,
   ...SERIES_MERGE_FIELDS,
+  GROUP_RUN_MINOR_MERGE_FIELD,
+  GROUP_RUN_ALONE_MERGE_FIELD,
+  GROUP_RUN_MINOR_AGE_MERGE_FIELD,
   "volunteerRole",
   "volunteerTasks",
   VOLUNTEER_ROLE_CHOICES_MERGE_FIELD,
@@ -456,6 +484,9 @@ export const MERGE_FIELDS = [
   "signedAt",
   MINIMUM_AGE_MERGE_FIELD,
   ...SERIES_MERGE_FIELDS,
+  GROUP_RUN_MINOR_MERGE_FIELD,
+  GROUP_RUN_ALONE_MERGE_FIELD,
+  GROUP_RUN_MINOR_AGE_MERGE_FIELD,
   ...VOLUNTEER_MERGE_FIELDS,
   ...DEADLINE_MERGE_FIELDS,
   LIST_STATES_MERGE_FIELD,
@@ -595,6 +626,16 @@ export function asksForIdDocument(body: unknown): boolean {
  */
 export function asksForMinorSignature(body: unknown): boolean {
   return mergeFieldsIn(body).has("participantIdDocument");
+}
+
+/**
+ * Whether a group-run declaration is written for a minor (§NNN): it names `{{minor}}`, the minor's own
+ * signature paragraph. The gate of the signing page's «Semnez pentru un minor» tick — every language of the
+ * text in force, asked by `groupRunMinorPathOffered` — and of the service's refusal of a post that ticks it
+ * against another text; the shape of `asksForMinorSignature` (§330) for the race. Pure.
+ */
+export function namesGroupRunMinor(body: unknown): boolean {
+  return mergeFieldsIn(body).has(GROUP_RUN_MINOR_MERGE_FIELD);
 }
 
 /**

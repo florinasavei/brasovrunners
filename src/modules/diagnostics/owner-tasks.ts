@@ -76,6 +76,7 @@ export type TaskId =
   | "teamPageNotice"
   | "raceDeclarations"
   | "groupRunSeriesTexts"
+  | "groupRunMinorText"
   | "liveEmail"
   | "emailFailSafe"
   | "scheduler"
@@ -124,6 +125,7 @@ export const TASK_KIND: Record<TaskId, TaskKind> = {
   teamPageNotice: "text",
   raceDeclarations: "text",
   groupRunSeriesTexts: "text",
+  groupRunMinorText: "text",
   liveEmail: "account",
   emailFailSafe: "check",
   scheduler: "check",
@@ -332,6 +334,12 @@ export type OwnerTaskInputs = {
    * one in force is older, null while none is in force — then there is nothing to approve again.
    */
   groupRunSeriesTextsCurrent: boolean | null;
+  /**
+   * Whether the group-run declarations in force carry the minor's paragraph (§NNN,
+   * `groupRunDeclarationsNameMinor`): true when every one names `{{minor}}`, false while one in force is older —
+   * the signing page then offers no «Semnez pentru un minor» — and null while none is in force.
+   */
+  groupRunMinorTextsCurrent: boolean | null;
   /**
    * How email leaves this deployment. Only `live` reaches a real participant; `allowlist` is the
    * Mailgun sandbox, which reaches five authorized addresses, and `capture` transmits nothing.
@@ -736,6 +744,18 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
       push("groupRunSeriesTexts", {
         owner: "club",
         state: input.groupRunSeriesTextsCurrent ? "done" : "open",
+      });
+    }
+    /*
+      The group-run declarations for a minor (§NNN): the signing page's «Semnez pentru un minor» waits for a text
+      that names `{{minor}}`, in every language, as the race's second signature waits for one that names the
+      minor's document (§330). Open, never blocking — an adult signs as before and nothing is refused — and done by
+      itself the day every group-run text in force carries the paragraph. Only while one is in force.
+    */
+    if (input.groupRunMinorTextsCurrent !== null) {
+      push("groupRunMinorText", {
+        owner: "club",
+        state: input.groupRunMinorTextsCurrent ? "done" : "open",
       });
     }
   }

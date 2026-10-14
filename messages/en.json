@@ -647,6 +647,10 @@
           "idDocument": "Identity document (series and number)",
           "email": "Email address",
           "accepted": "I meet the run's minimum age, I have read the declaration and I sign it",
+          "minor": "I am signing for a minor (under 18)",
+          "minorBirthDate": "The minor's date of birth",
+          "minorTypedName": "The minor's signature: their full name",
+          "guardianAgrees": "I am the parent or legal guardian and I agree",
           "typedName": "Signature: your full name",
           "birthDate": "Date of birth",
           "captcha": "The anti-bot check"
@@ -655,12 +659,21 @@
         "emailHelp": "We send the signed declaration here, as a PDF.",
         "languageNote": "The declaration is signed in this page's language, and the PDF and the email are in it too. For the other language, switch the language (RO / EN) before you sign.",
         "adultsOnly": "Sign it only for yourself, if you are at least {age} old on the day of the run; never on behalf of someone else, nor of a minor.",
+        "adultsOrMinor": "You sign it for yourself, if you have turned {age} by the day of the run. For a minor of at least {minorAge}, tick below: you both sign, the minor and their parent or guardian. The minor paragraphs apply only if you tick; otherwise the sentence “I, …, sign … only for myself” applies.",
         "accept": "I am at least {age} old, I have read the declaration above and sign it on my own responsibility",
+        "acceptAny": "I have read the declaration above and sign it on my own responsibility: for myself, being at least {age}, or for the minor ticked above",
         "acceptInline": "Tick this box so you can sign.",
         "acceptSummary": "Tick the box accepting the declaration so you can sign.",
+        "minorTickHelp": "For a participant under 18 and at least {age}: the minor and their parent or legal guardian each sign with their own name.",
+        "minorBlockTitle": "The minor and the parent or guardian",
+        "minorTypedNameHelp": "The minor's name, written by the minor. It appears as a signature beside yours.",
+        "guardianAgreesInline": "Tick this box to sign for the minor.",
+        "minorRefused": "The tick and the minor's boxes must agree: tick “I am signing for a minor” if you are, and empty its boxes if you are not.",
         "typedNameHelp": "Type your full name. It appears as a signature.",
+        "typedNameMinorHelp": "Write your full name. If you are signing for a minor, it is your name as parent or guardian: it appears as the second signature.",
         "birthDateHelp": "For the run's minimum age: {age}, reached by the day of the run. We do not keep it and it is not in the declaration.",
         "tooYoung": "The minimum age for this run is {age}, reached by the day of the run. The declaration cannot be signed.",
+        "tooOld": "The minor must be under 18 on the day of the run. An adult signs their own declaration, without the minor's tick.",
         "captcha": "The anti-bot check did not pass. Please try again.",
         "action": "Sign the declaration"
       }
@@ -2914,12 +2927,12 @@
       },
       "groupRunDeclaration": {
         "label": "Optional self-declaration",
-        "help": "Optional, signed once for every date; the signer and the club each get a copy. It needs an approved privacy notice. The run declaration is signed from 18, whatever the run's minimum age.",
+        "help": "Optional, signed once for every date; the signer and the club each get a copy. It needs an approved privacy notice. Under 18, the minor signs with a parent, if the text and the run allow it.",
         "notGroupSurface": "Only for a group run on asphalt or on a trail: choose the surface in “The course” card.",
         "missing": "The club has no approved version of “{document}” yet. Approve one in Legal documents, together with a new privacy notice, then tick it here.",
-        "minAgeHelp": "Reached by the day of the run, at least 18: the declaration covers no minor, even if this box says less. Above 18, for example 21, the signing page asks for the birth date.",
         "surface": "Surface, from “The course” card: {surface}",
-        "inForce": "The text in force for {surface}: “{document}”, v{version}."
+        "inForce": "The text in force for {surface}: “{document}”, v{version}.",
+        "minAgeHelp": "Reached by the day of the run. Under 18, the signing page also offers “I am signing for a minor”, if the text in force allows it. Above 18, for example 21, the page asks for the birth date."
       },
       "pageFlow": {
         "title": "The page, top to bottom",
@@ -3235,7 +3248,7 @@
       "noTranslations": "This version has no text yet.",
       "newTitle": "New version",
       "newFromTemplateIntro": "Prefilled with the template's text. Left to fill, in both languages, in angle brackets: {blanks}. Save the draft, then approve it from its page.",
-      "tokensHelp": "In the declaration only, these fields are filled in automatically for each person and event: '{{participant}}' (the registered name), '{{participantIdDocument}}' (their identity document, typed at signing), '{{guardian}}' and '{{guardianIdDocument}}' (a minor's parent or guardian and their document; a dash for an adult), '{{idDocument}}' (the declarant's document — the parent's, for a minor), '{{event}}' (the event's title), '{{eventDate}}' (its date), '{{eventLocation}}' (its place), '{{minimumAge}}' (the event's minimum age, with its unit), '{{signedAt}}' (the moment of signing). Written exactly so, with double braces.",
+      "tokensHelp": "In the declaration only, these fields are filled in automatically for each person and event: '{{participant}}' (the registered name), '{{participantIdDocument}}' (their identity document, typed at signing), '{{guardian}}' and '{{guardianIdDocument}}' (a minor's parent or guardian and their document; a dash for an adult), '{{idDocument}}' (the declarant's document — the parent's, for a minor), '{{event}}' (the event's title), '{{eventDate}}' (its date), '{{eventLocation}}' (its place), '{{minimumAge}}' (the event's minimum age, with its unit), '{{minor}}' (a group run's minor paragraph: it appears only on the minor's path), '{{signerAlone}}' (the adult's sentence, dropped from a minor's declaration), '{{minorMinimumAge}}' (the minor's minimum age, with its unit; empty on a run for adults), '{{signedAt}}' (the moment of signing). Written exactly so, with double braces.",
       "newIntro": "You are writing a new version, not changing an existing one. It saves as a draft and is not public until you approve it.",
       "newVersion": "New version",
       "saveDraft": "Save draft",
@@ -3312,7 +3325,7 @@
         "holdMinutes": "How long a place is held for signing, from “Deadlines”",
         "offerHours": "How long a waiting-list offer stays open, from “Deadlines”",
         "reminderClause": "The reminder as a clause with its comma, from “Deadlines”; with no number when the club sends none by default",
-        "minimumAge": "The event's minimum age, with its unit (“16 years”): at least 14 for a race, at least 18 for a group run. Every declaration states it in a sentence of its own",
+        "minimumAge": "The event's minimum age, with its unit (“16 years”): at least 14 for a race, at least 18 for a group run. A minor's group-run declaration drops the adult's sentence",
         "participantListStates": "Privacy notice only: the three stages beside a name on the public list. Without it in the notice in force, only confirmed names",
         "participantListSocials": "Privacy notice only: the tick with which someone shows their Strava and Instagram on the public list. Without it in the notice in force, never",
         "participantListNumbers": "Privacy notice only (and the terms): the race number beside the names of the confirmed on the public list. Without it in the notice in force, the list shows no number",
@@ -3322,6 +3335,9 @@
         "series": "Only in the group-run declarations: the series' name, when the run repeats. The sentence that names it shows only for a series; a one-day run keeps the sentence with '{{event}}' and '{{eventDate}}'",
         "seriesRhythm": "Only in the group-run declarations: how often the series repeats, read off its dates (“every Tuesday at 18:30”)",
         "seriesPlace": "Only in the group-run declarations: the series' usual starting place",
+        "minor": "Only in the group-run declarations: the minor's name, in the paragraphs of a declaration signed for a minor. With it in the text in force, the page offers the tick “I am signing for a minor”",
+        "signerAlone": "Only in the group-run declarations: the name of the person signing for themselves, in the sentence that only an adult's declaration keeps",
+        "minorMinimumAge": "Only in the group-run declarations: the run's minimum age, with its unit (“14 years”), when it is under 18, in the minor's paragraph; on a run for adults only the paragraph goes",
         "promotionalMaterials": "Only in the privacy notice: the optional box for offers and benefits from the club and its partners. Without it in the notice in force, the form does not offer it",
         "promotionalMaterialsShared": "Only in the privacy notice: what data the club's partners may receive from those who ticked offers and benefits. Without it in the notice in force, the list for sponsors is off",
         "registrationsPerAddress": "Terms only: how many people may register with the same email address for one event, with the unit (“4 people”), from Settings → “Deadlines”",
@@ -4114,6 +4130,18 @@
             "The same for “Self-declaration (group run, trail)”.",
             "Approve a new version of the privacy notice from the template too: it says a series' declaration is kept while it is active, and after a withdrawal for at most three years.",
             "Whoever signed the old version sees on the run's page, from the link in their email, that the new version is asked for; the old signature stays in the list."
+          ]
+        },
+        "groupRunMinorText": {
+          "title": "Group-run declarations: the minor and the parent",
+          "todo": "The group-run declarations in force have no paragraph for minors, so the signing page shows no “I am signing for a minor” tick. The new template adds it; approve it.",
+          "done": "The group-run declarations in force have the paragraph for minors: on a run whose minimum age is under 18, the signing page offers the tick, and the minor and the parent sign together.",
+          "how": [
+            "/admin/legal → the card “Self-declaration (group run, asphalt)” → “Regenerate from the template”. Then the draft: read, fill in, “Save draft”, then “Approve and publish”.",
+            "The same for “Self-declaration (group run, trail)”.",
+            "A lawyer should read the minor's paragraph first: the minor signs for themselves, and the parent approves and accepts the risks to the extent the law allows.",
+            "The tick appears only on a run whose minimum age, under “Rules”, is under 18. From 18, the run stays for adults only.",
+            "Declarations already signed stay as they were signed. The privacy notice, approved from the new template, also says what we keep about the minor."
           ]
         },
         "promoNotice": {
@@ -7787,7 +7815,7 @@
               "title": "Minors and the minimum age",
               "steps": [
                 "A participant under 18 is registered by a parent or guardian, who writes their name in the form's section for minors; the desk and the export show “Minor — parent/guardian”.",
-                "The minimum age is each event's own, of any type: «Minimum age to take part», under «Taking part, registration and rules» → «Rules». The event's page says it. It is counted on the day of the event, at every door — the form, the desk, a registration entered by staff. The run declaration is signed from 18, whatever the run's minimum age."
+                "The minimum age is each event's own, of any type: «Minimum age to take part», under «Taking part, registration and rules» → «Rules». The event's page says it. It is counted on the day of the event, at every door — the form, the desk, a registration entered by staff. The declaration is signed from 18. Under 18, the minor signs with a parent, but only if the text in force provides for it and the run's minimum age is under 18."
               ]
             },
             {
@@ -8386,6 +8414,7 @@
       "none": "No declaration signed yet.",
       "signedAt": "signed {when} (v{version})",
       "series": "series",
+      "minorOf": "minor · parent: {parent}",
       "pdf": "PDF",
       "reason": "Why it is erased",
       "reasonHelp": "It stays in the club's log, with your name. Do not write the person's name.",
