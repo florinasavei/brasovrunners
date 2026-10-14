@@ -196,7 +196,7 @@ describe("§758 the PDF's own words", () => {
   });
 
   it("says how it was accepted: on the page, from the link, or on paper and who recorded it", () => {
-    expect(acceptedHowWords("ro", "FORM", "marți, 13 oct.", null)).toContain("pe pagina evenimentului");
+    expect(acceptedHowWords("ro", "FORM", "marți, 13 oct.", null)).toContain("pe pagina de voluntari a evenimentului");
     expect(acceptedHowWords("ro", "LINK", "marți, 13 oct.", null)).toContain("din linkul unic trimis");
     expect(acceptedHowWords("ro", "PAPER", "marți, 13 oct. 2026, la 13:00", "Ana Admin")).toBe(
       "Semnat pe hârtie, la organizatori; înregistrat de Ana Admin, marți, 13 oct. 2026, la 13:00. Originalul semnat este păstrat de club.",

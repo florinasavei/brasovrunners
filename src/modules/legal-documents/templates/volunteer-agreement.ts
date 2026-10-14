@@ -62,7 +62,7 @@ const partiesRo = [
   // The platform's minimum age for a volunteer (§758): the one sentence of age, filled from the code.
   "Voluntarul declară că are cel puțin {{minimumAge}} împliniți.",
   // The minors' clause (§NNN): dropped whole for an adult, whose `{{volunteerGuardian}}` is "".
-  "Voluntarul fiind minor, părintele sau tutorele său, {{volunteerGuardian}}, își dă acordul ca el să fie voluntar la acest eveniment, în condițiile acestui contract, acceptându-l separat, în numele său, din legătura primită pe e-mail sau pe hârtie, la organizatori. Voluntarul minor este confirmat numai după acest acord.",
+  "Voluntarul fiind minor, părintele sau tutorele său, {{volunteerGuardian}}, își dă acordul ca el să fie voluntar la acest eveniment, în condițiile acestui contract, acceptându-l separat, în nume propriu, din legătura primită pe e-mail sau pe hârtie, la organizatori. Voluntarul minor este confirmat numai după acest acord.",
 ];
 
 const partiesEn = [
@@ -179,7 +179,7 @@ const lawRo = [
   "Contractul se încheie potrivit Legii nr. 78/2014 privind reglementarea activității de voluntariat în România și se completează cu prevederile Codului civil.",
   // «Momentul acceptării» as the platform records it (§534's words for the declarations), never a time stamp.
   "Voluntarul acceptă contractul electronic — numele, bifa de acceptare, momentul acceptării ({{signedAt}}) și amprenta textului citit sunt înregistrate împreună de platforma clubului — sau îl semnează pe hârtie, la organizatori. Voluntarul primește pe email o copie a contractului acceptat, ca PDF. Clubul păstrează dovada acceptării cât timp spune nota de confidențialitate.",
-  "Părintele sau tutorele, {{volunteerGuardian}}, acceptă contractul în numele său, electronic — numele scris, bifa de acceptare, momentul acceptării ({{signedAt}}) și amprenta textului citit sunt înregistrate împreună de platforma clubului — sau îl semnează pe hârtie, la organizatori.",
+  "Părintele sau tutorele, {{volunteerGuardian}}, acceptă contractul în nume propriu, electronic — numele scris, bifa de acceptare, momentul acceptării ({{signedAt}}) și amprenta textului citit sunt înregistrate împreună de platforma clubului — sau îl semnează pe hârtie, la organizatori.",
 ];
 
 const lawEn = [

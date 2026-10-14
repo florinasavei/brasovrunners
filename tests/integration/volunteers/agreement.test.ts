@@ -458,7 +458,7 @@ describe("§758 the volunteer agreement", () => {
       expect(text).toContain("fără plată");
       expect(text).toContain("Legii nr. 78/2014");
       expect(text).toContain("Acceptat electronic");
-      expect(text).toContain("pe pagina evenimentului");
+      expect(text).toContain("pe pagina de voluntari a evenimentului");
       expect(text).toContain(person.agreementTextHash!);
       // No identity document is asked anywhere.
       expect(text).not.toContain("Act de identitate");

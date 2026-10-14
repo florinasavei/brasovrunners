@@ -683,6 +683,20 @@ describe("§NNN the card: the parent's agreement, in words", () => {
     expect(waiting).toContain('href="mailto:maria@example.test"');
   });
 
+  it("says how a parent's consent is got once for the card, not on every minor's row — and marks a parent's address that is the volunteer's own", async () => {
+    const other = { ...MINOR, id: "88888888-8888-4888-8888-888888888888", name: "Ion Tânărul", email: "ion@example.test", guardianEmail: "ION@example.test" };
+    const page = await drawCard({ minorsOpen: true, volunteers: [MINOR, other] });
+    expect(page.match(/data-testid="volunteer-guardian-note"/g)).toHaveLength(1);
+    expect(rowOf(page, MINOR.id)).not.toContain("volunteer-guardian-note");
+    // Only the row whose guardian shares the volunteer's mailbox (through the canonicalizer) says so.
+    expect(rowOf(page, other.id)).toContain('data-testid="volunteer-guardian-same-address"');
+    expect(rowOf(page, other.id)).toContain("Aceeași adresă ca a voluntarului");
+    expect(rowOf(page, MINOR.id)).not.toContain("volunteer-guardian-same-address");
+    // Nothing waits on a parent: no note at all.
+    const none = await drawCard({ minorsOpen: true, volunteers: PEOPLE });
+    expect(none).not.toContain("volunteer-guardian-note");
+  });
+
   it("keeps saying «Acordul părintelui lipsește» while a link is live in the parent's mailbox — «Link trimis părintelui» is a second, smaller chip", async () => {
     const sent = { ...MINOR, guardianTokenExpiresAt: new Date("2026-10-20T10:00:00Z"), guardianRequestedAt: new Date("2026-10-14T09:10:00Z") };
     const page = await drawCard({ minorsOpen: true, volunteers: [sent] });
@@ -718,7 +732,9 @@ describe("§NNN the card: the parent's agreement, in words", () => {
   it("says the link and the paper wait while the notice or the agreement does not describe minors", async () => {
     const page = await drawCard({ minorsOpen: false, volunteers: [MINOR] });
     const waiting = rowOf(page, MINOR.id);
-    expect(waiting).toContain('data-testid="volunteer-guardian-closed"');
+    // The sentence is said once for the whole card, never on every row.
+    expect(page.match(/data-testid="volunteer-guardian-closed"/g)).toHaveLength(1);
+    expect(waiting).not.toContain('data-testid="volunteer-guardian-closed"');
     expect(waiting).not.toContain('data-testid="volunteer-guardian-send-form"');
     expect(waiting).not.toContain('data-testid="volunteer-guardian"');
     expect(waiting).not.toContain('data-testid="volunteer-guardian-pdf-to-sign"');

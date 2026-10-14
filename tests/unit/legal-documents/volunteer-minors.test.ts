@@ -78,7 +78,7 @@ describe("§NNN the agreement's minors' clause", () => {
     expect(ro).toContain("Voluntarul minor este confirmat numai după acest acord.");
     expect(ro).toContain("numai activități potrivite vârstei sale și nu îl pune pe posturi de noapte sau periculoase");
     expect(ro).toContain("poate retrage oricând acordul");
-    expect(ro).toContain("acceptă contractul în numele său, electronic");
+    expect(ro).toContain("acceptă contractul în nume propriu, electronic");
     const en = text(mergeLegalBody(volunteerAgreementEn, { ...ADULT, volunteerGuardian: "Maria Popescu" }));
     expect(en).toContain("agrees that they volunteer at this event");
     expect(en).toContain("only activities suited to their age and puts them on no night or dangerous posts");

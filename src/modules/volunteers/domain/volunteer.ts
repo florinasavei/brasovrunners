@@ -6,7 +6,7 @@ import { normalizeTeamText, resolveRichPair, richTextBox } from "@/modules/conte
 import { E164_PHONE } from "@/modules/registrations/phone";
 import { SHIRT_SIZES } from "@/modules/registrations/domain/kit";
 import { SEX_CHOICES } from "@/modules/registrations/domain/sex";
-import { isValidEmail } from "@/modules/participants/domain/canonical-email";
+import { canonicalizeEmail, isValidEmail } from "@/modules/participants/domain/canonical-email";
 
 /**
  * Volunteers for a race (§754; the owner, 2026-10-13: «I want to register volunteers for a race and
@@ -49,6 +49,20 @@ export const VOLUNTEER_ROLES_MAX = 30;
 export const VOLUNTEER_MINIMUM_AGE = 14;
 /** Of age: a volunteer under it needs a parent or guardian (§NNN); the agreement link's tick «Am cel puțin 18 ani» says it for a person with no age typed. */
 export const VOLUNTEER_ADULT_AGE = 18;
+
+/**
+ * Whether the guardian's address is the volunteer's own mailbox, through the canonicalizer (§10.4): a person of fourteen with no
+ * mailbox of their own may use their parent's (§389: a family on one address), so it is no refusal — the card marks it, and the
+ * organizer's confirm, the human check, sees it. False when either address is missing or cannot be read.
+ */
+export function guardianSharesAddress(volunteerEmail: string, guardianEmail: string | null): boolean {
+  if (!guardianEmail) return false;
+  try {
+    return canonicalizeEmail(volunteerEmail).canonicalEmail === canonicalizeEmail(guardianEmail).canonicalEmail;
+  } catch {
+    return false;
+  }
+}
 
 /**
  * The age `{{minimumAge}}` says in a volunteer agreement being read (§NNN). A text that carries the minors' clause

@@ -60,6 +60,7 @@ import {
   agreementStandingOf,
   agreementStillNamesRole,
   descriptionHead,
+  guardianSharesAddress,
   guardianStandingOf,
   isVolunteerMinor,
   type RoleStanding,
@@ -68,6 +69,7 @@ import {
   type VolunteerState,
 } from "../domain/volunteer";
 import { ROLE_FORM_COLOUR_BOXES, type VolunteerItem, type VolunteerRole } from "../volunteers";
+import { INLINE_TAP_TARGET } from "@/shared/ui/tap-target";
 import { DISCLOSURE_OPEN_ARROW, DISCLOSURE_SUMMARY_SX, FOLD_GLYPH_INLINE_SX } from "@/shared/ui/disclosure";
 
 /** The glyph of the role header's «Restul» fold, by name from the registry (§694). */
@@ -639,20 +641,12 @@ export default async function VolunteersCard({
       );
     }
     if (person.state === "CANCELLED") return null;
-    if (!minorsOpen) {
-      return (
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }} data-testid="volunteer-guardian-closed">
-          {t("volunteers.guardian.minorsClosed")}
-        </Typography>
-      );
-    }
+    // While the texts do not describe minors the link and the paper wait: the card says so once (`guardianNote`), not on every row.
+    if (!minorsOpen) return null;
     const sent = guardianStandingOf(person, now) === "linkSent" || person.guardianRequestedAt !== null;
     const sendLabel = sent ? t("volunteers.guardian.resend") : t("volunteers.guardian.send");
     return (
       <Stack spacing={1} sx={{ mt: 0.5 }} data-testid="volunteer-guardian">
-        <Typography variant="body2" color="text.secondary">
-          {t("volunteers.guardian.help")}
-        </Typography>
         {person.guardianRequestedAt && (
           <Typography variant="caption" color="text.secondary">
             {t("volunteers.guardian.requestedLine", { when: day(person.guardianRequestedAt) })}
@@ -833,12 +827,18 @@ export default async function VolunteersCard({
           {person.guardianEmail !== null && (
             <>
               {" · "}
-              <Box component="a" href={`mailto:${person.guardianEmail}`} sx={{ display: "inline-flex", alignItems: "center", minHeight: 44, wordBreak: "break-all" }} data-testid="volunteer-guardian-email">
+              <Box component="a" href={`mailto:${person.guardianEmail}`} sx={{ ...INLINE_TAP_TARGET, wordBreak: "break-all" }} data-testid="volunteer-guardian-email">
                 {person.guardianEmail}
               </Box>
             </>
           )}
         </Typography>
+      )}
+      {/* A guardian's address that is the volunteer's own (§389: a family on one address) is no refusal, but the organizer's confirm is the human check: it is said. */}
+      {isVolunteerMinor(person.age) && guardianSharesAddress(person.email, person.guardianEmail) && (
+        <Box sx={{ mt: 0.5 }}>
+          <StatusChip glyph="family" variant="outlined" label={t("volunteers.guardian.sameAddress")} testId="volunteer-guardian-same-address" />
+        </Box>
       )}
       {/* The address and the telephone number: drawn here and nowhere else, as links a thumb can press. */}
       <Stack direction="row" sx={{ flexWrap: "wrap", columnGap: 2, mt: 0.5 }}>
@@ -1134,6 +1134,13 @@ export default async function VolunteersCard({
         >
           {t("volunteers.badgesLink")}
         </GlyphButton>
+
+        {/* What waits on a parent, said once for the whole list (§NNN): how a minor's consent is got, or that it cannot be yet. */}
+        {volunteers.some((person) => isVolunteerMinor(person.age) && person.guardianName !== null && person.guardianAcceptedAt === null && person.state !== "CANCELLED") && (
+          <Typography variant="body2" color="text.secondary" data-testid={minorsOpen ? "volunteer-guardian-note" : "volunteer-guardian-closed"}>
+            {t(minorsOpen ? "volunteers.guardian.help" : "volunteers.guardian.minorsClosed")}
+          </Typography>
+        )}
 
         {/* The people: first the offers nobody has given a role yet, then each role's people with «N din M». */}
         {roles.length > 0 && (

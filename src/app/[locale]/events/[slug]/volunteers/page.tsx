@@ -1,6 +1,7 @@
 import Container from "@mui/material/Container";
 import MuiLink from "@mui/material/Link";
 import Typography from "@mui/material/Typography";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import type { Metadata } from "next";
 import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
@@ -16,6 +17,7 @@ import { readOrWhileAway } from "@/modules/resilience/optional-read";
 import { readVolunteerOffer } from "@/modules/volunteers/offer";
 import VolunteerBox from "@/modules/volunteers/ui/VolunteerBox";
 import { parseVolunteerBoxes, parseVolunteerOutcome, type VolunteerTyped } from "@/modules/volunteers/ui/volunteer-box";
+import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { DENSITY } from "@/theme/density";
 
 type Props = {
@@ -88,7 +90,9 @@ export default async function EventVolunteersPage({ params, searchParams }: Prop
   return (
     <Container id="main" component="main" maxWidth="md" sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
       <Typography variant="body2" sx={{ mb: 2 }}>
-        <MuiLink href={eventHref} data-testid="volunteers-back">
+        {/* The house's back link (§469, `EventPageView`): a left arrow before the words, 44 pixels tall. */}
+        <MuiLink href={eventHref} data-testid="volunteers-back" sx={{ display: "inline-flex", alignItems: "center", gap: 0.5, ...TAP_TARGET }}>
+          <ArrowBackIcon aria-hidden="true" data-testid="volunteers-back-arrow" sx={{ fontSize: 18 }} />
           {t("volunteers.page.back", { event: event.title })}
         </MuiLink>
       </Typography>
