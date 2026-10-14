@@ -54,6 +54,8 @@ describe("§NNN the badges' sheet", () => {
   it("prints as many badges as asked, per role, on as many A4 pages as they take", async () => {
     const { runs, pages, pdf } = await drawn(() => sheet());
     expect(pdf.subarray(0, 5).toString()).toBe("%PDF-");
+    // The file says how many badges it holds, in its own properties.
+    expect(pdf.toString("latin1")).toContain(`(${total} badges)`);
     const perSheet = badgeSheetGrid(badgePaper(DEFAULT_BADGE_DESIGN)).perSheet;
     expect(perSheet).toBe(16);
     expect(pages).toBe(Math.ceil(total / perSheet));

@@ -82,7 +82,8 @@ export async function renderBadgeSheet(input: BadgeSheetInput): Promise<Buffer> 
     margin: 0,
     autoFirstPage: false,
     font: regular as unknown as string,
-    info: { Title: `${input.eventTitle} — badges`, Author: CLUB_NAME, CreationDate: input.generatedAt, ModDate: input.generatedAt },
+    // The file says how many badges it holds, in its own properties: what the printer is asked for, readable without opening it.
+    info: { Title: `${input.eventTitle} — badges`, Subject: `${badges.length} badges`, Author: CLUB_NAME, CreationDate: input.generatedAt, ModDate: input.generatedAt },
   });
   doc.registerFont("body", regular);
   doc.registerFont("bold", bold);
