@@ -26,6 +26,7 @@ import { HEADER_CLEARANCE_PX } from "@/theme/brand";
 import { BADGE_LABEL_MAX, BADGE_PHONE_LABEL_MAX, BADGE_TITLE_MAX, type BadgeDesign, badgeColourReadable } from "../badge-design";
 import { BADGE_CUSTOM_BOUNDS, BADGE_SIZE_PRESETS, BADGE_SIZES, badgeImageSize, badgePaper, badgeRows, badgeSheetGrid, badgeSizeMm } from "../badge-geometry";
 import { BADGE_DESIGN_FORM_PREFIX, badgePreviewUrl } from "../badge-query";
+import { badgeDefaultWords } from "../badge-words";
 
 /** A form box's full name. */
 const box = (key: string) => `${BADGE_DESIGN_FORM_PREFIX}${key}`;
@@ -96,7 +97,15 @@ export default async function BadgeDesignPanel({
   const { widthMm, heightMm } = badgeSizeMm(design);
   const perSheet = (size: (typeof BADGE_SIZES)[number]) =>
     size === "custom" ? null : badgeSheetGrid(badgePaper({ size, customWidthMm: 0, customHeightMm: 0 })).perSheet;
-  const colourChoice = BIB_COLOURS.find((choice) => choice.hex === design.bandColour);
+  // The palette's colours the band may wear, and a kept colour that is not one of them (an imported event
+  // file's): offered as its own selected choice, so «Salvează ecusonul» keeps it unless the person changes it
+  // — the bib designer's own rule (`BibDesignPanel`'s band colour). The reader already turned a colour no
+  // word reads on into the club's blue, so a kept one always reads.
+  const offeredColours = BIB_COLOURS.filter((choice) => badgeColourReadable(choice.hex));
+  const colourChoice = offeredColours.find((choice) => choice.hex === design.bandColour);
+  const keptColour = design.bandColour && !colourChoice ? design.bandColour : null;
+  // The platform's words in each box's own language — what the badge prints in that language when the box is empty.
+  const [roDefaults, enDefaults] = await Promise.all([badgeDefaultWords("ro"), badgeDefaultWords("en")]);
 
   const pictureLabels: BibPictureLabels = {
     legend: t("badges.design.headerPicture"),
@@ -136,7 +145,13 @@ export default async function BadgeDesignPanel({
   const words = (...parts: Array<string | null | false>) => parts.filter((part): part is string => Boolean(part)).join(" · ");
   const sizeAside = t("badges.design.sizeAside", { width: String(widthMm), height: String(heightMm), perSheet: String(badgeSheetGrid(badgePaper(design)).perSheet) });
   const headerAside = words(
-    design.headerImageSrc ? t("badges.design.headerPicture") : colourChoice ? t(`editor.bibColours.${colourChoice.key}`) : t("editor.bibColours.club"),
+    design.headerImageSrc
+      ? t("badges.design.headerPicture")
+      : colourChoice
+        ? t(`editor.bibColours.${colourChoice.key}`)
+        : keptColour
+          ? t("badges.design.keptColour", { colour: keptColour })
+          : t("editor.bibColours.club"),
     design.showLogo && !design.headerImageSrc && t("badges.design.showLogo"),
     design.showTitle && !design.headerImageSrc && t("badges.design.showTitle"),
   );
@@ -165,7 +180,7 @@ export default async function BadgeDesignPanel({
               initialSrc={initialSrc}
               initialBox={badgeImageSize(design)}
               version={version}
-              labels={{ alt: t("badges.design.previewAlt"), caption: t("badges.design.previewCaption"), pending: t("editor.bibDesign.previewPending") }}
+              labels={{ alt: t("badges.design.previewAlt"), caption: t(sampleRole === "none" ? "badges.design.previewCaptionNone" : "badges.design.previewCaption"), pending: t("editor.bibDesign.previewPending") }}
             />
           </Box>
 
@@ -227,7 +242,8 @@ export default async function BadgeDesignPanel({
                 sx={{ width: { sm: 280 } }}
               >
                 <option value="">{t("editor.bibColours.club")}</option>
-                {BIB_COLOURS.filter((choice) => badgeColourReadable(choice.hex)).map((choice) => (
+                {keptColour && <option value={keptColour}>{t("badges.design.keptColour", { colour: keptColour })}</option>}
+                {offeredColours.map((choice) => (
                   <option key={choice.hex} value={choice.hex}>
                     {t(`editor.bibColours.${choice.key}`)}
                   </option>
@@ -293,7 +309,7 @@ export default async function BadgeDesignPanel({
                 <RecallField
                   name={box("labelRo")}
                   label={t("badges.design.labelRo")}
-                  placeholder={t("badges.defaults.label")}
+                  placeholder={roDefaults.label}
                   helperText={t("badges.design.labelHelp", { max: String(BADGE_LABEL_MAX) })}
                   defaultValue={design.labelRo}
                   fullWidth
@@ -302,7 +318,7 @@ export default async function BadgeDesignPanel({
                 <RecallField
                   name={box("labelEn")}
                   label={t("badges.design.labelEn")}
-                  placeholder={t("badges.defaults.labelEn")}
+                  placeholder={enDefaults.label}
                   helperText={t("badges.design.bothLanguages")}
                   defaultValue={design.labelEn}
                   fullWidth
@@ -345,7 +361,7 @@ export default async function BadgeDesignPanel({
                     <RecallField
                       name={box("phoneLabelRo")}
                       label={t("badges.design.phoneLabelRo")}
-                      placeholder={t("badges.defaults.phoneLabel")}
+                      placeholder={roDefaults.phoneLabel}
                       helperText={t("badges.design.phoneLabelHelp", { max: String(BADGE_PHONE_LABEL_MAX) })}
                       defaultValue={design.phoneLabelRo}
                       fullWidth
@@ -354,7 +370,7 @@ export default async function BadgeDesignPanel({
                     <RecallField
                       name={box("phoneLabelEn")}
                       label={t("badges.design.phoneLabelEn")}
-                      placeholder={t("badges.defaults.phoneLabelEn")}
+                      placeholder={enDefaults.phoneLabel}
                       helperText={t("badges.design.bothLanguages")}
                       defaultValue={design.phoneLabelEn}
                       fullWidth
@@ -367,7 +383,7 @@ export default async function BadgeDesignPanel({
           </Panel>
 
           {/* «Tăiere»: the dashed lines every sheet has, and the solid marks in the margin. */}
-          <Panel glyph="print" collapsible level={5} title={t("badges.design.sections.cut")} aside={cutAside} data-testid="badge-section-cut">
+          <Panel glyph="badgeCut" collapsible level={5} title={t("badges.design.sections.cut")} aside={cutAside} data-testid="badge-section-cut">
             <CheckboxField name={box("cutMarks")} defaultChecked={design.cutMarks} help={t("badges.design.cutMarksHelp")}>
               {t("badges.design.cutMarks")}
             </CheckboxField>

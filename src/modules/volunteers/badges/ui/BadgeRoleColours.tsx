@@ -11,24 +11,38 @@ import RecallField from "@/shared/forms/recall";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import Panel from "@/shared/ui/Panel";
-import { badgeColourReadable, badgeRoleColour, badgeTextOn } from "../badge-design";
+import { type BadgeDesign, badgeColourReadable, badgeRoleColour, badgeTextOn } from "../badge-design";
+import { badgeLabelIn } from "../badge-words";
 import { type BadgeRole, badgeRoleName, roleColourBoxes, TYPED_COLOUR } from "../badges";
 
 /** The palette's colours a role may wear: the bib's six (§177), those that carry their words at AA. */
 const READABLE = BIB_COLOURS.filter((choice) => badgeColourReadable(choice.hex));
 
 /**
- * «Culorile rolurilor» (§NNN): each role's band colour on the badge — «Culoarea temei» (the theme's, the
- * kit's orange), one of the bib's palette, or a colour typed beside «Altă culoare» and refused when its
- * words would not read at AA. On this page, not in the «Voluntari» card's role form, so the role's own
+ * «Culorile rolurilor» (§NNN): each role's band colour on the badge — «Portocaliul clubului» (the kit's
+ * orange), one of the bib's palette, or a colour typed in «Culoarea scrisă» and refused when its words
+ * would not read at AA. A new colour typed there is the one kept even when the select still shows the saved
+ * choice (`badges.ts#saveBadgeRoleColours`), so nobody types a colour and saves the old one. On this page, not in the «Voluntari» card's role form, so the role's own
  * editor stays the volunteers' card's alone.
  *
  * Every role shows its band as saved — a sample of the colour with «VOLUNTAR» in the text colour the
  * badge prints on it, the colour's name and its contrast in words — so the state is never told by colour
  * alone. One form, one press: «Salvează culorile» (`ActionForm`).
  */
-export default async function BadgeRoleColours({ eventId, locale, roles }: { eventId: string; locale: Locale; roles: readonly BadgeRole[] }) {
+export default async function BadgeRoleColours({
+  eventId,
+  locale,
+  roles,
+  design,
+}: {
+  eventId: string;
+  locale: Locale;
+  roles: readonly BadgeRole[];
+  /** The saved design: its «VOLUNTAR» is the word the sample band shows. */
+  design: BadgeDesign;
+}) {
   const t = await getTranslations("Admin");
+  const label = await badgeLabelIn(design, locale);
   const fields: Record<string, string> = {};
   for (const role of roles) {
     const boxes = roleColourBoxes(role.id);
@@ -60,7 +74,7 @@ export default async function BadgeRoleColours({ eventId, locale, roles }: { eve
                 const ink = badgeTextOn(shown);
                 const palette = READABLE.find((choice) => choice.hex === role.colour);
                 const choice = role.colour === null ? "" : palette ? palette.hex : TYPED_COLOUR;
-                // A stored colour no word reads on (written by hand) prints the theme's, and the line says so.
+                // A stored colour no word reads on (written by hand) prints the club's orange, and the line says so.
                 const colourName =
                   role.colour === null
                     ? t("badges.colours.theme")
@@ -79,7 +93,7 @@ export default async function BadgeRoleColours({ eventId, locale, roles }: { eve
                           aria-hidden
                           sx={{ minWidth: 96, minHeight: 32, px: 1, display: "inline-flex", alignItems: "center", justifyContent: "center", bgcolor: shown, color: ink, fontWeight: 700, borderRadius: 0.5, border: 1, borderColor: "divider" }}
                         >
-                          {t("badges.defaults.label")}
+                          {label}
                         </Box>
                         <Typography variant="body1" sx={{ fontWeight: 600 }}>
                           {badgeRoleName(role, locale)}

@@ -9152,16 +9152,15 @@
       "intro": "Ecusoanele sunt benzi mici și lungi, fără nume tipărit: numele se scrie cu markerul. Se tipăresc pe roluri, fiecare rol pe banda lui colorată.",
       "defaults": {
         "label": "VOLUNTAR",
-        "labelEn": "VOLUNTEER",
         "name": "Nume:",
-        "phoneLabel": "Coordonator",
-        "phoneLabelEn": "Coordinator"
+        "phoneLabel": "Coordonator"
       },
       "design": {
         "title": "Cum arată ecusonul",
-        "intro": "Fiecare parte are secțiunea ei, de sus în jos, cum se tipărește. Imaginea de mai sus se schimbă pe măsură ce alegi.",
+        "intro": "Fiecare parte are secțiunea ei, de sus în jos, cum se tipărește. Imaginea de mai jos se schimbă pe măsură ce alegi.",
         "previewAlt": "Ecusonul, așa cum se tipărește",
         "previewCaption": "Un ecuson de probă, cu primul rol al evenimentului.",
+        "previewCaptionNone": "Un ecuson de probă, fără rol.",
         "sections": {
           "size": "Dimensiunea",
           "header": "Antet",
@@ -9181,7 +9180,8 @@
         "perSheet": "Pe o foaie A4 încap {count} ecusoane de {width} × {height} mm.",
         "sizeAside": "{width} × {height} mm · {perSheet} pe foaie",
         "bandColour": "Culoarea benzii de sus",
-        "bandColourHelp": "Culoarea clubului, sau una dintre culorile numerelor de concurs.",
+        "bandColourHelp": "Culoarea clubului sau una dintre culorile numerelor care se citesc pe ecuson.",
+        "keptColour": "Culoarea păstrată ({colour})",
         "showLogo": "Sigla clubului",
         "showTitle": "Titlul evenimentului",
         "titleRo": "Titlul scurt (română)",
@@ -9222,20 +9222,20 @@
         "empty": "Evenimentul nu are încă roluri. Adaugă-le în cardul „Voluntari” al evenimentului.",
         "choiceOf": "Culoarea rolului {role}",
         "typedOf": "Culoarea scrisă pentru rolul {role}",
-        "theme": "Culoarea temei (portocaliu)",
-        "typed": "Altă culoare (scrisă alături)",
+        "theme": "Portocaliul clubului",
+        "typed": "Altă culoare",
         "choice": "Culoarea benzii",
-        "typedLabel": "Altă culoare",
-        "typedHelp": "Diez și șase cifre hexazecimale. Folosită doar cu „Altă culoare”.",
+        "typedLabel": "Culoarea scrisă",
+        "typedHelp": "Diez și șase cifre hexazecimale. O culoare nouă scrisă aici e cea care se păstrează.",
         "state": "Acum: {colour}, contrast {ratio} la 1",
         "save": "Salvează culorile",
         "saving": "Se salvează…",
-        "unreadable": "{colour}, care nu se citește: se tipărește culoarea temei"
+        "unreadable": "{colour}, care nu se citește: se tipărește portocaliul clubului"
       },
       "print": {
         "title": "Tipărire",
         "aside": "{perSheet} pe o foaie A4 · {width} × {height} mm",
-        "intro": "Ecusoanele se tipăresc pe roluri, nu pe persoane. Pe o foaie încap {perSheet}. Rolurile cer în total: {needed}.",
+        "intro": "Ecusoanele se tipăresc pe roluri, nu pe persoane. Pe o foaie încap {perSheet}. Rolurile cer în total: {needed}. Cel mult {max} pe un rol și {total} într-un fișier.",
         "introMore": "Foaia nu are niciun nume și nicio dată a vreunui voluntar. Numele se scrie de mână, la masa de primire.",
         "language": "Limba ecusoanelor",
         "languages": {
@@ -9247,7 +9247,7 @@
         "countHelp": "Rolul are nevoie de {needed}. „În plus” sunt rezerve.",
         "noRole": "Ecusoane fără rol",
         "noRoleCount": "Câte ecusoane fără rol",
-        "noRoleHelp": "Doar „VOLUNTAR”, pentru cine vine fără rol.",
+        "noRoleHelp": "Doar „{label}”, pentru cine vine fără rol.",
         "pictureAlt": "Ecusonul rolului {role}",
         "pictureAltNone": "Ecusonul fără rol",
         "download": "Descarcă ecusoanele (PDF)",

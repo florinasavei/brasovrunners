@@ -59,7 +59,7 @@ export default async function EventBadgesPage({ params }: Props) {
         {t("badges.intro")}
       </Typography>
       <BadgeDesignPanel eventId={id} locale={locale} design={event.design} sampleRole={sampleRole} version={version} />
-      <BadgeRoleColours eventId={id} locale={locale} roles={roles} />
+      <BadgeRoleColours eventId={id} locale={locale} roles={roles} design={event.design} />
       <BadgePrintPanel eventId={id} locale={locale} design={event.design} roles={roles} eventTitle={event.title} />
     </Stack>
   );

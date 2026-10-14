@@ -14,6 +14,7 @@ import ChecklistIcon from "@mui/icons-material/Checklist";
 import ConfirmationNumberIcon from "@mui/icons-material/ConfirmationNumber";
 import ContactMailIcon from "@mui/icons-material/ContactMail";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+import ContentCutIcon from "@mui/icons-material/ContentCut";
 import DataUsageIcon from "@mui/icons-material/DataUsage";
 import DateRangeIcon from "@mui/icons-material/DateRange";
 import DeleteSweepIcon from "@mui/icons-material/DeleteSweep";
@@ -146,11 +147,13 @@ export const PANEL_GLYPHS = {
   volunteers: VolunteerActivismIcon,
   // «Ecusoane pentru voluntari» (§NNN): the page's designer, and its sections top to bottom as the badge
   // prints — the size of the strip, the header («bibHeader», the bib's own), the role's band and its
-  // word, the writing area for the name, the coordinator's telephone («publicPhone»), the print («print»).
+  // word, the writing area for the name, the coordinator's telephone («publicPhone»), the cut lines
+  // («badgeCut», the scissors — never the print card's own glyph), the print («print»).
   badges: BadgeIcon,
   badgeSize: StraightenIcon,
   badgeRole: LabelIcon,
   badgeWriting: BorderColorIcon,
+  badgeCut: ContentCutIcon,
   // «Puncte de control» (§757): the points of the route, a pin on the ground.
   checkpoints: PinDropIcon,
   // What an event's registrations are, once it has them.

@@ -18,7 +18,11 @@ let locale: "ro" | "en" = "ro";
 vi.mock("next-intl/server", async () => {
   const { createTranslator } = await import("next-intl");
   return {
-    getTranslations: async (namespace: string) => createTranslator({ locale, messages: messages[locale], namespace: namespace as "Admin" }),
+    // The page's language by default; `{ locale, namespace }` for the words of a badge's own language (`badge-words.ts`).
+    getTranslations: async (arg: string | { locale: "ro" | "en"; namespace: string }) =>
+      typeof arg === "string"
+        ? createTranslator({ locale, messages: messages[locale], namespace: arg as "Admin" })
+        : createTranslator({ locale: arg.locale, messages: messages[arg.locale], namespace: arg.namespace as "Admin" }),
     getLocale: async () => locale,
   };
 });
@@ -70,24 +74,54 @@ describe("§NNN «Cum arată ecusonul»", () => {
     const page = await html(() => BadgeDesignPanel({ eventId: EVENT, locale: "en", design: DEFAULT_BADGE_DESIGN, sampleRole: "none", version: "abc" }), "en");
     expect(page).toContain("What the badge looks like");
     expect(page).toContain("90 × 35 mm — 16 on an A4 sheet");
+    // The sample is drawn without a role: the caption says so, not «the event's first role».
+    expect(page).toContain("A sample badge, without a role.");
+    expect(page).not.toContain("the event's first role");
+    // Each box's placeholder is the word the badge prints in that box's language, whatever the page's.
+    const placeholderOf = (name: string) => new RegExp(`<input[^>]*name="badge\\.design\\.${name}"[^>]*>`).exec(page)?.[0].match(/placeholder="([^"]*)"/)?.[1];
+    expect(placeholderOf("labelRo")).toBe("VOLUNTAR");
+    expect(placeholderOf("labelEn")).toBe("VOLUNTEER");
+    expect(placeholderOf("phoneLabelRo")).toBe("Coordonator");
+    expect(placeholderOf("phoneLabelEn")).toBe("Coordinator");
+  });
+
+  it("keeps a band colour from outside the palette as its own selected choice, so a save does not reset it", async () => {
+    const design = { ...DEFAULT_BADGE_DESIGN, bandColour: "#0d47a1" };
+    const page = await html(() => BadgeDesignPanel({ eventId: EVENT, locale: "ro", design, sampleRole: ROLES[0].id, version: "abc" }));
+    expect(page).toMatch(/<option value="#0d47a1" selected="">Culoarea păstrată \(#0d47a1\)<\/option>/);
+    // The closed fold names it too, never «Culoarea clubului».
+    expect(page).toContain("Culoarea păstrată (#0d47a1) · ");
+    // A palette colour is no extra choice.
+    const palette = await html(() =>
+      BadgeDesignPanel({ eventId: EVENT, locale: "ro", design: { ...DEFAULT_BADGE_DESIGN, bandColour: "#c62828" }, sampleRole: ROLES[0].id, version: "abc" }),
+    );
+    expect(palette).not.toContain("Culoarea păstrată");
+    expect(palette).toMatch(/<option value="#c62828" selected="">/);
   });
 });
 
 describe("§NNN «Culorile rolurilor»", () => {
   it("says each role's colour in words with its contrast, offers no colour that does not read, and says when a stored one does not", async () => {
-    const page = await html(() => BadgeRoleColours({ eventId: EVENT, locale: "ro", roles: ROLES }));
+    const page = await html(() => BadgeRoleColours({ eventId: EVENT, locale: "ro", roles: ROLES, design: DEFAULT_BADGE_DESIGN }));
     expect(page.match(/data-testid="badge-colour-row"/g)).toHaveLength(3);
     expect(page).toContain("Acum: Roșu, contrast");
-    expect(page).toContain("Acum: Culoarea temei (portocaliu), contrast");
+    expect(page).toContain("Acum: Portocaliul clubului, contrast");
     expect(page).toContain("#808080, care nu se citește");
     // The palette's green does not carry its words at AA: not a choice.
     expect(page).not.toContain('value="#1b8a3a"');
-    expect(page).toContain("Altă culoare (scrisă alături)");
+    expect(page).toContain(">Altă culoare</option>");
     expect(page).toContain("Salvează culorile");
   });
 
+  it("shows on each sample band the word the club typed, the one the badge prints", async () => {
+    const design = { ...DEFAULT_BADGE_DESIGN, labelRo: "Staff", labelEn: "Crew" };
+    const page = await html(() => BadgeRoleColours({ eventId: EVENT, locale: "ro", roles: ROLES, design }));
+    expect(page.match(/>STAFF</g)).toHaveLength(3);
+    expect(page).not.toContain(">VOLUNTAR<");
+  });
+
   it("says where roles are made when the event has none", async () => {
-    const page = await html(() => BadgeRoleColours({ eventId: EVENT, locale: "ro", roles: [] }));
+    const page = await html(() => BadgeRoleColours({ eventId: EVENT, locale: "ro", roles: [], design: DEFAULT_BADGE_DESIGN }));
     expect(page).toContain('data-testid="badge-colours-empty"');
     expect(page).not.toContain("Salvează culorile");
   });
@@ -109,5 +143,16 @@ describe("§NNN «Tipărire»", () => {
     expect(page).toContain("16 pe o foaie A4");
     // Each role's badge as saved, and the one «fără rol», stamped.
     expect(page.match(/badges\/preview\?locale=ro&amp;role=/g)).toHaveLength(4);
+    // The limits are said before anyone meets them.
+    expect(page).toContain("Cel mult 300 pe un rol și 1000 într-un fișier.");
+  });
+
+  it("starts a role that needs more than a pile holds at the most it prints, and names the club's own word", async () => {
+    const many: BadgeRole = { ...ROLES[1], needed: 500 };
+    const design = { ...DEFAULT_BADGE_DESIGN, labelRo: "Staff", labelEn: "Crew" };
+    const page = await html(() => BadgePrintPanel({ eventId: EVENT, locale: "ro", design, roles: [many], eventTitle: "Crosul" }));
+    const countBox = new RegExp(`<input[^>]*name="n\\.${many.id}"[^>]*>`).exec(page)?.[0] ?? "";
+    expect(countBox).toContain('value="300"');
+    expect(page).toContain("Doar „STAFF”, pentru cine vine fără rol.");
   });
 });

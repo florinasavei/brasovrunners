@@ -9152,16 +9152,15 @@
       "intro": "Badges are small, long strips with no printed name: the name is written with a marker. They are printed per role, each role on its coloured band.",
       "defaults": {
         "label": "VOLUNTEER",
-        "labelEn": "VOLUNTEER",
         "name": "Name:",
-        "phoneLabel": "Coordinator",
-        "phoneLabelEn": "Coordinator"
+        "phoneLabel": "Coordinator"
       },
       "design": {
         "title": "What the badge looks like",
-        "intro": "Each part has its own section, top to bottom, as it prints. The picture above changes as you choose.",
+        "intro": "Each part has its own section, top to bottom, as it prints. The picture below changes as you choose.",
         "previewAlt": "The badge, as it prints",
         "previewCaption": "A sample badge, with the event's first role.",
+        "previewCaptionNone": "A sample badge, without a role.",
         "sections": {
           "size": "Size",
           "header": "Header",
@@ -9181,7 +9180,8 @@
         "perSheet": "An A4 sheet holds {count} badges of {width} × {height} mm.",
         "sizeAside": "{width} × {height} mm · {perSheet} a sheet",
         "bandColour": "The top band's colour",
-        "bandColourHelp": "The club's colour, or one of the race numbers' colours.",
+        "bandColourHelp": "The club's colour or one of the race numbers' colours that read on a badge.",
+        "keptColour": "The kept colour ({colour})",
         "showLogo": "The club's logo",
         "showTitle": "The event's title",
         "titleRo": "Short title (Romanian)",
@@ -9222,20 +9222,20 @@
         "empty": "The event has no roles yet. Add them in the event's “Volunteers” card.",
         "choiceOf": "The colour of the role {role}",
         "typedOf": "The typed colour for the role {role}",
-        "theme": "The theme's colour (orange)",
-        "typed": "Another colour (typed beside it)",
+        "theme": "The club's orange",
+        "typed": "Another colour",
         "choice": "The band's colour",
-        "typedLabel": "Another colour",
-        "typedHelp": "A hash and six hexadecimal digits. Used only with “Another colour”.",
+        "typedLabel": "The typed colour",
+        "typedHelp": "A hash and six hexadecimal digits. A new colour typed here is the one kept.",
         "state": "Now: {colour}, contrast {ratio} to 1",
         "save": "Save the colours",
         "saving": "Saving…",
-        "unreadable": "{colour}, which does not read: the theme's colour prints"
+        "unreadable": "{colour}, which does not read: the club's orange prints"
       },
       "print": {
         "title": "Printing",
         "aside": "{perSheet} on an A4 sheet · {width} × {height} mm",
-        "intro": "Badges are printed per role, not per person. A sheet holds {perSheet}. The roles need in all: {needed}.",
+        "intro": "Badges are printed per role, not per person. A sheet holds {perSheet}. The roles need in all: {needed}. At most {max} for a role and {total} in one file.",
         "introMore": "The sheet holds no name and nothing about any volunteer. The name is written by hand at the welcome desk.",
         "language": "The badges' language",
         "languages": {
@@ -9247,7 +9247,7 @@
         "countHelp": "The role needs {needed}. “Spares” are extra badges.",
         "noRole": "Badges without a role",
         "noRoleCount": "How many badges without a role",
-        "noRoleHelp": "Only “VOLUNTEER”, for whoever comes without a role.",
+        "noRoleHelp": "Only “{label}”, for whoever comes without a role.",
         "pictureAlt": "The badge of the role {role}",
         "pictureAltNone": "The badge without a role",
         "download": "Download the badges (PDF)",

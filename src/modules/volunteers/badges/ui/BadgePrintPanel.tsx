@@ -12,7 +12,8 @@ import RadioField from "@/shared/ui/RadioField";
 import { type BadgeDesign, badgePictureStamp } from "../badge-design";
 import { badgeImageSize, badgePaper, badgeSheetGrid, badgeSizeMm } from "../badge-geometry";
 import { badgePictureSrc } from "../badge-query";
-import { BADGE_COUNT_MAX, type BadgeRole, badgeRoleName, printBoxes } from "../badges";
+import { BADGE_COUNT_MAX, BADGE_TOTAL_MAX, type BadgeRole, badgePrintDefault, badgeRoleName, printBoxes } from "../badges";
+import { badgeLabelIn } from "../badge-words";
 
 /**
  * «Tipărire» (§NNN): the badges printed **per role**, never per person — for each role «Câte ecusoane»
@@ -44,6 +45,8 @@ export default async function BadgePrintPanel({
   const { widthMm, heightMm } = badgeSizeMm(design);
   const image = badgeImageSize(design);
   const needed = roles.reduce((sum, role) => sum + role.needed, 0);
+  // «VOLUNTAR» as the page's language prints it: the club's own word when it typed one.
+  const label = await badgeLabelIn(design, locale);
   const pictureOf = (role: BadgeRole | null) =>
     badgePictureSrc({
       eventId,
@@ -82,14 +85,14 @@ export default async function BadgePrintPanel({
           </Typography>
           {role ? (
             <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5}>
-              {numberBox(printBoxes.count(role.id), t("badges.print.count"), role.needed, "badge-count")}
+              {numberBox(printBoxes.count(role.id), t("badges.print.count"), badgePrintDefault(role), "badge-count")}
               {numberBox(printBoxes.spares(role.id), t("badges.print.spares"), 0, "badge-spares")}
             </Stack>
           ) : (
             numberBox(printBoxes.none, t("badges.print.noRoleCount"), 0, "badge-none")
           )}
           <Typography variant="caption" color="text.secondary">
-            {role ? t("badges.print.countHelp", { needed: String(role.needed) }) : t("badges.print.noRoleHelp")}
+            {role ? t("badges.print.countHelp", { needed: String(role.needed) }) : t("badges.print.noRoleHelp", { label })}
           </Typography>
         </Stack>
       </Stack>
@@ -109,7 +112,7 @@ export default async function BadgePrintPanel({
       <Box component="form" method="get" action={`/api/admin/events/${eventId}/badges`} data-testid="badge-print-form">
         <Stack spacing={2}>
           <Typography variant="body2" color="text.secondary">
-            {t("badges.print.intro", { perSheet: String(grid.perSheet), needed: String(needed) })}
+            {t("badges.print.intro", { perSheet: String(grid.perSheet), needed: String(needed), max: String(BADGE_COUNT_MAX), total: String(BADGE_TOTAL_MAX) })}
             <QuietHelp text={t("badges.print.introMore")} />
           </Typography>
           <Box component="fieldset" sx={{ border: 0, p: 0, m: 0, minWidth: 0 }} data-testid="badge-print-language">

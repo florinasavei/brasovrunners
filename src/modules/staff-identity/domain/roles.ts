@@ -476,11 +476,15 @@ export function canTransitionEvent(
  * Pages and albums borrowed this gate for their own settings; they ask `isEditorial` now, so
  * nothing about them moved.
  *
- * **One exception, §757 amending this one:** an event's «Puncte de control» — where the water is,
- * by when the last runner passes — are the Organizer's to write too, through their own card and
- * service (`event-checkpoints/domain/checkpoint.ts#canEditCheckpoints`): the preparation on the
- * ground this section left with the Organizer, not the event's settings it took away. The
- * checkpoints reach the public page and the bib, and every change is audited.
+ * **Two exceptions, each amending this one:** an event's «Puncte de control» (§757) — where the
+ * water is, by when the last runner passes — are the Organizer's to write too, through their own card
+ * and service (`event-checkpoints/domain/checkpoint.ts#canEditCheckpoints`); and the volunteer
+ * badges' design (§NNN), the column `events.badge_design`, is written by whoever runs the volunteers
+ * (`canDesignVolunteerBadges`), through its own page and service
+ * (`volunteers/badges/badges.ts#saveBadgeDesign`), audited as `event.badge_design_changed`. Both are
+ * the preparation on the ground this section left with the Organizer, not the event's settings it
+ * took away. The checkpoints reach the public page and the bib; the badges reach only the printed
+ * sheet. Every change of either is audited.
  */
 export function canEditEventFields(subject: StaffSubject): boolean {
   const role = roleOf(subject);
@@ -708,7 +712,8 @@ export function canManageVolunteers(subject: StaffSubject): boolean {
  * for this page — written as that function so the two lines move together. A badge carries no person's
  * data, but the page reads the roles the volunteers' card defines and is the same people's work. The
  * Tehnic role, the Redactor, the desk Volunteer and a member are out. Asserted in the page, the actions,
- * the service and both routes, never by hiding the link.
+ * the service and both routes, never by hiding the link. The design is a column of the event's row: the
+ * second exception `canEditEventFields` names to §542.
  */
 export function canDesignVolunteerBadges(subject: StaffSubject): boolean {
   return canManageVolunteers(subject);

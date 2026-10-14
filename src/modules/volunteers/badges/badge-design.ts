@@ -33,14 +33,19 @@ export const BADGE_TITLE_MAX = 60;
 export const BADGE_LABEL_MAX = 24;
 export const BADGE_PHONE_LABEL_MAX = 30;
 
-/** A colour as stored: a hex triplet, lower case, or null for the platform's own. */
+/**
+ * The header band's colour as stored: a hex triplet, lower case, that carries its words at AA — or null
+ * for the club's blue. A colour no word reads on (an imported file, a column written by hand) reads as
+ * null, so it never prints and a save never "changes" it without the person touching it.
+ */
 const hexColour = z
   .string()
   .trim()
   .regex(/^#[0-9a-f]{6}$/i)
   .transform((value) => value.toLowerCase())
   .nullable()
-  .catch(null);
+  .catch(null)
+  .transform((value) => (value !== null && badgeColourReadable(value) ? value : null));
 
 /** One line of the club's text, as the bib keeps its own lines (§317): what the font can draw, cut at `max`. */
 const line = (max: number) =>
@@ -130,7 +135,7 @@ export function badgeDesignFromQuery(params: URLSearchParams): BadgeDesign {
 export const BADGE_BAND_FALLBACK = BIB_BAND_FALLBACK;
 
 /**
- * A role's band when the role has no colour of its own — «Culoarea temei»: the kit's orange, which
+ * A role's band when the role has no colour of its own — «Portocaliul clubului»: the kit's orange, which
  * carries the body ink at 6.2 : 1 and is never the header's blue, so the role reads apart from the band
  * above it. The badges «fără rol» wear it too, with «VOLUNTAR» alone on it.
  */
@@ -149,14 +154,14 @@ export function badgeColourReadable(colour: string): boolean {
   return isHex(colour) && contrastRatio(badgeTextOn(colour), colour) >= MIN_TEXT_CONTRAST;
 }
 
-/** The header band's colour: the design's own, or the club's blue. */
+/** The header band's colour: the design's own when it reads at AA (checked again, as a role's is), else the club's blue. */
 export function badgeBandColour(design: Pick<BadgeDesign, "bandColour">): string {
-  return isHex(design.bandColour) ? design.bandColour : BADGE_BAND_FALLBACK;
+  return isHex(design.bandColour) && badgeColourReadable(design.bandColour) ? design.bandColour.toLowerCase() : BADGE_BAND_FALLBACK;
 }
 
 /**
  * A role's band colour: its own when it is a hex that reads at AA (a stored colour is checked again, so a
- * row written by hand never prints unreadable words), else the theme's.
+ * row written by hand never prints unreadable words), else the club's orange.
  */
 export function badgeRoleColour(colour: string | null | undefined): string {
   return isHex(colour) && badgeColourReadable(colour) ? colour.toLowerCase() : BADGE_ROLE_FALLBACK;
