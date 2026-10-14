@@ -8,7 +8,7 @@ import { blankTranslation } from "@/modules/content/events/ui/TranslationFields"
 import type { Checkpoint } from "@/modules/event-checkpoints/domain/checkpoint";
 
 /**
- * §NNN (amending §757 and §760; BR-REQ-050-01) — «Puncte de control» inside «Traseul», in the
+ * §NNN (amending §757 and §760; BR-REQ-050-02) — «Puncte de control» inside «Traseul», in the
  * document. The owner, with a screenshot of the editor on production: «Partea cu „Puncte de control”
  * ar trebui să fie băgată în cardul cu traseu (nested)». §760 drew the card above card 1; the test
  * that went with it measured exactly that, so it passed while the owner saw the card at the top.
