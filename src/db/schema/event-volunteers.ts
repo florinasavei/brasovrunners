@@ -50,9 +50,15 @@ export const eventVolunteerRoles = pgTable(
     descriptionEn: text("description_en"),
     position: integer("position").notNull().default(0),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    /**
+     * The colour of the role's band on a volunteer badge (§NNN), a hex triplet read for contrast
+     * before it is saved (`badge-design.ts#badgeColourReadable`); null is the theme's own colour.
+     */
+    colour: text("colour"),
   },
   (t) => [
     index("event_volunteer_roles_event_idx").on(t.eventId, t.position),
+    check("event_volunteer_roles_colour_is_hex", sql`${t.colour} IS NULL OR ${t.colour} ~ '^#[0-9a-fA-F]{6}$'`),
     check("event_volunteer_roles_needed_positive", sql`${t.needed} >= 1`),
     check("event_volunteer_roles_name_length", sql`char_length(${t.nameRo}) BETWEEN 1 AND 80 AND char_length(${t.nameEn}) BETWEEN 1 AND 80`),
     check(
