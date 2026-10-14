@@ -11,6 +11,7 @@ import { Fragment, type ReactNode } from "react";
 import { DISCLOSURE_SUMMARY_SX, DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 import SocialIcon from "@/shared/ui/SocialIcon";
 import CalendarAddress from "./CalendarAddress";
+import { paletteWash } from "@/modules/feedback/ui/branch-glyph";
 import { facebookShareUrl, whatsappShareUrl } from "../share-links";
 import { CALENDAR_TARGET_NAMESPACE, CALENDAR_TARGETS, calendarTargetMark, type CalendarTarget } from "./calendar-targets";
 import InstagramShareButton from "./InstagramShareButton";
@@ -96,13 +97,13 @@ const CALENDAR_PILL_SX = {
   listStyle: "none",
   border: 1,
   // The outlined button's own tokens (MUI 9: the border at half the main colour, a primary tint on hover): the doors it opens read as its kin.
-  borderColor: "rgba(var(--mui-palette-primary-mainChannel) / 0.5)",
+  borderColor: paletteWash("primary", 50),
   color: "primary.main",
   fontWeight: 500,
   userSelect: "none",
   "&::-webkit-details-marker": { display: "none" },
   "&::marker": { content: '""' },
-  "&:hover": { borderColor: "primary.main", bgcolor: "rgba(var(--mui-palette-primary-mainChannel) / 0.04)" },
+  "&:hover": { borderColor: "primary.main", bgcolor: paletteWash("primary", 4) },
   "&:focus-visible": { outline: "2px solid", outlineColor: "primary.main", outlineOffset: 2 },
   "details[open] > & [data-chevron]": { transform: "rotate(180deg)" },
 } as const;
