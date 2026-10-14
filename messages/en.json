@@ -543,17 +543,17 @@
     },
     "volunteers": {
       "title": "I want to volunteer",
-      "intro": "The event needs a hand. Pick a role, tell us how to reach you and an organizer will confirm. It is not a race registration and it holds no place.",
-      "rolesLabel": "The roles that still need people",
+      "intro": "The event needs a hand. Tick what you are willing to do and tell us how to reach you. The organizers then choose your role and confirm you. It is not a race registration and it holds no place.",
+      "choices": "What you are willing to do",
+      "choicesHelp": "Tick everything you would do, at least one role. The organizers choose one and write to you.",
       "needs": {
         "one": "1 more person needed",
         "few": "{count} more people needed",
         "other": "{count} more people needed"
       },
-      "role": "The role you can take",
       "name": "Your name",
       "email": "Your email address",
-      "emailHelp": "We send one email of receipt here, with the accepted agreement attached and nothing to press.",
+      "emailHelp": "We send an email of receipt here, with the accepted agreement attached, and one when the organizers give you your role. Nothing to press in them.",
       "phoneHelp": "An organizer may ring you about the event.",
       "message": "A message for the organizers (optional)",
       "messageHelp": "At most {max} characters: when you are free, what you can do.",
@@ -564,17 +564,17 @@
       "adult": "I am at least {age} old.",
       "submit": "Offer to volunteer",
       "submitting": "Sending…",
-      "done": "Thank you! We received your offer. An organizer will confirm it and get in touch by email or phone if anything else is needed.",
+      "done": "Thank you! We received your offer. The organizers choose your role, write to you when they have given it, and get in touch by email or phone if anything else is needed.",
       "invalid": "Something in the form needs another look:",
       "captcha": "The anti-bot check did not pass. Tick the “I am not a robot” box again and resend.",
       "limited": "That is a lot of attempts for one address or one event in an hour. Wait a little and try again.",
-      "full": "The role you chose has just been filled. Pick another one below, or come back later.",
+      "full": "What you ticked has just filled. Pick from the roles below that still need people, or come back later.",
       "allFull": "Thank you! Every role has been filled in the meantime, so your offer was not kept. If you want to help, write to us from the contact page.",
       "errors": {
         "name": "Write your name.",
         "email": "That email address does not look valid.",
         "phone": "That telephone number is not valid.",
-        "roleId": "Pick one of the roles.",
+        "roleIds": "Tick at least one role under “What you are willing to do”.",
         "message": "The message is too long: shorten it.",
         "consent": "Tick the box to agree, or we cannot keep your offer.",
         "agreement": "Tick the box to accept the volunteer agreement, or we cannot keep your offer.",
@@ -1779,7 +1779,7 @@
       "CONFLICT": "Someone else saved while you were editing. Reload the page and reapply your changes — nothing of yours was overwritten.",
       "DECLARATION_HELD": "Nothing was erased: a declaration is kept for a complaint or a dispute. An Administrator removes the keep first, on the registration's page or the run's signatures.",
       "SHOP_SIZE_HAS_ORDERS": "Not saved: an unticked size has orders. Keep it ticked — set its stock to 0 so nobody orders it any more.",
-      "VOLUNTEER_ROLE_HAS_PEOPLE": "The role was not deleted: people are on it, cancelled ones included. Move them to another role, or delete them, first.",
+      "VOLUNTEER_ROLE_HAS_PEOPLE": "The role was not deleted: it is given to someone, or ticked by someone, cancelled people included. Change their roles, or delete them, first.",
       "VOLUNTEER_ALREADY_LISTED": "That address is already on this event's volunteers: one row per person. Find them in the list and change that row.",
       "ERASE_NAME_MISMATCH": "The name you typed is not this participant's name. Nothing was erased — type the name exactly as the row shows it.",
       "LEGAL_CONFIRMATION_MISMATCH": "What you typed does not name this version. Nothing was deleted — type the phrase exactly as asked, for example “GDPR 2”.",
@@ -3295,8 +3295,10 @@
         "volunteers": "Privacy notice only: the form's name “I want to volunteer”, in quotes. With it in the notice in force, an event that takes volunteers shows its form and keeps the offers",
         "volunteerAgreement": "Privacy notice only: the title “Volunteer agreement”, in quotes. Without it in the notice in force, the volunteers' form, the agreement's link and “Signed on paper” are off",
         "volunteer": "In the volunteer agreement only: the volunteer's name, as on the event's list",
-        "volunteerRole": "In the volunteer agreement only: the role's name, in the text's language",
-        "volunteerTasks": "In the volunteer agreement only: what the role does, from its description. Without one, the sentence naming it is left out"
+        "volunteerRole": "In the volunteer agreement only: the name of the role the organisers gave, in the text's language. With no role given, the sentence naming it is left out",
+        "volunteerTasks": "In the volunteer agreement only: what the role does, from its description. Without one, the sentence naming it is left out",
+        "volunteerRoleChoices": "In the volunteer agreement only: the roles the volunteer ticked, while no role is given. Once one is, the sentence naming them is left out",
+        "volunteerChoiceTasks": "In the volunteer agreement only: what each ticked role does, from their descriptions. With a role given or no descriptions, the sentence is left out"
       },
       "removeBlockedReferenced": "Can neither be withdrawn nor deleted permanently: {signatures}, {events} and {acknowledgements} depend on it. “Delete” on its row takes it off the list.",
       "removeBlockedCurrent": "In force right now — it can neither be withdrawn nor deleted. Approve its successor first; then this one can go.",
@@ -4205,6 +4207,16 @@
             "You and the lawyer decide how long the club keeps the acceptances. The site deletes them 30 days after the event.",
             "Open the draft, fill in what is left, “Save draft”, then “Approve and publish”. Once in force in both languages, the form appears on the pages of the events that take volunteers."
           ]
+        },
+        "volunteerRoleChoicesAgreement": {
+          "title": "The volunteer agreement: several roles",
+          "todo": "Volunteers now tick every role they would do, and you give them one afterwards. The agreement in force has room for one role, so a person offering on the page accepts “in the role Desk, Course”.",
+          "done": "The agreement in force says the organisers choose the role among those ticked, and what each involves.",
+          "how": [
+            "/admin/legal → the “Volunteer agreement” card → “Regenerate from the template” → confirm.",
+            "A lawyer should first read the two new sentences: the role given and the roles the volunteer offered for.",
+            "Open the draft, fill in what is left, “Save draft”, then “Approve and publish”. Agreements already accepted stay as they were accepted."
+          ]
         }
       },
       "freeVerdict": {
@@ -4625,11 +4637,12 @@
     },
     "volunteers": {
       "title": "Volunteers",
-      "intro": "The people who help at this event and the roles it needs them for. Roles are set here, per event, in both languages. Addresses and telephone numbers are never shown on a public page.",
+      "intro": "The people who help at this event: each ticks what they would do, you give them a role. Roles are set here, in both languages. Addresses and telephone numbers never appear on a public page.",
       "notAccounts": "The volunteers here are not accounts: whoever works the race-day desk gets an account on “Echipa”, with the role Voluntar.",
       "summary": "{taken} of {needed}",
       "summaryNone": "No roles yet",
       "summaryPending": "{count} to confirm",
+      "summaryUnassigned": "{count} to place",
       "standing": "{taken} of {needed}",
       "offer": {
         "open": "The “I want to volunteer” form is on the event's page.",
@@ -4654,7 +4667,7 @@
         "nameRo": "Role name (Română)",
         "nameEn": "Role name (English)",
         "needed": "People needed",
-        "neededHelp": "At least 1. The public form closes for a role once this many people have offered or been confirmed.",
+        "neededHelp": "At least 1. Only the people you gave the role count. Once it has that many, the public form stops offering it.",
         "descriptionRo": "What the person does (Română, optional)",
         "descriptionEn": "What the person does (English, optional)",
         "descriptionHelp": "A line, at most {max} characters; in both languages or in neither.",
@@ -4664,7 +4677,7 @@
         "delete": "Delete the role",
         "deleting": "Deleting…",
         "deleteTitle": "Delete this role?",
-        "deleteBody": "The role “{name}” is removed. A role with people on it cannot be deleted: move or delete them first."
+        "deleteBody": "The role “{name}” is removed. A role given to someone, or ticked by someone, cannot be deleted: change their roles or delete them first."
       },
       "move": {
         "up": "Move up",
@@ -4674,8 +4687,26 @@
       "save": "Save",
       "saving": "Saving…",
       "nobody": "Nobody yet.",
+      "unassigned": {
+        "title": "To place",
+        "intro": "Offers with no role yet. Give each one a role: the person gets an email that names it. Only the roles given count in “N of M”.",
+        "empty": "Nobody is waiting for a role."
+      },
+      "assign": {
+        "button": "Give them {role}",
+        "other": "Another role",
+        "otherSubmit": "Give the chosen role",
+        "standing": "{role} · {taken} of {needed}"
+      },
       "person": {
         "role": "Role",
+        "choices": "What they are willing to do",
+        "offeredFor": "Offered for",
+        "choicesHelp": "Tick the roles the person would do. At least one, or give them a role below.",
+        "assigned": "Role given",
+        "assignedNone": "None yet (to place)",
+        "assignedHelp": "Any of the event's roles. The person gets an email that names it.",
+        "choicesLine": "Offered for: {roles}",
         "name": "Name",
         "email": "Email address",
         "phone": "Telephone",
@@ -4714,7 +4745,7 @@
           "LINK": "from the link sent by email",
           "PAPER": "signed on paper"
         },
-        "otherRole": "Accepted for the role “{role}”; the role has changed since.",
+        "otherRole": "The accepted agreement names: {role}. The roles have changed since.",
         "otherPlace": "Accepted for {date}, at {place}; the event's date or place has changed since.",
         "requestedLine": "Last link sent: {when}",
         "help": "Send them the link by email, or print the PDF: they sign it with you, then you press “Signed on paper”.",
@@ -4729,9 +4760,10 @@
         "noticeMissing": "The privacy notice in force does not describe the agreement's acceptance yet: the link and “Signed on paper” wait. «Tasks» says what to approve."
       },
       "csv": "Download CSV",
-      "csvHelp": "One row per volunteer, grouped by role. The file holds addresses and telephone numbers: keep it as carefully as the list.",
+      "csvHelp": "One row per volunteer, grouped by the role given, those to place first. The file holds addresses and telephone numbers: keep it as carefully as the list.",
       "csvColumns": {
-        "role": "Role",
+        "role": "Role given",
+        "choices": "Offered for",
         "name": "Name",
         "email": "Email",
         "phone": "Telephone",
@@ -5725,7 +5757,8 @@
         "VOLUNTEER_RECEIVED": "We received your offer to volunteer",
         "VOLUNTEER_CLUB_NOTICE": "New volunteer",
         "VOLUNTEER_AGREEMENT_REQUEST": "The volunteer agreement",
-        "VOLUNTEER_AGREEMENT_ACCEPTED": "You accepted the volunteer agreement"
+        "VOLUNTEER_AGREEMENT_ACCEPTED": "You accepted the volunteer agreement",
+        "VOLUNTEER_ROLE_ASSIGNED": "Your volunteer role"
       },
       "typesShort": {
         "VERIFY_REGISTRATION_EMAIL": "Confirm your address",
@@ -5789,10 +5822,11 @@
         "SHOP_ORDER_PLACED": "When a member orders from the members' shop: the order and how to pay. The button opens the members' area.",
         "SHOP_ORDER_PAID": "When an administrator marks the order paid: to the member who ordered. The button opens the members' area.",
         "SHOP_ORDER_CLUB_NOTICE": "On every order in the shop, to the address in «Magazin» → “Who receives the orders”, if one is written.",
-        "VOLUNTEER_RECEIVED": "When a person offers to volunteer on an event's page: the one acknowledgement to them — the role, the event, that an organizer will confirm, and the accepted agreement as a PDF. Nothing to press.",
+        "VOLUNTEER_RECEIVED": "When a person offers to volunteer on an event's page: the acknowledgement, with the roles they chose, the event and that the organizers choose their role. The accepted agreement is attached as a PDF.",
         "VOLUNTEER_CLUB_NOTICE": "On every sign-up, to each Organizer, Administrator and Superadministrator. The button opens the event's «Volunteers» card.",
         "VOLUNTEER_AGREEMENT_REQUEST": "When an organizer presses “Send the agreement link” for a volunteer who has not accepted it yet: the agreement and the link to accept it.",
-        "VOLUNTEER_AGREEMENT_ACCEPTED": "When a volunteer accepts the agreement from the link, or an organizer presses “Signed on paper”: their copy, with the agreement attached as a PDF."
+        "VOLUNTEER_AGREEMENT_ACCEPTED": "When a volunteer accepts the agreement from the link, or an organizer presses “Signed on paper”: their copy, with the agreement attached as a PDF.",
+        "VOLUNTEER_ROLE_ASSIGNED": "When the organizers give a volunteer a role, from the event's «Volunteers» card: a short message naming the role, the date and the place. Nothing to press."
       },
       "whenShort": {
         "VERIFY_REGISTRATION_EMAIL": "after the form is sent",
@@ -5834,7 +5868,8 @@
         "VOLUNTEER_RECEIVED": "when someone offers to volunteer",
         "VOLUNTEER_CLUB_NOTICE": "on every sign-up, to the organizers",
         "VOLUNTEER_AGREEMENT_REQUEST": "on “Send the agreement link”",
-        "VOLUNTEER_AGREEMENT_ACCEPTED": "after the link or “Signed on paper”"
+        "VOLUNTEER_AGREEMENT_ACCEPTED": "after the link or “Signed on paper”",
+        "VOLUNTEER_ROLE_ASSIGNED": "when the organizers give a role"
       },
       "clubNotices": {
         "title": "The club's copies",
@@ -6453,10 +6488,11 @@
         "SHOP_ORDER_PLACED": "The order and the payment words are added after the text by themselves, however you write it. Payment does not go through the site.",
         "SHOP_ORDER_PAID": "The order is added after the text by itself, however you write it.",
         "SHOP_ORDER_CLUB_NOTICE": "Without an address nothing is sent: the orders are in the backoffice list either way.",
-        "VOLUNTEER_RECEIVED": "The role and the event's start and place are added by themselves, however you write the text. The message carries no link that does anything.",
-        "VOLUNTEER_CLUB_NOTICE": "Who offered and for which role is added by itself, however you write the text. The address and the telephone number are never in the email: they are on the card, behind the sign-in.",
+        "VOLUNTEER_RECEIVED": "The roles they offered for (or the role given) and the event's start and place are added by themselves, however you write the text. The message carries no link that does anything.",
+        "VOLUNTEER_CLUB_NOTICE": "Who offered and for which roles is added by itself, however you write the text. The address and the telephone number are never in the email: they are on the card, behind the sign-in.",
         "VOLUNTEER_AGREEMENT_REQUEST": "The role and the event are added by themselves. The link is for this person only, works once, and a new one replaces the old.",
-        "VOLUNTEER_AGREEMENT_ACCEPTED": "The role and the event are added by themselves. The PDF shows the accepted text, with the name, the role, the moment and its fingerprint."
+        "VOLUNTEER_AGREEMENT_ACCEPTED": "The role and the event are added by themselves. The PDF shows the accepted text, with the name, the role, the moment and its fingerprint.",
+        "VOLUNTEER_ROLE_ASSIGNED": "The role and the event's date and place are added by themselves, however you write the text. The message has no link that does anything."
       },
       "confirmationRetry": "To whoever has not confirmed, the link goes again by itself {retry} after the last email, at most {times}; “Resend” counts too. The deadline does not move.",
       "confirmationRetryOff": "It is not re-sent by itself: in “Deadlines”, the number of resends is 0."
@@ -10943,6 +10979,7 @@
       "volunteerAdded": "Volunteer added.",
       "volunteerSaved": "Volunteer saved.",
       "volunteerConfirmed": "Volunteer confirmed.",
+      "volunteerAssigned": "Role given. The person gets an email that names it.",
       "volunteerCancelled": "Volunteer cancelled.",
       "volunteerReopened": "Volunteer back to registered.",
       "volunteerDeleted": "Volunteer deleted.",
@@ -11554,6 +11591,7 @@
     "agreement": {
       "title": "The volunteer agreement",
       "intro": "{name}, you are on the volunteers' list for {event}, in the role “{role}”. Read the agreement and, if you agree, accept it below.",
+      "introChosen": "{name}, you are on the volunteers' list for {event}, available for: {roles}. The organizers choose your role. Read the agreement and, if you agree, accept it below.",
       "accept": "I have read and accept the volunteer agreement.",
       "adult": "I am at least {age} old.",
       "submit": "Accept the agreement",

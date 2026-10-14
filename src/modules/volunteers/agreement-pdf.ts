@@ -1,5 +1,5 @@
 import { eq } from "drizzle-orm";
-import { eventVolunteerRoles, eventVolunteers } from "@/db/schema/event-volunteers";
+import { eventVolunteers } from "@/db/schema/event-volunteers";
 import { events } from "@/db/schema/events";
 import { staffUsers } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
@@ -11,7 +11,7 @@ import { declarationWords } from "@/modules/registrations/declaration-labels";
 import { type DeclarationEntry, renderDeclarationPdf } from "@/modules/registrations/declaration-pdf";
 import type { DeclarationLabels } from "@/modules/registrations/signed-declaration";
 import { isUuid } from "@/shared/ids";
-import { agreementBlanks, agreementBody, agreementMergeValues, readAgreementFacts } from "./agreement";
+import { agreementBlanks, agreementBody, agreementMergeValues, readAgreementFacts, volunteerRoles } from "./agreement";
 
 /**
  * The volunteer agreement as a PDF (§758), drawn by the race declaration's own renderer (§95, §515): the club's
@@ -116,15 +116,9 @@ export async function renderVolunteerAgreementPdf<T extends Record<string, unkno
       facts: eventVolunteers.agreementFacts,
       recordedBy: staffUsers.displayName,
       timezone: events.timezone,
-      role: {
-        nameRo: eventVolunteerRoles.nameRo,
-        nameEn: eventVolunteerRoles.nameEn,
-        descriptionRo: eventVolunteerRoles.descriptionRo,
-        descriptionEn: eventVolunteerRoles.descriptionEn,
-      },
+      roleId: eventVolunteers.roleId,
     })
     .from(eventVolunteers)
-    .innerJoin(eventVolunteerRoles, eq(eventVolunteerRoles.id, eventVolunteers.roleId))
     .innerJoin(events, eq(events.id, eventVolunteers.eventId))
     .leftJoin(staffUsers, eq(staffUsers.id, eventVolunteers.agreementRecordedByStaffUserId))
     .where(eq(eventVolunteers.id, volunteerId))
@@ -166,10 +160,12 @@ export async function renderVolunteerAgreementPdf<T extends Record<string, unkno
     return { pdf, accepted: true };
   }
 
-  // Not accepted: the copy to sign at the desk, in the person's language, filled for them and their role.
+  // Not accepted: the copy to sign at the desk, in the person's language, filled for them and their roles — the one
+  // given, else the ones chosen (§761); «Semnat pe hârtie» posts the same back (`agreementRolesStamp`).
   const document = await findCurrentApprovedDocument(db, VOLUNTEER_AGREEMENT_KEY, row.locale, now);
   if (!document) return undefined;
-  const blanks = await agreementBlanks(db, { eventId: row.eventId, name: row.name, role: row.role, locale: row.locale });
+  const roles = await volunteerRoles(db, { id: volunteerId, roleId: row.roleId });
+  const blanks = await agreementBlanks(db, { eventId: row.eventId, name: row.name, roles, locale: row.locale, body: document.body });
   const entry: DeclarationEntry = {
     title: document.title,
     body: agreementBody(document.body),

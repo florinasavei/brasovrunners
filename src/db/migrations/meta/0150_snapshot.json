@@ -1,6 +1,6 @@
 {
   "id": "355c93f8-9198-4343-95ee-a9594a305b9a",
-  "prevId": "8111984f-2871-446f-badd-6cacdb48611a",
+  "prevId": "0d8ea625-a713-4562-baeb-8dff4c0754e0",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -1590,6 +1590,89 @@
       },
       "isRLSEnabled": false
     },
+    "public.event_volunteer_role_choices": {
+      "name": "event_volunteer_role_choices",
+      "schema": "",
+      "columns": {
+        "volunteer_id": {
+          "name": "volunteer_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "role_id": {
+          "name": "role_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "event_volunteer_role_choices_role_idx": {
+          "name": "event_volunteer_role_choices_role_idx",
+          "columns": [
+            {
+              "expression": "role_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "event_volunteer_role_choices_volunteer_id_event_volunteers_id_fk": {
+          "name": "event_volunteer_role_choices_volunteer_id_event_volunteers_id_fk",
+          "tableFrom": "event_volunteer_role_choices",
+          "tableTo": "event_volunteers",
+          "columnsFrom": [
+            "volunteer_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "event_volunteer_role_choices_role_id_event_volunteer_roles_id_fk": {
+          "name": "event_volunteer_role_choices_role_id_event_volunteer_roles_id_fk",
+          "tableFrom": "event_volunteer_role_choices",
+          "tableTo": "event_volunteer_roles",
+          "columnsFrom": [
+            "role_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "event_volunteer_role_choices_volunteer_id_role_id_pk": {
+          "name": "event_volunteer_role_choices_volunteer_id_role_id_pk",
+          "columns": [
+            "volunteer_id",
+            "role_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.event_volunteer_roles": {
       "name": "event_volunteer_roles",
       "schema": "",
@@ -1740,7 +1823,7 @@
           "name": "role_id",
           "type": "uuid",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "name": {
           "name": "name",
@@ -8521,7 +8604,8 @@
         "VOLUNTEER_RECEIVED",
         "VOLUNTEER_CLUB_NOTICE",
         "VOLUNTEER_AGREEMENT_REQUEST",
-        "VOLUNTEER_AGREEMENT_ACCEPTED"
+        "VOLUNTEER_AGREEMENT_ACCEPTED",
+        "VOLUNTEER_ROLE_ASSIGNED"
       ]
     },
     "public.email_outbox_status": {

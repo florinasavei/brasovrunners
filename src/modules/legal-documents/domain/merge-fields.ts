@@ -235,11 +235,32 @@ export const SERIES_MERGE_FIELDS = ["series", "seriesRhythm", "seriesPlace"] as 
  *
  * A role with no description answers `{{volunteerTasks}}` with "", and the sentence naming it is left out
  * whole (`PARAGRAPH_MERGE_FIELDS`) — never «Atribuțiile rolului: .».
+ *
+ * **The roles a person offered for (§761, amending §758).** A volunteer ticks every role they would do and the
+ * organizers give one later, so an agreement accepted on the form names no role given. The platform's template
+ * says so in its own approved sentences, never in words the code adds: `{{volunteerRoleChoices}}` — the names of the
+ * roles the person ticked, «Masă, Traseu» — in «Rolul îl stabilesc organizatorii dintre cele pentru care voluntarul
+ * s-a oferit — {{volunteerRoleChoices}} — …», and `{{volunteerChoiceTasks}}` — what each asks, «Masă — dă numerele;
+ * Traseu — arată drumul» — in «Ce presupune fiecare rol: …». The role's sentence and the choices' sentence each drop
+ * when their field is "" (`PARAGRAPH_MERGE_FIELDS`): a role given keeps «Voluntarul are rolul {{volunteerRole}}.» and
+ * loses the choices; none given keeps the choices and loses the role. A text in force that names no
+ * `{{volunteerRoleChoices}}` (every version approved before) is filled with the chosen roles' names alone in
+ * `{{volunteerRole}}` (`agreementRoleWords`), never a clause of the code's own; `/admin/tasks` carries the row
+ * `volunteerRoleChoicesAgreement` until a text naming it is in force in every language.
  */
-export const VOLUNTEER_MERGE_FIELDS = ["volunteer", "volunteerRole", "volunteerTasks"] as const;
+export const VOLUNTEER_ROLE_CHOICES_MERGE_FIELD = "volunteerRoleChoices";
+
+export const VOLUNTEER_MERGE_FIELDS = ["volunteer", "volunteerRole", "volunteerTasks", VOLUNTEER_ROLE_CHOICES_MERGE_FIELD, "volunteerChoiceTasks"] as const;
 
 /** The fields whose "" drops the paragraph that names them (see `MINIMUM_AGE_MERGE_FIELD`, `SERIES_MERGE_FIELDS`, `VOLUNTEER_MERGE_FIELDS`). */
-export const PARAGRAPH_MERGE_FIELDS: ReadonlySet<string> = new Set([MINIMUM_AGE_MERGE_FIELD, ...SERIES_MERGE_FIELDS, "volunteerTasks"]);
+export const PARAGRAPH_MERGE_FIELDS: ReadonlySet<string> = new Set([
+  MINIMUM_AGE_MERGE_FIELD,
+  ...SERIES_MERGE_FIELDS,
+  "volunteerRole",
+  "volunteerTasks",
+  VOLUNTEER_ROLE_CHOICES_MERGE_FIELD,
+  "volunteerChoiceTasks",
+]);
 
 const SERIES_FIELD_SET: ReadonlySet<string> = new Set(SERIES_MERGE_FIELDS);
 
@@ -604,6 +625,15 @@ export function describesVolunteers(body: unknown): boolean {
  */
 export function describesVolunteerAgreement(body: unknown): boolean {
   return mergeFieldsIn(body).has(VOLUNTEER_AGREEMENT_NOTICE_MERGE_FIELD);
+}
+
+/**
+ * Whether a volunteer agreement names the roles a person offered for (§761): it names `{{volunteerRoleChoices}}`.
+ * Asked of the one version a person reads (`agreementRoleWords`: its own sentences, else the names alone in
+ * `{{volunteerRole}}`), and in every language for `/admin/tasks`' row `volunteerRoleChoicesAgreement`. Pure.
+ */
+export function namesVolunteerRoleChoices(body: unknown): boolean {
+  return mergeFieldsIn(body).has(VOLUNTEER_ROLE_CHOICES_MERGE_FIELD);
 }
 
 /**

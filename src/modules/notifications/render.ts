@@ -59,9 +59,9 @@ import {
 } from "@/modules/registrations/family-entries";
 import { familyReservationHoldsAt, reservedUntilPhrase } from "@/modules/registrations/domain/family-reservation";
 import { eventInvitations } from "@/db/schema/event-invitations";
-import { eventVolunteerRoles, eventVolunteers } from "@/db/schema/event-volunteers";
+import { eventVolunteers } from "@/db/schema/event-volunteers";
 import { renderVolunteerAgreementPdf, VOLUNTEER_AGREEMENT_PDF_NAME } from "@/modules/volunteers/agreement-pdf";
-import { canonicalOrNull, mintVolunteerAgreementLink } from "@/modules/volunteers/agreement";
+import { canonicalOrNull, mintVolunteerAgreementLink, tasksWords, volunteerRoles } from "@/modules/volunteers/agreement";
 import { shopOrders } from "@/db/schema/shop";
 import { readShopSettings } from "@/modules/content/shop/settings";
 import { isUuid } from "@/shared/ids";
@@ -349,6 +349,7 @@ async function renderRow(
     row.messageType === "VOLUNTEER_CLUB_NOTICE" ||
     row.messageType === "VOLUNTEER_AGREEMENT_REQUEST" ||
     row.messageType === "VOLUNTEER_AGREEMENT_ACCEPTED" ||
+    row.messageType === "VOLUNTEER_ROLE_ASSIGNED" ||
     bulkRecipients !== null
       ? (row.payloadJson as { eventId?: unknown } | null)?.eventId
       : undefined;
@@ -887,20 +888,23 @@ async function renderRow(
         : `${env.APP_BASE_URL}${getPathname({ locale, href: "/members-area/shop" })}#members-shop`;
   }
   /*
-    A volunteer's two messages (§754): the volunteer's id and the event's are the payload — no
-    participant, no token. The name and the role (both languages, the club typed both) are read here, at
-    the send, so a role renamed after the sign-up reads right; a volunteer gone or cancelled since
-    withdraws the message (nothing left to acknowledge). The person's message has no button; the
-    organizers' opens the event's «Voluntari» card behind the sign-in — from `APP_BASE_URL` (AGENTS.md §8).
+    A volunteer's messages (§754): the volunteer's id and the event's are the payload — no
+    participant, no token. The name, the role given and the roles chosen (both languages, the club typed
+    both; §761) are read here, at the send, so a role renamed after the sign-up reads right; a volunteer gone
+    or cancelled since withdraws the message (nothing left to acknowledge). The person's message has no
+    button; the organizers' opens the event's «Voluntari» card behind the sign-in — from `APP_BASE_URL`
+    (AGENTS.md §8).
   */
   let volunteerAgreementPdf: Buffer | undefined;
   if (
     row.messageType === "VOLUNTEER_RECEIVED" ||
     row.messageType === "VOLUNTEER_CLUB_NOTICE" ||
     row.messageType === "VOLUNTEER_AGREEMENT_REQUEST" ||
-    row.messageType === "VOLUNTEER_AGREEMENT_ACCEPTED"
+    row.messageType === "VOLUNTEER_AGREEMENT_ACCEPTED" ||
+    row.messageType === "VOLUNTEER_ROLE_ASSIGNED"
   ) {
-    const volunteerId = (row.payloadJson as { volunteerId?: unknown } | null)?.volunteerId;
+    const payload = row.payloadJson as { volunteerId?: unknown; roleId?: unknown } | null;
+    const volunteerId = payload?.volunteerId;
     const [volunteer] =
       typeof volunteerId === "string" && isUuid(volunteerId)
         ? await db
@@ -909,18 +913,34 @@ async function renderRow(
               name: eventVolunteers.name,
               state: eventVolunteers.state,
               canonicalEmail: eventVolunteers.canonicalEmail,
-              roleRo: eventVolunteerRoles.nameRo,
-              roleEn: eventVolunteerRoles.nameEn,
+              roleId: eventVolunteers.roleId,
               agreementAcceptedAt: eventVolunteers.agreementAcceptedAt,
             })
             .from(eventVolunteers)
-            .innerJoin(eventVolunteerRoles, eq(eventVolunteerRoles.id, eventVolunteers.roleId))
             .where(eq(eventVolunteers.id, volunteerId))
             .limit(1)
         : [];
     if (!volunteer || volunteer.state === "CANCELLED") throw new OutboxMessageWithdrawn("the volunteer is gone or was cancelled");
+    // The role given (§761): only the one that stands is announced — a role changed again, or taken back, since
+    // the press withdraws the message; the newer press queued its own.
+    if (row.messageType === "VOLUNTEER_ROLE_ASSIGNED" && (volunteer.roleId === null || volunteer.roleId !== payload?.roleId)) {
+      throw new OutboxMessageWithdrawn("the volunteer's role was changed since it was given");
+    }
+    const roles = await volunteerRoles(db, volunteer);
+    const described = (text: string | null) => {
+      const words = tasksWords(text ?? "");
+      return words === "" ? null : `${words}.`;
+    };
     data.participantName = row.messageType === "VOLUNTEER_CLUB_NOTICE" ? "" : volunteer.name;
-    data.volunteer = { name: volunteer.name, roleRo: volunteer.roleRo, roleEn: volunteer.roleEn };
+    data.volunteer = {
+      name: volunteer.name,
+      roleRo: roles.assigned?.nameRo ?? null,
+      roleEn: roles.assigned?.nameEn ?? null,
+      roleDescriptionRo: described(roles.assigned?.descriptionRo ?? null),
+      roleDescriptionEn: described(roles.assigned?.descriptionEn ?? null),
+      chosenRo: roles.chosen.map((role) => role.nameRo),
+      chosenEn: roles.chosen.map((role) => role.nameEn),
+    };
     if (row.messageType === "VOLUNTEER_CLUB_NOTICE" && eventId) {
       payloadActionUrl = `${env.APP_BASE_URL}${getPathname({ locale, href: { pathname: "/admin/events/[id]", params: { id: eventId } } })}#box-volunteers`;
     }
@@ -936,6 +956,10 @@ async function renderRow(
       and a receipt or a copy leaves without the attachment.
     */
     const addressCurrent = canonicalOrNull(row.recipientEmail) === volunteer.canonicalEmail;
+    // The role given goes to the address the row holds, or nowhere: an address corrected since was the wrong one.
+    if (row.messageType === "VOLUNTEER_ROLE_ASSIGNED" && !addressCurrent) {
+      throw new OutboxMessageWithdrawn("the volunteer's address changed since the role was given");
+    }
     if (row.messageType === "VOLUNTEER_AGREEMENT_REQUEST") {
       if (volunteer.agreementAcceptedAt) throw new OutboxMessageWithdrawn("the volunteer has accepted the agreement since");
       if (!addressCurrent) throw new OutboxMessageWithdrawn("the volunteer's address changed since the request was queued");

@@ -1,11 +1,13 @@
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
+import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import {
   addVolunteerAction,
   addVolunteerRoleAction,
+  assignVolunteerAction,
   deleteVolunteerAction,
   deleteVolunteerRoleAction,
   editVolunteerAction,
@@ -24,6 +26,7 @@ import { confirmWords } from "@/shared/feedback/confirm-words";
 import ActionForm from "@/shared/forms/ActionForm";
 import RecallField from "@/shared/forms/recall";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
+import CheckboxField from "@/shared/ui/CheckboxField";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import Panel from "@/shared/ui/Panel";
@@ -35,7 +38,9 @@ import {
   VOLUNTEER_NOTE_MAX,
   VOLUNTEER_ROLE_DESCRIPTION_MAX,
   VOLUNTEER_ROLE_NAME_MAX,
+  agreementRolesStamp,
   agreementStandingOf,
+  agreementStillNamesRole,
   type RoleStanding,
   type VolunteerAgreementStanding,
   type VolunteerOfferClosed,
@@ -123,6 +128,15 @@ export default async function VolunteersCard({
   const totalNeeded = roles.reduce((sum, role) => sum + role.needed, 0);
   const totalTaken = standings.reduce((sum, standing) => sum + standing.taken, 0);
   const roleName = (role: Pick<VolunteerRole, "nameRo" | "nameEn">) => (locale === "en" ? role.nameEn : role.nameRo);
+  const roleById = new Map(roles.map((role) => [role.id, role]));
+  /** A person's roles as the agreement names them (§761): the one given and the ones chosen, in the club's order. */
+  const rolesOf = (person: VolunteerItem) => ({
+    assigned: (person.roleId ? roleById.get(person.roleId) : undefined) ?? null,
+    chosen: person.choiceIds.flatMap((id) => roleById.get(id) ?? []),
+  });
+  // Offers nobody has given a role yet (§761): «De repartizat», above the roles; the cancelled ones wait for nothing.
+  const unassigned = volunteers.filter((volunteer) => volunteer.roleId === null);
+  const waitingForRole = unassigned.filter((volunteer) => volunteer.state !== "CANCELLED").length;
   const day = (at: Date) => formatDay(at, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true, position: "inline" });
 
   const roleBoxes = await refusalMessages({
@@ -133,7 +147,8 @@ export default async function VolunteersCard({
     descriptionEn: t("volunteers.role.descriptionEn"),
   });
   const personBoxes = await refusalMessages({
-    roleId: t("volunteers.person.role"),
+    roleIds: t("volunteers.person.choices"),
+    assignedRoleId: t("volunteers.person.assigned"),
     name: t("volunteers.person.name"),
     email: t("volunteers.person.email"),
     phone: t("volunteers.person.phone"),
@@ -194,18 +209,36 @@ export default async function VolunteersCard({
     </Stack>
   );
 
-  /** The boxes of «Adaugă un voluntar» and every person's «Modifică». */
+  /**
+   * The boxes of «Adaugă un voluntar» and every person's «Modifică»: what the person would do (§761) — one box per
+   * role, the house's `CheckboxField` posting `roleIds` once per tick — and the role given, any of the event's or
+   * none yet. The service holds the rule: at least one ticked, or a role given.
+   */
   const personFields = (person: VolunteerItem | null) => (
     <Stack spacing={1.5} sx={{ maxWidth: 640 }}>
+      <Box component="fieldset" sx={{ border: 0, m: 0, p: 0, minWidth: 0 }} data-testid="volunteer-choices-field">
+        <Typography component="legend" variant="body2" sx={{ fontWeight: 600, p: 0 }}>
+          {t("volunteers.person.choices")}
+        </Typography>
+        <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
+          {t("volunteers.person.choicesHelp")}
+        </Typography>
+        {roles.map((role) => (
+          <CheckboxField key={role.id} name="roleIds" value={role.id} defaultChecked={person?.choiceIds.includes(role.id) ?? false}>
+            {roleName(role)}
+          </CheckboxField>
+        ))}
+      </Box>
       <RecallField
-        name="roleId"
+        name="assignedRoleId"
         select
-        label={t("volunteers.person.role")}
-        defaultValue={person?.roleId ?? roles[0]?.id ?? ""}
-        required
+        label={t("volunteers.person.assigned")}
+        helperText={t("volunteers.person.assignedHelp")}
+        defaultValue={person?.roleId ?? ""}
         size="small"
         slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}
       >
+        <option value="">{t("volunteers.person.assignedNone")}</option>
         {roles.map((role) => (
           <option key={role.id} value={role.id}>
             {roleName(role)}
@@ -285,8 +318,10 @@ export default async function VolunteersCard({
   const agreementBlock = (person: VolunteerItem) => {
     const pdfHref = `/api/admin/events/${eventId}/volunteers/${person.id}/agreement`;
     if (person.agreementAcceptedAt && person.agreementMethod) {
-      const currentRole = roles.find((role) => role.id === person.roleId);
-      const moved = person.agreementRoleName !== null && currentRole !== undefined && person.agreementRoleName !== currentRole.nameRo && person.agreementRoleName !== currentRole.nameEn;
+      // The role the accepted text names, against the person's roles now (§761): the one given, or what they chose.
+      const moved =
+        person.agreementRoleName !== null &&
+        !agreementStillNamesRole(person.agreementRoleName, rolesOf(person), person.agreementLocale ?? person.locale);
       // The date and the place the accepted text named, against the event's own now, in that text's language.
       const eventNow = person.agreementLocale ? agreementEvent[person.agreementLocale] : undefined;
       const elsewhere =
@@ -370,10 +405,75 @@ export default async function VolunteersCard({
             <input type="hidden" name="volunteerId" value={person.id} />
             {/* What the PDF beside it prints (§758): the service refuses the record if either changed since. */}
             <input type="hidden" name="agreementDocumentId" value={agreementDocumentIds[person.locale] ?? ""} />
-            <input type="hidden" name="roleId" value={person.roleId} />
+            <input type="hidden" name="agreementRoles" value={agreementRolesStamp(person.roleId, person.choiceIds)} />
             <GlyphSubmitButton icon="declaration" label={t("volunteers.agreement.paper")} pendingLabel={t("volunteers.agreement.paper")} variant="outlined" />
           </ActionForm>
         </Stack>
+      </Stack>
+    );
+  };
+
+  /** A role's name with how it stands, «Sosire · 1 din 1»: what the organizer sees before one press fills it. */
+  const roleStanding = (role: VolunteerRole) =>
+    t("volunteers.assign.standing", { role: roleName(role), taken: String(standingOf.get(role.id)?.taken ?? 0), needed: String(role.needed) });
+
+  /**
+   * «Dă-i rolul …» (§761), on the offers «De repartizat» only — a person given a role changes it in «Modifică» →
+   * «Rolul dat», so no press on their row moves them by mistake: one press per role the person ticked, with how it
+   * stands, and the event's other roles in the select beside them — each a plain form posting the role it wants
+   * (`assignVolunteerAction`), audited and told to the person by email. Nothing for a cancelled person: reopen them first.
+   */
+  const assignBlock = (person: VolunteerItem) => {
+    if (person.state === "CANCELLED" || person.roleId !== null) return null;
+    const quick = rolesOf(person).chosen;
+    const others = roles.filter((role) => !quick.some((chosen) => chosen.id === role.id));
+    if (quick.length === 0 && others.length === 0) return null;
+    return (
+      <Stack direction="row" sx={{ flexWrap: "wrap", alignItems: "center", gap: 1, mt: 1 }} data-testid="volunteer-assign">
+        {quick.map((role) => {
+          const label = t("volunteers.assign.button", { role: roleStanding(role) });
+          return (
+            <Box component="form" action={assignVolunteerAction} key={role.id} data-testid="volunteer-assign-form">
+              {hidden}
+              <input type="hidden" name="volunteerId" value={person.id} />
+              <input type="hidden" name="roleId" value={role.id} />
+              <GlyphSubmitButton
+                icon="role"
+                label={label}
+                pendingLabel={label}
+                ariaLabel={`${label}: ${shortText(person.name)}`}
+                variant="outlined"
+              />
+            </Box>
+          );
+        })}
+        {others.length > 0 && (
+          <Box component="form" action={assignVolunteerAction} sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 1 }} data-testid="volunteer-assign-other">
+            {hidden}
+            <input type="hidden" name="volunteerId" value={person.id} />
+            <TextField
+              name="roleId"
+              select
+              label={t("volunteers.assign.other")}
+              defaultValue={others[0]?.id ?? ""}
+              slotProps={{ select: { native: true }, inputLabel: { shrink: true }, htmlInput: { "aria-label": `${t("volunteers.assign.other")}: ${shortText(person.name)}` } }}
+              sx={{ minWidth: 200 }}
+            >
+              {others.map((role) => (
+                <option key={role.id} value={role.id}>
+                  {roleStanding(role)}
+                </option>
+              ))}
+            </TextField>
+            <GlyphSubmitButton
+              icon="role"
+              label={t("volunteers.assign.otherSubmit")}
+              pendingLabel={t("volunteers.assign.otherSubmit")}
+              ariaLabel={`${t("volunteers.assign.otherSubmit")}: ${shortText(person.name)}`}
+              variant="outlined"
+            />
+          </Box>
+        )}
       </Stack>
     );
   };
@@ -430,6 +530,20 @@ export default async function VolunteersCard({
       <Typography variant="caption" color="text.secondary">
         {t("volunteers.since", { when: day(person.createdAt) })}
       </Typography>
+
+      {/* What the person would do (§761): the roles they ticked, as chips — a word and a glyph, never colour alone. */}
+      {person.choiceIds.length > 0 && (
+        <Stack direction="row" sx={{ flexWrap: "wrap", alignItems: "center", gap: 0.5, mt: 0.5 }} data-testid="volunteer-choices">
+          <Typography component="span" variant="body2" color="text.secondary">
+            {t("volunteers.person.offeredFor")}:
+          </Typography>
+          {rolesOf(person).chosen.map((role) => (
+            <StatusChip key={role.id} glyph="offered" variant="outlined" label={roleName(role)} testId="volunteer-choice" />
+          ))}
+        </Stack>
+      )}
+
+      {assignBlock(person)}
 
       {agreementBlock(person)}
 
@@ -541,7 +655,11 @@ export default async function VolunteersCard({
   const aside =
     roles.length === 0
       ? t("volunteers.summaryNone")
-      : `${t("volunteers.summary", { taken: String(totalTaken), needed: String(totalNeeded) })}${pending > 0 ? ` · ${t("volunteers.summaryPending", { count: String(pending) })}` : ""}`;
+      : [
+          t("volunteers.summary", { taken: String(totalTaken), needed: String(totalNeeded) }),
+          ...(waitingForRole > 0 ? [t("volunteers.summaryUnassigned", { count: String(waitingForRole) })] : []),
+          ...(pending > 0 ? [t("volunteers.summaryPending", { count: String(pending) })] : []),
+        ].join(" · ");
 
   return (
     <Panel
@@ -550,7 +668,7 @@ export default async function VolunteersCard({
       id="box-volunteers"
       title={t("volunteers.title")}
       aside={aside}
-      openWhen={{ attention: pending > 0 }}
+      openWhen={{ attention: pending > 0 || waitingForRole > 0 }}
       data-testid="event-volunteers"
     >
       <Stack spacing={2}>
@@ -618,9 +736,31 @@ export default async function VolunteersCard({
           {t("volunteers.badgesLink")}
         </GlyphButton>
 
-        {/* The people, grouped by role with «N din M». */}
+        {/* The people: first the offers nobody has given a role yet, then each role's people with «N din M». */}
         {roles.length > 0 && (
           <Stack spacing={2} data-testid="volunteer-list">
+            {unassigned.length > 0 && (
+              <Box component="section" aria-label={t("volunteers.unassigned.title")} data-testid="volunteer-unassigned">
+                <Stack direction="row" sx={{ flexWrap: "wrap", alignItems: "center", gap: 1, mb: 0.5 }}>
+                  <Typography component="h3" variant="h3" sx={{ fontSize: "1.0625rem" }}>
+                    {t("volunteers.unassigned.title")}
+                  </Typography>
+                  <StatusChip
+                    glyph={waitingForRole > 0 ? "open" : "done"}
+                    color={waitingForRole > 0 ? "warning" : "success"}
+                    variant="outlined"
+                    label={t("volunteers.summaryUnassigned", { count: String(waitingForRole) })}
+                    testId="volunteer-unassigned-count"
+                  />
+                </Stack>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                  {waitingForRole > 0 ? t("volunteers.unassigned.intro") : t("volunteers.unassigned.empty")}
+                </Typography>
+                <Stack spacing={1.5} component="ul" sx={{ listStyle: "none", m: 0, p: 0 }}>
+                  {unassigned.map(personRow)}
+                </Stack>
+              </Box>
+            )}
             {roles.map((role) => {
               const mine = volunteers.filter((person) => person.roleId === role.id);
               return (
