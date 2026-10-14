@@ -15,7 +15,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 import { drawnRuns } from "../../helpers/pdf-drawn";
 
 /**
- * BR-REQ-033-02 (§NNN, amending §393 and §769; the owner, 2026-10-14) — the trace of the electronic signature on a
+ * BR-REQ-033-02 (§771, amending §393 and §769; the owner, 2026-10-14) — the trace of the electronic signature on a
  * group run's declaration: the caller's IP address and browser, written on the row of the signing (always
  * electronic: the run's page), printed small under the signature of the PDF — also a minor's, beside a parent's —
  * read back in «Toate datele unei persoane», and deleted with the row when an Administrator erases it.
@@ -80,7 +80,7 @@ async function signed(overrides: Partial<GroupRunSigningInput> = {}) {
   return { event, row };
 }
 
-describe("§NNN the trace of the electronic signature on a group run's declaration", () => {
+describe("§771 the trace of the electronic signature on a group run's declaration", () => {
   it("writes the address and the browser of the press on the row", async () => {
     const { row } = await signed({ trace: TRACE });
     expect(row.ip).toBe(TRACE.ip);

@@ -96,7 +96,7 @@ async function signOrRefuse(form: FormData, locale: Locale, path: string): Promi
         renderedAt: text(form, "renderedAt") || undefined,
         // A run for the members alone (§552) takes a signature from a members' session only.
         membersSession: async () => (await membersViewer()) !== null,
-        // The IP address and browser of this press (§NNN): the electronic signature's trace.
+        // The IP address and browser of this press (§771): the electronic signature's trace.
         trace: readSignatureTrace(await headers()),
       },
       new Date(),

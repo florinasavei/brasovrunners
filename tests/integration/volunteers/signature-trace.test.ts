@@ -24,13 +24,13 @@ const VOLUNTEER_TRACE = { ip: "203.0.113.20", userAgent: "Mozilla/5.0 (iPhone; C
 const GUARDIAN_TRACE = { ip: "2001:db8::7", userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Gecko/20100101 Firefox/127.0" };
 
 /**
- * BR-REQ-053-01 (§NNN, amending §758 and §768; the owner, 2026-10-14): the trace of the electronic signature on
+ * BR-REQ-053-01 (§771, amending §758 and §768; the owner, 2026-10-14): the trace of the electronic signature on
  * the volunteer agreement — the caller's IP address and browser, kept on the volunteer's row for an acceptance on the
  * form or from the emailed link, and for the guardian's own on theirs; never for «Semnat pe hârtie», which a member
  * of staff records from a sheet signed by hand. Printed under each signature of the PDF, listed in «Toate datele unei
  * persoane», deleted with the row.
  */
-describe("§NNN the trace of the electronic signature on the volunteer agreement", () => {
+describe("§771 the trace of the electronic signature on the volunteer agreement", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   let admin: StaffUser;

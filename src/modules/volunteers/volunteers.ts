@@ -1137,7 +1137,7 @@ export async function submitVolunteer<T extends Record<string, unknown>>(
   eventId: string,
   rawInput: unknown,
   now: Date,
-  /** The IP address and browser of the press (§NNN), read by the action from the request: the agreement's tick is an electronic acceptance, and this is its trace. */
+  /** The IP address and browser of the press (§771), read by the action from the request: the agreement's tick is an electronic acceptance, and this is its trace. */
   trace?: SignatureTrace,
 ): Promise<VolunteerSubmitOutcome> {
   assertIds(eventId);

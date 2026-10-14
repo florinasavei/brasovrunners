@@ -19,7 +19,7 @@ import { drawnRuns } from "../../helpers/pdf-drawn";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-033-02, BR-REQ-037-07 (§NNN, amending §418 and §330; the owner, 2026-10-14, after a SportID
+ * BR-REQ-033-02, BR-REQ-037-07 (§771, amending §418 and §330; the owner, 2026-10-14, after a SportID
  * «Consimțământ electronic» he received for a trail race) — the trace of the electronic signature on a
  * race declaration: the caller's IP address and browser, written on the acceptance at an email-link
  * signing and never on a paper one, read back for the PDF's small line under the signature and for
@@ -114,7 +114,7 @@ async function pending() {
   return { event, registrationId: row.id };
 }
 
-describe("the trace of the electronic signature on a race declaration (§NNN)", () => {
+describe("the trace of the electronic signature on a race declaration (§771)", () => {
   it("writes the IP address and the browser of the press on an email-link acceptance", async () => {
     const { event, registrationId } = await pending();
     const trace = readSignatureTrace(new Headers({ "x-forwarded-for": `${IP}, 10.0.0.1`, "user-agent": BROWSER }));

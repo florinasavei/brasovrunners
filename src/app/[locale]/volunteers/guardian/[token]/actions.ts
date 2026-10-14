@@ -32,7 +32,7 @@ export async function acceptVolunteerGuardianAction(form: FormData): Promise<voi
       token,
       { agreement: form.get("agreement") === "on", typedName: typeof form.get("typedName") === "string" ? String(form.get("typedName")) : "", locale },
       new Date(),
-      // The press is the acceptance: its IP address and browser are the guardian's signature's trace (§NNN).
+      // The press is the acceptance: its IP address and browser are the guardian's signature's trace (§771).
       readSignatureTrace(await headers()),
     );
   } catch (error) {

@@ -88,7 +88,7 @@ export async function signDeclarationAction(form: FormData): Promise<void> {
       contentSha256: String(form.get("contentSha256") ?? ""),
       // The signer's own yes to offers and benefits (§562), optional; ignored unless the notice in force describes them.
       promoConsent: form.get("promoConsent") === "on",
-      // The IP address and browser of this press (§NNN), from the request itself — the electronic signature's trace.
+      // The IP address and browser of this press (§771), from the request itself — the electronic signature's trace.
       trace: readSignatureTrace(await headers()),
     };
     const result = familyRegistrationId

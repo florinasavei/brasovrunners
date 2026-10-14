@@ -30,7 +30,7 @@ export async function acceptVolunteerAgreementAction(form: FormData): Promise<vo
       token,
       { agreement: form.get("agreement") === "on", adult: form.get("adult") === "on", locale },
       new Date(),
-      // The press is the acceptance: its IP address and browser are the signature's trace (§NNN).
+      // The press is the acceptance: its IP address and browser are the signature's trace (§771).
       readSignatureTrace(await headers()),
     );
   } catch (error) {

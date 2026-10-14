@@ -61,7 +61,7 @@ export type DeclarationEntry = {
     /** "Signed electronically from the link sent by email" or "Signed on paper, recorded by X". */
     method: string;
     /**
-     * The trace of an electronic signature (§NNN, amending §418, §330 and §769): the IP address and browser the row
+     * The trace of an electronic signature (§771, amending §418, §330 and §769): the IP address and browser the row
      * kept when the typed name was posted, printed small under the signature — «Semnat electronic la … · IP … · …».
      * Null for a paper acceptance (nothing was kept, and the staff member's own would say nothing about the signer),
      * for an electronic one from before the trace, and for one that arrived without the headers; absent is null.
@@ -129,11 +129,11 @@ export type DeclarationPdfInput = {
      */
     proofLine: (version: number, signedAt: string, textHash: string | null) => string;
     /**
-     * «Semnat electronic la 24.09.2026, 18:05:12 (ora României)» (§NNN): the head of the trace line under an
+     * «Semnat electronic la 24.09.2026, 18:05:12 (ora României)» (§771): the head of the trace line under an
      * electronic signature, the instant to the second as the proof line prints it; the address and the browser follow.
      */
     signedElectronically: (when: string) => string;
-    /** «IP» (§NNN): the word before the address in the trace line. */
+    /** «IP» (§771): the word before the address in the trace line. */
     ip: string;
   };
 };
@@ -223,7 +223,7 @@ export function declarationProofLine(
 }
 
 /**
- * The trace of an electronic signature as one small line under the signature (§NNN): «Semnat electronic la
+ * The trace of an electronic signature as one small line under the signature (§771): «Semnat electronic la
  * 24.09.2026, 18:05:12 (ora României) · IP 203.0.113.9 · Mozilla/5.0 …», or «Signed electronically on …» — the
  * instant to the second, the caller's address and browser as the row kept them. Undefined when there is nothing to
  * say: a paper acceptance, a row from before the trace, one that arrived without either header, the blank form.
@@ -429,7 +429,7 @@ function drawEntry(doc: PDFKit.PDFDocument, entry: DeclarationEntry, labels: Dec
   */
   const signature = entry.signature;
   const twoSigners = signature ? signature.minor !== null : Boolean(entry.forMinor);
-  // The trace of an electronic signature (§NNN) is one more small line, or two with a long browser string: the room is asked for with the block.
+  // The trace of an electronic signature (§771) is one more small line, or two with a long browser string: the room is asked for with the block.
   const traceLine = declarationTraceLine(entry, labels);
   const traceHeight = traceLine ? doc.font("body").fontSize(8).heightOfString(traceLine, { width: TEXT_WIDTH }) + 8 : 0;
   const blockHeight = (twoSigners ? 260 : 170) + traceHeight;
@@ -481,7 +481,7 @@ function drawEntry(doc: PDFKit.PDFDocument, entry: DeclarationEntry, labels: Dec
   }
   row(labels.date, signature ? signature.signedAt : null);
   doc.moveDown(0.4);
-  // The electronic signature's trace, small, straight under the signature and its date: when, from which address, in which browser (§NNN).
+  // The electronic signature's trace, small, straight under the signature and its date: when, from which address, in which browser (§771).
   if (traceLine) {
     doc.font("body").fontSize(8).fillColor(COLOR.inkMuted).text(traceLine, MARGIN.left, doc.y, { width: TEXT_WIDTH });
     doc.moveDown(0.4);

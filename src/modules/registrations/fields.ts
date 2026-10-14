@@ -635,7 +635,7 @@ export const declarationSigningSchema = z.object({
    */
   promoConsent: z.boolean().default(false),
   /**
-   * The IP address and browser of the request that carries the signature (§NNN), read by the action from the
+   * The IP address and browser of the request that carries the signature (§771), read by the action from the
    * request's headers — never from a form box — and kept on the acceptance as the proof that the typed name was
    * typed in a session. Optional: a script or a test passes none and the row keeps null.
    */

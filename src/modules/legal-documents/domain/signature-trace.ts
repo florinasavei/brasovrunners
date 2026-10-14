@@ -2,7 +2,7 @@ import { isIP } from "node:net";
 import { z } from "zod";
 
 /**
- * The trace of an electronic signature (§NNN, amending §418, §330 and §769; the owner, 2026-10-14, after a SportID
+ * The trace of an electronic signature (§771, amending §418, §330 and §769; the owner, 2026-10-14, after a SportID
  * «Consimțământ electronic» he received for a trail race): the caller's IP address and browser at the moment a
  * person signs, kept on the row of the acceptance as proof that the typed name was typed by whoever held the
  * session — «Semnat electronic la … · IP … · …» under the signature of the PDF.
@@ -72,7 +72,7 @@ export function traceColumns(trace: SignatureTrace | undefined, electronic: bool
 }
 
 /**
- * The line under the signature of a signed PDF (§NNN): «Semnat electronic la 24.09.2026, 18:05:12 · IP 203.0.113.9 ·
+ * The line under the signature of a signed PDF (§771): «Semnat electronic la 24.09.2026, 18:05:12 · IP 203.0.113.9 ·
  * Mozilla/5.0 …». The parts the row does not hold are left out, with their separators; the label and the words of
  * «IP» arrive translated. Pure, for its test.
  */

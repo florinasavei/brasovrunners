@@ -136,7 +136,7 @@ export async function submitVolunteerAction(form: FormData): Promise<void> {
         renderedAt: renderedAt || undefined,
       },
       new Date(),
-      // The agreement's tick is an electronic acceptance: this request's IP address and browser are its trace (§NNN).
+      // The agreement's tick is an electronic acceptance: this request's IP address and browser are its trace (§771).
       readSignatureTrace(requestHeaders),
     );
   } catch (error) {

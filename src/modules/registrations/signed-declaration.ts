@@ -79,7 +79,7 @@ export type SignedDeclaration = {
   minorTypedName: string | null;
   minorIdDocument: string | null;
   method: "EMAIL_LINK" | "PAPER";
-  /** The electronic signature's trace (§NNN): the IP address and browser of the press; null on a paper row and on one from before it. */
+  /** The electronic signature's trace (§771): the IP address and browser of the press; null on a paper row and on one from before it. */
   ip: string | null;
   userAgent: string | null;
   attestedByName: string | null;
@@ -328,7 +328,7 @@ function signedEntry(
       signedAt: whenStart,
       signedAtInline: when,
       acceptedAt: signed.acceptedAt,
-      // Only an electronic signature has a trace (§NNN); a paper row prints today's block.
+      // Only an electronic signature has a trace (§771); a paper row prints today's block.
       trace: traceColumns({ ip: signed.ip, userAgent: signed.userAgent }, signed.method === "EMAIL_LINK"),
       method:
         signed.method === "PAPER"

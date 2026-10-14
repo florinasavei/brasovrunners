@@ -234,7 +234,7 @@ export default async function PersonDataPage({ params, searchParams }: Props) {
                             when: show(offer.agreementAcceptedAt),
                           })})`
                         : t("volunteers.agreement.notAccepted")}
-                      {/* The electronic acceptance's trace (§NNN): the IP address and browser of each press, the volunteer's and the guardian's. */}
+                      {/* The electronic acceptance's trace (§771): the IP address and browser of each press, the volunteer's and the guardian's. */}
                       {offer.agreementIp || offer.agreementUserAgent
                         ? ` · ${t("person.traceVolunteer", { ip: show(offer.agreementIp), browser: show(offer.agreementUserAgent) })}`
                         : ""}
@@ -246,7 +246,7 @@ export default async function PersonDataPage({ params, searchParams }: Props) {
                 )}
               </Box>
               <Divider />
-              {/* The group-run declarations signed with this address (§393): every personal column, the signature's IP address and browser (§NNN) among them. */}
+              {/* The group-run declarations signed with this address (§393): every personal column, the signature's IP address and browser (§771) among them. */}
               <Box component="section" data-testid="person-group-run-declarations">
                 <Typography variant="h3" sx={{ fontSize: "1rem", mb: 1 }}>
                   {t("person.groupRuns", { count: data.groupRunDeclarations.length })}

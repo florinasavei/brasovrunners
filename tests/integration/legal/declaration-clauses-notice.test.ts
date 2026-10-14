@@ -9,7 +9,7 @@ import { runRegistrationMaintenance } from "@/modules/registrations/maintenance"
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §639 on §NNN — five more clauses in the race declaration and the typed name's sentence (the owner, 2026-10-14) change
+ * §639 on §771 — five more clauses in the race declaration and the typed name's sentence (the owner, 2026-10-14) change
  * the declaration templates' words, so the template the club approved before them reads as «Șablon nou» and the
  * maintenance job's first run emails the Administrators once; the platform approves nothing, and the text in force
  * does not move. The existing pattern of `templates-notice.test.ts`, with the declaration as the text in force.
@@ -23,7 +23,7 @@ const FACTS: ClubFacts = clubFactsFromEnv({
   EMAIL_REPLY_TO: "contact@example.test",
 });
 
-/** The six paragraphs §NNN added, in either language (the five clauses, then the signature sentence). */
+/** The six paragraphs §771 added, in either language (the five clauses, then the signature sentence). */
 const ADDED = [
   /asigurare medicală valabilă/,
   /Urmez numai traseul marcat/,
@@ -39,12 +39,12 @@ const ADDED = [
   /is my electronic signature/,
 ];
 
-/** The text as the club approved it before §NNN: the same paragraphs without the six. */
+/** The text as the club approved it before §771: the same paragraphs without the six. */
 const before = (body: LegalDocumentBody): LegalDocumentBody => ({
   sections: body.sections.map((section) => ({ ...section, paragraphs: section.paragraphs.filter((paragraph) => !ADDED.some((pattern) => pattern.test(paragraph))) })),
 });
 
-describe("§639 on §NNN the Administrators are emailed when the declaration's template moves", () => {
+describe("§639 on §771 the Administrators are emailed when the declaration's template moves", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   let admin: StaffUser;

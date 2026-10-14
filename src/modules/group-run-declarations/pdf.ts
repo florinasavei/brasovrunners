@@ -93,7 +93,7 @@ export async function renderGroupRunDeclarationPdf<T extends Record<string, unkn
           signedAt: whenStart,
           signedAtInline: when,
           acceptedAt: signed.acceptedAt,
-          // The press's IP address and browser (§NNN, amending §769); a group run is always signed on its page.
+          // The press's IP address and browser (§771, amending §769); a group run is always signed on its page.
           trace: traceColumns({ ip: signed.ip, userAgent: signed.userAgent }, true),
           method: signedOnPageWords(signed.locale, when, signed.minorTypedName !== null),
         },

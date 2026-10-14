@@ -151,7 +151,7 @@ type OwnAcceptance = {
   textHash: string | null;
   facts: unknown;
   recordedBy: string | null;
-  /** The electronic acceptance's trace (§NNN): the IP address and browser of the press; null for «PAPER» and for a row from before it. */
+  /** The electronic acceptance's trace (§771): the IP address and browser of the press; null for «PAPER» and for a row from before it. */
   ip: string | null;
   userAgent: string | null;
 };
@@ -190,7 +190,7 @@ async function ownAcceptanceEntry<T extends Record<string, unknown>>(db: Databas
       signedAt,
       signedAtInline,
       acceptedAt: own.acceptedAt,
-      // Only an electronic acceptance has a trace (§NNN); «PAPER» prints today's block.
+      // Only an electronic acceptance has a trace (§771); «PAPER» prints today's block.
       trace: traceColumns({ ip: own.ip, userAgent: own.userAgent }, own.method !== "PAPER"),
       method: [acceptedHowWords(locale, own.method, signedAtInline, own.recordedBy), pending].filter(Boolean).join("\n"),
     },
@@ -309,7 +309,7 @@ export async function renderVolunteerAgreementPdf<T extends Record<string, unkno
         signedAt,
         signedAtInline,
         acceptedAt: row.guardianAcceptedAt,
-        // The guardian's own press, when it was one (§NNN): «LINK» has a trace, «PAPER» none.
+        // The guardian's own press, when it was one (§771): «LINK» has a trace, «PAPER» none.
         trace: traceColumns({ ip: row.guardianIp, userAgent: row.guardianUserAgent }, row.guardianMethod !== "PAPER"),
         method: guardianHowWords(locale, row.guardianMethod, signedAtInline, guardianName, row.guardianRecordedBy),
       },

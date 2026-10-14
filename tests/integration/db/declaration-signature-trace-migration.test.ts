@@ -8,7 +8,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { auditMigration } from "../../../scripts/migration-check.mjs";
 
 /**
- * Migration `0158_declaration_signature_trace` (§NNN, amending §418, §330, §758, §768 and §769; the owner,
+ * Migration `0158_declaration_signature_trace` (§771, amending §418, §330, §758, §768 and §769; the owner,
  * 2026-10-14), proven on real PostgreSQL (PGlite): `ip` and `user_agent` — text, nullable — on
  * `declaration_acceptances` and `group_run_declarations`, and `agreement_ip` / `agreement_user_agent` and
  * `guardian_ip` / `guardian_user_agent` on `event_volunteers` (the volunteer's acceptance is columns of the volunteer's own

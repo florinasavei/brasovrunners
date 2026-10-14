@@ -71,7 +71,7 @@ export type GuardianAcceptanceColumns = {
   guardianTextHash: string;
   guardianFacts: AgreementFacts;
   guardianTypedName: string | null;
-  /** The guardian's electronic acceptance's trace (§NNN): the IP address and browser of the press; null for «PAPER». */
+  /** The guardian's electronic acceptance's trace (§771): the IP address and browser of the press; null for «PAPER». */
   guardianIp: string | null;
   guardianUserAgent: string | null;
   guardianRecordedByStaffUserId: string | null;
@@ -96,7 +96,7 @@ export async function guardianAcceptance<T extends Record<string, unknown>>(
     method: "LINK" | "PAPER";
     typedName: string | null;
     recordedBy?: string | null;
-    /** The IP address and browser of the press (§NNN), kept for «LINK» and dropped for «PAPER», whatever is passed. */
+    /** The IP address and browser of the press (§771), kept for «LINK» and dropped for «PAPER», whatever is passed. */
     trace?: SignatureTrace;
   },
   now: Date,
@@ -277,7 +277,7 @@ export async function acceptVolunteerGuardianByLink<T extends Record<string, unk
   secret: string,
   rawInput: unknown,
   now: Date,
-  /** The IP address and browser of the press (§NNN), read by the action: the guardian's electronic acceptance's trace. */
+  /** The IP address and browser of the press (§771), read by the action: the guardian's electronic acceptance's trace. */
   trace?: SignatureTrace,
 ): Promise<GuardianAcceptOutcome> {
   const parsed = volunteerGuardianAcceptSchema.safeParse(rawInput);

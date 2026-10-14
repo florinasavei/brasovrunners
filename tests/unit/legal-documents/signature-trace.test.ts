@@ -11,13 +11,13 @@ import {
 } from "@/modules/legal-documents/domain/signature-trace";
 
 /**
- * §NNN (the owner, 2026-10-14) — the electronic signature's trace: the caller's IP address and browser, read the way the
+ * §771 (the owner, 2026-10-14) — the electronic signature's trace: the caller's IP address and browser, read the way the
  * platform reads a caller's address (the first entry of `x-forwarded-for`, which Vercel sets), kept only for an
  * electronic acceptance, and printed as one small line under the signature.
  */
 const headers = (init: Record<string, string>) => new Headers(init);
 
-describe("§NNN reading the caller's address and browser from the request", () => {
+describe("§771 reading the caller's address and browser from the request", () => {
   it("takes the first entry of x-forwarded-for, trimmed — the client's, as the proxy sets it", () => {
     expect(callerIp(headers({ "x-forwarded-for": "203.0.113.9" }))).toBe("203.0.113.9");
     expect(callerIp(headers({ "x-forwarded-for": "  203.0.113.9 , 10.0.0.1, 10.0.0.2" }))).toBe("203.0.113.9");
@@ -53,7 +53,7 @@ describe("§NNN reading the caller's address and browser from the request", () =
 
 });
 
-describe("§NNN only an electronic acceptance keeps a trace", () => {
+describe("§771 only an electronic acceptance keeps a trace", () => {
   const trace = { ip: "203.0.113.9", userAgent: "Mozilla/5.0" };
 
   it("keeps it for an electronic acceptance and drops it for a paper one, whatever the caller passed", () => {
@@ -72,7 +72,7 @@ describe("§NNN only an electronic acceptance keeps a trace", () => {
   });
 });
 
-describe("§NNN the line under the signature", () => {
+describe("§771 the line under the signature", () => {
   const words = { signedElectronically: (when: string) => `Semnat electronic la ${when}`, ip: "IP" };
   const when = "24.09.2026, 18:05:12";
 

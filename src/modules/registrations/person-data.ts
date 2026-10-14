@@ -132,7 +132,7 @@ export type PersonData = {
     guardianAcceptedAt: Date | null;
     guardianMethod: (typeof eventVolunteers.$inferSelect)["guardianMethod"];
     /**
-     * The trace of the electronic acceptance (§NNN): the IP address and browser of the press — the volunteer's own on
+     * The trace of the electronic acceptance (§771): the IP address and browser of the press — the volunteer's own on
      * the form or the link, the guardian's on theirs. Null for «PAPER» and for a row from before it (art. 15 GDPR).
      */
     agreementIp: string | null;
@@ -142,7 +142,7 @@ export type PersonData = {
   }>;
   /**
    * The group-run declarations signed with this address (§393, §769) — the signer's own and, for a minor, the minor's
-   * name beside the parent's: every personal column of the row, the electronic signature's trace (§NNN: the IP address
+   * name beside the parent's: every personal column of the row, the electronic signature's trace (§771: the IP address
    * and browser) among them. Found through the canonicalizer like every other part of this page (AGENTS.md §10.4).
    */
   groupRunDeclarations: Array<{
@@ -341,7 +341,7 @@ async function collectPersonData<T extends Record<string, unknown>>(
  * is read through the canonicalizer and matched on the canonical form — `Ana.Pop+club@Gmail.com` and `ana.pop@gmail.com` are
  * one person, as everywhere on this page (AGENTS.md §10.4). The table is a club's signatures (a few thousand rows at most) and
  * an access request is rare, so the addresses are read and compared here rather than indexed twice. Every personal column is
- * returned, the trace of the electronic signature (§NNN) with them.
+ * returned, the trace of the electronic signature (§771) with them.
  */
 async function groupRunDeclarationsOf<T extends Record<string, unknown>>(db: Database<T>, canonicalEmail: string): Promise<PersonData["groupRunDeclarations"]> {
   const addresses = await db.select({ id: groupRunDeclarations.id, email: groupRunDeclarations.email }).from(groupRunDeclarations);

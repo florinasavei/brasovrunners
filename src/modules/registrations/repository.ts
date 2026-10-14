@@ -1661,7 +1661,7 @@ export async function insertDeclarationAcceptance<T extends Record<string, unkno
     /** The SHA-256 of the exact text signed (§556, `acceptanceTextHash`), computed in the caller's transaction. */
     textHash: string | null;
     /**
-     * The IP address and browser of the electronic signature (§NNN). Kept only with the email-link method: whatever a
+     * The IP address and browser of the electronic signature (§771). Kept only with the email-link method: whatever a
      * caller passes beside `PAPER` is dropped here, so a paper record never carries the staff member's own.
      */
     trace?: SignatureTrace;

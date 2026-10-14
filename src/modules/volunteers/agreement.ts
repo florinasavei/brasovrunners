@@ -200,7 +200,7 @@ export type AgreementAcceptanceColumns = {
   agreementLocale: Locale;
   agreementTextHash: string;
   agreementFacts: AgreementFacts;
-  /** The electronic acceptance's trace (§NNN): the IP address and browser of the press; null for «PAPER». */
+  /** The electronic acceptance's trace (§771): the IP address and browser of the press; null for «PAPER». */
   agreementIp: string | null;
   agreementUserAgent: string | null;
   agreementRecordedByStaffUserId: string | null;
@@ -229,7 +229,7 @@ export async function agreementAcceptance<T extends Record<string, unknown>>(
     recordedBy?: string | null;
     /** A volunteer under eighteen (§768): the guardian's name in the text's `{{volunteerGuardian}}`, and no «declared of age» whatever the way. */
     guardianName?: string | null;
-    /** The IP address and browser of the press (§NNN), kept for «FORM» and «LINK» and dropped for «PAPER», whatever is passed. */
+    /** The IP address and browser of the press (§771), kept for «FORM» and «LINK» and dropped for «PAPER», whatever is passed. */
     trace?: SignatureTrace;
   },
   now: Date,
@@ -400,7 +400,7 @@ export async function acceptVolunteerAgreementByLink<T extends Record<string, un
   secret: string,
   rawInput: unknown,
   now: Date,
-  /** The IP address and browser of the press (§NNN), read by the action: the electronic acceptance's trace. */
+  /** The IP address and browser of the press (§771), read by the action: the electronic acceptance's trace. */
   trace?: SignatureTrace,
 ): Promise<AgreementAcceptOutcome> {
   const parsed = volunteerAgreementAcceptSchema.safeParse(rawInput);

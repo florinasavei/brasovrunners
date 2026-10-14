@@ -78,7 +78,7 @@ export const declarationAcceptances = pgTable(
 
     method: declarationMethod("method").notNull().default("EMAIL_LINK"),
     /**
-     * The trace of the electronic signature (§NNN, amending §418 and §330; the owner, 2026-10-14): the caller's IP
+     * The trace of the electronic signature (§771, amending §418 and §330; the owner, 2026-10-14): the caller's IP
      * address and browser at the moment the typed name was posted — the proof, printed small under the signature
      * of the PDF, that it was typed in a session. Written only for `EMAIL_LINK`; a `PAPER` row keeps neither (the
      * staff member's browser says nothing about the person who signed the sheet), and a row from before it has none.

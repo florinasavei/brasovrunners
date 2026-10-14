@@ -12,7 +12,7 @@ import {
 import type { LegalDocumentBody } from "@/modules/legal-documents/domain/content-hash";
 
 /**
- * §NNN (the owner, 2026-10-14, after a SportID «Consimțământ electronic» he received for a trail race; amending §568, §418
+ * §771 (the owner, 2026-10-14, after a SportID «Consimțământ electronic» he received for a trail race; amending §568, §418
  * and §330) — five more clauses in the race declaration's TEMPLATE, trail and road, Romanian and English, and one
  * sentence that the typed name is the person's electronic signature. The texts in force never move; a Romanian lawyer reads the
  * disqualification clause and the signature sentence before the club approves them (the template's own note says so).
@@ -54,7 +54,7 @@ const SIGNATURE_SENTENCE = {
 
 const indexOf = (course: (typeof COURSES)[number], locale: Locale, pattern: RegExp) => TEXTS[course][locale].findIndex((paragraph) => pattern.test(paragraph));
 
-describe("§NNN the five clauses, in the trail's and the road's declaration, in both languages", () => {
+describe("§771 the five clauses, in the trail's and the road's declaration, in both languages", () => {
   for (const course of COURSES) {
     for (const locale of LOCALES) {
       for (const clause of CLAUSES) {
@@ -123,7 +123,7 @@ describe("§NNN the five clauses, in the trail's and the road's declaration, in 
   });
 });
 
-describe("§NNN the typed name is the person's electronic signature", () => {
+describe("§771 the typed name is the person's electronic signature", () => {
   for (const course of COURSES) {
     for (const locale of LOCALES) {
       it(`${course} ${locale}: one sentence of its own in the closing, before the organiser's footnote`, () => {
@@ -151,7 +151,7 @@ describe("§NNN the typed name is the person's electronic signature", () => {
   });
 });
 
-describe("§NNN the privacy notice's template says the trace is kept", () => {
+describe("§771 the privacy notice's template says the trace is kept", () => {
   const notice = (locale: Locale) => paragraphsOf(LEGAL_TEMPLATES.PRIVACY_NOTICE[locale].body);
   const declarationParagraph = (locale: Locale) => notice(locale).find((paragraph) => paragraph.startsWith(locale === "ro" ? "Declarația pe proprie răspundere confirmă locul" : "The declaration of own responsibility confirms your place"))!;
 

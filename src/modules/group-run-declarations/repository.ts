@@ -232,7 +232,7 @@ export async function findSignedGroupRunDeclaration<T extends Record<string, unk
       idDocument: groupRunDeclarations.idDocument,
       email: groupRunDeclarations.email,
       acceptedAt: groupRunDeclarations.acceptedAt,
-      // The electronic signature's trace (§NNN): the IP address and browser of the press; null on a row from before it.
+      // The electronic signature's trace (§771): the IP address and browser of the press; null on a row from before it.
       ip: groupRunDeclarations.ip,
       userAgent: groupRunDeclarations.userAgent,
       // What the blanks said at the signing, and whether it covers the series (§523).

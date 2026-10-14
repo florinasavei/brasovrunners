@@ -424,7 +424,7 @@ describe("the club's declaration (§95)", () => {
     for (const [name, pdf] of Object.entries(pdfs)) {
       const pages = textLinesByPage(pdf!);
       expect(pages.length, name).toBeGreaterThanOrEqual(2);
-      // A fourth since §NNN: five more clauses and the typed name's sentence, and the trace line under the signature.
+      // A fourth since §771: five more clauses and the typed name's sentence, and the trace line under the signature.
       expect(pages.length, name).toBeLessThanOrEqual(4);
       expect(pdf!.toString("latin1").match(/\/Type \/Page\b/g)?.length, name).toBe(pages.length);
       for (const [index, lines] of pages.entries()) {

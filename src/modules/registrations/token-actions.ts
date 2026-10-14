@@ -319,7 +319,7 @@ export async function consumeAndSignDeclaration(
     contentSha256: string;
     /** «Vreau să primesc oferte și beneficii», ticked while signing (§562); the service decides whether it is kept. */
     promoConsent?: boolean;
-    /** The IP address and browser of the press (§NNN), kept as the trace of the electronic signature; the action reads it from the request. */
+    /** The IP address and browser of the press (§771), kept as the trace of the electronic signature; the action reads it from the request. */
     trace?: SignatureTrace;
   },
   now: Date,

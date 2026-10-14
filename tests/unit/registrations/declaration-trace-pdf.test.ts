@@ -6,7 +6,7 @@ import { type DeclarationEntry, declarationTraceLine, renderDeclarationPdf } fro
 import { DECLARATION_FOOTER_Y, drawnRuns } from "../../helpers/pdf-drawn";
 
 /**
- * §NNN (the owner, 2026-10-14) — the signed PDF's signature block: the typed name large, in the handwriting face (Caveat, OFL,
+ * §771 (the owner, 2026-10-14) — the signed PDF's signature block: the typed name large, in the handwriting face (Caveat, OFL,
  * `src/theme/pdf/`, embedded in pdfkit — no new file, no new dependency), and under it, small, «Semnat electronic la … ·
  * IP … · …» from the row's trace; then the version and the fingerprint as before. A paper acceptance keeps today's block. A
  * minor's declaration beside a parent's draws the same block once, with both typed names. One renderer draws it for the
@@ -46,7 +46,7 @@ function entry(overrides: Partial<NonNullable<DeclarationEntry["signature"]>> = 
 const render = (entries: DeclarationEntry[], locale: "ro" | "en" = "ro") =>
   drawnRuns(() => renderDeclarationPdf({ entries, locale, generatedAt: NOW, labels: declarationWords(locale, NOW) }));
 
-describe("§NNN the line under an electronic signature, pure", () => {
+describe("§771 the line under an electronic signature, pure", () => {
   const ro = declarationWords("ro", NOW);
   const en = declarationWords("en", NOW);
 
@@ -66,7 +66,7 @@ describe("§NNN the line under an electronic signature, pure", () => {
   });
 });
 
-describe("§NNN the signature block as drawn", () => {
+describe("§771 the signature block as drawn", () => {
   it("sets the typed name large, in the handwriting face, then the small trace line, then the version and the fingerprint", async () => {
     const runs = await render([entry()]);
     const name = runs.find((run) => run.text === "Ana Popescu" && run.size !== undefined && run.size >= 20);
@@ -141,7 +141,7 @@ describe("§NNN the signature block as drawn", () => {
   });
 });
 
-describe("§NNN one renderer draws the block for all three signed documents", () => {
+describe("§771 one renderer draws the block for all three signed documents", () => {
   const source = (file: string) => readFileSync(file, "utf8");
 
   it("the race declaration, the group run's and the volunteer agreement's PDF all hand their entries to renderDeclarationPdf, and none of them draws a signature itself", () => {

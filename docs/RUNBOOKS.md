@@ -2,7 +2,7 @@
 
 # Runbooks
 
-**Baseline `BR-V3.29-2026-10-15`** · versioned with the whole set · [changelog](../CHANGELOG.md)
+**Baseline `BR-V3.30-2026-10-15`** · versioned with the whole set · [changelog](../CHANGELOG.md)
 
 
 | Runbook | When |
@@ -1026,9 +1026,9 @@ risks and the waiver for the minor «în limitele permise de lege», never for h
 Administrators are told by email that the templates changed (§639). A run saved with the default fourteen takes minors
 from fourteen; set the box to 18 (or more) on a run that is for adults only.
 
-### Five more clauses in the race declaration, and the signature's trace: approve the texts again (§NNN)
+### Five more clauses in the race declaration, and the signature's trace: approve the texts again (§771)
 
-Since §NNN the two race declarations (the rough terrain's and the road's, both languages) carry five more
+Since §771 the two race declarations (the rough terrain's and the road's, both languages) carry five more
 clauses among the runner's duties — valid medical insurance or the medical costs borne in full; the marked route
 followed and the instructions of the organiser and the volunteers respected, the organiser being able to stop or
 disqualify; disqualification without appeal, «în limitele permise de lege», for leaving the marked route, unsporting
