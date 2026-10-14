@@ -2,7 +2,7 @@
 
 # Runbooks
 
-**Baseline `BR-V3.16-2026-10-14`** · versioned with the whole set · [changelog](../CHANGELOG.md)
+**Baseline `BR-V3.17-2026-10-14`** · versioned with the whole set · [changelog](../CHANGELOG.md)
 
 
 | Runbook | When |
@@ -1113,7 +1113,9 @@ Related requirements: `BR-REQ-050-02`, `BR-REQ-051-01`, `BR-REQ-060-01`.
 
 ### What the file is
 
-`<slug>-<day>.json`, `format: "brasovrunners-event"`, `version: 1`: both languages' texts, the date and
+`<slug>-<day>.json`, `format: "brasovrunners-event"`, `version: 2` (a race's `durationMinutes` is its
+«Timp limită», counted from the gun; a `version: 1` file from an older release is still read, its race's
+minutes recounted from the gun so the end stays the same): both languages' texts, the date and
 its zone, the place, the registration settings (the declaration by its key, never an id), the
 programme, the partners, the route and its maps, the bib design, the lists' switches, and each picture
 or GPX by its public address with its size and SHA-256. It never holds a registration, an invitation, a

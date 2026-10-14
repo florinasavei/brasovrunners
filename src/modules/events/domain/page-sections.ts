@@ -48,6 +48,7 @@ export const PAGE_SECTION_IDS = [
   "registration",
   "coHosts",
   "share",
+  "checkpoints",
   "links",
   "programme",
   "rules",
@@ -71,6 +72,7 @@ export type PageSectionGlyph =
   | "registration"
   | "partner"
   | "share"
+  | "checkpoints"
   | "links"
   | "programme"
   | "rules"
@@ -129,6 +131,11 @@ export type PageSectionData = {
    * can serve it. Left out, a GPX counts — this file reads no environment.
    */
   storageConfigured?: boolean;
+  /**
+   * How many «Puncte de control» the event has (§757): their own table, not a column, so the caller
+   * counts them. Left out, none — the create page's event has none yet.
+   */
+  checkpointCount?: number;
 };
 
 export type PageSection = {
@@ -228,6 +235,20 @@ export const PAGE_SECTIONS: readonly PageSection[] = [
   { id: "coHosts", card: "box-cohosts", anchor: null, glyph: "partner", automatic: false, drawn: ({ event }) => readCoHosts(event).length > 0 },
   // Facebook, WhatsApp, Instagram and the calendar (§90, §107): from the page's own address.
   { id: "share", card: null, anchor: null, glyph: "share", automatic: true, drawn: () => true },
+  /*
+    «Puncte de control» (`#checkpoints`, §757): the table right under the route's maps, drawn while the
+    event has a checkpoint. Part of «Traseul»: the card «Puncte de control» is its own form beside the
+    save form (forms cannot nest) and the course card links to it, so it has no number and no chip.
+  */
+  {
+    id: "checkpoints",
+    card: "box-checkpoints",
+    anchor: "checkpoints",
+    glyph: "checkpoints",
+    automatic: false,
+    nestedIn: "course",
+    drawn: ({ checkpointCount }) => (checkpointCount ?? 0) > 0,
+  },
   /*
     "Linkuri și fișiere" (`#links`, §332). The card also holds the Strava and Facebook events, which
     the page draws in the route row, so either makes it drawn.

@@ -91,8 +91,9 @@ describe("§350 each box's summary, empty and filled", () => {
 
   it("Data și ora", () => {
     expect(whenSummary(words, null, "ro")).toBe(words.when.none);
-    expect(whenSummary(words, event as never, "ro")).toBe("Sâm., 21 nov. 2026, 09:00 · startul cursei 09:30 · 3 h");
-    expect(whenSummary(wordsEn, event as never, "en")).toBe("Sat, 21 Nov 2026, 09:00 · race start 09:30 · 3 h");
+    // A race's «Timp limită» counts from its gun (§757): 09:30 to 12:00 is 2 h 30 min, the box the editor shows.
+    expect(whenSummary(words, event as never, "ro")).toBe("Sâm., 21 nov. 2026, 09:00 · startul cursei 09:30 · 2 h 30 min");
+    expect(whenSummary(wordsEn, event as never, "en")).toBe("Sat, 21 Nov 2026, 09:00 · race start 09:30 · 2 h 30 min");
     // A gun time is a race's alone (§71).
     expect(whenSummary(words, { ...event, type: "GROUP_RUN" } as never, "ro")).toBe("Sâm., 21 nov. 2026, 09:00 · 3 h");
     // The duration in hours and minutes (§433): 90 minutes is «1 h 30 min», under an hour stays minutes.

@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.16-2026-10-14 -->
+<!-- PROJECT_BASELINE: BR-V3.17-2026-10-14 -->
 
 # CLAUDE.md — start here if you are an AI coding agent
 
-**Baseline `BR-V3.16-2026-10-14`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
+**Baseline `BR-V3.17-2026-10-14`** · [changelog](./CHANGELOG.md) · [weekend plan](./WEEKEND.md)
 
 Brașov Runners: a bilingual website and free event-registration platform for a small running
 club in Brașov, Romania. One Next.js App Router monolith, PostgreSQL, Material UI.
@@ -266,6 +266,13 @@ it is the authority, this is the summary):
     write how to pay and who receives the orders, and add the products. Payment is never on the site.
     The steps are `SETUP.md` §43; `/admin/tasks` carries the row `shopNotice` while a product is visible.
     A colleague who is not an Administrator runs it once given «Gestionează magazinul» on «Echipa».
+21. **Confirm every upcoming race's «Timp limită»** — the duration box of a race is «Timp limită»
+    since the checkpoints release (§757), counted from the gun, and the race's page shows «Timp limită:
+    2 h 30 min» (with checkpoints, also «Sosire · se închide la 12:30») from the end saved under the
+    old «Durata» meaning. No end moved; what the page says is the minutes from the gun to that end,
+    and a race whose gun is after its meeting time now reads shorter than the box said. Before the
+    release reaches production, open each upcoming race in `/admin/events` → «Când și unde» and confirm
+    «Timp limită» — the 21 November race first.
 
 **The values behind items 10 and 11 are in `.env.local` and on both Vercel projects**, never in
 this repository — it is public, and `yarn secrets:check` blocks a commit that carries one. The

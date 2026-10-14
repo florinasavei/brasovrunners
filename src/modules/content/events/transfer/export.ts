@@ -25,7 +25,9 @@ import type { StaffUser } from "@/db/schema/staff-users";
 import { readWeatherMode } from "@/modules/weather/domain/mode";
 import { getStorage, type Storage } from "@/modules/media/storage";
 import { waitlistChoiceOf } from "../waitlist-choice";
-import { savedDurationMinutes } from "../duration";
+import { eventDurationMinutes } from "../duration";
+import { type Checkpoint, sortedByKm } from "@/modules/event-checkpoints/domain/checkpoint";
+import { listCheckpoints } from "@/modules/event-checkpoints/checkpoints";
 import { type EditableEvent, type EditableTranslation, findCoverPicture, listTranslationsForEvent } from "../repository";
 import {
   EVENT_FILE_FORMAT,
@@ -93,6 +95,8 @@ export type ConfigContext = {
   gpxUrl: string | null;
   /** Turns a site-relative picture address (`/api/media/…`, the developer's modes) into an absolute one. */
   absolute: (src: string) => string;
+  /** The route's checkpoints (§757), a table of their own; none when the caller read none. */
+  checkpoints?: readonly Checkpoint[];
 };
 
 /** The event's configuration, exactly as the file and the diff both read it. */
@@ -107,7 +111,8 @@ export function configFromRows(event: EditableEvent, rows: readonly EditableTran
     surface: event.surface,
     timezone: event.timezone,
     start: { date: start.date || null, time: start.time || null },
-    durationMinutes: savedDurationMinutes(event.startsAt, event.endsAt),
+    // From the gun on a race that has one (§757, `durationBase`): the box the import posts back, so the end comes back the same.
+    durationMinutes: eventDurationMinutes(event),
     raceStartsAt: event.raceStartsAt?.toISOString() ?? null,
     dateToBeAnnounced: event.dateToBeAnnounced,
     timeToBeAnnounced: event.timeToBeAnnounced,
@@ -124,6 +129,14 @@ export function configFromRows(event: EditableEvent, rows: readonly EditableTran
       url: event.routeUrl,
       maps: readRouteMaps(event.routeMaps) as unknown as Array<Record<string, unknown>>,
       gpx: gpx && context.gpxUrl ? { name: gpx.name, url: context.gpxUrl } : null,
+      // By distance, the order every reader draws them in; no id — a row means something in one database only.
+      checkpoints: sortedByKm(context.checkpoints ?? []).map((row) => ({
+        km: row.km,
+        name: { ro: row.nameRo, en: row.nameEn },
+        kinds: [...row.kinds],
+        cutoff: row.cutoff,
+        note: { ro: row.noteRo, en: row.noteEn },
+      })),
     },
     links: readEventLinks(event.links),
     partners: readCoHosts(event),
@@ -200,6 +213,7 @@ export async function readConfigContext<T extends Record<string, unknown>>(db: D
     coverUrl: cover ? (cover.webUrl.startsWith("/") ? `${base}${cover.webUrl}` : cover.webUrl) : null,
     gpxUrl: gpx && storage ? storage.publicUrl(gpx.key) : null,
     absolute: (src) => `${base}${src}`,
+    checkpoints: await listCheckpoints(db, event.id),
   };
 }
 

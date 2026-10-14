@@ -5,6 +5,7 @@ import GavelIcon from "@mui/icons-material/Gavel";
 import HandshakeIcon from "@mui/icons-material/Handshake";
 import HowToRegIcon from "@mui/icons-material/HowToReg";
 import LinkIcon from "@mui/icons-material/Link";
+import PinDropIcon from "@mui/icons-material/PinDrop";
 import PaymentsIcon from "@mui/icons-material/Payments";
 import PlaceIcon from "@mui/icons-material/Place";
 import RouteIcon from "@mui/icons-material/Route";
@@ -35,6 +36,8 @@ export const SECTION_GLYPHS: Record<PageSectionGlyph, ComponentType<SvgIconProps
   registration: HowToRegIcon,
   partner: HandshakeIcon,
   share: ShareIcon,
+  // The editor card's own glyph (`panel-glyphs.ts`, «Puncte de control»).
+  checkpoints: PinDropIcon,
   links: LinkIcon,
   programme: ScheduleIcon,
   rules: GavelIcon,

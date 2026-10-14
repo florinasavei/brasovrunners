@@ -15,6 +15,8 @@ import { toCalendarEvent } from "@/modules/events/calendar";
 import { datedOrNull } from "@/modules/events/domain/dated";
 import { EVENT_LINK_KINDS, type EventLinkKind } from "@/modules/events/domain/links";
 import { registrationState } from "@/modules/events/domain/registration-window";
+import type { Checkpoint } from "@/modules/event-checkpoints/domain/checkpoint";
+import { checkpointFinish } from "@/modules/event-checkpoints/domain/start";
 import { hasRouteSection } from "@/modules/events/domain/route-section";
 import { isStorageConfigured } from "@/modules/media/storage";
 import type { RouteMapWords } from "@/modules/events/ui/EventRoute";
@@ -40,6 +42,7 @@ import OpenFoldFromHash from "@/shared/ui/OpenFoldFromHash";
 import { DENSITY } from "@/theme/density";
 import { eventCalendarFileUrl } from "./CalendarAddress";
 import EventAgeRule from "./EventAgeRule";
+import EventCheckpoints from "./EventCheckpoints";
 import EventDescription from "./EventDescription";
 import EventFacts from "./EventFacts";
 import EventLinks from "./EventLinks";
@@ -125,8 +128,11 @@ export default async function EventPageView({
   editHref = null,
   visit,
   preview,
+  checkpoints = [],
 }: {
   event: PublicEventPage;
+  /** The route's checkpoints (§757), read by the caller through the public cache; none draws no section. */
+  checkpoints?: readonly Checkpoint[];
   locale: "ro" | "en";
   slug: string;
   now: Date;
@@ -300,6 +306,15 @@ export default async function EventPageView({
         openRouteLabel={t("openRoute")}
         kindLabels={linkKindLabels}
         mapWords={t.raw("routeMaps") as RouteMapWords}
+      />
+
+      {/* «Puncte de control» (§757), under `#checkpoints`: right under the route's maps, the kilometre,
+          what there is and the cut-off of each point, and the finish when the event has a time limit.
+          Nothing at all when the club has put none. */}
+      <EventCheckpoints
+        checkpoints={checkpoints}
+        finish={dated ? checkpointFinish(dated) : { km: null, limit: null }}
+        locale={locale}
       />
 
       {/* "Linkuri și fișiere" (§332), under `#links`: right after the route's facts and the map,

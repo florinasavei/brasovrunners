@@ -113,7 +113,7 @@ describe("§433 the editor asks two boxes and the action joins them", () => {
   it("both catalogues name the two boxes", () => {
     for (const file of ["messages/ro.json", "messages/en.json"]) {
       const editor = JSON.parse(read(file)).Admin.editor;
-      for (const key of ["duration", "durationHours", "durationMinutesPart", "durationHelp"]) {
+      for (const key of ["duration", "durationHours", "durationMinutesPart", "durationRace", "durationRaceHelp", "durationOther", "durationOtherHelp"]) {
         expect(typeof editor[key], `${file} ${key}`).toBe("string");
       }
       expect(editor.durationMinutes, file).toBeUndefined();
