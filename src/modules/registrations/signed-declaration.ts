@@ -225,7 +225,7 @@ export async function eventMergeValues<T extends Record<string, unknown>>(
     },
     title: event.title,
     timezone: event.timezone,
-    // The event's own number (§329), for a group run's minor path (§NNN): its minimum under eighteen.
+    // The event's own number (§329), for a group run's minor path (§769): its minimum under eighteen.
     minAge: event.minAge,
   };
 }

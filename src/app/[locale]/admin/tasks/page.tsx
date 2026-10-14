@@ -508,7 +508,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
       raceDeclarationsCurrent: await raceDeclarationsCurrent(db, now),
       // §523: the group-run declarations written for one signature per series; null while none is in force.
       groupRunSeriesTextsCurrent: await groupRunDeclarationsSeriesCurrent(db, now),
-      // §NNN: every group-run text in force carries the minor's paragraph (`{{minor}}`), in every language.
+      // §769: every group-run text in force carries the minor's paragraph (`{{minor}}`), in every language.
       groupRunMinorTextsCurrent: await groupRunDeclarationsNameMinor(db, now),
       // The sample documents say so in their own titles, in both languages — the same banner a
       // visitor reads on the public page. Nothing else distinguishes them from the real thing,

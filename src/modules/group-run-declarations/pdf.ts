@@ -23,7 +23,7 @@ const SIGNED_ON_PAGE: Record<Locale, string> = {
 };
 
 /**
- * The same line for a declaration a minor signed beside a parent (§NNN): two typed names, two ticks — the
+ * The same line for a declaration a minor signed beside a parent (§769): two typed names, two ticks — the
  * minor's own signature and the parent's or guardian's — and the one moment and fingerprint, as the race's two
  * signatures are one press (§330).
  */
@@ -47,7 +47,7 @@ export function signedOnPageWords(locale: Locale, when: string, forMinor = false
  * from one value so the two cannot disagree. Required, never defaulted.
  *
  * The signer declares for themselves, so `{{participant}}` and `{{declarant}}` are the signer and
- * `{{guardian}}` an em dash, as on an adult's race declaration — or, since §NNN, a minor signs with a
+ * `{{guardian}}` an em dash, as on an adult's race declaration — or, since §769, a minor signs with a
  * parent, and the page draws **both signatures** with the race's own block (§330, `renderDeclarationPdf`'s
  * `signature.minor`): the minor's own signature, then the parent's or guardian's under it, one date, the
  * heading «DREPT PENTRU CARE SEMNĂM». No identity-document line: a group run asks none of a minor.
@@ -87,7 +87,7 @@ export async function renderGroupRunDeclarationPdf<T extends Record<string, unkn
         signature: {
           typedName: signed.typedName,
           idDocument,
-          // The minor's own signature beside the parent's (§NNN, §330's block), when a parent signed for one.
+          // The minor's own signature beside the parent's (§769, §330's block), when a parent signed for one.
           minor: signed.minorTypedName === null ? null : { typedName: signed.minorTypedName, idDocument: null },
           signedAt: whenStart,
           signedAtInline: when,

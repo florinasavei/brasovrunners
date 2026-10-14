@@ -23,7 +23,7 @@ import { languagePanel, languageTab, openEditorBox, openFold } from "./support/f
 
 const DATE = "2027-04-14";
 
-/** The consent box's words while a minor may sign (§NNN): the minor's tick is above it, and it says the adult's age too. */
+/** The consent box's words while a minor may sign (§769): the minor's tick is above it, and it says the adult's age too. */
 const ACCEPT_ANY_RO = "Am citit declarația de mai sus și o semnez pe propria răspundere: pentru mine, având cel puțin 18 ani împliniți, sau pentru minorul bifat mai sus";
 const ACCEPT_ANY_EN = "I have read the declaration above and sign it on my own responsibility: for myself, being at least 18 years, or for the minor ticked above";
 
@@ -85,7 +85,7 @@ async function sign(page: Page, locale: "ro" | "en", name: string, email: string
   // The run's own minimum age (§440, §515): a run saved with the default fourteen reads as eighteen,
   // which the text states once; no birth date is asked at eighteen.
   await expect(page.locator("#main")).not.toContainText(locale === "ro" ? "am împlinit 18 ani" : "I am 18 or older");
-  // The minor's box (§NNN) is on the page, closed: an adult is asked no date, and its box is not posted.
+  // The minor's box (§769) is on the page, closed: an adult is asked no date, and its box is not posted.
   await expect(page.locator('input[name="birthDate"]')).toBeHidden();
   await expect(page.getByTestId("group-run-minor-fields")).toBeHidden();
   await page.getByRole("textbox", { name: words.email }).fill(email);
@@ -328,7 +328,7 @@ test.describe.serial("§393 a group run's optional self-declaration", () => {
 
   /*
     A run for adults only (its own minimum is eighteen) draws no minor's tick and none of its boxes, whatever the text
-    in force says (§NNN, `groupRunTakesMinors`): the page says it is signed for oneself alone.
+    in force says (§769, `groupRunTakesMinors`): the page says it is signed for oneself alone.
   */
   test("a run whose minimum is eighteen draws no minor's tick, and says it is for adults", async ({ page }) => {
     await withDatabase(async (client) => {
@@ -566,7 +566,7 @@ test.describe.serial("§393 a group run's optional self-declaration", () => {
   });
 
   /*
-    §NNN — a minor signs, with a parent (the owner, 2026-10-14: «o bifă nouă și să semneze minorul +
+    §769 — a minor signs, with a parent (the owner, 2026-10-14: «o bifă nouă și să semneze minorul +
     părintele»). The sample texts of the local seed carry the minor's paragraph, and the run's minimum is the
     default fourteen: the tick is on the page, the minor's boxes open with it, both names are required, a refusal
     brings the form back as it was, and the signature is one row on §330's columns.
@@ -716,7 +716,7 @@ test.describe.serial("§393 a group run's optional self-declaration", () => {
   });
 
   // Nested in the serial run: it needs the run the first test made, and the signatures before it.
-  test.describe("§NNN the minor's boxes without scripts", () => {
+  test.describe("§769 the minor's boxes without scripts", () => {
   test.use({ javaScriptEnabled: false });
 
   test("are always on the page, and a box filled while the tick is not ticked is refused on the tick", async ({ page }) => {

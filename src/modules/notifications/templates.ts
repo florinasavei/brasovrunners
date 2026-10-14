@@ -1215,7 +1215,7 @@ export type TemplateData = {
    */
   minorSigns?: boolean;
   /**
-   * A group run's declaration signed by a minor beside a parent (§NNN, §330's two signatures): the minor's name.
+   * A group run's declaration signed by a minor beside a parent (§769, §330's two signatures): the minor's name.
    * `participantName` is then the parent's or guardian's, the declarant, and both messages say both signed.
    */
   groupRunMinorName?: string;
@@ -2319,7 +2319,7 @@ const T = {
     groupRunMasked: "În copia ta, seria și numărul actului de identitate apar mascate, pentru siguranță: adresa de e-mail nu a fost verificată înainte de trimitere.",
     groupRunNotYou: (contactUrl?: string) =>
       `Dacă nu tu ai semnat această declarație, scrie-ne din pagina de contact${contactUrl ? ` (${contactUrl})` : ""} și o ștergem.`,
-    /** A group run's declaration signed for a minor (§NNN): who signed, in the signer's copy and in the club's archive copy. */
+    /** A group run's declaration signed for a minor (§769): who signed, in the signer's copy and in the club's archive copy. */
     groupRunMinor: (parent: string, minor: string, archive: boolean) =>
       archive
         ? `Declarația este a minorului ${minor}: a semnat-o minorul, pentru el, și ${parent}, ca părinte sau tutore legal.`

@@ -214,7 +214,7 @@ export async function groupRunDeclarationsSeriesCurrent<T extends Record<string,
 }
 
 /**
- * Whether the group-run declaration of one kind that is in force names the minor's paragraph (§NNN,
+ * Whether the group-run declaration of one kind that is in force names the minor's paragraph (§769,
  * `namesGroupRunMinor`) in every language: the gate of the signing page's «Semnez pentru un minor» and of the
  * service's acceptance of it, as the race's second signature waits on `asksForMinorSignature` (§330), and the
  * privacy-notice markers on `describesListNumbers` (§613). Every language, because the page is signed in the
@@ -227,7 +227,7 @@ export async function groupRunMinorPathOffered<T extends Record<string, unknown>
 }
 
 /**
- * Whether every group-run declaration in force names the minor's paragraph (§NNN), in every language: what
+ * Whether every group-run declaration in force names the minor's paragraph (§769), in every language: what
  * `/admin/tasks`' row `groupRunMinorText` reads. Null while none is in force (the editor asks for approving
  * one, §393); false while one in force is older and so offers no tick. Nothing waits on it beyond the tick.
  */

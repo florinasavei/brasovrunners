@@ -602,7 +602,7 @@ describe("owner tasks", () => {
     }
   });
 
-  // §NNN: the group-run declarations for a minor and a parent — the row waits for the text that names `{{minor}}`.
+  // §769: the group-run declarations for a minor and a parent — the row waits for the text that names `{{minor}}`.
   it("asks for the group-run declarations once more while one in force has no minor's paragraph, and says nothing while none is in force", () => {
     expect(stateOf({ ...LAUNCHED, groupRunMinorTextsCurrent: false }, "groupRunMinorText")).toBe("open");
     expect(stateOf(LAUNCHED, "groupRunMinorText")).toBe("done");

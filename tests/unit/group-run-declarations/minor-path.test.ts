@@ -30,7 +30,7 @@ import { DECLARATION_TOKENS } from "@/modules/legal-documents/templates/tokens";
 import type { LegalDocumentBody } from "@/modules/legal-documents/domain/content-hash";
 
 /**
- * A minor signs a group run's declaration, with a parent (§NNN, amending §393, §523 and §330; the owner,
+ * A minor signs a group run's declaration, with a parent (§769, amending §393, §523 and §330; the owner,
  * 2026-10-14): the pure half. The service, the storage, the PDF and the emails are in
  * `tests/integration/group-run-declarations/minor.test.ts`.
  */
@@ -45,7 +45,7 @@ const TEXTS = [
 const paragraphs = (body: LegalDocumentBody) => body.sections.flatMap((section) => [...section.paragraphs]);
 const RUN = { minAge: 14, startsAt: new Date("2026-10-07T16:00:00.000Z"), timezone: "Europe/Bucharest" };
 
-describe("§NNN the template's marker, in both kinds and both languages", () => {
+describe("§769 the template's marker, in both kinds and both languages", () => {
   it("names {{minor}} in all four texts, and the old texts do not", () => {
     for (const { name, body } of TEXTS) expect(namesGroupRunMinor(body), name).toBe(true);
     // A text approved before: the same paragraphs without the minor's.
@@ -91,7 +91,7 @@ describe("§NNN the template's marker, in both kinds and both languages", () => 
   });
 });
 
-describe("§NNN one text, two paths: the paragraphs that apply are kept", () => {
+describe("§769 one text, two paths: the paragraphs that apply are kept", () => {
   const ADULT = { participant: "Ana Popescu", signerAlone: "Ana Popescu", minor: "", guardian: "—" } as const;
   const MINOR = { participant: "Ion Popescu", signerAlone: "", minor: "Ion Popescu", guardian: "Ana Popescu", minimumAge: "" } as const;
 
@@ -142,7 +142,7 @@ describe("§NNN one text, two paths: the paragraphs that apply are kept", () => 
   });
 });
 
-describe("§NNN the blanks a signature fills (§330's declarant and guardian, through the race's own functions)", () => {
+describe("§769 the blanks a signature fills (§330's declarant and guardian, through the race's own functions)", () => {
   const event = { values: { event: "Tura" }, timezone: "Europe/Bucharest" };
   const base = { idDocument: null, locale: "ro" as const, acceptedAt: new Date("2026-10-01T08:00:00.000Z") };
 
@@ -177,7 +177,7 @@ describe("§NNN the blanks a signature fills (§330's declarant and guardian, th
   });
 });
 
-describe("§NNN the rules of the boxes", () => {
+describe("§769 the rules of the boxes", () => {
   it("takes a minor only on a run whose own minimum is under eighteen, and states that minimum (never under fourteen)", () => {
     expect(groupRunTakesMinors(14)).toBe(true);
     expect(groupRunTakesMinors(17)).toBe(true);
@@ -280,7 +280,7 @@ describe("§NNN the rules of the boxes", () => {
   });
 });
 
-describe("§NNN the words, in both languages", () => {
+describe("§769 the words, in both languages", () => {
   const page = { ro: ro.Event.groupRunDeclaration.page, en: en.Event.groupRunDeclaration.page } as const;
 
   it("has every key the page and the refusal summary read, in both catalogues", () => {

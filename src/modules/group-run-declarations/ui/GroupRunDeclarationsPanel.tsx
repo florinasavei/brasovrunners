@@ -110,7 +110,7 @@ export default async function GroupRunDeclarationsPanel({
                       data-testid="group-run-declaration-tick"
                     />
                   )}
-                  {/* A minor's declaration is listed under the minor's own name, the parent beside it (§NNN, §330's two signatures on one row). */}
+                  {/* A minor's declaration is listed under the minor's own name, the parent beside it (§769, §330's two signatures on one row). */}
                   <Typography sx={{ fontWeight: 600 }}>{row.minorTypedName ?? row.typedName}</Typography>
                 </Stack>
                 {row.minorTypedName !== null && (

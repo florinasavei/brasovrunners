@@ -23,7 +23,7 @@ import { readSignedFacts, type RunSeries, seriesMergeValues, seriesRhythmPhrase,
  * is the date's own place — the text says «de obicei» / «usually» and sends a differing date to its
  * page — and its rhythm is read off every date the grouping gives it (`seriesRhythmPhrase`).
  *
- * **The minor's minimum (§NNN).** A text that names `{{minorMinimumAge}}` is given the run's own minimum under
+ * **The minor's minimum (§769).** A text that names `{{minorMinimumAge}}` is given the run's own minimum under
  * eighteen, with its unit — or "" when the run has none (`groupRunTakesMinors`), which drops the minor's
  * paragraph; a text that names it not is given nothing, as for the series.
  *
@@ -77,9 +77,9 @@ export async function groupRunSignedFacts<T extends Record<string, unknown>>(
  *
  * **For oneself** (`minorTypedName` null): `{{participant}}` and `{{declarant}}` are the signer and
  * `{{guardian}}` an em dash; `{{signerAlone}}` is the signer, which keeps the adult's sentence, and
- * `{{minor}}` is "", which drops the minor's paragraphs (§NNN).
+ * `{{minor}}` is "", which drops the minor's paragraphs (§769).
  *
- * **For a minor** (§NNN, as the race's §330 and §108 read it, through the same `declarantValues` and
+ * **For a minor** (§769, as the race's §330 and §108 read it, through the same `declarantValues` and
  * `identityDocumentValues`): `typedName` is the parent's or guardian's, the declarant; `minorTypedName`
  * is the minor's own signature, the participant. `{{participant}}` is the minor, `{{guardian}}` and
  * `{{declarant}}` name the parent; `{{minor}}` keeps the minor's paragraphs and `{{signerAlone}}` is

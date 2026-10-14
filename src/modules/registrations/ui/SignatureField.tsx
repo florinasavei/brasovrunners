@@ -107,7 +107,7 @@ export default function SignatureField({
    */
   help?: string;
   /**
-   * Whether the browser refuses an empty box. Always, but for a group run's minor box (§NNN), which sits in a
+   * Whether the browser refuses an empty box. Always, but for a group run's minor box (§769), which sits in a
    * block a browser with scripts off shows to every signer: there the server asks for it, and names the box.
    */
   required?: boolean;

@@ -107,7 +107,7 @@ describe("§393 the two templates", () => {
   it("carry the race declaration's tokens for an adult signer, and ask for no identity document (§418)", () => {
     for (const body of [groupRunAsphaltRo, groupRunAsphaltEn, groupRunTrailRo, groupRunTrailEn]) {
       // `minimumAge` since §440: the run's own minimum, in a sentence of its own; the series
-      // sentence's three since §523; since §NNN the minor's path: who signs (`guardian`, `minor`), the minor's
+      // sentence's three since §523; since §769 the minor's path: who signs (`guardian`, `minor`), the minor's
       // minimum (`minorMinimumAge`) and the adult's own sentence (`signerAlone`).
       expect([...mergeFieldsIn(body)].sort()).toEqual([
         "event",
@@ -425,7 +425,7 @@ describe("§393 the two templates", () => {
       // On the day of each run (§523): the text covers every date of the run.
       expect(TEXTS[surface].ro).toContain("Declar că am cel puțin {{minimumAge}} împliniți la data fiecărei alergări la care particip.");
       expect(TEXTS[surface].en).toContain("I declare that I am at least {{minimumAge}} old on the day of each run I take part in.");
-      // Signed personally, for oneself, on the adult's path; a minor's own paragraphs are behind `{{minor}}` (§NNN).
+      // Signed personally, for oneself, on the adult's path; a minor's own paragraphs are behind `{{minor}}` (§769).
       expect(TEXTS[surface].ro).toContain("Eu, {{signerAlone}}, semnez această declarație personal, doar pentru mine.");
       expect(TEXTS[surface].en).toContain("I, {{signerAlone}}, sign this declaration personally, for myself only.");
     }

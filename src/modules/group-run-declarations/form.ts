@@ -8,7 +8,7 @@ export const GROUP_RUN_FORM_FIELDS = [
   "birthDate",
   "email",
   "accepted",
-  // The minor's path (§NNN): the tick, the minor's own signature, the parent's tick; the parent's own name is `typedName`.
+  // The minor's path (§769): the tick, the minor's own signature, the parent's tick; the parent's own name is `typedName`.
   "minor",
   "minorTypedName",
   "guardianAgrees",
@@ -25,7 +25,7 @@ export type GroupRunFormField = (typeof GROUP_RUN_FORM_FIELDS)[number];
 export const GROUP_RUN_TOO_YOUNG = "tooYoung";
 
 /**
- * The marker beside `birthDate` when a minor's date is eighteen or more on the run's day (§NNN): the tick says
+ * The marker beside `birthDate` when a minor's date is eighteen or more on the run's day (§769): the tick says
  * «sub 18 ani», and the race decides who is a minor from the date (`isMinorOn`), so an adult's date is refused
  * on the minor's path with its own words, never as «unreadable» or «too young».
  */
@@ -38,7 +38,7 @@ export function parseGroupRunInvalid(value: string | undefined): GroupRunFormFie
 }
 
 /**
- * The names the minor's path posts (§NNN): the tick, the parent's tick and the minor's own signature — beside
+ * The names the minor's path posts (§769): the tick, the parent's tick and the minor's own signature — beside
  * `typedName` (the parent's) and `birthDate` (the minor's, counted and dropped). One list for the page, which
  * says which of them are the minor's, and the action, which reads them.
  */
@@ -66,7 +66,7 @@ export const GROUP_RUN_DRAFT_FIELDS = [
   "birthDate",
   "email",
   "typedName",
-  // The minor's boxes (§NNN): both ticks and the minor's own name come back after a refusal, as the race's do.
+  // The minor's boxes (§769): both ticks and the minor's own name come back after a refusal, as the race's do.
   "minor",
   "minorTypedName",
   "guardianAgrees",

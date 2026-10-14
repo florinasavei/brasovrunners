@@ -34,7 +34,7 @@ export function signingOpen(event: { editorialStatus: string; eventStatus: strin
  * carries one sentence, «Declar că am cel puțin {{minimumAge}} împliniți la data alergării», and this
  * is its value: the run's number, which the editor's group-run box starts and stops at eighteen,
  * read as eighteen for a run saved before with the race's default of fourteen. This is the **adult's**
- * age: the declaration signed for oneself. Since §NNN a minor signs on a path of their own, beside a
+ * age: the declaration signed for oneself. Since §769 a minor signs on a path of their own, beside a
  * parent (`groupRunTakesMinors`, `minorSigningRefusal`), under the run's own number when it is under
  * eighteen (`groupRunMinorMinimumAge`) — the number this function lifts to eighteen for the adult.
  */
@@ -43,7 +43,7 @@ export function groupRunMinimumAge(minAge: number): number {
 }
 
 /**
- * Whether a run takes a minor at all (§NNN, amending §393): its own minimum age (§329, §515) is under
+ * Whether a run takes a minor at all (§769, amending §393): its own minimum age (§329, §515) is under
  * eighteen. A run at eighteen or more is for adults, and its page offers no «Semnez pentru un minor» whatever
  * text is in force; a run saved with fourteen — the platform's floor and the editor's default — takes minors from
  * fourteen, which is what its page and its structured data already said (`EventAgeRule`), while the adult's
@@ -53,13 +53,13 @@ export function groupRunTakesMinors(minAge: number): boolean {
   return effectiveMinimumAge(minAge) < ADULT_AGE;
 }
 
-/** The minimum age a minor's declaration states (§NNN): the run's own number, never under the platform's fourteen. */
+/** The minimum age a minor's declaration states (§769): the run's own number, never under the platform's fourteen. */
 export function groupRunMinorMinimumAge(minAge: number): number {
   return effectiveMinimumAge(minAge);
 }
 
 /**
- * What the minor's boxes refuse (§NNN), the race's rule for two signatures (§330) on a group run: ticked, both
+ * What the minor's boxes refuse (§769), the race's rule for two signatures (§330) on a group run: ticked, both
  * names — the minor's own signature and the parent's tick «Sunt părintele sau tutorele legal și sunt de acord» —
  * are required (the parent's own typed name is the page's `typedName`, as the declarant's is the race's); not
  * ticked, none is asked and none may have been filled in. A minor's boxes filled while the tick is not — a
@@ -97,7 +97,7 @@ export function birthDateRefusal(
   event: { minAge: number; startsAt: Date; timezone: string },
   birthDate: string | undefined,
   /**
-   * The date is the minor's (§NNN): always asked on that path, counted against the run's own minimum under eighteen
+   * The date is the minor's (§769): always asked on that path, counted against the run's own minimum under eighteen
    * and refused at eighteen or more on the run's day (`GROUP_RUN_TOO_OLD`).
    */
   minor = false,
@@ -108,14 +108,14 @@ export function birthDateRefusal(
   const value = (birthDate ?? "").trim();
   if (ageOn(value, day) === null) return ["birthDate"];
   if (isUnderMinimumAge(value, day, minAge)) return ["birthDate", GROUP_RUN_TOO_YOUNG];
-  // A minor is under eighteen on the run's day (§NNN): the tick's own words, and the race's rule (`isMinorOn`).
+  // A minor is under eighteen on the run's day (§769): the tick's own words, and the race's rule (`isMinorOn`).
   // An adult signs their own declaration, with no tick.
   const age = ageOn(value, day);
   return minor && age !== null && age >= ADULT_AGE ? ["birthDate", GROUP_RUN_TOO_OLD] : [];
 }
 
 /**
- * The oldest birth date a minor may have on the run's day (§NNN): the day after the latest birth date that is
+ * The oldest birth date a minor may have on the run's day (§769): the day after the latest birth date that is
  * already eighteen (`latestBirthDateFor`), so the minor's box can say «sub 18 ani» as it is typed, with the very
  * arithmetic `birthDateRefusal` refuses with.
  */
@@ -150,7 +150,7 @@ export const GROUP_RUN_DECLARATION_ID_DOCUMENT_DAYS = 7;
  * (§10.4 — never a raw compare, so `Ana@Example.ro` is `ana@example.ro`) and the name as typed, read
  * loosely — case, accents and spacing make no other person («Ana  Popescu», «ana popescu», «Ană
  * Popescu»). The name is part of it because an address may be a family's (§389): a parent and a
- * grown child who share one sign one declaration each — and, since §NNN, the minor's name when a parent signs for
+ * grown child who share one sign one declaration each — and, since §769, the minor's name when a parent signs for
  * a child, so one parent's declarations for two children (or for themselves and a child) are each their own.
  * Null for an address that is not one.
  */
@@ -168,7 +168,7 @@ export function signerIdentity(email: string, typedName: string, minorTypedName?
     .trim()
     .toLowerCase()
     .replace(/\s+/g, " ");
-  // The minor's name, read as loosely, after the parent's: never the same key as an adult's own (§NNN).
+  // The minor's name, read as loosely, after the parent's: never the same key as an adult's own (§769).
   const minor = foldName(minorTypedName ?? "");
   return minor === "" ? `${canonical}\n${name}` : `${canonical}\n${name}\nminor:${minor}`;
 }
@@ -178,9 +178,9 @@ export type SeriesSignature = {
   id: string;
   legalDocumentId: string;
   email: string;
-  /** The declarant: the adult's own name, the parent's or guardian's on a minor's declaration (§NNN). */
+  /** The declarant: the adult's own name, the parent's or guardian's on a minor's declaration (§769). */
   typedName: string;
-  /** The minor's own signature when a parent signs beside them (§NNN, §330); null or absent for an adult's. */
+  /** The minor's own signature when a parent signs beside them (§769, §330); null or absent for an adult's. */
   minorTypedName?: string | null;
   acceptedAt: Date;
 };
