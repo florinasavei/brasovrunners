@@ -13,7 +13,7 @@ CREATE TABLE "event_volunteer_role_choices" (
 --> statement-breakpoint
 ALTER TABLE "event_volunteers" ALTER COLUMN "role_id" DROP NOT NULL;--> statement-breakpoint
 ALTER TABLE "event_volunteer_role_choices" ADD CONSTRAINT "event_volunteer_role_choices_volunteer_id_event_volunteers_id_fk" FOREIGN KEY ("volunteer_id") REFERENCES "public"."event_volunteers"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "event_volunteer_role_choices" ADD CONSTRAINT "event_volunteer_role_choices_role_id_event_volunteer_roles_id_fk" FOREIGN KEY ("role_id") REFERENCES "public"."event_volunteer_roles"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "event_volunteer_role_choices" ADD CONSTRAINT "event_volunteer_role_choices_role_id_event_volunteer_roles_id_fk" FOREIGN KEY ("role_id") REFERENCES "public"."event_volunteer_roles"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 CREATE INDEX "event_volunteer_role_choices_role_idx" ON "event_volunteer_role_choices" USING btree ("role_id");--> statement-breakpoint
 INSERT INTO "event_volunteer_role_choices" ("volunteer_id", "role_id", "created_at")
 SELECT "id", "role_id", "created_at" FROM "event_volunteers" WHERE "role_id" IS NOT NULL

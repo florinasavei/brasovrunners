@@ -10,9 +10,11 @@ import { auditMigration } from "../../../scripts/migration-check.mjs";
 /**
  * Migration `0149_volunteer_role_choices` (§NNN, amending §754), proven on real PostgreSQL (PGlite): a volunteer
  * listed before it — one role, `role_id NOT NULL` — keeps that role as the one given and gets it as their one choice;
- * afterwards an offer may have no role given (the column accepts NULL) and several choices; a role somebody chose is
- * not deleted under them (RESTRICT) and a volunteer's choices go with the volunteer (CASCADE). The backfill is safe to
- * run twice, and the file only expands.
+ * afterwards an offer may have no role given (the column accepts NULL) and several choices; a volunteer's choices go
+ * with the volunteer, and an event goes whole — roles, people and choices (both references CASCADE: a RESTRICT on the
+ * role refused deleting an event with an offer, the choice reached only through the people's second-level cascade;
+ * the service refuses a role with choosers before the database is asked). The backfill is safe to run twice, and the
+ * file only expands.
  */
 const MIGRATIONS = "src/db/migrations";
 const TAG = "0149_volunteer_role_choices";
@@ -85,7 +87,7 @@ describe("migration 0149_volunteer_role_choices — each volunteer's role become
     expect(rows[0]?.n).toBe(2);
   });
 
-  it("lets an offer have no role given and several choices; keeps a chosen role from being deleted; drops the choices with the volunteer", async () => {
+  it("lets an offer have no role given and several choices, never the same twice, and drops the choices with the volunteer", async () => {
     const MARIA = "cccccccc-0000-4000-8000-000000000003";
     await client.exec(`
       INSERT INTO event_volunteers (id, event_id, role_id, name, email, canonical_email, canonicalization_version, phone, source)
@@ -96,13 +98,22 @@ describe("migration 0149_volunteer_role_choices — each volunteer's role become
     expect(rows[0]?.n).toBe(2);
     // The same choice twice is one row (the primary key).
     await expect(client.exec(`INSERT INTO event_volunteer_role_choices (volunteer_id, role_id) VALUES ('${MARIA}', '${WATER}')`)).rejects.toThrow();
-    // Ion is gone: his choice goes with him; Finish is still Maria's choice, so it cannot be deleted.
+    // Ion is gone: his choice goes with him.
     await client.exec(`DELETE FROM event_volunteers WHERE id = '${ION}'`);
-    await expect(client.exec(`DELETE FROM event_volunteer_roles WHERE id = '${FINISH}'`)).rejects.toThrow();
-    await client.exec(`DELETE FROM event_volunteers WHERE id = '${MARIA}'`);
-    const left = await client.query<{ volunteer_id: string }>(`SELECT volunteer_id FROM event_volunteer_role_choices`);
-    expect(left.rows).toEqual([{ volunteer_id: ANA }]);
-    await client.exec(`DELETE FROM event_volunteer_roles WHERE id = '${FINISH}'`);
+    const left = await client.query<{ volunteer_id: string; role_id: string }>(`SELECT volunteer_id, role_id FROM event_volunteer_role_choices ORDER BY volunteer_id, role_id`);
+    expect(left.rows).toEqual([
+      { volunteer_id: ANA, role_id: WATER },
+      { volunteer_id: MARIA, role_id: WATER },
+      { volunteer_id: MARIA, role_id: FINISH },
+    ]);
+  });
+
+  it("deletes an event with its roles, its people and their choices — the two-level cascade never stops on a choice", async () => {
+    await client.exec(`DELETE FROM events WHERE id = '${EVENT}'`);
+    for (const table of ["event_volunteer_role_choices", "event_volunteers", "event_volunteer_roles"]) {
+      const { rows } = await client.query<{ n: number }>(`SELECT count(*)::int AS n FROM ${table}`);
+      expect(rows[0]?.n, table).toBe(0);
+    }
   });
 
   it("only expands: a new type value, a new table, a NOT NULL relaxed and a backfill — nothing dropped or tightened", () => {

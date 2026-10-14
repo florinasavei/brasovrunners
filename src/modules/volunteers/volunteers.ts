@@ -365,7 +365,8 @@ export async function changeVolunteerRole<T extends Record<string, unknown>>(
     const summary = { id: current.id, nameRo: current.nameRo };
 
     if (request.kind === "delete") {
-      // Anybody given the role, or who ticked it (§NNN) — cancelled people too: both references are RESTRICT.
+      // Anybody given the role, or who ticked it (§NNN) — cancelled people too: the people are asked to move first,
+      // never dropped from a role under them (the choices' own reference cascades only for an event's delete).
       const [people] = await tx.select({ n: count() }).from(eventVolunteers).where(eq(eventVolunteers.roleId, current.id));
       const [choosers] = await tx.select({ n: count() }).from(eventVolunteerRoleChoices).where(eq(eventVolunteerRoleChoices.roleId, current.id));
       if ((people?.n ?? 0) + (choosers?.n ?? 0) > 0) throw new DomainError("VOLUNTEER_ROLE_HAS_PEOPLE", "move the volunteers to another role first", ["roleId"]);

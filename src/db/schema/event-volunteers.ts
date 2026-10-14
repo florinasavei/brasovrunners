@@ -173,9 +173,13 @@ export const eventVolunteers = pgTable(
  * faci» or the organizers' own ticks. The person's offer, not a place: nothing here counts against a role's need —
  * the organizers then give each volunteer one role (`event_volunteers.role_id`), which may be any of the event's.
  *
- * The volunteer's rows go with the volunteer (`CASCADE`: deleting a person, or the retention sweep, takes them);
- * a role somebody ticked is not deleted under them (`RESTRICT`, as the assigned role is): the service says so first.
- * Migration `0149` made each existing volunteer's role their one choice.
+ * The volunteer's rows go with the volunteer (`CASCADE`: deleting a person, or the retention sweep, takes them).
+ * A role somebody ticked is not deleted under them: the service refuses it (`VOLUNTEER_ROLE_HAS_PEOPLE`, as for a
+ * role given). The reference to the role is `CASCADE` at the database, not `RESTRICT`: deleting an **event** cascades
+ * to its roles and to its volunteers, and the choices would be reached only through the volunteers' second-level
+ * cascade — after the roles' check, so a `RESTRICT` (or `NO ACTION`) here refused every event with an offer
+ * (`tests/integration/volunteers/card.test.ts` deletes one). Migration `0149` made each existing volunteer's role
+ * their one choice.
  */
 export const eventVolunteerRoleChoices = pgTable(
   "event_volunteer_role_choices",
@@ -185,12 +189,12 @@ export const eventVolunteerRoleChoices = pgTable(
       .references(() => eventVolunteers.id, { onDelete: "cascade" }),
     roleId: uuid("role_id")
       .notNull()
-      .references(() => eventVolunteerRoles.id, { onDelete: "restrict" }),
+      .references(() => eventVolunteerRoles.id, { onDelete: "cascade" }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
     primaryKey({ columns: [t.volunteerId, t.roleId] }),
-    // Who ticked a role: the RESTRICT's check on a role's delete, and the card's count of a role's choices.
+    // Who ticked a role: the service's check before a role's delete, and the cascade's own lookup.
     index("event_volunteer_role_choices_role_idx").on(t.roleId),
   ],
 );
