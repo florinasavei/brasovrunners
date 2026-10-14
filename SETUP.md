@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.18-2026-10-14 -->
+<!-- PROJECT_BASELINE: BR-V3.19-2026-10-14 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V3.18-2026-10-14`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.19-2026-10-14`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -1510,7 +1510,7 @@ else's: they are marked **YOURS**. Everything else below is a value, not a place
 | Înscrieri | Confirmarea participării: cu câte zile înainte se cere | **YOURS** — the default **7** asks everyone to confirm a week out |
 | Înscrieri | …și cu câte zile înainte expiră | **YOURS** — the default **2**: an unconfirmed place goes to the waiting list two days before (when somebody waits). Changing either number later moves the places already reserved by the window to the new deadline in the same save — the card says how many before you press, the banner after; inside an open window each of those people is emailed the new deadline. The last call to sign goes «Setări» → «Termene» → «Ultima chemare la semnat…» hours before the deadline (48 by default) |
 | Înscrieri | Numerele de concurs (BIB) încep de la | **1**, or **100** if the club wants three-digit numbers |
-| Înscrieri | Culoarea numerelor de concurs (BIB) | the band colour on the printed bib; any of the palette's |
+| Înscrieri → «Numere de concurs (BIB)» → «Cum arată numărul de concurs» → «Antet» | Culoarea numerelor de concurs (BIB) | the band colour on the printed bib; any of the palette's |
 | Înscrieri | Declarația pe care o semnează participantul | the approved **EVENT_DECLARATION** — the only entry in the list on production |
 | Înscrieri | Publică lista participanților | leave **off**. It goes on only once the privacy notice describes it |
 | Înscrieri | Clubul pe lista publică | **«Doar» the club's name** (the default, §753, §756): the «Club» column shows the club's own name for everyone who typed the club (BVR, the full name, any usual spelling, «.ro» after it, one typo in a word forgiven, a digit never), with or without an account on «Echipa»; every other cell is blank, and the column is not drawn when none has a value. «Cum l-au scris» shows what people typed, silly text included; «Nu arăta clubul» draws no column. Display only: the backoffice, the exports, the desk and the bibs keep the typed club |

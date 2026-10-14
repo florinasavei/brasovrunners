@@ -4,10 +4,15 @@ import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import ActionForm, { type ActionFormAction } from "@/shared/forms/ActionForm";
+import { ACTION_ICONS } from "@/shared/ui/action-icons";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import GlyphButtonLink from "@/shared/ui/GlyphButtonLink";
 import Panel from "@/shared/ui/Panel";
 import QuietHelp from "@/shared/ui/QuietHelp";
+import TipSpan from "@/shared/ui/TipSpan";
+
+/** The range heading's glyph (§759): the printer, the verb the range belongs to. */
+const RangeGlyph = ACTION_ICONS.print;
 
 /** The two small forms the card's controls belong to, by id (`form="…"`). */
 export const BIB_ASSIGN_FORM = "bib-assign";
@@ -120,6 +125,8 @@ async function SpareBibsSection({ spares, mayReserve }: { spares: SpareCard; may
  */
 export async function BibPrintCard({ eventId, total, unprinted, mayAssign, onlyTest, attention, spares = null }: Props) {
   const t = await getTranslations("Admin");
+  // What «Alocă numerele» does, then when it is needed — two lines, one tooltip (`TOOLTIP_TEXT_SX` keeps the break).
+  const assignWords = `${t("bibs.assignHelp")}\n${t("bibs.assignHelpMore")}`;
   return (
     <Panel glyph="print"
       collapsible
@@ -139,16 +146,38 @@ export async function BibPrintCard({ eventId, total, unprinted, mayAssign, onlyT
           {unprinted > 0 && total > 0 ? ` ${t("editor.boxes.bibPrint.unprinted", { count: unprinted })}` : ""}
           <QuietHelp text={t("bibs.helpMore")} />
         </Typography>
-        <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ alignItems: { sm: "center" }, flexWrap: "wrap", rowGap: 1 }}>
-          {mayAssign && (
-            <Box>
+        {/*
+          «Alocă numerele» on a row of its own (§759; the owner, 2026-10-13: «nu înțeleg ce face butonul de
+          „Alocă numerele"… îmi trebuie ceva tooltip pt el»): what it does in plain words on hover (the
+          house's `TipSpan`) and behind the «?» beside it for a thumb (`QuietHelp`).
+        */}
+        {mayAssign && (
+          // A 12-pixel gap: `QuietHelp`'s invisible 44-pixel target reaches 14 pixels out from its glyph, so without it the «?» covered the button's edge.
+          <Stack direction="row" sx={{ alignItems: "center", gap: 1.5 }} data-testid="bib-assign-row">
+            <TipSpan title={assignWords}>
               {/* The question is the assign form's own (`BibPrintForms`, §384); this button only submits it. */}
               <GlyphButton icon="number" type="submit" form={BIB_ASSIGN_FORM} variant="outlined" size="small" sx={{ minHeight: 44 }}>
                 {t("bibs.assign")}
               </GlyphButton>
-            </Box>
-          )}
-          {total > 0 && (
+            </TipSpan>
+            <QuietHelp text={assignWords} testId="bib-assign-help" />
+          </Stack>
+        )}
+        {/*
+          «Tipărește numerele (PDF)» (§759): «De la» and «Până la» belong to the PDF, not to
+          the allocation — under a heading that names the print, never «doar» over a button that says «toate»,
+          the range in its help, beside the download buttons, a divider above them. The
+          form wiring is the sheet's own GET (`BIB_DOWNLOAD_FORM`), unchanged.
+        */}
+        {total > 0 && (
+          <Box sx={{ borderTop: 1, borderColor: "divider", pt: 1.5 }} data-testid="bib-print-range">
+            <Typography variant="subtitle2" component="h5" sx={{ display: "flex", alignItems: "center", gap: 0.75, mb: 0.5 }}>
+              <RangeGlyph aria-hidden fontSize="small" sx={{ color: "text.secondary" }} />
+              {t("bibs.rangeTitle")}
+            </Typography>
+            <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 1 }}>
+              {t("bibs.rangeHelp")}
+            </Typography>
             <Stack direction="row" spacing={1} sx={{ alignItems: "center", flexWrap: "wrap", gap: 1 }}>
               <TextField
                 name="from"
@@ -174,8 +203,8 @@ export async function BibPrintCard({ eventId, total, unprinted, mayAssign, onlyT
                 {t("bibs.downloadOnePerPage")}
               </GlyphButton>
             </Stack>
-          )}
-        </Stack>
+          </Box>
+        )}
         {spares && <SpareBibsSection spares={spares} mayReserve={mayAssign} />}
         {/* Every bib as it will print, on its own page (§94): drawn on request. */}
         {total > 0 && (

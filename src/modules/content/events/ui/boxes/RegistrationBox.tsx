@@ -468,34 +468,15 @@ export default async function RegistrationBox({
                     openWhen={{ attention: Boolean(bibCounts && bibCounts.unprinted > 0 && event && now && withinRaceWeek(event, now, clubDeadlines)) }}
                   >
                     <Stack spacing={2}>
-                      <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-                        <RecallField
-                          name="event.bibStartNumber"
-                          label={t("editor.bibStartNumber")}
-                          helperText={t("editor.bibStartNumberHelp")}
-                          defaultValue={event?.bibStartNumber ?? 1}
-                          {...box("bibStartNumber", { inputMode: "numeric" })}
-                          sx={{ width: { sm: 220 } }}
-                        />
-                        {/* A palette, not a colour picker (§177): the club's own is the empty choice. */}
-                        <RecallField
-                          select
-                          name="event.bibColour"
-                          label={t("editor.bibColour")}
-                          helperText={t("editor.bibColourHelp")}
-                          defaultValue={event?.bibColour ?? ""}
-                          slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}
-                          sx={{ width: { sm: 220 } }}
-                        >
-                          <option value="">{t("editor.bibColours.club")}</option>
-                          {BIB_COLOURS.map((choice) => (
-                            <option key={choice.hex} value={choice.hex}>
-                              {t(`editor.bibColours.${choice.key}`)}
-                            </option>
-                          ))}
-                          {event?.bibColour && !colour && <option value={event.bibColour}>{event.bibColour}</option>}
-                        </RecallField>
-                      </Stack>
+                      {/* The band's colour (§173) is the designer's «Antet» now (§759), with the rest of the header. */}
+                      <RecallField
+                        name="event.bibStartNumber"
+                        label={t("editor.bibStartNumber")}
+                        helperText={t("editor.bibStartNumberHelp")}
+                        defaultValue={event?.bibStartNumber ?? 1}
+                        {...box("bibStartNumber", { inputMode: "numeric" })}
+                        sx={{ width: { sm: 220 } }}
+                      />
                       {event && <BoxNote>{t("editor.boxes.bibs.startChange")}</BoxNote>}
                       <BibDesignPanel
                         eventId={event?.id ?? null}

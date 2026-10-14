@@ -173,7 +173,11 @@ describe("§249 the bib's design, saved and read back", () => {
     // than the crops (§560), none of theirs either.
     // Nor the members' bib (§664), younger still, nor «Cum arată numărul» (§735), which reads `plain`.
     // Nor the sponsors' place, the profile and the emergency phone (§750): they read «Jos de tot», off and none.
-    const footerKeys = ["showEmail", "showPartners", "showEventInFooter", "showWebsite", "footerText", "headerImageCrop", "sponsorImageCrop", "member", "numberFormat", "sponsorPlace", "showProfile", "showEmergency", "emergencyPhone", "emergencyUpsideDown", "showDistance", "numberStubs", "showCheckpoints", "showCheckpointTimes"];
+    // Nor the profile's source, picture, figures and orientation, the phone's label and second number (§759).
+    const footerKeys = [
+      "showEmail", "showPartners", "showEventInFooter", "showWebsite", "footerText", "headerImageCrop", "sponsorImageCrop", "member", "numberFormat", "sponsorPlace", "showProfile", "showEmergency", "emergencyPhone", "emergencyUpsideDown", "showDistance", "numberStubs", "showCheckpoints", "showCheckpointTimes",
+      "profileSource", "profileImageSrc", "showProfileFigures", "profileOrientation", "emergencyLabel", "emergencyPhoneLabel", "emergencyPhone2", "emergencyPhone2Label",
+    ];
     const before = Object.fromEntries(
       Object.entries({ ...DEFAULT_BIB_DESIGN, numberScale: "large" }).filter(([key]) => !footerKeys.includes(key)),
     );
@@ -210,6 +214,8 @@ describe("§249 the bib's design, saved and read back", () => {
       cardImageCrop: crop,
       label: `Membru ${"B".repeat(17)}`,
       mark: false,
+      // «Semnul de membru» (§759): none saved, the star.
+      markShape: "star",
     });
   });
 

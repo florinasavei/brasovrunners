@@ -31,6 +31,8 @@ test.describe("§317 the footer, composed in the designer", () => {
     const preview = page.getByTestId("bib-design-preview").locator("img");
     await expect(preview).toHaveAttribute("src", /[?&]showEmail=1(&|$)/);
 
+    // The small print is in «Subsol și sponsori» (§759), a fold of its own.
+    await openFold(page.getByTestId("bib-section-footer"));
     const footer = page.getByTestId("bib-design-footer");
     const email = footer.getByRole("checkbox", { name: /Adresa de email a clubului/ });
     // A thumb's target, like every other box in the panel (BR-REQ-041-01 criterion 6).
@@ -70,7 +72,10 @@ test.describe("§560 the sponsors' band: upload, crop, preview", () => {
     await openFold(panel);
     const preview = page.getByTestId("bib-design-preview").locator("img");
 
+    // The sponsors' band is a named sub-card of «Subsol și sponsori» (§759), its «Calitate» row inside it.
+    await openFold(page.getByTestId("bib-section-footer"));
     const band = page.getByTestId("bib-picture-sponsors");
+    await expect(band.getByTestId("image-quality")).toBeVisible();
     // The three ways, each a thumb's target with its glyph (BR-REQ-041-01 criterion 6, §521).
     const upload = band.getByText("Încarcă o imagine");
     await expect(upload).toBeVisible();
@@ -127,6 +132,8 @@ test.describe("§664 the members' number, designed in the panel", () => {
     await openEditorBox(page, "Participare și înscrieri");
     await openEditorBox(page, "Numere de concurs (BIB)");
     await openFold(page.getByTestId("bib-design"));
+    // «Membrii» (§759), the designer's last section.
+    await openFold(page.getByTestId("bib-section-members"));
 
     const members = page.getByTestId("bib-design-member");
     const preview = page.getByTestId("bib-design-preview-member").locator("img");
@@ -161,6 +168,15 @@ test.describe("§664 the members' number, designed in the panel", () => {
     await mark.check();
     await expect(preview).toHaveAttribute("src", /[?&]memberMark=1(&|$)/, { timeout: 10_000 });
 
+    // «Semnul de membru» (§759): the star by default, then a heart — each radio a thumb's target.
+    const shapes = page.getByTestId("bib-member-mark-shape");
+    await expect(shapes.getByRole("radio", { name: "Steluță" })).toBeChecked();
+    await expect(preview).toHaveAttribute("src", /[?&]memberMarkShape=star(&|$)/, { timeout: 10_000 });
+    const heart = shapes.getByRole("radio", { name: "Inimă" });
+    expect((await shapes.locator("label").filter({ hasText: "Inimă" }).boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+    await heart.check();
+    await expect(preview).toHaveAttribute("src", /[?&]memberMarkShape=heart(&|$)/, { timeout: 10_000 });
+
     const picture = await page.request.get((await preview.getAttribute("src")) as string);
     expect(picture.status()).toBe(200);
     expect(picture.headers()["content-type"]).toBe("image/png");
@@ -168,12 +184,15 @@ test.describe("§664 the members' number, designed in the panel", () => {
 });
 
 /**
- * §750 — «Locul benzii cu sponsori», «Profilul traseului», «Telefon pentru urgențe» and the header
- * picture's warning, in the panel: each follows into the preview's address before anything is saved.
- * Nothing is saved; the featured event has no route GPX, so the profile's tick is greyed and says why.
+ * §750, amended §759 — the designer in its sections, top to bottom as the number prints: «Antet» (the
+ * badge, the header picture and its warning), «Profilul și urgențele» (the profile's source, its picture,
+ * its figures and orientation; the phone's label and two numbers, turned), «Subsol și sponsori» (the
+ * sponsors' place, the stubs). Each follows into the preview's address before anything is saved.
+ * Nothing is saved; the featured event has no route GPX, so the drawn profile says why and a picture
+ * is offered instead.
  */
-test.describe("§750 the sponsors' place, the profile, the emergency phone and the header's warning", () => {
-  test("each is a box of the panel and travels in the preview's address", async ({ page }) => {
+test.describe("§750 §759 the designer's sections: header, footer, the profile and the emergency phones", () => {
+  test("each is a box of its section and travels in the preview's address", async ({ page }) => {
     await signIn(page, "Dev Administrator");
     await ensureRegistrationIsOpen(page);
     await page.reload();
@@ -184,32 +203,82 @@ test.describe("§750 the sponsors' place, the profile, the emergency phone and t
     await openFold(panel);
     const preview = page.getByTestId("bib-design-preview").locator("img");
 
-    // «Jos de tot, în subsol» is the default; «Deasupra subsolului» is today's place.
-    const place = panel.getByLabel("Locul benzii cu sponsori");
+    // Six named sections, each closed with its heading in sight until opened.
+    for (const title of ["Antet", "Numărul", "Numele", "Profilul și urgențele", "Subsol și sponsori", "Membrii"]) {
+      await expect(panel.getByRole("heading", { name: new RegExp(`^${title}`), level: 5 })).toBeVisible();
+    }
+
+    // «Subsol și sponsori»: «Jos de tot, în subsol» is the default; «Deasupra subsolului» is today's place; the stubs.
+    const footer = page.getByTestId("bib-section-footer");
+    await openFold(footer);
+    const place = footer.getByLabel("Locul benzii cu sponsori");
     await expect(place).toHaveValue("bottom");
     await expect(preview).toHaveAttribute("src", /[?&]sponsorPlace=bottom(&|$)/);
     await place.selectOption("above");
     await expect(preview).toHaveAttribute("src", /[?&]sponsorPlace=above(&|$)/, { timeout: 10_000 });
+    const stubs = footer.getByRole("checkbox", { name: "Numărul și pe capetele subsolului" });
+    await expect(stubs).not.toBeChecked();
+    await stubs.check();
+    await expect(preview).toHaveAttribute("src", /[?&]numberStubs=1(&|$)/, { timeout: 10_000 });
 
-    // «Profilul traseului»: greyed without a GPX, with the reason beside it, and nothing in the address.
+    // «Profilul și urgențele»: the profile's tick is never greyed — a picture needs no GPX.
+    await openFold(page.getByTestId("bib-section-profile"));
     const extras = page.getByTestId("bib-design-extras");
     const profile = extras.getByRole("checkbox", { name: "Profilul traseului" });
-    await expect(profile).toBeDisabled();
-    await expect(extras).toContainText("Încarcă GPX-ul traseului în „Traseul”.");
+    await expect(profile).toBeEnabled();
     await expect(preview).toHaveAttribute("src", /[?&]showProfile=0(&|$)/);
+    await profile.check();
+    await expect(preview).toHaveAttribute("src", /[?&]showProfile=1(&|$)/, { timeout: 10_000 });
+    // No GPX on the featured event: the drawn profile says why, and a picture is the way.
+    await expect(extras).toContainText("Evenimentul nu are GPX: încarcă-l în „Traseul” sau alege o poză.");
+    const source = page.getByTestId("bib-profile-source");
+    await expect(source.getByRole("radio", { name: "Desenat din traseul evenimentului (GPX)" })).toBeChecked();
+    const profilePicture = page.getByTestId("bib-picture-profile");
+    await expect(profilePicture).toBeHidden();
+    await source.getByRole("radio", { name: "O poză încărcată" }).check();
+    await expect(preview).toHaveAttribute("src", /[?&]profileSource=picture(&|$)/, { timeout: 10_000 });
+    await expect(profilePicture).toBeVisible();
+    // Its own sub-card with its «Calitate» row, and never a crop box: the picture is fitted whole.
+    await expect(profilePicture.getByTestId("image-quality")).toBeVisible();
+    // A wide strip, at least 200 pixels on each side: the upload's own floor for any picture (`media/limits.ts`).
+    const drawing = await sharp({ create: { width: 2400, height: 240, channels: 3, background: "#ffffff" } }).jpeg().toBuffer();
+    await profilePicture.locator('input[type="file"]').setInputFiles({ name: "profil.jpg", mimeType: "image/jpeg", buffer: drawing });
+    await expect(preview).toHaveAttribute("src", /[?&]profileImageSrc=/, { timeout: 30_000 });
+    await expect(page.getByTestId("bib-picture-profile-crop")).toHaveCount(0);
 
-    // «Telefon pentru urgențe»: the box shows only once ticked, and the phone joins the address.
+    // The figures beside it: on by default, off takes the whole width.
+    const figures = extras.getByRole("checkbox", { name: "Arată distanța și diferența de nivel lângă profil" });
+    await expect(figures).toBeChecked();
+    await expect(preview).toHaveAttribute("src", /[?&]showProfileFigures=1(&|$)/);
+    await figures.uncheck();
+    await expect(preview).toHaveAttribute("src", /[?&]showProfileFigures=0(&|$)/, { timeout: 10_000 });
+
+    // «Orientarea profilului»: normal by default, turned for the runner.
+    const orientation = page.getByTestId("bib-profile-orientation");
+    await expect(orientation.getByRole("radio", { name: "Normal" })).toBeChecked();
+    await orientation.getByRole("radio", { name: "Întors, ca să-l citească alergătorul" }).check();
+    await expect(preview).toHaveAttribute("src", /[?&]profileOrientation=turned(&|$)/, { timeout: 10_000 });
+
+    // «Telefon pentru urgențe»: the boxes show only once ticked; the label and two numbers with their names join the address.
     const emergency = extras.getByRole("checkbox", { name: "Telefon pentru urgențe" });
     expect((await emergency.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
     const phone = extras.getByRole("textbox", { name: "Telefonul organizatorilor" });
     await expect(phone).toBeHidden();
     await emergency.check();
     await expect(phone).toBeVisible();
-    await phone.fill("0722 000 000");
+    await extras.getByRole("textbox", { name: "Eticheta telefonului" }).fill("Urgențe traseu");
+    await extras.getByRole("textbox", { name: "Numele de lângă primul telefon" }).fill("Coordonator");
+    await phone.fill("0700 000 001");
+    await extras.getByRole("textbox", { name: "Al doilea telefon (opțional)" }).fill("0700 000 002");
+    await extras.getByRole("textbox", { name: "Numele de lângă al doilea telefon" }).fill("Medic");
     await expect(preview).toHaveAttribute("src", /[?&]showEmergency=1(&|$)/, { timeout: 10_000 });
-    await expect(preview).toHaveAttribute("src", /[?&]emergencyPhone=0722\+000\+000(&|$)/, { timeout: 10_000 });
+    await expect(preview).toHaveAttribute("src", /[?&]emergencyPhone=0700\+000\+001(&|$)/, { timeout: 10_000 });
+    await expect(preview).toHaveAttribute("src", /[?&]emergencyLabel=Urgen%C8%9Be\+traseu(&|$)/, { timeout: 10_000 });
+    await expect(preview).toHaveAttribute("src", /[?&]emergencyPhoneLabel=Coordonator(&|$)/, { timeout: 10_000 });
+    await expect(preview).toHaveAttribute("src", /[?&]emergencyPhone2=0700\+000\+002(&|$)/, { timeout: 10_000 });
+    await expect(preview).toHaveAttribute("src", /[?&]emergencyPhone2Label=Medic(&|$)/, { timeout: 10_000 });
 
-    // «Tipărit invers»: ticked by default while the phone shows (the trail practice), and it travels too.
+    // «Tipărit invers»: ticked by default while the phone shows (the trail practice) — with the profile turned, one block.
     const upsideDown = extras.getByRole("checkbox", { name: "Tipărit invers" });
     await expect(upsideDown).toBeChecked();
     await expect(preview).toHaveAttribute("src", /[?&]emergencyUpsideDown=1(&|$)/);
@@ -217,16 +286,14 @@ test.describe("§750 the sponsors' place, the profile, the emergency phone and t
     await expect(preview).toHaveAttribute("src", /[?&]emergencyUpsideDown=0(&|$)/, { timeout: 10_000 });
     await upsideDown.check();
 
-    // The distance badge and the footer's two stubs: off until ticked, each in the address.
-    const badge = extras.getByRole("checkbox", { name: "Distanța pe număr" });
-    const stubs = extras.getByRole("checkbox", { name: "Numărul și pe capetele subsolului" });
+    // «Antet»: the distance badge, off until ticked.
+    const header = page.getByTestId("bib-section-header");
+    await openFold(header);
+    const badge = header.getByRole("checkbox", { name: "Distanța pe număr" });
     await expect(badge).not.toBeChecked();
-    await expect(stubs).not.toBeChecked();
     await expect(preview).toHaveAttribute("src", /[?&]showDistance=0(&|$)/);
     await badge.check();
-    await stubs.check();
     await expect(preview).toHaveAttribute("src", /[?&]showDistance=1(&|$)/, { timeout: 10_000 });
-    await expect(preview).toHaveAttribute("src", /[?&]numberStubs=1(&|$)/, { timeout: 10_000 });
 
     const drawn = await page.request.get((await preview.getAttribute("src")) as string);
     expect(drawn.status()).toBe(200);
@@ -235,13 +302,37 @@ test.describe("§750 the sponsors' place, the profile, the emergency phone and t
     // The header picture hides the event's name: said while a picture is chosen and the name is ticked.
     const warning = page.getByTestId("bib-header-warning");
     await expect(warning).toBeHidden();
-    const header = page.getByTestId("bib-picture-header");
+    const headerPicture = page.getByTestId("bib-picture-header");
     const strip = await sharp({ create: { width: 2400, height: 400, channels: 3, background: "#2255ee" } }).jpeg().toBuffer();
-    await header.locator('input[type="file"]').setInputFiles({ name: "antet.jpg", mimeType: "image/jpeg", buffer: strip });
+    await headerPicture.locator('input[type="file"]').setInputFiles({ name: "antet.jpg", mimeType: "image/jpeg", buffer: strip });
     await expect(page.getByTestId("bib-picture-header-crop-surface")).toBeVisible({ timeout: 30_000 });
     await expect(warning).toBeVisible();
     await expect(warning).toContainText("ascunde numele evenimentului");
-    await panel.getByRole("checkbox", { name: "Numele evenimentului" }).uncheck();
+    await header.getByRole("checkbox", { name: "Numele evenimentului" }).uncheck();
     await expect(warning).toBeHidden();
+  });
+});
+
+/**
+ * §759 — «Alocă numerele» and its «?» are two thumb targets side by side, and neither covers the other:
+ * `QuietHelp`'s invisible 44-pixel overlay reaches 14 pixels out from its 16-pixel glyph, so the row's
+ * gap keeps that overlay clear of the button's right edge — a tap on the button's edge submits it.
+ */
+test.describe("§759 the assign button's «?» never covers the button", () => {
+  test("the help's 44-pixel target starts after the button ends", async ({ page }) => {
+    await signIn(page, "Dev Administrator");
+    await ensureRegistrationIsOpen(page);
+    await page.reload();
+    await hydrated(page);
+    await openEditorBox(page, "Participare și înscrieri");
+    await openEditorBox(page, "Numere de concurs (BIB)");
+    await openFold(page.getByTestId("bib-print"));
+    const row = page.getByTestId("bib-assign-row");
+    const button = await row.getByRole("button", { name: "Alocă numerele" }).boundingBox();
+    const help = await row.getByTestId("bib-assign-help").boundingBox();
+    expect(button && help).toBeTruthy();
+    // The overlay is centred on the glyph and 44 pixels wide.
+    const overlayLeft = help!.x + help!.width / 2 - 22;
+    expect(overlayLeft).toBeGreaterThanOrEqual(button!.x + button!.width);
   });
 });

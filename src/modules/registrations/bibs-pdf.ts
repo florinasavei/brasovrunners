@@ -16,8 +16,10 @@ import {
   numberScaleFactor,
 } from "./bib-design";
 import { checkpointGlyphLines } from "./bib-checkpoints";
-import type { BibProfileDrawing } from "./bib-profile";
-import { bibFooterLines, bibFooterParts } from "./bib-footer";
+import type { BibProfileDrawing, BibProfileFigureLines } from "./bib-profile";
+import { bibProfileRow } from "./bib-profile-row";
+import { bibFooterLines, bibFooterParts, bibFooterWidth } from "./bib-footer";
+import { BIB_MEMBER_MARK_PATHS, BIB_MEMBER_MARK_VIEWBOX, bibMemberMarkBox, isVectorMark } from "./bib-member-mark";
 import { BIB_PICTURE_BOX, type BibPictureSlot, bibPictureDrawing } from "./bib-picture-frame";
 import {
   A4_PAGE,
@@ -27,12 +29,13 @@ import {
   BIB_MARGIN,
   BIB_PAPER,
   type BibHeaderLayout,
+  bibEmergencyFit,
   bibExtrasHeight,
+  bibExtrasTurn,
   bibNameReserve,
   bibNumberArea,
   bibNumberFit,
   bibStubScale,
-  MEMBER_MARK_CHECK,
 } from "./bib-geometry";
 import { bibHeader } from "./bib-header";
 import type { BibRow } from "./bibs";
@@ -109,13 +112,15 @@ export type BibSheetInput = {
    * caps their size and hands over what it got — `null` where it got nothing, which prints the
    * coloured band exactly as before (§249).
    */
-  pictures?: { header?: Buffer | null; sponsors?: Buffer | null; memberHeader?: Buffer | null; memberCard?: Buffer | null };
+  pictures?: { header?: Buffer | null; sponsors?: Buffer | null; memberHeader?: Buffer | null; memberCard?: Buffer | null; profile?: Buffer | null };
   /**
    * «Profilul traseului» (§750): the route's profile with its words, already read from the event's
    * GPX by the caller (`bib-extras.ts`). Drawn only while the design's tick is on; absent, none is.
    */
   profile?: BibProfileDrawing | null;
-  /** The word before the emergency phone (§750) — «Urgențe» — in the sheet's language; the phone is the design's. */
+  /** The figures beside the club's picture of the profile (§759), from `bib-extras.ts`; null draws the picture across the strip. */
+  profileFigures?: BibProfileFigureLines | null;
+  /** The word before the emergency phone when the club typed none (§750, §759) — «Urgențe» — in the sheet's language; the numbers are the design's. */
   emergencyLabel?: string;
   /** «21K» for the header's badge (§750), from `bib-extras.ts`; drawn only while the design's tick is on. */
   distanceBadge?: string | null;
@@ -250,19 +255,36 @@ export function bibSheetFooterLines(
 const ASSETS = path.join(process.cwd(), "src", "theme", "pdf");
 
 export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
-  const [regular, bold, logo] = await Promise.all([
-    readFile(path.join(ASSETS, "Roboto-Regular.ttf")),
-    readFile(path.join(ASSETS, "Roboto-Bold.ttf")),
-    readFile(path.join(ASSETS, "logo-white.png")),
-  ]);
   const band = bibBandColour(input.bandColour);
   const bandText = bandTextColour(band);
   const design = input.design ?? DEFAULT_BIB_DESIGN;
   const L = BIB_LAYOUT;
-  // The two lines under the number (§750): the route's profile when ticked and read, the emergency phone when ticked and typed.
-  const profile = design.showProfile ? (input.profile ?? null) : null;
-  const emergency = bibEmergencyLine(design, input.emergencyLabel ?? "");
-  const extrasHeight = bibExtrasHeight(profile !== null, emergency !== null);
+  // The member mark (§750, its shape §759): the club's logo is a picture, read only when it is the chosen mark.
+  const markShape = design.member.markShape;
+  const markBox = bibMemberMarkBox(markShape);
+  const logoMark = design.member.enabled && design.member.mark && markShape === "logo";
+  const [regular, bold, logo, clubLogo] = await Promise.all([
+    readFile(path.join(ASSETS, "Roboto-Regular.ttf")),
+    readFile(path.join(ASSETS, "Roboto-Bold.ttf")),
+    readFile(path.join(ASSETS, "logo-white.png")),
+    logoMark ? readFile(path.join(ASSETS, "logo.png")) : Promise.resolve(null),
+  ]);
+  /*
+    The two rows under the number (§750): the route's profile when ticked and drawable — from the GPX, or
+    the club's picture of it (§759) — and the emergency phone when ticked and typed, its words fitted to
+    the card (§759). What turns half a circle for the runner is decided once (`bibExtrasTurn`).
+  */
+  const profilePicture = input.pictures?.profile ?? null;
+  const profileRow = bibProfileRow(design, { profile: input.profile ?? null, profileFigures: input.profileFigures ?? null }, profilePicture !== null);
+  const emergencyText = bibEmergencyLine(design, input.emergencyLabel ?? "");
+  const emergency = emergencyText ? bibEmergencyFit(emergencyText, bibFooterWidth) : null;
+  const extrasHeight = bibExtrasHeight(profileRow !== null, emergency !== null);
+  const turn = bibExtrasTurn({
+    profile: profileRow !== null,
+    profileTurned: design.profileOrientation === "turned",
+    phone: emergency !== null,
+    phoneTurned: design.emergencyUpsideDown,
+  });
 
   const doc = new PDFDocument({
     size: "A4",
@@ -300,6 +322,9 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
   // The club's own pictures, embedded once each for the same reason the lockup is (§249).
   const headerPicture = input.pictures?.header ? embed(input.pictures.header) : null;
   const sponsorPicture = input.pictures?.sponsors ? embed(input.pictures.sponsors) : null;
+  // The profile's picture (§759) and the club's logo as the member mark (§759), embedded once each too.
+  const profileImage = profileRow?.kind === "picture" && profilePicture ? embed(profilePicture) : null;
+  const logoMarkImage = clubLogo ? embed(clubLogo) : null;
   /**
    * A place's picture through the one crop rule (`bib-picture-frame.ts`, §560), at the place's top
    * left corner: the crop clipped to the place's box — the size pdfkit read from the file makes the
@@ -520,23 +545,24 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
     }
 
     /*
-      The member mark (§750): a ring with a check in it, in the number's own ink, at the card's left
-      inset under the header (`BIB_LAYOUT.memberMark*`) — only on a member's number, only when ticked.
+      The member mark (§750; its shape the club's, §759): at the card's left inset under the header
+      (`BIB_LAYOUT.memberMark*`) — only on a member's number, only when ticked. A star or a registry glyph
+      is its one SVG path (`bib-member-mark.ts`), read by pdfkit's own path reader, scaled from its 24-unit
+      box into the mark's and filled in the number's ink; the club's logo is the blue lockup, fitted whole
+      in its wider box and never recoloured — on a member's card its own white ground is its plate.
     */
     const markDrawn = row.member === true && design.member.enabled && design.member.mark;
     if (markDrawn) {
-      const size = L.memberMarkSize;
       const markLeft = left + L.inset;
       const markTop = top + L.bandHeight + L.memberMarkTop;
-      doc.save();
-      doc.lineWidth(L.memberMarkWeight).strokeColor(ink).lineJoin("round").lineCap("round");
-      doc.circle(markLeft + size / 2, markTop + size / 2, size / 2 - L.memberMarkWeight / 2).stroke();
-      MEMBER_MARK_CHECK.forEach(([x, y], index) => {
-        if (index === 0) doc.moveTo(markLeft + x * size, markTop + y * size);
-        else doc.lineTo(markLeft + x * size, markTop + y * size);
-      });
-      doc.stroke();
-      doc.restore();
+      if (isVectorMark(markShape)) {
+        doc.save();
+        doc.translate(markLeft, markTop).scale(markBox.width / BIB_MEMBER_MARK_VIEWBOX);
+        doc.path(BIB_MEMBER_MARK_PATHS[markShape]).fill(ink);
+        doc.restore();
+      } else if (logoMarkImage) {
+        doc.image(logoMarkImage, markLeft, markTop, { fit: [markBox.width, markBox.height], valign: "center" });
+      }
     }
 
     /*
@@ -574,7 +600,7 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
       centred in the same strip, at the name's baseline, so the handwritten name sits where a
       printed one would. `stripTop` is the strip's top; the name is set `nameTop` into it.
     */
-    const nameReserve = bibNameReserve(markDrawn, nameAbove);
+    const nameReserve = bibNameReserve(markDrawn ? markBox.width : null, nameAbove);
     const drawName = (stripTop: number) => {
       if (row.registeredName === null) {
         const lineY = stripTop + L.blankLineTop;
@@ -630,12 +656,42 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
       vector paths in the number's own ink; «Start» and «Sosire» under the two ends, the distance and the
       gain in two lines beside the chart. All of it from `bib-geometry.ts`'s points, as the picture draws.
     */
-    const emergencyTop = regionFoot - stripeHeight - (emergency !== null ? L.emergencyHeight : 0);
-    if (profile) {
-      const rowTop = emergencyTop - L.profileHeight;
+    // The block under the name: the profile's row, then the phone's line (§750); turned as `turn` says (§759).
+    const blockTop = regionFoot - stripeHeight - extrasHeight;
+    const profileTop = blockTop;
+    const emergencyTop = blockTop + (profileRow !== null ? L.profileHeight : 0);
+    const centreX = left + BIB_CARD.width / 2;
+    /** Half a circle about a box's own centre: what the runner reads looking down at the chest. */
+    const turned = (boxTop: number, boxHeight: number, draw: () => void) => {
+      doc.save();
+      doc.rotate(180, { origin: [centreX, boxTop + boxHeight / 2] });
+      draw();
+      doc.restore();
+    };
+    const drawProfile = () => {
+      if (!profileRow) return;
+      const rowTop = profileTop;
       const chartLeft = left + L.inset;
+      const chartWidth = profileRow.chartWidth;
+      // The figures beside the chart or the picture, when the club shows them and they are known (§759).
+      const drawFigures = () => {
+        if (!profileRow.figures) return;
+        doc.font("body").fontSize(L.profileTextSize).fillColor(ink);
+        const textLeft = chartLeft + chartWidth + L.profileTextGap;
+        if (profileRow.figures.distance) doc.text(profileRow.figures.distance, textLeft, rowTop + L.profileDistanceTop, { lineBreak: false });
+        if (profileRow.figures.gain) doc.text(profileRow.figures.gain, textLeft, rowTop + L.profileGainTop, { lineBreak: false });
+      };
+      // «O poză încărcată» (§759): the club's picture, fitted whole in the chart's box, no marks on it.
+      if (profileRow.kind === "picture") {
+        if (profileImage) {
+          doc.image(profileImage, chartLeft, rowTop + L.profilePictureTop, { fit: [chartWidth, L.profilePictureHeight], align: "center", valign: "center" });
+        }
+        drawFigures();
+        return;
+      }
+      const profile = profileRow.drawing;
       const chartTop = rowTop + L.profileChartTop;
-      const at = (point: readonly [number, number]) => [chartLeft + point[0] * L.profileChartWidth, chartTop + (1 - point[1]) * L.profileChartHeight] as const;
+      const at = (point: readonly [number, number]) => [chartLeft + point[0] * chartWidth, chartTop + (1 - point[1]) * L.profileChartHeight] as const;
       const first = at(profile.points[0]);
       const last = at(profile.points[profile.points.length - 1]);
       doc.save();
@@ -651,7 +707,7 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
       // The route's checkpoints (§757, `bib-checkpoints.ts`): a tick down to the chart's foot, and an aid
       // station's cup or fork beside the line — any other point a dot on it — at the picture's points.
       for (const mark of profile.checkpoints?.marks ?? []) {
-        const markX = chartLeft + mark.x * L.profileChartWidth;
+        const markX = chartLeft + mark.x * chartWidth;
         doc.lineWidth(L.checkpointTickWeight).strokeColor(ink).moveTo(markX, chartTop + mark.tickFrom).lineTo(markX, chartTop + L.profileChartHeight).stroke();
         if (mark.glyph === null || mark.glyphY === null) {
           doc.circle(markX, chartTop + (1 - mark.y) * L.profileChartHeight, L.checkpointDot).fill(ink);
@@ -667,31 +723,42 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
       doc.restore();
       doc.font("body").fontSize(L.profileLabelSize).fillColor(ink);
       doc.text(profile.start, chartLeft, rowTop + L.profileLabelTop, { lineBreak: false });
-      doc.text(profile.finish, chartLeft + L.profileChartWidth - doc.widthOfString(profile.finish), rowTop + L.profileLabelTop, { lineBreak: false });
+      doc.text(profile.finish, chartLeft + chartWidth - doc.widthOfString(profile.finish), rowTop + L.profileLabelTop, { lineBreak: false });
       // Their words, «km 12» or «km 12 · 11:30», centred under the ticks in the labels' row — where the crowding rule kept them.
       for (const mark of profile.checkpoints?.marks ?? []) {
         if (!mark.label) continue;
-        doc.text(mark.label, chartLeft + mark.x * L.profileChartWidth - doc.widthOfString(mark.label) / 2, rowTop + L.profileLabelTop, { lineBreak: false });
+        doc.text(mark.label, chartLeft + mark.x * chartWidth - doc.widthOfString(mark.label) / 2, rowTop + L.profileLabelTop, { lineBreak: false });
       }
-      doc.fontSize(L.profileTextSize);
-      const textLeft = chartLeft + L.profileChartWidth + L.profileTextGap;
-      doc.text(profile.distance, textLeft, rowTop + L.profileDistanceTop, { lineBreak: false });
-      doc.text(profile.gain, textLeft, rowTop + L.profileGainTop, { lineBreak: false });
-    }
+      drawFigures();
+    };
 
     /*
       The emergency phone (§750): one centred line at a fixed place on every number, under the profile's
-      row, in the number's ink. Typed by the club — the organizers' number — never the runner's own.
+      row, in the number's ink — its label and up to two numbers with their names (§759), at the size that
+      fits the card (`bibEmergencyFit`). Typed by the club — the organizers' numbers — never the runner's own.
     */
-    if (emergency) {
-      doc.font("body").fontSize(L.emergencySize).fillColor(ink);
-      const width = doc.widthOfString(emergency);
-      const height = doc.heightOfString(emergency, { lineBreak: false });
-      // Upside down (§750): turned half a circle about the line's own centre, so the runner reads it looking down at the chest.
-      doc.save();
-      if (design.emergencyUpsideDown) doc.rotate(180, { origin: [left + BIB_CARD.width / 2, emergencyTop + L.emergencyHeight / 2] });
-      doc.text(emergency, left + (BIB_CARD.width - width) / 2, emergencyTop + (L.emergencyHeight - height) / 2, { lineBreak: false });
-      doc.restore();
+    const drawEmergency = () => {
+      if (!emergency) return;
+      doc.font("body").fontSize(emergency.size).fillColor(ink);
+      const width = doc.widthOfString(emergency.text);
+      const height = doc.heightOfString(emergency.text, { lineBreak: false });
+      doc.text(emergency.text, left + (BIB_CARD.width - width) / 2, emergencyTop + (L.emergencyHeight - height) / 2, { lineBreak: false });
+    };
+
+    /*
+      Turned for the runner (§750, §759): both turned — one block about its own centre, the phone ending
+      above the profile on the paper and right under it for the runner looking down; else each row alone.
+    */
+    if (turn.block) {
+      turned(blockTop, extrasHeight, () => {
+        drawProfile();
+        drawEmergency();
+      });
+    } else {
+      if (turn.profile) turned(profileTop, L.profileHeight, drawProfile);
+      else drawProfile();
+      if (turn.phone) turned(emergencyTop, L.emergencyHeight, drawEmergency);
+      else drawEmergency();
     }
 
     // The sponsors' strip above the small print (§249): the club's crop in the strip's shape, or

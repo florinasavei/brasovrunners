@@ -2717,6 +2717,13 @@
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
+        },
+        "accepts_volunteers": {
+          "name": "accepts_volunteers",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
         }
       },
       "indexes": {
@@ -8303,6 +8310,341 @@
         }
       },
       "isRLSEnabled": false
+    },
+    "public.event_volunteer_roles": {
+      "name": "event_volunteer_roles",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "event_id": {
+          "name": "event_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name_ro": {
+          "name": "name_ro",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name_en": {
+          "name": "name_en",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "needed": {
+          "name": "needed",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description_ro": {
+          "name": "description_ro",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "description_en": {
+          "name": "description_en",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "position": {
+          "name": "position",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "event_volunteer_roles_event_idx": {
+          "name": "event_volunteer_roles_event_idx",
+          "columns": [
+            {
+              "expression": "event_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "position",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "event_volunteer_roles_event_id_events_id_fk": {
+          "name": "event_volunteer_roles_event_id_events_id_fk",
+          "tableFrom": "event_volunteer_roles",
+          "tableTo": "events",
+          "columnsFrom": [
+            "event_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "event_volunteer_roles_needed_positive": {
+          "name": "event_volunteer_roles_needed_positive",
+          "value": "\"event_volunteer_roles\".\"needed\" >= 1"
+        },
+        "event_volunteer_roles_name_length": {
+          "name": "event_volunteer_roles_name_length",
+          "value": "char_length(\"event_volunteer_roles\".\"name_ro\") BETWEEN 1 AND 80 AND char_length(\"event_volunteer_roles\".\"name_en\") BETWEEN 1 AND 80"
+        },
+        "event_volunteer_roles_description_length": {
+          "name": "event_volunteer_roles_description_length",
+          "value": "(\"event_volunteer_roles\".\"description_ro\" IS NULL OR char_length(\"event_volunteer_roles\".\"description_ro\") BETWEEN 1 AND 200) AND (\"event_volunteer_roles\".\"description_en\" IS NULL OR char_length(\"event_volunteer_roles\".\"description_en\") BETWEEN 1 AND 200)"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.event_volunteers": {
+      "name": "event_volunteers",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "event_id": {
+          "name": "event_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "role_id": {
+          "name": "role_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "canonical_email": {
+          "name": "canonical_email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "canonicalization_version": {
+          "name": "canonicalization_version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "phone": {
+          "name": "phone",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "locale": {
+          "name": "locale",
+          "type": "locale",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'ro'"
+        },
+        "state": {
+          "name": "state",
+          "type": "event_volunteer_state",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'REGISTERED'"
+        },
+        "source": {
+          "name": "source",
+          "type": "event_volunteer_source",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "message": {
+          "name": "message",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "note": {
+          "name": "note",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "privacy_notice_version": {
+          "name": "privacy_notice_version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "created_by_staff_user_id": {
+          "name": "created_by_staff_user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "event_volunteers_role_idx": {
+          "name": "event_volunteers_role_idx",
+          "columns": [
+            {
+              "expression": "role_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "event_volunteers_canonical_email_idx": {
+          "name": "event_volunteers_canonical_email_idx",
+          "columns": [
+            {
+              "expression": "canonical_email",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "event_volunteers_event_id_events_id_fk": {
+          "name": "event_volunteers_event_id_events_id_fk",
+          "tableFrom": "event_volunteers",
+          "tableTo": "events",
+          "columnsFrom": [
+            "event_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "event_volunteers_role_id_event_volunteer_roles_id_fk": {
+          "name": "event_volunteers_role_id_event_volunteer_roles_id_fk",
+          "tableFrom": "event_volunteers",
+          "tableTo": "event_volunteer_roles",
+          "columnsFrom": [
+            "role_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "event_volunteers_created_by_staff_user_id_staff_users_id_fk": {
+          "name": "event_volunteers_created_by_staff_user_id_staff_users_id_fk",
+          "tableFrom": "event_volunteers",
+          "tableTo": "staff_users",
+          "columnsFrom": [
+            "created_by_staff_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "event_volunteers_event_canonical_email_unique": {
+          "name": "event_volunteers_event_canonical_email_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "event_id",
+            "canonical_email"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "event_volunteers_name_length": {
+          "name": "event_volunteers_name_length",
+          "value": "char_length(\"event_volunteers\".\"name\") BETWEEN 1 AND 120"
+        },
+        "event_volunteers_message_length": {
+          "name": "event_volunteers_message_length",
+          "value": "\"event_volunteers\".\"message\" IS NULL OR char_length(\"event_volunteers\".\"message\") BETWEEN 1 AND 300"
+        },
+        "event_volunteers_note_length": {
+          "name": "event_volunteers_note_length",
+          "value": "\"event_volunteers\".\"note\" IS NULL OR char_length(\"event_volunteers\".\"note\") BETWEEN 1 AND 500"
+        }
+      },
+      "isRLSEnabled": false
     }
   },
   "enums": {
@@ -8657,6 +8999,23 @@
         "DEV",
         "ADMIN",
         "SUPERADMIN"
+      ]
+    },
+    "public.event_volunteer_source": {
+      "name": "event_volunteer_source",
+      "schema": "public",
+      "values": [
+        "STAFF",
+        "PUBLIC"
+      ]
+    },
+    "public.event_volunteer_state": {
+      "name": "event_volunteer_state",
+      "schema": "public",
+      "values": [
+        "REGISTERED",
+        "CONFIRMED",
+        "CANCELLED"
       ]
     }
   },
