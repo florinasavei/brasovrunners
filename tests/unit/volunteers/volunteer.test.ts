@@ -420,6 +420,9 @@ describe("§754 the CSV", () => {
     volunteeredBefore: "A mai fost voluntar",
     clubMember: "Din grupul clubului",
     shirtSize: "Mărime tricou",
+    guardianName: "Părinte sau tutore",
+    guardianEmail: "Email părinte sau tutore",
+    guardianConsent: "Acordul părintelui",
   };
 
   it("starts with a BOM, ends no line with a bare newline and keeps a formula a text", () => {
@@ -441,6 +444,9 @@ describe("§754 the CSV", () => {
         volunteeredBefore: "Da",
         clubMember: "Nu",
         shirtSize: "M",
+        guardianName: "Maria Popescu",
+        guardianEmail: "maria@example.test",
+        guardianConsent: "Nu",
       },
     ]);
     expect(csv.startsWith("﻿Rolul dat,S-a oferit pentru,Nume")).toBe(true);
@@ -453,8 +459,10 @@ describe("§754 the CSV", () => {
     // §761: the role given, then the roles chosen — a comma inside them quoted.
     expect(lines[1].startsWith('Punct de apă,"Punct de apă, Sosire",')).toBe(true);
     // §765: what the person said about themselves comes after the moment, so no earlier column moves; a comma in the city is quoted.
-    expect(csv.split("\r\n")[0].endsWith("Data,Vârsta,Sex,Orașul,A mai fost voluntar,Din grupul clubului,Mărime tricou")).toBe(true);
-    expect(lines[1].endsWith('2026-10-13T10:00:00.000Z,34,Female,"Brașov, centru",Da,Nu,M')).toBe(true);
+    expect(csv.split("\r\n")[0].includes("Data,Vârsta,Sex,Orașul,A mai fost voluntar,Din grupul clubului,Mărime tricou")).toBe(true);
+    // §768: the parent or guardian of a volunteer under eighteen, appended after the T-shirt: name, address, and the consent as «Da» / «Nu».
+    expect(csv.split("\r\n")[0].endsWith("Mărime tricou,Părinte sau tutore,Email părinte sau tutore,Acordul părintelui")).toBe(true);
+    expect(lines[1].endsWith('2026-10-13T10:00:00.000Z,34,Female,"Brașov, centru",Da,Nu,M,Maria Popescu,maria@example.test,Nu')).toBe(true);
   });
 
   it("§765 leaves an unanswered box empty, never «null» or 0", () => {
@@ -476,9 +484,13 @@ describe("§754 the CSV", () => {
         volunteeredBefore: "Nu",
         clubMember: "Nu",
         shirtSize: "",
+        guardianName: null,
+        guardianEmail: null,
+        guardianConsent: "",
       },
     ]);
-    expect(csv.split("\r\n")[1].endsWith("2026-10-13T10:00:00.000Z,,,,Nu,Nu,")).toBe(true);
+    // An adult: the three guardian columns are empty — never «null».
+    expect(csv.split("\r\n")[1].endsWith("2026-10-13T10:00:00.000Z,,,,Nu,Nu,,,,")).toBe(true);
   });
 });
 

@@ -1025,6 +1025,8 @@ export type TemplateData = {
     chosenEn: string[];
     /** The volunteer agreement's PDF rides along (§758): the person accepted it, and their copy is attached. */
     agreementAttached?: boolean;
+    /** A volunteer under eighteen with a parent or guardian still to accept (§768): the «am primit» says their parent was emailed. */
+    guardianPending?: boolean;
   };
   /**
    * "Detalii actualizate" (§331): which facts the save changed — the place, the start, the
@@ -1810,6 +1812,10 @@ const T = {
         "Organizatorii îți aleg rolul, îți scriu când ți l-au dat și te caută pe email sau la telefon dacă mai trebuie ceva. Până atunci nu ai nimic de făcut: oferta nu e o înscriere la cursă și nu ține loc.",
         // The agreement accepted with the offer (§758): the person's copy, attached — said only when it is.
         ...(d.volunteer?.agreementAttached ? ["Contractul de voluntariat pe care l-ai acceptat e atașat, ca PDF. Păstrează-l: e copia ta."] : []),
+        // Under eighteen (§768): the parent or guardian was emailed their own link; until they accept, the organizers cannot confirm.
+        ...(d.volunteer?.guardianPending
+          ? ["Fiind sub 18 ani, ai nevoie și de acordul unui părinte sau tutore. Părintelui sau tutorelui pe care l-ai trecut i-am trimis un email cu un link; până își dă acordul, organizatorii nu te pot confirma."]
+          : []),
         `Dacă nu tu ai trimis oferta, scrie-ne din pagina de contact și o ștergem; altfel rămâne la organizatori cel mult ${volunteerDays("ro")} de la începutul evenimentului sau de la trimiterea ofertei, dacă e mai târziu.`,
       ],
     },
@@ -1834,6 +1840,19 @@ const T = {
         ...(d.volunteer?.agreementAttached ? ["Contractul e atașat, ca PDF. Păstrează-l: e copia ta."] : []),
         "Dacă nu tu ai acceptat contractul, scrie-ne din pagina de contact.",
       ],
+    },
+    // The parent or guardian of a volunteer under eighteen (§768): the link to read the agreement and accept it in their own name.
+    volunteerGuardianRequest: {
+      subject: (d: TemplateData) => `Acordul tău pentru un voluntar minor la ${d.eventTitle ?? "eveniment"}`,
+      greeting: () => "Bună ziua,",
+      facts: (d: TemplateData) => volunteerFacts("ro", d, { map: "Harta punctului de întâlnire", strava: "Evenimentul pe Strava" }),
+      body: (d: TemplateData) => [
+        `${d.volunteer?.name ?? "O persoană"} s-a oferit voluntar la ${d.eventTitle ?? "eveniment"} și, fiind sub 18 ani, are nevoie de acordul unui părinte sau tutore. Te-a trecut pe tine.`,
+        "Dacă ești părintele sau tutorele lui și ești de acord, citește contractul de voluntariat și acceptă-l în numele tău, cu butonul de mai jos. Contractul spune că ajutorul e neplătit, ce face voluntarul și ce face clubul.",
+        `Linkul este valabil **${d.linkLifetime ?? defaultLinkLifetime("ro")}** și doar pentru tine. Dacă preferi hârtia, poți semna contractul și la organizatori.`,
+        "Dacă nu te așteptai la acest mesaj, ignoră-l: fără acordul tău, voluntarul nu e confirmat.",
+      ],
+      action: "Citește contractul și dă-ți acordul",
     },
     // To each Organizer and Administrator (§754): who offered for which role; the card «Voluntari» has the rest.
     volunteerClubNotice: {
@@ -2322,6 +2341,9 @@ const T = {
     /** The volunteer agreement (§758): whether the person offered on the page or an organizer entered them, they are on the list. */
     privacyFooterVolunteerAgreement: (club: string) =>
       `Primești acest mesaj de la ${club} pentru că ești pe lista voluntarilor unui eveniment al clubului. Cum folosim datele tale:`,
+    /** The guardian's link (§768): the guardian is not on any list — somebody named them as the parent or guardian of a volunteer under eighteen. */
+    privacyFooterGuardian: (club: string) =>
+      `Primești acest mesaj de la ${club} pentru că cineva te-a trecut ca părinte sau tutore al unui voluntar sub 18 ani la un eveniment al clubului. Cum folosim datele tale:`,
     /** The same for a group run's self-declaration (§393): signed on a page, no registration behind it. */
     privacyFooterDeclaration: (club: string) =>
       `Primești acest mesaj de la ${club} pentru că ai semnat o declarație pe site-ul clubului. Cum folosim datele tale:`,
@@ -2581,6 +2603,9 @@ const T = {
         `Thank you! We received your offer to help as a volunteer at ${d.eventTitle ?? "the event"}; what you are willing to do is written above, with the date and place.`,
         "The organizers choose your role, write to you when they have given it, and get in touch by email or phone if anything else is needed. Until then there is nothing for you to do: the offer is not a race registration and holds no place.",
         ...(d.volunteer?.agreementAttached ? ["The volunteer agreement you accepted is attached as a PDF. Keep it: it is your copy."] : []),
+        ...(d.volunteer?.guardianPending
+          ? ["Being under 18, you also need a parent's or guardian's consent. We emailed the parent or guardian you named a link; until they give it, the organizers cannot confirm you."]
+          : []),
         `If you did not send the offer, write to us from the contact page and we will delete it; otherwise the organizers keep it at most ${volunteerDays("en")} from the event's start or from the offer, whichever is later.`,
       ],
     },
@@ -2602,6 +2627,18 @@ const T = {
         ...(d.volunteer?.agreementAttached ? ["The agreement is attached as a PDF. Keep it: it is your copy."] : []),
         "If you did not accept the agreement, write to us from the contact page.",
       ],
+    },
+    volunteerGuardianRequest: {
+      subject: (d: TemplateData) => `Your consent for a young volunteer at ${d.eventTitle ?? "the event"}`,
+      greeting: () => "Hello,",
+      facts: (d: TemplateData) => volunteerFacts("en", d, { map: "Map of the meeting point", strava: "The event on Strava" }),
+      body: (d: TemplateData) => [
+        `${d.volunteer?.name ?? "Someone"} offered to volunteer at ${d.eventTitle ?? "the event"} and, being under 18, needs a parent's or guardian's consent. They named you.`,
+        "If you are their parent or guardian and you agree, read the volunteer agreement and accept it in your own name with the button below. The agreement says the help is unpaid, what the volunteer does and what the club does.",
+        `The link is valid for **${d.linkLifetime ?? defaultLinkLifetime("en")}** and only for you. If you prefer paper, you can also sign the agreement with the organizers.`,
+        "If you were not expecting this message, ignore it: without your consent the volunteer is not confirmed.",
+      ],
+      action: "Read the agreement and give your consent",
     },
     volunteerClubNotice: {
       subject: (d: TemplateData) => `New volunteer for ${d.eventTitle ?? "the event"}`,
@@ -2998,6 +3035,8 @@ const T = {
     privacyFooterInvitation: (club: string) => `This message comes because ${club} entered your name and address to invite you to this event. How we use your data:`,
     privacyFooterVolunteer: (club: string) => `This message comes from ${club} because you offered, on the club's website, to help as a volunteer. How we use your data:`,
     privacyFooterVolunteerAgreement: (club: string) => `This message comes from ${club} because you are on the volunteers' list of one of the club's events. How we use your data:`,
+    privacyFooterGuardian: (club: string) =>
+      `This message comes from ${club} because someone named you as the parent or guardian of a volunteer under 18 at one of the club's events. How we use your data:`,
     privacyFooterDeclaration: (club: string) => `This message comes from ${club} because you signed a declaration on the club's website. How we use your data:`,
     privacyFooterNewsletter: (club: string) =>
       `This message comes from ${club} because you asked for the club's news at this address. Unsubscribe at any time from the link above. How we use your data:`,
@@ -3046,6 +3085,7 @@ const KEY_BY_MESSAGE_TYPE: Record<EmailMessageType, keyof typeof T.ro> = {
   VOLUNTEER_AGREEMENT_REQUEST: "volunteerAgreementRequest",
   VOLUNTEER_AGREEMENT_ACCEPTED: "volunteerAgreementAccepted",
   VOLUNTEER_ROLE_ASSIGNED: "volunteerRoleAssigned",
+  VOLUNTEER_GUARDIAN_REQUEST: "volunteerGuardianRequest",
 };
 
 /** The newsletter's three messages (§445): to an address, never about a registration. */
@@ -3731,6 +3771,8 @@ export function buildTemplateContent(
                 ? copy.privacyFooterInvitation
               : messageType === "VOLUNTEER_RECEIVED"
                 ? copy.privacyFooterVolunteer
+              : messageType === "VOLUNTEER_GUARDIAN_REQUEST"
+                ? copy.privacyFooterGuardian
               : messageType === "VOLUNTEER_AGREEMENT_REQUEST" || messageType === "VOLUNTEER_AGREEMENT_ACCEPTED" || messageType === "VOLUNTEER_ROLE_ASSIGNED"
                 ? copy.privacyFooterVolunteerAgreement
               : NEWSLETTER_MESSAGES.has(messageType)

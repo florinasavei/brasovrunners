@@ -78,6 +78,8 @@ const NOT_WAITED_FOR: ReadonlySet<EmailMessageType> = new Set<EmailMessageType>(
   "VOLUNTEER_AGREEMENT_ACCEPTED",
   // The role given (§761): it leaves at an organizer's press, to somebody on no page.
   "VOLUNTEER_ROLE_ASSIGNED",
+  // The guardian's link (§768): the sign-up's page says the parent is emailed, but the volunteer's own offer is already kept — nobody on a page waits to act.
+  "VOLUNTEER_GUARDIAN_REQUEST",
 ]);
 
 /** Whether somebody on a public page may be waiting for a message of this type (not a club copy). */

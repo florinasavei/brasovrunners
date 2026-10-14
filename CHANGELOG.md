@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V3.27-2026-10-14
+
+- **Volunteers from 14, with a parent's consent, on a page of their own** — the age floor is 14; a person of 14–17 offers with a parent's or guardian's name and address and is confirmed only after the parent accepts the agreement from a single-use link or on paper («Acordul părintelui lipsește» until then), once a privacy notice and an agreement that describe minors are approved; the form is `/evenimente/<slug>/voluntari` (404 while it could not be sent) and the event's page keeps one line and one button. §768.
 ## BR-V3.26-2026-10-14
 
 - **Smaller share buttons; every calendar on the event page** — the event page's share and calendar rows are small pills, and «Adaugă în calendar» offers Google Calendar, Apple Calendar, Outlook.com, Outlook for work or school and the .ics, in the subscription panel's words. §767.

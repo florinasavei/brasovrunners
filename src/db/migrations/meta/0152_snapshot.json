@@ -1,5 +1,5 @@
 {
-  "id": "8a971864-bf7e-4d21-b285-9428df41c9d6",
+  "id": "671afa73-f042-423a-ae3a-dd612a16520f",
   "prevId": "29f9bf0e-5cef-4b4c-a600-21d81d12aa09",
   "version": "7",
   "dialect": "postgresql",
@@ -2052,6 +2052,86 @@
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": false
+        },
+        "guardian_name": {
+          "name": "guardian_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "guardian_email": {
+          "name": "guardian_email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "guardian_document_id": {
+          "name": "guardian_document_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "guardian_accepted_at": {
+          "name": "guardian_accepted_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "guardian_method": {
+          "name": "guardian_method",
+          "type": "volunteer_guardian_method",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "guardian_locale": {
+          "name": "guardian_locale",
+          "type": "locale",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "guardian_text_hash": {
+          "name": "guardian_text_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "guardian_facts": {
+          "name": "guardian_facts",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "guardian_typed_name": {
+          "name": "guardian_typed_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "guardian_recorded_by_staff_user_id": {
+          "name": "guardian_recorded_by_staff_user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "guardian_token_hash": {
+          "name": "guardian_token_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "guardian_token_expires_at": {
+          "name": "guardian_token_expires_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "guardian_requested_at": {
+          "name": "guardian_requested_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "indexes": {
@@ -2097,6 +2177,22 @@
           ],
           "isUnique": false,
           "where": "\"event_volunteers\".\"agreement_document_id\" IS NOT NULL",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "event_volunteers_guardian_document_idx": {
+          "name": "event_volunteers_guardian_document_idx",
+          "columns": [
+            {
+              "expression": "guardian_document_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"event_volunteers\".\"guardian_document_id\" IS NOT NULL",
           "concurrently": false,
           "method": "btree",
           "with": {}
@@ -2167,6 +2263,32 @@
           ],
           "onDelete": "set null",
           "onUpdate": "no action"
+        },
+        "event_volunteers_guardian_document_id_legal_documents_id_fk": {
+          "name": "event_volunteers_guardian_document_id_legal_documents_id_fk",
+          "tableFrom": "event_volunteers",
+          "tableTo": "legal_documents",
+          "columnsFrom": [
+            "guardian_document_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "event_volunteers_guardian_recorded_by_staff_user_id_staff_users_id_fk": {
+          "name": "event_volunteers_guardian_recorded_by_staff_user_id_staff_users_id_fk",
+          "tableFrom": "event_volunteers",
+          "tableTo": "staff_users",
+          "columnsFrom": [
+            "guardian_recorded_by_staff_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -2176,6 +2298,13 @@
           "nullsNotDistinct": false,
           "columns": [
             "agreement_token_hash"
+          ]
+        },
+        "event_volunteers_guardian_token_hash_unique": {
+          "name": "event_volunteers_guardian_token_hash_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "guardian_token_hash"
           ]
         },
         "event_volunteers_event_canonical_email_unique": {
@@ -2228,6 +2357,34 @@
         "event_volunteers_agreement_token_expiry": {
           "name": "event_volunteers_agreement_token_expiry",
           "value": "(\"event_volunteers\".\"agreement_token_hash\" IS NULL) = (\"event_volunteers\".\"agreement_token_expires_at\" IS NULL)"
+        },
+        "event_volunteers_guardian_name_length": {
+          "name": "event_volunteers_guardian_name_length",
+          "value": "\"event_volunteers\".\"guardian_name\" IS NULL OR char_length(\"event_volunteers\".\"guardian_name\") BETWEEN 1 AND 120"
+        },
+        "event_volunteers_guardian_email_length": {
+          "name": "event_volunteers_guardian_email_length",
+          "value": "\"event_volunteers\".\"guardian_email\" IS NULL OR (\"event_volunteers\".\"guardian_name\" IS NOT NULL AND char_length(\"event_volunteers\".\"guardian_email\") BETWEEN 3 AND 320)"
+        },
+        "event_volunteers_guardian_complete": {
+          "name": "event_volunteers_guardian_complete",
+          "value": "(\"event_volunteers\".\"guardian_document_id\" IS NULL) = (\"event_volunteers\".\"guardian_accepted_at\" IS NULL) AND (\"event_volunteers\".\"guardian_document_id\" IS NULL) = (\"event_volunteers\".\"guardian_method\" IS NULL) AND (\"event_volunteers\".\"guardian_document_id\" IS NULL) = (\"event_volunteers\".\"guardian_locale\" IS NULL) AND (\"event_volunteers\".\"guardian_accepted_at\" IS NULL OR \"event_volunteers\".\"guardian_name\" IS NOT NULL)"
+        },
+        "event_volunteers_guardian_typed_name_length": {
+          "name": "event_volunteers_guardian_typed_name_length",
+          "value": "\"event_volunteers\".\"guardian_typed_name\" IS NULL OR char_length(\"event_volunteers\".\"guardian_typed_name\") BETWEEN 1 AND 120"
+        },
+        "event_volunteers_guardian_text_hash_sha256": {
+          "name": "event_volunteers_guardian_text_hash_sha256",
+          "value": "\"event_volunteers\".\"guardian_text_hash\" IS NULL OR \"event_volunteers\".\"guardian_text_hash\" ~ '^[0-9a-f]{64}$'"
+        },
+        "event_volunteers_guardian_token_sha256": {
+          "name": "event_volunteers_guardian_token_sha256",
+          "value": "\"event_volunteers\".\"guardian_token_hash\" IS NULL OR \"event_volunteers\".\"guardian_token_hash\" ~ '^[0-9a-f]{64}$'"
+        },
+        "event_volunteers_guardian_token_expiry": {
+          "name": "event_volunteers_guardian_token_expiry",
+          "value": "(\"event_volunteers\".\"guardian_token_hash\" IS NULL) = (\"event_volunteers\".\"guardian_token_expires_at\" IS NULL)"
         }
       },
       "isRLSEnabled": false
@@ -4553,12 +4710,6 @@
         },
         "id_document": {
           "name": "id_document",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "minor_typed_name": {
-          "name": "minor_typed_name",
           "type": "text",
           "primaryKey": false,
           "notNull": false
@@ -8698,7 +8849,8 @@
         "VOLUNTEER_CLUB_NOTICE",
         "VOLUNTEER_AGREEMENT_REQUEST",
         "VOLUNTEER_AGREEMENT_ACCEPTED",
-        "VOLUNTEER_ROLE_ASSIGNED"
+        "VOLUNTEER_ROLE_ASSIGNED",
+        "VOLUNTEER_GUARDIAN_REQUEST"
       ]
     },
     "public.email_outbox_status": {
@@ -8755,6 +8907,14 @@
       "schema": "public",
       "values": [
         "FORM",
+        "LINK",
+        "PAPER"
+      ]
+    },
+    "public.volunteer_guardian_method": {
+      "name": "volunteer_guardian_method",
+      "schema": "public",
+      "values": [
         "LINK",
         "PAPER"
       ]

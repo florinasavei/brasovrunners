@@ -581,7 +581,11 @@
         "ageMinimum": "Voluntarii trebuie să aibă cel puțin {age}.",
         "sex": "Alege sexul din listă.",
         "city": "Scrie orașul tău.",
-        "shirtSize": "Alege o mărime din listă."
+        "shirtSize": "Alege o mărime din listă.",
+        "guardianName": "Scrie numele părintelui sau tutorelui.",
+        "guardianEmail": "Adresa de email a părintelui sau tutorelui nu pare validă.",
+        "guardianAware": "Bifează că părintele sau tutorele tău știe și e de acord.",
+        "ageMinors": "Clubul nu primește încă voluntari sub 18 ani. Poți ajuta când împlinești 18 ani sau ne poți scrie din pagina de contact."
       },
       "details": "Detalii",
       "profile": {
@@ -591,7 +595,24 @@
         "before": "Am mai fost voluntar în trecut la alte curse",
         "club": "Fac parte din grupul {club}",
         "shirt": "Mărimea tricoului",
-        "shirtHelp": "Evenimentul dă tricouri voluntarilor. Alege mărimea ta sau „Fără tricou”."
+        "shirtHelp": "Evenimentul dă tricouri voluntarilor. Alege mărimea ta sau „Fără tricou”.",
+        "ageHelpMinors": "În ani împliniți; cel puțin {age}. Sub 18 ani îți trebuie și acordul unui părinte."
+      },
+      "page": {
+        "title": "Vreau să fiu voluntar la {event}",
+        "back": "Înapoi la {event}"
+      },
+      "callout": {
+        "line": "Căutăm voluntari: {roles}"
+      },
+      "doneGuardian": "Dacă ai sub 18 ani, părintele sau tutorele tău primește un email cu un link prin care își dă acordul; până atunci organizatorii nu te pot confirma.",
+      "guardian": {
+        "title": "Dacă ai sub 18 ani",
+        "intro": "Un voluntar sub 18 ani are nevoie de acordul unui părinte sau tutore, care primește un email cu un link și acceptă contractul în nume propriu.",
+        "name": "Numele părintelui sau tutorelui",
+        "email": "Emailul părintelui sau tutorelui",
+        "emailHelp": "Aici trimitem linkul pentru acord. Nu îl folosim pentru altceva.",
+        "aware": "Părintele sau tutorele meu știe și e de acord"
       }
     },
     "calendar": {
@@ -1881,7 +1902,11 @@
       "VOLUNTEER_AGREEMENT_ACCEPTED": "Persoana a acceptat deja contractul: nu mai e nimic de trimis sau de înregistrat.",
       "VOLUNTEER_AGREEMENT_NOTICE": "Nota de confidențialitate în vigoare nu descrie încă acceptarea contractului de voluntariat. Aprobă întâi o notă nouă din șablon, în «Documente legale»; «Sarcini» spune cum.",
       "VOLUNTEER_AGREEMENT_REPRINT": "Nu s-a înregistrat: de la tipărire s-a schimbat versiunea contractului sau rolul persoanei. Tipărește din nou PDF-ul de semnat și cere o semnătură pe foaia nouă.",
-      "BADGE_COLOUR_UNREADABLE": "Nu s-a salvat: textul nu se citește bine pe culoarea aleasă. Alege o culoare mai închisă sau mai deschisă."
+      "BADGE_COLOUR_UNREADABLE": "Nu s-a salvat: textul nu se citește bine pe culoarea aleasă. Alege o culoare mai închisă sau mai deschisă.",
+      "VOLUNTEER_GUARDIAN_MISSING": "Acordul părintelui lipsește: un voluntar sub 18 ani se confirmă doar după ce părintele sau tutorele a acceptat contractul, din link sau pe hârtie.",
+      "VOLUNTEER_GUARDIAN_ACCEPTED": "Părintele sau tutorele a acceptat deja contractul: nu mai e nimic de trimis sau de înregistrat.",
+      "VOLUNTEER_GUARDIAN_NO_EMAIL": "Părintele sau tutorele nu are un email trecut, deci nu are cui să-i plece linkul. Acordul se ia pe hârtie, sau adaugă emailul în „Modifică”.",
+      "VOLUNTEER_MINORS_CLOSED": "Clubul nu primește încă voluntari sub 18 ani: nota de confidențialitate și contractul în vigoare nu descriu încă minorii. Aprobă-le întâi; «Sarcini» spune cum."
     },
     "editor": {
       "draftPreview": {
@@ -3327,7 +3352,9 @@
         "volunteerTasks": "Doar în contractul de voluntariat: ce face rolul, din descrierea lui. Fără descriere, propoziția care îl numește dispare",
         "volunteerRoleChoices": "Doar în contractul de voluntariat: rolurile pe care voluntarul le-a bifat, cât încă nu are un rol dat. Cu rol dat, propoziția care le numește dispare",
         "volunteerChoiceTasks": "Doar în contractul de voluntariat: ce face fiecare rol bifat, din descrierile lor. Cu rol dat sau fără descrieri, propoziția dispare",
-        "volunteerProfile": "Doar în nota de confidențialitate: casetele formularului de voluntari despre persoană, între ghilimele. Fără el în nota în vigoare, formularul cere doar bifa vârstei minime"
+        "volunteerProfile": "Doar în nota de confidențialitate: casetele formularului de voluntari despre persoană, între ghilimele. Fără el în nota în vigoare, formularul cere doar bifa vârstei minime",
+        "volunteerGuardian": "Doar în contractul de voluntariat: numele părintelui sau tutorelui unui voluntar minor. La un adult, propoziția dispare. Fără el în contractul în vigoare, nu se primesc minori",
+        "volunteerMinors": "Doar în nota de confidențialitate: casetele părintelui din formularul de voluntari, între ghilimele; fără el, clubul nu primește voluntari sub 18 ani"
       },
       "removeBlockedReferenced": "Nu se poate nici retrage, nici șterge definitiv: {signatures}, {events} și {acknowledgements} depind de ea. «Șterge» de pe rândul ei o scoate din listă.",
       "removeBlockedCurrent": "În vigoare acum — nu se poate nici retrage, nici șterge. Aprobă întâi versiunea următoare; apoi aceasta se poate scoate.",
@@ -4268,6 +4295,17 @@
             "Un jurist ar trebui să citească paragraful: temeiul, scopul (repartizarea pe roluri), tricoul doar cât clubul dă tricouri și faptul că „grupul” e declarația persoanei, nu o verificare.",
             "Deschide ciorna, citește, completează ce a rămas, „Salvează ciorna”, apoi „Aprobă și publică” — în aceeași ședință cu celelalte texte ale voluntarilor."
           ]
+        },
+        "volunteerMinorsTexts": {
+          "title": "Textele pentru voluntarii sub 18 ani",
+          "todo": "Clubul primește voluntari de la 14 ani, dar nota sau contractul în vigoare nu descriu încă minorii. Până le aprobi pe amândouă, formularul refuză orice vârstă sub 18 ani.",
+          "done": "Nota și contractul în vigoare descriu minorii: un voluntar de 14–17 ani se oferă cu numele și emailul părintelui sau tutorelui, iar acesta acceptă contractul din link sau pe hârtie.",
+          "how": [
+            "/admin/legal → cardul „GDPR” → „Regenerează din șablon” → confirmă. Paragraful despre voluntari numește minorii, datele părintelui sau tutorelui și cât timp se păstrează.",
+            "/admin/legal → cardul „Contract de voluntariat” → „Regenerează din șablon” → confirmă. Textul are acum o clauză pentru minori: acordul părintelui și activități potrivite vârstei.",
+            "Un jurist ar trebui să citească ambele texte după Legea nr. 78/2014, cu regulile ei pentru minori, și să confirme vârsta de 14 ani și forma acordului.",
+            "Deschide ciorna, citește, completează ce a rămas, „Salvează ciorna”, apoi „Aprobă și publică” — în aceeași ședință, în ambele limbi."
+          ]
         }
       },
       "freeVerdict": {
@@ -4696,7 +4734,7 @@
       "summaryUnassigned": "{count} de repartizat",
       "standing": "{taken} din {needed}",
       "offer": {
-        "open": "Formularul „Vreau să fiu voluntar” e pe pagina evenimentului.",
+        "open": "Pagina „Vreau să fiu voluntar” e deschisă: pagina evenimentului trimite la ea.",
         "closed": {
           "off": "Formularul public e oprit: bifează mai jos „Primește voluntari pe pagină” ca pagina evenimentului să-l ofere. Lista ta funcționează oricum.",
           "notPublished": "Formularul public nu se arată: evenimentul nu e publicat. Apare pe pagină după publicare.",
@@ -4707,7 +4745,8 @@
           "noAgreement": "Formularul public nu se arată: niciun contract de voluntariat nu e în vigoare. Aprobă-l în «Documente legale»; «Sarcini» spune cum.",
           "noAgreementNotice": "Formularul public nu se arată: nota de confidențialitate în vigoare nu descrie încă acceptarea contractului de voluntariat. «Sarcini» spune ce trebuie aprobat."
         },
-        "profileOff": "Formularul public cere doar bifa vârstei minime: nota în vigoare nu descrie încă vârsta, sexul și orașul voluntarilor. «Sarcini» spune ce trebuie aprobat."
+        "profileOff": "Formularul public cere doar bifa vârstei minime: nota în vigoare nu descrie încă vârsta, sexul și orașul voluntarilor. «Sarcini» spune ce trebuie aprobat.",
+        "minorsOff": "Voluntarii sub 18 ani nu se primesc încă: nota sau contractul în vigoare nu descriu minorii («Sarcini» spune ce se aprobă)."
       },
       "switchOn": "Primește voluntari pe pagină",
       "rolesTitle": "Roluri",
@@ -4781,7 +4820,13 @@
         "club": "Face parte din grupul {club}",
         "ageValue": "Vârsta: {age}",
         "cityValue": "Oraș: {city}",
-        "shirtValue": "Tricou: {size}"
+        "shirtValue": "Tricou: {size}",
+        "guardianTitle": "Părintele sau tutorele (sub 18 ani)",
+        "guardianName": "Numele părintelui sau tutorelui",
+        "guardianEmail": "Emailul părintelui sau tutorelui",
+        "guardianHelp": "Doar pentru un voluntar sub 18 ani. Fără email, acordul se ia pe hârtie, la organizatori.",
+        "guardianValue": "Părinte sau tutore: {name}",
+        "ageHelpMinors": "Opțional. Ani întregi, cel puțin {age}. Sub 18 ani, trece mai jos și părintele sau tutorele."
       },
       "states": {
         "REGISTERED": "Înscris",
@@ -4842,10 +4887,13 @@
         "city": "Orașul",
         "volunteeredBefore": "A mai fost voluntar",
         "clubMember": "Din grupul clubului",
-        "shirtSize": "Mărime tricou"
+        "shirtSize": "Mărime tricou",
+        "guardianName": "Părinte sau tutore",
+        "guardianEmail": "Email părinte sau tutore",
+        "guardianConsent": "Acordul părintelui"
       },
       "badgesLink": "Ecusoane pentru voluntari",
-      "switchHelp": "Bifat, pagina evenimentului arată formularul „Vreau să fiu voluntar”. Debifat, nu se șterge nimic: rolurile și oamenii rămân.",
+      "switchHelp": "Bifat, pagina evenimentului arată „Căutăm voluntari” și un buton către pagina de voluntari. Debifat, nu se șterge nimic: rolurile și oamenii rămân.",
       "shirts": {
         "label": "Oferim tricouri voluntarilor",
         "help": "Bifat, formularul public cere mărimea tricoului și o vezi pe fiecare rând. Debifat, formularul nu cere nicio mărime."
@@ -4855,7 +4903,29 @@
         "club": "Din grupul {club}"
       },
       "yes": "Da",
-      "no": "Nu"
+      "no": "Nu",
+      "guardian": {
+        "missing": "Acordul părintelui lipsește",
+        "accepted": "Acordul părintelui primit",
+        "linkSent": "Link trimis părintelui",
+        "sameAddress": "Aceeași adresă ca a voluntarului",
+        "acceptedLine": "Părintele sau tutorele {guardian}: versiunea {version} · {how} · {when}",
+        "methods": {
+          "LINK": "din linkul trimis pe email",
+          "PAPER": "semnat pe hârtie"
+        },
+        "help": "Un minor se confirmă după acordul părintelui: trimite-i linkul pe email, sau tipărește PDF-ul și apasă „Acordul părintelui pe hârtie”.",
+        "noEmail": "Părintele nu are un email trecut: acordul se ia pe hârtie, sau adaugă emailul în „Modifică”.",
+        "requestedLine": "Ultimul link trimis părintelui: {when}",
+        "send": "Trimite linkul părintelui",
+        "resend": "Trimite din nou linkul părintelui",
+        "pdf": "PDF cu acordul părintelui",
+        "pdfToSign": "PDF de semnat de părinte",
+        "paper": "Acordul părintelui pe hârtie",
+        "paperTitle": "Părintele lui {name} a semnat contractul pe hârtie?",
+        "paperBody": "Se înregistrează că părintele sau tutorele lui {name} a semnat contractul tipărit, versiunea în vigoare, și că tu ai înregistrat semnătura. Păstrează foaia semnată.",
+        "minorsClosed": "Linkul părintelui și „Acordul părintelui pe hârtie” așteaptă: nota sau contractul în vigoare nu descriu minorii («Sarcini»)."
+      }
     },
     "eventTodos": {
       "title": "De făcut pentru pagina evenimentului",
@@ -5840,7 +5910,8 @@
         "VOLUNTEER_CLUB_NOTICE": "Voluntar nou",
         "VOLUNTEER_AGREEMENT_REQUEST": "Contractul de voluntariat",
         "VOLUNTEER_AGREEMENT_ACCEPTED": "Ai acceptat contractul de voluntariat",
-        "VOLUNTEER_ROLE_ASSIGNED": "Rolul tău de voluntar"
+        "VOLUNTEER_ROLE_ASSIGNED": "Rolul tău de voluntar",
+        "VOLUNTEER_GUARDIAN_REQUEST": "Acordul tău pentru un voluntar minor"
       },
       "typesShort": {
         "VERIFY_REGISTRATION_EMAIL": "Confirmă adresa",
@@ -5904,11 +5975,12 @@
         "SHOP_ORDER_PLACED": "Când un membru comandă din magazinul membrilor: comanda și cum se plătește. Butonul duce în zona membrilor.",
         "SHOP_ORDER_PAID": "Când un administrator marchează comanda plătită: membrului care a comandat. Butonul duce în zona membrilor.",
         "SHOP_ORDER_CLUB_NOTICE": "La fiecare comandă din magazin, la adresa din «Magazin» → «Cine primește comenzile», dacă e scrisă.",
-        "VOLUNTEER_RECEIVED": "Când cineva se oferă voluntar pe pagina unui eveniment: confirmarea primirii, cu rolurile alese, evenimentul și faptul că organizatorii îi aleg rolul. Contractul acceptat e atașat ca PDF.",
+        "VOLUNTEER_RECEIVED": "Când cineva se oferă voluntar: confirmarea primirii, cu rolurile alese, evenimentul și faptul că organizatorii îi aleg rolul. Contractul acceptat e atașat ca PDF.",
         "VOLUNTEER_CLUB_NOTICE": "La fiecare ofertă, către fiecare Organizator, Administrator și Superadministrator. Butonul deschide cardul «Voluntari» al evenimentului.",
         "VOLUNTEER_AGREEMENT_REQUEST": "Când un organizator apasă „Trimite linkul contractului” la un voluntar care nu l-a acceptat încă: contractul și linkul de acceptare.",
         "VOLUNTEER_AGREEMENT_ACCEPTED": "Când un voluntar acceptă contractul din link sau un organizator apasă „Semnat pe hârtie”: copia lui, cu contractul atașat ca PDF.",
-        "VOLUNTEER_ROLE_ASSIGNED": "Când organizatorii îi dau unui voluntar un rol, din cardul «Voluntari» al evenimentului: un mesaj scurt care numește rolul, data și locul. Nimic de apăsat."
+        "VOLUNTEER_ROLE_ASSIGNED": "Când organizatorii îi dau unui voluntar un rol, din cardul «Voluntari» al evenimentului: un mesaj scurt care numește rolul, data și locul. Nimic de apăsat.",
+        "VOLUNTEER_GUARDIAN_REQUEST": "Când un voluntar sub 18 ani se oferă, sau un organizator apasă „Trimite linkul părintelui”: contractul și linkul prin care părintele îl acceptă în nume propriu."
       },
       "whenShort": {
         "VERIFY_REGISTRATION_EMAIL": "după trimiterea formularului",
@@ -5951,7 +6023,8 @@
         "VOLUNTEER_CLUB_NOTICE": "la fiecare ofertă, organizatorilor",
         "VOLUNTEER_AGREEMENT_REQUEST": "la „Trimite linkul contractului”",
         "VOLUNTEER_AGREEMENT_ACCEPTED": "după link sau „Semnat pe hârtie”",
-        "VOLUNTEER_ROLE_ASSIGNED": "când organizatorii dau un rol"
+        "VOLUNTEER_ROLE_ASSIGNED": "când organizatorii dau un rol",
+        "VOLUNTEER_GUARDIAN_REQUEST": "când se oferă un voluntar sub 18 ani"
       },
       "clubNotices": {
         "title": "Copiile clubului",
@@ -6574,7 +6647,8 @@
         "VOLUNTEER_CLUB_NOTICE": "Cine s-a oferit și pentru ce roluri se adaugă singur, oricum ai scrie textul. Adresa și telefonul nu sunt niciodată în email: sunt pe card, după autentificare.",
         "VOLUNTEER_AGREEMENT_REQUEST": "Rolul și evenimentul se adaugă singure. Linkul e doar pentru persoana aceasta, se folosește o singură dată, iar unul nou îl înlocuiește pe cel vechi.",
         "VOLUNTEER_AGREEMENT_ACCEPTED": "Rolul și evenimentul se adaugă singure. PDF-ul arată textul acceptat, cu numele, rolul, momentul și amprenta lui.",
-        "VOLUNTEER_ROLE_ASSIGNED": "Rolul, data și locul evenimentului se adaugă singure, oricum ai scrie textul. Mesajul nu are niciun link care să facă ceva."
+        "VOLUNTEER_ROLE_ASSIGNED": "Rolul, data și locul evenimentului se adaugă singure, oricum ai scrie textul. Mesajul nu are niciun link care să facă ceva.",
+        "VOLUNTEER_GUARDIAN_REQUEST": "Voluntarul și evenimentul se adaugă singure. Linkul e doar pentru părinte sau tutore, se folosește o singură dată, iar unul nou îl înlocuiește pe cel vechi."
       },
       "confirmationRetry": "Cui nu a confirmat, linkul pleacă singur din nou la {retry} după ultimul email, cel mult {times}; se socotește și «Retrimite». Termenul nu se mută.",
       "confirmationRetryOff": "Nu se retrimite singur: în „Termene”, numărul de retrimiteri e 0."
@@ -10850,7 +10924,9 @@
       "declarationWaitlisted": "Declarație semnată: ești pe lista de așteptare.",
       "familySignNothingLeft": "Nu mai este nicio declarație de semnat la acest eveniment: lista de mai jos arată unde este fiecare înscriere.",
       "familySignOneLeft": "A mai rămas o singură declarație de semnat la acest eveniment: se semnează din linkul primit pe email pentru acea persoană.",
-      "familyWithdrawn": "Gata: înscrierea e anulată, iar adresa primește un email de confirmare."
+      "familyWithdrawn": "Gata: înscrierea e anulată, iar adresa primește un email de confirmare.",
+      "volunteerSent": "Oferta ta de voluntar a ajuns la organizatori.",
+      "volunteerGuardianAccepted": "Acordul tău a fost înregistrat."
     },
     "toast": {
       "saved": "Salvat.",
@@ -11059,7 +11135,7 @@
       "eventTodoSaved": "Rând salvat.",
       "eventTodoUnchanged": "Rândul spunea deja asta; nimic de schimbat.",
       "volunteersOn": "Evenimentul primește acum voluntari pe pagina lui, cât timp un rol mai are nevoie de oameni.",
-      "volunteersOff": "Evenimentul nu mai primește voluntari pe pagina lui. Rolurile și oamenii rămân.",
+      "volunteersOff": "Pagina de voluntari a evenimentului nu mai primește oferte. Rolurile și oamenii rămân.",
       "volunteerRoleAdded": "Rol adăugat.",
       "volunteerRoleSaved": "Rol salvat.",
       "volunteerRoleMoved": "Rol mutat.",
@@ -11248,7 +11324,9 @@
       "badgeColoursSaved": "Culorile rolurilor au fost salvate.",
       "badgeColoursUnchanged": "Nimic de schimbat la culori.",
       "volunteersShirtsOn": "Formularul public cere acum mărimea tricoului.",
-      "volunteersShirtsOff": "Formularul public nu mai cere mărimea tricoului. Mărimile deja date se păstrează."
+      "volunteersShirtsOff": "Formularul public nu mai cere mărimea tricoului. Mărimile deja date se păstrează.",
+      "volunteerGuardianRequested": "Linkul pentru părinte pleacă pe email.",
+      "volunteerGuardianRecorded": "Acordul părintelui, înregistrat ca semnat pe hârtie."
     }
   },
   "Network": {
@@ -11693,6 +11771,24 @@
       "errors": {
         "agreement": "Bifează că accepți contractul.",
         "adult": "Contractul e pentru persoane de cel puțin {age}: bifează căsuța dacă ai această vârstă."
+      },
+      "minor": "Fiind sub 18 ani, ai nevoie și de acordul părintelui sau tutorelui tău: el primește un link separat, pe emailul lui."
+    },
+    "guardian": {
+      "title": "Acordul părintelui sau tutorelui",
+      "intro": "{guardian}, {volunteer} s-a oferit voluntar la {event} și, fiind sub 18 ani, are nevoie de acordul unui părinte sau tutore. Citește contractul de mai jos și, dacă ești de acord, bifează căsuța, scrie-ți numele și acceptă-l.",
+      "accept": "Am citit contractul de voluntariat și sunt de acord ca {volunteer} să fie voluntar la acest eveniment, în condițiile lui.",
+      "typedName": "Numele tău întreg",
+      "typedNameHelp": "Numele scris aici este semnătura ta electronică.",
+      "submit": "Îmi dau acordul",
+      "submitting": "Se trimite…",
+      "paper": "Preferi hârtia? Poți semna și la organizatori.",
+      "accepted": "Mulțumim! Acordul tău a fost înregistrat. Organizatorii pot confirma acum voluntarul.",
+      "invalid": "Linkul nu mai este valabil: a fost folosit, a expirat sau a fost înlocuit de unul mai nou. Scrie-ne din pagina de contact dacă ai nevoie de altul.",
+      "noAgreement": "Contractul nu este disponibil acum. Încearcă mai târziu sau scrie-ne din pagina de contact.",
+      "errors": {
+        "agreement": "Bifează că ai citit contractul și ești de acord ca {volunteer} să fie voluntar.",
+        "typedName": "Scrie numele tău întreg: este semnătura ta."
       }
     }
   }

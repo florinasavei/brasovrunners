@@ -183,6 +183,21 @@ export const VOLUNTEER_AGREEMENT_NOTICE_MERGE_FIELD = "volunteerAgreement";
 export const VOLUNTEER_PROFILE_NOTICE_MERGE_FIELD = "volunteerProfile";
 
 /**
+ * The privacy notice's marker for volunteers under eighteen and their parent or guardian (§768; the owner, 2026-10-14:
+ * «voluntarii trebuie să aibă cel puțin 14 ani, nu 18» and «fă cu acord ceva»): the form's own name for the
+ * guardian's boxes, quoted, in the reader's language (`volunteers/notice-words.ts`) — „Numele părintelui sau
+ * tutorelui” / “Parent's or guardian's name” — inside the volunteers' paragraph's sentence that says minors from
+ * fourteen may volunteer with a parent's or guardian's agreement, that the guardian's name and address are kept for
+ * that (art. 6(1)(b) and the parent's own acceptance of the agreement), who sees them and that they stay as long as the
+ * volunteer's own row. Its own marker, §562's, §613's and §765's pattern: the public form takes a person under eighteen,
+ * and the organizers enter one, only while the notice in force names it (`describesVolunteerMinors`) **and** the
+ * volunteer agreement in force names `{{volunteerGuardian}}` (`namesVolunteerGuardian`), in every language;
+ * until then a typed age under eighteen is refused with a sentence that says the club cannot take minors yet, and
+ * `/admin/tasks` carries the row `volunteerMinorsTexts`.
+ */
+export const VOLUNTEER_MINORS_NOTICE_MERGE_FIELD = "volunteerMinors";
+
+/**
  * The privacy notice's marker for «Spune-ne ceva»'s named mode (§678): the radio's own words,
  * quoted — „Cu nume și prenume” / “With my name” (`feedback/notice-words.ts`) — in the same
  * paragraph, which then says the forms are anonymous unless the person chooses to give a name, what
@@ -291,7 +306,25 @@ export const GROUP_RUN_MINOR_AGE_MERGE_FIELD = "minorMinimumAge";
  */
 export const VOLUNTEER_ROLE_CHOICES_MERGE_FIELD = "volunteerRoleChoices";
 
-export const VOLUNTEER_MERGE_FIELDS = ["volunteer", "volunteerRole", "volunteerTasks", VOLUNTEER_ROLE_CHOICES_MERGE_FIELD, "volunteerChoiceTasks"] as const;
+/**
+ * The volunteer agreement's marker for the parent or guardian of a volunteer under eighteen (§768, amending §758): the
+ * guardian's name as the row holds it (`guardian_name`), in the minors' clause — «Pentru voluntarul minor, {{volunteerGuardian}},
+ * părinte sau tutore, își dă acordul …». "" for a volunteer who is eighteen or older, which drops the paragraph that
+ * names it (`PARAGRAPH_MERGE_FIELDS`): an adult's agreement never reads the clause. The text in force names it
+ * or it does not (`namesVolunteerGuardian`): the volunteer agreement is asked of a guardian, and a person under eighteen
+ * taken, only while a text naming it is in force in every language, together with a privacy notice naming
+ * `{{volunteerMinors}}` — the guardian reads and accepts the text, so the text must speak to them.
+ */
+export const VOLUNTEER_GUARDIAN_MERGE_FIELD = "volunteerGuardian";
+
+export const VOLUNTEER_MERGE_FIELDS = [
+  "volunteer",
+  "volunteerRole",
+  "volunteerTasks",
+  VOLUNTEER_ROLE_CHOICES_MERGE_FIELD,
+  "volunteerChoiceTasks",
+  VOLUNTEER_GUARDIAN_MERGE_FIELD,
+] as const;
 
 /** The fields whose "" drops the paragraph that names them (see `MINIMUM_AGE_MERGE_FIELD`, `SERIES_MERGE_FIELDS`, `VOLUNTEER_MERGE_FIELDS`). */
 export const PARAGRAPH_MERGE_FIELDS: ReadonlySet<string> = new Set([
@@ -304,6 +337,7 @@ export const PARAGRAPH_MERGE_FIELDS: ReadonlySet<string> = new Set([
   "volunteerTasks",
   VOLUNTEER_ROLE_CHOICES_MERGE_FIELD,
   "volunteerChoiceTasks",
+  VOLUNTEER_GUARDIAN_MERGE_FIELD,
 ]);
 
 const SERIES_FIELD_SET: ReadonlySet<string> = new Set(SERIES_MERGE_FIELDS);
@@ -471,6 +505,7 @@ export const MERGE_FIELDS = [
   VOLUNTEERS_MERGE_FIELD,
   VOLUNTEER_AGREEMENT_NOTICE_MERGE_FIELD,
   VOLUNTEER_PROFILE_NOTICE_MERGE_FIELD,
+  VOLUNTEER_MINORS_NOTICE_MERGE_FIELD,
 ] as const;
 
 /**
@@ -693,6 +728,24 @@ export function describesVolunteerAgreement(body: unknown): boolean {
  */
 export function describesVolunteerProfile(body: unknown): boolean {
   return mergeFieldsIn(body).has(VOLUNTEER_PROFILE_NOTICE_MERGE_FIELD);
+}
+
+/**
+ * Whether a privacy notice describes volunteers under eighteen and their guardian (§768): it names
+ * `{{volunteerMinors}}`. With `namesVolunteerGuardian` (the agreement), the gate for taking a person under eighteen —
+ * on the public form and by the organizers' hand — and what `/admin/tasks`' row `volunteerMinorsTexts` reads. Pure; the
+ * caller asks it of the notice in force, in every language.
+ */
+export function describesVolunteerMinors(body: unknown): boolean {
+  return mergeFieldsIn(body).has(VOLUNTEER_MINORS_NOTICE_MERGE_FIELD);
+}
+
+/**
+ * Whether a volunteer agreement carries the minors' clause (§768): it names `{{volunteerGuardian}}`. Asked of the
+ * agreement in force, in every language; with `describesVolunteerMinors`, the gate for taking a person under eighteen. Pure.
+ */
+export function namesVolunteerGuardian(body: unknown): boolean {
+  return mergeFieldsIn(body).has(VOLUNTEER_GUARDIAN_MERGE_FIELD);
 }
 
 /**

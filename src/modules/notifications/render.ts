@@ -62,6 +62,8 @@ import { eventInvitations } from "@/db/schema/event-invitations";
 import { eventVolunteers } from "@/db/schema/event-volunteers";
 import { renderVolunteerAgreementPdf, VOLUNTEER_AGREEMENT_PDF_NAME } from "@/modules/volunteers/agreement-pdf";
 import { canonicalOrNull, mintVolunteerAgreementLink, tasksWords, volunteerRoles } from "@/modules/volunteers/agreement";
+import { isVolunteerMinor } from "@/modules/volunteers/domain/volunteer";
+import { mintVolunteerGuardianLink } from "@/modules/volunteers/guardian";
 import { shopOrders } from "@/db/schema/shop";
 import { readShopSettings } from "@/modules/content/shop/settings";
 import { isUuid } from "@/shared/ids";
@@ -350,6 +352,7 @@ async function renderRow(
     row.messageType === "VOLUNTEER_AGREEMENT_REQUEST" ||
     row.messageType === "VOLUNTEER_AGREEMENT_ACCEPTED" ||
     row.messageType === "VOLUNTEER_ROLE_ASSIGNED" ||
+    row.messageType === "VOLUNTEER_GUARDIAN_REQUEST" ||
     bulkRecipients !== null
       ? (row.payloadJson as { eventId?: unknown } | null)?.eventId
       : undefined;
@@ -901,7 +904,8 @@ async function renderRow(
     row.messageType === "VOLUNTEER_CLUB_NOTICE" ||
     row.messageType === "VOLUNTEER_AGREEMENT_REQUEST" ||
     row.messageType === "VOLUNTEER_AGREEMENT_ACCEPTED" ||
-    row.messageType === "VOLUNTEER_ROLE_ASSIGNED"
+    row.messageType === "VOLUNTEER_ROLE_ASSIGNED" ||
+    row.messageType === "VOLUNTEER_GUARDIAN_REQUEST"
   ) {
     const payload = row.payloadJson as { volunteerId?: unknown; roleId?: unknown } | null;
     const volunteerId = payload?.volunteerId;
@@ -915,6 +919,9 @@ async function renderRow(
               canonicalEmail: eventVolunteers.canonicalEmail,
               roleId: eventVolunteers.roleId,
               agreementAcceptedAt: eventVolunteers.agreementAcceptedAt,
+              age: eventVolunteers.age,
+              guardianName: eventVolunteers.guardianName,
+              guardianAcceptedAt: eventVolunteers.guardianAcceptedAt,
             })
             .from(eventVolunteers)
             .where(eq(eventVolunteers.id, volunteerId))
@@ -931,7 +938,8 @@ async function renderRow(
       const words = tasksWords(text ?? "");
       return words === "" ? null : `${words}.`;
     };
-    data.participantName = row.messageType === "VOLUNTEER_CLUB_NOTICE" ? "" : volunteer.name;
+    // The club's notice and the guardian's link greet nobody by the volunteer's name: the first is a colleague's, the second a parent's.
+    data.participantName = row.messageType === "VOLUNTEER_CLUB_NOTICE" || row.messageType === "VOLUNTEER_GUARDIAN_REQUEST" ? "" : volunteer.name;
     data.volunteer = {
       name: volunteer.name,
       roleRo: roles.assigned?.nameRo ?? null,
@@ -940,6 +948,8 @@ async function renderRow(
       roleDescriptionEn: described(roles.assigned?.descriptionEn ?? null),
       chosenRo: roles.chosen.map((role) => role.nameRo),
       chosenEn: roles.chosen.map((role) => role.nameEn),
+      // «Am primit» of a volunteer under eighteen whose guardian has not accepted yet (§768) says their parent was emailed.
+      guardianPending: row.messageType === "VOLUNTEER_RECEIVED" && isVolunteerMinor(volunteer.age) && volunteer.guardianName !== null && volunteer.guardianAcceptedAt === null,
     };
     if (row.messageType === "VOLUNTEER_CLUB_NOTICE" && eventId) {
       payloadActionUrl = `${env.APP_BASE_URL}${getPathname({ locale, href: { pathname: "/admin/events/[id]", params: { id: eventId } } })}#box-volunteers`;
@@ -967,6 +977,16 @@ async function renderRow(
       if (!link) throw new OutboxMessageWithdrawn("the volunteer can no longer be asked to accept");
       // Its lifetime is the one every link states (`timings.linkDays`, the same constant the link is minted with).
       payloadActionUrl = `${env.APP_BASE_URL}${getPathname({ locale, href: { pathname: "/volunteers/agreement/[token]", params: { token: link.secret } } })}`;
+    }
+    /*
+      The guardian's link (§768): the same mint at the send, on the guardian's own columns and to the guardian's address
+      (the mint compares it with the row's, through the canonicalizer). A guardian who has accepted since, a volunteer who
+      is no longer under eighteen, or an address corrected meanwhile withdraws the message.
+    */
+    if (row.messageType === "VOLUNTEER_GUARDIAN_REQUEST") {
+      const link = await mintVolunteerGuardianLink(db, volunteer.id, row.recipientEmail, now);
+      if (!link) throw new OutboxMessageWithdrawn("the volunteer's guardian can no longer be asked to accept");
+      payloadActionUrl = `${env.APP_BASE_URL}${getPathname({ locale, href: { pathname: "/volunteers/guardian/[token]", params: { token: link.secret } } })}`;
     }
     /*
       The accepted agreement as a PDF (§758), rendered now from the rows like a signed declaration (§95): on the

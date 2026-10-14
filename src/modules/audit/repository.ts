@@ -497,6 +497,15 @@ export type AuditAction =
   /** The agreement's PDF downloaded from the card (§758): a file with a name in it leaves the site; who and when. */
   | "volunteer.agreement_downloaded"
   /**
+   * The parent's or guardian's agreement for a volunteer under eighteen (§768), entity `event`: an organizer's «Trimite
+   * linkul părintelui» (requested, or the sign-up's own email, no actor), the guardian's acceptance from the link
+   * (accepted, no actor) and a paper one recorded at the desk (recorded). The metadata holds the volunteer's id, the
+   * version and the way — never the guardian's name or address.
+   */
+  | "volunteer.guardian_requested"
+  | "volunteer.guardian_accepted"
+  | "volunteer.guardian_recorded"
+  /**
    * The volunteer badges (§764), entity `event`: «Cum arată ecusonul» saved (the names of the settings that
    * changed, and the design before and after — the club's own words and a picture's address, never a
    * person's), and a role's badge colour changed (the role's id and name, the colour from and to).

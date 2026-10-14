@@ -14,7 +14,7 @@ import { routing } from "@/i18n/routing";
 import LegalDocumentBody from "@/modules/legal-documents/ui/LegalDocumentBody";
 import { yearsPhrase } from "@/modules/registrations/domain/age";
 import { readVolunteerAgreementLink } from "@/modules/volunteers/agreement";
-import { VOLUNTEER_MINIMUM_AGE } from "@/modules/volunteers/domain/volunteer";
+import { VOLUNTEER_ADULT_AGE } from "@/modules/volunteers/domain/volunteer";
 import CheckboxField from "@/shared/ui/CheckboxField";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import { DENSITY } from "@/theme/density";
@@ -47,7 +47,8 @@ export default async function VolunteerAgreementLinkPage({ params, searchParams 
   const asked = await searchParams;
   const t = await getTranslations("Volunteers");
   const tLegal = await getTranslations("Legal");
-  const age = yearsPhrase(VOLUNTEER_MINIMUM_AGE, locale);
+  // The age tick says eighteen (§768): a volunteer under eighteen is not asked it — their parent accepts beside them.
+  const age = yearsPhrase(VOLUNTEER_ADULT_AGE, locale);
 
   // After the POST the link is spent or known to be dead: the page says so without reading it again.
   const view = asked.accepted || asked.invalid || asked.unavailable ? null : await readVolunteerAgreementLink(getDb(), token, locale, new Date());
@@ -107,15 +108,22 @@ export default async function VolunteerAgreementLinkPage({ params, searchParams 
             >
               {t("agreement.accept")}
             </CheckboxField>
-            <CheckboxField
-              name="adult"
-              id="volunteer-agreement-adult"
-              required
-              error={refused.has("adult") ? t("agreement.errors.adult", { age }) : undefined}
-              requiredMessage={t("agreement.errors.adult", { age })}
-            >
-              {t("agreement.adult", { age })}
-            </CheckboxField>
+            {view.minor ? (
+              // Under eighteen (§768): no age tick; the parent or guardian has their own link and accepts in their own name.
+              <Typography variant="body2" color="text.secondary" data-testid="volunteer-agreement-minor">
+                {t("agreement.minor")}
+              </Typography>
+            ) : (
+              <CheckboxField
+                name="adult"
+                id="volunteer-agreement-adult"
+                required
+                error={refused.has("adult") ? t("agreement.errors.adult", { age }) : undefined}
+                requiredMessage={t("agreement.errors.adult", { age })}
+              >
+                {t("agreement.adult", { age })}
+              </CheckboxField>
+            )}
             <Box>
               <SubmitButton label={t("agreement.submit")} pendingLabel={t("agreement.submitting")} size="large">
                 <HandshakeIcon />

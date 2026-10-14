@@ -37,11 +37,29 @@ export function volunteerProfileClause(locale: string): string {
   return [words.age, sex, words.city, words.before].map((label) => `${open}${label}${close}`).join(", ");
 }
 
+/**
+ * What the privacy notice's `{{volunteerMinors}}` becomes (§768): the guardian's two boxes on the volunteers' page, each by
+ * its label, quoted, in that language — „Numele părintelui sau tutorelui”, „Emailul părintelui sau tutorelui” — read from
+ * the catalogue the form's labels read (`Event.volunteers.guardian`), so the approved sentence names what a visitor sees
+ * when they say they are under eighteen.
+ */
+export function volunteerMinorsClause(locale: string): string {
+  const words = locale === "en" ? en.Event.volunteers.guardian : ro.Event.volunteers.guardian;
+  const [open, close] = locale === "en" ? ["“", "”"] : ["„", "”"];
+  return [words.name, words.email].map((label) => `${open}${label}${close}`).join(", ");
+}
+
 /** The notice's merge values, beside the other features' on the legal pages. */
-export function volunteersMergeValues(locale: string): { volunteers: string; volunteerAgreement: string; volunteerProfile: string } {
+export function volunteersMergeValues(locale: string): {
+  volunteers: string;
+  volunteerAgreement: string;
+  volunteerProfile: string;
+  volunteerMinors: string;
+} {
   return {
     volunteers: volunteersClause(locale),
     volunteerAgreement: volunteerAgreementClause(locale),
     volunteerProfile: volunteerProfileClause(locale),
+    volunteerMinors: volunteerMinorsClause(locale),
   };
 }

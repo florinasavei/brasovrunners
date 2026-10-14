@@ -51,7 +51,7 @@ vi.mock("@/modules/registrations/turnstile", async (importOriginal) => ({
   verifyTurnstile: async () => turnstile.verdict,
 }));
 
-const { submitVolunteerAction } = await import("@/app/[locale]/events/[slug]/actions");
+const { submitVolunteerAction } = await import("@/app/[locale]/events/[slug]/volunteers/actions");
 const { openFormDraft } = await import("@/modules/registrations/form-draft");
 
 const DAY = 24 * 60 * 60_000;
@@ -165,7 +165,8 @@ describe("§754 submitVolunteerAction's redirects", () => {
     turnstile = { on: true, verdict: "failed" };
     const renderedAt = new Date(Date.now() - 60_000).toISOString();
     const url = await pressed(post({ renderedAt }));
-    expect(url.pathname.endsWith(`/${slug}`)).toBe(true);
+    // §768: the form is the volunteers' own page now, and every answer comes back to it.
+    expect(url.pathname.endsWith(`/${slug}/voluntari`)).toBe(true);
     expect(url.searchParams.get("volunteer")).toBe("captcha");
     expect(url.searchParams.get("since")).toBe(renderedAt);
     expect(url.hash).toBe("#volunteers");
@@ -190,10 +191,11 @@ describe("§754 submitVolunteerAction's redirects", () => {
     expect(await people()).toHaveLength(1);
   });
 
-  it("sends a post to a form that is closed (CONFLICT) to the plain page, where the box is gone", async () => {
+  it("sends a post to a form that is closed (CONFLICT) to the event's own page, where the box is gone — never to the volunteers' page, which would answer 404", async () => {
     await seedEvent(false);
     const url = await pressed(post());
     expect(url.pathname.endsWith(`/${slug}`)).toBe(true);
+    expect(url.pathname).not.toContain("voluntari");
     expect(url.search).toBe("");
     expect(url.hash).toBe("");
     expect(await people()).toHaveLength(0);
@@ -204,6 +206,7 @@ describe("§754 submitVolunteerAction's redirects", () => {
     const url = await pressed(post({ email: "maria-at-example" }));
     expect(url.searchParams.get("volunteer")).toBe("invalid");
     expect(url.searchParams.get("vfields")).toBe("email");
+    expect(url.pathname.endsWith(`/${slug}/voluntari`)).toBe(true);
     expect(url.hash).toBe("#volunteers");
     expect(url.toString()).not.toContain("maria-at-example");
     expect(openFormDraft(lastDraft()?.value ?? "")).toMatchObject({ email: "maria-at-example" });
@@ -253,8 +256,13 @@ describe("§754 submitVolunteerAction's redirects", () => {
   it("thanks a kept offer with ?volunteer=1 and clears the draft", async () => {
     await seedEvent(true);
     const url = await pressed(post());
+    // The thank-you is on the volunteers' page (§768), said twice the house's way (§427): the banner the address asks for and the flash toast.
+    expect(url.pathname.endsWith(`/${slug}/voluntari`)).toBe(true);
     expect(url.searchParams.get("volunteer")).toBe("1");
     expect(url.hash).toBe("#volunteers");
+    const flash = sets.find((set) => set.name === "br-flash");
+    expect(flash).toBeDefined();
+    expect(decodeURIComponent(flash?.value ?? "")).toContain("volunteerSent");
     const [row] = await people();
     expect(row).toMatchObject({ name: "Maria Test", phone: "+40712345678", source: "PUBLIC" });
     expect(lastDraft()?.options.maxAge).toBe(0);

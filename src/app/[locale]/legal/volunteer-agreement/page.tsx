@@ -12,7 +12,7 @@ import LegalDocumentBody from "@/modules/legal-documents/ui/LegalDocumentBody";
 import { cachedCurrentApprovedDocument } from "@/modules/public-cache/reads";
 import { readWithLastGood } from "@/modules/resilience/last-good";
 import LastGoodNotice from "@/modules/resilience/ui/LastGoodNotice";
-import { VOLUNTEER_MINIMUM_AGE } from "@/modules/volunteers/domain/volunteer";
+import { agreementMinimumAge } from "@/modules/volunteers/domain/volunteer";
 import { env } from "@/shared/config/env";
 import { PAGE_WIDTH } from "@/theme/brand";
 import { DENSITY } from "@/theme/density";
@@ -74,7 +74,7 @@ export default async function VolunteerAgreementPage({ params }: Props) {
           <Typography variant="body2" color="text.secondary" sx={{ mb: { xs: DENSITY.gapSm, sm: 2 } }} data-testid="volunteer-agreement-blanks">
             {t("volunteerAgreementBlanks")}
           </Typography>
-          <LegalDocumentBody body={document.body} values={{ minimumAge: minimumAgeMergeValue(VOLUNTEER_MINIMUM_AGE, locale) }} />
+          <LegalDocumentBody body={document.body} values={{ minimumAge: minimumAgeMergeValue(agreementMinimumAge(document.body), locale) }} />
         </>
       ) : (
         <>

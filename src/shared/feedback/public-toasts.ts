@@ -25,6 +25,10 @@ export const PUBLIC_TOAST_KEYS = [
   "familySignOneLeft",
   // «Renunț la înscrierea pentru …» in the family's declarations wizard (§547).
   "familyWithdrawn",
+  // The volunteers' own page (§768): the offer was received — the thank-you is on that page, not the event's.
+  "volunteerSent",
+  // The guardian's link page (§768): the parent's or guardian's agreement was recorded.
+  "volunteerGuardianAccepted",
 ] as const;
 
 export type PublicToastKey = (typeof PUBLIC_TOAST_KEYS)[number];

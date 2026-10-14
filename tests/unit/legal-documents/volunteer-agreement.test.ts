@@ -110,7 +110,15 @@ describe("§758 the agreement's blanks", () => {
       for (const match of text(body).matchAll(/\{\{\s*([a-zA-Z]+)\s*\}\}/g)) expect(isMergeField(match[1]), match[1]).toBe(true);
       expect([...mergeFieldsIn(body)].sort()).toEqual([...AGREEMENT_FACT_FIELDS].sort());
     }
-    expect([...VOLUNTEER_MERGE_FIELDS]).toEqual(["volunteer", "volunteerRole", "volunteerTasks", "volunteerRoleChoices", "volunteerChoiceTasks"]);
+    expect([...VOLUNTEER_MERGE_FIELDS]).toEqual([
+      "volunteer",
+      "volunteerRole",
+      "volunteerTasks",
+      "volunteerRoleChoices",
+      "volunteerChoiceTasks",
+      // The parent or guardian of a volunteer under eighteen (§768): the minors' clause's one blank.
+      "volunteerGuardian",
+    ]);
     // Each has a line in the editor's legend, in both languages.
     for (const field of VOLUNTEER_MERGE_FIELDS) {
       expect(DECLARATION_TOKENS.some((token) => token.token === `{{${field}}}`), field).toBe(true);
@@ -139,6 +147,8 @@ describe("§758 the agreement's blanks", () => {
       volunteerTasks: "Împarte apă",
       volunteerRoleChoices: "",
       volunteerChoiceTasks: "",
+      // An adult: no guardian, so the minors' clause is left out whole (§768).
+      volunteerGuardian: "",
       event: "Crosul",
       eventDate: "sâmbătă, 21 nov. 2026",
       eventLocation: "Parcul central",
@@ -186,7 +196,7 @@ describe("§758 the PDF's own words", () => {
   });
 
   it("says how it was accepted: on the page, from the link, or on paper and who recorded it", () => {
-    expect(acceptedHowWords("ro", "FORM", "marți, 13 oct.", null)).toContain("pe pagina evenimentului");
+    expect(acceptedHowWords("ro", "FORM", "marți, 13 oct.", null)).toContain("pe pagina de voluntari a evenimentului");
     expect(acceptedHowWords("ro", "LINK", "marți, 13 oct.", null)).toContain("din linkul unic trimis");
     expect(acceptedHowWords("ro", "PAPER", "marți, 13 oct. 2026, la 13:00", "Ana Admin")).toBe(
       "Semnat pe hârtie, la organizatori; înregistrat de Ana Admin, marți, 13 oct. 2026, la 13:00. Originalul semnat este păstrat de club.",
@@ -199,6 +209,7 @@ describe("§758 the PDF's own words", () => {
 describe("§761 the agreement before a role is given", () => {
   const base = {
     volunteer: "Ana Popescu",
+    volunteerGuardian: "",
     event: "Crosul",
     eventDate: "sâmbătă, 21 nov. 2026",
     eventLocation: "Parcul central",

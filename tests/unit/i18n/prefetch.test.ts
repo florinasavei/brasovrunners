@@ -20,6 +20,11 @@ describe("§549 prefetchFor", () => {
     expect(prefetchFor(href)).toBe(false);
   });
 
+  it("never prefetches the volunteers' page or the guardian's link (§768): each is rendered per request", () => {
+    expect(prefetchFor({ pathname: "/events/[slug]/volunteers", params: { slug: "crosul" } } as never)).toBe(false);
+    expect(prefetchFor({ pathname: "/volunteers/guardian/[token]", params: { token: "abc" } } as never)).toBe(false);
+  });
+
   it("never prefetches the register or the declaration form", () => {
     expect(prefetchFor({ pathname: "/events/[slug]/register", params: { slug: "crosul" } } as never)).toBe(false);
     expect(prefetchFor({ pathname: "/events/[slug]/declaration", params: { slug: "crosul" } } as never)).toBe(false);
