@@ -694,7 +694,7 @@
       "warning": "Dacă o oprești, un robot poate trimite formularul. Merită oprită exact în ziua în care caseta refuză oameni reali; repornește-o după.",
       "turnOff": "Oprește verificarea",
       "turnOn": "Pornește verificarea",
-      "saving": "Se salvează…",
+      "tick": "Verificarea anti-bot pornită",
       "savedOn": "Verificarea anti-bot este pornită.",
       "savedOff": "Verificarea anti-bot este oprită. Capcana ascunsă și limita pe adresă rămân.",
       "updatedAt": "Modificat {when}.",
@@ -702,7 +702,8 @@
         "on": "Honeypot pornit: un câmp ascuns, pe care oamenii nu îl văd, dar roboții îl completează.",
         "off": "Honeypot oprit. Câmpul există în continuare și îl notăm în jurnal, dar nu mai refuză pe nimeni.",
         "turnOff": "Oprește honeypot-ul",
-        "turnOn": "Pornește honeypot-ul"
+        "turnOn": "Pornește honeypot-ul",
+        "tick": "Honeypot pornit"
       },
       "savedHoneypotOn": "Honeypot-ul este pornit.",
       "savedHoneypotOff": "Honeypot-ul este oprit.",

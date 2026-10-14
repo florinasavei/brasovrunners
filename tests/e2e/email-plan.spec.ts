@@ -135,7 +135,7 @@ test.describe("BR-REQ-080-02 the Mailgun plan on «Setări» → «Emailuri»", 
     // When the queue leaves (§529) is read by whoever reads the queue; the switch is the Administrator's.
     await expect(main.getByTestId("outbox-when-state")).toContainText(/Emailurile pleacă (la trecerea programată; următoarea:|imediat după cererea)/);
     await expect(main.getByTestId("outbox-timing-form")).toHaveCount(0);
-    await expect(main.getByTestId("outbox-when").getByRole("switch")).toHaveCount(0);
+    await expect(main.getByTestId("outbox-when").getByRole("checkbox")).toHaveCount(0);
     await expect(main.getByRole("heading", { name: "Copiile clubului" })).toBeVisible();
     // Where the calendar's answers go (§672): read by every reader of the page, changed by the Administrator.
     await expect(main.getByRole("heading", { name: "Răspunsurile din calendar" })).toBeVisible();
@@ -164,7 +164,7 @@ test.describe("BR-REQ-080-02 the Mailgun plan on «Setări» → «Emailuri»", 
       The owner, 2026-09-28: "vreau să pot vedea exact când pleacă emailurile și să pot face on/off
       la acea setare". The queue panel opens with the timing, the next round and what holds it back;
       every row says its departure; the switch is «Termene»'s «Când pleacă emailurile», both values,
-      asking first — a Material switch labelled «Trimite la trecerea programată», checked while the
+      asking first — a tick box labelled «Trimite la trecerea programată» (§766; a Material switch until then), checked while the
       round holds the mail, with one sentence under it saying the mode in force (§540).
 
       `data-timing` is the setting in force: the stored choice, else the environment's default —
@@ -182,7 +182,7 @@ test.describe("BR-REQ-080-02 the Mailgun plan on «Setări» → «Emailuri»", 
     const next = main.getByTestId("outbox-when-next");
     const holds = main.getByTestId("outbox-when-holds");
     const form = main.getByTestId("outbox-timing-form");
-    const toggle = form.getByRole("switch", { name: "Trimite la trecerea programată" });
+    const toggle = form.getByRole("checkbox", { name: "Trimite la trecerea programată" });
     const says = {
       scheduled: async () => {
         await expect(state).toHaveAttribute("data-timing", "scheduled");
@@ -199,9 +199,10 @@ test.describe("BR-REQ-080-02 the Mailgun plan on «Setări» → «Emailuri»", 
       },
     };
     const switchTo = async (timing: "scheduled" | "immediate") => {
-      // The page is running: the switch is enabled and the no-JavaScript button is gone.
+      // One tick, a thumb's size, and no second button beside it: the tick is the submit (§766).
       await expect(toggle).toBeEnabled();
-      await expect(form.getByRole("button", { name: /Trimite (imediat după cerere|la trecerea programată)/ })).toHaveCount(0);
+      expect((await toggle.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+      await expect(form.getByRole("button")).toHaveCount(0);
       await toggle.click();
       await confirmDialog(page, timing === "immediate" ? "Emailurile să plece imediat după cerere?" : "Emailurile să plece la trecerea programată?");
       await says[timing]();

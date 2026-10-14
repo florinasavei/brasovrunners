@@ -62,7 +62,6 @@ export const ALLOWED: { colours: Entry[]; icons: Entry[]; primitives: Entry[] } 
     { path: "src/modules/media/ui/GalleryPicker.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§694) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 7 },
     { path: "src/modules/newsletter/ui/NewsletterPreview.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§694) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 1 },
     { path: "src/modules/newsletter/ui/SubscriberListFields.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§694) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 3 },
-    { path: "src/modules/notifications/ui/DeliveryTimingSwitch.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§694) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 1 },
     { path: "src/modules/registrations/ui/DeskRow.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§694) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 1 },
     { path: "src/modules/registrations/ui/QueuePanel.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§694) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 2 },
     { path: "src/modules/registrations/ui/RegistrationRowMenu.tsx", reason: "a backoffice file names its icon file directly, which predates the guard (§694) and violates §318/§521; ask action-icons.ts by name when the file is next touched", count: 1 },
@@ -163,7 +162,7 @@ export const ALLOWED: { colours: Entry[]; icons: Entry[]; primitives: Entry[] } 
 /** Per rule, the entries and the hits (the sum of the counts): lower them in the same edit that removes an entry or a count. */
 export const PINNED = {
   colours: { entries: 13, hits: 28 },
-  icons: { entries: 39, hits: 142 },
+  icons: { entries: 38, hits: 141 },
   primitives: { entries: 87, hits: 94 },
 } as const;
 

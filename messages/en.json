@@ -694,7 +694,7 @@
       "warning": "With it off, a robot can submit the form. It is worth switching off on the day the box is refusing real people; switch it back on afterwards.",
       "turnOff": "Switch the check off",
       "turnOn": "Switch the check on",
-      "saving": "Saving…",
+      "tick": "Anti-bot check on",
       "savedOn": "The anti-bot check is on.",
       "savedOff": "The anti-bot check is off. The hidden honeypot and the per-address limit remain.",
       "updatedAt": "Changed on {when}.",
@@ -702,7 +702,8 @@
         "on": "Honeypot on: a hidden field people never see, which robots fill in.",
         "off": "Honeypot off. The field is still there and still logged, but it no longer refuses anybody.",
         "turnOff": "Turn the honeypot off",
-        "turnOn": "Turn the honeypot on"
+        "turnOn": "Turn the honeypot on",
+        "tick": "Honeypot on"
       },
       "savedHoneypotOn": "The honeypot is on.",
       "savedHoneypotOff": "The honeypot is off.",

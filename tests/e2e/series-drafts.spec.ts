@@ -115,7 +115,7 @@ test.describe("BR-REQ-050-02 a series' draft dates, named on the list and fixed 
     // The two fixes, on the line itself, each a thumb's size on a phone (BR-REQ-041-01 criterion 6),
     // and the line inside the viewport at 320 px.
     const publish = line.getByRole("button", { name: "Publică", exact: true });
-    const autoPublish = line.getByRole("button", { name: "Publică automat de acum" });
+    const autoPublish = line.getByRole("checkbox", { name: "Publică automat de acum" });
     for (const button of [publish, autoPublish]) {
       await expect(button).toBeVisible();
       expect((await button.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
@@ -154,7 +154,7 @@ test.describe("BR-REQ-050-02 a series' draft dates, named on the list and fixed 
     await expect(page.locator("#admin-alert")).toContainText("Publicarea automată e pornită");
     await hydrated(page);
     await expect(line).toContainText("2 date în ciornă, nu sunt pe site:");
-    await expect(line.getByRole("button", { name: "Publică automat de acum" })).toHaveCount(0);
+    await expect(line.getByRole("checkbox", { name: "Publică automat de acum" })).toHaveCount(0);
 
     // "Publică": exactly the two dates listed, after its confirmation — then the line is gone and
     // the series is published whole.

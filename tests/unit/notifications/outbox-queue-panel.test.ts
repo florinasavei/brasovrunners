@@ -113,9 +113,14 @@ function findByTestId(node: unknown, testId: string): { props: Record<string, un
   return findByTestId(element.props.children, testId);
 }
 
-async function render(locale: "ro" | "en", overrides: Partial<Props> = {}): Promise<string> {
+/** The panel's element tree, not yet rendered: the props its islands receive (a form's `confirm`) are in it. */
+async function panelElement(locale: "ro" | "en", overrides: Partial<Props> = {}): Promise<unknown> {
   state.locale = locale;
-  const element = await OutboxQueuePanel({ locale, queue: QUEUE, volume: VOLUME, mayEdit: true, delivery: DELIVERY, now: NOW, mayEditTiming: true, ...overrides });
+  return OutboxQueuePanel({ locale, queue: QUEUE, volume: VOLUME, mayEdit: true, delivery: DELIVERY, now: NOW, mayEditTiming: true, ...overrides });
+}
+
+async function render(locale: "ro" | "en", overrides: Partial<Props> = {}): Promise<string> {
+  const element = await panelElement(locale, overrides);
   return renderToStaticMarkup(element as ReactElement).replace(/<style[^>]*>[\s\S]*?<\/style>/g, "");
 }
 
@@ -150,27 +155,44 @@ describe("§529 the queue panel says when the emails leave", () => {
     expect(leaves[0]).toBe("Pleacă: vin., 2 oct. 2026, la 09:00 (estimat).");
   });
 
-  it("offers the Administrator the switch to the other value, asking first", async () => {
+  it("offers the Administrator the tick that posts the other value, asking first with what the change does", async () => {
     const on = await render("ro");
     expect(on).toMatch(/data-testid="outbox-timing-form"/);
     expect(on).toMatch(/<input type="hidden" name="timing" value="immediate"\/>/);
-    // Without JavaScript the button beside the switch posts the same form (§540).
-    expect(on).toContain(ro.Admin.emails.queue.when.turnOff);
+    // The question's own confirm button says what the press does, in words (§384): ticked, a press unticks.
+    const askingOn = await panelElement("ro");
+    expect((findByTestId(askingOn, "outbox-timing-form")?.props.confirm as { confirmLabel: string }).confirmLabel).toBe(ro.Admin.emails.queue.when.turnOff);
 
     const off = await render("ro", { delivery: { ...DELIVERY, timing: "immediate", waitMinutes: null } });
     expect(off).toContain(ro.Admin.emails.queue.when.stateOff);
     expect(off).toMatch(/<input type="hidden" name="timing" value="scheduled"\/>/);
-    expect(off).toContain(ro.Admin.emails.queue.when.turnOn);
+    const askingOff = await panelElement("ro", { delivery: { ...DELIVERY, timing: "immediate", waitMinutes: null } });
+    expect((findByTestId(askingOff, "outbox-timing-form")?.props.confirm as { confirmLabel: string }).confirmLabel).toBe(ro.Admin.emails.queue.when.turnOn);
+    // In English the same (both catalogues carry both verbs).
+    const askingEnglish = await panelElement("en");
+    expect((findByTestId(askingEnglish, "outbox-timing-form")?.props.confirm as { confirmLabel: string }).confirmLabel).toBe(en.Admin.emails.queue.when.turnOff);
   });
 
-  /** The switch's own input: MUI draws it as a checkbox with the `switch` role. */
-  const switchInput = (html: string) => html.match(/<input[^>]*role="switch"[^>]*>/)?.[0] ?? "";
+  /** The tick: a plain submit drawn as a checkbox (§766) — no MUI switch, no second button beside it. */
+  const tickButton = (html: string) => html.match(/<button[^>]*data-testid="outbox-timing-tick"[^>]*>[\s\S]*?<\/button>/)?.[0] ?? "";
 
-  it("is a switch labelled «Trimite la trecerea programată», checked under the scheduled setting, with one sentence of the mode (§540)", async () => {
+  it("is a tick box labelled «Trimite la trecerea programată», ticked under the scheduled setting, with one sentence of the mode (§540, §766)", async () => {
     const on = await render("ro");
     expect(on).toContain(ro.Admin.emails.queue.when.turnOn);
-    expect(switchInput(on)).toMatch(/checked=""/);
-    expect(switchInput(on)).toMatch(/aria-describedby="outbox-when-state"/);
+    const ticked = tickButton(on);
+    expect(ticked).toContain('type="submit"');
+    expect(ticked).toContain('role="checkbox"');
+    expect(ticked).toContain('aria-checked="true"');
+    expect(ticked).toContain('data-testid="CheckBoxIcon"');
+    expect(ticked).toContain(`${ro.Admin.emails.queue.when.turnOn}</button>`);
+    expect(ticked).toMatch(/aria-describedby="outbox-when-state"/);
+    // The only button of the form is the tick; the Material switch and its no-JavaScript twin are gone.
+    expect(on).not.toContain('role="switch"');
+    expect(on).not.toContain("MuiSwitch");
+    expect(on).not.toContain("ToggleOnIcon");
+    expect(on).not.toContain("ToggleOffIcon");
+    const form = /<form[^>]*data-testid="outbox-timing-form"[\s\S]*?<\/form>/.exec(on)?.[0] ?? "";
+    expect([...form.matchAll(/<button\b/g)]).toHaveLength(1);
     expect(on).toMatch(/id="outbox-when-state"[^>]*>Emailurile pleacă la trecerea programată; următoarea: [^<]*12:00\.</);
     // The mode is said once: no chip in the «Când pleacă emailurile» box, and the panel's aside is the
     // waiting count alone, never «· la trecerea programată» (review).
@@ -181,7 +203,12 @@ describe("§529 the queue panel says when the emails leave", () => {
     expect(on).not.toContain("· imediat după cerere");
 
     const off = await render("ro", { delivery: { ...DELIVERY, timing: "immediate", waitMinutes: null } });
-    expect(switchInput(off)).not.toMatch(/checked=""/);
+    const empty = tickButton(off);
+    expect(empty).toContain('role="checkbox"');
+    expect(empty).toContain('aria-checked="false"');
+    expect(empty).toContain('data-testid="CheckBoxOutlineBlankIcon"');
+    // The words name the setting, the same ticked or not: never the verb that would flip it.
+    expect(empty).toContain(`${ro.Admin.emails.queue.when.turnOn}</button>`);
     expect(off).toMatch(/id="outbox-when-state"[^>]*>Emailurile pleacă imediat după cererea care le-a pus în coadă\.</);
     expect(off).toContain("Ce rămâne (o nouă încercare, o amânare) pleacă la trecerea programată; următoarea:");
 
@@ -192,10 +219,11 @@ describe("§529 the queue panel says when the emails leave", () => {
     expect(englishOff).toMatch(/id="outbox-when-state"[^>]*>Emails leave right after the request that queued them\.</);
   });
 
-  it("shows anybody else the timing and no switch", async () => {
+  it("shows anybody else the timing and no tick", async () => {
     const html = await render("ro", { mayEditTiming: false, mayEdit: false });
     expect(html).toMatch(/data-testid="outbox-when-state"[^>]*>Emailurile pleacă la trecerea programată;/);
-    expect(html).not.toContain('role="switch"');
+    expect(html).not.toContain('role="checkbox"');
+    expect(html).not.toContain("outbox-timing-tick");
     expect(html).not.toContain("outbox-timing-form");
     expect(html).not.toContain('name="timing"');
   });
@@ -213,14 +241,16 @@ describe("§529 the queue panel says when the emails leave", () => {
     const html = await render("en");
     expect(html).toMatch(/Emails leave on the scheduled round; the next: [^<]*12:00\./);
     expect(html).toContain("An email queued now waits at most 2 hours.");
-    expect(html).toContain(en.Admin.emails.queue.when.turnOff);
+    expect(tickButton(html)).toContain(`${en.Admin.emails.queue.when.turnOn}</button>`);
     expect(html).toContain("Leaves: 12:00 (estimated).");
   });
 
-  it("names the switch in «Termene»'s own words, both values", async () => {
+  it("names the tick in «Termene»'s own words and its confirm button with the verb, both values", async () => {
     const on = await render("ro");
     expect(on).toContain("Emailurile pleacă la trecerea programată;");
-    expect(on).toContain("Trimite imediat după cerere");
+    // The tick's words are the setting's; «Trimite imediat după cerere» is the confirm button of the press that unticks it.
+    const asking = await panelElement("ro");
+    expect((findByTestId(asking, "outbox-timing-form")?.props.confirm as { confirmLabel: string }).confirmLabel).toBe("Trimite imediat după cerere");
     const off = await render("en", { delivery: { ...DELIVERY, timing: "immediate", waitMinutes: null } });
     expect(off).toContain("Emails leave right after the request that queued them.");
     expect(off).toContain("Send on the scheduled round");

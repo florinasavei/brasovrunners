@@ -4,16 +4,16 @@ import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
+import Checkbox from "@mui/material/Checkbox";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Stack from "@mui/material/Stack";
-import Switch from "@mui/material/Switch";
 import Typography from "@mui/material/Typography";
 import { type ReactNode, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { englishFollowsTyping, englishLeftBehind, mayCopyToEnglish } from "@/modules/events/domain/place";
 import type { textFieldConstraints } from "@/shared/forms/constraints";
 import { fillIn } from "@/shared/forms/fill-in";
 import RecallField, { useRecall } from "@/shared/forms/recall";
-import { TAP_TARGET } from "@/shared/ui/tap-target";
+import { CHECKBOX_TAP_TARGET, TAP_TARGET } from "@/shared/ui/tap-target";
 import TranslateFieldButton from "@/modules/translate/ui/TranslateFieldButton";
 import { PLACE_NAMES_AS_TYPED_FIELD } from "../form-names";
 import { ShownWhen } from "./OnlyForType";
@@ -80,7 +80,7 @@ const UNSEEN = {
 
 /**
  * "Locația se anunță mai târziu" (`DECISIONS.md` §328; the owner: "I want to be able to set the
- * location as TBD, and to not announce it yet") — the switch, and the place's boxes whose
+ * location as TBD, and to not announce it yet") — the tick (a Material switch until §766), and the place's boxes whose
  * `required` follows it: "Punct de întâlnire" once per language (§362; the owner: "There is some
  * redundance on this meeting spot location"), Romanian and English side by side from `sm` and
  * stacked on a phone, then the map link.
@@ -224,11 +224,13 @@ function Island({ initial, labels, names, children }: Props & { initial: boolean
         <FormControlLabel
           sx={{ ...TAP_TARGET, alignSelf: "flex-start" }}
           control={
-            <Switch
+            // A tick box, not a Material switch (§766; the owner, 2026-10-14: «nu mai folosi niciodată» that kind of toggle for a setting).
+            <Checkbox
               name={SWITCH_NAME}
               checked={later}
               onChange={(event) => setLater(event.target.checked)}
               slotProps={{ input: { "aria-describedby": "place-to-be-announced-help" } }}
+              sx={CHECKBOX_TAP_TARGET}
             />
           }
           label={labels.toggle}
