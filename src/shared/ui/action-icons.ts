@@ -31,6 +31,7 @@ import FamilyRestroomIcon from "@mui/icons-material/FamilyRestroom";
 import ForwardToInboxIcon from "@mui/icons-material/ForwardToInbox";
 import GridOnIcon from "@mui/icons-material/GridOn";
 import HandshakeIcon from "@mui/icons-material/Handshake";
+import HeightIcon from "@mui/icons-material/Height";
 import HourglassTopIcon from "@mui/icons-material/HourglassTop";
 import HowToRegIcon from "@mui/icons-material/HowToReg";
 import ImageIcon from "@mui/icons-material/Image";
@@ -178,7 +179,7 @@ export type ActionIconName =
   | "route"
   | "upright"
   | "turned"
-  // The tick beside them, «Arată distanța și diferența de nivel lângă profil» (§NNN): a measure, the ruler.
+  // The tick beside them, «Arată distanța și diferența de nivel lângă profil» (§NNN): up and down, the gain.
   | "profileFigures"
   // The people on the waiting list (§626): the hourglass «Coada» wears on its panel (`panel-glyphs.ts`) and the queue's line title, beside the «Înscrieri» tab's badge.
   | "waiting"
@@ -305,7 +306,7 @@ export const ACTION_ICONS: Record<ActionIconName, ComponentType<SvgIconProps>> =
   route: RouteIcon,
   upright: TextRotationNoneIcon,
   turned: ScreenRotationAltIcon,
-  profileFigures: StraightenIcon,
+  profileFigures: HeightIcon,
   waiting: HourglassTopIcon,
   declaration: DrawIcon,
   emailConfirmation: MarkEmailReadIcon,

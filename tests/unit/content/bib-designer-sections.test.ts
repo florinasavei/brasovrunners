@@ -265,7 +265,7 @@ describe("§NNN the bib designer in named sections", () => {
 
   it("draws a glyph before the figures' tick, and the club's logo on a white plate", async () => {
     const part = section(await render(), "profile");
-    expect(part).toMatch(/name="event.bibDesign.showProfileFigures"[\s\S]*?data-testid="StraightenIcon"[\s\S]*?Arată distanța și diferența de nivel lângă profil/);
+    expect(part).toMatch(/name="event.bibDesign.showProfileFigures"[\s\S]*?data-testid="HeightIcon"[\s\S]*?Arată distanța și diferența de nivel lângă profil/);
     // The bib prints the blue lockup on its own white ground; the radio shows it the same way (never recoloured, §711).
     const design: BibDesign = { ...DEFAULT_BIB_DESIGN, member: { ...DEFAULT_BIB_MEMBER_DESIGN, enabled: true, mark: true } };
     expect(section(await render(design), "members")).toMatch(/<span[^>]*>\s*<img[^>]*src="\/brand\/logo\.svg"[^>]*>\s*<\/span>/);
