@@ -4103,7 +4103,8 @@
           "done": "The volunteer agreement is in force: whoever offers on a page accepts it, and people entered by hand get it by link or sign it on paper.",
           "how": [
             "/admin/legal → the “Volunteer agreement” card → “Regenerate from the template” → confirm. Or the button that approves the missing texts in one step.",
-            "A lawyer should read the text first, against Law no. 78/2014: the written form and the electronic acceptance, the age of 18, the role's task sheet, the volunteers' insurance and register, and how long the club keeps the acceptances: the platform deletes them 30 days after the event.",
+            "A lawyer should read the text first, against Law no. 78/2014: the written form and the electronic acceptance, the age of 18, the role's task sheet, the volunteers' insurance and register.",
+            "You and the lawyer decide how long the club keeps the acceptances. The site deletes them 30 days after the event.",
             "Open the draft, fill in what is left, “Save draft”, then “Approve and publish”. Once in force in both languages, the form appears on the pages of the events that take volunteers."
           ]
         }
@@ -5683,7 +5684,7 @@
         "SHOP_ORDER_PLACED": "When a member orders from the members' shop: the order and how to pay. The button opens the members' area.",
         "SHOP_ORDER_PAID": "When an administrator marks the order paid: to the member who ordered. The button opens the members' area.",
         "SHOP_ORDER_CLUB_NOTICE": "On every order in the shop, to the address in «Magazin» → “Who receives the orders”, if one is written.",
-        "VOLUNTEER_RECEIVED": "When a person offers to volunteer on an event's page: the one acknowledgement to them — the role, the event, and that an organizer will confirm, with the accepted agreement attached as a PDF. Nothing to press.",
+        "VOLUNTEER_RECEIVED": "When a person offers to volunteer on an event's page: the one acknowledgement to them — the role, the event, that an organizer will confirm, and the accepted agreement as a PDF. Nothing to press.",
         "VOLUNTEER_CLUB_NOTICE": "On every sign-up, to each Organizer, Administrator and Superadministrator. The button opens the event's «Volunteers» card.",
         "VOLUNTEER_AGREEMENT_REQUEST": "When an organizer presses “Send the agreement link” for a volunteer who has not accepted it yet: the agreement and the link to accept it.",
         "VOLUNTEER_AGREEMENT_ACCEPTED": "When a volunteer accepts the agreement from the link, or an organizer presses “Signed on paper”: their copy, with the agreement attached as a PDF."

@@ -4103,7 +4103,8 @@
           "done": "Contractul de voluntariat e în vigoare: cine se oferă pe pagină îl acceptă, iar cei trecuți de mână îl primesc prin link sau îl semnează pe hârtie.",
           "how": [
             "/admin/legal → cardul „Contract de voluntariat” → „Regenerează din șablon” → confirmă. Sau butonul care aprobă într-un pas textele care lipsesc.",
-            "Un jurist ar trebui să citească textul întâi, după Legea nr. 78/2014: forma scrisă și acceptarea electronică, vârsta de 18 ani, fișa rolului, asigurarea voluntarilor și registrul lor, și cât timp păstrează clubul acceptările: platforma le șterge la 30 de zile după eveniment.",
+            "Un jurist ar trebui să citească textul întâi, după Legea nr. 78/2014: forma scrisă și acceptarea electronică, vârsta de 18 ani, fișa rolului, asigurarea voluntarilor și registrul lor.",
+            "Juristul și tu hotărâți cât timp păstrează clubul acceptările. Site-ul le șterge la 30 de zile după eveniment.",
             "Deschide ciorna, completează ce a rămas, „Salvează ciorna”, apoi „Aprobă și publică”. Odată în vigoare în ambele limbi, formularul apare pe paginile evenimentelor care primesc voluntari."
           ]
         }

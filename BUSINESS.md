@@ -721,7 +721,10 @@ and works the race-day desk. An **event's volunteer** («voluntar la eveniment»
 of one event) is a person who offered to help at that event, or whom an organizer entered: a name,
 an address, a telephone number and a role the club defined for that event. An event's volunteer has
 no account, signs in nowhere, holds no place of the race and is not a participant; whoever works at
-the desk also needs an account on «Echipa», with the role Voluntar.
+the desk also needs an account on «Echipa», with the role Voluntar. An event's volunteer accepts the
+club's **volunteer agreement** («Contract de voluntariat»: unpaid help, what the volunteer and the club
+each do) — on the event page's form, from an emailed single-use link, or by signing the printed copy at
+the desk — and is «Contract neacceptat încă» on the card until they do.
 
 An administrator can also fill an event's queue with clearly labelled **test registrations**, so
 the waiting list can be watched working without ten real mailboxes, and remove them again so the
