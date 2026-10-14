@@ -25,6 +25,7 @@ import {
   BADGE_LAYOUT,
   BADGE_PAGE_MARGIN,
   BADGE_WRITING_MIN,
+  type BadgeLayoutWords,
   type BadgeSizeChoice,
   badgeFit,
   badgeImageSize,
@@ -51,8 +52,8 @@ const MEASURE = { bold: bibTitleWidth, regular: bibFooterWidth };
 const STRIP90: BadgeSizeChoice = { size: "strip90", customWidthMm: 0, customHeightMm: 0 };
 const STRIP100: BadgeSizeChoice = { size: "strip100", customWidthMm: 0, customHeightMm: 0 };
 const custom = (width: number, height: number): BadgeSizeChoice => ({ size: "custom", customWidthMm: width, customHeightMm: height });
-const WORDS = { title: "Brașov Trail Race", label: "VOLUNTAR", role: "PUNCT DE APĂ", name: "Nume:", phone: null };
-const layoutOf = (size: BadgeSizeChoice, words: Partial<typeof WORDS> & { phone?: string | null } = {}) =>
+const WORDS: BadgeLayoutWords = { title: "Brașov Trail Race", label: "VOLUNTAR", role: "PUNCT DE APĂ", name: "Nume:", phone: null };
+const layoutOf = (size: BadgeSizeChoice, words: Partial<BadgeLayoutWords> = {}) =>
   badgeLayout({ ...size, headerPicture: false, showLogo: true, writingLine: true }, { ...WORDS, ...words }, MEASURE);
 
 describe("§NNN the badge's size", () => {
