@@ -33,7 +33,7 @@ export async function eventFormFieldLabels(): Promise<Record<string, string>> {
     inBox("registration", `${t(`editor.boxes.${card}.title`)} › ${label}`);
   // The named cards that were cards of their own among those not on the page (§NNN): «Evidențiere pe
   // site» in «Ce fel de eveniment», «Copertă» and the page's address in «Titlu și rezumat».
-  const inCardOf = (outer: "kind" | "titleSummary", card: "promotion" | "cover" | "address", label: string) =>
+  const inCardOf = (outer: "kind" | "titleSummary", card: "promotion" | "cover" | "address" | "cost", label: string) =>
     inBox(outer, `${t(`editor.boxes.${card}.title`)} › ${label}`);
 
   const labels: Record<string, string> = {
@@ -94,12 +94,13 @@ export async function eventFormFieldLabels(): Promise<Record<string, string>> {
     // Both in «Ce fel de eveniment», side by side (§526).
     "event.difficulty": inBox("kind", t("editor.fields.difficulty")),
     "event.difficultyStep": inBox("kind", t("editor.fields.difficultyStep")),
-    "event.costType": inBox("registration", t("editor.fields.costType")),
+    // The cost is a card of «Ce fel de eveniment» since §466: its fields are named by both (§NNN).
+    "event.costType": inCardOf("kind", "cost", t("editor.fields.costType")),
     // `costRule` (`content/events/fields.ts`) never names `costAmount` outside `PAID` nor
     // `costUrl` outside `DONATION`, so each name has exactly one meaning to the organizer who
     // reads it back — the same box `CostFields` relabels by the chosen kind (§343).
-    "event.costAmount": inBox("registration", t("editor.costAmount")),
-    "event.costUrl": inBox("registration", t("editor.costDonationUrl")),
+    "event.costAmount": inCardOf("kind", "cost", t("editor.costAmount")),
+    "event.costUrl": inCardOf("kind", "cost", t("editor.costDonationUrl")),
     "event.routeUrl": inBox("course", t("editor.routeUrl")),
     // «Traseul»'s two maps (§718).
     "event.routeGarmin": inBox("course", t("editor.routeGarmin")),
@@ -215,8 +216,8 @@ export async function eventFormFieldLabels(): Promise<Record<string, string>> {
     seoTitle: ["address", t("editor.fields.seoTitle")],
     seoDescription: ["address", t("editor.fields.seoDescription")],
     // The club's discount on an external event's own fee (`DECISIONS.md` §394), under the same
-    // box the cost boxes live in.
-    discountNote: ["registration", t("editor.discountNote")],
+    // box the cost boxes live in — «Ce fel de eveniment › Cost» since §466 (§NNN).
+    discountNote: ["cost", t("editor.discountNote")],
     // The club's own weather text (§666), in the place's card under «Vremea».
     weatherNote: ["whenWhere", `${t("editor.weather.label")} › ${t("editor.weather.note")}`],
   };
@@ -230,7 +231,9 @@ export async function eventFormFieldLabels(): Promise<Record<string, string>> {
           ? inParticipation(box, `${language} › ${label}`)
           : box === "address"
             ? inCardOf("titleSummary", "address", `${language} › ${label}`)
-            : inBox(box, `${language} › ${label}`);
+            : box === "cost"
+              ? inCardOf("kind", "cost", `${language} › ${label}`)
+              : inBox(box, `${language} › ${label}`);
     }
   }
 

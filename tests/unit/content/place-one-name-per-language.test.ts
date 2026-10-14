@@ -121,11 +121,16 @@ describe("BR-REQ-011-01 criterion 30 the schema: a meeting point in each languag
     expect(labels["event.locationName"]).toBe("Când și unde › Punct de întâlnire (Română)");
     expect(labels["event.locationNameEn"]).toBe("Când și unde › Punct de întâlnire (English)");
     expect(labels["event.startsAtDate"]).toMatch(/^Când și unde › /);
+    // The programme, the rules and the declaration are cards of «Participare, înscrieri și regulament» since §NNN.
     expect(labels["event.declarationDocumentId"]).toBe(
-      "Program, regulament și declarație › Declarația pe propria răspundere › Declarația pe care o semnează participantul",
+      "Participare, înscrieri și regulament › Declarația pe propria răspundere › Declarația pe care o semnează participantul",
     );
-    expect(labels["translations.en.rules"]).toMatch(/^Program, regulament și declarație › Regulamentul › English › /);
-    expect(labels["event.schedule[].date"]).toMatch(/^Program, regulament și declarație › Programul zilei și ce să aduci › /);
+    expect(labels["translations.en.rules"]).toMatch(/^Participare, înscrieri și regulament › Regulamentul › English › /);
+    expect(labels["event.schedule[].date"]).toMatch(/^Participare, înscrieri și regulament › Programul zilei și ce să aduci › /);
+    // The page's address and the cover are cards of «Titlu și rezumat», the promotion of «Ce fel de eveniment» (§NNN).
+    expect(labels["translations.en.slug"]).toMatch(/^Titlu și rezumat › Adresa paginii și motoarele de căutare › English › /);
+    expect(labels["event.coverAssetId"]).toMatch(/^Titlu și rezumat › Copertă › /);
+    expect(labels["event.featured"]).toMatch(/^Ce fel de eveniment › Evidențiere pe site › /);
   });
 });
 
