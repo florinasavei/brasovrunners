@@ -240,7 +240,8 @@ test.describe("§750 §NNN the designer's sections: header, footer, the profile 
     await expect(profilePicture).toBeVisible();
     // Its own sub-card with its «Calitate» row, and never a crop box: the picture is fitted whole.
     await expect(profilePicture.getByTestId("image-quality")).toBeVisible();
-    const drawing = await sharp({ create: { width: 1400, height: 100, channels: 3, background: "#ffffff" } }).jpeg().toBuffer();
+    // A wide strip, at least 200 pixels on each side: the upload's own floor for any picture (`media/limits.ts`).
+    const drawing = await sharp({ create: { width: 2400, height: 240, channels: 3, background: "#ffffff" } }).jpeg().toBuffer();
     await profilePicture.locator('input[type="file"]').setInputFiles({ name: "profil.jpg", mimeType: "image/jpeg", buffer: drawing });
     await expect(preview).toHaveAttribute("src", /[?&]profileImageSrc=/, { timeout: 30_000 });
     await expect(page.getByTestId("bib-picture-profile-crop")).toHaveCount(0);

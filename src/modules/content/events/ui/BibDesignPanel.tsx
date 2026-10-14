@@ -29,7 +29,7 @@ import {
   DEFAULT_BIB_DESIGN,
 } from "@/modules/registrations/bib-design";
 import { BIB_MEMBER_MARK_PATHS, BIB_MEMBER_MARK_VIEWBOX, BIB_MEMBER_MARKS, isVectorMark } from "@/modules/registrations/bib-member-mark";
-import { CLUB_NAME, LOGO } from "@/theme/brand";
+import { CLUB_NAME, HEADER_CLEARANCE_PX, LOGO } from "@/theme/brand";
 import { bibPreviewUrl } from "@/modules/registrations/bib-design-query";
 import { BIB_FOOTER_TEXT_MAX, bibWebsiteHost } from "@/modules/registrations/bib-footer";
 import { BIB_PICTURE_RATIO, type BibPictureSlot } from "@/modules/registrations/bib-picture-frame";
@@ -292,7 +292,7 @@ export default async function BibDesignPanel({
             once the event exists: the picture route draws an event's title and date. In sight on a
             wide screen while the sections below scroll (§NNN). */}
         {eventId && initialSrc && (
-          <Box sx={{ position: { md: "sticky" }, top: { md: 8 }, zIndex: 1, bgcolor: "background.paper", py: 0.5 }}>
+          <Box sx={{ position: { md: "sticky" }, top: { md: HEADER_CLEARANCE_PX.sm }, zIndex: 1, bgcolor: "background.paper", py: 0.5 }}>
             <BibDesignPreview
               eventId={eventId}
               locale={locale}
