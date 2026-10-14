@@ -67,7 +67,9 @@ function phoneOf(form: FormData): string {
 }
 
 const staffFields = (form: FormData) => ({
-  roleId: field(form, "roleId"),
+  // What the person would do (§761): every box ticked, one name, several values; and the role given, or "".
+  roleIds: form.getAll("roleIds").filter((value): value is string => typeof value === "string"),
+  assignedRoleId: field(form, "assignedRoleId"),
   name: field(form, "name"),
   email: field(form, "email"),
   phone: phoneOf(form),
@@ -188,6 +190,21 @@ export async function setVolunteerStateAction(form: FormData): Promise<void> {
 }
 
 /**
+ * «Dă-i rolul …» (§761): one press gives a volunteer one role of the event — one of those they ticked, or another from
+ * the select beside them. The form posts the role it wants, never a toggle; the service checks the role is this
+ * event's, refuses a cancelled person, audits the change and emails the person the role.
+ */
+export async function assignVolunteerAction(form: FormData): Promise<void> {
+  try {
+    const result = await runVolunteer({ kind: "assign", eventId: eventIdOf(form), id: field(form, "volunteerId"), roleId: field(form, "roleId") });
+    return backToCard(form, { saved: result.changed ? "volunteerAssigned" : "volunteerUnchanged" });
+  } catch (error) {
+    if (!isDomainError(error)) throw error;
+    return backToCard(form, { error: error.code });
+  }
+}
+
+/**
  * «Trimite linkul contractului» (§758): one email with the volunteer agreement and a single-use link to accept it,
  * for a person entered by hand. The service refuses while no agreement is in force, and for a person who has
  * accepted or was cancelled — each said in the card's banner.
@@ -217,7 +234,7 @@ export async function recordPaperVolunteerAgreementAction(_previous: FormOutcome
         eventId: eventIdOf(form),
         id: field(form, "volunteerId"),
         // What the card's «PDF de semnat» printed: the service refuses when either changed since (§758).
-        printed: { documentId: field(form, "agreementDocumentId"), roleId: field(form, "roleId") },
+        printed: { documentId: field(form, "agreementDocumentId"), roles: field(form, "agreementRoles") },
       },
       new Date(),
     );

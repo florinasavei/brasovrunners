@@ -221,8 +221,8 @@ export default async function EventDetailPage({ params, query, canEdit = false, 
           published: true,
           membersOnly,
         });
-        // The last place just taken — by this very person, or by someone else while they typed — still owes them
-        // the answer: the box stays, with no role and no form (`volunteerBoxRoles`).
+        // The last place given by the organizers while this person typed (an offer takes none, §761) still owes
+        // them the answer: the box stays, with no role and no form (`volunteerBoxRoles`).
         return volunteerBoxRoles(closed, roles, parseVolunteerOutcome(one(asked.volunteer)));
       }, null);
   const volunteerOutcome = volunteerRoles ? parseVolunteerOutcome(one(asked.volunteer)) : null;

@@ -14,11 +14,12 @@ decision or a click only the club can make · **released** — on production, wi
 The owner, 2026-10-10: «Soon I need to start a new session from the laptop … You need to save and document everything».
 This section replaces the plan of 2026-09-30; it is what a session with none of today's conversation needs to carry on.
 
-- **Production: `BR-V3.19`** (2026-10-14 morning: §759 the bib designer). Waiting for «prod»: `BR-V3.20` (§760,
-  below) — no migration.
-- **QA: `BR-V3.20`** — the event editor in eight cards: «Participare, înscrieri și regulament» holds what cards 6
-  and 9 held; «Evidențiere pe site» sits in card 1, «Adresa paginii…» and «Copertă» in card 2; «Puncte de control»
-  stands under «Traseul»; «Voluntari» under «Înscrierile primite». The night's queue is done.
+- **Production: `BR-V3.20`** (2026-10-14 morning: §760 the editor in eight cards). Waiting for «prod»: `BR-V3.21`
+  (§761, §762, below), migration `0149` (expand only).
+- **QA: `BR-V3.21`** — the backoffice's events list puts the main event first; a volunteer ticks every role they
+  would do and the organizers give each one a role («De repartizat», «Dă-i rolul …», a short email naming it).
+  Building: volunteer badges, the checkpoints inside «Traseul» (a V3.20 defect), then the volunteers' own page and
+  data (age, sex, city, experience, the club group, a guardian from 14), and tick boxes for every switch.
 - **Nothing is building.** Releases by the label `ship` reach production by themselves again: `SHIP_TOKEN` was given
   «Pull requests: Read and write» on 2026-10-12, and `BR-V3.05`'s run opened its `qa → main` pull request itself.
 - **Lanes:** the phone session took the calendar on 2026-10-12; one release at a time between
@@ -138,6 +139,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V3.21` | volunteers choose several roles (§761) · the main event first in the backoffice list (§762) |
 | `BR-V3.20` | the event editor in fewer cards (§760) |
 | `BR-V3.19` | the bib designer in sections, with a profile picture, a turned profile and labelled emergency phones (§759) |
 | `BR-V3.18` | a volunteer agreement (§758) |
