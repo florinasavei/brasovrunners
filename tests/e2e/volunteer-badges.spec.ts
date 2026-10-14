@@ -56,6 +56,18 @@ test.describe("§NNN volunteer badges, designed and printed per role", () => {
     await hydrated(page);
     // One button on the «Voluntari» card opens the badges' page.
     await openEditorBox(page, "Voluntari");
+    await openEditorBox(page, "Roluri");
+    // A role's colour is part of its definition: «Modifică» on the role's row, «Culoarea benzii», «Salvează».
+    const row = page.locator(`[data-testid="volunteer-role"][data-role-id="${event.water}"]`);
+    await expect(row.getByTestId("volunteer-role-colour")).toContainText("Portocaliul clubului");
+    await openFold(row.locator("summary", { hasText: "Modifică" }).locator("xpath=.."));
+    await row.getByLabel("Culoarea benzii").selectOption({ label: "Roșu" });
+    await row.getByRole("button", { name: "Salvează", exact: true }).click();
+    await page.waitForURL(/#box-volunteers$/);
+    await hydrated(page);
+    await openEditorBox(page, "Voluntari");
+    await openEditorBox(page, "Roluri");
+    await expect(row.getByTestId("volunteer-role-colour")).toContainText("Roșu");
     const link = page.getByTestId("volunteer-badges-link");
     expect((await link.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
     await link.click();
@@ -64,6 +76,9 @@ test.describe("§NNN volunteer badges, designed and printed per role", () => {
     await expect(page.getByRole("heading", { name: /Ecusoane pentru voluntari/ })).toBeVisible();
     // No horizontal scroll at the project's width.
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+    // The colour saved on the role's row is the one «Culorile rolurilor» says here.
+    await openFold(page.getByTestId("badge-colours"));
+    await expect(page.locator(`[data-testid="badge-colour-row"][data-role-id="${event.water}"]`).getByTestId("badge-colour-state")).toContainText("Roșu");
 
     // --- «Cum arată ecusonul»: the larger strip; the preview follows before the save -----------
     const designer = page.getByTestId("badge-design");
