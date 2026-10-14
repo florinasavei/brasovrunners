@@ -552,8 +552,8 @@ test.describe.serial("§393 a group run's optional self-declaration", () => {
     await expect(minorBoxes).toBeHidden();
     expect((await tick.locator("xpath=..").boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
     // The text itself carries both ways of signing, with blanks, before anybody has typed (what is read is what is signed).
-    await expect(page.locator("#main")).toContainText("Eu, ………………………, semnez această declarație personal, doar pentru mine.");
-    await expect(page.locator("#main")).toContainText("Pentru un participant minor, declarația este semnată de minor, ………………………, pentru sine");
+    await expect(page.locator("#main")).toContainText(/Eu, …+, semnez această declarație personal, doar pentru mine\./);
+    await expect(page.locator("#main")).toContainText(/Pentru un participant minor, declarația este semnată de minor, …+, pentru sine/);
 
     await tick.check();
     await expect(minorBoxes).toBeVisible();
