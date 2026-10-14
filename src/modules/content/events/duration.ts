@@ -65,3 +65,21 @@ export function savedDurationMinutes(startsAt: Date | null | undefined, endsAt: 
   const minutes = Math.round((endsAt.getTime() - startsAt.getTime()) / 60_000);
   return minutes > 0 ? minutes : null;
 }
+
+/**
+ * Where «Durata» counts from (§757, amending §71 and §433): **a race's gun when it has one** — for a
+ * race the box is «Timp limită», how long the runners have from the start until the finish closes,
+ * and a runner's start is the gun, not the meeting time before it — else the event's own start. The
+ * service adds the box's minutes to this instant to store `ends_at`, and the editor, its summary and
+ * the event's JSON file read the box back from it, so a save that changes nothing keeps the same end.
+ * Only a race has a gun (the service stores none on any other type), so every other event keeps the
+ * end it had.
+ */
+export function durationBase(event: { type: string; startsAt: Date; raceStartsAt: Date | null }): Date {
+  return event.type === "RACE" && event.raceStartsAt ? event.raceStartsAt : event.startsAt;
+}
+
+/** «Durata» as the editor shows it and the file carries it: whole minutes from `durationBase` to the end, or null. */
+export function eventDurationMinutes(event: { type: string; startsAt: Date; raceStartsAt: Date | null; endsAt: Date | null } | null | undefined): number | null {
+  return event ? savedDurationMinutes(durationBase(event), event.endsAt) : null;
+}

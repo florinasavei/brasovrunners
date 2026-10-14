@@ -12,7 +12,7 @@ import { readRouteGpx } from "@/modules/events/domain/route-gpx";
 import { readRouteMaps } from "@/modules/events/domain/route-maps";
 import { yearsPhrase } from "@/modules/registrations/domain/age";
 import { confirmationDueAtStart } from "@/modules/registrations/domain/hold-deadlines";
-import { savedDurationMinutes } from "../duration";
+import { eventDurationMinutes } from "../duration";
 import type { EditableEvent } from "../repository";
 import { storedTextValue } from "./publish-check";
 
@@ -270,7 +270,7 @@ type WhenEvent = Pick<EditableEvent, "type" | "startsAt" | "endsAt" | "raceStart
 /** Box 4: `Sâm., 21 nov. 2026, 09:00 · startul cursei 09:30 · 3 h` — the duration in hours and minutes (§433). */
 export function whenSummary(words: SummaryWords, event: WhenEvent | null, locale: string): string {
   if (!event) return words.when.none;
-  const minutes = savedDurationMinutes(event.startsAt, event.endsAt);
+  const minutes = eventDurationMinutes(event);
   // A part left blank (§545, amending §533) is not said at all: no invented date, and the day alone
   // when only the hour was left blank — never the provisional value the platform stored in its place.
   const blank = blankStartParts(event.startsAt, event.timezone);

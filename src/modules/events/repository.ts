@@ -94,6 +94,14 @@ export const OFFERS_MEMBER_BIB = sql<boolean>`coalesce((${events.bibDesign} #> '
 export const RACE_NUMBER_FORMAT = sql<RaceNumberFormat>`coalesce(${events.bibDesign} ->> 'numberFormat', 'plain')`.mapWith(readRaceNumberFormat);
 
 /**
+ * The route's checkpoints as one string (§757), for the stamp below: each one's kilometre, kinds and
+ * cut-off in distance order — the same facts `domain/checkpoint.ts#checkpointsStampPart` joins for the
+ * bibs page — so a point added, moved or retimed is a new picture address. Null with none, which
+ * `concat_ws` leaves out, so an event without checkpoints keeps the stamp it had.
+ */
+const CHECKPOINTS_STAMP = sql`(SELECT string_agg(concat_ws(':', c.km::text, array_to_string(c.kinds, '+'), c.cutoff_time::text), '|' ORDER BY c.km, c.position, c.id) FROM event_checkpoints c WHERE c.event_id = ${events.id})`;
+
+/**
  * A stamp of what a bib's picture is drawn from (§748, §750), for the desk's picture address: a hash of
  * the event's whole design, band colour, partners, route GPX and typed figures, and its title and
  * date in the row's language — so any change of the design (the number's format, the member mark, the
@@ -102,7 +110,7 @@ export const RACE_NUMBER_FORMAT = sql<RaceNumberFormat>`coalesce(${events.bibDes
  * translation joined, as every desk query has it. It starts with `BIB_DRAWING_VERSION` (§755), so a
  * change of the drawing itself — the header's lines — is a new address too.
  */
-export const BIB_STAMP = sql<string>`md5(concat_ws('|', ${String(BIB_DRAWING_VERSION)}::text, ${events.bibDesign}::text, ${events.bibColour}, ${events.coHosts}::text, ${events.coHostName}, ${events.coHostUrl}, ${events.routeGpx} ->> 'key', ${events.distanceMeters}, ${events.elevationGainMeters}, ${eventTranslations.title}, ${events.startsAt}::text))`;
+export const BIB_STAMP = sql<string>`md5(concat_ws('|', ${String(BIB_DRAWING_VERSION)}::text, ${events.bibDesign}::text, ${events.bibColour}, ${events.coHosts}::text, ${events.coHostName}, ${events.coHostUrl}, ${events.routeGpx} ->> 'key', ${events.distanceMeters}, ${events.elevationGainMeters}, ${eventTranslations.title}, ${events.startsAt}::text, ${CHECKPOINTS_STAMP}))`;
 
 /**
  * «Copertă» (the facelift's phase 2, §709) as a page draws it: the stored picture's key prefix and

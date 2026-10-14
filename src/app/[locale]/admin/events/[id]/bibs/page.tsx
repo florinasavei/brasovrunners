@@ -8,6 +8,8 @@ import { getDb } from "@/db/client";
 import { getPathname, Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { findEventForEditing } from "@/modules/content/events/repository";
+import { listCheckpoints } from "@/modules/event-checkpoints/checkpoints";
+import { checkpointsStampPart } from "@/modules/event-checkpoints/domain/checkpoint";
 import { BIB_IMAGE } from "@/modules/registrations/bib-geometry";
 import { bibPreviewUrl } from "@/modules/registrations/bib-design-query";
 import { bibEventDate, countUnverifiedMemberBibs, findEventForBibs, listBibs } from "@/modules/registrations/bibs";
@@ -63,7 +65,9 @@ export default async function EventBibsPage({ params }: Props) {
   */
   const memberBibs = memberBibOn ? bibs.filter((bib) => bib.member).length : 0;
   // What the pictures are drawn from, in their address: the browser keeps each an hour, so a new «Cum arată numărul» must be a new address (§748).
-  const pictureStamp = event ? bibPictureStamp([event.design, event.bibColour, event.title, bibEventDate(event, locale), event.coHosts, event.routeGpx?.key ?? null, event.distanceMeters, event.elevationGainMeters]) : "";
+  // The route's checkpoints are drawn from (§757): a point added, moved or retimed is a new address too.
+  const checkpointsPart = event ? checkpointsStampPart(await listCheckpoints(db, id)) : "";
+  const pictureStamp = event ? bibPictureStamp([event.design, event.bibColour, event.title, bibEventDate(event, locale), event.coHosts, event.routeGpx?.key ?? null, event.distanceMeters, event.elevationGainMeters, ...(checkpointsPart ? [checkpointsPart] : [])]) : "";
   const shown = memberBibs > 0 ? [...bibs.filter((bib) => bib.member), ...bibs.filter((bib) => !bib.member)] : bibs;
   const unverifiedHref = `${getPathname({ locale, href: "/admin/registrations" })}?${new URLSearchParams({ eventId: id, status: "CONFIRMED", memberBib: "asked" }).toString()}`;
 

@@ -58,6 +58,13 @@ const XS_DENSITY = new RegExp(`${PROP_THEN_XS}DENSITY\\.(\\w+),\\s*sm:\\s*(-?[\\
  * never excuses a literal in another.
  */
 const ALLOWED: Array<{ file: string; line: string; reason: string }> = [
+  // «Puncte de control» (§757): at 320 pixels the table is a stack of bordered blocks and is a table from `sm` up —
+  // a layout that exists only on a phone (its `sm` side is zero or the table's own cell padding), not a phone
+  // override of a desktop spacing, so there is no wider value for a density step to tighten.
+  { file: "src/modules/events/ui/EventCheckpoints.tsx", line: "mb: { xs: 1, sm: 0 },", reason: "the gap between two stacked rows, which a table row does not have" },
+  { file: "src/modules/events/ui/EventCheckpoints.tsx", line: "p: { xs: 1, sm: 0 },", reason: "a stacked row's own padding inside its border, which a table row does not have" },
+  { file: "src/modules/events/ui/EventCheckpoints.tsx", line: "gap: { xs: 1, sm: 0 },", reason: "between a stacked cell's column word and its value, which a table cell does not have" },
+  { file: "src/modules/events/ui/EventCheckpoints.tsx", line: "py: { xs: 0.5, sm: 1 },", reason: "a stacked cell is a line of its block, tighter than a table cell on purpose" },
   // The facelift's phase 4: under «Tema v2» the chips row takes 44 pixels on a phone, and this zero gives it back so the first week stays above the fold (§569).
   {
     file: "src/modules/events/ui/CalendarSection.tsx",
@@ -286,6 +293,7 @@ const CONVERTED_SITES: Array<{ file: string; prop: string; step: DensityStep; sm
   { file: "src/modules/events/ui/EventProgramme.tsx", prop: "mt", step: "sectionGap", sm: 4, xsBefore: 4 }, // §480: one step tighter on a phone, the event page
   // The route section (§387), born on the scale, spaced like "Linkuri și fișiere" beside it.
   { file: "src/modules/events/ui/EventRoute.tsx", prop: "mt", step: "sectionGap", sm: 4, xsBefore: 4 }, // §480: one step tighter on a phone, the event page
+  { file: "src/modules/events/ui/EventCheckpoints.tsx", prop: "mt", step: "sectionGap", sm: 4, xsBefore: 4 }, // §757: written on the scale from the start, as the route section above it
   { file: "src/modules/events/ui/RegistrationCta.tsx", prop: "mt", step: "gapSm", sm: 3, xsBefore: 3, count: 7 }, // §480: one step tighter on a phone, the event page
   { file: "src/modules/events/ui/StartList.tsx", prop: "mt", step: "sectionGap", sm: 4, xsBefore: 4 }, // §480: one step tighter on a phone, the event page
   // The filter panel (§424, a fix round on §413/§424's small-chip button — the owner: "Butonul

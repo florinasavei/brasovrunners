@@ -15,6 +15,7 @@ import {
   DEFAULT_BIB_DESIGN,
   numberScaleFactor,
 } from "./bib-design";
+import { checkpointGlyphLines } from "./bib-checkpoints";
 import type { BibProfileDrawing } from "./bib-profile";
 import { bibFooterLines, bibFooterParts } from "./bib-footer";
 import { BIB_PICTURE_BOX, type BibPictureSlot, bibPictureDrawing } from "./bib-picture-frame";
@@ -647,10 +648,31 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
       doc.stroke();
       doc.circle(first[0], first[1], 1.8).fill(ink);
       doc.circle(last[0], last[1], 1.8).fill(ink);
+      // The route's checkpoints (§757, `bib-checkpoints.ts`): a tick down to the chart's foot, and an aid
+      // station's cup or fork beside the line — any other point a dot on it — at the picture's points.
+      for (const mark of profile.checkpoints?.marks ?? []) {
+        const markX = chartLeft + mark.x * L.profileChartWidth;
+        doc.lineWidth(L.checkpointTickWeight).strokeColor(ink).moveTo(markX, chartTop + mark.tickFrom).lineTo(markX, chartTop + L.profileChartHeight).stroke();
+        if (mark.glyph === null || mark.glyphY === null) {
+          doc.circle(markX, chartTop + (1 - mark.y) * L.profileChartHeight, L.checkpointDot).fill(ink);
+          continue;
+        }
+        const glyphTop = chartTop + mark.glyphY;
+        doc.lineWidth(L.checkpointGlyphWeight).strokeColor(ink).lineJoin("round").lineCap("round");
+        for (const stroke of checkpointGlyphLines(mark.glyph)) {
+          stroke.forEach(([x, y], index) => (index === 0 ? doc.moveTo(markX + x, glyphTop + y) : doc.lineTo(markX + x, glyphTop + y)));
+          doc.stroke();
+        }
+      }
       doc.restore();
       doc.font("body").fontSize(L.profileLabelSize).fillColor(ink);
       doc.text(profile.start, chartLeft, rowTop + L.profileLabelTop, { lineBreak: false });
       doc.text(profile.finish, chartLeft + L.profileChartWidth - doc.widthOfString(profile.finish), rowTop + L.profileLabelTop, { lineBreak: false });
+      // Their words, «km 12» or «km 12 · 11:30», centred under the ticks in the labels' row — where the crowding rule kept them.
+      for (const mark of profile.checkpoints?.marks ?? []) {
+        if (!mark.label) continue;
+        doc.text(mark.label, chartLeft + mark.x * L.profileChartWidth - doc.widthOfString(mark.label) / 2, rowTop + L.profileLabelTop, { lineBreak: false });
+      }
       doc.fontSize(L.profileTextSize);
       const textLeft = chartLeft + L.profileChartWidth + L.profileTextGap;
       doc.text(profile.distance, textLeft, rowTop + L.profileDistanceTop, { lineBreak: false });

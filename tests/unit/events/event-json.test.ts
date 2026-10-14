@@ -68,7 +68,16 @@ function sampleConfig(): EventConfig {
       coordinates: { latitude: 45.6, longitude: 25.58 },
     },
     weather: { mode: "forecast" },
-    route: { url: null, maps: [{ provider: "garmin", id: "987654321" }], gpx: { name: "traseu.gpx", url: GPX } },
+    route: {
+      url: null,
+      maps: [{ provider: "garmin", id: "987654321" }],
+      gpx: { name: "traseu.gpx", url: GPX },
+      // The route's checkpoints (§757): one with a cut-off and a note, one without either.
+      checkpoints: [
+        { km: 7.5, name: { ro: "Apă la cabană", en: "Water at the hut" }, kinds: ["WATER", "FOOD"], cutoff: "10:45", note: { ro: "Și banane", en: "Bananas too" } },
+        { km: 15, name: { ro: "Cronometrare", en: "Timing" }, kinds: ["TIMING"], cutoff: null, note: { ro: null, en: null } },
+      ],
+    },
     links: [],
     partners: [],
     stravaEventUrl: null,
@@ -110,7 +119,7 @@ function sampleFile(): EventFile {
     format: EVENT_FILE_FORMAT,
     version: EVENT_FILE_VERSION,
     exportedAt: "2026-10-13T10:00:00.000Z",
-    exportedFrom: { environment: "production", baseline: "BR-V3.16-2026-10-14" },
+    exportedFrom: { environment: "production", baseline: "BR-V3.17-2026-10-14" },
     series: { partOfASeries: false, rule: null },
     event: sampleConfig(),
     media: [{ role: "cover", url: PICTURE, contentType: "image/webp", size: 10, sha256: "a".repeat(64) }],
@@ -133,9 +142,44 @@ describe("the event file's reader", () => {
     expect(refusal("[1, 2]")).toBe("notAnEventFile");
     expect(refusal("{}")).toBe("notAnEventFile");
     expect(refusal(JSON.stringify({ ...sampleFile(), format: "somebody.else" }))).toBe("notAnEventFile");
-    expect(refusal(JSON.stringify({ ...sampleFile(), version: 2 }))).toBe("unknownVersion");
+    expect(refusal(JSON.stringify({ ...sampleFile(), version: EVENT_FILE_VERSION + 1 }))).toBe("unknownVersion");
+    expect(refusal(JSON.stringify({ ...sampleFile(), version: "2" }))).toBe("unknownVersion");
     expect(refusal(JSON.stringify({ ...sampleFile(), version: undefined }))).toBe("unknownVersion");
     expect(refusal(JSON.stringify({ ...sampleFile(), padding: "x".repeat(MAX_EVENT_FILE_BYTES) }))).toBe("tooLarge");
+  });
+
+  /*
+    §757: version 2 counts a race's `durationMinutes` from its gun. A version 1 file — what production
+    exported before this release — counted from the event's start, and must import with the end it had.
+  */
+  it("reads a version 1 file with its race's end kept: the minutes from the start become minutes from the gun", () => {
+    const old = { ...sampleFile(), version: 1 };
+    // 09:00 on the event's clock is 07:00Z in November; the gun at 08:00Z is an hour later, so 150 from the start is 90 from the gun.
+    const read = readEventFile(JSON.stringify(old));
+    expect(read.ok).toBe(true);
+    if (!read.ok) return;
+    expect(read.file.version).toBe(EVENT_FILE_VERSION);
+    expect(read.file.event.durationMinutes).toBe(90);
+    // The end: start + 150 min (v1) = gun + 90 min (v2), the same instant.
+    const start = Date.parse("2026-11-21T07:00:00.000Z");
+    const gun = Date.parse(read.file.event.raceStartsAt as string);
+    expect(gun + 90 * 60_000).toBe(start + 150 * 60_000);
+  });
+
+  it("reads a version 1 file unchanged where the gun did not move the count: no gun, another type, no start hour", () => {
+    const minutes = (event: Partial<EventConfig>) => {
+      const read = readEventFile(JSON.stringify({ ...sampleFile(), version: 1, event: { ...sampleConfig(), ...event } }));
+      return read.ok ? read.file.event.durationMinutes : read.refusal;
+    };
+    expect(minutes({ raceStartsAt: null })).toBe(150);
+    expect(minutes({ type: "GROUP_RUN", raceStartsAt: null })).toBe(150);
+    expect(minutes({ start: { date: "2026-11-21", time: null } })).toBe(150);
+    expect(minutes({ durationMinutes: null })).toBeNull();
+  });
+
+  it("refuses a version 1 race whose end was at or before its gun: no time limit is made up", () => {
+    const read = readEventFile(JSON.stringify({ ...sampleFile(), version: 1, event: { ...sampleConfig(), durationMinutes: 60 } }));
+    expect(read).toMatchObject({ ok: false, refusal: "invalid", detail: "event.durationMinutes" });
   });
 
   it("names the parts that do not fit, by path and never by value", () => {

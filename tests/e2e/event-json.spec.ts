@@ -43,7 +43,8 @@ test.describe.serial("An event as a JSON file", () => {
     const text = readFileSync(await download.path(), "utf8");
     const file = JSON.parse(text) as { format: string; version: number; event: { translations: Record<"ro" | "en", { title: string; slug: string }> }; media: unknown[] };
     expect(file.format).toBe("brasovrunners-event");
-    expect(file.version).toBe(1);
+    // The version this release writes (`EVENT_FILE_VERSION` in transfer/file-format.ts): 2 since §757.
+    expect(file.version).toBe(2);
     expect(file.event.translations.ro.title).toBe("Antrenament de intervale");
     expect(Object.keys(file.event)).not.toContain("registrations");
     expect(text).not.toMatch(/@/);

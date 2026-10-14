@@ -73,6 +73,8 @@ import { readBibDesignForm } from "@/modules/registrations/bib-design-query";
 import { assignBibNumbers, reserveSpareBibs } from "@/modules/registrations/bibs";
 import { hiddenListRefusalOf, SPARES_BEFORE_HIDDEN_LIST } from "@/modules/registrations/domain/hidden-list";
 import { formatCalendarDay } from "@/i18n/dates";
+import { getTranslations } from "next-intl/server";
+import { SavedCheckpointsRefusal } from "@/modules/event-checkpoints/checkpoints";
 import { withdrawInterest } from "@/modules/registrations/interest";
 import { eraseGroupRunDeclaration, eraseGroupRunDeclarations, setGroupRunDeclarationHold } from "@/modules/group-run-declarations/service";
 import { DomainError, isDomainError } from "@/shared/errors/domain-error";
@@ -161,6 +163,20 @@ function hiddenListOutcome(error: unknown, locale: Locale): { error: string; err
   if (!refusal) return null;
   if (refusal.date === null) return { error: refusal.code };
   return { error: refusal.code, errorValues: { date: formatCalendarDay(refusal.date, { locale, position: "inline" }) } };
+}
+
+/**
+ * The saved «Puncte de control» would no longer hold against the event as this save leaves it (§757):
+ * a moved start or gun, a shorter «Timp limită» or route. The card's own sentence about the point, in
+ * the page's language, inside one that names the card (and the date, on another date of a series);
+ * no box of this form is linked — the point is changed in its own card.
+ */
+async function savedCheckpointsOutcome(error: unknown, locale: Locale): Promise<Partial<FormOutcome>> {
+  if (!(error instanceof SavedCheckpointsRefusal)) return {};
+  const t = await getTranslations({ locale, namespace: "Admin.errors" });
+  const detail = t(error.refusal.reason, error.refusal.valuesIn(locale));
+  if (error.date === null) return { error: "CHECKPOINTS_NO_LONGER_HOLD", errorValues: { detail }, fields: [] };
+  return { error: "CHECKPOINTS_NO_LONGER_HOLD_DATED", errorValues: { detail, date: formatCalendarDay(error.date, { locale, position: "inline" }) }, fields: [] };
 }
 
 /**
@@ -744,7 +760,7 @@ export async function saveEventAndTranslationsAction(_previous: FormOutcome | nu
       ...(notice?.kind === "cancelledNobodyToTell" ? { notice: "cancelledNobody" } : {}),
     };
   } catch (error) {
-    return { ...refused(error, form, { fieldNames: eventFormFieldNames }), ...hiddenListOutcome(error, locale) };
+    return { ...refused(error, form, { fieldNames: eventFormFieldNames }), ...hiddenListOutcome(error, locale), ...(await savedCheckpointsOutcome(error, locale)) };
   }
 
   return backTo(path, outcome);

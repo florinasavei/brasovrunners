@@ -9,8 +9,10 @@ import Panel from "@/shared/ui/Panel";
 import { startBoxValues, typedStartOrNull } from "@/modules/events/domain/provisional-start";
 import { toWallTimeInput } from "@/modules/events/domain/zoned-time";
 import { eventInputConstraints } from "../../constraints";
-import { DURATION_HOURS_CONSTRAINTS, DURATION_MINUTES_CONSTRAINTS, savedDurationMinutes, splitDuration } from "../../duration";
+import { PANEL_GLYPHS } from "@/shared/ui/panel-glyphs";
+import { DURATION_HOURS_CONSTRAINTS, DURATION_MINUTES_CONSTRAINTS, eventDurationMinutes, splitDuration } from "../../duration";
 import { placeSummary, summaryDateTime, timezoneSummary, whenSummary } from "../box-summaries";
+import DurationWords from "../DurationWords";
 import OnlyForType from "../OnlyForType";
 import RaceStartNotSet from "../RaceStartNotSet";
 import StartToBeAnnounced from "../StartToBeAnnounced";
@@ -64,6 +66,9 @@ function PartHeading({ id, children }: { id: string; children: string }) {
  * required; folded on the editor. With people registered, the card is amber and says what a new
  * date and a new place do to them. Field names, ids and refusals are the two boxes' own, unchanged.
  */
+/** The glyph before «Timp limită» / «Cât durează evenimentul»: the stopwatch, by name from the panels' registry (§318). */
+const DurationGlyph = PANEL_GLYPHS.deadlines;
+
 export default async function WhenBox({
   event,
   mayEditSettings,
@@ -78,7 +83,7 @@ export default async function WhenBox({
   const locale = await getLocale();
   const zone = event?.timezone ?? DEFAULT_TIMEZONE;
   const initialType = event?.type ?? "GROUP_RUN";
-  const duration = splitDuration(savedDurationMinutes(event?.startsAt, event?.endsAt));
+  const duration = splitDuration(eventDurationMinutes(event));
   const translations = languages.map((entry) => entry.translation);
   // The place a change moves people away from, as the Romanian page names it (§362).
   const place = placeNameInBox(event, languages, "ro");
@@ -162,10 +167,13 @@ export default async function WhenBox({
               required={eventInputConstraints("raceStartsAtWallTime").required === true}
             />
           </OnlyForType>
-          {/* How long, not when it ends: the end is derived (§71) — asked as hours and minutes (§433). */}
-          <Stack component="fieldset" spacing={0.5} sx={{ border: 0, m: 0, p: 0, minWidth: 0 }}>
-            <Typography component="legend" variant="body2" sx={{ mb: 1, p: 0 }}>
-              {t("editor.duration")}
+          {/* How long, not when it ends: the end is derived (§71) — asked as hours and minutes (§433). Its words
+              follow the type (§757): «Timp limită» for a race, counted from the gun when it has one, else
+              «Cât durează evenimentul» — the same two boxes and the same column. */}
+          <Stack component="fieldset" spacing={0.5} sx={{ border: 0, m: 0, p: 0, minWidth: 0 }} data-testid="duration-fieldset">
+            <Typography component="legend" variant="body2" sx={{ mb: 1, p: 0, display: "inline-flex", alignItems: "center", gap: 0.75 }}>
+              <DurationGlyph aria-hidden fontSize="small" />
+              <DurationWords selectName="event.type" initialType={initialType} race={t("editor.durationRace")} other={t("editor.durationOther")} />
             </Typography>
             <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.5, alignItems: "flex-start" }}>
               <RecallField
@@ -184,7 +192,7 @@ export default async function WhenBox({
               />
             </Box>
             <Typography variant="caption" color="text.secondary" sx={{ px: 1.75 }}>
-              {t("editor.durationHelp")}
+              <DurationWords selectName="event.type" initialType={initialType} race={t("editor.durationRaceHelp")} other={t("editor.durationOtherHelp")} />
             </Typography>
           </Stack>
           {/* «Unde» (§481): the place's own part, where "Publică" scrolls for a missing meeting point. */}

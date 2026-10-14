@@ -46,8 +46,8 @@ export async function eventFormFieldLabels(): Promise<Record<string, string>> {
     "event.raceStartsAtDate": inWhenWhere(t("editor.raceStartsAt")),
     "event.raceStartsAtTime": inWhenWhere(t("editor.raceStartsAt")),
     // «Durata» as hours and minutes (§433); a refusal of the total names the hours box.
-    "event.durationHours": inWhenWhere(`${t("editor.duration")} › ${t("editor.durationHours")}`),
-    "event.durationMinutesPart": inWhenWhere(`${t("editor.duration")} › ${t("editor.durationMinutesPart")}`),
+    "event.durationHours": inWhenWhere(`${t("editor.durationLabel")} › ${t("editor.durationHours")}`),
+    "event.durationMinutesPart": inWhenWhere(`${t("editor.durationLabel")} › ${t("editor.durationMinutesPart")}`),
     // "Punct de întâlnire", once per language (§362): the refusal names the empty one's language.
     "event.locationName": inWhenWhere(`${t("editor.fields.locationName")} (${tSite("languageName.ro")})`),
     "event.locationNameEn": inWhenWhere(`${t("editor.fields.locationName")} (${tSite("languageName.en")})`),

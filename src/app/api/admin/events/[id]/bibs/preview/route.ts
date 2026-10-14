@@ -9,7 +9,7 @@ import { routing } from "@/i18n/routing";
 import { shownContactAddresses } from "@/modules/contact/shown-address";
 import { type BibDesign, bibDesignFromQuery } from "@/modules/registrations/bib-design";
 import { bibNumberFromQuery } from "@/modules/registrations/bib-design-query";
-import { loadBibExtras } from "@/modules/registrations/bib-extras";
+import { loadBibExtras, withBibCheckpoints } from "@/modules/registrations/bib-extras";
 import { renderBibImage } from "@/modules/registrations/bib-image";
 import { BIB_PICTURE_WIDTH, bibPictureForImage, loadBibPictures } from "@/modules/registrations/bib-pictures";
 import { bibEventDate, findEventForBibs } from "@/modules/registrations/bibs";
@@ -128,7 +128,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
       member,
       ...(member ? { memberLabelDefault: await memberLabelDefault() } : {}),
       // The unsaved ticks' profile and phone (§750), read from the event's GPX like the sheet's.
-      ...(await loadBibExtras(event, drawn, locale)),
+      ...(await loadBibExtras(await withBibCheckpoints(db, id, event, drawn), drawn, locale)),
       // The pictures read here (§560): `next/og` cannot read the stored WebP, and their size makes
       // the unsaved crop exact — the same rule the sheet prints with.
       pictures: await imagePictures(drawn, member),
@@ -179,7 +179,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
     // The club's own design (§249), or the preview stops being a preview of the paper.
     design: event.design,
     pictures: await imagePictures(event.design, member),
-    ...(await loadBibExtras(event, event.design, locale)),
+    ...(await loadBibExtras(await withBibCheckpoints(db, id, event, event.design), event.design, locale)),
   });
   /*
     A number and a name change rarely; the browser may keep the picture for an hour. Whether it is a

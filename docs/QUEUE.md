@@ -14,12 +14,12 @@ decision or a click only the club can make · **released** — on production, wi
 The owner, 2026-10-10: «Soon I need to start a new session from the laptop … You need to save and document everything».
 This section replaces the plan of 2026-09-30; it is what a session with none of today's conversation needs to carry on.
 
-- **Production: `BR-V3.15`** (2026-10-14 night: §754 volunteers, §755 the bib's header; migration `0146`). Waiting
-  for «prod»: `BR-V3.16` (§756, below) — no migration.
-- **QA: `BR-V3.16`** — «Doar Brașov Runners» shows the club's name for everyone who typed it (BVR, «Brașov Runners
-  (BVR)», «brasovrunners», one typo), not only accounts on «Echipa»: the live race's list had lost its club column.
-  Next, one at a time: checkpoints and «Timp limită» (0147), the volunteer agreement, the bib designer, the editor's
-  cards.
+- **Production: `BR-V3.16`** (2026-10-14 night: §756 the public list's club for whoever typed it). Waiting for
+  «prod»: `BR-V3.17` (§757, below), migration `0147` (expand only).
+- **QA: `BR-V3.17`** — the route's checkpoints: a «Puncte de control» card (from the GPX's waypoints in one press),
+  a table on the event page with «Ora limită» and the finish row, a race's «Timp limită» counted from the gun, and
+  the aid stations drawn on the bib's profile strip; the event JSON carries them (file version 2). Next, one at a
+  time: the volunteer agreement, the bib designer's sections and profile choices, the editor's cards.
 - **Nothing is building.** Releases by the label `ship` reach production by themselves again: `SHIP_TOKEN` was given
   «Pull requests: Read and write» on 2026-10-12, and `BR-V3.05`'s run opened its `qa → main` pull request itself.
 - **Lanes:** the phone session took the calendar on 2026-10-12; one release at a time between
@@ -139,6 +139,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V3.17` | route checkpoints, cut-offs and the race's time limit (file v2) (§757) |
 | `BR-V3.16` | the public list's club shows for everyone who typed it (§756) |
 | `BR-V3.15` | volunteers for a race (§754) · the bib's header no longer overlaps (§755) |
 | `BR-V3.14` | the public list shows only the club's own members' club (§753) |

@@ -637,6 +637,29 @@
       "health": "Run only if, as far as you know, your health allows it.",
       "wildlife": "Animals and weather: follow the organiser's general safety instructions.",
       "leaving": "If you leave the group, tell the organiser."
+    },
+    "timeLimit": "Time limit",
+    "checkpoints": {
+      "heading": "Checkpoints",
+      "columns": {
+        "km": "Km",
+        "name": "Point",
+        "kinds": "What is there",
+        "cutoff": "Cut-off"
+      },
+      "km": "{km} km",
+      "kinds": {
+        "WATER": "Water",
+        "FOOD": "Food",
+        "FIRST_AID": "First aid",
+        "TIMING": "Timing"
+      },
+      "cutoff": "Cut-off {time}",
+      "noCutoff": "no cut-off",
+      "noKinds": "nothing marked",
+      "kmUnknown": "distance not given",
+      "finish": "Finish",
+      "finishCloses": "closes at {time}"
     }
   },
   "Admin": {
@@ -1810,7 +1833,19 @@
       "ANSWER_BIRTH_DATE_MINOR_AT_REGISTRATION": "The birth date was not saved: the person would have been a minor when they registered; empty Strava and Instagram first.",
       "ANSWER_BIRTH_DATE_GUARDIAN_SIGNED": "The birth date was not saved: it would make the person a minor, and the declaration was signed with no parent or guardian, who cannot be added now.",
       "ANSWER_BIRTH_DATE_GUARDIAN_SIGNED_ADULT": "The birth date was not saved: it would make the person an adult when they registered, and the declaration was signed by the parent or guardian it names, who cannot be removed now.",
-      "ANSWER_GUARDIAN_ADULT": "The parent or guardian was not saved: the person was not a minor when they registered. Only a minor's registration names a parent or guardian."
+      "ANSWER_GUARDIAN_ADULT": "The parent or guardian was not saved: the person was not a minor when they registered. Only a minor's registration names a parent or guardian.",
+      "CHECKPOINT_NAME_MISSING": "The point “{name}” needs a name in Romanian and in English, at most {max} characters.",
+      "CHECKPOINT_KM_INVALID": "The kilometre of the point “{name}” is not a number: write from 0, with at most two decimals.",
+      "CHECKPOINT_KM_BEYOND_ROUTE": "The point “{name}” is at {km} km, but the route is only {max} km long. Choose a kilometre up to {max}.",
+      "CHECKPOINT_KIND_UNKNOWN": "At the point “{name}”, what is there is not one of the options.",
+      "CHECKPOINT_CUTOFF_INVALID": "The cut-off of the point “{name}” is not a time: write, for example, 11:30.",
+      "CHECKPOINT_CUTOFF_BEFORE_START": "The cut-off {cutoff} of the point “{name}” is not after the start, at {start}. Choose a time after {start}.",
+      "CHECKPOINT_CUTOFF_AFTER_LATER": "The cut-off of the point “{name}” is after the one of “{later}” ({laterCutoff}), which is further along the route. Runners reach “{name}” first: its cut-off has to be earlier.",
+      "CHECKPOINT_CUTOFF_AFTER_END": "The cut-off {cutoff} of the point “{name}” is after {finishTime}, when the finish closes. Choose a time up to {finishTime} or lengthen “Time limit”.",
+      "CHECKPOINTS_NO_LONGER_HOLD": "This save would break “Checkpoints”: {detail} Change the point in its card first, then save again. Nothing was saved.",
+      "CHECKPOINTS_NO_LONGER_HOLD_DATED": "On one of the dates ({date}), this save would break “Checkpoints”: {detail} Change the point on that date first, or save without it. Nothing was saved, on any date.",
+      "CHECKPOINT_NOTE_ONE_LANGUAGE": "The note of the point “{name}” is written in both languages or in neither, at most {max} characters.",
+      "CHECKPOINT_TOO_MANY": "Too many points: at most {max} on a route."
     },
     "editor": {
       "draftPreview": {
@@ -2158,7 +2193,6 @@
       "duration": "Duration",
       "durationHours": "Hours",
       "durationMinutesPart": "Minutes",
-      "durationHelp": "How long it lasts — 1 hour 45 minutes, say. The end is worked out from it. Leave both empty if none was announced.",
       "coHostRows": {
         "add": "Add a partner",
         "remove": "Remove partner",
@@ -2282,6 +2316,11 @@
         "showProfile": "The route's profile",
         "showProfileHelp": "Ticked: every number carries a full-width strip of elevation over distance, with the distance and gain at its side. Those typed on the event win; otherwise, the GPX's.",
         "showProfileNoGpx": "Upload the route's GPX in \"The route\".",
+        "showCheckpoints": "Checkpoints on the profile",
+        "showCheckpointsHelp": "Ticked: on the profile, at each point, a cup for water, a fork for food, a dot for the rest. Under it, “km 12” where it fits. Drawn only with the route's profile.",
+        "showCheckpointTimes": "…with the cut-off times",
+        "showCheckpointTimesHelp": "Ticked: beside each point, its cut-off too, “km 12 · 11:30”. If not every time fits, none is printed; then the kilometres that do not fit go. The marks always stay.",
+        "showCheckpointsNone": "The event has no checkpoints: add them in the “Checkpoints” card.",
         "showEmergency": "Emergency phone",
         "showEmergencyHelp": "Ticked: every number carries a small \"Emergency: …\" line with the phone below. Unticked: no line. Type the organizers' number, never a participant's.",
         "emergencyPhone": "The organizers' phone",
@@ -2853,7 +2892,12 @@
       "publicListClubHelpMore": "Without diacritics, abbreviated or with one typo counts too. If nobody on the page typed it, the column is not shown.",
       "publicListClubMembersOnly": "Only {club}",
       "publicListClubAsTyped": "As they typed it",
-      "publicListClubHidden": "Don't show the club"
+      "publicListClubHidden": "Don't show the club",
+      "durationLabel": "Duration or time limit",
+      "durationRace": "Time limit",
+      "durationRaceHelp": "How long the runners have from the start until the finish closes — 2 hours 30 minutes, say. Leave empty if there is none.",
+      "durationOther": "How long the event lasts",
+      "durationOtherHelp": "From the start to the end — 1 hour 45 minutes, say. The end is worked out from it. Leave empty if none was announced."
     },
     "preview": {
       "notice": "Staff preview. The status of this text is: {status}. This page is not public and is not indexed.",
@@ -5373,6 +5417,8 @@
       "memberLabelDefault": "{club} member",
       "profileStart": "Start",
       "profileFinish": "Finish",
+      "checkpointKm": "km {km}",
+      "checkpointKmTime": "km {km} · {time}",
       "profileDistance": "Distance: {km} km",
       "profileGain": "Elevation gain: +{m} m",
       "emergencyLabel": "Emergency",
@@ -6526,27 +6572,84 @@
           "released": "released"
         },
         "decisions": {
-          "1": { "title": "The accent colour", "default": "A hot pink beside the logo blue, or the blue, the orange or a colour the club chooses under «Theme v2»; emails, PDFs, race numbers and share cards stay blue." },
-          "2": { "title": "The heading face", "default": "Inter 800 for headings, self-hosted with ș ț ă â î; the body stays Roboto." },
-          "3": { "title": "A real home page", "default": "A real home page at `/ro` and `/en`, reached from the logo — never a menu entry — switchable on and off in «Aspect» → «Pagina principală»." },
-          "4": { "title": "The four menu words", "default": "«Alergări», «Calendar», «Comunitatea» — a club page linking the team, the gallery, the FAQ and the members' zone — and «Despre noi»." },
-          "5": { "title": "Where «Vino cu noi» goes", "default": "To the next weekly run's page; «Cum funcționează» opens a club page." },
-          "6": { "title": "Photographs", "default": "Real club photos from the gallery only; people in a home-page photo have agreed." },
-          "7": { "title": "The Instagram block", "default": "A static strip of six gallery pictures with a link; no live feed." },
-          "8": { "title": "The numbers band", "default": "Typed under «Aspect» → «Pagina principală»: the founding date and the active runners; the rest computed from the events." },
-          "9": { "title": "What «Evenimente speciale» means", "default": "Everything that is not a weekly series; the chip «Ediție specială» keeps its meaning." },
-          "10": { "title": "The round arrow on cards", "default": "None: the home page shows the very cards of «Alergări», with their text door, «Descrierea completă a evenimentului»." },
-          "11": { "title": "Icons", "default": "The filled Material family stays; the lighter look comes from colour, weight and spacing." },
-          "12": { "title": "How it ships", "default": "Behind one setting, «Theme v2»: on for QA, off on production until the club approves; Theme v1 deleted one release after the flip." }
+          "1": {
+            "title": "The accent colour",
+            "default": "A hot pink beside the logo blue, or the blue, the orange or a colour the club chooses under «Theme v2»; emails, PDFs, race numbers and share cards stay blue."
+          },
+          "2": {
+            "title": "The heading face",
+            "default": "Inter 800 for headings, self-hosted with ș ț ă â î; the body stays Roboto."
+          },
+          "3": {
+            "title": "A real home page",
+            "default": "A real home page at `/ro` and `/en`, reached from the logo — never a menu entry — switchable on and off in «Aspect» → «Pagina principală»."
+          },
+          "4": {
+            "title": "The four menu words",
+            "default": "«Alergări», «Calendar», «Comunitatea» — a club page linking the team, the gallery, the FAQ and the members' zone — and «Despre noi»."
+          },
+          "5": {
+            "title": "Where «Vino cu noi» goes",
+            "default": "To the next weekly run's page; «Cum funcționează» opens a club page."
+          },
+          "6": {
+            "title": "Photographs",
+            "default": "Real club photos from the gallery only; people in a home-page photo have agreed."
+          },
+          "7": {
+            "title": "The Instagram block",
+            "default": "A static strip of six gallery pictures with a link; no live feed."
+          },
+          "8": {
+            "title": "The numbers band",
+            "default": "Typed under «Aspect» → «Pagina principală»: the founding date and the active runners; the rest computed from the events."
+          },
+          "9": {
+            "title": "What «Evenimente speciale» means",
+            "default": "Everything that is not a weekly series; the chip «Ediție specială» keeps its meaning."
+          },
+          "10": {
+            "title": "The round arrow on cards",
+            "default": "None: the home page shows the very cards of «Alergări», with their text door, «Descrierea completă a evenimentului»."
+          },
+          "11": {
+            "title": "Icons",
+            "default": "The filled Material family stays; the lighter look comes from colour, weight and spacing."
+          },
+          "12": {
+            "title": "How it ships",
+            "default": "Behind one setting, «Theme v2»: on for QA, off on production until the club approves; Theme v1 deleted one release after the flip."
+          }
         },
         "phases": {
-          "0": { "title": "Decisions and assets — no code", "gate": "The answers in writing, the photos uploaded." },
-          "1": { "title": "Tokens and the public shell", "gate": "Brand and font tests green, the header one row at 320 px, the club's yes on QA." },
-          "2": { "title": "Cover photos on events, and the event kind", "gate": "Listing specs green; every weekly run and the race carry a cover." },
-          "3": { "title": "The home page", "gate": "LCP under 2.5 s on a 320 px phone, the root tests rewritten, the club's yes on QA." },
-          "4": { "title": "The calendar", "gate": "The first week above the fold at 320 px; the filters work with scripts off." },
-          "5": { "title": "The listing and the event page", "gate": "Listing and event specs green." },
-          "6": { "title": "The flip and the clean-up", "gate": "A week on production without the way back being used." }
+          "0": {
+            "title": "Decisions and assets — no code",
+            "gate": "The answers in writing, the photos uploaded."
+          },
+          "1": {
+            "title": "Tokens and the public shell",
+            "gate": "Brand and font tests green, the header one row at 320 px, the club's yes on QA."
+          },
+          "2": {
+            "title": "Cover photos on events, and the event kind",
+            "gate": "Listing specs green; every weekly run and the race carry a cover."
+          },
+          "3": {
+            "title": "The home page",
+            "gate": "LCP under 2.5 s on a 320 px phone, the root tests rewritten, the club's yes on QA."
+          },
+          "4": {
+            "title": "The calendar",
+            "gate": "The first week above the fold at 320 px; the filters work with scripts off."
+          },
+          "5": {
+            "title": "The listing and the event page",
+            "gate": "Listing and event specs green."
+          },
+          "6": {
+            "title": "The flip and the clean-up",
+            "gate": "A week on production without the way back being used."
+          }
         }
       },
       "card": {
@@ -7700,7 +7803,7 @@
           "date": "Start date",
           "time": "Start time"
         },
-        "durationMinutes": "Duration (minutes)",
+        "durationMinutes": "Duration or time limit (minutes)",
         "raceStartsAt": "Race start",
         "dateToBeAnnounced": "Date to be announced",
         "timeToBeAnnounced": "Time to be announced",
@@ -7724,7 +7827,8 @@
           "gpx": {
             "name": "GPX file name",
             "url": "GPX file"
-          }
+          },
+          "checkpoints": "Checkpoints"
         },
         "links": "Links and files",
         "partners": "Partners",
@@ -7810,6 +7914,8 @@
             "showWebsite": "Bib: website address",
             "footerText": "Bib: the club's own line",
             "showProfile": "Bib: route profile",
+            "showCheckpoints": "Bib: checkpoints on the profile",
+            "showCheckpointTimes": "Bib: cut-off times on the profile",
             "showDistance": "Bib: distance badge",
             "showEmergency": "Bib: emergency phone",
             "emergencyPhone": "Bib: emergency number",
@@ -8804,6 +8910,72 @@
         "FORBIDDEN": "Only an administrator sends invitations.",
         "NOT_FOUND": "The event no longer exists.",
         "generic": "Nothing was sent: check the list and try again."
+      }
+    },
+    "checkpoints": {
+      "title": "Checkpoints",
+      "intro": "Where there is water, food, first aid or timing, and by when the last runner passes. Shown as a table on the event's page and on the number's profile, by kilometre.",
+      "routeLength": "The route is {km} km long. No point can be beyond it.",
+      "summaryNone": "no points",
+      "summary": {
+        "one": "{count} point",
+        "few": "{count} points",
+        "other": "{count} points"
+      },
+      "empty": "No checkpoints.",
+      "readOnly": "You can read the list; the Organizer, the Administrator and the Superadministrator write it. Ask them for any change.",
+      "rowTitle": "{km} km — {name}",
+      "cutoffAside": "cut-off {time}",
+      "noCutoff": "no cut-off",
+      "field": {
+        "km": "Kilometre",
+        "kmHelp": "From the start, up to {max} km (the route's length). A comma works too.",
+        "kmHelpNoRoute": "From the start, in kilometres. Type the route's distance or upload the GPX so the kilometre can be checked.",
+        "nameRo": "Name (Romanian)",
+        "nameEn": "Name (English)",
+        "kinds": "What is there",
+        "cutoff": "Cut-off",
+        "cutoffHelp": "The time of the day, on the event's clock: the last runner has to pass by then. Leave empty for no limit.",
+        "noteRo": "Note (Romanian)",
+        "noteEn": "Note (English)",
+        "noteHelp": "Optional, in both languages or neither; at most {max} characters."
+      },
+      "kinds": {
+        "WATER": "Water",
+        "FOOD": "Food",
+        "FIRST_AID": "First aid",
+        "TIMING": "Timing"
+      },
+      "remove": "Remove this point",
+      "removeHelp": "It is deleted at “Save the points”.",
+      "add": {
+        "title": "Add points"
+      },
+      "full": "There are already {max} points, as many as fit on a route.",
+      "save": "Save the points",
+      "saving": "Saving…",
+      "courseNote": "Checkpoints and their cut-offs are written in the “Checkpoints” card.",
+      "courseLink": "Open the checkpoints",
+      "gpx": {
+        "take": "Take the points from the GPX",
+        "title": "The points in the GPX file",
+        "intro": "The file's points, each with its kilometre along the track. The file's name goes in the Romanian box: write the English one for every ticked point. What is already listed is not added again.",
+        "row": "{km} km — {name} ({kinds})",
+        "noKinds": "no type",
+        "already": "{km} km — {name}: already on the list",
+        "ignored": {
+          "one": "{count} point in the file is more than {meters} m from the track and is left out.",
+          "few": "{count} points in the file are more than {meters} m from the track and are left out.",
+          "other": "{count} points in the file are more than {meters} m from the track and are left out."
+        },
+        "beyond": {
+          "one": "{count} point in the file is past the route's end ({km} km) and is left out.",
+          "few": "{count} points in the file are past the route's end ({km} km) and are left out.",
+          "other": "{count} points in the file are past the route's end ({km} km) and are left out."
+        },
+        "add": "Add the chosen points",
+        "adding": "Adding…",
+        "close": "Close the preview"
       }
     }
   },
@@ -10662,7 +10834,10 @@
       "teamBoxShown": "The box is on the site.",
       "teamBoxHidden": "The box was taken off the site.",
       "teamBoxMoved": "The order of the boxes was changed.",
-      "teamBoxDeleted": "The box was deleted."
+      "teamBoxDeleted": "The box was deleted.",
+      "checkpointsSaved": "The checkpoints were saved.",
+      "checkpointsAdded": "The points from the GPX were added.",
+      "checkpointsUnchanged": "Nothing to change in the checkpoints."
     }
   },
   "Network": {

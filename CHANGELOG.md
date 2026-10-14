@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V3.17-2026-10-14
+
+- **Checkpoints and the race's «Timp limită»** — «Puncte de control», a card of its own beside the editor's save form, linked from «Traseul» (water, food, first aid, timing, a cut-off; from the GPX's waypoints in one press, a name in each language), a table on the event page with the finish closing time, «Timp limită: 2 h 30 min» for a race, counted from the gun, and the aid stations marked on the bib's profile strip with «km 12» and, ticked, the cut-offs. An event save that would break a saved checkpoint is refused; the event's file is version 2 and a version 1 file keeps its race's end. Every race already saved shows «Timp limită» from its saved end: confirm each upcoming race's box. §757.
 ## BR-V3.16-2026-10-14
 
 - **The public list's club shows for everyone who typed it** — under «Doar Brașov Runners» the list now writes «Brașov Runners» for every runner whose club names it, with or without an account on «Echipa», so the live race's list shows the club again; the matcher forgives «Brasov Runers», «BVR - Brasov Runners» and «brasovrunners», and still hides every other club. §756.

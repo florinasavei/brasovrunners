@@ -5,6 +5,7 @@ import * as auditLogsSchema from "./schema/audit-logs";
 import * as declarationAcceptancesSchema from "./schema/declaration-acceptances";
 import * as emailActionTokensSchema from "./schema/email-action-tokens";
 import * as emailOutboxSchema from "./schema/email-outbox";
+import * as eventCheckpointsSchema from "./schema/event-checkpoints";
 import * as eventTodosSchema from "./schema/event-todos";
 import * as eventVolunteersSchema from "./schema/event-volunteers";
 import * as eventsSchema from "./schema/events";
@@ -26,6 +27,7 @@ export const schema = {
   ...eventsSchema,
   ...eventTodosSchema,
   ...eventVolunteersSchema,
+  ...eventCheckpointsSchema,
   ...participantsSchema,
   ...emailActionTokensSchema,
   ...emailOutboxSchema,
