@@ -100,6 +100,8 @@ export function kindsFromWords(words: string): CheckpointKind[] {
   if (/\b(?:food|mancare|restaurant\w*|alimenta\w*|snack\w*|gustare|gustari|cantina|buffet|aid station|ravito\w*|refreshment\w*)\b/.test(text)) kinds.push("FOOD");
   if (/\b(?:first aid|prim ajutor|medical\w*|medic\w*|ambulan\w*|salvamont\w*|doctor)\b/.test(text)) kinds.push("FIRST_AID");
   if (/\b(?:timing|chrono\w*|cronometr\w*|checkpoint\w*|punct de control|control point|timer)\b/.test(text)) kinds.push("TIMING");
+  // «Direcționare» (§769): a junction, a turn, a signpost or a marshal who shows the way — a watch's turn points and a mapping tool's «Crossing», «Turn», «Signpost» symbols.
+  if (/\b(?:directi\w*|turn|turnaround|junction\w*|intersec\w*|bifurca\w*|fork|crossroad\w*|crossing|signpost\w*|waymark\w*|marshal\w*|ghid\w*|indicator\w*)\b/.test(text)) kinds.push("DIRECTION");
   return kinds;
 }
 

@@ -12,9 +12,10 @@ import { countRegistrationsForEvent } from "@/modules/registrations/repository";
 import { canTransferEvents } from "@/modules/staff-identity/domain/roles";
 import { getStorage, type Storage } from "@/modules/media/storage";
 import { readRouteGpx, type RouteGpx } from "@/modules/events/domain/route-gpx";
-import { fromWallTimeInput, toWallTimeInput } from "@/modules/events/domain/zoned-time";
+import { fromWallTimeInput } from "@/modules/events/domain/zoned-time";
 import { replaceCheckpoints } from "@/modules/event-checkpoints/checkpoints";
-import { type CheckpointInput, CheckpointRefusal, checkpointContext, clockMinutes, prepareCheckpoints } from "@/modules/event-checkpoints/domain/checkpoint";
+import { type CheckpointInput, CheckpointRefusal, checkpointContext, prepareCheckpoints } from "@/modules/event-checkpoints/domain/checkpoint";
+import { splitDuration } from "../duration";
 import { env } from "@/shared/config/env";
 import { DomainError } from "@/shared/errors/domain-error";
 import { missingPublicFields, translationFieldsSchema } from "../fields";
@@ -23,7 +24,7 @@ import { createEvent, missingPublicEventFields, saveEventAndTranslations, transl
 import { storeRouteGpx } from "../route-gpx";
 import { comparable, type ConfigChange, diffConfigs } from "./diff";
 import { readEventConfig } from "./export";
-import type { EventConfig, EventFile } from "./file-format";
+import type { EventConfig, EventFile, FileNote } from "./file-format";
 import { eventFieldsFromConfig, translationFieldsFromConfig } from "./fields-from-config";
 import {
   collectMediaRefs,
@@ -64,7 +65,9 @@ export type MediaOutcome = { copied: number; reused: number; problems: MediaProb
 export type ImportNote =
   | { code: "slugSuffixed"; locale: Locale; slug: string }
   | { code: "publicListOff" }
-  | { code: "seriesNotApplied" };
+  | { code: "seriesNotApplied" }
+  /** What reading the file left out of its checkpoints (§769): a kind this release does not know, a time of day that could not be counted from the start. */
+  | FileNote;
 
 const allowsHttp = () => env.APP_ENV === "local" || env.APP_ENV === "test";
 
@@ -202,11 +205,13 @@ async function resolveMedia<T extends Record<string, unknown>>(
 
 /**
  * The file's checkpoints as rows to write (§757), held to the editor's card's own rules against the
- * file's event — a kilometre within the typed distance, cut-offs after the start (the gun's on a race,
- * else the event's), not after the end and in order along the route — **before anything is written**,
- * so a file whose list the card would refuse is refused whole, naming the rule, and no half-imported
- * event is left behind. The GPX's own length is not read here (the store is not asked before the copy);
- * the typed distance is the length the card measures against first anyway.
+ * file's event — a kilometre within the typed distance, time limits that need the event's start (the
+ * gun's on a race, else the event's), not longer than the event's own «Timp limită» and in order along
+ * the route — **before anything is written**, so a file whose list the card would refuse is refused
+ * whole, naming the rule, and no half-imported event is left behind. The GPX's own length is not read
+ * here (the store is not asked before the copy); the typed distance is the length the card measures
+ * against first anyway. The file was read forgivingly already (`file-format.ts#upgradeCheckpoints`): an
+ * old time of day is minutes by now, or left out with a word.
  */
 export function importedCheckpoints(config: EventConfig): Omit<CheckpointInput, "id">[] {
   if (config.route.checkpoints.length === 0) return [];
@@ -221,7 +226,6 @@ export function importedCheckpoints(config: EventConfig): Omit<CheckpointInput, 
     gpxMeters: null,
     start,
     endsAt,
-    wallMinutesOf: (instant) => clockMinutes(toWallTimeInput(instant, zone).slice(11, 16)),
   });
   try {
     return prepareCheckpoints(
@@ -231,7 +235,8 @@ export function importedCheckpoints(config: EventConfig): Omit<CheckpointInput, 
         nameEn: row.name.en,
         km: String(row.km),
         kinds: row.kinds,
-        cutoff: row.cutoff ?? "",
+        cutoffHours: splitDuration(row.cutoffMinutes).hours,
+        cutoffMinutes: splitDuration(row.cutoffMinutes).minutes,
         noteRo: row.note.ro ?? "",
         noteEn: row.note.en ?? "",
         remove: false,
@@ -243,7 +248,7 @@ export function importedCheckpoints(config: EventConfig): Omit<CheckpointInput, 
       nameEn: row.nameEn,
       km: row.km,
       kinds: row.kinds,
-      cutoff: row.cutoff,
+      cutoffMinutes: row.cutoffMinutes,
       noteRo: row.noteRo,
       noteEn: row.noteEn,
     }));

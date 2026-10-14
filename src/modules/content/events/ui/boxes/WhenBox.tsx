@@ -4,14 +4,14 @@ import Typography from "@mui/material/Typography";
 import { getLocale, getTranslations } from "next-intl/server";
 import { CLUB_TIME_ZONE } from "@/i18n/dates";
 import RecallField from "@/shared/forms/recall";
-import { textFieldConstraints } from "@/shared/forms/constraints";
 import Panel from "@/shared/ui/Panel";
 import { startBoxValues, typedStartOrNull } from "@/modules/events/domain/provisional-start";
 import { toWallTimeInput } from "@/modules/events/domain/zoned-time";
 import { eventInputConstraints } from "../../constraints";
 import { PANEL_GLYPHS } from "@/shared/ui/panel-glyphs";
-import { DURATION_HOURS_CONSTRAINTS, DURATION_MINUTES_CONSTRAINTS, eventDurationMinutes, splitDuration } from "../../duration";
+import { eventDurationMinutes, splitDuration } from "../../duration";
 import { placeSummary, summaryDateTime, timezoneSummary, whenSummary } from "../box-summaries";
+import DurationBoxes from "../DurationBoxes";
 import DurationWords from "../DurationWords";
 import OnlyForType from "../OnlyForType";
 import RaceStartNotSet from "../RaceStartNotSet";
@@ -175,22 +175,14 @@ export default async function WhenBox({
               <DurationGlyph aria-hidden fontSize="small" />
               <DurationWords selectName="event.type" initialType={initialType} race={t("editor.durationRace")} other={t("editor.durationOther")} />
             </Typography>
-            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.5, alignItems: "flex-start" }}>
-              <RecallField
-                name="event.durationHours"
-                label={t("editor.durationHours")}
-                defaultValue={duration.hours}
-                {...textFieldConstraints(DURATION_HOURS_CONSTRAINTS, { inputMode: "numeric" })}
-                sx={{ flex: "0 0 120px" }}
-              />
-              <RecallField
-                name="event.durationMinutesPart"
-                label={t("editor.durationMinutesPart")}
-                defaultValue={duration.minutes}
-                {...textFieldConstraints(DURATION_MINUTES_CONSTRAINTS, { inputMode: "numeric" })}
-                sx={{ flex: "0 0 120px" }}
-              />
-            </Box>
+            {/* The two boxes are the checkpoints' «Timp limită» too (§769): one component, never a second widget. */}
+            <DurationBoxes
+              hoursName="event.durationHours"
+              minutesName="event.durationMinutesPart"
+              hoursLabel={t("editor.durationHours")}
+              minutesLabel={t("editor.durationMinutesPart")}
+              defaults={duration}
+            />
             <Typography variant="caption" color="text.secondary" sx={{ px: 1.75 }}>
               <DurationWords selectName="event.type" initialType={initialType} race={t("editor.durationRaceHelp")} other={t("editor.durationOtherHelp")} />
             </Typography>

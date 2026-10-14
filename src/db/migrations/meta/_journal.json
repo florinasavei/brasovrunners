@@ -1051,6 +1051,20 @@
       "when": 1791986523643,
       "tag": "0152_volunteer_guardian",
       "breakpoints": true
+    },
+    {
+      "idx": 150,
+      "version": "7",
+      "when": 1792003434379,
+      "tag": "0153_direction_checkpoint_kind",
+      "breakpoints": true
+    },
+    {
+      "idx": 151,
+      "version": "7",
+      "when": 1792003494261,
+      "tag": "0154_checkpoint_cutoff_minutes",
+      "breakpoints": true
     }
   ]
 }
