@@ -105,13 +105,23 @@ export default async function GroupRunDeclarationsPanel({
                     <Checkbox
                       name="declarationIds"
                       value={row.id}
-                      slotProps={{ input: { form: batchForm, "aria-label": t("groupRunDeclarations.tick", { name: row.typedName }) } }}
+                      slotProps={{ input: { form: batchForm, "aria-label": t("groupRunDeclarations.tick", { name: row.minorTypedName ?? row.typedName }) } }}
                       sx={CHECKBOX_TAP_TARGET}
                       data-testid="group-run-declaration-tick"
                     />
                   )}
-                  <Typography sx={{ fontWeight: 600 }}>{row.typedName}</Typography>
+                  {/* A minor's declaration is listed under the minor's own name, the parent beside it (§769, §330's two signatures on one row). */}
+                  <Typography sx={{ fontWeight: 600 }}>{row.minorTypedName ?? row.typedName}</Typography>
                 </Stack>
+                {row.minorTypedName !== null && (
+                  <Chip
+                    size="small"
+                    variant="outlined"
+                    label={t("groupRunDeclarations.minorOf", { parent: row.typedName })}
+                    sx={{ alignSelf: { xs: "flex-start", sm: "center" } }}
+                    data-testid="group-run-declaration-minor"
+                  />
+                )}
                 {/* Signed for the whole series (§523): the one signature every date of the run lists. */}
                 {row.series && <Chip size="small" variant="outlined" label={t("groupRunDeclarations.series")} sx={{ alignSelf: { xs: "flex-start", sm: "center" } }} data-testid="group-run-declaration-series" />}
                 <Typography variant="body2" color="text.secondary">

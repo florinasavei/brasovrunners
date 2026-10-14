@@ -22,8 +22,18 @@ const SIGNED_ON_PAGE: Record<Locale, string> = {
   en: "Signed electronically on {when}, on the run's page on the club's website: typed name, explicit acceptance tick, the moment of signing as the club's platform recorded it, and the SHA-256 fingerprint of the text read — a simple electronic signature under Regulation (EU) 910/2014 (eIDAS) and Romanian Law no. 214/2024.",
 };
 
-export function signedOnPageWords(locale: Locale, when: string): string {
-  return SIGNED_ON_PAGE[locale].replace("{when}", when);
+/**
+ * The same line for a declaration a minor signed beside a parent (§769): two typed names, two ticks — the
+ * minor's own signature and the parent's or guardian's — and the one moment and fingerprint, as the race's two
+ * signatures are one press (§330).
+ */
+const SIGNED_ON_PAGE_MINOR: Record<Locale, string> = {
+  ro: "Semnat electronic {when}, pe pagina alergării de pe site-ul clubului, de minor și de părintele sau tutorele legal, împreună: numele tastate ale amândurora, bifele explicite de acceptare, momentul semnării, așa cum l-a înregistrat platforma clubului, și amprenta SHA-256 a textului citit — semnătură electronică simplă în sensul Regulamentului (UE) nr. 910/2014 (eIDAS) și al Legii nr. 214/2024.",
+  en: "Signed electronically on {when}, on the run's page on the club's website, by the minor and the parent or legal guardian together: both typed names, the explicit acceptance ticks, the moment of signing as the club's platform recorded it, and the SHA-256 fingerprint of the text read — a simple electronic signature under Regulation (EU) 910/2014 (eIDAS) and Romanian Law no. 214/2024.",
+};
+
+export function signedOnPageWords(locale: Locale, when: string, forMinor = false): string {
+  return (forMinor ? SIGNED_ON_PAGE_MINOR : SIGNED_ON_PAGE)[locale].replace("{when}", when);
 }
 
 /**
@@ -36,8 +46,11 @@ export function signedOnPageWords(locale: Locale, when: string): string {
  * for a mailbox nothing sweeps, the document masked in the text and on the signature line alike,
  * from one value so the two cannot disagree. Required, never defaulted.
  *
- * The signer declares for themselves (adults only, §393), so `{{participant}}` and `{{declarant}}`
- * are the signer and `{{guardian}}` an em dash, as on an adult's race declaration.
+ * The signer declares for themselves, so `{{participant}}` and `{{declarant}}` are the signer and
+ * `{{guardian}}` an em dash, as on an adult's race declaration — or, since §769, a minor signs with a
+ * parent, and the page draws **both signatures** with the race's own block (§330, `renderDeclarationPdf`'s
+ * `signature.minor`): the minor's own signature, then the parent's or guardian's under it, one date, the
+ * heading «DREPT PENTRU CARE SEMNĂM». No identity-document line: a group run asks none of a minor.
  */
 export async function renderGroupRunDeclarationPdf<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -71,7 +84,16 @@ export async function renderGroupRunDeclarationPdf<T extends Record<string, unkn
         effectiveAt: signed.effectiveAt,
         // The row's own fingerprint of what was signed (§556), never one computed now.
         textHash: signed.textHash,
-        signature: { typedName: signed.typedName, idDocument, minor: null, signedAt: whenStart, signedAtInline: when, acceptedAt: signed.acceptedAt, method: signedOnPageWords(signed.locale, when) },
+        signature: {
+          typedName: signed.typedName,
+          idDocument,
+          // The minor's own signature beside the parent's (§769, §330's block), when a parent signed for one.
+          minor: signed.minorTypedName === null ? null : { typedName: signed.minorTypedName, idDocument: null },
+          signedAt: whenStart,
+          signedAtInline: when,
+          acceptedAt: signed.acceptedAt,
+          method: signedOnPageWords(signed.locale, when, signed.minorTypedName !== null),
+        },
       },
     ],
     locale: signed.locale,

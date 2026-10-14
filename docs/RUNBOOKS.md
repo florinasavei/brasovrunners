@@ -2,7 +2,7 @@
 
 # Runbooks
 
-**Baseline `BR-V3.27-2026-10-14`** · versioned with the whole set · [changelog](../CHANGELOG.md)
+**Baseline `BR-V3.28-2026-10-14`** · versioned with the whole set · [changelog](../CHANGELOG.md)
 
 
 | Runbook | When |
@@ -1008,6 +1008,23 @@ four facts in angle brackets (legal name, registered address, registration numbe
 email), read it, save, open the PDF, approve. The declaration's text carries tokens —
 `{{participant}}`, `{{idDocument}}`, `{{event}}`, `{{eventDate}}`, `{{eventLocation}}`,
 `{{signedAt}}` — that are filled per person and per event; leave them as they are.
+
+### A minor on a group run: approve the group-run declarations again (§769)
+
+Since §769 the group-run declarations (asphalt and the rough terrain) carry a paragraph for a minor who
+signs beside a parent — the template names `{{minor}}`, `{{signerAlone}}` and `{{minorMinimumAge}}` — and the
+signing page offers «Semnez pentru un minor (sub 18 ani)» **only while** the declaration in force of the run's
+kind names `{{minor}}` in both languages **and** the run's own «Vârsta minimă» (the «Regulamentul» card) is under
+18. Until then nothing changes for anybody: an adult signs as before, and `/admin/tasks` carries the row «Declarațiile
+alergărilor de grup: minorul și părintele» (`groupRunMinorText`), which closes by itself the day every group-run
+text in force has the paragraph. To switch it on: `/admin/legal` → the card «Declarație pe propria răspundere (alergare
+de grup, asfalt)» → «Regenerează din șablon» → read the draft, fill the four facts, «Aprobă și publică»; the same
+for «teren accidentat»; then the privacy notice from its template (its group-run paragraph now says the minor's name is
+kept on the same row, and the minor's birth date is only checked). A Romanian lawyer reads the minor's paragraph first:
+the minor signs for themselves, the parent approves in advance (Codul civil art. 41 alin. (2)) and accepts the
+risks and the waiver for the minor «în limitele permise de lege», never for harm the club causes (art. 1355). The
+Administrators are told by email that the templates changed (§639). A run saved with the default fourteen takes minors
+from fourteen; set the box to 18 (or more) on a run that is for adults only.
 
 ### After a race: the declarations and the export
 

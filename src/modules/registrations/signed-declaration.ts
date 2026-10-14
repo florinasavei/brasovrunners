@@ -198,7 +198,7 @@ export async function eventMergeValues<T extends Record<string, unknown>>(
   db: Database<T>,
   eventId: string,
   locale: Locale,
-): Promise<{ values: MergeValues; title: string; timezone: string } | undefined> {
+): Promise<{ values: MergeValues; title: string; timezone: string; minAge: number } | undefined> {
   const event = await findEventNotificationDetails(db, eventId, locale);
   if (!event) return undefined;
   return {
@@ -225,6 +225,8 @@ export async function eventMergeValues<T extends Record<string, unknown>>(
     },
     title: event.title,
     timezone: event.timezone,
+    // The event's own number (§329), for a group run's minor path (§769): its minimum under eighteen.
+    minAge: event.minAge,
   };
 }
 

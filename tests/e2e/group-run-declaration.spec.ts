@@ -23,6 +23,10 @@ import { languagePanel, languageTab, openEditorBox, openFold } from "./support/f
 
 const DATE = "2027-04-14";
 
+/** The consent box's words while a minor may sign (§769): the minor's tick is above it, and it says the adult's age too. */
+const ACCEPT_ANY_RO = "Am citit declarația de mai sus și o semnez pe propria răspundere: pentru mine, având cel puțin 18 ani împliniți, sau pentru minorul bifat mai sus";
+const ACCEPT_ANY_EN = "I have read the declaration above and sign it on my own responsibility: for myself, being at least 18 years, or for the minor ticked above";
+
 let title = "";
 let englishTitle = "";
 let slug = "";
@@ -31,7 +35,7 @@ let editorUrl = "";
 let eventId = "";
 /** A second date of the same run (§113, §523): the same titles a week later, another slug. */
 let secondSlug = "";
-const signers = { ro: "", en: "" };
+const signers = { ro: "", en: "", parent: "", parentNoScript: "", unticked: "", tooOldNoScript: "" };
 
 function databaseUrl(): string {
   if (!process.env.DATABASE_URL && existsSync(".env.local")) process.loadEnvFile(".env.local");
@@ -59,8 +63,8 @@ async function noSidewaysScroll(page: Page) {
 async function sign(page: Page, locale: "ro" | "en", name: string, email: string) {
   const words =
     locale === "ro"
-      ? { document: "Act de identitate (seria și numărul)", email: "Adresa de email", accept: "Am cel puțin 18 ani împliniți, am citit declarația de mai sus și o semnez pe propria răspundere", signature: "Semnătura: numele tău complet", action: "Semnează declarația", adults: "Declar că am cel puțin 18 ani împliniți la data fiecărei alergări la care particip." }
-      : { document: "Identity document (series and number)", email: "Email address", accept: "I am at least 18 years old, I have read the declaration above and sign it on my own responsibility", signature: "Signature: your full name", action: "Sign the declaration", adults: "I declare that I am at least 18 years old on the day of each run I take part in." };
+      ? { document: "Act de identitate (seria și numărul)", email: "Adresa de email", accept: ACCEPT_ANY_RO, signature: "Semnătura: numele tău complet", action: "Semnează declarația", adults: "Declar că am cel puțin 18 ani împliniți la data fiecărei alergări la care particip." }
+      : { document: "Identity document (series and number)", email: "Email address", accept: ACCEPT_ANY_EN, signature: "Signature: your full name", action: "Sign the declaration", adults: "I declare that I am at least 18 years old on the day of each run I take part in." };
   await hydrated(page);
   // The approved text, before anything is asked (§57): the sample's banner says what it is, and the
   // text states the run's age through {{minimumAge}} — never under eighteen, the declaration covers
@@ -81,7 +85,9 @@ async function sign(page: Page, locale: "ro" | "en", name: string, email: string
   // The run's own minimum age (§440, §515): a run saved with the default fourteen reads as eighteen,
   // which the text states once; no birth date is asked at eighteen.
   await expect(page.locator("#main")).not.toContainText(locale === "ro" ? "am împlinit 18 ani" : "I am 18 or older");
-  await expect(page.locator('input[name="birthDate"]')).toHaveCount(0);
+  // The minor's box (§769) is on the page, closed: an adult is asked no date, and its box is not posted.
+  await expect(page.locator('input[name="birthDate"]')).toBeHidden();
+  await expect(page.getByTestId("group-run-minor-fields")).toBeHidden();
   await page.getByRole("textbox", { name: words.email }).fill(email);
   await page.getByRole("checkbox", { name: words.accept }).check();
   await page.getByRole("textbox", { name: words.signature }).fill(name);
@@ -193,6 +199,10 @@ test.describe.serial("§393 a group run's optional self-declaration", () => {
     englishSlug = `trail-loop-${suffix}`;
     signers.ro = `ana.${suffix}@example.test`;
     signers.en = `ion.${suffix}@example.test`;
+    signers.parent = `parinte.${suffix}@example.test`;
+    signers.parentNoScript = `tutore.${suffix}@example.test`;
+    signers.unticked = `schimbat.${suffix}@example.test`;
+    signers.tooOldNoScript = `major.${suffix}@example.test`;
 
     await signIn(page, "Dev Administrator");
     await page.goto("/ro/admin/events/new");
@@ -313,6 +323,30 @@ test.describe.serial("§393 a group run's optional self-declaration", () => {
       await expect(field).toContainText(locale === "en" ? "The minimum age for this run is 20 years" : "Vârsta minimă pentru această alergare este 20 de ani");
       await expect(box).toHaveAttribute("aria-invalid", "true");
       await noSidewaysScroll(page);
+    }
+  });
+
+  /*
+    A run for adults only (its own minimum is eighteen) draws no minor's tick and none of its boxes, whatever the text
+    in force says (§769, `groupRunTakesMinors`): the page says it is signed for oneself alone.
+  */
+  test("a run whose minimum is eighteen draws no minor's tick, and says it is for adults", async ({ page }) => {
+    await withDatabase(async (client) => {
+      const { rowCount } = await client.query(
+        "UPDATE events SET min_age = 18 WHERE id = (SELECT event_id FROM event_translations WHERE slug = $1)",
+        [secondSlug],
+      );
+      expect(rowCount).toBe(1);
+    });
+    for (const locale of ["ro", "en"] as const) {
+      await page.goto(locale === "en" ? `/en/events/${englishSlug}-2/declaration` : `/ro/evenimente/${secondSlug}/declaratie`);
+      await hydrated(page);
+      await expect(page.getByRole("checkbox", { name: /Semnez pentru un minor|I am signing for a minor/ })).toHaveCount(0);
+      await expect(page.getByTestId("group-run-minor")).toHaveCount(0);
+      await expect(page.getByTestId("group-run-minor-fields")).toHaveCount(0);
+      await expect(page.getByTestId("group-run-declaration-adults")).toContainText(locale === "en" ? "Sign it only for yourself" : "O semnezi doar pentru tine");
+      // Without a minor in the picture the consent box is the adult's own: nothing points at a tick.
+      await expect(page.getByRole("checkbox", { name: locale === "en" ? ACCEPT_ANY_EN : ACCEPT_ANY_RO })).toHaveCount(0);
     }
   });
 
@@ -529,5 +563,209 @@ test.describe.serial("§393 a group run's optional self-declaration", () => {
     );
     // The single erase's row and this press's, one per signature.
     expect(trail).toHaveLength(2);
+  });
+
+  /*
+    §769 — a minor signs, with a parent (the owner, 2026-10-14: «o bifă nouă și să semneze minorul +
+    părintele»). The sample texts of the local seed carry the minor's paragraph, and the run's minimum is the
+    default fourteen: the tick is on the page, the minor's boxes open with it, both names are required, a refusal
+    brings the form back as it was, and the signature is one row on §330's columns.
+  */
+  test("a parent signs for a minor: the tick opens the minor's boxes, a refusal brings them back, and one row keeps both names", async ({ page }) => {
+    await page.goto(`/ro/evenimente/${slug}/declaratie`);
+    await hydrated(page);
+    const tick = page.getByRole("checkbox", { name: "Semnez pentru un minor (sub 18 ani)", exact: true });
+    const minorBoxes = page.getByTestId("group-run-minor-fields");
+    // Closed on arrival: an adult is asked nothing of a minor, and nothing of it is posted.
+    await expect(tick).toBeVisible();
+    await expect(tick).not.toBeChecked();
+    await expect(minorBoxes).toBeHidden();
+    expect((await tick.locator("xpath=..").boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+    // The text itself carries both ways of signing, with blanks, before anybody has typed (what is read is what is signed).
+    await expect(page.locator("#main")).toContainText(/Eu, …+, semnez această declarație personal, doar pentru mine\./);
+    await expect(page.locator("#main")).toContainText(/Pentru un participant minor, declarația este semnată de minor, …+, pentru sine/);
+
+    await tick.check();
+    await expect(minorBoxes).toBeVisible();
+    const minorName = page.getByRole("textbox", { name: "Semnătura minorului: numele lui complet" });
+    const birthDate = page.getByRole("textbox", { name: "Data nașterii minorului" });
+    const guardianTick = page.getByRole("checkbox", { name: "Sunt părintele sau tutorele legal și sunt de acord", exact: true });
+    await expect(minorName).toBeVisible();
+    await expect(birthDate).toBeVisible();
+    await expect(guardianTick).toBeVisible();
+    expect((await guardianTick.locator("xpath=..").boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+    await noSidewaysScroll(page);
+
+    // The minor's name typed, the parent's tick and the date left: the refusal names those two, nothing is recorded,
+    // and the form comes back as it was — the minor's name kept, the parent's tick still unticked.
+    await minorName.fill("Ion Popescu");
+    await page.getByRole("textbox", { name: "Adresa de email" }).fill(signers.parent);
+    await page.getByRole("checkbox", { name: ACCEPT_ANY_RO }).check();
+    await page.getByRole("textbox", { name: "Semnătura: numele tău complet" }).fill("Ana Popescu");
+    await page.waitForTimeout(1_500);
+    await page.getByTestId("group-run-declaration-submit").click();
+    await page.waitForURL(/invalid=/);
+    const errors = page.getByTestId("group-run-declaration-errors");
+    await expect(errors).toContainText("Data nașterii minorului");
+    await expect(errors).toContainText("Sunt părintele sau tutorele legal și sunt de acord");
+    await expect(errors).not.toContainText("Semnătura minorului: numele lui complet");
+    expect(await withDatabase(async (client) => (await client.query("SELECT 1 FROM group_run_declarations WHERE email = $1", [signers.parent])).rowCount)).toBe(0);
+    await hydrated(page);
+    await expect(page.getByRole("checkbox", { name: "Semnez pentru un minor (sub 18 ani)", exact: true })).toBeChecked();
+    await expect(page.getByTestId("group-run-minor-fields")).toBeVisible();
+    await expect(page.getByRole("textbox", { name: "Semnătura minorului: numele lui complet" })).toHaveValue("Ion Popescu");
+    await expect(page.getByRole("checkbox", { name: "Sunt părintele sau tutorele legal și sunt de acord", exact: true })).not.toBeChecked();
+    await expect(page.getByRole("textbox", { name: "Adresa de email" })).toHaveValue(signers.parent);
+    await expect(page.getByRole("textbox", { name: "Semnătura: numele tău complet" })).toHaveValue("Ana Popescu");
+
+    // Both names, the parent's tick and the minor's birth date (counted against the run's minimum, never kept).
+    await page.getByRole("textbox", { name: "Semnătura minorului: numele lui complet" }).fill("Ion Popescu");
+    const date = page.getByRole("textbox", { name: "Data nașterii minorului" });
+    await date.fill("01032012");
+    await date.blur();
+    await expect(date).toHaveValue("01.03.2012");
+    await page.getByRole("checkbox", { name: "Sunt părintele sau tutorele legal și sunt de acord", exact: true }).check();
+    await page.getByRole("checkbox", { name: ACCEPT_ANY_RO }).check();
+    await page.waitForTimeout(1_500);
+    await page.getByTestId("group-run-declaration-submit").click();
+    await page.waitForURL(/done=1/);
+    await expect(page.getByTestId("group-run-declaration-done")).toBeVisible();
+
+    // One row on §330's columns — the parent's name, the minor's own signature — and no second table, no document.
+    const row = await withDatabase(async (client) =>
+      (await client.query<{ typed_name: string; minor_typed_name: string | null; id_document: string | null }>(
+        "SELECT typed_name, minor_typed_name, id_document FROM group_run_declarations WHERE email = $1",
+        [signers.parent],
+      )).rows,
+    );
+    expect(row).toEqual([{ typed_name: "Ana Popescu", minor_typed_name: "Ion Popescu", id_document: null }]);
+    expect(await outboxFor(signers.parent)).toEqual([
+      { type: "GROUP_RUN_DECLARATION_ARCHIVE", to: archive },
+      { type: "GROUP_RUN_DECLARATION_SIGNED", to: signers.parent },
+    ]);
+  });
+
+  test("a minor under the run's minimum is refused on the date, with the number said", async ({ page }) => {
+    await page.goto(`/en/events/${englishSlug}/declaration`);
+    await hydrated(page);
+    await page.getByRole("checkbox", { name: "I am signing for a minor (under 18)", exact: true }).check();
+    const date = page.getByRole("textbox", { name: "The minor's date of birth" });
+    // Thirteen on the run's day (14 April 2027), under the default fourteen.
+    await date.fill("15.04.2013");
+    const field = page.locator(".MuiFormControl-root", { has: date });
+    await expect(field).toContainText("The minimum age for this run is 14 years");
+    await expect(date).toHaveAttribute("aria-invalid", "true");
+    await noSidewaysScroll(page);
+  });
+
+  // The tick says «under 18»: a date of eighteen or more is no minor's — said under the box as it is typed.
+  test("a minor's date of eighteen or more is refused on the date, with its own words", async ({ page }) => {
+    await page.goto(`/en/events/${englishSlug}/declaration`);
+    await hydrated(page);
+    await page.getByRole("checkbox", { name: "I am signing for a minor (under 18)", exact: true }).check();
+    const date = page.getByRole("textbox", { name: "The minor's date of birth" });
+    // Forty on the run's day (14 April 2027).
+    await date.fill("01.01.1987");
+    const field = page.locator(".MuiFormControl-root", { has: date });
+    await expect(field).toContainText("The minor must be under 18 on the day of the run");
+    await expect(date).toHaveAttribute("aria-invalid", "true");
+    // Seventeen on the run's day: no refusal.
+    await date.fill("15.04.2009");
+    await expect(field).not.toContainText("The minor must be under 18");
+    await expect(date).toHaveAttribute("aria-invalid", "false");
+    await noSidewaysScroll(page);
+  });
+
+  // The parent changes their mind after typing: un-ticked, the minor's block is closed and posts nothing, so the
+  // adult's own declaration is signed as it is, with no minor's name on the row.
+  test("a minor's name typed and then un-ticked is not posted: the adult's own declaration is signed", async ({ page }) => {
+    await page.goto(`/ro/evenimente/${slug}/declaratie`);
+    await hydrated(page);
+    const tick = page.getByRole("checkbox", { name: "Semnez pentru un minor (sub 18 ani)", exact: true });
+    await tick.check();
+    await page.getByRole("textbox", { name: "Semnătura minorului: numele lui complet" }).fill("Copil Schimbat");
+    await page.getByRole("checkbox", { name: "Sunt părintele sau tutorele legal și sunt de acord", exact: true }).check();
+    await tick.uncheck();
+    await expect(page.getByTestId("group-run-minor-fields")).toBeHidden();
+    await page.getByRole("textbox", { name: "Adresa de email" }).fill(signers.unticked);
+    await page.getByRole("checkbox", { name: ACCEPT_ANY_RO }).check();
+    await page.getByRole("textbox", { name: "Semnătura: numele tău complet" }).fill("Elena Schimbat");
+    await page.waitForTimeout(1_500);
+    await page.getByTestId("group-run-declaration-submit").click();
+    await page.waitForURL(/done=1/);
+    const rows = await withDatabase(async (client) =>
+      (await client.query<{ typed_name: string; minor_typed_name: string | null }>("SELECT typed_name, minor_typed_name FROM group_run_declarations WHERE email = $1", [signers.unticked])).rows,
+    );
+    expect(rows).toEqual([{ typed_name: "Elena Schimbat", minor_typed_name: null }]);
+  });
+
+  test("the backoffice lists the minor's declaration under the minor's name, «minor · părinte: …»", async ({ page }) => {
+    await signIn(page, "Dev Administrator");
+    await page.goto(editorUrl);
+    await hydrated(page);
+    const fold = await openEditorBox(page, "Declarații semnate (alergare de grup)");
+    const row = fold.getByTestId("group-run-declaration-row").filter({ hasText: "Ion Popescu" });
+    await expect(row).toHaveCount(1);
+    await expect(row.getByTestId("group-run-declaration-minor")).toHaveText("minor · părinte: Ana Popescu");
+    // No address on the list, and the PDF is the Administrator's.
+    await expect(fold).not.toContainText(signers.parent);
+    const href = await row.getByRole("link", { name: "PDF" }).getAttribute("href");
+    const pdf = await page.request.get(href ?? "");
+    expect(pdf.status()).toBe(200);
+    expect(pdf.headers()["content-type"]).toContain("application/pdf");
+  });
+
+  // Nested in the serial run: it needs the run the first test made, and the signatures before it.
+  test.describe("§769 the minor's boxes without scripts", () => {
+  test.use({ javaScriptEnabled: false });
+
+  test("are always on the page, and a box filled while the tick is not ticked is refused on the tick", async ({ page }) => {
+    await page.goto(`/ro/evenimente/${slug}/declaratie`);
+    // No script to open them: the boxes are there, and the tick is beside them.
+    await expect(page.getByTestId("group-run-minor-fields")).toBeVisible();
+    await page.getByRole("textbox", { name: "Adresa de email" }).fill(signers.parentNoScript);
+    await page.getByRole("checkbox", { name: ACCEPT_ANY_RO }).check();
+    await page.getByRole("textbox", { name: "Semnătura: numele tău complet" }).fill("Maria Ionescu");
+    await page.getByRole("textbox", { name: "Semnătura minorului: numele lui complet" }).fill("Radu Ionescu");
+    await page.waitForTimeout(1_500);
+    await page.getByTestId("group-run-declaration-submit").click();
+    await page.waitForURL(/invalid=/);
+    await expect(page.getByTestId("group-run-declaration-errors")).toContainText("Semnez pentru un minor (sub 18 ani)");
+    expect(await withDatabase(async (client) => (await client.query("SELECT 1 FROM group_run_declarations WHERE email = $1", [signers.parentNoScript])).rowCount)).toBe(0);
+  });
+
+  test("a minor's date of eighteen or more is refused by the server, and the summary says why", async ({ page }) => {
+    await page.goto(`/ro/evenimente/${slug}/declaratie`);
+    await page.getByRole("textbox", { name: "Adresa de email" }).fill(signers.tooOldNoScript);
+    await page.getByRole("checkbox", { name: ACCEPT_ANY_RO }).check();
+    await page.getByRole("checkbox", { name: "Semnez pentru un minor (sub 18 ani)", exact: true }).check();
+    await page.getByRole("textbox", { name: "Semnătura: numele tău complet" }).fill("Maria Ionescu");
+    await page.getByRole("textbox", { name: "Semnătura minorului: numele lui complet" }).fill("Radu Ionescu");
+    await page.getByRole("textbox", { name: "Data nașterii minorului" }).fill("02.04.1985");
+    await page.getByRole("checkbox", { name: "Sunt părintele sau tutorele legal și sunt de acord", exact: true }).check();
+    await page.waitForTimeout(1_500);
+    await page.getByTestId("group-run-declaration-submit").click();
+    await page.waitForURL(/invalid=/);
+    await expect(page.getByTestId("group-run-declaration-errors")).toContainText("Minorul trebuie să aibă sub 18 ani în ziua alergării");
+    expect(await withDatabase(async (client) => (await client.query("SELECT 1 FROM group_run_declarations WHERE email = $1", [signers.tooOldNoScript])).rowCount)).toBe(0);
+  });
+
+  test("sign a minor's declaration once the tick, both names, the parent's tick and the date are given", async ({ page }) => {
+    await page.goto(`/ro/evenimente/${slug}/declaratie`);
+    await page.getByRole("textbox", { name: "Adresa de email" }).fill(signers.parentNoScript);
+    await page.getByRole("checkbox", { name: ACCEPT_ANY_RO }).check();
+    await page.getByRole("checkbox", { name: "Semnez pentru un minor (sub 18 ani)", exact: true }).check();
+    await page.getByRole("textbox", { name: "Semnătura: numele tău complet" }).fill("Maria Ionescu");
+    await page.getByRole("textbox", { name: "Semnătura minorului: numele lui complet" }).fill("Radu Ionescu");
+    await page.getByRole("textbox", { name: "Data nașterii minorului" }).fill("02.04.2011");
+    await page.getByRole("checkbox", { name: "Sunt părintele sau tutorele legal și sunt de acord", exact: true }).check();
+    await page.waitForTimeout(1_500);
+    await page.getByTestId("group-run-declaration-submit").click();
+    await page.waitForURL(/done=1/);
+    const row = await withDatabase(async (client) =>
+      (await client.query<{ typed_name: string; minor_typed_name: string | null }>("SELECT typed_name, minor_typed_name FROM group_run_declarations WHERE email = $1", [signers.parentNoScript])).rows,
+    );
+    expect(row).toEqual([{ typed_name: "Maria Ionescu", minor_typed_name: "Radu Ionescu" }]);
+  });
   });
 });
