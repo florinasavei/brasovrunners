@@ -122,7 +122,7 @@ function sampleFile(): EventFile {
     format: EVENT_FILE_FORMAT,
     version: EVENT_FILE_VERSION,
     exportedAt: "2026-10-13T10:00:00.000Z",
-    exportedFrom: { environment: "production", baseline: "BR-V3.25-2026-10-14" },
+    exportedFrom: { environment: "production", baseline: "BR-V3.26-2026-10-14" },
     series: { partOfASeries: false, rule: null },
     event: sampleConfig(),
     media: [{ role: "cover", url: PICTURE, contentType: "image/webp", size: 10, sha256: "a".repeat(64) }],

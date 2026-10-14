@@ -20,7 +20,7 @@ import { checkpointFinish } from "@/modules/event-checkpoints/domain/start";
 import { hasRouteSection } from "@/modules/events/domain/route-section";
 import { isStorageConfigured } from "@/modules/media/storage";
 import type { RouteMapWords } from "@/modules/events/ui/EventRoute";
-import { googleCalendarUrl } from "@/modules/events/ical";
+import { googleCalendarUrl, outlookCalendarUrl } from "@/modules/events/ical";
 import { instagramFileName } from "@/modules/events/instagram-share";
 import type { PublicEventPage } from "@/modules/events/repository";
 import { eventPageUrl } from "@/modules/events/share-links";
@@ -155,6 +155,8 @@ export default async function EventPageView({
   // Each kind of link's own word in this language (§332), for the route section and "Linkuri și fișiere" alike.
   const linkKindLabels = Object.fromEntries(EVENT_LINK_KINDS.map((kind) => [kind, t(`links.kinds.${kind}`)])) as Record<EventLinkKind, string>;
   const dated = datedOrNull(event);
+  // The one entry the file, the feed and the calendar row's add links all read (§107, §159).
+  const calendarEntry = dated ? toCalendarEvent(dated, locale, now) : null;
   return (
     <>
       <Stack direction="row" spacing={2} sx={{ mb: { xs: DENSITY.gapSm, sm: 2 }, alignItems: "center", justifyContent: "space-between" }}>
@@ -281,10 +283,13 @@ export default async function EventPageView({
           // A members' event is not shared (§552): its link opens for members, its pictures for nobody.
           shareable={!membersOnly}
           calendar={
-            dated ? {
+            dated && calendarEntry ? {
               // A members' file is the twin's, per request (§552): the static one reads the public row alone.
               icsHref: membersOnly ? `/${locale}/${LIVE_SEGMENT}/events/${slug}/calendar.ics` : `/${locale}/events/${slug}/calendar.ics`,
-              googleUrl: googleCalendarUrl(toCalendarEvent(dated, locale, now), { locale, t }),
+              // The event's own five doors (§767): Google's and the two Outlooks' add links, built from `calendarEntry`.
+              googleUrl: googleCalendarUrl(calendarEntry, { locale, t }),
+              outlookUrl: outlookCalendarUrl(calendarEntry, { locale, t }, "personal"),
+              outlookWorkUrl: outlookCalendarUrl(calendarEntry, { locale, t }, "work"),
               // The file's address to copy (§674): not for a members' event, whose file opens only with a member's session.
               fileAddress: membersOnly ? undefined : eventCalendarFileUrl(env.APP_BASE_URL, locale, slug),
             } : undefined
