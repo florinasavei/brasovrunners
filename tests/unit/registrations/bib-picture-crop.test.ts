@@ -10,6 +10,7 @@ import {
   BIB_PICTURE_BOX,
   BIB_PICTURE_RATIO,
   BIB_PICTURE_UNCROPPED,
+  BIB_PROFILE_PICTURE_RATIOS,
   bibPictureDrawing,
 } from "@/modules/registrations/bib-picture-frame";
 import { bibPictureForImage, loadBibPictures } from "@/modules/registrations/bib-pictures";
@@ -32,6 +33,15 @@ describe("§560 the two places' fixed shapes", () => {
     expect(BIB_PICTURE_RATIO.sponsors).toBeCloseTo(523.28 / 24, 4);
     expect(Math.round(BIB_PICTURE_RATIO.header)).toBe(9);
     expect(Math.round(BIB_PICTURE_RATIO.sponsors)).toBe(22);
+  });
+
+  it("§NNN the profile's picture has two shapes, both said in the editor: the strip alone and beside the figures", () => {
+    // 523.28 × 36 points alone, 380 × 36 beside the distance and the elevation gain: about 15 and 11 to 1.
+    expect(BIB_PROFILE_PICTURE_RATIOS.alone).toBeCloseTo(BIB_PICTURE_RATIO.profile, 6);
+    expect(BIB_PROFILE_PICTURE_RATIOS.alone).toBeCloseTo(523.28 / 36, 4);
+    expect(BIB_PROFILE_PICTURE_RATIOS.beside).toBeCloseTo(BIB_LAYOUT.profileChartWidth / BIB_LAYOUT.profilePictureHeight, 6);
+    expect(Math.round(BIB_PROFILE_PICTURE_RATIOS.alone)).toBe(15);
+    expect(Math.round(BIB_PROFILE_PICTURE_RATIOS.beside)).toBe(11);
   });
 
   it("start a new picture at the shape's largest rectangle, in the middle", () => {

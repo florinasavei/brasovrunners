@@ -68,13 +68,14 @@ describe("§NNN «Alocă numerele» says what it does", () => {
     // The «?» names it for a screen reader and a thumb; the tooltip's title is the same text.
     expect(row).toContain(`aria-label="${words}"`);
     expect(row).toContain('data-testid="bib-assign-help"');
-    for (const fact of ["în ordinea confirmării", "de la primul număr al cursei", "nu primește altul", "Testele nu primesc"]) {
+    // The special guests draw from their own series (`pickBibNumber`'s «hidden»), so «the race's first number» alone was not true.
+    for (const fact of ["în ordinea confirmării", "de la primul număr liber al cursei", "invitații speciali, din seria lor", "nu primește altul", "Înscrierile de test nu primesc număr"]) {
       expect(words).toContain(fact);
     }
     const english = block(await render({}, "en"), "bib-assign-row");
     // React writes an attribute's apostrophe as an entity.
     expect(english).toContain(`aria-label="${en.Admin.bibs.assignHelp}\n${en.Admin.bibs.assignHelpMore}"`.replace(/'/g, "&#x27;"));
-    for (const fact of ["in order of confirmation", "from the race's first number", "Nobody who has a number gets another", "Test ones get none"]) {
+    for (const fact of ["in order of confirmation", "from the race's first free number", "special guests from their own series", "Nobody who has a number gets another", "Test registrations get no number"]) {
       expect(`${en.Admin.bibs.assignHelp} ${en.Admin.bibs.assignHelpMore}`).toContain(fact);
     }
   });
@@ -88,7 +89,14 @@ describe("§NNN «De la» and «Până la» belong to the PDF", () => {
   it("sits under its own heading with the two download buttons, apart from the allocation, posting to the sheet's form", async () => {
     const html = await render();
     const range = block(html, "bib-print-range");
-    expect(range).toMatch(/<h5[^>]*>[\s\S]*?data-testid="PrintIcon"[\s\S]*?Tipărește doar numerele de la … până la …/);
+    // A heading that names the print, never «doar» over a button that says «toate» (§NNN): the range is the help's.
+    expect(range).toMatch(/<h5[^>]*>[\s\S]*?data-testid="PrintIcon"[\s\S]*?Tipărește numerele \(PDF\)/);
+    expect(range).toContain("De la / Până la: doar o parte, de exemplu 1–50. Goale: toate.");
+    expect(range).not.toMatch(/Tipărește doar/);
+    expect(range).toContain("Descarcă toate numerele (PDF)");
+    const english = block(await render({}, "en"), "bib-print-range");
+    expect(english).toMatch(/<h5[^>]*>[\s\S]*?Print the numbers \(PDF\)/);
+    expect(english).toContain("From / To: only part of them, 1–50 for example. Empty: all.");
     // The two boxes and the two buttons, all naming the sheet's GET form.
     expect(range).toMatch(new RegExp(`<input[^>]*name="from"[^>]*form="${BIB_DOWNLOAD_FORM}"|<input[^>]*form="${BIB_DOWNLOAD_FORM}"[^>]*name="from"`));
     expect(range).toMatch(new RegExp(`<input[^>]*name="to"[^>]*form="${BIB_DOWNLOAD_FORM}"|<input[^>]*form="${BIB_DOWNLOAD_FORM}"[^>]*name="to"`));

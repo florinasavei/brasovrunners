@@ -152,7 +152,8 @@ export async function BibPrintCard({ eventId, total, unprinted, mayAssign, onlyT
           house's `TipSpan`) and behind the «?» beside it for a thumb (`QuietHelp`).
         */}
         {mayAssign && (
-          <Stack direction="row" sx={{ alignItems: "center" }} data-testid="bib-assign-row">
+          // A 12-pixel gap: `QuietHelp`'s invisible 44-pixel target reaches 14 pixels out from its glyph, so without it the «?» covered the button's edge.
+          <Stack direction="row" sx={{ alignItems: "center", gap: 1.5 }} data-testid="bib-assign-row">
             <TipSpan title={assignWords}>
               {/* The question is the assign form's own (`BibPrintForms`, §384); this button only submits it. */}
               <GlyphButton icon="number" type="submit" form={BIB_ASSIGN_FORM} variant="outlined" size="small" sx={{ minHeight: 44 }}>
@@ -163,8 +164,9 @@ export async function BibPrintCard({ eventId, total, unprinted, mayAssign, onlyT
           </Stack>
         )}
         {/*
-          «Tipărește doar numerele de la … până la …» (§NNN): «De la» and «Până la» belong to the PDF, not to
-          the allocation — under their own heading, beside the download buttons, a divider above them. The
+          «Tipărește numerele (PDF)» (§NNN): «De la» and «Până la» belong to the PDF, not to
+          the allocation — under a heading that names the print, never «doar» over a button that says «toate»,
+          the range in its help, beside the download buttons, a divider above them. The
           form wiring is the sheet's own GET (`BIB_DOWNLOAD_FORM`), unchanged.
         */}
         {total > 0 && (

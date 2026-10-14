@@ -25,6 +25,7 @@ import {
   BIB_PROFILE_SOURCES,
   BIB_SPONSOR_PLACES,
   type BibDesign,
+  bibEmergencyLine,
   bibMemberCardColourReadable,
   DEFAULT_BIB_DESIGN,
 } from "@/modules/registrations/bib-design";
@@ -32,7 +33,7 @@ import { BIB_MEMBER_MARK_PATHS, BIB_MEMBER_MARK_VIEWBOX, BIB_MEMBER_MARKS, isVec
 import { CLUB_NAME, HEADER_CLEARANCE_PX, LOGO } from "@/theme/brand";
 import { bibPreviewUrl } from "@/modules/registrations/bib-design-query";
 import { BIB_FOOTER_TEXT_MAX, bibWebsiteHost } from "@/modules/registrations/bib-footer";
-import { BIB_PICTURE_RATIO, type BibPictureSlot } from "@/modules/registrations/bib-picture-frame";
+import { BIB_PICTURE_RATIO, BIB_PROFILE_PICTURE_RATIOS, type BibPictureSlot } from "@/modules/registrations/bib-picture-frame";
 import { readBibPictureFacts } from "@/modules/registrations/bib-pictures";
 import { env } from "@/shared/config/env";
 import { ACTION_ICONS } from "@/shared/ui/action-icons";
@@ -46,7 +47,8 @@ import OnlyWhenChosen from "./OnlyWhenChosen";
 import OnlyWhenTicked from "./OnlyWhenTicked";
 import { BIB_COLOURS } from "./bib-colours";
 
-/** The radios' glyphs, by name from the registry (§318, §NNN): the GPX's route, a picture, the right way up, turned. */
+/** The radios' glyphs, by name from the registry (§318, §NNN): the GPX's route, a picture, the right way up, turned; the figures' ruler. */
+const FiguresGlyph = ACTION_ICONS.profileFigures;
 const RouteGlyph = ACTION_ICONS.route;
 const PictureGlyph = ACTION_ICONS.picture;
 const UprightGlyph = ACTION_ICONS.upright;
@@ -80,10 +82,11 @@ function Legend({ children }: { children: string }) {
  * **In named sections, top to bottom as the number prints** (§NNN, amending §750; the owner,
  * 2026-10-13: «Aici am nevoie de separatoare și iconițe, că nu mai înțeleg nimic...»): «Antet» (the
  * band's colour, its picture, the lockup, the race and its date, the distance badge), «Numărul»
- * (its size, how it is written, the sheet's cut marks), «Numele» (whether and where), «Subsol și
- * sponsori» (the sponsors' band and its place, the stubs, the small print), «Profilul și urgențele»
- * (the route's profile — from the GPX or a picture, its figures, its orientation, the checkpoints —
- * and the emergency phones), and «Membrii» (the members' own number, its mark). Each is a fold of its
+ * (its size, how it is written, the sheet's cut marks), «Numele» (whether and where), «Profilul și
+ * urgențele» (the route's profile — from the GPX or a picture, its figures, its orientation, the
+ * checkpoints — and the emergency phones: one block above the bottom band, wherever the sponsors
+ * go), «Subsol și sponsori» (the sponsors' band and its place, the stubs, the small print), and
+ * «Membrii» (the members' own number, its mark — not a place on the bib, so last). Each is a fold of its
  * own with its glyph and a line saying what it holds, closed until opened; every field in it is
  * still in the form while it is closed, so the save posts the whole design.
  *
@@ -206,7 +209,13 @@ export default async function BibDesignPanel({
         ? t("editor.bibDesign.member.cardImageSrcHelp")
         : place === "member"
           ? t("editor.bibDesign.member.headerImageSrcHelp")
-          : t(`editor.bibDesign.${field}Help`),
+          : slot === "profile"
+            ? // Never cropped, so no crop box says its shape: the help names both of the strip's (§NNN).
+              t("editor.bibDesign.profileImageSrcHelp", {
+                alone: ratioWords.format(BIB_PROFILE_PICTURE_RATIOS.alone),
+                beside: ratioWords.format(BIB_PROFILE_PICTURE_RATIOS.beside),
+              })
+            : t(`editor.bibDesign.${field}Help`),
       none: t("editor.bibDesign.noPicture"),
       choose: t("editor.bibDesign.picture.choose"),
       replace: t("editor.bibDesign.picture.replace"),
@@ -269,11 +278,24 @@ export default async function BibDesignPanel({
   const footerAside = design.sponsorImageSrc
     ? t("editor.bibDesign.sectionSummary.sponsors", { place: t(`editor.bibDesign.sponsorPlaces.${design.sponsorPlace}`) })
     : t("editor.bibDesign.sectionSummary.sponsorsNone");
+  /*
+    The profile's words follow what the renderers print (`bibProfileRow`): a picture chosen with none
+    stored — or one the store no longer has — prints no profile, nor does the GPX on an event without one — so the line says it is missing
+    rather than naming a source that draws nothing. The phone follows `bibEmergencyLine`: either number
+    alone prints.
+  */
+  const profileWords = !design.showProfile
+    ? null
+    : design.profileSource === "picture"
+      ? design.profileImageSrc && facts.has(design.profileImageSrc)
+        ? t("editor.bibDesign.profileSources.picture")
+        : t("editor.bibDesign.sectionSummary.pictureMissing")
+      : hasRouteGpx
+        ? t("editor.bibDesign.profileSources.gpx")
+        : t("editor.bibDesign.sectionSummary.gpxMissing");
   const profileAside =
-    words(
-      design.showProfile && t(`editor.bibDesign.profileSources.${design.profileSource}`),
-      design.showEmergency && design.emergencyPhone !== "" && t("editor.bibDesign.sectionSummary.phone"),
-    ) || t("editor.bibDesign.sectionSummary.nothing");
+    words(profileWords, bibEmergencyLine(design, "x") !== null && t("editor.bibDesign.sectionSummary.phone")) ||
+    t("editor.bibDesign.sectionSummary.nothing");
   const membersAside = design.member.enabled
     ? words(t("editor.bibDesign.sectionSummary.membersOn"), design.member.mark && t(`editor.bibDesign.member.markShapes.${design.member.markShape}`))
     : t("editor.bibDesign.sectionSummary.membersOff");
@@ -402,60 +424,6 @@ export default async function BibDesignPanel({
           </Stack>
         </Panel>
 
-        {/* «Subsol și sponsori» (§NNN): the sponsors' band and its place (§750), the stubs, and the small print (§317). */}
-        <Panel glyph="bibFooter" collapsible level={5} title={t("editor.bibDesign.sections.footer")} aside={footerAside} data-testid="bib-section-footer">
-          <Stack spacing={1.5}>
-            {storage && picture("sponsors")}
-            {/* «Locul benzii cu sponsori» (§750): «Jos de tot, în subsol» for every event unless the club moves it. */}
-            <RecallField
-              select
-              name="event.bibDesign.sponsorPlace"
-              label={t("editor.bibDesign.sponsorPlace")}
-              helperText={t("editor.bibDesign.sponsorPlaceHelp")}
-              defaultValue={design.sponsorPlace}
-              slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}
-              sx={{ width: { sm: 360 } }}
-            >
-              {BIB_SPONSOR_PLACES.map((place) => (
-                <option key={place} value={place}>
-                  {t(`editor.bibDesign.sponsorPlaces.${place}`)}
-                </option>
-              ))}
-            </RecallField>
-            <CheckboxField name="event.bibDesign.numberStubs" defaultChecked={design.numberStubs} help={t("editor.bibDesign.numberStubsHelp")}>
-              {t("editor.bibDesign.numberStubs")}
-            </CheckboxField>
-            {/* The small print, the club's to compose (§317), in the order it prints: the event,
-                the partners, the club's own line, the website, the mailbox. */}
-            <Box component="fieldset" sx={{ border: 0, borderTop: 1, borderColor: "divider", pt: 1.5, px: 0, pb: 0, m: 0, minWidth: 0 }} data-testid="bib-design-footer">
-              <Typography component="legend" variant="body2" sx={{ fontWeight: 600, px: 0.5 }}>
-                {t("editor.bibDesign.footer.title")}
-              </Typography>
-              <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 1 }}>
-                {t("editor.bibDesign.footer.intro")}
-              </Typography>
-              <Stack spacing={1}>
-                <Stack direction="row" sx={CHOICE_ROW}>
-                  {footerSwitch("showEventInFooter", t("editor.bibDesign.footer.showEventInFooter"))}
-                  {footerSwitch("showPartners", t("editor.bibDesign.footer.showPartners"))}
-                </Stack>
-                <BibFooterTextField
-                  name="event.bibDesign.footerText"
-                  defaultValue={design.footerText}
-                  maxLength={BIB_FOOTER_TEXT_MAX}
-                  label={t("editor.bibDesign.footer.footerText")}
-                  placeholder={t("editor.bibDesign.footer.footerTextPlaceholder")}
-                  help={t("editor.bibDesign.footer.footerTextHelp")}
-                />
-                <Stack direction="row" sx={CHOICE_ROW}>
-                  {footerSwitch("showWebsite", t("editor.bibDesign.footer.showWebsite"), siteHost)}
-                  {footerSwitch("showEmail", t("editor.bibDesign.footer.showEmail"), replyTo)}
-                </Stack>
-              </Stack>
-            </Box>
-          </Stack>
-        </Panel>
-
         {/* «Profilul și urgențele» (§750, amended §NNN): the route's profile — from the GPX or a picture,
             its figures, its orientation, the checkpoints on the drawn one — and the emergency phones. */}
         <Panel glyph="bibProfile" collapsible level={5} title={t("editor.bibDesign.sections.profile")} aside={profileAside} data-testid="bib-section-profile">
@@ -490,7 +458,10 @@ export default async function BibDesignPanel({
                   </OnlyWhenChosen>
                 )}
                 <CheckboxField name="event.bibDesign.showProfileFigures" defaultChecked={design.showProfileFigures} help={t("editor.bibDesign.showProfileFiguresHelp")}>
-                  {t("editor.bibDesign.showProfileFigures")}
+                  <Box component="span" sx={{ display: "inline-flex", alignItems: "center", gap: 0.75 }}>
+                    <FiguresGlyph aria-hidden fontSize="small" sx={{ color: "text.secondary" }} />
+                    {t("editor.bibDesign.showProfileFigures")}
+                  </Box>
                 </CheckboxField>
                 {/* «Orientarea profilului» (§NNN): normal, or turned half a circle for the runner — with the phone, as one block, when it is turned too. */}
                 <Box component="fieldset" sx={{ border: 0, p: 0, m: 0, minWidth: 0 }} data-testid="bib-profile-orientation">
@@ -609,6 +580,60 @@ export default async function BibDesignPanel({
           </Stack>
         </Panel>
 
+        {/* «Subsol și sponsori» (§NNN): the sponsors' band and its place (§750), the stubs, and the small print (§317). */}
+        <Panel glyph="bibFooter" collapsible level={5} title={t("editor.bibDesign.sections.footer")} aside={footerAside} data-testid="bib-section-footer">
+          <Stack spacing={1.5}>
+            {storage && picture("sponsors")}
+            {/* «Locul benzii cu sponsori» (§750): «Jos de tot, în subsol» for every event unless the club moves it. */}
+            <RecallField
+              select
+              name="event.bibDesign.sponsorPlace"
+              label={t("editor.bibDesign.sponsorPlace")}
+              helperText={t("editor.bibDesign.sponsorPlaceHelp")}
+              defaultValue={design.sponsorPlace}
+              slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}
+              sx={{ width: { sm: 360 } }}
+            >
+              {BIB_SPONSOR_PLACES.map((place) => (
+                <option key={place} value={place}>
+                  {t(`editor.bibDesign.sponsorPlaces.${place}`)}
+                </option>
+              ))}
+            </RecallField>
+            <CheckboxField name="event.bibDesign.numberStubs" defaultChecked={design.numberStubs} help={t("editor.bibDesign.numberStubsHelp")}>
+              {t("editor.bibDesign.numberStubs")}
+            </CheckboxField>
+            {/* The small print, the club's to compose (§317), in the order it prints: the event,
+                the partners, the club's own line, the website, the mailbox. */}
+            <Box component="fieldset" sx={{ border: 0, borderTop: 1, borderColor: "divider", pt: 1.5, px: 0, pb: 0, m: 0, minWidth: 0 }} data-testid="bib-design-footer">
+              <Typography component="legend" variant="body2" sx={{ fontWeight: 600, px: 0.5 }}>
+                {t("editor.bibDesign.footer.title")}
+              </Typography>
+              <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 1 }}>
+                {t("editor.bibDesign.footer.intro")}
+              </Typography>
+              <Stack spacing={1}>
+                <Stack direction="row" sx={CHOICE_ROW}>
+                  {footerSwitch("showEventInFooter", t("editor.bibDesign.footer.showEventInFooter"))}
+                  {footerSwitch("showPartners", t("editor.bibDesign.footer.showPartners"))}
+                </Stack>
+                <BibFooterTextField
+                  name="event.bibDesign.footerText"
+                  defaultValue={design.footerText}
+                  maxLength={BIB_FOOTER_TEXT_MAX}
+                  label={t("editor.bibDesign.footer.footerText")}
+                  placeholder={t("editor.bibDesign.footer.footerTextPlaceholder")}
+                  help={t("editor.bibDesign.footer.footerTextHelp")}
+                />
+                <Stack direction="row" sx={CHOICE_ROW}>
+                  {footerSwitch("showWebsite", t("editor.bibDesign.footer.showWebsite"), siteHost)}
+                  {footerSwitch("showEmail", t("editor.bibDesign.footer.showEmail"), replyTo)}
+                </Stack>
+              </Stack>
+            </Box>
+          </Stack>
+        </Panel>
+
         {/* «Membrii» (§664): the members' own header and label, and their mark; the rest is the design
             above. The switch is what makes the form ask «Vreau numărul de membru». */}
         <Panel glyph="bibMembers" collapsible level={5} title={t("editor.bibDesign.sections.members")} aside={membersAside} data-testid="bib-section-members">
@@ -711,9 +736,15 @@ export default async function BibDesignPanel({
                                   <path d={BIB_MEMBER_MARK_PATHS[mark]} fill="currentColor" />
                                 </Box>
                               ) : (
-                                // The club's lockup in its own blue, never recoloured (the owner's rule, §711).
-                                // eslint-disable-next-line @next/next/no-img-element -- the club's own SVG, a few pixels tall
-                                <img src={LOGO.lockup.src} alt="" width={53} height={22} style={{ flexShrink: 0, display: "block" }} />
+                                // The club's lockup in its own blue, never recoloured (the owner's rule, §711), on the
+                                // white plate the bib gives it — on the dark scheme the blue would vanish into the panel.
+                                <Box
+                                  component="span"
+                                  sx={{ flexShrink: 0, display: "inline-flex", bgcolor: "common.white", border: 1, borderColor: "divider", px: 0.5, borderRadius: 0.5 }}
+                                >
+                                  {/* eslint-disable-next-line @next/next/no-img-element -- the club's own SVG, a few pixels tall */}
+                                  <img src={LOGO.lockup.src} alt="" width={53} height={22} style={{ display: "block" }} />
+                                </Box>
                               )}
                               {t(`editor.bibDesign.member.markShapes.${mark}`)}
                             </Box>

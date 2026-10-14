@@ -311,7 +311,7 @@ export function bibEmergencyPhone(value: string): string {
  */
 export const BIB_EMERGENCY_LABEL_MAX = 40;
 
-/** Each number's own label (§NNN) — a name, «Silviu», «Ambulanța traseului» — at most this many characters. */
+/** Each number's own label (§NNN) — a name or a role, «Coordonator», «Ambulanța traseului» — at most this many characters. */
 export const BIB_EMERGENCY_NAME_MAX = 24;
 
 /** The emergency line's words as the design keeps them (§NNN). Absent keys read as none: a design saved before them prints as it did. */
@@ -320,7 +320,7 @@ type BibEmergencyDesign = Pick<BibDesign, "showEmergency" | "emergencyPhone"> &
 
 /**
  * The line printed on every number (§750, amending it §NNN): «Urgențe: 07xx xxx xxx», or with the club's
- * label and two numbers, each with its own name, «Urgențe: Silviu 07xx xxx xxx / Ana 07yy yyy yyy» — on
+ * label and two numbers, each with its own name, «Urgențe: Coordonator 07xx xxx xxx / Medic 07yy yyy yyy» — on
  * one line, as the owner's trail example prints it. `fallback` is the sheet's language's word, used when
  * the club typed no label. Null while the tick is off or no valid number was typed; a second number alone
  * prints alone. The club's organizers' numbers, typed here: never a participant's own emergency contact,

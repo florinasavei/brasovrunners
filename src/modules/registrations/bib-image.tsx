@@ -372,7 +372,7 @@ function profileRowElement(row: BibProfileRow, ink: string, picture: BibImagePic
         <div style={{ display: "flex" }}>{profile.start}</div>
         <div style={{ display: "flex" }}>{profile.finish}</div>
       </div>
-      {/* Their words (§NNN), «km 12» or «km 12 · 11:30», centred under the ticks in the labels' row — where the crowding rule kept them. */}
+      {/* Their words (§757), «km 12» or «km 12 · 11:30», centred under the ticks in the labels' row — where the crowding rule kept them. */}
       {(profile.checkpoints?.marks ?? []).map((mark) =>
         mark.label ? (
           <div

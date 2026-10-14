@@ -124,12 +124,12 @@ export const PANEL_GLYPHS = {
   conditions: MedicalServicesIcon,
   bibDesign: BrushIcon,
   // The bib designer's sections (§NNN), top to bottom as the number prints: the header, the number, the
-  // name, the foot with the sponsors, the profile with the emergency phone, and the members' number.
+  // name, the profile with the emergency phone, the foot with the sponsors, and the members' number.
   bibHeader: VerticalAlignTopIcon,
   bibNumber: NumbersIcon,
   bibName: BadgeIcon,
-  bibFooter: VerticalAlignBottomIcon,
   bibProfile: TerrainIcon,
+  bibFooter: VerticalAlignBottomIcon,
   bibMembers: CardMembershipIcon,
   print: PrintIcon,
   startList: GroupsIcon,

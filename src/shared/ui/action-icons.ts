@@ -178,6 +178,8 @@ export type ActionIconName =
   | "route"
   | "upright"
   | "turned"
+  // The tick beside them, «Arată distanța și diferența de nivel lângă profil» (§NNN): a measure, the ruler.
+  | "profileFigures"
   // The people on the waiting list (§626): the hourglass «Coada» wears on its panel (`panel-glyphs.ts`) and the queue's line title, beside the «Înscrieri» tab's badge.
   | "waiting"
   // Those holding a place who still have to finish (§632): the pen the participant's own declaration step wears (`RegistrationSteps`), in the «Înscrieri» tab's pill.
@@ -303,6 +305,7 @@ export const ACTION_ICONS: Record<ActionIconName, ComponentType<SvgIconProps>> =
   route: RouteIcon,
   upright: TextRotationNoneIcon,
   turned: ScreenRotationAltIcon,
+  profileFigures: StraightenIcon,
   waiting: HourglassTopIcon,
   declaration: DrawIcon,
   emailConfirmation: MarkEmailReadIcon,

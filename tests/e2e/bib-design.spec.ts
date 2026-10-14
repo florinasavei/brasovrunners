@@ -185,9 +185,9 @@ test.describe("§664 the members' number, designed in the panel", () => {
 
 /**
  * §750, amended §NNN — the designer in its sections, top to bottom as the number prints: «Antet» (the
- * badge, the header picture and its warning), «Subsol și sponsori» (the sponsors' place, the stubs),
- * «Profilul și urgențele» (the profile's source, its picture, its figures and orientation; the phone's
- * label and two numbers, turned). Each follows into the preview's address before anything is saved.
+ * badge, the header picture and its warning), «Profilul și urgențele» (the profile's source, its picture,
+ * its figures and orientation; the phone's label and two numbers, turned), «Subsol și sponsori» (the
+ * sponsors' place, the stubs). Each follows into the preview's address before anything is saved.
  * Nothing is saved; the featured event has no route GPX, so the drawn profile says why and a picture
  * is offered instead.
  */
@@ -204,7 +204,7 @@ test.describe("§750 §NNN the designer's sections: header, footer, the profile 
     const preview = page.getByTestId("bib-design-preview").locator("img");
 
     // Six named sections, each closed with its heading in sight until opened.
-    for (const title of ["Antet", "Numărul", "Numele", "Subsol și sponsori", "Profilul și urgențele", "Membrii"]) {
+    for (const title of ["Antet", "Numărul", "Numele", "Profilul și urgențele", "Subsol și sponsori", "Membrii"]) {
       await expect(panel.getByRole("heading", { name: new RegExp(`^${title}`), level: 5 })).toBeVisible();
     }
 
@@ -310,5 +310,29 @@ test.describe("§750 §NNN the designer's sections: header, footer, the profile 
     await expect(warning).toContainText("ascunde numele evenimentului");
     await header.getByRole("checkbox", { name: "Numele evenimentului" }).uncheck();
     await expect(warning).toBeHidden();
+  });
+});
+
+/**
+ * §NNN — «Alocă numerele» and its «?» are two thumb targets side by side, and neither covers the other:
+ * `QuietHelp`'s invisible 44-pixel overlay reaches 14 pixels out from its 16-pixel glyph, so the row's
+ * gap keeps that overlay clear of the button's right edge — a tap on the button's edge submits it.
+ */
+test.describe("§NNN the assign button's «?» never covers the button", () => {
+  test("the help's 44-pixel target starts after the button ends", async ({ page }) => {
+    await signIn(page, "Dev Administrator");
+    await ensureRegistrationIsOpen(page);
+    await page.reload();
+    await hydrated(page);
+    await openEditorBox(page, "Participare și înscrieri");
+    await openEditorBox(page, "Numere de concurs (BIB)");
+    await openFold(page.getByTestId("bib-print"));
+    const row = page.getByTestId("bib-assign-row");
+    const button = await row.getByRole("button", { name: "Alocă numerele" }).boundingBox();
+    const help = await row.getByTestId("bib-assign-help").boundingBox();
+    expect(button && help).toBeTruthy();
+    // The overlay is centred on the glyph and 44 pixels wide.
+    const overlayLeft = help!.x + help!.width / 2 - 22;
+    expect(overlayLeft).toBeGreaterThanOrEqual(button!.x + button!.width);
   });
 });

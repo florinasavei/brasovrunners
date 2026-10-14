@@ -63,7 +63,7 @@ const EVERYTHING_OFF: BibDesign = {
   // The phone's label and a second number, each with a name (§NNN): the characters a URL escapes.
   emergencyLabel: "Urgențe & ambulanță",
   emergencyPhoneLabel: "Coordonator",
-  emergencyPhone2: "0722 111 222",
+  emergencyPhone2: "0700 000 002",
   emergencyPhone2Label: "Medic + cort",
   // The trail practice off, the badge and the stubs on: each the other way from its default (§750).
   emergencyUpsideDown: false,

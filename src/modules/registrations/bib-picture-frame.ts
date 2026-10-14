@@ -1,6 +1,6 @@
 import { frameCrop, type Intrinsic } from "@/modules/content/rich-text/domain/picture-frame";
 import type { ImageCrop } from "@/modules/content/rich-text/domain/schema";
-import { BIB_CARD, BIB_LAYOUT } from "./bib-geometry";
+import { BIB_CARD, BIB_LAYOUT, bibProfileChartWidth } from "./bib-geometry";
 
 /**
  * The bib's two picture places and the one rule that draws a crop in them (§560, amending §249
@@ -44,6 +44,16 @@ export const BIB_PICTURE_RATIO: Record<BibPictureSlot, number> = {
   memberCard: BIB_PICTURE_BOX.memberCard.width / BIB_PICTURE_BOX.memberCard.height,
   profile: BIB_PICTURE_BOX.profile.width / BIB_PICTURE_BOX.profile.height,
 };
+
+/**
+ * The profile's picture box, width over height (§NNN): the strip alone, about 14.5, and beside the
+ * distance and the elevation gain, about 10.6. The picture is never cropped, so the editor names both
+ * shapes in the place's help — the crop box's own «Forma» line never shows for it.
+ */
+export const BIB_PROFILE_PICTURE_RATIOS = {
+  alone: bibProfileChartWidth(false) / BIB_LAYOUT.profilePictureHeight,
+  beside: bibProfileChartWidth(true) / BIB_LAYOUT.profilePictureHeight,
+} as const;
 
 /**
  * What a place does with a picture that has no crop — every design saved before crops existed, and
