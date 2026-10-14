@@ -41,6 +41,7 @@ import {
   sameDescription,
   standingOf,
   type VolunteerRoleInput,
+  VOLUNTEER_MINIMUM_AGE,
   volunteerEventAhead,
   volunteerOfferClosedFor,
   volunteerPublicSchemaFor,
@@ -648,6 +649,31 @@ function staffInputOf(fields: Record<string, unknown>) {
   return { ...parsed.data, choiceIds: choicesWithAssigned(parsed.data), identity };
 }
 
+/**
+ * An age under eighteen typed on the card while the club cannot take a minor (§NNN), when the parse refused the parent's boxes: the
+ * card draws those boxes only while minors are open or the person already is one, so the refusal is on `age` — the box the organizer
+ * can see — with the minors-closed sentence, never on a box that is not there. Null when the refusal is something else.
+ */
+async function minorsClosedRefusal<T extends Record<string, unknown>>(
+  db: Database<T>,
+  request: Extract<VolunteerRequest, { kind: "add" | "edit" }>,
+  error: unknown,
+  now: Date,
+): Promise<DomainError | null> {
+  if (!(error instanceof DomainError) || error.code !== "VALIDATION_ERROR") return null;
+  if (!error.fields.some((field) => field === "guardianName" || field === "guardianEmail")) return null;
+  const typed = typeof request.fields.age === "string" ? request.fields.age.trim() : "";
+  const age = /^\d{1,3}$/.test(typed) ? Number(typed) : null;
+  if (age === null || age < VOLUNTEER_MINIMUM_AGE || !isVolunteerMinor(age)) return null;
+  if (request.kind === "edit" && isUuid(request.id)) {
+    // A person who already is under eighteen has the boxes drawn: their refusal is the boxes'.
+    const [held] = await db.select({ age: eventVolunteers.age }).from(eventVolunteers).where(eq(eventVolunteers.id, request.id)).limit(1);
+    if (held && isVolunteerMinor(held.age)) return null;
+  }
+  if (await volunteerMinorsOpen(db, now)) return null;
+  return new DomainError("VALIDATION_ERROR", "the club cannot take volunteers under eighteen yet", ["age", ...error.fields.filter((field) => field !== "guardianName" && field !== "guardianEmail")]);
+}
+
 /** The answers a person says about themselves, which only a privacy notice that names them (`{{volunteerProfile}}`) lets the platform keep (§765). */
 const PROFILE_BOXES = ["age", "sex", "city", "volunteeredBefore", "clubMember", "shirtSize"] as const;
 
@@ -741,7 +767,14 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
 ): Promise<VolunteerResult> {
   assertMayManage(actor);
   assertIds(request.eventId, ...(request.kind === "add" ? [] : [request.id]));
-  const input = request.kind === "add" || request.kind === "edit" ? staffInputOf(request.fields) : null;
+  let input: ReturnType<typeof staffInputOf> | null = null;
+  if (request.kind === "add" || request.kind === "edit") {
+    try {
+      input = staffInputOf(request.fields);
+    } catch (error) {
+      throw (await minorsClosedRefusal(db, request, error, now)) ?? error;
+    }
+  }
   // Whether the notice in force names the profile answers (§765): read before the transaction, like the public sign-up does.
   const profileDescribed = input ? await noticeDescribesVolunteerProfile(db, now) : true;
   // Whether the club may take a person under eighteen (§NNN): asked only when this entry says one — a card save of a person already

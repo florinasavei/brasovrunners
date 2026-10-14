@@ -239,37 +239,45 @@ function foldedName(value: string): string {
   return value.trim().replace(/\s+/g, " ");
 }
 
-type GuardianBoxes = { guardianName: string; guardianEmail: string };
+/** What the guardian's boxes came to for the age typed: the guardian as kept (or none), and which boxes are refused. */
+type GuardianVerdict = { guardian: { name: string; email: string | null } | null; badName: boolean; badEmail: boolean };
 
 /**
- * What the guardian's two boxes mean for the age typed (§NNN; zod's `superRefine` calls it):
+ * What the guardian's two boxes mean for the age typed (§NNN), pure:
  * - **eighteen or older, or no age** — the boxes are dropped (`null`): nobody keeps a third person's data for an adult;
  * - **a minor, `address: "required"` (the public form)** — the name (`guardianName`) and a valid address
  *   (`guardianEmail`); the volunteer's tick that the parent knows and agrees is the schema's own (`guardianAware`);
  * - **a minor, `address: "optional"` (the organizers' entry)** — the name, and the address only if typed: the consent
  *   may be taken on paper at the desk, which needs no address.
  *
- * Returns the guardian as kept, or null; the issues name the boxes so a refusal links to them.
+ * Read from the values a failed parse may leave (a box missing, an age that is no number, one under the floor already
+ * refused on its own box): none of those is a minor the guardian is asked for.
  */
-export function checkGuardian(
-  age: number | null,
-  boxes: GuardianBoxes,
-  address: "required" | "optional",
-  ctx: z.RefinementCtx,
-): { name: string; email: string | null } | null {
-  if (!isVolunteerMinor(age)) return null;
-  const name = foldedName(boxes.guardianName);
-  const email = boxes.guardianEmail.trim();
-  let ok = true;
-  if (name === "" || name.length > VOLUNTEER_GUARDIAN_NAME_MAX) {
-    ctx.addIssue({ code: "custom", path: ["guardianName"], message: "a volunteer under eighteen needs a parent's or guardian's name" });
-    ok = false;
-  }
-  if ((address === "required" || email !== "") && (email.length > 320 || !isValidEmail(email))) {
-    ctx.addIssue({ code: "custom", path: ["guardianEmail"], message: "a volunteer under eighteen needs the parent's or guardian's address" });
-    ok = false;
-  }
-  return ok ? { name, email: email === "" ? null : email } : null;
+function judgeGuardian(value: { age?: unknown; guardianName?: unknown; guardianEmail?: unknown }, address: "required" | "optional"): GuardianVerdict {
+  const age = typeof value.age === "number" ? value.age : null;
+  if (!isVolunteerMinor(age) || age === null || age < VOLUNTEER_MINIMUM_AGE) return { guardian: null, badName: false, badEmail: false };
+  const name = foldedName(typeof value.guardianName === "string" ? value.guardianName : "");
+  const email = (typeof value.guardianEmail === "string" ? value.guardianEmail : "").trim();
+  const badName = name === "" || name.length > VOLUNTEER_GUARDIAN_NAME_MAX;
+  const badEmail = (address === "required" || email !== "") && (email.length > 320 || !isValidEmail(email));
+  return { guardian: badName || badEmail ? null : { name, email: email === "" ? null : email }, badName, badEmail };
+}
+
+/**
+ * Names each guardian box the age typed makes refused, as zod refinements that run **even when another box was refused**
+ * (`when`): a person refused for «sex» is told about the parent's boxes in the same pass, not on a second try. The result
+ * is shaped by `guardianOf` in the schema's own `transform`.
+ */
+function refuseGuardianBoxes<S extends z.ZodType>(schema: S, address: "required" | "optional"): S {
+  const always = () => true;
+  return schema
+    .refine((value) => !judgeGuardian(value as never, address).badName, { path: ["guardianName"], message: "a volunteer under eighteen needs a parent's or guardian's name", when: always })
+    .refine((value) => !judgeGuardian(value as never, address).badEmail, { path: ["guardianEmail"], message: "a volunteer under eighteen needs the parent's or guardian's address", when: always }) as unknown as S;
+}
+
+/** The guardian as kept for a parse that passed, or null (an adult, no age): the one thing the schemas' `transform` shapes. */
+function guardianOf(value: { age: number | null; guardianName: string; guardianEmail: string }, address: "required" | "optional"): { name: string; email: string | null } | null {
+  return judgeGuardian(value, address).guardian;
 }
 
 /**
@@ -295,7 +303,7 @@ const assignedRoleField = z
  * person entered with a role given and nothing ticked has that role as their one choice, so every row says what
  * the person offered (`choicesWithAssigned`).
  */
-export const volunteerStaffInputSchema = z
+const volunteerStaffInputBase = z
   .object({
     roleIds: roleIdsField,
     assignedRoleId: assignedRoleField,
@@ -319,15 +327,18 @@ export const volunteerStaffInputSchema = z
     guardianName: guardianNameBox,
     guardianEmail: guardianEmailBox,
   })
-  .transform((value, ctx) => {
+  .superRefine((value, ctx) => {
     if (value.roleIds.length === 0 && value.assignedRoleId === null) {
       ctx.addIssue({ code: "custom", path: ["roleIds"], message: "tick at least one role, or give the person a role" });
     }
-    // An age under eighteen needs its guardian; any other age keeps none. The two boxes are read here and leave the result.
-    const { guardianName, guardianEmail, ...rest } = value;
-    const guardian = checkGuardian(value.age, { guardianName, guardianEmail }, "optional", ctx);
-    return { ...rest, guardian };
   });
+
+/** The organizers' entry: the guardian's boxes refused with the rest, then folded into one `guardian` (an adult's dropped). */
+export const volunteerStaffInputSchema = refuseGuardianBoxes(volunteerStaffInputBase, "optional").transform((value) => {
+  // An age under eighteen needs its guardian; any other age keeps none. The two boxes are read here and leave the result.
+  const { guardianName, guardianEmail, ...rest } = value;
+  return { ...rest, guardian: guardianOf({ age: value.age, guardianName, guardianEmail }, "optional") };
+});
 
 export type VolunteerStaffInput = z.infer<typeof volunteerStaffInputSchema>;
 
@@ -401,18 +412,21 @@ const volunteerPublicProfileBase = z.object({
  * under eighteen is refused on `age` — the page then says the club cannot take minors yet.
  */
 export function volunteerPublicProfileSchemaFor(minors: boolean) {
-  return volunteerPublicProfileBase.transform((value, ctx) => {
-    const { guardianName, guardianEmail, guardianAware, ...rest } = value;
-    let guardian: { name: string; email: string | null } | null = null;
-    if (isVolunteerMinor(value.age)) {
-      if (!minors) {
-        ctx.addIssue({ code: "custom", path: ["age"], message: "the club cannot take volunteers under eighteen yet" });
-      } else {
-        guardian = checkGuardian(value.age, { guardianName, guardianEmail }, "required", ctx);
-        if (!guardianAware) ctx.addIssue({ code: "custom", path: ["guardianAware"], message: "the volunteer says the parent knows and agrees" });
-      }
-    }
-    return { ...rest, guardian };
+  const always = () => true;
+  // A minor the form asks a guardian for: from the floor to seventeen (a number under it is refused on its own box already).
+  const minor = (value: { age?: unknown }) => typeof value.age === "number" && value.age >= VOLUNTEER_MINIMUM_AGE && isVolunteerMinor(value.age);
+  // While the club cannot take a minor the guardian's boxes are not asked at all: the age alone is refused. Every refused box is
+  // named in one pass, even when another (the sex, the city) was refused too.
+  const refused = minors
+    ? refuseGuardianBoxes(volunteerPublicProfileBase, "required").refine((value) => !minor(value) || value.guardianAware === true, {
+        path: ["guardianAware"],
+        message: "the volunteer says the parent knows and agrees",
+        when: always,
+      })
+    : volunteerPublicProfileBase.refine((value) => !minor(value), { path: ["age"], message: "the club cannot take volunteers under eighteen yet", when: always });
+  return refused.transform((value) => {
+    const { guardianName, guardianEmail, guardianAware: _aware, ...rest } = value;
+    return { ...rest, guardian: minors ? guardianOf({ age: value.age, guardianName, guardianEmail }, "required") : null };
   });
 }
 

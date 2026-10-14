@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
+  agreementMinimumAge,
   guardianAllowsConfirm,
+  guardianSharesAddress,
   guardianStandingOf,
   isVolunteerMinor,
   refusedFields,
@@ -175,5 +177,33 @@ describe("§NNN the two acceptance schemas", () => {
     expect(volunteerAgreementAcceptSchema.parse({ agreement: true, locale: "ro" })).toMatchObject({ agreement: true, adult: false });
     expect(volunteerAgreementAcceptSchema.parse({ agreement: true, adult: true, locale: "en" }).adult).toBe(true);
     expect(volunteerAgreementAcceptSchema.safeParse({ agreement: false, adult: true, locale: "ro" }).success).toBe(false);
+  });
+});
+
+describe("§NNN every refused box is named in one pass, and the text read decides the age it says", () => {
+  it("names the parent's boxes together with a sex that is no answer — never a second refusal for the same form", () => {
+    const verdict = volunteerPublicProfileSchemaFor(true).safeParse({ ...PUBLIC, sex: "ROBOT", age: "15" });
+    expect(verdict.success).toBe(false);
+    if (!verdict.success) expect(refusedFields(verdict.error)).toEqual(["sex", "guardianName", "guardianEmail", "guardianAware"]);
+    const staff = volunteerStaffInputSchema.safeParse({ roleIds: [ID], assignedRoleId: "", name: "Ana Test", email: "ana@example.test", phone: "+40712345678", note: "", age: "15", sex: "ROBOT" });
+    expect(staff.success).toBe(false);
+    if (!staff.success) expect(refusedFields(staff.error)).toEqual(["sex", "guardianName"]);
+    // While the club cannot take a minor the guardian's boxes are not asked: the age alone.
+    const closed = volunteerPublicProfileSchemaFor(false).safeParse({ ...PUBLIC, sex: "ROBOT", age: "15" });
+    if (!closed.success) expect(refusedFields(closed.error)).toEqual(["sex", "age"]);
+  });
+
+  it("says fourteen in a text that carries the minors' clause and eighteen in one that does not", () => {
+    const body = (paragraph: string) => ({ sections: [{ paragraphs: [paragraph] }] });
+    expect(agreementMinimumAge(body("Voluntarul fiind minor, părintele, {{volunteerGuardian}}, își dă acordul."))).toBe(VOLUNTEER_MINIMUM_AGE);
+    expect(agreementMinimumAge(body("Voluntarul este {{minimumAge}}."))).toBe(VOLUNTEER_ADULT_AGE);
+    expect(agreementMinimumAge(null)).toBe(VOLUNTEER_ADULT_AGE);
+  });
+
+  it("knows a guardian's address that is the volunteer's own mailbox, through the canonicalizer", () => {
+    expect(guardianSharesAddress("dan@example.test", "DAN@example.test")).toBe(true);
+    expect(guardianSharesAddress("dan@example.test", "maria@example.test")).toBe(false);
+    expect(guardianSharesAddress("dan@example.test", null)).toBe(false);
+    expect(guardianSharesAddress("dan@example.test", "not an address")).toBe(false);
   });
 });
