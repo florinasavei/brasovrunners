@@ -8,7 +8,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { auditMigration } from "../../../scripts/migration-check.mjs";
 
 /**
- * Migration `0151_volunteer_profile_fields` (§NNN, amending §754 and §761), proven on real PostgreSQL (PGlite): a role
+ * Migration `0151_volunteer_profile_fields` (§765, amending §754 and §761), proven on real PostgreSQL (PGlite): a role
  * written before it — a one-line `description_ro` / `description_en` — becomes a one-paragraph document with its plain
  * words per language, only where there are words; the old columns stay untouched; a volunteer listed before it has no
  * age, sex, city or size and has not volunteered before nor belongs to the group; an event gives no T-shirts; the

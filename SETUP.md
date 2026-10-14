@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.23-2026-10-14 -->
+<!-- PROJECT_BASELINE: BR-V3.24-2026-10-14 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V3.23-2026-10-14`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.24-2026-10-14`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -2016,7 +2016,7 @@ only ones who see the names, addresses and telephone numbers.
    the name in Română **and** English (both or neither, like every text the club types), how many
    people the role needs, and optionally «Descrierea rolului» — what the person does, where they stand, from
    what hour — written in the same editor the pages use, in both languages or neither (about 2000 characters
-   of words each; lists and paragraphs, no tables or pictures; `DECISIONS.md` §NNN). **«Copiază și tradu tot:
+   of words each; lists and paragraphs, no tables or pictures; `DECISIONS.md` §765). **«Copiază și tradu tot:
    RO → EN»** at the top of the role's form fills the English name and description from the Romanian ones
    (greyed, with the steps, until the translation key of `/admin/tasks` is set). The description is read under the
    role's tick on the public form (folded «Detalii» when long), on the card's role header, and — in plain
@@ -2040,7 +2040,7 @@ only ones who see the names, addresses and telephone numbers.
    the template **in the same sitting as step 3**. A notice approved before that names `{{volunteers}}` only,
    and until one naming both is in force in **both** languages the form, «Trimite linkul contractului» and
    «Semnat pe hârtie» wait; `/admin/tasks` shows the row «Nota de confidențialitate: contractul de
-   voluntariat» meanwhile. **Since §NNN the paragraph also names what a volunteer says about themselves**
+   voluntariat» meanwhile. **Since §765 the paragraph also names what a volunteer says about themselves**
    (`{{volunteerProfile}}`: the age, the sex, the city, whether they have volunteered before, their own claim to belong to the club's group and,
    only while the club gives T-shirts, the size): approve the notice from the template again, in the same sitting. Until a notice that names it is in
    force in **both** languages the public form stays as it was — «Am cel puțin 18 ani», no age, sex, city or size — and nothing of it is

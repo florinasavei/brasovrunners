@@ -5,7 +5,7 @@ import { DISCLOSURE_OPEN_ARROW, DISCLOSURE_SUMMARY_SX, FOLD_GLYPH_INLINE_SX } fr
 import { descriptionNeedsFold } from "../domain/volunteer";
 
 /**
- * A role's «Descrierea rolului» under its tick on the public form (§NNN; the owner, 2026-10-14: «I need the rich text
+ * A role's «Descrierea rolului» under its tick on the public form (§765; the owner, 2026-10-14: «I need the rich text
  * editor here for responsibilities»): the editor's document drawn by `RichText` — the one renderer every page uses, the
  * allowlist it was validated by — indented under the box it belongs to. A description that runs past about three
  * lines (`descriptionNeedsFold`, read off its plain words) sits behind a native `<details>` «Detalii», so a long list

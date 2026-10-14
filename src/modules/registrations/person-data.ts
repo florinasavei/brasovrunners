@@ -111,7 +111,7 @@ export type PersonData = {
     phone: string;
     message: string | null;
     note: string | null;
-    /** What the person said about themselves (§NNN), every answer as stored: nulls and false for a row from before. */
+    /** What the person said about themselves (§765), every answer as stored: nulls and false for a row from before. */
     age: number | null;
     sex: (typeof eventVolunteers.$inferSelect)["sex"];
     city: string | null;

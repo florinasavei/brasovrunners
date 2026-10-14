@@ -23,9 +23,9 @@ export const VOLUNTEER_SOURCES = ["STAFF", "PUBLIC"] as const satisfies readonly
 
 /** The bounds the database holds too (`event_volunteer_roles` and `event_volunteers` checks). */
 export const VOLUNTEER_ROLE_NAME_MAX = 80;
-/** The role description's plain words, per language (§NNN): a list item counts for what it says, not for its JSON. */
+/** The role description's plain words, per language (§765): a list item counts for what it says, not for its JSON. */
 export const VOLUNTEER_ROLE_DESCRIPTION_MAX = 2000;
-/** What a person says about themselves (§NNN): the city's length is the database's, the age's range too. */
+/** What a person says about themselves (§765): the city's length is the database's, the age's range too. */
 export const VOLUNTEER_CITY_MAX = 80;
 export const VOLUNTEER_AGE_MAX = 100;
 export const VOLUNTEER_NEEDED_MAX = 1000;
@@ -42,7 +42,7 @@ export const VOLUNTEER_ROLES_MAX = 30;
  * would take that consent is the lawyer's later question, so until then the platform takes adults only.
  */
 export const VOLUNTEER_MINIMUM_AGE = 18;
-// Since §NNN the typed age is what is checked against it (the public form, the organizers' entry); the link page keeps its tick.
+// Since §765 the typed age is what is checked against it (the public form, the organizers' entry); the link page keeps its tick.
 
 /** «Înscris» and «Confirmat» count against a role; «Anulat» never does. */
 export function countsAgainstRole(state: VolunteerState): boolean {
@@ -79,7 +79,7 @@ const plainBox = (max: number) => z.string().optional().default("").transform(no
 /**
  * A role as the club types it: both names (the bilingual rule, §352 — never one language's name under the other's
  * page), how many people it needs, and optionally «Descrierea rolului» — what the person would do — in both
- * languages or neither (§NNN: the rich-text editor's document per language, `descriptionRoBody` /
+ * languages or neither (§765: the rich-text editor's document per language, `descriptionRoBody` /
  * `descriptionEnBody`; the plain boxes `descriptionRo` / `descriptionEn` are for a caller without the editor, a
  * script or a test, and read as paragraphs). No table and no picture: the description is read on a phone, under a
  * tick. The field names are the form's own `name`s, so a refusal's summary links to the box.
@@ -144,7 +144,7 @@ export type VolunteerRoleInput = z.infer<typeof volunteerRoleInputSchema>;
 const uuidField = z.uuid();
 
 /**
- * What a person says about themselves (§NNN; the owner, 2026-10-14: «vârstă, sex, oraș și o bifă dacă a mai fost
+ * What a person says about themselves (§765; the owner, 2026-10-14: «vârstă, sex, oraș și o bifă dacă a mai fost
  * voluntar sau nu»): the age in whole years — digits only, one to `VOLUNTEER_AGE_MAX` and at least
  * `VOLUNTEER_MINIMUM_AGE` (the last a rule of the box itself, so a refusal names the age together with the other boxes
  * that failed; the page says «cel puțin 18 ani» rather than «scrie vârsta» by reading the typed age) — the sex as the
@@ -227,7 +227,7 @@ export const volunteerStaffInputSchema = z
     /** E.164, read from what the organizer typed by the registrations' own parser (`typedPhone`, in the action). */
     phone: z.string().regex(E164_PHONE),
     note: optionalLine(VOLUNTEER_NOTE_MAX),
-    /** What the person told the organizers (§NNN): every box optional here, an age below the minimum refused. */
+    /** What the person told the organizers (§765): every box optional here, an age below the minimum refused. */
     age: optionalAge,
     sex: optionalSex,
     city: optionalCity,
@@ -282,7 +282,7 @@ export const volunteerPublicInputSchema = z.object({
 export type VolunteerPublicInput = z.infer<typeof volunteerPublicInputSchema>;
 
 /**
- * The public form while the notice in force names it (§NNN, `describesVolunteerProfile`; the owner, 2026-10-14):
+ * The public form while the notice in force names it (§765, `describesVolunteerProfile`; the owner, 2026-10-14):
  * «Vârsta» (whole years, at least `VOLUNTEER_MINIMUM_AGE` — the tick «Am cel puțin 18 ani» is gone, the age answers
  * it), «Sex» (the registration form's two answers), «Orașul», the optional ticks «Am mai fost voluntar în trecut la
  * alte curse» and «Fac parte din grupul {club}», and «Mărimea tricoului» — which the service keeps only while the
@@ -367,7 +367,7 @@ export type RoleWords = { nameRo: string; nameEn: string; descriptionRo: string 
  * they are written. A text that is only punctuation reads as none, and its sentence is left out.
  */
 export function tasksWords(description: string): string {
-  // The description's plain words keep a line per paragraph and per list item (§NNN): in the agreement's sentence
+  // The description's plain words keep a line per paragraph and per list item (§765): in the agreement's sentence
   // they read as one, a line that ends a sentence followed by a space, any other by «; ».
   const lines = description
     .split(/\r?\n/)
@@ -378,7 +378,7 @@ export function tasksWords(description: string): string {
 }
 
 /**
- * A role's description is shown folded behind «Detalii» when it runs past about three lines (§NNN): more than three
+ * A role's description is shown folded behind «Detalii» when it runs past about three lines (§765): more than three
  * lines of plain words (a paragraph or a list item each) or more than `ROLE_DESCRIPTION_FOLD_CHARS` characters.
  * The plain words are the rule's input — a document's JSON says nothing about how long it reads.
  */
@@ -403,7 +403,7 @@ export function descriptionHead(words: string | null | undefined): { first: stri
 }
 
 /**
- * Whether two stored/typed descriptions are the same document (§NNN): read back from PostgreSQL's `jsonb` the keys come
+ * Whether two stored/typed descriptions are the same document (§765): read back from PostgreSQL's `jsonb` the keys come
  * in another order than the editor wrote them, so the comparison sorts them — a press that changes nothing must write
  * and audit nothing.
  */

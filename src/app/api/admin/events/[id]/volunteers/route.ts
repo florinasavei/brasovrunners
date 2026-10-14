@@ -88,7 +88,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
       city: person.city,
       volunteeredBefore: t(person.volunteeredBefore ? "volunteers.yes" : "volunteers.no"),
       clubMember: t(person.clubMember ? "volunteers.yes" : "volunteers.no"),
-      // Only while the event gives T-shirts (§NNN): a size left from before is exported as nothing.
+      // Only while the event gives T-shirts (§765): a size left from before is exported as nothing.
       shirtSize: shirtSizeShown(data.shirts, person.shirtSize) ?? "",
     })),
   );

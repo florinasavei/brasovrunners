@@ -52,7 +52,7 @@ export const STATUS_GLYPHS = {
   priorityLow: ArrowDownwardIcon,
   // A role a volunteer offered to do (§761): «S-a oferit pentru» on the «Voluntari» card.
   offered: VolunteerActivismIcon,
-  // «A mai fost voluntar» on the same row (§NNN): what the person did before, not what they offer now.
+  // «A mai fost voluntar» on the same row (§765): what the person did before, not what they offer now.
   experience: HistoryIcon,
 } satisfies Record<string, ComponentType<SvgIconProps>>;
 

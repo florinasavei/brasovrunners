@@ -106,9 +106,9 @@ type Props = {
   eventId: string;
   /** «Primește voluntari», as saved. */
   acceptsVolunteers: boolean;
-  /** «Oferim tricouri voluntarilor», as saved (§NNN): the people's rows show their size, and the entry's box asks it. */
+  /** «Oferim tricouri voluntarilor», as saved (§765): the people's rows show their size, and the entry's box asks it. */
   volunteersShirts: boolean;
-  /** The notice in force names what a volunteer says about themselves (§NNN): the public form asks it — else it is §758's tick. */
+  /** The notice in force names what a volunteer says about themselves (§765): the public form asks it — else it is §758's tick. */
   profileDescribed: boolean;
   /** Why the public form is not on the event's page now, or null when it is (`volunteerOfferClosedFor`). */
   offerClosed: VolunteerOfferClosed | null;
@@ -167,7 +167,7 @@ export default async function VolunteersCard({
 }: Props) {
   const t = await getTranslations("Admin");
   const words = await confirmWords();
-  // The editor's own control names, for the role's description (§NNN).
+  // The editor's own control names, for the role's description (§765).
   const rich = richTextEditorLabels(await getTranslations("Admin.richText"));
   const standingOf = new Map(standings.map((standing) => [standing.roleId, standing]));
 
@@ -248,7 +248,7 @@ export default async function VolunteersCard({
         size="small"
         slotProps={{ htmlInput: { min: 1, max: VOLUNTEER_NEEDED_MAX, inputMode: "numeric" } }}
       />
-      {/* «Descrierea rolului» (§NNN): the house's rich-text editor, one fold per language, both languages or neither; its plain words are what the agreement and the emails say. */}
+      {/* «Descrierea rolului» (§765): the house's rich-text editor, one fold per language, both languages or neither; its plain words are what the agreement and the emails say. */}
       <Stack spacing={1} data-testid="volunteer-role-description-field">
         <LazyRichTextEditor
           name="descriptionRoBody"
@@ -342,7 +342,7 @@ export default async function VolunteersCard({
         size="small"
         slotProps={{ htmlInput: { maxLength: 40, inputMode: "tel" } }}
       />
-      {/* What the person told the organizers (§NNN): every box optional here, drawn only while the privacy notice in force names them
+      {/* What the person told the organizers (§765): every box optional here, drawn only while the privacy notice in force names them
           (`profileDescribed`) — the service refuses them otherwise, so a hidden box is not the only gate. */}
       {profileDescribed && (
         <>
@@ -638,7 +638,7 @@ export default async function VolunteersCard({
           );
         })()}
       </Stack>
-      {/* What the person said about themselves (§NNN), small: two chips — «a mai fost voluntar» and the club's group, the person's own claims, in words and a glyph —
+      {/* What the person said about themselves (§765), small: two chips — «a mai fost voluntar» and the club's group, the person's own claims, in words and a glyph —
           and one line of the rest in the row's details. Nothing for a person who said nothing. */}
       {(person.volunteeredBefore || person.clubMember) && (
         <Stack direction="row" sx={{ flexWrap: "wrap", gap: 0.5, mt: 0.5 }} data-testid="volunteer-claims">
@@ -757,7 +757,7 @@ export default async function VolunteersCard({
       <Box sx={{ mt: 0.75 }}>
         <RoleColourSample colour={role.colour} label={badgeRoleText(roleName(role), locale)} locale={locale} testId="volunteer-role-colour" />
       </Box>
-      {/* «Descrierea rolului» (§NNN): the first line of its plain words in the card's language, the rest folded. */}
+      {/* «Descrierea rolului» (§765): the first line of its plain words in the card's language, the rest folded. */}
       {(() => {
         const head = descriptionHead(locale === "en" ? role.descriptionEn : role.descriptionRo);
         if (head.first === "") return null;
@@ -866,7 +866,7 @@ export default async function VolunteersCard({
           <Alert severity={offerClosed === null ? "success" : "info"} data-testid="volunteer-offer-state">
             {offerClosed === null ? t("volunteers.offer.open") : t(`volunteers.offer.closed.${offerClosed}`)}
           </Alert>
-          {/* «Primește voluntari pe pagină» (§NNN; the owner, 2026-10-14: «nu mai folosi niciodată» a button that flips a setting): a real tick —
+          {/* «Primește voluntari pe pagină» (§765; the owner, 2026-10-14: «nu mai folosi niciodată» a button that flips a setting): a real tick —
               a plain form whose submit is drawn as the checkbox, the words beside it, `role="checkbox"` and `aria-checked`, 44 pixels, working with
               scripts off (the to-do list's pattern, §752). It posts the state it wants; the action behind it is the one it always was. */}
           <Box component="form" action={switchVolunteersAction} data-testid="volunteer-switch-form">
@@ -887,7 +887,7 @@ export default async function VolunteersCard({
               {t("volunteers.switchHelp")}
             </Typography>
           </Box>
-          {/* «Oferim tricouri voluntarilor» (§NNN): the same tick as the one above — a submit drawn as the checkbox that posts the state it wants,
+          {/* «Oferim tricouri voluntarilor» (§765): the same tick as the one above — a submit drawn as the checkbox that posts the state it wants,
               so the card's two settings behave alike and neither waits for a «Salvează». */}
           <Box component="form" action={switchVolunteersShirtsAction} data-testid="volunteer-shirts-form">
             {hidden}
@@ -907,7 +907,7 @@ export default async function VolunteersCard({
               {t("volunteers.shirts.help")}
             </Typography>
           </Box>
-          {/* Which form the public page draws (§NNN): the one that asks the person's age, sex and city only while the notice in force names them. */}
+          {/* Which form the public page draws (§765): the one that asks the person's age, sex and city only while the notice in force names them. */}
           {!profileDescribed && (
             <Typography variant="body2" color="text.secondary" data-testid="volunteer-profile-off">
               {t("volunteers.offer.profileOff")}

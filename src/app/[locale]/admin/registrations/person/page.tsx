@@ -223,7 +223,7 @@ export default async function PersonDataPage({ params, searchParams }: Props) {
                       {t("volunteers.person.choicesLine", { roles: (locale === "en" ? offer.chosenRolesEn : offer.chosenRolesRo).join(", ") || "—" })} · {t(`volunteers.states.${offer.state}`)} · {t(`volunteers.sources.${offer.source}`)} · {offer.name} · {offer.deliveryEmail} · {offer.phone}
                       {offer.message ? ` · ${offer.message}` : ""}
                       {offer.note ? ` · ${offer.note}` : ""}
-                      {/* What the person said about themselves (§NNN): every column of the row, art. 15 GDPR. */}
+                      {/* What the person said about themselves (§765): every column of the row, art. 15 GDPR. */}
                       <VolunteerAnswers offer={offer} />
                       {/* The volunteer agreement (§758): accepted — which version, how, when — or not yet. */}
                       {" · "}

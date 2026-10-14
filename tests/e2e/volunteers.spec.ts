@@ -14,7 +14,7 @@ import { chooseSex } from "./support/sex-choice";
  * «De repartizat», gives one role with one press and sees «1 din N» on it; a role with all the people it needs is
  * no longer offered; a repeated sign-up gets the same answer; once every role is given away the page offers no form.
  *
- * §NNN — the volunteer's own data and the role's description: «Primește voluntari pe pagină» is a real tick (role
+ * §765 — the volunteer's own data and the role's description: «Primește voluntari pe pagină» is a real tick (role
  * checkbox, `aria-checked`, 44 pixels); a role's «Descrierea rolului» is typed in the rich-text editor in both
  * languages and read under its tick on the public form (folded «Detalii» when long); the form asks the age (17 is
  * refused, the tick «Am cel puțin 18 ani» is gone), the sex, the city, the two optional ticks, and the T-shirt's
@@ -116,7 +116,7 @@ test.describe("§754 volunteers for a race", () => {
     await openEditorBox(page, "Roluri");
     const roles = page.getByTestId("volunteer-role-name");
     await expect(roles).toHaveText(["Punct de apă", "Sosire"]);
-    // The role's header: the first line of its description's plain words, the rest folded (§NNN).
+    // The role's header: the first line of its description's plain words, the rest folded (§765).
     await expect(page.getByTestId("volunteer-role").nth(0).getByTestId("volunteer-role-description-first")).toHaveText("Stai la masa cu apă, la kilometrul 5.");
     await expect(page.getByTestId("volunteer-role").nth(1).getByTestId("volunteer-role-description-first")).toHaveText("Stai la linia de sosire.");
     const moveUp = page.getByTestId("volunteer-role").nth(1).getByRole("button", { name: /Mută mai sus/ });
@@ -134,7 +134,7 @@ test.describe("§754 volunteers for a race", () => {
 
     // The form is off until the event takes volunteers: the card says why.
     await expect(page.getByTestId("volunteer-offer-state")).toContainText("Formularul public e oprit");
-    // «Primește voluntari pe pagină» is a real tick (§NNN): a checkbox with its words, its state in `aria-checked`, a row a thumb can press.
+    // «Primește voluntari pe pagină» is a real tick (§765): a checkbox with its words, its state in `aria-checked`, a row a thumb can press.
     const acceptTick = page.getByRole("checkbox", { name: "Primește voluntari pe pagină", exact: true });
     await expect(acceptTick).toHaveAttribute("aria-checked", "false");
     expect((await acceptTick.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
@@ -166,7 +166,7 @@ test.describe("§754 volunteers for a race", () => {
       const finishBox = choices.getByRole("checkbox", { name: "Sosire" });
       await expect(waterBox).toBeVisible();
       await expect(finishBox).toBeVisible();
-      // «Descrierea rolului» under each tick: the long one folded behind «Detalii», the one-line one simply there (§NNN).
+      // «Descrierea rolului» under each tick: the long one folded behind «Detalii», the one-line one simply there (§765).
       const waterDescription = choices.getByTestId("volunteer-role-option").filter({ hasText: "Punct de apă" }).getByTestId("volunteer-role-description");
       await expect(waterDescription).toHaveAttribute("data-folded", "true");
       await expect(waterDescription.locator("summary")).toHaveText("Detalii");
@@ -200,7 +200,7 @@ test.describe("§754 volunteers for a race", () => {
         await page2.getByLabel("Numele tău").fill(name);
         await page2.getByLabel("Adresa ta de email").fill(email);
         await page2.locator('[name="phone"]').fill("712345678");
-        // What the person says about themselves (§NNN): the age, the sex, the city, two optional ticks and, while the event gives T-shirts, the size.
+        // What the person says about themselves (§765): the age, the sex, the city, two optional ticks and, while the event gives T-shirts, the size.
         await page2.locator('input[name="age"]').fill(about.age);
         await chooseSex(page2, about.sex ?? "FEMALE");
         await page2.locator('input[name="city"]').fill(about.city);
@@ -222,7 +222,7 @@ test.describe("§754 volunteers for a race", () => {
       await guest.getByLabel("Numele tău").fill("Maria Test");
       await guest.getByLabel("Adresa ta de email").fill(maria);
       await guest.locator('[name="phone"]').fill("712345678");
-      // Seventeen, no sex and no city: each named (§NNN). The browser's own `required` is lifted so the server's refusal is what is read.
+      // Seventeen, no sex and no city: each named (§765). The browser's own `required` is lifted so the server's refusal is what is read.
       await guest.locator('input[name="age"]').fill("17");
       await guest.locator('input[name="volunteeredBefore"]').check();
       for (const tick of ["consent", "agreement"]) {
@@ -278,7 +278,7 @@ test.describe("§754 volunteers for a race", () => {
       await expect(row.getByTestId("volunteer-state")).toHaveText("Înscris");
       // What she would do, as chips — words, never the colour alone.
       await expect(row.getByTestId("volunteer-choice")).toHaveText(["Punct de apă", "Sosire"]);
-      // What she said about herself (§NNN): two small chips in words, and one line of the rest — no T-shirt while the event gives none.
+      // What she said about herself (§765): two small chips in words, and one line of the rest — no T-shirt while the event gives none.
       await expect(row.getByTestId("volunteer-before")).toHaveText("A mai fost voluntar");
       await expect(row.getByTestId("volunteer-club")).toContainText("Din grupul");
       await expect(row.getByTestId("volunteer-facts")).toHaveText(/^Vârsta: 34 · .+ · Oraș: Brașov$/);
@@ -341,7 +341,7 @@ test.describe("§754 volunteers for a race", () => {
       expect(file).toContain("Rolul dat,S-a oferit pentru,Nume");
       expect(file).toContain(`Sosire,"Punct de apă, Sosire",Maria Test`);
       expect(file).toContain(maria);
-      // Six columns after the moment (§NNN): the age, the sex (the registrations' own word), the city, the two ticks as «Da»/«Nu», the size (empty: no T-shirts).
+      // Six columns after the moment (§765): the age, the sex (the registrations' own word), the city, the two ticks as «Da»/«Nu», the size (empty: no T-shirts).
       expect(file).toContain("Data,Vârsta,Sex,Orașul,A mai fost voluntar,Din grupul clubului,Mărime tricou");
       expect(file).toMatch(/,34,Female,Brașov,Da,Da,(\r?\n|$)/);
 
@@ -380,7 +380,7 @@ test.describe("§754 volunteers for a race", () => {
       await hydrated(page);
       await expect(page.getByTestId("volunteer-row")).toHaveCount(3);
       await expect(page.getByTestId("volunteer-unassigned").getByTestId("volunteer-name")).toHaveText(["Ion Test", "Dana Test"]);
-      // Ion ticked neither optional box and chose a size: no chips, and the T-shirt in the row's line (§NNN).
+      // Ion ticked neither optional box and chose a size: no chips, and the T-shirt in the row's line (§765).
       const ionRow = page.getByTestId("volunteer-row").filter({ hasText: "Ion Test" });
       await expect(ionRow.getByTestId("volunteer-claims")).toHaveCount(0);
       await expect(ionRow.getByTestId("volunteer-facts")).toHaveText(/^Vârsta: 52 · .+ · Oraș: Cluj-Napoca · Tricou: L$/);
@@ -432,7 +432,7 @@ test.describe("§754 volunteers for a race", () => {
       await add.getByRole("textbox", { name: "Nume", exact: true }).fill(name);
       await add.getByRole("textbox", { name: "Adresa de email", exact: true }).fill(email);
       await add.getByRole("textbox", { name: "Telefon", exact: true }).fill("0712 345 678");
-      // What the person told the organizers (§NNN): every box optional here, no T-shirt box while the event gives none.
+      // What the person told the organizers (§765): every box optional here, no T-shirt box while the event gives none.
       await expect(add.getByLabel("Mărimea tricoului")).toHaveCount(0);
       if (about.age) await add.locator('input[name="age"]').fill(about.age);
       if (about.city) await add.locator('input[name="city"]').fill(about.city);

@@ -132,7 +132,7 @@ describe("BR-REQ-070-01 everything held about a person", () => {
       source: "PUBLIC",
       message: "Sunt liberă sâmbătă",
       privacyNoticeVersion: 3,
-      // What she said about herself (§NNN): every answer is hers to see, as stored.
+      // What she said about herself (§765): every answer is hers to see, as stored.
       age: 34,
       sex: "FEMALE",
       city: "Brașov",

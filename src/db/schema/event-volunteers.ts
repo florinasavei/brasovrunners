@@ -48,14 +48,14 @@ export const eventVolunteerRoles = pgTable(
     /** How many people the role needs, at least one: «N din M» on the card and the form's «still needs people». */
     needed: integer("needed").notNull(),
     /**
-     * The one-line description of §754 (at most 200 characters), **kept only until a later contract release** (§NNN):
+     * The one-line description of §754 (at most 200 characters), **kept only until a later contract release** (§765):
      * migration `0151` turned each value into the document below, and nothing reads or writes these two columns
      * any more. Code still serving while the migration runs reads them; they are dropped when no such code can be.
      */
     descriptionRo: text("description_ro"),
     descriptionEn: text("description_en"),
     /**
-     * «Descrierea rolului» (§NNN; the owner, 2026-10-14: «I need the rich text editor here for responsibilities»): what
+     * «Descrierea rolului» (§765; the owner, 2026-10-14: «I need the rich text editor here for responsibilities»): what
      * the person does in the role — where they stand, what they do, from what hour — in the editor every page uses,
      * one document per language, kept the FAQ's way: the document (`description_ro_json`) and its plain words
      * (`description_words_ro`, `richTextToPlainText`, written by every save). The words are what the agreement's
@@ -83,7 +83,7 @@ export const eventVolunteerRoles = pgTable(
       "event_volunteer_roles_description_length",
       sql`(${t.descriptionRo} IS NULL OR char_length(${t.descriptionRo}) BETWEEN 1 AND 200) AND (${t.descriptionEn} IS NULL OR char_length(${t.descriptionEn}) BETWEEN 1 AND 200)`,
     ),
-    // The description's words: a document has its words and the words their document, within the bound the editor says (§NNN).
+    // The description's words: a document has its words and the words their document, within the bound the editor says (§765).
     check(
       "event_volunteer_roles_description_words",
       sql`(${t.descriptionRoJson} IS NULL) = (${t.descriptionWordsRo} IS NULL) AND (${t.descriptionEnJson} IS NULL) = (${t.descriptionWordsEn} IS NULL) AND (${t.descriptionWordsRo} IS NULL OR char_length(${t.descriptionWordsRo}) BETWEEN 1 AND 2000) AND (${t.descriptionWordsEn} IS NULL OR char_length(${t.descriptionWordsEn}) BETWEEN 1 AND 2000)`,
@@ -138,7 +138,7 @@ export const eventVolunteers = pgTable(
     /** The organizers' own line; backoffice only. */
     note: text("note"),
     /*
-      What the person says about themselves (§NNN; the owner, 2026-10-14: «când se înregistrează voluntarul trebuie să
+      What the person says about themselves (§765; the owner, 2026-10-14: «când se înregistrează voluntarul trebuie să
       pună măcar vârstă, sex, oraș și o bifă dacă a mai fost voluntar sau nu»): asked on the public form only while the
       privacy notice in force names it (`describesVolunteerProfile`), optional on the organizers' own entry, null on a
       row from before. The person's own answers, never checked against anything. Kept and deleted with the row.

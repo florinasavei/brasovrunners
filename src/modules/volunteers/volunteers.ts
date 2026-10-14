@@ -92,7 +92,7 @@ export type VolunteerRole = {
   nameEn: string;
   needed: number;
   /**
-   * «Descrierea rolului» (§NNN): the plain words per language — a line per paragraph and per list item: what the card's
+   * «Descrierea rolului» (§765): the plain words per language — a line per paragraph and per list item: what the card's
    * header, the agreement and the emails say (the columns `description_words_*`; it is `RoleWords`' own shape, so a role
    * names itself to the agreement as it is) — and the editor's document, which the public form and the editor draw.
    * Both languages or neither; null is none.
@@ -121,7 +121,7 @@ export type VolunteerItem = {
   source: "STAFF" | "PUBLIC";
   message: string | null;
   note: string | null;
-  /** What the person said about themselves (§NNN), or nulls and false for a row from before — and for one the club typed without. */
+  /** What the person said about themselves (§765), or nulls and false for a row from before — and for one the club typed without. */
   age: number | null;
   sex: SexChoice | null;
   city: string | null;
@@ -167,7 +167,7 @@ function storedDescription(json: unknown): RichTextDoc | null {
   return hasRichTextContent(doc) ? doc : null;
 }
 
-/** The roles' columns as the card, the form and the agreement read them (§NNN): the plain words under the names `RoleWords` uses. */
+/** The roles' columns as the card, the form and the agreement read them (§765): the plain words under the names `RoleWords` uses. */
 function roleOf(row: typeof eventVolunteerRoles.$inferSelect): VolunteerRole {
   return {
     id: row.id,
@@ -278,7 +278,7 @@ export type PublicVolunteerRole = {
   id: string;
   nameRo: string;
   nameEn: string;
-  /** «Descrierea rolului» (§NNN): the plain words (how long it reads) and the document the form draws under the role's tick. */
+  /** «Descrierea rolului» (§765): the plain words (how long it reads) and the document the form draws under the role's tick. */
   descriptionRo: string | null;
   descriptionEn: string | null;
   descriptionRoJson: RichTextDoc | null;
@@ -310,7 +310,7 @@ export async function readPublicVolunteerRoles<T extends Record<string, unknown>
     .where(eq(eventVolunteers.eventId, eventId));
   return {
     acceptsVolunteers: true,
-    // «Oferim tricouri voluntarilor» (§NNN): the form asks the size only while it is on.
+    // «Oferim tricouri voluntarilor» (§765): the form asks the size only while it is on.
     shirts: event.shirts,
     roles: roles.map((role) => {
       const standing = standingOf(role, people);
@@ -485,7 +485,7 @@ export async function changeVolunteerRole<T extends Record<string, unknown>>(
     const before = { nameRo: current.nameRo, nameEn: current.nameEn, needed: current.needed, colour: current.colour };
     const after = { nameRo: input.nameRo, nameEn: input.nameEn, needed: input.needed, colour };
     const changedFields: string[] = (Object.keys(before) as (keyof typeof before)[]).filter((key) => before[key] !== after[key]);
-    // The description is a document per language (§NNN): the names of the fields in the trail, never its words.
+    // The description is a document per language (§765): the names of the fields in the trail, never its words.
     if (!sameDescription(current.descriptionRoJson, input.descriptionRoJson)) changedFields.push("descriptionRo");
     if (!sameDescription(current.descriptionEnJson, input.descriptionEnJson)) changedFields.push("descriptionEn");
     if (changedFields.length === 0) return { changed: false, role: summary };
@@ -551,7 +551,7 @@ export async function setAcceptsVolunteers<T extends Record<string, unknown>>(
 }
 
 /**
- * «Oferim tricouri voluntarilor» on or off (§NNN; the owner, 2026-10-14: «acum nu vom da tricouri»): the event's own
+ * «Oferim tricouri voluntarilor» on or off (§765; the owner, 2026-10-14: «acum nu vom da tricouri»): the event's own
  * tick, saved by the «Voluntari» card's own form like «Primește voluntari» — never by the editor's save. Switching it
  * off keeps every size already given (they are shown nowhere meanwhile, `shirtSizeShown`); nothing is deleted by it.
  */
@@ -606,7 +606,7 @@ function staffInputOf(fields: Record<string, unknown>) {
   const parsed = volunteerStaffInputSchema.safeParse({
     ...postedStrings(fields, STAFF_FIELDS),
     roleIds: postedIds(fields.roleIds),
-    // The ticks (§NNN): true only when the form posted them.
+    // The ticks (§765): true only when the form posted them.
     volunteeredBefore: fields.volunteeredBefore === true,
     clubMember: fields.clubMember === true,
   });
@@ -622,11 +622,11 @@ function staffInputOf(fields: Record<string, unknown>) {
   return { ...parsed.data, choiceIds: choicesWithAssigned(parsed.data), identity };
 }
 
-/** The answers a person says about themselves, which only a privacy notice that names them (`{{volunteerProfile}}`) lets the platform keep (§NNN). */
+/** The answers a person says about themselves, which only a privacy notice that names them (`{{volunteerProfile}}`) lets the platform keep (§765). */
 const PROFILE_BOXES = ["age", "sex", "city", "volunteeredBefore", "clubMember", "shirtSize"] as const;
 
 /**
- * Staff enter those answers under the same gate as the public form (§NNN, the §562 / §613 pattern): while the notice in
+ * Staff enter those answers under the same gate as the public form (§765, the §562 / §613 pattern): while the notice in
  * force does not name them, an organizer's post that carries one — one that differs from what the row already holds —
  * is refused, naming the boxes. The card does not draw the boxes then, so only a forged or stale post reaches this.
  * A size for an event that gives no shirt is ignored, as it always was.
@@ -716,7 +716,7 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
   assertMayManage(actor);
   assertIds(request.eventId, ...(request.kind === "add" ? [] : [request.id]));
   const input = request.kind === "add" || request.kind === "edit" ? staffInputOf(request.fields) : null;
-  // Whether the notice in force names the profile answers (§NNN): read before the transaction, like the public sign-up does.
+  // Whether the notice in force names the profile answers (§765): read before the transaction, like the public sign-up does.
   const profileDescribed = input ? await noticeDescribesVolunteerProfile(db, now) : true;
   const state =
     request.kind === "setState"
@@ -805,7 +805,7 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
           city: input.city,
           volunteeredBefore: input.volunteeredBefore,
           clubMember: input.clubMember,
-          // A size only while the event gives a shirt (§NNN); a stale form posting one for an event without is ignored.
+          // A size only while the event gives a shirt (§765); a stale form posting one for an event without is ignored.
           shirtSize: event.shirts ? input.shirtSize : null,
           createdByStaffUserId: actor.id,
           createdAt: now,
@@ -880,7 +880,7 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
           city: input.city,
           volunteeredBefore: input.volunteeredBefore,
           clubMember: input.clubMember,
-          // While the event gives no shirt the box is not drawn: the size stays as it was, shown nowhere (§NNN).
+          // While the event gives no shirt the box is not drawn: the size stays as it was, shown nowhere (§765).
           shirtSize: event.shirts ? input.shirtSize : current.shirtSize,
         }
       : {
@@ -1019,7 +1019,7 @@ export async function submitVolunteer<T extends Record<string, unknown>>(
   now: Date,
 ): Promise<VolunteerSubmitOutcome> {
   assertIds(eventId);
-  // What the form asked depends on the notice in force (§NNN): the profile's boxes while it names them, §758's tick otherwise.
+  // What the form asked depends on the notice in force (§765): the profile's boxes while it names them, §758's tick otherwise.
   const profileMode = await noticeDescribesVolunteerProfile(db, now);
   const parsed = volunteerPublicSchemaFor(profileMode).safeParse(rawInput);
   if (!parsed.success) {
@@ -1027,7 +1027,7 @@ export async function submitVolunteer<T extends Record<string, unknown>>(
     throw new DomainError("VALIDATION_ERROR", "the volunteer form is malformed", fields.length > 0 ? fields : ["name"]);
   }
   const input = parsed.data;
-  // What the person said about themselves, only when the form asked it (§NNN).
+  // What the person said about themselves, only when the form asked it (§765).
   const profile =
     "age" in input
       ? { age: input.age, sex: input.sex, city: input.city, volunteeredBefore: input.volunteeredBefore, clubMember: input.clubMember, shirtSize: input.shirtSize }
@@ -1101,7 +1101,7 @@ export async function submitVolunteer<T extends Record<string, unknown>>(
     const kept = openChoices(input.roleIds, new Map(ticked.map((role) => [role.id, standingOf(role, people)])));
     if (kept.length === 0) return { outcome: "full", dropped: true };
     const dropped = kept.length < input.roleIds.length;
-    // The roles as the agreement names them (§NNN): the plain words of «Descrierea rolului», never the old one-line column.
+    // The roles as the agreement names them (§765): the plain words of «Descrierea rolului», never the old one-line column.
     const chosen = ticked.filter((role) => kept.includes(role.id)).map(roleOf).sort(compareRoles);
 
     // A repeat of the same person: the same answer a new one gets, nothing changed, nothing sent — whatever the row's state is.
@@ -1135,7 +1135,7 @@ export async function submitVolunteer<T extends Record<string, unknown>>(
         source: "PUBLIC",
         message: input.message,
         privacyNoticeVersion: notice.version,
-        // The person's own words about themselves (§NNN), kept only when the notice in force names them; the size only
+        // The person's own words about themselves (§765), kept only when the notice in force names them; the size only
         // while the event gives a shirt. A form posted for the other mode (a page cached before the notice changed) is refused at the top, naming its missing boxes; the redirect then draws the form now in force.
         ...(profile
           ? {

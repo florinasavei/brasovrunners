@@ -77,9 +77,9 @@ export type EventPageVisit = {
    */
   volunteers?: {
     roles: readonly PublicVolunteerRole[];
-    /** «Oferim tricouri voluntarilor» (§NNN): the form asks the T-shirt's size. */
+    /** «Oferim tricouri voluntarilor» (§765): the form asks the T-shirt's size. */
     shirts: boolean;
-    /** The notice in force names what a volunteer says about themselves (§NNN): the form asks it — else §758's tick. */
+    /** The notice in force names what a volunteer says about themselves (§765): the form asks it — else §758's tick. */
     profile: boolean;
     outcome: ReturnType<typeof parseVolunteerOutcome>;
     refused: ReturnType<typeof parseVolunteerBoxes>;

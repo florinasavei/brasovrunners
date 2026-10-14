@@ -9,7 +9,7 @@ import type { PublicVolunteerRole, VolunteerItem, VolunteerRole } from "@/module
 import { CLUB_NAME } from "@/theme/brand";
 
 /**
- * §NNN — the «Voluntari» card and the public form «Vreau să fiu voluntar» as the server draws them: the card's
+ * §765 — the «Voluntari» card and the public form «Vreau să fiu voluntar» as the server draws them: the card's
  * tick (a real checkbox with its words, scripts off), its shirts' checkbox, the role's editor with the translate
  * button, the people's small chips and facts; the form's age, sex, city, ticks and size while the notice names them,
  * §758's tick until then, and each role's description under its box, folded past three lines. Both languages.
@@ -220,7 +220,7 @@ async function drawBox(over: Partial<ComponentProps<typeof VolunteerBox>> = {}, 
   return html(createElement(NextIntlClientProvider, intl, drawn));
 }
 
-describe("§NNN «Primește voluntari pe pagină» is a real tick, never a toggle button", () => {
+describe("§765 «Primește voluntari pe pagină» is a real tick, never a toggle button", () => {
   it("is a plain form whose submit is the checkbox: role, state, words beside it, the state it wants posted", async () => {
     const off = await drawCard({ acceptsVolunteers: false });
     const form = /<form[^>]*data-testid="volunteer-switch-form"[\s\S]*?<\/form>/.exec(off)?.[0] ?? "";
@@ -259,7 +259,7 @@ describe("§NNN «Primește voluntari pe pagină» is a real tick, never a toggl
   });
 });
 
-describe("§NNN «Oferim tricouri voluntarilor» is the same tick as «Primește voluntari pe pagină»", () => {
+describe("§765 «Oferim tricouri voluntarilor» is the same tick as «Primește voluntari pe pagină»", () => {
   it("is a submit drawn as the checkbox with its one-line help, the state it wants posted, and no «Salvează» beside it", async () => {
     const off = await drawCard({ volunteersShirts: false });
     const form = /<form[^>]*data-testid="volunteer-shirts-form"[\s\S]*?<\/form>/.exec(off)?.[0] ?? "";
@@ -281,7 +281,7 @@ describe("§NNN «Oferim tricouri voluntarilor» is the same tick as «Primește
   });
 });
 
-describe("§NNN the organizers' entry draws the profile boxes only while the notice in force names them", () => {
+describe("§765 the organizers' entry draws the profile boxes only while the notice in force names them", () => {
   it("draws the age, the sex, the city, the two ticks and the size while it does, and none of them while it does not", async () => {
     const named = await drawCard({ profileDescribed: true, volunteersShirts: true });
     for (const box of ["age", "city", "volunteeredBefore", "clubMember"]) expect(named, box).toContain(`name="${box}"`);
@@ -294,7 +294,7 @@ describe("§NNN the organizers' entry draws the profile boxes only while the not
   });
 });
 
-describe("§NNN the role's form: «Descrierea rolului» in the rich-text editor, with «Copiază și tradu tot»", () => {
+describe("§765 the role's form: «Descrierea rolului» in the rich-text editor, with «Copiază și tradu tot»", () => {
   it("draws, in the add form and in every role's edit form, the translate button, one editor per language and no one-line box", async () => {
     const page = await drawCard();
     // One button per form: «Adaugă un rol» and the three roles' «Modifică».
@@ -336,7 +336,7 @@ describe("§NNN the role's form: «Descrierea rolului» in the rich-text editor,
   });
 });
 
-describe("§NNN the people: small chips for the two claims, one line of the rest, the size only while there are shirts", () => {
+describe("§765 the people: small chips for the two claims, one line of the rest, the size only while there are shirts", () => {
   it("draws «a mai fost voluntar» and the club's group as chips with the club's name from the constant, and the facts in one line", async () => {
     const page = await drawCard({ volunteersShirts: true });
     const maria = /<li[^>]*data-testid="volunteer-row"[^>]*data-volunteer-id="55555555[\s\S]*?<\/li>/.exec(page)?.[0] ?? "";
@@ -379,7 +379,7 @@ describe("§NNN the people: small chips for the two claims, one line of the rest
   });
 });
 
-describe("§NNN the public form while the notice names the profile", () => {
+describe("§765 the public form while the notice names the profile", () => {
   it("asks the age, the sex (the registration form's own box), the city and the two ticks, and no tick «Am cel puțin 18 ani»", async () => {
     const page = await drawBox();
     const age = tagOf(page, "input", "age");
@@ -458,7 +458,7 @@ describe("§NNN the public form while the notice names the profile", () => {
   });
 });
 
-describe("§NNN each role's description under its tick on the public form", () => {
+describe("§765 each role's description under its tick on the public form", () => {
   it("draws the document under the role's box, never the other language's, and nothing for a role with none", async () => {
     const page = await drawBox();
     // One block per role, in the club's order: Punct de apă, Sosire, Masă.
@@ -506,7 +506,7 @@ describe("§NNN each role's description under its tick on the public form", () =
   });
 });
 
-describe("§NNN «Toate datele unei persoane» lists the six answers of a volunteer", () => {
+describe("§765 «Toate datele unei persoane» lists the six answers of a volunteer", () => {
   it("writes the age, the sex, the city, the two claims and the size after the organizers' note, in the reader's language", async () => {
     const { default: VolunteerAnswers } = await import("@/modules/volunteers/ui/VolunteerAnswers");
     const all = { age: 34, sex: "FEMALE" as const, city: "Brașov", volunteeredBefore: true, clubMember: true, shirtSize: "M" as const };

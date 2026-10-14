@@ -129,7 +129,7 @@
  * (`describesVolunteerAgreement`, `/admin/tasks`' row `volunteerAgreementNotice`). The age is the agreement's
  * («vârsta minimă cerută de contract»), never a number here: the agreement states it (`{{minimumAge}}`).
  * **Open for counsel and the owner:** whether a register of agreements must outlive the thirty days.
- * Since §NNN the same paragraph names what a volunteer says about themselves — the age (which stands in for the age
+ * Since §765 the same paragraph names what a volunteer says about themselves — the age (which stands in for the age
  * statement), the sex, the city, whether they have volunteered before, their own claim to belong to the club's group and,
  * only while the club gives volunteers T-shirts, the size — with its own marker, `{{volunteerProfile}}` (the form's boxes by
  * their labels, quoted; the group tick and the size are said in the paragraph's words, never quoted, so the approved text never names the club): a notice approved from the earlier template says none of it, so the public form asks those boxes,

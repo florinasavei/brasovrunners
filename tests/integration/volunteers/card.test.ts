@@ -453,7 +453,7 @@ describe("§761 «Dă-i rolul …»: the organizers give each volunteer one role
     expect((await trail()).filter((row) => row.action === "volunteer.assigned")).toHaveLength(1);
   });
 
-  it("says a several-paragraph description in the email as one flattened sentence, in each language (§NNN)", async () => {
+  it("says a several-paragraph description in the email as one flattened sentence, in each language (§765)", async () => {
     const paragraph = (text: string) => ({ type: "paragraph", content: [{ type: "text", text }] });
     const docOf = (...lines: string[]) => JSON.stringify({ type: "doc", content: lines.map(paragraph) });
     const water = await addRole({

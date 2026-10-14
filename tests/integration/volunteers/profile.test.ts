@@ -18,7 +18,7 @@ import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — what a volunteer says about themselves (age, sex, city, «am mai fost voluntar», the club's group, the
+ * §765 — what a volunteer says about themselves (age, sex, city, «am mai fost voluntar», the club's group, the
  * T-shirt's size), the role's «Descrierea rolului» as a document, and the event's tick «Oferim tricouri
  * voluntarilor» (BR-REQ-031-01, BR-REQ-050-02, BR-REQ-053-01, BR-REQ-060-01).
  *
@@ -73,7 +73,7 @@ async function person(role: StaffRole, name: string): Promise<StaffUser> {
   return row;
 }
 
-/** The notice in force, in both languages; `profile` makes it name `{{volunteerProfile}}` too (§NNN). */
+/** The notice in force, in both languages; `profile` makes it name `{{volunteerProfile}}` too (§765). */
 async function approveNotice(profile: boolean, version = 1) {
   const marker = profile ? "Voluntari ({{volunteers}}, {{volunteerAgreement}}, {{volunteerProfile}})" : "Voluntari ({{volunteers}}, {{volunteerAgreement}})";
   const body = (text: string) => ({ sections: [{ paragraphs: [`${marker}: ${text}`] }] });
@@ -166,8 +166,8 @@ async function addRole(fields: Record<string, string> = {}) {
   return roles[roles.length - 1];
 }
 
-describe("§NNN the organizers' entry: what the person said about themselves", () => {
-  // The organizers' boxes are drawn and kept only while the notice in force names them (§NNN).
+describe("§765 the organizers' entry: what the person said about themselves", () => {
+  // The organizers' boxes are drawn and kept only while the notice in force names them (§765).
   beforeEach(async () => {
     await approveNotice(true);
   });
@@ -234,7 +234,7 @@ describe("§NNN the organizers' entry: what the person said about themselves", (
   });
 });
 
-describe("§NNN the organizers' entry is gated by the notice too (the §562 / §613 pattern)", () => {
+describe("§765 the organizers' entry is gated by the notice too (the §562 / §613 pattern)", () => {
   it("refuses an answer an organizer types while the notice in force does not name them, naming the boxes, and writes nothing", async () => {
     await approveNotice(false);
     const role = await addRole();
@@ -265,7 +265,7 @@ describe("§NNN the organizers' entry is gated by the notice too (the §562 / §
   });
 });
 
-describe("§NNN «Oferim tricouri voluntarilor»", () => {
+describe("§765 «Oferim tricouri voluntarilor»", () => {
   beforeEach(async () => {
     await approveNotice(true);
   });
@@ -321,7 +321,7 @@ describe("§NNN «Oferim tricouri voluntarilor»", () => {
   });
 });
 
-describe("§NNN «Descrierea rolului», a document per language", () => {
+describe("§765 «Descrierea rolului», a document per language", () => {
   it("adds a role with the editor's two documents, keeps each with its plain words and audits the names of the fields", async () => {
     const role = await addRole({
       descriptionRoBody: docOf("Stai la km 5.", "Dai apă de la 9:00."),
@@ -392,7 +392,7 @@ function publicForm(roleIds: string[], extra: Record<string, unknown> = {}) {
 }
 const ANSWERS = { age: "34", sex: "FEMALE", city: " Brașov ", volunteeredBefore: true, clubMember: true, shirtSize: "L" };
 
-describe("§NNN the public form: asked while the notice names it, §758's tick until then", () => {
+describe("§765 the public form: asked while the notice names it, §758's tick until then", () => {
   beforeEach(async () => {
     await approveAgreement();
   });
@@ -474,7 +474,7 @@ describe("§NNN the public form: asked while the notice names it, §758's tick u
   });
 });
 
-describe("§NNN the CSV and the card's list carry the answers", () => {
+describe("§765 the CSV and the card's list carry the answers", () => {
   beforeEach(async () => {
     await approveNotice(true);
   });
@@ -513,7 +513,7 @@ describe("§NNN the CSV and the card's list carry the answers", () => {
   });
 });
 
-describe("§NNN the role service refuses a role no one may touch", () => {
+describe("§765 the role service refuses a role no one may touch", () => {
   it("asserts the role for a description too", async () => {
     await expect(changeVolunteerRole(db, staff.DEV!, { kind: "add", eventId, fields: { ...ROLE, descriptionRoBody: docOf("x"), descriptionEnBody: docOf("y") } }, NOW)).rejects.toMatchObject({
       code: "FORBIDDEN",

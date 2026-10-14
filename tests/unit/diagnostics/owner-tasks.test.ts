@@ -203,7 +203,7 @@ describe("owner tasks", () => {
     }
   });
 
-  it("§NNN: the notice's row for what a volunteer says about themselves is open while an event ahead takes volunteers and the notice is silent, done once it names it", () => {
+  it("§765: the notice's row for what a volunteer says about themselves is open while an event ahead takes volunteers and the notice is silent, done once it names it", () => {
     expect(stateOf({ ...LAUNCHED, volunteerProfileDescribed: false }, "volunteerProfileNotice")).toBe("open");
     expect(stateOf(LAUNCHED, "volunteerProfileNotice")).toBe("done");
     expect(stateOf({ ...LAUNCHED, volunteeringEvents: 0 }, "volunteerProfileNotice")).toBe("done");

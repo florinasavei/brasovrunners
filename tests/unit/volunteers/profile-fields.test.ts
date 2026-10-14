@@ -36,7 +36,7 @@ import { SHIRT_SIZES } from "@/modules/registrations/domain/kit";
 import { CLUB_NAME } from "@/theme/brand";
 
 /**
- * §NNN — what a volunteer says about themselves, the role's description as a document, and the notice that must
+ * §765 — what a volunteer says about themselves, the role's description as a document, and the notice that must
  * name both before the form asks: the pure rules, no database (`tests/integration/volunteers/profile.test.ts`
  * keeps them in the rows).
  */
@@ -58,7 +58,7 @@ const PUBLIC = {
 const paragraph = (text: string) => ({ type: "paragraph", content: [{ type: "text", text }] });
 const doc = (...lines: string[]) => JSON.stringify({ type: "doc", content: lines.map(paragraph) });
 
-describe("§NNN the public form's age, sex and city (the notice names them)", () => {
+describe("§765 the public form's age, sex and city (the notice names them)", () => {
   it("takes the age in whole years, the registration form's two answers and a short city, folding the city's whitespace", () => {
     const parsed = volunteerPublicProfileSchema.parse(PUBLIC);
     expect(parsed).toMatchObject({ age: 34, sex: "FEMALE", city: "Brașov", volunteeredBefore: false, clubMember: false, shirtSize: null });
@@ -152,7 +152,7 @@ describe("§NNN the public form's age, sex and city (the notice names them)", ()
   });
 });
 
-describe("§NNN the organizers' entry takes the same answers, all optional", () => {
+describe("§765 the organizers' entry takes the same answers, all optional", () => {
   const staff = { roleIds: [ID], assignedRoleId: "", name: "Ana Test", email: "ana@example.test", phone: "+40712345678", note: "" };
 
   it("leaves every answer empty without refusing", () => {
@@ -183,7 +183,7 @@ describe("§NNN the organizers' entry takes the same answers, all optional", () 
   });
 });
 
-describe("§NNN «Descrierea rolului», a document per language with its plain words", () => {
+describe("§765 «Descrierea rolului», a document per language with its plain words", () => {
   const ROLE = { nameRo: "Punct de apă", nameEn: "Water point", needed: "4" };
 
   it("takes the editor's two documents and keeps each with its plain words, one line per paragraph", () => {
@@ -293,7 +293,7 @@ describe("§NNN «Descrierea rolului», a document per language with its plain w
   });
 });
 
-describe("§NNN the privacy notice's marker {{volunteerProfile}}", () => {
+describe("§765 the privacy notice's marker {{volunteerProfile}}", () => {
   it("is a merge field, and a notice describes the profile only when it names it", () => {
     expect(VOLUNTEER_PROFILE_NOTICE_MERGE_FIELD).toBe("volunteerProfile");
     expect(MERGE_FIELDS).toContain("volunteerProfile");
@@ -336,7 +336,7 @@ describe("§NNN the privacy notice's marker {{volunteerProfile}}", () => {
   });
 });
 
-describe("§NNN the catalogues say the new words in both languages", () => {
+describe("§765 the catalogues say the new words in both languages", () => {
   it("keeps the owner's own sentences", () => {
     expect(ro.Event.volunteers.profile.before).toBe("Am mai fost voluntar în trecut la alte curse");
     expect(en.Event.volunteers.profile.before).toBe("I have volunteered at other races before");

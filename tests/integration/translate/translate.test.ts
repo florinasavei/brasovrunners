@@ -96,7 +96,7 @@ describe("§464 «Tradu din română»", () => {
     expect(await charactersTranslatedToday(db, NOW)).toBe(outcome.characters);
   });
 
-  // §NNN — a volunteer role's own form: the name as words, the description as a rich text whose layout survives.
+  // §765 — a volunteer role's own form: the name as words, the description as a rich text whose layout survives.
   it("translates a volunteer role's name and description, the list and its layout kept, and audits the boxes without the words", async () => {
     const admin = await staff("ADMIN");
     const { translator, requests } = fakeTranslator();

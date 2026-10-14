@@ -426,7 +426,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
           agreementNoticeDescribes,
           agreementDocumentIds,
           agreementEvent,
-          // Which form the public page draws (§NNN): the card says so beside the tick.
+          // Which form the public page draws (§765): the card says so beside the tick.
           profileDescribed: await noticeDescribesVolunteerProfile(db, now),
           offerClosed: volunteerOfferClosedFor({
             acceptsVolunteers: event.acceptsVolunteers,

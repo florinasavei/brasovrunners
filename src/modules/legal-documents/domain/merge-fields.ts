@@ -167,7 +167,7 @@ export const VOLUNTEERS_MERGE_FIELD = "volunteers";
 export const VOLUNTEER_AGREEMENT_NOTICE_MERGE_FIELD = "volunteerAgreement";
 
 /**
- * The privacy notice's marker for what a volunteer says about themselves (§NNN; the owner, 2026-10-14: «vârstă, sex,
+ * The privacy notice's marker for what a volunteer says about themselves (§765; the owner, 2026-10-14: «vârstă, sex,
  * oraș și o bifă dacă a mai fost voluntar sau nu»): the public form's boxes, quoted, in the reader's language
  * (`volunteers/notice-words.ts`) — „Vârsta”, „Sex”, „Orașul”, „Am mai fost voluntar în trecut la alte curse” — inside the
  * volunteers' paragraph's sentence that says what those answers are kept for (placing the volunteers in roles and
@@ -645,7 +645,7 @@ export function describesVolunteerAgreement(body: unknown): boolean {
 }
 
 /**
- * Whether a privacy notice describes what a volunteer says about themselves (§NNN): it names
+ * Whether a privacy notice describes what a volunteer says about themselves (§765): it names
  * `{{volunteerProfile}}`. The gate for the public form's age, sex, city, experience, group and T-shirt boxes — and for
  * keeping what is typed in them — and what `/admin/tasks`' row `volunteerProfileNotice` reads. Pure; the caller asks it
  * of the notice in force, in every language.

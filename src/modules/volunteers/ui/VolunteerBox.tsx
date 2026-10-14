@@ -47,7 +47,7 @@ import { VOLUNTEER_BOX_ID, type VolunteerBox as BoxName, type VolunteerOutcome, 
  * volunteers, a role still needs people, and the privacy notice in force describes them. The action asks
  * again.
  *
- * What the person says about themselves (§NNN; the owner, 2026-10-14): while the notice in force names it (`profile`),
+ * What the person says about themselves (§765; the owner, 2026-10-14): while the notice in force names it (`profile`),
  * the form asks «Vârsta» (the registration's own number-in-years habit, at least 18 — the tick «Am cel puțin 18 ani» is
  * gone, the age answers it), «Sex» (the registration form's own `SexField`, its words), «Orașul» (its city box's words),
  * the optional ticks «Am mai fost voluntar în trecut la alte curse» and «Fac parte din grupul {club}» (the club's name
@@ -71,9 +71,9 @@ export default async function VolunteerBox({
   slug: string;
   /** Only the roles that still need people, in the club's order. */
   roles: readonly PublicVolunteerRole[];
-  /** «Oferim tricouri voluntarilor» is on for this event (§NNN): the form asks «Mărimea tricoului». */
+  /** «Oferim tricouri voluntarilor» is on for this event (§765): the form asks «Mărimea tricoului». */
   shirts: boolean;
-  /** The notice in force names what a volunteer says about themselves (§NNN): the form asks it — else §758's tick «Am cel puțin 18 ani». */
+  /** The notice in force names what a volunteer says about themselves (§765): the form asks it — else §758's tick «Am cel puțin 18 ani». */
   profile: boolean;
   outcome: VolunteerOutcome | null;
   /** The boxes a refusal named (`?vfields=`). */
@@ -215,7 +215,7 @@ export default async function VolunteerBox({
                           {roleName(role)}
                         </Box>
                       </CheckboxField>
-                      {/* «Descrierea rolului» (§NNN): the editor's document under the tick, folded «Detalii» past about three lines. */}
+                      {/* «Descrierea rolului» (§765): the editor's document under the tick, folded «Detalii» past about three lines. */}
                       <RoleDescription doc={roleDoc(role)} words={roleWords(role)} detailsLabel={t("volunteers.details")} bodyId={descriptionId} />
                     </Box>
                   );
@@ -269,7 +269,7 @@ export default async function VolunteerBox({
 
             {profile && (
               <Stack spacing={2} data-testid="volunteer-profile">
-                {/* «Vârsta» and «Sex» (§NNN): the age in whole years — at least the platform's minimum, so the tick «Am cel puțin 18 ani» is gone — and the registration form's own sex box. */}
+                {/* «Vârsta» and «Sex» (§765): the age in whole years — at least the platform's minimum, so the tick «Am cel puțin 18 ani» is gone — and the registration form's own sex box. */}
                 <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
                   <TextField
                     id={fieldId("age")}
@@ -306,7 +306,7 @@ export default async function VolunteerBox({
                   helperText={invalid.has("city") ? t("volunteers.errors.city") : undefined}
                   slotProps={{ htmlInput: { maxLength: VOLUNTEER_CITY_MAX } }}
                 />
-                {/* «Mărimea tricoului» (§NNN), only while the event gives T-shirts — the kit's own sizes, «Fără tricou» first. */}
+                {/* «Mărimea tricoului» (§765), only while the event gives T-shirts — the kit's own sizes, «Fără tricou» first. */}
                 {shirts && (
                   <TextField
                     id={fieldId("shirtSize")}
@@ -328,7 +328,7 @@ export default async function VolunteerBox({
                     ))}
                   </TextField>
                 )}
-                {/* Two optional ticks (§NNN): unticked is «nu», not an unanswered question; the club's group is the person's own claim, like the registration form's. */}
+                {/* Two optional ticks (§765): unticked is «nu», not an unanswered question; the club's group is the person's own claim, like the registration form's. */}
                 <Box>
                   <CheckboxField name="volunteeredBefore" id={fieldId("volunteeredBefore")} defaultChecked={typed.volunteeredBefore === "on"}>
                     {t("volunteers.profile.before")}
@@ -400,7 +400,7 @@ export default async function VolunteerBox({
                 .
               </CheckboxField>
             </Box>
-            {/* §758's tick, only while the notice does not name what a volunteer says about themselves: with the age asked, the age answers it (§NNN). */}
+            {/* §758's tick, only while the notice does not name what a volunteer says about themselves: with the age asked, the age answers it (§765). */}
             {!profile && (
               <Box data-testid="volunteer-adult">
                 <CheckboxField

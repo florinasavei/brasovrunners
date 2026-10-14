@@ -1,5 +1,5 @@
 /**
- * A volunteer role's «Descrierea rolului» as the database keeps it (§NNN): the editor's document per language and
+ * A volunteer role's «Descrierea rolului» as the database keeps it (§765): the editor's document per language and
  * its plain words — one paragraph per line — for a test that seeds the table directly instead of through the
  * service (`changeVolunteerRole`, which writes the same four columns from what the form posts).
  */

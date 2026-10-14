@@ -82,7 +82,7 @@ export default function CheckboxField({
   /** One helper line under the label, a caption, and the box's description for a screen reader. */
   help?: string;
   helpTestId?: string;
-  /** The id of another element that describes the box (a role's description beside its tick, §NNN), added to `aria-describedby`. */
+  /** The id of another element that describes the box (a role's description beside its tick, §765), added to `aria-describedby`. */
   describedBy?: string;
   /**
    * An optional box's word (`Registration.optionalSuffix`), written after the label as « — opțional»

@@ -76,7 +76,7 @@ const staffFields = (form: FormData) => ({
   email: field(form, "email"),
   phone: phoneOf(form),
   note: field(form, "note"),
-  // What the person told the organizers (§NNN), all optional: the boxes as typed, the two ticks true only when posted.
+  // What the person told the organizers (§765), all optional: the boxes as typed, the two ticks true only when posted.
   age: field(form, "age"),
   sex: field(form, "sex"),
   city: field(form, "city"),
@@ -91,7 +91,7 @@ const roleFields = (form: FormData) => ({
   needed: field(form, "needed"),
   descriptionRo: field(form, "descriptionRo"),
   descriptionEn: field(form, "descriptionEn"),
-  // «Descrierea rolului» (§NNN): the editor's documents when the form drew the editor; absent otherwise, so a caller with the plain boxes is read as it always was.
+  // «Descrierea rolului» (§765): the editor's documents when the form drew the editor; absent otherwise, so a caller with the plain boxes is read as it always was.
   ...(form.has("descriptionRoBody") ? { descriptionRoBody: field(form, "descriptionRoBody") } : {}),
   ...(form.has("descriptionEnBody") ? { descriptionEnBody: field(form, "descriptionEnBody") } : {}),
   // The band's colour (§764): only when the form drew its boxes — a form without them leaves the colour as it is.
@@ -127,7 +127,7 @@ export async function switchVolunteersAction(form: FormData): Promise<void> {
 }
 
 /**
- * «Oferim tricouri voluntarilor» (§NNN): the card's own tick, the event's `volunteers_shirts`. Its submit is drawn as the
+ * «Oferim tricouri voluntarilor» (§765): the card's own tick, the event's `volunteers_shirts`. Its submit is drawn as the
  * checkbox and posts `on=1|0`, the state it wants, never a toggle.
  */
 export async function switchVolunteersShirtsAction(form: FormData): Promise<void> {

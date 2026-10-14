@@ -290,7 +290,7 @@ export type OwnerTaskInputs = {
    */
   volunteerAgreementDescribed: boolean;
   /**
-   * Does the notice in force, in every language, describe what a volunteer says about themselves (§NNN,
+   * Does the notice in force, in every language, describe what a volunteer says about themselves (§765,
    * `noticeDescribesVolunteerProfile`)? Until it does, the form asks no age, sex, city or T-shirt and keeps no such
    * answer: it is §758's form, with its tick «Am cel puțin 18 ani».
    */
@@ -619,7 +619,7 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
       });
     }
     /*
-      What a volunteer says about themselves in the notice (§NNN), the same shape: open while an event ahead takes
+      What a volunteer says about themselves in the notice (§765), the same shape: open while an event ahead takes
       volunteers and the notice in force does not name `{{volunteerProfile}}` — the form asks no age, sex, city or
       T-shirt and keeps no such answer, and nothing else is refused — done by itself the day one naming it takes
       effect, absent while no event takes volunteers and the notice is silent.

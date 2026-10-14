@@ -324,7 +324,7 @@ export async function noticeDescribesVolunteers<T extends Record<string, unknown
 }
 
 /**
- * Whether the privacy notice in force describes what a volunteer says about themselves (§NNN,
+ * Whether the privacy notice in force describes what a volunteer says about themselves (§765,
  * `describesVolunteerProfile`) — in every language, like `noticeDescribesVolunteers`. For the public sign-up (which
  * form it takes, asked again at every post), the editor's card and `/admin/tasks`; the event page reads the cached
  * twin (`cachedVolunteerProfileDescribed`).

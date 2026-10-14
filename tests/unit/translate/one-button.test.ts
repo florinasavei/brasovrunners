@@ -140,7 +140,7 @@ describe("§482 «Echipa»'s words may be translated", () => {
   });
 });
 
-describe("§NNN a volunteer role's form may be translated", () => {
+describe("§765 a volunteer role's form may be translated", () => {
   it("allows the role's English name and its description, and knows the description is a rich text", () => {
     expect(isTranslatableEnglishField("nameEn")).toBe(true);
     expect(isTranslatableEnglishField("descriptionEnBody")).toBe(true);

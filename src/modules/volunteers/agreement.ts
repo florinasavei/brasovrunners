@@ -119,7 +119,7 @@ export async function volunteerRoles<T extends Record<string, unknown>>(
     id: eventVolunteerRoles.id,
     nameRo: eventVolunteerRoles.nameRo,
     nameEn: eventVolunteerRoles.nameEn,
-    // The role's plain words (§NNN): what the sentence «Ce presupune rolul» and the emails say, one line per paragraph.
+    // The role's plain words (§765): what the sentence «Ce presupune rolul» and the emails say, one line per paragraph.
     descriptionRo: eventVolunteerRoles.descriptionWordsRo,
     descriptionEn: eventVolunteerRoles.descriptionWordsEn,
     position: eventVolunteerRoles.position,

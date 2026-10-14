@@ -259,7 +259,7 @@ export const DECLARATION_TOKENS: readonly DeclarationToken[] = [
     messageKey: VOLUNTEER_AGREEMENT_NOTICE_MERGE_FIELD,
     example: inBoth((locale) => volunteerAgreementClause(locale)),
   },
-  // The privacy notice's marker for what a volunteer says about themselves (§NNN): the form's boxes, and the switch — the
+  // The privacy notice's marker for what a volunteer says about themselves (§765): the form's boxes, and the switch — the
   // form asks them, and keeps the answers, only while it is named (`describesVolunteerProfile`).
   {
     token: `{{${VOLUNTEER_PROFILE_NOTICE_MERGE_FIELD}}}`,

@@ -226,7 +226,7 @@ export default async function EventDetailPage({ params, query, canEdit = false, 
         // them the answer: the box stays, with no role and no form (`volunteerBoxRoles`).
         const boxRoles = volunteerBoxRoles(closed, roles, parseVolunteerOutcome(one(asked.volunteer)));
         if (boxRoles === null) return null;
-        // Which form (§NNN): the profile's boxes — age, sex, city, experience, group, and the T-shirt while the event gives
+        // Which form (§765): the profile's boxes — age, sex, city, experience, group, and the T-shirt while the event gives
         // one — while the notice in force names them, §758's tick «Am cel puțin 18 ani» while it does not. The action asks again.
         return { roles: boxRoles, shirts, profile: await cachedVolunteerProfileDescribed(now) };
       }, null);

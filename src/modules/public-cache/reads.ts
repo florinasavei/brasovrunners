@@ -595,7 +595,7 @@ export async function cachedVolunteerAgreementDescribed(now: Date): Promise<bool
 }
 
 /**
- * Whether the privacy notice in force describes what a volunteer says about themselves (§NNN,
+ * Whether the privacy notice in force describes what a volunteer says about themselves (§765,
  * `describesVolunteerProfile`), in every language — which form the event page draws: the profile's boxes while it
  * does, §758's tick «Am cel puțin 18 ani» while it does not. `noticeDescribesVolunteerProfile` is the uncached read
  * the sign-up asks again.

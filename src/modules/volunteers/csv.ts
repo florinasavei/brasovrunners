@@ -12,7 +12,7 @@ import { csvCell } from "@/modules/registrations/csv";
  * **BOM** first, because the club opens the file in Excel on Windows (`subscribers-csv.ts` says why).
  * The sign-up's moment is ISO 8601 in UTC (`toISOString`), one unambiguous value whatever the reader's zone.
  *
- * Since §NNN six columns after the moment — what the person said about themselves: the age, the sex (the registrations'
+ * Since §765 six columns after the moment — what the person said about themselves: the age, the sex (the registrations'
  * own English words, `sexCell`), the city, «a mai fost voluntar» and «din grupul clubului» as the reader's yes and no,
  * and the T-shirt's size, empty unless the event gives T-shirts. They are appended, so no earlier column moves.
  */
@@ -32,7 +32,7 @@ export type VolunteerCsvRow = {
   message: string | null;
   note: string | null;
   signedUpAt: Date;
-  /** What the person said about themselves (§NNN): empty for an unanswered box. */
+  /** What the person said about themselves (§765): empty for an unanswered box. */
   age: number | null;
   sex: string;
   city: string | null;

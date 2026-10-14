@@ -493,7 +493,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
       volunteerRoleChoicesAgreement: await volunteerAgreementNamesRoleChoices(db, now),
       // §758: the notice in force describes the agreement's acceptance (`{{volunteerAgreement}}`), in every language.
       volunteerAgreementDescribed: await noticeDescribesVolunteerAgreement(db, now),
-      // §NNN: the notice in force describes what a volunteer says about themselves (`{{volunteerProfile}}`), in every language.
+      // §765: the notice in force describes what a volunteer says about themselves (`{{volunteerProfile}}`), in every language.
       volunteerProfileDescribed: await noticeDescribesVolunteerProfile(db, now),
       gmailFallbackDescribed: await noticeDescribesGmailFallback(db, now),
       // §636: the terms in force carry the club's right to refuse a registration, in every language.

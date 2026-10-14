@@ -22,7 +22,7 @@ export function volunteerAgreementClause(locale: string): string {
 }
 
 /**
- * What the privacy notice's `{{volunteerProfile}}` becomes (§NNN): the public form's own boxes about the person, each by
+ * What the privacy notice's `{{volunteerProfile}}` becomes (§765): the public form's own boxes about the person, each by
  * its label, quoted, in that language — „Vârsta”, „Sex”, „Orașul”, „Am mai fost voluntar în trecut la alte curse” —
  * read from the catalogue the form's labels read (`Event.volunteers.profile`; «Sex» is the registration form's own
  * word, `Registration.sex`), so the approved sentence names what a visitor sees. The club's group tick and the T-shirt
