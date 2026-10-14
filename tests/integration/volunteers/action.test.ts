@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { emailOutbox } from "@/db/schema/email-outbox";
-import { eventVolunteerRoles, eventVolunteers } from "@/db/schema/event-volunteers";
+import { eventVolunteerRoleChoices, eventVolunteerRoles, eventVolunteers } from "@/db/schema/event-volunteers";
 import { eventTranslations, events } from "@/db/schema/events";
 import { staffUsers } from "@/db/schema/staff-users";
 import { computeContentHash, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
@@ -116,13 +116,13 @@ beforeEach(async () => {
   });
 });
 
-/** A post as the page's form makes it, rendered a minute before the press. */
-function post(fields: Record<string, string> = {}): FormData {
+/** A post as the page's form makes it, rendered a minute before the press; a list is the boxes ticked under one name (§NNN). */
+function post(fields: Record<string, string | readonly string[]> = {}): FormData {
   const form = new FormData();
-  const all: Record<string, string> = {
+  const all: Record<string, string | readonly string[]> = {
     locale: "ro",
     slug,
-    roleId,
+    roleIds: [roleId],
     name: "Maria Test",
     email: "maria@example.test",
     phoneCountry: "RO",
@@ -136,7 +136,10 @@ function post(fields: Record<string, string> = {}): FormData {
     renderedAt: new Date(Date.now() - 60_000).toISOString(),
     ...fields,
   };
-  for (const [name, value] of Object.entries(all)) form.append(name, value);
+  for (const [name, value] of Object.entries(all)) {
+    if (typeof value === "string") form.append(name, value);
+    else for (const item of value) form.append(name, item);
+  }
   return form;
 }
 
@@ -172,7 +175,7 @@ describe("§754 submitVolunteerAction's redirects", () => {
     const draft = lastDraft();
     expect(draft?.options.path).toBe(url.pathname);
     const kept = openFormDraft(draft?.value ?? "");
-    expect(kept).toMatchObject({ name: "Maria Test", email: "maria@example.test", phoneCountry: "RO", phone: "0712 345 678", roleId, message: "Pot toată ziua" });
+    expect(kept).toMatchObject({ name: "Maria Test", email: "maria@example.test", phoneCountry: "RO", phone: "0712 345 678", roleIds: roleId, message: "Pot toată ziua" });
     // Never the consent tick (the person's own act each time), the trap or the clock.
     expect(kept).not.toHaveProperty("consent");
     expect(kept).not.toHaveProperty("honeypot");
@@ -226,6 +229,25 @@ describe("§754 submitVolunteerAction's redirects", () => {
     expect(url.hash).toBe("#volunteers");
     expect(openFormDraft(lastDraft()?.value ?? "")).toMatchObject({ name: "Maria Test" });
     expect(await people()).toHaveLength(1);
+  });
+
+  it("§NNN keeps every role ticked as the person's choices, and names the box when none is ticked — the ticks kept in the draft, never in the URL", async () => {
+    await seedEvent(true);
+    const [finish] = await db.insert(eventVolunteerRoles).values({ eventId, nameRo: "Sosire", nameEn: "Finish", needed: 1, position: 1 }).returning();
+    const none = await pressed(post({ roleIds: [] }));
+    expect(none.searchParams.get("volunteer")).toBe("invalid");
+    expect(none.searchParams.get("vfields")).toBe("roleIds");
+    expect(await people()).toHaveLength(0);
+    // A refusal on another box keeps both ticks, as one string of ids, in the sealed draft.
+    const typo = await pressed(post({ roleIds: [roleId, finish.id], email: "maria-at-example" }));
+    expect(typo.toString()).not.toContain(finish.id);
+    expect(openFormDraft(lastDraft()?.value ?? "")).toMatchObject({ roleIds: `${roleId},${finish.id}` });
+    const url = await pressed(post({ roleIds: [finish.id, roleId] }));
+    expect(url.searchParams.get("volunteer")).toBe("1");
+    const [row] = await people();
+    expect(row.roleId).toBeNull();
+    const chosen = await db.select().from(eventVolunteerRoleChoices).where(eq(eventVolunteerRoleChoices.volunteerId, row.id));
+    expect(chosen.map((choice) => choice.roleId).sort()).toEqual([roleId, finish.id].sort());
   });
 
   it("thanks a kept offer with ?volunteer=1 and clears the draft", async () => {

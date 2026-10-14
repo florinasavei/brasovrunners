@@ -2,7 +2,7 @@ import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { auditLogs } from "@/db/schema/audit-logs";
 import { emailOutbox } from "@/db/schema/email-outbox";
-import { eventVolunteerRoles, eventVolunteers } from "@/db/schema/event-volunteers";
+import { eventVolunteerRoleChoices, eventVolunteerRoles, eventVolunteers } from "@/db/schema/event-volunteers";
 import { events } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
 import { registrationInterests } from "@/db/schema/registration-interests";
@@ -119,9 +119,11 @@ describe("BR-REQ-070-01 everything held about a person", () => {
     });
     // An offer to volunteer (§754) is found by the same canonical address, and is everything typed.
     const [volunteerRole] = await db.insert(eventVolunteerRoles).values({ eventId, nameRo: "Punct de apă", nameEn: "Water point", needed: 2 }).returning();
-    await db.insert(eventVolunteers).values({
+    const [finishRole] = await db.insert(eventVolunteerRoles).values({ eventId, nameRo: "Sosire", nameEn: "Finish", needed: 1, position: 1 }).returning();
+    // §NNN: an offer nobody has given a role yet, with the two roles she ticked.
+    const [offer] = await db.insert(eventVolunteers).values({
       eventId,
-      roleId: volunteerRole.id,
+      roleId: null,
       name: "Ana Pop",
       email: interest.deliveryEmail,
       canonicalEmail: interest.canonicalEmail,
@@ -130,7 +132,11 @@ describe("BR-REQ-070-01 everything held about a person", () => {
       source: "PUBLIC",
       message: "Sunt liberă sâmbătă",
       privacyNoticeVersion: 3,
-    });
+    }).returning();
+    await db.insert(eventVolunteerRoleChoices).values([
+      { volunteerId: offer.id, roleId: finishRole.id },
+      { volunteerId: offer.id, roleId: volunteerRole.id },
+    ]);
   });
 
   it("finds the person by the canonical address, whichever spelling was typed", async () => {
@@ -157,7 +163,19 @@ describe("BR-REQ-070-01 everything held about a person", () => {
     expect(data.announcementRequests).toHaveLength(1);
     // …and so is an offer to volunteer, with every column the platform keeps of it.
     expect(data.volunteerOffers).toMatchObject([
-      { roleNameRo: "Punct de apă", roleNameEn: "Water point", state: "REGISTERED", source: "PUBLIC", name: "Ana Pop", phone: "+40712345678", message: "Sunt liberă sâmbătă", privacyNoticeVersion: 3 },
+      {
+        // No role given yet, and every role she ticked, in the club's order (§NNN).
+        roleNameRo: null,
+        roleNameEn: null,
+        chosenRolesRo: ["Punct de apă", "Sosire"],
+        chosenRolesEn: ["Water point", "Finish"],
+        state: "REGISTERED",
+        source: "PUBLIC",
+        name: "Ana Pop",
+        phone: "+40712345678",
+        message: "Sunt liberă sâmbătă",
+        privacyNoticeVersion: 3,
+      },
     ]);
     // The volunteer agreement's columns are hers too (§758): here none was accepted, and it says so.
     expect(data.volunteerOffers[0]).toMatchObject({ agreementVersion: null, agreementMethod: null, agreementAcceptedAt: null, declaredAdult: false });
