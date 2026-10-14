@@ -3,7 +3,7 @@ import { bibProfileChartWidth } from "./bib-geometry";
 import type { BibProfileDrawing, BibProfileFigureLines } from "./bib-profile";
 
 /**
- * What the profile's row under the number holds (§750, amending it §NNN), decided once for both
+ * What the profile's row under the number holds (§750, amending it §759), decided once for both
  * renderers so the sheet and the picture cannot disagree:
  *
  * - `gpx` — «Desenat din traseul evenimentului (GPX)»: the line drawn from the route's file, with its

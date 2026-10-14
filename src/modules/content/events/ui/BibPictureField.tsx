@@ -4,7 +4,7 @@ import UploadIcon from "@mui/icons-material/Upload";
 import { ACTION_ICONS } from "@/shared/ui/action-icons";
 
 const ReplaceGlyph = ACTION_ICONS.replace;
-// The sub-card's own glyph before its title (§NNN): the sponsors' handshake on their band, a picture on every other place.
+// The sub-card's own glyph before its title (§759): the sponsors' handshake on their band, a picture on every other place.
 const SponsorsGlyph = ACTION_ICONS.sponsors;
 const PictureGlyph = ACTION_ICONS.picture;
 import Box from "@mui/material/Box";
@@ -73,7 +73,7 @@ type Props = {
 
 /** The form's field names for a place: the picture's address, its crop, and what a refused save brings back. */
 export function bibPictureFieldNames(slot: BibPictureSlot, place?: "member") {
-  // A member's card («Tot numărul») is a place of its own, always the members'; so is the profile's picture (§NNN).
+  // A member's card («Tot numărul») is a place of its own, always the members'; so is the profile's picture (§759).
   const key =
     slot === "memberCard"
       ? "member.cardImage"
@@ -145,7 +145,7 @@ function PictureField({ slot, picture: initial, crop: initialCrop, scope, labels
   const first = useRef(true);
   const lang = typeof document === "undefined" ? "ro" : document.documentElement.lang || "ro";
   const inputId = slot === "memberCard" ? "bib-picture-member-card" : place === "member" ? "bib-picture-member-header" : `bib-picture-${slot}`;
-  // The profile's picture is fitted whole, never cropped (§NNN): no crop box, and no crop posted.
+  // The profile's picture is fitted whole, never cropped (§759): no crop box, and no crop posted.
   const croppable = slot !== "profile";
   const sized = croppable && picture.src !== "" && picture.width > 0 && picture.height > 0;
   const Glyph = slot === "sponsors" ? SponsorsGlyph : PictureGlyph;
@@ -196,7 +196,7 @@ function PictureField({ slot, picture: initial, crop: initialCrop, scope, labels
 
   return (
     /*
-      A named sub-card of its own (§NNN; the owner: «Aici am nevoie de separatoare și iconițe»): a
+      A named sub-card of its own (§759; the owner: «Aici am nevoie de separatoare și iconițe»): a
       bordered box with the place's glyph before its title, its one line of help, the buttons, and its
       «Calitate» row inside it — so two picture places one under the other never run together.
     */

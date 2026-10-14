@@ -110,8 +110,8 @@ async function loadOne(src: string | null, maxWidth: number): Promise<LoadedBibP
  * Both places' pictures for a renderer, each `null` where there is none or it could not be read —
  * and the members' own (§664), read only when `members` says a member's bib will be drawn and the
  * members' switch is on: their header for «Același fundal ca restul numerelor», their card's photograph for «Tot
- * numărul» (§NNN), never both. A sheet of no member's bib fetches nothing more than before. The
- * profile's picture (§NNN) is read only while the profile is ticked and drawn from «O poză încărcată».
+ * numărul» (§759), never both. A sheet of no member's bib fetches nothing more than before. The
+ * profile's picture (§759) is read only while the profile is ticked and drawn from «O poză încărcată».
  */
 export async function loadBibPictures(
   design: {

@@ -11,7 +11,7 @@ import Panel from "@/shared/ui/Panel";
 import QuietHelp from "@/shared/ui/QuietHelp";
 import TipSpan from "@/shared/ui/TipSpan";
 
-/** The range heading's glyph (§NNN): the printer, the verb the range belongs to. */
+/** The range heading's glyph (§759): the printer, the verb the range belongs to. */
 const RangeGlyph = ACTION_ICONS.print;
 
 /** The two small forms the card's controls belong to, by id (`form="…"`). */
@@ -147,7 +147,7 @@ export async function BibPrintCard({ eventId, total, unprinted, mayAssign, onlyT
           <QuietHelp text={t("bibs.helpMore")} />
         </Typography>
         {/*
-          «Alocă numerele» on a row of its own (§NNN; the owner, 2026-10-13: «nu înțeleg ce face butonul de
+          «Alocă numerele» on a row of its own (§759; the owner, 2026-10-13: «nu înțeleg ce face butonul de
           „Alocă numerele"… îmi trebuie ceva tooltip pt el»): what it does in plain words on hover (the
           house's `TipSpan`) and behind the «?» beside it for a thumb (`QuietHelp`).
         */}
@@ -164,7 +164,7 @@ export async function BibPrintCard({ eventId, total, unprinted, mayAssign, onlyT
           </Stack>
         )}
         {/*
-          «Tipărește numerele (PDF)» (§NNN): «De la» and «Până la» belong to the PDF, not to
+          «Tipărește numerele (PDF)» (§759): «De la» and «Până la» belong to the PDF, not to
           the allocation — under a heading that names the print, never «doar» over a button that says «toate»,
           the range in its help, beside the download buttons, a divider above them. The
           form wiring is the sheet's own GET (`BIB_DOWNLOAD_FORM`), unchanged.

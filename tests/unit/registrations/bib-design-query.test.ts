@@ -53,14 +53,14 @@ const EVERYTHING_OFF: BibDesign = {
   showCheckpoints: false,
   // «…cu timpii limită» (§757): on, the other way from its default (off).
   showCheckpointTimes: true,
-  // The profile from the club's picture, the figures off and the strip turned (§NNN): each away from its default.
+  // The profile from the club's picture, the figures off and the strip turned (§759): each away from its default.
   profileSource: "picture",
   profileImageSrc: OURS,
   showProfileFigures: false,
   profileOrientation: "turned",
   showEmergency: true,
   emergencyPhone: "+40 722 000 000",
-  // The phone's label and a second number, each with a name (§NNN): the characters a URL escapes.
+  // The phone's label and a second number, each with a name (§759): the characters a URL escapes.
   emergencyLabel: "Urgențe & ambulanță",
   emergencyPhoneLabel: "Coordonator",
   emergencyPhone2: "0700 000 002",
@@ -81,7 +81,7 @@ const EVERYTHING_OFF: BibDesign = {
     cardImageCrop: { x: 0.1, y: 0.05, w: 0.8, h: 0.6 },
     label: "Membru Brașov & co",
     mark: true,
-    // «Semnul de membru» (§NNN): a registry glyph, away from the star.
+    // «Semnul de membru» (§759): a registry glyph, away from the star.
     markShape: "runner",
   },
 };
@@ -179,7 +179,7 @@ describe("§249 the design on the wire: encode, then parse", () => {
       showName: true,
       headerImageSrc: null,
       sponsorImageSrc: null,
-      // The profile's picture (§NNN), absent like the others.
+      // The profile's picture (§759), absent like the others.
       profileImageSrc: null,
       headerImageCrop: null,
       sponsorImageCrop: null,
@@ -225,7 +225,7 @@ describe("§249 the form, read the same way for the save and for the preview", (
       // The unticked upside-down box posts nothing, which reads off (§750); so does the checkpoints' (§757).
       emergencyUpsideDown: false,
       showCheckpoints: false,
-      // «Arată distanța și diferența de nivel lângă profil» unposted is off too (§NNN).
+      // «Arată distanța și diferența de nivel lângă profil» unposted is off too (§759).
       showProfileFigures: false,
     });
   });
@@ -252,7 +252,7 @@ describe("§249 the form, read the same way for the save and for the preview", (
       cardImageCrop: '{"x":0.1,"y":0,"w":0.8,"h":0.7}',
       label: " Membru BVR ",
       mark: true,
-      // No shape posted (§NNN): the star.
+      // No shape posted (§759): the star.
       markShape: "star",
     });
     expect(readBibDesignForm(posted({})).member).toEqual({ enabled: false, style: "band", bandColour: null, headerImageSrc: null, headerImageCrop: null, cardImageSrc: null, cardImageCrop: null, label: "", mark: false, markShape: "star" });
@@ -284,7 +284,7 @@ describe("§249 the form, read the same way for the save and for the preview", (
       // Nothing posted for the sponsors' place (§750): «Jos de tot», the default; and no profile, no phone.
       sponsorPlace: "bottom",
       showProfile: false,
-      // No source, no picture, no orientation posted (§NNN): the GPX, none, normal; the figures' box unticked.
+      // No source, no picture, no orientation posted (§759): the GPX, none, normal; the figures' box unticked.
       profileSource: "gpx",
       profileImageSrc: null,
       showProfileFigures: false,

@@ -145,7 +145,7 @@ export function bibCheckpointMarks(input: {
   finishWord: string;
   label: (row: BibCheckpointSource, withTime: boolean) => string;
   /**
-   * The chart's width in points (§NNN): `profileChartWidth` beside the figures, the strip's whole width
+   * The chart's width in points (§759): `profileChartWidth` beside the figures, the strip's whole width
    * with «Arată distanța și diferența de nivel lângă profil» off (`bib-geometry.ts#bibProfileChartWidth`)
    * — the crowding rule measures in it. Absent, the chart beside the figures.
    */

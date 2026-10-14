@@ -6,7 +6,7 @@ import ro from "../../../messages/ro.json";
 import { BIB_DOWNLOAD_FORM } from "@/modules/content/events/ui/boxes/BibPrint";
 
 /**
- * BR-REQ-038-01, §NNN — «Alocare și tipărire». The owner, 2026-10-13: «nu înțeleg ce face butonul de
+ * BR-REQ-038-01, §759 — «Alocare și tipărire». The owner, 2026-10-13: «nu înțeleg ce face butonul de
  * „Alocă numerele"… îmi trebuie ceva tooltip pt el». The button says what it does on hover and behind a
  * «?» a thumb can tap, in plain words; «De la» and «Până la» belong to the PDF, under their own heading
  * beside the download buttons, apart from the allocation — the GET form they post to unchanged.
@@ -59,7 +59,7 @@ function block(html: string, testId: string): string {
   return html.slice(start);
 }
 
-describe("§NNN «Alocă numerele» says what it does", () => {
+describe("§759 «Alocă numerele» says what it does", () => {
   it("carries the plain words on the button's tooltip and behind its «?», in both languages", async () => {
     const html = await render();
     const row = block(html, "bib-assign-row");
@@ -85,11 +85,11 @@ describe("§NNN «Alocă numerele» says what it does", () => {
   });
 });
 
-describe("§NNN «De la» and «Până la» belong to the PDF", () => {
+describe("§759 «De la» and «Până la» belong to the PDF", () => {
   it("sits under its own heading with the two download buttons, apart from the allocation, posting to the sheet's form", async () => {
     const html = await render();
     const range = block(html, "bib-print-range");
-    // A heading that names the print, never «doar» over a button that says «toate» (§NNN): the range is the help's.
+    // A heading that names the print, never «doar» over a button that says «toate» (§759): the range is the help's.
     expect(range).toMatch(/<h5[^>]*>[\s\S]*?data-testid="PrintIcon"[\s\S]*?Tipărește numerele \(PDF\)/);
     expect(range).toContain("De la / Până la: doar o parte, de exemplu 1–50. Goale: toate.");
     expect(range).not.toMatch(/Tipărește doar/);

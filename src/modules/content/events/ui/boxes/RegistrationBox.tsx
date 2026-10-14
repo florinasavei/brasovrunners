@@ -468,7 +468,7 @@ export default async function RegistrationBox({
                     openWhen={{ attention: Boolean(bibCounts && bibCounts.unprinted > 0 && event && now && withinRaceWeek(event, now, clubDeadlines)) }}
                   >
                     <Stack spacing={2}>
-                      {/* The band's colour (§173) is the designer's «Antet» now (§NNN), with the rest of the header. */}
+                      {/* The band's colour (§173) is the designer's «Antet» now (§759), with the rest of the header. */}
                       <RecallField
                         name="event.bibStartNumber"
                         label={t("editor.bibStartNumber")}

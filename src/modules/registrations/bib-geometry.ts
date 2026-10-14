@@ -118,7 +118,7 @@ export const BIB_LAYOUT = {
   memberStripeSize: 10,
   memberStripeSpacing: 1.2,
   /**
-   * The member mark (§750; its shape the club's choice since §NNN, `bib-member-mark.ts`): a box
+   * The member mark (§750; its shape the club's choice since §759, `bib-member-mark.ts`): a box
    * `memberMarkSize` points tall — square for a star or another glyph, the lockup's proportion for the
    * club's logo — at the card's left inset, `memberMarkTop` under the header's foot, clear of the number
    * below it (a number of up to five digits at the largest size still reaches about 44 points from the
@@ -154,7 +154,7 @@ export const BIB_LAYOUT = {
   profileDistanceTop: 9,
   profileGainTop: 20,
   /**
-   * «O poză încărcată» (§NNN): the club's own picture of the profile, fitted whole (never cropped) in a
+   * «O poză încărcată» (§759): the club's own picture of the profile, fitted whole (never cropped) in a
    * box `profilePictureHeight` points tall, `profilePictureTop` into the row, as wide as the chart would
    * be (`bibProfileChartWidth`) — so the figures beside it stand where they stand beside a drawn chart.
    */
@@ -181,7 +181,7 @@ export const BIB_LAYOUT = {
   /**
    * The emergency phone (§750): one centred line `emergencyHeight` points tall under the profile's
    * row (or where it would be), `emergencySize` points — a fixed place on every number, never over
-   * the number or the name, which keep the area that is left. With its label and two numbers (§NNN)
+   * the number or the name, which keep the area that is left. With its label and two numbers (§759)
    * a line may be long: it shrinks by `emergencySizeStep` down to `emergencyMinSize` until it fits the
    * card less its inset, and only past that is it cut with «…» (`bibEmergencyFit`).
    */
@@ -220,7 +220,7 @@ export function bibExtrasHeight(profileDrawn: boolean, emergencyDrawn: boolean):
 }
 
 /**
- * How wide the profile's chart — or the club's picture of it — is (§NNN): beside the figures, the
+ * How wide the profile's chart — or the club's picture of it — is (§759): beside the figures, the
  * chart's own `profileChartWidth`; with «Arată distanța și diferența de nivel lângă profil» off, or
  * nothing to say there, the strip's whole width, the card less its inset on each side.
  */
@@ -229,7 +229,7 @@ export function bibProfileChartWidth(figuresShown: boolean): number {
 }
 
 /**
- * What is turned half a circle under the number (§NNN, amending §750; the owner's trail example, «I should
+ * What is turned half a circle under the number (§759, amending §750; the owner's trail example, «I should
  * also be able to rotate the race profile»): the runner reads what is turned by looking down at the chest.
  *
  * - `block` — the profile and the phone are both drawn and both turned: **one** block, the two rows
@@ -252,7 +252,7 @@ export function bibExtrasTurn(rows: { profile: boolean; profileTurned: boolean; 
 export const BIB_EMERGENCY_WIDTH = BIB_CARD.width - 2 * BIB_LAYOUT.inset;
 
 /**
- * The emergency line as both renderers set it (§NNN): its own `emergencySize` when it fits the card less
+ * The emergency line as both renderers set it (§759): its own `emergencySize` when it fits the card less
  * its inset, else the first size down to `emergencyMinSize`, by `emergencySizeStep`, at which it fits —
  * and past that the minimum, cut with «…». `measure` is the line's width in ems of its type (Roboto
  * Regular's table, `bib-footer.ts#bibFooterWidth`), never narrower than either renderer sets it.

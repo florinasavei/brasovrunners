@@ -7,7 +7,7 @@ import { type BibDesign, DEFAULT_BIB_DESIGN, DEFAULT_BIB_MEMBER_DESIGN } from "@
 import { BIB_MEMBER_MARK_PATHS, BIB_MEMBER_MARKS } from "@/modules/registrations/bib-member-mark";
 
 /**
- * BR-REQ-038-01, §NNN (amending §750) — the bib designer in named sections. The owner, 2026-10-13, of
+ * BR-REQ-038-01, §759 (amending §750) — the bib designer in named sections. The owner, 2026-10-13, of
  * «Cum arată numărul de concurs»: «Aici am nevoie de separatoare și iconițe, că nu mai înțeleg nimic...».
  *
  * The panel is six folds, top to bottom as the number prints — «Antet», «Numărul», «Numele», «Profilul și
@@ -89,7 +89,7 @@ function hiddenAround(html: string, needle: string): boolean {
   return open.includes(true) || /data-hidden-block/.test(own);
 }
 
-describe("§NNN the bib designer in named sections", () => {
+describe("§759 the bib designer in named sections", () => {
   it("draws six folds in the order the number prints, each closed, with a glyph and a closed line", async () => {
     const html = await render();
     const order = SECTIONS.map((name) => html.indexOf(`data-testid="bib-section-${name}"`));

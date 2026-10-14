@@ -27,7 +27,7 @@ import { renderBibSheet } from "@/modules/registrations/bibs-pdf";
 import { drawnRuns } from "../../helpers/pdf-drawn";
 
 /**
- * §750, amended §NNN, BR-REQ-038-01 — «Semn de membru pe număr» and «Semnul de membru»: a mark on every
+ * §750, amended §759, BR-REQ-038-01 — «Semn de membru pe număr» and «Semnul de membru»: a mark on every
  * member's number, only when ticked and only on a member's — a star by default, the club's logo, or a
  * registry glyph, each drawn from the one path `bib-member-mark.ts` holds by both renderers.
  * «Același fundal ca restul numerelor» is the members' header alone over the race's own background (the
@@ -84,7 +84,7 @@ const picture = (design: BibDesign, member: boolean) =>
 
 afterEach(() => vi.restoreAllMocks());
 
-describe("§750 §NNN the member mark in the design", () => {
+describe("§750 §759 the member mark in the design", () => {
   it("reads off for a design saved before, and on only as a boolean", () => {
     expect(readBibDesign({ member: { enabled: true } }).member.mark).toBe(false);
     expect(readBibDesign({ member: { enabled: true, mark: true } }).member.mark).toBe(true);
@@ -127,7 +127,7 @@ describe("§750 §NNN the member mark in the design", () => {
   });
 });
 
-describe("§NNN the mark on the sheet: each choice through pdfkit's drawn paths", () => {
+describe("§759 the mark on the sheet: each choice through pdfkit's drawn paths", () => {
   it.each(BIB_MEMBER_MARKS.filter(isVectorMark))("%s: its own path, once per member's number when ticked", async (mark) => {
     const rows = [{ member: true }, { member: true }, { member: false }];
     const { paths } = await drawnMarks(rows, withMember({ mark: true, markShape: mark }));
@@ -160,7 +160,7 @@ describe("§NNN the mark on the sheet: each choice through pdfkit's drawn paths"
   });
 });
 
-describe("§NNN the mark on the picture: the same path in the markup", () => {
+describe("§759 the mark on the picture: the same path in the markup", () => {
   it.each(BIB_MEMBER_MARKS.filter(isVectorMark))("%s: an inline SVG in the 24-unit box with the sheet's path, in the ink given", (mark) => {
     const element = bibMemberMarkElement(mark, "#000001", null) as ReactElement<{ viewBox: string; "data-mark": string; children: ReactElement<{ d: string; fill: string }> }>;
     expect(element.type).toBe("svg");
@@ -223,7 +223,7 @@ describe("§750 the name above the number steps aside for the mark", () => {
     expect(marked.x! + marked.width! + reserve).toBeCloseTo(plain.x! + plain.width!, 5);
   });
 
-  it("steps further aside for the logo's wider box (§NNN)", async () => {
+  it("steps further aside for the logo's wider box (§759)", async () => {
     const above = { namePosition: "above" } as const;
     const plain = await nameRun({ ...withMember({ mark: false }), ...above }, true);
     const logo = await nameRun({ ...withMember({ mark: true, markShape: "logo" }), ...above }, true);
@@ -242,7 +242,7 @@ describe("§750 the name above the number steps aside for the mark", () => {
   });
 });
 
-describe("§750 §NNN the picture's stamp follows the mark", () => {
+describe("§750 §759 the picture's stamp follows the mark", () => {
   it("changes when the tick flips or the shape changes, so a cached picture is not served stale", () => {
     expect(bibPictureStamp([withMember({ mark: true })])).not.toBe(bibPictureStamp([withMember({ mark: false })]));
     const shapes = new Set<string>(BIB_MEMBER_MARKS.map((mark: BibMemberMark) => bibPictureStamp([withMember({ mark: true, markShape: mark })])));

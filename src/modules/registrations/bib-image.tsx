@@ -119,9 +119,9 @@ type BibImageInput = {
   memberLabelDefault?: string;
   /** «Profilul traseului» (§750), already read from the event's GPX by the route (`bib-extras.ts`); drawn only while the design's tick is on. */
   profile?: BibProfileDrawing | null;
-  /** The figures beside the club's picture of the profile (§NNN), from `bib-extras.ts`; null draws the picture across the strip. */
+  /** The figures beside the club's picture of the profile (§759), from `bib-extras.ts`; null draws the picture across the strip. */
   profileFigures?: BibProfileFigureLines | null;
-  /** The word before the emergency phone when the club typed none (§750, §NNN), in the picture's language. */
+  /** The word before the emergency phone when the club typed none (§750, §759), in the picture's language. */
   emergencyLabel?: string;
   /** «21K» for the header's badge (§750), from `bib-extras.ts`; drawn only while the design's tick is on. */
   distanceBadge?: string | null;
@@ -242,7 +242,7 @@ function clubLogo(): Promise<string> {
 }
 
 /**
- * The member mark (§750; its shape the club's, §NNN) at the sheet's points: absolute at the card's left
+ * The member mark (§750; its shape the club's, §759) at the sheet's points: absolute at the card's left
  * inset under the header. A star or a registry glyph is the one path of `bib-member-mark.ts`, in its
  * 24-unit box, filled in the number's ink — the very string the sheet hands pdfkit; the club's logo is
  * the blue lockup the sheet prints, never recoloured. Exported so the test reads the markup.
@@ -273,7 +273,7 @@ export function bibMemberMarkElement(shape: BibMemberMark, ink: string, logoSrc:
 
 /**
  * The profile's row (§750) at the sheet's points: the line drawn from the GPX with its words and the
- * checkpoints' marks, or the club's picture fitted whole (§NNN) — either in the chart's width the row
+ * checkpoints' marks, or the club's picture fitted whole (§759) — either in the chart's width the row
  * decided (`bib-profile-row.ts`), with the figures beside it when the club shows them.
  */
 function profileRowElement(row: BibProfileRow, ink: string, picture: BibImagePicture | null) {
@@ -398,11 +398,11 @@ function profileRowElement(row: BibProfileRow, ink: string, picture: BibImagePic
   );
 }
 
-/** Half a circle, for what the runner reads looking down at the chest (§750, §NNN). */
+/** Half a circle, for what the runner reads looking down at the chest (§750, §759). */
 const TURNED = { transform: "rotate(180deg)" } as const;
 
 /**
- * The block under the name (§750, amending it §NNN): the profile's row, then the emergency line — its
+ * The block under the name (§750, amending it §759): the profile's row, then the emergency line — its
  * label and numbers set at the size that fits (`bibEmergencyFit`) — turned as `bibExtrasTurn` decides:
  * both turned is **one** block turned about its own centre (the phone comes out above the profile, and
  * reads right under it for the runner), else each row alone. Null when neither is drawn. Exported so
@@ -461,13 +461,13 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
   const memberLabel = asMember ? bibMemberLabel(design.member, input.memberLabelDefault ?? "") : "";
   // «Tot numărul» (§NNN): the members' background over the whole card, the label a stripe.
   const asCard = asMember && design.member.style === "card";
-  // The member mark (§750, its shape §NNN); the name set above the number steps aside for its width (`bibNameReserve`).
+  // The member mark (§750, its shape §759); the name set above the number steps aside for its width (`bibNameReserve`).
   const markDrawn = asMember && design.member.mark;
   const markShape = design.member.markShape;
   const nameReserve = bibNameReserve(markDrawn ? bibMemberMarkBox(markShape).width : null, design.namePosition === "above");
   /*
-    The route's profile — from the GPX or the club's picture of it (§NNN) — and the emergency phone with
-    its label and numbers (§750, §NNN), when ticked and available, decided as the sheet decides them.
+    The route's profile — from the GPX or the club's picture of it (§759) — and the emergency phone with
+    its label and numbers (§750, §759), when ticked and available, decided as the sheet decides them.
   */
   const profilePicture = design.showProfile && design.profileSource === "picture" ? (input.pictures ? (input.pictures.profile ?? null) : (() => {
         const address = bibPictureUrl(design.profileImageSrc, env.APP_BASE_URL);
@@ -799,7 +799,7 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
             {memberLabel}
           </div>
         ) : null}
-        {/* The member mark (§750; its shape the club's, §NNN), the sheet's at the sheet's points. */}
+        {/* The member mark (§750; its shape the club's, §759), the sheet's at the sheet's points. */}
         {markDrawn ? bibMemberMarkElement(markShape, ink, markShape === "logo" ? await clubLogo() : null) : null}
         {design.namePosition === "above" ? name : null}
         {/* The number, centred on what the card has left, as the sheet centres it. */}

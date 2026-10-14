@@ -129,7 +129,7 @@ export type BibProfileDrawing = {
   checkpoints?: BibCheckpointsDrawing | null;
 };
 
-/** The two lines beside the profile, each `null` when its figure is not known (§NNN). */
+/** The two lines beside the profile, each `null` when its figure is not known (§759). */
 export type BibProfileFigureLines = { distance: string | null; gain: string | null };
 
 /** The words a drawing is made of, from the caller's catalogue (`Admin.bibs.profile*`). */
@@ -153,7 +153,7 @@ export function bibProfileDrawing(
 
 /**
  * The two lines beside the profile — «Distanță: 12,4 km», «Diferență de nivel: +640 m» — for whichever
- * figures are known (§750; for a picture of the profile, §NNN, they may be the club's typed figures
+ * figures are known (§750; for a picture of the profile, §759, they may be the club's typed figures
  * alone): a figure that is not known is `null`, its line not printed.
  */
 export function bibProfileFigureWords(

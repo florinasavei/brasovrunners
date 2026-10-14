@@ -31,7 +31,7 @@ test.describe("§317 the footer, composed in the designer", () => {
     const preview = page.getByTestId("bib-design-preview").locator("img");
     await expect(preview).toHaveAttribute("src", /[?&]showEmail=1(&|$)/);
 
-    // The small print is in «Subsol și sponsori» (§NNN), a fold of its own.
+    // The small print is in «Subsol și sponsori» (§759), a fold of its own.
     await openFold(page.getByTestId("bib-section-footer"));
     const footer = page.getByTestId("bib-design-footer");
     const email = footer.getByRole("checkbox", { name: /Adresa de email a clubului/ });
@@ -72,7 +72,7 @@ test.describe("§560 the sponsors' band: upload, crop, preview", () => {
     await openFold(panel);
     const preview = page.getByTestId("bib-design-preview").locator("img");
 
-    // The sponsors' band is a named sub-card of «Subsol și sponsori» (§NNN), its «Calitate» row inside it.
+    // The sponsors' band is a named sub-card of «Subsol și sponsori» (§759), its «Calitate» row inside it.
     await openFold(page.getByTestId("bib-section-footer"));
     const band = page.getByTestId("bib-picture-sponsors");
     await expect(band.getByTestId("image-quality")).toBeVisible();
@@ -132,7 +132,7 @@ test.describe("§664 the members' number, designed in the panel", () => {
     await openEditorBox(page, "Participare și înscrieri");
     await openEditorBox(page, "Numere de concurs (BIB)");
     await openFold(page.getByTestId("bib-design"));
-    // «Membrii» (§NNN), the designer's last section.
+    // «Membrii» (§759), the designer's last section.
     await openFold(page.getByTestId("bib-section-members"));
 
     const members = page.getByTestId("bib-design-member");
@@ -168,7 +168,7 @@ test.describe("§664 the members' number, designed in the panel", () => {
     await mark.check();
     await expect(preview).toHaveAttribute("src", /[?&]memberMark=1(&|$)/, { timeout: 10_000 });
 
-    // «Semnul de membru» (§NNN): the star by default, then a heart — each radio a thumb's target.
+    // «Semnul de membru» (§759): the star by default, then a heart — each radio a thumb's target.
     const shapes = page.getByTestId("bib-member-mark-shape");
     await expect(shapes.getByRole("radio", { name: "Steluță" })).toBeChecked();
     await expect(preview).toHaveAttribute("src", /[?&]memberMarkShape=star(&|$)/, { timeout: 10_000 });
@@ -184,14 +184,14 @@ test.describe("§664 the members' number, designed in the panel", () => {
 });
 
 /**
- * §750, amended §NNN — the designer in its sections, top to bottom as the number prints: «Antet» (the
+ * §750, amended §759 — the designer in its sections, top to bottom as the number prints: «Antet» (the
  * badge, the header picture and its warning), «Profilul și urgențele» (the profile's source, its picture,
  * its figures and orientation; the phone's label and two numbers, turned), «Subsol și sponsori» (the
  * sponsors' place, the stubs). Each follows into the preview's address before anything is saved.
  * Nothing is saved; the featured event has no route GPX, so the drawn profile says why and a picture
  * is offered instead.
  */
-test.describe("§750 §NNN the designer's sections: header, footer, the profile and the emergency phones", () => {
+test.describe("§750 §759 the designer's sections: header, footer, the profile and the emergency phones", () => {
   test("each is a box of its section and travels in the preview's address", async ({ page }) => {
     await signIn(page, "Dev Administrator");
     await ensureRegistrationIsOpen(page);
@@ -314,11 +314,11 @@ test.describe("§750 §NNN the designer's sections: header, footer, the profile 
 });
 
 /**
- * §NNN — «Alocă numerele» and its «?» are two thumb targets side by side, and neither covers the other:
+ * §759 — «Alocă numerele» and its «?» are two thumb targets side by side, and neither covers the other:
  * `QuietHelp`'s invisible 44-pixel overlay reaches 14 pixels out from its 16-pixel glyph, so the row's
  * gap keeps that overlay clear of the button's right edge — a tap on the button's edge submits it.
  */
-test.describe("§NNN the assign button's «?» never covers the button", () => {
+test.describe("§759 the assign button's «?» never covers the button", () => {
   test("the help's 44-pixel target starts after the button ends", async ({ page }) => {
     await signIn(page, "Dev Administrator");
     await ensureRegistrationIsOpen(page);

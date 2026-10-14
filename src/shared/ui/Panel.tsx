@@ -89,7 +89,7 @@ type CommonProps = {
    * cards inside "Emailurile trimise participanților" — 4 for a card inside that (the event
    * editor's "Numere de concurs (BIB)" › "Cum arată numărul de concurs"), so the heading list a
    * screen reader navigates by has the same shape as the screen — and 5 for a section inside that
-   * one (the bib designer's «Antet», «Numărul», … since §NNN).
+   * one (the bib designer's «Antet», «Numărul», … since §759).
    */
   level?: 2 | 3 | 4 | 5;
   /** The border's meaning (`PanelTone`); the plain box when absent. */

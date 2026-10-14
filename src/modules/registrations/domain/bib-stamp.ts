@@ -6,7 +6,7 @@ import { fnv1a } from "@/shared/hash";
  * title are what the club changes; this is what the platform changes. 2: the header's title in up to
  * two lines beside the badge, the date under its real height, the badge centred (§755). 3: the member
  * mark a star by default where §750 drew a ring and a check, and the emergency line fitted to the card
- * (§NNN). The bibs page's stamp (`bibPictureStamp`) and the desk's (`events/repository.ts#BIB_STAMP`)
+ * (§759). The bibs page's stamp (`bibPictureStamp`) and the desk's (`events/repository.ts#BIB_STAMP`)
  * both carry it.
  */
 export const BIB_DRAWING_VERSION = 3;

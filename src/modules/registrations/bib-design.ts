@@ -182,7 +182,7 @@ export const bibMemberSchema = z
     /** «Semn de membru pe număr» (§750): a mark on every member's number; off until the club ticks it. */
     mark: z.boolean().catch(false),
     /**
-     * «Semnul de membru» (§NNN, amending §750): which mark — «Steluță» by default, the club's logo, or one
+     * «Semnul de membru» (§759, amending §750): which mark — «Steluță» by default, the club's logo, or one
      * of the registry's glyphs (`bib-member-mark.ts`). A design saved before this key existed reads `star`:
      * a member's number that carried §750's ring and check carries a star now (`BIB_DRAWING_VERSION` 3).
      */
@@ -304,22 +304,22 @@ export function bibEmergencyPhone(value: string): string {
 }
 
 /**
- * «Eticheta telefonului» (§NNN; the owner, 2026-10-13: «pentru telefon în caz de urgențe trebuie să
+ * «Eticheta telefonului» (§759; the owner, 2026-10-13: «pentru telefon în caz de urgențe trebuie să
  * putem avea și un label»): the word before the numbers, at most this many characters — plain text on
  * one line like the club's footer line and the members' label (§317, §664), one text for every
  * language; empty prints the platform's word in the sheet's language («Urgențe» / "Emergency").
  */
 export const BIB_EMERGENCY_LABEL_MAX = 40;
 
-/** Each number's own label (§NNN) — a name or a role, «Coordonator», «Ambulanța traseului» — at most this many characters. */
+/** Each number's own label (§759) — a name or a role, «Coordonator», «Ambulanța traseului» — at most this many characters. */
 export const BIB_EMERGENCY_NAME_MAX = 24;
 
-/** The emergency line's words as the design keeps them (§NNN). Absent keys read as none: a design saved before them prints as it did. */
+/** The emergency line's words as the design keeps them (§759). Absent keys read as none: a design saved before them prints as it did. */
 type BibEmergencyDesign = Pick<BibDesign, "showEmergency" | "emergencyPhone"> &
   Partial<Pick<BibDesign, "emergencyLabel" | "emergencyPhoneLabel" | "emergencyPhone2" | "emergencyPhone2Label">>;
 
 /**
- * The line printed on every number (§750, amending it §NNN): «Urgențe: 07xx xxx xxx», or with the club's
+ * The line printed on every number (§750, amending it §759): «Urgențe: 07xx xxx xxx», or with the club's
  * label and two numbers, each with its own name, «Urgențe: Coordonator 07xx xxx xxx / Medic 07yy yyy yyy» — on
  * one line, as the owner's trail example prints it. `fallback` is the sheet's language's word, used when
  * the club typed no label. Null while the tick is off or no valid number was typed; a second number alone
@@ -343,7 +343,7 @@ export function bibEmergencyLine(design: BibEmergencyDesign, fallback: string): 
 }
 
 /**
- * «Profilul traseului» from where (§NNN; the owner, 2026-10-13: «la profilul traseului pe număr ar trebui
+ * «Profilul traseului» from where (§759; the owner, 2026-10-13: «la profilul traseului pe număr ar trebui
  * să pot alege dacă iau din Strava sau vreau poză»): `gpx` — «Desenat din traseul evenimentului (GPX)», the
  * strip drawn from the route's file (§750), the default — or `picture`, «O poză încărcată», a picture of
  * the profile the club uploads, fitted whole in the same strip. The checkpoints' marks (`bib-checkpoints.ts`) are drawn on
@@ -353,7 +353,7 @@ export const BIB_PROFILE_SOURCES = ["gpx", "picture"] as const;
 export type BibProfileSource = (typeof BIB_PROFILE_SOURCES)[number];
 
 /**
- * «Orientarea profilului» (§NNN; the owner: «I should also be able to rotate the race profile»): `normal`,
+ * «Orientarea profilului» (§759; the owner: «I should also be able to rotate the race profile»): `normal`,
  * or `turned` — «Întors, ca să-l citească alergătorul», half a circle, with the figures beside it and, when
  * the phone is turned too, the phone with it as one block (`bib-geometry.ts#bibExtrasTurn`).
  */
@@ -431,17 +431,17 @@ export const bibDesignSchema = z
      * distance and the gain; off by default, and only drawn when the event has a route GPX.
      */
     showProfile: z.boolean().catch(false),
-    /** Where the profile comes from (§NNN): the route's GPX, drawn, or the club's picture of it. */
+    /** Where the profile comes from (§759): the route's GPX, drawn, or the club's picture of it. */
     profileSource: z.enum(BIB_PROFILE_SOURCES).catch("gpx"),
-    /** «O poză încărcată»'s picture, one this site stored (§NNN); fitted whole, never cropped. */
+    /** «O poză încărcată»'s picture, one this site stored (§759); fitted whole, never cropped. */
     profileImageSrc: storedPicture,
     /**
-     * «Arată distanța și diferența de nivel lângă profil» (§NNN): **on by default**, the figures at the
+     * «Arată distanța și diferența de nivel lângă profil» (§759): **on by default**, the figures at the
      * strip's right as §750 drew them; off, the chart or the picture takes the strip's whole width (the
      * owner: with his own picture «o să-mi apară mie ce vreau acolo»).
      */
     showProfileFigures: z.boolean().catch(true),
-    /** «Orientarea profilului» (§NNN): normal, or turned half a circle for the runner. */
+    /** «Orientarea profilului» (§759): normal, or turned half a circle for the runner. */
     profileOrientation: z.enum(BIB_PROFILE_ORIENTATIONS).catch("normal"),
     /**
      * «Punctele de control pe profil» (§757): a small mark at each checkpoint's kilometre on the
@@ -460,14 +460,14 @@ export const bibDesignSchema = z
     /** «Telefon pentru urgențe» (§750): the tick, and the number the club types (`bibEmergencyPhone`). */
     showEmergency: z.boolean().catch(false),
     emergencyPhone: z.string().transform(bibEmergencyPhone).catch(""),
-    /** «Eticheta telefonului» (§NNN): the word before the numbers; empty is the sheet's language's own. */
+    /** «Eticheta telefonului» (§759): the word before the numbers; empty is the sheet's language's own. */
     emergencyLabel: z
       .string()
       .transform((value) => bibFooterText(value, BIB_EMERGENCY_LABEL_MAX))
       .catch(""),
-    /** The first number's own label (§NNN), a name or a role; empty prints the number alone. */
+    /** The first number's own label (§759), a name or a role; empty prints the number alone. */
     emergencyPhoneLabel: emergencyName,
-    /** A second number (§NNN), checked as the first is, with its own label; empty prints one number. */
+    /** A second number (§759), checked as the first is, with its own label; empty prints one number. */
     emergencyPhone2: z.string().transform(bibEmergencyPhone).catch(""),
     emergencyPhone2Label: emergencyName,
     /** «Tipărit invers» (§750): the phone printed upside down, to be read looking down at the chest; on by default, the trail practice. */
