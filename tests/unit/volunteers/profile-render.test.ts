@@ -259,19 +259,38 @@ describe("§NNN «Primește voluntari pe pagină» is a real tick, never a toggl
   });
 });
 
-describe("§NNN «Oferim tricouri voluntarilor» is a checkbox with a save beside it", () => {
-  it("draws the house's checkbox with its one-line help, ticked as saved, and its own save", async () => {
+describe("§NNN «Oferim tricouri voluntarilor» is the same tick as «Primește voluntari pe pagină»", () => {
+  it("is a submit drawn as the checkbox with its one-line help, the state it wants posted, and no «Salvează» beside it", async () => {
     const off = await drawCard({ volunteersShirts: false });
     const form = /<form[^>]*data-testid="volunteer-shirts-form"[\s\S]*?<\/form>/.exec(off)?.[0] ?? "";
-    expect(tagOf(form, "input", "on")).toContain('type="checkbox"');
-    expect(tagOf(form, "input", "on")).not.toContain("checked");
-    expect(form).toContain("Oferim tricouri voluntarilor");
+    expect(form).toContain('type="submit"');
+    expect(form).toContain('role="checkbox"');
+    expect(form).toContain('aria-checked="false"');
+    expect(form).toMatch(/<button[^>]*data-testid="volunteer-shirts-tick"[^>]*>[\s\S]*Oferim tricouri voluntarilor<\/button>/);
+    expect(form).toMatch(/data-testid="CheckBoxOutlineBlankIcon"/);
+    expect(form).toContain('name="on" value="1"');
     expect(form).toContain(ro.Admin.volunteers.shirts.help);
-    expect(form).toContain("Salvează");
+    expect(form).not.toContain("Salvează");
     const on = await drawCard({ volunteersShirts: true });
-    expect(tagOf(/<form[^>]*data-testid="volunteer-shirts-form"[\s\S]*?<\/form>/.exec(on)?.[0] ?? "", "input", "on")).toContain("checked");
+    const ticked = /<form[^>]*data-testid="volunteer-shirts-form"[\s\S]*?<\/form>/.exec(on)?.[0] ?? "";
+    expect(ticked).toContain('aria-checked="true"');
+    expect(ticked).toMatch(/data-testid="CheckBoxIcon"/);
+    expect(ticked).toContain('name="on" value="0"');
     const english = await drawCard({ volunteersShirts: true }, "en");
     expect(english).toContain("We give volunteers T-shirts");
+  });
+});
+
+describe("§NNN the organizers' entry draws the profile boxes only while the notice in force names them", () => {
+  it("draws the age, the sex, the city, the two ticks and the size while it does, and none of them while it does not", async () => {
+    const named = await drawCard({ profileDescribed: true, volunteersShirts: true });
+    for (const box of ["age", "city", "volunteeredBefore", "clubMember"]) expect(named, box).toContain(`name="${box}"`);
+    expect(named).toContain('name="shirtSize"');
+    const unnamed = await drawCard({ profileDescribed: false, volunteersShirts: true });
+    for (const box of ["age", "city", "volunteeredBefore", "clubMember", "shirtSize"]) expect(unnamed, box).not.toContain(`name="${box}"`);
+    // The rest of the entry is there as ever.
+    expect(unnamed).toContain('name="phone"');
+    expect(unnamed).toContain(ro.Admin.volunteers.offer.profileOff);
   });
 });
 

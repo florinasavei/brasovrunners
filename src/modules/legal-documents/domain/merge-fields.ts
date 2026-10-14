@@ -176,8 +176,9 @@ export const VOLUNTEER_AGREEMENT_NOTICE_MERGE_FIELD = "volunteerAgreement";
  * approved from an earlier template names `{{volunteers}}` and `{{volunteerAgreement}}` but says none of this, so the
  * public form asks those boxes — and keeps their answers — only while the notice in force names this marker too
  * (`describesVolunteerProfile`); until then it is the form of §758, with its tick «Am cel puțin 18 ani», and
- * `/admin/tasks` carries the row `volunteerProfileNotice`. The club's own list is not gated: an organizer may type
- * the same answers for a person.
+ * `/admin/tasks` carries the row `volunteerProfileNotice`. The club's own list is gated by the same marker: the
+ * template's sentence also covers the answers an organizer notes for a person they enter, so the card draws those
+ * boxes, and `changeVolunteer` keeps their answers, only while the notice in force names it.
  */
 export const VOLUNTEER_PROFILE_NOTICE_MERGE_FIELD = "volunteerProfile";
 

@@ -2076,8 +2076,8 @@ only ones who see the names, addresses and telephone numbers.
    people, as many ticked as the person would do, at least one (§761) —, an optional
    message, the consent tick, «Am citit și accept contractul de voluntariat» (linking the text in force)
    and — once the notice of step 2 names them — «Vârsta» (18 or more; it replaces the tick «Am cel puțin 18 ani»), «Sex», «Orașul», the optional ticks «Am mai fost voluntar în trecut la alte curse»
-   and «Fac parte din grupul …», behind the same anti-bot checks as the registration form. **«Oferim tricouri voluntarilor»** (the card, off by
-   default, with its own «Salvează») adds «Mărimea tricoului» to the form and to every row; the club gives no T-shirts today.
+   and «Fac parte din grupul …», behind the same anti-bot checks as the registration form. **«Oferim tricouri voluntarilor»** (a tick on the card, off by
+   default, one press like «Primește voluntari pe pagină») adds «Mărimea tricoului» to the form and to every row; the club gives no T-shirts today.
 5. **Answer the offers.** Each sign-up is «Înscris», with **no role yet**: it waits under **«De repartizat»**
    at the top of the card, with the roles the person ticked as chips. The person gets one email, «Ți-am primit
    oferta de voluntar», with nothing to press and the agreement they accepted attached as a PDF, and each

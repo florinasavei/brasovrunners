@@ -622,6 +622,31 @@ function staffInputOf(fields: Record<string, unknown>) {
   return { ...parsed.data, choiceIds: choicesWithAssigned(parsed.data), identity };
 }
 
+/** The answers a person says about themselves, which only a privacy notice that names them (`{{volunteerProfile}}`) lets the platform keep (§NNN). */
+const PROFILE_BOXES = ["age", "sex", "city", "volunteeredBefore", "clubMember", "shirtSize"] as const;
+
+/**
+ * Staff enter those answers under the same gate as the public form (§NNN, the §562 / §613 pattern): while the notice in
+ * force does not name them, an organizer's post that carries one — one that differs from what the row already holds —
+ * is refused, naming the boxes. The card does not draw the boxes then, so only a forged or stale post reaches this.
+ * A size for an event that gives no shirt is ignored, as it always was.
+ */
+function refuseUnnamedProfile(
+  input: Pick<ReturnType<typeof staffInputOf>, (typeof PROFILE_BOXES)[number]>,
+  current: { age: number | null; sex: SexChoice | "UNSPECIFIED" | null; city: string | null; volunteeredBefore: boolean; clubMember: boolean; shirtSize: string | null } | null,
+  shirts: boolean,
+): void {
+  const refused = PROFILE_BOXES.filter((box) => {
+    const posted = input[box];
+    if (posted === null || posted === false) return false;
+    if (box === "shirtSize" && !shirts) return false;
+    if (!current) return true;
+    const held = box === "sex" ? sexShown(current.sex) : current[box];
+    return held !== posted;
+  });
+  if (refused.length > 0) throw new DomainError("VALIDATION_ERROR", "the privacy notice in force does not name these answers yet", [...refused]);
+}
+
 const alreadyListed = () => new DomainError("VOLUNTEER_ALREADY_LISTED", "this address is already on the event's volunteers", ["email"]);
 
 /** PostgreSQL's unique violation (23505) on one event's addresses, wherever the driver nests it. */
@@ -691,6 +716,8 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
   assertMayManage(actor);
   assertIds(request.eventId, ...(request.kind === "add" ? [] : [request.id]));
   const input = request.kind === "add" || request.kind === "edit" ? staffInputOf(request.fields) : null;
+  // Whether the notice in force names the profile answers (§NNN): read before the transaction, like the public sign-up does.
+  const profileDescribed = input ? await noticeDescribesVolunteerProfile(db, now) : true;
   const state =
     request.kind === "setState"
       ? (VOLUNTEER_STATES as readonly unknown[]).includes(request.state)
@@ -759,6 +786,7 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
       await assertEventRoles(input.roleIds, "roleIds");
       if (input.assignedRoleId) await assertEventRoles([input.assignedRoleId], "assignedRoleId");
       if (await holderOf(input.identity.canonicalEmail)) throw alreadyListed();
+      if (!profileDescribed) refuseUnnamedProfile(input, null, event.shirts);
       const [row] = await tx
         .insert(eventVolunteers)
         .values({
@@ -843,19 +871,33 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
       const holder = await holderOf(input.identity.canonicalEmail);
       if (holder && holder.id !== current.id) throw alreadyListed();
     }
+    if (!profileDescribed) refuseUnnamedProfile(input, current, event.shirts);
+    // While the notice names none of them the boxes are not drawn: what the row holds stays as it was, shown by the card as before.
+    const profile = profileDescribed
+      ? {
+          age: input.age,
+          sex: input.sex,
+          city: input.city,
+          volunteeredBefore: input.volunteeredBefore,
+          clubMember: input.clubMember,
+          // While the event gives no shirt the box is not drawn: the size stays as it was, shown nowhere (§NNN).
+          shirtSize: event.shirts ? input.shirtSize : current.shirtSize,
+        }
+      : {
+          age: current.age,
+          sex: sexShown(current.sex),
+          city: current.city,
+          volunteeredBefore: current.volunteeredBefore,
+          clubMember: current.clubMember,
+          shirtSize: current.shirtSize,
+        };
     const next = {
       roleId: input.assignedRoleId,
       name: input.name,
       email: input.identity.deliveryEmail,
       phone: input.phone,
       note: input.note,
-      age: input.age,
-      sex: input.sex,
-      city: input.city,
-      volunteeredBefore: input.volunteeredBefore,
-      clubMember: input.clubMember,
-      // While the event gives no shirt the box is not drawn: the size stays as it was, shown nowhere (§NNN).
-      shirtSize: event.shirts ? input.shirtSize : current.shirtSize,
+      ...profile,
     };
     const before = {
       roleId: current.roleId,

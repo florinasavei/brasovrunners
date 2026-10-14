@@ -167,6 +167,11 @@ async function addRole(fields: Record<string, string> = {}) {
 }
 
 describe("§NNN the organizers' entry: what the person said about themselves", () => {
+  // The organizers' boxes are drawn and kept only while the notice in force names them (§NNN).
+  beforeEach(async () => {
+    await approveNotice(true);
+  });
+
   it("adds a person with age, sex, city and the two ticks, shows them on the list, and audits the names of the fields, never a value", async () => {
     const role = await addRole();
     const outcome = await post(
@@ -229,7 +234,42 @@ describe("§NNN the organizers' entry: what the person said about themselves", (
   });
 });
 
+describe("§NNN the organizers' entry is gated by the notice too (the §562 / §613 pattern)", () => {
+  it("refuses an answer an organizer types while the notice in force does not name them, naming the boxes, and writes nothing", async () => {
+    await approveNotice(false);
+    const role = await addRole();
+    const outcome = await post(
+      actions.addVolunteerAction,
+      form({ ...PERSON, roleIds: [role.id], assignedRoleId: "", age: "34", sex: "FEMALE", city: "Brașov", volunteeredBefore: "on", clubMember: "on" }),
+    );
+    expect(outcome).toMatchObject({ error: "VALIDATION_ERROR" });
+    expect([...(outcome as FormOutcome).fields].sort()).toEqual(["age", "city", "clubMember", "sex", "volunteeredBefore"]);
+    expect(await listVolunteers(db, eventId)).toHaveLength(0);
+    // The person themselves, without a word of it, is entered as ever.
+    expect(await post(actions.addVolunteerAction, form({ ...PERSON, roleIds: [role.id], assignedRoleId: "" }))).toBe("redirected");
+    expect((await listVolunteers(db, eventId))[0]).toMatchObject({ age: null, sex: null, city: null, volunteeredBefore: false, clubMember: false });
+  });
+
+  it("refuses an edit that sets one, and an edit that posts none leaves what the row holds as it was", async () => {
+    await approveNotice(true);
+    const role = await addRole();
+    await post(actions.addVolunteerAction, form({ ...PERSON, roleIds: [role.id], assignedRoleId: "", age: "34", sex: "FEMALE", city: "Brașov", volunteeredBefore: "on" }));
+    const [maria] = await listVolunteers(db, eventId);
+    // A notice that does not name them takes over (a new version without the marker).
+    await approveNotice(false, 2);
+    const edit = { ...PERSON, volunteerId: maria.id, roleIds: [role.id], assignedRoleId: "" };
+    expect(await post(actions.editVolunteerAction, form({ ...edit, age: "40", sex: "FEMALE", city: "Brașov", volunteeredBefore: "on" }))).toMatchObject({ error: "VALIDATION_ERROR", fields: ["age"] });
+    // The card draws no boxes then: a post without them changes the name and nothing else.
+    expect(await post(actions.editVolunteerAction, form({ ...edit, name: "Maria Nouă" }))).toBe("redirected");
+    expect((await listVolunteers(db, eventId))[0]).toMatchObject({ name: "Maria Nouă", age: 34, sex: "FEMALE", city: "Brașov", volunteeredBefore: true });
+  });
+});
+
 describe("§NNN «Oferim tricouri voluntarilor»", () => {
+  beforeEach(async () => {
+    await approveNotice(true);
+  });
+
   it("is off by default, switched by the card's own form, audited once per change and never on the event's version", async () => {
     const [before] = await db.select().from(events).where(eq(events.id, eventId));
     expect(before.volunteersShirts).toBe(false);
@@ -435,6 +475,10 @@ describe("§NNN the public form: asked while the notice names it, §758's tick u
 });
 
 describe("§NNN the CSV and the card's list carry the answers", () => {
+  beforeEach(async () => {
+    await approveNotice(true);
+  });
+
   async function get(lang = "ro") {
     state.actor = staff.MODERATOR;
     return exportRoute.GET(new Request(`https://example.test/api/admin/events/${eventId}/volunteers?lang=${lang}`), { params: Promise.resolve({ id: eventId }) });

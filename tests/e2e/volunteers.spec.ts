@@ -350,13 +350,14 @@ test.describe("§754 volunteers for a race", () => {
       await openFold(card);
       const shirtsForm = page.getByTestId("volunteer-shirts-form");
       const shirtsTick = shirtsForm.getByRole("checkbox", { name: "Oferim tricouri voluntarilor" });
-      await expect(shirtsTick).not.toBeChecked();
-      expect((await shirtsForm.locator("label").first().boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
-      await shirtsTick.check();
-      await shirtsForm.getByRole("button", { name: "Salvează", exact: true }).click();
+      await expect(shirtsTick).toHaveAttribute("aria-checked", "false");
+      expect((await shirtsTick.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+      // One press, like the tick above: no «Salvează» beside it.
+      await expect(shirtsForm.getByRole("button", { name: "Salvează", exact: true })).toHaveCount(0);
+      await shirtsTick.click();
       await page.waitForURL(/#box-volunteers$/);
       await hydrated(page);
-      await expect(page.getByTestId("volunteer-shirts-form").getByRole("checkbox", { name: "Oferim tricouri voluntarilor" })).toBeChecked();
+      await expect(page.getByTestId("volunteer-shirts-form").getByRole("checkbox", { name: "Oferim tricouri voluntarilor", includeHidden: true })).toHaveAttribute("aria-checked", "true");
 
       // --- A role with all its people is no longer offered; a repeat gets the same answer -------
       await openBox();

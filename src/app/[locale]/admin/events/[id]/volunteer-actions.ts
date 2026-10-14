@@ -127,8 +127,8 @@ export async function switchVolunteersAction(form: FormData): Promise<void> {
 }
 
 /**
- * «Oferim tricouri voluntarilor» (§NNN): the card's own tick and save, the event's `volunteers_shirts`. The checkbox posts
- * `on` only when ticked, so the form posts the state it wants, never a toggle.
+ * «Oferim tricouri voluntarilor» (§NNN): the card's own tick, the event's `volunteers_shirts`. Its submit is drawn as the
+ * checkbox and posts `on=1|0`, the state it wants, never a toggle.
  */
 export async function switchVolunteersShirtsAction(form: FormData): Promise<void> {
   const on = field(form, "on") === "1";

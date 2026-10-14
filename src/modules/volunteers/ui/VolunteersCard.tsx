@@ -340,67 +340,72 @@ export default async function VolunteersCard({
         size="small"
         slotProps={{ htmlInput: { maxLength: 40, inputMode: "tel" } }}
       />
-      {/* What the person told the organizers (§NNN): every box optional here — the public form asks the first three, and the notice must name them. */}
-      <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5}>
+      {/* What the person told the organizers (§NNN): every box optional here, drawn only while the privacy notice in force names them
+          (`profileDescribed`) — the service refuses them otherwise, so a hidden box is not the only gate. */}
+      {profileDescribed && (
+        <>
+        <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5}>
+          <RecallField
+            name="age"
+            label={t("volunteers.person.age")}
+            helperText={t("volunteers.person.ageHelp")}
+            defaultValue={person?.age !== null && person?.age !== undefined ? String(person.age) : ""}
+            size="small"
+            fullWidth
+            slotProps={{ htmlInput: { inputMode: "numeric", pattern: "[0-9]*", maxLength: String(VOLUNTEER_AGE_MAX).length } }}
+          />
+          <RecallField
+            name="sex"
+            select
+            label={t("volunteers.person.sex")}
+            defaultValue={person?.sex ?? ""}
+            size="small"
+            fullWidth
+            slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}
+          >
+            <option value="">{t("volunteers.person.sexNone")}</option>
+            {SEX_CHOICES.map((sex) => (
+              <option key={sex} value={sex}>
+                {t(`registrations.answers.sex.${sex}`)}
+              </option>
+            ))}
+          </RecallField>
+        </Stack>
         <RecallField
-          name="age"
-          label={t("volunteers.person.age")}
-          helperText={t("volunteers.person.ageHelp")}
-          defaultValue={person?.age !== null && person?.age !== undefined ? String(person.age) : ""}
+          name="city"
+          label={t("volunteers.person.city")}
+          defaultValue={person?.city ?? ""}
           size="small"
-          fullWidth
-          slotProps={{ htmlInput: { inputMode: "numeric", pattern: "[0-9]*", maxLength: String(VOLUNTEER_AGE_MAX).length } }}
+          slotProps={{ htmlInput: { maxLength: VOLUNTEER_CITY_MAX, autoComplete: "off" } }}
         />
-        <RecallField
-          name="sex"
-          select
-          label={t("volunteers.person.sex")}
-          defaultValue={person?.sex ?? ""}
-          size="small"
-          fullWidth
-          slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}
-        >
-          <option value="">{t("volunteers.person.sexNone")}</option>
-          {SEX_CHOICES.map((sex) => (
-            <option key={sex} value={sex}>
-              {t(`registrations.answers.sex.${sex}`)}
-            </option>
-          ))}
-        </RecallField>
-      </Stack>
-      <RecallField
-        name="city"
-        label={t("volunteers.person.city")}
-        defaultValue={person?.city ?? ""}
-        size="small"
-        slotProps={{ htmlInput: { maxLength: VOLUNTEER_CITY_MAX, autoComplete: "off" } }}
-      />
-      {/* The T-shirt's size, only while the event gives T-shirts: «Fără tricou» is none. A size left from before stays, shown nowhere. */}
-      {volunteersShirts && (
-        <RecallField
-          name="shirtSize"
-          select
-          label={t("volunteers.person.shirt")}
-          defaultValue={shirtSizeShown(true, person?.shirtSize) ?? ""}
-          size="small"
-          slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}
-        >
-          <option value="">{t("volunteers.person.shirtNone")}</option>
-          {SHIRT_SIZES.map((size) => (
-            <option key={size} value={size}>
-              {size}
-            </option>
-          ))}
-        </RecallField>
+        {/* The T-shirt's size, only while the event gives T-shirts: «Fără tricou» is none. A size left from before stays, shown nowhere. */}
+        {volunteersShirts && (
+          <RecallField
+            name="shirtSize"
+            select
+            label={t("volunteers.person.shirt")}
+            defaultValue={shirtSizeShown(true, person?.shirtSize) ?? ""}
+            size="small"
+            slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}
+          >
+            <option value="">{t("volunteers.person.shirtNone")}</option>
+            {SHIRT_SIZES.map((size) => (
+              <option key={size} value={size}>
+                {size}
+              </option>
+            ))}
+          </RecallField>
+        )}
+        <Box>
+          <CheckboxField name="volunteeredBefore" defaultChecked={person?.volunteeredBefore ?? false}>
+            {t("volunteers.person.before")}
+          </CheckboxField>
+          <CheckboxField name="clubMember" defaultChecked={person?.clubMember ?? false}>
+            {t("volunteers.person.club", { club: CLUB_NAME })}
+          </CheckboxField>
+        </Box>
+        </>
       )}
-      <Box>
-        <CheckboxField name="volunteeredBefore" defaultChecked={person?.volunteeredBefore ?? false}>
-          {t("volunteers.person.before")}
-        </CheckboxField>
-        <CheckboxField name="clubMember" defaultChecked={person?.clubMember ?? false}>
-          {t("volunteers.person.club", { club: CLUB_NAME })}
-        </CheckboxField>
-      </Box>
       <RecallField
         name="note"
         label={t("volunteers.person.note")}
@@ -880,15 +885,25 @@ export default async function VolunteersCard({
               {t("volunteers.switchHelp")}
             </Typography>
           </Box>
-          {/* «Oferim tricouri voluntarilor» (§NNN): the house's checkbox with a save of its own beside it — the card's forms are its own, never the editor's «Salvează». */}
+          {/* «Oferim tricouri voluntarilor» (§NNN): the same tick as the one above — a submit drawn as the checkbox that posts the state it wants,
+              so the card's two settings behave alike and neither waits for a «Salvează». */}
           <Box component="form" action={switchVolunteersShirtsAction} data-testid="volunteer-shirts-form">
             {hidden}
-            <CheckboxField name="on" value="1" defaultChecked={volunteersShirts} help={t("volunteers.shirts.help")}>
+            <input type="hidden" name="on" value={volunteersShirts ? "0" : "1"} />
+            <GlyphButton
+              type="submit"
+              icon={volunteersShirts ? "tickOn" : "tickOff"}
+              role="checkbox"
+              aria-checked={volunteersShirts}
+              color={volunteersShirts ? "success" : "inherit"}
+              sx={TICK_ROW_SX}
+              data-testid="volunteer-shirts-tick"
+            >
               {t("volunteers.shirts.label")}
-            </CheckboxField>
-            <Box sx={{ mt: 0.5 }}>
-              <GlyphSubmitButton label={t("volunteers.save")} pendingLabel={t("volunteers.saving")} icon="save" variant="outlined" />
-            </Box>
+            </GlyphButton>
+            <Typography variant="caption" color="text.secondary" sx={{ display: "block", pl: 0.5 }}>
+              {t("volunteers.shirts.help")}
+            </Typography>
           </Box>
           {/* Which form the public page draws (§NNN): the one that asks the person's age, sex and city only while the notice in force names them. */}
           {!profileDescribed && (

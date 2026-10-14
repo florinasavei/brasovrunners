@@ -314,11 +314,11 @@ describe("§NNN the privacy notice's marker {{volunteerProfile}}", () => {
       expect(volunteers).not.toContain(CLUB_NAME);
     }
     const roParagraph = privacyNoticeRo.sections.flatMap((section) => section.paragraphs).find((candidate) => candidate.includes("{{volunteerProfile}}")) ?? "";
-    for (const phrase of ["vârsta", "sexul", "orașul", "dacă ai mai fost voluntar la alte curse", "dacă spui că faci parte din grupul clubului", "doar cât timp clubul dă tricouri voluntarilor", "nu le verificăm", "repartizeze voluntarii pe roluri"]) {
+    for (const phrase of ["vârsta", "sexul", "orașul", "dacă ai mai fost voluntar la alte curse", "dacă spui că faci parte din grupul clubului", "doar cât timp clubul dă tricouri voluntarilor", "nu le verificăm", "repartizeze voluntarii pe roluri", "pe cele pe care organizatorii le notează pentru tine"]) {
       expect(roParagraph, phrase).toContain(phrase);
     }
     const enParagraph = privacyNoticeEn.sections.flatMap((section) => section.paragraphs).find((candidate) => candidate.includes("{{volunteerProfile}}")) ?? "";
-    for (const phrase of ["your age", "sex", "city", "volunteered at other races before", "whether you say you belong to the club's group", "only while the club gives volunteers T-shirts", "we check none of them", "place volunteers in roles"]) {
+    for (const phrase of ["your age", "sex", "city", "volunteered at other races before", "whether you say you belong to the club's group", "only while the club gives volunteers T-shirts", "we check none of them", "place volunteers in roles", "the ones the organizers note for you"]) {
       expect(enParagraph, phrase).toContain(phrase);
     }
   });
