@@ -7,6 +7,7 @@ import { createEmailSenderForEnvironment } from "@/infrastructure/email/sender";
 import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { contactDelivery, contactSmtpRoad } from "@/modules/contact/delivery";
+import { feedbackRoads } from "@/modules/feedback/roads";
 import { readContactRecipients } from "@/modules/contact/recipients";
 import {
   FEEDBACK_BRANCHES,
@@ -19,7 +20,7 @@ import {
 } from "@/modules/feedback/domain/branches";
 import { type FeedbackOutcome, submitFeedback } from "@/modules/feedback/service";
 import { readFeedbackSettingsMemo } from "@/modules/feedback/settings";
-import { noticeDescribesFeedbackForms, noticeDescribesFeedbackFormsNamed } from "@/modules/legal-documents/repository";
+import { noticeDescribesFeedbackForms, noticeDescribesFeedbackFormsNamed, noticeDescribesFeedbackSafetyGmail } from "@/modules/legal-documents/repository";
 import { cachedPublishedEventBySlug } from "@/modules/public-cache/reads";
 import { botCheckIsOn } from "@/modules/registrations/bot-check";
 import { TURNSTILE_FIELD } from "@/modules/registrations/domain/turnstile-widget";
@@ -81,10 +82,11 @@ export async function submitFeedbackAction(form: FormData): Promise<void> {
     const token = String(form.get(TURNSTILE_FIELD) ?? "");
     const verdict = (await botCheckIsOn(db, now)) ? await verifyTurnstile(token, remoteIp) : "not_configured";
 
-    const [settings, noticeDescribes, namedNow, recipients] = await Promise.all([
+    const [settings, noticeDescribes, namedNow, safetyGmailDescribed, recipients] = await Promise.all([
       readFeedbackSettingsMemo(db, now),
       noticeDescribesFeedbackForms(db, now),
       noticeDescribesFeedbackFormsNamed(db, now),
+      noticeDescribesFeedbackSafetyGmail(db, now),
       readContactRecipients(db),
     ]);
     namedDescribed = namedNow;
@@ -93,12 +95,14 @@ export async function submitFeedbackAction(form: FormData): Promise<void> {
       {
         settings,
         noticeDescribes,
+        safetyGmailDescribed,
         namedDescribed,
         // «Clubul» for a named safety report when «O reclamație» has no recipient (§678): the contact form's own.
         clubFallback: contactDelivery(recipients)?.to ?? [],
         smtp: contactSmtpRoad(),
-        // Mailgun's road alone for the safety branch: the environment's sender with no Gmail road at all.
-        mailgun: createEmailSenderForEnvironment(env).sender,
+        // Mailgun's road (§NNN): the environment's sender with no Gmail road at all — none where the email
+        // service does not transmit (`feedbackRoads`), so a form the club pointed at it is not offered.
+        mailgun: feedbackRoads().mailgun ? createEmailSenderForEnvironment(env).sender : null,
         appEnv: env.APP_ENV,
         screening: {
           botCheckOn: verdict !== "not_configured",

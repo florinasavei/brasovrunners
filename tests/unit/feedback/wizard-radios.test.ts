@@ -29,17 +29,18 @@ function groups(html: string) {
 
 describe("the wizard's radios are one group each (§702)", () => {
   for (const inLocale of ["ro", "en"] as const) {
-    for (const wayBack of ["email", "contact"] as const) {
+    for (const withPhone of [false, true]) {
       for (const named of [false, true]) {
-        it(`${inLocale}, ${wayBack}, ${named ? "named" : "anonymous"}: two groups, one checked each, native inputs`, async () => {
+        it(`${inLocale}, ${withPhone ? "with phone" : "email only"}, ${named ? "named" : "anonymous"}: two groups, one checked each, native inputs`, async () => {
           locale = inLocale;
           const html = renderToStaticMarkup(
             await IdentityChoice({
-              wayBack,
+              withPhone,
               named,
               invalid: new Set(),
               kept: () => undefined,
               safetyName: "Maria",
+              safetyByGmail: false,
               audiences: ["club", "person"],
               audience: "club",
             }),

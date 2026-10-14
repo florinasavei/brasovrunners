@@ -65,6 +65,7 @@ import { readEmailDelayFacts } from "@/modules/notifications/public-delay";
 import {
   describesFeedbackForms,
   describesFeedbackFormsNamed,
+  describesFeedbackSafetyGmail,
   describesListNumbers,
   describesListSocials,
   describesListStates,
@@ -667,6 +668,17 @@ export async function cachedFeedbackFormsNamedDescribed(now: Date): Promise<bool
 }
 
 /**
+ * Whether Girl Zone's messages may leave by the club's Gmail (§NNN): the notice in force names
+ * `{{feedbackSafetyGmail}}` (`describesFeedbackSafetyGmail`), in every language — the same reading as
+ * `cachedFeedbackFormsNamedDescribed`. The page words who sees her message by it; the action asks the
+ * uncached `noticeDescribesFeedbackSafetyGmail` again.
+ */
+export async function cachedFeedbackSafetyGmailDescribed(now: Date): Promise<boolean> {
+  const notices = await Promise.all(routing.locales.map((locale) => cachedCurrentApprovedDocument("PRIVACY_NOTICE", locale, now)));
+  return notices.every((notice) => notice !== undefined && describesFeedbackSafetyGmail(notice.body));
+}
+
+/**
  * The branches' switches and the safety branch's first name (§676), for the contact page's door and
  * the feedback page — never an address: who receives is nobody's business but the sender's, the
  * reasoning of `cachedContactFormReaches`. The page shows the first name anyway. When the database
@@ -684,10 +696,10 @@ export async function cachedFeedbackOffer(): Promise<FeedbackSettings> {
 function withoutAddresses(settings: FeedbackSettings): FeedbackSettings {
   const someone = (to: string | null) => (to ? "set" : null);
   return {
-    howItWent: { on: settings.howItWent.on, to: someone(settings.howItWent.to) },
-    suggestion: { on: settings.suggestion.on, to: someone(settings.suggestion.to) },
-    complaint: { on: settings.complaint.on, to: someone(settings.complaint.to) },
-    safety: { on: settings.safety.on, to: someone(settings.safety.to), name: settings.safety.name },
+    howItWent: { on: settings.howItWent.on, to: someone(settings.howItWent.to), via: settings.howItWent.via },
+    suggestion: { on: settings.suggestion.on, to: someone(settings.suggestion.to), via: settings.suggestion.via },
+    complaint: { on: settings.complaint.on, to: someone(settings.complaint.to), via: settings.complaint.via },
+    safety: { on: settings.safety.on, to: someone(settings.safety.to), via: settings.safety.via, name: settings.safety.name },
   };
 }
 

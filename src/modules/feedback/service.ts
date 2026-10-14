@@ -14,36 +14,44 @@ import {
   audiencesFor,
   chosenAudience,
   defaultAudience,
+  effectiveFeedbackSettings,
   type FeedbackAudience,
   type FeedbackBranch,
   type FeedbackInput,
+  type FeedbackRoads,
   type FeedbackSettings,
+  type FeedbackVia,
   composeFeedbackEmail,
   feedbackFields,
   FEEDBACK_BRANCHES,
   invalidFeedbackFields,
   offeredBranches,
+  replyAddressForInput,
+  viaFor,
 } from "./domain/branches";
 
 /**
  * «Spune-ne ceva» (§676): one anonymous message from a visitor, sent the moment it is posted and
  * kept nowhere — no table, no outbox row, no audit of what it says, no body or address in a log line.
  *
- * **Two roads, chosen by the branch.** «Cum a fost», «O sugestie» and «O reclamație» leave the way a
- * contact message leaves (§149): the club's Gmail over SMTP, to the address the club set for that
- * branch, `Reply-To` the address the person typed when they typed one, and marked «[posibil spam]»
- * on the contact form's own signals (§310). The safety branch leaves **by Mailgun alone** — the
- * configured adapter through the environment's sender, which captures on a laptop and in the tests —
- * to one person's own address, with a neutral subject, no `Reply-To` and Mailgun's tracking off: a
- * copy in the shared Gmail's Sent folder is the opposite of «only {name}», so it has no Gmail road and
- * no fallback. A road that refuses is said on the page («Nu am putut trimite acum…») with the text
- * kept, never a silent loss and never a second road.
+ * **Two roads, chosen by the club for each form (§NNN, amending §676).** The club's Gmail over SMTP —
+ * the way a contact message leaves (§149) — or Mailgun, the configured adapter through the environment's
+ * sender (which captures on a laptop and in the tests). The default is what §676 fixed in code: Gmail for
+ * «Cum a fost», «O sugestie» and «O reclamație», Mailgun for «Girl Zone». Either way the message goes to
+ * the address the club set for the form, `Reply-To` the address the person typed beside their name when
+ * they typed one (§NNN; none otherwise — on Mailgun's road not even the club's), with Mailgun's tracking
+ * off, and a message for the club's mailbox is marked «[posibil spam]» on the contact form's own signals
+ * (§310) whichever road carries it. A message for Girl Zone's person has a neutral subject and is never
+ * held back or marked. On Gmail the club's mailbox readers see a Girl Zone message — the one Gmail's Sent
+ * folder keeps — so the person's confidentiality is the club's choice, said on the card (§NNN). A road that
+ * refuses is said on the page («Nu am putut trimite acum…») with the text kept, never a silent loss and
+ * never a second road.
  *
  * **Who hears it, in the named mode (§678).** «Cine să afle?» may send a named message on any branch
  * to the club's mailbox (the branch's own recipient; for the safety branch the «O reclamație»
- * recipient, else the contact form's) by the SMTP road, or to the safety branch's person by Mailgun
- * alone, with the neutral subject — the road follows the reader, never the branch. An anonymous
- * message reaches its branch's own reader, as before. A choice not offered is refused on its box.
+ * recipient, else the contact form's) or to the safety branch's person, with the neutral subject — the
+ * road follows the form whose reader it reaches (`roadBranch`), never the form it was written on. An
+ * anonymous message reaches its branch's own reader, as before. A choice not offered is refused on its box.
  * While the privacy notice in force does not name `{{feedbackFormsNamed}}` (`namedDescribed`), every
  * post is read as anonymous: no name, no way back, no choice of reader.
  *
@@ -55,16 +63,22 @@ import {
  * identity to key on), said plainly.
  */
 
-/** The SMTP road the three ordinary branches take (`contact/delivery.ts`, `contactSmtpRoad`). */
+/** The Gmail road (`contact/delivery.ts`, `contactSmtpRoad`): `null` where the deployment has none. */
 export type FeedbackSmtpRoad = { transport: SmtpTransport; from: SmtpAddress; appEnv: AppEnvironment };
 
-/** The safety branch's road: the environment's sender over Mailgun (`createEmailSenderForEnvironment`), never Gmail. */
+/** The Mailgun road: the environment's sender (`createEmailSenderForEnvironment`); `null` where the deployment's email service does not transmit (`feedbackRoads`). */
 export type FeedbackMailgunRoad = { send(message: OutgoingEmail): Promise<SendResult> };
 
 export type FeedbackDeps = {
   settings: FeedbackSettings;
   /** The privacy notice in force names `{{feedbackForms}}` in every language (`noticeDescribesFeedbackForms`). */
   noticeDescribes: boolean;
+  /**
+   * The privacy notice in force names `{{feedbackSafetyGmail}}` in every language
+   * (`noticeDescribesFeedbackSafetyGmail`, §NNN): until it does, Girl Zone's messages leave by Mailgun
+   * whatever the card says (`effectiveFeedbackSettings`).
+   */
+  safetyGmailDescribed: boolean;
   /**
    * The privacy notice in force names `{{feedbackFormsNamed}}` in every language
    * (`noticeDescribesFeedbackFormsNamed`): until it does, every post is anonymous (§678).
@@ -117,12 +131,15 @@ function logged(branch: FeedbackBranch | "unknown", outcome: FeedbackOutcome, re
 
 export async function submitFeedback<T extends Record<string, unknown>>(
   db: Database<T>,
-  deps: FeedbackDeps,
+  given: FeedbackDeps,
   rawInput: unknown,
   now: Date,
 ): Promise<FeedbackOutcome> {
+  // The settings as they act: Girl Zone leaves by Gmail only while the notice in force says so (§NNN).
+  const deps: FeedbackDeps = { ...given, settings: effectiveFeedbackSettings(given.settings, given.safetyGmailDescribed) };
   const branch = postedBranch(rawInput);
-  if (!branch || !offeredBranches(deps.settings, deps.noticeDescribes, deps.smtp !== null).includes(branch)) {
+  const roads: FeedbackRoads = { gmail: deps.smtp !== null, mailgun: deps.mailgun !== null };
+  if (!branch || !offeredBranches(deps.settings, deps.noticeDescribes, roads).includes(branch)) {
     return logged(branch ?? "unknown", { outcome: "unavailable" });
   }
   // Cloudflare's own refusal only (§216): a widget that never ran is `unavailable`, and passes.
@@ -132,19 +149,20 @@ export async function submitFeedback<T extends Record<string, unknown>>(
   const input = readFeedbackInput(deps.namedDescribed ? rawInput : asAnonymous(rawInput));
 
   // A password manager that filled the trap with the typed address is autofill, not a bot (§282).
-  const typedContact = input.branch === "safety" ? input.contact : (input.email ?? undefined);
+  const typedContact = (input.branch === "safety" ? input.email || input.contact : input.email) ?? undefined;
   if (looksLikeSpam({ honeypot: input.honeypot, renderedAt: input.renderedAt, email: typedContact }, now)) {
     return logged(branch, input.branch === "safety" ? { outcome: "unavailable" } : { outcome: "ignored" });
   }
 
   // «Cine să afle?» (§678): the branch's own reader unless a named post chose the other one offered.
-  const offeredAudiences = audiencesFor(branch, deps.settings, { smtp: deps.smtp !== null, clubFallback: deps.clubFallback.length > 0 });
+  const offeredAudiences = audiencesFor(branch, deps.settings, { ...roads, clubFallback: deps.clubFallback.length > 0 });
   const audience = chosenAudience(input, offeredAudiences);
   if (!audience) throw new DomainError("VALIDATION_ERROR", "the feedback form chose a reader not offered", ["audience"]);
   const recipients = readersOf(branch, audience, deps);
   if (recipients.length === 0) return logged(branch, { outcome: "unavailable" }, audience);
-  const road = audience === "person" ? deps.mailgun : deps.smtp;
-  if (!road) return logged(branch, { outcome: "unavailable" }, audience);
+  // The road the club chose for the form that reaches this reader (§NNN); absent on this deployment is no road.
+  const via = viaFor(deps.settings, branch, audience);
+  if (!roads[via]) return logged(branch, { outcome: "unavailable" }, audience);
 
   const verdict = await consumeRateLimit(db, "feedback", branch, now);
   if (!verdict.allowed) return logged(branch, { outcome: "limited", retryAfter: verdict.retryAfter }, audience);
@@ -153,12 +171,7 @@ export async function submitFeedback<T extends Record<string, unknown>>(
   const eventTitle = eventSlug ? await deps.eventTitle(eventSlug, input.locale) : null;
   const email = composeFeedbackEmail(input, { eventTitle, toPerson: audience === "person" }, deps.appEnv);
 
-  const sent =
-    audience === "person"
-      ? (await sendSafety(deps.mailgun as FeedbackMailgunRoad, recipients[0], email, input.locale))
-        ? "sent"
-        : "failed"
-      : await sendOrdinary(db, deps.smtp as FeedbackSmtpRoad, recipients, email, input, deps.screening, now);
+  const sent = await deliver(db, deps, via, audience, recipients, email, input, now);
   if (sent === "held") {
     // Held back by the Administrator's tick (§744): it reached nobody, so it is not one of the branch's
     // thirty an hour either. The bucket is keyed on the branch, and a bot flood held back in silence
@@ -185,41 +198,57 @@ function readersOf(branch: FeedbackBranch, audience: "club" | "person", deps: Fe
   return deps.settings.complaint.to ? [deps.settings.complaint.to] : deps.clubFallback;
 }
 
-/** Mailgun alone (§676): no `Reply-To`, tracking off (every Mailgun send, §320), the environment's tag. */
-async function sendSafety(road: FeedbackMailgunRoad, to: string, email: { subject: string; text: string; html: string }, locale: "ro" | "en"): Promise<boolean> {
-  const result = await road.send({
-    to,
-    subject: email.subject,
-    text: email.text,
-    html: email.html,
-    locale,
-    // Identifies this send for a webhook and nothing else: no person, no content.
-    idempotencyKey: `feedback:${randomUUID()}`,
-    noReplyTo: true,
-  });
-  return result.outcome === "sent";
+/**
+ * One message out, by the road the club chose (§NNN). What the road is does not change what the message
+ * is: for the club's mailbox it is screened first on the contact form's signals — held back when the
+ * Administrator's tick says so (§744), else marked «[posibil spam]» (§310) — and for Girl Zone's person
+ * it never is, because a lost report costs more than a marked one. `Reply-To` is the address typed
+ * beside the name (`replyAddressForInput`), through the canonicalizer already; none otherwise.
+ */
+async function deliver<T extends Record<string, unknown>>(
+  db: Database<T>,
+  deps: FeedbackDeps,
+  via: FeedbackVia,
+  audience: FeedbackAudience,
+  recipients: readonly string[],
+  email: { subject: string; text: string; html: string },
+  input: FeedbackInput,
+  now: Date,
+): Promise<"sent" | "held" | "failed"> {
+  const replyAddress = replyAddressForInput(input);
+  let content = email;
+  if (audience === "club") {
+    const screened = await screenForClub(db, email, input, replyAddress, deps.screening, now);
+    if (screened === "held") return "held";
+    content = screened;
+  }
+  const to = recipients.map((address) => address.replace(/[\r\n]+/g, " ").trim());
+  const sent =
+    via === "mailgun"
+      ? await sendByMailgun(deps.mailgun as FeedbackMailgunRoad, to, content, input, replyAddress)
+      : await sendByGmail(deps.smtp as FeedbackSmtpRoad, to, content, input, replyAddress);
+  return sent ? "sent" : "failed";
 }
 
 /**
- * The contact form's road (§149, §310): the club's Gmail, `Reply-To` the typed address, marked when it
- * looks automated. A named safety report the sender sent to «Clubul» (§678) takes it too, with its
- * neutral subject and no `Reply-To` — its way back may be a telephone, and it is in the body.
+ * The contact form's screen for the club's mailbox (§310, §744): `"held"` when the Administrator's tick
+ * says a suspected message is counted and not emailed, else the message — marked «[posibil spam]» when it
+ * looks automated. The safety branch is never held back, whichever reader it is sent to.
  */
-async function sendOrdinary<T extends Record<string, unknown>>(
+async function screenForClub<T extends Record<string, unknown>>(
   db: Database<T>,
-  road: FeedbackSmtpRoad,
-  to: readonly string[],
   email: { subject: string; text: string; html: string },
   input: FeedbackInput,
+  replyAddress: string | null,
   screening: ContactScreening,
   now: Date,
-): Promise<"sent" | "held" | "failed"> {
+): Promise<"held" | { subject: string; text: string; html: string }> {
   const rendered = Date.parse(input.renderedAt ?? "");
-  const replyAddress = input.branch === "safety" ? null : input.email;
   const suspicion = contactSuspicion({
     ...screening,
     elapsedMs: Number.isNaN(rendered) ? null : now.getTime() - rendered,
-    senderEmail: replyAddress ?? "",
+    // A confidential report's address is not the screen's to read: «imitates-club» and the trap compare it with the club's domain, and a report is never marked on it (§NNN).
+    senderEmail: input.branch === "safety" ? "" : (replyAddress ?? ""),
     message: input.message,
     honeypot: input.honeypot,
   });
@@ -231,23 +260,67 @@ async function sendOrdinary<T extends Record<string, unknown>>(
     return "held";
   }
   const marked = suspicion.suspicious ? suspicionFooter(suspicion) : null;
-  const text = marked ? [email.text, "", "---", marked.heading, ...marked.reasons.map((line) => `• ${line}`), marked.signals].join("\n") : email.text;
-  const html = marked
-    ? `${email.html}<hr><p><strong>${escapeHtml(marked.heading)}</strong></p><ul>${marked.reasons.map((line) => `<li>${escapeHtml(line)}</li>`).join("")}</ul><p><small>${escapeHtml(marked.signals)}</small></p>`
-    : email.html;
+  if (!marked) return email;
+  const text = [email.text, "", "---", marked.heading, ...marked.reasons.map((line) => `• ${line}`), marked.signals].join("\n");
+  const html = `${email.html}<hr><p><strong>${escapeHtml(marked.heading)}</strong></p><ul>${marked.reasons.map((line) => `<li>${escapeHtml(line)}</li>`).join("")}</ul><p><small>${escapeHtml(marked.signals)}</small></p>`;
   // On QA the environment's mark comes first — «[QA] [posibil spam] …» — as on the contact form.
-  const subject = marked ? markAfterEnvironment(email.subject) : email.subject;
+  return { subject: markAfterEnvironment(email.subject), text, html };
+}
+
+/**
+ * Mailgun's road (§676, §NNN): the environment's tag and tracking off on every send (§320), one message
+ * per recipient — the allowlist and the allowance count addresses one by one — and `Reply-To` the typed
+ * address, else none at all (not even the club's: nobody is to be answered at the shared mailbox by
+ * default). Sent when any recipient took it: a report that reached somebody is not a lost one.
+ */
+async function sendByMailgun(
+  road: FeedbackMailgunRoad,
+  to: readonly string[],
+  email: { subject: string; text: string; html: string },
+  input: FeedbackInput,
+  replyAddress: string | null,
+): Promise<boolean> {
+  let reached = false;
+  for (const address of to) {
+    const result = await road.send({
+      to: address,
+      subject: email.subject,
+      text: email.text,
+      html: email.html,
+      locale: input.locale,
+      // Identifies this send for a webhook and nothing else: no person, no content.
+      idempotencyKey: `feedback:${randomUUID()}`,
+      ...(replyAddress ? { replyTo: replyAddress } : { noReplyTo: true as const }),
+    });
+    if (result.outcome === "sent") reached = true;
+    else console.error("[feedback] delivery failed", result.outcome);
+  }
+  return reached;
+}
+
+/**
+ * The club's Gmail (§149, §310): over SMTP from the club's account, `Reply-To` the typed address with the
+ * name beside it when they gave one (§678). A Girl Zone message on this road is in the account's Sent
+ * folder, which every reader of the club's mailbox sees — said on the card (§NNN), the club's choice.
+ */
+async function sendByGmail(
+  road: FeedbackSmtpRoad,
+  to: readonly string[],
+  email: { subject: string; text: string; html: string },
+  input: FeedbackInput,
+  replyAddress: string | null,
+): Promise<boolean> {
   const result = await road.transport.send({
     from: road.from,
-    to: to.map((address) => address.replace(/[\r\n]+/g, " ").trim()),
+    to: [...to],
     // Only in the named mode (§678): the anonymous mode has no address to answer, and no name.
     ...(replyAddress ? { replyTo: { name: input.name || replyAddress, address: replyAddress } } : {}),
-    subject,
-    text,
-    html,
+    subject: email.subject,
+    text: email.text,
+    html: email.html,
   });
   if (result.outcome !== "sent") console.error("[feedback] delivery failed", result.error);
-  return result.outcome === "sent" ? "sent" : "failed";
+  return result.outcome === "sent";
 }
 
 function markAfterEnvironment(subject: string): string {

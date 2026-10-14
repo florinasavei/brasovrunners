@@ -15,9 +15,10 @@ import { readShownContactAddress } from "@/modules/contact/shown-address";
 import ContactRecipientsPanel from "@/modules/contact/ui/ContactRecipientsPanel";
 import PublicPhonePanel from "@/modules/contact/ui/PublicPhonePanel";
 import ShownAddressPanel from "@/modules/contact/ui/ShownAddressPanel";
+import { feedbackRoads } from "@/modules/feedback/roads";
 import { readFeedbackSettings } from "@/modules/feedback/settings";
 import FeedbackFormsPanel from "@/modules/feedback/ui/FeedbackFormsPanel";
-import { noticeDescribesFeedbackForms } from "@/modules/legal-documents/repository";
+import { noticeDescribesFeedbackForms, noticeDescribesFeedbackSafetyGmail } from "@/modules/legal-documents/repository";
 import PagesSubNav from "@/modules/content/pages/ui/PagesSubNav";
 import { canManageClubSettings, canReadContent } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
@@ -57,13 +58,14 @@ export default async function AdminContactSettingsPage({ params, searchParams }:
   const t = await getTranslations("Admin");
   const db = getDb();
   const now = new Date();
-  const [recipients, heldBack, shownAddress, publicPhone, feedbackForms, feedbackNoticeDescribes] = await Promise.all([
+  const [recipients, heldBack, shownAddress, publicPhone, feedbackForms, feedbackNoticeDescribes, safetyGmailDescribed] = await Promise.all([
     readContactRecipients(db),
     countHeldBack(db, now),
     readShownContactAddress(db),
     readPublicPhone(db),
     readFeedbackSettings(db),
     noticeDescribesFeedbackForms(db, now),
+    noticeDescribesFeedbackSafetyGmail(db, now),
   ]);
   const mayEdit = canManageClubSettings(actor.role);
 
@@ -94,6 +96,8 @@ export default async function AdminContactSettingsPage({ params, searchParams }:
         state={feedbackForms}
         noticeDescribes={feedbackNoticeDescribes}
         mayEdit={mayEdit}
+        roads={feedbackRoads()}
+        safetyGmailDescribed={safetyGmailDescribed}
         openWhen={{ primary: true, saved: saved === "feedbackForms" }}
       />
 

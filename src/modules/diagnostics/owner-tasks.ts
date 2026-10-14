@@ -64,6 +64,7 @@ export type TaskId =
   | "newsletterNotice"
   | "feedbackNotice"
   | "feedbackNamedNotice"
+  | "feedbackSafetyGmailNotice"
   | "shopNotice"
   | "volunteersNotice"
   | "volunteerAgreementNotice"
@@ -113,6 +114,7 @@ export const TASK_KIND: Record<TaskId, TaskKind> = {
   newsletterNotice: "text",
   feedbackNotice: "text",
   feedbackNamedNotice: "text",
+  feedbackSafetyGmailNotice: "text",
   shopNotice: "text",
   volunteersNotice: "text",
   volunteerAgreementNotice: "text",
@@ -262,6 +264,13 @@ export type OwnerTaskInputs = {
    * `noticeDescribesFeedbackFormsNamed`)? Until it does, every form is anonymous only.
    */
   feedbackNamedDescribed: boolean;
+  /**
+   * Does the notice in force, in every language, say Girl Zone's messages may leave by the club's Gmail
+   * (§NNN, `noticeDescribesFeedbackSafetyGmail`)? Until it does, her messages leave by Mailgun whatever the card says.
+   */
+  feedbackSafetyGmailDescribed: boolean;
+  /** Girl Zone's road is saved as Gmail (§NNN): the row waits only while the club chose it. */
+  feedbackSafetyGmailChosen: boolean;
   /**
    * Does the notice in force, in every language, describe the members' shop (§683,
    * `noticeDescribesMembersShop`)? Until it does, the members' zone draws no shop and an order is refused.
@@ -596,6 +605,18 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
       push("feedbackNamedNotice", {
         owner: "club",
         state: input.feedbackNamedDescribed ? "done" : "open",
+      });
+    }
+    /*
+      Girl Zone by the club's Gmail (§NNN): the notice in force promises her messages never pass through the
+      club's mailbox unless it names `{{feedbackSafetyGmail}}`, so the road cannot be chosen until one does.
+      A row only while the club chose Gmail for her: open until a notice naming it takes effect, in which
+      case her messages leave by Mailgun meanwhile; done by itself the day it does; absent otherwise.
+    */
+    if (input.feedbackSafetyGmailChosen) {
+      push("feedbackSafetyGmailNotice", {
+        owner: "club",
+        state: input.feedbackSafetyGmailDescribed ? "done" : "open",
       });
     }
     /*

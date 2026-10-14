@@ -17,8 +17,8 @@ import RadioField from "@/shared/ui/RadioField";
 import IncognitoIcon from "./IncognitoIcon";
 
 type Props = {
-  /** The branch's way back: an address on the three ordinary forms, an address or a telephone on the safety form. */
-  wayBack: "email" | "contact";
+  /** Girl Zone's form also has a telephone box, beside the email every named form has (§NNN). */
+  withPhone: boolean;
   /** «Cu nume și prenume» checked — a refused named post coming back; «Anonim» otherwise. */
   named: boolean;
   /** The boxes a refusal named. */
@@ -27,6 +27,8 @@ type Props = {
   kept: (name: string) => string | undefined;
   /** The safety branch's first name, the club's own setting — the way back's label and «Cine să afle?»'s second answer. */
   safetyName: string;
+  /** Girl Zone's messages leave by the club's Gmail, so the mailbox's readers see them: «Cine să afle?» does not say «doar» then (§NNN). */
+  safetyByGmail: boolean;
   /** Whom a named message may reach (`audiencesFor`); fewer than two draws no «Cine să afle?». */
   audiences: readonly FeedbackAudience[];
   /** The answer checked by default: a refused post's, else the branch's own reader. */
@@ -75,7 +77,7 @@ function Choice({
  * «Spune-ne ceva»'s first box (§678), every branch's form: «Cum vrei să trimiți?» — «Anonim», the
  * default, or «Cu nume și prenume», each with its glyph before its words (the incognito hat and
  * glasses, a person; §679) and its sentence under it. The named mode shows the name
- * (2–80 characters, required there by the server), the branch's way back and, when a named message may
+ * (2–80 characters, required there by the server), the optional email (Girl Zone's form also a telephone) and, when a named message may
  * reach either, «Cine să afle?»: «Clubul» or the safety branch's person by her first name — never an
  * address. They show only while «Cu nume și prenume» is checked, in CSS alone (`:has`), no island;
  * without `:has` they simply stay visible and the server drops them from an anonymous post. No
@@ -83,7 +85,7 @@ function Choice({
  * on a box it cannot show. The page draws none of this while the privacy notice in force does not
  * name the named mode (`{{feedbackFormsNamed}}`): every form is anonymous only then.
  */
-export default async function IdentityChoice({ wayBack, named, invalid, kept, safetyName, audiences, audience }: Props) {
+export default async function IdentityChoice({ withPhone, named, invalid, kept, safetyName, safetyByGmail, audiences, audience }: Props) {
   const t = await getTranslations("Tell");
   const box = (name: FeedbackField, help?: string) => ({
     id: feedbackFieldId(name),
@@ -110,20 +112,21 @@ export default async function IdentityChoice({ wayBack, named, invalid, kept, sa
           fullWidth
           slotProps={{ htmlInput: { maxLength: FEEDBACK_NAME_MAX, "aria-required": "true" } }}
         />
-        {wayBack === "contact" ? (
+        {/* Every named form has the optional email — the message's reply address, kept nowhere (§NNN). */}
+        <TextField
+          {...box("email", t("emailHelp"))}
+          label={t("email")}
+          autoComplete="email"
+          fullWidth
+          slotProps={{ htmlInput: { inputMode: "email", spellCheck: false, autoCapitalize: "none" } }}
+        />
+        {withPhone && (
           <TextField
-            {...box("contact", t("safety.contactHelp"))}
-            label={t("safety.contact", { name: safetyName })}
+            {...box("contact", t("safety.contactHelp", { name: safetyName }))}
+            label={t("safety.contact")}
+            autoComplete="tel"
             fullWidth
-            slotProps={{ htmlInput: { maxLength: FEEDBACK_LINE_MAX } }}
-          />
-        ) : (
-          <TextField
-            {...box("email", t("emailHelp"))}
-            label={t("email")}
-            autoComplete="email"
-            fullWidth
-            slotProps={{ htmlInput: { inputMode: "email", spellCheck: false, autoCapitalize: "none" } }}
+            slotProps={{ htmlInput: { maxLength: FEEDBACK_LINE_MAX, inputMode: "tel" } }}
           />
         )}
         {audiences.length > 1 && (
@@ -138,7 +141,7 @@ export default async function IdentityChoice({ wayBack, named, invalid, kept, sa
                 value={answer}
                 checked={answer === audience}
                 label={answer === "club" ? t("audience.club") : t("audience.person", { name: safetyName })}
-                hint={answer === "club" ? t("audience.clubHint") : t("audience.personHint", { name: safetyName })}
+                hint={answer === "club" ? t("audience.clubHint") : t(safetyByGmail ? "audience.personHintGmail" : "audience.personHint", { name: safetyName })}
               />
             ))}
           </Box>

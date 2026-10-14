@@ -8,6 +8,8 @@ import { routing, type Locale } from "@/i18n/routing";
 import { addressListRefusal, CONTACT_RECIPIENTS_MAX, parseAddressList } from "@/modules/contact/domain/recipients";
 import { updateContactRecipients } from "@/modules/contact/recipients";
 import { updatePublicPhone } from "@/modules/contact/public-phone";
+import { feedbackRoads } from "@/modules/feedback/roads";
+import { noticeDescribesFeedbackSafetyGmail } from "@/modules/legal-documents/repository";
 import { updateFeedbackSettings } from "@/modules/feedback/settings";
 import { updateShownContactAddress } from "@/modules/contact/shown-address";
 import { requireStaffCapability } from "@/modules/staff-identity/session";
@@ -97,15 +99,16 @@ export async function updatePublicPhoneAction(_previous: FormOutcome | null, for
 }
 
 /**
- * «Spune-ne ceva» (§676): per branch a switch and the address that receives it, and the safety
- * branch's first name. Administrator at the door, the service asserting it again and validating
+ * «Spune-ne ceva» (§676): per branch a switch, the address that receives it and «Prin ce trimitem»
+ * (§NNN: `<branch>Via`, absent when its radio was greyed, which keeps the road already saved), and the
+ * safety branch's first name. Administrator at the door, the service asserting it again and validating
  * each address; a refused save comes back as typed, the boxes it names marked.
  */
 export async function updateFeedbackFormsAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const locale = localeOf(form);
   const path = getPathname({ locale, href: "/admin/pages/contact" });
   const value = (name: string) => (typeof form.get(name) === "string" ? String(form.get(name)) : "");
-  const branch = (name: string) => ({ on: form.get(`${name}On`) === "on", to: value(`${name}To`) });
+  const branch = (name: string) => ({ on: form.get(`${name}On`) === "on", to: value(`${name}To`), via: value(`${name}Via`) });
 
   try {
     const actor = await requireStaffCapability(canManageClubSettings);
@@ -119,6 +122,8 @@ export async function updateFeedbackFormsAction(_previous: FormOutcome | null, f
         safety: { ...branch("safety"), name: value("safetyName") },
       },
       new Date(),
+      feedbackRoads(),
+      await noticeDescribesFeedbackSafetyGmail(getDb(), new Date()),
     );
   } catch (error) {
     return refused(error, form);

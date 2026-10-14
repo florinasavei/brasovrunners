@@ -114,8 +114,9 @@ describe("BR-REQ-070-04 the tick that holds back suspected spam", () => {
     await tick(true);
     const capture = createCaptureSmtpTransport();
     const deps: FeedbackDeps = {
-      settings: { ...DEFAULT_FEEDBACK_SETTINGS, suggestion: { on: true, to: "ideas@example.org" } },
+      settings: { ...DEFAULT_FEEDBACK_SETTINGS, suggestion: { on: true, to: "ideas@example.org", via: "gmail" } },
       noticeDescribes: true,
+      safetyGmailDescribed: true,
       namedDescribed: true,
       clubFallback: ["club@example.com"],
       smtp: { transport: capture, from: { name: "Club", address: "club@example.com" }, appEnv: "production" },
@@ -140,8 +141,9 @@ describe("BR-REQ-070-04 the tick that holds back suspected spam", () => {
     const capture = createCaptureSmtpTransport();
     const mailgun = { send: vi.fn(async () => ({ outcome: "sent", providerMessageId: "mailgun:1" }) as SendResult) };
     const deps: FeedbackDeps = {
-      settings: { ...DEFAULT_FEEDBACK_SETTINGS, safety: { on: true, to: "safety@example.org", name: "Maria" } },
+      settings: { ...DEFAULT_FEEDBACK_SETTINGS, safety: { on: true, to: "safety@example.org", via: "mailgun", name: "Maria" } },
       noticeDescribes: true,
+      safetyGmailDescribed: true,
       namedDescribed: true,
       clubFallback: ["club@example.com"],
       smtp: { transport: capture, from: { name: "Club", address: "club@example.com" }, appEnv: "production" },
@@ -167,8 +169,9 @@ describe("BR-REQ-070-04 the tick that holds back suspected spam", () => {
     await tick(true);
     const capture = createCaptureSmtpTransport();
     const deps: FeedbackDeps = {
-      settings: { ...DEFAULT_FEEDBACK_SETTINGS, suggestion: { on: true, to: "ideas@example.org" } },
+      settings: { ...DEFAULT_FEEDBACK_SETTINGS, suggestion: { on: true, to: "ideas@example.org", via: "gmail" } },
       noticeDescribes: true,
+      safetyGmailDescribed: true,
       namedDescribed: true,
       clubFallback: ["club@example.com"],
       smtp: { transport: capture, from: { name: "Club", address: "club@example.com" }, appEnv: "production" },

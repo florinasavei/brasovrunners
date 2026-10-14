@@ -35,6 +35,8 @@ const LAUNCHED: OwnerTaskInputs = {
   feedbackDescribed: true,
   feedbackBranchesOn: 2,
   feedbackNamedDescribed: true,
+  feedbackSafetyGmailDescribed: true,
+  feedbackSafetyGmailChosen: false,
   shopDescribed: true,
   visibleShopProducts: 1,
   volunteersDescribed: true,
@@ -144,6 +146,18 @@ describe("owner tasks", () => {
     expect(stateOf(LAUNCHED, "feedbackNamedNotice")).toBe("done");
     // Its own answer, not the forms': a notice naming the forms and not the named mode leaves it open.
     expect(stateOf({ ...LAUNCHED, feedbackNamedDescribed: false }, "feedbackNotice")).toBe("done");
+  });
+
+  /** §NNN — Girl Zone by Gmail: a row only while the club chose that road; open until the notice names {{feedbackSafetyGmail}}. */
+  it("keeps Girl Zone's Gmail row open while the club chose Gmail and the notice in force does not name {{feedbackSafetyGmail}}, absent otherwise", () => {
+    expect(stateOf({ ...LAUNCHED, feedbackSafetyGmailChosen: true, feedbackSafetyGmailDescribed: false }, "feedbackSafetyGmailNotice")).toBe("open");
+    expect(stateOf({ ...LAUNCHED, feedbackSafetyGmailChosen: true }, "feedbackSafetyGmailNotice")).toBe("done");
+    expect(ownerTasks({ ...LAUNCHED, feedbackSafetyGmailDescribed: false }).some((task) => task.id === "feedbackSafetyGmailNotice")).toBe(false);
+    for (const catalogue of [ro, en]) {
+      const item = catalogue.Admin.tasks.items.feedbackSafetyGmailNotice;
+      expect(item.title && item.todo && item.done && item.how.length > 0).toBeTruthy();
+      expect(item.how.join("\n")).toContain("/admin/legal");
+    }
   });
 
   it("§754: the volunteers' notice row is open while an event ahead takes volunteers and the notice is silent, done once it names them, absent otherwise", () => {

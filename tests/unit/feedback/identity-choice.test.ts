@@ -23,12 +23,12 @@ vi.mock("next-intl/server", () => ({
 const { default: IdentityChoice } = await import("@/modules/feedback/ui/IdentityChoice");
 const { default: IncognitoIcon } = await import("@/modules/feedback/ui/IncognitoIcon");
 
-type Options = { wayBack?: "email" | "contact"; named?: boolean; audiences?: FeedbackAudience[]; audience?: FeedbackAudience; invalid?: FeedbackField[]; inLocale?: "ro" | "en" };
+type Options = { withPhone?: boolean; named?: boolean; audiences?: FeedbackAudience[]; audience?: FeedbackAudience; invalid?: FeedbackField[]; inLocale?: "ro" | "en" };
 
-async function render({ wayBack = "email", named = false, audiences = ["club", "person"], audience = "club", invalid = [], inLocale = "ro" }: Options = {}) {
+async function render({ withPhone = false, named = false, audiences = ["club", "person"], audience = "club", invalid = [], inLocale = "ro" }: Options = {}) {
   locale = inLocale;
   return renderToStaticMarkup(
-    await IdentityChoice({ wayBack, named, invalid: new Set(invalid), kept: () => undefined, safetyName: "Maria", audiences, audience }),
+    await IdentityChoice({ withPhone, named, invalid: new Set(invalid), kept: () => undefined, safetyName: "Maria", safetyByGmail: false, audiences, audience }),
   );
 }
 
@@ -94,7 +94,24 @@ describe("BR-REQ-070-04 «Cum vrei să trimiți?» (§678)", () => {
     expect(namedOnly).toContain('name="email"');
     expect(namedOnly).toContain('name="audience"');
     expect(html).not.toMatch(/<input[^>]*name="name"[^>]*\srequired/);
-    expect(await render({ wayBack: "contact" })).toContain('name="contact"');
+    // Only Girl Zone's form has the telephone box; every named form has the email (§NNN).
+    expect(namedOnly).not.toContain('name="contact"');
+    const girlZone = await render({ withPhone: true });
+    expect(girlZone).toContain('name="contact"');
+    expect(girlZone).toContain('name="email"');
+    expect(girlZone).toContain("E-mail (opțional)");
+    expect(girlZone).toContain("Telefon (opțional)");
+  });
+
+  it("says «Doar …» of Girl Zone's person only when the message does not leave by the club's Gmail (§NNN)", async () => {
+    locale = "ro";
+    const base = { withPhone: true, named: true, invalid: new Set<FeedbackField>(), kept: () => undefined, safetyName: "Maria", audiences: ["club", "person"] as FeedbackAudience[], audience: "person" as FeedbackAudience };
+    const mailgun = renderToStaticMarkup(await IdentityChoice({ ...base, safetyByGmail: false }));
+    const gmail = renderToStaticMarkup(await IdentityChoice({ ...base, safetyByGmail: true }));
+    expect(mailgun).toContain("Doar Maria");
+    expect(gmail).not.toContain("Doar Maria");
+    expect(gmail).not.toMatch(/Confidențial\./);
+    expect(gmail).toContain("unde îl văd și cei care o citesc");
   });
 
   it("offers «Clubul» and the safety person by her first name, never an address, the branch's own reader checked", async () => {
