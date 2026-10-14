@@ -436,7 +436,7 @@ export default async function VolunteersCard({
                 label={label}
                 pendingLabel={label}
                 ariaLabel={`${label}: ${shortText(person.name)}`}
-                variant={person.roleId === null ? "contained" : "outlined"}
+                variant="outlined"
               />
             </Box>
           );
