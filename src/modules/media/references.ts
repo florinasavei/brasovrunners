@@ -86,7 +86,9 @@ const inEventTranslation = sql`(${names(sql`${eventTranslations.bodyJson}::text`
  * delete from the pictures page is refused while a design uses it. Drafts, series dates and past
  * events count: a sheet is reprinted.
  */
-const inBibDesign = names(sql`${events.bibDesign}::text`);
+const inBibDesign = sql`(${names(sql`${events.bibDesign}::text`)} OR ${names(sql`${events.badgeDesign}::text`)})`;
+// …and its volunteer badges' header (§NNN), the bib design's twin: read in the same test, so a badge's
+// picture is never swept, a delete is refused while a badge prints it, and the list names the event.
 
 /** Whether a card of «Echipa» carries the asset in the words about the person, either language (§474). */
 const inTeamBio = sql`(${names(sql`${teamMembers.bioRoJson}::text`)} OR ${names(sql`${teamMembers.bioEnJson}::text`)})`;

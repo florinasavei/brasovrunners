@@ -1030,6 +1030,13 @@
       "when": 1791953823042,
       "tag": "0149_volunteer_role_choices",
       "breakpoints": true
+    },
+    {
+      "idx": 147,
+      "version": "7",
+      "when": 1791955244709,
+      "tag": "0150_volunteer_badges",
+      "breakpoints": true
     }
   ]
 }

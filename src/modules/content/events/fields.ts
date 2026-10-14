@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { bibDesignSchema } from "@/modules/registrations/bib-design";
+import { badgeDesignSchema } from "@/modules/volunteers/badges/badge-design";
 import { MIN_PARTICIPANT_AGE } from "@/modules/registrations/domain/age";
 import { PUBLIC_LIST_CLUBS } from "@/modules/registrations/domain/public-list-club";
 import { EVENT_REMINDER_MAX_HOURS } from "@/modules/deadlines/domain/deadlines";
@@ -976,6 +977,12 @@ export const eventFieldsSchema = z
      * switch off.
      */
     bibDesign: bibDesignSchema.optional(),
+    /**
+     * The volunteer badges' look (§NNN), by the same discipline: absent means "this caller is not editing
+     * it" — the editor never posts it (the badges' page writes it, `volunteers/badges/badges.ts`); only an
+     * import of an event file does (§751).
+     */
+    badgeDesign: badgeDesignSchema.optional(),
     /**
      * The participation window (§104), in days before the start: when the confirmation is
      * asked and when it is owed. Absent (an older form, a test fixture) means the defaults; an

@@ -84,7 +84,7 @@ export type BibNamePosition = (typeof BIB_NAME_POSITIONS)[number];
  * address, which on a printed sheet would be a request to somebody else's server every time
  * the club prints, and in the preview a way to make this application fetch an arbitrary URL.
  */
-const storedPicture = z
+export const storedPicture = z
   .string()
   .trim()
   .max(2048)
@@ -102,7 +102,7 @@ const storedPicture = z
  * whole photograph is no crop (`meaningfulCrop`), and anything malformed reads as none, never a
  * bib that fails to print.
  */
-const storedCrop = z
+export const storedCrop = z
   .preprocess((value) => {
     if (typeof value !== "string") return value;
     if (value.trim() === "") return null;

@@ -7,6 +7,7 @@ import { recordAuditEvent } from "@/modules/audit/repository";
 import { findCurrentApprovedVersionId } from "@/modules/legal-documents/repository";
 import type { RaceDeclarationKey } from "@/modules/legal-documents/domain/keys";
 import { readBibDesign, DEFAULT_BIB_DESIGN } from "@/modules/registrations/bib-design";
+import { DEFAULT_BADGE_DESIGN, readBadgeDesign } from "@/modules/volunteers/badges/badge-design";
 import { countRegistrationsForEvent } from "@/modules/registrations/repository";
 import { canTransferEvents } from "@/modules/staff-identity/domain/roles";
 import { getStorage, type Storage } from "@/modules/media/storage";
@@ -329,6 +330,8 @@ export async function importEventAsNew<T extends Record<string, unknown>>(db: Da
     declarationDocumentId,
     featured: false,
     includeBibDesign: JSON.stringify(design) !== JSON.stringify(DEFAULT_BIB_DESIGN),
+    // The volunteer badges' look (§NNN), by the bib's rule: a new event's column stays null on the platform's own.
+    includeBadgeDesign: JSON.stringify(readBadgeDesign(resolved.config.badges.design)) !== JSON.stringify(DEFAULT_BADGE_DESIGN),
     participantListNames: names && noticeInForce,
     eventStatus: "SCHEDULED",
   });
@@ -606,6 +609,7 @@ export async function importEventOver<T extends Record<string, unknown>>(db: Dat
   const sameDeclaration = file.event.registration.declaration?.key === target.config.registration.declaration?.key;
   const declarationDocumentId = sameDeclaration ? target.event.declarationDocumentId : await declarationIdFor(db, file.event.registration.declaration?.key ?? null, now);
   const designChanged = changes.some((change) => change.key.startsWith("bib.design"));
+  const badgeDesignChanged = changes.some((change) => change.key.startsWith("badges.design"));
   const coverChanged = changes.some((change) => change.key.startsWith("cover"));
   const gpxChanged = changes.some((change) => change.key.startsWith("route.gpx"));
 
@@ -617,6 +621,7 @@ export async function importEventOver<T extends Record<string, unknown>>(db: Dat
     declarationDocumentId,
     featured: target.event.featured,
     includeBibDesign: designChanged,
+    includeBadgeDesign: badgeDesignChanged,
     participantListNames: file.event.publicList.names,
     eventStatus: target.event.eventStatus,
   });

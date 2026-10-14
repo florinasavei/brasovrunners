@@ -494,6 +494,13 @@ export type AuditAction =
   | "volunteer.agreement_recorded"
   /** The agreement's PDF downloaded from the card (§758): a file with a name in it leaves the site; who and when. */
   | "volunteer.agreement_downloaded"
+  /**
+   * The volunteer badges (§NNN), entity `event`: «Cum arată ecusonul» saved (the names of the settings that
+   * changed, and the design before and after — the club's own words and a picture's address, never a
+   * person's), and a role's badge colour changed (the role's id and name, the colour from and to).
+   */
+  | "event.badge_design_changed"
+  | "volunteer_role.badge_colour_changed"
   /** A message's own words, rewritten by the club (§247). */
   | "email_copy.changed"
   /** Who at the club receives the declaration copies and the confirmation notices (§244, §245). */

@@ -21,6 +21,7 @@ import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository
 import { changeCheckpoints, listCheckpoints, SavedCheckpointsRefusal } from "@/modules/event-checkpoints/checkpoints";
 import type { PostedCheckpoint } from "@/modules/event-checkpoints/domain/checkpoint";
 import { DEFAULT_BIB_DESIGN } from "@/modules/registrations/bib-design";
+import { DEFAULT_BADGE_DESIGN, readBadgeDesign } from "@/modules/volunteers/badges/badge-design";
 import { uploadBodyImage } from "@/modules/media/service";
 import { getStorage } from "@/modules/media/storage";
 import { isDomainError } from "@/shared/errors/domain-error";
@@ -456,6 +457,60 @@ describe("import as a new event", () => {
 
     // The diff names the setting when the two sides differ in it.
     expect(diffConfigs(read.file.event, file.event).map((change) => change.key)).toContain("publicList.club");
+  });
+
+  it("§NNN carries the volunteer badges' design, never a role: as a new event, over one, and from a file made before it", async () => {
+    const { event } = await seedRace({}, {}, false);
+    const badge = { ...DEFAULT_BADGE_DESIGN, size: "strip100", titleRo: "Crosul", titleEn: "The cross", cutMarks: false };
+    await db.update(events).set({ badgeDesign: badge }).where(eq(events.id, event.id));
+    const file = await fileOf(event.id);
+    expect(file.event.badges.design).toEqual(badge);
+
+    const created = await importEventAsNew(db, { actor: admin, file, fetchImpl: serving(), now: NOW });
+    expect(readBadgeDesign((await reload(created.eventId)).badgeDesign)).toEqual(badge);
+
+    // Over another event: the diff names the badge's settings, and the import writes them.
+    const { target } = await seedTarget();
+    const diff = await diffEventImport(db, { actor: admin, file, eventId: target.id });
+    expect(diff.changes.map((change) => change.key)).toEqual(expect.arrayContaining(["badges.design.size", "badges.design.titleRo", "badges.design.cutMarks"]));
+    const over = await importEventOver(db, await overInput(file, target.id));
+    expect(over.changed).toContain("badges.design.size");
+    expect(readBadgeDesign((await reload(target.id)).badgeDesign)).toEqual(badge);
+
+    // A file written before the badges existed reads, as the platform's own badge, and leaves a new event's column null.
+    const old = JSON.parse(JSON.stringify(file)) as { event: Record<string, unknown> };
+    delete old.event.badges;
+    const read = readEventFile(JSON.stringify(old));
+    if (!read.ok) throw new Error(`an older file did not read: ${read.refusal} ${read.detail ?? ""}`);
+    expect(read.file.event.badges.design).toEqual(DEFAULT_BADGE_DESIGN);
+    const older = await importEventAsNew(db, { actor: admin, file: read.file, fetchImpl: serving(), now: NOW });
+    expect((await reload(older.eventId)).badgeDesign).toBeNull();
+  });
+
+  it("§NNN reads an imported badge design forgivingly: an unreadable band colour and a key from a later release neither throw nor refuse", async () => {
+    const { event } = await seedRace({}, {}, false);
+    const file = await fileOf(event.id);
+    // Hand-edited, or written by a later release: a grey no word reads on, and a setting this release has never heard of.
+    const edited = JSON.parse(JSON.stringify(file)) as { event: { badges: { design: Record<string, unknown> } } };
+    edited.event.badges.design = { ...DEFAULT_BADGE_DESIGN, size: "strip100", bandColour: "#777777", laterSetting: "x" };
+    const read = readEventFile(JSON.stringify(edited));
+    if (!read.ok) throw new Error(`a forgiving file did not read: ${read.refusal} ${read.detail ?? ""}`);
+
+    const created = await importEventAsNew(db, { actor: admin, file: read.file, fetchImpl: serving(), now: NOW });
+    const stored = readBadgeDesign((await reload(created.eventId)).badgeDesign);
+    expect(stored).toMatchObject({ size: "strip100", bandColour: null });
+    expect(JSON.stringify((await reload(created.eventId)).badgeDesign)).not.toContain("laterSetting");
+
+    // Over another event: the diff names the settings it understands and nothing for the one it does not.
+    const { target } = await seedTarget();
+    const diff = await diffEventImport(db, { actor: admin, file: read.file, eventId: target.id });
+    const keys = diff.changes.map((change) => change.key);
+    expect(keys).toContain("badges.design.size");
+    expect(keys).not.toContain("badges.design.bandColour");
+    expect(keys.filter((key) => key.startsWith("badges.design.") && key.includes("later"))).toEqual([]);
+    const over = await importEventOver(db, await overInput(read.file, target.id));
+    expect(over.changed).toContain("badges.design.size");
+    expect(readBadgeDesign((await reload(target.id)).badgeDesign)).toMatchObject({ size: "strip100", bandColour: null });
   });
 
   it("keeps a design saved as the platform's own as the platform's own (null), not as an explicit copy of it", async () => {

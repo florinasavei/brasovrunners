@@ -647,6 +647,8 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes, option
       silently redesign a bib nobody had touched.
     */
     ...(fields.bibDesign === undefined ? {} : { bibDesign: fields.bibDesign }),
+    // The volunteer badges' look (§NNN), by the same discipline: only an event file's import posts it.
+    ...(fields.badgeDesign === undefined ? {} : { badgeDesign: fields.badgeDesign }),
     confirmationOpensDaysBefore: fields.confirmationOpensDaysBefore,
     confirmationDeadlineDaysBefore: fields.confirmationDeadlineDaysBefore,
     // Who may enter, counted on the event's day at every door (§329).
@@ -2993,6 +2995,7 @@ function blankEventRow(now: Date): EditableEvent {
     walkInBibStart: null,
     walkInBibCount: null,
     bibDesign: null,
+    badgeDesign: null,
     bibsSettledAt: null,
     capacity: null,
     waitlistCapacity: null,
@@ -3628,6 +3631,9 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     // The numbers themselves are the copy's own (the start number is not carried).
     bibColour: source.bibColour,
     bibDesign: source.bibDesign,
+    // And what its volunteer badges look like (§NNN), the bib's twin: the design travels, the roles do not
+    // (§754 — a copy starts with none), so their colours stay with the source's roles.
+    badgeDesign: source.badgeDesign,
     // And the health note's question (§557): a copy, and every date of a series, ask it as the source does.
     askHealthNote: source.askHealthNote,
     confirmationOpensDaysBefore: source.confirmationOpensDaysBefore,

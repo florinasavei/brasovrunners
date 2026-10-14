@@ -4,6 +4,7 @@ import ArchiveIcon from "@mui/icons-material/Archive";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import ArrowOutwardIcon from "@mui/icons-material/ArrowOutward";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
+import BadgeIcon from "@mui/icons-material/Badge";
 import CampaignIcon from "@mui/icons-material/Campaign";
 import CardMembershipIcon from "@mui/icons-material/CardMembership";
 import CheckBoxIcon from "@mui/icons-material/CheckBox";
@@ -251,7 +252,9 @@ export type ActionIconName =
   | "orderFor"
   | "intro"
   // «Tabelul de mărimi» (§697): the ruler on the product editor's size chart fold — the measures per size in centimetres.
-  | "sizeChart";
+  | "sizeChart"
+  // «Ecusoane pentru voluntari» (§NNN): the name badge, on the «Voluntari» card's link to the badges' page.
+  | "badges";
 // No runner here: the public send buttons wear it through `SubmitButton`'s own `runner` flag,
 // because this table must never reach a public page (above).
 
@@ -351,4 +354,5 @@ export const ACTION_ICONS: Record<ActionIconName, ComponentType<SvgIconProps>> =
   orderFor: AddShoppingCartIcon,
   intro: SubjectIcon,
   sizeChart: StraightenIcon,
+  badges: BadgeIcon,
 };
