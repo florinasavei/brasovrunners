@@ -65,7 +65,7 @@ const language = (locale: "ro" | "en"): LanguageEntry => ({
   label: locale === "ro" ? "Română" : "English",
 });
 
-const POINT: Checkpoint = { id: "22222222-2222-4222-8222-222222222222", nameRo: "Cabana", nameEn: "The hut", km: 7.5, kinds: ["WATER"], cutoff: "11:00", noteRo: null, noteEn: null };
+const POINT: Checkpoint = { id: "22222222-2222-4222-8222-222222222222", nameRo: "Cabana", nameEn: "The hut", km: 7.5, kinds: ["WATER"], cutoffMinutes: 90, cutoffClock: "11:00", noteRo: null, noteEn: null };
 
 async function html(element: ReactElement): Promise<string> {
   const { NextIntlClientProvider } = await import("next-intl");

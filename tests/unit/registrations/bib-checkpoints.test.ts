@@ -37,9 +37,9 @@ import { drawnRuns } from "../../helpers/pdf-drawn";
 /** A profile rising to the middle and falling, so a mark's height is easy to check. */
 const POINTS = Array.from({ length: 64 }, (_, i) => [i / 63, i <= 31 ? i / 31 : 1 - (i - 31) / 32] as const);
 
-const label = (row: BibCheckpointSource, withTime: boolean) => (withTime && row.cutoff ? `km ${row.km} · ${row.cutoff}` : `km ${row.km}`);
+const label = (row: BibCheckpointSource, withTime: boolean) => (withTime && row.cutoffClock ? `km ${row.km} · ${row.cutoffClock}` : `km ${row.km}`);
 const base = { routeKm: 21.1, points: POINTS, startWord: "Start", finishWord: "Sosire", showTimes: false, label };
-const at = (km: number, cutoff: string | null = null, kinds: readonly string[] = []): BibCheckpointSource => ({ km, cutoff, kinds });
+const at = (km: number, cutoffClock: string | null = null, kinds: readonly string[] = []): BibCheckpointSource => ({ km, cutoffClock, kinds });
 const width = BIB_LAYOUT.profileChartWidth;
 /** The kilometre `points` points along the strip of a 21.1 km route. */
 const kmAt = (points: number) => (points / width) * 21.1;

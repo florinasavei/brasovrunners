@@ -44,7 +44,8 @@ const point = (id: string, km: number, over: Partial<Checkpoint> = {}): Checkpoi
   nameEn: `Point ${id}`,
   km,
   kinds: ["WATER"],
-  cutoff: null,
+  cutoffMinutes: null,
+  cutoffClock: null,
   noteRo: null,
   noteEn: null,
   ...over,
@@ -95,30 +96,71 @@ describe("§757 the card «Puncte de control»", () => {
   });
 
   it("draws one block per saved point and every box under its own name, the saved id carried", async () => {
-    const html = await render({ checkpoints: [point("a", 5, { cutoff: "10:15", kinds: ["WATER", "FOOD"] }), point("b", 12.5)] });
+    const html = await render({ checkpoints: [point("a", 5, { cutoffMinutes: 75, cutoffClock: "10:15", kinds: ["WATER", "FOOD"] }), point("b", 12.5)] });
     expect(html.match(/data-testid="checkpoint-edit-row"/g)).toHaveLength(2);
     for (const index of [0, 1]) {
-      for (const field of ["km", "nameRo", "nameEn", "cutoff", "noteRo", "noteEn"]) expect(html).toContain(`name="cp[${index}].${field}"`);
+      for (const field of ["km", "nameRo", "nameEn", "cutoffHours", "cutoffMinutes", "noteRo", "noteEn"]) expect(html).toContain(`name="cp[${index}].${field}"`);
       expect(html).toContain(`name="cp[${index}].kinds"`);
       expect(html).toContain(`name="cp[${index}].remove"`);
     }
     expect(html).toContain('name="cp[0].id" value="a"');
     expect(html).toContain('name="cp[1].id" value="b"');
-    // The saved values, as typed back: the kilometre with its point, the cut-off as a time.
+    // The saved values, as typed back: the kilometre with its point, the time limit as hours and minutes.
     expect(html).toMatch(/name="cp\[0\]\.km"[^>]*value="5"/);
-    expect(html).toMatch(/name="cp\[0\]\.cutoff"[^>]*value="10:15"/);
+    expect(html).toMatch(/name="cp\[0\]\.cutoffHours"[^>]*value="1"/);
+    expect(html).toMatch(/name="cp\[0\]\.cutoffMinutes"[^>]*value="15"/);
+    // A point with no limit has two empty boxes.
+    expect(html).toMatch(/name="cp\[1\]\.cutoffHours"[^>]*value=""/);
+    expect(html).toMatch(/name="cp\[1\]\.cutoffMinutes"[^>]*value=""/);
     expect(html).toMatch(/name="cp\[1\]\.km"[^>]*value="12.5"/);
   });
 
-  it("offers the four kinds as words, ticks the saved ones, and posts them under one name", async () => {
-    const html = await render({ checkpoints: [point("a", 5, { kinds: ["WATER", "TIMING"] })] });
+  it("asks «Timp limită» with the race's own two boxes — the same component, the same words and limits — each naming the list's form (§769)", async () => {
+    const html = await render({ checkpoints: [point("a", 5, { cutoffMinutes: 90, cutoffClock: "10:30" })] });
+    const fieldset = html.slice(html.indexOf('data-testid="checkpoint-cutoff-fieldset"'));
+    expect(fieldset.slice(0, fieldset.indexOf("</fieldset>"))).toContain("Timp limită");
+    const input = (name: string) => html.match(new RegExp(`<input[^>]*name="${name.replace(/[[\]]/g, "\\$&")}"[^>]*>`))?.[0] ?? "";
+    const hours = input("cp[0].cutoffHours");
+    const minutes = input("cp[0].cutoffMinutes");
+    // The race's boxes: a whole number of hours up to a week's worth, minutes up to 59 (`duration.ts`).
+    expect(hours).toContain('max="168"');
+    expect(minutes).toContain('max="59"');
+    for (const box of [hours, minutes]) {
+      expect(box).toContain('form="checkpoints-form"');
+      expect(box).toContain('inputMode="numeric"');
+    }
+    // The labels are the race's own, «Ore» and «Minute».
+    expect(html).toContain(">Ore<");
+    expect(html).toContain(">Minute<");
+    expect(html).toContain("De la start: până atunci trebuie să treacă ultimul alergător. Lasă gol dacă nu e limită.");
+    // No time of the day is asked any more.
+    expect(html).not.toContain("cp[0].cutoff\"");
+    expect(html).not.toContain("Ora limită");
+  });
+
+  it("says the saved limit and the clock it closes at on the point's closed line, when the start has an hour (§769)", async () => {
+    const html = await render({ checkpoints: [point("a", 5, { cutoffMinutes: 90, cutoffClock: "10:30" }), point("b", 8, { cutoffMinutes: 45, cutoffClock: null })] });
+    expect(html).toContain("timp limită 1 h 30 min · se închide la 10:30");
+    expect(html).toContain("timp limită 45 min");
+  });
+
+  it("offers the five kinds as words, «Direcționare» among them, ticks the saved ones, and posts them under one name", async () => {
+    const html = await render({ checkpoints: [point("a", 5, { kinds: ["WATER", "DIRECTION"] })] });
     const first = html.slice(html.indexOf('data-testid="checkpoint-edit-row"'), html.indexOf('data-testid="checkpoint-add"'));
-    for (const word of ["Apă", "Mâncare", "Prim ajutor", "Cronometrare"]) expect(first).toContain(word);
+    for (const word of ["Apă", "Mâncare", "Prim ajutor", "Cronometrare", "Direcționare"]) expect(first).toContain(word);
     const box = (kind: string) => first.match(new RegExp(`<input[^>]*name="cp\\[0\\]\\.kinds"[^>]*value="${kind}"[^>]*>`))?.[0] ?? "";
     expect(box("WATER")).toContain("checked");
-    expect(box("TIMING")).toContain("checked");
+    expect(box("DIRECTION")).toContain("checked");
     expect(box("FOOD")).not.toContain("checked");
     expect(box("FIRST_AID")).not.toContain("checked");
+    expect(box("TIMING")).not.toContain("checked");
+    // Five ticks per point, each naming the list's form.
+    expect(first.match(/name="cp\[0\]\.kinds"/g)).toHaveLength(5);
+    expect(box("DIRECTION")).toContain('form="checkpoints-form"');
+    // And on a spare row too.
+    const add = html.slice(html.indexOf('data-testid="checkpoint-add"'));
+    expect(add.match(/name="cp\[1\]\.kinds"/g)).toHaveLength(5);
+    expect(add).toContain('name="cp[1].kinds" value="DIRECTION"');
   });
 
   it("draws three spare rows for new points under «Adaugă puncte», numbered after the saved ones, with no «Scoate»", async () => {
@@ -146,31 +188,35 @@ describe("§757 the card «Puncte de control»", () => {
   });
 
   it("is a reader's list with no form for a role that cannot write", async () => {
-    const html = await render({ mayEdit: false, checkpoints: [point("a", 5, { cutoff: "10:15", kinds: ["WATER", "FOOD"] })] });
+    const html = await render({ mayEdit: false, checkpoints: [point("a", 5, { cutoffMinutes: 75, cutoffClock: "10:15", kinds: ["WATER", "FOOD", "DIRECTION"] })] });
     expect(html).toContain("Poți citi lista");
     expect(html).toContain('data-testid="checkpoints-read-only"');
-    expect(html).toContain("5 km — Punct a · Apă, Mâncare · ora limită 10:15");
+    expect(html).toContain("5 km — Punct a · Apă, Mâncare, Direcționare · timp limită 1 h 15 min · se închide la 10:15");
     expect(html).not.toContain("<form");
     expect(html).not.toContain("Salvează punctele");
     expect(html).not.toMatch(/<details[^>]*id="box-checkpoints"[^>]*open/);
   });
 
-  it("leaves out of a reader's line what a point does not have: no bare dash, «fără oră limită» as the page says it", async () => {
+  it("leaves out of a reader's line what a point does not have: no bare dash, «fără timp limită» as the page says it", async () => {
     const html = await render({ mayEdit: false, checkpoints: [point("a", 5, { kinds: [] })] });
-    expect(html).toContain("5 km — Punct a · fără oră limită");
+    expect(html).toContain("5 km — Punct a · fără timp limită");
     expect(html).not.toContain("· —");
-    expect(html).not.toContain("ora limită —");
+    expect(html).not.toContain("timp limită —");
   });
 
   it("is in both languages", async () => {
     language = "en";
     try {
-      const html = await render({ locale: "en", checkpoints: [point("a", 5, { cutoff: "10:15" })] });
+      const html = await render({ locale: "en", checkpoints: [point("a", 5, { cutoffMinutes: 75, cutoffClock: "10:15" })] });
       expect(html).toContain("Checkpoints");
       expect(html).toContain("Save the points");
       expect(html).toContain("Name (Romanian)");
       expect(html).toContain("Name (English)");
       expect(html).toContain("1 point");
+      expect(html).toContain("Time limit");
+      expect(html).toContain("Direction");
+      expect(html).toContain("time limit 1 h 15 min · closes at 10:15");
+      expect(html).not.toContain("Cut-off");
       expect(html).toContain("The route is 21.1 km long");
     } finally {
       language = "ro";

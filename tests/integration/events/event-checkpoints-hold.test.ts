@@ -8,11 +8,12 @@ import type { PostedCheckpoint } from "@/modules/event-checkpoints/domain/checkp
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §757, BR-REQ-050-02 — the checkpoints' rules hold after every save, not only their own card's: an
- * event save that moves the gun past a saved cut-off, shortens «Timp limită» under one or shortens the
- * route under a point is refused naming «Puncte de control» and the rule, writing nothing; a save that
- * keeps them true goes through. On a series the other dates the save reaches are held to the same rules,
- * the refusal naming the date. «Duplică» and a series' new dates carry the checkpoints.
+ * §757, §769, BR-REQ-050-02 — the checkpoints' rules hold after every save, not only their own card's: an
+ * event save that shortens «Timp limită» under a saved point's time limit or shortens the route under a
+ * point is refused naming «Puncte de control» and the rule, writing nothing; a save that keeps them true
+ * goes through — and one that moves the gun moves every clock and no limit, which is the point of a
+ * time limit. On a series the other dates the save reaches are held to the same rules, the refusal naming
+ * the date. «Duplică» and a series' new dates carry the checkpoints.
  */
 const NOW = new Date("2026-10-14T10:00:00.000Z");
 
@@ -86,7 +87,8 @@ const posted = (index: number, over: Partial<PostedCheckpoint>): PostedCheckpoin
   nameEn: "",
   km: "",
   kinds: [],
-  cutoff: "",
+  cutoffHours: "",
+  cutoffMinutes: "",
   noteRo: "",
   noteEn: "",
   remove: false,
@@ -94,7 +96,10 @@ const posted = (index: number, over: Partial<PostedCheckpoint>): PostedCheckpoin
   ...over,
 });
 
-/** The race, with water at km 5 closing at 10:00 and timing at km 20 closing at 12:00. */
+/** A time limit in minutes as the card's two boxes post it. */
+const limit = (minutes: number) => ({ cutoffHours: String(Math.floor(minutes / 60)), cutoffMinutes: String(minutes % 60) });
+
+/** The race, with water at km 5 closing 30 minutes after the gun (10:00) and timing at km 20 closing 150 minutes after it (12:00). */
 async function raceWithCheckpoints() {
   const { event } = await createEventAndPublish(db, { actor: admin, fields: { ...RACE, translations: TRANSLATIONS }, publish: false, now: NOW });
   await changeCheckpoints(
@@ -104,8 +109,8 @@ async function raceWithCheckpoints() {
       kind: "save",
       eventId: event.id,
       rows: [
-        posted(0, { nameRo: "Apă", nameEn: "Water", km: "5", kinds: ["WATER"], cutoff: "10:00" }),
-        posted(1, { nameRo: "Cronometrare", nameEn: "Timing", km: "20", kinds: ["TIMING"], cutoff: "12:00" }),
+        posted(0, { nameRo: "Apă", nameEn: "Water", km: "5", kinds: ["WATER"], ...limit(30) }),
+        posted(1, { nameRo: "Cronometrare", nameEn: "Timing", km: "20", kinds: ["TIMING"], ...limit(150) }),
       ],
     },
     NOW,
@@ -141,18 +146,19 @@ async function refusalOf(operation: Promise<unknown>): Promise<SavedCheckpointsR
 }
 
 describe("§757 an event save holds the saved checkpoints to their rules", () => {
-  it("refuses moving the gun past a saved cut-off, naming «Puncte de control» and the point, and writes nothing", async () => {
+  it("lets the gun move: every clock follows it and no time limit changes (§769)", async () => {
     const event = await raceWithCheckpoints();
-    const before = await reload(event.id);
-    const refused = await refusalOf(save(event.id, { raceStartsAtWallTime: "2026-11-21T10:15" }));
-    expect(refused.code).toBe("VALIDATION_ERROR");
-    expect(refused.fields).toEqual(["checkpoints"]);
-    expect(refused.date).toBeNull();
-    expect(refused.refusal.reason).toBe("CHECKPOINT_CUTOFF_BEFORE_START");
-    expect(refused.refusal.valuesIn("en")).toMatchObject({ name: "Water", cutoff: "10:00", start: "10:15" });
-    const after = await reload(event.id);
-    expect(after.version).toBe(before.version);
-    expect(after.raceStartsAt?.toISOString()).toBe(before.raceStartsAt?.toISOString());
+    expect((await listCheckpoints(db, event.id)).map((row) => [row.cutoffMinutes, row.cutoffClock])).toEqual([
+      [30, "10:00"],
+      [150, "12:00"],
+    ]);
+    // A quarter of an hour later, past what a time of the day would have allowed for the water point's old 10:00.
+    await save(event.id, { raceStartsAtWallTime: "2026-11-21T10:15" });
+    expect((await reload(event.id)).raceStartsAt?.toISOString()).toBe("2026-11-21T08:15:00.000Z");
+    expect((await listCheckpoints(db, event.id)).map((row) => [row.cutoffMinutes, row.cutoffClock])).toEqual([
+      [30, "10:45"],
+      [150, "12:45"],
+    ]);
   });
 
   it("refuses shortening the route under a saved point, saying the new length", async () => {
@@ -163,12 +169,32 @@ describe("§757 an event save holds the saved checkpoints to their rules", () =>
     expect((await reload(event.id)).distanceMeters).toBe(21_100);
   });
 
-  it("refuses shortening «Timp limită» under a saved cut-off, saying when the finish would close", async () => {
+  it("refuses shortening «Timp limită» under a saved time limit, saying both durations", async () => {
     const event = await raceWithCheckpoints();
-    // Two hours from the 09:30 gun: the finish would close at 11:30, before the 12:00 timing cut-off.
+    const before = await reload(event.id);
+    // Two hours from the gun: shorter than the timing point's two and a half.
     const refused = await refusalOf(save(event.id, { durationMinutes: "120" }));
+    expect(refused.code).toBe("VALIDATION_ERROR");
+    expect(refused.fields).toEqual(["checkpoints"]);
+    expect(refused.date).toBeNull();
     expect(refused.refusal.reason).toBe("CHECKPOINT_CUTOFF_AFTER_END");
-    expect(refused.refusal.values).toMatchObject({ cutoff: "12:00", finishTime: "11:30" });
+    expect(refused.refusal.values).toMatchObject({ name: "Cronometrare", cutoff: "2 h 30 min", limit: "2 h" });
+    const after = await reload(event.id);
+    expect(after.version).toBe(before.version);
+    expect(after.endsAt?.toISOString()).toBe(before.endsAt?.toISOString());
+    // Exactly as long as the longest limit is fine.
+    await save(event.id, { durationMinutes: "150" });
+    expect((await reload(event.id)).endsAt?.toISOString()).toBe("2026-11-21T10:00:00.000Z");
+  });
+
+  it("keeps a saved time limit when the start's hour is later said to be announced: a duration needs no hour to stay true", async () => {
+    const event = await raceWithCheckpoints();
+    const minutes = (await listCheckpoints(db, event.id)).map((row) => row.cutoffMinutes);
+    await save(event.id, { startsAtWallTime: "2026-11-21", raceStartsAtWallTime: "", timeToBeAnnounced: true });
+    expect((await listCheckpoints(db, event.id)).map((row) => [row.cutoffMinutes, row.cutoffClock])).toEqual([
+      [minutes[0], null],
+      [minutes[1], null],
+    ]);
   });
 
   it("lets every save through that keeps the points true, and never touches them", async () => {
@@ -177,7 +203,9 @@ describe("§757 an event save holds the saved checkpoints to their rules", () =>
     await save(event.id, { distanceMeters: "21500", raceStartsAtWallTime: "2026-11-21T09:45", locationName: "Pietrele lui Solomon" });
     const after = await reload(event.id);
     expect(after.distanceMeters).toBe(21_500);
-    expect(await listCheckpoints(db, event.id)).toEqual(points);
+    // The minutes stay as they were; only the clocks moved with the gun (a quarter of an hour earlier than 09:30 is later: 09:45).
+    expect((await listCheckpoints(db, event.id)).map(({ cutoffClock: _clock, ...row }) => row)).toEqual(points.map(({ cutoffClock: _clock, ...row }) => row));
+    expect((await listCheckpoints(db, event.id)).map((row) => row.cutoffClock)).toEqual(["10:15", "12:15"]);
   });
 });
 
@@ -185,9 +213,9 @@ describe("§757 the checkpoints on a copy and on a series", () => {
   it("«Duplică» copies the checkpoints with the route", async () => {
     const event = await raceWithCheckpoints();
     const copy = await duplicateEvent(db, { actor: admin, eventId: event.id, now: NOW });
-    expect((await listCheckpoints(db, copy.id)).map((row) => [row.km, row.nameRo, row.nameEn, row.kinds, row.cutoff])).toEqual([
-      [5, "Apă", "Water", ["WATER"], "10:00"],
-      [20, "Cronometrare", "Timing", ["TIMING"], "12:00"],
+    expect((await listCheckpoints(db, copy.id)).map((row) => [row.km, row.nameRo, row.nameEn, row.kinds, row.cutoffMinutes])).toEqual([
+      [5, "Apă", "Water", ["WATER"], 30],
+      [20, "Cronometrare", "Timing", ["TIMING"], 150],
     ]);
     // The source keeps its own.
     expect(await listCheckpoints(db, event.id)).toHaveLength(2);
@@ -200,7 +228,7 @@ describe("§757 the checkpoints on a copy and on a series", () => {
     const [date] = await db.select().from(events).where(eq(events.repeatOf, source.id)).orderBy(asc(events.startsAt));
     expect(await listCheckpoints(db, date.id)).toHaveLength(2);
 
-    // The source's own points go; the date's stay — a gun moved on every date breaks the date's water cut-off.
+    // The source's own points go; the date's stay — a «Timp limită» shortened on every date breaks the date's timing limit.
     const sourcePoints = await listCheckpoints(db, source.id);
     await changeCheckpoints(
       db,
@@ -208,10 +236,10 @@ describe("§757 the checkpoints on a copy and on a series", () => {
       { kind: "save", eventId: source.id, rows: sourcePoints.map((row, index) => posted(index, { id: row.id, nameRo: row.nameRo, nameEn: row.nameEn, km: String(row.km), remove: true })) },
       NOW,
     );
-    const refused = await refusalOf(save(source.id, { raceStartsAtWallTime: "2026-11-21T10:15" }, "all"));
+    const refused = await refusalOf(save(source.id, { durationMinutes: "120" }, "all"));
     expect(refused.date).toBe("2026-11-28");
-    expect(refused.refusal.reason).toBe("CHECKPOINT_CUTOFF_BEFORE_START");
+    expect(refused.refusal.reason).toBe("CHECKPOINT_CUTOFF_AFTER_END");
     // Nothing written on any date.
-    expect((await reload(source.id)).raceStartsAt?.toISOString()).toBe("2026-11-21T07:30:00.000Z");
+    expect((await reload(source.id)).endsAt?.toISOString()).toBe("2026-11-21T10:30:00.000Z");
   });
 });
