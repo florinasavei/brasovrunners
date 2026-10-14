@@ -47,7 +47,7 @@ test.describe("BR-REQ-011-01 criterion 19 the place to be announced (§328)", ()
     // (the owner: "if the location is announced later, we should hide these fields").
     await field("event.locationName").fill(secret);
     await field("event.locationNameEn").fill(secretEnglish);
-    const toggle = page.getByRole("switch", { name: "Locația se anunță mai târziu" });
+    const toggle = page.getByRole("checkbox", { name: "Locația se anunță mai târziu" });
     await toggle.check();
     for (const name of ["event.locationName", "event.locationNameEn"]) {
       await expect(field(name)).not.toHaveAttribute("required", "");
@@ -105,7 +105,7 @@ test.describe("BR-REQ-011-01 criterion 19 the place to be announced (§328)", ()
     // The Locul box is folded on the editor, and its closed line says the place is to come.
     const place = await openEditorBox(page, "Când și unde");
     await expect(place.locator(":scope > summary")).toContainText("Se anunță mai târziu");
-    await expect(page.getByRole("switch", { name: "Locația se anunță mai târziu" })).toBeChecked();
+    await expect(page.getByRole("checkbox", { name: "Locația se anunță mai târziu" })).toBeChecked();
     await expect(field("event.locationName")).toBeHidden();
     await expect(field("event.locationName")).toHaveValue(secret);
 
@@ -142,10 +142,10 @@ test.describe("BR-REQ-011-01 criterion 19 the place to be announced (§328)", ()
     await expect(page.getByTestId("place-announced")).toHaveCount(0);
     await hydrated(page);
     await openEditorBox(page, "Când și unde");
-    await expect(page.getByRole("switch", { name: "Locația se anunță mai târziu" })).toBeChecked();
+    await expect(page.getByRole("checkbox", { name: "Locația se anunță mai târziu" })).toBeChecked();
     await expect(field("event.mapUrl")).toHaveValue("");
 
-    await page.getByRole("switch", { name: "Locația se anunță mai târziu" }).uncheck();
+    await page.getByRole("checkbox", { name: "Locația se anunță mai târziu" }).uncheck();
     await expect(field("event.locationName")).toBeVisible();
     await expect(field("event.locationName")).toHaveAttribute("required", "");
     await expect(field("event.locationNameEn")).toBeVisible();

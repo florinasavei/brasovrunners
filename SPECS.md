@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.24-2026-10-14 -->
+<!-- PROJECT_BASELINE: BR-V3.25-2026-10-14 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V3.24-2026-10-14`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.25-2026-10-14`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -434,6 +434,7 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 229. Given the calendar with «Tema v2» on, the «?» is a 44-pixel native fold at the end of a row under the calendar's controls and before the month, at 1280 and at 320 pixels, its panel opens from there with the two calendar links and the feed's address, with scripts off too, and the first week's row ends inside a 320 × 568 screen; with «Tema v1» the fold is in the page's head on a phone only (2026-10-13, `DECISIONS.md` §745).
 230. Given the calendar with «Tema v2» on, «Filtre» is the last item of the kind chips' line, outside the sideways scroller and at least 44 pixels tall, so on a phone it stays in sight while the chips scroll; its panel opens below the whole line at the line's full width and its form submits with scripts off; the line is one row at 320 pixels; with «Tema v1» the chips are not drawn and «Filtre» is on a line of its own (2026-10-13, `DECISIONS.md` §745).
 231. Given the calendar with «Tema v2» on, a date whose last day (its end, or its start when it has none) is before the page's day in the club's time zone is marked past on the server, drawn with the lighter fill and softer words from the theme's tokens (never a colour literal, never a blur, at least 3 : 1 in both schemes), still a link, in the grid and in the list, and read out with «a trecut» / "past"; an event earlier today, or one of several days still running today, is not past; with «Tema v1» no date is marked (2026-10-13, `DECISIONS.md` §745).
+232. Given any setting of the backoffice that is on or off — the anti-bot check and the honeypot, «Când pleacă emailurile», «Publică automat de acum» on a series' draft line, «Locația se anunță mai târziu» — when it renders, then it is a tick box, either a checkbox in the save form or a plain submit drawn as the checkbox (`role="checkbox"`, `aria-checked`, the setting's words beside it, 44 pixels, working with scripts off) that posts the state it wants and, where it asked before, asks first; never a button with a toggle glyph and never a Material switch, and a design guard fails on a toggle glyph's name, a Toggle icon import or a `Switch` import in `src/` (2026-10-14, `DECISIONS.md` §766).
 
 **Verification:** e2e `registration-form.spec.ts` and `registration-entry.spec.ts` under both Playwright viewport projects, `event-pages.spec.ts` (criterion 12); unit `registrations/form-errors.test.ts`, `events/listing.test.ts`, `theme/brand.test.ts`; release check on a real device
 
@@ -816,6 +817,7 @@ coffee is run on nothing.
 44. Criteria 41 and 43 amended: under `members_only` the public list's club cell holds the club's own name for every registration whose typed club names the club, whoever typed it — an account on «Echipa» is no condition — and is blank for every other text; the typed text is turned into the club's name or into nothing before the row is cached or drawn, and adding or removing an account no longer expires the public lists (2026-10-14, `DECISIONS.md` §756).
 45. A typed club names the club when, with case, diacritics, punctuation, spaces and filler words («Clubul», «Asociația», «ACS», «Team», «România», «ro», «com»…) folded, it splits — glued or not — into the club's own words, initials, plate-code short form and nicknames and nothing else, and names the club (its words in order, the initials beside the first word, or «BVR»); one typo is forgiven in each of its words of six letters or more, inside one typed word, never a digit; the plate code and the nickname belong to the club's constants beside its name and name no other configured club; «Brașov Runners Cluj», «Cluj Runners», «Brasov Runners A», «Brasov Runners 2024», «Runners», «BR» and «Brașov» alone never match (2026-10-14, `DECISIONS.md` §756).
 46. Amends criterion 21. A refusal of the public-list switch in the event editor names it «Participare, înscrieri și regulament › Lista publică a participanților › …»; the switch keeps its name `event.participantListVisibility` and its privacy-notice guard (2026-10-14, `DECISIONS.md` §760).
+47. Amends criterion 45. A typed club names the club also when the name's words come in the opposite order or glued — «Runners Brașov», «Runnersbrasov», «Runners-Brașov», «Brasovrunners» — with the same folding and the same one-typo forgiveness; «Brasov Gunners», «Gunners Brasov», «Runners Cluj», «Runners Brașov Cluj», «Runners Brasov 2», «Runners BV» and «Runners» alone never match, and another configured club's name reverses by the same rule (2026-10-14, `DECISIONS.md` §766).
 
 **Verification:** integration `privacy/public-surface.test.ts`
 

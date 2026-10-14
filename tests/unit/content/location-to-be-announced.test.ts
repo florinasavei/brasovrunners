@@ -94,8 +94,8 @@ describe("BR-REQ-011-01 criterion 19 the editor's constraints follow the switch 
     en: { defaultValue: "", box: textFieldConstraints(eventInputConstraints("locationNameEn")) },
   };
   const labels = {
-    toggle: "Locația se anunță mai târziu",
-    toggleHelp: "Ajutor.",
+    tick: "Locația se anunță mai târziu",
+    tickHelp: "Ajutor.",
     meetingPoint: "Punct de întâlnire",
     ro: "Română",
     en: "English",
@@ -156,6 +156,19 @@ describe("BR-REQ-011-01 criterion 19 the editor's constraints follow the switch 
     expect(html).toContain(labels.unpublished);
     // The map link's box is still there, under the names, kept like them.
     expect(html).toContain('name="event.mapUrl"');
+  });
+
+  it("is a tick box, never a Material switch (§766): a checkbox input with its words, ticked or empty, never the switch role", () => {
+    for (const html of [render(false), render(true)]) {
+      const input = switchInput(html);
+      expect(input).toMatch(/type="checkbox"/);
+      expect(input).not.toMatch(/role="switch"/);
+      expect(input).toContain('aria-describedby="place-to-be-announced-help"');
+      expect(html).not.toMatch(/MuiSwitch-(?:root|thumb|track|switchBase)/);
+      expect(html).toContain("MuiCheckbox-root");
+      expect(html).toContain(labels.tick);
+    }
+    expect(read("src/modules/content/events/ui/PlaceToBeAnnounced.tsx")).not.toContain("@mui/material/Switch");
   });
 
   it("comes back as it was posted after a refusal: on when posted, off when not — whatever the page said", () => {

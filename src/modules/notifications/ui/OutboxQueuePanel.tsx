@@ -26,7 +26,7 @@ import type { EmailVolumeToday } from "@/modules/notifications/volume";
 import { confirmWords } from "@/shared/feedback/confirm-words";
 import ActionForm from "@/shared/forms/ActionForm";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
-import DeliveryTimingSwitch from "@/modules/notifications/ui/DeliveryTimingSwitch";
+import TickButton from "@/shared/ui/TickButton";
 import { stopWords } from "@/modules/notifications/ui/stop-words";
 
 type Props = {
@@ -197,10 +197,11 @@ export default async function OutboxQueuePanel({ locale, queue, volume, mayEdit,
         </Alert>
       )}
       {/*
-        When the queue leaves (§529): the switch, the mode in force in one sentence, the next and the
-        last real run, and what holds the round back. Said to every reader of the queue; the switch
-        is the Administrator's. The switch replaced a button that named the other value (the owner:
-        «nu e clar cum funcționează acest toggle», §540): on is «La trecerea programată».
+        When the queue leaves (§529): the tick, the mode in force in one sentence, the next and the
+        last real run, and what holds the round back. Said to every reader of the queue; the tick
+        is the Administrator's. It replaced a button that named the other value (§529) and then a
+        Material switch (§540; the owner: «nu e clar cum funcționează acest toggle»); since §766 it is a
+        real tick box, the owner's rule of 2026-10-14: ticked is «Trimite la trecerea programată».
       */}
       <Box sx={{ border: 1, borderColor: "divider", borderRadius: 1, p: 1.5, mb: 2 }} data-testid="outbox-when">
         <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
@@ -208,9 +209,9 @@ export default async function OutboxQueuePanel({ locale, queue, volume, mayEdit,
         </Typography>
         {mayEditTiming && (
           /*
-            The «Termene» setting (§513) as a switch: a change posts the other value, asking first
-            (§384) with what the change does — switched off, the queue leaves now — and the toast
-            after. Without JavaScript the form's button posts the same (`DeliveryTimingSwitch`).
+            The «Termene» setting (§513) as a tick box (§766): a press posts the other value, asking
+            first (§384) with what the change does — unticked, the queue leaves now — and the toast
+            after. A plain submit drawn as the checkbox, so it works with scripts off, 44 pixels.
           */
           <ActionForm
             action={updateDeliveryTimingFromEmailsAction}
@@ -225,12 +226,9 @@ export default async function OutboxQueuePanel({ locale, queue, volume, mayEdit,
           >
             <input type="hidden" name="uiLocale" value={locale} />
             <input type="hidden" name="timing" value={scheduled ? "immediate" : "scheduled"} />
-            <DeliveryTimingSwitch
-              checked={scheduled}
-              label={t("emails.queue.when.turnOn")}
-              fallbackLabel={scheduled ? t("emails.queue.when.turnOff") : t("emails.queue.when.turnOn")}
-              pendingLabel={t("emails.deadlines.saving")}
-            />
+            <TickButton checked={scheduled} aria-describedby="outbox-when-state" data-testid="outbox-timing-tick">
+              {t("emails.queue.when.turnOn")}
+            </TickButton>
           </ActionForm>
         )}
         {/* The one statement of the mode in force, and what it means for an email queued now. */}
