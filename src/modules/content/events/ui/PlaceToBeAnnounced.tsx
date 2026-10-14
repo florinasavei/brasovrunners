@@ -18,8 +18,8 @@ import TranslateFieldButton from "@/modules/translate/ui/TranslateFieldButton";
 import { PLACE_NAMES_AS_TYPED_FIELD } from "../form-names";
 import { ShownWhen } from "./OnlyForType";
 
-/** What the switch posts; `admin/actions.ts#eventFieldsFrom` reads it by this name. */
-const SWITCH_NAME = "event.locationToBeAnnounced";
+/** What the tick posts; `admin/actions.ts#eventFieldsFrom` reads it by this name. */
+const TICK_NAME = "event.locationToBeAnnounced";
 /** The two boxes of "Punct de întâlnire" (§362), by the names `eventFieldsFrom` reads. */
 const RO_NAME = "event.locationName";
 const EN_NAME = "event.locationNameEn";
@@ -34,15 +34,15 @@ type Props = {
   /** The event's own state; the create form starts announced. */
   defaultChecked: boolean;
   labels: {
-    toggle: string;
-    toggleHelp: string;
+    tick: string;
+    tickHelp: string;
     /** "Punct de întâlnire": the one heading over both boxes. */
     meetingPoint: string;
     /** Each box's own label: the language in its own words ("Română", "English"). */
     ro: string;
     en: string;
     locationHelp: string;
-    /** "Not published while the place is to be announced", under the boxes while the switch is on. */
+    /** "Not published while the place is to be announced", under the boxes while the tick is on. */
     unpublished: string;
     /** "Același nume și în engleză": copies the Romanian box into an empty English one. */
     copyToEnglish: string;
@@ -87,9 +87,9 @@ const UNSEEN = {
  *
  * The boxes' constraints are the schema's (§315), read on the server and handed over as data:
  * `fields.ts` declares both names required, and `placeRule` there is what refuses a blank one —
- * unless this switch is on. So the browser's rule follows the switch the same way: on, neither box
+ * unless this tick is on. So the browser's rule follows the tick the same way: on, neither box
  * is required and they say that what is in them is not published; off, both are required again.
- * Nothing typed is cleared by the switch — the organizer may write the venue down the moment it
+ * Nothing typed is cleared by the tick — the organizer may write the venue down the moment it
  * is known and announce it later with one save.
  *
  * "Același nume și în engleză" under the English box copies the Romanian text into it: a place's
@@ -119,12 +119,12 @@ const UNSEEN = {
  * JavaScript off the boxes keep the state they were rendered with, the copy button does nothing,
  * and the server's rule is the whole answer — as for every other cross-field rule on this form.
  *
- * After a refusal the switch comes back as it was posted (§315): an unticked switch posts
+ * After a refusal the tick comes back as it was posted (§315): an unticked box posts
  * nothing, so "not posted" is "off", and the island re-mounts on every answer.
  */
 export default function PlaceToBeAnnounced(props: Props) {
   const recall = useRecall();
-  const initial = recall.has ? recall.value(SWITCH_NAME) === "on" : props.defaultChecked;
+  const initial = recall.has ? recall.value(TICK_NAME) === "on" : props.defaultChecked;
   return <Island key={recall.generation} {...props} initial={initial} />;
 }
 
@@ -148,7 +148,7 @@ function Island({ initial, labels, names, children }: Props & { initial: boolean
 
   /*
     The form's own watchers — the create button's "lipsește: …" and the save button's named hint
-    (§315) — measure on `change`, which the switch fires *before* React has re-rendered the boxes
+    (§315) — measure on `change`, which the tick fires *before* React has re-rendered the boxes
     without `required`. So once the attribute has actually changed, they are told again, from the
     form itself: no input of theirs is named, so the bib preview and the rest ignore it.
   */
@@ -226,34 +226,34 @@ function Island({ initial, labels, names, children }: Props & { initial: boolean
           control={
             // A tick box, not a Material switch (§766; the owner, 2026-10-14: «nu mai folosi niciodată» that kind of toggle for a setting).
             <Checkbox
-              name={SWITCH_NAME}
+              name={TICK_NAME}
               checked={later}
               onChange={(event) => setLater(event.target.checked)}
               slotProps={{ input: { "aria-describedby": "place-to-be-announced-help" } }}
               sx={CHECKBOX_TAP_TARGET}
             />
           }
-          label={labels.toggle}
+          label={labels.tick}
         />
         <Typography id="place-to-be-announced-help" variant="body2" color="text.secondary">
-          {labels.toggleHelp}
+          {labels.tickHelp}
         </Typography>
       </Stack>
 
       {/*
         The place's boxes are hidden while the place is to be announced (the owner, 2026-09-24:
         "if the location is announced later, we should hide these fields"), and kept mounted: a
-        venue typed before the switch went on is still posted, still saved, never published, and
-        back in its box the moment the switch goes off (§328). `display: none` keeps them out of
+        venue typed before the tick was ticked is still posted, still saved, never published, and
+        back in its box the moment the tick is cleared (§328). `display: none` keeps them out of
         the accessibility tree as well as out of sight; nothing is required while they are hidden.
 
         And nothing in them can stop the save while hidden (§350, the editor's boxes, found by
         re-review): the map link keeps its https pattern, and one typed as `www.harta.ro` before
-        the switch went on made the browser refuse the submit and then fail to focus a box it
+        the tick was ticked made the browser refuse the submit and then fail to focus a box it
         could not show — Salvează did nothing and said nothing. `ShownWhen` makes every box in the
         block read-only while it is hidden, which the browser does not check and still posts; the
-        service ignores a map link it could not store while the switch is on
-        (`ignoreHiddenFields`). Switched off, the boxes are checked again as they stand.
+        service ignores a map link it could not store while the tick is on
+        (`ignoreHiddenFields`). Unticked, the boxes are checked again as they stand.
       */}
       <ShownWhen shown={!later} answer={later ? "later" : "announced"}>
         <Stack spacing={2} data-place-details>

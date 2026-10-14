@@ -3076,7 +3076,6 @@
         "shopManage": "Manages the shop",
         "implied": "included in the role",
         "chipShop": "Shop",
-        "saving": "Saving…",
         "grantTitle": "Give them the shop?",
         "grantBody": "{name} will write the products, the payment words and the address for orders, and mark each order paid, handed over or cancelled, in the “Shop” section. They do not see the members' addresses.",
         "grant": "Give them the shop",

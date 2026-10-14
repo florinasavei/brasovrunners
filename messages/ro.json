@@ -3076,7 +3076,6 @@
         "shopManage": "Gestionează magazinul",
         "implied": "inclus în rol",
         "chipShop": "Magazin",
-        "saving": "Se salvează…",
         "grantTitle": "Îi dai magazinul?",
         "grantBody": "{name} va putea scrie produsele, plata și adresa pentru comenzi și va marca fiecare comandă plătită, predată sau anulată, din secțiunea «Magazin». Adresele membrilor nu le vede.",
         "grant": "Dă-i magazinul",

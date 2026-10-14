@@ -30,8 +30,9 @@ import { byFile, holdRatchet, importFacts, type Hit, type Source, SOURCES, strin
  * refuses them too. A failure prints `file:line — what matched`.
  */
 const GLYPH_NAMES = new Set(["turnOn", "turnOff", "toggleOn", "toggleOff"]);
-const TOGGLE_ICON = /^@mui\/icons-material\/Toggle(?:On|Off)(?:Outlined|Rounded|Sharp|TwoTone)?$/;
-const SWITCH = /^@mui\/material\/Switch$/;
+const TOGGLE_ICON = /^@mui\/icons-material\/Toggle(?:On|Off)(?:Outlined|Rounded|Sharp|TwoTone)?(?:\/|\.js|$)/;
+const SWITCH = /^@mui\/material\/Switch(?:\/|$)/;
+const TOGGLE_NAME = /^(?:Toggle(?:On|Off)(?:Outlined|Rounded|Sharp|TwoTone)?|Switch)$/;
 
 /** What one source file does that the rule refuses, with its line. */
 function toggleHits(source: Source): Hit[] {
@@ -42,7 +43,10 @@ function toggleHits(source: Source): Hit[] {
     .filter((fact) => !fact.typeOnly)
     .filter(
       (fact) =>
-        TOGGLE_ICON.test(fact.specifier) || SWITCH.test(fact.specifier) || (fact.specifier === "@mui/material" && fact.names.some((name) => name === "Switch" || name === "*")),
+        TOGGLE_ICON.test(fact.specifier) ||
+        SWITCH.test(fact.specifier) ||
+        // The barrels: `import { Switch } from "@mui/material"`, `import { ToggleOn } from "@mui/icons-material"`, or a namespace import of either.
+        ((fact.specifier === "@mui/material" || fact.specifier === "@mui/icons-material") && fact.names.some((name) => name === "*" || TOGGLE_NAME.test(name))),
     )
     .map((fact) => ({ file: source.file, line: fact.line, text: `import of ${fact.names.join(", ")} from ${fact.specifier}` }));
   return [...literals, ...imports];
@@ -79,6 +83,15 @@ describe("§766 a setting is a tick box, never a toggle", () => {
     expect(toggleHits(sample('import Switch from "@mui/material/Switch";'))).toHaveLength(1);
     expect(toggleHits(sample('import { Box, Switch } from "@mui/material";'))).toHaveLength(1);
     expect(toggleHits(sample('const Lazy = () => import("@mui/icons-material/ToggleOn");'))).toHaveLength(1);
+    // Deep paths and the icons barrel get through an exact match; they do not get through this one.
+    expect(toggleHits(sample('import Switch from "@mui/material/Switch/Switch";'))).toHaveLength(1);
+    expect(toggleHits(sample('import Switch from "@mui/material/Switch/index.js";'))).toHaveLength(1);
+    expect(toggleHits(sample('import ToggleOn from "@mui/icons-material/ToggleOn.js";'))).toHaveLength(1);
+    expect(toggleHits(sample('import { ToggleOn } from "@mui/icons-material";'))).toHaveLength(1);
+    expect(toggleHits(sample('import { ToggleOffOutlined as Off } from "@mui/icons-material";'))).toHaveLength(1);
+    expect(toggleHits(sample('import * as Icons from "@mui/icons-material";'))).toHaveLength(1);
+    expect(toggleHits(sample('import { Check, Toll } from "@mui/icons-material";'))).toEqual([]);
+    expect(toggleHits(sample('import SwitchAccount from "@mui/icons-material/SwitchAccount";'))).toEqual([]);
     // The tick, the words of a confirm button, a radio and the theme's own mode button are not toggles.
     expect(toggleHits(sample('<TickButton checked={on}>Verificarea anti-bot pornită</TickButton>'))).toEqual([]);
     expect(toggleHits(sample('<GlyphButton icon={on ? "tickOn" : "tickOff"} />'))).toEqual([]);

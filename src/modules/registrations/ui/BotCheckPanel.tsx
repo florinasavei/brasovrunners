@@ -18,7 +18,7 @@ import TickButton from "@/shared/ui/TickButton";
  * Two tick boxes (§766; the owner, 2026-10-14: «nu mai folosi niciodată» a button that flips a
  * setting — it was «oprește verificarea» / «pornește-o» with a toggle glyph): a plain submit drawn
  * as the checkbox, its words naming the setting and never the verb. A press asks first, in the
- * words of what it does, and the confirm button says «Oprește verificarea» or «Pornește-o». The
+ * words of what it does, and the confirm button says «Oprește verificarea» or «Pornește verificarea». The
  * sentence above says what is actually in force, including the case the club cannot fix from
  * here — no keys on this deployment, so there is nothing to switch on.
  *
@@ -68,8 +68,8 @@ export default async function BotCheckPanel({
       )}
 
       {/*
-        The hidden field's own switch (§282), outside the `keysPresent` gate above: the trap
-        needs no keys and no third party, so it can be switched on a deployment that has no
+        The hidden field's own tick (§282), outside the `keysPresent` gate above: the trap
+        needs no keys and no third party, so it can be ticked on a deployment that has no
         Turnstile at all. Its own sentence, because "off" means something different here — the
         field is still rendered and still logged, and it simply stops refusing anybody.
       */}

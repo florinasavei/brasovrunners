@@ -16,8 +16,13 @@ import GlyphButton from "./GlyphButton";
  * the verb that would flip it: a tick that said «Oprește» while it was drawn ticked was the toggle button
  * again. A Server Component renders it: `GlyphButton` makes the icon, so no element crosses the boundary.
  *
- * `VolunteersCard` and `EventTodoCard` draw the same pattern with their own copy of this row's styles
- * (§752, §765); they can adopt it when they are next touched.
+ * There is no pending state on purpose: the form posts the state it wants (the absolute value, worked out at
+ * render), so a second press before the page answers asks the same question and saves the same state —
+ * harmless. The toast and the redirect say it worked.
+ *
+ * `VolunteersCard`'s row draws the same pattern with its own copy of this row's styles (§765); it can adopt
+ * this when it is next touched. `EventTodoCard`'s tick is a different shape — an icon-only 44-pixel square
+ * with an `aria-label`, no words — and stays as it is.
  */
 const TICK_ROW_SX = {
   minHeight: 44,

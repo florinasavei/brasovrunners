@@ -138,6 +138,7 @@ test.describe("BR-REQ-050-02 a series' draft dates, named on the list and fixed 
     await hydrated(page);
     await expect(line).toContainText("2 date noi, create automat, nu sunt pe site:");
     await expect(line.getByRole("button", { name: /^Publică/ })).toHaveCount(0);
+    await expect(line.getByRole("checkbox", { name: "Publică automat de acum" })).toHaveCount(0);
     await page.context().clearCookies();
     await signIn(page, "Dev Administrator");
     await page.goto("/ro/admin");

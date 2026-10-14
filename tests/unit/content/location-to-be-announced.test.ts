@@ -94,8 +94,8 @@ describe("BR-REQ-011-01 criterion 19 the editor's constraints follow the switch 
     en: { defaultValue: "", box: textFieldConstraints(eventInputConstraints("locationNameEn")) },
   };
   const labels = {
-    toggle: "Locația se anunță mai târziu",
-    toggleHelp: "Ajutor.",
+    tick: "Locația se anunță mai târziu",
+    tickHelp: "Ajutor.",
     meetingPoint: "Punct de întâlnire",
     ro: "Română",
     en: "English",
@@ -166,7 +166,7 @@ describe("BR-REQ-011-01 criterion 19 the editor's constraints follow the switch 
       expect(input).toContain('aria-describedby="place-to-be-announced-help"');
       expect(html).not.toMatch(/MuiSwitch-(?:root|thumb|track|switchBase)/);
       expect(html).toContain("MuiCheckbox-root");
-      expect(html).toContain(labels.toggle);
+      expect(html).toContain(labels.tick);
     }
     expect(read("src/modules/content/events/ui/PlaceToBeAnnounced.tsx")).not.toContain("@mui/material/Switch");
   });
