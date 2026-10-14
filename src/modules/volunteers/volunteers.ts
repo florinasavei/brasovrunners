@@ -6,11 +6,15 @@ import type { StaffUser } from "@/db/schema/staff-users";
 import { staffUsers } from "@/db/schema/staff-users";
 import type { Database, Transaction } from "@/db/types";
 import type { Locale } from "@/i18n/routing";
+import { hasRichTextContent, readRichText, type RichTextDoc } from "@/modules/content/rich-text/domain/schema";
+import { sexShown, type SexChoice } from "@/modules/registrations/domain/sex";
+import type { RegistrationTshirtSize } from "@/db/schema/registrations";
 import { type AuditAction, recordAuditEvent } from "@/modules/audit/repository";
 import { VOLUNTEER_AGREEMENT_KEY } from "@/modules/legal-documents/domain/keys";
 import {
   findCurrentApprovedDocument,
   noticeDescribesVolunteerAgreement,
+  noticeDescribesVolunteerProfile,
   noticeDescribesVolunteers,
   volunteerAgreementInForce,
 } from "@/modules/legal-documents/repository";
@@ -30,11 +34,12 @@ import {
   openChoices,
   refusedFields,
   type RoleStanding,
+  sameDescription,
   standingOf,
   type VolunteerRoleInput,
   volunteerEventAhead,
   volunteerOfferClosedFor,
-  volunteerPublicInputSchema,
+  volunteerPublicSchemaFor,
   volunteerRoleInputSchema,
   volunteerStaffInputSchema,
   VOLUNTEER_ROLES_MAX,
@@ -86,8 +91,16 @@ export type VolunteerRole = {
   nameRo: string;
   nameEn: string;
   needed: number;
+  /**
+   * «Descrierea rolului» (§NNN): the plain words per language — a line per paragraph and per list item: what the card's
+   * header, the agreement and the emails say (the columns `description_words_*`; it is `RoleWords`' own shape, so a role
+   * names itself to the agreement as it is) — and the editor's document, which the public form and the editor draw.
+   * Both languages or neither; null is none.
+   */
   descriptionRo: string | null;
   descriptionEn: string | null;
+  descriptionRoJson: RichTextDoc | null;
+  descriptionEnJson: RichTextDoc | null;
   /** The role's band on the volunteer badges (§764): a hex, or null for the club's orange. */
   colour: string | null;
   position: number;
@@ -108,6 +121,13 @@ export type VolunteerItem = {
   source: "STAFF" | "PUBLIC";
   message: string | null;
   note: string | null;
+  /** What the person said about themselves (§NNN), or nulls and false for a row from before — and for one the club typed without. */
+  age: number | null;
+  sex: SexChoice | null;
+  city: string | null;
+  volunteeredBefore: boolean;
+  clubMember: boolean;
+  shirtSize: Exclude<RegistrationTshirtSize, "NONE"> | null;
   createdAt: Date;
   updatedAt: Date;
   /** The volunteer agreement (§758): when it was accepted and how, or nulls for «contract neacceptat încă». */
@@ -137,7 +157,32 @@ export type VolunteerItem = {
 /** An event's roles, in the order the club set them. */
 export async function listVolunteerRoles<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<VolunteerRole[]> {
   const rows = await db.select().from(eventVolunteerRoles).where(eq(eventVolunteerRoles.eventId, eventId));
-  return rows.sort(compareRoles);
+  return rows.sort(compareRoles).map(roleOf);
+}
+
+/** A stored document as the editor and the page read it: leniently, so a body nobody can parse costs a description, not the page. */
+function storedDescription(json: unknown): RichTextDoc | null {
+  if (json === null || json === undefined) return null;
+  const doc = readRichText(json);
+  return hasRichTextContent(doc) ? doc : null;
+}
+
+/** The roles' columns as the card, the form and the agreement read them (§NNN): the plain words under the names `RoleWords` uses. */
+function roleOf(row: typeof eventVolunteerRoles.$inferSelect): VolunteerRole {
+  return {
+    id: row.id,
+    eventId: row.eventId,
+    nameRo: row.nameRo,
+    nameEn: row.nameEn,
+    needed: row.needed,
+    descriptionRo: row.descriptionWordsRo,
+    descriptionEn: row.descriptionWordsEn,
+    descriptionRoJson: storedDescription(row.descriptionRoJson),
+    descriptionEnJson: storedDescription(row.descriptionEnJson),
+    colour: row.colour,
+    position: row.position,
+    createdAt: row.createdAt,
+  };
 }
 
 /**
@@ -183,6 +228,12 @@ export async function listVolunteers<T extends Record<string, unknown>>(db: Data
       source: row.source,
       message: row.message,
       note: row.note,
+      age: row.age,
+      sex: sexShown(row.sex),
+      city: row.city,
+      volunteeredBefore: row.volunteeredBefore,
+      clubMember: row.clubMember,
+      shirtSize: row.shirtSize === null || row.shirtSize === "NONE" ? null : row.shirtSize,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
       agreementAcceptedAt: row.agreementAcceptedAt,
@@ -227,8 +278,11 @@ export type PublicVolunteerRole = {
   id: string;
   nameRo: string;
   nameEn: string;
+  /** «Descrierea rolului» (§NNN): the plain words (how long it reads) and the document the form draws under the role's tick. */
   descriptionRo: string | null;
   descriptionEn: string | null;
+  descriptionRoJson: RichTextDoc | null;
+  descriptionEnJson: RichTextDoc | null;
   needed: number;
   taken: number;
   free: number;
@@ -242,9 +296,13 @@ export type PublicVolunteerRole = {
 export async function readPublicVolunteerRoles<T extends Record<string, unknown>>(
   db: Database<T>,
   eventId: string,
-): Promise<{ acceptsVolunteers: boolean; roles: PublicVolunteerRole[] }> {
-  const [event] = await db.select({ accepts: events.acceptsVolunteers }).from(events).where(eq(events.id, eventId)).limit(1);
-  if (!event?.accepts) return { acceptsVolunteers: false, roles: [] };
+): Promise<{ acceptsVolunteers: boolean; shirts: boolean; roles: PublicVolunteerRole[] }> {
+  const [event] = await db
+    .select({ accepts: events.acceptsVolunteers, shirts: events.volunteersShirts })
+    .from(events)
+    .where(eq(events.id, eventId))
+    .limit(1);
+  if (!event?.accepts) return { acceptsVolunteers: false, shirts: false, roles: [] };
   const roles = await listVolunteerRoles(db, eventId);
   const people = await db
     .select({ roleId: eventVolunteers.roleId, state: eventVolunteers.state })
@@ -252,6 +310,8 @@ export async function readPublicVolunteerRoles<T extends Record<string, unknown>
     .where(eq(eventVolunteers.eventId, eventId));
   return {
     acceptsVolunteers: true,
+    // «Oferim tricouri voluntarilor» (§NNN): the form asks the size only while it is on.
+    shirts: event.shirts,
     roles: roles.map((role) => {
       const standing = standingOf(role, people);
       return {
@@ -260,6 +320,8 @@ export async function readPublicVolunteerRoles<T extends Record<string, unknown>
         nameEn: role.nameEn,
         descriptionRo: role.descriptionRo,
         descriptionEn: role.descriptionEn,
+        descriptionRoJson: role.descriptionRoJson,
+        descriptionEnJson: role.descriptionEnJson,
         needed: role.needed,
         taken: standing.taken,
         free: standing.free,
@@ -290,9 +352,12 @@ function postedStrings(fields: Record<string, unknown>, names: readonly string[]
 }
 
 const ROLE_FIELDS = ["nameRo", "nameEn", "needed", "descriptionRo", "descriptionEn"] as const;
+/** The editor's documents: absent stays absent (a caller without the editor posts the plain boxes), never an empty document that would win over them. */
+const ROLE_BODY_FIELDS = ["descriptionRoBody", "descriptionEnBody"] as const;
 
 function roleInputOf(fields: Record<string, unknown>): VolunteerRoleInput {
-  const parsed = volunteerRoleInputSchema.safeParse(postedStrings(fields, ROLE_FIELDS));
+  const bodies = Object.fromEntries(ROLE_BODY_FIELDS.filter((name) => typeof fields[name] === "string").map((name) => [name, fields[name] as string]));
+  const parsed = volunteerRoleInputSchema.safeParse({ ...postedStrings(fields, ROLE_FIELDS), ...bodies });
   if (!parsed.success) {
     throw new DomainError("VALIDATION_ERROR", parsed.error.issues.map((issue) => `${issue.path.join(".")}: ${issue.message}`).join("; "), refusedFields(parsed.error));
   }
@@ -372,8 +437,10 @@ export async function changeVolunteerRole<T extends Record<string, unknown>>(
           nameRo: input.nameRo,
           nameEn: input.nameEn,
           needed: input.needed,
-          descriptionRo: input.descriptionRo,
-          descriptionEn: input.descriptionEn,
+          descriptionRoJson: input.descriptionRoJson,
+          descriptionEnJson: input.descriptionEnJson,
+          descriptionWordsRo: input.descriptionWordsRo,
+          descriptionWordsEn: input.descriptionWordsEn,
           colour,
           position: roles.length === 0 ? 0 : Math.max(...roles.map((role) => role.position)) + 1,
           createdAt: now,
@@ -415,16 +482,12 @@ export async function changeVolunteerRole<T extends Record<string, unknown>>(
     // «Salvează» on a role: both names, how many it needs, and its description.
     if (!input) throw new DomainError("VALIDATION_ERROR", "nothing to save");
     const colour = postedColour ? checkedRoleColour(postedColour, current.colour, ROLE_FORM_COLOUR_BOXES) : current.colour;
-    const before = {
-      nameRo: current.nameRo,
-      nameEn: current.nameEn,
-      needed: current.needed,
-      descriptionRo: current.descriptionRo,
-      descriptionEn: current.descriptionEn,
-      colour: current.colour,
-    };
-    const after = { ...input, colour };
-    const changedFields = (Object.keys(before) as (keyof typeof before)[]).filter((key) => before[key] !== after[key]);
+    const before = { nameRo: current.nameRo, nameEn: current.nameEn, needed: current.needed, colour: current.colour };
+    const after = { nameRo: input.nameRo, nameEn: input.nameEn, needed: input.needed, colour };
+    const changedFields: string[] = (Object.keys(before) as (keyof typeof before)[]).filter((key) => before[key] !== after[key]);
+    // The description is a document per language (§NNN): the names of the fields in the trail, never its words.
+    if (!sameDescription(current.descriptionRoJson, input.descriptionRoJson)) changedFields.push("descriptionRo");
+    if (!sameDescription(current.descriptionEnJson, input.descriptionEnJson)) changedFields.push("descriptionEn");
     if (changedFields.length === 0) return { changed: false, role: summary };
     await tx
       .update(eventVolunteerRoles)
@@ -432,8 +495,10 @@ export async function changeVolunteerRole<T extends Record<string, unknown>>(
         nameRo: input.nameRo,
         nameEn: input.nameEn,
         needed: input.needed,
-        descriptionRo: input.descriptionRo,
-        descriptionEn: input.descriptionEn,
+        descriptionRoJson: input.descriptionRoJson,
+        descriptionEnJson: input.descriptionEnJson,
+        descriptionWordsRo: input.descriptionWordsRo,
+        descriptionWordsEn: input.descriptionWordsEn,
         colour,
       })
       .where(eq(eventVolunteerRoles.id, current.id));
@@ -485,7 +550,41 @@ export async function setAcceptsVolunteers<T extends Record<string, unknown>>(
   return result;
 }
 
-const STAFF_FIELDS = ["assignedRoleId", "name", "email", "phone", "note"] as const;
+/**
+ * «Oferim tricouri voluntarilor» on or off (§NNN; the owner, 2026-10-14: «acum nu vom da tricouri»): the event's own
+ * tick, saved by the «Voluntari» card's own form like «Primește voluntari» — never by the editor's save. Switching it
+ * off keeps every size already given (they are shown nowhere meanwhile, `shirtSizeShown`); nothing is deleted by it.
+ */
+export async function setVolunteersShirts<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Actor,
+  request: { eventId: string; on: boolean },
+  now: Date,
+): Promise<{ changed: boolean }> {
+  assertMayManage(actor);
+  assertIds(request.eventId);
+  const result = await db.transaction(async (tx) => {
+    const [event] = await tx.select({ on: events.volunteersShirts }).from(events).where(eq(events.id, request.eventId)).for("no key update").limit(1);
+    if (!event) throw new DomainError("NOT_FOUND", "the event is not there");
+    if (event.on === request.on) return { changed: false };
+    // Not `events.version`, like the other tick: it is no edit of the page's text and must not make an open editor's save stale.
+    await tx.update(events).set({ volunteersShirts: request.on }).where(eq(events.id, request.eventId));
+    await recordAuditEvent(tx, {
+      actorStaffUserId: actor.id,
+      action: "event.volunteers_shirts_switched",
+      entityType: "event",
+      entityId: request.eventId,
+      metadata: { on: request.on },
+      now,
+    });
+    return { changed: true };
+  });
+  // The public form asks the size only while the tick is on: the page is told once the write has committed.
+  if (result.changed) revalidatePublicContent("events", "places");
+  return result;
+}
+
+const STAFF_FIELDS = ["assignedRoleId", "name", "email", "phone", "note", "age", "sex", "city", "shirtSize"] as const;
 
 export type VolunteerRequest =
   | { kind: "add"; eventId: string; fields: Record<string, unknown> }
@@ -504,7 +603,13 @@ function postedIds(value: unknown): string[] {
 }
 
 function staffInputOf(fields: Record<string, unknown>) {
-  const parsed = volunteerStaffInputSchema.safeParse({ ...postedStrings(fields, STAFF_FIELDS), roleIds: postedIds(fields.roleIds) });
+  const parsed = volunteerStaffInputSchema.safeParse({
+    ...postedStrings(fields, STAFF_FIELDS),
+    roleIds: postedIds(fields.roleIds),
+    // The ticks (§NNN): true only when the form posted them.
+    volunteeredBefore: fields.volunteeredBefore === true,
+    clubMember: fields.clubMember === true,
+  });
   if (!parsed.success) {
     throw new DomainError("VALIDATION_ERROR", parsed.error.issues.map((issue) => `${issue.path.join(".")}: ${issue.message}`).join("; "), refusedFields(parsed.error));
   }
@@ -515,6 +620,31 @@ function staffInputOf(fields: Record<string, unknown>) {
     throw new DomainError("VALIDATION_ERROR", "the address is not valid", ["email"]);
   }
   return { ...parsed.data, choiceIds: choicesWithAssigned(parsed.data), identity };
+}
+
+/** The answers a person says about themselves, which only a privacy notice that names them (`{{volunteerProfile}}`) lets the platform keep (§NNN). */
+const PROFILE_BOXES = ["age", "sex", "city", "volunteeredBefore", "clubMember", "shirtSize"] as const;
+
+/**
+ * Staff enter those answers under the same gate as the public form (§NNN, the §562 / §613 pattern): while the notice in
+ * force does not name them, an organizer's post that carries one — one that differs from what the row already holds —
+ * is refused, naming the boxes. The card does not draw the boxes then, so only a forged or stale post reaches this.
+ * A size for an event that gives no shirt is ignored, as it always was.
+ */
+function refuseUnnamedProfile(
+  input: Pick<ReturnType<typeof staffInputOf>, (typeof PROFILE_BOXES)[number]>,
+  current: { age: number | null; sex: SexChoice | "UNSPECIFIED" | null; city: string | null; volunteeredBefore: boolean; clubMember: boolean; shirtSize: string | null } | null,
+  shirts: boolean,
+): void {
+  const refused = PROFILE_BOXES.filter((box) => {
+    const posted = input[box];
+    if (posted === null || posted === false) return false;
+    if (box === "shirtSize" && !shirts) return false;
+    if (!current) return true;
+    const held = box === "sex" ? sexShown(current.sex) : current[box];
+    return held !== posted;
+  });
+  if (refused.length > 0) throw new DomainError("VALIDATION_ERROR", "the privacy notice in force does not name these answers yet", [...refused]);
 }
 
 const alreadyListed = () => new DomainError("VOLUNTEER_ALREADY_LISTED", "this address is already on the event's volunteers", ["email"]);
@@ -586,6 +716,8 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
   assertMayManage(actor);
   assertIds(request.eventId, ...(request.kind === "add" ? [] : [request.id]));
   const input = request.kind === "add" || request.kind === "edit" ? staffInputOf(request.fields) : null;
+  // Whether the notice in force names the profile answers (§NNN): read before the transaction, like the public sign-up does.
+  const profileDescribed = input ? await noticeDescribesVolunteerProfile(db, now) : true;
   const state =
     request.kind === "setState"
       ? (VOLUNTEER_STATES as readonly unknown[]).includes(request.state)
@@ -597,7 +729,7 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
   if (request.kind === "assign" && !isUuid(assigned)) throw new DomainError("VALIDATION_ERROR", "that is not a role", ["roleId"]);
 
   const result = await db.transaction(async (tx) => {
-    const [event] = await tx.select({ id: events.id }).from(events).where(eq(events.id, request.eventId)).limit(1);
+    const [event] = await tx.select({ id: events.id, shirts: events.volunteersShirts }).from(events).where(eq(events.id, request.eventId)).limit(1);
     if (!event) throw new DomainError("NOT_FOUND", "the event is not there");
     const audit = (action: AuditAction, metadata: Record<string, unknown>) =>
       recordAuditEvent(tx, { actorStaffUserId: actor.id, action, entityType: "event", entityId: request.eventId, metadata, now });
@@ -654,6 +786,7 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
       await assertEventRoles(input.roleIds, "roleIds");
       if (input.assignedRoleId) await assertEventRoles([input.assignedRoleId], "assignedRoleId");
       if (await holderOf(input.identity.canonicalEmail)) throw alreadyListed();
+      if (!profileDescribed) refuseUnnamedProfile(input, null, event.shirts);
       const [row] = await tx
         .insert(eventVolunteers)
         .values({
@@ -667,6 +800,13 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
           state: "REGISTERED",
           source: "STAFF",
           note: input.note,
+          age: input.age,
+          sex: input.sex,
+          city: input.city,
+          volunteeredBefore: input.volunteeredBefore,
+          clubMember: input.clubMember,
+          // A size only while the event gives a shirt (§NNN); a stale form posting one for an event without is ignored.
+          shirtSize: event.shirts ? input.shirtSize : null,
           createdByStaffUserId: actor.id,
           createdAt: now,
           updatedAt: now,
@@ -731,14 +871,48 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
       const holder = await holderOf(input.identity.canonicalEmail);
       if (holder && holder.id !== current.id) throw alreadyListed();
     }
+    if (!profileDescribed) refuseUnnamedProfile(input, current, event.shirts);
+    // While the notice names none of them the boxes are not drawn: what the row holds stays as it was, shown by the card as before.
+    const profile = profileDescribed
+      ? {
+          age: input.age,
+          sex: input.sex,
+          city: input.city,
+          volunteeredBefore: input.volunteeredBefore,
+          clubMember: input.clubMember,
+          // While the event gives no shirt the box is not drawn: the size stays as it was, shown nowhere (§NNN).
+          shirtSize: event.shirts ? input.shirtSize : current.shirtSize,
+        }
+      : {
+          age: current.age,
+          sex: sexShown(current.sex),
+          city: current.city,
+          volunteeredBefore: current.volunteeredBefore,
+          clubMember: current.clubMember,
+          shirtSize: current.shirtSize,
+        };
     const next = {
       roleId: input.assignedRoleId,
       name: input.name,
       email: input.identity.deliveryEmail,
       phone: input.phone,
       note: input.note,
+      ...profile,
     };
-    const before = { roleId: current.roleId, name: current.name, email: current.email, phone: current.phone, note: current.note };
+    const before = {
+      roleId: current.roleId,
+      name: current.name,
+      email: current.email,
+      phone: current.phone,
+      note: current.note,
+      age: current.age,
+      // The retired «Prefer să nu spun» reads as no answer, as it does everywhere (`sexShown`).
+      sex: sexShown(current.sex),
+      city: current.city,
+      volunteeredBefore: current.volunteeredBefore,
+      clubMember: current.clubMember,
+      shirtSize: current.shirtSize,
+    };
     const choicesBefore = (
       await tx.select({ roleId: eventVolunteerRoleChoices.roleId }).from(eventVolunteerRoleChoices).where(eq(eventVolunteerRoleChoices.volunteerId, current.id))
     ).map((row) => row.roleId);
@@ -788,10 +962,10 @@ export async function exportVolunteers<T extends Record<string, unknown>>(
   actor: Actor,
   eventId: string,
   now: Date,
-): Promise<{ roles: VolunteerRole[]; volunteers: VolunteerItem[] }> {
+): Promise<{ roles: VolunteerRole[]; volunteers: VolunteerItem[]; shirts: boolean }> {
   assertMayManage(actor);
   assertIds(eventId);
-  const [event] = await db.select({ id: events.id }).from(events).where(eq(events.id, eventId)).limit(1);
+  const [event] = await db.select({ id: events.id, shirts: events.volunteersShirts }).from(events).where(eq(events.id, eventId)).limit(1);
   if (!event) throw new DomainError("NOT_FOUND", "the event is not there");
   const roles = await listVolunteerRoles(db, eventId);
   const volunteers = await listVolunteers(db, eventId);
@@ -803,7 +977,7 @@ export async function exportVolunteers<T extends Record<string, unknown>>(
     metadata: { rows: volunteers.length },
     now,
   });
-  return { roles, volunteers };
+  return { roles, volunteers, shirts: event.shirts };
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -845,12 +1019,19 @@ export async function submitVolunteer<T extends Record<string, unknown>>(
   now: Date,
 ): Promise<VolunteerSubmitOutcome> {
   assertIds(eventId);
-  const parsed = volunteerPublicInputSchema.safeParse(rawInput);
+  // What the form asked depends on the notice in force (§NNN): the profile's boxes while it names them, §758's tick otherwise.
+  const profileMode = await noticeDescribesVolunteerProfile(db, now);
+  const parsed = volunteerPublicSchemaFor(profileMode).safeParse(rawInput);
   if (!parsed.success) {
     const fields = refusedFields(parsed.error);
     throw new DomainError("VALIDATION_ERROR", "the volunteer form is malformed", fields.length > 0 ? fields : ["name"]);
   }
   const input = parsed.data;
+  // What the person said about themselves, only when the form asked it (§NNN).
+  const profile =
+    "age" in input
+      ? { age: input.age, sex: input.sex, city: input.city, volunteeredBefore: input.volunteeredBefore, clubMember: input.clubMember, shirtSize: input.shirtSize }
+      : null;
   // The spam defences answer like a success: nothing is kept, nothing says so.
   if (looksLikeSpam(input, now)) return { outcome: "done" };
 
@@ -861,6 +1042,7 @@ export async function submitVolunteer<T extends Record<string, unknown>>(
       editorialStatus: events.editorialStatus,
       membersOnly: events.membersOnly,
       acceptsVolunteers: events.acceptsVolunteers,
+      volunteersShirts: events.volunteersShirts,
       startsAt: events.startsAt,
       endsAt: events.endsAt,
     })
@@ -919,7 +1101,8 @@ export async function submitVolunteer<T extends Record<string, unknown>>(
     const kept = openChoices(input.roleIds, new Map(ticked.map((role) => [role.id, standingOf(role, people)])));
     if (kept.length === 0) return { outcome: "full", dropped: true };
     const dropped = kept.length < input.roleIds.length;
-    const chosen = ticked.filter((role) => kept.includes(role.id)).sort(compareRoles);
+    // The roles as the agreement names them (§NNN): the plain words of «Descrierea rolului», never the old one-line column.
+    const chosen = ticked.filter((role) => kept.includes(role.id)).map(roleOf).sort(compareRoles);
 
     // A repeat of the same person: the same answer a new one gets, nothing changed, nothing sent — whatever the row's state is.
     const [existing] = await tx
@@ -952,6 +1135,18 @@ export async function submitVolunteer<T extends Record<string, unknown>>(
         source: "PUBLIC",
         message: input.message,
         privacyNoticeVersion: notice.version,
+        // The person's own words about themselves (§NNN), kept only when the notice in force names them; the size only
+        // while the event gives a shirt. A form posted for the other mode (a page cached before the notice changed) is refused at the top, naming its missing boxes; the redirect then draws the form now in force.
+        ...(profile
+          ? {
+              age: profile.age,
+              sex: profile.sex,
+              city: profile.city,
+              volunteeredBefore: profile.volunteeredBefore,
+              clubMember: profile.clubMember,
+              shirtSize: event.volunteersShirts ? profile.shirtSize : null,
+            }
+          : {}),
         ...acceptance,
         createdAt: now,
         updatedAt: now,

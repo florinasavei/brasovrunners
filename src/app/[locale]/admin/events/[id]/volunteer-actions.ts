@@ -12,6 +12,7 @@ import {
   changeVolunteerRole,
   ROLE_FORM_COLOUR_BOXES,
   setAcceptsVolunteers,
+  setVolunteersShirts,
   type VolunteerRequest,
   type VolunteerRoleRequest,
 } from "@/modules/volunteers/volunteers";
@@ -75,6 +76,13 @@ const staffFields = (form: FormData) => ({
   email: field(form, "email"),
   phone: phoneOf(form),
   note: field(form, "note"),
+  // What the person told the organizers (§NNN), all optional: the boxes as typed, the two ticks true only when posted.
+  age: field(form, "age"),
+  sex: field(form, "sex"),
+  city: field(form, "city"),
+  shirtSize: field(form, "shirtSize"),
+  volunteeredBefore: form.get("volunteeredBefore") === "on",
+  clubMember: form.get("clubMember") === "on",
 });
 
 const roleFields = (form: FormData) => ({
@@ -83,6 +91,9 @@ const roleFields = (form: FormData) => ({
   needed: field(form, "needed"),
   descriptionRo: field(form, "descriptionRo"),
   descriptionEn: field(form, "descriptionEn"),
+  // «Descrierea rolului» (§NNN): the editor's documents when the form drew the editor; absent otherwise, so a caller with the plain boxes is read as it always was.
+  ...(form.has("descriptionRoBody") ? { descriptionRoBody: field(form, "descriptionRoBody") } : {}),
+  ...(form.has("descriptionEnBody") ? { descriptionEnBody: field(form, "descriptionEnBody") } : {}),
   // The band's colour (§764): only when the form drew its boxes — a form without them leaves the colour as it is.
   ...(form.has(ROLE_FORM_COLOUR_BOXES.choice)
     ? {
@@ -109,6 +120,22 @@ export async function switchVolunteersAction(form: FormData): Promise<void> {
     const actor = await requireStaff();
     const result = await setAcceptsVolunteers(getDb(), actor, { eventId: eventIdOf(form), on }, new Date());
     return backToCard(form, { saved: result.changed ? (on ? "volunteersOn" : "volunteersOff") : "volunteerUnchanged" });
+  } catch (error) {
+    if (!isDomainError(error)) throw error;
+    return backToCard(form, { error: error.code });
+  }
+}
+
+/**
+ * «Oferim tricouri voluntarilor» (§NNN): the card's own tick, the event's `volunteers_shirts`. Its submit is drawn as the
+ * checkbox and posts `on=1|0`, the state it wants, never a toggle.
+ */
+export async function switchVolunteersShirtsAction(form: FormData): Promise<void> {
+  const on = field(form, "on") === "1";
+  try {
+    const actor = await requireStaff();
+    const result = await setVolunteersShirts(getDb(), actor, { eventId: eventIdOf(form), on }, new Date());
+    return backToCard(form, { saved: result.changed ? (on ? "volunteersShirtsOn" : "volunteersShirtsOff") : "volunteerUnchanged" });
   } catch (error) {
     if (!isDomainError(error)) throw error;
     return backToCard(form, { error: error.code });

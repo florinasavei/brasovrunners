@@ -500,6 +500,15 @@ export const events = pgTable(
     acceptsVolunteers: boolean("accepts_volunteers").notNull().default(false),
 
     /**
+     * «Oferim tricouri voluntarilor» (§NNN; the owner, 2026-10-14: «opțional (configurabil) bifă pentru tricou — acum
+     * nu vom da tricouri»): while it is on, the public volunteer form asks «Mărimea tricoului» and the organizers see
+     * it on each row; off by default, and a size left on a row from before it was switched off is shown nowhere
+     * (`shirtSizeShown`). Ticked in the «Voluntari» card's own form beside `accepts_volunteers`: the event's save
+     * never writes it, and a copy of an event never inherits it.
+     */
+    volunteersShirts: boolean("volunteers_shirts").notNull().default(false),
+
+    /**
      * The two facts that stopped being free text in migration `0018`.
      *
      * Null means the club has not said, and the page then omits the row rather than guessing —

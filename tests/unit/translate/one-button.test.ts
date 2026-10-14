@@ -140,6 +140,26 @@ describe("§482 «Echipa»'s words may be translated", () => {
   });
 });
 
+describe("§NNN a volunteer role's form may be translated", () => {
+  it("allows the role's English name and its description, and knows the description is a rich text", () => {
+    expect(isTranslatableEnglishField("nameEn")).toBe(true);
+    expect(isTranslatableEnglishField("descriptionEnBody")).toBe(true);
+    for (const name of ["nameRo", "descriptionRoBody", "needed", "colourChoice"]) expect(isTranslatableEnglishField(name), name).toBe(false);
+    expect(isRichTextField("descriptionEnBody")).toBe(true);
+    expect(isRichTextField("nameEn")).toBe(false);
+    expect(romanianTwinCandidates("nameEn")[0]).toBe("nameRo");
+    expect(romanianTwinCandidates("descriptionEnBody")).toEqual(["descriptionRoBody"]);
+  });
+
+  it("is mounted on the role's own form, new and saved, beside the description's two editors", () => {
+    const card = readFileSync(path.join(ROOT, "src/modules/volunteers/ui/VolunteersCard.tsx"), "utf8");
+    // `roleFields` draws both the «Adaugă un rol» form and every role's «Modifică».
+    expect(card).toMatch(/const roleFields = [\s\S]*<TranslateAllButton \/>[\s\S]*name="descriptionRoBody"[\s\S]*name="descriptionEnBody"/);
+    expect(card.match(/<TranslateAllButton \/>/g)?.length).toBe(1);
+    expect(card.match(/roleFields\(/g)?.length).toBeGreaterThanOrEqual(2);
+  });
+});
+
 describe("§482 a rich text fills only in the form that pressed", () => {
   const doc = { type: "doc", content: [] } as unknown as RichTextDoc;
   const cardA = {} as HTMLFormElement;

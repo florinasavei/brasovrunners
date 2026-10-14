@@ -42,6 +42,7 @@ const LAUNCHED: OwnerTaskInputs = {
   volunteerAgreementInForce: true,
   volunteerRoleChoicesAgreement: true,
   volunteerAgreementDescribed: true,
+  volunteerProfileDescribed: true,
   gmailFallbackDescribed: true,
   refusalDescribed: true,
   teamPageDescribed: true,
@@ -197,6 +198,20 @@ describe("owner tasks", () => {
     expect(ownerTasks({ ...LAUNCHED, hasApprovedPrivacyNotice: false }).some((task) => task.id === "volunteerAgreementNotice")).toBe(false);
     for (const catalogue of [ro, en]) {
       const item = catalogue.Admin.tasks.items.volunteerAgreementNotice;
+      expect(item.title && item.todo && item.done).toBeTruthy();
+      expect(item.how.join("\n")).toContain("/admin/legal");
+    }
+  });
+
+  it("§NNN: the notice's row for what a volunteer says about themselves is open while an event ahead takes volunteers and the notice is silent, done once it names it", () => {
+    expect(stateOf({ ...LAUNCHED, volunteerProfileDescribed: false }, "volunteerProfileNotice")).toBe("open");
+    expect(stateOf(LAUNCHED, "volunteerProfileNotice")).toBe("done");
+    expect(stateOf({ ...LAUNCHED, volunteeringEvents: 0 }, "volunteerProfileNotice")).toBe("done");
+    expect(ownerTasks({ ...LAUNCHED, volunteerProfileDescribed: false, volunteeringEvents: 0 }).some((task) => task.id === "volunteerProfileNotice")).toBe(false);
+    // A notice row: there is nothing to describe until a notice is approved at all.
+    expect(ownerTasks({ ...LAUNCHED, hasApprovedPrivacyNotice: false }).some((task) => task.id === "volunteerProfileNotice")).toBe(false);
+    for (const catalogue of [ro, en]) {
+      const item = catalogue.Admin.tasks.items.volunteerProfileNotice;
       expect(item.title && item.todo && item.done).toBeTruthy();
       expect(item.how.join("\n")).toContain("/admin/legal");
     }
@@ -474,6 +489,7 @@ describe("owner tasks", () => {
       "shopNotice",
       "volunteersNotice",
       "volunteerAgreementNotice",
+      "volunteerProfileNotice",
       "gmailFallbackNotice",
       "volunteerAgreement",
       "volunteerRoleChoicesAgreement",

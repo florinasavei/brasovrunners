@@ -17,15 +17,24 @@ import {
   requestVolunteerAgreementAction,
   setVolunteerStateAction,
   switchVolunteersAction,
+  switchVolunteersShirtsAction,
 } from "@/app/[locale]/admin/events/[id]/volunteer-actions";
 import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
+import LazyRichTextEditor from "@/modules/content/rich-text/ui/LazyRichTextEditor";
+import { richTextEditorLabels } from "@/modules/content/rich-text/ui/labels";
+import { yearsPhrase } from "@/modules/registrations/domain/age";
+import { shirtSizeShown, SHIRT_SIZES } from "@/modules/registrations/domain/kit";
+import { SEX_CHOICES } from "@/modules/registrations/domain/sex";
 import { formatPhone } from "@/modules/registrations/phone";
+import TranslateAllButton from "@/modules/translate/ui/TranslateAllButton";
 import { badgeRoleText } from "../badges/badge-design";
 import RoleColourFields from "../badges/ui/RoleColourFields";
 import RoleColourSample from "../badges/ui/RoleColourSample";
+import { CLUB_NAME } from "@/theme/brand";
 import { confirmWords } from "@/shared/feedback/confirm-words";
+import { ACTION_ICONS } from "@/shared/ui/action-icons";
 import ActionForm from "@/shared/forms/ActionForm";
 import RecallField from "@/shared/forms/recall";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
@@ -36,6 +45,9 @@ import Panel from "@/shared/ui/Panel";
 import StatusChip from "@/shared/ui/StatusChip";
 import type { StatusGlyphName } from "@/shared/ui/status-glyphs";
 import {
+  VOLUNTEER_AGE_MAX,
+  VOLUNTEER_CITY_MAX,
+  VOLUNTEER_MINIMUM_AGE,
   VOLUNTEER_NAME_MAX,
   VOLUNTEER_NEEDED_MAX,
   VOLUNTEER_NOTE_MAX,
@@ -44,12 +56,17 @@ import {
   agreementRolesStamp,
   agreementStandingOf,
   agreementStillNamesRole,
+  descriptionHead,
   type RoleStanding,
   type VolunteerAgreementStanding,
   type VolunteerOfferClosed,
   type VolunteerState,
 } from "../domain/volunteer";
 import { ROLE_FORM_COLOUR_BOXES, type VolunteerItem, type VolunteerRole } from "../volunteers";
+import { DISCLOSURE_OPEN_ARROW, DISCLOSURE_SUMMARY_SX, FOLD_GLYPH_INLINE_SX } from "@/shared/ui/disclosure";
+
+/** The glyph of the role header's «Restul» fold, by name from the registry (§694). */
+const MoreIcon = ACTION_ICONS.intro;
 
 /** A state's chip: its word, its glyph and its tone — never the colour alone. */
 const STATE_CHIP: Record<VolunteerState, { glyph: StatusGlyphName; color: "warning" | "success" | "default" }> = {
@@ -65,11 +82,34 @@ const AGREEMENT_CHIP: Record<VolunteerAgreementStanding, { glyph: StatusGlyphNam
   notAccepted: { glyph: "open", color: "warning" },
 };
 
+/**
+ * The one-press tick (§752's pattern, the owner's rule of 2026-10-14: «nu mai folosi niciodată» a button that flips a setting):
+ * a plain submit drawn as the house's checkbox with its words beside it — the glyph is the box, 24 pixels in a 44-pixel row,
+ * the state in `aria-checked` and in the glyph, never the colour alone.
+ */
+const TICK_ROW_SX = {
+  minHeight: 44,
+  justifyContent: "flex-start",
+  textAlign: "left",
+  textTransform: "none",
+  fontWeight: 400,
+  fontSize: "1rem",
+  color: "text.primary",
+  px: 0.5,
+  borderRadius: 1,
+  "& .MuiButton-startIcon": { mr: 1, ml: 0 },
+  "& .MuiButton-startIcon > *:nth-of-type(1)": { fontSize: 24 },
+} as const;
+
 type Props = {
   locale: Locale;
   eventId: string;
   /** «Primește voluntari», as saved. */
   acceptsVolunteers: boolean;
+  /** «Oferim tricouri voluntarilor», as saved (§NNN): the people's rows show their size, and the entry's box asks it. */
+  volunteersShirts: boolean;
+  /** The notice in force names what a volunteer says about themselves (§NNN): the public form asks it — else it is §758's tick. */
+  profileDescribed: boolean;
   /** Why the public form is not on the event's page now, or null when it is (`volunteerOfferClosedFor`). */
   offerClosed: VolunteerOfferClosed | null;
   roles: readonly VolunteerRole[];
@@ -112,6 +152,8 @@ export default async function VolunteersCard({
   locale,
   eventId,
   acceptsVolunteers,
+  volunteersShirts,
+  profileDescribed,
   offerClosed,
   roles,
   standings,
@@ -125,6 +167,8 @@ export default async function VolunteersCard({
 }: Props) {
   const t = await getTranslations("Admin");
   const words = await confirmWords();
+  // The editor's own control names, for the role's description (§NNN).
+  const rich = richTextEditorLabels(await getTranslations("Admin.richText"));
   const standingOf = new Map(standings.map((standing) => [standing.roleId, standing]));
 
   const pending = volunteers.filter((volunteer) => volunteer.state === "REGISTERED").length;
@@ -148,6 +192,8 @@ export default async function VolunteersCard({
     needed: t("volunteers.role.needed"),
     descriptionRo: t("volunteers.role.descriptionRo"),
     descriptionEn: t("volunteers.role.descriptionEn"),
+    descriptionRoBody: t("volunteers.role.descriptionRo"),
+    descriptionEnBody: t("volunteers.role.descriptionEn"),
     [ROLE_FORM_COLOUR_BOXES.choice]: t("badges.colours.choice"),
     [ROLE_FORM_COLOUR_BOXES.typed]: t("badges.colours.typedLabel"),
   });
@@ -158,6 +204,10 @@ export default async function VolunteersCard({
     email: t("volunteers.person.email"),
     phone: t("volunteers.person.phone"),
     note: t("volunteers.person.note"),
+    age: t("volunteers.person.age"),
+    sex: t("volunteers.person.sex"),
+    city: t("volunteers.person.city"),
+    shirtSize: t("volunteers.person.shirt"),
   });
 
   const hidden = (
@@ -170,6 +220,8 @@ export default async function VolunteersCard({
   /** The boxes of «Adaugă un rol» and every role's «Modifică»: the names, the number, the descriptions and the badge's colour. */
   const roleFields = (role: VolunteerRole | null) => (
     <Stack spacing={1.5} sx={{ maxWidth: 640 }}>
+      {/* «Copiază și tradu tot: RO → EN» (§464, §482), scoped to this form: the English name from the Romanian one, the English description from the Romanian — layout kept. */}
+      <TranslateAllButton />
       <RecallField
         name="nameRo"
         label={t("volunteers.role.nameRo")}
@@ -196,21 +248,32 @@ export default async function VolunteersCard({
         size="small"
         slotProps={{ htmlInput: { min: 1, max: VOLUNTEER_NEEDED_MAX, inputMode: "numeric" } }}
       />
-      <RecallField
-        name="descriptionRo"
-        label={t("volunteers.role.descriptionRo")}
-        helperText={t("volunteers.role.descriptionHelp", { max: String(VOLUNTEER_ROLE_DESCRIPTION_MAX) })}
-        defaultValue={role?.descriptionRo ?? ""}
-        size="small"
-        slotProps={{ htmlInput: { maxLength: VOLUNTEER_ROLE_DESCRIPTION_MAX } }}
-      />
-      <RecallField
-        name="descriptionEn"
-        label={t("volunteers.role.descriptionEn")}
-        defaultValue={role?.descriptionEn ?? ""}
-        size="small"
-        slotProps={{ htmlInput: { maxLength: VOLUNTEER_ROLE_DESCRIPTION_MAX } }}
-      />
+      {/* «Descrierea rolului» (§NNN): the house's rich-text editor, one fold per language, both languages or neither; its plain words are what the agreement and the emails say. */}
+      <Stack spacing={1} data-testid="volunteer-role-description-field">
+        <LazyRichTextEditor
+          name="descriptionRoBody"
+          label={t("volunteers.role.descriptionRo")}
+          summary={t("volunteers.role.descriptionRo")}
+          emptyHint={t("volunteers.role.descriptionEmpty")}
+          initialBody={role?.descriptionRoJson ?? null}
+          accessibleSuffix="RO"
+          features={{ media: false, tables: false }}
+          labels={rich}
+        />
+        <LazyRichTextEditor
+          name="descriptionEnBody"
+          label={t("volunteers.role.descriptionEn")}
+          summary={t("volunteers.role.descriptionEn")}
+          emptyHint={t("volunteers.role.descriptionEmpty")}
+          initialBody={role?.descriptionEnJson ?? null}
+          accessibleSuffix="EN"
+          features={{ media: false, tables: false }}
+          labels={rich}
+        />
+        <Typography variant="caption" color="text.secondary" sx={{ px: 1.75 }}>
+          {t("volunteers.role.descriptionHelp", { max: String(VOLUNTEER_ROLE_DESCRIPTION_MAX) })}
+        </Typography>
+      </Stack>
       {/* The role's band on its volunteer badge (§764): the same two boxes as the badges' page, saved by the same rule. */}
       <RoleColourFields names={ROLE_FORM_COLOUR_BOXES} colour={role?.colour ?? null} />
     </Stack>
@@ -279,6 +342,72 @@ export default async function VolunteersCard({
         size="small"
         slotProps={{ htmlInput: { maxLength: 40, inputMode: "tel" } }}
       />
+      {/* What the person told the organizers (§NNN): every box optional here, drawn only while the privacy notice in force names them
+          (`profileDescribed`) — the service refuses them otherwise, so a hidden box is not the only gate. */}
+      {profileDescribed && (
+        <>
+        <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5}>
+          <RecallField
+            name="age"
+            label={t("volunteers.person.age")}
+            helperText={t("volunteers.person.ageHelp", { age: yearsPhrase(VOLUNTEER_MINIMUM_AGE, locale) })}
+            defaultValue={person?.age !== null && person?.age !== undefined ? String(person.age) : ""}
+            size="small"
+            fullWidth
+            slotProps={{ htmlInput: { inputMode: "numeric", pattern: "[0-9]*", maxLength: String(VOLUNTEER_AGE_MAX).length } }}
+          />
+          <RecallField
+            name="sex"
+            select
+            label={t("volunteers.person.sex")}
+            defaultValue={person?.sex ?? ""}
+            size="small"
+            fullWidth
+            slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}
+          >
+            <option value="">{t("volunteers.person.sexNone")}</option>
+            {SEX_CHOICES.map((sex) => (
+              <option key={sex} value={sex}>
+                {t(`registrations.answers.sex.${sex}`)}
+              </option>
+            ))}
+          </RecallField>
+        </Stack>
+        <RecallField
+          name="city"
+          label={t("volunteers.person.city")}
+          defaultValue={person?.city ?? ""}
+          size="small"
+          slotProps={{ htmlInput: { maxLength: VOLUNTEER_CITY_MAX, autoComplete: "off" } }}
+        />
+        {/* The T-shirt's size, only while the event gives T-shirts: «Fără tricou» is none. A size left from before stays, shown nowhere. */}
+        {volunteersShirts && (
+          <RecallField
+            name="shirtSize"
+            select
+            label={t("volunteers.person.shirt")}
+            defaultValue={shirtSizeShown(true, person?.shirtSize) ?? ""}
+            size="small"
+            slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}
+          >
+            <option value="">{t("volunteers.person.shirtNone")}</option>
+            {SHIRT_SIZES.map((size) => (
+              <option key={size} value={size}>
+                {size}
+              </option>
+            ))}
+          </RecallField>
+        )}
+        <Box>
+          <CheckboxField name="volunteeredBefore" defaultChecked={person?.volunteeredBefore ?? false}>
+            {t("volunteers.person.before")}
+          </CheckboxField>
+          <CheckboxField name="clubMember" defaultChecked={person?.clubMember ?? false}>
+            {t("volunteers.person.club", { club: CLUB_NAME })}
+          </CheckboxField>
+        </Box>
+        </>
+      )}
       <RecallField
         name="note"
         label={t("volunteers.person.note")}
@@ -509,6 +638,28 @@ export default async function VolunteersCard({
           );
         })()}
       </Stack>
+      {/* What the person said about themselves (§NNN), small: two chips — «a mai fost voluntar» and the club's group, the person's own claims, in words and a glyph —
+          and one line of the rest in the row's details. Nothing for a person who said nothing. */}
+      {(person.volunteeredBefore || person.clubMember) && (
+        <Stack direction="row" sx={{ flexWrap: "wrap", gap: 0.5, mt: 0.5 }} data-testid="volunteer-claims">
+          {person.volunteeredBefore && <StatusChip glyph="experience" variant="outlined" label={t("volunteers.chips.before")} testId="volunteer-before" />}
+          {person.clubMember && <StatusChip glyph="club" variant="outlined" label={t("volunteers.chips.club", { club: CLUB_NAME })} testId="volunteer-club" />}
+        </Stack>
+      )}
+      {(() => {
+        const size = shirtSizeShown(volunteersShirts, person.shirtSize);
+        const facts = [
+          person.age !== null ? t("volunteers.person.ageValue", { age: String(person.age) }) : null,
+          person.sex !== null ? t(`registrations.answers.sex.${person.sex}`) : null,
+          person.city !== null ? t("volunteers.person.cityValue", { city: person.city }) : null,
+          size !== null ? t("volunteers.person.shirtValue", { size }) : null,
+        ].filter((fact): fact is string => fact !== null);
+        return facts.length > 0 ? (
+          <Typography variant="body2" color="text.secondary" sx={{ wordBreak: "break-word" }} data-testid="volunteer-facts">
+            {facts.join(" · ")}
+          </Typography>
+        ) : null;
+      })()}
       {/* The address and the telephone number: drawn here and nowhere else, as links a thumb can press. */}
       <Stack direction="row" sx={{ flexWrap: "wrap", columnGap: 2, mt: 0.5 }}>
         <Box component="a" href={`mailto:${person.email}`} sx={{ display: "inline-flex", alignItems: "center", minHeight: 44, wordBreak: "break-all" }} data-testid="volunteer-email">
@@ -606,11 +757,29 @@ export default async function VolunteersCard({
       <Box sx={{ mt: 0.75 }}>
         <RoleColourSample colour={role.colour} label={badgeRoleText(roleName(role), locale)} locale={locale} testId="volunteer-role-colour" />
       </Box>
-      {(role.descriptionRo || role.descriptionEn) && (
-        <Typography variant="body2" color="text.secondary" sx={{ wordBreak: "break-word" }}>
-          {[role.descriptionRo, role.descriptionEn].filter(Boolean).join(" / ")}
-        </Typography>
-      )}
+      {/* «Descrierea rolului» (§NNN): the first line of its plain words in the card's language, the rest folded. */}
+      {(() => {
+        const head = descriptionHead(locale === "en" ? role.descriptionEn : role.descriptionRo);
+        if (head.first === "") return null;
+        return (
+          <Box data-testid="volunteer-role-description">
+            <Typography variant="body2" color="text.secondary" sx={{ wordBreak: "break-word" }} data-testid="volunteer-role-description-first">
+              {head.first}
+            </Typography>
+            {head.rest !== null && (
+              <Box component="details" sx={{ "& > summary": { ...DISCLOSURE_SUMMARY_SX, py: 0.5 }, ...DISCLOSURE_OPEN_ARROW }}>
+                <Box component="summary">
+                  <MoreIcon aria-hidden sx={FOLD_GLYPH_INLINE_SX} />
+                  {t("volunteers.role.more")}
+                </Box>
+                <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: "pre-line", wordBreak: "break-word" }}>
+                  {head.rest}
+                </Typography>
+              </Box>
+            )}
+          </Box>
+        );
+      })()}
       <Stack spacing={1} sx={{ mt: 1 }}>
         <Stack direction="row" sx={{ flexWrap: "wrap", gap: 1 }}>
           {([
@@ -697,16 +866,53 @@ export default async function VolunteersCard({
           <Alert severity={offerClosed === null ? "success" : "info"} data-testid="volunteer-offer-state">
             {offerClosed === null ? t("volunteers.offer.open") : t(`volunteers.offer.closed.${offerClosed}`)}
           </Alert>
-          <Box component="form" action={switchVolunteersAction}>
+          {/* «Primește voluntari pe pagină» (§NNN; the owner, 2026-10-14: «nu mai folosi niciodată» a button that flips a setting): a real tick —
+              a plain form whose submit is drawn as the checkbox, the words beside it, `role="checkbox"` and `aria-checked`, 44 pixels, working with
+              scripts off (the to-do list's pattern, §752). It posts the state it wants; the action behind it is the one it always was. */}
+          <Box component="form" action={switchVolunteersAction} data-testid="volunteer-switch-form">
             {hidden}
             <input type="hidden" name="on" value={acceptsVolunteers ? "0" : "1"} />
-            <GlyphSubmitButton
-              icon={acceptsVolunteers ? "turnOff" : "turnOn"}
-              label={t(acceptsVolunteers ? "volunteers.switchOff" : "volunteers.switchOn")}
-              pendingLabel={t(acceptsVolunteers ? "volunteers.switchOff" : "volunteers.switchOn")}
-              variant="outlined"
-            />
+            <GlyphButton
+              type="submit"
+              icon={acceptsVolunteers ? "tickOn" : "tickOff"}
+              role="checkbox"
+              aria-checked={acceptsVolunteers}
+              color={acceptsVolunteers ? "success" : "inherit"}
+              sx={TICK_ROW_SX}
+              data-testid="volunteer-switch-tick"
+            >
+              {t("volunteers.switchOn")}
+            </GlyphButton>
+            <Typography variant="caption" color="text.secondary" sx={{ display: "block", pl: 0.5 }}>
+              {t("volunteers.switchHelp")}
+            </Typography>
           </Box>
+          {/* «Oferim tricouri voluntarilor» (§NNN): the same tick as the one above — a submit drawn as the checkbox that posts the state it wants,
+              so the card's two settings behave alike and neither waits for a «Salvează». */}
+          <Box component="form" action={switchVolunteersShirtsAction} data-testid="volunteer-shirts-form">
+            {hidden}
+            <input type="hidden" name="on" value={volunteersShirts ? "0" : "1"} />
+            <GlyphButton
+              type="submit"
+              icon={volunteersShirts ? "tickOn" : "tickOff"}
+              role="checkbox"
+              aria-checked={volunteersShirts}
+              color={volunteersShirts ? "success" : "inherit"}
+              sx={TICK_ROW_SX}
+              data-testid="volunteer-shirts-tick"
+            >
+              {t("volunteers.shirts.label")}
+            </GlyphButton>
+            <Typography variant="caption" color="text.secondary" sx={{ display: "block", pl: 0.5 }}>
+              {t("volunteers.shirts.help")}
+            </Typography>
+          </Box>
+          {/* Which form the public page draws (§NNN): the one that asks the person's age, sex and city only while the notice in force names them. */}
+          {!profileDescribed && (
+            <Typography variant="body2" color="text.secondary" data-testid="volunteer-profile-off">
+              {t("volunteers.offer.profileOff")}
+            </Typography>
+          )}
         </Stack>
 
         {/* The roles: bilingual, how many each needs, the club's order. */}

@@ -1,8 +1,11 @@
 import { z } from "zod";
 import type { EventVolunteerSource, EventVolunteerState } from "@/db/schema/event-volunteers";
+import type { RichTextDoc } from "@/modules/content/rich-text/domain/schema";
+import { normalizeTeamText, resolveRichPair, richTextBox } from "@/modules/content/team/fields";
 import { E164_PHONE } from "@/modules/registrations/phone";
+import { SHIRT_SIZES } from "@/modules/registrations/domain/kit";
+import { SEX_CHOICES } from "@/modules/registrations/domain/sex";
 import { isValidEmail } from "@/modules/participants/domain/canonical-email";
-import { refuseOneLanguage } from "@/shared/forms/both-languages";
 
 /**
  * Volunteers for a race (§754; the owner, 2026-10-13: «I want to register volunteers for a race and
@@ -20,7 +23,11 @@ export const VOLUNTEER_SOURCES = ["STAFF", "PUBLIC"] as const satisfies readonly
 
 /** The bounds the database holds too (`event_volunteer_roles` and `event_volunteers` checks). */
 export const VOLUNTEER_ROLE_NAME_MAX = 80;
-export const VOLUNTEER_ROLE_DESCRIPTION_MAX = 200;
+/** The role description's plain words, per language (§NNN): a list item counts for what it says, not for its JSON. */
+export const VOLUNTEER_ROLE_DESCRIPTION_MAX = 2000;
+/** What a person says about themselves (§NNN): the city's length is the database's, the age's range too. */
+export const VOLUNTEER_CITY_MAX = 80;
+export const VOLUNTEER_AGE_MAX = 100;
 export const VOLUNTEER_NEEDED_MAX = 1000;
 export const VOLUNTEER_NAME_MAX = 120;
 export const VOLUNTEER_MESSAGE_MAX = 300;
@@ -35,6 +42,7 @@ export const VOLUNTEER_ROLES_MAX = 30;
  * would take that consent is the lawyer's later question, so until then the platform takes adults only.
  */
 export const VOLUNTEER_MINIMUM_AGE = 18;
+// Since §NNN the typed age is what is checked against it (the public form, the organizers' entry); the link page keeps its tick.
 
 /** «Înscris» and «Confirmat» count against a role; «Anulat» never does. */
 export function countsAgainstRole(state: VolunteerState): boolean {
@@ -65,10 +73,19 @@ const optionalLine = (max: number) =>
     .pipe(z.string().max(max))
     .transform((value) => (value === "" ? null : value));
 
+/** A plain box of several lines (the description's plain twin, for a caller without the editor): trimmed, at most one empty line in a row. */
+const plainBox = (max: number) => z.string().optional().default("").transform(normalizeTeamText).pipe(z.string().max(max));
+
 /**
- * A role as the club types it: both names (the bilingual rule, §352 — never one language's name under the
- * other's page), how many people it needs, and optionally what the person would do, in both languages or
- * neither. The field names are the form's own `name`s, so a refusal's summary links to the box.
+ * A role as the club types it: both names (the bilingual rule, §352 — never one language's name under the other's
+ * page), how many people it needs, and optionally «Descrierea rolului» — what the person would do — in both
+ * languages or neither (§NNN: the rich-text editor's document per language, `descriptionRoBody` /
+ * `descriptionEnBody`; the plain boxes `descriptionRo` / `descriptionEn` are for a caller without the editor, a
+ * script or a test, and read as paragraphs). No table and no picture: the description is read on a phone, under a
+ * tick. The field names are the form's own `name`s, so a refusal's summary links to the box.
+ *
+ * Parsed, the description is its document and its plain words per language (`descriptionRoJson`,
+ * `descriptionWordsRo`, …), or nulls — the FAQ's shape (§525, §474).
  */
 export const volunteerRoleInputSchema = z
   .object({
@@ -80,21 +97,99 @@ export const volunteerRoleInputSchema = z
       .pipe(z.string().regex(/^\d+$/))
       .transform((value) => Number(value))
       .pipe(z.number().int().min(1).max(VOLUNTEER_NEEDED_MAX)),
-    descriptionRo: optionalLine(VOLUNTEER_ROLE_DESCRIPTION_MAX),
-    descriptionEn: optionalLine(VOLUNTEER_ROLE_DESCRIPTION_MAX),
+    descriptionRo: plainBox(VOLUNTEER_ROLE_DESCRIPTION_MAX),
+    descriptionEn: plainBox(VOLUNTEER_ROLE_DESCRIPTION_MAX),
+    descriptionRoBody: richTextBox,
+    descriptionEnBody: richTextBox,
   })
-  .superRefine((value, ctx) => {
-    refuseOneLanguage(
+  .transform((fields, ctx) => {
+    // No picture and no video: the description is read on a phone, under a tick (and a picture-only body has no plain
+    // words, which the table's CHECK refuses — a forged post must be a refusal here, never a 500 there).
+    for (const [body, name] of [
+      [fields.descriptionRoBody, "descriptionRoBody"],
+      [fields.descriptionEnBody, "descriptionEnBody"],
+    ] as const) {
+      if (body !== undefined && hasMedia(body)) {
+        ctx.addIssue({ code: "custom", path: [name], message: "the role's description may not hold a picture or a video" });
+      }
+    }
+    const description = resolveRichPair(
       ctx,
-      { ro: value.descriptionRo, en: value.descriptionEn },
-      { ro: ["descriptionRo"], en: ["descriptionEn"] },
-      "the role's description",
+      { ro: { plain: fields.descriptionRo, body: fields.descriptionRoBody }, en: { plain: fields.descriptionEn, body: fields.descriptionEnBody } },
+      { ro: { plain: "descriptionRo", body: "descriptionRoBody" }, en: { plain: "descriptionEn", body: "descriptionEnBody" } },
+      { max: VOLUNTEER_ROLE_DESCRIPTION_MAX, tables: false, what: "the role's description" },
     );
+    // A side with no plain words is no description: the document and the words are both set or both null (the CHECK).
+    const kept = (side: { doc: RichTextDoc | null; plain: string | null }) => (side.plain === null ? { doc: null, plain: null } : side);
+    const ro = kept(description.ro);
+    const en = kept(description.en);
+    return {
+      nameRo: fields.nameRo,
+      nameEn: fields.nameEn,
+      needed: fields.needed,
+      descriptionRoJson: ro.doc,
+      descriptionEnJson: en.doc,
+      descriptionWordsRo: ro.plain,
+      descriptionWordsEn: en.plain,
+    };
   });
+
+/** Whether a document holds a picture or a video block (top-level blocks, `schema.ts`). */
+function hasMedia(doc: RichTextDoc): boolean {
+  return (doc.content ?? []).some((block) => block.type === "image" || block.type === "youtube");
+}
 
 export type VolunteerRoleInput = z.infer<typeof volunteerRoleInputSchema>;
 
 const uuidField = z.uuid();
+
+/**
+ * What a person says about themselves (§NNN; the owner, 2026-10-14: «vârstă, sex, oraș și o bifă dacă a mai fost
+ * voluntar sau nu»): the age in whole years — digits only, one to `VOLUNTEER_AGE_MAX` and at least
+ * `VOLUNTEER_MINIMUM_AGE` (the last a rule of the box itself, so a refusal names the age together with the other boxes
+ * that failed; the page says «cel puțin 18 ani» rather than «scrie vârsta» by reading the typed age) — the sex as the
+ * registration form's two answers, the city as one short line. Required on the public form, optional on the
+ * organizers' entry (an empty box is null).
+ */
+const ageDigits = z
+  .string()
+  .transform((value) => value.trim())
+  .pipe(z.string().regex(/^\d{1,3}$/))
+  .transform((value) => Number(value))
+  .pipe(
+    z
+      .number()
+      .int()
+      .min(1)
+      .max(VOLUNTEER_AGE_MAX)
+      .refine((age) => age >= VOLUNTEER_MINIMUM_AGE, { message: `volunteers must be at least ${VOLUNTEER_MINIMUM_AGE} years old` }),
+  );
+const requiredAge = z.string().optional().default("").pipe(ageDigits);
+const optionalAge = z
+  .string()
+  .optional()
+  .default("")
+  .transform((value) => value.trim())
+  .pipe(z.union([z.literal(""), ageDigits]))
+  .transform((value) => (value === "" ? null : value));
+const requiredSex = z.string().optional().default("").pipe(z.enum(SEX_CHOICES));
+const optionalSex = z
+  .string()
+  .optional()
+  .default("")
+  .pipe(z.union([z.literal(""), z.enum(SEX_CHOICES)]))
+  .transform((value) => (value === "" ? null : value));
+const requiredCity = z.string().optional().default("").pipe(line(VOLUNTEER_CITY_MAX));
+const optionalCity = z.string().optional().default("").pipe(optionalLine(VOLUNTEER_CITY_MAX));
+/** «Mărimea tricoului»: a size of the kit's list, or "" for none (null) — whether the event gives a shirt is the service's question. */
+const shirtField = z
+  .string()
+  .optional()
+  .default("")
+  .pipe(z.union([z.literal(""), z.enum(SHIRT_SIZES)]))
+  .transform((value) => (value === "" ? null : value));
+/** A tick as the action reads it from the form: true only when posted. */
+const tick = z.boolean().optional().default(false);
 
 /**
  * The roles a person ticked (§761): each an id, trimmed, the same one twice kept once, in the order posted — never
@@ -132,6 +227,13 @@ export const volunteerStaffInputSchema = z
     /** E.164, read from what the organizer typed by the registrations' own parser (`typedPhone`, in the action). */
     phone: z.string().regex(E164_PHONE),
     note: optionalLine(VOLUNTEER_NOTE_MAX),
+    /** What the person told the organizers (§NNN): every box optional here, an age below the minimum refused. */
+    age: optionalAge,
+    sex: optionalSex,
+    city: optionalCity,
+    volunteeredBefore: tick,
+    clubMember: tick,
+    shirtSize: shirtField,
   })
   .superRefine((value, ctx) => {
     if (value.roleIds.length === 0 && value.assignedRoleId === null) {
@@ -146,11 +248,8 @@ export function choicesWithAssigned(input: Pick<VolunteerStaffInput, "roleIds" |
   return input.roleIds.length > 0 ? input.roleIds : input.assignedRoleId ? [input.assignedRoleId] : [];
 }
 
-/**
- * The public form: a person offering, with the consent tick that names the privacy notice. «Ce ești dispus(ă) să
- * faci» (§761): every role the person would do, at least one — the box `roleIds` in the refusal.
- */
-export const volunteerPublicInputSchema = z.object({
+/** What every public sign-up posts, whatever the notice in force says (§761, §758). */
+const publicBase = {
   roleIds: roleIdsField.pipe(z.array(z.string()).min(1)),
   name: line(VOLUNTEER_NAME_MAX),
   email: z
@@ -165,13 +264,47 @@ export const volunteerPublicInputSchema = z.object({
   consent: z.literal(true),
   /** «Am citit și accept contractul de voluntariat» (§758): the person's acceptance of the agreement in force, required. */
   agreement: z.literal(true),
-  /** «Am cel puțin 18 ani» (§758, `VOLUNTEER_MINIMUM_AGE`): required; a minor's volunteering is a later question for the lawyer. */
-  adult: z.literal(true),
   honeypot: z.string().max(2000).optional(),
   renderedAt: z.iso.datetime().optional(),
+};
+
+/**
+ * The public form while the privacy notice in force does **not** name what a volunteer says about themselves
+ * (§758's shape, unchanged): the consent, the agreement and «Am cel puțin 18 ani», each a tick that is the person's
+ * own act, required; a minor's volunteering is a later question for the lawyer.
+ */
+export const volunteerPublicInputSchema = z.object({
+  ...publicBase,
+  /** «Am cel puțin 18 ani» (§758, `VOLUNTEER_MINIMUM_AGE`): required. */
+  adult: z.literal(true),
 });
 
 export type VolunteerPublicInput = z.infer<typeof volunteerPublicInputSchema>;
+
+/**
+ * The public form while the notice in force names it (§NNN, `describesVolunteerProfile`; the owner, 2026-10-14):
+ * «Vârsta» (whole years, at least `VOLUNTEER_MINIMUM_AGE` — the tick «Am cel puțin 18 ani» is gone, the age answers
+ * it), «Sex» (the registration form's two answers), «Orașul», the optional ticks «Am mai fost voluntar în trecut la
+ * alte curse» and «Fac parte din grupul {club}», and «Mărimea tricoului» — which the service keeps only while the
+ * event gives a shirt.
+ */
+export const volunteerPublicProfileSchema = z
+  .object({
+    ...publicBase,
+    age: requiredAge,
+    sex: requiredSex,
+    city: requiredCity,
+    volunteeredBefore: tick,
+    clubMember: tick,
+    shirtSize: shirtField,
+  });
+
+export type VolunteerPublicProfileInput = z.infer<typeof volunteerPublicProfileSchema>;
+
+/** The schema a public post is read with: the profile's while the notice names it, §758's otherwise. */
+export function volunteerPublicSchemaFor(profile: boolean) {
+  return profile ? volunteerPublicProfileSchema : volunteerPublicInputSchema;
+}
 
 /** The field names a Zod refusal is about, in the form's own words (names only, never values). */
 export function refusedFields(error: z.ZodError): string[] {
@@ -234,7 +367,58 @@ export type RoleWords = { nameRo: string; nameEn: string; descriptionRo: string 
  * they are written. A text that is only punctuation reads as none, and its sentence is left out.
  */
 export function tasksWords(description: string): string {
-  return description.trim().replace(/[.!?…;]$/u, "").trimEnd();
+  // The description's plain words keep a line per paragraph and per list item (§NNN): in the agreement's sentence
+  // they read as one, a line that ends a sentence followed by a space, any other by «; ».
+  const lines = description
+    .split(/\r?\n/)
+    .map((part) => part.replace(/\s+/g, " ").trim())
+    .filter((part) => part !== "");
+  const flat = lines.map((part, index) => (index === lines.length - 1 ? part : /[.!?…;:]$/u.test(part) ? `${part} ` : `${part}; `)).join("");
+  return flat.trim().replace(/[.!?…;]$/u, "").trimEnd();
+}
+
+/**
+ * A role's description is shown folded behind «Detalii» when it runs past about three lines (§NNN): more than three
+ * lines of plain words (a paragraph or a list item each) or more than `ROLE_DESCRIPTION_FOLD_CHARS` characters.
+ * The plain words are the rule's input — a document's JSON says nothing about how long it reads.
+ */
+// About three lines on a 320-pixel phone, where a line of body text holds about forty characters.
+export const ROLE_DESCRIPTION_FOLD_CHARS = 120;
+export const ROLE_DESCRIPTION_FOLD_LINES = 3;
+
+export function descriptionNeedsFold(words: string | null | undefined): boolean {
+  const text = (words ?? "").trim();
+  if (text === "") return false;
+  return text.length > ROLE_DESCRIPTION_FOLD_CHARS || text.split(/\r?\n/).filter((line) => line.trim() !== "").length > ROLE_DESCRIPTION_FOLD_LINES;
+}
+
+/** The first line of a description's plain words, and whether more follows: the card's role header shows the first and folds the rest. */
+export function descriptionHead(words: string | null | undefined): { first: string; rest: string | null } {
+  const lines = (words ?? "")
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) => line !== "");
+  if (lines.length === 0) return { first: "", rest: null };
+  return { first: lines[0], rest: lines.length > 1 ? lines.slice(1).join("\n") : null };
+}
+
+/**
+ * Whether two stored/typed descriptions are the same document (§NNN): read back from PostgreSQL's `jsonb` the keys come
+ * in another order than the editor wrote them, so the comparison sorts them — a press that changes nothing must write
+ * and audit nothing.
+ */
+export function sameDescription(a: unknown, b: unknown): boolean {
+  const canonical = (value: unknown): unknown =>
+    Array.isArray(value)
+      ? value.map(canonical)
+      : value && typeof value === "object"
+        ? Object.fromEntries(
+            Object.entries(value as Record<string, unknown>)
+              .sort(([left], [right]) => left.localeCompare(right))
+              .map(([key, inner]) => [key, canonical(inner)]),
+          )
+        : value;
+  return JSON.stringify(canonical(a ?? null)) === JSON.stringify(canonical(b ?? null));
 }
 
 /** The agreement's role blanks for one person: the role given and its tasks, or the roles chosen and what each asks. */

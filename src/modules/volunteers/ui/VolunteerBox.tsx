@@ -15,13 +15,17 @@ import { phoneCountryLabels, phoneCountryOrder } from "@/modules/registrations/p
 import { turnstileSiteKey } from "@/modules/registrations/turnstile";
 import BotCheck from "@/modules/registrations/ui/BotCheck";
 import PhoneField from "@/modules/registrations/ui/PhoneField";
+import SexField from "@/modules/registrations/ui/SexField";
+import { SHIRT_SIZES } from "@/modules/registrations/domain/kit";
 import CheckboxField from "@/shared/ui/CheckboxField";
 import { DISCLOSURE_OPEN_ARROW, DISCLOSURE_SUMMARY_SX, FOLD_GLYPH_INLINE_SX } from "@/shared/ui/disclosure";
 import LegalLink from "@/shared/ui/LegalLink";
 import SubmitButton from "@/shared/ui/SubmitButton";
+import { CLUB_NAME } from "@/theme/brand";
 import { DENSITY } from "@/theme/density";
 import { yearsPhrase } from "@/modules/registrations/domain/age";
-import { VOLUNTEER_MESSAGE_MAX, VOLUNTEER_MINIMUM_AGE, VOLUNTEER_NAME_MAX } from "../domain/volunteer";
+import { VOLUNTEER_AGE_MAX, VOLUNTEER_CITY_MAX, VOLUNTEER_MESSAGE_MAX, VOLUNTEER_MINIMUM_AGE, VOLUNTEER_NAME_MAX } from "../domain/volunteer";
+import RoleDescription from "./RoleDescription";
 import type { PublicVolunteerRole } from "../volunteers";
 import { VOLUNTEER_BOX_ID, type VolunteerBox as BoxName, type VolunteerOutcome, type VolunteerTyped } from "./volunteer-box";
 
@@ -42,11 +46,21 @@ import { VOLUNTEER_BOX_ID, type VolunteerBox as BoxName, type VolunteerOutcome, 
  * The page draws this only while the three conditions hold (`volunteerOfferClosedFor`): the event takes
  * volunteers, a role still needs people, and the privacy notice in force describes them. The action asks
  * again.
+ *
+ * What the person says about themselves (§NNN; the owner, 2026-10-14): while the notice in force names it (`profile`),
+ * the form asks «Vârsta» (the registration's own number-in-years habit, at least 18 — the tick «Am cel puțin 18 ani» is
+ * gone, the age answers it), «Sex» (the registration form's own `SexField`, its words), «Orașul» (its city box's words),
+ * the optional ticks «Am mai fost voluntar în trecut la alte curse» and «Fac parte din grupul {club}» (the club's name
+ * from `CLUB_NAME`, as the registration form's member tick draws it — the person's claim, checked against nothing) and,
+ * only while the event gives T-shirts (`shirts`), «Mărimea tricoului» — the kit's sizes. While it does not, the form is
+ * §758's, with its tick. Each role's description is its document, under its tick (`RoleDescription`).
  */
 export default async function VolunteerBox({
   locale,
   slug,
   roles,
+  shirts,
+  profile,
   outcome,
   refused,
   typed,
@@ -57,6 +71,10 @@ export default async function VolunteerBox({
   slug: string;
   /** Only the roles that still need people, in the club's order. */
   roles: readonly PublicVolunteerRole[];
+  /** «Oferim tricouri voluntarilor» is on for this event (§NNN): the form asks «Mărimea tricoului». */
+  shirts: boolean;
+  /** The notice in force names what a volunteer says about themselves (§NNN): the form asks it — else §758's tick «Am cel puțin 18 ani». */
+  profile: boolean;
   outcome: VolunteerOutcome | null;
   /** The boxes a refusal named (`?vfields=`). */
   refused: readonly BoxName[];
@@ -72,7 +90,8 @@ export default async function VolunteerBox({
   const siteKey = turnstileSiteKey();
   const invalid = new Set<BoxName>(refused);
   const roleName = (role: PublicVolunteerRole) => (locale === "en" ? role.nameEn : role.nameRo);
-  const roleDescription = (role: PublicVolunteerRole) => (locale === "en" ? role.descriptionEn : role.descriptionRo);
+  const roleDoc = (role: PublicVolunteerRole) => (locale === "en" ? role.descriptionEnJson : role.descriptionRoJson);
+  const roleWords = (role: PublicVolunteerRole) => (locale === "en" ? role.descriptionEn : role.descriptionRo);
   const needs = (role: PublicVolunteerRole) => t(`volunteers.needs.${countForm(role.free, locale)}`, { count: role.free });
   const countrySearchWords = {
     search: tForm("countrySearch.search"),
@@ -85,6 +104,11 @@ export default async function VolunteerBox({
   const age = yearsPhrase(VOLUNTEER_MINIMUM_AGE, locale);
   // The roles ticked before a refusal (§142), still offered: a role that filled meanwhile is simply not drawn.
   const ticked = new Set((typed.roleIds ?? "").split(",").filter((id) => roles.some((role) => role.id === id)));
+  // «Vârsta» says one of two sentences after a refusal: a number below the minimum is «cel puțin 18 ani», anything else is «scrie vârsta».
+  const typedAge = Number((typed.age ?? "").trim());
+  const ageSentence = /^\d{1,3}$/.test((typed.age ?? "").trim()) && typedAge < VOLUNTEER_MINIMUM_AGE ? "ageMinimum" : "age";
+  /** A refusal's sentence for one box, in the form's own words (§758's `{age}` is the minimum's phrase). */
+  const refusal = (name: BoxName) => t(`volunteers.errors.${name === "age" ? ageSentence : name}`, { age });
 
   return (
     <Box id={VOLUNTEER_BOX_ID} component="section" aria-labelledby={`${VOLUNTEER_BOX_ID}-title`} data-testid="volunteer-box" sx={{ mt: { xs: DENSITY.sectionGap, sm: 4 }, scrollMarginTop: 16 }}>
@@ -138,8 +162,8 @@ export default async function VolunteerBox({
                   <Box component="ul" sx={{ m: 0, pl: 3 }}>
                     {refused.map((name) => (
                       <li key={name}>
-                        {/* `{age}` is the age box's own value (§758); the other sentences take none and ignore it. */}
-                        <a href={`#${fieldId(name)}`}>{t(`volunteers.errors.${name}`, { age })}</a>
+                        {/* `{age}` is the minimum's phrase (§758); the other sentences take none and ignore it. */}
+                        <a href={`#${fieldId(name)}`}>{refusal(name)}</a>
                       </li>
                     ))}
                   </Box>
@@ -174,20 +198,28 @@ export default async function VolunteerBox({
                 </FormHelperText>
               )}
               <Stack sx={{ mt: 0.5 }}>
-                {roles.map((role) => (
-                  <CheckboxField
-                    key={role.id}
-                    name="roleIds"
-                    value={role.id}
-                    id={`volunteer-role-${role.id}`}
-                    defaultChecked={ticked.has(role.id)}
-                    help={[roleDescription(role), needs(role)].filter(Boolean).join(" · ")}
-                  >
-                    <Box component="span" sx={{ fontWeight: 600 }}>
-                      {roleName(role)}
+                {roles.map((role) => {
+                  const described = roleDoc(role) != null && (roleWords(role) ?? "").trim() !== "";
+                  const descriptionId = `volunteer-role-${role.id}-description`;
+                  return (
+                    <Box key={role.id} data-testid="volunteer-role-option">
+                      <CheckboxField
+                        name="roleIds"
+                        value={role.id}
+                        id={`volunteer-role-${role.id}`}
+                        defaultChecked={ticked.has(role.id)}
+                        help={needs(role)}
+                        describedBy={described ? descriptionId : undefined}
+                      >
+                        <Box component="span" sx={{ fontWeight: 600 }}>
+                          {roleName(role)}
+                        </Box>
+                      </CheckboxField>
+                      {/* «Descrierea rolului» (§NNN): the editor's document under the tick, folded «Detalii» past about three lines. */}
+                      <RoleDescription doc={roleDoc(role)} words={roleWords(role)} detailsLabel={t("volunteers.details")} bodyId={descriptionId} />
                     </Box>
-                  </CheckboxField>
-                ))}
+                  );
+                })}
               </Stack>
             </Box>
 
@@ -234,6 +266,79 @@ export default async function VolunteerBox({
               error={invalid.has("phone")}
               helperText={invalid.has("phone") ? tForm("errors.phone") : t("volunteers.phoneHelp")}
             />
+
+            {profile && (
+              <Stack spacing={2} data-testid="volunteer-profile">
+                {/* «Vârsta» and «Sex» (§NNN): the age in whole years — at least the platform's minimum, so the tick «Am cel puțin 18 ani» is gone — and the registration form's own sex box. */}
+                <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+                  <TextField
+                    id={fieldId("age")}
+                    name="age"
+                    label={t("volunteers.profile.age")}
+                    helperText={invalid.has("age") ? refusal("age") : t("volunteers.profile.ageHelp", { age })}
+                    required
+                    fullWidth
+                    autoComplete="off"
+                    defaultValue={typed.age}
+                    error={invalid.has("age")}
+                    slotProps={{ htmlInput: { inputMode: "numeric", pattern: "[0-9]*", maxLength: String(VOLUNTEER_AGE_MAX).length } }}
+                  />
+                  <SexField
+                    id={fieldId("sex")}
+                    name="sex"
+                    label={tForm("sex")}
+                    placeholder={tForm("sexChoose")}
+                    answers={{ FEMALE: tForm("sexOptions.FEMALE"), MALE: tForm("sexOptions.MALE") }}
+                    defaultValue={typed.sex}
+                    error={invalid.has("sex")}
+                    helperText={invalid.has("sex") ? t("volunteers.errors.sex") : undefined}
+                  />
+                </Stack>
+                <TextField
+                  id={fieldId("city")}
+                  name="city"
+                  label={t("volunteers.profile.city")}
+                  required
+                  fullWidth
+                  autoComplete="address-level2"
+                  defaultValue={typed.city}
+                  error={invalid.has("city")}
+                  helperText={invalid.has("city") ? t("volunteers.errors.city") : undefined}
+                  slotProps={{ htmlInput: { maxLength: VOLUNTEER_CITY_MAX } }}
+                />
+                {/* «Mărimea tricoului» (§NNN), only while the event gives T-shirts — the kit's own sizes, «Fără tricou» first. */}
+                {shirts && (
+                  <TextField
+                    id={fieldId("shirtSize")}
+                    name="shirtSize"
+                    label={t("volunteers.profile.shirt")}
+                    select
+                    fullWidth
+                    defaultValue={typed.shirtSize ?? ""}
+                    error={invalid.has("shirtSize")}
+                    helperText={invalid.has("shirtSize") ? t("volunteers.errors.shirtSize") : t("volunteers.profile.shirtHelp")}
+                    slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}
+                    data-testid="volunteer-shirt"
+                  >
+                    <option value="">{tForm("tshirtSizes.NONE")}</option>
+                    {SHIRT_SIZES.map((size) => (
+                      <option key={size} value={size}>
+                        {size}
+                      </option>
+                    ))}
+                  </TextField>
+                )}
+                {/* Two optional ticks (§NNN): unticked is «nu», not an unanswered question; the club's group is the person's own claim, like the registration form's. */}
+                <Box>
+                  <CheckboxField name="volunteeredBefore" id={fieldId("volunteeredBefore")} defaultChecked={typed.volunteeredBefore === "on"}>
+                    {t("volunteers.profile.before")}
+                  </CheckboxField>
+                  <CheckboxField name="clubMember" id={fieldId("clubMember")} defaultChecked={typed.clubMember === "on"}>
+                    {t("volunteers.profile.club", { club: CLUB_NAME })}
+                  </CheckboxField>
+                </Box>
+              </Stack>
+            )}
 
             <TextField
               id={fieldId("message")}
@@ -295,17 +400,20 @@ export default async function VolunteerBox({
                 .
               </CheckboxField>
             </Box>
-            <Box data-testid="volunteer-adult">
-              <CheckboxField
-                name="adult"
-                id={fieldId("adult")}
-                required
-                error={invalid.has("adult") ? t("volunteers.errors.adult", { age }) : undefined}
-                requiredMessage={t("volunteers.errors.adult", { age })}
-              >
-                {t("volunteers.adult", { age })}
-              </CheckboxField>
-            </Box>
+            {/* §758's tick, only while the notice does not name what a volunteer says about themselves: with the age asked, the age answers it (§NNN). */}
+            {!profile && (
+              <Box data-testid="volunteer-adult">
+                <CheckboxField
+                  name="adult"
+                  id={fieldId("adult")}
+                  required
+                  error={invalid.has("adult") ? t("volunteers.errors.adult", { age }) : undefined}
+                  requiredMessage={t("volunteers.errors.adult", { age })}
+                >
+                  {t("volunteers.adult", { age })}
+                </CheckboxField>
+              </Box>
+            )}
 
             <SubmitButton label={t("volunteers.submit")} pendingLabel={t("volunteers.submitting")} size="large">
               <VolunteerActivismIcon />

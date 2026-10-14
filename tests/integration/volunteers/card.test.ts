@@ -453,6 +453,23 @@ describe("§761 «Dă-i rolul …»: the organizers give each volunteer one role
     expect((await trail()).filter((row) => row.action === "volunteer.assigned")).toHaveLength(1);
   });
 
+  it("says a several-paragraph description in the email as one flattened sentence, in each language (§NNN)", async () => {
+    const paragraph = (text: string) => ({ type: "paragraph", content: [{ type: "text", text }] });
+    const docOf = (...lines: string[]) => JSON.stringify({ type: "doc", content: lines.map(paragraph) });
+    const water = await addRole({
+      descriptionRoBody: docOf("Stai la km 5.", "Dai apă de la 9:00", "Strângi gunoiul"),
+      descriptionEnBody: docOf("Stand at km 5.", "Hand out water from 9:00", "Collect the rubbish"),
+    });
+    const maria = await addPerson(water.id, { roleIds: [water.id], assignedRoleId: "" });
+    await press(actions.assignVolunteerAction, form({ volunteerId: maria.id, roleId: water.id }));
+    const [message] = await told();
+    const rendered = await render(message);
+    // One line per paragraph in the table, one sentence in the email: the full stops kept, the others joined by «; ».
+    expect(rendered.text).toContain("Ce presupune rolul: Stai la km 5. Dai apă de la 9:00; Strângi gunoiul.");
+    expect(rendered.text).toContain("What the role involves: Stand at km 5. Hand out water from 9:00; Collect the rubbish.");
+    expect(rendered.text).not.toMatch(/\n\s*Dai apă/);
+  });
+
   it("gives any role of the event — one the person never ticked too — and announces only the role that stands", async () => {
     const water = await addRole();
     const finish = await addRole({ nameRo: "Sosire", nameEn: "Finish" });

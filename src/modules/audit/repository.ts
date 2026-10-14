@@ -465,6 +465,8 @@ export type AuditAction =
    * number or message, so deleting a volunteer leaves nothing of the person in the trail.
    */
   | "event.volunteers_switched"
+  /** «Oferim tricouri voluntarilor» (§NNN), entity `event`: metadata `{ on }`. */
+  | "event.volunteers_shirts_switched"
   | "volunteer_role.added"
   | "volunteer_role.edited"
   | "volunteer_role.moved"

@@ -15,6 +15,7 @@ import { routing } from "@/i18n/routing";
 import { openPersonLookup, PERSON_LOOKUP_MINUTES, viewPersonData } from "@/modules/registrations/person-data";
 import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
+import VolunteerAnswers from "@/modules/volunteers/ui/VolunteerAnswers";
 import { lookUpPersonAction } from "./actions";
 import { actionKeyOf } from "@/shared/forms/action-key";
 import GlyphButton from "@/shared/ui/GlyphButton";
@@ -222,6 +223,8 @@ export default async function PersonDataPage({ params, searchParams }: Props) {
                       {t("volunteers.person.choicesLine", { roles: (locale === "en" ? offer.chosenRolesEn : offer.chosenRolesRo).join(", ") || "—" })} · {t(`volunteers.states.${offer.state}`)} · {t(`volunteers.sources.${offer.source}`)} · {offer.name} · {offer.deliveryEmail} · {offer.phone}
                       {offer.message ? ` · ${offer.message}` : ""}
                       {offer.note ? ` · ${offer.note}` : ""}
+                      {/* What the person said about themselves (§NNN): every column of the row, art. 15 GDPR. */}
+                      <VolunteerAnswers offer={offer} />
                       {/* The volunteer agreement (§758): accepted — which version, how, when — or not yet. */}
                       {" · "}
                       {offer.agreementAcceptedAt && offer.agreementMethod
