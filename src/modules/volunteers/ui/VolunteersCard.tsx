@@ -64,7 +64,6 @@ import {
   isVolunteerMinor,
   type RoleStanding,
   type VolunteerAgreementStanding,
-  type VolunteerGuardianStanding,
   type VolunteerOfferClosed,
   type VolunteerState,
 } from "../domain/volunteer";
@@ -88,10 +87,12 @@ const AGREEMENT_CHIP: Record<VolunteerAgreementStanding, { glyph: StatusGlyphNam
   notAccepted: { glyph: "open", color: "warning" },
 };
 
-/** The parent's or guardian's chip (§NNN): its words, its glyph and its tone — never the colour alone. */
-const GUARDIAN_CHIP: Record<Exclude<VolunteerGuardianStanding, "notNeeded">, { glyph: StatusGlyphName; color: "warning" | "success" | "default" }> = {
+/**
+ * The parent's or guardian's chip (§NNN): its words, its glyph and its tone — never the colour alone. Until the guardian accepts it says
+ * «Acordul părintelui lipsește», a link live in their mailbox or not (that is a second, smaller chip beside it).
+ */
+const GUARDIAN_CHIP: Record<"accepted" | "missing", { glyph: StatusGlyphName; color: "warning" | "success" | "default" }> = {
   accepted: { glyph: "done", color: "success" },
-  linkSent: { glyph: "link", color: "default" },
   missing: { glyph: "open", color: "warning" },
 };
 
@@ -786,14 +787,20 @@ export default async function VolunteersCard({
         {(() => {
           const standing = guardianStandingOf(person, now);
           if (standing === "notNeeded" || (person.state === "CANCELLED" && standing !== "accepted")) return null;
+          const chip = GUARDIAN_CHIP[standing === "accepted" ? "accepted" : "missing"];
           return (
-            <StatusChip
-              glyph={GUARDIAN_CHIP[standing].glyph}
-              color={GUARDIAN_CHIP[standing].color}
-              variant="outlined"
-              label={t(`volunteers.guardian.${standing}`)}
-              testId="volunteer-guardian-state"
-            />
+            <>
+              <StatusChip
+                glyph={chip.glyph}
+                color={chip.color}
+                variant="outlined"
+                label={t(standing === "accepted" ? "volunteers.guardian.accepted" : "volunteers.guardian.missing")}
+                testId="volunteer-guardian-state"
+              />
+              {standing === "linkSent" && (
+                <StatusChip glyph="link" variant="outlined" label={t("volunteers.guardian.linkSent")} testId="volunteer-guardian-link" />
+              )}
+            </>
           );
         })()}
       </Stack>

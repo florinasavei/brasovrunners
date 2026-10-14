@@ -316,7 +316,7 @@ export default async function VolunteerBox({
                   them; the server refuses a minor's post without them either way (`checkGuardian`).
                 */}
                 {minors && (
-                  <GuardianFields ageInputId={fieldId("age")}>
+                  <GuardianFields ageInputId={fieldId("age")} minimumAge={VOLUNTEER_MINIMUM_AGE} adultAge={VOLUNTEER_ADULT_AGE}>
                     <Box component="fieldset" sx={{ border: 0, m: 0, p: 0, minWidth: 0 }} data-testid="volunteer-guardian">
                       <Typography component="legend" sx={{ fontWeight: 600, p: 0 }}>
                         <FamilyRestroomIcon aria-hidden sx={FOLD_GLYPH_INLINE_SX} />

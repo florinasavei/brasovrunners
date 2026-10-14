@@ -683,6 +683,21 @@ describe("§NNN the card: the parent's agreement, in words", () => {
     expect(waiting).toContain('href="mailto:maria@example.test"');
   });
 
+  it("keeps saying «Acordul părintelui lipsește» while a link is live in the parent's mailbox — «Link trimis părintelui» is a second, smaller chip", async () => {
+    const sent = { ...MINOR, guardianTokenExpiresAt: new Date("2026-10-20T10:00:00Z"), guardianRequestedAt: new Date("2026-10-14T09:10:00Z") };
+    const page = await drawCard({ minorsOpen: true, volunteers: [sent] });
+    const row = rowOf(page, MINOR.id);
+    expect(row).toMatch(/data-testid="volunteer-guardian-state"[\s\S]*?Acordul părintelui lipsește/);
+    expect(row).toMatch(/data-testid="volunteer-guardian-link"[\s\S]*?Link trimis părintelui/);
+    // The button then says «again», with when it was last sent.
+    expect(row).toContain("Trimite din nou linkul părintelui");
+    expect(row).toContain("Ultimul link trimis părintelui");
+    // A link past its expiry is no link: the second chip goes, the first stays.
+    const expired = await drawCard({ minorsOpen: true, volunteers: [{ ...sent, guardianTokenExpiresAt: new Date("2026-10-14T09:59:00Z") }] });
+    expect(rowOf(expired, MINOR.id)).not.toContain("volunteer-guardian-link");
+    expect(rowOf(expired, MINOR.id)).toContain("Acordul părintelui lipsește");
+  });
+
   it("offers the link, the sheet to sign and the paper record while the texts describe minors; the link only with an address", async () => {
     const page = await drawCard({ minorsOpen: true, volunteers: [MINOR, lost], agreementDocumentIds: { ro: "doc-1" } });
     const withAddress = rowOf(page, MINOR.id);
