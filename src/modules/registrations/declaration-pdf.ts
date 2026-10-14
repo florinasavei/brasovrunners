@@ -71,6 +71,12 @@ export type DeclarationEntry = {
    */
   noIdDocument?: boolean;
   /**
+   * The words on a single signature line, in place of the bundle's `labels.signature` (§768): the volunteer agreement of a
+   * minor draws two entries, one for the volunteer's own acceptance and one for the guardian's, and each names its own signer.
+   * Absent, `labels.signature` as ever.
+   */
+  signatureLabel?: string;
+  /**
    * The SHA-256 of the exact text signed (§556, `signedTextHash`), from the row; null on a row from
    * before it, whose proof line then prints no hash — never one computed now, which would prove only
    * what the text says today. Absent on the blank form, which nobody has signed.
@@ -435,7 +441,7 @@ function drawEntry(doc: PDFKit.PDFDocument, entry: DeclarationEntry, labels: Dec
     row(labels.guardianSignature, signature ? signature.typedName : null, Boolean(signature));
     if (!entry.noIdDocument && (signature ? signature.idDocument !== null : true)) row(labels.idDocument, signature ? signature.idDocument : null);
   } else {
-    row(labels.signature, signature ? signature.typedName : null, Boolean(signature));
+    row(entry.signatureLabel ?? labels.signature, signature ? signature.typedName : null, Boolean(signature));
     if (!entry.noIdDocument && (signature ? signature.idDocument !== null : true)) row(labels.idDocument, signature ? signature.idDocument : null);
   }
   row(labels.date, signature ? signature.signedAt : null);

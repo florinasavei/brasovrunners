@@ -68,6 +68,7 @@ export type TaskId =
   | "volunteersNotice"
   | "volunteerAgreementNotice"
   | "volunteerProfileNotice"
+  | "volunteerMinorsTexts"
   | "volunteerAgreement"
   | "volunteerRoleChoicesAgreement"
   | "gmailFallbackNotice"
@@ -115,6 +116,7 @@ export const TASK_KIND: Record<TaskId, TaskKind> = {
   volunteersNotice: "text",
   volunteerAgreementNotice: "text",
   volunteerProfileNotice: "text",
+  volunteerMinorsTexts: "text",
   volunteerAgreement: "text",
   volunteerRoleChoicesAgreement: "text",
   gmailFallbackNotice: "text",
@@ -295,6 +297,12 @@ export type OwnerTaskInputs = {
    * answer: it is §758's form, with its tick «Am cel puțin 18 ani».
    */
   volunteerProfileDescribed: boolean;
+  /**
+   * Do the notice in force (`{{volunteerMinors}}`) **and** the volunteer agreement in force (`{{volunteerGuardian}}`), each in
+   * every language, describe volunteers under eighteen and their parent or guardian (§768, `volunteerMinorsOpen`)? Until
+   * they do, the club takes nobody under eighteen: a typed age under eighteen is refused with a sentence that says so.
+   */
+  volunteerMinorsOpen: boolean;
   /**
    * Does the notice in force, in every language, say a message may leave through the club's Gmail
    * while Mailgun is stopped (§622, `noticeDescribesGmailFallback`)? Until it does, «Gmail preia când
@@ -628,6 +636,19 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
       push("volunteerProfileNotice", {
         owner: "club",
         state: input.volunteerProfileDescribed ? "done" : "open",
+      });
+    }
+    /*
+      The texts for volunteers under eighteen (§768), the same shape with two gates: open while an event ahead takes
+      volunteers and the notice in force does not name `{{volunteerMinors}}` or the agreement in force does not name
+      `{{volunteerGuardian}}` — the club takes nobody under eighteen and a typed age under eighteen is refused with a
+      sentence that says so — done by itself the day both take effect, absent while no event takes volunteers and the
+      texts are silent. Never blocking: nothing a runner does, and the adults' form is untouched.
+    */
+    if (input.volunteerMinorsOpen || input.volunteeringEvents > 0) {
+      push("volunteerMinorsTexts", {
+        owner: "club",
+        state: input.volunteerMinorsOpen ? "done" : "open",
       });
     }
     /*

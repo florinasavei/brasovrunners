@@ -15,6 +15,9 @@ import { csvCell } from "@/modules/registrations/csv";
  * Since §765 six columns after the moment — what the person said about themselves: the age, the sex (the registrations'
  * own English words, `sexCell`), the city, «a mai fost voluntar» and «din grupul clubului» as the reader's yes and no,
  * and the T-shirt's size, empty unless the event gives T-shirts. They are appended, so no earlier column moves.
+ *
+ * Since §768 three more after them: the parent or guardian of a volunteer under eighteen — name and address, empty for an adult — and
+ * «Acordul părintelui» as the reader's yes and no (empty for an adult: nothing was asked).
  */
 
 export type VolunteerCsvRow = {
@@ -40,6 +43,10 @@ export type VolunteerCsvRow = {
   volunteeredBefore: string;
   clubMember: string;
   shirtSize: string;
+  /** The parent or guardian of a volunteer under eighteen (§768), empty for an adult; the consent as «Da» / «Nu», empty for an adult. */
+  guardianName: string | null;
+  guardianEmail: string | null;
+  guardianConsent: string;
 };
 
 export type VolunteerCsvHeader = {
@@ -59,11 +66,14 @@ export type VolunteerCsvHeader = {
   volunteeredBefore: string;
   clubMember: string;
   shirtSize: string;
+  guardianName: string;
+  guardianEmail: string;
+  guardianConsent: string;
 };
 
 export function buildVolunteersCsv(header: VolunteerCsvHeader, rows: readonly VolunteerCsvRow[]): string {
   const lines = [
-    [header.role, header.choices, header.name, header.email, header.phone, header.state, header.source, header.message, header.note, header.signedUpAt, header.age, header.sex, header.city, header.volunteeredBefore, header.clubMember, header.shirtSize]
+    [header.role, header.choices, header.name, header.email, header.phone, header.state, header.source, header.message, header.note, header.signedUpAt, header.age, header.sex, header.city, header.volunteeredBefore, header.clubMember, header.shirtSize, header.guardianName, header.guardianEmail, header.guardianConsent]
       .map(csvCell)
       .join(","),
     ...rows.map((row) =>
@@ -84,6 +94,9 @@ export function buildVolunteersCsv(header: VolunteerCsvHeader, rows: readonly Vo
         row.volunteeredBefore,
         row.clubMember,
         row.shirtSize,
+        row.guardianName ?? "",
+        row.guardianEmail ?? "",
+        row.guardianConsent,
       ]
         .map(csvCell)
         .join(","),

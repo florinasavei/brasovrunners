@@ -194,7 +194,8 @@ describe("§765 the organizers' entry: what the person said about themselves", (
   it("refuses an age under the minimum, a sex that is no answer and a city past the bound — naming the box, keeping what was typed, writing nothing", async () => {
     const role = await addRole();
     for (const [fields, box] of [
-      [{ age: "17" }, "age"],
+      // §768: the floor is fourteen — fifteen is a minor, taken only with a guardian (tests/integration/volunteers/guardian.test.ts).
+      [{ age: "13" }, "age"],
       [{ age: "abc" }, "age"],
       [{ sex: "UNSPECIFIED" }, "sex"],
       [{ city: "x".repeat(81) }, "city"],
@@ -494,11 +495,12 @@ describe("§765 the CSV and the card's list carry the answers", () => {
     await post(actions.addVolunteerAction, form({ ...PERSON, name: "Ion Test", email: "ion@example.test", roleIds: [role.id], assignedRoleId: role.id }));
     const text = await (await get()).text();
     const lines = text.split("\r\n");
-    expect(lines[0].endsWith("Data,Vârsta,Sex,Orașul,A mai fost voluntar,Din grupul clubului,Mărime tricou")).toBe(true);
+    // §768: the parent or guardian's three columns are appended after the T-shirt, empty for an adult.
+    expect(lines[0].endsWith("Data,Vârsta,Sex,Orașul,A mai fost voluntar,Din grupul clubului,Mărime tricou,Părinte sau tutore,Email părinte sau tutore,Acordul părintelui")).toBe(true);
     const maria = lines.find((line) => line.includes("Maria Test")) ?? "";
-    expect(maria).toMatch(/,34,Female,"Brașov, centru",Da,Nu,M$/);
+    expect(maria).toMatch(/,34,Female,"Brașov, centru",Da,Nu,M,,,$/);
     const ion = lines.find((line) => line.includes("Ion Test")) ?? "";
-    expect(ion).toMatch(/,,,,Nu,Nu,$/);
+    expect(ion).toMatch(/,,,,Nu,Nu,,,,$/);
     expect(await (await get("en")).text()).toMatch(/,34,Female,"Brașov, centru",Yes,No,M/);
   });
 

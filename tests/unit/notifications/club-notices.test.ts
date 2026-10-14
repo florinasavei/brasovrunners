@@ -163,6 +163,8 @@ describe("BR-REQ-033-02 criterion 12 the club's hidden copy of every participant
       "VOLUNTEER_AGREEMENT_ACCEPTED",
       // The role given to a volunteer (§761): to the volunteer, no registration behind it.
       "VOLUNTEER_ROLE_ASSIGNED",
+      // The link to a minor volunteer's parent or guardian (§768): to an address nobody confirmed, no registration behind it.
+      "VOLUNTEER_GUARDIAN_REQUEST",
       "REGISTRATION_OPENED",
       // An invitation (§647): to an address the club named, before any registration.
       "EVENT_INVITATION",

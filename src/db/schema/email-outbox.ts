@@ -133,6 +133,10 @@ export const emailMessageType = pgEnum("email_message_type", [
   // language. The volunteer's and the role's ids in the payload; withdrawn at the send when the role was changed
   // again since, or the person cancelled. No token, no link that acts.
   "VOLUNTEER_ROLE_ASSIGNED",
+  // «Acordul tău pentru …» (§768): a volunteer under eighteen needs their parent's or guardian's agreement — the
+  // agreement in force and the single-use link to accept it in the guardian's name, to the guardian's address
+  // (minted at the send; only its hash is kept, on the volunteer's row, §12.8). The volunteer's id in the payload.
+  "VOLUNTEER_GUARDIAN_REQUEST",
 ]);
 
 export type EmailMessageType = (typeof emailMessageType.enumValues)[number];

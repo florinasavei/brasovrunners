@@ -72,8 +72,10 @@ import {
   describesPromotionalMaterials,
   describesPromotionalMaterialsShared,
   describesVolunteerAgreement,
+  describesVolunteerMinors,
   describesVolunteerProfile,
   describesVolunteers,
+  namesVolunteerGuardian,
 } from "@/modules/legal-documents/domain/merge-fields";
 import { readPublicVolunteerRoles } from "@/modules/volunteers/volunteers";
 import { describesRefusal } from "@/modules/legal-documents/domain/refusal-clause";
@@ -606,6 +608,22 @@ export async function cachedVolunteerProfileDescribed(now: Date): Promise<boolea
 }
 
 /**
+ * Whether the club may take a volunteer under eighteen yet (§768, `volunteerMinorsOpen`): the privacy notice in force
+ * names `{{volunteerMinors}}` and the volunteer agreement `{{volunteerGuardian}}`, each in every language — whether
+ * the volunteers' own page draws the guardian's boxes. `volunteerMinorsOpen` is the uncached read the sign-up asks again.
+ */
+export async function cachedVolunteerMinorsOpen(now: Date): Promise<boolean> {
+  const [notices, agreements] = await Promise.all([
+    Promise.all(routing.locales.map((locale) => cachedCurrentApprovedDocument("PRIVACY_NOTICE", locale, now))),
+    Promise.all(routing.locales.map((locale) => cachedCurrentApprovedDocument("VOLUNTEER_AGREEMENT", locale, now))),
+  ]);
+  return (
+    notices.every((notice) => notice !== undefined && describesVolunteerMinors(notice.body)) &&
+    agreements.every((agreement) => agreement !== undefined && namesVolunteerGuardian(agreement.body))
+  );
+}
+
+/**
  * Whether a volunteer agreement is in force in every language (§758) — the event page's fourth condition for
  * «Vreau să fiu voluntar», through the legal texts' own cached read, so an approval opens the form the moment
  * the text takes effect. `volunteerAgreementInForce` is the uncached read the action asks again.
@@ -1090,7 +1108,14 @@ export async function cachedAddressCap(): Promise<AddressCap> {
 // --- The language switch ----------------------------------------------------------------------
 
 /** The routes whose other-language address only the database knows: a slug per language. */
-const SLUG_ROUTES = new Set(["/events/[slug]", "/events/[slug]/register", "/events/[slug]/declaration", "/gallery/[slug]", "/pages/[slug]"]);
+const SLUG_ROUTES = new Set([
+  "/events/[slug]",
+  "/events/[slug]/register",
+  "/events/[slug]/declaration",
+  "/events/[slug]/volunteers",
+  "/gallery/[slug]",
+  "/pages/[slug]",
+]);
 
 /**
  * Where the language switcher lands (`resolveLocaleSwitch`), cached per address.

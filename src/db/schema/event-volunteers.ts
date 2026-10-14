@@ -25,6 +25,13 @@ export const eventVolunteerSource = pgEnum("event_volunteer_source", ["STAFF", "
 export const volunteerAgreementMethod = pgEnum("volunteer_agreement_method", ["FORM", "LINK", "PAPER"]);
 
 /**
+ * How a minor volunteer's parent or guardian gave their agreement (§768, amending §758): from the single-use link emailed
+ * to them («LINK», the typed name is the acceptance) or on a printed copy signed at the desk and recorded by a staff
+ * member («PAPER»). No «FORM»: the volunteer's own form ticks the agreement for the volunteer, never for the guardian.
+ */
+export const volunteerGuardianMethod = pgEnum("volunteer_guardian_method", ["LINK", "PAPER"]);
+
+/**
  * One role an event needs people for (§754; the owner, 2026-10-13: «I want to register volunteers
  * for a race and be able to define custom roles» — answering «per event», not a club-wide list).
  *
@@ -188,6 +195,37 @@ export const eventVolunteers = pgTable(
     agreementTokenExpiresAt: timestamp("agreement_token_expires_at", { withTimezone: true }),
     /** When an organizer last asked for the link to be sent: the card's «link trimis …». */
     agreementRequestedAt: timestamp("agreement_requested_at", { withTimezone: true }),
+
+    /*
+      The parent's or guardian's agreement for a volunteer under eighteen (§768, amending §758; the owner, 2026-10-14:
+      «voluntarii trebuie să aibă cel puțin 14 ani, nu 18» and «fă cu acord ceva»): from fourteen a volunteer is taken
+      only with a parent or guardian who accepts the same agreement in their own name. The guardian's name, and their
+      address (what the single-use link goes to; none when the organizers take the consent on paper), are asked on the
+      public form and typed by the organizers; both are personal data of a third person, kept and deleted with the
+      row. All null for a volunteer who is eighteen or older, or who gave no age.
+    */
+    guardianName: text("guardian_name"),
+    guardianEmail: text("guardian_email"),
+    /*
+      The guardian's acceptance: the version, the moment, the way and the language together, or nothing (the CHECK
+      below), the SHA-256 of the exact text read with its blanks filled and the blanks themselves — the same proof the
+      volunteer's own acceptance keeps (§556). `guardian_typed_name` is what the guardian typed on the link's page,
+      the acceptance itself; null for a paper one, which the staff member who recorded it names. `RESTRICT`: a version
+      somebody accepted is never removed under them.
+    */
+    guardianDocumentId: uuid("guardian_document_id").references(() => legalDocuments.id, { onDelete: "restrict" }),
+    guardianAcceptedAt: timestamp("guardian_accepted_at", { withTimezone: true }),
+    guardianMethod: volunteerGuardianMethod("guardian_method"),
+    guardianLocale: locale("guardian_locale"),
+    guardianTextHash: text("guardian_text_hash"),
+    guardianFacts: jsonb("guardian_facts"),
+    guardianTypedName: text("guardian_typed_name"),
+    guardianRecordedByStaffUserId: uuid("guardian_recorded_by_staff_user_id").references(() => staffUsers.id, { onDelete: "set null" }),
+    /** The guardian's single-use link (AGENTS.md §12.8), the agreement link's own pattern: only the SHA-256, minted at the send, dead at its expiry or once used. */
+    guardianTokenHash: text("guardian_token_hash").unique("event_volunteers_guardian_token_hash_unique"),
+    guardianTokenExpiresAt: timestamp("guardian_token_expires_at", { withTimezone: true }),
+    /** When the guardian's link was last asked for (the sign-up of a minor, or an organizer's press): the card's «link trimis …». */
+    guardianRequestedAt: timestamp("guardian_requested_at", { withTimezone: true }),
   },
   (t) => [
     unique("event_volunteers_event_canonical_email_unique").on(t.eventId, t.canonicalEmail),
@@ -213,6 +251,19 @@ export const eventVolunteers = pgTable(
     // Never the raw secret: a base64url secret cannot match a lower-case hex digest (§12.8, the action tokens' own CHECK).
     check("event_volunteers_agreement_token_sha256", sql`${t.agreementTokenHash} IS NULL OR ${t.agreementTokenHash} ~ '^[0-9a-f]{64}$'`),
     check("event_volunteers_agreement_token_expiry", sql`(${t.agreementTokenHash} IS NULL) = (${t.agreementTokenExpiresAt} IS NULL)`),
+    // The guardian (§768): a name within the bound; an address only with a name; the acceptance whole or absent, and never without a guardian.
+    check("event_volunteers_guardian_name_length", sql`${t.guardianName} IS NULL OR char_length(${t.guardianName}) BETWEEN 1 AND 120`),
+    check("event_volunteers_guardian_email_length", sql`${t.guardianEmail} IS NULL OR (${t.guardianName} IS NOT NULL AND char_length(${t.guardianEmail}) BETWEEN 3 AND 320)`),
+    check(
+      "event_volunteers_guardian_complete",
+      sql`(${t.guardianDocumentId} IS NULL) = (${t.guardianAcceptedAt} IS NULL) AND (${t.guardianDocumentId} IS NULL) = (${t.guardianMethod} IS NULL) AND (${t.guardianDocumentId} IS NULL) = (${t.guardianLocale} IS NULL) AND (${t.guardianAcceptedAt} IS NULL OR ${t.guardianName} IS NOT NULL)`,
+    ),
+    check("event_volunteers_guardian_typed_name_length", sql`${t.guardianTypedName} IS NULL OR char_length(${t.guardianTypedName}) BETWEEN 1 AND 120`),
+    check("event_volunteers_guardian_text_hash_sha256", sql`${t.guardianTextHash} IS NULL OR ${t.guardianTextHash} ~ '^[0-9a-f]{64}$'`),
+    check("event_volunteers_guardian_token_sha256", sql`${t.guardianTokenHash} IS NULL OR ${t.guardianTokenHash} ~ '^[0-9a-f]{64}$'`),
+    check("event_volunteers_guardian_token_expiry", sql`(${t.guardianTokenHash} IS NULL) = (${t.guardianTokenExpiresAt} IS NULL)`),
+    // `/admin/legal`'s count of the people who accepted a version, and the RESTRICT's check on a delete.
+    index("event_volunteers_guardian_document_idx").on(t.guardianDocumentId).where(sql`${t.guardianDocumentId} IS NOT NULL`),
   ],
 );
 
