@@ -1446,7 +1446,7 @@ V1 internal registration requires approved declaration version.
 - participant sees exact version;
 - acceptance requires explicit checkbox + typed full name, which must be the declarant's own — the registered name, or the parent's or guardian's for a minor — compared after folding case, whitespace, diacritics, typographic punctuation and invisible characters, and refused otherwise before anything is recorded (`DECISIONS.md` §314);
 - acceptance stores version/hash/locale/name/server timestamp;
-- no raw IP/user-agent stored by default;
+- no raw IP/user-agent stored by default — the one exception is the trace of an **electronic** signature (§NNN, the owner, 2026-10-14): the caller's IP address and browser at the moment the typed name was posted (`declaration_acceptances.ip` / `user_agent`, and the same on a group run's declaration and on the volunteer agreement's and its guardian's acceptance), written only with the email-link method — never with `PAPER`, whatever the caller passes (`signature-trace.ts#traceColumns`) —, read from the request's headers by the action (`readSignatureTrace`, never a form box), kept as long as the row and deleted with it, printed small under the signature of the PDF, listed in «Toate datele unei persoane», and named in the privacy notice's template (the declaration's, the group run's and the volunteers' paragraphs);
 - staff cannot sign on participant's behalf;
 - do not label as qualified electronic signature;
 - exact wording/effect approved by human/legal owner.
