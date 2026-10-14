@@ -104,7 +104,7 @@ type Props = {
  * «Puncte de control» (§757; the owner, 2026-10-13: «other things for the route: I need to put
  * checkpoints and limit times»): the named card of «Traseul» where the route's points are kept —
  * a name in both languages, the kilometre, what is there (water, food, first aid, timing, direction), an
- * optional time limit (§769: the race's own hours and minutes boxes, counted from the start) and an optional note — and, when the route's GPX has waypoints, the one press
+ * optional time limit (§NNN: the race's own hours and minutes boxes, counted from the start) and an optional note — and, when the route's GPX has waypoints, the one press
  * that takes them («Ia punctele din GPX»: a preview first, then what the club ticks is added).
  *
  * **Inside «Traseul», in the document** (§763; the owner, of §760's card at the top of the editor:
@@ -171,7 +171,7 @@ export default async function CheckpointsCard({ locale, eventId, checkpoints, ma
         </Box>
       </Box>
       <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5}>
-        {/* «Timp limită» (§769): the race's own two boxes — hours and minutes from the start — not a second widget. */}
+        {/* «Timp limită» (§NNN): the race's own two boxes — hours and minutes from the start — not a second widget. */}
         <Stack component="fieldset" spacing={0.5} sx={{ border: 0, m: 0, p: 0, minWidth: 0, flex: { sm: "0 0 auto" } }} data-testid="checkpoint-cutoff-fieldset">
           <Typography component="legend" variant="caption" color="text.secondary" sx={{ mb: 0.5, p: 0, display: "inline-flex", alignItems: "center", gap: 0.75 }}>
             <LimitGlyph aria-hidden fontSize="inherit" />

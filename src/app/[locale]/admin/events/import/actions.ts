@@ -35,7 +35,7 @@ function refusal(error: unknown): ImportRefusal {
   return { ok: false, kind: "domain", code: error.code, fields: [...error.fields], detail: error.message };
 }
 
-/** The file's text read again — with what reading left out of it, said in words (§769) — or the refusal that says why it is not an event file. */
+/** The file's text read again — with what reading left out of it, said in words (§NNN) — or the refusal that says why it is not an event file. */
 function readFile(json: unknown): { file: EventFile; notes: FileNote[] } | ImportRefusal {
   if (typeof json !== "string") return { ok: false, kind: "file", refusal: "notJson" };
   const read = readEventFile(json);

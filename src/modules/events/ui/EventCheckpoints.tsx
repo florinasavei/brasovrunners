@@ -23,7 +23,7 @@ const SR_ONLY = {
  * «Puncte de control» / "Checkpoints" under `#checkpoints` (§757; the owner, 2026-10-13: «I need to put
  * checkpoints and limit times»): a table under the route's maps — the kilometre, the point, what
  * there is (a chip with a glyph **and** its word, never the glyph alone) and the time limit in words —
- * «Timp limită: 1 h 30 min · se închide la 11:30» (§769: the duration from the start, and the clock
+ * «Timp limită: 1 h 30 min · se închide la 11:30» (§NNN: the duration from the start, and the clock
  * that follows the start, left out while the start has no hour). **The finish is the last row when the
  * event has a time limit** — the event's «Timp limită» and its end on its own clock, at the route's
  * length — so the last limit a runner reads is the one that ends the race.
@@ -184,7 +184,7 @@ export default async function EventCheckpoints({
                 <td data-label={t("checkpoints.columns.cutoff")}>
                   {view.minutes ? (
                     <span data-testid="checkpoint-cutoff">
-                      {/* The duration from the start, and the clock it closes at while the start has an hour (§769). */}
+                      {/* The duration from the start, and the clock it closes at while the start has an hour (§NNN). */}
                       {view.clock
                         ? t("checkpoints.cutoff", { duration: durationShort(view.minutes), time: view.clock })
                         : t("checkpoints.cutoffNoClock", { duration: durationShort(view.minutes) })}

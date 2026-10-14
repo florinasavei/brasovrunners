@@ -62,7 +62,7 @@ export type BibCheckpointMark = {
 export type BibCheckpointsDrawing = { marks: BibCheckpointMark[]; timesShown: boolean };
 
 /**
- * A checkpoint as the strip reads it: where, what, and by when — the clock its time limit closes at (§769),
+ * A checkpoint as the strip reads it: where, what, and by when — the clock its time limit closes at (§NNN),
  * `HH:MM` on the event's clock, the same one the event page prints (`start.ts#cutoffClockOf`), null with no
  * limit or no start to count it from.
  */

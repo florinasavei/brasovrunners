@@ -5,7 +5,7 @@ import { DURATION_HOURS_CONSTRAINTS, DURATION_MINUTES_CONSTRAINTS } from "../dur
 
 /**
  * «Ore» and «Minute», the two boxes a length of time is typed in (§433): the race's «Timp limită» in
- * «Când și unde» and each checkpoint's in «Puncte de control» (§769) are this one component, so the two
+ * «Când și unde» and each checkpoint's in «Puncte de control» (§NNN) are this one component, so the two
  * say the same thing in the same words and refuse the same typing — a whole number of hours up to a
  * week's worth, minutes up to 59 (`duration.ts`). A Server Component: both boxes are the house's
  * `RecallField`, which keeps what a refused save typed and — drawn inside a detached form (§763) —

@@ -1,6 +1,6 @@
 ALTER TABLE "event_checkpoints" ADD COLUMN "cutoff_minutes" integer;--> statement-breakpoint
 ALTER TABLE "event_checkpoints" ADD CONSTRAINT "event_checkpoints_cutoff_minutes_range" CHECK ("event_checkpoints"."cutoff_minutes" IS NULL OR "event_checkpoints"."cutoff_minutes" BETWEEN 1 AND 10080);--> statement-breakpoint
--- The cut-off as a time limit from the start (§769): a time of day typed under §757 becomes the minutes after the
+-- The cut-off as a time limit from the start (§NNN): a time of day typed under §757 becomes the minutes after the
 -- event's start, the gun on a race that has one, else the event's start, both on the event's own clock — the
 -- converter `domain/start.ts#minutesFromClock` in SQL. A cut-off earlier than the start's time of day is the
 -- next day's only when the event runs past midnight (its end, counted from the start, says so); otherwise it

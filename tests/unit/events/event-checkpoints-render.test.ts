@@ -16,7 +16,7 @@ import { CHECKPOINT_GLYPH } from "@/modules/events/ui/glyphs";
 import EventCheckpoints from "@/modules/events/ui/EventCheckpoints";
 
 /**
- * §757, §769, BR-REQ-011-01 — the table «Puncte de control» on the event page: the kilometre, the point,
+ * §757, §NNN, BR-REQ-011-01 — the table «Puncte de control» on the event page: the kilometre, the point,
  * what is there (a glyph with its word, «Direcționare» among them), the time limit in words — «Timp
  * limită: 1 h 30 min · se închide la 11:30» — the finish last when the event has a time limit; both
  * languages; nothing without checkpoints; every cell carries its column's word so the table reads as a
@@ -73,7 +73,7 @@ describe("§757 the checkpoints' table on the event page", () => {
     expect(rows[1]).toContain('aria-hidden="true"');
   });
 
-  it("draws a «Direcționare» point with its word and its own glyph, in both languages (§769)", async () => {
+  it("draws a «Direcționare» point with its word and its own glyph, in both languages (§NNN)", async () => {
     const html = await render([point("a", 5, { kinds: ["DIRECTION"] }), point("b", 9, { kinds: ["WATER", "DIRECTION"] })]);
     const rows = rowsOf(html);
     expect(rows[0]).toContain("Direcționare");
@@ -168,7 +168,7 @@ describe("§757 the checkpoints' table on the event page", () => {
     }
   });
 
-  it("names the time limit, not a time of the day, in every sentence of both catalogues (§769)", () => {
+  it("names the time limit, not a time of the day, in every sentence of both catalogues (§NNN)", () => {
     expect(ro.Admin.checkpoints.field.cutoff).toBe("Timp limită");
     expect(en.Admin.checkpoints.field.cutoff).toBe("Time limit");
     expect(ro.Admin.checkpoints.field.cutoffHelp).toBe("De la start: până atunci trebuie să treacă ultimul alergător. Lasă gol dacă nu e limită.");

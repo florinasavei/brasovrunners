@@ -73,7 +73,7 @@ function sampleConfig(): EventConfig {
       url: null,
       maps: [{ provider: "garmin", id: "987654321" }],
       gpx: { name: "traseu.gpx", url: GPX },
-      // The route's checkpoints (§757, §769): one with a time limit in minutes and a note, one without either and with a direction kind.
+      // The route's checkpoints (§757, §NNN): one with a time limit in minutes and a note, one without either and with a direction kind.
       checkpoints: [
         { km: 7.5, name: { ro: "Apă la cabană", en: "Water at the hut" }, kinds: ["WATER", "FOOD"], cutoffMinutes: 45, note: { ro: "Și banane", en: "Bananas too" } },
         { km: 15, name: { ro: "Cronometrare", en: "Timing" }, kinds: ["TIMING", "DIRECTION"], cutoffMinutes: null, note: { ro: null, en: null } },
@@ -186,10 +186,10 @@ describe("the event file's reader", () => {
   });
 
   /*
-    §769: version 3 carries a checkpoint's cut-off as `cutoffMinutes`, minutes from the start (the gun on a race).
+    §NNN: version 3 carries a checkpoint's cut-off as `cutoffMinutes`, minutes from the start (the gun on a race).
     A file made before — versions 1 and 2 — carries `cutoff`, a time of day, and is read forgivingly.
   */
-  describe("the checkpoints, read forgivingly (§769)", () => {
+  describe("the checkpoints, read forgivingly (§NNN)", () => {
     type Loose = Record<string, unknown>;
     const oldPoint = (over: Loose = {}): Loose => ({ km: 5, name: { ro: "Apă", en: "Water" }, kinds: ["WATER"], cutoff: "10:45", note: { ro: null, en: null }, ...over });
     /** An older file with these checkpoints and event fields, as it was written: `cutoff` and no `cutoffMinutes`. */

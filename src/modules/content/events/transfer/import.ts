@@ -66,7 +66,7 @@ export type ImportNote =
   | { code: "slugSuffixed"; locale: Locale; slug: string }
   | { code: "publicListOff" }
   | { code: "seriesNotApplied" }
-  /** What reading the file left out of its checkpoints (§769): a kind this release does not know, a time of day that could not be counted from the start. */
+  /** What reading the file left out of its checkpoints (§NNN): a kind this release does not know, a time of day that could not be counted from the start. */
   | FileNote;
 
 const allowsHttp = () => env.APP_ENV === "local" || env.APP_ENV === "test";
