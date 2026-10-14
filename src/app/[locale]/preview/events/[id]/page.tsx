@@ -21,7 +21,7 @@ import EventLinks from "@/modules/events/ui/EventLinks";
 import EventRoute from "@/modules/events/ui/EventRoute";
 import EventCheckpoints from "@/modules/events/ui/EventCheckpoints";
 import { listCheckpoints } from "@/modules/event-checkpoints/checkpoints";
-import { checkpointFinish } from "@/modules/event-checkpoints/domain/start";
+import { checkpointFinish, withCutoffClocks } from "@/modules/event-checkpoints/domain/start";
 import { hasRouteSection } from "@/modules/events/domain/route-section";
 import { isStorageConfigured } from "@/modules/media/storage";
 import type { RouteMapWords } from "@/modules/events/ui/EventRoute";
@@ -149,8 +149,8 @@ export default async function PreviewEventPage({ params }: Props) {
       />
       {/* «Puncte de control» (§757), under the route as on the public page. */}
       <EventCheckpoints
-        checkpoints={await listCheckpoints(getDb(), event.id)}
-        finish={datedPreview ? checkpointFinish(datedPreview) : { km: null, limit: null }}
+        checkpoints={withCutoffClocks(await listCheckpoints(getDb(), event.id), datedPreview)}
+        finish={datedPreview ? checkpointFinish(datedPreview) : { km: null, limit: null, minutes: null }}
         locale={locale}
       />
       <EventLinks

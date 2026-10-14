@@ -1,6 +1,7 @@
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
+import { durationShort } from "@/i18n/dates";
 import { type Checkpoint, checkpointRows, type CheckpointRow } from "@/modules/event-checkpoints/domain/checkpoint";
 import { DENSITY } from "@/theme/density";
 import GlyphChip from "./GlyphChip";
@@ -21,10 +22,11 @@ const SR_ONLY = {
 /**
  * «Puncte de control» / "Checkpoints" under `#checkpoints` (§757; the owner, 2026-10-13: «I need to put
  * checkpoints and limit times»): a table under the route's maps — the kilometre, the point, what
- * there is (a chip with a glyph **and** its word, never the glyph alone) and the cut-off in words,
- * «Ora limită 11:30». **The finish is the last row when the event has a time limit** — the event's
- * end on its own clock, at the route's length — so the last cut-off a runner reads is the one that
- * ends the race.
+ * there is (a chip with a glyph **and** its word, never the glyph alone) and the time limit in words —
+ * «Timp limită: 1 h 30 min · se închide la 11:30» (§NNN: the duration from the start, and the clock
+ * that follows the start, left out while the start has no hour). **The finish is the last row when the
+ * event has a time limit** — the event's «Timp limită» and its end on its own clock, at the route's
+ * length — so the last limit a runner reads is the one that ends the race.
  *
  * Nothing at all with no checkpoints, so the anchor exists only when it leads somewhere. One
  * component for the public page and the staff's previews, so the two cannot differ.
@@ -39,8 +41,8 @@ export default async function EventCheckpoints({
   locale,
 }: {
   checkpoints: readonly Checkpoint[];
-  /** The route's length and the event's time limit as `HH:MM` on the event's clock; both null for none. */
-  finish: { km: number | null; limit: string | null };
+  /** The route's length, the event's time limit as `HH:MM` on the event's clock and in minutes from the start; null for none. */
+  finish: { km: number | null; limit: string | null; minutes: number | null };
   locale: "ro" | "en";
 }) {
   const rows = checkpointRows(checkpoints, finish);
@@ -57,7 +59,8 @@ export default async function EventCheckpoints({
         name: t("checkpoints.finish"),
         note: null,
         kinds: [] as const,
-        cutoff: row.cutoff,
+        minutes: row.cutoffMinutes as number | null,
+        clock: row.cutoffClock as string | null,
         finish: true,
       };
     }
@@ -67,7 +70,8 @@ export default async function EventCheckpoints({
       name: locale === "ro" ? row.nameRo : row.nameEn,
       note: locale === "ro" ? row.noteRo : row.noteEn,
       kinds: row.kinds,
-      cutoff: row.cutoff,
+      minutes: row.cutoffMinutes,
+      clock: row.cutoffClock,
       finish: false,
     };
   };
@@ -178,10 +182,12 @@ export default async function EventCheckpoints({
                   )}
                 </td>
                 <td data-label={t("checkpoints.columns.cutoff")}>
-                  {view.cutoff ? (
+                  {view.minutes ? (
                     <span data-testid="checkpoint-cutoff">
-                      {/* The finish closes; a checkpoint has a time a runner must be there by. */}
-                      {view.finish ? t("checkpoints.finishCloses", { time: view.cutoff }) : t("checkpoints.cutoff", { time: view.cutoff })}
+                      {/* The duration from the start, and the clock it closes at while the start has an hour (§NNN). */}
+                      {view.clock
+                        ? t("checkpoints.cutoff", { duration: durationShort(view.minutes), time: view.clock })
+                        : t("checkpoints.cutoffNoClock", { duration: durationShort(view.minutes) })}
                     </span>
                   ) : (
                     <>

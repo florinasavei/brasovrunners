@@ -3,6 +3,7 @@ import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import AutorenewIcon from "@mui/icons-material/Autorenew";
 import CardMembershipIcon from "@mui/icons-material/CardMembership";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import DirectionsIcon from "@mui/icons-material/Directions";
 import DirectionsRunIcon from "@mui/icons-material/DirectionsRun";
 import EventAvailableIcon from "@mui/icons-material/EventAvailable";
 import EventBusyIcon from "@mui/icons-material/EventBusy";
@@ -86,7 +87,8 @@ export const COST_GLYPH: Record<"FREE" | "PAID" | "DONATION", Glyph> = {
 
 /**
  * What a checkpoint has (§757), one metaphor each, written down: water is a drop, food the cutlery,
- * first aid the medical case, timing the stopwatch. Always beside the word — «Apă», «Mâncare» —
+ * first aid the medical case, timing the stopwatch, direction the road sign with its arrow (§NNN).
+ * Always beside the word — «Apă», «Mâncare», «Direcționare» —
  * on the event page's table (`EventCheckpoints`); never the glyph alone.
  */
 export const CHECKPOINT_GLYPH: Record<CheckpointKind, Glyph> = {
@@ -94,6 +96,7 @@ export const CHECKPOINT_GLYPH: Record<CheckpointKind, Glyph> = {
   FOOD: RestaurantIcon,
   FIRST_AID: MedicalServicesIcon,
   TIMING: TimerIcon,
+  DIRECTION: DirectionsIcon,
 };
 
 /**

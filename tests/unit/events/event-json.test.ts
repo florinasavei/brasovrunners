@@ -73,10 +73,10 @@ function sampleConfig(): EventConfig {
       url: null,
       maps: [{ provider: "garmin", id: "987654321" }],
       gpx: { name: "traseu.gpx", url: GPX },
-      // The route's checkpoints (§757): one with a cut-off and a note, one without either.
+      // The route's checkpoints (§757, §NNN): one with a time limit in minutes and a note, one without either and with a direction kind.
       checkpoints: [
-        { km: 7.5, name: { ro: "Apă la cabană", en: "Water at the hut" }, kinds: ["WATER", "FOOD"], cutoff: "10:45", note: { ro: "Și banane", en: "Bananas too" } },
-        { km: 15, name: { ro: "Cronometrare", en: "Timing" }, kinds: ["TIMING"], cutoff: null, note: { ro: null, en: null } },
+        { km: 7.5, name: { ro: "Apă la cabană", en: "Water at the hut" }, kinds: ["WATER", "FOOD"], cutoffMinutes: 45, note: { ro: "Și banane", en: "Bananas too" } },
+        { km: 15, name: { ro: "Cronometrare", en: "Timing" }, kinds: ["TIMING", "DIRECTION"], cutoffMinutes: null, note: { ro: null, en: null } },
       ],
     },
     links: [],
@@ -183,6 +183,107 @@ describe("the event file's reader", () => {
   it("refuses a version 1 race whose end was at or before its gun: no time limit is made up", () => {
     const read = readEventFile(JSON.stringify({ ...sampleFile(), version: 1, event: { ...sampleConfig(), durationMinutes: 60 } }));
     expect(read).toMatchObject({ ok: false, refusal: "invalid", detail: "event.durationMinutes" });
+  });
+
+  /*
+    §NNN: version 3 carries a checkpoint's cut-off as `cutoffMinutes`, minutes from the start (the gun on a race).
+    A file made before — versions 1 and 2 — carries `cutoff`, a time of day, and is read forgivingly.
+  */
+  describe("the checkpoints, read forgivingly (§NNN)", () => {
+    type Loose = Record<string, unknown>;
+    const oldPoint = (over: Loose = {}): Loose => ({ km: 5, name: { ro: "Apă", en: "Water" }, kinds: ["WATER"], cutoff: "10:45", note: { ro: null, en: null }, ...over });
+    /** An older file with these checkpoints and event fields, as it was written: `cutoff` and no `cutoffMinutes`. */
+    const olderFile = (version: 1 | 2, checkpoints: Loose[], event: Loose = {}) => {
+      const base = sampleConfig();
+      return JSON.stringify({ ...sampleFile(), version, event: { ...base, ...event, route: { ...base.route, checkpoints } } });
+    };
+    const read = (raw: string) => {
+      const result = readEventFile(raw);
+      if (!result.ok) throw new Error(`refused: ${result.refusal} ${result.detail ?? ""}`);
+      return result;
+    };
+
+    it("writes this release's version, with minutes and no time of day, and reads it back as it was", () => {
+      const written = JSON.parse(JSON.stringify(sampleFile())) as { version: number; event: { route: { checkpoints: Loose[] } } };
+      expect(written.version).toBe(3);
+      expect(EVENT_FILE_VERSION).toBe(3);
+      for (const checkpoint of written.event.route.checkpoints) {
+        expect(checkpoint).toHaveProperty("cutoffMinutes");
+        expect(checkpoint).not.toHaveProperty("cutoff");
+      }
+      const back = read(JSON.stringify(sampleFile()));
+      expect(back.file.event.route.checkpoints).toEqual(sampleConfig().route.checkpoints);
+      expect(back.notes).toEqual([]);
+    });
+
+    it("converts a version 2 file's time of day to minutes from the gun, with no word to say", () => {
+      // The gun at 08:00Z is 10:00 on the event's clock: 10:45 is 45 minutes after it, 12:30 is 150.
+      const result = read(olderFile(2, [oldPoint(), oldPoint({ km: 9, cutoff: "12:30" })]));
+      expect(result.file.event.route.checkpoints.map((row) => row.cutoffMinutes)).toEqual([45, 150]);
+      expect(result.file.event.route.checkpoints.every((row) => !("cutoff" in row))).toBe(true);
+      expect(result.file.version).toBe(EVENT_FILE_VERSION);
+      expect(result.notes).toEqual([]);
+    });
+
+    it("counts a version 1 file's time of day from its gun too, after the race's end was moved to the gun", () => {
+      const result = read(olderFile(1, [oldPoint({ cutoff: "11:15" })]));
+      expect(result.file.event.route.checkpoints[0].cutoffMinutes).toBe(75);
+    });
+
+    it("counts a time of day from the event's start when there is no gun, and across midnight for a night race", () => {
+      // A group run at 09:00 (no gun): 10:15 is 75 minutes after it.
+      const run = read(olderFile(2, [oldPoint({ cutoff: "10:15" })], { type: "GROUP_RUN", raceStartsAt: null }));
+      expect(run.file.event.route.checkpoints[0].cutoffMinutes).toBe(75);
+      // A night race: the gun at 22:00 on the event's clock (20:00Z), eight hours: 02:00 is four hours later, 23:30 an hour and a half.
+      const night = read(olderFile(2, [oldPoint({ cutoff: "23:30" }), oldPoint({ km: 9, cutoff: "02:00" })], { raceStartsAt: "2026-11-21T20:00:00.000Z", durationMinutes: 480 }));
+      expect(night.file.event.route.checkpoints.map((row) => row.cutoffMinutes)).toEqual([90, 240]);
+    });
+
+    it("leaves out a time of day it cannot count — before the start, or with no start hour in the file — and says how many", () => {
+      // 09:30 is before the 10:00 gun.
+      const before = read(olderFile(2, [oldPoint({ cutoff: "09:30" }), oldPoint({ km: 9, cutoff: "11:00" })]));
+      expect(before.file.event.route.checkpoints.map((row) => row.cutoffMinutes)).toEqual([null, 60]);
+      expect(before.notes).toEqual([{ code: "checkpointLimitsDropped", count: 1 }]);
+      // No gun and no hour on the start: nothing to count from.
+      const none = read(olderFile(2, [oldPoint(), oldPoint({ km: 9 })], { type: "GROUP_RUN", raceStartsAt: null, start: { date: "2026-11-21", time: null } }));
+      expect(none.file.event.route.checkpoints.map((row) => row.cutoffMinutes)).toEqual([null, null]);
+      expect(none.notes).toEqual([{ code: "checkpointLimitsDropped", count: 2 }]);
+      // The checkpoints themselves stay.
+      expect(none.file.event.route.checkpoints).toHaveLength(2);
+    });
+
+    it("keeps the minutes of a file that carries both, and reads an old point with no cut-off as none", () => {
+      const result = read(olderFile(2, [oldPoint({ cutoffMinutes: 30, cutoff: "11:00" }), oldPoint({ km: 9, cutoff: null })]));
+      expect(result.file.event.route.checkpoints.map((row) => row.cutoffMinutes)).toEqual([30, null]);
+      expect(result.notes).toEqual([]);
+    });
+
+    it("reads a file made before «Direcționare» existed: four kinds at most, nothing to say", () => {
+      const result = read(olderFile(2, [oldPoint({ kinds: ["WATER", "FOOD", "FIRST_AID", "TIMING"], cutoff: null })]));
+      expect(result.file.event.route.checkpoints[0].kinds).toEqual(["WATER", "FOOD", "FIRST_AID", "TIMING"]);
+      expect(result.notes).toEqual([]);
+    });
+
+    it("keeps «Direcționare» and leaves out a kind this release does not know, with a word, never a refusal", () => {
+      const result = read(olderFile(2, [oldPoint({ kinds: ["DIRECTION", "TELEPORT"], cutoff: null }), oldPoint({ km: 9, kinds: ["TELEPORT", "HOVERCRAFT"], cutoff: null })]));
+      expect(result.file.event.route.checkpoints.map((row) => row.kinds)).toEqual([["DIRECTION"], []]);
+      expect(result.notes).toEqual([{ code: "checkpointKindsDropped", count: 3 }]);
+      // The same for a version 3 file written by a later release.
+      const later = JSON.parse(JSON.stringify(sampleFile())) as { event: { route: { checkpoints: Loose[] } } };
+      later.event.route.checkpoints[0].kinds = ["WATER", "TELEPORT"];
+      expect(read(JSON.stringify(later)).file.event.route.checkpoints[0].kinds).toEqual(["WATER"]);
+    });
+
+    it("still refuses a checkpoint that is not one: a name missing, a kilometre that is no number, a limit that is zero", () => {
+      const broken = (over: Loose) => readEventFile(olderFile(2, [oldPoint(over)])).ok;
+      expect(broken({ name: { ro: "", en: "Water" } })).toBe(false);
+      expect(broken({ km: "5" })).toBe(false);
+      const file = JSON.parse(JSON.stringify(sampleFile())) as { event: { route: { checkpoints: Loose[] } } };
+      file.event.route.checkpoints[0].cutoffMinutes = 0;
+      expect(readEventFile(JSON.stringify(file)).ok).toBe(false);
+      file.event.route.checkpoints[0].cutoffMinutes = 10081;
+      expect(readEventFile(JSON.stringify(file)).ok).toBe(false);
+    });
   });
 
   it("names the parts that do not fit, by path and never by value", () => {

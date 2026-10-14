@@ -1,6 +1,6 @@
 import type { Locale } from "@/i18n/routing";
 import type { ConfigChange } from "./diff";
-import type { EventFileRefusal } from "./file-format";
+import type { EventFileRefusal, FileNote } from "./file-format";
 import type { DiffEventImportResult, ImportNote, MediaOutcome } from "./import";
 
 /**
@@ -38,6 +38,8 @@ export type PreviewOutcome =
         baseline: string;
         media: number;
         seriesNotApplied: boolean;
+        /** What reading the file left out of its checkpoints (§NNN), for the summary to say before anything is imported. */
+        fileNotes: FileNote[];
       };
       /** The page addresses a new event would get, and whether either had to be suffixed because the file's was taken. */
       newEvent: { slugs: Record<Locale, string>; suffixed: boolean };
@@ -61,6 +63,8 @@ export type DiffOutcome =
       refusal: string | null;
       seriesNotApplied: boolean;
       slugsKept: boolean;
+      /** What reading the file left out of its checkpoints (§NNN): the diff shows the file as it will be written. */
+      fileNotes: FileNote[];
     };
 
 export type AsNewOutcome = ImportRefusal | { ok: true; eventId: string; path: string; slugs: Record<Locale, string>; media: MediaOutcome; notes: ImportNote[] };

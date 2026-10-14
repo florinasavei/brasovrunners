@@ -6,7 +6,9 @@ import { getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
 import { addGpxCheckpointsAction, saveCheckpointsAction } from "@/app/[locale]/admin/events/[id]/checkpoint-actions";
 import { countForm } from "@/i18n/count-form";
+import { durationShort } from "@/i18n/dates";
 import type { Locale } from "@/i18n/routing";
+import { splitDuration } from "@/modules/content/events/duration";
 import {
   CHECKPOINT_KINDS,
   CHECKPOINT_NAME_MAX,
@@ -17,17 +19,21 @@ import {
 } from "@/modules/event-checkpoints/domain/checkpoint";
 import { type GpxProposal, MAX_OFF_TRACK_METERS } from "@/modules/event-checkpoints/domain/gpx-waypoints";
 import DetachedActionForm, { DetachedFields, DetachedForm } from "@/shared/forms/DetachedActionForm";
-import TimeField from "@/shared/forms/pickers/TimeField";
 import RecallField from "@/shared/forms/recall";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
 import { ACTION_ICONS } from "@/shared/ui/action-icons";
 import CheckboxField from "@/shared/ui/CheckboxField";
 import GlyphButtonLink from "@/shared/ui/GlyphButtonLink";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
+import { PANEL_GLYPHS } from "@/shared/ui/panel-glyphs";
 import Panel from "@/shared/ui/Panel";
+import DurationBoxes from "./DurationBoxes";
 
 /** The glyph before «Scoate»: the delete verb's, by name from the verbs' registry (§318). */
 const RemoveGlyph = ACTION_ICONS.delete;
+
+/** The glyph before «Timp limită»: the one the race's own box wears (`WhenBox`), the deadlines' clock. */
+const LimitGlyph = PANEL_GLYPHS.deadlines;
 
 /** How many empty rows the card draws under the saved ones, for points to be typed in this sitting. */
 const SPARE_ROWS = 3;
@@ -54,7 +60,8 @@ export async function CheckpointForms({ locale, eventId, mayEdit, children }: { 
     "cp[].nameEn": t("checkpoints.field.nameEn"),
     "cp[].km": t("checkpoints.field.km"),
     "cp[].kinds": t("checkpoints.field.kinds"),
-    "cp[].cutoff": t("checkpoints.field.cutoff"),
+    "cp[].cutoffHours": t("checkpoints.field.cutoff"),
+    "cp[].cutoffMinutesPart": t("checkpoints.field.cutoff"),
     "cp[].noteRo": t("checkpoints.field.noteRo"),
     "cp[].noteEn": t("checkpoints.field.noteEn"),
   });
@@ -96,8 +103,8 @@ type Props = {
 /**
  * «Puncte de control» (§757; the owner, 2026-10-13: «other things for the route: I need to put
  * checkpoints and limit times»): the named card of «Traseul» where the route's points are kept —
- * a name in both languages, the kilometre, what is there (water, food, first aid, timing), an
- * optional cut-off and an optional note — and, when the route's GPX has waypoints, the one press
+ * a name in both languages, the kilometre, what is there (water, food, first aid, timing, direction), an
+ * optional time limit (§NNN: the race's own hours and minutes boxes, counted from the start) and an optional note — and, when the route's GPX has waypoints, the one press
  * that takes them («Ia punctele din GPX»: a preview first, then what the club ticks is added).
  *
  * **Inside «Traseul», in the document** (§763; the owner, of §760's card at the top of the editor:
@@ -108,7 +115,7 @@ type Props = {
  * and every box and button here names its form with the `form` attribute (`DetachedFields`, which
  * the house's primitives read). So «Salvează punctele» posts the points and nothing of the event,
  * «Salvează» posts the event and none of the points, and a refusal here — a kilometre beyond the
- * route, a cut-off before the start or after a later point's — keeps what was typed here, says why
+ * route, a time limit longer than the race's or than a later point's — keeps what was typed here, says why
  * above these boxes, and leaves the event's other boxes as they were (§757's shape, §749's card).
  * Plain posts, so it works with scripts off.
  *
@@ -164,14 +171,25 @@ export default async function CheckpointsCard({ locale, eventId, checkpoints, ma
         </Box>
       </Box>
       <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5}>
-        <TimeField
-          name={checkpointBox(index, "cutoff")}
-          label={t("checkpoints.field.cutoff")}
-          helperText={t("checkpoints.field.cutoffHelp")}
-          defaultValue={saved?.cutoff ?? ""}
-          size="small"
-          sx={{ flex: { sm: "0 0 160px" } }}
-        />
+        {/* «Timp limită» (§NNN): the race's own two boxes — hours and minutes from the start — not a second widget. */}
+        <Stack component="fieldset" spacing={0.5} sx={{ border: 0, m: 0, p: 0, minWidth: 0, flex: { sm: "0 0 auto" } }} data-testid="checkpoint-cutoff-fieldset">
+          <Typography component="legend" variant="caption" color="text.secondary" sx={{ mb: 0.5, p: 0, display: "inline-flex", alignItems: "center", gap: 0.75 }}>
+            <LimitGlyph aria-hidden fontSize="inherit" />
+            {t("checkpoints.field.cutoff")}
+          </Typography>
+          <DurationBoxes
+            hoursName={checkpointBox(index, "cutoffHours")}
+            minutesName={checkpointBox(index, "cutoffMinutesPart")}
+            hoursLabel={t("editor.durationHours")}
+            minutesLabel={t("editor.durationMinutesPart")}
+            defaults={splitDuration(saved?.cutoffMinutes)}
+            size="small"
+            describedBy={`checkpoint-cutoff-help-${index}`}
+          />
+          <Typography id={`checkpoint-cutoff-help-${index}`} variant="caption" color="text.secondary" sx={{ px: 1.75, maxWidth: 280 }}>
+            {t("checkpoints.field.cutoffHelp")}
+          </Typography>
+        </Stack>
         <RecallField
           name={checkpointBox(index, "noteRo")}
           label={t("checkpoints.field.noteRo")}
@@ -204,6 +222,14 @@ export default async function CheckpointsCard({ locale, eventId, checkpoints, ma
   const summary =
     count === 0 ? t("checkpoints.summaryNone") : t(`checkpoints.summary.${countForm(count, locale)}`, { count });
 
+  /** A point's limit in words: «timp limită 1 h 30 min», with the clock it closes at when the event's start has one. */
+  const limitWords = (row: Checkpoint): string | null =>
+    row.cutoffMinutes === null
+      ? null
+      : row.cutoffClock
+        ? t("checkpoints.cutoffAsideClock", { duration: durationShort(row.cutoffMinutes), time: row.cutoffClock })
+        : t("checkpoints.cutoffAside", { duration: durationShort(row.cutoffMinutes) });
+
   /** What a role that may only read sees: the list, as words. */
   const readOnly = (
     <Stack spacing={1}>
@@ -216,11 +242,11 @@ export default async function CheckpointsCard({ locale, eventId, checkpoints, ma
         <Box component="ul" sx={{ m: 0, pl: 2.5 }} data-testid="checkpoints-read-only">
           {checkpoints.map((row) => (
             <li key={row.id}>
-              {/* Only what the point has: no bare dash for no kinds, and «fără oră limită» as the public table says it. */}
+              {/* Only what the point has: no bare dash for no kinds, and «fără timp limită» as the public table says it. */}
               {[
                 t("checkpoints.rowTitle", { km: km(row.km), name: locale === "ro" ? row.nameRo : row.nameEn }),
                 row.kinds.map((kind) => t(`checkpoints.kinds.${kind}`)).join(", "),
-                row.cutoff ? t("checkpoints.cutoffAside", { time: row.cutoff }) : t("checkpoints.noCutoff"),
+                limitWords(row) ?? t("checkpoints.noCutoff"),
               ]
                 .filter((part) => part !== "")
                 .join(" · ")}
@@ -365,7 +391,7 @@ export default async function CheckpointsCard({ locale, eventId, checkpoints, ma
                     collapsible
                     level={4}
                     title={t("checkpoints.rowTitle", { km: km(row.km), name: locale === "ro" ? row.nameRo : row.nameEn })}
-                    aside={row.cutoff ? t("checkpoints.cutoffAside", { time: row.cutoff }) : undefined}
+                    aside={limitWords(row) ?? undefined}
                     data-testid="checkpoint-card"
                   >
                     {rowFields(index, row)}

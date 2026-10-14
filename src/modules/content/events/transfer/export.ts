@@ -135,7 +135,7 @@ export function configFromRows(event: EditableEvent, rows: readonly EditableTran
         km: row.km,
         name: { ro: row.nameRo, en: row.nameEn },
         kinds: [...row.kinds],
-        cutoff: row.cutoff,
+        cutoffMinutes: row.cutoffMinutes,
         note: { ro: row.noteRo, en: row.noteEn },
       })),
     },

@@ -74,7 +74,7 @@ export type EventImportWords = {
   open: string;
   mediaProblemsHeading: string;
   mediaProblems: Record<MediaFailure, string>;
-  notes: { slugSuffixed: string; publicListOff: string; seriesNotApplied: string };
+  notes: { slugSuffixed: string; publicListOff: string; seriesNotApplied: string; checkpointKindsDropped: string; checkpointLimitsDropped: string };
   languages: Record<"ro" | "en", string>;
   roles: Record<string, string>;
   fields: Record<string, string>;
@@ -307,6 +307,11 @@ export default function EventImportPanel({
                 {words.summarySeries}
               </Typography>
             )}
+            {preview.summary.fileNotes.map((note) => (
+              <Typography key={note.code} variant="body2" color="text.secondary" data-testid="event-json-file-note">
+                {fill(words.notes[note.code], { count: note.count })}
+              </Typography>
+            ))}
           </Stack>
         </Paper>
       )}
@@ -395,6 +400,11 @@ export default function EventImportPanel({
 
                     {diff.slugsKept && <Typography variant="body2">{words.overSlugsKept}</Typography>}
                     {diff.seriesNotApplied && <Typography variant="body2">{words.summarySeries}</Typography>}
+                    {diff.fileNotes.map((note) => (
+                      <Typography key={note.code} variant="body2" data-testid="event-json-file-note">
+                        {fill(words.notes[note.code], { count: note.count })}
+                      </Typography>
+                    ))}
 
                     {diff.media.length > 0 && (
                       <Stack spacing={0.5} data-testid="event-json-media">
@@ -468,7 +478,11 @@ export default function EventImportPanel({
           <Alert severity="success">{words.asNewDone}</Alert>
           {created.notes.map((note) => (
             <Alert severity="info" key={`${note.code}-${"locale" in note ? note.locale : ""}`}>
-              {note.code === "slugSuffixed" ? fill(words.notes.slugSuffixed, { language: words.languages[note.locale], slug: note.slug }) : words.notes[note.code]}
+              {note.code === "slugSuffixed"
+                ? fill(words.notes.slugSuffixed, { language: words.languages[note.locale], slug: note.slug })
+                : "count" in note
+                  ? fill(words.notes[note.code], { count: note.count })
+                  : words.notes[note.code]}
             </Alert>
           ))}
           {mediaProblems(created)}

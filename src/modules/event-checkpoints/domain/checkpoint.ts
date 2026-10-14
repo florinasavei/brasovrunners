@@ -1,4 +1,6 @@
+import { durationShort } from "@/i18n/dates";
 import { canEditClubTodo, canReadClubTodo } from "@/modules/club-todo/domain/club-todo";
+import { DURATION_MAX_MINUTES, DURATION_MINUTES_CONSTRAINTS, joinDuration } from "@/modules/content/events/duration";
 import { DomainError } from "@/shared/errors/domain-error";
 import type { StaffRole } from "@/modules/staff-identity/domain/roles";
 
@@ -12,15 +14,20 @@ import type { StaffRole } from "@/modules/staff-identity/domain/roles";
  * three readers — the editor's card, the event page's table, the bib's profile strip — cannot
  * disagree about them. `checkpoints.ts` beside this folder is the writer.
  *
- * **The cut-off is a time of the day in the event's own zone** (the column's comment says why): it
- * is read against the start's time of day — the race's gun when it has one (§71), else the event's
- * start. A cut-off earlier than that is before the start and refused — unless the race ends on the
- * next day (the event's end, «Durata»), when it is the next day's and a night race reads right. One
- * race is shorter than a day; a cut-off a whole day later cannot be said.
+ * **The cut-off is a time limit, minutes from the start** (§NNN, reversing §757's first answer; the
+ * column's comment says why): hours and minutes as the race's own «Timp limită» boxes take them,
+ * counted from the race's gun when it has one (§71), else the event's start, the same instant the
+ * event's own «Timp limită» counts from — so a point's limit is held against the event's as minutes
+ * against minutes, with no clock arithmetic and no day to wrap. The clock a limit closes at is derived
+ * from the start (`start.ts#cutoffClockOf`), never stored, and a time of day is read only from an
+ * old file or an old row (`start.ts#minutesFromClock`).
  */
 
-/** What a checkpoint can have, most basic first: the order the glyphs and the words are drawn in. */
-export const CHECKPOINT_KINDS = ["WATER", "FOOD", "FIRST_AID", "TIMING"] as const;
+/**
+ * What a checkpoint can have, most basic first: the order the glyphs and the words are drawn in.
+ * «Direcționare» (§NNN) is last: a volunteer who shows the way at a junction, not something a runner takes.
+ */
+export const CHECKPOINT_KINDS = ["WATER", "FOOD", "FIRST_AID", "TIMING", "DIRECTION"] as const;
 export type CheckpointKind = (typeof CHECKPOINT_KINDS)[number];
 
 /** A name is a word or two on a table row and a card; the database holds the same bound. */
@@ -32,15 +39,21 @@ export const CHECKPOINTS_MAX = 30;
 /** The largest distance a column of `numeric(6,2)` holds. */
 export const CHECKPOINT_KM_MAX = 9999.99;
 
-/** One checkpoint as every reader has it: the km a number, the cut-off «HH:MM» or null. */
+/** One checkpoint as every reader has it: the km a number, the time limit in minutes from the start or null. */
 export type Checkpoint = {
   id: string;
   nameRo: string;
   nameEn: string;
   km: number;
   kinds: readonly CheckpointKind[];
-  /** The time of the day in the event's zone, `HH:MM`, or null for no limit. */
-  cutoff: string | null;
+  /** Minutes from the start (the gun on a race that has one) by which the last runner has to be here, or null for no limit (§NNN). */
+  cutoffMinutes: number | null;
+  /**
+   * The clock that limit closes at, `HH:MM` in the event's zone, read against the start the event has
+   * now (`start.ts#cutoffClockOf`); null with no limit or while the start has no date or hour. Derived,
+   * never stored: it follows the start.
+   */
+  cutoffClock: string | null;
   noteRo: string | null;
   noteEn: string | null;
 };
@@ -53,7 +66,9 @@ export type PostedCheckpoint = {
   nameEn: string;
   km: string;
   kinds: readonly string[];
-  cutoff: string;
+  /** «Timp limită», the race's own two boxes: hours and minutes as typed, both empty for no limit. */
+  cutoffHours: string;
+  cutoffMinutesPart: string;
   noteRo: string;
   noteEn: string;
   /** «Scoate» ticked on a saved row. */
@@ -62,8 +77,8 @@ export type PostedCheckpoint = {
   index: number;
 };
 
-/** A row after the rules, ready to write: no id for a new row. */
-export type CheckpointInput = Omit<Checkpoint, "id"> & { id: string | null };
+/** A row after the rules, ready to write: no id for a new row, no derived clock. */
+export type CheckpointInput = Omit<Checkpoint, "id" | "cutoffClock"> & { id: string | null };
 
 // ---------------------------------------------------------------------------------------------
 // Who may read and who may write (BR-REQ-060-01: asserted by the service, not by a hidden button)
@@ -99,7 +114,7 @@ export const CHECKPOINT_REASONS = [
   "CHECKPOINT_KM_BEYOND_ROUTE",
   "CHECKPOINT_KIND_UNKNOWN",
   "CHECKPOINT_CUTOFF_INVALID",
-  "CHECKPOINT_CUTOFF_BEFORE_START",
+  "CHECKPOINT_CUTOFF_NO_START",
   "CHECKPOINT_CUTOFF_AFTER_LATER",
   "CHECKPOINT_CUTOFF_AFTER_END",
   "CHECKPOINT_NOTE_ONE_LANGUAGE",
@@ -140,19 +155,15 @@ export class CheckpointRefusal extends DomainError {
   }
 }
 
-/** A minute of the day as `HH:MM`, wrapping past midnight. */
-export function clockTimeOf(minutes: number): string {
-  const wrapped = ((Math.round(minutes) % 1440) + 1440) % 1440;
-  return `${String(Math.floor(wrapped / 60)).padStart(2, "0")}:${String(wrapped % 60).padStart(2, "0")}`;
-}
-
 // ---------------------------------------------------------------------------------------------
 // The posted row, read
 // ---------------------------------------------------------------------------------------------
 
 /** The boxes' names: `cp[3].km` — the row's number in the form, so a refusal links to the box. */
-export const checkpointBox = (index: number, field: "id" | "nameRo" | "nameEn" | "km" | "kinds" | "cutoff" | "noteRo" | "noteEn" | "remove"): string =>
-  `cp[${index}].${field}`;
+export const checkpointBox = (
+  index: number,
+  field: "id" | "nameRo" | "nameEn" | "km" | "kinds" | "cutoffHours" | "cutoffMinutesPart" | "noteRo" | "noteEn" | "remove",
+): string => `cp[${index}].${field}`;
 
 /** The whole of a row's text, folded: one line, no run of spaces. */
 const oneLine = (value: string): string => value.replace(/\s+/g, " ").trim();
@@ -180,9 +191,31 @@ export function clockMinutes(time: string): number {
   return hours * 60 + minutes;
 }
 
+/**
+ * «Timp limită» as the two boxes were typed (§NNN) — the race's own boxes, joined the way the race's are
+ * (`duration.ts#joinDuration`): null for both empty (no limit), the minutes for a whole positive time of
+ * at most a week, and `"hours"` / `"minutes"` for the box that is not one — sixty minutes or more, a
+ * letter, a zero or a limit past the week — so a refusal names the box to fix.
+ */
+export function readTimeLimit(hours: string, minutes: string): number | null | "hours" | "minutes" {
+  const joined = joinDuration(hours, minutes);
+  if (joined === "") return null;
+  const m = minutes.trim();
+  // Only the minutes box left behind, a zero («1 h 0 min» with the hours cleared): the limit is removed, not a «0».
+  if (hours.trim() === "" && /^0+$/.test(m)) return null;
+  if (m !== "" && (!/^\d+$/.test(m) || Number(m) > (DURATION_MINUTES_CONSTRAINTS.max ?? 59))) return "minutes";
+  if (!/^\d+$/.test(joined)) return "hours";
+  const total = Number(joined);
+  return total >= 1 && total <= DURATION_MAX_MINUTES ? total : "hours";
+}
+
 /** A row nobody typed in: the spare rows at the foot of the card post nothing but their number. */
 export function isBlankPosted(row: PostedCheckpoint): boolean {
-  return row.id === "" && [row.nameRo, row.nameEn, row.km, row.cutoff, row.noteRo, row.noteEn].every((value) => value.trim() === "") && row.kinds.length === 0;
+  return (
+    row.id === "" &&
+    [row.nameRo, row.nameEn, row.km, row.cutoffHours, row.cutoffMinutesPart, row.noteRo, row.noteEn].every((value) => value.trim() === "") &&
+    row.kinds.length === 0
+  );
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -190,69 +223,50 @@ export function isBlankPosted(row: PostedCheckpoint): boolean {
 // ---------------------------------------------------------------------------------------------
 
 /**
- * What the event says that a checkpoint is measured against: the route's length, the start's time
- * of the day (the gun's, else the event's) and how long the event lasts after it. Each is null when
- * the event does not say — a rule that needs it is then not applied, never guessed.
+ * What the event says that a checkpoint is measured against: the route's length, whether the start
+ * has a date and an hour to count a limit from (the gun's, else the event's) and how long the event
+ * lasts after it. Each is null or false when the event does not say — a rule that needs it is then not
+ * applied, never guessed; a limit with no start to count from is refused (§NNN).
  */
 export type CheckpointContext = {
   /** The route's length in kilometres: the distance the club typed, else the GPX's. */
   routeKm: number | null;
-  /** The start's time of the day in the event's zone, in minutes since midnight. */
-  startMinutes: number | null;
-  /** Minutes from that start to the event's end («Durata»): the time limit the finish row says. */
+  /** The start has a date and an hour: a time limit counts from it, and the clock it closes at can be said. */
+  startKnown: boolean;
+  /** Minutes from that start to the event's end («Timp limită» of a race, «Durata» of the rest): the longest limit a point may have. */
   limitMinutes: number | null;
+  /**
+   * Each saved point's limit by id. A row posted with the limit it already has keeps it while the start
+   * is unknown — the club who marks the hour «se anunță mai târziu» can still save a note — and only a
+   * new or changed limit is refused for want of a start.
+   */
+  savedMinutes?: ReadonlyMap<string, number | null>;
 };
 
 /**
  * The context an event gives: the route's length in kilometres from the typed distance (§598) or the
- * track's, the start's minute of the day and the span to the event's end — all read on the event's
- * own clock. `wallMinutesOf` is the caller's conversion of an instant to minutes since midnight in
- * the event's zone (`events/domain/zoned-time.ts#toWallTimeInput`), passed in so this stays pure.
+ * track's, whether the start is known, and the event's «Timp limită» in minutes. The limit is a
+ * duration, so it is true with or without an hour on the start (`duration.ts#savedDurationMinutes` from
+ * `durationBase`, or the file's own minutes): a point's limit is held to it even while the hour is to be
+ * announced. Minutes are elapsed minutes, the same measure the race's «Timp limită» is stored in, so a
+ * night the clocks change moves no limit and no comparison.
  */
 export function checkpointContext(input: {
   distanceMeters: number | null;
   gpxMeters: number | null;
-  /** The start the cut-offs count from — the gun's, else the event's — or null while its hour is not typed. */
+  /** The start the limits count from — the gun's, else the event's — or null while its hour is not typed. */
   start: Date | null;
-  endsAt: Date | null;
-  wallMinutesOf: (instant: Date) => number;
+  /** The event's «Timp limită» in minutes — known whether or not the start has an hour — or null when it has none. */
+  limitMinutes: number | null;
+  savedMinutes?: ReadonlyMap<string, number | null>;
 }): CheckpointContext {
   const meters = input.distanceMeters && input.distanceMeters > 0 ? input.distanceMeters : input.gpxMeters && input.gpxMeters > 0 ? input.gpxMeters : null;
-  const startMinutes = input.start ? input.wallMinutesOf(input.start) : null;
-  let limit: number | null = null;
-  if (input.start && input.endsAt && startMinutes !== null) {
-    const real = Math.round((input.endsAt.getTime() - input.start.getTime()) / 60_000);
-    /*
-      On the clock, not in elapsed minutes: the cut-offs are times of the day, so the end is too. On
-      the night the clocks go back (or forward) the two differ by the hour moved, and a cut-off after
-      the finish closes would otherwise pass (§757). The wall-clock span is the one nearest the real
-      one whose minute of the day is the end's.
-    */
-    const drift = (((input.wallMinutesOf(input.endsAt) - startMinutes - real) % 1440) + 1440 + 720) % 1440 - 720;
-    limit = real + drift;
-  }
   return {
     routeKm: meters === null ? null : meters / 1000,
-    startMinutes,
-    limitMinutes: limit !== null && limit > 0 ? limit : null,
+    startKnown: input.start !== null,
+    limitMinutes: input.limitMinutes !== null && input.limitMinutes > 0 ? input.limitMinutes : null,
+    savedMinutes: input.savedMinutes,
   };
-}
-
-/**
- * How many minutes after the start a cut-off falls, or the time of the day itself while the start is
- * not known (nothing to count from).
- *
- * **A cut-off earlier than the start's time of day is the next day's only for a race that crosses
- * midnight** — one whose end, `limitMinutes` after the start, is on the next day — and a night race
- * says so by its end. For every other event it is before the start: negative, which the rule that asks
- * for a positive offset refuses. One equal to the start's time is zero minutes — a cut-off nobody could
- * meet — and is refused the same way. With no end given the race is taken to end the day it starts.
- */
-export function cutoffOffset(cutoff: string, startMinutes: number | null, limitMinutes: number | null = null): number {
-  const minutes = clockMinutes(cutoff);
-  if (startMinutes === null) return minutes;
-  const crossesMidnight = limitMinutes !== null && startMinutes + limitMinutes >= 1440;
-  return crossesMidnight ? (((minutes - startMinutes) % 1440) + 1440) % 1440 : minutes - startMinutes;
 }
 
 /** The checkpoints by distance, ties in the order they were typed: the order every reader draws. */
@@ -280,9 +294,10 @@ function kindsOf(posted: readonly string[]): CheckpointKind[] | null {
  * - a distance from 0, at most the route's length when the event has one — **a distance beyond the
  *   route is refused with the reason** and the length, in kilometres;
  * - only the closed set's kinds;
- * - a cut-off that is a time of the day, **after the start** (when the event's start has an hour)
- *   and **not after the cut-off of a checkpoint further along** — a runner is held at kilometre 10
- *   no later than at kilometre 20 — and not after the event's end when it has one;
+ * - a time limit (§NNN): hours and minutes as the race's own boxes read them, positive; **needing a
+ *   start to count from** (a new or changed limit with no date or hour on the start is refused), **not
+ *   longer than the event's own «Timp limită»** and **not longer than the limit of a checkpoint
+ *   further along** — a runner is held at kilometre 10 no later than at kilometre 20;
  * - a note in both languages or in neither, at most `CHECKPOINT_NOTE_MAX` each;
  * - at most `CHECKPOINTS_MAX` rows.
  *
@@ -317,10 +332,13 @@ export function prepareCheckpoints(posted: readonly PostedCheckpoint[], context:
     }
     const kinds = kindsOf(row.kinds);
     if (kinds === null) throw new CheckpointRefusal("CHECKPOINT_KIND_UNKNOWN", { name: label }, [checkpointBox(row.index, "kinds")]);
-    let cutoff: string | null = null;
-    if (row.cutoff.trim() !== "") {
-      cutoff = readClockTime(row.cutoff);
-      if (cutoff === null) throw new CheckpointRefusal("CHECKPOINT_CUTOFF_INVALID", { name: label }, [checkpointBox(row.index, "cutoff")]);
+    const limit = readTimeLimit(row.cutoffHours, row.cutoffMinutesPart);
+    if (limit === "hours" || limit === "minutes") {
+      throw new CheckpointRefusal("CHECKPOINT_CUTOFF_INVALID", { name: label }, [checkpointBox(row.index, limit === "hours" ? "cutoffHours" : "cutoffMinutesPart")]);
+    }
+    // A limit counts from the start: with no date or hour on it there is nothing to count from — unless this row keeps the limit it had.
+    if (limit !== null && !context.startKnown && !(row.id !== "" && context.savedMinutes?.get(row.id) === limit)) {
+      throw new CheckpointRefusal("CHECKPOINT_CUTOFF_NO_START", { name: label }, [checkpointBox(row.index, "cutoffHours")]);
     }
     const noteRo = oneLine(row.noteRo);
     const noteEn = oneLine(row.noteEn);
@@ -334,7 +352,7 @@ export function prepareCheckpoints(posted: readonly PostedCheckpoint[], context:
       nameEn,
       km,
       kinds,
-      cutoff,
+      cutoffMinutes: limit,
       noteRo: noteRo === "" ? null : noteRo,
       noteEn: noteEn === "" ? null : noteEn,
       index: row.index,
@@ -342,24 +360,26 @@ export function prepareCheckpoints(posted: readonly PostedCheckpoint[], context:
     });
   }
 
-  // The cut-offs, against the start, the end and each other — in the order a runner meets the points.
-  const along = sortedByKm(prepared).filter((row) => row.cutoff !== null);
-  let previous: { offset: number; name: RefusalWords; index: number } | null = null;
+  // The limits, against the event's own and each other — in the order a runner meets the points: minutes against minutes.
+  const along = sortedByKm(prepared).filter((row) => row.cutoffMinutes !== null);
+  let previous: { minutes: number; name: RefusalWords; index: number } | null = null;
   for (const row of along) {
-    const cutoff = row.cutoff as string;
-    const offset = cutoffOffset(cutoff, context.startMinutes, context.limitMinutes);
+    const minutes = row.cutoffMinutes as number;
     const name = row.label;
-    if (context.startMinutes !== null && offset <= 0) {
-      throw new CheckpointRefusal("CHECKPOINT_CUTOFF_BEFORE_START", { name, cutoff, start: clockTimeOf(context.startMinutes) }, [checkpointBox(row.index, "cutoff")]);
+    if (context.limitMinutes !== null && minutes > context.limitMinutes) {
+      throw new CheckpointRefusal("CHECKPOINT_CUTOFF_AFTER_END", { name, cutoff: durationShort(minutes), limit: durationShort(context.limitMinutes) }, [
+        checkpointBox(row.index, "cutoffHours"),
+      ]);
     }
-    if (context.startMinutes !== null && context.limitMinutes !== null && offset > context.limitMinutes) {
-      throw new CheckpointRefusal("CHECKPOINT_CUTOFF_AFTER_END", { name, cutoff, finishTime: clockTimeOf(context.startMinutes + context.limitMinutes) }, [checkpointBox(row.index, "cutoff")]);
+    if (previous && minutes < previous.minutes) {
+      // The earlier point's limit is longer than this one's: the earlier point's box is the one linked.
+      throw new CheckpointRefusal(
+        "CHECKPOINT_CUTOFF_AFTER_LATER",
+        { name: previous.name, cutoff: durationShort(previous.minutes), later: name, laterCutoff: durationShort(minutes) },
+        [checkpointBox(previous.index, "cutoffHours")],
+      );
     }
-    if (previous && offset < previous.offset) {
-      // The earlier point's limit is later than this one's: the earlier point's box is the one linked.
-      throw new CheckpointRefusal("CHECKPOINT_CUTOFF_AFTER_LATER", { name: previous.name, later: name, laterCutoff: cutoff }, [checkpointBox(previous.index, "cutoff")]);
-    }
-    previous = { offset, name, index: row.index };
+    previous = { minutes, name, index: row.index };
   }
   return sortedByKm(prepared).map((row) => ({
     id: row.id,
@@ -367,7 +387,7 @@ export function prepareCheckpoints(posted: readonly PostedCheckpoint[], context:
     nameEn: row.nameEn,
     km: row.km,
     kinds: row.kinds,
-    cutoff: row.cutoff,
+    cutoffMinutes: row.cutoffMinutes,
     noteRo: row.noteRo,
     noteEn: row.noteEn,
   }));
@@ -397,16 +417,30 @@ function labelOf(nameRo: string, nameEn: string, typedKm: string): RefusalWords 
 
 /** One row of the page's table: a point, or the finish. */
 export type CheckpointRow =
-  | { kind: "point"; id: string; km: number; nameRo: string; nameEn: string; kinds: readonly CheckpointKind[]; cutoff: string | null; noteRo: string | null; noteEn: string | null }
-  | { kind: "finish"; km: number | null; cutoff: string };
+  | {
+      kind: "point";
+      id: string;
+      km: number;
+      nameRo: string;
+      nameEn: string;
+      kinds: readonly CheckpointKind[];
+      cutoffMinutes: number | null;
+      cutoffClock: string | null;
+      noteRo: string | null;
+      noteEn: string | null;
+    }
+  | { kind: "finish"; km: number | null; cutoffMinutes: number; cutoffClock: string };
 
 /**
  * The table «Puncte de control» as rows (§757): the checkpoints by distance and — **the finish as the
- * last row when the event has a time limit**, its limit being the event's end on the event's clock
- * (the `HH:MM` the caller formats from `endsAt`), at the route's length when the event has one.
- * Nothing at all with no checkpoints: the section is not drawn for a finish alone.
+ * last row when the event has a time limit**, its limit being the event's «Timp limită» in minutes and
+ * the clock it closes at, the event's end on the event's clock (§NNN), at the route's length when the
+ * event has one. Nothing at all with no checkpoints: the section is not drawn for a finish alone.
  */
-export function checkpointRows(checkpoints: readonly Checkpoint[], finish: { km: number | null; limit: string | null }): CheckpointRow[] {
+export function checkpointRows(
+  checkpoints: readonly Checkpoint[],
+  finish: { km: number | null; limit: string | null; minutes: number | null },
+): CheckpointRow[] {
   if (checkpoints.length === 0) return [];
   const rows: CheckpointRow[] = sortedByKm(checkpoints).map((row) => ({
     kind: "point",
@@ -415,22 +449,24 @@ export function checkpointRows(checkpoints: readonly Checkpoint[], finish: { km:
     nameRo: row.nameRo,
     nameEn: row.nameEn,
     kinds: row.kinds,
-    cutoff: row.cutoff,
+    cutoffMinutes: row.cutoffMinutes,
+    cutoffClock: row.cutoffClock,
     noteRo: row.noteRo,
     noteEn: row.noteEn,
   }));
-  if (finish.limit) rows.push({ kind: "finish", km: finish.km, cutoff: finish.limit });
+  if (finish.limit && finish.minutes) rows.push({ kind: "finish", km: finish.km, cutoffMinutes: finish.minutes, cutoffClock: finish.limit });
   return rows;
 }
 
 /**
- * What changes a bib's drawing (§750), as one string: every checkpoint's distance, kinds and cut-off,
- * in order — folded into the stamp of what a picture is drawn from (`bib-stamp.ts`), so a new,
- * moved or retimed checkpoint is a new picture address and no old picture is served. The names are
- * not in it: the strip draws no name.
+ * What changes a bib's drawing (§750), as one string: every checkpoint's distance, kinds, time limit
+ * and the clock it closes at, in order — folded into the stamp of what a picture is drawn from
+ * (`bib-stamp.ts`), so a new, moved or retimed checkpoint, or a moved start that moves the clock the
+ * strip prints, is a new picture address and no old picture is served. The names are not in it: the
+ * strip draws no name.
  */
-export function checkpointsStampPart(checkpoints: readonly Pick<Checkpoint, "km" | "kinds" | "cutoff">[]): string {
+export function checkpointsStampPart(checkpoints: readonly Pick<Checkpoint, "km" | "kinds" | "cutoffMinutes" | "cutoffClock">[]): string {
   return sortedByKm(checkpoints)
-    .map((row) => `${row.km.toFixed(2)}:${row.kinds.join("+")}:${row.cutoff ?? ""}`)
+    .map((row) => `${row.km.toFixed(2)}:${row.kinds.join("+")}:${row.cutoffMinutes ?? ""}@${row.cutoffClock ?? ""}`)
     .join("|");
 }

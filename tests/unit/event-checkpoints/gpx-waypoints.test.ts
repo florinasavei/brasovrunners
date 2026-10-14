@@ -142,7 +142,35 @@ describe("§757 what a waypoint's words say it offers", () => {
     ["Aid station — snacks", ["FOOD"]],
     ["Prim ajutor", ["FIRST_AID"]],
     ["Control point", ["TIMING"]],
+    // «Direcționare» (§NNN): a junction, a turn, a signpost or a marshal who shows the way.
+    ["Direcționare la bifurcație", ["DIRECTION"]],
+    ["Intersecție — voluntar", ["DIRECTION"]],
+    ["Turn left at the fork", ["DIRECTION"]],
+    ["Signpost", ["DIRECTION"]],
+    ["Marshal at the junction", ["DIRECTION"]],
+    ["Fork in the road", ["DIRECTION"]],
+    ["Punct de apă la intersecție", ["WATER", "DIRECTION"]],
+    // Words that are not a junction on their own: a river crossing, a fork and knife, a mountain guide's book.
+    ["River crossing", []],
+    ["Stream crossing", []],
+    ["Fork & knife", []],
+    ["Ghid de munte", []],
+    // A word that only begins like one of these is not one.
+    ["Returnare", []],
     ["Cabana", []],
     ["", []],
   ])("reads %j as %j", (words, kinds) => expect(kindsFromWords(words)).toEqual(kinds));
+
+  it("reads «Crossing» as a junction only from the symbol, never from a name", () => {
+    expect(kindsFromWords("River crossing")).toEqual([]);
+    expect(kindsFromWords("River crossing", "Crossing")).toEqual(["DIRECTION"]);
+  });
+
+  it("puts a waypoint with a direction symbol on the list as «Direcționare» (§NNN)", () => {
+    const parsed = parseGpxWaypoints(gpx(wpt(LAT, 25.52, "<name>Colț</name><sym>Crossing</sym>") + wpt(LAT, 25.53, "<name>Stâlp</name><type>signpost</type>")));
+    expect(parsed.proposals.map((p) => [p.name, p.kinds])).toEqual([
+      ["Colț", ["DIRECTION"]],
+      ["Stâlp", ["DIRECTION"]],
+    ]);
+  });
 });

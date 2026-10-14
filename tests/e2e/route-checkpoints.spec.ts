@@ -4,18 +4,22 @@ import { existsSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import pg from "pg";
-import { fillTimeField, hydrated, signIn } from "./support/featured-event";
+import { hydrated, signIn } from "./support/featured-event";
 import { openEditorBox, openFold } from "./support/fold";
 
 /**
- * §757 (amending §718 and §750), BR-REQ-011-01, BR-REQ-050-02, BR-REQ-038-01 — the route's checkpoints and
- * the race's time limit (the owner, 2026-10-13: «I need to put checkpoints and limit times»; «trebuie să
- * pot pune timp limită»; «nu pot să văd unde e punctul de alimentare pe acel număr»).
+ * §757 (amending §718 and §750), §NNN, BR-REQ-011-01, BR-REQ-050-02, BR-REQ-038-01 — the route's checkpoints
+ * and the race's time limit (the owner, 2026-10-13: «I need to put checkpoints and limit times»; «trebuie
+ * să pot pune timp limită»; «nu pot să văd unde e punctul de alimentare pe acel număr»; 2026-10-14: «aici
+ * aș vrea să am și un tip de punct de tipul „direcționare”», «în loc de ora limită, trebuie să punem „timp
+ * limită” ca să fie dinamic»).
  *
- * An Administrator sets a race's «Timp limită», is refused a checkpoint beyond the route with the reason,
- * adds two checkpoints with their cut-offs through the card's own form, and the bib designer's preview
- * address changes with them; the published page then shows «Timp limită: 2 h 30 min», the table «Puncte
- * de control» with both points and the finish closing at 12:30.
+ * An Administrator sets a race's «Timp limită», is refused a checkpoint beyond the route with the reason
+ * and one with a time limit longer than the race's, adds two checkpoints — one ticked «Direcționare» —
+ * with their time limits typed as hours and minutes through the card's own form, and the bib designer's
+ * preview address changes with them; the published page then shows «Timp limită: 2 h 30 min», the table
+ * «Puncte de control» with both points, each with its limit and the clock it closes at («Timp limită: 1 h ·
+ * se închide la 11:00»), and the finish closing at 12:30.
  *
  * The race is written straight into the database — the setup, not the subject — one per project and
  * run, so the two projects never share a row: a 21 km race on 15 May 2027, the meeting at 09:00 and the
@@ -68,12 +72,14 @@ async function bibPreview(page: Page): Promise<Locator> {
 }
 
 /** One spare row of the card: its boxes, by their own labels inside the row. */
-async function fillRow(row: Locator, values: { km: string; ro: string; en: string; kinds: string[]; cutoff: string }) {
+async function fillRow(row: Locator, values: { km: string; ro: string; en: string; kinds: string[]; hours: string; minutes: string }) {
   await row.getByLabel("Kilometrul").fill(values.km);
   await row.getByLabel("Numele (română)").fill(values.ro);
   await row.getByLabel("Numele (engleză)").fill(values.en);
   for (const kind of values.kinds) await row.getByRole("checkbox", { name: kind, exact: true }).check();
-  await fillTimeField(row, "Ora limită", values.cutoff);
+  // «Timp limită»: the race's own two boxes, «Ore» and «Minute» (§NNN).
+  await row.getByLabel("Ore", { exact: true }).fill(values.hours);
+  await row.getByLabel("Minute", { exact: true }).fill(values.minutes);
 }
 
 test.describe("§757 the route's checkpoints and the race's time limit", () => {
@@ -112,15 +118,24 @@ test.describe("§757 the route's checkpoints and the race's time limit", () => {
     await expect(spare).toHaveCount(3);
 
     // A kilometre beyond the route is refused with the reason, and what was typed stays.
-    await fillRow(spare.nth(0), { km: "30", ro: "Prea departe", en: "Too far", kinds: ["Apă"], cutoff: "11:00" });
+    await fillRow(spare.nth(0), { km: "30", ro: "Prea departe", en: "Too far", kinds: ["Apă"], hours: "1", minutes: "0" });
     await card.getByRole("button", { name: "Salvează punctele" }).click();
     await expect(card).toContainText("dar traseul are doar 21 km", { timeout: 20_000 });
     await expect(spare.nth(0).getByLabel("Kilometrul")).toHaveValue("30");
 
-    // Two points: water and food at 7,5 with 11:00, timing at 15 with 12:00.
-    await fillRow(spare.nth(0), { km: "7,5", ro: "Apă la cabană", en: "Water at the hut", kinds: [], cutoff: "11:00" });
+    // A time limit longer than the race's own «Timp limită» (2 h 30 min) is refused with both durations, and what was typed stays.
+    await fillRow(spare.nth(0), { km: "7,5", ro: "Prea lung", en: "Too long", kinds: ["Apă"], hours: "3", minutes: "15" });
+    await card.getByRole("button", { name: "Salvează punctele" }).click();
+    await expect(card).toContainText("3 h 15 min", { timeout: 20_000 });
+    await expect(card).toContainText("e mai lung decât 2 h 30 min");
+    await expect(spare.nth(0).getByLabel("Ore", { exact: true })).toHaveValue("3");
+    await expect(spare.nth(0).getByLabel("Minute", { exact: true })).toHaveValue("15");
+    await expect(page.getByTestId("checkpoint-card")).toHaveCount(0);
+
+    // Two points: water and food at 7,5 with one hour, timing and direction at 15 with two.
+    await fillRow(spare.nth(0), { km: "7,5", ro: "Apă la cabană", en: "Water at the hut", kinds: [], hours: "1", minutes: "0" });
     await spare.nth(0).getByRole("checkbox", { name: "Mâncare", exact: true }).check();
-    await fillRow(spare.nth(1), { km: "15", ro: "Cronometrare", en: "Timing", kinds: ["Cronometrare"], cutoff: "12:00" });
+    await fillRow(spare.nth(1), { km: "15", ro: "Cronometrare", en: "Timing", kinds: ["Cronometrare", "Direcționare"], hours: "2", minutes: "0" });
     const save = card.getByRole("button", { name: "Salvează punctele" });
     expect((await save.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
     await save.click();
@@ -151,18 +166,34 @@ test.describe("§757 the route's checkpoints and the race's time limit", () => {
     const kindsOf = (row: Locator) => row.locator('td[data-label="Ce găsești aici"]');
     await expect(kindsOf(rows.nth(0)).getByText("Apă", { exact: true })).toBeVisible();
     await expect(kindsOf(rows.nth(0)).getByText("Mâncare", { exact: true })).toBeVisible();
-    await expect(rows.nth(0)).toContainText("Ora limită 11:00");
+    // The limit and the clock it closes at: the gun is at 10:00, so one hour is 11:00 and two hours 12:00.
+    await expect(rows.nth(0).getByTestId("checkpoint-cutoff")).toHaveText("Timp limită: 1 h · se închide la 11:00");
     await expect(kindsOf(rows.nth(1)).getByText("Cronometrare", { exact: true })).toBeVisible();
+    await expect(kindsOf(rows.nth(1)).getByText("Direcționare", { exact: true })).toBeVisible();
     await expect(kindsOf(rows.nth(1)).getByText("Apă", { exact: true })).toHaveCount(0);
-    await expect(rows.nth(1)).toContainText("Ora limită 12:00");
+    await expect(rows.nth(1).getByTestId("checkpoint-cutoff")).toHaveText("Timp limită: 2 h · se închide la 12:00");
+    await expect(kindsOf(rows.nth(0)).getByText("Direcționare", { exact: true })).toHaveCount(0);
     const finish = table.getByTestId("checkpoint-finish");
     await expect(finish).toContainText("Sosire");
-    await expect(finish).toContainText("se închide la 12:30");
+    await expect(finish).toContainText("Timp limită: 2 h 30 min · se închide la 12:30");
 
     // The English page says it in English.
     await page.goto(`/en/events/checkpoints-${tag}`);
     await expect(page.getByTestId("event-checkpoints")).toContainText("Water at the hut");
-    await expect(page.getByTestId("checkpoint-finish")).toContainText("closes at 12:30");
+    await expect(page.getByTestId("event-checkpoints")).toContainText("Direction");
+    await expect(page.getByTestId("checkpoint-finish")).toContainText("Time limit: 2 h 30 min · closes at 12:30");
+
+    // The saved points on the editor's closed lines say the limit and the clock it closes at.
+    await page.goto(`/ro/admin/events/${race.id}`);
+    await hydrated(page);
+    const cardAgain = await openEditorBox(page, "Puncte de control");
+    await expect(cardAgain).toContainText("timp limită 1 h · se închide la 11:00");
+    await expect(cardAgain).toContainText("timp limită 2 h · se închide la 12:00");
+    // The two boxes come back as they were saved: one hour and no minutes (the editor's own «0» for none).
+    const firstCard = cardAgain.getByTestId("checkpoint-card").nth(0);
+    await openFold(firstCard);
+    await expect(firstCard.getByLabel("Ore", { exact: true })).toHaveValue("1");
+    await expect(firstCard.getByLabel("Minute", { exact: true })).toHaveValue("0");
   });
 
   /*
@@ -258,6 +289,22 @@ test.describe("§757 the route's checkpoints and the race's time limit", () => {
       await expect(after).toContainText("dar traseul are doar 21 km");
       await expect(after.getByTestId("checkpoint-new-row").first().getByLabel("Kilometrul")).toHaveValue("30");
       await expect(after.getByTestId("checkpoint-new-row").first().getByLabel("Numele (engleză)")).toHaveValue("Too far");
+      // The same for the time limits, with the refusal only the server makes (the browser holds the boxes' own bounds,
+      // so «60 minute» never leaves the page): a nearer point with a longer limit than a farther one. Both boxes of both
+      // rows come back as typed (§NNN).
+      await openEditorBox(page, "Puncte de control");
+      await openEditorBox(page, "Adaugă puncte");
+      const rows = after.getByTestId("checkpoint-new-row");
+      await fillRow(rows.nth(0), { km: "5", ro: "Prima", en: "First", kinds: [], hours: "2", minutes: "0" });
+      await fillRow(rows.nth(1), { km: "9", ro: "A doua", en: "Second", kinds: [], hours: "1", minutes: "15" });
+      await after.getByRole("button", { name: "Salvează punctele" }).click();
+      await page.waitForURL(/./);
+      const again = page.getByTestId("event-checkpoints-card");
+      await expect(again).toContainText("e mai lung decât cel al punctului", { timeout: 20_000 });
+      const typed = again.getByTestId("checkpoint-new-row");
+      await expect(typed.nth(0).getByLabel("Ore", { exact: true })).toHaveValue("2");
+      await expect(typed.nth(1).getByLabel("Ore", { exact: true })).toHaveValue("1");
+      await expect(typed.nth(1).getByLabel("Minute", { exact: true })).toHaveValue("15");
       const saved = await withDatabase((client) => client.query(`SELECT 1 FROM event_checkpoints WHERE event_id = $1`, [race.id]));
       expect(saved.rowCount).toBe(0);
     } finally {

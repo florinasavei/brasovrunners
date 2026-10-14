@@ -321,8 +321,8 @@ describe("§759 the profile turned for the runner, and with the phone as one blo
   it("measures the checkpoints' crowding in the chart's own width: a strip without figures keeps marks a narrow one drops", () => {
     const points = parseGpxProfile(track())!.points;
     const close = [
-      { km: 50, kinds: ["WATER"], cutoff: null },
-      { km: 51.3, kinds: ["FOOD"], cutoff: null },
+      { km: 50, kinds: ["WATER"], cutoffClock: null },
+      { km: 51.3, kinds: ["FOOD"], cutoffClock: null },
     ];
     const say = { startWord: "Start", finishWord: "Sosire", showTimes: false, label: () => "km" };
     expect(bibCheckpointMarks({ checkpoints: close, routeKm: 100, points, ...say })?.marks).toHaveLength(1);

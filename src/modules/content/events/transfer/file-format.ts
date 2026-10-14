@@ -4,8 +4,10 @@ import { EVENT_SURFACES, EVENT_TYPES } from "@/modules/events/domain/event-type"
 import { WEATHER_MODES } from "@/modules/weather/domain/mode";
 import { DEFAULT_PUBLIC_LIST_CLUB, PUBLIC_LIST_CLUBS } from "@/modules/registrations/domain/public-list-club";
 import { RACE_DECLARATION_KEYS } from "@/modules/legal-documents/domain/keys";
-import { CHECKPOINT_KINDS, CHECKPOINT_KM_MAX, CHECKPOINT_NAME_MAX, CHECKPOINT_NOTE_MAX, CHECKPOINTS_MAX } from "@/modules/event-checkpoints/domain/checkpoint";
-import { fromWallTimeInput } from "@/modules/events/domain/zoned-time";
+import { CHECKPOINT_KINDS, CHECKPOINT_KM_MAX, CHECKPOINT_NAME_MAX, CHECKPOINT_NOTE_MAX, CHECKPOINTS_MAX, clockMinutes } from "@/modules/event-checkpoints/domain/checkpoint";
+import { minutesFromClock } from "@/modules/event-checkpoints/domain/start";
+import { DURATION_MAX_MINUTES } from "@/modules/content/events/duration";
+import { fromWallTimeInput, toWallTimeInput } from "@/modules/events/domain/zoned-time";
 import { DEFAULT_BADGE_DESIGN, readBadgeDesign } from "@/modules/volunteers/badges/badge-design";
 import { WAITLIST_CHOICES } from "../waitlist-choice";
 
@@ -39,11 +41,15 @@ export const EVENT_FILE_FORMAT = "brasovrunners-event";
  * one (`duration.ts#durationBase`); in a version 1 file it counts from the event's start. A version 1
  * file is still read, and upgraded as it is read (`upgradeVersion1`), so a file exported by the
  * release before this one — production's, during a release — imports with the end it had.
+ * **3** (§NNN): a checkpoint's cut-off is `cutoffMinutes`, a time limit in minutes from the start (the
+ * gun on a race), where versions 1 and 2 carried `cutoff`, a time of the day. An older file is still
+ * read, and its time of day converted when the event's start is in the file (`upgradeCheckpoints`),
+ * otherwise left out with a word, never refused.
  */
-export const EVENT_FILE_VERSION = 2;
+export const EVENT_FILE_VERSION = 3;
 
-/** Every version this release reads: the one it writes, and 1, upgraded on reading. */
-export const EVENT_FILE_VERSIONS_READ: readonly number[] = [1, EVENT_FILE_VERSION];
+/** Every version this release reads: the one it writes, and 1 and 2, upgraded on reading. */
+export const EVENT_FILE_VERSIONS_READ: readonly number[] = [1, 2, EVENT_FILE_VERSION];
 
 /**
  * The largest file taken: the file travels from the browser to a Server Action as text, and the
@@ -126,21 +132,29 @@ const programmeRowSchema = z
 
 /**
  * One of the route's checkpoints (§757): where, its name and note in both languages, what is there and
- * its cut-off as a time of the day on the event's own clock — the shape `event_checkpoints` holds, with
- * no id. The rules that need the event (a kilometre within the route, cut-offs after the start and in
+ * its time limit in minutes from the start (§NNN) — the shape `event_checkpoints` holds, with no id.
+ * The rules that need the event (a kilometre within the route, limits not past the event's own and in
  * order) are the import's to apply, as the editor's card applies them.
+ *
+ * **Read forgivingly** (§NNN): `kinds` are words, and a kind this release does not know — a later
+ * release's — is left out when the file is read, with a word (`upgradeCheckpoints`), never a refusal of
+ * the whole file; and `cutoff`, a time of the day, is what versions 1 and 2 wrote, read and converted
+ * to `cutoffMinutes` where the event's start is in the file. After the read neither is in the file.
  */
 const checkpointSchema = z
   .object({
     km: z.number().min(0).max(CHECKPOINT_KM_MAX),
     name: z.object({ ro: text(CHECKPOINT_NAME_MAX).min(1), en: text(CHECKPOINT_NAME_MAX).min(1) }).strict(),
-    kinds: z.array(z.enum(CHECKPOINT_KINDS)).max(CHECKPOINT_KINDS.length),
-    cutoff: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/).nullable(),
+    kinds: z.array(text(40)).max(40),
+    cutoffMinutes: z.number().int().min(1).max(DURATION_MAX_MINUTES).nullable().default(null),
+    /** The first answer's time of the day (versions 1 and 2): read, converted by `upgradeCheckpoints`, never written. */
+    cutoff: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/).nullable().optional(),
     note: z.object({ ro: nullableText(CHECKPOINT_NOTE_MAX), en: nullableText(CHECKPOINT_NOTE_MAX) }).strict(),
   })
   .strict();
 
-export type CheckpointConfig = z.infer<typeof checkpointSchema>;
+/** A checkpoint as the rest of the platform reads it from a file: only the kinds this release knows, only `cutoffMinutes`. */
+export type CheckpointConfig = Omit<z.infer<typeof checkpointSchema>, "kinds" | "cutoff"> & { kinds: (typeof CHECKPOINT_KINDS)[number][] };
 
 /**
  * The configuration, in a shape that means the same in every environment: instants in ISO with the
@@ -297,6 +311,9 @@ export type EventFile = z.infer<typeof eventFileSchema>;
 const eventFileVersion1Schema = eventFileSchema.extend({ version: z.literal(1) });
 type EventFileVersion1 = z.infer<typeof eventFileVersion1Schema>;
 
+/** A version 2 file: the same shape, its checkpoints' cut-off a time of the day (§757) where a version 3's is minutes. */
+const eventFileVersion2Schema = eventFileSchema.extend({ version: z.literal(2) });
+
 /**
  * A version 1 file as this release's version (§757): a race with a gun and a start whose hour is in
  * the file gets its `durationMinutes` counted from the gun — the minutes from the start less the
@@ -318,13 +335,59 @@ export function upgradeVersion1(file: EventFileVersion1): EventFile | null {
   return { ...file, version: EVENT_FILE_VERSION, event: { ...event, durationMinutes } };
 }
 
+/**
+ * The file's checkpoints as this release means them (§NNN), whatever version wrote them: a kind this
+ * release does not know is left out, and a cut-off written as a time of the day (versions 1 and 2) is
+ * converted to minutes from the start by the platform's one converter (`start.ts#minutesFromClock`), when
+ * the file says the event's start — the gun on a race that has one, else the start's date and hour — and
+ * the clock is after it; otherwise it is left out. **Never a refusal**: each count comes back as a note the
+ * page says in words. A cut-off already in minutes is kept as it is, and a file that carries both keeps the
+ * minutes.
+ */
+export function upgradeCheckpoints(file: EventFile): { file: EventFile; notes: FileNote[] } {
+  const event = file.event;
+  if (event.route.checkpoints.length === 0) return { file, notes: [] };
+  const zone = event.timezone;
+  const eventStart = event.start.date && event.start.time ? fromWallTimeInput(`${event.start.date}T${event.start.time}`, zone) : null;
+  const start = event.type === "RACE" && event.raceStartsAt ? new Date(event.raceStartsAt) : eventStart;
+  const startMinutes = start ? clockMinutes(toWallTimeInput(start, zone).slice(11, 16)) : null;
+  let kindsDropped = 0;
+  let limitsDropped = 0;
+  const known = new Set<string>(CHECKPOINT_KINDS);
+  const checkpoints = event.route.checkpoints.map((row) => {
+    const kinds = row.kinds.filter((kind) => known.has(kind));
+    kindsDropped += row.kinds.length - kinds.length;
+    let cutoffMinutes = row.cutoffMinutes;
+    if (cutoffMinutes === null && row.cutoff) {
+      cutoffMinutes = startMinutes === null ? null : minutesFromClock(row.cutoff, startMinutes, event.durationMinutes);
+      if (cutoffMinutes === null) limitsDropped += 1;
+    }
+    // The time of day is read and gone: what comes out has minutes and no `cutoff`.
+    return { km: row.km, name: row.name, kinds, cutoffMinutes, note: row.note };
+  });
+  const notes: FileNote[] = [];
+  if (kindsDropped > 0) notes.push({ code: "checkpointKindsDropped", count: kindsDropped });
+  if (limitsDropped > 0) notes.push({ code: "checkpointLimitsDropped", count: limitsDropped });
+  return { file: { ...file, event: { ...event, route: { ...event.route, checkpoints } } }, notes };
+}
+
 /** The file as it is downloaded: readable, two spaces, a newline at the end. The size the reader measures is this one's. */
 export const serializeEventFile = (file: EventFile): string => `${JSON.stringify(file, null, 2)}\n`;
 
 /** Why a file was refused, as a code the page says in words (`Admin.eventJson.refusals.<code>`). */
 export type EventFileRefusal = "tooLarge" | "notJson" | "notAnEventFile" | "unknownVersion" | "invalid";
 
-export type ReadEventFile = { ok: true; file: EventFile } | { ok: false; refusal: EventFileRefusal; detail?: string };
+/**
+ * What reading adjusted, said in `Admin.eventJson.notes.<code>` (§NNN): the file is read forgivingly, and a
+ * person is told what was left out rather than finding the checkpoints different afterwards.
+ */
+export type FileNote =
+  /** `count` kinds this release does not know were left out of the checkpoints. */
+  | { code: "checkpointKindsDropped"; count: number }
+  /** `count` cut-offs of an older file could not be counted from the start (none in the file, or at or before it) and were left out. */
+  | { code: "checkpointLimitsDropped"; count: number };
+
+export type ReadEventFile = { ok: true; file: EventFile; notes: FileNote[] } | { ok: false; refusal: EventFileRefusal; detail?: string };
 
 /**
  * The file's text read into an event file, or the reason it is not one — in the order a person would
@@ -344,14 +407,19 @@ export function readEventFile(raw: string): ReadEventFile {
   }
   const version = (parsed as { version?: unknown }).version;
   if (typeof version !== "number" || !EVENT_FILE_VERSIONS_READ.includes(version)) return { ok: false, refusal: "unknownVersion" };
-  const checked = version === 1 ? eventFileVersion1Schema.safeParse(parsed) : eventFileSchema.safeParse(parsed);
+  const checked = version === 1 ? eventFileVersion1Schema.safeParse(parsed) : version === 2 ? eventFileVersion2Schema.safeParse(parsed) : eventFileSchema.safeParse(parsed);
   if (!checked.success) {
     const paths = [...new Set(checked.error.issues.map((issue) => issue.path.join(".")).filter((path) => path !== ""))].slice(0, 8);
     return { ok: false, refusal: "invalid", detail: paths.join(", ") };
   }
+  let file: EventFile;
   if (checked.data.version === 1) {
     const upgraded = upgradeVersion1(checked.data);
-    return upgraded ? { ok: true, file: upgraded } : { ok: false, refusal: "invalid", detail: "event.durationMinutes" };
+    if (!upgraded) return { ok: false, refusal: "invalid", detail: "event.durationMinutes" };
+    file = upgraded;
+  } else {
+    file = { ...checked.data, version: EVENT_FILE_VERSION };
   }
-  return { ok: true, file: checked.data };
+  const { file: read, notes } = upgradeCheckpoints(file);
+  return { ok: true, file: read, notes };
 }

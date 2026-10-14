@@ -11,25 +11,30 @@ import {
   checkpointsStampPart,
   canEditCheckpoints,
   canReadCheckpoints,
-  cutoffOffset,
   isBlankPosted,
   type PostedCheckpoint,
   prepareCheckpoints,
   readClockTime,
   readKm,
+  readTimeLimit,
   sortedByKm,
 } from "@/modules/event-checkpoints/domain/checkpoint";
-import { checkpointFinish, checkpointStart } from "@/modules/event-checkpoints/domain/start";
+import { savedDurationMinutes } from "@/modules/content/events/duration";
+import { checkpointClock, checkpointFinish, checkpointStart, cutoffClockOf, minutesFromClock, withCutoffClocks } from "@/modules/event-checkpoints/domain/start";
 import { STAFF_ROLES } from "@/modules/staff-identity/domain/roles";
 
 /**
- * §757, BR-REQ-011-01 — the checkpoints' rules, with no database: a kilometre read as typed and held
- * to the route's length, the cut-offs measured from the start and against each other, a note in both
- * languages or neither, the order a runner meets the points, the page's rows with the finish last.
+ * §757, §NNN, BR-REQ-011-01 — the checkpoints' rules, with no database: a kilometre read as typed and
+ * held to the route's length, the time limits (hours and minutes from the start) held to the event's
+ * own and to each other, a note in both languages or neither, the order a runner meets the points, the
+ * page's rows with the finish last, and the one converter between a clock and a time limit.
  */
 
-/** A route of 21.1 km, a race starting at 09:00 (540 minutes), a three-hour limit. */
-const CONTEXT: CheckpointContext = { routeKm: 21.1, startMinutes: 540, limitMinutes: 180 };
+/** A route of 21.1 km, a race whose start is known, a three-hour limit. */
+const CONTEXT: CheckpointContext = { routeKm: 21.1, startKnown: true, limitMinutes: 180 };
+
+/** A time limit in minutes as the race's two boxes carry it: hours and minutes. */
+const limit = (minutes: number) => ({ cutoffHours: String(Math.floor(minutes / 60)), cutoffMinutesPart: String(minutes % 60) });
 
 const row = (index: number, over: Partial<PostedCheckpoint> = {}): PostedCheckpoint => ({
   index,
@@ -38,7 +43,8 @@ const row = (index: number, over: Partial<PostedCheckpoint> = {}): PostedCheckpo
   nameEn: `Point ${index}`,
   km: String(index + 1),
   kinds: [],
-  cutoff: "",
+  cutoffHours: "",
+  cutoffMinutesPart: "",
   noteRo: "",
   noteEn: "",
   remove: false,
@@ -55,7 +61,7 @@ function refusal(posted: PostedCheckpoint[], context = CONTEXT): CheckpointRefus
   throw new Error("expected a refusal");
 }
 
-describe("§757 a kilometre and a time of the day, as typed", () => {
+describe("§757 a kilometre, a time of the day and a time limit, as typed", () => {
   it.each([
     ["12", 12],
     ["12,5", 12.5],
@@ -73,23 +79,82 @@ describe("§757 a kilometre and a time of the day, as typed", () => {
     ["00:00", "00:00"],
     ["23:59", "23:59"],
     ["11:30:00", "11:30"],
-  ])("reads %s as %s", (typed, time) => expect(readClockTime(typed)).toBe(time));
+  ])("reads the clock %s as %s (an old file's or an old row's time of day)", (typed, time) => expect(readClockTime(typed)).toBe(time));
 
-  it.each(["", "24:00", "11:60", "1130", "11.30", "noon"])("refuses %j as a time", (typed) => expect(readClockTime(typed)).toBeNull());
+  it.each(["", "24:00", "11:60", "1130", "11.30", "noon"])("refuses %j as a time of day", (typed) => expect(readClockTime(typed)).toBeNull());
 
-  it("counts a cut-off from the start: before the start when earlier than its time of day, the next day's only for a race that ends the next day", () => {
-    expect(cutoffOffset("11:30", 540)).toBe(150);
-    expect(cutoffOffset("09:00", 540)).toBe(0);
+  it.each([
+    ["1", "30", 90],
+    ["", "45", 45],
+    ["2", "", 120],
+    ["0", "30", 30],
+    ["", "", null],
+    [" ", " ", null],
+    // The hours cleared on a whole-hour limit leaves its «0» minutes behind: the limit is removed, not refused as a zero.
+    ["", "0", null],
+    ["", "00", null],
+    ["168", "0", 10080],
+  ])("reads the limit %j h %j min as %s, the race's own two boxes' way", (hours, minutes, expected) => expect(readTimeLimit(hours, minutes)).toBe(expected));
+
+  it.each([
+    ["0", "0", "hours"],
+    ["1", "60", "minutes"],
+    ["1", "x", "minutes"],
+    ["x", "30", "hours"],
+    ["169", "", "hours"],
+    ["-1", "30", "hours"],
+    ["1.5", "", "hours"],
+  ])("refuses the limit %j h %j min, naming the %s box", (hours, minutes, box) => expect(readTimeLimit(hours, minutes)).toBe(box));
+});
+
+describe("§NNN the one converter between a clock and a time limit", () => {
+  it("reads a time of day as the minutes after the start: before the start it is nothing, the next day's only for an event that runs past midnight", () => {
+    expect(minutesFromClock("11:30", 540)).toBe(150);
+    // At the start: zero minutes, a limit nobody could meet.
+    expect(minutesFromClock("09:00", 540)).toBeNull();
     // An ordinary race: 08:59 is a minute before the start, never the next day's.
-    expect(cutoffOffset("08:59", 540)).toBe(-1);
-    expect(cutoffOffset("08:59", 540, 180)).toBe(-1);
+    expect(minutesFromClock("08:59", 540)).toBeNull();
+    expect(minutesFromClock("08:59", 540, 180)).toBeNull();
     // A night race from 22:00 ending at 06:00 (480 minutes): 02:00 is four hours later.
-    expect(cutoffOffset("02:00", 22 * 60, 480)).toBe(240);
-    expect(cutoffOffset("23:30", 22 * 60, 480)).toBe(90);
+    expect(minutesFromClock("02:00", 22 * 60, 480)).toBe(240);
+    expect(minutesFromClock("23:30", 22 * 60, 480)).toBe(90);
     // With no end given the race ends the day it starts.
-    expect(cutoffOffset("02:00", 22 * 60)).toBe(-1200);
-    // No start known: the time of the day itself.
-    expect(cutoffOffset("11:30", null)).toBe(690);
+    expect(minutesFromClock("02:00", 22 * 60)).toBeNull();
+  });
+
+  it("says the clock a limit closes at: the start plus the minutes, on the event's own clock", () => {
+    const start = new Date("2026-11-21T07:00:00Z"); // 09:00 in Bucharest
+    expect(cutoffClockOf(start, 150, "Europe/Bucharest")).toBe("11:30");
+    expect(cutoffClockOf(start, 1, "Europe/Bucharest")).toBe("09:01");
+    // Past midnight the clock wraps: 22:00 + 4 h = 02:00.
+    expect(cutoffClockOf(new Date("2026-11-21T20:00:00Z"), 240, "Europe/Bucharest")).toBe("02:00");
+  });
+
+  it("counts elapsed minutes across the night the clocks go back", () => {
+    // 24 October 2026, 22:00 summer time (19:00Z): five elapsed hours later it is 03:00 winter time.
+    expect(cutoffClockOf(new Date("2026-10-24T19:00:00Z"), 300, "Europe/Bucharest")).toBe("03:00");
+    expect(cutoffClockOf(new Date("2026-10-24T19:00:00Z"), 60, "Europe/Bucharest")).toBe("23:00");
+  });
+
+  it("is each other's inverse for any limit the card accepts", () => {
+    const start = new Date("2026-11-21T07:00:00Z");
+    for (const minutes of [1, 59, 60, 90, 150, 600]) {
+      const clock = cutoffClockOf(start, minutes, "Europe/Bucharest");
+      expect(minutesFromClock(clock, 9 * 60, 1000)).toBe(minutes);
+    }
+  });
+
+  it("gives a reader the clocks of the event it draws, and none while the start has no date or hour", () => {
+    const event = { startsAt: new Date("2026-11-21T07:00:00Z"), raceStartsAt: null, timezone: "Europe/Bucharest" };
+    expect(checkpointClock(event)(150)).toBe("11:30");
+    expect(checkpointClock(event)(null)).toBeNull();
+    // The gun, not the meeting time, is what a limit counts from.
+    expect(checkpointClock({ ...event, raceStartsAt: new Date("2026-11-21T08:00:00Z") })(90)).toBe("11:30");
+    // No hour typed: the provisional start (§545) says nothing a clock could be counted from.
+    expect(checkpointClock({ ...event, startsAt: new Date("2026-11-21T10:00:01Z") })(150)).toBeNull();
+    const withClocks = withCutoffClocks([{ cutoffMinutes: 30 }, { cutoffMinutes: null }], event);
+    expect(withClocks.map((r) => r.cutoffClock)).toEqual(["09:30", null]);
+    expect(withCutoffClocks([{ cutoffMinutes: 30 }], null)[0].cutoffClock).toBeNull();
   });
 });
 
@@ -108,7 +173,13 @@ describe("§757 the rules a checkpoint is held to", () => {
     );
     expect(rows.map((r) => r.nameRo)).toEqual(["A", "B", "C"]);
     expect(rows[0].kinds).toEqual(["WATER", "TIMING"]);
-    expect(CHECKPOINT_KINDS).toEqual(["WATER", "FOOD", "FIRST_AID", "TIMING"]);
+    expect(CHECKPOINT_KINDS).toEqual(["WATER", "FOOD", "FIRST_AID", "TIMING", "DIRECTION"]);
+  });
+
+  it("takes «Direcționare» as the fifth kind, with the others in the closed set's own order (§NNN)", () => {
+    const rows = prepareCheckpoints([row(0, { kinds: ["DIRECTION", "WATER"] }), row(1, { km: "9", kinds: ["DIRECTION"] })], CONTEXT);
+    expect(rows[0].kinds).toEqual(["WATER", "DIRECTION"]);
+    expect(rows[1].kinds).toEqual(["DIRECTION"]);
   });
 
   it("folds a name to one line and refuses a missing or an over-long one, in either language, naming the box", () => {
@@ -142,43 +213,66 @@ describe("§757 the rules a checkpoint is held to", () => {
     expect(refusal([row(0, { kinds: ["WATER", "PIZZA"] })]).reason).toBe("CHECKPOINT_KIND_UNKNOWN");
   });
 
-  it("refuses a cut-off that is not a time, and one at or before the start", () => {
-    expect(refusal([row(0, { cutoff: "noon" })]).reason).toBe("CHECKPOINT_CUTOFF_INVALID");
-    const early = refusal([row(0, { cutoff: "09:00" })]);
-    expect(early.reason).toBe("CHECKPOINT_CUTOFF_BEFORE_START");
-    expect(early.fields).toEqual(["cp[0].cutoff"]);
-    // 08:30 is before a 09:00 start: an ordinary race has no next day to put it on.
-    expect(refusal([row(0, { cutoff: "08:30" })]).reason).toBe("CHECKPOINT_CUTOFF_BEFORE_START");
-    // With no start known, nothing to be before.
-    expect(prepareCheckpoints([row(0, { cutoff: "05:00" })], { ...CONTEXT, startMinutes: null, limitMinutes: null })).toHaveLength(1);
+  it("reads a time limit typed as hours and minutes, and keeps it as minutes (§NNN)", () => {
+    const rows = prepareCheckpoints([row(0, { cutoffHours: "1", cutoffMinutesPart: "30" }), row(1, { km: "9", ...limit(150) })], CONTEXT);
+    expect(rows.map((r) => r.cutoffMinutes)).toEqual([90, 150]);
+    expect(prepareCheckpoints([row(0)], CONTEXT)[0].cutoffMinutes).toBeNull();
   });
 
-  it("refuses a cut-off after the one of a point further along, naming the earlier point's box", () => {
-    const wrong = refusal([row(0, { km: "5", cutoff: "11:00", nameRo: "Prima" }), row(1, { km: "10", cutoff: "10:30", nameRo: "A doua" })]);
+  it("refuses a limit that is not a duration, naming the hours box or the minutes box", () => {
+    // The hours box cleared on a whole-hour limit leaves «0» in the minutes box: that is no limit, not a «0».
+    expect(prepareCheckpoints([row(0, { cutoffHours: "", cutoffMinutesPart: "0" })], CONTEXT)[0].cutoffMinutes).toBeNull();
+    expect(readTimeLimit("", "0")).toBeNull();
+    const zero = refusal([row(0, { cutoffHours: "0", cutoffMinutesPart: "0" })]);
+    expect(zero.reason).toBe("CHECKPOINT_CUTOFF_INVALID");
+    expect(zero.fields).toEqual(["cp[0].cutoffHours"]);
+    const sixty = refusal([row(0, { cutoffHours: "1", cutoffMinutesPart: "60" })]);
+    expect(sixty.reason).toBe("CHECKPOINT_CUTOFF_INVALID");
+    expect(sixty.fields).toEqual(["cp[0].cutoffMinutesPart"]);
+    expect(refusal([row(0, { cutoffHours: "noon" })]).reason).toBe("CHECKPOINT_CUTOFF_INVALID");
+  });
+
+  it("refuses a limit with no start to count it from, unless the row keeps the limit it already had", () => {
+    const noStart: CheckpointContext = { routeKm: 21.1, startKnown: false, limitMinutes: null };
+    const refused = refusal([row(0, { ...limit(45) })], noStart);
+    expect(refused.reason).toBe("CHECKPOINT_CUTOFF_NO_START");
+    expect(refused.fields).toEqual(["cp[0].cutoffHours"]);
+    // No limit asked: nothing to count.
+    expect(prepareCheckpoints([row(0)], noStart)).toHaveLength(1);
+    // A saved point whose limit is posted unchanged keeps it while the hour is to be announced; a changed one is refused.
+    const saved = new Map<string, number | null>([["11111111-1111-4111-8111-111111111111", 45]]);
+    const unchanged = row(0, { id: "11111111-1111-4111-8111-111111111111", ...limit(45) });
+    expect(prepareCheckpoints([unchanged], { ...noStart, savedMinutes: saved })).toHaveLength(1);
+    expect(refusal([{ ...unchanged, ...limit(50) }], { ...noStart, savedMinutes: saved }).reason).toBe("CHECKPOINT_CUTOFF_NO_START");
+  });
+
+  it("refuses a limit longer than the one of a point further along, naming the earlier point's box and both durations", () => {
+    const wrong = refusal([row(0, { km: "5", ...limit(90), nameRo: "Prima" }), row(1, { km: "10", ...limit(75), nameRo: "A doua" })]);
     expect(wrong.reason).toBe("CHECKPOINT_CUTOFF_AFTER_LATER");
-    expect(wrong.fields).toEqual(["cp[0].cutoff"]);
-    expect(wrong.values).toMatchObject({ name: "Prima", later: "A doua", laterCutoff: "10:30" });
+    expect(wrong.fields).toEqual(["cp[0].cutoffHours"]);
+    expect(wrong.values).toMatchObject({ name: "Prima", cutoff: "1 h 30 min", later: "A doua", laterCutoff: "1 h 15 min" });
     // The order is the kilometre's, never the order the rows were typed in.
-    const fine = prepareCheckpoints([row(0, { km: "10", cutoff: "11:00" }), row(1, { km: "5", cutoff: "10:15" })], CONTEXT);
-    expect(fine.map((r) => r.cutoff)).toEqual(["10:15", "11:00"]);
-    // The same minute at two points is allowed; a point with none does not take part.
-    expect(prepareCheckpoints([row(0, { km: "5", cutoff: "10:00" }), row(1, { km: "6" }), row(2, { km: "10", cutoff: "10:00" })], CONTEXT)).toHaveLength(3);
+    const fine = prepareCheckpoints([row(0, { km: "10", ...limit(120) }), row(1, { km: "5", ...limit(75) })], CONTEXT);
+    expect(fine.map((r) => r.cutoffMinutes)).toEqual([75, 120]);
+    // The same limit at two points is allowed; a point with none does not take part.
+    expect(prepareCheckpoints([row(0, { km: "5", ...limit(60) }), row(1, { km: "6" }), row(2, { km: "10", ...limit(60) })], CONTEXT)).toHaveLength(3);
   });
 
-  it("refuses a cut-off after the event's end when it has one", () => {
-    const late = refusal([row(0, { cutoff: "12:30" })]);
+  it("refuses a limit longer than the event's own, minutes against minutes", () => {
+    const late = refusal([row(0, { cutoffHours: "3", cutoffMinutesPart: "30" })]);
     expect(late.reason).toBe("CHECKPOINT_CUTOFF_AFTER_END");
-    // The sentence says the time the finish closes, to choose up to.
-    expect(late.values).toMatchObject({ cutoff: "12:30", finishTime: "12:00" });
-    expect(prepareCheckpoints([row(0, { cutoff: "12:00" })], CONTEXT)).toHaveLength(1);
-  });
-
-  it("says the start a cut-off must come after", () => {
-    expect(refusal([row(0, { cutoff: "08:30" })]).values).toMatchObject({ cutoff: "08:30", start: "09:00" });
+    expect(late.fields).toEqual(["cp[0].cutoffHours"]);
+    // The sentence says the event's limit, to choose up to.
+    expect(late.values).toMatchObject({ cutoff: "3 h 30 min", limit: "3 h" });
+    expect(prepareCheckpoints([row(0, { cutoffHours: "3" })], CONTEXT)).toHaveLength(1);
+    // The event's limit is as long as the race says, with no clock arithmetic: a night race of eight hours takes seven.
+    expect(prepareCheckpoints([row(0, { cutoffHours: "7" })], { routeKm: 42, startKnown: true, limitMinutes: 8 * 60 })).toHaveLength(1);
+    // No end given: no limit to be longer than.
+    expect(prepareCheckpoints([row(0, { cutoffHours: "20" })], { ...CONTEXT, limitMinutes: null })).toHaveLength(1);
   });
 
   it("names a point in the page's language, and a row with no name by its kilometre, never by a number the card does not show", () => {
-    const named = refusal([row(0, { nameRo: "Cabana", nameEn: "The hut", cutoff: "08:00" })]);
+    const named = refusal([row(0, { nameRo: "Cabana", nameEn: "The hut", ...limit(999) })]);
     expect(named.valuesIn("ro").name).toBe("Cabana");
     expect(named.valuesIn("en").name).toBe("The hut");
     const unnamed = refusal([row(4, { nameRo: "", nameEn: "", km: "12,5" })]);
@@ -188,13 +282,6 @@ describe("§757 the rules a checkpoint is held to", () => {
     expect(JSON.stringify(unnamed.words)).not.toContain("#");
     // One language typed: both sentences name it by that one.
     expect(refusal([row(0, { nameRo: "", nameEn: "Hut" })]).valuesIn("ro").name).toBe("Hut");
-  });
-
-  it("counts a night race across midnight", () => {
-    const night: CheckpointContext = { routeKm: 42, startMinutes: 22 * 60, limitMinutes: 8 * 60 };
-    const rows = prepareCheckpoints([row(0, { km: "10", cutoff: "23:30" }), row(1, { km: "30", cutoff: "03:00" })], night);
-    expect(rows.map((r) => r.cutoff)).toEqual(["23:30", "03:00"]);
-    expect(refusal([row(0, { km: "10", cutoff: "03:00" }), row(1, { km: "30", cutoff: "23:30" })], night).reason).toBe("CHECKPOINT_CUTOFF_AFTER_LATER");
   });
 
   it("holds a note to both languages or neither, at most 120 characters each", () => {
@@ -223,41 +310,40 @@ describe("§757 the rules a checkpoint is held to", () => {
 
 describe("§757 what the event says the points are measured against", () => {
   const at = (hours: number, minutes = 0) => new Date(Date.UTC(2026, 10, 21, hours, minutes));
-  const wall = (instant: Date) => instant.getUTCHours() * 60 + instant.getUTCMinutes();
 
   it("takes the typed distance first, the track's second, and nothing when there is none", () => {
-    const base = { start: at(9), endsAt: null, wallMinutesOf: wall };
+    const base = { start: at(9), limitMinutes: null };
     expect(checkpointContext({ ...base, distanceMeters: 21097, gpxMeters: 25000 }).routeKm).toBeCloseTo(21.097);
     expect(checkpointContext({ ...base, distanceMeters: null, gpxMeters: 25000 }).routeKm).toBe(25);
     expect(checkpointContext({ ...base, distanceMeters: null, gpxMeters: null }).routeKm).toBeNull();
     expect(checkpointContext({ ...base, distanceMeters: 0, gpxMeters: null }).routeKm).toBeNull();
   });
 
-  it("counts the limit on the event's clock across the night the clocks go back (§757)", () => {
-    // 24 October 2026, 22:00 summer time (19:00Z), six real hours: the finish closes at 03:00 winter time, five hours on the clock.
-    const bucharest = (instant: Date) => {
-      const [hours, minutes] = new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Bucharest", hour: "2-digit", minute: "2-digit", hourCycle: "h23" })
-        .format(instant)
-        .split(":")
-        .map(Number);
-      return hours * 60 + minutes;
-    };
+  it("measures the limit in elapsed minutes, so the night the clocks change moves nothing (§NNN)", () => {
+    // 24 October 2026, 22:00 summer time (19:00Z), six real hours: the finish closes at 03:00 winter time, six hours of limit.
     const start = new Date("2026-10-24T19:00:00Z");
-    const context = checkpointContext({ distanceMeters: 50_000, gpxMeters: null, start, endsAt: new Date("2026-10-25T01:00:00Z"), wallMinutesOf: bucharest });
-    expect(context).toMatchObject({ startMinutes: 22 * 60, limitMinutes: 300 });
-    // A 03:30 cut-off is after the 03:00 finish on the clock: refused, though under six elapsed hours.
-    const late = refusal([row(0, { km: "40", cutoff: "03:30" })], context);
-    expect(late.reason).toBe("CHECKPOINT_CUTOFF_AFTER_END");
-    expect(late.values.finishTime).toBe("03:00");
-    expect(prepareCheckpoints([row(0, { km: "40", cutoff: "02:45" })], context)).toHaveLength(1);
+    const context = checkpointContext({
+      distanceMeters: 50_000,
+      gpxMeters: null,
+      start,
+      limitMinutes: savedDurationMinutes(start, new Date("2026-10-25T01:00:00Z")),
+    });
+    expect(context).toMatchObject({ startKnown: true, limitMinutes: 360 });
+    // Six elapsed hours is the most a point may have, whatever the wall clock says on the way.
+    expect(refusal([row(0, { km: "40", cutoffHours: "6", cutoffMinutesPart: "1" })], context).reason).toBe("CHECKPOINT_CUTOFF_AFTER_END");
+    expect(prepareCheckpoints([row(0, { km: "40", cutoffHours: "6" })], context)).toHaveLength(1);
   });
 
-  it("reads the start's minute of the day and the span to the event's end", () => {
-    const context = checkpointContext({ distanceMeters: 10_000, gpxMeters: null, start: at(9, 30), endsAt: at(12, 30), wallMinutesOf: wall });
-    expect(context).toEqual({ routeKm: 10, startMinutes: 570, limitMinutes: 180 });
-    expect(checkpointContext({ distanceMeters: null, gpxMeters: null, start: null, endsAt: at(12), wallMinutesOf: wall })).toMatchObject({ startMinutes: null, limitMinutes: null });
-    // An end that is not after the start is no limit.
-    expect(checkpointContext({ distanceMeters: null, gpxMeters: null, start: at(9), endsAt: at(8), wallMinutesOf: wall }).limitMinutes).toBeNull();
+  it("reads whether the start is known and the span to the event's end", () => {
+    const context = checkpointContext({ distanceMeters: 10_000, gpxMeters: null, start: at(9, 30), limitMinutes: 180 });
+    expect(context).toEqual({ routeKm: 10, startKnown: true, limitMinutes: 180, savedMinutes: undefined });
+    // The event's «Timp limită» is a duration: it is true while the hour is unsaid, and a point's limit is held to it then too.
+    const unsaid = checkpointContext({ distanceMeters: null, gpxMeters: null, start: null, limitMinutes: 60 });
+    expect(unsaid).toMatchObject({ startKnown: false, limitMinutes: 60 });
+    expect(refusal([row(0, limit(150))], { ...unsaid, startKnown: true }).reason).toBe("CHECKPOINT_CUTOFF_AFTER_END");
+    // A limit that is not positive is no limit.
+    expect(checkpointContext({ distanceMeters: null, gpxMeters: null, start: at(9), limitMinutes: 0 }).limitMinutes).toBeNull();
+    expect(checkpointContext({ distanceMeters: null, gpxMeters: null, start: at(9), limitMinutes: null }).limitMinutes).toBeNull();
   });
 
   it("counts from the race's gun when there is one, and from nothing while the start's hour is blank", () => {
@@ -271,7 +357,7 @@ describe("§757 what the event says the points are measured against", () => {
     expect(checkpointStart({ ...event, startsAt: new Date("9999-01-01T10:00:00Z") })).toBeNull();
   });
 
-  it("gives the finish row its limit on the event's own clock, and the route's length when typed", () => {
+  it("gives the finish row its limit on the event's own clock and in minutes, and the route's length when typed", () => {
     const event = {
       type: "RACE",
       startsAt: new Date("2026-11-21T07:00:00Z"), // 09:00 in Bucharest
@@ -280,39 +366,43 @@ describe("§757 what the event says the points are measured against", () => {
       timezone: "Europe/Bucharest",
       distanceMeters: 21097,
     };
-    expect(checkpointFinish(event)).toEqual({ km: 21.1, limit: "12:00" });
-    expect(checkpointFinish({ ...event, endsAt: null, distanceMeters: null })).toEqual({ km: null, limit: null });
+    expect(checkpointFinish(event)).toEqual({ km: 21.1, limit: "12:00", minutes: 180 });
+    expect(checkpointFinish({ ...event, endsAt: null, distanceMeters: null })).toEqual({ km: null, limit: null, minutes: null });
     expect(checkpointFinish({ ...event, endsAt: new Date("2026-11-21T06:00:00Z") }).limit).toBeNull();
+    // Counted from the gun when the race has one, as the race's own «Timp limită» is.
+    expect(checkpointFinish({ ...event, raceStartsAt: new Date("2026-11-21T08:00:00Z") })).toMatchObject({ limit: "12:00", minutes: 120 });
     // Only a race closes its finish: a group run's end is when it ends, no limit — no finish row.
-    expect(checkpointFinish({ ...event, type: "GROUP_RUN" })).toEqual({ km: 21.1, limit: null });
+    expect(checkpointFinish({ ...event, type: "GROUP_RUN" })).toEqual({ km: 21.1, limit: null, minutes: null });
     expect(checkpointFinish({ ...event, type: "HIKE" }).limit).toBeNull();
   });
 });
 
 describe("§757 the table the event page draws", () => {
-  const point = (id: string, km: number, cutoff: string | null = null): Checkpoint => ({
+  const point = (id: string, km: number, cutoffMinutes: number | null = null, cutoffClock: string | null = null): Checkpoint => ({
     id,
     nameRo: id,
     nameEn: id,
     km,
     kinds: ["WATER"],
-    cutoff,
+    cutoffMinutes,
+    cutoffClock,
     noteRo: null,
     noteEn: null,
   });
 
   it("is nothing without checkpoints, even with a time limit: the finish alone is no section", () => {
-    expect(checkpointRows([], { km: 21.1, limit: "12:00" })).toEqual([]);
+    expect(checkpointRows([], { km: 21.1, limit: "12:00", minutes: 180 })).toEqual([]);
   });
 
   it("lists the points by distance and puts the finish last when the event has a time limit", () => {
-    const rows = checkpointRows([point("b", 12, "10:30"), point("a", 5, "09:45")], { km: 21.1, limit: "12:00" });
+    const rows = checkpointRows([point("b", 12, 90, "10:30"), point("a", 5, 45, "09:45")], { km: 21.1, limit: "12:00", minutes: 180 });
     expect(rows.map((r) => (r.kind === "point" ? r.id : "finish"))).toEqual(["a", "b", "finish"]);
-    expect(rows[2]).toEqual({ kind: "finish", km: 21.1, cutoff: "12:00" });
+    expect(rows[2]).toEqual({ kind: "finish", km: 21.1, cutoffMinutes: 180, cutoffClock: "12:00" });
+    expect(rows[0]).toMatchObject({ cutoffMinutes: 45, cutoffClock: "09:45" });
   });
 
   it("has no finish row without a time limit", () => {
-    expect(checkpointRows([point("a", 5)], { km: 21.1, limit: null })).toHaveLength(1);
+    expect(checkpointRows([point("a", 5)], { km: 21.1, limit: null, minutes: null })).toHaveLength(1);
   });
 
   it("orders ties by how they were typed", () => {
@@ -321,21 +411,24 @@ describe("§757 the table the event page draws", () => {
 });
 
 describe("§757 the picture stamp covers the checkpoints", () => {
-  const base: Checkpoint = { id: "a", nameRo: "Apă", nameEn: "Water", km: 5, kinds: ["WATER"], cutoff: "10:00", noteRo: null, noteEn: null };
+  const base: Checkpoint = { id: "a", nameRo: "Apă", nameEn: "Water", km: 5, kinds: ["WATER"], cutoffMinutes: 60, cutoffClock: "10:00", noteRo: null, noteEn: null };
 
-  it("changes with a kilometre, a kind or a cut-off, and not with a name or an id", () => {
+  it("changes with a kilometre, a kind, a limit or the clock it closes at, and not with a name or an id", () => {
     const stamp = checkpointsStampPart([base]);
-    expect(stamp).toBe("5.00:WATER:10:00");
+    expect(stamp).toBe("5.00:WATER:60@10:00");
     expect(checkpointsStampPart([{ ...base, km: 5.5 }])).not.toBe(stamp);
     expect(checkpointsStampPart([{ ...base, kinds: ["WATER", "FOOD"] }])).not.toBe(stamp);
-    expect(checkpointsStampPart([{ ...base, cutoff: "10:05" }])).not.toBe(stamp);
-    expect(checkpointsStampPart([{ ...base, cutoff: null }])).not.toBe(stamp);
+    expect(checkpointsStampPart([{ ...base, kinds: ["WATER", "DIRECTION"] }])).not.toBe(stamp);
+    expect(checkpointsStampPart([{ ...base, cutoffMinutes: 65, cutoffClock: "10:05" }])).not.toBe(stamp);
+    // A moved start moves the clock though the limit is the same: a new picture address.
+    expect(checkpointsStampPart([{ ...base, cutoffClock: "10:30" }])).not.toBe(stamp);
+    expect(checkpointsStampPart([{ ...base, cutoffMinutes: null, cutoffClock: null }])).not.toBe(stamp);
     expect(checkpointsStampPart([{ ...base, nameRo: "Alt nume", id: "b" } as Checkpoint])).toBe(stamp);
     expect(checkpointsStampPart([])).toBe("");
   });
 
   it("is the same whatever order the rows come in", () => {
-    const other: Checkpoint = { ...base, id: "b", km: 9, cutoff: null };
+    const other: Checkpoint = { ...base, id: "b", km: 9, cutoffMinutes: null, cutoffClock: null };
     expect(checkpointsStampPart([base, other])).toBe(checkpointsStampPart([other, base]));
   });
 });
