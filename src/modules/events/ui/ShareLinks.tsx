@@ -95,13 +95,14 @@ const CALENDAR_PILL_SX = {
   cursor: "pointer",
   listStyle: "none",
   border: 1,
-  borderColor: "primary.main",
+  // The outlined button's own tokens (MUI 9: the border at half the main colour, a primary tint on hover): the doors it opens read as its kin.
+  borderColor: "rgba(var(--mui-palette-primary-mainChannel) / 0.5)",
   color: "primary.main",
   fontWeight: 500,
   userSelect: "none",
   "&::-webkit-details-marker": { display: "none" },
   "&::marker": { content: '""' },
-  "&:hover": { bgcolor: "action.hover" },
+  "&:hover": { borderColor: "primary.main", bgcolor: "rgba(var(--mui-palette-primary-mainChannel) / 0.04)" },
   "&:focus-visible": { outline: "2px solid", outlineColor: "primary.main", outlineOffset: 2 },
   "details[open] > & [data-chevron]": { transform: "rotate(180deg)" },
 } as const;

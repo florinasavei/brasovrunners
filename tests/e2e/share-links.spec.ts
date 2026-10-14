@@ -154,7 +154,16 @@ test.describe("BR-REQ-052-02 criterion 8 — the share buttons", () => {
   test("are small pills at 320 pixels, a row that wraps, nothing wider than the page (§767)", async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 720 });
     await page.goto(EVENT);
+    // The closed pill itself, at 320: a small pill inside the page, its chevron turned only once open.
+    const closedPill = (await page.getByTestId("event-calendar-toggle").boundingBox())!;
+    expect(closedPill.height).toBeGreaterThanOrEqual(24);
+    expect(closedPill.height).toBeLessThanOrEqual(36);
+    expect(closedPill.x + closedPill.width).toBeLessThanOrEqual(320);
+    const chevron = page.getByTestId("event-calendar-toggle").locator("[data-chevron]");
+    const turned = () => chevron.evaluate((el) => getComputedStyle(el).transform);
+    expect(await turned()).toBe("none");
     await openCalendar(page);
+    await expect.poll(turned).not.toBe("none");
     const row = page.locator("#main").getByRole("link", { name: /^(Facebook|WhatsApp|Google Calendar|Apple Calendar|Outlook.*|Descarcă fișierul \.ics)$/ });
     const count = await row.count();
     expect(count).toBeGreaterThanOrEqual(7);
@@ -172,6 +181,17 @@ test.describe("BR-REQ-052-02 criterion 8 — the share buttons", () => {
   test("keep a tap band around the small pill that never covers a neighbour: above and below, two pixels inside an edge is the pill's own (§767)", async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 720 });
     await page.goto(EVENT);
+    // The closed summary pill: the band around it is its own too, and two pixels inside an edge is the pill.
+    const toggle = page.getByTestId("event-calendar-toggle");
+    await toggle.evaluate((el) => el.scrollIntoView({ block: "center" }));
+    const toggleBox = (await toggle.boundingBox())!;
+    for (const y of [toggleBox.y - 3, toggleBox.y + 2, toggleBox.y + toggleBox.height - 2, toggleBox.y + toggleBox.height + 3]) {
+      const own = await toggle.evaluate((el, point) => {
+        const found = document.elementFromPoint(point.x, point.y);
+        return found !== null && (found === el || el.contains(found));
+      }, { x: toggleBox.x + toggleBox.width / 2, y });
+      expect(own, `the calendar pill at y=${y}`).toBe(true);
+    }
     await openCalendar(page);
     const main = page.locator("#main");
     const probe = async (name: RegExp | string, offset: "above" | "below" | "insideTop" | "insideBottom") => {
