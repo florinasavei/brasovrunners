@@ -96,25 +96,62 @@ export type VolunteerRoleInput = z.infer<typeof volunteerRoleInputSchema>;
 
 const uuidField = z.uuid();
 
-/** A person as an organizer types them: the same boxes as the public form, plus the organizers' own note. */
-export const volunteerStaffInputSchema = z.object({
-  roleId: z.string().transform((value) => value.trim()).pipe(uuidField),
-  name: line(VOLUNTEER_NAME_MAX),
-  email: z
-    .string()
-    .trim()
-    .max(320)
-    .refine((value) => isValidEmail(value)),
-  /** E.164, read from what the organizer typed by the registrations' own parser (`typedPhone`, in the action). */
-  phone: z.string().regex(E164_PHONE),
-  note: optionalLine(VOLUNTEER_NOTE_MAX),
-});
+/**
+ * The roles a person ticked (§NNN): each an id, trimmed, the same one twice kept once, in the order posted — never
+ * more than an event may define. Whether each is this event's is the service's question (it reads the event).
+ */
+const roleIdsField = z
+  .array(z.string().transform((value) => value.trim()).pipe(uuidField))
+  .max(VOLUNTEER_ROLES_MAX)
+  .transform((ids) => [...new Set(ids)]);
+
+/** The organizers' «Rolul dat»: a role's id, or "" for nobody placed yet (null). */
+const assignedRoleField = z
+  .string()
+  .transform((value) => value.trim())
+  .pipe(z.union([z.literal(""), uuidField]))
+  .transform((value) => (value === "" ? null : value));
+
+/**
+ * A person as an organizer types them: the same boxes as the public form, plus the organizers' own note — the roles
+ * the person would do (`roleIds`, the ticks) and, optionally, the role the organizers give them (`assignedRoleId`,
+ * which may be any of the event's, ticked or not). At least one of the two (`roleIds` named in the refusal); a
+ * person entered with a role given and nothing ticked has that role as their one choice, so every row says what
+ * the person offered (`choicesWithAssigned`).
+ */
+export const volunteerStaffInputSchema = z
+  .object({
+    roleIds: roleIdsField,
+    assignedRoleId: assignedRoleField,
+    name: line(VOLUNTEER_NAME_MAX),
+    email: z
+      .string()
+      .trim()
+      .max(320)
+      .refine((value) => isValidEmail(value)),
+    /** E.164, read from what the organizer typed by the registrations' own parser (`typedPhone`, in the action). */
+    phone: z.string().regex(E164_PHONE),
+    note: optionalLine(VOLUNTEER_NOTE_MAX),
+  })
+  .superRefine((value, ctx) => {
+    if (value.roleIds.length === 0 && value.assignedRoleId === null) {
+      ctx.addIssue({ code: "custom", path: ["roleIds"], message: "tick at least one role, or give the person a role" });
+    }
+  });
 
 export type VolunteerStaffInput = z.infer<typeof volunteerStaffInputSchema>;
 
-/** The public form: a person offering, with the consent tick that names the privacy notice. */
+/** The choices a staff entry keeps: what was ticked, or — nothing ticked — the role given, as the one choice. */
+export function choicesWithAssigned(input: Pick<VolunteerStaffInput, "roleIds" | "assignedRoleId">): string[] {
+  return input.roleIds.length > 0 ? input.roleIds : input.assignedRoleId ? [input.assignedRoleId] : [];
+}
+
+/**
+ * The public form: a person offering, with the consent tick that names the privacy notice. «Ce ești dispus(ă) să
+ * faci» (§NNN): every role the person would do, at least one — the box `roleIds` in the refusal.
+ */
 export const volunteerPublicInputSchema = z.object({
-  roleId: z.string().transform((value) => value.trim()).pipe(uuidField),
+  roleIds: roleIdsField.pipe(z.array(z.string()).min(1)),
   name: line(VOLUNTEER_NAME_MAX),
   email: z
     .string()
@@ -145,18 +182,22 @@ export function refusedFields(error: z.ZodError): string[] {
 // How a role stands
 // ---------------------------------------------------------------------------------------------
 
-/** One role with the people counted against it: «N din M», what is still needed, and who is already confirmed. */
+/**
+ * One role with the people counted against it: «N din M», what is still needed, and who is already confirmed.
+ * Since §NNN only the people the organizers **gave** the role count (`roleId`, the assigned role): an offer that
+ * merely ticked it holds nothing — the card and the public form's «mai e nevoie de N» read the same number.
+ */
 export type RoleStanding = {
   roleId: string;
   needed: number;
-  /** «Înscris» + «Confirmat»: the people the role counts. */
+  /** «Înscris» + «Confirmat» who were given the role: the people the role counts. */
   taken: number;
   confirmed: number;
-  /** How many more the role needs; never below zero (an organizer may enter more than it asked). */
+  /** How many more the role needs; never below zero (an organizer may give it more people than it asked). */
   free: number;
 };
 
-export function standingOf(role: { id: string; needed: number }, volunteers: readonly { roleId: string; state: VolunteerState }[]): RoleStanding {
+export function standingOf(role: { id: string; needed: number }, volunteers: readonly { roleId: string | null; state: VolunteerState }[]): RoleStanding {
   const mine = volunteers.filter((volunteer) => volunteer.roleId === role.id);
   const taken = mine.filter((volunteer) => countsAgainstRole(volunteer.state)).length;
   const confirmed = mine.filter((volunteer) => volunteer.state === "CONFIRMED").length;
@@ -166,6 +207,109 @@ export function standingOf(role: { id: string; needed: number }, volunteers: rea
 /** Whether at least one role still needs people (the form's condition (b)). */
 export function someRoleNeedsPeople(standings: readonly Pick<RoleStanding, "free">[]): boolean {
   return standings.some((standing) => standing.free > 0);
+}
+
+// ---------------------------------------------------------------------------------------------
+// The roles a person chooses (§NNN)
+// ---------------------------------------------------------------------------------------------
+
+/**
+ * What a public sign-up keeps of the roles the person ticked: those that still need people, in the order ticked.
+ * A role that filled while the form was open is dropped and the others are kept; an empty answer — every ticked
+ * role filled — is the polite «full» with the roles still open (the service says it, the page lists them). A
+ * ticked role that is not this event's is no role at all (`undefined` standing) and is the service's refusal,
+ * never silently dropped here.
+ */
+export function openChoices(ticked: readonly string[], standings: ReadonlyMap<string, Pick<RoleStanding, "free">>): string[] {
+  return ticked.filter((roleId) => (standings.get(roleId)?.free ?? 0) > 0);
+}
+
+/** A role's words as the agreement and the emails name it, in both languages. */
+export type RoleWords = { nameRo: string; nameEn: string; descriptionRo: string | null; descriptionEn: string | null };
+
+/**
+ * A role's description as the agreement's sentence takes it: «Ce presupune rolul: {{volunteerTasks}}.» ends with
+ * its own full stop, so the club's text — typed in the editor as a sentence, often with one — loses one closing
+ * mark (after its spaces), never «…kilometrul 5..». The facts are frozen at acceptance, so this happens before
+ * they are written. A text that is only punctuation reads as none, and its sentence is left out.
+ */
+export function tasksWords(description: string): string {
+  return description.trim().replace(/[.!?…;]$/u, "").trimEnd();
+}
+
+/** The agreement's role blanks for one person: the role given and its tasks, or the roles chosen and what each asks. */
+export type AgreementRoleValues = { role: string; tasks: string; choices: string; choiceTasks: string };
+
+/**
+ * The agreement's role blanks for one person (§NNN, amending §758), filled with the club's words only — the roles'
+ * names and descriptions —, never a clause of the code's own: the sentences are the approved text's.
+ *
+ * - A role given: `{{volunteerRole}}` its name, `{{volunteerTasks}}` what it asks; the choices' fields "" (their
+ *   sentences drop).
+ * - None given, and the text in force names `{{volunteerRoleChoices}}` (`textNamesChoices`, the platform's template
+ *   since §NNN): `{{volunteerRoleChoices}}` the chosen roles' names, «Masă, Traseu», `{{volunteerChoiceTasks}}` what
+ *   each asks, «Masă — dă numerele; Traseu — arată drumul»; the role's fields "" (their sentences drop).
+ * - None given under a text that does not (every version approved before): the chosen roles' names alone in
+ *   `{{volunteerRole}}` — «… în rolul Masă, Traseu.» — and their tasks in `{{volunteerTasks}}` (one role: its
+ *   description alone). `/admin/tasks`' row `volunteerRoleChoicesAgreement` asks the club for the new text meanwhile.
+ *
+ * A role with no description adds nothing to the tasks; none at all is "" and that sentence is left out.
+ */
+export function agreementRoleWords(
+  roles: { assigned: RoleWords | null; chosen: readonly RoleWords[] },
+  locale: "ro" | "en",
+  textNamesChoices: boolean,
+): AgreementRoleValues {
+  const name = (role: RoleWords) => (locale === "en" ? role.nameEn : role.nameRo);
+  const description = (role: RoleWords) => tasksWords((locale === "en" ? role.descriptionEn : role.descriptionRo) ?? "");
+  if (roles.assigned) return { role: name(roles.assigned), tasks: description(roles.assigned), choices: "", choiceTasks: "" };
+  const names = roleNames(roles.chosen, locale);
+  const eachTasks = roles.chosen
+    .filter((chosen) => description(chosen) !== "")
+    .map((chosen) => `${name(chosen)} — ${description(chosen)}`)
+    .join("; ");
+  if (textNamesChoices) return { role: "", tasks: "", choices: names, choiceTasks: eachTasks };
+  const tasks = roles.chosen.length === 1 ? description(roles.chosen[0]) : eachTasks;
+  return { role: names, tasks, choices: "", choiceTasks: "" };
+}
+
+/** Roles' names as the agreement and the card name them: «Masă, Traseu», in the order given. */
+export function roleNames(roles: readonly RoleWords[], locale: "ro" | "en"): string {
+  return roles.map((role) => (locale === "en" ? role.nameEn : role.nameRo)).join(", ");
+}
+
+/**
+ * The roles an accepted agreement named, from its blanks (`agreement_facts`): the roles chosen when the text named
+ * them in their own sentence, else the role's blank — the role given, or the chosen roles' names under an earlier
+ * text. Names only, so the card can show them and compare them.
+ */
+export function acceptedRoleNames(facts: { volunteerRole: string; volunteerRoleChoices?: string }): string {
+  return facts.volunteerRoleChoices && facts.volunteerRoleChoices !== "" ? facts.volunteerRoleChoices : facts.volunteerRole;
+}
+
+/**
+ * Whether the roles an accepted agreement names (`acceptedRoleNames`) still describe the person: the role given, by
+ * name; or — while nobody gave them a role, or the role given is one they chose — the names of their choices as
+ * they stand. Otherwise the card says the accepted text named other roles (§758): the acceptance stays valid, the
+ * organizers talk it over.
+ */
+export function agreementStillNamesRole(
+  accepted: string,
+  person: { assigned: (RoleWords & { id: string }) | null; chosen: readonly (RoleWords & { id: string })[] },
+  locale: "ro" | "en",
+): boolean {
+  if (person.assigned && accepted === roleNames([person.assigned], locale)) return true;
+  const assignedChosen = person.assigned === null || person.chosen.some((role) => role.id === person.assigned?.id);
+  return assignedChosen && person.chosen.length > 0 && accepted === roleNames(person.chosen, locale);
+}
+
+/**
+ * What a desk's printed agreement names, as one string the card posts back with «Semnat pe hârtie» (§758): the role
+ * given, or the roles chosen — so the record is refused (`VOLUNTEER_AGREEMENT_REPRINT`) when either changed since
+ * the sheet was printed. Ids only, order-free.
+ */
+export function agreementRolesStamp(assignedRoleId: string | null, choiceIds: readonly string[]): string {
+  return assignedRoleId ? `role:${assignedRoleId}` : `choices:${[...choiceIds].sort().join(",")}`;
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -248,9 +392,9 @@ export const volunteerAgreementAcceptSchema = z.object({
 
 /**
  * Which roles the page's box lists, or null for no box at all: the roles that still need people while the form
- * is open; and, when the form closed only because the last place has just gone, an empty list for a person
- * whose page is the answer to their own post — «am primit», «the role filled», or a refusal they came back to
- * correct (invalid, captcha, limited) while the last role filled — so the box says «toate rolurile s-au umplut»
+ * is open; and, when the form closed only because the organizers gave the last place while the person typed (an
+ * offer takes none, §NNN), an empty list for a person whose page is the answer to their own post — «am primit»,
+ * «the role filled», or a refusal they came back to correct (invalid, captcha, limited) — so the box says «toate rolurile s-au umplut»
  * rather than vanishing without a sentence. A plain visit, and every other closed form, draws nothing.
  */
 export function volunteerBoxRoles<R extends Pick<RoleStanding, "free">>(

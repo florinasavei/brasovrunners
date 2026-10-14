@@ -14,6 +14,7 @@ import { verifyTurnstile } from "@/modules/registrations/turnstile";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { clearFormDraft, stashDraftValues } from "@/modules/registrations/form-draft";
 import { composePhone } from "@/modules/registrations/phone";
+import { VOLUNTEER_ROLES_MAX } from "@/modules/volunteers/domain/volunteer";
 import { VOLUNTEER_BOX_ID } from "@/modules/volunteers/ui/volunteer-box";
 import { submitVolunteer } from "@/modules/volunteers/volunteers";
 
@@ -24,6 +25,14 @@ function toLocale(value: FormDataEntryValue | null): Locale {
 function text(form: FormData, name: string): string {
   const value = form.get(name);
   return typeof value === "string" ? value : "";
+}
+
+/** The volunteer form's ticked roles (§NNN): every value posted as `roleIds`, strings only, at most what an event may define. */
+function roleIdsOf(form: FormData): string[] {
+  return form
+    .getAll("roleIds")
+    .filter((value): value is string => typeof value === "string")
+    .slice(0, VOLUNTEER_ROLES_MAX);
 }
 
 /**
@@ -90,8 +99,8 @@ export async function registerInterestAction(form: FormData): Promise<void> {
  * `volunteers.ts` accepts and says why).
  *
  * Always a redirect back to the event's page, to the box: `invalid` (with `vfields`, the boxes to fix,
- * and what was typed in the sealed draft, never in the URL, §14.5), `captcha`, `limited` or `full` (the
- * role filled while the form was open) with the box open again, and `since`, the rendering time the
+ * and what was typed in the sealed draft, never in the URL, §14.5), `captcha`, `limited` or `full` (every
+ * role ticked filled while the form was open) with the box open again, and `since`, the rendering time the
  * person is correcting from. An event that no longer takes volunteers — or a notice that stopped
  * describing them — redirects to the plain page, where the box is now gone.
  */
@@ -116,7 +125,8 @@ export async function submitVolunteerAction(form: FormData): Promise<void> {
         email: text(form, "email").trim(),
         phoneCountry: country,
         phone: national,
-        roleId: text(form, "roleId"),
+        // The roles ticked (§NNN), one string in the draft: their ids joined by commas.
+        roleIds: roleIdsOf(form).join(","),
         message: text(form, "message"),
       },
       path,
@@ -138,7 +148,8 @@ export async function submitVolunteerAction(form: FormData): Promise<void> {
       db,
       event.id,
       {
-        roleId: text(form, "roleId"),
+        // «Ce ești dispus(ă) să faci» (§NNN): every box ticked posts its role's id under the one name.
+        roleIds: roleIdsOf(form),
         name: text(form, "name"),
         email: text(form, "email"),
         // The country and the digits become the one number a phone can dial, or nothing (a refusal on `phone`).

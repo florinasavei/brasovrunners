@@ -2061,25 +2061,39 @@ only ones who see the names, addresses and telephone numbers.
    takes volunteers, the event is published and not for the members alone (the form is public), the
    event is not cancelled or over, a role still needs people, the notice describes them, a volunteer
    agreement is in force, and the notice describes its acceptance. The form is a fold, «Vreau să fiu voluntar», under the programme; it asks the name,
-   the address, the telephone number, the role (only roles that still need people), an optional
+   the address, the telephone number, «Ce ești dispus(ă) să faci» — one box per role that still needs
+   people, as many ticked as the person would do, at least one (§NNN) —, an optional
    message, the consent tick, «Am citit și accept contractul de voluntariat» (linking the text in force)
    and «Am cel puțin 18 ani», behind the same anti-bot checks as the registration form.
-5. **Answer the offers.** Each sign-up is «Înscris»; the person gets one email, «Ți-am primit oferta de
-   voluntar», with nothing to press and the agreement they accepted attached as a PDF, and each Organizer,
-   Administrator and Superadministrator gets a
-   notice with who and which role (never the address or the number). On the card: «Confirmă» when you
-   have spoken to the person, «Anulează», «Modifică» (the role included, and your own note — never shown
-   publicly), «Șterge voluntarul» (the address and the telephone number go with it). «N din M» beside
-   each role counts «Înscris» and «Confirmat». «Adaugă un voluntar de mână» enters a person yourself —
-   a role may take more people than it asked. «Descarcă CSV» downloads the list, grouped by role.
+5. **Answer the offers.** Each sign-up is «Înscris», with **no role yet**: it waits under **«De repartizat»**
+   at the top of the card, with the roles the person ticked as chips. The person gets one email, «Ți-am primit
+   oferta de voluntar», with nothing to press and the agreement they accepted attached as a PDF, and each
+   Organizer, Administrator and Superadministrator gets a notice with who and which roles they offered for
+   (never the address or the number). **Give each person a role**: on a row under «De repartizat», «Dă-i
+   rolul …» beside each role they ticked (with how that role stands, «Sosire · 0 din 1»), or «Alt rol» →
+   «Dă-i rolul ales» for another role of the event; the person gets a short email naming it. A person who
+   already has a role is moved in «Modifică» → «Rolul dat» — the email follows, and a corrected address or a
+   reopened person is told the role again. On the card: «Confirmă» when you have spoken to the person, «Anulează», «Modifică» (the roles ticked,
+   the role given — «Încă niciunul» takes it back — and your own note, never shown publicly), «Șterge
+   voluntarul» (the address and the telephone number go with it). «N din M» beside each role counts only the
+   people **given** that role («Înscris» and «Confirmat»); the page stops offering a role once it has them.
+   «Adaugă un voluntar de mână» enters a person yourself — tick what they would do, and give a role if you
+   already know it; a role may take more people than it asked. «Descarcă CSV» downloads the list, grouped by
+   the role given, with a column of the roles each person offered for. A role somebody was given or ticked
+   cannot be deleted until you change their roles.
    Each person's row says where they stand with the agreement: «Contract acceptat» (with the version, the
    way and when, and «PDF contract» for their copy) or «Contract neacceptat încă». For a person you entered
    by hand: **«Trimite linkul contractului»** emails them the agreement and a single-use link to accept it
    (valid 14 days; a new press sends a new link that replaces the old), or print **«PDF de semnat»** — the
    agreement filled for them, with the volunteer's and the organizer's signature lines — let them sign it
    at the desk, keep the sheet, and press **«Semnat pe hârtie»**, which records the version in force and
-   your name as the one who recorded it, and emails the person their copy. If a new version was approved,
-   or the person's role changed, after you printed the PDF, the record is refused: print it again and have
+   your name as the one who recorded it, and emails the person their copy. While nobody gave the person a
+   role, the agreement names the roles they offered for: the platform's text says so in its own sentence
+   («Rolul îl stabilesc organizatorii dintre cele pentru care voluntarul s-a oferit — …»); a version approved
+   before it has room for one role, and names them there, «în rolul Masă, Traseu». Approve the agreement
+   again from the template (`/admin/legal` → «Contract de voluntariat» → «Regenerează din șablon», a lawyer
+   reading the two new sentences first); `/admin/tasks` carries the row until then. If a new version was approved,
+   or the person's role or ticks changed, after you printed the PDF, the record is refused: print it again and have
    the new sheet signed. «Link trimis» on the row means a link is live in their mailbox; a message the
    provider refuses for good leaves the row «Contract neacceptat încă» again.
 6. **A person who asks for their data** is found by address on «Toate datele unei persoane»: the offers

@@ -32,6 +32,13 @@ import type { LegalDocumentBody } from "../domain/content-hash";
  * (`VOLUNTEER_MINIMUM_AGE`, through `{{minimumAge}}`) — a minor's volunteering with a parent's consent is a
  * later question, and the form refuses a person who does not tick «Am cel puțin 18 ani».
  *
+ * **Several roles (§NNN, amending §758).** A volunteer ticks every role they would do and the organizers give one
+ * afterwards, so a person accepting on the form has no role yet. The text says it in its own sentences: «Voluntarul
+ * are rolul {{volunteerRole}}.» when a role is given, «Rolul îl stabilesc organizatorii dintre cele pentru care
+ * voluntarul s-a oferit — {{volunteerRoleChoices}} — și i-l comunică pe email.» while none is, each dropped whole when
+ * its field is empty, and «Ce presupune fiecare rol: {{volunteerChoiceTasks}}.» beside «Ce presupune rolul: …». A
+ * lawyer reads these with the rest: whether accepting before the role is fixed, among the roles named, is enough.
+ *
  * **No hardcoded value (§357).** Nothing names a club, an event, a place, a date, an amount or an age: the
  * club by its four `<PLACEHOLDER>`s, the rest by merge fields. The laws cited and the emergency number stay
  * written in, as in every text.
@@ -51,15 +58,23 @@ const partiesEn = [
 ];
 
 const activityRo = [
-  "Voluntarul ajută la evenimentul {{event}}, care are loc {{eventDate}}, în {{eventLocation}}, în rolul {{volunteerRole}}.",
+  "Voluntarul ajută la evenimentul {{event}}, care are loc {{eventDate}}, în {{eventLocation}}.",
+  // The role given and the roles offered for (§NNN): each sentence is dropped whole when its field is "" (`PARAGRAPH_MERGE_FIELDS`) —
+  // a role given keeps the first and its tasks, none given keeps the choices and what each asks.
+  "Voluntarul are rolul {{volunteerRole}}.",
+  "Rolul îl stabilesc organizatorii dintre cele pentru care voluntarul s-a oferit — {{volunteerRoleChoices}} — și i-l comunică pe email.",
   // Dropped whole for a role with no description (`PARAGRAPH_MERGE_FIELDS`).
   "Ce presupune rolul: {{volunteerTasks}}.",
+  "Ce presupune fiecare rol: {{volunteerChoiceTasks}}.",
   "Ora și locul de întâlnire și sarcinile concrete ale rolului le stabilesc organizatorii împreună cu voluntarul, înainte de eveniment.",
 ];
 
 const activityEn = [
-  "The volunteer helps at the event {{event}}, which takes place on {{eventDate}}, at {{eventLocation}}, in the role {{volunteerRole}}.",
+  "The volunteer helps at the event {{event}}, which takes place on {{eventDate}}, at {{eventLocation}}.",
+  "The volunteer's role is {{volunteerRole}}.",
+  "The organisers choose the role from those the volunteer offered to do — {{volunteerRoleChoices}} — and tell the volunteer by email.",
   "What the role involves: {{volunteerTasks}}.",
+  "What each role involves: {{volunteerChoiceTasks}}.",
   "The meeting time and place and the role's concrete tasks are agreed between the organisers and the volunteer before the event.",
 ];
 

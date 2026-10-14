@@ -1,10 +1,10 @@
-import { and, asc, count, eq, gt, sql } from "drizzle-orm";
-import { eventVolunteerRoles, eventVolunteers, type VolunteerAgreementMethod } from "@/db/schema/event-volunteers";
+import { and, asc, count, eq, gt, inArray, notInArray, sql } from "drizzle-orm";
+import { eventVolunteerRoleChoices, eventVolunteerRoles, eventVolunteers, type VolunteerAgreementMethod } from "@/db/schema/event-volunteers";
 import { events } from "@/db/schema/events";
 import { legalDocuments } from "@/db/schema/legal-documents";
 import type { StaffUser } from "@/db/schema/staff-users";
 import { staffUsers } from "@/db/schema/staff-users";
-import type { Database } from "@/db/types";
+import type { Database, Transaction } from "@/db/types";
 import type { Locale } from "@/i18n/routing";
 import { type AuditAction, recordAuditEvent } from "@/modules/audit/repository";
 import { VOLUNTEER_AGREEMENT_KEY } from "@/modules/legal-documents/domain/keys";
@@ -24,7 +24,10 @@ import { canManageVolunteers, isBackofficeRole } from "@/modules/staff-identity/
 import { DomainError } from "@/shared/errors/domain-error";
 import { isUuid } from "@/shared/ids";
 import {
+  acceptedRoleNames,
+  choicesWithAssigned,
   compareRoles,
+  openChoices,
   refusedFields,
   type RoleStanding,
   standingOf,
@@ -66,13 +69,10 @@ import { agreementAcceptance, readAgreementFacts } from "./agreement";
  *
  * **A repeated sign-up** (the same address for the same event, whatever the role and whatever the row's
  * state — an organizer's «Anulat» included) changes nothing, sends nothing, and gets the answer a new one
- * gets — «am primit», or «full» when the role it names has filled, judged first for everybody: the answer
- * itself never tells a listed address from a new one (BR-REQ-031-01 criterion 3). **An accepted residual,
- * like the registration form's places line:** a new address adds a row, so the public «mai e nevoie de N»
- * drops by one, and a listed one does not — a stranger who posts an address and reloads the page can tell.
- * The probe is loud (it puts a row in the person's name before the organizers and mails the person), and
- * the throttles bound it; hiding the number would cost every visitor the one line that says how much help
- * is still wanted.
+ * gets — «am primit», or «full» when every role it ticks has filled, judged first for everybody: the answer
+ * itself never tells a listed address from a new one (BR-REQ-031-01 criterion 3). §754's accepted residual —
+ * a new address lowered the public «mai e nevoie de N» and a listed one did not — ended with §NNN: an offer
+ * takes no place, only a role the organizers give counts, so a sign-up never moves the number.
  */
 
 // ---------------------------------------------------------------------------------------------
@@ -94,7 +94,10 @@ export type VolunteerRole = {
 export type VolunteerItem = {
   id: string;
   eventId: string;
-  roleId: string;
+  /** The role the organizers gave the person, or null while nobody has (§NNN): «De repartizat» on the card. */
+  roleId: string | null;
+  /** The roles the person said they would do, in the club's order (§NNN): their chips on the card. */
+  choiceIds: string[];
   name: string;
   email: string;
   phone: string;
@@ -109,7 +112,10 @@ export type VolunteerItem = {
   agreementMethod: VolunteerAgreementMethod | null;
   /** The number of the version accepted, read through the row's reference. */
   agreementVersion: number | null;
-  /** The role's name the agreement was accepted for, in its language — differs from the row's role once moved. */
+  /**
+   * The roles' names the accepted agreement named, in its language (`acceptedRoleNames`): the role given, or the
+   * roles chosen while none was — they differ from the row's once the roles change.
+   */
   agreementRoleName: string | null;
   /**
    * The event's date and place as the accepted text named them (`agreement_facts`), in the acceptance's language
@@ -131,7 +137,27 @@ export async function listVolunteerRoles<T extends Record<string, unknown>>(db: 
   return rows.sort(compareRoles);
 }
 
-/** An event's volunteers, oldest first (the card groups them by role). */
+/**
+ * The roles each of an event's volunteers chose (§NNN), volunteer → role ids in the club's order (`compareRoles`):
+ * one read for the whole list.
+ */
+async function choicesOf<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<Map<string, string[]>> {
+  const rows = await db
+    .select({
+      volunteerId: eventVolunteerRoleChoices.volunteerId,
+      id: eventVolunteerRoles.id,
+      position: eventVolunteerRoles.position,
+      createdAt: eventVolunteerRoles.createdAt,
+    })
+    .from(eventVolunteerRoleChoices)
+    .innerJoin(eventVolunteerRoles, eq(eventVolunteerRoles.id, eventVolunteerRoleChoices.roleId))
+    .where(eq(eventVolunteerRoles.eventId, eventId));
+  const byVolunteer = new Map<string, string[]>();
+  for (const row of rows.sort(compareRoles)) byVolunteer.set(row.volunteerId, [...(byVolunteer.get(row.volunteerId) ?? []), row.id]);
+  return byVolunteer;
+}
+
+/** An event's volunteers, oldest first (the card groups them by the role given, «De repartizat» first). */
 export async function listVolunteers<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<VolunteerItem[]> {
   const rows = await db
     .select({ row: eventVolunteers, agreementVersion: legalDocuments.version })
@@ -139,12 +165,14 @@ export async function listVolunteers<T extends Record<string, unknown>>(db: Data
     .leftJoin(legalDocuments, eq(legalDocuments.id, eventVolunteers.agreementDocumentId))
     .where(eq(eventVolunteers.eventId, eventId))
     .orderBy(asc(eventVolunteers.createdAt), asc(eventVolunteers.id));
+  const choices = await choicesOf(db, eventId);
   return rows.map(({ row, agreementVersion }) => {
     const facts = readAgreementFacts(row.agreementFacts);
     return {
       id: row.id,
       eventId: row.eventId,
       roleId: row.roleId,
+      choiceIds: choices.get(row.id) ?? [],
       name: row.name,
       email: row.email,
       phone: row.phone,
@@ -157,7 +185,7 @@ export async function listVolunteers<T extends Record<string, unknown>>(db: Data
       agreementAcceptedAt: row.agreementAcceptedAt,
       agreementMethod: row.agreementMethod,
       agreementVersion: row.agreementAcceptedAt ? agreementVersion : null,
-      agreementRoleName: facts?.volunteerRole ?? null,
+      agreementRoleName: facts ? acceptedRoleNames(facts) : null,
       agreementLocale: row.agreementAcceptedAt ? row.agreementLocale : null,
       agreementEventDate: facts?.eventDate ?? null,
       agreementEventLocation: facts?.eventLocation ?? null,
@@ -168,7 +196,10 @@ export async function listVolunteers<T extends Record<string, unknown>>(db: Data
   });
 }
 
-/** The roles of one event with how each stands, in the club's order: «N din M» and what is still needed. */
+/**
+ * The roles of one event with how each stands, in the club's order: «N din M» and what is still needed — the people
+ * given each role, never those who only ticked it (§NNN).
+ */
 export function volunteerStandings(roles: readonly VolunteerRole[], volunteers: readonly Pick<VolunteerItem, "roleId" | "state">[]): RoleStanding[] {
   return roles.map((role) => standingOf(role, volunteers));
 }
@@ -303,8 +334,10 @@ export async function changeVolunteerRole<T extends Record<string, unknown>>(
       recordAuditEvent(tx, { actorStaffUserId: actor.id, action, entityType: "event", entityId: request.eventId, metadata, now });
 
     // Every verb is about this event's list: locked for the change, so two presses cannot both take a position.
+    // In the order of the ids — the order a sign-up locks the roles it ticked (§NNN) — so the two never wait on
+    // each other in a circle.
     const roles = (
-      await tx.select().from(eventVolunteerRoles).where(eq(eventVolunteerRoles.eventId, request.eventId)).for("update")
+      await tx.select().from(eventVolunteerRoles).where(eq(eventVolunteerRoles.eventId, request.eventId)).orderBy(asc(eventVolunteerRoles.id)).for("update")
     ).sort(compareRoles);
 
     if (request.kind === "add" && input) {
@@ -333,8 +366,11 @@ export async function changeVolunteerRole<T extends Record<string, unknown>>(
     const summary = { id: current.id, nameRo: current.nameRo };
 
     if (request.kind === "delete") {
+      // Anybody given the role, or who ticked it (§NNN) — cancelled people too: the people are asked to move first,
+      // never dropped from a role under them (the choices' own reference cascades only for an event's delete).
       const [people] = await tx.select({ n: count() }).from(eventVolunteers).where(eq(eventVolunteers.roleId, current.id));
-      if ((people?.n ?? 0) > 0) throw new DomainError("VOLUNTEER_ROLE_HAS_PEOPLE", "move the volunteers to another role first", ["roleId"]);
+      const [choosers] = await tx.select({ n: count() }).from(eventVolunteerRoleChoices).where(eq(eventVolunteerRoleChoices.roleId, current.id));
+      if ((people?.n ?? 0) + (choosers?.n ?? 0) > 0) throw new DomainError("VOLUNTEER_ROLE_HAS_PEOPLE", "move the volunteers to another role first", ["roleId"]);
       await tx.delete(eventVolunteerRoles).where(eq(eventVolunteerRoles.id, current.id));
       await audit("volunteer_role.deleted", { roleId: current.id, nameRo: current.nameRo, nameEn: current.nameEn });
       return { changed: true, role: summary };
@@ -417,18 +453,26 @@ export async function setAcceptsVolunteers<T extends Record<string, unknown>>(
   return result;
 }
 
-const STAFF_FIELDS = ["roleId", "name", "email", "phone", "note"] as const;
+const STAFF_FIELDS = ["assignedRoleId", "name", "email", "phone", "note"] as const;
 
 export type VolunteerRequest =
   | { kind: "add"; eventId: string; fields: Record<string, unknown> }
   | { kind: "edit"; eventId: string; id: string; fields: Record<string, unknown> }
   | { kind: "setState"; eventId: string; id: string; state: unknown }
+  /** «Dă-i rolul …» (§NNN): the organizers give the person one role of the event, ticked by them or not. */
+  | { kind: "assign"; eventId: string; id: string; roleId: unknown }
   | { kind: "delete"; eventId: string; id: string };
 
 export type VolunteerResult = { changed: boolean; volunteer: { id: string } };
 
+/** The ticked roles as a form posts them: every value of `roleIds` (one box, or several), strings only. */
+function postedIds(value: unknown): string[] {
+  if (Array.isArray(value)) return value.filter((item): item is string => typeof item === "string");
+  return typeof value === "string" && value !== "" ? [value] : [];
+}
+
 function staffInputOf(fields: Record<string, unknown>) {
-  const parsed = volunteerStaffInputSchema.safeParse(postedStrings(fields, STAFF_FIELDS));
+  const parsed = volunteerStaffInputSchema.safeParse({ ...postedStrings(fields, STAFF_FIELDS), roleIds: postedIds(fields.roleIds) });
   if (!parsed.success) {
     throw new DomainError("VALIDATION_ERROR", parsed.error.issues.map((issue) => `${issue.path.join(".")}: ${issue.message}`).join("; "), refusedFields(parsed.error));
   }
@@ -438,7 +482,7 @@ function staffInputOf(fields: Record<string, unknown>) {
   } catch {
     throw new DomainError("VALIDATION_ERROR", "the address is not valid", ["email"]);
   }
-  return { ...parsed.data, identity };
+  return { ...parsed.data, choiceIds: choicesWithAssigned(parsed.data), identity };
 }
 
 const alreadyListed = () => new DomainError("VOLUNTEER_ALREADY_LISTED", "this address is already on the event's volunteers", ["email"]);
@@ -454,13 +498,52 @@ function isAddressClash(error: unknown): boolean {
   return false;
 }
 
+/** The same ids, whatever their order. */
+function sameIds(a: readonly string[], b: readonly string[]): boolean {
+  const left = [...new Set(a)].sort();
+  const right = [...new Set(b)].sort();
+  return left.length === right.length && left.every((id, index) => id === right[index]);
+}
+
+/**
+ * The one short email that names the role the organizers gave a volunteer (§NNN), through the outbox in the same
+ * transaction as the change, in the person's language. Never to a cancelled person (nothing to do), and withdrawn at
+ * the send when the role was changed again or the person cancelled meanwhile (`render.ts`), so only the role that
+ * stands is ever announced. Each assignment is its own message: the moment and why it is sent are in the key —
+ * `given`, `readdressed` (the role kept, the address corrected) or `reopened` (a cancelled person back with a role).
+ */
+async function queueRoleAssigned<T extends Record<string, unknown>>(
+  tx: Transaction<T>,
+  volunteer: { id: string; eventId: string; email: string; locale: Locale; state: VolunteerState },
+  roleId: string,
+  actorId: string,
+  now: Date,
+  why: "given" | "readdressed" | "reopened" = "given",
+): Promise<void> {
+  if (volunteer.state === "CANCELLED") return;
+  await enqueueEmail(tx, {
+    participantId: null,
+    registrationId: null,
+    messageType: "VOLUNTEER_ROLE_ASSIGNED",
+    locale: volunteer.locale,
+    recipientEmail: volunteer.email,
+    payload: { eventId: volunteer.eventId, volunteerId: volunteer.id, roleId },
+    idempotencyKey: `volunteer:${volunteer.id}:assigned:${roleId}:${why}:${now.getTime()}`,
+    requestedByStaffUserId: actorId,
+    now,
+  });
+}
+
 /**
  * One change to one event's volunteers, by one staff member: enter one by hand, change what was typed
- * (the name, the address, the telephone number, the role, the organizers' note), confirm or cancel, delete.
- * The address goes through the canonicalizer and is unique per event (`VOLUNTEER_ALREADY_LISTED`, naming the
- * box); the role must be this event's (VALIDATION_ERROR, `roleId`); a person who is not there, or is on
- * another event, is NOT_FOUND. A press that changes nothing writes nothing. Every change is audited with the
- * ids and the names of the fields — never the person's own words.
+ * (the name, the address, the telephone number, the roles they would do, the role given, the organizers' note),
+ * give them a role («Dă-i rolul …», §NNN), confirm or cancel, delete. The address goes through the canonicalizer
+ * and is unique per event (`VOLUNTEER_ALREADY_LISTED`, naming the box); every role ticked or given must be this
+ * event's (VALIDATION_ERROR naming `roleIds`, `assignedRoleId` or `roleId`); a person who is not there, or is on
+ * another event, is NOT_FOUND; a cancelled person is given no role (CONFLICT: reopen first). A role may be given to
+ * more people than it asked (the card then reads «3 din 2»). A press that changes nothing writes nothing. Every
+ * change is audited with the ids and the names of the fields — never the person's own words — and every new role
+ * given is told to the person by one email (`VOLUNTEER_ROLE_ASSIGNED`).
  */
 export async function changeVolunteer<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -478,6 +561,8 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
         : null
       : null;
   if (request.kind === "setState" && !state) throw new DomainError("VALIDATION_ERROR", "that is not a state", ["state"]);
+  const assigned = request.kind === "assign" && typeof request.roleId === "string" ? request.roleId.trim() : "";
+  if (request.kind === "assign" && !isUuid(assigned)) throw new DomainError("VALIDATION_ERROR", "that is not a role", ["roleId"]);
 
   const result = await db.transaction(async (tx) => {
     const [event] = await tx.select({ id: events.id }).from(events).where(eq(events.id, request.eventId)).limit(1);
@@ -485,14 +570,27 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
     const audit = (action: AuditAction, metadata: Record<string, unknown>) =>
       recordAuditEvent(tx, { actorStaffUserId: actor.id, action, entityType: "event", entityId: request.eventId, metadata, now });
 
-    const roleOf = async (roleId: string) => {
-      const [role] = await tx
-        .select({ id: eventVolunteerRoles.id, nameRo: eventVolunteerRoles.nameRo })
+    // A verb that writes a reference to a role — the role given, the roles ticked — locks the event's roles first, in
+    // the order of their ids: the order a sign-up locks the roles it ticked and a role change locks them all (§NNN).
+    // Without it the insert's foreign keys take KEY SHARE on each role in the order posted, and a hand entry naming
+    // two roles against a sign-up ticking both waits in a circle (40P01) — one side aborted, someone's typing lost.
+    if (request.kind === "add" || request.kind === "edit" || request.kind === "assign") {
+      await tx
+        .select({ id: eventVolunteerRoles.id })
         .from(eventVolunteerRoles)
-        .where(and(eq(eventVolunteerRoles.id, roleId), eq(eventVolunteerRoles.eventId, request.eventId)))
-        .limit(1);
-      if (!role) throw new DomainError("VALIDATION_ERROR", "that role is not this event's", ["roleId"]);
-      return role;
+        .where(eq(eventVolunteerRoles.eventId, request.eventId))
+        .orderBy(asc(eventVolunteerRoles.id))
+        .for("update");
+    }
+
+    /** Every id this event's role, or the refusal naming the box it came from. */
+    const assertEventRoles = async (ids: readonly string[], box: string) => {
+      if (ids.length === 0) return;
+      const found = await tx
+        .select({ id: eventVolunteerRoles.id })
+        .from(eventVolunteerRoles)
+        .where(and(inArray(eventVolunteerRoles.id, [...ids]), eq(eventVolunteerRoles.eventId, request.eventId)));
+      if (found.length !== new Set(ids).size) throw new DomainError("VALIDATION_ERROR", "that role is not this event's", [box]);
     };
     const holderOf = async (canonicalEmail: string) => {
       const [row] = await tx
@@ -502,15 +600,33 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
         .limit(1);
       return row;
     };
+    /** The person's choices become exactly `ids`: the ones no longer ticked go, the new ones come. */
+    const writeChoices = async (volunteerId: string, ids: readonly string[]) => {
+      await tx
+        .delete(eventVolunteerRoleChoices)
+        .where(
+          ids.length > 0
+            ? and(eq(eventVolunteerRoleChoices.volunteerId, volunteerId), notInArray(eventVolunteerRoleChoices.roleId, [...ids]))
+            : eq(eventVolunteerRoleChoices.volunteerId, volunteerId),
+        );
+      if (ids.length > 0) {
+        await tx
+          .insert(eventVolunteerRoleChoices)
+          // In the order of the ids, as the roles were locked above.
+          .values([...ids].sort().map((roleId) => ({ volunteerId, roleId, createdAt: now })))
+          .onConflictDoNothing();
+      }
+    };
 
     if (request.kind === "add" && input) {
-      const role = await roleOf(input.roleId);
+      await assertEventRoles(input.roleIds, "roleIds");
+      if (input.assignedRoleId) await assertEventRoles([input.assignedRoleId], "assignedRoleId");
       if (await holderOf(input.identity.canonicalEmail)) throw alreadyListed();
       const [row] = await tx
         .insert(eventVolunteers)
         .values({
           eventId: request.eventId,
-          roleId: role.id,
+          roleId: input.assignedRoleId,
           name: input.name,
           email: input.identity.deliveryEmail,
           canonicalEmail: input.identity.canonicalEmail,
@@ -526,9 +642,11 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
         // A public sign-up of the same address may commit between the check above and this insert: the
         // constraint decides, and the organizer hears the same sentence, never a database error.
         .onConflictDoNothing({ target: [eventVolunteers.eventId, eventVolunteers.canonicalEmail] })
-        .returning({ id: eventVolunteers.id });
+        .returning({ id: eventVolunteers.id, eventId: eventVolunteers.eventId, email: eventVolunteers.email, locale: eventVolunteers.locale, state: eventVolunteers.state });
       if (!row) throw alreadyListed();
-      await audit("volunteer.added", { volunteerId: row.id, roleId: role.id, roleNameRo: role.nameRo });
+      await writeChoices(row.id, input.choiceIds);
+      await audit("volunteer.added", { volunteerId: row.id, roleId: input.assignedRoleId, roleIds: input.choiceIds });
+      if (input.assignedRoleId) await queueRoleAssigned(tx, row, input.assignedRoleId, actor.id, now);
       return { changed: true, volunteer: { id: row.id } };
     }
 
@@ -542,6 +660,7 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
     const summary = { id: current.id };
 
     if (request.kind === "delete") {
+      // The person's choices go with them (CASCADE).
       await tx.delete(eventVolunteers).where(eq(eventVolunteers.id, current.id));
       await audit("volunteer.deleted", { volunteerId: current.id, roleId: current.roleId, state: current.state });
       return { changed: true, volunteer: summary };
@@ -551,25 +670,48 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
       if (current.state === state) return { changed: false, volunteer: summary };
       await tx.update(eventVolunteers).set({ state, updatedAt: now }).where(eq(eventVolunteers.id, current.id));
       await audit("volunteer.state_changed", { volunteerId: current.id, roleId: current.roleId, from: current.state, to: state });
+      // A cancelled person reopened with a role given is told it: the email queued when it was given was withdrawn at
+      // the send while they were cancelled, or never queued (`queueRoleAssigned`), and the receipt promised one.
+      if (current.state === "CANCELLED" && current.roleId) await queueRoleAssigned(tx, { ...current, state }, current.roleId, actor.id, now, "reopened");
       return { changed: true, volunteer: summary };
     }
 
-    // «Salvează» on a volunteer: every box, the role included.
+    if (request.kind === "assign") {
+      await assertEventRoles([assigned], "roleId");
+      if (current.state === "CANCELLED") throw new DomainError("CONFLICT", "a cancelled volunteer is given no role: reopen them first");
+      if (current.roleId === assigned) return { changed: false, volunteer: summary };
+      await tx.update(eventVolunteers).set({ roleId: assigned, updatedAt: now }).where(eq(eventVolunteers.id, current.id));
+      await audit("volunteer.assigned", { volunteerId: current.id, roleId: assigned, from: current.roleId });
+      await queueRoleAssigned(tx, current, assigned, actor.id, now);
+      return { changed: true, volunteer: summary };
+    }
+
+    // «Salvează» on a volunteer: every box, the roles ticked and the role given included.
     if (!input) throw new DomainError("VALIDATION_ERROR", "nothing to save");
-    const role = await roleOf(input.roleId);
+    await assertEventRoles(input.roleIds, "roleIds");
+    if (input.assignedRoleId) await assertEventRoles([input.assignedRoleId], "assignedRoleId");
+    // The same line «Dă-i rolul» holds: a cancelled person is given no new role — reopen them first. Taking a role
+    // back, or keeping the one they had, is still an edit.
+    if (current.state === "CANCELLED" && input.assignedRoleId && input.assignedRoleId !== current.roleId) {
+      throw new DomainError("CONFLICT", "a cancelled volunteer is given no role: reopen them first");
+    }
     if (input.identity.canonicalEmail !== current.canonicalEmail) {
       const holder = await holderOf(input.identity.canonicalEmail);
       if (holder && holder.id !== current.id) throw alreadyListed();
     }
     const next = {
-      roleId: role.id,
+      roleId: input.assignedRoleId,
       name: input.name,
       email: input.identity.deliveryEmail,
       phone: input.phone,
       note: input.note,
     };
     const before = { roleId: current.roleId, name: current.name, email: current.email, phone: current.phone, note: current.note };
-    const changedFields = (Object.keys(before) as (keyof typeof before)[]).filter((key) => before[key] !== next[key]);
+    const choicesBefore = (
+      await tx.select({ roleId: eventVolunteerRoleChoices.roleId }).from(eventVolunteerRoleChoices).where(eq(eventVolunteerRoleChoices.volunteerId, current.id))
+    ).map((row) => row.roleId);
+    const changedFields: string[] = (Object.keys(before) as (keyof typeof before)[]).filter((key) => before[key] !== next[key]);
+    if (!sameIds(choicesBefore, input.choiceIds)) changedFields.push("roleIds");
     if (changedFields.length === 0) return { changed: false, volunteer: summary };
     try {
       await tx
@@ -589,7 +731,15 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
       if (isAddressClash(error)) throw alreadyListed();
       throw error;
     }
-    await audit("volunteer.edited", { volunteerId: current.id, fields: changedFields, roleId: role.id });
+    if (changedFields.includes("roleIds")) await writeChoices(current.id, input.choiceIds);
+    await audit("volunteer.edited", { volunteerId: current.id, fields: changedFields, roleId: input.assignedRoleId });
+    // A role newly given is told to the person, at the address the row now holds — and so is a role kept when the
+    // address was corrected: the earlier email went to the old address (or is withdrawn at the send for it).
+    const addressCorrected = input.identity.canonicalEmail !== current.canonicalEmail;
+    if (input.assignedRoleId && (input.assignedRoleId !== current.roleId || addressCorrected)) {
+      const why = input.assignedRoleId !== current.roleId ? "given" : "readdressed";
+      await queueRoleAssigned(tx, { ...current, email: next.email }, input.assignedRoleId, actor.id, now, why);
+    }
     return { changed: true, volunteer: summary };
   });
   if (result.changed) revalidatePublicContent("places");
@@ -633,22 +783,28 @@ export type VolunteerSubmitOutcome =
   | { outcome: "done" }
   /** The address's hour, or the event's, is spent: said plainly, because a person is not a bot. */
   | { outcome: "limited" }
-  /** The role filled while the form was open: the page offers the roles that still need people. */
+  /** Every role ticked filled while the form was open: the page offers the roles that still need people. */
   | { outcome: "full" };
 
 /**
  * A person's offer from an event's page. Refuses — as the person's own fix, `VALIDATION_ERROR` naming each
- * box — a malformed address or telephone number, a missing name, a role that is not this event's, or the
- * consent, agreement or age tick not given; and — `CONFLICT`, the page offers no form then — an event that does
- * not take volunteers, is cancelled or over, is not published, whose privacy notice in force does not describe
- * volunteers, while no volunteer agreement is in force, or while that notice does not describe the agreement's
- * acceptance (`volunteerOfferClosedFor`, asked again here: the page's cache is not the gate).
+ * box — a malformed address or telephone number, a missing name, no role ticked or one that is not this event's
+ * (`roleIds`), or the consent, agreement or age tick not given; and — `CONFLICT`, the page offers no form then — an
+ * event that does not take volunteers, is cancelled or over, is not published, whose privacy notice in force does
+ * not describe volunteers, while no volunteer agreement is in force, or while that notice does not describe the
+ * agreement's acceptance (`volunteerOfferClosedFor`, asked again here: the page's cache is not the gate).
+ *
+ * «Ce ești dispus(ă) să faci» (§NNN): the person ticks every role they would do. The ones that still need people are
+ * kept as their choices (`openChoices`) — a role that filled while the form was open is dropped and the others stay;
+ * none left is «full», for everybody, before the repeat is looked for (no oracle). The offer holds no place: the row
+ * has no role until the organizers give one (`assign`), and only a role given counts against its need.
  *
  * On a new person: one row «Înscris» (`source` PUBLIC, the notice's version recorded as the consent's
- * proof, and the agreement accepted with its version, moment and fingerprint, §758), one `VOLUNTEER_RECEIVED`
- * to them in the language of the page — the agreement's PDF attached at the send — and one `VOLUNTEER_CLUB_NOTICE` to
- * each Organizer, Administrator and Superadministrator — all in the one transaction (BR-REQ-080-02). The
- * role's row is locked while its people are counted, so two people cannot take the last place together.
+ * proof, and the agreement accepted with its version, moment and fingerprint, §758 — naming the roles chosen),
+ * their choices, one `VOLUNTEER_RECEIVED` to them in the language of the page — the agreement's PDF attached at the
+ * send — and one `VOLUNTEER_CLUB_NOTICE` to each Organizer, Administrator and Superadministrator — all in the one
+ * transaction (BR-REQ-080-02). The ticked roles' rows are locked, in the order of their ids, while their people are
+ * counted, so a role given away meanwhile is read as it stands.
  */
 export async function submitVolunteer<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -711,22 +867,27 @@ export async function submitVolunteer<T extends Record<string, unknown>>(
   const byEvent = await consumeRateLimit(db, "volunteer-event", eventId, now);
   if (!byAddress.allowed || !byEvent.allowed) return { outcome: "limited" };
 
-  const outcome = await db.transaction(async (tx): Promise<VolunteerSubmitOutcome & { added?: string }> => {
-    const [role] = await tx
+  const outcome = await db.transaction(async (tx): Promise<VolunteerSubmitOutcome & { added?: string; dropped?: boolean }> => {
+    // The roles ticked, locked in the order of their ids — the order a role change locks them — while their people
+    // are counted: a role given away by the organizers meanwhile is read as it stands, never twice.
+    const ticked = await tx
       .select()
       .from(eventVolunteerRoles)
-      .where(and(eq(eventVolunteerRoles.id, input.roleId), eq(eventVolunteerRoles.eventId, eventId)))
-      .for("update")
-      .limit(1);
-    if (!role) throw new DomainError("VALIDATION_ERROR", "that role is not this event's", ["roleId"]);
+      .where(and(inArray(eventVolunteerRoles.id, input.roleIds), eq(eventVolunteerRoles.eventId, eventId)))
+      .orderBy(asc(eventVolunteerRoles.id))
+      .for("update");
+    if (ticked.length !== input.roleIds.length) throw new DomainError("VALIDATION_ERROR", "that role is not this event's", ["roleIds"]);
 
-    // A full role first, for everybody: asked after the repeat, a forged post naming a full role would answer
+    // Full roles first, for everybody: asked after the repeat, a forged post naming only full roles would answer
     // «full» to a stranger and «am primit» to a person already listed — an oracle. This way both hear «full».
     const people = await tx
       .select({ roleId: eventVolunteers.roleId, state: eventVolunteers.state })
       .from(eventVolunteers)
-      .where(eq(eventVolunteers.roleId, role.id));
-    if (standingOf(role, people).free === 0) return { outcome: "full" };
+      .where(inArray(eventVolunteers.roleId, input.roleIds));
+    const kept = openChoices(input.roleIds, new Map(ticked.map((role) => [role.id, standingOf(role, people)])));
+    if (kept.length === 0) return { outcome: "full", dropped: true };
+    const dropped = kept.length < input.roleIds.length;
+    const chosen = ticked.filter((role) => kept.includes(role.id)).sort(compareRoles);
 
     // A repeat of the same person: the same answer a new one gets, nothing changed, nothing sent — whatever the row's state is.
     const [existing] = await tx
@@ -734,19 +895,21 @@ export async function submitVolunteer<T extends Record<string, unknown>>(
       .from(eventVolunteers)
       .where(and(eq(eventVolunteers.eventId, eventId), eq(eventVolunteers.canonicalEmail, identity.canonicalEmail)))
       .limit(1);
-    if (existing) return { outcome: "done" };
+    if (existing) return { outcome: "done", dropped };
 
-    // The agreement accepted with the sign-up (§758): the version, the moment, the blanks and their fingerprint.
+    // The agreement accepted with the sign-up (§758): the version, the moment, the blanks and their fingerprint —
+    // naming the roles chosen, since nobody has given the person one yet (§NNN).
     const acceptance = await agreementAcceptance(
       tx,
-      { eventId, name: input.name, role, locale: input.locale, document: agreement, method: "FORM" },
+      { eventId, name: input.name, roles: { assigned: null, chosen }, locale: input.locale, document: agreement, method: "FORM" },
       now,
     );
     const [row] = await tx
       .insert(eventVolunteers)
       .values({
         eventId,
-        roleId: role.id,
+        // No role until the organizers give one (§NNN): the offer holds no place.
+        roleId: null,
         name: input.name,
         email: identity.deliveryEmail,
         canonicalEmail: identity.canonicalEmail,
@@ -764,7 +927,8 @@ export async function submitVolunteer<T extends Record<string, unknown>>(
       // Two first posts of one address at once: the constraint decides, the loser reads the winner next time.
       .onConflictDoNothing({ target: [eventVolunteers.eventId, eventVolunteers.canonicalEmail] })
       .returning({ id: eventVolunteers.id });
-    if (!row) return { outcome: "done" };
+    if (!row) return { outcome: "done", dropped };
+    await tx.insert(eventVolunteerRoleChoices).values([...kept].sort().map((roleId) => ({ volunteerId: row.id, roleId, createdAt: now })));
 
     await enqueueEmail(tx, {
       participantId: null,
@@ -798,12 +962,13 @@ export async function submitVolunteer<T extends Record<string, unknown>>(
       action: "volunteer.signed_up",
       entityType: "event",
       entityId: eventId,
-      metadata: { volunteerId: row.id, roleId: role.id, roleNameRo: role.nameRo },
+      metadata: { volunteerId: row.id, roleIds: chosen.map((role) => role.id) },
       now,
     });
-    return { outcome: "done", added: row.id };
+    return { outcome: "done", added: row.id, dropped };
   });
-  // The roles on the page changed (a place taken, or a role found full): the page is told once the write has committed.
-  if (outcome.added || outcome.outcome === "full") revalidatePublicContent("places");
+  // An offer takes no place, so the page's counts did not move — unless the post found a role full that the page
+  // still offered: then the page is told once the write has committed.
+  if (outcome.dropped) revalidatePublicContent("places");
   return { outcome: outcome.outcome } as VolunteerSubmitOutcome;
 }

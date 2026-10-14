@@ -22,6 +22,7 @@ import {
   describesFeedbackFormsNamed,
   describesMembersShop,
   describesVolunteerAgreement,
+  namesVolunteerRoleChoices,
   describesVolunteers,
   describesListNumbers,
   describesGmailFallback,
@@ -342,6 +343,16 @@ export async function noticeDescribesVolunteerAgreement<T extends Record<string,
 export async function volunteerAgreementInForce<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<boolean> {
   const versions = await Promise.all(routing.locales.map((locale) => findCurrentApprovedDocument(db, "VOLUNTEER_AGREEMENT", locale, now)));
   return versions.every((version) => version !== undefined);
+}
+
+/**
+ * Whether the volunteer agreement in force names the roles a person offered for (§NNN, `namesVolunteerRoleChoices`)
+ * in every language: what `/admin/tasks`' row `volunteerRoleChoicesAgreement` reads. Nothing waits on it — a text
+ * that does not is filled with the roles' names alone (`agreementRoleWords`).
+ */
+export async function volunteerAgreementNamesRoleChoices<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<boolean> {
+  const versions = await Promise.all(routing.locales.map((locale) => findCurrentApprovedDocument(db, "VOLUNTEER_AGREEMENT", locale, now)));
+  return versions.every((version) => version !== undefined && namesVolunteerRoleChoices(version.body));
 }
 
 /**

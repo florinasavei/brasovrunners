@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { boolean, check, index, integer, jsonb, pgEnum, pgTable, text, timestamp, unique, uuid } from "drizzle-orm/pg-core";
+import { boolean, check, index, integer, jsonb, pgEnum, pgTable, primaryKey, text, timestamp, unique, uuid } from "drizzle-orm/pg-core";
 import { events } from "./events";
 import { legalDocuments } from "./legal-documents";
 import { locale } from "./locale";
@@ -87,9 +87,13 @@ export const eventVolunteers = pgTable(
     eventId: uuid("event_id")
       .notNull()
       .references(() => events.id, { onDelete: "cascade" }),
-    roleId: uuid("role_id")
-      .notNull()
-      .references(() => eventVolunteerRoles.id, { onDelete: "restrict" }),
+    /**
+     * The role the organizers gave the person (§754; since §NNN the *assigned* role). Null for an offer nobody
+     * has placed yet — every public sign-up, which ticks the roles the person would do
+     * (`event_volunteer_role_choices`) and leaves the choice to the organizers. Only an assigned role counts
+     * against its need («N din M»). Nullable since migration `0149`: a relaxing change, expand only.
+     */
+    roleId: uuid("role_id").references(() => eventVolunteerRoles.id, { onDelete: "restrict" }),
     name: text("name").notNull(),
     /** The address as typed, minus whitespace: where the one message goes. */
     email: text("email").notNull(),
@@ -159,6 +163,39 @@ export const eventVolunteers = pgTable(
     // Never the raw secret: a base64url secret cannot match a lower-case hex digest (§12.8, the action tokens' own CHECK).
     check("event_volunteers_agreement_token_sha256", sql`${t.agreementTokenHash} IS NULL OR ${t.agreementTokenHash} ~ '^[0-9a-f]{64}$'`),
     check("event_volunteers_agreement_token_expiry", sql`(${t.agreementTokenHash} IS NULL) = (${t.agreementTokenExpiresAt} IS NULL)`),
+  ],
+);
+
+/**
+ * The roles a volunteer is willing to do (§NNN, amending §754; the owner, 2026-10-14: «Când se înscrie un voluntar,
+ * poate bifa mai multe atribuțiuni din ce e dispus să facă (definite de noi), de exemplu: stă la masă, stă pe
+ * traseu, stă în punctele de alimentare etc.»). One row per ticked role: the public form's «Ce ești dispus(ă) să
+ * faci» or the organizers' own ticks. The person's offer, not a place: nothing here counts against a role's need —
+ * the organizers then give each volunteer one role (`event_volunteers.role_id`), which may be any of the event's.
+ *
+ * The volunteer's rows go with the volunteer (`CASCADE`: deleting a person, or the retention sweep, takes them).
+ * A role somebody ticked is not deleted under them: the service refuses it (`VOLUNTEER_ROLE_HAS_PEOPLE`, as for a
+ * role given). The reference to the role is `CASCADE` at the database, not `RESTRICT`: deleting an **event** cascades
+ * to its roles and to its volunteers, and the choices would be reached only through the volunteers' second-level
+ * cascade — after the roles' check, so a `RESTRICT` (or `NO ACTION`) here refused every event with an offer
+ * (`tests/integration/volunteers/card.test.ts` deletes one). Migration `0149` made each existing volunteer's role
+ * their one choice.
+ */
+export const eventVolunteerRoleChoices = pgTable(
+  "event_volunteer_role_choices",
+  {
+    volunteerId: uuid("volunteer_id")
+      .notNull()
+      .references(() => eventVolunteers.id, { onDelete: "cascade" }),
+    roleId: uuid("role_id")
+      .notNull()
+      .references(() => eventVolunteerRoles.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.volunteerId, t.roleId] }),
+    // Who ticked a role: the service's check before a role's delete, and the cascade's own lookup.
+    index("event_volunteer_role_choices_role_idx").on(t.roleId),
   ],
 );
 

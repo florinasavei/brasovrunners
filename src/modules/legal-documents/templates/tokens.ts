@@ -137,6 +137,14 @@ export const DECLARATION_TOKENS: readonly DeclarationToken[] = [
     messageKey: "volunteerTasks",
     example: { ro: "Împarte apă la kilometrul 5 și strânge paharele", en: "Hands out water at kilometre 5 and picks up the cups" },
   },
+  // The roles a person ticked while no role is given (§NNN), and what each asks: each sentence is left out once a
+  // role is given — or, for the tasks, when no ticked role has a description.
+  { token: "{{volunteerRoleChoices}}", messageKey: "volunteerRoleChoices", example: { ro: "Punct de hidratare, Sosire", en: "Water station, Finish" } },
+  {
+    token: "{{volunteerChoiceTasks}}",
+    messageKey: "volunteerChoiceTasks",
+    example: { ro: "Punct de hidratare — împarte apă la kilometrul 5; Sosire — dă medaliile", en: "Water station — hands out water at kilometre 5; Finish — hands out the medals" },
+  },
   // The club's deadlines (§377) and the public list's period after the event (§421), in any of the three texts, filled from "Termene" when the text is
   // shown — the examples are what an unset setting fills in, in the words it is filled with.
   // Each language's example in its own words, as the text in that language is filled (§369).

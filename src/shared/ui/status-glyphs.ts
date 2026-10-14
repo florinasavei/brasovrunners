@@ -13,6 +13,7 @@ import RemoveIcon from "@mui/icons-material/Remove";
 import ScheduleIcon from "@mui/icons-material/Schedule";
 import StorefrontIcon from "@mui/icons-material/Storefront";
 import TranslateIcon from "@mui/icons-material/Translate";
+import VolunteerActivismIcon from "@mui/icons-material/VolunteerActivism";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import type { SvgIconProps } from "@mui/material/SvgIcon";
@@ -48,6 +49,8 @@ export const STATUS_GLYPHS = {
   priorityHigh: ArrowUpwardIcon,
   priorityNormal: RemoveIcon,
   priorityLow: ArrowDownwardIcon,
+  // A role a volunteer offered to do (§NNN): «S-a oferit pentru» on the «Voluntari» card.
+  offered: VolunteerActivismIcon,
 } satisfies Record<string, ComponentType<SvgIconProps>>;
 
 export type StatusGlyphName = keyof typeof STATUS_GLYPHS;

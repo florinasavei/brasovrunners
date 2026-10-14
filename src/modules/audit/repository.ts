@@ -475,6 +475,8 @@ export type AuditAction =
   | "volunteer.deleted"
   | "volunteer.signed_up"
   | "volunteer.exported"
+  /** «Dă-i rolul …» (§NNN): the organizers gave a volunteer one role — the volunteer's id, the role's and the one before. */
+  | "volunteer.assigned"
   /**
    * An event's checkpoints saved on its editor's «Puncte de control» card (§757), or taken from the
    * route's GPX: how many were added, changed and removed, and the list before and after — each

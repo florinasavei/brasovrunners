@@ -73,7 +73,12 @@ export default async function VolunteerAgreementLinkPage({ params, searchParams 
         </Alert>
       ) : (
         <Stack spacing={2}>
-          <Typography>{t("agreement.intro", { name: view.name, event: view.eventTitle, role: view.roleName })}</Typography>
+          {/* The role the organizers gave, or — none yet — the roles the person chose (§NNN). */}
+          <Typography>
+            {view.roleName !== null
+              ? t("agreement.intro", { name: view.name, event: view.eventTitle, role: view.roleName })
+              : t("agreement.introChosen", { name: view.name, event: view.eventTitle, roles: view.chosenRoleNames.join(", ") })}
+          </Typography>
 
           {/* The text in force, filled for this person; the moment of acceptance stays a blank until it happens. */}
           <Box component="section" aria-label={view.document.title} sx={{ border: 1, borderColor: "divider", borderRadius: 2, p: 2 }} data-testid="volunteer-agreement-text">

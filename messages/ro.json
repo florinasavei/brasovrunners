@@ -543,17 +543,17 @@
     },
     "volunteers": {
       "title": "Vreau să fiu voluntar",
-      "intro": "Evenimentul are nevoie de ajutor. Alege un rol, spune-ne cum te găsim și un organizator te confirmă. Nu e o înscriere la cursă și nu ține loc.",
-      "rolesLabel": "Rolurile care mai au nevoie de oameni",
+      "intro": "Evenimentul are nevoie de ajutor. Bifează ce ești dispus(ă) să faci și spune-ne cum te găsim. Organizatorii îți aleg apoi rolul și te confirmă. Nu e o înscriere la cursă și nu ține loc.",
+      "choices": "Ce ești dispus(ă) să faci",
+      "choicesHelp": "Bifează tot ce ai face, cel puțin un rol. Organizatorii îți aleg unul și îți scriu.",
       "needs": {
         "one": "mai e nevoie de 1 persoană",
         "few": "mai sunt necesare {count} persoane",
         "other": "mai sunt necesare {count} de persoane"
       },
-      "role": "Rolul pe care îl poți prelua",
       "name": "Numele tău",
       "email": "Adresa ta de email",
-      "emailHelp": "Îți trimitem aici un singur email de primire, cu contractul acceptat atașat, fără nimic de apăsat.",
+      "emailHelp": "Îți trimitem aici un email de primire, cu contractul acceptat atașat, și unul când organizatorii îți dau rolul. Nimic de apăsat în ele.",
       "phoneHelp": "Un organizator te poate suna în legătură cu evenimentul.",
       "message": "Un mesaj pentru organizatori (opțional)",
       "messageHelp": "Cel mult {max} de caractere: când ești liber, ce știi să faci.",
@@ -564,17 +564,17 @@
       "adult": "Am cel puțin {age}.",
       "submit": "Mă ofer voluntar",
       "submitting": "Se trimite…",
-      "done": "Mulțumim! Am primit oferta ta. Un organizator o confirmă și te caută pe email sau la telefon dacă mai trebuie ceva.",
+      "done": "Mulțumim! Am primit oferta ta. Organizatorii îți aleg rolul, îți scriu când ți l-au dat și te caută pe email sau la telefon dacă mai trebuie ceva.",
       "invalid": "Ceva din formular mai cere o privire:",
       "captcha": "Verificarea anti-bot nu a reușit. Bifează din nou căsuța „Nu sunt robot” și retrimite.",
       "limited": "Sunt multe încercări pentru o adresă sau pentru un eveniment într-o oră. Așteaptă puțin și încearcă din nou.",
-      "full": "Rolul ales tocmai s-a umplut. Alege altul mai jos sau revino mai târziu.",
+      "full": "Ce ai bifat tocmai s-a umplut. Alege mai jos din rolurile care mai au nevoie de oameni sau revino mai târziu.",
       "allFull": "Mulțumim! Între timp toate rolurile s-au umplut, așa că oferta ta nu a fost păstrată. Dacă vrei să ajuți, scrie-ne din pagina de contact.",
       "errors": {
         "name": "Scrie-ți numele.",
         "email": "Adresa de email nu pare validă.",
         "phone": "Numărul de telefon nu este valid.",
-        "roleId": "Alege unul dintre roluri.",
+        "roleIds": "Bifează cel puțin un rol la „Ce ești dispus(ă) să faci”.",
         "message": "Mesajul are prea multe caractere: scurtează-l.",
         "consent": "Bifează căsuța de acord, altfel nu putem păstra oferta ta.",
         "agreement": "Bifează că accepți contractul de voluntariat, altfel nu putem păstra oferta ta.",
@@ -1779,7 +1779,7 @@
       "CONFLICT": "Altcineva a salvat între timp. Reîncarcă pagina și aplică din nou modificările tale — nimic nu a fost suprascris.",
       "DECLARATION_HELD": "Nu s-a șters nimic: o declarație e păstrată pentru o reclamație sau un litigiu. Un Administrator scoate întâi păstrarea, din pagina înscrierii sau din semnăturile alergării.",
       "SHOP_SIZE_HAS_ORDERS": "Nu s-a salvat: o mărime debifată are comenzi. Las-o bifată — poți pune stocul 0 ca să nu se mai comande.",
-      "VOLUNTEER_ROLE_HAS_PEOPLE": "Rolul nu s-a șters: are oameni pe el, și cei anulați. Mută-i întâi pe alt rol sau șterge-i.",
+      "VOLUNTEER_ROLE_HAS_PEOPLE": "Rolul nu s-a șters: e dat cuiva sau bifat de cineva, cei anulați inclusiv. Schimbă-le întâi rolurile sau șterge-i.",
       "VOLUNTEER_ALREADY_LISTED": "Adresa e deja pe voluntarii acestui eveniment: un rând pe persoană. Găsește-o în listă și modifică acel rând.",
       "ERASE_NAME_MISMATCH": "Numele scris nu este numele înscrisului. Nu s-a șters nimic — scrie numele exact așa cum apare pe rând.",
       "LEGAL_CONFIRMATION_MISMATCH": "Confirmarea scrisă nu este a acestei versiuni. Nu s-a șters nimic — scrie exact textul cerut, de exemplu „GDPR 2”.",
@@ -3294,8 +3294,10 @@
         "volunteers": "Doar în nota de confidențialitate: numele formularului „Vreau să fiu voluntar”, între ghilimele. Cu el în nota în vigoare, un eveniment cu voluntari își arată formularul și păstrează ofertele",
         "volunteerAgreement": "Doar în nota de confidențialitate: titlul „Contract de voluntariat”, între ghilimele. Fără el în nota în vigoare, formularul de voluntari, linkul contractului și „Semnat pe hârtie” sunt oprite",
         "volunteer": "Doar în contractul de voluntariat: numele voluntarului, cum e pe lista evenimentului",
-        "volunteerRole": "Doar în contractul de voluntariat: numele rolului, în limba textului",
-        "volunteerTasks": "Doar în contractul de voluntariat: ce face rolul, din descrierea lui. Fără descriere, propoziția care îl numește dispare"
+        "volunteerRole": "Doar în contractul de voluntariat: numele rolului dat de organizatori, în limba textului. Fără rol dat, propoziția care îl numește dispare",
+        "volunteerTasks": "Doar în contractul de voluntariat: ce face rolul, din descrierea lui. Fără descriere, propoziția care îl numește dispare",
+        "volunteerRoleChoices": "Doar în contractul de voluntariat: rolurile pe care voluntarul le-a bifat, cât încă nu are un rol dat. Cu rol dat, propoziția care le numește dispare",
+        "volunteerChoiceTasks": "Doar în contractul de voluntariat: ce face fiecare rol bifat, din descrierile lor. Cu rol dat sau fără descrieri, propoziția dispare"
       },
       "removeBlockedReferenced": "Nu se poate nici retrage, nici șterge definitiv: {signatures}, {events} și {acknowledgements} depind de ea. «Șterge» de pe rândul ei o scoate din listă.",
       "removeBlockedCurrent": "În vigoare acum — nu se poate nici retrage, nici șterge. Aprobă întâi versiunea următoare; apoi aceasta se poate scoate.",
@@ -4204,6 +4206,16 @@
             "Juristul și tu hotărâți cât timp păstrează clubul acceptările. Site-ul le șterge la 30 de zile după eveniment.",
             "Deschide ciorna, completează ce a rămas, „Salvează ciorna”, apoi „Aprobă și publică”. Odată în vigoare în ambele limbi, formularul apare pe paginile evenimentelor care primesc voluntari."
           ]
+        },
+        "volunteerRoleChoicesAgreement": {
+          "title": "Contractul de voluntariat: mai multe roluri",
+          "todo": "Voluntarii bifează acum toate rolurile pe care le-ar face, iar tu le dai unul după. Contractul în vigoare are loc pentru un singur rol, așa că cine se oferă pe pagină acceptă „în rolul Masă, Traseu”.",
+          "done": "Contractul în vigoare spune că organizatorii aleg rolul dintre cele bifate și ce presupune fiecare.",
+          "how": [
+            "/admin/legal → cardul „Contract de voluntariat” → „Regenerează din șablon” → confirmă.",
+            "Un jurist ar trebui să citească întâi cele două propoziții noi: rolul dat și rolurile pentru care s-a oferit voluntarul.",
+            "Deschide ciorna, completează ce a rămas, „Salvează ciorna”, apoi „Aprobă și publică”. Contractele deja acceptate rămân cum au fost acceptate."
+          ]
         }
       },
       "freeVerdict": {
@@ -4624,11 +4636,12 @@
     },
     "volunteers": {
       "title": "Voluntari",
-      "intro": "Oamenii care ajută la acest eveniment și rolurile pentru care e nevoie de ei. Rolurile se definesc aici, pe eveniment, în ambele limbi. Adresele și telefoanele nu apar pe nicio pagină publică.",
+      "intro": "Oamenii care ajută la eveniment: fiecare bifează ce ar face, tu îi dai un rol. Rolurile se definesc aici, în ambele limbi. Adresele și telefoanele nu apar pe nicio pagină publică.",
       "notAccounts": "Voluntarii de aici nu sunt conturi: cine lucrează la masa de ridicare primește un cont din „Echipa”, cu rolul Voluntar.",
       "summary": "{taken} din {needed}",
       "summaryNone": "Încă niciun rol",
       "summaryPending": "{count} de confirmat",
+      "summaryUnassigned": "{count} de repartizat",
       "standing": "{taken} din {needed}",
       "offer": {
         "open": "Formularul „Vreau să fiu voluntar” e pe pagina evenimentului.",
@@ -4653,7 +4666,7 @@
         "nameRo": "Numele rolului (Română)",
         "nameEn": "Numele rolului (English)",
         "needed": "Câți oameni trebuie",
-        "neededHelp": "Cel puțin 1. Formularul public se închide pentru un rol când atâția oameni s-au oferit sau au fost confirmați.",
+        "neededHelp": "Cel puțin 1. Se numără doar oamenii cărora le-ai dat rolul. Când are atâția, formularul public nu-l mai oferă.",
         "descriptionRo": "Ce face persoana (Română, opțional)",
         "descriptionEn": "Ce face persoana (English, opțional)",
         "descriptionHelp": "O linie, cel mult {max} de caractere; în ambele limbi sau în niciuna.",
@@ -4663,7 +4676,7 @@
         "delete": "Șterge rolul",
         "deleting": "Se șterge…",
         "deleteTitle": "Ștergi acest rol?",
-        "deleteBody": "Rolul „{name}” se șterge. Un rol cu oameni pe el nu poate fi șters: mută-i sau șterge-i mai întâi."
+        "deleteBody": "Rolul „{name}” se șterge. Un rol dat cuiva sau bifat de cineva nu poate fi șters: schimbă-le întâi rolurile sau șterge-i."
       },
       "move": {
         "up": "Mută mai sus",
@@ -4673,8 +4686,26 @@
       "save": "Salvează",
       "saving": "Se salvează…",
       "nobody": "Încă nimeni.",
+      "unassigned": {
+        "title": "De repartizat",
+        "intro": "Oferte fără rol încă. Dă-i fiecăruia un rol: persoana primește un email care îl numește. Doar rolurile date se numără la „N din M”.",
+        "empty": "Nimeni nu așteaptă un rol."
+      },
+      "assign": {
+        "button": "Dă-i rolul {role}",
+        "other": "Alt rol",
+        "otherSubmit": "Dă-i rolul ales",
+        "standing": "{role} · {taken} din {needed}"
+      },
       "person": {
         "role": "Rol",
+        "choices": "Ce e dispus(ă) să facă",
+        "offeredFor": "S-a oferit pentru",
+        "choicesHelp": "Bifează rolurile pe care persoana le-ar face. Cel puțin unul, sau dă-i un rol mai jos.",
+        "assigned": "Rolul dat",
+        "assignedNone": "Încă niciunul (de repartizat)",
+        "assignedHelp": "Oricare dintre rolurile evenimentului. Persoana primește un email care îl numește.",
+        "choicesLine": "S-a oferit pentru: {roles}",
         "name": "Nume",
         "email": "Adresa de email",
         "phone": "Telefon",
@@ -4713,7 +4744,7 @@
           "LINK": "din linkul trimis pe email",
           "PAPER": "semnat pe hârtie"
         },
-        "otherRole": "Acceptat pentru rolul „{role}”; rolul s-a schimbat de atunci.",
+        "otherRole": "Contractul acceptat numește: {role}. Rolurile s-au schimbat de atunci.",
         "otherPlace": "Acceptat pentru {date}, în {place}; data sau locul evenimentului s-au schimbat de atunci.",
         "requestedLine": "Ultimul link trimis: {when}",
         "help": "Trimite-i linkul pe email sau tipărește PDF-ul: persoana îl semnează la voi, apoi apeși „Semnat pe hârtie”.",
@@ -4728,9 +4759,10 @@
         "noticeMissing": "Nota de confidențialitate în vigoare nu descrie încă acceptarea contractului: linkul și „Semnat pe hârtie” așteaptă. «Sarcini» spune ce trebuie aprobat."
       },
       "csv": "Descarcă CSV",
-      "csvHelp": "Un rând pe voluntar, grupat pe roluri. Fișierul conține adrese și telefoane: păstrează-l la fel de atent ca lista.",
+      "csvHelp": "Un rând pe voluntar, grupat pe rolul dat, cei de repartizat primii. Fișierul conține adrese și telefoane: păstrează-l la fel de atent ca lista.",
       "csvColumns": {
-        "role": "Rol",
+        "role": "Rolul dat",
+        "choices": "S-a oferit pentru",
         "name": "Nume",
         "email": "Email",
         "phone": "Telefon",
@@ -5723,7 +5755,8 @@
         "VOLUNTEER_RECEIVED": "Ți-am primit oferta de voluntar",
         "VOLUNTEER_CLUB_NOTICE": "Voluntar nou",
         "VOLUNTEER_AGREEMENT_REQUEST": "Contractul de voluntariat",
-        "VOLUNTEER_AGREEMENT_ACCEPTED": "Ai acceptat contractul de voluntariat"
+        "VOLUNTEER_AGREEMENT_ACCEPTED": "Ai acceptat contractul de voluntariat",
+        "VOLUNTEER_ROLE_ASSIGNED": "Rolul tău de voluntar"
       },
       "typesShort": {
         "VERIFY_REGISTRATION_EMAIL": "Confirmă adresa",
@@ -5787,10 +5820,11 @@
         "SHOP_ORDER_PLACED": "Când un membru comandă din magazinul membrilor: comanda și cum se plătește. Butonul duce în zona membrilor.",
         "SHOP_ORDER_PAID": "Când un administrator marchează comanda plătită: membrului care a comandat. Butonul duce în zona membrilor.",
         "SHOP_ORDER_CLUB_NOTICE": "La fiecare comandă din magazin, la adresa din «Magazin» → «Cine primește comenzile», dacă e scrisă.",
-        "VOLUNTEER_RECEIVED": "Când cineva se oferă voluntar pe pagina unui eveniment: singurul mesaj către el — rolul, evenimentul și faptul că un organizator confirmă, cu contractul acceptat atașat ca PDF. Nimic de apăsat.",
+        "VOLUNTEER_RECEIVED": "Când cineva se oferă voluntar pe pagina unui eveniment: confirmarea primirii, cu rolurile alese, evenimentul și faptul că organizatorii îi aleg rolul. Contractul acceptat e atașat ca PDF.",
         "VOLUNTEER_CLUB_NOTICE": "La fiecare ofertă, către fiecare Organizator, Administrator și Superadministrator. Butonul deschide cardul «Voluntari» al evenimentului.",
         "VOLUNTEER_AGREEMENT_REQUEST": "Când un organizator apasă „Trimite linkul contractului” la un voluntar care nu l-a acceptat încă: contractul și linkul de acceptare.",
-        "VOLUNTEER_AGREEMENT_ACCEPTED": "Când un voluntar acceptă contractul din link sau un organizator apasă „Semnat pe hârtie”: copia lui, cu contractul atașat ca PDF."
+        "VOLUNTEER_AGREEMENT_ACCEPTED": "Când un voluntar acceptă contractul din link sau un organizator apasă „Semnat pe hârtie”: copia lui, cu contractul atașat ca PDF.",
+        "VOLUNTEER_ROLE_ASSIGNED": "Când organizatorii îi dau unui voluntar un rol, din cardul «Voluntari» al evenimentului: un mesaj scurt care numește rolul, data și locul. Nimic de apăsat."
       },
       "whenShort": {
         "VERIFY_REGISTRATION_EMAIL": "după trimiterea formularului",
@@ -5832,7 +5866,8 @@
         "VOLUNTEER_RECEIVED": "când cineva se oferă voluntar",
         "VOLUNTEER_CLUB_NOTICE": "la fiecare ofertă, organizatorilor",
         "VOLUNTEER_AGREEMENT_REQUEST": "la „Trimite linkul contractului”",
-        "VOLUNTEER_AGREEMENT_ACCEPTED": "după link sau „Semnat pe hârtie”"
+        "VOLUNTEER_AGREEMENT_ACCEPTED": "după link sau „Semnat pe hârtie”",
+        "VOLUNTEER_ROLE_ASSIGNED": "când organizatorii dau un rol"
       },
       "clubNotices": {
         "title": "Copiile clubului",
@@ -6451,10 +6486,11 @@
         "SHOP_ORDER_PLACED": "Comanda și cuvintele despre plată se adaugă singure după text, oricum l-ai scrie. Plata nu trece prin site.",
         "SHOP_ORDER_PAID": "Comanda se adaugă singură după text, oricum l-ai scrie.",
         "SHOP_ORDER_CLUB_NOTICE": "Fără adresă, nu pleacă nimic: comenzile sunt oricum în lista din backoffice.",
-        "VOLUNTEER_RECEIVED": "Rolul și startul și locul evenimentului se adaugă singure, oricum ai scrie textul. Mesajul nu are niciun link care să facă ceva.",
-        "VOLUNTEER_CLUB_NOTICE": "Cine s-a oferit și pentru ce rol se adaugă singur, oricum ai scrie textul. Adresa și telefonul nu sunt niciodată în email: sunt pe card, după autentificare.",
+        "VOLUNTEER_RECEIVED": "Rolurile pentru care s-a oferit (sau rolul dat), startul și locul evenimentului se adaugă singure, oricum ai scrie textul. Mesajul nu are niciun link care să facă ceva.",
+        "VOLUNTEER_CLUB_NOTICE": "Cine s-a oferit și pentru ce roluri se adaugă singur, oricum ai scrie textul. Adresa și telefonul nu sunt niciodată în email: sunt pe card, după autentificare.",
         "VOLUNTEER_AGREEMENT_REQUEST": "Rolul și evenimentul se adaugă singure. Linkul e doar pentru persoana aceasta, se folosește o singură dată, iar unul nou îl înlocuiește pe cel vechi.",
-        "VOLUNTEER_AGREEMENT_ACCEPTED": "Rolul și evenimentul se adaugă singure. PDF-ul arată textul acceptat, cu numele, rolul, momentul și amprenta lui."
+        "VOLUNTEER_AGREEMENT_ACCEPTED": "Rolul și evenimentul se adaugă singure. PDF-ul arată textul acceptat, cu numele, rolul, momentul și amprenta lui.",
+        "VOLUNTEER_ROLE_ASSIGNED": "Rolul, data și locul evenimentului se adaugă singure, oricum ai scrie textul. Mesajul nu are niciun link care să facă ceva."
       },
       "confirmationRetry": "Cui nu a confirmat, linkul pleacă singur din nou la {retry} după ultimul email, cel mult {times}; se socotește și «Retrimite». Termenul nu se mută.",
       "confirmationRetryOff": "Nu se retrimite singur: în „Termene”, numărul de retrimiteri e 0."
@@ -10810,6 +10846,7 @@
       "volunteerAdded": "Voluntar adăugat.",
       "volunteerSaved": "Voluntar salvat.",
       "volunteerConfirmed": "Voluntar confirmat.",
+      "volunteerAssigned": "Rol dat. Persoana primește un email care îl numește.",
       "volunteerCancelled": "Voluntar anulat.",
       "volunteerReopened": "Voluntar înapoi la înscris.",
       "volunteerDeleted": "Voluntar șters.",
@@ -11417,6 +11454,7 @@
     "agreement": {
       "title": "Contractul de voluntariat",
       "intro": "{name}, ești pe lista voluntarilor pentru {event}, în rolul „{role}”. Citește contractul și, dacă ești de acord, acceptă-l mai jos.",
+      "introChosen": "{name}, ești pe lista voluntarilor pentru {event}, disponibil(ă) pentru: {roles}. Rolul îl stabilesc organizatorii. Citește contractul și, dacă ești de acord, acceptă-l mai jos.",
       "accept": "Am citit și accept contractul de voluntariat.",
       "adult": "Am cel puțin {age}.",
       "submit": "Accept contractul",
