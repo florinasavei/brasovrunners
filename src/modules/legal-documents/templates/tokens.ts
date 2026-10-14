@@ -147,7 +147,7 @@ export const DECLARATION_TOKENS: readonly DeclarationToken[] = [
     messageKey: "volunteerChoiceTasks",
     example: { ro: "Punct de hidratare — împarte apă la kilometrul 5; Sosire — dă medaliile", en: "Water station — hands out water at kilometre 5; Finish — hands out the medals" },
   },
-  // The parent or guardian of a volunteer under eighteen (§NNN): their name, in the minors' clause — the clause is left out for an adult.
+  // The parent or guardian of a volunteer under eighteen (§768): their name, in the minors' clause — the clause is left out for an adult.
   { token: "{{volunteerGuardian}}", messageKey: "volunteerGuardian", example: same("Maria Popescu") },
   // The club's deadlines (§377) and the public list's period after the event (§421), in any of the three texts, filled from "Termene" when the text is
   // shown — the examples are what an unset setting fills in, in the words it is filled with.
@@ -269,7 +269,7 @@ export const DECLARATION_TOKENS: readonly DeclarationToken[] = [
     messageKey: VOLUNTEER_PROFILE_NOTICE_MERGE_FIELD,
     example: inBoth((locale) => volunteerProfileClause(locale)),
   },
-  // The privacy notice's marker for volunteers under eighteen and their guardian (§NNN): the guardian's boxes, and the switch —
+  // The privacy notice's marker for volunteers under eighteen and their guardian (§768): the guardian's boxes, and the switch —
   // a person under eighteen is taken only while it is named, with the agreement's `{{volunteerGuardian}}` (`describesVolunteerMinors`).
   {
     token: `{{${VOLUNTEER_MINORS_NOTICE_MERGE_FIELD}}}`,

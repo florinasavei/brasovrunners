@@ -218,7 +218,7 @@ describe("owner tasks", () => {
     }
   });
 
-  it("§NNN: the row for the texts that let the club take volunteers under 18 is open while an event takes volunteers and the notice or the agreement is silent, done once both describe minors, absent while neither is wanted", () => {
+  it("§768: the row for the texts that let the club take volunteers under 18 is open while an event takes volunteers and the notice or the agreement is silent, done once both describe minors, absent while neither is wanted", () => {
     expect(stateOf({ ...LAUNCHED, volunteerMinorsOpen: false }, "volunteerMinorsTexts")).toBe("open");
     expect(stateOf(LAUNCHED, "volunteerMinorsTexts")).toBe("done");
     // Done by itself the day both texts take effect, even with no event taking volunteers.

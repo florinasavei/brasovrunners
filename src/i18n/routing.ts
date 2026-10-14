@@ -48,7 +48,7 @@ export const routing = defineRouting({
     // A group run's optional self-declaration (§393): the page that signs it, never a registration.
     "/events/[slug]/declaration": { ro: "/evenimente/[slug]/declaratie", en: "/events/[slug]/declaration" },
     /**
-     * The event's volunteers page (§NNN, amending §754; the owner, 2026-10-14: «formularul trebuie să fie pagină separată, nu
+     * The event's volunteers page (§768, amending §754; the owner, 2026-10-14: «formularul trebuie să fie pagină separată, nu
      * embedded în pagina evenimentului»): «Vreau să fiu voluntar la …» — the roles, the form, the agreement's links. A form page
      * like the registration's, never a registration; it answers 404 while the form could not be sent.
      */
@@ -106,7 +106,7 @@ export const routing = defineRouting({
       en: "/volunteers/agreement/[token]",
     },
     /**
-     * The guardian's link (§NNN, amending §758): the page the email to a minor volunteer's parent or guardian opens — the
+     * The guardian's link (§768, amending §758): the page the email to a minor volunteer's parent or guardian opens — the
      * agreement filled for the volunteer, a typed name, one tick, one button. The GET reads; only the button writes.
      */
     "/volunteers/guardian/[token]": {

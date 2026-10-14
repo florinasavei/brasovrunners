@@ -8,7 +8,7 @@ import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { DENSITY } from "@/theme/density";
 
 /**
- * The event page's volunteers box (§NNN, amending §754; the owner, 2026-10-14: «formularul trebuie să fie pagină separată,
+ * The event page's volunteers box (§768, amending §754; the owner, 2026-10-14: «formularul trebuie să fie pagină separată,
  * nu embedded în pagina evenimentului»): one line, «Căutăm voluntari: Punct de apă, Sosire», and one button,
  * «Vreau să fiu voluntar», to the volunteers' own page (`/evenimente/<slug>/voluntari`) — where the roles with their
  * descriptions and the form are. Nothing else of the volunteers is on the event's page: the header and the landing stay

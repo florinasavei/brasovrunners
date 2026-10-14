@@ -429,7 +429,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
           agreementEvent,
           // Which form the public page draws (§765): the card says so beside the tick.
           profileDescribed: await noticeDescribesVolunteerProfile(db, now),
-          // Whether the club may take a person under eighteen (§NNN): the guardian's boxes, link and paper wait for it.
+          // Whether the club may take a person under eighteen (§768): the guardian's boxes, link and paper wait for it.
           minorsOpen: await volunteerMinorsOpen(db, now),
           offerClosed: volunteerOfferClosedFor({
             acceptsVolunteers: event.acceptsVolunteers,

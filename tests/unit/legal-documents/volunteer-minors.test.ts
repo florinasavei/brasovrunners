@@ -22,7 +22,7 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
 /**
- * §NNN — the templates for volunteers under eighteen (the owner, 2026-10-14): the agreement's minors' clause with its marker
+ * §768 — the templates for volunteers under eighteen (the owner, 2026-10-14): the agreement's minors' clause with its marker
  * `{{volunteerGuardian}}`, the privacy notice's paragraph with `{{volunteerMinors}}`, and the gate they make together — the
  * club takes a person under eighteen only while a notice naming the one and an agreement naming the other are in force. Template
  * only: no text in force is touched, and a lawyer reads the clause first (the entry says so; so do the templates' headers).
@@ -42,7 +42,7 @@ const ADULT = {
   signedAt: "marți, 13 oct. 2026, la 13:00",
 };
 
-describe("§NNN the agreement's minors' clause", () => {
+describe("§768 the agreement's minors' clause", () => {
   it("names one new blank, a merge field of the volunteer agreement that drops its paragraph when it is empty", () => {
     expect(VOLUNTEER_GUARDIAN_MERGE_FIELD).toBe("volunteerGuardian");
     expect(isMergeField("volunteerGuardian")).toBe(true);
@@ -104,7 +104,7 @@ describe("§NNN the agreement's minors' clause", () => {
   });
 });
 
-describe("§NNN the privacy notice's paragraph for volunteers under eighteen", () => {
+describe("§768 the privacy notice's paragraph for volunteers under eighteen", () => {
   it("names its own marker in both languages, a marker of the notice that the agreement does not carry", () => {
     expect(VOLUNTEER_MINORS_NOTICE_MERGE_FIELD).toBe("volunteerMinors");
     expect(isMergeField("volunteerMinors")).toBe(true);
@@ -139,7 +139,7 @@ describe("§NNN the privacy notice's paragraph for volunteers under eighteen", (
   });
 });
 
-describe("§NNN the editor's legend names both markers, in both languages", () => {
+describe("§768 the editor's legend names both markers, in both languages", () => {
   it("has a token and a line for each", () => {
     for (const field of ["volunteerGuardian", "volunteerMinors"]) {
       expect(DECLARATION_TOKENS.some((token) => token.token === `{{${field}}}`), field).toBe(true);

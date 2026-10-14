@@ -125,7 +125,7 @@ export type PersonData = {
     agreementMethod: (typeof eventVolunteers.$inferSelect)["agreementMethod"];
     agreementAcceptedAt: Date | null;
     declaredAdult: boolean;
-    /** The parent or guardian of a volunteer under eighteen (§NNN) — their name and address, and whether and how they accepted: every column of the row (art. 15 GDPR). */
+    /** The parent or guardian of a volunteer under eighteen (§768) — their name and address, and whether and how they accepted: every column of the row (art. 15 GDPR). */
     guardianName: string | null;
     guardianEmail: string | null;
     guardianAcceptedAt: Date | null;

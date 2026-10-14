@@ -69,7 +69,7 @@ export type EventPageVisit = {
   declaratie?: string;
   lista?: string;
   /**
-   * «Căutăm voluntari: …» and the button to the volunteers' own page (§NNN, amending §754): the names of the roles that
+   * «Căutăm voluntari: …» and the button to the volunteers' own page (§768, amending §754): the names of the roles that
    * still need people, in the page's language, or null when that page would answer 404 — the event takes no volunteers,
    * every role is full, or the privacy notice or the volunteer agreement in force does not describe them.
    */
@@ -328,7 +328,7 @@ export default async function EventPageView({
       {/* The programme (§96, §117), under `#schedule`: the timed rows, then the text. */}
       <EventProgramme scheduleItems={event.scheduleItems} scheduleJson={event.scheduleJson} timeZone={event.timezone} heading={t("schedule")} />
 
-      {/* «Căutăm voluntari: …» and «Vreau să fiu voluntar» (§754, §NNN), after the programme and before the rules: one line
+      {/* «Căutăm voluntari: …» and «Vreau să fiu voluntar» (§754, §768), after the programme and before the rules: one line
           and one button to the volunteers' own page — the form is no longer here. A visit's page only, and only where that
           page would answer 200 (the page decides, from the one read both share) — the preview before saving reads no
           public cache and takes no name. */}

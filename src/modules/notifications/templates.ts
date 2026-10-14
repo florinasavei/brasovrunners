@@ -1025,7 +1025,7 @@ export type TemplateData = {
     chosenEn: string[];
     /** The volunteer agreement's PDF rides along (§758): the person accepted it, and their copy is attached. */
     agreementAttached?: boolean;
-    /** A volunteer under eighteen with a parent or guardian still to accept (§NNN): the «am primit» says their parent was emailed. */
+    /** A volunteer under eighteen with a parent or guardian still to accept (§768): the «am primit» says their parent was emailed. */
     guardianPending?: boolean;
   };
   /**
@@ -1807,7 +1807,7 @@ const T = {
         "Organizatorii îți aleg rolul, îți scriu când ți l-au dat și te caută pe email sau la telefon dacă mai trebuie ceva. Până atunci nu ai nimic de făcut: oferta nu e o înscriere la cursă și nu ține loc.",
         // The agreement accepted with the offer (§758): the person's copy, attached — said only when it is.
         ...(d.volunteer?.agreementAttached ? ["Contractul de voluntariat pe care l-ai acceptat e atașat, ca PDF. Păstrează-l: e copia ta."] : []),
-        // Under eighteen (§NNN): the parent or guardian was emailed their own link; until they accept, the organizers cannot confirm.
+        // Under eighteen (§768): the parent or guardian was emailed their own link; until they accept, the organizers cannot confirm.
         ...(d.volunteer?.guardianPending
           ? ["Fiind sub 18 ani, ai nevoie și de acordul unui părinte sau tutore. Părintelui sau tutorelui pe care l-ai trecut i-am trimis un email cu un link; până își dă acordul, organizatorii nu te pot confirma."]
           : []),
@@ -1836,7 +1836,7 @@ const T = {
         "Dacă nu tu ai acceptat contractul, scrie-ne din pagina de contact.",
       ],
     },
-    // The parent or guardian of a volunteer under eighteen (§NNN): the link to read the agreement and accept it in their own name.
+    // The parent or guardian of a volunteer under eighteen (§768): the link to read the agreement and accept it in their own name.
     volunteerGuardianRequest: {
       subject: (d: TemplateData) => `Acordul tău pentru un voluntar minor la ${d.eventTitle ?? "eveniment"}`,
       greeting: () => "Bună ziua,",
@@ -2331,7 +2331,7 @@ const T = {
     /** The volunteer agreement (§758): whether the person offered on the page or an organizer entered them, they are on the list. */
     privacyFooterVolunteerAgreement: (club: string) =>
       `Primești acest mesaj de la ${club} pentru că ești pe lista voluntarilor unui eveniment al clubului. Cum folosim datele tale:`,
-    /** The guardian's link (§NNN): the guardian is not on any list — somebody named them as the parent or guardian of a volunteer under eighteen. */
+    /** The guardian's link (§768): the guardian is not on any list — somebody named them as the parent or guardian of a volunteer under eighteen. */
     privacyFooterGuardian: (club: string) =>
       `Primești acest mesaj de la ${club} pentru că cineva te-a trecut ca părinte sau tutore al unui voluntar sub 18 ani la un eveniment al clubului. Cum folosim datele tale:`,
     /** The same for a group run's self-declaration (§393): signed on a page, no registration behind it. */

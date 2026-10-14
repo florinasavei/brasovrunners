@@ -35,7 +35,7 @@ function roleIdsOf(form: FormData): string[] {
 }
 
 /**
- * «Mă ofer voluntar» (§754; moved to the volunteers' own page by §NNN, 2026-10-14): a person's offer. The registration form's
+ * «Mă ofer voluntar» (§754; moved to the volunteers' own page by §768, 2026-10-14): a person's offer. The registration form's
  * defences — Turnstile first, then the honeypot, the timing check and the throttles in the service — and one answer
  * whatever the person turned out to be: `?volunteer=1` for a new offer, a repeat and a bot's alike (BR-REQ-031-01
  * criterion 3) — the answer is the same (the count on the page is the residual `volunteers.ts` accepts and says why).
@@ -47,7 +47,7 @@ function roleIdsOf(form: FormData): string[] {
  * volunteers — or a notice or an agreement that stopped describing them — redirects to the event's own page, where the
  * volunteers' box is now gone (the volunteers' page would answer 404).
  *
- * The parent's or guardian's boxes (§NNN) ride along; the service reads them only of a person who typed an age under
+ * The parent's or guardian's boxes (§768) ride along; the service reads them only of a person who typed an age under
  * eighteen, and only while the notice and the agreement in force describe minors.
  */
 export async function submitVolunteerAction(form: FormData): Promise<void> {
@@ -77,7 +77,7 @@ export async function submitVolunteerAction(form: FormData): Promise<void> {
         message: text(form, "message"),
         // What the person said about themselves (§765) comes back too — never the consent, the agreement or the age tick.
         age: text(form, "age").trim(),
-        // Their parent's or guardian's name and address (§NNN) too; the tick that the parent agrees is never kept.
+        // Their parent's or guardian's name and address (§768) too; the tick that the parent agrees is never kept.
         guardianName: text(form, "guardianName").trim(),
         guardianEmail: text(form, "guardianEmail").trim(),
         sex: text(form, "sex"),
@@ -126,7 +126,7 @@ export async function submitVolunteerAction(form: FormData): Promise<void> {
         shirtSize: text(form, "shirtSize"),
         volunteeredBefore: form.get("volunteeredBefore") === "on",
         clubMember: form.get("clubMember") === "on",
-        // The parent or guardian of a person under eighteen (§NNN): the name, the address and the person's tick that the parent knows and agrees.
+        // The parent or guardian of a person under eighteen (§768): the name, the address and the person's tick that the parent knows and agrees.
         guardianName: text(form, "guardianName"),
         guardianEmail: text(form, "guardianEmail"),
         guardianAware: form.get("guardianAware") === "on",

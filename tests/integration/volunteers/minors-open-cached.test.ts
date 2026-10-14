@@ -5,7 +5,7 @@ import { LEGAL_TEMPLATES } from "@/modules/legal-documents/templates/catalogue";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — the volunteers' own page reads whether the club may take a minor through the public cache
+ * §768 — the volunteers' own page reads whether the club may take a minor through the public cache
  * (`cachedVolunteerMinorsOpen`), and the sign-up asks the database (`volunteerMinorsOpen`). The two are one rule written
  * twice, so this pins that they agree in the four states a club passes through: both texts describe minors, the notice
  * alone, the agreement alone, and one language missing — a page that says «sub 18 ani» must never lead to a refusal.
@@ -24,7 +24,7 @@ const reads = await import("@/modules/public-cache/reads");
 const NOW = new Date("2026-10-14T10:00:00.000Z");
 const EFFECTIVE = new Date("2026-01-01T00:00:00.000Z");
 
-describe("§NNN the cached twin of «may the club take a minor» agrees with the database's", () => {
+describe("§768 the cached twin of «may the club take a minor» agrees with the database's", () => {
   beforeAll(async () => {
     ({ db, close } = await createTestDatabase());
   });

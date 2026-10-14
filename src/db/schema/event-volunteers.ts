@@ -25,7 +25,7 @@ export const eventVolunteerSource = pgEnum("event_volunteer_source", ["STAFF", "
 export const volunteerAgreementMethod = pgEnum("volunteer_agreement_method", ["FORM", "LINK", "PAPER"]);
 
 /**
- * How a minor volunteer's parent or guardian gave their agreement (§NNN, amending §758): from the single-use link emailed
+ * How a minor volunteer's parent or guardian gave their agreement (§768, amending §758): from the single-use link emailed
  * to them («LINK», the typed name is the acceptance) or on a printed copy signed at the desk and recorded by a staff
  * member («PAPER»). No «FORM»: the volunteer's own form ticks the agreement for the volunteer, never for the guardian.
  */
@@ -197,7 +197,7 @@ export const eventVolunteers = pgTable(
     agreementRequestedAt: timestamp("agreement_requested_at", { withTimezone: true }),
 
     /*
-      The parent's or guardian's agreement for a volunteer under eighteen (§NNN, amending §758; the owner, 2026-10-14:
+      The parent's or guardian's agreement for a volunteer under eighteen (§768, amending §758; the owner, 2026-10-14:
       «voluntarii trebuie să aibă cel puțin 14 ani, nu 18» and «fă cu acord ceva»): from fourteen a volunteer is taken
       only with a parent or guardian who accepts the same agreement in their own name. The guardian's name, and their
       address (what the single-use link goes to; none when the organizers take the consent on paper), are asked on the
@@ -251,7 +251,7 @@ export const eventVolunteers = pgTable(
     // Never the raw secret: a base64url secret cannot match a lower-case hex digest (§12.8, the action tokens' own CHECK).
     check("event_volunteers_agreement_token_sha256", sql`${t.agreementTokenHash} IS NULL OR ${t.agreementTokenHash} ~ '^[0-9a-f]{64}$'`),
     check("event_volunteers_agreement_token_expiry", sql`(${t.agreementTokenHash} IS NULL) = (${t.agreementTokenExpiresAt} IS NULL)`),
-    // The guardian (§NNN): a name within the bound; an address only with a name; the acceptance whole or absent, and never without a guardian.
+    // The guardian (§768): a name within the bound; an address only with a name; the acceptance whole or absent, and never without a guardian.
     check("event_volunteers_guardian_name_length", sql`${t.guardianName} IS NULL OR char_length(${t.guardianName}) BETWEEN 1 AND 120`),
     check("event_volunteers_guardian_email_length", sql`${t.guardianEmail} IS NULL OR (${t.guardianName} IS NOT NULL AND char_length(${t.guardianEmail}) BETWEEN 3 AND 320)`),
     check(

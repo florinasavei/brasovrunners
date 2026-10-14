@@ -47,7 +47,7 @@ export default async function VolunteerAgreementLinkPage({ params, searchParams 
   const asked = await searchParams;
   const t = await getTranslations("Volunteers");
   const tLegal = await getTranslations("Legal");
-  // The age tick says eighteen (§NNN): a volunteer under eighteen is not asked it — their parent accepts beside them.
+  // The age tick says eighteen (§768): a volunteer under eighteen is not asked it — their parent accepts beside them.
   const age = yearsPhrase(VOLUNTEER_ADULT_AGE, locale);
 
   // After the POST the link is spent or known to be dead: the page says so without reading it again.
@@ -109,7 +109,7 @@ export default async function VolunteerAgreementLinkPage({ params, searchParams 
               {t("agreement.accept")}
             </CheckboxField>
             {view.minor ? (
-              // Under eighteen (§NNN): no age tick; the parent or guardian has their own link and accepts in their own name.
+              // Under eighteen (§768): no age tick; the parent or guardian has their own link and accepts in their own name.
               <Typography variant="body2" color="text.secondary" data-testid="volunteer-agreement-minor">
                 {t("agreement.minor")}
               </Typography>

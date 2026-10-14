@@ -90,7 +90,7 @@ const AGREEMENT_CHIP: Record<VolunteerAgreementStanding, { glyph: StatusGlyphNam
 };
 
 /**
- * The parent's or guardian's chip (§NNN): its words, its glyph and its tone — never the colour alone. Until the guardian accepts it says
+ * The parent's or guardian's chip (§768): its words, its glyph and its tone — never the colour alone. Until the guardian accepts it says
  * «Acordul părintelui lipsește», a link live in their mailbox or not (that is a second, smaller chip beside it).
  */
 const GUARDIAN_CHIP: Record<"accepted" | "missing", { glyph: StatusGlyphName; color: "warning" | "success" | "default" }> = {
@@ -127,7 +127,7 @@ type Props = {
   /** The notice in force names what a volunteer says about themselves (§765): the public form asks it — else it is §758's tick. */
   profileDescribed: boolean;
   /**
-   * The club may take a volunteer under eighteen (§NNN): the privacy notice in force names `{{volunteerMinors}}` and the
+   * The club may take a volunteer under eighteen (§768): the privacy notice in force names `{{volunteerMinors}}` and the
    * agreement `{{volunteerGuardian}}`, in every language. Without it the entry's guardian boxes and the guardian's link and
    * paper record wait — the service refuses them (`volunteerMinorsOpen`), so a hidden box is not the only gate.
    */
@@ -398,8 +398,8 @@ export default async function VolunteersCard({
             ))}
           </RecallField>
         </Stack>
-        {/* The parent or guardian of a person under eighteen (§NNN): a named card, open while the person is one. The boxes are drawn while the club may take
-            minors (`minorsOpen`) or the person already is one; the service holds the rule either way (`volunteerMinorsOpen`, `checkGuardian`). */}
+        {/* The parent or guardian of a person under eighteen (§768): a named card, open while the person is one. The boxes are drawn while the club may take
+            minors (`minorsOpen`) or the person already is one; the service holds the rule either way (`volunteerMinorsOpen`, `refuseGuardianBoxes`). */}
         {minorsOpen || isVolunteerMinor(person?.age) ? (
           <Panel
             glyph="volunteers"
@@ -613,7 +613,7 @@ export default async function VolunteersCard({
   };
 
   /**
-   * The parent's or guardian's agreement for one person under eighteen (§NNN): when it was accepted, how and which version
+   * The parent's or guardian's agreement for one person under eighteen (§768): when it was accepted, how and which version
    * — or, not yet, the two ways to get it: the link by email (when the organizer has the address), or the PDF to sign at the
    * desk and «Acordul părintelui pe hârtie». Nothing for an adult, nothing to do for a cancelled person; the link and the
    * paper wait while the club may not take minors (the card says so, and the service refuses anyway).
@@ -678,7 +678,7 @@ export default async function VolunteersCard({
           >
             {hidden}
             <input type="hidden" name="volunteerId" value={person.id} />
-            {/* What the PDF beside it prints (§NNN): the service refuses the record if either changed since. */}
+            {/* What the PDF beside it prints (§768): the service refuses the record if either changed since. */}
             <input type="hidden" name="agreementDocumentId" value={agreementDocumentIds[person.locale] ?? ""} />
             <input type="hidden" name="agreementRoles" value={agreementRolesStamp(person.roleId, person.choiceIds)} />
             <GlyphSubmitButton icon="declaration" label={t("volunteers.guardian.paper")} pendingLabel={t("volunteers.guardian.paper")} variant="outlined" />
@@ -776,7 +776,7 @@ export default async function VolunteersCard({
             />
           );
         })()}
-        {/* The parent's or guardian's agreement (§NNN), for a volunteer under eighteen only: «Acordul părintelui lipsește», a link sent, or received —
+        {/* The parent's or guardian's agreement (§768), for a volunteer under eighteen only: «Acordul părintelui lipsește», a link sent, or received —
             in words, never by colour alone. A cancelled person waiting on nothing shows none. */}
         {(() => {
           const standing = guardianStandingOf(person, now);
@@ -820,7 +820,7 @@ export default async function VolunteersCard({
           </Typography>
         ) : null;
       })()}
-      {/* The parent or guardian of a volunteer under eighteen (§NNN): the name, beside the age; the address is a link a thumb can press. */}
+      {/* The parent or guardian of a volunteer under eighteen (§768): the name, beside the age; the address is a link a thumb can press. */}
       {isVolunteerMinor(person.age) && person.guardianName !== null && (
         <Typography variant="body2" color="text.secondary" sx={{ wordBreak: "break-word" }} data-testid="volunteer-guardian-line">
           {t("volunteers.person.guardianValue", { name: person.guardianName })}
@@ -1135,7 +1135,7 @@ export default async function VolunteersCard({
           {t("volunteers.badgesLink")}
         </GlyphButton>
 
-        {/* What waits on a parent, said once for the whole list (§NNN): how a minor's consent is got, or that it cannot be yet. */}
+        {/* What waits on a parent, said once for the whole list (§768): how a minor's consent is got, or that it cannot be yet. */}
         {volunteers.some((person) => isVolunteerMinor(person.age) && person.guardianName !== null && person.guardianAcceptedAt === null && person.state !== "CANCELLED") && (
           <Typography variant="body2" color="text.secondary" data-testid={minorsOpen ? "volunteer-guardian-note" : "volunteer-guardian-closed"}>
             {t(minorsOpen ? "volunteers.guardian.help" : "volunteers.guardian.minorsClosed")}

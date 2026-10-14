@@ -38,7 +38,7 @@ export function volunteerProfileClause(locale: string): string {
 }
 
 /**
- * What the privacy notice's `{{volunteerMinors}}` becomes (§NNN): the guardian's two boxes on the volunteers' page, each by
+ * What the privacy notice's `{{volunteerMinors}}` becomes (§768): the guardian's two boxes on the volunteers' page, each by
  * its label, quoted, in that language — „Numele părintelui sau tutorelui”, „Emailul părintelui sau tutorelui” — read from
  * the catalogue the form's labels read (`Event.volunteers.guardian`), so the approved sentence names what a visitor sees
  * when they say they are under eighteen.

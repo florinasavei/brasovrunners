@@ -33,7 +33,7 @@ export const metadata: Metadata = { robots: { index: false, follow: false } };
 const BOXES = ["agreement", "typedName"] as const;
 
 /**
- * The guardian's link (§NNN, amending §758): the page the email to the parent or guardian of a volunteer under eighteen
+ * The guardian's link (§768, amending §758): the page the email to the parent or guardian of a volunteer under eighteen
  * opens — the volunteer agreement in force in the page's language, filled for the volunteer, their roles and the event,
  * with the guardian's name in the minors' clause; one tick, the guardian's typed name — the acceptance itself — and one
  * button. The text is the same the volunteer accepted on the form; the guardian accepts it in their own name.

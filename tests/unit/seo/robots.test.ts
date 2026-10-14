@@ -45,7 +45,7 @@ describe("§549 robots.txt on production", () => {
     "/ro/evenimente/crosul-aniversar/inscriere",
     "/en/events/anniversary-cross/register",
     "/ro/evenimente/tura-pe-tampa/declaratie",
-    // The volunteers' own page (§NNN) is a form like the registration's, and the two volunteer link pages carry a secret.
+    // The volunteers' own page (§768) is a form like the registration's, and the two volunteer link pages carry a secret.
     "/ro/evenimente/crosul-aniversar/voluntari",
     "/en/events/anniversary-cross/volunteers",
     "/ro/voluntari/contract/abc",

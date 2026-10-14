@@ -87,7 +87,7 @@ export default function robots(): MetadataRoute.Robots {
           "/en/events/*/register",
           "/ro/evenimente/*/declaratie",
           "/en/events/*/declaration",
-          // The volunteers' page (§NNN) is a form like the registration's, and the two volunteer link pages (§758, §NNN) carry a secret.
+          // The volunteers' page (§768) is a form like the registration's, and the two volunteer link pages (§758, §768) carry a secret.
           "/ro/evenimente/*/voluntari",
           "/en/events/*/volunteers",
           "/ro/voluntari/",

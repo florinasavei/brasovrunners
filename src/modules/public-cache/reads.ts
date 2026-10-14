@@ -608,7 +608,7 @@ export async function cachedVolunteerProfileDescribed(now: Date): Promise<boolea
 }
 
 /**
- * Whether the club may take a volunteer under eighteen yet (§NNN, `volunteerMinorsOpen`): the privacy notice in force
+ * Whether the club may take a volunteer under eighteen yet (§768, `volunteerMinorsOpen`): the privacy notice in force
  * names `{{volunteerMinors}}` and the volunteer agreement `{{volunteerGuardian}}`, each in every language — whether
  * the volunteers' own page draws the guardian's boxes. `volunteerMinorsOpen` is the uncached read the sign-up asks again.
  */

@@ -10,7 +10,7 @@ import { volunteerBoxRoles, volunteerEventAhead, volunteerOfferClosedFor } from 
 import type { PublicVolunteerRole } from "./volunteers";
 
 /**
- * What an event offers volunteers right now, for the two public surfaces that ask (§NNN, amending §754): the event page's
+ * What an event offers volunteers right now, for the two public surfaces that ask (§768, amending §754): the event page's
  * short box («Căutăm voluntari: …», a button) and the volunteers' own page, `/evenimente/<slug>/voluntari` — one read, so
  * the box that says «Căutăm voluntari» and the page it links to can never disagree about whether there is a form.
  *
@@ -30,7 +30,7 @@ export type VolunteerOffer = {
   shirts: boolean;
   /** The notice in force names what a volunteer says about themselves (§765): the form asks it — else §758's tick. */
   profile: boolean;
-  /** The club may take a person under eighteen (§NNN): the notice and the agreement in force both describe minors. */
+  /** The club may take a person under eighteen (§768): the notice and the agreement in force both describe minors. */
   minors: boolean;
 };
 
@@ -55,7 +55,7 @@ export async function readVolunteerOffer(
   const boxRoles = volunteerBoxRoles(closed, roles, answer);
   if (boxRoles === null) return null;
   const profile = await cachedVolunteerProfileDescribed(now);
-  // Minors ride on the profile form: no age is asked without it, so no minor is either (§NNN).
+  // Minors ride on the profile form: no age is asked without it, so no minor is either (§768).
   const minors = profile && (await cachedVolunteerMinorsOpen(now));
   return { roles: boxRoles, shirts, profile, minors };
 }

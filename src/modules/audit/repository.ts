@@ -497,7 +497,7 @@ export type AuditAction =
   /** The agreement's PDF downloaded from the card (§758): a file with a name in it leaves the site; who and when. */
   | "volunteer.agreement_downloaded"
   /**
-   * The parent's or guardian's agreement for a volunteer under eighteen (§NNN), entity `event`: an organizer's «Trimite
+   * The parent's or guardian's agreement for a volunteer under eighteen (§768), entity `event`: an organizer's «Trimite
    * linkul părintelui» (requested, or the sign-up's own email, no actor), the guardian's acceptance from the link
    * (accepted, no actor) and a paper one recorded at the desk (recorded). The metadata holds the volunteer's id, the
    * version and the way — never the guardian's name or address.

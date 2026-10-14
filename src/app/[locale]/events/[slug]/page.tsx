@@ -183,7 +183,7 @@ export default async function EventDetailPage({ params, query, canEdit = false, 
 
   const interestOutcome = parseInterestOutcome(interest);
   /*
-    «Căutăm voluntari: …» and «Vreau să fiu voluntar» (§754, §NNN): a short box that links to the volunteers' own page
+    «Căutăm voluntari: …» and «Vreau să fiu voluntar» (§754, §768): a short box that links to the volunteers' own page
     (`/evenimente/<slug>/voluntari`), drawn only where that page would answer 200 — the event takes volunteers, a role still
     needs people, the privacy notice in force describes them and a volunteer agreement is in force (§758;
     `readVolunteerOffer`, the one read the page shares) — from the public cache, expired by every write to the roles, the

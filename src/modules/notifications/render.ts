@@ -948,7 +948,7 @@ async function renderRow(
       roleDescriptionEn: described(roles.assigned?.descriptionEn ?? null),
       chosenRo: roles.chosen.map((role) => role.nameRo),
       chosenEn: roles.chosen.map((role) => role.nameEn),
-      // «Am primit» of a volunteer under eighteen whose guardian has not accepted yet (§NNN) says their parent was emailed.
+      // «Am primit» of a volunteer under eighteen whose guardian has not accepted yet (§768) says their parent was emailed.
       guardianPending: row.messageType === "VOLUNTEER_RECEIVED" && isVolunteerMinor(volunteer.age) && volunteer.guardianName !== null && volunteer.guardianAcceptedAt === null,
     };
     if (row.messageType === "VOLUNTEER_CLUB_NOTICE" && eventId) {
@@ -979,7 +979,7 @@ async function renderRow(
       payloadActionUrl = `${env.APP_BASE_URL}${getPathname({ locale, href: { pathname: "/volunteers/agreement/[token]", params: { token: link.secret } } })}`;
     }
     /*
-      The guardian's link (§NNN): the same mint at the send, on the guardian's own columns and to the guardian's address
+      The guardian's link (§768): the same mint at the send, on the guardian's own columns and to the guardian's address
       (the mint compares it with the row's, through the canonicalizer). A guardian who has accepted since, a volunteer who
       is no longer under eighteen, or an address corrected meanwhile withdraws the message.
     */

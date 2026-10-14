@@ -299,7 +299,7 @@ export type OwnerTaskInputs = {
   volunteerProfileDescribed: boolean;
   /**
    * Do the notice in force (`{{volunteerMinors}}`) **and** the volunteer agreement in force (`{{volunteerGuardian}}`), each in
-   * every language, describe volunteers under eighteen and their parent or guardian (§NNN, `volunteerMinorsOpen`)? Until
+   * every language, describe volunteers under eighteen and their parent or guardian (§768, `volunteerMinorsOpen`)? Until
    * they do, the club takes nobody under eighteen: a typed age under eighteen is refused with a sentence that says so.
    */
   volunteerMinorsOpen: boolean;
@@ -639,7 +639,7 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
       });
     }
     /*
-      The texts for volunteers under eighteen (§NNN), the same shape with two gates: open while an event ahead takes
+      The texts for volunteers under eighteen (§768), the same shape with two gates: open while an event ahead takes
       volunteers and the notice in force does not name `{{volunteerMinors}}` or the agreement in force does not name
       `{{volunteerGuardian}}` — the club takes nobody under eighteen and a typed age under eighteen is refused with a
       sentence that says so — done by itself the day both take effect, absent while no event takes volunteers and the

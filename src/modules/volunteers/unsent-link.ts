@@ -24,7 +24,7 @@ export async function forgetUnsentVolunteerAgreementLink<T extends Record<string
   const volunteerId = (row.payloadJson as { volunteerId?: unknown } | null)?.volunteerId;
   if (typeof volunteerId !== "string" || !isUuid(volunteerId)) return;
   const mintedExpiry = new Date(batchNow.getTime() + DEFAULT_TOKEN_HOURS * 60 * 60_000);
-  // The guardian's link (§NNN) is the same pattern on its own two columns.
+  // The guardian's link (§768) is the same pattern on its own two columns.
   if (row.messageType === "VOLUNTEER_GUARDIAN_REQUEST") {
     await db
       .update(eventVolunteers)

@@ -453,7 +453,7 @@ describe("§765 the public form while the notice names the profile", () => {
 
   it("brings back what was typed after a refusal, and says one of three sentences for the age: no minors yet, «cel puțin 14 ani», «scrie vârsta»", async () => {
     const typed = { name: "Maria", age: "17", sex: "FEMALE", city: "Brașov", volunteeredBefore: "on", clubMember: "on", shirtSize: "L" };
-    // Seventeen while the notice and the agreement do not describe minors: the club says it cannot take them yet (§NNN).
+    // Seventeen while the notice and the agreement do not describe minors: the club says it cannot take them yet (§768).
     const under = await drawBox({ outcome: "invalid", refused: ["age"], typed, shirts: true });
     expect(tagOf(under, "input", "age")).toContain('value="17"');
     expect(under).toMatch(/<option value="FEMALE" selected/);
@@ -560,7 +560,7 @@ describe("§765 «Toate datele unei persoane» lists the six answers of a volunt
   });
 });
 
-/** A volunteer under eighteen on the card: fifteen, the parent named, with or without an address, accepted or not (§NNN). */
+/** A volunteer under eighteen on the card: fifteen, the parent named, with or without an address, accepted or not (§768). */
 const MINOR: VolunteerItem = {
   ...PEOPLE[0],
   id: "77777777-7777-4777-8777-777777777777",
@@ -571,7 +571,7 @@ const MINOR: VolunteerItem = {
   guardianEmail: "maria@example.test",
 };
 
-describe("§NNN the public form's block for a parent or guardian", () => {
+describe("§768 the public form's block for a parent or guardian", () => {
   it("is drawn hidden — an adult never sees it flash — with no box required and no asterisk, a noscript rule opening it, inside the island that follows the age", async () => {
     const page = await drawBox({ minors: true });
     expect(page).toContain('data-testid="volunteer-guardian-block"');
@@ -650,7 +650,7 @@ describe("§NNN the public form's block for a parent or guardian", () => {
   });
 });
 
-describe("§NNN the form is the volunteers' own page's: the thank-you with its flash, and no fold", () => {
+describe("§768 the form is the volunteers' own page's: the thank-you with its flash, and no fold", () => {
   it("says «am primit» in a banner with the flash toast's slot — and, where minors are taken, the same line about the parent for everybody", async () => {
     const page = await drawBox({ outcome: "done", minors: true });
     expect(page).toContain('data-testid="volunteer-done"');
@@ -673,7 +673,7 @@ describe("§NNN the form is the volunteers' own page's: the thank-you with its f
   });
 });
 
-describe("§NNN the card: the parent's agreement, in words", () => {
+describe("§768 the card: the parent's agreement, in words", () => {
   const lost = { ...MINOR, id: "88888888-8888-4888-8888-888888888888", name: "Vlad Tânărul", guardianName: "Elena Popescu", guardianEmail: null };
   const accepted = {
     ...MINOR,
@@ -775,7 +775,7 @@ describe("§NNN the card: the parent's agreement, in words", () => {
   });
 });
 
-describe("§NNN the event page keeps one line and one button", () => {
+describe("§768 the event page keeps one line and one button", () => {
   it("draws «Căutăm voluntari: …» and a 44-pixel button to the volunteers' page — in both languages", async () => {
     const { default: VolunteerCallout } = await import("@/modules/volunteers/ui/VolunteerCallout");
     const { NextIntlClientProvider } = await import("next-intl");

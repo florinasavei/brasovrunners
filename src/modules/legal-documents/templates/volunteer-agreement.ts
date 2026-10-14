@@ -29,10 +29,10 @@ import type { LegalDocumentBody } from "../domain/content-hash";
  * (after the form, the link and the paper alike) and the proof kept «cât timp spune nota de confidențialitate»;
  * whether to keep a narrowed acceptance record longer, or to send the club an archive copy as the declarations do,
  * is the owner's and the lawyer's to decide before the club approves the text; and the age: the text states the platform's minimum, fourteen
- * (`VOLUNTEER_MINIMUM_AGE`, through `{{minimumAge}}`) — and, since §NNN, a person of fourteen to seventeen volunteers with a parent's or
+ * (`VOLUNTEER_MINIMUM_AGE`, through `{{minimumAge}}`) — and, since §768, a person of fourteen to seventeen volunteers with a parent's or
  * guardian's agreement (see the minors' clause below).
  *
- * **The minors' clause (§NNN, amending §758; the owner, 2026-10-14: «voluntarii trebuie să aibă cel puțin 14 ani, nu 18» and
+ * **The minors' clause (§768, amending §758; the owner, 2026-10-14: «voluntarii trebuie să aibă cel puțin 14 ani, nu 18» and
  * «fă cu acord ceva»).** Four sentences name `{{volunteerGuardian}}` — the parent's or guardian's name — and so drop whole for an
  * adult (`PARAGRAPH_MERGE_FIELDS`): the guardian's consent given by accepting this same text in their own name, from a link or
  * on paper, and the minor's confirmation only after it (§1); the activities suited to the age and no night or dangerous posts
@@ -61,7 +61,7 @@ const partiesRo = [
   "Voluntarul este {{volunteer}}.",
   // The platform's minimum age for a volunteer (§758): the one sentence of age, filled from the code.
   "Voluntarul declară că are cel puțin {{minimumAge}} împliniți.",
-  // The minors' clause (§NNN): dropped whole for an adult, whose `{{volunteerGuardian}}` is "".
+  // The minors' clause (§768): dropped whole for an adult, whose `{{volunteerGuardian}}` is "".
   "Voluntarul fiind minor, părintele sau tutorele său, {{volunteerGuardian}}, își dă acordul ca el să fie voluntar la acest eveniment, în condițiile acestui contract, acceptându-l separat, în nume propriu, din legătura primită pe e-mail sau pe hârtie, la organizatori. Voluntarul minor este confirmat numai după acest acord.",
 ];
 

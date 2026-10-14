@@ -158,7 +158,7 @@ export type VolunteerItem = {
   agreementTokenExpiresAt: Date | null;
   agreementRequestedAt: Date | null;
   /**
-   * The parent or guardian of a volunteer under eighteen (§NNN): their name and address (null for an adult, and for a
+   * The parent or guardian of a volunteer under eighteen (§768): their name and address (null for an adult, and for a
    * guardian with no address — the consent is taken on paper), and how and when they accepted the agreement.
    */
   guardianName: string | null;
@@ -650,7 +650,7 @@ function staffInputOf(fields: Record<string, unknown>) {
 }
 
 /**
- * An age under eighteen typed on the card while the club cannot take a minor (§NNN), when the parse refused the parent's boxes: the
+ * An age under eighteen typed on the card while the club cannot take a minor (§768), when the parse refused the parent's boxes: the
  * card draws those boxes only while minors are open or the person already is one, so the refusal is on `age` — the box the organizer
  * can see — with the minors-closed sentence, never on a box that is not there. Null when the refusal is something else.
  */
@@ -777,7 +777,7 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
   }
   // Whether the notice in force names the profile answers (§765): read before the transaction, like the public sign-up does.
   const profileDescribed = input ? await noticeDescribesVolunteerProfile(db, now) : true;
-  // Whether the club may take a person under eighteen (§NNN): asked only when this entry says one — a card save of a person already
+  // Whether the club may take a person under eighteen (§768): asked only when this entry says one — a card save of a person already
   // under eighteen is never held up by a text withdrawn since, but nobody new is put under eighteen without the texts.
   const minorsOpen = input?.guardian ? await volunteerMinorsOpen(db, now) : true;
   const state =
@@ -870,7 +870,7 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
           clubMember: input.clubMember,
           // A size only while the event gives a shirt (§765); a stale form posting one for an event without is ignored.
           shirtSize: event.shirts ? input.shirtSize : null,
-          // The parent or guardian of a person under eighteen (§NNN): their name, and the address when the organizer has one.
+          // The parent or guardian of a person under eighteen (§768): their name, and the address when the organizer has one.
           guardianName: input.guardian?.name ?? null,
           guardianEmail: input.guardian?.email ?? null,
           createdByStaffUserId: actor.id,
@@ -906,7 +906,7 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
 
     if (request.kind === "setState" && state) {
       if (current.state === state) return { changed: false, volunteer: summary };
-      // A volunteer under eighteen is confirmed only once their parent or guardian has accepted the agreement (§NNN): «Acordul părintelui lipsește».
+      // A volunteer under eighteen is confirmed only once their parent or guardian has accepted the agreement (§768): «Acordul părintelui lipsește».
       if (state === "CONFIRMED" && !guardianAllowsConfirm(current)) {
         throw new DomainError("VOLUNTEER_GUARDIAN_MISSING", "the parent's or guardian's agreement is missing", ["guardian"]);
       }
@@ -989,7 +989,7 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
     const changedFields: string[] = (Object.keys(before) as (keyof typeof before)[]).filter((key) => before[key] !== next[key]);
     if (!sameIds(choicesBefore, input.choiceIds)) changedFields.push("roleIds");
 
-    // The parent or guardian follows the age typed (§NNN): a person under eighteen has one — the name, and the address if
+    // The parent or guardian follows the age typed (§768): a person under eighteen has one — the name, and the address if
     // the organizer has it; an age of eighteen or more (or none) keeps no third person's data, so the guardian's columns,
     // an acceptance included, are cleared. While the notice names no profile the age is not drawn and the guardian stays as it is.
     // A guardian who has accepted is not renamed or readdressed under their acceptance.
@@ -1138,7 +1138,7 @@ export async function submitVolunteer<T extends Record<string, unknown>>(
   assertIds(eventId);
   // What the form asked depends on the notice in force (§765): the profile's boxes while it names them, §758's tick otherwise.
   const profileMode = await noticeDescribesVolunteerProfile(db, now);
-  // A person under eighteen is taken only while the notice and the agreement in force both describe minors (§NNN).
+  // A person under eighteen is taken only while the notice and the agreement in force both describe minors (§768).
   const minorsMode = profileMode && (await volunteerMinorsOpen(db, now));
   const parsed = volunteerPublicSchemaFor({ profile: profileMode, minors: minorsMode }).safeParse(rawInput);
   if (!parsed.success) {
@@ -1151,7 +1151,7 @@ export async function submitVolunteer<T extends Record<string, unknown>>(
     "age" in input
       ? { age: input.age, sex: input.sex, city: input.city, volunteeredBefore: input.volunteeredBefore, clubMember: input.clubMember, shirtSize: input.shirtSize }
       : null;
-  // The parent or guardian of a person under eighteen (§NNN): the name and the address, or none for an adult.
+  // The parent or guardian of a person under eighteen (§768): the name and the address, or none for an adult.
   const guardian = "guardian" in input ? input.guardian : null;
   // The spam defences answer like a success: nothing is kept, nothing says so.
   if (looksLikeSpam(input, now)) return { outcome: "done" };
@@ -1200,7 +1200,7 @@ export async function submitVolunteer<T extends Record<string, unknown>>(
 
   const byAddress = await consumeRateLimit(db, "volunteer-signup", emailBucketKey("volunteer-signup", identity.canonicalEmail), now);
   const byEvent = await consumeRateLimit(db, "volunteer-event", eventId, now);
-  // The guardian's address is mailed too, unproven (§NNN): the same three an hour, in its own bucket — a script cannot spend the allowance on one parent's mailbox.
+  // The guardian's address is mailed too, unproven (§768): the same three an hour, in its own bucket — a script cannot spend the allowance on one parent's mailbox.
   const guardianAddress = guardian?.email ? canonicalOrNull(guardian.email) : null;
   const byGuardian = guardianAddress ? await consumeRateLimit(db, "volunteer-signup", emailBucketKey("volunteer-guardian", guardianAddress), now) : { allowed: true };
   if (!byAddress.allowed || !byEvent.allowed || !byGuardian.allowed) return { outcome: "limited" };
@@ -1271,7 +1271,7 @@ export async function submitVolunteer<T extends Record<string, unknown>>(
               shirtSize: event.volunteersShirts ? profile.shirtSize : null,
             }
           : {}),
-        // The parent or guardian of a person under eighteen (§NNN): kept with the row, and asked by email below.
+        // The parent or guardian of a person under eighteen (§768): kept with the row, and asked by email below.
         ...(guardian ? { guardianName: guardian.name, guardianEmail: guardian.email, guardianRequestedAt: now } : {}),
         ...acceptance,
         createdAt: now,
@@ -1294,7 +1294,7 @@ export async function submitVolunteer<T extends Record<string, unknown>>(
       now,
     });
     // A person under eighteen: their parent or guardian is asked, at the address the form took, in the language of the
-    // page — the same single-use link flow as the volunteer's own agreement (§NNN, §758). Minted when the email leaves.
+    // page — the same single-use link flow as the volunteer's own agreement (§768, §758). Minted when the email leaves.
     if (guardian?.email) {
       await enqueueEmail(tx, {
         participantId: null,

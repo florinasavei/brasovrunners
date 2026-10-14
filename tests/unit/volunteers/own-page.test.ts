@@ -7,7 +7,7 @@ import ro from "../../../messages/ro.json";
 import type { PublicVolunteerRole } from "@/modules/volunteers/volunteers";
 
 /**
- * §NNN — the volunteers' own page, `/evenimente/<slug>/voluntari` (the owner, 2026-10-14: «formularul trebuie să fie pagină
+ * §768 — the volunteers' own page, `/evenimente/<slug>/voluntari` (the owner, 2026-10-14: «formularul trebuie să fie pagină
  * separată, nu embedded în pagina evenimentului»): the title, the event's date and place, the form with what the offer says,
  * and — the point of the page — its 404 while the form could not be sent (the switch off, no role needing people, the notice or
  * the agreement not in force, the event over or gone), never a form that cannot work. The reads are stood in for with a state a
@@ -139,7 +139,7 @@ async function visit(search: Record<string, string> = {}, locale: "ro" | "en" = 
 
 const boxOf = (page: string) => JSON.parse(/data-props="([^"]*)"/.exec(page)?.[1]?.replace(/&quot;/g, '"') ?? "{}");
 
-describe("§NNN the volunteers' page answers 404 while the form could not be sent", () => {
+describe("§768 the volunteers' page answers 404 while the form could not be sent", () => {
   it("is a page when every gate is open, in both languages, with its title and the event's date and place in one line", async () => {
     const page = await visit();
     expect(page).not.toBeNull();
@@ -226,7 +226,7 @@ describe("§NNN the volunteers' page answers 404 while the form could not be sen
   });
 });
 
-describe("§NNN the one read the event page's box and this page share", () => {
+describe("§768 the one read the event page's box and this page share", () => {
   const event = { id: EVENT.id, eventStatus: "SCHEDULED", startsAt: EVENT.startsAt, endsAt: null as Date | null };
 
   it("answers the roles still needing people and the form's switches, or null — the same call the box makes with no answer", async () => {
@@ -242,7 +242,7 @@ describe("§NNN the one read the event page's box and this page share", () => {
   });
 });
 
-describe("§NNN the paths", () => {
+describe("§768 the paths", () => {
   it("are the event's own with a word added, per language, in the routing's map", async () => {
     const { routing } = await import("@/i18n/routing");
     expect(routing.pathnames["/events/[slug]/volunteers"]).toEqual({ ro: "/evenimente/[slug]/voluntari", en: "/events/[slug]/volunteers" });

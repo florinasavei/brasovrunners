@@ -183,7 +183,7 @@ export const VOLUNTEER_AGREEMENT_NOTICE_MERGE_FIELD = "volunteerAgreement";
 export const VOLUNTEER_PROFILE_NOTICE_MERGE_FIELD = "volunteerProfile";
 
 /**
- * The privacy notice's marker for volunteers under eighteen and their parent or guardian (§NNN; the owner, 2026-10-14:
+ * The privacy notice's marker for volunteers under eighteen and their parent or guardian (§768; the owner, 2026-10-14:
  * «voluntarii trebuie să aibă cel puțin 14 ani, nu 18» and «fă cu acord ceva»): the form's own name for the
  * guardian's boxes, quoted, in the reader's language (`volunteers/notice-words.ts`) — „Numele părintelui sau
  * tutorelui” / “Parent's or guardian's name” — inside the volunteers' paragraph's sentence that says minors from
@@ -282,7 +282,7 @@ export const SERIES_MERGE_FIELDS = ["series", "seriesRhythm", "seriesPlace"] as 
 export const VOLUNTEER_ROLE_CHOICES_MERGE_FIELD = "volunteerRoleChoices";
 
 /**
- * The volunteer agreement's marker for the parent or guardian of a volunteer under eighteen (§NNN, amending §758): the
+ * The volunteer agreement's marker for the parent or guardian of a volunteer under eighteen (§768, amending §758): the
  * guardian's name as the row holds it (`guardian_name`), in the minors' clause — «Pentru voluntarul minor, {{volunteerGuardian}},
  * părinte sau tutore, își dă acordul …». "" for a volunteer who is eighteen or older, which drops the paragraph that
  * names it (`PARAGRAPH_MERGE_FIELDS`): an adult's agreement never reads the clause. The text in force names it
@@ -690,7 +690,7 @@ export function describesVolunteerProfile(body: unknown): boolean {
 }
 
 /**
- * Whether a privacy notice describes volunteers under eighteen and their guardian (§NNN): it names
+ * Whether a privacy notice describes volunteers under eighteen and their guardian (§768): it names
  * `{{volunteerMinors}}`. With `namesVolunteerGuardian` (the agreement), the gate for taking a person under eighteen —
  * on the public form and by the organizers' hand — and what `/admin/tasks`' row `volunteerMinorsTexts` reads. Pure; the
  * caller asks it of the notice in force, in every language.
@@ -700,7 +700,7 @@ export function describesVolunteerMinors(body: unknown): boolean {
 }
 
 /**
- * Whether a volunteer agreement carries the minors' clause (§NNN): it names `{{volunteerGuardian}}`. Asked of the
+ * Whether a volunteer agreement carries the minors' clause (§768): it names `{{volunteerGuardian}}`. Asked of the
  * agreement in force, in every language; with `describesVolunteerMinors`, the gate for taking a person under eighteen. Pure.
  */
 export function namesVolunteerGuardian(body: unknown): boolean {

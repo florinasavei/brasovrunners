@@ -165,7 +165,7 @@ describe("§754 submitVolunteerAction's redirects", () => {
     turnstile = { on: true, verdict: "failed" };
     const renderedAt = new Date(Date.now() - 60_000).toISOString();
     const url = await pressed(post({ renderedAt }));
-    // §NNN: the form is the volunteers' own page now, and every answer comes back to it.
+    // §768: the form is the volunteers' own page now, and every answer comes back to it.
     expect(url.pathname.endsWith(`/${slug}/voluntari`)).toBe(true);
     expect(url.searchParams.get("volunteer")).toBe("captcha");
     expect(url.searchParams.get("since")).toBe(renderedAt);
@@ -256,7 +256,7 @@ describe("§754 submitVolunteerAction's redirects", () => {
   it("thanks a kept offer with ?volunteer=1 and clears the draft", async () => {
     await seedEvent(true);
     const url = await pressed(post());
-    // The thank-you is on the volunteers' page (§NNN), said twice the house's way (§427): the banner the address asks for and the flash toast.
+    // The thank-you is on the volunteers' page (§768), said twice the house's way (§427): the banner the address asks for and the flash toast.
     expect(url.pathname.endsWith(`/${slug}/voluntari`)).toBe(true);
     expect(url.searchParams.get("volunteer")).toBe("1");
     expect(url.hash).toBe("#volunteers");

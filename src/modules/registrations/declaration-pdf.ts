@@ -71,7 +71,7 @@ export type DeclarationEntry = {
    */
   noIdDocument?: boolean;
   /**
-   * The words on a single signature line, in place of the bundle's `labels.signature` (§NNN): the volunteer agreement of a
+   * The words on a single signature line, in place of the bundle's `labels.signature` (§768): the volunteer agreement of a
    * minor draws two entries, one for the volunteer's own acceptance and one for the guardian's, and each names its own signer.
    * Absent, `labels.signature` as ever.
    */

@@ -93,7 +93,7 @@ describe("§427 the flash a public action writes", () => {
         "src/app/[locale]/registrations/manage/[token]/actions.ts",
         "src/app/[locale]/registrations/mine/[token]/actions.ts",
         "src/app/[locale]/registrations/declare/[token]/actions.ts",
-        // The volunteers' own page and the guardian's link page (§NNN).
+        // The volunteers' own page and the guardian's link page (§768).
         "src/app/[locale]/events/[slug]/volunteers/actions.ts",
         "src/app/[locale]/volunteers/guardian/[token]/actions.ts",
       ]),
@@ -173,7 +173,7 @@ describe("§427 mounted only where a flow lands", () => {
       "src/app/[locale]/registrations/declare/[token]/page.tsx",
       "src/app/[locale]/registrations/manage/[token]/page.tsx",
       "src/app/[locale]/registrations/mine/[token]/page.tsx",
-      // The guardian's link page and the volunteers' form (the page's own component, §NNN).
+      // The guardian's link page and the volunteers' form (the page's own component, §768).
       "src/app/[locale]/volunteers/guardian/[token]/page.tsx",
       "src/modules/volunteers/ui/VolunteerBox.tsx",
     ]);

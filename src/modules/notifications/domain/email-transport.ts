@@ -94,7 +94,7 @@ export const EMAIL_GROUP_OF: Readonly<Record<EmailMessageType, EmailGroup>> = {
   VOLUNTEER_AGREEMENT_ACCEPTED: "confirmations",
   // The role given (§761): the organizers' answer to the person's offer, as a confirmation answers a runner's step.
   VOLUNTEER_ROLE_ASSIGNED: "confirmations",
-  // The guardian's link (§NNN) is an action link, on the links' road like the volunteer's own agreement link.
+  // The guardian's link (§768) is an action link, on the links' road like the volunteer's own agreement link.
   VOLUNTEER_GUARDIAN_REQUEST: "links",
   NEWSLETTER_CONFIRM: "newsletter",
   NEWSLETTER: "newsletter",

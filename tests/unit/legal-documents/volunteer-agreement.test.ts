@@ -116,7 +116,7 @@ describe("§758 the agreement's blanks", () => {
       "volunteerTasks",
       "volunteerRoleChoices",
       "volunteerChoiceTasks",
-      // The parent or guardian of a volunteer under eighteen (§NNN): the minors' clause's one blank.
+      // The parent or guardian of a volunteer under eighteen (§768): the minors' clause's one blank.
       "volunteerGuardian",
     ]);
     // Each has a line in the editor's legend, in both languages.
@@ -147,7 +147,7 @@ describe("§758 the agreement's blanks", () => {
       volunteerTasks: "Împarte apă",
       volunteerRoleChoices: "",
       volunteerChoiceTasks: "",
-      // An adult: no guardian, so the minors' clause is left out whole (§NNN).
+      // An adult: no guardian, so the minors' clause is left out whole (§768).
       volunteerGuardian: "",
       event: "Crosul",
       eventDate: "sâmbătă, 21 nov. 2026",

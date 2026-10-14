@@ -20,7 +20,7 @@ import { chooseSex } from "./support/sex-choice";
  * refused, the tick «Am cel puțin 18 ani» is gone), the sex, the city, the two optional ticks, and the T-shirt's
  * size only while «Oferim tricouri voluntarilor» is ticked; the card's row, the CSV and the person's data carry them.
  *
- * §NNN — the form is a page of its own, `/ro/evenimente/<slug>/voluntari` (the owner, 2026-10-14: «formularul trebuie să fie
+ * §768 — the form is a page of its own, `/ro/evenimente/<slug>/voluntari` (the owner, 2026-10-14: «formularul trebuie să fie
  * pagină separată»): the event's page keeps one line and one button; the form, the thank-you and the 404 are the page's. The
  * floor is fourteen: thirteen is refused; fifteen needs a parent's or guardian's name and address and the tick that they agree,
  * shown from the age typed (always, without scripts); the parent accepts from a single-use link, the card says «Acordul
@@ -162,7 +162,7 @@ test.describe("§754 volunteers for a race", () => {
         await hydrated(guest);
         await expect(guest.getByRole("heading", { level: 1 })).toContainText("Vreau să fiu voluntar la");
       };
-      // The event's own page: one line and one button to the volunteers' page, and no form on it (§NNN).
+      // The event's own page: one line and one button to the volunteers' page, and no form on it (§768).
       await guest.goto(`/ro/evenimente/${event.slug}`);
       await hydrated(guest);
       const callout = guest.getByTestId("volunteer-callout");
@@ -251,7 +251,7 @@ test.describe("§754 volunteers for a race", () => {
       await guest.getByLabel("Numele tău").fill("Maria Test");
       await guest.getByLabel("Adresa ta de email").fill(maria);
       await guest.locator('[name="phone"]').fill("712345678");
-      // Thirteen — under the floor of fourteen (§NNN) — no sex and no city: each named (§765). The browser's own `required` is lifted so the server's refusal is what is read.
+      // Thirteen — under the floor of fourteen (§768) — no sex and no city: each named (§765). The browser's own `required` is lifted so the server's refusal is what is read.
       await guest.locator('input[name="age"]').fill("13");
       await guest.locator('input[name="volunteeredBefore"]').check();
       for (const tick of ["consent", "agreement"]) {
@@ -372,7 +372,7 @@ test.describe("§754 volunteers for a race", () => {
       expect(file).toContain(maria);
       // Six columns after the moment (§765): the age, the sex (the registrations' own word), the city, the two ticks as «Da»/«Nu», the size (empty: no T-shirts).
       expect(file).toContain("Data,Vârsta,Sex,Orașul,A mai fost voluntar,Din grupul clubului,Mărime tricou");
-      // …then the parent's three (§NNN), empty for an adult.
+      // …then the parent's three (§768), empty for an adult.
       expect(file).toMatch(/,34,Female,Brașov,Da,Da,,,,(\r?\n|$)/);
 
       // --- «Oferim tricouri voluntarilor»: a tick of the card's own, and the form asks the size from then on ---
@@ -429,7 +429,7 @@ test.describe("§754 volunteers for a race", () => {
       await guest.goto(`/ro/evenimente/${event.slug}`);
       await hydrated(guest);
       await expect(guest.getByTestId("volunteer-callout")).toHaveCount(0);
-      // …and the volunteers' page answers 404, never a form that cannot be sent (§NNN).
+      // …and the volunteers' page answers 404, never a form that cannot be sent (§768).
       await expect(async () => {
         const answered = await guest.request.get(`/ro/evenimente/${event.slug}/voluntari`);
         expect(answered.status()).toBe(404);
@@ -479,7 +479,7 @@ test.describe("§754 volunteers for a race", () => {
       await page.waitForURL(/#box-volunteers$/);
       await hydrated(page);
     }
-    // Thirteen is below the platform's floor of fourteen (§NNN): refused where it was typed, nothing added.
+    // Thirteen is below the platform's floor of fourteen (§768): refused where it was typed, nothing added.
     const underage = await fillByHand("Prea Tanar", `tanar.${tag}@example.test`, false, { age: "13" });
     await expect(underage.getByTestId("form-refusal")).toBeVisible({ timeout: 30_000 });
     await expect(page.getByTestId("volunteer-row")).toHaveCount(0);
@@ -570,7 +570,7 @@ test.describe("§754 volunteers for a race", () => {
     await expect(danaRow.getByTestId("volunteer-agreement")).toContainText("semnat pe hârtie");
   });
 
-  test("§NNN a volunteer of fifteen offers with a parent: the boxes follow the age, the parent accepts from the link, the card says «Acordul părintelui lipsește» and refuses «Confirmă» until then, and the consent can be taken on paper", async ({
+  test("§768 a volunteer of fifteen offers with a parent: the boxes follow the age, the parent accepts from the link, the card says «Acordul părintelui lipsește» and refuses «Confirmă» until then, and the consent can be taken on paper", async ({
     page,
     browser,
   }) => {
@@ -795,7 +795,7 @@ test.describe("§754 volunteers for a race", () => {
     await expect(page.getByRole("heading", { level: 1 })).toContainText("Alergarea cu voluntari");
     await expect(page.getByTestId("volunteer-box")).toHaveCount(0);
     await expect(page.getByTestId("volunteer-callout")).toHaveCount(0);
-    // The volunteers' own page answers 404 while the event takes none: never a form that cannot be sent (§NNN).
+    // The volunteers' own page answers 404 while the event takes none: never a form that cannot be sent (§768).
     const answered = await page.request.get(`/ro/evenimente/voluntari-${tag}/voluntari`);
     expect(answered.status()).toBe(404);
     expect((await page.request.get(`/en/events/volunteers-${tag}/volunteers`)).status()).toBe(404);

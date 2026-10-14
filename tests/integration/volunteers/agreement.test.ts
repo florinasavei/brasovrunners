@@ -226,7 +226,7 @@ describe("§758 the volunteer agreement", () => {
         volunteerChoiceTasks: "Water point — Hands out water at kilometre 5",
         event: "The cross",
         eventLocation: "Central park",
-        // §NNN: the platform's minimum is fourteen; under eighteen a parent accepts beside the volunteer.
+        // §768: the platform's minimum is fourteen; under eighteen a parent accepts beside the volunteer.
         minimumAge: "14 years",
       });
       expect(facts?.signedAt).toBeTruthy();

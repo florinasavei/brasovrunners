@@ -86,7 +86,7 @@ export const AGREEMENT_FACT_FIELDS = [
 export type AgreementFacts = Record<(typeof AGREEMENT_FACT_FIELDS)[number], string>;
 
 /**
- * The blanks added after acceptances were already kept (§761, §NNN): a row accepted before reads them as "" — its text
+ * The blanks added after acceptances were already kept (§761, §768): a row accepted before reads them as "" — its text
  * named none of them (`{{volunteerGuardian}}` is the guardian's name, "" for an adult, which drops the minors' clause).
  */
 const LATER_FACT_FIELDS: ReadonlySet<string> = new Set(["volunteerRoleChoices", "volunteerChoiceTasks", "volunteerGuardian"]);
@@ -158,7 +158,7 @@ export async function agreementBlanks<T extends Record<string, unknown>>(
     roles: Pick<AgreementRoles, "assigned"> & { chosen: readonly RoleWords[] };
     locale: Locale;
     body: unknown;
-    /** The parent or guardian of a volunteer under eighteen (§NNN): their name fills `{{volunteerGuardian}}`; none, or an adult, leaves it "" and the minors' clause out. */
+    /** The parent or guardian of a volunteer under eighteen (§768): their name fills `{{volunteerGuardian}}`; none, or an adult, leaves it "" and the minors' clause out. */
     guardianName?: string | null;
   },
 ): Promise<{ facts: Omit<AgreementFacts, "signedAt">; timezone: string }> {
@@ -223,7 +223,7 @@ export async function agreementAcceptance<T extends Record<string, unknown>>(
     document: { id: string; title: string; body: unknown };
     method: VolunteerAgreementMethod;
     recordedBy?: string | null;
-    /** A volunteer under eighteen (§NNN): the guardian's name in the text's `{{volunteerGuardian}}`, and no «declared of age» whatever the way. */
+    /** A volunteer under eighteen (§768): the guardian's name in the text's `{{volunteerGuardian}}`, and no «declared of age» whatever the way. */
     guardianName?: string | null;
   },
   now: Date,
@@ -238,7 +238,7 @@ export async function agreementAcceptance<T extends Record<string, unknown>>(
     agreementTextHash: signedTextHash({ title: input.document.title, body: agreementBody(input.document.body), values: facts }),
     agreementFacts: facts,
     agreementRecordedByStaffUserId: input.recordedBy ?? null,
-    // «Am cel puțin 18 ani»: never for a volunteer under eighteen — their parent accepts beside them (§NNN).
+    // «Am cel puțin 18 ani»: never for a volunteer under eighteen — their parent accepts beside them (§768).
     declaredAdult: !input.guardianName && (input.method !== "PAPER" || mergeFieldsIn(input.document.body).has(MINIMUM_AGE_MERGE_FIELD)),
     agreementTokenHash: null,
     agreementTokenExpiresAt: null,
@@ -327,7 +327,7 @@ export type AgreementLinkView =
   | {
       status: "open";
       name: string;
-      /** A volunteer under eighteen (§NNN): the page asks no «Am cel puțin 18 ani» — their parent or guardian accepts beside them. */
+      /** A volunteer under eighteen (§768): the page asks no «Am cel puțin 18 ani» — their parent or guardian accepts beside them. */
       minor: boolean;
       eventTitle: string;
       /** The role the organizers gave the person, in the page's language, or null while nobody has (§761). */
@@ -402,7 +402,7 @@ export async function acceptVolunteerAgreementByLink<T extends Record<string, un
     const row = await liveLinkRow(tx, secret, now, true);
     if (!row) return { outcome: "invalid" };
     const minor = isVolunteerMinor(row.age) && row.guardianName !== null;
-    // «Am cel puțin 18 ani» is asked of everybody but a volunteer under eighteen, whose guardian accepts beside them (§NNN).
+    // «Am cel puțin 18 ani» is asked of everybody but a volunteer under eighteen, whose guardian accepts beside them (§768).
     if (!minor && !input.adult) throw new DomainError("VALIDATION_ERROR", "the age tick is missing", ["adult"]);
     const document = await findCurrentApprovedDocument(tx, VOLUNTEER_AGREEMENT_KEY, input.locale, now);
     if (!document) return { outcome: "noAgreement" };

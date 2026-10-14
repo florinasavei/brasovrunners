@@ -48,7 +48,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 /**
- * The volunteers' own page (§NNN, amending §754; the owner, 2026-10-14: «formularul trebuie să fie pagină separată, nu embedded
+ * The volunteers' own page (§768, amending §754; the owner, 2026-10-14: «formularul trebuie să fie pagină separată, nu embedded
  * în pagina evenimentului»): `/evenimente/<slug>/voluntari` and `/en/events/<slug>/volunteers` — «Vreau să fiu voluntar la
  * <eveniment>», the event's date and place in one short line, the roles that still need people with their descriptions
  * and how many places each has, the form, and the agreement's links. The event's own page keeps only a short box that

@@ -35,13 +35,13 @@ export type DomainErrorCode =
   | "VOLUNTEER_AGREEMENT_NOTICE"
   // «Semnat pe hârtie» after the version in force or the person's role changed since the sheet was printed (§758).
   | "VOLUNTEER_AGREEMENT_REPRINT"
-  // «Confirmă» on a volunteer under eighteen whose parent or guardian has not accepted the agreement (§NNN): «Acordul părintelui lipsește».
+  // «Confirmă» on a volunteer under eighteen whose parent or guardian has not accepted the agreement (§768): «Acordul părintelui lipsește».
   | "VOLUNTEER_GUARDIAN_MISSING"
-  // The guardian's link or paper record for a volunteer whose guardian has already accepted (§NNN): nothing to send, nothing to record.
+  // The guardian's link or paper record for a volunteer whose guardian has already accepted (§768): nothing to send, nothing to record.
   | "VOLUNTEER_GUARDIAN_ACCEPTED"
-  // «Trimite linkul părintelui» for a volunteer with no guardian address (§NNN): the consent is taken on paper.
+  // «Trimite linkul părintelui» for a volunteer with no guardian address (§768): the consent is taken on paper.
   | "VOLUNTEER_GUARDIAN_NO_EMAIL"
-  // The guardian's link or paper record while the privacy notice and the agreement in force do not both describe minors (§NNN).
+  // The guardian's link or paper record while the privacy notice and the agreement in force do not both describe minors (§768).
   | "VOLUNTEER_MINORS_CLOSED";
 
 export class DomainError extends Error {

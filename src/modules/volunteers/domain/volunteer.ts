@@ -29,7 +29,7 @@ export const VOLUNTEER_ROLE_DESCRIPTION_MAX = 2000;
 /** What a person says about themselves (§765): the city's length is the database's, the age's range too. */
 export const VOLUNTEER_CITY_MAX = 80;
 export const VOLUNTEER_AGE_MAX = 100;
-/** The guardian's name (§NNN): the volunteer's own bound. */
+/** The guardian's name (§768): the volunteer's own bound. */
 export const VOLUNTEER_GUARDIAN_NAME_MAX = 120;
 export const VOLUNTEER_NEEDED_MAX = 1000;
 export const VOLUNTEER_NAME_MAX = 120;
@@ -39,7 +39,7 @@ export const VOLUNTEER_NOTE_MAX = 500;
 export const VOLUNTEER_ROLES_MAX = 30;
 
 /**
- * How old a volunteer must be (§NNN; the owner, 2026-10-14: «voluntarii trebuie să aibă cel puțin 14 ani, nu 18»,
+ * How old a volunteer must be (§768; the owner, 2026-10-14: «voluntarii trebuie să aibă cel puțin 14 ani, nu 18»,
  * replacing §758's eighteen): the age box's floor on the public form and on the organizers' entry, and the agreement's
  * `{{minimumAge}}`. One constant of the platform, not a club setting: the club did not ask to vary it, and a lower or
  * higher number is Legea nr. 78/2014's question, which a lawyer answers — a change is one line and a release.
@@ -47,7 +47,7 @@ export const VOLUNTEER_ROLES_MAX = 30;
  * (`isVolunteerMinor`, the guardian's boxes, the link and the paper record).
  */
 export const VOLUNTEER_MINIMUM_AGE = 14;
-/** Of age: a volunteer under it needs a parent or guardian (§NNN); the agreement link's tick «Am cel puțin 18 ani» says it for a person with no age typed. */
+/** Of age: a volunteer under it needs a parent or guardian (§768); the agreement link's tick «Am cel puțin 18 ani» says it for a person with no age typed. */
 export const VOLUNTEER_ADULT_AGE = 18;
 
 /**
@@ -65,7 +65,7 @@ export function guardianSharesAddress(volunteerEmail: string, guardianEmail: str
 }
 
 /**
- * The age `{{minimumAge}}` says in a volunteer agreement being read (§NNN). A text that carries the minors' clause
+ * The age `{{minimumAge}}` says in a volunteer agreement being read (§768). A text that carries the minors' clause
  * (`{{volunteerGuardian}}`) is one the club approved knowing a person from fourteen volunteers with a parent: it says
  * `VOLUNTEER_MINIMUM_AGE`. A text approved under §758 says nothing of a guardian and the platform takes only adults
  * under it, so it keeps saying eighteen until the club approves a version from the new template — a text in force
@@ -228,7 +228,7 @@ const shirtField = z
 const tick = z.boolean().optional().default(false);
 
 /**
- * The guardian of a volunteer under eighteen (§NNN), as a form posts the two boxes: whatever was typed, judged together
+ * The guardian of a volunteer under eighteen (§768), as a form posts the two boxes: whatever was typed, judged together
  * with the age by `refuseGuardianBoxes` — an adult's boxes (or no age) are dropped, never kept.
  */
 const guardianNameBox = z.string().optional().default("");
@@ -243,7 +243,7 @@ function foldedName(value: string): string {
 type GuardianVerdict = { guardian: { name: string; email: string | null } | null; badName: boolean; badEmail: boolean };
 
 /**
- * What the guardian's two boxes mean for the age typed (§NNN), pure:
+ * What the guardian's two boxes mean for the age typed (§768), pure:
  * - **eighteen or older, or no age** — the boxes are dropped (`null`): nobody keeps a third person's data for an adult;
  * - **a minor, `address: "required"` (the public form)** — the name (`guardianName`) and a valid address
  *   (`guardianEmail`); the volunteer's tick that the parent knows and agrees is the schema's own (`guardianAware`);
@@ -323,7 +323,7 @@ const volunteerStaffInputBase = z
     volunteeredBefore: tick,
     clubMember: tick,
     shirtSize: shirtField,
-    /** The parent or guardian of a volunteer under eighteen (§NNN): the name, and the address only if typed (the consent may be on paper). */
+    /** The parent or guardian of a volunteer under eighteen (§768): the name, and the address only if typed (the consent may be on paper). */
     guardianName: guardianNameBox,
     guardianEmail: guardianEmailBox,
   })
@@ -395,14 +395,14 @@ const volunteerPublicProfileBase = z.object({
   volunteeredBefore: tick,
   clubMember: tick,
   shirtSize: shirtField,
-  /** The parent's or guardian's name and address, and the volunteer's tick «Părintele sau tutorele meu știe și e de acord» (§NNN): asked only of a minor. */
+  /** The parent's or guardian's name and address, and the volunteer's tick «Părintele sau tutorele meu știe și e de acord» (§768): asked only of a minor. */
   guardianName: guardianNameBox,
   guardianEmail: guardianEmailBox,
   guardianAware: tick,
 });
 
 /**
- * The profile's form with the minors' path (§NNN; the owner, 2026-10-14: «voluntarii trebuie să aibă cel puțin 14
+ * The profile's form with the minors' path (§768; the owner, 2026-10-14: «voluntarii trebuie să aibă cel puțin 14
  * ani» and «fă cu acord ceva»). From fourteen to seventeen the form also takes the parent's or guardian's name and
  * address and the volunteer's tick that the parent knows and agrees — and keeps the guardian as `guardian`, the
  * boxes themselves gone; at eighteen or more the guardian's boxes are dropped, whatever was typed in them.
@@ -709,7 +709,7 @@ export function agreementStandingOf(
 /**
  * The link page's two ticks: the agreement and the age, both the person's own act each time. The age tick
  * («Am cel puțin 18 ani») is asked only of a person with no age on their row or one of eighteen or more: a volunteer
- * the organizers entered with an age under eighteen has their guardian accept beside them (§NNN), and the service
+ * the organizers entered with an age under eighteen has their guardian accept beside them (§768), and the service
  * (`acceptVolunteerAgreementByLink`) asks the tick of everybody else.
  */
 export const volunteerAgreementAcceptSchema = z.object({
@@ -718,7 +718,7 @@ export const volunteerAgreementAcceptSchema = z.object({
   locale: z.enum(["ro", "en"]),
 });
 
-/** The guardian's link page: the typed name is the acceptance, the tick the explicit act; both the guardian's own, every time (§NNN). */
+/** The guardian's link page: the typed name is the acceptance, the tick the explicit act; both the guardian's own, every time (§768). */
 export const volunteerGuardianAcceptSchema = z.object({
   agreement: z.literal(true),
   typedName: z
@@ -729,7 +729,7 @@ export const volunteerGuardianAcceptSchema = z.object({
 });
 
 /**
- * Where a volunteer stands with their parent's or guardian's agreement (§NNN), as the card says it:
+ * Where a volunteer stands with their parent's or guardian's agreement (§768), as the card says it:
  * - `notNeeded` — eighteen or older, or no age: nothing to ask;
  * - `accepted` — the guardian accepted, from the link or on paper;
  * - `linkSent` — not yet, and a link is live in the guardian's mailbox;
@@ -748,7 +748,7 @@ export function guardianStandingOf(
 }
 
 /**
- * Whether a volunteer may be confirmed (§NNN): a minor needs the guardian's agreement first — the confirm action
+ * Whether a volunteer may be confirmed (§768): a minor needs the guardian's agreement first — the confirm action
  * refuses with «Acordul părintelui lipsește» until it is recorded; an adult is never held up by it.
  */
 export function guardianAllowsConfirm(volunteer: { age: number | null; guardianAcceptedAt: Date | null }): boolean {

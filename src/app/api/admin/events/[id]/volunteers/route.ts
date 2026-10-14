@@ -94,7 +94,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
       clubMember: t(person.clubMember ? "volunteers.yes" : "volunteers.no"),
       // Only while the event gives T-shirts (§765): a size left from before is exported as nothing.
       shirtSize: shirtSizeShown(data.shirts, person.shirtSize) ?? "",
-      // The parent or guardian of a volunteer under eighteen (§NNN) and whether their consent is in; nothing for an adult.
+      // The parent or guardian of a volunteer under eighteen (§768) and whether their consent is in; nothing for an adult.
       guardianName: person.guardianName,
       guardianEmail: person.guardianEmail,
       guardianConsent: isVolunteerMinor(person.age) ? t(person.guardianAcceptedAt ? "volunteers.yes" : "volunteers.no") : "",

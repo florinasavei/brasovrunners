@@ -16,7 +16,7 @@ import {
 } from "@/modules/volunteers/domain/volunteer";
 
 /**
- * §NNN — volunteers from fourteen, with a parent's or guardian's agreement under eighteen (the owner, 2026-10-14: «voluntarii
+ * §768 — volunteers from fourteen, with a parent's or guardian's agreement under eighteen (the owner, 2026-10-14: «voluntarii
  * trebuie să aibă cel puțin 14 ani, nu 18» and «fă cu acord ceva»): the pure rules — the age boundary, what the form and the
  * organizers' entry ask of a minor, the guardian's states, and the two acceptance schemas. No database
  * (`tests/integration/volunteers/guardian.test.ts` keeps them in the rows).
@@ -37,7 +37,7 @@ const PUBLIC = {
 const GUARDIAN = { guardianName: "  Maria   Popescu ", guardianEmail: " maria@example.test ", guardianAware: true };
 const NOW = new Date("2026-10-14T10:00:00Z");
 
-describe("§NNN the age boundary: fourteen, and eighteen for a person alone", () => {
+describe("§768 the age boundary: fourteen, and eighteen for a person alone", () => {
   it("is one constant of the platform, not a club setting: fourteen to be taken, eighteen to be taken alone", () => {
     expect(VOLUNTEER_MINIMUM_AGE).toBe(14);
     expect(VOLUNTEER_ADULT_AGE).toBe(18);
@@ -106,7 +106,7 @@ describe("§NNN the age boundary: fourteen, and eighteen for a person alone", ()
   });
 });
 
-describe("§NNN the organizers' entry holds the same line", () => {
+describe("§768 the organizers' entry holds the same line", () => {
   const staff = { roleIds: [ID], assignedRoleId: "", name: "Ana Test", email: "ana@example.test", phone: "+40712345678", note: "" };
 
   it("asks a name for a person under eighteen, and the address only if the organizer has it — the consent may be on paper", () => {
@@ -133,7 +133,7 @@ describe("§NNN the organizers' entry holds the same line", () => {
   });
 });
 
-describe("§NNN where a volunteer stands with their parent's or guardian's agreement", () => {
+describe("§768 where a volunteer stands with their parent's or guardian's agreement", () => {
   const minor = { age: 15, guardianAcceptedAt: null, guardianTokenExpiresAt: null };
 
   it("is «Acordul părintelui lipsește» until the guardian accepts, «link sent» while a link is live, and nothing for an adult", () => {
@@ -156,7 +156,7 @@ describe("§NNN where a volunteer stands with their parent's or guardian's agree
   });
 });
 
-describe("§NNN the two acceptance schemas", () => {
+describe("§768 the two acceptance schemas", () => {
   it("asks the guardian's tick and typed name, the name folded — each the guardian's own act, named apart", () => {
     expect(volunteerGuardianAcceptSchema.parse({ agreement: true, typedName: "  Maria   Popescu ", locale: "ro" })).toEqual({
       agreement: true,
@@ -180,7 +180,7 @@ describe("§NNN the two acceptance schemas", () => {
   });
 });
 
-describe("§NNN every refused box is named in one pass, and the text read decides the age it says", () => {
+describe("§768 every refused box is named in one pass, and the text read decides the age it says", () => {
   it("names the parent's boxes together with a sex that is no answer — never a second refusal for the same form", () => {
     const verdict = volunteerPublicProfileSchemaFor(true).safeParse({ ...PUBLIC, sex: "ROBOT", age: "15" });
     expect(verdict.success).toBe(false);

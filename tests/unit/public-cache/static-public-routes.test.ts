@@ -94,8 +94,8 @@ const PER_REQUEST: Record<string, string> = {
   "src/app/[locale]/preview/draft/page.tsx": "staff only: the editor's preview frame, for the roles the session says may preview (§579)",
   "src/app/[locale]/events/[slug]/register/page.tsx": "the registration form: the draft cookie, the family cookie, the render time (§97, §389)",
   "src/app/[locale]/events/[slug]/declaration/page.tsx": "the group run's signing form (§393)",
-  // The volunteers' own page (§NNN): the registration page's model — a form, so its render time is the bot check's clock, its refusals come back from the draft cookie, its answer is in the address.
-  "src/app/[locale]/events/[slug]/volunteers/page.tsx": "the volunteers' form: the draft cookie, the render time, ?volunteer= and ?vfields= (§NNN)",
+  // The volunteers' own page (§768): the registration page's model — a form, so its render time is the bot check's clock, its refusals come back from the draft cookie, its answer is in the address.
+  "src/app/[locale]/events/[slug]/volunteers/page.tsx": "the volunteers' form: the draft cookie, the render time, ?volunteer= and ?vfields= (§768)",
   "src/app/[locale]/registrations/mine/page.tsx": "a form that takes an address: ?sent= says its outcome (BR-REQ-036-04)",
   "src/app/[locale]/registrations/resend/page.tsx": "a form that takes an address: ?sent= and ?event= (BR-REQ-036-02)",
   "src/app/[locale]/registrations/confirm/[token]/page.tsx": TOKEN_PAGE,
@@ -105,7 +105,7 @@ const PER_REQUEST: Record<string, string> = {
   "src/app/[locale]/registrations/invitation/[token]/page.tsx": TOKEN_PAGE,
   "src/app/[locale]/registrations/list/[token]/page.tsx": TOKEN_PAGE,
   "src/app/[locale]/registrations/manage/[token]/page.tsx": TOKEN_PAGE,
-  // The volunteer agreement's link (§758) and the guardian's (§NNN), like every link page.
+  // The volunteer agreement's link (§758) and the guardian's (§768), like every link page.
   "src/app/[locale]/volunteers/agreement/[token]/page.tsx": TOKEN_PAGE,
   "src/app/[locale]/volunteers/guardian/[token]/page.tsx": TOKEN_PAGE,
   "src/app/[locale]/registrations/mine/[token]/page.tsx": TOKEN_PAGE,
@@ -257,7 +257,7 @@ const REQUEST_READERS_ALLOWED: Record<string, string> = {
   "src/modules/resilience/last-good.ts": "the resting page's way back, on a cold miss only",
   /*
     The sealed draft cookie (§142) was here while the event page's volunteer box named a Server Action that kept what was
-    typed (§754): the form moved to its own per-request page (§NNN), so no static page reaches `form-draft.ts` any more —
+    typed (§754): the form moved to its own per-request page (§768), so no static page reaches `form-draft.ts` any more —
     the entry is gone, which is what this list is for.
   */
   /*

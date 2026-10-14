@@ -35,13 +35,13 @@ const DAY = 24 * 60 * 60_000;
 const RENDERED = new Date(NOW.getTime() - 60_000).toISOString();
 
 /**
- * §NNN — volunteers from fourteen, with a parent's or guardian's agreement under eighteen (the owner, 2026-10-14): the
+ * §768 — volunteers from fourteen, with a parent's or guardian's agreement under eighteen (the owner, 2026-10-14): the
  * age boundary on the public form and the organizers' entry, the guardian's single-use link (minted at the send, hashed
  * at rest, single use, a read that never writes — AGENTS.md §12.8), the paper record at the desk, «Acordul părintelui
  * lipsește» and the refusal to confirm, the PDF's second signer, and the gate: nobody under eighteen is taken until a
  * privacy notice naming `{{volunteerMinors}}` and an agreement naming `{{volunteerGuardian}}` are in force in every language.
  */
-describe("§NNN volunteers under eighteen and their guardian", () => {
+describe("§768 volunteers under eighteen and their guardian", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   let admin: StaffUser;

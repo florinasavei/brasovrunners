@@ -77,7 +77,7 @@ describe("§765 the public form's age, sex and city (the notice names them)", ()
   });
 
   it("holds the age to the minimum: 13 is refused on the age's own box; with minors closed 17 is too, 18 and the top bound are taken", () => {
-    // §NNN: fourteen, not eighteen — a person of fourteen to seventeen needs a guardian (below), and only while the texts allow it.
+    // §768: fourteen, not eighteen — a person of fourteen to seventeen needs a guardian (below), and only while the texts allow it.
     expect(VOLUNTEER_MINIMUM_AGE).toBe(14);
     for (const age of ["13", "1"]) {
       const under = volunteerPublicProfileSchemaFor(true).safeParse({ ...PUBLIC, age });

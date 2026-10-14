@@ -136,7 +136,7 @@
  * and keeps their answers, only while the notice in force names this marker too (`describesVolunteerProfile`); until then it
  * is §758's form, and `/admin/tasks` carries the row `volunteerProfileNotice`. **Open for counsel:** whether the sex, a
  * personal datum the registration form also asks, needs more than the purpose written here for a volunteer.
- * Since §NNN the same paragraph says that a minor of the age the agreement asks — fourteen to seventeen — may volunteer with a
+ * Since §768 the same paragraph says that a minor of the age the agreement asks — fourteen to seventeen — may volunteer with a
  * parent's or guardian's agreement, names the guardian's two boxes — its own marker, `{{volunteerMinors}}`: the form's labels,
  * quoted — the guardian's name and email, why they are kept (to ask the guardian's agreement, art. 6(1)(f) for the data and
  * 6(1)(b) for the acceptance), who sees them, that they stay as long as the volunteer's own row (thirty days after the event),

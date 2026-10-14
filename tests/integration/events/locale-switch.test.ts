@@ -70,7 +70,7 @@ describe("BR-REQ-040-01 where a language switch lands", () => {
     );
   });
 
-  it("§NNN keeps the volunteers' page and the guardian's link on their own address in the other language", async () => {
+  it("§768 keeps the volunteers' page and the guardian's link on their own address in the other language", async () => {
     await seedEvent({ withEnglish: true });
 
     // The volunteers' page is the event's own page in the other language: its slug is that language's, not this one's.

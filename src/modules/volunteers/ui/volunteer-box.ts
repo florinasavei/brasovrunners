@@ -1,5 +1,5 @@
 /**
- * The public form's address on the volunteers' page (§754, §NNN): the id its action's redirect lands on, and what
+ * The public form's address on the volunteers' page (§754, §768): the id its action's redirect lands on, and what
  * the page says after the action, read from `?volunteer=`. Kept out of the action's module because a
  * "use server" file may export only async functions.
  */
@@ -55,7 +55,7 @@ export type VolunteerTyped = {
   roleIds?: string;
   message?: string;
   age?: string;
-  /** The parent's or guardian's name and address (§NNN) come back with the rest; the tick «știe și e de acord» never does — it is the person's own act each time. */
+  /** The parent's or guardian's name and address (§768) come back with the rest; the tick «știe și e de acord» never does — it is the person's own act each time. */
   guardianName?: string;
   guardianEmail?: string;
   sex?: string;

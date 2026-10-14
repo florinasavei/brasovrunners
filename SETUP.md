@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.26-2026-10-14 -->
+<!-- PROJECT_BASELINE: BR-V3.27-2026-10-14 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V3.26-2026-10-14`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.27-2026-10-14`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -2008,7 +2008,7 @@ with its cards in the order you fill them.
 ## 44. Voluntari — register the people who help at a race
 
 The event's volunteers (`DECISIONS.md` §754) are built and closed: no event page offers «Vreau să fiu
-voluntar» until the steps below are done. Since §NNN the form is a **page of its own**, `/ro/evenimente/<slug>/voluntari`
+voluntar» until the steps below are done. Since §768 the form is a **page of its own**, `/ro/evenimente/<slug>/voluntari`
 (`/en/events/<slug>/volunteers`); the event's page keeps only one line, «Căutăm voluntari: …», and one button to it. A volunteer is not a registration — no place of the race, no
 declaration, no row on the public list, no account — and the Organizer and the Administrators are the
 only ones who see the names, addresses and telephone numbers.
@@ -2140,7 +2140,7 @@ only ones who see the names, addresses and telephone numbers.
      of that pile, and a number the file cannot take brings you back to the page with the reason. Print at
      100 %, cut along the dashed lines.
 
-8. **Volunteers from 14, with a parent's or guardian's agreement** (`DECISIONS.md` §NNN; the owner, 2026-10-14: «voluntarii
+8. **Volunteers from 14, with a parent's or guardian's agreement** (`DECISIONS.md` §768; the owner, 2026-10-14: «voluntarii
    trebuie să aibă cel puțin 14 ani, nu 18»). The age is one constant of the platform, `VOLUNTEER_MINIMUM_AGE` = 14 (no club
    setting: a different number is Legea nr. 78/2014's question and one line of code). A person of 14–17 is taken **only with a parent or
    guardian who accepts the same agreement in their own name**; an adult goes alone, as ever. **Until both texts below are in force in
@@ -2174,4 +2174,4 @@ only ones who see the names, addresses and telephone numbers.
      address, never the parent's, and the parent's name and address live only on the minor's row (30 days after the event, they go with it).
      So for a parent's request, find the minor's row on the event's «Voluntari» card (the parent's address is on it, and the CSV lists it), read or
      export it from there, and erase by deleting the row — that is the manual route; no tool searches by a guardian's address, because the platform
-     keeps no list of guardians (a table of them was refused, `DECISIONS.md` §NNN).
+     keeps no list of guardians (a table of them was refused, `DECISIONS.md` §768).

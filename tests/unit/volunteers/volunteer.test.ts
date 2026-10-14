@@ -460,7 +460,7 @@ describe("§754 the CSV", () => {
     expect(lines[1].startsWith('Punct de apă,"Punct de apă, Sosire",')).toBe(true);
     // §765: what the person said about themselves comes after the moment, so no earlier column moves; a comma in the city is quoted.
     expect(csv.split("\r\n")[0].includes("Data,Vârsta,Sex,Orașul,A mai fost voluntar,Din grupul clubului,Mărime tricou")).toBe(true);
-    // §NNN: the parent or guardian of a volunteer under eighteen, appended after the T-shirt: name, address, and the consent as «Da» / «Nu».
+    // §768: the parent or guardian of a volunteer under eighteen, appended after the T-shirt: name, address, and the consent as «Da» / «Nu».
     expect(csv.split("\r\n")[0].endsWith("Mărime tricou,Părinte sau tutore,Email părinte sau tutore,Acordul părintelui")).toBe(true);
     expect(lines[1].endsWith('2026-10-13T10:00:00.000Z,34,Female,"Brașov, centru",Da,Nu,M,Maria Popescu,maria@example.test,Nu')).toBe(true);
   });

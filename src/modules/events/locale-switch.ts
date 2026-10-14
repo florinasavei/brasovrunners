@@ -34,7 +34,7 @@ export async function resolveLocaleSwitch(
   if (!parsed) return listing;
 
   // The group run's self-declaration page (§393) is the event's page in the other language too.
-  // The volunteers' page (§NNN) likewise: its slug per language is the event's.
+  // The volunteers' page (§768) likewise: its slug per language is the event's.
   if (
     parsed.route === "/events/[slug]" ||
     parsed.route === "/events/[slug]/register" ||
@@ -125,7 +125,7 @@ export async function resolveLocaleSwitch(
     parsed.route === "/registrations/invitation/[token]" ||
     // The volunteer agreement's link (§758), the same rule.
     parsed.route === "/volunteers/agreement/[token]" ||
-    // The guardian's link (§NNN), the same rule.
+    // The guardian's link (§768), the same rule.
     parsed.route === "/volunteers/guardian/[token]"
   ) {
     const token = parsed.params.token;

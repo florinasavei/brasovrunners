@@ -82,7 +82,7 @@ const staffFields = (form: FormData) => ({
   sex: field(form, "sex"),
   city: field(form, "city"),
   shirtSize: field(form, "shirtSize"),
-  // The parent or guardian of a person under eighteen (§NNN): the name, and the address when the organizer has it.
+  // The parent or guardian of a person under eighteen (§768): the name, and the address when the organizer has it.
   guardianName: field(form, "guardianName"),
   guardianEmail: field(form, "guardianEmail"),
   volunteeredBefore: form.get("volunteeredBefore") === "on",
@@ -286,7 +286,7 @@ export async function recordPaperVolunteerAgreementAction(_previous: FormOutcome
 }
 
 /**
- * «Trimite linkul părintelui» (§NNN): one email with the volunteer agreement and a single-use link to accept it in the
+ * «Trimite linkul părintelui» (§768): one email with the volunteer agreement and a single-use link to accept it in the
  * guardian's name, to the guardian's address. The service refuses while the club may not take minors, for a volunteer
  * who is not under eighteen, was cancelled, has no guardian address or whose guardian has accepted — each said in the
  * card's banner.
@@ -303,7 +303,7 @@ export async function requestVolunteerGuardianAction(form: FormData): Promise<vo
 }
 
 /**
- * «Acordul părintelui pe hârtie» (§NNN): asks first (§384), then records that the guardian signed the printed agreement at
+ * «Acordul părintelui pe hârtie» (§768): asks first (§384), then records that the guardian signed the printed agreement at
  * the desk — the version in force, and who recorded it. A staff member records the guardian's signature, never gives one.
  */
 export async function recordPaperVolunteerGuardianAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {

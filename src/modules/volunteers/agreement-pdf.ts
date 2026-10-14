@@ -31,7 +31,7 @@ import { isVolunteerMinor } from "./domain/volunteer";
  *
  * Neither line asks for an identity document: the agreement names none (`noIdDocument`).
  *
- * **A volunteer under eighteen (§NNN)** has a parent or guardian who accepts the same text in their own name, so the
+ * **A volunteer under eighteen (§768)** has a parent or guardian who accepts the same text in their own name, so the
  * signature block has a second signer: the volunteer's own acceptance and the guardian's — the typed name from the link,
  * or the paper — under one date, the guardian's version, blanks and fingerprint when they accepted, and a line that says
  * the consent is still to come while it is. The sheet to sign on paper has the volunteer's line and the guardian's, in
@@ -96,7 +96,7 @@ const WORDS: Record<
 
 /**
  * The declaration's labels with the agreement's own signature words in place (pure, for its test). For a volunteer under
- * eighteen (§NNN) the second line is the parent's or guardian's — the organizer's is for an adult's desk copy — and a
+ * eighteen (§768) the second line is the parent's or guardian's — the organizer's is for an adult's desk copy — and a
  * single guardian's signature, while the volunteer has not accepted their own, reads as theirs.
  */
 export function volunteerAgreementLabels(locale: Locale, now: Date, guardian = false): DeclarationLabels {
@@ -118,7 +118,7 @@ export function acceptedHowWords(locale: Locale, method: "FORM" | "LINK" | "PAPE
   return (method === "LINK" ? words.acceptedByLink : words.acceptedOnForm).replace("{when}", when);
 }
 
-/** How the guardian accepted, under the signature (§NNN): the link or the paper, with the guardian's name and, on paper, who recorded it. */
+/** How the guardian accepted, under the signature (§768): the link or the paper, with the guardian's name and, on paper, who recorded it. */
 export function guardianHowWords(
   locale: Locale,
   method: "LINK" | "PAPER",
@@ -134,7 +134,7 @@ export function guardianHowWords(
     .replace("{when}", when);
 }
 
-/** The line that says the guardian's consent is still to come (§NNN), under the volunteer's own acceptance. */
+/** The line that says the guardian's consent is still to come (§768), under the volunteer's own acceptance. */
 export function guardianPendingWords(locale: Locale, guardianName: string): string {
   return WORDS[locale].guardianPending.replace("{guardian}", guardianName);
 }
@@ -155,7 +155,7 @@ type OwnAcceptance = {
 /**
  * The entry for the volunteer's own acceptance: the version they accepted in the language they accepted it in, filled with the
  * blanks kept on their row — the values the fingerprint was taken over (§556) — with their name, the moment and the way.
- * `pending` is the line that says a guardian's consent is still to come (§NNN), under it; none once it came, when the guardian's
+ * `pending` is the line that says a guardian's consent is still to come (§768), under it; none once it came, when the guardian's
  * own entry follows. Undefined when the version is gone.
  */
 async function ownAcceptanceEntry<T extends Record<string, unknown>>(db: Database<T>, own: OwnAcceptance, pending: string | null): Promise<DeclarationEntry | undefined> {
@@ -203,7 +203,7 @@ export async function renderVolunteerAgreementPdf<T extends Record<string, unkno
   volunteerId: string,
   now: Date,
   /**
-   * `sheet`: the copy to sign on paper even though the volunteer has accepted (§NNN) — the desk's sheet for the parent or
+   * `sheet`: the copy to sign on paper even though the volunteer has accepted (§768) — the desk's sheet for the parent or
    * guardian of a volunteer under eighteen, whose consent is still to come. Honoured only for such a volunteer.
    */
   options: { sheet?: boolean } = {},
@@ -243,14 +243,14 @@ export async function renderVolunteerAgreementPdf<T extends Record<string, unkno
     .limit(1);
   if (!row) return undefined;
 
-  // A volunteer under eighteen has a parent or guardian beside them (§NNN); their consent is done when the row says so whole.
+  // A volunteer under eighteen has a parent or guardian beside them (§768); their consent is done when the row says so whole.
   const guardianName = isVolunteerMinor(row.age) ? row.guardianName : null;
   const guardianDone =
     guardianName !== null && row.guardianAcceptedAt !== null && row.guardianDocumentId !== null && row.guardianMethod !== null && row.guardianLocale !== null;
   // The desk's sheet for the guardian: the text to sign though the volunteer accepted, while the guardian's consent is to come.
   const sheet = options.sheet === true && guardianName !== null && !guardianDone;
 
-  // The guardian accepted (§NNN): two entries, each the text its signer read — the volunteer's own acceptance when they gave it
+  // The guardian accepted (§768): two entries, each the text its signer read — the volunteer's own acceptance when they gave it
   // (their version, blanks and fingerprint, as an adult's) and the guardian's (theirs, under the guardian's date). The guardian
   // reads the version in force when they pressed, which may be newer than the volunteer's: one entry could not carry both proofs.
   if (guardianName !== null && guardianDone && row.guardianDocumentId && row.guardianAcceptedAt && row.guardianMethod && row.guardianLocale) {
@@ -311,7 +311,7 @@ export async function renderVolunteerAgreementPdf<T extends Record<string, unkno
   }
 
   if (!sheet && row.acceptedAt && row.documentId && row.method && row.agreementLocale) {
-    // A volunteer under eighteen whose guardian has not accepted yet says so under their own acceptance (§NNN).
+    // A volunteer under eighteen whose guardian has not accepted yet says so under their own acceptance (§768).
     const entry = await ownAcceptanceEntry(
       db,
       {

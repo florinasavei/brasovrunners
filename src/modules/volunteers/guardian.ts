@@ -26,7 +26,7 @@ import {
 import { agreementRolesStamp, isVolunteerMinor, refusedFields, type RoleWords, volunteerGuardianAcceptSchema } from "./domain/volunteer";
 
 /**
- * The parent's or guardian's agreement for a volunteer under eighteen (§NNN, amending §758; the owner, 2026-10-14:
+ * The parent's or guardian's agreement for a volunteer under eighteen (§768, amending §758; the owner, 2026-10-14:
  * «voluntarii trebuie să aibă cel puțin 14 ani, nu 18» and «fă cu acord ceva»).
  *
  * From fourteen a volunteer is taken only with a parent or guardian who accepts the **same volunteer agreement** in
@@ -317,7 +317,7 @@ export async function acceptVolunteerGuardianByLink<T extends Record<string, unk
 }
 
 /**
- * The volunteer's copy of the agreement, queued again once their guardian has accepted (§NNN): the PDF the send attaches
+ * The volunteer's copy of the agreement, queued again once their guardian has accepted (§768): the PDF the send attaches
  * carries both acceptances. Only for a volunteer who accepted their own — nothing to copy before that.
  */
 async function queueVolunteerCopy<T extends Record<string, unknown>>(
@@ -360,7 +360,7 @@ async function lockedMinor<T extends Record<string, unknown>>(tx: Transaction<T>
 }
 
 /**
- * «Trimite linkul părintelui» (§NNN): one email with the volunteer agreement and a single-use link to accept it in the
+ * «Trimite linkul părintelui» (§768): one email with the volunteer agreement and a single-use link to accept it in the
  * guardian's name, to the guardian's address — minted at the send, so a press queues a message and never a secret
  * (§14.5). Refuses an actor who may not (FORBIDDEN), a volunteer not of this event (NOT_FOUND), one who is not under
  * eighteen or was cancelled (CONFLICT), one whose guardian has accepted (`VOLUNTEER_GUARDIAN_ACCEPTED`) or has no address
@@ -404,7 +404,7 @@ export async function requestVolunteerGuardian<T extends Record<string, unknown>
 }
 
 /**
- * «Acordul părintelui pe hârtie» (§NNN): the guardian signed the printed agreement at the desk, and an organizer records
+ * «Acordul părintelui pe hârtie» (§768): the guardian signed the printed agreement at the desk, and an organizer records
  * it — the version in force in the volunteer's language (the one the desk's PDF prints), the moment of the press,
  * `PAPER`, and who recorded it; the signed sheet stays with the club. Refuses as `requestVolunteerGuardian` does, and —
  * `VOLUNTEER_AGREEMENT_REPRINT` — when the version in force or the volunteer's roles are no longer the ones the card

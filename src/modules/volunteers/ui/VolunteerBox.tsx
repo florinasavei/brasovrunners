@@ -41,7 +41,7 @@ import { VOLUNTEER_BOX_ID, type VolunteerBox as BoxName, type VolunteerOutcome, 
 
 /**
  * «Vreau să fiu voluntar» — the form of the volunteers' own page (§754; the owner, 2026-10-13: «I want to register
- * volunteers for a race»; since §NNN, 2026-10-14: «formularul trebuie să fie pagină separată, nu embedded în pagina
+ * volunteers for a race»; since §768, 2026-10-14: «formularul trebuie să fie pagină separată, nu embedded în pagina
  * evenimentului», so it lives at `/evenimente/<slug>/voluntari`, not in a fold of the event's page): one plain form —
  * «Ce ești dispus(ă) să faci», one box per role that still needs people with its description and how many it still
  * needs, as many ticked as the person would do (§761; the owner, 2026-10-14: «poate bifa mai multe atribuțiuni din ce e
@@ -59,7 +59,7 @@ import { VOLUNTEER_BOX_ID, type VolunteerBox as BoxName, type VolunteerOutcome, 
  * action asks again.
  *
  * What the person says about themselves (§765; the owner, 2026-10-14): while the notice in force names it (`profile`),
- * the form asks «Vârsta» (the registration's own number-in-years habit, at least 14 since §NNN — the tick «Am cel puțin
+ * the form asks «Vârsta» (the registration's own number-in-years habit, at least 14 since §768 — the tick «Am cel puțin
  * 18 ani» is gone, the age answers it), «Sex» (the registration form's own `SexField`, its words), «Orașul» (its city
  * box's words), the optional ticks «Am mai fost voluntar în trecut la alte curse» and «Fac parte din grupul {club}» (the
  * club's name from `CLUB_NAME`, as the registration form's member tick draws it — the person's claim, checked against
@@ -67,7 +67,7 @@ import { VOLUNTEER_BOX_ID, type VolunteerBox as BoxName, type VolunteerOutcome, 
  * the form is §758's, with its tick, and takes adults only. Each role's description is its document, under its tick
  * (`RoleDescription`).
  *
- * **Under eighteen (§NNN).** While the notice in force names `{{volunteerMinors}}` and the agreement `{{volunteerGuardian}}`
+ * **Under eighteen (§768).** While the notice in force names `{{volunteerMinors}}` and the agreement `{{volunteerGuardian}}`
  * (`minors`), a person of fourteen to seventeen also gives their parent's or guardian's name and address and ticks
  * «Părintele sau tutorele meu știe și e de acord»: the block is `GuardianFields`, always drawn without scripts and shown
  * by the age typed with them. While it is not (`minors` false), a typed age under eighteen is refused with the sentence
@@ -94,7 +94,7 @@ export default async function VolunteerBox({
   shirts: boolean;
   /** The notice in force names what a volunteer says about themselves (§765): the form asks it — else §758's tick «Am cel puțin 18 ani». */
   profile: boolean;
-  /** The club may take a person under eighteen (§NNN): the notice and the agreement in force both describe minors — the form draws the guardian's block. */
+  /** The club may take a person under eighteen (§768): the notice and the agreement in force both describe minors — the form draws the guardian's block. */
   minors: boolean;
   outcome: VolunteerOutcome | null;
   /** The boxes a refusal named (`?vfields=`). */
@@ -128,7 +128,7 @@ export default async function VolunteerBox({
   const ticked = new Set((typed.roleIds ?? "").split(",").filter((id) => roles.some((role) => role.id === id)));
   /*
     «Vârsta» says one of three sentences after a refusal: a number under eighteen, while the club cannot take minors yet,
-    says so (§NNN); a number below the minimum (fourteen) says «cel puțin 14 ani»; anything else is «scrie vârsta».
+    says so (§768); a number below the minimum (fourteen) says «cel puțin 14 ani»; anything else is «scrie vârsta».
   */
   const typedAge = Number((typed.age ?? "").trim());
   const ageDigits = /^\d{1,3}$/.test((typed.age ?? "").trim());
@@ -144,7 +144,7 @@ export default async function VolunteerBox({
           <>
             <Alert severity="success" role="status" data-testid="volunteer-done" sx={{ mt: 1 }}>
               {t("volunteers.done")}
-              {/* Where the club takes minors, the same extra sentence for everybody: never a hint about who was typed (§NNN). */}
+              {/* Where the club takes minors, the same extra sentence for everybody: never a hint about who was typed (§768). */}
               {minors && (
                 <Box component="span" sx={{ display: "block", mt: 1 }} data-testid="volunteer-done-guardian">
                   {t("volunteers.doneGuardian")}
@@ -311,7 +311,7 @@ export default async function VolunteerBox({
                   />
                 </Stack>
                 {/*
-                  The parent or guardian of a person under eighteen (§NNN): drawn hidden (open when the age typed before a refusal says
+                  The parent or guardian of a person under eighteen (§768): drawn hidden (open when the age typed before a refusal says
                   a minor) with no box `required` and no asterisk — an adult is never shown it, scripts off open it with a
                   `<noscript>` rule — and the island follows the age typed, marking the three boxes required while it shows them;
                   the server refuses a minor's post without them either way (`refuseGuardianBoxes`).

@@ -3,7 +3,7 @@
 import Box from "@mui/material/Box";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 
-/** The three boxes of the guardian's block that the browser should call required while the block is shown (§NNN). */
+/** The three boxes of the guardian's block that the browser should call required while the block is shown (§768). */
 const GUARDIAN_BOXES = ["guardianName", "guardianEmail", "guardianAware"] as const;
 
 /**
@@ -17,7 +17,7 @@ function saysMinor(typed: string, minimumAge: number, adultAge: number): boolean
 }
 
 /**
- * The parent's or guardian's boxes on the volunteers' page (§NNN; the owner, 2026-10-14: «atunci fă cu acord ceva» for a
+ * The parent's or guardian's boxes on the volunteers' page (§768; the owner, 2026-10-14: «atunci fă cu acord ceva» for a
  * volunteer under 18): shown while the age typed is from the minimum to seventeen, hidden otherwise — and **always shown
  * without scripts**.
  *

@@ -360,7 +360,7 @@ export async function volunteerAgreementInForce<T extends Record<string, unknown
 }
 
 /**
- * Whether the privacy notice in force describes volunteers under eighteen and their guardian (§NNN,
+ * Whether the privacy notice in force describes volunteers under eighteen and their guardian (§768,
  * `describesVolunteerMinors`) — in every language, like `noticeDescribesVolunteers`. Half of `volunteerMinorsOpen`.
  */
 export async function noticeDescribesVolunteerMinors<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<boolean> {
@@ -369,7 +369,7 @@ export async function noticeDescribesVolunteerMinors<T extends Record<string, un
 }
 
 /**
- * Whether the volunteer agreement in force carries the minors' clause (§NNN, `namesVolunteerGuardian`) in every
+ * Whether the volunteer agreement in force carries the minors' clause (§768, `namesVolunteerGuardian`) in every
  * language — the other half of `volunteerMinorsOpen`, and what `/admin/tasks`' row `volunteerMinorsTexts` reads.
  */
 export async function volunteerAgreementNamesGuardian<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<boolean> {
@@ -378,7 +378,7 @@ export async function volunteerAgreementNamesGuardian<T extends Record<string, u
 }
 
 /**
- * Whether the club may take a volunteer under eighteen yet (§NNN): the privacy notice in force names
+ * Whether the club may take a volunteer under eighteen yet (§768): the privacy notice in force names
  * `{{volunteerMinors}}` **and** the volunteer agreement in force names `{{volunteerGuardian}}`, each in every language —
  * §562's and §613's pattern, with the second text because the guardian accepts it. For the public sign-up, the
  * organizers' entry, the guardian verbs and `/admin/tasks`; the public form reads the cached twin
@@ -822,7 +822,7 @@ export async function listVersionsForBackoffice<T extends Record<string, unknown
       deletedReason: legalDocuments.deletedReason,
       locales: sql<string[]>`coalesce(array_agg(distinct ${legalDocumentTranslations.locale}::text) filter (where ${legalDocumentTranslations.locale} is not null), '{}')`,
       // Every signature against this version: a race's acceptances, a group run's optional
-      // self-declarations (§393), a volunteer's accepted agreement (§758) and a guardian's (§NNN: the version
+      // self-declarations (§393), a volunteer's accepted agreement (§758) and a guardian's (§768: the version
       // in force when the parent pressed, which may not be the volunteer's own) — each is somebody
       // relying on these exact words, and the guardian's column is a RESTRICT foreign key too.
       acceptanceCount: sql<number>`(

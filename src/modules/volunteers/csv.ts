@@ -16,7 +16,7 @@ import { csvCell } from "@/modules/registrations/csv";
  * own English words, `sexCell`), the city, «a mai fost voluntar» and «din grupul clubului» as the reader's yes and no,
  * and the T-shirt's size, empty unless the event gives T-shirts. They are appended, so no earlier column moves.
  *
- * Since §NNN three more after them: the parent or guardian of a volunteer under eighteen — name and address, empty for an adult — and
+ * Since §768 three more after them: the parent or guardian of a volunteer under eighteen — name and address, empty for an adult — and
  * «Acordul părintelui» as the reader's yes and no (empty for an adult: nothing was asked).
  */
 
@@ -43,7 +43,7 @@ export type VolunteerCsvRow = {
   volunteeredBefore: string;
   clubMember: string;
   shirtSize: string;
-  /** The parent or guardian of a volunteer under eighteen (§NNN), empty for an adult; the consent as «Da» / «Nu», empty for an adult. */
+  /** The parent or guardian of a volunteer under eighteen (§768), empty for an adult; the consent as «Da» / «Nu», empty for an adult. */
   guardianName: string | null;
   guardianEmail: string | null;
   guardianConsent: string;

@@ -13,7 +13,7 @@ function toLocale(value: FormDataEntryValue | null): Locale {
 }
 
 /**
- * «Îmi dau acordul» (§NNN): the guardian link page's one POST, and the only write the link leads to (AGENTS.md §12.8:
+ * «Îmi dau acordul» (§768): the guardian link page's one POST, and the only write the link leads to (AGENTS.md §12.8:
  * the GET never mutates). The service spends the link in the statement that records the acceptance; the answer comes
  * back to the same address as a word — `accepted`, `invalid` (spent, expired, replaced, cancelled: one answer) or
  * `refused` with the boxes to fill — never a value of the guardian's. The typed name is the acceptance: it travels in
