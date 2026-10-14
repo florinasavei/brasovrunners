@@ -6,6 +6,7 @@ import { routing, type Locale } from "@/i18n/routing";
 import { sexCell } from "@/modules/registrations/domain/sex";
 import { shirtSizeShown } from "@/modules/registrations/domain/kit";
 import { buildVolunteersCsv, volunteersCsvFileName } from "@/modules/volunteers/csv";
+import { isVolunteerMinor } from "@/modules/volunteers/domain/volunteer";
 import { exportVolunteers } from "@/modules/volunteers/volunteers";
 import { canManageVolunteers } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
@@ -71,6 +72,9 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
       volunteeredBefore: t("volunteers.csvColumns.volunteeredBefore"),
       clubMember: t("volunteers.csvColumns.clubMember"),
       shirtSize: t("volunteers.csvColumns.shirtSize"),
+      guardianName: t("volunteers.csvColumns.guardianName"),
+      guardianEmail: t("volunteers.csvColumns.guardianEmail"),
+      guardianConsent: t("volunteers.csvColumns.guardianConsent"),
     },
     volunteers.map((person) => ({
       role: person.roleId === null ? "" : (roleNames.get(person.roleId) ?? ""),
@@ -90,6 +94,10 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
       clubMember: t(person.clubMember ? "volunteers.yes" : "volunteers.no"),
       // Only while the event gives T-shirts (§765): a size left from before is exported as nothing.
       shirtSize: shirtSizeShown(data.shirts, person.shirtSize) ?? "",
+      // The parent or guardian of a volunteer under eighteen (§768) and whether their consent is in; nothing for an adult.
+      guardianName: person.guardianName,
+      guardianEmail: person.guardianEmail,
+      guardianConsent: isVolunteerMinor(person.age) ? t(person.guardianAcceptedAt ? "volunteers.yes" : "volunteers.no") : "",
     })),
   );
 

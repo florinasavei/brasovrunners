@@ -71,6 +71,8 @@ export const EMAIL_AUDIENCE = {
   VOLUNTEER_AGREEMENT_ACCEPTED: "public",
   // The role the organizers gave a volunteer (§761): to the volunteer, the public's road like their «am primit».
   VOLUNTEER_ROLE_ASSIGNED: "public",
+  // The link to a minor volunteer's parent or guardian (§768): to an address nobody confirmed, no registration behind it — the public's road.
+  VOLUNTEER_GUARDIAN_REQUEST: "public",
 } as const satisfies Record<EmailMessageType, EmailAudience>;
 
 export function audienceOf(messageType: EmailMessageType): EmailAudience {

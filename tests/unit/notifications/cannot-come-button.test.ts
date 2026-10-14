@@ -59,6 +59,7 @@ const EVERY_MESSAGE: Record<EmailMessageType, { button: boolean; why: string }> 
   VOLUNTEER_AGREEMENT_REQUEST: { button: false, why: "no registration" },
   VOLUNTEER_AGREEMENT_ACCEPTED: { button: false, why: "no registration" },
   VOLUNTEER_ROLE_ASSIGNED: { button: false, why: "no registration" },
+  VOLUNTEER_GUARDIAN_REQUEST: { button: false, why: "no registration" },
 };
 
 const TYPES = Object.keys(EVERY_MESSAGE) as EmailMessageType[];

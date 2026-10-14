@@ -259,6 +259,7 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       // A group run's optional self-declaration (§393): signed, never edited here.
       "/events/[slug]/declaration",
       "/events/[slug]/register",
+      "/events/[slug]/volunteers",
       // «Întrebări frecvente» (§525): a platform page like «Echipa», never one the CMS makes.
       "/faq",
       "/gallery",
@@ -297,6 +298,7 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       "/team",
       // The volunteer agreement's link (§758): read, then one press.
       "/volunteers/agreement/[token]",
+      "/volunteers/guardian/[token]",
     ]);
   });
 
