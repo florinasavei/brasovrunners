@@ -15,7 +15,9 @@ import { difficultyScaleText, difficultyStepWords } from "../difficulty-words";
 import GlyphSelect from "../GlyphSelect";
 import TypeNote from "../TypeNote";
 import { BoxNote, type BoxProps, type LanguageEntry, SettingsReadOnly } from "./box-kit";
+import { promotionSummary, type SummaryWords } from "../box-summaries";
 import CostBox, { costLine } from "./CostBox";
+import PromotionBox from "./PromotionBox";
 import StatusCard, { type StatusNotice } from "./StatusBox";
 
 /**
@@ -49,6 +51,11 @@ import StatusCard, { type StatusNotice } from "./StatusBox";
  * from `sm`: with the type, what kind of outing this is. The closed line names it last, «Mediu 5»,
  * and says nothing while the club has not said.
  *
+ * **«Evidențiere pe site» is a named card in here since §760** (the owner, 2026-10-13: «„evidențierea
+ * pe site” ar putea fi în același card cu „ce fel de eveniment”… practic vreau mai puține carduri și
+ * mai mult nesting»): `PromotionBox`, last, with its id `box-promotion`. The closed line names its
+ * marks while one is on — «… · Eveniment principal · Ediție specială» — and nothing while none is.
+ *
  * A role that may only read the settings is told so, in place of the select and the status card;
  * the closed line still names both.
  */
@@ -73,7 +80,8 @@ export default async function KindBox({
   const initialType = event?.type ?? "GROUP_RUN";
   /** One sentence per type, for the note under the select (§170). */
   const typeNotes = Object.fromEntries(EVENT_TYPES.map((type) => [type, t(`editor.typeNotes.${type}`)]));
-  const separator = (t.raw("editor.boxes.summary") as { separator: string }).separator;
+  const words = t.raw("editor.boxes.summary") as SummaryWords;
+  const separator = words.separator;
   // The level on the club's scale of fifteen (§526), as the two controls ask it: its band, then
   // the level inside it — the band's own three numbers since §563 (Mediu → 4 · 5 · 6).
   const level = event ? difficultyLevelOf(event) : null;
@@ -87,7 +95,9 @@ export default async function KindBox({
   // The type, the status and the cost (§466), and the difficulty when stated (§526): what this box asks, on its closed line.
   // For the members alone (§552), said on the closed line too: it decides who sees the event at all.
   const membersLine = event?.membersOnly ? t("editor.membersOnlyShort") : null;
-  const aside = [tEvent(`type.${initialType}`), EVENT_STATUS_LABEL[event?.eventStatus ?? "SCHEDULED"], await costLine(event, languages), difficultyLine, membersLine]
+  // «Evidențiere pe site» inside this card since §760: its marks on the closed line while one is on, nothing otherwise.
+  const promotionLine = event?.featured || event?.isSpecial ? promotionSummary(words, event) : null;
+  const aside = [tEvent(`type.${initialType}`), EVENT_STATUS_LABEL[event?.eventStatus ?? "SCHEDULED"], await costLine(event, languages), difficultyLine, membersLine, promotionLine]
     .filter((part): part is string => Boolean(part))
     .join(separator);
   // Awaited here rather than nested, so the element is ready when the box is (a string renderer
@@ -101,6 +111,8 @@ export default async function KindBox({
         : null;
   // The cost card (§466), awaited for the same reason as the status card.
   const cost = await CostBox({ event, mayEditSettings, languages });
+  // «Evidențiere pe site» (§760), the same way: a named card, last.
+  const promotion = await PromotionBox({ event, mayEditSettings });
 
   return (
     <Panel glyph="kind"
@@ -185,11 +197,14 @@ export default async function KindBox({
           {status}
           {/* 1.2 — the cost (§466): the page draws it after the course; the editor asks it here. */}
           {cost}
+          {/* 1.3 — «Evidențiere pe site» (§760): how the site marks the event, beside what kind it is. */}
+          {promotion}
         </Stack>
       ) : (
         <Stack spacing={1.5}>
           <SettingsReadOnly />
           {cost}
+          {promotion}
         </Stack>
       )}
     </Panel>

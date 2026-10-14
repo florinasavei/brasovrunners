@@ -7,11 +7,12 @@ import type { ReactNode } from "react";
 import { type Deadlines, EVENT_REMINDER_CHOICES, withinRaceWeek } from "@/modules/deadlines/domain/deadlines";
 import { capitalizeFirst } from "@/i18n/dates";
 import { hoursPhrase, leadPhrase, minutesPhrase } from "@/modules/deadlines/domain/duration-words";
-import { EVENT_TYPES, takesRegistrations } from "@/modules/events/domain/event-type";
+import { EVENT_TYPES, hasProgramme, takesRegistrations } from "@/modules/events/domain/event-type";
 import { typedStartOrNull } from "@/modules/events/domain/provisional-start";
 import { readRouteGpx } from "@/modules/events/domain/route-gpx";
 import { readBibDesign } from "@/modules/registrations/bib-design";
 import type { RaceDeclarationKey } from "@/modules/legal-documents/domain/keys";
+import { effectiveMinimumAge } from "@/modules/registrations/domain/age";
 import { spareBandOf } from "@/modules/registrations/domain/spare-bibs";
 import {
   confirmationDueAtStart,
@@ -34,9 +35,13 @@ import {
   bibDesignSummary,
   bibsSummary,
   confirmationSummary,
+  healthNoteSummary,
   kitSummary,
+  minAgeSummary,
+  programmeSummary,
   registrationSummary,
   registrationWindowSummary,
+  rulesSummary,
   summaryDate,
   summaryDateTime,
 } from "../box-summaries";
@@ -45,7 +50,12 @@ import OnlyForMode from "../OnlyForMode";
 import OnlyForType from "../OnlyForType";
 import WaitlistLimitOnly from "../WaitlistLimitOnly";
 import WallTimeField from "../WallTimeField";
-import { BoxNote, type BoxProps, RiskLine, SettingsReadOnly, summaryWords } from "./box-kit";
+import { BoxNote, type BoxProps, type LanguageEntry, RiskLine, SettingsReadOnly, summaryWords } from "./box-kit";
+import ConditionsBox from "./ConditionsBox";
+import DeclarationCard, { declarationLine } from "./DeclarationCard";
+import ProgrammeBox from "./ProgrammeBox";
+import StartListBox from "./StartListBox";
+import { RulesBox } from "./TextBoxes";
 import { DEFAULT_TIMEZONE } from "./WhenBox";
 
 const REGISTRATION_MODES = ["NONE", "INTERNAL", "EXTERNAL"] as const;
@@ -59,14 +69,32 @@ function box(field: EventFieldName, extra: Record<string, unknown> = {}) {
 }
 
 /**
- * "Participare și înscrieri" (§350): how people register — here, with another organizer, or not at
- * all — and under which rules; on the page, who may enter and the button, under the cost row (§406:
- * the cost is its own card, `CostBox`, just above this one, where the page draws its row). Registration's rules are
- * in this one box, as named cards: the period (the minimum age and the declaration are under «Regulamentul», §505, §448), the confirmation
- * window, the reminder, the race numbers (with the bib design and, on the editor, allocation and
- * printing). The public list was the fifth card here (owner requirement 1 of §350); since §406 it is
- * its own card, last, because the page draws it last (`StartListBox`), and since §512 the last card
- * inside «Program, regulament și declarație».
+ * Card 6, «Participare, înscrieri și regulament» (§760; the owner, 2026-10-13: «cardurile 6 și 9 se
+ * pot uni sincer, sunt chestii oarecum related»): what were two cards — «Participare și înscrieri»
+ * (§350) and «Program, regulament și declarație» (§481, §512) — in one, the same fields with the same
+ * names and ids, only held together. On the page, who may enter and the button, under the cost row;
+ * further down the programme, the rules and the public list — the card wears the number of the first,
+ * and is drawn when any is (`cardStates`).
+ *
+ * **Its named cards, in the order a runner's registration happens:**
+ *
+ * 1. how people register (the mode, the places and the waiting list — no card of their own, the
+ *    card's first question), then, while the club registers them here, «Perioada de înscriere»
+ *    (`#box-registration-window`), «Fereastra de confirmare» (`#box-confirmation`) and «Reminderul
+ *    dinaintea startului» (`#box-reminder`) — the registration's life, in time;
+ * 2. what a participant agrees to: «Regulamentul» with the minimum age (`#box-rules`, §505), right
+ *    above «Declarația pe propria răspundere» (`#box-declaration`, §448) — the age and the declaration
+ *    side by side, so the sentence that sent the reader from one card to the other is gone — then
+ *    «Condiții de participare» (`#box-conditions`, §557), what the form asks;
+ * 3. the day itself: «Programul zilei și ce să aduci» (`#box-schedule`), then, while the club
+ *    registers them here, «Kit de participare» (`#box-kit`, §554) and «Numere de concurs (BIB)»
+ *    (`#box-bibs`, with the designer and, on the editor, allocation and printing);
+ * 4. «Lista publică a participanților» (`#box-start-list`, §512), last, as the page draws it last.
+ *
+ * The closed line says the registration's line, then the programme's, the rules' and the age in brief.
+ * It opens itself while a saved event that registers on the site has no declaration chosen, or while a
+ * group run offering its self-declaration has no text in force for its surface (§483); with people
+ * registered it is amber (registration and the programme are both boxes a change reaches, §350).
  *
  * **Only what the chosen mode needs is shown** (`OnlyForMode`): "Pe site" shows the capacity and
  * the cards, "La organizator" the organizer's name and link, "Fără" one sentence. A group run
@@ -85,6 +113,8 @@ export default async function RegistrationBox({
   mayEditSettings,
   risk,
   heading,
+  groupRunDeclarations,
+  languages,
   declarations,
   waiting = 0,
   bibCounts,
@@ -94,6 +124,8 @@ export default async function RegistrationBox({
   clubDeadlines,
   windowHolds = null,
 }: BoxProps & {
+  /** Every language's row, for the programme's and the rules' texts (§760: their cards are in here). */
+  languages: readonly LanguageEntry[];
   /**
    * The reserved places the participation window gave, as a save would treat them (§665,
    * `registrations/window-holds.ts#previewWindowHolds`): how many a save moves now to the stored
@@ -189,32 +221,50 @@ export default async function RegistrationBox({
     return null;
   })();
 
-  const summary = registrationSummary(words, event, {
-    takesRegistrations: takesRegistrations(initialType),
-    // The cost is its own card since §406 (`CostBox`), and its closed line says it.
-    declarationVersion: declaration?.version ?? null,
-    locale,
-    creating: event === null,
-  });
+  const registers = takesRegistrations(initialType);
+  const translations = languages.map((entry) => entry.translation);
+  // The declaration's line (§448, §483): whether the card opens itself, and what the closed line says.
+  const line = await declarationLine(event, declarations, words, groupRunDeclarations);
+  // The named cards of what was «Program, regulament și declarație» (§481, §512), each awaited so the
+  // element is ready when the card is (`requiredLine` does the same); their fields, names and ids unchanged.
+  const programme = await ProgrammeBox({ event, mayEditSettings, risk, languages });
+  // The rules hold the minimum age, for every type (§505).
+  const rules = await RulesBox({ languages, event, mayEditSettings });
+  const declarationCard = await DeclarationCard({ event, mayEditSettings, groupRunDeclarations, declarations, words });
+  const conditions = await ConditionsBox({ event, mayEditSettings });
+  const startList = await StartListBox({ event, mayEditSettings });
 
-  return (
-    <Panel glyph="registration"
-      collapsible
-      id="box-registration"
-      title={heading ?? t("editor.boxes.registration.title")}
-      aside={summary}
-      tone={risk ? "risk" : "default"}
-    >
-      {risk && <RiskLine>{t("editor.risk.registration")}</RiskLine>}
-      {!mayEditSettings ? (
-        // A reader keeps what is not a setting of the event (§542): the race numbers' allocation and
-        // printing — «Vezi numerele», «Descarcă toate numerele (PDF)» — which the page draws only
-        // for a role that reads the registrations (§289: the Organizer, not the Redactor).
-        <Stack spacing={2}>
-          <SettingsReadOnly />
-          {bibPrint}
-        </Stack>
-      ) : (
+  /*
+    The closed line, short (§760): the registration's own line — the mode, the places, the
+    declaration's version and the list where the club registers people, with its waiting list when
+    that is public too (§628) — then the declaration a group run offers (the registration's line
+    names a race's), whether the form asks for medical information (§557, a disclosure old card 9's
+    line said), the programme's line, the rules' and the minimum age. Each named card inside says
+    the rest on its own line.
+  */
+  const summary = [
+    registrationSummary(words, event, {
+      takesRegistrations: registers,
+      // The cost is a card of «Ce fel de eveniment» since §466, and its closed line says it.
+      declarationVersion: declaration?.version ?? null,
+      locale,
+      creating: event === null,
+    }),
+    !(registers && event?.registrationMode === "INTERNAL") ? line.text : null,
+    registers && event?.registrationMode === "INTERNAL" ? healthNoteSummary(words, event.askHealthNote ?? false) : null,
+    programmeSummary(words, event, hasProgramme(initialType), translations, locale),
+    t("editor.boxes.registration.rulesLine", { state: rulesSummary(words, translations) }),
+    minAgeSummary(words, effectiveMinimumAge(event?.minAge), locale),
+  ]
+    .filter(Boolean)
+    .join(words.separator);
+
+  /*
+    6.1 — how people register (§350): the mode, the places and the waiting list, then — while the
+    club registers them here — the period, the confirmation window and the reminder. The fields of
+    what was «Participare și înscrieri», as they were.
+  */
+  const registrationFields = (
         <Stack spacing={2}>
           <OnlyForType type={EVENT_TYPES.filter((type) => !takesRegistrations(type))} selectName="event.type" initialType={initialType}>
             <BoxNote testId="group-run-no-registration">{t("editor.groupRunNoRegistration")}</BoxNote>
@@ -341,7 +391,7 @@ export default async function RegistrationBox({
                     <BoxNote more={t("editor.waitlistAutoOfferHelpMore")}>{t("editor.waitlistAutoOfferHelp")}</BoxNote>
                   </Stack>
 
-                  {/* 8.1 — from when until when. */}
+                  {/* 6.1.1 — from when until when. */}
                   <Panel glyph="window" collapsible level={3} id="box-registration-window" title={t("editor.boxes.registrationWindow.title")} aside={registrationWindowSummary(words, event, locale)}>
                     <Stack spacing={1}>
                       {/* «Se deschid în curând» (§451): announced, with no date. The marker says the
@@ -360,13 +410,9 @@ export default async function RegistrationBox({
                     </Stack>
                   </Panel>
 
-                  {/* 8.2 — who may enter was a card here («Condiții de participare», §329). Since
-                      §505 the minimum age is one box of «Regulamentul» for every type, and what a
-                      runner signs is chosen beside it since §448 (`DeclarationCard`): one line
-                      says where both went. */}
-                  <BoxNote testId="declaration-moved">{t("editor.boxes.conditions.declarationUnderRules")}</BoxNote>
-
-                  {/* 8.3 — the participation window (§104). */}
+                  {/* 6.1.2 — the participation window (§104). The minimum age and the declaration are
+                      named cards of this same card since §760, «Regulamentul» and «Declarația pe
+                      propria răspundere» below: the sentence that sent the reader to them is gone. */}
                   <Panel glyph="confirmation"
                     collapsible
                     level={3}
@@ -406,7 +452,7 @@ export default async function RegistrationBox({
                   </Panel>
 
                   {/*
-                    8.3b — the reminder before the start (§81, §377): the club's lead unless this
+                    6.1.3 — the reminder before the start (§81, §377): the club's lead unless this
                     event says otherwise. A native select of the owner's choices — "as usual",
                     24, 48, 72, 96, 120 hours, none — and the stored number too when a script set another,
                     so a save never quietly changes it.
@@ -432,9 +478,24 @@ export default async function RegistrationBox({
                       <BoxNote>{t("editor.reminder.help", { lead: clubReminder })}</BoxNote>
                     </Stack>
                   </Panel>
+                </Stack>
+              </OnlyForMode>
+            </Stack>
+          </OnlyForType>
+        </Stack>
+  );
 
+  /*
+    6.3 — the kit and the race numbers, the day's two cards that belong to registering here: shown
+    only for a type that takes registrations, registering on the site (§111, §350) — hidden, never
+    removed, like every field that follows the type and the mode.
+  */
+  const kitAndBibs = (
+    <OnlyForType type={EVENT_TYPES.filter(takesRegistrations)} selectName="event.type" initialType={initialType}>
+      <OnlyForMode mode="INTERNAL" initialMode={initialMode}>
+                <Stack spacing={2}>
                   {/*
-                    8.3c — «Kit de participare» (§554; the owner, 2026-09-29: «o subsecțiune cu kit de
+                    6.3.1 — «Kit de participare» (§554; the owner, 2026-09-29: «o subsecțiune cu kit de
                     participare, și doar dacă e bifat tricoul să avem alegerea mărimii în formular»):
                     what the runners are handed. For now one tick, the T-shirt; the form asks the
                     size only while it is on. Inside "Pe site", so only a type that takes
@@ -451,7 +512,7 @@ export default async function RegistrationBox({
                     </Stack>
                   </Panel>
 
-                  {/* 8.4 — the one card for race numbers: the band (§173), what one bib looks like
+                  {/* 6.3.2 — the one card for race numbers: the band (§173), what one bib looks like
                       (§249, now on create too) and, on the editor, whether they exist and print. */}
                   <Panel glyph="bibs"
                     collapsible
@@ -489,14 +550,39 @@ export default async function RegistrationBox({
                       {bibPrint}
                     </Stack>
                   </Panel>
-                  {/* The public list was 8.5 here; it is the last card of «Program, regulament și
-                      declarație» now, where the page draws it (§406, §512, `StartListBox`). */}
                 </Stack>
-              </OnlyForMode>
-            </Stack>
-          </OnlyForType>
-        </Stack>
-      )}
+      </OnlyForMode>
+    </OnlyForType>
+  );
+
+  return (
+    <Panel glyph="registration"
+      collapsible
+      id="box-registration"
+      title={heading ?? t("editor.boxes.registration.title")}
+      aside={summary}
+      openWhen={{ attention: line.missing }}
+      tone={risk ? "risk" : "default"}
+    >
+      {risk && <RiskLine>{t("editor.risk.registration")}</RiskLine>}
+      <Stack spacing={2}>
+        {/* 6.1 — how people register, and the registration's life. A reader is told once that the settings are not theirs (§358). */}
+        {mayEditSettings ? registrationFields : <SettingsReadOnly />}
+        {/* 6.2 — what a participant agrees to: the rules and the minimum age, the declaration, what the form asks (§505, §448, §557). */}
+        {rules}
+        {declarationCard}
+        {conditions}
+        {/* 6.3 — the day: the programme and what to bring, then the kit and the numbers. */}
+        {programme}
+        {mayEditSettings
+          ? kitAndBibs
+          : // A reader keeps what is not a setting of the event (§542): the race numbers' allocation and
+            // printing — «Vezi numerele», «Descarcă toate numerele (PDF)» — which the page draws only
+            // for a role that reads the registrations (§289: the Organizer, not the Redactor).
+            bibPrint}
+        {/* 6.4 — the public list, last, where the page draws it (§406, §512). */}
+        {startList}
+      </Stack>
     </Panel>
   );
 }

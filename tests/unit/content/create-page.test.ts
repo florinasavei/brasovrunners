@@ -19,7 +19,7 @@ const read = (file: string) => readFileSync(path.join(process.cwd(), file), "utf
 
 const CREATE = read("src/app/[locale]/admin/events/new/page.tsx");
 const EDIT = read("src/app/[locale]/admin/events/[id]/page.tsx");
-const BOXES = ["KindBox", "WhenBox", "PlaceBox", "ProgrammeRulesBox", "ProgrammeBox", "RegistrationBox", "StatusBox", "DeclarationCard", "CourseBox", "LinksBox", "CoHostsBox", "PromotionBox", "TextBoxes"]
+const BOXES = ["KindBox", "WhenBox", "PlaceBox", "ProgrammeBox", "RegistrationBox", "StatusBox", "DeclarationCard", "CourseBox", "LinksBox", "CoHostsBox", "PromotionBox", "TextBoxes"]
   .map((box) => read(`src/modules/content/events/ui/boxes/${box}.tsx`))
   .join("\n");
 const TRANSLATION_FIELDS = read("src/modules/content/events/ui/TranslationFields.tsx");
@@ -49,7 +49,7 @@ describe("the create page is the editor's page", () => {
     }
   });
 
-  it("puts Recurență first, then the boxes in the page's own order, then the ones not on the page, then Salvare", () => {
+  it("puts Recurență first, then the page's eight cards in its own order, then the preview and Salvare (§760)", () => {
     // The page's order itself is `events/page-sections.test.ts`'s to hold (§406); this is the frame.
     const order = [
       'id="box-recurrence"',
@@ -58,18 +58,16 @@ describe("the create page is the editor's page", () => {
       "<KindBox",
       "<TitleSummaryBox",
       "<DescriptionBox",
-      // «Când și unde» holds the place, «Program, regulament și declarație» the rules (§481) and the public list (§512).
+      // «Când și unde» holds the place (§481); «Participare, înscrieri și regulament» the programme, the
+      // rules and the public list (§760: what were cards 6 and 9).
       "<WhenBox",
       "<CourseBox",
       "<RegistrationBox",
       "<CoHostsBox",
       "<LinksBox",
-      "<ProgrammeRulesBox",
-      't("editor.groups.offPage")',
-      // «Copertă» (§709), on both pages: a new event can be created with its cover.
-      "<CoverBox",
-      "<PromotionBox",
-      "<AddressBox",
+      // No group of cards not on the page since §760: the cover and the page's address are cards of
+      // «Titlu și rezumat», the promotion of «Ce fel de eveniment» — on both pages.
+      "<PreviewBox",
       'id="box-save"',
     ];
     for (const page of [CREATE, EDIT]) {
@@ -80,7 +78,9 @@ describe("the create page is the editor's page", () => {
       // No box holds another any more: the first box is the type alone (§406, undoing §358's nesting).
       expect(page).not.toContain("</KindBox>");
       // No film card, and no card of its own for the place, the rules (§481) or the public list (§512).
-      for (const gone of ["<VideoBox", "<PlaceBox", "<RulesBox", "<ProgrammeBox ", "<StartListBox"]) expect(page, gone).not.toContain(gone);
+      for (const gone of ["<VideoBox", "<PlaceBox", "<RulesBox", "<ProgrammeBox ", "<StartListBox", "<ProgrammeRulesBox", "<CoverBox", "<PromotionBox", "<AddressBox", "editor.groups.offPage"]) {
+        expect(page, gone).not.toContain(gone);
+      }
     }
   });
 

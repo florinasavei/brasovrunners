@@ -743,7 +743,7 @@ const TURN_UP_FIELDS = {
 
 /**
  * What the chosen registration mode hides is ignored, not refused (§350, extending §111's shape
- * to the mode): the editor's "Participare și înscrieri" box shows only the fields of the chosen
+ * to the mode): the editor's «Participare, înscrieri și regulament» box shows only the fields of the chosen
  * mode (`OnlyForMode`) and keeps the others in the document, hidden, so switching back finds what
  * was typed. A capacity left behind a switch to "Fără înscrieri" is a box the organizer can no
  * longer see — refusing the save over it would name a field that is not on the screen.

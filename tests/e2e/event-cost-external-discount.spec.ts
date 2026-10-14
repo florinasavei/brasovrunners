@@ -68,7 +68,7 @@ test.describe("an EXTERNAL-registration PAID event's discount note (§394)", () 
     await page.getByRole("option", { name: "Concurs" }).click();
 
     await openEditorBox(page, "Cost");
-    await openEditorBox(page, "Participare și înscrieri");
+    await openEditorBox(page, "Participare, înscrieri și regulament");
 
     // Cost first: Cu taxă, with an amount — the discount note is not on screen yet, INTERNAL is
     // still the mode (§394: shown only for EXTERNAL + PAID).
@@ -196,7 +196,7 @@ async function runFeaturedHeroCase(page: Page): Promise<void> {
     await hydrated(page);
 
     await openEditorBox(page, "Cost");
-    await openEditorBox(page, "Participare și înscrieri");
+    await openEditorBox(page, "Participare, înscrieri și regulament");
     await page.getByRole("combobox", { name: "Cost" }).click();
     await page.getByRole("option", { name: "Cu taxă", exact: true }).click();
     await page.locator('[name="event.costAmount"]').fill("75 lei");

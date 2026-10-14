@@ -244,7 +244,7 @@ export async function ensureRegistrationIsOpen(page: Page) {
     await hydrated(page);
 
     // Everything about registration is one box of the editor now (§350), shut on arrival.
-    await openEditorBox(page, "Participare și înscrieri");
+    await openEditorBox(page, "Participare, înscrieri și regulament");
     if ((await modeSelect(page).textContent()) === "Înscrieri pe site") return;
 
     await modeSelect(page).click();

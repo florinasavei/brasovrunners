@@ -13,8 +13,9 @@ import { BoxNote, type BoxProps, summaryWords } from "./box-kit";
 /**
  * «Condiții de participare» (§557; the owner, 2026-09-29: «trebuie să am o bifă și pentru acele
  * informații medicale, pentru că nu știu ce să fac cu ele, deci e mai bine să avem o bifă în
- * backoffice la Condiții de participare»): a level-3 card inside «Program, regulament și
- * declarație», after the declaration, holding one tick — «Informații medicale».
+ * backoffice la Condiții de participare»): a level-3 card inside «Participare, înscrieri și
+ * regulament» since §760 («Program, regulament și declarație» before), after the declaration,
+ * holding one tick — «Informații medicale».
  *
  * Ticked, the registration form asks the optional health note (BR-REQ-031-05); unticked — the
  * default, every event before the column included — the form asks nothing medical and the server

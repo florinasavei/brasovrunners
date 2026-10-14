@@ -66,6 +66,8 @@ export type SummaryWords = {
     noDeclaration: string;
     listHidden: string;
     listShown: string;
+    /** The list public with its waiting list too (§628): said on the merged card's closed line (§760). */
+    listShownWithWaitlist: string;
     external: string;
     externalUnnamed: string;
   };
@@ -356,7 +358,8 @@ export function programmeSummary(
 type RegistrationEvent = Pick<
   EditableEvent,
   "type" | "registrationMode" | "capacity" | "minAge" | "declarationDocumentId" | "participantListVisibility" | "externalProvider" | "costType"
->;
+> &
+  Partial<Pick<EditableEvent, "waitlistPublic">>;
 
 /**
  * The cost select's own starting value (§398; the owner: "by default toate evenimentele sunt
@@ -391,7 +394,12 @@ export function registrationSummary(
     words.registration.internal,
     event?.capacity === null || event?.capacity === undefined ? words.registration.unlimited : counted(words.registration.places, event.capacity, options.locale),
     options.declarationVersion !== null ? fillIn(words.registration.declaration, { version: options.declarationVersion }) : words.registration.noDeclaration,
-    event?.participantListVisibility === "NAMES" ? words.registration.listShown : words.registration.listHidden,
+    // The waiting list public too (§628) is a disclosure of its own, said where the list is (§760).
+    event?.participantListVisibility === "NAMES"
+      ? event.waitlistPublic === true
+        ? words.registration.listShownWithWaitlist
+        : words.registration.listShown
+      : words.registration.listHidden,
   ]);
 }
 
@@ -552,11 +560,13 @@ function distanceSummary(words: SummaryWords, distanceMeters: number | null | un
  * own date, which the caller computes). The route / training description (§387) adds `cu descriere` when
  * written in every language, `descriere într-o singură limbă` when in one only — the text the next
  * save refuses (§352), said the way the partners' line says it — and `EN identic cu RO` (§354).
+ * `labels.checkpoints` — `3 puncte de control`, said after the maps when the route has any (§760):
+ * «Puncte de control» is a card of «Traseul», and a closed «Traseul» says it briefly.
  */
 export function courseSummary(
   words: SummaryWords,
   event: CourseEvent | null,
-  labels: { surface: string | null; night?: boolean },
+  labels: { surface: string | null; night?: boolean; checkpoints?: string | null },
   translations: readonly SummaryTranslation[] = [],
 ): string {
   const described = translations.filter((translation) => !BLANK.route(translation)).length;
@@ -571,6 +581,7 @@ export function courseSummary(
     event?.routeUrl ? words.course.route : null,
     // «Traseul»'s maps and GPX (§718), in the page's order: «Garmin · Strava · GPX».
     ...readRouteMaps(event?.routeMaps).map((map) => words.course[map.provider]),
+    labels.checkpoints ?? null,
     described === 0 ? null : described === translations.length ? words.course.described : words.course.describedOneLanguage,
     ...identicalMarks(words, translations, ["routeDescription"]),
   ]);

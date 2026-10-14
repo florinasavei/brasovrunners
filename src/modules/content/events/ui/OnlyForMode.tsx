@@ -8,7 +8,7 @@ const MODE_SELECT = "event.registrationMode";
 
 /**
  * Shows its children while the registration mode says one of `mode` (§350, the event editor's
- * "Participare și înscrieri" box): the capacity, the window, the declaration and the numbers
+ * «Participare, înscrieri și regulament» box, §760): the capacity, the window, the declaration and the numbers
  * belong to registration here, the organizer's name and link to registration elsewhere, and
  * nothing belongs to "no registration" but a sentence. Forty fields for three answers was the
  * box nobody could read.
