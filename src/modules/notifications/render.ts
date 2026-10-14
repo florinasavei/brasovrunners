@@ -60,8 +60,8 @@ import {
 import { familyReservationHoldsAt, reservedUntilPhrase } from "@/modules/registrations/domain/family-reservation";
 import { eventInvitations } from "@/db/schema/event-invitations";
 import { eventVolunteerRoles, eventVolunteers } from "@/db/schema/event-volunteers";
-import { mintVolunteerAgreementLink } from "@/modules/volunteers/agreement";
 import { renderVolunteerAgreementPdf, VOLUNTEER_AGREEMENT_PDF_NAME } from "@/modules/volunteers/agreement-pdf";
+import { canonicalOrNull, mintVolunteerAgreementLink } from "@/modules/volunteers/agreement";
 import { shopOrders } from "@/db/schema/shop";
 import { readShopSettings } from "@/modules/content/shop/settings";
 import { isUuid } from "@/shared/ids";
@@ -908,6 +908,7 @@ async function renderRow(
               id: eventVolunteers.id,
               name: eventVolunteers.name,
               state: eventVolunteers.state,
+              canonicalEmail: eventVolunteers.canonicalEmail,
               roleRo: eventVolunteerRoles.nameRo,
               roleEn: eventVolunteerRoles.nameEn,
               agreementAcceptedAt: eventVolunteers.agreementAcceptedAt,
@@ -928,9 +929,17 @@ async function renderRow(
       email alone (§14.5), the row keeps its SHA-256, and this newest link replaces any older one. A volunteer who
       has accepted since (from an earlier link, or on paper at the desk) has nothing left to accept: withdrawn.
     */
+    /*
+      The address the message goes to is the one queued (`recipientEmail`); an organizer may have corrected the
+      volunteer's since (§NNN). The link, and the accepted agreement's PDF, are the person's: neither leaves to a
+      mailbox the row no longer names — the request is withdrawn (the mint refuses it too, in its own statement),
+      and a receipt or a copy leaves without the attachment.
+    */
+    const addressCurrent = canonicalOrNull(row.recipientEmail) === volunteer.canonicalEmail;
     if (row.messageType === "VOLUNTEER_AGREEMENT_REQUEST") {
       if (volunteer.agreementAcceptedAt) throw new OutboxMessageWithdrawn("the volunteer has accepted the agreement since");
-      const link = await mintVolunteerAgreementLink(db, volunteer.id, now);
+      if (!addressCurrent) throw new OutboxMessageWithdrawn("the volunteer's address changed since the request was queued");
+      const link = await mintVolunteerAgreementLink(db, volunteer.id, row.recipientEmail, now);
       if (!link) throw new OutboxMessageWithdrawn("the volunteer can no longer be asked to accept");
       // Its lifetime is the one every link states (`timings.linkDays`, the same constant the link is minted with).
       payloadActionUrl = `${env.APP_BASE_URL}${getPathname({ locale, href: { pathname: "/volunteers/agreement/[token]", params: { token: link.secret } } })}`;
@@ -939,7 +948,7 @@ async function renderRow(
       The accepted agreement as a PDF (§NNN), rendered now from the rows like a signed declaration (§95): on the
       person's «am primit» once they accepted it on the form, and on the copy after the link.
     */
-    if ((row.messageType === "VOLUNTEER_RECEIVED" || row.messageType === "VOLUNTEER_AGREEMENT_ACCEPTED") && volunteer.agreementAcceptedAt && !clubCopy) {
+    if ((row.messageType === "VOLUNTEER_RECEIVED" || row.messageType === "VOLUNTEER_AGREEMENT_ACCEPTED") && volunteer.agreementAcceptedAt && !clubCopy && addressCurrent) {
       const rendered = await renderVolunteerAgreementPdf(db, volunteer.id, now);
       if (rendered?.accepted) {
         volunteerAgreementPdf = rendered.pdf;

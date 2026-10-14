@@ -155,6 +155,18 @@ export const MEMBERS_SHOP_MERGE_FIELD = "membersShop";
 export const VOLUNTEERS_MERGE_FIELD = "volunteers";
 
 /**
+ * The privacy notice's marker for the volunteer agreement (§NNN, amending §754): the agreement's own title,
+ * quoted, in the reader's language (`volunteers/notice-words.ts`) — „Contract de voluntariat” / “Volunteer
+ * agreement” — inside the volunteers' paragraph's sentence that says what an acceptance keeps (the version, the
+ * moment, the way, the fingerprint, the age statement), why (art. 6(1)(b)), the PDF on the receipt and the
+ * single-use link email to a person entered by hand. Its own marker, §562's, §613's and §754's pattern: a notice
+ * approved from §754's template names `{{volunteers}}` but says none of this, so the public form, the link and the
+ * paper record wait for a notice naming this one too (`describesVolunteerAgreement`); `/admin/tasks` carries the
+ * row `volunteerAgreementNotice` meanwhile.
+ */
+export const VOLUNTEER_AGREEMENT_NOTICE_MERGE_FIELD = "volunteerAgreement";
+
+/**
  * The privacy notice's marker for «Spune-ne ceva»'s named mode (§678): the radio's own words,
  * quoted — „Cu nume și prenume” / “With my name” (`feedback/notice-words.ts`) — in the same
  * paragraph, which then says the forms are anonymous unless the person chooses to give a name, what
@@ -389,6 +401,7 @@ export const MERGE_FIELDS = [
   FEEDBACK_FORMS_NAMED_MERGE_FIELD,
   MEMBERS_SHOP_MERGE_FIELD,
   VOLUNTEERS_MERGE_FIELD,
+  VOLUNTEER_AGREEMENT_NOTICE_MERGE_FIELD,
 ] as const;
 
 /**
@@ -582,6 +595,15 @@ export function describesMembersShop(body: unknown): boolean {
  */
 export function describesVolunteers(body: unknown): boolean {
   return mergeFieldsIn(body).has(VOLUNTEERS_MERGE_FIELD);
+}
+
+/**
+ * Whether a privacy notice describes the volunteer agreement's acceptance (§NNN): it names
+ * `{{volunteerAgreement}}`. With `describesVolunteers`, the gate for the public form, «Trimite linkul
+ * contractului» and «Semnat pe hârtie», and what `/admin/tasks`' row `volunteerAgreementNotice` reads. Pure.
+ */
+export function describesVolunteerAgreement(body: unknown): boolean {
+  return mergeFieldsIn(body).has(VOLUNTEER_AGREEMENT_NOTICE_MERGE_FIELD);
 }
 
 /**

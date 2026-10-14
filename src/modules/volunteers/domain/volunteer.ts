@@ -181,6 +181,12 @@ export type VolunteerOfferInputs = {
   noticeDescribes: boolean;
   /** (d) A volunteer agreement is in force in every language (§NNN): nobody is listed without accepting one. */
   agreementInForce: boolean;
+  /**
+   * (e) The privacy notice in force also names `{{volunteerAgreement}}` in every language (§NNN): the acceptance
+   * the form records — the version, the moment, the fingerprint, the age statement — is processing a notice from
+   * §754's template does not describe.
+   */
+  noticeDescribesAgreement: boolean;
   /** The event is neither cancelled nor over: nobody offers to help at a race that is gone. */
   eventAhead: boolean;
   /** The event's page is published: an unpublished event has no public page to carry the form. */
@@ -190,12 +196,13 @@ export type VolunteerOfferInputs = {
 };
 
 /** Why the form is not offered, in the order the page checks; null when it is. */
-export type VolunteerOfferClosed = "off" | "notPublished" | "membersOnly" | "eventOver" | "noRoleNeeds" | "noNotice" | "noAgreement";
+export type VolunteerOfferClosed = "off" | "notPublished" | "membersOnly" | "eventOver" | "noRoleNeeds" | "noNotice" | "noAgreement" | "noAgreementNotice";
 
 /**
  * The form's conditions as one pure rule, so the page, the action, the editor's card and the tests read the
  * same: the event offers volunteering (a), at least one role still needs people (b), the privacy notice
- * in force describes volunteers (c) and a volunteer agreement is in force (d, §NNN) — plus the event being
+ * in force describes volunteers (c), a volunteer agreement is in force (d, §NNN) and the notice describes its
+ * acceptance (e, §NNN) — plus the event being
  * published, public (not for the members alone) and still ahead. The page draws the form only when this says
  * null; the action asks it again before it keeps a name; the card names the first condition missing.
  */
@@ -207,6 +214,7 @@ export function volunteerOfferClosedFor(inputs: VolunteerOfferInputs): Volunteer
   if (!someRoleNeedsPeople(inputs.standings)) return "noRoleNeeds";
   if (!inputs.noticeDescribes) return "noNotice";
   if (!inputs.agreementInForce) return "noAgreement";
+  if (!inputs.noticeDescribesAgreement) return "noAgreementNotice";
   return null;
 }
 

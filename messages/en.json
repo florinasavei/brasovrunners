@@ -1817,7 +1817,9 @@
       "ANSWER_BIRTH_DATE_GUARDIAN_SIGNED_ADULT": "The birth date was not saved: it would make the person an adult when they registered, and the declaration was signed by the parent or guardian it names, who cannot be removed now.",
       "ANSWER_GUARDIAN_ADULT": "The parent or guardian was not saved: the person was not a minor when they registered. Only a minor's registration names a parent or guardian.",
       "VOLUNTEER_AGREEMENT_MISSING": "No volunteer agreement is in force. Approve one first in «Legal documents»: the template is ready.",
-      "VOLUNTEER_AGREEMENT_ACCEPTED": "The person has already accepted the agreement: there is nothing left to send or record."
+      "VOLUNTEER_AGREEMENT_ACCEPTED": "The person has already accepted the agreement: there is nothing left to send or record.",
+      "VOLUNTEER_AGREEMENT_NOTICE": "The privacy notice in force does not describe the volunteer agreement's acceptance yet. Approve one from the template in «Legal documents» first; «Tasks» says how.",
+      "VOLUNTEER_AGREEMENT_REPRINT": "Not recorded: the agreement's version or the person's role changed since it was printed. Print the PDF to sign again and ask for a signature on the new sheet."
     },
     "editor": {
       "draftPreview": {
@@ -3193,6 +3195,7 @@
         "feedbackFormsNamed": "Privacy notice only: the “With my name” choice of the “Tell us something” forms, in quotation marks. Without it in the notice in force, the forms are anonymous only",
         "membersShop": "Privacy notice only: the section name “The club's shop”, in quotes. With it in the notice in force, the members' area shows the shop and takes orders",
         "volunteers": "Privacy notice only: the form's name “I want to volunteer”, in quotes. With it in the notice in force, an event that takes volunteers shows its form and keeps the offers",
+        "volunteerAgreement": "Privacy notice only: the title “Volunteer agreement”, in quotes. Without it in the notice in force, the volunteers' form, the agreement's link and “Signed on paper” are off",
         "volunteer": "In the volunteer agreement only: the volunteer's name, as on the event's list",
         "volunteerRole": "In the volunteer agreement only: the role's name, in the text's language",
         "volunteerTasks": "In the volunteer agreement only: what the role does, from its description. Without one, the sentence naming it is left out"
@@ -4528,7 +4531,8 @@
           "eventOver": "The public form is not shown: the event is cancelled or over.",
           "noRoleNeeds": "The public form is not shown: every role has all the people it needs (or there is no role yet).",
           "noNotice": "The public form is not shown: the privacy notice in force does not describe volunteers yet. /admin/tasks says what to approve.",
-          "noAgreement": "The public form is not shown: no volunteer agreement is in force. Approve one in «Legal documents»; «Tasks» says how."
+          "noAgreement": "The public form is not shown: no volunteer agreement is in force. Approve one in «Legal documents»; «Tasks» says how.",
+          "noAgreementNotice": "The public form is not shown: the privacy notice in force does not describe the volunteer agreement's acceptance yet. «Tasks» says what to approve."
         }
       },
       "switchOn": "Take volunteers on the page",
@@ -4594,7 +4598,7 @@
       "agreement": {
         "accepted": "Agreement accepted",
         "notAccepted": "Agreement not accepted yet",
-        "linkSent": "Link sent, agreement not accepted yet",
+        "linkSent": "Link sent",
         "acceptedLine": "Version {version} · {how} · {when}",
         "methods": {
           "FORM": "on the page's form",
@@ -4602,6 +4606,7 @@
           "PAPER": "signed on paper"
         },
         "otherRole": "Accepted for the role “{role}”; the role has changed since.",
+        "otherPlace": "Accepted for {date}, at {place}; the event's date or place has changed since.",
         "requestedLine": "Last link sent: {when}",
         "help": "Send them the link by email, or print the PDF: they sign it with you, then you press “Signed on paper”.",
         "send": "Send the agreement link",
@@ -4610,8 +4615,9 @@
         "pdfToSign": "PDF to sign",
         "paper": "Signed on paper",
         "paperTitle": "Did {name} sign the agreement on paper?",
-        "paperBody": "This records that {name} signed the printed agreement, the version in force, and that you recorded it. Keep the signed sheet.",
-        "missing": "No volunteer agreement is in force: nothing can be sent or printed yet. Approve one in «Legal documents»."
+        "paperBody": "This records that {name} signed the printed agreement, the version in force, and that you recorded the signature. {name} gets a copy by email. Keep the signed sheet.",
+        "missing": "No volunteer agreement is in force: nothing can be sent or printed yet. Approve one in «Legal documents».",
+        "noticeMissing": "The privacy notice in force does not describe the agreement's acceptance yet: the link and “Signed on paper” wait. «Tasks» says what to approve."
       },
       "csv": "Download CSV",
       "csvHelp": "One row per volunteer, grouped by role. The file holds addresses and telephone numbers: keep it as carefully as the list.",

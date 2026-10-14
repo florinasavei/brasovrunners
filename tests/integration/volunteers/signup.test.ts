@@ -39,9 +39,13 @@ describe("§754 the volunteers' public sign-up", () => {
   });
   afterAll(async () => close());
 
-  /** The notice in force, in both languages; `describing` makes it name `{{volunteers}}` (the gate, §754). */
-  async function approveNotice(describing: boolean, version = 1) {
-    const body = (text: string) => ({ sections: [{ paragraphs: [describing ? `Voluntari ({{volunteers}}): ${text}` : text] }] });
+  /**
+   * The notice in force, in both languages; `describing` makes it name `{{volunteers}}` (the gate, §754) and, unless
+   * `agreement` is false — a notice approved from §754's template — `{{volunteerAgreement}}` too (§NNN).
+   */
+  async function approveNotice(describing: boolean, version = 1, agreement = true) {
+    const marker = agreement ? "Voluntari ({{volunteers}}, {{volunteerAgreement}})" : "Voluntari ({{volunteers}})";
+    const body = (text: string) => ({ sections: [{ paragraphs: [describing ? `${marker}: ${text}` : text] }] });
     const translations: LegalDocumentTranslationInput[] = [
       { locale: "ro", title: "Confidențialitate", body: body("păstrăm numele") },
       { locale: "en", title: "Privacy", body: body("we keep the name") },
@@ -284,11 +288,16 @@ describe("§754 the volunteers' public sign-up", () => {
     expect(await closedWith(quiet, (await seedRole(quiet.id)).id)).toBe("CONFLICT");
     expect(await db.select().from(eventVolunteers)).toHaveLength(0);
     // A notice that names it in force, in both languages — and still no volunteer agreement (§NNN): shut.
-    await approveNotice(true, 2);
+    await approveNotice(true, 2, false);
     expect(await closedWith(quiet, (await db.select().from(eventVolunteerRoles))[0].id)).toBe("CONFLICT");
     expect(await db.select().from(eventVolunteers)).toHaveLength(0);
-    // (d) The agreement approved from the template: it opens.
+    // (d) The agreement approved from the template — but (e) the notice in force is §754's, naming the volunteers
+    // and not the agreement's acceptance (`{{volunteerAgreement}}`): still shut, nothing kept.
     await approveAgreement();
+    expect(await closedWith(quiet, (await db.select().from(eventVolunteerRoles))[0].id)).toBe("CONFLICT");
+    expect(await db.select().from(eventVolunteers)).toHaveLength(0);
+    // A notice naming both, in both languages: it opens.
+    await approveNotice(true, 3);
     expect(await closedWith(quiet, (await db.select().from(eventVolunteerRoles))[0].id)).toBe("accepted");
   });
 
@@ -297,7 +306,7 @@ describe("§754 the volunteers' public sign-up", () => {
     // The agreement in force (§NNN), so the notice alone is what shuts the form here.
     await approveAgreement();
     const translations: LegalDocumentTranslationInput[] = [
-      { locale: "ro", title: "Confidențialitate", body: { sections: [{ paragraphs: ["Voluntari ({{volunteers}})"] }] } },
+      { locale: "ro", title: "Confidențialitate", body: { sections: [{ paragraphs: ["Voluntari ({{volunteers}}, {{volunteerAgreement}})"] }] } },
       { locale: "en", title: "Privacy", body: { sections: [{ paragraphs: ["Nothing about it"] }] } },
     ];
     await insertLegalDocumentVersion(db, {

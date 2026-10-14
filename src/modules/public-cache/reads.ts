@@ -70,6 +70,7 @@ import {
   describesNewsletter,
   describesPromotionalMaterials,
   describesPromotionalMaterialsShared,
+  describesVolunteerAgreement,
   describesVolunteers,
 } from "@/modules/legal-documents/domain/merge-fields";
 import { readPublicVolunteerRoles } from "@/modules/volunteers/volunteers";
@@ -570,6 +571,17 @@ export async function cachedNewsletterOffered(now: Date): Promise<boolean> {
 export async function cachedVolunteersDescribed(now: Date): Promise<boolean> {
   const notices = await Promise.all(routing.locales.map((locale) => cachedCurrentApprovedDocument("PRIVACY_NOTICE", locale, now)));
   return notices.every((notice) => notice !== undefined && describesVolunteers(notice.body));
+}
+
+/**
+ * Whether the privacy notice in force describes the volunteer agreement's acceptance (§NNN,
+ * `describesVolunteerAgreement`), in every language — the event page's fifth condition for «Vreau să fiu
+ * voluntar», `cachedVolunteersDescribed`'s twin. `noticeDescribesVolunteerAgreement` is the uncached read the
+ * sign-up asks again.
+ */
+export async function cachedVolunteerAgreementDescribed(now: Date): Promise<boolean> {
+  const notices = await Promise.all(routing.locales.map((locale) => cachedCurrentApprovedDocument("PRIVACY_NOTICE", locale, now)));
+  return notices.every((notice) => notice !== undefined && describesVolunteerAgreement(notice.body));
 }
 
 /**

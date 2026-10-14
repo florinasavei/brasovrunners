@@ -1817,7 +1817,9 @@
       "ANSWER_BIRTH_DATE_GUARDIAN_SIGNED_ADULT": "Data nașterii nu s-a salvat: persoana ar fi fost majoră la înscriere, iar declarația e semnată de părintele sau tutorele pe care îl numește, care nu se mai poate scoate.",
       "ANSWER_GUARDIAN_ADULT": "Părintele sau tutorele nu s-a salvat: persoana nu era minoră la înscriere. Doar înscrierea unui minor numește un părinte sau tutore.",
       "VOLUNTEER_AGREEMENT_MISSING": "Niciun contract de voluntariat nu e în vigoare. Aprobă-l întâi în «Documente legale»: șablonul e gata.",
-      "VOLUNTEER_AGREEMENT_ACCEPTED": "Persoana a acceptat deja contractul: nu mai e nimic de trimis sau de înregistrat."
+      "VOLUNTEER_AGREEMENT_ACCEPTED": "Persoana a acceptat deja contractul: nu mai e nimic de trimis sau de înregistrat.",
+      "VOLUNTEER_AGREEMENT_NOTICE": "Nota de confidențialitate în vigoare nu descrie încă acceptarea contractului de voluntariat. Aprobă întâi o notă nouă din șablon, în «Documente legale»; «Sarcini» spune cum.",
+      "VOLUNTEER_AGREEMENT_REPRINT": "Nu s-a înregistrat: de la tipărire s-a schimbat versiunea contractului sau rolul persoanei. Tipărește din nou PDF-ul de semnat și cere o semnătură pe foaia nouă."
     },
     "editor": {
       "draftPreview": {
@@ -3193,6 +3195,7 @@
         "feedbackFormsNamed": "Doar în nota de confidențialitate: alegerea „Cu nume și prenume” din formularele „Spune-ne ceva”, între ghilimele. Fără el în nota în vigoare, formularele sunt doar anonime",
         "membersShop": "Doar în nota de confidențialitate: numele secțiunii „Magazinul clubului”, între ghilimele. Cu el în nota în vigoare, zona membrilor arată magazinul și primește comenzi",
         "volunteers": "Doar în nota de confidențialitate: numele formularului „Vreau să fiu voluntar”, între ghilimele. Cu el în nota în vigoare, un eveniment cu voluntari își arată formularul și păstrează ofertele",
+        "volunteerAgreement": "Doar în nota de confidențialitate: titlul „Contract de voluntariat”, între ghilimele. Fără el în nota în vigoare, formularul de voluntari, linkul contractului și „Semnat pe hârtie” sunt oprite",
         "volunteer": "Doar în contractul de voluntariat: numele voluntarului, cum e pe lista evenimentului",
         "volunteerRole": "Doar în contractul de voluntariat: numele rolului, în limba textului",
         "volunteerTasks": "Doar în contractul de voluntariat: ce face rolul, din descrierea lui. Fără descriere, propoziția care îl numește dispare"
@@ -4528,7 +4531,8 @@
           "eventOver": "Formularul public nu se arată: evenimentul e anulat sau s-a terminat.",
           "noRoleNeeds": "Formularul public nu se arată: fiecare rol are toți oamenii de care are nevoie (sau încă nu există niciun rol).",
           "noNotice": "Formularul public nu se arată: nota de confidențialitate în vigoare nu descrie încă voluntarii. «Sarcini» spune ce trebuie aprobat.",
-          "noAgreement": "Formularul public nu se arată: niciun contract de voluntariat nu e în vigoare. Aprobă-l în «Documente legale»; «Sarcini» spune cum."
+          "noAgreement": "Formularul public nu se arată: niciun contract de voluntariat nu e în vigoare. Aprobă-l în «Documente legale»; «Sarcini» spune cum.",
+          "noAgreementNotice": "Formularul public nu se arată: nota de confidențialitate în vigoare nu descrie încă acceptarea contractului de voluntariat. «Sarcini» spune ce trebuie aprobat."
         }
       },
       "switchOn": "Primește voluntari pe pagină",
@@ -4594,7 +4598,7 @@
       "agreement": {
         "accepted": "Contract acceptat",
         "notAccepted": "Contract neacceptat încă",
-        "linkSent": "Link trimis, contract neacceptat încă",
+        "linkSent": "Link trimis",
         "acceptedLine": "Versiunea {version} · {how} · {when}",
         "methods": {
           "FORM": "în formularul de pe pagină",
@@ -4602,6 +4606,7 @@
           "PAPER": "semnat pe hârtie"
         },
         "otherRole": "Acceptat pentru rolul „{role}”; rolul s-a schimbat de atunci.",
+        "otherPlace": "Acceptat pentru {date}, în {place}; data sau locul evenimentului s-au schimbat de atunci.",
         "requestedLine": "Ultimul link trimis: {when}",
         "help": "Trimite-i linkul pe email sau tipărește PDF-ul: persoana îl semnează la voi, apoi apeși „Semnat pe hârtie”.",
         "send": "Trimite linkul contractului",
@@ -4610,8 +4615,9 @@
         "pdfToSign": "PDF de semnat",
         "paper": "Semnat pe hârtie",
         "paperTitle": "{name} a semnat contractul pe hârtie?",
-        "paperBody": "Se înregistrează că {name} a semnat contractul tipărit, versiunea în vigoare, și că tu ai înregistrat. Păstrează foaia semnată.",
-        "missing": "Niciun contract de voluntariat nu e în vigoare: nu se poate trimite sau tipări încă. Aprobă-l în «Documente legale»."
+        "paperBody": "Se înregistrează că {name} a semnat contractul tipărit, versiunea în vigoare, și că tu ai înregistrat semnătura. {name} primește o copie pe email. Păstrează foaia semnată.",
+        "missing": "Niciun contract de voluntariat nu e în vigoare: nu se poate trimite sau tipări încă. Aprobă-l în «Documente legale».",
+        "noticeMissing": "Nota de confidențialitate în vigoare nu descrie încă acceptarea contractului: linkul și „Semnat pe hârtie” așteaptă. «Sarcini» spune ce trebuie aprobat."
       },
       "csv": "Descarcă CSV",
       "csvHelp": "Un rând pe voluntar, grupat pe roluri. Fișierul conține adrese și telefoane: păstrează-l la fel de atent ca lista.",

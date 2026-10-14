@@ -3,7 +3,7 @@ import ro from "../../../messages/ro.json";
 import en from "../../../messages/en.json";
 import { RETENTION_PERIODS } from "@/modules/jobs/domain/retention-periods";
 import { RETENTION } from "@/modules/jobs/retention";
-import { describesVolunteers, mergeText, VOLUNTEERS_MERGE_FIELD } from "@/modules/legal-documents/domain/merge-fields";
+import { describesVolunteerAgreement, describesVolunteers, mergeText, VOLUNTEERS_MERGE_FIELD } from "@/modules/legal-documents/domain/merge-fields";
 import { typedPhone } from "@/modules/registrations/answers";
 import { privacyNoticeEn, privacyNoticeRo } from "@/modules/legal-documents/templates/privacy-notice";
 import { DECLARATION_TOKENS } from "@/modules/legal-documents/templates/tokens";
@@ -191,7 +191,7 @@ describe("§754 how a role stands: «N din M»", () => {
 });
 
 describe("§754 the three conditions of the public form", () => {
-  const open = { acceptsVolunteers: true, standings: [{ free: 2 }], noticeDescribes: true, agreementInForce: true, eventAhead: true, published: true, membersOnly: false };
+  const open = { acceptsVolunteers: true, standings: [{ free: 2 }], noticeDescribes: true, agreementInForce: true, noticeDescribesAgreement: true, eventAhead: true, published: true, membersOnly: false };
 
   it("is offered only when the event takes volunteers, a role still needs people and the notice describes them", () => {
     expect(volunteerOfferClosedFor(open)).toBeNull();
@@ -206,6 +206,13 @@ describe("§754 the three conditions of the public form", () => {
     // The notice is asked first: both missing, the card names the notice, which the club approves first.
     expect(volunteerOfferClosedFor({ ...open, agreementInForce: false, noticeDescribes: false })).toBe("noNotice");
     expect(volunteerOfferClosedFor({ ...open, agreementInForce: false, acceptsVolunteers: false })).toBe("off");
+  });
+
+  it("§NNN is not offered while the notice in force does not describe the agreement's acceptance — after the agreement itself", () => {
+    expect(volunteerOfferClosedFor({ ...open, noticeDescribesAgreement: false })).toBe("noAgreementNotice");
+    // The agreement first: without one there is nothing whose acceptance the notice could describe.
+    expect(volunteerOfferClosedFor({ ...open, noticeDescribesAgreement: false, agreementInForce: false })).toBe("noAgreement");
+    expect(volunteerOfferClosedFor({ ...open, noticeDescribesAgreement: false, noticeDescribes: false })).toBe("noNotice");
   });
 
   it("is not offered for an event that is cancelled or over, whatever else is true", () => {
@@ -271,10 +278,28 @@ describe("§754 the privacy notice's marker {{volunteers}}", () => {
   it("is in both languages' templates, in the token legend, and filled with the form's own name", () => {
     for (const body of [privacyNoticeRo, privacyNoticeEn]) expect(describesVolunteers(body)).toBe(true);
     expect(DECLARATION_TOKENS.some((entry) => entry.token === "{{volunteers}}")).toBe(true);
-    expect(volunteersMergeValues("ro")).toEqual({ volunteers: `„${ro.Event.volunteers.title}”` });
-    expect(volunteersMergeValues("en")).toEqual({ volunteers: `“${en.Event.volunteers.title}”` });
+    expect(volunteersMergeValues("ro")).toMatchObject({ volunteers: `„${ro.Event.volunteers.title}”` });
+    expect(volunteersMergeValues("en")).toMatchObject({ volunteers: `“${en.Event.volunteers.title}”` });
     expect(volunteersClause("ro")).toBe("„Vreau să fiu voluntar”");
     expect(mergeText("Voluntari ({{volunteers}})", volunteersMergeValues("en"))).toBe("Voluntari (“I want to volunteer”)");
+  });
+
+  it("§NNN has a twin, {{volunteerAgreement}}, in the same paragraph: a notice naming only {{volunteers}} does not describe the agreement", () => {
+    // A notice approved from §754's template: it names the volunteers, and says nothing of the acceptance.
+    const before = { sections: [{ heading: "5.", paragraphs: ["Voluntari ({{volunteers}}): un singur e-mail de primire, fără nicio legătură care să facă ceva."] }] };
+    expect(describesVolunteers(before)).toBe(true);
+    expect(describesVolunteerAgreement(before)).toBe(false);
+    for (const body of [privacyNoticeRo, privacyNoticeEn]) {
+      expect(describesVolunteerAgreement(body)).toBe(true);
+      // In the volunteers' own paragraph, beside its marker.
+      const paragraph = body.sections.flatMap((section) => section.paragraphs).find((candidate) => candidate.includes("{{volunteers}}")) ?? "";
+      expect(paragraph).toContain("{{volunteerAgreement}}");
+      // The age is the agreement's, never a number written into the notice.
+      expect(paragraph).not.toMatch(/18/);
+    }
+    expect(DECLARATION_TOKENS.some((entry) => entry.token === "{{volunteerAgreement}}")).toBe(true);
+    expect(volunteersMergeValues("ro").volunteerAgreement).toBe(`„${ro.Legal.volunteerAgreementTitle}”`);
+    expect(volunteersMergeValues("en").volunteerAgreement).toBe(`“${en.Legal.volunteerAgreementTitle}”`);
   });
 
   it("says in section 7, in both languages, the number of days the sweep deletes by", () => {

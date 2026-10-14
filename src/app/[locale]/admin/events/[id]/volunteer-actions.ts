@@ -210,7 +210,17 @@ export async function requestVolunteerAgreementAction(form: FormData): Promise<v
 export async function recordPaperVolunteerAgreementAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   try {
     const actor = await requireStaff();
-    await recordPaperVolunteerAgreement(getDb(), actor, { eventId: eventIdOf(form), id: field(form, "volunteerId") }, new Date());
+    await recordPaperVolunteerAgreement(
+      getDb(),
+      actor,
+      {
+        eventId: eventIdOf(form),
+        id: field(form, "volunteerId"),
+        // What the card's «PDF de semnat» printed: the service refuses when either changed since (§NNN).
+        printed: { documentId: field(form, "agreementDocumentId"), roleId: field(form, "roleId") },
+      },
+      new Date(),
+    );
   } catch (error) {
     if (!isDomainError(error)) throw error;
     return backToCard(form, { error: error.code });

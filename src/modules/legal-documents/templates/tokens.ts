@@ -15,6 +15,7 @@ import {
   FEEDBACK_FORMS_NAMED_MERGE_FIELD,
   MEMBERS_SHOP_MERGE_FIELD,
   VOLUNTEERS_MERGE_FIELD,
+  VOLUNTEER_AGREEMENT_NOTICE_MERGE_FIELD,
   DEADLINE_MERGE_FIELDS,
   deadlineMergeValues,
   LIST_NUMBERS_MERGE_FIELD,
@@ -33,7 +34,7 @@ import { gmailFallbackClause } from "@/modules/notifications/fallback-notice-wor
 import { eventInvitationsClause } from "@/modules/registrations/invitation-words";
 import { feedbackFormsClause, feedbackFormsNamedClause } from "@/modules/feedback/notice-words";
 import { membersShopClause } from "@/modules/content/shop/notice-words";
-import { volunteersClause } from "@/modules/volunteers/notice-words";
+import { volunteerAgreementClause, volunteersClause } from "@/modules/volunteers/notice-words";
 
 /**
  * The declaration's merge fields, in one list (`DECISIONS.md` §190).
@@ -241,6 +242,13 @@ export const DECLARATION_TOKENS: readonly DeclarationToken[] = [
     token: `{{${VOLUNTEERS_MERGE_FIELD}}}`,
     messageKey: VOLUNTEERS_MERGE_FIELD,
     example: inBoth((locale) => volunteersClause(locale)),
+  },
+  // The privacy notice's marker for the volunteer agreement (§NNN): its title, and the switch — the form, the link
+  // and the paper record wait, with `{{volunteers}}`, for a notice naming it (`describesVolunteerAgreement`).
+  {
+    token: `{{${VOLUNTEER_AGREEMENT_NOTICE_MERGE_FIELD}}}`,
+    messageKey: VOLUNTEER_AGREEMENT_NOTICE_MERGE_FIELD,
+    example: inBoth((locale) => volunteerAgreementClause(locale)),
   },
 ];
 

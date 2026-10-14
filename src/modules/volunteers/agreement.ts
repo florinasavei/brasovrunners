@@ -9,11 +9,12 @@ import { generateTokenSecret, hashTokenSecret, isWellFormedTokenSecret } from "@
 import { recordAuditEvent } from "@/modules/audit/repository";
 import { isLegalDocumentBody, type LegalDocumentBody } from "@/modules/legal-documents/domain/content-hash";
 import { VOLUNTEER_AGREEMENT_KEY } from "@/modules/legal-documents/domain/keys";
-import { minimumAgeMergeValue, type MergeValues } from "@/modules/legal-documents/domain/merge-fields";
+import { MINIMUM_AGE_MERGE_FIELD, mergeFieldsIn, minimumAgeMergeValue, type MergeValues } from "@/modules/legal-documents/domain/merge-fields";
 import { signedTextHash } from "@/modules/legal-documents/domain/signed-text";
-import { findCurrentApprovedDocument, volunteerAgreementInForce } from "@/modules/legal-documents/repository";
+import { findCurrentApprovedDocument, noticeDescribesVolunteerAgreement, volunteerAgreementInForce } from "@/modules/legal-documents/repository";
 import { DEFAULT_TOKEN_HOURS } from "@/modules/notifications/domain/token-lifetime";
 import { enqueueEmail } from "@/modules/notifications/outbox";
+import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
 import { eventMergeValues } from "@/modules/registrations/signed-declaration";
 import { canManageVolunteers } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
@@ -80,6 +81,16 @@ export function readAgreementFacts(value: unknown): AgreementFacts | null {
 export type AgreementRole = { nameRo: string; nameEn: string; descriptionRo: string | null; descriptionEn: string | null };
 
 /**
+ * A role's description as the agreement's sentence takes it: «Ce presupune rolul: {{volunteerTasks}}.» ends with
+ * its own full stop, so the club's text — typed in the editor as a sentence, often with one — loses one closing
+ * mark (after its spaces), never «…kilometrul 5..». The facts are frozen at acceptance, so this happens before
+ * they are written. A text that is only punctuation reads as none, and its sentence is left out.
+ */
+export function tasksWords(description: string): string {
+  return description.trim().replace(/[.!?…;]$/u, "").trimEnd();
+}
+
+/**
  * The agreement's blanks for one person, one role and one event, in one language — everything but the moment
  * of acceptance. The event's facts as a race's declaration fills them (`eventMergeValues`: its title, its date
  * in words, its place — the city while the place is to be announced, §328); the age is the platform's
@@ -97,7 +108,7 @@ export async function agreementBlanks<T extends Record<string, unknown>>(
     facts: {
       volunteer: input.name,
       volunteerRole: en ? input.role.nameEn : input.role.nameRo,
-      volunteerTasks: (en ? input.role.descriptionEn : input.role.descriptionRo) ?? "",
+      volunteerTasks: tasksWords((en ? input.role.descriptionEn : input.role.descriptionRo) ?? ""),
       event: event?.values.event ?? "",
       eventDate: event?.values.eventDate ?? "",
       eventLocation: event?.values.eventLocation ?? "",
@@ -126,7 +137,7 @@ export type AgreementAcceptanceColumns = {
   agreementTextHash: string;
   agreementFacts: AgreementFacts;
   agreementRecordedByStaffUserId: string | null;
-  declaredAdult: true;
+  declaredAdult: boolean;
   agreementTokenHash: null;
   agreementTokenExpiresAt: null;
 };
@@ -135,8 +146,9 @@ export type AgreementAcceptanceColumns = {
  * One acceptance of the agreement in force, as the row keeps it: the version, the moment, the way, the language,
  * the blanks as filled and the fingerprint of the text with them (§556) — hashed before the row is written, in
  * the caller's transaction. Any live link dies with it (an accepted agreement needs no other way in), and the age
- * is recorded as declared: on the form and the link page by its own tick, on paper by the text the person signed,
- * which states it.
+ * is recorded as declared: on the form and the link page by its own tick; on paper only when the version signed
+ * states it — its text names `{{minimumAge}}` — since the club may have approved one that does not, and no box on
+ * the desk asks it.
  */
 export async function agreementAcceptance<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -161,7 +173,7 @@ export async function agreementAcceptance<T extends Record<string, unknown>>(
     agreementTextHash: signedTextHash({ title: input.document.title, body: agreementBody(input.document.body), values: facts }),
     agreementFacts: facts,
     agreementRecordedByStaffUserId: input.recordedBy ?? null,
-    declaredAdult: true,
+    declaredAdult: input.method !== "PAPER" || mergeFieldsIn(input.document.body).has(MINIMUM_AGE_MERGE_FIELD),
     agreementTokenHash: null,
     agreementTokenExpiresAt: null,
   };
@@ -180,22 +192,44 @@ export function agreementMergeValues(facts: Partial<AgreementFacts>): MergeValue
  * A fresh link for one volunteer, minted when its email leaves (`notifications/render.ts`), never when it is
  * queued: the secret is in the email alone (§14.5), the row keeps its SHA-256 and its expiry, and a newer link
  * replaces the older one in the same statement — the newest email is the one whose link works. Null for a row
- * that has accepted since, been cancelled or deleted: there is nothing left to ask, and the email is withdrawn.
+ * that has accepted since, been cancelled or deleted, or whose address is no longer the one the email goes to
+ * (`recipientEmail`, the queued row's, compared through the canonicalizer, §10.4): an organizer corrected it while
+ * the email waited, and whoever reads the old mailbox must not accept in the person's name. Nothing left to ask
+ * there, and the email is withdrawn.
  */
 export async function mintVolunteerAgreementLink<T extends Record<string, unknown>>(
   db: Database<T>,
   volunteerId: string,
+  recipientEmail: string,
   now: Date,
 ): Promise<{ secret: string; expiresAt: Date } | null> {
   if (!isUuid(volunteerId)) return null;
+  const recipient = canonicalOrNull(recipientEmail);
+  if (recipient === null) return null;
   const secret = generateTokenSecret();
   const expiresAt = new Date(now.getTime() + DEFAULT_TOKEN_HOURS * 60 * 60_000);
   const [row] = await db
     .update(eventVolunteers)
     .set({ agreementTokenHash: hashTokenSecret(secret), agreementTokenExpiresAt: expiresAt })
-    .where(and(eq(eventVolunteers.id, volunteerId), isNull(eventVolunteers.agreementAcceptedAt), ne(eventVolunteers.state, "CANCELLED")))
+    .where(
+      and(
+        eq(eventVolunteers.id, volunteerId),
+        eq(eventVolunteers.canonicalEmail, recipient),
+        isNull(eventVolunteers.agreementAcceptedAt),
+        ne(eventVolunteers.state, "CANCELLED"),
+      ),
+    )
     .returning({ id: eventVolunteers.id });
   return row ? { secret, expiresAt } : null;
+}
+
+/** An address's identity (§10.4), or null for one the canonicalizer refuses — which matches no row. */
+export function canonicalOrNull(address: string): string | null {
+  try {
+    return canonicalizeEmail(address).canonicalEmail;
+  } catch {
+    return null;
+  }
 }
 
 /** The row a live link opens: unknown, spent, expired or cancelled all read as none — one answer (§13.2). */
@@ -358,8 +392,10 @@ function assertIds(...ids: readonly string[]): void {
  * agreement in force and the single-use link to accept it — minted at the send, so a press queues a message and
  * never a secret (§14.5). Refuses an actor who may not (FORBIDDEN), a volunteer not of this event (NOT_FOUND), one
  * who has accepted (`VOLUNTEER_AGREEMENT_ACCEPTED`) or was cancelled (CONFLICT), and any press while no agreement
- * is in force in every language (`VOLUNTEER_AGREEMENT_MISSING`). Each press is its own email (a resend is a new
- * trigger, §12.11) and the newest link replaces the older one when it leaves.
+ * is in force in every language (`VOLUNTEER_AGREEMENT_MISSING`) or while the privacy notice in force does not
+ * describe its acceptance (`VOLUNTEER_AGREEMENT_NOTICE`, `{{volunteerAgreement}}`: the link leads to an acceptance
+ * the notice must name). Each press is its own email (a resend is a new trigger, §12.11) and the newest link
+ * replaces the older one when it leaves.
  */
 export async function requestVolunteerAgreement<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -370,6 +406,7 @@ export async function requestVolunteerAgreement<T extends Record<string, unknown
   assertMayManage(actor);
   assertIds(request.eventId, request.id);
   if (!(await volunteerAgreementInForce(db, now))) throw new DomainError("VOLUNTEER_AGREEMENT_MISSING", "no volunteer agreement is in force");
+  await assertNoticeDescribesAgreement(db, now);
   await db.transaction(async (tx) => {
     const row = await lockedVolunteer(tx, request.eventId, request.id);
     if (row.agreementAcceptedAt) throw new DomainError("VOLUNTEER_AGREEMENT_ACCEPTED", "the volunteer has accepted the agreement");
@@ -397,27 +434,45 @@ export async function requestVolunteerAgreement<T extends Record<string, unknown
   });
 }
 
+/** The privacy notice in force names `{{volunteerAgreement}}` in every language, or the verb is refused (§NNN). */
+async function assertNoticeDescribesAgreement<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<void> {
+  if (!(await noticeDescribesVolunteerAgreement(db, now))) {
+    throw new DomainError("VOLUNTEER_AGREEMENT_NOTICE", "the privacy notice in force does not describe the volunteer agreement");
+  }
+}
+
+/** What the desk printed: the version the «PDF de semnat» carried and the role it named (the card posts both). */
+export type PrintedAgreement = { documentId: string; roleId: string };
+
 /**
  * «Semnat pe hârtie» (§NNN): the person signed the printed agreement at the desk, and an organizer records it —
  * the version in force in the row's language (the one the desk's PDF prints), the moment of the press, `PAPER`,
- * and who recorded it; the signed sheet stays with the club. Refuses as `requestVolunteerAgreement` does. The
+ * and who recorded it; the signed sheet stays with the club, and the person is sent their copy by email
+ * (`VOLUNTEER_AGREEMENT_ACCEPTED`, the PDF attached at the send), as after the link. Refuses as
+ * `requestVolunteerAgreement` does, and — `VOLUNTEER_AGREEMENT_REPRINT` — when the version in force or the
+ * person's role is no longer the one the card printed (`printed`): what the row records must be what the sheet
+ * says, so a new version approved, or a role changed, between the print and the press asks for a new sheet. The
  * staff member records the person's signature; they never sign for the person (CLAUDE.md: no staff-signed
  * declaration — the same line for this agreement).
  */
 export async function recordPaperVolunteerAgreement<T extends Record<string, unknown>>(
   db: Database<T>,
   actor: Actor,
-  request: { eventId: string; id: string },
+  request: { eventId: string; id: string; printed: PrintedAgreement },
   now: Date,
 ): Promise<void> {
   assertMayManage(actor);
   assertIds(request.eventId, request.id);
+  await assertNoticeDescribesAgreement(db, now);
   await db.transaction(async (tx) => {
     const row = await lockedVolunteer(tx, request.eventId, request.id);
     if (row.agreementAcceptedAt) throw new DomainError("VOLUNTEER_AGREEMENT_ACCEPTED", "the volunteer has accepted the agreement");
     if (row.state === "CANCELLED") throw new DomainError("CONFLICT", "a cancelled volunteer is not recorded");
     const document = await findCurrentApprovedDocument(tx, VOLUNTEER_AGREEMENT_KEY, row.locale, now);
     if (!document) throw new DomainError("VOLUNTEER_AGREEMENT_MISSING", "no volunteer agreement is in force");
+    if (document.id !== request.printed.documentId || row.roleId !== request.printed.roleId) {
+      throw new DomainError("VOLUNTEER_AGREEMENT_REPRINT", "the version in force or the role changed since the sheet was printed");
+    }
     const role = await roleOf(tx, row.roleId);
     if (!role) throw new DomainError("NOT_FOUND", "the volunteer's role is not there");
     const acceptance = await agreementAcceptance(
@@ -426,6 +481,18 @@ export async function recordPaperVolunteerAgreement<T extends Record<string, unk
       now,
     );
     await tx.update(eventVolunteers).set({ ...acceptance, updatedAt: now }).where(eq(eventVolunteers.id, row.id));
+    // The person's copy (§NNN): the agreement they signed, by email — the club keeps the sheet.
+    await enqueueEmail(tx, {
+      participantId: null,
+      registrationId: null,
+      messageType: "VOLUNTEER_AGREEMENT_ACCEPTED",
+      locale: row.locale,
+      recipientEmail: row.email,
+      payload: { eventId: row.eventId, volunteerId: row.id },
+      idempotencyKey: `volunteer:${row.id}:agreement-accepted`,
+      requestedByStaffUserId: actor.id,
+      now,
+    });
     await recordAuditEvent(tx, {
       actorStaffUserId: actor.id,
       action: "volunteer.agreement_recorded",

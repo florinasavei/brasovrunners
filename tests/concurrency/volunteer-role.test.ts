@@ -44,15 +44,15 @@ describe("§754 BR-REQ-031-01 ten people offer for a role's last place at once",
 
   beforeAll(async () => {
     [admin] = await db.insert(staffUsers).values({ email: `volunteers.admin.${stamp}@example.test`, displayName: "Admin", role: "ADMIN" }).returning();
-    // A privacy notice naming `{{volunteers}}` in both languages, the newest version, so it is the one in force
-    // (`noticeDescribesVolunteers`). Withdrawn again after the suite, so the next suite reads what it approved.
+    // A privacy notice naming `{{volunteers}}` and `{{volunteerAgreement}}` (§NNN) in both languages, the newest
+    // version, so it is the one in force (`noticeDescribesVolunteers`, `noticeDescribesVolunteerAgreement`). Withdrawn again after the suite, so the next suite reads what it approved.
     const [{ highest }] = await db
       .select({ highest: sql<number>`coalesce(max(${legalDocuments.version}), 0)::int` })
       .from(legalDocuments)
       .where(eq(legalDocuments.key, "PRIVACY_NOTICE"));
     const translations: LegalDocumentTranslationInput[] = [
-      { locale: "ro", title: "Confidențialitate", body: { sections: [{ paragraphs: ["Voluntari ({{volunteers}}): păstrăm numele."] }] } },
-      { locale: "en", title: "Privacy", body: { sections: [{ paragraphs: ["Volunteers ({{volunteers}}): we keep the name."] }] } },
+      { locale: "ro", title: "Confidențialitate", body: { sections: [{ paragraphs: ["Voluntari ({{volunteers}}, {{volunteerAgreement}}): păstrăm numele."] }] } },
+      { locale: "en", title: "Privacy", body: { sections: [{ paragraphs: ["Volunteers ({{volunteers}}, {{volunteerAgreement}}): we keep the name."] }] } },
     ];
     noticeId = await insertLegalDocumentVersion(db, {
       key: "PRIVACY_NOTICE",

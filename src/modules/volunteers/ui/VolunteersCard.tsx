@@ -68,6 +68,12 @@ type Props = {
   volunteers: readonly VolunteerItem[];
   /** Whether a volunteer agreement is in force in every language (§NNN): the link and the paper need one. */
   agreementInForce: boolean;
+  /** Whether the privacy notice in force describes the agreement's acceptance (§NNN): the link and the paper need it too. */
+  agreementNoticeDescribes: boolean;
+  /** The version in force per language: what «PDF de semnat» prints, posted back by «Semnat pe hârtie» (§NNN). */
+  agreementDocumentIds: Partial<Record<Locale, string>>;
+  /** The event's date and place as an acceptance would name them now, per language (`eventMergeValues`). */
+  agreementEvent: Partial<Record<Locale, { eventDate: string; eventLocation: string }>>;
   /** The page's clock: whether a sent link is still live. */
   now: Date;
   /** A refused one-button form's code, already translated. */
@@ -93,7 +99,21 @@ function shortText(text: string): string {
  * role (BR-REQ-060-01) whatever buttons this draws. It sits beside the editor's save form, never inside
  * it: HTML forms cannot nest. A volunteer's address and telephone number are drawn here and nowhere else.
  */
-export default async function VolunteersCard({ locale, eventId, acceptsVolunteers, offerClosed, roles, standings, volunteers, agreementInForce, now, error }: Props) {
+export default async function VolunteersCard({
+  locale,
+  eventId,
+  acceptsVolunteers,
+  offerClosed,
+  roles,
+  standings,
+  volunteers,
+  agreementInForce,
+  agreementNoticeDescribes,
+  agreementDocumentIds,
+  agreementEvent,
+  now,
+  error,
+}: Props) {
   const t = await getTranslations("Admin");
   const words = await confirmWords();
   const standingOf = new Map(standings.map((standing) => [standing.roleId, standing]));
@@ -266,6 +286,13 @@ export default async function VolunteersCard({ locale, eventId, acceptsVolunteer
     if (person.agreementAcceptedAt && person.agreementMethod) {
       const currentRole = roles.find((role) => role.id === person.roleId);
       const moved = person.agreementRoleName !== null && currentRole !== undefined && person.agreementRoleName !== currentRole.nameRo && person.agreementRoleName !== currentRole.nameEn;
+      // The date and the place the accepted text named, against the event's own now, in that text's language.
+      const eventNow = person.agreementLocale ? agreementEvent[person.agreementLocale] : undefined;
+      const elsewhere =
+        eventNow !== undefined &&
+        person.agreementEventDate !== null &&
+        person.agreementEventLocation !== null &&
+        (person.agreementEventDate !== eventNow.eventDate || person.agreementEventLocation !== eventNow.eventLocation);
       return (
         <Stack spacing={0.5} sx={{ mt: 0.5 }} data-testid="volunteer-agreement">
           <Typography variant="body2" color="text.secondary">
@@ -278,6 +305,11 @@ export default async function VolunteersCard({ locale, eventId, acceptsVolunteer
           {moved && (
             <Typography variant="body2" color="text.secondary" data-testid="volunteer-agreement-other-role">
               {t("volunteers.agreement.otherRole", { role: person.agreementRoleName ?? "" })}
+            </Typography>
+          )}
+          {elsewhere && (
+            <Typography variant="body2" color="text.secondary" data-testid="volunteer-agreement-other-place">
+              {t("volunteers.agreement.otherPlace", { date: person.agreementEventDate ?? "", place: person.agreementEventLocation ?? "" })}
             </Typography>
           )}
           <Box>
@@ -293,6 +325,13 @@ export default async function VolunteersCard({ locale, eventId, acceptsVolunteer
       return (
         <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }} data-testid="volunteer-agreement-missing">
           {t("volunteers.agreement.missing")}
+        </Typography>
+      );
+    }
+    if (!agreementNoticeDescribes) {
+      return (
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }} data-testid="volunteer-agreement-notice-missing">
+          {t("volunteers.agreement.noticeMissing")}
         </Typography>
       );
     }
@@ -328,6 +367,9 @@ export default async function VolunteersCard({ locale, eventId, acceptsVolunteer
           >
             {hidden}
             <input type="hidden" name="volunteerId" value={person.id} />
+            {/* What the PDF beside it prints (§NNN): the service refuses the record if either changed since. */}
+            <input type="hidden" name="agreementDocumentId" value={agreementDocumentIds[person.locale] ?? ""} />
+            <input type="hidden" name="roleId" value={person.roleId} />
             <GlyphSubmitButton icon="declaration" label={t("volunteers.agreement.paper")} pendingLabel={t("volunteers.agreement.paper")} variant="outlined" />
           </ActionForm>
         </Stack>
@@ -343,9 +385,11 @@ export default async function VolunteersCard({ locale, eventId, acceptsVolunteer
         </Typography>
         <StatusChip glyph={STATE_CHIP[person.state].glyph} color={STATE_CHIP[person.state].color} label={t(`volunteers.states.${person.state}`)} testId="volunteer-state" />
         <StatusChip glyph={person.source === "PUBLIC" ? "link" : "club"} variant="outlined" label={t(`volunteers.sources.${person.source}`)} />
-        {/* The volunteer agreement (§NNN): accepted, a link waiting, or «contract neacceptat încă» — in words, never by colour alone. */}
+        {/* The volunteer agreement (§NNN): accepted, a link waiting, or «contract neacceptat încă» — in words, never by colour alone.
+            A cancelled person who never accepted is asked nothing: no chip to act on. */}
         {(() => {
           const standing = agreementStandingOf(person, now);
+          if (person.state === "CANCELLED" && standing !== "accepted") return null;
           return (
             <StatusChip
               glyph={AGREEMENT_CHIP[standing].glyph}

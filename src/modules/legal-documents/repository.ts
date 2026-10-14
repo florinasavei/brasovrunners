@@ -21,6 +21,7 @@ import {
   describesFeedbackForms,
   describesFeedbackFormsNamed,
   describesMembersShop,
+  describesVolunteerAgreement,
   describesVolunteers,
   describesListNumbers,
   describesGmailFallback,
@@ -318,6 +319,17 @@ export async function noticeDescribesMembersShop<T extends Record<string, unknow
 export async function noticeDescribesVolunteers<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<boolean> {
   const notices = await Promise.all(routing.locales.map((locale) => findCurrentApprovedDocument(db, "PRIVACY_NOTICE", locale, now)));
   return notices.every((notice) => notice !== undefined && describesVolunteers(notice.body));
+}
+
+/**
+ * Whether the privacy notice in force describes the volunteer agreement's acceptance (§NNN,
+ * `describesVolunteerAgreement`) — in every language, like `noticeDescribesVolunteers`. For the public sign-up,
+ * «Trimite linkul contractului», «Semnat pe hârtie», the editor's card and `/admin/tasks`; the event page reads
+ * the cached twin (`cachedVolunteerAgreementDescribed`).
+ */
+export async function noticeDescribesVolunteerAgreement<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<boolean> {
+  const notices = await Promise.all(routing.locales.map((locale) => findCurrentApprovedDocument(db, "PRIVACY_NOTICE", locale, now)));
+  return notices.every((notice) => notice !== undefined && describesVolunteerAgreement(notice.body));
 }
 
 /**

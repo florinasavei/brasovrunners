@@ -9,7 +9,7 @@ import { legalDocuments } from "@/db/schema/legal-documents";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import { computeContentHash, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
 import { signedTextHash } from "@/modules/legal-documents/domain/signed-text";
-import { insertLegalDocumentVersion, listVersionsForBackoffice } from "@/modules/legal-documents/repository";
+import { findCurrentApprovedDocument, insertLegalDocumentVersion, listVersionsForBackoffice } from "@/modules/legal-documents/repository";
 import { LEGAL_TEMPLATES } from "@/modules/legal-documents/templates/catalogue";
 import type { OutboxRow } from "@/modules/notifications/outbox";
 import { renderOutboxMessage } from "@/modules/notifications/render";
@@ -51,16 +51,20 @@ describe("§NNN the volunteer agreement", () => {
   });
   afterAll(async () => close());
 
-  /** The notice in force names `{{volunteers}}` (§754's gate), in both languages. */
-  async function approveNotice() {
-    const body = (text: string) => ({ sections: [{ paragraphs: [`Voluntari ({{volunteers}}): ${text}`] }] });
+  /**
+   * The notice in force names `{{volunteers}}` (§754's gate) and `{{volunteerAgreement}}` (§NNN's), in both
+   * languages; `agreement: false` is a notice approved from §754's template, silent on the acceptance.
+   */
+  async function approveNotice(version = 1, agreement = true) {
+    const marker = agreement ? "{{volunteers}}, {{volunteerAgreement}}" : "{{volunteers}}";
+    const body = (text: string) => ({ sections: [{ paragraphs: [`Voluntari (${marker}): ${text}`] }] });
     const translations: LegalDocumentTranslationInput[] = [
       { locale: "ro", title: "Confidențialitate", body: body("păstrăm numele") },
       { locale: "en", title: "Privacy", body: body("we keep the name") },
     ];
     await insertLegalDocumentVersion(db, {
       key: "PRIVACY_NOTICE",
-      version: 1,
+      version,
       effectiveAt: new Date("2026-01-01T00:00:00.000Z"),
       isApproved: true,
       contentSha256: computeContentHash(translations),
@@ -120,6 +124,17 @@ describe("§NNN the volunteer agreement", () => {
   }
 
   const row = async (id: string) => (await db.select().from(eventVolunteers).where(eq(eventVolunteers.id, id)))[0];
+
+  /** What the card's «PDF de semnat» printed for this person now: the version in force in their language, their role. */
+  async function printedFor(id: string, at = NOW) {
+    const person = await row(id);
+    const version = await findCurrentApprovedDocument(db, "VOLUNTEER_AGREEMENT", person.locale, at);
+    return { documentId: version?.id ?? "00000000-0000-4000-8000-000000000000", roleId: person.roleId };
+  }
+
+  /** «Semnat pe hârtie» as the card posts it, the printed version and role with it. */
+  const paper = async (eventId: string, id: string, at = NOW, actor: StaffUser = admin) =>
+    recordPaperVolunteerAgreement(db, actor, { eventId, id, printed: await printedFor(id, at) }, at);
   const outboxOf = (type: "VOLUNTEER_AGREEMENT_REQUEST" | "VOLUNTEER_AGREEMENT_ACCEPTED" | "VOLUNTEER_RECEIVED") =>
     db.select().from(emailOutbox).where(eq(emailOutbox.messageType, type));
   const render = (outboxRow: unknown, at = NOW) => renderOutboxMessage({ ...(outboxRow as OutboxRow), status: "PROCESSING", lockedAt: at }, db, at);
@@ -283,7 +298,7 @@ describe("§NNN the volunteer agreement", () => {
       const agreementId = await approveAgreement();
       const { event, role } = await seedEvent();
       const id = await byHand(event.id, role.id);
-      const link = await mintVolunteerAgreementLink(db, id, NOW);
+      const link = await mintVolunteerAgreementLink(db, id, "ion@example.test", NOW);
       expect(link).not.toBeNull();
       const secret = link!.secret;
 
@@ -315,8 +330,8 @@ describe("§NNN the volunteer agreement", () => {
 
       // Accepted: no further link, no paper record.
       await expect(requestVolunteerAgreement(db, admin, { eventId: event.id, id }, LATER)).rejects.toMatchObject({ code: "VOLUNTEER_AGREEMENT_ACCEPTED" });
-      await expect(recordPaperVolunteerAgreement(db, admin, { eventId: event.id, id }, LATER)).rejects.toMatchObject({ code: "VOLUNTEER_AGREEMENT_ACCEPTED" });
-      expect(await mintVolunteerAgreementLink(db, id, LATER)).toBeNull();
+      await expect(paper(event.id, id, LATER, admin)).rejects.toMatchObject({ code: "VOLUNTEER_AGREEMENT_ACCEPTED" });
+      expect(await mintVolunteerAgreementLink(db, id, "ion@example.test", LATER)).toBeNull();
     });
 
     it("kills a link that expired, one a newer email replaced, one sent to an address changed since, and one of a cancelled person", async () => {
@@ -325,20 +340,22 @@ describe("§NNN the volunteer agreement", () => {
       const id = await byHand(event.id, role.id);
       const accept = (secret: string, at: Date) => acceptVolunteerAgreementByLink(db, secret, { agreement: true, adult: true, locale: "ro" }, at);
 
-      const first = (await mintVolunteerAgreementLink(db, id, NOW))!;
+      const first = (await mintVolunteerAgreementLink(db, id, "ion@example.test", NOW))!;
       // Past its expiry: nothing.
       expect(await accept(first.secret, new Date(first.expiresAt.getTime() + 1))).toEqual({ outcome: "invalid" });
       // A newer email's link replaces the older one.
-      const second = (await mintVolunteerAgreementLink(db, id, NOW))!;
+      const second = (await mintVolunteerAgreementLink(db, id, "ion@example.test", NOW))!;
       expect(await accept(first.secret, NOW)).toEqual({ outcome: "invalid" });
       // The address changed: the link went to the old one, and dies.
       await changeVolunteer(db, admin, { kind: "edit", eventId: event.id, id, fields: { roleId: role.id, name: "Ion Popescu", email: "ion.nou@example.test", phone: "+40712345679", note: "" } }, NOW);
       expect(await accept(second.secret, NOW)).toEqual({ outcome: "invalid" });
       // Cancelled: no link is minted, none is honoured.
-      const third = (await mintVolunteerAgreementLink(db, id, NOW))!;
+      // A request queued to the old address mints nothing (§NNN): its link would reach the wrong mailbox.
+      expect(await mintVolunteerAgreementLink(db, id, "ion@example.test", NOW)).toBeNull();
+      const third = (await mintVolunteerAgreementLink(db, id, "ion.nou@example.test", NOW))!;
       await changeVolunteer(db, admin, { kind: "setState", eventId: event.id, id, state: "CANCELLED" }, NOW);
       expect(await accept(third.secret, NOW)).toEqual({ outcome: "invalid" });
-      expect(await mintVolunteerAgreementLink(db, id, NOW)).toBeNull();
+      expect(await mintVolunteerAgreementLink(db, id, "ion.nou@example.test", NOW)).toBeNull();
       expect((await row(id)).agreementAcceptedAt).toBeNull();
     });
 
@@ -347,7 +364,7 @@ describe("§NNN the volunteer agreement", () => {
       const { event, role } = await seedEvent();
       const id = await byHand(event.id, role.id);
       await requestVolunteerAgreement(db, admin, { eventId: event.id, id }, NOW);
-      await recordPaperVolunteerAgreement(db, admin, { eventId: event.id, id }, NOW);
+      await paper(event.id, id, NOW, admin);
       const [queued] = await outboxOf("VOLUNTEER_AGREEMENT_REQUEST");
       await expect(render(queued)).rejects.toThrow(/accepted/i);
       expect((await row(id)).agreementTokenHash).toBeNull();
@@ -356,10 +373,10 @@ describe("§NNN the volunteer agreement", () => {
     it("records a paper acceptance at the desk with the version in force and who recorded it — never by a role that may not", async () => {
       const { event, role } = await seedEvent();
       const id = await byHand(event.id, role.id);
-      await expect(recordPaperVolunteerAgreement(db, admin, { eventId: event.id, id }, NOW)).rejects.toMatchObject({ code: "VOLUNTEER_AGREEMENT_MISSING" });
+      await expect(paper(event.id, id, NOW, admin)).rejects.toMatchObject({ code: "VOLUNTEER_AGREEMENT_MISSING" });
       const agreementId = await approveAgreement();
-      await expect(recordPaperVolunteerAgreement(db, technician, { eventId: event.id, id }, NOW)).rejects.toMatchObject({ code: "FORBIDDEN" });
-      await recordPaperVolunteerAgreement(db, admin, { eventId: event.id, id }, NOW);
+      await expect(paper(event.id, id, NOW, technician)).rejects.toMatchObject({ code: "FORBIDDEN" });
+      await paper(event.id, id, NOW, admin);
       expect(await row(id)).toMatchObject({
         agreementDocumentId: agreementId,
         agreementMethod: "PAPER",
@@ -377,7 +394,7 @@ describe("§NNN the volunteer agreement", () => {
       await approveAgreement();
       const { event, role } = await seedEvent();
       const id = await byHand(event.id, role.id);
-      await recordPaperVolunteerAgreement(db, admin, { eventId: event.id, id }, NOW);
+      await paper(event.id, id, NOW, admin);
       await db.update(eventVolunteerRoles).set({ nameRo: "Hidratare", nameEn: "Hydration" }).where(eq(eventVolunteerRoles.id, role.id));
       const [listed] = await listVolunteers(db, event.id);
       expect(listed.agreementRoleName).toBe("Punct de apă");
@@ -435,7 +452,7 @@ describe("§NNN the volunteer agreement", () => {
       await approveAgreement();
       const { event, role } = await seedEvent();
       const id = await byHand(event.id, role.id);
-      await recordPaperVolunteerAgreement(db, admin, { eventId: event.id, id }, NOW);
+      await paper(event.id, id, NOW, admin);
       const text = await words(id);
       expect(text).toContain("Semnat pe hârtie");
       expect(text).toContain("Ana Admin");

@@ -5,9 +5,15 @@ import { legalDocuments } from "@/db/schema/legal-documents";
 import type { StaffUser } from "@/db/schema/staff-users";
 import { staffUsers } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
+import type { Locale } from "@/i18n/routing";
 import { type AuditAction, recordAuditEvent } from "@/modules/audit/repository";
 import { VOLUNTEER_AGREEMENT_KEY } from "@/modules/legal-documents/domain/keys";
-import { findCurrentApprovedDocument, noticeDescribesVolunteers, volunteerAgreementInForce } from "@/modules/legal-documents/repository";
+import {
+  findCurrentApprovedDocument,
+  noticeDescribesVolunteerAgreement,
+  noticeDescribesVolunteers,
+  volunteerAgreementInForce,
+} from "@/modules/legal-documents/repository";
 import { enqueueEmail } from "@/modules/notifications/outbox";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
 import { revalidatePublicContent } from "@/modules/public-cache/cache";
@@ -105,6 +111,15 @@ export type VolunteerItem = {
   agreementVersion: number | null;
   /** The role's name the agreement was accepted for, in its language — differs from the row's role once moved. */
   agreementRoleName: string | null;
+  /**
+   * The event's date and place as the accepted text named them (`agreement_facts`), in the acceptance's language
+   * (`agreementLocale`) — the card compares them with the event's own, so a race moved since says so.
+   */
+  agreementLocale: Locale | null;
+  agreementEventDate: string | null;
+  agreementEventLocation: string | null;
+  /** The language the person wrote in: the version in force in it is the one the desk's PDF prints. */
+  locale: Locale;
   /** Whether a link to accept is live, and when an organizer last sent one. */
   agreementTokenExpiresAt: Date | null;
   agreementRequestedAt: Date | null;
@@ -124,26 +139,33 @@ export async function listVolunteers<T extends Record<string, unknown>>(db: Data
     .leftJoin(legalDocuments, eq(legalDocuments.id, eventVolunteers.agreementDocumentId))
     .where(eq(eventVolunteers.eventId, eventId))
     .orderBy(asc(eventVolunteers.createdAt), asc(eventVolunteers.id));
-  return rows.map(({ row, agreementVersion }) => ({
-    id: row.id,
-    eventId: row.eventId,
-    roleId: row.roleId,
-    name: row.name,
-    email: row.email,
-    phone: row.phone,
-    state: row.state,
-    source: row.source,
-    message: row.message,
-    note: row.note,
-    createdAt: row.createdAt,
-    updatedAt: row.updatedAt,
-    agreementAcceptedAt: row.agreementAcceptedAt,
-    agreementMethod: row.agreementMethod,
-    agreementVersion: row.agreementAcceptedAt ? agreementVersion : null,
-    agreementRoleName: readAgreementFacts(row.agreementFacts)?.volunteerRole ?? null,
-    agreementTokenExpiresAt: row.agreementTokenExpiresAt,
-    agreementRequestedAt: row.agreementRequestedAt,
-  }));
+  return rows.map(({ row, agreementVersion }) => {
+    const facts = readAgreementFacts(row.agreementFacts);
+    return {
+      id: row.id,
+      eventId: row.eventId,
+      roleId: row.roleId,
+      name: row.name,
+      email: row.email,
+      phone: row.phone,
+      state: row.state,
+      source: row.source,
+      message: row.message,
+      note: row.note,
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
+      agreementAcceptedAt: row.agreementAcceptedAt,
+      agreementMethod: row.agreementMethod,
+      agreementVersion: row.agreementAcceptedAt ? agreementVersion : null,
+      agreementRoleName: facts?.volunteerRole ?? null,
+      agreementLocale: row.agreementAcceptedAt ? row.agreementLocale : null,
+      agreementEventDate: facts?.eventDate ?? null,
+      agreementEventLocation: facts?.eventLocation ?? null,
+      locale: row.locale,
+      agreementTokenExpiresAt: row.agreementTokenExpiresAt,
+      agreementRequestedAt: row.agreementRequestedAt,
+    };
+  });
 }
 
 /** The roles of one event with how each stands, in the club's order: «N din M» and what is still needed. */
@@ -619,8 +641,8 @@ export type VolunteerSubmitOutcome =
  * box — a malformed address or telephone number, a missing name, a role that is not this event's, or the
  * consent, agreement or age tick not given; and — `CONFLICT`, the page offers no form then — an event that does
  * not take volunteers, is cancelled or over, is not published, whose privacy notice in force does not describe
- * volunteers, or while no volunteer agreement is in force (`volunteerOfferClosedFor`, asked again here: the
- * page's cache is not the gate).
+ * volunteers, while no volunteer agreement is in force, or while that notice does not describe the agreement's
+ * acceptance (`volunteerOfferClosedFor`, asked again here: the page's cache is not the gate).
  *
  * On a new person: one row «Înscris» (`source` PUBLIC, the notice's version recorded as the consent's
  * proof, and the agreement accepted with its version, moment and fingerprint, §NNN), one `VOLUNTEER_RECEIVED`
@@ -666,6 +688,7 @@ export async function submitVolunteer<T extends Record<string, unknown>>(
     standings: [{ free: 1 }],
     noticeDescribes,
     agreementInForce: await volunteerAgreementInForce(db, now),
+    noticeDescribesAgreement: await noticeDescribesVolunteerAgreement(db, now),
     eventAhead: volunteerEventAhead(event, now),
     published: event.editorialStatus === "PUBLISHED",
     membersOnly: event.membersOnly,

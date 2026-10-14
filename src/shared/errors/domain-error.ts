@@ -28,7 +28,11 @@ export type DomainErrorCode =
   // «Trimite linkul contractului» or a paper acceptance while no volunteer agreement is in force (§NNN): approve one first.
   | "VOLUNTEER_AGREEMENT_MISSING"
   // The same, for a volunteer who has already accepted the agreement (§NNN): nothing to send, nothing to record.
-  | "VOLUNTEER_AGREEMENT_ACCEPTED";
+  | "VOLUNTEER_AGREEMENT_ACCEPTED"
+  // The link or a paper acceptance while the privacy notice in force does not describe the acceptance (§NNN).
+  | "VOLUNTEER_AGREEMENT_NOTICE"
+  // «Semnat pe hârtie» after the version in force or the person's role changed since the sheet was printed (§NNN).
+  | "VOLUNTEER_AGREEMENT_REPRINT";
 
 export class DomainError extends Error {
   readonly code: DomainErrorCode;

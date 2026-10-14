@@ -88,8 +88,8 @@ beforeEach(async () => {
   sets.length = 0;
   turnstile = { on: false, verdict: "not_configured" };
   await db.insert(staffUsers).values({ email: "admin@example.test", displayName: "Admin", role: "ADMIN" });
-  // The notice in force names `{{volunteers}}` in both languages: the form is open.
-  const body = (text: string) => ({ sections: [{ paragraphs: [`Voluntari ({{volunteers}}): ${text}`] }] });
+  // The notice in force names `{{volunteers}}` and `{{volunteerAgreement}}` (§NNN) in both languages: the form is open.
+  const body = (text: string) => ({ sections: [{ paragraphs: [`Voluntari ({{volunteers}}, {{volunteerAgreement}}): ${text}`] }] });
   const translations: LegalDocumentTranslationInput[] = [
     { locale: "ro", title: "Confidențialitate", body: body("păstrăm numele") },
     { locale: "en", title: "Privacy", body: body("we keep the name") },
