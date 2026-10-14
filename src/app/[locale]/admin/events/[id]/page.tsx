@@ -18,7 +18,7 @@ import { offerableProposals } from "@/modules/event-checkpoints/domain/gpx-waypo
 import { canEditCheckpoints } from "@/modules/event-checkpoints/domain/checkpoint";
 import { loadGpxWaypoints } from "@/modules/event-checkpoints/gpx-file";
 import { readRouteGpx } from "@/modules/events/domain/route-gpx";
-import CheckpointsCard from "@/modules/content/events/ui/CheckpointsCard";
+import CheckpointsCard, { CheckpointForms } from "@/modules/content/events/ui/CheckpointsCard";
 import { canEditEventTodos, canReadEventTodos } from "@/modules/event-todos/domain/event-todo";
 import { listEventTodos } from "@/modules/event-todos/event-todos";
 import EventTodoCard from "@/modules/event-todos/ui/EventTodoCard";
@@ -1023,21 +1023,12 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                 error={todoErrorCode ? t(`errors.${todoErrorCode}`) : undefined}
               />
               {/*
-                «Puncte de control» (§757), part of «Traseul» in the page's sections (nested, no number): its
-                forms are its own, so it stands beside the save form, never inside it — HTML forms cannot nest.
-                It stands here on the screen too, where the document has it: no CSS `order` moving it under
-                «Traseul» (§760), so the tab order and a screen reader meet what the screen shows. «Traseul»
-                links to it, and its closed line counts the points.
+                «Puncte de control» (§757) is a named card of «Traseul», inside it in the document (§NNN). Its
+                two forms are detached (`CheckpointForms`): their state wraps the save form, their `<form>`
+                elements stand right after it — HTML forms cannot nest — and every box of the card names its
+                form, so neither save posts the other's boxes.
               */}
-              <CheckpointsCard
-                locale={locale}
-                eventId={event.id}
-                checkpoints={checkpoints}
-                mayEdit={canEditCheckpoints(staffUser.role)}
-                routeKm={checkpointRouteKm}
-                gpx={checkpointsGpx}
-                previewOpen={query.checkpointsGpx === "1"}
-              />
+              <CheckpointForms locale={locale} eventId={event.id} mayEdit={canEditCheckpoints(staffUser.role)}>
               {/* Settings and texts: one form, one save — and a refusal that keeps every box (§315). */}
               <ActionForm action={saveEventAndTranslationsAction} messages={refusal} confirm={saveConfirm} id="event-save-form" data-testid="event-save-form">
                 <input type="hidden" name="uiLocale" value={locale} />
@@ -1073,7 +1064,24 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                   <TitleSummaryBox {...box} languages={languages} creating={false} slugLocked={slugLocked} heading={flow.headings.title} />
                   <DescriptionBox languages={languages} heading={flow.headings.description} />
                   <WhenBox {...box} risk={risk} languages={languages} inSeries={inSeries} heading={flow.headings.when} />
-                  <CourseBox {...box} languages={languages} inSeries={inSeries} heading={flow.headings.course} checkpointCount={checkpoints.length} />
+                  <CourseBox
+                    {...box}
+                    languages={languages}
+                    inSeries={inSeries}
+                    heading={flow.headings.course}
+                    checkpointCount={checkpoints.length}
+                    checkpoints={
+                      <CheckpointsCard
+                        locale={locale}
+                        eventId={event.id}
+                        checkpoints={checkpoints}
+                        mayEdit={canEditCheckpoints(staffUser.role)}
+                        routeKm={checkpointRouteKm}
+                        gpx={checkpointsGpx}
+                        previewOpen={query.checkpointsGpx === "1"}
+                      />
+                    }
+                  />
                   <RegistrationBox
                     {...box}
                     heading={flow.headings.registration}
@@ -1161,6 +1169,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                   )}
                 </Stack>
               </ActionForm>
+              </CheckpointForms>
               {/* The bib card's two immediate actions post these, never the save above (hidden: no place in the column). */}
               {bibCounts && <BibPrintForms eventId={event.id} locale={locale} mayAssign={canManageRegistrations(staffUser.role)} assignAction={assignBibNumbersAction} sparesAction={reserveSpareBibsAction} sparesFrom={spares?.nextFrom ?? null} cancelLabel={words.cancel} />}
             </EditorMainColumn>

@@ -9092,8 +9092,6 @@
       "full": "There are already {max} points, as many as fit on a route.",
       "save": "Save the points",
       "saving": "Saving…",
-      "courseNote": "Checkpoints and their cut-offs are written in the “Checkpoints” card, above card 1.",
-      "courseLink": "Open the checkpoints",
       "inCourse": {
         "one": "{count} checkpoint",
         "few": "{count} checkpoints",

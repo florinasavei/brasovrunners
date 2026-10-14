@@ -9092,8 +9092,6 @@
       "full": "Sunt deja {max} de puncte, cât încape pe un traseu.",
       "save": "Salvează punctele",
       "saving": "Se salvează…",
-      "courseNote": "Punctele de control și orele limită se scriu în cardul „Puncte de control”, deasupra cardului 1.",
-      "courseLink": "Deschide punctele de control",
       "inCourse": {
         "one": "{count} punct de control",
         "few": "{count} puncte de control",
