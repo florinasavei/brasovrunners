@@ -203,6 +203,30 @@ describe("§NNN the trace of the electronic signature on the volunteer agreement
     }
   });
 
+  it("clears the guardian's trace with the rest of their columns when the age is corrected to eighteen or more", async () => {
+    const { event, role } = await seedEvent();
+    await submitVolunteer(db, event.id, minorForm(role.id), NOW, VOLUNTEER_TRACE);
+    const minor = await only();
+    const secret = (await mintVolunteerGuardianLink(db, minor.id, "maria.p@example.test", NOW))!.secret;
+    await acceptVolunteerGuardianByLink(db, secret, { agreement: true, typedName: "Maria Popescu", locale: "ro" }, LATER, GUARDIAN_TRACE);
+    expect(await row(minor.id)).toMatchObject({ guardianIp: GUARDIAN_TRACE.ip, guardianUserAgent: GUARDIAN_TRACE.userAgent });
+
+    await changeVolunteer(
+      db,
+      admin,
+      { kind: "edit", eventId: event.id, id: minor.id, fields: { roleIds: [role.id], assignedRoleId: role.id, name: "Dan Tânărul", email: "dan@example.test", phone: "+40712345678", note: "", age: "19" } },
+      LATER,
+    );
+    expect(await row(minor.id)).toMatchObject({
+      guardianName: null,
+      guardianAcceptedAt: null,
+      guardianTypedName: null,
+      guardianIp: null,
+      guardianUserAgent: null,
+      agreementIp: VOLUNTEER_TRACE.ip,
+    });
+  });
+
   it("deletes the trace with the row — the columns are the row's", async () => {
     const { event, role } = await seedEvent();
     await submitVolunteer(db, event.id, form(role.id), NOW, VOLUNTEER_TRACE);

@@ -1029,6 +1029,8 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
           guardianFacts: null,
           guardianTypedName: null,
           guardianRecordedByStaffUserId: null,
+          guardianIp: null,
+          guardianUserAgent: null,
           guardianTokenHash: null,
           guardianTokenExpiresAt: null,
           guardianRequestedAt: null,
