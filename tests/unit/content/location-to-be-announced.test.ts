@@ -158,6 +158,19 @@ describe("BR-REQ-011-01 criterion 19 the editor's constraints follow the switch 
     expect(html).toContain('name="event.mapUrl"');
   });
 
+  it("is a tick box, never a Material switch (§766): a checkbox input with its words, ticked or empty, never the switch role", () => {
+    for (const html of [render(false), render(true)]) {
+      const input = switchInput(html);
+      expect(input).toMatch(/type="checkbox"/);
+      expect(input).not.toMatch(/role="switch"/);
+      expect(input).toContain('aria-describedby="place-to-be-announced-help"');
+      expect(html).not.toMatch(/MuiSwitch-(?:root|thumb|track|switchBase)/);
+      expect(html).toContain("MuiCheckbox-root");
+      expect(html).toContain(labels.toggle);
+    }
+    expect(read("src/modules/content/events/ui/PlaceToBeAnnounced.tsx")).not.toContain("@mui/material/Switch");
+  });
+
   it("comes back as it was posted after a refusal: on when posted, off when not — whatever the page said", () => {
     expect(locationInput(render(false, { "event.locationToBeAnnounced": ["on"] }))).not.toMatch(/\brequired\b/);
     expect(englishInput(render(false, { "event.locationToBeAnnounced": ["on"] }))).not.toMatch(/\brequired\b/);
