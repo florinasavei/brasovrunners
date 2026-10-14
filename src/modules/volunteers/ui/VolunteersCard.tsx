@@ -14,7 +14,9 @@ import {
   editVolunteerRoleAction,
   moveVolunteerRoleAction,
   recordPaperVolunteerAgreementAction,
+  recordPaperVolunteerGuardianAction,
   requestVolunteerAgreementAction,
+  requestVolunteerGuardianAction,
   setVolunteerStateAction,
   switchVolunteersAction,
   switchVolunteersShirtsAction,
@@ -47,6 +49,7 @@ import type { StatusGlyphName } from "@/shared/ui/status-glyphs";
 import {
   VOLUNTEER_AGE_MAX,
   VOLUNTEER_CITY_MAX,
+  VOLUNTEER_GUARDIAN_NAME_MAX,
   VOLUNTEER_MINIMUM_AGE,
   VOLUNTEER_NAME_MAX,
   VOLUNTEER_NEEDED_MAX,
@@ -57,8 +60,11 @@ import {
   agreementStandingOf,
   agreementStillNamesRole,
   descriptionHead,
+  guardianStandingOf,
+  isVolunteerMinor,
   type RoleStanding,
   type VolunteerAgreementStanding,
+  type VolunteerGuardianStanding,
   type VolunteerOfferClosed,
   type VolunteerState,
 } from "../domain/volunteer";
@@ -80,6 +86,13 @@ const AGREEMENT_CHIP: Record<VolunteerAgreementStanding, { glyph: StatusGlyphNam
   accepted: { glyph: "done", color: "success" },
   linkSent: { glyph: "link", color: "default" },
   notAccepted: { glyph: "open", color: "warning" },
+};
+
+/** The parent's or guardian's chip (§NNN): its words, its glyph and its tone — never the colour alone. */
+const GUARDIAN_CHIP: Record<Exclude<VolunteerGuardianStanding, "notNeeded">, { glyph: StatusGlyphName; color: "warning" | "success" | "default" }> = {
+  accepted: { glyph: "done", color: "success" },
+  linkSent: { glyph: "link", color: "default" },
+  missing: { glyph: "open", color: "warning" },
 };
 
 /**
@@ -110,6 +123,12 @@ type Props = {
   volunteersShirts: boolean;
   /** The notice in force names what a volunteer says about themselves (§765): the public form asks it — else it is §758's tick. */
   profileDescribed: boolean;
+  /**
+   * The club may take a volunteer under eighteen (§NNN): the privacy notice in force names `{{volunteerMinors}}` and the
+   * agreement `{{volunteerGuardian}}`, in every language. Without it the entry's guardian boxes and the guardian's link and
+   * paper record wait — the service refuses them (`volunteerMinorsOpen`), so a hidden box is not the only gate.
+   */
+  minorsOpen: boolean;
   /** Why the public form is not on the event's page now, or null when it is (`volunteerOfferClosedFor`). */
   offerClosed: VolunteerOfferClosed | null;
   roles: readonly VolunteerRole[];
@@ -154,6 +173,7 @@ export default async function VolunteersCard({
   acceptsVolunteers,
   volunteersShirts,
   profileDescribed,
+  minorsOpen,
   offerClosed,
   roles,
   standings,
@@ -208,6 +228,8 @@ export default async function VolunteersCard({
     sex: t("volunteers.person.sex"),
     city: t("volunteers.person.city"),
     shirtSize: t("volunteers.person.shirt"),
+    guardianName: t("volunteers.person.guardianName"),
+    guardianEmail: t("volunteers.person.guardianEmail"),
   });
 
   const hidden = (
@@ -350,7 +372,7 @@ export default async function VolunteersCard({
           <RecallField
             name="age"
             label={t("volunteers.person.age")}
-            helperText={t("volunteers.person.ageHelp", { age: yearsPhrase(VOLUNTEER_MINIMUM_AGE, locale) })}
+            helperText={t(minorsOpen ? "volunteers.person.ageHelpMinors" : "volunteers.person.ageHelp", { age: yearsPhrase(VOLUNTEER_MINIMUM_AGE, locale) })}
             defaultValue={person?.age !== null && person?.age !== undefined ? String(person.age) : ""}
             size="small"
             fullWidth
@@ -373,6 +395,44 @@ export default async function VolunteersCard({
             ))}
           </RecallField>
         </Stack>
+        {/* The parent or guardian of a person under eighteen (§NNN): a named card, open while the person is one. The boxes are drawn while the club may take
+            minors (`minorsOpen`) or the person already is one; the service holds the rule either way (`volunteerMinorsOpen`, `checkGuardian`). */}
+        {minorsOpen || isVolunteerMinor(person?.age) ? (
+          <Panel
+            glyph="volunteers"
+            collapsible
+            level={3}
+            title={t("volunteers.person.guardianTitle")}
+            aside={person?.guardianName ?? undefined}
+            openWhen={{ attention: isVolunteerMinor(person?.age) }}
+            data-testid="volunteer-guardian-field"
+          >
+            <Stack spacing={1.5} sx={{ pb: 1.5 }}>
+              <Typography variant="body2" color="text.secondary">
+                {t("volunteers.person.guardianHelp")}
+              </Typography>
+              <RecallField
+                name="guardianName"
+                label={t("volunteers.person.guardianName")}
+                defaultValue={person?.guardianName ?? ""}
+                size="small"
+                slotProps={{ htmlInput: { maxLength: VOLUNTEER_GUARDIAN_NAME_MAX, autoComplete: "off" } }}
+              />
+              <RecallField
+                name="guardianEmail"
+                type="email"
+                label={t("volunteers.person.guardianEmail")}
+                defaultValue={person?.guardianEmail ?? ""}
+                size="small"
+                slotProps={{ htmlInput: { maxLength: 320, autoComplete: "off" } }}
+              />
+            </Stack>
+          </Panel>
+        ) : (
+          <Typography variant="body2" color="text.secondary" data-testid="volunteer-minors-off-field">
+            {t("volunteers.offer.minorsOff")}
+          </Typography>
+        )}
         <RecallField
           name="city"
           label={t("volunteers.person.city")}
@@ -549,6 +609,90 @@ export default async function VolunteersCard({
     );
   };
 
+  /**
+   * The parent's or guardian's agreement for one person under eighteen (§NNN): when it was accepted, how and which version
+   * — or, not yet, the two ways to get it: the link by email (when the organizer has the address), or the PDF to sign at the
+   * desk and «Acordul părintelui pe hârtie». Nothing for an adult, nothing to do for a cancelled person; the link and the
+   * paper wait while the club may not take minors (the card says so, and the service refuses anyway).
+   */
+  const guardianBlock = (person: VolunteerItem) => {
+    if (!isVolunteerMinor(person.age) || person.guardianName === null) return null;
+    const pdfHref = `/api/admin/events/${eventId}/volunteers/${person.id}/agreement`;
+    if (person.guardianAcceptedAt && person.guardianMethod) {
+      return (
+        <Stack spacing={0.5} sx={{ mt: 0.5 }} data-testid="volunteer-guardian">
+          <Typography variant="body2" color="text.secondary">
+            {t("volunteers.guardian.acceptedLine", {
+              guardian: person.guardianName,
+              version: String(person.guardianVersion ?? ""),
+              how: t(`volunteers.guardian.methods.${person.guardianMethod}`),
+              when: day(person.guardianAcceptedAt),
+            })}
+          </Typography>
+          <Box>
+            <GlyphButton icon="pdf" href={pdfHref} variant="outlined" sx={{ minHeight: 44 }} data-testid="volunteer-guardian-pdf">
+              {t("volunteers.guardian.pdf")}
+            </GlyphButton>
+          </Box>
+        </Stack>
+      );
+    }
+    if (person.state === "CANCELLED") return null;
+    if (!minorsOpen) {
+      return (
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }} data-testid="volunteer-guardian-closed">
+          {t("volunteers.guardian.minorsClosed")}
+        </Typography>
+      );
+    }
+    const sent = guardianStandingOf(person, now) === "linkSent" || person.guardianRequestedAt !== null;
+    const sendLabel = sent ? t("volunteers.guardian.resend") : t("volunteers.guardian.send");
+    return (
+      <Stack spacing={1} sx={{ mt: 0.5 }} data-testid="volunteer-guardian">
+        <Typography variant="body2" color="text.secondary">
+          {t("volunteers.guardian.help")}
+        </Typography>
+        {person.guardianRequestedAt && (
+          <Typography variant="caption" color="text.secondary">
+            {t("volunteers.guardian.requestedLine", { when: day(person.guardianRequestedAt) })}
+          </Typography>
+        )}
+        <Stack direction="row" sx={{ flexWrap: "wrap", gap: 1 }}>
+          {person.guardianEmail !== null ? (
+            <Box component="form" action={requestVolunteerGuardianAction} data-testid="volunteer-guardian-send-form">
+              {hidden}
+              <input type="hidden" name="volunteerId" value={person.id} />
+              <GlyphSubmitButton icon={sent ? "resend" : "send"} label={sendLabel} pendingLabel={sendLabel} ariaLabel={`${sendLabel}: ${shortText(person.name)}`} variant="outlined" />
+            </Box>
+          ) : (
+            <Typography variant="body2" color="text.secondary" data-testid="volunteer-guardian-no-email">
+              {t("volunteers.guardian.noEmail")}
+            </Typography>
+          )}
+          <GlyphButton icon="print" href={`${pdfHref}?for=guardian`} variant="outlined" sx={{ minHeight: 44 }} data-testid="volunteer-guardian-pdf-to-sign">
+            {t("volunteers.guardian.pdfToSign")}
+          </GlyphButton>
+          <ActionForm
+            action={recordPaperVolunteerGuardianAction}
+            confirm={{
+              title: t("volunteers.guardian.paperTitle", { name: shortText(person.name) }),
+              body: t("volunteers.guardian.paperBody", { name: shortText(person.name) }),
+              confirmLabel: t("volunteers.guardian.paper"),
+              cancelLabel: words.cancel,
+            }}
+          >
+            {hidden}
+            <input type="hidden" name="volunteerId" value={person.id} />
+            {/* What the PDF beside it prints (§NNN): the service refuses the record if either changed since. */}
+            <input type="hidden" name="agreementDocumentId" value={agreementDocumentIds[person.locale] ?? ""} />
+            <input type="hidden" name="agreementRoles" value={agreementRolesStamp(person.roleId, person.choiceIds)} />
+            <GlyphSubmitButton icon="declaration" label={t("volunteers.guardian.paper")} pendingLabel={t("volunteers.guardian.paper")} variant="outlined" />
+          </ActionForm>
+        </Stack>
+      </Stack>
+    );
+  };
+
   /** A role's name with how it stands, «Sosire · 1 din 1»: what the organizer sees before one press fills it. */
   const roleStanding = (role: VolunteerRole) =>
     t("volunteers.assign.standing", { role: roleName(role), taken: String(standingOf.get(role.id)?.taken ?? 0), needed: String(role.needed) });
@@ -637,6 +781,21 @@ export default async function VolunteersCard({
             />
           );
         })()}
+        {/* The parent's or guardian's agreement (§NNN), for a volunteer under eighteen only: «Acordul părintelui lipsește», a link sent, or received —
+            in words, never by colour alone. A cancelled person waiting on nothing shows none. */}
+        {(() => {
+          const standing = guardianStandingOf(person, now);
+          if (standing === "notNeeded" || (person.state === "CANCELLED" && standing !== "accepted")) return null;
+          return (
+            <StatusChip
+              glyph={GUARDIAN_CHIP[standing].glyph}
+              color={GUARDIAN_CHIP[standing].color}
+              variant="outlined"
+              label={t(`volunteers.guardian.${standing}`)}
+              testId="volunteer-guardian-state"
+            />
+          );
+        })()}
       </Stack>
       {/* What the person said about themselves (§765), small: two chips — «a mai fost voluntar» and the club's group, the person's own claims, in words and a glyph —
           and one line of the rest in the row's details. Nothing for a person who said nothing. */}
@@ -660,6 +819,20 @@ export default async function VolunteersCard({
           </Typography>
         ) : null;
       })()}
+      {/* The parent or guardian of a volunteer under eighteen (§NNN): the name, beside the age; the address is a link a thumb can press. */}
+      {isVolunteerMinor(person.age) && person.guardianName !== null && (
+        <Typography variant="body2" color="text.secondary" sx={{ wordBreak: "break-word" }} data-testid="volunteer-guardian-line">
+          {t("volunteers.person.guardianValue", { name: person.guardianName })}
+          {person.guardianEmail !== null && (
+            <>
+              {" · "}
+              <Box component="a" href={`mailto:${person.guardianEmail}`} sx={{ display: "inline-flex", alignItems: "center", minHeight: 44, wordBreak: "break-all" }} data-testid="volunteer-guardian-email">
+                {person.guardianEmail}
+              </Box>
+            </>
+          )}
+        </Typography>
+      )}
       {/* The address and the telephone number: drawn here and nowhere else, as links a thumb can press. */}
       <Stack direction="row" sx={{ flexWrap: "wrap", columnGap: 2, mt: 0.5 }}>
         <Box component="a" href={`mailto:${person.email}`} sx={{ display: "inline-flex", alignItems: "center", minHeight: 44, wordBreak: "break-all" }} data-testid="volunteer-email">
@@ -704,6 +877,8 @@ export default async function VolunteersCard({
       {assignBlock(person)}
 
       {agreementBlock(person)}
+
+      {guardianBlock(person)}
 
       <Stack spacing={1} sx={{ mt: 1 }}>
         <Stack direction="row" sx={{ flexWrap: "wrap", gap: 1 }}>

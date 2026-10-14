@@ -297,9 +297,9 @@ export const volunteerStaffInputSchema = z
     if (value.roleIds.length === 0 && value.assignedRoleId === null) {
       ctx.addIssue({ code: "custom", path: ["roleIds"], message: "tick at least one role, or give the person a role" });
     }
-    // An age under eighteen needs its guardian; any other age keeps none.
-    const guardian = checkGuardian(value.age, value, "optional", ctx);
-    const { guardianName: _name, guardianEmail: _email, ...rest } = value;
+    // An age under eighteen needs its guardian; any other age keeps none. The two boxes are read here and leave the result.
+    const { guardianName, guardianEmail, ...rest } = value;
+    const guardian = checkGuardian(value.age, { guardianName, guardianEmail }, "optional", ctx);
     return { ...rest, guardian };
   });
 
@@ -376,19 +376,22 @@ const volunteerPublicProfileBase = z.object({
  */
 export function volunteerPublicProfileSchemaFor(minors: boolean) {
   return volunteerPublicProfileBase.transform((value, ctx) => {
+    const { guardianName, guardianEmail, guardianAware, ...rest } = value;
     let guardian: { name: string; email: string | null } | null = null;
     if (isVolunteerMinor(value.age)) {
       if (!minors) {
         ctx.addIssue({ code: "custom", path: ["age"], message: "the club cannot take volunteers under eighteen yet" });
       } else {
-        guardian = checkGuardian(value.age, value, "required", ctx);
-        if (!value.guardianAware) ctx.addIssue({ code: "custom", path: ["guardianAware"], message: "the volunteer says the parent knows and agrees" });
+        guardian = checkGuardian(value.age, { guardianName, guardianEmail }, "required", ctx);
+        if (!guardianAware) ctx.addIssue({ code: "custom", path: ["guardianAware"], message: "the volunteer says the parent knows and agrees" });
       }
     }
-    const { guardianName: _name, guardianEmail: _email, guardianAware: _aware, ...rest } = value;
     return { ...rest, guardian };
   });
 }
+
+/** The profile's form while the club cannot take minors yet (`minors` false): adults only, an age under eighteen refused on `age`. */
+export const volunteerPublicProfileSchema = volunteerPublicProfileSchemaFor(false);
 
 export type VolunteerPublicProfileInput = z.infer<ReturnType<typeof volunteerPublicProfileSchemaFor>>;
 

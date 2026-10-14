@@ -30,6 +30,7 @@ import {
   noticeDescribesVolunteerAgreement,
   noticeDescribesVolunteers,
   noticeDescribesVolunteerProfile,
+  volunteerMinorsOpen,
   volunteerAgreementInForce,
 } from "@/modules/legal-documents/repository";
 import { VOLUNTEER_AGREEMENT_KEY } from "@/modules/legal-documents/domain/keys";
@@ -428,6 +429,8 @@ export default async function EditEventPage({ params, searchParams }: Props) {
           agreementEvent,
           // Which form the public page draws (§765): the card says so beside the tick.
           profileDescribed: await noticeDescribesVolunteerProfile(db, now),
+          // Whether the club may take a person under eighteen (§NNN): the guardian's boxes, link and paper wait for it.
+          minorsOpen: await volunteerMinorsOpen(db, now),
           offerClosed: volunteerOfferClosedFor({
             acceptsVolunteers: event.acceptsVolunteers,
             standings,
@@ -444,7 +447,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
       })()
     : null;
   const volunteerErrorCode = (
-    ["FORBIDDEN", "VALIDATION_ERROR", "CONFLICT", "NOT_FOUND", "VOLUNTEER_ROLE_HAS_PEOPLE", "VOLUNTEER_ALREADY_LISTED", "VOLUNTEER_AGREEMENT_MISSING", "VOLUNTEER_AGREEMENT_ACCEPTED", "VOLUNTEER_AGREEMENT_NOTICE", "VOLUNTEER_AGREEMENT_REPRINT"] as const
+    ["FORBIDDEN", "VALIDATION_ERROR", "CONFLICT", "NOT_FOUND", "VOLUNTEER_ROLE_HAS_PEOPLE", "VOLUNTEER_ALREADY_LISTED", "VOLUNTEER_AGREEMENT_MISSING", "VOLUNTEER_AGREEMENT_ACCEPTED", "VOLUNTEER_AGREEMENT_NOTICE", "VOLUNTEER_AGREEMENT_REPRINT", "VOLUNTEER_GUARDIAN_MISSING", "VOLUNTEER_GUARDIAN_ACCEPTED", "VOLUNTEER_GUARDIAN_NO_EMAIL", "VOLUNTEER_MINORS_CLOSED"] as const
   ).find(
     (code) => code === query.volunteerError,
   );
@@ -1431,6 +1434,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                   acceptsVolunteers={event.acceptsVolunteers}
                   volunteersShirts={event.volunteersShirts}
                   profileDescribed={volunteersCard.profileDescribed}
+                  minorsOpen={volunteersCard.minorsOpen}
                   offerClosed={volunteersCard.offerClosed}
                   roles={volunteersCard.roles}
                   standings={volunteersCard.standings}

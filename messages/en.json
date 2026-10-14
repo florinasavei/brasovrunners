@@ -3340,7 +3340,7 @@
         "volunteerRoleChoices": "In the volunteer agreement only: the roles the volunteer ticked, while no role is given. Once one is, the sentence naming them is left out",
         "volunteerChoiceTasks": "In the volunteer agreement only: what each ticked role does, from their descriptions. With a role given or no descriptions, the sentence is left out",
         "volunteerProfile": "Privacy notice only: the volunteers' form boxes about the person, in quotes. Without it in the notice in force, the form asks only the minimum-age tick",
-        "volunteerGuardian": "Only in the volunteer agreement: the name of the parent or guardian of a volunteer under 18, in the minors' clause; for an adult the sentence is left out. Without it in the agreement in force, the club takes no volunteers under 18",
+        "volunteerGuardian": "Only in the volunteer agreement: the name of a minor volunteer's parent or guardian. For an adult the sentence is left out. Without it in the agreement in force, no minors are taken",
         "volunteerMinors": "Only in the privacy notice: the parent's or guardian's boxes of the volunteers' form, in quotation marks. Without it in the notice in force, the club takes no volunteers under 18"
       },
       "removeBlockedReferenced": "Can neither be withdrawn nor deleted permanently: {signatures}, {events} and {acknowledgements} depend on it. “Delete” on its row takes it off the list.",
@@ -4276,9 +4276,9 @@
           "todo": "The club takes volunteers from 14, but the privacy notice or the agreement in force does not describe minors and their parent yet. Until you approve both, the form refuses any age under 18.",
           "done": "The notice and the agreement in force describe minors: a volunteer of 14–17 offers with their parent's or guardian's name and email, and the parent accepts the agreement from the link or on paper.",
           "how": [
-            "/admin/legal → the “GDPR” card → “Regenerate from the template” → confirm. The paragraph about volunteers names minors from 14, the parent's or guardian's name and email, what they are for and how long they are kept.",
-            "/admin/legal → the “Contract de voluntariat” card → “Regenerate from the template” → confirm. The text now has a minors' clause: the parent's consent, activities suited to the age, no night or dangerous posts.",
-            "A lawyer should read both texts against Law no. 78/2014, which has its own rules for the age and consent of minors, and confirm the age of 14 and the form of the consent, before you approve them.",
+            "/admin/legal → the “GDPR” card → “Regenerate from the template” → confirm. The paragraph about volunteers names minors, the parent's or guardian's data and how long it is kept.",
+            "/admin/legal → the “Contract de voluntariat” card → “Regenerate from the template” → confirm. The text now has a minors' clause: the parent's consent and activities suited to the age.",
+            "A lawyer should read both texts against Law no. 78/2014, with its rules for minors, and confirm the age of 14 and the form of the consent.",
             "Open the draft, read it, fill in what is left, “Save draft”, then “Approve and publish” — in the same sitting, in both languages."
           ]
         }
@@ -4721,7 +4721,7 @@
           "noAgreementNotice": "The public form is not shown: the privacy notice in force does not describe the volunteer agreement's acceptance yet. «Tasks» says what to approve."
         },
         "profileOff": "The public form asks only the minimum-age tick: the notice in force does not describe the volunteers' age, sex and city yet. “Tasks” says what to approve.",
-        "minorsOff": "No volunteers under 18: the privacy notice or the agreement in force does not describe minors and their parent yet, so the form refuses any age under 18 and you cannot enter a volunteer under 18. “Tasks” says what to approve."
+        "minorsOff": "No volunteers under 18: the notice or the agreement in force does not describe minors yet, so the form refuses that age and you cannot enter a minor. “Tasks” says what to approve."
       },
       "switchOn": "Take volunteers on the page",
       "rolesTitle": "Roles",

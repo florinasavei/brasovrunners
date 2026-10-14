@@ -226,7 +226,8 @@ describe("§758 the volunteer agreement", () => {
         volunteerChoiceTasks: "Water point — Hands out water at kilometre 5",
         event: "The cross",
         eventLocation: "Central park",
-        minimumAge: "18 years",
+        // §NNN: the platform's minimum is fourteen; under eighteen a parent accepts beside the volunteer.
+        minimumAge: "14 years",
       });
       expect(facts?.signedAt).toBeTruthy();
       // The fingerprint is over the English text as filled: recomputed from the row, it is the same.
@@ -319,7 +320,7 @@ describe("§758 the volunteer agreement", () => {
       expect(await row(id)).toEqual(stored);
       expect(view).toMatchObject({ status: "open", name: "Ion Popescu", eventTitle: "Crosul", roleName: "Punct de apă" });
       if (view.status === "open") {
-        expect(view.values).toMatchObject({ volunteer: "Ion Popescu", volunteerRole: "Punct de apă", volunteerTasks: "Împarte apă la kilometrul 5", minimumAge: "18 ani" });
+        expect(view.values).toMatchObject({ volunteer: "Ion Popescu", volunteerRole: "Punct de apă", volunteerTasks: "Împarte apă la kilometrul 5", minimumAge: "14 ani" });
         expect(view.values.signedAt).toBeUndefined();
       }
       // A forged or malformed secret reads as nothing, the one answer.
@@ -452,7 +453,7 @@ describe("§758 the volunteer agreement", () => {
       expect(text).toContain("Punct de apă");
       expect(text).toContain("Împarte apă la kilometrul 5");
       expect(text).toContain("Crosul");
-      expect(text).toContain("18 ani");
+      expect(text).toContain("14 ani");
       // Unpaid, the law, and how it was accepted — on the form, an electronic signature.
       expect(text).toContain("fără plată");
       expect(text).toContain("Legii nr. 78/2014");

@@ -3340,7 +3340,7 @@
         "volunteerRoleChoices": "Doar în contractul de voluntariat: rolurile pe care voluntarul le-a bifat, cât încă nu are un rol dat. Cu rol dat, propoziția care le numește dispare",
         "volunteerChoiceTasks": "Doar în contractul de voluntariat: ce face fiecare rol bifat, din descrierile lor. Cu rol dat sau fără descrieri, propoziția dispare",
         "volunteerProfile": "Doar în nota de confidențialitate: casetele formularului de voluntari despre persoană, între ghilimele. Fără el în nota în vigoare, formularul cere doar bifa vârstei minime",
-        "volunteerGuardian": "Doar în contractul de voluntariat: numele părintelui sau tutorelui unui voluntar sub 18 ani, în clauza pentru minori; la un adult, propoziția dispare. Fără el în contractul în vigoare, clubul nu primește voluntari sub 18 ani",
+        "volunteerGuardian": "Doar în contractul de voluntariat: numele părintelui sau tutorelui unui voluntar minor. La un adult, propoziția dispare. Fără el în contractul în vigoare, nu se primesc minori",
         "volunteerMinors": "Doar în nota de confidențialitate: casetele părintelui sau tutorelui din formularul de voluntari, între ghilimele. Fără el în nota în vigoare, clubul nu primește voluntari sub 18 ani"
       },
       "removeBlockedReferenced": "Nu se poate nici retrage, nici șterge definitiv: {signatures}, {events} și {acknowledgements} depind de ea. «Șterge» de pe rândul ei o scoate din listă.",
@@ -4273,12 +4273,12 @@
         },
         "volunteerMinorsTexts": {
           "title": "Textele pentru voluntarii sub 18 ani",
-          "todo": "Clubul primește voluntari de la 14 ani, dar nota de confidențialitate sau contractul în vigoare nu descriu încă minorii și părintele lor. Până le aprobi pe amândouă, formularul refuză orice vârstă sub 18 ani.",
+          "todo": "Clubul primește voluntari de la 14 ani, dar nota sau contractul în vigoare nu descriu încă minorii. Până le aprobi pe amândouă, formularul refuză orice vârstă sub 18 ani.",
           "done": "Nota și contractul în vigoare descriu minorii: un voluntar de 14–17 ani se oferă cu numele și emailul părintelui sau tutorelui, iar acesta acceptă contractul din link sau pe hârtie.",
           "how": [
-            "/admin/legal → cardul „GDPR” → „Regenerează din șablon” → confirmă. Paragraful despre voluntari numește minorii de la 14 ani, numele și emailul părintelui sau tutorelui, la ce folosesc și cât timp se păstrează.",
-            "/admin/legal → cardul „Contract de voluntariat” → „Regenerează din șablon” → confirmă. Textul are acum o clauză pentru minori: acordul părintelui, activități potrivite vârstei, fără posturi de noapte sau periculoase.",
-            "Un jurist ar trebui să citească ambele texte după Legea nr. 78/2014, care are reguli proprii pentru vârsta și acordul minorilor, și să confirme vârsta de 14 ani și forma acordului, înainte să le aprobi.",
+            "/admin/legal → cardul „GDPR” → „Regenerează din șablon” → confirmă. Paragraful despre voluntari numește minorii, datele părintelui sau tutorelui și cât timp se păstrează.",
+            "/admin/legal → cardul „Contract de voluntariat” → „Regenerează din șablon” → confirmă. Textul are acum o clauză pentru minori: acordul părintelui și activități potrivite vârstei.",
+            "Un jurist ar trebui să citească ambele texte după Legea nr. 78/2014, cu regulile ei pentru minori, și să confirme vârsta de 14 ani și forma acordului.",
             "Deschide ciorna, citește, completează ce a rămas, „Salvează ciorna”, apoi „Aprobă și publică” — în aceeași ședință, în ambele limbi."
           ]
         }
@@ -4721,7 +4721,7 @@
           "noAgreementNotice": "Formularul public nu se arată: nota de confidențialitate în vigoare nu descrie încă acceptarea contractului de voluntariat. «Sarcini» spune ce trebuie aprobat."
         },
         "profileOff": "Formularul public cere doar bifa vârstei minime: nota în vigoare nu descrie încă vârsta, sexul și orașul voluntarilor. «Sarcini» spune ce trebuie aprobat.",
-        "minorsOff": "Fără voluntari sub 18 ani: nota de confidențialitate sau contractul în vigoare nu descriu încă minorii și părintele lor, așa că formularul refuză orice vârstă sub 18 ani, iar tu nu poți trece un voluntar sub 18 ani. «Sarcini» spune ce trebuie aprobat."
+        "minorsOff": "Fără voluntari sub 18 ani: nota sau contractul în vigoare nu descriu încă minorii, așa că formularul refuză această vârstă, iar tu nu poți trece un minor. «Sarcini» spune ce trebuie aprobat."
       },
       "switchOn": "Primește voluntari pe pagină",
       "rolesTitle": "Roluri",

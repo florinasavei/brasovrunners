@@ -118,6 +118,13 @@ const PEOPLE: VolunteerItem[] = [
     locale: "ro",
     agreementTokenExpiresAt: null,
     agreementRequestedAt: null,
+    guardianName: null,
+    guardianEmail: null,
+    guardianAcceptedAt: null,
+    guardianMethod: null,
+    guardianVersion: null,
+    guardianTokenExpiresAt: null,
+    guardianRequestedAt: null,
   },
   {
     id: "66666666-6666-4666-8666-666666666666",
@@ -149,6 +156,13 @@ const PEOPLE: VolunteerItem[] = [
     locale: "ro",
     agreementTokenExpiresAt: null,
     agreementRequestedAt: null,
+    guardianName: null,
+    guardianEmail: null,
+    guardianAcceptedAt: null,
+    guardianMethod: null,
+    guardianVersion: null,
+    guardianTokenExpiresAt: null,
+    guardianRequestedAt: null,
   },
 ];
 
@@ -172,6 +186,7 @@ async function drawCard(over: Partial<ComponentProps<typeof VolunteersCard>> = {
     acceptsVolunteers: false,
     volunteersShirts: false,
     profileDescribed: true,
+    minorsOpen: false,
     offerClosed: "off",
     roles: [ROLE, FINISH_ROLE, NO_DESCRIPTION],
     standings: [ROLE, FINISH_ROLE, NO_DESCRIPTION].map((role) => ({ roleId: role.id, needed: role.needed, taken: 0, confirmed: 0, free: role.needed })),
@@ -208,6 +223,7 @@ async function drawBox(over: Partial<ComponentProps<typeof VolunteerBox>> = {}, 
     roles: [publicRole(ROLE), publicRole(FINISH_ROLE), publicRole(NO_DESCRIPTION)],
     shirts: false,
     profile: true,
+    minors: false,
     outcome: null,
     refused: [],
     typed: {},
@@ -428,8 +444,9 @@ describe("§765 the public form while the notice names the profile", () => {
     for (const name of ["age", "sex", "city", "volunteeredBefore", "clubMember", "shirtSize"]) expect(page, name).not.toContain(`name="${name}"`);
   });
 
-  it("brings back what was typed after a refusal, and says «cel puțin 18 ani» for an age under it, «scrie vârsta» for anything else", async () => {
+  it("brings back what was typed after a refusal, and says one of three sentences for the age: no minors yet, «cel puțin 14 ani», «scrie vârsta»", async () => {
     const typed = { name: "Maria", age: "17", sex: "FEMALE", city: "Brașov", volunteeredBefore: "on", clubMember: "on", shirtSize: "L" };
+    // Seventeen while the notice and the agreement do not describe minors: the club says it cannot take them yet (§NNN).
     const under = await drawBox({ outcome: "invalid", refused: ["age"], typed, shirts: true });
     expect(tagOf(under, "input", "age")).toContain('value="17"');
     expect(under).toMatch(/<option value="FEMALE" selected/);
@@ -437,10 +454,15 @@ describe("§765 the public form while the notice names the profile", () => {
     expect(tagOf(under, "input", "volunteeredBefore")).toContain("checked");
     expect(tagOf(under, "input", "clubMember")).toContain("checked");
     expect(under).toMatch(/<option value="L" selected/);
-    expect(under).toContain("Voluntarii trebuie să aibă cel puțin 18 ani.");
+    expect(under).toContain("Clubul nu primește încă voluntari sub 18 ani.");
+    // Thirteen, where minors are taken: the floor is fourteen.
+    const young = await drawBox({ outcome: "invalid", refused: ["age"], typed: { ...typed, age: "13" }, minors: true });
+    expect(young).toContain("Voluntarii trebuie să aibă cel puțin 14 ani.");
+    expect(young).not.toContain("Clubul nu primește încă");
     const typo = await drawBox({ outcome: "invalid", refused: ["age"], typed: { ...typed, age: "abc" } });
     expect(typo).toContain("Scrie vârsta în ani întregi, de exemplu 34.");
     expect(typo).not.toContain("Voluntarii trebuie să aibă cel puțin");
+    expect(typo).not.toContain("Clubul nu primește încă");
     // The summary links to the box.
     expect(under).toContain('href="#volunteer-age"');
     const missing = await drawBox({ outcome: "invalid", refused: ["sex", "city"], typed: {} });
@@ -509,7 +531,8 @@ describe("§765 each role's description under its tick on the public form", () =
 describe("§765 «Toate datele unei persoane» lists the six answers of a volunteer", () => {
   it("writes the age, the sex, the city, the two claims and the size after the organizers' note, in the reader's language", async () => {
     const { default: VolunteerAnswers } = await import("@/modules/volunteers/ui/VolunteerAnswers");
-    const all = { age: 34, sex: "FEMALE" as const, city: "Brașov", volunteeredBefore: true, clubMember: true, shirtSize: "M" as const };
+    const noGuardian = { guardianName: null, guardianEmail: null, guardianAcceptedAt: null, guardianMethod: null };
+    const all = { age: 34, sex: "FEMALE" as const, city: "Brașov", volunteeredBefore: true, clubMember: true, shirtSize: "M" as const, ...noGuardian };
     locale = "ro";
     const page = await html(createElement("p", null, (await VolunteerAnswers({ offer: all })) as ReactElement));
     expect(page).toContain(" · Vârsta: 34 · Feminin · Oraș: Brașov · A mai fost voluntar · Din grupul " + CLUB_NAME + " · Tricou: M");
@@ -523,7 +546,7 @@ describe("§765 «Toate datele unei persoane» lists the six answers of a volunt
   it("writes nothing for a row from before, for the retired «Prefer să nu spun» and for «Fără tricou»", async () => {
     const { default: VolunteerAnswers } = await import("@/modules/volunteers/ui/VolunteerAnswers");
     locale = "ro";
-    const empty = { age: null, sex: null, city: null, volunteeredBefore: false, clubMember: false, shirtSize: null };
+    const empty = { age: null, sex: null, city: null, volunteeredBefore: false, clubMember: false, shirtSize: null, guardianName: null, guardianEmail: null, guardianAcceptedAt: null, guardianMethod: null };
     expect(await html(createElement("p", null, (await VolunteerAnswers({ offer: empty })) as ReactElement))).toBe("<p></p>");
     const retired = await html(createElement("p", null, (await VolunteerAnswers({ offer: { ...empty, sex: "UNSPECIFIED", shirtSize: "NONE" } })) as ReactElement));
     expect(retired).toBe("<p></p>");

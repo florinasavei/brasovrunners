@@ -17,6 +17,7 @@ import {
   type VolunteerRoleRequest,
 } from "@/modules/volunteers/volunteers";
 import { recordPaperVolunteerAgreement, requestVolunteerAgreement } from "@/modules/volunteers/agreement";
+import { recordPaperVolunteerGuardian, requestVolunteerGuardian } from "@/modules/volunteers/guardian";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { flashOutcome } from "@/shared/feedback/flash";
 import { type FormOutcome, refused } from "@/shared/forms/outcome";
@@ -81,6 +82,9 @@ const staffFields = (form: FormData) => ({
   sex: field(form, "sex"),
   city: field(form, "city"),
   shirtSize: field(form, "shirtSize"),
+  // The parent or guardian of a person under eighteen (§NNN): the name, and the address when the organizer has it.
+  guardianName: field(form, "guardianName"),
+  guardianEmail: field(form, "guardianEmail"),
   volunteeredBefore: form.get("volunteeredBefore") === "on",
   clubMember: form.get("clubMember") === "on",
 });
@@ -279,6 +283,48 @@ export async function recordPaperVolunteerAgreementAction(_previous: FormOutcome
     return backToCard(form, { error: error.code });
   }
   return backToCard(form, { saved: "volunteerAgreementRecorded" });
+}
+
+/**
+ * «Trimite linkul părintelui» (§NNN): one email with the volunteer agreement and a single-use link to accept it in the
+ * guardian's name, to the guardian's address. The service refuses while the club may not take minors, for a volunteer
+ * who is not under eighteen, was cancelled, has no guardian address or whose guardian has accepted — each said in the
+ * card's banner.
+ */
+export async function requestVolunteerGuardianAction(form: FormData): Promise<void> {
+  try {
+    const actor = await requireStaff();
+    await requestVolunteerGuardian(getDb(), actor, { eventId: eventIdOf(form), id: field(form, "volunteerId") }, new Date());
+  } catch (error) {
+    if (!isDomainError(error)) throw error;
+    return backToCard(form, { error: error.code });
+  }
+  return backToCard(form, { saved: "volunteerGuardianRequested" });
+}
+
+/**
+ * «Acordul părintelui pe hârtie» (§NNN): asks first (§384), then records that the guardian signed the printed agreement at
+ * the desk — the version in force, and who recorded it. A staff member records the guardian's signature, never gives one.
+ */
+export async function recordPaperVolunteerGuardianAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  try {
+    const actor = await requireStaff();
+    await recordPaperVolunteerGuardian(
+      getDb(),
+      actor,
+      {
+        eventId: eventIdOf(form),
+        id: field(form, "volunteerId"),
+        // What the card's «PDF de semnat de părinte» printed: the service refuses when either changed since.
+        printed: { documentId: field(form, "agreementDocumentId"), roles: field(form, "agreementRoles") },
+      },
+      new Date(),
+    );
+  } catch (error) {
+    if (!isDomainError(error)) throw error;
+    return backToCard(form, { error: error.code });
+  }
+  return backToCard(form, { saved: "volunteerGuardianRecorded" });
 }
 
 /** «Șterge»: asks first (§384) — a deleted volunteer is gone, and the audit row keeps no name. */
