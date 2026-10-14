@@ -99,7 +99,7 @@ export const RACE_NUMBER_FORMAT = sql<RaceNumberFormat>`coalesce(${events.bibDes
  * bibs page — so a point added, moved or retimed is a new picture address. Null with none, which
  * `concat_ws` leaves out, so an event without checkpoints keeps the stamp it had.
  */
-const CHECKPOINTS_STAMP = sql`(SELECT string_agg(concat_ws(':', c.km::text, array_to_string(c.kinds, '+'), c.cutoff_time::text), '|' ORDER BY c.km, c.position, c.id) FROM event_checkpoints c WHERE c.event_id = ${events.id})`;
+const CHECKPOINTS_STAMP = sql`(SELECT string_agg(concat_ws(':', c.km::text, array_to_string(c.kinds, '+'), CASE WHEN c.cutoff_minutes IS NOT NULL THEN concat_ws('@', c.cutoff_minutes::text, ${events.raceStartsAt}::text, ${events.timezone}) END), '|' ORDER BY c.km, c.position, c.id) FROM event_checkpoints c WHERE c.event_id = ${events.id})`;
 
 /**
  * A stamp of what a bib's picture is drawn from (§748, §750), for the desk's picture address: a hash of

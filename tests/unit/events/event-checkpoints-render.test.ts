@@ -12,13 +12,15 @@ vi.mock("next-intl/server", async () => {
 });
 
 import type { Checkpoint } from "@/modules/event-checkpoints/domain/checkpoint";
+import { CHECKPOINT_GLYPH } from "@/modules/events/ui/glyphs";
 import EventCheckpoints from "@/modules/events/ui/EventCheckpoints";
 
 /**
- * §757, BR-REQ-011-01 — the table «Puncte de control» on the event page: the kilometre, the point,
- * what is there (a glyph with its word), the cut-off in words, the finish last when the event has a
- * time limit; both languages; nothing without checkpoints; every cell carries its column's word so the
- * table reads as a stack at 320 pixels.
+ * §757, §770, BR-REQ-011-01 — the table «Puncte de control» on the event page: the kilometre, the point,
+ * what is there (a glyph with its word, «Direcționare» among them), the time limit in words — «Timp
+ * limită: 1 h 30 min · se închide la 11:30» — the finish last when the event has a time limit; both
+ * languages; nothing without checkpoints; every cell carries its column's word so the table reads as a
+ * stack at 320 pixels.
  */
 const point = (id: string, km: number, over: Partial<Checkpoint> = {}): Checkpoint => ({
   id,
@@ -26,13 +28,17 @@ const point = (id: string, km: number, over: Partial<Checkpoint> = {}): Checkpoi
   nameEn: `Point ${id}`,
   km,
   kinds: ["WATER"],
-  cutoff: null,
+  cutoffMinutes: null,
+  cutoffClock: null,
   noteRo: null,
   noteEn: null,
   ...over,
 });
 
-async function render(checkpoints: Checkpoint[], finish: { km: number | null; limit: string | null } = { km: 21.1, limit: null }, locale: "ro" | "en" = "ro") {
+type Finish = { km: number | null; limit: string | null; minutes: number | null };
+const NO_LIMIT: Finish = { km: 21.1, limit: null, minutes: null };
+
+async function render(checkpoints: Checkpoint[], finish: Finish = NO_LIMIT, locale: "ro" | "en" = "ro") {
   const element = await EventCheckpoints({ checkpoints, finish, locale });
   return element ? renderToStaticMarkup(element) : "";
 }
@@ -41,7 +47,7 @@ const rowsOf = (html: string) => [...html.matchAll(/<tr data-testid="checkpoint-
 
 describe("§757 the checkpoints' table on the event page", () => {
   it("is nothing at all with no checkpoints, even with a time limit", async () => {
-    expect(await render([], { km: 21.1, limit: "12:00" })).toBe("");
+    expect(await render([], { km: 21.1, limit: "12:00", minutes: 180 })).toBe("");
   });
 
   it("draws a section under #checkpoints with its heading and a table headed by its four columns", async () => {
@@ -67,26 +73,47 @@ describe("§757 the checkpoints' table on the event page", () => {
     expect(rows[1]).toContain('aria-hidden="true"');
   });
 
-  it("says the cut-off in words, «Ora limită 11:30», and a dash with its words for a point without one", async () => {
-    const rows = rowsOf(await render([point("a", 5, { cutoff: "11:30" }), point("b", 8)]));
-    expect(rows[0]).toContain("Ora limită 11:30");
-    expect(rows[1]).not.toContain("Ora limită");
+  it("draws a «Direcționare» point with its word and its own glyph, in both languages (§770)", async () => {
+    const html = await render([point("a", 5, { kinds: ["DIRECTION"] }), point("b", 9, { kinds: ["WATER", "DIRECTION"] })]);
+    const rows = rowsOf(html);
+    expect(rows[0]).toContain("Direcționare");
+    expect(rows[0]).not.toContain(ro.Event.checkpoints.kinds.WATER);
+    expect(rows[1]).toContain("Apă");
+    expect(rows[1]).toContain("Direcționare");
+    // One glyph per kind: the direction's is not another kind's, so the chips tell the kinds apart.
+    expect(CHECKPOINT_GLYPH.DIRECTION).toBeDefined();
+    expect(new Set(Object.values(CHECKPOINT_GLYPH)).size).toBe(Object.keys(CHECKPOINT_GLYPH).length);
+    const english = rowsOf(await render([point("a", 5, { kinds: ["DIRECTION"] })], NO_LIMIT, "en"));
+    expect(english[0]).toContain("Direction");
+    expect(english[0]).not.toContain("Direcționare");
+  });
+
+  it("says the time limit in words and the clock it closes at, «Timp limită: 1 h 30 min · se închide la 11:30», and a dash with its words for a point without one", async () => {
+    const rows = rowsOf(await render([point("a", 5, { cutoffMinutes: 90, cutoffClock: "11:30" }), point("b", 8)]));
+    expect(rows[0]).toContain("Timp limită: 1 h 30 min · se închide la 11:30");
+    expect(rows[0]).not.toContain("Ora limită");
+    expect(rows[1]).not.toContain("Timp limită");
     expect(rows[1]).toContain(ro.Event.checkpoints.noCutoff);
   });
 
-  it("puts the finish last, with the event's limit, when the event has a time limit — and not otherwise", async () => {
-    const withLimit = rowsOf(await render([point("a", 5, { cutoff: "10:00" })], { km: 21.1, limit: "12:00" }));
+  it("says only the duration while the event's start has no hour to count it from", async () => {
+    const rows = rowsOf(await render([point("a", 5, { cutoffMinutes: 45, cutoffClock: null })]));
+    expect(rows[0]).toContain("Timp limită: 45 min");
+    expect(rows[0]).not.toContain("se închide");
+  });
+
+  it("puts the finish last, with the event's limit and its clock, when the event has a time limit — and not otherwise", async () => {
+    const withLimit = rowsOf(await render([point("a", 5, { cutoffMinutes: 60, cutoffClock: "10:00" })], { km: 21.1, limit: "12:00", minutes: 180 }));
     expect(withLimit).toHaveLength(2);
     expect(withLimit[1]).toContain('data-testid="checkpoint-finish"');
     expect(withLimit[1]).toContain(ro.Event.checkpoints.finish);
     expect(withLimit[1]).toContain("21,1 km");
-    expect(withLimit[1]).toContain("se închide la 12:00");
-    expect(withLimit[1]).not.toContain("Ora limită 12:00");
-    expect(rowsOf(await render([point("a", 5)], { km: 21.1, limit: null }))).toHaveLength(1);
+    expect(withLimit[1]).toContain("Timp limită: 3 h · se închide la 12:00");
+    expect(rowsOf(await render([point("a", 5)], NO_LIMIT))).toHaveLength(1);
   });
 
   it("shows the finish without a distance as a dash the eye sees and words a screen reader reads", async () => {
-    const rows = rowsOf(await render([point("a", 5)], { km: null, limit: "12:00" }));
+    const rows = rowsOf(await render([point("a", 5)], { km: null, limit: "12:00", minutes: 180 }));
     expect(rows[1]).toContain('<span aria-hidden="true">—</span>');
     expect(rows[1]).toContain(ro.Event.checkpoints.kmUnknown);
     // The finish has no kinds: no bare dash there either.
@@ -98,23 +125,24 @@ describe("§757 the checkpoints' table on the event page", () => {
     const note = { noteRo: "Banane pe masă", noteEn: "Bananas on the table" };
     expect(await render([point("a", 5, note)])).toContain("Banane pe masă");
     expect(await render([point("a", 5, note)])).not.toContain("Bananas");
-    const english = await render([point("a", 5, note)], { km: 21.1, limit: null }, "en");
+    const english = await render([point("a", 5, note)], NO_LIMIT, "en");
     expect(english).toContain("Bananas on the table");
     expect(english).not.toContain("Banane");
   });
 
-  it("is in both languages: the heading, the names, the kinds and the cut-off", async () => {
-    const html = await render([point("a", 5, { cutoff: "11:30", kinds: ["TIMING"] })], { km: 21.1, limit: "12:00" }, "en");
+  it("is in both languages: the heading, the names, the kinds and the time limit", async () => {
+    const html = await render([point("a", 5, { cutoffMinutes: 90, cutoffClock: "11:30", kinds: ["TIMING"] })], { km: 21.1, limit: "12:00", minutes: 180 }, "en");
     expect(html).toContain(">Checkpoints</h2>");
     expect(html).toContain("Point a");
     expect(html).not.toContain("Punct a");
     expect(html).toContain("Timing");
-    expect(html).toContain("Cut-off 11:30");
+    expect(html).toContain("Time limit: 1 h 30 min · closes at 11:30");
+    expect(html).not.toContain("Cut-off");
     expect(html).toContain("Finish");
   });
 
   it("gives every cell its column's word, so the table reads as a stack on a phone, and hides the header row from the eye only", async () => {
-    const html = await render([point("a", 5, { cutoff: "11:30" })]);
+    const html = await render([point("a", 5, { cutoffMinutes: 90, cutoffClock: "11:30" })]);
     const row = rowsOf(html)[0];
     for (const column of ["km", "name", "kinds", "cutoff"] as const) {
       expect(row).toContain(`data-label="${ro.Event.checkpoints.columns[column]}"`);
@@ -126,10 +154,31 @@ describe("§757 the checkpoints' table on the event page", () => {
 
   it("has the same words in both catalogues", () => {
     expect(Object.keys(en.Event.checkpoints).sort()).toEqual(Object.keys(ro.Event.checkpoints).sort());
-    expect(Object.keys(en.Event.checkpoints.kinds).sort()).toEqual(["FIRST_AID", "FOOD", "TIMING", "WATER"]);
+    expect(Object.keys(en.Event.checkpoints.kinds).sort()).toEqual(["DIRECTION", "FIRST_AID", "FOOD", "TIMING", "WATER"]);
+    expect(Object.keys(ro.Event.checkpoints.kinds).sort()).toEqual(["DIRECTION", "FIRST_AID", "FOOD", "TIMING", "WATER"]);
+    expect(Object.keys(en.Admin.checkpoints.kinds).sort()).toEqual(["DIRECTION", "FIRST_AID", "FOOD", "TIMING", "WATER"]);
+    expect(Object.keys(ro.Admin.checkpoints.kinds).sort()).toEqual(["DIRECTION", "FIRST_AID", "FOOD", "TIMING", "WATER"]);
     expect(Object.keys(en.Admin.checkpoints).sort()).toEqual(Object.keys(ro.Admin.checkpoints).sort());
+    expect(Object.keys(en.Admin.checkpoints.field).sort()).toEqual(Object.keys(ro.Admin.checkpoints.field).sort());
     for (const key of Object.keys(ro.Admin.errors).filter((name) => name.startsWith("CHECKPOINT"))) {
       expect(en.Admin.errors).toHaveProperty(key);
     }
+    for (const key of Object.keys(en.Admin.errors).filter((name) => name.startsWith("CHECKPOINT"))) {
+      expect(ro.Admin.errors).toHaveProperty(key);
+    }
+  });
+
+  it("names the time limit, not a time of the day, in every sentence of both catalogues (§770)", () => {
+    expect(ro.Admin.checkpoints.field.cutoff).toBe("Timp limită");
+    expect(en.Admin.checkpoints.field.cutoff).toBe("Time limit");
+    expect(ro.Admin.checkpoints.field.cutoffHelp).toBe("De la start: până atunci trebuie să treacă ultimul alergător. Lasă gol dacă nu e limită.");
+    expect(en.Admin.checkpoints.field.cutoffHelp).toBe("From the start: the last runner has to pass by then. Leave empty for no limit.");
+    for (const key of ["CHECKPOINT_CUTOFF_INVALID", "CHECKPOINT_CUTOFF_NO_START", "CHECKPOINT_CUTOFF_AFTER_LATER", "CHECKPOINT_CUTOFF_AFTER_END"] as const) {
+      expect(ro.Admin.errors[key], key).toMatch(/Timpul limită/);
+      expect(en.Admin.errors[key], key).toMatch(/time limit/i);
+    }
+    // The time-of-day refusal went with the time of day.
+    expect(ro.Admin.errors).not.toHaveProperty("CHECKPOINT_CUTOFF_BEFORE_START");
+    expect(en.Admin.errors).not.toHaveProperty("CHECKPOINT_CUTOFF_BEFORE_START");
   });
 });

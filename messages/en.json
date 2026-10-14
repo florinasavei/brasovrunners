@@ -697,21 +697,22 @@
         "km": "Km",
         "name": "Point",
         "kinds": "What is there",
-        "cutoff": "Cut-off"
+        "cutoff": "Limit"
       },
       "km": "{km} km",
       "kinds": {
         "WATER": "Water",
         "FOOD": "Food",
         "FIRST_AID": "First aid",
-        "TIMING": "Timing"
+        "TIMING": "Timing",
+        "DIRECTION": "Direction"
       },
-      "cutoff": "Cut-off {time}",
-      "noCutoff": "no cut-off",
+      "cutoff": "Time limit: {duration} · closes at {time}",
+      "cutoffNoClock": "Time limit: {duration}",
+      "noCutoff": "no time limit",
       "noKinds": "nothing marked",
       "kmUnknown": "distance not given",
-      "finish": "Finish",
-      "finishCloses": "closes at {time}"
+      "finish": "Finish"
     }
   },
   "Admin": {
@@ -1891,10 +1892,10 @@
       "CHECKPOINT_KM_INVALID": "The kilometre of the point “{name}” is not a number: write from 0, with at most two decimals.",
       "CHECKPOINT_KM_BEYOND_ROUTE": "The point “{name}” is at {km} km, but the route is only {max} km long. Choose a kilometre up to {max}.",
       "CHECKPOINT_KIND_UNKNOWN": "At the point “{name}”, what is there is not one of the options.",
-      "CHECKPOINT_CUTOFF_INVALID": "The cut-off of the point “{name}” is not a time: write, for example, 11:30.",
-      "CHECKPOINT_CUTOFF_BEFORE_START": "The cut-off {cutoff} of the point “{name}” is not after the start, at {start}. Choose a time after {start}.",
-      "CHECKPOINT_CUTOFF_AFTER_LATER": "The cut-off of the point “{name}” is after the one of “{later}” ({laterCutoff}), which is further along the route. Runners reach “{name}” first: its cut-off has to be earlier.",
-      "CHECKPOINT_CUTOFF_AFTER_END": "The cut-off {cutoff} of the point “{name}” is after {finishTime}, when the finish closes. Choose a time up to {finishTime} or lengthen “Time limit”.",
+      "CHECKPOINT_CUTOFF_INVALID": "The time limit of the point “{name}” is not a duration: write the hours and the minutes (minutes from 0 to 59), for example 1 hour and 15 minutes.",
+      "CHECKPOINT_CUTOFF_NO_START": "The time limit of the point “{name}” counts from the start, and the start has no time yet. Write the start's time (or the race's start) and save the event first, then set the time limit.",
+      "CHECKPOINT_CUTOFF_AFTER_LATER": "The time limit of the point “{name}” ({cutoff}) is longer than the one of “{later}” ({laterCutoff}), which is further along the route. Runners reach “{name}” first: its time limit has to be shorter.",
+      "CHECKPOINT_CUTOFF_AFTER_END": "The time limit {cutoff} of the point “{name}” is longer than {limit}, how long the event lasts from the start to the finish. Choose a time up to {limit} or lengthen the event's “Time limit”.",
       "CHECKPOINTS_NO_LONGER_HOLD": "This save would break “Checkpoints”: {detail} Change the point in its card first, then save again. Nothing was saved.",
       "CHECKPOINTS_NO_LONGER_HOLD_DATED": "On one of the dates ({date}), this save would break “Checkpoints”: {detail} Change the point on that date first, or save without it. Nothing was saved, on any date.",
       "CHECKPOINT_NOTE_ONE_LANGUAGE": "The note of the point “{name}” is written in both languages or in neither, at most {max} characters.",
@@ -2381,7 +2382,7 @@
         "showCheckpoints": "Checkpoints on the profile",
         "showCheckpointsHelp": "Ticked: on the profile, at each point, a cup for water, a fork for food, a dot for the rest. Under it, “km 12” where it fits. Drawn only with the route's profile.",
         "showCheckpointTimes": "…with the cut-off times",
-        "showCheckpointTimesHelp": "Ticked: beside each point, its cut-off too, “km 12 · 11:30”. If not every time fits, none is printed; then the kilometres that do not fit go. The marks always stay.",
+        "showCheckpointTimesHelp": "Ticked: beside each point, the time it closes too, “km 12 · 11:30”. If not every time fits, none is printed; then the kilometres that do not fit go. The marks always stay.",
         "showCheckpointsNone": "The event has no checkpoints: add them in “The course” › “Checkpoints”.",
         "showEmergency": "Emergency phone",
         "showEmergencyHelp": "Ticked: every number carries a small line with the label and one or two phones. Type the organizers' numbers, never a participant's.",
@@ -8088,7 +8089,9 @@
       "notes": {
         "slugSuffixed": "The page address in {language} was taken: {slug} was used.",
         "publicListOff": "The public participant list stayed off: the privacy notice that describes it is not yet in force here.",
-        "seriesNotApplied": "The series' rule in the file was not applied: the event is a single date."
+        "seriesNotApplied": "The series' rule in the file was not applied: the event is a single date.",
+        "checkpointKindsDropped": "In the file's checkpoints, the kinds this version does not know were left out (in all: {count}).",
+        "checkpointLimitsDropped": "In the file's checkpoints, the cut-off times that could not be counted from the start were left out (in all: {count}). Write them again as “Time limit”."
       },
       "refusals": {
         "tooLarge": "The file is too large for an event file.",
@@ -9271,7 +9274,7 @@
     },
     "checkpoints": {
       "title": "Checkpoints",
-      "intro": "Where there is water, food, first aid or timing, and by when the last runner passes. Shown as a table on the event's page and on the number's profile, by kilometre.",
+      "intro": "Where there is water, food, first aid, timing or someone showing the way, and how long after the start the last runner passes. Shown as a table on the event's page and on the number's profile.",
       "saveNote": "The points are saved only with “Save the points”, not with the page's “Save”.",
       "routeLength": "The route is {km} km long. No point can be beyond it.",
       "summaryNone": "no points",
@@ -9283,8 +9286,9 @@
       "empty": "No checkpoints.",
       "readOnly": "You can read the list; the Organizer, the Administrator and the Superadministrator write it. Ask them for any change.",
       "rowTitle": "{km} km — {name}",
-      "cutoffAside": "cut-off {time}",
-      "noCutoff": "no cut-off",
+      "cutoffAside": "time limit {duration}",
+      "cutoffAsideClock": "time limit {duration} · closes at {time}",
+      "noCutoff": "no time limit",
       "field": {
         "km": "Kilometre",
         "kmHelp": "From the start, up to {max} km (the route's length). A comma works too.",
@@ -9292,8 +9296,8 @@
         "nameRo": "Name (Romanian)",
         "nameEn": "Name (English)",
         "kinds": "What is there",
-        "cutoff": "Cut-off",
-        "cutoffHelp": "The time of the day, on the event's clock: the last runner has to pass by then. Leave empty for no limit.",
+        "cutoff": "Time limit",
+        "cutoffHelp": "From the start: the last runner has to pass by then. Leave empty for no limit.",
         "noteRo": "Note (Romanian)",
         "noteEn": "Note (English)",
         "noteHelp": "Optional, in both languages or neither; at most {max} characters."
@@ -9302,7 +9306,8 @@
         "WATER": "Water",
         "FOOD": "Food",
         "FIRST_AID": "First aid",
-        "TIMING": "Timing"
+        "TIMING": "Timing",
+        "DIRECTION": "Direction"
       },
       "remove": "Remove this point",
       "removeHelp": "It is deleted at “Save the points”.",
