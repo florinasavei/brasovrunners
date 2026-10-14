@@ -1,12 +1,11 @@
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
-import DownloadIcon from "@mui/icons-material/Download";
 import EventRepeatIcon from "@mui/icons-material/EventRepeat";
 import RssFeedIcon from "@mui/icons-material/RssFeed";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import CalendarAddress from "@/modules/events/ui/CalendarAddress";
-import { AppleLogo, GoogleLogo, OutlookLogo } from "@/modules/events/ui/calendar-app-logos";
+import { CALENDAR_TARGET_NAMESPACE, calendarTargetMark } from "@/modules/events/ui/calendar-targets";
 import { webcalUrl } from "@/modules/events/ical";
 import { calendarFeedLinks } from "@/modules/events/ui/CalendarIntroFold";
 import { DISCLOSURE_SUMMARY_SX, DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
@@ -78,6 +77,8 @@ const ROW_SX = {
  */
 export default async function SubscribeBox({ locale, baseUrl, addressId = "calendar-feed-address-box" }: SubscribeBoxProps) {
   const t = await getTranslations("Events");
+  // The five doors' words and marks are the event page's too (`calendar-targets.tsx`): one source.
+  const doors = await getTranslations(CALENDAR_TARGET_NAMESPACE);
   const links = calendarFeedLinks(baseUrl, locale);
 
   return (
@@ -110,36 +111,36 @@ export default async function SubscribeBox({ locale, baseUrl, addressId = "calen
       <Box component="ul" aria-label={t("calendar.look.subscribe.rows")} sx={{ listStyle: "none", m: 0, p: 0, display: "grid", gap: 1 }}>
         <li>
           <Box component="a" href={links.google} target="_blank" rel="noopener noreferrer" sx={ROW_SX} data-testid="subscribe-google">
-            <GoogleLogo />
-            {t("calendar.look.subscribe.google")}
+            {calendarTargetMark("google")}
+            {doors("google")}
             <ChevronRightIcon data-row-end aria-hidden="true" />
           </Box>
         </li>
         <li>
           <Box component="a" href={links.webcal} sx={ROW_SX} data-testid="subscribe-apple">
-            <AppleLogo />
-            {t("calendar.look.subscribe.apple")}
+            {calendarTargetMark("apple")}
+            {doors("apple")}
             <ChevronRightIcon data-row-end aria-hidden="true" />
           </Box>
         </li>
         <li>
           <Box component="a" href={outlookSubscribeUrl(links.feed, "personal")} target="_blank" rel="noopener noreferrer" sx={ROW_SX} data-testid="subscribe-outlook">
-            <OutlookLogo />
-            {t("calendar.look.subscribe.outlook")}
+            {calendarTargetMark("outlook")}
+            {doors("outlook")}
             <ChevronRightIcon data-row-end aria-hidden="true" />
           </Box>
         </li>
         <li>
           <Box component="a" href={outlookSubscribeUrl(links.feed, "work")} target="_blank" rel="noopener noreferrer" sx={ROW_SX} data-testid="subscribe-outlook-work">
-            <OutlookLogo />
-            {t("calendar.look.subscribe.outlookWork")}
+            {calendarTargetMark("outlookWork")}
+            {doors("outlookWork")}
             <ChevronRightIcon data-row-end aria-hidden="true" />
           </Box>
         </li>
         <li>
           <Box component="a" href={`/${locale}/events/calendar.ics`} sx={ROW_SX} data-testid="subscribe-ics">
-            <DownloadIcon data-row-glyph aria-hidden="true" />
-            {t("calendar.look.subscribe.ics")}
+            {calendarTargetMark("ics")}
+            {doors("ics")}
             <ChevronRightIcon data-row-end aria-hidden="true" />
           </Box>
         </li>
