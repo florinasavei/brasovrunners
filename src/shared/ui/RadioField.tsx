@@ -25,7 +25,7 @@ export default function RadioField({
   value: string;
   defaultChecked?: boolean;
   /**
-   * A choice that cannot be made now, greyed (§NNN): the browser does not post it and takes no click on it,
+   * A choice that cannot be made now, greyed (§772): the browser does not post it and takes no click on it,
    * so it can stay checked to show what is saved. Never alone: the caller says why, in words beside it.
    */
   disabled?: boolean;

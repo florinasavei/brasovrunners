@@ -21,7 +21,7 @@ export function feedbackFormsNamedClause(locale: string): string {
 }
 
 /**
- * What the privacy notice's `{{feedbackSafetyGmail}}` becomes (§NNN): the club's Gmail, in the words of the
+ * What the privacy notice's `{{feedbackSafetyGmail}}` becomes (§772): the club's Gmail, in the words of the
  * road's own radio (`Tell.noticeSafetyGmail`), so the approved sentence names what the club chose on its card.
  */
 export function feedbackSafetyGmailClause(locale: string): string {

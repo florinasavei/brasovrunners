@@ -210,7 +210,7 @@ export const VOLUNTEER_MINORS_NOTICE_MERGE_FIELD = "volunteerMinors";
 export const FEEDBACK_FORMS_NAMED_MERGE_FIELD = "feedbackFormsNamed";
 
 /**
- * The privacy notice's marker for «Prin ce trimitem» on Girl Zone (§NNN): the club's Gmail, said in the
+ * The privacy notice's marker for «Prin ce trimitem» on Girl Zone (§772): the club's Gmail, said in the
  * clause that tells a person her message reaches the designated person «fără să treacă prin căsuța
  * clubului» *unless the club chooses its Gmail for her messages*. A notice approved before this release
  * promises the first without the exception, so the road is gated like the named mode: the club may
@@ -778,7 +778,7 @@ export function describesFeedbackFormsNamed(body: unknown): boolean {
 }
 
 /**
- * Whether a privacy notice says Girl Zone's messages may leave by the club's Gmail (§NNN): it names
+ * Whether a privacy notice says Girl Zone's messages may leave by the club's Gmail (§772): it names
  * `{{feedbackSafetyGmail}}`. The gate for choosing Gmail on Girl Zone's «Prin ce trimitem», for a message
  * to leave by it, for the visitor's words about who sees the message, and what `/admin/tasks`' row
  * `feedbackSafetyGmailNotice` reads. Pure; asked of the notice in force, in every language.

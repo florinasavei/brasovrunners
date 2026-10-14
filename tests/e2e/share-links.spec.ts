@@ -15,7 +15,7 @@ import { expect, type Page, test } from "@playwright/test";
 const EVENT = "/ro/evenimente/tura-pe-tampa";
 
 /**
- * «Adaugă în calendar» is one small pill that opens the five doors (§NNN; the owner, 2026-10-14: «asta ar
+ * «Adaugă în calendar» is one small pill that opens the five doors (§772; the owner, 2026-10-14: «asta ar
  * trebui să fie collapsed»): a native `<details>`, closed on arrival. Opened the way a person opens it — by
  * pressing the pill — and returned, so a spec presses a door only after it.
  */
@@ -106,7 +106,7 @@ test.describe("BR-REQ-052-02 criterion 8 — the share buttons", () => {
     for (const index of [0, 2, 3]) await expect(links.nth(index)).toHaveAttribute("target", "_blank");
   });
 
-  test("opens by the keyboard, shows the five doors on one wrapping line under the pill, and closes again (§NNN)", async ({ page }) => {
+  test("opens by the keyboard, shows the five doors on one wrapping line under the pill, and closes again (§772)", async ({ page }) => {
     await page.goto(EVENT);
     const fold = page.getByTestId("event-calendar");
     const toggle = fold.getByTestId("event-calendar-toggle");
@@ -140,7 +140,7 @@ test.describe("BR-REQ-052-02 criterion 8 — the share buttons", () => {
   test.describe("with scripts off", () => {
     test.use({ javaScriptEnabled: false });
 
-    test("opens with the pill alone: a native fold needs no script (§NNN)", async ({ page }) => {
+    test("opens with the pill alone: a native fold needs no script (§772)", async ({ page }) => {
       await page.goto(EVENT);
       const fold = page.getByTestId("event-calendar");
       await expect(fold).not.toHaveAttribute("open", /.*/);

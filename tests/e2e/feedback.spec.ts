@@ -37,7 +37,7 @@ import { HUMAN_PAUSE_MS, hydrated, signIn } from "./support/featured-event";
  * The messages leave by the capture (`APP_ENV=local`/`test`: `CONTACT_FORM_MODE=capture`), so no
  * socket is opened; each project sends one «Cum a fost», well under the branch's thirty an hour.
  *
- * §NNN (the owner, 2026-10-14): Girl Zone's address is `?tip=girl-zone`, and `?tip=siguranta` — a link in a
+ * §772 (the owner, 2026-10-14): Girl Zone's address is `?tip=girl-zone`, and `?tip=siguranta` — a link in a
  * sent email — moves to it; each form's road, «Prin ce trimitem», is a radio pair on the same card (Gmail for
  * the three, Mailgun for Girl Zone until the club chooses; «O sugestie» is put on Mailgun here and offered
  * all the same, then put back); and the named mode's optional «E-mail (opțional)» is typed — refused when it
@@ -45,7 +45,7 @@ import { HUMAN_PAUSE_MS, hydrated, signIn } from "./support/featured-event";
  */
 
 const LOCK_KEY = 390_039_001;
-/** The forms' marker (§676), the named mode's (§678) and Girl Zone's Gmail road's (§NNN): without the second, every form is anonymous only; without the third, Girl Zone's Gmail is greyed. */
+/** The forms' marker (§676), the named mode's (§678) and Girl Zone's Gmail road's (§772): without the second, every form is anonymous only; without the third, Girl Zone's Gmail is greyed. */
 const MARKERS = ["{{feedbackForms}}", "{{feedbackFormsNamed}}", "{{feedbackSafetyGmail}}"] as const;
 const SAFETY_NAME = "Maria";
 const ADDED_PARAGRAPH = {
@@ -162,14 +162,14 @@ async function setBranches(page: Page, on: Branches, roads: Roads = {}): Promise
   await form.getByRole("button", { name: "Salvează formularele" }).click();
   await confirmDialog(page);
   await expect(page).toHaveURL(/saved=feedbackForms/, { timeout: 30_000 });
-  // The card comes back open on the road that was saved (§NNN): what was chosen is what is checked.
+  // The card comes back open on the road that was saved (§772): what was chosen is what is checked.
   for (const [branch, road] of Object.entries(roads)) {
     await expect(page.getByTestId("feedback-forms-form").locator(`input[name="${branch}Via"][value="${road}"]`)).toBeChecked();
   }
 }
 
 /**
- * «Prin ce trimitem» as the card draws it (§NNN): per form two native radios — «Gmail-ul clubului („Scrie-ne”)» and
+ * «Prin ce trimitem» as the card draws it (§772): per form two native radios — «Gmail-ul clubului („Scrie-ne”)» and
  * «Mailgun» — a thumb's row each, the form's own default checked, none of them a toggle, none greyed where
  * this deployment has both roads (the capture of a laptop and of CI), and Girl Zone's one-line note.
  */
@@ -455,7 +455,7 @@ test.describe("BR-REQ-070-04 «Spune-ne ceva», the anonymous wizard (§676)", (
         `Anonim, mesajul ajunge doar la ${SAFETY_NAME}; cu nume și prenume, alegi tu cine află. Site-ul nu păstrează nimic din el.`,
       );
       await expect(page.getByTestId("feedback-form-girl-zone")).toBeVisible();
-      // The old address, from before it was `girl-zone` (§NNN): a link in a sent email or on paper still opens
+      // The old address, from before it was `girl-zone` (§772): a link in a sent email or on paper still opens
       // the form — at the new address, with every other word of the query kept; the sent page's old word too.
       await page.goto("/ro/contact/spune-ne?tip=siguranta&eveniment=nu-exista-aici");
       await expect(page).toHaveURL(/\/ro\/contact\/spune-ne\?tip=girl-zone&eveniment=nu-exista-aici$/);
@@ -500,7 +500,7 @@ test.describe("BR-REQ-070-04 «Spune-ne ceva», the anonymous wizard (§676)", (
       await expect(identity.locator('input[name="identity"]:checked')).toHaveCount(1);
       await expect(safetyForm.locator('[name="name"]')).toBeVisible();
       await expect(safetyForm.locator('[name="name"]')).toHaveAttribute("maxlength", "80");
-      // Girl Zone's named mode has the optional email beside the telephone, one box each (§NNN).
+      // Girl Zone's named mode has the optional email beside the telephone, one box each (§772).
       await expect(safetyForm.locator('[name="contact"]')).toBeVisible();
       await expect(safetyForm.getByLabel("E-mail (opțional)")).toBeVisible();
       await expect(safetyForm.getByLabel("Telefon (opțional)")).toBeVisible();
@@ -544,7 +544,7 @@ test.describe("BR-REQ-070-04 «Spune-ne ceva», the anonymous wizard (§676)", (
       await page.goto("/ro/contact/spune-ne?tip=cum-a-fost");
       await hydrated(page);
       const form = page.getByTestId("feedback-form-cum-a-fost");
-      // The optional email shows with the name and only then (§NNN): hidden while «Anonim» is chosen.
+      // The optional email shows with the name and only then (§772): hidden while «Anonim» is chosen.
       await expect(form.locator('[name="email"]')).toBeHidden();
       await form.getByRole("radio", { name: "Cu nume și prenume" }).check();
       await form.locator('[name="name"]').fill("Ana Pop");
@@ -651,7 +651,7 @@ test.describe("BR-REQ-070-04 «Spune-ne ceva», the anonymous wizard (§676)", (
       }).toPass({ timeout: 45_000 });
 
       // One branch on: no choice of one — its form at once, on /ro and on /en.
-      // «O sugestie» put on Mailgun (§NNN): a road this deployment has, so the form is offered all the same.
+      // «O sugestie» put on Mailgun (§772): a road this deployment has, so the form is offered all the same.
       await setBranches(page, { suggestion: true }, { suggestion: "mailgun" });
       await page.goto("/ro/contact/spune-ne");
       await expect(page.getByTestId("feedback-choose")).toHaveCount(0);

@@ -668,7 +668,7 @@ export async function cachedFeedbackFormsNamedDescribed(now: Date): Promise<bool
 }
 
 /**
- * Whether Girl Zone's messages may leave by the club's Gmail (§NNN): the notice in force names
+ * Whether Girl Zone's messages may leave by the club's Gmail (§772): the notice in force names
  * `{{feedbackSafetyGmail}}` (`describesFeedbackSafetyGmail`), in every language — the same reading as
  * `cachedFeedbackFormsNamedDescribed`. The page words who sees her message by it; the action asks the
  * uncached `noticeDescribesFeedbackSafetyGmail` again.

@@ -333,7 +333,7 @@ export async function noticeDescribesFeedbackFormsNamed<T extends Record<string,
 }
 
 /**
- * Whether the privacy notice in force says Girl Zone's messages may leave by the club's Gmail (§NNN,
+ * Whether the privacy notice in force says Girl Zone's messages may leave by the club's Gmail (§772,
  * `describesFeedbackSafetyGmail`) — in every language, like `noticeDescribesFeedbackFormsNamed`. For the
  * save that chooses the road, the action that sends by it and `/admin/tasks`; the page asks through the
  * public cache (`cachedFeedbackSafetyGmailDescribed`).

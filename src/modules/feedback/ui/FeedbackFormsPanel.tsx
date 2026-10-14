@@ -33,7 +33,7 @@ type Props = {
   mayEdit: boolean;
   /** Which roads this deployment has (`feedbackRoads`): a road it lacks is greyed, with the steps that give it. */
   roads: FeedbackRoads;
-  /** The privacy notice in force names `{{feedbackSafetyGmail}}` in every language (§NNN): until it does, Girl Zone's Gmail is greyed with a link to «Texte legale». */
+  /** The privacy notice in force names `{{feedbackSafetyGmail}}` in every language (§772): until it does, Girl Zone's Gmail is greyed with a link to «Texte legale». */
   safetyGmailDescribed: boolean;
   openWhen?: FoldOpenWhen;
 };
@@ -48,7 +48,7 @@ const STEPS_ROW: Readonly<Record<FeedbackVia, string>> = { gmail: "task-contactF
  * shape (§164): a Server Component, one form, a Save behind the §384 confirmation; read by everybody
  * who reads the club's content, written by the Administrator. The summary counts what is on.
  *
- * Beside each form's recipient, «Prin ce trimitem» (§NNN): two native radios (`RadioField`) — the club's
+ * Beside each form's recipient, «Prin ce trimitem» (§772): two native radios (`RadioField`) — the club's
  * Gmail or Mailgun — whose default is what §676 fixed in code. A road this deployment lacks is greyed
  * with a sentence and a link to the steps in «Sarcini»; it stays checked when it is what was saved, so
  * the card shows what the form does, and a save leaves it as it was (`keepUnpostedVia`).
@@ -162,7 +162,7 @@ export default async function FeedbackFormsPanel({ locale, state, noticeDescribe
                           />
                         )}
                       </Stack>
-                      {/* «Prin ce trimitem» (§NNN): a radio pair, never a toggle; the default is the form's own (§676). */}
+                      {/* «Prin ce trimitem» (§772): a radio pair, never a toggle; the default is the form's own (§676). */}
                       <Box component="fieldset" sx={{ border: 0, m: 0, mt: 1.5, p: 0, minWidth: 0 }} data-testid={`feedback-via-${branch}`}>
                         <Typography component="legend" variant="body2" sx={{ fontWeight: 600, p: 0 }} data-via-legend="">
                           {t("emails.feedbackForms.via.legend")}

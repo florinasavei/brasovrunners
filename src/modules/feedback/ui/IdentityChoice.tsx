@@ -17,7 +17,7 @@ import RadioField from "@/shared/ui/RadioField";
 import IncognitoIcon from "./IncognitoIcon";
 
 type Props = {
-  /** Girl Zone's form also has a telephone box, beside the email every named form has (§NNN). */
+  /** Girl Zone's form also has a telephone box, beside the email every named form has (§772). */
   withPhone: boolean;
   /** «Cu nume și prenume» checked — a refused named post coming back; «Anonim» otherwise. */
   named: boolean;
@@ -27,7 +27,7 @@ type Props = {
   kept: (name: string) => string | undefined;
   /** The safety branch's first name, the club's own setting — the way back's label and «Cine să afle?»'s second answer. */
   safetyName: string;
-  /** Girl Zone's messages leave by the club's Gmail, so the mailbox's readers see them: «Cine să afle?» does not say «doar» then (§NNN). */
+  /** Girl Zone's messages leave by the club's Gmail, so the mailbox's readers see them: «Cine să afle?» does not say «doar» then (§772). */
   safetyByGmail: boolean;
   /** Whom a named message may reach (`audiencesFor`); fewer than two draws no «Cine să afle?». */
   audiences: readonly FeedbackAudience[];
@@ -112,7 +112,7 @@ export default async function IdentityChoice({ withPhone, named, invalid, kept, 
           fullWidth
           slotProps={{ htmlInput: { maxLength: FEEDBACK_NAME_MAX, "aria-required": "true" } }}
         />
-        {/* Every named form has the optional email — the message's reply address, kept nowhere (§NNN). */}
+        {/* Every named form has the optional email — the message's reply address, kept nowhere (§772). */}
         <TextField
           {...box("email", t("emailHelp"))}
           label={t("email")}

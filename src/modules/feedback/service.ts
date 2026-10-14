@@ -34,16 +34,16 @@ import {
  * «Spune-ne ceva» (§676): one anonymous message from a visitor, sent the moment it is posted and
  * kept nowhere — no table, no outbox row, no audit of what it says, no body or address in a log line.
  *
- * **Two roads, chosen by the club for each form (§NNN, amending §676).** The club's Gmail over SMTP —
+ * **Two roads, chosen by the club for each form (§772, amending §676).** The club's Gmail over SMTP —
  * the way a contact message leaves (§149) — or Mailgun, the configured adapter through the environment's
  * sender (which captures on a laptop and in the tests). The default is what §676 fixed in code: Gmail for
  * «Cum a fost», «O sugestie» and «O reclamație», Mailgun for «Girl Zone». Either way the message goes to
  * the address the club set for the form, `Reply-To` the address the person typed beside their name when
- * they typed one (§NNN; none otherwise — on Mailgun's road not even the club's), with Mailgun's tracking
+ * they typed one (§772; none otherwise — on Mailgun's road not even the club's), with Mailgun's tracking
  * off, and a message for the club's mailbox is marked «[posibil spam]» on the contact form's own signals
  * (§310) whichever road carries it. A message for Girl Zone's person has a neutral subject and is never
  * held back or marked. On Gmail the club's mailbox readers see a Girl Zone message — the one Gmail's Sent
- * folder keeps — so the person's confidentiality is the club's choice, said on the card (§NNN). A road that
+ * folder keeps — so the person's confidentiality is the club's choice, said on the card (§772). A road that
  * refuses is said on the page («Nu am putut trimite acum…») with the text kept, never a silent loss and
  * never a second road.
  *
@@ -75,7 +75,7 @@ export type FeedbackDeps = {
   noticeDescribes: boolean;
   /**
    * The privacy notice in force names `{{feedbackSafetyGmail}}` in every language
-   * (`noticeDescribesFeedbackSafetyGmail`, §NNN): until it does, Girl Zone's messages leave by Mailgun
+   * (`noticeDescribesFeedbackSafetyGmail`, §772): until it does, Girl Zone's messages leave by Mailgun
    * whatever the card says (`effectiveFeedbackSettings`).
    */
   safetyGmailDescribed: boolean;
@@ -135,7 +135,7 @@ export async function submitFeedback<T extends Record<string, unknown>>(
   rawInput: unknown,
   now: Date,
 ): Promise<FeedbackOutcome> {
-  // The settings as they act: Girl Zone leaves by Gmail only while the notice in force says so (§NNN).
+  // The settings as they act: Girl Zone leaves by Gmail only while the notice in force says so (§772).
   const deps: FeedbackDeps = { ...given, settings: effectiveFeedbackSettings(given.settings, given.safetyGmailDescribed) };
   const branch = postedBranch(rawInput);
   const roads: FeedbackRoads = { gmail: deps.smtp !== null, mailgun: deps.mailgun !== null };
@@ -160,7 +160,7 @@ export async function submitFeedback<T extends Record<string, unknown>>(
   if (!audience) throw new DomainError("VALIDATION_ERROR", "the feedback form chose a reader not offered", ["audience"]);
   const recipients = readersOf(branch, audience, deps);
   if (recipients.length === 0) return logged(branch, { outcome: "unavailable" }, audience);
-  // The road the club chose for the form that reaches this reader (§NNN); absent on this deployment is no road.
+  // The road the club chose for the form that reaches this reader (§772); absent on this deployment is no road.
   const via = viaFor(deps.settings, branch, audience);
   if (!roads[via]) return logged(branch, { outcome: "unavailable" }, audience);
 
@@ -199,7 +199,7 @@ function readersOf(branch: FeedbackBranch, audience: "club" | "person", deps: Fe
 }
 
 /**
- * One message out, by the road the club chose (§NNN). What the road is does not change what the message
+ * One message out, by the road the club chose (§772). What the road is does not change what the message
  * is: for the club's mailbox it is screened first on the contact form's signals — held back when the
  * Administrator's tick says so (§744), else marked «[posibil spam]» (§310) — and for Girl Zone's person
  * it never is, because a lost report costs more than a marked one. `Reply-To` is the address typed
@@ -247,7 +247,7 @@ async function screenForClub<T extends Record<string, unknown>>(
   const suspicion = contactSuspicion({
     ...screening,
     elapsedMs: Number.isNaN(rendered) ? null : now.getTime() - rendered,
-    // A confidential report's address is not the screen's to read: «imitates-club» and the trap compare it with the club's domain, and a report is never marked on it (§NNN).
+    // A confidential report's address is not the screen's to read: «imitates-club» and the trap compare it with the club's domain, and a report is never marked on it (§772).
     senderEmail: input.branch === "safety" ? "" : (replyAddress ?? ""),
     message: input.message,
     honeypot: input.honeypot,
@@ -268,7 +268,7 @@ async function screenForClub<T extends Record<string, unknown>>(
 }
 
 /**
- * Mailgun's road (§676, §NNN): the environment's tag and tracking off on every send (§320), one message
+ * Mailgun's road (§676, §772): the environment's tag and tracking off on every send (§320), one message
  * per recipient — the allowlist and the allowance count addresses one by one — and `Reply-To` the typed
  * address, else none at all (not even the club's: nobody is to be answered at the shared mailbox by
  * default). Sent when any recipient took it: a report that reached somebody is not a lost one.
@@ -301,7 +301,7 @@ async function sendByMailgun(
 /**
  * The club's Gmail (§149, §310): over SMTP from the club's account, `Reply-To` the typed address with the
  * name beside it when they gave one (§678). A Girl Zone message on this road is in the account's Sent
- * folder, which every reader of the club's mailbox sees — said on the card (§NNN), the club's choice.
+ * folder, which every reader of the club's mailbox sees — said on the card (§772), the club's choice.
  */
 async function sendByGmail(
   road: FeedbackSmtpRoad,

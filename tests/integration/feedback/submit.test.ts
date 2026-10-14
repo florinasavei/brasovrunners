@@ -181,7 +181,7 @@ describe("§676 «Spune-ne ceva»", () => {
       const [message] = mailgun.send.mock.calls[0];
       expect(message.to).toBe("safety@example.org");
       expect(message.subject).toBe(SAFETY_SUBJECT);
-      // The address the person typed beside the name (§NNN): «Reply» reaches them, not the shared club mailbox.
+      // The address the person typed beside the name (§772): «Reply» reaches them, not the shared club mailbox.
       expect(message.replyTo).toBe("ana@example.org");
       expect(message.noReplyTo).toBeUndefined();
       expect(message.text.split("\n")[0]).toBe("Nume: Ana Pop");
@@ -228,7 +228,7 @@ describe("§676 «Spune-ne ceva»", () => {
       expect(smtp.messages[1].to).toEqual(["contact@example.org"]);
     });
 
-    it("§NNN Girl Zone's named mode has an email box of its own: the Reply-To, checked by the canonicalizer, kept nowhere; the telephone stays in the message", async () => {
+    it("§772 Girl Zone's named mode has an email box of its own: the Reply-To, checked by the canonicalizer, kept nowhere; the telephone stays in the message", async () => {
       const named = { ...SAFETY, identity: "named", name: "Ana Pop", email: "Ana.Pop@Example.org ", contact: "0700 000 000" };
       expect(await submitFeedback(db, deps(), named, NOW)).toEqual({ outcome: "sent" });
       const [message] = mailgun.send.mock.calls[0];
@@ -251,7 +251,7 @@ describe("§676 «Spune-ne ceva»", () => {
       expect(await db.select().from(auditLogs)).toEqual([]);
     });
 
-    it("§NNN does not hand a confidential report's typed address to the club's spam screen: never marked for it", async () => {
+    it("§772 does not hand a confidential report's typed address to the club's spam screen: never marked for it", async () => {
       const screening: ContactScreening = { botCheckOn: false, tokenPresent: false, turnstileVerdict: "not_configured", clubHost: "club.example.org" };
       const toClub = { ...SAFETY, identity: "named", name: "Ana Pop", audience: "club", email: "ana@club-example.net" };
       expect(await submitFeedback(db, deps({ screening }), toClub, NOW)).toEqual({ outcome: "sent", audience: "club" });
@@ -262,7 +262,7 @@ describe("§676 «Spune-ne ceva»", () => {
       expect(smtp.messages[1].subject).toContain("posibil spam");
     });
 
-    it("§NNN sends Girl Zone's messages by Gmail only while the notice in force names {{feedbackSafetyGmail}}: by Mailgun otherwise, whatever the card says", async () => {
+    it("§772 sends Girl Zone's messages by Gmail only while the notice in force names {{feedbackSafetyGmail}}: by Mailgun otherwise, whatever the card says", async () => {
       const gmailForHer = { ...SETTINGS, safety: { ...SETTINGS.safety, via: "gmail" as const } };
       expect(await submitFeedback(db, deps({ settings: gmailForHer, safetyGmailDescribed: false }), SAFETY, NOW)).toEqual({ outcome: "sent" });
       expect(smtp.messages).toHaveLength(0);
@@ -384,7 +384,7 @@ describe("§676 «Spune-ne ceva»", () => {
       expect(forms[1].get("h:Reply-To")).toBe("club@example.org");
     });
 
-    it("§NNN answers a typed address in place of the club's: its own Reply-To, still tracking off; `noReplyTo` outranks it", async () => {
+    it("§772 answers a typed address in place of the club's: its own Reply-To, still tracking off; `noReplyTo` outranks it", async () => {
       const forms: FormData[] = [];
       globalThis.fetch = (async (_url: string | URL | Request, init?: RequestInit) => {
         forms.push(init?.body as FormData);
@@ -400,7 +400,7 @@ describe("§676 «Spune-ne ceva»", () => {
     });
   });
 
-  describe("§NNN the road is the club's choice, per form", () => {
+  describe("§772 the road is the club's choice, per form", () => {
     const FORMS: ReadonlyArray<[FeedbackBranch, Record<string, unknown>, string, string]> = [
       ["howItWent", HOW, "how@example.org", "Cum a fost: Crosul de toamnă"],
       ["suggestion", SUGGESTION, "ideas@example.org", "O sugestie de pe site"],
@@ -490,7 +490,7 @@ describe("§676 «Spune-ne ceva»", () => {
     });
   });
 
-  describe("§NNN the optional email beside the name: Reply-To on both roads, and nothing kept", () => {
+  describe("§772 the optional email beside the name: Reply-To on both roads, and nothing kept", () => {
     const NAMED = post({ branch: "suggestion", identity: "named", name: "Ana Pop", message: "Alergări seara.", email: "Ana.Pop@Example.org" });
 
     it("sets the typed address as Reply-To by Gmail, with the name beside it, as typed", async () => {
@@ -589,7 +589,7 @@ describe("§676 «Spune-ne ceva»", () => {
       expect(await db.select().from(platformSettings).where(eq(platformSettings.key, FEEDBACK_SETTING_KEY))).toEqual([]);
     });
 
-    it("§NNN defaults every form's road to what §676 fixed in code, and saves what the Administrator chose, audited as a word", async () => {
+    it("§772 defaults every form's road to what §676 fixed in code, and saves what the Administrator chose, audited as a word", async () => {
       const defaults = await readFeedbackSettings(db);
       expect(FEEDBACK_BRANCHES.map((branch) => defaults[branch].via)).toEqual(["gmail", "gmail", "gmail", "mailgun"]);
       const chosen = { ...SETTINGS, suggestion: { ...SETTINGS.suggestion, via: "mailgun" }, safety: { ...SETTINGS.safety, via: "gmail" } };
@@ -601,7 +601,7 @@ describe("§676 «Spune-ne ceva»", () => {
       expect(JSON.stringify(audit.metadataJson)).not.toContain("@");
     });
 
-    it("§NNN reads a row saved before the road was chosen as each form's default, never a guess", async () => {
+    it("§772 reads a row saved before the road was chosen as each form's default, never a guess", async () => {
       await db.insert(platformSettings).values({ key: FEEDBACK_SETTING_KEY, value: { howItWent: { on: true, to: "how@example.org" }, safety: { on: true, to: "safety@example.org", name: "Maria" } }, updatedAt: NOW });
       const read = await readFeedbackSettings(db);
       expect(read.howItWent).toEqual({ on: true, to: "how@example.org", via: "gmail" });
@@ -611,7 +611,7 @@ describe("§676 «Spune-ne ceva»", () => {
       expect((await readFeedbackSettings(db)).suggestion.via).toBe("gmail");
     });
 
-    it("§NNN keeps the road already saved when a save does not post one — a greyed radio is never posted", async () => {
+    it("§772 keeps the road already saved when a save does not post one — a greyed radio is never posted", async () => {
       await updateFeedbackSettings(db, admin, { ...SETTINGS, howItWent: { ...SETTINGS.howItWent, via: "mailgun" } }, NOW);
       const unposted = Object.fromEntries(FEEDBACK_BRANCHES.map((branch) => [branch, { on: true, to: SETTINGS[branch].to, via: "", ...(branch === "safety" ? { name: "Maria" } : {}) }]));
       const saved = await updateFeedbackSettings(db, admin, unposted, NOW);
@@ -620,7 +620,7 @@ describe("§676 «Spune-ne ceva»", () => {
       expect(saved.suggestion.via).toBe("gmail");
     });
 
-    it("§NNN refuses to newly choose a road the deployment lacks, on the form's box, and saves nothing — but lets one stay where it already was", async () => {
+    it("§772 refuses to newly choose a road the deployment lacks, on the form's box, and saves nothing — but lets one stay where it already was", async () => {
       const gmailLess = { gmail: false, mailgun: true };
       const allMailgun = Object.fromEntries(FEEDBACK_BRANCHES.map((branch) => [branch, { ...SETTINGS[branch], via: "mailgun" }]));
       await updateFeedbackSettings(db, admin, allMailgun, NOW);
@@ -633,7 +633,7 @@ describe("§676 «Spune-ne ceva»", () => {
       await expect(updateFeedbackSettings(db, admin, { ...SETTINGS, suggestion: { ...SETTINGS.suggestion, via: "carrier-pigeon" } }, NOW)).rejects.toMatchObject({ code: "VALIDATION_ERROR", fields: ["suggestionVia"] });
     });
 
-    it("§NNN refuses to newly choose Gmail for Girl Zone while the notice in force does not name {{feedbackSafetyGmail}}, on her box — but lets it stay, and lets the other forms choose it", async () => {
+    it("§772 refuses to newly choose Gmail for Girl Zone while the notice in force does not name {{feedbackSafetyGmail}}, on her box — but lets it stay, and lets the other forms choose it", async () => {
       const noNotice = { gmail: true, mailgun: true };
       const gmailForHer = { ...SETTINGS, safety: { ...SETTINGS.safety, via: "gmail" } };
       await expect(updateFeedbackSettings(db, admin, gmailForHer, NOW, noNotice, false)).rejects.toMatchObject({ code: "VALIDATION_ERROR", fields: ["safetyVia"] });

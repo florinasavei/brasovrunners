@@ -19,7 +19,7 @@ import {
 
 /**
  * «Spune-ne ceva» on «Pagini» → «Contact» (§676): per branch a switch, the address that receives
- * it and — §NNN — the road it leaves by (Gmail or Mailgun, defaulting to what §676 fixed in code), and
+ * it and — §772 — the road it leaves by (Gmail or Mailgun, defaulting to what §676 fixed in code), and
  * the safety branch's first name — one `platform_settings` row (the table is a key-value
  * store, so no migration), the contact recipients' shape (§164). Read by everybody who reads the
  * club's content; written by an Administrator (`canManageClubSettings`), audited — which branch moved
@@ -42,7 +42,7 @@ const address = z
 
 /**
  * A stored branch: a value this code cannot read is off, or no address — never a crash; and a row
- * saved before the road was chosen (§NNN) has none, so it reads as the form's default (§676's), never a guess.
+ * saved before the road was chosen (§772) has none, so it reads as the form's default (§676's), never a guess.
  */
 const branch = (name: FeedbackBranch) =>
   z.object({ on: z.boolean().catch(false), to: z.email().nullable().catch(null), via: z.enum(FEEDBACK_VIAS).catch(DEFAULT_VIA[name]) });
@@ -131,7 +131,7 @@ export async function updateFeedbackSettings<T extends Record<string, unknown>>(
   /**
    * The privacy notice in force names `{{feedbackSafetyGmail}}` in every language (`noticeDescribesFeedbackSafetyGmail`):
    * until it does, Girl Zone's road cannot be newly set to Gmail — the notice promises her messages never
-   * pass through the club's mailbox (§NNN). Absent, nothing waits on it.
+   * pass through the club's mailbox (§772). Absent, nothing waits on it.
    */
   safetyGmailDescribed = true,
 ): Promise<FeedbackSettingsState> {
@@ -214,7 +214,7 @@ export function auditOf(before: FeedbackSettings, next: FeedbackSettings): {
   switched: Array<{ branch: FeedbackBranch; on: boolean }>;
   recipientChanged: FeedbackBranch[];
   safetyNameChanged: boolean;
-  /** Which form's road moved, and to which (§NNN): a word, never an address. */
+  /** Which form's road moved, and to which (§772): a word, never an address. */
   viaChanged: Array<{ branch: FeedbackBranch; via: FeedbackSettings[FeedbackBranch]["via"] }>;
 } {
   return {

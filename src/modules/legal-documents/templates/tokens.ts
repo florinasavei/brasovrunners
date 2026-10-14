@@ -250,7 +250,7 @@ export const DECLARATION_TOKENS: readonly DeclarationToken[] = [
     messageKey: FEEDBACK_FORMS_NAMED_MERGE_FIELD,
     example: inBoth((locale) => feedbackFormsNamedClause(locale)),
   },
-  // The privacy notice's marker for Girl Zone by the club's Gmail (§NNN): the road's words, and the switch —
+  // The privacy notice's marker for Girl Zone by the club's Gmail (§772): the road's words, and the switch —
   // the road may be chosen, and a message leaves by it, only while it is named (`describesFeedbackSafetyGmail`).
   {
     token: `{{${FEEDBACK_SAFETY_GMAIL_MERGE_FIELD}}}`,

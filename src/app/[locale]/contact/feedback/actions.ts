@@ -100,7 +100,7 @@ export async function submitFeedbackAction(form: FormData): Promise<void> {
         // «Clubul» for a named safety report when «O reclamație» has no recipient (§678): the contact form's own.
         clubFallback: contactDelivery(recipients)?.to ?? [],
         smtp: contactSmtpRoad(),
-        // Mailgun's road (§NNN): the environment's sender with no Gmail road at all — none where the email
+        // Mailgun's road (§772): the environment's sender with no Gmail road at all — none where the email
         // service does not transmit (`feedbackRoads`), so a form the club pointed at it is not offered.
         mailgun: feedbackRoads().mailgun ? createEmailSenderForEnvironment(env).sender : null,
         appEnv: env.APP_ENV,

@@ -27,7 +27,7 @@ import { SHARE_PILL_SX, SHARE_ROW_GAP } from "./share-pill";
  * doors as the subscription panel (§767, `calendar-targets.tsx` — one source for their words and
  * marks): Google's own add-event address, the `.ics` for Apple Calendar, Outlook.com and Outlook
  * for work or school (each its own compose window, `outlookCalendarUrl`), and the `.ics` to download.
- * Behind one small pill, «Adaugă în calendar» (§NNN, amending §767; the owner, 2026-10-14: «asta ar
+ * Behind one small pill, «Adaugă în calendar» (§772, amending §767; the owner, 2026-10-14: «asta ar
  * trebui să fie collapsed, că nu vedem tot șirul de opțiuni»): a native `<details>`, closed, whose
  * summary is the pill — the calendar's glyph, the words, a chevron that turns — and whose body holds the
  * five doors on one wrapping line, the file's note and the file's address. No script: it opens with
@@ -82,7 +82,7 @@ function calendarDoor(calendar: NonNullable<Props["calendar"]>, id: CalendarTarg
 }
 
 /**
- * The calendar fold's summary (§NNN): the share row's own small pill (`SHARE_PILL_SX`: 28 pixels, the
+ * The calendar fold's summary (§772): the share row's own small pill (`SHARE_PILL_SX`: 28 pixels, the
  * 0.8125rem word, the 18-pixel glyph, the four-pixel tap band above and below) drawn on a `<summary>`, in the
  * outlined button's look from theme tokens. The browser's marker is hidden — the pill's own chevron says
  * it opens, and turns when it has — and `display` is a flex box that does not stretch to the row. A plain
@@ -157,7 +157,7 @@ export default async function ShareLinks({ url, title, imageHref, fileName, cale
       )}
       {calendar && (
         /*
-          «Adaugă în calendar» (§NNN): ONE pill, a native fold closed on arrival — the five doors (§767) are
+          «Adaugă în calendar» (§772): ONE pill, a native fold closed on arrival — the five doors (§767) are
           its body, on one wrapping line under it, so the page shows a single small control where it showed
           a row that ran off a phone's width. The pill is the `<summary>`: keyboard-reachable and
           toggled by Enter and Space with no island, and it works with scripts off.

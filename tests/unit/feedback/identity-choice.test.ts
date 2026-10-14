@@ -94,7 +94,7 @@ describe("BR-REQ-070-04 «Cum vrei să trimiți?» (§678)", () => {
     expect(namedOnly).toContain('name="email"');
     expect(namedOnly).toContain('name="audience"');
     expect(html).not.toMatch(/<input[^>]*name="name"[^>]*\srequired/);
-    // Only Girl Zone's form has the telephone box; every named form has the email (§NNN).
+    // Only Girl Zone's form has the telephone box; every named form has the email (§772).
     expect(namedOnly).not.toContain('name="contact"');
     const girlZone = await render({ withPhone: true });
     expect(girlZone).toContain('name="contact"');
@@ -103,7 +103,7 @@ describe("BR-REQ-070-04 «Cum vrei să trimiți?» (§678)", () => {
     expect(girlZone).toContain("Telefon (opțional)");
   });
 
-  it("says «Doar …» of Girl Zone's person only when the message does not leave by the club's Gmail (§NNN)", async () => {
+  it("says «Doar …» of Girl Zone's person only when the message does not leave by the club's Gmail (§772)", async () => {
     locale = "ro";
     const base = { withPhone: true, named: true, invalid: new Set<FeedbackField>(), kept: () => undefined, safetyName: "Maria", audiences: ["club", "person"] as FeedbackAudience[], audience: "person" as FeedbackAudience };
     const mailgun = renderToStaticMarkup(await IdentityChoice({ ...base, safetyByGmail: false }));

@@ -72,7 +72,7 @@ export type OutgoingEmail = {
    */
   noReplyTo?: true;
   /**
-   * The one address a reply to this message goes to, instead of the club's (§NNN): «Spune-ne ceva»'s
+   * The one address a reply to this message goes to, instead of the club's (§772): «Spune-ne ceva»'s
    * named post may leave an address to be answered at, and the reader's «Reply» must reach it. A bare
    * address already through the canonicalizer, never a display name — a name typed by a visitor is a header.
    * Mailgun's road only, like `noReplyTo`; wins over the configured Reply-To, and is ignored when

@@ -148,7 +148,7 @@ describe("owner tasks", () => {
     expect(stateOf({ ...LAUNCHED, feedbackNamedDescribed: false }, "feedbackNotice")).toBe("done");
   });
 
-  /** §NNN — Girl Zone by Gmail: a row only while the club chose that road; open until the notice names {{feedbackSafetyGmail}}. */
+  /** §772 — Girl Zone by Gmail: a row only while the club chose that road; open until the notice names {{feedbackSafetyGmail}}. */
   it("keeps Girl Zone's Gmail row open while the club chose Gmail and the notice in force does not name {{feedbackSafetyGmail}}, absent otherwise", () => {
     expect(stateOf({ ...LAUNCHED, feedbackSafetyGmailChosen: true, feedbackSafetyGmailDescribed: false }, "feedbackSafetyGmailNotice")).toBe("open");
     expect(stateOf({ ...LAUNCHED, feedbackSafetyGmailChosen: true }, "feedbackSafetyGmailNotice")).toBe("done");

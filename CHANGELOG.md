@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V3.31-2026-10-15
+
+- **Four small asks** — Girl Zone's address is `?tip=girl-zone` (`siguranta` still opens it), each «Spune-ne ceva» form has a «Prin ce trimitem» choice between the club's Gmail and Mailgun (Girl Zone's Gmail waits for a privacy notice that names it), the optional email beside the name — on Girl Zone's form too — is checked and becomes the reply address on either road, and «Adaugă în calendar» is one small pill that opens the five doors. §772.
 ## BR-V3.30-2026-10-15
 
 - **Five more clauses in the race declaration; the signature's trace** — the declaration's template (trail and road, both languages) gains medical insurance, the marked route and the volunteers' instructions, disqualification without appeal on objective grounds, litter, and no vehicle in the perimeter, plus one sentence that the typed name is the electronic signature; the texts in force do not move until the club approves them (a lawyer reads the five first). An electronic signature now keeps the IP address and browser of the press — on the race's declaration, a group run's and the volunteer agreement's (the volunteer's and the guardian's) — never on paper, printed small under the signature of the PDF («Semnat electronic la … · IP … · …») and listed, with the group run's declarations, in «Toate datele unei persoane». The privacy notice's template says so. §771.

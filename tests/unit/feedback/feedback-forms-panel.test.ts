@@ -10,7 +10,7 @@ import ro from "../../../messages/ro.json";
  * on and off: each form's glyph before its legend (as on the public contact page, §696), and a
  * separator between the four forms — three of them, and nothing before the save button.
  *
- * §NNN (the owner, 2026-10-14: «aici trebuie să setăm prin ce trimitem mail (Mailgun sau Gmail)») — and
+ * §772 (the owner, 2026-10-14: «aici trebuie să setăm prin ce trimitem mail (Mailgun sau Gmail)») — and
  * under each form «Prin ce trimitem»: two native radios, never a toggle, the form's own default checked,
  * a road the deployment lacks greyed with the sentence and the link to its steps, Girl Zone's note, and a
  * footer that says the road is chosen per form.
@@ -70,7 +70,7 @@ describe("the backoffice card of the four forms", () => {
 
   it("draws each form's glyph, hidden from a screen reader, before its legend", async () => {
     const out = await html();
-    // The four forms' own legends: the road's group has a legend of its own, a plain sentence (§NNN).
+    // The four forms' own legends: the road's group has a legend of its own, a plain sentence (§772).
     const legends = [...out.matchAll(/<legend(?![^>]*data-via-legend)[^>]*>([\s\S]*?)<\/legend>/g)].map(([, inner]) => inner);
     expect(legends).toHaveLength(4);
     for (const inner of legends) {
@@ -80,7 +80,7 @@ describe("the backoffice card of the four forms", () => {
   });
 });
 
-describe("§NNN «Prin ce trimitem» under each form", () => {
+describe("§772 «Prin ce trimitem» under each form", () => {
   it("is a pair of native radios per form — Gmail, then Mailgun — in a fieldset with its own legend, never a toggle", async () => {
     const out = await html();
     for (const branch of FEEDBACK_BRANCHES) {
@@ -107,7 +107,7 @@ describe("§NNN «Prin ce trimitem» under each form", () => {
     expect(checked("safety")).toEqual(["mailgun"]);
   });
 
-  it("greys Girl Zone's Gmail alone until the notice in force names {{feedbackSafetyGmail}}, with a link to «Texte legale» — the other forms' Gmail is never gated (§NNN)", async () => {
+  it("greys Girl Zone's Gmail alone until the notice in force names {{feedbackSafetyGmail}}, with a link to «Texte legale» — the other forms' Gmail is never gated (§772)", async () => {
     const out = await html(BOTH, true, false);
     const [gmail, mailgun] = radios(viaGroup(out, "safety"));
     expect(gmail).toMatch(/\sdisabled(=|\s|\/|>)/);

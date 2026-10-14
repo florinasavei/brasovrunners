@@ -155,7 +155,7 @@ describe("the event page's calendar row", () => {
     fileName: "crosul.png",
     calendar,
   };
-  /** Every `<a …>…</a>` of the doors inside the fold «Adaugă în calendar» (§NNN), as attributes and text. */
+  /** Every `<a …>…</a>` of the doors inside the fold «Adaugă în calendar» (§772), as attributes and text. */
   const row = (rendered: string) => {
     const html = rendered.replace(/<style[^>]*>[\s\S]*?<\/style>/g, "");
     const from = html.indexOf('data-testid="event-calendar-doors"');
@@ -209,7 +209,7 @@ describe("the event page's calendar row", () => {
     return { html, from, tag: html.slice(from, html.indexOf(">", from) + 1), summary: html.slice(html.indexOf("<summary", from), html.indexOf("</summary>", from)) };
   };
 
-  it.each(["ro", "en"] as const)("puts the five doors behind ONE pill, a native fold closed on arrival, that says «Adaugă în calendar» (%s, §NNN)", async (locale) => {
+  it.each(["ro", "en"] as const)("puts the five doors behind ONE pill, a native fold closed on arrival, that says «Adaugă în calendar» (%s, §772)", async (locale) => {
     currentLocale = locale;
     const html = renderToStaticMarkup(await ShareLinks(props));
     const { tag, summary, from } = fold(html);

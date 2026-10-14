@@ -148,7 +148,7 @@ export default async function FeedbackPage({ params, searchParams }: Props) {
   setRequestLocale(locale);
 
   const search = await searchParams;
-  // A link from before Girl Zone's address was `girl-zone` (§NNN: `?tip=siguranta`, a sent email's, a
+  // A link from before Girl Zone's address was `girl-zone` (§772: `?tip=siguranta`, a sent email's, a
   // printed one) lands on the same form at the new address — a GET only, every other word of the query kept.
   const moved = aliasRedirect(getPathname({ locale, href: "/contact/feedback" }), search);
   if (moved) redirect(moved);
@@ -161,9 +161,9 @@ export default async function FeedbackPage({ params, searchParams }: Props) {
     orNull(() => cachedFeedbackFormsDescribed(now)),
     orNull(() => cachedFeedbackSafetyGmailDescribed(now)),
   ]);
-  // The settings as they act (§NNN): Girl Zone's road is Gmail only while the notice in force says so, and the words below follow it.
+  // The settings as they act (§772): Girl Zone's road is Gmail only while the notice in force says so, and the words below follow it.
   const offer = offered0 ? effectiveFeedbackSettings(offered0, safetyGmailDescribed === true) : null;
-  // By Gmail, the message is in the club's mailbox and its Sent folder: «doar la …» would not be true (§NNN).
+  // By Gmail, the message is in the club's mailbox and its Sent folder: «doar la …» would not be true (§772).
   const safetyByGmail = offer ? safetyMessageSeenByMailboxReaders(offer) : false;
   // The three ordinary branches only where the SMTP road exists (`CONTACT_FORM_MODE`), as «Scrie-ne» draws no form without one.
   const offered = offer ? offeredBranches(offer, described === true, feedbackRoads()) : [];

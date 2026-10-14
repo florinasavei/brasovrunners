@@ -143,7 +143,7 @@ describe("§678 anonymous, or with one's name", () => {
   it("every branch's form starts with the name and its way back, inside the choice at the very top", () => {
     for (const [branch, fields] of Object.entries(BRANCH_FIELDS)) {
       expect(fields[0], branch).toBe("name");
-      // The optional email is every named form's second box; Girl Zone's telephone follows it (§NNN).
+      // The optional email is every named form's second box; Girl Zone's telephone follows it (§772).
       expect(fields[1], branch).toBe("email");
     }
     expect(BRANCH_FIELDS.safety[2]).toBe("contact");
@@ -340,7 +340,7 @@ describe("§676 the picker's order", () => {
   });
 });
 
-describe("§NNN Girl Zone's road follows the notice in force", () => {
+describe("§772 Girl Zone's road follows the notice in force", () => {
   const gmail = { ...DEFAULT_FEEDBACK_SETTINGS, safety: { ...DEFAULT_FEEDBACK_SETTINGS.safety, via: "gmail" as const } };
 
   it("is Gmail only while the notice names {{feedbackSafetyGmail}}; Mailgun otherwise, and the other forms are never touched", () => {
@@ -419,7 +419,7 @@ describe("§676 the addresses the action sends the browser back to", () => {
   });
 });
 
-describe("§NNN Girl Zone's address is `girl-zone`, and `siguranta` still opens it", () => {
+describe("§772 Girl Zone's address is `girl-zone`, and `siguranta` still opens it", () => {
   it("writes the new slug everywhere an address is built, and keeps the other three", () => {
     expect(BRANCH_SLUG).toEqual({ howItWent: "cum-a-fost", suggestion: "sugestie", complaint: "reclamatie", safety: "girl-zone" });
     expect(feedbackRefusalUrl("/ro/contact/spune-ne", "safety", "LIMITED")).toContain("?tip=girl-zone&");
@@ -457,7 +457,7 @@ describe("§NNN Girl Zone's address is `girl-zone`, and `siguranta` still opens 
   });
 });
 
-describe("§NNN the road each form leaves by", () => {
+describe("§772 the road each form leaves by", () => {
   it("is, until the club chooses, what §676 fixed in code: Gmail for the three, Mailgun for Girl Zone", () => {
     expect(DEFAULT_VIA).toEqual({ howItWent: "gmail", suggestion: "gmail", complaint: "gmail", safety: "mailgun" });
     for (const branch of ["howItWent", "suggestion", "complaint", "safety"] as const) expect(DEFAULT_FEEDBACK_SETTINGS[branch].via, branch).toBe(DEFAULT_VIA[branch]);
@@ -508,7 +508,7 @@ describe("§NNN the road each form leaves by", () => {
   });
 });
 
-describe("§NNN the optional email beside the name", () => {
+describe("§772 the optional email beside the name", () => {
   const named = (raw: Record<string, unknown>) => feedbackFields.safeParse({ locale: "ro", identity: "named", name: "Ana Pop", message: "Seara.", ...raw });
 
   it("is kept as typed, trimmed, when the canonicalizer accepts it — capitals and a plus tag are the person's own", () => {
@@ -537,7 +537,7 @@ describe("§NNN the optional email beside the name", () => {
   it("is the message's Reply-To in the named mode, on every form: the box on three, Girl Zone's way back when it is an address", () => {
     const suggestion = named({ branch: "suggestion", email: "ana@example.org" }).data as FeedbackInput;
     expect(replyAddressForInput(suggestion)).toBe("ana@example.org");
-    // Girl Zone has the same email box, beside the telephone (§NNN); an address typed in the telephone box still answers.
+    // Girl Zone has the same email box, beside the telephone (§772); an address typed in the telephone box still answers.
     const safetyByEmail = named({ branch: "safety", whereWhen: "", email: "ana@example.org", contact: "0700 000 000" }).data as FeedbackInput;
     expect(replyAddressForInput(safetyByEmail)).toBe("ana@example.org");
     const safetyByAddress = named({ branch: "safety", whereWhen: "", contact: "ana@example.org" }).data as FeedbackInput;

@@ -340,7 +340,7 @@ export function createMailgunAdapter(config: MailgunConfig): EmailAdapter {
       // A composed message carries its Reply-To and its files inside the MIME (`composeMime`).
       if (!message.calendar) {
         // A confidential message (§676) carries none: its reader answers only through the body's contact line.
-        // A visitor's own address (§NNN) replaces the club's: «Reply» answers the person who asked to be answered.
+        // A visitor's own address (§772) replaces the club's: «Reply» answers the person who asked to be answered.
         if (!message.noReplyTo) {
           const replyTo = message.replyTo ?? config.replyTo;
           if (replyTo) form.set("h:Reply-To", replyTo);
