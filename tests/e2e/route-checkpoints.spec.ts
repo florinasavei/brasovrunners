@@ -8,7 +8,7 @@ import { hydrated, signIn } from "./support/featured-event";
 import { openEditorBox, openFold } from "./support/fold";
 
 /**
- * §757 (amending §718 and §750), §NNN, BR-REQ-011-01, BR-REQ-050-02, BR-REQ-038-01 — the route's checkpoints
+ * §757 (amending §718 and §750), §770, BR-REQ-011-01, BR-REQ-050-02, BR-REQ-038-01 — the route's checkpoints
  * and the race's time limit (the owner, 2026-10-13: «I need to put checkpoints and limit times»; «trebuie
  * să pot pune timp limită»; «nu pot să văd unde e punctul de alimentare pe acel număr»; 2026-10-14: «aici
  * aș vrea să am și un tip de punct de tipul „direcționare”», «în loc de ora limită, trebuie să punem „timp
@@ -77,7 +77,7 @@ async function fillRow(row: Locator, values: { km: string; ro: string; en: strin
   await row.getByLabel("Numele (română)").fill(values.ro);
   await row.getByLabel("Numele (engleză)").fill(values.en);
   for (const kind of values.kinds) await row.getByRole("checkbox", { name: kind, exact: true }).check();
-  // «Timp limită»: the race's own two boxes, «Ore» and «Minute» (§NNN).
+  // «Timp limită»: the race's own two boxes, «Ore» and «Minute» (§770).
   await row.getByLabel("Ore", { exact: true }).fill(values.hours);
   await row.getByLabel("Minute", { exact: true }).fill(values.minutes);
 }
@@ -291,7 +291,7 @@ test.describe("§757 the route's checkpoints and the race's time limit", () => {
       await expect(after.getByTestId("checkpoint-new-row").first().getByLabel("Numele (engleză)")).toHaveValue("Too far");
       // The same for the time limits, with the refusal only the server makes (the browser holds the boxes' own bounds,
       // so «60 minute» never leaves the page): a nearer point with a longer limit than a farther one. Both boxes of both
-      // rows come back as typed (§NNN).
+      // rows come back as typed (§770).
       await openEditorBox(page, "Puncte de control");
       await openEditorBox(page, "Adaugă puncte");
       const rows = after.getByTestId("checkpoint-new-row");

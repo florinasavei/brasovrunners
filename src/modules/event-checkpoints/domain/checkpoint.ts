@@ -14,7 +14,7 @@ import type { StaffRole } from "@/modules/staff-identity/domain/roles";
  * three readers — the editor's card, the event page's table, the bib's profile strip — cannot
  * disagree about them. `checkpoints.ts` beside this folder is the writer.
  *
- * **The cut-off is a time limit, minutes from the start** (§NNN, reversing §757's first answer; the
+ * **The cut-off is a time limit, minutes from the start** (§770, reversing §757's first answer; the
  * column's comment says why): hours and minutes as the race's own «Timp limită» boxes take them,
  * counted from the race's gun when it has one (§71), else the event's start, the same instant the
  * event's own «Timp limită» counts from — so a point's limit is held against the event's as minutes
@@ -25,7 +25,7 @@ import type { StaffRole } from "@/modules/staff-identity/domain/roles";
 
 /**
  * What a checkpoint can have, most basic first: the order the glyphs and the words are drawn in.
- * «Direcționare» (§NNN) is last: a volunteer who shows the way at a junction, not something a runner takes.
+ * «Direcționare» (§770) is last: a volunteer who shows the way at a junction, not something a runner takes.
  */
 export const CHECKPOINT_KINDS = ["WATER", "FOOD", "FIRST_AID", "TIMING", "DIRECTION"] as const;
 export type CheckpointKind = (typeof CHECKPOINT_KINDS)[number];
@@ -46,7 +46,7 @@ export type Checkpoint = {
   nameEn: string;
   km: number;
   kinds: readonly CheckpointKind[];
-  /** Minutes from the start (the gun on a race that has one) by which the last runner has to be here, or null for no limit (§NNN). */
+  /** Minutes from the start (the gun on a race that has one) by which the last runner has to be here, or null for no limit (§770). */
   cutoffMinutes: number | null;
   /**
    * The clock that limit closes at, `HH:MM` in the event's zone, read against the start the event has
@@ -192,7 +192,7 @@ export function clockMinutes(time: string): number {
 }
 
 /**
- * «Timp limită» as the two boxes were typed (§NNN) — the race's own boxes, joined the way the race's are
+ * «Timp limită» as the two boxes were typed (§770) — the race's own boxes, joined the way the race's are
  * (`duration.ts#joinDuration`): null for both empty (no limit), the minutes for a whole positive time of
  * at most a week, and `"hours"` / `"minutes"` for the box that is not one — sixty minutes or more, a
  * letter, a zero or a limit past the week — so a refusal names the box to fix.
@@ -226,7 +226,7 @@ export function isBlankPosted(row: PostedCheckpoint): boolean {
  * What the event says that a checkpoint is measured against: the route's length, whether the start
  * has a date and an hour to count a limit from (the gun's, else the event's) and how long the event
  * lasts after it. Each is null or false when the event does not say — a rule that needs it is then not
- * applied, never guessed; a limit with no start to count from is refused (§NNN).
+ * applied, never guessed; a limit with no start to count from is refused (§770).
  */
 export type CheckpointContext = {
   /** The route's length in kilometres: the distance the club typed, else the GPX's. */
@@ -294,7 +294,7 @@ function kindsOf(posted: readonly string[]): CheckpointKind[] | null {
  * - a distance from 0, at most the route's length when the event has one — **a distance beyond the
  *   route is refused with the reason** and the length, in kilometres;
  * - only the closed set's kinds;
- * - a time limit (§NNN): hours and minutes as the race's own boxes read them, positive; **needing a
+ * - a time limit (§770): hours and minutes as the race's own boxes read them, positive; **needing a
  *   start to count from** (a new or changed limit with no date or hour on the start is refused), **not
  *   longer than the event's own «Timp limită»** and **not longer than the limit of a checkpoint
  *   further along** — a runner is held at kilometre 10 no later than at kilometre 20;
@@ -434,7 +434,7 @@ export type CheckpointRow =
 /**
  * The table «Puncte de control» as rows (§757): the checkpoints by distance and — **the finish as the
  * last row when the event has a time limit**, its limit being the event's «Timp limită» in minutes and
- * the clock it closes at, the event's end on the event's clock (§NNN), at the route's length when the
+ * the clock it closes at, the event's end on the event's clock (§770), at the route's length when the
  * event has one. Nothing at all with no checkpoints: the section is not drawn for a finish alone.
  */
 export function checkpointRows(

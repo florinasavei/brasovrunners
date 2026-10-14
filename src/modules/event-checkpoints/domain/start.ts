@@ -36,7 +36,7 @@ export function raceTimeLimitMinutes(event: { type: string; startsAt: Date; race
 /**
  * The finish row of the page's table: the route's length when the club typed one, and — **for a race
  * with a time limit** — the time the finish closes, the event's end as `HH:MM` on the event's own clock,
- * and the limit itself in minutes from the start (`minutes`, the race's «Timp limită», §NNN), when the
+ * and the limit itself in minutes from the start (`minutes`, the race's «Timp limită», §770), when the
  * start has an hour and the end is after it. Every other event's end is when it finishes, not a limit
  * anyone is held to, so its table has no finish row (`limit` and `minutes` null).
  */
@@ -58,7 +58,7 @@ export function checkpointFinish(event: {
 }
 
 // ---------------------------------------------------------------------------------------------
-// The one converter between a clock and a time limit (§NNN)
+// The one converter between a clock and a time limit (§770)
 // ---------------------------------------------------------------------------------------------
 
 /**

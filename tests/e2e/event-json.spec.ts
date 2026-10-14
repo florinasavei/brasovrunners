@@ -43,7 +43,7 @@ test.describe.serial("An event as a JSON file", () => {
     const text = readFileSync(await download.path(), "utf8");
     const file = JSON.parse(text) as { format: string; version: number; event: { translations: Record<"ro" | "en", { title: string; slug: string }> }; media: unknown[] };
     expect(file.format).toBe("brasovrunners-event");
-    // The version this release writes (`EVENT_FILE_VERSION` in transfer/file-format.ts): 3 since §NNN (a checkpoint's limit in minutes).
+    // The version this release writes (`EVENT_FILE_VERSION` in transfer/file-format.ts): 3 since §770 (a checkpoint's limit in minutes).
     expect(file.version).toBe(3);
     expect(file.event.translations.ro.title).toBe("Antrenament de intervale");
     expect(Object.keys(file.event)).not.toContain("registrations");

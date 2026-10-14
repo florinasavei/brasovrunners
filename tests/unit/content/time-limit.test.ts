@@ -108,7 +108,7 @@ describe("§757 the page's «Timp limită» and the finish row", () => {
     expect(facts).toContain("durationShort(timeLimit)");
     expect(ro.Event.timeLimit).toBe("Timp limită");
     expect(en.Event.timeLimit).toBe("Time limit");
-    // The finish row says the same words as a point (§NNN): the duration from the gun, and the clock the finish closes at.
+    // The finish row says the same words as a point (§770): the duration from the gun, and the clock the finish closes at.
     expect(ro.Event.checkpoints.cutoff).toBe("Timp limită: {duration} · se închide la {time}");
     expect(en.Event.checkpoints.cutoff).toBe("Time limit: {duration} · closes at {time}");
   });

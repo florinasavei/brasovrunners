@@ -41,7 +41,7 @@ export const EVENT_FILE_FORMAT = "brasovrunners-event";
  * one (`duration.ts#durationBase`); in a version 1 file it counts from the event's start. A version 1
  * file is still read, and upgraded as it is read (`upgradeVersion1`), so a file exported by the
  * release before this one — production's, during a release — imports with the end it had.
- * **3** (§NNN): a checkpoint's cut-off is `cutoffMinutes`, a time limit in minutes from the start (the
+ * **3** (§770): a checkpoint's cut-off is `cutoffMinutes`, a time limit in minutes from the start (the
  * gun on a race), where versions 1 and 2 carried `cutoff`, a time of the day. An older file is still
  * read, and its time of day converted when the event's start is in the file (`upgradeCheckpoints`),
  * otherwise left out with a word, never refused.
@@ -132,11 +132,11 @@ const programmeRowSchema = z
 
 /**
  * One of the route's checkpoints (§757): where, its name and note in both languages, what is there and
- * its time limit in minutes from the start (§NNN) — the shape `event_checkpoints` holds, with no id.
+ * its time limit in minutes from the start (§770) — the shape `event_checkpoints` holds, with no id.
  * The rules that need the event (a kilometre within the route, limits not past the event's own and in
  * order) are the import's to apply, as the editor's card applies them.
  *
- * **Read forgivingly** (§NNN): `kinds` are words, and a kind this release does not know — a later
+ * **Read forgivingly** (§770): `kinds` are words, and a kind this release does not know — a later
  * release's — is left out when the file is read, with a word (`upgradeCheckpoints`), never a refusal of
  * the whole file; and `cutoff`, a time of the day, is what versions 1 and 2 wrote, read and converted
  * to `cutoffMinutes` where the event's start is in the file. After the read neither is in the file.
@@ -336,7 +336,7 @@ export function upgradeVersion1(file: EventFileVersion1): EventFile | null {
 }
 
 /**
- * The file's checkpoints as this release means them (§NNN), whatever version wrote them: a kind this
+ * The file's checkpoints as this release means them (§770), whatever version wrote them: a kind this
  * release does not know is left out, and a cut-off written as a time of the day (versions 1 and 2) is
  * converted to minutes from the start by the platform's one converter (`start.ts#minutesFromClock`), when
  * the file says the event's start — the gun on a race that has one, else the start's date and hour — and
@@ -378,7 +378,7 @@ export const serializeEventFile = (file: EventFile): string => `${JSON.stringify
 export type EventFileRefusal = "tooLarge" | "notJson" | "notAnEventFile" | "unknownVersion" | "invalid";
 
 /**
- * What reading adjusted, said in `Admin.eventJson.notes.<code>` (§NNN): the file is read forgivingly, and a
+ * What reading adjusted, said in `Admin.eventJson.notes.<code>` (§770): the file is read forgivingly, and a
  * person is told what was left out rather than finding the checkpoints different afterwards.
  */
 export type FileNote =

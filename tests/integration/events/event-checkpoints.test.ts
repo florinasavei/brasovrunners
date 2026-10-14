@@ -11,7 +11,7 @@ import { expectViolation, SQLSTATE } from "../../helpers/constraints";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §757, §NNN, BR-REQ-011-01 and BR-REQ-060-01 — an event's checkpoints, through the real Server Actions:
+ * §757, §770, BR-REQ-011-01 and BR-REQ-060-01 — an event's checkpoints, through the real Server Actions:
  * saved as the card posts them (added, changed, ticked «Scoate»), a kilometre beyond the route and a
  * time limit longer than the event's or than a later point's, or with no start to count from, refused
  * naming the box with the sentence's own numbers, the five kinds («Direcționare» among them), every change audited, a save that never deletes a point it was not told about, the role
@@ -404,7 +404,7 @@ describe("§757 an event's checkpoints", () => {
     expect((await actions()).filter((action) => action === "event_checkpoints.changed")).toHaveLength(2);
   });
 
-  it("hands the bib's strip and the event page the same clock: one converter, the gun's hour plus the limit (§NNN)", async () => {
+  it("hands the bib's strip and the event page the same clock: one converter, the gun's hour plus the limit (§770)", async () => {
     await save([WATER, FOOD]);
     const source: BibProfileSource = { routeGpx: { key: "route/a.gpx" } as never, distanceMeters: 21_100, elevationGainMeters: null };
     const strip = await withBibCheckpoints(db, eventId, source, { showProfile: true, showCheckpoints: true });

@@ -4,7 +4,7 @@ import { events } from "./events";
 
 /**
  * What a checkpoint has to give a runner (§757): a small closed set — water, food, first aid, timing
- * and, since §NNN, direction (a volunteer who shows the way at a junction) — in the backoffice's words
+ * and, since §770, direction (a volunteer who shows the way at a junction) — in the backoffice's words
  * «Apă», «Mâncare», «Prim ajutor», «Cronometrare», «Direcționare». A sixth is a migration, like every
  * other state here; the page and the bib draw each with its glyph and its word.
  */
@@ -17,7 +17,7 @@ export const eventCheckpointKind = pgEnum("event_checkpoint_kind", ["WATER", "FO
  * be there. They are the list under «Traseul» in the editor, the table «Puncte de control» on the
  * event page and the marks on the bib's profile strip (§750).
  *
- * **The cut-off is a time limit, minutes from the gun, not a time of the day** (§NNN, reversing
+ * **The cut-off is a time limit, minutes from the gun, not a time of the day** (§770, reversing
  * §757's first answer; the owner, 2026-10-14: «în loc de ora limită, trebuie să punem „timp limită”
  * ca să fie dinamic»). `cutoff_minutes` is how long after the start the last runner may pass: the
  * club types a duration — the race's own «Timp limită» boxes, hours and minutes — and the clock
@@ -49,9 +49,9 @@ export const eventCheckpoints = pgTable(
     km: numeric("km", { precision: 6, scale: 2 }).notNull(),
     /** What there is: none or more of the closed set. */
     kinds: eventCheckpointKind("kinds").array().notNull().default(sql`'{}'`),
-    /** The first answer's cut-off, a time of the day (§757): no longer written or read since §NNN, dropped by a later contract. */
+    /** The first answer's cut-off, a time of the day (§757): no longer written or read since §770, dropped by a later contract. */
     cutoffTime: time("cutoff_time"),
-    /** Minutes from the start (the gun on a race that has one) by which the last runner has to be here; null for no limit (§NNN). */
+    /** Minutes from the start (the gun on a race that has one) by which the last runner has to be here; null for no limit (§770). */
     cutoffMinutes: integer("cutoff_minutes"),
     noteRo: text("note_ro"),
     noteEn: text("note_en"),

@@ -73,7 +73,7 @@ function sampleConfig(): EventConfig {
       url: null,
       maps: [{ provider: "garmin", id: "987654321" }],
       gpx: { name: "traseu.gpx", url: GPX },
-      // The route's checkpoints (§757, §NNN): one with a time limit in minutes and a note, one without either and with a direction kind.
+      // The route's checkpoints (§757, §770): one with a time limit in minutes and a note, one without either and with a direction kind.
       checkpoints: [
         { km: 7.5, name: { ro: "Apă la cabană", en: "Water at the hut" }, kinds: ["WATER", "FOOD"], cutoffMinutes: 45, note: { ro: "Și banane", en: "Bananas too" } },
         { km: 15, name: { ro: "Cronometrare", en: "Timing" }, kinds: ["TIMING", "DIRECTION"], cutoffMinutes: null, note: { ro: null, en: null } },
@@ -122,7 +122,7 @@ function sampleFile(): EventFile {
     format: EVENT_FILE_FORMAT,
     version: EVENT_FILE_VERSION,
     exportedAt: "2026-10-13T10:00:00.000Z",
-    exportedFrom: { environment: "production", baseline: "BR-V3.28-2026-10-14" },
+    exportedFrom: { environment: "production", baseline: "BR-V3.29-2026-10-15" },
     series: { partOfASeries: false, rule: null },
     event: sampleConfig(),
     media: [{ role: "cover", url: PICTURE, contentType: "image/webp", size: 10, sha256: "a".repeat(64) }],
@@ -186,10 +186,10 @@ describe("the event file's reader", () => {
   });
 
   /*
-    §NNN: version 3 carries a checkpoint's cut-off as `cutoffMinutes`, minutes from the start (the gun on a race).
+    §770: version 3 carries a checkpoint's cut-off as `cutoffMinutes`, minutes from the start (the gun on a race).
     A file made before — versions 1 and 2 — carries `cutoff`, a time of day, and is read forgivingly.
   */
-  describe("the checkpoints, read forgivingly (§NNN)", () => {
+  describe("the checkpoints, read forgivingly (§770)", () => {
     type Loose = Record<string, unknown>;
     const oldPoint = (over: Loose = {}): Loose => ({ km: 5, name: { ro: "Apă", en: "Water" }, kinds: ["WATER"], cutoff: "10:45", note: { ro: null, en: null }, ...over });
     /** An older file with these checkpoints and event fields, as it was written: `cutoff` and no `cutoffMinutes`. */

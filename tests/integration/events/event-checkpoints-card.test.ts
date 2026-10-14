@@ -115,7 +115,7 @@ describe("§757 the card «Puncte de control»", () => {
     expect(html).toMatch(/name="cp\[1\]\.km"[^>]*value="12.5"/);
   });
 
-  it("asks «Timp limită» with the race's own two boxes — the same component, the same words and limits — each naming the list's form (§NNN)", async () => {
+  it("asks «Timp limită» with the race's own two boxes — the same component, the same words and limits — each naming the list's form (§770)", async () => {
     const html = await render({ checkpoints: [point("a", 5, { cutoffMinutes: 90, cutoffClock: "10:30" })] });
     const fieldset = html.slice(html.indexOf('data-testid="checkpoint-cutoff-fieldset"'));
     expect(fieldset.slice(0, fieldset.indexOf("</fieldset>"))).toContain("Timp limită");
@@ -138,7 +138,7 @@ describe("§757 the card «Puncte de control»", () => {
     expect(html).not.toContain("Ora limită");
   });
 
-  it("says the saved limit and the clock it closes at on the point's closed line, when the start has an hour (§NNN)", async () => {
+  it("says the saved limit and the clock it closes at on the point's closed line, when the start has an hour (§770)", async () => {
     const html = await render({ checkpoints: [point("a", 5, { cutoffMinutes: 90, cutoffClock: "10:30" }), point("b", 8, { cutoffMinutes: 45, cutoffClock: null })] });
     expect(html).toContain("timp limită 1 h 30 min · se închide la 10:30");
     expect(html).toContain("timp limită 45 min");

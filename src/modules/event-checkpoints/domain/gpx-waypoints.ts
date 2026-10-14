@@ -105,7 +105,7 @@ export function kindsFromWords(words: string, symbols = ""): CheckpointKind[] {
   if (/\b(?:food|mancare|restaurant\w*|alimenta\w*|snack\w*|gustare|gustari|cantina|buffet|aid station|ravito\w*|refreshment\w*)\b/.test(text)) kinds.push("FOOD");
   if (/\b(?:first aid|prim ajutor|medical\w*|medic\w*|ambulan\w*|salvamont\w*|doctor)\b/.test(text)) kinds.push("FIRST_AID");
   if (/\b(?:timing|chrono\w*|cronometr\w*|checkpoint\w*|punct de control|control point|timer)\b/.test(text)) kinds.push("TIMING");
-  // «Direcționare» (§NNN): a junction, a turn, a signpost or a marshal who shows the way — a watch's turn points and a mapping tool's «Crossing», «Turn», «Signpost» symbols.
+  // «Direcționare» (§770): a junction, a turn, a signpost or a marshal who shows the way — a watch's turn points and a mapping tool's «Crossing», «Turn», «Signpost» symbols.
   // Not «crossing» in a name (a river crossing is a hazard), not «fork» alone (a fork and knife is food), not «ghid»
   // (a mountain guide's book): those need their context — «crossing» comes from the symbol only.
   const symbolText = symbols.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();

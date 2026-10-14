@@ -66,7 +66,7 @@ export type ImportNote =
   | { code: "slugSuffixed"; locale: Locale; slug: string }
   | { code: "publicListOff" }
   | { code: "seriesNotApplied" }
-  /** What reading the file left out of its checkpoints (§NNN): a kind this release does not know, a time of day that could not be counted from the start. */
+  /** What reading the file left out of its checkpoints (§770): a kind this release does not know, a time of day that could not be counted from the start. */
   | FileNote;
 
 const allowsHttp = () => env.APP_ENV === "local" || env.APP_ENV === "test";
@@ -220,7 +220,7 @@ export function importedCheckpoints(config: EventConfig): Omit<CheckpointInput, 
   const gun = config.type === "RACE" && config.raceStartsAt ? new Date(config.raceStartsAt) : null;
   const start = gun ?? eventStart;
   // A time limit is a duration, true with or without an hour to count it from: a file made from an event whose hour is
-  // «se anunță mai târziu» carries its saved limits, and an import must give them back (the round trip, §NNN).
+  // «se anunță mai târziu» carries its saved limits, and an import must give them back (the round trip, §770).
   const context = { ...checkpointContext({ distanceMeters: config.measures.distanceMeters, gpxMeters: null, start, limitMinutes: config.durationMinutes }), startKnown: true };
   try {
     return prepareCheckpoints(

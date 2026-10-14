@@ -954,7 +954,7 @@ describe("§757 the route's checkpoints travel in the file", () => {
       { km: 7.5, name: { ro: "Apă la cabană", en: "Water at the hut" }, kinds: ["WATER", "FOOD"], cutoffMinutes: 60, note: { ro: "Și banane", en: "Bananas too" } },
       { km: 15, name: { ro: "Cronometrare", en: "Timing" }, kinds: ["TIMING"], cutoffMinutes: 120, note: { ro: null, en: null } },
     ]);
-    // Minutes, never a time of the day (§NNN).
+    // Minutes, never a time of the day (§770).
     expect(JSON.stringify(file.event.route.checkpoints)).not.toContain('"cutoff"');
     expect(JSON.stringify(file.event.route.checkpoints)).not.toMatch(/"id"/);
 
@@ -997,7 +997,7 @@ describe("§757 the route's checkpoints travel in the file", () => {
     expect((await reload(created.eventId)).endsAt?.toISOString()).toBe("2026-11-21T10:30:00.000Z");
   });
 
-  it("refuses an import over an event that would shorten «Timp limită» under a saved time limit while the file leaves the list as it is (§757, §NNN)", async () => {
+  it("refuses an import over an event that would shorten «Timp limită» under a saved time limit while the file leaves the list as it is (§757, §770)", async () => {
     const { event } = await seedRace({}, {}, false);
     await seedCheckpoints(event.id);
     const { target } = await seedTarget();
@@ -1022,7 +1022,7 @@ describe("§757 the route's checkpoints travel in the file", () => {
     expect((await listCheckpoints(db, target.id)).map((row) => row.cutoffMinutes)).toEqual([60, 85]);
   });
 
-  it("lets an import over an event move the gun: the saved time limits stay and their clocks move (§NNN)", async () => {
+  it("lets an import over an event move the gun: the saved time limits stay and their clocks move (§770)", async () => {
     const { event } = await seedRace({}, {}, false);
     await seedCheckpoints(event.id);
     const { target } = await seedTarget();
@@ -1037,7 +1037,7 @@ describe("§757 the route's checkpoints travel in the file", () => {
     ]);
   });
 
-  it("gives back the saved limits of an event whose start hour is to be announced: a duration needs no hour, so the round trip holds (§NNN)", async () => {
+  it("gives back the saved limits of an event whose start hour is to be announced: a duration needs no hour, so the round trip holds (§770)", async () => {
     const { event } = await seedRace({}, {}, false);
     await seedCheckpoints(event.id);
     const file = await fileOf(event.id);
@@ -1056,7 +1056,7 @@ describe("§757 the route's checkpoints travel in the file", () => {
     ]);
   });
 
-  it("refuses a point's time limit longer than the race's own even while the start hour is to be announced: minutes against minutes (§NNN)", async () => {
+  it("refuses a point's time limit longer than the race's own even while the start hour is to be announced: minutes against minutes (§770)", async () => {
     const { event } = await seedRace({}, {}, false);
     await seedCheckpoints(event.id);
     const file = await fileOf(event.id);
@@ -1082,7 +1082,7 @@ describe("§757 the route's checkpoints travel in the file", () => {
     ]);
   });
 
-  it("imports a version 2 file — a time of the day for each cut-off — as minutes from the gun, and leaves out what it cannot count, with the kinds it does not know (§NNN)", async () => {
+  it("imports a version 2 file — a time of the day for each cut-off — as minutes from the gun, and leaves out what it cannot count, with the kinds it does not know (§770)", async () => {
     const { event } = await seedRace({}, {}, false);
     const file = await fileOf(event.id);
     const point = (km: number, over: Record<string, unknown>) => ({ km, name: { ro: `Punct ${km}`, en: `Point ${km}` }, kinds: ["WATER"], note: { ro: null, en: null }, ...over });

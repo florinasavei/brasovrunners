@@ -175,7 +175,7 @@ export default async function WhenBox({
               <DurationGlyph aria-hidden fontSize="small" />
               <DurationWords selectName="event.type" initialType={initialType} race={t("editor.durationRace")} other={t("editor.durationOther")} />
             </Typography>
-            {/* The two boxes are the checkpoints' «Timp limită» too (§NNN): one component, never a second widget. */}
+            {/* The two boxes are the checkpoints' «Timp limită» too (§770): one component, never a second widget. */}
             <DurationBoxes
               hoursName="event.durationHours"
               minutesName="event.durationMinutesPart"

@@ -8,7 +8,7 @@ import type { PostedCheckpoint } from "@/modules/event-checkpoints/domain/checkp
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §757, §NNN, BR-REQ-050-02 — the checkpoints' rules hold after every save, not only their own card's: an
+ * §757, §770, BR-REQ-050-02 — the checkpoints' rules hold after every save, not only their own card's: an
  * event save that shortens «Timp limită» under a saved point's time limit or shortens the route under a
  * point is refused naming «Puncte de control» and the rule, writing nothing; a save that keeps them true
  * goes through — and one that moves the gun moves every clock and no limit, which is the point of a
@@ -146,7 +146,7 @@ async function refusalOf(operation: Promise<unknown>): Promise<SavedCheckpointsR
 }
 
 describe("§757 an event save holds the saved checkpoints to their rules", () => {
-  it("lets the gun move: every clock follows it and no time limit changes (§NNN)", async () => {
+  it("lets the gun move: every clock follows it and no time limit changes (§770)", async () => {
     const event = await raceWithCheckpoints();
     expect((await listCheckpoints(db, event.id)).map((row) => [row.cutoffMinutes, row.cutoffClock])).toEqual([
       [30, "10:00"],

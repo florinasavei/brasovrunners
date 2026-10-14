@@ -11,7 +11,7 @@ import { checkpointStart, minutesFromClock } from "@/modules/event-checkpoints/d
 import { toWallTimeInput } from "@/modules/events/domain/zoned-time";
 
 /**
- * Migrations `0156_direction_checkpoint_kind` and `0157_checkpoint_cutoff_minutes` (§NNN), proven on real
+ * Migrations `0156_direction_checkpoint_kind` and `0157_checkpoint_cutoff_minutes` (§770), proven on real
  * PostgreSQL (PGlite): the fifth kind is a value of the enum and no row written before it changes; a
  * cut-off written as a time of the day (§757) becomes minutes after the event's start — the gun on a race
  * that has one, else the event's start, on the event's own clock — with a point before and after the gun,

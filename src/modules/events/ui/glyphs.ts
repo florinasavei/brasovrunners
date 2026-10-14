@@ -87,7 +87,7 @@ export const COST_GLYPH: Record<"FREE" | "PAID" | "DONATION", Glyph> = {
 
 /**
  * What a checkpoint has (§757), one metaphor each, written down: water is a drop, food the cutlery,
- * first aid the medical case, timing the stopwatch, direction the road sign with its arrow (§NNN).
+ * first aid the medical case, timing the stopwatch, direction the road sign with its arrow (§770).
  * Always beside the word — «Apă», «Mâncare», «Direcționare» —
  * on the event page's table (`EventCheckpoints`); never the glyph alone.
  */

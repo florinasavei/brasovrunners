@@ -38,7 +38,7 @@ export type PreviewOutcome =
         baseline: string;
         media: number;
         seriesNotApplied: boolean;
-        /** What reading the file left out of its checkpoints (§NNN), for the summary to say before anything is imported. */
+        /** What reading the file left out of its checkpoints (§770), for the summary to say before anything is imported. */
         fileNotes: FileNote[];
       };
       /** The page addresses a new event would get, and whether either had to be suffixed because the file's was taken. */
@@ -63,7 +63,7 @@ export type DiffOutcome =
       refusal: string | null;
       seriesNotApplied: boolean;
       slugsKept: boolean;
-      /** What reading the file left out of its checkpoints (§NNN): the diff shows the file as it will be written. */
+      /** What reading the file left out of its checkpoints (§770): the diff shows the file as it will be written. */
       fileNotes: FileNote[];
     };
 

@@ -55,7 +55,7 @@ const toCheckpoint = (row: EventCheckpointRow, clockOf: (minutes: number | null)
 
 /**
  * An event's checkpoints by distance, ties in the order the club saw — each with the clock its time
- * limit closes at, derived from the start the event has now (§NNN): one more column of the one query,
+ * limit closes at, derived from the start the event has now (§770): one more column of the one query,
  * so the bib, the export and the card say the same clock the page does, and a moved start moves it.
  */
 export async function listCheckpoints<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<Checkpoint[]> {

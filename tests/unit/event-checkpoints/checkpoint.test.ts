@@ -24,7 +24,7 @@ import { checkpointClock, checkpointFinish, checkpointStart, cutoffClockOf, minu
 import { STAFF_ROLES } from "@/modules/staff-identity/domain/roles";
 
 /**
- * §757, §NNN, BR-REQ-011-01 — the checkpoints' rules, with no database: a kilometre read as typed and
+ * §757, §770, BR-REQ-011-01 — the checkpoints' rules, with no database: a kilometre read as typed and
  * held to the route's length, the time limits (hours and minutes from the start) held to the event's
  * own and to each other, a note in both languages or neither, the order a runner meets the points, the
  * page's rows with the finish last, and the one converter between a clock and a time limit.
@@ -107,7 +107,7 @@ describe("§757 a kilometre, a time of the day and a time limit, as typed", () =
   ])("refuses the limit %j h %j min, naming the %s box", (hours, minutes, box) => expect(readTimeLimit(hours, minutes)).toBe(box));
 });
 
-describe("§NNN the one converter between a clock and a time limit", () => {
+describe("§770 the one converter between a clock and a time limit", () => {
   it("reads a time of day as the minutes after the start: before the start it is nothing, the next day's only for an event that runs past midnight", () => {
     expect(minutesFromClock("11:30", 540)).toBe(150);
     // At the start: zero minutes, a limit nobody could meet.
@@ -176,7 +176,7 @@ describe("§757 the rules a checkpoint is held to", () => {
     expect(CHECKPOINT_KINDS).toEqual(["WATER", "FOOD", "FIRST_AID", "TIMING", "DIRECTION"]);
   });
 
-  it("takes «Direcționare» as the fifth kind, with the others in the closed set's own order (§NNN)", () => {
+  it("takes «Direcționare» as the fifth kind, with the others in the closed set's own order (§770)", () => {
     const rows = prepareCheckpoints([row(0, { kinds: ["DIRECTION", "WATER"] }), row(1, { km: "9", kinds: ["DIRECTION"] })], CONTEXT);
     expect(rows[0].kinds).toEqual(["WATER", "DIRECTION"]);
     expect(rows[1].kinds).toEqual(["DIRECTION"]);
@@ -213,7 +213,7 @@ describe("§757 the rules a checkpoint is held to", () => {
     expect(refusal([row(0, { kinds: ["WATER", "PIZZA"] })]).reason).toBe("CHECKPOINT_KIND_UNKNOWN");
   });
 
-  it("reads a time limit typed as hours and minutes, and keeps it as minutes (§NNN)", () => {
+  it("reads a time limit typed as hours and minutes, and keeps it as minutes (§770)", () => {
     const rows = prepareCheckpoints([row(0, { cutoffHours: "1", cutoffMinutesPart: "30" }), row(1, { km: "9", ...limit(150) })], CONTEXT);
     expect(rows.map((r) => r.cutoffMinutes)).toEqual([90, 150]);
     expect(prepareCheckpoints([row(0)], CONTEXT)[0].cutoffMinutes).toBeNull();
@@ -319,7 +319,7 @@ describe("§757 what the event says the points are measured against", () => {
     expect(checkpointContext({ ...base, distanceMeters: 0, gpxMeters: null }).routeKm).toBeNull();
   });
 
-  it("measures the limit in elapsed minutes, so the night the clocks change moves nothing (§NNN)", () => {
+  it("measures the limit in elapsed minutes, so the night the clocks change moves nothing (§770)", () => {
     // 24 October 2026, 22:00 summer time (19:00Z), six real hours: the finish closes at 03:00 winter time, six hours of limit.
     const start = new Date("2026-10-24T19:00:00Z");
     const context = checkpointContext({
