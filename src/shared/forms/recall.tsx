@@ -4,6 +4,7 @@ import Box, { type BoxProps } from "@mui/material/Box";
 import TextField, { type TextFieldProps } from "@mui/material/TextField";
 import { createContext, type InputHTMLAttributes, type ReactNode, useContext } from "react";
 import QuietHelp from "@/shared/ui/QuietHelp";
+import { useFormOwner } from "./form-owner";
 import { fieldId } from "./outcome";
 
 /**
@@ -17,7 +18,7 @@ import { fieldId } from "./outcome";
  *
  * `values === null` means no refusal has happened: every field shows what the page gave it.
  */
-type Recall = {
+export type Recall = {
   values: Readonly<Record<string, readonly string[]>> | null;
   /** The field names the refusal was about, so a box can mark itself. */
   fields: readonly string[];
@@ -69,6 +70,18 @@ export function recalledJson(value: string | undefined, fallback: unknown): unkn
 }
 
 /**
+ * A box drawn inside another form's markup names the form it posts with (`useFormOwner`, §763): the
+ * `form` attribute on the input itself, added to whatever the caller put in `slotProps.htmlInput`.
+ */
+function withFormOwner(slotProps: TextFieldProps["slotProps"], form: string): TextFieldProps["slotProps"] {
+  const htmlInput = slotProps?.htmlInput;
+  if (typeof htmlInput === "function") {
+    return { ...slotProps, htmlInput: (state: Parameters<typeof htmlInput>[0]) => ({ ...htmlInput(state), form }) };
+  }
+  return { ...slotProps, htmlInput: { ...htmlInput, form } };
+}
+
+/**
  * A `TextField` that comes back filled after a refused submit.
  *
  * Nothing else about it is different — every prop goes straight through — so a Server Component
@@ -93,6 +106,7 @@ export default function RecallField({
   helpMore?: string;
 }) {
   const recall = useRecall();
+  const owner = useFormOwner();
   const recalled = recall.value(name);
   const named = recall.named(name);
   const help = named && recall.fieldError ? recall.fieldError : props.helperText;
@@ -102,6 +116,7 @@ export default function RecallField({
       id={props.id ?? recall.idOf(name)}
       name={name}
       {...props}
+      slotProps={owner ? withFormOwner(props.slotProps, owner.id) : props.slotProps}
       defaultValue={recalled ?? props.defaultValue}
       error={props.error || named}
       helperText={
@@ -134,6 +149,7 @@ export default function RecallField({
  */
 export function NeverKeptField({ name, ...props }: Omit<TextFieldProps, "defaultValue" | "value"> & { name: string }) {
   const recall = useRecall();
+  const owner = useFormOwner();
   const named = recall.named(name);
   return (
     <TextField
@@ -141,6 +157,7 @@ export function NeverKeptField({ name, ...props }: Omit<TextFieldProps, "default
       id={props.id ?? recall.idOf(name)}
       name={name}
       {...props}
+      slotProps={owner ? withFormOwner(props.slotProps, owner.id) : props.slotProps}
       error={props.error || named}
       helperText={
         named && recall.fieldError ? (
@@ -167,7 +184,8 @@ export function NeverKeptField({ name, ...props }: Omit<TextFieldProps, "default
  */
 export function RecallHidden({ name, value }: { name: string; value: string | number }) {
   const recall = useRecall();
-  return <input type="hidden" name={name} value={recall.value(name) ?? String(value)} />;
+  const owner = useFormOwner();
+  return <input type="hidden" name={name} value={recall.value(name) ?? String(value)} form={owner?.id} />;
 }
 
 /**
@@ -198,8 +216,9 @@ export function RecallCheckbox({
   ...rest
 }: { name: string; defaultChecked?: boolean } & Omit<InputHTMLAttributes<HTMLInputElement>, "name" | "value" | "defaultChecked" | "type">) {
   const recall = useRecall();
+  const owner = useFormOwner();
   const checked = recall.has ? recall.value(name) === "on" : defaultChecked;
-  return <input key={recall.generation} type="checkbox" name={name} value="on" defaultChecked={checked} {...rest} />;
+  return <input key={recall.generation} type="checkbox" name={name} value="on" defaultChecked={checked} form={owner?.id} {...rest} />;
 }
 
 /**
@@ -216,6 +235,7 @@ export function RecallRadio({
   "name" | "value" | "defaultChecked" | "type"
 >) {
   const recall = useRecall();
+  const owner = useFormOwner();
   const checked = recall.has ? recall.value(name) === value : defaultChecked;
-  return <input key={recall.generation} type="radio" name={name} value={value} defaultChecked={checked} {...rest} />;
+  return <input key={recall.generation} type="radio" name={name} value={value} defaultChecked={checked} form={owner?.id} {...rest} />;
 }

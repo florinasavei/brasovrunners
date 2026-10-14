@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V3.22-2026-10-14
+
+- **«Puncte de control» inside «Traseul»** — the event editor's checkpoints card is now a named card of «Traseul», after the route's fields, in the document and on the screen, instead of standing above card 1; its forms post on their own (the HTML `form` attribute), so saving the points never saves the event and «Salvează» never saves a point, with scripts on or off. §763.
 ## BR-V3.21-2026-10-14
 
 - **Volunteers tick every role they would do** — «Ce ești dispus(ă) să faci» on the event's page takes several roles; the organizers find each offer under «De repartizat» on the «Voluntari» card, give one role with one press («Dă-i rolul …», showing how the role stands) and the person is told by a short email; «N din M» counts only the roles given; the CSV names the roles offered for. The volunteer agreement's template names the roles offered for in its own sentences — approve it again (`/admin/tasks` says so). §761.

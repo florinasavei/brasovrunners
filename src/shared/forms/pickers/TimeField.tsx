@@ -8,6 +8,7 @@ import type { SxProps, Theme } from "@mui/material/styles";
 import { useTranslations } from "next-intl";
 import type { KeyboardEvent } from "react";
 import { useRef } from "react";
+import { useFormOwner } from "@/shared/forms/form-owner";
 import { useRecall } from "@/shared/forms/recall";
 import { normalizeTypedTime, TIME_PATTERN } from "./wall-values";
 
@@ -59,6 +60,7 @@ function announce(input: HTMLInputElement) {
  */
 export default function TimeField({ name, label, defaultValue = "", required = false, helperText, size, sx, clearable = !required }: TimeFieldProps) {
   const recall = useRecall();
+  const owner = useFormOwner();
   const t = useTranslations("Admin");
   const initial = recall.value(name) ?? defaultValue;
   const named = recall.named(name);
@@ -115,6 +117,8 @@ export default function TimeField({ name, label, defaultValue = "", required = f
           pattern: TIME_PATTERN,
           placeholder: t("pickers.timePlaceholder"),
           title: t("pickers.timeTyped"),
+          // Drawn inside another form's markup, the box posts with the form it names (`useFormOwner`, §763).
+          form: owner?.id,
         },
         input: {
           endAdornment: clearable ? (

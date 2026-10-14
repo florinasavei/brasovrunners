@@ -138,14 +138,29 @@ describe("§760 «Participare, înscrieri și regulament»: cards 6 and 9 in one
   });
 });
 
-describe("§760 «Puncte de control» where the document has it, «Voluntari» with the registrations", () => {
-  it("keeps the checkpoints' forms beside the save form, before it, never inside it", () => {
+describe("§760, amended by §763: «Puncte de control» inside «Traseul», «Voluntari» with the registrations", () => {
+  it("draws the checkpoints card inside «Traseul», in the save form, and its detached forms around and after it", () => {
     const saveStart = at(EDIT, 'id="event-save-form"');
     const saveEnd = at(EDIT, "</ActionForm>", saveStart);
-    const card = at(EDIT, "<CheckpointsCard");
-    expect(card).toBeLessThan(saveStart);
-    expect(card).toBeGreaterThan(at(EDIT, "<EventTodoCard"));
-    expect(EDIT.slice(saveStart, saveEnd)).not.toContain("<CheckpointsCard");
+    // The card is «Traseul»'s `checkpoints`, inside the one save form — in the document, not moved by CSS.
+    const course = at(EDIT, "<CourseBox ", saveStart);
+    const card = at(EDIT, "<CheckpointsCard", course);
+    expect(card).toBeLessThan(saveEnd);
+    expect(EDIT.split("<CheckpointsCard").length - 1).toBe(1);
+    // Its forms' state wraps the save form, so their `<form>` elements stand after it, never in it.
+    expect(at(EDIT, "<CheckpointForms ")).toBeLessThan(saveStart);
+    expect(at(EDIT, "</CheckpointForms>")).toBeGreaterThan(saveEnd);
+    const checkpoints = read("src/modules/content/events/ui/CheckpointsCard.tsx");
+    const forms = checkpoints.slice(at(checkpoints, "export async function CheckpointForms"), at(checkpoints, "type Props = {"));
+    expect(at(forms, "{children}")).toBeLessThan(at(forms, "<DetachedForm id={CHECKPOINTS_FORM}>"));
+    // Every box of the card is inside the fields that name its form, and the card draws no `<form>` of its own.
+    expect(checkpoints).not.toMatch(/^\s*<(form|ActionForm)\b/m);
+    expect(checkpoints).toContain("<DetachedFields form={CHECKPOINTS_FORM}>");
+    expect(checkpoints).toContain("<DetachedFields form={CHECKPOINTS_GPX_FORM}>");
+    // «Traseul» draws it last, after the route's fields, whatever the reader's role.
+    const courseBox = read(`${BOXES}/CourseBox.tsx`);
+    expect(courseBox.split("{checkpoints}").length - 1).toBe(2);
+    expect(at(courseBox, "{routeDescription}\n        {checkpoints}")).toBeGreaterThan(at(courseBox, 'name="event.routeStrava"'));
   });
 
   it("moves nothing on the screen with CSS order: what the tab and a screen reader meet is what the screen shows (WCAG 2.4.3, 1.3.2)", () => {
@@ -159,15 +174,17 @@ describe("§760 «Puncte de control» where the document has it, «Voluntari» w
     const form = EDIT.slice(at(EDIT, 'id="event-save-form"'));
     expect(at(form, "<CourseBox ")).toBeGreaterThan(at(form, "<WhenBox "));
     expect(at(form, "<RegistrationBox")).toBeGreaterThan(at(form, "<CourseBox "));
-    // A card of the column like the to-do card: its default level, its own cards a level below.
+    // A named card of «Traseul»: level 3, its own cards a level below.
     const checkpoints = read("src/modules/content/events/ui/CheckpointsCard.tsx");
-    expect(checkpoints).toMatch(/<Panel glyph="checkpoints" collapsible id="box-checkpoints"/);
+    expect(checkpoints).toMatch(/<Panel\s+glyph="checkpoints"\s+collapsible\s+level=\{3\}\s+id="box-checkpoints"/);
+    expect(checkpoints).not.toMatch(/level=\{3\}\s+(?:id="box-checkpoints-gpx"|title=\{t\("checkpoints\.(rowTitle|add\.title)")/);
   });
 
-  it("says where the card is in words the screen bears out, and counts it on «Traseul»'s closed line", () => {
+  it("no longer sends the reader elsewhere for the points, and counts them on «Traseul»'s closed line", () => {
     for (const locale of ["ro", "en"] as const) {
       const words = JSON.parse(read(`messages/${locale}.json`)).Admin.checkpoints;
-      expect(words.courseNote, locale).not.toMatch(/chiar sub acest card|right under this card/);
+      expect(words.courseNote, locale).toBeUndefined();
+      expect(words.courseLink, locale).toBeUndefined();
       expect(Object.keys(words.inCourse).sort(), locale).toEqual(["few", "one", "other"]);
     }
     expect(EDIT).toContain("checkpointCount={checkpoints.length}");

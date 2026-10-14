@@ -1,4 +1,4 @@
-import { expect, type Page, test } from "@playwright/test";
+import { expect, type Page, type Request, test } from "@playwright/test";
 import { fillDateField, fillTimeField, hydrated, signIn } from "./support/featured-event";
 import { editorBox, languageTab, openEditorBox } from "./support/fold";
 
@@ -283,41 +283,109 @@ test.describe.serial("§406 the editor is the page, top to bottom", () => {
   });
 
   /*
-    §760 — «Puncte de control» (§757) stands where the document has it, after the to-do card and
-    above card 1, its forms beside the save form: no CSS `order`, so the screen, the tab key and a
-    screen reader meet the cards in one order (WCAG 2.4.3, 1.3.2). «Traseul» links to it and counts
-    its points. «Voluntari» (§754) is with the registrations, below the grid.
+    §763, amending §757 and §760 — the owner, with a screenshot of the editor on production: «Partea cu
+    „Puncte de control” ar trebui să fie băgată în cardul cu traseu (nested)». §760 drew the card above
+    card 1, and this test then measured exactly that — so it passed while the owner saw it at the top.
+    Now it measures what he asked: the card inside «Traseul» in the document AND on the screen (its box
+    within «Traseul»'s, below card 1 and the route's fields), at this project's width (320 and 1280),
+    its two forms beside the save form and never in it; neither save posts the other's boxes.
+    «Voluntari» (§754) is with the registrations, below the grid.
   */
-  test("«Puncte de control» where the document has it; «Voluntari» below the grid", async ({ page }) => {
+  test("«Puncte de control» inside «Traseul», in the document and on the screen; «Voluntari» below the grid", async ({ page }) => {
     test.skip(!editorUrl, "the create step did not run");
     await signIn(page, "Dev Administrator");
     await page.goto(editorUrl);
     await hydrated(page);
-    const kind = (await page.locator("#box-kind").boundingBox())!;
-    const checkpoints = (await page.locator("#box-checkpoints").boundingBox())!;
-    // Above card 1 on the screen, and before it in the document: the same order for every reader.
-    expect(checkpoints.y + checkpoints.height).toBeLessThanOrEqual(kind.y);
-    const before = await page.evaluate(() => {
-      const card = document.getElementById("box-checkpoints");
-      const first = document.getElementById("box-kind");
-      return Boolean(card && first && card.compareDocumentPosition(first) & Node.DOCUMENT_POSITION_FOLLOWING);
+
+    // The document: a descendant of «Traseul», and so of the save form; its two forms are not.
+    await expect(page.locator("#box-course #box-checkpoints")).toHaveCount(1);
+    await expect(page.locator("#event-save-form #box-course #box-checkpoints")).toHaveCount(1);
+    for (const form of ["checkpoints-form", "checkpoints-gpx-form"]) {
+      await expect(page.locator(`form#${form}`)).toBeAttached();
+      await expect(page.locator(`#event-save-form #${form}`)).toHaveCount(0);
+    }
+    await expect(page.locator("form form")).toHaveCount(0);
+    // Between card 1 and card 6 in the document — what the tab key and a screen reader meet.
+    const order = await page.evaluate(() => {
+      const card = document.getElementById("box-checkpoints")!;
+      const follows = (id: string) => Boolean(card.compareDocumentPosition(document.getElementById(id)!) & Node.DOCUMENT_POSITION_FOLLOWING);
+      return { kindBefore: !follows("box-kind"), registrationAfter: follows("box-registration") };
     });
-    expect(before).toBe(true);
-    // Its forms are never inside the save form: HTML forms cannot nest.
-    await expect(page.locator("#event-save-form #box-checkpoints")).toHaveCount(0);
-    await expect(page.locator("#box-checkpoints form").first()).toBeAttached();
-    // A card of the column like the others: a level-2 heading.
-    await expect(page.locator("#box-checkpoints > summary h2")).toHaveCount(1);
+    expect(order).toEqual({ kindBefore: true, registrationAfter: true });
+    // A named card of «Traseul»: a level-3 heading, closed on arrival like every fold.
+    await expect(page.locator("#box-checkpoints > summary h3")).toHaveCount(1);
+    await expect(page.locator("#box-checkpoints")).not.toHaveAttribute("open", "");
+
+    // The screen: opened the way a person does, its box inside «Traseul»'s box, under the route's fields and under card 1.
+    const course = await openEditorBox(page, "Traseul");
+    const card = await openEditorBox(page, "Puncte de control");
+    const courseBox = (await course.boundingBox())!;
+    const cardBox = (await card.boundingBox())!;
+    const kindBox = (await page.locator("#box-kind").boundingBox())!;
+    const strava = (await page.locator('[name="event.routeStrava"]').boundingBox())!;
+    expect(cardBox.y).toBeGreaterThan(kindBox.y + kindBox.height);
+    expect(cardBox.y).toBeGreaterThan(strava.y + strava.height);
+    expect(cardBox.y).toBeGreaterThanOrEqual(courseBox.y);
+    expect(cardBox.y + cardBox.height).toBeLessThanOrEqual(courseBox.y + courseBox.height + 0.5);
+    expect(cardBox.x).toBeGreaterThanOrEqual(courseBox.x);
+    expect(cardBox.x + cardBox.width).toBeLessThanOrEqual(courseBox.x + courseBox.width + 0.5);
+    // No horizontal scroll at this width (320 on the phone project).
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+    // Its button, a thumb's target.
+    const savePoints = card.getByRole("button", { name: "Salvează punctele" });
+    expect((await savePoints.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+
+    // «Salvează» posts none of the points: a point typed in the card and the event saved — no point is kept.
+    await openEditorBox(page, "Adaugă puncte");
+    const spare = card.getByTestId("checkpoint-new-row").first();
+    await spare.getByLabel("Kilometrul").fill("3");
+    await spare.getByLabel("Numele (română)").fill("Nu se salvează cu evenimentul");
+    await spare.getByLabel("Numele (engleză)").fill("Not saved with the event");
+    // The request itself is read, not only what is kept: a box that lost its `form` would still be "not kept" (the event's save never reads the points).
+    const eventPress = page.waitForRequest((request) => request.method() === "POST" && postedNames(request).includes("event.distanceMeters"));
+    await page.getByRole("button", { name: "Salvează", exact: true }).click();
+    const eventNames = postedNames(await eventPress);
+    expect(eventNames.filter((name) => name.startsWith("cp["))).toEqual([]);
+    await page.waitForURL(/saved=event/);
+    await hydrated(page);
+    await expect(page.getByTestId("checkpoint-card")).toHaveCount(0);
+
+    // «Salvează punctele» posts none of the event: a distance typed in «Traseul» and the points saved —
+    // the point is kept, the distance is not.
+    await openEditorBox(page, "Traseul");
+    await page.locator('[name="event.distanceMeters"]').fill("4321");
+    const cardAgain = await openEditorBox(page, "Puncte de control");
+    await openEditorBox(page, "Adaugă puncte");
+    const row = cardAgain.getByTestId("checkpoint-new-row").first();
+    await row.getByLabel("Kilometrul").fill("2");
+    await row.getByLabel("Numele (română)").fill("Izvorul");
+    await row.getByLabel("Numele (engleză)").fill("The spring");
+    const pointsPress = page.waitForRequest((request) => request.method() === "POST" && postedNames(request).some((name) => name.startsWith("cp[")));
+    await cardAgain.getByRole("button", { name: "Salvează punctele" }).click();
+    const pointNames = postedNames(await pointsPress);
+    expect(pointNames.filter((name) => name.startsWith("event.") || name.startsWith("translations."))).toEqual([]);
+    await expect(page.getByTestId("toast-live")).toContainText("Punctele de control au fost salvate.", { timeout: 20_000 });
+    await page.goto(editorUrl);
+    await hydrated(page);
+    await expect(page.getByTestId("checkpoint-card")).toHaveCount(1);
+    await expect(page.locator('[name="event.distanceMeters"]')).toHaveValue("");
+
     // «Voluntari» under the save, with the registrations' operations, outside the save form.
     const save = (await page.locator("#box-save").boundingBox())!;
     const volunteers = (await page.locator("#box-volunteers").boundingBox())!;
     expect(volunteers.y).toBeGreaterThan(save.y + save.height);
     await expect(page.locator("#event-save-form #box-volunteers")).toHaveCount(0);
-    // A full save from the form whose box moved still lands (the names did not move).
-    await page.getByRole("button", { name: "Salvează", exact: true }).click();
-    await page.waitForURL(/saved=event/);
   });
 });
+
+/** The field names a request posted: a Server Action's multipart body, or a plain form's urlencoded one. */
+function postedNames(request: Request): string[] {
+  const body = request.postData() ?? "";
+  // A Server Action posts the FormData as parts named `_<n>_<field>`; the prefix is React's, not the form's.
+  const multipart = [...body.matchAll(/name="([^"]+)"/g)].map((match) => match[1].replace(/^_?\d+_/, ""));
+  if (multipart.length > 0) return multipart;
+  return [...new URLSearchParams(body).keys()];
+}
 
 /*
   §554 — «Kit de participare» in card 6 «Participare, înscrieri și regulament» (§760): a fold of its own, closed, its
