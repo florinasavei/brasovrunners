@@ -12,6 +12,7 @@ import {
   icalFold,
   icalText,
   icalUtc,
+  outlookCalendarUrl,
   webcalUrl,
   type CalendarEvent,
   type CalendarLabels,
@@ -497,6 +498,9 @@ describe("the calendar file", () => {
     // The link does not.
     const url = googleCalendarUrl(long, labelsRo);
     expect(url.length).toBeLessThanOrEqual(4000);
+    // Outlook's compose links carry the same description, each space written %20 rather than «+»: they get
+    // the same budget, since nothing can open them to see one refused (`share-row-calendars.test.ts`).
+    for (const account of ["personal", "work"] as const) expect(outlookCalendarUrl(long, labelsRo, account).length, account).toBeLessThanOrEqual(4000);
     const details = new URL(url).searchParams.get("details") ?? "";
     expect(details).not.toContain("Ora 36:00");
     expect(details.endsWith("…")).toBe(true);

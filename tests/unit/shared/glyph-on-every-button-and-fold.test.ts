@@ -199,11 +199,12 @@ describe("§521 a glyph on every button", () => {
       expect(read(entry.file), entry.file).toContain(`{${entry.expression}}`);
       if (entry.wrapper !== "anchor") expect(BUTTONS.has(entry.wrapper), entry.wrapper).toBe(true);
     }
-    // The share row's local helper: every call hands it an icon element.
+    // The share row's local helper: every call hands it an icon element — or, for the five calendar
+    // doors drawn in one loop, the shared mark (`calendar-targets.tsx`, §767) of the door.
     const share = read("src/modules/events/ui/ShareLinks.tsx");
     const calls = [...share.matchAll(/\banchor\(([\s\S]*?)\)\}/g)];
-    expect(calls.length).toBe(4);
-    for (const call of calls) expect(call[1]).toMatch(/<\w+Icon\b/);
+    expect(calls.length).toBe(3);
+    for (const call of calls) expect(call[1]).toMatch(/<\w+Icon\b|\bcalendarTargetMark\(/);
   });
 
   it("does not count a bare {children} inside a button that is not a listed wrapper", () => {
