@@ -33,6 +33,8 @@ type Props = {
   mayEdit: boolean;
   /** Which roads this deployment has (`feedbackRoads`): a road it lacks is greyed, with the steps that give it. */
   roads: FeedbackRoads;
+  /** The privacy notice in force names `{{feedbackSafetyGmail}}` in every language (§NNN): until it does, Girl Zone's Gmail is greyed with a link to «Texte legale». */
+  safetyGmailDescribed: boolean;
   openWhen?: FoldOpenWhen;
 };
 
@@ -51,12 +53,16 @@ const STEPS_ROW: Readonly<Record<FeedbackVia, string>> = { gmail: "task-contactF
  * with a sentence and a link to the steps in «Sarcini»; it stays checked when it is what was saved, so
  * the card shows what the form does, and a save leaves it as it was (`keepUnpostedVia`).
  */
-export default async function FeedbackFormsPanel({ locale, state, noticeDescribes, mayEdit, roads, openWhen }: Props) {
+export default async function FeedbackFormsPanel({ locale, state, noticeDescribes, mayEdit, roads, safetyGmailDescribed, openWhen }: Props) {
   const t = await getTranslations("Admin");
   const words = await confirmWords();
   const on = branchesSwitchedOn(state).length;
   const label = (branch: FeedbackBranch) => t(`emails.feedbackForms.branches.${branch}`);
   const tasksPath = getPathname({ locale, href: "/admin/tasks" });
+  const legalPath = getPathname({ locale, href: "/admin/legal" });
+  /** Why a road cannot be newly chosen on this form, or null: the deployment lacks it, or (Girl Zone's Gmail) the notice does not say it yet. */
+  const blocked = (branch: FeedbackBranch, via: FeedbackVia): "missing" | "notice" | null =>
+    !roads[via] ? "missing" : branch === "safety" && via === "gmail" && !safetyGmailDescribed ? "notice" : null;
 
   const boxLabels: Record<string, string> = { safetyName: t("emails.feedbackForms.safetyName") };
   for (const branch of FEEDBACK_BRANCHES) {
@@ -163,17 +169,25 @@ export default async function FeedbackFormsPanel({ locale, state, noticeDescribe
                         </Typography>
                         {FEEDBACK_VIAS.map((via) => (
                           <Box key={via} data-testid={`feedback-via-${branch}-${via}`}>
-                            <RadioField name={`${branch}Via`} value={via} defaultChecked={state[branch].via === via} disabled={!roads[via]}>
+                            <RadioField name={`${branch}Via`} value={via} defaultChecked={state[branch].via === via} disabled={blocked(branch, via) !== null}>
                               {t(`emails.feedbackForms.via.${via}`)}
                             </RadioField>
                             <Typography variant="caption" color="text.secondary" sx={{ display: "block", ml: 6, mt: -0.5 }}>
                               {t(`emails.feedbackForms.via.${via}Hint`)}
                             </Typography>
-                            {!roads[via] && (
+                            {blocked(branch, via) === "missing" && (
                               <Typography variant="caption" color="text.secondary" sx={{ display: "block", ml: 6 }} data-testid={`feedback-via-${branch}-${via}-missing`}>
                                 {t(`emails.feedbackForms.via.${via}Missing`)}{" "}
                                 <MuiLink href={`${tasksPath}#${STEPS_ROW[via]}`} sx={INLINE_TAP_TARGET}>
                                   {t("emails.feedbackForms.via.steps")}
+                                </MuiLink>
+                              </Typography>
+                            )}
+                            {blocked(branch, via) === "notice" && (
+                              <Typography variant="caption" color="text.secondary" sx={{ display: "block", ml: 6 }} data-testid="feedback-via-safety-gmail-notice">
+                                {t("emails.feedbackForms.via.gmailNotice")}{" "}
+                                <MuiLink href={legalPath} sx={INLINE_TAP_TARGET}>
+                                  {t("emails.feedbackForms.via.noticeSteps")}
                                 </MuiLink>
                               </Typography>
                             )}

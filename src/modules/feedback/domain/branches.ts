@@ -149,6 +149,22 @@ export function viaFor(settings: FeedbackSettings, branch: FeedbackBranch, audie
 }
 
 /**
+ * The settings as they act (§NNN): Girl Zone's road is Gmail only while the privacy notice in force
+ * says her messages may leave by it (`safetyGmailDescribed`, `{{feedbackSafetyGmail}}`); otherwise the
+ * notice promises they never pass through the club's mailbox, so they leave by Mailgun whatever was
+ * saved. Everything that decides what a visitor is told or where a message goes reads this, never the raw row.
+ */
+export function effectiveFeedbackSettings(settings: FeedbackSettings, safetyGmailDescribed: boolean): FeedbackSettings {
+  if (safetyGmailDescribed || settings.safety.via !== "gmail") return settings;
+  return { ...settings, safety: { ...settings.safety, via: "mailgun" } };
+}
+
+/** Whether a message for Girl Zone's person leaves by the club's Gmail, so the club's mailbox readers see it (`viaFor`, §NNN). */
+export function safetyMessageSeenByMailboxReaders(settings: FeedbackSettings): boolean {
+  return viaFor(settings, "safety", "person") === "gmail";
+}
+
+/**
  * The branches a visitor is offered, in the wizard's order: switched on, with somebody to receive
  * them (and, for the safety branch, the first name the page promises), and with the road the club chose
  * for the form to leave by (`FeedbackSettings`' `via`, §NNN) — Gmail only where the deployment has the SMTP road
@@ -340,12 +356,12 @@ export function replyAddressOf(typed: string): string | null {
 
 /**
  * Where a reply to this message goes (§NNN): the address typed beside the name in the named mode — on
- * Girl Zone's form, the way-back line when it is an address (it may as well be a telephone, which has no
- * `Reply-To`); `null` anonymous or when none was given.
+ * Girl Zone's form, the «E-mail (opțional)» box (a telephone has no `Reply-To`); `null` anonymous or when none was given.
  */
 export function replyAddressForInput(input: FeedbackInput): string | null {
   if (input.identity !== "named") return null;
-  return input.branch === "safety" ? replyAddressOf(input.contact) : input.email;
+  // Girl Zone: the box called email; a line typed in the telephone box that is an address stays as good as one.
+  return input.branch === "safety" ? (input.email ?? replyAddressOf(input.contact)) : input.email;
 }
 
 /** The boxes only the named mode shows and the server only keeps: the name, the branch's way back and «Cine să afle?». */
@@ -366,7 +382,7 @@ export const BRANCH_FIELDS: Readonly<Record<FeedbackBranch, readonly FeedbackFie
   howItWent: ["name", "email", "event", "date", "rating", "message", "reasons", "reasonOther"],
   suggestion: ["name", "email", "message"],
   complaint: ["name", "email", "message", "event", "date"],
-  safety: ["name", "contact", "message", "whereWhen"],
+  safety: ["name", "email", "contact", "message", "whereWhen"],
 };
 
 /** A line becomes a header-free line: no break, the edges trimmed. */
@@ -454,7 +470,12 @@ export const complaintFields = z.object({
   ...common,
 });
 
-export const safetyFields = z.object({ branch: z.literal("safety"), message: text, whereWhen: line, contact: line, ...common });
+/**
+ * Girl Zone's named mode has two optional ways back, one box each (§NNN): `email`, the address a reply can go
+ * to (checked by the canonicalizer, the message's `Reply-To`, kept nowhere), and `contact`, a telephone
+ * number or any line the person wants the designated person to have — carried in the message and nowhere else.
+ */
+export const safetyFields = z.object({ branch: z.literal("safety"), message: text, whereWhen: line, contact: line, email: optionalEmail.default(null), ...common });
 
 /**
  * Anonymous unless the person chose otherwise (§678): any identity but «Cu nume și prenume» reads as
@@ -664,7 +685,7 @@ export function feedbackLines(input: FeedbackInput, context: FeedbackContext): {
   }
   lines.push({ label: "Limba formularului", value: LANGUAGE_NAME[input.locale] });
   const message: Line = { label: input.branch === "suggestion" ? "Sugestia" : "Ce s-a întâmplat", value: input.message };
-  const way = input.branch === "safety" ? input.contact : (input.email ?? "");
+  const way = (input.branch === "safety" ? [input.email, input.contact] : [input.email]).filter(Boolean).join(" · ");
   const contact: Line = { label: "Contact", value: way || NO_CONTACT_LINE };
   return { lines, message, contact };
 }

@@ -20,7 +20,7 @@ import {
 } from "@/modules/feedback/domain/branches";
 import { type FeedbackOutcome, submitFeedback } from "@/modules/feedback/service";
 import { readFeedbackSettingsMemo } from "@/modules/feedback/settings";
-import { noticeDescribesFeedbackForms, noticeDescribesFeedbackFormsNamed } from "@/modules/legal-documents/repository";
+import { noticeDescribesFeedbackForms, noticeDescribesFeedbackFormsNamed, noticeDescribesFeedbackSafetyGmail } from "@/modules/legal-documents/repository";
 import { cachedPublishedEventBySlug } from "@/modules/public-cache/reads";
 import { botCheckIsOn } from "@/modules/registrations/bot-check";
 import { TURNSTILE_FIELD } from "@/modules/registrations/domain/turnstile-widget";
@@ -82,10 +82,11 @@ export async function submitFeedbackAction(form: FormData): Promise<void> {
     const token = String(form.get(TURNSTILE_FIELD) ?? "");
     const verdict = (await botCheckIsOn(db, now)) ? await verifyTurnstile(token, remoteIp) : "not_configured";
 
-    const [settings, noticeDescribes, namedNow, recipients] = await Promise.all([
+    const [settings, noticeDescribes, namedNow, safetyGmailDescribed, recipients] = await Promise.all([
       readFeedbackSettingsMemo(db, now),
       noticeDescribesFeedbackForms(db, now),
       noticeDescribesFeedbackFormsNamed(db, now),
+      noticeDescribesFeedbackSafetyGmail(db, now),
       readContactRecipients(db),
     ]);
     namedDescribed = namedNow;
@@ -94,6 +95,7 @@ export async function submitFeedbackAction(form: FormData): Promise<void> {
       {
         settings,
         noticeDescribes,
+        safetyGmailDescribed,
         namedDescribed,
         // «Clubul» for a named safety report when «O reclamație» has no recipient (§678): the contact form's own.
         clubFallback: contactDelivery(recipients)?.to ?? [],

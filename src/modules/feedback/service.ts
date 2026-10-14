@@ -14,6 +14,7 @@ import {
   audiencesFor,
   chosenAudience,
   defaultAudience,
+  effectiveFeedbackSettings,
   type FeedbackAudience,
   type FeedbackBranch,
   type FeedbackInput,
@@ -73,6 +74,12 @@ export type FeedbackDeps = {
   /** The privacy notice in force names `{{feedbackForms}}` in every language (`noticeDescribesFeedbackForms`). */
   noticeDescribes: boolean;
   /**
+   * The privacy notice in force names `{{feedbackSafetyGmail}}` in every language
+   * (`noticeDescribesFeedbackSafetyGmail`, §NNN): until it does, Girl Zone's messages leave by Mailgun
+   * whatever the card says (`effectiveFeedbackSettings`).
+   */
+  safetyGmailDescribed: boolean;
+  /**
    * The privacy notice in force names `{{feedbackFormsNamed}}` in every language
    * (`noticeDescribesFeedbackFormsNamed`): until it does, every post is anonymous (§678).
    */
@@ -124,10 +131,12 @@ function logged(branch: FeedbackBranch | "unknown", outcome: FeedbackOutcome, re
 
 export async function submitFeedback<T extends Record<string, unknown>>(
   db: Database<T>,
-  deps: FeedbackDeps,
+  given: FeedbackDeps,
   rawInput: unknown,
   now: Date,
 ): Promise<FeedbackOutcome> {
+  // The settings as they act: Girl Zone leaves by Gmail only while the notice in force says so (§NNN).
+  const deps: FeedbackDeps = { ...given, settings: effectiveFeedbackSettings(given.settings, given.safetyGmailDescribed) };
   const branch = postedBranch(rawInput);
   const roads: FeedbackRoads = { gmail: deps.smtp !== null, mailgun: deps.mailgun !== null };
   if (!branch || !offeredBranches(deps.settings, deps.noticeDescribes, roads).includes(branch)) {
@@ -140,7 +149,7 @@ export async function submitFeedback<T extends Record<string, unknown>>(
   const input = readFeedbackInput(deps.namedDescribed ? rawInput : asAnonymous(rawInput));
 
   // A password manager that filled the trap with the typed address is autofill, not a bot (§282).
-  const typedContact = input.branch === "safety" ? input.contact : (input.email ?? undefined);
+  const typedContact = (input.branch === "safety" ? input.email || input.contact : input.email) ?? undefined;
   if (looksLikeSpam({ honeypot: input.honeypot, renderedAt: input.renderedAt, email: typedContact }, now)) {
     return logged(branch, input.branch === "safety" ? { outcome: "unavailable" } : { outcome: "ignored" });
   }
@@ -238,7 +247,8 @@ async function screenForClub<T extends Record<string, unknown>>(
   const suspicion = contactSuspicion({
     ...screening,
     elapsedMs: Number.isNaN(rendered) ? null : now.getTime() - rendered,
-    senderEmail: replyAddress ?? "",
+    // A confidential report's address is not the screen's to read: «imitates-club» and the trap compare it with the club's domain, and a report is never marked on it (§NNN).
+    senderEmail: input.branch === "safety" ? "" : (replyAddress ?? ""),
     message: input.message,
     honeypot: input.honeypot,
   });

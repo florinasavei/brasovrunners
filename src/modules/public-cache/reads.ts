@@ -65,6 +65,7 @@ import { readEmailDelayFacts } from "@/modules/notifications/public-delay";
 import {
   describesFeedbackForms,
   describesFeedbackFormsNamed,
+  describesFeedbackSafetyGmail,
   describesListNumbers,
   describesListSocials,
   describesListStates,
@@ -664,6 +665,17 @@ export async function cachedFeedbackFormsDescribed(now: Date): Promise<boolean> 
 export async function cachedFeedbackFormsNamedDescribed(now: Date): Promise<boolean> {
   const notices = await Promise.all(routing.locales.map((locale) => cachedCurrentApprovedDocument("PRIVACY_NOTICE", locale, now)));
   return notices.every((notice) => notice !== undefined && describesFeedbackFormsNamed(notice.body));
+}
+
+/**
+ * Whether Girl Zone's messages may leave by the club's Gmail (§NNN): the notice in force names
+ * `{{feedbackSafetyGmail}}` (`describesFeedbackSafetyGmail`), in every language — the same reading as
+ * `cachedFeedbackFormsNamedDescribed`. The page words who sees her message by it; the action asks the
+ * uncached `noticeDescribesFeedbackSafetyGmail` again.
+ */
+export async function cachedFeedbackSafetyGmailDescribed(now: Date): Promise<boolean> {
+  const notices = await Promise.all(routing.locales.map((locale) => cachedCurrentApprovedDocument("PRIVACY_NOTICE", locale, now)));
+  return notices.every((notice) => notice !== undefined && describesFeedbackSafetyGmail(notice.body));
 }
 
 /**

@@ -6,6 +6,7 @@ import {
   BRANCH_FIELDS,
   chosenAudience,
   defaultAudience,
+  effectiveFeedbackSettings,
   FEEDBACK_NAME_MAX,
   FEEDBACK_NAME_MIN,
   namedModeFor,
@@ -32,12 +33,13 @@ import {
   readDay,
   readFeedbackQuery,
   SAFETY_SUBJECT,
+  safetyMessageSeenByMailboxReaders,
   sentReader,
   wizardStep,
 } from "@/modules/feedback/domain/branches";
-import { describesFeedbackForms, describesFeedbackFormsNamed } from "@/modules/legal-documents/domain/merge-fields";
+import { describesFeedbackForms, describesFeedbackFormsNamed, describesFeedbackSafetyGmail } from "@/modules/legal-documents/domain/merge-fields";
 import { privacyNoticeEn, privacyNoticeRo } from "@/modules/legal-documents/templates/privacy-notice";
-import { feedbackFormsClause, feedbackFormsMergeValues, feedbackFormsNamedClause } from "@/modules/feedback/notice-words";
+import { feedbackFormsClause, feedbackFormsMergeValues, feedbackFormsNamedClause, feedbackSafetyGmailClause } from "@/modules/feedback/notice-words";
 
 /**
  * BR-REQ-070-04, `DECISIONS.md` §676 — «Spune-ne ceva»'s rules, pure: which branches are offered,
@@ -141,8 +143,10 @@ describe("§678 anonymous, or with one's name", () => {
   it("every branch's form starts with the name and its way back, inside the choice at the very top", () => {
     for (const [branch, fields] of Object.entries(BRANCH_FIELDS)) {
       expect(fields[0], branch).toBe("name");
-      expect(fields[1], branch).toBe(branch === "safety" ? "contact" : "email");
+      // The optional email is every named form's second box; Girl Zone's telephone follows it (§NNN).
+      expect(fields[1], branch).toBe("email");
     }
+    expect(BRANCH_FIELDS.safety[2]).toBe("contact");
   });
 
   it("reads anything but «Cu nume și prenume» as anonymous, and then drops the name and the way back — even a box the page hid that would not pass", () => {
@@ -336,6 +340,30 @@ describe("§676 the picker's order", () => {
   });
 });
 
+describe("§NNN Girl Zone's road follows the notice in force", () => {
+  const gmail = { ...DEFAULT_FEEDBACK_SETTINGS, safety: { ...DEFAULT_FEEDBACK_SETTINGS.safety, via: "gmail" as const } };
+
+  it("is Gmail only while the notice names {{feedbackSafetyGmail}}; Mailgun otherwise, and the other forms are never touched", () => {
+    expect(effectiveFeedbackSettings(gmail, true).safety.via).toBe("gmail");
+    expect(effectiveFeedbackSettings(gmail, false).safety.via).toBe("mailgun");
+    expect(effectiveFeedbackSettings(gmail, false).complaint.via).toBe("gmail");
+    expect(effectiveFeedbackSettings(DEFAULT_FEEDBACK_SETTINGS, false)).toBe(DEFAULT_FEEDBACK_SETTINGS);
+  });
+
+  it("tells the visitor her message is seen by the mailbox's readers only on the Gmail road", () => {
+    expect(safetyMessageSeenByMailboxReaders(effectiveFeedbackSettings(gmail, true))).toBe(true);
+    expect(safetyMessageSeenByMailboxReaders(effectiveFeedbackSettings(gmail, false))).toBe(false);
+    expect(safetyMessageSeenByMailboxReaders(DEFAULT_FEEDBACK_SETTINGS)).toBe(false);
+  });
+
+  it("is a marker of the notice's template, in both languages, read by the same function as the others", () => {
+    for (const body of [privacyNoticeRo, privacyNoticeEn]) {
+      expect(describesFeedbackSafetyGmail(body)).toBe(true);
+      expect(describesFeedbackSafetyGmail(JSON.parse(JSON.stringify(body).split("{{feedbackSafetyGmail}}").join("Gmail-ul său")))).toBe(false);
+    }
+  });
+});
+
 describe("§676 the notice's marker", () => {
   it("is named in both languages of the platform's privacy notice, and absent from a text without it", () => {
     expect(describesFeedbackForms(privacyNoticeRo)).toBe(true);
@@ -362,7 +390,8 @@ describe("§676 the notice's marker", () => {
   it("§678 fills the named mode's marker with the radio's own words, quoted", () => {
     expect(feedbackFormsNamedClause("ro")).toBe("„Cu nume și prenume”");
     expect(feedbackFormsNamedClause("en")).toBe("“With my name”");
-    expect(feedbackFormsMergeValues("en")).toEqual({ feedbackForms: "“Tell us something”", feedbackFormsNamed: "“With my name”" });
+    expect(feedbackFormsMergeValues("en")).toEqual({ feedbackForms: "“Tell us something”", feedbackFormsNamed: "“With my name”", feedbackSafetyGmail: "the club's Gmail" });
+    expect(feedbackSafetyGmailClause("ro")).toBe("Gmail-ul clubului");
   });
 });
 
@@ -508,6 +537,9 @@ describe("§NNN the optional email beside the name", () => {
   it("is the message's Reply-To in the named mode, on every form: the box on three, Girl Zone's way back when it is an address", () => {
     const suggestion = named({ branch: "suggestion", email: "ana@example.org" }).data as FeedbackInput;
     expect(replyAddressForInput(suggestion)).toBe("ana@example.org");
+    // Girl Zone has the same email box, beside the telephone (§NNN); an address typed in the telephone box still answers.
+    const safetyByEmail = named({ branch: "safety", whereWhen: "", email: "ana@example.org", contact: "0700 000 000" }).data as FeedbackInput;
+    expect(replyAddressForInput(safetyByEmail)).toBe("ana@example.org");
     const safetyByAddress = named({ branch: "safety", whereWhen: "", contact: "ana@example.org" }).data as FeedbackInput;
     expect(replyAddressForInput(safetyByAddress)).toBe("ana@example.org");
     // A telephone has no Reply-To, and the body carries it.

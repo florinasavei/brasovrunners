@@ -3345,6 +3345,7 @@
         "eventInvitations": "Privacy notice only: the Invitations section's name, in quotation marks. With it in the notice in force, /admin/tasks counts the invitations as described",
         "feedbackForms": "Privacy notice only: the “Tell us something” forms’ name, in quotation marks. With it in the notice in force, the contact page shows the forms switched on",
         "feedbackFormsNamed": "Privacy notice only: the “With my name” choice of the “Tell us something” forms, in quotation marks. Without it in the notice in force, the forms are anonymous only",
+        "feedbackSafetyGmail": "Privacy notice only: “the club's Gmail”, in the sentence that says Girl Zone messages do not pass through the club's mailbox unless the club chooses Gmail. Without it in the notice in force, Girl Zone messages leave by Mailgun only",
         "membersShop": "Privacy notice only: the section name “The club's shop”, in quotes. With it in the notice in force, the members' area shows the shop and takes orders",
         "volunteers": "Privacy notice only: the form's name “I want to volunteer”, in quotes. With it in the notice in force, an event that takes volunteers shows its form and keeps the offers",
         "volunteerAgreement": "Privacy notice only: the title “Volunteer agreement”, in quotes. Without it in the notice in force, the volunteers' form, the agreement's link and “Signed on paper” are off",
@@ -4072,6 +4073,15 @@
           "how": [
             "/admin/legal → the “GDPR” card → “Regenerate from the template” → confirm. The forms' paragraph in section 5 describes the “With my name” choice and who hears it.",
             "Open the draft, read it, fill in what is left, “Save draft”, then “Approve and publish”. Once in force in both languages, the forms open with the choice, with no other setting."
+          ]
+        },
+        "feedbackSafetyGmailNotice": {
+          "title": "Privacy notice: Girl Zone by Gmail",
+          "todo": "You chose Gmail for Girl Zone, but the notice in force promises its messages do not pass through the club's mailbox: until you approve a notice that says otherwise, the messages leave by Mailgun.",
+          "done": "The notice in force says Girl Zone messages may leave by the club's Gmail and stay in its Sent folder, which whoever reads the mailbox sees.",
+          "how": [
+            "/admin/legal → the “GDPR” card → “Regenerate from the template” → confirm. The forms' paragraph in section 5 now also says when a Girl Zone message leaves by Gmail.",
+            "Open the draft, read it, “Save draft”, then “Approve and publish”. Once in force in both languages, Girl Zone messages leave by Gmail, with no other setting."
           ]
         },
         "teamPageNotice": {
@@ -6585,7 +6595,7 @@
           "howItWent": "The event, the date, a rating from 1 to 5, what happened and why someone stopped coming. Also from the thank-you email.",
           "suggestion": "One text box.",
           "complaint": "What happened, optionally the event and the date.",
-          "safety": "For women who did not feel safe: it reaches only the person below."
+          "safety": "For women who did not feel safe: it reaches the person below, by the road chosen."
         },
         "switch": "On",
         "to": "Who receives it",
@@ -6598,16 +6608,18 @@
           "gmail": "The club's Gmail (“Write to us”)",
           "mailgun": "Mailgun",
           "gmailHint": "From the club's mailbox; the message also stays in its Sent folder.",
-          "mailgunHint": "From the club's email service; no copy stays in any mailbox.",
+          "mailgunHint": "From the club's email service; no copy stays in the club's Sent folder.",
           "gmailMissing": "Gmail is not ready here: the club's account and its app password are missing.",
           "mailgunMissing": "Mailgun does not send here: emails are not switched on in this environment.",
           "steps": "See the steps",
+          "gmailNotice": "The privacy notice in force promises that Girl Zone messages do not pass through the club's mailbox: first approve a new notice, from the template, that says they may leave by Gmail.",
+          "noticeSteps": "Legal texts",
           "safetyNote": "Through Gmail, a Girl Zone message stays in the club's mailbox and whoever reads it sees it; through Mailgun it reaches only the person above.",
           "stateGmail": "Gmail",
           "stateMailgun": "Mailgun"
         },
         "safetyName": "First name shown",
-        "safetyNameHelp": "The form says: “The message reaches … only”. At most 40 characters.",
+        "safetyNameHelp": "The form writes it in the sentence about who reads the message. At most 40 characters.",
         "stateOn": "on",
         "stateOff": "off",
         "readOnly": "The Administrator switches the forms on; you see what is on.",
@@ -10665,6 +10677,7 @@
   "Tell": {
     "title": "Tell us something (anonymous)",
     "noticeName": "Tell us something",
+    "noticeSafetyGmail": "the club's Gmail",
     "intro": "Anonymous unless you choose to give your name. Choose what it is about.",
     "backToContact": "Back to Contact",
     "door": {
@@ -10689,7 +10702,8 @@
       "club": "The club",
       "clubHint": "The message reaches the club's mailbox.",
       "person": "{name}",
-      "personHint": "Only {name}, the person the club designated for safety. Confidential."
+      "personHint": "Only {name}, the person the club designated for safety. Confidential.",
+      "personHintGmail": "{name}, the person the club designated for safety, through the club's mailbox, where whoever reads it sees it too."
     },
     "branches": {
       "howItWent": {
@@ -10714,10 +10728,12 @@
     },
     "safety": {
       "reader": "The message reaches {name} only. The site keeps nothing of it.",
+      "readerGmail": "The message reaches {name} through the club's mailbox, where whoever reads it sees it too. The site keeps nothing of it.",
       "readerChoice": "Anonymously, the message reaches {name} only; with your name, you choose who hears it. The site keeps nothing of it.",
+      "readerChoiceGmail": "Anonymously, the message reaches {name} through the club's mailbox, where whoever reads it sees it too; with your name, you choose who hears it. The site keeps nothing of it.",
       "whereWhen": "Where and when (optional)",
-      "contact": "If you want {name} to contact you, leave an email or a phone number (optional)",
-      "contactHelp": "Only if you want an answer."
+      "contact": "Phone number (optional)",
+      "contactHelp": "Only if you want {name} to call you."
     },
     "event": "The event",
     "eventGeneral": "Something else / in general",
@@ -10806,7 +10822,8 @@
     "sent": {
       "title": "Your message is on its way",
       "body": "Thank you! We read it carefully.",
-      "safety": "Only {name} received it. Thank you for telling us."
+      "safety": "Only {name} received it. Thank you for telling us.",
+      "safetyGmail": "{name} received it, through the club's mailbox, where whoever reads it sees it too. Thank you for telling us."
     },
     "eventPage": {
       "lead": "Were you there? Tell us how it was — anonymously, it takes a minute.",

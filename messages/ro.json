@@ -3345,6 +3345,7 @@
         "eventInvitations": "Doar în nota de confidențialitate: numele secțiunii Invitații, între ghilimele. Cu el în nota în vigoare, /admin/tasks consideră invitațiile descrise",
         "feedbackForms": "Doar în nota de confidențialitate: numele formularelor „Spune-ne ceva”, între ghilimele. Cu el în nota în vigoare, pagina de contact arată formularele pornite",
         "feedbackFormsNamed": "Doar în nota de confidențialitate: alegerea „Cu nume și prenume” din formularele „Spune-ne ceva”, între ghilimele. Fără el în nota în vigoare, formularele sunt doar anonime",
+        "feedbackSafetyGmail": "Doar în nota de confidențialitate: „Gmail-ul clubului”, în propoziția care spune că mesajele Girl Zone nu trec prin căsuța clubului, afară de cazul în care clubul alege Gmail. Fără el în nota în vigoare, mesajele Girl Zone pleacă doar prin Mailgun",
         "membersShop": "Doar în nota de confidențialitate: numele secțiunii „Magazinul clubului”, între ghilimele. Cu el în nota în vigoare, zona membrilor arată magazinul și primește comenzi",
         "volunteers": "Doar în nota de confidențialitate: numele formularului „Vreau să fiu voluntar”, între ghilimele. Cu el în nota în vigoare, un eveniment cu voluntari își arată formularul și păstrează ofertele",
         "volunteerAgreement": "Doar în nota de confidențialitate: titlul „Contract de voluntariat”, între ghilimele. Fără el în nota în vigoare, formularul de voluntari, linkul contractului și „Semnat pe hârtie” sunt oprite",
@@ -4072,6 +4073,15 @@
           "how": [
             "/admin/legal → cardul „GDPR” → „Regenerează din șablon” → confirmă. Paragraful despre formulare din secțiunea 5 descrie alegerea „Cu nume și prenume” și cine află.",
             "Deschide ciorna, citește, completează ce a rămas, „Salvează ciorna”, apoi „Aprobă și publică”. Odată în vigoare în ambele limbi, formularele încep cu alegerea, fără altă setare."
+          ]
+        },
+        "feedbackSafetyGmailNotice": {
+          "title": "Nota de confidențialitate: Girl Zone prin Gmail",
+          "todo": "Ai ales Gmail-ul pentru Girl Zone, dar nota în vigoare promite că mesajele ei nu trec prin căsuța clubului: până aprobi o notă care spune altfel, mesajele pleacă prin Mailgun.",
+          "done": "Nota în vigoare spune că mesajele Girl Zone pot pleca prin Gmail-ul clubului și rămân în folderul lui Trimise, pe care îl văd cei care citesc căsuța.",
+          "how": [
+            "/admin/legal → cardul „GDPR” → „Regenerează din șablon” → confirmă. Paragraful despre formulare din secțiunea 5 spune acum și când mesajul Girl Zone pleacă prin Gmail.",
+            "Deschide ciorna, citește, „Salvează ciorna”, apoi „Aprobă și publică”. Odată în vigoare în ambele limbi, mesajele Girl Zone pleacă prin Gmail, fără altă setare."
           ]
         },
         "teamPageNotice": {
@@ -6585,7 +6595,7 @@
           "howItWent": "Evenimentul, data, o notă de la 1 la 5, ce s-a întâmplat și de ce nu mai vine cineva. Și din emailul de mulțumire.",
           "suggestion": "O singură casetă de text.",
           "complaint": "Ce s-a întâmplat, opțional evenimentul și data.",
-          "safety": "Pentru femeile care nu s-au simțit în siguranță: ajunge doar la persoana de mai jos."
+          "safety": "Pentru femeile care nu s-au simțit în siguranță: ajunge la persoana de mai jos, prin calea aleasă."
         },
         "switch": "Pornit",
         "to": "Cine primește",
@@ -6598,16 +6608,18 @@
           "gmail": "Gmail-ul clubului („Scrie-ne”)",
           "mailgun": "Mailgun",
           "gmailHint": "Din căsuța clubului; mesajul rămâne și în folderul ei Trimise.",
-          "mailgunHint": "Din serviciul de email al clubului; nu rămâne nicio copie într-o căsuță.",
+          "mailgunHint": "Din serviciul de email al clubului; nu rămâne nicio copie în folderul Trimise al clubului.",
           "gmailMissing": "Gmail-ul nu e pregătit aici: lipsesc contul clubului și parola lui de aplicație.",
           "mailgunMissing": "Mailgun nu trimite aici: emailurile nu sunt pornite pe acest mediu.",
           "steps": "Vezi pașii",
+          "gmailNotice": "Nota de confidențialitate în vigoare promite că mesajele Girl Zone nu trec prin căsuța clubului: aprobă mai întâi o notă nouă, din șablon, care spune că pot pleca prin Gmail.",
+          "noticeSteps": "Texte legale",
           "safetyNote": "Prin Gmail, mesajul Girl Zone rămâne în căsuța clubului și îl văd cei care o citesc; prin Mailgun ajunge doar la persoana de mai sus.",
           "stateGmail": "Gmail",
           "stateMailgun": "Mailgun"
         },
         "safetyName": "Prenumele afișat",
-        "safetyNameHelp": "Formularul spune: „Mesajul ajunge doar la …”. Cel mult 40 de caractere.",
+        "safetyNameHelp": "Formularul îl scrie în propoziția despre cine citește mesajul. Cel mult 40 de caractere.",
         "stateOn": "pornit",
         "stateOff": "oprit",
         "readOnly": "Formularele le pornește Administratorul; tu vezi ce e pornit.",
@@ -10665,6 +10677,7 @@
   "Tell": {
     "title": "Spune-ne ceva (anonim)",
     "noticeName": "Spune-ne ceva",
+    "noticeSafetyGmail": "Gmail-ul clubului",
     "intro": "Anonim, dacă nu alegi să-ți spui numele. Alege despre ce e vorba.",
     "backToContact": "Înapoi la Contact",
     "door": {
@@ -10689,7 +10702,8 @@
       "club": "Clubul",
       "clubHint": "Mesajul ajunge în căsuța de e-mail a clubului.",
       "person": "{name}",
-      "personHint": "Doar {name}, persoana desemnată de club pentru siguranță. Confidențial."
+      "personHint": "Doar {name}, persoana desemnată de club pentru siguranță. Confidențial.",
+      "personHintGmail": "{name}, persoana desemnată de club pentru siguranță, prin căsuța clubului, unde îl văd și cei care o citesc."
     },
     "branches": {
       "howItWent": {
@@ -10714,10 +10728,12 @@
     },
     "safety": {
       "reader": "Mesajul ajunge doar la {name}. Site-ul nu păstrează nimic din el.",
+      "readerGmail": "Mesajul ajunge la {name}, prin căsuța clubului, unde îl văd și cei care o citesc. Site-ul nu păstrează nimic din el.",
       "readerChoice": "Anonim, mesajul ajunge doar la {name}; cu nume și prenume, alegi tu cine află. Site-ul nu păstrează nimic din el.",
+      "readerChoiceGmail": "Anonim, mesajul ajunge la {name}, prin căsuța clubului, unde îl văd și cei care o citesc; cu nume și prenume, alegi tu cine află. Site-ul nu păstrează nimic din el.",
       "whereWhen": "Unde și când (opțional)",
-      "contact": "Dacă vrei să te contacteze {name}, lasă un email sau un telefon (opțional)",
-      "contactHelp": "Doar dacă vrei să-ți răspundă."
+      "contact": "Telefon (opțional)",
+      "contactHelp": "Doar dacă vrei să te sune {name}."
     },
     "event": "Alergarea",
     "eventGeneral": "Altceva / în general",
@@ -10806,7 +10822,8 @@
     "sent": {
       "title": "Mesajul a plecat",
       "body": "Mulțumim! Îl citim cu atenție.",
-      "safety": "L-a primit doar {name}. Mulțumim că ne-ai spus."
+      "safety": "L-a primit doar {name}. Mulțumim că ne-ai spus.",
+      "safetyGmail": "L-a primit {name}, prin căsuța clubului, unde îl văd și cei care o citesc. Mulțumim că ne-ai spus."
     },
     "eventPage": {
       "lead": "Ai fost? Spune-ne cum a fost — anonim, durează un minut.",

@@ -20,6 +20,7 @@ import {
   describesEventInvitations,
   describesFeedbackForms,
   describesFeedbackFormsNamed,
+  describesFeedbackSafetyGmail,
   describesMembersShop,
   describesVolunteerAgreement,
   describesVolunteerMinors,
@@ -329,6 +330,17 @@ export async function noticeDescribesFeedbackForms<T extends Record<string, unkn
 export async function noticeDescribesFeedbackFormsNamed<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<boolean> {
   const notices = await Promise.all(routing.locales.map((locale) => findCurrentApprovedDocument(db, "PRIVACY_NOTICE", locale, now)));
   return notices.every((notice) => notice !== undefined && describesFeedbackFormsNamed(notice.body));
+}
+
+/**
+ * Whether the privacy notice in force says Girl Zone's messages may leave by the club's Gmail (§NNN,
+ * `describesFeedbackSafetyGmail`) — in every language, like `noticeDescribesFeedbackFormsNamed`. For the
+ * save that chooses the road, the action that sends by it and `/admin/tasks`; the page asks through the
+ * public cache (`cachedFeedbackSafetyGmailDescribed`).
+ */
+export async function noticeDescribesFeedbackSafetyGmail<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<boolean> {
+  const notices = await Promise.all(routing.locales.map((locale) => findCurrentApprovedDocument(db, "PRIVACY_NOTICE", locale, now)));
+  return notices.every((notice) => notice !== undefined && describesFeedbackSafetyGmail(notice.body));
 }
 
 /**

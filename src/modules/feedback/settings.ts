@@ -128,6 +128,12 @@ export async function updateFeedbackSettings<T extends Record<string, unknown>>(
   now: Date,
   /** Which roads this deployment has (`feedbackRoads`); a road not there cannot be newly chosen. Absent, both are. */
   roads: FeedbackRoads = { gmail: true, mailgun: true },
+  /**
+   * The privacy notice in force names `{{feedbackSafetyGmail}}` in every language (`noticeDescribesFeedbackSafetyGmail`):
+   * until it does, Girl Zone's road cannot be newly set to Gmail — the notice promises her messages never
+   * pass through the club's mailbox (§NNN). Absent, nothing waits on it.
+   */
+  safetyGmailDescribed = true,
 ): Promise<FeedbackSettingsState> {
   if (!canManageClubSettings(actor.role)) {
     throw new DomainError("FORBIDDEN", `role ${actor.role} may not change the feedback forms`);
@@ -152,6 +158,11 @@ export async function updateFeedbackSettings<T extends Record<string, unknown>>(
       `${unavailable.join(", ")}: the road chosen is not available on this deployment`,
       unavailable.map((name) => boxName([name, "via"])),
     );
+  }
+
+  // Girl Zone by Gmail changes where her messages go: nothing new happens to them before the approved notice says so (AGENTS.md §10.8).
+  if (next.safety.via === "gmail" && before.safety.via !== "gmail" && !safetyGmailDescribed) {
+    throw new DomainError("VALIDATION_ERROR", "safety: Gmail is not described by the privacy notice in force", [boxName(["safety", "via"])]);
   }
 
   await db.transaction(async (tx) => {

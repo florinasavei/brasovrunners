@@ -9,6 +9,7 @@ import { addressListRefusal, CONTACT_RECIPIENTS_MAX, parseAddressList } from "@/
 import { updateContactRecipients } from "@/modules/contact/recipients";
 import { updatePublicPhone } from "@/modules/contact/public-phone";
 import { feedbackRoads } from "@/modules/feedback/roads";
+import { noticeDescribesFeedbackSafetyGmail } from "@/modules/legal-documents/repository";
 import { updateFeedbackSettings } from "@/modules/feedback/settings";
 import { updateShownContactAddress } from "@/modules/contact/shown-address";
 import { requireStaffCapability } from "@/modules/staff-identity/session";
@@ -122,6 +123,7 @@ export async function updateFeedbackFormsAction(_previous: FormOutcome | null, f
       },
       new Date(),
       feedbackRoads(),
+      await noticeDescribesFeedbackSafetyGmail(getDb(), new Date()),
     );
   } catch (error) {
     return refused(error, form);

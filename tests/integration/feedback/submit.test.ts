@@ -75,6 +75,7 @@ describe("§676 «Spune-ne ceva»", () => {
   const deps = (overrides: Partial<FeedbackDeps> = {}): FeedbackDeps => ({
     settings: SETTINGS,
     noticeDescribes: true,
+    safetyGmailDescribed: true,
     namedDescribed: true,
     clubFallback: ["contact@example.org"],
     smtp: { transport: smtp, from: { name: "Club", address: "club@example.org" }, appEnv: "production" },
@@ -225,6 +226,50 @@ describe("§676 «Spune-ne ceva»", () => {
       const noComplaint = { ...SETTINGS, complaint: { on: false, to: null, via: "gmail" as const } };
       expect(await submitFeedback(db, deps({ settings: noComplaint }), toClub, NOW)).toEqual({ outcome: "sent", audience: "club" });
       expect(smtp.messages[1].to).toEqual(["contact@example.org"]);
+    });
+
+    it("§NNN Girl Zone's named mode has an email box of its own: the Reply-To, checked by the canonicalizer, kept nowhere; the telephone stays in the message", async () => {
+      const named = { ...SAFETY, identity: "named", name: "Ana Pop", email: "Ana.Pop@Example.org ", contact: "0700 000 000" };
+      expect(await submitFeedback(db, deps(), named, NOW)).toEqual({ outcome: "sent" });
+      const [message] = mailgun.send.mock.calls[0];
+      expect(message.replyTo).toBe("Ana.Pop@Example.org");
+      expect(message.noReplyTo).toBeUndefined();
+      expect(message.text).toContain("Contact: Ana.Pop@Example.org · 0700 000 000");
+      // A telephone alone is no address: no Reply-To, the way back stays in the message.
+      expect(await submitFeedback(db, deps(), { ...named, email: "" }, NOW)).toEqual({ outcome: "sent" });
+      const [phoneOnly] = mailgun.send.mock.calls[1];
+      expect(phoneOnly.noReplyTo).toBe(true);
+      expect(phoneOnly.text).toContain("Contact: 0700 000 000");
+      // What the canonicalizer refuses is refused on the box: a name in front of it, two addresses, a bare tag.
+      for (const email of ["Ana <ana@example.org>", "a@example.org, b@example.org", "+tag@gmail.com", "ana@exam​ple.org"]) {
+        await expect(submitFeedback(db, deps(), { ...named, email }, NOW)).rejects.toMatchObject({ code: "VALIDATION_ERROR", fields: ["email"] });
+      }
+      // Anonymous: the box is dropped, never sent.
+      expect(await submitFeedback(db, deps(), { ...named, identity: "anonymous" }, NOW)).toEqual({ outcome: "sent" });
+      expect(mailgun.send.mock.calls[2][0].text).not.toContain("example.org");
+      // Nothing of it kept: no outbox row, no audit row.
+      expect(await db.select().from(auditLogs)).toEqual([]);
+    });
+
+    it("§NNN does not hand a confidential report's typed address to the club's spam screen: never marked for it", async () => {
+      const screening: ContactScreening = { botCheckOn: false, tokenPresent: false, turnstileVerdict: "not_configured", clubHost: "club.example.org" };
+      const toClub = { ...SAFETY, identity: "named", name: "Ana Pop", audience: "club", email: "ana@club-example.net" };
+      expect(await submitFeedback(db, deps({ screening }), toClub, NOW)).toEqual({ outcome: "sent", audience: "club" });
+      expect(smtp.messages[0].subject).not.toContain("posibil spam");
+      // The same address on a complaint is the contact form's own signal (§310): marked.
+      const complaint = { ...COMPLAINT, identity: "named", name: "Ana Pop", email: "ana@club-example.net" };
+      expect(await submitFeedback(db, deps({ screening }), complaint, NOW)).toEqual({ outcome: "sent" });
+      expect(smtp.messages[1].subject).toContain("posibil spam");
+    });
+
+    it("§NNN sends Girl Zone's messages by Gmail only while the notice in force names {{feedbackSafetyGmail}}: by Mailgun otherwise, whatever the card says", async () => {
+      const gmailForHer = { ...SETTINGS, safety: { ...SETTINGS.safety, via: "gmail" as const } };
+      expect(await submitFeedback(db, deps({ settings: gmailForHer, safetyGmailDescribed: false }), SAFETY, NOW)).toEqual({ outcome: "sent" });
+      expect(smtp.messages).toHaveLength(0);
+      expect(mailgun.send).toHaveBeenCalledTimes(1);
+      expect(await submitFeedback(db, deps({ settings: gmailForHer, safetyGmailDescribed: true }), SAFETY, NOW)).toEqual({ outcome: "sent" });
+      expect(smtp.messages.map((message) => message.to)).toEqual([["safety@example.org"]]);
+      expect(mailgun.send).toHaveBeenCalledTimes(1);
     });
 
     it("refuses a reader not offered on its box, and sends nothing", async () => {
@@ -586,6 +631,19 @@ describe("§676 «Spune-ne ceva»", () => {
       await updateFeedbackSettings(db, admin, SETTINGS, NOW);
       await expect(updateFeedbackSettings(db, admin, SETTINGS, NOW, gmailLess)).resolves.toMatchObject({ howItWent: { via: "gmail" } });
       await expect(updateFeedbackSettings(db, admin, { ...SETTINGS, suggestion: { ...SETTINGS.suggestion, via: "carrier-pigeon" } }, NOW)).rejects.toMatchObject({ code: "VALIDATION_ERROR", fields: ["suggestionVia"] });
+    });
+
+    it("§NNN refuses to newly choose Gmail for Girl Zone while the notice in force does not name {{feedbackSafetyGmail}}, on her box — but lets it stay, and lets the other forms choose it", async () => {
+      const noNotice = { gmail: true, mailgun: true };
+      const gmailForHer = { ...SETTINGS, safety: { ...SETTINGS.safety, via: "gmail" } };
+      await expect(updateFeedbackSettings(db, admin, gmailForHer, NOW, noNotice, false)).rejects.toMatchObject({ code: "VALIDATION_ERROR", fields: ["safetyVia"] });
+      expect((await readFeedbackSettings(db)).safety.via).toBe("mailgun");
+      // The ordinary forms' Gmail is the club's mailbox the notice already names: no gate.
+      const mailgunForOne = { ...SETTINGS, suggestion: { ...SETTINGS.suggestion, via: "mailgun" } };
+      await expect(updateFeedbackSettings(db, admin, mailgunForOne, NOW, noNotice, false)).resolves.toMatchObject({ suggestion: { via: "mailgun" } });
+      // Once the notice names it, the road can be chosen; a later save with the notice gone keeps it (not choosing it again).
+      await updateFeedbackSettings(db, admin, gmailForHer, NOW, noNotice, true);
+      await expect(updateFeedbackSettings(db, admin, gmailForHer, NOW, noNotice, false)).resolves.toMatchObject({ safety: { via: "gmail" } });
     });
 
     it("refuses anybody but the Administrator", async () => {

@@ -43,7 +43,7 @@ const state = {
 const BOTH = { gmail: true, mailgun: true };
 
 async function html(roads = BOTH, mayEdit = true): Promise<string> {
-  const element = await FeedbackFormsPanel({ locale: "ro", state, noticeDescribes: true, mayEdit, roads });
+  const element = await FeedbackFormsPanel({ locale: "ro", state, noticeDescribes: true, mayEdit, roads, safetyGmailDescribed: true });
   return renderToStaticMarkup(element).replace(/<style[\s\S]*?<\/style>/g, "");
 }
 
