@@ -346,6 +346,8 @@ test.describe("§754 volunteers for a race", () => {
       expect(file).toMatch(/,34,Female,Brașov,Da,Da,(\r?\n|$)/);
 
       // --- «Oferim tricouri voluntarilor»: a tick of the card's own, and the form asks the size from then on ---
+      // Nobody waits any more, so the card is shut: open it, as a person does.
+      await openFold(card);
       const shirtsForm = page.getByTestId("volunteer-shirts-form");
       const shirtsTick = shirtsForm.getByRole("checkbox", { name: "Oferim tricouri voluntarilor" });
       await expect(shirtsTick).not.toBeChecked();
