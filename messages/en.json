@@ -2329,7 +2329,7 @@
         "showCheckpointsHelp": "Ticked: on the profile, at each point, a cup for water, a fork for food, a dot for the rest. Under it, “km 12” where it fits. Drawn only with the route's profile.",
         "showCheckpointTimes": "…with the cut-off times",
         "showCheckpointTimesHelp": "Ticked: beside each point, its cut-off too, “km 12 · 11:30”. If not every time fits, none is printed; then the kilometres that do not fit go. The marks always stay.",
-        "showCheckpointsNone": "The event has no checkpoints: add them in the “Checkpoints” card.",
+        "showCheckpointsNone": "The event has no checkpoints: add them in “The course” › “Checkpoints”.",
         "showEmergency": "Emergency phone",
         "showEmergencyHelp": "Ticked: every number carries a small line with the label and one or two phones. Type the organizers' numbers, never a participant's.",
         "emergencyPhone": "The organizers' phone",

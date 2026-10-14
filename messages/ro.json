@@ -2329,7 +2329,7 @@
         "showCheckpointsHelp": "Bifat: pe profil, la fiecare punct, o cană unde e apă, o furculiță unde e mâncare, o bulină la celelalte. Dedesubt, „km 12” unde încape. Apare doar cu profilul traseului.",
         "showCheckpointTimes": "…cu orele limită",
         "showCheckpointTimesHelp": "Bifat: lângă fiecare punct, și ora limită, „km 12 · 11:30”. Dacă nu încap toate orele, nu se scrie niciuna; apoi pleacă kilometrii care nu încap. Semnele rămân mereu.",
-        "showCheckpointsNone": "Evenimentul nu are puncte de control: adaugă-le în cardul „Puncte de control”.",
+        "showCheckpointsNone": "Evenimentul nu are puncte de control: adaugă-le în „Traseul” › „Puncte de control”.",
         "showEmergency": "Telefon pentru urgențe",
         "showEmergencyHelp": "Bifat: pe fiecare număr, mic, un rând cu eticheta și unul sau două telefoane. Scrie numerele organizatorilor, nu ale participanților.",
         "emergencyPhone": "Telefonul organizatorilor",
