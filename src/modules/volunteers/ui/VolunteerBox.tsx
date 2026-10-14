@@ -1,4 +1,5 @@
 import ChecklistIcon from "@mui/icons-material/Checklist";
+import FamilyRestroomIcon from "@mui/icons-material/FamilyRestroom";
 import VolunteerActivismIcon from "@mui/icons-material/VolunteerActivism";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
@@ -7,9 +8,10 @@ import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
-import { submitVolunteerAction } from "@/app/[locale]/events/[slug]/actions";
+import { submitVolunteerAction } from "@/app/[locale]/events/[slug]/volunteers/actions";
 import { countForm } from "@/i18n/count-form";
 import type { Locale } from "@/i18n/routing";
+import PublicFlash from "@/shared/feedback/PublicFlash";
 import { BOT_CHECK_SLOT_SX } from "@/modules/registrations/domain/turnstile-widget";
 import { phoneCountryLabels, phoneCountryOrder } from "@/modules/registrations/phone";
 import { turnstileSiteKey } from "@/modules/registrations/turnstile";
@@ -18,42 +20,58 @@ import PhoneField from "@/modules/registrations/ui/PhoneField";
 import SexField from "@/modules/registrations/ui/SexField";
 import { SHIRT_SIZES } from "@/modules/registrations/domain/kit";
 import CheckboxField from "@/shared/ui/CheckboxField";
-import { DISCLOSURE_OPEN_ARROW, DISCLOSURE_SUMMARY_SX, FOLD_GLYPH_INLINE_SX } from "@/shared/ui/disclosure";
+import { FOLD_GLYPH_INLINE_SX } from "@/shared/ui/disclosure";
 import LegalLink from "@/shared/ui/LegalLink";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import { CLUB_NAME } from "@/theme/brand";
-import { DENSITY } from "@/theme/density";
 import { yearsPhrase } from "@/modules/registrations/domain/age";
-import { VOLUNTEER_AGE_MAX, VOLUNTEER_CITY_MAX, VOLUNTEER_MESSAGE_MAX, VOLUNTEER_MINIMUM_AGE, VOLUNTEER_NAME_MAX } from "../domain/volunteer";
+import {
+  VOLUNTEER_ADULT_AGE,
+  VOLUNTEER_AGE_MAX,
+  VOLUNTEER_CITY_MAX,
+  VOLUNTEER_GUARDIAN_NAME_MAX,
+  VOLUNTEER_MESSAGE_MAX,
+  VOLUNTEER_MINIMUM_AGE,
+  VOLUNTEER_NAME_MAX,
+} from "../domain/volunteer";
+import GuardianFields from "./GuardianFields";
 import RoleDescription from "./RoleDescription";
 import type { PublicVolunteerRole } from "../volunteers";
 import { VOLUNTEER_BOX_ID, type VolunteerBox as BoxName, type VolunteerOutcome, type VolunteerTyped } from "./volunteer-box";
 
 /**
- * «Vreau să fiu voluntar» on an event's page (§754; the owner, 2026-10-13: «I want to register volunteers
- * for a race»): a fold with one plain form — «Ce ești dispus(ă) să faci», one box per role that still needs
- * people, as many ticked as the person would do (§761; the owner, 2026-10-14: «poate bifa mai multe atribuțiuni
- * din ce e dispus să facă»), the name, the address, the telephone number, an optional message, the consent tick
- * that names the privacy notice, and — since §758 — the tick that accepts the volunteer agreement in force and the
- * one that says the person is of age. The organizers then give the person one role.
+ * «Vreau să fiu voluntar» — the form of the volunteers' own page (§754; the owner, 2026-10-13: «I want to register
+ * volunteers for a race»; since §NNN, 2026-10-14: «formularul trebuie să fie pagină separată, nu embedded în pagina
+ * evenimentului», so it lives at `/evenimente/<slug>/voluntari`, not in a fold of the event's page): one plain form —
+ * «Ce ești dispus(ă) să faci», one box per role that still needs people with its description and how many it still
+ * needs, as many ticked as the person would do (§761; the owner, 2026-10-14: «poate bifa mai multe atribuțiuni din ce e
+ * dispus să facă»), the name, the address, the telephone number, an optional message, the consent tick that names the
+ * privacy notice, and — since §758 — the tick that accepts the volunteer agreement in force. The organizers then give
+ * the person one role. The page owns the title and the event's date and place; this is the form and the answers to it.
  *
- * A Server Component around a Server Action, like the «Anunță-mă» box beside it: it works with scripts
- * off (a native `<details>` and native checkboxes; the only islands are the telephone box and the
- * anti-bot widget, both with a no-script fallback of their own), the honeypot and the rendering time ride
- * along as hidden fields, Turnstile shows when the club switched it on, and the answer comes back as a
- * sentence after a redirect — the same one for a new person and for a repeat (BR-REQ-031-01 criterion 3).
+ * A Server Component around a Server Action, like the «Anunță-mă» box: it works with scripts off (native checkboxes; the
+ * only islands are the telephone box, the guardian's block and the anti-bot widget, each with a no-script fallback of
+ * its own), the honeypot and the rendering time ride along as hidden fields, Turnstile shows when the club switched it
+ * on, and the answer comes back as a sentence after a redirect to the same page — the same one for a new person and for
+ * a repeat (BR-REQ-031-01 criterion 3) — with the house's flash toast beside it (§427).
  *
- * The page draws this only while the three conditions hold (`volunteerOfferClosedFor`): the event takes
- * volunteers, a role still needs people, and the privacy notice in force describes them. The action asks
- * again.
+ * The page draws this only while the offer's conditions hold (`readVolunteerOffer`, `volunteerOfferClosedFor`); the
+ * action asks again.
  *
  * What the person says about themselves (§765; the owner, 2026-10-14): while the notice in force names it (`profile`),
- * the form asks «Vârsta» (the registration's own number-in-years habit, at least 18 — the tick «Am cel puțin 18 ani» is
- * gone, the age answers it), «Sex» (the registration form's own `SexField`, its words), «Orașul» (its city box's words),
- * the optional ticks «Am mai fost voluntar în trecut la alte curse» and «Fac parte din grupul {club}» (the club's name
- * from `CLUB_NAME`, as the registration form's member tick draws it — the person's claim, checked against nothing) and,
- * only while the event gives T-shirts (`shirts`), «Mărimea tricoului» — the kit's sizes. While it does not, the form is
- * §758's, with its tick. Each role's description is its document, under its tick (`RoleDescription`).
+ * the form asks «Vârsta» (the registration's own number-in-years habit, at least 14 since §NNN — the tick «Am cel puțin
+ * 18 ani» is gone, the age answers it), «Sex» (the registration form's own `SexField`, its words), «Orașul» (its city
+ * box's words), the optional ticks «Am mai fost voluntar în trecut la alte curse» and «Fac parte din grupul {club}» (the
+ * club's name from `CLUB_NAME`, as the registration form's member tick draws it — the person's claim, checked against
+ * nothing) and, only while the event gives T-shirts (`shirts`), «Mărimea tricoului» — the kit's sizes. While it does not,
+ * the form is §758's, with its tick, and takes adults only. Each role's description is its document, under its tick
+ * (`RoleDescription`).
+ *
+ * **Under eighteen (§NNN).** While the notice in force names `{{volunteerMinors}}` and the agreement `{{volunteerGuardian}}`
+ * (`minors`), a person of fourteen to seventeen also gives their parent's or guardian's name and address and ticks
+ * «Părintele sau tutorele meu știe și e de acord»: the block is `GuardianFields`, always drawn without scripts and shown
+ * by the age typed with them. While it is not (`minors` false), a typed age under eighteen is refused with the sentence
+ * that says the club cannot take minors yet.
  */
 export default async function VolunteerBox({
   locale,
@@ -61,6 +79,7 @@ export default async function VolunteerBox({
   roles,
   shirts,
   profile,
+  minors,
   outcome,
   refused,
   typed,
@@ -75,6 +94,8 @@ export default async function VolunteerBox({
   shirts: boolean;
   /** The notice in force names what a volunteer says about themselves (§765): the form asks it — else §758's tick «Am cel puțin 18 ani». */
   profile: boolean;
+  /** The club may take a person under eighteen (§NNN): the notice and the agreement in force both describe minors — the form draws the guardian's block. */
+  minors: boolean;
   outcome: VolunteerOutcome | null;
   /** The boxes a refusal named (`?vfields=`). */
   refused: readonly BoxName[];
@@ -100,44 +121,39 @@ export default async function VolunteerBox({
     close: tForm("countrySearch.close"),
   };
   const fieldId = (name: string) => `volunteer-${name}`;
-  // «18 ani» / «18 years», the unit in the words every age is said with (§440).
+  // «14 ani» / «14 years» and «18 ani» / «18 years», the unit in the words every age is said with (§440).
   const age = yearsPhrase(VOLUNTEER_MINIMUM_AGE, locale);
+  const adultAge = yearsPhrase(VOLUNTEER_ADULT_AGE, locale);
   // The roles ticked before a refusal (§142), still offered: a role that filled meanwhile is simply not drawn.
   const ticked = new Set((typed.roleIds ?? "").split(",").filter((id) => roles.some((role) => role.id === id)));
-  // «Vârsta» says one of two sentences after a refusal: a number below the minimum is «cel puțin 18 ani», anything else is «scrie vârsta».
+  /*
+    «Vârsta» says one of three sentences after a refusal: a number under eighteen, while the club cannot take minors yet,
+    says so (§NNN); a number below the minimum (fourteen) says «cel puțin 14 ani»; anything else is «scrie vârsta».
+  */
   const typedAge = Number((typed.age ?? "").trim());
-  const ageSentence = /^\d{1,3}$/.test((typed.age ?? "").trim()) && typedAge < VOLUNTEER_MINIMUM_AGE ? "ageMinimum" : "age";
-  /** A refusal's sentence for one box, in the form's own words (§758's `{age}` is the minimum's phrase). */
-  const refusal = (name: BoxName) => t(`volunteers.errors.${name === "age" ? ageSentence : name}`, { age });
+  const ageDigits = /^\d{1,3}$/.test((typed.age ?? "").trim());
+  const ageSentence = !ageDigits ? "age" : typedAge < VOLUNTEER_ADULT_AGE && !minors ? "ageMinors" : typedAge < VOLUNTEER_MINIMUM_AGE ? "ageMinimum" : "age";
+  /** A refusal's sentence for one box, in the form's own words (`{age}` is the minimum's phrase, §758's tick says eighteen). */
+  const refusal = (name: BoxName) => t(`volunteers.errors.${name === "age" ? ageSentence : name}`, { age: name === "adult" ? adultAge : age });
 
   return (
-    <Box id={VOLUNTEER_BOX_ID} component="section" aria-labelledby={`${VOLUNTEER_BOX_ID}-title`} data-testid="volunteer-box" sx={{ mt: { xs: DENSITY.sectionGap, sm: 4 }, scrollMarginTop: 16 }}>
-      <Box
-        component="details"
-        // A person who has just answered, or is correcting a refusal, finds the box open.
-        open={outcome !== null}
-        sx={{
-          border: 1,
-          borderColor: "divider",
-          borderRadius: 2,
-          px: 2,
-          "& > summary": { ...DISCLOSURE_SUMMARY_SX, py: 1.5 },
-          ...DISCLOSURE_OPEN_ARROW,
-          "&[open]": { pb: 2 },
-        }}
-      >
-        <Box component="summary">
-          <Typography component="h2" id={`${VOLUNTEER_BOX_ID}-title`} variant="h2" sx={{ fontSize: "1.25rem" }}>
-            <VolunteerActivismIcon aria-hidden sx={FOLD_GLYPH_INLINE_SX} />
-            {t("volunteers.title")}
-          </Typography>
-        </Box>
-
+    <Box id={VOLUNTEER_BOX_ID} component="section" aria-label={t("volunteers.title")} data-testid="volunteer-box" sx={{ scrollMarginTop: 16 }}>
+      <Box>
         {outcome === "done" ? (
           // The same sentence whether the person was new or already on the list (BR-REQ-031-01 criterion 3).
-          <Alert severity="success" role="status" data-testid="volunteer-done" sx={{ mt: 1 }}>
-            {t("volunteers.done")}
-          </Alert>
+          <>
+            <Alert severity="success" role="status" data-testid="volunteer-done" sx={{ mt: 1 }}>
+              {t("volunteers.done")}
+              {/* Where the club takes minors, the same extra sentence for everybody: never a hint about who was typed (§NNN). */}
+              {minors && (
+                <Box component="span" sx={{ display: "block", mt: 1 }} data-testid="volunteer-done-guardian">
+                  {t("volunteers.doneGuardian")}
+                </Box>
+              )}
+            </Alert>
+            {/* The toast the send flashed (§427), here and on no other state of this page. */}
+            <PublicFlash accept={["volunteerSent"]} />
+          </>
         ) : roles.length === 0 ? (
           // Every role filled while the person typed: thanked, and no form with nothing to choose from.
           <Alert severity="info" role="status" data-testid="volunteer-all-full" sx={{ mt: 1 }}>
@@ -275,7 +291,7 @@ export default async function VolunteerBox({
                     id={fieldId("age")}
                     name="age"
                     label={t("volunteers.profile.age")}
-                    helperText={invalid.has("age") ? refusal("age") : t("volunteers.profile.ageHelp", { age })}
+                    helperText={invalid.has("age") ? refusal("age") : minors ? t("volunteers.profile.ageHelpMinors", { age }) : t("volunteers.profile.ageHelp", { age: adultAge })}
                     required
                     fullWidth
                     autoComplete="off"
@@ -294,6 +310,57 @@ export default async function VolunteerBox({
                     helperText={invalid.has("sex") ? t("volunteers.errors.sex") : undefined}
                   />
                 </Stack>
+                {/*
+                  The parent or guardian of a person under eighteen (§NNN): drawn open and with no box `required`, so scripts off
+                  and an adult both work — the island follows the age typed and marks the three boxes required while it shows
+                  them; the server refuses a minor's post without them either way (`checkGuardian`).
+                */}
+                {minors && (
+                  <GuardianFields ageInputId={fieldId("age")}>
+                    <Box component="fieldset" sx={{ border: 0, m: 0, p: 0, minWidth: 0 }} data-testid="volunteer-guardian">
+                      <Typography component="legend" sx={{ fontWeight: 600, p: 0 }}>
+                        <FamilyRestroomIcon aria-hidden sx={FOLD_GLYPH_INLINE_SX} />
+                        {t("volunteers.guardian.title")}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+                        {t("volunteers.guardian.intro")}
+                      </Typography>
+                      <Stack spacing={2}>
+                        <TextField
+                          id={fieldId("guardianName")}
+                          name="guardianName"
+                          label={t("volunteers.guardian.name")}
+                          fullWidth
+                          autoComplete="off"
+                          defaultValue={typed.guardianName}
+                          error={invalid.has("guardianName")}
+                          helperText={invalid.has("guardianName") ? t("volunteers.errors.guardianName") : undefined}
+                          slotProps={{ htmlInput: { maxLength: VOLUNTEER_GUARDIAN_NAME_MAX }, inputLabel: { required: true } }}
+                        />
+                        <TextField
+                          id={fieldId("guardianEmail")}
+                          name="guardianEmail"
+                          type="email"
+                          label={t("volunteers.guardian.email")}
+                          fullWidth
+                          autoComplete="off"
+                          defaultValue={typed.guardianEmail}
+                          error={invalid.has("guardianEmail")}
+                          helperText={invalid.has("guardianEmail") ? t("volunteers.errors.guardianEmail") : t("volunteers.guardian.emailHelp")}
+                          slotProps={{ htmlInput: { maxLength: 320 }, inputLabel: { required: true } }}
+                        />
+                        <CheckboxField
+                          name="guardianAware"
+                          id={fieldId("guardianAware")}
+                          error={invalid.has("guardianAware") ? t("volunteers.errors.guardianAware") : undefined}
+                          requiredMessage={t("volunteers.errors.guardianAware")}
+                        >
+                          {t("volunteers.guardian.aware")}
+                        </CheckboxField>
+                      </Stack>
+                    </Box>
+                  </GuardianFields>
+                )}
                 <TextField
                   id={fieldId("city")}
                   name="city"
@@ -407,10 +474,10 @@ export default async function VolunteerBox({
                   name="adult"
                   id={fieldId("adult")}
                   required
-                  error={invalid.has("adult") ? t("volunteers.errors.adult", { age }) : undefined}
-                  requiredMessage={t("volunteers.errors.adult", { age })}
+                  error={invalid.has("adult") ? t("volunteers.errors.adult", { age: adultAge }) : undefined}
+                  requiredMessage={t("volunteers.errors.adult", { age: adultAge })}
                 >
-                  {t("volunteers.adult", { age })}
+                  {t("volunteers.adult", { age: adultAge })}
                 </CheckboxField>
               </Box>
             )}

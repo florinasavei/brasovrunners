@@ -23,6 +23,7 @@ import {
   agreementRolesStamp,
   agreementRoleWords,
   compareRoles,
+  isVolunteerMinor,
   refusedFields,
   type RoleWords,
   tasksWords,
@@ -74,6 +75,7 @@ export const AGREEMENT_FACT_FIELDS = [
   "volunteerTasks",
   "volunteerRoleChoices",
   "volunteerChoiceTasks",
+  "volunteerGuardian",
   "event",
   "eventDate",
   "eventLocation",
@@ -83,8 +85,11 @@ export const AGREEMENT_FACT_FIELDS = [
 
 export type AgreementFacts = Record<(typeof AGREEMENT_FACT_FIELDS)[number], string>;
 
-/** The blanks added after acceptances were already kept (§761): a row accepted before reads them as "" — its text named neither. */
-const LATER_FACT_FIELDS: ReadonlySet<string> = new Set(["volunteerRoleChoices", "volunteerChoiceTasks"]);
+/**
+ * The blanks added after acceptances were already kept (§761, §NNN): a row accepted before reads them as "" — its text
+ * named none of them (`{{volunteerGuardian}}` is the guardian's name, "" for an adult, which drops the minors' clause).
+ */
+const LATER_FACT_FIELDS: ReadonlySet<string> = new Set(["volunteerRoleChoices", "volunteerChoiceTasks", "volunteerGuardian"]);
 
 const agreementFactsSchema = z.object(
   Object.fromEntries(AGREEMENT_FACT_FIELDS.map((field) => [field, LATER_FACT_FIELDS.has(field) ? z.string().default("") : z.string()])) as Record<
@@ -147,7 +152,15 @@ export async function volunteerRoles<T extends Record<string, unknown>>(
  */
 export async function agreementBlanks<T extends Record<string, unknown>>(
   db: Database<T>,
-  input: { eventId: string; name: string; roles: Pick<AgreementRoles, "assigned"> & { chosen: readonly RoleWords[] }; locale: Locale; body: unknown },
+  input: {
+    eventId: string;
+    name: string;
+    roles: Pick<AgreementRoles, "assigned"> & { chosen: readonly RoleWords[] };
+    locale: Locale;
+    body: unknown;
+    /** The parent or guardian of a volunteer under eighteen (§NNN): their name fills `{{volunteerGuardian}}`; none, or an adult, leaves it "" and the minors' clause out. */
+    guardianName?: string | null;
+  },
 ): Promise<{ facts: Omit<AgreementFacts, "signedAt">; timezone: string }> {
   const event = await eventMergeValues(db, input.eventId, input.locale);
   const role = agreementRoleWords(input.roles, input.locale, namesVolunteerRoleChoices(input.body));
@@ -158,6 +171,7 @@ export async function agreementBlanks<T extends Record<string, unknown>>(
       volunteerTasks: role.tasks,
       volunteerRoleChoices: role.choices,
       volunteerChoiceTasks: role.choiceTasks,
+      volunteerGuardian: input.guardianName ?? "",
       event: event?.values.event ?? "",
       eventDate: event?.values.eventDate ?? "",
       eventLocation: event?.values.eventLocation ?? "",
@@ -209,6 +223,8 @@ export async function agreementAcceptance<T extends Record<string, unknown>>(
     document: { id: string; title: string; body: unknown };
     method: VolunteerAgreementMethod;
     recordedBy?: string | null;
+    /** A volunteer under eighteen (§NNN): the guardian's name in the text's `{{volunteerGuardian}}`, and no «declared of age» whatever the way. */
+    guardianName?: string | null;
   },
   now: Date,
 ): Promise<AgreementAcceptanceColumns> {
@@ -222,7 +238,8 @@ export async function agreementAcceptance<T extends Record<string, unknown>>(
     agreementTextHash: signedTextHash({ title: input.document.title, body: agreementBody(input.document.body), values: facts }),
     agreementFacts: facts,
     agreementRecordedByStaffUserId: input.recordedBy ?? null,
-    declaredAdult: input.method !== "PAPER" || mergeFieldsIn(input.document.body).has(MINIMUM_AGE_MERGE_FIELD),
+    // «Am cel puțin 18 ani»: never for a volunteer under eighteen — their parent accepts beside them (§NNN).
+    declaredAdult: !input.guardianName && (input.method !== "PAPER" || mergeFieldsIn(input.document.body).has(MINIMUM_AGE_MERGE_FIELD)),
     agreementTokenHash: null,
     agreementTokenExpiresAt: null,
   };
@@ -293,6 +310,8 @@ async function liveLinkRow<T extends Record<string, unknown>>(db: Database<T>, s
       email: eventVolunteers.email,
       locale: eventVolunteers.locale,
       state: eventVolunteers.state,
+      age: eventVolunteers.age,
+      guardianName: eventVolunteers.guardianName,
       acceptedAt: eventVolunteers.agreementAcceptedAt,
       expiresAt: eventVolunteers.agreementTokenExpiresAt,
     })
@@ -308,6 +327,8 @@ export type AgreementLinkView =
   | {
       status: "open";
       name: string;
+      /** A volunteer under eighteen (§NNN): the page asks no «Am cel puțin 18 ani» — their parent or guardian accepts beside them. */
+      minor: boolean;
       eventTitle: string;
       /** The role the organizers gave the person, in the page's language, or null while nobody has (§761). */
       roleName: string | null;
@@ -339,11 +360,13 @@ export async function readVolunteerAgreementLink<T extends Record<string, unknow
   if (!document) return { status: "noAgreement" };
   const roles = await volunteerRoles(db, row);
   if (!roles.assigned && roles.chosen.length === 0) return { status: "invalid" };
-  const blanks = await agreementBlanks(db, { eventId: row.eventId, name: row.name, roles, locale, body: document.body });
+  const minor = isVolunteerMinor(row.age) && row.guardianName !== null;
+  const blanks = await agreementBlanks(db, { eventId: row.eventId, name: row.name, roles, locale, body: document.body, guardianName: minor ? row.guardianName : null });
   const nameOf = (role: RoleWords) => (locale === "en" ? role.nameEn : role.nameRo);
   return {
     status: "open",
     name: row.name,
+    minor,
     eventTitle: blanks.facts.event,
     roleName: roles.assigned ? nameOf(roles.assigned) : null,
     chosenRoleNames: roles.chosen.map(nameOf),
@@ -378,11 +401,18 @@ export async function acceptVolunteerAgreementByLink<T extends Record<string, un
   return db.transaction(async (tx): Promise<AgreementAcceptOutcome> => {
     const row = await liveLinkRow(tx, secret, now, true);
     if (!row) return { outcome: "invalid" };
+    const minor = isVolunteerMinor(row.age) && row.guardianName !== null;
+    // «Am cel puțin 18 ani» is asked of everybody but a volunteer under eighteen, whose guardian accepts beside them (§NNN).
+    if (!minor && !input.adult) throw new DomainError("VALIDATION_ERROR", "the age tick is missing", ["adult"]);
     const document = await findCurrentApprovedDocument(tx, VOLUNTEER_AGREEMENT_KEY, input.locale, now);
     if (!document) return { outcome: "noAgreement" };
     const roles = await volunteerRoles(tx, row);
     if (!roles.assigned && roles.chosen.length === 0) return { outcome: "invalid" };
-    const acceptance = await agreementAcceptance(tx, { eventId: row.eventId, name: row.name, roles, locale: input.locale, document, method: "LINK" }, now);
+    const acceptance = await agreementAcceptance(
+      tx,
+      { eventId: row.eventId, name: row.name, roles, locale: input.locale, document, method: "LINK", guardianName: minor ? row.guardianName : null },
+      now,
+    );
     const [written] = await tx
       .update(eventVolunteers)
       .set({ ...acceptance, updatedAt: now })
@@ -526,7 +556,16 @@ export async function recordPaperVolunteerAgreement<T extends Record<string, unk
     if (!roles.assigned && roles.chosen.length === 0) throw new DomainError("NOT_FOUND", "the volunteer has no role");
     const acceptance = await agreementAcceptance(
       tx,
-      { eventId: row.eventId, name: row.name, roles, locale: row.locale, document, method: "PAPER", recordedBy: actor.id },
+      {
+        eventId: row.eventId,
+        name: row.name,
+        roles,
+        locale: row.locale,
+        document,
+        method: "PAPER",
+        recordedBy: actor.id,
+        guardianName: isVolunteerMinor(row.age) ? row.guardianName : null,
+      },
       now,
     );
     await tx.update(eventVolunteers).set({ ...acceptance, updatedAt: now }).where(eq(eventVolunteers.id, row.id));

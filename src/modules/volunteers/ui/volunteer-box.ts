@@ -1,5 +1,5 @@
 /**
- * The public form's address on the event page (§754): the id its action's redirect lands on, and what
+ * The public form's address on the volunteers' page (§754, §NNN): the id its action's redirect lands on, and what
  * the page says after the action, read from `?volunteer=`. Kept out of the action's module because a
  * "use server" file may export only async functions.
  */
@@ -15,7 +15,23 @@ export function parseVolunteerOutcome(value: string | undefined): VolunteerOutco
 }
 
 /** The boxes a refusal can name, in the order the form draws them (the service's own field names). */
-export const VOLUNTEER_BOXES = ["roleIds", "name", "email", "phone", "age", "sex", "city", "shirtSize", "message", "consent", "agreement", "adult"] as const;
+export const VOLUNTEER_BOXES = [
+  "roleIds",
+  "name",
+  "email",
+  "phone",
+  "age",
+  "guardianName",
+  "guardianEmail",
+  "guardianAware",
+  "sex",
+  "city",
+  "shirtSize",
+  "message",
+  "consent",
+  "agreement",
+  "adult",
+] as const;
 export type VolunteerBox = (typeof VOLUNTEER_BOXES)[number];
 
 /** The boxes `?vfields=` names — names only, never a value (§14.5); a query string is typed by anybody. */
@@ -39,6 +55,9 @@ export type VolunteerTyped = {
   roleIds?: string;
   message?: string;
   age?: string;
+  /** The parent's or guardian's name and address (§NNN) come back with the rest; the tick «știe și e de acord» never does — it is the person's own act each time. */
+  guardianName?: string;
+  guardianEmail?: string;
   sex?: string;
   city?: string;
   shirtSize?: string;

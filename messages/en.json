@@ -583,7 +583,11 @@
         "ageMinimum": "Volunteers must be at least {age} old.",
         "sex": "Choose your sex from the list.",
         "city": "Type your city.",
-        "shirtSize": "Choose a size from the list."
+        "shirtSize": "Choose a size from the list.",
+        "guardianName": "Write your parent's or guardian's name.",
+        "guardianEmail": "The parent's or guardian's email address does not look valid.",
+        "guardianAware": "Tick that your parent or guardian knows and agrees.",
+        "ageMinors": "The club does not take volunteers under 18 yet. You can help when you turn 18, or write to us from the contact page."
       },
       "details": "Details",
       "profile": {
@@ -593,7 +597,24 @@
         "before": "I have volunteered at other races before",
         "club": "I belong to the {club} group",
         "shirt": "T-shirt size",
-        "shirtHelp": "The event gives volunteers a T-shirt. Choose your size, or “No t-shirt”."
+        "shirtHelp": "The event gives volunteers a T-shirt. Choose your size, or “No t-shirt”.",
+        "ageHelpMinors": "In completed years; at least {age}. Under 18 you also need a parent's consent."
+      },
+      "page": {
+        "title": "I want to volunteer at {event}",
+        "back": "Back to {event}"
+      },
+      "callout": {
+        "line": "We are looking for volunteers: {roles}"
+      },
+      "doneGuardian": "If you are under 18, your parent or guardian is emailed a link to give their consent; until then the organizers cannot confirm you.",
+      "guardian": {
+        "title": "If you are under 18",
+        "intro": "A volunteer under 18 needs a parent's or guardian's consent. We email them a link, where they read the agreement and accept it in their own name.",
+        "name": "Parent's or guardian's name",
+        "email": "Parent's or guardian's email",
+        "emailHelp": "We send the consent link here. We use it for nothing else.",
+        "aware": "My parent or guardian knows and agrees"
       }
     },
     "calendar": {
@@ -1870,7 +1891,11 @@
       "VOLUNTEER_AGREEMENT_ACCEPTED": "The person has already accepted the agreement: there is nothing left to send or record.",
       "VOLUNTEER_AGREEMENT_NOTICE": "The privacy notice in force does not describe the volunteer agreement's acceptance yet. Approve one from the template in «Legal documents» first; «Tasks» says how.",
       "VOLUNTEER_AGREEMENT_REPRINT": "Not recorded: the agreement's version or the person's role changed since it was printed. Print the PDF to sign again and ask for a signature on the new sheet.",
-      "BADGE_COLOUR_UNREADABLE": "Not saved: the text does not read well on the chosen colour. Choose a darker or a lighter colour."
+      "BADGE_COLOUR_UNREADABLE": "Not saved: the text does not read well on the chosen colour. Choose a darker or a lighter colour.",
+      "VOLUNTEER_GUARDIAN_MISSING": "The parent's consent is missing: a volunteer under 18 is confirmed only once their parent or guardian has accepted the agreement, from the link or on paper.",
+      "VOLUNTEER_GUARDIAN_ACCEPTED": "The parent or guardian has already accepted the agreement: there is nothing left to send or record.",
+      "VOLUNTEER_GUARDIAN_NO_EMAIL": "The parent or guardian has no email address entered, so there is nowhere to send the link. Take the consent on paper, or add the address under “Edit”.",
+      "VOLUNTEER_MINORS_CLOSED": "The club does not take volunteers under 18 yet: the privacy notice and the agreement in force do not describe minors. Approve them first; “Tasks” says how."
     },
     "editor": {
       "draftPreview": {
@@ -3314,7 +3339,9 @@
         "volunteerTasks": "In the volunteer agreement only: what the role does, from its description. Without one, the sentence naming it is left out",
         "volunteerRoleChoices": "In the volunteer agreement only: the roles the volunteer ticked, while no role is given. Once one is, the sentence naming them is left out",
         "volunteerChoiceTasks": "In the volunteer agreement only: what each ticked role does, from their descriptions. With a role given or no descriptions, the sentence is left out",
-        "volunteerProfile": "Privacy notice only: the volunteers' form boxes about the person, in quotes. Without it in the notice in force, the form asks only the minimum-age tick"
+        "volunteerProfile": "Privacy notice only: the volunteers' form boxes about the person, in quotes. Without it in the notice in force, the form asks only the minimum-age tick",
+        "volunteerGuardian": "Only in the volunteer agreement: the name of the parent or guardian of a volunteer under 18, in the minors' clause; for an adult the sentence is left out. Without it in the agreement in force, the club takes no volunteers under 18",
+        "volunteerMinors": "Only in the privacy notice: the parent's or guardian's boxes of the volunteers' form, in quotation marks. Without it in the notice in force, the club takes no volunteers under 18"
       },
       "removeBlockedReferenced": "Can neither be withdrawn nor deleted permanently: {signatures}, {events} and {acknowledgements} depend on it. “Delete” on its row takes it off the list.",
       "removeBlockedCurrent": "In force right now — it can neither be withdrawn nor deleted. Approve its successor first; then this one can go.",
@@ -4243,6 +4270,17 @@
             "A lawyer should read the paragraph: the basis, the purpose (placing volunteers in roles), the T-shirt only while the club gives them, and that the “group” is the person's own claim.",
             "Open the draft, read it, fill in what is left, “Save draft”, then “Approve and publish” — in the same sitting as the volunteers' other texts."
           ]
+        },
+        "volunteerMinorsTexts": {
+          "title": "The texts for volunteers under 18",
+          "todo": "The club takes volunteers from 14, but the privacy notice or the agreement in force does not describe minors and their parent yet. Until you approve both, the form refuses any age under 18.",
+          "done": "The notice and the agreement in force describe minors: a volunteer of 14–17 offers with their parent's or guardian's name and email, and the parent accepts the agreement from the link or on paper.",
+          "how": [
+            "/admin/legal → the “GDPR” card → “Regenerate from the template” → confirm. The paragraph about volunteers names minors from 14, the parent's or guardian's name and email, what they are for and how long they are kept.",
+            "/admin/legal → the “Contract de voluntariat” card → “Regenerate from the template” → confirm. The text now has a minors' clause: the parent's consent, activities suited to the age, no night or dangerous posts.",
+            "A lawyer should read both texts against Law no. 78/2014, which has its own rules for the age and consent of minors, and confirm the age of 14 and the form of the consent, before you approve them.",
+            "Open the draft, read it, fill in what is left, “Save draft”, then “Approve and publish” — in the same sitting, in both languages."
+          ]
         }
       },
       "freeVerdict": {
@@ -4671,7 +4709,7 @@
       "summaryUnassigned": "{count} to place",
       "standing": "{taken} of {needed}",
       "offer": {
-        "open": "The “I want to volunteer” form is on the event's page.",
+        "open": "The “I want to volunteer” page is open: the event's page links to it.",
         "closed": {
           "off": "The public form is off: tick “Take volunteers on the page” below for the event's page to offer it. Your own list works either way.",
           "notPublished": "The public form is not shown: the event is not published. It appears on the page once the event is.",
@@ -4682,7 +4720,8 @@
           "noAgreement": "The public form is not shown: no volunteer agreement is in force. Approve one in «Legal documents»; «Tasks» says how.",
           "noAgreementNotice": "The public form is not shown: the privacy notice in force does not describe the volunteer agreement's acceptance yet. «Tasks» says what to approve."
         },
-        "profileOff": "The public form asks only the minimum-age tick: the notice in force does not describe the volunteers' age, sex and city yet. “Tasks” says what to approve."
+        "profileOff": "The public form asks only the minimum-age tick: the notice in force does not describe the volunteers' age, sex and city yet. “Tasks” says what to approve.",
+        "minorsOff": "No volunteers under 18: the privacy notice or the agreement in force does not describe minors and their parent yet, so the form refuses any age under 18 and you cannot enter a volunteer under 18. “Tasks” says what to approve."
       },
       "switchOn": "Take volunteers on the page",
       "rolesTitle": "Roles",
@@ -4756,7 +4795,13 @@
         "club": "Belongs to the {club} group",
         "ageValue": "Age: {age}",
         "cityValue": "City: {city}",
-        "shirtValue": "T-shirt: {size}"
+        "shirtValue": "T-shirt: {size}",
+        "guardianTitle": "Parent or guardian (under 18)",
+        "guardianName": "Parent's or guardian's name",
+        "guardianEmail": "Parent's or guardian's email",
+        "guardianHelp": "Only for a volunteer under 18. Without an email, the consent is taken on paper, with the organizers.",
+        "guardianValue": "Parent or guardian: {name}",
+        "ageHelpMinors": "Optional. Whole years, at least {age}. Under 18, add the parent or guardian below."
       },
       "states": {
         "REGISTERED": "Registered",
@@ -4817,10 +4862,13 @@
         "city": "City",
         "volunteeredBefore": "Volunteered before",
         "clubMember": "From the club's group",
-        "shirtSize": "T-shirt size"
+        "shirtSize": "T-shirt size",
+        "guardianName": "Parent or guardian",
+        "guardianEmail": "Parent or guardian email",
+        "guardianConsent": "Parent's consent"
       },
       "badgesLink": "Volunteer badges",
-      "switchHelp": "Ticked, the event's page shows the “I want to volunteer” form. Unticked, nothing is deleted: the roles and the people stay.",
+      "switchHelp": "Ticked, the event's page shows “We are looking for volunteers” and a button to the volunteers' page. Unticked, nothing is deleted: the roles and the people stay.",
       "shirts": {
         "label": "We give volunteers T-shirts",
         "help": "Ticked, the public form asks for the T-shirt size and you see it on each row. Unticked, the form asks for no size."
@@ -4830,7 +4878,28 @@
         "club": "From the {club} group"
       },
       "yes": "Yes",
-      "no": "No"
+      "no": "No",
+      "guardian": {
+        "missing": "Parent's consent missing",
+        "accepted": "Parent's consent received",
+        "linkSent": "Link sent to the parent",
+        "acceptedLine": "Parent or guardian {guardian}: version {version} · {how} · {when}",
+        "methods": {
+          "LINK": "from the link sent by email",
+          "PAPER": "signed on paper"
+        },
+        "help": "A volunteer under 18 is confirmed only after their parent's or guardian's consent. Send the link by email or print the PDF: they sign it with you, then you press “Parent's consent on paper”.",
+        "noEmail": "No parent's email is entered: the consent is taken on paper, or add the address under “Edit”.",
+        "requestedLine": "Last link sent to the parent: {when}",
+        "send": "Send the parent's link",
+        "resend": "Send the parent's link again",
+        "pdf": "PDF with the parent's consent",
+        "pdfToSign": "PDF for the parent to sign",
+        "paper": "Parent's consent on paper",
+        "paperTitle": "Did {name}'s parent sign the agreement on paper?",
+        "paperBody": "This records that {name}'s parent or guardian signed the printed agreement, the version in force, and that you recorded the signature. Keep the signed sheet.",
+        "minorsClosed": "The privacy notice or the agreement in force does not describe minors yet: the parent's link and “Parent's consent on paper” wait. “Tasks” says what to approve."
+      }
     },
     "eventTodos": {
       "title": "To do for the event's page",
@@ -5815,7 +5884,8 @@
         "VOLUNTEER_CLUB_NOTICE": "New volunteer",
         "VOLUNTEER_AGREEMENT_REQUEST": "The volunteer agreement",
         "VOLUNTEER_AGREEMENT_ACCEPTED": "You accepted the volunteer agreement",
-        "VOLUNTEER_ROLE_ASSIGNED": "Your volunteer role"
+        "VOLUNTEER_ROLE_ASSIGNED": "Your volunteer role",
+        "VOLUNTEER_GUARDIAN_REQUEST": "Your consent for a young volunteer"
       },
       "typesShort": {
         "VERIFY_REGISTRATION_EMAIL": "Confirm your address",
@@ -5883,7 +5953,8 @@
         "VOLUNTEER_CLUB_NOTICE": "On every sign-up, to each Organizer, Administrator and Superadministrator. The button opens the event's «Volunteers» card.",
         "VOLUNTEER_AGREEMENT_REQUEST": "When an organizer presses “Send the agreement link” for a volunteer who has not accepted it yet: the agreement and the link to accept it.",
         "VOLUNTEER_AGREEMENT_ACCEPTED": "When a volunteer accepts the agreement from the link, or an organizer presses “Signed on paper”: their copy, with the agreement attached as a PDF.",
-        "VOLUNTEER_ROLE_ASSIGNED": "When the organizers give a volunteer a role, from the event's «Volunteers» card: a short message naming the role, the date and the place. Nothing to press."
+        "VOLUNTEER_ROLE_ASSIGNED": "When the organizers give a volunteer a role, from the event's «Volunteers» card: a short message naming the role, the date and the place. Nothing to press.",
+        "VOLUNTEER_GUARDIAN_REQUEST": "When a volunteer under 18 offers on the event's page, or an organizer presses “Send the parent's link”: the agreement and the link where the parent or guardian accepts it in their own name."
       },
       "whenShort": {
         "VERIFY_REGISTRATION_EMAIL": "after the form is sent",
@@ -5926,7 +5997,8 @@
         "VOLUNTEER_CLUB_NOTICE": "on every sign-up, to the organizers",
         "VOLUNTEER_AGREEMENT_REQUEST": "on “Send the agreement link”",
         "VOLUNTEER_AGREEMENT_ACCEPTED": "after the link or “Signed on paper”",
-        "VOLUNTEER_ROLE_ASSIGNED": "when the organizers give a role"
+        "VOLUNTEER_ROLE_ASSIGNED": "when the organizers give a role",
+        "VOLUNTEER_GUARDIAN_REQUEST": "when a volunteer under 18 offers"
       },
       "clubNotices": {
         "title": "The club's copies",
@@ -6549,7 +6621,8 @@
         "VOLUNTEER_CLUB_NOTICE": "Who offered and for which roles is added by itself, however you write the text. The address and the telephone number are never in the email: they are on the card, behind the sign-in.",
         "VOLUNTEER_AGREEMENT_REQUEST": "The role and the event are added by themselves. The link is for this person only, works once, and a new one replaces the old.",
         "VOLUNTEER_AGREEMENT_ACCEPTED": "The role and the event are added by themselves. The PDF shows the accepted text, with the name, the role, the moment and its fingerprint.",
-        "VOLUNTEER_ROLE_ASSIGNED": "The role and the event's date and place are added by themselves, however you write the text. The message has no link that does anything."
+        "VOLUNTEER_ROLE_ASSIGNED": "The role and the event's date and place are added by themselves, however you write the text. The message has no link that does anything.",
+        "VOLUNTEER_GUARDIAN_REQUEST": "The volunteer and the event are added by themselves. The link is for the parent or guardian only, works once, and a new one replaces the old."
       },
       "confirmationRetry": "To whoever has not confirmed, the link goes again by itself {retry} after the last email, at most {times}; “Resend” counts too. The deadline does not move.",
       "confirmationRetryOff": "It is not re-sent by itself: in “Deadlines”, the number of resends is 0."
@@ -10824,7 +10897,9 @@
       "declarationWaitlisted": "Declaration signed: you are on the waiting list.",
       "familySignNothingLeft": "No declaration is left to sign for this event: the list below shows where each registration stands.",
       "familySignOneLeft": "Only one declaration is left to sign for this event: it is signed from the link emailed for that person.",
-      "familyWithdrawn": "Done: the registration is cancelled, and the address gets a confirmation email."
+      "familyWithdrawn": "Done: the registration is cancelled, and the address gets a confirmation email.",
+      "volunteerSent": "Your volunteer offer reached the organizers.",
+      "volunteerGuardianAccepted": "Your consent is recorded."
     },
     "toast": {
       "saved": "Saved.",
@@ -11222,7 +11297,9 @@
       "badgeColoursSaved": "The roles' colours were saved.",
       "badgeColoursUnchanged": "Nothing to change in the colours.",
       "volunteersShirtsOn": "The public form now asks for the T-shirt size.",
-      "volunteersShirtsOff": "The public form no longer asks for the T-shirt size. Sizes already given are kept."
+      "volunteersShirtsOff": "The public form no longer asks for the T-shirt size. Sizes already given are kept.",
+      "volunteerGuardianRequested": "The link to the parent is on its way by email.",
+      "volunteerGuardianRecorded": "The parent's consent is recorded as signed on paper."
     }
   },
   "Network": {
@@ -11667,6 +11744,24 @@
       "errors": {
         "agreement": "Tick the box to accept the agreement.",
         "adult": "The agreement is for people of at least {age}: tick the box if you are."
+      },
+      "minor": "Being under 18, you also need your parent's or guardian's consent: they get a separate link, on their own email."
+    },
+    "guardian": {
+      "title": "The parent's or guardian's consent",
+      "intro": "{guardian}, {volunteer} offered to volunteer at {event} and, being under 18, needs a parent's or guardian's consent. Read the agreement below and, if you agree, tick the box, write your name and accept it.",
+      "accept": "I have read the volunteer agreement and I agree that {volunteer} volunteers at this event, under its terms.",
+      "typedName": "Your full name",
+      "typedNameHelp": "The name written here is your electronic signature.",
+      "submit": "I give my consent",
+      "submitting": "Sending…",
+      "paper": "Prefer paper? You can also sign with the organizers.",
+      "accepted": "Thank you! Your consent is recorded. The organizers can now confirm the volunteer.",
+      "invalid": "The link is no longer valid: it was used, it expired or a newer one replaced it. Write to us from the contact page if you need another.",
+      "noAgreement": "The agreement is not available right now. Try later or write to us from the contact page.",
+      "errors": {
+        "agreement": "Tick that you have read the agreement and agree that {volunteer} volunteers.",
+        "typedName": "Write your full name: it is your signature."
       }
     }
   }

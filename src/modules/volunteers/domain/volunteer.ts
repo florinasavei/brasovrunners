@@ -28,6 +28,8 @@ export const VOLUNTEER_ROLE_DESCRIPTION_MAX = 2000;
 /** What a person says about themselves (§765): the city's length is the database's, the age's range too. */
 export const VOLUNTEER_CITY_MAX = 80;
 export const VOLUNTEER_AGE_MAX = 100;
+/** The guardian's name (§NNN): the volunteer's own bound. */
+export const VOLUNTEER_GUARDIAN_NAME_MAX = 120;
 export const VOLUNTEER_NEEDED_MAX = 1000;
 export const VOLUNTEER_NAME_MAX = 120;
 export const VOLUNTEER_MESSAGE_MAX = 300;
@@ -36,13 +38,21 @@ export const VOLUNTEER_NOTE_MAX = 500;
 export const VOLUNTEER_ROLES_MAX = 30;
 
 /**
- * How old a volunteer must be (§758; the owner's brief of 2026-10-13: «volunteers must be 18 or older unless the
- * club decides otherwise»): the form's and the link page's «Am cel puțin 18 ani» and the agreement's
- * `{{minimumAge}}`. Romania's volunteering law lets a minor volunteer with a parent's consent; how the club
- * would take that consent is the lawyer's later question, so until then the platform takes adults only.
+ * How old a volunteer must be (§NNN; the owner, 2026-10-14: «voluntarii trebuie să aibă cel puțin 14 ani, nu 18»,
+ * replacing §758's eighteen): the age box's floor on the public form and on the organizers' entry, and the agreement's
+ * `{{minimumAge}}`. One constant of the platform, not a club setting: the club did not ask to vary it, and a lower or
+ * higher number is Legea nr. 78/2014's question, which a lawyer answers — a change is one line and a release.
+ * From this age to `VOLUNTEER_ADULT_AGE` a volunteer is taken only with a parent's or guardian's agreement
+ * (`isVolunteerMinor`, the guardian's boxes, the link and the paper record).
  */
-export const VOLUNTEER_MINIMUM_AGE = 18;
-// Since §765 the typed age is what is checked against it (the public form, the organizers' entry); the link page keeps its tick.
+export const VOLUNTEER_MINIMUM_AGE = 14;
+/** Of age: a volunteer under it needs a parent or guardian (§NNN); the agreement link's tick «Am cel puțin 18 ani» says it for a person with no age typed. */
+export const VOLUNTEER_ADULT_AGE = 18;
+
+/** Whether an age typed says a minor: a number under eighteen. No age (an adult's hand entry, a row from before) is never a minor. */
+export function isVolunteerMinor(age: number | null | undefined): boolean {
+  return typeof age === "number" && age < VOLUNTEER_ADULT_AGE;
+}
 
 /** «Înscris» and «Confirmat» count against a role; «Anulat» never does. */
 export function countsAgainstRole(state: VolunteerState): boolean {
@@ -192,6 +202,51 @@ const shirtField = z
 const tick = z.boolean().optional().default(false);
 
 /**
+ * The guardian of a volunteer under eighteen (§NNN), as a form posts the two boxes: whatever was typed, judged together
+ * with the age by `checkGuardian` — an adult's boxes (or no age) are dropped, never kept.
+ */
+const guardianNameBox = z.string().optional().default("");
+const guardianEmailBox = z.string().optional().default("");
+
+/** One name as the forms keep it: whitespace folded, trimmed. */
+function foldedName(value: string): string {
+  return value.trim().replace(/\s+/g, " ");
+}
+
+type GuardianBoxes = { guardianName: string; guardianEmail: string };
+
+/**
+ * What the guardian's two boxes mean for the age typed (§NNN; zod's `superRefine` calls it):
+ * - **eighteen or older, or no age** — the boxes are dropped (`null`): nobody keeps a third person's data for an adult;
+ * - **a minor, `address: "required"` (the public form)** — the name (`guardianName`) and a valid address
+ *   (`guardianEmail`); the volunteer's tick that the parent knows and agrees is the schema's own (`guardianAware`);
+ * - **a minor, `address: "optional"` (the organizers' entry)** — the name, and the address only if typed: the consent
+ *   may be taken on paper at the desk, which needs no address.
+ *
+ * Returns the guardian as kept, or null; the issues name the boxes so a refusal links to them.
+ */
+export function checkGuardian(
+  age: number | null,
+  boxes: GuardianBoxes,
+  address: "required" | "optional",
+  ctx: z.RefinementCtx,
+): { name: string; email: string | null } | null {
+  if (!isVolunteerMinor(age)) return null;
+  const name = foldedName(boxes.guardianName);
+  const email = boxes.guardianEmail.trim();
+  let ok = true;
+  if (name === "" || name.length > VOLUNTEER_GUARDIAN_NAME_MAX) {
+    ctx.addIssue({ code: "custom", path: ["guardianName"], message: "a volunteer under eighteen needs a parent's or guardian's name" });
+    ok = false;
+  }
+  if ((address === "required" || email !== "") && (email.length > 320 || !isValidEmail(email))) {
+    ctx.addIssue({ code: "custom", path: ["guardianEmail"], message: "a volunteer under eighteen needs the parent's or guardian's address" });
+    ok = false;
+  }
+  return ok ? { name, email: email === "" ? null : email } : null;
+}
+
+/**
  * The roles a person ticked (§761): each an id, trimmed, the same one twice kept once, in the order posted — never
  * more than an event may define. Whether each is this event's is the service's question (it reads the event).
  */
@@ -234,11 +289,18 @@ export const volunteerStaffInputSchema = z
     volunteeredBefore: tick,
     clubMember: tick,
     shirtSize: shirtField,
+    /** The parent or guardian of a volunteer under eighteen (§NNN): the name, and the address only if typed (the consent may be on paper). */
+    guardianName: guardianNameBox,
+    guardianEmail: guardianEmailBox,
   })
-  .superRefine((value, ctx) => {
+  .transform((value, ctx) => {
     if (value.roleIds.length === 0 && value.assignedRoleId === null) {
       ctx.addIssue({ code: "custom", path: ["roleIds"], message: "tick at least one role, or give the person a role" });
     }
+    // An age under eighteen needs its guardian; any other age keeps none.
+    const guardian = checkGuardian(value.age, value, "optional", ctx);
+    const { guardianName: _name, guardianEmail: _email, ...rest } = value;
+    return { ...rest, guardian };
   });
 
 export type VolunteerStaffInput = z.infer<typeof volunteerStaffInputSchema>;
@@ -288,22 +350,54 @@ export type VolunteerPublicInput = z.infer<typeof volunteerPublicInputSchema>;
  * alte curse» and «Fac parte din grupul {club}», and «Mărimea tricoului» — which the service keeps only while the
  * event gives a shirt.
  */
-export const volunteerPublicProfileSchema = z
-  .object({
-    ...publicBase,
-    age: requiredAge,
-    sex: requiredSex,
-    city: requiredCity,
-    volunteeredBefore: tick,
-    clubMember: tick,
-    shirtSize: shirtField,
+const volunteerPublicProfileBase = z.object({
+  ...publicBase,
+  age: requiredAge,
+  sex: requiredSex,
+  city: requiredCity,
+  volunteeredBefore: tick,
+  clubMember: tick,
+  shirtSize: shirtField,
+  /** The parent's or guardian's name and address, and the volunteer's tick «Părintele sau tutorele meu știe și e de acord» (§NNN): asked only of a minor. */
+  guardianName: guardianNameBox,
+  guardianEmail: guardianEmailBox,
+  guardianAware: tick,
+});
+
+/**
+ * The profile's form with the minors' path (§NNN; the owner, 2026-10-14: «voluntarii trebuie să aibă cel puțin 14
+ * ani» and «fă cu acord ceva»). From fourteen to seventeen the form also takes the parent's or guardian's name and
+ * address and the volunteer's tick that the parent knows and agrees — and keeps the guardian as `guardian`, the
+ * boxes themselves gone; at eighteen or more the guardian's boxes are dropped, whatever was typed in them.
+ *
+ * `minors` is whether the club may take a minor yet: the privacy notice in force names `{{volunteerMinors}}` and the
+ * volunteer agreement `{{volunteerGuardian}}`, in every language (the §562 / §613 pattern). While it does not, an age
+ * under eighteen is refused on `age` — the page then says the club cannot take minors yet.
+ */
+export function volunteerPublicProfileSchemaFor(minors: boolean) {
+  return volunteerPublicProfileBase.transform((value, ctx) => {
+    let guardian: { name: string; email: string | null } | null = null;
+    if (isVolunteerMinor(value.age)) {
+      if (!minors) {
+        ctx.addIssue({ code: "custom", path: ["age"], message: "the club cannot take volunteers under eighteen yet" });
+      } else {
+        guardian = checkGuardian(value.age, value, "required", ctx);
+        if (!value.guardianAware) ctx.addIssue({ code: "custom", path: ["guardianAware"], message: "the volunteer says the parent knows and agrees" });
+      }
+    }
+    const { guardianName: _name, guardianEmail: _email, guardianAware: _aware, ...rest } = value;
+    return { ...rest, guardian };
   });
+}
 
-export type VolunteerPublicProfileInput = z.infer<typeof volunteerPublicProfileSchema>;
+export type VolunteerPublicProfileInput = z.infer<ReturnType<typeof volunteerPublicProfileSchemaFor>>;
 
-/** The schema a public post is read with: the profile's while the notice names it, §758's otherwise. */
-export function volunteerPublicSchemaFor(profile: boolean) {
-  return profile ? volunteerPublicProfileSchema : volunteerPublicInputSchema;
+/**
+ * The schema a public post is read with: the profile's (with the minors' path while `minors`) while the notice names
+ * the profile, §758's otherwise — which takes adults only, by its own tick.
+ */
+export function volunteerPublicSchemaFor(mode: { profile: boolean; minors: boolean }) {
+  return mode.profile ? volunteerPublicProfileSchemaFor(mode.minors) : volunteerPublicInputSchema;
 }
 
 /** The field names a Zod refusal is about, in the form's own words (names only, never values). */
@@ -567,12 +661,54 @@ export function agreementStandingOf(
   return "notAccepted";
 }
 
-/** The link page's two ticks: the agreement and the age, both the person's own act each time. */
+/**
+ * The link page's two ticks: the agreement and the age, both the person's own act each time. The age tick
+ * («Am cel puțin 18 ani») is asked only of a person with no age on their row or one of eighteen or more: a volunteer
+ * the organizers entered with an age under eighteen has their guardian accept beside them (§NNN), and the service
+ * (`acceptVolunteerAgreementByLink`) asks the tick of everybody else.
+ */
 export const volunteerAgreementAcceptSchema = z.object({
   agreement: z.literal(true),
-  adult: z.literal(true),
+  adult: z.boolean().optional().default(false),
   locale: z.enum(["ro", "en"]),
 });
+
+/** The guardian's link page: the typed name is the acceptance, the tick the explicit act; both the guardian's own, every time (§NNN). */
+export const volunteerGuardianAcceptSchema = z.object({
+  agreement: z.literal(true),
+  typedName: z
+    .string()
+    .transform((value) => foldedName(value))
+    .pipe(z.string().min(1).max(VOLUNTEER_GUARDIAN_NAME_MAX)),
+  locale: z.enum(["ro", "en"]),
+});
+
+/**
+ * Where a volunteer stands with their parent's or guardian's agreement (§NNN), as the card says it:
+ * - `notNeeded` — eighteen or older, or no age: nothing to ask;
+ * - `accepted` — the guardian accepted, from the link or on paper;
+ * - `linkSent` — not yet, and a link is live in the guardian's mailbox;
+ * - `missing` — not yet, and no live link: «Acordul părintelui lipsește».
+ */
+export type VolunteerGuardianStanding = "notNeeded" | "accepted" | "linkSent" | "missing";
+
+export function guardianStandingOf(
+  volunteer: { age: number | null; guardianAcceptedAt: Date | null; guardianTokenExpiresAt: Date | null },
+  now: Date,
+): VolunteerGuardianStanding {
+  if (!isVolunteerMinor(volunteer.age)) return "notNeeded";
+  if (volunteer.guardianAcceptedAt) return "accepted";
+  if (volunteer.guardianTokenExpiresAt && volunteer.guardianTokenExpiresAt.getTime() > now.getTime()) return "linkSent";
+  return "missing";
+}
+
+/**
+ * Whether a volunteer may be confirmed (§NNN): a minor needs the guardian's agreement first — the confirm action
+ * refuses with «Acordul părintelui lipsește» until it is recorded; an adult is never held up by it.
+ */
+export function guardianAllowsConfirm(volunteer: { age: number | null; guardianAcceptedAt: Date | null }): boolean {
+  return !isVolunteerMinor(volunteer.age) || volunteer.guardianAcceptedAt !== null;
+}
 
 /**
  * Which roles the page's box lists, or null for no box at all: the roles that still need people while the form

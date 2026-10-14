@@ -22,7 +22,9 @@ import {
   describesFeedbackFormsNamed,
   describesMembersShop,
   describesVolunteerAgreement,
+  describesVolunteerMinors,
   describesVolunteerProfile,
+  namesVolunteerGuardian,
   namesVolunteerRoleChoices,
   describesVolunteers,
   describesListNumbers,
@@ -355,6 +357,35 @@ export async function noticeDescribesVolunteerAgreement<T extends Record<string,
 export async function volunteerAgreementInForce<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<boolean> {
   const versions = await Promise.all(routing.locales.map((locale) => findCurrentApprovedDocument(db, "VOLUNTEER_AGREEMENT", locale, now)));
   return versions.every((version) => version !== undefined);
+}
+
+/**
+ * Whether the privacy notice in force describes volunteers under eighteen and their guardian (§NNN,
+ * `describesVolunteerMinors`) — in every language, like `noticeDescribesVolunteers`. Half of `volunteerMinorsOpen`.
+ */
+export async function noticeDescribesVolunteerMinors<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<boolean> {
+  const notices = await Promise.all(routing.locales.map((locale) => findCurrentApprovedDocument(db, "PRIVACY_NOTICE", locale, now)));
+  return notices.every((notice) => notice !== undefined && describesVolunteerMinors(notice.body));
+}
+
+/**
+ * Whether the volunteer agreement in force carries the minors' clause (§NNN, `namesVolunteerGuardian`) in every
+ * language — the other half of `volunteerMinorsOpen`, and what `/admin/tasks`' row `volunteerMinorsTexts` reads.
+ */
+export async function volunteerAgreementNamesGuardian<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<boolean> {
+  const versions = await Promise.all(routing.locales.map((locale) => findCurrentApprovedDocument(db, "VOLUNTEER_AGREEMENT", locale, now)));
+  return versions.every((version) => version !== undefined && namesVolunteerGuardian(version.body));
+}
+
+/**
+ * Whether the club may take a volunteer under eighteen yet (§NNN): the privacy notice in force names
+ * `{{volunteerMinors}}` **and** the volunteer agreement in force names `{{volunteerGuardian}}`, each in every language —
+ * §562's and §613's pattern, with the second text because the guardian accepts it. For the public sign-up, the
+ * organizers' entry, the guardian verbs and `/admin/tasks`; the public form reads the cached twin
+ * (`cachedVolunteerMinorsOpen`).
+ */
+export async function volunteerMinorsOpen<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<boolean> {
+  return (await noticeDescribesVolunteerMinors(db, now)) && (await volunteerAgreementNamesGuardian(db, now));
 }
 
 /**
