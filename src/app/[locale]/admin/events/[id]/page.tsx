@@ -1064,12 +1064,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                   <TitleSummaryBox {...box} languages={languages} creating={false} slugLocked={slugLocked} heading={flow.headings.title} />
                   <DescriptionBox languages={languages} heading={flow.headings.description} />
                   <WhenBox {...box} risk={risk} languages={languages} inSeries={inSeries} heading={flow.headings.when} />
-                  <CourseBox
-                    {...box}
-                    languages={languages}
-                    inSeries={inSeries}
-                    heading={flow.headings.course}
-                    checkpointCount={checkpoints.length}
+                  <CourseBox {...box} languages={languages} inSeries={inSeries} heading={flow.headings.course} checkpointCount={checkpoints.length}
                     checkpoints={
                       <CheckpointsCard
                         locale={locale}

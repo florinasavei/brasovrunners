@@ -1,5 +1,8 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
+import { randomUUID } from "node:crypto";
 import { existsSync } from "node:fs";
+import { mkdir, writeFile } from "node:fs/promises";
+import path from "node:path";
 import pg from "pg";
 import { fillTimeField, hydrated, signIn } from "./support/featured-event";
 import { openEditorBox, openFold } from "./support/fold";
@@ -99,8 +102,10 @@ test.describe("§757 the route's checkpoints and the race's time limit", () => {
     await page.waitForURL(/saved=event/);
     await hydrated(page);
 
-    // «Puncte de control»: open by itself while it has none, with three spare rows.
+    // «Puncte de control»: a named card of «Traseul» (§NNN), opened the way a person does, with three spare rows.
     const card = page.getByTestId("event-checkpoints-card");
+    await expect(page.locator("#box-course").getByTestId("event-checkpoints-card")).toHaveCount(1);
+    await openEditorBox(page, "Puncte de control");
     await expect(card.locator("xpath=self::details")).toHaveAttribute("open", "");
     await expect(card).toContainText("Lungimea traseului: 21 km.");
     const spare = card.getByTestId("checkpoint-new-row");
@@ -159,4 +164,130 @@ test.describe("§757 the route's checkpoints and the race's time limit", () => {
     await expect(page.getByTestId("event-checkpoints")).toContainText("Water at the hut");
     await expect(page.getByTestId("checkpoint-finish")).toContainText("closes at 12:30");
   });
+
+  /*
+    §NNN — every verb of the card, from inside «Traseul» (the owner: «Partea cu „Puncte de control” ar
+    trebui să fie băgată în cardul cu traseu (nested)»): the GPX's points previewed, a refusal that keeps
+    what was typed, the ticked ones added, a point changed, one removed — each posting the card's own
+    form from inside the event's save form, and none of it saving the event.
+  */
+  test("from inside «Traseul»: the GPX's points previewed and added, a refusal that keeps the boxes, a point changed and one removed", async ({ page }) => {
+    const tag = `${test.info().project.name}-gpx-${Date.now().toString(36)}`;
+    const race = await seedRace(tag);
+    await attachGpx(race.id);
+    await signIn(page, "Dev Administrator");
+    await page.goto(`/ro/admin/events/${race.id}`);
+    await hydrated(page);
+
+    const card = await openEditorBox(page, "Puncte de control");
+    await card.getByTestId("checkpoints-gpx-offer").click();
+    await page.waitForURL(/checkpointsGpx=1/);
+    await hydrated(page);
+    const preview = page.getByTestId("checkpoints-gpx-preview");
+    await expect(preview).toBeVisible();
+    await expect(page.locator("#event-save-form #box-course #box-checkpoints-gpx")).toHaveCount(1);
+    const offered = preview.getByTestId("checkpoints-gpx-row");
+    await expect(offered).toHaveCount(2);
+
+    // A ticked point with no English name is refused, said in the card, and what was typed stays.
+    await offered.nth(0).getByLabel("Numele (română)").fill("Izvorul Tâmpei");
+    await offered.nth(1).getByLabel("Numele (engleză)").fill("The hut");
+    await preview.getByRole("button", { name: "Adaugă punctele alese" }).click();
+    await expect(preview.getByTestId("form-refusal")).toContainText("are nevoie de un nume în română și în engleză", { timeout: 20_000 });
+    await expect(offered.nth(0).getByLabel("Numele (română)")).toHaveValue("Izvorul Tâmpei");
+    await expect(offered.nth(1).getByLabel("Numele (engleză)")).toHaveValue("The hut");
+    await expect(page.getByTestId("checkpoint-card")).toHaveCount(0);
+
+    // Named in both languages, the two are added.
+    await offered.nth(0).getByLabel("Numele (engleză)").fill("The spring");
+    await preview.getByRole("button", { name: "Adaugă punctele alese" }).click();
+    await expect(page.getByTestId("toast-live")).toContainText("Punctele din GPX au fost adăugate.", { timeout: 20_000 });
+    await hydrated(page);
+    await expect(page.getByTestId("checkpoint-card")).toHaveCount(2);
+
+    // A point changed: its English name, saved by «Salvează punctele» from inside «Traseul».
+    await page.goto(`/ro/admin/events/${race.id}`);
+    await hydrated(page);
+    const again = await openEditorBox(page, "Puncte de control");
+    const first = again.getByTestId("checkpoint-card").nth(0);
+    await openFold(first);
+    await first.getByLabel("Numele (engleză)").fill("The spring above the town");
+    await again.getByRole("button", { name: "Salvează punctele" }).click();
+    await expect(page.getByTestId("toast-live")).toContainText("Punctele de control au fost salvate.", { timeout: 20_000 });
+
+    // A point removed: «Scoate acest punct» ticked, then saved.
+    await page.goto(`/ro/admin/events/${race.id}`);
+    await hydrated(page);
+    const third = await openEditorBox(page, "Puncte de control");
+    const second = third.getByTestId("checkpoint-card").nth(1);
+    await openFold(second);
+    await second.getByRole("checkbox", { name: /Scoate acest punct/ }).check();
+    await third.getByRole("button", { name: "Salvează punctele" }).click();
+    await expect(page.getByTestId("toast-live")).toContainText("Punctele de control au fost salvate.", { timeout: 20_000 });
+
+    const saved = await withDatabase((client) =>
+      client.query<{ name_ro: string; name_en: string }>(`SELECT name_ro, name_en FROM event_checkpoints WHERE event_id = $1 ORDER BY km`, [race.id]),
+    );
+    expect(saved.rows).toEqual([{ name_ro: "Izvorul Tâmpei", name_en: "The spring above the town" }]);
+    // None of it touched the event: the distance is still the one seeded.
+    const event = await withDatabase((client) => client.query<{ distance_meters: number }>(`SELECT distance_meters FROM events WHERE id = $1`, [race.id]));
+    expect(event.rows[0].distance_meters).toBe(21000);
+  });
+
+  /*
+    §NNN — with scripts off, the card inside «Traseul» is a plain form of its own: a refused POST
+    renders the page with the reason in the card and the typed boxes kept, and nothing is saved.
+  */
+  test("with scripts off, a refusal from inside «Traseul» comes back with the reason and the typed boxes", async ({ browser }) => {
+    const tag = `${test.info().project.name}-nojs-${Date.now().toString(36)}`;
+    const race = await seedRace(tag);
+    const context = await browser.newContext({ javaScriptEnabled: false, baseURL: test.info().project.use.baseURL, viewport: test.info().project.use.viewport ?? undefined });
+    const page = await context.newPage();
+    try {
+      await signIn(page, "Dev Administrator");
+      await page.goto(`/ro/admin/events/${race.id}`);
+      const card = await openEditorBox(page, "Puncte de control");
+      await openEditorBox(page, "Adaugă puncte");
+      const spare = card.getByTestId("checkpoint-new-row").first();
+      await spare.getByLabel("Kilometrul").fill("30");
+      await spare.getByLabel("Numele (română)").fill("Prea departe");
+      await spare.getByLabel("Numele (engleză)").fill("Too far");
+      await card.getByRole("button", { name: "Salvează punctele" }).click();
+      await page.waitForLoadState("load");
+      const after = page.getByTestId("event-checkpoints-card");
+      await expect(after).toContainText("dar traseul are doar 21 km");
+      await expect(after.getByTestId("checkpoint-new-row").first().getByLabel("Kilometrul")).toHaveValue("30");
+      await expect(after.getByTestId("checkpoint-new-row").first().getByLabel("Numele (engleză)")).toHaveValue("Too far");
+      const saved = await withDatabase((client) => client.query(`SELECT 1 FROM event_checkpoints WHERE event_id = $1`, [race.id]));
+      expect(saved.rowCount).toBe(0);
+    } finally {
+      await context.close();
+    }
+  });
 });
+
+/** The environment's folder in the media store, as the server names it (`<env>/route-gpx/…`). */
+function appEnv(): string {
+  databaseUrl();
+  return process.env.APP_ENV ?? "local";
+}
+
+/**
+ * A GPX for the seeded race, written where the server's store reads it (`.media/`; on CI's `test`
+ * the in-memory store falls back to the disk, `E2E_FAKE_MEDIA_FROM_DISK`): a straight 21 km track
+ * east along one parallel, two waypoints on it — a spring near km 7.8 and a hut near km 15.6.
+ */
+async function attachGpx(eventId: string) {
+  const key = `${appEnv()}/route-gpx/${randomUUID()}/traseu.gpx`;
+  const track = Array.from({ length: 55 }, (_, step) => `<trkpt lat="45.6" lon="${(25.5 + step * 0.005).toFixed(3)}"><ele>600</ele></trkpt>`).join("");
+  const gpx = `<?xml version="1.0" encoding="UTF-8"?><gpx version="1.1" creator="e2e" xmlns="http://www.topografix.com/GPX/1/1"><wpt lat="45.6" lon="25.6"><name>Izvor</name><sym>Drinking Water</sym></wpt><wpt lat="45.6" lon="25.7"><name>Cabana</name><sym>Lodge</sym></wpt><trk><name>Traseu</name><trkseg>${track}</trkseg></trk></gpx>`;
+  const file = path.join(process.cwd(), ".media", key);
+  await mkdir(path.dirname(file), { recursive: true });
+  await writeFile(file, gpx);
+  await withDatabase((client) =>
+    client.query(`UPDATE events SET route_gpx = $2::jsonb WHERE id = $1`, [
+      eventId,
+      JSON.stringify({ key, name: "traseu.gpx", size: Buffer.byteLength(gpx), uploadedAt: new Date().toISOString() }),
+    ]),
+  );
+}

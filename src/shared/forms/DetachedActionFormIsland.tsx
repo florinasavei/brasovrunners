@@ -68,17 +68,18 @@ export default function DetachedActionFormIsland({
 export function DetachedForm({ id, children }: { id: string; children?: ReactNode }) {
   const detached = useContext(DetachedContext)[id];
   if (!detached) throw new Error(`DetachedForm "${id}" is drawn outside its DetachedActionForm`);
-  const { kept, actionKey } = detached;
+  const { actionKey } = detached;
+  const { form, formAction, pressed } = detached.kept;
   return (
     // `data-action-key` and `data-action-form` as on `ActionForm` (§436): a blocked press finds this form again.
     <form
-      ref={kept.form}
+      ref={form}
       id={id}
-      action={kept.formAction}
+      action={formAction}
       hidden
       data-action-key={actionKey}
       data-action-form=""
-      onSubmit={(event) => kept.pressed((event.nativeEvent as SubmitEvent).submitter ?? null)}
+      onSubmit={(event) => pressed(((event.nativeEvent as SubmitEvent).submitter ?? null) as HTMLElement | null)}
     >
       {children}
     </form>

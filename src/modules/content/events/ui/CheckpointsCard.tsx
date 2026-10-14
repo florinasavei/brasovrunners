@@ -46,7 +46,7 @@ export const CHECKPOINTS_GPX_FORM = "checkpoints-gpx-form";
  * `<form>` elements stand right after it, beside it and never in it — HTML forms cannot nest. For a
  * role that may only read the points there is nothing to post, and the save form is drawn alone.
  */
-export async function CheckpointForms({ locale, eventId, mayEdit, children }: { locale: Locale; eventId: string; mayEdit: boolean; children: ReactNode }) {
+export async function CheckpointForms({ locale, eventId, mayEdit, children }: { locale: Locale; eventId: string; mayEdit: boolean; children?: ReactNode }) {
   if (!mayEdit) return children;
   const t = await getTranslations("Admin");
   const messages = await refusalMessages({
