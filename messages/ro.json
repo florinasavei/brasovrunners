@@ -4629,7 +4629,7 @@
     },
     "volunteers": {
       "title": "Voluntari",
-      "intro": "Oamenii care ajută la acest eveniment și rolurile pentru care e nevoie de ei. Fiecare bifează ce ar face; voi îi dați un rol. Rolurile se definesc aici, pe eveniment, în ambele limbi. Adresele și telefoanele nu apar pe nicio pagină publică.",
+      "intro": "Oamenii care ajută la eveniment: fiecare bifează ce ar face, voi îi dați un rol. Rolurile se definesc aici, în ambele limbi. Adresele și telefoanele nu apar pe nicio pagină publică.",
       "notAccounts": "Voluntarii de aici nu sunt conturi: cine lucrează la masa de ridicare primește un cont din „Echipa”, cu rolul Voluntar.",
       "summary": "{taken} din {needed}",
       "summaryNone": "Încă niciun rol",
