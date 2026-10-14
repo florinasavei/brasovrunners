@@ -2364,7 +2364,7 @@
         },
         "profileSourceHelp": "Desenul vine din fișierul GPX al evenimentului, nu din Strava: harta Strava nu poate fi citită de site. Cu o poză pui pe fâșie ce vrei tu, de exemplu punctele de alimentare.",
         "profileImageSrc": "Poza profilului",
-        "profileImageSrcHelp": "Se pune întreagă, fără decupaj, într-o fâșie de circa {alone} la 1 ({beside} la 1 cu distanța și diferența de nivel alături). Cel mai bine: o imagine la fel de lată, pe fundal alb.",
+        "profileImageSrcHelp": "Se pune întreagă, fără decupaj, într-o fâșie de circa {alone} la 1; cu distanța și diferența de nivel alături, {beside} la 1. Cel mai bine: o imagine la fel de lată, pe fundal alb.",
         "showProfileFigures": "Arată distanța și diferența de nivel lângă profil",
         "showProfileFiguresHelp": "Bifat: cele două cifre în dreapta profilului. Debifat: profilul sau poza ocupă toată lățimea.",
         "profileOrientation": "Orientarea profilului",
@@ -5507,7 +5507,7 @@
     "bibs": {
       "title": "Numere de concurs (BIB)",
       "assign": "Alocă numerele",
-      "assignHelp": "Dă un număr fiecărei înscrieri reale și confirmate care nu are încă unul, în ordinea confirmării, de la primul număr liber al cursei (invitații speciali, din seria lor). Cine are deja un număr nu primește altul.",
+      "assignHelp": "Dă un număr fiecărei înscrieri reale și confirmate fără număr, în ordinea confirmării, de la primul număr liber al cursei; invitații speciali, din seria lor. Cine are un număr nu primește altul.",
       "assignHelpMore": "Numerele se dau singure la confirmare. Butonul recuperează înscrierile rămase fără număr: confirmate înainte să existe numere sau după schimbarea primului număr. Înscrierile de test nu primesc număr.",
       "rangeTitle": "Tipărește numerele (PDF)",
       "rangeHelp": "De la / Până la: doar o parte, de exemplu 1–50. Goale: toate.",

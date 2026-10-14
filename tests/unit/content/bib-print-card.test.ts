@@ -75,7 +75,7 @@ describe("§NNN «Alocă numerele» says what it does", () => {
     const english = block(await render({}, "en"), "bib-assign-row");
     // React writes an attribute's apostrophe as an entity.
     expect(english).toContain(`aria-label="${en.Admin.bibs.assignHelp}\n${en.Admin.bibs.assignHelpMore}"`.replace(/'/g, "&#x27;"));
-    for (const fact of ["in order of confirmation", "from the race's first free number", "special guests from their own series", "Nobody who has a number gets another", "Test registrations get no number"]) {
+    for (const fact of ["in order of confirmation", "from the race's first free number", "special guests, from their own series", "Nobody gets a second", "Test registrations get none"]) {
       expect(`${en.Admin.bibs.assignHelp} ${en.Admin.bibs.assignHelpMore}`).toContain(fact);
     }
   });

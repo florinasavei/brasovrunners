@@ -259,8 +259,8 @@ describe("§NNN the bib designer in named sections", () => {
 
   it("names the profile picture's two shapes in its help, computed from the strip, in both languages", async () => {
     // Never cropped, so no crop box says its shape: 523.28 × 36 alone, 380 × 36 beside the figures.
-    expect(section(await render(), "profile")).toContain("într-o fâșie de circa 15 la 1 (11 la 1 cu distanța și diferența de nivel alături)");
-    expect(section(await render(DEFAULT_BIB_DESIGN, "en"), "profile")).toContain("in a strip of about 15 to 1 (11 to 1 with the distance and the elevation gain beside it)");
+    expect(section(await render(), "profile")).toContain("într-o fâșie de circa 15 la 1; cu distanța și diferența de nivel alături, 11 la 1.");
+    expect(section(await render(DEFAULT_BIB_DESIGN, "en"), "profile")).toContain("in a strip of about 15 to 1; with the distance and the elevation gain beside it, 11 to 1.");
   });
 
   it("draws a glyph before the figures' tick, and the club's logo on a white plate", async () => {
