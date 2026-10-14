@@ -1,6 +1,6 @@
 {
   "id": "8111984f-2871-446f-badd-6cacdb48611a",
-  "prevId": "68e5fe0a-37d2-4ff1-a314-e7bb5538a2f1",
+  "prevId": "84d6dd69-a4dc-41cc-a88e-20377ec5f1fd",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -1009,6 +1009,133 @@
         "email_outbox_sent_at_matches_status": {
           "name": "email_outbox_sent_at_matches_status",
           "value": "(\"email_outbox\".\"status\" <> 'SENT' OR \"email_outbox\".\"sent_at\" IS NOT NULL)\n          AND (\"email_outbox\".\"status\" NOT IN ('PENDING', 'PROCESSING', 'FAILED') OR \"email_outbox\".\"sent_at\" IS NULL)"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.event_checkpoints": {
+      "name": "event_checkpoints",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "event_id": {
+          "name": "event_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "position": {
+          "name": "position",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "name_ro": {
+          "name": "name_ro",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name_en": {
+          "name": "name_en",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "km": {
+          "name": "km",
+          "type": "numeric(6, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "kinds": {
+          "name": "kinds",
+          "type": "event_checkpoint_kind[]",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'"
+        },
+        "cutoff_time": {
+          "name": "cutoff_time",
+          "type": "time",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "note_ro": {
+          "name": "note_ro",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "note_en": {
+          "name": "note_en",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "event_checkpoints_event_idx": {
+          "name": "event_checkpoints_event_idx",
+          "columns": [
+            {
+              "expression": "event_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "event_checkpoints_event_id_events_id_fk": {
+          "name": "event_checkpoints_event_id_events_id_fk",
+          "tableFrom": "event_checkpoints",
+          "tableTo": "events",
+          "columnsFrom": [
+            "event_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "event_checkpoints_km_not_negative": {
+          "name": "event_checkpoints_km_not_negative",
+          "value": "\"event_checkpoints\".\"km\" >= 0"
+        },
+        "event_checkpoints_name_length": {
+          "name": "event_checkpoints_name_length",
+          "value": "char_length(\"event_checkpoints\".\"name_ro\") BETWEEN 1 AND 60 AND char_length(\"event_checkpoints\".\"name_en\") BETWEEN 1 AND 60"
+        },
+        "event_checkpoints_note_both_languages": {
+          "name": "event_checkpoints_note_both_languages",
+          "value": "(\"event_checkpoints\".\"note_ro\" IS NULL) = (\"event_checkpoints\".\"note_en\" IS NULL) AND (\"event_checkpoints\".\"note_ro\" IS NULL OR (char_length(\"event_checkpoints\".\"note_ro\") BETWEEN 1 AND 120 AND char_length(\"event_checkpoints\".\"note_en\") BETWEEN 1 AND 120))"
         }
       },
       "isRLSEnabled": false
@@ -8391,6 +8518,16 @@
         "FAILED",
         "BOUNCED",
         "COMPLAINED"
+      ]
+    },
+    "public.event_checkpoint_kind": {
+      "name": "event_checkpoint_kind",
+      "schema": "public",
+      "values": [
+        "WATER",
+        "FOOD",
+        "FIRST_AID",
+        "TIMING"
       ]
     },
     "public.event_todo_priority": {
