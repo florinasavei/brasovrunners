@@ -205,10 +205,10 @@ async function resolveMedia<T extends Record<string, unknown>>(
 
 /**
  * The file's checkpoints as rows to write (§757), held to the editor's card's own rules against the
- * file's event — a kilometre within the typed distance, time limits that need the event's start (the
- * gun's on a race, else the event's), not longer than the event's own «Timp limită» and in order along
- * the route — **before anything is written**, so a file whose list the card would refuse is refused
- * whole, naming the rule, and no half-imported event is left behind. The GPX's own length is not read
+ * file's event — a kilometre within the typed distance, time limits not longer than the event's own
+ * «Timp limită» (counted from the gun on a race, else the event's start) and in order along the route —
+ * **before anything is written**, so a file whose list the card would refuse is refused whole, naming
+ * the rule, and no half-imported event is left behind. The GPX's own length is not read
  * here (the store is not asked before the copy); the typed distance is the length the card measures
  * against first anyway. The file was read forgivingly already (`file-format.ts#upgradeCheckpoints`): an
  * old time of day is minutes by now, or left out with a word.
@@ -221,12 +221,9 @@ export function importedCheckpoints(config: EventConfig): Omit<CheckpointInput, 
   const start = gun ?? eventStart;
   // «Durata» counts from the gun on a race that has one (`duration.ts#durationBase`), as the save stores the end.
   const endsAt = start && config.durationMinutes ? new Date(start.getTime() + config.durationMinutes * 60_000) : null;
-  const context = checkpointContext({
-    distanceMeters: config.measures.distanceMeters,
-    gpxMeters: null,
-    start,
-    endsAt,
-  });
+  // A time limit is a duration, true with or without an hour to count it from: a file made from an event whose hour is
+  // «se anunță mai târziu» carries its saved limits, and an import must give them back (the round trip, §NNN).
+  const context = { ...checkpointContext({ distanceMeters: config.measures.distanceMeters, gpxMeters: null, start, endsAt }), startKnown: true };
   try {
     return prepareCheckpoints(
       config.route.checkpoints.map((row, index) => ({

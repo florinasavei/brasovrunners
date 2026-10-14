@@ -289,19 +289,22 @@ test.describe("§757 the route's checkpoints and the race's time limit", () => {
       await expect(after).toContainText("dar traseul are doar 21 km");
       await expect(after.getByTestId("checkpoint-new-row").first().getByLabel("Kilometrul")).toHaveValue("30");
       await expect(after.getByTestId("checkpoint-new-row").first().getByLabel("Numele (engleză)")).toHaveValue("Too far");
-      // The same for the time limit: sixty minutes is no minutes box, and both boxes come back as typed (§NNN).
+      // The same for the time limits, with the refusal only the server makes (the browser holds the boxes' own bounds,
+      // so «60 minute» never leaves the page): a nearer point with a longer limit than a farther one. Both boxes of both
+      // rows come back as typed (§NNN).
       await openEditorBox(page, "Puncte de control");
       await openEditorBox(page, "Adaugă puncte");
-      const row = after.getByTestId("checkpoint-new-row").first();
-      await row.getByLabel("Kilometrul").fill("7");
-      await row.getByLabel("Ore", { exact: true }).fill("1");
-      await row.getByLabel("Minute", { exact: true }).fill("60");
+      const rows = after.getByTestId("checkpoint-new-row");
+      await fillRow(rows.nth(0), { km: "5", ro: "Prima", en: "First", kinds: [], hours: "2", minutes: "0" });
+      await fillRow(rows.nth(1), { km: "9", ro: "A doua", en: "Second", kinds: [], hours: "1", minutes: "15" });
       await after.getByRole("button", { name: "Salvează punctele" }).click();
-      await page.waitForLoadState("load");
+      await page.waitForURL(/./);
       const again = page.getByTestId("event-checkpoints-card");
-      await expect(again).toContainText("nu e o durată");
-      await expect(again.getByTestId("checkpoint-new-row").first().getByLabel("Ore", { exact: true })).toHaveValue("1");
-      await expect(again.getByTestId("checkpoint-new-row").first().getByLabel("Minute", { exact: true })).toHaveValue("60");
+      await expect(again).toContainText("e mai lung decât cel al punctului", { timeout: 20_000 });
+      const typed = again.getByTestId("checkpoint-new-row");
+      await expect(typed.nth(0).getByLabel("Ore", { exact: true })).toHaveValue("2");
+      await expect(typed.nth(1).getByLabel("Ore", { exact: true })).toHaveValue("1");
+      await expect(typed.nth(1).getByLabel("Minute", { exact: true })).toHaveValue("15");
       const saved = await withDatabase((client) => client.query(`SELECT 1 FROM event_checkpoints WHERE event_id = $1`, [race.id]));
       expect(saved.rowCount).toBe(0);
     } finally {

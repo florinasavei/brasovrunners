@@ -1037,6 +1037,25 @@ describe("§757 the route's checkpoints travel in the file", () => {
     ]);
   });
 
+  it("gives back the saved limits of an event whose start hour is to be announced: a duration needs no hour, so the round trip holds (§NNN)", async () => {
+    const { event } = await seedRace({}, {}, false);
+    await seedCheckpoints(event.id);
+    const file = await fileOf(event.id);
+    // The hour is «se anunță mai târziu» and there is no gun: the clocks cannot be said, the minutes are still true.
+    const undecided = JSON.parse(JSON.stringify(file)) as EventFile;
+    undecided.event.raceStartsAt = null;
+    undecided.event.start.time = null;
+    undecided.event.timeToBeAnnounced = true;
+    undecided.event.durationMinutes = null;
+    undecided.event.registration.opensAt = null;
+    undecided.event.registration.closesAt = null;
+    const created = await importEventAsNew(db, { actor: admin, file: undecided, fetchImpl: serving(), now: NOW });
+    expect((await listCheckpoints(db, created.eventId)).map((row) => [row.km, row.cutoffMinutes, row.cutoffClock])).toEqual([
+      [7.5, 60, null],
+      [15, 120, null],
+    ]);
+  });
+
   it("imports a version 2 file — a time of the day for each cut-off — as minutes from the gun, and leaves out what it cannot count, with the kinds it does not know (§NNN)", async () => {
     const { event } = await seedRace({}, {}, false);
     const file = await fileOf(event.id);
@@ -1110,7 +1129,7 @@ describe("§757 the route's checkpoints travel in the file", () => {
     expect(await listCheckpoints(db, target.id)).toEqual([]);
   });
 
-  it("refuses a file whose list the card would refuse — beyond the route, out of order, longer than the race, a limit with no start — and writes nothing", async () => {
+  it("refuses a file whose list the card would refuse — beyond the route, out of order, longer than the race — and writes nothing", async () => {
     const { event } = await seedRace({}, {}, false);
     await seedCheckpoints(event.id);
     const file = await fileOf(event.id);
@@ -1118,11 +1137,6 @@ describe("§757 the route's checkpoints travel in the file", () => {
     const edited = (change: (list: EventFile["event"]["route"]["checkpoints"]) => void): EventFile => {
       const copy = JSON.parse(JSON.stringify(file)) as EventFile;
       change(copy.event.route.checkpoints);
-      return copy;
-    };
-    const editedEvent = (change: (config: EventFile["event"]) => void): EventFile => {
-      const copy = JSON.parse(JSON.stringify(file)) as EventFile;
-      change(copy.event);
       return copy;
     };
     const cases = [
@@ -1138,13 +1152,6 @@ describe("§757 the route's checkpoints travel in the file", () => {
       edited((list) => {
         list[1].cutoffMinutes = 151;
       }),
-      // With no start hour in the file there is nothing to count a limit from.
-      editedEvent((config) => {
-        config.start.time = null;
-        config.timeToBeAnnounced = true;
-        config.raceStartsAt = null;
-        config.type = "GROUP_RUN";
-      }),
     ];
     for (const bad of cases) {
       expect(await codeOf(importEventAsNew(db, { actor: admin, file: bad, fetchImpl: serving(), now: NOW }))).toBe("VALIDATION_ERROR");
@@ -1155,7 +1162,6 @@ describe("§757 the route's checkpoints travel in the file", () => {
     expect(reasons[0]).toContain("CHECKPOINT_KM_BEYOND_ROUTE");
     expect(reasons[1]).toContain("CHECKPOINT_CUTOFF_AFTER_LATER");
     expect(reasons[2]).toContain("CHECKPOINT_CUTOFF_AFTER_END");
-    expect(reasons[3]).toContain("CHECKPOINT_CUTOFF_NO_START");
     expect((await db.select().from(events)).length).toBe(eventsBefore);
 
     const { target } = await seedTarget();
