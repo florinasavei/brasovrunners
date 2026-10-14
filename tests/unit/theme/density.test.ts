@@ -262,7 +262,6 @@ const CONVERTED_SITES: Array<{ file: string; prop: string; step: DensityStep; sm
   { file: "src/modules/events/ui/EventCard.tsx", prop: "mt", step: "gapSm", sm: 1.5, xsBefore: 1.5 },
   { file: "src/modules/events/ui/SeriesCard.tsx", prop: "mt", step: "gapSm", sm: 1.5, xsBefore: 1.5 },
   { file: "src/modules/events/ui/RoutePills.tsx", prop: "gap", step: "gapXs", sm: 1, xsBefore: 1 },
-  { file: "src/modules/events/ui/ShareLinks.tsx", prop: "gap", step: "gapXs", sm: 1, xsBefore: 1, count: 2 },
   // The calendar.
   { file: "src/app/[locale]/calendar/page.tsx", prop: "mb", step: "gapSm", sm: 2, xsBefore: 2 },
   { file: "src/modules/events/ui/CalendarSection.tsx", prop: "mt", step: "gapSm", sm: 2, xsBefore: 2 },

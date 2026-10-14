@@ -4,6 +4,9 @@ export const SHARE_ROW_GAP = 1;
 /** Pixels the invisible tap band reaches above and below a pill: half of `SHARE_ROW_GAP`, never more. */
 export const SHARE_PILL_BAND = 4;
 
+/** The outlined button's own border: an absolutely placed band is measured from inside it, so it is added to the offset. */
+const SHARE_PILL_BORDER = 1;
+
 /**
  * The share row's pills (`DECISIONS.md` §140, §158): one shape for the anchors the server
  * renders and the two islands beside them, so a network's button, the phone's own sheet and
@@ -35,5 +38,5 @@ export const SHARE_PILL_SX = {
   // The glyph: the marks are 18 pixels whatever size they were drawn at (the provider logos are 20 in
   // `SubscribeBox`, MUI's icons 24), decorative — the name is the pill's text.
   "& > svg": { width: 18, height: 18, fontSize: 18, flexShrink: 0 },
-  "&::after": { content: '""', position: "absolute", top: -SHARE_PILL_BAND, bottom: -SHARE_PILL_BAND, left: 0, right: 0 },
+  "&::after": { content: '""', position: "absolute", top: -(SHARE_PILL_BAND + SHARE_PILL_BORDER), bottom: -(SHARE_PILL_BAND + SHARE_PILL_BORDER), left: 0, right: 0 },
 } as const;

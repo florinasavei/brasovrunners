@@ -266,7 +266,7 @@ describe("the small pill", () => {
     expect(SHARE_PILL_SX.minHeight).toBeLessThanOrEqual(32);
     expect(JSON.stringify(SHARE_PILL_SX)).not.toMatch(/44/);
     // The tap area is an invisible band, not a taller pill (§NNN).
-    expect(SHARE_PILL_SX["&::after"]).toMatchObject({ top: -SHARE_PILL_BAND, bottom: -SHARE_PILL_BAND });
+    expect(SHARE_PILL_SX["&::after"]).toMatchObject({ top: -(SHARE_PILL_BAND + 1), bottom: -(SHARE_PILL_BAND + 1) }); // + the outlined button's 1-pixel border, inside which the band is measured
     expect(SHARE_PILL_SX.minHeight + 2 * SHARE_PILL_BAND).toBeGreaterThanOrEqual(24);
   });
 
