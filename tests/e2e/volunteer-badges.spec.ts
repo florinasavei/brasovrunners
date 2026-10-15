@@ -206,6 +206,9 @@ test.describe("§764 volunteer badges, designed and printed per role", () => {
     // The refusal links the height's box; what was typed is still there.
     await expect(refusal.getByRole("link", { name: "Înălțimea (mm)" })).toBeVisible();
     await expect(page.getByLabel("Text liber (română)")).toHaveValue("Bea apă");
+    // The size chosen comes back chosen, with its boxes shown — not the saved size with them hidden behind it.
+    await expect(page.getByTestId("badge-size").getByRole("radio", { name: "Altă dimensiune" })).toBeChecked();
+    await expect(page.getByLabel("Înălțimea (mm)")).toBeVisible();
     // Nothing was kept: the event's design is still empty.
     const client = new pg.Client({ connectionString: databaseUrl() });
     await client.connect();
