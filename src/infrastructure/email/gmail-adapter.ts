@@ -51,7 +51,7 @@ export function createGmailAdapter(config: GmailAdapterConfig): EmailAdapter {
           to: message.to,
           ...(message.cc && message.cc.length > 0 ? { cc: [...message.cc] } : {}),
           ...(message.bcc && message.bcc.length > 0 ? { bcc: [...message.bcc] } : {}),
-          ...(config.replyTo ? { replyTo: config.replyTo } : {}),
+          ...replyToOf(message, config.replyTo),
           subject: message.subject,
           text: message.text,
           html: message.html,
@@ -108,6 +108,17 @@ export function createGmailAdapter(config: GmailAdapterConfig): EmailAdapter {
   };
 }
 
+/**
+ * The Reply-To of one message on this road (§NNN): none at all for a confidential one (`noReplyTo`), the address a
+ * visitor typed — with the name beside it, which Nodemailer quotes — for a message that carries one, else the
+ * club's own as it always was. A transactional message sets neither flag and is exactly what it was.
+ */
+export function replyToOf(message: Pick<OutgoingEmail, "noReplyTo" | "replyTo" | "replyToName">, clubReplyTo: string | undefined): { replyTo?: string | SmtpAddress } {
+  if (message.noReplyTo) return {};
+  if (message.replyTo) return { replyTo: message.replyToName ? { name: message.replyToName, address: message.replyTo } : message.replyTo };
+  return clubReplyTo ? { replyTo: clubReplyTo } : {};
+}
+
 /** The SMTP answer's enhanced status (`5.1.1`), read from its reply without keeping the reply. */
 export function enhancedStatusOf(error: unknown): string | null {
   if (!error || typeof error !== "object") return null;
@@ -160,8 +171,21 @@ export function refusalOf(to: string, answer: { rejected?: unknown; rejectedErro
  */
 const BEFORE_ACCEPTANCE = new Set(["ECONNECTION", "EDNS", "ETLS", "EAUTH", "ENOAUTH", "EOAUTH2", "EENVELOPE", "EMESSAGE"]);
 
+/**
+ * A timeout or a dropped socket is **before** acceptance when the SMTP command in progress was not the end of
+ * the message (§NNN): Nodemailer names it in `error.command` — `CONN` for the connection and the greeting,
+ * `EHLO`, `STARTTLS`, `AUTH …`, `MAIL FROM`, `RCPT TO` — and only the answer to `DATA` is Google taking the
+ * message. Before §NNN every one of these was «may have been accepted», so a Gmail that never answered the
+ * connection (the 2026-09-28 `ETIMEDOUT`) kept its message on the outbox's hourly retry instead of letting the
+ * other road have it, which cost a message the minutes it did not need to wait. A socket error with no command
+ * at all, or during `DATA`, stays ambiguous.
+ */
+const BEFORE_ACCEPTANCE_IF_NOT_DATA = new Set(["ETIMEDOUT", "ESOCKET", "ECONNRESET"]);
+
 export function gmailFailureIsBeforeAcceptance(error: unknown): boolean {
   if (!error || typeof error !== "object") return false;
-  const code = (error as { code?: unknown }).code;
-  return typeof code === "string" && BEFORE_ACCEPTANCE.has(code);
+  const { code, command } = error as { code?: unknown; command?: unknown };
+  if (typeof code !== "string") return false;
+  if (BEFORE_ACCEPTANCE.has(code)) return true;
+  return BEFORE_ACCEPTANCE_IF_NOT_DATA.has(code) && typeof command === "string" && command !== "" && command.toUpperCase() !== "DATA";
 }

@@ -116,3 +116,48 @@ export function drainOutboxRowsAfterResponse(ids: readonly string[]): void {
     wakeJobs("email-outbox");
   }
 }
+
+/**
+ * A visitor’s message, sent the moment its response is out (§NNN, amending §149, §676 and §68): «Scrie-ne» and
+ * «Spune-ne ceva» queue a row (`relay.ts`) and call this with its id, **whatever «Când pleacă emailurile» says** — a person
+ * who wrote to the club does not wait for the pinger. The same one-shot `after()`, limited to these ids.
+ *
+ * It waits for what it can finish: a failed first attempt is due again in seconds (`QUICK_RETRY_MS`), so the pass runs
+ * again, up to four times and no longer than `DRAIN_BUDGET_MS` — enough for the chosen road to fail twice and the other to
+ * take the message, which is the failover a person is owed — and what it could not do is the outbox job’s, woken for it.
+ */
+const DRAIN_BUDGET_MS = 30_000;
+const DRAIN_PASSES = 4;
+
+export function drainRelayAfterResponse(ids: readonly string[]): void {
+  if (ids.length === 0) return;
+  if (env.APP_ENV === "test" && !env.E2E_DRAIN_OUTBOX) return;
+  try {
+    after(async () => {
+      try {
+        const [{ processRelayBatch }, { createRelayRoads }, { nextOutboxWork }] = await Promise.all([
+          import("./relay"),
+          import("./relay-roads"),
+          import("@/modules/jobs/next-work"),
+        ]);
+        const db = getDb();
+        const started = Date.now();
+        for (let pass = 0; pass < DRAIN_PASSES; pass += 1) {
+          const summary = await processRelayBatch(db, { roads: () => createRelayRoads(db), now: new Date(), ids });
+          // Nothing left for this pass to do: everything went, was refused, or is waiting for a road.
+          if (summary.retrying === 0) break;
+          if (Date.now() - started > DRAIN_BUDGET_MS) break;
+          await new Promise((resolve) => setTimeout(resolve, 5_000));
+        }
+        const left = await nextOutboxWork(db);
+        if (left) wakeJobs("email-outbox", left);
+      } catch (error) {
+        console.error("[email-relay] drain after response failed", error);
+        wakeJobs("email-outbox");
+      }
+    });
+  } catch {
+    // Outside a request scope — a script, a test — there is no "after": the row stays PENDING for the outbox job.
+    wakeJobs("email-outbox");
+  }
+}

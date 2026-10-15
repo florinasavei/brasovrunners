@@ -381,6 +381,17 @@ export type AuditAction =
   | "email_plan.changed"
   /** Which road each group of emails takes, Gmail's cap and pace, the overflow (§443): from and to. */
   | "email_transport.changed"
+  /**
+   * A visitor's message left by the other road because the chosen one failed it (§NNN): entity `email_outbox`, the row's id;
+   * `{ type, chosen, via, failures }` — the roads and how many times the chosen one failed — never a word of the message,
+   * an address or the visitor. No actor: the platform did it.
+   */
+  | "email_road.failed_over"
+  /**
+   * A visitor's message that no road carried in a day, or whose address was refused (§NNN): its words are deleted and the
+   * Administrators told. `{ type, chosen, cause }`; never the words. No actor.
+   */
+  | "email_relay.lost"
   /** The Neon plan the club says it is on — Free or Launch — from and to, with the note (§280's follow-up). */
   | "neon_plan.changed"
   /** The Vercel plan the club says it is on — Hobby or Pro — and its seats, from and to, with the note (§610). */

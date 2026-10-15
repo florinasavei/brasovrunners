@@ -68,17 +68,24 @@ export type OutgoingEmail = {
   /**
    * No `Reply-To` at all, not even the club's (§676): «Spune-ne ceva»'s confidential safety form
    * reaches one person, and a "Reply" from her mailbox must not go to a shared club mailbox by
-   * default — the contact line in the body is the only way back. Mailgun's road only.
+   * default — the contact line in the body is the only way back. Both roads honour it since §NNN.
    */
   noReplyTo?: true;
   /**
    * The one address a reply to this message goes to, instead of the club's (§772): «Spune-ne ceva»'s
    * named post may leave an address to be answered at, and the reader's «Reply» must reach it. A bare
    * address already through the canonicalizer, never a display name — a name typed by a visitor is a header.
-   * Mailgun's road only, like `noReplyTo`; wins over the configured Reply-To, and is ignored when
-   * `noReplyTo` is set. Never stored: it rides one send.
+   * Wins over the configured Reply-To, and is ignored when `noReplyTo` is set. Both roads honour it since §NNN
+   * (a visitor's message is carried by either). It rides one send; the outbox row holds it only until the
+   * message is delivered (`relay.ts`).
    */
   replyTo?: string;
+  /**
+   * The name the visitor typed beside that address (§678), for the Gmail road to write beside it — Nodemailer
+   * quotes it, so a name cannot become a header. Mailgun's road writes the bare address, as it always did.
+   * Only with `replyTo`.
+   */
+  replyToName?: string;
 };
 
 /**

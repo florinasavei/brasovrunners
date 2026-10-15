@@ -1,4 +1,4 @@
-import { and, count, eq, gt } from "drizzle-orm";
+import { and, count, eq, gt, notInArray } from "drizzle-orm";
 import { emailOutbox } from "@/db/schema/email-outbox";
 import type { StaffUser } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
@@ -7,6 +7,7 @@ import { consumeRateLimit } from "@/modules/rate-limit/service";
 import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
 import { drainOutboxAfterResponse } from "./drain";
+import { RELAY_MESSAGE_TYPES } from "./domain/relay";
 import { EMAIL_HEALTH_THRESHOLDS } from "./health";
 
 /**
@@ -22,8 +23,13 @@ import { EMAIL_HEALTH_THRESHOLDS } from "./health";
  */
 export const RETRY_FAILED_WINDOW_MS = EMAIL_HEALTH_THRESHOLDS.FAILED_WINDOW_MS;
 
+// A visitor’s message given up on has no words left to send (§NNN): never put back.
 const retryable = (now: Date) =>
-  and(eq(emailOutbox.status, "FAILED"), gt(emailOutbox.createdAt, new Date(now.getTime() - RETRY_FAILED_WINDOW_MS)));
+  and(
+    eq(emailOutbox.status, "FAILED"),
+    gt(emailOutbox.createdAt, new Date(now.getTime() - RETRY_FAILED_WINDOW_MS)),
+    notInArray(emailOutbox.messageType, [...RELAY_MESSAGE_TYPES]),
+  );
 
 /** How many rows the button would put back now: the dialog's live count. */
 export async function countRetryableFailed<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<number> {

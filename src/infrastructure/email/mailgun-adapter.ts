@@ -274,6 +274,20 @@ export function isAccountRefusalError(stored: string | null | undefined): boolea
   return !(failure.outcome === "permanent_failure" && !failure.notTheAddress);
 }
 
+/**
+ * Whether a failed request certainly never reached Mailgun (§NNN): the name did not resolve, the connection was
+ * refused or timed out before it was made, the route was not there. Undici puts the system's code on `error.cause`.
+ * Anything else — a total timeout, a reset, a socket that closed — may have come after Mailgun took the message,
+ * so it is ambiguous (`SendResult.mayHaveBeenAccepted`), and the relay keeps the message on this road.
+ */
+const NEVER_REACHED = new Set(["ENOTFOUND", "EAI_AGAIN", "ECONNREFUSED", "ENETUNREACH", "EHOSTUNREACH", "UND_ERR_CONNECT_TIMEOUT"]);
+
+export function requestNeverReachedMailgun(error: unknown): boolean {
+  const cause = error && typeof error === "object" ? (error as { cause?: unknown }).cause : undefined;
+  const code = cause && typeof cause === "object" ? (cause as { code?: unknown }).code : (error as { code?: unknown } | null)?.code;
+  return typeof code === "string" && NEVER_REACHED.has(code);
+}
+
 /** The tag that names the environment a message left from (§670): the webhook acts only on its own. */
 export const ENVIRONMENT_TAG_PREFIX = "env:";
 
@@ -374,10 +388,13 @@ export function createMailgunAdapter(config: MailgunConfig): EmailAdapter {
           signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
         });
       } catch (error) {
-        // DNS, TLS, a timeout, a dropped connection. None of them says the message is bad.
+        // DNS, TLS, a timeout, a dropped connection. None of them says the message is bad. Whether Mailgun may
+        // already have it is another matter (§NNN): a request that never reached it did not, one that was on its way
+        // when the wait ran out may — and a message that may have been taken is never handed to another road.
         return {
           outcome: "transient_failure",
           error: `mailgun unreachable: ${error instanceof Error ? error.name : "unknown"}`,
+          ...(requestNeverReachedMailgun(error) ? {} : { mayHaveBeenAccepted: true as const }),
         };
       }
 

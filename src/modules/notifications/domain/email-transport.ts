@@ -96,6 +96,11 @@ export const EMAIL_GROUP_OF: Readonly<Record<EmailMessageType, EmailGroup>> = {
   VOLUNTEER_ROLE_ASSIGNED: "confirmations",
   // The guardian's link (§768) is an action link, on the links' road like the volunteer's own agreement link.
   VOLUNTEER_GUARDIAN_REQUEST: "links",
+  // A visitor's message and the road notice (§NNN) take the road on the row (`road`), never a group's setting; "club" is
+  // only the group a type must have — nothing reads it for these three (`relay.ts`).
+  CONTACT_MESSAGE: "club",
+  FEEDBACK_MESSAGE: "club",
+  RELAY_NOTICE: "club",
   NEWSLETTER_CONFIRM: "newsletter",
   NEWSLETTER: "newsletter",
   NEW_EVENT_ALERT: "newsletter",

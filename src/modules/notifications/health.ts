@@ -2,6 +2,7 @@ import { and, count, desc, eq, gt, inArray, isNotNull, lt, not, or, type SQL, sq
 import { emailOutbox } from "@/db/schema/email-outbox";
 import { BULK_MESSAGE_TYPES } from "./domain/bulk";
 import { GMAIL_CAP_DEFERRED_ERROR } from "./domain/email-transport";
+import { RELAY_MESSAGE_TYPES } from "./domain/relay";
 import { PACE_EVIDENCE_MS, paceHolds, RATE_PAUSE_ERROR_PREFIX } from "./domain/hourly-pace";
 import { readMailgunHour } from "./hourly-pace";
 import { gmailRoadCondition } from "./outbox";
@@ -185,7 +186,12 @@ export async function checkEmailHealth<T extends Record<string, unknown>>(
       and(sql`${emailOutbox.nextAttemptAt} IS NULL`, lt(emailOutbox.createdAt, overdueBefore)),
     ),
   );
-  const failedWhere = and(eq(emailOutbox.status, "FAILED"), gt(emailOutbox.createdAt, failedSince));
+  /*
+    A visitor’s message given up on after a day (§NNN) is a FAILED row too, but not this alarm’s: its words are deleted, so
+    «Reîncearcă emailurile eșuate» cannot put it back, and a 503 that nothing can clear for a week would only teach the
+    monitor to be ignored. It has its own row on «Sarcini» (`relayLost`) and the Administrators were emailed.
+  */
+  const failedWhere = and(eq(emailOutbox.status, "FAILED"), gt(emailOutbox.createdAt, failedSince), not(inArray(emailOutbox.messageType, [...RELAY_MESSAGE_TYPES])));
 
   /*
     Mailgun's hourly pace (§605). A queue held back for the hour is the pace working: while the hour
