@@ -696,6 +696,11 @@ export function roleTakesPeople(standing: Pick<RoleStanding, "free"> | undefined
   return standing !== undefined && (standing.free === null || standing.free > 0);
 }
 
+/** The names the event page's callout offers: each role that still takes people, in the page's language, a name once though two categories hold the same role (§774). */
+export function openRoleNames(roles: readonly (Pick<RoleStanding, "free"> & { nameRo: string; nameEn: string })[], locale: string): string[] {
+  return [...new Set(roles.filter((role) => roleTakesPeople(role)).map((role) => (locale === "en" ? role.nameEn : role.nameRo)))];
+}
+
 /** Whether at least one role still needs people (the form's condition (b)). */
 export function someRoleNeedsPeople(standings: readonly Pick<RoleStanding, "free">[]): boolean {
   return standings.some((standing) => roleTakesPeople(standing));

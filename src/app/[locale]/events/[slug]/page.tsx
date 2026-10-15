@@ -17,7 +17,7 @@ import {
   cachedPublishedTranslations,
 } from "@/modules/public-cache/reads";
 import { parseInterestOutcome, parseInterestSince } from "@/modules/registrations/interest-box";
-import { roleTakesPeople } from "@/modules/volunteers/domain/volunteer";
+import { openRoleNames } from "@/modules/volunteers/domain/volunteer";
 import { readVolunteerOffer } from "@/modules/volunteers/offer";
 import { CLUB_TIME_ZONE } from "@/i18n/dates";
 import { nextWallMidnight } from "@/modules/events/domain/page-clock";
@@ -196,7 +196,7 @@ export default async function EventDetailPage({ params, query, canEdit = false, 
   const volunteerOffer = membersOnly ? null : await readOrWhileAway(() => readVolunteerOffer(event, now), null);
   const volunteerRoleNames = volunteerOffer
     ? // A name once, though the same role may stand in two categories (§774): the box says what is needed, the page says where.
-      [...new Set(volunteerOffer.roles.filter((role) => roleTakesPeople(role)).map((role) => (locale === "en" ? role.nameEn : role.nameRo)))]
+      openRoleNames(volunteerOffer.roles, locale)
     : [];
   // A staff member who may edit the words gets the way into the editor from here (§135; the
   // owner: "when I am signed in … I should be able to edit events from the event page"). The live

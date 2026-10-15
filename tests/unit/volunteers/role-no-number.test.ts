@@ -4,6 +4,7 @@ import ro from "../../../messages/ro.json";
 import { volunteersFileSchema } from "@/modules/content/events/transfer/file-format";
 import {
   openChoices,
+  openRoleNames,
   refusedFields,
   roleNeededFrom,
   roleTakesPeople,
@@ -72,6 +73,14 @@ describe("§NNN how a role without a number stands", () => {
   it("keeps a numbered role as it was: free falls to zero and stays there", () => {
     expect(standingOf({ id: "r1", needed: 3 }, people(5))).toMatchObject({ taken: 5, free: 0 });
     expect(standingOf({ id: "r1", needed: 3 }, people(1))).toMatchObject({ taken: 1, free: 2 });
+  });
+
+  it("names for the event page's callout the roles that still take people, a role without a number always, a full one never", () => {
+    const named = (nameRo: string, nameEn: string, free: number | null) => ({ nameRo, nameEn, free });
+    const roles = [named("Sosire", "Finish", null), named("Ajutor", "Help", 2), named("Traseu", "Course", 0), named("Ajutor", "Help", 1)];
+    expect(openRoleNames(roles, "ro")).toEqual(["Sosire", "Ajutor"]);
+    expect(openRoleNames(roles, "en")).toEqual(["Finish", "Help"]);
+    expect(openRoleNames([named("Traseu", "Course", 0)], "ro")).toEqual([]);
   });
 
   it("takes people while it has no number, whatever it was given; a numbered role while it has places", () => {
@@ -161,6 +170,7 @@ describe("§NNN the words", () => {
     ["Admin", "volunteers", "role", "neededHelp"],
     ["Admin", "badges", "print", "countHelpNoNumber"],
     ["Admin", "badges", "print", "introNoNumber"],
+    ["Admin", "badges", "print", "introAllNoNumber"],
   ];
 
   it("has every new sentence in both languages, short, and the tick named as the owner asked", () => {

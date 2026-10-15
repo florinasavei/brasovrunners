@@ -90,7 +90,10 @@ export async function listBadgeRoles<T extends Record<string, unknown>>(db: Data
     .where(eq(eventVolunteerRoles.eventId, eventId));
   const categories = (await db.select().from(eventVolunteerCategories).where(eq(eventVolunteerCategories.eventId, eventId))).sort(compareCategories);
   // The people given each role (§761): what a role without a number starts its badges at (§NNN) — one read for the event, counted here.
-  const people = await db.select({ roleId: eventVolunteers.roleId, state: eventVolunteers.state }).from(eventVolunteers).where(eq(eventVolunteers.eventId, eventId));
+  // Only when some role has no number: the people are read for nothing else (the preview asks for one role's colour and name).
+  const people = rows.some((row) => row.needed === null)
+    ? await db.select({ roleId: eventVolunteers.roleId, state: eventVolunteers.state }).from(eventVolunteers).where(eq(eventVolunteers.eventId, eventId))
+    : [];
   const assigned = (roleId: string) => people.filter((person) => person.roleId === roleId && countsAgainstRole(person.state)).length;
   const roles = rows
     .sort(compareRoles)
