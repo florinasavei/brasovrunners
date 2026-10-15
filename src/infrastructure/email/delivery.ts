@@ -150,6 +150,9 @@ export type GmailRoad = {
   paceBudgetMs?: number;
 };
 
+/** What a Gmail-only send answers when Gmail took nothing in this batch (a failure before it, or its own earlier one): the relay reads it (§NNN). */
+export const GMAIL_NOT_TAKING_ERROR = "gmail is not taking messages in this batch";
+
 /** Twenty seconds of pacing per batch: three or four Gmail sends at the default six seconds apart, and a function that ends. */
 export const GMAIL_PACE_BUDGET_MS = 20_000;
 
@@ -354,7 +357,7 @@ export function createEmailSender(config: {
       if (outgoing.gmailOnly) {
         const carried = await viaGmail(outgoing, transmit, true, true);
         if (carried) return carried;
-        return { outcome: "throttled", error: gmail ? "gmail is not taking messages in this batch" : "gmail is not configured" };
+        return { outcome: "throttled", error: gmail ? GMAIL_NOT_TAKING_ERROR : "gmail is not configured" };
       }
 
       if (outgoing.transport === "gmail") {

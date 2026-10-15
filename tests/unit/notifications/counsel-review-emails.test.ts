@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { emailMessageType, type EmailMessageType } from "@/db/schema/email-outbox";
+import { TEMPLATED_MESSAGE_TYPES } from "@/modules/notifications/domain/relay";
+import type { EmailMessageType } from "@/db/schema/email-outbox";
 import { durationPhrase } from "@/modules/deadlines/domain/duration-words";
 import { RETENTION } from "@/modules/jobs/retention";
 import { BULK_CLUB_COPY_MESSAGES, bulkCopyRecipients, isCopiedPerMessage, isParticipantMessage } from "@/modules/notifications/domain/club-notices";
@@ -25,7 +26,7 @@ const render = (messageType: EmailMessageType, data: TemplateData, locale: "ro" 
 describe("BR-REQ-080-01 §419 the club's copies: none of an unconfirmed address's, one per bulk send", () => {
   it("copies no address confirmation, no family link and no bulk send per message — and every other participant message as before", () => {
     const none = ["VERIFY_REGISTRATION_EMAIL", "REGISTER_ANOTHER_PERSON", "ORGANIZER_MESSAGE", "EVENT_UPDATE_NOTICE"];
-    for (const type of emailMessageType.enumValues) {
+    for (const type of TEMPLATED_MESSAGE_TYPES) {
       expect(isCopiedPerMessage(type), type).toBe(isParticipantMessage(type) && !none.includes(type));
     }
     // Still participant messages: the privacy line and no envelope copies stay theirs.

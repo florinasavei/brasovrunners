@@ -76,7 +76,7 @@ describe("BR-REQ-070-04 the contact form's fields", () => {
     for (const catalogue of [ro, en]) {
       const contact = catalogue.Contact as { fieldNames: Record<string, string>; errors: Record<string, string> };
       for (const field of ["name", "email", "message", "captcha"]) expect(contact.fieldNames[field]).toBeTruthy();
-      for (const code of ["LIMITED", "DELIVERY", "DELIVERY_NO_ADDRESS", "UNAVAILABLE", "captcha", "generic"]) {
+      for (const code of ["LIMITED", "UNAVAILABLE", "captcha", "generic"]) {
         expect(contact.errors[code], code).toBeTruthy();
       }
     }

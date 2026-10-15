@@ -3376,6 +3376,7 @@
         "feedbackForms": "Privacy notice only: the “Tell us something” forms’ name, in quotation marks. With it in the notice in force, the contact page shows the forms switched on",
         "feedbackFormsNamed": "Privacy notice only: the “With my name” choice of the “Tell us something” forms, in quotation marks. Without it in the notice in force, the forms are anonymous only",
         "feedbackSafetyGmail": "Privacy notice only: “the club's Gmail”, in the sentence about Girl Zone messages. Without it in the notice in force, they leave by Mailgun only",
+        "relayQueue": "Only in the privacy notice: how long the site keeps a “Write to us” or “Tell us something” message before it leaves. Without it, /admin/tasks tells you; messages still go.",
         "membersShop": "Privacy notice only: the section name “The club's shop”, in quotes. With it in the notice in force, the members' area shows the shop and takes orders",
         "volunteers": "Privacy notice only: the form's name “I want to volunteer”, in quotes. With it in the notice in force, an event that takes volunteers shows its form and keeps the offers",
         "volunteerAgreement": "Privacy notice only: the title “Volunteer agreement”, in quotes. Without it in the notice in force, the volunteers' form, the agreement's link and “Signed on paper” are off",
@@ -4114,6 +4115,15 @@
             "Open the draft, read it, “Save draft”, then “Approve and publish”. Once in force in both languages, Girl Zone messages leave by Gmail, with no other setting."
           ]
         },
+        "relayQueueNotice": {
+          "title": "Privacy notice: the queue for form messages",
+          "todo": "The notice in force says we keep no copy, but “Write to us” and “Tell us something” messages wait in a queue until they leave. They go anyway; approve a new notice.",
+          "done": "The notice in force says the message waits in the queue only until it leaves (three days at most) and may leave by the other email service.",
+          "how": [
+            "/admin/legal → the “GDPR” card → “Regenerate from template” → confirm. The paragraphs about the contact form and “Tell us something”, in section 5, now describe the queue.",
+            "Open the draft, read it, “Save draft”, then “Approve and publish”, in both languages."
+          ]
+        },
         "teamPageNotice": {
           "title": "Privacy notice: the team page",
           "todo": "The notice in force does not yet describe the team page, which shows the names and photographs of the club's team and volunteers. Approve a new notice before publishing the page.",
@@ -4346,6 +4356,37 @@
             "/admin/legal → the “Contract de voluntariat” card → “Regenerate from the template” → confirm. The text now has a minors' clause: the parent's consent and activities suited to the age.",
             "A lawyer should read both texts against Law no. 78/2014, with its rules for minors, and confirm the age of 14 and the form of the consent.",
             "Open the draft, read it, fill in what is left, “Save draft”, then “Approve and publish” — in the same sitting, in both languages."
+          ]
+        },
+        "emailRoadDown": {
+          "title": "A way of sending does not work",
+          "todo": "The club's Gmail or Mailgun has refused messages for over an hour; messages leave by the other way.",
+          "broken": "The club's Gmail or Mailgun has refused every message for over an hour. What can leave by the other way leaves; what cannot, waits.",
+          "done": "Both ways carry messages. If one is down, messages leave by the other.",
+          "how": [
+            "«Settings» → «Emails» → «Messages from the site»: see what the way answered, the last message it carried and since when it has not.",
+            "Gmail: the app password was revoked or the account asks for a check. Create a new one in the club's Google account, put it in CONTACT_SMTP_PASSWORD on Vercel and redeploy.",
+            "Mailgun: the key, the domain or the plan. Check MAILGUN_API_KEY, MAILGUN_DOMAIN and MAILGUN_API_BASE_URL on Vercel and Mailgun's status page.",
+            "The row turns green when the way carries a message again."
+          ]
+        },
+        "relayLost": {
+          "title": "Messages from the site that nobody carried",
+          "broken": {
+            "one": "{count} message from the site could not be sent in the last 7 days, and its words are deleted.",
+            "few": "{count} messages from the site could not be sent in the last 7 days, and their words are deleted.",
+            "other": "{count} messages from the site could not be sent in the last 7 days, and their words are deleted."
+          },
+          "todo": {
+            "one": "{count} message from the site could not be sent in the last 7 days, and its words are deleted.",
+            "few": "{count} messages from the site could not be sent in the last 7 days, and their words are deleted.",
+            "other": "{count} messages from the site could not be sent in the last 7 days, and their words are deleted."
+          },
+          "done": "No message from the site lost in the last 7 days.",
+          "how": [
+            "«Settings» → «Emails» → «Messages from the site»: the rows “Lost” or “Address refused”, with what each way answered.",
+            "The words cannot be recovered, and the site does not know who wrote them. Fix the way (the row above) or the form's address, so it does not happen again.",
+            "The row turns green after 7 days without a lost message."
           ]
         }
       },
@@ -6689,7 +6730,10 @@
           "noticeSteps": "Legal texts",
           "safetyNote": "Through Gmail, a Girl Zone message stays in the club's mailbox and whoever reads it sees it; through Mailgun it reaches only the person above.",
           "stateGmail": "Gmail",
-          "stateMailgun": "Mailgun"
+          "stateMailgun": "Mailgun",
+          "fallback": "If Mailgun is down, send through the club's Gmail",
+          "fallbackHelp": "Only for Girl Zone messages. Unticked, a message Mailgun cannot send waits until it works. Ticked, it leaves from the club's mailbox, and whoever reads that mailbox sees it in the Sent folder.",
+          "fallbackNotice": "The tick cannot be changed until the privacy notice in force says Girl Zone messages may leave through Gmail."
         },
         "safetyName": "First name shown",
         "safetyNameHelp": "The form writes it in the sentence about who reads the message. At most 40 characters.",
@@ -6699,7 +6743,8 @@
         "save": "Save the forms",
         "saving": "Saving…",
         "saved": "The “Tell us something” forms were saved.",
-        "roads": "The site keeps no message. The way it is sent is chosen for each form on its own: the club's Gmail (CONTACT_SMTP_USER) or Mailgun."
+        "roads": "A message is kept only until it leaves; then its words are deleted. The way is chosen for each form on its own: the club's Gmail (CONTACT_SMTP_USER) or Mailgun. If one fails, the other carries it.",
+        "selfRecipient": "The address above is the very Gmail account that sends. Gmail may keep such a message in Sent only, not in the Inbox: choose another address or the Mailgun way."
       },
       "perSendNewsletter": "The newsletter's text is written per send, on the backoffice's “Newsletter” page, so it has no words to edit here.",
       "newsletterLink": "Newsletter →",
@@ -6751,7 +6796,45 @@
         "VOLUNTEER_GUARDIAN_REQUEST": "The volunteer and the event are added by themselves. The link is for the parent or guardian only, works once, and a new one replaces the old."
       },
       "confirmationRetry": "To whoever has not confirmed, the link goes again by itself {retry} after the last email, at most {times}; “Resend” counts too. The deadline does not move.",
-      "confirmationRetryOff": "It is not re-sent by itself: in “Deadlines”, the number of resends is 0."
+      "confirmationRetryOff": "It is not re-sent by itself: in “Deadlines”, the number of resends is 0.",
+      "relay": {
+        "title": "Messages from the site",
+        "intro": "Messages from “Write to us” and “Tell us something” go through the email queue. The words stay only until the message leaves; then they are deleted and the trace remains: road, time, tries.",
+        "aside": "Last 7 days: {count}",
+        "empty": "No message in the last 7 days.",
+        "road": {
+          "gmail": "The club's Gmail",
+          "mailgun": "Mailgun"
+        },
+        "lastOk": "Last message carried: {when}",
+        "neverOk": "No message carried yet",
+        "lastFailure": "Last refusal: {when} ({error})",
+        "failingSince": "Not carrying messages since {when}",
+        "type": {
+          "CONTACT_MESSAGE": "Write to us",
+          "FEEDBACK_MESSAGE": "Tell us something",
+          "RELAY_NOTICE": "Notice to the administrators"
+        },
+        "status": {
+          "PENDING": "Queued",
+          "PROCESSING": "Sending",
+          "SENT": "Sent",
+          "FAILED": "Lost",
+          "BOUNCED": "Address refused",
+          "COMPLAINED": "Complained"
+        },
+        "otherWay": "Sent by the other road",
+        "body": {
+          "kept": "Words: kept until it leaves",
+          "deleted": "Words: deleted"
+        },
+        "chosen": "Chosen road: {road}",
+        "leftBy": "left by {road}",
+        "leftByOther": "left by {road}, because the chosen one did not take it",
+        "sentAt": "carried {when}",
+        "failure": "{road} refused {count} times: {error}",
+        "pinned": "stays on this road for now: we cannot tell whether it was already taken"
+      }
     },
     "design": {
       "title": "Design system",
@@ -10443,7 +10526,6 @@
       "title": "Emails captured on this machine",
       "intro": "Locally nothing leaves the machine: every message the site would have sent lands here instead, newest first, with its links — click them to walk the participant's journey.",
       "empty": "Nothing captured yet. Register for an event and come back.",
-      "contact": "Through the contact form — would have reached the club’s mailbox:",
       "text": "The message text"
     },
     "pictures": "Stored pictures: {total} · used nowhere: {unreferenced} · to be deleted on the next run (unused for over {days} days): {sweepable}",
@@ -10720,6 +10802,16 @@
         "dns": "the name not found",
         "pings": "no scheduled call"
       }
+    },
+    "roads": {
+      "gmail": "The club's Gmail",
+      "mailgun": "Mailgun",
+      "ok": "working",
+      "failing": "failing",
+      "lastOk": "last message carried {when}",
+      "neverOk": "no message carried yet",
+      "lastFailure": "last refusal {when} ({error})",
+      "since": "since {when}"
     }
   },
   "Error": {
@@ -10792,8 +10884,6 @@
       "generic": "The message could not be sent. Check what you filled in and try again.",
       "captcha": "The anti-bot check did not pass. Tick the “I am not a robot” box again and resend.",
       "LIMITED": "Too many messages from this address in the last hour. Try again later — your message is still written below.",
-      "DELIVERY": "We could not send it. Write to us directly at",
-      "DELIVERY_NO_ADDRESS": "We could not send it. Try again in a few minutes.",
       "UNAVAILABLE": "The contact form is not available on this site."
     },
     "prefill": {
@@ -10806,6 +10896,7 @@
     "title": "Tell us something (anonymous)",
     "noticeName": "Tell us something",
     "noticeSafetyGmail": "the club's Gmail",
+    "noticeRelayQueue": "only until it leaves — usually a few seconds, at most three days if no email service works — and then deletes it",
     "intro": "Anonymous unless you choose to give your name. Choose what it is about.",
     "backToContact": "Back to Contact",
     "door": {
@@ -10831,7 +10922,8 @@
       "clubHint": "The message reaches the club's mailbox.",
       "person": "{name}",
       "personHint": "Only {name}, the person the club designated for safety. Confidential.",
-      "personHintGmail": "{name}, the person the club designated for safety, through the club's mailbox, where whoever reads it sees it too."
+      "personHintGmail": "{name}, the person the club designated for safety, through the club's mailbox, where whoever reads it sees it too.",
+      "personHintFallback": "{name}, the person the club designated for safety; if the email service is down, through the club's mailbox, where its readers see it."
     },
     "branches": {
       "howItWent": {
@@ -10855,10 +10947,12 @@
       }
     },
     "safety": {
-      "reader": "The message reaches {name} only. The site keeps nothing of it.",
-      "readerGmail": "The message reaches {name} through the club's mailbox, where whoever reads it sees it too. The site keeps nothing of it.",
-      "readerChoice": "Anonymously, the message reaches {name} only; with your name, you choose who hears it. The site keeps nothing of it.",
-      "readerChoiceGmail": "Anonymously, the message reaches {name} through the club's mailbox, where whoever reads it sees it too; with your name, you choose who hears it. The site keeps nothing of it.",
+      "reader": "The message reaches {name} only. The site keeps it only until it leaves (three days at most), then deletes it.",
+      "readerGmail": "The message reaches {name} through the club's mailbox, where its readers see it. The site keeps it only until it leaves (three days at most), then deletes it.",
+      "readerChoice": "Anonymously, the message reaches {name} only; with your name, you choose who hears it. The site keeps it only until it leaves (three days at most), then deletes it.",
+      "readerChoiceGmail": "Anonymously, the message reaches {name} through the club's mailbox, where its readers see it; with your name, you choose who hears it. The site keeps it only until it leaves (three days at most).",
+      "readerFallback": "The message reaches {name}; if the email service is down, through the club's mailbox, where its readers see it. The site keeps it only until it leaves (three days at most), then deletes it.",
+      "readerChoiceFallback": "Anonymously, the message reaches {name}; if the email service is down, through the club's mailbox, where its readers see it. With your name, you choose who hears it. The site keeps it only until it leaves (three days at most).",
       "whereWhen": "Where and when (optional)",
       "contact": "Phone number (optional)",
       "contactHelp": "Only if you want {name} to call you."
@@ -10939,8 +11033,8 @@
       "email": "The email",
       "captcha": "The anti-bot check"
     },
-    "privacy": "The site keeps nothing: the message leaves by email to the club.",
-    "privacySafety": "The site keeps nothing of the message.",
+    "privacy": "The site keeps the message only until it leaves (three days at most), then deletes it: the message leaves by email to the club.",
+    "privacySafety": "The site keeps the message only until it leaves (three days at most), then deletes it.",
     "privacyLinkLabel": "Privacy notice",
     "submit": "Send",
     "submitting": "Sending…",
@@ -10951,7 +11045,8 @@
       "title": "Your message is on its way",
       "body": "Thank you! We read it carefully.",
       "safety": "Only {name} received it. Thank you for telling us.",
-      "safetyGmail": "{name} received it, through the club's mailbox, where whoever reads it sees it too. Thank you for telling us."
+      "safetyGmail": "{name} received it, through the club's mailbox, where whoever reads it sees it too. Thank you for telling us.",
+      "safetyFallback": "{name} gets it — if the email service is down, through the club's mailbox, where its readers see it. Thank you for telling us."
     },
     "eventPage": {
       "lead": "Were you there? Tell us how it was — anonymously, it takes a minute.",

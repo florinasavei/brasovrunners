@@ -17,7 +17,7 @@ import { canonicalizeEmail, InvalidEmailError } from "@/modules/participants/dom
  * - **«O reclamație»** (`reclamatie`) — what happened, and optionally the event and the date.
  * - **«Girl Zone»** (`girl-zone`; `siguranta` until §772, still read) — confidential, for women who did
  *   not feel safe: it reaches one person the club names, by Mailgun unless the club chose its Gmail
- *   (§772), and the site keeps nothing of it.
+ *   (§772), and the site keeps it only until it leaves (§NNN).
  *
  * Anonymous unless the person chooses otherwise (§678): every form opens with «Anonim» (the default)
  * or «Cu nume și prenume», and only the named mode shows — and the server only keeps — a name, which it
@@ -105,12 +105,15 @@ export const DEFAULT_VIA: Readonly<Record<FeedbackBranch, FeedbackVia>> = {
 /** One branch as the club set it: a switch, the address that receives it and the road it leaves by. */
 export type BranchSetting = { on: boolean; to: string | null; via: FeedbackVia };
 
-/** The setting `feedbackForms` (`settings.ts`): per branch a switch and a recipient; the safety branch also the first name shown. */
+/**
+ * The setting `feedbackForms` (`settings.ts`): per branch a switch and a recipient; the safety branch also the first name shown
+ * and — §NNN — whether Girl Zone’s messages may leave by the club’s Gmail when Mailgun is down (`fallbackToGmail`, off).
+ */
 export type FeedbackSettings = {
   howItWent: BranchSetting;
   suggestion: BranchSetting;
   complaint: BranchSetting;
-  safety: BranchSetting & { name: string | null };
+  safety: BranchSetting & { name: string | null; fallbackToGmail: boolean };
 };
 
 /** Off, each of them, until the club switches it on (the owner: «must be a toggle»). */
@@ -118,7 +121,7 @@ export const DEFAULT_FEEDBACK_SETTINGS: FeedbackSettings = {
   howItWent: { on: false, to: null, via: DEFAULT_VIA.howItWent },
   suggestion: { on: false, to: null, via: DEFAULT_VIA.suggestion },
   complaint: { on: false, to: null, via: DEFAULT_VIA.complaint },
-  safety: { on: false, to: null, via: DEFAULT_VIA.safety, name: null },
+  safety: { on: false, to: null, via: DEFAULT_VIA.safety, name: null, fallbackToGmail: false },
 };
 
 /**
@@ -162,6 +165,45 @@ export function effectiveFeedbackSettings(settings: FeedbackSettings, safetyGmai
 /** Whether a message for Girl Zone's person leaves by the club's Gmail, so the club's mailbox readers see it (`viaFor`, §772). */
 export function safetyMessageSeenByMailboxReaders(settings: FeedbackSettings): boolean {
   return viaFor(settings, "safety", "person") === "gmail";
+}
+
+/**
+ * Whether a message for Girl Zone's person may still pass through the club's Gmail without the club having chosen it
+ * (§NNN): the club's tick «Dacă Mailgun pică, trimite prin Gmail-ul clubului» is on, the notice in force says her messages may
+ * leave by Gmail, and the club's Gmail exists here — the cases in which, when Mailgun is down, her message leaves by the club's
+ * mailbox and its readers see it in Sent. The public lines then say so (never «doar la …» where it may not be true).
+ */
+export function safetyMessageMayLeaveByGmail(settings: FeedbackSettings, safetyGmailDescribed: boolean, roads: FeedbackRoads): boolean {
+  return roads.gmail && roads.mailgun && !safetyMessageSeenByMailboxReaders(settings) && fallbackAllowedFor(settings, "person", safetyGmailDescribed);
+}
+
+/**
+ * Whether the other road may carry a message when the chosen one is down (§NNN, amending §772). The contact form’s and
+ * the three ordinary forms’ messages go to the club’s own mailbox and the notice names both roads for them (§772),
+ * so each may take them over from the other — and a message for Girl Zone’s person leaves by Gmail **only** with the club’s
+ * tick, «Dacă Mailgun pică, trimite prin Gmail-ul clubului» (off by default), and only while the privacy notice in force says
+ * her messages may leave by Gmail (`safetyGmailDescribed`): the notice promises they never pass through the club’s mailbox
+ * otherwise, and the readers of that mailbox would see her message in Gmail’s Sent folder. Her message by Gmail that Mailgun
+ * may take over (the club chose Gmail for her) needs no tick: Mailgun is the road the notice promised her.
+ */
+export function fallbackAllowedFor(settings: FeedbackSettings, audience: FeedbackAudience, safetyGmailDescribed: boolean): boolean {
+  if (audience !== "person") return true;
+  if (settings.safety.via === "gmail") return true;
+  return settings.safety.fallbackToGmail && safetyGmailDescribed;
+}
+
+/**
+ * Whether a form's recipient is the club's Gmail account itself (§NNN): by the canonicalizer, never a string compare —
+ * a dotted or tagged spelling is the same inbox (§10.4). Gmail files a message from an account to the same account in
+ * Sent and All mail, not necessarily in the Inbox, so the card says so beside the box.
+ */
+export function sendsToItself(recipient: string | null, account: string | null): boolean {
+  if (!recipient || !account) return false;
+  try {
+    return canonicalizeEmail(recipient).inboxEmail === canonicalizeEmail(account).inboxEmail;
+  } catch {
+    return false;
+  }
 }
 
 /**

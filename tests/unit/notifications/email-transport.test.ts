@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { emailMessageType } from "@/db/schema/email-outbox";
+import { isRelayMessage } from "@/modules/notifications/domain/relay";
 import type { EmailAdapter, OutgoingEmail, SendResult } from "@/infrastructure/email/adapter";
 import { createEmailSender, type GmailRoad } from "@/infrastructure/email/delivery";
 import { gmailFailureIsBeforeAcceptance } from "@/infrastructure/email/gmail-adapter";
@@ -43,8 +44,11 @@ const usage = (over: Partial<GmailUsage> = {}): GmailUsage => ({
 
 describe("§443 the message groups and the setting", () => {
   it("puts every message type in exactly one group, and the newsletter's own three in the newsletter group", () => {
-    for (const type of emailMessageType.enumValues) expect(EMAIL_GROUP_OF[type]).toBeDefined();
-    expect(Object.keys(EMAIL_GROUP_OF).sort()).toEqual([...emailMessageType.enumValues].sort());
+    // Every type with a template; a visitor's message and the road notice (§NNN) take the road on their row.
+    const grouped = emailMessageType.enumValues.filter((type) => !isRelayMessage(type)) as (keyof typeof EMAIL_GROUP_OF)[];
+    for (const type of grouped) expect(EMAIL_GROUP_OF[type]).toBeDefined();
+    expect(Object.keys(EMAIL_GROUP_OF).sort()).toEqual([...grouped].sort());
+    expect(emailGroupOf("CONTACT_MESSAGE", false)).toBe("club");
     expect(EMAIL_GROUPS).toEqual(["links", "confirmations", "reminders", "announcements", "club", "newsletter"]);
     const newsletter = (Object.keys(EMAIL_GROUP_OF) as (keyof typeof EMAIL_GROUP_OF)[]).filter((type) => EMAIL_GROUP_OF[type] === "newsletter");
     expect(newsletter.sort()).toEqual(["NEWSLETTER", "NEWSLETTER_CONFIRM", "NEW_EVENT_ALERT"]);
@@ -391,7 +395,7 @@ describe("§443 review — Gmail's rows are claimed apart, as many as the pace l
     const rows = gmailRoadRows(DEFAULT_EMAIL_TRANSPORT);
     expect(rows.clubCopies).toBe(true);
     expect(new Set(rows.messageTypes)).toEqual(
-      new Set(emailMessageType.enumValues.filter((type) => preferredTransport(DEFAULT_EMAIL_TRANSPORT, type, false) === "gmail")),
+      new Set(emailMessageType.enumValues.filter((type) => !isRelayMessage(type) && preferredTransport(DEFAULT_EMAIL_TRANSPORT, type, false) === "gmail")),
     );
     expect(rows.messageTypes).not.toContain("VERIFY_REGISTRATION_EMAIL");
     const allMailgun = gmailRoadRows({ ...DEFAULT_EMAIL_TRANSPORT, groups: { ...DEFAULT_EMAIL_TRANSPORT.groups, club: "mailgun", newsletter: "mailgun" } });

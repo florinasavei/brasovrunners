@@ -5,7 +5,7 @@ import Typography from "@mui/material/Typography";
 import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
-import { emailMessageType, type EmailMessageType } from "@/db/schema/email-outbox";
+import type { EmailMessageType } from "@/db/schema/email-outbox";
 import { getPathname, Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import type { EmailLocale } from "@/infrastructure/email/adapter";
@@ -44,6 +44,9 @@ import { readCalendarRsvpTo } from "@/modules/notifications/calendar-rsvp";
 import ClubMailboxRejectionsPanel from "@/modules/notifications/ui/ClubMailboxRejectionsPanel";
 import { readClubMailboxRejections } from "@/modules/notifications/club-mailbox-rejections";
 import OutboxQueuePanel from "@/modules/notifications/ui/OutboxQueuePanel";
+import RelayMessagesPanel from "@/modules/notifications/ui/RelayMessagesPanel";
+import { TEMPLATED_MESSAGE_TYPES } from "@/modules/notifications/domain/relay";
+import { readRelayView } from "@/modules/notifications/relay-view";
 import ParticipantEmailsPanel, { type ParticipantEmailCard } from "@/modules/notifications/ui/ParticipantEmailsPanel";
 import UpcomingEmailsPanel from "@/modules/notifications/ui/UpcomingEmailsPanel";
 import { FORECAST_HORIZON_DAYS, forecastAutomaticEmails } from "@/modules/notifications/forecast";
@@ -118,9 +121,10 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
     the enum cannot lose a value (expand only, `AGENTS.md` §7.6) and a row sent long ago still
     renders through them.
   */
+  // Every type with a template (a visitor's message and the road notice have none, §NNN), the three nothing queues any more last.
   const types = [
-    ...(emailMessageType.enumValues as readonly EmailMessageType[]).filter((type) => !NEVER_QUEUED.has(type)),
-    ...(emailMessageType.enumValues as readonly EmailMessageType[]).filter((type) => NEVER_QUEUED.has(type)),
+    ...TEMPLATED_MESSAGE_TYPES.filter((type) => !NEVER_QUEUED.has(type)),
+    ...TEMPLATED_MESSAGE_TYPES.filter((type) => NEVER_QUEUED.has(type)),
   ];
   // Which message's words were just saved (§336): the save names it, and only a real type counts.
   const copySaved = saved === "emailCopy" || saved === "emailCopyReset" || saved === "emailCopySamples";
@@ -151,13 +155,15 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
   // The club's deadlines (§377), straight through like the words: the panel that sets them, the
   // when-lines that state them, the previews that print them and the forecast (§383), as they now stand.
   const deadlinesRead = readDeadlines(db);
-  const [plan, transport, volume, queue, notices, written, deadlines, forecast, addressCap, shownAddress, outboxDelivery, failedRetryable, calendarRsvp] = await Promise.all([
+  const [plan, transport, volume, queue, relayView, notices, written, deadlines, forecast, addressCap, shownAddress, outboxDelivery, failedRetryable, calendarRsvp] = await Promise.all([
     readEmailPlan(db),
     // Which road each group takes, Gmail's cap and pace (§443), beside the plan it spends less of.
     readEmailTransport(db),
     readEmailVolumeToday(db, now),
     // The page's one "now": the due and the held rows «Trimite acum» names (§529) are counted at it.
     maySeeQueue ? readOutboxQueue(db, OUTBOX_QUEUE_LIMIT, now) : null,
+    // The visitors' messages the outbox carries and the two roads' state (§NNN): no address and no word, but the same readers as the queue.
+    maySeeQueue ? readRelayView(db, now) : null,
     // Who receives a signed declaration and who is told about a confirmation (§244, §245):
     // participant data again, so the same gate as the queue.
     maySeeQueue ? readClubNotices(db) : null,
@@ -407,6 +413,9 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
           failedRetryable={failedRetryable}
         />
       )}
+
+      {/* «Scrie-ne» and «Spune-ne ceva», carried by the same outbox (§NNN): the road, the road it left by, the words kept or gone. */}
+      {relayView && <RelayMessagesPanel locale={locale} view={relayView} now={now} />}
 
       {/* The club's own copies (§244, §245); the contact recipients they mirror are on «Pagini» → «Contact». */}
       {notices && (

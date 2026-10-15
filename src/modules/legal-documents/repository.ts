@@ -21,6 +21,7 @@ import {
   describesFeedbackForms,
   describesFeedbackFormsNamed,
   describesFeedbackSafetyGmail,
+  describesRelayQueue,
   describesMembersShop,
   describesVolunteerAgreement,
   describesVolunteerMinors,
@@ -341,6 +342,15 @@ export async function noticeDescribesFeedbackFormsNamed<T extends Record<string,
 export async function noticeDescribesFeedbackSafetyGmail<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<boolean> {
   const notices = await Promise.all(routing.locales.map((locale) => findCurrentApprovedDocument(db, "PRIVACY_NOTICE", locale, now)));
   return notices.every((notice) => notice !== undefined && describesFeedbackSafetyGmail(notice.body));
+}
+
+/**
+ * Whether the privacy notice in force says a visitor's message waits in a queue until it leaves (§NNN,
+ * `describesRelayQueue`) — in every language. Only `/admin/tasks`' row `relayQueueNotice` reads it: the queue itself is not gated.
+ */
+export async function noticeDescribesRelayQueue<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<boolean> {
+  const notices = await Promise.all(routing.locales.map((locale) => findCurrentApprovedDocument(db, "PRIVACY_NOTICE", locale, now)));
+  return notices.every((notice) => notice !== undefined && describesRelayQueue(notice.body));
 }
 
 /**

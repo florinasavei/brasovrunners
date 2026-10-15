@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { emailMessageType, type EmailMessageType } from "@/db/schema/email-outbox";
+import { isRelayMessage, type RelayMessageType } from "@/modules/notifications/domain/relay";
 import { CANNOT_COME_MESSAGES, cannotComeApplies, cannotComeUrlOf } from "@/modules/notifications/domain/cannot-come";
 import { emailSampleActionUrl, emailSampleFamilyConfirmed, emailSampleFor } from "@/modules/notifications/email-copy-fields";
 import { buildTemplateContent, renderBilingual } from "@/modules/notifications/templates";
@@ -10,7 +11,7 @@ import { buildTemplateContent, renderBilingual } from "@/modules/notifications/t
  * fie clar butonul de „Nu mai pot ajunge”»). The table names every message type, with the decision's
  * reason, so a type added later fails here until somebody decides.
  */
-const EVERY_MESSAGE: Record<EmailMessageType, { button: boolean; why: string }> = {
+const EVERY_MESSAGE: Record<Exclude<EmailMessageType, RelayMessageType>, { button: boolean; why: string }> = {
   VERIFY_REGISTRATION_EMAIL: { button: true, why: "the address to confirm: a place is held" },
   COMPLETE_DECLARATION: { button: true, why: "the declaration to sign, or the participation confirmation" },
   WAITLIST_JOINED: { button: true, why: "on the waiting list: leaving it is the same cancel" },
@@ -62,7 +63,7 @@ const EVERY_MESSAGE: Record<EmailMessageType, { button: boolean; why: string }> 
   VOLUNTEER_GUARDIAN_REQUEST: { button: false, why: "no registration" },
 };
 
-const TYPES = Object.keys(EVERY_MESSAGE) as EmailMessageType[];
+const TYPES = Object.keys(EVERY_MESSAGE) as (keyof typeof EVERY_MESSAGE)[];
 const LINK = "https://example.test/ro/inregistrari/gestionare/SECRET#cancel";
 
 function rendered(messageType: EmailMessageType, extra: Record<string, unknown> = {}) {
@@ -72,7 +73,8 @@ function rendered(messageType: EmailMessageType, extra: Record<string, unknown> 
 
 describe("§558 the «Nu mai pot ajunge» button, message type by message type", () => {
   it("the table names every message type, and the platform's list is exactly its «yes» rows", () => {
-    expect([...TYPES].sort()).toEqual([...emailMessageType.enumValues].sort());
+    // A visitor's message and the road notice (§NNN) are composed when queued: no template, so no button.
+    expect([...TYPES].sort()).toEqual([...emailMessageType.enumValues].filter((type) => !isRelayMessage(type)).sort());
     expect([...CANNOT_COME_MESSAGES].sort()).toEqual(TYPES.filter((type) => EVERY_MESSAGE[type].button).sort());
   });
 

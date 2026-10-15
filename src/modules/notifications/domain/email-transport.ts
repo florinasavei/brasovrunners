@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { EmailMessageType } from "@/db/schema/email-outbox";
+import { isRelayMessage, type RelayMessageType } from "./relay";
 
 /**
  * Which road each email leaves by — Mailgun, or the club's own Gmail over SMTP (§443).
@@ -43,7 +44,7 @@ export type EmailGroup = (typeof EMAIL_GROUPS)[number];
  * Every message type in exactly one group. A `Record` over the enum, so a type added tomorrow
  * does not compile until somebody decides which road it takes.
  */
-export const EMAIL_GROUP_OF: Readonly<Record<EmailMessageType, EmailGroup>> = {
+export const EMAIL_GROUP_OF: Readonly<Record<Exclude<EmailMessageType, RelayMessageType>, EmailGroup>> = {
   VERIFY_REGISTRATION_EMAIL: "links",
   COMPLETE_DECLARATION: "links",
   WAITLIST_SPOT_OFFER: "links",
@@ -106,7 +107,8 @@ export const EMAIL_GROUP_OF: Readonly<Record<EmailMessageType, EmailGroup>> = {
  * whatever the message it copies: it goes to the club's own mailbox and carries no link to act on.
  */
 export function emailGroupOf(messageType: EmailMessageType, clubCopy: boolean): EmailGroup {
-  return clubCopy ? "club" : EMAIL_GROUP_OF[messageType];
+  // A visitor's message and the road notice (§NNN) take the road on the row (`road`), never a group's setting: no group lists them.
+  return clubCopy || isRelayMessage(messageType) ? "club" : EMAIL_GROUP_OF[messageType];
 }
 
 /**

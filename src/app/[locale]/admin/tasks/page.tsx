@@ -16,7 +16,10 @@ import { CLUB_TIME_ZONE, formatCalendarDay, formatDay } from "@/i18n/dates";
 import { routing } from "@/i18n/routing";
 import { listPublishedEvents, listUndatedPublishedEvents } from "@/modules/events/repository";
 import { checkJobHealth } from "@/modules/jobs/health";
+import { ROADS } from "@/modules/notifications/domain/road-failover";
 import { checkEmailHealth } from "@/modules/notifications/health";
+import { countLostRelayMessages } from "@/modules/notifications/relay-view";
+import { readRoadStates, roadRings } from "@/modules/notifications/road-status";
 import {
   findCurrentApprovedDocument,
   noticeDescribesEventInvitations,
@@ -30,6 +33,7 @@ import {
   noticeDescribesFeedbackForms,
   noticeDescribesFeedbackFormsNamed,
   noticeDescribesFeedbackSafetyGmail,
+  noticeDescribesRelayQueue,
   noticeDescribesMembersShop,
   noticeDescribesVolunteers,
   noticeDescribesVolunteerAgreement,
@@ -348,6 +352,8 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
   const volume = await readEmailVolumeToday(db, now);
   // Whether email has stopped (§98): the same answer `/api/health` gives the monitors.
   const email = await checkEmailHealth(db, now, budget.effects.jobFloorMinutes);
+  // The two roads (§NNN): which has been failing for over an hour, and the visitors' messages no road carried.
+  const [roadStates, lostRelayMessages] = await Promise.all([readRoadStates(db), countLostRelayMessages(db, now)]);
   // Who reads what "Scrie-ne" sends (§164): the club's list, or `CONTACT_FORM_TO` behind it.
   const contactRecipients = await readContactRecipients(db);
   // One row is the Administrator inserted by hand; a second is somebody invited from
@@ -487,6 +493,8 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
       // §772: Girl Zone by the club's Gmail waits on its own marker; the row exists only while the club chose that road.
       feedbackSafetyGmailDescribed: await noticeDescribesFeedbackSafetyGmail(db, now),
       feedbackSafetyGmailChosen: (await readFeedbackSettings(db)).safety.via === "gmail",
+      // §NNN: a visitor's message waits in the outbox until it leaves; the notice in force must say so.
+      relayQueueDescribed: await noticeDescribesRelayQueue(db, now),
       // §683: the members' shop, described by the notice in force; the row waits only while a product is visible.
       shopDescribed: await noticeDescribesMembersShop(db, now),
       visibleShopProducts: await countVisibleProducts(db),
@@ -522,6 +530,10 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
       appEnv: env.APP_ENV,
       // Email nothing is carrying (§622): the health check's own counts, read above for the red banner.
       emailFailSafe: { stoppedLong: email.stoppedLong, failed: email.failed, retryingLate: email.retryingLate },
+      emailRoads: {
+        failing: ROADS.filter((road) => roadRings(road, roadStates[road], now)).map((road) => ({ road, error: roadStates[road].lastError })),
+        lostMessages: lostRelayMessages,
+      },
       staleJobNames,
       failingJobNames,
       staffCount,

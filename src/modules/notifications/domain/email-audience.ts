@@ -73,6 +73,11 @@ export const EMAIL_AUDIENCE = {
   VOLUNTEER_ROLE_ASSIGNED: "public",
   // The link to a minor volunteer's parent or guardian (§768): to an address nobody confirmed, no registration behind it — the public's road.
   VOLUNTEER_GUARDIAN_REQUEST: "public",
+  // A visitor's message to the club and the platform's notice about a road (§NNN): to the club's own people, about no
+  // participant — the staff's, with no privacy line and no club copy.
+  CONTACT_MESSAGE: "staff",
+  FEEDBACK_MESSAGE: "staff",
+  RELAY_NOTICE: "staff",
 } as const satisfies Record<EmailMessageType, EmailAudience>;
 
 export function audienceOf(messageType: EmailMessageType): EmailAudience {

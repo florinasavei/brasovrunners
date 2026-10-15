@@ -6,6 +6,7 @@ import type { RichTextDoc } from "@/modules/content/rich-text/domain/schema";
 import { copyFor, onlyMissingFacts, type EmailCopy, fillPlaceholders } from "./domain/email-copy";
 import { organizerParagraphs } from "./domain/organizer-message";
 import { audienceOf } from "./domain/email-audience";
+import { isRelayMessage, type RelayMessageType } from "./domain/relay";
 import { type EmailEventFacts, type EventFactsBlock, eventFactsBlock } from "./domain/event-facts";
 import { DEFAULT_TOKEN_HOURS } from "./domain/token-lifetime";
 import type { EventChangeKind } from "@/modules/events/domain/event-changes";
@@ -3057,7 +3058,13 @@ const T = {
   },
 } as const;
 
-const KEY_BY_MESSAGE_TYPE: Record<EmailMessageType, keyof typeof T.ro> = {
+/** A type with no template — a visitor's message or the road notice (§NNN) is composed when it is queued — never reaches this lookup. */
+function templateKey(messageType: EmailMessageType): keyof typeof T.ro {
+  if (isRelayMessage(messageType)) throw new Error(`${messageType} has no template: the relay composes it when it is queued`);
+  return KEY_BY_MESSAGE_TYPE[messageType];
+}
+
+const KEY_BY_MESSAGE_TYPE: Record<Exclude<EmailMessageType, RelayMessageType>, keyof typeof T.ro> = {
   VERIFY_REGISTRATION_EMAIL: "verify",
   COMPLETE_DECLARATION: "completeDeclaration",
   WAITLIST_JOINED: "waitlistJoined",
@@ -3245,7 +3252,7 @@ export function platformWords(
   locale: EmailLocale,
   data: TemplateData,
 ): { subject: string; paragraphs: string[] } {
-  const entry = T[locale][KEY_BY_MESSAGE_TYPE[messageType]] as {
+  const entry = T[locale][templateKey(messageType)] as {
     subject: string | ((d: TemplateData) => string);
     body: (d: TemplateData) => string[];
   };
@@ -3273,7 +3280,7 @@ export function buildTemplateContent(
   const privacyUrl = privacyNoticeUrl(locale);
   let data: TemplateData = { ...given, privacyUrl, ...timingWords(locale, given.timings) };
   const copy = T[locale];
-  const key = KEY_BY_MESSAGE_TYPE[messageType];
+  const key = templateKey(messageType);
   /*
     The club's copy (§320) is the participant's message minus what only the participant may hold.
     The renderer already mints no token and sets none of these for one; they are dropped here as

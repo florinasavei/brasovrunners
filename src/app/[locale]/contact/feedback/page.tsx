@@ -50,6 +50,7 @@ import {
   pickerOrder,
   RATINGS,
   readFeedbackQuery,
+  safetyMessageMayLeaveByGmail,
   safetyMessageSeenByMailboxReaders,
   sentReader,
   STOPPED_REASONS,
@@ -165,6 +166,8 @@ export default async function FeedbackPage({ params, searchParams }: Props) {
   const offer = offered0 ? effectiveFeedbackSettings(offered0, safetyGmailDescribed === true) : null;
   // By Gmail, the message is in the club's mailbox and its Sent folder: «doar la …» would not be true (§772).
   const safetyByGmail = offer ? safetyMessageSeenByMailboxReaders(offer) : false;
+  // Or only when Mailgun is down, by the club's tick: «doar la …» would not be true then either (§NNN).
+  const safetyFallback = offer ? safetyMessageMayLeaveByGmail(offer, safetyGmailDescribed === true, feedbackRoads()) : false;
   // The three ordinary branches only where the SMTP road exists (`CONTACT_FORM_MODE`), as «Scrie-ne» draws no form without one.
   const offered = offer ? offeredBranches(offer, described === true, feedbackRoads()) : [];
   const query = readFeedbackQuery(search);
@@ -210,7 +213,7 @@ export default async function FeedbackPage({ params, searchParams }: Props) {
         <Alert severity="success" role="status" data-testid="feedback-sent">
           <AlertTitle>{t("sent.title")}</AlertTitle>
           {/* Who got it (§678): the safety person — her form's own reader, or the one a named message chose — or the club. */}
-          {sentReader(sentBranch, search.catre) === "person" ? t(safetyByGmail ? "sent.safetyGmail" : "sent.safety", { name: safetyName }) : t("sent.body")}
+          {sentReader(sentBranch, search.catre) === "person" ? t(safetyByGmail ? "sent.safetyGmail" : safetyFallback ? "sent.safetyFallback" : "sent.safety", { name: safetyName }) : t("sent.body")}
         </Alert>
         {/* A way on after the send (§NNN): another message, from the wizard's first step. */}
         <Button
@@ -238,6 +241,7 @@ export default async function FeedbackPage({ params, searchParams }: Props) {
           now={now}
           safetyName={safetyName}
           safetyByGmail={safetyByGmail}
+          safetyFallback={safetyFallback}
           identity={identity}
         />
       )}
@@ -286,6 +290,7 @@ async function BranchForm({
   now,
   safetyName,
   safetyByGmail,
+  safetyFallback,
   identity,
 }: {
   branch: FeedbackBranch;
@@ -296,6 +301,7 @@ async function BranchForm({
   now: Date;
   safetyName: string;
   safetyByGmail: boolean;
+  safetyFallback: boolean;
   identity: Identity | null;
 }) {
   const t = await getTranslations("Tell");
@@ -415,10 +421,10 @@ async function BranchForm({
         )}
       </Box>
       {branch === "safety" ? (
-        // Above the form, in the person's language (§676): who reads it, and that the site keeps nothing —
+        // Above the form, in the person's language (§676): who reads it, and that the site keeps it only until it leaves —
         // and, when a named report may go to the club instead (§678), that the sender chooses then.
         <Alert severity="info" icon={false} sx={{ mb: 2 }} data-testid="feedback-safety-reader">
-          {t(`safety.${identity?.audiences.includes("club") ? "readerChoice" : "reader"}${safetyByGmail ? "Gmail" : ""}`, { name: safetyName })}
+          {t(`safety.${identity?.audiences.includes("club") ? "readerChoice" : "reader"}${safetyByGmail ? "Gmail" : safetyFallback ? "Fallback" : ""}`, { name: safetyName })}
         </Alert>
       ) : (
         <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
@@ -479,6 +485,7 @@ async function BranchForm({
               kept={kept}
               safetyName={safetyName}
               safetyByGmail={safetyByGmail}
+              safetyFallback={safetyFallback}
               audiences={identity.audiences}
               audience={audienceKept && identity.audiences.includes(audienceKept) ? audienceKept : defaultAudience(branch)}
             />

@@ -30,7 +30,9 @@ import { minutesPhrase } from "@/modules/deadlines/domain/duration-words";
 import { countMediaAssets, ORPHAN_ASSET_DAYS } from "@/modules/media/references";
 import { readDatabaseSizeBytes } from "@/modules/diagnostics/database-size";
 import { REPO_DOCS } from "@/modules/diagnostics/repo-docs";
+import { ROADS } from "@/modules/notifications/domain/road-failover";
 import { checkEmailHealth } from "@/modules/notifications/health";
+import { readRoadLastSuccess, readRoadStates, roadRings } from "@/modules/notifications/road-status";
 import { readEmailVolumeToday } from "@/modules/notifications/volume";
 import { readWeatherStatus } from "@/modules/weather/source";
 import { readNeonConsumption } from "@/modules/diagnostics/neon";
@@ -52,7 +54,6 @@ import { buildInfo, formatLastUpdated, formatVersion } from "@/shared/config/bui
 import { CONFIGURATION_ENUMS } from "@/shared/config/env-enums";
 import { env } from "@/shared/config/env";
 import { capturedEmails } from "@/infrastructure/email/sender";
-import { capturedContactMessages } from "@/modules/contact/delivery";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -171,6 +172,8 @@ export default async function DevsPage({ params, searchParams }: Props) {
   // and against the Administrator's saved thresholds — the governor's own cached reader — so the
   // colour here is the one Costuri and `/api/health` show.
   const budget = neon.ok ? await budgetOfInForce(neon.consumption.meter, now) : await readNeonBudget(now);
+  // The two roads emails leave by (§NNN): the last message each carried and its last refusal, beside the jobs.
+  const [roadStates, roadLastSuccess] = await Promise.all([readRoadStates(db), readRoadLastSuccess(db)]);
   const jobs = await Promise.all(
     ["registration-maintenance", "email-outbox"].map((jobName) =>
       checkJobHealth(db, jobName, now, budget.effects.jobFloorMinutes),
@@ -303,26 +306,6 @@ export default async function DevsPage({ params, searchParams }: Props) {
                         {message.text}
                       </Typography>
                     </Box>
-                  </Box>
-                ))}
-              </Stack>
-            )}
-
-            {/* The contact form's messages (§149): the same capture, a different mailbox — the club's. */}
-            {capturedContactMessages().length > 0 && (
-              <Stack spacing={1.5} sx={{ mt: 2 }}>
-                <Typography variant="body2" color="text.secondary">
-                  {t("captured.contact")}
-                </Typography>
-                {capturedContactMessages().map((message) => (
-                  <Box key={message.providerMessageId} sx={{ border: 1, borderColor: "divider", borderRadius: 1, p: 1.5 }}>
-                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                      {message.subject}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
-                      {message.to.join(", ")} · Reply-To {message.replyTo?.address ?? "—"} ·{" "}
-                      {formatDay(message.capturedAt, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true })}
-                    </Typography>
                   </Box>
                 ))}
               </Stack>
@@ -833,6 +816,21 @@ export default async function DevsPage({ params, searchParams }: Props) {
                   {schedule.lastPingAt
                     ? ` · ${t(schedule.lastPingRan ? "jobSchedule.pingRan" : "jobSchedule.pingSkipped", { when: at(schedule.lastPingAt) })}`
                     : ""}
+                </Typography>
+              );
+            })}
+            {/* The two roads (§NNN): Gmail and Mailgun, each with the last message it carried, its last refusal and, when failing, since when. */}
+            {ROADS.map((road) => {
+              const state = roadStates[road];
+              const at = (value: Date) => formatDay(value, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true });
+              const last = roadLastSuccess[road];
+              return (
+                <Typography variant="body2" key={road} data-testid={`road-${road}`} color={roadRings(road, state, now) ? "error.main" : "text.primary"}>
+                  {t(`roads.${road}`)}: <strong>{t(state.failingSince ? "roads.failing" : "roads.ok")}</strong>
+                  {" · "}
+                  {last ? t("roads.lastOk", { when: at(last) }) : t("roads.neverOk")}
+                  {state.lastFailureAt ? ` · ${t("roads.lastFailure", { when: at(state.lastFailureAt), error: state.lastError ?? "—" })}` : ""}
+                  {state.failingSince ? ` · ${t("roads.since", { when: at(state.failingSince) })}` : ""}
                 </Typography>
               );
             })}

@@ -2,6 +2,8 @@ import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import ConstructionIcon from "@mui/icons-material/Construction";
+import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
+import ErrorOutlinedIcon from "@mui/icons-material/ErrorOutlined";
 import EventBusyIcon from "@mui/icons-material/EventBusy";
 import EventRepeatIcon from "@mui/icons-material/EventRepeat";
 import FamilyRestroomIcon from "@mui/icons-material/FamilyRestroom";
@@ -9,11 +11,13 @@ import GroupsIcon from "@mui/icons-material/Groups";
 import HelpIcon from "@mui/icons-material/Help";
 import HistoryIcon from "@mui/icons-material/History";
 import LinkIcon from "@mui/icons-material/Link";
+import LockClockIcon from "@mui/icons-material/LockClock";
 import PriorityHighIcon from "@mui/icons-material/PriorityHigh";
 import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 import RemoveIcon from "@mui/icons-material/Remove";
 import ScheduleIcon from "@mui/icons-material/Schedule";
 import StorefrontIcon from "@mui/icons-material/Storefront";
+import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 import TranslateIcon from "@mui/icons-material/Translate";
 import VolunteerActivismIcon from "@mui/icons-material/VolunteerActivism";
 import VisibilityIcon from "@mui/icons-material/Visibility";
@@ -57,6 +61,12 @@ export const STATUS_GLYPHS = {
   experience: HistoryIcon,
   // A guardian's address that is the volunteer's own (§768): a family on one address, marked on the card, never refused.
   family: FamilyRestroomIcon,
+  // A visitor's message in the outbox (§NNN): a message nobody carried; one that left by the other road; its words kept
+  // until it leaves, and gone.
+  failed: ErrorOutlinedIcon,
+  otherRoad: SwapHorizIcon,
+  wordsKept: LockClockIcon,
+  wordsGone: DeleteForeverIcon,
 } satisfies Record<string, ComponentType<SvgIconProps>>;
 
 export type StatusGlyphName = keyof typeof STATUS_GLYPHS;

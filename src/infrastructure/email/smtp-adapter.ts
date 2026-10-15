@@ -1,26 +1,15 @@
-import { randomUUID } from "node:crypto";
 import nodemailer from "nodemailer";
 
 /**
- * Plain SMTP, for the one message that must not go through Mailgun (`DECISIONS.md` §149).
+ * Plain SMTP to the club's own Gmail (`DECISIONS.md` §149, §443): the connection, its bounded waits and the
+ * words for a failure — the one place that knows how the club's Gmail is reached.
  *
- * The contact form's message is correspondence, not transactional mail: it is written by a
- * visitor to the club, it carries no token, no participant row depends on its delivery, and
- * every one of them would otherwise spend a unit of the Mailgun allowance the registrations
- * need (the owner: "email communication must be minimal so we meet the quota"). So it leaves
- * through the club's own Gmail — an app password, port 465, TLS from the first byte — and
- * lands in whichever mailboxes the club named, with the visitor as `Reply-To`. *Which*
- * mailboxes is not this module's question and not the environment's either since §164: the
- * resolution order is `platform_settings.contactRecipients` first and `CONTACT_FORM_TO`
- * behind it, in `modules/contact/domain/recipients.ts`; here they arrive already resolved.
- *
- * This is deliberately NOT an `EmailAdapter` (`adapter.ts`): that contract is the outbox's —
- * one recipient, an idempotency key, a locale tag, a classified failure the job retries. A
- * contact message has several recipients, no row to retry from and no queue; a failure is
- * told to the visitor on the spot with the club's address to write to instead. Two narrow
- * types instead of one wide one, and nothing here is reachable from `createEmailSender`.
- * Since §443 the outbox has a Gmail road of its own — `gmail-adapter.ts`, a real `EmailAdapter`
- * over the same connection (`createSmtpConnection`) — and this contract is still the contact form's.
+ * Until §NNN this file also held the contact form's own transport, a narrow contract beside the outbox's because a
+ * contact message had no row to retry from and a failure was told to the visitor on the spot. It is a row now
+ * (`CONTACT_MESSAGE`): «Scrie-ne» and «Spune-ne ceva» are carried by the outbox like every other mail, and the Gmail
+ * road they use is `gmail-adapter.ts`, an `EmailAdapter` over `createSmtpConnection` below. What stays here is what
+ * both roads share: the connection, `describeSmtpFailure` and the message's shape (`SmtpMessage`, which the contact
+ * message is composed as before it is queued).
  *
  * Nodemailer 10 ships its own types, and is the one SMTP client the ecosystem uses; Node has
  * no SMTP client of its own, and a hand-written one over `node:tls` is the kind of code that
@@ -50,16 +39,6 @@ export type SmtpMessage = {
   text: string;
   html: string;
 };
-
-export type SmtpSendResult =
-  | { outcome: "sent"; providerMessageId: string }
-  /** The error is safe to log: a code and a class, never the password or a header. */
-  | { outcome: "failed"; error: string };
-
-export interface SmtpTransport {
-  readonly name: string;
-  send(message: SmtpMessage): Promise<SmtpSendResult>;
-}
 
 export type SmtpConfig = {
   host: string;
@@ -122,72 +101,5 @@ function smtpOptions(config: SmtpConfig) {
     connectionTimeout: CONNECTION_TIMEOUT_MS,
     greetingTimeout: GREETING_TIMEOUT_MS,
     socketTimeout: SOCKET_TIMEOUT_MS,
-  };
-}
-
-export function createSmtpTransport(config: SmtpConfig): SmtpTransport {
-  const transporter = createSmtpConnection(config);
-
-  return {
-    name: "smtp",
-
-    async send(message: SmtpMessage): Promise<SmtpSendResult> {
-      try {
-        const info = await transporter.sendMail({
-          from: message.from,
-          to: [...message.to],
-          ...(message.cc && message.cc.length > 0 ? { cc: [...message.cc] } : {}),
-          ...(message.bcc && message.bcc.length > 0 ? { bcc: [...message.bcc] } : {}),
-          ...(message.replyTo ? { replyTo: message.replyTo } : {}),
-          subject: message.subject,
-          text: message.text,
-          html: message.html,
-        });
-        // Gmail accepts for every address it relays; a recipient it refuses outright is a
-        // failure the visitor should hear about rather than a "sent" that reached nobody.
-        // Deliberately "every recipient", `cc` included: a copy that arrived is a message the
-        // club has, and telling the visitor "we could not send" would be a second, wrong
-        // message on top of a delivered one. A refused address shows in the function log.
-        if (info.accepted.length === 0) return { outcome: "failed", error: "smtp rejected every recipient" };
-        return { outcome: "sent", providerMessageId: info.messageId };
-      } catch (error) {
-        return { outcome: "failed", error: describeSmtpFailure(error) };
-      }
-    },
-  };
-}
-
-export type CapturedSmtpMessage = SmtpMessage & { providerMessageId: string; capturedAt: Date };
-
-export type CaptureSmtpTransport = SmtpTransport & {
-  /** Everything captured since the last `clear()`, oldest first. */
-  readonly messages: readonly CapturedSmtpMessage[];
-  clear(): void;
-};
-
-/**
- * The capture twin, for local, test and the end-to-end suite: accepts the message, keeps it
- * in memory, opens no socket. The same shape the outbox's capture adapter has, for the same
- * reason — a developer reads it on `/devs` instead of an inbox.
- */
-export function createCaptureSmtpTransport(now: () => Date = () => new Date()): CaptureSmtpTransport {
-  const captured: CapturedSmtpMessage[] = [];
-
-  return {
-    name: "capture",
-
-    async send(message: SmtpMessage): Promise<SmtpSendResult> {
-      const providerMessageId = `capture:${randomUUID()}`;
-      captured.push({ ...message, providerMessageId, capturedAt: now() });
-      return { outcome: "sent", providerMessageId };
-    },
-
-    get messages() {
-      return captured;
-    },
-
-    clear() {
-      captured.length = 0;
-    },
   };
 }

@@ -65,6 +65,7 @@ export type TaskId =
   | "feedbackNotice"
   | "feedbackNamedNotice"
   | "feedbackSafetyGmailNotice"
+  | "relayQueueNotice"
   | "shopNotice"
   | "volunteersNotice"
   | "volunteerAgreementNotice"
@@ -80,6 +81,8 @@ export type TaskId =
   | "groupRunMinorText"
   | "liveEmail"
   | "emailFailSafe"
+  | "emailRoadDown"
+  | "relayLost"
   | "scheduler"
   | "retentionSweep"
   | "inviteStaff"
@@ -115,6 +118,7 @@ export const TASK_KIND: Record<TaskId, TaskKind> = {
   feedbackNotice: "text",
   feedbackNamedNotice: "text",
   feedbackSafetyGmailNotice: "text",
+  relayQueueNotice: "text",
   shopNotice: "text",
   volunteersNotice: "text",
   volunteerAgreementNotice: "text",
@@ -130,6 +134,8 @@ export const TASK_KIND: Record<TaskId, TaskKind> = {
   groupRunMinorText: "text",
   liveEmail: "account",
   emailFailSafe: "check",
+  emailRoadDown: "check",
+  relayLost: "check",
   scheduler: "check",
   retentionSweep: "check",
   inviteStaff: "account",
@@ -272,6 +278,12 @@ export type OwnerTaskInputs = {
   /** Girl Zone's road is saved as Gmail (§772): the row waits only while the club chose it. */
   feedbackSafetyGmailChosen: boolean;
   /**
+   * Does the notice in force, in every language, say a visitor's message waits in a queue until it leaves and may leave by the
+   * other email service (§NNN, `noticeDescribesRelayQueue`)? Until it does the notice says the platform keeps no copy — which is
+   * not true of the contact and feedback forms now. Nothing is gated on it: the message is kept either way.
+   */
+  relayQueueDescribed: boolean;
+  /**
    * Does the notice in force, in every language, describe the members' shop (§683,
    * `noticeDescribesMembersShop`)? Until it does, the members' zone draws no shop and an order is refused.
    */
@@ -366,6 +378,11 @@ export type OwnerTaskInputs = {
    * refusal keeps retrying hourly past six attempts (`/api/health`'s own count).
    */
   emailFailSafe: { stoppedLong: number; failed: number; retryingLate: number };
+  /**
+   * The two roads emails leave by (§NNN): the ones that have been failing for over an hour — each with its last short code —
+   * and the visitors' messages given up on in the last seven days (`relay.ts`).
+   */
+  emailRoads: { failing: ReadonlyArray<{ road: "gmail" | "mailgun"; error: string | null }>; lostMessages: number };
   /**
    * Each scheduled job's own liveness, not one boolean for all of them.
    *
@@ -620,6 +637,16 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
       });
     }
     /*
+      The queue a visitor's message waits in (§NNN): the contact form and «Spune-ne ceva» keep the message, in the outbox, until
+      it leaves — the notice approved before says the platform keeps no copy. A row for as long as the notice in force does not
+      name `{{relayQueue}}` (always on: the queue always runs), done by itself the day one naming it takes effect. Nothing is
+      held back meanwhile: a message must never be lost to wait for a text.
+    */
+    push("relayQueueNotice", {
+      owner: "club",
+      state: input.relayQueueDescribed ? "done" : "open",
+    });
+    /*
       The members' shop (§683), «Spune-ne ceva»'s shape: open while a product is visible and the notice
       in force does not name `{{membersShop}}` (the club put something in the shop and members see
       nothing: the club must hear why), done by itself the day a notice naming it takes effect, and
@@ -798,6 +825,24 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
     owner: "club",
     state: stoppedOrFailed ? "broken" : "done",
     ...(stoppedOrFailed ? { text: "broken" } : {}),
+  });
+
+  /*
+    A road that has been failing for over an hour (§NNN): Gmail or Mailgun refusing every message — a revoked app password,
+    a closed key, a spent plan — while the other road carries what it can. Red, the club's; the detail names the road and
+    its last short code. Green otherwise, and always on the list.
+  */
+  const failingRoads = input.emailRoads.failing;
+  push("emailRoadDown", {
+    owner: "club",
+    state: failingRoads.length > 0 ? "broken" : "done",
+    ...(failingRoads.length > 0 ? { text: "broken", detail: failingRoads.map((entry) => `${entry.road === "gmail" ? "Gmail" : "Mailgun"}${entry.error ? ` (${entry.error})` : ""}`).join(", ") } : {}),
+  });
+  // A visitor's message no road carried in a day, in the last seven days: its words are deleted, the Administrators were emailed.
+  push("relayLost", {
+    owner: "club",
+    state: input.emailRoads.lostMessages > 0 ? "broken" : "done",
+    ...(input.emailRoads.lostMessages > 0 ? { text: "broken", count: input.emailRoads.lostMessages } : {}),
   });
 
   const emailDone =
