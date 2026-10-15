@@ -27,7 +27,6 @@ import {
   badgePaper,
   badgeRows,
   badgeSizeRefusal,
-  MM,
 } from "@/modules/volunteers/badges/badge-geometry";
 import { badgeDesignQuery, readBadgeDesignForm } from "@/modules/volunteers/badges/badge-query";
 
