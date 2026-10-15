@@ -3,7 +3,7 @@ import { asciiFallbackName, contentDisposition } from "@/shared/http/content-dis
 import { pdfResponse } from "@/modules/registrations/declaration-labels";
 
 /**
- * BR-REQ-060-01, §NNN — every download's name goes through one helper. An HTTP header is Latin-1
+ * BR-REQ-060-01, §779 — every download's name goes through one helper. An HTTP header is Latin-1
  * bytes, and the race «CROSUL ANIVERSAR BRAȘOV RUNNERS – EDIȚIA A II-A 2026» (a «Ș», a «Ț» and an en
  * dash) used to answer the participants' Excel export with a 500: «Cannot convert argument to a
  * ByteString because the character at index 42 has a value of 536».
@@ -32,7 +32,7 @@ function decodeStar(header: string): string {
   return decodeURIComponent(match![1]);
 }
 
-describe("BR-REQ-060-01 contentDisposition (§NNN)", () => {
+describe("BR-REQ-060-01 contentDisposition (§779)", () => {
   it.each(NAMES)("%s: Headers accepts it, the fallback is printable ASCII, filename* is the real name", (_label, name) => {
     for (const type of ["attachment", "inline"] as const) {
       const value = contentDisposition(type, name);
@@ -98,7 +98,7 @@ describe("BR-REQ-060-01 contentDisposition (§NNN)", () => {
   });
 });
 
-describe("BR-REQ-060-01 a signed declaration's PDF (§NNN)", () => {
+describe("BR-REQ-060-01 a signed declaration's PDF (§779)", () => {
   it("answers 200 with a header Headers accepts, whatever the name carries", async () => {
     const response = pdfResponse(Buffer.from("%PDF-1.4 test"), "Declarația Ștefan Țepeș – 2026.pdf", "attachment");
     expect(response.status).toBe(200);

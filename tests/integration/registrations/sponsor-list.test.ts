@@ -480,7 +480,7 @@ describe("§581 the sponsor list as Excel, every tick in its column", () => {
     expect((await downloadSponsorList(new Request("http://localhost/api/admin/registrations/sponsor-list?format=xlsx"))).status).toBe(409);
   });
 
-  it("an event whose slug and title carry diacritics still downloads: 200, a header Headers accepts (§NNN)", async () => {
+  it("an event whose slug and title carry diacritics still downloads: 200, a header Headers accepts (§779)", async () => {
     await approveNotice(1, boxOnly, V1_AT);
     await approveNotice(2, sharing, V2_AT);
     const event = await createEvent("crosul-brașov-ediția-2026", "CROSUL BRAȘOV – EDIȚIA A II-A");

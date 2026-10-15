@@ -1,5 +1,5 @@
 /**
- * The one place a `Content-Disposition` header is built (§NNN, RFC 6266 and RFC 5987).
+ * The one place a `Content-Disposition` header is built (§779, RFC 6266 and RFC 5987).
  *
  * An HTTP header value is Latin-1 bytes: a file named after an event whose title has an S with a
  * comma below, a T with a comma below or an en dash used to crash the download with a 500 («Cannot

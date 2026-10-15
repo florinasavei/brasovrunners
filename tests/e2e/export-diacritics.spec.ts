@@ -4,7 +4,7 @@ import pg from "pg";
 import { hydrated, signIn } from "./support/featured-event";
 
 /**
- * §NNN — «I can't export the participants as excel anymore!» (the owner, 2026-10-15). The race
+ * §779 — «I can't export the participants as excel anymore!» (the owner, 2026-10-15). The race
  * «CROSUL ANIVERSAR BRAȘOV RUNNERS – EDIȚIA A II-A 2026» has an «Ș», a «Ț» and an en dash; an HTTP header
  * is Latin-1 bytes, and the Excel export answered 500 for any such title. Here the button on the
  * registrations list is pressed for such an event, and the browser is handed a workbook whose suggested name
@@ -73,7 +73,7 @@ async function cleanup(seeded: Seeded): Promise<void> {
   }
 }
 
-test.describe("BR-REQ-060-01 §NNN the participants' Excel export, for an event whose title has diacritics", () => {
+test.describe("BR-REQ-060-01 §779 the participants' Excel export, for an event whose title has diacritics", () => {
   test("downloads a workbook whose name keeps the diacritics, its plain name beside it in ASCII", async ({ page }) => {
     test.setTimeout(90_000);
     const seeded = await seed(`${test.info().project.name}-${Date.now().toString(36)}`);

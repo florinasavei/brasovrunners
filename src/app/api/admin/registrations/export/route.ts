@@ -34,7 +34,7 @@ function isRegistrationStatus(value: string | null): value is RegistrationStatus
  * the date appended so two exports of the same race a week apart are two files. Falls back to
  * the plain name when nothing was filtered for.
  *
- * The name is not the header: `contentDisposition` (§NNN) puts an ASCII fallback in `filename`
+ * The name is not the header: `contentDisposition` (§779) puts an ASCII fallback in `filename`
  * and these very characters in `filename*`. Raw in the header, an «Ș» or an en dash was a 500 —
  * «I can't export the participants as excel anymore!», 2026-10-15.
  */

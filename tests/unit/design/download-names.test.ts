@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { byFile, type Hit, type Source, SOURCES, stringLiterals } from "./scan";
 
 /**
- * BR-REQ-060-01, §NNN — a download's name is built in one place, `src/shared/http/content-disposition.ts`.
+ * BR-REQ-060-01, §779 — a download's name is built in one place, `src/shared/http/content-disposition.ts`.
  *
  * A raw ``Content-Disposition: attachment; filename="${title}"`` crashes the whole download with a 500
  * («Cannot convert argument to a ByteString») the moment the title has an «Ș», a «ț» or an en dash — the
@@ -24,7 +24,7 @@ function headerHits(source: Source): Hit[] {
 
 const sample = (file: string, text: string): Source => ({ file, text, tree: ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS) });
 
-describe("BR-REQ-060-01 §NNN every download's name goes through contentDisposition()", () => {
+describe("BR-REQ-060-01 §779 every download's name goes through contentDisposition()", () => {
   it("scans the whole of src/ and the helper is where it should be", () => {
     expect(SOURCES.length).toBeGreaterThan(500);
     expect(SOURCES.some((source) => source.file === HELPER)).toBe(true);

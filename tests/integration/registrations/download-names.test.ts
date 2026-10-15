@@ -8,7 +8,7 @@ import { readSheet } from "../../helpers/xlsx";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-060-01, §NNN — «I can't export the participants as excel anymore!» (the owner, 2026-10-15), from a
+ * BR-REQ-060-01, §779 — «I can't export the participants as excel anymore!» (the owner, 2026-10-15), from a
  * real database: the race «CROSUL ANIVERSAR BRAȘOV RUNNERS – EDIȚIA A II-A 2026» has a «Ș», a «Ț» and an en
  * dash, an HTTP header is Latin-1 bytes, and the export answered 500 («Cannot convert argument to a
  * ByteString because the character at index 42 has a value of 536»).
@@ -92,7 +92,7 @@ beforeEach(async () => {
   await resetTables(db);
 });
 
-describe("BR-REQ-060-01 §NNN the registrations export, for an event whose title has diacritics", () => {
+describe("BR-REQ-060-01 §779 the registrations export, for an event whose title has diacritics", () => {
   it("the Excel export answers 200 with a workbook and a header a Headers accepts, the real name in filename*", async () => {
     const race = await createRace(TITLE);
     await register(race.id, "Ștefan Țepeș", 1);
