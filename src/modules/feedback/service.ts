@@ -31,9 +31,10 @@ import {
 } from "./domain/branches";
 
 /**
- * «Spune-ne ceva» (§676): one anonymous message from a visitor, sent the moment it is posted and
- * kept nowhere — no table, no outbox row, no audit of what it says, no body or address in a log line.
- *
+ * «Spune-ne ceva» (§676): one anonymous message from a visitor — queued in the outbox the moment it is posted (§NNN) and sent at
+ * once, after the response, by the relay (`notifications/relay.ts`). The service composes the message, applies the gates and
+ * writes the row; it sends nothing itself. The words stay in the row only until the message is delivered, then they are deleted
+ * (§NNN, amending §676's «kept nowhere»): no body or address in a log line, and the audit trail has no row about it. *
  * **Two roads, chosen by the club for each form (§772, amending §676).** The club's Gmail over SMTP —
  * the way a contact message leaves (§149) — or Mailgun, the configured adapter through the environment's
  * sender (which captures on a laptop and in the tests). The default is what §676 fixed in code: Gmail for
@@ -43,9 +44,10 @@ import {
  * off, and a message for the club's mailbox is marked «[posibil spam]» on the contact form's own signals
  * (§310) whichever road carries it. A message for Girl Zone's person has a neutral subject and is never
  * held back or marked. On Gmail the club's mailbox readers see a Girl Zone message — the one Gmail's Sent
- * folder keeps — so the person's confidentiality is the club's choice, said on the card (§772). A road that
- * refuses is said on the page («Nu am putut trimite acum…») with the text kept, never a silent loss and
- * never a second road.
+ * folder keeps — so the person's confidentiality is the club's choice, said on the card (§772). **A road that
+ * refuses is the relay's, no longer the page's (§NNN):** the person is answered «trimis», the message waits in the
+ * outbox and, after two refusals by the service, the other road carries it (`domain/road-failover.ts`) — for Girl Zone's
+ * person only with the club's tick and the notice's words (`fallbackAllowedFor`).
  *
  * **Who hears it, in the named mode (§678).** «Cine să afle?» may send a named message on any branch
  * to the club's mailbox (the branch's own recipient; for the safety branch the «O reclamație»

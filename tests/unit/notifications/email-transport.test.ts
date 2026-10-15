@@ -395,7 +395,7 @@ describe("§443 review — Gmail's rows are claimed apart, as many as the pace l
     const rows = gmailRoadRows(DEFAULT_EMAIL_TRANSPORT);
     expect(rows.clubCopies).toBe(true);
     expect(new Set(rows.messageTypes)).toEqual(
-      new Set(emailMessageType.enumValues.filter((type) => preferredTransport(DEFAULT_EMAIL_TRANSPORT, type, false) === "gmail")),
+      new Set(emailMessageType.enumValues.filter((type) => !isRelayMessage(type) && preferredTransport(DEFAULT_EMAIL_TRANSPORT, type, false) === "gmail")),
     );
     expect(rows.messageTypes).not.toContain("VERIFY_REGISTRATION_EMAIL");
     const allMailgun = gmailRoadRows({ ...DEFAULT_EMAIL_TRANSPORT, groups: { ...DEFAULT_EMAIL_TRANSPORT.groups, club: "mailgun", newsletter: "mailgun" } });

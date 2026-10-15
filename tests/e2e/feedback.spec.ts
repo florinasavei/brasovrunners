@@ -452,7 +452,7 @@ test.describe("BR-REQ-070-04 «Spune-ne ceva», the anonymous wizard (§676)", (
       // Above the form, in the page's language: who reads it, by the first name the club set.
       // The club may hear a named report too (§678) — the contact form reaches it on this deployment — so the line says the sender chooses then.
       await expect(page.getByTestId("feedback-safety-reader")).toHaveText(
-        `Anonim, mesajul ajunge doar la ${SAFETY_NAME}; cu nume și prenume, alegi tu cine află. Site-ul nu păstrează nimic din el.`,
+        `Anonim, mesajul ajunge doar la ${SAFETY_NAME}; cu nume și prenume, alegi tu cine află. Site-ul îl ține doar până pleacă, câteva minute, apoi îl șterge.`,
       );
       await expect(page.getByTestId("feedback-form-girl-zone")).toBeVisible();
       // The old address, from before it was `girl-zone` (§772): a link in a sent email or on paper still opens
@@ -649,6 +649,15 @@ test.describe("BR-REQ-070-04 «Spune-ne ceva», the anonymous wizard (§676)", (
         await page.goto("/ro/devs?panel=email");
         await expect(page.locator("main")).toContainText(`Cum a fost: ${pickedTitle}`, { timeout: 2_000 });
       }).toPass({ timeout: 45_000 });
+      // §NNN: it went through the outbox, by the road the form has — and the page that shows the outbox keeps the trace, never the words.
+      await page.goto("/ro/admin/settings/emails");
+      const relay = page.getByTestId("relay-messages");
+      await expect(relay).toBeVisible();
+      const sentRow = relay.getByTestId("relay-row").filter({ hasText: "Spune-ne ceva" }).first();
+      await expect(sentRow).toHaveAttribute("data-status", "SENT");
+      await expect(sentRow.getByTestId("relay-body-deleted")).toBeVisible();
+      await expect(sentRow.getByTestId("relay-other-way")).toHaveCount(0);
+      await expect(relay).not.toContainText("Foarte frumos, mulțumim.");
 
       // One branch on: no choice of one — its form at once, on /ro and on /en.
       // «O sugestie» put on Mailgun (§772): a road this deployment has, so the form is offered all the same.

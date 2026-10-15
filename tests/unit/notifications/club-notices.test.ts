@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { emailMessageType } from "@/db/schema/email-outbox";
+import { TEMPLATED_MESSAGE_TYPES } from "@/modules/notifications/domain/relay";
 import {
   clubCopyPayload,
   clubCopyRecipients,
@@ -173,7 +173,7 @@ describe("BR-REQ-033-02 criterion 12 the club's hidden copy of every participant
       "NEWSLETTER",
       "NEW_EVENT_ALERT",
     ];
-    for (const type of emailMessageType.enumValues) {
+    for (const type of TEMPLATED_MESSAGE_TYPES) {
       expect(isParticipantMessage(type), type).toBe(!excluded.includes(type));
     }
   });
@@ -228,7 +228,7 @@ describe("BR-REQ-033-02 criterion 14 the club copy's recipients, payload and att
     // The group run's signer's copy is masked too (§419): its address was never confirmed.
     expect(declarationPdfAudience("GROUP_RUN_DECLARATION_SIGNED", false)).toBe("club");
     expect(declarationPdfAudience("GROUP_RUN_DECLARATION_ARCHIVE", false)).toBe("club");
-    for (const type of emailMessageType.enumValues) {
+    for (const type of TEMPLATED_MESSAGE_TYPES) {
       // A club copy of any message attaches no PDF at all.
       expect(declarationPdfAudience(type, true), type).toBeNull();
       if (!["REGISTRATION_CONFIRMED", "DECLARATION_SIGNED", "DECLARATION_ARCHIVE", "GROUP_RUN_DECLARATION_SIGNED", "GROUP_RUN_DECLARATION_ARCHIVE"].includes(type)) {

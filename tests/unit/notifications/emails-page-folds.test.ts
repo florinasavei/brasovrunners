@@ -198,7 +198,7 @@ describe("§336 the page hands every message to the card, and the panels fold", 
   it("renders the card of cards from every message type, with the language switch inside it", () => {
     expect(page).toContain("<ParticipantEmailsPanel");
     // Every type from the enum, the three nothing queues any more last and said so (§331).
-    expect(page).toMatch(/const types = \[\s*\.\.\.\(emailMessageType\.enumValues/);
+    expect(page).toMatch(/const types = \[\s*\.\.\.TEMPLATED_MESSAGE_TYPES\.filter/);
     expect(page).toMatch(/filter\(\(type\) => !NEVER_QUEUED\.has\(type\)\)[\s\S]*?filter\(\(type\) => NEVER_QUEUED\.has\(type\)\)/);
     expect(page).toMatch(/NEVER_QUEUED\.has\(messageType\) \? \{ neverSent: t\("emails\.neverSent"\) \}/);
     // Through `cards`, which is `types` with each message's preview and saved words (§359).

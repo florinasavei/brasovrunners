@@ -5,7 +5,7 @@ import Typography from "@mui/material/Typography";
 import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
-import { emailMessageType, type EmailMessageType } from "@/db/schema/email-outbox";
+import type { EmailMessageType } from "@/db/schema/email-outbox";
 import { getPathname, Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import type { EmailLocale } from "@/infrastructure/email/adapter";
@@ -45,7 +45,7 @@ import ClubMailboxRejectionsPanel from "@/modules/notifications/ui/ClubMailboxRe
 import { readClubMailboxRejections } from "@/modules/notifications/club-mailbox-rejections";
 import OutboxQueuePanel from "@/modules/notifications/ui/OutboxQueuePanel";
 import RelayMessagesPanel from "@/modules/notifications/ui/RelayMessagesPanel";
-import { isRelayMessage } from "@/modules/notifications/domain/relay";
+import { TEMPLATED_MESSAGE_TYPES } from "@/modules/notifications/domain/relay";
 import { readRelayView } from "@/modules/notifications/relay-view";
 import ParticipantEmailsPanel, { type ParticipantEmailCard } from "@/modules/notifications/ui/ParticipantEmailsPanel";
 import UpcomingEmailsPanel from "@/modules/notifications/ui/UpcomingEmailsPanel";
@@ -121,9 +121,11 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
     the enum cannot lose a value (expand only, `AGENTS.md` §7.6) and a row sent long ago still
     renders through them.
   */
-  // Not a visitor's message or the road notice (§NNN): they have no template — the visitor wrote the first, the platform composed the second.
-  const templated = (emailMessageType.enumValues as readonly EmailMessageType[]).filter((type) => !isRelayMessage(type));
-  const types = [...templated.filter((type) => !NEVER_QUEUED.has(type)), ...templated.filter((type) => NEVER_QUEUED.has(type))];
+  // Every type with a template (a visitor's message and the road notice have none, §NNN), the three nothing queues any more last.
+  const types = [
+    ...TEMPLATED_MESSAGE_TYPES.filter((type) => !NEVER_QUEUED.has(type)),
+    ...TEMPLATED_MESSAGE_TYPES.filter((type) => NEVER_QUEUED.has(type)),
+  ];
   // Which message's words were just saved (§336): the save names it, and only a real type counts.
   const copySaved = saved === "emailCopy" || saved === "emailCopyReset" || saved === "emailCopySamples";
   const savedMessage = types.find((candidate) => candidate === message);

@@ -1,4 +1,4 @@
-import type { EmailMessageType } from "@/db/schema/email-outbox";
+import { type EmailMessageType, emailMessageType } from "@/db/schema/email-outbox";
 
 /**
  * A visitor's message carried by the outbox (§NNN, amending §149, §676, §772 and §622).
@@ -22,6 +22,13 @@ export type RelayMessageType = (typeof RELAY_MESSAGE_TYPES)[number];
 export function isRelayMessage(messageType: EmailMessageType): messageType is RelayMessageType {
   return (RELAY_MESSAGE_TYPES as readonly EmailMessageType[]).includes(messageType);
 }
+
+/**
+ * Every message type that has a template — the whole enum but the relay's three. What the email editor, the previews, the
+ * privacy line and the tests that walk «every message type» iterate: a visitor's message and the road notice are composed
+ * when queued and have no card to edit, no sample and no footer.
+ */
+export const TEMPLATED_MESSAGE_TYPES: readonly EmailMessageType[] = emailMessageType.enumValues.filter((type) => !isRelayMessage(type));
 
 /** The state of a relay row's words: kept while it waits to leave, gone once it has left or been given up on. */
 export type RelayBodyState = "kept" | "deleted";

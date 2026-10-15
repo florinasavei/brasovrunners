@@ -13,8 +13,9 @@ import { contactFields, type ContactInput } from "./fields";
 import { type ContactMessageRoute, renderContactMessage } from "./message";
 
 /**
- * "Scrie-ne" (`DECISIONS.md` §149, BR-REQ-070-04): one message from a visitor to the club,
- * sent the moment it is posted, through SMTP and never the outbox.
+ * "Scrie-ne" (`DECISIONS.md` §149, BR-REQ-070-04): one message from a visitor to the club, queued in the outbox
+ * the moment it is posted and sent at once, after the response, by the club's Gmail — or by Mailgun when Gmail is
+ * down (§NNN, amending §149: it went by SMTP straight from the request, and a refusal lost it).
  *
  * The guards are the registration form's, in the registration form's order, with one
  * difference in what they say. A bot — the trap field filled, the form posted faster than a
@@ -23,9 +24,9 @@ import { type ContactMessageRoute, renderContactMessage } from "./message";
  * person who has written five times this hour is *told* so, plainly: the throttle exists to
  * keep a script out of the club's mailbox, and a person who hits it is not a script.
  *
- * Nothing is stored. The message is the email; the platform keeps no copy, which is what the
- * privacy notice promises ("kept in the club's mailbox as ordinary correspondence") — so the
- * throttle's row holds a hash of the identity, not the address, for the day it lives.
+ * The words are kept only until the message is delivered (§NNN): the outbox row holds them in `payload_json` and
+ * deletes them the moment the message leaves — the platform keeps no copy after, and the club's mailbox keeps
+ * it as ordinary correspondence. The throttle's row holds a hash of the identity, not the address, for the day it lives.
  *
  * **What the gates let through is still read** (the owner, 2026-09-23: "primesc spam cu SEO
  * stuff"). A script that posts no token, leaves the trap empty and waits out the timer passes

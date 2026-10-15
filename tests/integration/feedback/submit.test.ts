@@ -729,7 +729,7 @@ describe("§676 «Spune-ne ceva»", () => {
       const [audit] = await db.select().from(auditLogs).where(eq(auditLogs.action, "feedback_forms.changed"));
       expect(audit.metadataJson).toMatchObject({ fallbackToGmail: true });
       // A greyed box posts nothing: the tick already saved stays, never turned off by omission.
-      const { fallbackToGmail: _omitted, ...withoutTick } = SETTINGS.safety;
+      const withoutTick = Object.fromEntries(Object.entries(SETTINGS.safety).filter(([key]) => key !== "fallbackToGmail"));
       const kept = await updateFeedbackSettings(db, admin, { ...SETTINGS, safety: withoutTick }, NOW);
       expect(kept.safety.fallbackToGmail).toBe(true);
       // Unticked and posted as unticked, it goes off — and the audit says so.
