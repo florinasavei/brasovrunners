@@ -16,7 +16,7 @@ import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * Internal notes on a registration (§NNN) — the screens and the two presses, read from a real database.
+ * Internal notes on a registration (§777) — the screens and the two presses, read from a real database.
  *
  * - the registration's page draws «Note interne» for the Organizer and above, folded with the count in its
  *   closed line («3 note» / «nicio notă»), and never for the Tehnic role or the volunteer, who do not get the

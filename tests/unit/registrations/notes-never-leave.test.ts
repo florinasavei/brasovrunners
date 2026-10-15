@@ -3,7 +3,7 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 /**
- * §NNN, BR-REQ-060-01 — an internal note reaches only the screens that draw it.
+ * §777, BR-REQ-060-01 — an internal note reaches only the screens that draw it.
  *
  * The owner: notes «doar pentru organizatori și administratori». A note is read by the registration's own page
  * (the card), counted by the registrations list (the marker) and listed in «Toate datele unei persoane»; it is
@@ -43,7 +43,7 @@ function sourceFiles(dir: string, acc: string[] = []): string[] {
 const NAMES_NOTES = /["'](?:@\/db\/schema\/registration-notes|@\/modules\/registrations\/notes|\.{1,2}\/notes)["']/;
 const SCHEMA_FILE = path.join(SRC, "db", "schema", "registration-notes.ts");
 
-describe("§NNN who reads the notes", () => {
+describe("§777 who reads the notes", () => {
   const files = sourceFiles(SRC);
 
   it("is imported by no file but the card, the page, its presses, the list and the person's record", () => {

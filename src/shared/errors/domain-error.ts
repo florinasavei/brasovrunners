@@ -25,7 +25,7 @@ export type DomainErrorCode =
   | "BADGE_COLOUR_UNREADABLE"
   // A volunteer badge's size with no room for everything ticked (§776): the free-text line and the telephone need a taller badge.
   | "BADGE_SIZE_TOO_SMALL"
-  // An internal note on a registration with no words, or past its limit (§NNN): the form says which, naming its box.
+  // An internal note on a registration with no words, or past its limit (§777): the form says which, naming its box.
   | "NOTE_EMPTY"
   | "NOTE_TOO_LONG"
   // A volunteer role removed while people are on it (§754): move them first, so no one is deleted by a click on a role.

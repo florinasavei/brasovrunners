@@ -519,7 +519,7 @@ describe("BR-REQ-060-01 every capability × every role", () => {
     canManageVolunteers: /*   */ [false, false, false, true, false, true, true],
     // §764: the volunteer badges — the Organizer and the Administrators, as the volunteers; never Tehnic.
     canDesignVolunteerBadges: [false, false, false, true, false, true, true],
-    // §NNN: internal notes on a registration — read and written by the Organizer and the Administrators; never Tehnic, the volunteer or a member.
+    // §777: internal notes on a registration — read and written by the Organizer and the Administrators; never Tehnic, the volunteer or a member.
     canKeepRegistrationNotes: [false, false, false, true, false, true, true],
     canTranslateTexts: /*     */ [false, false, true, true, false, true, true],
     canManageRegistrations: /**/ [false, false, false, false, false, true, true],

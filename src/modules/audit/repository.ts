@@ -168,7 +168,7 @@ export type AuditAction =
    */
   | "registration.answers_viewed"
   /**
-   * An internal note added to a registration, or deleted (§NNN): the staff member (the actor) and the moment —
+   * An internal note added to a registration, or deleted (§777): the staff member (the actor) and the moment —
    * and nothing of the words, ever. The note's text lives in `registration_notes` and nowhere else; a trail row
    * that carried it would outlive the erase that removes the note with its registration (§12.12).
    */

@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V3.36-2026-10-15
+
+- **Internal notes on a registration** — «Note interne»: organizers and administrators leave plain-text notes on each registration, with a count marker on the list; never on the desk, in an export or on the public list, deleted with the registration, and listed in «Toate datele unei persoane»; the privacy notice's template says so. §777.
 ## BR-V3.35-2026-10-15
 
 - **A free-text line and a space for the marker on the volunteer badge** — two optional sections in «Cum arată ecusonul»: one small line of the club's own words under the role's band, and a second white area beside «Nume:» with an optional label (such as «Tură») and a line for the marker. The sheet and the preview draw both, and a size with no room for everything ticked is refused in words, naming what does not fit and how tall a badge it needs. A refused save now brings every form's radio choice back as it was posted, as the tick boxes always did (the badge's size first, the public feedback form's identity choice too). §776.

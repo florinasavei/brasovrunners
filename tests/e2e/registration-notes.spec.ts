@@ -5,7 +5,7 @@ import { confirmDialog } from "./support/confirm";
 import { FEATURED, hydrated, signIn } from "./support/featured-event";
 
 /**
- * §NNN — «Note interne» on a registration (the owner, 2026-10-15: «ca și Admins, trebuie să putem lăsa
+ * §777 — «Note interne» on a registration (the owner, 2026-10-15: «ca și Admins, trebuie să putem lăsa
  * comentarii pe fiecare înscriere în parte, doar pentru organizatori și administratori»), walked as an
  * Organizer, phone first. The card is closed with «nicio notă» in its line; a note is typed and saved and the
  * card comes back open with the note, its author and «1 notă» in the line; the registrations list marks the row
@@ -84,7 +84,7 @@ async function fitsTheScreen(page: Page): Promise<void> {
   expect(overflow, "horizontal overflow").toBeLessThanOrEqual(0);
 }
 
-test.describe("§NNN «Note interne» on a registration", () => {
+test.describe("§777 «Note interne» on a registration", () => {
   test("an Organizer adds a note, sees the card's count and the list's marker, and deletes it", async ({ page }) => {
     test.setTimeout(120_000);
     const hydrationWarnings: string[] = [];

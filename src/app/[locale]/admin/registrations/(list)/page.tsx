@@ -282,7 +282,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   */
   const [resubmissions, notesCounts, family, t, minorSigns] = await Promise.all([
     listResubmissionMarks(db, rows.map((row) => row.id)),
-    // «Note interne» (§NNN): how many live notes each row has — one grouped count, only for a role that may keep notes,
+    // «Note interne» (§777): how many live notes each row has — one grouped count, only for a role that may keep notes,
     // and only the number: the words are read on the registration's own page. Never in the export or on the desk.
     canKeepRegistrationNotes(actor.role) ? countRegistrationNotes(db, actor, rows.map((row) => row.id)) : Promise.resolve(new Map<string, number>()),
     // The family marker (§543): the other people on each row's address at its event, one query per page.
@@ -489,7 +489,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               />
             );
           })()}
-          {/* «Note interne» (§NNN): a sticky note and the count when somebody left one; the link opens the card. */}
+          {/* «Note interne» (§777): a sticky note and the count when somebody left one; the link opens the card. */}
           {(notesCounts.get(row.id) ?? 0) > 0 && (() => {
             const noteCount = notesCounts.get(row.id) ?? 0;
             const counted = t(`registrations.notes.count.${countForm(noteCount, locale)}`, { count: noteCount });

@@ -14,7 +14,7 @@ import { REGISTRATION_NOTE_MAX } from "@/db/schema/registration-notes";
 import type { RegistrationNoteRow } from "../notes";
 
 /**
- * «Note interne» on a registration's page (§NNN): what the organizers tell each other about one registration,
+ * «Note interne» on a registration's page (§777): what the organizers tell each other about one registration,
  * seen by the Organizer and above and by nobody else — the page draws this card only for a role that may keep
  * notes, and `notes.ts` refuses every other role again (BR-REQ-060-01).
  *

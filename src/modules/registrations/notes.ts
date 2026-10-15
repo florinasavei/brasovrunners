@@ -9,7 +9,7 @@ import { DomainError } from "@/shared/errors/domain-error";
 import { isUuid } from "@/shared/ids";
 
 /**
- * Internal notes on a registration (§NNN; the owner, 2026-10-15: «trebuie să putem lăsa comentarii pe fiecare
+ * Internal notes on a registration (§777; the owner, 2026-10-15: «trebuie să putem lăsa comentarii pe fiecare
  * înscriere în parte, doar pentru organizatori și administratori»).
  *
  * **Who** — the Organizer, the Administrator and the Superadministrator (`canKeepRegistrationNotes`), asserted in

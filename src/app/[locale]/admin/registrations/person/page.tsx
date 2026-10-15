@@ -178,7 +178,7 @@ export default async function PersonDataPage({ params, searchParams }: Props) {
               </Box>
               <Divider />
               {/*
-                The organizers' internal notes (§NNN; art. 15 GDPR): the words, the moment, the event and the author's role —
+                The organizers' internal notes (§777; art. 15 GDPR): the words, the moment, the event and the author's role —
                 «Organizator», «Administrator» — never the colleague's name. The registration's erase removes them.
               */}
               <Box component="section" data-testid="person-notes">

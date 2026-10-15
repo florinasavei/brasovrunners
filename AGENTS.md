@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.35-2026-10-15 -->
+<!-- PROJECT_BASELINE: BR-V3.36-2026-10-15 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V3.35-2026-10-15`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.36-2026-10-15`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -2856,7 +2856,7 @@ BR-REQ-037-05):
      Organizer's too since §289** (`canReadRegistrations`, a set that excludes DEV); cancel,
      erase, rename, resend and the printing mark stay Administrator-only
      (`canManageRegistrations`). Each verb is audited under the volunteer's own id.
-   - **One thing the Organizer writes, and it is not the registration (§NNN).** An internal note on a
+   - **One thing the Organizer writes, and it is not the registration (§777).** An internal note on a
      registration («Note interne», `registration_notes`): the Organizer, the Administrator and the
      Superadministrator read and write them (`canKeepRegistrationNotes`, the same set as
      `canReadRegistrations`, asserted in `notes.ts`); Tehnic and the volunteer get neither the card nor an

@@ -640,7 +640,7 @@ export function canReadRegistrations(subject: StaffSubject): boolean {
 }
 
 /**
- * **Internal notes on a registration (§NNN, amending §289 and §67).**
+ * **Internal notes on a registration (§777, amending §289 and §67).**
  *
  * The owner, 2026-10-15: «ca și Admins, trebuie să putem lăsa comentarii pe fiecare înscriere în parte,
  * doar pentru organizatori și administratori». The Organizer, the Administrator and the Superadministrator

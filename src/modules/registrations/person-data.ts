@@ -166,7 +166,7 @@ export type PersonData = {
     userAgent: string | null;
   }>;
   /**
-   * The internal notes the organizers kept on this person's registrations (§NNN; art. 15 GDPR: an access request
+   * The internal notes the organizers kept on this person's registrations (§777; art. 15 GDPR: an access request
    * covers them): the words as written, the moment, and the author's **role** — «Organizator», «Administrator» —
    * not their name. A colleague's name is that colleague's personal data, and what the person is entitled to know
    * is what is held about them and the kind of recipient who read it (art. 15(1)(c)), not who typed it (art. 15(4),
@@ -330,7 +330,7 @@ async function collectPersonData<T extends Record<string, unknown>>(
 
   const groupRuns = await groupRunDeclarationsOf(db, canonicalEmail);
 
-  // The internal notes on these registrations (§NNN): live ones only, oldest first as the rest of this page, the
+  // The internal notes on these registrations (§777): live ones only, oldest first as the rest of this page, the
   // author as a role. `registrationIds` is this person's own registrations, so nobody else's note is read.
   const noteRows =
     registrationIds.length > 0
@@ -356,7 +356,7 @@ async function collectPersonData<T extends Record<string, unknown>>(
     ...(registrationIds.length > 0 ? [and(eq(auditLogs.entityType, "registration"), inArray(auditLogs.entityId, registrationIds))] : []),
   ];
   // The trail names the colleague who acted, as it always did — except for a note: the notes above carry the author as a
-  // role and never a name (§NNN), so the rows for adding and deleting one keep the when and drop the who.
+  // role and never a name (§777), so the rows for adding and deleting one keep the when and drop the who.
   const noteActions = new Set<string>(["registration.note_added", "registration.note_deleted"]);
   const auditTrail =
     aboutThePerson.length > 0

@@ -8,7 +8,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { auditMigration } from "../../../scripts/migration-check.mjs";
 
 /**
- * Migration `0161_registration_notes` (§NNN; the owner, 2026-10-15), proven on real PostgreSQL (PGlite): one new
+ * Migration `0161_registration_notes` (§777; the owner, 2026-10-15), proven on real PostgreSQL (PGlite): one new
  * table, `registration_notes`, that expands and nothing else — a note's registration (`ON DELETE CASCADE`), its
  * author (`ON DELETE SET NULL`), the words (text, at most 2000 characters), and a nullable `deleted_at`. A
  * registration written before it simply has no notes; the file only expands, and the journal lists it last,

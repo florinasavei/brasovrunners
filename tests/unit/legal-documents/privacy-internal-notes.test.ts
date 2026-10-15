@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { privacyNoticeEn, privacyNoticeRo } from "@/modules/legal-documents/templates/privacy-notice";
 
 /**
- * §NNN (amends §754's paragraphs, BR-REQ-053-01) — the notice's template says what the organizers may keep: an
+ * §777 (amends §754's paragraphs, BR-REQ-053-01) — the notice's template says what the organizers may keep: an
  * internal note about a registration, for organising the event, visible to the organizers and administrators
  * only and deleted with the registration; and that an access request is answered with them too. The TEMPLATE
  * only: the texts in force move only when the club approves a version made from it (§639's digest says so).
@@ -15,7 +15,7 @@ const registrationParagraph = (body: typeof privacyNoticeRo, heading: RegExp) =>
   return found[0];
 };
 
-describe("§NNN the notice's internal-notes sentence", () => {
+describe("§777 the notice's internal-notes sentence", () => {
   it("ro: the organizers may keep them to organise the event, only they and the administrators see them, deleted with the registration", () => {
     const paragraph = registrationParagraph(privacyNoticeRo, /^2\./);
     expect(paragraph).toMatch(/Organizatorii pot ține și note interne despre o înscriere, pentru organizarea evenimentului/);

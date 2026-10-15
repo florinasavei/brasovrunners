@@ -2,7 +2,7 @@ import StickyNote2Icon from "@mui/icons-material/StickyNote2";
 import Box from "@mui/material/Box";
 
 /**
- * The marker on a registrations-list row that has internal notes (§NNN): the sticky-note glyph and the count,
+ * The marker on a registrations-list row that has internal notes (§777): the sticky-note glyph and the count,
  * in the row's own words («2 note»), so a registration somebody left a note on says so before it is opened.
  * A link to the registration's «Note interne» card (`#note-interne`, which opens the fold), at least 44 pixels
  * high like every control in a row. `ariaLabel` names the person too («Note interne la Ana Pop: 2 note»), so a

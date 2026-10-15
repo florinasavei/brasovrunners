@@ -4,13 +4,13 @@ import { registrations } from "./registrations";
 import { staffUsers } from "./staff-users";
 
 /**
- * The longest note, in characters (§NNN). Written once: the form's `maxLength`, the service's refusal and the
+ * The longest note, in characters (§777). Written once: the form's `maxLength`, the service's refusal and the
  * table's own check read it, so the three cannot drift.
  */
 export const REGISTRATION_NOTE_MAX = 2000;
 
 /**
- * An internal note on one registration (§NNN; the owner, 2026-10-15: «trebuie să putem lăsa comentarii pe
+ * An internal note on one registration (§777; the owner, 2026-10-15: «trebuie să putem lăsa comentarii pe
  * fiecare înscriere în parte, doar pentru organizatori și administratori»).
  *
  * What the organizers tell each other about a registration while they organise the event — «cere

@@ -11,7 +11,7 @@ import { flash } from "@/shared/feedback/flash";
 import { type FormOutcome, refused } from "@/shared/forms/outcome";
 
 /**
- * The two presses of «Note interne» (§NNN): «Salvează nota» and «Șterge».
+ * The two presses of «Note interne» (§777): «Salvează nota» and «Șterge».
  *
  * Each starts with `requireStaffCapability(canKeepRegistrationNotes)` — the coarse gate, so the Tehnic role,
  * the volunteer and a member never reach the service — and the service asserts the role again, and for a

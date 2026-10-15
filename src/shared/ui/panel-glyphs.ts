@@ -165,7 +165,7 @@ export const PANEL_GLYPHS = {
   // What an event's registrations are, once it has them.
   registrations: ListAltIcon,
   queue: HourglassTopIcon,
-  // «Note interne» (§NNN): what the organizers tell each other about one registration — the sticky note.
+  // «Note interne» (§777): what the organizers tell each other about one registration — the sticky note.
   internalNotes: StickyNote2Icon,
   thanks: MailIcon,
   test: ScienceIcon,

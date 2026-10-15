@@ -142,7 +142,7 @@ export async function resetTables(db: TestDatabase): Promise<void> {
   // `registrations` references `events`, and `events.declaration_document_id` references
   // `legal_documents`, so registrations must go before events, and events before legal
   // documents — the reverse of the order either child appears in the schema files.
-  // The internal notes (§NNN) cascade from their registration; named first like the other children, so the list says what owns what.
+  // The internal notes (§777) cascade from their registration; named first like the other children, so the list says what owns what.
   await db.delete(registrationNotes);
   await db.delete(registrations);
   // The "tell me when registration opens" addresses (§146) cascade from their event; deleted

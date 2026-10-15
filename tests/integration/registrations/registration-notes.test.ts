@@ -18,7 +18,7 @@ import { expectViolation, SQLSTATE } from "../../helpers/constraints";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * Internal notes on a registration (§NNN; BR-REQ-037-03, BR-REQ-060-01, BR-REQ-053-01) — the table, the
+ * Internal notes on a registration (§777; BR-REQ-037-03, BR-REQ-060-01, BR-REQ-053-01) — the table, the
  * service and what must never carry a note: read from a real database (PGlite, the same migrations as Neon).
  *
  * The owner, 2026-10-15: «ca și Admins, trebuie să putem lăsa comentarii pe fiecare înscriere în parte, doar

@@ -170,7 +170,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
     listPartnerShares(db, id),
     // The invitation it came from (§647): who sent it and when, for every role that reads this page.
     findInvitationOfRegistration(db, id),
-    // «Note interne» (§NNN): read only for a role that may keep them — the Organizer and above, never Tehnic; the service asks again.
+    // «Note interne» (§777): read only for a role that may keep them — the Organizer and above, never Tehnic; the service asks again.
     canKeepRegistrationNotes(actor.role) ? listRegistrationNotes(db, actor, id) : Promise.resolve(null),
   ]);
 
@@ -713,7 +713,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
       </Panel>
 
       {/*
-        «Note interne» (§NNN; the owner, 2026-10-15): what the organizers tell each other about this
+        «Note interne» (§777; the owner, 2026-10-15): what the organizers tell each other about this
         registration, for the Organizer and above — never the Tehnic role, the volunteer or the desk. Drawn
         only when `listRegistrationNotes` ran (it asks `canKeepRegistrationNotes` itself); the two actions and
         the service refuse every other role again (BR-REQ-060-01). A note is not the registration: the

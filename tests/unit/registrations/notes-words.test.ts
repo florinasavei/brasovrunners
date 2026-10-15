@@ -4,7 +4,7 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
 /**
- * §NNN — the words of «Note interne», in both languages (the owner's own words, and the house rules for words:
+ * §777 — the words of «Note interne», in both languages (the owner's own words, and the house rules for words:
  * every key in Română AND English, no ICU plural, a counted phrase as `one` / `few` / `other`, short sentences).
  */
 const keysOf = (value: unknown, prefix = ""): string[] =>
@@ -24,7 +24,7 @@ const strings = (catalogue: typeof ro) => ({
   toast: [catalogue.Feedback.toast.noteAdded, catalogue.Feedback.toast.noteDeleted],
 });
 
-describe("§NNN the words of the notes", () => {
+describe("§777 the words of the notes", () => {
   it("has every key in both languages", () => {
     expect(keysOf(strings(ro)).sort()).toEqual(keysOf(strings(en)).sort());
   });
