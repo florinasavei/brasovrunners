@@ -126,7 +126,7 @@ export const EVENT_INVITATIONS_MERGE_FIELD = "eventInvitations";
 /**
  * The privacy notice's marker for «Spune-ne ceva» (§676): the forms' name, quoted, in the reader's
  * language (`feedback/notice-words.ts`), in the paragraph that says the forms are anonymous unless the
- * person chooses to give a name (`{{feedbackFormsNamed}}`, below), that the site keeps nothing, where each message goes and how long it is kept. The
+ * person chooses to give a name (`{{feedbackFormsNamed}}`, below), that the site keeps a message only until it leaves, where each message goes and how long it is kept. The
  * gate, like the newsletter's (§445): the contact page draws the door, and the feedback page exists,
  * only while the notice in force names it in every language (`describesFeedbackForms`).
  */

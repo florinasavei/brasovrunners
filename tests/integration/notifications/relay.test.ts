@@ -439,6 +439,31 @@ describe("§NNN the relay: a visitor's message through the outbox", () => {
       expect(await countLostRelayMessages(db, after(RELAY_GIVE_UP_MS / 1000 + 7200))).toBe(1);
     });
 
+    it("tells the Administrators once per form per club day, not once per message: a mistyped recipient bouncing every message is one email each", async () => {
+      await admins();
+      await queue({ road: "mailgun" });
+      await queue({ road: "mailgun" });
+      const roads = fakeRoads({ mailgun: { outcome: "permanent_failure", error: "mailgun 400: 'to' parameter is not a valid address" } });
+      expect(await deliverRelay(db, roads, after(1))).toMatchObject({ bounced: 2 });
+      const notices = (await relayRows(db)).filter((entry) => entry.messageType === "RELAY_NOTICE");
+      expect(notices).toHaveLength(2);
+      // Another form is its own notice.
+      await queue({ road: "mailgun", type: "CONTACT_MESSAGE", content: { form: "contact" } });
+      await deliverRelay(db, roads, after(2));
+      expect((await relayRows(db)).filter((entry) => entry.messageType === "RELAY_NOTICE")).toHaveLength(4);
+    });
+
+    it("«a road is down» is once per road per club day, not per UTC date", async () => {
+      await admins();
+      await queue({ road: "mailgun" });
+      await queue({ road: "mailgun" });
+      const roads = fakeRoads({ available: { mailgun: false } });
+      // 23:30 and 00:10 UTC are 02:30 and 03:10 the same night in Brașov (UTC+3 in October): one day for the club.
+      await deliverRelay(db, roads, new Date("2026-10-15T23:30:00.000Z"));
+      await deliverRelay(db, roads, new Date("2026-10-16T00:10:00.000Z"));
+      expect((await relayRows(db)).filter((entry) => entry.messageType === "RELAY_NOTICE")).toHaveLength(2);
+    });
+
     it("a notice the platform cannot deliver raises no notice of its own", async () => {
       await admins();
       await queue({ type: "RELAY_NOTICE", road: "gmail", content: { notice: true } });

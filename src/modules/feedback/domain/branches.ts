@@ -17,7 +17,7 @@ import { canonicalizeEmail, InvalidEmailError } from "@/modules/participants/dom
  * - **«O reclamație»** (`reclamatie`) — what happened, and optionally the event and the date.
  * - **«Girl Zone»** (`girl-zone`; `siguranta` until §772, still read) — confidential, for women who did
  *   not feel safe: it reaches one person the club names, by Mailgun unless the club chose its Gmail
- *   (§772), and the site keeps nothing of it.
+ *   (§772), and the site keeps it only until it leaves (§NNN).
  *
  * Anonymous unless the person chooses otherwise (§678): every form opens with «Anonim» (the default)
  * or «Cu nume și prenume», and only the named mode shows — and the server only keeps — a name, which it

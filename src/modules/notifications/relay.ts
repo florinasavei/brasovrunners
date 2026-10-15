@@ -3,6 +3,7 @@ import { and, asc, eq, inArray, isNull, lte, or, sql } from "drizzle-orm";
 import { type EmailMessageType, emailOutbox } from "@/db/schema/email-outbox";
 import type { Database } from "@/db/types";
 import type { EmailLocale, OutgoingEmail, SendResult } from "@/infrastructure/email/adapter";
+import { CLUB_TIME_ZONE } from "@/i18n/dates";
 import { getPathname } from "@/i18n/navigation";
 import { recordAuditEvent } from "@/modules/audit/repository";
 import { canWriteLegalTexts } from "@/modules/staff-identity/domain/roles";
@@ -401,8 +402,8 @@ async function noteFailover(db: Db, row: OutboxRow, payload: RelayPayload, chose
 
 /**
  * The platform’s notice to every Administrator and Superadministrator, in the language of their row — «a road is down»
- * once a road a day (a message after message must not become an email after email), «a message could not be delivered»
- * once per message. Carried by the working road, by this same worker. Returns the rows’ ids for the batch’s second pass.
+ * once a road a club day (a message after message must not become an email after email), «a message could not be delivered»
+ * once a form a club day. Carried by the working road, by this same worker. Returns the rows’ ids for the batch’s second pass.
  */
 async function queueNotice(
   db: Db,
@@ -413,7 +414,10 @@ async function queueNotice(
   via: Road = otherRoad(facts.road),
 ): Promise<string[]> {
   if (payload.notice) return [];
-  const scope = kind === "roadDown" ? `${facts.road}:${at.toISOString().slice(0, 10)}` : `${randomUUID()}`;
+  // One notice per road per **club** day for «a road is down», and one per form per club day for «a message was lost»: a mistyped
+  // recipient that bounces every message must not email every Administrator once per message (the list on the page has each one).
+  const day = new Intl.DateTimeFormat("en-CA", { timeZone: CLUB_TIME_ZONE, year: "numeric", month: "2-digit", day: "2-digit" }).format(at);
+  const scope = kind === "roadDown" ? `${facts.road}:${day}` : `${facts.form ?? "contact"}:${day}`;
   const recipients = (await listStaffUsers(db)).filter((member) => canWriteLegalTexts(member.role) && member.email.trim() !== "");
   const queued: string[] = [];
   for (const member of recipients) {

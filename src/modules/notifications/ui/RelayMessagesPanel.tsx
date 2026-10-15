@@ -101,7 +101,7 @@ export default async function RelayMessagesPanel({ locale, view, now, openWhen }
                   {row.via ? ` · ${t(otherWay ? "emails.relay.leftByOther" : "emails.relay.leftBy", { road: roadName(row.via) })}` : ""}
                 </Typography>
                 <Typography variant="caption" color="text.secondary" component="p">
-                  {t("emails.relay.facts", { queued: when(row.createdAt), attempts: row.attempts })}
+                  {t("emails.queue.facts", { queued: when(row.createdAt), attempts: row.attempts })}
                   {row.sentAt ? ` · ${t("emails.relay.sentAt", { when: when(row.sentAt) })}` : ""}
                 </Typography>
                 {ROADS.filter((road) => row.failures[road]).map((road) => (

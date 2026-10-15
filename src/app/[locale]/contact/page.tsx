@@ -169,8 +169,8 @@ export default async function ContactPage({ params, searchParams }: Props) {
   // Guarded, because this is the page that has to work when nothing else does: a database
   // that is not answering falls back to `CONTACT_FORM_TO`, never to an error page (§164).
   const formAvailable = await cachedContactFormReaches();
-  // «Contact direct»: the address except where a delivery error's alert names it, the phone when one is set.
-  const emailWay = error !== "DELIVERY" && writeTo.length > 0;
+  // «Contact direct»: the address, the phone when one is set. A post is queued (§NNN) and never answers «could not send».
+  const emailWay = writeTo.length > 0;
   const waysOpen = emailWay || Boolean(phone);
   // The form's own heading, while the form itself is drawn.
   const formDrawn = !sent && formAvailable;
@@ -358,12 +358,6 @@ export default async function ContactPage({ params, searchParams }: Props) {
                 </>
               ) : error === "VALIDATION_ERROR" ? (
                 t("errors.generic")
-              ) : error === "DELIVERY" && writeTo.length > 0 ? (
-                <>
-                  {t("errors.DELIVERY")} {addressLinks}
-                </>
-              ) : error === "DELIVERY" ? (
-                t("errors.DELIVERY_NO_ADDRESS")
               ) : (
                 t(`errors.${error}`)
               )}

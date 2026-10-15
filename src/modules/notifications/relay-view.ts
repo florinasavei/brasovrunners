@@ -41,7 +41,10 @@ export type RelayView = {
   lastSuccess: Record<Road, Date | null>;
 };
 
-/** A week: the trace of what happened to a message stays this long, then the sweep takes the row (`retention.ts`). */
+/**
+ * A week: what the panel draws. The rows themselves stay as long as any outbox row does (`retention.ts`: ninety days for a sent
+ * one, a failed one with no registration likewise), with the recipient and the road and none of the words.
+ */
 export const RELAY_VIEW_WINDOW_MS = 7 * 24 * 3_600_000;
 export const RELAY_VIEW_LIMIT = 30;
 

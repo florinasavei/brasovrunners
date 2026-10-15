@@ -6772,7 +6772,7 @@
       "confirmationRetryOff": "It is not re-sent by itself: in “Deadlines”, the number of resends is 0.",
       "relay": {
         "title": "Messages from the site",
-        "intro": "Messages from “Write to us” and “Tell us something” go through the email queue. The words stay only until the message leaves; then they are deleted and the trace remains: way, time, tries.",
+        "intro": "Messages from “Write to us” and “Tell us something” go through the email queue. The words stay only until the message leaves; then they are deleted and the trace remains: road, time, tries.",
         "aside": "Last 7 days: {count}",
         "empty": "No message in the last 7 days.",
         "road": {
@@ -6796,18 +6796,17 @@
           "BOUNCED": "Address refused",
           "COMPLAINED": "Complained"
         },
-        "otherWay": "Sent by the other way",
+        "otherWay": "Sent by the other road",
         "body": {
           "kept": "Words: kept until it leaves",
           "deleted": "Words: deleted"
         },
-        "chosen": "Chosen way: {road}",
+        "chosen": "Chosen road: {road}",
         "leftBy": "left by {road}",
         "leftByOther": "left by {road}, because the chosen one did not take it",
-        "facts": "Queued {queued} · tries: {attempts}",
         "sentAt": "carried {when}",
         "failure": "{road} refused {count} times: {error}",
-        "pinned": "stays on this way: we cannot tell whether it was already taken"
+        "pinned": "stays on this road for now: we cannot tell whether it was already taken"
       }
     },
     "design": {
@@ -10838,8 +10837,6 @@
       "generic": "The message could not be sent. Check what you filled in and try again.",
       "captcha": "The anti-bot check did not pass. Tick the “I am not a robot” box again and resend.",
       "LIMITED": "Too many messages from this address in the last hour. Try again later — your message is still written below.",
-      "DELIVERY": "We could not send it. Write to us directly at",
-      "DELIVERY_NO_ADDRESS": "We could not send it. Try again in a few minutes.",
       "UNAVAILABLE": "The contact form is not available on this site."
     },
     "prefill": {

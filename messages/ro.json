@@ -6779,10 +6779,10 @@
           "gmail": "Gmail-ul clubului",
           "mailgun": "Mailgun"
         },
-        "lastOk": "Ultimul mesaj dus: {when}",
-        "neverOk": "Niciun mesaj dus încă",
+        "lastOk": "Ultimul mesaj trimis: {when}",
+        "neverOk": "Niciun mesaj trimis încă",
         "lastFailure": "Ultima refuzare: {when} ({error})",
-        "failingSince": "Nu duce mesaje din {when}",
+        "failingSince": "Nu trimite mesaje din {when}",
         "type": {
           "CONTACT_MESSAGE": "Scrie-ne",
           "FEEDBACK_MESSAGE": "Spune-ne ceva",
@@ -6794,7 +6794,7 @@
           "SENT": "Trimis",
           "FAILED": "Pierdut",
           "BOUNCED": "Adresă refuzată",
-          "COMPLAINED": "Reclamat"
+          "COMPLAINED": "Marcat ca spam"
         },
         "otherWay": "Trimis prin cealaltă cale",
         "body": {
@@ -6804,10 +6804,9 @@
         "chosen": "Calea aleasă: {road}",
         "leftBy": "a plecat prin {road}",
         "leftByOther": "a plecat prin {road}, pentru că calea aleasă nu l-a luat",
-        "facts": "În coadă din {queued} · încercări: {attempts}",
-        "sentAt": "dus {when}",
+        "sentAt": "trimis {when}",
         "failure": "{road} a refuzat de {count} ori: {error}",
-        "pinned": "rămâne pe această cale: nu știm dacă a fost deja luat"
+        "pinned": "rămâne deocamdată pe această cale: nu știm dacă a fost deja luat"
       }
     },
     "design": {
@@ -10762,8 +10761,8 @@
       "mailgun": "Mailgun",
       "ok": "merge",
       "failing": "refuză",
-      "lastOk": "ultimul mesaj dus {when}",
-      "neverOk": "niciun mesaj dus încă",
+      "lastOk": "ultimul mesaj trimis {when}",
+      "neverOk": "niciun mesaj trimis încă",
       "lastFailure": "ultima refuzare {when} ({error})",
       "since": "din {when}"
     }
@@ -10838,8 +10837,6 @@
       "generic": "Mesajul nu a putut fi trimis. Verifică datele completate și încearcă din nou.",
       "captcha": "Verificarea anti-bot nu a reușit. Bifează din nou căsuța „Nu sunt robot” și retrimite.",
       "LIMITED": "Prea multe mesaje de la această adresă în ultima oră. Încearcă mai târziu — mesajul tău a rămas scris mai jos.",
-      "DELIVERY": "Nu am putut trimite. Scrie-ne direct la",
-      "DELIVERY_NO_ADDRESS": "Nu am putut trimite. Încearcă din nou peste câteva minute.",
       "UNAVAILABLE": "Formularul de contact nu este disponibil pe acest site."
     },
     "prefill": {

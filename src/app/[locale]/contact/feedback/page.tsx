@@ -421,7 +421,7 @@ async function BranchForm({
         )}
       </Box>
       {branch === "safety" ? (
-        // Above the form, in the person's language (§676): who reads it, and that the site keeps nothing —
+        // Above the form, in the person's language (§676): who reads it, and that the site keeps it only until it leaves —
         // and, when a named report may go to the club instead (§678), that the sender chooses then.
         <Alert severity="info" icon={false} sx={{ mb: 2 }} data-testid="feedback-safety-reader">
           {t(`safety.${identity?.audiences.includes("club") ? "readerChoice" : "reader"}${safetyByGmail ? "Gmail" : safetyFallback ? "Fallback" : ""}`, { name: safetyName })}
