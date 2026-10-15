@@ -26,6 +26,7 @@ import { comparable, type ConfigChange, diffConfigs } from "./diff";
 import { readEventConfig } from "./export";
 import type { EventConfig, EventFile, FileNote } from "./file-format";
 import { eventFieldsFromConfig, translationFieldsFromConfig } from "./fields-from-config";
+import { importVolunteersFile } from "./volunteers";
 import {
   collectMediaRefs,
   describeMedia,
@@ -349,6 +350,8 @@ export async function importEventAsNew<T extends Record<string, unknown>>(db: Da
   });
   // The route's checkpoints (§757): their own table, written after the event exists, as the card writes them.
   if (checkpoints.length > 0) await replaceCheckpoints(db, input.actor, created.id, checkpoints, now);
+  // The volunteers' categories and roles (§NNN): the card's own services, in the file's order, on the new event alone.
+  const volunteers = await importVolunteersFile(db, input.actor, created.id, file.volunteers, now);
 
   await recordAuditEvent(db, {
     actorStaffUserId: input.actor.id,
@@ -361,6 +364,8 @@ export async function importEventAsNew<T extends Record<string, unknown>>(db: Da
       copied: resolved.outcome.copied,
       missing: resolved.outcome.problems.length,
       adjusted: notes.map((note) => note.code),
+      volunteerCategories: volunteers.categories,
+      volunteerRoles: volunteers.roles,
     },
     now,
   });

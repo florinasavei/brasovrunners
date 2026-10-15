@@ -9473,7 +9473,7 @@
         "showPhone": "The coordinator's phone",
         "showPhoneHelp": "A small line at the foot, with the number volunteers call. The club's number, never a volunteer's.",
         "phone": "Phone number",
-        "phoneHelp": "Written as a phone number, for example 07xx xxx xxx.",
+        "phoneHelp": "Written as a phone number, for example 07xx xxx xxx. Leave it empty for each role's badge to carry the telephone of its category's contact person.",
         "phoneLabelRo": "Label (Romanian)",
         "phoneLabelEn": "Label (English)",
         "phoneLabelHelp": "Empty in both languages: Coordonator and Coordinator. At most {max} characters.",
@@ -9482,7 +9482,8 @@
         "cutMarksHelp": "The dashed lines between the badges always print. The marks in the margin help a guillotine.",
         "cutLinesOnly": "Dashed lines only",
         "save": "Save the badge",
-        "saving": "Saving…"
+        "saving": "Saving…",
+        "phoneFromCategory": "From the role's category"
       },
       "colours": {
         "title": "The roles' colours",

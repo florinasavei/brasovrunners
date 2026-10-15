@@ -125,6 +125,8 @@ function sampleFile(): EventFile {
     exportedFrom: { environment: "production", baseline: "BR-V3.31-2026-10-15" },
     series: { partOfASeries: false, rule: null },
     event: sampleConfig(),
+    // The volunteers' categories and roles (§NNN): none in the sample; the round trip with some is in the integration test.
+    volunteers: { categories: [], roles: [] },
     media: [{ role: "cover", url: PICTURE, contentType: "image/webp", size: 10, sha256: "a".repeat(64) }],
   };
 }

@@ -9473,7 +9473,7 @@
         "showPhone": "Telefonul coordonatorului",
         "showPhoneHelp": "Un rând mic jos, cu numărul la care sună voluntarii. Numărul clubului, niciodată al unui voluntar.",
         "phone": "Numărul de telefon",
-        "phoneHelp": "Scris ca un număr de telefon, de exemplu 07xx xxx xxx.",
+        "phoneHelp": "Scris ca un număr de telefon, de exemplu 07xx xxx xxx. Lasă gol ca ecusonul fiecărui rol să poarte telefonul persoanei de contact a categoriei lui.",
         "phoneLabelRo": "Eticheta (română)",
         "phoneLabelEn": "Eticheta (engleză)",
         "phoneLabelHelp": "Gol în ambele limbi: Coordonator și Coordinator. Cel mult {max} caractere.",
@@ -9482,7 +9482,8 @@
         "cutMarksHelp": "Liniile punctate dintre ecusoane se tipăresc mereu. Semnele de pe margine ajută la tăierea cu ghilotina.",
         "cutLinesOnly": "Doar liniile punctate",
         "save": "Salvează ecusonul",
-        "saving": "Se salvează…"
+        "saving": "Se salvează…",
+        "phoneFromCategory": "Din categoria rolului"
       },
       "colours": {
         "title": "Culorile rolurilor",
