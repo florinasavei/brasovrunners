@@ -137,6 +137,19 @@ export const emailMessageType = pgEnum("email_message_type", [
   // agreement in force and the single-use link to accept it in the guardian's name, to the guardian's address
   // (minted at the send; only its hash is kept, on the volunteer's row, §12.8). The volunteer's id in the payload.
   "VOLUNTEER_GUARDIAN_REQUEST",
+  // «Scrie-ne» (§149, amending it in §NNN): a visitor's message to the club, carried by the outbox like every
+  // other mail — by the road the club chose (Gmail or Mailgun), the other when that one is down. The words the
+  // visitor wrote travel in the payload until the message is delivered, and are deleted then (`body_deleted_at`);
+  // no participant, no registration, no token.
+  "CONTACT_MESSAGE",
+  // «Spune-ne ceva» (§676, §772; amended in §NNN): one anonymous message of the four forms, on the same road
+  // and with the same rules as the contact form's. Nothing of the sender beyond what the message carries.
+  "FEEDBACK_MESSAGE",
+  // «O cale de trimitere nu merge» / «Un mesaj nu a putut fi trimis» (§NNN): the platform's own notice to every
+  // Administrator and Superadministrator — a road (Gmail or Mailgun) has been failing for a message, or a visitor's
+  // message could not be delivered in a day and its words are deleted. Composed when it is queued, carried by
+  // the same worker as the two above; names a road and a count, never a visitor's words or address.
+  "RELAY_NOTICE",
 ]);
 
 export type EmailMessageType = (typeof emailMessageType.enumValues)[number];
@@ -258,6 +271,31 @@ export const emailOutbox = pgTable(
     /** On a refused participant's message: when the same message, or one that carries it, last left again, and by which road. */
     retriedAt: timestamp("retried_at", { withTimezone: true }),
     retriedVia: text("retried_via", { enum: ["mailgun", "gmail"] }),
+
+    /*
+      A visitor's message carried by the outbox (§NNN, `CONTACT_MESSAGE` and `FEEDBACK_MESSAGE`): the road
+      the club chose for it, the failures each road has given it, and whether its words are gone.
+    */
+    /**
+     * The road the club chose for this message (`gmail` or `mailgun`) — a visitor's message carries it from the
+     * moment it is queued; null on every other row, whose road is its group's setting (§443). `transport` is the
+     * road it left by: when the two differ the message went «prin cealaltă cale» (the chosen road was down).
+     */
+    road: text("road", { enum: ["mailgun", "gmail"] }),
+    /**
+     * What each road has failed with for this message, as `{ gmail: { count, ambiguous, lastError }, mailgun: … }`:
+     * the failures that are the service's (a refused login, a 5xx, a timeout, an allowance spent), never the
+     * recipient's. `count` decides when the other road is tried; `ambiguous` — the connection broke where the
+     * service may already have taken the message — pins the message to that road, so it is never sent twice
+     * by two roads. Short sanitized codes only, never a body, an address or a secret (§14.5).
+     */
+    roadFailures: jsonb("road_failures").notNull().default(sql`'{}'::jsonb`),
+    /**
+     * When the words of the message were deleted (§NNN): on delivery, and after the final failure's notice to the
+     * Administrators. `payload_json` is then only `{ "deleted": true }`. Null while the words are kept — until
+     * the message is delivered, minutes, never after — and on every row that never held a visitor's words.
+     */
+    bodyDeletedAt: timestamp("body_deleted_at", { withTimezone: true }),
   },
   (t) => [
     check("email_outbox_attempt_count_non_negative", sql`${t.attemptCount} >= 0`),
