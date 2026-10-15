@@ -116,7 +116,7 @@ export default async function BadgeDesignPanel({
   });
 
   // The header's shape at the saved size, for the crop box (§560's rule; a crop drawn at another size is trimmed, never squashed).
-  const rows = badgeRows(badgePaper(design), design.showPhone && design.phone !== "", design.showFreeText && (design.freeTextRo !== "" || design.freeTextEn !== ""));
+  const rows = badgeRows(badgePaper(design), design.showPhone, design.showFreeText && (design.freeTextRo !== "" || design.freeTextEn !== ""));
   const headerRatio = (badgePaper(design).width - 2 * rows.content.left) / rows.header.height;
   const ratioWords = new Intl.NumberFormat(locale, { maximumFractionDigits: 1 });
   const initialSrc = badgePreviewUrl({ eventId, locale, role: sampleRole, design, version });
@@ -194,7 +194,8 @@ export default async function BadgeDesignPanel({
         {t("badges.design.dropped")}
       </Typography>
     ) : null;
-  const phoneAside = design.showPhone && design.phone ? design.phone : t("badges.design.phoneOff");
+  // Ticked with no number: each role's badge prints the telephone of its category's contact person (§774).
+  const phoneAside = design.showPhone ? (design.phone ? design.phone : t("badges.design.phoneFromCategory")) : t("badges.design.phoneOff");
   const cutAside = design.cutMarks ? t("badges.design.cutMarks") : t("badges.design.cutLinesOnly");
 
   return (

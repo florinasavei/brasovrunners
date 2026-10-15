@@ -260,6 +260,11 @@ export type BadgeLayoutChoice = BadgeSizeChoice & {
   writingLine: boolean;
   /** «Spațiu pentru marker»: a second writing area beside «Nume:» (§NNN). */
   showMarker: boolean;
+  /**
+   * «Telefonul coordonatorului» is ticked (§774): the telephone's row is kept on every badge, blank on a role whose category has no
+   * number, so every badge of a sheet is cut the same and the designer's crop box (`badgeRows(paper, design.showPhone)`) is true.
+   */
+  showPhone?: boolean;
 };
 
 /** Everything both renderers draw, in points from the paper's top left corner. */
@@ -311,7 +316,7 @@ export type BadgeLayout = {
 export function badgeLayout(choice: BadgeLayoutChoice, words: BadgeLayoutWords, measure: BadgeMeasure): BadgeLayout {
   const L = BADGE_LAYOUT;
   const paper = badgePaper(choice);
-  const rows = badgeRows(paper, words.phone !== null, words.free !== null);
+  const rows = badgeRows(paper, words.phone !== null || choice.showPhone === true, words.free !== null);
   const { content, header, role, free, writing, phone } = rows;
   const pad = header.height * L.padShare;
   const centred = (row: BadgeRow, size: number) => row.top + (row.height - badgeLineHeight(size)) / 2;

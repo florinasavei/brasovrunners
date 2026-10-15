@@ -8,7 +8,7 @@ import { getPathname } from "@/i18n/navigation";
 import { type Locale, routing } from "@/i18n/routing";
 import { countRegistrationsByEvent, listEventsForBackoffice } from "@/modules/content/events/repository";
 import { type EventFile, type FileNote, readEventFile } from "@/modules/content/events/transfer/file-format";
-import { diffEventImport, importEventAsNew, importEventOver, slugsForNewEvent } from "@/modules/content/events/transfer/import";
+import { diffEventImport, hasVolunteers, importEventAsNew, importEventOver, slugsForNewEvent } from "@/modules/content/events/transfer/import";
 import type { AsNewOutcome, DiffOutcome, ImportRefusal, ImportTarget, OverOutcome, PreviewOutcome } from "@/modules/content/events/transfer/outcomes";
 import { typedStartShape } from "@/modules/events/domain/provisional-start";
 import { canTransferEvents } from "@/modules/staff-identity/domain/roles";
@@ -97,6 +97,7 @@ export async function previewEventImportAction(json: string, localeArgument: str
         baseline: file.exportedFrom.baseline,
         media: file.media.length,
         seriesNotApplied: file.series.partOfASeries || file.series.rule !== null,
+        volunteers: hasVolunteers(file),
         fileNotes: read.notes,
       },
       newEvent: { slugs, suffixed: routing.locales.some((language) => slugs[language] !== file.event.translations[language].slug) },

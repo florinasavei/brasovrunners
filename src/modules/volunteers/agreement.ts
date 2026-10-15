@@ -1,6 +1,6 @@
 import { and, eq, isNull, ne } from "drizzle-orm";
 import { z } from "zod";
-import { eventVolunteerRoleChoices, eventVolunteerRoles, eventVolunteers, type VolunteerAgreementMethod } from "@/db/schema/event-volunteers";
+import { eventVolunteerCategories, eventVolunteerRoleChoices, eventVolunteerRoles, eventVolunteers, type VolunteerAgreementMethod } from "@/db/schema/event-volunteers";
 import type { StaffUser } from "@/db/schema/staff-users";
 import type { Database, Transaction } from "@/db/types";
 import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
@@ -24,9 +24,12 @@ import {
   agreementMinimumAge,
   agreementRolesStamp,
   agreementRoleWords,
+  type CategoryContact,
+  categoryContactOf,
   compareRoles,
   isVolunteerMinor,
   refusedFields,
+  roleLabel,
   type RoleWords,
   tasksWords,
   volunteerAgreementAcceptSchema,
@@ -108,8 +111,14 @@ export function readAgreementFacts(value: unknown): AgreementFacts | null {
 /** A role as the agreement names it: its words in both languages. */
 export type AgreementRole = RoleWords;
 
+/**
+ * A role of one person as the agreement and the emails read it: its words, the words of the category it sits under (§774, for
+ * «Direcționare (Traseu)») and that category's contact person, null while the category has none or the role sits under none.
+ */
+export type AgreementRoleRow = RoleWords & { id: string; contact?: CategoryContact | null };
+
 /** The roles one person's agreement names: the one the organizers gave them, or null, and the ones they chose. */
-export type AgreementRoles = { assigned: (RoleWords & { id: string }) | null; chosen: (RoleWords & { id: string })[] };
+export type AgreementRoles = { assigned: AgreementRoleRow | null; chosen: AgreementRoleRow[] };
 
 export { tasksWords };
 
@@ -130,14 +139,37 @@ export async function volunteerRoles<T extends Record<string, unknown>>(
     descriptionEn: eventVolunteerRoles.descriptionWordsEn,
     position: eventVolunteerRoles.position,
     createdAt: eventVolunteerRoles.createdAt,
+    // The heading the role sits under and its contact person (§774), through a left join: a role under none has nulls.
+    categoryRo: eventVolunteerCategories.nameRo,
+    categoryEn: eventVolunteerCategories.nameEn,
+    contactName: eventVolunteerCategories.contactName,
+    contactPhone: eventVolunteerCategories.contactPhone,
+    contactEmail: eventVolunteerCategories.contactEmail,
   };
   const chosen = await db
     .select(columns)
     .from(eventVolunteerRoleChoices)
     .innerJoin(eventVolunteerRoles, eq(eventVolunteerRoles.id, eventVolunteerRoleChoices.roleId))
+    .leftJoin(eventVolunteerCategories, eq(eventVolunteerCategories.id, eventVolunteerRoles.categoryId))
     .where(eq(eventVolunteerRoleChoices.volunteerId, volunteer.id));
-  const [assigned] = volunteer.roleId ? await db.select(columns).from(eventVolunteerRoles).where(eq(eventVolunteerRoles.id, volunteer.roleId)).limit(1) : [];
-  const words = ({ id, nameRo, nameEn, descriptionRo, descriptionEn }: (typeof chosen)[number]) => ({ id, nameRo, nameEn, descriptionRo, descriptionEn });
+  const [assigned] = volunteer.roleId
+    ? await db
+        .select(columns)
+        .from(eventVolunteerRoles)
+        .leftJoin(eventVolunteerCategories, eq(eventVolunteerCategories.id, eventVolunteerRoles.categoryId))
+        .where(eq(eventVolunteerRoles.id, volunteer.roleId))
+        .limit(1)
+    : [];
+  const words = (row: (typeof chosen)[number]): AgreementRoleRow => ({
+    id: row.id,
+    nameRo: row.nameRo,
+    nameEn: row.nameEn,
+    descriptionRo: row.descriptionRo,
+    descriptionEn: row.descriptionEn,
+    categoryRo: row.categoryRo,
+    categoryEn: row.categoryEn,
+    contact: categoryContactOf(row),
+  });
   return { assigned: assigned ? words(assigned) : null, chosen: chosen.sort(compareRoles).map(words) };
 }
 
@@ -371,7 +403,7 @@ export async function readVolunteerAgreementLink<T extends Record<string, unknow
   if (!roles.assigned && roles.chosen.length === 0) return { status: "invalid" };
   const minor = isVolunteerMinor(row.age) && row.guardianName !== null;
   const blanks = await agreementBlanks(db, { eventId: row.eventId, name: row.name, roles, locale, body: document.body, guardianName: minor ? row.guardianName : null });
-  const nameOf = (role: RoleWords) => (locale === "en" ? role.nameEn : role.nameRo);
+  const nameOf = (role: RoleWords) => roleLabel(role, locale);
   return {
     status: "open",
     name: row.name,

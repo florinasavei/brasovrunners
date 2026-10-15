@@ -33,13 +33,18 @@ vi.mock("@/app/[locale]/admin/events/[id]/volunteer-actions", () => {
   const noop = async () => {};
   return {
     addVolunteerAction: noop,
+    addVolunteerCategoryAction: noop,
     addVolunteerRoleAction: noop,
     assignVolunteerAction: noop,
     deleteVolunteerAction: noop,
+    deleteVolunteerCategoryAction: noop,
     deleteVolunteerRoleAction: noop,
     editVolunteerAction: noop,
+    editVolunteerCategoryAction: noop,
     editVolunteerRoleAction: noop,
+    moveVolunteerCategoryAction: noop,
     moveVolunteerRoleAction: noop,
+    saveVolunteerCategoryContactAction: noop,
     recordPaperVolunteerAgreementAction: noop,
     recordPaperVolunteerGuardianAction: noop,
     requestVolunteerAgreementAction: noop,
@@ -83,6 +88,7 @@ const ROLE: VolunteerRole = {
   descriptionRoJson: docOf("Stai la km 5.", "Dai apă de la 9:00.", "Îți dăm pahare.", "Strângi gunoiul."),
   descriptionEnJson: docOf("Stand at km 5.", "Hand out water from 9:00.", "We give you cups.", "Collect the rubbish."),
   colour: null,
+  categoryId: null,
   position: 0,
   createdAt: new Date("2026-10-14T08:00:00Z"),
 };
@@ -206,6 +212,7 @@ async function drawCard(over: Partial<ComponentProps<typeof VolunteersCard>> = {
     minorsOpen: false,
     offerClosed: "off",
     roles: [ROLE, FINISH_ROLE, NO_DESCRIPTION],
+    categories: [],
     standings: [ROLE, FINISH_ROLE, NO_DESCRIPTION].map((role) => ({ roleId: role.id, needed: role.needed, taken: 0, confirmed: 0, free: role.needed })),
     volunteers: PEOPLE,
     agreementInForce: true,
@@ -233,6 +240,7 @@ async function drawBox(over: Partial<ComponentProps<typeof VolunteerBox>> = {}, 
     needed: role.needed,
     taken: 0,
     free: role.needed,
+    categoryId: role.categoryId,
   });
   const drawn = (await VolunteerBox({
     locale: language,
@@ -332,8 +340,8 @@ describe("§765 the organizers' entry draws the profile boxes only while the not
 describe("§765 the role's form: «Descrierea rolului» in the rich-text editor, with «Copiază și tradu tot»", () => {
   it("draws, in the add form and in every role's edit form, the translate button, one editor per language and no one-line box", async () => {
     const page = await drawCard();
-    // One button per form: «Adaugă un rol» and the three roles' «Modifică».
-    expect((page.match(/data-testid="translate-all"/g) ?? []).length).toBe(4);
+    // One button per form: «Adaugă un rol», the three roles' «Modifică» — and, since §774, «Adaugă o categorie» (its own names, with «Copiază și tradu»).
+    expect((page.match(/data-testid="translate-all"/g) ?? []).length).toBe(5);
     expect((page.match(/name="descriptionRoBody"/g) ?? []).length).toBe(4);
     expect((page.match(/name="descriptionEnBody"/g) ?? []).length).toBe(4);
     expect(page).toContain("Descrierea rolului (Română, opțional)");
@@ -350,7 +358,7 @@ describe("§765 the role's form: «Descrierea rolului» in the rich-text editor,
   it("says why the button is grey while the provider is off, like the editor's", async () => {
     const off = await drawCard({}, "ro", { action: null, setupHref: "/admin/tasks#translate" } as never);
     expect(off).toContain('data-translate-state="off"');
-    expect((off.match(/data-translate-state="off"/g) ?? []).length).toBe(4);
+    expect((off.match(/data-translate-state="off"/g) ?? []).length).toBe(5);
     expect(off).toContain(ro.Translate.off);
   });
 
@@ -905,7 +913,7 @@ describe("§773 the public page says how many people a role needs only while the
   });
 
   it("offers the same roles either way: a role that is full is not on the page, with the number said or not", async () => {
-    const full: PublicVolunteerRole = { id: FINISH, nameRo: "Sosire", nameEn: "Finish", descriptionRo: null, descriptionEn: null, descriptionRoJson: null, descriptionEnJson: null, needed: 1, taken: 1, free: 0 };
+    const full: PublicVolunteerRole = { id: FINISH, nameRo: "Sosire", nameEn: "Finish", descriptionRo: null, descriptionEn: null, descriptionRoJson: null, descriptionEnJson: null, needed: 1, taken: 1, free: 0, categoryId: null };
     // The page hands the form only the roles that still need people (`volunteerBoxRoles`); the form never invents one.
     for (const showCounts of [false, true]) {
       const page = await drawBox({ showCounts, roles: [{ ...full, id: WATER, nameRo: "Punct de apă", nameEn: "Water point", needed: 3, taken: 1, free: 2 }] });

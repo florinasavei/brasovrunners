@@ -24,7 +24,7 @@ import { listEventTodos } from "@/modules/event-todos/event-todos";
 import EventTodoCard from "@/modules/event-todos/ui/EventTodoCard";
 import { volunteerEventAhead, volunteerEventDay, volunteerOfferClosedFor } from "@/modules/volunteers/domain/volunteer";
 import VolunteersCard from "@/modules/volunteers/ui/VolunteersCard";
-import { listVolunteerRoles, listVolunteers, volunteerStandings } from "@/modules/volunteers/volunteers";
+import { listVolunteerCategories, listVolunteerRoles, listVolunteers, volunteerStandings } from "@/modules/volunteers/volunteers";
 import {
   findCurrentApprovedDocument,
   noticeDescribesVolunteerAgreement,
@@ -403,6 +403,8 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   const volunteersCard = canManageVolunteers(staffUser.role)
     ? await (async () => {
         const roles = await listVolunteerRoles(db, event.id);
+        // The headings the roles are grouped under, with each one's contact person (§774).
+        const categories = await listVolunteerCategories(db, event.id);
         const people = await listVolunteers(db, event.id);
         const standings = volunteerStandings(roles, people);
         // The volunteer agreement in force (§758): the form's fourth condition, and what the link and the paper need.
@@ -421,6 +423,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
         }
         return {
           roles,
+          categories,
           people,
           standings,
           agreementInForce,
@@ -449,7 +452,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
       })()
     : null;
   const volunteerErrorCode = (
-    ["FORBIDDEN", "VALIDATION_ERROR", "CONFLICT", "NOT_FOUND", "VOLUNTEER_ROLE_HAS_PEOPLE", "VOLUNTEER_ALREADY_LISTED", "VOLUNTEER_AGREEMENT_MISSING", "VOLUNTEER_AGREEMENT_ACCEPTED", "VOLUNTEER_AGREEMENT_NOTICE", "VOLUNTEER_AGREEMENT_REPRINT", "VOLUNTEER_GUARDIAN_MISSING", "VOLUNTEER_GUARDIAN_ACCEPTED", "VOLUNTEER_GUARDIAN_NO_EMAIL", "VOLUNTEER_MINORS_CLOSED"] as const
+    ["FORBIDDEN", "VALIDATION_ERROR", "CONFLICT", "NOT_FOUND", "VOLUNTEER_ROLE_HAS_PEOPLE", "VOLUNTEER_CATEGORY_HAS_ROLES", "VOLUNTEER_NAME_TAKEN", "VOLUNTEER_ALREADY_LISTED", "VOLUNTEER_AGREEMENT_MISSING", "VOLUNTEER_AGREEMENT_ACCEPTED", "VOLUNTEER_AGREEMENT_NOTICE", "VOLUNTEER_AGREEMENT_REPRINT", "VOLUNTEER_GUARDIAN_MISSING", "VOLUNTEER_GUARDIAN_ACCEPTED", "VOLUNTEER_GUARDIAN_NO_EMAIL", "VOLUNTEER_MINORS_CLOSED"] as const
   ).find(
     (code) => code === query.volunteerError,
   );
@@ -1441,6 +1444,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                   eventDay={volunteersCard.eventDay}
                   offerClosed={volunteersCard.offerClosed}
                   roles={volunteersCard.roles}
+                  categories={volunteersCard.categories}
                   standings={volunteersCard.standings}
                   volunteers={volunteersCard.people}
                   agreementInForce={volunteersCard.agreementInForce}

@@ -473,6 +473,15 @@ export type AuditAction =
   | "volunteer_role.edited"
   | "volunteer_role.moved"
   | "volunteer_role.deleted"
+  /**
+   * An event's volunteer categories (§774), entity `event`: the category's id and names, never a contact's words —
+   * `volunteer_category.contact_edited` names the boxes that changed (`contactName`, `contactPhone`, `contactEmail`), not what was typed.
+   */
+  | "volunteer_category.added"
+  | "volunteer_category.edited"
+  | "volunteer_category.moved"
+  | "volunteer_category.deleted"
+  | "volunteer_category.contact_edited"
   | "volunteer.added"
   | "volunteer.edited"
   | "volunteer.state_changed"

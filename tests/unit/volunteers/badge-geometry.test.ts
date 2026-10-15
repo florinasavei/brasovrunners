@@ -324,8 +324,9 @@ describe("§764 the design as stored, posted and carried", () => {
       phone: "Coordinator: 0712 345 678",
       free: null,
       markerLabel: null,
+      phoneLabel: "Coordinator",
     });
-    expect(badgeWords(DEFAULT_BADGE_DESIGN, "ro", "Crosul toamnei", defaults)).toEqual({ title: "Crosul toamnei", label: "VOLUNTAR", name: "Nume:", phone: null, free: null, markerLabel: null });
+    expect(badgeWords(DEFAULT_BADGE_DESIGN, "ro", "Crosul toamnei", defaults)).toEqual({ title: "Crosul toamnei", label: "VOLUNTAR", name: "Nume:", phone: null, phoneLabel: "Coordonator", free: null, markerLabel: null });
     expect(badgeWords({ ...DEFAULT_BADGE_DESIGN, showTitle: false }, "ro", "Crosul toamnei", defaults).title).toBeNull();
   });
 });
