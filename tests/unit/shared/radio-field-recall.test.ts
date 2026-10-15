@@ -1,4 +1,4 @@
-import { createElement, type ReactNode } from "react";
+import { type ComponentProps, createElement, type ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { RecallProvider } from "@/shared/forms/recall";
@@ -11,13 +11,14 @@ import RadioField from "@/shared/ui/RadioField";
  */
 const group = (props: { posted?: Record<string, string[]> | null; saved: string; disabled?: string }): string => {
   const radio = (value: string): ReactNode =>
-    createElement(RadioField, { key: value, name: "size", value, defaultChecked: props.saved === value, disabled: props.disabled === value }, value);
+    // Children go as the third argument (react/no-children-prop); the props type still lists them as required.
+    createElement(RadioField, { key: value, name: "size", value, defaultChecked: props.saved === value, disabled: props.disabled === value } as unknown as ComponentProps<typeof RadioField>, value);
   const recall =
     props.posted === undefined || props.posted === null
       ? null
       : { values: props.posted, fields: [], generation: 1, fieldError: "" };
   const radios = ["strip90", "strip100", "custom"].map(radio);
-  return renderToStaticMarkup(recall ? createElement(RecallProvider, { value: recall }, radios) : createElement("div", null, radios));
+  return renderToStaticMarkup(recall ? createElement(RecallProvider, { value: recall } as unknown as ComponentProps<typeof RecallProvider>, radios) : createElement("div", null, radios));
 };
 
 /** The values of the radios drawn checked. */
