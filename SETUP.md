@@ -1429,14 +1429,14 @@ club names — which is why a colleague's Yahoo can be on the list.
 7. **Optional, in the club's Gmail: file the messages the site marks as possible spam.** A
    message the form lets through but that looks automated still arrives, so that a real person is
    never lost. That covers a post with no anti-bot token while the check is on, and a sender whose
-   domain imitates the club's (`search-<domain>`, `<name>-seo.com`). The subject starts with
-   `[posibil spam] ` (`[QA] [posibil spam] …` on QA) and a note under the message says why. To file
+   domain imitates the club's (`search-<domain>`, `<name>-seo.com`). The subject carries
+   `[posibil spam]`, right after the tags (`[contact][posibil spam] Mesaj de pe site: …`, `[QA][contact][posibil spam] …` on QA) and a note under the message says why. To file
    them away: open the club's Gmail → the search box → **Show search options** → in **Has the
    words** type `subject:"[posibil spam]"` (Gmail ignores the brackets and matches the phrase, so
    the QA mark is caught too) → **Create filter** → tick **Skip the Inbox (Archive it)** and
    **Apply the label** → **New label** `Posibil spam` → **Create filter**. Do not tick **Delete
    it**. Look at the label once a week: somebody whose browser never ran the check lands there too,
-   and "Reply" still answers them. The mark is fixed text (`SUSPICIOUS_SUBJECT_PREFIX` in
+   and "Reply" still answers them. The mark is fixed text (`SUSPICIOUS_SUBJECT_MARK` in
    `src/modules/contact/message.ts`); changing it breaks this filter in every mailbox that has one.
    Do the same in any mailbox that is on "Către" or "Copie (Cc)" and wants it. (`DECISIONS.md`
    §310, §744) **Or stop them at the source:** «Pagini» → «Contact» → «Cine primește mesajele de contact»
@@ -1520,13 +1520,66 @@ Gmail and «Email către participanți reali» for Mailgun). On each deployment 
    and is kept nowhere; Girl Zone's form has it too, with a «Telefon (opțional)» box beside it
    (the telephone goes in the message and is no `Reply-To`).
 3. Check: `/ro/contact` shows «Spune-ne ceva» under the contact form, above «Contact direct» and the newsletter (the newsletter last); a message sent from QA arrives
-   with `[QA]` in front of its subject, its first line «Nume: (anonim)» or the name the person gave. The site keeps no copy of any message, so the inbox is the
+   with `[QA][feedback][…]` in front of its subject (the tags, §NNN: «Filtre în Gmail» below), its first line «Nume: (anonim)» or the name the person gave. The site keeps no copy of any message, so the inbox is the
    only place to look.
 
 To take the form away, clear the recipients on «Pagini» → «Contact» (`/admin/pages/contact`) and leave `CONTACT_FORM_TO`
 empty — or remove `CONTACT_SMTP_USER` or `CONTACT_SMTP_PASSWORD` and redeploy: the page goes
 back to the address either way. Google's own limit on an ordinary account is about 500 messages a day,
 which is more than a club receives; the form's own limit is five an hour per sender.
+
+### Filtre în Gmail — the tags at the start of every message the club receives
+
+Every email the site sends **to the club or to a colleague** starts with fixed tags in square brackets, in lowercase
+ASCII, never translated, so one Gmail filter files a message whichever language it was written in (`DECISIONS.md` §NNN;
+the tags are `src/modules/notifications/domain/subject-tags.ts`'s, the one place that knows them). The words come
+after: `[feedback][cum-a-fost] Cum a fost: <event>`. On QA the environment's mark comes first and is joined to
+the tags: `[QA][feedback][cum-a-fost] …`. A message to a runner, a volunteer, a subscriber or an invitee of the public
+**has no tags** — their subjects are what they were. The club's copy of a runner's message keeps its own mark,
+`[Copie club]`.
+
+| Tag | What arrives under it |
+| --- | --- |
+| `[contact]` | «Scrie-ne»: a visitor's message through the contact form |
+| `[feedback]` + `[cum-a-fost]` · `[sugestie]` · `[reclamatie]` · `[girl-zone]` | «Spune-ne ceva», one tag for each of its four forms; **a message that reached Girl Zone's person carries `[girl-zone]`**, whichever form wrote it |
+| `[inscrieri]` | «somebody has confirmed» (the registrations notice) |
+| `[declaratii]` | the archive copy of a signed declaration |
+| `[voluntari]` | an organizers' notice of a volunteer's sign-up |
+| `[legal]` | the Administrators' digest of legal templates that moved |
+| `[livrare]` | the platform's notices about the email roads: a road is down, a message could not be delivered |
+| `[sistem]` | the platform's alerts: the database unreachable, and back |
+| `[magazin]` | the members' shop: an order placed, paid, the club's notice |
+| `[echipa]` | an invitation to the backoffice or to the members' zone |
+
+**Ready-to-paste filters.** In Gmail: the search box → **Show search options** → paste into **Has the words** →
+**Create filter** → tick **Apply the label** (a new one) and, if you like, **Skip the Inbox** → **Create filter**. Gmail
+searches the words and ignores the brackets, so a quoted phrase is exact enough: a subject whose human words repeat
+the tag's word («Comandă nouă în magazin», «Ești în echipa …») names the same family anyway. `[QA]` in front
+changes nothing for these filters.
+
+```text
+subject:"[contact]"                                  label «Site / Contact»
+subject:"[feedback]" -subject:"[girl-zone]"          label «Site / Feedback»  (all three ordinary forms)
+subject:"[cum-a-fost]"                               label «Site / Cum a fost»
+subject:"[sugestie]"                                 label «Site / Sugestii»
+subject:"[reclamatie]"                               label «Site / Reclamații»
+subject:"[girl-zone]"                                label «Girl Zone»  — see the warning below
+subject:"[inscrieri]" OR subject:"[declaratii]"      label «Site / Înscrieri»
+subject:"[voluntari]"                                label «Site / Voluntari»
+subject:"[legal]"                                    label «Site / Legal»
+subject:"[livrare]" OR subject:"[sistem]"            label «Site / Platformă»  (a road down, the database away: read these)
+subject:"[magazin]"                                  label «Site / Magazin»
+subject:"[QA]"                                       label «QA»  (skip the Inbox; the tests of a QA release)
+```
+
+**Girl Zone's messages are confidential.** Filter `subject:"[girl-zone]"` only in the mailbox of the person who
+receives them (or of the club's, when the club chose Gmail for that form), with a label and a star, **never with
+«Forward it to»**, never in a filter another account can read, and never in a mailbox shared wider than the form's
+card says. The `[feedback]` filter above excludes `[girl-zone]` for the same reason: a forward or a shared label made
+from it would carry her messages along. The subject's words stay neutral on purpose («Mesaj confidențial de pe
+site»); the tag is the one thing that tells the person's own filter what it is.
+
+Changing a tag is changing every mailbox's filter, so a tag moves only by a decision.
 
 ## 39. Put the 21 November race on production — the last thing between the club and its entries
 
