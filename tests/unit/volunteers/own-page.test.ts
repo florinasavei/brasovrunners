@@ -52,6 +52,7 @@ const role = (id: string, nameRo: string, nameEn: string, free: number): PublicV
   needed: 3,
   taken: 3 - free,
   free,
+  categoryId: null,
 });
 
 vi.mock("next/navigation", () => ({

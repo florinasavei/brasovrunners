@@ -613,7 +613,9 @@
         "email": "Emailul părintelui sau tutorelui",
         "emailHelp": "Aici trimitem linkul pentru acord. Nu îl folosim pentru altceva.",
         "aware": "Părintele sau tutorele meu știe și e de acord"
-      }
+      },
+      "otherCategory": "Alte activități",
+      "contactLabel": "Întrebări?"
     },
     "calendar": {
       "feedName": "🏃 BVR",
@@ -1908,7 +1910,9 @@
       "VOLUNTEER_GUARDIAN_MISSING": "Acordul părintelui lipsește: un voluntar sub 18 ani se confirmă doar după ce părintele sau tutorele a acceptat contractul, din link sau pe hârtie.",
       "VOLUNTEER_GUARDIAN_ACCEPTED": "Părintele sau tutorele a acceptat deja contractul: nu mai e nimic de trimis sau de înregistrat.",
       "VOLUNTEER_GUARDIAN_NO_EMAIL": "Părintele sau tutorele nu are un email trecut, deci nu are cui să-i plece linkul. Acordul se ia pe hârtie, sau adaugă emailul în „Modifică”.",
-      "VOLUNTEER_MINORS_CLOSED": "Clubul nu primește încă voluntari sub 18 ani: nota de confidențialitate și contractul în vigoare nu descriu încă minorii. Aprobă-le întâi; «Sarcini» spune cum."
+      "VOLUNTEER_MINORS_CLOSED": "Clubul nu primește încă voluntari sub 18 ani: nota de confidențialitate și contractul în vigoare nu descriu încă minorii. Aprobă-le întâi; «Sarcini» spune cum.",
+      "VOLUNTEER_CATEGORY_HAS_ROLES": "Categoria nu s-a șters: are roluri în ea. Mută sau șterge întâi rolurile.",
+      "VOLUNTEER_NAME_TAKEN": "Numele există deja în această categorie (sau printre categoriile evenimentului). Alege alt nume: același nume poate sta în două categorii, dar nu de două ori într-una."
     },
     "editor": {
       "draftPreview": {
@@ -4781,7 +4785,9 @@
         "deleteTitle": "Ștergi acest rol?",
         "deleteBody": "Rolul „{name}” se șterge. Un rol dat cuiva sau bifat de cineva nu poate fi șters: schimbă-le întâi rolurile sau șterge-i.",
         "descriptionEmpty": "Încă nicio descriere.",
-        "more": "Restul"
+        "more": "Restul",
+        "category": "Categoria",
+        "categoryHelp": "Titlul sub care apare rolul. „Alte activități” înseamnă fără categorie. Același nume poate sta în două categorii, dar nu de două ori într-una."
       },
       "move": {
         "up": "Mută mai sus",
@@ -4945,6 +4951,33 @@
         "paperTitle": "Părintele lui {name} a semnat contractul pe hârtie?",
         "paperBody": "Se înregistrează că părintele sau tutorele lui {name} a semnat contractul tipărit, versiunea în vigoare, și că tu ai înregistrat semnătura. Păstrează foaia semnată.",
         "minorsClosed": "Linkul părintelui și „Acordul părintelui pe hârtie” așteaptă: nota sau contractul în vigoare nu descriu minorii («Sarcini»)."
+      },
+      "otherCategory": "Alte activități",
+      "categories": {
+        "title": "Categorii",
+        "count": "Categorii: {count}",
+        "intro": "O categorie grupează rolurile sub un titlu, pe card și pe pagina voluntarilor, de exemplu „Traseu”. Același rol poate sta în mai multe categorii. Ordinea de aici e ordinea de pe pagină.",
+        "empty": "Nicio categorie încă. Rolurile se arată într-o listă, fără titluri. Adaugă prima mai jos: de exemplu „Traseu”.",
+        "rolesUnder": "Roluri: {count}",
+        "contactIs": "Persoana de contact: {contact}",
+        "contactNone": "Nicio persoană de contact încă."
+      },
+      "category": {
+        "nameRo": "Numele categoriei (Română)",
+        "nameEn": "Numele categoriei (English)",
+        "addTitle": "Adaugă o categorie",
+        "add": "Adaugă categoria",
+        "adding": "Se adaugă…",
+        "delete": "Șterge categoria",
+        "deleting": "Se șterge…",
+        "deleteTitle": "Ștergi această categorie?",
+        "deleteBody": "Categoria „{name}” se șterge. O categorie cu roluri în ea nu se poate șterge: mută sau șterge întâi rolurile.",
+        "contactTitle": "Persoana de contact",
+        "contactHelp": "Opțională, goală la început. Apare pe pagina voluntarilor și în subsolul emailurilor către voluntari. Trece doar o persoană care a fost de acord să apară pe o pagină publică.",
+        "contactHelpMore": "Telefonul apare și pe ecusoanele rolurilor categoriei, când designul nu are alt număr. Contactul intră în fișierul evenimentului, nu în CSV.",
+        "contactName": "Numele persoanei de contact",
+        "contactPhone": "Telefon",
+        "contactEmail": "Adresa de email"
       }
     },
     "eventTodos": {
@@ -8052,7 +8085,9 @@
           "few": "{count} imagini sau fișiere",
           "other": "{count} de imagini sau fișiere"
         },
-        "series": "Evenimentul era o dată dintr-o serie sau sursa ei. Regula seriei nu se aplică: copia e o singură dată; seria o pornești tu, din editor."
+        "series": "Evenimentul era o dată dintr-o serie sau sursa ei. Regula seriei nu se aplică: copia e o singură dată; seria o pornești tu, din editor.",
+        "volunteers": "Fișierul poartă categoriile și rolurile de voluntari ale evenimentului, cu persoanele lor de contact. „Ca eveniment nou” le scrie în noua ciornă.",
+        "volunteersOver": "Fișierul poartă categorii și roluri de voluntari. Un import peste un eveniment existent nu le scrie: ele rămân cum sunt aici."
       },
       "mode": {
         "heading": "Ce vrei să faci cu el?"
@@ -8127,6 +8162,7 @@
         "slugSuffixed": "Adresa paginii în {language} era luată: s-a folosit {slug}.",
         "publicListOff": "Lista publică a participanților a rămas oprită: nota de confidențialitate care o descrie nu e încă în vigoare aici.",
         "seriesNotApplied": "Regula seriei din fișier nu s-a aplicat: evenimentul e o singură dată.",
+        "volunteersSkipped": "Din categoriile, persoanele de contact și rolurile de voluntari din fișier s-au lăsat deoparte cele pe care regulile cardului «Voluntari» nu le primesc (în total: {count}).",
         "checkpointKindsDropped": "La punctele de control din fișier s-au lăsat deoparte tipurile pe care această versiune nu le știe (în total: {count}).",
         "checkpointLimitsDropped": "La punctele de control din fișier s-au lăsat deoparte orele limită care nu se puteau număra de la start (în total: {count}). Scrie-le din nou ca „Timp limită”."
       },
@@ -9440,7 +9476,7 @@
         "showPhone": "Telefonul coordonatorului",
         "showPhoneHelp": "Un rând mic jos, cu numărul la care sună voluntarii. Numărul clubului, niciodată al unui voluntar.",
         "phone": "Numărul de telefon",
-        "phoneHelp": "Scris ca un număr de telefon, de exemplu 07xx xxx xxx.",
+        "phoneHelp": "Scris ca un număr de telefon, de exemplu 07xx xxx xxx. Lasă gol ca ecusonul fiecărui rol să poarte telefonul persoanei de contact a categoriei lui.",
         "phoneLabelRo": "Eticheta (română)",
         "phoneLabelEn": "Eticheta (engleză)",
         "phoneLabelHelp": "Gol în ambele limbi: Coordonator și Coordinator. Cel mult {max} caractere.",
@@ -9449,7 +9485,8 @@
         "cutMarksHelp": "Liniile punctate dintre ecusoane se tipăresc mereu. Semnele de pe margine ajută la tăierea cu ghilotina.",
         "cutLinesOnly": "Doar liniile punctate",
         "save": "Salvează ecusonul",
-        "saving": "Se salvează…"
+        "saving": "Se salvează…",
+        "phoneFromCategory": "Din categoria rolului"
       },
       "colours": {
         "title": "Culorile rolurilor",
@@ -11376,7 +11413,12 @@
       "volunteersCountsOn": "Pagina de voluntari spune acum câte persoane mai sunt necesare la fiecare rol.",
       "volunteersCountsOff": "Pagina de voluntari nu mai spune câte persoane mai sunt necesare, doar că rolul mai are locuri.",
       "volunteerGuardianRequested": "Linkul pentru părinte pleacă pe email.",
-      "volunteerGuardianRecorded": "Acordul părintelui, înregistrat ca semnat pe hârtie."
+      "volunteerGuardianRecorded": "Acordul părintelui, înregistrat ca semnat pe hârtie.",
+      "volunteerCategoryAdded": "Categorie adăugată.",
+      "volunteerCategorySaved": "Categorie salvată.",
+      "volunteerCategoryMoved": "Categorie mutată.",
+      "volunteerCategoryDeleted": "Categorie ștearsă.",
+      "volunteerCategoryContactSaved": "Persoana de contact a fost salvată."
     }
   },
   "Network": {

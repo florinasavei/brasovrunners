@@ -2,7 +2,7 @@ import { and, asc, eq } from "drizzle-orm";
 import sharp from "sharp";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { auditLogs } from "@/db/schema/audit-logs";
-import { eventVolunteerRoles, eventVolunteers } from "@/db/schema/event-volunteers";
+import { eventVolunteerCategories, eventVolunteerRoles, eventVolunteers } from "@/db/schema/event-volunteers";
 import { eventTranslations, events } from "@/db/schema/events";
 import { mediaAssets } from "@/db/schema/gallery";
 import { legalDocuments } from "@/db/schema/legal-documents";
@@ -14,6 +14,7 @@ import { comparable, diffConfigs } from "@/modules/content/events/transfer/diff"
 import { exportEvent, readEventConfig } from "@/modules/content/events/transfer/export";
 import { type EventFile, readEventFile } from "@/modules/content/events/transfer/file-format";
 import { diffEventImport, importEventAsNew, importEventOver } from "@/modules/content/events/transfer/import";
+import { readVolunteersFile } from "@/modules/content/events/transfer/volunteers";
 import { storeKeyOfUrl } from "@/modules/content/events/transfer/media";
 import { storeRouteGpx } from "@/modules/content/events/route-gpx";
 import { computeContentHash, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
@@ -21,7 +22,7 @@ import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository
 import { changeCheckpoints, listCheckpoints, SavedCheckpointsRefusal } from "@/modules/event-checkpoints/checkpoints";
 import type { PostedCheckpoint } from "@/modules/event-checkpoints/domain/checkpoint";
 import { DEFAULT_BIB_DESIGN } from "@/modules/registrations/bib-design";
-import { DEFAULT_BADGE_DESIGN, readBadgeDesign } from "@/modules/volunteers/badges/badge-design";
+import { badgeColourReadable, DEFAULT_BADGE_DESIGN, readBadgeDesign } from "@/modules/volunteers/badges/badge-design";
 import { uploadBodyImage } from "@/modules/media/service";
 import { getStorage } from "@/modules/media/storage";
 import { isDomainError } from "@/shared/errors/domain-error";
@@ -318,7 +319,8 @@ describe("the file an event is exported as", () => {
     // No database id of this environment: not the event's, a translation's, the declaration's, the staff's.
     for (const id of [event.id, declarationId, admin.id, ...(await texts(event.id)).map((row) => row.id)]) expect(text).not.toContain(id);
     // The configuration's own top-level shape, and nothing about registrations in it.
-    expect(Object.keys(file).sort()).toEqual(["event", "exportedAt", "exportedFrom", "format", "media", "series", "version"]);
+    // …and, beside the event, the volunteers' categories and roles (§774) — words, never a person.
+    expect(Object.keys(file).sort()).toEqual(["event", "exportedAt", "exportedFrom", "format", "media", "series", "version", "volunteers"]);
     expect(Object.keys(file.event)).not.toContain("registrations");
     expect(Object.keys(file.event)).not.toContain("volunteers");
     expect(Object.keys(file.event)).not.toContain("invitations");
@@ -853,12 +855,12 @@ describe("import over an existing event", () => {
 // --- An event's volunteers are not the file's (§754) -------------------------------------------
 
 /**
- * The volunteers' card (§754) is no part of what an event *is* for the file: the people are personal data,
- * and the roles and the tick «Primește voluntari» belong to one date — the same rule as a copy of an event
- * (`copyEvent` starts with no role and the tick off) and as the to-dos (§749). The file carries none of them,
- * an import as new starts with none, and an import over an event leaves its own untouched.
+ * The volunteers' card (§754): the **people** are no part of the file — they are personal data — nor is the tick «Primește voluntari»,
+ * which belongs to one date (a copy of an event starts with the tick off, like the to-dos, §749). The volunteers' **categories and
+ * roles** are (§774, amending §751 and §754): their words, the contact person the club published for each category, never a person —
+ * written to a new event by the card's own services, and never applied over an existing event.
  */
-describe("an event's volunteers are not the file's", () => {
+describe("an event's volunteers are not the file's — only their categories and roles are", () => {
   async function withVolunteers(eventId: string) {
     await db.update(events).set({ acceptsVolunteers: true, volunteersShirts: true, volunteersShowCounts: true }).where(eq(events.id, eventId));
     const [role] = await db
@@ -879,25 +881,28 @@ describe("an event's volunteers are not the file's", () => {
     return role;
   }
 
-  it("carries no role, no person and no tick", async () => {
+  it("carries no person, no tick and no id — the role's own words are the file's", async () => {
     const { event } = await seedRace();
     const role = await withVolunteers(event.id);
     const file = await fileOf(event.id);
     const text = JSON.stringify(file);
-    for (const needle of ["Zmeură", "Raspberry", "Pahare la km 5", "Voluntarescu", "vlad.voluntarescu", "+40712345678", "Am mai ajutat", role.id]) {
+    for (const needle of ["Voluntarescu", "vlad.voluntarescu", "+40712345678", "Am mai ajutat", role.id, "acceptsVolunteers", "showCounts", "show_counts", "volunteersShirts"]) {
       expect(text, needle).not.toContain(needle);
     }
-    expect(text).not.toMatch(/volunteer/i);
+    // The role's words are there — both names, how many it needs — and nothing else of it.
+    expect(file.volunteers.roles).toEqual([{ name: { ro: "Punct de apă Zmeură", en: "Water point Raspberry" }, needed: 3, description: { ro: null, en: null }, colour: null, category: null }]);
+    expect(file.volunteers.categories).toEqual([]);
   });
 
-  it("starts an event imported as new with no role and the tick off, and leaves the target's own alone on an import over it", async () => {
+  it("starts an event imported as new with the roles and the tick off — no person —, and leaves the target's own alone on an import over it", async () => {
     const { event } = await seedRace();
     await withVolunteers(event.id);
     const file = await fileOf(event.id);
 
     const created = await importEventAsNew(db, { actor: admin, file, fetchImpl: serving(), now: NOW });
     expect((await reload(created.eventId)).acceptsVolunteers).toBe(false);
-    expect(await db.select().from(eventVolunteerRoles).where(eq(eventVolunteerRoles.eventId, created.eventId))).toEqual([]);
+    expect((await db.select().from(eventVolunteerRoles).where(eq(eventVolunteerRoles.eventId, created.eventId))).map((row) => [row.nameRo, row.needed])).toEqual([["Punct de apă Zmeură", 3]]);
+    expect(await db.select().from(eventVolunteers).where(eq(eventVolunteers.eventId, created.eventId))).toEqual([]);
 
     const { target } = await seedTarget();
     const targetRole = await withVolunteers(target.id);
@@ -915,7 +920,7 @@ describe("an event's volunteers are not the file's", () => {
     // The tick is on for the source event, and the file says nothing of it, nor of the volunteers' shirts or switch.
     expect((await reload(event.id)).volunteersShowCounts).toBe(true);
     const file = await fileOf(event.id);
-    expect(JSON.stringify(file)).not.toMatch(/volunteer|showCounts|show_counts/i);
+    expect(JSON.stringify(file)).not.toMatch(/showCounts|show_counts|acceptsVolunteers|volunteersShirts/i);
 
     const created = await importEventAsNew(db, { actor: admin, file, fetchImpl: serving(), now: NOW });
     expect((await reload(created.eventId)).volunteersShowCounts).toBe(false);
@@ -928,6 +933,168 @@ describe("an event's volunteers are not the file's", () => {
     await db.update(events).set({ volunteersShowCounts: false }).where(eq(events.id, target.id));
     await importEventOver(db, await overInput(file, target.id));
     expect((await reload(target.id)).volunteersShowCounts).toBe(false);
+  });
+});
+
+/**
+ * §774 — the volunteers' categories and roles in the file: the words and the contact person the club published for each category, never a
+ * person; a role names its category by its place in the list, never by an id; written to a new event through the card's own services and
+ * read forgivingly; an import over an existing event leaves its roles as they are.
+ */
+describe("§774 the volunteers' categories and roles in the file", () => {
+  async function withCategories(eventId: string) {
+    const [start, route] = await db
+      .insert(eventVolunteerCategories)
+      .values([
+        { eventId, nameRo: "Start / Sosire", nameEn: "Start / Finish", sort: 0 },
+        { eventId, nameRo: "Traseu", nameEn: "Route", sort: 1, contactName: "Ana Popescu", contactPhone: "+40712345678", contactEmail: "coordonator@club.test" },
+      ])
+      .returning();
+    const paragraph = (text: string) => ({ type: "doc" as const, content: [{ type: "paragraph" as const, content: [{ type: "text" as const, text }] }] });
+    await db.insert(eventVolunteerRoles).values([
+      { eventId, categoryId: start.id, nameRo: "Direcționare", nameEn: "Guidance", needed: 2, position: 0 },
+      {
+        eventId,
+        categoryId: route.id,
+        nameRo: "Direcționare",
+        nameEn: "Guidance",
+        needed: 4,
+        position: 1,
+        colour: "#c62828",
+        descriptionRoJson: paragraph("Arăți drumul pe traseu"),
+        descriptionEnJson: paragraph("Show the way on the route"),
+        descriptionWordsRo: "Arăți drumul pe traseu",
+        descriptionWordsEn: "Show the way on the route",
+      },
+      { eventId, categoryId: null, nameRo: "Foto/Video", nameEn: "Photo/Video", needed: 1, position: 2 },
+    ]);
+    return { start, route };
+  }
+
+  it("carries the categories in the club's order with their contact, and each role with its category by place — no id, no person", async () => {
+    const { event } = await seedRace();
+    const { start, route } = await withCategories(event.id);
+    const file = await fileOf(event.id);
+    expect(file.volunteers.categories).toEqual([
+      { name: { ro: "Start / Sosire", en: "Start / Finish" }, contact: null },
+      { name: { ro: "Traseu", en: "Route" }, contact: { name: "Ana Popescu", phone: "+40712345678", email: "coordonator@club.test" } },
+    ]);
+    expect(file.volunteers.roles.map((role) => [role.name.ro, role.needed, role.category])).toEqual([
+      ["Direcționare", 2, 0],
+      ["Direcționare", 4, 1],
+      ["Foto/Video", 1, null],
+    ]);
+    expect(file.volunteers.roles[1]).toMatchObject({ colour: "#c62828", description: { ro: { type: "doc" }, en: { type: "doc" } } });
+    const text = JSON.stringify(file.volunteers);
+    for (const id of [start.id, route.id, event.id]) expect(text).not.toContain(id);
+  });
+
+  it("makes the same configuration after a round trip — export, import as new, export — with the roles under their categories, the tick off and nobody on them", async () => {
+    const { event } = await seedRace();
+    await withCategories(event.id);
+    const file = await fileOf(event.id);
+    const created = await importEventAsNew(db, { actor: admin, file, fetchImpl: serving(), now: NOW });
+    expect((await reload(created.eventId)).acceptsVolunteers).toBe(false);
+    const categories = await db.select().from(eventVolunteerCategories).where(eq(eventVolunteerCategories.eventId, created.eventId)).orderBy(asc(eventVolunteerCategories.sort));
+    expect(categories.map((row) => [row.nameRo, row.contactName, row.contactPhone, row.contactEmail])).toEqual([
+      ["Start / Sosire", null, null, null],
+      ["Traseu", "Ana Popescu", "+40712345678", "coordonator@club.test"],
+    ]);
+    const roles = await db.select().from(eventVolunteerRoles).where(eq(eventVolunteerRoles.eventId, created.eventId)).orderBy(asc(eventVolunteerRoles.position));
+    expect(roles.map((row) => [row.nameRo, row.categoryId === null ? null : categories.find((category) => category.id === row.categoryId)?.nameRo])).toEqual([
+      ["Direcționare", "Start / Sosire"],
+      ["Direcționare", "Traseu"],
+      ["Foto/Video", null],
+    ]);
+    // The description's plain words are written with its document, as the card writes them; the colour is kept.
+    expect(roles[1]).toMatchObject({ colour: "#c62828", descriptionWordsRo: "Arăți drumul pe traseu", descriptionWordsEn: "Show the way on the route" });
+    expect(await readVolunteersFile(db, created.eventId)).toEqual(file.volunteers);
+    expect(await db.select().from(eventVolunteers).where(eq(eventVolunteers.eventId, created.eventId))).toEqual([]);
+    // The trail says how many were written, never what.
+    const [imported] = await db.select().from(auditLogs).where(and(eq(auditLogs.action, "event.imported_as_new"), eq(auditLogs.entityId, created.eventId)));
+    expect(imported.metadataJson).toMatchObject({ volunteerCategories: 2, volunteerRoles: 3 });
+    expect(JSON.stringify(imported.metadataJson)).not.toContain("Ana Popescu");
+  });
+
+  it("reads the file forgivingly: a category that is not in it is «Alte activități», a contact the card would refuse is left out, a colour no word reads on costs the colour", async () => {
+    expect(badgeColourReadable("#808080")).toBe(false);
+    const { event } = await seedRace();
+    await withCategories(event.id);
+    const file = await fileOf(event.id);
+    const edited: EventFile = structuredClone(file);
+    // The first two roles point at no category of the file; «Foto/Video» keeps none, and a colour that no word reads on.
+    edited.volunteers.roles[0].category = 9;
+    edited.volunteers.roles[1].category = -1;
+    edited.volunteers.roles[1].name = { ro: "Alta", en: "Another" };
+    edited.volunteers.roles[2].colour = "#808080";
+    edited.volunteers.categories[1].contact = { name: "Ana Popescu", phone: "+40712345678", email: "not an address" };
+    const created = await importEventAsNew(db, { actor: admin, file: edited, fetchImpl: serving(), now: NOW });
+    const read = await readVolunteersFile(db, created.eventId);
+    expect(read.roles.map((role) => [role.name.ro, role.category, role.colour])).toEqual([
+      ["Direcționare", null, null],
+      ["Alta", null, "#c62828"],
+      ["Foto/Video", null, null],
+    ]);
+    expect(read.categories[1].contact).toBeNull();
+    // What was left out is said, never silent: the one contact the card refused.
+    expect(created.notes.filter((note) => note.code === "volunteersSkipped")).toEqual([{ code: "volunteersSkipped", count: 1 }]);
+    expect(read.categories.map((category) => category.name.ro)).toEqual(["Start / Sosire", "Traseu"]);
+  });
+
+  it("skips, without holding up the rest, an entry the card itself would refuse: a name twice under one category", async () => {
+    const { event } = await seedRace();
+    await withCategories(event.id);
+    const file = await fileOf(event.id);
+    const edited: EventFile = structuredClone(file);
+    edited.volunteers.roles[0].category = 1;
+    const created = await importEventAsNew(db, { actor: admin, file: edited, fetchImpl: serving(), now: NOW });
+    const read = await readVolunteersFile(db, created.eventId);
+    expect(read.roles.map((role) => [role.name.ro, role.category])).toEqual([
+      ["Direcționare", 1],
+      ["Foto/Video", null],
+    ]);
+    expect(created.notes.filter((note) => note.code === "volunteersSkipped")).toEqual([{ code: "volunteersSkipped", count: 1 }]);
+  });
+
+  it("is applied to a new event alone: an import over an existing event leaves its roles and categories exactly as they are", async () => {
+    const { event } = await seedRace();
+    await withCategories(event.id);
+    const file = await fileOf(event.id);
+    const { target } = await seedTarget();
+    const [mine] = await db.insert(eventVolunteerCategories).values({ eventId: target.id, nameRo: "A mea", nameEn: "Mine", sort: 0 }).returning();
+    const [role] = await db.insert(eventVolunteerRoles).values({ eventId: target.id, categoryId: mine.id, nameRo: "Rolul meu", nameEn: "My role", needed: 1 }).returning();
+    const diff = await diffEventImport(db, { actor: admin, file, eventId: target.id });
+    expect(diff.changes.map((change) => change.key).filter((key) => /volunteer|categor/i.test(key))).toEqual([]);
+    // …and the preview says so, as it says a series' rule is not applied.
+    expect(diff.volunteersNotApplied).toBe(true);
+    await importEventOver(db, await overInput(file, target.id));
+    expect((await db.select().from(eventVolunteerCategories).where(eq(eventVolunteerCategories.eventId, target.id))).map((row) => row.id)).toEqual([mine.id]);
+    expect((await db.select().from(eventVolunteerRoles).where(eq(eventVolunteerRoles.eventId, target.id))).map((row) => [row.id, row.categoryId])).toEqual([[role.id, mine.id]]);
+  });
+
+  it("reads a file made before the categories as an event with no volunteers to bring, and refuses one shaped wrong", async () => {
+    const { event } = await seedRace();
+    await withCategories(event.id);
+    const file = await fileOf(event.id);
+    const { volunteers, ...older } = file;
+    expect(volunteers.roles).toHaveLength(3);
+    const read = readEventFile(JSON.stringify(older));
+    expect(read.ok).toBe(true);
+    if (!read.ok) return;
+    expect(read.file.volunteers).toEqual({ categories: [], roles: [] });
+    const created = await importEventAsNew(db, { actor: admin, file: read.file, fetchImpl: serving(), now: NOW });
+    expect(await db.select().from(eventVolunteerRoles).where(eq(eventVolunteerRoles.eventId, created.eventId))).toEqual([]);
+
+    for (const bad of [
+      { ...file, volunteers: { ...file.volunteers, roles: [{ ...file.volunteers.roles[0], needed: 0 }] } },
+      { ...file, volunteers: { ...file.volunteers, categories: [{ name: { ro: "x".repeat(81), en: "y" }, contact: null }] } },
+      { ...file, volunteers: { ...file.volunteers, extra: true } },
+      { ...file, volunteers: { categories: Array.from({ length: 13 }, () => ({ name: { ro: "a", en: "b" }, contact: null })), roles: [] } },
+    ]) {
+      const refused = readEventFile(JSON.stringify(bad));
+      expect(refused.ok).toBe(false);
+      if (!refused.ok) expect(refused).toMatchObject({ refusal: "invalid" });
+    }
   });
 });
 

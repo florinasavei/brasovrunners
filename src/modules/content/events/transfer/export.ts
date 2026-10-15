@@ -41,6 +41,7 @@ import {
   type TranslationConfig,
 } from "./file-format";
 import { collectMediaRefs, describeMedia, mapMediaUrls, readStoredMedium } from "./media";
+import { readVolunteersFile } from "./volunteers";
 
 /**
  * Taking an event out as a JSON file (§751).
@@ -50,9 +51,10 @@ import { collectMediaRefs, describeMedia, mapMediaUrls, readStoredMedium } from 
  * with like and a round trip (export, import as new, export) is the same configuration. What it does
  * not read is as much the point: no registration, invitation, participant, volunteer, to-do, audit row,
  * staff member or email address is reachable from here, and nothing keyed by an id that means
- * something in one database only. Nor an event's volunteer roles or its tick «Primește voluntari»
- * (§754): the roles hold no person, but they belong to one date — a copy of an event starts with none
- * and the tick off, like the to-dos — so the file leaves them where they are on both sides.
+ * something in one database only. Nor the tick «Primește voluntari» (§754): a copy of an event starts with the
+ * tick off, like the to-dos. The volunteers' **categories and roles** are the file's own key beside the event
+ * (`volunteers`, §774, `volunteers.ts`): their words and the category contact the club published, never a person,
+ * and applied only to an event made new — the diff and an import over an event leave them where they are.
  */
 
 type Actor = Pick<StaffUser, "id" | "role">;
@@ -270,6 +272,8 @@ export async function exportEvent<T extends Record<string, unknown>>(
       rule: rule ? { cadence: rule.cadence, weekdays: rule.weekdays, until: rule.until } : null,
     },
     event: read.config,
+    // The volunteers' categories and roles (§774): their words and the contact the club published, never a person.
+    volunteers: await readVolunteersFile(db, input.eventId),
     media,
   };
   const bytes = Buffer.byteLength(serializeEventFile(file));

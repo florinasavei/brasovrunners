@@ -1,6 +1,7 @@
 import { and, asc, count, eq, gt, inArray, notInArray, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
-import { eventVolunteerRoleChoices, eventVolunteerRoles, eventVolunteers, type VolunteerAgreementMethod } from "@/db/schema/event-volunteers";
+import type { z } from "zod";
+import { eventVolunteerCategories, eventVolunteerRoleChoices, eventVolunteerRoles, eventVolunteers, type VolunteerAgreementMethod } from "@/db/schema/event-volunteers";
 import { events } from "@/db/schema/events";
 import { legalDocuments } from "@/db/schema/legal-documents";
 import type { StaffUser } from "@/db/schema/staff-users";
@@ -33,7 +34,10 @@ import { readTypedDate } from "@/shared/forms/pickers/wall-values";
 import { isUuid } from "@/shared/ids";
 import {
   acceptedRoleNames,
+  type CategoryContact,
+  categoryContactOf,
   choicesWithAssigned,
+  compareCategories,
   compareRoles,
   guardianAllowsConfirm,
   isVolunteerMinor,
@@ -48,9 +52,12 @@ import {
   volunteerEventAhead,
   volunteerEventDay,
   volunteerOfferClosedFor,
+  volunteerCategoryContactSchema,
+  volunteerCategoryInputSchema,
   volunteerPublicSchemaFor,
   volunteerRoleInputSchema,
   volunteerStaffInputSchemaFor,
+  VOLUNTEER_CATEGORIES_MAX,
   VOLUNTEER_ROLES_MAX,
   VOLUNTEER_STATES,
   type VolunteerState,
@@ -112,7 +119,26 @@ export type VolunteerRole = {
   descriptionEnJson: RichTextDoc | null;
   /** The role's band on the volunteer badges (§764): a hex, or null for the club's orange. */
   colour: string | null;
+  /** The category the role sits under (§774), or null for «Alte activități». */
+  categoryId: string | null;
   position: number;
+  createdAt: Date;
+};
+
+/**
+ * A heading an event's roles are grouped under (§774), with the contact person the club set for its volunteers — the three words
+ * as the database holds them (`contact`, null while none is set, is the same as the pages and the emails read it).
+ */
+export type VolunteerCategory = {
+  id: string;
+  eventId: string;
+  nameRo: string;
+  nameEn: string;
+  sort: number;
+  contactName: string | null;
+  contactPhone: string | null;
+  contactEmail: string | null;
+  contact: CategoryContact | null;
   createdAt: Date;
 };
 
@@ -184,6 +210,27 @@ export async function listVolunteerRoles<T extends Record<string, unknown>>(db: 
   return rows.sort(compareRoles).map(roleOf);
 }
 
+/** An event's categories, in the order the club set them (§774): `sort`, then age, then the id. */
+export async function listVolunteerCategories<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<VolunteerCategory[]> {
+  const rows = await db.select().from(eventVolunteerCategories).where(eq(eventVolunteerCategories.eventId, eventId));
+  return rows.sort(compareCategories).map(categoryOf);
+}
+
+function categoryOf(row: typeof eventVolunteerCategories.$inferSelect): VolunteerCategory {
+  return {
+    id: row.id,
+    eventId: row.eventId,
+    nameRo: row.nameRo,
+    nameEn: row.nameEn,
+    sort: row.sort,
+    contactName: row.contactName,
+    contactPhone: row.contactPhone,
+    contactEmail: row.contactEmail,
+    contact: categoryContactOf(row),
+    createdAt: row.createdAt,
+  };
+}
+
 /** A stored document as the editor and the page read it: leniently, so a body nobody can parse costs a description, not the page. */
 function storedDescription(json: unknown): RichTextDoc | null {
   if (json === null || json === undefined) return null;
@@ -204,6 +251,7 @@ function roleOf(row: typeof eventVolunteerRoles.$inferSelect): VolunteerRole {
     descriptionRoJson: storedDescription(row.descriptionRoJson),
     descriptionEnJson: storedDescription(row.descriptionEnJson),
     colour: row.colour,
+    categoryId: row.categoryId,
     position: row.position,
     createdAt: row.createdAt,
   };
@@ -320,7 +368,16 @@ export type PublicVolunteerRole = {
   needed: number;
   taken: number;
   free: number;
+  /** The category the role sits under (§774); null is «Alte activități». */
+  categoryId: string | null;
 };
+
+/**
+ * One heading of the public form (§774): the category's words in both languages and the contact person the club set for its
+ * volunteers — «Întrebări? <name> · <phone> · <email>» under the heading — or null while none is set. The club's own business
+ * contact, published by its choice; never a participant's or a volunteer's.
+ */
+export type PublicVolunteerCategory = { id: string; nameRo: string; nameEn: string; contact: CategoryContact | null };
 
 /**
  * What an event's page reads to decide whether to draw «Vreau să fiu voluntar» and which roles to list
@@ -330,14 +387,15 @@ export type PublicVolunteerRole = {
 export async function readPublicVolunteerRoles<T extends Record<string, unknown>>(
   db: Database<T>,
   eventId: string,
-): Promise<{ acceptsVolunteers: boolean; shirts: boolean; showCounts: boolean; roles: PublicVolunteerRole[] }> {
+): Promise<{ acceptsVolunteers: boolean; shirts: boolean; showCounts: boolean; roles: PublicVolunteerRole[]; categories: PublicVolunteerCategory[] }> {
   const [event] = await db
     .select({ accepts: events.acceptsVolunteers, shirts: events.volunteersShirts, showCounts: events.volunteersShowCounts })
     .from(events)
     .where(eq(events.id, eventId))
     .limit(1);
-  if (!event?.accepts) return { acceptsVolunteers: false, shirts: false, showCounts: false, roles: [] };
+  if (!event?.accepts) return { acceptsVolunteers: false, shirts: false, showCounts: false, roles: [], categories: [] };
   const roles = await listVolunteerRoles(db, eventId);
+  const categories = await listVolunteerCategories(db, eventId);
   const people = await db
     .select({ roleId: eventVolunteers.roleId, state: eventVolunteers.state })
     .from(eventVolunteers)
@@ -361,8 +419,11 @@ export async function readPublicVolunteerRoles<T extends Record<string, unknown>
         needed: role.needed,
         taken: standing.taken,
         free: standing.free,
+        categoryId: role.categoryId,
       };
     }),
+    // In the club's order; the page draws only the headings that have a role still needing people.
+    categories: categories.map((category) => ({ id: category.id, nameRo: category.nameRo, nameEn: category.nameEn, contact: category.contact })),
   };
 }
 
@@ -441,6 +502,13 @@ export async function changeVolunteerRole<T extends Record<string, unknown>>(
           }
         : null
       : null;
+  // «Categoria» (§774): the id the form's choice posted, "" for «Alte activități»; absent when the form drew no such choice, which
+  // leaves the role where it is — the saves that predate the categories, and any caller without the box, never move a role.
+  const postedCategory =
+    (request.kind === "add" || request.kind === "edit") && typeof request.fields.categoryId === "string" ? request.fields.categoryId.trim() : undefined;
+  if (postedCategory !== undefined && postedCategory !== "" && !isUuid(postedCategory)) {
+    throw new DomainError("VALIDATION_ERROR", "that is not a category of this event", ["categoryId"]);
+  }
 
   const result = await db.transaction(async (tx) => {
     // The event's own row is locked first: on an event with no roles yet there is no role row to lock, and two
@@ -454,6 +522,15 @@ export async function changeVolunteerRole<T extends Record<string, unknown>>(
     const audit = (action: AuditAction, metadata: Record<string, unknown>) =>
       recordAuditEvent(tx, { actorStaffUserId: actor.id, action, entityType: "event", entityId: request.eventId, metadata, now });
 
+    // The categories next (§774), in the order of their ids: the order a category's own change locks them, after the event and
+    // before the roles — so a role put under a category and that category's delete never wait on each other in a circle.
+    const categoryIds = (
+      await tx.select({ id: eventVolunteerCategories.id }).from(eventVolunteerCategories).where(eq(eventVolunteerCategories.eventId, request.eventId)).orderBy(asc(eventVolunteerCategories.id)).for("update")
+    ).map((row) => row.id);
+    if (postedCategory && !categoryIds.includes(postedCategory)) {
+      throw new DomainError("VALIDATION_ERROR", "that is not a category of this event", ["categoryId"]);
+    }
+
     // Every verb is about this event's list: locked for the change, so two presses cannot both take a position.
     // In the order of the ids — the order a sign-up locks the roles it ticked (§761) — so the two never wait on
     // each other in a circle.
@@ -461,10 +538,22 @@ export async function changeVolunteerRole<T extends Record<string, unknown>>(
       await tx.select().from(eventVolunteerRoles).where(eq(eventVolunteerRoles.eventId, request.eventId)).orderBy(asc(eventVolunteerRoles.id)).for("update")
     ).sort(compareRoles);
 
+    /** One name once per category and language (§774): the same name may stand in two categories, never twice in one. */
+    const assertNameFree = (names: { nameRo: string; nameEn: string }, categoryId: string | null, exceptId: string | null) => {
+      const same = (a: string, b: string) => a.toLowerCase() === b.toLowerCase();
+      for (const other of roles) {
+        if (other.id === exceptId || other.categoryId !== categoryId) continue;
+        if (same(other.nameRo, names.nameRo)) throw new DomainError("VOLUNTEER_NAME_TAKEN", "a role of that name is already under this category", ["nameRo"]);
+        if (same(other.nameEn, names.nameEn)) throw new DomainError("VOLUNTEER_NAME_TAKEN", "a role of that name is already under this category", ["nameEn"]);
+      }
+    };
+
     if (request.kind === "add" && input) {
       if (roles.length >= VOLUNTEER_ROLES_MAX) {
         throw new DomainError("VALIDATION_ERROR", `an event takes at most ${VOLUNTEER_ROLES_MAX} roles`, ["nameRo"]);
       }
+      const categoryId = postedCategory ? postedCategory : null;
+      assertNameFree(input, categoryId, null);
       const colour = postedColour ? checkedRoleColour(postedColour, null, ROLE_FORM_COLOUR_BOXES) : null;
       const [row] = await tx
         .insert(eventVolunteerRoles)
@@ -478,11 +567,12 @@ export async function changeVolunteerRole<T extends Record<string, unknown>>(
           descriptionWordsRo: input.descriptionWordsRo,
           descriptionWordsEn: input.descriptionWordsEn,
           colour,
+          categoryId,
           position: roles.length === 0 ? 0 : Math.max(...roles.map((role) => role.position)) + 1,
           createdAt: now,
         })
         .returning({ id: eventVolunteerRoles.id });
-      await audit("volunteer_role.added", { roleId: row.id, nameRo: input.nameRo, nameEn: input.nameEn, needed: input.needed, colour });
+      await audit("volunteer_role.added", { roleId: row.id, nameRo: input.nameRo, nameEn: input.nameEn, needed: input.needed, colour, categoryId });
       return { changed: true, role: { id: row.id, nameRo: input.nameRo } };
     }
 
@@ -502,11 +592,18 @@ export async function changeVolunteerRole<T extends Record<string, unknown>>(
     }
 
     if (request.kind === "move") {
-      const index = roles.findIndex((role) => role.id === current.id);
+      // One step inside the role's own category (§774): the card lists the roles under their headings, so «up» is above the
+      // neighbour under the same heading. The group's members keep the slots they hold in the event's order, swapped.
+      const group = roles.filter((role) => role.categoryId === current.categoryId);
+      const index = group.findIndex((role) => role.id === current.id);
       const target = request.direction === "up" ? index - 1 : index + 1;
-      if (target < 0 || target >= roles.length) return { changed: false, role: summary };
+      if (target < 0 || target >= group.length) return { changed: false, role: summary };
+      const swapped = group.map((role) => role.id);
+      [swapped[index], swapped[target]] = [swapped[target], swapped[index]];
+      const inGroup = new Set(group.map((role) => role.id));
       const order = roles.map((role) => role.id);
-      [order[index], order[target]] = [order[target], order[index]];
+      let slot = 0;
+      for (const [at, id] of order.entries()) if (inGroup.has(id)) order[at] = swapped[slot++] ?? id;
       // Positions 0..n-1 in the new order: a total order, whatever the gaps a delete left.
       for (const [position, id] of order.entries()) {
         await tx.update(eventVolunteerRoles).set({ position }).where(eq(eventVolunteerRoles.id, id));
@@ -518,8 +615,11 @@ export async function changeVolunteerRole<T extends Record<string, unknown>>(
     // «Salvează» on a role: both names, how many it needs, and its description.
     if (!input) throw new DomainError("VALIDATION_ERROR", "nothing to save");
     const colour = postedColour ? checkedRoleColour(postedColour, current.colour, ROLE_FORM_COLOUR_BOXES) : current.colour;
-    const before = { nameRo: current.nameRo, nameEn: current.nameEn, needed: current.needed, colour: current.colour };
-    const after = { nameRo: input.nameRo, nameEn: input.nameEn, needed: input.needed, colour };
+    // «Categoria» (§774): a role moved to another category goes to its end — the club's order inside the new heading.
+    const categoryId = postedCategory === undefined ? current.categoryId : postedCategory === "" ? null : postedCategory;
+    assertNameFree(input, categoryId, current.id);
+    const before = { nameRo: current.nameRo, nameEn: current.nameEn, needed: current.needed, colour: current.colour, categoryId: current.categoryId };
+    const after = { nameRo: input.nameRo, nameEn: input.nameEn, needed: input.needed, colour, categoryId };
     const changedFields: string[] = (Object.keys(before) as (keyof typeof before)[]).filter((key) => before[key] !== after[key]);
     // The description is a document per language (§765): the names of the fields in the trail, never its words.
     if (!sameDescription(current.descriptionRoJson, input.descriptionRoJson)) changedFields.push("descriptionRo");
@@ -536,6 +636,8 @@ export async function changeVolunteerRole<T extends Record<string, unknown>>(
         descriptionWordsRo: input.descriptionWordsRo,
         descriptionWordsEn: input.descriptionWordsEn,
         colour,
+        categoryId,
+        ...(categoryId !== current.categoryId ? { position: Math.max(...roles.map((role) => role.position)) + 1 } : {}),
       })
       .where(eq(eventVolunteerRoles.id, current.id));
     await audit("volunteer_role.edited", {
@@ -543,11 +645,147 @@ export async function changeVolunteerRole<T extends Record<string, unknown>>(
       fields: changedFields,
       nameRo: input.nameRo,
       needed: input.needed,
+      ...(changedFields.includes("categoryId") ? { categoryFrom: current.categoryId, categoryTo: categoryId } : {}),
       ...(changedFields.includes("colour") ? { colourFrom: current.colour, colourTo: colour } : {}),
     });
     return { changed: true, role: { id: current.id, nameRo: input.nameRo } };
   });
   // The public page lists the roles and what each still needs: it is told once the write has committed.
+  if (result.changed) revalidatePublicContent("places");
+  return result;
+}
+
+export type VolunteerCategoryRequest =
+  | { kind: "add"; eventId: string; fields: Record<string, unknown> }
+  | { kind: "edit"; eventId: string; id: string; fields: Record<string, unknown> }
+  /** «Persoana de contact»: the three boxes of one category, saved by the category's own form. */
+  | { kind: "contact"; eventId: string; id: string; fields: Record<string, unknown> }
+  | { kind: "move"; eventId: string; id: string; direction: "up" | "down" }
+  | { kind: "delete"; eventId: string; id: string };
+
+export type VolunteerCategoryResult = { changed: boolean; category: { id: string; nameRo: string } };
+
+const CATEGORY_FIELDS = ["nameRo", "nameEn"] as const;
+const CONTACT_FIELDS = ["contactName", "contactPhone", "contactEmail"] as const;
+
+/**
+ * One change to one event's volunteer categories (§774; the owner, 2026-10-14: «categorii cu sub-categorii … Toate astea
+ * configurabile», and «the contact person for each category will be established later»), by one staff member: add a category,
+ * rename it, move it one step in the club's order, set its contact person, delete it. Refuses a person who may not (FORBIDDEN, as
+ * the roles' own), a name typed wrong (VALIDATION_ERROR naming `nameRo` / `nameEn`: both, never one), a contact address that is
+ * no address (naming `contactEmail`), a name already on the event (VOLUNTEER_NAME_TAKEN), an event or a category that is not there
+ * — or one of another event — (NOT_FOUND), and a delete while any role sits under it (VOLUNTEER_CATEGORY_HAS_ROLES: move or delete
+ * the roles first). A press that changes nothing writes and records nothing; the trail names the boxes that changed and never a
+ * contact's words.
+ */
+export async function changeVolunteerCategory<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Actor,
+  request: VolunteerCategoryRequest,
+  now: Date,
+): Promise<VolunteerCategoryResult> {
+  assertMayManage(actor);
+  assertIds(request.eventId, ...(request.kind === "add" ? [] : [request.id]));
+  const refuse = (error: z.ZodError) =>
+    new DomainError("VALIDATION_ERROR", error.issues.map((issue) => `${issue.path.join(".")}: ${issue.message}`).join("; "), refusedFields(error));
+  let named: { nameRo: string; nameEn: string } | null = null;
+  if (request.kind === "add" || request.kind === "edit") {
+    const parsed = volunteerCategoryInputSchema.safeParse(postedStrings(request.fields, CATEGORY_FIELDS));
+    if (!parsed.success) throw refuse(parsed.error);
+    named = parsed.data;
+  }
+  let contact: { contactName: string | null; contactPhone: string | null; contactEmail: string | null } | null = null;
+  if (request.kind === "contact") {
+    const parsed = volunteerCategoryContactSchema.safeParse(postedStrings(request.fields, CONTACT_FIELDS));
+    if (!parsed.success) throw refuse(parsed.error);
+    contact = parsed.data;
+  }
+
+  const result = await db.transaction(async (tx): Promise<VolunteerCategoryResult> => {
+    // The event's row first, as the roles' change does (NO KEY UPDATE: a sign-up's foreign key is not made to wait), then the
+    // categories in the order of their ids: the order a role's change locks them (§774), so the two never wait in a circle.
+    const [event] = await tx.select({ id: events.id }).from(events).where(eq(events.id, request.eventId)).for("no key update").limit(1);
+    if (!event) throw new DomainError("NOT_FOUND", "the event is not there");
+    const audit = (action: AuditAction, metadata: Record<string, unknown>) =>
+      recordAuditEvent(tx, { actorStaffUserId: actor.id, action, entityType: "event", entityId: request.eventId, metadata, now });
+    const categories = (
+      await tx.select().from(eventVolunteerCategories).where(eq(eventVolunteerCategories.eventId, request.eventId)).orderBy(asc(eventVolunteerCategories.id)).for("update")
+    ).sort(compareCategories);
+    const assertNameFree = (names: { nameRo: string; nameEn: string }, exceptId: string | null) => {
+      const same = (a: string, b: string) => a.toLowerCase() === b.toLowerCase();
+      for (const other of categories) {
+        if (other.id === exceptId) continue;
+        if (same(other.nameRo, names.nameRo)) throw new DomainError("VOLUNTEER_NAME_TAKEN", "a category of that name is already on this event", ["nameRo"]);
+        if (same(other.nameEn, names.nameEn)) throw new DomainError("VOLUNTEER_NAME_TAKEN", "a category of that name is already on this event", ["nameEn"]);
+      }
+    };
+
+    if (request.kind === "add" && named) {
+      if (categories.length >= VOLUNTEER_CATEGORIES_MAX) {
+        throw new DomainError("VALIDATION_ERROR", `an event takes at most ${VOLUNTEER_CATEGORIES_MAX} categories`, ["nameRo"]);
+      }
+      assertNameFree(named, null);
+      const [row] = await tx
+        .insert(eventVolunteerCategories)
+        .values({
+          eventId: request.eventId,
+          nameRo: named.nameRo,
+          nameEn: named.nameEn,
+          sort: categories.length === 0 ? 0 : Math.max(...categories.map((category) => category.sort)) + 1,
+          createdAt: now,
+          updatedAt: now,
+        })
+        .returning({ id: eventVolunteerCategories.id });
+      await audit("volunteer_category.added", { categoryId: row.id, nameRo: named.nameRo, nameEn: named.nameEn });
+      return { changed: true, category: { id: row.id, nameRo: named.nameRo } };
+    }
+
+    const current = categories.find((category) => category.id === (request.kind === "add" ? "" : request.id));
+    if (!current) throw new DomainError("NOT_FOUND", "the category is not there");
+    const summary = { id: current.id, nameRo: current.nameRo };
+
+    if (request.kind === "delete") {
+      const [roles] = await tx.select({ n: count() }).from(eventVolunteerRoles).where(eq(eventVolunteerRoles.categoryId, current.id));
+      if ((roles?.n ?? 0) > 0) throw new DomainError("VOLUNTEER_CATEGORY_HAS_ROLES", "move or delete the roles under it first", ["categoryId"]);
+      await tx.delete(eventVolunteerCategories).where(eq(eventVolunteerCategories.id, current.id));
+      await audit("volunteer_category.deleted", { categoryId: current.id, nameRo: current.nameRo, nameEn: current.nameEn });
+      return { changed: true, category: summary };
+    }
+
+    if (request.kind === "move") {
+      const index = categories.findIndex((category) => category.id === current.id);
+      const target = request.direction === "up" ? index - 1 : index + 1;
+      if (target < 0 || target >= categories.length) return { changed: false, category: summary };
+      const order = categories.map((category) => category.id);
+      [order[index], order[target]] = [order[target], order[index]];
+      // Positions 0..n-1 in the new order: a total order, whatever the gaps a delete left.
+      for (const [sort, id] of order.entries()) {
+        await tx.update(eventVolunteerCategories).set({ sort }).where(eq(eventVolunteerCategories.id, id));
+      }
+      await audit("volunteer_category.moved", { categoryId: current.id, nameRo: current.nameRo, direction: request.direction });
+      return { changed: true, category: summary };
+    }
+
+    if (request.kind === "contact") {
+      if (!contact) throw new DomainError("VALIDATION_ERROR", "nothing to save");
+      const changedFields = CONTACT_FIELDS.filter((box) => current[box] !== contact[box]);
+      if (changedFields.length === 0) return { changed: false, category: summary };
+      await tx.update(eventVolunteerCategories).set({ ...contact, updatedAt: now }).where(eq(eventVolunteerCategories.id, current.id));
+      // The boxes that changed, never their words: a contact person is a third person's name and number.
+      await audit("volunteer_category.contact_edited", { categoryId: current.id, nameRo: current.nameRo, fields: changedFields });
+      return { changed: true, category: summary };
+    }
+
+    // «Salvează» on a category: both names.
+    if (!named) throw new DomainError("VALIDATION_ERROR", "nothing to save");
+    assertNameFree(named, current.id);
+    const changedFields = CATEGORY_FIELDS.filter((box) => current[box] !== named[box]);
+    if (changedFields.length === 0) return { changed: false, category: summary };
+    await tx.update(eventVolunteerCategories).set({ nameRo: named.nameRo, nameEn: named.nameEn, updatedAt: now }).where(eq(eventVolunteerCategories.id, current.id));
+    await audit("volunteer_category.edited", { categoryId: current.id, fields: changedFields, nameRo: named.nameRo, nameEn: named.nameEn });
+    return { changed: true, category: { id: current.id, nameRo: named.nameRo } };
+  });
+  // The public page draws the headings and their contact: it is told once the write has committed.
   if (result.changed) revalidatePublicContent("places");
   return result;
 }
@@ -1173,12 +1411,14 @@ export async function exportVolunteers<T extends Record<string, unknown>>(
   actor: Actor,
   eventId: string,
   now: Date,
-): Promise<{ roles: VolunteerRole[]; volunteers: VolunteerItem[]; shirts: boolean }> {
+): Promise<{ roles: VolunteerRole[]; categories: VolunteerCategory[]; volunteers: VolunteerItem[]; shirts: boolean }> {
   assertMayManage(actor);
   assertIds(eventId);
   const [event] = await db.select({ id: events.id, shirts: events.volunteersShirts }).from(events).where(eq(events.id, eventId)).limit(1);
   if (!event) throw new DomainError("NOT_FOUND", "the event is not there");
   const roles = await listVolunteerRoles(db, eventId);
+  // The categories name a role in the file («Direcționare (Traseu)»); their contact person never goes into it.
+  const categories = await listVolunteerCategories(db, eventId);
   const volunteers = await listVolunteers(db, eventId);
   await recordAuditEvent(db, {
     actorStaffUserId: actor.id,
@@ -1188,7 +1428,7 @@ export async function exportVolunteers<T extends Record<string, unknown>>(
     metadata: { rows: volunteers.length },
     now,
   });
-  return { roles, volunteers, shirts: event.shirts };
+  return { roles, categories, volunteers, shirts: event.shirts };
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -1326,7 +1566,15 @@ export async function submitVolunteer<T extends Record<string, unknown>>(
     if (kept.length === 0) return { outcome: "full", dropped: true };
     const dropped = kept.length < input.roleIds.length;
     // The roles as the agreement names them (§765): the plain words of «Descrierea rolului», never the old one-line column.
-    const chosen = ticked.filter((role) => kept.includes(role.id)).map(roleOf).sort(compareRoles);
+    // …each with the words of the category it sits under (§774), so the sentence says «Direcționare (Traseu)».
+    const categoryWords = new Map(
+      (await tx.select({ id: eventVolunteerCategories.id, nameRo: eventVolunteerCategories.nameRo, nameEn: eventVolunteerCategories.nameEn }).from(eventVolunteerCategories).where(eq(eventVolunteerCategories.eventId, eventId))).map((category) => [category.id, category]),
+    );
+    const chosen = ticked
+      .filter((role) => kept.includes(role.id))
+      .map(roleOf)
+      .sort(compareRoles)
+      .map((role) => ({ ...role, categoryRo: categoryWords.get(role.categoryId ?? "")?.nameRo ?? null, categoryEn: categoryWords.get(role.categoryId ?? "")?.nameEn ?? null }));
 
     // A repeat of the same person: the same answer a new one gets, nothing changed, nothing sent — whatever the row's state is.
     const [existing] = await tx

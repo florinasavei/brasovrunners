@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { contrastRatio, MIN_TEXT_CONTRAST } from "@/modules/appearance/domain/tint-contrast";
 import { BIB_BAND_FALLBACK, bibEmergencyPhone, storedCrop, storedPicture } from "@/modules/registrations/bib-design";
+import { formatPhone } from "@/modules/registrations/phone";
 import { bibFooterText } from "@/modules/registrations/bib-footer";
 import { fnv1a } from "@/shared/hash";
 import { COLOR } from "@/theme/brand";
@@ -184,6 +185,8 @@ export type BadgeWords = {
   name: string;
   /** «Coordonator: 07xx xxx xxx», or null while the tick is off or no valid number was typed. */
   phone: string | null;
+  /** The telephone's label in the badge's language — the club's, else the platform's — kept so a role's own number can take it (`badgePhoneLine`). */
+  phoneLabel?: string;
 };
 
 /**
@@ -197,7 +200,23 @@ export function badgeWords(design: BadgeDesign, locale: BadgeLocale, eventTitle:
   const label = pick(design.labelRo, design.labelEn) || defaults.label;
   const phoneLabel = pick(design.phoneLabelRo, design.phoneLabelEn) || defaults.phoneLabel;
   const phone = design.showPhone && design.phone ? (phoneLabel ? `${phoneLabel}: ${design.phone}` : design.phone) : null;
-  return { title, label, name: defaults.name, phone };
+  return { title, label, name: defaults.name, phone, phoneLabel };
+}
+
+/**
+ * The coordinator's line of one role's badge (§774; the owner, 2026-10-14: «trebuie să fie o persoană de contact pentru voluntari»):
+ * the design's own number when the club typed one — the same for every role —, else, while «Telefonul coordonatorului» is ticked and
+ * the design leaves the number empty, the telephone of the contact person of the role's category, with the same label; none when the
+ * role sits under no category or its category has no valid number. Never anything while the tick is off.
+ */
+export function badgePhoneLine(design: Pick<BadgeDesign, "showPhone" | "phone">, words: Pick<BadgeWords, "phone" | "phoneLabel">, categoryPhone: string | null | undefined): string | null {
+  // The design's own number, already worded with its label (`badgeWords`, null while the tick is off); else the category's.
+  if (words.phone !== null) return words.phone;
+  if (!design.showPhone) return null;
+  // Read as a person reads it («+40 712 345 678»), as the public page does; the design's own number is printed as the club typed it.
+  const number = categoryPhone ? formatPhone(bibEmergencyPhone(categoryPhone)) : "";
+  if (number === "") return null;
+  return words.phoneLabel ? `${words.phoneLabel}: ${number}` : number;
 }
 
 /** A role's name as the band prints it: one line the font can draw, in capitals in the badge's language (ș stays ș). */

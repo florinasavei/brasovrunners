@@ -38,6 +38,8 @@ export type PreviewOutcome =
         baseline: string;
         media: number;
         seriesNotApplied: boolean;
+        /** The file's volunteers: an import as a new event writes them, one over an existing event does not (§774). */
+        volunteers: boolean;
         /** What reading the file left out of its checkpoints (§770), for the summary to say before anything is imported. */
         fileNotes: FileNote[];
       };
@@ -62,6 +64,7 @@ export type DiffOutcome =
       };
       refusal: string | null;
       seriesNotApplied: boolean;
+      volunteersNotApplied: boolean;
       slugsKept: boolean;
       /** What reading the file left out of its checkpoints (§770): the diff shows the file as it will be written. */
       fileNotes: FileNote[];

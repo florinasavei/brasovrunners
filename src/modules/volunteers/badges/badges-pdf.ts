@@ -11,6 +11,7 @@ import {
   type BadgeWords,
   badgeBandColour,
   badgeLabelText,
+  badgePhoneLine,
   badgeRoleColour,
   badgeRoleText,
   badgeTextOn,
@@ -36,8 +37,11 @@ import { BADGE_LAYOUT, BADGE_PAGE_MARGIN, type BadgeLayout, badgeLayout, badgePa
 
 /** One pile of the sheet: a role's badges, or (`role: null`) the badges «fără rol». */
 export type BadgeSheetEntry = {
-  /** The role's name in the badge's language and its band's colour; null prints «VOLUNTAR» alone. */
-  role: { name: string; colour: string | null } | null;
+  /**
+   * The role's name in the badge's language and its band's colour; null prints «VOLUNTAR» alone. `phone` is the telephone of its category's
+   * contact person (§774): the coordinator's number of this role's badges while the design leaves its own empty (`badgePhoneLine`).
+   */
+  role: { name: string; colour: string | null; phone?: string | null } | null;
   /** How many badges of it, spares included. */
   count: number;
 };
@@ -104,12 +108,13 @@ export async function renderBadgeSheet(input: BadgeSheetInput): Promise<Buffer> 
   // Laid out once per role: every badge of a pile is the same badge.
   const layouts = new Map<string, BadgeLayout>();
   const layoutFor = (role: BadgeSheetEntry["role"]) => {
-    const key = role ? `r:${role.name}` : "none";
+    const phone = role ? badgePhoneLine(design, words, role.phone) : badgePhoneLine(design, words, null);
+    const key = role ? `r:${role.name}:${phone ?? ""}` : "none";
     let layout = layouts.get(key);
     if (!layout) {
       layout = badgeLayout(
         { ...design, headerPicture: header !== null },
-        { title: words.title, label, role: role ? badgeRoleText(role.name, locale) : null, name: words.name, phone: words.phone },
+        { title: words.title, label, role: role ? badgeRoleText(role.name, locale) : null, name: words.name, phone },
         measure,
       );
       layouts.set(key, layout);

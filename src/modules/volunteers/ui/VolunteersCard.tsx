@@ -6,13 +6,18 @@ import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import {
   addVolunteerAction,
+  addVolunteerCategoryAction,
   addVolunteerRoleAction,
   assignVolunteerAction,
   deleteVolunteerAction,
+  deleteVolunteerCategoryAction,
   deleteVolunteerRoleAction,
   editVolunteerAction,
+  editVolunteerCategoryAction,
   editVolunteerRoleAction,
+  moveVolunteerCategoryAction,
   moveVolunteerRoleAction,
+  saveVolunteerCategoryContactAction,
   recordPaperVolunteerAgreementAction,
   recordPaperVolunteerGuardianAction,
   requestVolunteerAgreementAction,
@@ -46,10 +51,14 @@ import CheckboxField from "@/shared/ui/CheckboxField";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import Panel from "@/shared/ui/Panel";
+import QuietHelp from "@/shared/ui/QuietHelp";
 import StatusChip from "@/shared/ui/StatusChip";
 import type { StatusGlyphName } from "@/shared/ui/status-glyphs";
 import {
+  VOLUNTEER_CATEGORIES_MAX,
   VOLUNTEER_CITY_MAX,
+  VOLUNTEER_CONTACT_EMAIL_MAX,
+  VOLUNTEER_CONTACT_PHONE_MAX,
   VOLUNTEER_GUARDIAN_NAME_MAX,
   VOLUNTEER_MINIMUM_AGE,
   VOLUNTEER_NAME_MAX,
@@ -60,18 +69,23 @@ import {
   agreementRolesStamp,
   agreementStandingOf,
   agreementStillNamesRole,
+  contactParts,
   descriptionHead,
   earliestVolunteerBirthDate,
   guardianSharesAddress,
+  groupRolesByCategory,
+  groupsNeedHeadings,
   guardianStandingOf,
   isVolunteerMinor,
   latestVolunteerBirthDate,
   type RoleStanding,
+  roleLabel,
+  rolesWithCategoryWords,
   type VolunteerAgreementStanding,
   type VolunteerOfferClosed,
   type VolunteerState,
 } from "../domain/volunteer";
-import { ROLE_FORM_COLOUR_BOXES, type VolunteerItem, type VolunteerRole } from "../volunteers";
+import { ROLE_FORM_COLOUR_BOXES, type VolunteerCategory, type VolunteerItem, type VolunteerRole } from "../volunteers";
 import VolunteerBirthDateField from "./VolunteerBirthDateField";
 import { INLINE_TAP_TARGET } from "@/shared/ui/tap-target";
 import { DISCLOSURE_OPEN_ARROW, DISCLOSURE_SUMMARY_SX, FOLD_GLYPH_INLINE_SX } from "@/shared/ui/disclosure";
@@ -143,6 +157,8 @@ type Props = {
   /** Why the public form is not on the event's page now, or null when it is (`volunteerOfferClosedFor`). */
   offerClosed: VolunteerOfferClosed | null;
   roles: readonly VolunteerRole[];
+  /** The headings the roles are grouped under, in the club's order, each with its contact person (§774). */
+  categories: readonly VolunteerCategory[];
   standings: readonly RoleStanding[];
   volunteers: readonly VolunteerItem[];
   /** Whether a volunteer agreement is in force in every language (§758): the link and the paper need one. */
@@ -189,6 +205,7 @@ export default async function VolunteersCard({
   minorsOpen,
   offerClosed,
   roles,
+  categories,
   standings,
   volunteers,
   agreementInForce,
@@ -210,7 +227,15 @@ export default async function VolunteersCard({
   const totalNeeded = roles.reduce((sum, role) => sum + role.needed, 0);
   const totalTaken = standings.reduce((sum, standing) => sum + standing.taken, 0);
   const roleName = (role: Pick<VolunteerRole, "nameRo" | "nameEn">) => (locale === "en" ? role.nameEn : role.nameRo);
-  const roleById = new Map(roles.map((role) => [role.id, role]));
+  // The roles in the order the card lists them — under their categories (§774) — each with its category's words, so a role named alone
+  // says «Direcționare (Traseu)»: the assignment chips, the select, the ticks, the chips, the agreement's roles. The role's own header,
+  // already under its heading, and the badge's band keep the name only.
+  const labelled = rolesWithCategoryWords(categories, roles);
+  const roleById = new Map(labelled.map((role) => [role.id, role]));
+  const labelOf = (role: VolunteerRole) => roleLabel(roleById.get(role.id) ?? role, locale);
+  const roleGroups = groupRolesByCategory(categories, roles, { withRoles: true });
+  const roleHeaded = groupsNeedHeadings(roleGroups);
+  const categoryName = (category: Pick<VolunteerCategory, "nameRo" | "nameEn">) => (locale === "en" ? category.nameEn : category.nameRo);
   /** A person's roles as the agreement names them (§761): the one given and the ones chosen, in the club's order. */
   const rolesOf = (person: VolunteerItem) => ({
     assigned: (person.roleId ? roleById.get(person.roleId) : undefined) ?? null,
@@ -221,7 +246,15 @@ export default async function VolunteersCard({
   const waitingForRole = unassigned.filter((volunteer) => volunteer.state !== "CANCELLED").length;
   const day = (at: Date) => formatDay(at, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true, position: "inline" });
 
+  const categoryBoxes = await refusalMessages({
+    nameRo: t("volunteers.category.nameRo"),
+    nameEn: t("volunteers.category.nameEn"),
+    contactName: t("volunteers.category.contactName"),
+    contactPhone: t("volunteers.category.contactPhone"),
+    contactEmail: t("volunteers.category.contactEmail"),
+  });
   const roleBoxes = await refusalMessages({
+    categoryId: t("volunteers.role.category"),
     nameRo: t("volunteers.role.nameRo"),
     nameEn: t("volunteers.role.nameEn"),
     needed: t("volunteers.role.needed"),
@@ -259,6 +292,27 @@ export default async function VolunteersCard({
     <Stack spacing={1.5} sx={{ maxWidth: 640 }}>
       {/* «Copiază și tradu tot: RO → EN» (§464, §482), scoped to this form: the English name from the Romanian one, the English description from the Romanian — layout kept. */}
       <TranslateAllButton />
+      {/* «Categoria» (§774): the heading the role sits under — the house's native select, as «Rolul dat» below; «Alte activități» is none. Drawn only
+          once the event has a category: a form without the box leaves the role where it is. */}
+      {categories.length > 0 && (
+        <RecallField
+          name="categoryId"
+          select
+          label={t("volunteers.role.category")}
+          helperText={t("volunteers.role.categoryHelp")}
+          defaultValue={role?.categoryId ?? ""}
+          size="small"
+          slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}
+          data-testid="volunteer-role-category"
+        >
+          <option value="">{t("volunteers.otherCategory")}</option>
+          {categories.map((category) => (
+            <option key={category.id} value={category.id}>
+              {categoryName(category)}
+            </option>
+          ))}
+        </RecallField>
+      )}
       <RecallField
         name="nameRo"
         label={t("volunteers.role.nameRo")}
@@ -330,9 +384,9 @@ export default async function VolunteersCard({
         <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
           {t("volunteers.person.choicesHelp")}
         </Typography>
-        {roles.map((role) => (
+        {labelled.map((role) => (
           <CheckboxField key={role.id} name="roleIds" value={role.id} defaultChecked={person?.choiceIds.includes(role.id) ?? false}>
-            {roleName(role)}
+            {labelOf(role)}
           </CheckboxField>
         ))}
       </Box>
@@ -346,9 +400,9 @@ export default async function VolunteersCard({
         slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}
       >
         <option value="">{t("volunteers.person.assignedNone")}</option>
-        {roles.map((role) => (
+        {labelled.map((role) => (
           <option key={role.id} value={role.id}>
-            {roleName(role)}
+            {labelOf(role)}
           </option>
         ))}
       </RecallField>
@@ -714,7 +768,7 @@ export default async function VolunteersCard({
 
   /** A role's name with how it stands, «Sosire · 1 din 1»: what the organizer sees before one press fills it. */
   const roleStanding = (role: VolunteerRole) =>
-    t("volunteers.assign.standing", { role: roleName(role), taken: String(standingOf.get(role.id)?.taken ?? 0), needed: String(role.needed) });
+    t("volunteers.assign.standing", { role: labelOf(role), taken: String(standingOf.get(role.id)?.taken ?? 0), needed: String(role.needed) });
 
   /**
    * «Dă-i rolul …» (§761), on the offers «De repartizat» only — a person given a role changes it in «Modifică» →
@@ -725,7 +779,7 @@ export default async function VolunteersCard({
   const assignBlock = (person: VolunteerItem) => {
     if (person.state === "CANCELLED" || person.roleId !== null) return null;
     const quick = rolesOf(person).chosen;
-    const others = roles.filter((role) => !quick.some((chosen) => chosen.id === role.id));
+    const others = labelled.filter((role) => !quick.some((chosen) => chosen.id === role.id));
     if (quick.length === 0 && others.length === 0) return null;
     return (
       <Stack direction="row" sx={{ flexWrap: "wrap", alignItems: "center", gap: 1, mt: 1 }} data-testid="volunteer-assign">
@@ -901,7 +955,7 @@ export default async function VolunteersCard({
             {t("volunteers.person.offeredFor")}:
           </Typography>
           {rolesOf(person).chosen.map((role) => (
-            <StatusChip key={role.id} glyph="offered" variant="outlined" label={roleName(role)} testId="volunteer-choice" />
+            <StatusChip key={role.id} glyph="offered" variant="outlined" label={labelOf(role)} testId="volunteer-choice" />
           ))}
         </Stack>
       )}
@@ -949,7 +1003,8 @@ export default async function VolunteersCard({
     </Box>
   );
 
-  const roleRow = (role: VolunteerRole, index: number) => (
+  /** One role under its heading: `index` and `count` are its place among the roles of its own category — the arrows move it inside it (§774). */
+  const roleRow = (role: VolunteerRole, index: number, count: number) => (
     <Box component="li" key={role.id} data-testid="volunteer-role" data-role-id={role.id} sx={{ border: 1, borderColor: "divider", borderRadius: 1, p: 1.5 }}>
       <Stack direction="row" sx={{ flexWrap: "wrap", alignItems: "center", gap: 0.75 }}>
         <Typography component="span" sx={{ fontWeight: 600, wordBreak: "break-word" }} data-testid="volunteer-role-name">
@@ -991,7 +1046,7 @@ export default async function VolunteersCard({
         <Stack direction="row" sx={{ flexWrap: "wrap", gap: 1 }}>
           {([
             ["up", "moveUp", index > 0],
-            ["down", "moveDown", index < roles.length - 1],
+            ["down", "moveDown", index < count - 1],
           ] as const).map(([direction, icon, possible]) =>
             possible ? (
               <Box component="form" action={moveVolunteerRoleAction} key={direction}>
@@ -1002,7 +1057,7 @@ export default async function VolunteersCard({
                   icon={icon}
                   label={t(`volunteers.move.${direction}`)}
                   pendingLabel={t(`volunteers.move.${direction}`)}
-                  ariaLabel={`${t(`volunteers.move.${direction}`)}: ${roleName(role)}`}
+                  ariaLabel={`${t(`volunteers.move.${direction}`)}: ${labelOf(role)}`}
                   variant="outlined"
                 />
               </Box>
@@ -1023,7 +1078,7 @@ export default async function VolunteersCard({
               action={deleteVolunteerRoleAction}
               confirm={{
                 title: t("volunteers.role.deleteTitle"),
-                body: t("volunteers.role.deleteBody", { name: roleName(role) }),
+                body: t("volunteers.role.deleteBody", { name: labelOf(role) }),
                 confirmLabel: t("volunteers.role.delete"),
                 cancelLabel: words.cancel,
                 destructive: true,
@@ -1038,6 +1093,145 @@ export default async function VolunteersCard({
       </Stack>
     </Box>
   );
+
+  /** The two names of a category, with «Copiază și tradu» (§482) in front: the English name from the Romanian one. */
+  const categoryNameFields = (category: VolunteerCategory | null) => (
+    <Stack spacing={1.5} sx={{ maxWidth: 640 }}>
+      <TranslateAllButton />
+      <RecallField
+        name="nameRo"
+        label={t("volunteers.category.nameRo")}
+        defaultValue={category?.nameRo ?? ""}
+        required
+        size="small"
+        slotProps={{ htmlInput: { maxLength: VOLUNTEER_ROLE_NAME_MAX } }}
+      />
+      <RecallField
+        name="nameEn"
+        label={t("volunteers.category.nameEn")}
+        defaultValue={category?.nameEn ?? ""}
+        required
+        size="small"
+        slotProps={{ htmlInput: { maxLength: VOLUNTEER_ROLE_NAME_MAX } }}
+      />
+    </Stack>
+  );
+
+  /**
+   * One category of the «Categorii» fold (§774): its two names, how many roles sit under it, the arrows, «Modifică» (the names, the delete —
+   * refused with a sentence while a role is under it) and «Persoana de contact» — three optional boxes with a «Salvează» of their own,
+   * audited by the boxes that changed, never by their words. `index` and `count` are its place among the categories.
+   */
+  const categoryRow = (category: VolunteerCategory, index: number, count: number) => {
+    const under = roles.filter((role) => role.categoryId === category.id).length;
+    return (
+      <Box component="li" key={category.id} data-testid="volunteer-category" data-category-id={category.id} sx={{ border: 1, borderColor: "divider", borderRadius: 1, p: 1.5 }}>
+        <Stack direction="row" sx={{ flexWrap: "wrap", alignItems: "center", gap: 0.75 }}>
+          <Typography component="span" sx={{ fontWeight: 600, wordBreak: "break-word" }} data-testid="volunteer-category-name">
+            {category.nameRo}
+          </Typography>
+          <Typography component="span" color="text.secondary" sx={{ wordBreak: "break-word" }}>
+            / {category.nameEn}
+          </Typography>
+          <StatusChip glyph={under > 0 ? "done" : "open"} color={under > 0 ? "success" : "warning"} variant="outlined" label={t("volunteers.categories.rolesUnder", { count: String(under) })} testId="volunteer-category-roles" />
+        </Stack>
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, wordBreak: "break-word" }} data-testid="volunteer-category-contact-line">
+          {category.contact
+            ? t("volunteers.categories.contactIs", { contact: contactParts(category.contact).join(" · ") })
+            : t("volunteers.categories.contactNone")}
+        </Typography>
+        <Stack spacing={1} sx={{ mt: 1 }}>
+          <Stack direction="row" sx={{ flexWrap: "wrap", gap: 1 }}>
+            {([
+              ["up", "moveUp", index > 0],
+              ["down", "moveDown", index < count - 1],
+            ] as const).map(([direction, icon, possible]) =>
+              possible ? (
+                <Box component="form" action={moveVolunteerCategoryAction} key={direction}>
+                  {hidden}
+                  <input type="hidden" name="categoryId" value={category.id} />
+                  <input type="hidden" name="direction" value={direction} />
+                  <GlyphSubmitButton
+                    icon={icon}
+                    label={t(`volunteers.move.${direction}`)}
+                    pendingLabel={t(`volunteers.move.${direction}`)}
+                    ariaLabel={`${t(`volunteers.move.${direction}`)}: ${categoryName(category)}`}
+                    variant="outlined"
+                  />
+                </Box>
+              ) : null,
+            )}
+          </Stack>
+          {/* «Persoana de contact»: empty at creation, filled in later by the club; its own form and its own «Salvează». */}
+          <Panel glyph="contacts" collapsible level={3} title={t("volunteers.category.contactTitle")} data-testid="volunteer-category-contact">
+            <ActionForm action={saveVolunteerCategoryContactAction} scope={`category-contact-${category.id}`} messages={categoryBoxes}>
+              {hidden}
+              <input type="hidden" name="categoryId" value={category.id} />
+              <Stack spacing={1.5} sx={{ maxWidth: 640 }}>
+                <Typography variant="body2" color="text.secondary">
+                  {t("volunteers.category.contactHelp")}
+                  <QuietHelp text={t("volunteers.category.contactHelpMore")} />
+                </Typography>
+                <RecallField
+                  name="contactName"
+                  label={t("volunteers.category.contactName")}
+                  defaultValue={category.contactName ?? ""}
+                  size="small"
+                  slotProps={{ htmlInput: { maxLength: VOLUNTEER_NAME_MAX, autoComplete: "off" } }}
+                />
+                <RecallField
+                  name="contactPhone"
+                  type="tel"
+                  label={t("volunteers.category.contactPhone")}
+                  helperText={t("registrations.answers.phoneHelp")}
+                  defaultValue={category.contactPhone ?? ""}
+                  size="small"
+                  slotProps={{ htmlInput: { maxLength: VOLUNTEER_CONTACT_PHONE_MAX, inputMode: "tel", autoComplete: "off" } }}
+                />
+                <RecallField
+                  name="contactEmail"
+                  type="email"
+                  label={t("volunteers.category.contactEmail")}
+                  defaultValue={category.contactEmail ?? ""}
+                  size="small"
+                  slotProps={{ htmlInput: { maxLength: VOLUNTEER_CONTACT_EMAIL_MAX, autoComplete: "off" } }}
+                />
+                <Box>
+                  <GlyphSubmitButton label={t("volunteers.save")} pendingLabel={t("volunteers.saving")} icon="save" />
+                </Box>
+              </Stack>
+            </ActionForm>
+          </Panel>
+          <Panel variant="help" title={t("volunteers.edit")}>
+            <Stack spacing={1.5} sx={{ pb: 1.5 }}>
+              <ActionForm action={editVolunteerCategoryAction} scope={`category-${category.id}`} messages={categoryBoxes}>
+                {hidden}
+                <input type="hidden" name="categoryId" value={category.id} />
+                {categoryNameFields(category)}
+                <Box sx={{ mt: 1.5 }}>
+                  <GlyphSubmitButton label={t("volunteers.save")} pendingLabel={t("volunteers.saving")} icon="save" />
+                </Box>
+              </ActionForm>
+              <ActionForm
+                action={deleteVolunteerCategoryAction}
+                confirm={{
+                  title: t("volunteers.category.deleteTitle"),
+                  body: t("volunteers.category.deleteBody", { name: categoryName(category) }),
+                  confirmLabel: t("volunteers.category.delete"),
+                  cancelLabel: words.cancel,
+                  destructive: true,
+                }}
+              >
+                {hidden}
+                <input type="hidden" name="categoryId" value={category.id} />
+                <GlyphSubmitButton label={t("volunteers.category.delete")} pendingLabel={t("volunteers.category.deleting")} icon="delete" color="error" variant="outlined" />
+              </ActionForm>
+            </Stack>
+          </Panel>
+        </Stack>
+      </Box>
+    );
+  };
 
   const aside =
     roles.length === 0
@@ -1143,6 +1337,36 @@ export default async function VolunteersCard({
           )}
         </Stack>
 
+        {/* «Categorii» (§774; the owner, 2026-10-14: «categorii cu sub-categorii … Toate astea configurabile»): the headings the roles are grouped
+            under on this card and on the volunteers' page — «Start / Sosire», «Traseu» —, each with its optional contact person. */}
+        <Panel glyph="kind" collapsible level={3} title={t("volunteers.categories.title")} aside={t("volunteers.categories.count", { count: String(categories.length) })} id="box-volunteer-categories" data-testid="volunteer-categories">
+          <Stack spacing={1.5}>
+            <Typography variant="body2" color="text.secondary">
+              {t("volunteers.categories.intro")}
+            </Typography>
+            {categories.length === 0 ? (
+              <Typography variant="body2" color="text.secondary" data-testid="volunteer-categories-empty">
+                {t("volunteers.categories.empty")}
+              </Typography>
+            ) : (
+              <Stack spacing={1.5} component="ul" aria-label={t("volunteers.categories.title")} sx={{ listStyle: "none", m: 0, p: 0 }}>
+                {categories.map((category, index) => categoryRow(category, index, categories.length))}
+              </Stack>
+            )}
+            {categories.length < VOLUNTEER_CATEGORIES_MAX && (
+              <Panel glyph="add" collapsible level={3} title={t("volunteers.category.addTitle")} data-testid="volunteer-category-add">
+                <ActionForm action={addVolunteerCategoryAction} scope="category-new" messages={categoryBoxes}>
+                  {hidden}
+                  {categoryNameFields(null)}
+                  <Box sx={{ mt: 1.5 }}>
+                    <GlyphSubmitButton label={t("volunteers.category.add")} pendingLabel={t("volunteers.category.adding")} icon="add" />
+                  </Box>
+                </ActionForm>
+              </Panel>
+            )}
+          </Stack>
+        </Panel>
+
         {/* The roles: bilingual, how many each needs, the club's order. */}
         <Panel glyph="volunteers" collapsible level={3} title={t("volunteers.rolesTitle")} aside={t("volunteers.rolesCount", { count: String(roles.length) })} id="box-volunteer-roles" data-testid="volunteer-roles">
           <Stack spacing={1.5}>
@@ -1154,8 +1378,20 @@ export default async function VolunteersCard({
                 {t("volunteers.rolesEmpty")}
               </Typography>
             ) : (
-              <Stack spacing={1.5} component="ul" aria-label={t("volunteers.rolesTitle")} sx={{ listStyle: "none", m: 0, p: 0 }}>
-                {roles.map(roleRow)}
+              <Stack spacing={2} data-testid="volunteer-role-groups">
+                {/* The roles under their categories (§774), in the club's order, then «Alte activități»; an event with no category lists them as before. */}
+                {roleGroups.map((group) => (
+                  <Box key={group.category?.id ?? "other"} component="section" aria-label={roleHeaded ? (group.category ? categoryName(group.category) : t("volunteers.otherCategory")) : undefined} data-testid="volunteer-role-group" data-category-id={group.category?.id ?? ""}>
+                    {roleHeaded && (
+                      <Typography component="h4" variant="h3" sx={{ fontSize: "1rem", mb: 1 }} data-testid="volunteer-role-group-heading">
+                        {group.category ? categoryName(group.category) : t("volunteers.otherCategory")}
+                      </Typography>
+                    )}
+                    <Stack spacing={1.5} component="ul" aria-label={t("volunteers.rolesTitle")} sx={{ listStyle: "none", m: 0, p: 0 }}>
+                      {group.roles.map((role, index) => roleRow(role, index, group.roles.length))}
+                    </Stack>
+                  </Box>
+                ))}
               </Stack>
             )}
             <Panel glyph="add" collapsible level={3} title={t("volunteers.role.addTitle")} data-testid="volunteer-role-add">
@@ -1213,13 +1449,13 @@ export default async function VolunteersCard({
                 </Stack>
               </Box>
             )}
-            {roles.map((role) => {
+            {labelled.map((role) => {
               const mine = volunteers.filter((person) => person.roleId === role.id);
               return (
-                <Box component="section" key={role.id} aria-label={roleName(role)} data-testid="volunteer-group" data-role-id={role.id}>
+                <Box component="section" key={role.id} aria-label={labelOf(role)} data-testid="volunteer-group" data-role-id={role.id}>
                   <Stack direction="row" sx={{ flexWrap: "wrap", alignItems: "center", gap: 1, mb: 1 }}>
                     <Typography component="h3" variant="h3" sx={{ fontSize: "1.0625rem" }}>
-                      {roleName(role)}
+                      {labelOf(role)}
                     </Typography>
                     {standingChip(role)}
                   </Stack>
