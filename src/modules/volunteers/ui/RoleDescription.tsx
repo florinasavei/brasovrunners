@@ -20,6 +20,7 @@ export default function RoleDescription({
   detailsLabel,
   bodyId,
   testId = "volunteer-role-description",
+  flush = false,
 }: {
   /** The stored document for the page's language, or null. */
   doc: unknown;
@@ -30,14 +31,19 @@ export default function RoleDescription({
   /** The id of the words' box, so the role's tick can name it in `aria-describedby` (it is read with the box, folded or not). */
   bodyId?: string;
   testId?: string;
+  /**
+   * The caller indents it (§780: the role's tile puts it under the name, past the tick): no left or right padding of its own. Off, it is
+   * indented under the box of a `CheckboxField` as before.
+   */
+  flush?: boolean;
 }) {
   if (doc === null || doc === undefined || words === null || words.trim() === "") return null;
   const body = (
     <Box
       sx={{
         // Under the box's label, not under the box: the tick is 44 pixels wide and the words start after it.
-        pl: { xs: 4.5, sm: 5 },
-        pr: 1,
+        pl: flush ? 0 : { xs: 4.5, sm: 5 },
+        pr: flush ? 0 : 1,
         color: "text.secondary",
         typography: "body2",
         overflowWrap: "anywhere",
@@ -58,7 +64,7 @@ export default function RoleDescription({
       component="details"
       data-testid={testId}
       data-folded="true"
-      sx={{ pl: { xs: 4.5, sm: 5 }, "& > summary": { ...DISCLOSURE_SUMMARY_SX, py: 0.5 }, ...DISCLOSURE_OPEN_ARROW, "& > div": { pl: 0 } }}
+      sx={{ pl: flush ? 0 : { xs: 4.5, sm: 5 }, "& > summary": { ...DISCLOSURE_SUMMARY_SX, py: 0.5 }, ...DISCLOSURE_OPEN_ARROW, "& > div": { pl: 0 } }}
     >
       <Box component="summary">
         <InfoOutlinedIcon aria-hidden sx={FOLD_GLYPH_INLINE_SX} />

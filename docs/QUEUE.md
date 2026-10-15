@@ -14,13 +14,14 @@ decision or a click only the club can make · **released** — on production, wi
 The owner, 2026-10-10: «Soon I need to start a new session from the laptop … You need to save and document everything».
 This section replaces the plan of 2026-09-30; it is what a session with none of today's conversation needs to carry on.
 
-- **Production: `BR-V3.36`** (2026-10-15 13:50: §777 internal notes, migration `0161`). Waiting for «prod», in order:
-  `BR-V3.37` (§778 every mail through the outbox, failover Mailgun ↔ Gmail, migration `0162`) and `BR-V3.38` (§779,
-  below) — a production defect's fix, no migration.
-- **QA: `BR-V3.38`** — the Excel export of registrations works again: the event's title went raw into the download's
-  `Content-Disposition` header and a «Ș» or an en dash crashed it with a 500; every downloaded file's name now goes
-  through one helper (an ASCII fallback and the real name in `filename*`), across all 17 downloads, with a guard test.
-  Building: the volunteers' page with each category its own card, the share row on one line.
+- **Production: `BR-V3.37`** (2026-10-15 19:10: §778 email outbox + failover, migration `0162`). Waiting for «prod», in
+  order: `BR-V3.38` (§779, the Excel export's hotfix) and `BR-V3.39` (§780, §781, below) — no migration in either.
+- **QA: `BR-V3.39`** — the volunteers' page: each category its own bordered card with a dark band (its name, its glyph,
+  «4 roluri», its contact), each role a selectable tile inside it (the whole tile ticks; the count under the name; one
+  column on a phone, two from a tablet); the event page's share row and the «Adaugă în calendar» pill on one line, the
+  calendar's doors in a dropdown that moves nothing.
+  Nothing is building. Next session: «Mailgun (recomandat)» (lane 22), one badge for everyone (lane 25), a volunteer role
+  «fără număr» (lane 24, migration `0163`).
 - **Waiting on the owner:** the privacy notice from the new template, approved in `/admin/legal` after a lawyer reads
   the paragraph on what the site loads (its first sentence says what is used is strictly necessary and needs no consent,
   art. 4(6) of Legea nr. 506/2004, while the same paragraph says Strava may set its own cookies without a press — the
@@ -136,6 +137,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V3.39` | the volunteers' page: each category its own card, roles as tiles (§780) · the share row and the calendar pill on one line (§781) |
 | `BR-V3.38` | the Excel export works again with diacritics in the event's title (§779) |
 | `BR-V3.37` | every mail through the outbox; failover between Mailgun and Gmail (§778) |
 | `BR-V3.36` | internal notes on a registration for organizers and administrators (§777) |
