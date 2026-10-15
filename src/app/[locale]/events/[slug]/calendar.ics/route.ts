@@ -1,3 +1,4 @@
+import { contentDisposition } from "@/shared/http/content-disposition";
 import { getTranslations } from "next-intl/server";
 import { routing } from "@/i18n/routing";
 import { toCalendarEvent } from "@/modules/events/calendar";
@@ -48,7 +49,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ loc
   return new Response(body, {
     headers: {
       "Content-Type": "text/calendar; charset=utf-8",
-      "Content-Disposition": `attachment; filename="${slug}.ics"`,
+      "Content-Disposition": contentDisposition("attachment", `${slug}.ics`, "event"),
       // No Cache-Control of its own (§549): Next writes the static response's, and a save expires the CDN's copy.
     },
   });

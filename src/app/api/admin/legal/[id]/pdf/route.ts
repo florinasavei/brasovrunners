@@ -1,3 +1,4 @@
+import { contentDisposition } from "@/shared/http/content-disposition";
 import { hasLocale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { CLUB_TIME_ZONE, formatDateInWords, formatDay } from "@/i18n/dates";
@@ -86,7 +87,7 @@ export async function GET(
     status: 200,
     headers: {
       "Content-Type": "application/pdf",
-      "Content-Disposition": `attachment; filename="${filename}"`,
+      "Content-Disposition": contentDisposition("attachment", filename, "legal"),
       "Content-Length": String(pdf.byteLength),
       "Cache-Control": "private, no-store",
     },

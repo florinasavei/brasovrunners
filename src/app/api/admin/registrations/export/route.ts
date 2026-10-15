@@ -1,3 +1,4 @@
+import { contentDisposition } from "@/shared/http/content-disposition";
 import { NextResponse } from "next/server";
 import { getDb } from "@/db/client";
 import { type RegistrationStatus, registrationStatus } from "@/db/schema/registrations";
@@ -32,6 +33,10 @@ function isRegistrationStatus(value: string | null): value is RegistrationStatus
  * Windows, macOS and Linux all take them and "Crosul Tâmpei" is what the club calls it — with
  * the date appended so two exports of the same race a week apart are two files. Falls back to
  * the plain name when nothing was filtered for.
+ *
+ * The name is not the header: `contentDisposition` (§779) puts an ASCII fallback in `filename`
+ * and these very characters in `filename*`. Raw in the header, an «Ș» or an en dash was a 500 —
+ * «I can't export the participants as excel anymore!», 2026-10-15.
  */
 function fileNameFor(eventTitle: string | null): string {
   const day = new Date().toISOString().slice(0, 10);
@@ -207,7 +212,7 @@ export async function GET(request: Request): Promise<Response> {
     return new NextResponse(new Uint8Array(workbook), {
       headers: {
         "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        "Content-Disposition": `attachment; filename="${fileNameFor(eventTitle)}.xlsx"`,
+        "Content-Disposition": contentDisposition("attachment", `${fileNameFor(eventTitle)}.xlsx`, "registrations"),
         "X-Robots-Tag": "noindex",
         "Cache-Control": "private, no-store",
       },
@@ -269,7 +274,7 @@ export async function GET(request: Request): Promise<Response> {
   return new NextResponse(csv, {
     headers: {
       "Content-Type": "text/csv; charset=utf-8",
-      "Content-Disposition": `attachment; filename="registrations.csv"`,
+      "Content-Disposition": contentDisposition("attachment", "registrations.csv"),
       "X-Robots-Tag": "noindex",
       "Cache-Control": "private, no-store",
     },

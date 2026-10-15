@@ -310,7 +310,7 @@ describe("§570 the route: the role on the server, the notice, the file and its 
     const response = await downloadSponsorList(new Request(`http://localhost/api/admin/registrations/sponsor-list?event=${event.id}&lang=ro`));
     expect(response.status).toBe(200);
     expect(response.headers.get("Content-Type")).toBe("text/csv; charset=utf-8");
-    expect(response.headers.get("Content-Disposition")).toMatch(/^attachment; filename="sponsori-crosul-toamnei-\d{4}-\d{2}-\d{2}\.csv"$/);
+    expect(response.headers.get("Content-Disposition")).toMatch(/^attachment; filename="sponsori-crosul-toamnei-\d{4}-\d{2}-\d{2}\.csv"; filename\*=UTF-8''/);
     const body = new TextDecoder("utf-8", { ignoreBOM: true }).decode(await response.arrayBuffer());
     expect(body.startsWith(CSV_BOM)).toBe(true);
     const lines = body.slice(CSV_BOM.length).split("\r\n");
@@ -403,7 +403,7 @@ describe("§581 the sponsor list as Excel, every tick in its column", () => {
     const response = await downloadSponsorList(excel(event.id));
     expect(response.status).toBe(200);
     expect(response.headers.get("Content-Type")).toBe("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-    expect(response.headers.get("Content-Disposition")).toMatch(/^attachment; filename="sponsori-crosul-toamnei-\d{4}-\d{2}-\d{2}\.xlsx"$/);
+    expect(response.headers.get("Content-Disposition")).toMatch(/^attachment; filename="sponsori-crosul-toamnei-\d{4}-\d{2}-\d{2}\.xlsx"; filename\*=UTF-8''/);
     const { rows, sheetName } = readSheet(Buffer.from(await response.arrayBuffer()));
     expect(sheetName).toBe("Sponsori");
     const sheet = ro.Admin.sponsors.sheet;
@@ -478,6 +478,21 @@ describe("§581 the sponsor list as Excel, every tick in its column", () => {
     await approveNotice(1, boxOnly, V1_AT);
     state.cookie = (await staff("ADMIN")).id;
     expect((await downloadSponsorList(new Request("http://localhost/api/admin/registrations/sponsor-list?format=xlsx"))).status).toBe(409);
+  });
+
+  it("an event whose slug and title carry diacritics still downloads: 200, a header Headers accepts (§779)", async () => {
+    await approveNotice(1, boxOnly, V1_AT);
+    await approveNotice(2, sharing, V2_AT);
+    const event = await createEvent("crosul-brașov-ediția-2026", "CROSUL BRAȘOV – EDIȚIA A II-A");
+    await seedRow(event.id, "Ștefan", { listOptOut: false });
+    state.cookie = (await staff("ADMIN")).id;
+    for (const request of [excel(event.id), csv(event.id)]) {
+      const response = await downloadSponsorList(request);
+      expect(response.status).toBe(200);
+      const header = response.headers.get("Content-Disposition")!;
+      expect(() => new Headers({ "Content-Disposition": header })).not.toThrow();
+      expect(header).toMatch(/^attachment; filename="sponsori-crosul-bra-ov-edi-ia-2026-\d{4}-\d{2}-\d{2}\.(xlsx|csv)"; filename\*=UTF-8''/);
+    }
   });
 });
 

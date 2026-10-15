@@ -59,7 +59,7 @@ describe("BR-REQ-011-01 the GPX's key, name and headers (§718)", () => {
     expect(key).toBe(`qa/route-gpx/${ID}/traseu-tampa-2026.gpx`);
     expect(isRouteGpxKey(key)).toBe(true);
     expect(routeGpxFileName(key)).toBe("traseu-tampa-2026.gpx");
-    expect(routeGpxHeaders(key)).toEqual({ contentType: "application/gpx+xml", contentDisposition: 'attachment; filename="traseu-tampa-2026.gpx"' });
+    expect(routeGpxHeaders(key)).toEqual({ contentType: "application/gpx+xml", contentDisposition: "attachment; filename=\"traseu-tampa-2026.gpx\"; filename*=UTF-8''traseu-tampa-2026.gpx" });
     expect(gpxFileStem("…")).toBe("traseu");
     expect(gpxFileStem("a".repeat(100)).length).toBe(60);
   });
