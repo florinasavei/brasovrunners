@@ -489,7 +489,7 @@ describe("import as a new event", () => {
     expect((await reload(older.eventId)).badgeDesign).toBeNull();
   });
 
-  it("§NNN carries the badge's free-text line and marker area: over an event, from a file made before them, and from one with a value it cannot read", async () => {
+  it("§776 carries the badge's free-text line and marker area: over an event, from a file made before them, and from one with a value it cannot read", async () => {
     const { event } = await seedRace({}, {}, false);
     const badge = { ...DEFAULT_BADGE_DESIGN, showFreeText: true, freeTextRo: "Bea apă", freeTextEn: "Drink water", showMarker: true, markerLabelRo: "Tură", markerLabelEn: "Shift" };
     await db.update(events).set({ badgeDesign: badge }).where(eq(events.id, event.id));

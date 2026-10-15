@@ -100,7 +100,7 @@ export function badgeRoleLabel(role: Pick<BadgeRole, "nameRo" | "nameEn" | "cate
 }
 
 /**
- * The event as the badges read it: its title in the badge's language, its design, and the §NNN settings
+ * The event as the badges read it: its title in the badge's language, its design, and the §776 settings
  * the stored design held as something they cannot be and the reader left out (`badgeDesignDropped`).
  */
 export async function findEventForBadges<T extends Record<string, unknown>>(
@@ -122,7 +122,7 @@ export async function findEventForBadges<T extends Record<string, unknown>>(
 const box = (key: string) => `${BADGE_DESIGN_FORM_PREFIX}${key}`;
 
 /**
- * A size with no room for everything ticked (§NNN, `BADGE_SIZE_TOO_SMALL`): the rows that do not fit, the
+ * A size with no room for everything ticked (§776, `BADGE_SIZE_TOO_SMALL`): the rows that do not fit, the
  * size, and the least height at which they do — the numbers the action puts in the sentence.
  */
 export class BadgeSizeRefusal extends DomainError {
@@ -144,7 +144,7 @@ export class BadgeSizeRefusal extends DomainError {
  * - «Altă dimensiune» needs a whole width and height in millimetres within `BADGE_CUSTOM_BOUNDS`;
  * - every text the club types is Romanian **and** English, or neither (§352): the short title, «VOLUNTAR»,
  *   the free-text line, the marker area's label and the telephone's label, the empty side named;
- * - «Text liber» ticked needs something written in it (§NNN);
+ * - «Text liber» ticked needs something written in it (§776);
  * - a size too small for everything ticked is refused (`BADGE_SIZE_TOO_SMALL`, `badgeSizeRefusal`): the free-text
  *   line and the telephone together need a taller badge, and the sentence says how tall;
  * - «Telefon coordonator» ticked needs a number written like one (the bib's own check, §750);

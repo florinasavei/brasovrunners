@@ -518,7 +518,7 @@ describe("§764 the badge design travels with the event, never a role", () => {
   });
 });
 
-describe("§NNN the free-text line and the marker area", () => {
+describe("§776 the free-text line and the marker area", () => {
   const BOTH = {
     "badge.design.showFreeText": "on",
     "badge.design.freeTextRo": "Bea apă la fiecare punct",

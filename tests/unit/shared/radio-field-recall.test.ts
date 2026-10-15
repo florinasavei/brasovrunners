@@ -5,7 +5,7 @@ import { RecallProvider } from "@/shared/forms/recall";
 import RadioField from "@/shared/ui/RadioField";
 
 /**
- * §NNN — `RadioField` after a refused submit: the choice comes back as it was posted (§315, the checkbox's
+ * §776 — `RadioField` after a refused submit: the choice comes back as it was posted (§315, the checkbox's
  * own rule). The badge's designer needs it: «Altă dimensiune» refused for being too small came back on the
  * saved size, the boxes typed for it hidden behind a choice nobody made.
  */

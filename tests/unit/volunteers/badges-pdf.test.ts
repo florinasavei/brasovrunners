@@ -13,7 +13,7 @@ import { COLOR } from "@/theme/brand";
  * as asked, packed on as many A4 pages as they take, each badge's words at the layout's sizes, and no
  * volunteer's name anywhere; the picture is the same badge at its own scale.
  *
- * §NNN adds the free-text line and the marker area: both drawn by the sheet and the picture from the same
+ * §776 adds the free-text line and the marker area: both drawn by the sheet and the picture from the same
  * layout, the sheet carrying the club's words and nothing of anybody.
  *
  * `BADGE_SAMPLE_DIR=<folder>` writes a sample sheet and pictures there, to look at.
@@ -27,7 +27,7 @@ const ENTRIES = [
   { role: null, count: 4 },
 ];
 const total = ENTRIES.reduce((sum, entry) => sum + entry.count, 0);
-/** §NNN: the free-text line and the marker area, ticked, with the words a badge in Romanian prints. */
+/** §776: the free-text line and the marker area, ticked, with the words a badge in Romanian prints. */
 const EXTRAS_WORDS = { ...WORDS, free: "Hidratează-te la fiecare punct de apă", markerLabel: "Tură:" };
 const EXTRAS: BadgeDesign = {
   ...DEFAULT_BADGE_DESIGN,
@@ -113,7 +113,7 @@ describe("§764 the badges' sheet", () => {
     expect(runs.filter((run) => run.text === "Nume:" && run.page === 0)).toHaveLength(14);
   });
 
-  it("carries the free-text line and the marker's label on every badge when they are ticked, and neither when they are not (§NNN)", async () => {
+  it("carries the free-text line and the marker's label on every badge when they are ticked, and neither when they are not (§776)", async () => {
     const entries = [{ role: { name: "Punct de apă", colour: "#c62828" }, count: 3 }, { role: null, count: 2 }];
     const withExtras = await drawn(() => renderBadgeSheet({ design: EXTRAS, locale: "ro", words: EXTRAS_WORDS, entries, eventTitle: "Brașov Trail Race", generatedAt: new Date("2026-10-14T08:00:00Z") }));
     expect(withExtras.runs.filter((run) => run.text === "Hidratează-te la fiecare punct de apă")).toHaveLength(5);
@@ -128,7 +128,7 @@ describe("§764 the badges' sheet", () => {
     expect(without.runs.some((run) => run.text === "Tură:" || run.text.startsWith("Hidratează"))).toBe(false);
   });
 
-  it("draws the marker's area's line and divider as strokes, besides the name's line, and no more on a badge without it (§NNN)", async () => {
+  it("draws the marker's area's line and divider as strokes, besides the name's line, and no more on a badge without it (§776)", async () => {
     const strokes = async (design: BadgeDesign, words: typeof WORDS) => {
       let count = 0;
       const stroke = PDFDocument.prototype.stroke;
@@ -253,7 +253,7 @@ describe("§764 the badge's picture", () => {
     expect(markup).toContain(badgeRoleColour(null));
   });
 
-  it("draws the free-text line and the marker's area from the same layout, and nothing of them without the ticks (§NNN)", () => {
+  it("draws the free-text line and the marker's area from the same layout, and nothing of them without the ticks (§776)", () => {
     const input = { design: EXTRAS, locale: "ro" as const, words: EXTRAS_WORDS, role: { name: "Punct de apă", colour: "#c62828" } };
     const layout = badgeImageLayout(input);
     expect(layout.freeLine!.text).toBe("Hidratează-te la fiecare punct de apă");
@@ -270,7 +270,7 @@ describe("§764 the badge's picture", () => {
     expect(unlabelled).not.toContain("badge-marker-label");
   });
 
-  it("renders a PNG of the paper's proportion with both ticked, too (§NNN)", async () => {
+  it("renders a PNG of the paper's proportion with both ticked, too (§776)", async () => {
     const image = await renderBadgeImage({ design: EXTRAS, locale: "ro", words: EXTRAS_WORDS, role: null });
     const bytes = Buffer.from(await image.arrayBuffer());
     expect(bytes.subarray(1, 4).toString()).toBe("PNG");

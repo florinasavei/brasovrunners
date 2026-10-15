@@ -26,7 +26,7 @@ vi.mock("next-intl/server", async () => {
 vi.mock("@/app/[locale]/admin/pages/contact/actions", () => ({ updateFeedbackFormsAction: async () => undefined }));
 vi.mock("@/shared/forms/refusal-messages", () => ({ refusalMessages: async () => ({}) }));
 vi.mock("@/shared/forms/ActionForm", () => ({ default: ({ children }: { children: ReactNode }) => createElement("form", null, children) }));
-// `RadioField` reads the recall (§NNN): none here, no refusal has been answered.
+// `RadioField` reads the recall (§776): none here, no refusal has been answered.
 vi.mock("@/shared/forms/recall", () => ({ default: () => null, useRecall: () => ({ value: () => undefined }) }));
 vi.mock("@/shared/ui/CheckboxField", () => ({ default: () => null }));
 vi.mock("@/shared/ui/GlyphSubmitButton", () => ({ default: () => createElement("button", { type: "submit", "data-testid": "save" }) }));

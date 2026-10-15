@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.34-2026-10-15 -->
+<!-- PROJECT_BASELINE: BR-V3.35-2026-10-15 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V3.34-2026-10-15`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.35-2026-10-15`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -2149,7 +2149,7 @@ only ones who see the names, addresses and telephone numbers.
      coordinator's telephone (the club's number, with its label in both languages) and the cut marks.
      «Salvează ecusonul» keeps it on the event — on this date: each date of a series has its own badge — and
      the event's JSON file (§751) carries it too. Under 35 mm tall the small words come out very small.
-     Two optional sections, each with its own tick (§NNN): **«Text liber»** — one small line of your own words,
+     Two optional sections, each with its own tick (§776): **«Text liber»** — one small line of your own words,
      in Română **and** English, at most 60 characters, centred under the role's band (a rule, a zone, a
      message: the same on every badge, never about a volunteer) — and **«Spațiu pentru marker»** — a second
      white area beside «Nume:», blank on paper, with an optional short label in both languages (at most 20

@@ -11,7 +11,7 @@ import { openEditorBox, openFold } from "./support/fold";
  * typed with its spares, the other's left at the people it needs, and a few badges «fără rol». The PDF
  * downloads with exactly that many badges (the file's own properties say how many), on the pages they take.
  *
- * §NNN adds the free-text line and the marker area: the Organizer ticks both in the designer, types the
+ * §776 adds the free-text line and the marker area: the Organizer ticks both in the designer, types the
  * texts, sees the preview follow, saves, finds them again after the save, and the sheet still holds the
  * badges asked for; and a size with no room for everything ticked is refused, in words, before anything is kept.
  *
@@ -97,7 +97,7 @@ test.describe("§764 volunteer badges, designed and printed per role", () => {
     expect(picture.status()).toBe(200);
     expect(picture.headers()["content-type"]).toBe("image/png");
 
-    // --- «Text liber» and «Spațiu pentru marker» (§NNN): each behind its own tick; the preview follows ----
+    // --- «Text liber» and «Spațiu pentru marker» (§776): each behind its own tick; the preview follows ----
     const free = page.getByTestId("badge-section-free");
     await openFold(free);
     await expect(free.locator("summary")).toContainText("Fără text liber");
@@ -178,7 +178,7 @@ test.describe("§764 volunteer badges, designed and printed per role", () => {
     await expect(page.getByTestId("badge-print")).toHaveAttribute("open", "");
   });
 
-  test("a size with no room for everything ticked is refused in words, and nothing is kept (§NNN)", async ({ page }) => {
+  test("a size with no room for everything ticked is refused in words, and nothing is kept (§776)", async ({ page }) => {
     const tag = `${test.info().project.name}-small-${Date.now().toString(36)}`;
     const event = await seedEvent(tag);
     await signIn(page, "Dev Moderator");

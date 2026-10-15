@@ -33,7 +33,7 @@ import { badgeDesignValuesFromQuery } from "./badge-query";
 export const BADGE_TITLE_MAX = 60;
 export const BADGE_LABEL_MAX = 24;
 export const BADGE_PHONE_LABEL_MAX = 30;
-/** §NNN: the free-text line under the role's band, and the label of the marker's area («Tură», «Zona»). */
+/** §776: the free-text line under the role's band, and the label of the marker's area («Tură», «Zona»). */
 export const BADGE_FREE_TEXT_MAX = 60;
 export const BADGE_MARKER_LABEL_MAX = 20;
 
@@ -82,11 +82,11 @@ export const badgeDesignSchema = z
     labelEn: line(BADGE_LABEL_MAX),
     /** One faint line across the writing area, for the marker. */
     writingLine: z.boolean().catch(true),
-    /** «Text liber» (§NNN): one line of the club's own words under the role's band, in both languages or neither. */
+    /** «Text liber» (§776): one line of the club's own words under the role's band, in both languages or neither. */
     showFreeText: z.boolean().catch(false),
     freeTextRo: line(BADGE_FREE_TEXT_MAX),
     freeTextEn: line(BADGE_FREE_TEXT_MAX),
-    /** «Spațiu pentru marker» (§NNN): a second white writing area beside «Nume:», with an optional short label. */
+    /** «Spațiu pentru marker» (§776): a second white writing area beside «Nume:», with an optional short label. */
     showMarker: z.boolean().catch(false),
     markerLabelRo: line(BADGE_MARKER_LABEL_MAX),
     markerLabelEn: line(BADGE_MARKER_LABEL_MAX),
@@ -143,7 +143,7 @@ export function readBadgeDesign(value: unknown): BadgeDesign {
 }
 
 /**
- * The §NNN settings a stored design holds as something they cannot be (a text that is a number, a tick that
+ * The §776 settings a stored design holds as something they cannot be (a text that is a number, a tick that
  * is a word — a file made by hand, a later release's shape): `readBadgeDesign` leaves each out, as the
  * platform's own, and the designer says so beside its section, so the club types it again rather than
  * wonder where it went. An old design without the keys is nothing to say: absent is not unreadable.
@@ -224,9 +224,9 @@ export type BadgeWords = {
   name: string;
   /** «Coordonator: 07xx xxx xxx», or null while the tick is off or no valid number was typed. */
   phone: string | null;
-  /** The club's free-text line in this language, or null while the tick is off or nothing is written in it (§NNN). */
+  /** The club's free-text line in this language, or null while the tick is off or nothing is written in it (§776). */
   free: string | null;
-  /** The marker area's label with its colon, or null while the tick is off or the club typed none in this language (§NNN). */
+  /** The marker area's label with its colon, or null while the tick is off or the club typed none in this language (§776). */
   markerLabel: string | null;
   /** The telephone's label in the badge's language — the club's, else the platform's — kept so a role's own number can take it (`badgePhoneLine`). */
   phoneLabel?: string;

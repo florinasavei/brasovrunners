@@ -187,12 +187,12 @@ export function badgeMarkup(input: BadgeImageInput, logoSrc: string) {
       <div data-testid="badge-role-band" style={{ display: "flex", ...at(content.left, layout.role.top), width: px(content.width), height: px(layout.role.height), background: roleColour }} />
       {layout.label ? lineBox(layout.label, roleText, 700, { centre: true }, "badge-label") : null}
       {lineBox(layout.roleLine, roleText, 700, { centre: true }, "badge-role")}
-      {/* The free-text line (§NNN): the club's own words, small and centred under the role's band. */}
+      {/* The free-text line (§776): the club's own words, small and centred under the role's band. */}
       {layout.freeLine ? lineBox(layout.freeLine, COLOR.ink, 400, { centre: true }, "badge-free") : null}
       {/* The writing area: «Nume:», and the faint line the name is written on in marker. */}
       {lineBox(layout.name, COLOR.inkMuted, 400, { left: layout.name.left }, "badge-name")}
       {layout.line ? hairline(layout.line.left, layout.line.y, layout.line.right - layout.line.left, "badge-line") : null}
-      {/* «Spațiu pentru marker» (§NNN): a divider, the club's label and one faint line at the name's height. */}
+      {/* «Spațiu pentru marker» (§776): a divider, the club's label and one faint line at the name's height. */}
       {layout.marker ? (
         <>
           <div

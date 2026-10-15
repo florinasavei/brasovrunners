@@ -58,7 +58,7 @@ export async function saveBadgeDesignAction(_previous: FormOutcome | null, form:
     changed = (await saveBadgeDesign(getDb(), actor, eventIdOf(form), values, new Date())).changed;
   } catch (error) {
     if (!isDomainError(error)) throw error;
-    // A size with no room for everything ticked (§NNN): the sentence names what does not fit and how tall a badge it needs.
+    // A size with no room for everything ticked (§776): the sentence names what does not fit and how tall a badge it needs.
     if (error instanceof BadgeSizeRefusal) {
       const t = await getTranslations({ locale: localeOf(form), namespace: "Admin" });
       const what = error.what.map((extra) => t(`badges.design.extras.${extra}`)).join(", ");

@@ -21,7 +21,7 @@ import { TAP_TARGET } from "./tap-target";
  * the form it sits in has been answered with a refusal and the group posted a value, the radio checked
  * is the one that was; a group that posted nothing, or a disabled radio, keeps the page's word. Without
  * it the badge's size, refused for being too small, came back on the saved size while the boxes typed
- * for «Altă dimensiune» stayed behind, hidden (§NNN).
+ * for «Altă dimensiune» stayed behind, hidden (§776).
  */
 export default function RadioField({
   name,

@@ -155,7 +155,7 @@ export const PANEL_GLYPHS = {
   badgeSize: StraightenIcon,
   badgeRole: LabelIcon,
   badgeWriting: BorderColorIcon,
-  // §NNN: the club's free-text line under the role's band, and the second area to write in with the marker.
+  // §776: the club's free-text line under the role's band, and the second area to write in with the marker.
   badgeFreeText: TextFieldsIcon,
   badgeMarker: GestureIcon,
   badgeCut: ContentCutIcon,

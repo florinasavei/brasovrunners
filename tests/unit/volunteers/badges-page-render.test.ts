@@ -75,7 +75,7 @@ describe("§764 «Cum arată ecusonul»", () => {
     expect(page).toMatch(/<details[^>]*id="box-badge-design"[^>]* open=""|<details[^>]* open=""[^>]*id="box-badge-design"/);
   });
 
-  it("says beside a section that a stored value could not be read, and says nothing otherwise (§NNN)", async () => {
+  it("says beside a section that a stored value could not be read, and says nothing otherwise (§776)", async () => {
     const draw = (dropped: Array<"showFreeText" | "freeTextRo">) => html(() => BadgeDesignPanel({ eventId: EVENT, locale: "ro", design: DEFAULT_BADGE_DESIGN, sampleRole: ROLES[0].id, version: "abc", dropped }));
     const told = await draw(["showFreeText"]);
     expect(told).toContain('data-testid="badge-dropped"');
@@ -83,7 +83,7 @@ describe("§764 «Cum arată ecusonul»", () => {
     expect(await draw([])).not.toContain('data-testid="badge-dropped"');
   });
 
-  it("shows the free-text line cut short in the closed section's heading, the Romanian only (§NNN)", async () => {
+  it("shows the free-text line cut short in the closed section's heading, the Romanian only (§776)", async () => {
     const free = { ...DEFAULT_BADGE_DESIGN, showFreeText: true, freeTextRo: "Hidratează-te la fiecare punct de pe traseu, te rugăm", freeTextEn: "Drink water at every point along the course, please" };
     const page = await html(() => BadgeDesignPanel({ eventId: EVENT, locale: "ro", design: free, sampleRole: ROLES[0].id, version: "abc" }));
     expect(page).toContain("Hidratează-te la fiecare punct…");
