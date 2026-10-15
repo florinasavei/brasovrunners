@@ -544,10 +544,12 @@
       "intro": "Evenimentul are nevoie de ajutor. Bifează ce ești dispus(ă) să faci și spune-ne cum te găsim. Organizatorii îți aleg apoi rolul și te confirmă. Nu e o înscriere la cursă și nu ține loc.",
       "choices": "Ce ești dispus(ă) să faci",
       "choicesHelp": "Bifează tot ce ai face, cel puțin un rol. Organizatorii îți aleg unul și îți scriu.",
+      "choicesNote": "În funcție de numărul de doritori, există posibilitatea să fie nevoie să acoperi o altă responsabilitate. Mulțumim pentru dorința de a ajuta. Te vom contacta curând.",
       "needs": {
         "one": "mai e nevoie de 1 persoană",
         "few": "mai sunt necesare {count} persoane",
-        "other": "mai sunt necesare {count} de persoane"
+        "other": "mai sunt necesare {count} de persoane",
+        "open": "mai sunt locuri"
       },
       "name": "Numele tău",
       "email": "Adresa ta de email",
@@ -577,26 +579,25 @@
         "consent": "Bifează căsuța de acord, altfel nu putem păstra oferta ta.",
         "agreement": "Bifează că accepți contractul de voluntariat, altfel nu putem păstra oferta ta.",
         "adult": "Formularul e pentru persoane de cel puțin {age}: bifează căsuța dacă ai această vârstă.",
-        "age": "Scrie vârsta în ani întregi, de exemplu 34.",
-        "ageMinimum": "Voluntarii trebuie să aibă cel puțin {age}.",
+        "birthDate": "Scrie data nașterii ca zi, lună, an: 11.05.1990.",
+        "birthDateMinimum": "Voluntarii trebuie să aibă cel puțin {age} în ziua evenimentului.",
         "sex": "Alege sexul din listă.",
         "city": "Scrie orașul tău.",
         "shirtSize": "Alege o mărime din listă.",
         "guardianName": "Scrie numele părintelui sau tutorelui.",
         "guardianEmail": "Adresa de email a părintelui sau tutorelui nu pare validă.",
         "guardianAware": "Bifează că părintele sau tutorele tău știe și e de acord.",
-        "ageMinors": "Clubul nu primește încă voluntari sub 18 ani. Poți ajuta când împlinești 18 ani sau ne poți scrie din pagina de contact."
+        "birthDateMinors": "Clubul nu primește încă voluntari sub 18 ani. Poți ajuta când împlinești 18 ani sau ne poți scrie din pagina de contact."
       },
       "details": "Detalii",
       "profile": {
-        "age": "Vârsta",
-        "ageHelp": "În ani împliniți; trebuie să ai cel puțin {age}.",
+        "birthDateHelp": "Trebuie să ai cel puțin {age} în ziua evenimentului.",
         "city": "Orașul",
         "before": "Am mai fost voluntar în trecut la alte curse",
         "club": "Fac parte din grupul {club}",
         "shirt": "Mărimea tricoului",
         "shirtHelp": "Evenimentul dă tricouri voluntarilor. Alege mărimea ta sau „Fără tricou”.",
-        "ageHelpMinors": "În ani împliniți; cel puțin {age}. Sub 18 ani îți trebuie și acordul unui părinte."
+        "birthDateHelpMinors": "Cel puțin {age} în ziua evenimentului. Sub 18 ani îți trebuie și acordul unui părinte."
       },
       "page": {
         "title": "Vreau să fiu voluntar la {event}",
@@ -4821,8 +4822,11 @@
         "addTitle": "Adaugă un voluntar de mână",
         "add": "Adaugă voluntarul",
         "adding": "Se adaugă…",
-        "age": "Vârsta",
-        "ageHelp": "Opțional. Ani întregi; cel puțin {age}.",
+        "birthDate": "Data nașterii",
+        "birthDateHelp": "Opțional. Cel puțin {age} în ziua evenimentului.",
+        "birthDateKept": "Rândul are doar vârsta: {age}. Scrie data nașterii ca s-o înlocuiești; goală, vârsta rămâne.",
+        "birthDateTooYoung": "Voluntarii trebuie să aibă cel puțin {age} în ziua evenimentului.",
+        "birthDateValue": "Data nașterii: {date}",
         "sex": "Sex",
         "sexNone": "Nespecificat",
         "city": "Orașul",
@@ -4838,7 +4842,7 @@
         "guardianEmail": "Emailul părintelui sau tutorelui",
         "guardianHelp": "Doar pentru un voluntar sub 18 ani. Fără email, acordul se ia pe hârtie, la organizatori.",
         "guardianValue": "Părinte sau tutore: {name}",
-        "ageHelpMinors": "Opțional. Ani întregi, cel puțin {age}. Sub 18 ani, trece mai jos și părintele sau tutorele."
+        "birthDateHelpMinors": "Opțional. Cel puțin {age} în ziua evenimentului. Sub 18 ani, trece mai jos și părintele sau tutorele."
       },
       "states": {
         "REGISTERED": "Înscris",
@@ -4895,6 +4899,7 @@
         "note": "Notă",
         "signedUpAt": "Data",
         "age": "Vârsta",
+        "dateOfBirth": "Data nașterii",
         "sex": "Sex",
         "city": "Orașul",
         "volunteeredBefore": "A mai fost voluntar",
@@ -4909,6 +4914,10 @@
       "shirts": {
         "label": "Oferim tricouri voluntarilor",
         "help": "Bifat, formularul public cere mărimea tricoului și o vezi pe fiecare rând. Debifat, formularul nu cere nicio mărime."
+      },
+      "counts": {
+        "label": "Arată public câți voluntari mai sunt necesari",
+        "help": "Bifat, pagina de voluntari spune la fiecare rol câte persoane mai sunt necesare. Debifat, spune doar că rolul mai are locuri; aici vezi mereu numerele."
       },
       "chips": {
         "before": "A mai fost voluntar",
@@ -11365,6 +11374,8 @@
       "badgeColoursUnchanged": "Nimic de schimbat la culori.",
       "volunteersShirtsOn": "Formularul public cere acum mărimea tricoului.",
       "volunteersShirtsOff": "Formularul public nu mai cere mărimea tricoului. Mărimile deja date se păstrează.",
+      "volunteersCountsOn": "Pagina de voluntari spune acum câte persoane mai sunt necesare la fiecare rol.",
+      "volunteersCountsOff": "Pagina de voluntari nu mai spune câte persoane mai sunt necesare, doar că rolul mai are locuri.",
       "volunteerGuardianRequested": "Linkul pentru părinte pleacă pe email.",
       "volunteerGuardianRecorded": "Acordul părintelui, înregistrat ca semnat pe hârtie."
     }

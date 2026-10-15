@@ -10,7 +10,16 @@ import { deleteEvent, duplicateEvent } from "@/modules/content/events/service";
 import type { OutboxRow } from "@/modules/notifications/outbox";
 import { renderOutboxMessage } from "@/modules/notifications/render";
 import type { StaffRole } from "@/modules/staff-identity/domain/roles";
-import { changeVolunteer, changeVolunteerRole, listVolunteerRoles, listVolunteers, setAcceptsVolunteers, volunteerStandings } from "@/modules/volunteers/volunteers";
+import {
+  changeVolunteer,
+  changeVolunteerRole,
+  listVolunteerRoles,
+  listVolunteers,
+  readPublicVolunteerRoles,
+  setAcceptsVolunteers,
+  setVolunteersShowCounts,
+  volunteerStandings,
+} from "@/modules/volunteers/volunteers";
 import type { FormOutcome } from "@/shared/forms/outcome";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
@@ -579,6 +588,76 @@ describe("§754 «Primește voluntari»", () => {
   });
 });
 
+describe("§NNN «Arată public câți voluntari mai sunt necesari» is the third tick of the card", () => {
+  const countsTrail = async () => (await trail()).filter((row) => row.action === "event.volunteers_counts_switched").map((row) => row.metadataJson);
+
+  it("is off for a new event, switches through its own form, audits a change and not a repeat, and leaves the event's version alone", async () => {
+    const [before] = await db.select().from(events).where(eq(events.id, eventId));
+    expect(before.volunteersShowCounts).toBe(false);
+    await press(actions.switchVolunteersCountsAction, form({ on: "1" }));
+    const [on] = await db.select().from(events).where(eq(events.id, eventId));
+    expect(on.volunteersShowCounts).toBe(true);
+    // The tick is no edit of the page's text: an open editor's save is not made stale by it.
+    expect(on.version).toBe(before.version);
+    // A repeat of the state it already has writes nothing and says so (the same toast as the other ticks' «nothing to change»).
+    await press(actions.switchVolunteersCountsAction, form({ on: "1" }));
+    await press(actions.switchVolunteersCountsAction, form({ on: "0" }));
+    expect((await db.select().from(events).where(eq(events.id, eventId)))[0].volunteersShowCounts).toBe(false);
+    expect(await countsTrail()).toEqual([{ on: true }, { on: false }]);
+    // The audit names the switch and nothing of a person.
+    expect(JSON.stringify(await trail())).not.toMatch(/Maria|maria@/);
+  });
+
+  it("posts the state it wants, never a toggle: a form that says «0» on an event already off changes nothing", async () => {
+    await press(actions.switchVolunteersCountsAction, form({ on: "0" }));
+    expect((await db.select().from(events).where(eq(events.id, eventId)))[0].volunteersShowCounts).toBe(false);
+    expect(await countsTrail()).toEqual([]);
+    // A form with no state at all is «off», not «flip».
+    await press(actions.switchVolunteersCountsAction, form({ on: "1" }));
+    await press(actions.switchVolunteersCountsAction, form({}));
+    expect((await db.select().from(events).where(eq(events.id, eventId)))[0].volunteersShowCounts).toBe(false);
+  });
+
+  it("changes nothing but the page's words: the roles, the people and the other two ticks stay, and the public read carries the tick", async () => {
+    const role = await addRole({ needed: "3" });
+    await addPerson(role.id);
+    await press(actions.switchVolunteersAction, form({ on: "1" }));
+    await press(actions.switchVolunteersShirtsAction, form({ on: "1" }));
+    expect((await readPublicVolunteerRoles(db, eventId)).showCounts).toBe(false);
+    await press(actions.switchVolunteersCountsAction, form({ on: "1" }));
+    const read = await readPublicVolunteerRoles(db, eventId);
+    expect(read).toMatchObject({ acceptsVolunteers: true, shirts: true, showCounts: true });
+    // The counts are in the read either way: the page decides what to say, the backoffice always has the numbers.
+    expect(read.roles.map((candidate) => [candidate.needed, candidate.taken, candidate.free])).toEqual([[3, 1, 2]]);
+    await press(actions.switchVolunteersCountsAction, form({ on: "0" }));
+    expect((await readPublicVolunteerRoles(db, eventId)).roles.map((candidate) => candidate.free)).toEqual([2]);
+    expect(await listVolunteerRoles(db, eventId)).toHaveLength(1);
+    expect(await listVolunteers(db, eventId)).toHaveLength(1);
+    const [event] = await db.select().from(events).where(eq(events.id, eventId));
+    expect(event).toMatchObject({ acceptsVolunteers: true, volunteersShirts: true, volunteersShowCounts: false });
+  });
+
+  it("is the Organizer's and the Administrators', whatever the card drew: the service asserts the role and writes nothing for anybody else", async () => {
+    const superadmin = await person("SUPERADMIN", "Sara Superadmin");
+    for (const actor of [staff.MODERATOR!, staff.ADMIN!, superadmin]) {
+      state.actor = actor;
+      await press(actions.switchVolunteersCountsAction, form({ on: "1" }));
+      expect((await db.select().from(events).where(eq(events.id, eventId)))[0].volunteersShowCounts, actor.role).toBe(true);
+      await press(actions.switchVolunteersCountsAction, form({ on: "0" }));
+    }
+    for (const key of ["DEV", "COPYWRITER", "CONTRIBUTOR", "MEMBER"] as const) {
+      state.actor = staff[key];
+      expect(await press(actions.switchVolunteersCountsAction, form({ on: "1" })), key).toContain("volunteerError=FORBIDDEN");
+    }
+    expect((await db.select().from(events).where(eq(events.id, eventId)))[0].volunteersShowCounts).toBe(false);
+    await expect(setVolunteersShowCounts(db, staff.DEV!, { eventId, on: true }, NOW)).rejects.toMatchObject({ code: "FORBIDDEN" });
+    // An event that is not there, and an id that is none, are refused the way the other ticks refuse them.
+    state.actor = staff.ADMIN;
+    await expect(setVolunteersShowCounts(db, staff.ADMIN!, { eventId: "7f6c3c0e-0000-4000-8000-000000000000", on: true }, NOW)).rejects.toMatchObject({ code: "NOT_FOUND" });
+    expect((await countsTrail()).length).toBe(6);
+  });
+});
+
 describe("§754 who may do what (BR-REQ-060-01) — the service asserts it, whatever the card drew", () => {
   it("lets the Organizer, the Administrator and the Superadministrator write", async () => {
     const superadmin = await person("SUPERADMIN", "Sara Superadmin");
@@ -682,6 +761,17 @@ describe("§754 a copy of an event is not its volunteers", () => {
     expect(await listVolunteerRoles(db, copyId)).toHaveLength(0);
     expect(await listVolunteers(db, copyId)).toHaveLength(0);
     expect((await db.select().from(events).where(eq(events.id, copyId)))[0].acceptsVolunteers).toBe(false);
+  });
+
+  it("does not copy the tick «Arată public câți voluntari mai sunt necesari» either: a copy shows no number until the club says so (§NNN)", async () => {
+    await db.update(events).set({ volunteersShowCounts: true }).where(eq(events.id, eventId));
+    await db.insert(eventTranslations).values([
+      { eventId, locale: "ro", slug: "cursa", title: "Cursa" },
+      { eventId, locale: "en", slug: "the-race", title: "The race" },
+    ]);
+    const copyId = (await duplicateEvent(db, { actor: staff.ADMIN!, eventId })).id;
+    expect((await db.select().from(events).where(eq(events.id, copyId)))[0].volunteersShowCounts).toBe(false);
+    expect((await db.select().from(events).where(eq(events.id, eventId)))[0].volunteersShowCounts).toBe(true);
   });
 });
 

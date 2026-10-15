@@ -15,6 +15,7 @@ import type { OutboxRow } from "@/modules/notifications/outbox";
 import { renderOutboxMessage } from "@/modules/notifications/render";
 import { acceptVolunteerAgreementByLink, mintVolunteerAgreementLink, readVolunteerAgreementLink, readAgreementFacts } from "@/modules/volunteers/agreement";
 import { renderVolunteerAgreementPdf } from "@/modules/volunteers/agreement-pdf";
+import { ageOn } from "@/modules/registrations/domain/age";
 import { agreementMinimumAge, agreementRolesStamp, guardianStandingOf } from "@/modules/volunteers/domain/volunteer";
 import {
   acceptVolunteerGuardianByLink,
@@ -29,9 +30,13 @@ import { roleDescription } from "../../helpers/role-description";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 import { drawnRuns } from "../../helpers/pdf-drawn";
 
+import { bornAged, bornAgedOn } from "../../helpers/volunteer-birth";
+
 const NOW = new Date("2026-10-13T10:00:00.000Z");
 const LATER = new Date("2026-10-14T10:00:00.000Z");
 const DAY = 24 * 60 * 60_000;
+/** A date of birth that makes a person `years` old on the event's day (§NNN): the last day of being so. */
+const aged = (years: number) => bornAged(years, new Date(NOW.getTime() + 30 * DAY));
 const RENDERED = new Date(NOW.getTime() - 60_000).toISOString();
 
 /**
@@ -69,6 +74,25 @@ describe("§768 volunteers under eighteen and their guardian", () => {
       translations,
       now: NOW,
     });
+  }
+
+  /** A notice approved before the profile's boxes were named (§758's): the form asks no date and the entry takes none. */
+  async function approveNoticeWithoutProfile() {
+    const body = (text: string) => ({ sections: [{ paragraphs: [`Voluntari ({{volunteers}}, {{volunteerAgreement}}): ${text}`] }] });
+    const translations: LegalDocumentTranslationInput[] = [
+      { locale: "ro", title: "Confidențialitate", body: body("păstrăm numele") },
+      { locale: "en", title: "Privacy", body: body("we keep the name") },
+    ];
+    await insertLegalDocumentVersion(db, {
+      key: "PRIVACY_NOTICE",
+      version: 1,
+      effectiveAt: new Date("2026-01-01T00:00:00.000Z"),
+      isApproved: true,
+      contentSha256: computeContentHash(translations),
+      translations,
+      now: NOW,
+    });
+    await approveAgreement();
   }
 
   /** The agreement in force: the platform's template (its minors' clause names the guardian), or — `minors: false` — one approved before it. */
@@ -116,7 +140,7 @@ describe("§768 volunteers under eighteen and their guardian", () => {
     locale: "ro",
     consent: true,
     agreement: true,
-    age: "15",
+    birthDate: aged(15),
     sex: "MALE",
     city: "Brașov",
     guardianName: "Maria Popescu",
@@ -134,7 +158,7 @@ describe("§768 volunteers under eighteen and their guardian", () => {
       {
         kind: "add",
         eventId,
-        fields: { roleIds: [roleId], assignedRoleId: roleId, name: "Dan Tânărul", email: "dan@example.test", phone: "+40712345679", note: "", age: "15", guardianName: "Maria Popescu", guardianEmail: "maria@example.test", ...extra },
+        fields: { roleIds: [roleId], assignedRoleId: roleId, name: "Dan Tânărul", email: "dan@example.test", phone: "+40712345679", note: "", birthDate: aged(15), guardianName: "Maria Popescu", guardianEmail: "maria@example.test", ...extra },
       },
       NOW,
     );
@@ -189,25 +213,25 @@ describe("§768 volunteers under eighteen and their guardian", () => {
     it("says on the age's own box that a person under eighteen is not taken yet — the adults' form is untouched", async () => {
       await approveNotice(2, false);
       const { event, role } = await seedEvent();
-      await expect(submitVolunteer(db, event.id, form(role.id), NOW)).rejects.toMatchObject({ code: "VALIDATION_ERROR", fields: ["age"] });
+      await expect(submitVolunteer(db, event.id, form(role.id), NOW)).rejects.toMatchObject({ code: "VALIDATION_ERROR", fields: ["birthDate"] });
       expect(await db.select().from(eventVolunteers)).toHaveLength(0);
       expect(await db.select().from(emailOutbox)).toHaveLength(0);
       // An adult is taken as ever, the guardian's boxes dropped.
-      expect(await submitVolunteer(db, event.id, form(role.id, { age: "30", guardianName: "", guardianEmail: "", guardianAware: false }), NOW)).toEqual({ outcome: "done" });
+      expect(await submitVolunteer(db, event.id, form(role.id, { birthDate: aged(30), guardianName: "", guardianEmail: "", guardianAware: false }), NOW)).toEqual({ outcome: "done" });
     });
 
     it("says the same while the agreement carries no clause for the guardian", async () => {
       await approveAgreement(2, false);
       const { event, role } = await seedEvent();
-      await expect(submitVolunteer(db, event.id, form(role.id), NOW)).rejects.toMatchObject({ code: "VALIDATION_ERROR", fields: ["age"] });
+      await expect(submitVolunteer(db, event.id, form(role.id), NOW)).rejects.toMatchObject({ code: "VALIDATION_ERROR", fields: ["birthDate"] });
     });
 
     it("keeps the organizers' entry shut to a person under eighteen too, naming the age", async () => {
       await approveNotice(2, false);
       const { event, role } = await seedEvent();
       await expect(
-        changeVolunteer(db, admin, { kind: "add", eventId: event.id, fields: { roleIds: [role.id], assignedRoleId: "", name: "Dan", email: "dan@example.test", phone: "+40712345679", note: "", age: "15", guardianName: "Maria Popescu" } }, NOW),
-      ).rejects.toMatchObject({ code: "VALIDATION_ERROR", fields: ["age"] });
+        changeVolunteer(db, admin, { kind: "add", eventId: event.id, fields: { roleIds: [role.id], assignedRoleId: "", name: "Dan", email: "dan@example.test", phone: "+40712345679", note: "", birthDate: aged(15), guardianName: "Maria Popescu" } }, NOW),
+      ).rejects.toMatchObject({ code: "VALIDATION_ERROR", fields: ["birthDate"] });
       expect(await db.select().from(eventVolunteers)).toHaveLength(0);
     });
   });
@@ -233,7 +257,7 @@ describe("§768 volunteers under eighteen and their guardian", () => {
       await approveAgreement(2, false);
       const { event, role } = await seedEvent();
       // An adult signs under the old text: its blanks, its fingerprint and the page it read all say eighteen.
-      expect(await submitVolunteer(db, event.id, form(role.id, { age: "30", guardianName: "", guardianEmail: "", guardianAware: false }), NOW)).toEqual({ outcome: "done" });
+      expect(await submitVolunteer(db, event.id, form(role.id, { birthDate: aged(30), guardianName: "", guardianEmail: "", guardianAware: false }), NOW)).toEqual({ outcome: "done" });
       const [adult] = await db.select().from(eventVolunteers);
       expect(readAgreementFacts(adult.agreementFacts)?.minimumAge).toBe("18 ani");
       const old = await findCurrentApprovedDocument(db, "VOLUNTEER_AGREEMENT", "ro", NOW);
@@ -264,23 +288,23 @@ describe("§768 volunteers under eighteen and their guardian", () => {
   describe("the organizers' card while the texts do not describe minors", () => {
     it("refuses a typed age under eighteen on the age's own box — the only one the card draws — whether the parent's boxes came or not", async () => {
       const { event, role } = await seedEvent();
-      const id = await minorByHand(event.id, role.id, { age: "40", guardianName: "", guardianEmail: "" });
+      const id = await minorByHand(event.id, role.id, { birthDate: aged(40), guardianName: "", guardianEmail: "" });
       await approveNotice(2, false);
       const base = { roleIds: [role.id], assignedRoleId: role.id, name: "Dan Tânărul", email: "dan@example.test", phone: "+40712345679", note: "" };
       // No boxes posted (the card drew none): the refusal is the age's, not a guardianName nobody can see.
-      await expect(changeVolunteer(db, admin, { kind: "edit", eventId: event.id, id, fields: { ...base, age: "16" } }, NOW)).rejects.toMatchObject({ code: "VALIDATION_ERROR", fields: ["age"] });
-      await expect(changeVolunteer(db, admin, { kind: "add", eventId: event.id, fields: { ...base, email: "ion@example.test", age: "16" } }, NOW)).rejects.toMatchObject({ code: "VALIDATION_ERROR", fields: ["age"] });
+      await expect(changeVolunteer(db, admin, { kind: "edit", eventId: event.id, id, fields: { ...base, birthDate: aged(16) } }, NOW)).rejects.toMatchObject({ code: "VALIDATION_ERROR", fields: ["birthDate"] });
+      await expect(changeVolunteer(db, admin, { kind: "add", eventId: event.id, fields: { ...base, email: "ion@example.test", birthDate: aged(16) } }, NOW)).rejects.toMatchObject({ code: "VALIDATION_ERROR", fields: ["birthDate"] });
       expect(await row(id)).toMatchObject({ age: 40, guardianName: null });
       // Thirteen is the age's own refusal whatever the texts say; an adult's age saves.
-      await expect(changeVolunteer(db, admin, { kind: "edit", eventId: event.id, id, fields: { ...base, age: "13" } }, NOW)).rejects.toMatchObject({ fields: ["age"] });
-      expect(await changeVolunteer(db, admin, { kind: "edit", eventId: event.id, id, fields: { ...base, age: "41" } }, NOW)).toMatchObject({ changed: true });
+      await expect(changeVolunteer(db, admin, { kind: "edit", eventId: event.id, id, fields: { ...base, birthDate: aged(13) } }, NOW)).rejects.toMatchObject({ fields: ["birthDate"] });
+      expect(await changeVolunteer(db, admin, { kind: "edit", eventId: event.id, id, fields: { ...base, birthDate: aged(41) } }, NOW)).toMatchObject({ changed: true });
     });
 
     it("keeps refusing on the parent's boxes for a person who already is under eighteen — they are drawn for them", async () => {
       const { event, role } = await seedEvent();
       const id = await minorByHand(event.id, role.id);
       await approveNotice(2, false);
-      const base = { roleIds: [role.id], assignedRoleId: role.id, name: "Dan Tânărul", email: "dan@example.test", phone: "+40712345679", note: "", age: "16" };
+      const base = { roleIds: [role.id], assignedRoleId: role.id, name: "Dan Tânărul", email: "dan@example.test", phone: "+40712345679", note: "", birthDate: aged(16) };
       await expect(changeVolunteer(db, admin, { kind: "edit", eventId: event.id, id, fields: base }, NOW)).rejects.toMatchObject({ code: "VALIDATION_ERROR", fields: ["guardianName"] });
     });
   });
@@ -288,15 +312,15 @@ describe("§768 volunteers under eighteen and their guardian", () => {
   describe("the public form: the boundary", () => {
     it("refuses thirteen on the age's box, fourteen without a guardian on each of the three boxes, and takes fourteen to seventeen with one", async () => {
       const { event, role } = await seedEvent();
-      await expect(submitVolunteer(db, event.id, form(role.id, { age: "13" }), NOW)).rejects.toMatchObject({ code: "VALIDATION_ERROR", fields: ["age"] });
-      const alone = submitVolunteer(db, event.id, form(role.id, { age: "14", guardianName: "", guardianEmail: "", guardianAware: false }), NOW);
+      await expect(submitVolunteer(db, event.id, form(role.id, { birthDate: aged(13) }), NOW)).rejects.toMatchObject({ code: "VALIDATION_ERROR", fields: ["birthDate"] });
+      const alone = submitVolunteer(db, event.id, form(role.id, { birthDate: aged(14), guardianName: "", guardianEmail: "", guardianAware: false }), NOW);
       await expect(alone).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
       await alone.catch((error) => expect([...error.fields].sort()).toEqual(["guardianAware", "guardianEmail", "guardianName"]));
       expect(await db.select().from(eventVolunteers)).toHaveLength(0);
       expect(await db.select().from(emailOutbox)).toHaveLength(0);
 
-      for (const [index, age] of ["14", "17"].entries()) {
-        expect(await submitVolunteer(db, event.id, form(role.id, { age, email: `dan${index}@example.test`, guardianEmail: `maria${index}@example.test` }), NOW)).toEqual({ outcome: "done" });
+      for (const [index, age] of [14, 17].entries()) {
+        expect(await submitVolunteer(db, event.id, form(role.id, { birthDate: aged(age), email: `dan${index}@example.test`, guardianEmail: `maria${index}@example.test` }), NOW)).toEqual({ outcome: "done" });
       }
       const people = await db.select().from(eventVolunteers);
       expect(people.map((person) => person.age).sort()).toEqual([14, 17]);
@@ -336,7 +360,7 @@ describe("§768 volunteers under eighteen and their guardian", () => {
 
     it("takes eighteen alone and keeps nothing of the guardian's boxes", async () => {
       const { event, role } = await seedEvent();
-      await submitVolunteer(db, event.id, form(role.id, { age: "18" }), NOW);
+      await submitVolunteer(db, event.id, form(role.id, { birthDate: aged(18) }), NOW);
       const [person] = await db.select().from(eventVolunteers);
       expect(person).toMatchObject({ age: 18, guardianName: null, guardianEmail: null, guardianRequestedAt: null });
       expect(await outboxOf("VOLUNTEER_GUARDIAN_REQUEST")).toHaveLength(0);
@@ -458,7 +482,7 @@ describe("§768 volunteers under eighteen and their guardian", () => {
       await changeVolunteer(
         db,
         admin,
-        { kind: "edit", eventId: event.id, id, fields: { roleIds: [role.id], assignedRoleId: role.id, name: "Dan Tânărul", email: "dan@example.test", phone: "+40712345679", note: "", age: "15", guardianName: "Maria Popescu", guardianEmail: "maria.noua@example.test" } },
+        { kind: "edit", eventId: event.id, id, fields: { roleIds: [role.id], assignedRoleId: role.id, name: "Dan Tânărul", email: "dan@example.test", phone: "+40712345679", note: "", birthDate: aged(15), guardianName: "Maria Popescu", guardianEmail: "maria.noua@example.test" } },
         NOW,
       );
       expect(await mintVolunteerGuardianLink(db, id, "maria@example.test", NOW)).toBeNull();
@@ -476,7 +500,7 @@ describe("§768 volunteers under eighteen and their guardian", () => {
     it("refuses «Confirmă» for a minor until the guardian accepts, with the sentence's own code — and never holds an adult up", async () => {
       const { event, role } = await seedEvent();
       await submitVolunteer(db, event.id, form(role.id), NOW);
-      await submitVolunteer(db, event.id, form(role.id, { age: "30", email: "adult@example.test", guardianName: "", guardianEmail: "", guardianAware: false }), NOW);
+      await submitVolunteer(db, event.id, form(role.id, { birthDate: aged(30), email: "adult@example.test", guardianName: "", guardianEmail: "", guardianAware: false }), NOW);
       const listed = await listVolunteers(db, event.id);
       const minor = listed.find((person) => person.email === "dan@example.test")!;
       const adult = listed.find((person) => person.email === "adult@example.test")!;
@@ -518,7 +542,7 @@ describe("§768 volunteers under eighteen and their guardian", () => {
       const onPaper = await minorByHand(event.id, role.id, { email: "ana@example.test", name: "Ana Tânăra", guardianEmail: "" });
       await expect(requestVolunteerGuardian(db, admin, { eventId: event.id, id: onPaper }, NOW)).rejects.toMatchObject({ code: "VOLUNTEER_GUARDIAN_NO_EMAIL" });
       // An adult is not a minor; a cancelled person is not asked.
-      const adult = (await changeVolunteer(db, admin, { kind: "add", eventId: event.id, fields: { roleIds: [role.id], assignedRoleId: "", name: "Ion", email: "ion@example.test", phone: "+40712345680", note: "", age: "40" } }, NOW)).volunteer.id;
+      const adult = (await changeVolunteer(db, admin, { kind: "add", eventId: event.id, fields: { roleIds: [role.id], assignedRoleId: "", name: "Ion", email: "ion@example.test", phone: "+40712345680", note: "", birthDate: aged(40) } }, NOW)).volunteer.id;
       await expect(requestVolunteerGuardian(db, admin, { eventId: event.id, id: adult }, NOW)).rejects.toMatchObject({ code: "CONFLICT" });
       // Accepted: nothing left to send.
       const secret = (await mintVolunteerGuardianLink(db, id, "maria@example.test", NOW))!.secret;
@@ -584,7 +608,7 @@ describe("§768 volunteers under eighteen and their guardian", () => {
 
     it("refuses a paper record for an adult and while the texts do not describe minors", async () => {
       const { event, role } = await seedEvent();
-      const adult = (await changeVolunteer(db, admin, { kind: "add", eventId: event.id, fields: { roleIds: [role.id], assignedRoleId: "", name: "Ion", email: "ion@example.test", phone: "+40712345680", note: "", age: "40" } }, NOW)).volunteer.id;
+      const adult = (await changeVolunteer(db, admin, { kind: "add", eventId: event.id, fields: { roleIds: [role.id], assignedRoleId: "", name: "Ion", email: "ion@example.test", phone: "+40712345680", note: "", birthDate: aged(40) } }, NOW)).volunteer.id;
       await expect(recordPaperVolunteerGuardian(db, admin, { eventId: event.id, id: adult, printed: await printedFor(adult) }, NOW)).rejects.toMatchObject({ code: "CONFLICT" });
       const id = await minorByHand(event.id, role.id);
       const printed = await printedFor(id);
@@ -597,10 +621,10 @@ describe("§768 volunteers under eighteen and their guardian", () => {
     it("takes a minor with the parent's name — the address optional, the consent on paper — and refuses thirteen", async () => {
       const { event, role } = await seedEvent();
       await expect(
-        changeVolunteer(db, admin, { kind: "add", eventId: event.id, fields: { roleIds: [role.id], assignedRoleId: "", name: "Dan", email: "dan@example.test", phone: "+40712345679", note: "", age: "13", guardianName: "Maria Popescu" } }, NOW),
-      ).rejects.toMatchObject({ code: "VALIDATION_ERROR", fields: ["age"] });
+        changeVolunteer(db, admin, { kind: "add", eventId: event.id, fields: { roleIds: [role.id], assignedRoleId: "", name: "Dan", email: "dan@example.test", phone: "+40712345679", note: "", birthDate: aged(13), guardianName: "Maria Popescu" } }, NOW),
+      ).rejects.toMatchObject({ code: "VALIDATION_ERROR", fields: ["birthDate"] });
       await expect(
-        changeVolunteer(db, admin, { kind: "add", eventId: event.id, fields: { roleIds: [role.id], assignedRoleId: "", name: "Dan", email: "dan@example.test", phone: "+40712345679", note: "", age: "15" } }, NOW),
+        changeVolunteer(db, admin, { kind: "add", eventId: event.id, fields: { roleIds: [role.id], assignedRoleId: "", name: "Dan", email: "dan@example.test", phone: "+40712345679", note: "", birthDate: aged(15) } }, NOW),
       ).rejects.toMatchObject({ code: "VALIDATION_ERROR", fields: ["guardianName"] });
       const id = await minorByHand(event.id, role.id, { guardianEmail: "" });
       expect(await row(id)).toMatchObject({ age: 15, guardianName: "Maria Popescu", guardianEmail: null, guardianAcceptedAt: null });
@@ -613,22 +637,22 @@ describe("§768 volunteers under eighteen and their guardian", () => {
       await changeVolunteer(
         db,
         admin,
-        { kind: "edit", eventId: event.id, id, fields: { roleIds: [role.id], assignedRoleId: role.id, name: "Dan Tânărul", email: "dan@example.test", phone: "+40712345679", note: "", age: "19" } },
+        { kind: "edit", eventId: event.id, id, fields: { roleIds: [role.id], assignedRoleId: role.id, name: "Dan Tânărul", email: "dan@example.test", phone: "+40712345679", note: "", birthDate: aged(19) } },
         NOW,
       );
       expect(await row(id)).toMatchObject({ age: 19, guardianName: null, guardianEmail: null, guardianTokenHash: null, guardianRequestedAt: null });
       // The link a parent holds finds a volunteer who is no longer a minor: nothing.
       expect(await readVolunteerGuardianLink(db, secret, "ro", NOW)).toEqual({ status: "invalid" });
       const [audit] = await db.select().from(auditLogs).where(eq(auditLogs.action, "volunteer.edited"));
-      expect((audit.metadataJson as { fields: string[] }).fields).toEqual(expect.arrayContaining(["age", "guardianCleared"]));
+      expect((audit.metadataJson as { fields: string[] }).fields).toEqual(expect.arrayContaining(["birthDate", "guardianCleared"]));
     });
 
     it("refuses to turn a confirmed adult into a minor with no consent — «Confirmat» is not kept without the parent's agreement", async () => {
       const { event, role } = await seedEvent();
-      const id = await minorByHand(event.id, role.id, { age: "20", guardianName: "", guardianEmail: "" });
+      const id = await minorByHand(event.id, role.id, { birthDate: aged(20), guardianName: "", guardianEmail: "" });
       await changeVolunteer(db, admin, { kind: "setState", eventId: event.id, id, state: "CONFIRMED" }, NOW);
-      const base = { roleIds: [role.id], assignedRoleId: role.id, name: "Dan Tânărul", email: "dan@example.test", phone: "+40712345679", note: "", age: "16", guardianName: "Maria Popescu", guardianEmail: "maria@example.test" };
-      await expect(changeVolunteer(db, admin, { kind: "edit", eventId: event.id, id, fields: base }, NOW)).rejects.toMatchObject({ code: "VOLUNTEER_GUARDIAN_MISSING", fields: ["age"] });
+      const base = { roleIds: [role.id], assignedRoleId: role.id, name: "Dan Tânărul", email: "dan@example.test", phone: "+40712345679", note: "", birthDate: aged(16), guardianName: "Maria Popescu", guardianEmail: "maria@example.test" };
+      await expect(changeVolunteer(db, admin, { kind: "edit", eventId: event.id, id, fields: base }, NOW)).rejects.toMatchObject({ code: "VOLUNTEER_GUARDIAN_MISSING", fields: ["birthDate"] });
       expect(await row(id)).toMatchObject({ age: 20, state: "CONFIRMED", guardianName: null });
       // Moved back to «Înscris» first, the same edit is taken: the consent is then asked as for any minor.
       await changeVolunteer(db, admin, { kind: "setState", eventId: event.id, id, state: "REGISTERED" }, NOW);
@@ -640,7 +664,7 @@ describe("§768 volunteers under eighteen and their guardian", () => {
       const { event, role } = await seedEvent();
       const id = await minorByHand(event.id, role.id);
       const live = (await mintVolunteerGuardianLink(db, id, "maria@example.test", NOW))!.secret;
-      const base = { roleIds: [role.id], assignedRoleId: role.id, name: "Dan Tânărul", email: "dan@example.test", phone: "+40712345679", note: "", age: "15" };
+      const base = { roleIds: [role.id], assignedRoleId: role.id, name: "Dan Tânărul", email: "dan@example.test", phone: "+40712345679", note: "", birthDate: aged(15) };
       await changeVolunteer(db, admin, { kind: "edit", eventId: event.id, id, fields: { ...base, guardianName: "Maria Popescu", guardianEmail: "maria.noua@example.test" } }, NOW);
       expect(await readVolunteerGuardianLink(db, live, "ro", NOW)).toEqual({ status: "invalid" });
 
@@ -667,7 +691,7 @@ describe("§768 volunteers under eighteen and their guardian", () => {
       expect(await acceptVolunteerAgreementByLink(db, secret, { agreement: true, locale: "ro" }, NOW)).toEqual({ outcome: "accepted", volunteerId: id });
       expect(await row(id)).toMatchObject({ agreementMethod: "LINK", declaredAdult: false });
 
-      const adult = (await changeVolunteer(db, admin, { kind: "add", eventId: event.id, fields: { roleIds: [role.id], assignedRoleId: role.id, name: "Ion", email: "ion@example.test", phone: "+40712345680", note: "", age: "40" } }, NOW)).volunteer.id;
+      const adult = (await changeVolunteer(db, admin, { kind: "add", eventId: event.id, fields: { roleIds: [role.id], assignedRoleId: role.id, name: "Ion", email: "ion@example.test", phone: "+40712345680", note: "", birthDate: aged(40) } }, NOW)).volunteer.id;
       const adultSecret = (await mintVolunteerAgreementLink(db, adult, "ion@example.test", NOW))!.secret;
       expect(await readVolunteerAgreementLink(db, adultSecret, "ro", NOW)).toMatchObject({ status: "open", minor: false });
       await expect(acceptVolunteerAgreementByLink(db, adultSecret, { agreement: true, locale: "ro" }, NOW)).rejects.toMatchObject({ code: "VALIDATION_ERROR", fields: ["adult"] });
@@ -695,7 +719,7 @@ describe("§768 volunteers under eighteen and their guardian", () => {
 
     it("an adult's PDF is unchanged: the organizer's line, no clause about a minor", async () => {
       const { event, role } = await seedEvent();
-      const adult = (await changeVolunteer(db, admin, { kind: "add", eventId: event.id, fields: { roleIds: [role.id], assignedRoleId: role.id, name: "Ion", email: "ion@example.test", phone: "+40712345680", note: "", age: "40" } }, NOW)).volunteer.id;
+      const adult = (await changeVolunteer(db, admin, { kind: "add", eventId: event.id, fields: { roleIds: [role.id], assignedRoleId: role.id, name: "Ion", email: "ion@example.test", phone: "+40712345680", note: "", birthDate: aged(40) } }, NOW)).volunteer.id;
       const text = await words(adult);
       expect(text).toContain("Pentru organizator (nume și semnătură):");
       expect(text).not.toContain("Semnătura părintelui sau tutorelui");
@@ -765,6 +789,162 @@ describe("§768 volunteers under eighteen and their guardian", () => {
       const text = await words(id);
       expect(text).toContain("Acordul părintelui sau tutorelui, Maria Popescu, semnat pe hârtie");
       expect(text).toContain("Ana Admin");
+    });
+  });
+
+  describe("§NNN the date of birth: the age is counted on the event's day, not today's", () => {
+    /** The event's day in its own zone: NOW + 30 days at 10:00 UTC is 12 November 2026 in Brașov. */
+    const EVENT_DAY = "2026-11-12";
+    /** The day after a date, `YYYY-MM-DD`. */
+    const nextDay = (day: string) => new Date(Date.parse(`${day}T00:00:00Z`) + DAY).toISOString().slice(0, 10);
+
+    it("takes fourteen today, fourteen tomorrow and fourteen on the event's own morning — and refuses the day after, thirteen on the event's day", async () => {
+      const { event, role } = await seedEvent();
+      // Born so that fourteen was reached today (13 October), tomorrow, and on the event's day itself: all taken, each with a guardian.
+      const born = [bornAgedOn(14, "2026-10-13"), bornAgedOn(14, "2026-10-14"), bornAgedOn(14, EVENT_DAY)];
+      for (const [index, birthDate] of born.entries()) {
+        expect(await submitVolunteer(db, event.id, form(role.id, { birthDate, email: `dan${index}@example.test`, guardianEmail: `maria${index}@example.test` }), NOW), birthDate).toEqual({ outcome: "done" });
+      }
+      const kept = await db.select().from(eventVolunteers).orderBy(eventVolunteers.createdAt);
+      expect(kept.map((person) => person.age)).toEqual([14, 14, 14]);
+      expect(kept.map((person) => person.dateOfBirth).sort()).toEqual([...born].sort());
+      // One day later and fourteen comes the day after the event: thirteen on the event's day, refused on the date's own box.
+      await expect(submitVolunteer(db, event.id, form(role.id, { birthDate: nextDay(born[2]), email: "late@example.test" }), NOW)).rejects.toMatchObject({ code: "VALIDATION_ERROR", fields: ["birthDate"] });
+      expect(await db.select().from(eventVolunteers)).toHaveLength(3);
+    });
+
+    it("tells seventeen from eighteen on the event's day: a person who is seventeen today and eighteen by the race is an adult, and the other way is not", async () => {
+      const { event, role } = await seedEvent();
+      // Eighteen tomorrow, seventeen on the event's day: a minor, and the guardian is asked for.
+      const stillMinor = nextDay(bornAgedOn(18, EVENT_DAY));
+      const noGuardian = submitVolunteer(db, event.id, form(role.id, { birthDate: stillMinor, guardianName: "", guardianEmail: "", guardianAware: false }), NOW);
+      await expect(noGuardian).rejects.toMatchObject({ code: "VALIDATION_ERROR", fields: ["guardianName", "guardianEmail", "guardianAware"] });
+      expect(await submitVolunteer(db, event.id, form(role.id, { birthDate: stillMinor }), NOW)).toEqual({ outcome: "done" });
+      // Eighteen on the event's day — seventeen today (the birthday is within the month): an adult, no guardian, and what was typed in the boxes is dropped.
+      const adultByTheRace = bornAgedOn(18, EVENT_DAY);
+      expect([ageOn(adultByTheRace, "2026-10-13"), ageOn(adultByTheRace, EVENT_DAY)]).toEqual([17, 18]);
+      expect(await submitVolunteer(db, event.id, form(role.id, { birthDate: adultByTheRace, email: "ana@example.test", guardianName: "Maria Popescu", guardianEmail: "m@example.test" }), NOW)).toEqual({ outcome: "done" });
+      const rows = await db.select().from(eventVolunteers).orderBy(eventVolunteers.createdAt);
+      expect(rows.map((person) => [person.age, person.guardianName])).toEqual([[17, "Maria Popescu"], [18, null]]);
+    });
+
+    it("takes the person who is eighteen on the event's day while the club cannot take minors, and refuses the one who is seventeen on it", async () => {
+      await approveNotice(2, false);
+      const { event, role } = await seedEvent();
+      expect(await submitVolunteer(db, event.id, form(role.id, { birthDate: bornAgedOn(18, EVENT_DAY) }), NOW)).toEqual({ outcome: "done" });
+      // One day younger: seventeen on the event's day, refused on the date's own box with the minors-closed sentence's box.
+      await expect(
+        submitVolunteer(db, event.id, form(role.id, { birthDate: nextDay(bornAgedOn(18, EVENT_DAY)), email: "young@example.test" }), NOW),
+      ).rejects.toMatchObject({ code: "VALIDATION_ERROR", fields: ["birthDate"] });
+      // The organizers' entry holds the same line, naming the same box.
+      await expect(
+        changeVolunteer(db, admin, { kind: "add", eventId: event.id, fields: { roleIds: [role.id], assignedRoleId: "", name: "Dan", email: "dan@example.test", phone: "+40712345679", note: "", birthDate: bornAgedOn(17, EVENT_DAY) } }, NOW),
+      ).rejects.toMatchObject({ code: "VALIDATION_ERROR", fields: ["birthDate"] });
+    });
+
+    it("counts a person born on 29 February as a common year does: eighteen on 1 March, seventeen on the 28th", async () => {
+      await approveNotice(2, false);
+      const { event, role } = await seedEvent();
+      const born = "2008-02-29";
+      // The event's day is 12 November 2026 here, so the leap-day birthday is the arithmetic's: the rule is `ageOn`, shown on both sides of 1 March.
+      expect(ageOn(born, "2026-02-28")).toBe(17);
+      expect(ageOn(born, "2026-03-01")).toBe(18);
+      expect(ageOn(born, EVENT_DAY)).toBe(18);
+      expect(await submitVolunteer(db, event.id, form(role.id, { birthDate: "29.02.2008" }), NOW)).toEqual({ outcome: "done" });
+      expect(await db.select({ age: eventVolunteers.age, born: eventVolunteers.dateOfBirth }).from(eventVolunteers)).toEqual([{ age: 18, born }]);
+      // 29 February 2009 is no day at all.
+      await expect(submitVolunteer(db, event.id, form(role.id, { birthDate: "29.02.2009", email: "other@example.test" }), NOW)).rejects.toMatchObject({ fields: ["birthDate"] });
+    });
+
+    it("counts the age on the gun's day when the race has one, in the event's own zone", async () => {
+      const { event, role } = await seedEvent();
+      // The event begins on the 12th; the gun is on the 13th, 00:30 in Brașov (22:30 UTC on the 12th) — the 13th, not the UTC day.
+      await db.update(events).set({ raceStartsAt: new Date("2026-11-12T22:30:00.000Z"), endsAt: new Date("2026-11-13T12:00:00.000Z") }).where(eq(events.id, event.id));
+      const bornOnGunDay = bornAgedOn(20, "2026-11-13");
+      expect(await submitVolunteer(db, event.id, form(role.id, { birthDate: bornOnGunDay, email: "gun@example.test", guardianName: "", guardianEmail: "", guardianAware: false }), NOW)).toEqual({ outcome: "done" });
+      // Twenty on the gun's day, nineteen on the event's first day: the gun's day counts.
+      expect((await db.select().from(eventVolunteers))[0]).toMatchObject({ age: 20, dateOfBirth: bornOnGunDay });
+      // The same for an entry by hand.
+      const hand = await changeVolunteer(db, admin, { kind: "add", eventId: event.id, fields: { roleIds: [role.id], assignedRoleId: "", name: "Ion", email: "ion@example.test", phone: "+40712345680", note: "", birthDate: bornOnGunDay } }, NOW);
+      expect((await row(hand.volunteer.id)).age).toBe(20);
+    });
+
+    it("writes the date and its age by hand too, reads the typed shapes, and audits the box's name only — never the date", async () => {
+      const { event, role } = await seedEvent();
+      const id = await minorByHand(event.id, role.id, { birthDate: "15.11.2010" });
+      expect(await row(id)).toMatchObject({ dateOfBirth: "2010-11-15", age: 15, guardianName: "Maria Popescu" });
+      const [audit] = await db.select().from(auditLogs).where(eq(auditLogs.action, "volunteer.added"));
+      expect(JSON.stringify(audit.metadataJson)).not.toMatch(/2010|birthDate/);
+      // A correction of the date: the age follows it, the trail names the box.
+      await changeVolunteer(
+        db,
+        admin,
+        { kind: "edit", eventId: event.id, id, fields: { roleIds: [role.id], assignedRoleId: role.id, name: "Dan Tânărul", email: "dan@example.test", phone: "+40712345679", note: "", birthDate: "15.11.2009", guardianName: "Maria Popescu", guardianEmail: "maria@example.test" } },
+        LATER,
+      );
+      expect(await row(id)).toMatchObject({ dateOfBirth: "2009-11-15", age: 16 });
+      const edited = (await db.select().from(auditLogs).where(eq(auditLogs.action, "volunteer.edited")))[0];
+      expect((edited.metadataJson as { fields: string[] }).fields).toEqual(["birthDate"]);
+      expect(JSON.stringify(edited.metadataJson)).not.toMatch(/2009/);
+    });
+
+    it("keeps the age of a row from before the date when its box is left empty — the guardian is not lost over a corrected telephone number — and a date typed replaces it", async () => {
+      const { event, role } = await seedEvent();
+      // A row as the earlier release wrote it: an age of sixteen, a guardian, no date.
+      const [old] = await db
+        .insert(eventVolunteers)
+        .values({
+          eventId: event.id,
+          roleId: role.id,
+          name: "Dan Tânărul",
+          email: "dan@example.test",
+          canonicalEmail: "dan@example.test",
+          canonicalizationVersion: 1,
+          phone: "+40712345679",
+          source: "STAFF",
+          age: 16,
+          guardianName: "Maria Popescu",
+          guardianEmail: "maria@example.test",
+        })
+        .returning();
+      await db.insert(eventVolunteerRoleChoices).values({ volunteerId: old.id, roleId: role.id });
+      expect(old.dateOfBirth).toBeNull();
+      const fields = { roleIds: [role.id], assignedRoleId: role.id, name: "Dan Tânărul", email: "dan@example.test", note: "", birthDate: "", guardianName: "Maria Popescu", guardianEmail: "maria@example.test" };
+      await changeVolunteer(db, admin, { kind: "edit", eventId: event.id, id: old.id, fields: { ...fields, phone: "+40712345681" } }, LATER);
+      expect(await row(old.id)).toMatchObject({ age: 16, dateOfBirth: null, guardianName: "Maria Popescu", guardianEmail: "maria@example.test", phone: "+40712345681" });
+      const [edited] = await db.select().from(auditLogs).where(eq(auditLogs.action, "volunteer.edited"));
+      expect((edited.metadataJson as { fields: string[] }).fields).toEqual(["phone"]);
+      // A date typed replaces the age: forty, so the guardian goes with it.
+      await changeVolunteer(db, admin, { kind: "edit", eventId: event.id, id: old.id, fields: { ...fields, phone: "+40712345681", birthDate: bornAgedOn(40, EVENT_DAY) } }, LATER);
+      expect(await row(old.id)).toMatchObject({ age: 40, dateOfBirth: bornAgedOn(40, EVENT_DAY), guardianName: null, guardianEmail: null });
+    });
+
+    it("counts the age again on the next save when the event moved: the date is the person's, the age is the day's", async () => {
+      const { event, role } = await seedEvent();
+      const birthDate = nextDay(bornAgedOn(18, EVENT_DAY));
+      const id = await minorByHand(event.id, role.id, { birthDate });
+      expect((await row(id)).age).toBe(17);
+      // The race moves a month: eighteen by then.
+      await db.update(events).set({ startsAt: new Date(NOW.getTime() + 70 * DAY) }).where(eq(events.id, event.id));
+      await changeVolunteer(
+        db,
+        admin,
+        { kind: "edit", eventId: event.id, id, fields: { roleIds: [role.id], assignedRoleId: role.id, name: "Dan Tânărul", email: "dan@example.test", phone: "+40712345679", note: "nou", birthDate, guardianName: "Maria Popescu", guardianEmail: "maria@example.test" } },
+        LATER,
+      );
+      expect(await row(id)).toMatchObject({ age: 18, dateOfBirth: birthDate, guardianName: null });
+      const edited = (await db.select().from(auditLogs).where(eq(auditLogs.action, "volunteer.edited")))[0];
+      expect((edited.metadataJson as { fields: string[] }).fields).toEqual(expect.arrayContaining(["age", "note", "guardianCleared"]));
+    });
+
+    it("refuses a date the notice in force does not name while the profile boxes are not asked — a hand entry carrying one is refused on the box", async () => {
+      await resetTables(db);
+      await approveNoticeWithoutProfile();
+      [admin] = await db.insert(staffUsers).values({ email: "admin@example.test", displayName: "Ana Admin", role: "ADMIN" }).returning();
+      const { event, role } = await seedEvent();
+      await expect(
+        changeVolunteer(db, admin, { kind: "add", eventId: event.id, fields: { roleIds: [role.id], assignedRoleId: "", name: "Ion", email: "ion@example.test", phone: "+40712345680", note: "", birthDate: bornAgedOn(40, EVENT_DAY) } }, NOW),
+      ).rejects.toMatchObject({ code: "VALIDATION_ERROR", fields: ["birthDate"] });
     });
   });
 });

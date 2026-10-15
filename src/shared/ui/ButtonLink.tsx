@@ -8,7 +8,9 @@ import { prefetchFor } from "@/i18n/prefetch";
 // MUI's own `href` is a plain string. It is dropped so the locale-aware one wins: an
 // intersection of the two is a type nothing can satisfy, which surfaces as an error at the
 // first call site that passes a route object rather than here.
-type Props = Omit<ButtonProps, "href"> & Pick<ComponentProps<typeof Link>, "href">;
+// `target` and `rel` pass through for a link that opens a new tab (the event page's «Vreau să fiu voluntar», §NNN): the house's way is
+// `target="_blank"` with a `rel` and the new-tab mark, as `LegalLink` does (§197).
+type Props = Omit<ButtonProps, "href"> & Pick<ComponentProps<typeof Link>, "href" | "target" | "rel">;
 
 /**
  * A locale-aware MUI Button that renders as a link.

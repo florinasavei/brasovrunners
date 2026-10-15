@@ -12,8 +12,9 @@ import {
   volunteerGuardianAcceptSchema,
   volunteerPublicProfileSchemaFor,
   volunteerPublicSchemaFor,
-  volunteerStaffInputSchema,
+  volunteerStaffInputSchemaFor,
 } from "@/modules/volunteers/domain/volunteer";
+import { bornAgedOn } from "../../helpers/volunteer-birth";
 
 /**
  * §768 — volunteers from fourteen, with a parent's or guardian's agreement under eighteen (the owner, 2026-10-14: «voluntarii
@@ -36,6 +37,10 @@ const PUBLIC = {
 };
 const GUARDIAN = { guardianName: "  Maria   Popescu ", guardianEmail: " maria@example.test ", guardianAware: true };
 const NOW = new Date("2026-10-14T10:00:00Z");
+/** The day the ages are counted on (§NNN): the event's. `aged(n)` is the last day of being `n` on it. */
+const EVENT_DAY = "2026-11-21";
+const aged = (years: number) => bornAgedOn(years, EVENT_DAY);
+const volunteerStaffInputSchema = volunteerStaffInputSchemaFor(EVENT_DAY);
 
 describe("§768 the age boundary: fourteen, and eighteen for a person alone", () => {
   it("is one constant of the platform, not a club setting: fourteen to be taken, eighteen to be taken alone", () => {
@@ -51,55 +56,55 @@ describe("§768 the age boundary: fourteen, and eighteen for a person alone", ()
 
   it("refuses thirteen on the age's own box whatever the club's texts say, and takes fourteen only with a guardian", () => {
     for (const minors of [true, false]) {
-      const schema = volunteerPublicProfileSchemaFor(minors);
-      const thirteen = schema.safeParse({ ...PUBLIC, age: "13", ...GUARDIAN });
+      const schema = volunteerPublicProfileSchemaFor(minors, EVENT_DAY);
+      const thirteen = schema.safeParse({ ...PUBLIC, birthDate: aged(13), ...GUARDIAN });
       expect(thirteen.success, `minors ${minors}`).toBe(false);
-      if (!thirteen.success) expect(refusedFields(thirteen.error)).toContain("age");
+      if (!thirteen.success) expect(refusedFields(thirteen.error)).toContain("birthDate");
     }
-    const open = volunteerPublicProfileSchemaFor(true);
+    const open = volunteerPublicProfileSchemaFor(true, EVENT_DAY);
     // Fourteen with the parent's name, address and the person's tick: taken, the boxes folded into one guardian.
-    const taken = open.parse({ ...PUBLIC, age: "14", ...GUARDIAN });
+    const taken = open.parse({ ...PUBLIC, birthDate: aged(14), ...GUARDIAN });
     expect(taken).toMatchObject({ age: 14, guardian: { name: "Maria Popescu", email: "maria@example.test" } });
     expect(taken).not.toHaveProperty("guardianName");
     expect(taken).not.toHaveProperty("guardianAware");
     // Fourteen alone is refused, each missing box named — the name, the address, the tick.
-    const alone = open.safeParse({ ...PUBLIC, age: "14" });
+    const alone = open.safeParse({ ...PUBLIC, birthDate: aged(14) });
     expect(alone.success).toBe(false);
     if (!alone.success) expect(refusedFields(alone.error).sort()).toEqual(["guardianAware", "guardianEmail", "guardianName"]);
     // Seventeen is still a minor; eighteen goes alone, and whatever was typed in the guardian's boxes is dropped, never kept.
-    expect(open.parse({ ...PUBLIC, age: "17", ...GUARDIAN }).guardian).not.toBeNull();
-    const adult = open.parse({ ...PUBLIC, age: "18", ...GUARDIAN });
+    expect(open.parse({ ...PUBLIC, birthDate: aged(17), ...GUARDIAN }).guardian).not.toBeNull();
+    const adult = open.parse({ ...PUBLIC, birthDate: aged(18), ...GUARDIAN });
     expect(adult.guardian).toBeNull();
     expect(JSON.stringify(adult)).not.toContain("Popescu");
-    expect(open.parse({ ...PUBLIC, age: "18" }).guardian).toBeNull();
+    expect(open.parse({ ...PUBLIC, birthDate: aged(18) }).guardian).toBeNull();
   });
 
   it("asks the guardian's address as a real address and the tick as the person's own act, each named apart", () => {
-    const open = volunteerPublicProfileSchemaFor(true);
-    const badAddress = open.safeParse({ ...PUBLIC, age: "15", ...GUARDIAN, guardianEmail: "maria-at-example" });
+    const open = volunteerPublicProfileSchemaFor(true, EVENT_DAY);
+    const badAddress = open.safeParse({ ...PUBLIC, birthDate: aged(15), ...GUARDIAN, guardianEmail: "maria-at-example" });
     expect(badAddress.success).toBe(false);
     if (!badAddress.success) expect(refusedFields(badAddress.error)).toEqual(["guardianEmail"]);
-    const noTick = open.safeParse({ ...PUBLIC, age: "15", ...GUARDIAN, guardianAware: false });
+    const noTick = open.safeParse({ ...PUBLIC, birthDate: aged(15), ...GUARDIAN, guardianAware: false });
     expect(noTick.success).toBe(false);
     if (!noTick.success) expect(refusedFields(noTick.error)).toEqual(["guardianAware"]);
-    const noName = open.safeParse({ ...PUBLIC, age: "15", ...GUARDIAN, guardianName: "   " });
+    const noName = open.safeParse({ ...PUBLIC, birthDate: aged(15), ...GUARDIAN, guardianName: "   " });
     expect(noName.success).toBe(false);
     if (!noName.success) expect(refusedFields(noName.error)).toEqual(["guardianName"]);
   });
 
   it("refuses an age under eighteen while the club cannot take minors yet, on the age's own box — whatever the guardian's boxes hold", () => {
-    const closed = volunteerPublicProfileSchemaFor(false);
-    for (const age of ["14", "17"]) {
-      const verdict = closed.safeParse({ ...PUBLIC, age, ...GUARDIAN });
-      expect(verdict.success, age).toBe(false);
-      if (!verdict.success) expect(refusedFields(verdict.error), age).toEqual(["age"]);
+    const closed = volunteerPublicProfileSchemaFor(false, EVENT_DAY);
+    for (const age of [14, 17]) {
+      const verdict = closed.safeParse({ ...PUBLIC, birthDate: aged(age), ...GUARDIAN });
+      expect(verdict.success, String(age)).toBe(false);
+      if (!verdict.success) expect(refusedFields(verdict.error), String(age)).toEqual(["birthDate"]);
     }
-    expect(closed.safeParse({ ...PUBLIC, age: "18" }).success).toBe(true);
+    expect(closed.safeParse({ ...PUBLIC, birthDate: aged(18) }).success).toBe(true);
   });
 
   it("takes only adults on §758's form, whatever the minors' texts say: it asks no age", () => {
     for (const minors of [true, false]) {
-      const schema = volunteerPublicSchemaFor({ profile: false, minors });
+      const schema = volunteerPublicSchemaFor({ profile: false, minors, eventDay: EVENT_DAY });
       expect(schema.safeParse({ ...PUBLIC, adult: false }).success).toBe(false);
       expect(schema.safeParse({ ...PUBLIC, adult: true }).success).toBe(true);
     }
@@ -110,24 +115,24 @@ describe("§768 the organizers' entry holds the same line", () => {
   const staff = { roleIds: [ID], assignedRoleId: "", name: "Ana Test", email: "ana@example.test", phone: "+40712345678", note: "" };
 
   it("asks a name for a person under eighteen, and the address only if the organizer has it — the consent may be on paper", () => {
-    const noGuardian = volunteerStaffInputSchema.safeParse({ ...staff, age: "16" });
+    const noGuardian = volunteerStaffInputSchema.safeParse({ ...staff, birthDate: aged(16) });
     expect(noGuardian.success).toBe(false);
     if (!noGuardian.success) expect(refusedFields(noGuardian.error)).toEqual(["guardianName"]);
-    const onPaper = volunteerStaffInputSchema.parse({ ...staff, age: "16", guardianName: " Maria  Popescu " });
+    const onPaper = volunteerStaffInputSchema.parse({ ...staff, birthDate: aged(16), guardianName: " Maria  Popescu " });
     expect(onPaper).toMatchObject({ age: 16, guardian: { name: "Maria Popescu", email: null } });
-    const withAddress = volunteerStaffInputSchema.parse({ ...staff, age: "16", guardianName: "Maria Popescu", guardianEmail: "maria@example.test" });
+    const withAddress = volunteerStaffInputSchema.parse({ ...staff, birthDate: aged(16), guardianName: "Maria Popescu", guardianEmail: "maria@example.test" });
     expect(withAddress.guardian).toEqual({ name: "Maria Popescu", email: "maria@example.test" });
     // An address typed must be one.
-    const typo = volunteerStaffInputSchema.safeParse({ ...staff, age: "16", guardianName: "Maria Popescu", guardianEmail: "nope" });
+    const typo = volunteerStaffInputSchema.safeParse({ ...staff, birthDate: aged(16), guardianName: "Maria Popescu", guardianEmail: "nope" });
     if (!typo.success) expect(refusedFields(typo.error)).toEqual(["guardianEmail"]);
     expect(typo.success).toBe(false);
   });
 
   it("refuses thirteen, takes an adult or no age with no guardian, and drops what an adult's boxes hold", () => {
-    expect(volunteerStaffInputSchema.safeParse({ ...staff, age: "13", guardianName: "Maria Popescu" }).success).toBe(false);
+    expect(volunteerStaffInputSchema.safeParse({ ...staff, birthDate: aged(13), guardianName: "Maria Popescu" }).success).toBe(false);
     expect(volunteerStaffInputSchema.parse({ ...staff }).guardian).toBeNull();
-    expect(volunteerStaffInputSchema.parse({ ...staff, age: "18" }).guardian).toBeNull();
-    const adult = volunteerStaffInputSchema.parse({ ...staff, age: "40", guardianName: "Maria Popescu", guardianEmail: "maria@example.test" });
+    expect(volunteerStaffInputSchema.parse({ ...staff, birthDate: aged(18) }).guardian).toBeNull();
+    const adult = volunteerStaffInputSchema.parse({ ...staff, birthDate: aged(40), guardianName: "Maria Popescu", guardianEmail: "maria@example.test" });
     expect(adult.guardian).toBeNull();
     expect(JSON.stringify(adult)).not.toContain("Popescu");
   });
@@ -182,15 +187,15 @@ describe("§768 the two acceptance schemas", () => {
 
 describe("§768 every refused box is named in one pass, and the text read decides the age it says", () => {
   it("names the parent's boxes together with a sex that is no answer — never a second refusal for the same form", () => {
-    const verdict = volunteerPublicProfileSchemaFor(true).safeParse({ ...PUBLIC, sex: "ROBOT", age: "15" });
+    const verdict = volunteerPublicProfileSchemaFor(true, EVENT_DAY).safeParse({ ...PUBLIC, sex: "ROBOT", birthDate: aged(15) });
     expect(verdict.success).toBe(false);
     if (!verdict.success) expect(refusedFields(verdict.error)).toEqual(["sex", "guardianName", "guardianEmail", "guardianAware"]);
-    const staff = volunteerStaffInputSchema.safeParse({ roleIds: [ID], assignedRoleId: "", name: "Ana Test", email: "ana@example.test", phone: "+40712345678", note: "", age: "15", sex: "ROBOT" });
+    const staff = volunteerStaffInputSchema.safeParse({ roleIds: [ID], assignedRoleId: "", name: "Ana Test", email: "ana@example.test", phone: "+40712345678", note: "", birthDate: aged(15), sex: "ROBOT" });
     expect(staff.success).toBe(false);
     if (!staff.success) expect(refusedFields(staff.error)).toEqual(["sex", "guardianName"]);
     // While the club cannot take a minor the guardian's boxes are not asked: the age alone.
-    const closed = volunteerPublicProfileSchemaFor(false).safeParse({ ...PUBLIC, sex: "ROBOT", age: "15" });
-    if (!closed.success) expect(refusedFields(closed.error)).toEqual(["sex", "age"]);
+    const closed = volunteerPublicProfileSchemaFor(false, EVENT_DAY).safeParse({ ...PUBLIC, sex: "ROBOT", birthDate: aged(15) });
+    if (!closed.success) expect(refusedFields(closed.error)).toEqual(["sex", "birthDate"]);
   });
 
   it("says fourteen in a text that carries the minors' clause and eighteen in one that does not", () => {

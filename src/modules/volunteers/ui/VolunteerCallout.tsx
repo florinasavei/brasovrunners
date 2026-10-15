@@ -1,3 +1,4 @@
+import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import VolunteerActivismIcon from "@mui/icons-material/VolunteerActivism";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
@@ -14,10 +15,16 @@ import { DENSITY } from "@/theme/density";
  * descriptions and the form are. Nothing else of the volunteers is on the event's page: the header and the landing stay
  * as light as they were.
  *
+ * **In a new tab** (§NNN; the owner, 2026-10-14: «„Vreau să fiu voluntar” ar trebui să fie un buton care să deschidă o pagină nouă
+ * în alt tab»): the house's way for a link that leaves the page it is on (`LegalLink`, §197) — `target="_blank"` with
+ * `rel="noopener"`, the new-tab mark (`OpenInNewIcon`) after the words, and the accessible name that says it in words, so a person
+ * who presses Back finds the event's page as they left it. The button keeps its own glyph before its words and its 44 pixels.
+ *
  * Drawn only where that page would answer 200 — `readVolunteerOffer`, the one read both share — and only for the roles
- * that still need people, so the line never names a full one and the button never leads to a 404. A Server Component:
- * the button is a plain link (`ButtonLink`, 44 pixels, a glyph before its words), not prefetched — the page it opens is
- * rendered per request.
+ * that still need people, so the line never names a full one and the button never leads to a 404. It names the roles and
+ * **never a number**: how many people a role still needs is the club's to show (`volunteers_show_counts`, §NNN) and is said
+ * on the volunteers' page alone. A Server Component: the button is a plain link (`ButtonLink`, 44 pixels, a glyph before its
+ * words), not prefetched — the page it opens is rendered per request.
  */
 export default async function VolunteerCallout({ slug, roleNames }: { slug: string; roleNames: readonly string[] }) {
   const t = await getTranslations("Event");
@@ -28,12 +35,17 @@ export default async function VolunteerCallout({ slug, roleNames }: { slug: stri
       </Typography>
       <ButtonLink
         href={{ pathname: "/events/[slug]/volunteers", params: { slug } }}
+        target="_blank"
+        rel="noopener"
+        aria-label={`${t("volunteers.title")} — ${t("opensInNewTab")}`}
         variant="outlined"
         sx={{ ...TAP_TARGET, ...WITH_GLYPH_SX }}
         data-testid="volunteer-callout-button"
       >
         <VolunteerActivismIcon aria-hidden="true" sx={glyphSx("medium")} />
         {t("volunteers.title")}
+        {/* Decorative: the accessible name above already says where this goes. */}
+        <OpenInNewIcon aria-hidden="true" data-testid="volunteer-callout-new-tab" sx={{ fontSize: "1rem", flexShrink: 0, opacity: 0.8 }} />
       </ButtonLink>
     </Box>
   );

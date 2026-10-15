@@ -41,6 +41,10 @@ export type BirthDateFieldProps = {
    */
   tooOld?: string;
   autoComplete?: string;
+  /** The backoffice's compact boxes (the volunteers' card, §NNN); the public forms keep the default. */
+  size?: "small" | "medium";
+  /** The box fills its row (the volunteers' form lays it beside the sex box, §NNN). */
+  fullWidth?: boolean;
 };
 
 /** The box's own refusal: "" when it holds a date in range, or nothing at all (`required` says the rest). */
@@ -151,6 +155,8 @@ export default function BirthDateField({
   tooYoung,
   tooOld,
   autoComplete,
+  size,
+  fullWidth,
 }: BirthDateFieldProps) {
   const drawn = shownTypedDate(defaultValue);
   const [text, setText] = useState(drawn);
@@ -194,6 +200,8 @@ export default function BirthDateField({
       required={required}
       error={red}
       autoComplete={autoComplete}
+      size={size}
+      fullWidth={fullWidth}
       inputRef={inputRef}
       onBlur={(event) => {
         const shown = shownTypedDate(event.target.value.trim());

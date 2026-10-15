@@ -134,6 +134,7 @@ describe("BR-REQ-070-01 everything held about a person", () => {
       privacyNoticeVersion: 3,
       // What she said about herself (§765): every answer is hers to see, as stored.
       age: 34,
+      dateOfBirth: "1992-03-12",
       sex: "FEMALE",
       city: "Brașov",
       volunteeredBefore: true,
@@ -183,6 +184,8 @@ describe("BR-REQ-070-01 everything held about a person", () => {
         message: "Sunt liberă sâmbătă",
         privacyNoticeVersion: 3,
         age: 34,
+        // §NNN: the date of birth the age came from is hers too, every column of the row (art. 15 GDPR).
+        dateOfBirth: "1992-03-12",
         sex: "FEMALE",
         city: "Brașov",
         volunteeredBefore: true,
