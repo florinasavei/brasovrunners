@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { QA_SUBJECT_PREFIX } from "@/infrastructure/email/delivery";
 import { contactSuspicion, type ContactSuspicionInput } from "@/modules/contact/domain/suspicion";
-import { contactSubject, renderContactMessage, SUSPICIOUS_SUBJECT_PREFIX } from "@/modules/contact/message";
+import { contactSubject, renderContactMessage, SUSPICIOUS_SUBJECT_MARK } from "@/modules/contact/message";
 
 /**
  * BR-REQ-070-04 criterion 3 — what the club receives: from its own address, to every mailbox
@@ -27,7 +26,7 @@ describe("BR-REQ-070-04 the message the club receives", () => {
     expect(message.from).toEqual(ROUTE.from);
     expect(message.to).toEqual(["club@example.com", "colleague@example.org"]);
     expect(message.replyTo).toEqual({ name: "Ana Popescu", address: "ana@example.com" });
-    expect(message.subject).toBe("Mesaj de pe site: Ana Popescu");
+    expect(message.subject).toBe("[contact] Mesaj de pe site: Ana Popescu");
     // No copy list configured, no `Cc` header at all — not an empty one (§164).
     expect(message.cc).toBeUndefined();
   });
@@ -66,8 +65,8 @@ describe("BR-REQ-070-04 the message the club receives", () => {
   });
 
   it("marks the subject on QA and nowhere else (AGENTS.md §16.4)", () => {
-    expect(renderContactMessage(INPUT, { ...ROUTE, appEnv: "qa" }).subject).toBe(`${QA_SUBJECT_PREFIX}Mesaj de pe site: Ana Popescu`);
-    expect(renderContactMessage(INPUT, { ...ROUTE, appEnv: "local" }).subject).toBe("Mesaj de pe site: Ana Popescu");
+    expect(renderContactMessage(INPUT, { ...ROUTE, appEnv: "qa" }).subject).toBe("[QA][contact] Mesaj de pe site: Ana Popescu");
+    expect(renderContactMessage(INPUT, { ...ROUTE, appEnv: "local" }).subject).toBe("[contact] Mesaj de pe site: Ana Popescu");
   });
 
   it("carries the name, the address, the message and the page, in text and in HTML", () => {
@@ -82,7 +81,7 @@ describe("BR-REQ-070-04 the message the club receives", () => {
   });
 
   it("keeps a header to one line whatever the box allowed", () => {
-    expect(contactSubject("Ana\r\nBcc: x@example.com")).toBe("Mesaj de pe site: Ana Bcc: x@example.com");
+    expect(contactSubject("Ana\r\nBcc: x@example.com")).toBe("[contact] Mesaj de pe site: Ana Bcc: x@example.com");
     expect(renderContactMessage({ ...INPUT, name: "Ana\nPopescu" }, ROUTE).replyTo?.name).toBe("Ana Popescu");
   });
 
@@ -119,7 +118,7 @@ describe("BR-REQ-070-04 the message the club receives", () => {
     it("leaves an ordinary message byte-for-byte what it was, with or without a verdict that found nothing", () => {
       const before = renderContactMessage(INPUT, ROUTE);
       // Pinned as literals: the message as it was before any marking existed.
-      expect(before.subject).toBe("Mesaj de pe site: Ana Popescu");
+      expect(before.subject).toBe("[contact] Mesaj de pe site: Ana Popescu");
       expect(before.text).toBe(
         [
           "Nume: Ana Popescu",
@@ -149,11 +148,11 @@ describe("BR-REQ-070-04 the message the club receives", () => {
       }
     });
 
-    it("puts the mark in front of the subject, and QA's own mark in front of that", () => {
-      expect(SUSPICIOUS_SUBJECT_PREFIX).toBe("[posibil spam] ");
-      expect(renderContactMessage(SPAM_INPUT, ROUTE, SPAM).subject).toBe("[posibil spam] Mesaj de pe site: Jaqueline Denehy");
+    it("puts the mark after the tag and before the words, and QA's own mark in front of the tag", () => {
+      expect(SUSPICIOUS_SUBJECT_MARK).toBe("[posibil spam]");
+      expect(renderContactMessage(SPAM_INPUT, ROUTE, SPAM).subject).toBe("[contact][posibil spam] Mesaj de pe site: Jaqueline Denehy");
       expect(renderContactMessage(SPAM_INPUT, { ...ROUTE, appEnv: "qa" }, SPAM).subject).toBe(
-        `${QA_SUBJECT_PREFIX}[posibil spam] Mesaj de pe site: Jaqueline Denehy`,
+        "[QA][contact][posibil spam] Mesaj de pe site: Jaqueline Denehy",
       );
     });
 

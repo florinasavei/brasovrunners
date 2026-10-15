@@ -197,7 +197,7 @@ describe("§678 anonymous, or with one's name", () => {
     expect(named.html.startsWith("<p><strong>Nume:</strong> Ana Pop<br>")).toBe(true);
     expect(named.text).toContain("Contact: 0700 000 000");
     // The subject still names nobody.
-    expect(named.subject).toBe(SAFETY_SUBJECT);
+    expect(named.subject).toBe(`[feedback][girl-zone] ${SAFETY_SUBJECT}`);
   });
 });
 
@@ -247,11 +247,11 @@ describe("§678 «Cine să afle?»: the club or the safety branch's person", () 
   it("a message for the person carries the neutral subject and says the sender chose her", () => {
     const input = parse({ branch: "suggestion", identity: "named", name: "Ana Pop", audience: "person", message: "Seara.", email: "ana@example.org" });
     const toPerson = composeFeedbackEmail(input, { eventTitle: null, toPerson: true }, "production");
-    expect(toPerson.subject).toBe(SAFETY_SUBJECT);
+    expect(toPerson.subject).toBe(`[feedback][girl-zone] ${SAFETY_SUBJECT}`);
     expect(toPerson.text).toContain("cine a scris a ales să afli doar tu");
     expect(toPerson.text.split("\n")[1]).toBe("Din formularul: „O sugestie”");
     const toClub = composeFeedbackEmail(input, { eventTitle: null }, "production");
-    expect(toClub.subject).toBe("O sugestie de pe site");
+    expect(toClub.subject).toBe("[feedback][sugestie] O sugestie de pe site");
     expect(toClub.text).not.toContain("Din formularul");
     // Her own form needs no such line.
     const safety = parse({ branch: "safety", message: "Cineva m-a urmărit.", whereWhen: "", contact: "" });
@@ -262,9 +262,9 @@ describe("§678 «Cine să afle?»: the club or the safety branch's person", () 
     const safety = parse({ branch: "safety", message: "Cineva m-a urmărit.", whereWhen: "", contact: "" });
     const email = composeFeedbackEmail(safety, { eventTitle: null }, "production");
     expect(SAFETY_SUBJECT).toBe("Mesaj confidențial de pe site");
-    expect(email.subject).toBe(SAFETY_SUBJECT);
+    expect(email.subject).toBe(`[feedback][girl-zone] ${SAFETY_SUBJECT}`);
     expect(email.text).toContain("— Trimis prin formularul confidențial „Girl Zone” al site-ului. Site-ul nu a păstrat nimic din el.");
-    expect(email.subject).not.toContain("Girl Zone");
+    expect(email.subject.replace("[girl-zone]", "")).not.toMatch(/girl.?zone/i);
   });
 });
 
@@ -281,7 +281,7 @@ describe("§676 the email each branch becomes", () => {
       email: "",
     });
     const email = composeFeedbackEmail(input, { eventTitle: "Crosul de toamnă" }, "production");
-    expect(email.subject).toBe("Cum a fost: Crosul de toamnă");
+    expect(email.subject).toBe("[feedback][cum-a-fost] Cum a fost: Crosul de toamnă");
     const lines = email.text.split("\n");
     expect(lines.slice(0, 7)).toEqual([
       `Nume: ${ANONYMOUS_NAME_LINE}`,
@@ -299,7 +299,7 @@ describe("§676 the email each branch becomes", () => {
   it("names «altceva / în general» for no event, or a slug the club does not publish, and the typed address as the contact", () => {
     const input = parse({ branch: "complaint", identity: "named", name: "Ana Pop", message: "<b>Nimeni</b> la start.", event: "nu-exista", date: "", email: "ana@example.org" });
     const email = composeFeedbackEmail(input, { eventTitle: null }, "production");
-    expect(email.subject).toBe("O reclamație de pe site");
+    expect(email.subject).toBe("[feedback][reclamatie] O reclamație de pe site");
     expect(email.text).toContain("Eveniment: altceva / în general");
     expect(email.text).toContain("Contact: ana@example.org");
     expect(email.text).not.toContain(NO_CONTACT_LINE);
@@ -311,8 +311,8 @@ describe("§676 the email each branch becomes", () => {
   it("the safety branch: a neutral subject, where and when, the contact line in the body only, [QA] on QA", () => {
     const input = parse({ branch: "safety", message: "Cineva m-a urmărit după alergare.", whereWhen: "Parcul Tractorul, joi seara", contact: "" });
     const email = composeFeedbackEmail(input, { eventTitle: null }, "qa");
-    expect(email.subject).toBe(`[QA] ${SAFETY_SUBJECT}`);
-    expect(email.subject).not.toMatch(/sigur|safety|femei/i);
+    expect(email.subject).toBe(`[QA][feedback][girl-zone] ${SAFETY_SUBJECT}`);
+    expect(email.subject.replace(/\[[a-z-]+\]/g, "")).not.toMatch(/sigur|safety|femei/i);
     expect(email.text).toContain("Unde și când: Parcul Tractorul, joi seara");
     expect(email.text).toContain(`Contact: ${NO_CONTACT_LINE}`);
     const reachable = composeFeedbackEmail(
@@ -320,13 +320,13 @@ describe("§676 the email each branch becomes", () => {
       { eventTitle: null },
       "production",
     );
-    expect(reachable.subject).toBe(SAFETY_SUBJECT);
+    expect(reachable.subject).toBe(`[feedback][girl-zone] ${SAFETY_SUBJECT}`);
     expect(reachable.text).toContain("Contact: 0700 000 000");
   });
 
   it("a suggestion has no event line and says it is one", () => {
     const email = composeFeedbackEmail(parse({ branch: "suggestion", message: "Alergări de seară.", email: "" }), { eventTitle: null }, "production");
-    expect(email.subject).toBe("O sugestie de pe site");
+    expect(email.subject).toBe("[feedback][sugestie] O sugestie de pe site");
     expect(email.text).not.toContain("Eveniment:");
     expect(email.text).toContain("Sugestia:\nAlergări de seară.");
   });

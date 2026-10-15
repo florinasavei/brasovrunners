@@ -6,6 +6,7 @@ import type { RichTextDoc } from "@/modules/content/rich-text/domain/schema";
 import { copyFor, onlyMissingFacts, type EmailCopy, fillPlaceholders } from "./domain/email-copy";
 import { organizerParagraphs } from "./domain/organizer-message";
 import { audienceOf } from "./domain/email-audience";
+import { tagsOfMessageType, tagSubject } from "./domain/subject-tags";
 import { isRelayMessage, type RelayMessageType } from "./domain/relay";
 import { type EmailEventFacts, type EventFactsBlock, eventFactsBlock } from "./domain/event-facts";
 import { DEFAULT_TOKEN_HOURS } from "./domain/token-lifetime";
@@ -728,7 +729,8 @@ export function renderBilingual(
   const a = renderContent(first, locale);
   const b = renderContent(second, OTHER_LOCALE[locale]);
   return {
-    subject: `${first.subject} / ${second.subject}`,
+    // A message for the club or a colleague starts with its tags, once, before the two halves (§NNN); every other type has none.
+    subject: tagSubject(tagsOfMessageType(messageType), `${first.subject} / ${second.subject}`),
     html: card([a.htmlParts, b.htmlParts]),
     text: [...a.textLines, "", "— — —", "", ...b.textLines].join("\n"),
   };

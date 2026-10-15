@@ -82,7 +82,7 @@ describe("BR-REQ-070-04 the tick that holds back suspected spam", () => {
     const capture = capturing();
     expect(await quietly(() => submitContactMessage(db, delivery(capture), PERSON, NOW, PAGE, NO_TOKEN))).toEqual({ outcome: "sent" });
     expect(capture.messages).toHaveLength(1);
-    expect(capture.messages[0]?.subject).toBe("[posibil spam] Mesaj de pe site: Ana Popescu");
+    expect(capture.messages[0]?.subject).toBe("[contact][posibil spam] Mesaj de pe site: Ana Popescu");
     expect(await countHeldBack(db, NOW)).toBe(0);
     expect(await db.select().from(platformSettings)).toHaveLength(0);
   });
@@ -106,7 +106,7 @@ describe("BR-REQ-070-04 the tick that holds back suspected spam", () => {
     const capture = capturing();
     expect(await submitContactMessage(db, delivery(capture), PERSON, NOW, PAGE, withTick(PASSED, true))).toEqual({ outcome: "sent" });
     expect(capture.messages).toHaveLength(1);
-    expect(capture.messages[0]?.subject).toBe("Mesaj de pe site: Ana Popescu");
+    expect(capture.messages[0]?.subject).toBe("[contact] Mesaj de pe site: Ana Popescu");
     expect(await countHeldBack(db, NOW)).toBe(0);
   });
 

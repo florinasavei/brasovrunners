@@ -72,7 +72,7 @@ describe("§357 no hardcoded value in the emails' own sentences", () => {
   });
 
   it("names the club in the invitation and the registrations link through the constant", () => {
-    expect(render("STAFF_INVITATION", DATA).subject).toBe(`Ești în echipa ${CLUB_NAME} / You are on the ${CLUB_NAME} team`);
+    expect(render("STAFF_INVITATION", DATA).subject).toBe(`[echipa] Ești în echipa ${CLUB_NAME} / You are on the ${CLUB_NAME} team`);
     expect(render("PROFILE_MANAGE_LINK", DATA).subject).toBe(`Înscrierile tale la ${CLUB_NAME} / Your registrations at ${CLUB_NAME}`);
   });
 
