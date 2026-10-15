@@ -113,7 +113,7 @@ test.describe("§425 the accepted terms on the registration's page and in the ex
       const [header, ...lines] = (await response.text()).split("\r\n");
       // The terms' two columns, then the declaration's two (§499), then the family column (§543),
       // then the participant's reason for cancelling (§558), then the offers and benefits (§562), then
-      // «Special guest» (§643, named by §647, renamed since), then the list's «Până când» (§650): the moment and what for, then the age on race day, the country and the city (§660), then the members' race number (§664), then «Note interne» (§782), the last.
+      // «Special guest» (§643, named by §647, renamed since), then the list's «Până când» (§650): the moment and what for, then the age on race day, the country and the city (§660), then the members' race number (§664), then «Note interne» (§NNN), the last.
       expect(header.split(",").slice(-15, -11)).toEqual(["Terms version", "Terms accepted", "Declaration version", "Declaration signed"]);
       expect(header.split(",").at(-11)).toBe("family");
       expect(header.split(",").at(-10)).toBe("Cancellation reason");
@@ -122,7 +122,7 @@ test.describe("§425 the accepted terms on the registration's page and in the ex
       expect(header.split(",").slice(-7, -5)).toEqual(["Until when", "Waiting on"]);
       expect(header.split(",").slice(-5, -2)).toEqual(["Age on race day", "Country", "City"]);
       expect(header.split(",").at(-2)).toBe("Member bib");
-      // …and, for the Administrator who downloaded it, the internal notes, the very last (§782).
+      // …and, for the Administrator who downloaded it, the internal notes, the very last (§NNN).
       expect(header.split(",").at(-1)).toBe("Note interne");
       const publicLine = lines.find((line) => line.includes("Termeni public"));
       const staffLine = lines.find((line) => line.includes("Termeni staff"));

@@ -157,7 +157,7 @@ export type RegistrationCsvRow = {
   memberBibOffered?: boolean;
   memberBibWanted?: boolean;
   /**
-   * «Note interne» (§782): the registration's live notes as the cell's words (`exportNotesCell` — one a line,
+   * «Note interne» (§NNN): the registration's live notes as the cell's words (`exportNotesCell` — one a line,
    * newest first, the author's role), written only when the file is built with `notesHeader`, last. Words, never
    * the table: this file does not import the notes module (`notes-never-leave.test.ts`).
    */
@@ -220,7 +220,7 @@ const HEADER = [
 ];
 
 /**
- * The file. `notesHeader` adds the «Note interne» column (§782) after «Member bib», the last — passed by the
+ * The file. `notesHeader` adds the «Note interne» column (§NNN) after «Member bib», the last — passed by the
  * route only for a role that `canKeepRegistrationNotes`; without it no such column, which is every other
  * caller's file. A note's line breaks stay inside the quoted cell (`csvCell` quotes on `\n`).
  */

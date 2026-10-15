@@ -5,7 +5,7 @@ import { readSheet } from "../helpers/xlsx";
 import { FEATURED, hydrated, signIn } from "./support/featured-event";
 
 /**
- * §782 — «cum stăm cu coloana de comentarii pentru participanți? asta trebuie de asemenea să fie și în Excel!»
+ * §NNN — «cum stăm cu coloana de comentarii pentru participanți? asta trebuie de asemenea să fie și în Excel!»
  * (the owner, 2026-10-15): the Excel the registrations list's button downloads ends with «Note interne». An Organizer
  * writes a note on the registration's page (the real card), a second one — whose author's account is gone — is
  * written straight into the table, and the file the button hands over is read back as a workbook: the header
@@ -78,7 +78,7 @@ async function cleanup(seeded: Seeded): Promise<void> {
   }
 }
 
-test.describe("§782 «Note interne» in the registrations export", () => {
+test.describe("§NNN «Note interne» in the registrations export", () => {
   test("the Excel an Organizer downloads ends with the notes: both lines, newest first, the role and never a name", async ({ page }) => {
     test.setTimeout(120_000);
     const seeded = await seed(`${test.info().project.name}-${Date.now().toString(36)}`);

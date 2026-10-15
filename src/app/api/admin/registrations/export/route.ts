@@ -82,7 +82,7 @@ export async function GET(request: Request): Promise<Response> {
   const outside = url.searchParams.get("outside");
   // The bibs page's filter (§664): the file is the rows on screen.
   const memberBib = url.searchParams.get("memberBib");
-  // The reader's language (§782), as the sponsor list's `lang`: the words of «Note interne» — its header, its roles.
+  // The reader's language (§NNN), as the sponsor list's `lang`: the words of «Note interne» — its header, its roles.
   const lang = url.searchParams.get("lang");
   const locale: Locale = (routing.locales as readonly string[]).includes(lang ?? "") ? (lang as Locale) : routing.defaultLocale;
 
@@ -146,7 +146,7 @@ export async function GET(request: Request): Promise<Response> {
   // The other people on each row's address (§543), the `family` column of both formats: one query.
   const family = await familyOf(db, rows);
   /*
-    «Note interne» (§782; the owner: «asta trebuie de asemenea să fie și în Excel!»): a last column in both files,
+    «Note interne» (§NNN; the owner: «asta trebuie de asemenea să fie și în Excel!»): a last column in both files,
     for a role that may keep notes — asserted here and again in the reader — and for no other. Today every role
     that exports may, so the check never refuses; it is written so that moving either boundary moves the column.
     One grouped query for the exported rows (never one per row), the author as a role, the date on each event's own clock.
@@ -179,7 +179,7 @@ export async function GET(request: Request): Promise<Response> {
     action: "registration.exported",
     entityType: "event",
     entityId: scope.eventId ?? null,
-    // `withNotes` (§782): whether the file carries «Note interne» — a count of nothing, never a word of one.
+    // `withNotes` (§NNN): whether the file carries «Note interne» — a count of nothing, never a word of one.
     metadata: { eventId: scope.eventId ?? null, format, rowCount: rows.length, withNotes },
     now: new Date(),
   });
@@ -297,7 +297,7 @@ export async function GET(request: Request): Promise<Response> {
       ageOnRaceDay: ageOnRaceDay(row.birthDate, row.eventStartsAt, row.eventTimezone),
       country: row.country,
       city: row.city,
-      // «Note interne» (§782), last, written only with the header — a role that may keep notes.
+      // «Note interne» (§NNN), last, written only with the header — a role that may keep notes.
       notes: notes.get(row.id) ?? "",
     })),
     { notesHeader },

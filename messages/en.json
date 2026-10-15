@@ -1107,7 +1107,7 @@
           "few": "{count} notes",
           "other": "{count} notes"
         },
-        "help": "Only organizers and administrators see the notes. Do not write medical or other sensitive data.",
+        "help": "Only organizers and administrators see the notes. They are also in the registrations export. Do not write medical or other sensitive data.",
         "empty": "No notes yet.",
         "by": "{name} · {date}",
         "delete": "Delete",
@@ -7456,7 +7456,7 @@
               "steps": [
                 "«Registrations» → search the name → open the registration → «Internal notes». The closed card says how many notes it holds.",
                 "Write in «Add a note» and press «Save the note». The notes come newest first, with the name of who wrote them and the moment.",
-                "Only organizers and administrators see the notes. They do not show at the desk, in the export or on the public list. Do not write medical or other sensitive data.",
+                "Only organizers and administrators see the notes. They do not show at the desk or on the public list; in the Excel and CSV export they are the last column, «Internal notes». Do not write medical or other sensitive data.",
                 "On the registrations list, a row with notes has a marker with their number; press it to open the notes.",
                 "«Delete» takes a note away, after a question: you delete your own, an Administrator deletes any. The notes are deleted with the registration."
               ]
@@ -7467,6 +7467,7 @@
                 "«Registrations» → pick the event → «Filter».",
                 "Tick «Only with offers and benefits» to see only who said yes to offers; the export follows the filter.",
                 "Press «Export to Excel» (or «Export CSV»). The file holds exactly the filtered rows, without test registrations.",
+                "The file ends with «Internal notes»: one note a line, with the author's role. The column is named in the language of the page where you pressed the button.",
                 "The file carries identity documents and phone numbers: never send it to a group, and delete it within 7 days of the event."
               ]
             },
@@ -7790,7 +7791,7 @@
               "steps": [
                 "«Registrations» → search the name → open the registration → «Internal notes». The closed card says how many notes it holds.",
                 "Write in «Add a note» and press «Save the note». The notes come newest first, with the name of who wrote them and the moment.",
-                "Only organizers and administrators see the notes. They do not show at the desk, in the export or on the public list. Do not write medical or other sensitive data.",
+                "Only organizers and administrators see the notes. They do not show at the desk or on the public list; in the Excel and CSV export they are the last column, «Internal notes». Do not write medical or other sensitive data.",
                 "On the registrations list, a row with notes has a marker with their number; press it to open the notes.",
                 "«Delete» takes a note away, after a question: you delete your own, an Administrator deletes any. The notes are deleted with the registration."
               ]

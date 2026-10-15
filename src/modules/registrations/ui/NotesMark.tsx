@@ -10,7 +10,7 @@ import Box from "@mui/material/Box";
  *
  * Drawn from plain elements with the glyph as a child, never MUI's `Chip` with an `icon` element, so the list's
  * Server Component may render it (§370: no element prop across the boundary) — `FamilyChip`'s way. Nothing
- * when there is no note: the list draws it only for a role that may keep them, and never into the export.
+ * when there is no note: the list draws it only for a role that may keep them, the marker itself is never in the export; the notes are its last column (§NNN).
  */
 export default function NotesMark({ label, ariaLabel, href, testId = "notes-mark" }: { label: string; ariaLabel?: string; href: string; testId?: string }) {
   return (

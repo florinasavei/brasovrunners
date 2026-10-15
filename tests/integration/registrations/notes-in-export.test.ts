@@ -14,7 +14,7 @@ import { readSheet } from "../../helpers/xlsx";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §782 (amends §777, §172; BR-REQ-060-01, BR-REQ-037-03) — «cum stăm cu coloana de comentarii pentru participanți?
+ * §NNN (amends §777, §172; BR-REQ-060-01, BR-REQ-037-03) — «cum stăm cu coloana de comentarii pentru participanți?
  * asta trebuie de asemenea să fie și în Excel!» (the owner, 2026-10-15), from a real database and through the export
  * route itself: the last column «Note interne» in the spreadsheet and in the CSV for a role that may keep notes,
  * newest first, the author as a role, the soft-deleted ones left out, read in one grouped query — and for no other
@@ -131,7 +131,7 @@ async function sheetOf(response: Response) {
   return readSheet(Buffer.from(await response.arrayBuffer())).rows;
 }
 
-describe("§782 the spreadsheet's «Note interne» column, through the route", () => {
+describe("§NNN the spreadsheet's «Note interne» column, through the route", () => {
   it.each<StaffRole>(["MODERATOR", "ADMIN", "SUPERADMIN"])("%s gets it last, newest first, the author's role and never their name", async (role) => {
     const { race } = await seed();
     state.actor = await staff(role, `Reader ${role}`);
@@ -173,7 +173,7 @@ describe("§782 the spreadsheet's «Note interne» column, through the route", (
   });
 });
 
-describe("§782 the CSV's «Note interne» column, through the route", () => {
+describe("§NNN the CSV's «Note interne» column, through the route", () => {
   it("is last, the same words, the line break kept inside the quoted field", async () => {
     const { race } = await seed();
     state.actor = await staff("MODERATOR", "Reader");
@@ -200,7 +200,7 @@ describe("§782 the CSV's «Note interne» column, through the route", () => {
   });
 });
 
-describe("§782 who gets the column: by the role's own rule, on the server", () => {
+describe("§NNN who gets the column: by the role's own rule, on the server", () => {
   it("every role that may export gets it exactly when it may keep notes; every other role gets no file at all", async () => {
     const { race } = await seed();
     const seen: Record<string, string> = {};
@@ -247,7 +247,7 @@ describe("§782 who gets the column: by the role's own rule, on the server", () 
   });
 });
 
-describe("§782 the notes of exactly the exported rows, read in one grouped query", () => {
+describe("§NNN the notes of exactly the exported rows, read in one grouped query", () => {
   it("the reader groups by registration, newest first, live notes only, the role and no name", async () => {
     const { ana, bob, cora, organizer } = await seed();
     const notes = await listRegistrationNotesForExport(db, organizer, [ana, bob, cora, "not-a-uuid"]);

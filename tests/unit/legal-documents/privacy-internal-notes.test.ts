@@ -24,7 +24,7 @@ describe("§777 the notice's internal-notes sentence", () => {
     expect(paragraph).toMatch(/cerere de acces ți le dăm și pe ele/);
   });
 
-  /** §782 — the notes are also a column of the registrations export, so the notice says where they are seen. */
+  /** §NNN — the notes are also a column of the registrations export, so the notice says where they are seen. */
   it("ro: says they are seen in the administration page and in the registrations export the organizers download", () => {
     const paragraph = registrationParagraph(privacyNoticeRo, /^2\./);
     expect(paragraph).toMatch(/în pagina de administrare și în exportul înscrierilor \(Excel sau CSV\) pe care îl descarcă/);

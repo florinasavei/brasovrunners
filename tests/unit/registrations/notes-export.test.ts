@@ -9,7 +9,7 @@ import ro from "../../../messages/ro.json";
 import { readSheet, unzip } from "../../helpers/xlsx";
 
 /**
- * §782 (amends §777, §172, §779; BR-REQ-060-01) — «cum stăm cu coloana de comentarii pentru participanți? asta
+ * §NNN (amends §777, §172, §779; BR-REQ-060-01) — «cum stăm cu coloana de comentarii pentru participanți? asta
  * trebuie de asemenea să fie și în Excel!» (the owner, 2026-10-15): the registrations export's last column
  * «Note interne», the words of one cell, the two writers that carry it, and the words in both languages. What the
  * route asks and for whom is read from a database in `tests/integration/registrations/notes-in-export.test.ts`.
@@ -25,7 +25,7 @@ const BRASOV = "Europe/Bucharest";
 
 const note = (over: Partial<ExportNote> = {}): ExportNote => ({ createdAt: new Date("2026-10-15T10:30:00.000Z"), authorRole: "MODERATOR", body: "cere tricou S", ...over });
 
-describe("§782 one registration's notes as the export's cell", () => {
+describe("§NNN one registration's notes as the export's cell", () => {
   it("is empty for no notes", () => {
     expect(exportNotesCell(undefined, BRASOV, RO)).toBe("");
     expect(exportNotesCell([], BRASOV, RO)).toBe("");
@@ -119,7 +119,7 @@ const sheetRow = (over: Partial<RegistrationSheetRow> = {}): RegistrationSheetRo
 
 const TWO_NOTES = "15.10.2026 15:00 · Administrator: a doua\n15.10.2026 12:00 · Organizator: prima";
 
-describe("§782 the spreadsheet's «Note interne» column", () => {
+describe("§NNN the spreadsheet's «Note interne» column", () => {
   it("is the last column, headed with the card's own title, wrapping, one note a line — only when the header is given", async () => {
     const buffer = await buildRegistrationsWorkbook([sheetRow({ notes: TWO_NOTES })], "Test", { notesHeader: ro.Admin.registrations.notes.title });
     const { rows } = readSheet(buffer);
@@ -178,7 +178,7 @@ const csvRow = (over: Partial<RegistrationCsvRow> = {}): RegistrationCsvRow => (
   ...over,
 });
 
-describe("§782 the CSV's «Note interne» column", () => {
+describe("§NNN the CSV's «Note interne» column", () => {
   it("is the last column with the same words, the line breaks kept inside the quoted field", () => {
     const csv = buildRegistrationsCsv([csvRow({ notes: TWO_NOTES }), csvRow({ registeredName: "Fără Note" })], { notesHeader: "Note interne" });
     const header = csv.split("\r\n")[0].split(",");
@@ -199,7 +199,7 @@ describe("§782 the CSV's «Note interne» column", () => {
   });
 });
 
-describe("§782 the words, in both languages", () => {
+describe("§NNN the words, in both languages", () => {
   it("has every export key in Română and in English, one role each", () => {
     for (const catalogue of [ro, en]) {
       const notes = catalogue.Admin.registrations.notes;

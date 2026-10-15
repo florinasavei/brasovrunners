@@ -371,7 +371,7 @@ describe("where a note never appears", () => {
     const publicList = await listPublicStartList(db, race);
     expect(JSON.stringify(publicList)).not.toContain("tricou");
 
-    // The files' writers have no column for it unless the route asks for one (§782: a role that may keep notes,
+    // The files' writers have no column for it unless the route asks for one (§NNN: a role that may keep notes,
     // read in `notes-in-export.test.ts`): their own header names none. The guard for who reads the table is
     // structural — `tests/unit/registrations/notes-never-leave.test.ts` lists the only files that may import it.
     const [header] = buildRegistrationsCsv([]).split("\n");
