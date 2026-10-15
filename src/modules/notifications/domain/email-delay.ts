@@ -80,6 +80,10 @@ const NOT_WAITED_FOR: ReadonlySet<EmailMessageType> = new Set<EmailMessageType>(
   "VOLUNTEER_ROLE_ASSIGNED",
   // The guardian's link (§768): the sign-up's page says the parent is emailed, but the volunteer's own offer is already kept — nobody on a page waits to act.
   "VOLUNTEER_GUARDIAN_REQUEST",
+  // A visitor's message and the road notice (§778): carried by the relay, on the row's own road; no public page says the queue is late for them.
+  "CONTACT_MESSAGE",
+  "FEEDBACK_MESSAGE",
+  "RELAY_NOTICE",
 ]);
 
 /** Whether somebody on a public page may be waiting for a message of this type (not a club copy). */

@@ -56,7 +56,7 @@ export function parseContactErrorFields(value: string | undefined): ContactFormF
  * three are whole-form answers: too many messages this hour, the club's mailbox could not be
  * reached, or the form is not configured on this deployment at all.
  */
-export const CONTACT_ERRORS = ["VALIDATION_ERROR", "LIMITED", "DELIVERY", "UNAVAILABLE"] as const;
+export const CONTACT_ERRORS = ["VALIDATION_ERROR", "LIMITED", "UNAVAILABLE"] as const;
 
 export type ContactError = (typeof CONTACT_ERRORS)[number];
 

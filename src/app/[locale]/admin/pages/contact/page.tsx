@@ -98,6 +98,7 @@ export default async function AdminContactSettingsPage({ params, searchParams }:
         mayEdit={mayEdit}
         roads={feedbackRoads()}
         safetyGmailDescribed={safetyGmailDescribed}
+        gmailAccount={env.CONTACT_SMTP_USER ?? null}
         openWhen={{ primary: true, saved: saved === "feedbackForms" }}
       />
 

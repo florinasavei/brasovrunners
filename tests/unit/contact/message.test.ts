@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 import { QA_SUBJECT_PREFIX } from "@/infrastructure/email/delivery";
-import { createCaptureSmtpTransport } from "@/infrastructure/email/smtp-adapter";
 import { contactSuspicion, type ContactSuspicionInput } from "@/modules/contact/domain/suspicion";
 import { contactSubject, renderContactMessage, SUSPICIOUS_SUBJECT_PREFIX } from "@/modules/contact/message";
 
@@ -211,16 +210,5 @@ describe("BR-REQ-070-04 the message the club receives", () => {
       expect(outageText).toContain("Cloudflare nu a răspuns la verificare");
       expect(outageText).not.toContain("fără token");
     });
-  });
-
-  it("is captured whole by the capture transport, which opens no socket", async () => {
-    const transport = createCaptureSmtpTransport(() => new Date("2026-09-19T20:00:00.000Z"));
-    const result = await transport.send(renderContactMessage(INPUT, ROUTE));
-    expect(result.outcome).toBe("sent");
-    expect(transport.messages).toHaveLength(1);
-    expect(transport.messages[0].to).toEqual(ROUTE.to);
-    expect(transport.messages[0].providerMessageId).toMatch(/^capture:/);
-    transport.clear();
-    expect(transport.messages).toHaveLength(0);
   });
 });

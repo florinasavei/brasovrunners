@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { FOLD_LINE } from "../../src/shared/ui/footer-target";
-import { HUMAN_PAUSE_MS } from "./support/featured-event";
+import { HUMAN_PAUSE_MS, signIn } from "./support/featured-event";
 
 /**
  * BR-REQ-070-04 (`DECISIONS.md` §149) — "Scrie-ne", through the browser, at 320px and on a
@@ -10,7 +10,8 @@ import { HUMAN_PAUSE_MS } from "./support/featured-event";
  * ways in (the header and the footer), and a real post through the Server Action landing on
  * "Mesajul a plecat". The end-to-end server runs with `APP_ENV=local`, so the message is
  * captured in memory and no socket is ever opened — which is the mode the form is in on every
- * laptop, and the one the test can rely on.
+ * laptop, and the one the test can rely on. Since §778 the message is an outbox row the relay sends after
+ * the response, so the same test follows it into the mail sink and onto «Mesaje de pe site».
  */
 test.describe("BR-REQ-070-04 the contact form", () => {
   test("renders on a phone without sideways scrolling, every control a thumb can hit", async ({ page }) => {
@@ -109,6 +110,8 @@ test.describe("BR-REQ-070-04 the contact form", () => {
   });
 
   test("sends a message and says so, naming where the answer goes", async ({ page }) => {
+    // The message is followed into the mail sink and onto the staff page (§778): more than the default half minute.
+    test.setTimeout(120_000);
     await page.goto("/ro/contact");
     const email = `e2e-contact-${test.info().project.name}-${Date.now().toString(36)}@test.invalid`;
     await page.locator('[name="name"]').fill("Ana Popescu");
@@ -136,6 +139,31 @@ test.describe("BR-REQ-070-04 the contact form", () => {
     await page.reload();
     await expect(page.getByText("Mesajul a plecat.")).toBeVisible();
     await expect(page.getByTestId("toast-live")).toHaveCount(0);
+
+    // §778: the message went through the outbox — the mail sink holds what the club's mailbox would have received (a staff page)...
+    await signIn(page, "Dev Superadministrator");
+    await expect(async () => {
+      await page.goto("/ro/devs?panel=email");
+      await expect(page.locator("main")).toContainText("Mesaj de pe site: Ana Popescu", { timeout: 2_000 });
+    }).toPass({ timeout: 45_000 });
+    // ...and «Stare» says what each road last did: both named, neither failing (a captured message reached nobody, so no «last sent» yet).
+    await page.goto("/ro/devs");
+    await expect(page.getByTestId("road-gmail")).toContainText("Gmail-ul clubului: merge");
+    await expect(page.getByTestId("road-mailgun")).toContainText("Mailgun: merge");
+    // ...and the page that shows the outbox has its trace: sent, by the road the form has (Gmail), the words deleted.
+    await page.goto("/ro/admin/settings/emails");
+    const relay = page.getByTestId("relay-messages");
+    await expect(relay).toBeVisible();
+    // Folded while nothing needs a person (§336): open it the way a person does.
+    if (!(await relay.evaluate((element) => (element as HTMLDetailsElement).open))) await relay.locator("summary").first().click();
+    const row = relay.getByTestId("relay-row").filter({ hasText: "Scrie-ne" }).first();
+    await expect(row).toHaveAttribute("data-status", "SENT");
+    await expect(row.getByTestId("relay-body-deleted")).toBeVisible();
+    await expect(row).toContainText("a plecat prin Gmail-ul clubului");
+    await expect(row.getByTestId("relay-other-way")).toHaveCount(0);
+    // Never the visitor's address or words on that page.
+    await expect(relay).not.toContainText("La ce oră începe alergarea de duminică?");
+    await expect(relay).not.toContainText(email);
   });
 
   test("lands a rejection on a focusable summary that names the box", async ({ page }) => {

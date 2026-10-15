@@ -10,6 +10,7 @@ import { env } from "@/shared/config/env";
 import { isBulkMessage } from "./domain/bulk";
 import { CLUB_COPY_FLAG } from "./domain/club-notices";
 import { type EmailDelay, type EmailDelayFacts, isWaitedFor, judgeEmailDelay } from "./domain/email-delay";
+import { isRelayMessage } from "./domain/relay";
 import { DEFAULT_EMAIL_PLAN, emailPlanSettingSchema } from "./domain/email-plan";
 import { defaultEmailTransportFor, emailTransportSettingSchema } from "./domain/email-transport";
 import { emailWaitMinutes } from "./domain/email-wait";
@@ -157,6 +158,9 @@ function factsFromGroups(groups: readonly FactsGroup[], noticeNamesFallback: boo
     carriedRecently += group.carriedRecently;
     const oldestSent = asDate(group.oldestSentInHour);
     facts.hourFreesAt = earliest(facts.hourFreesAt, oldestSent === null ? null : new Date(oldestSent.getTime() + PACE_WINDOW_MS));
+    // A visitor's message has its own worker and road (§778): what it sent through Mailgun counts against the hour above,
+    // and nothing of it is a queue a page waits for or one the hour holds.
+    if (isRelayMessage(group.messageType)) continue;
     const mailgun = !onGmailRoad(group, roads);
     if (mailgun) {
       inFlight += group.inFlight;

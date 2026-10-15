@@ -51,7 +51,7 @@ export function createGmailAdapter(config: GmailAdapterConfig): EmailAdapter {
           to: message.to,
           ...(message.cc && message.cc.length > 0 ? { cc: [...message.cc] } : {}),
           ...(message.bcc && message.bcc.length > 0 ? { bcc: [...message.bcc] } : {}),
-          ...(config.replyTo ? { replyTo: config.replyTo } : {}),
+          ...replyToOf(message, config.replyTo),
           subject: message.subject,
           text: message.text,
           html: message.html,
@@ -108,6 +108,17 @@ export function createGmailAdapter(config: GmailAdapterConfig): EmailAdapter {
   };
 }
 
+/**
+ * The Reply-To of one message on this road (§778): none at all for a confidential one (`noReplyTo`), the address a
+ * visitor typed — with the name beside it, which Nodemailer quotes — for a message that carries one, else the
+ * club's own as it always was. A transactional message sets neither flag and is exactly what it was.
+ */
+export function replyToOf(message: Pick<OutgoingEmail, "noReplyTo" | "replyTo" | "replyToName">, clubReplyTo: string | undefined): { replyTo?: string | SmtpAddress } {
+  if (message.noReplyTo) return {};
+  if (message.replyTo) return { replyTo: message.replyToName ? { name: message.replyToName, address: message.replyTo } : message.replyTo };
+  return clubReplyTo ? { replyTo: clubReplyTo } : {};
+}
+
 /** The SMTP answer's enhanced status (`5.1.1`), read from its reply without keeping the reply. */
 export function enhancedStatusOf(error: unknown): string | null {
   if (!error || typeof error !== "object") return null;
@@ -153,15 +164,48 @@ export function refusalOf(to: string, answer: { rejected?: unknown; rejectedErro
 }
 
 /**
- * Nodemailer's codes for a failure that happened before Gmail could have taken the message: no
- * connection, no TLS, no DNS, a refused login, an envelope or a message the server answered "no"
- * to. Anything else — a socket error, a timeout, an unknown throw — may have come after the
- * server accepted DATA, and is reported as such so the sender does not send it again by Mailgun.
+ * Whether a Gmail failure came **before** the server could have taken the message (§778) — told by what
+ * Nodemailer really gives, not by what would be convenient. Nodemailer 10 labels every connection-level
+ * error with the command `CONN`, whatever the phase: a timeout while the body waits for Google's `250`
+ * is `{code:'ETIMEDOUT', command:'CONN', message:'Timeout'}`, a socket closed after the body is
+ * `{code:'ECONNECTION', command:'CONN', message:'Connection closed unexpectedly'}`. So the command says
+ * nothing; the **message** and the **kind** of error do:
+ *
+ * - Before acceptance, certainly: a name that did not resolve (`EDNS`, `ENOTFOUND`, `EAI_AGAIN`), a connection
+ *   that was refused or never made (`ECONNREFUSED`, and an `ESOCKET` whose failing system call was `connect`),
+ *   the connect and greeting timeouts (`Connection timeout`, `Greeting never received`), TLS, a refused login,
+ *   the server's own answer to an envelope command or to the message (`EAUTH`, `EENVELOPE`, `EMESSAGE`), and any
+ *   failure that names an SMTP command ahead of `DATA` (`EHLO`, `STARTTLS`, `AUTH …`, `MAIL FROM`, `RCPT TO`).
+ *   A server that closes the connection **with** a 4xx or 5xx reply said no.
+ * - Ambiguous, so the message is never sent by another road at once: every other `ETIMEDOUT` (`Timeout`),
+ *   `ESOCKET` and `ECONNECTION` (`Connection closed unexpectedly`) — the socket may have died after the body.
+ *   A bare `ECONNECTION` with no message and no command keeps the answer it had before this lane: before.
  */
-const BEFORE_ACCEPTANCE = new Set(["ECONNECTION", "EDNS", "ETLS", "EAUTH", "ENOAUTH", "EOAUTH2", "EENVELOPE", "EMESSAGE"]);
+const BEFORE_ACCEPTANCE = new Set(["EDNS", "ETLS", "EAUTH", "ENOAUTH", "EOAUTH2", "EENVELOPE", "EMESSAGE", "ENOTFOUND", "EAI_AGAIN", "ECONNREFUSED", "EHOSTUNREACH", "ENETUNREACH"]);
+
+/** The commands the server answers before it is given the message: a failure that names one never reached `DATA`. */
+const BEFORE_DATA_COMMAND = /^(EHLO|HELO|LHLO|STARTTLS|AUTH|MAIL FROM|RCPT TO)\b/i;
+
+/** The messages Nodemailer gives a connect or greeting timeout, the only timeouts that are before acceptance. */
+const CONNECT_TIMEOUT_MESSAGE = /^(Connection timeout|Greeting never received)\b/i;
+
+/** A refusal or a failure to connect, in the words of the system call that failed (`connect ECONNREFUSED …`). */
+const CONNECT_FAILURE_MESSAGE = /\b(ECONNREFUSED|ENOTFOUND|EAI_AGAIN|EHOSTUNREACH|ENETUNREACH)\b/;
 
 export function gmailFailureIsBeforeAcceptance(error: unknown): boolean {
   if (!error || typeof error !== "object") return false;
-  const code = (error as { code?: unknown }).code;
-  return typeof code === "string" && BEFORE_ACCEPTANCE.has(code);
+  const { code, command, message, syscall, responseCode } = error as { code?: unknown; command?: unknown; message?: unknown; syscall?: unknown; responseCode?: unknown };
+  if (typeof code !== "string") return false;
+  if (BEFORE_ACCEPTANCE.has(code)) return true;
+  if (typeof command === "string" && BEFORE_DATA_COMMAND.test(command.trim())) return true;
+  const text = typeof message === "string" ? message : "";
+  if (code === "ETIMEDOUT") return CONNECT_TIMEOUT_MESSAGE.test(text);
+  if (code === "ESOCKET") return syscall === "connect" || CONNECT_FAILURE_MESSAGE.test(text);
+  if (code === "ECONNECTION") {
+    // The server closed the connection with a refusal of its own: it said no. «Connection closed unexpectedly»
+    // with nothing from the server may have come after the body.
+    if (typeof responseCode === "number" && responseCode >= 400 && responseCode < 600) return true;
+    return !/closed unexpectedly/i.test(text);
+  }
+  return false;
 }

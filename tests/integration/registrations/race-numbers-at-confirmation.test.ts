@@ -335,7 +335,7 @@ describe("BR-REQ-038-01 §548 a race number only once a registration is confirme
           providerMessageId: null,
           transport: null,
           recipientCount: null,
-          deliveredAt: null, rejectedAt: null, rejectionCause: null, providerCode: null, providerDetail: null, laterDeliveredAt: null, resolvedAt: null, retriedAt: null, retriedVia: null,
+          deliveredAt: null, rejectedAt: null, rejectionCause: null, providerCode: null, providerDetail: null, laterDeliveredAt: null, resolvedAt: null, retriedAt: null, retriedVia: null, road: null, roadFailures: {}, bodyDeletedAt: null,
           lastError: null,
           createdAt: later(2),
           sentAt: null,

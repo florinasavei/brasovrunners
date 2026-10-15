@@ -7,7 +7,8 @@ import { getDb } from "@/db/client";
 import { getPathname } from "@/i18n/navigation";
 import { routing, type Locale } from "@/i18n/routing";
 import { addressListRefusal, parseAddressList } from "@/modules/contact/domain/recipients";
-import { emailMessageType, type EmailMessageType } from "@/db/schema/email-outbox";
+import type { EmailMessageType } from "@/db/schema/email-outbox";
+import { TEMPLATED_MESSAGE_TYPES } from "@/modules/notifications/domain/relay";
 import { updateCalendarRsvpTo } from "@/modules/notifications/calendar-rsvp";
 import { updateClubNotices } from "@/modules/notifications/club-notices";
 import { CLUB_NOTICE_RECIPIENTS_MAX, clubNoticeBoxesOf } from "@/modules/notifications/domain/club-notices";
@@ -345,7 +346,8 @@ export async function updateEmailCopyAction(_previous: FormOutcome | null, form:
   const messageType = posted("messageType") as EmailMessageType;
   try {
     const actor = await requireStaff();
-    if (!(emailMessageType.enumValues as readonly string[]).includes(messageType)) {
+    // Only the types that have a template: a visitor's message and the road notice are composed when queued and have no copy to edit.
+    if (!TEMPLATED_MESSAGE_TYPES.includes(messageType)) {
       throw new DomainError("VALIDATION_ERROR", `unknown message type ${messageType}`);
     }
     await updateEmailCopy(

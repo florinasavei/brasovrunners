@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { emailMessageType, type EmailMessageType } from "@/db/schema/email-outbox";
+import { TEMPLATED_MESSAGE_TYPES } from "@/modules/notifications/domain/relay";
+import type { EmailMessageType } from "@/db/schema/email-outbox";
 import { getPathname } from "@/i18n/navigation";
 import { buildOutgoingEmail, type TemplateData } from "@/modules/notifications/templates";
 import { env } from "@/shared/config/env";
@@ -55,7 +56,7 @@ function render(messageType: EmailMessageType, locale: "ro" | "en") {
 }
 
 describe("BR-REQ-080-01 the privacy line on every participant message (§323)", () => {
-  const participantTypes = (emailMessageType.enumValues as EmailMessageType[]).filter((type) => !CLUB_MAIL.includes(type));
+  const participantTypes = (TEMPLATED_MESSAGE_TYPES as EmailMessageType[]).filter((type) => !CLUB_MAIL.includes(type));
 
   for (const messageType of participantTypes) {
     for (const locale of ["ro", "en"] as const) {

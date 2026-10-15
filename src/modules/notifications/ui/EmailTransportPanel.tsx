@@ -54,7 +54,7 @@ export default async function EmailTransportPanel({ locale, setting, volume, may
   const fallbackOn = fallbackActive(setting, volume.gmailConfigured, volume.fallbackDisclosed);
   const fallbackGreyed = fallbackUnavailable(volume.gmailConfigured, volume.fallbackDisclosed);
   const namesOf = (group: (typeof EMAIL_GROUPS)[number]) =>
-    (Object.keys(EMAIL_GROUP_OF) as EmailMessageType[])
+    (Object.keys(EMAIL_GROUP_OF) as (keyof typeof EMAIL_GROUP_OF)[])
       .filter((type) => EMAIL_GROUP_OF[type] === group && !neverQueued.has(type))
       .map((type) => t(`emails.types.${type}`))
       .join(", ");
