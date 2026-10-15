@@ -32,7 +32,7 @@ function decodeStar(header: string): string {
   return decodeURIComponent(match![1]);
 }
 
-describe("contentDisposition", () => {
+describe("BR-REQ-060-01 contentDisposition (§NNN)", () => {
   it.each(NAMES)("%s: Headers accepts it, the fallback is printable ASCII, filename* is the real name", (_label, name) => {
     for (const type of ["attachment", "inline"] as const) {
       const value = contentDisposition(type, name);
@@ -98,7 +98,7 @@ describe("contentDisposition", () => {
   });
 });
 
-describe("a signed declaration's PDF (§NNN)", () => {
+describe("BR-REQ-060-01 a signed declaration's PDF (§NNN)", () => {
   it("answers 200 with a header Headers accepts, whatever the name carries", async () => {
     const response = pdfResponse(Buffer.from("%PDF-1.4 test"), "Declarația Ștefan Țepeș – 2026.pdf", "attachment");
     expect(response.status).toBe(200);

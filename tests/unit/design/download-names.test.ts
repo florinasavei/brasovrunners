@@ -24,7 +24,7 @@ function headerHits(source: Source): Hit[] {
 
 const sample = (file: string, text: string): Source => ({ file, text, tree: ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS) });
 
-describe("§NNN every download's name goes through contentDisposition()", () => {
+describe("BR-REQ-060-01 §NNN every download's name goes through contentDisposition()", () => {
   it("scans the whole of src/ and the helper is where it should be", () => {
     expect(SOURCES.length).toBeGreaterThan(500);
     expect(SOURCES.some((source) => source.file === HELPER)).toBe(true);

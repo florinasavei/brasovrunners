@@ -92,7 +92,7 @@ beforeEach(async () => {
   await resetTables(db);
 });
 
-describe("§NNN the registrations export, for an event whose title has diacritics", () => {
+describe("BR-REQ-060-01 §NNN the registrations export, for an event whose title has diacritics", () => {
   it("the Excel export answers 200 with a workbook and a header a Headers accepts, the real name in filename*", async () => {
     const race = await createRace(TITLE);
     await register(race.id, "Ștefan Țepeș", 1);

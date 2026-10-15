@@ -34,8 +34,8 @@ const PLAIN_TWINS: Record<string, string> = {
   "«": "'",
   "»": "'",
   "…": "...",
-  " ": " ",
-  " ": " ",
+  "\u00a0": " ",
+  "\u202f": " ",
   "ß": "ss",
   "ø": "o",
   "Ø": "O",
@@ -60,7 +60,7 @@ const HAS_WORD = /[A-Za-z0-9]/;
 export function asciiFallbackName(fileName: string, defaultStem = "download"): string {
   const plain = fileName
     .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
+    .replace(/[\u0300-\u036f]/g, "")
     .replace(/[^\x20-\x7e]/g, (char) => PLAIN_TWINS[char] ?? "")
     .replace(/"/g, "'")
     .replace(/[\\/]/g, "_")
@@ -76,7 +76,7 @@ export function asciiFallbackName(fileName: string, defaultStem = "download"): s
 /** RFC 5987's `value-chars`: `encodeURIComponent` leaves `!'()*` alone, the grammar does not. */
 function encodeRfc5987(value: string): string {
   // A lone surrogate would make `encodeURIComponent` throw: it becomes the replacement character.
-  const wellFormed = value.replace(/[\ud800-\udbff][\udc00-\udfff]|[\ud800-\udfff]/g, (unit) => (unit.length === 2 ? unit : "�"));
+  const wellFormed = value.replace(/[\ud800-\udbff][\udc00-\udfff]|[\ud800-\udfff]/g, (unit) => (unit.length === 2 ? unit : "\ufffd"));
   return encodeURIComponent(wellFormed).replace(/['()*!]/g, (char) => `%${char.charCodeAt(0).toString(16).toUpperCase()}`);
 }
 
