@@ -62,8 +62,8 @@ import { VOLUNTEER_BOX_ID, type VolunteerBox as BoxName, type VolunteerOutcome, 
  * action asks again.
  *
  * What the person says about themselves (§765; the owner, 2026-10-14): while the notice in force names it (`profile`),
- * the form asks «Vârsta» (the registration's own number-in-years habit, at least 14 since §768 — the tick «Am cel puțin
- * 18 ani» is gone, the age answers it), «Sex» (the registration form's own `SexField`, its words), «Orașul» (its city
+ * the form asks «Data nașterii» (§NNN, instead of «Vârsta»: the registration form's own `BirthDateField`, the age on the
+ * event's day at least 14 since §768 — the tick «Am cel puțin 18 ani» is gone, the date answers it), «Sex» (the registration form's own `SexField`, its words), «Orașul» (its city
  * box's words), the optional ticks «Am mai fost voluntar în trecut la alte curse» and «Fac parte din grupul {club}» (the
  * club's name from `CLUB_NAME`, as the registration form's member tick draws it — the person's claim, checked against
  * nothing) and, only while the event gives T-shirts (`shirts`), «Mărimea tricoului» — the kit's sizes. While it does not,
