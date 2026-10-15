@@ -615,7 +615,12 @@
         "aware": "Părintele sau tutorele meu știe și e de acord"
       },
       "otherCategory": "Alte activități",
-      "contactLabel": "Întrebări?"
+      "contactLabel": "Întrebări?",
+      "roleCount": {
+        "one": "1 rol",
+        "few": "{count} roluri",
+        "other": "{count} de roluri"
+      }
     },
     "calendar": {
       "feedName": "🏃 BVR",

@@ -615,7 +615,12 @@
         "aware": "My parent or guardian knows and agrees"
       },
       "otherCategory": "Other activities",
-      "contactLabel": "Questions?"
+      "contactLabel": "Questions?",
+      "roleCount": {
+        "one": "1 role",
+        "few": "{count} roles",
+        "other": "{count} roles"
+      }
     },
     "calendar": {
       "feedName": "🏃 BVR",
