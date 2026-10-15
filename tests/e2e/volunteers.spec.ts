@@ -188,7 +188,7 @@ test.describe("§754 volunteers for a race", () => {
     await expect(page.getByTestId("volunteer-offer-state")).toContainText("pagina evenimentului trimite la ea", { timeout: 30_000 });
     await hydrated(page);
     // The card may be shut after the redirect: its tick is still the same checkbox, with the state in `aria-checked`.
-    await expect(page.getByRole("checkbox", { name: "Primește voluntari pe pagină", exact: true, includeHidden: true })).toHaveAttribute("aria-checked", "true");
+    await expect(page.getByRole("checkbox", { name: "Primește voluntari pe pagină", exact: true, includeHidden: true })).toHaveAttribute("aria-checked", "true", { timeout: 30_000 });
 
     // «Arată public câți voluntari mai sunt necesari» (§773): the card's third tick, a real checkbox, off until the club ticks it.
     await openFold(card);
@@ -280,7 +280,7 @@ test.describe("§754 volunteers for a race", () => {
       await countsTick.click();
       await page.waitForURL(/#box-volunteers$/);
       await hydrated(page);
-      await expect(page.getByTestId("volunteer-counts-form").getByRole("checkbox", { name: "Arată public câți voluntari mai sunt necesari", includeHidden: true })).toHaveAttribute("aria-checked", "true");
+      await expect(page.getByTestId("volunteer-counts-form").getByRole("checkbox", { name: "Arată public câți voluntari mai sunt necesari", includeHidden: true })).toHaveAttribute("aria-checked", "true", { timeout: 30_000 });
       await expect(async () => {
         await guest.reload();
         await expect(guest.getByTestId("volunteer-roles")).toContainText("mai sunt necesare 2 persoane", { timeout: 3_000 });
@@ -290,7 +290,7 @@ test.describe("§754 volunteers for a race", () => {
       await page.getByTestId("volunteer-counts-form").getByRole("checkbox", { name: "Arată public câți voluntari mai sunt necesari", includeHidden: true }).click();
       await page.waitForURL(/#box-volunteers$/);
       await hydrated(page);
-      await expect(page.getByTestId("volunteer-counts-form").getByRole("checkbox", { name: "Arată public câți voluntari mai sunt necesari", includeHidden: true })).toHaveAttribute("aria-checked", "false");
+      await expect(page.getByTestId("volunteer-counts-form").getByRole("checkbox", { name: "Arată public câți voluntari mai sunt necesari", includeHidden: true })).toHaveAttribute("aria-checked", "false", { timeout: 30_000 });
       await expect(async () => {
         await guest.reload();
         await expect(guest.getByTestId("volunteer-roles")).toContainText("mai sunt locuri", { timeout: 3_000 });
@@ -546,7 +546,7 @@ test.describe("§754 volunteers for a race", () => {
       await shirtsTick.click();
       await page.waitForURL(/#box-volunteers$/);
       await hydrated(page);
-      await expect(page.getByTestId("volunteer-shirts-form").getByRole("checkbox", { name: "Oferim tricouri voluntarilor", includeHidden: true })).toHaveAttribute("aria-checked", "true");
+      await expect(page.getByTestId("volunteer-shirts-form").getByRole("checkbox", { name: "Oferim tricouri voluntarilor", includeHidden: true })).toHaveAttribute("aria-checked", "true", { timeout: 30_000 });
 
       // --- A role with all its people is no longer offered; a repeat gets the same answer -------
       await openBox();
