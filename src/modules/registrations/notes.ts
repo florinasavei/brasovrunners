@@ -4,7 +4,8 @@ import { registrations } from "@/db/schema/registrations";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
 import { recordAuditEvent } from "@/modules/audit/repository";
-import { canKeepRegistrationNotes, canManageRegistrations } from "@/modules/staff-identity/domain/roles";
+import { toWallTimeInput } from "@/modules/events/domain/zoned-time";
+import { canKeepRegistrationNotes, canManageRegistrations, type StaffRole } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
 import { isUuid } from "@/shared/ids";
 
@@ -27,8 +28,14 @@ import { isUuid } from "@/shared/ids";
  * with an empty metadata. A delete empties the row's `body` (the words are gone, not merely hidden) and stamps
  * `deleted_at`; nothing reads a deleted row.
  *
- * **Where a note never appears** — the race-day desk (§67: a name, a state and a number), the CSV and the
- * spreadsheet, the public list, every email. None of those queries read this table, and a test holds each.
+ * **Where a note never appears** — the race-day desk (§67: a name, a state and a number), the public list,
+ * every email. None of those queries read this table, and a test holds each.
+ *
+ * **The one file that carries them (§785; the owner, 2026-10-15: «asta trebuie de asemenea să fie și în Excel!»)** —
+ * the registrations export, the spreadsheet and the CSV, a last column «Note interne» for a role that may keep
+ * notes (`listRegistrationNotesForExport` here, `exportNotesCell` for the words; the route asks the same
+ * `canKeepRegistrationNotes` before it asks for the column, and the reader asserts it again). The author is a
+ * role, never a name, as on «Toate datele unei persoane».
  */
 
 /** One note as the registration's page draws it. */
@@ -167,6 +174,87 @@ export async function countRegistrationNotes<T extends Record<string, unknown>>(
     .groupBy(registrationNotes.registrationId);
   for (const row of rows) counts.set(row.registrationId, row.total);
   return counts;
+}
+
+/** One live note as the export reads it: when, by which role (null once the account is gone), and the words. */
+export type ExportNote = { createdAt: Date; authorRole: StaffRole | null; body: string };
+
+/**
+ * The live notes of the exported registrations (§785), in **one grouped query** over their ids — never a query
+ * per row — each registration's list newest first (`created_at` then `id` descending, as the card). A
+ * registration with none is absent from the map; a soft-deleted note is never read (`deleted_at IS NULL`, and its
+ * words are gone anyway). The author is the role only: the display name is not selected. Asserted here like the
+ * card's read: a role that may not keep notes is refused, never handed an empty map that looks like «none».
+ */
+export async function listRegistrationNotesForExport<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Pick<StaffUser, "role">,
+  registrationIds: readonly string[],
+): Promise<Map<string, ExportNote[]>> {
+  assertMayKeepNotes(actor);
+  const notes = new Map<string, ExportNote[]>();
+  const ids = registrationIds.filter(isUuid);
+  if (ids.length === 0) return notes;
+  const rows = await db
+    .select({
+      registrationId: registrationNotes.registrationId,
+      body: registrationNotes.body,
+      createdAt: registrationNotes.createdAt,
+      authorRole: staffUsers.role,
+    })
+    .from(registrationNotes)
+    .leftJoin(staffUsers, eq(staffUsers.id, registrationNotes.authorStaffUserId))
+    .where(and(inArray(registrationNotes.registrationId, ids), isNull(registrationNotes.deletedAt)))
+    .orderBy(desc(registrationNotes.createdAt), desc(registrationNotes.id));
+  for (const row of rows) {
+    const list = notes.get(row.registrationId) ?? [];
+    list.push({ createdAt: row.createdAt, authorRole: row.authorRole, body: row.body });
+    notes.set(row.registrationId, list);
+  }
+  return notes;
+}
+
+/**
+ * The most characters the notes cell holds (§785). Excel stops at 32 767 per cell and silently cuts what is
+ * past it; the file stops a little before, at a note's end, and says so on its last line.
+ */
+export const EXPORT_NOTES_CELL_MAX = 32_000;
+
+/** The words the cell is written in, from the reader's language (`Admin.registrations.notes.export*`). */
+export type ExportNotesWords = {
+  /** The author's role, written out. */
+  roles: Record<StaffRole, string>;
+  /** Where the author is gone («cont șters»). */
+  authorGone: string;
+  /** The closing line when the cap cut the list («… (mai multe note pe pagina înscrierii)»). */
+  more: string;
+};
+
+/**
+ * One registration's notes as the export's cell (§785): one note a line, newest first, each
+ * «<date> · <rolul autorului>: <text>» — the date on the event's clock (`dd.mm.yyyy hh:mm`), the author's role and
+ * never their name — a note's own line breaks kept inside the cell. Empty for no notes. Cut at a note's end below
+ * `EXPORT_NOTES_CELL_MAX` with `words.more` as the last line, so the cell is never past what Excel keeps.
+ */
+export function exportNotesCell(notes: readonly ExportNote[] | undefined, timeZone: string, words: ExportNotesWords): string {
+  if (!notes || notes.length === 0) return "";
+  const lines: string[] = [];
+  let length = 0;
+  for (const [index, note] of notes.entries()) {
+    const [day, time] = toWallTimeInput(note.createdAt, timeZone).split("T");
+    const [year, month, date] = day.split("-");
+    const role = note.authorRole ? words.roles[note.authorRole] : words.authorGone;
+    const line = `${date}.${month}.${year} ${time} · ${role}: ${note.body.replace(/\r\n?/g, "\n")}`;
+    // The room the closing line needs is kept back unless this is the last note and it fits whole.
+    const room = EXPORT_NOTES_CELL_MAX - (index === notes.length - 1 ? 0 : words.more.length + 1);
+    if (index > 0 && length + 1 + line.length > room) {
+      lines.push(words.more);
+      break;
+    }
+    lines.push(line);
+    length += (index > 0 ? 1 : 0) + line.length;
+  }
+  return lines.join("\n");
 }
 
 /**

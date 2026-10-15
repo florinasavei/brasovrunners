@@ -31,7 +31,9 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 const state = vi.hoisted(() => ({ db: undefined as unknown, actor: undefined as unknown, locale: "ro" as "ro" | "en" }));
 
 vi.mock("next-intl/server", () => ({
-  getTranslations: async (namespace: string) => {
+  // `namespace` string as a page asks, or `{ namespace }` as the export route does (§785).
+  getTranslations: async (arg: string | { namespace: string }) => {
+    const namespace = typeof arg === "string" ? arg : arg.namespace;
     const catalogue = (state.locale === "ro" ? ro : en) as unknown as Record<string, Record<string, unknown>>;
     return createTranslator({ locale: state.locale, messages: catalogue[namespace] as never });
   },
@@ -253,8 +255,8 @@ describe("§650 «Până când» on the registrations list", () => {
     const response = await exportRegistrations(new Request(`http://localhost/api/admin/registrations/export?eventId=${race.id}`));
     expect(response.status).toBe(200);
     const [header, ...lines] = (await response.text()).split("\r\n");
-    expect(header.split(",").slice(-6, -4)).toEqual(["Until when", "Waiting on"]);
-    const last = (name: string) => lines.find((line) => line.includes(name))?.split(",").slice(-6, -4);
+    expect(header.split(",").slice(-7, -5)).toEqual(["Until when", "Waiting on"]);
+    const last = (name: string) => lines.find((line) => line.includes(name))?.split(",").slice(-7, -5);
     expect(last("Bogdan Semnează")).toEqual([at.hold.toISOString(), "hold"]);
     expect(last("Carmen Depășit")).toEqual([at.kept.toISOString(), "kept"]);
     expect(last("Dan Oferit")).toEqual([at.offer.toISOString(), "offer"]);
@@ -299,7 +301,7 @@ describe("§650 «Până când» on the registrations list", () => {
     expect(listed.offerEmailQueued).toBe(true);
     expect(rowDeadlineOf(listed, new Date())?.kind).toBe("offer");
     const csv = await (await exportRegistrations(new Request(`http://localhost/api/admin/registrations/export?eventId=${race.id}`))).text();
-    expect(csv.split("\r\n").find((line) => line.includes("Dan Oferit"))?.split(",").at(-5)).toBe("offer");
+    expect(csv.split("\r\n").find((line) => line.includes("Dan Oferit"))?.split(",").at(-6)).toBe("offer");
     const day = formatDay(past, { locale: "ro", timeZone: CLUB_TIME_ZONE, style: "short", withTime: true });
     expect(await timeline(id)).toContain(`Ține locul până: ${day}`);
 

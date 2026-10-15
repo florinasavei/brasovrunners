@@ -35,6 +35,7 @@ const NOW = new Date("2026-09-04T10:00:00.000Z");
 
 // The export route reads the database and the signed-in staff member through these two (§664).
 const state = vi.hoisted(() => ({ db: undefined as unknown, actor: undefined as unknown }));
+vi.mock("next-intl/server", async () => (await import("../../helpers/intl-server")).intlServerMock);
 vi.mock("@/db/client", () => ({ getDb: () => state.db }));
 vi.mock("@/modules/staff-identity/session", () => ({
   DEV_STAFF_COOKIE: "dev-staff",

@@ -96,8 +96,8 @@ export const eventVolunteerRoles = pgTable(
       .references(() => events.id, { onDelete: "cascade" }),
     nameRo: text("name_ro").notNull(),
     nameEn: text("name_en").notNull(),
-    /** How many people the role needs, at least one: «N din M» on the card and the form's «still needs people». */
-    needed: integer("needed").notNull(),
+    /** How many people the role needs, at least one: «N din M» on the card and the form's «still needs people». NULL is «fără număr» (§784): any number of people, never full. */
+    needed: integer("needed"),
     /**
      * The one-line description of §754 (at most 200 characters), **kept only until a later contract release** (§765):
      * migration `0151` turned each value into the document below, and nothing reads or writes these two columns
@@ -149,7 +149,7 @@ export const eventVolunteerRoles = pgTable(
       sql`lower(${t.nameEn})`,
     ),
     check("event_volunteer_roles_colour_is_hex", sql`${t.colour} IS NULL OR ${t.colour} ~ '^#[0-9a-fA-F]{6}$'`),
-    check("event_volunteer_roles_needed_positive", sql`${t.needed} >= 1`),
+    check("event_volunteer_roles_needed_positive", sql`${t.needed} IS NULL OR ${t.needed} >= 1`),
     check("event_volunteer_roles_name_length", sql`char_length(${t.nameRo}) BETWEEN 1 AND 80 AND char_length(${t.nameEn}) BETWEEN 1 AND 80`),
     check(
       "event_volunteer_roles_description_length",

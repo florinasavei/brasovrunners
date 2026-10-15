@@ -11,7 +11,7 @@ import { readEventConfig } from "@/modules/content/events/transfer/export";
 import type { StaffRole } from "@/modules/staff-identity/domain/roles";
 import { DEFAULT_BADGE_DESIGN, readBadgeDesign } from "@/modules/volunteers/badges/badge-design";
 import { readBadgeDesignForm } from "@/modules/volunteers/badges/badge-query";
-import { BADGE_COUNT_MAX, badgePrintDefault, findEventForBadges, listBadgeRoles, readPrintCounts, saveBadgeDesign, saveBadgeRoleColours } from "@/modules/volunteers/badges/badges";
+import { BADGE_COUNT_MAX, badgePrintDefault, badgePrintEntries, findEventForBadges, listBadgeRoles, readBadgeSingleStart, readPrintCounts, saveBadgeDesign, saveBadgeRoleColours } from "@/modules/volunteers/badges/badges";
 import { changeVolunteerRole } from "@/modules/volunteers/volunteers";
 import { DomainError } from "@/shared/errors/domain-error";
 import type { FormOutcome } from "@/shared/forms/outcome";
@@ -653,16 +653,58 @@ describe("§776 the free-text line and the marker area", () => {
   }, 60_000);
 });
 
+describe("§784 «Câte ecusoane» for a role without a number", () => {
+  const person = (roleId: string, name: string, state: "REGISTERED" | "CONFIRMED" | "CANCELLED") => ({
+    eventId,
+    roleId,
+    name,
+    email: `${name.toLowerCase()}@example.test`,
+    canonicalEmail: `${name.toLowerCase()}@example.test`,
+    canonicalizationVersion: 1,
+    phone: "+40712345678",
+    state,
+    source: "PUBLIC" as const,
+  });
+
+  it("starts it at the people the organizers gave the role — never the cancelled — where a numbered role starts at its number", async () => {
+    const [free] = await db.insert(eventVolunteerRoles).values({ eventId, nameRo: "Ajutoare", nameEn: "Helpers", needed: null, position: 2 }).returning({ id: eventVolunteerRoles.id });
+    await db.insert(eventVolunteers).values([person(free.id, "Ana", "CONFIRMED"), person(free.id, "Bogdan", "REGISTERED"), person(free.id, "Cora", "CANCELLED"), person(waterId, "Dan", "CONFIRMED")]);
+    const roles = await listBadgeRoles(db, eventId);
+    expect(roles.map((role) => [role.nameRo, role.needed, role.assigned])).toEqual([
+      ["Punct de apă", 3, 1],
+      ["Marshal", 5, 0],
+      ["Ajutoare", null, 2],
+    ]);
+    const counts = readPrintCounts(new URLSearchParams(), roles);
+    if ("refused" in counts) throw new Error("the defaults are never a refusal");
+    expect([...counts.roles.values()].map((entry) => entry.count)).toEqual([3, 5, 2]);
+    expect(badgePrintDefault(roles[2])).toBe(2);
+    // The sheet's piles: what each role starts at, so a press without a change prints 3 + 5 + 2 badges.
+    expect(badgePrintEntries(roles, counts, "ro").map((entry) => entry.count)).toEqual([3, 5, 2]);
+    // The box is the club's to change: a typed number replaces the start.
+    const typed = readPrintCounts(new URLSearchParams(`n.${free.id}=12`), roles);
+    if ("refused" in typed) throw new Error("a number in range is no refusal");
+    expect(typed.roles.get(free.id)).toEqual({ count: 12, spares: 0 });
+  });
+
+  it("starts at nothing while nobody has been given the role, and says so in the sheet", async () => {
+    await db.insert(eventVolunteerRoles).values({ eventId, nameRo: "Ajutoare", nameEn: "Helpers", needed: null, position: 2 });
+    const roles = await listBadgeRoles(db, eventId);
+    expect(roles.at(-1)).toMatchObject({ needed: null, assigned: 0 });
+    expect(badgePrintDefault(roles.at(-1)!)).toBe(0);
+  });
+});
+
 describe("§783 one badge for everyone, no role — the default", () => {
   const sheet = (query: string, id = eventId) => sheetRoute.GET(new Request(`http://localhost/api/admin/events/${id}/badges?${query}`), { params: Promise.resolve({ id }) });
   const picture = (query: string, id = eventId) => previewRoute.GET(new Request(`http://localhost/api/admin/events/${id}/badges/preview?${query}`), { params: Promise.resolve({ id }) });
   const held = async (response: Response) => /\((\d+) badges\)/.exec(Buffer.from(await response.arrayBuffer()).toString("latin1"))?.[1];
 
-  /** A sign-up of the event in a state: the people the badges' default counts are the confirmed ones. */
-  const volunteer = (n: number, state: "REGISTERED" | "CONFIRMED" | "CANCELLED", event = eventId) =>
+  /** A sign-up of the event in a state, given a role or none: the people the one badge's default counts are the confirmed ones. */
+  const volunteer = (n: number, state: "REGISTERED" | "CONFIRMED" | "CANCELLED", event = eventId, roleId: string | null = null) =>
     db.insert(eventVolunteers).values({
       eventId: event,
-      roleId: null,
+      roleId,
       name: `Voluntar ${n}`,
       email: `v${n}@example.test`,
       canonicalEmail: `v${n}@example.test`,
@@ -756,6 +798,32 @@ describe("§783 one badge for everyone, no role — the default", () => {
     // «Punct de apă» 3 and «Marshal» 5.
     expect(await held(await sheet("locale=ro"))).toBe("8");
     await db.delete(eventVolunteerRoles).where(eq(eventVolunteerRoles.eventId, eventId));
+    expect(await held(await sheet("locale=ro"))).toBe("10");
+  });
+
+  it("meets a role without a number (§784): its people join the sum of the roles' needs, finite and never a hole, and the confirmed volunteers still come first", async () => {
+    // «Punct de apă» needs 3 and «Marshal» 5; «Ajutoare» has no number, so no need to add up.
+    const [free] = await db.insert(eventVolunteerRoles).values({ eventId, nameRo: "Ajutoare", nameEn: "Helpers", needed: null, position: 2 }).returning({ id: eventVolunteerRoles.id });
+    const start = async () => readBadgeSingleStart(db, eventId, await listBadgeRoles(db, eventId));
+    // Nobody given it yet: it adds nothing, so the sum is the numbered roles' own — a number, never NaN.
+    expect(await start()).toEqual({ count: 8, basis: "neededNoNumber" });
+    // Three people given it, one cancelled: 3 + 5 + 3 = 11 — not the ten of the fallback, and the sheet's route prints the same.
+    for (const [n, state] of [[1, "REGISTERED"], [2, "REGISTERED"], [3, "REGISTERED"], [4, "CANCELLED"]] as const) await volunteer(n, state, eventId, free.id);
+    const sum = await start();
+    expect(sum).toEqual({ count: 11, basis: "neededNoNumber" });
+    expect(Number.isFinite(sum.count)).toBe(true);
+    expect(await held(await sheet("locale=ro"))).toBe("11");
+    // The club's own «Câte ecusoane» replaces it, as it does everywhere.
+    expect(await held(await sheet("locale=ro&all=4"))).toBe("4");
+    // One confirmed volunteer: theirs is the count now, whatever the roles' sum.
+    await volunteer(5, "CONFIRMED", eventId, free.id);
+    expect(await start()).toEqual({ count: 1, basis: "confirmed" });
+    expect(await held(await sheet("locale=ro"))).toBe("1");
+    // Only a role without a number, nobody given it and nobody confirmed: the ten of the fallback — not nothing.
+    await db.delete(eventVolunteers).where(eq(eventVolunteers.eventId, eventId));
+    await db.delete(eventVolunteerRoles).where(eq(eventVolunteerRoles.id, waterId));
+    await db.delete(eventVolunteerRoles).where(eq(eventVolunteerRoles.id, marshalId));
+    expect(await start()).toEqual({ count: 10, basis: "fallback" });
     expect(await held(await sheet("locale=ro"))).toBe("10");
   });
 

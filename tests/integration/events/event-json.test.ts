@@ -926,6 +926,22 @@ describe("an event's volunteers are not the file's — only their categories and
     expect(file.volunteers.categories).toEqual([]);
   });
 
+  it("§784 carries a role without a number as null and an import as new makes the same role, still without a number", async () => {
+    const { event } = await seedRace();
+    await db.insert(eventVolunteerRoles).values([
+      { eventId: event.id, nameRo: "Punct de apă", nameEn: "Water point", needed: null, position: 0 },
+      { eventId: event.id, nameRo: "Sosire", nameEn: "Finish", needed: 2, position: 1 },
+    ]);
+    const file = await fileOf(event.id);
+    expect(file.volunteers.roles.map((role) => role.needed)).toEqual([null, 2]);
+    // The file is text: null survives the trip through JSON, and a file from before (a number in every role) reads as it always did.
+    const created = await importEventAsNew(db, { actor: admin, file: JSON.parse(JSON.stringify(file)), fetchImpl: serving(), now: NOW });
+    expect((await db.select().from(eventVolunteerRoles).where(eq(eventVolunteerRoles.eventId, created.eventId)).orderBy(eventVolunteerRoles.position)).map((row) => [row.nameRo, row.needed])).toEqual([
+      ["Punct de apă", null],
+      ["Sosire", 2],
+    ]);
+  });
+
   it("starts an event imported as new with the roles and the tick off — no person —, and leaves the target's own alone on an import over it", async () => {
     const { event } = await seedRace();
     await withVolunteers(event.id);
