@@ -926,7 +926,7 @@ describe("an event's volunteers are not the file's — only their categories and
     expect(file.volunteers.categories).toEqual([]);
   });
 
-  it("§782 carries a role without a number as null and an import as new makes the same role, still without a number", async () => {
+  it("§NNN carries a role without a number as null and an import as new makes the same role, still without a number", async () => {
     const { event } = await seedRace();
     await db.insert(eventVolunteerRoles).values([
       { eventId: event.id, nameRo: "Punct de apă", nameEn: "Water point", needed: null, position: 0 },

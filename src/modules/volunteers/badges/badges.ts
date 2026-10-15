@@ -49,7 +49,7 @@ export type BadgeRole = {
   id: string;
   nameRo: string;
   nameEn: string;
-  /** How many people the role needs; null is «fără număr» (§782). */
+  /** How many people the role needs; null is «fără număr» (§NNN). */
   needed: number | null;
   /** The people the organizers gave the role (§761's count): what «Câte ecusoane» starts at for a role without a number. */
   assigned: number;
@@ -67,7 +67,7 @@ export type BadgeRole = {
   categoryPhone: string | null;
 };
 
-/** What «Câte ecusoane» reads of a role: what it needs, and — for a role without a number (§782) — the people it was given. */
+/** What «Câte ecusoane» reads of a role: what it needs, and — for a role without a number (§NNN) — the people it was given. */
 export type BadgeCountRole = Pick<BadgeRole, "needed"> & { assigned?: number };
 
 /**
@@ -89,7 +89,7 @@ export async function listBadgeRoles<T extends Record<string, unknown>>(db: Data
     .from(eventVolunteerRoles)
     .where(eq(eventVolunteerRoles.eventId, eventId));
   const categories = (await db.select().from(eventVolunteerCategories).where(eq(eventVolunteerCategories.eventId, eventId))).sort(compareCategories);
-  // The people given each role (§761): what a role without a number starts its badges at (§782) — one read for the event, counted here.
+  // The people given each role (§761): what a role without a number starts its badges at (§NNN) — one read for the event, counted here.
   const people = await db.select({ roleId: eventVolunteers.roleId, state: eventVolunteers.state }).from(eventVolunteers).where(eq(eventVolunteers.eventId, eventId));
   const assigned = (roleId: string) => people.filter((person) => person.roleId === roleId && countsAgainstRole(person.state)).length;
   const roles = rows
@@ -407,7 +407,7 @@ export type BadgePrintCounts = {
 /**
  * «Câte ecusoane» before anyone types: the people the role needs, never more than one pile may hold — a role
  * that needs more than `BADGE_COUNT_MAX` (the volunteers allow up to 1 000) starts at the most a pile
- * prints, so the form the page draws is always one the sheet accepts. A role without a number (§782) has no
+ * prints, so the form the page draws is always one the sheet accepts. A role without a number (§NNN) has no
  * need to start from: it starts at the people it was given, and the box is the club's to raise.
  */
 export function badgePrintDefault(role: BadgeCountRole): number {

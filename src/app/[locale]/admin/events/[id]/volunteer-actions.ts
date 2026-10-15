@@ -99,7 +99,7 @@ const roleFields = (form: FormData) => ({
   nameRo: field(form, "nameRo"),
   nameEn: field(form, "nameEn"),
   needed: field(form, "needed"),
-  // «Fără număr — oricâți oameni» (§782): the house tick posts `on`; the service decides by it, whatever the number box holds.
+  // «Fără număr — oricâți oameni» (§NNN): the house tick posts `on`; the service decides by it, whatever the number box holds.
   unlimited: form.get("unlimited") === "on" ? "on" : "",
   descriptionRo: field(form, "descriptionRo"),
   descriptionEn: field(form, "descriptionEn"),

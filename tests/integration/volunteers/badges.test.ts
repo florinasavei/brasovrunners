@@ -642,7 +642,7 @@ describe("§776 the free-text line and the marker area", () => {
   }, 60_000);
 });
 
-describe("§782 «Câte ecusoane» for a role without a number", () => {
+describe("§NNN «Câte ecusoane» for a role without a number", () => {
   const person = (roleId: string, name: string, state: "REGISTERED" | "CONFIRMED" | "CANCELLED") => ({
     eventId,
     roleId,

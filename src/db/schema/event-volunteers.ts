@@ -96,7 +96,7 @@ export const eventVolunteerRoles = pgTable(
       .references(() => events.id, { onDelete: "cascade" }),
     nameRo: text("name_ro").notNull(),
     nameEn: text("name_en").notNull(),
-    /** How many people the role needs, at least one: «N din M» on the card and the form's «still needs people». NULL is «fără număr» (§782): any number of people, never full. */
+    /** How many people the role needs, at least one: «N din M» on the card and the form's «still needs people». NULL is «fără număr» (§NNN): any number of people, never full. */
     needed: integer("needed"),
     /**
      * The one-line description of §754 (at most 200 characters), **kept only until a later contract release** (§765):

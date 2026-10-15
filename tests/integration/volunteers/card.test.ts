@@ -787,7 +787,7 @@ describe("§754 deleting an event", () => {
   });
 });
 
-describe("§782 a role «fără număr» — the tick of the role's form", () => {
+describe("§NNN a role «fără număr» — the tick of the role's form", () => {
   const roleRows = () => listVolunteerRoles(db, eventId);
 
   it("adds a role with the tick and no number: it is saved without one, the audit says so, and the number box is ignored while the tick is on", async () => {

@@ -117,7 +117,7 @@ export async function importVolunteersFile<T extends Record<string, unknown>>(
           fields: {
             nameRo: role.name.ro,
             nameEn: role.name.en,
-            // A role without a number (§782) is added through the tick, as the card's own form posts it.
+            // A role without a number (§NNN) is added through the tick, as the card's own form posts it.
             ...(role.needed === null ? { needed: "", unlimited: "on" } : { needed: String(role.needed) }),
             categoryId: under ?? "",
             ...(role.description.ro && role.description.en

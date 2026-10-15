@@ -199,7 +199,7 @@ export const volunteerRoleInputSchema = z
   .object({
     nameRo: line(VOLUNTEER_ROLE_NAME_MAX),
     nameEn: line(VOLUNTEER_ROLE_NAME_MAX),
-    // «Câți oameni trebuie» as typed, and «Fără număr — oricâți oameni» (§782): the tick posts `on`. The server decides by the tick —
+    // «Câți oameni trebuie» as typed, and «Fără număr — oricâți oameni» (§NNN): the tick posts `on`. The server decides by the tick —
     // a ticked role has no number whatever the box holds (a form without scripts keeps the box, a forged post may fill it).
     needed: z.string().optional().default("").transform((value) => value.trim()),
     unlimited: z.string().optional().default(""),
@@ -229,7 +229,7 @@ export const volunteerRoleInputSchema = z
     const kept = (side: { doc: RichTextDoc | null; plain: string | null }) => (side.plain === null ? { doc: null, plain: null } : side);
     const ro = kept(description.ro);
     const en = kept(description.en);
-    // NULL is «fără număr» (§782): the tick, or a whole number of at least one — neither is the refusal at the number's box.
+    // NULL is «fără număr» (§NNN): the tick, or a whole number of at least one — neither is the refusal at the number's box.
     const typed = fields.unlimited === "on" ? null : roleNeededFrom(fields.needed);
     if (typed === undefined) ctx.addIssue({ code: "custom", path: ["needed"], message: "a role needs a number of people, at least 1, or «fără număr»" });
     return {
@@ -675,7 +675,7 @@ export function refusedFields(error: z.ZodError): string[] {
  */
 export type RoleStanding = {
   roleId: string;
-  /** How many people the role needs; null is «fără număr» (§782): any number, never full. */
+  /** How many people the role needs; null is «fără număr» (§NNN): any number, never full. */
   needed: number | null;
   /** «Înscris» + «Confirmat» who were given the role: the people the role counts. */
   taken: number;
@@ -691,7 +691,7 @@ export function standingOf(role: { id: string; needed: number | null }, voluntee
   return { roleId: role.id, needed: role.needed, taken, confirmed, free: role.needed === null ? null : Math.max(0, role.needed - taken) };
 }
 
-/** Whether a role still takes people: one without a number (§782) always does; a numbered one while it has places. */
+/** Whether a role still takes people: one without a number (§NNN) always does; a numbered one while it has places. */
 export function roleTakesPeople(standing: Pick<RoleStanding, "free"> | undefined): boolean {
   return standing !== undefined && (standing.free === null || standing.free > 0);
 }
