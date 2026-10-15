@@ -212,7 +212,7 @@ async function checkRoadRadios(page: Page): Promise<void> {
   await expect(pair.getByRole("radio", { name: "Mailgun (recomandat)" })).toBeEnabled();
   await expect(pair.getByRole("radio", { name: "Gmail-ul clubului („Scrie-ne”)" })).toBeEnabled();
   await expect(pair.locator('input[type="radio"]:checked')).toHaveValue("mailgun");
-  await expect(contact.getByTestId("contact-via-why")).toContainText("Pleacă de pe domeniul clubului");
+  await expect(contact.getByTestId("contact-via-why")).toContainText("Mailgun pleacă de pe domeniul clubului");
 }
 
 /** How many races and how many group runs the spec publishes for the picker: eight events and «Altceva», over the island's threshold. */
