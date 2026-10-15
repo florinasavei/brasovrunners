@@ -29,6 +29,8 @@ type Props = {
   safetyName: string;
   /** Girl Zone's messages leave by the club's Gmail, so the mailbox's readers see them: «Cine să afle?» does not say «doar» then (§772). */
   safetyByGmail: boolean;
+  /** It may leave by the club's Gmail when Mailgun is down (the club's tick, §778): the hint says so rather than «doar». */
+  safetyFallback?: boolean;
   /** Whom a named message may reach (`audiencesFor`); fewer than two draws no «Cine să afle?». */
   audiences: readonly FeedbackAudience[];
   /** The answer checked by default: a refused post's, else the branch's own reader. */
@@ -85,7 +87,7 @@ function Choice({
  * on a box it cannot show. The page draws none of this while the privacy notice in force does not
  * name the named mode (`{{feedbackFormsNamed}}`): every form is anonymous only then.
  */
-export default async function IdentityChoice({ withPhone, named, invalid, kept, safetyName, safetyByGmail, audiences, audience }: Props) {
+export default async function IdentityChoice({ withPhone, named, invalid, kept, safetyName, safetyByGmail, safetyFallback = false, audiences, audience }: Props) {
   const t = await getTranslations("Tell");
   const box = (name: FeedbackField, help?: string) => ({
     id: feedbackFieldId(name),
@@ -141,7 +143,7 @@ export default async function IdentityChoice({ withPhone, named, invalid, kept, 
                 value={answer}
                 checked={answer === audience}
                 label={answer === "club" ? t("audience.club") : t("audience.person", { name: safetyName })}
-                hint={answer === "club" ? t("audience.clubHint") : t(safetyByGmail ? "audience.personHintGmail" : "audience.personHint", { name: safetyName })}
+                hint={answer === "club" ? t("audience.clubHint") : t(safetyByGmail ? "audience.personHintGmail" : safetyFallback ? "audience.personHintFallback" : "audience.personHint", { name: safetyName })}
               />
             ))}
           </Box>

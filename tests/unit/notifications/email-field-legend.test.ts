@@ -1,9 +1,10 @@
 import { readFileSync } from "node:fs";
+import { TEMPLATED_MESSAGE_TYPES } from "@/modules/notifications/domain/relay";
 import path from "node:path";
 import type { ReactElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
-import { emailMessageType, type EmailMessageType } from "@/db/schema/email-outbox";
+import type { EmailMessageType } from "@/db/schema/email-outbox";
 import { EMAIL_COPY_CONDITIONAL_FACTS, EMAIL_COPY_PLACEHOLDERS, emailCopyKey, emailCopySchema } from "@/modules/notifications/domain/email-copy";
 import { EMAIL_SAMPLE, EMAIL_SAMPLE_HOLD_EXPIRES_AT, EMAIL_SAMPLE_SIGNED_AT, emailSampleValueOf } from "@/modules/notifications/domain/email-sample";
 import {
@@ -45,7 +46,7 @@ vi.mock("next-intl/server", async () => {
 
 const { default: EmailFieldLegend } = await import("@/modules/notifications/ui/EmailFieldLegend");
 
-const TYPES = emailMessageType.enumValues as readonly EmailMessageType[];
+const TYPES = TEMPLATED_MESSAGE_TYPES;
 const LOCALES = ["ro", "en"] as const;
 const CATALOGUE = { ro, en } as const;
 

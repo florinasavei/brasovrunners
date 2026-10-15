@@ -18,6 +18,7 @@ import { SOCIAL_ANSWERS } from "@/modules/registrations/answers";
 import { currentDeadlines } from "@/modules/deadlines/deadlines";
 import { GROUP_RUN_DECLARATION_ID_DOCUMENT_DAYS } from "@/modules/group-run-declarations/domain";
 import { revalidatePublicContent } from "@/modules/public-cache/cache";
+import { DELETED_RELAY_PAYLOAD, RELAY_MESSAGE_TYPES } from "@/modules/notifications/domain/relay";
 import { RETENTION_PERIODS } from "./domain/retention-periods";
 
 /**
@@ -456,6 +457,29 @@ export async function pruneExpiredRows<T extends Record<string, unknown>>(
       )
       .returning({ id: emailOutbox.id });
     counts.orphanOutboxMessages = deleted.length;
+    /*
+      A visitor's message still holding its words after three days (§778): the relay gives a message up at twenty-four hours,
+      so this is only the net under a worker that never ran — the notice (`{{relayQueue}}`) says the words are kept until the message
+      leaves: seconds, and three days at the very most. The words go, the row is FAILED as the record.
+    */
+    await tx
+      .update(emailOutbox)
+      .set({
+        status: "FAILED",
+        lockedAt: null,
+        nextAttemptAt: null,
+        lastError: "the words were deleted by the retention sweep: no road carried the message in three days",
+        payloadJson: DELETED_RELAY_PAYLOAD,
+        bodyDeletedAt: now,
+      })
+      .where(
+        and(
+          inArray(emailOutbox.messageType, [...RELAY_MESSAGE_TYPES]),
+          inArray(emailOutbox.status, ["PENDING", "PROCESSING"]),
+          isNull(emailOutbox.bodyDeletedAt),
+          lt(emailOutbox.createdAt, daysBefore(now, 3)),
+        ),
+      );
   });
 
   /**

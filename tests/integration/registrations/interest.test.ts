@@ -256,7 +256,7 @@ describe("BR-REQ-011-01 criterion 13 — the interest list and REGISTRATION_OPEN
         providerMessageId: null,
         transport: null,
         recipientCount: null,
-        deliveredAt: null, rejectedAt: null, rejectionCause: null, providerCode: null, providerDetail: null, laterDeliveredAt: null, resolvedAt: null, retriedAt: null, retriedVia: null,
+        deliveredAt: null, rejectedAt: null, rejectionCause: null, providerCode: null, providerDetail: null, laterDeliveredAt: null, resolvedAt: null, retriedAt: null, retriedVia: null, road: null, roadFailures: {}, bodyDeletedAt: null,
         lastError: null,
         createdAt: OPENS_AT,
         sentAt: null,

@@ -3,7 +3,9 @@ import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import { computeContentHash } from "@/modules/legal-documents/domain/content-hash";
 import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
 import { privacyNoticeEn, privacyNoticeRo } from "@/modules/legal-documents/templates/privacy-notice";
+import { readRelayPayload } from "@/modules/notifications/relay";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
+import { relayRows } from "../../helpers/relay";
 
 /**
  * BR-REQ-070-04, `DECISIONS.md` §676 — «Spune-ne ceva»'s one Server Action, `submitFeedbackAction`,
@@ -52,7 +54,6 @@ const { submitFeedbackAction } = await import("@/app/[locale]/contact/feedback/a
 const { updateFeedbackSettings } = await import("@/modules/feedback/settings");
 const { forgetFeedbackLinkMemo } = await import("@/modules/feedback/links");
 const { openFormDraft } = await import("@/modules/registrations/form-draft");
-const { capturedContactMessages } = await import("@/modules/contact/delivery");
 
 /** As the panel posts it: «O sugestie» and «O reclamație» off, their boxes empty. */
 const SETTINGS = {
@@ -110,6 +111,14 @@ async function pressed(form: FormData): Promise<string> {
     throw error;
   }
   throw new Error("the action returned without a redirect");
+}
+
+/**
+ * What the forms queued (§778): «Spune-ne ceva» no longer sends from the action — it writes an outbox row and the relay carries it
+ * after the response, which a test does not run — so what a post leaves is read from the queue, newest first, with its words.
+ */
+async function queued() {
+  return (await relayRows(db)).map((row) => ({ road: row.road, to: row.recipientEmail, ...readRelayPayload(row.payloadJson)! })).reverse();
 }
 
 const lastDraft = () => sets.filter((set) => set.name === "br_form_draft").at(-1);
@@ -175,14 +184,15 @@ describe("§676 submitFeedbackAction's redirects", () => {
       translations,
       now: new Date(),
     });
-    const before = capturedContactMessages().length;
+    const before = (await queued()).length;
     const named = { branch: "howItWent", identity: "named", name: "Ana Pop", email: "ana@example.org", event: "", date: "", rating: "", reasons: [], reasonOther: "" };
     expect(await pressed(post({ ...named, message: "Foarte frumos." }))).toBe("/ro/contact/spune-ne?sent=cum-a-fost");
-    expect(capturedContactMessages().length).toBe(before + 1);
-    const [sent] = capturedContactMessages();
+    expect((await queued()).length).toBe(before + 1);
+    const [sent] = await queued();
     expect(sent.text.split("\n")[0]).toBe("Nume: (anonim)");
     expect(sent.text).not.toContain("Ana");
     expect(sent.replyTo).toBeUndefined();
+    expect(sent.noReplyTo).toBe(true);
 
     await pressed(post({ ...named, message: " " }));
     const kept = openFormDraft(lastDraft()?.value ?? "");
@@ -192,12 +202,12 @@ describe("§676 submitFeedbackAction's redirects", () => {
   });
 
   it("names the other reader on the sent page: a named safety report the sender gave the club leaves by the SMTP road, «&catre=clubul» (§678)", async () => {
-    const before = capturedContactMessages().length;
+    const before = (await queued()).length;
     const to = await pressed(post({ branch: "safety", identity: "named", name: "Ana Pop", audience: "club", message: "Cineva m-a urmărit.", whereWhen: "", contact: "" }));
     expect(to).toBe("/ro/contact/spune-ne?sent=girl-zone&catre=clubul");
-    expect(capturedContactMessages().length).toBe(before + 1);
-    expect(capturedContactMessages()[0].subject).toContain("Mesaj confidențial de pe site");
-    expect(capturedContactMessages()[0].text.split("\n")[0]).toBe("Nume: Ana Pop");
+    expect((await queued()).length).toBe(before + 1);
+    expect((await queued())[0].subject).toContain("Mesaj confidențial de pe site");
+    expect((await queued())[0].text.split("\n")[0]).toBe("Nume: Ana Pop");
   });
 
   it("keeps the English path for an English post", async () => {
@@ -207,13 +217,13 @@ describe("§676 submitFeedbackAction's redirects", () => {
   });
 
   it("answers a post that left with ?sent=<the branch's slug>, the draft cleared, the message on the SMTP road", async () => {
-    const before = capturedContactMessages().length;
+    const before = (await queued()).length;
     const to = await pressed(post({ branch: "howItWent", event: "", date: "", rating: "5", message: "Foarte frumos.", reasons: [], reasonOther: "", email: "" }));
     expect(to).toBe("/ro/contact/spune-ne?sent=cum-a-fost");
     const cleared = sets.at(-1);
     expect(cleared?.options).toMatchObject({ path: "/ro/contact/spune-ne", maxAge: 0 });
-    expect(capturedContactMessages().length).toBe(before + 1);
-    expect(capturedContactMessages()[0].to).toEqual(["how@example.org"]);
+    expect((await queued()).length).toBe(before + 1);
+    expect((await queued())[0]).toMatchObject({ to: "how@example.org", road: "gmail" });
   });
 
   it("answers a branch that is not offered «UNAVAILABLE», on that branch's form, with the text kept", async () => {

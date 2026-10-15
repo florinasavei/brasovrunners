@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.36-2026-10-15 -->
+<!-- PROJECT_BASELINE: BR-V3.37-2026-10-15 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V3.36-2026-10-15`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.37-2026-10-15`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -1356,6 +1356,25 @@ a rolling day (500 is Google's own ceiling, shared with the people who write by 
 race morning that cap, not Mailgun's, is what decides how many confirmations still leave, so raise it there
 before the window if Mailgun is on probation.
 
+**The form's message is an outbox row since §778, and one road down is no loss.** «Scrie-ne» (Gmail) and each «Spune-ne ceva» form
+(the road the club chose on «Pagini» → «Contact») queue their message in the same outbox the emails use, and it leaves at once, after the
+response; the words stay in the row only until it is delivered, then they are deleted and the row stays as the trace («Setări» → «Emailuri» →
+«Mesaje de pe site»: the road chosen, the road it left by, the tries, what each road answered). If the road refuses twice — a revoked app password
+(`smtp EAUTH`, Google's `535-5.7.8`), a timeout, a `5xx` — the **other road** carries it (Gmail to Mailgun, Mailgun to Gmail) and the Administrators
+are emailed (once per club day per road); a timeout that may have come after the message was handed over keeps it on that road for three tries, then the
+other road carries it — a possible second copy beats a lost message; a wrong password is no longer a sentence on the page, and `/devs` → «Stare» says which road fails. Girl Zone leaves by Gmail only with
+the tick «Dacă Mailgun pică, trimite prin Gmail-ul clubului» and the notice naming it — and while the tick is in force the public form says so.
+**Approve the privacy notice from the new template** (`/admin/legal`, with the other texts of the release): its contact and feedback paragraphs now say the
+platform keeps a message only until it leaves (seconds, three days at the very most) — until then the notice in force says «nicio copie» and
+`/admin/tasks` has the row «Nota de confidențialitate: coada mesajelor din formulare» (the queue runs meanwhile). What to do when a road stays down: `docs/RUNBOOKS.md` § A way
+of sending is down. **The diagnosis of 2026-10-15** (QA «Spune-ne ceva» «did not send by Gmail»): what is proven is that no refusal was ever logged — QA's function
+log held eight `[feedback] … sent` and no failure line, and the outbox's Gmail road on the same account carried twenty a day. What is **not** proven is
+which road carried those eight: the old log line named no road, and the card was set to Mailgun, so they may all have been Mailgun's. One thing to
+check, in a minute, as a hypothesis: the form's **«Către»**. If it is the club's own Gmail address (the account that sends), Gmail may keep a message
+sent to itself in Sent / All mail and not in the Inbox; the card warns beside the box. Put another address there, or set that form's road to
+Mailgun. **Answered by the owner on 2026-10-15 13:20:** the messages had arrived — a Gmail filter had filed them out of the Inbox; no road failed. From now on «Mesaje de pe site» names the road each message left by, so the question has an answer. On QA the allowlist now applies to Gmail as it does to Mailgun: a
+recipient it does not name is captured, not sent (`EMAIL_ALLOWLIST`; `*` names everybody).
+
 **Done on both Vercel projects**, and visible: `/ro/contact` shows the form on production and on
 QA rather than the club's address (checked 2026-09-22). `CONTACT_SMTP_USER`,
 `CONTACT_SMTP_PASSWORD` and `CONTACT_FORM_TO` were written on 2026-09-20 and predate the builds
@@ -1375,9 +1394,9 @@ club names — which is why a colleague's Yahoo can be on the list.
    the 16 characters (shown once) into the password manager.
 3. Vercel → the production project → Settings → Environment Variables (Production):
    `CONTACT_SMTP_USER` = the club's Gmail address; `CONTACT_SMTP_PASSWORD` = the 16
-   characters (spaces or not, both work). The same on the QA project (a QA message is a real
-   email to the same mailboxes, its subject starting with `[QA] ` so it is never mistaken
-   for a real question; put a test address there if even that is unwelcome).
+   characters (spaces or not, both work). The same on the QA project (a QA message reaches only an address
+   `EMAIL_ALLOWLIST` names — since §778 the same rule as for Mailgun — its subject starting with `[QA] ` so it is
+   never mistaken for a real question; put a test address there if even that is unwelcome).
    `CONTACT_FORM_TO` is **optional since `DECISIONS.md` §164**: it is the fallback list, read
    only while the club has named nobody in the app, and there is no `CONTACT_CC` variable at
    all. Set it if you want the form to work before anybody opens the backoffice.
@@ -1392,9 +1411,9 @@ club names — which is why a colleague's Yahoo can be on the list.
    plecat. Îți răspundem pe …", the email arrives in every mailbox from the club's address
    with "Reply" addressed to whoever wrote, and the "Formularul de contact" row on
    `/admin/tasks` is green; `/devs` shows the form as `smtp`. A wrong password shows
-   "Nu am putut trimite. Scrie-ne direct la …" on the page and `smtp EAUTH` in the function
-   log — never the password. Those failed tries are not counted against the sender: once
-   the password is right, the same address sends at once.
+   `smtp EAUTH` in the row's «Mesaje de pe site» line, in `/devs` → «Stare» and in the function log —
+   never the password — while the message goes by Mailgun (§778; before it, the page said «Nu am putut trimite. Scrie-ne
+   direct la …» and the message was lost). Once the password is right, the first message Gmail carries clears the road.
 7. **Optional, in the club's Gmail: file the messages the site marks as possible spam.** A
    message the form lets through but that looks automated still arrives, so that a real person is
    never lost. That covers a post with no anti-bot token while the check is on, and a sender whose

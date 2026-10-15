@@ -2,7 +2,6 @@ import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { auditLogs } from "@/db/schema/audit-logs";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
-import { createCaptureSmtpTransport } from "@/infrastructure/email/smtp-adapter";
 import { type ContactConfig, contactDeliveryFor } from "@/modules/contact/delivery";
 import { addressListRefusal, CONTACT_RECIPIENTS_MAX, parseAddressList } from "@/modules/contact/domain/recipients";
 import {
@@ -10,9 +9,10 @@ import {
   readContactRecipients,
   updateContactRecipients,
 } from "@/modules/contact/recipients";
-import { type ContactScreening, submitContactMessage } from "@/modules/contact/service";
+import { type ContactDelivery, type ContactScreening, submitContactMessage } from "@/modules/contact/service";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
+import { type SmtpCapture, smtpCapture } from "../../helpers/relay";
 
 /**
  * BR-REQ-070-04, `DECISIONS.md` §559 (amending §442 and §457) — the owner, 2026-09-29: «trebuie
@@ -37,10 +37,7 @@ const PERSON = {
 const CONFIG: ContactConfig = {
   APP_ENV: "production",
   CONTACT_FORM_MODE: "capture",
-  CONTACT_SMTP_HOST: "smtp.gmail.com",
-  CONTACT_SMTP_PORT: 465,
   CONTACT_SMTP_USER: "club@example.com",
-  CONTACT_SMTP_PASSWORD: "abcd efgh ijkl mnop",
   CONTACT_FORM_TO: [],
   EMAIL_FROM_NAME: "Brașov Runners",
 };
@@ -55,6 +52,13 @@ describe("BR-REQ-070-04 CC and BCC on the contact page's messages", () => {
   let close: () => Promise<void>;
   let admin: StaffUser;
   let organizer: StaffUser;
+
+  /** One post, then the relay's pass that follows it (§778): the form queues, the road carries it. */
+  const send = async (capture: SmtpCapture, route: ContactDelivery | null, input: Parameters<typeof submitContactMessage>[2], now: Date, page: string, screening?: ContactScreening) => {
+    const outcome = await submitContactMessage(db, route, input, now, page, screening);
+    await capture.deliver(db, new Date(now.getTime() + 1_000));
+    return outcome;
+  };
 
   beforeAll(async () => {
     ({ db, close } = await createTestDatabase());
@@ -122,9 +126,9 @@ describe("BR-REQ-070-04 CC and BCC on the contact page's messages", () => {
     await updateContactRecipients(db, admin, typed("club@example.com", "ioana@example.org", "arhiva@example.org"), NOW);
     const route = contactDeliveryFor(CONFIG, await readContactRecipients(db));
     expect(route).not.toBeNull();
-    const capture = createCaptureSmtpTransport();
+    const capture = smtpCapture();
 
-    expect(await submitContactMessage(db, { ...route!, transport: capture }, PERSON, NOW, PAGE)).toEqual({ outcome: "sent" });
+    expect(await send(capture, route!, PERSON, NOW, PAGE)).toEqual({ outcome: "sent" });
     // One message, to the club: the visitor is its Reply-To, never a recipient or a copy.
     expect(capture.messages).toHaveLength(1);
     const [message] = capture.messages;
@@ -139,12 +143,12 @@ describe("BR-REQ-070-04 CC and BCC on the contact page's messages", () => {
   it("carries the CC and BCC on a message delivered marked «[posibil spam]» too (§310)", async () => {
     await updateContactRecipients(db, admin, typed("club@example.com", "ioana@example.org", "arhiva@example.org"), NOW);
     const route = contactDeliveryFor(CONFIG, await readContactRecipients(db));
-    const capture = createCaptureSmtpTransport();
+    const capture = smtpCapture();
     const noToken: ContactScreening = { botCheckOn: true, tokenPresent: false, turnstileVerdict: "unavailable", clubHost: "club.example" };
     const log = vi.spyOn(console, "info").mockImplementation(() => {});
     try {
       const post = { ...PERSON, email: "domains@search-club.example", message: "Feature club.example in Google's Search Index https://searchregister.net/submit" };
-      expect(await submitContactMessage(db, { ...route!, transport: capture }, post, NOW, PAGE, noToken)).toEqual({ outcome: "sent" });
+      expect(await send(capture, route!, post, NOW, PAGE, noToken)).toEqual({ outcome: "sent" });
     } finally {
       log.mockRestore();
     }
@@ -157,8 +161,8 @@ describe("BR-REQ-070-04 CC and BCC on the contact page's messages", () => {
   it("sends no Cc or Bcc at all while both boxes are empty", async () => {
     await updateContactRecipients(db, admin, typed("club@example.com", "", ""), NOW);
     const route = contactDeliveryFor(CONFIG, await readContactRecipients(db));
-    const capture = createCaptureSmtpTransport();
-    await submitContactMessage(db, { ...route!, transport: capture }, PERSON, NOW, PAGE);
+    const capture = smtpCapture();
+    await send(capture, route!, PERSON, NOW, PAGE);
     expect(capture.messages[0]?.cc ?? []).toEqual([]);
     expect(capture.messages[0]?.bcc ?? []).toEqual([]);
   });

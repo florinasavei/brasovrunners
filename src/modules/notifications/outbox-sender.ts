@@ -8,6 +8,7 @@ import { isClubCopy } from "./domain/club-notices";
 import { preferredTransport } from "./domain/email-transport";
 import { fallbackActive } from "./domain/mailgun-stop";
 import { createGmailLedger, gmailIsConfigured, readEmailTransport, recordGmailFailure } from "./email-transport";
+import { recordRoadFailure, withRoadStatus } from "./road-status";
 import type { OutboxRoads, OutboxRow } from "./outbox";
 import { fallbackNoticeForOutbox, outboxRoadsFor } from "./outbox-roads";
 
@@ -46,12 +47,17 @@ export async function createOutboxSender<T extends Record<string, unknown>>(
       overflowToGmail: setting.overflowToGmail || fallbackActive(setting, configured, noticeNamesFallback),
       ledger: createGmailLedger(db),
       // Every Gmail failure is kept for /admin/emails and /api/health (§443), not only fallen back from.
-      onFailure: (error, at) => recordGmailFailure(db, error, at),
+      onFailure: async (error, at) => {
+        await recordGmailFailure(db, error, at);
+        // And on the one record both roads share (§778): `/devs`, `/admin/tasks` and the relay read it.
+        await recordRoadFailure(db, "gmail", error, at);
+      },
     },
   });
   const roads = outboxRoadsFor(setting, configured, noticeNamesFallback);
   return {
-    sender,
+    // Noting what each road did (§778): a refusal of the service, and the first message a failing road carries again.
+    sender: withRoadStatus(db, sender),
     replyTo,
     route: (row) => preferredTransport(setting, row.messageType, isClubCopy(row.payloadJson)),
     ...(roads ? { roads } : {}),

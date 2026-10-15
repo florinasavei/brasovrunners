@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { emailMessageType, type EmailMessageType } from "@/db/schema/email-outbox";
+import { TEMPLATED_MESSAGE_TYPES } from "@/modules/notifications/domain/relay";
 import { buildOutgoingEmail, buildTemplateContent, type TemplateData } from "@/modules/notifications/templates";
 
 /**
@@ -26,7 +26,7 @@ const DATA: TemplateData = {
 const bodyOf = (html: string) => html.slice(html.indexOf("</div>") + 6);
 
 describe("BR-REQ-080-01 message templates", () => {
-  for (const messageType of emailMessageType.enumValues as EmailMessageType[]) {
+  for (const messageType of TEMPLATED_MESSAGE_TYPES) {
     for (const locale of ["ro", "en"] as const) {
       it(`renders a complete ${locale} message for ${messageType}`, () => {
         const email = buildOutgoingEmail({

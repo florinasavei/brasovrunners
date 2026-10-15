@@ -699,7 +699,7 @@ function withoutAddresses(settings: FeedbackSettings): FeedbackSettings {
     howItWent: { on: settings.howItWent.on, to: someone(settings.howItWent.to), via: settings.howItWent.via },
     suggestion: { on: settings.suggestion.on, to: someone(settings.suggestion.to), via: settings.suggestion.via },
     complaint: { on: settings.complaint.on, to: someone(settings.complaint.to), via: settings.complaint.via },
-    safety: { on: settings.safety.on, to: someone(settings.safety.to), via: settings.safety.via, name: settings.safety.name },
+    safety: { on: settings.safety.on, to: someone(settings.safety.to), via: settings.safety.via, name: settings.safety.name, fallbackToGmail: settings.safety.fallbackToGmail },
   };
 }
 

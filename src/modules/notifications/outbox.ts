@@ -1,4 +1,4 @@
-import { and, asc, eq, inArray, isNull, lte, ne, not, or, type SQL, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, isNull, lte, ne, not, notInArray, or, type SQL, sql } from "drizzle-orm";
 import {
   type EmailMessageType,
   type EmailOutboxStatus,
@@ -42,6 +42,7 @@ import { currentDeadlines } from "@/modules/deadlines/deadlines";
 import { wakeJobs } from "@/modules/jobs/schedule-cache";
 import { forgetUnsentVolunteerAgreementLink } from "@/modules/volunteers/unsent-link";
 import { BULK_MESSAGE_TYPES, isBulkMessage } from "./domain/bulk";
+import { RELAY_MESSAGE_TYPES } from "./domain/relay";
 import { drainOutboxAfterResponse } from "./drain";
 import {
   nextAllowanceResetAt,
@@ -449,9 +450,14 @@ async function claimOutboxBatchWithStop(
   const hourlyAllowance = params.hourlyAllowance !== undefined ? params.hourlyAllowance : (await readEmailPlan(db)).hourlyAllowance;
   const bulkLimit = params.bulkLimit ?? null;
   const staleBefore = new Date(now.getTime() - PROCESSING_LOCK_TIMEOUT_MS);
-  const claimable = or(
-    and(eq(emailOutbox.status, "PENDING"), or(isNull(emailOutbox.nextAttemptAt), lte(emailOutbox.nextAttemptAt, now))),
-    and(eq(emailOutbox.status, "PROCESSING"), lte(emailOutbox.lockedAt, staleBefore)),
+  // A visitor’s message and the road notice (§778) are the relay’s: no template, no participant, a road of their own.
+  const notRelay = notInArray(emailOutbox.messageType, [...RELAY_MESSAGE_TYPES]);
+  const claimable = and(
+    notRelay,
+    or(
+      and(eq(emailOutbox.status, "PENDING"), or(isNull(emailOutbox.nextAttemptAt), lte(emailOutbox.nextAttemptAt, now))),
+      and(eq(emailOutbox.status, "PROCESSING"), lte(emailOutbox.lockedAt, staleBefore)),
+    ),
   );
   const due = params.ids ? and(claimable, inArray(emailOutbox.id, [...params.ids])) : claimable;
   const bulk = inArray(emailOutbox.messageType, [...BULK_MESSAGE_TYPES]);
@@ -546,7 +552,7 @@ async function claimOutboxBatchWithStop(
     const mailgunLimit = carried || paused ? 0 : hour === null ? batchSize : Math.min(batchSize, hour.remaining ?? batchSize);
     const mailgun = await claimRoad(mailgunRoad, mailgunLimit, bulkLimit);
     const gmailLimit = Math.min(batchSize, roads?.gmailBatchSize ?? batchSize);
-    const heldNow = and(eq(emailOutbox.status, "PENDING"), heldByMailgunCondition(), params.ids ? inArray(emailOutbox.id, [...params.ids]) : undefined);
+    const heldNow = and(notRelay, eq(emailOutbox.status, "PENDING"), heldByMailgunCondition(), params.ids ? inArray(emailOutbox.id, [...params.ids]) : undefined);
     const gmail = carried
       ? // The newsletter and the new-event alert stay on Mailgun's road during a stop unless the club routed them to Gmail (§443, §622).
         await claimRoadWhere(and(or(due, heldNow), gmailRoad ? or(not(bulk), gmailRoad) : not(bulk)), gmailLimit)

@@ -35,6 +35,7 @@ export const TASK_TARGETS: Partial<Record<TaskId, TaskTarget>> = {
   feedbackNotice: { kind: "section", section: "legal" },
   feedbackNamedNotice: { kind: "section", section: "legal" },
   feedbackSafetyGmailNotice: { kind: "section", section: "legal" },
+  relayQueueNotice: { kind: "section", section: "legal" },
   shopNotice: { kind: "section", section: "legal" },
   volunteersNotice: { kind: "section", section: "legal" },
   volunteerAgreementNotice: { kind: "section", section: "legal" },
@@ -55,6 +56,9 @@ export const TASK_TARGETS: Partial<Record<TaskId, TaskTarget>> = {
   publishEvents: { kind: "section", section: "events" },
   // The queue, its stop header and «Reîncearcă emailurile eșuate» (§622); the switch and the cap are the panel above it.
   emailFailSafe: { kind: "settings", tab: "emails", hash: "outbox-queue" },
+  // The two roads and the visitors' messages beside the queue (§778).
+  emailRoadDown: { kind: "settings", tab: "emails", hash: "relay-messages" },
+  relayLost: { kind: "settings", tab: "emails", hash: "relay-messages" },
   // What each job did and how often it may run (§334).
   scheduler: { kind: "settings", tab: "costs", hash: "job-cadence" },
   // The switch and the hidden trap (§254, §282).
