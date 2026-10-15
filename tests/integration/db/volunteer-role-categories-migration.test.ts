@@ -8,7 +8,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { auditMigration } from "../../../scripts/migration-check.mjs";
 
 /**
- * Migration `0160_volunteer_role_categories` (§NNN, amending §754 and §761), proven on real PostgreSQL (PGlite): the roles an event
+ * Migration `0160_volunteer_role_categories` (§774, amending §754 and §761), proven on real PostgreSQL (PGlite): the roles an event
  * had before it keep no category — they sit under «Alte activități» — and their people and choices are untouched; a role name typed twice
  * on one event (nothing enforced it until now) is told apart by a number so the new per-category uniqueness can never refuse the
  * migration; the same name may then stand in two categories but not twice in one; a category holds a contact person whose every box is

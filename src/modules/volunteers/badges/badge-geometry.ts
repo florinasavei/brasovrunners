@@ -194,7 +194,7 @@ export type BadgeLayoutChoice = BadgeSizeChoice & {
   showLogo: boolean;
   writingLine: boolean;
   /**
-   * «Telefonul coordonatorului» is ticked (§NNN): the telephone's row is kept on every badge, blank on a role whose category has no
+   * «Telefonul coordonatorului» is ticked (§774): the telephone's row is kept on every badge, blank on a role whose category has no
    * number, so every badge of a sheet is cut the same and the designer's crop box (`badgeRows(paper, design.showPhone)`) is true.
    */
   showPhone?: boolean;

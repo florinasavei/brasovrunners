@@ -40,9 +40,9 @@ export const VOLUNTEER_MESSAGE_MAX = 300;
 export const VOLUNTEER_NOTE_MAX = 500;
 /** How many roles one event may define: a list a person can read, and a bound on a forged form. */
 export const VOLUNTEER_ROLES_MAX = 30;
-/** How many categories one event may define (§NNN): headings a person can read on a phone, and a bound on a forged form. */
+/** How many categories one event may define (§774): headings a person can read on a phone, and a bound on a forged form. */
 export const VOLUNTEER_CATEGORIES_MAX = 12;
-/** The category's contact person (§NNN): the name's own bound is the volunteer's, the telephone's and the address's are the database's. */
+/** The category's contact person (§774): the name's own bound is the volunteer's, the telephone's and the address's are the database's. */
 export const VOLUNTEER_CONTACT_PHONE_MAX = 40;
 export const VOLUNTEER_CONTACT_EMAIL_MAX = 320;
 
@@ -236,7 +236,7 @@ export const volunteerRoleInputSchema = z
   });
 
 /**
- * A category as the club types it (§NNN): both names — the bilingual rule, never one language's heading under the other's page.
+ * A category as the club types it (§774): both names — the bilingual rule, never one language's heading under the other's page.
  * The field names are the form's own `name`s, so a refusal's summary links to the box.
  */
 export const volunteerCategoryInputSchema = z.object({
@@ -247,7 +247,7 @@ export const volunteerCategoryInputSchema = z.object({
 export type VolunteerCategoryInput = z.infer<typeof volunteerCategoryInputSchema>;
 
 /**
- * «Persoana de contact» of a category (§NNN): a name, a telephone number and an address, each optional and empty until the club
+ * «Persoana de contact» of a category (§774): a name, a telephone number and an address, each optional and empty until the club
  * fills them («the contact person for each category will be established later»). The address is read as an address; the telephone is
  * what the card's box posted after `typedPhone` (E.164 when it can be read, else as typed) and is bounded and must be written like a telephone number (`isPhoneNumberShaped`, the check «Telefon public» and the badge share) — so a foreign
  * or a landline number passes, and words do not: a dead `tel:` link and a badge line that silently vanishes are what the check prevents.
@@ -287,7 +287,7 @@ export type CategoryContactOf = CategoryContact & { categoryRo?: string; categor
 type ContactRole = { contact?: CategoryContact | null; categoryRo?: string | null; categoryEn?: string | null };
 
 /**
- * The contact persons a volunteer's message names (§NNN): the one of the category of the role the organizers gave, else those of the
+ * The contact persons a volunteer's message names (§774): the one of the category of the role the organizers gave, else those of the
  * categories of the roles the person offered for — each once, in the club's order, and none for a role under no category or a
  * category with no contact set. The volunteer's emails (received, role given, the guardian's request) say them in their footer.
  */
@@ -318,7 +318,7 @@ export function compareCategories(
 export type RoleGroup<C, R> = { category: C | null; roles: R[] };
 
 /**
- * An event's roles under their categories (§NNN), in the order the club set the categories (`categories` arrives sorted); the roles
+ * An event's roles under their categories (§774), in the order the club set the categories (`categories` arrives sorted); the roles
  * keep the order they come in. The roles with no category — or one that is not in the list — are the last group, `category: null`.
  * A category with no role is a group with none (the card shows it, to add one; the public form leaves it out, `withRoles`).
  * An event with no category at all is one group with `category: null`: callers draw no heading for it (`groupsNeedHeadings`).
@@ -337,7 +337,7 @@ export function groupRolesByCategory<C extends { id: string }, R extends { categ
 
 /**
  * An event's roles in the order the card lists them — under their categories, in the club's order (`groupRolesByCategory`) — each with
- * the words of its category (§NNN), ready for `roleLabel`: the role's own words stay as they are, `categoryRo` / `categoryEn` are null
+ * the words of its category (§774), ready for `roleLabel`: the role's own words stay as they are, `categoryRo` / `categoryEn` are null
  * for a role under none.
  */
 export function rolesWithCategoryWords<R extends { categoryId: string | null }>(
@@ -703,7 +703,7 @@ export function openChoices(ticked: readonly string[], standings: ReadonlyMap<st
 }
 
 /**
- * A role's words as the agreement and the emails name it, in both languages — with the heading it sits under, when it has one (§NNN):
+ * A role's words as the agreement and the emails name it, in both languages — with the heading it sits under, when it has one (§774):
  * a role is named «Direcționare (Traseu)» wherever it is named alone, because «Direcționare» may stand in two categories.
  */
 export type RoleWords = {
@@ -716,7 +716,7 @@ export type RoleWords = {
 };
 
 /**
- * A role named alone (§NNN): «Direcționare (Traseu)» in the language asked — the category in brackets when the role has one, the name
+ * A role named alone (§774): «Direcționare (Traseu)» in the language asked — the category in brackets when the role has one, the name
  * alone when it sits under none. What the assignment chips, the email's «Dă-i rolul …», the CSV's role columns and the agreement's
  * sentences say; the badge's band keeps the role's name only (the owner decided it so).
  */

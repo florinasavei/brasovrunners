@@ -2,7 +2,7 @@ import { eventVolunteerCategories, eventVolunteerRoles } from "@/db/schema/event
 import { getDb } from "@/db/client";
 
 /**
- * The sample race's volunteer categories and roles (§NNN; the owner, 2026-10-14: «aș pune activități Start/Finish și am putea adăuga
+ * The sample race's volunteer categories and roles (§774; the owner, 2026-10-14: «aș pune activități Start/Finish și am putea adăuga
  * ex: direcționare, foto/video, punct hidratare; Traseu: direcționare, punct hidratare, foto/video»): two categories, «Start / Sosire»
  * and «Traseu», and under each the same three roles — which is the point of the sample: one role name in two categories. No contact person:
  * «the contact person for each category will be established later», and the card shows it empty.

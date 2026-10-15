@@ -17,7 +17,7 @@ import {
 } from "@/modules/volunteers/domain/volunteer";
 
 /**
- * §NNN — an event's volunteer roles in configurable categories, each with a contact person (the owner, 2026-10-14: «categorii cu
+ * §774 — an event's volunteer roles in configurable categories, each with a contact person (the owner, 2026-10-14: «categorii cu
  * sub-categorii … Toate astea configurabile», «trebuie să fie o persoană de contact pentru voluntari»): the pure rules — how roles
  * group under their headings, how a role is named alone, the contact persons a message names, the contact's boxes, and the badge's
  * telephone defaulting to the category's.
@@ -30,14 +30,14 @@ const EMPTY = { ...at("c-empty", 2), nameRo: "Goală", nameEn: "Empty" };
 
 const role = (id: string, categoryId: string | null, nameRo = "Direcționare", nameEn = "Guidance") => ({ id, categoryId, nameRo, nameEn, descriptionRo: null, descriptionEn: null });
 
-describe("§NNN the order of categories", () => {
+describe("§774 the order of categories", () => {
   it("is the club's `sort`, then age, then the id — a total order", () => {
     const sorted = [at("b", 1), at("a", 1, 5), at("c", 0, 9), at("a2", 1, 5)].sort(compareCategories).map((row) => row.id);
     expect(sorted).toEqual(["c", "b", "a", "a2"]);
   });
 });
 
-describe("§NNN the roles under their categories", () => {
+describe("§774 the roles under their categories", () => {
   const roles = [role("r1", "c-route"), role("r2", "c-start"), role("r3", null, "Foto/Video", "Photo/Video"), role("r4", "c-route", "Punct de hidratare", "Water point"), role("r5", "c-gone")];
 
   it("groups them in the category order, the roles in the order they come in, and the roles under none — or under a category that is not there — last", () => {
@@ -83,7 +83,7 @@ describe("§NNN the roles under their categories", () => {
   });
 });
 
-describe("§NNN a role named alone", () => {
+describe("§774 a role named alone", () => {
   const guidance = { nameRo: "Direcționare", nameEn: "Guidance", descriptionRo: null, descriptionEn: null, categoryRo: "Traseu", categoryEn: "Route" };
   const photo = { nameRo: "Foto/Video", nameEn: "Photo/Video", descriptionRo: null, descriptionEn: null, categoryRo: null, categoryEn: null };
 
@@ -117,7 +117,7 @@ describe("§NNN a role named alone", () => {
   });
 });
 
-describe("§NNN the contact person of a category", () => {
+describe("§774 the contact person of a category", () => {
   it("is none until the club sets one of its three boxes — and then the three as set", () => {
     expect(categoryContactOf({ contactName: null, contactPhone: null, contactEmail: null })).toBeNull();
     expect(categoryContactOf({ contactName: "Ana", contactPhone: null, contactEmail: null })).toEqual({ name: "Ana", phone: null, email: null });
@@ -157,7 +157,7 @@ describe("§NNN the contact person of a category", () => {
   });
 });
 
-describe("§NNN a category's names", () => {
+describe("§774 a category's names", () => {
   it("takes both languages, trimmed and folded, each at most 80 characters — one alone is refused naming its box", () => {
     expect(volunteerCategoryInputSchema.parse({ nameRo: "  Start  /  Sosire ", nameEn: "Start / Finish" })).toEqual({ nameRo: "Start / Sosire", nameEn: "Start / Finish" });
     const missing = volunteerCategoryInputSchema.safeParse({ nameRo: "Traseu", nameEn: "  " });
@@ -166,7 +166,7 @@ describe("§NNN a category's names", () => {
   });
 });
 
-describe("§NNN the coordinator's telephone on a role's badge", () => {
+describe("§774 the coordinator's telephone on a role's badge", () => {
   const defaults = { label: "VOLUNTAR", name: "Nume:", phoneLabel: "Coordonator" };
   const design = (over: Partial<BadgeDesign>): BadgeDesign => ({ ...DEFAULT_BADGE_DESIGN, ...over });
 

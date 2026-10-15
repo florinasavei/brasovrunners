@@ -18,7 +18,7 @@ import { drawnRuns } from "../../helpers/pdf-drawn";
 import { bornAged } from "../../helpers/volunteer-birth";
 
 /**
- * §NNN — the contact person of a category, in the volunteers' emails, and the role named alone with its category in brackets in the
+ * §774 — the contact person of a category, in the volunteers' emails, and the role named alone with its category in brackets in the
  * agreement (the owner, 2026-10-14: «trebuie să fie o persoană de contact pentru voluntari»; «the contact person for each category will
  * be established later»): «received», «role assigned» and the guardian's request carry the contact of the category of the role(s)
  * concerned in their footer — when set — and no other message does; the agreement's sentences, its PDF and the card's comparison say
@@ -29,7 +29,7 @@ const DAY = 24 * 60 * 60_000;
 const RENDERED = new Date(NOW.getTime() - 60_000).toISOString();
 const aged = (years: number) => bornAged(years, new Date(NOW.getTime() + 30 * DAY));
 
-describe("§NNN a category's contact person in the volunteers' emails", () => {
+describe("§774 a category's contact person in the volunteers' emails", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   let admin: StaffUser;

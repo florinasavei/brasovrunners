@@ -8,7 +8,7 @@ import { standingOf } from "@/modules/volunteers/domain/volunteer";
 import type { PublicVolunteerCategory, PublicVolunteerRole, VolunteerCategory, VolunteerItem, VolunteerRole } from "@/modules/volunteers/volunteers";
 
 /**
- * §NNN — the volunteer categories as the server draws them: the «Voluntari» card's «Categorii» fold, each role's «Categoria», the roles
+ * §774 — the volunteer categories as the server draws them: the «Voluntari» card's «Categorii» fold, each role's «Categoria», the roles
  * under their headings and a role named alone as «Direcționare (Traseu)»; and the volunteers' page's form — a level-3 heading per category in the
  * club's order, only those with a role still needing people, «Alte activități» for the roles under none, and under a heading the contact
  * person as one line of `tel:` and `mailto:` links. Both languages.
@@ -230,7 +230,7 @@ const headings = (page: string) => [...page.matchAll(/<h3[^>]*data-testid="volun
 /** The role boxes' ids in the order drawn: the ticks post `roleIds`. */
 const optionIds = (page: string) => [...page.matchAll(/<input[^>]*name="roleIds"[^>]*>/g)].map((match) => /value="([^"]+)"/.exec(match[0])?.[1]);
 
-describe("§NNN the volunteers' page: the roles under their headings", () => {
+describe("§774 the volunteers' page: the roles under their headings", () => {
   it("draws a level-3 heading per category in the club's order, each role under its own, and «Alte activități» for the roles under none — in both languages", async () => {
     const page = await drawBox();
     expect(headings(page)).toEqual(["Start / Sosire", "Traseu", "Alte activități"]);
@@ -277,7 +277,7 @@ describe("§NNN the volunteers' page: the roles under their headings", () => {
   });
 });
 
-describe("§NNN the contact person under a category's heading", () => {
+describe("§774 the contact person under a category's heading", () => {
   it("is one line «Întrebări? <name> · <phone> · <email>» with a tel: and a mailto: link, only for the category that has one", async () => {
     const page = await drawBox();
     expect((page.match(/data-testid="volunteer-contact"/g) ?? []).length).toBe(1);
@@ -316,7 +316,7 @@ describe("§NNN the contact person under a category's heading", () => {
   });
 });
 
-describe("§NNN the card: «Categorii», «Categoria» and the roles under their headings", () => {
+describe("§774 the card: «Categorii», «Categoria» and the roles under their headings", () => {
   it("draws the fold with a row per category — both names, the roles under it, the arrows only where a step is possible, «Modifică» and «Persoana de contact»", async () => {
     const page = await drawCard();
     expect(page).toContain('data-testid="volunteer-categories"');

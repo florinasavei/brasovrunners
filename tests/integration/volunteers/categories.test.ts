@@ -22,7 +22,7 @@ import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — an event's volunteer roles in configurable categories, each with a contact person (the owner, 2026-10-14: «categorii cu
+ * §774 — an event's volunteer roles in configurable categories, each with a contact person (the owner, 2026-10-14: «categorii cu
  * sub-categorii … Toate astea configurabile», «trebuie să fie o persoană de contact pentru voluntari … stabilită mai târziu»):
  * the table and its per-category uniqueness, the card's category verbs through the real Server Actions (add, rename, reorder, the
  * contact person's own save, delete only while empty), the role's «Categoria», the public read, the CSV — and the role asserted
@@ -149,7 +149,7 @@ async function addRole(fields: Record<string, string> = {}, event = eventId) {
   return all[all.length - 1];
 }
 
-describe("§NNN the table: categories, and a role's name once per category", () => {
+describe("§774 the table: categories, and a role's name once per category", () => {
   const category = async (event: string, nameRo: string, nameEn: string, sort = 0) =>
     (await db.insert(eventVolunteerCategories).values({ eventId: event, nameRo, nameEn, sort }).returning())[0];
   const role = (event: string, categoryId: string | null, nameRo: string, nameEn: string) =>
@@ -196,7 +196,7 @@ describe("§NNN the table: categories, and a role's name once per category", () 
   });
 });
 
-describe("§NNN «Adaugă o categorie», rename, reorder — through the real Server Actions", () => {
+describe("§774 «Adaugă o categorie», rename, reorder — through the real Server Actions", () => {
   it("adds a category with both names, in the order added, and audits it", async () => {
     const start = await addCategory({ nameRo: "  Start  / Sosire ", nameEn: "Start / Finish" });
     expect(start).toMatchObject({ eventId, nameRo: "Start / Sosire", nameEn: "Start / Finish", sort: 0, contact: null });
@@ -318,7 +318,7 @@ describe("§NNN «Adaugă o categorie», rename, reorder — through the real Se
   });
 });
 
-describe("§NNN «Persoana de contact» of a category: three optional boxes, its own save, audited", () => {
+describe("§774 «Persoana de contact» of a category: three optional boxes, its own save, audited", () => {
   const contact = (over: Record<string, string> = {}) => ({ contactName: "Ana Popescu", contactPhone: "0712 345 678", contactEmail: "ana@example.test", ...over });
 
   it("is empty when the category is made, and set later by its own form: the phone read as a Romanian number, the address kept as typed", async () => {
@@ -369,7 +369,7 @@ describe("§NNN «Persoana de contact» of a category: three optional boxes, its
   });
 });
 
-describe("§NNN a role's «Categoria»", () => {
+describe("§774 a role's «Categoria»", () => {
   it("adds a role under a category — the same name in two — and audits its category", async () => {
     const start = await addCategory(START);
     const route = await addCategory(ROUTE);
@@ -453,7 +453,7 @@ describe("§NNN a role's «Categoria»", () => {
   });
 });
 
-describe("§NNN the public read: the headings, their roles and the contact person", () => {
+describe("§774 the public read: the headings, their roles and the contact person", () => {
   it("hands the page the categories in the club's order with each one's contact, and each role's category", async () => {
     await db.update(events).set({ acceptsVolunteers: true }).where(eq(events.id, eventId));
     const start = await addCategory(START);
@@ -493,7 +493,7 @@ describe("§NNN the public read: the headings, their roles and the contact perso
   });
 });
 
-describe("§NNN the CSV: a role named alone says its category, the contact person is never in it", () => {
+describe("§774 the CSV: a role named alone says its category, the contact person is never in it", () => {
   async function get(actor: StaffUser, lang = "ro") {
     state.actor = actor;
     return exportRoute.GET(new Request(`https://example.test/api/admin/events/${eventId}/volunteers?lang=${lang}`), { params: Promise.resolve({ id: eventId }) });
@@ -530,7 +530,7 @@ describe("§NNN the CSV: a role named alone says its category, the contact perso
   });
 });
 
-describe("§NNN what an event's volunteers see of a category stays with their event", () => {
+describe("§774 what an event's volunteers see of a category stays with their event", () => {
   it("lists the people under their role whatever its category, and a category delete never takes a volunteer", async () => {
     const route = await addCategory(ROUTE);
     const guidance = await addRole({ categoryId: route.id });

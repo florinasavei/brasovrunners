@@ -100,7 +100,7 @@ export default async function VolunteerBox({
   /** Only the roles that still need people, in the club's order. */
   roles: readonly PublicVolunteerRole[];
   /**
-   * The event's categories (§NNN), in the club's order: the roles are listed under their headings, a category with no open role
+   * The event's categories (§774), in the club's order: the roles are listed under their headings, a category with no open role
    * is not drawn, and the roles under none follow under «Alte activități» — or are simply listed when the event has no category.
    */
   categories?: readonly PublicVolunteerCategory[];
@@ -132,7 +132,7 @@ export default async function VolunteerBox({
   const siteKey = turnstileSiteKey();
   const invalid = new Set<BoxName>(refused);
   const roleName = (role: PublicVolunteerRole) => (locale === "en" ? role.nameEn : role.nameRo);
-  // The roles under their categories (§NNN): only the headings that have a role still needing people; the heading words are the club's.
+  // The roles under their categories (§774): only the headings that have a role still needing people; the heading words are the club's.
   const groups = groupRolesByCategory(categories, roles, { withRoles: true });
   const headed = groupsNeedHeadings(groups);
   const roleDoc = (role: PublicVolunteerRole) => (locale === "en" ? role.descriptionEnJson : role.descriptionRoJson);
@@ -254,7 +254,7 @@ export default async function VolunteerBox({
                 {groups.map((group) => (
                   <Box key={group.category?.id ?? "other"} data-testid="volunteer-category" role={headed ? "group" : undefined} aria-labelledby={headed ? `volunteer-category-${group.category?.id ?? "other"}` : undefined}>
                     {/*
-                      A level-3 heading per category (§NNN; the owner, 2026-10-14: «categorii cu sub-categorii»), in the club's order, then
+                      A level-3 heading per category (§774; the owner, 2026-10-14: «categorii cu sub-categorii»), in the club's order, then
                       «Alte activități» for the roles under none — drawn only when the event has a category at all — and, when the club set
                       the category's contact person, the one line «Întrebări? …» under it.
                     */}

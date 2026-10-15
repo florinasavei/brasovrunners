@@ -9,7 +9,7 @@ import { badgePrintEntries, badgeRoleLabel, badgeRoleName, listBadgeRoles, readP
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — the badges and the categories (the owner, 2026-10-14: «trebuie să fie o persoană de contact pentru voluntari»): «Câte ecusoane» lists
+ * §774 — the badges and the categories (the owner, 2026-10-14: «trebuie să fie o persoană de contact pentru voluntari»): «Câte ecusoane» lists
  * the roles under their categories; a badge's band shows the role only; the coordinator's telephone, ticked with no number typed in the
  * design, is the telephone of the contact person of the role's category — and the design's own number, when typed, wins on every role.
  */
@@ -54,7 +54,7 @@ const values = (fields: Record<string, string>) =>
   readBadgeDesignForm((name) => fields[name] ?? null);
 const FORM = { "badge.design.size": "strip90", "badge.design.showLogo": "on", "badge.design.showTitle": "on", "badge.design.writingLine": "on", "badge.design.cutMarks": "on" };
 
-describe("§NNN «Câte ecusoane»: the roles under their categories", () => {
+describe("§774 «Câte ecusoane»: the roles under their categories", () => {
   it("lists them in the category order — the start's, the route's, then the roles under none — with their category's words and its contact's telephone", async () => {
     const { onRoute, atStart, loose } = await withCategories();
     const roles = await listBadgeRoles(db, eventId);
@@ -94,7 +94,7 @@ describe("§NNN «Câte ecusoane»: the roles under their categories", () => {
   });
 });
 
-describe("§NNN «Telefonul coordonatorului» ticked with no number: the category's telephone", () => {
+describe("§774 «Telefonul coordonatorului» ticked with no number: the category's telephone", () => {
   it("saves the design with the tick and no number — the badges then carry each role's category telephone — and audits it", async () => {
     const saved = await saveBadgeDesign(db, admin, eventId, values({ ...FORM, "badge.design.showPhone": "on" }), NOW);
     expect(saved).toEqual({ changed: true });

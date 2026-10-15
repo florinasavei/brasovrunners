@@ -47,7 +47,7 @@ export type BadgeRole = {
   position: number;
   createdAt: Date;
   /**
-   * The category the role sits under, in both languages (§NNN), and the telephone of that category's contact person — what the role's
+   * The category the role sits under, in both languages (§774), and the telephone of that category's contact person — what the role's
    * badge prints as the coordinator's number while the design leaves its own empty (`badgePhoneLine`). Null for a role under none.
    */
   categoryId: string | null;
@@ -57,7 +57,7 @@ export type BadgeRole = {
 };
 
 /**
- * An event's roles under their categories (§NNN), in the club's order: the categories in theirs, each one's roles in the order of
+ * An event's roles under their categories (§774), in the club's order: the categories in theirs, each one's roles in the order of
  * `compareRoles` (the volunteers' card's own), then the roles under none — the order «Câte ecusoane» lists them in.
  */
 export async function listBadgeRoles<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<BadgeRole[]> {
@@ -86,7 +86,7 @@ export function badgeRoleName(role: Pick<BadgeRole, "nameRo" | "nameEn">, locale
   return locale === "en" ? role.nameEn : role.nameRo;
 }
 
-/** A role named alone on the page, not on the badge: «Direcționare (Traseu)» (§NNN). */
+/** A role named alone on the page, not on the badge: «Direcționare (Traseu)» (§774). */
 export function badgeRoleLabel(role: Pick<BadgeRole, "nameRo" | "nameEn" | "categoryRo" | "categoryEn">, locale: BadgeLocale): string {
   return roleLabel(role, locale);
 }
@@ -145,7 +145,7 @@ export function parseBadgeDesignPost(values: BadgeDesignFormValues): BadgeDesign
   });
   if (oneLanguage.length > 0) throw invalid("a text is written in one language only; write it in both, or in neither", oneLanguage);
   // Whatever the tick says: a number typed and not readable as one is refused, never kept as nothing while the box is off. The tick with no number
-  // typed is allowed since §NNN: each role's badge then prints the telephone of its category's contact person (`badgePhoneLine`).
+  // typed is allowed since §774: each role's badge then prints the telephone of its category's contact person (`badgePhoneLine`).
   if (values.phone.trim() !== "" && bibEmergencyPhone(values.phone) === "") throw invalid("phone: not written like a telephone number", [box("phone")]);
   if (values.bandColour !== null && !badgeColourReadable(values.bandColour)) {
     throw new DomainError("BADGE_COLOUR_UNREADABLE", "the band's colour does not carry its words at AA", [box("bandColour")]);

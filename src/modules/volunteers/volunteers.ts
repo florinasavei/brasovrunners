@@ -119,14 +119,14 @@ export type VolunteerRole = {
   descriptionEnJson: RichTextDoc | null;
   /** The role's band on the volunteer badges (§764): a hex, or null for the club's orange. */
   colour: string | null;
-  /** The category the role sits under (§NNN), or null for «Alte activități». */
+  /** The category the role sits under (§774), or null for «Alte activități». */
   categoryId: string | null;
   position: number;
   createdAt: Date;
 };
 
 /**
- * A heading an event's roles are grouped under (§NNN), with the contact person the club set for its volunteers — the three words
+ * A heading an event's roles are grouped under (§774), with the contact person the club set for its volunteers — the three words
  * as the database holds them (`contact`, null while none is set, is the same as the pages and the emails read it).
  */
 export type VolunteerCategory = {
@@ -210,7 +210,7 @@ export async function listVolunteerRoles<T extends Record<string, unknown>>(db: 
   return rows.sort(compareRoles).map(roleOf);
 }
 
-/** An event's categories, in the order the club set them (§NNN): `sort`, then age, then the id. */
+/** An event's categories, in the order the club set them (§774): `sort`, then age, then the id. */
 export async function listVolunteerCategories<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<VolunteerCategory[]> {
   const rows = await db.select().from(eventVolunteerCategories).where(eq(eventVolunteerCategories.eventId, eventId));
   return rows.sort(compareCategories).map(categoryOf);
@@ -368,12 +368,12 @@ export type PublicVolunteerRole = {
   needed: number;
   taken: number;
   free: number;
-  /** The category the role sits under (§NNN); null is «Alte activități». */
+  /** The category the role sits under (§774); null is «Alte activități». */
   categoryId: string | null;
 };
 
 /**
- * One heading of the public form (§NNN): the category's words in both languages and the contact person the club set for its
+ * One heading of the public form (§774): the category's words in both languages and the contact person the club set for its
  * volunteers — «Întrebări? <name> · <phone> · <email>» under the heading — or null while none is set. The club's own business
  * contact, published by its choice; never a participant's or a volunteer's.
  */
@@ -502,7 +502,7 @@ export async function changeVolunteerRole<T extends Record<string, unknown>>(
           }
         : null
       : null;
-  // «Categoria» (§NNN): the id the form's choice posted, "" for «Alte activități»; absent when the form drew no such choice, which
+  // «Categoria» (§774): the id the form's choice posted, "" for «Alte activități»; absent when the form drew no such choice, which
   // leaves the role where it is — the saves that predate the categories, and any caller without the box, never move a role.
   const postedCategory =
     (request.kind === "add" || request.kind === "edit") && typeof request.fields.categoryId === "string" ? request.fields.categoryId.trim() : undefined;
@@ -522,7 +522,7 @@ export async function changeVolunteerRole<T extends Record<string, unknown>>(
     const audit = (action: AuditAction, metadata: Record<string, unknown>) =>
       recordAuditEvent(tx, { actorStaffUserId: actor.id, action, entityType: "event", entityId: request.eventId, metadata, now });
 
-    // The categories next (§NNN), in the order of their ids: the order a category's own change locks them, after the event and
+    // The categories next (§774), in the order of their ids: the order a category's own change locks them, after the event and
     // before the roles — so a role put under a category and that category's delete never wait on each other in a circle.
     const categoryIds = (
       await tx.select({ id: eventVolunteerCategories.id }).from(eventVolunteerCategories).where(eq(eventVolunteerCategories.eventId, request.eventId)).orderBy(asc(eventVolunteerCategories.id)).for("update")
@@ -538,7 +538,7 @@ export async function changeVolunteerRole<T extends Record<string, unknown>>(
       await tx.select().from(eventVolunteerRoles).where(eq(eventVolunteerRoles.eventId, request.eventId)).orderBy(asc(eventVolunteerRoles.id)).for("update")
     ).sort(compareRoles);
 
-    /** One name once per category and language (§NNN): the same name may stand in two categories, never twice in one. */
+    /** One name once per category and language (§774): the same name may stand in two categories, never twice in one. */
     const assertNameFree = (names: { nameRo: string; nameEn: string }, categoryId: string | null, exceptId: string | null) => {
       const same = (a: string, b: string) => a.toLowerCase() === b.toLowerCase();
       for (const other of roles) {
@@ -592,7 +592,7 @@ export async function changeVolunteerRole<T extends Record<string, unknown>>(
     }
 
     if (request.kind === "move") {
-      // One step inside the role's own category (§NNN): the card lists the roles under their headings, so «up» is above the
+      // One step inside the role's own category (§774): the card lists the roles under their headings, so «up» is above the
       // neighbour under the same heading. The group's members keep the slots they hold in the event's order, swapped.
       const group = roles.filter((role) => role.categoryId === current.categoryId);
       const index = group.findIndex((role) => role.id === current.id);
@@ -615,7 +615,7 @@ export async function changeVolunteerRole<T extends Record<string, unknown>>(
     // «Salvează» on a role: both names, how many it needs, and its description.
     if (!input) throw new DomainError("VALIDATION_ERROR", "nothing to save");
     const colour = postedColour ? checkedRoleColour(postedColour, current.colour, ROLE_FORM_COLOUR_BOXES) : current.colour;
-    // «Categoria» (§NNN): a role moved to another category goes to its end — the club's order inside the new heading.
+    // «Categoria» (§774): a role moved to another category goes to its end — the club's order inside the new heading.
     const categoryId = postedCategory === undefined ? current.categoryId : postedCategory === "" ? null : postedCategory;
     assertNameFree(input, categoryId, current.id);
     const before = { nameRo: current.nameRo, nameEn: current.nameEn, needed: current.needed, colour: current.colour, categoryId: current.categoryId };
@@ -669,7 +669,7 @@ const CATEGORY_FIELDS = ["nameRo", "nameEn"] as const;
 const CONTACT_FIELDS = ["contactName", "contactPhone", "contactEmail"] as const;
 
 /**
- * One change to one event's volunteer categories (§NNN; the owner, 2026-10-14: «categorii cu sub-categorii … Toate astea
+ * One change to one event's volunteer categories (§774; the owner, 2026-10-14: «categorii cu sub-categorii … Toate astea
  * configurabile», and «the contact person for each category will be established later»), by one staff member: add a category,
  * rename it, move it one step in the club's order, set its contact person, delete it. Refuses a person who may not (FORBIDDEN, as
  * the roles' own), a name typed wrong (VALIDATION_ERROR naming `nameRo` / `nameEn`: both, never one), a contact address that is
@@ -703,7 +703,7 @@ export async function changeVolunteerCategory<T extends Record<string, unknown>>
 
   const result = await db.transaction(async (tx): Promise<VolunteerCategoryResult> => {
     // The event's row first, as the roles' change does (NO KEY UPDATE: a sign-up's foreign key is not made to wait), then the
-    // categories in the order of their ids: the order a role's change locks them (§NNN), so the two never wait in a circle.
+    // categories in the order of their ids: the order a role's change locks them (§774), so the two never wait in a circle.
     const [event] = await tx.select({ id: events.id }).from(events).where(eq(events.id, request.eventId)).for("no key update").limit(1);
     if (!event) throw new DomainError("NOT_FOUND", "the event is not there");
     const audit = (action: AuditAction, metadata: Record<string, unknown>) =>
@@ -1566,7 +1566,7 @@ export async function submitVolunteer<T extends Record<string, unknown>>(
     if (kept.length === 0) return { outcome: "full", dropped: true };
     const dropped = kept.length < input.roleIds.length;
     // The roles as the agreement names them (§765): the plain words of «Descrierea rolului», never the old one-line column.
-    // …each with the words of the category it sits under (§NNN), so the sentence says «Direcționare (Traseu)».
+    // …each with the words of the category it sits under (§774), so the sentence says «Direcționare (Traseu)».
     const categoryWords = new Map(
       (await tx.select({ id: eventVolunteerCategories.id, nameRo: eventVolunteerCategories.nameRo, nameEn: eventVolunteerCategories.nameEn }).from(eventVolunteerCategories).where(eq(eventVolunteerCategories.eventId, eventId))).map((category) => [category.id, category]),
     );

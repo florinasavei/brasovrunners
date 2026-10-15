@@ -157,7 +157,7 @@ type Props = {
   /** Why the public form is not on the event's page now, or null when it is (`volunteerOfferClosedFor`). */
   offerClosed: VolunteerOfferClosed | null;
   roles: readonly VolunteerRole[];
-  /** The headings the roles are grouped under, in the club's order, each with its contact person (§NNN). */
+  /** The headings the roles are grouped under, in the club's order, each with its contact person (§774). */
   categories: readonly VolunteerCategory[];
   standings: readonly RoleStanding[];
   volunteers: readonly VolunteerItem[];
@@ -227,7 +227,7 @@ export default async function VolunteersCard({
   const totalNeeded = roles.reduce((sum, role) => sum + role.needed, 0);
   const totalTaken = standings.reduce((sum, standing) => sum + standing.taken, 0);
   const roleName = (role: Pick<VolunteerRole, "nameRo" | "nameEn">) => (locale === "en" ? role.nameEn : role.nameRo);
-  // The roles in the order the card lists them — under their categories (§NNN) — each with its category's words, so a role named alone
+  // The roles in the order the card lists them — under their categories (§774) — each with its category's words, so a role named alone
   // says «Direcționare (Traseu)»: the assignment chips, the select, the ticks, the chips, the agreement's roles. The role's own header,
   // already under its heading, and the badge's band keep the name only.
   const labelled = rolesWithCategoryWords(categories, roles);
@@ -292,7 +292,7 @@ export default async function VolunteersCard({
     <Stack spacing={1.5} sx={{ maxWidth: 640 }}>
       {/* «Copiază și tradu tot: RO → EN» (§464, §482), scoped to this form: the English name from the Romanian one, the English description from the Romanian — layout kept. */}
       <TranslateAllButton />
-      {/* «Categoria» (§NNN): the heading the role sits under — the house's native select, as «Rolul dat» below; «Alte activități» is none. Drawn only
+      {/* «Categoria» (§774): the heading the role sits under — the house's native select, as «Rolul dat» below; «Alte activități» is none. Drawn only
           once the event has a category: a form without the box leaves the role where it is. */}
       {categories.length > 0 && (
         <RecallField
@@ -1003,7 +1003,7 @@ export default async function VolunteersCard({
     </Box>
   );
 
-  /** One role under its heading: `index` and `count` are its place among the roles of its own category — the arrows move it inside it (§NNN). */
+  /** One role under its heading: `index` and `count` are its place among the roles of its own category — the arrows move it inside it (§774). */
   const roleRow = (role: VolunteerRole, index: number, count: number) => (
     <Box component="li" key={role.id} data-testid="volunteer-role" data-role-id={role.id} sx={{ border: 1, borderColor: "divider", borderRadius: 1, p: 1.5 }}>
       <Stack direction="row" sx={{ flexWrap: "wrap", alignItems: "center", gap: 0.75 }}>
@@ -1118,7 +1118,7 @@ export default async function VolunteersCard({
   );
 
   /**
-   * One category of the «Categorii» fold (§NNN): its two names, how many roles sit under it, the arrows, «Modifică» (the names, the delete —
+   * One category of the «Categorii» fold (§774): its two names, how many roles sit under it, the arrows, «Modifică» (the names, the delete —
    * refused with a sentence while a role is under it) and «Persoana de contact» — three optional boxes with a «Salvează» of their own,
    * audited by the boxes that changed, never by their words. `index` and `count` are its place among the categories.
    */
@@ -1337,7 +1337,7 @@ export default async function VolunteersCard({
           )}
         </Stack>
 
-        {/* «Categorii» (§NNN; the owner, 2026-10-14: «categorii cu sub-categorii … Toate astea configurabile»): the headings the roles are grouped
+        {/* «Categorii» (§774; the owner, 2026-10-14: «categorii cu sub-categorii … Toate astea configurabile»): the headings the roles are grouped
             under on this card and on the volunteers' page — «Start / Sosire», «Traseu» —, each with its optional contact person. */}
         <Panel glyph="kind" collapsible level={3} title={t("volunteers.categories.title")} aside={t("volunteers.categories.count", { count: String(categories.length) })} id="box-volunteer-categories" data-testid="volunteer-categories">
           <Stack spacing={1.5}>
@@ -1379,7 +1379,7 @@ export default async function VolunteersCard({
               </Typography>
             ) : (
               <Stack spacing={2} data-testid="volunteer-role-groups">
-                {/* The roles under their categories (§NNN), in the club's order, then «Alte activități»; an event with no category lists them as before. */}
+                {/* The roles under their categories (§774), in the club's order, then «Alte activități»; an event with no category lists them as before. */}
                 {roleGroups.map((group) => (
                   <Box key={group.category?.id ?? "other"} component="section" aria-label={roleHeaded ? (group.category ? categoryName(group.category) : t("volunteers.otherCategory")) : undefined} data-testid="volunteer-role-group" data-category-id={group.category?.id ?? ""}>
                     {roleHeaded && (

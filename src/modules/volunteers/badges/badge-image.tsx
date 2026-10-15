@@ -39,7 +39,7 @@ export type BadgeImageInput = {
   design: BadgeDesign;
   locale: BadgeLocale;
   words: BadgeWords;
-  /** The role's name in the badge's language and its colour — and the telephone of its category's contact person (§NNN, `badgePhoneLine`); null draws a badge «fără rol». */
+  /** The role's name in the badge's language and its colour — and the telephone of its category's contact person (§774, `badgePhoneLine`); null draws a badge «fără rol». */
   role: { name: string; colour: string | null; phone?: string | null } | null;
   /** The header's picture as the route read it; null draws the band. */
   headerPicture?: BadgeImagePicture | null;

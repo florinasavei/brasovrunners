@@ -102,7 +102,7 @@ export type PersonData = {
     eventTitle: string | null;
     /**
      * The role the organizers gave, in both languages (the page shows the one of its own locale) — null while none (§761). Named as
-     * a role is named alone, with its category: «Direcționare (Traseu)» (§NNN, `roleLabel`).
+     * a role is named alone, with its category: «Direcționare (Traseu)» (§774, `roleLabel`).
      */
     roleNameRo: string | null;
     roleNameEn: string | null;
@@ -306,7 +306,7 @@ async function collectPersonData<T extends Record<string, unknown>>(
           .where(inArray(eventVolunteerRoleChoices.volunteerId, offerRows.map((offer) => offer.id)))
           .orderBy(asc(eventVolunteerRoles.position), asc(eventVolunteerRoles.createdAt), asc(eventVolunteerRoles.id))
       : [];
-  // A role is named as a role is named alone (§NNN): «Direcționare (Traseu)», so the same name under two categories is two roles to read.
+  // A role is named as a role is named alone (§774): «Direcționare (Traseu)», so the same name under two categories is two roles to read.
   const volunteerOffers = offerRows.map(({ id, roleCategoryRo, roleCategoryEn, ...offer }) => {
     const chosen = choiceRows.filter((choice) => choice.volunteerId === id);
     return {

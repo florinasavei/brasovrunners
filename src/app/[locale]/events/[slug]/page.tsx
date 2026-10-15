@@ -194,7 +194,7 @@ export default async function EventDetailPage({ params, query, canEdit = false, 
   await holdPageUntil([event.endsAt ?? event.startsAt], now);
   const volunteerOffer = membersOnly ? null : await readOrWhileAway(() => readVolunteerOffer(event, now), null);
   const volunteerRoleNames = volunteerOffer
-    ? // A name once, though the same role may stand in two categories (§NNN): the box says what is needed, the page says where.
+    ? // A name once, though the same role may stand in two categories (§774): the box says what is needed, the page says where.
       [...new Set(volunteerOffer.roles.filter((role) => role.free > 0).map((role) => (locale === "en" ? role.nameEn : role.nameRo)))]
     : [];
   // A staff member who may edit the words gets the way into the editor from here (§135; the

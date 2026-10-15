@@ -403,7 +403,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   const volunteersCard = canManageVolunteers(staffUser.role)
     ? await (async () => {
         const roles = await listVolunteerRoles(db, event.id);
-        // The headings the roles are grouped under, with each one's contact person (§NNN).
+        // The headings the roles are grouped under, with each one's contact person (§774).
         const categories = await listVolunteerCategories(db, event.id);
         const people = await listVolunteers(db, event.id);
         const standings = volunteerStandings(roles, people);

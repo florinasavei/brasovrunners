@@ -5,7 +5,7 @@ import { badgeImageLayout, badgeMarkup } from "@/modules/volunteers/badges/badge
 import { renderBadgeSheet } from "@/modules/volunteers/badges/badges-pdf";
 
 /**
- * §NNN — the coordinator's telephone on a role's badge, in both renderers (the sheet and the picture): the design's own number on every
+ * §774 — the coordinator's telephone on a role's badge, in both renderers (the sheet and the picture): the design's own number on every
  * role; else, with «Telefonul coordonatorului» ticked, the telephone of the contact person of the role's category — a badge with none says none,
  * and its layout gives the writing area the room.
  */
@@ -36,7 +36,7 @@ async function textsOf(render: () => Promise<Buffer>): Promise<string[]> {
 const sheet = (design: BadgeDesign, words = badgeWords(design, "ro", "Brașov Trail Race", DEFAULTS)) =>
   renderBadgeSheet({ design, locale: "ro", words, entries: ENTRIES, eventTitle: "Brașov Trail Race", generatedAt: new Date("2026-10-14T08:00:00Z") });
 
-describe("§NNN the sheet: each role's telephone", () => {
+describe("§774 the sheet: each role's telephone", () => {
   it("prints, on each pile, the telephone of its category — the same role under two categories, two numbers — and none where there is none", async () => {
     const runs = await textsOf(() => sheet(ticked));
     expect(runs.filter((run) => run === "Coordonator: +40 712 345 678")).toHaveLength(2);
@@ -61,7 +61,7 @@ describe("§NNN the sheet: each role's telephone", () => {
   });
 });
 
-describe("§NNN the picture: the same telephone as the sheet", () => {
+describe("§774 the picture: the same telephone as the sheet", () => {
   const input = (role: { name: string; colour: string | null; phone: string | null } | null, design = ticked) => ({
     design,
     locale: "ro" as const,

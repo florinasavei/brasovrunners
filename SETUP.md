@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.32-2026-10-15 -->
+<!-- PROJECT_BASELINE: BR-V3.33-2026-10-15 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V3.32-2026-10-15`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.33-2026-10-15`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -2196,7 +2196,7 @@ only ones who see the names, addresses and telephone numbers.
      export it from there, and erase by deleting the row — that is the manual route; no tool searches by a guardian's address, because the platform
      keeps no list of guardians (a table of them was refused, `DECISIONS.md` §768).
 
-9. **Group the roles in categories, and name a contact person for each** (`DECISIONS.md` §NNN; the owner, 2026-10-14: «Pentru „ce sunt
+9. **Group the roles in categories, and name a contact person for each** (`DECISIONS.md` §774; the owner, 2026-10-14: «Pentru „ce sunt
    dispus să fac” trebuie să am categorii cu sub-categorii … Toate astea configurabile», and «trebuie să fie o persoană de contact pentru
    voluntari» — «the contact person for each category will be established later»). No category is needed: an event with none lists its roles as
    before.

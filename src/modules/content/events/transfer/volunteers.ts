@@ -10,7 +10,7 @@ import { isDomainError } from "@/shared/errors/domain-error";
 import type { VolunteersFile } from "./file-format";
 
 /**
- * An event's volunteer categories and roles in the file (§NNN, amending §751 and §754; the owner, 2026-10-14: «categorii cu
+ * An event's volunteer categories and roles in the file (§774, amending §751 and §754; the owner, 2026-10-14: «categorii cu
  * sub-categorii … Toate astea configurabile» — what an event's volunteers do is configured once, so a copy of the event, or its
  * file on another environment, starts with it).
  *

@@ -32,7 +32,7 @@ export const volunteerAgreementMethod = pgEnum("volunteer_agreement_method", ["F
 export const volunteerGuardianMethod = pgEnum("volunteer_guardian_method", ["LINK", "PAPER"]);
 
 /**
- * A heading the club groups an event's roles under (§NNN; the owner, 2026-10-14: «Pentru „ce sunt dispus să fac” trebuie să
+ * A heading the club groups an event's roles under (§774; the owner, 2026-10-14: «Pentru „ce sunt dispus să fac” trebuie să
  * am categorii cu sub-categorii, eg: aș pune activități Start/Finish și am putea adăuga ex: direcționare, foto/video, punct
  * hidratare; Traseu: direcționare, punct hidratare, foto/video. Toate astea configurabile.»): «Start / Sosire», «Traseu».
  *
@@ -125,7 +125,7 @@ export const eventVolunteerRoles = pgTable(
      */
     colour: text("colour"),
     /**
-     * The category the role sits under (§NNN): null is the default heading «Alte activități» / «Other activities» — every role
+     * The category the role sits under (§774): null is the default heading «Alte activități» / «Other activities» — every role
      * from before the categories, and any the club leaves unfiled. `NO ACTION`: a category with roles is emptied first, never
      * deleted from under them (the service says so first, and the database refuses at the end of the statement). Not `RESTRICT`,
      * which is checked at once: deleting an **event** cascades to both tables in no promised order, and a category removed

@@ -204,7 +204,7 @@ export function badgeWords(design: BadgeDesign, locale: BadgeLocale, eventTitle:
 }
 
 /**
- * The coordinator's line of one role's badge (§NNN; the owner, 2026-10-14: «trebuie să fie o persoană de contact pentru voluntari»):
+ * The coordinator's line of one role's badge (§774; the owner, 2026-10-14: «trebuie să fie o persoană de contact pentru voluntari»):
  * the design's own number when the club typed one — the same for every role —, else, while «Telefonul coordonatorului» is ticked and
  * the design leaves the number empty, the telephone of the contact person of the role's category, with the same label; none when the
  * role sits under no category or its category has no valid number. Never anything while the tick is off.

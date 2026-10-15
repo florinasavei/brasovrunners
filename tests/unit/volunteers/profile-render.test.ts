@@ -340,7 +340,7 @@ describe("§765 the organizers' entry draws the profile boxes only while the not
 describe("§765 the role's form: «Descrierea rolului» in the rich-text editor, with «Copiază și tradu tot»", () => {
   it("draws, in the add form and in every role's edit form, the translate button, one editor per language and no one-line box", async () => {
     const page = await drawCard();
-    // One button per form: «Adaugă un rol», the three roles' «Modifică» — and, since §NNN, «Adaugă o categorie» (its own names, with «Copiază și tradu»).
+    // One button per form: «Adaugă un rol», the three roles' «Modifică» — and, since §774, «Adaugă o categorie» (its own names, with «Copiază și tradu»).
     expect((page.match(/data-testid="translate-all"/g) ?? []).length).toBe(5);
     expect((page.match(/name="descriptionRoBody"/g) ?? []).length).toBe(4);
     expect((page.match(/name="descriptionEnBody"/g) ?? []).length).toBe(4);

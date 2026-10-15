@@ -157,7 +157,7 @@ export default async function BadgeDesignPanel({
   );
   const roleAside = design.labelRo ? `${design.labelRo} / ${design.labelEn}` : t("badges.design.labelDefaultAside");
   const writingAside = design.writingLine ? t("badges.design.writingLine") : t("badges.design.writingPlain");
-  // Ticked with no number: each role's badge prints the telephone of its category's contact person (§NNN).
+  // Ticked with no number: each role's badge prints the telephone of its category's contact person (§774).
   const phoneAside = design.showPhone ? (design.phone ? design.phone : t("badges.design.phoneFromCategory")) : t("badges.design.phoneOff");
   const cutAside = design.cutMarks ? t("badges.design.cutMarks") : t("badges.design.cutLinesOnly");
 

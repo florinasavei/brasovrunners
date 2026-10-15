@@ -112,7 +112,7 @@ export function readAgreementFacts(value: unknown): AgreementFacts | null {
 export type AgreementRole = RoleWords;
 
 /**
- * A role of one person as the agreement and the emails read it: its words, the words of the category it sits under (§NNN, for
+ * A role of one person as the agreement and the emails read it: its words, the words of the category it sits under (§774, for
  * «Direcționare (Traseu)») and that category's contact person, null while the category has none or the role sits under none.
  */
 export type AgreementRoleRow = RoleWords & { id: string; contact?: CategoryContact | null };
@@ -139,7 +139,7 @@ export async function volunteerRoles<T extends Record<string, unknown>>(
     descriptionEn: eventVolunteerRoles.descriptionWordsEn,
     position: eventVolunteerRoles.position,
     createdAt: eventVolunteerRoles.createdAt,
-    // The heading the role sits under and its contact person (§NNN), through a left join: a role under none has nulls.
+    // The heading the role sits under and its contact person (§774), through a left join: a role under none has nulls.
     categoryRo: eventVolunteerCategories.nameRo,
     categoryEn: eventVolunteerCategories.nameEn,
     contactName: eventVolunteerCategories.contactName,

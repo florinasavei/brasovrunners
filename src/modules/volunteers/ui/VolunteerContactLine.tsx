@@ -7,7 +7,7 @@ import { INLINE_TAP_TARGET, TAP_TARGET } from "@/shared/ui/tap-target";
 import type { CategoryContact } from "../domain/volunteer";
 
 /**
- * «Întrebări? Ana · 0712 345 678 · ana@club.test» — the contact person the club set for a category's volunteers (§NNN; the owner,
+ * «Întrebări? Ana · 0712 345 678 · ana@club.test» — the contact person the club set for a category's volunteers (§774; the owner,
  * 2026-10-14: «trebuie să fie o persoană de contact pentru voluntari»), under that category's heading on the volunteers' page.
  *
  * A Server Component with no state: the words come in (`label`, the page's «Întrebări?»), the three boxes are each optional, and a

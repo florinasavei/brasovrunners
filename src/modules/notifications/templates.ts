@@ -1029,7 +1029,7 @@ export type TemplateData = {
     /** A volunteer under eighteen with a parent or guardian still to accept (§768): the «am primit» says their parent was emailed. */
     guardianPending?: boolean;
     /**
-     * The contact persons of the categories of the role (or roles) concerned (§NNN), when the club has set them: the footer of the
+     * The contact persons of the categories of the role (or roles) concerned (§774), when the club has set them: the footer of the
      * three messages that reach a volunteer or their guardian says «Întrebări despre voluntariat? Ana · 0712 345 678 · ana@club.test».
      * The club's own business contact; never in the club's notice and never in a copy to the club.
      */
@@ -2302,7 +2302,7 @@ const T = {
       `Clubul a refuzat această înscriere. Motivul: „${ground}”.`,
     termsLink: "Termenii și condițiile",
     footer: "Răspunde la acest email pentru întrebări.",
-    /** The volunteer category's contact person (§NNN), the words of «Persoana de contact» already joined: «Ana · 0712 345 678 · ana@club.test». */
+    /** The volunteer category's contact person (§774), the words of «Persoana de contact» already joined: «Ana · 0712 345 678 · ana@club.test». */
     volunteerContact: (contacts: string) => `Întrebări despre voluntariat? ${contacts}`,
     /** The club's copy of a participant's message (§320): in front of the subject, and the first line. */
     clubCopy: {
@@ -3766,7 +3766,7 @@ export function buildTemplateContent(
     })(),
     closing: copy.closing,
     // The reply address's line, and — on the three messages that reach a volunteer or their guardian — the contact person of the
-    // category of the role concerned (§NNN), when the club has set one. Not on the club's copy: it is the volunteer's message.
+    // category of the role concerned (§774), when the club has set one. Not on the club's copy: it is the volunteer's message.
     footer: (() => {
       const concerned =
         !clubCopy && (messageType === "VOLUNTEER_RECEIVED" || messageType === "VOLUNTEER_ROLE_ASSIGNED" || messageType === "VOLUNTEER_GUARDIAN_REQUEST")

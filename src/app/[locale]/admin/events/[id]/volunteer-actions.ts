@@ -94,7 +94,7 @@ const staffFields = (form: FormData) => ({
 });
 
 const roleFields = (form: FormData) => ({
-  // «Categoria» (§NNN): the id of the category chosen, "" for «Alte activități» — only when the form drew the choice, so a form without it leaves the role where it is.
+  // «Categoria» (§774): the id of the category chosen, "" for «Alte activități» — only when the form drew the choice, so a form without it leaves the role where it is.
   ...(form.has("categoryId") ? { categoryId: field(form, "categoryId") } : {}),
   nameRo: field(form, "nameRo"),
   nameEn: field(form, "nameEn"),
@@ -116,7 +116,7 @@ const roleFields = (form: FormData) => ({
 const categoryFields = (form: FormData) => ({ nameRo: field(form, "nameRo"), nameEn: field(form, "nameEn") });
 
 /**
- * «Persoana de contact» of a category (§NNN): the three boxes as posted — the telephone read by the parser a staff member's box uses
+ * «Persoana de contact» of a category (§774): the three boxes as posted — the telephone read by the parser a staff member's box uses
  * (`typedPhone`: with the country code, or as a Romanian number; anything it cannot read stays as typed, for the schema's bound).
  */
 const contactFields = (form: FormData) => ({
@@ -185,7 +185,7 @@ export async function switchVolunteersCountsAction(form: FormData): Promise<void
   }
 }
 
-/** «Adaugă o categorie» (§NNN): both names. A refusal keeps what was typed (§315). */
+/** «Adaugă o categorie» (§774): both names. A refusal keeps what was typed (§315). */
 export async function addVolunteerCategoryAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   try {
     await runCategory({ kind: "add", eventId: eventIdOf(form), fields: categoryFields(form) });
@@ -263,7 +263,7 @@ export async function editVolunteerRoleAction(_previous: FormOutcome | null, for
     changed = (await runRole({ kind: "edit", eventId: eventIdOf(form), id: field(form, "roleId"), fields: roleFields(form) })).changed;
   } catch (error) {
     // A colour no word reads on is a box to correct, like a name left empty (§764).
-    // …or a name already under that category (§NNN): the box to change.
+    // …or a name already under that category (§774): the box to change.
     if (isDomainError(error) && (error.code === "VALIDATION_ERROR" || error.code === "BADGE_COLOUR_UNREADABLE" || error.code === "VOLUNTEER_NAME_TAKEN")) return refused(error, form);
     if (!isDomainError(error)) throw error;
     return backToCard(form, { error: error.code });

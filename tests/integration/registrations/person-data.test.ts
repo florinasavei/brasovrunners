@@ -120,7 +120,7 @@ describe("BR-REQ-070-01 everything held about a person", () => {
     // An offer to volunteer (§754) is found by the same canonical address, and is everything typed.
     const [volunteerRole] = await db.insert(eventVolunteerRoles).values({ eventId, nameRo: "Punct de apă", nameEn: "Water point", needed: 2 }).returning();
     const [finishRole] = await db.insert(eventVolunteerRoles).values({ eventId, nameRo: "Sosire", nameEn: "Finish", needed: 1, position: 1 }).returning();
-    // §NNN: the same role name under two categories — «Direcționare» at the start and on the route — is two roles to read, so the
+    // §774: the same role name under two categories — «Direcționare» at the start and on the route — is two roles to read, so the
     // person's own copy names each with its category and never «Direcționare, Direcționare».
     const [startCategory, routeCategory] = await db
       .insert(eventVolunteerCategories)
@@ -165,7 +165,7 @@ describe("BR-REQ-070-01 everything held about a person", () => {
     ]);
   });
 
-  it("names the role the organizers gave with its category, as every other place that names a role alone (§NNN)", async () => {
+  it("names the role the organizers gave with its category, as every other place that names a role alone (§774)", async () => {
     const admin = await staff("ADMIN");
     const [route] = await db.select().from(eventVolunteerCategories).where(eq(eventVolunteerCategories.nameEn, "Route"));
     const [guide] = await db.select().from(eventVolunteerRoles).where(eq(eventVolunteerRoles.categoryId, route.id));

@@ -194,7 +194,7 @@ async function seed() {
         })),
       );
 
-    // The featured sample race gets two volunteer categories with the owner's example roles (§NNN), so the card's groups can be walked.
+    // The featured sample race gets two volunteer categories with the owner's example roles (§774), so the card's groups can be walked.
     if ("featured" in row && row.featured) await seedSampleVolunteers(event.id);
   }
 

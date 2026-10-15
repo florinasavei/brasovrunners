@@ -26,7 +26,7 @@ import { chooseSex } from "./support/sex-choice";
  * shown from the age typed (always, without scripts); the parent accepts from a single-use link, the card says «Acordul
  * părintelui lipsește» and refuses «Confirmă» until then, and the organizers can take the consent on paper.
  *
- * §NNN — categories and the contact person: an Administrator adds two categories, moves one, saves a contact person for it, defines «Direcționare» under each
+ * §774 — categories and the contact person: an Administrator adds two categories, moves one, saves a contact person for it, defines «Direcționare» under each
  * (the same name in two categories) and «Foto/Video» under none; the volunteers' page groups the roles under level-3 headings in that order with the contact on one
  * line under its heading (links of 44 pixels); an offer for «Direcționare» is named «Direcționare (Traseu)» on the card; the CSV says so and holds no contact.
  *
@@ -899,7 +899,7 @@ test.describe("§754 volunteers for a race", () => {
     }
   });
 
-  test("§NNN a category with its contact person: the card's «Categorii» and «Categoria», the roles grouped under their headings on the volunteers' page with the contact line, an offer for a role named «Direcționare (Traseu)», and no contact in the CSV", async ({
+  test("§774 a category with its contact person: the card's «Categorii» and «Categoria», the roles grouped under their headings on the volunteers' page with the contact line, an offer for a role named «Direcționare (Traseu)», and no contact in the CSV", async ({
     page,
     browser,
   }) => {

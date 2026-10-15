@@ -942,14 +942,14 @@ async function renderRow(
     data.participantName = row.messageType === "VOLUNTEER_CLUB_NOTICE" || row.messageType === "VOLUNTEER_GUARDIAN_REQUEST" ? "" : volunteer.name;
     data.volunteer = {
       name: volunteer.name,
-      // A role named alone says its category in brackets (§NNN): «Direcționare (Traseu)».
+      // A role named alone says its category in brackets (§774): «Direcționare (Traseu)».
       roleRo: roles.assigned ? roleLabel(roles.assigned, "ro") : null,
       roleEn: roles.assigned ? roleLabel(roles.assigned, "en") : null,
       roleDescriptionRo: described(roles.assigned?.descriptionRo ?? null),
       roleDescriptionEn: described(roles.assigned?.descriptionEn ?? null),
       chosenRo: roles.chosen.map((role) => roleLabel(role, "ro")),
       chosenEn: roles.chosen.map((role) => roleLabel(role, "en")),
-      // The contact person of the category of the role (or roles) concerned (§NNN), when the club has set one: the message's footer says it.
+      // The contact person of the category of the role (or roles) concerned (§774), when the club has set one: the message's footer says it.
       contacts: volunteerContactsOf(roles),
       // «Am primit» of a volunteer under eighteen whose guardian has not accepted yet (§768) says their parent was emailed.
       guardianPending: row.messageType === "VOLUNTEER_RECEIVED" && isVolunteerMinor(volunteer.age) && volunteer.guardianName !== null && volunteer.guardianAcceptedAt === null,

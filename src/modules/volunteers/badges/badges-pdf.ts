@@ -39,7 +39,7 @@ import { BADGE_LAYOUT, BADGE_PAGE_MARGIN, type BadgeLayout, badgeLayout, badgePa
 export type BadgeSheetEntry = {
   /**
    * The role's name in the badge's language and its band's colour; null prints «VOLUNTAR» alone. `phone` is the telephone of its category's
-   * contact person (§NNN): the coordinator's number of this role's badges while the design leaves its own empty (`badgePhoneLine`).
+   * contact person (§774): the coordinator's number of this role's badges while the design leaves its own empty (`badgePhoneLine`).
    */
   role: { name: string; colour: string | null; phone?: string | null } | null;
   /** How many badges of it, spares included. */

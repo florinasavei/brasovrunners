@@ -319,7 +319,7 @@ describe("the file an event is exported as", () => {
     // No database id of this environment: not the event's, a translation's, the declaration's, the staff's.
     for (const id of [event.id, declarationId, admin.id, ...(await texts(event.id)).map((row) => row.id)]) expect(text).not.toContain(id);
     // The configuration's own top-level shape, and nothing about registrations in it.
-    // …and, beside the event, the volunteers' categories and roles (§NNN) — words, never a person.
+    // …and, beside the event, the volunteers' categories and roles (§774) — words, never a person.
     expect(Object.keys(file).sort()).toEqual(["event", "exportedAt", "exportedFrom", "format", "media", "series", "version", "volunteers"]);
     expect(Object.keys(file.event)).not.toContain("registrations");
     expect(Object.keys(file.event)).not.toContain("volunteers");
@@ -857,7 +857,7 @@ describe("import over an existing event", () => {
 /**
  * The volunteers' card (§754): the **people** are no part of the file — they are personal data — nor is the tick «Primește voluntari»,
  * which belongs to one date (a copy of an event starts with the tick off, like the to-dos, §749). The volunteers' **categories and
- * roles** are (§NNN, amending §751 and §754): their words, the contact person the club published for each category, never a person —
+ * roles** are (§774, amending §751 and §754): their words, the contact person the club published for each category, never a person —
  * written to a new event by the card's own services, and never applied over an existing event.
  */
 describe("an event's volunteers are not the file's — only their categories and roles are", () => {
@@ -937,11 +937,11 @@ describe("an event's volunteers are not the file's — only their categories and
 });
 
 /**
- * §NNN — the volunteers' categories and roles in the file: the words and the contact person the club published for each category, never a
+ * §774 — the volunteers' categories and roles in the file: the words and the contact person the club published for each category, never a
  * person; a role names its category by its place in the list, never by an id; written to a new event through the card's own services and
  * read forgivingly; an import over an existing event leaves its roles as they are.
  */
-describe("§NNN the volunteers' categories and roles in the file", () => {
+describe("§774 the volunteers' categories and roles in the file", () => {
   async function withCategories(eventId: string) {
     const [start, route] = await db
       .insert(eventVolunteerCategories)

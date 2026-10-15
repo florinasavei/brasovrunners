@@ -48,7 +48,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
   }
 
   const t = await getTranslations({ locale, namespace: "Admin" });
-  // The roles under their categories in the club's order, each named alone as «Direcționare (Traseu)» (§NNN); the category's
+  // The roles under their categories in the club's order, each named alone as «Direcționare (Traseu)» (§774); the category's
   // contact person is never in the file.
   const roles = rolesWithCategoryWords(data.categories, data.roles);
   const roleNames = new Map(roles.map((role) => [role.id, roleLabel(role, locale)]));

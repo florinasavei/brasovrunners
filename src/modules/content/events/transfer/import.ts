@@ -67,7 +67,7 @@ export type ImportNote =
   | { code: "slugSuffixed"; locale: Locale; slug: string }
   | { code: "publicListOff" }
   | { code: "seriesNotApplied" }
-  /** `count` of the file's volunteer categories, contacts or roles the card's own rules refused, so the new event lacks them (§NNN). */
+  /** `count` of the file's volunteer categories, contacts or roles the card's own rules refused, so the new event lacks them (§774). */
   | { code: "volunteersSkipped"; count: number }
   /** What reading the file left out of its checkpoints (§770): a kind this release does not know, a time of day that could not be counted from the start. */
   | FileNote;
@@ -352,7 +352,7 @@ export async function importEventAsNew<T extends Record<string, unknown>>(db: Da
   });
   // The route's checkpoints (§757): their own table, written after the event exists, as the card writes them.
   if (checkpoints.length > 0) await replaceCheckpoints(db, input.actor, created.id, checkpoints, now);
-  // The volunteers' categories and roles (§NNN): the card's own services, in the file's order, on the new event alone.
+  // The volunteers' categories and roles (§774): the card's own services, in the file's order, on the new event alone.
   const volunteers = await importVolunteersFile(db, input.actor, created.id, file.volunteers, now);
   if (volunteers.skipped > 0) notes.push({ code: "volunteersSkipped", count: volunteers.skipped });
 
@@ -398,7 +398,7 @@ function storageOrNull(): Storage | null {
 const fileDigests = (file: EventFile): Map<string, string> =>
   new Map(file.media.flatMap((entry) => (entry.sha256 ? [[entry.url, entry.sha256] as [string, string]] : [])));
 
-/** Whether the file carries any volunteer category or role (§NNN). */
+/** Whether the file carries any volunteer category or role (§774). */
 export const hasVolunteers = (file: EventFile): boolean => file.volunteers.categories.length > 0 || file.volunteers.roles.length > 0;
 
 /** Both sides of the comparison for a target: the changes, and the digests the pictures were read by. */
@@ -504,7 +504,7 @@ export type DiffEventImportResult = {
   refusal: string | null;
   /** The file's series rule, said so it is not mistaken for one that will be applied. */
   seriesNotApplied: boolean;
-  /** The file carries volunteer categories or roles, which an import over an existing event never writes (§NNN): said, so it is not mistaken for one that will be. */
+  /** The file carries volunteer categories or roles, which an import over an existing event never writes (§774): said, so it is not mistaken for one that will be. */
   volunteersNotApplied: boolean;
   /** The event has been public, so its page addresses stay as they are even where the file's differ. */
   slugsKept: boolean;

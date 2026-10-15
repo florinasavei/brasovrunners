@@ -26,7 +26,7 @@ import type { PublicVolunteerCategory, PublicVolunteerRole } from "./volunteers"
 export type VolunteerOffer = {
   /** The roles still needing people, in the club's order — empty only for a person reading the answer to their own post. */
   roles: PublicVolunteerRole[];
-  /** The event's categories in the club's order, each with its contact person (§NNN): the page draws a heading for each that has a role in `roles`. */
+  /** The event's categories in the club's order, each with its contact person (§774): the page draws a heading for each that has a role in `roles`. */
   categories: PublicVolunteerCategory[];
   /** «Oferim tricouri voluntarilor» (§765): the form asks the size. */
   shirts: boolean;
@@ -64,6 +64,6 @@ export async function readVolunteerOffer(
   const profile = await cachedVolunteerProfileDescribed(now);
   // Minors ride on the profile form: no age is asked without it, so no minor is either (§768).
   const minors = profile && (await cachedVolunteerMinorsOpen(now));
-  // A cache entry written before the categories existed has none: the roles are then simply listed (§NNN).
+  // A cache entry written before the categories existed has none: the roles are then simply listed (§774).
   return { roles: boxRoles, categories: categories ?? [], shirts, showCounts, profile, minors };
 }
