@@ -17,6 +17,7 @@ const state = vi.hoisted(() => ({
   event: null as null | Record<string, unknown>,
   accepts: true,
   shirts: false,
+  showCounts: false,
   roles: [] as unknown[],
   noticeDescribes: true,
   agreementInForce: true,
@@ -79,7 +80,7 @@ vi.mock("@/modules/registrations/form-draft", () => ({
   },
 }));
 vi.mock("@/modules/public-cache/reads", () => ({
-  cachedVolunteerRoles: async () => ({ acceptsVolunteers: state.accepts, shirts: state.shirts, roles: state.roles }),
+  cachedVolunteerRoles: async () => ({ acceptsVolunteers: state.accepts, shirts: state.shirts, showCounts: state.showCounts, roles: state.roles }),
   cachedVolunteersDescribed: async () => state.noticeDescribes,
   cachedVolunteerAgreementInForce: async () => state.agreementInForce,
   cachedVolunteerAgreementDescribed: async () => state.agreementDescribed,
@@ -94,6 +95,8 @@ vi.mock("@/modules/volunteers/ui/VolunteerBox", () => ({
       "data-props": JSON.stringify({
         roles: (props.roles as PublicVolunteerRole[]).map((candidate) => candidate.id),
         shirts: props.shirts,
+        showCounts: props.showCounts,
+        eventDay: props.eventDay,
         profile: props.profile,
         minors: props.minors,
         outcome: props.outcome,
@@ -114,6 +117,7 @@ beforeEach(() => {
   state.event = { ...EVENT };
   state.accepts = true;
   state.shirts = false;
+  state.showCounts = false;
   state.roles = [role("r1", "Punct de apă", "Water point", 2), role("r2", "Sosire", "Finish", 1)];
   state.noticeDescribes = true;
   state.agreementInForce = true;
@@ -203,13 +207,13 @@ describe("§768 the volunteers' page answers 404 while the form could not be sen
   });
 
   it("reads the sealed draft only when the page is the answer to a refusal — never on a plain visit or after a send", async () => {
-    state.draft = { name: "Dan", age: "15", guardianName: "Maria Popescu" };
+    state.draft = { name: "Dan", birthDate: "21.11.2011", guardianName: "Maria Popescu" };
     await visit();
     await visit({ volunteer: "1" });
     expect(state.draftReads).toBe(0);
-    const page = (await visit({ volunteer: "invalid", vfields: "guardianEmail,age,<b>", since: "x" })) ?? "";
+    const page = (await visit({ volunteer: "invalid", vfields: "guardianEmail,birthDate,<b>", since: "x" })) ?? "";
     expect(state.draftReads).toBe(1);
-    expect(boxOf(page)).toMatchObject({ outcome: "invalid", refused: ["age", "guardianEmail"], typed: { name: "Dan", guardianName: "Maria Popescu" } });
+    expect(boxOf(page)).toMatchObject({ outcome: "invalid", refused: ["birthDate", "guardianEmail"], typed: { name: "Dan", birthDate: "21.11.2011", guardianName: "Maria Popescu" } });
   });
 
   it("is never indexed, and its head names the event", async () => {
@@ -232,13 +236,46 @@ describe("§768 the one read the event page's box and this page share", () => {
   it("answers the roles still needing people and the form's switches, or null — the same call the box makes with no answer", async () => {
     const offer = await readVolunteerOffer(event, new Date(NOW_EVENT_AHEAD));
     expect(offer?.roles.map((candidate) => candidate.id)).toEqual(["r1", "r2"]);
-    expect(offer).toMatchObject({ shirts: false, profile: true, minors: true });
+    expect(offer).toMatchObject({ shirts: false, showCounts: false, profile: true, minors: true });
     state.accepts = false;
     expect(await readVolunteerOffer(event, new Date(NOW_EVENT_AHEAD))).toBeNull();
   });
 
   it("holds an event whose date is to be announced as ahead — nobody is refused for a date not yet given", async () => {
     expect(await readVolunteerOffer({ ...event, startsAt: null }, new Date(NOW_EVENT_AHEAD))).not.toBeNull();
+  });
+});
+
+describe("§773 the public count of volunteers is the club's tick, and the date of birth is counted on the event's day", () => {
+  const event = { id: EVENT.id, eventStatus: "SCHEDULED", startsAt: EVENT.startsAt, endsAt: null as Date | null };
+
+  it("hands the form the tick: off by default, on when the club ticked it — one flag for every public number", async () => {
+    expect((await readVolunteerOffer(event, new Date(NOW_EVENT_AHEAD)))?.showCounts).toBe(false);
+    state.showCounts = true;
+    expect((await readVolunteerOffer(event, new Date(NOW_EVENT_AHEAD)))?.showCounts).toBe(true);
+    const page = (await visit()) ?? "";
+    expect(boxOf(page)).toMatchObject({ showCounts: true });
+    state.showCounts = false;
+    expect(boxOf((await visit()) ?? "")).toMatchObject({ showCounts: false });
+  });
+
+  it("never opens a role that is full because the counts are hidden: the roles handed over are the ones still needing people either way", async () => {
+    state.roles = [role("r1", "Punct de apă", "Water point", 0), role("r2", "Sosire", "Finish", 1)];
+    for (const showCounts of [false, true]) {
+      state.showCounts = showCounts;
+      expect(boxOf((await visit()) ?? "").roles, String(showCounts)).toEqual(["r2"]);
+    }
+  });
+
+  it("counts the age on the event's day in its own zone: the gun's day when the race has one, else the event's", async () => {
+    // 21 November 2026 at 10:00 in Brașov (08:00 UTC): the day is the 21st.
+    expect(boxOf((await visit()) ?? "")).toMatchObject({ eventDay: "2026-11-21" });
+    // A gun after midnight in the event's zone is that day's, not the UTC day's: 00:30 on the 22nd in Brașov is 22:30 UTC on the 21st.
+    state.event = { ...EVENT, startsAt: new Date("2026-11-21T20:00:00.000Z"), raceStartsAt: new Date("2026-11-21T22:30:00.000Z") };
+    expect(boxOf((await visit()) ?? "")).toMatchObject({ eventDay: "2026-11-22" });
+    // No gun: the event's own start.
+    state.event = { ...EVENT, startsAt: new Date("2026-11-21T22:30:00.000Z"), raceStartsAt: null };
+    expect(boxOf((await visit()) ?? "")).toMatchObject({ eventDay: "2026-11-22" });
   });
 });
 

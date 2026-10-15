@@ -23,18 +23,18 @@ export function volunteerAgreementClause(locale: string): string {
 
 /**
  * What the privacy notice's `{{volunteerProfile}}` becomes (§765): the public form's own boxes about the person, each by
- * its label, quoted, in that language — „Vârsta”, „Sex”, „Orașul”, „Am mai fost voluntar în trecut la alte curse” —
- * read from the catalogue the form's labels read (`Event.volunteers.profile`; «Sex» is the registration form's own
- * word, `Registration.sex`), so the approved sentence names what a visitor sees. The club's group tick and the T-shirt
+ * its label, quoted, in that language — „Data nașterii”, „Sex”, „Orașul”, „Am mai fost voluntar în trecut la alte curse” —
+ * read from the catalogue the form's labels read (`Event.volunteers.profile`; «Data nașterii» and «Sex» are the registration
+ * form's own words, `Registration.birthDate` and `Registration.sex`, §773), so the approved sentence names what a visitor sees. The club's group tick and the T-shirt
  * are said in the notice's own words, never quoted: the tick would put the club's name into the approved text, and the
  * size is asked only while the club gives T-shirts, which the sentence says (§357, the member tick's rule).
  */
 export function volunteerProfileClause(locale: string): string {
   const words = locale === "en" ? en.Event.volunteers.profile : ro.Event.volunteers.profile;
-  // «Sex» is the registration form's own word and box (`SexField`), so the one label is read from where that form reads it.
-  const sex = locale === "en" ? en.Registration.sex : ro.Registration.sex;
+  // «Data nașterii» and «Sex» are the registration form's own words and boxes (`BirthDateField`, `SexField`), so each label is read from where that form reads it.
+  const registration = locale === "en" ? en.Registration : ro.Registration;
   const [open, close] = locale === "en" ? ["“", "”"] : ["„", "”"];
-  return [words.age, sex, words.city, words.before].map((label) => `${open}${label}${close}`).join(", ");
+  return [registration.birthDate, registration.sex, words.city, words.before].map((label) => `${open}${label}${close}`).join(", ");
 }
 
 /**

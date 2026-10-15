@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V3.32-2026-10-15
+
+- **The volunteers' page, four small things** — «Vreau să fiu voluntar» opens the page in a new tab; «Arată public câți voluntari mai sunt necesari» is a tick on the event (off by default: the page says «mai sunt locuri», not a number); the form asks «Data nașterii» instead of the age, counted on the event's day, with the date beside the age on the card, in the CSV and in the person's data; and the owner's kinder note sits under the roles. Migration `0159`; approve the privacy notice from the new template. §773.
 ## BR-V3.31-2026-10-15
 
 - **Four small asks** — Girl Zone's address is `?tip=girl-zone` (`siguranta` still opens it), each «Spune-ne ceva» form has a «Prin ce trimitem» choice between the club's Gmail and Mailgun (Girl Zone's Gmail waits for a privacy notice that names it), the optional email beside the name — on Girl Zone's form too — is checked and becomes the reply address on either road, and «Adaugă în calendar» is one small pill that opens the five doors. §772.

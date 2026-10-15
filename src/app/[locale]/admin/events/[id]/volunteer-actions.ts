@@ -13,6 +13,7 @@ import {
   ROLE_FORM_COLOUR_BOXES,
   setAcceptsVolunteers,
   setVolunteersShirts,
+  setVolunteersShowCounts,
   type VolunteerRequest,
   type VolunteerRoleRequest,
 } from "@/modules/volunteers/volunteers";
@@ -77,8 +78,9 @@ const staffFields = (form: FormData) => ({
   email: field(form, "email"),
   phone: phoneOf(form),
   note: field(form, "note"),
-  // What the person told the organizers (§765), all optional: the boxes as typed, the two ticks true only when posted.
-  age: field(form, "age"),
+  // What the person told the organizers (§765), all optional: the boxes as typed, the two ticks true only when posted. The date of
+  // birth is what the card's box posts (§773, the registration form's own box); the service reads it as typed, day first, and derives the age.
+  birthDate: field(form, "birthDate"),
   sex: field(form, "sex"),
   city: field(form, "city"),
   shirtSize: field(form, "shirtSize"),
@@ -140,6 +142,22 @@ export async function switchVolunteersShirtsAction(form: FormData): Promise<void
     const actor = await requireStaff();
     const result = await setVolunteersShirts(getDb(), actor, { eventId: eventIdOf(form), on }, new Date());
     return backToCard(form, { saved: result.changed ? (on ? "volunteersShirtsOn" : "volunteersShirtsOff") : "volunteerUnchanged" });
+  } catch (error) {
+    if (!isDomainError(error)) throw error;
+    return backToCard(form, { error: error.code });
+  }
+}
+
+/**
+ * «Arată public câți voluntari mai sunt necesari» (§773): the card's third tick, the event's `volunteers_show_counts`, the same
+ * submit drawn as the checkbox as the two above — it posts `on=1|0`, the state it wants, never a toggle.
+ */
+export async function switchVolunteersCountsAction(form: FormData): Promise<void> {
+  const on = field(form, "on") === "1";
+  try {
+    const actor = await requireStaff();
+    const result = await setVolunteersShowCounts(getDb(), actor, { eventId: eventIdOf(form), on }, new Date());
+    return backToCard(form, { saved: result.changed ? (on ? "volunteersCountsOn" : "volunteersCountsOff") : "volunteerUnchanged" });
   } catch (error) {
     if (!isDomainError(error)) throw error;
     return backToCard(form, { error: error.code });

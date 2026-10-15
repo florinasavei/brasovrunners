@@ -543,11 +543,13 @@
       "title": "I want to volunteer",
       "intro": "The event needs a hand. Tick what you are willing to do and tell us how to reach you. The organizers then choose your role and confirm you. It is not a race registration and it holds no place.",
       "choices": "What you are willing to do",
-      "choicesHelp": "Tick everything you would do, at least one role. The organizers choose one and write to you.",
+      "choicesHelp": "Tick everything you would do, at least one role.",
+      "choicesNote": "Depending on how many people sign up, you may be asked to cover a different responsibility. Thank you for wanting to help. We will contact you soon.",
       "needs": {
         "one": "1 more person needed",
         "few": "{count} more people needed",
-        "other": "{count} more people needed"
+        "other": "{count} more people needed",
+        "open": "spots still open"
       },
       "name": "Your name",
       "email": "Your email address",
@@ -577,26 +579,24 @@
         "consent": "Tick the box to agree, or we cannot keep your offer.",
         "agreement": "Tick the box to accept the volunteer agreement, or we cannot keep your offer.",
         "adult": "The form is for people of at least {age}: tick the box if you are.",
-        "age": "Type your age in whole years, for example 34.",
-        "ageMinimum": "Volunteers must be at least {age} old.",
+        "birthDateMinimum": "Volunteers must be at least {age} old on the day of the event.",
         "sex": "Choose your sex from the list.",
         "city": "Type your city.",
         "shirtSize": "Choose a size from the list.",
         "guardianName": "Write your parent's or guardian's name.",
         "guardianEmail": "The parent's or guardian's email address does not look valid.",
         "guardianAware": "Tick that your parent or guardian knows and agrees.",
-        "ageMinors": "The club does not take volunteers under 18 yet. You can help when you turn 18, or write to us from the contact page."
+        "birthDateMinors": "The club does not take volunteers under 18 yet. You can help when you turn 18, or write to us from the contact page."
       },
       "details": "Details",
       "profile": {
-        "age": "Age",
-        "ageHelp": "In whole years; you must be at least {age} old.",
+        "birthDateHelp": "You must be at least {age} old on the day of the event.",
         "city": "City",
         "before": "I have volunteered at other races before",
         "club": "I belong to the {club} group",
         "shirt": "T-shirt size",
         "shirtHelp": "The event gives volunteers a T-shirt. Choose your size, or “No t-shirt”.",
-        "ageHelpMinors": "In completed years; at least {age}. Under 18 you also need a parent's consent."
+        "birthDateHelpMinors": "At least {age} on the day of the event. Under 18 you also need a parent's consent."
       },
       "page": {
         "title": "I want to volunteer at {event}",
@@ -4300,8 +4300,8 @@
         },
         "volunteerProfileNotice": {
           "title": "Privacy notice: what volunteers say about themselves",
-          "todo": "An event ahead takes volunteers, but the notice in force does not describe their age, sex and city yet. The form asks only the minimum-age tick.",
-          "done": "The notice in force describes what volunteers say about themselves: the form asks for the age, sex and city.",
+          "todo": "An event ahead takes volunteers, but the notice in force does not describe their date of birth, sex and city yet. The form asks only the minimum-age tick.",
+          "done": "The notice in force describes what volunteers say about themselves: the form asks for the date of birth, sex and city.",
           "how": [
             "/admin/legal → the “GDPR” card → “Regenerate from the template” → confirm. Section 5's paragraph about volunteers names the volunteers' answers and what they are for.",
             "A lawyer should read the paragraph: the basis, the purpose (placing volunteers in roles), the T-shirt only while the club gives them, and that the “group” is the person's own claim.",
@@ -4757,7 +4757,7 @@
           "noAgreement": "The public form is not shown: no volunteer agreement is in force. Approve one in «Legal documents»; «Tasks» says how.",
           "noAgreementNotice": "The public form is not shown: the privacy notice in force does not describe the volunteer agreement's acceptance yet. «Tasks» says what to approve."
         },
-        "profileOff": "The public form asks only the minimum-age tick: the notice in force does not describe the volunteers' age, sex and city yet. “Tasks” says what to approve.",
+        "profileOff": "The public form asks only the minimum-age tick: the notice in force does not describe the volunteers' date of birth, sex and city yet. “Tasks” says what to approve.",
         "minorsOff": "Volunteers under 18 are not taken yet: the notice or the agreement in force does not describe minors (“Tasks” says what to approve)."
       },
       "switchOn": "Take volunteers on the page",
@@ -4821,8 +4821,11 @@
         "addTitle": "Add a volunteer by hand",
         "add": "Add the volunteer",
         "adding": "Adding…",
-        "age": "Age",
-        "ageHelp": "Optional. Whole years; at least {age} old.",
+        "birthDate": "Date of birth",
+        "birthDateHelp": "Optional. At least {age} old on the day of the event.",
+        "birthDateKept": "The row has only the age: {age}. Write the date of birth to replace it; left empty, the age stays.",
+        "birthDateTooYoung": "Volunteers must be at least {age} old on the day of the event.",
+        "birthDateValue": "Date of birth: {date}",
         "sex": "Sex",
         "sexNone": "Not given",
         "city": "City",
@@ -4838,7 +4841,7 @@
         "guardianEmail": "Parent's or guardian's email",
         "guardianHelp": "Only for a volunteer under 18. Without an email, the consent is taken on paper, with the organizers.",
         "guardianValue": "Parent or guardian: {name}",
-        "ageHelpMinors": "Optional. Whole years, at least {age}. Under 18, add the parent or guardian below."
+        "birthDateHelpMinors": "Optional. At least {age} old on the day of the event. Under 18, add the parent or guardian below."
       },
       "states": {
         "REGISTERED": "Registered",
@@ -4895,6 +4898,7 @@
         "note": "Note",
         "signedUpAt": "Date",
         "age": "Age",
+        "dateOfBirth": "Date of birth",
         "sex": "Sex",
         "city": "City",
         "volunteeredBefore": "Volunteered before",
@@ -4909,6 +4913,10 @@
       "shirts": {
         "label": "We give volunteers T-shirts",
         "help": "Ticked, the public form asks for the T-shirt size and you see it on each row. Unticked, the form asks for no size."
+      },
+      "counts": {
+        "label": "Show publicly how many volunteers are still needed",
+        "help": "Ticked, the volunteers' page tells each role how many more people it needs. Unticked, it only says the role still has room; here you always see the numbers."
       },
       "chips": {
         "before": "Volunteered before",
@@ -11365,6 +11373,8 @@
       "badgeColoursUnchanged": "Nothing to change in the colours.",
       "volunteersShirtsOn": "The public form now asks for the T-shirt size.",
       "volunteersShirtsOff": "The public form no longer asks for the T-shirt size. Sizes already given are kept.",
+      "volunteersCountsOn": "The volunteers' page now says how many more people each role needs.",
+      "volunteersCountsOff": "The volunteers' page no longer says how many more people each role needs, only that it still has room.",
       "volunteerGuardianRequested": "The link to the parent is on its way by email.",
       "volunteerGuardianRecorded": "The parent's consent is recorded as signed on paper."
     }

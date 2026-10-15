@@ -14,6 +14,7 @@ import { parseInterestSince } from "@/modules/registrations/interest-box";
 import { readFormDraft } from "@/modules/registrations/form-draft";
 import { formEventBySlug } from "@/modules/resilience/event-copy";
 import { readOrWhileAway } from "@/modules/resilience/optional-read";
+import { volunteerEventDay } from "@/modules/volunteers/domain/volunteer";
 import { readVolunteerOffer } from "@/modules/volunteers/offer";
 import VolunteerBox from "@/modules/volunteers/ui/VolunteerBox";
 import { parseVolunteerBoxes, parseVolunteerOutcome, type VolunteerTyped } from "@/modules/volunteers/ui/volunteer-box";
@@ -109,6 +110,9 @@ export default async function EventVolunteersPage({ params, searchParams }: Prop
         slug={slug}
         roles={offer.roles}
         shirts={offer.shirts}
+        showCounts={offer.showCounts}
+        // The day the date of birth is counted on (§773): the gun's, else the event's, in the event's own zone.
+        eventDay={volunteerEventDay(event, now)}
         profile={offer.profile}
         minors={offer.minors}
         outcome={outcome}

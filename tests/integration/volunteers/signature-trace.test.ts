@@ -16,9 +16,13 @@ import { roleDescription } from "../../helpers/role-description";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 import { drawnRuns } from "../../helpers/pdf-drawn";
 
+import { bornAged } from "../../helpers/volunteer-birth";
+
 const NOW = new Date("2026-10-13T10:00:00.000Z");
 const LATER = new Date("2026-10-14T10:00:00.000Z");
 const DAY = 24 * 60 * 60_000;
+/** A date of birth that makes a person `years` old on the event's day (§773): the last day of being so. */
+const aged = (years: number) => bornAged(years, new Date(NOW.getTime() + 30 * DAY));
 const RENDERED = new Date(NOW.getTime() - 60_000).toISOString();
 const VOLUNTEER_TRACE = { ip: "203.0.113.20", userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 Safari/604.1" };
 const GUARDIAN_TRACE = { ip: "2001:db8::7", userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Gecko/20100101 Firefox/127.0" };
@@ -80,14 +84,14 @@ describe("§771 the trace of the electronic signature on the volunteer agreement
     locale: "ro",
     consent: true,
     agreement: true,
-    age: "30",
+    birthDate: aged(30),
     sex: "FEMALE",
     city: "Brașov",
     renderedAt: RENDERED,
     ...extra,
   });
   const minorForm = (roleId: string) =>
-    form(roleId, { name: "Dan Tânărul", email: "dan@example.test", age: "15", sex: "MALE", guardianName: "Maria Popescu", guardianEmail: "maria.p@example.test", guardianAware: true });
+    form(roleId, { name: "Dan Tânărul", email: "dan@example.test", birthDate: aged(15), sex: "MALE", guardianName: "Maria Popescu", guardianEmail: "maria.p@example.test", guardianAware: true });
 
   const row = async (id: string) => (await db.select().from(eventVolunteers).where(eq(eventVolunteers.id, id)))[0];
   const only = async () => (await db.select().from(eventVolunteers))[0];
@@ -103,7 +107,7 @@ describe("§771 the trace of the electronic signature on the volunteer agreement
       await changeVolunteer(
         db,
         admin,
-        { kind: "add", eventId, fields: { roleIds: [roleId], assignedRoleId: roleId, name: "Ion Popescu", email: "ion@example.test", phone: "+40712345679", note: "", age: "40", ...extra } },
+        { kind: "add", eventId, fields: { roleIds: [roleId], assignedRoleId: roleId, name: "Ion Popescu", email: "ion@example.test", phone: "+40712345679", note: "", birthDate: aged(40), ...extra } },
         NOW,
       )
     ).volunteer.id;
@@ -158,7 +162,7 @@ describe("§771 the trace of the electronic signature on the volunteer agreement
     });
 
     // Another person under eighteen, whose guardian signs the sheet at the desk.
-    const other = await handEntered(event.id, role.id, { name: "Dana Tânăra", email: "dana@example.test", age: "16", guardianName: "Elena Popescu", guardianEmail: "elena@example.test" });
+    const other = await handEntered(event.id, role.id, { name: "Dana Tânăra", email: "dana@example.test", birthDate: aged(16), guardianName: "Elena Popescu", guardianEmail: "elena@example.test" });
     await recordPaperVolunteerGuardian(db, admin, { eventId: event.id, id: other, printed: await printedFor(other) }, NOW);
     expect(await row(other)).toMatchObject({ guardianMethod: "PAPER", guardianIp: null, guardianUserAgent: null });
   });
@@ -214,7 +218,7 @@ describe("§771 the trace of the electronic signature on the volunteer agreement
     await changeVolunteer(
       db,
       admin,
-      { kind: "edit", eventId: event.id, id: minor.id, fields: { roleIds: [role.id], assignedRoleId: role.id, name: "Dan Tânărul", email: "dan@example.test", phone: "+40712345678", note: "", age: "19" } },
+      { kind: "edit", eventId: event.id, id: minor.id, fields: { roleIds: [role.id], assignedRoleId: role.id, name: "Dan Tânărul", email: "dan@example.test", phone: "+40712345678", note: "", birthDate: aged(19) } },
       LATER,
     );
     expect(await row(minor.id)).toMatchObject({

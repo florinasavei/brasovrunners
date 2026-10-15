@@ -449,14 +449,18 @@ describe("§754 the volunteers' public sign-up", () => {
     await seedAssigned(event.id, water.id, "dat@example.test");
     const read = await readPublicVolunteerRoles(db, event.id);
     expect(read.acceptsVolunteers).toBe(true);
+    // §773: a public number is the club's tick, off until ticked — the read carries it, the counts stay in the roles.
+    expect(read.showCounts).toBe(false);
     expect(read.roles.map((role) => [role.nameRo, role.needed, role.taken, role.free])).toEqual([
       ["Punct de apă", 2, 1, 1],
       ["Sosire", 1, 0, 1],
     ]);
     expect(JSON.stringify(read)).not.toMatch(/Maria|maria@|\+4071|dat@/);
     // Off: no roles are handed out at all.
+    await db.update(events).set({ volunteersShowCounts: true });
+    expect((await readPublicVolunteerRoles(db, event.id)).showCounts).toBe(true);
     await db.update(events).set({ acceptsVolunteers: false });
-    expect(await readPublicVolunteerRoles(db, event.id)).toEqual({ acceptsVolunteers: false, shirts: false, roles: [] });
+    expect(await readPublicVolunteerRoles(db, event.id)).toEqual({ acceptsVolunteers: false, shirts: false, showCounts: false, roles: [] });
   });
 
   it("lists each volunteer with the role given and the roles chosen, in the club's order", async () => {

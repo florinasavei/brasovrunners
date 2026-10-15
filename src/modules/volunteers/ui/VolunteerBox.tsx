@@ -24,10 +24,13 @@ import { FOLD_GLYPH_INLINE_SX } from "@/shared/ui/disclosure";
 import LegalLink from "@/shared/ui/LegalLink";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import { CLUB_NAME } from "@/theme/brand";
-import { yearsPhrase } from "@/modules/registrations/domain/age";
+import { ageOn, yearsPhrase } from "@/modules/registrations/domain/age";
+import BirthDateField from "@/modules/registrations/ui/BirthDateField";
+import { readTypedDate } from "@/shared/forms/pickers/wall-values";
 import {
+  earliestVolunteerBirthDate,
+  latestVolunteerBirthDate,
   VOLUNTEER_ADULT_AGE,
-  VOLUNTEER_AGE_MAX,
   VOLUNTEER_CITY_MAX,
   VOLUNTEER_GUARDIAN_NAME_MAX,
   VOLUNTEER_MESSAGE_MAX,
@@ -59,8 +62,8 @@ import { VOLUNTEER_BOX_ID, type VolunteerBox as BoxName, type VolunteerOutcome, 
  * action asks again.
  *
  * What the person says about themselves (§765; the owner, 2026-10-14): while the notice in force names it (`profile`),
- * the form asks «Vârsta» (the registration's own number-in-years habit, at least 14 since §768 — the tick «Am cel puțin
- * 18 ani» is gone, the age answers it), «Sex» (the registration form's own `SexField`, its words), «Orașul» (its city
+ * the form asks «Data nașterii» (§773, instead of «Vârsta»: the registration form's own `BirthDateField`, the age on the
+ * event's day at least 14 since §768 — the tick «Am cel puțin 18 ani» is gone, the date answers it), «Sex» (the registration form's own `SexField`, its words), «Orașul» (its city
  * box's words), the optional ticks «Am mai fost voluntar în trecut la alte curse» and «Fac parte din grupul {club}» (the
  * club's name from `CLUB_NAME`, as the registration form's member tick draws it — the person's claim, checked against
  * nothing) and, only while the event gives T-shirts (`shirts`), «Mărimea tricoului» — the kit's sizes. While it does not,
@@ -78,6 +81,8 @@ export default async function VolunteerBox({
   slug,
   roles,
   shirts,
+  showCounts,
+  eventDay,
   profile,
   minors,
   outcome,
@@ -92,6 +97,13 @@ export default async function VolunteerBox({
   roles: readonly PublicVolunteerRole[];
   /** «Oferim tricouri voluntarilor» is on for this event (§765): the form asks «Mărimea tricoului». */
   shirts: boolean;
+  /**
+   * «Arată public câți voluntari mai sunt necesari» is on for this event (§773): each role says how many people it still needs. Off, it says
+   * only that it still takes people — the one flag every public number about volunteers asks (`VolunteerOffer.showCounts`).
+   */
+  showCounts: boolean;
+  /** The day the date of birth is counted on, `YYYY-MM-DD` (`volunteerEventDay`, §773): the gun's, else the event's. */
+  eventDay: string;
   /** The notice in force names what a volunteer says about themselves (§765): the form asks it — else §758's tick «Am cel puțin 18 ani». */
   profile: boolean;
   /** The club may take a person under eighteen (§768): the notice and the agreement in force both describe minors — the form draws the guardian's block. */
@@ -113,7 +125,8 @@ export default async function VolunteerBox({
   const roleName = (role: PublicVolunteerRole) => (locale === "en" ? role.nameEn : role.nameRo);
   const roleDoc = (role: PublicVolunteerRole) => (locale === "en" ? role.descriptionEnJson : role.descriptionRoJson);
   const roleWords = (role: PublicVolunteerRole) => (locale === "en" ? role.descriptionEn : role.descriptionRo);
-  const needs = (role: PublicVolunteerRole) => t(`volunteers.needs.${countForm(role.free, locale)}`, { count: role.free });
+  // «mai sunt necesare 10 persoane» only while the club ticked «Arată public câți voluntari mai sunt necesari»; else «mai sunt locuri» (§773).
+  const needs = (role: PublicVolunteerRole) => (showCounts ? t(`volunteers.needs.${countForm(role.free, locale)}`, { count: role.free }) : t("volunteers.needs.open"));
   const countrySearchWords = {
     search: tForm("countrySearch.search"),
     noMatch: tForm("countrySearch.noMatch"),
@@ -127,14 +140,26 @@ export default async function VolunteerBox({
   // The roles ticked before a refusal (§142), still offered: a role that filled meanwhile is simply not drawn.
   const ticked = new Set((typed.roleIds ?? "").split(",").filter((id) => roles.some((role) => role.id === id)));
   /*
-    «Vârsta» says one of three sentences after a refusal: a number under eighteen, while the club cannot take minors yet,
-    says so (§768); a number below the minimum (fourteen) says «cel puțin 14 ani»; anything else is «scrie vârsta».
+    «Data nașterii» says one of three sentences after a refusal (§773, the age's three of §768): a date that gives under eighteen on the
+    event's day, while the club cannot take minors yet, says so; one that gives under the minimum (fourteen), or a day after the event,
+    says «cel puțin 14 ani»; anything else — no date, half a date, a century ago — is the registration form's «Scrie data ca zi, lună, an».
   */
-  const typedAge = Number((typed.age ?? "").trim());
-  const ageDigits = /^\d{1,3}$/.test((typed.age ?? "").trim());
-  const ageSentence = !ageDigits ? "age" : typedAge < VOLUNTEER_ADULT_AGE && !minors ? "ageMinors" : typedAge < VOLUNTEER_MINIMUM_AGE ? "ageMinimum" : "age";
+  const typedDate = readTypedDate(typed.birthDate ?? "");
+  const typedAge = typedDate === "" ? null : ageOn(typedDate, eventDay);
+  const birthSentence =
+    typedAge === null
+      ? "birthDate"
+      : typedAge < VOLUNTEER_MINIMUM_AGE
+        ? "birthDateMinimum"
+        : typedAge < VOLUNTEER_ADULT_AGE && !minors
+          ? "birthDateMinors"
+          : "birthDate";
   /** A refusal's sentence for one box, in the form's own words (`{age}` is the minimum's phrase, §758's tick says eighteen). */
-  const refusal = (name: BoxName) => t(`volunteers.errors.${name === "age" ? ageSentence : name}`, { age: name === "adult" ? adultAge : age });
+  const refusal = (name: BoxName) => {
+    // «Scrie data ca zi, lună, an» is the registration form's own sentence, the box's live one too (`tForm`): one set of words for one rule.
+    if (name === "birthDate" && birthSentence === "birthDate") return tForm("birthDateUnreadable");
+    return t(`volunteers.errors.${name === "birthDate" ? birthSentence : name}`, { age: name === "adult" ? adultAge : age });
+  };
 
   return (
     <Box id={VOLUNTEER_BOX_ID} component="section" aria-label={t("volunteers.title")} data-testid="volunteer-box" sx={{ scrollMarginTop: 16 }}>
@@ -196,7 +221,7 @@ export default async function VolunteerBox({
             <Box
               component="fieldset"
               id={fieldId("roleIds")}
-              aria-describedby={[`${fieldId("roleIds")}-help`, invalid.has("roleIds") ? `${fieldId("roleIds")}-error` : null].filter(Boolean).join(" ")}
+              aria-describedby={[`${fieldId("roleIds")}-help`, `${fieldId("roleIds")}-note`, invalid.has("roleIds") ? `${fieldId("roleIds")}-error` : null].filter(Boolean).join(" ")}
               sx={{ border: 0, m: 0, p: 0, minWidth: 0 }}
               data-testid="volunteer-roles"
             >
@@ -237,6 +262,14 @@ export default async function VolunteerBox({
                   );
                 })}
               </Stack>
+              {/*
+                The kinder note (§773; the owner, 2026-10-14: «Și pusă o notă mai drăguță»), right under the roles' list: the person may be
+                asked to cover another responsibility, thanked, and told they will be contacted. The short instruction above the roles stays
+                short; this one is a caption in the form's own style (`body2`, secondary), read with the group.
+              */}
+              <Typography id={`${fieldId("roleIds")}-note`} variant="body2" color="text.secondary" sx={{ mt: 1 }} data-testid="volunteer-roles-note">
+                {t("volunteers.choicesNote")}
+              </Typography>
             </Box>
 
             <TextField
@@ -285,19 +318,32 @@ export default async function VolunteerBox({
 
             {profile && (
               <Stack spacing={2} data-testid="volunteer-profile">
-                {/* «Vârsta» and «Sex» (§765): the age in whole years — at least the platform's minimum, so the tick «Am cel puțin 18 ani» is gone — and the registration form's own sex box. */}
+                {/*
+                  «Data nașterii» and «Sex» (§765, §773; the owner, 2026-10-14: «în loc de vârstă vreau să treacă data nașterii»): the registration
+                  form's own date box — `BirthDateField`, typed day first with its mask and, with scripts off, a plain text box the server reads —
+                  whose age on the event's day is at least the platform's minimum, so the tick «Am cel puțin 18 ani» is gone; and the
+                  registration form's own sex box.
+                */}
                 <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-                  <TextField
-                    id={fieldId("age")}
-                    name="age"
-                    label={t("volunteers.profile.age")}
-                    helperText={invalid.has("age") ? refusal("age") : minors ? t("volunteers.profile.ageHelpMinors", { age }) : t("volunteers.profile.ageHelp", { age: adultAge })}
+                  <BirthDateField
+                    id={fieldId("birthDate")}
+                    name="birthDate"
+                    label={tForm("birthDate")}
+                    defaultValue={typed.birthDate ?? ""}
                     required
                     fullWidth
-                    autoComplete="off"
-                    defaultValue={typed.age}
-                    error={invalid.has("age")}
-                    slotProps={{ htmlInput: { inputMode: "numeric", pattern: "[0-9]*", maxLength: String(VOLUNTEER_AGE_MAX).length } }}
+                    autoComplete="bday"
+                    error={invalid.has("birthDate")}
+                    errorText={refusal("birthDate")}
+                    help={minors ? t("volunteers.profile.birthDateHelpMinors", { age }) : t("volunteers.profile.birthDateHelp", { age: adultAge })}
+                    min={earliestVolunteerBirthDate(eventDay)}
+                    max={latestVolunteerBirthDate(eventDay)}
+                    eventDay={eventDay}
+                    locale={locale}
+                    echoTemplate={tForm("birthDateEcho", { date: "{date}", age: "{age}" })}
+                    placeholder={tForm("birthDatePlaceholder")}
+                    unreadable={tForm("birthDateUnreadable")}
+                    tooYoung={t("volunteers.errors.birthDateMinimum", { age })}
                   />
                   <SexField
                     id={fieldId("sex")}
@@ -317,7 +363,13 @@ export default async function VolunteerBox({
                   the server refuses a minor's post without them either way (`refuseGuardianBoxes`).
                 */}
                 {minors && (
-                  <GuardianFields ageInputId={fieldId("age")} minimumAge={VOLUNTEER_MINIMUM_AGE} adultAge={VOLUNTEER_ADULT_AGE} startOpen={ageDigits && typedAge >= VOLUNTEER_MINIMUM_AGE && typedAge < VOLUNTEER_ADULT_AGE}>
+                  <GuardianFields
+                    birthDateId={fieldId("birthDate")}
+                    eventDay={eventDay}
+                    minimumAge={VOLUNTEER_MINIMUM_AGE}
+                    adultAge={VOLUNTEER_ADULT_AGE}
+                    startOpen={typedAge !== null && typedAge >= VOLUNTEER_MINIMUM_AGE && typedAge < VOLUNTEER_ADULT_AGE}
+                  >
                     <Box component="fieldset" sx={{ border: 0, m: 0, p: 0, minWidth: 0 }} data-testid="volunteer-guardian">
                       <Typography component="legend" sx={{ fontWeight: 600, p: 0 }}>
                         <FamilyRestroomIcon aria-hidden sx={FOLD_GLYPH_INLINE_SX} />

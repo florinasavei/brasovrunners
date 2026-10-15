@@ -19,6 +19,7 @@ import {
   requestVolunteerGuardianAction,
   setVolunteerStateAction,
   switchVolunteersAction,
+  switchVolunteersCountsAction,
   switchVolunteersShirtsAction,
 } from "@/app/[locale]/admin/events/[id]/volunteer-actions";
 import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
@@ -30,6 +31,7 @@ import { yearsPhrase } from "@/modules/registrations/domain/age";
 import { shirtSizeShown, SHIRT_SIZES } from "@/modules/registrations/domain/kit";
 import { SEX_CHOICES } from "@/modules/registrations/domain/sex";
 import { formatPhone } from "@/modules/registrations/phone";
+import { shownTypedDate } from "@/shared/forms/pickers/wall-values";
 import TranslateAllButton from "@/modules/translate/ui/TranslateAllButton";
 import { badgeRoleText } from "../badges/badge-design";
 import RoleColourFields from "../badges/ui/RoleColourFields";
@@ -47,7 +49,6 @@ import Panel from "@/shared/ui/Panel";
 import StatusChip from "@/shared/ui/StatusChip";
 import type { StatusGlyphName } from "@/shared/ui/status-glyphs";
 import {
-  VOLUNTEER_AGE_MAX,
   VOLUNTEER_CITY_MAX,
   VOLUNTEER_GUARDIAN_NAME_MAX,
   VOLUNTEER_MINIMUM_AGE,
@@ -60,15 +61,18 @@ import {
   agreementStandingOf,
   agreementStillNamesRole,
   descriptionHead,
+  earliestVolunteerBirthDate,
   guardianSharesAddress,
   guardianStandingOf,
   isVolunteerMinor,
+  latestVolunteerBirthDate,
   type RoleStanding,
   type VolunteerAgreementStanding,
   type VolunteerOfferClosed,
   type VolunteerState,
 } from "../domain/volunteer";
 import { ROLE_FORM_COLOUR_BOXES, type VolunteerItem, type VolunteerRole } from "../volunteers";
+import VolunteerBirthDateField from "./VolunteerBirthDateField";
 import { INLINE_TAP_TARGET } from "@/shared/ui/tap-target";
 import { DISCLOSURE_OPEN_ARROW, DISCLOSURE_SUMMARY_SX, FOLD_GLYPH_INLINE_SX } from "@/shared/ui/disclosure";
 
@@ -124,6 +128,10 @@ type Props = {
   acceptsVolunteers: boolean;
   /** «Oferim tricouri voluntarilor», as saved (§765): the people's rows show their size, and the entry's box asks it. */
   volunteersShirts: boolean;
+  /** «Arată public câți voluntari mai sunt necesari», as saved (§773): the volunteers' page says how many a role needs only while it is on; the card always does. */
+  volunteersShowCounts: boolean;
+  /** The day the entry's date of birth is counted on, `YYYY-MM-DD` (§773, `volunteerEventDay`): the gun's, else the event's. */
+  eventDay: string;
   /** The notice in force names what a volunteer says about themselves (§765): the public form asks it — else it is §758's tick. */
   profileDescribed: boolean;
   /**
@@ -175,6 +183,8 @@ export default async function VolunteersCard({
   eventId,
   acceptsVolunteers,
   volunteersShirts,
+  volunteersShowCounts,
+  eventDay,
   profileDescribed,
   minorsOpen,
   offerClosed,
@@ -189,6 +199,8 @@ export default async function VolunteersCard({
   error,
 }: Props) {
   const t = await getTranslations("Admin");
+  // The registration form's own words for its date-of-birth box (§773): the echo, the placeholder, «Scrie data ca zi, lună, an».
+  const tReg = await getTranslations("Registration");
   const words = await confirmWords();
   // The editor's own control names, for the role's description (§765).
   const rich = richTextEditorLabels(await getTranslations("Admin.richText"));
@@ -227,7 +239,7 @@ export default async function VolunteersCard({
     email: t("volunteers.person.email"),
     phone: t("volunteers.person.phone"),
     note: t("volunteers.person.note"),
-    age: t("volunteers.person.age"),
+    birthDate: t("volunteers.person.birthDate"),
     sex: t("volunteers.person.sex"),
     city: t("volunteers.person.city"),
     shirtSize: t("volunteers.person.shirt"),
@@ -372,14 +384,26 @@ export default async function VolunteersCard({
       {profileDescribed && (
         <>
         <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5}>
-          <RecallField
-            name="age"
-            label={t("volunteers.person.age")}
-            helperText={t(minorsOpen ? "volunteers.person.ageHelpMinors" : "volunteers.person.ageHelp", { age: yearsPhrase(VOLUNTEER_MINIMUM_AGE, locale) })}
-            defaultValue={person?.age !== null && person?.age !== undefined ? String(person.age) : ""}
-            size="small"
-            fullWidth
-            slotProps={{ htmlInput: { inputMode: "numeric", pattern: "[0-9]*", maxLength: String(VOLUNTEER_AGE_MAX).length } }}
+          {/* «Data nașterii» (§773, instead of «Vârsta»): the registration form's own box, its mask and its echo, counted on the event's day. A row from
+              before the date has an age and no date: the box is empty, and the line says the age it keeps until a date is typed. */}
+          <VolunteerBirthDateField
+            label={t("volunteers.person.birthDate")}
+            defaultValue={person?.dateOfBirth ?? ""}
+            help={
+              person && person.age !== null && person.dateOfBirth === null
+                ? t("volunteers.person.birthDateKept", { age: yearsPhrase(person.age, locale) })
+                : t(minorsOpen ? "volunteers.person.birthDateHelpMinors" : "volunteers.person.birthDateHelp", { age: yearsPhrase(VOLUNTEER_MINIMUM_AGE, locale) })
+            }
+            min={earliestVolunteerBirthDate(eventDay)}
+            max={latestVolunteerBirthDate(eventDay)}
+            eventDay={eventDay}
+            locale={locale}
+            words={{
+              echoTemplate: tReg("birthDateEcho", { date: "{date}", age: "{age}" }),
+              placeholder: tReg("birthDatePlaceholder"),
+              unreadable: tReg("birthDateUnreadable"),
+              tooYoung: t("volunteers.person.birthDateTooYoung", { age: yearsPhrase(VOLUNTEER_MINIMUM_AGE, locale) }),
+            }}
           />
           <RecallField
             name="sex"
@@ -809,7 +833,8 @@ export default async function VolunteersCard({
       {(() => {
         const size = shirtSizeShown(volunteersShirts, person.shirtSize);
         const facts = [
-          person.age !== null ? t("volunteers.person.ageValue", { age: String(person.age) }) : null,
+          // «17 ani (12.03.2009)» (§773): the age on the event's day and the date it came from; a row from before the date shows the age alone.
+          person.age !== null ? `${yearsPhrase(person.age, locale)}${person.dateOfBirth !== null ? ` (${shownTypedDate(person.dateOfBirth)})` : ""}` : null,
           person.sex !== null ? t(`registrations.answers.sex.${person.sex}`) : null,
           person.city !== null ? t("volunteers.person.cityValue", { city: person.city }) : null,
           size !== null ? t("volunteers.person.shirtValue", { size }) : null,
@@ -1089,7 +1114,28 @@ export default async function VolunteersCard({
               {t("volunteers.shirts.help")}
             </Typography>
           </Box>
-          {/* Which form the public page draws (§765): the one that asks the person's age, sex and city only while the notice in force names them. */}
+          {/* «Arată public câți voluntari mai sunt necesari» (§773; the §634 rule on the waiting list's count): the same tick as the two above — a submit
+              drawn as the checkbox that posts the state it wants. Off, the volunteers' page says only that a role still takes people, never how many;
+              the numbers on this card are the club's own and are always shown. */}
+          <Box component="form" action={switchVolunteersCountsAction} data-testid="volunteer-counts-form">
+            {hidden}
+            <input type="hidden" name="on" value={volunteersShowCounts ? "0" : "1"} />
+            <GlyphButton
+              type="submit"
+              icon={volunteersShowCounts ? "tickOn" : "tickOff"}
+              role="checkbox"
+              aria-checked={volunteersShowCounts}
+              color={volunteersShowCounts ? "success" : "inherit"}
+              sx={TICK_ROW_SX}
+              data-testid="volunteer-counts-tick"
+            >
+              {t("volunteers.counts.label")}
+            </GlyphButton>
+            <Typography variant="caption" color="text.secondary" sx={{ display: "block", pl: 0.5 }}>
+              {t("volunteers.counts.help")}
+            </Typography>
+          </Box>
+          {/* Which form the public page draws (§765): the one that asks the person's date of birth, sex and city only while the notice in force names them. */}
           {!profileDescribed && (
             <Typography variant="body2" color="text.secondary" data-testid="volunteer-profile-off">
               {t("volunteers.offer.profileOff")}

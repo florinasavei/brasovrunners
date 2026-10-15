@@ -509,6 +509,15 @@ export const events = pgTable(
     volunteersShirts: boolean("volunteers_shirts").notNull().default(false),
 
     /**
+     * «Arată public câți voluntari mai sunt necesari» (§773, the §634 rule on the volunteers' count; the owner, 2026-10-14:
+     * «vreau să bifez dacă să afișez sau nu numărătoarea voluntarilor — știi că am mai avut probleme din astea»): a public
+     * number is the club's choice. Off by default — the volunteers' page then says only that a role still takes people,
+     * never how many; the backoffice always shows the counts. Ticked in the «Voluntari» card's own form: the event's save
+     * never writes it, the event's file does not carry it, and a copy of an event never inherits it.
+     */
+    volunteersShowCounts: boolean("volunteers_show_counts").notNull().default(false),
+
+    /**
      * The two facts that stopped being free text in migration `0018`.
      *
      * Null means the club has not said, and the page then omits the row rather than guessing —
