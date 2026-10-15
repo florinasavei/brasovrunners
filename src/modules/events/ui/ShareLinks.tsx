@@ -14,6 +14,7 @@ import CalendarAddress from "./CalendarAddress";
 import { paletteWash } from "@/modules/feedback/ui/branch-glyph";
 import { facebookShareUrl, whatsappShareUrl } from "../share-links";
 import { CALENDAR_TARGET_NAMESPACE, CALENDAR_TARGETS, calendarTargetMark, type CalendarTarget } from "./calendar-targets";
+import CalendarFoldClose from "./CalendarFoldClose";
 import InstagramShareButton from "./InstagramShareButton";
 import NativeShareButton from "./NativeShareButton";
 import { SHARE_PILL_SX, SHARE_ROW_GAP } from "./share-pill";
@@ -32,6 +33,12 @@ import { SHARE_PILL_SX, SHARE_ROW_GAP } from "./share-pill";
  * summary is the pill — the calendar's glyph, the words, a chevron that turns — and whose body holds the
  * five doors on one wrapping line, the file's note and the file's address. No script: it opens with
  * the click, the Enter key and the space bar, and with scripts off.
+ *
+ * One row (§778, amending §767 and §772; the owner, 2026-10-15: «These should be inline to save
+ * space»): the caption, the networks and, last, the calendar pill are one wrapping line of the same small
+ * pill, and the fold's body is a dropdown panel anchored under the pill, out of the flow, so opening it
+ * pushes nothing. With scripts off the panel is the same CSS and opens and closes by the pill; with scripts
+ * `CalendarFoldClose` adds Escape and a press outside.
  *
  * The network buttons are anchors rendered here, on the server, with the event's absolute
  * address built from `APP_BASE_URL` (`../share-links.ts`): a plain `<a target="_blank">` is
@@ -108,6 +115,31 @@ const CALENDAR_PILL_SX = {
   "details[open] > & [data-chevron]": { transform: "rotate(180deg)" },
 } as const;
 
+/** The calendar fold's id: `CalendarFoldClose` finds the fold by it. */
+const CALENDAR_FOLD_ID = "event-calendar";
+
+/**
+ * The calendar fold's body as a dropdown panel (§778): out of the flow, so opening it never moves the pills
+ * (the row, `position: relative`, is its containing block). `top` stays auto — the panel sits where it would
+ * have flowed, right under the summary, whichever line of the wrapped row the pill is on — and `left: 0` with
+ * a `max-width` of the row's own width keeps it inside the viewport at 320 pixels. Its own surface, border
+ * and shadow from theme tokens, above what follows it. A plain object (`AGENTS.md` §14.1).
+ */
+const CALENDAR_PANEL_SX = {
+  position: "absolute",
+  left: 0,
+  zIndex: 3,
+  mt: SHARE_ROW_GAP,
+  width: "max-content",
+  maxWidth: "min(26rem, 100%)",
+  p: 1.5,
+  bgcolor: "background.paper",
+  border: 1,
+  borderColor: "divider",
+  borderRadius: 2,
+  boxShadow: 3,
+} as const;
+
 export default async function ShareLinks({ url, title, imageHref, fileName, calendar, shareable = true }: Props) {
   const t = await getTranslations("Event");
   const doors = await getTranslations(CALENDAR_TARGET_NAMESPACE);
@@ -136,39 +168,46 @@ export default async function ShareLinks({ url, title, imageHref, fileName, cale
     </Typography>
   );
   return (
-    <Stack spacing={SHARE_ROW_GAP}>
+    /*
+      ONE wrapping row (§778, amending §767 and §772; the owner, 2026-10-15: «These should be inline to save
+      space»): the caption, the networks and, last, the calendar pill, all the same 28-pixel pill with its tap
+      band, eight pixels apart. The row is the containing block of the calendar panel, so the panel can never
+      reach past the row's own width — a phone's 320 included.
+    */
+    <Stack direction="row" data-testid="event-share-row" sx={{ position: "relative", flexWrap: "wrap", alignItems: "center", gap: SHARE_ROW_GAP }}>
       {shareable && (
-      <Stack direction="row" sx={{ flexWrap: "wrap", alignItems: "center", gap: SHARE_ROW_GAP }}>
-        {caption(t("share.title"))}
-        <NativeShareButton url={url} title={title} text={title} label={t("share.native")} />
-        {anchor(facebookShareUrl(url), t("share.facebook"), <SocialIcon network="facebook" size={18} />)}
-        {anchor(whatsappShareUrl(title, url), t("share.whatsapp"), <WhatsAppIcon aria-hidden="true" />)}
-        <InstagramShareButton
-          imageHref={imageHref}
-          fileName={fileName}
-          title={title}
-          url={url}
-          shareLabel={t("share.instagram")}
-          downloadLabel={t("share.instagramDownload")}
-        >
-          <SocialIcon network="instagram" size={18} />
-        </InstagramShareButton>
-      </Stack>
+        <>
+          {caption(t("share.title"))}
+          <NativeShareButton url={url} title={title} text={title} label={t("share.native")} />
+          {anchor(facebookShareUrl(url), t("share.facebook"), <SocialIcon network="facebook" size={18} />)}
+          {anchor(whatsappShareUrl(title, url), t("share.whatsapp"), <WhatsAppIcon aria-hidden="true" />)}
+          <InstagramShareButton
+            imageHref={imageHref}
+            fileName={fileName}
+            title={title}
+            url={url}
+            shareLabel={t("share.instagram")}
+            downloadLabel={t("share.instagramDownload")}
+          >
+            <SocialIcon network="instagram" size={18} />
+          </InstagramShareButton>
+        </>
       )}
       {calendar && (
         /*
-          «Adaugă în calendar» (§772): ONE pill, a native fold closed on arrival — the five doors (§767) are
-          its body, on one wrapping line under it, so the page shows a single small control where it showed
-          a row that ran off a phone's width. The pill is the `<summary>`: keyboard-reachable and
-          toggled by Enter and Space with no island, and it works with scripts off.
+          «Adaugă în calendar» (§772, §778): ONE pill, a native fold closed on arrival, the last pill of the row.
+          Its body is a dropdown panel under the row, out of the flow: opening it moves nothing. The pill is the
+          `<summary>`: keyboard-reachable and toggled by Enter and Space, and it works with scripts off — the
+          panel is plain CSS, so without scripts it opens the same way and closes by the pill; with scripts,
+          `CalendarFoldClose` adds Escape and a press outside.
         */
-        <Box component="details" data-testid="event-calendar">
+        <Box component="details" id={CALENDAR_FOLD_ID} data-testid="event-calendar">
           <Box component="summary" data-testid="event-calendar-toggle" sx={CALENDAR_PILL_SX}>
             <CalendarMonthIcon aria-hidden="true" />
             {t("share.calendarTitle")}
             <ExpandMoreIcon aria-hidden="true" data-chevron="" sx={{ transition: "transform 150ms" }} />
           </Box>
-          <Stack spacing={SHARE_ROW_GAP} sx={{ mt: SHARE_ROW_GAP }}>
+          <Stack spacing={SHARE_ROW_GAP} data-testid="event-calendar-panel" sx={CALENDAR_PANEL_SX}>
             <Stack direction="row" data-testid="event-calendar-doors" sx={{ flexWrap: "wrap", alignItems: "center", gap: SHARE_ROW_GAP }}>
               {CALENDAR_TARGETS.map((id) => {
                 const { href, open } = calendarDoor(calendar, id);
@@ -180,7 +219,7 @@ export default async function ShareLinks({ url, title, imageHref, fileName, cale
               {t("share.fileSnapshot")}
             </Typography>
             {/*
-              The file's address, to copy (§674): a fold inside the fold, closed. Google Calendar
+              The file's address, to copy (§674): a fold inside the panel, closed. Google Calendar
               on the web takes it by «Din URL»; and a person who deleted the event in Google learns why
               the file will not add it again for 30 days (Google keeps the deleted entry, by its UID, in
               the calendar's Bin — the UID is the event's on purpose, §107, §174).
@@ -202,6 +241,7 @@ export default async function ShareLinks({ url, title, imageHref, fileName, cale
               </Box>
             )}
           </Stack>
+          <CalendarFoldClose foldId={CALENDAR_FOLD_ID} />
         </Box>
       )}
     </Stack>
