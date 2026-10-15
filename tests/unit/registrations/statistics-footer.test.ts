@@ -121,7 +121,7 @@ describe("§NNN the footer's numbers, for a mixed fixture", () => {
       ["Feminin, 60+ ani", "1", "0", "0", "0"],
       ["Masculin, sub 18 ani", "1", "0", "1", "0"],
       ["Masculin, 30-39 ani", "2", "1", "1", "1"],
-      ["Fără categorie (lipsește sexul sau data nașterii)", "1", "0", "0", "0"],
+      ["Fără categorie", "1", "0", "0", "0"],
     ]);
     // The category rows add up to the total too.
     const sum = footer.slice(at + 1, at + 7).reduce((total, row) => total + Number(row[1]), 0);
@@ -199,6 +199,12 @@ describe("§NNN the footer's place and typing in the file", () => {
     // The category header's labels are bold too.
     const categoryRow = rows.findIndex((row) => row?.[0] === "Categorie") + 1;
     for (const column of "ABCDE") expect(isBoldStyle(buffer, cells.get(`${column}${categoryRow}`)!.style), `${column}${categoryRow}`).toBe(true);
+    // Every label with a count beside it (column A of each footer row after the title) is bold, not plain text.
+    for (let index = 12; index < rows.length; index += 1) {
+      const row = rows[index];
+      if (!row || row.length < 2) continue;
+      expect(isBoldStyle(buffer, cells.get(`A${index + 1}`)!.style), `A${index + 1} «${row[0]}» is bold`).toBe(true);
+    }
     // A count is not text: B13 is «Total», 9.
     expect(cells.get("B13")).toEqual({ type: undefined, style: cells.get("B13")!.style, value: "9" });
   });
@@ -318,7 +324,7 @@ describe("§NNN the footer's words, in both languages", () => {
     ]);
     expect(footer.map((row) => row[0])).toContain("Female, 18-29");
     expect(footer.map((row) => row[0])).toContain("Male, under 18");
-    expect(footer.map((row) => row[0])).toContain("No category (sex or date of birth missing)");
+    expect(footer.map((row) => row[0])).toContain("No category");
     expect(footer.find((row) => row[0] === "Category")).toEqual(["Category", "Total", "Confirmed (active)", CLUB_NAME, `${CLUB_NAME}, confirmed`]);
     // The same numbers as Română gives.
     expect(footer[1]).toEqual(["Total", "9"]);
@@ -337,7 +343,7 @@ describe("§NNN the footer's words, in both languages", () => {
         expect(word.length).toBeLessThanOrEqual(200);
       }
       expect(words.category).toBe("{sex}, {band}");
-      expect(words.notes).toHaveLength(3);
+      expect(words.notes).toHaveLength(4);
       expect(words.club).toBe(CLUB_NAME);
     }
     const keys = (catalogue: typeof ro) => Object.keys(catalogue.Admin.registrations.statistics).sort();
@@ -349,8 +355,9 @@ describe("§NNN the footer's words, in both languages", () => {
   it("tells the reader what «active» and «Brașov Runners» mean, in a sentence of its own", async () => {
     const { rows } = readSheet(await build(mixed(), RO));
     const last = rows.filter((row) => row?.[0]).map((row) => row![0]!);
-    expect(last.at(-3)).toBe("Activi sunt cei confirmați: au un loc și declarația semnată.");
-    expect(last.at(-2)).toContain(`«${CLUB_NAME}»`);
+    expect(last.at(-4)).toBe("Activi sunt cei confirmați: au un loc și declarația semnată.");
+    expect(last.at(-3)).toContain(`«${CLUB_NAME}»`);
+    expect(last.at(-2)).toContain("se numără toate stările");
     expect(last.at(-1)).toContain("Înscrierile de test nu se numără");
   });
 });

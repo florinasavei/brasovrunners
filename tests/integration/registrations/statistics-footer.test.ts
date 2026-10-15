@@ -175,7 +175,7 @@ describe("§NNN the footer, through the route", () => {
       ["Feminin, 60+ ani", "1", "0", "0", "0"],
       ["Masculin, sub 18 ani", "1", "0", "1", "0"],
       ["Masculin, 30-39 ani", "2", "1", "1", "1"],
-      ["Fără categorie (lipsește sexul sau data nașterii)", "1", "0", "0", "0"],
+      ["Fără categorie", "1", "0", "0", "0"],
       [],
       ["Activi sunt cei confirmați: au un loc și declarația semnată."],
     ]);
@@ -240,6 +240,23 @@ describe("§NNN the footer, through the route", () => {
     expect(labels).toContain("Alergarea de luni · 09.11.2099");
     expect(footer[labels.indexOf("Alergarea de luni · 02.11.2099") + 1]).toEqual(["Total", "1"]);
     expect(footer[labels.indexOf("Alergarea de luni · 09.11.2099") + 1]).toEqual(["Total", "2"]);
+  });
+
+  it("tells two events with one title on one day apart by their start time, and never prints an id", async () => {
+    const morning = await createRace("Alergarea dublă", "2099-11-02T08:00:00.000Z");
+    const noon = await createRace("Alergarea dublă", "2099-11-02T12:00:00.000Z");
+    const [untitled] = await db
+      .insert(events)
+      .values({ type: "RACE", surface: "ASPHALT", startsAt: new Date("2099-11-03T08:00:00.000Z"), timezone: "Europe/Bucharest", capacity: 10, registrationMode: "INTERNAL", editorialStatus: "PUBLISHED", publishedAt: new Date("2026-09-01T10:00:00.000Z") })
+      .returning();
+    await register(morning.id, "CONFIRMED", { sex: "FEMALE", age: 30 });
+    await register(noon.id, "CONFIRMED", { sex: "FEMALE", age: 30 });
+    await register(untitled.id, "CONFIRMED", { sex: "FEMALE", age: 30 });
+    const labels = footerOf(await download("eventId=all&format=xlsx")).map((row) => row[0]);
+    expect(labels).toContain("Alergarea dublă · 02.11.2099 · 10:00");
+    expect(labels).toContain("Alergarea dublă · 02.11.2099 · 14:00");
+    expect(labels).toContain("Eveniment fără titlu · 03.11.2099");
+    expect(labels.some((label) => label?.includes(untitled.id))).toBe(false);
   });
 
   it("is never in the CSV, whose file stays the rows", async () => {

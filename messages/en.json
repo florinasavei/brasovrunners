@@ -1141,9 +1141,10 @@
         "clubConfirmed": "{club}, confirmed",
         "notClub": "Others, not {club}",
         "allEvents": "All events",
+        "untitled": "Untitled event",
         "categoryHeader": "Category",
         "category": "{sex}, {band}",
-        "noCategory": "No category (sex or date of birth missing)",
+        "noCategory": "No category",
         "sexFemale": "Female",
         "sexMale": "Male",
         "bandUnder18": "under 18",
@@ -1154,7 +1155,8 @@
         "bandFrom60": "60+",
         "note1": "Active means confirmed: the person has a place and has signed the declaration.",
         "note2": "«{club}» counts the members on «Echipa», the people who ticked that they are members and the people who typed the club on the form.",
-        "note3": "The category is the sex and the age on the race day. Test registrations are not counted."
+        "note3": "«{club}», as «Total», counts every state; the ones who come are in «{club}, confirmed».",
+        "note4": "The category is the sex and the age on the race day; a row missing either is under «No category». Test registrations are not counted."
       },
       "auditActorParticipant": "the participant, from their own link",
       "audit": {

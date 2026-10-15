@@ -21,7 +21,7 @@ import {
 import { defaultEventFilter } from "@/modules/registrations/domain/default-event-filter";
 import { identityDocumentsOf } from "@/modules/registrations/domain/identity-documents";
 import { rowDeadlineOf } from "@/modules/registrations/domain/row-deadline";
-import { ageOnRaceDay, dayIn } from "@/modules/registrations/domain/age";
+import { ageOnRaceDay, dayIn, timeIn } from "@/modules/registrations/domain/age";
 import { exportNotesCell, type ExportNotesWords, listRegistrationNotesForExport } from "@/modules/registrations/notes";
 import { STAFF_ROLES, canKeepRegistrationNotes, canReadRegistrations } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
@@ -202,9 +202,22 @@ export async function GET(request: Request): Promise<Response> {
     const statsT = await getTranslations({ locale, namespace: "Admin" });
     const statistics = statisticsWordsFrom((key, values) => statsT(`registrations.statistics.${key}`, values), CLUB_NAME);
     // What an event is called in a file of several: its title and its day on its own clock.
-    const eventLabelOf = (row: (typeof rows)[number]) => {
+    // A title is the event's, in the registration's language; one with none is «Eveniment fără titlu», never its id.
+    const eventLabelBase = (row: (typeof rows)[number]) => {
       const [year, month, day] = dayIn(row.eventStartsAt, row.eventTimezone).split("-");
-      return `${row.eventTitle ?? row.eventId} · ${day}.${month}.${year}`;
+      return `${row.eventTitle ?? statistics.untitled} · ${day}.${month}.${year}`;
+    };
+    // Two events with one title on one day (two distances modelled as events) are told apart by their start time.
+    const eventsByLabel = new Map<string, Set<string>>();
+    for (const row of rows) {
+      const own = eventsByLabel.get(eventLabelBase(row)) ?? new Set<string>();
+      own.add(row.eventId);
+      eventsByLabel.set(eventLabelBase(row), own);
+    }
+    const eventLabelOf = (row: (typeof rows)[number]) => {
+      const base = eventLabelBase(row);
+      if ((eventsByLabel.get(base)?.size ?? 0) < 2) return base;
+      return `${base} · ${timeIn(row.eventStartsAt, row.eventTimezone)}`;
     };
     const workbook = await buildRegistrationsWorkbook(
       rows.map((row) => ({

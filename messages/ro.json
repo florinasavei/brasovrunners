@@ -1141,9 +1141,10 @@
         "clubConfirmed": "{club}, confirmați",
         "notClub": "Alții, nu {club}",
         "allEvents": "Toate evenimentele",
+        "untitled": "Eveniment fără titlu",
         "categoryHeader": "Categorie",
         "category": "{sex}, {band}",
-        "noCategory": "Fără categorie (lipsește sexul sau data nașterii)",
+        "noCategory": "Fără categorie",
         "sexFemale": "Feminin",
         "sexMale": "Masculin",
         "bandUnder18": "sub 18 ani",
@@ -1154,7 +1155,8 @@
         "bandFrom60": "60+ ani",
         "note1": "Activi sunt cei confirmați: au un loc și declarația semnată.",
         "note2": "La «{club}» se numără membrii din «Echipa», cei care au bifat că sunt membri și cei care au scris clubul în formular.",
-        "note3": "Categoria este sexul și vârsta la data cursei. Înscrierile de test nu se numără."
+        "note3": "La «{club}», ca la «Total», se numără toate stările; cei care vin sunt la «{club}, confirmați».",
+        "note4": "Categoria este sexul și vârsta la data cursei; cine nu are una dintre ele este la «Fără categorie». Înscrierile de test nu se numără."
       },
       "auditActorParticipant": "participantul, din linkul propriu",
       "audit": {

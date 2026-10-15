@@ -78,6 +78,8 @@ export type StatisticsWords = {
   clubConfirmed: string;
   notClub: string;
   allEvents: string;
+  /** An event with no title in the registration's language, in a file of several events. */
+  untitled: string;
   categoryHeader: string;
   /** «{sex}, {band}». */
   category: string;
@@ -108,6 +110,7 @@ export function statisticsWordsFrom(t: (key: string, values?: Record<string, str
     clubConfirmed: t("clubConfirmed", withClub),
     notClub: t("notClub", withClub),
     allEvents: t("allEvents"),
+    untitled: t("untitled"),
     categoryHeader: t("categoryHeader"),
     category: t("category", { sex: "{sex}", band: "{band}" }),
     noCategory: t("noCategory"),
@@ -120,7 +123,7 @@ export function statisticsWordsFrom(t: (key: string, values?: Record<string, str
       from50: t("bandFrom50"),
       from60: t("bandFrom60"),
     },
-    notes: [t("note1"), t("note2", withClub), t("note3")],
+    notes: [t("note1"), t("note2", withClub), t("note3", withClub), t("note4")],
   };
 }
 
@@ -244,7 +247,7 @@ const count = (value: number): StatisticsCell => ({ value, type: Number });
  * group — its counts in two columns (the label under the table's first column, the number beside it), a blank
  * row, then its categories as a small table of its own with a bold header — then the definitions.
  *
- * Labels are bold in the header's font, every count is a number cell (never text, so it sums and sorts), and the
+ * Every label (the title, the event, each count line and each category) is bold in the header's font, every count is a number cell (never text, so it sums and sorts), and the
  * block starts in the table's first column so it reads under the table rather than beside it. There is no
  * autofilter and no table on the sheet — the header is only kept on screen — so the empty row is what keeps a
  * sort of the list from dragging the footer: a spreadsheet's current region ends at the first empty row.
@@ -254,7 +257,7 @@ export function statisticsCells(blocks: readonly StatisticsBlock[], words: Stati
   blocks.forEach((block, index) => {
     if (index > 0 || block.label) rows.push([]);
     if (block.label) rows.push([bold(block.label)]);
-    const line = (label: string, value: number) => rows.push([text(label), count(value)]);
+    const line = (label: string, value: number) => rows.push([bold(label), count(value)]);
     const t = block.tally;
     line(words.total, t.total);
     line(words.confirmed, t.confirmed);
@@ -271,7 +274,7 @@ export function statisticsCells(blocks: readonly StatisticsBlock[], words: Stati
       rows.push([]);
       rows.push([bold(words.categoryHeader), bold(words.total), bold(words.confirmed), bold(words.club), bold(words.clubConfirmed)]);
       for (const category of block.categories) {
-        rows.push([text(category.label), count(category.tally.total), count(category.tally.confirmed), count(category.tally.club), count(category.tally.clubConfirmed)]);
+        rows.push([bold(category.label), count(category.tally.total), count(category.tally.confirmed), count(category.tally.club), count(category.tally.clubConfirmed)]);
       }
     }
   });

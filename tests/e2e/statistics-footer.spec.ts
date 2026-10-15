@@ -143,7 +143,7 @@ test.describe("§NNN «Statistici» under the registrations Excel", () => {
         ["Feminin, 18-29 ani", "2", "2", "1", "1"],
         ["Feminin, 50-59 ani", "1", "0", "0", "0"],
         ["Masculin, 30-39 ani", "2", "1", "1", "1"],
-        ["Fără categorie (lipsește sexul sau data nașterii)", "1", "0", "0", "0"],
+        ["Fără categorie", "1", "0", "0", "0"],
       ]);
 
       // The same file in English, from the same route the English page's button asks.
