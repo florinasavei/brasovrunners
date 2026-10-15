@@ -1747,7 +1747,7 @@
       "emailTransportTitle": "Change how emails leave?",
       "emailTransportBody": "From now on the chosen groups leave through Gmail, within the limit and with the pause set here; the rest through Mailgun. Emails already sent stay as they were.",
       "contactRecipientsTitle": "Change who receives the contact messages?",
-      "contactRecipientsBody": "Messages from the contact form reach the saved addresses from now on, and only them.",
+      "contactRecipientsBody": "Messages from the contact form reach the saved addresses from now on, and only them, by the road chosen.",
       "clubNoticesTitle": "Change who receives the club's copies?",
       "clubNoticesBody": "Signed declarations, confirmations and the copies of messages to participants — with their personal data — go from now on to the addresses saved, and only to them.",
       "calendarRsvpTitle": "Change where calendar answers go?",
@@ -4012,7 +4012,7 @@
         },
         "contactForm": {
           "title": "The contact form",
-          "todo": "Messages from “Write to us” reach the club through Gmail. Until the account is configured, the page shows the club's address instead of the form.",
+          "todo": "“Write to us” shows only once the club's Gmail account is configured; until then the page shows the club's address instead of the form.",
           "done": "The contact form sends to the club's mailbox.",
           "how": [
             "The club's Google account → Security → 2-Step Verification: on (without it Google gives no app passwords).",
@@ -6508,7 +6508,7 @@
         "aside": "They currently reach: {to} · CC: {cc} · BCC: {bcc}",
         "asideNoCopies": "They currently reach: {to} · no copies",
         "asideNobody": "nobody",
-        "intro": "Who receives the messages from “Write to us”; they leave through the club's Gmail, not Mailgun. Saved here, with no redeploy.",
+        "intro": "Who receives the messages from “Write to us” and how they leave. Saved here, with no redeploy.",
         "source": {
           "setting": "They currently reach: {to}. CC: {cc}. BCC: {bcc}. Set here, in the app.",
           "environment": "They currently reach: {to}, from CONTACT_FORM_TO on the server, because “To” is empty. CC: {cc}. BCC: {bcc}.",
@@ -6536,7 +6536,7 @@
         "readOnly": "Who receives the contact messages is the Administrator’s to set; you see the list in force.",
         "saving": "Saving…",
         "saved": "The contact form's recipients have been saved.",
-        "sender": "The account the messages leave from is not changed here: it is the club's Google account, set by a developer in CONTACT_SMTP_USER and CONTACT_SMTP_PASSWORD. The password is shown nowhere in the app."
+        "sender": "The Gmail account the messages leave from, when the road is Gmail, is not changed here: it is the club's Google account, set by a developer in CONTACT_SMTP_USER and CONTACT_SMTP_PASSWORD. The password is shown nowhere in the app."
       },
       "neverSent": "not sent any more",
       "lastCall": "With the reminder — {reminder} before the start, or as the event chooses — it goes one last time, to whoever has not signed.",
@@ -6727,7 +6727,7 @@
           "gmail": "The club's Gmail (“Write to us”)",
           "mailgun": "Mailgun (recommended)",
           "gmailHint": "From the club's mailbox; a copy of the message stays in the club's “Sent” folder.",
-          "mailgunHint": "From the club's email service; no copy stays in the club's Sent folder.",
+          "mailgunHint": "From the club's email service; no copy stays in the club's “Sent” folder.",
           "gmailMissing": "Gmail is not ready here: the club's account and its app password are missing.",
           "mailgunMissing": "Mailgun does not send here: emails are not switched on in this environment.",
           "steps": "See the steps",
@@ -6736,10 +6736,10 @@
           "safetyNote": "Through Gmail, a Girl Zone message stays in the club's mailbox and whoever reads it sees it; through Mailgun it reaches only the person above.",
           "stateGmail": "Gmail",
           "stateMailgun": "Mailgun",
-          "why": "Sent from the club's own domain, with the person's address as Reply-To and no copy in the club's mailbox; Gmail stays as the backup road.",
-          "gmailCopy": "Through Gmail, a copy stays in the club's mailbox.",
+          "why": "Mailgun sends from the club's own domain, with the person's address as Reply-To and no copy in the club's “Sent” folder; Gmail stays as the backup road where it is allowed.",
+          "gmailCopy": "Through Gmail, a copy stays in “Sent”.",
           "fallback": "If Mailgun is down, send through the club's Gmail",
-          "fallbackHelp": "Only for Girl Zone messages. Unticked, a message Mailgun cannot send waits until it works. Ticked, it leaves from the club's mailbox, and whoever reads that mailbox sees it in the Sent folder.",
+          "fallbackHelp": "Only for Girl Zone messages. Unticked, a message Mailgun cannot send waits until it works. Ticked, it leaves from the club's mailbox, and whoever reads that mailbox sees it in the “Sent” folder.",
           "fallbackNotice": "The tick cannot be changed until the privacy notice in force says Girl Zone messages may leave through Gmail."
         },
         "safetyName": "First name shown",

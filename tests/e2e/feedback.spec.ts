@@ -201,7 +201,7 @@ async function checkRoadRadios(page: Page): Promise<void> {
   await expect(panel).not.toContainText("Girl Zone doar prin Mailgun");
   // Why Mailgun is recommended: one line for the whole card, under the four pairs (§NNN).
   await expect(form.getByTestId("feedback-via-why")).toHaveCount(1);
-  await expect(form.getByTestId("feedback-via-why")).toContainText("Pleacă de pe domeniul clubului, cu adresa persoanei ca Reply-To, fără nicio copie în căsuța clubului; Gmail rămâne drum de rezervă.");
+  await expect(form.getByTestId("feedback-via-why")).toContainText("Mailgun pleacă de pe domeniul clubului, cu adresa persoanei ca Reply-To, fără nicio copie în folderul „Trimise” al clubului; Gmail rămâne drum de rezervă acolo unde e permis.");
 
   // «Scrie-ne» has the same pair, the same words and the same default, in «Cine primește mesajele de contact» (§NNN).
   const contact = page.getByTestId("contact-recipients");

@@ -1747,7 +1747,7 @@
       "emailTransportTitle": "Schimbi pe unde pleacă emailurile?",
       "emailTransportBody": "De acum, grupurile alese pleacă prin Gmail, în limita și cu pauza de aici; restul prin Mailgun. Emailurile deja trimise rămân cum au fost.",
       "contactRecipientsTitle": "Schimbi cine primește mesajele de contact?",
-      "contactRecipientsBody": "Mesajele din formularul de contact ajung de acum la adresele salvate, și numai la ele.",
+      "contactRecipientsBody": "Mesajele din formularul de contact ajung de acum la adresele salvate, și numai la ele, pe drumul ales.",
       "clubNoticesTitle": "Schimbi cine primește copiile clubului?",
       "clubNoticesBody": "Declarațiile semnate, confirmările și copiile mesajelor către participanți — cu datele lor personale — ajung de acum la adresele salvate, și numai la ele.",
       "calendarRsvpTitle": "Schimbi unde merg răspunsurile din calendar?",
@@ -4012,7 +4012,7 @@
         },
         "contactForm": {
           "title": "Formularul de contact",
-          "todo": "Mesajele de pe „Scrie-ne” ajung la club prin Gmail. Până e configurat contul, pagina arată adresa clubului în locul formularului.",
+          "todo": "„Scrie-ne” apare doar cu contul Gmail al clubului configurat; până atunci pagina arată adresa clubului în locul formularului.",
           "done": "Formularul de contact trimite în căsuța clubului.",
           "how": [
             "Contul Google al clubului → Security → 2-Step Verification: pornită (fără ea Google nu dă parole de aplicație).",
@@ -6508,7 +6508,7 @@
         "aside": "Acum ajung la: {to} · CC: {cc} · BCC: {bcc}",
         "asideNoCopies": "Acum ajung la: {to} · fără copii",
         "asideNobody": "nimeni",
-        "intro": "Cine primește mesajele de pe „Scrie-ne”; ele pleacă prin Gmail-ul clubului, nu prin Mailgun. Se salvează aici, fără redeploy.",
+        "intro": "Cine primește mesajele de pe „Scrie-ne” și prin ce pleacă. Se salvează aici, fără redeploy.",
         "source": {
           "setting": "Acum ajung la: {to}. CC: {cc}. BCC: {bcc}. Scrise aici, în aplicație.",
           "environment": "Acum ajung la: {to}, din CONTACT_FORM_TO de pe server, pentru că „Către” e gol. CC: {cc}. BCC: {bcc}.",
@@ -6536,7 +6536,7 @@
         "readOnly": "Cine primește mesajele de contact stabilește Administratorul; tu vezi lista în vigoare.",
         "saving": "Se salvează…",
         "saved": "Destinatarii formularului de contact au fost salvați.",
-        "sender": "Contul din care pleacă mesajele nu se schimbă de aici: e contul Google al clubului, setat de un dezvoltator în CONTACT_SMTP_USER și CONTACT_SMTP_PASSWORD. Parola nu se vede nicăieri în aplicație."
+        "sender": "Contul Gmail din care pleacă mesajele, când drumul e Gmail, nu se schimbă de aici: e contul Google al clubului, setat de un dezvoltator în CONTACT_SMTP_USER și CONTACT_SMTP_PASSWORD. Parola nu se vede nicăieri în aplicație."
       },
       "neverSent": "nu se mai trimite",
       "lastCall": "Odată cu reminderul — cu {reminder} înainte de start, sau cât e ales pe eveniment — pleacă o ultimă dată, către cine încă nu a semnat.",
@@ -6727,7 +6727,7 @@
           "gmail": "Gmail-ul clubului („Scrie-ne”)",
           "mailgun": "Mailgun (recomandat)",
           "gmailHint": "Din căsuța clubului; o copie a mesajului rămâne în folderul „Trimise” al clubului.",
-          "mailgunHint": "Din serviciul de email al clubului; nu rămâne nicio copie în folderul Trimise al clubului.",
+          "mailgunHint": "Din serviciul de email al clubului; nu rămâne nicio copie în folderul „Trimise” al clubului.",
           "gmailMissing": "Gmail-ul nu e pregătit aici: lipsesc contul clubului și parola lui de aplicație.",
           "mailgunMissing": "Mailgun nu trimite aici: emailurile nu sunt pornite pe acest mediu.",
           "steps": "Vezi pașii",
@@ -6736,10 +6736,10 @@
           "safetyNote": "Prin Gmail, mesajul Girl Zone rămâne în căsuța clubului și îl văd cei care o citesc; prin Mailgun ajunge doar la persoana de mai sus.",
           "stateGmail": "Gmail",
           "stateMailgun": "Mailgun",
-          "why": "Pleacă de pe domeniul clubului, cu adresa persoanei ca Reply-To, fără nicio copie în căsuța clubului; Gmail rămâne drum de rezervă.",
-          "gmailCopy": "Prin Gmail rămâne o copie în căsuța clubului.",
+          "why": "Mailgun pleacă de pe domeniul clubului, cu adresa persoanei ca Reply-To, fără nicio copie în folderul „Trimise” al clubului; Gmail rămâne drum de rezervă acolo unde e permis.",
+          "gmailCopy": "Prin Gmail rămâne o copie în „Trimise”.",
           "fallback": "Dacă Mailgun pică, trimite prin Gmail-ul clubului",
-          "fallbackHelp": "Doar pentru mesajele Girl Zone. Fără bifă, un mesaj care nu poate pleca prin Mailgun așteaptă până merge. Cu bifă, pleacă din căsuța clubului, iar cei care o citesc îl văd în folderul Trimise.",
+          "fallbackHelp": "Doar pentru mesajele Girl Zone. Fără bifă, un mesaj care nu poate pleca prin Mailgun așteaptă până merge. Cu bifă, pleacă din căsuța clubului, iar cei care o citesc îl văd în folderul „Trimise”.",
           "fallbackNotice": "Bifa nu se poate schimba până când nota de confidențialitate în vigoare spune că mesajele Girl Zone pot pleca prin Gmail."
         },
         "safetyName": "Prenumele afișat",

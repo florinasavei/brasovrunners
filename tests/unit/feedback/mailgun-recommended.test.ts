@@ -29,8 +29,8 @@ vi.mock("@/shared/ui/GlyphSubmitButton", () => ({ default: () => createElement("
 const { default: FeedbackFormsPanel } = await import("@/modules/feedback/ui/FeedbackFormsPanel");
 const { default: ContactRecipientsPanel } = await import("@/modules/contact/ui/ContactRecipientsPanel");
 
-const WHY_RO = "Pleacă de pe domeniul clubului, cu adresa persoanei ca Reply-To, fără nicio copie în căsuța clubului; Gmail rămâne drum de rezervă.";
-const WHY_EN = "Sent from the club's own domain, with the person's address as Reply-To and no copy in the club's mailbox; Gmail stays as the backup road.";
+const WHY_RO = "Mailgun pleacă de pe domeniul clubului, cu adresa persoanei ca Reply-To, fără nicio copie în folderul „Trimise” al clubului; Gmail rămâne drum de rezervă acolo unde e permis.";
+const WHY_EN = "Mailgun sends from the club's own domain, with the person's address as Reply-To and no copy in the club's “Sent” folder; Gmail stays as the backup road where it is allowed.";
 const BOTH = { gmail: true, mailgun: true };
 const GMAIL_ONLY = { gmail: true, mailgun: false };
 
@@ -100,9 +100,9 @@ describe("§NNN Mailgun is the recommended road", () => {
     expect(en.Admin.emails.feedbackForms.via.gmailHint).toContain("a copy of the message stays in the club's “Sent” folder");
   });
 
-  it("puts the quiet caption «Prin Gmail rămâne o copie în căsuța clubului.» next to a form left on Gmail, and only there", async () => {
-    expect(ro.Admin.emails.feedbackForms.via.gmailCopy).toBe("Prin Gmail rămâne o copie în căsuța clubului.");
-    expect(en.Admin.emails.feedbackForms.via.gmailCopy).toBe("Through Gmail, a copy stays in the club's mailbox.");
+  it("puts the quiet caption «Prin Gmail rămâne o copie în „Trimise”.» next to a form left on Gmail, and only there", async () => {
+    expect(ro.Admin.emails.feedbackForms.via.gmailCopy).toBe("Prin Gmail rămâne o copie în „Trimise”.");
+    expect(en.Admin.emails.feedbackForms.via.gmailCopy).toBe("Through Gmail, a copy stays in “Sent”.");
     const caption = ro.Admin.emails.feedbackForms.via.gmailCopy;
     const out = await formsHtml();
     // The state: «Cum a fost» and «O reclamație» on Gmail, «O sugestie» and Girl Zone on Mailgun.

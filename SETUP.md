@@ -1366,7 +1366,7 @@ form left on Gmail keeps a copy in the club's «Trimise» (the card says so besi
 other. **The default** of a form with no saved road — a fresh install, a new form, a deployment nobody has chosen on — is Mailgun where it transmits
 (`EMAIL_DELIVERY_MODE` `allowlist` or `live`) and the club's Gmail where it does not; «Girl Zone» stays on Mailgun everywhere. **A road the club
 saved is never changed by a release.** «Scrie-ne» had no road setting before §NNN and always went by Gmail: with nothing saved it now goes by Mailgun
-on a deployment where Mailgun transmits — choose «Gmail-ul clubului» in «Cine primește mesajele de contact» to keep the old road.
+on a deployment where Mailgun transmits — choose «Gmail-ul clubului» in «Cine primește mesajele de contact» to keep the old road. The privacy notice's template says both roads for «Scrie-ne» too (§NNN); approve the notice from the new template (`/admin/legal`, a lawyer reading that paragraph first) like every change of the notice.
 
 **The form's message is an outbox row since §778, and one road down is no loss.** «Scrie-ne» (the road the club chose, §NNN) and each «Spune-ne ceva» form
 (the road the club chose on «Pagini» → «Contact») queue their message in the same outbox the emails use, and it leaves at once, after the
@@ -1482,7 +1482,7 @@ Gmail, the same account as the form above (`CONTACT_SMTP_USER`, `CONTACT_SMTP_PA
 with its reasons in one line under the four pairs (§NNN). Until the club chooses, the three ordinary
 branches («Cum a fost», «O sugestie», «O reclamație») leave by Mailgun where it transmits and by Gmail where
 it does not (before §NNN: always Gmail), and the confidential «Girl Zone» by Mailgun; a form left on
-Gmail carries the caption «Prin Gmail rămâne o copie în căsuța clubului.» A form whose road this deployment lacks is not offered, whatever its switch says, and its
+Gmail carries the caption «Prin Gmail rămâne o copie în „Trimise”.» A form whose road this deployment lacks is not offered, whatever its switch says, and its
 radio is greyed on the card with a link to the steps in «Sarcini» (the rows «Formularul de contact» for
 Gmail and «Email către participanți reali» for Mailgun). On each deployment (QA has its own):
 

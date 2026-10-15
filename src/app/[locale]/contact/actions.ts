@@ -7,7 +7,7 @@ import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { contactDelivery } from "@/modules/contact/delivery";
 import { CONTACT_ERROR_SUMMARY_ID } from "@/modules/contact/fields";
-import { contactViaFor } from "@/modules/contact/domain/recipients";
+import { withContactRoad } from "@/modules/contact/domain/recipients";
 import { readContactRecipients } from "@/modules/contact/recipients";
 import { feedbackRoads } from "@/modules/feedback/roads";
 import { submitContactMessage } from "@/modules/contact/service";
@@ -138,16 +138,6 @@ function text(form: FormData, name: string): string {
   return typeof value === "string" ? value : "";
 }
 
-/** «Scrie-ne» with the road the club chose for it — Mailgun where it transmits and nothing was chosen, else the club's Gmail (§NNN). */
-function withContactRoad<D extends object>(delivery: D | null, recipients: Parameters<typeof contactViaFor>[0]): (D & { road: ReturnType<typeof contactViaFor> }) | null {
-  if (!delivery) return null;
-  const roads = feedbackRoads();
-  const chosen = contactViaFor(recipients, roads);
-  // A road this deployment does not have carries nothing: the one it has does, rather than a queue that waits for the other's failures.
-  const other = chosen === "gmail" ? "mailgun" : "gmail";
-  return { ...delivery, road: !roads[chosen] && roads[other] ? other : chosen };
-}
-
 /**
  * The contact form's submit handler (BR-REQ-070-04, `DECISIONS.md` §149).
  *
@@ -202,7 +192,7 @@ async function sendOrRefuse(form: FormData, locale: Locale, path: string): Promi
   try {
     outcome = await submitContactMessage(
       db,
-      withContactRoad(contactDelivery(recipients), recipients),
+      withContactRoad(contactDelivery(recipients), recipients, feedbackRoads()),
       {
         name: text(form, "name"),
         email: text(form, "email"),

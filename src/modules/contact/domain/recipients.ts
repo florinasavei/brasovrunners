@@ -99,6 +99,22 @@ export function contactViaFor(setting: Pick<ContactRecipients, "via"> | null, ro
   return setting?.via ?? defaultViaFor("contact", roads);
 }
 
+/**
+ * «Scrie-ne» with the road the club chose for it, joined to the delivery the message is queued on (§NNN): the saved road, else the
+ * default of point 2 (`contactViaFor`). A road this deployment does not have carries nothing, so the one it has does, rather than
+ * a queue that waits for the other's failures. No delivery (the form is off) stays none.
+ */
+export function withContactRoad<D extends object>(
+  delivery: D | null,
+  setting: Pick<ContactRecipients, "via"> | null,
+  roads: FeedbackRoads,
+): (D & { road: FeedbackVia }) | null {
+  if (!delivery) return null;
+  const chosen = contactViaFor(setting, roads);
+  const other: FeedbackVia = chosen === "gmail" ? "mailgun" : "gmail";
+  return { ...delivery, road: !roads[chosen] && roads[other] ? other : chosen };
+}
+
 export const DEFAULT_CONTACT_RECIPIENTS: ContactRecipients = { to: [], cc: [], bcc: [], holdBackSuspected: false };
 
 /**
