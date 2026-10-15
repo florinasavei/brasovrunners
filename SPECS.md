@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.37-2026-10-15 -->
+<!-- PROJECT_BASELINE: BR-V3.38-2026-10-15 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V3.37-2026-10-15`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.38-2026-10-15`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -3042,6 +3042,7 @@ format was what stood in the way (`DECISIONS.md` §58, following §51 and §46).
 153. Given an event's volunteer badges, when anyone but the Organizer, an Administrator or a Superadministrator — the Tehnic role, the Redactor, the desk Volunteer (`CONTRIBUTOR`), a member, a stranger — opens the page, saves the design or a role's colour, or asks for the sheet or a badge's picture, then the page answers 404, the service refuses (FORBIDDEN), the routes answer 403 (401 for a stranger) whatever the page drew, and nothing is written (2026-10-14, `DECISIONS.md` §764). Verification: integration `volunteers/badges.test.ts`; unit `staff/roles.test.ts`; e2e `volunteer-badges.spec.ts`.
 154. Amends criterion 150. Given the guardian's verbs — «Trimite linkul părintelui» and «Acordul părintelui pe hârtie» — and the PDF's `?for=guardian`, when anyone but the Organizer, an Administrator or a Superadministrator asks, then the server refuses (`FORBIDDEN`, and 403 for the PDF), and a volunteer of another event is `NOT_FOUND` (2026-10-14, `DECISIONS.md` §768).
 155. Given a registration's internal notes («Note interne»), when the Tehnic role, the volunteer, the Redactor or a member reads, counts, adds or deletes one, then the service and both presses refuse FORBIDDEN, whatever the page drew; the Organizer, the Administrator and the Superadministrator keep notes through `canKeepRegistrationNotes`, an Organizer deletes only their own note and an Administrator any, and the Organizer still changes nothing on the registration itself (2026-10-15, `DECISIONS.md` §777).
+156. Given the Excel export (or any other download) of an event whose title or name carries «ă», «ș», «ț», an en dash or any character above U+00FF, when it is requested, then it is served with status 200 and a `Content-Disposition` that `new Headers()` accepts — an ASCII `filename` with the accents taken off beside the real name in `filename*=UTF-8''…` — and every download's header is built by the one helper, a `filename=` literal anywhere else in `src/` failing a guard test (2026-10-15, `DECISIONS.md` §779).
 
 **Verification:** integration `auth/role-boundaries.test.ts`, `cms/crud.test.ts`, `registrations/test-kind.test.ts`; unit `staff/roles.test.ts`, `staff/zitadel-users.test.ts`, `registrations/row-verbs.test.ts`; e2e `cms-publish.spec.ts`
 

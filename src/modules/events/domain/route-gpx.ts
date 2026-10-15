@@ -10,6 +10,8 @@
  * (`content/events/route-gpx.ts`).
  */
 
+import { contentDisposition } from "@/shared/http/content-disposition";
+
 /**
  * The largest file accepted: four megabytes. A long trail's track with a point every second is
  * well under one; and a request to a function on the host carries at most 4.5 MB, so a larger
@@ -69,7 +71,7 @@ export function isRouteGpxKey(key: string): boolean {
 
 /** The headers a GPX is served with, from the store or from `/api/media`: a file to save, not a page. */
 export function routeGpxHeaders(key: string): { contentType: string; contentDisposition: string } {
-  return { contentType: "application/gpx+xml", contentDisposition: `attachment; filename="${routeGpxFileName(key)}"` };
+  return { contentType: "application/gpx+xml", contentDisposition: contentDisposition("attachment", routeGpxFileName(key), "route") };
 }
 
 /** The name as shown: no control characters, no path, at most 120 characters. */
