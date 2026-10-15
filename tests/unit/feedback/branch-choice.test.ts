@@ -84,7 +84,7 @@ describe("BR-REQ-070-04 step 1: one card per branch offered", () => {
     const html = await render(["suggestion", "safety"], "safety");
     expect(radios(html)).toEqual([
       { name: "tip", value: "sugestie", checked: false, hidden: false },
-      { name: "tip", value: "siguranta", checked: true, hidden: false },
+      { name: "tip", value: "girl-zone", checked: true, hidden: false },
     ]);
     expect(html).not.toContain("feedback-choice-cum-a-fost");
     expect(html).not.toContain("feedback-choice-reclamatie");
@@ -139,7 +139,7 @@ describe("BR-REQ-070-04 one glyph per branch", () => {
       expect(branchLabelLang(branch, "en")).toBeUndefined();
     }
     const roHtml = await render(FEEDBACK_BRANCHES, "howItWent", "ro");
-    expect(roHtml).toMatch(/id="feedback-choice-siguranta-title"[^>]*lang="en"|lang="en"[^>]*id="feedback-choice-siguranta-title"/);
+    expect(roHtml).toMatch(/id="feedback-choice-girl-zone-title"[^>]*lang="en"|lang="en"[^>]*id="feedback-choice-girl-zone-title"/);
     expect(roHtml.match(/lang="/g)).toHaveLength(1);
     const enHtml = await render(FEEDBACK_BRANCHES, "howItWent", "en");
     expect(enHtml).not.toContain('lang="');

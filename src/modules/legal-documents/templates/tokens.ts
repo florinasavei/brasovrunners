@@ -13,6 +13,7 @@ import {
   EVENT_INVITATIONS_MERGE_FIELD,
   FEEDBACK_FORMS_MERGE_FIELD,
   FEEDBACK_FORMS_NAMED_MERGE_FIELD,
+  FEEDBACK_SAFETY_GMAIL_MERGE_FIELD,
   MEMBERS_SHOP_MERGE_FIELD,
   VOLUNTEERS_MERGE_FIELD,
   VOLUNTEER_AGREEMENT_NOTICE_MERGE_FIELD,
@@ -37,7 +38,7 @@ import { seriesRhythmPhrase } from "@/modules/group-run-declarations/series";
 import { newsletterMergeValues } from "@/modules/newsletter/topic-words";
 import { gmailFallbackClause } from "@/modules/notifications/fallback-notice-words";
 import { eventInvitationsClause } from "@/modules/registrations/invitation-words";
-import { feedbackFormsClause, feedbackFormsNamedClause } from "@/modules/feedback/notice-words";
+import { feedbackFormsClause, feedbackFormsNamedClause, feedbackSafetyGmailClause } from "@/modules/feedback/notice-words";
 import { membersShopClause } from "@/modules/content/shop/notice-words";
 import { volunteerAgreementClause, volunteerMinorsClause, volunteerProfileClause, volunteersClause } from "@/modules/volunteers/notice-words";
 
@@ -248,6 +249,13 @@ export const DECLARATION_TOKENS: readonly DeclarationToken[] = [
     token: `{{${FEEDBACK_FORMS_NAMED_MERGE_FIELD}}}`,
     messageKey: FEEDBACK_FORMS_NAMED_MERGE_FIELD,
     example: inBoth((locale) => feedbackFormsNamedClause(locale)),
+  },
+  // The privacy notice's marker for Girl Zone by the club's Gmail (§772): the road's words, and the switch —
+  // the road may be chosen, and a message leaves by it, only while it is named (`describesFeedbackSafetyGmail`).
+  {
+    token: `{{${FEEDBACK_SAFETY_GMAIL_MERGE_FIELD}}}`,
+    messageKey: FEEDBACK_SAFETY_GMAIL_MERGE_FIELD,
+    example: inBoth((locale) => feedbackSafetyGmailClause(locale)),
   },
   // The privacy notice's marker for the members' shop (§683): the zone section's name, and the switch —
   // the zone draws the shop, and an order is taken, only while it is named (`describesMembersShop`).

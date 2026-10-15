@@ -20,13 +20,14 @@ import Typography from "@mui/material/Typography";
 import type { Metadata } from "next";
 import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { notFound, unstable_rethrow } from "next/navigation";
+import { notFound, redirect, unstable_rethrow } from "next/navigation";
 import type { ComponentType } from "react";
 import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import { getPathname, Link } from "@/i18n/navigation";
 import { type Locale, routing } from "@/i18n/routing";
-import { contactSmtpRoadExists } from "@/modules/contact/delivery";
+import { feedbackRoads } from "@/modules/feedback/roads";
 import {
+  aliasRedirect,
   BRANCH_SLUG,
   BRANCH_FIELDS,
   defaultAudience,
@@ -39,6 +40,7 @@ import {
   FEEDBACK_TEXT_MAX,
   type FeedbackBranch,
   type FeedbackField,
+  effectiveFeedbackSettings,
   namedModeFor,
   offeredBranches,
   parseFeedbackError,
@@ -48,6 +50,7 @@ import {
   pickerOrder,
   RATINGS,
   readFeedbackQuery,
+  safetyMessageSeenByMailboxReaders,
   sentReader,
   STOPPED_REASONS,
   wizardStep,
@@ -65,6 +68,7 @@ import {
   cachedFeedbackFormsDescribed,
   cachedFeedbackFormsNamedDescribed,
   cachedFeedbackOffer,
+  cachedFeedbackSafetyGmailDescribed,
   cachedPublishedEventsBetween,
 } from "@/modules/public-cache/reads";
 import { parseInterestSince } from "@/modules/registrations/interest-box";
@@ -144,13 +148,25 @@ export default async function FeedbackPage({ params, searchParams }: Props) {
   setRequestLocale(locale);
 
   const search = await searchParams;
+  // A link from before Girl Zone's address was `girl-zone` (§772: `?tip=siguranta`, a sent email's, a
+  // printed one) lands on the same form at the new address — a GET only, every other word of the query kept.
+  const moved = aliasRedirect(getPathname({ locale, href: "/contact/feedback" }), search);
+  if (moved) redirect(moved);
   const now = new Date();
   const t = await getTranslations("Tell");
 
   // Tolerant of an outage like every read on the contact page (§281): no answer is no door.
-  const [offer, described] = await Promise.all([orNull(() => cachedFeedbackOffer()), orNull(() => cachedFeedbackFormsDescribed(now))]);
+  const [offered0, described, safetyGmailDescribed] = await Promise.all([
+    orNull(() => cachedFeedbackOffer()),
+    orNull(() => cachedFeedbackFormsDescribed(now)),
+    orNull(() => cachedFeedbackSafetyGmailDescribed(now)),
+  ]);
+  // The settings as they act (§772): Girl Zone's road is Gmail only while the notice in force says so, and the words below follow it.
+  const offer = offered0 ? effectiveFeedbackSettings(offered0, safetyGmailDescribed === true) : null;
+  // By Gmail, the message is in the club's mailbox and its Sent folder: «doar la …» would not be true (§772).
+  const safetyByGmail = offer ? safetyMessageSeenByMailboxReaders(offer) : false;
   // The three ordinary branches only where the SMTP road exists (`CONTACT_FORM_MODE`), as «Scrie-ne» draws no form without one.
-  const offered = offer ? offeredBranches(offer, described === true, contactSmtpRoadExists()) : [];
+  const offered = offer ? offeredBranches(offer, described === true, feedbackRoads()) : [];
   const query = readFeedbackQuery(search);
   const sentBranch = Object.entries(BRANCH_SLUG).find(([, slug]) => slug === search.sent)?.[0] as FeedbackBranch | undefined;
   const step = wizardStep(offered, sentBranch ?? query.branch);
@@ -165,7 +181,7 @@ export default async function FeedbackPage({ params, searchParams }: Props) {
   if (step.kind === "form" && offer) {
     const namedDescribed = (await orNull(() => cachedFeedbackFormsNamedDescribed(now))) === true;
     const clubFallback = namedDescribed && step.branch === "safety" ? (await orNull(() => cachedContactFormReaches())) === true : false;
-    identity = namedModeFor(step.branch, offer, namedDescribed, { smtp: contactSmtpRoadExists(), clubFallback });
+    identity = namedModeFor(step.branch, offer, namedDescribed, { ...feedbackRoads(), clubFallback });
   }
 
   return (
@@ -194,7 +210,7 @@ export default async function FeedbackPage({ params, searchParams }: Props) {
         <Alert severity="success" role="status" data-testid="feedback-sent">
           <AlertTitle>{t("sent.title")}</AlertTitle>
           {/* Who got it (§678): the safety person — her form's own reader, or the one a named message chose — or the club. */}
-          {sentReader(sentBranch, search.catre) === "person" ? t("sent.safety", { name: safetyName }) : t("sent.body")}
+          {sentReader(sentBranch, search.catre) === "person" ? t(safetyByGmail ? "sent.safetyGmail" : "sent.safety", { name: safetyName }) : t("sent.body")}
         </Alert>
         {/* A way on after the send (§NNN): another message, from the wizard's first step. */}
         <Button
@@ -221,6 +237,7 @@ export default async function FeedbackPage({ params, searchParams }: Props) {
           query={query}
           now={now}
           safetyName={safetyName}
+          safetyByGmail={safetyByGmail}
           identity={identity}
         />
       )}
@@ -268,6 +285,7 @@ async function BranchForm({
   query,
   now,
   safetyName,
+  safetyByGmail,
   identity,
 }: {
   branch: FeedbackBranch;
@@ -277,6 +295,7 @@ async function BranchForm({
   query: ReturnType<typeof readFeedbackQuery>;
   now: Date;
   safetyName: string;
+  safetyByGmail: boolean;
   identity: Identity | null;
 }) {
   const t = await getTranslations("Tell");
@@ -399,7 +418,7 @@ async function BranchForm({
         // Above the form, in the person's language (§676): who reads it, and that the site keeps nothing —
         // and, when a named report may go to the club instead (§678), that the sender chooses then.
         <Alert severity="info" icon={false} sx={{ mb: 2 }} data-testid="feedback-safety-reader">
-          {identity?.audiences.includes("club") ? t("safety.readerChoice", { name: safetyName }) : t("safety.reader", { name: safetyName })}
+          {t(`safety.${identity?.audiences.includes("club") ? "readerChoice" : "reader"}${safetyByGmail ? "Gmail" : ""}`, { name: safetyName })}
         </Alert>
       ) : (
         <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
@@ -454,11 +473,12 @@ async function BranchForm({
           */}
           {identity && (
             <IdentityChoice
-              wayBack={fields.includes("contact") ? "contact" : "email"}
+              withPhone={fields.includes("contact")}
               named={named}
               invalid={invalid}
               kept={kept}
               safetyName={safetyName}
+              safetyByGmail={safetyByGmail}
               audiences={identity.audiences}
               audience={audienceKept && identity.audiences.includes(audienceKept) ? audienceKept : defaultAudience(branch)}
             />

@@ -1,14 +1,23 @@
 import { describe, expect, it } from "vitest";
 import {
+  aliasRedirect,
   ANONYMOUS_NAME_LINE,
   audiencesFor,
   BRANCH_FIELDS,
   chosenAudience,
   defaultAudience,
+  effectiveFeedbackSettings,
   FEEDBACK_NAME_MAX,
   FEEDBACK_NAME_MIN,
   namedModeFor,
   BRANCH_SLUG,
+  BRANCH_SLUG_ALIASES,
+  branchFromSlug,
+  DEFAULT_VIA,
+  replyAddressForInput,
+  replyAddressOf,
+  roadBranch,
+  viaFor,
   composeFeedbackEmail,
   DEFAULT_FEEDBACK_SETTINGS,
   doorIntroKey,
@@ -24,12 +33,13 @@ import {
   readDay,
   readFeedbackQuery,
   SAFETY_SUBJECT,
+  safetyMessageSeenByMailboxReaders,
   sentReader,
   wizardStep,
 } from "@/modules/feedback/domain/branches";
-import { describesFeedbackForms, describesFeedbackFormsNamed } from "@/modules/legal-documents/domain/merge-fields";
+import { describesFeedbackForms, describesFeedbackFormsNamed, describesFeedbackSafetyGmail } from "@/modules/legal-documents/domain/merge-fields";
 import { privacyNoticeEn, privacyNoticeRo } from "@/modules/legal-documents/templates/privacy-notice";
-import { feedbackFormsClause, feedbackFormsMergeValues, feedbackFormsNamedClause } from "@/modules/feedback/notice-words";
+import { feedbackFormsClause, feedbackFormsMergeValues, feedbackFormsNamedClause, feedbackSafetyGmailClause } from "@/modules/feedback/notice-words";
 
 /**
  * BR-REQ-070-04, `DECISIONS.md` §676 — «Spune-ne ceva»'s rules, pure: which branches are offered,
@@ -38,38 +48,41 @@ import { feedbackFormsClause, feedbackFormsMergeValues, feedbackFormsNamedClause
  * Every address here is made up, on `example.org`.
  */
 const ON: FeedbackSettings = {
-  howItWent: { on: true, to: "how@example.org" },
-  suggestion: { on: true, to: "ideas@example.org" },
-  complaint: { on: true, to: "complaints@example.org" },
-  safety: { on: true, to: "safety@example.org", name: "Maria" },
+  howItWent: { on: true, to: "how@example.org", via: "gmail" },
+  suggestion: { on: true, to: "ideas@example.org", via: "gmail" },
+  complaint: { on: true, to: "complaints@example.org", via: "gmail" },
+  safety: { on: true, to: "safety@example.org", via: "mailgun", name: "Maria" },
 };
+/** Both roads there, and the deployment with no SMTP road (`CONTACT_FORM_MODE=off`). */
+const BOTH = { gmail: true, mailgun: true };
+const NO_GMAIL = { gmail: false, mailgun: true };
 
 const parse = (raw: Record<string, unknown>): FeedbackInput => feedbackFields.parse({ locale: "ro", ...raw });
 
 describe("§676 the branches a visitor is offered", () => {
   it("offers none by default, and none while the notice in force does not describe the forms", () => {
-    expect(offeredBranches(DEFAULT_FEEDBACK_SETTINGS, true, true)).toEqual([]);
-    expect(offeredBranches(ON, false, true)).toEqual([]);
+    expect(offeredBranches(DEFAULT_FEEDBACK_SETTINGS, true, BOTH)).toEqual([]);
+    expect(offeredBranches(ON, false, BOTH)).toEqual([]);
   });
 
   it("offers each branch switched on with a recipient, in the wizard's order — the safety branch only with its first name", () => {
-    expect(offeredBranches(ON, true, true)).toEqual(["howItWent", "suggestion", "complaint", "safety"]);
-    expect(offeredBranches({ ...ON, suggestion: { on: true, to: null } }, true, true)).toEqual(["howItWent", "complaint", "safety"]);
-    expect(offeredBranches({ ...ON, complaint: { on: false, to: "complaints@example.org" } }, true, true)).toEqual(["howItWent", "suggestion", "safety"]);
-    expect(offeredBranches({ ...ON, safety: { on: true, to: "safety@example.org", name: null } }, true, true)).toEqual(["howItWent", "suggestion", "complaint"]);
+    expect(offeredBranches(ON, true, BOTH)).toEqual(["howItWent", "suggestion", "complaint", "safety"]);
+    expect(offeredBranches({ ...ON, suggestion: { on: true, to: null, via: "gmail" } }, true, BOTH)).toEqual(["howItWent", "complaint", "safety"]);
+    expect(offeredBranches({ ...ON, complaint: { on: false, to: "complaints@example.org", via: "gmail" } }, true, BOTH)).toEqual(["howItWent", "suggestion", "safety"]);
+    expect(offeredBranches({ ...ON, safety: { on: true, to: "safety@example.org", via: "mailgun", name: null } }, true, BOTH)).toEqual(["howItWent", "suggestion", "complaint"]);
   });
 
   it("offers the three ordinary branches only where the deployment has the SMTP road; the safety branch leaves by Mailgun and stays", () => {
     // `CONTACT_FORM_MODE=off`: every post on them would answer «Nu am putut trimite acum…» forever.
-    expect(offeredBranches(ON, true, false)).toEqual(["safety"]);
-    expect(offeredBranches({ ...ON, safety: { on: false, to: null, name: null } }, true, false)).toEqual([]);
-    expect(offeredBranches(ON, false, false)).toEqual([]);
+    expect(offeredBranches(ON, true, NO_GMAIL)).toEqual(["safety"]);
+    expect(offeredBranches({ ...ON, safety: { on: false, to: null, via: "mailgun", name: null } }, true, NO_GMAIL)).toEqual([]);
+    expect(offeredBranches(ON, false, NO_GMAIL)).toEqual([]);
   });
 
   it("says the door's sentence from what is offered: the safety form's own with «Girl Zone» alone, the three forms' otherwise", () => {
-    expect(doorIntroKey(offeredBranches(ON, true, false))).toBe("door.introSafety");
+    expect(doorIntroKey(offeredBranches(ON, true, NO_GMAIL))).toBe("door.introSafety");
     expect(doorIntroKey(["safety"])).toBe("door.introSafety");
-    expect(doorIntroKey(offeredBranches(ON, true, true))).toBe("door.intro");
+    expect(doorIntroKey(offeredBranches(ON, true, BOTH))).toBe("door.intro");
     expect(doorIntroKey(["howItWent"])).toBe("door.intro");
     expect(doorIntroKey(["suggestion", "safety"])).toBe("door.intro");
   });
@@ -130,8 +143,10 @@ describe("§678 anonymous, or with one's name", () => {
   it("every branch's form starts with the name and its way back, inside the choice at the very top", () => {
     for (const [branch, fields] of Object.entries(BRANCH_FIELDS)) {
       expect(fields[0], branch).toBe("name");
-      expect(fields[1], branch).toBe(branch === "safety" ? "contact" : "email");
+      // The optional email is every named form's second box; Girl Zone's telephone follows it (§772).
+      expect(fields[1], branch).toBe("email");
     }
+    expect(BRANCH_FIELDS.safety[2]).toBe("contact");
   });
 
   it("reads anything but «Cu nume și prenume» as anonymous, and then drops the name and the way back — even a box the page hid that would not pass", () => {
@@ -186,24 +201,24 @@ describe("§678 anonymous, or with one's name", () => {
 });
 
 describe("§678 «Cine să afle?»: the club or the safety branch's person", () => {
-  const roads = { smtp: true, clubFallback: true };
+  const roads = { ...BOTH, clubFallback: true };
 
   it("offers the club and the person on every branch while both exist, the club first", () => {
     for (const branch of ["howItWent", "suggestion", "complaint", "safety"] as const) expect(audiencesFor(branch, ON, roads), branch).toEqual(["club", "person"]);
   });
 
   it("offers the person whenever the safety branch has its recipient and its first name, switched on or not", () => {
-    expect(audiencesFor("suggestion", { ...ON, safety: { on: false, to: "safety@example.org", name: "Maria" } }, roads)).toEqual(["club", "person"]);
-    expect(audiencesFor("suggestion", { ...ON, safety: { on: true, to: null, name: "Maria" } }, roads)).toEqual(["club"]);
-    expect(audiencesFor("suggestion", { ...ON, safety: { on: true, to: "safety@example.org", name: null } }, roads)).toEqual(["club"]);
+    expect(audiencesFor("suggestion", { ...ON, safety: { on: false, to: "safety@example.org", via: "mailgun", name: "Maria" } }, roads)).toEqual(["club", "person"]);
+    expect(audiencesFor("suggestion", { ...ON, safety: { on: true, to: null, via: "mailgun", name: "Maria" } }, roads)).toEqual(["club"]);
+    expect(audiencesFor("suggestion", { ...ON, safety: { on: true, to: "safety@example.org", via: "mailgun", name: null } }, roads)).toEqual(["club"]);
   });
 
   it("offers the club on the safety form through «O reclamație»'s recipient or else the contact form's, and only where the SMTP road exists", () => {
-    const noComplaint = { ...ON, complaint: { on: false, to: null } };
-    expect(audiencesFor("safety", noComplaint, { smtp: true, clubFallback: true })).toEqual(["club", "person"]);
-    expect(audiencesFor("safety", noComplaint, { smtp: true, clubFallback: false })).toEqual(["person"]);
-    expect(audiencesFor("safety", ON, { smtp: true, clubFallback: false })).toEqual(["club", "person"]);
-    expect(audiencesFor("safety", ON, { smtp: false, clubFallback: true })).toEqual(["person"]);
+    const noComplaint = { ...ON, complaint: { on: false, to: null, via: "gmail" as const } };
+    expect(audiencesFor("safety", noComplaint, { ...BOTH, clubFallback: true })).toEqual(["club", "person"]);
+    expect(audiencesFor("safety", noComplaint, { ...BOTH, clubFallback: false })).toEqual(["person"]);
+    expect(audiencesFor("safety", ON, { ...BOTH, clubFallback: false })).toEqual(["club", "person"]);
+    expect(audiencesFor("safety", ON, { ...NO_GMAIL, clubFallback: true })).toEqual(["person"]);
   });
 
   it("reaches the branch's own reader when anonymous or when the named post chose nobody, the one chosen otherwise, and nobody for a choice not offered", () => {
@@ -325,6 +340,30 @@ describe("§676 the picker's order", () => {
   });
 });
 
+describe("§772 Girl Zone's road follows the notice in force", () => {
+  const gmail = { ...DEFAULT_FEEDBACK_SETTINGS, safety: { ...DEFAULT_FEEDBACK_SETTINGS.safety, via: "gmail" as const } };
+
+  it("is Gmail only while the notice names {{feedbackSafetyGmail}}; Mailgun otherwise, and the other forms are never touched", () => {
+    expect(effectiveFeedbackSettings(gmail, true).safety.via).toBe("gmail");
+    expect(effectiveFeedbackSettings(gmail, false).safety.via).toBe("mailgun");
+    expect(effectiveFeedbackSettings(gmail, false).complaint.via).toBe("gmail");
+    expect(effectiveFeedbackSettings(DEFAULT_FEEDBACK_SETTINGS, false)).toBe(DEFAULT_FEEDBACK_SETTINGS);
+  });
+
+  it("tells the visitor her message is seen by the mailbox's readers only on the Gmail road", () => {
+    expect(safetyMessageSeenByMailboxReaders(effectiveFeedbackSettings(gmail, true))).toBe(true);
+    expect(safetyMessageSeenByMailboxReaders(effectiveFeedbackSettings(gmail, false))).toBe(false);
+    expect(safetyMessageSeenByMailboxReaders(DEFAULT_FEEDBACK_SETTINGS)).toBe(false);
+  });
+
+  it("is a marker of the notice's template, in both languages, read by the same function as the others", () => {
+    for (const body of [privacyNoticeRo, privacyNoticeEn]) {
+      expect(describesFeedbackSafetyGmail(body)).toBe(true);
+      expect(describesFeedbackSafetyGmail(JSON.parse(JSON.stringify(body).split("{{feedbackSafetyGmail}}").join("Gmail-ul său")))).toBe(false);
+    }
+  });
+});
+
 describe("§676 the notice's marker", () => {
   it("is named in both languages of the platform's privacy notice, and absent from a text without it", () => {
     expect(describesFeedbackForms(privacyNoticeRo)).toBe(true);
@@ -351,7 +390,8 @@ describe("§676 the notice's marker", () => {
   it("§678 fills the named mode's marker with the radio's own words, quoted", () => {
     expect(feedbackFormsNamedClause("ro")).toBe("„Cu nume și prenume”");
     expect(feedbackFormsNamedClause("en")).toBe("“With my name”");
-    expect(feedbackFormsMergeValues("en")).toEqual({ feedbackForms: "“Tell us something”", feedbackFormsNamed: "“With my name”" });
+    expect(feedbackFormsMergeValues("en")).toEqual({ feedbackForms: "“Tell us something”", feedbackFormsNamed: "“With my name”", feedbackSafetyGmail: "the club's Gmail" });
+    expect(feedbackSafetyGmailClause("ro")).toBe("Gmail-ul clubului");
   });
 });
 
@@ -361,7 +401,7 @@ describe("§676 the addresses the action sends the browser back to", () => {
       "/ro/contact/spune-ne?tip=reclamatie&error=VALIDATION_ERROR&fields=message,date&since=2026-10-08T12%3A00%3A00.000Z#feedback-errors",
     );
     expect(feedbackRefusalUrl("/en/contact/tell-us", null, "UNAVAILABLE")).toBe("/en/contact/tell-us?error=UNAVAILABLE#feedback-errors");
-    expect(feedbackRefusalUrl("/ro/contact/spune-ne", "safety", "LIMITED", { fields: [], renderedAt: "" })).toBe("/ro/contact/spune-ne?tip=siguranta&error=LIMITED#feedback-errors");
+    expect(feedbackRefusalUrl("/ro/contact/spune-ne", "safety", "LIMITED", { fields: [], renderedAt: "" })).toBe("/ro/contact/spune-ne?tip=girl-zone&error=LIMITED#feedback-errors");
   });
 
   it("answers a sent post with the branch's slug", () => {
@@ -370,11 +410,142 @@ describe("§676 the addresses the action sends the browser back to", () => {
   });
 
   it("§678 names the other reader a named message reached, by a word, and reads it back", () => {
-    expect(feedbackSentUrl("/ro/contact/spune-ne", "safety", "club")).toBe("/ro/contact/spune-ne?sent=siguranta&catre=clubul");
+    expect(feedbackSentUrl("/ro/contact/spune-ne", "safety", "club")).toBe("/ro/contact/spune-ne?sent=girl-zone&catre=clubul");
     expect(feedbackSentUrl("/ro/contact/spune-ne", "complaint", "person")).toBe("/ro/contact/spune-ne?sent=reclamatie&catre=persoana");
     expect(sentReader("safety", "clubul")).toBe("club");
     expect(sentReader("complaint", "persoana")).toBe("person");
     expect(sentReader("safety", null)).toBe("person");
     expect(sentReader("complaint", "someone@example.org")).toBe("club");
+  });
+});
+
+describe("§772 Girl Zone's address is `girl-zone`, and `siguranta` still opens it", () => {
+  it("writes the new slug everywhere an address is built, and keeps the other three", () => {
+    expect(BRANCH_SLUG).toEqual({ howItWent: "cum-a-fost", suggestion: "sugestie", complaint: "reclamatie", safety: "girl-zone" });
+    expect(feedbackRefusalUrl("/ro/contact/spune-ne", "safety", "LIMITED")).toContain("?tip=girl-zone&");
+    expect(feedbackSentUrl("/en/contact/tell-us", "safety")).toBe("/en/contact/tell-us?sent=girl-zone");
+    expect(JSON.stringify(BRANCH_SLUG)).not.toContain("siguranta");
+  });
+
+  it("reads the old word as the same branch — an old link in a sent email or on paper keeps working", () => {
+    expect(BRANCH_SLUG_ALIASES).toEqual({ siguranta: "safety" });
+    expect(branchFromSlug("girl-zone")).toBe("safety");
+    expect(branchFromSlug("siguranta")).toBe("safety");
+    expect(readFeedbackQuery({ tip: "siguranta" }).branch).toBe("safety");
+    // Not a door for anything else the address bar may carry, `Object` prototype names included.
+    for (const word of ["admin", "", "toString", "__proto__", "constructor", undefined, null]) expect(branchFromSlug(word as string | null | undefined), String(word)).toBeNull();
+  });
+
+  it("moves a link with the old word to the new address on a GET, keeping every other word of the query", () => {
+    expect(aliasRedirect("/ro/contact/spune-ne", { tip: "siguranta" })).toBe("/ro/contact/spune-ne?tip=girl-zone");
+    expect(aliasRedirect("/en/contact/tell-us", { tip: "siguranta", eveniment: "crosul", data: "2026-10-04" })).toBe("/en/contact/tell-us?tip=girl-zone&eveniment=crosul&data=2026-10-04");
+    // The sent page's word too, and a refusal's field names with their commas.
+    expect(aliasRedirect("/ro/contact/spune-ne", { sent: "siguranta", catre: "clubul" })).toBe("/ro/contact/spune-ne?sent=girl-zone&catre=clubul");
+    expect(aliasRedirect("/ro/contact/spune-ne", { tip: "siguranta", error: "VALIDATION_ERROR", fields: "message,whereWhen" })).toBe(
+      "/ro/contact/spune-ne?tip=girl-zone&error=VALIDATION_ERROR&fields=message,whereWhen",
+    );
+  });
+
+  it("moves nothing that does not need it, so the page never loops", () => {
+    expect(aliasRedirect("/ro/contact/spune-ne", { tip: "girl-zone" })).toBeNull();
+    expect(aliasRedirect("/ro/contact/spune-ne", {})).toBeNull();
+    expect(aliasRedirect("/ro/contact/spune-ne", { tip: "cum-a-fost", sent: "reclamatie" })).toBeNull();
+    // A word that merely contains the old one is not it.
+    expect(aliasRedirect("/ro/contact/spune-ne", { eveniment: "siguranta" })).toBeNull();
+    // The redirect's own target needs no second move.
+    expect(aliasRedirect("/ro/contact/spune-ne", { tip: "girl-zone", eveniment: "siguranta" })).toBeNull();
+  });
+});
+
+describe("§772 the road each form leaves by", () => {
+  it("is, until the club chooses, what §676 fixed in code: Gmail for the three, Mailgun for Girl Zone", () => {
+    expect(DEFAULT_VIA).toEqual({ howItWent: "gmail", suggestion: "gmail", complaint: "gmail", safety: "mailgun" });
+    for (const branch of ["howItWent", "suggestion", "complaint", "safety"] as const) expect(DEFAULT_FEEDBACK_SETTINGS[branch].via, branch).toBe(DEFAULT_VIA[branch]);
+  });
+
+  it("follows the form whose reader the message reaches: the form for the club's mailbox, Girl Zone's own for the person", () => {
+    // The defaults reproduce §676 and §678 exactly: the club's mailbox by Gmail, the person by Mailgun.
+    for (const branch of ["howItWent", "suggestion", "complaint", "safety"] as const) {
+      expect(viaFor(ON, branch, "person"), `${branch} to the person`).toBe("mailgun");
+      expect(viaFor(ON, branch, "club"), `${branch} to the club`).toBe("gmail");
+    }
+    // A Girl Zone message for «Clubul» reaches the mailbox «O reclamație» names, so it leaves by that form's road.
+    expect(roadBranch("safety", "club")).toBe("complaint");
+    expect(roadBranch("safety", "person")).toBe("safety");
+    expect(roadBranch("suggestion", "club")).toBe("suggestion");
+    expect(roadBranch("suggestion", "person")).toBe("safety");
+  });
+
+  it("is what the club chose when it chose otherwise", () => {
+    const swapped: FeedbackSettings = { ...ON, suggestion: { ...ON.suggestion, via: "mailgun" }, safety: { ...ON.safety, via: "gmail" } };
+    expect(viaFor(swapped, "suggestion", "club")).toBe("mailgun");
+    expect(viaFor(swapped, "howItWent", "club")).toBe("gmail");
+    expect(viaFor(swapped, "howItWent", "person")).toBe("gmail");
+    expect(viaFor(swapped, "safety", "person")).toBe("gmail");
+  });
+
+  it("offers a form only where its own road exists — Gmail where there is the SMTP road, Mailgun where the email service transmits", () => {
+    const NO_MAILGUN = { gmail: true, mailgun: false };
+    expect(offeredBranches(ON, true, NO_MAILGUN)).toEqual(["howItWent", "suggestion", "complaint"]);
+    expect(offeredBranches(ON, true, NO_GMAIL)).toEqual(["safety"]);
+    expect(offeredBranches(ON, true, { gmail: false, mailgun: false })).toEqual([]);
+    // Girl Zone by Gmail needs the SMTP road, not Mailgun; «Cum a fost» by Mailgun needs Mailgun, not the SMTP road.
+    const crossed: FeedbackSettings = { ...ON, howItWent: { ...ON.howItWent, via: "mailgun" }, safety: { ...ON.safety, via: "gmail" } };
+    expect(offeredBranches(crossed, true, NO_GMAIL)).toEqual(["howItWent"]);
+    expect(offeredBranches(crossed, true, NO_MAILGUN)).toEqual(["suggestion", "complaint", "safety"]);
+  });
+
+  it("offers «Cine să afle?» only the readers whose road exists", () => {
+    const roads = { clubFallback: true };
+    expect(audiencesFor("suggestion", ON, { ...BOTH, ...roads })).toEqual(["club", "person"]);
+    // No Gmail: the club's mailbox by Gmail has no road; the person by Mailgun does.
+    expect(audiencesFor("suggestion", ON, { ...NO_GMAIL, ...roads })).toEqual(["person"]);
+    // No Mailgun: the person by Mailgun has no road.
+    expect(audiencesFor("suggestion", ON, { gmail: true, mailgun: false, ...roads })).toEqual(["club"]);
+    // The club chose Gmail for Girl Zone: she is reached wherever Gmail is.
+    const gmailGirlZone: FeedbackSettings = { ...ON, safety: { ...ON.safety, via: "gmail" } };
+    expect(audiencesFor("suggestion", gmailGirlZone, { gmail: true, mailgun: false, ...roads })).toEqual(["club", "person"]);
+  });
+});
+
+describe("§772 the optional email beside the name", () => {
+  const named = (raw: Record<string, unknown>) => feedbackFields.safeParse({ locale: "ro", identity: "named", name: "Ana Pop", message: "Seara.", ...raw });
+
+  it("is kept as typed, trimmed, when the canonicalizer accepts it — capitals and a plus tag are the person's own", () => {
+    expect(named({ branch: "suggestion", email: "  Ana.Pop+club@Example.org " }).data).toMatchObject({ email: "Ana.Pop+club@Example.org" });
+    expect(named({ branch: "suggestion", email: "" }).data).toMatchObject({ email: null });
+    expect(named({ branch: "complaint", event: "", date: "", email: "ana@example.org" }).data).toMatchObject({ email: "ana@example.org" });
+  });
+
+  it("refuses, on the box, an address the canonicalizer refuses — before anything is sent", () => {
+    for (const bad of ["not an address", "ana@", "@example.org", "ana@@example.org", "ana@example", "a b@example.org", "ana@example.org, bob@example.org", "Ana <ana@example.org>", "ana@exa​mple.org", "+tag@gmail.com"]) {
+      const refused = named({ branch: "suggestion", email: bad });
+      expect(refused.success, bad).toBe(false);
+      expect(refused.error?.issues.map((issue) => issue.path[0]), bad).toEqual(["email"]);
+    }
+  });
+
+  it("is dropped, not refused, in the anonymous mode: a box the page hid never stops a post", () => {
+    expect(feedbackFields.safeParse({ locale: "ro", branch: "suggestion", identity: "anonymous", message: "Seara.", email: "not an address" }).data).toMatchObject({ email: null });
+  });
+
+  it("reads as a reply address only when it is one", () => {
+    expect(replyAddressOf(" ana@example.org ")).toBe("ana@example.org");
+    for (const typed of ["", "0700 000 000", "ana@", "ana@example.org bob@example.org"]) expect(replyAddressOf(typed), typed).toBeNull();
+  });
+
+  it("is the message's Reply-To in the named mode, on every form: the box on three, Girl Zone's way back when it is an address", () => {
+    const suggestion = named({ branch: "suggestion", email: "ana@example.org" }).data as FeedbackInput;
+    expect(replyAddressForInput(suggestion)).toBe("ana@example.org");
+    // Girl Zone has the same email box, beside the telephone (§772); an address typed in the telephone box still answers.
+    const safetyByEmail = named({ branch: "safety", whereWhen: "", email: "ana@example.org", contact: "0700 000 000" }).data as FeedbackInput;
+    expect(replyAddressForInput(safetyByEmail)).toBe("ana@example.org");
+    const safetyByAddress = named({ branch: "safety", whereWhen: "", contact: "ana@example.org" }).data as FeedbackInput;
+    expect(replyAddressForInput(safetyByAddress)).toBe("ana@example.org");
+    // A telephone has no Reply-To, and the body carries it.
+    const safetyByPhone = named({ branch: "safety", whereWhen: "", contact: "0700 000 000" }).data as FeedbackInput;
+    expect(replyAddressForInput(safetyByPhone)).toBeNull();
+    // Anonymous: nobody to answer.
+    expect(replyAddressForInput(parse({ branch: "suggestion", message: "Seara.", email: "ana@example.org" }))).toBeNull();
   });
 });
