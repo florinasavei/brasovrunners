@@ -8496,6 +8496,8 @@
             "size": "Ecuson: dimensiunea",
             "customWidthMm": "Ecuson: lățimea (mm)",
             "customHeightMm": "Ecuson: înălțimea (mm)",
+            "mode": "Ecuson: felul ecusonului (unul sau pe roluri)",
+            "singleColour": "Ecuson: culoarea benzii ecusonului unic",
             "bandColour": "Ecuson: culoarea benzii",
             "headerImageSrc": "Ecuson: imaginea de sus",
             "headerImageCrop": "Ecuson: decuparea imaginii de sus",

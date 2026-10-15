@@ -8496,6 +8496,8 @@
             "size": "Badge: the size",
             "customWidthMm": "Badge: the width (mm)",
             "customHeightMm": "Badge: the height (mm)",
+            "mode": "Badge: the kind of badge (one, or per role)",
+            "singleColour": "Badge: the band's colour of the one badge",
             "bandColour": "Badge: the band's colour",
             "headerImageSrc": "Badge: the top picture",
             "headerImageCrop": "Badge: the top picture's crop",
