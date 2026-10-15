@@ -8,6 +8,10 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V3.41-2026-10-16
+
+- **A volunteer role without a number** — «Fără număr — oricâți oameni» in «Adaugă un rol» and «Modifică»: the role is never full and always offered, reads «3 · fără număr» on the card, says «mai sunt locuri» on the page, and «Câte ecusoane» starts at the people given it. §784.
+- **«Note interne» in the registrations export** — the Excel and the CSV end with a column of the registration's internal notes for the Organizer, the Administrator and the Superadministrator: one note a line, newest first, «<data> · <rolul>: <text>», the author as a role and never a name, in the language of the list. The privacy notice's template says where the organizers see them. §785.
 ## BR-V3.40-2026-10-15
 
 - **Mailgun is «recomandat» for the site's forms** — «Prin ce trimitem» marks Mailgun as the recommended road with one line of why under the pairs, a form left on Gmail says a copy stays in the club's mailbox, a form with no saved road now defaults to Mailgun where it transmits, and «Scrie-ne» has the same pair in «Cine primește mesajele de contact». A saved road is never changed. §782.

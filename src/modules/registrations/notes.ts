@@ -31,7 +31,7 @@ import { isUuid } from "@/shared/ids";
  * **Where a note never appears** — the race-day desk (§67: a name, a state and a number), the public list,
  * every email. None of those queries read this table, and a test holds each.
  *
- * **The one file that carries them (§NNN; the owner, 2026-10-15: «asta trebuie de asemenea să fie și în Excel!»)** —
+ * **The one file that carries them (§785; the owner, 2026-10-15: «asta trebuie de asemenea să fie și în Excel!»)** —
  * the registrations export, the spreadsheet and the CSV, a last column «Note interne» for a role that may keep
  * notes (`listRegistrationNotesForExport` here, `exportNotesCell` for the words; the route asks the same
  * `canKeepRegistrationNotes` before it asks for the column, and the reader asserts it again). The author is a
@@ -180,7 +180,7 @@ export async function countRegistrationNotes<T extends Record<string, unknown>>(
 export type ExportNote = { createdAt: Date; authorRole: StaffRole | null; body: string };
 
 /**
- * The live notes of the exported registrations (§NNN), in **one grouped query** over their ids — never a query
+ * The live notes of the exported registrations (§785), in **one grouped query** over their ids — never a query
  * per row — each registration's list newest first (`created_at` then `id` descending, as the card). A
  * registration with none is absent from the map; a soft-deleted note is never read (`deleted_at IS NULL`, and its
  * words are gone anyway). The author is the role only: the display name is not selected. Asserted here like the
@@ -215,7 +215,7 @@ export async function listRegistrationNotesForExport<T extends Record<string, un
 }
 
 /**
- * The most characters the notes cell holds (§NNN). Excel stops at 32 767 per cell and silently cuts what is
+ * The most characters the notes cell holds (§785). Excel stops at 32 767 per cell and silently cuts what is
  * past it; the file stops a little before, at a note's end, and says so on its last line.
  */
 export const EXPORT_NOTES_CELL_MAX = 32_000;
@@ -231,7 +231,7 @@ export type ExportNotesWords = {
 };
 
 /**
- * One registration's notes as the export's cell (§NNN): one note a line, newest first, each
+ * One registration's notes as the export's cell (§785): one note a line, newest first, each
  * «<date> · <rolul autorului>: <text>» — the date on the event's clock (`dd.mm.yyyy hh:mm`), the author's role and
  * never their name — a note's own line breaks kept inside the cell. Empty for no notes. Cut at a note's end below
  * `EXPORT_NOTES_CELL_MAX` with `words.more` as the last line, so the cell is never past what Excel keeps.

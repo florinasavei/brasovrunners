@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.40-2026-10-15 -->
+<!-- PROJECT_BASELINE: BR-V3.41-2026-10-16 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V3.40-2026-10-15`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.41-2026-10-16`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.

@@ -400,7 +400,7 @@ describe("§774 the card: «Categorii», «Categoria» and the roles under their
   });
 });
 
-describe("§NNN a role without a number", () => {
+describe("§784 a role without a number", () => {
   const NO_NUMBER: VolunteerRole = { ...ROUTE_WATER, needed: null };
   const given = (state: "REGISTERED" | "CONFIRMED") => person({ roleId: NO_NUMBER.id, choiceIds: [NO_NUMBER.id], state });
   const standingChips = (page: string) => [...new Set([...page.matchAll(/data-testid="volunteer-role-standing"[^>]*>(?:<[^>]*>)*([^<]*)</g)].map((match) => match[1]))];

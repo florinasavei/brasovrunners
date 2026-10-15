@@ -15,7 +15,7 @@ export const REGISTRATION_NOTE_MAX = 2000;
  *
  * What the organizers tell each other about a registration while they organise the event — «cere
  * tricou S», «a sunat, vine cu o oră mai târziu». Plain text in the author's own language, never shown
- * to the participant, never on the race-day desk, never on the public list, and in one file only — the registrations export, as a last column for those same roles (§NNN); read and
+ * to the participant, never on the race-day desk, never on the public list, and in one file only — the registrations export, as a last column for those same roles (§785); read and
  * written by the Organizer and above only (`canKeepRegistrationNotes`), asserted in the service.
  *
  * - **Deleted with the registration.** `ON DELETE CASCADE`: an erase, the retention sweep and an event's

@@ -30,7 +30,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 const state = vi.hoisted(() => ({ db: undefined as unknown, actor: undefined as unknown, locale: "ro" as "ro" | "en" }));
 
 vi.mock("next-intl/server", () => ({
-  // `namespace` string as a page asks, or `{ namespace }` as the export route does (§NNN).
+  // `namespace` string as a page asks, or `{ namespace }` as the export route does (§785).
   getTranslations: async (arg: string | { namespace: string }) => {
     const namespace = typeof arg === "string" ? arg : arg.namespace;
     const catalogue = (state.locale === "ro" ? ro : en) as unknown as Record<string, Record<string, unknown>>;

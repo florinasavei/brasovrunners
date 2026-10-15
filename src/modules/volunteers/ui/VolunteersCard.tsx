@@ -223,7 +223,7 @@ export default async function VolunteersCard({
   const standingOf = new Map(standings.map((standing) => [standing.roleId, standing]));
 
   const pending = volunteers.filter((volunteer) => volunteer.state === "REGISTERED").length;
-  // The summary counts only the roles with a number (§NNN): a role without one has nothing to be «din» — it is said once beside them.
+  // The summary counts only the roles with a number (§784): a role without one has nothing to be «din» — it is said once beside them.
   const numbered = standings.filter((standing) => standing.needed !== null);
   const withoutNumber = standings.filter((standing) => standing.needed === null);
   const totalNeeded = numbered.reduce((sum, standing) => sum + (standing.needed ?? 0), 0);
@@ -331,7 +331,7 @@ export default async function VolunteersCard({
         size="small"
         slotProps={{ htmlInput: { maxLength: VOLUNTEER_ROLE_NAME_MAX } }}
       />
-      {/* «Câți oameni trebuie» or «Fără număr — oricâți oameni» (§NNN): a number, or the house's tick (never a toggle). Ticked, the number box is hidden by
+      {/* «Câți oameni trebuie» or «Fără număr — oricâți oameni» (§784): a number, or the house's tick (never a toggle). Ticked, the number box is hidden by
           the stylesheet alone (`:has`) — no script, so a form without scripts keeps working with the box shown; the box is never `required` (a hidden
           required box would block the press), the server decides by the tick and says «Verifică acest câmp» at the number when neither is given. */}
       <Stack
@@ -580,7 +580,7 @@ export default async function VolunteersCard({
   const standingChip = (role: VolunteerRole) => {
     const standing = standingOf.get(role.id);
     if (!standing) return null;
-    // A role without a number (§NNN) is never «full»: «3 · fără număr», the open glyph and no warning colour (nothing is owed).
+    // A role without a number (§784) is never «full»: «3 · fără număr», the open glyph and no warning colour (nothing is owed).
     if (standing.needed === null) {
       return <StatusChip glyph="open" variant="outlined" label={t("volunteers.standingNoNumber", { taken: String(standing.taken) })} testId="volunteer-role-standing" />;
     }
@@ -1258,7 +1258,7 @@ export default async function VolunteersCard({
     roles.length === 0
       ? t("volunteers.summaryNone")
       : [
-          // «3 din 10», «3 din 10 + roluri fără număr»; with no numbered role at all, only the people in the roles without one (§NNN).
+          // «3 din 10», «3 din 10 + roluri fără număr»; with no numbered role at all, only the people in the roles without one (§784).
           numbered.length > 0
             ? t(withoutNumber.length > 0 ? "volunteers.summaryPlusNoNumber" : "volunteers.summary", { taken: String(totalTaken), needed: String(totalNeeded) })
             : t("volunteers.summaryOnlyNoNumber", { taken: String(withoutNumber.reduce((sum, standing) => sum + standing.taken, 0)) }),

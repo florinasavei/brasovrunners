@@ -346,7 +346,7 @@ describe("§783 «Tipărire» of the one badge", () => {
   it("says where the number starts: the confirmed volunteers, what the roles need, what they need with the people given a role without a number, or the fallback", async () => {
     expect(await single({ count: 37, basis: "confirmed" })).toContain("Începe de la voluntarii confirmați ai evenimentului: 37.");
     expect(await single({ count: 20, basis: "needed" })).toContain("Încă nu e niciun voluntar confirmat, așa că începe de la câți cer rolurile împreună: 20.");
-    // §NNN: a role without a number adds the people it was given, and the help says so rather than call that what the roles «ask for».
+    // §784: a role without a number adds the people it was given, and the help says so rather than call that what the roles «ask for».
     expect(await single({ count: 11, basis: "neededNoNumber" })).toContain("începe de la câți cer rolurile împreună și, pentru un rol fără număr, de la oamenii cărora le-ai dat rolul: 11.");
     expect(await single({ count: 11, basis: "neededNoNumber" }, "en")).toContain("and for a role with no limit at the people you gave it: 11.");
     expect(await single({ count: 10, basis: "fallback" })).toContain("niciun rol nu cere pe nimeni, așa că începe de la 10.");

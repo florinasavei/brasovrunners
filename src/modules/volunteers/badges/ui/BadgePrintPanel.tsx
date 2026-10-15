@@ -53,7 +53,7 @@ export default async function BadgePrintPanel({
   const grid = badgeSheetGrid(badgePaper(design));
   const { widthMm, heightMm } = badgeSizeMm(design);
   const image = badgeImageSize(design);
-  // The roles with a number say what they need; a role without one (§NNN) is said once beside the total.
+  // The roles with a number say what they need; a role without one (§784) is said once beside the total.
   const needed = roles.reduce((sum, role) => sum + (role.needed ?? 0), 0);
   const someWithoutNumber = roles.some((role) => role.needed === null);
   const allWithoutNumber = roles.length > 0 && roles.every((role) => role.needed === null);

@@ -30,7 +30,7 @@ import { chooseSex } from "./support/sex-choice";
  * (the same name in two categories) and «Foto/Video» under none; the volunteers' page groups the roles under level-3 headings in that order with the contact on one
  * line under its heading (links of 44 pixels); an offer for «Direcționare» is named «Direcționare (Traseu)» on the card; the CSV says so and holds no contact.
  *
- * §NNN — a role «fără număr»: «Adaugă un rol» has the tick «Fără număr — oricâți oameni» beside «Câți oameni trebuie» (the number box goes while it is ticked); the card says
+ * §784 — a role «fără număr»: «Adaugă un rol» has the tick «Fără număr — oricâți oameni» beside «Câți oameni trebuie» (the number box goes while it is ticked); the card says
  * «0 · fără număr» on that role and «0 din 1 + roluri fără număr» in its closed line; the event's page lists the role, the volunteers' page offers it however many
  * people it was given and never puts a number on it, even with the counts on.
  *
@@ -1165,7 +1165,7 @@ test.describe("§754 volunteers for a race", () => {
     expect(text).not.toMatch(/Ana Popescu|coordonator@club\.test|0712 345 678|\+40 ?712 ?345 ?678/);
   });
 
-  test("§NNN a role «fără număr»: the tick in «Adaugă un rol», «0 · fără număr» on the card, offered on the page whoever it was given to, and never a number on it", async ({ page, browser }) => {
+  test("§784 a role «fără număr»: the tick in «Adaugă un rol», «0 · fără număr» on the card, offered on the page whoever it was given to, and never a number on it", async ({ page, browser }) => {
     const tag = `${test.info().project.name}-${Date.now().toString(36)}-nonum`;
     const event = await seedEvent(tag);
     const emails = ["maria", "ion", "dana"].map((name) => `${name}.${tag}@example.test`);

@@ -8,7 +8,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { auditMigration } from "../../../scripts/migration-check.mjs";
 
 /**
- * Migration `0163_volunteer_role_no_number` (§NNN, amending §754 and §761), proven on real PostgreSQL (PGlite): a volunteer role's
+ * Migration `0163_volunteer_role_no_number` (§784, amending §754 and §761), proven on real PostgreSQL (PGlite): a volunteer role's
  * `needed` becomes optional — NULL is «fără număr», any number of people. The roles an event had before keep their number and their
  * people; a role may now be saved with none; the table still refuses zero, a negative number and the roles' other bounds; and the file
  * only expands (dropping a NOT NULL, and replacing a CHECK by a wider one, are no contraction).

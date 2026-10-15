@@ -10,7 +10,7 @@ import { readSheet } from "../../helpers/xlsx";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN (BR-REQ-060-01) — the route's «may export but may not keep notes» path. Today `canKeepRegistrationNotes` and
+ * §785 (BR-REQ-060-01) — the route's «may export but may not keep notes» path. Today `canKeepRegistrationNotes` and
  * `canReadRegistrations` are the same set, so no real role reaches it; here the first predicate alone is turned off,
  * as moving either boundary would, and the file must come without «Note interne», the notes' reader must never be
  * called, and the trail must say `withNotes: false`.
@@ -100,7 +100,7 @@ async function seed(): Promise<{ eventId: string; admin: StaffUser }> {
   return { eventId: event.id, admin };
 }
 
-describe("§NNN a role that may export but not keep notes", () => {
+describe("§785 a role that may export but not keep notes", () => {
   it("gets the spreadsheet and the CSV without the column, the reader never called, the trail saying so", async () => {
     const { eventId, admin } = await seed();
     state.actor = admin;

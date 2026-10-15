@@ -8,7 +8,7 @@ import { describe, expect, it } from "vitest";
  * The owner: notes «doar pentru organizatori și administratori». A note is read by the registration's own page
  * (the card), counted by the registrations list (the marker) and listed in «Toate datele unei persoane»; it is
  * on no other surface — not the race-day desk (§67: a name, a state and a number), not the public list, not an
- * email — and, since §NNN (the owner: «asta trebuie de asemenea să fie și în Excel!»), in one file: the
+ * email — and, since §785 (the owner: «asta trebuie de asemenea să fie și în Excel!»), in one file: the
  * registrations export's last column «Note interne». The export route is the one reader on the list for it; it
  * hands the file's writers (`csv.ts`, `workbook.ts`) the words, never the table, and those two stay refused below.
  * This is the structural half of that promise: no file outside
@@ -30,7 +30,7 @@ const READERS = new Set(
     "src/app/[locale]/admin/registrations/[id]/page.tsx",
     "src/app/[locale]/admin/registrations/[id]/note-actions.ts",
     "src/app/[locale]/admin/registrations/(list)/page.tsx",
-    // The registrations export's «Note interne» column (§NNN), asked only for a role that may keep notes.
+    // The registrations export's «Note interne» column (§785), asked only for a role that may keep notes.
     "src/app/api/admin/registrations/export/route.ts",
   ].map((file) => path.join(ROOT, file)),
 );

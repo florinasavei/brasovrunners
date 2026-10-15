@@ -17,13 +17,13 @@ import {
 import { badgePrintDefault, printBoxes, readPrintCounts } from "@/modules/volunteers/badges/badges";
 
 /**
- * §NNN — a volunteer role «fără număr»: the role's needed count is optional, NULL meaning any number of people. The rules of
+ * §784 — a volunteer role «fără număr»: the role's needed count is optional, NULL meaning any number of people. The rules of
  * the domain that read it: the role's form (the tick decides, never the box), a role's standing («free» is null: never full), the
  * public form (never stops offering it), the badges' default («Câte ecusoane» starts at the people given the role), the event file.
  */
 const ROLE = { nameRo: "Punct de apă", nameEn: "Water point", needed: "4", descriptionRo: "", descriptionEn: "" };
 
-describe("§NNN the role's form: a number, or the tick «Fără număr»", () => {
+describe("§784 the role's form: a number, or the tick «Fără număr»", () => {
   it("reads a typed number as before, and an old caller without the tick as unticked", () => {
     expect(volunteerRoleInputSchema.parse(ROLE)).toMatchObject({ needed: 4 });
     expect(volunteerRoleInputSchema.parse({ ...ROLE, needed: " 4 ", unlimited: "" })).toMatchObject({ needed: 4 });
@@ -59,7 +59,7 @@ describe("§NNN the role's form: a number, or the tick «Fără număr»", () =>
   });
 });
 
-describe("§NNN how a role without a number stands", () => {
+describe("§784 how a role without a number stands", () => {
   const role = { id: "r1", needed: null };
   const people = (count: number, state: "REGISTERED" | "CONFIRMED" | "CANCELLED" = "CONFIRMED") =>
     Array.from({ length: count }, () => ({ roleId: "r1", state }));
@@ -117,7 +117,7 @@ describe("§NNN how a role without a number stands", () => {
   });
 });
 
-describe("§NNN the badges' «Câte ecusoane» default", () => {
+describe("§784 the badges' «Câte ecusoane» default", () => {
   it("starts a role with a number at what it needs, and one without at the people given it, within one pile", () => {
     expect(badgePrintDefault({ needed: 3, assigned: 9 })).toBe(3);
     expect(badgePrintDefault({ needed: null, assigned: 9 })).toBe(9);
@@ -140,7 +140,7 @@ describe("§NNN the badges' «Câte ecusoane» default", () => {
   });
 });
 
-describe("§NNN the event's file", () => {
+describe("§784 the event's file", () => {
   const file = (needed: number | null) => ({
     categories: [],
     roles: [{ name: { ro: "Punct de apă", en: "Water point" }, needed, description: { ro: null, en: null }, colour: null, category: null }],
@@ -157,7 +157,7 @@ describe("§NNN the event's file", () => {
   });
 });
 
-describe("§NNN the words", () => {
+describe("§784 the words", () => {
   const catalogues = { ro, en } as const;
   const path = (root: unknown, keys: string[]) => keys.reduce<unknown>((at, key) => (at as Record<string, unknown> | undefined)?.[key], root);
   const KEYS = [

@@ -653,7 +653,7 @@ describe("§776 the free-text line and the marker area", () => {
   }, 60_000);
 });
 
-describe("§NNN «Câte ecusoane» for a role without a number", () => {
+describe("§784 «Câte ecusoane» for a role without a number", () => {
   const person = (roleId: string, name: string, state: "REGISTERED" | "CONFIRMED" | "CANCELLED") => ({
     eventId,
     roleId,
@@ -801,7 +801,7 @@ describe("§783 one badge for everyone, no role — the default", () => {
     expect(await held(await sheet("locale=ro"))).toBe("10");
   });
 
-  it("meets a role without a number (§NNN): its people join the sum of the roles' needs, finite and never a hole, and the confirmed volunteers still come first", async () => {
+  it("meets a role without a number (§784): its people join the sum of the roles' needs, finite and never a hole, and the confirmed volunteers still come first", async () => {
     // «Punct de apă» needs 3 and «Marshal» 5; «Ajutoare» has no number, so no need to add up.
     const [free] = await db.insert(eventVolunteerRoles).values({ eventId, nameRo: "Ajutoare", nameEn: "Helpers", needed: null, position: 2 }).returning({ id: eventVolunteerRoles.id });
     const start = async () => readBadgeSingleStart(db, eventId, await listBadgeRoles(db, eventId));
