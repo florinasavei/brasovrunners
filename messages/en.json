@@ -1114,7 +1114,18 @@
         "add": "Add a note",
         "label": "Note",
         "limit": "At most {max} characters.",
-        "save": "Save the note"
+        "save": "Save the note",
+        "exportMore": "… (more notes on the registration's page)",
+        "exportGone": "account removed",
+        "exportRole": {
+          "MEMBER": "Member",
+          "CONTRIBUTOR": "Volunteer",
+          "COPYWRITER": "Editor",
+          "MODERATOR": "Organizer",
+          "DEV": "Technical",
+          "ADMIN": "Administrator",
+          "SUPERADMIN": "Superadministrator"
+        }
       },
       "auditActorParticipant": "the participant, from their own link",
       "audit": {

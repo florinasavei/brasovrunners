@@ -1,7 +1,9 @@
 import { contentDisposition } from "@/shared/http/content-disposition";
 import { NextResponse } from "next/server";
+import { getTranslations } from "next-intl/server";
 import { getDb } from "@/db/client";
 import { type RegistrationStatus, registrationStatus } from "@/db/schema/registrations";
+import { routing, type Locale } from "@/i18n/routing";
 import { buildRegistrationsCsv } from "@/modules/registrations/csv";
 import { cancelReasonCell } from "@/modules/registrations/domain/cancel-reason";
 import { familyColumn, familyOf } from "@/modules/registrations/family-marker";
@@ -17,7 +19,8 @@ import { defaultEventFilter } from "@/modules/registrations/domain/default-event
 import { identityDocumentsOf } from "@/modules/registrations/domain/identity-documents";
 import { rowDeadlineOf } from "@/modules/registrations/domain/row-deadline";
 import { ageOnRaceDay } from "@/modules/registrations/domain/age";
-import { canReadRegistrations } from "@/modules/staff-identity/domain/roles";
+import { exportNotesCell, type ExportNotesWords, listRegistrationNotesForExport } from "@/modules/registrations/notes";
+import { STAFF_ROLES, canKeepRegistrationNotes, canReadRegistrations } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { needsEmailAction } from "@/modules/registrations/domain/email-state";
@@ -79,6 +82,9 @@ export async function GET(request: Request): Promise<Response> {
   const outside = url.searchParams.get("outside");
   // The bibs page's filter (§664): the file is the rows on screen.
   const memberBib = url.searchParams.get("memberBib");
+  // The reader's language (§782), as the sponsor list's `lang`: the words of «Note interne» — its header, its roles.
+  const lang = url.searchParams.get("lang");
+  const locale: Locale = (routing.locales as readonly string[]).includes(lang ?? "") ? (lang as Locale) : routing.defaultLocale;
 
   /*
     The event scope, by the rule the screen uses (§178, §312) rather than the raw parameter.
@@ -139,6 +145,26 @@ export async function GET(request: Request): Promise<Response> {
   const declarations = await listLatestDeclarationAcceptances(db, rows.map((row) => row.id));
   // The other people on each row's address (§543), the `family` column of both formats: one query.
   const family = await familyOf(db, rows);
+  /*
+    «Note interne» (§782; the owner: «asta trebuie de asemenea să fie și în Excel!»): a last column in both files,
+    for a role that may keep notes — asserted here and again in the reader — and for no other. Today every role
+    that exports may, so the check never refuses; it is written so that moving either boundary moves the column.
+    One grouped query for the exported rows (never one per row), the author as a role, the date on each event's own clock.
+  */
+  const withNotes = canKeepRegistrationNotes(actor.role);
+  let notesHeader: string | undefined;
+  const notes = new Map<string, string>();
+  if (withNotes) {
+    const t = await getTranslations({ locale, namespace: "Admin" });
+    const words: ExportNotesWords = {
+      roles: Object.fromEntries(STAFF_ROLES.map((role) => [role, t(`registrations.notes.exportRole.${role}`)])) as ExportNotesWords["roles"],
+      authorGone: t("registrations.notes.exportGone"),
+      more: t("registrations.notes.exportMore"),
+    };
+    notesHeader = t("registrations.notes.title");
+    const live = await listRegistrationNotesForExport(db, actor, rows.map((row) => row.id));
+    for (const row of rows) notes.set(row.id, exportNotesCell(live.get(row.id), row.eventTimezone, words));
+  }
   // The list's «Până când» (§650): the moment each row waits on and what for, or none.
   const deadlineOf = (row: (typeof rows)[number]) => rowDeadlineOf(row, deadlinesNow);
 
@@ -153,7 +179,8 @@ export async function GET(request: Request): Promise<Response> {
     action: "registration.exported",
     entityType: "event",
     entityId: scope.eventId ?? null,
-    metadata: { eventId: scope.eventId ?? null, format, rowCount: rows.length },
+    // `withNotes` (§782): whether the file carries «Note interne» — a count of nothing, never a word of one.
+    metadata: { eventId: scope.eventId ?? null, format, rowCount: rows.length, withNotes },
     now: new Date(),
   });
 
@@ -205,8 +232,10 @@ export async function GET(request: Request): Promise<Response> {
         // «Până când» (§650), beside «Status»: the moment on the club's clock and what it is for, in words.
         deadline: deadlineOf(row)?.at ?? null,
         deadlineFor: deadlineOf(row)?.kind ?? null,
+        notes: notes.get(row.id) ?? "",
       })),
       eventTitle ?? "Participants",
+      { notesHeader },
     );
 
     return new NextResponse(new Uint8Array(workbook), {
@@ -268,7 +297,10 @@ export async function GET(request: Request): Promise<Response> {
       ageOnRaceDay: ageOnRaceDay(row.birthDate, row.eventStartsAt, row.eventTimezone),
       country: row.country,
       city: row.city,
+      // «Note interne» (§782), last, written only with the header — a role that may keep notes.
+      notes: notes.get(row.id) ?? "",
     })),
+    { notesHeader },
   );
 
   return new NextResponse(csv, {

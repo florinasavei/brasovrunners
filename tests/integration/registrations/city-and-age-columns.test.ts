@@ -25,7 +25,9 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 const state = vi.hoisted(() => ({ db: undefined as unknown, actor: undefined as unknown, locale: "ro" as "ro" | "en" }));
 
 vi.mock("next-intl/server", () => ({
-  getTranslations: async (namespace: string) => {
+  // `namespace` string as a page asks, or `{ namespace }` as the export route does (§782).
+  getTranslations: async (arg: string | { namespace: string }) => {
+    const namespace = typeof arg === "string" ? arg : arg.namespace;
     const catalogue = (state.locale === "ro" ? ro : en) as unknown as Record<string, Record<string, unknown>>;
     return createTranslator({ locale: state.locale, messages: catalogue[namespace] as never });
   },
@@ -229,8 +231,8 @@ describe("§660 «Oraș» and «Vârstă» on the registrations list", () => {
     const response = await exportRegistrations(new Request(`http://localhost/api/admin/registrations/export?eventId=${race.id}`));
     expect(response.status).toBe(200);
     const [header, ...lines] = (await response.text()).split("\r\n");
-    expect(header.split(",").slice(-4, -1)).toEqual(["Age on race day", "Country", "City"]);
-    const last = (name: string) => lines.find((line) => line.includes(name))?.split(",").slice(-4, -1);
+    expect(header.split(",").slice(-5, -2)).toEqual(["Age on race day", "Country", "City"]);
+    const last = (name: string) => lines.find((line) => line.includes(name))?.split(",").slice(-5, -2);
     expect(last("Ana Brașov")).toEqual(["36", "RO", "Brașov"]);
     expect(last("Bob Bristol")).toEqual(["17", "GB", "Bristol"]);
     expect(last("Cora Nimic")).toEqual(["", "RO", ""]);

@@ -1114,7 +1114,18 @@
         "add": "Adaugă o notă",
         "label": "Nota",
         "limit": "Cel mult {max} de caractere.",
-        "save": "Salvează nota"
+        "save": "Salvează nota",
+        "exportMore": "… (mai multe note pe pagina înscrierii)",
+        "exportGone": "cont șters",
+        "exportRole": {
+          "MEMBER": "Membru",
+          "CONTRIBUTOR": "Voluntar",
+          "COPYWRITER": "Redactor",
+          "MODERATOR": "Organizator",
+          "DEV": "Tehnic",
+          "ADMIN": "Administrator",
+          "SUPERADMIN": "Superadministrator"
+        }
       },
       "auditActorParticipant": "participantul, din linkul propriu",
       "audit": {

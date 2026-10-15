@@ -20,6 +20,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 const state = vi.hoisted(() => ({ db: undefined as unknown, actor: undefined as unknown }));
 
 vi.mock("next/headers", () => ({ cookies: async () => ({ get: () => undefined, set: () => {}, delete: () => {} }), headers: async () => new Headers() }));
+vi.mock("next-intl/server", async () => (await import("../../helpers/intl-server")).intlServerMock);
 vi.mock("next/cache", async () => (await import("../../helpers/next-cache")).fakeNextCache.module);
 vi.mock("@/auth", () => ({ auth: async () => null, signIn: async () => {}, signOut: async () => {} }));
 vi.mock("@/db/client", () => ({ getDb: () => state.db }));
