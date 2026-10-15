@@ -6706,7 +6706,7 @@
         "save": "Salvează formularele",
         "saving": "Se salvează…",
         "saved": "Formularele „Spune-ne ceva” au fost salvate.",
-        "roads": "Mesajul stă în coada de emailuri doar până pleacă, câteva minute; apoi textul se șterge și rămâne doar urma trimiterii. Calea se alege pentru fiecare formular: Gmail-ul clubului (CONTACT_SMTP_USER) sau Mailgun. Dacă una pică, mesajul pleacă prin cealaltă.",
+        "roads": "Mesajul stă în coada de emailuri doar până pleacă, câteva minute; apoi textul se șterge și rămâne doar urma trimiterii. Calea se alege pentru fiecare formular în parte: Gmail-ul clubului (CONTACT_SMTP_USER) sau Mailgun. Dacă una pică, mesajul pleacă prin cealaltă.",
         "selfRecipient": "Adresa de mai sus este chiar contul Gmail care trimite. Gmail poate lăsa un astfel de mesaj doar în Trimise, nu în Primite: alege altă adresă sau calea Mailgun."
       },
       "perSendNewsletter": "Textul newsletterului se scrie la fiecare trimitere, pe pagina „Newsletter” a backoffice-ului, așa că nu are cuvinte de editat aici.",

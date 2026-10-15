@@ -10,7 +10,6 @@ import { registrations } from "@/db/schema/registrations";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import type { OutgoingEmail, SendResult } from "@/infrastructure/email/adapter";
 import { createMailgunAdapter } from "@/infrastructure/email/mailgun-adapter";
-import { createCaptureSmtpTransport } from "@/infrastructure/email/smtp-adapter";
 import type { ContactScreening } from "@/modules/contact/service";
 import {
   DEFAULT_FEEDBACK_SETTINGS,
@@ -22,7 +21,7 @@ import {
   SAFETY_SUBJECT,
 } from "@/modules/feedback/domain/branches";
 import { forgetFeedbackLinkMemo } from "@/modules/feedback/links";
-import { type FeedbackDeps, submitFeedback } from "@/modules/feedback/service";
+import { type FeedbackDeps, submitFeedback as queueFeedback } from "@/modules/feedback/service";
 import { FEEDBACK_SETTING_KEY, readFeedbackSettings, updateFeedbackSettings } from "@/modules/feedback/settings";
 import { computeContentHash, type LegalDocumentBody } from "@/modules/legal-documents/domain/content-hash";
 import { insertLegalDocumentVersion, noticeDescribesFeedbackForms, noticeDescribesFeedbackFormsNamed } from "@/modules/legal-documents/repository";
@@ -31,6 +30,7 @@ import { sendParticipantMessage } from "@/modules/notifications/participant-mess
 import { renderOutboxMessage } from "@/modules/notifications/render";
 import { RATE_LIMITS } from "@/modules/rate-limit/service";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
+import { deliverRelay, fakeRoads, relayRows, sent } from "../../helpers/relay";
 
 /**
  * BR-REQ-070-04, BR-REQ-080-01, `DECISIONS.md` §676 — «Spune-ne ceva»: each branch by its own road
@@ -45,7 +45,18 @@ const SETTINGS: FeedbackSettings = {
   howItWent: { on: true, to: "how@example.org", via: "gmail" },
   suggestion: { on: true, to: "ideas@example.org", via: "gmail" },
   complaint: { on: true, to: "complaints@example.org", via: "gmail" },
-  safety: { on: true, to: "safety@example.org", via: "mailgun", name: "Maria" },
+  safety: { on: true, to: "safety@example.org", via: "mailgun", name: "Maria", fallbackToGmail: false },
+};
+
+type CapturedSmtp = {
+  from: { name: string; address: string };
+  to: string[];
+  cc?: string[];
+  bcc?: string[];
+  replyTo?: { name: string; address: string };
+  subject: string;
+  text: string;
+  html: string;
 };
 
 const UNSCREENED: ContactScreening = { botCheckOn: false, tokenPresent: false, turnstileVerdict: "not_configured", clubHost: null };
@@ -55,8 +66,11 @@ describe("§676 «Spune-ne ceva»", () => {
   let close: () => Promise<void>;
   let admin: StaffUser;
   let organizer: StaffUser;
-  let smtp: ReturnType<typeof createCaptureSmtpTransport>;
+  /** What the club's Gmail was handed, as the contact form's own transport once recorded it. */
+  let smtp: { messages: CapturedSmtp[] };
   let mailgun: { send: ReturnType<typeof vi.fn<(message: OutgoingEmail) => Promise<SendResult>>> };
+  /** Which roads this deployment has, and what answers on Mailgun's: what a test says through `deps`, read when the relay sends. */
+  let legacy: { gmail: boolean; mailgun: { send: (message: OutgoingEmail) => Promise<SendResult> } | null };
 
   beforeAll(async () => {
     ({ db, close } = await createTestDatabase());
@@ -68,23 +82,57 @@ describe("§676 «Spune-ne ceva»", () => {
     forgetFeedbackLinkMemo(db);
     [admin] = await db.insert(staffUsers).values({ email: "admin@dev.test", displayName: "Admin", role: "ADMIN" }).returning();
     [organizer] = await db.insert(staffUsers).values({ email: "org@dev.test", displayName: "Org", role: "MODERATOR" }).returning();
-    smtp = createCaptureSmtpTransport();
+    smtp = { messages: [] };
     mailgun = { send: vi.fn(async () => ({ outcome: "sent", providerMessageId: "mailgun:1" }) as SendResult) };
+    legacy = { gmail: true, mailgun };
   });
 
-  const deps = (overrides: Partial<FeedbackDeps> = {}): FeedbackDeps => ({
-    settings: SETTINGS,
-    noticeDescribes: true,
-    safetyGmailDescribed: true,
-    namedDescribed: true,
-    clubFallback: ["contact@example.org"],
-    smtp: { transport: smtp, from: { name: "Club", address: "club@example.org" }, appEnv: "production" },
-    mailgun,
-    appEnv: "production",
-    screening: UNSCREENED,
-    eventTitle: async (slug) => (slug === "crosul" ? "Crosul de toamnă" : null),
-    ...overrides,
-  });
+  /*
+    §NNN: «Spune-ne ceva» queues its message and the relay carries it. These tests read what a road was handed, so the
+    two roads are the two fakes they always had — Gmail records what it was handed, Mailgun is `mailgun.send` — and every
+    submit is followed by one pass of the relay, the way the after-response drain follows it in production.
+  */
+  const submitFeedback: typeof queueFeedback = async (...args) => {
+    const outcome = await queueFeedback(...args);
+    const roads = fakeRoads({
+      available: { gmail: legacy.gmail, mailgun: legacy.mailgun !== null },
+      gmail: (message) => {
+        smtp.messages.push({
+          from: { name: "Club", address: "club@example.org" },
+          to: [message.to, ...(message.cc ?? [])],
+          ...(message.cc ? { cc: [...message.cc] } : {}),
+          ...(message.bcc ? { bcc: [...message.bcc] } : {}),
+          ...(message.replyTo ? { replyTo: { name: message.replyToName ?? message.replyTo, address: message.replyTo } } : {}),
+          subject: message.subject,
+          text: message.text,
+          html: message.html,
+        });
+        return sent("gmail");
+      },
+      mailgun: (message) => (legacy.mailgun as { send: (m: OutgoingEmail) => Promise<SendResult> }).send(message),
+    });
+    await deliverRelay(db, roads, new Date(NOW.getTime() + 1_000));
+    return outcome;
+  };
+
+  /** A road a test takes away is `null`, as it was when the deployment lacked it. */
+  type Legacy = Omit<Partial<FeedbackDeps>, "roads"> & { smtp?: null; mailgun?: { send: (message: OutgoingEmail) => Promise<SendResult> } | null };
+  const deps = (overrides: Legacy = {}): FeedbackDeps => {
+    const { smtp: gmailRoad, mailgun: mailgunRoad, ...rest } = overrides;
+    legacy = { gmail: gmailRoad !== null, mailgun: mailgunRoad === undefined ? mailgun : mailgunRoad };
+    return {
+      settings: SETTINGS,
+      noticeDescribes: true,
+      safetyGmailDescribed: true,
+      namedDescribed: true,
+      clubFallback: ["contact@example.org"],
+      roads: { gmail: legacy.gmail, mailgun: legacy.mailgun !== null },
+      appEnv: "production",
+      screening: UNSCREENED,
+      eventTitle: async (slug) => (slug === "crosul" ? "Crosul de toamnă" : null),
+      ...rest,
+    };
+  };
 
   const post = (fields: Record<string, unknown>) => ({ locale: "ro", renderedAt: RENDERED, ...fields });
   const HOW = post({ branch: "howItWent", event: "crosul", date: "2026-10-04", rating: "5", message: "Foarte frumos.", reasons: [], reasonOther: "", email: "" });
@@ -141,14 +189,25 @@ describe("§676 «Spune-ne ceva»", () => {
       expect(message.transport).toBeUndefined();
       expect(message.text).toContain("Unde și când: Parcul, joi");
       expect(message.text).toContain(`Contact: ${NO_CONTACT_LINE}`);
-      expect(message.idempotencyKey).toMatch(/^feedback:/);
+      expect(message.idempotencyKey).toMatch(/^relay:/);
     });
 
-    it("writes no outbox row and no audit row, and logs the branch, the reader and the outcome only", async () => {
+    it("keeps the words only until they are delivered — one outbox row each, on its road, the words gone — writes no audit row, and logs the branch, the reader and the outcome only", async () => {
       const logged = vi.spyOn(console, "info").mockImplementation(() => undefined);
       await submitFeedback(db, deps(), HOW, NOW);
       await submitFeedback(db, deps(), SAFETY, NOW);
-      expect(await db.select().from(emailOutbox)).toEqual([]);
+      // The row is the record (§NNN): the form, the road chosen and the road it left by — and nothing a person wrote.
+      const rows = await relayRows(db);
+      expect(rows.map((row) => [row.messageType, row.status, row.road, row.transport]).sort((a, b) => String(a[2]).localeCompare(String(b[2])))).toEqual([
+        ["FEEDBACK_MESSAGE", "SENT", "gmail", "gmail"],
+        ["FEEDBACK_MESSAGE", "SENT", "mailgun", "mailgun"],
+      ]);
+      for (const row of rows) {
+        expect(row).toMatchObject({ participantId: null, registrationId: null, payloadJson: { deleted: true } });
+        expect(row.bodyDeletedAt).not.toBeNull();
+      }
+      expect(JSON.stringify(rows)).not.toContain("Foarte frumos");
+      expect(JSON.stringify(rows)).not.toContain("Parcul");
       expect(await db.select().from(auditLogs)).toEqual([]);
       const lines = logged.mock.calls.map((call) => call.join(" "));
       // The reader as a word (§678), never an address or a name.
@@ -193,7 +252,7 @@ describe("§676 «Spune-ne ceva»", () => {
     });
 
     it("sends a named «O sugestie» to the safety branch's person by Mailgun while her own form is switched off but she is configured", async () => {
-      const safetyOff = { ...SETTINGS, safety: { on: false, to: "safety@example.org", via: "mailgun" as const, name: "Maria" } };
+      const safetyOff = { ...SETTINGS, safety: { on: false, to: "safety@example.org", via: "mailgun" as const, name: "Maria", fallbackToGmail: false } };
       const toPerson = { ...SUGGESTION, audience: "person" };
       expect(await submitFeedback(db, deps({ settings: safetyOff }), toPerson, NOW)).toEqual({ outcome: "sent", audience: "person" });
       expect(smtp.messages).toHaveLength(0);
@@ -273,7 +332,7 @@ describe("§676 «Spune-ne ceva»", () => {
     });
 
     it("refuses a reader not offered on its box, and sends nothing", async () => {
-      const noPerson = { ...SETTINGS, safety: { on: false, to: null, via: "mailgun" as const, name: null } };
+      const noPerson = { ...SETTINGS, safety: { on: false, to: null, via: "mailgun" as const, name: null, fallbackToGmail: false } };
       const toPerson = { ...SUGGESTION, audience: "person" };
       await expect(submitFeedback(db, deps({ settings: noPerson }), toPerson, NOW)).rejects.toMatchObject({ code: "VALIDATION_ERROR", fields: ["audience"] });
       // No club on the safety form without the SMTP road and with no mailbox to fall back on.
@@ -342,17 +401,44 @@ describe("§676 «Spune-ne ceva»", () => {
       expect(await submitFeedback(db, deps(), COMPLAINT, NOW)).toEqual({ outcome: "sent" });
     });
 
-    it("answers Mailgun's refusal «unavailable», with no second road, and gives the attempt back", async () => {
+    /*
+      §NNN: a refusing road is no longer a sentence on the page. The message is queued, the person is answered «trimis», and the
+      relay — not the form — carries it: by the other road when the message may take it, waiting when it may not.
+    */
+    it("answers «sent» for a message its road refuses, and keeps Girl Zone's waiting for Mailgun: never by Gmail without the club's tick", async () => {
       mailgun.send.mockResolvedValue({ outcome: "transient_failure", error: "mailgun unreachable" });
       vi.spyOn(console, "info").mockImplementation(() => undefined);
-      for (let index = 0; index < 31; index += 1) expect(await submitFeedback(db, deps(), SAFETY, NOW)).toEqual({ outcome: "unavailable" });
-      expect(smtp.messages).toHaveLength(0);
-      // Every refused send was refunded: the bucket is not spent by sends that reached nobody.
-      mailgun.send.mockResolvedValue({ outcome: "sent", providerMessageId: "mailgun:2" });
       expect(await submitFeedback(db, deps(), SAFETY, NOW)).toEqual({ outcome: "sent" });
+      expect(smtp.messages).toHaveLength(0);
+      const [row] = await relayRows(db);
+      expect(row).toMatchObject({ status: "PENDING", road: "mailgun", attemptCount: 1, lastError: "mailgun unreachable" });
+      expect(row.payloadJson).toMatchObject({ fallbackAllowed: false });
+      // The quarter-hour of retries that follow never reach Gmail: her message stays with Mailgun.
+      const roads = fakeRoads({ mailgun: mailgun.send, gmail: () => sent("gmail") });
+      for (const seconds of [10, 20, 3_600, 7_200]) await deliverRelay(db, roads, new Date(NOW.getTime() + seconds * 1000));
+      expect(roads.by("gmail")).toHaveLength(0);
+      expect((await relayRows(db))[0].status).toBe("PENDING");
     });
 
-    it("answers a deployment with no road «unavailable»; without the SMTP road the safety branch still leaves by Mailgun", async () => {
+    it("lets Girl Zone's message leave by Gmail when Mailgun is down only with the club's tick and the notice that names it", async () => {
+      mailgun.send.mockResolvedValue({ outcome: "transient_failure", error: "mailgun unreachable" });
+      vi.spyOn(console, "info").mockImplementation(() => undefined);
+      vi.spyOn(console, "warn").mockImplementation(() => undefined);
+      const ticked = { ...SETTINGS, safety: { ...SETTINGS.safety, fallbackToGmail: true } };
+      // The tick alone is not enough while the notice in force does not name Gmail for her messages.
+      await submitFeedback(db, deps({ settings: ticked, safetyGmailDescribed: false }), SAFETY, NOW);
+      expect((await relayRows(db))[0].payloadJson).toMatchObject({ fallbackAllowed: false });
+      await resetTables(db);
+      expect(await submitFeedback(db, deps({ settings: ticked, safetyGmailDescribed: true }), SAFETY, NOW)).toEqual({ outcome: "sent" });
+      expect((await relayRows(db))[0].payloadJson).toMatchObject({ fallbackAllowed: true });
+      const roads = fakeRoads({ mailgun: mailgun.send, gmail: () => sent("gmail") });
+      await deliverRelay(db, roads, new Date(NOW.getTime() + 10_000));
+      await deliverRelay(db, roads, new Date(NOW.getTime() + 20_000));
+      expect(roads.by("gmail").map((message) => message.to)).toEqual(["safety@example.org"]);
+      expect((await relayRows(db))[0]).toMatchObject({ status: "SENT", road: "mailgun", transport: "gmail" });
+    });
+
+        it("answers a deployment with no road «unavailable»; without the SMTP road the safety branch still leaves by Mailgun", async () => {
       // No SMTP road (`CONTACT_FORM_MODE=off`): the three ordinary branches are not offered at all.
       for (const branch of [HOW, SUGGESTION, COMPLAINT]) expect(await submitFeedback(db, deps({ smtp: null }), branch, NOW)).toEqual({ outcome: "unavailable" });
       expect(await submitFeedback(db, deps({ mailgun: null }), SAFETY, NOW)).toEqual({ outcome: "unavailable" });
@@ -425,7 +511,7 @@ describe("§676 «Spune-ne ceva»", () => {
       const [message] = mailgun.send.mock.calls[0];
       expect(message.to).toBe(to);
       expect(message.subject).toBe(subject);
-      expect(message.idempotencyKey).toMatch(/^feedback:/);
+      expect(message.idempotencyKey).toMatch(/^relay:/);
       expect(message.cc).toBeUndefined();
       expect(message.bcc).toBeUndefined();
     });
@@ -443,18 +529,29 @@ describe("§676 «Spune-ne ceva»", () => {
       expect(mailgun.send).not.toHaveBeenCalled();
     });
 
-    it("answers a refusing road «unavailable» on either, with no second road and the attempt given back", async () => {
+    it("queues a message whichever road refuses it: the club's three forms are taken over by the other road, by default", async () => {
       vi.spyOn(console, "error").mockImplementation(() => undefined);
       vi.spyOn(console, "info").mockImplementation(() => undefined);
+      vi.spyOn(console, "warn").mockImplementation(() => undefined);
       mailgun.send.mockResolvedValue({ outcome: "transient_failure", error: "mailgun unreachable" });
-      expect(await submitFeedback(db, deps({ settings: choosing("complaint", "mailgun") }), COMPLAINT, NOW)).toEqual({ outcome: "unavailable" });
+      expect(await submitFeedback(db, deps({ settings: choosing("complaint", "mailgun") }), COMPLAINT, NOW)).toEqual({ outcome: "sent" });
       expect(smtp.messages).toHaveLength(0);
-      vi.spyOn(smtp, "send").mockResolvedValue({ outcome: "failed", error: "smtp refused" } as never);
-      expect(await submitFeedback(db, deps({ settings: choosing("safety", "gmail") }), SAFETY, NOW)).toEqual({ outcome: "unavailable" });
-      expect(mailgun.send).toHaveBeenCalledTimes(1);
+      const roads = fakeRoads({ mailgun: mailgun.send, gmail: (message) => (smtp.messages.push({ from: { name: "Club", address: "club@example.org" }, to: [message.to], subject: message.subject, text: message.text, html: message.html }), sent("gmail")) });
+      await deliverRelay(db, roads, new Date(NOW.getTime() + 10_000));
+      await deliverRelay(db, roads, new Date(NOW.getTime() + 20_000));
+      // The message, and the notice to the Administrator that Mailgun did not carry it (the working road carries both).
+      expect(smtp.messages.map((message) => message.to)).toEqual([["complaints@example.org"], ["admin@dev.test"]]);
+      // And the other way: Gmail refusing, Mailgun carrying.
+      const gmailDown = fakeRoads({ gmail: { outcome: "transient_failure", error: "gmail: smtp EAUTH" }, mailgun: sent("mailgun") });
+      mailgun.send.mockResolvedValue({ outcome: "sent", providerMessageId: "mailgun:9" });
+      await queueFeedback(db, deps({ settings: choosing("suggestion", "gmail") }), SUGGESTION, NOW);
+      for (const seconds of [1, 10, 20]) await deliverRelay(db, gmailDown, new Date(NOW.getTime() + 100_000 + seconds * 1000));
+      expect(gmailDown.by("gmail")).toHaveLength(2);
+      // Mailgun carried the message and, with it, the Administrator's notice that Gmail did not.
+      expect(gmailDown.by("mailgun").map((message) => message.to)).toEqual(["ideas@example.org", "admin@dev.test"]);
     });
 
-    it("screens a message for the club's mailbox the same way by either road: marked «[posibil spam]», or held back on the Administrator's tick", async () => {
+        it("screens a message for the club's mailbox the same way by either road: marked «[posibil spam]», or held back on the Administrator's tick", async () => {
       const screening: ContactScreening = { botCheckOn: true, tokenPresent: false, turnstileVerdict: "unavailable", clubHost: null };
       await submitFeedback(db, deps({ screening, settings: choosing("suggestion", "mailgun") }), SUGGESTION, NOW);
       expect(mailgun.send.mock.calls[0][0].subject).toBe("[posibil spam] O sugestie de pe site");
@@ -545,10 +642,15 @@ describe("§676 «Spune-ne ceva»", () => {
       expect(smtp.messages[0].replyTo).toEqual({ name: "Ana Pop", address: "ana@example.org" });
     });
 
-    it("is kept nowhere: no outbox row, no audit row, no bucket that holds an address or a name", async () => {
+    it("is kept only until it is delivered: the outbox rows hold no address or name once sent, and no audit row, no bucket holds one at all", async () => {
       await submitFeedback(db, deps(), NAMED, NOW);
       await submitFeedback(db, deps({ settings: { ...SETTINGS, suggestion: { ...SETTINGS.suggestion, via: "mailgun" } } }), NAMED, NOW);
-      expect(await db.select().from(emailOutbox)).toEqual([]);
+      const rows = await db.select().from(emailOutbox);
+      expect(rows).toHaveLength(2);
+      const kept = JSON.stringify(rows);
+      expect(kept).not.toContain("Ana");
+      expect(kept).not.toContain("ana@example.org");
+      expect(rows.every((row) => row.status === "SENT" && row.bodyDeletedAt !== null)).toBe(true);
       expect(await db.select().from(auditLogs)).toEqual([]);
       const written = JSON.stringify([await db.select().from(rateLimitBuckets), await db.select().from(platformSettings)]);
       expect(written.toLowerCase()).not.toContain("example.org");
@@ -567,7 +669,7 @@ describe("§676 «Spune-ne ceva»", () => {
       await updateFeedbackSettings(db, admin, { ...SETTINGS, suggestion: { on: false, to: "other@example.org" } }, NOW);
       const audits = await db.select().from(auditLogs).where(eq(auditLogs.action, "feedback_forms.changed"));
       expect(audits).toHaveLength(2);
-      expect(audits[1].metadataJson).toEqual({ switched: [{ branch: "suggestion", on: false }], recipientChanged: ["suggestion"], safetyNameChanged: false, viaChanged: [] });
+      expect(audits[1].metadataJson).toEqual({ switched: [{ branch: "suggestion", on: false }], recipientChanged: ["suggestion"], safetyNameChanged: false, viaChanged: [], fallbackToGmail: null });
       const written = JSON.stringify(audits.map((row) => row.metadataJson));
       expect(written).not.toContain("@");
       expect(written).not.toContain("Maria");
@@ -605,7 +707,7 @@ describe("§676 «Spune-ne ceva»", () => {
       await db.insert(platformSettings).values({ key: FEEDBACK_SETTING_KEY, value: { howItWent: { on: true, to: "how@example.org" }, safety: { on: true, to: "safety@example.org", name: "Maria" } }, updatedAt: NOW });
       const read = await readFeedbackSettings(db);
       expect(read.howItWent).toEqual({ on: true, to: "how@example.org", via: "gmail" });
-      expect(read.safety).toEqual({ on: true, to: "safety@example.org", via: "mailgun", name: "Maria" });
+      expect(read.safety).toEqual({ on: true, to: "safety@example.org", via: "mailgun", name: "Maria", fallbackToGmail: false });
       // A word this code does not know is the default too.
       await db.update(platformSettings).set({ value: { suggestion: { on: false, to: null, via: "carrier-pigeon" } } }).where(eq(platformSettings.key, FEEDBACK_SETTING_KEY));
       expect((await readFeedbackSettings(db)).suggestion.via).toBe("gmail");
@@ -618,6 +720,24 @@ describe("§676 «Spune-ne ceva»", () => {
       expect(saved.howItWent.via).toBe("mailgun");
       expect(saved.safety.via).toBe("mailgun");
       expect(saved.suggestion.via).toBe("gmail");
+    });
+
+    it("§NNN keeps Girl Zone's «dacă Mailgun pică, trimite prin Gmail» off by default, saves the tick as a word in the audit, and keeps it when a save does not post it", async () => {
+      expect((await readFeedbackSettings(db)).safety.fallbackToGmail).toBe(false);
+      const ticked = await updateFeedbackSettings(db, admin, { ...SETTINGS, safety: { ...SETTINGS.safety, fallbackToGmail: true } }, NOW);
+      expect(ticked.safety.fallbackToGmail).toBe(true);
+      const [audit] = await db.select().from(auditLogs).where(eq(auditLogs.action, "feedback_forms.changed"));
+      expect(audit.metadataJson).toMatchObject({ fallbackToGmail: true });
+      // A greyed box posts nothing: the tick already saved stays, never turned off by omission.
+      const { fallbackToGmail: _omitted, ...withoutTick } = SETTINGS.safety;
+      const kept = await updateFeedbackSettings(db, admin, { ...SETTINGS, safety: withoutTick }, NOW);
+      expect(kept.safety.fallbackToGmail).toBe(true);
+      // Unticked and posted as unticked, it goes off — and the audit says so.
+      const off = await updateFeedbackSettings(db, admin, { ...SETTINGS, safety: { ...SETTINGS.safety, fallbackToGmail: false } }, NOW);
+      expect(off.safety.fallbackToGmail).toBe(false);
+      // A row saved before the tick existed reads as off.
+      await db.update(platformSettings).set({ value: { safety: { on: true, to: "safety@example.org", via: "mailgun", name: "Maria" } } }).where(eq(platformSettings.key, FEEDBACK_SETTING_KEY));
+      expect((await readFeedbackSettings(db)).safety.fallbackToGmail).toBe(false);
     });
 
     it("§772 refuses to newly choose a road the deployment lacks, on the form's box, and saves nothing — but lets one stay where it already was", async () => {
@@ -769,6 +889,9 @@ describe("§676 «Spune-ne ceva»", () => {
       resolvedAt: null,
       retriedAt: null,
       retriedVia: null,
+      road: null,
+      roadFailures: {},
+      bodyDeletedAt: null,
       lastError: null,
       createdAt: NOW,
       sentAt: null,

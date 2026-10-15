@@ -6706,7 +6706,7 @@
         "save": "Save the forms",
         "saving": "Saving…",
         "saved": "The “Tell us something” forms were saved.",
-        "roads": "A message stays in the email queue only until it leaves, a few minutes; then its words are deleted and only the trace of the send remains. The way is chosen for each form: the club's Gmail (CONTACT_SMTP_USER) or Mailgun. If one is down, the message leaves by the other.",
+        "roads": "A message stays in the email queue only until it leaves, a few minutes; then its words are deleted and only the trace of the send remains. The way is chosen for each form on its own: the club's Gmail (CONTACT_SMTP_USER) or Mailgun. If one is down, the message leaves by the other.",
         "selfRecipient": "The address above is the very Gmail account that sends. Gmail may keep such a message in Sent only, not in the Inbox: choose another address or the Mailgun way."
       },
       "perSendNewsletter": "The newsletter's text is written per send, on the backoffice's “Newsletter” page, so it has no words to edit here.",

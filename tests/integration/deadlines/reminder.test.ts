@@ -183,7 +183,7 @@ describe("§377 the reminder lead, the event's or the club's", () => {
       providerMessageId: null,
       transport: null,
       recipientCount: null,
-      deliveredAt: null, rejectedAt: null, rejectionCause: null, providerCode: null, providerDetail: null, laterDeliveredAt: null, resolvedAt: null, retriedAt: null, retriedVia: null,
+      deliveredAt: null, rejectedAt: null, rejectionCause: null, providerCode: null, providerDetail: null, laterDeliveredAt: null, resolvedAt: null, retriedAt: null, retriedVia: null, road: null, roadFailures: {}, bodyDeletedAt: null,
       lastError: null,
       createdAt: NOW,
       sentAt: null,

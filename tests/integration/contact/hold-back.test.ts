@@ -3,14 +3,14 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vites
 import { platformSettings } from "@/db/schema/platform-settings";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import type { SendResult } from "@/infrastructure/email/adapter";
-import { createCaptureSmtpTransport } from "@/infrastructure/email/smtp-adapter";
 import { countHeldBack, HELD_BACK_SETTING_KEY } from "@/modules/contact/held-back";
 import { readContactRecipients, updateContactRecipients } from "@/modules/contact/recipients";
 import { DEFAULT_FEEDBACK_SETTINGS } from "@/modules/feedback/domain/branches";
-import { type FeedbackDeps, submitFeedback } from "@/modules/feedback/service";
-import { type ContactDelivery, type ContactScreening, submitContactMessage } from "@/modules/contact/service";
+import { type FeedbackDeps, submitFeedback as queueFeedback } from "@/modules/feedback/service";
+import { type ContactDelivery, type ContactScreening, submitContactMessage as queueContact } from "@/modules/contact/service";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
+import { type SmtpCapture, smtpCapture } from "../../helpers/relay";
 
 /**
  * BR-REQ-070-04, `DECISIONS.md` §744 (amends §310) — the tick «Nu-mi trimite mesajele care par spam»
@@ -43,8 +43,27 @@ describe("BR-REQ-070-04 the tick that holds back suspected spam", () => {
     [organizer] = await db.insert(staffUsers).values({ email: "org@dev.test", displayName: "Org", role: "MODERATOR" }).returning();
   });
 
-  const delivery = (capture: ReturnType<typeof createCaptureSmtpTransport>): ContactDelivery => ({
-    transport: capture,
+  /*
+    §NNN: the forms queue their message and the relay carries it. These tests read what the club's Gmail was handed, so every
+    post is followed by one pass of the relay with Gmail answering into the capture — and Mailgun into `mailgun.send`.
+  */
+  const mailgun = { send: vi.fn(async () => ({ outcome: "sent", providerMessageId: "mailgun:1" }) as SendResult) };
+  const mailgunAnswer = () => mailgun.send();
+  let current: SmtpCapture | null = null;
+  const capturing = () => (current = smtpCapture(undefined, mailgunAnswer));
+  const submitContactMessage: typeof queueContact = async (...args) => {
+    const outcome = await queueContact(...args);
+    await current?.deliver(db, new Date(NOW.getTime() + 1_000));
+    return outcome;
+  };
+  const submitFeedback: typeof queueFeedback = async (...args) => {
+    const outcome = await queueFeedback(...args);
+    await current?.deliver(db, new Date(NOW.getTime() + 1_000));
+    return outcome;
+  };
+
+  const delivery = (capture: SmtpCapture): ContactDelivery => ({
+    ...((current = capture), {}),
     from: { name: "Club", address: "club@example.com" },
     to: ["club@example.com"],
     appEnv: "production",
@@ -60,7 +79,7 @@ describe("BR-REQ-070-04 the tick that holds back suspected spam", () => {
   };
 
   it("unticked, a suspicious message is delivered marked exactly as before, and nothing is counted", async () => {
-    const capture = createCaptureSmtpTransport();
+    const capture = capturing();
     expect(await quietly(() => submitContactMessage(db, delivery(capture), PERSON, NOW, PAGE, NO_TOKEN))).toEqual({ outcome: "sent" });
     expect(capture.messages).toHaveLength(1);
     expect(capture.messages[0]?.subject).toBe("[posibil spam] Mesaj de pe site: Ana Popescu");
@@ -70,7 +89,7 @@ describe("BR-REQ-070-04 the tick that holds back suspected spam", () => {
 
   it("ticked, a suspicious message is counted and not emailed, and the sender is answered the same", async () => {
     await tick(true);
-    const capture = createCaptureSmtpTransport();
+    const capture = capturing();
     expect(await quietly(() => submitContactMessage(db, delivery(capture), PERSON, NOW, PAGE, withTick(NO_TOKEN, true)))).toEqual({ outcome: "sent" });
     expect(capture.messages).toHaveLength(0);
     expect(await countHeldBack(db, NOW)).toBe(1);
@@ -84,7 +103,7 @@ describe("BR-REQ-070-04 the tick that holds back suspected spam", () => {
 
   it("ticked, a message that is not suspicious is delivered untouched", async () => {
     await tick(true);
-    const capture = createCaptureSmtpTransport();
+    const capture = capturing();
     expect(await submitContactMessage(db, delivery(capture), PERSON, NOW, PAGE, withTick(PASSED, true))).toEqual({ outcome: "sent" });
     expect(capture.messages).toHaveLength(1);
     expect(capture.messages[0]?.subject).toBe("Mesaj de pe site: Ana Popescu");
@@ -93,7 +112,7 @@ describe("BR-REQ-070-04 the tick that holds back suspected spam", () => {
 
   it("counts the last thirty days only", async () => {
     await tick(true);
-    const capture = createCaptureSmtpTransport();
+    const capture = capturing();
     await quietly(() => submitContactMessage(db, delivery(capture), PERSON, NOW, PAGE, withTick(NO_TOKEN, true)));
     expect(await countHeldBack(db, new Date(NOW.getTime() + 29 * 86_400_000))).toBe(1);
     expect(await countHeldBack(db, new Date(NOW.getTime() + 31 * 86_400_000))).toBe(0);
@@ -112,15 +131,14 @@ describe("BR-REQ-070-04 the tick that holds back suspected spam", () => {
 
   it("covers the feedback forms too: ticked, a marked suggestion is counted and not emailed; unticked, delivered marked", async () => {
     await tick(true);
-    const capture = createCaptureSmtpTransport();
+    const capture = capturing();
     const deps: FeedbackDeps = {
       settings: { ...DEFAULT_FEEDBACK_SETTINGS, suggestion: { on: true, to: "ideas@example.org", via: "gmail" } },
       noticeDescribes: true,
       safetyGmailDescribed: true,
       namedDescribed: true,
       clubFallback: ["club@example.com"],
-      smtp: { transport: capture, from: { name: "Club", address: "club@example.com" }, appEnv: "production" },
-      mailgun: null,
+      roads: { gmail: true, mailgun: false },
       appEnv: "production",
       screening: withTick(NO_TOKEN, true),
       eventTitle: async () => null,
@@ -138,16 +156,14 @@ describe("BR-REQ-070-04 the tick that holds back suspected spam", () => {
 
   it("never holds back the safety branch: ticked, a suspicious named report for the club is delivered marked and not counted", async () => {
     await tick(true);
-    const capture = createCaptureSmtpTransport();
-    const mailgun = { send: vi.fn(async () => ({ outcome: "sent", providerMessageId: "mailgun:1" }) as SendResult) };
+    const capture = capturing();
     const deps: FeedbackDeps = {
-      settings: { ...DEFAULT_FEEDBACK_SETTINGS, safety: { on: true, to: "safety@example.org", via: "mailgun", name: "Maria" } },
+      settings: { ...DEFAULT_FEEDBACK_SETTINGS, safety: { on: true, to: "safety@example.org", via: "mailgun", name: "Maria", fallbackToGmail: false } },
       noticeDescribes: true,
       safetyGmailDescribed: true,
       namedDescribed: true,
       clubFallback: ["club@example.com"],
-      smtp: { transport: capture, from: { name: "Club", address: "club@example.com" }, appEnv: "production" },
-      mailgun,
+      roads: { gmail: true, mailgun: true },
       appEnv: "production",
       screening: withTick(NO_TOKEN, true),
       eventTitle: async () => null,
@@ -167,15 +183,14 @@ describe("BR-REQ-070-04 the tick that holds back suspected spam", () => {
 
   it("a held-back feedback post does not use one of the branch's thirty an hour", async () => {
     await tick(true);
-    const capture = createCaptureSmtpTransport();
+    const capture = capturing();
     const deps: FeedbackDeps = {
       settings: { ...DEFAULT_FEEDBACK_SETTINGS, suggestion: { on: true, to: "ideas@example.org", via: "gmail" } },
       noticeDescribes: true,
       safetyGmailDescribed: true,
       namedDescribed: true,
       clubFallback: ["club@example.com"],
-      smtp: { transport: capture, from: { name: "Club", address: "club@example.com" }, appEnv: "production" },
-      mailgun: null,
+      roads: { gmail: true, mailgun: false },
       appEnv: "production",
       screening: withTick(NO_TOKEN, true),
       eventTitle: async () => null,

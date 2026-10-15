@@ -56,6 +56,7 @@ const LAUNCHED: OwnerTaskInputs = {
   emailDeliveryMode: "live",
   appEnv: "production",
   emailFailSafe: { stoppedLong: 0, failed: 0, retryingLate: 0 },
+  emailRoads: { failing: [], lostMessages: 0 },
   staleJobNames: [],
   failingJobNames: [],
   staffCount: 3,
@@ -530,6 +531,8 @@ describe("owner tasks", () => {
       "groupRunSeriesTexts",
       "groupRunMinorText",
       "emailFailSafe",
+      "emailRoadDown",
+      "relayLost",
       "liveEmail",
       "inviteStaff",
       "inviteKey",
@@ -584,6 +587,32 @@ describe("owner tasks", () => {
       const item = catalogue.Admin.tasks.items.emailFailSafe;
       expect(item.broken).toContain("90");
       expect(item.how.join("\n")).toContain("MAILGUN_API_BASE_URL");
+    }
+  });
+
+  // §NNN: a road that has been failing for over an hour, and the visitors' messages no road carried.
+  it("turns the road row red while Gmail or Mailgun has been failing for over an hour, naming the road and its last code", () => {
+    expect(ownerTasks(LAUNCHED).find((task) => task.id === "emailRoadDown")).toMatchObject({ owner: "club", kind: "check", state: "done" });
+    const failing = ownerTasks({ ...LAUNCHED, emailRoads: { failing: [{ road: "gmail", error: "gmail: smtp EAUTH" }, { road: "mailgun", error: null }], lostMessages: 0 } }).find((task) => task.id === "emailRoadDown");
+    expect(failing).toMatchObject({ state: "broken", text: "broken", detail: "Gmail (gmail: smtp EAUTH), Mailgun" });
+    for (const catalogue of [ro, en]) {
+      const item = catalogue.Admin.tasks.items.emailRoadDown;
+      expect(item.title && item.todo && item.broken && item.done).toBeTruthy();
+      // The steps name the two places a person acts: the app password and the key.
+      expect(item.how.join(" ")).toContain("CONTACT_SMTP_PASSWORD");
+      expect(item.how.join(" ")).toContain("MAILGUN_API_KEY");
+    }
+  });
+
+  it("turns the lost-messages row red with the count, in the right form, and green once the week is clear", () => {
+    expect(stateOf(LAUNCHED, "relayLost")).toBe("done");
+    const lost = ownerTasks({ ...LAUNCHED, emailRoads: { failing: [], lostMessages: 3 } }).find((task) => task.id === "relayLost");
+    expect(lost).toMatchObject({ owner: "club", kind: "check", state: "broken", text: "broken", count: 3 });
+    for (const catalogue of [ro, en]) {
+      const item = catalogue.Admin.tasks.items.relayLost;
+      expect(Object.keys(item.broken).sort()).toEqual(["few", "one", "other"]);
+      expect(Object.keys(item.todo).sort()).toEqual(["few", "one", "other"]);
+      expect(item.how.length).toBeGreaterThan(0);
     }
   });
 

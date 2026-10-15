@@ -189,7 +189,7 @@ describe("BR-REQ-036-04 my registrations", () => {
         providerMessageId: null,
         transport: null,
         recipientCount: null,
-        deliveredAt: null, rejectedAt: null, rejectionCause: null, providerCode: null, providerDetail: null, laterDeliveredAt: null, resolvedAt: null, retriedAt: null, retriedVia: null,
+        deliveredAt: null, rejectedAt: null, rejectionCause: null, providerCode: null, providerDetail: null, laterDeliveredAt: null, resolvedAt: null, retriedAt: null, retriedVia: null, road: null, roadFailures: {}, bodyDeletedAt: null,
         lastError: null,
         createdAt: NOW,
         sentAt: null,

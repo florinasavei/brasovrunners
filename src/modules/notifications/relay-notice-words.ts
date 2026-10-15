@@ -73,18 +73,18 @@ export function relayNoticeWords(kind: RelayNoticeKind, locale: EmailLocale, fac
     ? {
         subject: "A message from the site could not be delivered",
         paragraphs: [
-          `A message sent through ${form} could not leave in a day, by either Gmail or Mailgun. Its words are deleted and cannot be recovered; the site keeps no copy.`,
+          `A message sent through ${form} could not be delivered. Its words are deleted and cannot be recovered; the site keeps no copy.`,
           ...(errors ? [`The last answers: ${errors}.`] : []),
-          "If the person left a way to answer, write to them; and check the roads, because both are not carrying mail.",
+          "Check the two roads, and the address that receives this form.",
           `The state of both roads is on this page: ${facts.pageUrl}`,
         ],
       }
     : {
         subject: "Un mesaj de pe site nu a putut fi trimis",
         paragraphs: [
-          `Un mesaj trimis prin ${form} nu a putut pleca într-o zi, nici prin Gmail, nici prin Mailgun. Textul lui este șters și nu mai poate fi recuperat; site-ul nu păstrează nicio copie.`,
+          `Un mesaj trimis prin ${form} nu a putut fi trimis. Textul lui este șters și nu mai poate fi recuperat; site-ul nu păstrează nicio copie.`,
           ...(errors ? [`Ultimele răspunsuri: ${errors}.`] : []),
-          "Dacă persoana a lăsat o cale de răspuns, scrie-i; și verifică căile, pentru că niciuna nu duce mesaje acum.",
+          "Verifică cele două căi și adresa care primește formularul.",
           `Starea celor două căi este pe această pagină: ${facts.pageUrl}`,
         ],
       };

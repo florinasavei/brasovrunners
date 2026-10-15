@@ -51,7 +51,7 @@ const ON: FeedbackSettings = {
   howItWent: { on: true, to: "how@example.org", via: "gmail" },
   suggestion: { on: true, to: "ideas@example.org", via: "gmail" },
   complaint: { on: true, to: "complaints@example.org", via: "gmail" },
-  safety: { on: true, to: "safety@example.org", via: "mailgun", name: "Maria" },
+  safety: { on: true, to: "safety@example.org", via: "mailgun", name: "Maria", fallbackToGmail: false },
 };
 /** Both roads there, and the deployment with no SMTP road (`CONTACT_FORM_MODE=off`). */
 const BOTH = { gmail: true, mailgun: true };
@@ -69,13 +69,13 @@ describe("§676 the branches a visitor is offered", () => {
     expect(offeredBranches(ON, true, BOTH)).toEqual(["howItWent", "suggestion", "complaint", "safety"]);
     expect(offeredBranches({ ...ON, suggestion: { on: true, to: null, via: "gmail" } }, true, BOTH)).toEqual(["howItWent", "complaint", "safety"]);
     expect(offeredBranches({ ...ON, complaint: { on: false, to: "complaints@example.org", via: "gmail" } }, true, BOTH)).toEqual(["howItWent", "suggestion", "safety"]);
-    expect(offeredBranches({ ...ON, safety: { on: true, to: "safety@example.org", via: "mailgun", name: null } }, true, BOTH)).toEqual(["howItWent", "suggestion", "complaint"]);
+    expect(offeredBranches({ ...ON, safety: { on: true, to: "safety@example.org", via: "mailgun", name: null, fallbackToGmail: false } }, true, BOTH)).toEqual(["howItWent", "suggestion", "complaint"]);
   });
 
   it("offers the three ordinary branches only where the deployment has the SMTP road; the safety branch leaves by Mailgun and stays", () => {
     // `CONTACT_FORM_MODE=off`: every post on them would answer «Nu am putut trimite acum…» forever.
     expect(offeredBranches(ON, true, NO_GMAIL)).toEqual(["safety"]);
-    expect(offeredBranches({ ...ON, safety: { on: false, to: null, via: "mailgun", name: null } }, true, NO_GMAIL)).toEqual([]);
+    expect(offeredBranches({ ...ON, safety: { on: false, to: null, via: "mailgun", name: null, fallbackToGmail: false } }, true, NO_GMAIL)).toEqual([]);
     expect(offeredBranches(ON, false, NO_GMAIL)).toEqual([]);
   });
 
@@ -208,9 +208,9 @@ describe("§678 «Cine să afle?»: the club or the safety branch's person", () 
   });
 
   it("offers the person whenever the safety branch has its recipient and its first name, switched on or not", () => {
-    expect(audiencesFor("suggestion", { ...ON, safety: { on: false, to: "safety@example.org", via: "mailgun", name: "Maria" } }, roads)).toEqual(["club", "person"]);
-    expect(audiencesFor("suggestion", { ...ON, safety: { on: true, to: null, via: "mailgun", name: "Maria" } }, roads)).toEqual(["club"]);
-    expect(audiencesFor("suggestion", { ...ON, safety: { on: true, to: "safety@example.org", via: "mailgun", name: null } }, roads)).toEqual(["club"]);
+    expect(audiencesFor("suggestion", { ...ON, safety: { on: false, to: "safety@example.org", via: "mailgun", name: "Maria", fallbackToGmail: false } }, roads)).toEqual(["club", "person"]);
+    expect(audiencesFor("suggestion", { ...ON, safety: { on: true, to: null, via: "mailgun", name: "Maria", fallbackToGmail: false } }, roads)).toEqual(["club"]);
+    expect(audiencesFor("suggestion", { ...ON, safety: { on: true, to: "safety@example.org", via: "mailgun", name: null, fallbackToGmail: false } }, roads)).toEqual(["club"]);
   });
 
   it("offers the club on the safety form through «O reclamație»'s recipient or else the contact form's, and only where the SMTP road exists", () => {

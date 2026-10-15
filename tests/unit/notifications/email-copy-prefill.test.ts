@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { emailMessageType, type EmailMessageType } from "@/db/schema/email-outbox";
+import { isRelayMessage, type RelayMessageType } from "@/modules/notifications/domain/relay";
 import { fromPlainText, type RichTextDoc } from "@/modules/content/rich-text/domain/schema";
 import {
   EMAIL_COPY_PLACEHOLDERS,
@@ -46,9 +47,10 @@ import { EMAIL_EMPHASIS } from "@/theme/brand";
  * and the send ignores one — so its card is pinned below, on its own.
  */
 // The newsletter (§445) is written per send too, in its own composer.
-type EditedType = Exclude<EmailMessageType, "ORGANIZER_MESSAGE" | "NEWSLETTER">;
+// A visitor's message and the road notice (§NNN) have no template to edit.
+type EditedType = Exclude<EmailMessageType, "ORGANIZER_MESSAGE" | "NEWSLETTER" | RelayMessageType>;
 const TYPES = (emailMessageType.enumValues as readonly EmailMessageType[]).filter(
-  (type): type is EditedType => type !== "ORGANIZER_MESSAGE" && type !== "NEWSLETTER",
+  (type): type is EditedType => type !== "ORGANIZER_MESSAGE" && type !== "NEWSLETTER" && !isRelayMessage(type),
 );
 const LOCALES = ["ro", "en"] as const;
 

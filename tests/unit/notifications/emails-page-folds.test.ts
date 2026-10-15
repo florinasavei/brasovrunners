@@ -4,6 +4,7 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { emailMessageType, type EmailMessageType } from "@/db/schema/email-outbox";
+import { isRelayMessage, type RelayMessageType } from "@/modules/notifications/domain/relay";
 import { NEVER_QUEUED_MESSAGE_TYPES } from "@/modules/notifications/domain/never-queued";
 import type { FoldOpenWhen } from "@/shared/ui/fold";
 import ParticipantEmailsPanel, { type ParticipantEmailCard } from "@/modules/notifications/ui/ParticipantEmailsPanel";
@@ -24,13 +25,14 @@ const ROOT = process.cwd();
 const read = (relative: string) => readFileSync(path.join(ROOT, relative), "utf8");
 const markup = (html: string): string => html.replace(/<style[^>]*>[\s\S]*?<\/style>/g, "");
 
-const TYPES = emailMessageType.enumValues as readonly EmailMessageType[];
+// The cards of the templates: a visitor's message and the road notice (§NNN) have none.
+const TYPES = (emailMessageType.enumValues as readonly EmailMessageType[]).filter((type): type is Exclude<EmailMessageType, RelayMessageType> => !isRelayMessage(type));
 
 /** The page fills the club's deadlines into the when-lines (§377); these are the unset ones' words. */
 const DEADLINE_WORDS: Record<string, string> = { confirmation: "48 de ore", hold: "30 de minute", offer: "24 de ore", reminder: "2 zile" };
 const filled = (template: string) => template.replace(/\{(\w+)\}/g, (whole, name: string) => DEADLINE_WORDS[name] ?? whole);
 
-function card(type: EmailMessageType, justSaved = false, neverSent = false): ParticipantEmailCard {
+function card(type: (typeof TYPES)[number], justSaved = false, neverSent = false): ParticipantEmailCard {
   return {
     type,
     name: ro.Admin.emails.types[type],
@@ -160,7 +162,7 @@ describe("§336 the emails participants receive: one card of cards", () => {
       const start = html.indexOf(`id="email-${type}"`);
       const summary = html.slice(start, html.indexOf("</summary>", start));
       expect(summary).toContain(ro.Admin.emails.neverSent);
-      expect(summary).toContain(filled(ro.Admin.emails.whenShort[type]));
+      expect(summary).toContain(filled(ro.Admin.emails.whenShort[type as (typeof TYPES)[number]]));
     }
     const reminder = html.indexOf('id="email-EVENT_REMINDER"');
     expect(html.slice(reminder, html.indexOf("</summary>", reminder))).not.toContain(ro.Admin.emails.neverSent);
