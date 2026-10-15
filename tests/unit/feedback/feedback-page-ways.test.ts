@@ -48,10 +48,10 @@ vi.mock("@/modules/public-cache/reads", () => ({
   cachedFeedbackFormsDescribed: async () => true,
   cachedFeedbackFormsNamedDescribed: async () => false,
   cachedFeedbackOffer: async () => ({
-    howItWent: { on: branches.howItWent, to: "club@example.org" },
-    suggestion: { on: branches.suggestion, to: "club@example.org" },
-    complaint: { on: false, to: null },
-    safety: { on: false, to: null, name: null },
+    howItWent: { on: branches.howItWent, to: "club@example.org", via: "gmail" },
+    suggestion: { on: branches.suggestion, to: "club@example.org", via: "gmail" },
+    complaint: { on: false, to: null, via: "gmail" },
+    safety: { on: false, to: null, via: "mailgun", name: null },
   }),
   cachedPublishedEventsBetween: async () => [],
 }));

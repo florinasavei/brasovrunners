@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.30-2026-10-15 -->
+<!-- PROJECT_BASELINE: BR-V3.31-2026-10-15 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V3.30-2026-10-15`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.31-2026-10-15`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -1444,12 +1444,14 @@ club names — which is why a colleague's Yahoo can be on the list.
      another one changes the organizer of entries already answered, which some calendar apps
      refuse; choose the address once.
 
-**«Spune-ne ceva» — the anonymous forms under the contact form, above «Contact direct» and the newsletter (§676, §679).** Nothing to set on the
-deployment: the three ordinary branches («Cum a fost», «O sugestie», «O reclamație») leave through
-the same Gmail account as the form above, and the confidential «Girl Zone» through Mailgun alone
-(`MAILGUN_*`, already set), never through the club's Gmail. Without the Gmail account and its app
-password (`CONTACT_SMTP_USER`, `CONTACT_SMTP_PASSWORD`) the three ordinary branches are not offered at
-all, whatever their switches say — only «Girl Zone», if it is on. On each deployment (QA has its own):
+**«Spune-ne ceva» — the anonymous forms under the contact form, above «Contact direct» and the newsletter (§676, §679, §772).** Nothing to set on the
+deployment: each form leaves by the road the club chooses for it, «Prin ce trimitem» (§772) — the club's
+Gmail, the same account as the form above (`CONTACT_SMTP_USER`, `CONTACT_SMTP_PASSWORD`), or Mailgun
+(`MAILGUN_*`, already set, with the email provider live). Until the club chooses, the three ordinary
+branches («Cum a fost», «O sugestie», «O reclamație») leave by Gmail and the confidential «Girl Zone»
+by Mailgun. A form whose road this deployment lacks is not offered, whatever its switch says, and its
+radio is greyed on the card with a link to the steps in «Sarcini» (the rows «Formularul de contact» for
+Gmail and «Email către participanți reali» for Mailgun). On each deployment (QA has its own):
 
 1. `/admin/legal` → the «GDPR» card → «Regenerează din șablon» → approve the notice: its section 5
    describes the forms. Until a notice naming them is in force in both languages, nothing shows on
@@ -1466,9 +1468,24 @@ all, whatever their switches say — only «Girl Zone», if it is on. On each de
    formularele** → confirm. Each branch is off by default; untick to take it away. «Cine să afle?»
    offers the safety branch's person whenever her address and first name are saved, switched on or not —
    unticking «Girl Zone» takes away her form, not her; on the safety form «Clubul» is the
-   «O reclamație» address, or the contact form's recipients when it has none, and needs the Gmail
-   account. A message for the person always leaves by Mailgun alone, with the neutral subject, and one
-   from another form says which on its line «Din formularul: „…”»; one for the club by the club's Gmail.
+   «O reclamație» address, or the contact form's recipients when it has none. Under each form,
+   **«Prin ce trimitem»** (§772): «Gmail-ul clubului („Scrie-ne”)» or «Mailgun», two radios, saved with
+   the rest. The road follows the form whose reader the message reaches: a message for the club's
+   mailbox leaves by the road of the form it was written on (a Girl Zone message for «Clubul», by
+   «O reclamație»'s), and one for the designated person by Girl Zone's own, whatever form it was written
+   on, with the neutral subject; one from another form says which on its line «Din formularul: „…”».
+   **Girl Zone by Gmail** puts her messages in the club's mailbox and its Sent folder, which everybody
+   who reads that mailbox sees: the card says so under the radios, and the confidentiality of her form is
+   then the club's choice. **Gmail for Girl Zone is greyed until the privacy notice in force says so**
+   (§772): the notice's feedback paragraph promises her messages never pass through the club's mailbox
+   unless the club chooses Gmail, and names that road with the marker `{{feedbackSafetyGmail}}`. Approve
+   the notice from the template of this release first (item 1), in both languages; until then her
+   messages leave by Mailgun whatever the card says, the form's sentences keep saying «doar la …», and
+   `/admin/tasks` carries the row «Girl Zone prin Gmail» if Gmail was already saved. Once it is in force,
+   the form's sentences stop saying «doar» and say the message reaches her through the club's mailbox.
+   The optional «E-mail (opțional)» beside the name becomes the message's `Reply-To` on either road
+   and is kept nowhere; Girl Zone's form has it too, with a «Telefon (opțional)» box beside it
+   (the telephone goes in the message and is no `Reply-To`).
 3. Check: `/ro/contact` shows «Spune-ne ceva» under the contact form, above «Contact direct» and the newsletter (the newsletter last); a message sent from QA arrives
    with `[QA]` in front of its subject, its first line «Nume: (anonim)» or the name the person gave. The site keeps no copy of any message, so the inbox is the
    only place to look.

@@ -155,11 +155,11 @@ describe("the event page's calendar row", () => {
     fileName: "crosul.png",
     calendar,
   };
-  /** Every `<a …>…</a>` of the row under «Adaugă în calendar», as attributes and text. */
+  /** Every `<a …>…</a>` of the doors inside the fold «Adaugă în calendar» (§772), as attributes and text. */
   const row = (rendered: string) => {
     const html = rendered.replace(/<style[^>]*>[\s\S]*?<\/style>/g, "");
-    const from = html.indexOf(">Adaugă în calendar:") >= 0 ? html.indexOf(">Adaugă în calendar:") : html.indexOf(">Add to calendar:");
-    const tail = html.slice(from, html.indexOf("</div>", from));
+    const from = html.indexOf('data-testid="event-calendar-doors"');
+    const tail = from < 0 ? "" : html.slice(from, html.indexOf("</div>", from));
     return [...tail.matchAll(/<a ([^>]*)>([\s\S]*?)<\/a>/g)].map((match) => ({
       attributes: unescape(match[1]),
       text: match[2].replace(/<svg[\s\S]*?<\/svg>/g, "").replace(/<[^>]+>/g, ""),
@@ -202,16 +202,72 @@ describe("the event page's calendar row", () => {
     expect(links[4].attributes).toContain("download");
   });
 
+  /** The rendered page without the styles, from the fold's opening tag. */
+  const fold = (rendered: string) => {
+    const html = rendered.replace(/<style[^>]*>[\s\S]*?<\/style>/g, "");
+    const from = html.search(/<details[^>]*data-testid="event-calendar"/);
+    return { html, from, tag: html.slice(from, html.indexOf(">", from) + 1), summary: html.slice(html.indexOf("<summary", from), html.indexOf("</summary>", from)) };
+  };
+
+  it.each(["ro", "en"] as const)("puts the five doors behind ONE pill, a native fold closed on arrival, that says «Adaugă în calendar» (%s, §772)", async (locale) => {
+    currentLocale = locale;
+    const html = renderToStaticMarkup(await ShareLinks(props));
+    const { tag, summary, from } = fold(html);
+    expect(from).toBeGreaterThan(-1);
+    // A `<details>`, so it opens with a click, Enter or Space and with scripts off — and no `open`: closed.
+    expect(tag).toMatch(/^<details /);
+    expect(tag).not.toMatch(/\sopen(=|\s|>)/);
+    const words = (locale === "ro" ? ro : en).Event.share.calendarTitle;
+    expect(words).toBe(locale === "ro" ? "Adaugă în calendar" : "Add to calendar");
+    // The pill is the summary: a glyph, the words, the chevron — three marks of one control, nothing else in it.
+    expect(summary).toMatch(/^<summary [^>]*data-testid="event-calendar-toggle"/);
+    expect(summary.replace(/<svg[\s\S]*?<\/svg>/g, "").replace(/<[^>]+>/g, "")).toBe(words);
+    expect(summary.match(/<svg/g)).toHaveLength(2);
+    expect(summary.trimStart().indexOf("<svg", summary.indexOf(">"))).toBeGreaterThan(-1);
+    expect(summary).toContain('aria-hidden="true"');
+  });
+
+  it("holds all five doors, the file's note and nothing else of the calendar inside the fold, after its summary", async () => {
+    const html = renderToStaticMarkup(await ShareLinks({ ...props, calendar: { ...calendar, fileAddress: "https://example.test/ro/events/crosul/calendar.ics" } }));
+    const { from, html: page } = fold(html);
+    const closing = page.indexOf("</details>", page.indexOf('data-testid="event-calendar-address"'));
+    const inside = page.slice(from, closing);
+    expect(inside.indexOf("<summary")).toBeLessThan(inside.indexOf('data-testid="event-calendar-doors"'));
+    expect(inside.match(/<a /g)).toHaveLength(5);
+    expect(inside).toContain('data-testid="event-calendar-snapshot"');
+    expect(inside).toContain('data-testid="event-calendar-address"');
+    // No door outside it: the share row above carries the networks only.
+    const before = page.slice(0, from);
+    for (const door of [calendar.googleUrl, calendar.icsHref]) expect(before).not.toContain(door);
+  });
+
+  it("wears the share row's own small pill on the summary: 28 pixels and the tap band, no 44", () => {
+    const source = read("src/modules/events/ui/ShareLinks.tsx");
+    expect(source).toContain("...SHARE_PILL_SX");
+    expect(source).toMatch(/const CALENDAR_PILL_SX = \{[\s\S]*?\.\.\.SHARE_PILL_SX/);
+    expect(SHARE_PILL_SX.minHeight).toBe(28);
+    expect(SHARE_PILL_SX["&::after"]).toMatchObject({ content: '""' });
+    // The marker is the pill's chevron, not the browser's, and the chevron turns when the fold opens.
+    expect(source).toMatch(/"&::-webkit-details-marker": \{ display: "none" \}/);
+    expect(source).toMatch(/"details\[open\] > & \[data-chevron\]": \{ transform: "rotate\(180deg\)" \}/);
+    expect(source).not.toMatch(/MuiMenu|<Menu\b|useState|"use client"/);
+  });
+
   it("keeps Facebook and WhatsApp, and the picture's download, in the row above", async () => {
     const html = renderToStaticMarkup(await ShareLinks(props));
     for (const word of ["Dă mai departe:", "Facebook", "WhatsApp", "Descarcă poza"]) expect(html).toContain(word);
+    // The share row is the one it was: outside the fold, before it.
+    expect(html.indexOf("Dă mai departe:")).toBeLessThan(html.indexOf('data-testid="event-calendar"'));
+    expect(html.indexOf("Facebook")).toBeLessThan(html.indexOf('data-testid="event-calendar"'));
   });
 
   it("draws no calendar row without a date, and leaves a members' event its calendar with no network buttons", async () => {
     const without = renderToStaticMarkup(await ShareLinks({ ...props, calendar: undefined }));
     expect(without).not.toContain("Adaugă în calendar");
+    expect(without).not.toContain("event-calendar");
     const members = renderToStaticMarkup(await ShareLinks({ ...props, shareable: false }));
     expect(members).not.toContain("Facebook");
+    expect(members).toContain("Adaugă în calendar");
     expect(row(members)).toHaveLength(5);
   });
 });

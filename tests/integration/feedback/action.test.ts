@@ -194,7 +194,7 @@ describe("§676 submitFeedbackAction's redirects", () => {
   it("names the other reader on the sent page: a named safety report the sender gave the club leaves by the SMTP road, «&catre=clubul» (§678)", async () => {
     const before = capturedContactMessages().length;
     const to = await pressed(post({ branch: "safety", identity: "named", name: "Ana Pop", audience: "club", message: "Cineva m-a urmărit.", whereWhen: "", contact: "" }));
-    expect(to).toBe("/ro/contact/spune-ne?sent=siguranta&catre=clubul");
+    expect(to).toBe("/ro/contact/spune-ne?sent=girl-zone&catre=clubul");
     expect(capturedContactMessages().length).toBe(before + 1);
     expect(capturedContactMessages()[0].subject).toContain("Mesaj confidențial de pe site");
     expect(capturedContactMessages()[0].text.split("\n")[0]).toBe("Nume: Ana Pop");
@@ -202,7 +202,7 @@ describe("§676 submitFeedbackAction's redirects", () => {
 
   it("keeps the English path for an English post", async () => {
     const to = await pressed(post({ locale: "en", branch: "safety", message: "", whereWhen: "", contact: "" }));
-    expect(to).toMatch(/^\/en\/contact\/tell-us\?tip=siguranta&error=VALIDATION_ERROR&fields=message&since=[^#]+#feedback-errors$/);
+    expect(to).toMatch(/^\/en\/contact\/tell-us\?tip=girl-zone&error=VALIDATION_ERROR&fields=message&since=[^#]+#feedback-errors$/);
     expect(lastDraft()?.options.path).toBe("/en/contact/tell-us");
   });
 

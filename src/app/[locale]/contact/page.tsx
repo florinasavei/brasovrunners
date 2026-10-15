@@ -49,7 +49,7 @@ import {
   parseContactErrorFields,
 } from "@/modules/contact/fields";
 import { readFormDraft } from "@/modules/registrations/form-draft";
-import { contactSmtpRoadExists } from "@/modules/contact/delivery";
+import { feedbackRoads } from "@/modules/feedback/roads";
 import { doorIntroKey, FEEDBACK_SECTION_ID, offeredBranches } from "@/modules/feedback/domain/branches";
 import BotCheck from "@/modules/registrations/ui/BotCheck";
 import { BOT_CHECK_ERROR_ATTRIBUTE, BOT_CHECK_SLOT_SX } from "@/modules/registrations/domain/turnstile-widget";
@@ -208,7 +208,7 @@ export default async function ContactPage({ params, searchParams }: Props) {
     an outage like every read here, and then simply not drawn.
   */
   const [feedbackOffer, feedbackDescribed] = await Promise.all([orNull(() => cachedFeedbackOffer()), orNull(() => cachedFeedbackFormsDescribed(now))]);
-  const feedbackOffered = feedbackOffer === null ? [] : offeredBranches(feedbackOffer, feedbackDescribed === true, contactSmtpRoadExists());
+  const feedbackOffered = feedbackOffer === null ? [] : offeredBranches(feedbackOffer, feedbackDescribed === true, feedbackRoads());
   const feedbackOpen = feedbackOffered.length > 0;
   const tell = await getTranslations("Tell");
 

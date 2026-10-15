@@ -46,10 +46,10 @@ vi.mock("@/modules/public-cache/reads", () => ({
   cachedNewsletterOffered: async () => false,
   cachedFeedbackFormsDescribed: async () => true,
   cachedFeedbackOffer: async () => ({
-    howItWent: { on: offered, to: "club@mail.example.test" },
-    suggestion: { on: false, to: null },
-    complaint: { on: false, to: null },
-    safety: { on: false, to: null, name: null },
+    howItWent: { on: offered, to: "club@mail.example.test", via: "gmail" },
+    suggestion: { on: false, to: null, via: "gmail" },
+    complaint: { on: false, to: null, via: "gmail" },
+    safety: { on: false, to: null, via: "mailgun", name: null },
   }),
 }));
 vi.mock("@/modules/contact/delivery", () => ({ contactSmtpRoadExists: () => true }));

@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { ADDRESS_QUERY, type PickerChip, readPickerChip } from "./event-picker";
 import { type AppEnvironment, markSubjectForEnvironment } from "@/infrastructure/email/delivery";
+import { canonicalizeEmail, InvalidEmailError } from "@/modules/participants/domain/canonical-email";
 
 /**
  * «Spune-ne ceva» / "Tell us something" (§676; the owner, 2026-10-08: «I just want to know how my
@@ -14,13 +15,15 @@ import { type AppEnvironment, markSubjectForEnvironment } from "@/infrastructure
  *   stopped coming.
  * - **«O sugestie»** (`sugestie`) — one box.
  * - **«O reclamație»** (`reclamatie`) — what happened, and optionally the event and the date.
- * - **«Girl Zone»** (`siguranta`) — confidential, for women who did not feel safe: it
- *   reaches one person the club names, by the club's email service alone, and the site keeps nothing of it.
+ * - **«Girl Zone»** (`girl-zone`; `siguranta` until §772, still read) — confidential, for women who did
+ *   not feel safe: it reaches one person the club names, by Mailgun unless the club chose its Gmail
+ *   (§772), and the site keeps nothing of it.
  *
  * Anonymous unless the person chooses otherwise (§678): every form opens with «Anonim» (the default)
  * or «Cu nume și prenume», and only the named mode shows — and the server only keeps — a name, which it
  * then requires, the branch's way back (an address, or for the safety form an address or a telephone)
- * and «Cine să afle?»: the club's mailbox or the safety branch's person (`audiencesFor`). The named mode
+ * and «Cine să afle?»: the club's mailbox or the safety branch's person (`audiencesFor`). The way back's
+ * address, when one is typed, is checked by the canonicalizer and is the message's `Reply-To` (§772). The named mode
  * exists only while the privacy notice in force says so (`{{feedbackFormsNamed}}`); until then every
  * form is anonymous only.
  */
@@ -37,18 +40,70 @@ export const BRANCH_SLUG: Readonly<Record<FeedbackBranch, string>> = {
   howItWent: "cum-a-fost",
   suggestion: "sugestie",
   complaint: "reclamatie",
-  safety: "siguranta",
+  safety: "girl-zone",
+};
+
+/**
+ * The names a branch had before (§772, amending §676): the address bar still understands them, so a
+ * link in a sent email or on printed material keeps opening the same form — `siguranta` was the
+ * safety branch's slug until the owner asked for «girl-zone» (2026-10-14). Read, never written: every
+ * address the code builds uses `BRANCH_SLUG`.
+ */
+export const BRANCH_SLUG_ALIASES: Readonly<Record<string, FeedbackBranch>> = {
+  siguranta: "safety",
 };
 
 /** The address bar's four names: the branch, the event's slug, the day of the run and the chip (`ADDRESS_QUERY`). */
 export const FEEDBACK_QUERY = { branch: "tip", ...ADDRESS_QUERY } as const;
 
 export function branchFromSlug(value: string | null | undefined): FeedbackBranch | null {
-  return FEEDBACK_BRANCHES.find((branch) => BRANCH_SLUG[branch] === value) ?? null;
+  if (typeof value !== "string") return null;
+  // `isBranchAlias` is an own-property test: `toString` and `__proto__` are not an old name of any branch.
+  return FEEDBACK_BRANCHES.find((branch) => BRANCH_SLUG[branch] === value) ?? (isBranchAlias(value) ? BRANCH_SLUG_ALIASES[value] : null);
 }
 
-/** One branch as the club set it: a switch and the address that receives it. */
-export type BranchSetting = { on: boolean; to: string | null };
+/** Whether `value` is a name the branch had before and no longer has (`BRANCH_SLUG_ALIASES`). */
+export function isBranchAlias(value: string | null | undefined): boolean {
+  return typeof value === "string" && Object.prototype.hasOwnProperty.call(BRANCH_SLUG_ALIASES, value);
+}
+
+/**
+ * The address a link with an old branch name moves to (§772): the same path and every other word of
+ * the query as it came, with `?tip=` and `?sent=` — the two that carry a branch's slug — written with the
+ * current one. `null` when neither names a branch by an old name, so the page redirects only a link that
+ * needs it. The query is the page's own, read from its search parameters, never a free-form URL.
+ */
+export function aliasRedirect(path: string, search: Readonly<Record<string, string | string[] | undefined>>): string | null {
+  const first = (value: string | string[] | undefined) => (Array.isArray(value) ? value[0] : value);
+  if (!isBranchAlias(first(search.tip)) && !isBranchAlias(first(search.sent))) return null;
+  const query = new URLSearchParams();
+  for (const [name, raw] of Object.entries(search)) {
+    const value = first(raw);
+    if (value === undefined) continue;
+    const moved = (name === FEEDBACK_QUERY.branch || name === "sent") && isBranchAlias(value) ? BRANCH_SLUG[BRANCH_SLUG_ALIASES[value]] : value;
+    query.set(name, moved);
+  }
+  return `${path}?${query.toString().replace(/%2C/g, ",")}`;
+}
+
+/**
+ * The road a form's messages leave by (§772; the owner, 2026-10-14: «prin ce trimitem mail, Mailgun sau
+ * Gmail»): the club's Gmail — the one `Scrie-ne` leaves by (§149) — or Mailgun, the platform's own
+ * email service. Chosen per form on «Pagini» → «Contact».
+ */
+export const FEEDBACK_VIAS = ["gmail", "mailgun"] as const;
+export type FeedbackVia = (typeof FEEDBACK_VIAS)[number];
+
+/** Each form's road until the club chooses (§676, as it was fixed in code): Gmail for the three, Mailgun alone for Girl Zone. */
+export const DEFAULT_VIA: Readonly<Record<FeedbackBranch, FeedbackVia>> = {
+  howItWent: "gmail",
+  suggestion: "gmail",
+  complaint: "gmail",
+  safety: "mailgun",
+};
+
+/** One branch as the club set it: a switch, the address that receives it and the road it leaves by. */
+export type BranchSetting = { on: boolean; to: string | null; via: FeedbackVia };
 
 /** The setting `feedbackForms` (`settings.ts`): per branch a switch and a recipient; the safety branch also the first name shown. */
 export type FeedbackSettings = {
@@ -60,29 +115,70 @@ export type FeedbackSettings = {
 
 /** Off, each of them, until the club switches it on (the owner: «must be a toggle»). */
 export const DEFAULT_FEEDBACK_SETTINGS: FeedbackSettings = {
-  howItWent: { on: false, to: null },
-  suggestion: { on: false, to: null },
-  complaint: { on: false, to: null },
-  safety: { on: false, to: null, name: null },
+  howItWent: { on: false, to: null, via: DEFAULT_VIA.howItWent },
+  suggestion: { on: false, to: null, via: DEFAULT_VIA.suggestion },
+  complaint: { on: false, to: null, via: DEFAULT_VIA.complaint },
+  safety: { on: false, to: null, via: DEFAULT_VIA.safety, name: null },
 };
 
-/** The branches that leave by the contact form's SMTP road (§149); the safety branch leaves by Mailgun alone. */
-export const SMTP_BRANCHES: readonly FeedbackBranch[] = ["howItWent", "suggestion", "complaint"];
+/**
+ * Which roads this deployment has (§772): `gmail` where the contact form's SMTP road exists
+ * (`CONTACT_SMTP_USER` and its password, or the laptop's capture — `contactSmtpRoadExists`), `mailgun`
+ * where the email service transmits (`EMAIL_DELIVERY_MODE` not `capture`, or a laptop that captures
+ * on purpose — `feedbackRoads`). A form whose road is missing is not offered, and its choice is greyed
+ * on the backoffice card.
+ */
+export type FeedbackRoads = { gmail: boolean; mailgun: boolean };
+
+/**
+ * Whose road a message leaves by (§772): the road follows the form whose reader it reaches — the
+ * form it was written on for the club's mailbox, and Girl Zone's own for the person it designates,
+ * whatever form the message was written on. A named Girl Zone message for «Clubul» reaches the mailbox
+ * «O reclamație» names (or the contact form's), so it leaves by that form's road: a message on its way to
+ * the club's mailbox leaves the way a complaint does, never by the road chosen for the confidential
+ * reader. With the defaults it is exactly what §676 and §678 fixed in code.
+ */
+export function roadBranch(branch: FeedbackBranch, audience: FeedbackAudience): FeedbackBranch {
+  if (audience === "person") return "safety";
+  return branch === "safety" ? "complaint" : branch;
+}
+
+/** The road one message leaves by (`roadBranch`): what the club chose for the form that reaches its reader. */
+export function viaFor(settings: FeedbackSettings, branch: FeedbackBranch, audience: FeedbackAudience): FeedbackVia {
+  return settings[roadBranch(branch, audience)].via;
+}
+
+/**
+ * The settings as they act (§772): Girl Zone's road is Gmail only while the privacy notice in force
+ * says her messages may leave by it (`safetyGmailDescribed`, `{{feedbackSafetyGmail}}`); otherwise the
+ * notice promises they never pass through the club's mailbox, so they leave by Mailgun whatever was
+ * saved. Everything that decides what a visitor is told or where a message goes reads this, never the raw row.
+ */
+export function effectiveFeedbackSettings(settings: FeedbackSettings, safetyGmailDescribed: boolean): FeedbackSettings {
+  if (safetyGmailDescribed || settings.safety.via !== "gmail") return settings;
+  return { ...settings, safety: { ...settings.safety, via: "mailgun" } };
+}
+
+/** Whether a message for Girl Zone's person leaves by the club's Gmail, so the club's mailbox readers see it (`viaFor`, §772). */
+export function safetyMessageSeenByMailboxReaders(settings: FeedbackSettings): boolean {
+  return viaFor(settings, "safety", "person") === "gmail";
+}
 
 /**
  * The branches a visitor is offered, in the wizard's order: switched on, with somebody to receive
- * them (and, for the safety branch, the first name the page promises), and with a road to leave by —
- * the three ordinary branches only where the deployment has the SMTP road (`contactSmtpRoadExists`;
- * `CONTACT_FORM_MODE=off` has none), as «Scrie-ne» draws no form without one — and none at all while
+ * them (and, for the safety branch, the first name the page promises), and with the road the club chose
+ * for the form to leave by (`FeedbackSettings`' `via`, §772) — Gmail only where the deployment has the SMTP road
+ * (`contactSmtpRoadExists`; `CONTACT_FORM_MODE=off` has none), as «Scrie-ne» draws no form without one,
+ * Mailgun only where the email service transmits — and none at all while
  * the privacy notice in force does not describe the forms (`describesFeedbackForms`): nothing is
  * taken from a person before the notice the club approved says what happens to it (AGENTS.md §10.8).
  */
-export function offeredBranches(settings: FeedbackSettings, noticeDescribes: boolean, smtpRoad: boolean): FeedbackBranch[] {
+export function offeredBranches(settings: FeedbackSettings, noticeDescribes: boolean, roads: FeedbackRoads): FeedbackBranch[] {
   if (!noticeDescribes) return [];
   return FEEDBACK_BRANCHES.filter((branch) => {
     const setting = settings[branch];
     if (!setting.on || !setting.to) return false;
-    if (!smtpRoad && SMTP_BRANCHES.includes(branch)) return false;
+    if (!roads[setting.via]) return false;
     return branch !== "safety" || Boolean(settings.safety.name);
   });
 }
@@ -198,18 +294,23 @@ export function defaultAudience(branch: FeedbackBranch): FeedbackAudience {
  * whether each exists:
  *
  * - **«Clubul»** — the branch's own recipient, and for the safety branch the «O reclamație» recipient
- *   or else the contact form's (`clubFallback`: whether the contact form reaches anybody); by the SMTP
- *   road, so never on a deployment without one.
+ *   or else the contact form's (`clubFallback`: whether the contact form reaches anybody); by the road
+ *   chosen for the form that reaches it (`roadBranch`), so never where that road is missing.
  * - **the person** — while the safety branch has its recipient and its first name, switched on or not,
- *   the person the club designated; by Mailgun alone, whatever the branch. Switching the safety form off
- *   takes away her form, not her: a named message from another form may still reach her.
+ *   the person the club designated; by the road chosen for Girl Zone (Mailgun unless the club chose
+ *   otherwise, §772), whatever the branch, never where that road is missing. Switching the safety form
+ *   off takes away her form, not her: a named message from another form may still reach her.
  *
  * Fewer than two is no choice: the group is not drawn and the message goes to the branch's own reader.
  */
-export function audiencesFor(branch: FeedbackBranch, settings: FeedbackSettings, roads: { smtp: boolean; clubFallback: boolean }): FeedbackAudience[] {
+export function audiencesFor(
+  branch: FeedbackBranch,
+  settings: FeedbackSettings,
+  roads: FeedbackRoads & { clubFallback: boolean },
+): FeedbackAudience[] {
   const clubRecipient = branch === "safety" ? Boolean(settings.complaint.to) || roads.clubFallback : Boolean(settings[branch].to);
-  const club = roads.smtp && clubRecipient;
-  const person = Boolean(settings.safety.to) && Boolean(settings.safety.name);
+  const club = roads[viaFor(settings, branch, "club")] && clubRecipient;
+  const person = roads[viaFor(settings, branch, "person")] && Boolean(settings.safety.to) && Boolean(settings.safety.name);
   return FEEDBACK_AUDIENCES.filter((audience) => (audience === "club" ? club : person));
 }
 
@@ -222,7 +323,7 @@ export function namedModeFor(
   branch: FeedbackBranch,
   settings: FeedbackSettings,
   namedDescribed: boolean,
-  roads: { smtp: boolean; clubFallback: boolean },
+  roads: FeedbackRoads & { clubFallback: boolean },
 ): { audiences: FeedbackAudience[] } | null {
   return namedDescribed ? { audiences: audiencesFor(branch, settings, roads) } : null;
 }
@@ -236,6 +337,31 @@ export function chosenAudience(input: Pick<FeedbackInput, "branch" | "identity" 
   const own = defaultAudience(input.branch);
   if (input.identity !== "named" || input.audience === "") return offered.length === 0 || offered.includes(own) ? own : offered[0];
   return offered.includes(input.audience) ? input.audience : null;
+}
+
+/**
+ * `typed` as an address a reply can go to, or `null`: what the canonicalizer accepts (`deliveryEmail`,
+ * the trimmed typing) and `z.email()` agrees on. Pure; the refusal's reason is not kept — it would carry the address.
+ */
+export function replyAddressOf(typed: string): string | null {
+  const value = typed.trim();
+  if (value === "" || !z.email().safeParse(value).success) return null;
+  try {
+    return canonicalizeEmail(value).deliveryEmail;
+  } catch (error) {
+    if (error instanceof InvalidEmailError) return null;
+    throw error;
+  }
+}
+
+/**
+ * Where a reply to this message goes (§772): the address typed beside the name in the named mode — on
+ * Girl Zone's form, the «E-mail (opțional)» box (a telephone has no `Reply-To`); `null` anonymous or when none was given.
+ */
+export function replyAddressForInput(input: FeedbackInput): string | null {
+  if (input.identity !== "named") return null;
+  // Girl Zone: the box called email; a line typed in the telephone box that is an address stays as good as one.
+  return input.branch === "safety" ? (input.email ?? replyAddressOf(input.contact)) : input.email;
 }
 
 /** The boxes only the named mode shows and the server only keeps: the name, the branch's way back and «Cine să afle?». */
@@ -256,7 +382,7 @@ export const BRANCH_FIELDS: Readonly<Record<FeedbackBranch, readonly FeedbackFie
   howItWent: ["name", "email", "event", "date", "rating", "message", "reasons", "reasonOther"],
   suggestion: ["name", "email", "message"],
   complaint: ["name", "email", "message", "event", "date"],
-  safety: ["name", "contact", "message", "whereWhen"],
+  safety: ["name", "email", "contact", "message", "whereWhen"],
 };
 
 /** A line becomes a header-free line: no break, the edges trimmed. */
@@ -266,13 +392,25 @@ const line = z
   .transform((value) => value.replace(/[\r\n]+/g, " ").trim())
   .pipe(z.string().max(FEEDBACK_LINE_MAX));
 const text = z.string().trim().min(1).max(FEEDBACK_TEXT_MAX);
-/** Optional: empty is none; otherwise an address the reply can go to. */
+/**
+ * Optional: empty is none; otherwise an address the reply can go to (§772) — one the versioned
+ * canonicalizer accepts (AGENTS.md §10.4, BR-REQ-032-*), as every address a person types on this site.
+ * What is kept is what was typed, trimmed (`deliveryEmail`): the mail goes there with its capitals, and
+ * becomes the message's `Reply-To`. Nothing of it is stored: the identity is never computed beyond this check.
+ */
 const optionalEmail = z
   .string()
   .trim()
   .max(320)
-  .transform((value) => (value === "" ? null : value))
-  .pipe(z.email().nullable());
+  .transform((value, context) => {
+    if (value === "") return null;
+    const address = replyAddressOf(value);
+    if (!address) {
+      context.addIssue({ code: "custom", message: "not an address the reply can go to" });
+      return z.NEVER;
+    }
+    return address;
+  });
 const optionalSlug = z
   .string()
   .trim()
@@ -332,7 +470,12 @@ export const complaintFields = z.object({
   ...common,
 });
 
-export const safetyFields = z.object({ branch: z.literal("safety"), message: text, whereWhen: line, contact: line, ...common });
+/**
+ * Girl Zone's named mode has two optional ways back, one box each (§772): `email`, the address a reply can go
+ * to (checked by the canonicalizer, the message's `Reply-To`, kept nowhere), and `contact`, a telephone
+ * number or any line the person wants the designated person to have — carried in the message and nowhere else.
+ */
+export const safetyFields = z.object({ branch: z.literal("safety"), message: text, whereWhen: line, contact: line, email: optionalEmail.default(null), ...common });
 
 /**
  * Anonymous unless the person chose otherwise (§678): any identity but «Cu nume și prenume» reads as
@@ -542,7 +685,7 @@ export function feedbackLines(input: FeedbackInput, context: FeedbackContext): {
   }
   lines.push({ label: "Limba formularului", value: LANGUAGE_NAME[input.locale] });
   const message: Line = { label: input.branch === "suggestion" ? "Sugestia" : "Ce s-a întâmplat", value: input.message };
-  const way = input.branch === "safety" ? input.contact : (input.email ?? "");
+  const way = (input.branch === "safety" ? [input.email, input.contact] : [input.email]).filter(Boolean).join(" · ");
   const contact: Line = { label: "Contact", value: way || NO_CONTACT_LINE };
   return { lines, message, contact };
 }

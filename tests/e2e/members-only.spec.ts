@@ -82,6 +82,9 @@ test.describe("§552 events and codes for the members alone", () => {
     expect(pageAnswer.headers()["cache-control"]).toContain("no-store");
     expect(pageAnswer.headers()["cache-control"]).toContain("private");
     // Its calendar file is the twin's too; the static one stays a 404 whoever asks.
+    // The five doors sit behind the one «Adaugă în calendar» pill (§767): open it first.
+    await page.getByTestId("event-calendar-toggle").click();
+    await expect(page.getByTestId("event-calendar")).toHaveAttribute("open", "");
     const icsLink = page.locator("main").getByRole("link", { name: "Descarcă fișierul .ics", exact: true });
     await expect(icsLink).toHaveAttribute("href", `/ro/live/events/${fixture.ro}/calendar.ics`);
     const ics = await page.request.get(`/ro/live/events/${fixture.ro}/calendar.ics`);

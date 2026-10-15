@@ -20,7 +20,19 @@ export function feedbackFormsNamedClause(locale: string): string {
   return locale === "en" ? `“${en.Tell.identity.named}”` : `„${ro.Tell.identity.named}”`;
 }
 
-/** The notice's merge values, beside the newsletter's and the invitations' on the legal pages: the forms' name and the named mode's. */
-export function feedbackFormsMergeValues(locale: string): { feedbackForms: string; feedbackFormsNamed: string } {
-  return { feedbackForms: feedbackFormsClause(locale), feedbackFormsNamed: feedbackFormsNamedClause(locale) };
+/**
+ * What the privacy notice's `{{feedbackSafetyGmail}}` becomes (§772): the club's Gmail, in the words of the
+ * road's own radio (`Tell.noticeSafetyGmail`), so the approved sentence names what the club chose on its card.
+ */
+export function feedbackSafetyGmailClause(locale: string): string {
+  return locale === "en" ? en.Tell.noticeSafetyGmail : ro.Tell.noticeSafetyGmail;
+}
+
+/** The notice's merge values, beside the newsletter's and the invitations' on the legal pages: the forms' name, the named mode's and Girl Zone's Gmail road. */
+export function feedbackFormsMergeValues(locale: string): { feedbackForms: string; feedbackFormsNamed: string; feedbackSafetyGmail: string } {
+  return {
+    feedbackForms: feedbackFormsClause(locale),
+    feedbackFormsNamed: feedbackFormsNamedClause(locale),
+    feedbackSafetyGmail: feedbackSafetyGmailClause(locale),
+  };
 }
