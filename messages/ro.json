@@ -4973,7 +4973,7 @@
         "deleteTitle": "Ștergi această categorie?",
         "deleteBody": "Categoria „{name}” se șterge. O categorie cu roluri în ea nu se poate șterge: mută sau șterge întâi rolurile.",
         "contactTitle": "Persoana de contact",
-        "contactHelp": "Opțională și goală la început: o completezi când o știi. Apare pe pagina voluntarilor și în subsolul emailurilor către voluntari. Trece doar o persoană care a fost de acord să apară pe o pagină publică.",
+        "contactHelp": "Opțională, goală la început. Apare pe pagina voluntarilor și în subsolul emailurilor către voluntari. Trece doar o persoană care a fost de acord să apară pe o pagină publică.",
         "contactHelpMore": "Telefonul apare și pe ecusoanele rolurilor categoriei, când designul nu are alt număr. Contactul intră în fișierul evenimentului, nu în CSV.",
         "contactName": "Numele persoanei de contact",
         "contactPhone": "Telefon",
