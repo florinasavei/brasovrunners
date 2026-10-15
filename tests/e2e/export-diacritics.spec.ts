@@ -73,7 +73,7 @@ async function cleanup(seeded: Seeded): Promise<void> {
   }
 }
 
-test.describe("§NNN the participants' Excel export, for an event whose title has diacritics", () => {
+test.describe("BR-REQ-060-01 §NNN the participants' Excel export, for an event whose title has diacritics", () => {
   test("downloads a workbook whose name keeps the diacritics, its plain name beside it in ASCII", async ({ page }) => {
     test.setTimeout(90_000);
     const seeded = await seed(`${test.info().project.name}-${Date.now().toString(36)}`);
