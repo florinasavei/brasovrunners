@@ -65,7 +65,7 @@ export default async function EventBadgesPage({ params, searchParams }: Props) {
           {refused === "number" ? t("badges.print.refusedNumber", { max: String(BADGE_COUNT_MAX) }) : t("badges.print.refusedTotal", { total: String(BADGE_TOTAL_MAX) })}
         </Alert>
       )}
-      <BadgeDesignPanel eventId={id} locale={locale} design={event.design} sampleRole={sampleRole} version={version} />
+      <BadgeDesignPanel eventId={id} locale={locale} design={event.design} dropped={event.dropped} sampleRole={sampleRole} version={version} />
       <BadgeRoleColours eventId={id} locale={locale} roles={roles} design={event.design} />
       <BadgePrintPanel eventId={id} locale={locale} design={event.design} roles={roles} eventTitle={event.title} refused={refused === "number" || refused === "total"} />
     </Stack>

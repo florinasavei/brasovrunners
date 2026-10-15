@@ -489,6 +489,38 @@ describe("import as a new event", () => {
     expect((await reload(older.eventId)).badgeDesign).toBeNull();
   });
 
+  it("§NNN carries the badge's free-text line and marker area: over an event, from a file made before them, and from one with a value it cannot read", async () => {
+    const { event } = await seedRace({}, {}, false);
+    const badge = { ...DEFAULT_BADGE_DESIGN, showFreeText: true, freeTextRo: "Bea apă", freeTextEn: "Drink water", showMarker: true, markerLabelRo: "Tură", markerLabelEn: "Shift" };
+    await db.update(events).set({ badgeDesign: badge }).where(eq(events.id, event.id));
+    const file = await fileOf(event.id);
+    expect(file.event.badges.design).toEqual(badge);
+
+    // Over another event: the diff names each of the six settings, and the import writes them.
+    const { target } = await seedTarget();
+    const diff = await diffEventImport(db, { actor: admin, file, eventId: target.id });
+    expect(diff.changes.map((change) => change.key)).toEqual(
+      expect.arrayContaining(["badges.design.showFreeText", "badges.design.freeTextRo", "badges.design.freeTextEn", "badges.design.showMarker", "badges.design.markerLabelRo", "badges.design.markerLabelEn"]),
+    );
+    await importEventOver(db, await overInput(file, target.id));
+    expect(readBadgeDesign((await reload(target.id)).badgeDesign)).toEqual(badge);
+
+    // A file made before them has none of the six keys: it reads as both off, nothing written.
+    const six = ["showFreeText", "freeTextRo", "freeTextEn", "showMarker", "markerLabelRo", "markerLabelEn"];
+    const old = JSON.parse(JSON.stringify(file)) as { event: { badges: { design: Record<string, unknown> } } };
+    for (const key of six) delete old.event.badges.design[key];
+    const read = readEventFile(JSON.stringify(old));
+    if (!read.ok) throw new Error(`an older file did not read: ${read.refusal} ${read.detail ?? ""}`);
+    expect(read.file.event.badges.design).toMatchObject({ showFreeText: false, freeTextRo: "", freeTextEn: "", showMarker: false, markerLabelRo: "", markerLabelEn: "" });
+
+    // A value it cannot read is dropped as the platform's own, and the file still reads.
+    const unreadable = JSON.parse(JSON.stringify(file)) as { event: { badges: { design: Record<string, unknown> } } };
+    Object.assign(unreadable.event.badges.design, { showFreeText: "yes", freeTextRo: 5, markerLabelEn: ["Shift"] });
+    const forgiven = readEventFile(JSON.stringify(unreadable));
+    if (!forgiven.ok) throw new Error(`a forgiving file did not read: ${forgiven.refusal} ${forgiven.detail ?? ""}`);
+    expect(forgiven.file.event.badges.design).toMatchObject({ showFreeText: false, freeTextRo: "", freeTextEn: "Drink water", showMarker: true, markerLabelRo: "Tură", markerLabelEn: "" });
+  });
+
   it("§764 reads an imported badge design forgivingly: an unreadable band colour and a key from a later release neither throw nor refuse", async () => {
     const { event } = await seedRace({}, {}, false);
     const file = await fileOf(event.id);
