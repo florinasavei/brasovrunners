@@ -23,8 +23,27 @@ import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import Panel from "@/shared/ui/Panel";
 import RadioField from "@/shared/ui/RadioField";
 import { HEADER_CLEARANCE_PX } from "@/theme/brand";
-import { BADGE_LABEL_MAX, BADGE_PHONE_LABEL_MAX, BADGE_TITLE_MAX, type BadgeDesign, badgeColourReadable } from "../badge-design";
-import { BADGE_CUSTOM_BOUNDS, BADGE_SIZE_PRESETS, BADGE_SIZES, badgeImageSize, badgePaper, badgeRows, badgeSheetGrid, badgeSizeMm } from "../badge-geometry";
+import {
+  BADGE_FREE_TEXT_MAX,
+  BADGE_LABEL_MAX,
+  BADGE_MARKER_LABEL_MAX,
+  BADGE_PHONE_LABEL_MAX,
+  BADGE_TITLE_MAX,
+  type BadgeDesign,
+  type BadgeDroppedKey,
+  badgeColourReadable,
+} from "../badge-design";
+import {
+  BADGE_CUSTOM_BOUNDS,
+  BADGE_SIZE_PRESETS,
+  BADGE_SIZES,
+  badgeImageSize,
+  badgePaper,
+  badgeRows,
+  badgeSheetGrid,
+  badgeSizeMm,
+  badgeSizeRefusal,
+} from "../badge-geometry";
 import { BADGE_DESIGN_FORM_PREFIX, badgePreviewUrl } from "../badge-query";
 import { badgeDefaultWords } from "../badge-words";
 
@@ -39,6 +58,9 @@ function Legend({ children }: { children: string }) {
     </Typography>
   );
 }
+
+/** The most letters of the free-text line the closed section shows in its heading. */
+const FREE_ASIDE_MAX = 30;
 
 /** Two boxes side by side on a computer, one under the other on a phone: a club text in both languages. */
 const PAIR = { direction: { xs: "column", sm: "row" }, spacing: 1.5 } as const;
@@ -59,12 +81,15 @@ export default async function BadgeDesignPanel({
   eventId,
   locale,
   design,
+  dropped = [],
   sampleRole,
   version,
 }: {
   eventId: string;
   locale: Locale;
   design: BadgeDesign;
+  /** The §776 settings the stored design held as something they cannot be, left out by the reader: said beside their section. */
+  dropped?: readonly BadgeDroppedKey[];
   /** The role the preview's sample is drawn for: the event's first, or `none`. */
   sampleRole: string;
   /** What the sample is drawn from beside the form (the roles' saved names and colours), in its address. */
@@ -84,17 +109,23 @@ export default async function BadgeDesignPanel({
     [box("titleEn")]: t("badges.design.titleEn"),
     [box("labelRo")]: t("badges.design.labelRo"),
     [box("labelEn")]: t("badges.design.labelEn"),
+    [box("freeTextRo")]: t("badges.design.freeTextRo"),
+    [box("freeTextEn")]: t("badges.design.freeTextEn"),
+    [box("markerLabelRo")]: t("badges.design.markerLabelRo"),
+    [box("markerLabelEn")]: t("badges.design.markerLabelEn"),
     [box("phone")]: t("badges.design.phone"),
     [box("phoneLabelRo")]: t("badges.design.phoneLabelRo"),
     [box("phoneLabelEn")]: t("badges.design.phoneLabelEn"),
   });
 
   // The header's shape at the saved size, for the crop box (§560's rule; a crop drawn at another size is trimmed, never squashed).
-  const rows = badgeRows(badgePaper(design), design.showPhone);
+  const rows = badgeRows(badgePaper(design), design.showPhone, design.showFreeText && (design.freeTextRo !== "" || design.freeTextEn !== ""));
   const headerRatio = (badgePaper(design).width - 2 * rows.content.left) / rows.header.height;
   const ratioWords = new Intl.NumberFormat(locale, { maximumFractionDigits: 1 });
   const initialSrc = badgePreviewUrl({ eventId, locale, role: sampleRole, design, version });
   const { widthMm, heightMm } = badgeSizeMm(design);
+  // The limit in words (§776): the free-text line and the telephone together need this height, whatever the width — said beside the size, always.
+  const extrasNeed = badgeSizeRefusal({ size: "custom", customWidthMm: widthMm, customHeightMm: BADGE_CUSTOM_BOUNDS.height.min }, { freeText: true, phone: true })?.minHeightMm ?? null;
   const perSheet = (size: (typeof BADGE_SIZES)[number]) =>
     size === "custom" ? null : badgeSheetGrid(badgePaper({ size, customWidthMm: 0, customHeightMm: 0 })).perSheet;
   // The palette's colours the band may wear, and a kept colour that is not one of them (an imported event
@@ -157,6 +188,17 @@ export default async function BadgeDesignPanel({
   );
   const roleAside = design.labelRo ? `${design.labelRo} / ${design.labelEn}` : t("badges.design.labelDefaultAside");
   const writingAside = design.writingLine ? t("badges.design.writingLine") : t("badges.design.writingPlain");
+  // The Romanian line only, cut short: the closed line sits in the section's heading, and a typed text may be 60 characters.
+  const freeLetters = Array.from(design.freeTextRo);
+  const freeAside = design.showFreeText && freeLetters.length > 0 ? `${freeLetters.slice(0, FREE_ASIDE_MAX).join("")}${freeLetters.length > FREE_ASIDE_MAX ? "…" : ""}` : t("badges.design.freeTextOff");
+  const markerAside = design.showMarker ? (design.markerLabelRo ? `${design.markerLabelRo} / ${design.markerLabelEn}` : t("badges.design.markerNoLabel")) : t("badges.design.markerOff");
+  /** What a section says when the stored design held one of its settings as something it cannot be (§776). */
+  const droppedNote = (...keys: BadgeDroppedKey[]) =>
+    keys.some((key) => dropped.includes(key)) ? (
+      <Typography variant="caption" color="text.secondary" role="status" data-testid="badge-dropped">
+        {t("badges.design.dropped")}
+      </Typography>
+    ) : null;
   // Ticked with no number: each role's badge prints the telephone of its category's contact person (§774).
   const phoneAside = design.showPhone ? (design.phone ? design.phone : t("badges.design.phoneFromCategory")) : t("badges.design.phoneOff");
   const cutAside = design.cutMarks ? t("badges.design.cutMarks") : t("badges.design.cutLinesOnly");
@@ -234,6 +276,11 @@ export default async function BadgeDesignPanel({
                   />
                 </Stack>
               </OnlyWhenChosen>
+              {extrasNeed !== null && (
+                <Typography variant="caption" color="text.secondary" data-testid="badge-extras-need">
+                  {t("badges.design.extrasNeed", { height: String(extrasNeed) })}
+                </Typography>
+              )}
               <Typography variant="caption" color="text.secondary" data-testid="badge-per-sheet">
                 {t("badges.design.perSheet", { count: String(badgeSheetGrid(badgePaper(design)).perSheet), width: String(widthMm), height: String(heightMm) })}
               </Typography>
@@ -339,6 +386,39 @@ export default async function BadgeDesignPanel({
             </Stack>
           </Panel>
 
+          {/* «Text liber» (§776): one line of the club's own words, small, on the white under the role's band. */}
+          <Panel glyph="badgeFreeText" collapsible level={5} title={t("badges.design.sections.freeText")} aside={freeAside} data-testid="badge-section-free">
+            <Stack spacing={1.5}>
+              <Typography variant="caption" color="text.secondary">
+                {t("badges.design.freeTextHelp")}
+              </Typography>
+              {droppedNote("showFreeText", "freeTextRo", "freeTextEn")}
+              <CheckboxField name={box("showFreeText")} defaultChecked={design.showFreeText}>
+                {t("badges.design.showFreeText")}
+              </CheckboxField>
+              <OnlyWhenTicked name={box("showFreeText")} initiallyTicked={design.showFreeText}>
+                <Stack {...PAIR}>
+                  <RecallField
+                    name={box("freeTextRo")}
+                    label={t("badges.design.freeTextRo")}
+                    helperText={t("badges.design.freeTextBoxHelp", { max: String(BADGE_FREE_TEXT_MAX) })}
+                    defaultValue={design.freeTextRo}
+                    fullWidth
+                    slotProps={{ htmlInput: { maxLength: BADGE_FREE_TEXT_MAX, autoComplete: "off" }, inputLabel: { shrink: true } }}
+                  />
+                  <RecallField
+                    name={box("freeTextEn")}
+                    label={t("badges.design.freeTextEn")}
+                    helperText={t("badges.design.bothLanguages")}
+                    defaultValue={design.freeTextEn}
+                    fullWidth
+                    slotProps={{ htmlInput: { maxLength: BADGE_FREE_TEXT_MAX, autoComplete: "off" }, inputLabel: { shrink: true } }}
+                  />
+                </Stack>
+              </OnlyWhenTicked>
+            </Stack>
+          </Panel>
+
           {/* «Locul pentru nume»: no name is printed; «Nume:» and, if wanted, one faint line for the marker. */}
           <Panel glyph="badgeWriting" collapsible level={5} title={t("badges.design.sections.writing")} aside={writingAside} data-testid="badge-section-writing">
             <Stack spacing={1.5}>
@@ -348,6 +428,39 @@ export default async function BadgeDesignPanel({
               <CheckboxField name={box("writingLine")} defaultChecked={design.writingLine}>
                 {t("badges.design.writingLine")}
               </CheckboxField>
+            </Stack>
+          </Panel>
+
+          {/* «Spațiu pentru marker» (§776): a second white area beside «Nume:», blank, for one more word in marker at the desk. */}
+          <Panel glyph="badgeMarker" collapsible level={5} title={t("badges.design.sections.marker")} aside={markerAside} data-testid="badge-section-marker">
+            <Stack spacing={1.5}>
+              <Typography variant="caption" color="text.secondary">
+                {t("badges.design.markerHelp")}
+              </Typography>
+              {droppedNote("showMarker", "markerLabelRo", "markerLabelEn")}
+              <CheckboxField name={box("showMarker")} defaultChecked={design.showMarker}>
+                {t("badges.design.showMarker")}
+              </CheckboxField>
+              <OnlyWhenTicked name={box("showMarker")} initiallyTicked={design.showMarker}>
+                <Stack {...PAIR}>
+                  <RecallField
+                    name={box("markerLabelRo")}
+                    label={t("badges.design.markerLabelRo")}
+                    helperText={t("badges.design.markerLabelHelp", { max: String(BADGE_MARKER_LABEL_MAX) })}
+                    defaultValue={design.markerLabelRo}
+                    fullWidth
+                    slotProps={{ htmlInput: { maxLength: BADGE_MARKER_LABEL_MAX, autoComplete: "off" }, inputLabel: { shrink: true } }}
+                  />
+                  <RecallField
+                    name={box("markerLabelEn")}
+                    label={t("badges.design.markerLabelEn")}
+                    helperText={t("badges.design.bothLanguages")}
+                    defaultValue={design.markerLabelEn}
+                    fullWidth
+                    slotProps={{ htmlInput: { maxLength: BADGE_MARKER_LABEL_MAX, autoComplete: "off" }, inputLabel: { shrink: true } }}
+                  />
+                </Stack>
+              </OnlyWhenTicked>
             </Stack>
           </Panel>
 

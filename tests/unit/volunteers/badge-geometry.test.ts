@@ -56,9 +56,9 @@ const MEASURE = { bold: bibTitleWidth, regular: bibFooterWidth };
 const STRIP90: BadgeSizeChoice = { size: "strip90", customWidthMm: 0, customHeightMm: 0 };
 const STRIP100: BadgeSizeChoice = { size: "strip100", customWidthMm: 0, customHeightMm: 0 };
 const custom = (width: number, height: number): BadgeSizeChoice => ({ size: "custom", customWidthMm: width, customHeightMm: height });
-const WORDS: BadgeLayoutWords = { title: "Brașov Trail Race", label: "VOLUNTAR", role: "PUNCT DE APĂ", name: "Nume:", phone: null };
+const WORDS: BadgeLayoutWords = { title: "Brașov Trail Race", label: "VOLUNTAR", role: "PUNCT DE APĂ", name: "Nume:", phone: null, free: null, markerLabel: null };
 const layoutOf = (size: BadgeSizeChoice, words: Partial<BadgeLayoutWords> = {}) =>
-  badgeLayout({ ...size, headerPicture: false, showLogo: true, writingLine: true }, { ...WORDS, ...words }, MEASURE);
+  badgeLayout({ ...size, headerPicture: false, showLogo: true, writingLine: true, showMarker: false }, { ...WORDS, ...words }, MEASURE);
 
 describe("§764 the badge's size", () => {
   it("is 90 × 35 mm by default and 100 × 40 mm as the second preset, in points", () => {
@@ -195,7 +195,7 @@ describe("§764 the header and the writing area", () => {
   });
 
   it("draws neither logo nor title over the club's picture (the bib's rule)", () => {
-    const layout = badgeLayout({ ...STRIP90, headerPicture: true, showLogo: true, writingLine: true }, WORDS, MEASURE);
+    const layout = badgeLayout({ ...STRIP90, headerPicture: true, showLogo: true, writingLine: true, showMarker: false }, WORDS, MEASURE);
     expect(layout.logo).toBeNull();
     expect(layout.title).toBeNull();
   });
@@ -205,7 +205,7 @@ describe("§764 the header and the writing area", () => {
     expect(layout.name.top).toBeGreaterThanOrEqual(layout.writing.top);
     expect(layout.line!.y).toBeGreaterThan(layout.name.top + badgeLineHeight(layout.name.size));
     expect(layout.line!.y).toBeLessThan(layout.writing.top + layout.writing.height);
-    const plain = badgeLayout({ ...STRIP90, headerPicture: false, showLogo: true, writingLine: false }, WORDS, MEASURE);
+    const plain = badgeLayout({ ...STRIP90, headerPicture: false, showLogo: true, writingLine: false, showMarker: false }, WORDS, MEASURE);
     expect(plain.line).toBeNull();
   });
 
@@ -322,9 +322,11 @@ describe("§764 the design as stored, posted and carried", () => {
       label: "VOLUNTEER",
       name: "Name:",
       phone: "Coordinator: 0712 345 678",
+      free: null,
+      markerLabel: null,
       phoneLabel: "Coordinator",
     });
-    expect(badgeWords(DEFAULT_BADGE_DESIGN, "ro", "Crosul toamnei", defaults)).toEqual({ title: "Crosul toamnei", label: "VOLUNTAR", name: "Nume:", phone: null, phoneLabel: "Coordonator" });
+    expect(badgeWords(DEFAULT_BADGE_DESIGN, "ro", "Crosul toamnei", defaults)).toEqual({ title: "Crosul toamnei", label: "VOLUNTAR", name: "Nume:", phone: null, phoneLabel: "Coordonator", free: null, markerLabel: null });
     expect(badgeWords({ ...DEFAULT_BADGE_DESIGN, showTitle: false }, "ro", "Crosul toamnei", defaults).title).toBeNull();
   });
 });

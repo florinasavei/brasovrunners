@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.34-2026-10-15 -->
+<!-- PROJECT_BASELINE: BR-V3.35-2026-10-15 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V3.34-2026-10-15`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.35-2026-10-15`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -2149,6 +2149,14 @@ only ones who see the names, addresses and telephone numbers.
      coordinator's telephone (the club's number, with its label in both languages) and the cut marks.
      «Salvează ecusonul» keeps it on the event — on this date: each date of a series has its own badge — and
      the event's JSON file (§751) carries it too. Under 35 mm tall the small words come out very small.
+     Two optional sections, each with its own tick (§776): **«Text liber»** — one small line of your own words,
+     in Română **and** English, at most 60 characters, centred under the role's band (a rule, a zone, a
+     message: the same on every badge, never about a volunteer) — and **«Spațiu pentru marker»** — a second
+     white area beside «Nume:», blank on paper, with an optional short label in both languages (at most 20
+     characters, for example «Tură» or «Zona») and a faint line to write on. The preview shows both as you
+     type. A badge that is too short for everything you ticked is refused when you save, with a sentence
+     saying what does not fit and how tall it must be: the free-text line and the coordinator's telephone
+     together need a custom size at least 34 mm tall; both ready-made sizes (90 × 35 and 100 × 40 mm) take everything.
    - **A role's colour** is part of the role: «Adaugă un rol» and each role's «Modifică» in the card, or
      all the roles at once under «Culorile rolurilor» on the badges' page. «Portocaliul clubului», one of
      the palette, or «Altă culoare» typed as `#rrggbb`; it is kept only when white or black text reads on

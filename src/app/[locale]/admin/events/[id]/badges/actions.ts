@@ -1,13 +1,14 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
 import { getDb } from "@/db/client";
 import { getPathname } from "@/i18n/navigation";
 import { type Locale, routing } from "@/i18n/routing";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { readBadgeDesignForm } from "@/modules/volunteers/badges/badge-query";
-import { type PostedRoleColour, saveBadgeDesign, saveBadgeRoleColours } from "@/modules/volunteers/badges/badges";
+import { BadgeSizeRefusal, type PostedRoleColour, saveBadgeDesign, saveBadgeRoleColours } from "@/modules/volunteers/badges/badges";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { flashOutcome } from "@/shared/feedback/flash";
 import { type FormOutcome, refused } from "@/shared/forms/outcome";
@@ -57,6 +58,12 @@ export async function saveBadgeDesignAction(_previous: FormOutcome | null, form:
     changed = (await saveBadgeDesign(getDb(), actor, eventIdOf(form), values, new Date())).changed;
   } catch (error) {
     if (!isDomainError(error)) throw error;
+    // A size with no room for everything ticked (§776): the sentence names what does not fit and how tall a badge it needs.
+    if (error instanceof BadgeSizeRefusal) {
+      const t = await getTranslations({ locale: localeOf(form), namespace: "Admin" });
+      const what = error.what.map((extra) => t(`badges.design.extras.${extra}`)).join(", ");
+      return { ...refused(error, form), errorValues: { what, width: String(error.widthMm), height: String(error.heightMm), minHeight: String(error.minHeightMm) } };
+    }
     return refused(error, form);
   }
   return backToPage(form, changed ? "badgeDesignSaved" : "badgeDesignUnchanged", "box-badge-design");
