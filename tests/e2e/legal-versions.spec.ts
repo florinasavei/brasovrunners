@@ -179,7 +179,7 @@ test.describe("legal documents: a version downloads as a PDF", () => {
     const response = await page.request.get(`/api/admin/legal/${id}/pdf?locale=en`);
     expect(response.status()).toBe(200);
     expect(response.headers()["content-type"]).toBe("application/pdf");
-    expect(response.headers()["content-disposition"]).toMatch(/-en\.pdf"$/);
+    expect(response.headers()["content-disposition"]).toMatch(/filename="[a-z_]+-v\d+-en\.pdf"; filename\*=UTF-8''[a-z_]+-v\d+-en\.pdf$/);
     expect((await response.body()).subarray(0, 5).toString()).toBe("%PDF-");
   });
 
