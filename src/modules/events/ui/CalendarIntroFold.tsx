@@ -6,6 +6,7 @@ import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import { webcalUrl } from "@/modules/events/ical";
 import CalendarAddress from "@/modules/events/ui/CalendarAddress";
+import { DROPDOWN_PANEL_SURFACE_SX } from "@/modules/events/ui/share-pill";
 
 /**
  * The two doors into a reader's own calendar (§107, §139), built exactly as `CalendarSection` builds
@@ -88,11 +89,8 @@ export default async function CalendarIntroFold({ locale, baseUrl }: { locale: s
           right: 0,
           top: "100%",
           zIndex: 2,
+          ...DROPDOWN_PANEL_SURFACE_SX,
           p: 1.5,
-          bgcolor: "background.paper",
-          border: 1,
-          borderColor: "divider",
-          borderRadius: 2,
           boxShadow: 2,
         }}
       >

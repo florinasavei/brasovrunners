@@ -2,9 +2,10 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { getLocale, getTranslations } from "next-intl/server";
 import { BRANCH_SLUG, FEEDBACK_QUERY, type FeedbackBranch } from "@/modules/feedback/domain/branches";
+import { CHOICE_CARD_SX, CHOICE_INPUT_SX, paletteWash } from "@/shared/ui/choice-card";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { DENSITY } from "@/theme/density";
-import { branchLabelLang, FEEDBACK_BRANCH_GLYPH, FEEDBACK_BRANCH_TINT, paletteWash } from "./branch-glyph";
+import { branchLabelLang, FEEDBACK_BRANCH_GLYPH, FEEDBACK_BRANCH_TINT } from "./branch-glyph";
 
 /**
  * A branch's glyph on its tinted tile — 40 pixels, a rounded square, a 24-pixel picture — the same on
@@ -60,18 +61,10 @@ export default async function BranchChoice({ branches, chosen }: { branches: rea
                 alignItems: "flex-start",
                 gap: 1.5,
                 p: 1.5,
-                // Two pixels wide always, so choosing a card never moves its words.
-                border: 2,
-                borderColor: "divider",
-                borderRadius: 2,
+                // The house's selectable card (`CHOICE_CARD_SX`, shared with the volunteers' role tiles, §780).
+                ...CHOICE_CARD_SX,
                 cursor: "pointer",
-                transition: "border-color 120ms, background-color 120ms",
-                "&:hover": { borderColor: "primary.main" },
-                "&:has(input:checked)": { borderColor: "primary.main", bgcolor: paletteWash("primary", 8) },
-                // The keyboard's ring on the whole card, not only the radio — the primary colour's own
-                // variable, so it follows the colour scheme.
-                "&:has(input:focus-visible)": { outline: "2px solid var(--mui-palette-primary-main)", outlineOffset: "2px" },
-                "& input": { flex: "none", width: 22, height: 22, m: 0, mt: 1.25, ml: "auto", accentColor: "var(--mui-palette-primary-main)", cursor: "pointer" },
+                "& input": { ...CHOICE_INPUT_SX, mt: 1.25, ml: "auto" },
               }}
             >
               <BranchGlyphTile branch={branch} />

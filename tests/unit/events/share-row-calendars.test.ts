@@ -6,7 +6,7 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 import { googleCalendarDetails, googleCalendarUrl, isoInZone, outlookCalendarUrl, type CalendarEvent, type CalendarLabels } from "@/modules/events/ical";
 import { CALENDAR_TARGET_NAMESPACE, CALENDAR_TARGETS } from "@/modules/events/ui/calendar-targets";
-import { SHARE_PILL_BAND, SHARE_PILL_SX, SHARE_ROW_GAP } from "@/modules/events/ui/share-pill";
+import { CALENDAR_PILL_LEFT_VAR, DROPDOWN_PANEL_SURFACE_SX, SHARE_PILL_BAND, SHARE_PILL_SX, SHARE_ROW_GAP } from "@/modules/events/ui/share-pill";
 
 /**
  * The event page's «Adaugă în calendar» row names the five doors of the subscription panel, and
@@ -241,6 +241,85 @@ describe("the event page's calendar row", () => {
     for (const door of [calendar.googleUrl, calendar.icsHref]) expect(before).not.toContain(door);
   });
 
+  /** The share row's markup: from its opening tag to the end of the rendered block. */
+  const shareRow = (rendered: string) => {
+    const html = rendered.replace(/<style[^>]*>[\s\S]*?<\/style>/g, "");
+    const from = html.indexOf('data-testid="event-share-row"');
+    return { html, from, row: from < 0 ? "" : html.slice(from) };
+  };
+
+  it("draws ONE row: the caption, the networks and the calendar pill last, in that order (§781)", async () => {
+    const { html, from } = shareRow(renderToStaticMarkup(await ShareLinks(props)));
+    expect(from).toBeGreaterThan(-1);
+    // One row element, the only one: the old second row is gone.
+    expect(html.match(/data-testid="event-share-row"/g)).toHaveLength(1);
+    const at = (needle: string) => html.indexOf(needle, from);
+    const order = ["Dă mai departe:", "Facebook", "WhatsApp", "Descarcă poza", 'data-testid="event-calendar"'].map(at);
+    for (const position of order) expect(position).toBeGreaterThan(from);
+    expect([...order].sort((a, b) => a - b)).toEqual(order);
+    // The row wraps, eight pixels between pills; the calendar fold is its last child, nothing after it.
+    const tag = html.slice(html.lastIndexOf("<", from), html.indexOf(">", from) + 1);
+    expect(tag).toMatch(/^<div /);
+    const fold = fold_(html);
+    expect(html.slice(fold.closing + "</details>".length).replace(/<\/div>\s*$/, "")).toBe("");
+  });
+
+  /** The calendar fold, from its opening tag to its closing one (the address fold inside it is a second `<details>`). */
+  const fold_ = (html: string) => {
+    const opening = html.search(/<details[^>]*data-testid="event-calendar"/);
+    // The fold's own closing tag is the last one on the page: nothing follows it but the row's `</div>`.
+    const closing = html.lastIndexOf("</details>");
+    return { opening, closing, markup: html.slice(opening, closing + "</details>".length) };
+  };
+
+  it("puts the panel INSIDE the details, after its summary, and keeps it out of the flow (§781)", async () => {
+    const html = renderToStaticMarkup(
+      await ShareLinks({ ...props, calendar: { ...calendar, fileAddress: "https://example.test/ro/events/crosul/calendar.ics" } }),
+    ).replace(/<style[^>]*>[\s\S]*?<\/style>/g, "");
+    const { markup } = fold_(html);
+    expect(markup.indexOf("<summary")).toBeGreaterThan(-1);
+    expect(markup.indexOf("</summary>")).toBeLessThan(markup.indexOf('data-testid="event-calendar-panel"'));
+    for (const inner of ['data-testid="event-calendar-doors"', 'data-testid="event-calendar-snapshot"', 'data-testid="event-calendar-address"']) {
+      expect(markup.indexOf('data-testid="event-calendar-panel"'), inner).toBeLessThan(markup.indexOf(inner));
+    }
+    // Only the summary is in the row's flow; the panel is out of it, so opening the fold moves no pill.
+    const source = read("src/modules/events/ui/ShareLinks.tsx");
+    const panel = source.slice(source.indexOf("const CALENDAR_PANEL_WIDTH"), source.indexOf("export default async function ShareLinks"));
+    expect(panel).toMatch(/position: "absolute"/);
+    // 26rem at most, never wider than the row; its left edge the pill's, pulled back inside the row's width.
+    expect(panel).toMatch(/const CALENDAR_PANEL_WIDTH = "min\(26rem, 100%\)"/);
+    expect(panel).toMatch(/width: CALENDAR_PANEL_WIDTH/);
+    expect(panel).toMatch(/left: `min\(var\(\$\{CALENDAR_PILL_LEFT_VAR\}, 0px\), calc\(100% - \$\{CALENDAR_PANEL_WIDTH\}\)\)`/);
+    expect(panel).toMatch(/boxSizing: "border-box"/);
+    // Its own surface, border and shadow from theme tokens, above what follows; no colour literal.
+    expect(panel).toMatch(/\.\.\.DROPDOWN_PANEL_SURFACE_SX/);
+    expect(DROPDOWN_PANEL_SURFACE_SX).toMatchObject({ bgcolor: "background.paper", borderColor: "divider" });
+    expect(read("src/modules/events/ui/CalendarIntroFold.tsx")).toContain("...DROPDOWN_PANEL_SURFACE_SX");
+    expect(panel).toMatch(/boxShadow: 3/);
+    expect(panel).toMatch(/zIndex: 1001/);
+    expect(panel).not.toMatch(/#[0-9a-fA-F]{3,8}\b|rgba?\(/);
+    // The row is its containing block: the panel cannot pass the row's width.
+    expect(source).toMatch(/data-testid="event-share-row" sx=\{\{ position: "relative", flexWrap: "wrap"/);
+  });
+
+  it("closes on Escape and a press outside through one tiny island that draws nothing, the fold working without it (§781)", async () => {
+    const island = read("src/modules/events/ui/CalendarFoldClose.tsx");
+    expect(island).toMatch(/^"use client";/);
+    expect(island).toContain('event.key !== "Escape"');
+    expect(island).toContain('document.addEventListener("click"');
+    // Not `pointerdown`: the first touch of a scroll swipe would close the panel.
+    expect(island).not.toContain(`Listener("pointerdown"`);
+    expect(island).toMatch(/return null;/);
+    // The pill's offset goes into the custom property the panel's CSS reads, and is kept up to date.
+    expect(island).toContain("CALENDAR_PILL_LEFT_VAR");
+    expect(island).toContain("ResizeObserver");
+    expect(CALENDAR_PILL_LEFT_VAR).toBe("--calendar-pill-left");
+    // It is wired by the fold's id, and the fold itself has no `open` and no handler: a native details.
+    const html = renderToStaticMarkup(await ShareLinks(props));
+    expect(html).toContain('id="event-calendar"');
+    expect(read("src/modules/events/ui/ShareLinks.tsx")).toContain("<CalendarFoldClose foldId={CALENDAR_FOLD_ID} />");
+  });
+
   it("wears the share row's own small pill on the summary: 28 pixels and the tap band, no 44", () => {
     const source = read("src/modules/events/ui/ShareLinks.tsx");
     expect(source).toContain("...SHARE_PILL_SX");
@@ -249,6 +328,8 @@ describe("the event page's calendar row", () => {
     expect(SHARE_PILL_SX["&::after"]).toMatchObject({ content: '""' });
     // The marker is the pill's chevron, not the browser's, and the chevron turns when the fold opens.
     expect(source).toMatch(/"&::-webkit-details-marker": \{ display: "none" \}/);
+    // A bare summary is content-box where MUI's button is border-box: said, so its 28 pixels stay 28 (§781).
+    expect(source).toMatch(/const CALENDAR_PILL_SX = \{[\s\S]*?boxSizing: "border-box"/);
     expect(source).toMatch(/"details\[open\] > & \[data-chevron\]": \{ transform: "rotate\(180deg\)" \}/);
     expect(source).not.toMatch(/MuiMenu|<Menu\b|useState|"use client"/);
   });
@@ -268,6 +349,7 @@ describe("the event page's calendar row", () => {
     const members = renderToStaticMarkup(await ShareLinks({ ...props, shareable: false }));
     expect(members).not.toContain("Facebook");
     expect(members).toContain("Adaugă în calendar");
+    expect(members).not.toContain("Dă mai departe:");
     expect(row(members)).toHaveLength(5);
   });
 });
@@ -330,9 +412,11 @@ describe("the small pill", () => {
     // Spacing unit is 8 pixels. Two bands of neighbouring lines then meet inside the gap, never on a pill.
     expect(SHARE_PILL_BAND * 2).toBeLessThanOrEqual(SHARE_ROW_GAP * 8);
     const share = read("src/modules/events/ui/ShareLinks.tsx");
-    // The two rows, the lines of a wrapped row and the pills in a line all keep that one gap.
-    expect(share).toContain("<Stack spacing={SHARE_ROW_GAP}>");
+    // The ONE row (§781: the caption, the networks and the calendar pill), its wrapped lines and the five
+    // doors' lines inside the panel all keep that one gap; the panel's own stack too.
+    expect(share).toContain("<Stack spacing={SHARE_ROW_GAP} data-testid=\"event-calendar-panel\"");
     expect(share.match(/gap: SHARE_ROW_GAP/g)).toHaveLength(2);
+    expect(share).not.toContain("<Stack spacing={SHARE_ROW_GAP}>");
   });
 
   it("is worn by every pill of both rows, the islands included", () => {

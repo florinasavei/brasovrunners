@@ -1,3 +1,4 @@
+import { contentDisposition } from "@/shared/http/content-disposition";
 import { NextResponse } from "next/server";
 import { getTranslations } from "next-intl/server";
 import { getDb } from "@/db/client";
@@ -110,7 +111,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
   return new NextResponse(csv, {
     headers: {
       "Content-Type": "text/csv; charset=utf-8",
-      "Content-Disposition": `attachment; filename="${volunteersCsvFileName(day)}"`,
+      "Content-Disposition": contentDisposition("attachment", volunteersCsvFileName(day), "volunteers"),
       "X-Robots-Tag": "noindex",
       "Cache-Control": "private, no-store",
     },

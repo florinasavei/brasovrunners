@@ -1,3 +1,4 @@
+import { contentDisposition } from "@/shared/http/content-disposition";
 import { CLUB_TIME_ZONE, formatDateInWords, formatDay } from "@/i18n/dates";
 import type { Locale } from "@/i18n/routing";
 import { CLUB_NAME } from "@/theme/brand";
@@ -119,7 +120,7 @@ export function pdfResponse(pdf: Buffer, filename: string, disposition: "inline"
     status: 200,
     headers: {
       "Content-Type": "application/pdf",
-      "Content-Disposition": `${disposition}; filename="${filename}"`,
+      "Content-Disposition": contentDisposition(disposition, filename, "declaration"),
       "Content-Length": String(pdf.byteLength),
       // A signed declaration names a person: never in a shared cache.
       "Cache-Control": "private, no-store",

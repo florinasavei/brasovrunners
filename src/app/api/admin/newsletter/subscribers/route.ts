@@ -1,3 +1,4 @@
+import { contentDisposition } from "@/shared/http/content-disposition";
 import { NextResponse } from "next/server";
 import { getTranslations } from "next-intl/server";
 import { getDb } from "@/db/client";
@@ -78,7 +79,7 @@ export async function GET(request: Request): Promise<Response> {
   return new NextResponse(csv, {
     headers: {
       "Content-Type": "text/csv; charset=utf-8",
-      "Content-Disposition": `attachment; filename="${subscribersCsvFileName(day)}"`,
+      "Content-Disposition": contentDisposition("attachment", subscribersCsvFileName(day), "subscribers"),
       "X-Robots-Tag": "noindex",
       "Cache-Control": "private, no-store",
     },

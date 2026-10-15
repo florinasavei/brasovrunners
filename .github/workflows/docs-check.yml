@@ -102,7 +102,9 @@ jobs:
     runs-on: ubuntu-latest
     # About twelve minutes when well. A job with no ceiling waits GitHub's six hours; the V2.13
     # night lost an hour per shard to one hung spec before anybody saw it (§531).
-    timeout-minutes: 30
+    # 45, not 30: the unit suite passed 14 000 tests on 2026-10-15 and a run of BR-V3.38's PR was cancelled
+    # at the 30-minute cap with no failing test (CI's runners are ~3x slower than the 8-worker local hook).
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
 

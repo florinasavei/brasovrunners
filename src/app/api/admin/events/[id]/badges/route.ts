@@ -1,3 +1,4 @@
+import { contentDisposition } from "@/shared/http/content-disposition";
 import { hasLocale } from "next-intl";
 import { NextResponse } from "next/server";
 import { getDb } from "@/db/client";
@@ -78,7 +79,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
     status: 200,
     headers: {
       "Content-Type": "application/pdf",
-      "Content-Disposition": `attachment; filename="badges-${id.slice(0, 8)}-${badgeLocale}.pdf"`,
+      "Content-Disposition": contentDisposition("attachment", `badges-${id.slice(0, 8)}-${badgeLocale}.pdf`, "badges"),
       "Content-Length": String(pdf.byteLength),
       "Cache-Control": "private, no-store",
     },
