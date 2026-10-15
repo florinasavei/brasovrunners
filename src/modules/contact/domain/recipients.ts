@@ -1,3 +1,4 @@
+import { defaultViaFor, FEEDBACK_VIAS, type FeedbackRoads, type FeedbackVia } from "@/modules/feedback/domain/branches";
 import { isValidEmail } from "@/modules/participants/domain/canonical-email";
 import { z } from "zod";
 
@@ -68,6 +69,10 @@ export const contactRecipientsSchema = z
     // §744 (amends §310): a message the form marks «[posibil spam]» is not emailed, only
     // counted. Off on a row saved before it existed — nothing changes on release.
     holdBackSuspected: z.boolean().default(false),
+    // «Prin ce trimitem» (§782, amending §149): the road «Scrie-ne» leaves by. Absent on a row saved before the choice existed and
+    // on a deployment nobody has chosen on — then the default stands (`contactViaFor`: Mailgun where it transmits). A road
+    // the club chose is stored and never replaced by a release.
+    via: z.enum(FEEDBACK_VIAS).optional(),
   })
   .strict()
   // Stored the way it will be sent, so the boxes show the club what it actually did. One `seen`
@@ -79,10 +84,36 @@ export const contactRecipientsSchema = z
       cc: withoutRepeats(value.cc, seen),
       bcc: withoutRepeats(value.bcc, seen),
       holdBackSuspected: value.holdBackSuspected,
+      // Only when chosen: a row that never carried a road stays exactly what it was.
+      ...(value.via ? { via: value.via } : {}),
     };
   });
 
 export type ContactRecipients = z.infer<typeof contactRecipientsSchema>;
+
+/**
+ * The road «Scrie-ne» leaves by (§782): the club's saved choice, else the default of a form with none — Mailgun where it
+ * transmits, otherwise the club's Gmail, which is what the form always did (`defaultViaFor`).
+ */
+export function contactViaFor(setting: Pick<ContactRecipients, "via"> | null, roads: FeedbackRoads): FeedbackVia {
+  return setting?.via ?? defaultViaFor("contact", roads);
+}
+
+/**
+ * «Scrie-ne» with the road the club chose for it, joined to the delivery the message is queued on (§782): the saved road, else the
+ * default of point 2 (`contactViaFor`). A road this deployment does not have carries nothing, so the one it has does, rather than
+ * a queue that waits for the other's failures. No delivery (the form is off) stays none.
+ */
+export function withContactRoad<D extends object>(
+  delivery: D | null,
+  setting: Pick<ContactRecipients, "via"> | null,
+  roads: FeedbackRoads,
+): (D & { road: FeedbackVia }) | null {
+  if (!delivery) return null;
+  const chosen = contactViaFor(setting, roads);
+  const other: FeedbackVia = chosen === "gmail" ? "mailgun" : "gmail";
+  return { ...delivery, road: !roads[chosen] && roads[other] ? other : chosen };
+}
 
 export const DEFAULT_CONTACT_RECIPIENTS: ContactRecipients = { to: [], cc: [], bcc: [], holdBackSuspected: false };
 

@@ -11,7 +11,9 @@ import {
   type BadgeWords,
   badgeBandColour,
   badgeLabelText,
+  badgeNoRoleColour,
   badgePhoneLine,
+  badgePhoneRow,
   badgeRoleColour,
   badgeRoleText,
   badgeTextOn,
@@ -114,7 +116,7 @@ export async function renderBadgeSheet(input: BadgeSheetInput): Promise<Buffer> 
     let layout = layouts.get(key);
     if (!layout) {
       layout = badgeLayout(
-        { ...design, headerPicture: header !== null },
+        { ...design, showPhone: badgePhoneRow(design), headerPicture: header !== null },
         { title: words.title, label, role: role ? badgeRoleText(role.name, locale) : null, name: words.name, phone, free: words.free, markerLabel: words.markerLabel },
         measure,
       );
@@ -159,7 +161,8 @@ export async function renderBadgeSheet(input: BadgeSheetInput): Promise<Buffer> 
       text("bold", layout.title, x + layout.title.right - doc.widthOfString(layout.title.text), y, bandText);
     }
     // The role's band in its colour; «VOLUNTAR» small above the role's name, or alone and large.
-    const roleColour = badgeRoleColour(role?.colour ?? null);
+    // A badge with no role wears the one badge's colour in `single` mode (§783), the club's orange in `perRole` mode (§764).
+    const roleColour = role ? badgeRoleColour(role.colour) : badgeNoRoleColour(design);
     const roleText = badgeTextOn(roleColour);
     doc.rect(x + content.left, y + layout.role.top, content.width, layout.role.height).fill(roleColour);
     const bandWidth = content.width - 2 * pad;

@@ -7,9 +7,10 @@ import { recordAuditEvent } from "@/modules/audit/repository";
 import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import { canManageClubSettings } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
+import { feedbackRoads } from "./roads";
 import {
-  DEFAULT_FEEDBACK_SETTINGS,
-  DEFAULT_VIA,
+  defaultFeedbackSettings,
+  defaultViaFor,
   FEEDBACK_BRANCHES,
   FEEDBACK_VIAS,
   type FeedbackBranch,
@@ -44,20 +45,26 @@ const address = z
  * A stored branch: a value this code cannot read is off, or no address — never a crash; and a row
  * saved before the road was chosen (§772) has none, so it reads as the form's default (§676's), never a guess.
  */
-const branch = (name: FeedbackBranch) =>
-  z.object({ on: z.boolean().catch(false), to: z.email().nullable().catch(null), via: z.enum(FEEDBACK_VIAS).catch(DEFAULT_VIA[name]) });
+const branch = (name: FeedbackBranch, roads: FeedbackRoads) =>
+  z.object({ on: z.boolean().catch(false), to: z.email().nullable().catch(null), via: z.enum(FEEDBACK_VIAS).catch(defaultViaFor(name, roads)) });
 
-/** What a stored row is read with: anything unreadable is that branch off, never a crash. */
-const storedSchema = z
-  .object({
-    howItWent: branch("howItWent").catch(DEFAULT_FEEDBACK_SETTINGS.howItWent),
-    suggestion: branch("suggestion").catch(DEFAULT_FEEDBACK_SETTINGS.suggestion),
-    complaint: branch("complaint").catch(DEFAULT_FEEDBACK_SETTINGS.complaint),
-    safety: branch("safety")
-      .extend({ name: z.string().trim().min(1).max(SAFETY_NAME_MAX).nullable().catch(null), fallbackToGmail: z.boolean().catch(false) })
-      .catch(DEFAULT_FEEDBACK_SETTINGS.safety),
-  })
-  .partial();
+/**
+ * What a stored row is read with: anything unreadable is that branch off, never a crash. A road the row does not carry is the form's
+ * default for this deployment (`defaultViaFor`, §782) — Mailgun where it transmits — and a road it does carry is read as saved, always.
+ */
+function storedSchemaFor(roads: FeedbackRoads) {
+  const defaults = defaultFeedbackSettings(roads);
+  return z
+    .object({
+      howItWent: branch("howItWent", roads).catch(defaults.howItWent),
+      suggestion: branch("suggestion", roads).catch(defaults.suggestion),
+      complaint: branch("complaint", roads).catch(defaults.complaint),
+      safety: branch("safety", roads)
+        .extend({ name: z.string().trim().min(1).max(SAFETY_NAME_MAX).nullable().catch(null), fallbackToGmail: z.boolean().catch(false) })
+        .catch(defaults.safety),
+    })
+    .partial();
+}
 
 /**
  * What a save is checked against: each address `z.email()` or empty; a branch switched on needs its
@@ -92,21 +99,27 @@ const saveSchema = z
 
 export type FeedbackSettingsState = FeedbackSettings & { updatedAt: Date | null };
 
-function readStored(value: unknown): FeedbackSettings {
-  const parsed = storedSchema.safeParse(value ?? {});
+function readStored(value: unknown, roads: FeedbackRoads): FeedbackSettings {
+  const parsed = storedSchemaFor(roads).safeParse(value ?? {});
   const stored = parsed.success ? parsed.data : {};
+  const defaults = defaultFeedbackSettings(roads);
   return {
-    howItWent: stored.howItWent ?? DEFAULT_FEEDBACK_SETTINGS.howItWent,
-    suggestion: stored.suggestion ?? DEFAULT_FEEDBACK_SETTINGS.suggestion,
-    complaint: stored.complaint ?? DEFAULT_FEEDBACK_SETTINGS.complaint,
-    safety: stored.safety ?? DEFAULT_FEEDBACK_SETTINGS.safety,
+    howItWent: stored.howItWent ?? defaults.howItWent,
+    suggestion: stored.suggestion ?? defaults.suggestion,
+    complaint: stored.complaint ?? defaults.complaint,
+    safety: stored.safety ?? defaults.safety,
   };
 }
 
-export async function readFeedbackSettings<T extends Record<string, unknown>>(db: Database<T>): Promise<FeedbackSettingsState> {
+/**
+ * The four forms as the club set them. A form with no saved road reads as Mailgun where it transmits and as the club's Gmail
+ * where it does not (`defaultViaFor`, §782) — `roads` is this deployment's (`feedbackRoads`, its environment). A saved road is
+ * never replaced.
+ */
+export async function readFeedbackSettings<T extends Record<string, unknown>>(db: Database<T>, roads: FeedbackRoads = feedbackRoads()): Promise<FeedbackSettingsState> {
   const [row] = await db.select().from(platformSettings).where(eq(platformSettings.key, FEEDBACK_SETTING_KEY)).limit(1);
-  if (!row) return { ...DEFAULT_FEEDBACK_SETTINGS, updatedAt: null };
-  return { ...readStored(row.value), updatedAt: row.updatedAt };
+  if (!row) return { ...defaultFeedbackSettings(roads), updatedAt: null };
+  return { ...readStored(row.value, roads), updatedAt: row.updatedAt };
 }
 
 /** Half a minute: the outbox renders a batch of thank-yous, the action sends a message — one read for all of them. */
@@ -140,7 +153,7 @@ export async function updateFeedbackSettings<T extends Record<string, unknown>>(
   if (!canManageClubSettings(actor.role)) {
     throw new DomainError("FORBIDDEN", `role ${actor.role} may not change the feedback forms`);
   }
-  const before = await readFeedbackSettings(db);
+  const before = await readFeedbackSettings(db, roads);
   const parsed = saveSchema.safeParse(keepUnpostedFallback(keepUnpostedVia(rawInput, before), before));
   if (!parsed.success) {
     throw new DomainError(

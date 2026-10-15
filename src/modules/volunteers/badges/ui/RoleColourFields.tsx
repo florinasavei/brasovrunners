@@ -1,5 +1,7 @@
 import Stack from "@mui/material/Stack";
+import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
+import OnlyWhenChosen from "@/modules/content/events/ui/OnlyWhenChosen";
 import { BIB_COLOURS } from "@/modules/content/events/ui/bib-colours";
 import RecallField from "@/shared/forms/recall";
 import { badgeColourReadable } from "../badge-design";
@@ -25,40 +27,66 @@ export function roleColourChoice(colour: string | null): { choice: string; palet
 export default async function RoleColourFields({
   names,
   colour,
+  forSingle = false,
+  perRoleHelp = !forSingle,
 }: {
   names: { choice: string; typed: string };
-  /** The role's colour as stored: a hex, or null for the club's orange. */
+  /** The colour as stored: a hex, or null for the club's orange. */
   colour: string | null;
+  /**
+   * The boxes of the one badge for everyone, in the designer (§783): the same choice and the same typed colour with the same help, but the
+   * typed box is shown only while «Altă culoare» is chosen (so the select alone decides which colour is meant), and no line says that the colour
+   * serves the per-role badges — it is the one badge's own. Left out, these are a role's boxes (§764), and the one line under them says so.
+   */
+  forSingle?: boolean;
+  /** The one line saying the colour serves the badge per role only (§783): under a role's own boxes; the badges' page says it once, in its intro. */
+  perRoleHelp?: boolean;
 }) {
   const t = await getTranslations("Admin");
   const { choice } = roleColourChoice(colour);
+  const typedBox = (
+    <RecallField
+      name={names.typed}
+      label={t("badges.colours.typedLabel")}
+      helperText={t("badges.colours.typedHelp")}
+      defaultValue={choice === TYPED_COLOUR ? (colour ?? "") : ""}
+      placeholder="#rrggbb"
+      slotProps={{ htmlInput: { maxLength: 7, autoComplete: "off", spellCheck: false }, inputLabel: { shrink: true } }}
+      sx={{ width: { sm: 260 } }}
+    />
+  );
   return (
-    <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5}>
-      <RecallField
-        select
-        name={names.choice}
-        label={t("badges.colours.choice")}
-        defaultValue={choice}
-        slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}
-        sx={{ width: { sm: 260 } }}
-      >
-        <option value="">{t("badges.colours.themeOption")}</option>
-        {READABLE_ROLE_COLOURS.map((option) => (
-          <option key={option.hex} value={option.hex}>
-            {t(`editor.bibColours.${option.key}`)}
-          </option>
-        ))}
-        <option value={TYPED_COLOUR}>{t("badges.colours.typed")}</option>
-      </RecallField>
-      <RecallField
-        name={names.typed}
-        label={t("badges.colours.typedLabel")}
-        helperText={t("badges.colours.typedHelp")}
-        defaultValue={choice === TYPED_COLOUR ? (colour ?? "") : ""}
-        placeholder="#rrggbb"
-        slotProps={{ htmlInput: { maxLength: 7, autoComplete: "off", spellCheck: false }, inputLabel: { shrink: true } }}
-        sx={{ width: { sm: 260 } }}
-      />
+    <Stack spacing={1}>
+      <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5}>
+        <RecallField
+          select
+          name={names.choice}
+          label={t("badges.colours.choice")}
+          defaultValue={choice}
+          slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}
+          sx={{ width: { sm: 260 } }}
+        >
+          <option value="">{t("badges.colours.themeOption")}</option>
+          {READABLE_ROLE_COLOURS.map((option) => (
+            <option key={option.hex} value={option.hex}>
+              {t(`editor.bibColours.${option.key}`)}
+            </option>
+          ))}
+          <option value={TYPED_COLOUR}>{t("badges.colours.typed")}</option>
+        </RecallField>
+        {forSingle ? (
+          <OnlyWhenChosen name={names.choice} value={TYPED_COLOUR} initial={choice}>
+            {typedBox}
+          </OnlyWhenChosen>
+        ) : (
+          typedBox
+        )}
+      </Stack>
+      {perRoleHelp && (
+        <Typography variant="caption" color="text.secondary" data-testid="badge-colour-per-role-only">
+          {t("badges.colours.perRoleOnly")}
+        </Typography>
+      )}
     </Stack>
   );
 }

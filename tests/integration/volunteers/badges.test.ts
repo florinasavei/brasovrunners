@@ -11,7 +11,7 @@ import { readEventConfig } from "@/modules/content/events/transfer/export";
 import type { StaffRole } from "@/modules/staff-identity/domain/roles";
 import { DEFAULT_BADGE_DESIGN, readBadgeDesign } from "@/modules/volunteers/badges/badge-design";
 import { readBadgeDesignForm } from "@/modules/volunteers/badges/badge-query";
-import { BADGE_COUNT_MAX, badgePrintDefault, badgePrintEntries, findEventForBadges, listBadgeRoles, readPrintCounts, saveBadgeDesign, saveBadgeRoleColours } from "@/modules/volunteers/badges/badges";
+import { BADGE_COUNT_MAX, badgePrintDefault, badgePrintEntries, findEventForBadges, listBadgeRoles, readBadgeSingleStart, readPrintCounts, saveBadgeDesign, saveBadgeRoleColours } from "@/modules/volunteers/badges/badges";
 import { changeVolunteerRole } from "@/modules/volunteers/volunteers";
 import { DomainError } from "@/shared/errors/domain-error";
 import type { FormOutcome } from "@/shared/forms/outcome";
@@ -115,12 +115,16 @@ beforeEach(async () => {
   state.redirected.length = 0;
 });
 
-/** The designer's boxes as the form posts them, the default design unless told otherwise. */
+/**
+ * The designer's boxes as the form posts them, the default design unless told otherwise: since §783 that is the one badge for everyone, so a case about
+ * the badges per role (the print, the category's telephone) says `perRole` in its own boxes or stores it first (`storePerRole`).
+ */
 function designForm(fields: Record<string, string> = {}, event = eventId): FormData {
   const data = new FormData();
   data.set("uiLocale", "ro");
   data.set("eventId", event);
   const base: Record<string, string> = {
+    "badge.design.mode": "single",
     "badge.design.size": "strip90",
     "badge.design.customWidthMm": "90",
     "badge.design.customHeightMm": "35",
@@ -141,6 +145,9 @@ async function post(action: Stateful, data: FormData): Promise<FormOutcome | "re
     throw error;
   });
 }
+
+/** The event's design chosen as the badge per role (§764), the rest the platform's own: what a case about a role's pile or band starts from. */
+const storePerRole = (id = eventId) => db.update(events).set({ badgeDesign: { ...DEFAULT_BADGE_DESIGN, mode: "perRole" } }).where(eq(events.id, id));
 
 const stored = async (id = eventId) => (await db.select({ badgeDesign: events.badgeDesign }).from(events).where(eq(events.id, id)))[0].badgeDesign;
 const trail = (action: string) => db.select().from(auditLogs).where(eq(auditLogs.action, action as never));
@@ -364,6 +371,10 @@ describe("§764 a role's colour in the role's own form («Voluntari»)", () => {
 
 describe("§764 «Descarcă ecusoanele (PDF)»", () => {
   const get = (query: string, id = eventId) => sheetRoute.GET(new Request(`http://localhost/api/admin/events/${id}/badges?${query}`), { params: Promise.resolve({ id }) });
+  // The badges per role (§764): since §783 the event's design must choose them; the one badge for everyone has its own describe below.
+  beforeEach(async () => {
+    await storePerRole();
+  });
 
   it("starts a role that needs more than a pile holds at the most a pile prints, typed or not", () => {
     const many = { id: "a", needed: 500 };
@@ -613,7 +624,7 @@ describe("§776 the free-text line and the marker area", () => {
   });
 
   it("prints the free line and the marker's label on every badge of the sheet, in the badge's language", async () => {
-    await post(actions.saveBadgeDesignAction, designForm(BOTH));
+    await post(actions.saveBadgeDesignAction, designForm({ ...BOTH, "badge.design.mode": "perRole" }));
     const words: string[] = [];
     const text = PDFDocument.prototype.text;
     const spy = vi.spyOn(PDFDocument.prototype, "text").mockImplementation(function (this: PDFKit.PDFDocument, ...args: unknown[]) {
@@ -681,5 +692,193 @@ describe("§NNN «Câte ecusoane» for a role without a number", () => {
     const roles = await listBadgeRoles(db, eventId);
     expect(roles.at(-1)).toMatchObject({ needed: null, assigned: 0 });
     expect(badgePrintDefault(roles.at(-1)!)).toBe(0);
+  });
+});
+
+describe("§783 one badge for everyone, no role — the default", () => {
+  const sheet = (query: string, id = eventId) => sheetRoute.GET(new Request(`http://localhost/api/admin/events/${id}/badges?${query}`), { params: Promise.resolve({ id }) });
+  const picture = (query: string, id = eventId) => previewRoute.GET(new Request(`http://localhost/api/admin/events/${id}/badges/preview?${query}`), { params: Promise.resolve({ id }) });
+  const held = async (response: Response) => /\((\d+) badges\)/.exec(Buffer.from(await response.arrayBuffer()).toString("latin1"))?.[1];
+
+  /** A sign-up of the event in a state, given a role or none: the people the one badge's default counts are the confirmed ones. */
+  const volunteer = (n: number, state: "REGISTERED" | "CONFIRMED" | "CANCELLED", event = eventId, roleId: string | null = null) =>
+    db.insert(eventVolunteers).values({
+      eventId: event,
+      roleId,
+      name: `Voluntar ${n}`,
+      email: `v${n}@example.test`,
+      canonicalEmail: `v${n}@example.test`,
+      canonicalizationVersion: 1,
+      phone: "+40712345678",
+      locale: "ro",
+      state,
+      source: "STAFF",
+    });
+
+  it("reads an event that never chose, and a design saved before the choice, as the one badge for everyone", async () => {
+    expect((await findEventForBadges(db, eventId, "ro"))!.design).toMatchObject({ mode: "single", singleColour: null });
+    // A column as it was before this release: every key it had, none of the two new ones.
+    const old: Record<string, unknown> = { ...DEFAULT_BADGE_DESIGN, size: "strip100", bandColour: "#c62828" };
+    delete old.mode;
+    delete old.singleColour;
+    await db.update(events).set({ badgeDesign: old }).where(eq(events.id, eventId));
+    const read = await findEventForBadges(db, eventId, "ro");
+    expect(read!.design).toMatchObject({ mode: "single", size: "strip100", bandColour: "#c62828" });
+    expect(read!.dropped).toEqual([]);
+    // The designer's form, saved over it as it stands, is no change at all: nothing written, nothing audited.
+    expect(await saveBadgeDesign(db, staff.ADMIN!, eventId, readBadgeDesignForm((name) => (designForm({ "badge.design.size": "strip100", "badge.design.bandColour": "#c62828" }).get(name) as string | null) ?? null), NOW)).toEqual({ changed: false });
+    expect(await trail("event.badge_design_changed")).toHaveLength(0);
+  });
+
+  it("keeps the choice and the one badge's colour on the event, audited by name, and carries both in the event's file and a copy", async () => {
+    expect(await post(actions.saveBadgeDesignAction, designForm({ "badge.design.mode": "perRole", "badge.design.singleColourChoice": "#c62828" }))).toBe("redirected");
+    expect(readBadgeDesign(await stored())).toMatchObject({ mode: "perRole", singleColour: "#c62828" });
+    const rows = await trail("event.badge_design_changed");
+    expect((rows[0].metadataJson as { changed: string[] }).changed.sort()).toEqual(["mode", "singleColour"]);
+    expect((await readEventConfig(db, eventId))!.config.badges.design).toMatchObject({ mode: "perRole", singleColour: "#c62828" });
+    const copy = await duplicateEvent(db, { actor: staff.ADMIN!, eventId, now: NOW });
+    expect(readBadgeDesign(await stored(copy.id))).toMatchObject({ mode: "perRole", singleColour: "#c62828" });
+    // And back: the one badge, the colour kept for the day the badges go per role again.
+    expect(await post(actions.saveBadgeDesignAction, designForm({ "badge.design.mode": "single", "badge.design.singleColourChoice": "#c62828" }))).toBe("redirected");
+    expect(readBadgeDesign(await stored())).toMatchObject({ mode: "single", singleColour: "#c62828" });
+  });
+
+  it("keeps a colour typed beside «Altă culoare», in lower case, and the club's orange for the empty choice", async () => {
+    await post(actions.saveBadgeDesignAction, designForm({ "badge.design.singleColourChoice": "typed", "badge.design.singleColourTyped": "#6A1B9A" }));
+    expect(readBadgeDesign(await stored()).singleColour).toBe("#6a1b9a");
+    await post(actions.saveBadgeDesignAction, designForm({ "badge.design.singleColourChoice": "", "badge.design.singleColourTyped": "#6a1b9a" }));
+    expect(readBadgeDesign(await stored()).singleColour).toBeNull();
+  });
+
+  it.each([
+    ["a choice that is neither of the two", { "badge.design.mode": "everyone" }, "badge.design.mode", "VALIDATION_ERROR"],
+    ["a mode left out of the form", { "badge.design.mode": "__off" }, "badge.design.mode", "VALIDATION_ERROR"],
+    ["a typed colour that is no colour", { "badge.design.singleColourChoice": "typed", "badge.design.singleColourTyped": "green" }, "badge.design.singleColourTyped", "VALIDATION_ERROR"],
+    ["a typed colour no word reads on", { "badge.design.singleColourChoice": "typed", "badge.design.singleColourTyped": "#808080" }, "badge.design.singleColourTyped", "BADGE_COLOUR_UNREADABLE"],
+    ["a chosen colour no word reads on (the palette's green)", { "badge.design.singleColourChoice": "#1b8a3a" }, "badge.design.singleColourChoice", "BADGE_COLOUR_UNREADABLE"],
+    ["a choice that is no option", { "badge.design.singleColourChoice": "pink" }, "badge.design.singleColourChoice", "VALIDATION_ERROR"],
+    ["the telephone ticked on the one badge with no number typed", { "badge.design.showPhone": "on" }, "badge.design.phone", "VALIDATION_ERROR"],
+  ])("refuses %s, naming the box and keeping what was typed", async (_name, fields, box, code) => {
+    const result = (await post(actions.saveBadgeDesignAction, designForm(fields))) as FormOutcome;
+    expect(result).toMatchObject({ error: code });
+    expect(result.fields).toContain(box);
+    expect(await stored()).toBeNull();
+  });
+
+  it("does not refuse a colour the club hid by choosing a badge per role: typed text that is no colour, or one no word reads on, saves the club's orange", async () => {
+    for (const typed of ["green", "#808080"]) {
+      expect(await post(actions.saveBadgeDesignAction, designForm({ "badge.design.mode": "perRole", "badge.design.singleColourChoice": "typed", "badge.design.singleColourTyped": typed }))).toBe("redirected");
+      expect(readBadgeDesign(await stored())).toMatchObject({ mode: "perRole", singleColour: null });
+    }
+  });
+
+  it("allows the telephone ticked with no number on the badges per role (§774), and with the number typed on the one badge", async () => {
+    expect(await post(actions.saveBadgeDesignAction, designForm({ "badge.design.mode": "perRole", "badge.design.showPhone": "on" }))).toBe("redirected");
+    expect(readBadgeDesign(await stored())).toMatchObject({ mode: "perRole", showPhone: true, phone: "" });
+    expect(await post(actions.saveBadgeDesignAction, designForm({ "badge.design.mode": "single", "badge.design.showPhone": "on", "badge.design.phone": "0712 345 678" }))).toBe("redirected");
+    expect(readBadgeDesign(await stored())).toMatchObject({ mode: "single", showPhone: true, phone: "0712 345 678" });
+  });
+
+  it("prints, by default, as many badges as the event has confirmed volunteers — never the unconfirmed or the cancelled", async () => {
+    await volunteer(1, "CONFIRMED");
+    await volunteer(2, "CONFIRMED");
+    await volunteer(3, "CONFIRMED");
+    await volunteer(4, "REGISTERED");
+    await volunteer(5, "CANCELLED");
+    await volunteer(6, "CONFIRMED", otherEventId);
+    const response = await sheet("locale=ro");
+    expect(response.status).toBe(200);
+    expect(await held(response)).toBe("3");
+    // «Câte ecusoane» typed, and the spares; the roles' boxes and «Ecusoane fără rol» are not read.
+    expect(await held(await sheet(`locale=ro&all=40&allx=5&n.${waterId}=9&none=7`))).toBe("45");
+    expect(await held(await sheet("locale=ro&all=&allx=2"))).toBe("2");
+  });
+
+  it("starts at what the roles need together when nobody is confirmed yet, and at ten when no role needs anyone", async () => {
+    // «Punct de apă» 3 and «Marshal» 5.
+    expect(await held(await sheet("locale=ro"))).toBe("8");
+    await db.delete(eventVolunteerRoles).where(eq(eventVolunteerRoles.eventId, eventId));
+    expect(await held(await sheet("locale=ro"))).toBe("10");
+  });
+
+  it("meets a role without a number (§NNN): its people join the sum of the roles' needs, finite and never a hole, and the confirmed volunteers still come first", async () => {
+    // «Punct de apă» needs 3 and «Marshal» 5; «Ajutoare» has no number, so no need to add up.
+    const [free] = await db.insert(eventVolunteerRoles).values({ eventId, nameRo: "Ajutoare", nameEn: "Helpers", needed: null, position: 2 }).returning({ id: eventVolunteerRoles.id });
+    const start = async () => readBadgeSingleStart(db, eventId, await listBadgeRoles(db, eventId));
+    // Nobody given it yet: it adds nothing, so the sum is the numbered roles' own — a number, never NaN.
+    expect(await start()).toEqual({ count: 8, basis: "neededNoNumber" });
+    // Three people given it, one cancelled: 3 + 5 + 3 = 11 — not the ten of the fallback, and the sheet's route prints the same.
+    for (const [n, state] of [[1, "REGISTERED"], [2, "REGISTERED"], [3, "REGISTERED"], [4, "CANCELLED"]] as const) await volunteer(n, state, eventId, free.id);
+    const sum = await start();
+    expect(sum).toEqual({ count: 11, basis: "neededNoNumber" });
+    expect(Number.isFinite(sum.count)).toBe(true);
+    expect(await held(await sheet("locale=ro"))).toBe("11");
+    // The club's own «Câte ecusoane» replaces it, as it does everywhere.
+    expect(await held(await sheet("locale=ro&all=4"))).toBe("4");
+    // One confirmed volunteer: theirs is the count now, whatever the roles' sum.
+    await volunteer(5, "CONFIRMED", eventId, free.id);
+    expect(await start()).toEqual({ count: 1, basis: "confirmed" });
+    expect(await held(await sheet("locale=ro"))).toBe("1");
+    // Only a role without a number, nobody given it and nobody confirmed: the ten of the fallback — not nothing.
+    await db.delete(eventVolunteers).where(eq(eventVolunteers.eventId, eventId));
+    await db.delete(eventVolunteerRoles).where(eq(eventVolunteerRoles.id, waterId));
+    await db.delete(eventVolunteerRoles).where(eq(eventVolunteerRoles.id, marshalId));
+    expect(await start()).toEqual({ count: 10, basis: "fallback" });
+    expect(await held(await sheet("locale=ro"))).toBe("10");
+  });
+
+  it("refuses a number that is not one, or a total past the file's ceiling, as the page's form sends it back", async () => {
+    expect((await sheet("locale=ro&all=-1")).status).toBe(400);
+    expect((await sheet("locale=ro&all=1.5")).status).toBe(400);
+    expect((await sheet("locale=ro&all=1001")).status).toBe(400);
+    expect((await sheet("locale=ro&all=1000&allx=1")).status).toBe(400);
+    const back = await sheet("locale=ro&from=ro&all=1000&allx=1");
+    expect(back.status).toBe(303);
+    expect(back.headers.get("location")).toBe(`/ro/admin/events/${eventId}/badges?refused=total`);
+    // Up to a file's worth is the one pile of a race with many volunteers.
+    expect(await held(await sheet("locale=ro&all=1000"))).toBe("1000");
+  }, 120_000);
+
+  it("prints «VOLUNTAR» alone on every badge, no role's name, the free-text line and the marker's area as ticked", async () => {
+    await post(actions.saveBadgeDesignAction, designForm({ ...{ "badge.design.showFreeText": "on", "badge.design.freeTextRo": "Bea apă", "badge.design.freeTextEn": "Drink", "badge.design.showMarker": "on", "badge.design.markerLabelRo": "Tură", "badge.design.markerLabelEn": "Shift" } }));
+    const words: string[] = [];
+    const text = PDFDocument.prototype.text;
+    const spy = vi.spyOn(PDFDocument.prototype, "text").mockImplementation(function (this: PDFKit.PDFDocument, ...args: unknown[]) {
+      if (typeof args[0] === "string") words.push(args[0]);
+      return (text as (...a: unknown[]) => PDFKit.PDFDocument).apply(this, args);
+    });
+    try {
+      expect((await sheet("locale=ro&all=6&allx=2")).status).toBe(200);
+    } finally {
+      spy.mockRestore();
+    }
+    expect(words.filter((word) => word === "VOLUNTAR")).toHaveLength(8);
+    expect(words.filter((word) => word === "Nume:")).toHaveLength(8);
+    expect(words.filter((word) => word === "Bea apă")).toHaveLength(8);
+    expect(words.filter((word) => word === "Tură:")).toHaveLength(8);
+    expect(words).not.toContain("PUNCT DE APĂ");
+    expect(words).not.toContain("MARSHAL");
+  });
+
+  it("draws the one badge whatever role the address names — the designer's sample keeps asking for the first role — and a role's own badge in `perRole`", async () => {
+    const bytes = async (response: Response) => Buffer.from(await response.arrayBuffer());
+    const none = await bytes(await picture("locale=ro&role=none&v=a"));
+    const named = await bytes(await picture(`locale=ro&role=${waterId}&v=b`));
+    expect(named.equals(none)).toBe(true);
+    // The unsaved sample follows the mode in its own address: per role, the role's name is drawn, so the picture differs.
+    const sampleSingle = await bytes(await picture(`locale=ro&role=${waterId}&sample=1&mode=single`));
+    const samplePerRole = await bytes(await picture(`locale=ro&role=${waterId}&sample=1&mode=perRole`));
+    expect(sampleSingle.equals(samplePerRole)).toBe(false);
+    expect(sampleSingle.equals(none)).toBe(true);
+    // A role of another event is still not found, in either mode.
+    expect((await picture(`locale=ro&role=${otherRoleId}`)).status).toBe(404);
+  }, 120_000);
+
+  it("keeps the badges per role as they were once the design chooses them: a pile per role, the band of each", async () => {
+    await storePerRole();
+    expect(await held(await sheet("locale=ro"))).toBe("8");
+    expect(await held(await sheet(`locale=ro&n.${waterId}=2&x.${waterId}=1&n.${marshalId}=4&none=3`))).toBe("10");
+    // The one badge's boxes are not read there.
+    expect(await held(await sheet(`locale=ro&all=50&n.${waterId}=1&n.${marshalId}=1`))).toBe("2");
   });
 });

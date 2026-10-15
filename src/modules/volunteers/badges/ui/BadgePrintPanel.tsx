@@ -12,7 +12,7 @@ import RadioField from "@/shared/ui/RadioField";
 import { type BadgeDesign, badgePictureStamp } from "../badge-design";
 import { badgeImageSize, badgePaper, badgeSheetGrid, badgeSizeMm } from "../badge-geometry";
 import { badgePictureSrc } from "../badge-query";
-import { BADGE_COUNT_MAX, BADGE_FROM_BOX, BADGE_TOTAL_MAX, type BadgeRole, badgePrintDefault, badgeRoleLabel, printBoxes } from "../badges";
+import { BADGE_COUNT_MAX, BADGE_FROM_BOX, BADGE_TOTAL_MAX, type BadgeRole, type BadgeSingleStart, badgePrintDefault, badgeRoleLabel, printBoxes } from "../badges";
 import { badgeLabelIn } from "../badge-words";
 
 /**
@@ -33,6 +33,7 @@ export default async function BadgePrintPanel({
   roles,
   eventTitle,
   refused = false,
+  singleStart = null,
 }: {
   eventId: string;
   locale: Locale;
@@ -42,6 +43,11 @@ export default async function BadgePrintPanel({
   eventTitle: string;
   /** The page came back with the route's refusal of the numbers: the card opens, its boxes in view. */
   refused?: boolean;
+  /**
+   * Where «Câte ecusoane» of the one badge for everyone starts (§783: `readBadgeSingleStart`) — given when the saved design is `single`, which
+   * makes the card one pile; null for the badges per role (§764), a pile per role and the badges «fără rol».
+   */
+  singleStart?: BadgeSingleStart | null;
 }) {
   const t = await getTranslations("Admin");
   const grid = badgeSheetGrid(badgePaper(design));
@@ -63,15 +69,48 @@ export default async function BadgePrintPanel({
       role: role ? role.id : "none",
       stamp: badgePictureStamp([design, eventTitle, role ? [role.nameRo, role.nameEn, role.colour, role.categoryPhone] : null]),
     });
-  const numberBox = (name: string, label: string, value: number, testId: string) => (
+  const numberBox = (name: string, label: string, value: number, testId: string, max = BADGE_COUNT_MAX) => (
     <RecallField
       name={name}
       type="number"
       label={label}
       defaultValue={String(value)}
-      slotProps={{ htmlInput: { min: 0, max: BADGE_COUNT_MAX, step: 1, inputMode: "numeric", "data-testid": testId }, inputLabel: { shrink: true } }}
+      slotProps={{ htmlInput: { min: 0, max, step: 1, inputMode: "numeric", "data-testid": testId }, inputLabel: { shrink: true } }}
       sx={{ width: { xs: "100%", sm: 160 } }}
     />
+  );
+  /**
+   * The one badge for everyone (§783): one pile, as the saved design prints it — «VOLUNTAR» on its colour, no role — with «Câte ecusoane»
+   * (the event's confirmed volunteers to begin with, `badgeSingleStart`) and «În plus». The whole pile is everyone, so the boxes may hold up to a file's worth.
+   */
+  const singlePile = (start: BadgeSingleStart) => (
+    <Box component="li" key="all" data-testid="badge-print-row" data-role-id="all">
+      <Stack direction={{ xs: "column", md: "row" }} spacing={1.5} sx={{ alignItems: { md: "center" } }}>
+        <Box component="figure" sx={{ m: 0, width: { xs: "100%", md: 300 }, flexShrink: 0 }}>
+          <Box
+            component="img"
+            src={badgePictureSrc({ eventId, locale, role: "none", stamp: badgePictureStamp([design, eventTitle, "single"]) })}
+            alt={t("badges.print.pictureAltSingle")}
+            width={image.width}
+            height={image.height}
+            loading="lazy"
+            sx={{ width: "100%", height: "auto", display: "block" }}
+          />
+        </Box>
+        <Stack spacing={1} sx={{ minWidth: 0 }}>
+          <Typography variant="body1" sx={{ fontWeight: 600 }}>
+            {t("badges.print.singleTitle")}
+          </Typography>
+          <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5}>
+            {numberBox(printBoxes.all, t("badges.print.count"), start.count, "badge-count", BADGE_TOTAL_MAX)}
+            {numberBox(printBoxes.allSpares, t("badges.print.spares"), 0, "badge-spares", BADGE_TOTAL_MAX)}
+          </Stack>
+          <Typography variant="caption" color="text.secondary" data-testid="badge-single-help">
+            {t(`badges.print.singleHelp.${start.basis}`, { count: String(start.count) })}
+          </Typography>
+        </Stack>
+      </Stack>
+    </Box>
   );
   /** One pile: its badge as it prints, and its numbers. */
   const pile = (role: BadgeRole | null) => (
@@ -128,7 +167,9 @@ export default async function BadgePrintPanel({
         <input type="hidden" name={BADGE_FROM_BOX} value={locale} />
         <Stack spacing={2}>
           <Typography variant="body2" color="text.secondary">
-            {t(allWithoutNumber ? "badges.print.introAllNoNumber" : someWithoutNumber ? "badges.print.introNoNumber" : "badges.print.intro", { perSheet: String(grid.perSheet), needed: String(needed), max: String(BADGE_COUNT_MAX), total: String(BADGE_TOTAL_MAX) })}
+            {singleStart
+              ? t("badges.print.introSingle", { perSheet: String(grid.perSheet), total: String(BADGE_TOTAL_MAX) })
+              : t(allWithoutNumber ? "badges.print.introAllNoNumber" : someWithoutNumber ? "badges.print.introNoNumber" : "badges.print.intro", { perSheet: String(grid.perSheet), needed: String(needed), max: String(BADGE_COUNT_MAX), total: String(BADGE_TOTAL_MAX) })}
             <QuietHelp text={t("badges.print.introMore")} />
           </Typography>
           <Box component="fieldset" sx={{ border: 0, p: 0, m: 0, minWidth: 0 }} data-testid="badge-print-language">
@@ -144,10 +185,16 @@ export default async function BadgePrintPanel({
             </Stack>
           </Box>
           <Stack spacing={2.5} component="ul" sx={{ listStyle: "none", m: 0, p: 0 }}>
-            {roles.map((role) => pile(role))}
-            {pile(null)}
+            {singleStart ? (
+              singlePile(singleStart)
+            ) : (
+              <>
+                {roles.map((role) => pile(role))}
+                {pile(null)}
+              </>
+            )}
           </Stack>
-          {startsAt === 0 && (
+          {!singleStart && startsAt === 0 && (
             <Typography variant="body2" color="text.secondary" data-testid="badge-print-nothing">
               {t("badges.print.nothing")}
             </Typography>
