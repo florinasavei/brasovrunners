@@ -54,7 +54,7 @@ const storedSchema = z
     suggestion: branch("suggestion").catch(DEFAULT_FEEDBACK_SETTINGS.suggestion),
     complaint: branch("complaint").catch(DEFAULT_FEEDBACK_SETTINGS.complaint),
     safety: branch("safety")
-      .extend({ name: z.string().trim().min(1).max(SAFETY_NAME_MAX).nullable().catch(null) })
+      .extend({ name: z.string().trim().min(1).max(SAFETY_NAME_MAX).nullable().catch(null), fallbackToGmail: z.boolean().catch(false) })
       .catch(DEFAULT_FEEDBACK_SETTINGS.safety),
   })
   .partial();
@@ -73,6 +73,8 @@ const saveSchema = z
       on: z.boolean(),
       to: address,
       via,
+      // «Dacă Mailgun pică, trimite prin Gmail-ul clubului» (§NNN): absent from a post whose box was greyed — then what is saved stays.
+      fallbackToGmail: z.boolean(),
       name: z
         .string()
         .trim()
@@ -139,7 +141,7 @@ export async function updateFeedbackSettings<T extends Record<string, unknown>>(
     throw new DomainError("FORBIDDEN", `role ${actor.role} may not change the feedback forms`);
   }
   const before = await readFeedbackSettings(db);
-  const parsed = saveSchema.safeParse(keepUnpostedVia(rawInput, before));
+  const parsed = saveSchema.safeParse(keepUnpostedFallback(keepUnpostedVia(rawInput, before), before));
   if (!parsed.success) {
     throw new DomainError(
       "VALIDATION_ERROR",
@@ -205,6 +207,19 @@ function keepUnpostedVia(raw: unknown, before: FeedbackSettings): unknown {
   return kept;
 }
 
+/**
+ * Girl Zone’s fallback tick (§NNN): a greyed (disabled) box is never posted, and an unticked one posts nothing either, so the
+ * form says which it was with `fallbackToGmail: undefined` for the greyed one — and what is saved stays, as the road does.
+ */
+function keepUnpostedFallback(raw: unknown, before: FeedbackSettings): unknown {
+  if (!raw || typeof raw !== "object") return raw;
+  const safety = (raw as { safety?: unknown }).safety;
+  if (!safety || typeof safety !== "object") return raw;
+  const given = (safety as { fallbackToGmail?: unknown }).fallbackToGmail;
+  if (given !== undefined) return raw;
+  return { ...(raw as Record<string, unknown>), safety: { ...safety, fallbackToGmail: before.safety.fallbackToGmail } };
+}
+
 function boxName(path: readonly PropertyKey[]): string {
   const [branchName, field] = path.map(String);
   return field ? `${branchName}${field.charAt(0).toUpperCase()}${field.slice(1)}` : branchName;
@@ -216,8 +231,11 @@ export function auditOf(before: FeedbackSettings, next: FeedbackSettings): {
   safetyNameChanged: boolean;
   /** Which form's road moved, and to which (§772): a word, never an address. */
   viaChanged: Array<{ branch: FeedbackBranch; via: FeedbackSettings[FeedbackBranch]["via"] }>;
+  /** Girl Zone's «Dacă Mailgun pică, trimite prin Gmail-ul clubului» moved, and to which (§NNN). */
+  fallbackToGmail: boolean | null;
 } {
   return {
+    fallbackToGmail: before.safety.fallbackToGmail !== next.safety.fallbackToGmail ? next.safety.fallbackToGmail : null,
     viaChanged: FEEDBACK_BRANCHES.filter((name) => before[name].via !== next[name].via).map((name) => ({ branch: name, via: next[name].via })),
     switched: FEEDBACK_BRANCHES.filter((name) => before[name].on !== next[name].on).map((name) => ({ branch: name, on: next[name].on })),
     recipientChanged: FEEDBACK_BRANCHES.filter((name) => (before[name].to ?? "").toLowerCase() !== (next[name].to ?? "").toLowerCase()),

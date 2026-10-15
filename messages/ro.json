@@ -6662,7 +6662,10 @@
           "noticeSteps": "Texte legale",
           "safetyNote": "Prin Gmail, mesajul Girl Zone rămâne în căsuța clubului și îl văd cei care o citesc; prin Mailgun ajunge doar la persoana de mai sus.",
           "stateGmail": "Gmail",
-          "stateMailgun": "Mailgun"
+          "stateMailgun": "Mailgun",
+          "fallback": "Dacă Mailgun pică, trimite prin Gmail-ul clubului",
+          "fallbackHelp": "Doar pentru mesajele Girl Zone. Fără bifă, un mesaj care nu poate pleca prin Mailgun așteaptă până merge. Cu bifă, pleacă din căsuța clubului, iar cei care o citesc îl văd în folderul Trimise.",
+          "fallbackNotice": "Bifa e oprită până când nota de confidențialitate în vigoare spune că mesajele Girl Zone pot pleca prin Gmail."
         },
         "safetyName": "Prenumele afișat",
         "safetyNameHelp": "Formularul îl scrie în propoziția despre cine citește mesajul. Cel mult 40 de caractere.",
@@ -6672,7 +6675,8 @@
         "save": "Salvează formularele",
         "saving": "Se salvează…",
         "saved": "Formularele „Spune-ne ceva” au fost salvate.",
-        "roads": "Site-ul nu păstrează niciun mesaj. Calea de trimitere se alege pentru fiecare formular în parte: Gmail-ul clubului (CONTACT_SMTP_USER) sau Mailgun."
+        "roads": "Mesajul stă în coada de emailuri doar până pleacă, câteva minute; apoi textul se șterge și rămâne doar urma trimiterii. Calea se alege pentru fiecare formular: Gmail-ul clubului (CONTACT_SMTP_USER) sau Mailgun. Dacă una pică, mesajul pleacă prin cealaltă.",
+        "selfRecipient": "Adresa de mai sus este chiar contul Gmail care trimite. Gmail poate lăsa un astfel de mesaj doar în Trimise, nu în Primite: alege altă adresă sau calea Mailgun."
       },
       "perSendNewsletter": "Textul newsletterului se scrie la fiecare trimitere, pe pagina „Newsletter” a backoffice-ului, așa că nu are cuvinte de editat aici.",
       "newsletterLink": "Newsletter →",
@@ -10396,7 +10400,6 @@
       "title": "Emailuri capturate pe această mașină",
       "intro": "Local nu pleacă nimic: fiecare mesaj pe care site-ul l-ar fi trimis ajunge aici, cel mai nou primul, cu linkurile lui — apasă-le ca să parcurgi drumul participantului.",
       "empty": "Nimic capturat încă. Înscrie-te la un eveniment și revino.",
-      "contact": "Prin formularul de contact — ar fi ajuns în căsuța clubului:",
       "text": "Textul mesajului"
     },
     "pictures": "Imagini stocate: {total} · nefolosite nicăieri: {unreferenced} · de șters la următoarea rulare (nefolosite de peste {days} zile): {sweepable}",
@@ -10808,10 +10811,10 @@
       }
     },
     "safety": {
-      "reader": "Mesajul ajunge doar la {name}. Site-ul nu păstrează nimic din el.",
-      "readerGmail": "Mesajul ajunge la {name}, prin căsuța clubului, unde îl văd și cei care o citesc. Site-ul nu păstrează nimic din el.",
-      "readerChoice": "Anonim, mesajul ajunge doar la {name}; cu nume și prenume, alegi tu cine află. Site-ul nu păstrează nimic din el.",
-      "readerChoiceGmail": "Anonim, mesajul ajunge la {name}, prin căsuța clubului, unde îl văd și cei care o citesc; cu nume și prenume, alegi tu cine află. Site-ul nu păstrează nimic din el.",
+      "reader": "Mesajul ajunge doar la {name}. Site-ul îl ține doar până pleacă, câteva minute, apoi îl șterge.",
+      "readerGmail": "Mesajul ajunge la {name}, prin căsuța clubului, unde îl văd și cei care o citesc. Site-ul îl ține doar până pleacă, câteva minute, apoi îl șterge.",
+      "readerChoice": "Anonim, mesajul ajunge doar la {name}; cu nume și prenume, alegi tu cine află. Site-ul îl ține doar până pleacă, câteva minute, apoi îl șterge.",
+      "readerChoiceGmail": "Anonim, mesajul ajunge la {name}, prin căsuța clubului, unde îl văd și cei care o citesc; cu nume și prenume, alegi tu cine află. Site-ul îl ține doar până pleacă, câteva minute, apoi îl șterge.",
       "whereWhen": "Unde și când (opțional)",
       "contact": "Telefon (opțional)",
       "contactHelp": "Doar dacă vrei să te sune {name}."
@@ -10892,8 +10895,8 @@
       "email": "E-mailul",
       "captcha": "Verificarea anti-bot"
     },
-    "privacy": "Site-ul nu păstrează nimic: mesajul pleacă pe e-mail la club.",
-    "privacySafety": "Site-ul nu păstrează nimic din mesaj.",
+    "privacy": "Site-ul ține mesajul doar până pleacă, câteva minute, apoi îl șterge: mesajul pleacă pe e-mail la club.",
+    "privacySafety": "Site-ul ține mesajul doar până pleacă, câteva minute, apoi îl șterge.",
     "privacyLinkLabel": "Nota de confidențialitate",
     "submit": "Trimite",
     "submitting": "Se trimite…",

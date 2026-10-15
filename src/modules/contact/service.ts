@@ -1,5 +1,6 @@
 import type { Database } from "@/db/types";
-import type { SmtpTransport } from "@/infrastructure/email/smtp-adapter";
+import { drainRelayAfterResponse } from "@/modules/notifications/drain";
+import { enqueueRelay } from "@/modules/notifications/relay";
 import { canonicalizeEmail, InvalidEmailError } from "@/modules/participants/domain/canonical-email";
 import { emailBucketKey } from "@/modules/rate-limit/domain/key";
 import { consumeRateLimit, refundRateLimit } from "@/modules/rate-limit/service";
@@ -35,7 +36,11 @@ import { type ContactMessageRoute, renderContactMessage } from "./message";
  * it tripped (`AGENTS.md` §19.4, §39).
  */
 
-export type ContactDelivery = ContactMessageRoute & { transport: SmtpTransport };
+/**
+ * Who receives and from where (the club's recipients, the sender's name, the environment for the subject's mark) — and no
+ * transport since §NNN: the message is queued in the outbox and the relay's roads carry it (`notifications/relay.ts`).
+ */
+export type ContactDelivery = ContactMessageRoute;
 
 /**
  * What the action knows about the post that the form's fields do not carry: whether the club's
@@ -74,9 +79,7 @@ export type ContactOutcome =
   /** Too many this hour; `retryAfter` in seconds, for the sentence on the page. */
   | { outcome: "limited"; retryAfter: number }
   /** The deployment has no way out (`CONTACT_FORM_MODE=off`). */
-  | { outcome: "unavailable" }
-  /** SMTP refused or timed out; the page says to write directly. */
-  | { outcome: "delivery_failed" };
+  | { outcome: "unavailable" };
 
 /** Which boxes a rejected post names: the schema's own paths, in the form's order. */
 function invalidFields(error: unknown): string[] {
@@ -147,23 +150,45 @@ export async function submitContactMessage<T extends Record<string, unknown>>(
     { from: delivery.from, to: delivery.to, cc: delivery.cc, bcc: delivery.bcc, appEnv: delivery.appEnv },
     suspicion,
   );
-  const result = await delivery.transport.send(message);
-  if (result.outcome === "sent") {
-    // How often the mark fires, for whoever reads the function log — the reasons' names only,
-    // never the address, the domain or anything typed (§216's rule for its own line).
-    if (suspicion.suspicious) {
-      console.info("[contact] delivered marked as possible spam:", suspicion.reasons.map((reason) => reason.kind).join(","));
-    }
-    return { outcome: "sent" };
+  /*
+    Queued, not sent from here (§NNN, amending §149): the club's Gmail is the road the form always had, the other road
+    takes over when it is down and the message may take it, and the retries are the outbox's. A transport that fails no
+    longer loses the message or tells the visitor «nu am putut trimite»: the row is the promise. The first recipient is
+    the row's `To`, the rest ride as visible copies with the club's own list, as they always did.
+  */
+  const [first, ...otherTo] = message.to;
+  const copies = [...otherTo, ...(message.cc ?? [])];
+  let row;
+  try {
+    row = await enqueueRelay(db, {
+      type: "CONTACT_MESSAGE",
+      road: "gmail",
+      to: first,
+      locale: input.locale,
+      content: {
+        subject: message.subject,
+        text: message.text,
+        html: message.html,
+        ...(copies.length > 0 ? { cc: copies } : {}),
+        ...(message.bcc && message.bcc.length > 0 ? { bcc: message.bcc } : {}),
+        ...(message.replyTo ? { replyTo: message.replyTo.address, replyToName: message.replyTo.name } : {}),
+        fallbackAllowed: true,
+        form: "contact",
+      },
+      now,
+    });
+  } catch (error) {
+    // Nothing was kept: not one of the sender's five.
+    await refundRateLimit(db, "contact-message", key, now).catch(() => undefined);
+    throw error;
   }
-
-  // The server's refusal, as a code or a class — never the password or its reply (the adapter
-  // reduces it): the one trace an operator has on a wrong-password day (`SETUP.md` §38 step 5).
-  // A message that reached nobody is not one of the sender's five: on a day the mailbox is
-  // down, the fifth try must not turn "we could not send" into "too many messages".
-  console.error("[contact] delivery failed", result.error);
-  await refundRateLimit(db, "contact-message", key, now);
-  return { outcome: "delivery_failed" };
+  if (row) drainRelayAfterResponse([row.id]);
+  // How often the mark fires, for whoever reads the function log — the reasons' names only,
+  // never the address, the domain or anything typed (§216's rule for its own line).
+  if (suspicion.suspicious) {
+    console.info("[contact] queued marked as possible spam:", suspicion.reasons.map((reason) => reason.kind).join(","));
+  }
+  return { outcome: "sent" };
 }
 
 /** Milliseconds from the page's render to the post, or `null` when the form carried no readable time (§217). */

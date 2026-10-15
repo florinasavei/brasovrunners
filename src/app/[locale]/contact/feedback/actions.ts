@@ -3,10 +3,9 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { getDb } from "@/db/client";
-import { createEmailSenderForEnvironment } from "@/infrastructure/email/sender";
 import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
-import { contactDelivery, contactSmtpRoad } from "@/modules/contact/delivery";
+import { contactDelivery } from "@/modules/contact/delivery";
 import { feedbackRoads } from "@/modules/feedback/roads";
 import { readContactRecipients } from "@/modules/contact/recipients";
 import {
@@ -99,10 +98,9 @@ export async function submitFeedbackAction(form: FormData): Promise<void> {
         namedDescribed,
         // «Clubul» for a named safety report when «O reclamație» has no recipient (§678): the contact form's own.
         clubFallback: contactDelivery(recipients)?.to ?? [],
-        smtp: contactSmtpRoad(),
-        // Mailgun's road (§772): the environment's sender with no Gmail road at all — none where the email
-        // service does not transmit (`feedbackRoads`), so a form the club pointed at it is not offered.
-        mailgun: feedbackRoads().mailgun ? createEmailSenderForEnvironment(env).sender : null,
+        // Which roads this deployment has (§772): a form whose road is missing is not offered. The roads themselves
+        // are the relay's (§NNN): the message is queued here and leaves at once, after this response.
+        roads: feedbackRoads(),
         appEnv: env.APP_ENV,
         screening: {
           botCheckOn: verdict !== "not_configured",

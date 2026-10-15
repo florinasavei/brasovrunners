@@ -119,7 +119,13 @@ export async function updateFeedbackFormsAction(_previous: FormOutcome | null, f
         howItWent: branch("howItWent"),
         suggestion: branch("suggestion"),
         complaint: branch("complaint"),
-        safety: { ...branch("safety"), name: value("safetyName") },
+        safety: {
+          ...branch("safety"),
+          name: value("safetyName"),
+          // «Dacă Mailgun pică, trimite prin Gmail-ul clubului» (§NNN): a real tick. Greyed, its box carries what is saved in a
+          // hidden field (CheckboxField's rule), so a save leaves it as it was.
+          fallbackToGmail: form.get("safetyFallbackToGmail") === "on",
+        },
       },
       new Date(),
       feedbackRoads(),

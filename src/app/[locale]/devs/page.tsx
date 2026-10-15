@@ -52,7 +52,6 @@ import { buildInfo, formatLastUpdated, formatVersion } from "@/shared/config/bui
 import { CONFIGURATION_ENUMS } from "@/shared/config/env-enums";
 import { env } from "@/shared/config/env";
 import { capturedEmails } from "@/infrastructure/email/sender";
-import { capturedContactMessages } from "@/modules/contact/delivery";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -303,26 +302,6 @@ export default async function DevsPage({ params, searchParams }: Props) {
                         {message.text}
                       </Typography>
                     </Box>
-                  </Box>
-                ))}
-              </Stack>
-            )}
-
-            {/* The contact form's messages (§149): the same capture, a different mailbox — the club's. */}
-            {capturedContactMessages().length > 0 && (
-              <Stack spacing={1.5} sx={{ mt: 2 }}>
-                <Typography variant="body2" color="text.secondary">
-                  {t("captured.contact")}
-                </Typography>
-                {capturedContactMessages().map((message) => (
-                  <Box key={message.providerMessageId} sx={{ border: 1, borderColor: "divider", borderRadius: 1, p: 1.5 }}>
-                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                      {message.subject}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
-                      {message.to.join(", ")} · Reply-To {message.replyTo?.address ?? "—"} ·{" "}
-                      {formatDay(message.capturedAt, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true })}
-                    </Typography>
                   </Box>
                 ))}
               </Stack>

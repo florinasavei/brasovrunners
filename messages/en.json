@@ -6662,7 +6662,10 @@
           "noticeSteps": "Legal texts",
           "safetyNote": "Through Gmail, a Girl Zone message stays in the club's mailbox and whoever reads it sees it; through Mailgun it reaches only the person above.",
           "stateGmail": "Gmail",
-          "stateMailgun": "Mailgun"
+          "stateMailgun": "Mailgun",
+          "fallback": "If Mailgun is down, send through the club's Gmail",
+          "fallbackHelp": "Only for Girl Zone messages. Unticked, a message Mailgun cannot send waits until it works. Ticked, it leaves from the club's mailbox, and whoever reads that mailbox sees it in the Sent folder.",
+          "fallbackNotice": "The tick is off until the privacy notice in force says Girl Zone messages may leave through Gmail."
         },
         "safetyName": "First name shown",
         "safetyNameHelp": "The form writes it in the sentence about who reads the message. At most 40 characters.",
@@ -6672,7 +6675,8 @@
         "save": "Save the forms",
         "saving": "Saving…",
         "saved": "The “Tell us something” forms were saved.",
-        "roads": "The site keeps no message. The way it is sent is chosen for each form on its own: the club's Gmail (CONTACT_SMTP_USER) or Mailgun."
+        "roads": "A message stays in the email queue only until it leaves, a few minutes; then its words are deleted and only the trace of the send remains. The way is chosen for each form: the club's Gmail (CONTACT_SMTP_USER) or Mailgun. If one is down, the message leaves by the other.",
+        "selfRecipient": "The address above is the very Gmail account that sends. Gmail may keep such a message in Sent only, not in the Inbox: choose another address or the Mailgun way."
       },
       "perSendNewsletter": "The newsletter's text is written per send, on the backoffice's “Newsletter” page, so it has no words to edit here.",
       "newsletterLink": "Newsletter →",
@@ -10396,7 +10400,6 @@
       "title": "Emails captured on this machine",
       "intro": "Locally nothing leaves the machine: every message the site would have sent lands here instead, newest first, with its links — click them to walk the participant's journey.",
       "empty": "Nothing captured yet. Register for an event and come back.",
-      "contact": "Through the contact form — would have reached the club’s mailbox:",
       "text": "The message text"
     },
     "pictures": "Stored pictures: {total} · used nowhere: {unreferenced} · to be deleted on the next run (unused for over {days} days): {sweepable}",
@@ -10808,10 +10811,10 @@
       }
     },
     "safety": {
-      "reader": "The message reaches {name} only. The site keeps nothing of it.",
-      "readerGmail": "The message reaches {name} through the club's mailbox, where whoever reads it sees it too. The site keeps nothing of it.",
-      "readerChoice": "Anonymously, the message reaches {name} only; with your name, you choose who hears it. The site keeps nothing of it.",
-      "readerChoiceGmail": "Anonymously, the message reaches {name} through the club's mailbox, where whoever reads it sees it too; with your name, you choose who hears it. The site keeps nothing of it.",
+      "reader": "The message reaches {name} only. The site keeps it only until it leaves, a few minutes, then deletes it.",
+      "readerGmail": "The message reaches {name} through the club's mailbox, where whoever reads it sees it too. The site keeps it only until it leaves, a few minutes, then deletes it.",
+      "readerChoice": "Anonymously, the message reaches {name} only; with your name, you choose who hears it. The site keeps it only until it leaves, a few minutes, then deletes it.",
+      "readerChoiceGmail": "Anonymously, the message reaches {name} through the club's mailbox, where whoever reads it sees it too; with your name, you choose who hears it. The site keeps it only until it leaves, a few minutes, then deletes it.",
       "whereWhen": "Where and when (optional)",
       "contact": "Phone number (optional)",
       "contactHelp": "Only if you want {name} to call you."
@@ -10892,8 +10895,8 @@
       "email": "The email",
       "captcha": "The anti-bot check"
     },
-    "privacy": "The site keeps nothing: the message leaves by email to the club.",
-    "privacySafety": "The site keeps nothing of the message.",
+    "privacy": "The site keeps the message only until it leaves, a few minutes, then deletes it: the message leaves by email to the club.",
+    "privacySafety": "The site keeps the message only until it leaves, a few minutes, then deletes it.",
     "privacyLinkLabel": "Privacy notice",
     "submit": "Send",
     "submitting": "Sending…",

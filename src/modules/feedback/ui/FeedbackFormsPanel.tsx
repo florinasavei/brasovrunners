@@ -11,7 +11,7 @@ import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import type { Locale } from "@/i18n/routing";
 import { FEEDBACK_BRANCH_GLYPH } from "@/modules/feedback/ui/branch-glyph";
 import { getPathname } from "@/i18n/navigation";
-import { branchesSwitchedOn, FEEDBACK_BRANCHES, FEEDBACK_VIAS, type FeedbackBranch, type FeedbackRoads, type FeedbackVia } from "@/modules/feedback/domain/branches";
+import { branchesSwitchedOn, FEEDBACK_BRANCHES, sendsToItself, FEEDBACK_VIAS, type FeedbackBranch, type FeedbackRoads, type FeedbackVia } from "@/modules/feedback/domain/branches";
 import { SAFETY_NAME_MAX, type FeedbackSettingsState } from "@/modules/feedback/settings";
 import { confirmWords } from "@/shared/feedback/confirm-words";
 import ActionForm from "@/shared/forms/ActionForm";
@@ -35,6 +35,8 @@ type Props = {
   roads: FeedbackRoads;
   /** The privacy notice in force names `{{feedbackSafetyGmail}}` in every language (§772): until it does, Girl Zone's Gmail is greyed with a link to «Texte legale». */
   safetyGmailDescribed: boolean;
+  /** The club's Gmail account that sends (`CONTACT_SMTP_USER`), or null: a form whose recipient is this very account is warned (§NNN). */
+  gmailAccount?: string | null;
   openWhen?: FoldOpenWhen;
 };
 
@@ -53,7 +55,7 @@ const STEPS_ROW: Readonly<Record<FeedbackVia, string>> = { gmail: "task-contactF
  * with a sentence and a link to the steps in «Sarcini»; it stays checked when it is what was saved, so
  * the card shows what the form does, and a save leaves it as it was (`keepUnpostedVia`).
  */
-export default async function FeedbackFormsPanel({ locale, state, noticeDescribes, mayEdit, roads, safetyGmailDescribed, openWhen }: Props) {
+export default async function FeedbackFormsPanel({ locale, state, noticeDescribes, mayEdit, roads, safetyGmailDescribed, gmailAccount = null, openWhen }: Props) {
   const t = await getTranslations("Admin");
   const words = await confirmWords();
   const on = branchesSwitchedOn(state).length;
@@ -63,6 +65,9 @@ export default async function FeedbackFormsPanel({ locale, state, noticeDescribe
   /** Why a road cannot be newly chosen on this form, or null: the deployment lacks it, or (Girl Zone's Gmail) the notice does not say it yet. */
   const blocked = (branch: FeedbackBranch, via: FeedbackVia): "missing" | "notice" | null =>
     !roads[via] ? "missing" : branch === "safety" && via === "gmail" && !safetyGmailDescribed ? "notice" : null;
+
+  /** Why Girl Zone's «dacă Mailgun pică» cannot be ticked: Gmail is not here, or the notice in force does not say it may carry her messages. */
+  const fallbackBlocked: "missing" | "notice" | null = !roads.gmail ? "missing" : !safetyGmailDescribed ? "notice" : null;
 
   const boxLabels: Record<string, string> = { safetyName: t("emails.feedbackForms.safetyName") };
   for (const branch of FEEDBACK_BRANCHES) {
@@ -151,6 +156,11 @@ export default async function FeedbackFormsPanel({ locale, state, noticeDescribe
                           helperText={branch === "safety" ? t("emails.feedbackForms.toHelpSafety") : t("emails.feedbackForms.toHelp")}
                           slotProps={{ htmlInput: { maxLength: 320, autoComplete: "off", spellCheck: false } }}
                         />
+                        {state[branch].via === "gmail" && sendsToItself(state[branch].to, gmailAccount) && (
+                          <Typography variant="caption" color="warning.main" sx={{ display: "block" }} data-testid={`feedback-self-${branch}`}>
+                            {t("emails.feedbackForms.selfRecipient")}
+                          </Typography>
+                        )}
                         {branch === "safety" && (
                           <RecallField
                             name="safetyName"
@@ -197,6 +207,37 @@ export default async function FeedbackFormsPanel({ locale, state, noticeDescribe
                           <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }} data-testid="feedback-via-safety-note">
                             {t("emails.feedbackForms.via.safetyNote")}
                           </Typography>
+                        )}
+                        {/* «Dacă Mailgun pică, trimite prin Gmail-ul clubului» (§NNN): a real tick, off by default, with the readers' note. */}
+                        {branch === "safety" && (
+                          <Box sx={{ mt: 1 }} data-testid="feedback-fallback">
+                            <CheckboxField
+                              name="safetyFallbackToGmail"
+                              defaultChecked={state.safety.fallbackToGmail}
+                              disabled={fallbackBlocked !== null}
+                              help={t("emails.feedbackForms.via.fallbackHelp")}
+                              helpTestId="feedback-fallback-help"
+                            >
+                              {t("emails.feedbackForms.via.fallback")}
+                            </CheckboxField>
+                            {fallbackBlocked !== null && state.safety.fallbackToGmail && <input type="hidden" name="safetyFallbackToGmail" value="on" />}
+                            {fallbackBlocked === "notice" && (
+                              <Typography variant="caption" color="text.secondary" sx={{ display: "block", ml: 6 }} data-testid="feedback-fallback-notice">
+                                {t("emails.feedbackForms.via.fallbackNotice")}{" "}
+                                <MuiLink href={legalPath} sx={INLINE_TAP_TARGET}>
+                                  {t("emails.feedbackForms.via.noticeSteps")}
+                                </MuiLink>
+                              </Typography>
+                            )}
+                            {fallbackBlocked === "missing" && (
+                              <Typography variant="caption" color="text.secondary" sx={{ display: "block", ml: 6 }} data-testid="feedback-fallback-missing">
+                                {t("emails.feedbackForms.via.gmailMissing")}{" "}
+                                <MuiLink href={`${tasksPath}#${STEPS_ROW.gmail}`} sx={INLINE_TAP_TARGET}>
+                                  {t("emails.feedbackForms.via.steps")}
+                                </MuiLink>
+                              </Typography>
+                            )}
+                          </Box>
                         )}
                       </Box>
                     </Box>
