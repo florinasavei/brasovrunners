@@ -34,7 +34,7 @@ import { CALENDAR_PILL_LEFT_VAR, DROPDOWN_PANEL_SURFACE_SX, SHARE_PILL_SX, SHARE
  * five doors on one wrapping line, the file's note and the file's address. No script: it opens with
  * the click, the Enter key and the space bar, and with scripts off.
  *
- * One row (§NNN, amending §767 and §772; the owner, 2026-10-15: «These should be inline to save
+ * One row (§781, amending §767 and §772; the owner, 2026-10-15: «These should be inline to save
  * space»): the caption, the networks and, last, the calendar pill are one wrapping line of the same small
  * pill, and the fold's body is a dropdown panel anchored under the pill, out of the flow, so opening it
  * pushes nothing. With scripts off the panel is the same CSS and opens and closes by the pill; with scripts
@@ -97,7 +97,7 @@ function calendarDoor(calendar: NonNullable<Props["calendar"]>, id: CalendarTarg
  */
 const CALENDAR_PILL_SX = {
   ...SHARE_PILL_SX,
-  // MUI's button is border-box; a bare `<summary>` is not, and its 28 pixels would read 34 beside the others (§NNN).
+  // MUI's button is border-box; a bare `<summary>` is not, and its 28 pixels would read 34 beside the others (§781).
   boxSizing: "border-box",
   display: "flex",
   width: "fit-content",
@@ -121,7 +121,7 @@ const CALENDAR_PILL_SX = {
 const CALENDAR_FOLD_ID = "event-calendar";
 
 /**
- * The calendar fold's body as a dropdown panel (§NNN): out of the flow, so opening it never moves the pills
+ * The calendar fold's body as a dropdown panel (§781): out of the flow, so opening it never moves the pills
  * (the row, `position: relative`, is its containing block). `top` stays auto — the panel sits where it would
  * have flowed, right under the summary, whichever line of the wrapped row the pill is on. Its width is 26rem
  * at most and never more than the row's own, and its left edge is the pill's (`CalendarFoldClose` writes the
@@ -174,7 +174,7 @@ export default async function ShareLinks({ url, title, imageHref, fileName, cale
   );
   return (
     /*
-      ONE wrapping row (§NNN, amending §767 and §772; the owner, 2026-10-15: «These should be inline to save
+      ONE wrapping row (§781, amending §767 and §772; the owner, 2026-10-15: «These should be inline to save
       space»): the caption, the networks and, last, the calendar pill, all the same 28-pixel pill with its tap
       band, eight pixels apart. The row is the containing block of the calendar panel, so the panel can never
       reach past the row's own width — a phone's 320 included.
@@ -200,7 +200,7 @@ export default async function ShareLinks({ url, title, imageHref, fileName, cale
       )}
       {calendar && (
         /*
-          «Adaugă în calendar» (§772, §NNN): ONE pill, a native fold closed on arrival, the last pill of the row.
+          «Adaugă în calendar» (§772, §781): ONE pill, a native fold closed on arrival, the last pill of the row.
           Its body is a dropdown panel under the row, out of the flow: opening it moves nothing. The pill is the
           `<summary>`: keyboard-reachable and toggled by Enter and Space, and it works with scripts off — the
           panel is plain CSS, so without scripts it opens the same way and closes by the pill; with scripts,

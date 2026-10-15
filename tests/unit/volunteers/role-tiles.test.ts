@@ -9,7 +9,7 @@ import { CHOICE_CARD_SX, CHOICE_INPUT_SX } from "@/shared/ui/choice-card";
 import type { PublicVolunteerCategory, PublicVolunteerRole } from "@/modules/volunteers/volunteers";
 
 /**
- * §NNN — the volunteers' page's roles as the server draws them: each category its own card (a band with its glyph, its name as the
+ * §780 — the volunteers' page's roles as the server draws them: each category its own card (a band with its glyph, its name as the
  * level-3 heading and «4 roluri», its contact line, its tiles inside), «Alte activități» last with the same look, no card at all for an
  * event with no category; each role a tile whose whole surface is the checkbox's label (the name, the count line under the name, the
  * description outside the label); the ticked state, which the CSS draws from `:checked`; the grid's one column and its two from the tablet
@@ -110,7 +110,7 @@ const tiles = (chunk: string) => chunk.split('data-testid="volunteer-role-option
 /** The checkbox tags of a page, in the order drawn. */
 const boxes = (page: string) => [...page.matchAll(/<input[^>]*name="roleIds"[^>]*>/g)].map((match) => match[0]);
 
-describe("§NNN each category is a card of its own", () => {
+describe("§780 each category is a card of its own", () => {
   it("draws one card per category in the club's order, «Alte activități» last, each with its glyph, its name as a level-3 heading and how many roles it offers", async () => {
     const page = await draw();
     const drawn = cards(page);
@@ -185,7 +185,7 @@ describe("§NNN each category is a card of its own", () => {
   });
 });
 
-describe("§NNN each role is a tile the whole of which is the checkbox's label", () => {
+describe("§780 each role is a tile the whole of which is the checkbox's label", () => {
   it("wraps the box, the name and the count line in one label, the count under the name, and keeps the description outside it", async () => {
     const page = await draw();
     const [guide, , water] = tiles(page);
@@ -263,7 +263,7 @@ describe("§NNN each role is a tile the whole of which is the checkbox's label",
   });
 });
 
-describe("§NNN the grid and the page without scripts", () => {
+describe("§780 the grid and the page without scripts", () => {
   it("is one column on a phone and two from the tablet width, in the columns a long name cannot stretch", async () => {
     const page = await draw({}, "ro", { styles: true });
     // Emotion writes the rule as `grid-template-columns: minmax(0, 1fr)` and, under the `sm` breakpoint, `repeat(2, minmax(0, 1fr))`.

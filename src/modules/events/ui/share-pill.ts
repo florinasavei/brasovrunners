@@ -5,13 +5,13 @@ export const SHARE_ROW_GAP = 1;
 export const SHARE_PILL_BAND = 4;
 
 /**
- * The custom property the event page's share row carries (§NNN): the calendar pill's offset from the row's
+ * The custom property the event page's share row carries (§781): the calendar pill's offset from the row's
  * left edge, in pixels, written by `CalendarFoldClose` and read by the panel that opens under the pill.
  */
 export const CALENDAR_PILL_LEFT_VAR = "--calendar-pill-left";
 
 /**
- * The surface of a dropdown panel opened from a native fold (§NNN; the calendar page's help panel wears the same):
+ * The surface of a dropdown panel opened from a native fold (§781; the calendar page's help panel wears the same):
  * the paper, a hairline in the divider's colour and the rounded corner, all theme tokens. Each panel keeps its own
  * padding, shadow, position and layer. A plain object: a Server Component hands sx an object, never a function.
  */

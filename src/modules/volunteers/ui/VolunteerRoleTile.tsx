@@ -12,7 +12,7 @@ import RoleDescription from "./RoleDescription";
 const TILE_TEXT_INDENT = "46px";
 
 /**
- * The tiles of one group of roles, as a responsive grid (§NNN): one column on a phone — a 320-pixel screen has no room for two — and
+ * The tiles of one group of roles, as a responsive grid (§780): one column on a phone — a 320-pixel screen has no room for two — and
  * two from the tablet width. `minmax(0, 1fr)` so a long role name wraps inside its tile instead of stretching the column past the page.
  */
 export function RoleTileGrid({ children }: { children: ReactNode }) {
@@ -24,7 +24,7 @@ export function RoleTileGrid({ children }: { children: ReactNode }) {
 }
 
 /**
- * One role on the volunteers' page, as a selectable tile (§NNN, amending §761, §765, §773; the owner, 2026-10-15: «Și aici aș vrea mai
+ * One role on the volunteers' page, as a selectable tile (§780, amending §761, §765, §773; the owner, 2026-10-15: «Și aici aș vrea mai
  * multe separatoare și un design mai frumos pentru roluri»): the house's selectable card (`CHOICE_CARD_SX`, the surface the feedback
  * page's `BranchChoice` draws, §676), around a native checkbox named `roleIds`. The whole tile is the checkbox's `<label>` — a press on the
  * name or on the count line ticks it, the label being at least 44 pixels tall — and the tile's outline and tint follow `:checked`, its

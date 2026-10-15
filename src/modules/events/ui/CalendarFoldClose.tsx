@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { CALENDAR_PILL_LEFT_VAR } from "./share-pill";
 
 /**
- * What the event page's «Adaugă în calendar» dropdown (`DECISIONS.md` §NNN, amending §772) does once there is
+ * What the event page's «Adaugă în calendar» dropdown (`DECISIONS.md` §781, amending §772) does once there is
  * a script. The fold itself is a native `<details>` whose panel is plain CSS, so it opens and closes with the
  * pill and works with scripts off; this island adds three things a dropdown is expected to do, and draws nothing:
  *

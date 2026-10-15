@@ -4,7 +4,7 @@ import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
 
 /**
- * One category of an event's volunteer roles on the volunteers' page, as a card of its own (§NNN, amending §774; the owner, 2026-10-15,
+ * One category of an event's volunteer roles on the volunteers' page, as a card of its own (§780, amending §774; the owner, 2026-10-15,
  * of the flat list of roles under two plain headings: «nu e clară gruparea pe categorii! vreau să prioritizezi asta!»): a bordered,
  * rounded box with a coloured band across its top — the category's glyph (the house's volunteers glyph, one for every category), its name
  * large, as the level-3 heading the group is named by, and how many roles it offers («4 roluri») — then, when the club set one, the

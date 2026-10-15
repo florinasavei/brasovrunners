@@ -248,7 +248,7 @@ describe("the event page's calendar row", () => {
     return { html, from, row: from < 0 ? "" : html.slice(from) };
   };
 
-  it("draws ONE row: the caption, the networks and the calendar pill last, in that order (§NNN)", async () => {
+  it("draws ONE row: the caption, the networks and the calendar pill last, in that order (§781)", async () => {
     const { html, from } = shareRow(renderToStaticMarkup(await ShareLinks(props)));
     expect(from).toBeGreaterThan(-1);
     // One row element, the only one: the old second row is gone.
@@ -272,7 +272,7 @@ describe("the event page's calendar row", () => {
     return { opening, closing, markup: html.slice(opening, closing + "</details>".length) };
   };
 
-  it("puts the panel INSIDE the details, after its summary, and keeps it out of the flow (§NNN)", async () => {
+  it("puts the panel INSIDE the details, after its summary, and keeps it out of the flow (§781)", async () => {
     const html = renderToStaticMarkup(
       await ShareLinks({ ...props, calendar: { ...calendar, fileAddress: "https://example.test/ro/events/crosul/calendar.ics" } }),
     ).replace(/<style[^>]*>[\s\S]*?<\/style>/g, "");
@@ -302,7 +302,7 @@ describe("the event page's calendar row", () => {
     expect(source).toMatch(/data-testid="event-share-row" sx=\{\{ position: "relative", flexWrap: "wrap"/);
   });
 
-  it("closes on Escape and a press outside through one tiny island that draws nothing, the fold working without it (§NNN)", async () => {
+  it("closes on Escape and a press outside through one tiny island that draws nothing, the fold working without it (§781)", async () => {
     const island = read("src/modules/events/ui/CalendarFoldClose.tsx");
     expect(island).toMatch(/^"use client";/);
     expect(island).toContain('event.key !== "Escape"');
@@ -328,7 +328,7 @@ describe("the event page's calendar row", () => {
     expect(SHARE_PILL_SX["&::after"]).toMatchObject({ content: '""' });
     // The marker is the pill's chevron, not the browser's, and the chevron turns when the fold opens.
     expect(source).toMatch(/"&::-webkit-details-marker": \{ display: "none" \}/);
-    // A bare summary is content-box where MUI's button is border-box: said, so its 28 pixels stay 28 (§NNN).
+    // A bare summary is content-box where MUI's button is border-box: said, so its 28 pixels stay 28 (§781).
     expect(source).toMatch(/const CALENDAR_PILL_SX = \{[\s\S]*?boxSizing: "border-box"/);
     expect(source).toMatch(/"details\[open\] > & \[data-chevron\]": \{ transform: "rotate\(180deg\)" \}/);
     expect(source).not.toMatch(/MuiMenu|<Menu\b|useState|"use client"/);
@@ -412,7 +412,7 @@ describe("the small pill", () => {
     // Spacing unit is 8 pixels. Two bands of neighbouring lines then meet inside the gap, never on a pill.
     expect(SHARE_PILL_BAND * 2).toBeLessThanOrEqual(SHARE_ROW_GAP * 8);
     const share = read("src/modules/events/ui/ShareLinks.tsx");
-    // The ONE row (§NNN: the caption, the networks and the calendar pill), its wrapped lines and the five
+    // The ONE row (§781: the caption, the networks and the calendar pill), its wrapped lines and the five
     // doors' lines inside the panel all keep that one gap; the panel's own stack too.
     expect(share).toContain("<Stack spacing={SHARE_ROW_GAP} data-testid=\"event-calendar-panel\"");
     expect(share.match(/gap: SHARE_ROW_GAP/g)).toHaveLength(2);

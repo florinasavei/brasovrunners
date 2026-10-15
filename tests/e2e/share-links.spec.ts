@@ -17,7 +17,7 @@ const EVENT = "/ro/evenimente/tura-pe-tampa";
 /**
  * «Adaugă în calendar» is one small pill that opens the five doors (§772; the owner, 2026-10-14: «asta ar
  * trebui să fie collapsed»): a native `<details>`, closed on arrival, the LAST pill of the share row
- * (§NNN, 2026-10-15: «These should be inline to save space»), its body a dropdown panel under it. Opened the
+ * (§781, 2026-10-15: «These should be inline to save space»), its body a dropdown panel under it. Opened the
  * way a person opens it — by pressing the pill — and returned, so a spec presses a door only after it.
  */
 async function openCalendar(page: Page) {
@@ -119,7 +119,7 @@ test.describe("BR-REQ-052-02 criterion 8 — the share buttons", () => {
     for (const index of [0, 2, 3]) await expect(links.nth(index)).toHaveAttribute("target", "_blank");
   });
 
-  test("opens by the keyboard, shows the five doors in a panel under the pill, and closes again (§772, §NNN)", async ({ page }) => {
+  test("opens by the keyboard, shows the five doors in a panel under the pill, and closes again (§772, §781)", async ({ page }) => {
     await page.goto(EVENT);
     const fold = page.getByTestId("event-calendar");
     const toggle = fold.getByTestId("event-calendar-toggle");
@@ -140,7 +140,7 @@ test.describe("BR-REQ-052-02 criterion 8 — the share buttons", () => {
     for (let index = 0; index < 5; index += 1) {
       const box = (await doors.nth(index).boundingBox())!;
       expect(box.y, `door ${index} under the pill`).toBeGreaterThanOrEqual(pillBottom - 1);
-      // Each door a small pill; the longest word may take a second line in a 320-pixel panel (§NNN).
+      // Each door a small pill; the longest word may take a second line in a 320-pixel panel (§781).
       expect(box.height, `door ${index}`).toBeLessThanOrEqual(48);
     }
     await page.keyboard.press("Space");
@@ -151,7 +151,7 @@ test.describe("BR-REQ-052-02 criterion 8 — the share buttons", () => {
     await expect(page.locator("#main").getByRole("link", { name: "WhatsApp" })).toBeVisible();
   });
 
-  test("keeps the calendar pill in the share row, last, and the open panel moves no pill (§NNN)", async ({ page }) => {
+  test("keeps the calendar pill in the share row, last, and the open panel moves no pill (§781)", async ({ page }) => {
     await page.goto(EVENT);
     const before = await rowPills(page);
     const texts = before.map((pill) => pill.text);
@@ -198,7 +198,7 @@ test.describe("BR-REQ-052-02 criterion 8 — the share buttons", () => {
     expect(await rowPills(page)).toEqual(before);
   });
 
-  test("closes on Escape and on a press outside, and a press inside the panel leaves it open (§NNN)", async ({ page }) => {
+  test("closes on Escape and on a press outside, and a press inside the panel leaves it open (§781)", async ({ page }) => {
     await page.goto(EVENT);
     const fold = page.getByTestId("event-calendar");
     const toggle = page.getByTestId("event-calendar-toggle");
@@ -226,7 +226,7 @@ test.describe("BR-REQ-052-02 criterion 8 — the share buttons", () => {
   test.describe("with scripts off", () => {
     test.use({ javaScriptEnabled: false });
 
-    test("opens with the pill alone: a native fold needs no script, and the panel is the same CSS (§772, §NNN)", async ({ page }) => {
+    test("opens with the pill alone: a native fold needs no script, and the panel is the same CSS (§772, §781)", async ({ page }) => {
       await page.goto(EVENT);
       const fold = page.getByTestId("event-calendar");
       await expect(fold).not.toHaveAttribute("open", /.*/);
@@ -262,7 +262,7 @@ test.describe("BR-REQ-052-02 criterion 8 — the share buttons", () => {
       const box = await row.nth(i).boundingBox();
       // The house's small pill: over WCAG 2.2's 24, nowhere near the old 44.
       expect(box?.height ?? 0, `share link ${i}`).toBeGreaterThanOrEqual(24);
-      // A door in the open panel (§NNN) has the panel's padding and border less than the row's 288 pixels: the longest word
+      // A door in the open panel (§781) has the panel's padding and border less than the row's 288 pixels: the longest word
       // («Outlook la serviciu sau la școală») may take two lines there, and is still no taller than two of them.
       const inPanel = await row.nth(i).evaluate((el) => el.closest('[data-testid="event-calendar-panel"]') !== null);
       expect(box?.height ?? 0, `share link ${i}`).toBeLessThanOrEqual(inPanel ? 48 : 36);
@@ -270,7 +270,7 @@ test.describe("BR-REQ-052-02 criterion 8 — the share buttons", () => {
     }
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     expect(overflow).toBeLessThanOrEqual(0);
-    // The open panel (§NNN) stays inside the 320 pixels, whichever line of the wrapped row the pill is on.
+    // The open panel (§781) stays inside the 320 pixels, whichever line of the wrapped row the pill is on.
     const panel = (await page.getByTestId("event-calendar-panel").boundingBox())!;
     expect(panel.x).toBeGreaterThanOrEqual(0);
     expect(panel.x + panel.width).toBeLessThanOrEqual(320);

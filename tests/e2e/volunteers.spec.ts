@@ -304,7 +304,7 @@ test.describe("§754 volunteers for a race", () => {
       // A row a thumb can press; no horizontal scroll at the project's width.
       expect((await choices.locator("label").first().boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
       expect(await guest.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
-      // §NNN: a role is a tile — the whole tile is the checkbox's label, so a press on the count line (not the box) ticks it, and again unticks it;
+      // §780: a role is a tile — the whole tile is the checkbox's label, so a press on the count line (not the box) ticks it, and again unticks it;
       // the ticked tile's border changes; each tile is a thumb's height; one column at a phone's width, two from the tablet's.
       const waterTile = choices.getByTestId("volunteer-role-option").filter({ hasText: "Punct de apă" });
       const finishTile = choices.getByTestId("volunteer-role-option").filter({ hasText: "Sosire" });
@@ -421,7 +421,7 @@ test.describe("§754 volunteers for a race", () => {
       await expect(guest.getByLabel("Numele tău")).toHaveValue("Maria Test");
       await expect(guest.getByLabel("Adresa ta de email")).toHaveValue(maria);
 
-      // §NNN: a ticked role tile survives a refused post. One tile is ticked by a press on its count line, the post is refused again (the
+      // §780: a ticked role tile survives a refused post. One tile is ticked by a press on its count line, the post is refused again (the
       // consent and the age are still wrong), and the page comes back with that box checked and the tile's border the ticked one.
       await guest.getByTestId("volunteer-roles").getByTestId("volunteer-role-option").filter({ hasText: "Sosire" }).getByTestId("volunteer-role-needs").click();
       await expect(guest.getByTestId("volunteer-roles").getByRole("checkbox", { name: "Sosire" })).toBeChecked();
@@ -1093,7 +1093,7 @@ test.describe("§754 volunteers for a race", () => {
       await expect(under("Start / Sosire").getByTestId("volunteer-contact")).toHaveCount(0);
       expect(await guest.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 
-      // §NNN: each category is a card of its own — its band names it and counts its roles, its tiles are inside it, and a clear space stands between two cards.
+      // §780: each category is a card of its own — its band names it and counts its roles, its tiles are inside it, and a clear space stands between two cards.
       await expect(guest.getByTestId("volunteer-category")).toHaveCount(3);
       await expect(guest.getByTestId("volunteer-category-count")).toHaveText(["2 roluri", "1 rol", "1 rol"]);
       const cards = guest.getByTestId("volunteer-category");
@@ -1124,7 +1124,7 @@ test.describe("§754 volunteers for a race", () => {
       // The heading's band is the loudest line of the card: the name at 20 px or more.
       expect(await cards.first().getByTestId("volunteer-category-heading").evaluate((heading) => parseFloat(getComputedStyle(heading).fontSize))).toBeGreaterThanOrEqual(20);
 
-      // She offers for «Direcționare» on the route: a press on the tile's count line (not on the box) ticks it (§NNN).
+      // She offers for «Direcționare» on the route: a press on the tile's count line (not on the box) ticks it (§780).
       await under("Traseu").getByTestId("volunteer-role-option").filter({ hasText: "Direcționare" }).getByTestId("volunteer-role-needs").click();
       await expect(under("Traseu").getByRole("checkbox", { name: "Direcționare" })).toBeChecked();
       await guest.getByLabel("Numele tău").fill("Ana Test");
