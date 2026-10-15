@@ -65,8 +65,8 @@ type Actor = Pick<StaffUser, "id" | "role">;
 
 /**
  * Writes the file's categories and roles to a new event, through the card's own services, in the file's order. Returns how many of each
- * were written. An entry the card refuses (a name over its bound, a name twice under one category, a colour no word reads on) is skipped
- * and counted out; anything that is not the card's refusal is an error.
+ * were written, and how many entries were left out. An entry the card refuses (a name over its bound, a name twice under one category, a
+ * colour no word reads on) is skipped and counted in `skipped`, so the page says so; anything that is not the card's refusal is an error.
  */
 export async function importVolunteersFile<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -74,10 +74,11 @@ export async function importVolunteersFile<T extends Record<string, unknown>>(
   eventId: string,
   file: VolunteersFile,
   now: Date,
-): Promise<{ categories: number; roles: number }> {
+): Promise<{ categories: number; roles: number; skipped: number }> {
   // The category each file position became (undefined for one the card refused): a role pointing at it, or at no position, sits under none.
   const created: Array<string | undefined> = [];
   let categories = 0;
+  let skipped = 0;
   for (const category of file.categories) {
     try {
       const added = await changeVolunteerCategory(db, actor, { kind: "add", eventId, fields: { nameRo: category.name.ro, nameEn: category.name.en } }, now);
@@ -94,11 +95,13 @@ export async function importVolunteersFile<T extends Record<string, unknown>>(
         } catch (error) {
           // A contact the card would refuse (an address that is none) is left out; the category stays.
           if (!isDomainError(error)) throw error;
+          skipped += 1;
         }
       }
     } catch (error) {
       if (!isDomainError(error)) throw error;
       created.push(undefined);
+      skipped += 1;
     }
   }
   let roles = 0;
@@ -137,7 +140,8 @@ export async function importVolunteersFile<T extends Record<string, unknown>>(
       roles += 1;
     } catch (error) {
       if (!isDomainError(error)) throw error;
+      skipped += 1;
     }
   }
-  return { categories, roles };
+  return { categories, roles, skipped };
 }

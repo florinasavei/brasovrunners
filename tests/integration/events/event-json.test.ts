@@ -1036,6 +1036,8 @@ describe("§NNN the volunteers' categories and roles in the file", () => {
       ["Foto/Video", null, null],
     ]);
     expect(read.categories[1].contact).toBeNull();
+    // What was left out is said, never silent: the one contact the card refused.
+    expect(created.notes.filter((note) => note.code === "volunteersSkipped")).toEqual([{ code: "volunteersSkipped", count: 1 }]);
     expect(read.categories.map((category) => category.name.ro)).toEqual(["Start / Sosire", "Traseu"]);
   });
 
@@ -1051,6 +1053,7 @@ describe("§NNN the volunteers' categories and roles in the file", () => {
       ["Direcționare", 1],
       ["Foto/Video", null],
     ]);
+    expect(created.notes.filter((note) => note.code === "volunteersSkipped")).toEqual([{ code: "volunteersSkipped", count: 1 }]);
   });
 
   it("is applied to a new event alone: an import over an existing event leaves its roles and categories exactly as they are", async () => {
@@ -1062,6 +1065,8 @@ describe("§NNN the volunteers' categories and roles in the file", () => {
     const [role] = await db.insert(eventVolunteerRoles).values({ eventId: target.id, categoryId: mine.id, nameRo: "Rolul meu", nameEn: "My role", needed: 1 }).returning();
     const diff = await diffEventImport(db, { actor: admin, file, eventId: target.id });
     expect(diff.changes.map((change) => change.key).filter((key) => /volunteer|categor/i.test(key))).toEqual([]);
+    // …and the preview says so, as it says a series' rule is not applied.
+    expect(diff.volunteersNotApplied).toBe(true);
     await importEventOver(db, await overInput(file, target.id));
     expect((await db.select().from(eventVolunteerCategories).where(eq(eventVolunteerCategories.eventId, target.id))).map((row) => row.id)).toEqual([mine.id]);
     expect((await db.select().from(eventVolunteerRoles).where(eq(eventVolunteerRoles.eventId, target.id))).map((row) => [row.id, row.categoryId])).toEqual([[role.id, mine.id]]);

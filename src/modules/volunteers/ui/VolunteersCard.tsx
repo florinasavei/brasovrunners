@@ -51,6 +51,7 @@ import CheckboxField from "@/shared/ui/CheckboxField";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import Panel from "@/shared/ui/Panel";
+import QuietHelp from "@/shared/ui/QuietHelp";
 import StatusChip from "@/shared/ui/StatusChip";
 import type { StatusGlyphName } from "@/shared/ui/status-glyphs";
 import {
@@ -1169,6 +1170,7 @@ export default async function VolunteersCard({
               <Stack spacing={1.5} sx={{ maxWidth: 640 }}>
                 <Typography variant="body2" color="text.secondary">
                   {t("volunteers.category.contactHelp")}
+                  <QuietHelp text={t("volunteers.category.contactHelpMore")} />
                 </Typography>
                 <RecallField
                   name="contactName"

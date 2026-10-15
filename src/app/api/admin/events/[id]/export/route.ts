@@ -14,9 +14,10 @@ export const maxDuration = 60;
  * for the Administrator, asserted again here whatever the editor's button showed (BR-REQ-060-01) and
  * recorded in the trail (`event.exported`: who, which event, never a word of the file).
  *
- * The file is the response; nothing is written on the server. It holds no registration and no person
- * (`transfer/file-format.ts` says what it holds), but it is the club's whole page for the event, so
- * it is never cached and never indexed.
+ * The file is the response; nothing is written on the server. It holds no registration and no volunteer
+ * (`transfer/file-format.ts` says what it holds), but it carries each volunteer category's contact person —
+ * a third person's name, telephone and email, published by the club — and it is the club's whole page for the
+ * event, so it is for staff alone, never cached and never indexed.
  */
 export async function GET(_request: Request, context: { params: Promise<{ id: string }> }): Promise<Response> {
   let actor;

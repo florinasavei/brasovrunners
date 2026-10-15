@@ -259,8 +259,8 @@ export const eventConfigSchema = z
       .strict(),
     /**
      * The volunteer badges' design (§764) as `readBadgeDesign` answers — its header picture's address among
-     * `media` (role `badge.header`). Never a volunteer and never a role: the roles stay with their event
-     * (§754), and their badge colours with them. A file made before the badges existed has none, and reads
+     * `media` (role `badge.header`). Never a volunteer: the roles, their badge colours and their categories
+     * travel under `volunteers` (§NNN). A file made before the badges existed has none, and reads
      * as the platform's own design, so an import over an event shows that difference before anything is kept.
      * Read forgivingly here, before the diff or the import sees the file: a colour no word reads on, a value out
      * of range and a key from a later release are what `readBadgeDesign` makes of them, so the diff shows only

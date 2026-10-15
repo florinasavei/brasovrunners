@@ -2209,20 +2209,25 @@ only ones who see the names, addresses and telephone numbers.
      never twice in one. A role is then told apart as **«Direcționare (Traseu)»** wherever it is named alone — the «Dă-i rolul …» buttons and select, the
      chips, the email «Rolul tău de voluntar», the CSV's role columns and the agreement's sentences; the badge's band shows the role only. The card lists
      the roles under their category's heading, in the category's order; ↑ / ↓ on a role move it inside its category; a role moved to another category goes
-     to the end of it.
+     to the end of it. **Filing a role that people already signed for under a category** (or moving it to another) changes the words it is named
+     with, so the card adds a note on their rows — «the accepted text named other roles» — as renaming a role always did; **the signatures stay valid**.
+     The same holds for a paper agreement already printed: rename or move a role or a category after printing and **print the agreement again** before
+     «Semnat pe hârtie», because the sheet names the role with its category.
    - **On the volunteers' page** the roles show under a heading per category, in the category's order, each with its tick, description and count line
      as before; a category with no role still needing people is not shown, the roles under none follow under «Alte activități», and an event with no
      category shows no heading at all.
    - **«Persoana de contact»** on each category's own row: a name, a telephone number and an email, **each optional and empty when the category is
      made**, with a «Salvează» of its own — fill it in when the club knows who it is (the telephone is read as a Romanian number or with the country
-     code). The trail names the boxes that changed, never the words. Once set, the contact appears: under the category's heading on the volunteers' page,
+     code, and must be written like a telephone number: words such as «în curând» are refused, a foreign or a landline number is not). The trail names the boxes that changed, never the words. Once set, the contact appears: under the category's heading on the volunteers' page,
      as one line «Întrebări? Ana Popescu · +40 712 345 678 · ana@…» with the telephone and the address as links; in the footer of the volunteers'
-     emails — «Ți-am primit oferta», «Rolul tău» and the parent's request — the contact of the category of the role (or roles) concerned; and on the
+     emails — «Ți-am primit oferta», «Rolul tău» and the parent's request — the contact of the category of the role (or roles) concerned (each one
+     with its category when the roles ticked sit under two); and on the
      badges: tick «Telefonul coordonatorului» in the badge's designer and leave the number empty, and each role's badge prints its category's
-     telephone (a number typed in the designer wins on every role). **Never in the CSV.** It is the club's own business contact, published by the
-     club's choice, nothing of a volunteer's or a participant's: the privacy notice's template needs no change — but name only a person who agreed to be on a public page.
+     telephone (a number typed in the designer wins on every role; a role with no number keeps the row blank, so every badge is cut alike). **Never in the CSV.** It is the club's own business contact, published by the
+     club's choice, nothing of a volunteer's or a participant's: the privacy notice's template needs no change — but name only a person who agreed to be on a public page,
+     since the number may also be printed on badges and travels in the event's file.
    - **In the event's JSON file** (§751) the categories (with their contact) and the roles travel as the file's own key `volunteers`: their words, how many each
      needs, the description, the colour and the category by its place in the list — never a person, an id or the tick «Primește voluntari». «Ca eveniment
      nou» writes them into the new draft through the card's own rules (an entry the card would refuse is skipped); an import over an existing event leaves
-     its roles and categories as they are.
+     its roles and categories as they are, and the preview says so (a skipped entry is counted in words, never silently).
    - **Local and QA databases** get two categories with the owner's example roles on the sample race (`yarn db:seed`; never production, `DECISIONS.md` §30).

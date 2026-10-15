@@ -4973,7 +4973,8 @@
         "deleteTitle": "Delete this category?",
         "deleteBody": "The category “{name}” is removed. A category with roles under it cannot be deleted: move or delete its roles first.",
         "contactTitle": "Contact person",
-        "contactHelp": "Optional and empty at first: fill it in when you know it. It shows on the volunteers' page, under the category's heading, and in the footer of the emails to volunteers; the telephone also goes on the badges of its roles when the design has no number of its own. It goes into the event's file, not the CSV. Name only a person who agreed to appear on a public page.",
+        "contactHelp": "Optional and empty at first: fill it in when you know it. It shows on the volunteers' page and in the emails to volunteers. Name only a person who agreed to appear on a public page.",
+        "contactHelpMore": "The telephone also goes on the badges of the category's roles when the design has no number of its own. The contact goes into the event's file, not the CSV.",
         "contactName": "Contact person's name",
         "contactPhone": "Telephone",
         "contactEmail": "Email address"
@@ -8084,7 +8085,9 @@
           "few": "{count} pictures or files",
           "other": "{count} pictures or files"
         },
-        "series": "The event was a date of a series, or its source. The series' rule is not applied: the copy is one date; you start the series yourself, in the editor."
+        "series": "The event was a date of a series, or its source. The series' rule is not applied: the copy is one date; you start the series yourself, in the editor.",
+        "volunteers": "The file carries the event's volunteer categories and roles, with their contact persons. “As a new event” writes them into the new draft.",
+        "volunteersOver": "The file carries volunteer categories and roles. An import over an existing event does not write them: they stay as they are here."
       },
       "mode": {
         "heading": "What do you want to do with it?"
@@ -8159,6 +8162,7 @@
         "slugSuffixed": "The page address in {language} was taken: {slug} was used.",
         "publicListOff": "The public participant list stayed off: the privacy notice that describes it is not yet in force here.",
         "seriesNotApplied": "The series' rule in the file was not applied: the event is a single date.",
+        "volunteersSkipped": "Of the volunteer categories, contact persons and roles in the file, those the “Volunteers” card's rules do not accept were left out (in all: {count}).",
         "checkpointKindsDropped": "In the file's checkpoints, the kinds this version does not know were left out (in all: {count}).",
         "checkpointLimitsDropped": "In the file's checkpoints, the cut-off times that could not be counted from the start were left out (in all: {count}). Write them again as “Time limit”."
       },

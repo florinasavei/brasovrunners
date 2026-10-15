@@ -4973,7 +4973,8 @@
         "deleteTitle": "Ștergi această categorie?",
         "deleteBody": "Categoria „{name}” se șterge. O categorie cu roluri în ea nu se poate șterge: mută sau șterge întâi rolurile.",
         "contactTitle": "Persoana de contact",
-        "contactHelp": "Opțională și goală la început: o completezi când o știi. Apare pe pagina voluntarilor, sub titlul categoriei, și în subsolul emailurilor către voluntari; telefonul apare și pe ecusoanele rolurilor ei când designul nu are alt număr. Intră în fișierul evenimentului, nu în CSV. Trece doar o persoană care a fost de acord să apară pe o pagină publică.",
+        "contactHelp": "Opțională și goală la început: o completezi când o știi. Apare pe pagina voluntarilor și în subsolul emailurilor către voluntari. Trece doar o persoană care a fost de acord să apară pe o pagină publică.",
+        "contactHelpMore": "Telefonul apare și pe ecusoanele rolurilor categoriei, când designul nu are alt număr. Contactul intră în fișierul evenimentului, nu în CSV.",
         "contactName": "Numele persoanei de contact",
         "contactPhone": "Telefon",
         "contactEmail": "Adresa de email"
@@ -8084,7 +8085,9 @@
           "few": "{count} imagini sau fișiere",
           "other": "{count} de imagini sau fișiere"
         },
-        "series": "Evenimentul era o dată dintr-o serie sau sursa ei. Regula seriei nu se aplică: copia e o singură dată; seria o pornești tu, din editor."
+        "series": "Evenimentul era o dată dintr-o serie sau sursa ei. Regula seriei nu se aplică: copia e o singură dată; seria o pornești tu, din editor.",
+        "volunteers": "Fișierul poartă categoriile și rolurile de voluntari ale evenimentului, cu persoanele lor de contact. „Ca eveniment nou” le scrie în noua ciornă.",
+        "volunteersOver": "Fișierul poartă categorii și roluri de voluntari. Un import peste un eveniment existent nu le scrie: ele rămân cum sunt aici."
       },
       "mode": {
         "heading": "Ce vrei să faci cu el?"
@@ -8159,6 +8162,7 @@
         "slugSuffixed": "Adresa paginii în {language} era luată: s-a folosit {slug}.",
         "publicListOff": "Lista publică a participanților a rămas oprită: nota de confidențialitate care o descrie nu e încă în vigoare aici.",
         "seriesNotApplied": "Regula seriei din fișier nu s-a aplicat: evenimentul e o singură dată.",
+        "volunteersSkipped": "Din categoriile, persoanele de contact și rolurile de voluntari din fișier s-au lăsat deoparte cele pe care regulile cardului «Voluntari» nu le primesc (în total: {count}).",
         "checkpointKindsDropped": "La punctele de control din fișier s-au lăsat deoparte tipurile pe care această versiune nu le știe (în total: {count}).",
         "checkpointLimitsDropped": "La punctele de control din fișier s-au lăsat deoparte orele limită care nu se puteau număra de la start (în total: {count}). Scrie-le din nou ca „Timp limită”."
       },

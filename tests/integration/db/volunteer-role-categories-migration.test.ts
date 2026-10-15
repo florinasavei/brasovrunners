@@ -21,6 +21,8 @@ type Journal = { entries: Array<{ idx: number; tag: string; when: number }> };
 
 const EVENT = "aaaaaaaa-0000-4000-8000-000000000001";
 const OTHER = "aaaaaaaa-0000-4000-8000-000000000002";
+const CLASH = "aaaaaaaa-0000-4000-8000-000000000003";
+const CLASH_IDS = ["bbbbbbbb-0000-4000-8000-0000000000a1", "bbbbbbbb-0000-4000-8000-0000000000a2", "bbbbbbbb-0000-4000-8000-0000000000a3"] as const;
 const WATER = "bbbbbbbb-0000-4000-8000-000000000001";
 const WATER_AGAIN = "bbbbbbbb-0000-4000-8000-000000000002";
 const WATER_THIRD = "bbbbbbbb-0000-4000-8000-000000000003";
@@ -53,13 +55,18 @@ beforeAll(async () => {
   await client.exec(`
     INSERT INTO events (id, type, starts_at, editorial_status) VALUES
       ('${EVENT}', 'RACE', '2026-11-21T08:00:00Z', 'DRAFT'),
-      ('${OTHER}', 'RACE', '2026-12-05T08:00:00Z', 'DRAFT');
+      ('${OTHER}', 'RACE', '2026-12-05T08:00:00Z', 'DRAFT'),
+      ('${CLASH}', 'RACE', '2027-01-09T08:00:00Z', 'DRAFT');
     INSERT INTO event_volunteer_roles (id, event_id, name_ro, name_en, needed, position, created_at) VALUES
       ('${WATER}', '${EVENT}', 'Punct de apă', 'Water point', 3, 0, '2026-10-01T08:00:00Z'),
       ('${WATER_AGAIN}', '${EVENT}', 'PUNCT DE APĂ', 'Water point', 2, 1, '2026-10-01T09:00:00Z'),
       ('${WATER_THIRD}', '${EVENT}', 'Punct de apă', 'Hydration', 1, 2, '2026-10-01T10:00:00Z'),
       ('${FINISH}', '${EVENT}', 'Sosire', 'Finish', 1, 3, '2026-10-01T11:00:00Z'),
-      ('${OTHER_WATER}', '${OTHER}', 'Punct de apă', 'Water point', 1, 0, '2026-10-01T08:00:00Z');
+      ('${OTHER_WATER}', '${OTHER}', 'Punct de apă', 'Water point', 1, 0, '2026-10-01T08:00:00Z'),
+      -- «A», «a» and «A (2)»: the number given to «a» is a name already there, so it needs telling apart once more.
+      ('${CLASH_IDS[0]}', '${CLASH}', 'A', 'A', 1, 0, '2026-10-01T08:00:00Z'),
+      ('${CLASH_IDS[1]}', '${CLASH}', 'a', 'a', 1, 1, '2026-10-01T09:00:00Z'),
+      ('${CLASH_IDS[2]}', '${CLASH}', 'A (2)', 'A (2)', 1, 2, '2026-10-01T10:00:00Z');
     INSERT INTO event_volunteers (id, event_id, role_id, name, email, canonical_email, canonicalization_version, phone, state, source)
       VALUES ('${ANA}', '${EVENT}', '${WATER}', 'Ana', 'ana@example.test', 'ana@example.test', 2, '+40712345678', 'CONFIRMED', 'PUBLIC');
     INSERT INTO event_volunteer_role_choices (volunteer_id, role_id) VALUES ('${ANA}', '${WATER}'), ('${ANA}', '${FINISH}');
@@ -75,10 +82,19 @@ afterAll(async () => {
 describe("migration 0160_volunteer_role_categories — the roles from before", () => {
   it("leaves every role without a category — «Alte activități» — with its people and its choices as they were", async () => {
     const roles = await client.query(`SELECT id, category_id FROM event_volunteer_roles ORDER BY id`);
-    expect(roles.rows).toHaveLength(5);
+    expect(roles.rows).toHaveLength(8);
     for (const row of roles.rows as Array<{ category_id: unknown }>) expect(row.category_id).toBeNull();
     expect((await client.query(`SELECT role_id, state FROM event_volunteers WHERE id = '${ANA}'`)).rows).toEqual([{ role_id: WATER, state: "CONFIRMED" }]);
     expect((await client.query(`SELECT role_id FROM event_volunteer_role_choices WHERE volunteer_id = '${ANA}' ORDER BY role_id`)).rows).toEqual([{ role_id: WATER }, { role_id: FINISH }]);
+  });
+
+  it("never refuses to run on a name its own number collides with: «A», «a» and «A (2)» all end up told apart, the first keeping its name", async () => {
+    const { rows } = await client.query<{ id: string; name_ro: string; name_en: string }>(`SELECT id, name_ro, name_en FROM event_volunteer_roles WHERE event_id = '${CLASH}' ORDER BY position`);
+    expect(rows[0]).toMatchObject({ name_ro: "A", name_en: "A" });
+    for (const language of ["name_ro", "name_en"] as const) {
+      const names = rows.map((row) => row[language].toLowerCase());
+      expect(new Set(names).size).toBe(3);
+    }
   });
 
   it("tells apart, by a number in the club's own order, a name typed twice on one event — in either language, whatever the case — and touches nothing else", async () => {
