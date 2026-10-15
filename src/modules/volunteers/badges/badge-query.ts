@@ -18,6 +18,13 @@ export type BadgeCropValue = string | { x: number; y: number; w: number; h: numb
 
 /** What the designer posts, before validation: the action's and the island's common reading. */
 export type BadgeDesignFormValues = {
+  /** «Un singur ecuson» (`single`) or «Câte un ecuson pe rol» (`perRole`), as posted (§783); the save refuses anything else. */
+  mode: string;
+  /** The one badge's band colour: what `singleColourChoice` and `singleColourTyped` say (`postedSingleColour`), null for the club's orange or for a typed text that is no colour. */
+  singleColour: string | null;
+  /** The select's choice («» the club's orange, a palette colour, or `typed`) and the colour typed beside «Altă culoare», as posted: the save names the box that is wrong. */
+  singleColourChoice: string;
+  singleColourTyped: string;
   size: string;
   /** «Lățimea» and «Înălțimea» in millimetres, as typed; NaN when the box holds no number. */
   customWidthMm: number;
@@ -47,7 +54,29 @@ export type BadgeDesignFormValues = {
 };
 
 const SWITCHES = ["showLogo", "showTitle", "writingLine", "showFreeText", "showMarker", "showPhone", "cutMarks"] as const;
+/** The choice that means «Altă culoare»: the colour typed beside it (a role's colour boxes' own, `badges.ts`). */
+export const TYPED_COLOUR = "typed";
+
+/** A typed colour as kept: `#` and six hex digits, lower case — a missing `#` added — or null for nothing that reads as one. */
+export function typedColour(raw: string): string | null {
+  const text = raw.trim().toLowerCase();
+  const withHash = text.startsWith("#") ? text : `#${text}`;
+  return /^#[0-9a-f]{6}$/.test(withHash) ? withHash : null;
+}
+
+/**
+ * The colour of the one badge's band, from the two boxes that post it (§783): `null` for the club's orange (the empty choice), a palette
+ * colour as chosen, or the typed one after «Altă culoare». `undefined` is a choice that names no colour — a typed text that is not
+ * `#rrggbb`, a value no option holds — which the save refuses, naming its box, and the preview draws as the club's orange.
+ */
+export function postedSingleColour(choice: string, typed: string): string | null | undefined {
+  if (choice === TYPED_COLOUR) return typedColour(typed) ?? undefined;
+  if (choice === "") return null;
+  return typedColour(choice) ?? undefined;
+}
+
 const TEXTS = [
+  "mode",
   "size",
   "titleRo",
   "titleEn",
@@ -85,7 +114,13 @@ export function readBadgeDesignForm(get: (name: string) => string | null): Badge
     const value = (at(key) ?? "").trim();
     return value === "" ? null : value;
   };
+  const singleColourChoice = text("singleColourChoice");
+  const singleColourTyped = text("singleColourTyped");
   return {
+    mode: text("mode"),
+    singleColour: postedSingleColour(singleColourChoice, singleColourTyped) ?? null,
+    singleColourChoice,
+    singleColourTyped,
     size: text("size"),
     customWidthMm: numberOf(at("customWidthMm")),
     customHeightMm: numberOf(at("customHeightMm")),
@@ -127,6 +162,7 @@ export function badgeDesignQuery(values: BadgeDesignFormValues | Record<string, 
     if (typeof value === "number" && Number.isFinite(value)) params.set(key, String(value));
   }
   if (typeof record.bandColour === "string" && record.bandColour) params.set("bandColour", record.bandColour);
+  if (typeof record.singleColour === "string" && record.singleColour) params.set("singleColour", record.singleColour);
   if (typeof record.headerImageSrc === "string" && record.headerImageSrc) {
     params.set("headerImageSrc", record.headerImageSrc);
     const crop = record.headerImageCrop;
@@ -142,6 +178,8 @@ export function badgeDesignValuesFromQuery(params: URLSearchParams): Record<stri
   for (const key of TEXTS) if (params.has(key)) values[key] = params.get(key) ?? "";
   for (const key of NUMBERS) if (params.has(key)) values[key] = numberOf(params.get(key));
   if (params.has("bandColour")) values.bandColour = params.get("bandColour") || null;
+  // No `singleColour` in the address is the club's orange, as an unsaved design with none chosen reads.
+  values.singleColour = params.get("singleColour") || null;
   values.headerImageSrc = params.get("headerImageSrc") || null;
   values.headerImageCrop = params.get("headerImageCrop") || null;
   return values;

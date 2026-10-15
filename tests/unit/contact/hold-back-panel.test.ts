@@ -37,6 +37,8 @@ async function render(over: { holdBackSuspected: boolean; mayEdit: boolean; held
     resolved: { to: ["club@example.org"], cc: [], bcc: [], source: "setting" },
     mayEdit: over.mayEdit,
     heldBack: over.heldBack,
+    via: "gmail",
+    roads: { gmail: true, mailgun: true },
   });
   return elements(tree);
 }
