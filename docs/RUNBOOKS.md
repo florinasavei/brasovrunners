@@ -955,6 +955,50 @@ queued or left in the last hour, and anyone whose five resends of the hour are s
 email it queues carries a new link, so the link in the earlier email stops working. It queues;
 the outbox sends at the road's pace. Three presses an hour per event; no state or deadline moves.
 
+## A way of sending is down: Gmail or Mailgun (§NNN)
+
+What it looks like: «Sarcini» → «Club» has the red row **«O cale de trimitere nu merge»** (`emailRoadDown`), or **«Mesaje de pe
+site pe care nu le-a dus nimeni»** (`relayLost`), or each Administrator got the email «{road} nu a trimis un mesaj: a plecat
+prin …» / «Un mesaj de pe site nu a putut fi trimis». `/devs` → «Stare» says, per road, `merge` or `refuză`, the last message
+it carried, its last refusal's short code and since when it has been failing; «Setări» → «Emailuri» → **«Mesaje de pe site»**
+has the same two lines and one row per message of the last seven days.
+
+What the platform does by itself, so there is little to do at the moment itself (`notifications/relay.ts`):
+
+- **«Scrie-ne» and «Spune-ne ceva» are outbox rows.** The form queues the message and answers «trimis»; the same request sends
+  it after its response, by the road the club chose for that form (the contact form: Gmail). The words stay in the row only until
+  it leaves: delivered, they are deleted at once and the row stays as the trace — road, time, tries, what each road answered.
+- **A failure of the service counts against its road** — a refused login (`smtp EAUTH`, Mailgun `401`), a `5xx`, no connection, a spent
+  allowance or a pause. After **two** such failures of one message the other road gets its turn, both ways (Mailgun to Gmail, Gmail to
+  Mailgun); the row then says «Trimis prin cealaltă cale», a line `[email-relay] … left by gmail` goes to the function log, an audit row
+  `email_road.failed_over` names the roads (never a word of the message or an address), and each Administrator and Superadministrator is
+  emailed once a day per road. A road Mailgun has stopped (a pause, the allowance) or a road this deployment does not have is skipped at once.
+- **Never twice.** A refused address is the recipient's, not the road's: the message ends «Adresă refuzată», the other road is not tried.
+  A send whose connection broke where the service may already have the message (a timeout during the message itself) pins it to that
+  road: it is retried there only, because nothing can say whether the first road delivered, and another road would risk a
+  second copy.
+- **Girl Zone** goes by Gmail only if the club ticked «Dacă Mailgun pică, trimite prin Gmail-ul clubului» on «Pagini» → «Contact» AND the notice in
+  force names Gmail for her messages (the tick is greyed until it does). Without the tick her message waits for Mailgun, never by the club's mailbox.
+- **A day without a road** (`RELAY_GIVE_UP_MS`): the message is FAILED, its words deleted, the Administrators emailed «Un mesaj de pe site
+  nu a putut fi trimis», an audit row `email_relay.lost` written. «Reîncearcă emailurile eșuate» does not put it back — there is nothing left to send.
+
+What to do, by the road's code on the row:
+
+1. **Gmail — `smtp EAUTH`** (Google answered `535-5.7.8`): the app password was revoked, or 2-Step Verification was turned off. Create a new app
+   password in the club's Google account (`SETUP.md` §38 steps 1–2), put it in `CONTACT_SMTP_PASSWORD` on the Vercel project (never in the
+   repository), redeploy. The row turns green with the first message Gmail carries.
+2. **Gmail — `smtp ETIMEDOUT` / `ECONNECTION`**: Google or the network. Nothing to change unless it lasts; the other road carries meanwhile.
+3. **Gmail accepted it and nobody saw it**: look at the form's «Către» on «Pagini» → «Contact». If it is the club's own Gmail address — the
+   account that sends — Gmail may keep the message in Sent / All mail and not in the Inbox (the card warns beside the box); give the form another
+   address, or set its road to Mailgun.
+4. **Mailgun — `mailgun 401` / `403`**: the key or the sending domain (`MAILGUN_API_KEY`, `MAILGUN_DOMAIN`; EU accounts answer at `api.eu.mailgun.net`,
+   `SETUP.md` §35). **`420` / `429`**: the plan's allowance or the probation's pause — see «Email has stopped».
+5. **QA only:** a message to an address the allowlist does not name is captured, not sent — one rule for both roads since §NNN. `EMAIL_ALLOWLIST` on the
+   QA project names who may receive (`*` for everybody); a captured message shows in the row with 0 recipients and in `/devs`.
+
+The monitors stay quiet for a relay row that waits: `/api/health?deep=1` counts it as `waiting`, and `overdue` after ninety minutes like every other
+row; a message given up on is not a 503 — it has its own «Sarcini» row for seven days.
+
 ## Legal document version
 
 Applies to the privacy notice, the terms, and the event declaration. All three share the

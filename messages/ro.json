@@ -4331,7 +4331,7 @@
           "done": "Ambele căi duc mesajele. Dacă una pică, mesajele pleacă prin cealaltă.",
           "how": [
             "«Setări» → «Emailuri» → «Mesaje de pe site»: vezi ce a răspuns calea, ultimul mesaj dus și de când nu mai duce.",
-            "Gmail: parola de aplicație a fost revocată sau contul cere o verificare. Creează una nouă (pașii sunt în SETUP.md §38), pune-o în CONTACT_SMTP_PASSWORD pe Vercel și redeploy.",
+            "Gmail: parola de aplicație a fost revocată sau contul cere o verificare. Creează una nouă în contul Google al clubului, pune-o în CONTACT_SMTP_PASSWORD pe Vercel și redeploy.",
             "Mailgun: cheia, domeniul sau planul. Verifică MAILGUN_API_KEY, MAILGUN_DOMAIN și MAILGUN_API_BASE_URL pe Vercel și pagina de stare a Mailgun.",
             "Rândul se face verde când calea duce din nou un mesaj."
           ]
@@ -6706,7 +6706,7 @@
         "save": "Salvează formularele",
         "saving": "Se salvează…",
         "saved": "Formularele „Spune-ne ceva” au fost salvate.",
-        "roads": "Mesajul stă în coada de emailuri doar până pleacă, câteva minute; apoi textul se șterge și rămâne doar urma trimiterii. Calea se alege pentru fiecare formular în parte: Gmail-ul clubului (CONTACT_SMTP_USER) sau Mailgun. Dacă una pică, mesajul pleacă prin cealaltă.",
+        "roads": "Mesajul stă în coadă doar până pleacă; apoi textul se șterge. Calea se alege pentru fiecare formular în parte: Gmail-ul clubului (CONTACT_SMTP_USER) sau Mailgun. Dacă una pică, pleacă prin cealaltă.",
         "selfRecipient": "Adresa de mai sus este chiar contul Gmail care trimite. Gmail poate lăsa un astfel de mesaj doar în Trimise, nu în Primite: alege altă adresă sau calea Mailgun."
       },
       "perSendNewsletter": "Textul newsletterului se scrie la fiecare trimitere, pe pagina „Newsletter” a backoffice-ului, așa că nu are cuvinte de editat aici.",
@@ -6762,7 +6762,7 @@
       "confirmationRetryOff": "Nu se retrimite singur: în „Termene”, numărul de retrimiteri e 0.",
       "relay": {
         "title": "Mesaje de pe site",
-        "intro": "Mesajele din „Scrie-ne” și „Spune-ne ceva” trec prin aceeași coadă ca emailurile. Textul stă aici doar până pleacă; apoi se șterge și rămâne urma: calea, ora, încercările.",
+        "intro": "Mesajele din „Scrie-ne” și „Spune-ne ceva” trec prin coada de emailuri. Textul stă aici doar până pleacă; apoi se șterge și rămâne urma: calea, ora, încercările.",
         "aside": "Ultimele 7 zile: {count}",
         "empty": "Niciun mesaj în ultimele 7 zile.",
         "road": {
@@ -6795,7 +6795,7 @@
         "leftBy": "a plecat prin {road}",
         "leftByOther": "a plecat prin {road}, pentru că calea aleasă nu l-a luat",
         "facts": "În coadă din {queued} · încercări: {attempts}",
-        "sentAt": "dus la {when}",
+        "sentAt": "dus {when}",
         "failure": "{road} a refuzat de {count} ori: {error}",
         "pinned": "rămâne pe această cale: nu știm dacă a fost deja luat"
       }

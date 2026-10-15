@@ -4331,7 +4331,7 @@
           "done": "Both ways carry messages. If one is down, messages leave by the other.",
           "how": [
             "«Settings» → «Emails» → «Messages from the site»: see what the way answered, the last message it carried and since when it has not.",
-            "Gmail: the app password was revoked or the account asks for a check. Create a new one (the steps are in SETUP.md §38), put it in CONTACT_SMTP_PASSWORD on Vercel and redeploy.",
+            "Gmail: the app password was revoked or the account asks for a check. Create a new one in the club's Google account, put it in CONTACT_SMTP_PASSWORD on Vercel and redeploy.",
             "Mailgun: the key, the domain or the plan. Check MAILGUN_API_KEY, MAILGUN_DOMAIN and MAILGUN_API_BASE_URL on Vercel and Mailgun's status page.",
             "The row turns green when the way carries a message again."
           ]
@@ -6706,7 +6706,7 @@
         "save": "Save the forms",
         "saving": "Saving…",
         "saved": "The “Tell us something” forms were saved.",
-        "roads": "A message stays in the email queue only until it leaves, a few minutes; then its words are deleted and only the trace of the send remains. The way is chosen for each form on its own: the club's Gmail (CONTACT_SMTP_USER) or Mailgun. If one is down, the message leaves by the other.",
+        "roads": "A message is kept only until it leaves; then its words are deleted. The way is chosen for each form on its own: the club's Gmail (CONTACT_SMTP_USER) or Mailgun. If one fails, the other carries it.",
         "selfRecipient": "The address above is the very Gmail account that sends. Gmail may keep such a message in Sent only, not in the Inbox: choose another address or the Mailgun way."
       },
       "perSendNewsletter": "The newsletter's text is written per send, on the backoffice's “Newsletter” page, so it has no words to edit here.",
@@ -6762,7 +6762,7 @@
       "confirmationRetryOff": "It is not re-sent by itself: in “Deadlines”, the number of resends is 0.",
       "relay": {
         "title": "Messages from the site",
-        "intro": "Messages from “Write to us” and “Tell us something” go through the same queue as the emails. The words stay here only until the message leaves; then they are deleted and the trace remains: the way, the time, the tries.",
+        "intro": "Messages from “Write to us” and “Tell us something” go through the email queue. The words stay only until the message leaves; then they are deleted and the trace remains: way, time, tries.",
         "aside": "Last 7 days: {count}",
         "empty": "No message in the last 7 days.",
         "road": {
