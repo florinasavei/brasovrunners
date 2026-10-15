@@ -1027,6 +1027,12 @@ export type TemplateData = {
     agreementAttached?: boolean;
     /** A volunteer under eighteen with a parent or guardian still to accept (§768): the «am primit» says their parent was emailed. */
     guardianPending?: boolean;
+    /**
+     * The contact persons of the categories of the role (or roles) concerned (§NNN), when the club has set them: the footer of the
+     * three messages that reach a volunteer or their guardian says «Întrebări despre voluntariat? Ana · 0712 345 678 · ana@club.test».
+     * The club's own business contact; never in the club's notice and never in a copy to the club.
+     */
+    contacts?: { name: string | null; phone: string | null; email: string | null }[];
   };
   /**
    * "Detalii actualizate" (§331): which facts the save changed — the place, the start, the
@@ -2295,6 +2301,8 @@ const T = {
       `Clubul a refuzat această înscriere. Motivul: „${ground}”.`,
     termsLink: "Termenii și condițiile",
     footer: "Răspunde la acest email pentru întrebări.",
+    /** The volunteer category's contact person (§NNN), the words of «Persoana de contact» already joined: «Ana · 0712 345 678 · ana@club.test». */
+    volunteerContact: (contacts: string) => `Întrebări despre voluntariat? ${contacts}.`,
     /** The club's copy of a participant's message (§320): in front of the subject, and the first line. */
     clubCopy: {
       subject: "[Copie club] ",
@@ -3008,6 +3016,7 @@ const T = {
       `The club refused this registration. The ground: “${ground}”.`,
     termsLink: "Terms and conditions",
     footer: "Reply to this email with questions.",
+    volunteerContact: (contacts: string) => `Questions about volunteering? ${contacts}.`,
     clubCopy: {
       subject: "[Club copy] ",
       note: "Club copy of the message sent to the participant. The personal links, the QR code and the attachments have been removed.",
@@ -3755,7 +3764,16 @@ export function buildTemplateContent(
       return [...own, ...standardLinks(linkData, copy.moreLinks).filter((link) => !seen.has(link.url))];
     })(),
     closing: copy.closing,
-    footer: data.replyTo ? copy.footer : undefined,
+    // The reply address's line, and — on the three messages that reach a volunteer or their guardian — the contact person of the
+    // category of the role concerned (§NNN), when the club has set one. Not on the club's copy: it is the volunteer's message.
+    footer: (() => {
+      const contacts =
+        !clubCopy && (messageType === "VOLUNTEER_RECEIVED" || messageType === "VOLUNTEER_ROLE_ASSIGNED" || messageType === "VOLUNTEER_GUARDIAN_REQUEST")
+          ? (data.volunteer?.contacts ?? []).map((contact) => [contact.name, contact.phone, contact.email].filter(Boolean).join(" · ")).filter((words) => words !== "")
+          : [];
+      const lines = [contacts.length > 0 ? copy.volunteerContact(contacts.join("; ")) : undefined, data.replyTo ? copy.footer : undefined].filter(Boolean);
+      return lines.length > 0 ? lines.join(" ") : undefined;
+    })(),
     // Not on the club's copy either (§320, §324): "this message comes to you about your
     // registration" is addressed to the participant, and the copy lands in the club's mailbox.
     privacy: carriesNoPrivacyLine(messageType) || clubCopy

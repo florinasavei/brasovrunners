@@ -83,6 +83,7 @@ const ROLE: VolunteerRole = {
   descriptionRoJson: docOf("Stai la km 5.", "Dai apă de la 9:00.", "Îți dăm pahare.", "Strângi gunoiul."),
   descriptionEnJson: docOf("Stand at km 5.", "Hand out water from 9:00.", "We give you cups.", "Collect the rubbish."),
   colour: null,
+  categoryId: null,
   position: 0,
   createdAt: new Date("2026-10-14T08:00:00Z"),
 };
@@ -206,6 +207,7 @@ async function drawCard(over: Partial<ComponentProps<typeof VolunteersCard>> = {
     minorsOpen: false,
     offerClosed: "off",
     roles: [ROLE, FINISH_ROLE, NO_DESCRIPTION],
+    categories: [],
     standings: [ROLE, FINISH_ROLE, NO_DESCRIPTION].map((role) => ({ roleId: role.id, needed: role.needed, taken: 0, confirmed: 0, free: role.needed })),
     volunteers: PEOPLE,
     agreementInForce: true,
@@ -233,6 +235,7 @@ async function drawBox(over: Partial<ComponentProps<typeof VolunteerBox>> = {}, 
     needed: role.needed,
     taken: 0,
     free: role.needed,
+    categoryId: role.categoryId,
   });
   const drawn = (await VolunteerBox({
     locale: language,
@@ -898,7 +901,7 @@ describe("§NNN the public page says how many people a role needs only while the
   });
 
   it("offers the same roles either way: a role that is full is not on the page, with the number said or not", async () => {
-    const full: PublicVolunteerRole = { id: FINISH, nameRo: "Sosire", nameEn: "Finish", descriptionRo: null, descriptionEn: null, descriptionRoJson: null, descriptionEnJson: null, needed: 1, taken: 1, free: 0 };
+    const full: PublicVolunteerRole = { id: FINISH, nameRo: "Sosire", nameEn: "Finish", descriptionRo: null, descriptionEn: null, descriptionRoJson: null, descriptionEnJson: null, needed: 1, taken: 1, free: 0, categoryId: null };
     // The page hands the form only the roles that still need people (`volunteerBoxRoles`); the form never invents one.
     for (const showCounts of [false, true]) {
       const page = await drawBox({ showCounts, roles: [{ ...full, id: WATER, nameRo: "Punct de apă", nameEn: "Water point", needed: 3, taken: 1, free: 2 }] });

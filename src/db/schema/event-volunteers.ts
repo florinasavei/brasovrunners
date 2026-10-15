@@ -44,7 +44,7 @@ export const volunteerGuardianMethod = pgEnum("volunteer_guardian_method", ["LIN
  * volunteer's data, never in the CSV — so the privacy notice's template needs no word about them.
  *
  * The rows go with the event (`ON DELETE CASCADE`). A category with a role under it is not deleted: the service says so
- * first (`VOLUNTEER_CATEGORY_HAS_ROLES`), and `event_volunteer_roles.category_id` is `RESTRICT` as well.
+ * first (`VOLUNTEER_CATEGORY_HAS_ROLES`), and the database refuses it too (`event_volunteer_roles.category_id`).
  */
 export const eventVolunteerCategories = pgTable(
   "event_volunteer_categories",
@@ -126,10 +126,12 @@ export const eventVolunteerRoles = pgTable(
     colour: text("colour"),
     /**
      * The category the role sits under (§NNN): null is the default heading «Alte activități» / «Other activities» — every role
-     * from before the categories, and any the club leaves unfiled. `RESTRICT`: a category with roles is emptied first, never
-     * deleted from under them (the service says so; deleting an **event** still cascades to both tables).
+     * from before the categories, and any the club leaves unfiled. `NO ACTION`: a category with roles is emptied first, never
+     * deleted from under them (the service says so first, and the database refuses at the end of the statement). Not `RESTRICT`,
+     * which is checked at once: deleting an **event** cascades to both tables in no promised order, and a category removed
+     * before its roles would refuse the whole delete — the end-of-statement check sees both gone (`event_volunteer_role_choices`).
      */
-    categoryId: uuid("category_id").references(() => eventVolunteerCategories.id, { onDelete: "restrict" }),
+    categoryId: uuid("category_id").references(() => eventVolunteerCategories.id),
   },
   (t) => [
     index("event_volunteer_roles_event_idx").on(t.eventId, t.position),

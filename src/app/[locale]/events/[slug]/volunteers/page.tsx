@@ -109,6 +109,7 @@ export default async function EventVolunteersPage({ params, searchParams }: Prop
         locale={locale}
         slug={slug}
         roles={offer.roles}
+        categories={offer.categories}
         shirts={offer.shirts}
         showCounts={offer.showCounts}
         // The day the date of birth is counted on (§NNN): the gun's, else the event's, in the event's own zone.

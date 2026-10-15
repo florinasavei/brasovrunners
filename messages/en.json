@@ -614,7 +614,9 @@
         "email": "Parent's or guardian's email",
         "emailHelp": "We send the consent link here. We use it for nothing else.",
         "aware": "My parent or guardian knows and agrees"
-      }
+      },
+      "otherCategory": "Other activities",
+      "contactLabel": "Questions?"
     },
     "calendar": {
       "feedName": "🏃 BVR",
@@ -1909,7 +1911,9 @@
       "VOLUNTEER_GUARDIAN_MISSING": "The parent's consent is missing: a volunteer under 18 is confirmed only once their parent or guardian has accepted the agreement, from the link or on paper.",
       "VOLUNTEER_GUARDIAN_ACCEPTED": "The parent or guardian has already accepted the agreement: there is nothing left to send or record.",
       "VOLUNTEER_GUARDIAN_NO_EMAIL": "The parent or guardian has no email address entered, so there is nowhere to send the link. Take the consent on paper, or add the address under “Edit”.",
-      "VOLUNTEER_MINORS_CLOSED": "The club does not take volunteers under 18 yet: the privacy notice and the agreement in force do not describe minors. Approve them first; “Tasks” says how."
+      "VOLUNTEER_MINORS_CLOSED": "The club does not take volunteers under 18 yet: the privacy notice and the agreement in force do not describe minors. Approve them first; “Tasks” says how.",
+      "VOLUNTEER_CATEGORY_HAS_ROLES": "The category was not deleted: it has roles under it. Move or delete the roles first.",
+      "VOLUNTEER_NAME_TAKEN": "That name is already used in this category (or among the event's categories). Choose another: the same name can stand in two categories, but not twice in one."
     },
     "editor": {
       "draftPreview": {
@@ -4782,7 +4786,9 @@
         "deleteTitle": "Delete this role?",
         "deleteBody": "The role “{name}” is removed. A role given to someone, or ticked by someone, cannot be deleted: change their roles or delete them first.",
         "descriptionEmpty": "No description yet.",
-        "more": "The rest"
+        "more": "The rest",
+        "category": "Category",
+        "categoryHelp": "The heading the role appears under. “Other activities” means none. The same name can stand in two categories, but not twice in one."
       },
       "move": {
         "up": "Move up",
@@ -4946,6 +4952,32 @@
         "paperTitle": "Did {name}'s parent sign the agreement on paper?",
         "paperBody": "This records that {name}'s parent or guardian signed the printed agreement, the version in force, and that you recorded the signature. Keep the signed sheet.",
         "minorsClosed": "The parent's link and “Parent's consent on paper” wait: the notice or the agreement in force does not describe minors (“Tasks”)."
+      },
+      "otherCategory": "Other activities",
+      "categories": {
+        "title": "Categories",
+        "count": "Categories: {count}",
+        "intro": "A category groups roles under one heading, on this card and on the volunteers' page: for example “Start / Finish” and “Route”. The same role can stand in several categories. The order here is the order on the page.",
+        "empty": "No categories yet. The roles are listed without headings. Add the first one below: for example “Route”.",
+        "rolesUnder": "Roles under it: {count}",
+        "contactIs": "Contact person: {contact}",
+        "contactNone": "No contact person yet."
+      },
+      "category": {
+        "nameRo": "Category name (Română)",
+        "nameEn": "Category name (English)",
+        "addTitle": "Add a category",
+        "add": "Add the category",
+        "adding": "Adding…",
+        "delete": "Delete the category",
+        "deleting": "Deleting…",
+        "deleteTitle": "Delete this category?",
+        "deleteBody": "The category “{name}” is removed. A category with roles under it cannot be deleted: move or delete its roles first.",
+        "contactTitle": "Contact person",
+        "contactHelp": "Optional and empty at first: fill it in when you know it. It shows on the volunteers' page, under the category's heading, and in the footer of the emails to volunteers. It is not in the CSV.",
+        "contactName": "Contact person's name",
+        "contactPhone": "Telephone",
+        "contactEmail": "Email address"
       }
     },
     "eventTodos": {
@@ -11377,7 +11409,12 @@
       "volunteersCountsOn": "The volunteers' page now says how many more people each role needs.",
       "volunteersCountsOff": "The volunteers' page no longer says how many more people each role needs, only that it still has room.",
       "volunteerGuardianRequested": "The link to the parent is on its way by email.",
-      "volunteerGuardianRecorded": "The parent's consent is recorded as signed on paper."
+      "volunteerGuardianRecorded": "The parent's consent is recorded as signed on paper.",
+      "volunteerCategoryAdded": "Category added.",
+      "volunteerCategorySaved": "Category saved.",
+      "volunteerCategoryMoved": "Category moved.",
+      "volunteerCategoryDeleted": "Category deleted.",
+      "volunteerCategoryContactSaved": "The contact person was saved."
     }
   },
   "Network": {

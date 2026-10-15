@@ -614,7 +614,9 @@
         "email": "Emailul părintelui sau tutorelui",
         "emailHelp": "Aici trimitem linkul pentru acord. Nu îl folosim pentru altceva.",
         "aware": "Părintele sau tutorele meu știe și e de acord"
-      }
+      },
+      "otherCategory": "Alte activități",
+      "contactLabel": "Întrebări?"
     },
     "calendar": {
       "feedName": "🏃 BVR",
@@ -1909,7 +1911,9 @@
       "VOLUNTEER_GUARDIAN_MISSING": "Acordul părintelui lipsește: un voluntar sub 18 ani se confirmă doar după ce părintele sau tutorele a acceptat contractul, din link sau pe hârtie.",
       "VOLUNTEER_GUARDIAN_ACCEPTED": "Părintele sau tutorele a acceptat deja contractul: nu mai e nimic de trimis sau de înregistrat.",
       "VOLUNTEER_GUARDIAN_NO_EMAIL": "Părintele sau tutorele nu are un email trecut, deci nu are cui să-i plece linkul. Acordul se ia pe hârtie, sau adaugă emailul în „Modifică”.",
-      "VOLUNTEER_MINORS_CLOSED": "Clubul nu primește încă voluntari sub 18 ani: nota de confidențialitate și contractul în vigoare nu descriu încă minorii. Aprobă-le întâi; «Sarcini» spune cum."
+      "VOLUNTEER_MINORS_CLOSED": "Clubul nu primește încă voluntari sub 18 ani: nota de confidențialitate și contractul în vigoare nu descriu încă minorii. Aprobă-le întâi; «Sarcini» spune cum.",
+      "VOLUNTEER_CATEGORY_HAS_ROLES": "Categoria nu s-a șters: are roluri în ea. Mută sau șterge întâi rolurile.",
+      "VOLUNTEER_NAME_TAKEN": "Numele există deja în această categorie (sau printre categoriile evenimentului). Alege alt nume: același nume poate sta în două categorii, dar nu de două ori într-una."
     },
     "editor": {
       "draftPreview": {
@@ -4782,7 +4786,9 @@
         "deleteTitle": "Ștergi acest rol?",
         "deleteBody": "Rolul „{name}” se șterge. Un rol dat cuiva sau bifat de cineva nu poate fi șters: schimbă-le întâi rolurile sau șterge-i.",
         "descriptionEmpty": "Încă nicio descriere.",
-        "more": "Restul"
+        "more": "Restul",
+        "category": "Categoria",
+        "categoryHelp": "Titlul sub care apare rolul. „Alte activități” înseamnă fără categorie. Același nume poate sta în două categorii, dar nu de două ori într-una."
       },
       "move": {
         "up": "Mută mai sus",
@@ -4946,6 +4952,32 @@
         "paperTitle": "Părintele lui {name} a semnat contractul pe hârtie?",
         "paperBody": "Se înregistrează că părintele sau tutorele lui {name} a semnat contractul tipărit, versiunea în vigoare, și că tu ai înregistrat semnătura. Păstrează foaia semnată.",
         "minorsClosed": "Linkul părintelui și „Acordul părintelui pe hârtie” așteaptă: nota sau contractul în vigoare nu descriu minorii («Sarcini»)."
+      },
+      "otherCategory": "Alte activități",
+      "categories": {
+        "title": "Categorii",
+        "count": "Categorii: {count}",
+        "intro": "O categorie grupează rolurile sub un titlu, pe card și pe pagina voluntarilor: de exemplu „Start / Sosire” și „Traseu”. Același rol poate sta în mai multe categorii. Ordinea de aici e ordinea de pe pagină.",
+        "empty": "Nicio categorie încă. Rolurile se arată într-o listă, fără titluri. Adaugă prima mai jos: de exemplu „Traseu”.",
+        "rolesUnder": "Roluri în ea: {count}",
+        "contactIs": "Persoana de contact: {contact}",
+        "contactNone": "Nicio persoană de contact încă."
+      },
+      "category": {
+        "nameRo": "Numele categoriei (Română)",
+        "nameEn": "Numele categoriei (English)",
+        "addTitle": "Adaugă o categorie",
+        "add": "Adaugă categoria",
+        "adding": "Se adaugă…",
+        "delete": "Șterge categoria",
+        "deleting": "Se șterge…",
+        "deleteTitle": "Ștergi această categorie?",
+        "deleteBody": "Categoria „{name}” se șterge. O categorie cu roluri în ea nu se poate șterge: mută sau șterge întâi rolurile.",
+        "contactTitle": "Persoana de contact",
+        "contactHelp": "Opțională și goală la început: o completezi când o știi. Apare pe pagina voluntarilor, sub titlul categoriei, și în subsolul emailurilor către voluntari. Nu intră în CSV.",
+        "contactName": "Numele persoanei de contact",
+        "contactPhone": "Telefon",
+        "contactEmail": "Adresa de email"
       }
     },
     "eventTodos": {
@@ -11377,7 +11409,12 @@
       "volunteersCountsOn": "Pagina de voluntari spune acum câte persoane mai sunt necesare la fiecare rol.",
       "volunteersCountsOff": "Pagina de voluntari nu mai spune câte persoane mai sunt necesare, doar că rolul mai are locuri.",
       "volunteerGuardianRequested": "Linkul pentru părinte pleacă pe email.",
-      "volunteerGuardianRecorded": "Acordul părintelui, înregistrat ca semnat pe hârtie."
+      "volunteerGuardianRecorded": "Acordul părintelui, înregistrat ca semnat pe hârtie.",
+      "volunteerCategoryAdded": "Categorie adăugată.",
+      "volunteerCategorySaved": "Categorie salvată.",
+      "volunteerCategoryMoved": "Categorie mutată.",
+      "volunteerCategoryDeleted": "Categorie ștearsă.",
+      "volunteerCategoryContactSaved": "Persoana de contact a fost salvată."
     }
   },
   "Network": {

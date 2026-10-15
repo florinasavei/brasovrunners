@@ -194,7 +194,8 @@ export default async function EventDetailPage({ params, query, canEdit = false, 
   await holdPageUntil([event.endsAt ?? event.startsAt], now);
   const volunteerOffer = membersOnly ? null : await readOrWhileAway(() => readVolunteerOffer(event, now), null);
   const volunteerRoleNames = volunteerOffer
-    ? volunteerOffer.roles.filter((role) => role.free > 0).map((role) => (locale === "en" ? role.nameEn : role.nameRo))
+    ? // A name once, though the same role may stand in two categories (§NNN): the box says what is needed, the page says where.
+      [...new Set(volunteerOffer.roles.filter((role) => role.free > 0).map((role) => (locale === "en" ? role.nameEn : role.nameRo)))]
     : [];
   // A staff member who may edit the words gets the way into the editor from here (§135; the
   // owner: "when I am signed in … I should be able to edit events from the event page"). The live

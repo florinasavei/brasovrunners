@@ -7,7 +7,7 @@ import {
   cachedVolunteersDescribed,
 } from "@/modules/public-cache/reads";
 import { volunteerBoxRoles, volunteerEventAhead, volunteerOfferClosedFor } from "./domain/volunteer";
-import type { PublicVolunteerRole } from "./volunteers";
+import type { PublicVolunteerCategory, PublicVolunteerRole } from "./volunteers";
 
 /**
  * What an event offers volunteers right now, for the two public surfaces that ask (§768, amending §754): the event page's
@@ -26,6 +26,8 @@ import type { PublicVolunteerRole } from "./volunteers";
 export type VolunteerOffer = {
   /** The roles still needing people, in the club's order — empty only for a person reading the answer to their own post. */
   roles: PublicVolunteerRole[];
+  /** The event's categories in the club's order, each with its contact person (§NNN): the page draws a heading for each that has a role in `roles`. */
+  categories: PublicVolunteerCategory[];
   /** «Oferim tricouri voluntarilor» (§765): the form asks the size. */
   shirts: boolean;
   /**
@@ -44,7 +46,7 @@ export async function readVolunteerOffer(
   now: Date,
   answer: "done" | "full" | "invalid" | "captcha" | "limited" | null = null,
 ): Promise<VolunteerOffer | null> {
-  const { acceptsVolunteers, shirts, showCounts, roles } = await cachedVolunteerRoles(event.id);
+  const { acceptsVolunteers, shirts, showCounts, roles, categories } = await cachedVolunteerRoles(event.id);
   if (!acceptsVolunteers) return null;
   const closed = volunteerOfferClosedFor({
     acceptsVolunteers,
@@ -62,5 +64,6 @@ export async function readVolunteerOffer(
   const profile = await cachedVolunteerProfileDescribed(now);
   // Minors ride on the profile form: no age is asked without it, so no minor is either (§768).
   const minors = profile && (await cachedVolunteerMinorsOpen(now));
-  return { roles: boxRoles, shirts, showCounts, profile, minors };
+  // A cache entry written before the categories existed has none: the roles are then simply listed (§NNN).
+  return { roles: boxRoles, categories: categories ?? [], shirts, showCounts, profile, minors };
 }
