@@ -486,9 +486,16 @@ describe("§765 the public form while the notice names the profile", () => {
     expect(young).toContain("Voluntarii trebuie să aibă cel puțin 14 ani în ziua evenimentului.");
     expect(young).not.toContain("Clubul nu primește încă");
     const typo = await drawBox({ outcome: "invalid", refused: ["birthDate"], typed: { ...typed, birthDate: "abc" } });
-    expect(typo).toContain("Scrie data nașterii ca zi, lună, an: 11.05.1990.");
+    expect(typo).toContain("Scrie data ca zi, lună, an: 11.05.1990.");
     expect(typo).not.toContain("Voluntarii trebuie să aibă cel puțin");
     expect(typo).not.toContain("Clubul nu primește încă");
+    // A date after the event day is negative: the minimum's sentence, not the minors' one, while minors are closed.
+    const future = await drawBox({ outcome: "invalid", refused: ["birthDate"], typed: { ...typed, birthDate: "2030-01-01" } });
+    expect(future).toContain("Voluntarii trebuie să aibă cel puțin 14 ani în ziua evenimentului.");
+    expect(future).not.toContain("Clubul nu primește încă");
+    // A day that does not exist is the registration form's «scrie data», not an age sentence.
+    const noDay = await drawBox({ outcome: "invalid", refused: ["birthDate"], typed: { ...typed, birthDate: "1990-02-30" } });
+    expect(noDay).toContain("Scrie data ca zi, lună, an: 11.05.1990.");
     // The summary links to the box.
     expect(under).toContain('href="#volunteer-birthDate"');
     const missing = await drawBox({ outcome: "invalid", refused: ["sex", "city"], typed: {} });
@@ -926,7 +933,7 @@ describe("§NNN the owner's note under the roles' list", () => {
     expect(ro.Event.volunteers.choicesNote).toBe(NOTE_RO);
     expect(en.Event.volunteers.choicesNote).toBe(NOTE_EN);
     // The short instruction stays as it was, above the roles.
-    expect(ro.Event.volunteers.choicesHelp).toBe("Bifează tot ce ai face, cel puțin un rol. Organizatorii îți aleg unul și îți scriu.");
+    expect(ro.Event.volunteers.choicesHelp).toBe("Bifează tot ce ai face, cel puțin un rol.");
   });
 
   it("is drawn right under the last role's box, before the next field, and the short instruction stays above the roles", async () => {

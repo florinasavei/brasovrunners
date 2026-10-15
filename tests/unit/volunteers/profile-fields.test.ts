@@ -401,7 +401,8 @@ describe("§765 the catalogues say the new words in both languages", () => {
   it("says «cel puțin {age}» for a date under the minimum on the event's day and «scrie data» for anything else", () => {
     expect(ro.Event.volunteers.errors.birthDateMinimum).toContain("{age}");
     expect(en.Event.volunteers.errors.birthDateMinimum).toContain("{age}");
-    expect(ro.Event.volunteers.errors.birthDate).not.toContain("{age}");
+    expect(ro.Event.volunteers.errors).not.toHaveProperty("birthDate");
+    expect(ro.Registration.birthDateUnreadable).not.toContain("{age}");
     // The retired age sentences are gone, not left for a form that no longer asks.
     for (const words of [ro.Event.volunteers.errors, en.Event.volunteers.errors]) {
       expect(words).not.toHaveProperty("age");

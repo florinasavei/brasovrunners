@@ -543,7 +543,7 @@
       "title": "Vreau să fiu voluntar",
       "intro": "Evenimentul are nevoie de ajutor. Bifează ce ești dispus(ă) să faci și spune-ne cum te găsim. Organizatorii îți aleg apoi rolul și te confirmă. Nu e o înscriere la cursă și nu ține loc.",
       "choices": "Ce ești dispus(ă) să faci",
-      "choicesHelp": "Bifează tot ce ai face, cel puțin un rol. Organizatorii îți aleg unul și îți scriu.",
+      "choicesHelp": "Bifează tot ce ai face, cel puțin un rol.",
       "choicesNote": "În funcție de numărul de doritori, există posibilitatea să fie nevoie să acoperi o altă responsabilitate. Mulțumim pentru dorința de a ajuta. Te vom contacta curând.",
       "needs": {
         "one": "mai e nevoie de 1 persoană",
@@ -579,7 +579,6 @@
         "consent": "Bifează căsuța de acord, altfel nu putem păstra oferta ta.",
         "agreement": "Bifează că accepți contractul de voluntariat, altfel nu putem păstra oferta ta.",
         "adult": "Formularul e pentru persoane de cel puțin {age}: bifează căsuța dacă ai această vârstă.",
-        "birthDate": "Scrie data nașterii ca zi, lună, an: 11.05.1990.",
         "birthDateMinimum": "Voluntarii trebuie să aibă cel puțin {age} în ziua evenimentului.",
         "sex": "Alege sexul din listă.",
         "city": "Scrie orașul tău.",
@@ -4291,8 +4290,8 @@
         },
         "volunteerProfileNotice": {
           "title": "Nota de confidențialitate: ce spun voluntarii despre ei",
-          "todo": "Un eveniment viitor primește voluntari, dar nota în vigoare nu descrie încă vârsta, sexul și orașul lor. Formularul cere doar bifa vârstei minime.",
-          "done": "Nota în vigoare descrie ce spun voluntarii despre ei: formularul cere vârsta, sexul și orașul.",
+          "todo": "Un eveniment viitor primește voluntari, dar nota în vigoare nu descrie încă data nașterii, sexul și orașul lor. Formularul cere doar bifa vârstei minime.",
+          "done": "Nota în vigoare descrie ce spun voluntarii despre ei: formularul cere data nașterii, sexul și orașul.",
           "how": [
             "/admin/legal → cardul „GDPR” → „Regenerează din șablon” → confirmă. Paragraful despre voluntari din secțiunea 5 numește răspunsurile voluntarilor și la ce folosesc.",
             "Un jurist ar trebui să citească paragraful: temeiul, scopul (repartizarea pe roluri), tricoul doar cât clubul dă tricouri și faptul că „grupul” e declarația persoanei, nu o verificare.",
@@ -4748,7 +4747,7 @@
           "noAgreement": "Formularul public nu se arată: niciun contract de voluntariat nu e în vigoare. Aprobă-l în «Documente legale»; «Sarcini» spune cum.",
           "noAgreementNotice": "Formularul public nu se arată: nota de confidențialitate în vigoare nu descrie încă acceptarea contractului de voluntariat. «Sarcini» spune ce trebuie aprobat."
         },
-        "profileOff": "Formularul public cere doar bifa vârstei minime: nota în vigoare nu descrie încă vârsta, sexul și orașul voluntarilor. «Sarcini» spune ce trebuie aprobat.",
+        "profileOff": "Formularul public cere doar bifa vârstei minime: nota în vigoare nu descrie încă data nașterii, sexul și orașul voluntarilor. «Sarcini» spune ce trebuie aprobat.",
         "minorsOff": "Voluntarii sub 18 ani nu se primesc încă: nota sau contractul în vigoare nu descriu minorii («Sarcini» spune ce se aprobă)."
       },
       "switchOn": "Primește voluntari pe pagină",

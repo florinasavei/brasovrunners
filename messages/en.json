@@ -543,7 +543,7 @@
       "title": "I want to volunteer",
       "intro": "The event needs a hand. Tick what you are willing to do and tell us how to reach you. The organizers then choose your role and confirm you. It is not a race registration and it holds no place.",
       "choices": "What you are willing to do",
-      "choicesHelp": "Tick everything you would do, at least one role. The organizers choose one and write to you.",
+      "choicesHelp": "Tick everything you would do, at least one role.",
       "choicesNote": "Depending on how many people sign up, you may be asked to cover a different responsibility. Thank you for wanting to help. We will contact you soon.",
       "needs": {
         "one": "1 more person needed",
@@ -579,7 +579,6 @@
         "consent": "Tick the box to agree, or we cannot keep your offer.",
         "agreement": "Tick the box to accept the volunteer agreement, or we cannot keep your offer.",
         "adult": "The form is for people of at least {age}: tick the box if you are.",
-        "birthDate": "Write the date of birth as day, month, year: 11.05.1990.",
         "birthDateMinimum": "Volunteers must be at least {age} old on the day of the event.",
         "sex": "Choose your sex from the list.",
         "city": "Type your city.",
@@ -4291,8 +4290,8 @@
         },
         "volunteerProfileNotice": {
           "title": "Privacy notice: what volunteers say about themselves",
-          "todo": "An event ahead takes volunteers, but the notice in force does not describe their age, sex and city yet. The form asks only the minimum-age tick.",
-          "done": "The notice in force describes what volunteers say about themselves: the form asks for the age, sex and city.",
+          "todo": "An event ahead takes volunteers, but the notice in force does not describe their date of birth, sex and city yet. The form asks only the minimum-age tick.",
+          "done": "The notice in force describes what volunteers say about themselves: the form asks for the date of birth, sex and city.",
           "how": [
             "/admin/legal → the “GDPR” card → “Regenerate from the template” → confirm. Section 5's paragraph about volunteers names the volunteers' answers and what they are for.",
             "A lawyer should read the paragraph: the basis, the purpose (placing volunteers in roles), the T-shirt only while the club gives them, and that the “group” is the person's own claim.",
@@ -4748,7 +4747,7 @@
           "noAgreement": "The public form is not shown: no volunteer agreement is in force. Approve one in «Legal documents»; «Tasks» says how.",
           "noAgreementNotice": "The public form is not shown: the privacy notice in force does not describe the volunteer agreement's acceptance yet. «Tasks» says what to approve."
         },
-        "profileOff": "The public form asks only the minimum-age tick: the notice in force does not describe the volunteers' age, sex and city yet. “Tasks” says what to approve.",
+        "profileOff": "The public form asks only the minimum-age tick: the notice in force does not describe the volunteers' date of birth, sex and city yet. “Tasks” says what to approve.",
         "minorsOff": "Volunteers under 18 are not taken yet: the notice or the agreement in force does not describe minors (“Tasks” says what to approve)."
       },
       "switchOn": "Take volunteers on the page",

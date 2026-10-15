@@ -6,7 +6,7 @@ import { normalizeTeamText, resolveRichPair, richTextBox } from "@/modules/conte
 import { E164_PHONE } from "@/modules/registrations/phone";
 import { ageOn, dayIn, latestBirthDateFor } from "@/modules/registrations/domain/age";
 import { SHIRT_SIZES } from "@/modules/registrations/domain/kit";
-import { normalizeTypedDate } from "@/shared/forms/pickers/wall-values";
+import { isDateValue, normalizeTypedDate } from "@/shared/forms/pickers/wall-values";
 import { SEX_CHOICES } from "@/modules/registrations/domain/sex";
 import { canonicalizeEmail, isValidEmail } from "@/modules/participants/domain/canonical-email";
 
@@ -87,15 +87,24 @@ export function isVolunteerMinor(age: number | null | undefined): boolean {
  * nașterii»): the day of the race's gun when the event has one, else the event's own day — in the event's own zone, as the
  * registration form counts (`formViewOf`) — so a person who turns fourteen on the morning of the race may offer today. An
  * event whose date is still to be announced has no such day: today stands for it, and the age is judged again at the next
- * save. Pure.
+ * save. An event whose **time alone** is to be announced has one — the public row hides the instant but carries `announcedDay`,
+ * the day on the event's own calendar — so the page and the service count on the same day. Pure.
  */
 export function volunteerEventDay(
-  event: { startsAt: Date | null; raceStartsAt?: Date | null; timezone?: string | null; dateToBeAnnounced?: boolean | null },
+  event: {
+    startsAt: Date | null;
+    raceStartsAt?: Date | null;
+    timezone?: string | null;
+    dateToBeAnnounced?: boolean | null;
+    announcedDay?: string | null;
+  },
   now: Date,
 ): string {
   const zone = event.timezone || "Europe/Bucharest";
-  const at = event.dateToBeAnnounced === true ? now : (event.raceStartsAt ?? event.startsAt ?? now);
-  return dayIn(at, zone);
+  if (event.dateToBeAnnounced === true) return dayIn(now, zone);
+  const at = event.raceStartsAt ?? event.startsAt;
+  if (at) return dayIn(at, zone);
+  return event.announcedDay || dayIn(now, zone);
 }
 
 /** The youngest birth date a volunteer may give: the latest day that still makes `VOLUNTEER_MINIMUM_AGE` on the event's day. */
@@ -116,7 +125,8 @@ export function earliestVolunteerBirthDate(eventDay: string): string {
  * age here is counted (`ageOn`).
  */
 export function volunteerAgeOn(birthDate: string, eventDay: string): number | null {
-  return ageOn(birthDate, eventDay);
+  // 30 February is no day: `ageOn` would roll it into March and give an age to a date the form refuses.
+  return isDateValue(birthDate) ? ageOn(birthDate, eventDay) : null;
 }
 
 /**
@@ -125,7 +135,7 @@ export function volunteerAgeOn(birthDate: string, eventDay: string): number | nu
  * (`undefined`), says nothing — no guardian is asked for an age nobody could read.
  */
 function ageOfBox(birthDate: unknown, eventDay: string, kept: number | null): number | null {
-  if (typeof birthDate === "string" && birthDate !== "") return ageOn(birthDate, eventDay);
+  if (typeof birthDate === "string" && birthDate !== "") return volunteerAgeOn(birthDate, eventDay);
   return birthDate === null ? kept : null;
 }
 
@@ -243,6 +253,8 @@ function birthDateBox(eventDay: string) {
     .string()
     .transform((value) => normalizeTypedDate(value))
     .pipe(z.string().regex(/^\d{4}-\d{2}-\d{2}$/))
+    // A day that does not exist (30 February) passes the shape and would roll over in `ageOn`: refused on the box, as the registration form's `z.iso.date` does.
+    .refine((day) => isDateValue(day))
     .refine(
       (day) => {
         const age = ageOn(day, eventDay);

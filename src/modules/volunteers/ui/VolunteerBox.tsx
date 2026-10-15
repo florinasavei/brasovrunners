@@ -147,9 +147,19 @@ export default async function VolunteerBox({
   const typedDate = readTypedDate(typed.birthDate ?? "");
   const typedAge = typedDate === "" ? null : ageOn(typedDate, eventDay);
   const birthSentence =
-    typedAge === null ? "birthDate" : typedAge < VOLUNTEER_ADULT_AGE && !minors ? "birthDateMinors" : typedAge < VOLUNTEER_MINIMUM_AGE ? "birthDateMinimum" : "birthDate";
+    typedAge === null
+      ? "birthDate"
+      : typedAge < VOLUNTEER_MINIMUM_AGE
+        ? "birthDateMinimum"
+        : typedAge < VOLUNTEER_ADULT_AGE && !minors
+          ? "birthDateMinors"
+          : "birthDate";
   /** A refusal's sentence for one box, in the form's own words (`{age}` is the minimum's phrase, §758's tick says eighteen). */
-  const refusal = (name: BoxName) => t(`volunteers.errors.${name === "birthDate" ? birthSentence : name}`, { age: name === "adult" ? adultAge : age });
+  const refusal = (name: BoxName) => {
+    // «Scrie data ca zi, lună, an» is the registration form's own sentence, the box's live one too (`tForm`): one set of words for one rule.
+    if (name === "birthDate" && birthSentence === "birthDate") return tForm("birthDateUnreadable");
+    return t(`volunteers.errors.${name === "birthDate" ? birthSentence : name}`, { age: name === "adult" ? adultAge : age });
+  };
 
   return (
     <Box id={VOLUNTEER_BOX_ID} component="section" aria-label={t("volunteers.title")} data-testid="volunteer-box" sx={{ scrollMarginTop: 16 }}>

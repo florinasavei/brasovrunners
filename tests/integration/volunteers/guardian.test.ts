@@ -368,6 +368,18 @@ describe("§768 volunteers under eighteen and their guardian", () => {
       expect(guardianStandingOf(listed, NOW)).toBe("notNeeded");
     });
 
+    it("refuses a day that does not exist on the date's own box — a refusal, never a value the database rejects, on the page's post and on the organizers' entry alike", async () => {
+      const { event, role } = await seedEvent();
+      for (const birthDate of ["1990-02-30", "2009-02-31", "30.02.1990"]) {
+        await expect(submitVolunteer(db, event.id, form(role.id, { birthDate }), NOW), birthDate).rejects.toMatchObject({ code: "VALIDATION_ERROR", fields: ["birthDate"] });
+        await expect(
+          changeVolunteer(db, admin, { kind: "add", eventId: event.id, fields: { roleIds: [role.id], assignedRoleId: "", name: "Dan", email: "dan@example.test", phone: "+40712345679", note: "", birthDate } }, NOW),
+          birthDate,
+        ).rejects.toMatchObject({ code: "VALIDATION_ERROR", fields: ["birthDate"] });
+      }
+      expect(await db.select().from(eventVolunteers)).toHaveLength(0);
+    });
+
     it("throttles the guardian's address too: three an hour, so a script cannot spend a parent's mailbox", async () => {
       const { event, role } = await seedEvent();
       const results = [];

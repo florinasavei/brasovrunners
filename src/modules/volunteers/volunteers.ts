@@ -29,7 +29,7 @@ import { consumeRateLimit } from "@/modules/rate-limit/service";
 import { looksLikeSpam } from "@/modules/registrations/service";
 import { canManageVolunteers, isBackofficeRole } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
-import { normalizeTypedDate } from "@/shared/forms/pickers/wall-values";
+import { readTypedDate } from "@/shared/forms/pickers/wall-values";
 import { isUuid } from "@/shared/ids";
 import {
   acceptedRoleNames,
@@ -723,7 +723,7 @@ async function minorsClosedRefusal<T extends Record<string, unknown>>(
 ): Promise<DomainError | null> {
   if (!(error instanceof DomainError) || error.code !== "VALIDATION_ERROR") return null;
   if (!error.fields.some((field) => field === "guardianName" || field === "guardianEmail")) return null;
-  const typed = typeof request.fields.birthDate === "string" ? normalizeTypedDate(request.fields.birthDate) : "";
+  const typed = typeof request.fields.birthDate === "string" ? readTypedDate(request.fields.birthDate) : "";
   const age = typed === "" ? null : volunteerAgeOn(typed, eventDay);
   if (age === null || age < VOLUNTEER_MINIMUM_AGE || !isVolunteerMinor(age)) return null;
   if (request.kind === "edit" && isUuid(request.id)) {
