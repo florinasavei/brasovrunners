@@ -10,7 +10,7 @@ import { routing } from "@/i18n/routing";
 import { canDesignVolunteerBadges } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { badgePictureStamp } from "@/modules/volunteers/badges/badge-design";
-import { BADGE_COUNT_MAX, BADGE_REFUSED_PARAM, BADGE_TOTAL_MAX, findEventForBadges, listBadgeRoles } from "@/modules/volunteers/badges/badges";
+import { BADGE_COUNT_MAX, BADGE_REFUSED_PARAM, BADGE_TOTAL_MAX, findEventForBadges, listBadgeRoles, readBadgeSingleStart } from "@/modules/volunteers/badges/badges";
 import BadgeDesignPanel from "@/modules/volunteers/badges/ui/BadgeDesignPanel";
 import BadgePrintPanel from "@/modules/volunteers/badges/ui/BadgePrintPanel";
 import BadgeRoleColours from "@/modules/volunteers/badges/ui/BadgeRoleColours";
@@ -62,12 +62,20 @@ export default async function EventBadgesPage({ params, searchParams }: Props) {
       </Typography>
       {(refused === "number" || refused === "total") && (
         <Alert severity="error" data-testid="badge-print-refused">
-          {refused === "number" ? t("badges.print.refusedNumber", { max: String(BADGE_COUNT_MAX) }) : t("badges.print.refusedTotal", { total: String(BADGE_TOTAL_MAX) })}
+          {refused === "number" ? t("badges.print.refusedNumber", { max: String(event.design.mode === "single" ? BADGE_TOTAL_MAX : BADGE_COUNT_MAX) }) : t("badges.print.refusedTotal", { total: String(BADGE_TOTAL_MAX) })}
         </Alert>
       )}
       <BadgeDesignPanel eventId={id} locale={locale} design={event.design} dropped={event.dropped} sampleRole={sampleRole} version={version} />
       <BadgeRoleColours eventId={id} locale={locale} roles={roles} design={event.design} />
-      <BadgePrintPanel eventId={id} locale={locale} design={event.design} roles={roles} eventTitle={event.title} refused={refused === "number" || refused === "total"} />
+      <BadgePrintPanel
+        eventId={id}
+        locale={locale}
+        design={event.design}
+        roles={roles}
+        eventTitle={event.title}
+        refused={refused === "number" || refused === "total"}
+        singleStart={event.design.mode === "single" ? await readBadgeSingleStart(db, id, roles) : null}
+      />
     </Stack>
   );
 }

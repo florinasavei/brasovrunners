@@ -417,8 +417,15 @@ export const BADGE_SINGLE_FALLBACK = 10;
  * so the form the page draws is always one the sheet accepts.
  */
 export function badgeSingleDefault(input: { confirmed: number; needed: number }): number {
-  const wanted = input.confirmed > 0 ? input.confirmed : input.needed > 0 ? input.needed : BADGE_SINGLE_FALLBACK;
-  return Math.min(wanted, BADGE_TOTAL_MAX);
+  return badgeSingleStart(input).count;
+}
+
+/** Where the starting number came from: the confirmed volunteers, what the roles need, or the fallback — what the print card's help names. */
+export type BadgeSingleStart = { count: number; basis: "confirmed" | "needed" | "fallback" };
+
+export function badgeSingleStart(input: { confirmed: number; needed: number }): BadgeSingleStart {
+  const [wanted, basis] = input.confirmed > 0 ? ([input.confirmed, "confirmed"] as const) : input.needed > 0 ? ([input.needed, "needed"] as const) : ([BADGE_SINGLE_FALLBACK, "fallback"] as const);
+  return { count: Math.min(wanted, BADGE_TOTAL_MAX), basis };
 }
 
 /**
@@ -433,9 +440,14 @@ export async function countConfirmedVolunteers<T extends Record<string, unknown>
   return Number(row?.confirmed ?? 0);
 }
 
-/** `badgeSingleDefault` for an event: its confirmed volunteers counted, its roles' needs added up. */
+/** `badgeSingleStart` for an event: its confirmed volunteers counted, its roles' needs added up. */
+export async function readBadgeSingleStart<T extends Record<string, unknown>>(db: Database<T>, eventId: string, roles: readonly Pick<BadgeRole, "needed">[]): Promise<BadgeSingleStart> {
+  return badgeSingleStart({ confirmed: await countConfirmedVolunteers(db, eventId), needed: roles.reduce((sum, role) => sum + Math.max(0, role.needed), 0) });
+}
+
+/** `readBadgeSingleStart`'s number: what the sheet's route prints when the print form's box is absent. */
 export async function readBadgeSingleDefault<T extends Record<string, unknown>>(db: Database<T>, eventId: string, roles: readonly Pick<BadgeRole, "needed">[]): Promise<number> {
-  return badgeSingleDefault({ confirmed: await countConfirmedVolunteers(db, eventId), needed: roles.reduce((sum, role) => sum + Math.max(0, role.needed), 0) });
+  return (await readBadgeSingleStart(db, eventId, roles)).count;
 }
 
 /**

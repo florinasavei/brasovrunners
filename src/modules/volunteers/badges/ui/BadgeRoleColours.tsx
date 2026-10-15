@@ -15,7 +15,7 @@ import RoleColourFields from "./RoleColourFields";
 import RoleColourSample from "./RoleColourSample";
 
 /**
- * «Culorile rolurilor» (§764): each role's band colour on the badge — «Portocaliul clubului» (the kit's
+ * «Culorile rolurilor» (§764): each role's band colour on the badge — used only while the badge is per role (§NNN: the one badge for everyone has the colour of its own, in «Cum arată ecusonul») —«Portocaliul clubului» (the kit's
  * orange), one of the bib's palette, or a colour typed in «Culoarea scrisă» and refused when its words
  * would not read at AA. A new colour typed there is the one kept even when the select still shows the saved
  * choice (`badges.ts#saveBadgeRoleColours`), so nobody types a colour and saves the old one. The same colour
@@ -47,7 +47,13 @@ export default async function BadgeRoleColours({
     fields[boxes.typed] = t("badges.colours.typedOf", { role: badgeRoleLabel(role, locale) });
   }
   const messages = await refusalMessages(fields);
-  const aside = roles.length === 0 ? t("badges.colours.none") : t("badges.colours.aside", { count: String(roles.filter((role) => role.colour).length), total: String(roles.length) });
+  // With the one badge for everyone chosen (§NNN) these colours print nowhere: the closed line says so, the colours stay kept for the day the badges go per role.
+  const aside =
+    design.mode === "single"
+      ? t("badges.colours.asideSingle")
+      : roles.length === 0
+        ? t("badges.colours.none")
+        : t("badges.colours.aside", { count: String(roles.filter((role) => role.colour).length), total: String(roles.length) });
 
   return (
     <Panel glyph="appearance" collapsible level={2} id="box-badge-colours" title={t("badges.colours.title")} aside={aside} data-testid="badge-colours">
@@ -75,7 +81,7 @@ export default async function BadgeRoleColours({
                     </Stack>
                     {/* The band as it prints: the colour, the word in the ink the badge sets on it, and the colour in words. */}
                     <RoleColourSample colour={role.colour} label={label} locale={locale} />
-                    <RoleColourFields names={roleColourBoxes(role.id)} colour={role.colour} />
+                    <RoleColourFields names={roleColourBoxes(role.id)} colour={role.colour} perRoleHelp={false} />
                   </Stack>
                 </Box>
               ))}

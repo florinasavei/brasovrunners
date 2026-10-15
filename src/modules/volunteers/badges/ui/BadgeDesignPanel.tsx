@@ -27,11 +27,13 @@ import {
   BADGE_FREE_TEXT_MAX,
   BADGE_LABEL_MAX,
   BADGE_MARKER_LABEL_MAX,
+  BADGE_MODES,
   BADGE_PHONE_LABEL_MAX,
   BADGE_TITLE_MAX,
   type BadgeDesign,
   type BadgeDroppedKey,
   badgeColourReadable,
+  badgePhoneRow,
 } from "../badge-design";
 import {
   BADGE_CUSTOM_BOUNDS,
@@ -45,7 +47,9 @@ import {
   badgeSizeRefusal,
 } from "../badge-geometry";
 import { BADGE_DESIGN_FORM_PREFIX, badgePreviewUrl } from "../badge-query";
-import { badgeDefaultWords } from "../badge-words";
+import { badgeDefaultWords, badgeLabelIn } from "../badge-words";
+import RoleColourFields from "./RoleColourFields";
+import RoleColourSample from "./RoleColourSample";
 
 /** A form box's full name. */
 const box = (key: string) => `${BADGE_DESIGN_FORM_PREFIX}${key}`;
@@ -101,6 +105,9 @@ export default async function BadgeDesignPanel({
   const stored = design.headerImageSrc ? facts.get(design.headerImageSrc) : undefined;
   const rich = richTextEditorLabels(await getTranslations("Admin.richText"));
   const messages = await refusalMessages({
+    [box("mode")]: t("badges.design.mode"),
+    [box("singleColourChoice")]: t("badges.design.singleColour"),
+    [box("singleColourTyped")]: t("badges.colours.typedLabel"),
     [box("size")]: t("badges.design.size"),
     [box("customWidthMm")]: t("badges.design.customWidth"),
     [box("customHeightMm")]: t("badges.design.customHeight"),
@@ -119,7 +126,7 @@ export default async function BadgeDesignPanel({
   });
 
   // The header's shape at the saved size, for the crop box (§560's rule; a crop drawn at another size is trimmed, never squashed).
-  const rows = badgeRows(badgePaper(design), design.showPhone, design.showFreeText && (design.freeTextRo !== "" || design.freeTextEn !== ""));
+  const rows = badgeRows(badgePaper(design), badgePhoneRow(design), design.showFreeText && (design.freeTextRo !== "" || design.freeTextEn !== ""));
   const headerRatio = (badgePaper(design).width - 2 * rows.content.left) / rows.header.height;
   const ratioWords = new Intl.NumberFormat(locale, { maximumFractionDigits: 1 });
   const initialSrc = badgePreviewUrl({ eventId, locale, role: sampleRole, design, version });
@@ -186,6 +193,9 @@ export default async function BadgeDesignPanel({
     design.showLogo && !design.headerImageSrc && t("badges.design.showLogo"),
     design.showTitle && !design.headerImageSrc && t("badges.design.showTitle"),
   );
+  const modeAside = t(`badges.design.modeAside.${design.mode}`);
+  // «VOLUNTAR» as the page's language prints it: the sample of the one badge's band shows the club's own word.
+  const bandWord = await badgeLabelIn(design, locale);
   const roleAside = design.labelRo ? `${design.labelRo} / ${design.labelEn}` : t("badges.design.labelDefaultAside");
   const writingAside = design.writingLine ? t("badges.design.writingLine") : t("badges.design.writingPlain");
   // The Romanian line only, cut short: the closed line sits in the section's heading, and a typed text may be 60 characters.
@@ -200,7 +210,14 @@ export default async function BadgeDesignPanel({
       </Typography>
     ) : null;
   // Ticked with no number: each role's badge prints the telephone of its category's contact person (§774).
-  const phoneAside = design.showPhone ? (design.phone ? design.phone : t("badges.design.phoneFromCategory")) : t("badges.design.phoneOff");
+  // On the one badge for everyone (§NNN) there is no category: a ticked telephone without a number prints no row, and the line says so.
+  const phoneAside = design.showPhone
+    ? design.phone
+      ? design.phone
+      : design.mode === "single"
+        ? t("badges.design.phoneNeeded")
+        : t("badges.design.phoneFromCategory")
+    : t("badges.design.phoneOff");
   const cutAside = design.cutMarks ? t("badges.design.cutMarks") : t("badges.design.cutLinesOnly");
 
   return (
@@ -236,6 +253,39 @@ export default async function BadgeDesignPanel({
               labels={{ alt: t("badges.design.previewAlt"), caption: t(sampleRole === "none" ? "badges.design.previewCaptionNone" : "badges.design.previewCaption"), pending: t("editor.bibDesign.previewPending") }}
             />
           </Box>
+
+          {/* «Câte feluri de ecusoane» (§NNN): one badge for everyone — the default — or one per role; the one badge's band colour with it. */}
+          <Panel glyph="badgeMode" collapsible level={5} title={t("badges.design.sections.mode")} aside={modeAside} data-testid="badge-section-mode">
+            <Stack spacing={1.5}>
+              <Typography variant="caption" color="text.secondary">
+                {t("badges.design.modeHelp")}
+              </Typography>
+              {droppedNote("mode", "singleColour")}
+              <Box component="fieldset" sx={{ border: 0, p: 0, m: 0, minWidth: 0 }} data-testid="badge-mode">
+                <Legend>{t("badges.design.mode")}</Legend>
+                {BADGE_MODES.map((mode) => (
+                  <RadioField key={mode} name={box("mode")} value={mode} defaultChecked={design.mode === mode}>
+                    {t(`badges.design.modes.${mode}`)}
+                  </RadioField>
+                ))}
+              </Box>
+              {/* The one badge's band: «VOLUNTAR» on the club's orange, a palette colour or a typed one — as a role's band is chosen (`RoleColourFields`). */}
+              <OnlyWhenChosen name={box("mode")} value="single" initial={design.mode}>
+                <Stack spacing={1} data-testid="badge-single-colour">
+                  <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                    {t("badges.design.singleColour")}
+                  </Typography>
+                  <RoleColourSample colour={design.singleColour} label={bandWord} locale={locale} testId="badge-single-colour-state" />
+                  <RoleColourFields names={{ choice: box("singleColourChoice"), typed: box("singleColourTyped") }} colour={design.singleColour} forSingle />
+                </Stack>
+              </OnlyWhenChosen>
+              <OnlyWhenChosen name={box("mode")} value="perRole" initial={design.mode}>
+                <Typography variant="caption" color="text.secondary" data-testid="badge-per-role-help">
+                  {t("badges.design.perRoleHelp")}
+                </Typography>
+              </OnlyWhenChosen>
+            </Stack>
+          </Panel>
 
           {/* «Dimensiunea»: the two strips, or the club's own size within bounds; how many fit on an A4 sheet. */}
           <Panel glyph="badgeSize" collapsible level={5} title={t("badges.design.sections.size")} aside={sizeAside} data-testid="badge-section-size">
@@ -357,7 +407,7 @@ export default async function BadgeDesignPanel({
             </Stack>
           </Panel>
 
-          {/* «Rolul»: the role's band — its colour in «Culorile rolurilor» — and the word above the role's name. */}
+          {/* «Cuvântul de pe bandă»: «VOLUNTAR» — alone on the one badge's band, small above the role's name on a badge per role (§NNN). */}
           <Panel glyph="badgeRole" collapsible level={5} title={t("badges.design.sections.role")} aside={roleAside} data-testid="badge-section-role">
             <Stack spacing={1.5}>
               <Typography variant="caption" color="text.secondary">

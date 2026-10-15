@@ -9557,7 +9557,7 @@
     "badges": {
       "backToEvent": "← Înapoi la eveniment",
       "title": "Ecusoane pentru voluntari — {event}",
-      "intro": "Ecusoanele sunt benzi mici și lungi, fără nume tipărit: numele se scrie cu markerul. Se tipăresc pe roluri, fiecare rol pe banda lui colorată.",
+      "intro": "Ecusoanele sunt benzi mici și lungi, fără nume tipărit: numele se scrie cu markerul. Implicit e un singur ecuson pentru toți voluntarii; dacă vrei, fiecare rol poate avea ecusonul lui, pe banda lui colorată.",
       "defaults": {
         "label": "VOLUNTAR",
         "name": "Nume:",
@@ -9567,18 +9567,31 @@
         "title": "Cum arată ecusonul",
         "intro": "Fiecare parte are secțiunea ei, de sus în jos, cum se tipărește. Imaginea de mai jos se schimbă pe măsură ce alegi. Ecusonul se păstrează pe această dată: fiecare dată a unei serii are ecusonul ei.",
         "previewAlt": "Ecusonul, așa cum se tipărește",
-        "previewCaption": "Un ecuson de probă, cu primul rol al evenimentului.",
+        "previewCaption": "Un ecuson de probă. Dacă ecusonul e pe roluri, e al primului rol al evenimentului.",
         "previewCaptionNone": "Un ecuson de probă, fără rol.",
         "sections": {
+          "mode": "Un ecuson sau pe roluri",
           "size": "Dimensiunea",
           "header": "Antet",
-          "role": "Rolul",
+          "role": "Cuvântul de pe bandă",
           "freeText": "Text liber",
           "writing": "Locul pentru nume",
           "marker": "Spațiu pentru marker",
           "phone": "Telefon coordonator",
           "cut": "Tăiere"
         },
+        "mode": "Felul ecusonului",
+        "modeHelp": "Cu un singur ecuson, toți voluntarii îl poartă pe același, cu „VOLUNTAR” pe bandă și niciun rol. Pe roluri, fiecare rol are ecusonul lui, cu numele rolului pe banda lui colorată. Rolul se poate scrie și de mână, în spațiul pentru marker.",
+        "modes": {
+          "single": "Un singur ecuson pentru toți, fără rol",
+          "perRole": "Câte un ecuson pe rol"
+        },
+        "modeAside": {
+          "single": "Un singur ecuson",
+          "perRole": "Pe roluri"
+        },
+        "singleColour": "Culoarea benzii ecusonului",
+        "perRoleHelp": "Fiecare rol are banda lui pe ecuson. Culoarea fiecărui rol se alege mai jos, în „Culorile rolurilor”, sau în formularul rolului din cardul „Voluntari”.",
         "size": "Dimensiunea ecusonului",
         "sizes": {
           "preset": "{width} × {height} mm — {perSheet} pe o foaie A4",
@@ -9604,9 +9617,9 @@
         "headerPictureCropHelp": "Trage dreptunghiul peste partea care vrei să apară pe banda de sus, pe toată lățimea ecusonului.",
         "headerPictureShape": "Forma benzii: {ratio} la 1, la dimensiunea salvată.",
         "headerHidesTitle": "Imaginea acoperă titlul evenimentului: pe ecuson se vede doar imaginea.",
-        "roleHelp": "Rolul se tipărește mare, pe banda lui colorată. Culorile se aleg mai jos, în „Culorile rolurilor”.",
-        "labelRo": "Cuvântul de deasupra rolului (română)",
-        "labelEn": "Cuvântul de deasupra rolului (engleză)",
+        "roleHelp": "„VOLUNTAR” se tipărește singur și mare pe banda ecusonului unic, și mic, deasupra numelui rolului, pe ecusoanele pe roluri.",
+        "labelRo": "Cuvântul „VOLUNTAR” (română)",
+        "labelEn": "Cuvântul „VOLUNTAR” (engleză)",
         "labelHelp": "Gol în ambele limbi: VOLUNTAR și VOLUNTEER. Cel mult {max} caractere.",
         "labelDefaultAside": "VOLUNTAR",
         "freeTextHelp": "O linie mică cu cuvintele clubului, sub banda rolului: o regulă, o zonă, un mesaj. E aceeași pe toate ecusoanele și nu spune nimic despre vreun voluntar.",
@@ -9628,7 +9641,7 @@
         "showPhone": "Telefonul coordonatorului",
         "showPhoneHelp": "Un rând mic jos, cu numărul la care sună voluntarii. Numărul clubului, niciodată al unui voluntar.",
         "phone": "Numărul de telefon",
-        "phoneHelp": "Scris ca un număr de telefon, de exemplu 07xx xxx xxx. Lasă gol ca ecusonul fiecărui rol să poarte telefonul persoanei de contact a categoriei lui.",
+        "phoneHelp": "Scris ca un număr de telefon, de exemplu 07xx xxx xxx. La ecusoanele pe roluri, lasă gol ca ecusonul fiecărui rol să poarte telefonul persoanei de contact a categoriei lui. La ecusonul unic, numărul trebuie scris.",
         "phoneLabelRo": "Eticheta (română)",
         "phoneLabelEn": "Eticheta (engleză)",
         "phoneLabelHelp": "Gol în ambele limbi: Coordonator și Coordinator. Cel mult {max} caractere.",
@@ -9644,13 +9657,15 @@
         "cutLinesOnly": "Doar liniile punctate",
         "save": "Salvează ecusonul",
         "saving": "Se salvează…",
-        "phoneFromCategory": "Din categoria rolului"
+        "phoneFromCategory": "Din categoria rolului",
+        "phoneNeeded": "Scrie numărul"
       },
       "colours": {
         "title": "Culorile rolurilor",
-        "intro": "Fiecare rol are banda lui pe ecuson. Textul de pe bandă se tipărește alb sau negru, cum se citește mai bine.",
+        "intro": "Fiecare rol are banda lui pe ecuson, când ecusonul e pe roluri. Textul de pe bandă se tipărește alb sau negru, cum se citește mai bine.",
         "none": "Niciun rol încă",
         "aside": "{count} din {total} cu culoare proprie",
+        "asideSingle": "Doar pe roluri",
         "empty": "Evenimentul nu are încă roluri. Adaugă-le în cardul „Voluntari” al evenimentului.",
         "choiceOf": "Culoarea rolului {role}",
         "typedOf": "Culoarea scrisă pentru rolul {role}",
@@ -9660,6 +9675,7 @@
         "themeOption": "Implicit: portocaliul clubului",
         "typedLabel": "Culoarea scrisă",
         "typedHelp": "Pentru banda ecusonului: diez și șase cifre, ca #1b8a3a. Se păstrează doar dacă textul alb sau negru se citește pe ea, la contrast de cel puțin 4,5 la 1. Culoarea nouă scrisă aici se păstrează.",
+        "perRoleOnly": "Culoarea se folosește doar când ecusonul e pe roluri. Ecusonul unic are culoarea lui, în „Cum arată ecusonul”.",
         "state": "Banda pe ecuson: {colour}, contrast {ratio} la 1",
         "save": "Salvează culorile",
         "saving": "Se salvează…",
@@ -9669,6 +9685,7 @@
         "title": "Tipărire",
         "aside": "{perSheet} pe o foaie A4 · {width} × {height} mm",
         "intro": "Ecusoanele se tipăresc pe roluri, nu pe persoane. Pe o foaie A4 încap {perSheet} ecusoane. Rolurile cer în total: {needed}. Cel mult {max} pe un rol și {total} într-un fișier.",
+        "introSingle": "Un singur ecuson pentru toți voluntarii. Pe o foaie A4 încap {perSheet} ecusoane. Cel mult {total} într-un fișier.",
         "introMore": "Foaia nu are niciun nume și nicio dată a vreunui voluntar. Numele se scrie de mână, la masa de primire.",
         "language": "Limba ecusoanelor",
         "languages": {
@@ -9678,11 +9695,18 @@
         "count": "Câte ecusoane",
         "spares": "În plus",
         "countHelp": "Rolul are nevoie de {needed}. „În plus” sunt rezerve.",
+        "singleTitle": "Ecusonul pentru toți",
+        "singleHelp": {
+          "confirmed": "Începe de la voluntarii confirmați ai evenimentului: {count}. „În plus” sunt rezerve.",
+          "needed": "Încă nu e niciun voluntar confirmat, așa că începe de la câți cer rolurile împreună: {count}. „În plus” sunt rezerve.",
+          "fallback": "Încă nu e niciun voluntar confirmat și niciun rol nu cere pe nimeni, așa că începe de la {count}. „În plus” sunt rezerve."
+        },
         "noRole": "Ecusoane fără rol",
         "noRoleCount": "Câte ecusoane fără rol",
         "noRoleHelp": "Doar „{label}”, pentru cine vine fără rol.",
         "pictureAlt": "Ecusonul rolului {role}",
         "pictureAltNone": "Ecusonul fără rol",
+        "pictureAltSingle": "Ecusonul pentru toți voluntarii",
         "nothing": "Nimic de tipărit: alege cel puțin un ecuson.",
         "refusedNumber": "Fișierul nu s-a făcut: fiecare număr trebuie să fie întreg, de la 0 la {max}.",
         "refusedTotal": "Fișierul nu s-a făcut: sunt prea multe ecusoane. Cel mult {total} într-un fișier, iar acum sunt mai multe. Scade numerele.",
