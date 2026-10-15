@@ -1,4 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import net from "node:net";
+import nodemailer from "nodemailer";
 import type { OutgoingEmail } from "@/infrastructure/email/adapter";
 import { gmailFailureIsBeforeAcceptance, replyToOf } from "@/infrastructure/email/gmail-adapter";
 import { createMailgunAdapter, requestNeverReachedMailgun } from "@/infrastructure/email/mailgun-adapter";
@@ -11,27 +13,149 @@ import { createMailgunAdapter, requestNeverReachedMailgun } from "@/infrastructu
  */
 describe("§NNN the Gmail road: before or after acceptance", () => {
   it("a refused connection, login, DNS answer or TLS is before acceptance — nothing was taken", () => {
-    for (const code of ["ECONNECTION", "EDNS", "ETLS", "EAUTH", "ENOAUTH", "EENVELOPE", "EMESSAGE"]) {
+    for (const code of ["EDNS", "ETLS", "EAUTH", "ENOAUTH", "EENVELOPE", "EMESSAGE", "ECONNREFUSED", "ENOTFOUND"]) {
       expect(gmailFailureIsBeforeAcceptance({ code }), code).toBe(true);
     }
   });
 
-  it("a timeout or a dropped socket is before acceptance while the SMTP command in progress is not the end of the message", () => {
-    // The 2026-09-28 `ETIMEDOUT` on QA: the connection or the greeting never answered.
-    expect(gmailFailureIsBeforeAcceptance({ code: "ETIMEDOUT", command: "CONN" })).toBe(true);
-    expect(gmailFailureIsBeforeAcceptance({ code: "ETIMEDOUT", command: "EHLO" })).toBe(true);
-    expect(gmailFailureIsBeforeAcceptance({ code: "ESOCKET", command: "AUTH PLAIN" })).toBe(true);
-    expect(gmailFailureIsBeforeAcceptance({ code: "ECONNRESET", command: "RCPT TO" })).toBe(true);
+  it("the shapes Nodemailer really gives, by message: the connect and greeting timeouts are before, «Timeout» and a close are not", () => {
+    // Nodemailer 10 names the command `CONN` for every connection-level error, whatever the phase.
+    expect(gmailFailureIsBeforeAcceptance({ code: "ETIMEDOUT", command: "CONN", message: "Connection timeout" })).toBe(true);
+    expect(gmailFailureIsBeforeAcceptance({ code: "ETIMEDOUT", command: "CONN", message: "Greeting never received" })).toBe(true);
+    expect(gmailFailureIsBeforeAcceptance({ code: "ESOCKET", command: "CONN", syscall: "connect", message: "connect ECONNREFUSED 127.0.0.1:465" })).toBe(true);
+    expect(gmailFailureIsBeforeAcceptance({ code: "ETIMEDOUT", command: "CONN", message: "Timeout" })).toBe(false);
+    expect(gmailFailureIsBeforeAcceptance({ code: "ESOCKET", command: "CONN", syscall: "read", message: "read ECONNRESET" })).toBe(false);
+    expect(gmailFailureIsBeforeAcceptance({ code: "ECONNECTION", command: "CONN", message: "Connection closed unexpectedly" })).toBe(false);
+    // The server closed it with an answer of its own: it said no.
+    expect(gmailFailureIsBeforeAcceptance({ code: "ECONNECTION", command: "CONN", responseCode: 421, message: "Connection closed unexpectedly: 421 try later" })).toBe(true);
   });
 
-  it("and ambiguous once the message was on its way: during DATA, with no command named, or an error nobody knows", () => {
+  it("a failure that names a command ahead of DATA is before acceptance; DATA, or no command and no message, is not", () => {
+    expect(gmailFailureIsBeforeAcceptance({ code: "EPROTOCOL", command: "EHLO" })).toBe(true);
+    expect(gmailFailureIsBeforeAcceptance({ code: "ECONNECTION", command: "EHLO", message: "Server terminates connection" })).toBe(true);
+    expect(gmailFailureIsBeforeAcceptance({ code: "ETIMEDOUT", command: "RCPT TO" })).toBe(true);
     expect(gmailFailureIsBeforeAcceptance({ code: "ETIMEDOUT", command: "DATA" })).toBe(false);
-    expect(gmailFailureIsBeforeAcceptance({ code: "ETIMEDOUT", command: "data" })).toBe(false);
     expect(gmailFailureIsBeforeAcceptance({ code: "ETIMEDOUT" })).toBe(false);
     expect(gmailFailureIsBeforeAcceptance({ code: "ESOCKET" })).toBe(false);
     expect(gmailFailureIsBeforeAcceptance(new Error("boom"))).toBe(false);
     expect(gmailFailureIsBeforeAcceptance(null)).toBe(false);
   });
+});
+
+/**
+ * The classifier against Nodemailer itself, over a fake SMTP server on the loopback: the shapes are not made up.
+ * A server that takes the whole body and never answers `250`, and one that drops the socket after the body, are
+ * the two ambiguous cases; a closed port and a server that never greets are not.
+ */
+describe("§NNN the Gmail road against a real Nodemailer error", () => {
+  type Behaviour = "never-answer" | "drop" | "silent";
+
+  async function fakeSmtp(behaviour: Behaviour) {
+    const sockets = new Set<net.Socket>();
+    const server = net.createServer((socket) => {
+      sockets.add(socket);
+      socket.on("close", () => sockets.delete(socket));
+      socket.on("error", () => {});
+      if (behaviour === "silent") return;
+      socket.write("220 fake ESMTP\r\n");
+      let inData = false;
+      let buffer = "";
+      socket.on("data", (chunk) => {
+        buffer += chunk.toString("latin1");
+        if (inData) {
+          if (!buffer.includes("\r\n.\r\n")) return;
+          if (behaviour === "drop") socket.destroy();
+          return; // never-answer: the body is in, Google's 250 never comes
+        }
+        let index = buffer.indexOf("\r\n");
+        while (index >= 0 && !inData) {
+          const line = buffer.slice(0, index);
+          buffer = buffer.slice(index + 2);
+          if (/^EHLO/i.test(line)) socket.write("250-fake\r\n250 8BITMIME\r\n");
+          else if (/^(MAIL|RCPT)/i.test(line)) socket.write("250 ok\r\n");
+          else if (/^DATA/i.test(line)) {
+            socket.write("354 go\r\n");
+            inData = true;
+          }
+          index = buffer.indexOf("\r\n");
+        }
+      });
+    });
+    await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+    const port = (server.address() as net.AddressInfo).port;
+    return {
+      port,
+      close: async () => {
+        for (const socket of sockets) socket.destroy();
+        await new Promise<void>((resolve) => server.close(() => resolve()));
+      },
+    };
+  }
+
+  async function failureOf(port: number, options: Record<string, unknown>, pooled: boolean) {
+    const transport = nodemailer.createTransport({
+      host: "127.0.0.1",
+      port,
+      secure: false,
+      ignoreTLS: true,
+      ...(pooled ? { pool: true, maxConnections: 1, maxRequeues: 0 } : {}),
+      ...options,
+    });
+    try {
+      await transport.sendMail({ from: "club@example.org", to: "ana@example.org", subject: "x", text: "body" });
+      return null;
+    } catch (error) {
+      return error;
+    } finally {
+      transport.close();
+    }
+  }
+
+  for (const pooled of [false, true]) {
+    const label = pooled ? "pooled" : "single";
+
+    it(`${label}: a timeout after the body was sent is ambiguous`, async () => {
+      const server = await fakeSmtp("never-answer");
+      try {
+        const error = await failureOf(server.port, { socketTimeout: 400 }, pooled);
+        expect(error).toMatchObject({ code: "ETIMEDOUT" });
+        expect(gmailFailureIsBeforeAcceptance(error)).toBe(false);
+      } finally {
+        await server.close();
+      }
+    });
+
+    it(`${label}: a socket dropped after the body was sent is ambiguous`, async () => {
+      const server = await fakeSmtp("drop");
+      try {
+        const error = await failureOf(server.port, { socketTimeout: 2_000 }, pooled);
+        expect(error).toMatchObject({ code: expect.stringMatching(/^(ECONNECTION|ESOCKET)$/) });
+        expect(gmailFailureIsBeforeAcceptance(error)).toBe(false);
+      } finally {
+        await server.close();
+      }
+    });
+
+    it(`${label}: a server that never greets is before acceptance`, async () => {
+      const server = await fakeSmtp("silent");
+      try {
+        const error = await failureOf(server.port, { greetingTimeout: 300, connectionTimeout: 2_000 }, pooled);
+        expect(error).toMatchObject({ code: "ETIMEDOUT" });
+        expect(gmailFailureIsBeforeAcceptance(error)).toBe(true);
+      } finally {
+        await server.close();
+      }
+    });
+
+    it(`${label}: a refused connection is before acceptance`, async () => {
+      const server = await fakeSmtp("silent");
+      const port = server.port;
+      await server.close();
+      const error = await failureOf(port, { connectionTimeout: 2_000 }, pooled);
+      expect(error).toBeTruthy();
+      expect(gmailFailureIsBeforeAcceptance(error)).toBe(true);
+    });
+  }
 });
 
 describe("§NNN the Gmail road's Reply-To", () => {
