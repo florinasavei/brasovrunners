@@ -7,7 +7,7 @@ import { canDesignVolunteerBadges } from "@/modules/staff-identity/domain/roles"
 import { requireStaff } from "@/modules/staff-identity/session";
 import { type BadgeLocale, badgeWords } from "@/modules/volunteers/badges/badge-design";
 import { badgeDefaultWords } from "@/modules/volunteers/badges/badge-words";
-import { BADGE_FROM_BOX, BADGE_REFUSED_PARAM, badgePrintEntries, findEventForBadges, listBadgeRoles, readPrintCounts } from "@/modules/volunteers/badges/badges";
+import { BADGE_FROM_BOX, BADGE_REFUSED_PARAM, badgePrintEntries, findEventForBadges, listBadgeRoles, readBadgeSingleDefault, readPrintCounts } from "@/modules/volunteers/badges/badges";
 import { renderBadgeSheet } from "@/modules/volunteers/badges/badges-pdf";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { isUuid } from "@/shared/ids";
@@ -19,8 +19,13 @@ import { isUuid } from "@/shared/ids";
  * «Ecusoane fără rol» (`none`), the badges with «VOLUNTAR» alone. `locale` is the badge's language, the
  * bib's way: the words, the title and the roles' names in it.
  *
+ * **When the design is the one badge for everyone** (`mode: single`, the default, §NNN) the sheet is one pile
+ * of «VOLUNTAR» badges on the design's colour, no role: `all=40&allx=5` — «Câte ecusoane» (by default the
+ * event's confirmed volunteers, else what its roles need together, else ten) and «În plus» (none by default).
+ * The role boxes above are not read then. The only thing read of the people is how many are confirmed.
+ *
  * A GET that writes nothing, openable in a tab and again (`AGENTS.md` §12.8). Whoever designs the badges
- * (`canDesignVolunteerBadges`), asserted here whatever the page drew. **No volunteer is read**: the sheet
+ * (`canDesignVolunteerBadges`), asserted here whatever the page drew. **No volunteer's data is read** (at most how many are confirmed, §NNN): the sheet
  * holds the club's words and the roles' names, and the names are written by hand at the desk — so the
  * file carries no personal data and needs no trail of its own.
  */
@@ -45,7 +50,8 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
   const event = await findEventForBadges(db, id, badgeLocale);
   if (!event) return NextResponse.json({ error: "NOT_FOUND" }, { status: 404 });
   const roles = await listBadgeRoles(db, id);
-  const counts = readPrintCounts(url.searchParams, roles);
+  // One badge for everyone (§NNN): one pile, «Câte ecusoane» starting at the confirmed volunteers; per role (§764): a pile per role.
+  const counts = readPrintCounts(url.searchParams, roles, event.design.mode === "single" ? { defaultCount: await readBadgeSingleDefault(db, id, roles) } : undefined);
   if ("refused" in counts) {
     // The form (§764) says which page it came from: a refusal is told there, with the limits, not as bare JSON
     // that would replace the page. A caller that sends no `from` is a script, and gets the 400.
