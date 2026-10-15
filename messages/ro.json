@@ -4323,6 +4323,37 @@
             "Un jurist ar trebui să citească ambele texte după Legea nr. 78/2014, cu regulile ei pentru minori, și să confirme vârsta de 14 ani și forma acordului.",
             "Deschide ciorna, citește, completează ce a rămas, „Salvează ciorna”, apoi „Aprobă și publică” — în aceeași ședință, în ambele limbi."
           ]
+        },
+        "emailRoadDown": {
+          "title": "O cale de trimitere nu merge",
+          "todo": "Gmail-ul clubului sau Mailgun refuză mesajele de peste o oră; mesajele pleacă prin cealaltă cale.",
+          "broken": "Gmail-ul clubului sau Mailgun refuză toate mesajele de peste o oră. Ce poate pleca prin cealaltă cale pleacă; ce nu poate, așteaptă.",
+          "done": "Ambele căi duc mesajele. Dacă una pică, mesajele pleacă prin cealaltă.",
+          "how": [
+            "«Setări» → «Emailuri» → «Mesaje de pe site»: vezi ce a răspuns calea, ultimul mesaj dus și de când nu mai duce.",
+            "Gmail: parola de aplicație a fost revocată sau contul cere o verificare. Creează una nouă (pașii sunt în SETUP.md §38), pune-o în CONTACT_SMTP_PASSWORD pe Vercel și redeploy.",
+            "Mailgun: cheia, domeniul sau planul. Verifică MAILGUN_API_KEY, MAILGUN_DOMAIN și MAILGUN_API_BASE_URL pe Vercel și pagina de stare a Mailgun.",
+            "Rândul se face verde când calea duce din nou un mesaj."
+          ]
+        },
+        "relayLost": {
+          "title": "Mesaje de pe site pe care nu le-a dus nimeni",
+          "broken": {
+            "one": "{count} mesaj de pe site nu a putut fi trimis în ultimele 7 zile, iar textul lui este șters.",
+            "few": "{count} mesaje de pe site nu au putut fi trimise în ultimele 7 zile, iar textele lor sunt șterse.",
+            "other": "{count} de mesaje de pe site nu au putut fi trimise în ultimele 7 zile, iar textele lor sunt șterse."
+          },
+          "todo": {
+            "one": "{count} mesaj de pe site nu a putut fi trimis în ultimele 7 zile, iar textul lui este șters.",
+            "few": "{count} mesaje de pe site nu au putut fi trimise în ultimele 7 zile, iar textele lor sunt șterse.",
+            "other": "{count} de mesaje de pe site nu au putut fi trimise în ultimele 7 zile, iar textele lor sunt șterse."
+          },
+          "done": "Niciun mesaj de pe site pierdut în ultimele 7 zile.",
+          "how": [
+            "«Setări» → «Emailuri» → «Mesaje de pe site»: rândurile „Pierdut” sau „Adresă refuzată”, cu ce a răspuns fiecare cale.",
+            "Textul nu se mai poate recupera, iar site-ul nu știe cine l-a scris. Repară calea (rândul de mai sus) sau adresa formularului, ca să nu se mai întâmple.",
+            "Rândul se face verde după 7 zile fără niciun mesaj pierdut."
+          ]
         }
       },
       "freeVerdict": {
@@ -6728,7 +6759,46 @@
         "VOLUNTEER_GUARDIAN_REQUEST": "Voluntarul și evenimentul se adaugă singure. Linkul e doar pentru părinte sau tutore, se folosește o singură dată, iar unul nou îl înlocuiește pe cel vechi."
       },
       "confirmationRetry": "Cui nu a confirmat, linkul pleacă singur din nou la {retry} după ultimul email, cel mult {times}; se socotește și «Retrimite». Termenul nu se mută.",
-      "confirmationRetryOff": "Nu se retrimite singur: în „Termene”, numărul de retrimiteri e 0."
+      "confirmationRetryOff": "Nu se retrimite singur: în „Termene”, numărul de retrimiteri e 0.",
+      "relay": {
+        "title": "Mesaje de pe site",
+        "intro": "Mesajele din „Scrie-ne” și „Spune-ne ceva” trec prin aceeași coadă ca emailurile. Textul stă aici doar până pleacă; apoi se șterge și rămâne urma: calea, ora, încercările.",
+        "aside": "Ultimele 7 zile: {count}",
+        "empty": "Niciun mesaj în ultimele 7 zile.",
+        "road": {
+          "gmail": "Gmail-ul clubului",
+          "mailgun": "Mailgun"
+        },
+        "lastOk": "Ultimul mesaj dus: {when}",
+        "neverOk": "Niciun mesaj dus încă",
+        "lastFailure": "Ultima refuzare: {when} ({error})",
+        "failingSince": "Nu duce mesaje din {when}",
+        "type": {
+          "CONTACT_MESSAGE": "Scrie-ne",
+          "FEEDBACK_MESSAGE": "Spune-ne ceva",
+          "RELAY_NOTICE": "Anunț pentru administratori"
+        },
+        "status": {
+          "PENDING": "În coadă",
+          "PROCESSING": "Se trimite",
+          "SENT": "Trimis",
+          "FAILED": "Pierdut",
+          "BOUNCED": "Adresă refuzată",
+          "COMPLAINED": "Reclamat"
+        },
+        "otherWay": "Trimis prin cealaltă cale",
+        "body": {
+          "kept": "Textul: păstrat până pleacă",
+          "deleted": "Textul: șters"
+        },
+        "chosen": "Calea aleasă: {road}",
+        "leftBy": "a plecat prin {road}",
+        "leftByOther": "a plecat prin {road}, pentru că calea aleasă nu l-a luat",
+        "facts": "În coadă din {queued} · încercări: {attempts}",
+        "sentAt": "dus la {when}",
+        "failure": "{road} a refuzat de {count} ori: {error}",
+        "pinned": "rămâne pe această cale: nu știm dacă a fost deja luat"
+      }
     },
     "design": {
       "title": "Sistemul de design",
@@ -10676,6 +10746,16 @@
         "dns": "numele negăsit",
         "pings": "nicio verificare programată"
       }
+    },
+    "roads": {
+      "gmail": "Gmail-ul clubului",
+      "mailgun": "Mailgun",
+      "ok": "merge",
+      "failing": "refuză",
+      "lastOk": "ultimul mesaj dus {when}",
+      "neverOk": "niciun mesaj dus încă",
+      "lastFailure": "ultima refuzare {when} ({error})",
+      "since": "din {when}"
     }
   },
   "Error": {

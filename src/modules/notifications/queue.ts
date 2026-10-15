@@ -1,7 +1,8 @@
-import { and, asc, count, eq, gt, inArray, isNull, lte, not, or, sql } from "drizzle-orm";
+import { and, asc, count, eq, gt, inArray, isNull, lte, not, notInArray, or, sql } from "drizzle-orm";
 import { emailOutbox, type EmailMessageType, type EmailOutboxStatus } from "@/db/schema/email-outbox";
 import type { Database } from "@/db/types";
 import { BULK_MESSAGE_TYPES } from "./domain/bulk";
+import { RELAY_MESSAGE_TYPES } from "./domain/relay";
 import { SENT_NOW_FLAG } from "./domain/send-at-once";
 import { gmailRoadCondition } from "./outbox";
 import { readOutboxRoads } from "./outbox-roads";
@@ -98,6 +99,9 @@ export async function readOutboxQueue<T extends Record<string, unknown>>(
   */
   // The roads as the claim splits them: one row by key, and the panel's «late» reads them (§605).
   const roads = await readOutboxRoads(db, now);
+  // A visitor's message has its own panel (§NNN, `relay-view.ts`): it leaves in seconds, on a road of its own, and the
+  // estimates of «când pleacă» below are about the notifications.
+  const notRelay = notInArray(emailOutbox.messageType, [...RELAY_MESSAGE_TYPES]);
   const familyFlag = sql`coalesce((${emailOutbox.payloadJson} ->> 'sittingHeld') = 'true' or (${emailOutbox.payloadJson} ->> 'familyHeld') = 'true', false)`;
   const rows = await db
     .select({
@@ -115,7 +119,7 @@ export async function readOutboxQueue<T extends Record<string, unknown>>(
       onMailgunRoad: roads ? sql<boolean>`not coalesce((${gmailRoadCondition(roads)}), false)` : sql<boolean>`true`,
     })
     .from(emailOutbox)
-    .where(inArray(emailOutbox.status, UNSENT))
+    .where(and(inArray(emailOutbox.status, UNSENT), notRelay))
     // The queue's own order: what has waited longest is what is worth explaining first.
     .orderBy(asc(emailOutbox.createdAt))
     .limit(limit);
@@ -134,7 +138,7 @@ export async function readOutboxQueue<T extends Record<string, unknown>>(
       until: sql<Date | string | null>`min(case when ${later} then ${emailOutbox.nextAttemptAt} end)`,
     })
     .from(emailOutbox)
-    .where(inArray(emailOutbox.status, UNSENT));
+    .where(and(inArray(emailOutbox.status, UNSENT), notRelay));
 
   const family = counts?.family ?? 0;
   const retry = counts?.retry ?? 0;

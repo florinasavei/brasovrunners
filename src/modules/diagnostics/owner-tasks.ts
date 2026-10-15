@@ -80,6 +80,8 @@ export type TaskId =
   | "groupRunMinorText"
   | "liveEmail"
   | "emailFailSafe"
+  | "emailRoadDown"
+  | "relayLost"
   | "scheduler"
   | "retentionSweep"
   | "inviteStaff"
@@ -130,6 +132,8 @@ export const TASK_KIND: Record<TaskId, TaskKind> = {
   groupRunMinorText: "text",
   liveEmail: "account",
   emailFailSafe: "check",
+  emailRoadDown: "check",
+  relayLost: "check",
   scheduler: "check",
   retentionSweep: "check",
   inviteStaff: "account",
@@ -366,6 +370,11 @@ export type OwnerTaskInputs = {
    * refusal keeps retrying hourly past six attempts (`/api/health`'s own count).
    */
   emailFailSafe: { stoppedLong: number; failed: number; retryingLate: number };
+  /**
+   * The two roads emails leave by (§NNN): the ones that have been failing for over an hour — each with its last short code —
+   * and the visitors' messages given up on in the last seven days (`relay.ts`).
+   */
+  emailRoads: { failing: ReadonlyArray<{ road: "gmail" | "mailgun"; error: string | null }>; lostMessages: number };
   /**
    * Each scheduled job's own liveness, not one boolean for all of them.
    *
@@ -798,6 +807,24 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
     owner: "club",
     state: stoppedOrFailed ? "broken" : "done",
     ...(stoppedOrFailed ? { text: "broken" } : {}),
+  });
+
+  /*
+    A road that has been failing for over an hour (§NNN): Gmail or Mailgun refusing every message — a revoked app password,
+    a closed key, a spent plan — while the other road carries what it can. Red, the club's; the detail names the road and
+    its last short code. Green otherwise, and always on the list.
+  */
+  const failingRoads = input.emailRoads.failing;
+  push("emailRoadDown", {
+    owner: "club",
+    state: failingRoads.length > 0 ? "broken" : "done",
+    ...(failingRoads.length > 0 ? { text: "broken", detail: failingRoads.map((entry) => `${entry.road === "gmail" ? "Gmail" : "Mailgun"}${entry.error ? ` (${entry.error})` : ""}`).join(", ") } : {}),
+  });
+  // A visitor's message no road carried in a day, in the last seven days: its words are deleted, the Administrators were emailed.
+  push("relayLost", {
+    owner: "club",
+    state: input.emailRoads.lostMessages > 0 ? "broken" : "done",
+    ...(input.emailRoads.lostMessages > 0 ? { text: "broken", count: input.emailRoads.lostMessages } : {}),
   });
 
   const emailDone =
