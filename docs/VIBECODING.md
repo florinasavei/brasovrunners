@@ -1,8 +1,8 @@
 # Vibecoding this repo — the one page to read before asking an AI to change anything
 
-<!-- PROJECT_BASELINE: BR-V3.37-2026-10-15 -->
+<!-- PROJECT_BASELINE: BR-V3.38-2026-10-15 -->
 
-**Baseline `BR-V3.37-2026-10-15`**
+**Baseline `BR-V3.38-2026-10-15`**
 
 The owner's word for how this platform is built: an AI agent writes, the owner reads and
 merges. This page is the short version of everything an agent trips over. `CLAUDE.md` is the
@@ -52,6 +52,7 @@ request and `.github/workflows/release.yml` lands and ships it
 | The words on it | `messages/ro.json` and `messages/en.json` — both, same keys, no ICU plurals |
 | A backoffice screen | `src/app/[locale]/admin/…`; its Server Actions in the sibling `actions.ts` |
 | A route handler (PDF, image, API) | `src/app/api/…/route.ts` |
+| A file a route hands out for saving (Excel, CSV, PDF, JSON, GPX, `.ics`) — the header that names it (§779, amending §172) | `contentDisposition("attachment", fileName)` from `src/shared/http/content-disposition.ts`, never a `filename="…"` written by hand: an HTTP header is Latin-1 bytes, so a title with «Ș» or an en dash crashed the Excel export with a 500 (2026-10-15). The helper writes an ASCII `filename` and the real name in `filename*`; `tests/unit/design/download-names.test.ts` fails on any other `filename=` literal in `src/` |
 | The rules of registration (holds, the waiting list, capacity) | `src/modules/registrations/service.ts` — the allocator; nothing bypasses it |
 | What staff may do to a registration | `src/modules/registrations/admin-service.ts` |
 | Internal notes on a registration — «Note interne», for the Organizer, the Administrator and the Superadministrator, never Tehnic or the volunteer (§777, amending §67, §289, §418 and §754): plain text, a card on the registration's page, a marker with the count on the list, never on the desk, in an export or on the public list | the table `src/db/schema/registration-notes.ts` (migration `0161`, `ON DELETE CASCADE`: the erase takes the notes; `REGISTRATION_NOTE_MAX` 2000); the rule and the only readers/writers `src/modules/registrations/notes.ts` (`addRegistrationNote`, `listRegistrationNotes`, `countRegistrationNotes`, `deleteRegistrationNote` — each asks `canKeepRegistrationNotes` of `staff-identity/domain/roles.ts`; a delete is its author's or an Administrator's, empties the words and stamps `deleted_at`); the card `registrations/ui/NotesCard.tsx` (a `Panel` with `internalNotes`, its closed line counting «3 note» / «nicio notă») and its two presses `app/[locale]/admin/registrations/[id]/note-actions.ts`; the list's marker `registrations/ui/NotesMark.tsx`; «Toate datele unei persoane» lists them with the author's role, not name (`person-data.ts`). The trail (`registration.note_added` / `registration.note_deleted`) names who and when, never the words; the privacy notice template's sentence is in section 2's history paragraph. `tests/unit/registrations/notes-never-leave.test.ts` lists the only files that import the table: a new reader is a reviewed edit of that list |

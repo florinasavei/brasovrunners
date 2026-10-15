@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.37-2026-10-15 -->
+<!-- PROJECT_BASELINE: BR-V3.38-2026-10-15 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V3.37-2026-10-15`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.38-2026-10-15`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -26647,3 +26647,17 @@ Baseline `BR-V3.36-2026-10-15`.
 **Confirmed by the owner, 2026-10-15 13:20:** the messages had arrived — a Gmail filter had filed them out of the Inbox. No transport failure and no configuration change; what was missing was the site's record of where a message went, which this release adds.
 
 Baseline `BR-V3.37-2026-10-15`.
+
+## 779. Every downloaded file's name goes through one helper: an ASCII fallback and the real name in filename* (amending §172)
+
+**The owner, 2026-10-15, top priority:** «I can't export the participants as excel anymore!»
+
+**What broke.** Production's log on `/api/admin/registrations/export` read `TypeError: Cannot convert argument to a ByteString because the character at index 42 has a value of 536 which is greater than 255` — character 536 is «Ș». §172 named the Excel file after the event's title, «diacritics kept, because Windows, macOS and Linux all take them», and put the name raw into `Content-Disposition: attachment; filename="…"`. A filesystem takes diacritics; an HTTP header does not: its value is Latin-1 bytes, so any title with «ă», «ș», «ț», an en dash or any character above U+00FF made the route answer 500. The race «CROSUL ANIVERSAR BRAȘOV RUNNERS – EDIȚIA A II-A 2026» has two of them. The CSV export had a fixed ASCII name and kept working, which is why only the Excel button died. The same line was written by hand in seventeen routes (the badges, the bibs, the event's JSON, the volunteers' CSV, the legal PDF, the newsletter's two CSVs, the participant's JSON, the sponsor list, the shop's orders, the GPX served from `/api/media`, the three calendar files, the share image and the signed declarations' PDFs); the others only escaped because their names were slugs and digits.
+
+**Decision.** One helper, `contentDisposition(type, fileName, defaultStem?)` in `src/shared/http/content-disposition.ts` (RFC 6266, RFC 5987), returns `attachment; filename="<ASCII fallback>"; filename*=UTF-8''<percent-encoded real name>`. The fallback is the name with its accents taken off («Ș» is «S», «ă» is «a»), typographic dashes and quotes made plain, `"` and backslashes replaced, everything else outside printable ASCII dropped, and never empty (a stem with nothing readable left becomes the route's own default stem, its extension kept); `filename*` carries the whole real name, so a browser that reads it saves «CROSUL ANIVERSAR BRAȘOV RUNNERS – EDIȚIA A II-A 2026 2026-10-15.xlsx» as the club named it, and the result is accepted by `new Headers()` for any input, a lone surrogate included. Every route that sets the header, and the GPX header R2 stores with the object, uses it; each keeps its own stem and extension. §172's naming is unchanged: the event's title, at most sixty characters, the day.
+
+**The ratchet.** `tests/unit/design/download-names.test.ts` fails on a string or template literal that spells `filename=` anywhere in `src/` but the helper, with no list of exceptions: the next download calls the helper or does not pass. A comment that explains the header is not scanned.
+
+**Refused.** Stripping the diacritics from the Excel file's real name too (the owner's file would read «BRASOV», and the fix would hide the bug rather than end it); a new dependency for the encoding (`encodeURIComponent` plus five characters is the whole of RFC 5987); sending only `filename*` (older clients and some mail previews read only `filename`); cutting a long name in the helper (the routes already cap theirs, and the helper must never change what a name says).
+
+Baseline `BR-V3.38-2026-10-15`.

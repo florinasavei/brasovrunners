@@ -1,3 +1,4 @@
+import { contentDisposition } from "@/shared/http/content-disposition";
 import { NextResponse } from "next/server";
 import { getDb } from "@/db/client";
 import { exportPersonData, openPersonLookup } from "@/modules/registrations/person-data";
@@ -39,7 +40,7 @@ export async function GET(request: Request): Promise<Response> {
   return new NextResponse(JSON.stringify(data, null, 2), {
     headers: {
       "Content-Type": "application/json; charset=utf-8",
-      "Content-Disposition": `attachment; filename="participant-${stem}-${day}.json"`,
+      "Content-Disposition": contentDisposition("attachment", `participant-${stem}-${day}.json`, "participant"),
       "X-Robots-Tag": "noindex",
       "Cache-Control": "private, no-store",
     },
