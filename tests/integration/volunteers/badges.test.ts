@@ -11,7 +11,7 @@ import { readEventConfig } from "@/modules/content/events/transfer/export";
 import type { StaffRole } from "@/modules/staff-identity/domain/roles";
 import { DEFAULT_BADGE_DESIGN, readBadgeDesign } from "@/modules/volunteers/badges/badge-design";
 import { readBadgeDesignForm } from "@/modules/volunteers/badges/badge-query";
-import { BADGE_COUNT_MAX, badgePrintDefault, listBadgeRoles, readPrintCounts, saveBadgeDesign, saveBadgeRoleColours } from "@/modules/volunteers/badges/badges";
+import { BADGE_COUNT_MAX, badgePrintDefault, findEventForBadges, listBadgeRoles, readPrintCounts, saveBadgeDesign, saveBadgeRoleColours } from "@/modules/volunteers/badges/badges";
 import { changeVolunteerRole } from "@/modules/volunteers/volunteers";
 import { DomainError } from "@/shared/errors/domain-error";
 import type { FormOutcome } from "@/shared/forms/outcome";
@@ -516,4 +516,128 @@ describe("§764 the badge design travels with the event, never a role", () => {
     const read = await readEventConfig(db, otherEventId);
     expect(read!.config.badges.design).toEqual(DEFAULT_BADGE_DESIGN);
   });
+});
+
+describe("§776 the free-text line and the marker area", () => {
+  const BOTH = {
+    "badge.design.showFreeText": "on",
+    "badge.design.freeTextRo": "Bea apă la fiecare punct",
+    "badge.design.freeTextEn": "Drink water at every point",
+    "badge.design.showMarker": "on",
+    "badge.design.markerLabelRo": "Tură",
+    "badge.design.markerLabelEn": "Shift",
+  };
+
+  it("keeps both on the event, audited with the settings that changed, and carries them in the event's file and a copy", async () => {
+    expect(await post(actions.saveBadgeDesignAction, designForm(BOTH))).toBe("redirected");
+    expect(readBadgeDesign(await stored())).toMatchObject({
+      showFreeText: true,
+      freeTextRo: "Bea apă la fiecare punct",
+      freeTextEn: "Drink water at every point",
+      showMarker: true,
+      markerLabelRo: "Tură",
+      markerLabelEn: "Shift",
+    });
+    const rows = await trail("event.badge_design_changed");
+    expect((rows[0].metadataJson as { changed: string[] }).changed.sort()).toEqual(["freeTextEn", "freeTextRo", "markerLabelEn", "markerLabelRo", "showFreeText", "showMarker"]);
+    expect((await readEventConfig(db, eventId))!.config.badges.design).toMatchObject({ showFreeText: true, showMarker: true, markerLabelEn: "Shift" });
+    const copy = await duplicateEvent(db, { actor: staff.ADMIN!, eventId, now: NOW });
+    expect(readBadgeDesign(await stored(copy.id))).toMatchObject({ showFreeText: true, freeTextRo: "Bea apă la fiecare punct", showMarker: true });
+  });
+
+  it("reads a design stored before them as it always drew: both off, and saves the same form as no change", async () => {
+    // A design as the column held it before this release: none of the six keys.
+    const old: Record<string, unknown> = { ...readBadgeDesign(null) };
+    for (const key of ["showFreeText", "freeTextRo", "freeTextEn", "showMarker", "markerLabelRo", "markerLabelEn"]) delete old[key];
+    await db.update(events).set({ badgeDesign: old }).where(eq(events.id, eventId));
+    expect(readBadgeDesign(await stored())).toMatchObject({ showFreeText: false, showMarker: false, freeTextRo: "", markerLabelEn: "" });
+    expect(await saveBadgeDesign(db, staff.ADMIN!, eventId, readBadgeDesignForm((name) => (designForm().get(name) as string | null) ?? null), NOW)).toEqual({ changed: false });
+  });
+
+  it("drops an unreadable stored value as the platform's own, and the page is told which", async () => {
+    await db.update(events).set({ badgeDesign: { ...readBadgeDesign(null), showFreeText: "yes", freeTextRo: 7 } }).where(eq(events.id, eventId));
+    const event = await findEventForBadges(db, eventId, "ro");
+    expect(event!.design).toMatchObject({ showFreeText: false, freeTextRo: "" });
+    expect([...event!.dropped].sort()).toEqual(["freeTextRo", "showFreeText"]);
+    expect((await findEventForBadges(db, otherEventId, "ro"))!.dropped).toEqual([]);
+  });
+
+  it("writes the design as read when a stored value was dropped, even with the boxes unchanged, so the note goes", async () => {
+    await db.update(events).set({ badgeDesign: { ...readBadgeDesign(null), showFreeText: "yes" } }).where(eq(events.id, eventId));
+    expect((await findEventForBadges(db, eventId, "ro"))!.dropped).toEqual(["showFreeText"]);
+    expect(await post(actions.saveBadgeDesignAction, designForm({}))).toBe("redirected");
+    expect((await stored()) as Record<string, unknown>).toMatchObject({ showFreeText: false });
+    expect((await findEventForBadges(db, eventId, "ro"))!.dropped).toEqual([]);
+  });
+
+  it.each([
+    ["a free text in one language only", { "badge.design.showFreeText": "on", "badge.design.freeTextRo": "Bea apă" }, "badge.design.freeTextEn"],
+    ["a free text in English only", { "badge.design.showFreeText": "on", "badge.design.freeTextEn": "Drink" }, "badge.design.freeTextRo"],
+    ["the free text ticked with nothing written", { "badge.design.showFreeText": "on" }, "badge.design.freeTextRo"],
+    ["the free text ticked with nothing written, English too", { "badge.design.showFreeText": "on" }, "badge.design.freeTextEn"],
+    ["the free text ticked with only what the font cannot draw", { "badge.design.showFreeText": "on", "badge.design.freeTextRo": "😀", "badge.design.freeTextEn": "😀" }, "badge.design.freeTextRo"],
+    ["a free text with an emoji only in one language", { "badge.design.showFreeText": "on", "badge.design.freeTextRo": "😀", "badge.design.freeTextEn": "Drink" }, "badge.design.freeTextRo"],
+    ["a marker label with an emoji only in one language", { "badge.design.showMarker": "on", "badge.design.markerLabelRo": "😀", "badge.design.markerLabelEn": "Shift" }, "badge.design.markerLabelRo"],
+    ["the marker's label in one language only", { "badge.design.showMarker": "on", "badge.design.markerLabelRo": "Tură" }, "badge.design.markerLabelEn"],
+  ])("refuses %s, naming the box and keeping what was typed", async (_name, fields, box) => {
+    const result = (await post(actions.saveBadgeDesignAction, designForm(fields))) as FormOutcome;
+    expect(result).toMatchObject({ error: "VALIDATION_ERROR" });
+    expect(result.fields).toContain(box);
+    expect(await stored()).toBeNull();
+  });
+
+  it("keeps the marker's area ticked with no label at all, and a text written while its tick is off", async () => {
+    expect(await post(actions.saveBadgeDesignAction, designForm({ "badge.design.showMarker": "on", "badge.design.freeTextRo": "Bea apă", "badge.design.freeTextEn": "Drink" }))).toBe("redirected");
+    expect(readBadgeDesign(await stored())).toMatchObject({ showMarker: true, markerLabelRo: "", showFreeText: false, freeTextRo: "Bea apă" });
+  });
+
+  it("refuses a size with no room for everything ticked, in words that name what, the size and the height that would", async () => {
+    const fields = { ...BOTH, "badge.design.size": "custom", "badge.design.customWidthMm": "60", "badge.design.customHeightMm": "30", "badge.design.showPhone": "on", "badge.design.phone": "0712 345 678" };
+    const result = (await post(actions.saveBadgeDesignAction, designForm(fields))) as FormOutcome;
+    expect(result).toMatchObject({
+      error: "BADGE_SIZE_TOO_SMALL",
+      fields: ["badge.design.customHeightMm"],
+      errorValues: { what: "linia de text liber, telefonul coordonatorului", width: "60", height: "30", minHeight: "34" },
+    });
+    expect(await stored()).toBeNull();
+    // The sentence, in each language, with the numbers in it.
+    const sentence = (locale: "ro" | "en") => createTranslator({ locale, messages: locale === "ro" ? ro : en, namespace: "Admin.errors" })("BADGE_SIZE_TOO_SMALL", result.errorValues!);
+    expect(sentence("ro")).toContain("60 × 30 mm");
+    expect(sentence("ro")).toContain("linia de text liber, telefonul coordonatorului");
+    expect(sentence("ro")).toContain("34 mm");
+    expect(sentence("en")).toContain("60 × 30 mm");
+    expect(sentence("en")).toContain("at least 34 mm");
+    // The same ticks on the height the sentence named save.
+    expect(await post(actions.saveBadgeDesignAction, designForm({ ...fields, "badge.design.customHeightMm": "34" }))).toBe("redirected");
+    expect(readBadgeDesign(await stored())).toMatchObject({ size: "custom", customHeightMm: 34, showFreeText: true, showPhone: true });
+  });
+
+  it("prints the free line and the marker's label on every badge of the sheet, in the badge's language", async () => {
+    await post(actions.saveBadgeDesignAction, designForm(BOTH));
+    const words: string[] = [];
+    const text = PDFDocument.prototype.text;
+    const spy = vi.spyOn(PDFDocument.prototype, "text").mockImplementation(function (this: PDFKit.PDFDocument, ...args: unknown[]) {
+      if (typeof args[0] === "string") words.push(args[0]);
+      return (text as (...a: unknown[]) => PDFKit.PDFDocument).apply(this, args);
+    });
+    try {
+      const ro = await sheetRoute.GET(new Request(`http://localhost/api/admin/events/${eventId}/badges?locale=ro`), { params: Promise.resolve({ id: eventId }) });
+      expect(ro.status).toBe(200);
+      expect(words.filter((word) => word === "Bea apă la fiecare punct")).toHaveLength(3 + 5);
+      expect(words.filter((word) => word === "Tură:")).toHaveLength(3 + 5);
+      words.length = 0;
+      await sheetRoute.GET(new Request(`http://localhost/api/admin/events/${eventId}/badges?locale=en&n.${marshalId}=0&none=0`), { params: Promise.resolve({ id: eventId }) });
+      expect(words.filter((word) => word === "Drink water at every point")).toHaveLength(3);
+      expect(words.filter((word) => word === "Shift:")).toHaveLength(3);
+    } finally {
+      spy.mockRestore();
+    }
+  });
+
+  it("draws the designer's unsaved sample with both, from the address", async () => {
+    const query = new URLSearchParams({ locale: "ro", role: "none", sample: "1", showFreeText: "1", showMarker: "1", freeTextRo: "Bea apă", freeTextEn: "Drink", markerLabelRo: "Tură", markerLabelEn: "Shift" });
+    const sample = await previewRoute.GET(new Request(`http://localhost/api/admin/events/${eventId}/badges/preview?${query.toString()}`), { params: Promise.resolve({ id: eventId }) });
+    expect(sample.status).toBe(200);
+    expect(sample.headers.get("content-type")).toBe("image/png");
+  }, 60_000);
 });

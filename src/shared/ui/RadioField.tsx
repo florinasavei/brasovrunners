@@ -1,5 +1,8 @@
+"use client";
+
 import Box from "@mui/material/Box";
 import type { ReactNode } from "react";
+import { useRecall } from "@/shared/forms/recall";
 import { TAP_TARGET } from "./tap-target";
 
 /**
@@ -13,6 +16,12 @@ import { TAP_TARGET } from "./tap-target";
  *
  * One radio per call; the group is the shared `name`. `defaultChecked` on one of them is the form's
  * default. The row is 44 pixels tall at least (BR-REQ-041-01 criterion 6).
+ *
+ * After a refused submit the choice comes back as it was posted (§315, the checkbox's own rule): when
+ * the form it sits in has been answered with a refusal and the group posted a value, the radio checked
+ * is the one that was; a group that posted nothing, or a disabled radio, keeps the page's word. Without
+ * it the badge's size, refused for being too small, came back on the saved size while the boxes typed
+ * for «Altă dimensiune» stayed behind, hidden (§776).
  */
 export default function RadioField({
   name,
@@ -32,6 +41,9 @@ export default function RadioField({
   /** The label, which may contain a link. */
   children: ReactNode;
 }) {
+  const recall = useRecall();
+  const posted = disabled ? undefined : recall.value(name);
+  const checked = posted === undefined ? defaultChecked : posted === value;
   return (
     <Box
       component="label"
@@ -46,7 +58,7 @@ export default function RadioField({
         "&:has(input:focus-visible)": { outline: "2px solid var(--mui-palette-primary-main)", outlineOffset: "-2px", borderRadius: 1 },
       }}
     >
-      <input type="radio" name={name} value={value} defaultChecked={defaultChecked} disabled={disabled} />
+      <input type="radio" name={name} value={value} defaultChecked={checked} disabled={disabled} />
       <Box component="span">{children}</Box>
     </Box>
   );

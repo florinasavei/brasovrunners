@@ -63,6 +63,8 @@ export function badgeImageLayout(input: BadgeImageInput): BadgeLayout {
       role: input.role ? badgeRoleText(input.role.name, input.locale) : null,
       name: input.words.name,
       phone: badgePhoneLine(input.design, input.words, input.role?.phone),
+      free: input.words.free,
+      markerLabel: input.words.markerLabel,
     },
     { bold: bibTitleWidth, regular: bibFooterWidth },
   );
@@ -114,6 +116,21 @@ export function badgeMarkup(input: BadgeImageInput, logoSrc: string) {
       </div>
     );
   };
+
+  /** One faint horizontal line, `width` points long, centred on `y`. */
+  const hairline = (left: number, y: number, width: number, testId: string) => (
+    <div
+      data-testid={testId}
+      style={{
+        display: "flex",
+        ...at(left, y - BADGE_LAYOUT.lineWeight / 2),
+        width: px(width),
+        height: Math.max(1, px(BADGE_LAYOUT.lineWeight)),
+        background: COLOR.inkMuted,
+        opacity: BADGE_LAYOUT.lineOpacity,
+      }}
+    />
+  );
 
   const headerBox = { width: px(content.width), height: px(layout.header.height) };
   const picture = input.headerPicture ?? null;
@@ -170,20 +187,28 @@ export function badgeMarkup(input: BadgeImageInput, logoSrc: string) {
       <div data-testid="badge-role-band" style={{ display: "flex", ...at(content.left, layout.role.top), width: px(content.width), height: px(layout.role.height), background: roleColour }} />
       {layout.label ? lineBox(layout.label, roleText, 700, { centre: true }, "badge-label") : null}
       {lineBox(layout.roleLine, roleText, 700, { centre: true }, "badge-role")}
+      {/* The free-text line (§776): the club's own words, small and centred under the role's band. */}
+      {layout.freeLine ? lineBox(layout.freeLine, COLOR.ink, 400, { centre: true }, "badge-free") : null}
       {/* The writing area: «Nume:», and the faint line the name is written on in marker. */}
       {lineBox(layout.name, COLOR.inkMuted, 400, { left: layout.name.left }, "badge-name")}
-      {layout.line ? (
-        <div
-          data-testid="badge-line"
-          style={{
-            display: "flex",
-            ...at(layout.line.left, layout.line.y - BADGE_LAYOUT.lineWeight / 2),
-            width: px(layout.line.right - layout.line.left),
-            height: Math.max(1, px(BADGE_LAYOUT.lineWeight)),
-            background: COLOR.inkMuted,
-            opacity: BADGE_LAYOUT.lineOpacity,
-          }}
-        />
+      {layout.line ? hairline(layout.line.left, layout.line.y, layout.line.right - layout.line.left, "badge-line") : null}
+      {/* «Spațiu pentru marker» (§776): a divider, the club's label and one faint line at the name's height. */}
+      {layout.marker ? (
+        <>
+          <div
+            data-testid="badge-divider"
+            style={{
+              display: "flex",
+              ...at(layout.marker.divider.x - BADGE_LAYOUT.lineWeight / 2, layout.marker.divider.top),
+              width: Math.max(1, px(BADGE_LAYOUT.lineWeight)),
+              height: px(layout.marker.divider.bottom - layout.marker.divider.top),
+              background: COLOR.inkMuted,
+              opacity: BADGE_LAYOUT.lineOpacity,
+            }}
+          />
+          {layout.marker.label ? lineBox(layout.marker.label, COLOR.inkMuted, 400, { left: layout.marker.label.left }, "badge-marker-label") : null}
+          {hairline(layout.marker.line.left, layout.marker.line.y, layout.marker.line.right - layout.marker.line.left, "badge-marker-line")}
+        </>
       ) : null}
       {layout.phoneLine ? lineBox(layout.phoneLine, COLOR.ink, 400, { centre: true }, "badge-phone") : null}
     </div>
