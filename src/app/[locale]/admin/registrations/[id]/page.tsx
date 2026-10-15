@@ -56,7 +56,9 @@ import FamilyChip from "@/modules/registrations/ui/FamilyChip";
 import HiddenListChip from "@/modules/registrations/ui/HiddenListChip";
 import HiddenListRadio from "@/modules/registrations/ui/HiddenListRadio";
 import { familyOf } from "@/modules/registrations/family-marker";
-import { canManageRegistrations, canReadRegistrations } from "@/modules/staff-identity/domain/roles";
+import { canKeepRegistrationNotes, canManageRegistrations, canReadRegistrations } from "@/modules/staff-identity/domain/roles";
+import { listRegistrationNotes } from "@/modules/registrations/notes";
+import NotesCard from "@/modules/registrations/ui/NotesCard";
 import { REGISTRATION_STATUS_LABEL } from "@/modules/staff-identity/domain/staff-labels";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { confirmWords } from "@/shared/feedback/confirm-words";
@@ -81,6 +83,7 @@ import {
 } from "../actions";
 import { CLUB_NAME } from "@/theme/brand";
 import { resendRegistrationEmailAction } from "./actions";
+import { addRegistrationNoteAction, deleteRegistrationNoteAction } from "./note-actions";
 import DeclarationHoldForm from "@/modules/registrations/ui/DeclarationHoldForm";
 import MemberChip from "@/modules/registrations/ui/MemberChip";
 import { membershipOf } from "@/modules/registrations/domain/membership";
@@ -148,7 +151,7 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
   // and its address is no member account's — the sheet then prints the ordinary bib.
   const memberBib = memberBibOf({ offered: registration.eventOffersMemberBib, wanted: registration.memberBibWanted, verified: registration.memberVerified });
 
-  const [acceptances, outboxHistory, auditTrail, freeBibs, minorSigns, family, partnerShares, invitedBy] = await Promise.all([
+  const [acceptances, outboxHistory, auditTrail, freeBibs, minorSigns, family, partnerShares, invitedBy, notes] = await Promise.all([
     listDeclarationAcceptances(db, id),
     listOutboxHistory(db, id),
     // With its event: the supplementary place added for it is a row about the event (§642), found by the index.
@@ -167,6 +170,8 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
     listPartnerShares(db, id),
     // The invitation it came from (§647): who sent it and when, for every role that reads this page.
     findInvitationOfRegistration(db, id),
+    // «Note interne» (§777): read only for a role that may keep them — the Organizer and above, never Tehnic; the service asks again.
+    canKeepRegistrationNotes(actor.role) ? listRegistrationNotes(db, actor, id) : Promise.resolve(null),
   ]);
 
   const query = await searchParams;
@@ -706,6 +711,24 @@ export default async function RegistrationDetailPage({ params, searchParams }: P
           </Typography>
         </Stack>
       </Panel>
+
+      {/*
+        «Note interne» (§777; the owner, 2026-10-15): what the organizers tell each other about this
+        registration, for the Organizer and above — never the Tehnic role, the volunteer or the desk. Drawn
+        only when `listRegistrationNotes` ran (it asks `canKeepRegistrationNotes` itself); the two actions and
+        the service refuse every other role again (BR-REQ-060-01). A note is not the registration: the
+        Organizer still changes nothing on it (§289).
+      */}
+      {notes !== null && (
+        <NotesCard
+          locale={locale}
+          registrationId={registration.id}
+          notes={notes}
+          addAction={addRegistrationNoteAction}
+          deleteAction={deleteRegistrationNoteAction}
+          opened={saved === "noteAdded" || saved === "noteDeleted"}
+        />
+      )}
 
       {/*
         Emergency and health (§322): for the people they are for, and only when asked. Folded

@@ -14,6 +14,7 @@ import { getPathname, Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { openPersonLookup, PERSON_LOOKUP_MINUTES, viewPersonData } from "@/modules/registrations/person-data";
 import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
+import { STAFF_ROLE_LABEL } from "@/modules/staff-identity/domain/staff-labels";
 import { requireStaff } from "@/modules/staff-identity/session";
 import VolunteerAnswers from "@/modules/volunteers/ui/VolunteerAnswers";
 import { lookUpPersonAction } from "./actions";
@@ -170,6 +171,36 @@ export default async function PersonDataPage({ params, searchParams }: Props) {
                     {data.declarationAcceptances.map((acceptance) => (
                       <Box key={acceptance.id} sx={{ border: 1, borderColor: "divider", borderRadius: 1, p: 1.5 }}>
                         {fields(acceptance)}
+                      </Box>
+                    ))}
+                  </Stack>
+                )}
+              </Box>
+              <Divider />
+              {/*
+                The organizers' internal notes (§777; art. 15 GDPR): the words, the moment, the event and the author's role —
+                «Organizator», «Administrator» — never the colleague's name. The registration's erase removes them.
+              */}
+              <Box component="section" data-testid="person-notes">
+                <Typography variant="h3" sx={{ fontSize: "1rem", mb: 1 }}>
+                  {t("person.notes", { count: data.notes.length })}
+                </Typography>
+                {data.notes.length === 0 ? (
+                  <Typography variant="body2">{t("person.none")}</Typography>
+                ) : (
+                  <Stack spacing={1}>
+                    {data.notes.map((note, index) => (
+                      <Box key={index} data-testid="person-note">
+                        <Typography variant="body2" sx={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}>
+                          {note.body}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {t("person.noteBy", {
+                            role: note.authorRole ? STAFF_ROLE_LABEL[note.authorRole] : t("person.noteAuthorGone"),
+                            date: show(note.createdAt),
+                            event: note.eventTitle ?? note.eventId,
+                          })}
+                        </Typography>
                       </Box>
                     ))}
                   </Stack>

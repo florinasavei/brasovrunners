@@ -65,6 +65,7 @@ import SaveIcon from "@mui/icons-material/Save";
 import ScheduleIcon from "@mui/icons-material/Schedule";
 import ScheduleSendIcon from "@mui/icons-material/ScheduleSend";
 import ScienceIcon from "@mui/icons-material/Science";
+import StickyNote2Icon from "@mui/icons-material/StickyNote2";
 import ShareIcon from "@mui/icons-material/Share";
 import SpeedIcon from "@mui/icons-material/Speed";
 import StraightenIcon from "@mui/icons-material/Straighten";
@@ -164,6 +165,8 @@ export const PANEL_GLYPHS = {
   // What an event's registrations are, once it has them.
   registrations: ListAltIcon,
   queue: HourglassTopIcon,
+  // «Note interne» (§777): what the organizers tell each other about one registration — the sticky note.
+  internalNotes: StickyNote2Icon,
   thanks: MailIcon,
   test: ScienceIcon,
   copy: ContentCopyIcon,

@@ -24,6 +24,7 @@ import { participants } from "@/db/schema/participants";
 import { platformSettings } from "@/db/schema/platform-settings";
 import { rateLimitBuckets } from "@/db/schema/rate-limit";
 import { registrationInterests } from "@/db/schema/registration-interests";
+import { registrationNotes } from "@/db/schema/registration-notes";
 import { newsletterSends, newsletterSubscribers, newsletterTokens } from "@/db/schema/newsletter";
 import { registrations } from "@/db/schema/registrations";
 import { staffUsers } from "@/db/schema/staff-users";
@@ -141,6 +142,8 @@ export async function resetTables(db: TestDatabase): Promise<void> {
   // `registrations` references `events`, and `events.declaration_document_id` references
   // `legal_documents`, so registrations must go before events, and events before legal
   // documents — the reverse of the order either child appears in the schema files.
+  // The internal notes (§777) cascade from their registration; named first like the other children, so the list says what owns what.
+  await db.delete(registrationNotes);
   await db.delete(registrations);
   // The "tell me when registration opens" addresses (§146) cascade from their event; deleted
   // first for the same reason as the translations above.

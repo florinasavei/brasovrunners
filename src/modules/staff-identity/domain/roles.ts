@@ -640,6 +640,29 @@ export function canReadRegistrations(subject: StaffSubject): boolean {
 }
 
 /**
+ * **Internal notes on a registration (§777, amending §289 and §67).**
+ *
+ * The owner, 2026-10-15: «ca și Admins, trebuie să putem lăsa comentarii pe fiecare înscriere în parte,
+ * doar pentru organizatori și administratori». The Organizer, the Administrator and the Superadministrator
+ * read the notes of a registration and write them; the Tehnic role (`DEV`), the volunteer and the member
+ * get nothing — not the card, not the count on the list, not an action that answers.
+ *
+ * **An explicit exception to §289's «reading against changing», and the reason it is one:** the Organizer
+ * still changes nothing *on the registration* — no state, no place, no number, no answer — and a note is not
+ * the registration, it is what the organizers say to each other about it. It is the same set as reading the
+ * registrations (`MAY_READ_REGISTRATIONS`) because nobody who may not read a person may read what is said
+ * about them; it is a predicate of its own so that «may read the list» and «may keep notes» can move apart
+ * without a page asking one when it means the other (BR-REQ-060-01).
+ *
+ * Deleting a note is narrower and is the service's to decide: its author, or whoever changes
+ * registrations (`canManageRegistrations`).
+ */
+export function canKeepRegistrationNotes(subject: StaffSubject): boolean {
+  const role = roleOf(subject);
+  return MAY_READ_REGISTRATIONS.has(role);
+}
+
+/**
  * **Writing to an event's participants in the club's own words (§364)** — "Trimite un mesaj
  * participanților": bad weather, a changed start, anything the organizer has to tell the people
  * registered for one event.
