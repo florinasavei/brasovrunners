@@ -326,10 +326,17 @@ describe("«Toate datele unei persoane» lists the notes (art. 15 GDPR)", () => 
     // The role, never the name: what the file carries of the author is that one word.
     expect(JSON.stringify(data.notes)).not.toContain("Secretname");
     expect(JSON.stringify(data.notes)).not.toContain(organizer.id);
+    // Nor does the trail below the notes name the colleague who added or deleted one: the rows stay (the person learns a
+    // note was added or deleted, and when), the who is dropped — in the page's data and in the file alike.
+    const noteRows = data.auditTrail.filter((entry) => entry.action === "registration.note_added" || entry.action === "registration.note_deleted");
+    expect(noteRows).toHaveLength(3);
+    expect(noteRows.every((entry) => entry.actorName === null)).toBe(true);
+    for (const name of ["Secretname", "Andrei Admin"]) expect(JSON.stringify(data)).not.toContain(name);
 
     // The file an access request is answered with carries them too, and the trail counts them without a word.
     const exported = await exportPersonData(db, admin, email, minutes(11));
     expect(exported.notes).toHaveLength(1);
+    expect(JSON.stringify(exported)).not.toContain("Secretname");
     const [row] = await db.select().from(auditLogs).where(eq(auditLogs.action, "participant.data_exported"));
     expect(row.metadataJson).toMatchObject({ notes: 1 });
     expect(JSON.stringify(row)).not.toContain("tricou");
@@ -364,7 +371,9 @@ describe("where a note never appears", () => {
     const publicList = await listPublicStartList(db, race);
     expect(JSON.stringify(publicList)).not.toContain("tricou");
 
-    // The spreadsheet has no column for it: its header names none.
+    // The spreadsheet has no column for it: its header names none. The CSV's rows come from the export route's own
+    // query, which never reads `registration_notes`; the guard for that is structural —
+    // `tests/unit/registrations/notes-never-leave.test.ts` lists the only files that may import the table.
     const [header] = buildRegistrationsCsv([]).split("\n");
     expect(header).not.toMatch(/note/i);
   });

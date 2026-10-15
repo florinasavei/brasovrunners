@@ -1096,6 +1096,7 @@
       "notes": {
         "title": "Note interne",
         "none": "nicio notă",
+        "mark": "Note interne la {name}: {counted}",
         "count": {
           "one": "{count} notă",
           "few": "{count} note",
@@ -1830,13 +1831,13 @@
       "memberSetTitle": "Pui bifa de membru?",
       "memberSetBody": "Pui bifa de membru la {name}; pe listă clubul devine {club}. Nimic altceva nu se schimbă, niciun email.",
       "noteDeleteTitle": "Ștergi nota?",
-      "noteDeleteBody": "Nota se șterge definitiv, cu tot cu cuvinte. În jurnal rămân doar cine a șters-o și când."
+      "noteDeleteBody": "Nota se șterge definitiv, împreună cu textul ei. În jurnal rămân doar cine a șters-o și când."
     },
     "errors": {
       "PICTURE_IN_USE": "Imaginea este folosită într-o pagină, într-un eveniment sau într-un album. Scoate-o de acolo mai întâi.",
       "NOTHING_SELECTED": "Nu ai bifat nicio înscriere.",
       "NOTE_EMPTY": "Nota trebuie să aibă cuvinte: scrie ceva înainte să o salvezi.",
-      "NOTE_TOO_LONG": "Nota e prea lungă. Scurteaz-o sau împart-o în două note.",
+      "NOTE_TOO_LONG": "Nota e prea lungă. Scurtează-o sau împarte-o în două note.",
       "UNAUTHENTICATED": "Sesiunea a expirat. Autentifică-te din nou.",
       "FORBIDDEN": "Rolul tău nu permite această acțiune.",
       "NOT_FOUND": "Înregistrarea nu mai există.",

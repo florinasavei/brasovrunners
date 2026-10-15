@@ -1096,6 +1096,7 @@
       "notes": {
         "title": "Internal notes",
         "none": "no notes",
+        "mark": "Internal notes on {name}: {counted}",
         "count": {
           "one": "{count} note",
           "few": "{count} notes",
@@ -1830,7 +1831,7 @@
       "memberSetTitle": "Set the member tick?",
       "memberSetBody": "You set the member tick on {name}; their club on the list becomes {club}. Nothing else changes, no email.",
       "noteDeleteTitle": "Delete the note?",
-      "noteDeleteBody": "The note is deleted for good, words and all. The trail keeps only who deleted it and when."
+      "noteDeleteBody": "The note is deleted for good, along with its text. The trail keeps only who deleted it and when."
     },
     "errors": {
       "PICTURE_IN_USE": "The picture is used on a page, an event or in an album. Take it out of there first.",

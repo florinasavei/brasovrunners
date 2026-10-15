@@ -490,12 +490,17 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
             );
           })()}
           {/* «Note interne» (§NNN): a sticky note and the count when somebody left one; the link opens the card. */}
-          {(notesCounts.get(row.id) ?? 0) > 0 && (
+          {(notesCounts.get(row.id) ?? 0) > 0 && (() => {
+            const noteCount = notesCounts.get(row.id) ?? 0;
+            const counted = t(`registrations.notes.count.${countForm(noteCount, locale)}`, { count: noteCount });
+            return (
             <NotesMark
-              label={t(`registrations.notes.count.${countForm(notesCounts.get(row.id) ?? 0, locale)}`, { count: notesCounts.get(row.id) ?? 0 })}
+              label={counted}
+              ariaLabel={t("registrations.notes.mark", { name: row.registeredName, counted })}
               href={`${getPathname({ locale, href: { pathname: "/admin/registrations/[id]", params: { id: row.id } } })}#note-interne`}
             />
-          )}
+            );
+          })()}
           {/* The email state in one line under the name and its chips (§663, §671): only while somebody must
               act — the cause, the email, the day — itself the link to the registration's «Emailuri». An email
               sent again waits quietly here; the registration's page says it. */}

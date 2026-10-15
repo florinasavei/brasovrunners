@@ -355,6 +355,9 @@ async function collectPersonData<T extends Record<string, unknown>>(
     ...(participant ? [eq(auditLogs.participantId, participant.id)] : []),
     ...(registrationIds.length > 0 ? [and(eq(auditLogs.entityType, "registration"), inArray(auditLogs.entityId, registrationIds))] : []),
   ];
+  // The trail names the colleague who acted, as it always did — except for a note: the notes above carry the author as a
+  // role and never a name (§NNN), so the rows for adding and deleting one keep the when and drop the who.
+  const noteActions = new Set<string>(["registration.note_added", "registration.note_deleted"]);
   const auditTrail =
     aboutThePerson.length > 0
       ? (
@@ -371,7 +374,7 @@ async function collectPersonData<T extends Record<string, unknown>>(
             .leftJoin(staffUsers, eq(staffUsers.id, auditLogs.actorStaffUserId))
             .where(or(...aboutThePerson))
             .orderBy(desc(auditLogs.createdAt))
-        )
+        ).map((entry) => (noteActions.has(entry.action) ? { ...entry, actorName: null } : entry))
       : [];
 
   return {

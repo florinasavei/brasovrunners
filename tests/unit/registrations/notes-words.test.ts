@@ -12,6 +12,9 @@ const keysOf = (value: unknown, prefix = ""): string[] =>
     ? Object.entries(value).flatMap(([key, child]) => keysOf(child, prefix ? `${prefix}.${key}` : key))
     : [prefix];
 
+const leavesOf = (value: unknown): string[] =>
+  typeof value === "string" ? [value] : typeof value === "object" && value !== null ? Object.values(value).flatMap(leavesOf) : [];
+
 const strings = (catalogue: typeof ro) => ({
   notes: catalogue.Admin.registrations.notes,
   audit: [catalogue.Admin.registrations.audit.registration.note_added, catalogue.Admin.registrations.audit.registration.note_deleted],
@@ -58,12 +61,17 @@ describe("§NNN the words of the notes", () => {
 
   it("keeps every sentence short enough to read at a glance", () => {
     for (const catalogue of [ro, en]) {
-      const all = JSON.stringify(strings(catalogue));
-      const sentences = all
-        .replace(/[{}"[\]]/g, " ")
-        .split(/[.!?]\s|[:,]\s*[a-zA-Z]+:/)
-        .map((sentence) => sentence.trim());
+      // Each string on its own: one without a full stop must not run into the next key's words.
+      const sentences = leavesOf(strings(catalogue)).flatMap((text) => text.split(/[.!?]\s/).map((sentence) => sentence.trim()));
       for (const sentence of sentences) expect(sentence.length, sentence).toBeLessThanOrEqual(200);
     }
+  });
+
+  it("names the person on the list marker's accessible name and writes the imperatives right", () => {
+    expect(ro.Admin.registrations.notes.mark).toBe("Note interne la {name}: {counted}");
+    expect(en.Admin.registrations.notes.mark).toBe("Internal notes on {name}: {counted}");
+    expect(ro.Admin.errors.NOTE_TOO_LONG).toBe("Nota e prea lungă. Scurtează-o sau împarte-o în două note.");
+    expect(ro.Admin.confirm.noteDeleteBody).not.toContain("cu tot cu cuvinte");
+    expect(en.Admin.confirm.noteDeleteBody).not.toContain("words and all");
   });
 });
