@@ -168,6 +168,13 @@ export type AuditAction =
    */
   | "registration.answers_viewed"
   /**
+   * An internal note added to a registration, or deleted (§NNN): the staff member (the actor) and the moment —
+   * and nothing of the words, ever. The note's text lives in `registration_notes` and nowhere else; a trail row
+   * that carried it would outlive the erase that removes the note with its registration (§12.12).
+   */
+  | "registration.note_added"
+  | "registration.note_deleted"
+  /**
    * Optional data withdrawn (§322): the health note and its consent, the socials, or the
    * results consent. By the participant from their own link (no staff actor, the door in the
    * metadata) or by an Administrator (the actor, and the reason typed). The metadata names the

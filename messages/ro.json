@@ -1093,6 +1093,23 @@
         "noRecipient": "destinatar nenotat"
       },
       "auditActorRemoved": "cont șters",
+      "notes": {
+        "title": "Note interne",
+        "none": "nicio notă",
+        "count": {
+          "one": "{count} notă",
+          "few": "{count} note",
+          "other": "{count} de note"
+        },
+        "help": "Doar organizatorii și administratorii văd notele. Nu scrie date medicale sau alte date sensibile.",
+        "empty": "Nicio notă încă.",
+        "by": "{name} · {date}",
+        "delete": "Șterge",
+        "add": "Adaugă o notă",
+        "label": "Nota",
+        "limit": "Cel mult {max} de caractere.",
+        "save": "Salvează nota"
+      },
       "auditActorParticipant": "participantul, din linkul propriu",
       "audit": {
         "registration": {
@@ -1125,7 +1142,9 @@
           "hold_moved_by_window": "Termenul semnării mutat după fereastra de confirmare schimbată",
           "not_revived_for_outage": "Nereluat după întreruperea site-ului: termenul trecuse cât nu putea fi accesat, iar locul fusese dat între timp sau cererea expirase deja",
           "answer_corrected": "Răspuns corectat: {field}",
-          "answers_viewed": "Datele înscrierii deschise, cu telefonul și persoana de contact"
+          "answers_viewed": "Datele înscrierii deschise, cu telefonul și persoana de contact",
+          "note_added": "Notă internă adăugată",
+          "note_deleted": "Notă internă ștearsă"
         },
         "event": {
           "capacity_raised_for_offer": "Loc suplimentar adăugat pentru o ofertă («Trimite-i oferta»): {from} → {to}",
@@ -1809,11 +1828,15 @@
       "memberClearTitle": "Scoți bifa de membru?",
       "memberClearBody": "Scoți bifa de membru de la {name}; nimic altceva nu se schimbă, niciun email.",
       "memberSetTitle": "Pui bifa de membru?",
-      "memberSetBody": "Pui bifa de membru la {name}; pe listă clubul devine {club}. Nimic altceva nu se schimbă, niciun email."
+      "memberSetBody": "Pui bifa de membru la {name}; pe listă clubul devine {club}. Nimic altceva nu se schimbă, niciun email.",
+      "noteDeleteTitle": "Ștergi nota?",
+      "noteDeleteBody": "Nota se șterge definitiv, cu tot cu cuvinte. În jurnal rămân doar cine a șters-o și când."
     },
     "errors": {
       "PICTURE_IN_USE": "Imaginea este folosită într-o pagină, într-un eveniment sau într-un album. Scoate-o de acolo mai întâi.",
       "NOTHING_SELECTED": "Nu ai bifat nicio înscriere.",
+      "NOTE_EMPTY": "Nota trebuie să aibă cuvinte: scrie ceva înainte să o salvezi.",
+      "NOTE_TOO_LONG": "Nota e prea lungă. Scurteaz-o sau împart-o în două note.",
       "UNAUTHENTICATED": "Sesiunea a expirat. Autentifică-te din nou.",
       "FORBIDDEN": "Rolul tău nu permite această acțiune.",
       "NOT_FOUND": "Înregistrarea nu mai există.",
@@ -5822,6 +5845,9 @@
       "groupRuns": "Declarații de alergare de grup ({count})",
       "traceVolunteer": "Urma semnăturii voluntarului: IP {ip} · browser {browser}",
       "traceGuardian": "Urma semnăturii părintelui sau tutorelui: IP {ip} · browser {browser}",
+      "notes": "Note interne ({count})",
+      "noteBy": "{role} · {date} · {event}",
+      "noteAuthorGone": "cont șters",
       "audit": "Jurnal ({count})",
       "none": "Niciuna.",
       "newSearch": "Altă căutare"
@@ -11404,6 +11430,8 @@
         "other": "Bifa de membru scoasă la {count} de înscrieri."
       },
       "answersCorrected": "Date corectate: {fields}.",
+      "noteAdded": "Nota a fost salvată.",
+      "noteDeleted": "Nota a fost ștearsă.",
       "shopProductCreated": "Produsul a fost adăugat.",
       "shopProductSaved": "Produsul a fost salvat.",
       "shopProductMoved": "Ordinea produselor a fost schimbată.",

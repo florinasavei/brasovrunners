@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, inArray, or } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNull, or } from "drizzle-orm";
 import { auditLogs } from "@/db/schema/audit-logs";
 import { type DeclarationAcceptance, declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import { emailOutbox } from "@/db/schema/email-outbox";
@@ -8,6 +8,7 @@ import { groupRunDeclarations } from "@/db/schema/group-run-declarations";
 import { legalDocuments } from "@/db/schema/legal-documents";
 import { type Participant, participants } from "@/db/schema/participants";
 import { registrationInterests } from "@/db/schema/registration-interests";
+import { registrationNotes } from "@/db/schema/registration-notes";
 import { type Registration, registrations } from "@/db/schema/registrations";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
@@ -164,6 +165,15 @@ export type PersonData = {
     ip: string | null;
     userAgent: string | null;
   }>;
+  /**
+   * The internal notes the organizers kept on this person's registrations (§NNN; art. 15 GDPR: an access request
+   * covers them): the words as written, the moment, and the author's **role** — «Organizator», «Administrator» —
+   * not their name. A colleague's name is that colleague's personal data, and what the person is entitled to know
+   * is what is held about them and the kind of recipient who read it (art. 15(1)(c)), not who typed it (art. 15(4),
+   * the lawyer's question, not decided here: whether a note may be withheld where it would reveal another person's
+   * data). Deleted notes hold no words and are not listed; the registration's erase removes the rest.
+   */
+  notes: Array<{ registrationId: string; eventId: string; eventTitle: string | null; body: string; createdAt: Date; authorRole: StaffUser["role"] | null }>;
   auditTrail: Array<{ action: string; entityType: string; entityId: string | null; createdAt: Date; actorName: string | null; metadata: unknown }>;
 };
 
@@ -320,6 +330,27 @@ async function collectPersonData<T extends Record<string, unknown>>(
 
   const groupRuns = await groupRunDeclarationsOf(db, canonicalEmail);
 
+  // The internal notes on these registrations (§NNN): live ones only, oldest first as the rest of this page, the
+  // author as a role. `registrationIds` is this person's own registrations, so nobody else's note is read.
+  const noteRows =
+    registrationIds.length > 0
+      ? await db
+          .select({
+            registrationId: registrationNotes.registrationId,
+            body: registrationNotes.body,
+            createdAt: registrationNotes.createdAt,
+            authorRole: staffUsers.role,
+          })
+          .from(registrationNotes)
+          .leftJoin(staffUsers, eq(staffUsers.id, registrationNotes.authorStaffUserId))
+          .where(and(inArray(registrationNotes.registrationId, registrationIds), isNull(registrationNotes.deletedAt)))
+          .orderBy(asc(registrationNotes.createdAt), asc(registrationNotes.id))
+      : [];
+  const notes = noteRows.map((note) => {
+    const registration = rows.find((row) => row.registration.id === note.registrationId);
+    return { ...note, eventId: registration?.registration.eventId ?? "", eventTitle: registration?.eventTitle ?? null };
+  });
+
   const aboutThePerson = [
     ...(participant ? [eq(auditLogs.participantId, participant.id)] : []),
     ...(registrationIds.length > 0 ? [and(eq(auditLogs.entityType, "registration"), inArray(auditLogs.entityId, registrationIds))] : []),
@@ -352,6 +383,7 @@ async function collectPersonData<T extends Record<string, unknown>>(
     announcementRequests,
     volunteerOffers,
     groupRunDeclarations: groupRuns,
+    notes,
     auditTrail,
   };
 }
@@ -449,6 +481,7 @@ export async function exportPersonData<T extends Record<string, unknown>>(
       announcementRequests: data.announcementRequests.length,
       volunteerOffers: data.volunteerOffers.length,
       groupRunDeclarations: data.groupRunDeclarations.length,
+      notes: data.notes.length,
       auditRows: data.auditTrail.length,
     },
     now,

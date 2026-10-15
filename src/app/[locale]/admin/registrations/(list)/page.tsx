@@ -48,7 +48,9 @@ import { ageOnRaceDay } from "@/modules/registrations/domain/age";
 import { deadlinesForThisRequest } from "@/modules/deadlines/request";
 import GlyphChip from "@/modules/events/ui/GlyphChip";
 import { familiesTogether, familyOf } from "@/modules/registrations/family-marker";
-import { canExportSponsorList, canManageRegistrations, canMessageParticipants, canReadRegistrations } from "@/modules/staff-identity/domain/roles";
+import { canExportSponsorList, canKeepRegistrationNotes, canManageRegistrations, canMessageParticipants, canReadRegistrations } from "@/modules/staff-identity/domain/roles";
+import { countRegistrationNotes } from "@/modules/registrations/notes";
+import NotesMark from "@/modules/registrations/ui/NotesMark";
 import { sponsorListSummary } from "@/modules/registrations/sponsor-list";
 import SponsorListButton from "@/modules/registrations/ui/SponsorListButton";
 import CheckboxField from "@/shared/ui/CheckboxField";
@@ -278,8 +280,11 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
     audit trail keyed on the ids just fetched, so a page of twenty-five costs one query, not
     twenty-five. Beside the translations, which it does not depend on.
   */
-  const [resubmissions, family, t, minorSigns] = await Promise.all([
+  const [resubmissions, notesCounts, family, t, minorSigns] = await Promise.all([
     listResubmissionMarks(db, rows.map((row) => row.id)),
+    // «Note interne» (§NNN): how many live notes each row has — one grouped count, only for a role that may keep notes,
+    // and only the number: the words are read on the registration's own page. Never in the export or on the desk.
+    canKeepRegistrationNotes(actor.role) ? countRegistrationNotes(db, actor, rows.map((row) => row.id)) : Promise.resolve(new Map<string, number>()),
     // The family marker (§543): the other people on each row's address at its event, one query per page.
     familyOf(db, rows),
     getTranslations("Admin"),
@@ -484,6 +489,13 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               />
             );
           })()}
+          {/* «Note interne» (§NNN): a sticky note and the count when somebody left one; the link opens the card. */}
+          {(notesCounts.get(row.id) ?? 0) > 0 && (
+            <NotesMark
+              label={t(`registrations.notes.count.${countForm(notesCounts.get(row.id) ?? 0, locale)}`, { count: notesCounts.get(row.id) ?? 0 })}
+              href={`${getPathname({ locale, href: { pathname: "/admin/registrations/[id]", params: { id: row.id } } })}#note-interne`}
+            />
+          )}
           {/* The email state in one line under the name and its chips (§663, §671): only while somebody must
               act — the cause, the email, the day — itself the link to the registration's «Emailuri». An email
               sent again waits quietly here; the registration's page says it. */}

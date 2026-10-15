@@ -1093,6 +1093,23 @@
         "noRecipient": "recipient not noted"
       },
       "auditActorRemoved": "account removed",
+      "notes": {
+        "title": "Internal notes",
+        "none": "no notes",
+        "count": {
+          "one": "{count} note",
+          "few": "{count} notes",
+          "other": "{count} notes"
+        },
+        "help": "Only organizers and administrators see the notes. Do not write medical or other sensitive data.",
+        "empty": "No notes yet.",
+        "by": "{name} · {date}",
+        "delete": "Delete",
+        "add": "Add a note",
+        "label": "Note",
+        "limit": "At most {max} characters.",
+        "save": "Save the note"
+      },
       "auditActorParticipant": "the participant, from their own link",
       "audit": {
         "registration": {
@@ -1125,7 +1142,9 @@
           "hold_moved_by_window": "Signing deadline moved with the changed confirmation window",
           "not_revived_for_outage": "Not revived after the outage: the deadline had passed while the site could not be reached, and the place had been given meanwhile or the claim had already lapsed",
           "answer_corrected": "Answer corrected: {field}",
-          "answers_viewed": "Answers opened, with the phone and the emergency contact"
+          "answers_viewed": "Answers opened, with the phone and the emergency contact",
+          "note_added": "Internal note added",
+          "note_deleted": "Internal note deleted"
         },
         "event": {
           "capacity_raised_for_offer": "Supplementary place added for an offer (“Send them the offer”): {from} → {to}",
@@ -1809,11 +1828,15 @@
       "memberClearTitle": "Clear the member tick?",
       "memberClearBody": "You clear the member tick from {name}; nothing else changes, no email.",
       "memberSetTitle": "Set the member tick?",
-      "memberSetBody": "You set the member tick on {name}; their club on the list becomes {club}. Nothing else changes, no email."
+      "memberSetBody": "You set the member tick on {name}; their club on the list becomes {club}. Nothing else changes, no email.",
+      "noteDeleteTitle": "Delete the note?",
+      "noteDeleteBody": "The note is deleted for good, words and all. The trail keeps only who deleted it and when."
     },
     "errors": {
       "PICTURE_IN_USE": "The picture is used on a page, an event or in an album. Take it out of there first.",
       "NOTHING_SELECTED": "You did not tick any registration.",
+      "NOTE_EMPTY": "A note needs words: write something before you save it.",
+      "NOTE_TOO_LONG": "The note is too long. Shorten it or split it into two notes.",
       "UNAUTHENTICATED": "Your session has ended. Sign in again.",
       "FORBIDDEN": "Your role does not allow this.",
       "NOT_FOUND": "That record no longer exists.",
@@ -5822,6 +5845,9 @@
       "groupRuns": "Group-run declarations ({count})",
       "traceVolunteer": "The volunteer's signature trace: IP {ip} · browser {browser}",
       "traceGuardian": "The parent's or guardian's signature trace: IP {ip} · browser {browser}",
+      "notes": "Internal notes ({count})",
+      "noteBy": "{role} · {date} · {event}",
+      "noteAuthorGone": "account removed",
       "audit": "Audit trail ({count})",
       "none": "None.",
       "newSearch": "Another lookup"
@@ -11404,6 +11430,8 @@
         "other": "Member tick cleared on {count} registrations."
       },
       "answersCorrected": "Answers corrected: {fields}.",
+      "noteAdded": "The note was saved.",
+      "noteDeleted": "The note was deleted.",
       "shopProductCreated": "The item has been added.",
       "shopProductSaved": "The item has been saved.",
       "shopProductMoved": "The items' order has been changed.",
