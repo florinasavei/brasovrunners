@@ -314,36 +314,66 @@ describe("§NNN the relay: a visitor's message through the outbox", () => {
       expect(await countLostRelayMessages(db, after(60))).toBe(1);
     });
 
-    it("a send that timed out may have gone through: it is retried on that road only, however long it takes", async () => {
+    it("a send that timed out may have gone through: it is retried on that road, and a hanging road does not keep it for good", async () => {
       const row = await queue({ road: "mailgun" });
       const roads = fakeRoads({ mailgun: timedOut("mailgun unreachable: TimeoutError") });
       let at = 1;
-      for (let attempt = 0; attempt < 8; attempt += 1) {
+      for (let attempt = 0; attempt < 3; attempt += 1) {
+        // Pinned to Mailgun for its first three tries: Gmail does not get it while Mailgun may be about to deliver.
         await deliverRelay(db, roads, after(at));
         at += 3600; // far past any backoff, inside the day
       }
-      expect(roads.by("mailgun")).toHaveLength(8);
+      expect(roads.by("mailgun")).toHaveLength(3);
       expect(roads.by("gmail")).toHaveLength(0);
-      const stuck = await relayRow(db, row.id);
-      expect(stuck.roadFailures).toMatchObject({ mailgun: { ambiguous: true } });
+      expect((await relayRow(db, row.id)).roadFailures).toMatchObject({ mailgun: { count: 3, ambiguous: true } });
+      // The pin lets go: the fourth try is Gmail's, and the message is delivered by it — not lost at the day's end.
+      expect(await deliverRelay(db, roads, after(at))).toMatchObject({ sent: 1, failedOver: 1 });
+      expect(roads.by("gmail")).toHaveLength(1);
+      expect(await relayRow(db, row.id)).toMatchObject({ status: "SENT", transport: "gmail" });
     });
 
-    it("an ambiguous failure after a failover pins the message to the road that went ambiguous", async () => {
+    it("a message pinned to the only road it may take is still given up on after a day, with the Administrators told", async () => {
+      await admins();
+      const row = await queue({ road: "mailgun", content: { fallbackAllowed: false } });
+      const roads = fakeRoads({ mailgun: timedOut("mailgun unreachable: TimeoutError") });
+      let at = 1;
+      for (let attempt = 0; attempt < 4; attempt += 1) {
+        await deliverRelay(db, roads, after(at));
+        at += 3600;
+      }
+      expect(roads.by("gmail").filter((message) => message.subject === "x")).toHaveLength(0);
+      expect((await relayRow(db, row.id)).status).toBe("PENDING");
+      expect(await deliverRelay(db, roads, after(25 * 3600))).toMatchObject({ lost: 1 });
+      expect((await relayRow(db, row.id)).status).toBe("FAILED");
+    });
+
+    it("an ambiguous failure after a failover pins the message to the road that went ambiguous, for three tries", async () => {
       const row = await queue({ road: "mailgun" });
       const roads = fakeRoads({ mailgun: serviceDown("mailgun 503"), gmail: timedOut("gmail: smtp ETIMEDOUT") });
       await deliverRelay(db, roads, after(1));
       await deliverRelay(db, roads, after(10));
       await deliverRelay(db, roads, after(20)); // Gmail, ambiguous
       await deliverRelay(db, roads, after(20 + 3 * 3600));
-      await deliverRelay(db, roads, after(20 + 6 * 3600));
-      // From then on Gmail alone: Mailgun is not tried again while Gmail may have it.
+      await deliverRelay(db, roads, after(20 + 5 * 3600));
+      // Gmail alone for its three tries: Mailgun is not tried again while Gmail may have it.
       expect(roads.by("mailgun")).toHaveLength(2);
       expect(roads.by("gmail")).toHaveLength(3);
       expect((await relayRow(db, row.id)).status).toBe("PENDING");
+      // Then the pin lets go and the roads take turns: Mailgun, which has failed it less, is tried again.
+      await deliverRelay(db, roads, after(20 + 6 * 3600));
+      expect(roads.by("mailgun")).toHaveLength(3);
     });
 
-    it("waits, without an attempt, while the road it is pinned to is unavailable", async () => {
+    it("a pinned road that is stopped gives way to the other road when the message may take it", async () => {
       const row = await queue({ road: "mailgun" });
+      await db.update(emailOutbox).set({ roadFailures: { mailgun: { count: 1, ambiguous: true, lastError: "mailgun unreachable: TimeoutError" } } }).where(eq(emailOutbox.id, row.id));
+      const roads = fakeRoads({ available: { mailgun: false } });
+      expect(await deliverRelay(db, roads, after(1))).toMatchObject({ sent: 1, failedOver: 1 });
+      expect(roads.by("gmail")).toHaveLength(1);
+    });
+
+    it("waits, without an attempt, while the road it is pinned to is unavailable and nothing else may carry it", async () => {
+      const row = await queue({ road: "mailgun", content: { fallbackAllowed: false } });
       await db.update(emailOutbox).set({ roadFailures: { mailgun: { count: 1, ambiguous: true, lastError: "mailgun unreachable: TimeoutError" } } }).where(eq(emailOutbox.id, row.id));
       const roads = fakeRoads({ available: { mailgun: false } });
       expect(await deliverRelay(db, roads, after(1))).toMatchObject({ waiting: 1, sent: 0 });

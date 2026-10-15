@@ -6,6 +6,7 @@ import {
   readRoadFailures,
   readRoadOutcome,
   RELAY_FAILOVER_AFTER,
+  RELAY_PIN_RELEASE_AFTER,
   type Road,
   type RoadFailures,
   withFailure,
@@ -55,19 +56,35 @@ describe("§NNN planRoad: the chosen road keeps the message until it has failed 
   });
 });
 
-describe("§NNN planRoad: a send that may have been accepted never changes road", () => {
-  it("pins the message to the road whose failure was ambiguous, however many failures the road has", () => {
+describe("§NNN planRoad: a send that may have been accepted is pinned to its road, for a while", () => {
+  it("pins the message to the road whose failure was ambiguous, until the road has failed it three times", () => {
+    expect(RELAY_PIN_RELEASE_AFTER).toBe(3);
     expect(plan("mailgun", { mailgun: failed(1, true) })).toEqual({ road: "mailgun", failedOver: false });
-    expect(plan("mailgun", { mailgun: failed(9, true) })).toEqual({ road: "mailgun", failedOver: false });
-    expect(plan("gmail", { gmail: failed(9, true) })).toEqual({ road: "gmail", failedOver: false });
+    expect(plan("mailgun", { mailgun: failed(2, true) })).toEqual({ road: "mailgun", failedOver: false });
+    expect(plan("gmail", { gmail: failed(2, true) })).toEqual({ road: "gmail", failedOver: false });
   });
 
-  it("stays pinned to the other road when it was the other road that went ambiguous after a failover", () => {
-    expect(plan("mailgun", { mailgun: failed(2), gmail: failed(1, true) })).toEqual({ road: "gmail", failedOver: true });
+  it("lets go after that: a hanging road no longer keeps the message, the other road carries it (both directions)", () => {
+    expect(plan("mailgun", { mailgun: failed(3, true) })).toEqual({ road: "gmail", failedOver: true });
+    expect(plan("gmail", { gmail: failed(3, true) })).toEqual({ road: "mailgun", failedOver: true });
+    expect(plan("mailgun", { mailgun: failed(9, true) })).toEqual({ road: "gmail", failedOver: true });
   });
 
-  it("waits, rather than hand the message over, while the pinned road is unavailable", () => {
-    expect(plan("mailgun", { mailgun: failed(1, true) }, { available: { gmail: true, mailgun: false } })).toEqual({ road: null, why: "pinned-unavailable" });
+  it("lets go of a pin that is not on the chosen road in the same way: the roads take turns by their failures", () => {
+    expect(plan("mailgun", { mailgun: failed(2), gmail: failed(2, true) })).toEqual({ road: "gmail", failedOver: true });
+    expect(plan("mailgun", { mailgun: failed(2), gmail: failed(3, true) })).toEqual({ road: "mailgun", failedOver: false });
+  });
+
+  it("when the message may not take the other road the pin is moot: it stays on the chosen one", () => {
+    expect(plan("mailgun", { mailgun: failed(9, true) }, { fallbackAllowed: false })).toEqual({ road: "mailgun", failedOver: false });
+  });
+
+  it("waits while the pinned road is stopped only when nothing else may carry the message", () => {
+    const stopped = { gmail: true, mailgun: false };
+    expect(plan("mailgun", { mailgun: failed(1, true) }, { available: stopped, fallbackAllowed: false })).toEqual({ road: null, why: "pinned-unavailable" });
+    expect(plan("mailgun", { mailgun: failed(1, true) }, { available: { gmail: false, mailgun: false } })).toEqual({ road: null, why: "pinned-unavailable" });
+    // The other road may carry it: a stopped road is not one to wait on.
+    expect(plan("mailgun", { mailgun: failed(1, true) }, { available: stopped })).toEqual({ road: "gmail", failedOver: true });
   });
 });
 

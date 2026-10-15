@@ -11,14 +11,17 @@ import type { SendResult } from "@/infrastructure/email/adapter";
  * and the two take turns by their failure counts until one of them carries it. Both directions: Mailgun to
  * Gmail and Gmail to Mailgun.
  *
- * **Never a double send.** A failure after which the service may already have the message — the connection
+ * **A pin, but a bounded one.** A failure after which the service may already have the message — the connection
  * broke or timed out once the message was on its way (`mayHaveBeenAccepted`) — is *ambiguous*, and pins the
- * message to that road for good: it is retried there and never handed to the other, because the first road
- * may be about to deliver it. There is no way to ask Gmail whether it took a message, and Mailgun's id is
- * only known from an answer that never came, so «until the road's state is known» is decided in the only
- * way that can be: the state of an ambiguous send is never known, and the message does not change road.
- * (A failure before the service could have taken it — a refused connection, a login, a DNS answer, the
- * server's own 5xx, a connect timeout — is not ambiguous: nothing was accepted.)
+ * message to that road: it is retried there and not handed to the other at once, because the first road may be
+ * about to deliver it. But the pin is a courtesy, not a promise: neither service can be asked whether it took the
+ * message (Gmail's SMTP and Mailgun's API both ignore the idempotency key), so retrying the same road duplicates
+ * exactly as much as the other would, and a pin that never let go would turn a possible duplicate into a delay and
+ * then a loss — a hanging Mailgun would never fail over. So the pin lets go after `RELAY_PIN_RELEASE_AFTER`
+ * failures on the pinned road, and at once when the pinned road is stopped and the other may carry the message;
+ * the roads then take turns as for any failure. A person's message that arrives twice is better than one that
+ * does not arrive (§NNN, the owner's two asks). (A failure before the service could have taken it — a refused
+ * connection, a login, a DNS answer, the server's own 5xx, a connect timeout — is not ambiguous: nothing was accepted.)
  */
 export type Road = "gmail" | "mailgun";
 
@@ -31,6 +34,9 @@ export const ROADS = ["gmail", "mailgun"] as const satisfies readonly Road[];
  * starts at one minute, and the relay's first two retries are seconds, `relay.ts`).
  */
 export const RELAY_FAILOVER_AFTER = 2;
+
+/** Failures on the road an ambiguous send pinned the message to before the pin lets go: three. */
+export const RELAY_PIN_RELEASE_AFTER = 3;
 
 export type RoadFailure = {
   /** The service's failures of this message on this road. */
@@ -95,9 +101,15 @@ export function planRoad(input: RoadPlanInput): RoadPlan {
   const other = otherRoad(chosen);
   const count = (road: Road) => failures[road]?.count ?? 0;
 
-  // An ambiguous send pins the message to its road: retried there, never by the other (see the header).
+  // An ambiguous send pins the message to its road for a while (see the header): retried there, until the pin lets go.
   const pinned = failures[chosen]?.ambiguous ? chosen : failures[other]?.ambiguous ? other : null;
-  if (pinned) return available[pinned] ? { road: pinned, failedOver: pinned !== chosen } : { road: null, why: "pinned-unavailable" };
+  if (pinned && count(pinned) < RELAY_PIN_RELEASE_AFTER) {
+    if (available[pinned]) return { road: pinned, failedOver: pinned !== chosen };
+    // A stopped road is no road to wait on when the other may carry it; with nowhere else to go, wait.
+    const elsewhere = otherRoad(pinned);
+    const mayTakeIt = elsewhere === chosen || fallbackAllowed;
+    if (!available[elsewhere] || !mayTakeIt) return { road: null, why: "pinned-unavailable" };
+  }
 
   const candidates: Road[] = [chosen, ...(fallbackAllowed ? [other] : [])].filter((road) => available[road]);
   if (candidates.length === 0) return { road: null, why: "none-available" };
