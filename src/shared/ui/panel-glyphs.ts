@@ -52,6 +52,7 @@ import PinDropIcon from "@mui/icons-material/PinDrop";
 import FormatSizeIcon from "@mui/icons-material/FormatSize";
 import PaletteIcon from "@mui/icons-material/Palette";
 import PaymentsIcon from "@mui/icons-material/Payments";
+import PeopleAltIcon from "@mui/icons-material/PeopleAlt";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import PhoneIcon from "@mui/icons-material/Phone";
 import EventAvailableIcon from "@mui/icons-material/EventAvailable";
@@ -153,6 +154,8 @@ export const PANEL_GLYPHS = {
   // word, the writing area for the name, the coordinator's telephone («publicPhone»), the cut lines
   // («badgeCut», the scissors — never the print card's own glyph), the print («print»).
   badges: BadgeIcon,
+  // §NNN: one badge for everyone or one per role — the people the badge is for.
+  badgeMode: PeopleAltIcon,
   badgeSize: StraightenIcon,
   badgeRole: LabelIcon,
   badgeWriting: BorderColorIcon,

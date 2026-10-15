@@ -4,9 +4,13 @@ import { type ReactNode, useCallback, useSyncExternalStore } from "react";
 import { useRecall } from "@/shared/forms/recall";
 import { ShownWhen } from "./OnlyForType";
 
-/** The form's radio group `name`: the value checked now, or null with none checked. */
+/** The form's radio group `name`: the value checked now, or — for a native select of that name (§NNN) — the option chosen; null with none. */
 function chosen(name: string): string | null {
-  return document.querySelector<HTMLInputElement>(`input[type="radio"][name="${name}"]:checked`)?.value ?? null;
+  return (
+    document.querySelector<HTMLInputElement>(`input[type="radio"][name="${name}"]:checked`)?.value ??
+    document.querySelector<HTMLSelectElement>(`select[name="${name}"]`)?.value ??
+    null
+  );
 }
 
 /**
@@ -17,6 +21,8 @@ function chosen(name: string): string | null {
  *
  * A native radio fires `change` on the one newly checked, and it bubbles: one listener on the document
  * hears the whole group, renewed on every answer of a kept form (§315), when the group re-mounts.
+ *
+ * `name` may also be a native `<select>`'s (§NNN): the one badge's colour shows the box for «Altă culoare» only while that option is chosen.
  */
 export default function OnlyWhenChosen({ name, value, initial, children }: { name: string; value: string; initial: string; children: ReactNode }) {
   const recall = useRecall();
@@ -25,7 +31,7 @@ export default function OnlyWhenChosen({ name, value, initial, children }: { nam
   const subscribe = useCallback(
     (notify: () => void) => {
       const onChange = (event: Event) => {
-        if (event.target instanceof HTMLInputElement && event.target.name === name) notify();
+        if ((event.target instanceof HTMLInputElement || event.target instanceof HTMLSelectElement) && event.target.name === name) notify();
       };
       document.addEventListener("change", onChange);
       return () => document.removeEventListener("change", onChange);
