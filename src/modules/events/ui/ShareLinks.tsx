@@ -11,7 +11,7 @@ import { Fragment, type ReactNode } from "react";
 import { DISCLOSURE_SUMMARY_SX, DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 import SocialIcon from "@/shared/ui/SocialIcon";
 import CalendarAddress from "./CalendarAddress";
-import { paletteWash } from "@/modules/feedback/ui/branch-glyph";
+import { paletteWash } from "@/shared/ui/choice-card";
 import { facebookShareUrl, whatsappShareUrl } from "../share-links";
 import { CALENDAR_TARGET_NAMESPACE, CALENDAR_TARGETS, calendarTargetMark, type CalendarTarget } from "./calendar-targets";
 import InstagramShareButton from "./InstagramShareButton";

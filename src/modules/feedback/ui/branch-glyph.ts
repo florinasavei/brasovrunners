@@ -51,6 +51,3 @@ export function branchLabelLang(branch: FeedbackBranch, locale: string): string 
   const lang = FEEDBACK_BRANCH_LABEL_LANG[branch];
   return lang && lang !== locale ? lang : undefined;
 }
-
-/** A wash of a palette colour, through its CSS variable so it follows the colour scheme (`theme/surfaces.ts`'s way). */
-export const paletteWash = (colour: "primary" | "secondary", percent: number) => `color-mix(in srgb, var(--mui-palette-${colour}-main) ${percent}%, transparent)`;

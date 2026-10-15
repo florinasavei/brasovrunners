@@ -40,8 +40,9 @@ import {
   VOLUNTEER_NAME_MAX,
 } from "../domain/volunteer";
 import GuardianFields from "./GuardianFields";
-import RoleDescription from "./RoleDescription";
-import VolunteerContactLine from "./VolunteerContactLine";
+import VolunteerCategoryCard from "./VolunteerCategoryCard";
+import VolunteerContactLine, { hasVolunteerContact } from "./VolunteerContactLine";
+import VolunteerRoleTile, { RoleTileGrid } from "./VolunteerRoleTile";
 import type { PublicVolunteerCategory, PublicVolunteerRole } from "../volunteers";
 import { VOLUNTEER_BOX_ID, type VolunteerBox as BoxName, type VolunteerOutcome, type VolunteerTyped } from "./volunteer-box";
 
@@ -250,57 +251,50 @@ export default async function VolunteerBox({
                   {t("volunteers.errors.roleIds")}
                 </FormHelperText>
               )}
-              <Stack sx={{ mt: 0.5 }}>
-                {groups.map((group) => (
-                  <Box key={group.category?.id ?? "other"} data-testid="volunteer-category" role={headed ? "group" : undefined} aria-labelledby={headed ? `volunteer-category-${group.category?.id ?? "other"}` : undefined}>
-                    {/*
-                      A level-3 heading per category (§774; the owner, 2026-10-14: «categorii cu sub-categorii»), in the club's order, then
-                      «Alte activități» for the roles under none — drawn only when the event has a category at all — and, when the club set
-                      the category's contact person, the one line «Întrebări? …» under it.
-                    */}
-                    {headed && (
-                      <Typography
-                        component="h3"
-                        variant="subtitle1"
-                        id={`volunteer-category-${group.category?.id ?? "other"}`}
-                        data-testid="volunteer-category-heading"
-                        sx={{ fontWeight: 700, mt: 1.5 }}
-                      >
-                        {group.category ? (locale === "en" ? group.category.nameEn : group.category.nameRo) : t("volunteers.otherCategory")}
-                      </Typography>
-                    )}
-                    {group.category && <VolunteerContactLine contact={group.category.contact} label={t("volunteers.contactLabel")} />}
-                    {group.roles.map((role) => {
-                      const described = roleDoc(role) != null && (roleWords(role) ?? "").trim() !== "";
-                      const descriptionId = `volunteer-role-${role.id}-description`;
-                      return (
-                        <Box key={role.id} data-testid="volunteer-role-option">
-                          <CheckboxField
-                            name="roleIds"
-                            value={role.id}
-                            id={`volunteer-role-${role.id}`}
-                            defaultChecked={ticked.has(role.id)}
-                            help={needs(role)}
-                            describedBy={described ? descriptionId : undefined}
-                          >
-                            <Box component="span" sx={{ fontWeight: 600 }}>
-                              {roleName(role)}
-                            </Box>
-                          </CheckboxField>
-                          {/* «Descrierea rolului» (§765): the editor's document under the tick, folded «Detalii» past about three lines. */}
-                          <RoleDescription doc={roleDoc(role)} words={roleWords(role)} detailsLabel={t("volunteers.details")} bodyId={descriptionId} />
-                        </Box>
-                      );
-                    })}
-                  </Box>
-                ))}
+              {/*
+                The roles, each category its own card (§778, amending §774; the owner, 2026-10-15: «nu e clară gruparea pe categorii!»): a bordered
+                box with a coloured band — the category's glyph, its name as the level-3 heading, «4 roluri» — the contact line (§774) when the
+                club set one, and the roles inside it as tiles (`VolunteerRoleTile`: the whole tile is the checkbox's label), a clear step between
+                two cards, «Alte activități» last with the same look. An event with no category shows the tiles under no heading, as before.
+              */}
+              <Stack spacing={{ xs: 3, sm: 3.5 }} sx={{ mt: 1.5 }} data-testid="volunteer-role-groups">
+                {groups.map((group) => {
+                  const tiles = (
+                    <RoleTileGrid>
+                      {group.roles.map((role) => (
+                        <VolunteerRoleTile
+                          key={role.id}
+                          id={role.id}
+                          name={roleName(role)}
+                          needs={needs(role)}
+                          ticked={ticked.has(role.id)}
+                          doc={roleDoc(role)}
+                          words={roleWords(role)}
+                          detailsLabel={t("volunteers.details")}
+                        />
+                      ))}
+                    </RoleTileGrid>
+                  );
+                  if (!headed) return <Box key="all">{tiles}</Box>;
+                  return (
+                    <VolunteerCategoryCard
+                      key={group.category?.id ?? "other"}
+                      id={group.category?.id ?? "other"}
+                      title={group.category ? (locale === "en" ? group.category.nameEn : group.category.nameRo) : t("volunteers.otherCategory")}
+                      count={t(`volunteers.roleCount.${countForm(group.roles.length, locale)}`, { count: group.roles.length })}
+                      contact={group.category && hasVolunteerContact(group.category.contact) ? <VolunteerContactLine contact={group.category.contact} label={t("volunteers.contactLabel")} /> : undefined}
+                    >
+                      {tiles}
+                    </VolunteerCategoryCard>
+                  );
+                })}
               </Stack>
               {/*
                 The kinder note (§773; the owner, 2026-10-14: «Și pusă o notă mai drăguță»), right under the roles' list: the person may be
                 asked to cover another responsibility, thanked, and told they will be contacted. The short instruction above the roles stays
                 short; this one is a caption in the form's own style (`body2`, secondary), read with the group.
               */}
-              <Typography id={`${fieldId("roleIds")}-note`} variant="body2" color="text.secondary" sx={{ mt: 1 }} data-testid="volunteer-roles-note">
+              <Typography id={`${fieldId("roleIds")}-note`} variant="body2" color="text.secondary" sx={{ mt: 2 }} data-testid="volunteer-roles-note">
                 {t("volunteers.choicesNote")}
               </Typography>
             </Box>
