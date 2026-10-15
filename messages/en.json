@@ -1107,7 +1107,7 @@
           "few": "{count} notes",
           "other": "{count} notes"
         },
-        "help": "Only organizers and administrators see the notes. They are also in the registrations export. Do not write medical or other sensitive data.",
+        "help": "Only organizers and administrators see the notes. Do not write medical or other sensitive data.",
         "empty": "No notes yet.",
         "by": "{name} · {date}",
         "delete": "Delete",

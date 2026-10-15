@@ -1107,7 +1107,7 @@
           "few": "{count} note",
           "other": "{count} de note"
         },
-        "help": "Doar organizatorii și administratorii văd notele. Apar și în exportul înscrierilor. Nu scrie date medicale sau alte date sensibile.",
+        "help": "Doar organizatorii și administratorii văd notele. Nu scrie date medicale sau alte date sensibile.",
         "empty": "Nicio notă încă.",
         "by": "{name} · {date}",
         "delete": "Șterge",
