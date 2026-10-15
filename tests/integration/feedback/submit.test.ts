@@ -48,6 +48,11 @@ const SETTINGS: FeedbackSettings = {
   safety: { on: true, to: "safety@example.org", via: "mailgun", name: "Maria", fallbackToGmail: false },
 };
 
+/** A deployment where Mailgun does not transmit: a form with no saved road is on the club's Gmail, as before §NNN. */
+const NO_MAILGUN = { gmail: true, mailgun: false };
+/** A deployment with both roads: a form with no saved road is on Mailgun, the recommended one (§NNN). */
+const BOTH_ROADS = { gmail: true, mailgun: true };
+
 type CapturedSmtp = {
   from: { name: string; address: string };
   to: string[];
@@ -661,7 +666,7 @@ describe("§676 «Spune-ne ceva»", () => {
 
   describe("the setting", () => {
     it("is every branch off by default, then what the Administrator saved, audited without an address or a name", async () => {
-      expect(await readFeedbackSettings(db)).toEqual({ ...DEFAULT_FEEDBACK_SETTINGS, updatedAt: null });
+      expect(await readFeedbackSettings(db, NO_MAILGUN)).toEqual({ ...DEFAULT_FEEDBACK_SETTINGS, updatedAt: null });
       await updateFeedbackSettings(db, admin, { ...SETTINGS, safety: { ...SETTINGS.safety, to: " safety@example.org " } }, NOW);
       expect(await readFeedbackSettings(db)).toEqual({ ...SETTINGS, updatedAt: NOW });
 
@@ -692,25 +697,56 @@ describe("§676 «Spune-ne ceva»", () => {
     });
 
     it("§772 defaults every form's road to what §676 fixed in code, and saves what the Administrator chose, audited as a word", async () => {
-      const defaults = await readFeedbackSettings(db);
+      const defaults = await readFeedbackSettings(db, NO_MAILGUN);
       expect(FEEDBACK_BRANCHES.map((branch) => defaults[branch].via)).toEqual(["gmail", "gmail", "gmail", "mailgun"]);
       const chosen = { ...SETTINGS, suggestion: { ...SETTINGS.suggestion, via: "mailgun" }, safety: { ...SETTINGS.safety, via: "gmail" } };
       const saved = await updateFeedbackSettings(db, admin, chosen, NOW);
       expect(saved.suggestion.via).toBe("mailgun");
       expect((await readFeedbackSettings(db)).safety.via).toBe("gmail");
       const [audit] = await db.select().from(auditLogs).where(eq(auditLogs.action, "feedback_forms.changed"));
-      expect(audit.metadataJson).toMatchObject({ viaChanged: [{ branch: "suggestion", via: "mailgun" }, { branch: "safety", via: "gmail" }] });
+      // Against the default of a deployment where Mailgun transmits (§NNN): the three forms saved on Gmail moved, the one saved on Mailgun did not.
+      expect(audit.metadataJson).toMatchObject({ viaChanged: [{ branch: "howItWent", via: "gmail" }, { branch: "complaint", via: "gmail" }, { branch: "safety", via: "gmail" }] });
       expect(JSON.stringify(audit.metadataJson)).not.toContain("@");
     });
 
     it("§772 reads a row saved before the road was chosen as each form's default, never a guess", async () => {
       await db.insert(platformSettings).values({ key: FEEDBACK_SETTING_KEY, value: { howItWent: { on: true, to: "how@example.org" }, safety: { on: true, to: "safety@example.org", name: "Maria" } }, updatedAt: NOW });
-      const read = await readFeedbackSettings(db);
+      const read = await readFeedbackSettings(db, NO_MAILGUN);
       expect(read.howItWent).toEqual({ on: true, to: "how@example.org", via: "gmail" });
       expect(read.safety).toEqual({ on: true, to: "safety@example.org", via: "mailgun", name: "Maria", fallbackToGmail: false });
       // A word this code does not know is the default too.
       await db.update(platformSettings).set({ value: { suggestion: { on: false, to: null, via: "carrier-pigeon" } } }).where(eq(platformSettings.key, FEEDBACK_SETTING_KEY));
-      expect((await readFeedbackSettings(db)).suggestion.via).toBe("gmail");
+      expect((await readFeedbackSettings(db, NO_MAILGUN)).suggestion.via).toBe("gmail");
+    });
+
+    it("§NNN defaults a form with no saved road to Mailgun where it transmits and to the club's Gmail where it does not; Girl Zone stays on Mailgun", async () => {
+      const withMailgun = await readFeedbackSettings(db, BOTH_ROADS);
+      expect(FEEDBACK_BRANCHES.map((branch) => withMailgun[branch].via)).toEqual(["mailgun", "mailgun", "mailgun", "mailgun"]);
+      const without = await readFeedbackSettings(db, NO_MAILGUN);
+      expect(FEEDBACK_BRANCHES.map((branch) => without[branch].via)).toEqual(["gmail", "gmail", "gmail", "mailgun"]);
+      // The environment decides when no roads are passed: the test environment transmits through Mailgun's capture.
+      expect((await readFeedbackSettings(db)).suggestion.via).toBe("mailgun");
+    });
+
+    it("§NNN reads a row saved before the road was chosen as the default for this deployment, and never replaces a road that was saved", async () => {
+      await db.insert(platformSettings).values({
+        key: FEEDBACK_SETTING_KEY,
+        value: {
+          howItWent: { on: true, to: "how@example.org" },
+          suggestion: { on: true, to: "ideas@example.org", via: "gmail" },
+          complaint: { on: true, to: "complaints@example.org", via: "mailgun" },
+        },
+        updatedAt: NOW,
+      });
+      const withMailgun = await readFeedbackSettings(db, BOTH_ROADS);
+      // No road saved: the recommended one. A saved Gmail stays Gmail, though Mailgun transmits; a saved Mailgun stays.
+      expect(FEEDBACK_BRANCHES.map((branch) => withMailgun[branch].via)).toEqual(["mailgun", "gmail", "mailgun", "mailgun"]);
+      const without = await readFeedbackSettings(db, NO_MAILGUN);
+      // Where Mailgun does not transmit, what was saved still stands and the form with none is on Gmail.
+      expect(FEEDBACK_BRANCHES.map((branch) => without[branch].via)).toEqual(["gmail", "gmail", "mailgun", "mailgun"]);
+      // Saving the card writes what it shows: every road saved from then on, none replaced by a later default.
+      await updateFeedbackSettings(db, admin, Object.fromEntries(FEEDBACK_BRANCHES.map((branch) => [branch, { ...SETTINGS[branch], via: withMailgun[branch].via }])), NOW, BOTH_ROADS);
+      expect((await readFeedbackSettings(db, NO_MAILGUN)).howItWent.via).toBe("mailgun");
     });
 
     it("§772 keeps the road already saved when a save does not post one — a greyed radio is never posted", async () => {
@@ -772,7 +808,7 @@ describe("§676 «Spune-ne ceva»", () => {
 
     it("reads a stored value this code cannot read as that branch off", async () => {
       await db.insert(platformSettings).values({ key: FEEDBACK_SETTING_KEY, value: { howItWent: { on: "yes", to: 4 }, safety: 7 }, updatedAt: NOW });
-      const read = await readFeedbackSettings(db);
+      const read = await readFeedbackSettings(db, NO_MAILGUN);
       expect(read.howItWent).toEqual({ on: false, to: null, via: "gmail" });
       expect(read.safety).toEqual(DEFAULT_FEEDBACK_SETTINGS.safety);
     });

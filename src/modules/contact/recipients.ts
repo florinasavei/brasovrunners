@@ -4,6 +4,7 @@ import { platformSettings } from "@/db/schema/platform-settings";
 import type { StaffUser } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
 import { recordAuditEvent } from "@/modules/audit/repository";
+import type { FeedbackRoads } from "@/modules/feedback/domain/branches";
 import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import { canManageClubSettings } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
@@ -72,16 +73,31 @@ export async function readContactRecipientsOrNull(): Promise<ContactRecipientsSt
   }
 }
 
+/**
+ * A choice of road that did not come with the post — a greyed (disabled) radio is never posted — is the road already saved, not a
+ * default: saving the lists must not move «Scrie-ne» to a road nobody chose (§NNN). Anything posted is left for the schema to judge.
+ */
+function keepUnpostedVia(raw: unknown, before: ContactRecipients): unknown {
+  if (!raw || typeof raw !== "object") return raw;
+  const posted = raw as { via?: unknown };
+  if ((posted.via === undefined || posted.via === "") && before.via) return { ...posted, via: before.via };
+  if (posted.via === "") return { ...posted, via: undefined };
+  return raw;
+}
+
 export async function updateContactRecipients<T extends Record<string, unknown>>(
   db: Database<T>,
   actor: Pick<StaffUser, "id" | "role">,
   rawInput: unknown,
   now: Date,
+  /** Which roads this deployment has (`feedbackRoads`); a road not there cannot be newly chosen. Absent, both are. */
+  roads: FeedbackRoads = { gmail: true, mailgun: true },
 ): Promise<ContactRecipientsState> {
   if (!canManageClubSettings(actor.role)) {
     throw new DomainError("FORBIDDEN", `role ${actor.role} may not change the contact recipients`);
   }
-  const parsed = contactRecipientsSchema.safeParse(rawInput);
+  const before = await readContactRecipients(db);
+  const parsed = contactRecipientsSchema.safeParse(keepUnpostedVia(rawInput, before));
   if (!parsed.success) {
     throw new DomainError(
       "VALIDATION_ERROR",
@@ -90,8 +106,12 @@ export async function updateContactRecipients<T extends Record<string, unknown>>
     );
   }
   const next = parsed.data;
+  // A road the deployment does not have may stay where it was — the card greys it and says so — but is never newly chosen:
+  // «Scrie-ne» would then leave by a road that cannot carry it (§NNN, as the four forms' card, §772).
+  if (next.via && next.via !== before.via && !roads[next.via]) {
+    throw new DomainError("VALIDATION_ERROR", "the road chosen is not available on this deployment", ["via"]);
+  }
 
-  const before = await readContactRecipients(db);
   await db.transaction(async (tx) => {
     await tx
       .insert(platformSettings)
@@ -106,8 +126,8 @@ export async function updateContactRecipients<T extends Record<string, unknown>>
       entityType: "platform_setting",
       entityId: CONTACT_RECIPIENTS_SETTING_ENTITY_ID,
       metadata: {
-        from: { to: before.to, cc: before.cc, bcc: before.bcc, holdBackSuspected: before.holdBackSuspected },
-        to: { to: next.to, cc: next.cc, bcc: next.bcc, holdBackSuspected: next.holdBackSuspected },
+        from: { to: before.to, cc: before.cc, bcc: before.bcc, holdBackSuspected: before.holdBackSuspected, ...(before.via ? { via: before.via } : {}) },
+        to: { to: next.to, cc: next.cc, bcc: next.bcc, holdBackSuspected: next.holdBackSuspected, ...(next.via ? { via: next.via } : {}) },
       },
       now,
     });
