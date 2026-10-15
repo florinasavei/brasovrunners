@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { withContactRoad } from "@/modules/contact/domain/recipients";
 
 /**
- * BR-REQ-070-04, `DECISIONS.md` §NNN (amending §149) — the road «Scrie-ne» is queued on: the club's saved choice, else the default
+ * BR-REQ-070-04, `DECISIONS.md` §782 (amending §149) — the road «Scrie-ne» is queued on: the club's saved choice, else the default
  * (Mailgun where it transmits), and a road the deployment lacks is replaced by the one it has.
  */
 const BOTH = { gmail: true, mailgun: true };

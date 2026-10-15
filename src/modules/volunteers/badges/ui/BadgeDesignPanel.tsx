@@ -210,7 +210,7 @@ export default async function BadgeDesignPanel({
       </Typography>
     ) : null;
   // Ticked with no number: each role's badge prints the telephone of its category's contact person (§774).
-  // On the one badge for everyone (§NNN) there is no category: a ticked telephone without a number prints no row, and the line says so.
+  // On the one badge for everyone (§783) there is no category: a ticked telephone without a number prints no row, and the line says so.
   const phoneAside = design.showPhone
     ? design.phone
       ? design.phone
@@ -254,7 +254,7 @@ export default async function BadgeDesignPanel({
             />
           </Box>
 
-          {/* «Un ecuson sau pe roluri» (§NNN): one badge for everyone — the default — or one per role; the one badge's band colour with it. */}
+          {/* «Un ecuson sau pe roluri» (§783): one badge for everyone — the default — or one per role; the one badge's band colour with it. */}
           <Panel glyph="badgeMode" collapsible level={5} title={t("badges.design.sections.mode")} aside={modeAside} data-testid="badge-section-mode">
             <Stack spacing={1.5}>
               <Typography variant="caption" color="text.secondary">
@@ -407,7 +407,7 @@ export default async function BadgeDesignPanel({
             </Stack>
           </Panel>
 
-          {/* «Cuvântul de pe bandă»: «VOLUNTAR» — alone on the one badge's band, small above the role's name on a badge per role (§NNN). */}
+          {/* «Cuvântul de pe bandă»: «VOLUNTAR» — alone on the one badge's band, small above the role's name on a badge per role (§783). */}
           <Panel glyph="badgeRole" collapsible level={5} title={t("badges.design.sections.role")} aside={roleAside} data-testid="badge-section-role">
             <Stack spacing={1.5}>
               <Typography variant="caption" color="text.secondary">

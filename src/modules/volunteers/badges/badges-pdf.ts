@@ -161,7 +161,7 @@ export async function renderBadgeSheet(input: BadgeSheetInput): Promise<Buffer> 
       text("bold", layout.title, x + layout.title.right - doc.widthOfString(layout.title.text), y, bandText);
     }
     // The role's band in its colour; «VOLUNTAR» small above the role's name, or alone and large.
-    // A badge with no role wears the one badge's colour in `single` mode (§NNN), the club's orange in `perRole` mode (§764).
+    // A badge with no role wears the one badge's colour in `single` mode (§783), the club's orange in `perRole` mode (§764).
     const roleColour = role ? badgeRoleColour(role.colour) : badgeNoRoleColour(design);
     const roleText = badgeTextOn(roleColour);
     doc.rect(x + content.left, y + layout.role.top, content.width, layout.role.height).fill(roleColour);

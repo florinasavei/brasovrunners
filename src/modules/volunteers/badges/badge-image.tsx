@@ -83,7 +83,7 @@ export function badgeMarkup(input: BadgeImageInput, logoSrc: string) {
   const { content, pad } = layout;
   const band = badgeBandColour(input.design);
   const bandText = badgeTextOn(band);
-  // A badge with no role wears the one badge's colour in `single` mode (§NNN), the club's orange in `perRole` mode (§764).
+  // A badge with no role wears the one badge's colour in `single` mode (§783), the club's orange in `perRole` mode (§764).
   const roleColour = input.role ? badgeRoleColour(input.role.colour) : badgeNoRoleColour(input.design);
   const roleText = badgeTextOn(roleColour);
   const at = (left: number, top: number) => ({ position: "absolute", left: px(left) - PAPER_EDGE, top: px(top) - PAPER_EDGE }) as const;

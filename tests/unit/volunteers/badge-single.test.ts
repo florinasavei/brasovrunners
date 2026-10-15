@@ -33,7 +33,7 @@ import { badgeSheetOrder, renderBadgeSheet } from "@/modules/volunteers/badges/b
 import { COLOR } from "@/theme/brand";
 
 /**
- * §NNN — one volunteer badge for everyone, no role (the owner, 2026-10-15: «aș vrea să am un singur ecuson de voluntari, fără roluri»), the
+ * §783 — one volunteer badge for everyone, no role (the owner, 2026-10-15: «aș vrea să am un singur ecuson de voluntari, fără roluri»), the
  * default for every design: the choice and its forgiving read, the band's words and colour at AA, the count's start and the spares, the sheet
  * and the picture of the one badge, and the badge per role (§764) untouched beside it.
  *
@@ -47,7 +47,7 @@ const wordsOf = (design: BadgeDesign, locale: "ro" | "en" = "ro") => badgeWords(
 
 afterEach(() => vi.restoreAllMocks());
 
-describe("§NNN the mode: one badge for everyone is the default", () => {
+describe("§783 the mode: one badge for everyone is the default", () => {
   it("is `single` for a design that never chose — null, empty, a design from before the choice, a stored design without the key", () => {
     expect(DEFAULT_BADGE_DESIGN.mode).toBe("single");
     expect(DEFAULT_BADGE_DESIGN.singleColour).toBeNull();
@@ -97,7 +97,7 @@ describe("§NNN the mode: one badge for everyone is the default", () => {
   });
 });
 
-describe("§NNN the one badge's band: words and colour", () => {
+describe("§783 the one badge's band: words and colour", () => {
   it("says the club's «VOLUNTAR» alone — in capitals, in the badge's language — and no role anywhere", () => {
     const ro = JSON.stringify(badgeMarkup({ design: SINGLE, locale: "ro", words: wordsOf(SINGLE), role: null }, ""));
     expect(ro).toContain("VOLUNTAR");
@@ -176,7 +176,7 @@ describe("§NNN the one badge's band: words and colour", () => {
   });
 });
 
-describe("§NNN the telephone on the one badge", () => {
+describe("§783 the telephone on the one badge", () => {
   it("keeps the row only with a number typed: the one badge has no category to take one from", () => {
     expect(badgePhoneRow({ mode: "single", showPhone: true, phone: "" })).toBe(false);
     expect(badgePhoneRow({ mode: "single", showPhone: true, phone: "0712 345 678" })).toBe(true);
@@ -191,7 +191,7 @@ describe("§NNN the telephone on the one badge", () => {
   });
 });
 
-describe("§NNN «Câte ecusoane»: where it starts, and the spares", () => {
+describe("§783 «Câte ecusoane»: where it starts, and the spares", () => {
   it("starts at the confirmed volunteers; else what the roles need together; else ten", () => {
     expect(badgeSingleDefault({ confirmed: 37, needed: 20 })).toBe(37);
     expect(badgeSingleDefault({ confirmed: 0, needed: 20 })).toBe(20);
@@ -240,7 +240,7 @@ describe("§NNN «Câte ecusoane»: where it starts, and the spares", () => {
   });
 });
 
-describe("§NNN the sheet and the picture of the one badge", () => {
+describe("§783 the sheet and the picture of the one badge", () => {
   const entries = [{ role: null, count: 45 }];
   const render = (design: BadgeDesign = SINGLE) =>
     renderBadgeSheet({ design, locale: "ro", words: wordsOf(design), entries, eventTitle: "Brașov Trail Race", generatedAt: new Date("2026-10-15T08:00:00Z") });

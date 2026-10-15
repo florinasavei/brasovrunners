@@ -116,7 +116,7 @@ beforeEach(async () => {
 });
 
 /**
- * The designer's boxes as the form posts them, the default design unless told otherwise: since §NNN that is the one badge for everyone, so a case about
+ * The designer's boxes as the form posts them, the default design unless told otherwise: since §783 that is the one badge for everyone, so a case about
  * the badges per role (the print, the category's telephone) says `perRole` in its own boxes or stores it first (`storePerRole`).
  */
 function designForm(fields: Record<string, string> = {}, event = eventId): FormData {
@@ -371,7 +371,7 @@ describe("§764 a role's colour in the role's own form («Voluntari»)", () => {
 
 describe("§764 «Descarcă ecusoanele (PDF)»", () => {
   const get = (query: string, id = eventId) => sheetRoute.GET(new Request(`http://localhost/api/admin/events/${id}/badges?${query}`), { params: Promise.resolve({ id }) });
-  // The badges per role (§764): since §NNN the event's design must choose them; the one badge for everyone has its own describe below.
+  // The badges per role (§764): since §783 the event's design must choose them; the one badge for everyone has its own describe below.
   beforeEach(async () => {
     await storePerRole();
   });
@@ -653,7 +653,7 @@ describe("§776 the free-text line and the marker area", () => {
   }, 60_000);
 });
 
-describe("§NNN one badge for everyone, no role — the default", () => {
+describe("§783 one badge for everyone, no role — the default", () => {
   const sheet = (query: string, id = eventId) => sheetRoute.GET(new Request(`http://localhost/api/admin/events/${id}/badges?${query}`), { params: Promise.resolve({ id }) });
   const picture = (query: string, id = eventId) => previewRoute.GET(new Request(`http://localhost/api/admin/events/${id}/badges/preview?${query}`), { params: Promise.resolve({ id }) });
   const held = async (response: Response) => /\((\d+) badges\)/.exec(Buffer.from(await response.arrayBuffer()).toString("latin1"))?.[1];

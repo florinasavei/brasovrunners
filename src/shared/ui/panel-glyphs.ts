@@ -154,7 +154,7 @@ export const PANEL_GLYPHS = {
   // word, the writing area for the name, the coordinator's telephone («publicPhone»), the cut lines
   // («badgeCut», the scissors — never the print card's own glyph), the print («print»).
   badges: BadgeIcon,
-  // §NNN: one badge for everyone or one per role — the people the badge is for.
+  // §783: one badge for everyone or one per role — the people the badge is for.
   badgeMode: PeopleAltIcon,
   badgeSize: StraightenIcon,
   badgeRole: LabelIcon,

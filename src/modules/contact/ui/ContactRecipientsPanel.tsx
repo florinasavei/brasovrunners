@@ -32,7 +32,7 @@ type Props = {
   mayEdit: boolean;
   /** Messages the tick held back in the last 30 days (§744 (amends §310)): a count, never a message. */
   heldBack: number;
-  /** The road «Scrie-ne» leaves by now: the saved choice, else the default (`contactViaFor`, §NNN). */
+  /** The road «Scrie-ne» leaves by now: the saved choice, else the default (`contactViaFor`, §782). */
   via: FeedbackVia;
   /** Which roads this deployment has (`feedbackRoads`): one it lacks is greyed, with the steps that give it. */
   roads: FeedbackRoads;
@@ -118,7 +118,7 @@ export default async function ContactRecipientsPanel({ locale, recipients, resol
           <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }} data-testid="contact-hold-back-state">
             {t(recipients.holdBackSuspected ? "emails.contacts.holdBackOn" : "emails.contacts.holdBackOff")}
           </Typography>
-          {/* The road «Scrie-ne» leaves by, as the four forms' card says it (§NNN). */}
+          {/* The road «Scrie-ne» leaves by, as the four forms' card says it (§782). */}
           <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }} data-testid="contact-via-state">
             {t("emails.feedbackForms.via.legend")}: {t(`emails.feedbackForms.via.state${via === "gmail" ? "Gmail" : "Mailgun"}`)}
           </Typography>
@@ -175,7 +175,7 @@ export default async function ContactRecipientsPanel({ locale, recipients, resol
           <Typography variant="caption" color="text.secondary">
             {t("emails.contacts.repeats")}
           </Typography>
-          {/* «Prin ce trimitem» (§772, §NNN): the pair the four forms' card draws (`RoadChoice`), Mailgun recommended; the default of a form with no saved road. */}
+          {/* «Prin ce trimitem» (§772, §782): the pair the four forms' card draws (`RoadChoice`), Mailgun recommended; the default of a form with no saved road. */}
           <RoadChoice
             name="via"
             testId="contact-via"

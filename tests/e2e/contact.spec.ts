@@ -150,7 +150,7 @@ test.describe("BR-REQ-070-04 the contact form", () => {
     await page.goto("/ro/devs");
     await expect(page.getByTestId("road-gmail")).toContainText("Gmail-ul clubului: merge");
     await expect(page.getByTestId("road-mailgun")).toContainText("Mailgun: merge");
-    // ...and the page that shows the outbox has its trace: sent, by the road the form has (Mailgun, the default where it transmits, §NNN), the words deleted.
+    // ...and the page that shows the outbox has its trace: sent, by the road the form has (Mailgun, the default where it transmits, §782), the words deleted.
     await page.goto("/ro/admin/settings/emails");
     const relay = page.getByTestId("relay-messages");
     await expect(relay).toBeVisible();

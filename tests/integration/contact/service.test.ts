@@ -232,7 +232,7 @@ describe("BR-REQ-070-04 the contact form", () => {
     expect(await db.select().from(rateLimitBuckets)).toHaveLength(0);
   });
 
-  it("§NNN queues the message for the road the club chose for «Scrie-ne», and for the club's Gmail when the delivery names none", async () => {
+  it("§782 queues the message for the road the club chose for «Scrie-ne», and for the club's Gmail when the delivery names none", async () => {
     const capture = smtpCapture();
     await queueContact(db, delivery(capture), PERSON, NOW, PAGE);
     await queueContact(db, { ...delivery(capture), road: "mailgun" }, { ...PERSON, email: "ioana@example.com" }, NOW, PAGE);

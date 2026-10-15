@@ -52,7 +52,7 @@ async function withCategories() {
 
 const values = (fields: Record<string, string>) =>
   readBadgeDesignForm((name) => fields[name] ?? null);
-// The badge per role (§764, §774): the category's telephone is a thing of the roles, so these cases choose them (§NNN made one badge for everyone the default).
+// The badge per role (§764, §774): the category's telephone is a thing of the roles, so these cases choose them (§783 made one badge for everyone the default).
 const FORM = { "badge.design.mode": "perRole", "badge.design.size": "strip90", "badge.design.showLogo": "on", "badge.design.showTitle": "on", "badge.design.writingLine": "on", "badge.design.cutMarks": "on" };
 
 describe("§774 «Câte ecusoane»: the roles under their categories", () => {

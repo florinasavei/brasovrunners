@@ -43,7 +43,7 @@ export async function updateContactRecipientsAction(_previous: FormOutcome | nul
 
   try {
     const actor = await requireStaffCapability(canManageClubSettings);
-    // `via` is absent when its radio was greyed (a disabled radio is never posted): the road already saved stays (§NNN).
+    // `via` is absent when its radio was greyed (a disabled radio is never posted): the road already saved stays (§782).
     const via = form.get("via");
     await updateContactRecipients(
       getDb(),

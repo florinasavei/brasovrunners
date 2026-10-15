@@ -48,9 +48,9 @@ const SETTINGS: FeedbackSettings = {
   safety: { on: true, to: "safety@example.org", via: "mailgun", name: "Maria", fallbackToGmail: false },
 };
 
-/** A deployment where Mailgun does not transmit: a form with no saved road is on the club's Gmail, as before §NNN. */
+/** A deployment where Mailgun does not transmit: a form with no saved road is on the club's Gmail, as before §782. */
 const NO_MAILGUN = { gmail: true, mailgun: false };
-/** A deployment with both roads: a form with no saved road is on Mailgun, the recommended one (§NNN). */
+/** A deployment with both roads: a form with no saved road is on Mailgun, the recommended one (§782). */
 const BOTH_ROADS = { gmail: true, mailgun: true };
 
 type CapturedSmtp = {
@@ -704,7 +704,7 @@ describe("§676 «Spune-ne ceva»", () => {
       expect(saved.suggestion.via).toBe("mailgun");
       expect((await readFeedbackSettings(db)).safety.via).toBe("gmail");
       const [audit] = await db.select().from(auditLogs).where(eq(auditLogs.action, "feedback_forms.changed"));
-      // Against the default of a deployment where Mailgun transmits (§NNN): the three forms saved on Gmail moved, the one saved on Mailgun did not.
+      // Against the default of a deployment where Mailgun transmits (§782): the three forms saved on Gmail moved, the one saved on Mailgun did not.
       expect(audit.metadataJson).toMatchObject({ viaChanged: [{ branch: "howItWent", via: "gmail" }, { branch: "complaint", via: "gmail" }, { branch: "safety", via: "gmail" }] });
       expect(JSON.stringify(audit.metadataJson)).not.toContain("@");
     });
@@ -719,7 +719,7 @@ describe("§676 «Spune-ne ceva»", () => {
       expect((await readFeedbackSettings(db, NO_MAILGUN)).suggestion.via).toBe("gmail");
     });
 
-    it("§NNN defaults a form with no saved road to Mailgun where it transmits and to the club's Gmail where it does not; Girl Zone stays on Mailgun", async () => {
+    it("§782 defaults a form with no saved road to Mailgun where it transmits and to the club's Gmail where it does not; Girl Zone stays on Mailgun", async () => {
       const withMailgun = await readFeedbackSettings(db, BOTH_ROADS);
       expect(FEEDBACK_BRANCHES.map((branch) => withMailgun[branch].via)).toEqual(["mailgun", "mailgun", "mailgun", "mailgun"]);
       const without = await readFeedbackSettings(db, NO_MAILGUN);
@@ -728,7 +728,7 @@ describe("§676 «Spune-ne ceva»", () => {
       expect((await readFeedbackSettings(db)).suggestion.via).toBe("mailgun");
     });
 
-    it("§NNN reads a row saved before the road was chosen as the default for this deployment, and never replaces a road that was saved", async () => {
+    it("§782 reads a row saved before the road was chosen as the default for this deployment, and never replaces a road that was saved", async () => {
       await db.insert(platformSettings).values({
         key: FEEDBACK_SETTING_KEY,
         value: {

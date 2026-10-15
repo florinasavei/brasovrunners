@@ -192,7 +192,7 @@ export function parseBadgeDesignPost(values: BadgeDesignFormValues): BadgeDesign
   if (values.bandColour !== null && !badgeColourReadable(values.bandColour)) {
     throw new DomainError("BADGE_COLOUR_UNREADABLE", "the band's colour does not carry its words at AA", [box("bandColour")]);
   }
-  // The one badge's colour (§NNN), held to the rule every band obeys: a typed text that is no `#rrggbb` is refused naming its box, and a colour
+  // The one badge's colour (§783), held to the rule every band obeys: a typed text that is no `#rrggbb` is refused naming its box, and a colour
   // no word reads on is `BADGE_COLOUR_UNREADABLE` — as a role's is (`checkedRoleColour`). Per role the box is hidden (the service ignores what the
   // choice hides): a colour that was typed and cannot be kept is the club's orange, never a refusal about a box the person cannot see.
   const singleBox = box(values.singleColourChoice === TYPED_COLOUR ? "singleColourTyped" : "singleColourChoice");
@@ -407,15 +407,15 @@ export type BadgePrintCounts = {
   roles: ReadonlyMap<string, { count: number; spares: number }>;
   /** «Ecusoane fără rol»: badges with «VOLUNTAR» alone. */
   none: number;
-  /** One badge for everyone (§NNN): «Câte ecusoane» and «În plus» of the single pile, and no role's. Absent in `perRole` mode. */
+  /** One badge for everyone (§783): «Câte ecusoane» and «În plus» of the single pile, and no role's. Absent in `perRole` mode. */
   single?: { count: number; spares: number };
 };
 
-/** What «Câte ecusoane» starts at when the event has no confirmed volunteer and no role that needs anyone (§NNN): ten badges. */
+/** What «Câte ecusoane» starts at when the event has no confirmed volunteer and no role that needs anyone (§783): ten badges. */
 export const BADGE_SINGLE_FALLBACK = 10;
 
 /**
- * «Câte ecusoane» of the one badge for everyone, before anyone types (§NNN): the event's confirmed volunteers; else, with none confirmed
+ * «Câte ecusoane» of the one badge for everyone, before anyone types (§783): the event's confirmed volunteers; else, with none confirmed
  * yet, the people its roles need together; else ten (`BADGE_SINGLE_FALLBACK`). Never more than a sheet's file holds (`BADGE_TOTAL_MAX`),
  * so the form the page draws is always one the sheet accepts.
  */
@@ -471,7 +471,7 @@ export const printBoxes = {
   count: (roleId: string) => `n.${roleId}`,
   spares: (roleId: string) => `x.${roleId}`,
   none: "none",
-  /** The one badge for everyone (§NNN): its «Câte ecusoane» and «În plus». */
+  /** The one badge for everyone (§783): its «Câte ecusoane» and «În plus». */
   all: "all",
   allSpares: "allx",
 } as const;
@@ -486,7 +486,7 @@ export type BadgePrintRefusal = { refused: "number" | "total" };
  * request — for a number that is not a whole number from 0 to `BADGE_COUNT_MAX` (`"number"`), or a total past
  * `BADGE_TOTAL_MAX` (`"total"`); the route says which on the page.
  *
- * With `single` (the design is the one badge for everyone, §NNN) only two boxes are read, `all` and `allx`: «Câte ecusoane»,
+ * With `single` (the design is the one badge for everyone, §783) only two boxes are read, `all` and `allx`: «Câte ecusoane»,
  * absent meaning `single.defaultCount`, and «În plus», absent meaning none — each from 0 to `BADGE_TOTAL_MAX`, the whole pile being everyone; a role's
  * box, or «Ecusoane fără rol», in such a query is not read.
  */
@@ -527,7 +527,7 @@ export function badgePrintEntries(
   counts: BadgePrintCounts,
   locale: BadgeLocale,
 ): Array<{ role: { name: string; colour: string | null; phone: string | null } | null; count: number }> {
-  // One badge for everyone (§NNN): a single pile with no role — «VOLUNTAR» alone, on the design's own colour — however many roles the event has.
+  // One badge for everyone (§783): a single pile with no role — «VOLUNTAR» alone, on the design's own colour — however many roles the event has.
   if (counts.single) return counts.single.count + counts.single.spares > 0 ? [{ role: null, count: counts.single.count + counts.single.spares }] : [];
   return [
     ...roles

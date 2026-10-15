@@ -15,7 +15,7 @@ import { openEditorBox, openFold } from "./support/fold";
  * texts, sees the preview follow, saves, finds them again after the save, and the sheet still holds the
  * badges asked for; and a size with no room for everything ticked is refused, in words, before anything is kept.
  *
- * §NNN makes the one badge for everyone, with no role, the default: the first case chooses «Câte un ecuson pe rol» (the badge per role, §764, kept
+ * §783 makes the one badge for everyone, with no role, the default: the first case chooses «Câte un ecuson pe rol» (the badge per role, §764, kept
  * as it was), and a case of its own prints in the one-badge mode — its colour chosen and refused below AA, «Câte ecusoane» starting at the
  * confirmed volunteers, «În plus», the PDF holding N plus the spares.
  *
@@ -52,7 +52,7 @@ async function seedEvent(tag: string): Promise<{ id: string; water: string; fini
   }
 }
 
-/** `count` confirmed volunteers of the event, written straight into the database: what the one badge's «Câte ecusoane» starts at (§NNN). */
+/** `count` confirmed volunteers of the event, written straight into the database: what the one badge's «Câte ecusoane» starts at (§783). */
 async function confirmedVolunteers(eventId: string, count: number): Promise<void> {
   const client = new pg.Client({ connectionString: databaseUrl() });
   await client.connect();
@@ -87,7 +87,7 @@ test.describe("§764 volunteer badges, designed and printed per role", () => {
     await expect(row.getByTestId("volunteer-role-colour")).toContainText("Portocaliul clubului");
     await openFold(row.locator("summary", { hasText: "Modifică" }).locator("xpath=.."));
     await row.getByLabel("Culoarea benzii").selectOption({ label: "Roșu" });
-    // §NNN: the colour serves the badge per role only, and the role's form says so in one line.
+    // §783: the colour serves the badge per role only, and the role's form says so in one line.
     await expect(row.getByTestId("badge-colour-per-role-only")).toContainText("doar când ecusonul e pe roluri");
     await row.getByRole("button", { name: "Salvează", exact: true }).click();
     await page.waitForURL(/#box-volunteers$/);
@@ -112,7 +112,7 @@ test.describe("§764 volunteer badges, designed and printed per role", () => {
     await openFold(designer);
     const preview = page.getByTestId("badge-design-preview").locator("img");
     await expect(preview).toHaveAttribute("src", /[?&]size=strip90(&|$)/);
-    // Since §NNN one badge for everyone is the default: this case is about the badge per role, so it chooses them — and the preview follows.
+    // Since §783 one badge for everyone is the default: this case is about the badge per role, so it chooses them — and the preview follows.
     const mode = page.getByTestId("badge-mode");
     await openFold(page.getByTestId("badge-section-mode"));
     await expect(mode.getByRole("radio", { name: "Un singur ecuson pentru toți, fără rol" })).toBeChecked();
@@ -212,7 +212,7 @@ test.describe("§764 volunteer badges, designed and printed per role", () => {
     await expect(page.getByTestId("badge-print")).toHaveAttribute("open", "");
   });
 
-  test("one badge for everyone, no role, is the default: its colour is chosen, the count starts at the confirmed volunteers, the PDF holds N plus the spares (§NNN)", async ({ page }) => {
+  test("one badge for everyone, no role, is the default: its colour is chosen, the count starts at the confirmed volunteers, the PDF holds N plus the spares (§783)", async ({ page }) => {
     const tag = `${test.info().project.name}-single-${Date.now().toString(36)}`;
     const event = await seedEvent(tag);
     await confirmedVolunteers(event.id, 4);

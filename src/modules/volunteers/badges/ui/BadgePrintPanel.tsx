@@ -44,7 +44,7 @@ export default async function BadgePrintPanel({
   /** The page came back with the route's refusal of the numbers: the card opens, its boxes in view. */
   refused?: boolean;
   /**
-   * Where «Câte ecusoane» of the one badge for everyone starts (§NNN: `readBadgeSingleStart`) — given when the saved design is `single`, which
+   * Where «Câte ecusoane» of the one badge for everyone starts (§783: `readBadgeSingleStart`) — given when the saved design is `single`, which
    * makes the card one pile; null for the badges per role (§764), a pile per role and the badges «fără rol».
    */
   singleStart?: BadgeSingleStart | null;
@@ -77,7 +77,7 @@ export default async function BadgePrintPanel({
     />
   );
   /**
-   * The one badge for everyone (§NNN): one pile, as the saved design prints it — «VOLUNTAR» on its colour, no role — with «Câte ecusoane»
+   * The one badge for everyone (§783): one pile, as the saved design prints it — «VOLUNTAR» on its colour, no role — with «Câte ecusoane»
    * (the event's confirmed volunteers to begin with, `badgeSingleStart`) and «În plus». The whole pile is everyone, so the boxes may hold up to a file's worth.
    */
   const singlePile = (start: BadgeSingleStart) => (

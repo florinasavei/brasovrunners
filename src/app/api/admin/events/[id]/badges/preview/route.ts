@@ -60,7 +60,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
     design,
     locale: badgeLocale,
     words: badgeWords(design, badgeLocale, event.title, await badgeDefaultWords(badgeLocale)),
-    // The one badge for everyone (§NNN) has no role, whichever role the address names: the designer's sample keeps asking for the event's first
+    // The one badge for everyone (§783) has no role, whichever role the address names: the designer's sample keeps asking for the event's first
     // role while the choice is flipped, and the picture follows the design it is drawn from.
     role: role && design.mode === "perRole" ? { name: badgeRoleName(role, badgeLocale), colour: role.colour, phone: role.categoryPhone } : null,
     headerPicture: bibPictureForImage(loaded.header),

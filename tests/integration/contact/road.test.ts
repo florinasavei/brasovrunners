@@ -8,7 +8,7 @@ import { CONTACT_RECIPIENTS_SETTING_KEY, readContactRecipients, updateContactRec
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-070-04, `DECISIONS.md` §NNN (amending §149, §164) — «Prin ce trimitem» for «Scrie-ne»: the road the form leaves by is a
+ * BR-REQ-070-04, `DECISIONS.md` §782 (amending §149, §164) — «Prin ce trimitem» for «Scrie-ne»: the road the form leaves by is a
  * setting of the same row as its recipients, Mailgun by default where it transmits and the club's Gmail where it does not, a
  * road the club chose is never replaced, and a save that does not post one (a greyed radio) leaves it as it was.
  */

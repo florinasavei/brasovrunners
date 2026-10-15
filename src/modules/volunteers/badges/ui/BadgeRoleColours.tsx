@@ -15,7 +15,7 @@ import RoleColourFields from "./RoleColourFields";
 import RoleColourSample from "./RoleColourSample";
 
 /**
- * «Culorile rolurilor» (§764): each role's band colour on the badge — used only while the badge is per role (§NNN: the one badge for everyone has the colour of its own, in «Cum arată ecusonul») —«Portocaliul clubului» (the kit's
+ * «Culorile rolurilor» (§764): each role's band colour on the badge — used only while the badge is per role (§783: the one badge for everyone has the colour of its own, in «Cum arată ecusonul») —«Portocaliul clubului» (the kit's
  * orange), one of the bib's palette, or a colour typed in «Culoarea scrisă» and refused when its words
  * would not read at AA. A new colour typed there is the one kept even when the select still shows the saved
  * choice (`badges.ts#saveBadgeRoleColours`), so nobody types a colour and saves the old one. The same colour
@@ -47,7 +47,7 @@ export default async function BadgeRoleColours({
     fields[boxes.typed] = t("badges.colours.typedOf", { role: badgeRoleLabel(role, locale) });
   }
   const messages = await refusalMessages(fields);
-  // With the one badge for everyone chosen (§NNN) these colours print nowhere: the closed line says so, the colours stay kept for the day the badges go per role.
+  // With the one badge for everyone chosen (§783) these colours print nowhere: the closed line says so, the colours stay kept for the day the badges go per role.
   const aside =
     design.mode === "single"
       ? t("badges.colours.asideSingle")

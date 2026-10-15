@@ -210,7 +210,7 @@ describe("§764 «Tipărire»", () => {
   });
 });
 
-describe("§NNN «Un singur ecuson» in the designer", () => {
+describe("§783 «Un singur ecuson» in the designer", () => {
   const draw = (design = DEFAULT_BADGE_DESIGN, language: "ro" | "en" = "ro", dropped: Array<"mode" | "singleColour"> = []) =>
     html(() => BadgeDesignPanel({ eventId: EVENT, locale: language, design, dropped, sampleRole: ROLES[0].id, version: "abc" }), language);
   const radio = (page: string, value: string) => new RegExp(`<input[^>]*name="badge\\.design\\.mode"[^>]*value="${value}"[^>]*>|<input[^>]*value="${value}"[^>]*name="badge\\.design\\.mode"[^>]*>`).exec(page)?.[0] ?? "";
@@ -291,7 +291,7 @@ describe("§NNN «Un singur ecuson» in the designer", () => {
   });
 });
 
-describe("§NNN «Culorile rolurilor» serve the badges per role only", () => {
+describe("§783 «Culorile rolurilor» serve the badges per role only", () => {
   it("says so in the closed line when the one badge is chosen, and keeps the colours", async () => {
     const single = await html(() => BadgeRoleColours({ eventId: EVENT, locale: "ro", roles: ROLES, design: DEFAULT_BADGE_DESIGN }));
     expect(single).toContain("Doar pe roluri");
@@ -320,7 +320,7 @@ describe("§NNN «Culorile rolurilor» serve the badges per role only", () => {
   });
 });
 
-describe("§NNN «Tipărire» of the one badge", () => {
+describe("§783 «Tipărire» of the one badge", () => {
   const single = (start: { count: number; basis: "confirmed" | "needed" | "fallback" }, language: "ro" | "en" = "ro") =>
     html(() => BadgePrintPanel({ eventId: EVENT, locale: language, design: DEFAULT_BADGE_DESIGN, roles: ROLES, eventTitle: "Crosul", singleStart: start }), language);
 

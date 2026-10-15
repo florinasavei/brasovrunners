@@ -34,12 +34,12 @@ export default async function RoleColourFields({
   /** The colour as stored: a hex, or null for the club's orange. */
   colour: string | null;
   /**
-   * The boxes of the one badge for everyone, in the designer (§NNN): the same choice and the same typed colour with the same help, but the
+   * The boxes of the one badge for everyone, in the designer (§783): the same choice and the same typed colour with the same help, but the
    * typed box is shown only while «Altă culoare» is chosen (so the select alone decides which colour is meant), and no line says that the colour
    * serves the per-role badges — it is the one badge's own. Left out, these are a role's boxes (§764), and the one line under them says so.
    */
   forSingle?: boolean;
-  /** The one line saying the colour serves the badge per role only (§NNN): under a role's own boxes; the badges' page says it once, in its intro. */
+  /** The one line saying the colour serves the badge per role only (§783): under a role's own boxes; the badges' page says it once, in its intro. */
   perRoleHelp?: boolean;
 }) {
   const t = await getTranslations("Admin");

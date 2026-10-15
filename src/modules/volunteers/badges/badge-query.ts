@@ -18,7 +18,7 @@ export type BadgeCropValue = string | { x: number; y: number; w: number; h: numb
 
 /** What the designer posts, before validation: the action's and the island's common reading. */
 export type BadgeDesignFormValues = {
-  /** «Un singur ecuson» (`single`) or «Câte un ecuson pe rol» (`perRole`), as posted (§NNN); the save refuses anything else. */
+  /** «Un singur ecuson» (`single`) or «Câte un ecuson pe rol» (`perRole`), as posted (§783); the save refuses anything else. */
   mode: string;
   /** The one badge's band colour: what `singleColourChoice` and `singleColourTyped` say (`postedSingleColour`), null for the club's orange or for a typed text that is no colour. */
   singleColour: string | null;
@@ -65,7 +65,7 @@ export function typedColour(raw: string): string | null {
 }
 
 /**
- * The colour of the one badge's band, from the two boxes that post it (§NNN): `null` for the club's orange (the empty choice), a palette
+ * The colour of the one badge's band, from the two boxes that post it (§783): `null` for the club's orange (the empty choice), a palette
  * colour as chosen, or the typed one after «Altă culoare». `undefined` is a choice that names no colour — a typed text that is not
  * `#rrggbb`, a value no option holds — which the save refuses, naming its box, and the preview draws as the club's orange.
  */
