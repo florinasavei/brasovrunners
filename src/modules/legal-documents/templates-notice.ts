@@ -11,6 +11,7 @@ import { LEGAL_DOCUMENT_KEYS } from "./domain/keys";
 import {
   isUnannouncedChange,
   legalTemplatesCheckDue,
+  legalTemplatesDigestDue,
   legalTemplatesIdempotencyKey,
   type LegalTemplatesNotice,
   readLegalTemplatesNoticeValue,
@@ -33,6 +34,14 @@ import { type ClubFacts, clubFactsFromEnv } from "./templates/club-facts";
  * of its own: it runs when the job runs, and reads the overview at most once an hour per environment
  * (`domain/templates-notice.ts`). Each environment has its own row and its own staff: QA announces
  * QA's templates to QA's Administrators, production production's.
+ *
+ * **One email a day, a digest (§NNN; the owner, 2026-10-15: six releases in a night sent six emails).**
+ * The first run at or after 08:00 club time (Europe/Bucharest) that finds a template newer than the
+ * ones the last email carried sends ONE email naming every text whose template is newer; nothing is
+ * sent when nothing changed, and a change that lands after the day's email waits for the next day's.
+ * The mark of «the last digest» is `announcedAt` in this same row — the house keeps its job marks in
+ * `platform_settings` (the hourly check, the translation budget, the newsletter's alert lock) — so it
+ * survives a restart and costs no table.
  *
  * **It asks; it never does.** `readLegalOverview` is read-only, and nothing here drafts, approves or
  * writes a legal text (AGENTS.md §10.8, §29): the email tells a person to regenerate, read and approve.
@@ -82,7 +91,7 @@ export function legalTemplatesStamp(): string {
 }
 
 export type LegalTemplatesNoticeRun = {
-  /** Whether this run read the overview (false: inside the hour since the last read). */
+  /** Whether this run read the overview (false: not the digest's turn — before 08:00 club time or today's email has gone — or inside the hour since the last read). */
   checked: boolean;
   /** Emails queued this run: one per Administrator and Superadministrator, on a change, else none. */
   queued: number;
@@ -96,6 +105,9 @@ export async function announceLegalTemplateChanges<T extends Record<string, unkn
   now: Date,
 ): Promise<LegalTemplatesNoticeRun> {
   const notice = await readLegalTemplatesNotice(db);
+  // The digest's turn first (§NNN): before 08:00 club time, or once today's email has gone, the step
+  // reads the one row and nothing else — a release at 09:00 waits for tomorrow's digest.
+  if (!legalTemplatesDigestDue(notice, now)) return { checked: false, queued: 0, keys: [] };
   const templatesStamp = legalTemplatesStamp();
   if (!legalTemplatesCheckDue(notice, now, templatesStamp)) return { checked: false, queued: 0, keys: [] };
 

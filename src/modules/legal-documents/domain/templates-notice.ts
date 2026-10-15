@@ -1,6 +1,8 @@
 import { createHash } from "node:crypto";
 import { z } from "zod";
 import type { LegalDocumentKey } from "@/db/schema/legal-documents";
+import { CLUB_TIME_ZONE } from "@/i18n/dates";
+import { fromWallTimeInput, toWallTimeInput } from "@/modules/events/domain/zoned-time";
 import { LEGAL_DOCUMENT_KEYS } from "./keys";
 
 /**
@@ -9,6 +11,13 @@ import { LEGAL_DOCUMENT_KEYS } from "./keys";
  * change of the templates, and what it remembers in `platform_settings` so each change is announced
  * once, on each environment separately.
  *
+ * - **A digest, not a notice per change** (§NNN; the owner, 2026-10-15: «Parcă totuși șabloanele
+ *   textelor se schimbă prea des, că tot primesc email, de ce?» — six releases in one night sent six
+ *   emails). At most one email per club day (`LEGAL_TEMPLATES_DIGEST_HOUR`, Europe/Bucharest): the first
+ *   run at or after 08:00 club time that finds a change since the last email sends ONE, naming every
+ *   text whose template is newer; a change that lands after that email waits for the next day's. The
+ *   mark is `announcedAt` in the same row — «the last digest» — so it survives a restart and a deploy,
+ *   and no table or column is new.
  * - **How often.** At most once an hour (`LEGAL_TEMPLATES_CHECK_MINUTES`), whatever the pinger does:
  *   reading every text's overview is a dozen queries, and the job may run every fifteen minutes
  *   (§479, §549: a job step must be cheap). Between two checks the step reads one row and nothing else
@@ -21,6 +30,15 @@ import { LEGAL_DOCUMENT_KEYS } from "./keys";
  *   was announced — the club approved some of the texts and not yet the rest — is not a change and is
  *   not announced again: `/admin/tasks` stays the standing reminder, the email is the knock.
  */
+
+/**
+ * The club hour from which the day's digest may go (§NNN): the first run at or after it. Before it a
+ * night's releases wait, so the one email is read in the morning and not at 03:00.
+ */
+export const LEGAL_TEMPLATES_DIGEST_HOUR = 8;
+
+/** The same hour as the email writes it, «08:00» — read from the one constant, never typed twice. */
+export const LEGAL_TEMPLATES_DIGEST_CLOCK = `${String(LEGAL_TEMPLATES_DIGEST_HOUR).padStart(2, "0")}:00`;
 
 /** The least time between two reads of the overview, per environment (§479). */
 export const LEGAL_TEMPLATES_CHECK_MINUTES = 60;
@@ -59,6 +77,31 @@ export const NO_LEGAL_TEMPLATES_NOTICE: LegalTemplatesNotice = {
 export function readLegalTemplatesNoticeValue(value: unknown): LegalTemplatesNotice {
   const parsed = legalTemplatesNoticeSchema.safeParse(value);
   return parsed.success ? parsed.data : { ...NO_LEGAL_TEMPLATES_NOTICE };
+}
+
+/**
+ * The instant the club day of `now` opens its digest: 08:00 on the wall clock of `CLUB_TIME_ZONE`
+ * that day — 05:00Z in summer time, 06:00Z in winter — so the hour holds across the two changes of
+ * the clock (the wall clock, never «plus 24 hours»; the changes happen between 03:00 and 04:00, so
+ * 08:00 is never in a gap or an overlap).
+ */
+export function legalTemplatesDigestOpensAt(now: Date): Date {
+  const today = toWallTimeInput(now, CLUB_TIME_ZONE).slice(0, 10);
+  const opens = fromWallTimeInput(`${today}T${LEGAL_TEMPLATES_DIGEST_CLOCK}`, CLUB_TIME_ZONE);
+  if (!opens) throw new Error(`cannot place ${LEGAL_TEMPLATES_DIGEST_CLOCK} on ${today} in ${CLUB_TIME_ZONE}`);
+  return opens;
+}
+
+/**
+ * Whether it is the digest's turn (§NNN): `now` is at or after today's 08:00 club time, and no digest
+ * has gone since then — at most one per club day, the first run after 08:00 sending it. A change
+ * after the day's digest therefore waits for the next day's; a run before 08:00 reads nothing.
+ * `announcedAt` is the mark; never sent is due from the first morning.
+ */
+export function legalTemplatesDigestDue(notice: LegalTemplatesNotice, now: Date): boolean {
+  const opensAt = legalTemplatesDigestOpensAt(now);
+  if (now.getTime() < opensAt.getTime()) return false;
+  return notice.announcedAt === null || Date.parse(notice.announcedAt) < opensAt.getTime();
 }
 
 /**

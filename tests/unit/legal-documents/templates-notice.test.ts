@@ -6,6 +6,9 @@ import {
   isUnannouncedChange,
   LEGAL_TEMPLATES_CHECK_MINUTES,
   legalTemplatesCheckDue,
+  LEGAL_TEMPLATES_DIGEST_CLOCK,
+  legalTemplatesDigestDue,
+  legalTemplatesDigestOpensAt,
   legalTemplatesIdempotencyKey,
   legalTemplatesNoticeSchema,
   NO_LEGAL_TEMPLATES_NOTICE,
@@ -93,6 +96,69 @@ describe("§639 what counts as a change of the templates", () => {
     expect(legalTemplatesNoticeSchema.safeParse({ ...NO_LEGAL_TEMPLATES_NOTICE, keys: ["NOT_A_TEXT"] }).success).toBe(false);
     expect(legalTemplatesNoticeSchema.safeParse({ ...NO_LEGAL_TEMPLATES_NOTICE, other: 1 }).success).toBe(false);
     expect(readLegalTemplatesNoticeValue({ checkedAt: "yesterday" })).toEqual(NO_LEGAL_TEMPLATES_NOTICE);
+  });
+});
+
+/**
+ * §NNN — the digest's turn: at most one email per club day (Europe/Bucharest), the first run at or
+ * after 08:00 club time. Every instant below is handed to the function as `now`; nothing reads the
+ * real clock, so `yarn test:clock` has nothing to move here.
+ */
+describe("§NNN the digest opens at 08:00 club time, on the wall clock, across both changes of the clock", () => {
+  const at = (iso: string) => new Date(iso);
+
+  it("is 05:00Z in summer time and 06:00Z in winter time", () => {
+    expect(LEGAL_TEMPLATES_DIGEST_CLOCK).toBe("08:00");
+    expect(legalTemplatesDigestOpensAt(at("2026-07-15T12:00:00Z")).toISOString()).toBe("2026-07-15T05:00:00.000Z");
+    expect(legalTemplatesDigestOpensAt(at("2026-12-15T12:00:00Z")).toISOString()).toBe("2026-12-15T06:00:00.000Z");
+  });
+
+  it("moves with the clock on the day of each change: the last Sundays of October and March", () => {
+    // 2026-10-25: summer time ends at 04:00 local (01:00Z); 08:00 that day is winter time, 06:00Z.
+    expect(legalTemplatesDigestOpensAt(at("2026-10-24T12:00:00Z")).toISOString()).toBe("2026-10-24T05:00:00.000Z");
+    expect(legalTemplatesDigestOpensAt(at("2026-10-25T12:00:00Z")).toISOString()).toBe("2026-10-25T06:00:00.000Z");
+    // 2026-03-29: summer time starts at 03:00 local (01:00Z); 08:00 that day is summer time, 05:00Z.
+    expect(legalTemplatesDigestOpensAt(at("2026-03-28T12:00:00Z")).toISOString()).toBe("2026-03-28T06:00:00.000Z");
+    expect(legalTemplatesDigestOpensAt(at("2026-03-29T12:00:00Z")).toISOString()).toBe("2026-03-29T05:00:00.000Z");
+  });
+
+  it("reads the club's day, not the UTC day: 00:30 in Brașov is already the next day, and before its 08:00", () => {
+    // 2026-10-02T21:30Z is 00:30 on 3 October in Brașov.
+    expect(legalTemplatesDigestOpensAt(at("2026-10-02T21:30:00Z")).toISOString()).toBe("2026-10-03T05:00:00.000Z");
+    expect(legalTemplatesDigestDue(NO_LEGAL_TEMPLATES_NOTICE, at("2026-10-02T21:30:00Z"))).toBe(false);
+  });
+
+  it("is due from the first minute of 08:00, never before, in summer time", () => {
+    expect(legalTemplatesDigestDue(NO_LEGAL_TEMPLATES_NOTICE, at("2026-10-24T04:59:59Z"))).toBe(false);
+    expect(legalTemplatesDigestDue(NO_LEGAL_TEMPLATES_NOTICE, at("2026-10-24T05:00:00Z"))).toBe(true);
+  });
+
+  it("is due from the first minute of 08:00 in winter time, so the day the clock goes back opens an hour later in UTC", () => {
+    expect(legalTemplatesDigestDue(NO_LEGAL_TEMPLATES_NOTICE, at("2026-10-25T05:59:59Z"))).toBe(false);
+    expect(legalTemplatesDigestDue(NO_LEGAL_TEMPLATES_NOTICE, at("2026-10-25T06:00:00Z"))).toBe(true);
+  });
+
+  it("opens an hour earlier in UTC the day the clock goes forward", () => {
+    expect(legalTemplatesDigestDue(NO_LEGAL_TEMPLATES_NOTICE, at("2026-03-29T04:59:59Z"))).toBe(false);
+    expect(legalTemplatesDigestDue(NO_LEGAL_TEMPLATES_NOTICE, at("2026-03-29T05:00:00Z"))).toBe(true);
+  });
+
+  it("is not due again the same club day once a digest has gone, and is the next morning", () => {
+    const sent = { ...NO_LEGAL_TEMPLATES_NOTICE, announcedAt: "2026-10-24T05:03:00.000Z" };
+    expect(legalTemplatesDigestDue(sent, at("2026-10-24T05:03:00Z"))).toBe(false);
+    expect(legalTemplatesDigestDue(sent, at("2026-10-24T20:00:00Z"))).toBe(false);
+    // 24 hours later is 07:03 local the day the clock goes back: still before 08:00, so not due.
+    expect(legalTemplatesDigestDue(sent, at("2026-10-25T05:59:59Z"))).toBe(false);
+    expect(legalTemplatesDigestDue(sent, at("2026-10-25T06:00:00Z"))).toBe(true);
+  });
+
+  it("counts a digest sent at 08:00 sharp as today's, and one sent yesterday as no mark for today", () => {
+    expect(legalTemplatesDigestDue({ ...NO_LEGAL_TEMPLATES_NOTICE, announcedAt: "2026-10-24T05:00:00.000Z" }, at("2026-10-24T09:00:00Z"))).toBe(false);
+    expect(legalTemplatesDigestDue({ ...NO_LEGAL_TEMPLATES_NOTICE, announcedAt: "2026-10-23T05:00:00.000Z" }, at("2026-10-24T09:00:00Z"))).toBe(true);
+  });
+
+  it("keeps the mark on the row's existing field, so no column or table is new", () => {
+    expect(Object.keys(NO_LEGAL_TEMPLATES_NOTICE).sort()).toEqual(["announcedAt", "checkedAt", "fingerprint", "keys", "pairs", "templatesStamp"]);
   });
 });
 
