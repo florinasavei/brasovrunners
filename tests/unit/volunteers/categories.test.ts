@@ -124,8 +124,8 @@ describe("§NNN the contact person of a category", () => {
   });
 
   it("is said in the order name, telephone, address, leaving out what is not set", () => {
-    expect(contactParts({ name: "Ana", phone: "+40712345678", email: "ana@club.test" })).toEqual(["Ana", "+40712345678", "ana@club.test"]);
-    expect(contactParts({ name: null, phone: "+40712345678", email: null })).toEqual(["+40712345678"]);
+    expect(contactParts({ name: "Ana", phone: "+40712345678", email: "ana@club.test" })).toEqual(["Ana", "+40 712 345 678", "ana@club.test"]);
+    expect(contactParts({ name: null, phone: "+40712345678", email: null })).toEqual(["+40 712 345 678"]);
   });
 
   it("is read from the form: every box optional, an empty one is null, an address must be one, a number is bounded and never parsed", () => {
@@ -138,6 +138,11 @@ describe("§NNN the contact person of a category", () => {
     expect(volunteerCategoryContactSchema.safeParse({ contactName: "", contactPhone: "", contactEmail: "not an address" }).success).toBe(false);
     expect(volunteerCategoryContactSchema.safeParse({ contactName: "", contactPhone: "0".repeat(41), contactEmail: "" }).success).toBe(false);
     expect(volunteerCategoryContactSchema.safeParse({ contactName: "x".repeat(121), contactPhone: "", contactEmail: "" }).success).toBe(false);
+    // Words are no number: they would be saved as a dead tel: link and vanish from the badges.
+    const words = volunteerCategoryContactSchema.safeParse({ contactName: "", contactPhone: "in curand", contactEmail: "" });
+    expect(words.success).toBe(false);
+    if (!words.success) expect(words.error.issues[0]?.path).toEqual(["contactPhone"]);
+    expect(volunteerCategoryContactSchema.safeParse({ contactName: "", contactPhone: "123", contactEmail: "" }).success).toBe(false);
     // A landline, a foreign number: the club's to write.
     expect(volunteerCategoryContactSchema.parse({ contactName: "", contactPhone: "+44 20 7946 0000", contactEmail: "" }).contactPhone).toBe("+44 20 7946 0000");
   });
@@ -175,7 +180,7 @@ describe("§NNN the coordinator's telephone on a role's badge", () => {
   it("defaults to the telephone of the role's category when the tick is on and the design leaves the number empty, with the same label", () => {
     const empty = design({ showPhone: true, phone: "", phoneLabelRo: "Șef traseu", phoneLabelEn: "Route lead" });
     expect(badgePhoneLine(empty, badgeWords(empty, "ro", "Crosul", defaults), "0799 000 111")).toBe("Șef traseu: 0799 000 111");
-    expect(badgePhoneLine(empty, badgeWords(empty, "en", "Crosul", { ...defaults, phoneLabel: "Coordinator" }), "+40799000111")).toBe("Route lead: +40799000111");
+    expect(badgePhoneLine(empty, badgeWords(empty, "en", "Crosul", { ...defaults, phoneLabel: "Coordinator" }), "+40799000111")).toBe("Route lead: +40 799 000 111");
     // The platform's word when the club typed no label.
     const unlabelled = design({ showPhone: true });
     expect(badgePhoneLine(unlabelled, badgeWords(unlabelled, "ro", "Crosul", defaults), "0799 000 111")).toBe("Coordonator: 0799 000 111");

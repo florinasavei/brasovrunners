@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { contrastRatio, MIN_TEXT_CONTRAST } from "@/modules/appearance/domain/tint-contrast";
 import { BIB_BAND_FALLBACK, bibEmergencyPhone, storedCrop, storedPicture } from "@/modules/registrations/bib-design";
+import { formatPhone } from "@/modules/registrations/phone";
 import { bibFooterText } from "@/modules/registrations/bib-footer";
 import { fnv1a } from "@/shared/hash";
 import { COLOR } from "@/theme/brand";
@@ -212,7 +213,8 @@ export function badgePhoneLine(design: Pick<BadgeDesign, "showPhone" | "phone">,
   // The design's own number, already worded with its label (`badgeWords`, null while the tick is off); else the category's.
   if (words.phone !== null) return words.phone;
   if (!design.showPhone) return null;
-  const number = categoryPhone ? bibEmergencyPhone(categoryPhone) : "";
+  // Read as a person reads it («+40 712 345 678»), as the public page does; the design's own number is printed as the club typed it.
+  const number = categoryPhone ? formatPhone(bibEmergencyPhone(categoryPhone)) : "";
   if (number === "") return null;
   return words.phoneLabel ? `${words.phoneLabel}: ${number}` : number;
 }

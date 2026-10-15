@@ -4958,7 +4958,7 @@
         "count": "Categorii: {count}",
         "intro": "O categorie grupează rolurile sub un titlu, pe card și pe pagina voluntarilor, de exemplu „Traseu”. Același rol poate sta în mai multe categorii. Ordinea de aici e ordinea de pe pagină.",
         "empty": "Nicio categorie încă. Rolurile se arată într-o listă, fără titluri. Adaugă prima mai jos: de exemplu „Traseu”.",
-        "rolesUnder": "Roluri în ea: {count}",
+        "rolesUnder": "Roluri: {count}",
         "contactIs": "Persoana de contact: {contact}",
         "contactNone": "Nicio persoană de contact încă."
       },
@@ -4973,7 +4973,7 @@
         "deleteTitle": "Ștergi această categorie?",
         "deleteBody": "Categoria „{name}” se șterge. O categorie cu roluri în ea nu se poate șterge: mută sau șterge întâi rolurile.",
         "contactTitle": "Persoana de contact",
-        "contactHelp": "Opțională și goală la început: o completezi când o știi. Apare pe pagina voluntarilor, sub titlul categoriei, și în subsolul emailurilor către voluntari. Nu intră în CSV.",
+        "contactHelp": "Opțională și goală la început: o completezi când o știi. Apare pe pagina voluntarilor, sub titlul categoriei, și în subsolul emailurilor către voluntari; telefonul apare și pe ecusoanele rolurilor ei când designul nu are alt număr. Intră în fișierul evenimentului, nu în CSV. Trece doar o persoană care a fost de acord să apară pe o pagină publică.",
         "contactName": "Numele persoanei de contact",
         "contactPhone": "Telefon",
         "contactEmail": "Adresa de email"

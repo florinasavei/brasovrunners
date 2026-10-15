@@ -68,6 +68,7 @@ import {
   agreementRolesStamp,
   agreementStandingOf,
   agreementStillNamesRole,
+  contactParts,
   descriptionHead,
   earliestVolunteerBirthDate,
   guardianSharesAddress,
@@ -1135,7 +1136,7 @@ export default async function VolunteersCard({
         </Stack>
         <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, wordBreak: "break-word" }} data-testid="volunteer-category-contact-line">
           {category.contact
-            ? t("volunteers.categories.contactIs", { contact: [category.contact.name, category.contact.phone, category.contact.email].filter(Boolean).join(" · ") })
+            ? t("volunteers.categories.contactIs", { contact: contactParts(category.contact).join(" · ") })
             : t("volunteers.categories.contactNone")}
         </Typography>
         <Stack spacing={1} sx={{ mt: 1 }}>

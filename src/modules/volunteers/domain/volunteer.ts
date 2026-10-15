@@ -3,7 +3,8 @@ import { namesVolunteerGuardian } from "@/modules/legal-documents/domain/merge-f
 import type { EventVolunteerSource, EventVolunteerState } from "@/db/schema/event-volunteers";
 import type { RichTextDoc } from "@/modules/content/rich-text/domain/schema";
 import { normalizeTeamText, resolveRichPair, richTextBox } from "@/modules/content/team/fields";
-import { E164_PHONE } from "@/modules/registrations/phone";
+import { isPhoneNumberShaped } from "@/modules/contact/domain/public-phone";
+import { E164_PHONE, formatPhone } from "@/modules/registrations/phone";
 import { ageOn, dayIn, latestBirthDateFor } from "@/modules/registrations/domain/age";
 import { SHIRT_SIZES } from "@/modules/registrations/domain/kit";
 import { isDateValue, normalizeTypedDate } from "@/shared/forms/pickers/wall-values";
@@ -248,12 +249,12 @@ export type VolunteerCategoryInput = z.infer<typeof volunteerCategoryInputSchema
 /**
  * «Persoana de contact» of a category (§NNN): a name, a telephone number and an address, each optional and empty until the club
  * fills them («the contact person for each category will be established later»). The address is read as an address; the telephone is
- * what the card's box posted after `typedPhone` (E.164 when it can be read, else as typed) and is bounded, not parsed — a foreign
- * or a landline number is the club's to write.
+ * what the card's box posted after `typedPhone` (E.164 when it can be read, else as typed) and is bounded and must be written like a telephone number (`isPhoneNumberShaped`, the check «Telefon public» and the badge share) — so a foreign
+ * or a landline number passes, and words do not: a dead `tel:` link and a badge line that silently vanishes are what the check prevents.
  */
 export const volunteerCategoryContactSchema = z.object({
   contactName: optionalLine(VOLUNTEER_NAME_MAX),
-  contactPhone: optionalLine(VOLUNTEER_CONTACT_PHONE_MAX),
+  contactPhone: optionalLine(VOLUNTEER_CONTACT_PHONE_MAX).refine((value) => value === null || isPhoneNumberShaped(value)),
   contactEmail: optionalLine(VOLUNTEER_CONTACT_EMAIL_MAX).refine((value) => value === null || isValidEmail(value)),
 });
 
@@ -270,26 +271,37 @@ export function categoryContactOf(columns: CategoryContactColumns): CategoryCont
   return contact.name === null && contact.phone === null && contact.email === null ? null : contact;
 }
 
-/** A contact's words in their order — the name, the telephone, the address — leaving out what is not set: «Ana · 0712 345 678 · ana@club.test». */
+/**
+ * A contact's words in their order — the name, the telephone, the address — leaving out what is not set: «Ana · +40 712 345 678 ·
+ * ana@club.test». The telephone is read as a person reads it (`formatPhone`, grouped), never as it is stored (E.164); its `tel:`
+ * link takes the stored digits.
+ */
 export function contactParts(contact: CategoryContact): string[] {
-  return [contact.name, contact.phone, contact.email].filter((part): part is string => part !== null && part !== "");
+  return [contact.name, contact.phone === null ? null : formatPhone(contact.phone), contact.email].filter(
+    (part): part is string => part !== null && part !== "",
+  );
 }
+
+export type CategoryContactOf = CategoryContact & { categoryRo?: string; categoryEn?: string };
+
+type ContactRole = { contact?: CategoryContact | null; categoryRo?: string | null; categoryEn?: string | null };
 
 /**
  * The contact persons a volunteer's message names (§NNN): the one of the category of the role the organizers gave, else those of the
  * categories of the roles the person offered for — each once, in the club's order, and none for a role under no category or a
  * category with no contact set. The volunteer's emails (received, role given, the guardian's request) say them in their footer.
  */
-export function volunteerContactsOf(roles: { assigned: { contact?: CategoryContact | null } | null; chosen: readonly { contact?: CategoryContact | null }[] }): CategoryContact[] {
+export function volunteerContactsOf(roles: { assigned: ContactRole | null; chosen: readonly ContactRole[] }): CategoryContactOf[] {
   const concerned = roles.assigned ? [roles.assigned] : roles.chosen;
   const seen = new Set<string>();
-  const contacts: CategoryContact[] = [];
-  for (const { contact } of concerned) {
+  const contacts: CategoryContactOf[] = [];
+  for (const { contact, categoryRo, categoryEn } of concerned) {
     if (!contact) continue;
     const key = JSON.stringify(contact);
     if (seen.has(key)) continue;
     seen.add(key);
-    contacts.push(contact);
+    // The category's name rides along so a message naming two persons can say whose each is.
+    contacts.push(categoryRo && categoryEn ? { ...contact, categoryRo, categoryEn } : contact);
   }
   return contacts;
 }

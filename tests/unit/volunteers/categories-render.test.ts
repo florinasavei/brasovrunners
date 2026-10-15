@@ -284,7 +284,7 @@ describe("§NNN the contact person under a category's heading", () => {
     const line = /data-testid="volunteer-contact"[\s\S]*?<\/p>/.exec(page)?.[0] ?? "";
     expect(line).toContain("Întrebări?");
     expect(line).toContain("Ana Popescu");
-    expect(line).toMatch(/href="tel:\+40712345678"[^>]*>\+40712 345 678</);
+    expect(line).toMatch(/href="tel:\+40712345678"[^>]*>\+40 712 345 678</);
     expect(line).toMatch(/href="mailto:coordonator@club\.test"[^>]*>coordonator@club\.test</);
     // Under the heading of its own category, not another's.
     const route = page.indexOf(">Traseu<");
@@ -325,7 +325,7 @@ describe("§NNN the card: «Categorii», «Categoria» and the roles under their
     expect(page).toContain("Start / Sosire");
     expect(page).toContain("/ Start / Finish");
     // The contact line of a category that has one, and «Nicio persoană de contact încă» for the others.
-    expect(page).toContain("Persoana de contact: Ana Popescu · +40712 345 678 · coordonator@club.test");
+    expect(page).toContain("Persoana de contact: Ana Popescu · +40 712 345 678 · coordonator@club.test");
     expect((page.match(/Nicio persoană de contact încă/g) ?? []).length).toBe(2);
     // Up on the first and down on the last are not drawn: the arrows of three categories are four, not six.
     const categories = /data-testid="volunteer-categories"[\s\S]*?data-testid="volunteer-roles"/.exec(page)?.[0] ?? "";

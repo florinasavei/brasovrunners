@@ -123,8 +123,8 @@ describe("§NNN a category's contact person in the volunteers' emails", () => {
     db.select().from(emailOutbox).where(eq(emailOutbox.messageType, type));
   const render = (outboxRow: unknown) => renderOutboxMessage({ ...(outboxRow as OutboxRow), status: "PROCESSING", lockedAt: NOW }, db, NOW);
 
-  const CONTACT_RO = "Întrebări despre voluntariat? Ana Popescu · +40712345678 · coordonator@club.test.";
-  const CONTACT_EN = "Questions about volunteering? Ana Popescu · +40712345678 · coordonator@club.test.";
+  const CONTACT_RO = "Întrebări despre voluntariat? Ana Popescu · +40 712 345 678 · coordonator@club.test";
+  const CONTACT_EN = "Questions about volunteering? Ana Popescu · +40 712 345 678 · coordonator@club.test";
 
   beforeEach(async () => {
     await resetTables(db);
@@ -152,7 +152,7 @@ describe("§NNN a category's contact person in the volunteers' emails", () => {
       const { event, atStart, onRoute, loose } = await seedEvent({ startContact: true });
       await submitVolunteer(db, event.id, form([atStart.id, onRoute.id, loose.id]), NOW);
       const rendered = await render((await outboxOf("VOLUNTEER_RECEIVED"))[0]);
-      expect(rendered.text).toContain("Questions about volunteering? Dan Ionescu · +40722000111; Ana Popescu · +40712345678 · coordonator@club.test.");
+      expect(rendered.text).toContain("Questions about volunteering? Start / Finish: Dan Ionescu · +40 722 000 111; Route: Ana Popescu · +40 712 345 678 · coordonator@club.test");
       expect(rendered.text).toContain("Te-ai oferit pentru: Direcționare (Start / Sosire), Direcționare (Traseu), Foto/Video");
 
       await resetTables(db);
@@ -199,7 +199,7 @@ describe("§NNN a category's contact person in the volunteers' emails", () => {
       await changeVolunteer(db, admin, { kind: "assign", eventId: event.id, id: added.volunteer.id, roleId: atStart.id }, NOW);
       const second = (await outboxOf("VOLUNTEER_ROLE_ASSIGNED")).find((row) => (row.payloadJson as { roleId: string }).roleId === atStart.id)!;
       const again = await render(second);
-      expect(again.text).toContain("Questions about volunteering? Dan Ionescu · +40722000111.");
+      expect(again.text).toContain("Questions about volunteering? Dan Ionescu · +40 722 000 111");
       expect(again.text).not.toContain("Ana Popescu");
     });
 

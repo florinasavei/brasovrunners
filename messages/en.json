@@ -4958,7 +4958,7 @@
         "count": "Categories: {count}",
         "intro": "A category groups roles under one heading, on this card and on the volunteers' page, for example “Route”. The same role can stand in several categories. The order here is the page's order.",
         "empty": "No categories yet. The roles are listed without headings. Add the first one below: for example “Route”.",
-        "rolesUnder": "Roles under it: {count}",
+        "rolesUnder": "Roles: {count}",
         "contactIs": "Contact person: {contact}",
         "contactNone": "No contact person yet."
       },
@@ -4973,7 +4973,7 @@
         "deleteTitle": "Delete this category?",
         "deleteBody": "The category “{name}” is removed. A category with roles under it cannot be deleted: move or delete its roles first.",
         "contactTitle": "Contact person",
-        "contactHelp": "Optional and empty at first: fill it in when you know it. It shows on the volunteers' page, under the category's heading, and in the footer of the emails to volunteers. It is not in the CSV.",
+        "contactHelp": "Optional and empty at first: fill it in when you know it. It shows on the volunteers' page, under the category's heading, and in the footer of the emails to volunteers; the telephone also goes on the badges of its roles when the design has no number of its own. It goes into the event's file, not the CSV. Name only a person who agreed to appear on a public page.",
         "contactName": "Contact person's name",
         "contactPhone": "Telephone",
         "contactEmail": "Email address"

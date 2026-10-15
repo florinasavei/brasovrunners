@@ -2,6 +2,7 @@ import ContactSupportIcon from "@mui/icons-material/ContactSupport";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
+import { formatPhone } from "@/modules/registrations/phone";
 import { INLINE_TAP_TARGET, TAP_TARGET } from "@/shared/ui/tap-target";
 import type { CategoryContact } from "../domain/volunteer";
 
@@ -13,7 +14,7 @@ import type { CategoryContact } from "../domain/volunteer";
  * contact with none of them draws nothing. The telephone is a `tel:` link and the address a `mailto:` one, each 44 pixels tall
  * for a thumb: the first link reaches above its words (`INLINE_TAP_TARGET`), a later one — which may wrap to the line under the
  * first, where that reach would cover the first's lower half — takes `TAP_TARGET`'s own shape, as the contact page's second address
- * does (§480). It is the club's own business contact, published by the club's choice.
+ * does (§480). The telephone is read grouped («+40 712 345 678», `formatPhone`) while its link keeps the digits. It is the club's own business contact, published by the club's choice.
  */
 export default function VolunteerContactLine({ contact, label }: { contact: CategoryContact | null; label: string }) {
   if (!contact || (contact.name === null && contact.phone === null && contact.email === null)) return null;
@@ -25,7 +26,7 @@ export default function VolunteerContactLine({ contact, label }: { contact: Cate
   if (contact.phone) {
     parts.push(
       <Box key="phone" component="a" href={`tel:${contact.phone.replace(/[^\d+]/g, "")}`} sx={linkSx()} data-testid="volunteer-contact-phone">
-        {contact.phone}
+        {formatPhone(contact.phone)}
       </Box>,
     );
   }

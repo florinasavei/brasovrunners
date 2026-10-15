@@ -953,7 +953,7 @@ test.describe("§754 volunteers for a race", () => {
     await contact.getByLabel("Adresa de email").fill("coordonator@club.test");
     await contact.getByRole("button", { name: "Salvează", exact: true }).click();
     await expect(page.getByTestId("volunteer-category").nth(0).getByTestId("volunteer-category-contact-line")).toHaveText(
-      "Persoana de contact: Ana Popescu · +40712345678 · coordonator@club.test",
+      "Persoana de contact: Ana Popescu · +40 712 345 678 · coordonator@club.test",
       { timeout: 30_000 },
     );
     await hydrated(page);
@@ -1032,6 +1032,7 @@ test.describe("§754 volunteers for a race", () => {
       const phone = line.getByTestId("volunteer-contact-phone");
       const mail = line.getByTestId("volunteer-contact-email");
       await expect(phone).toHaveAttribute("href", "tel:+40712345678");
+      await expect(phone).toHaveText("+40 712 345 678");
       await expect(mail).toHaveAttribute("href", "mailto:coordonator@club.test");
       expect((await phone.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
       expect((await mail.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
@@ -1071,7 +1072,7 @@ test.describe("§754 volunteers for a race", () => {
     expect(csv.status()).toBe(200);
     const text = await csv.text();
     expect(text).toContain("Direcționare (Traseu)");
-    expect(text).not.toMatch(/Ana Popescu|coordonator@club\.test|0712 345 678|\+40712345678/);
+    expect(text).not.toMatch(/Ana Popescu|coordonator@club\.test|0712 345 678|\+40 ?712 ?345 ?678/);
   });
 
   test("the event's page shows no form while the event does not take volunteers", async ({ page }) => {

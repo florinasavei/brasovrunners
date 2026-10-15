@@ -39,8 +39,8 @@ const sheet = (design: BadgeDesign, words = badgeWords(design, "ro", "Brașov Tr
 describe("§NNN the sheet: each role's telephone", () => {
   it("prints, on each pile, the telephone of its category — the same role under two categories, two numbers — and none where there is none", async () => {
     const runs = await textsOf(() => sheet(ticked));
-    expect(runs.filter((run) => run === "Coordonator: +40712345678")).toHaveLength(2);
-    expect(runs.filter((run) => run === "Coordonator: +40799000111")).toHaveLength(3);
+    expect(runs.filter((run) => run === "Coordonator: +40 712 345 678")).toHaveLength(2);
+    expect(runs.filter((run) => run === "Coordonator: +40 799 000 111")).toHaveLength(3);
     // «Foto/Video» (no category) and the badges «fără rol» carry no telephone line at all.
     expect(runs.filter((run) => run.startsWith("Coordonator:"))).toHaveLength(5);
     expect(runs.filter((run) => run === "FOTO/VIDEO")).toHaveLength(1);
@@ -72,7 +72,7 @@ describe("§NNN the picture: the same telephone as the sheet", () => {
   it("draws the role's category telephone with its label, and none for a role with no telephone", () => {
     const withPhone = JSON.stringify(badgeMarkup(input(ENTRIES[0].role), ""));
     expect(withPhone).toContain("badge-phone");
-    expect(withPhone).toContain("Coordonator: +40712345678");
+    expect(withPhone).toContain("Coordonator: +40 712 345 678");
     const without = JSON.stringify(badgeMarkup(input(ENTRIES[2].role), ""));
     expect(without).not.toContain("badge-phone");
     expect(JSON.stringify(badgeMarkup(input(null), ""))).not.toContain("badge-phone");
@@ -82,8 +82,11 @@ describe("§NNN the picture: the same telephone as the sheet", () => {
     const row = (role: Parameters<typeof input>[0]) => badgeImageLayout(input(role));
     expect(row(ENTRIES[0].role).phoneLine).not.toBeNull();
     expect(row(ENTRIES[2].role).phoneLine).toBeNull();
-    // Without its row the writing area is taller.
-    expect(row(ENTRIES[2].role).writing.height).toBeGreaterThan(row(ENTRIES[0].role).writing.height);
+    // The row stays on every badge while the tick is on — blank where there is no number — so the badges of a sheet are cut alike and
+    // the designer's crop box is true for each.
+    expect(row(ENTRIES[2].role).phone).not.toBeNull();
+    expect(row(ENTRIES[2].role).writing.height).toBe(row(ENTRIES[0].role).writing.height);
+    expect(badgeImageLayout(input(ENTRIES[2].role, { ...ticked, showPhone: false })).phone).toBeNull();
     const typed = { ...ticked, phone: "0712 345 678" };
     expect(JSON.stringify(badgeMarkup(input(ENTRIES[0].role, typed), ""))).toContain("Coordonator: 0712 345 678");
     expect(JSON.stringify(badgeMarkup(input(ENTRIES[2].role, typed), ""))).toContain("Coordonator: 0712 345 678");
