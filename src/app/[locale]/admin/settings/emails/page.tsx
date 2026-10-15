@@ -214,7 +214,7 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
     hold: pageWords.hold,
     offer: pageWords.offer,
     reminder: pageWords.reminder ?? "",
-    // The hour the legal templates' digest opens at (§NNN), from the one constant the email reads too.
+    // The hour the legal templates' digest opens at (§775), from the one constant the email reads too.
     digestHour: LEGAL_TEMPLATES_DIGEST_CLOCK,
     // The club's limit per address, for the one message that states it (§389).
     people: t(`emails.addressCap.people.${countForm(perAddress, locale)}`, { count: perAddress }),

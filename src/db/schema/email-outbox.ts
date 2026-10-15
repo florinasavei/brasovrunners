@@ -93,7 +93,7 @@ export const emailMessageType = pgEnum("email_message_type", [
   // stays silent (§331, `WAITLIST_OFFER_EXPIRED`). No token.
   "DECLARATION_HOLD_EXPIRED",
   // "The legal templates changed: regenerate and approve" (§639): queued by the maintenance job, at most
-  // once a club day as a digest from 08:00 club time (§NNN), to every active Administrator and Superadministrator with an
+  // once a club day as a digest from 08:00 club time (§775), to every active Administrator and Superadministrator with an
   // address. To a colleague, like the invitation: no participant, no token; the action is
   // `/admin/legal/new`, behind the sign-in.
   "LEGAL_TEMPLATES_CHANGED",

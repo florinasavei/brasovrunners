@@ -23,12 +23,12 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  * maintenance job emails every Administrator and Superadministrator, once per change, and the
  * platform still approves nothing. The trigger is `/admin/legal`'s own «Șablon nou» predicate
  * (`readLegalOverview`'s `templateNewer`); the throttle is one overview read a club day, the first run
- * after 08:00 (§NNN); the memory is one `platform_settings` row.
+ * after 08:00 (§775); the memory is one `platform_settings` row.
  */
 const NOW = new Date("2026-10-02T08:00:00.000Z");
 const minutes = (count: number) => new Date(NOW.getTime() + count * 60_000);
 const HOUR_LATER = minutes(60);
-// §NNN: one email per club day, so a second look at the same change is a day on (11:00 club time again).
+// §775: one email per club day, so a second look at the same change is a day on (11:00 club time again).
 const DAY_LATER = minutes(24 * 60);
 
 const FACTS: ClubFacts = clubFactsFromEnv({
@@ -218,7 +218,7 @@ describe("§639 the Administrators are emailed when a release moves a legal temp
     await approveOwn("TERMS", "v1");
     await announceLegalTemplateChanges(db, facts, NOW);
     const [row] = await db.select().from(platformSettings).where(eq(platformSettings.key, LEGAL_TEMPLATES_NOTICE_SETTING_KEY));
-    // As the row looked before §NNN: the same fields and a `templatesStamp`, the last look yesterday.
+    // As the row looked before §775: the same fields and a `templatesStamp`, the last look yesterday.
     await db
       .update(platformSettings)
       .set({ value: { ...(row.value as object), templatesStamp: "0".repeat(64), checkedAt: new Date(NOW.getTime() - 24 * 60 * 60_000).toISOString() } })
@@ -240,7 +240,7 @@ describe("§639 the Administrators are emailed when a release moves a legal temp
   });
 
   /*
-    §NNN — the digest. 2026-10-03 in Brașov is summer time (UTC+3): 00:00Z is 03:00, 05:00Z is 08:00.
+    §775 — the digest. 2026-10-03 in Brașov is summer time (UTC+3): 00:00Z is 03:00, 05:00Z is 08:00.
     Every instant is the run's `now`, handed in; nothing here reads the real clock. All of them come
     after NOW, when the club's own texts were approved, so each template reads as newer.
   */

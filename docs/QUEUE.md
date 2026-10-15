@@ -14,14 +14,11 @@ decision or a click only the club can make · **released** — on production, wi
 The owner, 2026-10-10: «Soon I need to start a new session from the laptop … You need to save and document everything».
 This section replaces the plan of 2026-09-30; it is what a session with none of today's conversation needs to carry on.
 
-- **Production: `BR-V3.32`** (2026-10-15 05:35: §773 the volunteers' follow-ups, migration `0159`). Waiting for «prod»:
-  `BR-V3.33` (§774, below), migration `0160` (expand only).
-- **QA: `BR-V3.33`** — volunteer roles in configurable categories («Start / Sosire», «Traseu» …, the same role name in
-  several), each category with an optional contact person shown on the volunteers' page, in the volunteers' emails and
-  as the badge's default coordinator phone; the public form groups the roles under category headings; the event JSON
-  carries categories and roles under a new `volunteers` key.
-  Building: the §639 «templates changed» email as a daily digest. Next: a free-text line and a second marker area on
-  the volunteer badge.
+- **Production: `BR-V3.33`** (2026-10-15 07:55: §774 role categories with a contact person, migration `0160`). Waiting
+  for «prod»: `BR-V3.34` (§775, below) — no migration.
+- **QA: `BR-V3.34`** — «Șabloanele textelor legale s-au schimbat» comes at most once a club day, at the first
+  maintenance run after 08:00, naming every text whose template is newer; nothing when nothing changed.
+  Building: the volunteer badge's free-text line and a second marker area. The 2026-10-14 queue is otherwise done.
   sessions — no label `ship` while a `release.yml` or `migrate.yml` run is in progress.
 - **Waiting on the owner:** the privacy notice from the new template, approved in `/admin/legal` after a lawyer reads
   the paragraph on what the site loads (its first sentence says what is used is strictly necessary and needs no consent,
@@ -138,6 +135,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V3.34` | the templates-changed email as a daily digest (§775) |
 | `BR-V3.33` | volunteer roles in configurable categories, each with a contact person (§774) |
 | `BR-V3.32` | the volunteers' page: the button in a new tab, the public counts a tick, the date of birth, a kinder note (§773) |
 | `BR-V3.31` | small asks: the Girl Zone address, Mailgun or Gmail per form, an optional email, the calendar fold (§772) |

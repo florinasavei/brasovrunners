@@ -64,7 +64,7 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
   familyEntriesPurged: number;
   /**
    * «Șabloanele textelor legale s-au schimbat» queued this run (§639): one per Administrator and
-   * Superadministrator on the run that sends the day's digest (§NNN), zero on every other run.
+   * Superadministrator on the run that sends the day's digest (§775), zero on every other run.
    */
   legalTemplatesNoticesQueued: number;
   /**
@@ -292,7 +292,7 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
   }
 
   /**
-   * The Administrators' notice of a moved legal template (§639): a daily digest (§NNN) — nothing before
+   * The Administrators' notice of a moved legal template (§639): a daily digest (§775) — nothing before
    * 08:00 club time, at most one email per Administrator and Superadministrator per club day, naming
    * every newer text — and ONE read of the legal texts' overview per club day, the first run after
    * 08:00, whatever the pinger does (§479). Caught on its own and never retryable: a template

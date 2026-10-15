@@ -11,7 +11,7 @@ import { LEGAL_DOCUMENT_KEYS } from "./keys";
  * change of the templates, and what it remembers in `platform_settings` so each change is announced
  * once, on each environment separately.
  *
- * - **A digest, not a notice per change** (§NNN; the owner, 2026-10-15: «Parcă totuși șabloanele
+ * - **A digest, not a notice per change** (§775; the owner, 2026-10-15: «Parcă totuși șabloanele
  *   textelor se schimbă prea des, că tot primesc email, de ce?» — six releases in one night sent six
  *   emails). ONE look at the templates per club day (`LEGAL_TEMPLATES_DIGEST_HOUR`, Europe/Bucharest),
  *   made by the first run at or after 08:00 club time; if it finds a change the last email did not
@@ -30,7 +30,7 @@ import { LEGAL_DOCUMENT_KEYS } from "./keys";
  */
 
 /**
- * The club hour from which the day's digest may go (§NNN): the first run at or after it. Before it a
+ * The club hour from which the day's digest may go (§775): the first run at or after it. Before it a
  * night's releases wait, so the one email is read in the morning and not at 03:00.
  */
 export const LEGAL_TEMPLATES_DIGEST_HOUR = 8;
@@ -53,7 +53,7 @@ export const legalTemplatesNoticeSchema = z
     /** …and the template each was announced at, `KEY:filledHash`: what a later change is told apart by. */
     pairs: z.array(z.string().regex(PAIR)),
   });
-// Not strict (§NNN): rows written before the digest carry a `templatesStamp` this code no longer uses,
+// Not strict (§775): rows written before the digest carry a `templatesStamp` this code no longer uses,
 // and refusing one would read as «never announced» and send the whole list again.
 
 export type LegalTemplatesNotice = z.infer<typeof legalTemplatesNoticeSchema>;
@@ -86,7 +86,7 @@ export function legalTemplatesDigestOpensAt(now: Date): Date {
 }
 
 /**
- * Whether it is the digest's turn (§NNN): `now` is at or after today's 08:00 club time, and the day's
+ * Whether it is the digest's turn (§775): `now` is at or after today's 08:00 club time, and the day's
  * look has not been made — ONE look per club day, by the first run at or after 08:00. A change that
  * lands after that look, at 10:00 or at 22:30, waits for tomorrow's: the day's look found what it
  * found, and no second email follows it the same day. A run before 08:00 reads nothing, so a night's

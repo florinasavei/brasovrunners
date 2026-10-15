@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.33-2026-10-15 -->
+<!-- PROJECT_BASELINE: BR-V3.34-2026-10-15 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V3.33-2026-10-15`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.34-2026-10-15`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -26564,3 +26564,19 @@ Baseline `BR-V3.32-2026-10-15`.
 **Refused.** A role held in two categories at once (a role is one row with one category); sub-categories of categories (the owner's «sub-categorii» are the roles under a heading: two levels, the second being the roles themselves); a fixed list of categories (they are the club's words, per event); showing the category on the badge's band; a contact person in the CSV; the contact in the organizers' notice (the colleagues have the card); a category's heading at all on an event with none; a unique constraint that could refuse the migration on data already there; `RESTRICT` on the role's category (it refuses an event's own delete); applying the file's volunteers over an existing event.
 
 Baseline `BR-V3.33-2026-10-15`.
+
+## 775. The templates-changed email is a daily digest
+
+**The owner, 2026-10-15, about 05:45:** «Parcă totuși șabloanele textelor se schimbă prea des, că tot primesc email, de ce?» Six releases in one night each moved a legal template, and §639 sent «Șabloanele textelor legale s-au schimbat» once per change, on the maintenance job's next run: six emails. (On 2026-10-14 he had said «keep that I guess» about a weekly digest; the night changed his mind. Told to decide the open points himself, «YOLO».)
+
+**Decision.** §639's notice becomes a digest, amending it. **ONE look per environment per club day (Europe/Bucharest):** the maintenance job's first run at or after 08:00 club time (`LEGAL_TEMPLATES_DIGEST_HOUR`; 05:00 UTC in summer time, 06:00 UTC in winter time, found on the wall clock with `fromWallTimeInput`, never «plus 24 hours») reads the legal texts' overview once. If a text's template is newer than the text in force and not already announced, it sends ONE email, naming every text whose template is newer on its one bold line; if nothing changed, nothing is sent. Either way that was the day's look: a change that lands after it, at 10:00 or at 22:30, waits for the next morning's, and a night's releases (before 08:00) are all in the one morning email. So an environment sends at most one email per club day, and never two about the same day's changes. «At most once in 24 hours» is read as once per club day, so a digest at 08:05 does not push the next one to 08:05. (A first version gated on «no email since 08:00», which let the first change after a quiet morning go out at the next run; the gate is the look, not the email.)
+
+**The mark.** «The day's look» is `checkedAt` in the `platform_settings` row `legalTemplatesNotice`, where the fingerprint and `announcedAt` of what was announced already lived: the house keeps its job marks in `platform_settings` (the translation budget, the newsletter's alert lock). The claim is written before the overview is read (§479), so a read that fails is tried again tomorrow, not at every ping; the announcement is written in the same transaction as the emails, so it survives a restart. The hourly throttle and the templates stamp (`templatesStamp`) are gone: with one look a day they guard nothing. The row's schema is no longer strict, so rows written before this release, which carry the stamp, still read; refusing one would read as «never announced» and send the whole list again. **No table, no column, no migration.** Before 08:00 or once today's look is made the step reads that one row and nothing else.
+
+**Unchanged.** The recipients (whoever may approve a legal text, §450: every Administrator and Superadministrator with an address, in the language of their staff row, the other language below); the message type, its idempotency key per person per change, its road and its subject; `/admin/tasks` with one row per text, which stays the authority; and that the platform drafts and approves nothing. The email's words gain two sentences, in both languages: approve them all in one sitting, and this message comes at most once a day after 08:00 with everything still waiting for approval; the «când» lines on `/admin/emails` say the same, and read the hour from the one constant (`LEGAL_TEMPLATES_DIGEST_CLOCK`, filled in by the page as `{digestHour}`), never typed twice.
+
+**Decided without the owner (YOLO), to be corrected if wrong.** (1) The email lists texts by name, not by «§»: the platform keeps no per-text change log, only «newer than the text in force», and a decision number means nothing to the club's Administrators. (2) It lists every text whose template is newer than the text in force, including one an earlier digest named and the club has not yet approved, because the button regenerates all of them and the Administrator should see everything still owed; the trigger is still only an unannounced change. (3) The hour is 08:00 club time for both environments; QA announces to QA's Administrators on the same rule. (4) A look whose read fails is not retried the same day: the next morning's look names the same texts, and `/admin/tasks` is the standing reminder.
+
+**Refused.** A new table or column for the mark (the row had it). A weekly digest (the owner's «prea des» is about the same-night repeats, and a day is the grain the club approves in). A separate scheduled job (a step of the maintenance job, as §639). A retry inside the morning after a failed read (a new field for a rare failure; tomorrow's look covers it).
+
+Baseline `BR-V3.34-2026-10-15`.

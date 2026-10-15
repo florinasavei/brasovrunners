@@ -1762,7 +1762,7 @@ const T = {
           `Șabloanele textelor de mai sus nu mai spun ce spun textele în vigoare: pe «${w.documents}» au «${w.templateNew}». Textele în vigoare rămân cum sunt, cu cuvintele lor, până când clubul aprobă versiuni noi: platforma nu aprobă nimic în locul clubului.`,
           `Ce ai de făcut: «${w.documents}» → «${w.newVersion}» → «${w.regenerateAll}» (butonul de mai jos te duce acolo). Se face câte o ciornă pentru fiecare text; deschide-le pe rând, citește-le și completează ce a rămas de forma <…>, în română și în engleză, apoi apasă «${w.approveDrafts}» pe «${w.documents}».`,
           `Un text care are deja o ciornă în așteptare arată «${w.draftExists}»: aprob-o sau șterge-o mai întâi, apoi regenerează-l.`,
-          // A digest (§NNN): one email a day for everything that moved, so one sitting approves it all.
+          // A digest (§775): one email a day for everything that moved, so one sitting approves it all.
           "Aprobă-le pe toate într-o singură ședință, nu pe rând, în zile diferite.",
           lawyerReads("ro", d.legalTemplateKeys ?? []),
           `«${w.tasks}» arată aceleași rânduri până când textele sunt aprobate. Mesajul acesta vine cel mult o dată pe zi, după ora ${LEGAL_TEMPLATES_DIGEST_CLOCK} (ora României), cu tot ce așteaptă încă aprobarea, fiecărui Administrator și Superadministrator.`,

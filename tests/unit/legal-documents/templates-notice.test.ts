@@ -66,7 +66,7 @@ describe("§639 what counts as a change of the templates", () => {
     expect(legalTemplatesNoticeSchema.safeParse(NO_LEGAL_TEMPLATES_NOTICE).success).toBe(true);
     expect(legalTemplatesNoticeSchema.safeParse({ ...NO_LEGAL_TEMPLATES_NOTICE, keys: ["NOT_A_TEXT"] }).success).toBe(false);
     expect(readLegalTemplatesNoticeValue({ checkedAt: "yesterday" })).toEqual(NO_LEGAL_TEMPLATES_NOTICE);
-    // §NNN: rows kept by the hourly check carry a `templatesStamp` the digest no longer uses. Refusing one
+    // §775: rows kept by the hourly check carry a `templatesStamp` the digest no longer uses. Refusing one
     // would read as «never announced» and send the whole list again, so the extra field is dropped, not an error.
     const old = { ...NO_LEGAL_TEMPLATES_NOTICE, checkedAt: "2026-10-02T08:00:00.000Z", fingerprint: HASH_A, announcedAt: "2026-10-02T08:00:00.000Z", pairs: [`TERMS:${HASH_B}`], keys: ["TERMS"], templatesStamp: HASH_B };
     expect(readLegalTemplatesNoticeValue(old)).toEqual({ ...old, templatesStamp: undefined });
@@ -75,11 +75,11 @@ describe("§639 what counts as a change of the templates", () => {
 });
 
 /**
- * §NNN — the digest's turn: at most one email per club day (Europe/Bucharest), the first run at or
+ * §775 — the digest's turn: at most one email per club day (Europe/Bucharest), the first run at or
  * after 08:00 club time. Every instant below is handed to the function as `now`; nothing reads the
  * real clock, so `yarn test:clock` has nothing to move here.
  */
-describe("§NNN the digest opens at 08:00 club time, on the wall clock, across both changes of the clock", () => {
+describe("§775 the digest opens at 08:00 club time, on the wall clock, across both changes of the clock", () => {
   const at = (iso: string) => new Date(iso);
 
   it("is 05:00Z in summer time and 06:00Z in winter time", () => {

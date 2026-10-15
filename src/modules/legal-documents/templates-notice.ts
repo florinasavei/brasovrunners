@@ -33,7 +33,7 @@ import { type ClubFacts, clubFactsFromEnv } from "./templates/club-facts";
  * (`domain/templates-notice.ts`). Each environment has its own row and its own staff: QA announces
  * QA's templates to QA's Administrators, production production's.
  *
- * **One look a day, a digest (§NNN; the owner, 2026-10-15: six releases in a night sent six emails).**
+ * **One look a day, a digest (§775; the owner, 2026-10-15: six releases in a night sent six emails).**
  * The first run at or after 08:00 club time (Europe/Bucharest) looks once; if a template is newer than
  * the ones the last email carried it sends ONE email naming every text whose template is newer, and
  * nothing when nothing changed. A change that lands after the day's look — at 10:00, at 22:30 — waits
@@ -94,7 +94,7 @@ export async function announceLegalTemplateChanges<T extends Record<string, unkn
   now: Date,
 ): Promise<LegalTemplatesNoticeRun> {
   const notice = await readLegalTemplatesNotice(db);
-  // The digest's turn first (§NNN): before 08:00 club time, or once today's look has been made, the
+  // The digest's turn first (§775): before 08:00 club time, or once today's look has been made, the
   // step reads the one row and nothing else — a release at 10:00 or at 22:30 waits for tomorrow's.
   if (!legalTemplatesDigestDue(notice, now)) return { checked: false, queued: 0, keys: [] };
 

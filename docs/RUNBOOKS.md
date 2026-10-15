@@ -2,7 +2,7 @@
 
 # Runbooks
 
-**Baseline `BR-V3.33-2026-10-15`** · versioned with the whole set · [changelog](../CHANGELOG.md)
+**Baseline `BR-V3.34-2026-10-15`** · versioned with the whole set · [changelog](../CHANGELOG.md)
 
 
 | Runbook | When |
@@ -1039,7 +1039,7 @@ handwritten one, and ticking the box accepts that mode. The privacy notice's tem
 (and the group run's, and the volunteers'), that the IP address and the browser at the moment of signing are kept with
 the signed declaration as proof of the signature, as long as the declaration; it no longer says the IP address is not kept.
 **Template only:** the texts in force do not move, a registration is neither refused nor changed, and nothing is gated, so
-`/admin/tasks` carries no new row; every Administrator is emailed «Șabloanele textelor legale s-au schimbat», in the next morning's digest (§639, §NNN),
+`/admin/tasks` carries no new row; every Administrator is emailed «Șabloanele textelor legale s-au schimbat», in the next morning's digest (§639, §775),
 and `/admin/legal` marks the declarations and the notice «Șablon nou». Until the club approves them the signed PDFs
 carry the new line (the IP address and the browser are kept from the first signing after this release, whatever text is
 in force), but the declaration and the notice a person read do not mention it — **approve the notice from the new template on production the same day this release
@@ -1082,10 +1082,10 @@ what stands on the version, and the screen says which before anything is pressed
 Every deletion leaves an audit row (`legal_document.deleted` for the first kind,
 `legal_document_version.deleted` for the second) naming who, when and why.
 
-### «Șabloanele textelor legale s-au schimbat» comes once a day, as a digest (§639, §NNN)
+### «Șabloanele textelor legale s-au schimbat» comes once a day, as a digest (§639, §775)
 
 A release that moves a legal template used to send this email at once, so six releases in a night sent six.
-Since §NNN it is a digest: **at most one email per environment per club day (Europe/Bucharest)**, from the
+Since §775 it is a digest: **at most one email per environment per club day (Europe/Bucharest)**, from the
 maintenance job's first run **at or after 08:00 club time** (05:00 UTC in summer time, 06:00 UTC in winter time).
 
 - **What it sends.** ONE look a day: the first run at or after 08:00 club time reads the legal texts' overview, and if a
