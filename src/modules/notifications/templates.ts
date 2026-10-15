@@ -36,6 +36,7 @@ import {
   windowOpenedFactsLine,
 } from "./outage-grace-words";
 import { LEGAL_DOCUMENT_KEYS } from "@/modules/legal-documents/domain/keys";
+import { LEGAL_TEMPLATES_DIGEST_CLOCK } from "@/modules/legal-documents/domain/templates-notice";
 import { contactParts } from "@/modules/volunteers/domain/volunteer";
 
 /**
@@ -1761,8 +1762,10 @@ const T = {
           `Șabloanele textelor de mai sus nu mai spun ce spun textele în vigoare: pe «${w.documents}» au «${w.templateNew}». Textele în vigoare rămân cum sunt, cu cuvintele lor, până când clubul aprobă versiuni noi: platforma nu aprobă nimic în locul clubului.`,
           `Ce ai de făcut: «${w.documents}» → «${w.newVersion}» → «${w.regenerateAll}» (butonul de mai jos te duce acolo). Se face câte o ciornă pentru fiecare text; deschide-le pe rând, citește-le și completează ce a rămas de forma <…>, în română și în engleză, apoi apasă «${w.approveDrafts}» pe «${w.documents}».`,
           `Un text care are deja o ciornă în așteptare arată «${w.draftExists}»: aprob-o sau șterge-o mai întâi, apoi regenerează-l.`,
+          // A digest (§775): one email a day for everything that moved, so one sitting approves it all.
+          "Aprobă-le pe toate într-o singură ședință, nu pe rând, în zile diferite.",
           lawyerReads("ro", d.legalTemplateKeys ?? []),
-          `«${w.tasks}» arată aceleași rânduri până când textele sunt aprobate. Mesajul acesta vine o singură dată pentru fiecare schimbare a șabloanelor, fiecărui Administrator și Superadministrator.`,
+          `«${w.tasks}» arată aceleași rânduri până când textele sunt aprobate. Mesajul acesta vine cel mult o dată pe zi, după ora ${LEGAL_TEMPLATES_DIGEST_CLOCK} (ora României), cu tot ce așteaptă încă aprobarea, fiecărui Administrator și Superadministrator.`,
         ];
       },
       // The screen the button opens and what is done there (§654): «Versiune nouă» regenerates; approving is on «Documente legale».
@@ -2560,8 +2563,9 @@ const T = {
           `The templates of the texts above no longer say what the texts in force say: on «${w.documents}» they show «${w.templateNew}». The texts in force keep their words until the club approves new versions: the platform approves nothing in the club's place.`,
           `What to do: «${w.documents}» → «${w.newVersion}» → «${w.regenerateAll}» (the button below takes you there). One draft is made for each text; open each one, read it and fill in what is left written <…>, in Romanian and in English, then press «${w.approveDrafts}» on «${w.documents}».`,
           `A text that already has a draft waiting shows «${w.draftExists}»: approve it or delete it first, then regenerate it.`,
+          "Approve them all in one sitting, not one at a time over several days.",
           lawyerReads("en", d.legalTemplateKeys ?? []),
-          `«${w.tasks}» shows the same rows until the texts are approved. This message comes once for each change of the templates, to every Administrator and Superadministrator.`,
+          `«${w.tasks}» shows the same rows until the texts are approved. This message comes at most once a day, after ${LEGAL_TEMPLATES_DIGEST_CLOCK} Romanian time, with everything still waiting for approval, to every Administrator and Superadministrator.`,
         ];
       },
       action: `${legalTemplatesWords("en").newVersion}: regenerate the texts`,
