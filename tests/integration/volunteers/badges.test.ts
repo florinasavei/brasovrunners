@@ -115,12 +115,16 @@ beforeEach(async () => {
   state.redirected.length = 0;
 });
 
-/** The designer's boxes as the form posts them, the default design unless told otherwise. */
+/**
+ * The designer's boxes as the form posts them, the default design unless told otherwise: since §NNN that is the one badge for everyone, so a case about
+ * the badges per role (the print, the category's telephone) says `perRole` in its own boxes or stores it first (`storePerRole`).
+ */
 function designForm(fields: Record<string, string> = {}, event = eventId): FormData {
   const data = new FormData();
   data.set("uiLocale", "ro");
   data.set("eventId", event);
   const base: Record<string, string> = {
+    "badge.design.mode": "single",
     "badge.design.size": "strip90",
     "badge.design.customWidthMm": "90",
     "badge.design.customHeightMm": "35",
@@ -141,6 +145,9 @@ async function post(action: Stateful, data: FormData): Promise<FormOutcome | "re
     throw error;
   });
 }
+
+/** The event's design chosen as the badge per role (§764), the rest the platform's own: what a case about a role's pile or band starts from. */
+const storePerRole = (id = eventId) => db.update(events).set({ badgeDesign: { ...DEFAULT_BADGE_DESIGN, mode: "perRole" } }).where(eq(events.id, id));
 
 const stored = async (id = eventId) => (await db.select({ badgeDesign: events.badgeDesign }).from(events).where(eq(events.id, id)))[0].badgeDesign;
 const trail = (action: string) => db.select().from(auditLogs).where(eq(auditLogs.action, action as never));
@@ -364,6 +371,10 @@ describe("§764 a role's colour in the role's own form («Voluntari»)", () => {
 
 describe("§764 «Descarcă ecusoanele (PDF)»", () => {
   const get = (query: string, id = eventId) => sheetRoute.GET(new Request(`http://localhost/api/admin/events/${id}/badges?${query}`), { params: Promise.resolve({ id }) });
+  // The badges per role (§764): since §NNN the event's design must choose them; the one badge for everyone has its own describe below.
+  beforeEach(async () => {
+    await storePerRole();
+  });
 
   it("starts a role that needs more than a pile holds at the most a pile prints, typed or not", () => {
     const many = { id: "a", needed: 500 };
@@ -613,7 +624,7 @@ describe("§776 the free-text line and the marker area", () => {
   });
 
   it("prints the free line and the marker's label on every badge of the sheet, in the badge's language", async () => {
-    await post(actions.saveBadgeDesignAction, designForm(BOTH));
+    await post(actions.saveBadgeDesignAction, designForm({ ...BOTH, "badge.design.mode": "perRole" }));
     const words: string[] = [];
     const text = PDFDocument.prototype.text;
     const spy = vi.spyOn(PDFDocument.prototype, "text").mockImplementation(function (this: PDFKit.PDFDocument, ...args: unknown[]) {

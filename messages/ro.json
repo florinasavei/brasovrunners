@@ -9557,7 +9557,7 @@
     "badges": {
       "backToEvent": "← Înapoi la eveniment",
       "title": "Ecusoane pentru voluntari — {event}",
-      "intro": "Ecusoanele sunt benzi mici și lungi, fără nume tipărit: numele se scrie cu markerul. Implicit e un singur ecuson pentru toți voluntarii; dacă vrei, fiecare rol poate avea ecusonul lui, pe banda lui colorată.",
+      "intro": "Ecusoanele sunt benzi mici și lungi, fără nume tipărit: numele se scrie cu markerul. Implicit e un singur ecuson pentru toți; dacă vrei, fiecare rol are ecusonul lui, pe banda lui.",
       "defaults": {
         "label": "VOLUNTAR",
         "name": "Nume:",
@@ -9581,7 +9581,7 @@
           "cut": "Tăiere"
         },
         "mode": "Felul ecusonului",
-        "modeHelp": "Cu un singur ecuson, toți voluntarii îl poartă pe același, cu „VOLUNTAR” pe bandă și niciun rol. Pe roluri, fiecare rol are ecusonul lui, cu numele rolului pe banda lui colorată. Rolul se poate scrie și de mână, în spațiul pentru marker.",
+        "modeHelp": "Un singur ecuson: toți voluntarii îl poartă pe același, cu „VOLUNTAR” pe bandă. Pe roluri: fiecare rol are ecusonul lui, cu numele rolului pe banda lui colorată.",
         "modes": {
           "single": "Un singur ecuson pentru toți, fără rol",
           "perRole": "Câte un ecuson pe rol"
@@ -9641,7 +9641,7 @@
         "showPhone": "Telefonul coordonatorului",
         "showPhoneHelp": "Un rând mic jos, cu numărul la care sună voluntarii. Numărul clubului, niciodată al unui voluntar.",
         "phone": "Numărul de telefon",
-        "phoneHelp": "Scris ca un număr de telefon, de exemplu 07xx xxx xxx. La ecusoanele pe roluri, lasă gol ca ecusonul fiecărui rol să poarte telefonul persoanei de contact a categoriei lui. La ecusonul unic, numărul trebuie scris.",
+        "phoneHelp": "Scris ca un număr de telefon, de exemplu 07xx xxx xxx. Pe roluri, lasă gol ca ecusonul fiecărui rol să poarte telefonul categoriei lui. La ecusonul unic, scrie numărul.",
         "phoneLabelRo": "Eticheta (română)",
         "phoneLabelEn": "Eticheta (engleză)",
         "phoneLabelHelp": "Gol în ambele limbi: Coordonator și Coordinator. Cel mult {max} caractere.",

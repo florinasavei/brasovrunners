@@ -9581,7 +9581,7 @@
           "cut": "Cutting"
         },
         "mode": "Kind of badge",
-        "modeHelp": "With one badge, every volunteer wears the same one, with “VOLUNTEER” on the band and no role. Per role, each role has its own badge, with the role's name on its coloured band. A role can also be written by hand, in the marker space.",
+        "modeHelp": "One badge: every volunteer wears the same, with “VOLUNTEER” on the band. Per role: each role has its own badge, with the role's name on its coloured band.",
         "modes": {
           "single": "One badge for everyone, no role",
           "perRole": "One badge per role"
@@ -9641,7 +9641,7 @@
         "showPhone": "The coordinator's phone",
         "showPhoneHelp": "A small line at the foot, with the number volunteers call. The club's number, never a volunteer's.",
         "phone": "Phone number",
-        "phoneHelp": "Written as a phone number, for example 07xx xxx xxx. On badges per role, leave it empty for each role's badge to carry the telephone of its category's contact person. On the one badge, the number must be written.",
+        "phoneHelp": "Written as a phone number, for example 07xx xxx xxx. Per role, leave it empty for each badge to carry its category's telephone. On the one badge, write the number.",
         "phoneLabelRo": "Label (Romanian)",
         "phoneLabelEn": "Label (English)",
         "phoneLabelHelp": "Empty in both languages: Coordonator and Coordinator. At most {max} characters.",
