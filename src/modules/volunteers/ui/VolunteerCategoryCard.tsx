@@ -12,8 +12,9 @@ import type { ReactNode } from "react";
  * stack), so on a phone a reader never wonders which category a role belongs to: the role is inside the box under the band, never
  * between two headings.
  *
- * The band is the primary colour with its own contrast text (`primary.contrastText`, which the theme keeps AA for the light and the dark
- * scheme and for both looks, «Tema v1» and «Tema v2»); it holds no link, so the contact line, whose links are the page's own colour,
+ * The band is the primary's deep shade (`primary.dark`: the logo's ink blue, `blueInk`, not its pure blue, which vibrates across a
+ * full-width flat fill — `brand.ts`) with the primary's own contrast text (`primary.contrastText`, AA on it in the light and the dark scheme
+ * and in both looks, «Tema v1» and «Tema v2», whose deep shade is `accentDeep`); it holds no link, so the contact line, whose links are the page's own colour,
  * sits on the card's surface under it. The state is never in colour alone: the name, the count and the glyph say it in words and shape.
  *
  * A Server Component with no state; `contact` is the page's `VolunteerContactLine` (a node, never a component reference, so the boundary
@@ -46,7 +47,7 @@ export default function VolunteerCategoryCard({
     >
       <Box
         data-testid="volunteer-category-band"
-        sx={{ display: "flex", alignItems: "center", gap: 1.5, px: { xs: 1.5, sm: 2 }, py: 1.5, bgcolor: "primary.main", color: "primary.contrastText" }}
+        sx={{ display: "flex", alignItems: "center", gap: 1.5, px: { xs: 1.5, sm: 2 }, py: 1.5, bgcolor: "primary.dark", color: "primary.contrastText" }}
       >
         <Box
           aria-hidden="true"

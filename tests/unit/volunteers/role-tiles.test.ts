@@ -237,13 +237,29 @@ describe("§NNN each role is a tile the whole of which is the checkbox's label",
     expect(boxes(await draw())).not.toContainEqual(expect.stringMatching(/\schecked/));
   });
 
-  it("draws the ticked state in CSS from the box's :checked, with the keyboard's ring and a 22-pixel box", () => {
+  it("draws the ticked state in CSS from the box's :checked, with the keyboard's ring and a 22-pixel box", async () => {
     expect(CHOICE_CARD_SX["&:has(input:checked)"].borderColor).toBe("primary.main");
     expect(CHOICE_CARD_SX["&:has(input:checked)"].bgcolor).toContain("color-mix");
     expect(CHOICE_CARD_SX["&:has(input:focus-visible)"].outline).toContain("2px solid");
     // Two pixels wide always, so ticking a tile never moves its words.
     expect(CHOICE_CARD_SX.border).toBe(2);
     expect(CHOICE_INPUT_SX.width).toBe(22);
+    // And the drawn tile really carries it: the page's own CSS has the rules, so a tile that stopped spreading the shared surface fails here.
+    // (No theme provider in this draw, so the colours are MUI's defaults, not variables: the test reads the rules, not the hues.)
+    const page = await draw({}, "ro", { styles: true });
+    expect(page).toMatch(/:has\(input:checked\)\{[^}]*border-color:[^;}]+;/);
+    expect(page).toMatch(/:has\(input:focus-visible\)\{[^}]*outline:2px solid/);
+    // The hover border only where a pointer hovers: on a phone `:hover` sticks after a tap and would keep an unticked tile's border.
+    expect(page).toMatch(/@media \(hover: hover\)\{\.css-[\w-]+:hover\{border-color:/);
+    expect(page).not.toMatch(/\}\.css-[\w-]+:hover\{border-color:/.source.length ? /(?<!\{)\.css-[\w-]+:hover\{border-color:/ : /x^/);
+  });
+
+  it("stretches the label over the whole tile, and the band is the deep shade of the primary, never the pure blue", async () => {
+    const page = await draw({}, "ro", { styles: true });
+    expect(page).toMatch(/::after\{[^}]*position:absolute[^}]*inset:0/);
+    const card = readFileSync(new URL("../../../src/modules/volunteers/ui/VolunteerCategoryCard.tsx", import.meta.url), "utf8");
+    expect(card).toContain('bgcolor: "primary.dark"');
+    expect(card).not.toContain('bgcolor: "primary.main"');
   });
 });
 

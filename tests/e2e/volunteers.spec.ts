@@ -421,6 +421,28 @@ test.describe("§754 volunteers for a race", () => {
       await expect(guest.getByLabel("Numele tău")).toHaveValue("Maria Test");
       await expect(guest.getByLabel("Adresa ta de email")).toHaveValue(maria);
 
+      // §NNN: a ticked role tile survives a refused post. One tile is ticked by a press on its count line, the post is refused again (the
+      // consent and the age are still wrong), and the page comes back with that box checked and the tile's border the ticked one.
+      await guest.getByTestId("volunteer-roles").getByTestId("volunteer-role-option").filter({ hasText: "Sosire" }).getByTestId("volunteer-role-needs").click();
+      await expect(guest.getByTestId("volunteer-roles").getByRole("checkbox", { name: "Sosire" })).toBeChecked();
+      await guest.getByTestId("volunteer-form").evaluate((form: HTMLFormElement) => {
+        form.noValidate = true;
+      });
+      await guest.waitForTimeout(1_200);
+      await submit.click();
+      // The first refusal's summary says «Bifează cel puțin un rol»: the new page is the one that no longer does.
+      await expect(guest.getByTestId("volunteer-invalid")).not.toContainText("Bifează cel puțin un rol", { timeout: 30_000 });
+      await expect(guest.getByTestId("volunteer-invalid")).toContainText("Bifează căsuța de acord");
+      await expect(guest.getByTestId("volunteer-roles").getByRole("checkbox", { name: "Sosire" })).toBeChecked();
+      await expect(guest.getByTestId("volunteer-roles").getByRole("checkbox", { name: "Punct de apă" })).not.toBeChecked();
+      await guest.mouse.move(0, 0);
+      const recalledBorder = await guest
+        .getByTestId("volunteer-roles")
+        .getByTestId("volunteer-role-option")
+        .filter({ hasText: "Sosire" })
+        .evaluate((tile) => getComputedStyle(tile).borderTopColor);
+      expect(recalledBorder).not.toBe(borderBefore);
+
       // She would do both.
       await offer(guest, "Maria Test", maria, ["Punct de apă", "Sosire"], { years: 34, sex: "FEMALE", city: "Brașov", before: true, club: true });
 

@@ -7,7 +7,7 @@ import { INLINE_TAP_TARGET, TAP_TARGET } from "@/shared/ui/tap-target";
 import type { CategoryContact } from "../domain/volunteer";
 
 /** Whether a category's contact has anything to say: at least one of its three boxes (§774). */
-export function hasVolunteerContact(contact: CategoryContact | null): contact is CategoryContact {
+export function hasVolunteerContact(contact: CategoryContact | null): boolean {
   return contact !== null && (contact.name !== null || contact.phone !== null || contact.email !== null);
 }
 
@@ -22,7 +22,7 @@ export function hasVolunteerContact(contact: CategoryContact | null): contact is
  * does (§480). The telephone is read grouped («+40 712 345 678», `formatPhone`) while its link keeps the digits. It is the club's own business contact, published by the club's choice.
  */
 export default function VolunteerContactLine({ contact, label }: { contact: CategoryContact | null; label: string }) {
-  if (!hasVolunteerContact(contact)) return null;
+  if (contact === null || !hasVolunteerContact(contact)) return null;
   const stretched = { display: "inline-flex", alignItems: "center", ...TAP_TARGET } as const;
   let links = 0;
   const linkSx = () => (links++ === 0 ? INLINE_TAP_TARGET : stretched);

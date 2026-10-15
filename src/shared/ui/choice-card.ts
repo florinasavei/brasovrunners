@@ -1,3 +1,5 @@
+import { HOVER_OK } from "@/theme/motion";
+
 /**
  * The house's selectable card, written once (§676 step 1, §NNN): the feedback page's branch cards (`BranchChoice`, a native radio)
  * and the volunteers' page's role tiles (`VolunteerRoleTile`, a native checkbox) are the same surface — a bordered, rounded tile
@@ -21,7 +23,8 @@ export const CHOICE_CARD_SX = {
   borderColor: "divider",
   borderRadius: 2,
   transition: "border-color 120ms, background-color 120ms",
-  "&:hover": { borderColor: "primary.main" },
+  // Only where a pointer hovers: on a phone `:hover` sticks after a tap, and an unticked tile would keep the ticked border.
+  [HOVER_OK]: { "&:hover": { borderColor: "primary.main" } },
   "&:has(input:checked)": { borderColor: "primary.main", bgcolor: paletteWash("primary", 8) },
   "&:has(input:focus-visible)": { outline: "2px solid var(--mui-palette-primary-main)", outlineOffset: "2px" },
 } as const;

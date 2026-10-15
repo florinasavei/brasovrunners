@@ -37,7 +37,8 @@ export function RoleTileGrid({ children }: { children: ReactNode }) {
  *
  * The count line («mai sunt locuri» / «mai e nevoie de N persoane», §773) sits under the NAME, aligned with it, not under the box. The
  * role's description (§765) sits under that, outside the label: it may hold a link and a native fold («Detalii»), and a label may not
- * hold either — a press on its words reads or opens it, never ticks the role.
+ * hold either — a press on its words reads or opens it, never ticks the role; the blank space around it ticks, the label's press area
+ * being stretched over the tile (`::after`) and the description's wrapper letting presses through except on its own content.
  *
  * A Server Component with no state.
  */
@@ -69,7 +70,7 @@ export default function VolunteerRoleTile({
   const described = doc !== null && doc !== undefined && words !== null && words.trim() !== "";
   const descriptionId = `${base}-description`;
   return (
-    <Box data-testid="volunteer-role-option" sx={{ ...CHOICE_CARD_SX, display: "flex", flexDirection: "column", minWidth: 0 }}>
+    <Box data-testid="volunteer-role-option" sx={{ ...CHOICE_CARD_SX, display: "flex", flexDirection: "column", minWidth: 0, position: "relative" }}>
       <Box
         component="label"
         data-testid="volunteer-role-label"
@@ -81,6 +82,9 @@ export default function VolunteerRoleTile({
           p: 1.5,
           cursor: "pointer",
           "& input": { ...CHOICE_INPUT_SX, mt: "1px" },
+          // The label's press area reaches over the whole tile (the tile is the positioned box), so the blank space under a short name
+          // beside a taller neighbour ticks the box too; the description, a layer above, keeps its own links and fold.
+          "&::after": { content: '""', position: "absolute", inset: 0 },
         }}
       >
         <input
@@ -103,7 +107,7 @@ export default function VolunteerRoleTile({
       </Box>
       {described && (
         // «Descrierea rolului» (§765): the editor's document, folded «Detalii» past about three lines, under the name.
-        <Box sx={{ pl: TILE_TEXT_INDENT, pr: 1.5, pb: 0.5 }}>
+        <Box sx={{ pl: TILE_TEXT_INDENT, pr: 1.5, pb: 0.5, position: "relative", zIndex: 1, pointerEvents: "none", "& > *": { pointerEvents: "auto" } }}>
           <RoleDescription doc={doc} words={words} detailsLabel={detailsLabel} bodyId={descriptionId} flush />
         </Box>
       )}
