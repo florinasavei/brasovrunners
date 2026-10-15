@@ -17,7 +17,7 @@ import { CALENDAR_TARGET_NAMESPACE, CALENDAR_TARGETS, calendarTargetMark, type C
 import CalendarFoldClose from "./CalendarFoldClose";
 import InstagramShareButton from "./InstagramShareButton";
 import NativeShareButton from "./NativeShareButton";
-import { CALENDAR_PILL_LEFT_VAR, SHARE_PILL_SX, SHARE_ROW_GAP } from "./share-pill";
+import { CALENDAR_PILL_LEFT_VAR, DROPDOWN_PANEL_SURFACE_SX, SHARE_PILL_SX, SHARE_ROW_GAP } from "./share-pill";
 
 /**
  * Share this event (`DECISIONS.md` §90, §140): the phone's own share sheet where there is
@@ -34,7 +34,7 @@ import { CALENDAR_PILL_LEFT_VAR, SHARE_PILL_SX, SHARE_ROW_GAP } from "./share-pi
  * five doors on one wrapping line, the file's note and the file's address. No script: it opens with
  * the click, the Enter key and the space bar, and with scripts off.
  *
- * One row (§778, amending §767 and §772; the owner, 2026-10-15: «These should be inline to save
+ * One row (§NNN, amending §767 and §772; the owner, 2026-10-15: «These should be inline to save
  * space»): the caption, the networks and, last, the calendar pill are one wrapping line of the same small
  * pill, and the fold's body is a dropdown panel anchored under the pill, out of the flow, so opening it
  * pushes nothing. With scripts off the panel is the same CSS and opens and closes by the pill; with scripts
@@ -97,7 +97,7 @@ function calendarDoor(calendar: NonNullable<Props["calendar"]>, id: CalendarTarg
  */
 const CALENDAR_PILL_SX = {
   ...SHARE_PILL_SX,
-  // MUI's button is border-box; a bare `<summary>` is not, and its 28 pixels would read 34 beside the others (§778).
+  // MUI's button is border-box; a bare `<summary>` is not, and its 28 pixels would read 34 beside the others (§NNN).
   boxSizing: "border-box",
   display: "flex",
   width: "fit-content",
@@ -121,7 +121,7 @@ const CALENDAR_PILL_SX = {
 const CALENDAR_FOLD_ID = "event-calendar";
 
 /**
- * The calendar fold's body as a dropdown panel (§778): out of the flow, so opening it never moves the pills
+ * The calendar fold's body as a dropdown panel (§NNN): out of the flow, so opening it never moves the pills
  * (the row, `position: relative`, is its containing block). `top` stays auto — the panel sits where it would
  * have flowed, right under the summary, whichever line of the wrapped row the pill is on. Its width is 26rem
  * at most and never more than the row's own, and its left edge is the pill's (`CalendarFoldClose` writes the
@@ -140,11 +140,8 @@ const CALENDAR_PANEL_SX = {
   mt: SHARE_ROW_GAP,
   boxSizing: "border-box",
   width: CALENDAR_PANEL_WIDTH,
+  ...DROPDOWN_PANEL_SURFACE_SX,
   p: 1.5,
-  bgcolor: "background.paper",
-  border: 1,
-  borderColor: "divider",
-  borderRadius: 2,
   boxShadow: 3,
 } as const;
 
@@ -177,7 +174,7 @@ export default async function ShareLinks({ url, title, imageHref, fileName, cale
   );
   return (
     /*
-      ONE wrapping row (§778, amending §767 and §772; the owner, 2026-10-15: «These should be inline to save
+      ONE wrapping row (§NNN, amending §767 and §772; the owner, 2026-10-15: «These should be inline to save
       space»): the caption, the networks and, last, the calendar pill, all the same 28-pixel pill with its tap
       band, eight pixels apart. The row is the containing block of the calendar panel, so the panel can never
       reach past the row's own width — a phone's 320 included.
@@ -203,7 +200,7 @@ export default async function ShareLinks({ url, title, imageHref, fileName, cale
       )}
       {calendar && (
         /*
-          «Adaugă în calendar» (§772, §778): ONE pill, a native fold closed on arrival, the last pill of the row.
+          «Adaugă în calendar» (§772, §NNN): ONE pill, a native fold closed on arrival, the last pill of the row.
           Its body is a dropdown panel under the row, out of the flow: opening it moves nothing. The pill is the
           `<summary>`: keyboard-reachable and toggled by Enter and Space, and it works with scripts off — the
           panel is plain CSS, so without scripts it opens the same way and closes by the pill; with scripts,
