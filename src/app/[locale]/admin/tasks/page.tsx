@@ -19,7 +19,7 @@ import { checkJobHealth } from "@/modules/jobs/health";
 import { ROADS } from "@/modules/notifications/domain/road-failover";
 import { checkEmailHealth } from "@/modules/notifications/health";
 import { countLostRelayMessages } from "@/modules/notifications/relay-view";
-import { readRoadStates, roadFailingLong } from "@/modules/notifications/road-status";
+import { readRoadStates, roadRings } from "@/modules/notifications/road-status";
 import {
   findCurrentApprovedDocument,
   noticeDescribesEventInvitations,
@@ -528,7 +528,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
       // Email nothing is carrying (§622): the health check's own counts, read above for the red banner.
       emailFailSafe: { stoppedLong: email.stoppedLong, failed: email.failed, retryingLate: email.retryingLate },
       emailRoads: {
-        failing: ROADS.filter((road) => roadFailingLong(roadStates[road], now)).map((road) => ({ road, error: roadStates[road].lastError })),
+        failing: ROADS.filter((road) => roadRings(road, roadStates[road], now)).map((road) => ({ road, error: roadStates[road].lastError })),
         lostMessages: lostRelayMessages,
       },
       staleJobNames,

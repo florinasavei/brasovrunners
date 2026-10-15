@@ -6,7 +6,7 @@ import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import type { Locale } from "@/i18n/routing";
 import { ROADS, type Road } from "@/modules/notifications/domain/road-failover";
 import { type RelayRow, type RelayView } from "@/modules/notifications/relay-view";
-import { roadFailingLong } from "@/modules/notifications/road-status";
+import { roadRings } from "@/modules/notifications/road-status";
 import type { StatusGlyphName } from "@/shared/ui/status-glyphs";
 import Panel from "@/shared/ui/Panel";
 import StatusChip from "@/shared/ui/StatusChip";
@@ -35,7 +35,7 @@ export default async function RelayMessagesPanel({ locale, view, now, openWhen }
   const when = (at: Date) => formatDay(at, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true, position: "inline" });
   const roadName = (road: Road) => t(`emails.relay.road.${road}`);
   const lost = view.rows.some((row) => row.status === "FAILED" || row.status === "BOUNCED");
-  const failing = ROADS.some((road) => roadFailingLong(view.states[road], now));
+  const failing = ROADS.some((road) => roadRings(road, view.states[road], now));
   const waiting = view.rows.some((row) => row.status === "PENDING" || row.status === "PROCESSING");
 
   return (
@@ -55,7 +55,7 @@ export default async function RelayMessagesPanel({ locale, view, now, openWhen }
           const state = view.states[road];
           const last = view.lastSuccess[road];
           return (
-            <Box component="li" key={road} data-testid={`relay-road-${road}`} data-failing={roadFailingLong(state, now) ? "true" : "false"}>
+            <Box component="li" key={road} data-testid={`relay-road-${road}`} data-failing={roadRings(road, state, now) ? "true" : "false"}>
               <Typography variant="body2" sx={{ fontWeight: 600 }}>
                 {roadName(road)}
               </Typography>
@@ -64,7 +64,7 @@ export default async function RelayMessagesPanel({ locale, view, now, openWhen }
                 {state.lastFailureAt ? ` · ${t("emails.relay.lastFailure", { when: when(state.lastFailureAt), error: state.lastError ?? "—" })}` : ""}
               </Typography>
               {state.failingSince && (
-                <Typography variant="body2" color={roadFailingLong(state, now) ? "error" : "text.secondary"} data-testid={`relay-road-${road}-failing`}>
+                <Typography variant="body2" color={roadRings(road, state, now) ? "error" : "text.secondary"} data-testid={`relay-road-${road}-failing`}>
                   {t("emails.relay.failingSince", { when: when(state.failingSince) })}
                 </Typography>
               )}

@@ -2,7 +2,8 @@ import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { emailOutbox } from "@/db/schema/email-outbox";
 import { platformSettings } from "@/db/schema/platform-settings";
-import type { EmailSender } from "@/infrastructure/email/delivery";
+import { type EmailSender, GMAIL_NOT_TAKING_ERROR } from "@/infrastructure/email/delivery";
+import { GMAIL_CAP_DEFERRED_ERROR } from "@/modules/notifications/domain/email-transport";
 import type { OutgoingEmail, SendResult } from "@/infrastructure/email/adapter";
 import {
   ROAD_FAILING_ALARM_MS,
@@ -60,11 +61,20 @@ describe("§NNN the roads' state", () => {
     expect((await readRoadStates(db)).mailgun).toEqual({ failingSince: null, lastFailureAt: minutes(10), lastError: "mailgun 503" });
   });
 
-  it("rings after an hour of failing, not before, and not after the road works again", () => {
-    const failing = { failingSince: T0, lastFailureAt: T0, lastError: "x" };
+  it("rings after an hour of failing that is still going on, not before, and not after the road works again", () => {
+    const failing = { failingSince: T0, lastFailureAt: minutes(59), lastError: "x" };
     expect(roadFailingLong(failing, new Date(T0.getTime() + ROAD_FAILING_ALARM_MS - 1))).toBe(false);
     expect(roadFailingLong(failing, new Date(T0.getTime() + ROAD_FAILING_ALARM_MS))).toBe(true);
     expect(roadFailingLong({ ...failing, failingSince: null }, minutes(600))).toBe(false);
+  });
+
+  it("one old failure followed by silence is not red: the road is not shown down on no evidence", () => {
+    const once = { failingSince: T0, lastFailureAt: T0, lastError: "gmail: smtp ETIMEDOUT" };
+    // A single failure can never ring; neither does a run whose failures stopped coming an hour ago.
+    expect(roadFailingLong(once, minutes(61))).toBe(false);
+    expect(roadFailingLong(once, minutes(600))).toBe(false);
+    expect(roadFailingLong({ failingSince: T0, lastFailureAt: minutes(30), lastError: "x" }, minutes(89))).toBe(true);
+    expect(roadFailingLong({ failingSince: T0, lastFailureAt: minutes(30), lastError: "x" }, minutes(90))).toBe(false);
   });
 
   describe("which answers are a road's failure", () => {
@@ -83,6 +93,12 @@ describe("§NNN the roads' state", () => {
       expect(roadFailureOf({ outcome: "throttled", error: "gmail pace: handed to the next run", paced: true })).toBeNull();
       expect(roadFailureOf({ outcome: "sent", providerMessageId: "m" })).toBeNull();
       expect(roadFailureOf({ outcome: "transient_failure", error: "unknown error" })).toBeNull();
+    });
+
+    it("nor the club's own words about Gmail: «not taking messages», «not configured» and the daily cap's deferral", () => {
+      expect(roadFailureOf({ outcome: "throttled", error: GMAIL_NOT_TAKING_ERROR })).toBeNull();
+      expect(roadFailureOf({ outcome: "throttled", error: "gmail is not configured" })).toBeNull();
+      expect(roadFailureOf({ outcome: "throttled", error: GMAIL_CAP_DEFERRED_ERROR, retryAfter: minutes(600) })).toBeNull();
     });
   });
 

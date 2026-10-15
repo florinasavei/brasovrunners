@@ -3,7 +3,9 @@ import { emailOutbox } from "@/db/schema/email-outbox";
 import { platformSettings } from "@/db/schema/platform-settings";
 import type { Database } from "@/db/types";
 import type { SendResult } from "@/infrastructure/email/adapter";
-import type { EmailSender } from "@/infrastructure/email/delivery";
+import { type EmailSender, GMAIL_NOT_TAKING_ERROR } from "@/infrastructure/email/delivery";
+import { env } from "@/shared/config/env";
+import { GMAIL_CAP_DEFERRED_ERROR } from "./domain/email-transport";
 import { type Road, ROADS } from "./domain/road-failover";
 
 /**
@@ -14,8 +16,8 @@ import { type Road, ROADS } from "./domain/road-failover";
  * already uses): it needs no write on the hot path. The last **failure** and when the road **began failing**
  * are a `platform_settings` row written only when a road fails and when a failing road works again — a
  * message the service refused (a refused login, a 5xx, no connection, a spent allowance), never one that
- * bounced for its address, which says nothing about the road. «Failing» for over an hour is what
- * `/admin/tasks` rings for (`ROAD_FAILING_ALARM_MS`).
+ * bounced for its address, which says nothing about the road. «Failing» is what `/admin/tasks` rings for
+ * (`roadFailingLong`): failures that have gone on for over an hour **and are still coming**.
  */
 export const ROAD_STATUS_KEY = "emailRoadStatus";
 
@@ -97,9 +99,27 @@ export async function recordRoadSuccess<T extends Record<string, unknown>>(db: D
   await writeRoadState(db, at, (states) => (states[road].failingSince ? { ...states, [road]: { ...states[road], failingSince: null } } : null));
 }
 
-/** Whether a road has been failing long enough to ring: since over an hour, with no success since. */
+/**
+ * Whether a road has been failing long enough to ring (§NNN): the run began over an hour ago, no success has ended
+ * it, **and the latest failure is within the last hour**. One failure on a quiet road — Gmail at night, or a Gmail
+ * failure whose message Mailgun then carried — is not a road that is down: it can never ring, because the first and
+ * the latest failure of a single failure are the same moment, and a run whose failures stopped coming (the road is
+ * not asked, or was turned off) goes quiet an hour after its last one rather than staying red until a message
+ * happens to cross it.
+ */
 export function roadFailingLong(state: RoadState, now: Date): boolean {
-  return state.failingSince !== null && now.getTime() - state.failingSince.getTime() >= ROAD_FAILING_ALARM_MS;
+  if (state.failingSince === null || state.lastFailureAt === null) return false;
+  return now.getTime() - state.failingSince.getTime() >= ROAD_FAILING_ALARM_MS && now.getTime() - state.lastFailureAt.getTime() < ROAD_FAILING_ALARM_MS;
+}
+
+/** Whether the deployment has this road at all: Gmail needs the club's account and app password; Mailgun is always the platform's. */
+export function roadIsConfigured(road: Road): boolean {
+  return road === "mailgun" || Boolean(env.CONTACT_SMTP_USER && env.CONTACT_SMTP_PASSWORD);
+}
+
+/** What the pages ring for: a road that exists here and is failing long. A Gmail account taken away clears its row. */
+export function roadRings(road: Road, state: RoadState, now: Date): boolean {
+  return roadIsConfigured(road) && roadFailingLong(state, now);
 }
 
 /** When each road last carried a message that reached somebody (not a captured one), from the outbox itself. */
@@ -116,14 +136,20 @@ export async function readRoadLastSuccess<T extends Record<string, unknown>>(db:
   return last;
 }
 
+const NOT_A_ROAD_FAILURE = new Set([GMAIL_NOT_TAKING_ERROR, "gmail is not configured", GMAIL_CAP_DEFERRED_ERROR]);
+
 /**
  * The road a refusal belongs to and its short code, when it is the **service's** refusal — read from the adapters'
  * own words (`gmail: smtp EAUTH`, `mailgun 503: …`, `mailgun unreachable: …`): a transient failure, a stop (the
  * allowance, a pause), a refusal of the account or the message. Never an address that bounced, never the club's
- * own pace, never a sent message. Null when it says nothing about a road.
+ * own pace, never a sent message, and never the club's own words about Gmail: «not taking messages in this batch»
+ * says only that an earlier failure was already noted with its real code (overwriting it with the generic phrase hid
+ * the code SETUP §38 promises), «not configured» is no road at all, and «daily cap: deferred» is the club's own cap,
+ * not a service that is down. Null when it says nothing about a road.
  */
 export function roadFailureOf(result: SendResult): { road: Road; error: string } | null {
   if (result.outcome === "sent") return null;
+  if (NOT_A_ROAD_FAILURE.has(result.error)) return null;
   if (result.outcome === "permanent_failure" && !result.notTheAddress) return null;
   if (result.outcome === "throttled" && result.paced && !result.rateRefused) return null;
   const road = /^gmail\b/i.test(result.error) ? "gmail" : /^mailgun\b/i.test(result.error) ? "mailgun" : null;

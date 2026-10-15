@@ -30,7 +30,8 @@ export async function createRelayRoads<T extends Record<string, unknown>>(db: Da
   const capture = env.APP_ENV === "local" || env.APP_ENV === "test";
   const setting = await readEmailTransport(db);
   // The refusal Gmail’s sender hands to `onFailure`: the sender’s answer to a failed Gmail send is a generic «not taking»,
-  // and the relay needs the real code to count the failure and to say it.
+  // and the relay needs the real code to count the failure and to say it. Kept for the sender’s life, which is one batch: once
+  // Gmail failed, every later message of the batch is «not taken» for that same reason, and says its code.
   let lastGmailError: string | null = null;
 
   let mailgun: EmailSender | null = null;
@@ -71,7 +72,6 @@ export async function createRelayRoads<T extends Record<string, unknown>>(db: Da
         const captured = await mailgunSender().send(message);
         return captured.outcome === "sent" ? { ...captured, transport: "gmail" } : captured;
       }
-      lastGmailError = null;
       const result = await gmailSender().send({ ...message, transport: "gmail", gmailOnly: true });
       if (result.outcome === "throttled" && !result.paced && result.error === GMAIL_NOT_TAKING_ERROR) {
         // A refusal before Gmail could have taken the message: the service’s, counted once like any other, not a stop.

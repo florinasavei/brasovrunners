@@ -32,7 +32,7 @@ import { readDatabaseSizeBytes } from "@/modules/diagnostics/database-size";
 import { REPO_DOCS } from "@/modules/diagnostics/repo-docs";
 import { ROADS } from "@/modules/notifications/domain/road-failover";
 import { checkEmailHealth } from "@/modules/notifications/health";
-import { readRoadLastSuccess, readRoadStates, roadFailingLong } from "@/modules/notifications/road-status";
+import { readRoadLastSuccess, readRoadStates, roadRings } from "@/modules/notifications/road-status";
 import { readEmailVolumeToday } from "@/modules/notifications/volume";
 import { readWeatherStatus } from "@/modules/weather/source";
 import { readNeonConsumption } from "@/modules/diagnostics/neon";
@@ -825,7 +825,7 @@ export default async function DevsPage({ params, searchParams }: Props) {
               const at = (value: Date) => formatDay(value, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true });
               const last = roadLastSuccess[road];
               return (
-                <Typography variant="body2" key={road} data-testid={`road-${road}`} color={roadFailingLong(state, now) ? "error.main" : "text.primary"}>
+                <Typography variant="body2" key={road} data-testid={`road-${road}`} color={roadRings(road, state, now) ? "error.main" : "text.primary"}>
                   {t(`roads.${road}`)}: <strong>{t(state.failingSince ? "roads.failing" : "roads.ok")}</strong>
                   {" · "}
                   {last ? t("roads.lastOk", { when: at(last) }) : t("roads.neverOk")}
