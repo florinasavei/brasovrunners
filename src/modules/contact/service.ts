@@ -1,5 +1,6 @@
 import type { Database } from "@/db/types";
 import { drainRelayAfterResponse } from "@/modules/notifications/drain";
+import type { FeedbackVia } from "@/modules/feedback/domain/branches";
 import { enqueueRelay } from "@/modules/notifications/relay";
 import { canonicalizeEmail, InvalidEmailError } from "@/modules/participants/domain/canonical-email";
 import { emailBucketKey } from "@/modules/rate-limit/domain/key";
@@ -41,7 +42,10 @@ import { type ContactMessageRoute, renderContactMessage } from "./message";
  * Who receives and from where (the club's recipients, the sender's name, the environment for the subject's mark) — and no
  * transport since §778: the message is queued in the outbox and the relay's roads carry it (`notifications/relay.ts`).
  */
-export type ContactDelivery = ContactMessageRoute;
+export type ContactDelivery = ContactMessageRoute & {
+  /** The road the club chose for «Scrie-ne» (§NNN, amending §149); absent is the club's Gmail, what the form always did. */
+  road?: FeedbackVia;
+};
 
 /**
  * What the action knows about the post that the form's fields do not carry: whether the club's
@@ -152,7 +156,7 @@ export async function submitContactMessage<T extends Record<string, unknown>>(
     suspicion,
   );
   /*
-    Queued, not sent from here (§778, amending §149): the club's Gmail is the road the form always had, the other road
+    Queued, not sent from here (§778, amending §149): the road is the club's choice (§NNN; the club's Gmail when none was made and Mailgun does not transmit), the other road
     takes over when it is down and the message may take it, and the retries are the outbox's. A transport that fails no
     longer loses the message or tells the visitor «nu am putut trimite»: the row is the promise. The first recipient is
     the row's `To`, the rest ride as visible copies with the club's own list, as they always did.
@@ -163,7 +167,7 @@ export async function submitContactMessage<T extends Record<string, unknown>>(
   try {
     row = await enqueueRelay(db, {
       type: "CONTACT_MESSAGE",
-      road: "gmail",
+      road: delivery.road ?? "gmail",
       to: first,
       locale: input.locale,
       content: {

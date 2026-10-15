@@ -1,3 +1,4 @@
+import { defaultViaFor, FEEDBACK_VIAS, type FeedbackRoads, type FeedbackVia } from "@/modules/feedback/domain/branches";
 import { isValidEmail } from "@/modules/participants/domain/canonical-email";
 import { z } from "zod";
 
@@ -68,6 +69,10 @@ export const contactRecipientsSchema = z
     // §744 (amends §310): a message the form marks «[posibil spam]» is not emailed, only
     // counted. Off on a row saved before it existed — nothing changes on release.
     holdBackSuspected: z.boolean().default(false),
+    // «Prin ce trimitem» (§NNN, amending §149): the road «Scrie-ne» leaves by. Absent on a row saved before the choice existed and
+    // on a deployment nobody has chosen on — then the default stands (`contactViaFor`: Mailgun where it transmits). A road
+    // the club chose is stored and never replaced by a release.
+    via: z.enum(FEEDBACK_VIAS).optional(),
   })
   .strict()
   // Stored the way it will be sent, so the boxes show the club what it actually did. One `seen`
@@ -79,10 +84,20 @@ export const contactRecipientsSchema = z
       cc: withoutRepeats(value.cc, seen),
       bcc: withoutRepeats(value.bcc, seen),
       holdBackSuspected: value.holdBackSuspected,
+      // Only when chosen: a row that never carried a road stays exactly what it was.
+      ...(value.via ? { via: value.via } : {}),
     };
   });
 
 export type ContactRecipients = z.infer<typeof contactRecipientsSchema>;
+
+/**
+ * The road «Scrie-ne» leaves by (§NNN): the club's saved choice, else the default of a form with none — Mailgun where it
+ * transmits, otherwise the club's Gmail, which is what the form always did (`defaultViaFor`).
+ */
+export function contactViaFor(setting: Pick<ContactRecipients, "via"> | null, roads: FeedbackRoads): FeedbackVia {
+  return setting?.via ?? defaultViaFor("contact", roads);
+}
 
 export const DEFAULT_CONTACT_RECIPIENTS: ContactRecipients = { to: [], cc: [], bcc: [], holdBackSuspected: false };
 
