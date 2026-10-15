@@ -106,7 +106,7 @@ export type VolunteerRole = {
   eventId: string;
   nameRo: string;
   nameEn: string;
-  needed: number;
+  needed: number | null;
   /**
    * «Descrierea rolului» (§765): the plain words per language — a line per paragraph and per list item: what the card's
    * header, the agreement and the emails say (the columns `description_words_*`; it is `RoleWords`' own shape, so a role
@@ -365,9 +365,9 @@ export type PublicVolunteerRole = {
   descriptionEn: string | null;
   descriptionRoJson: RichTextDoc | null;
   descriptionEnJson: RichTextDoc | null;
-  needed: number;
+  needed: number | null;
   taken: number;
-  free: number;
+  free: number | null;
   /** The category the role sits under (§774); null is «Alte activități». */
   categoryId: string | null;
 };
@@ -448,7 +448,7 @@ function postedStrings(fields: Record<string, unknown>, names: readonly string[]
   return Object.fromEntries(names.map((name) => [name, typeof fields[name] === "string" ? (fields[name] as string) : ""]));
 }
 
-const ROLE_FIELDS = ["nameRo", "nameEn", "needed", "descriptionRo", "descriptionEn"] as const;
+const ROLE_FIELDS = ["nameRo", "nameEn", "needed", "unlimited", "descriptionRo", "descriptionEn"] as const;
 /** The editor's documents: absent stays absent (a caller without the editor posts the plain boxes), never an empty document that would win over them. */
 const ROLE_BODY_FIELDS = ["descriptionRoBody", "descriptionEnBody"] as const;
 

@@ -1114,7 +1114,18 @@
         "add": "Add a note",
         "label": "Note",
         "limit": "At most {max} characters.",
-        "save": "Save the note"
+        "save": "Save the note",
+        "exportMore": "… (more notes on the registration's page)",
+        "exportGone": "account removed",
+        "exportRole": {
+          "MEMBER": "Member",
+          "CONTRIBUTOR": "Volunteer",
+          "COPYWRITER": "Editor",
+          "MODERATOR": "Organizer",
+          "DEV": "Technical",
+          "ADMIN": "Administrator",
+          "SUPERADMIN": "Superadministrator"
+        }
       },
       "auditActorParticipant": "the participant, from their own link",
       "audit": {
@@ -4816,10 +4827,13 @@
       "intro": "The people who help at this event: each ticks what they would do, you give them a role. Roles are set here, in both languages. Addresses and telephone numbers never appear on a public page.",
       "notAccounts": "The volunteers here are not accounts: whoever works the race-day desk gets an account on “Echipa”, with the role Voluntar.",
       "summary": "{taken} of {needed}",
+      "summaryPlusNoNumber": "{taken} of {needed} + roles with no limit",
+      "summaryOnlyNoNumber": "{taken} in roles with no limit",
       "summaryNone": "No roles yet",
       "summaryPending": "{count} to confirm",
       "summaryUnassigned": "{count} to place",
       "standing": "{taken} of {needed}",
+      "standingNoNumber": "{taken} · no limit",
       "offer": {
         "open": "The “I want to volunteer” page is open: the event's page links to it.",
         "closed": {
@@ -4844,7 +4858,9 @@
         "nameRo": "Role name (Română)",
         "nameEn": "Role name (English)",
         "needed": "People needed",
-        "neededHelp": "At least 1. Only the people you gave the role count. Once it has that many, the public form stops offering it.",
+        "neededHelp": "At least 1, or tick “No limit” below. Only the people you gave the role count. Once it has that many, the public form stops offering it.",
+        "unlimited": "No limit — any number of people",
+        "unlimitedHelp": "The role is always offered, however many people it already has. Unticked, type a number of at least 1 above.",
         "descriptionRo": "Role description (Română, optional)",
         "descriptionEn": "Role description (English, optional)",
         "descriptionHelp": "What the role involves: where the volunteer stands, what they do, from what hour. At most {max} characters of text in each language; in both languages or neither.",
@@ -4877,7 +4893,8 @@
         "button": "Give them {role}",
         "other": "Another role",
         "otherSubmit": "Give the chosen role",
-        "standing": "{role} · {taken} of {needed}"
+        "standing": "{role} · {taken} of {needed}",
+        "standingNoNumber": "{role} · {taken} · no limit"
       },
       "person": {
         "role": "Role",
@@ -7447,7 +7464,7 @@
               "steps": [
                 "«Registrations» → search the name → open the registration → «Internal notes». The closed card says how many notes it holds.",
                 "Write in «Add a note» and press «Save the note». The notes come newest first, with the name of who wrote them and the moment.",
-                "Only organizers and administrators see the notes. They do not show at the desk, in the export or on the public list. Do not write medical or other sensitive data.",
+                "Only organizers and administrators see the notes. They do not show at the desk or on the public list; in the Excel and CSV export they are the last column, «Internal notes». Do not write medical or other sensitive data.",
                 "On the registrations list, a row with notes has a marker with their number; press it to open the notes.",
                 "«Delete» takes a note away, after a question: you delete your own, an Administrator deletes any. The notes are deleted with the registration."
               ]
@@ -7458,6 +7475,7 @@
                 "«Registrations» → pick the event → «Filter».",
                 "Tick «Only with offers and benefits» to see only who said yes to offers; the export follows the filter.",
                 "Press «Export to Excel» (or «Export CSV»). The file holds exactly the filtered rows, without test registrations.",
+                "The file ends with «Internal notes»: one note a line, with the author's role. The column is named in the language of the page where you pressed the button.",
                 "The file carries identity documents and phone numbers: never send it to a group, and delete it within 7 days of the event."
               ]
             },
@@ -7781,7 +7799,7 @@
               "steps": [
                 "«Registrations» → search the name → open the registration → «Internal notes». The closed card says how many notes it holds.",
                 "Write in «Add a note» and press «Save the note». The notes come newest first, with the name of who wrote them and the moment.",
-                "Only organizers and administrators see the notes. They do not show at the desk, in the export or on the public list. Do not write medical or other sensitive data.",
+                "Only organizers and administrators see the notes. They do not show at the desk or on the public list; in the Excel and CSV export they are the last column, «Internal notes». Do not write medical or other sensitive data.",
                 "On the registrations list, a row with notes has a marker with their number; press it to open the notes.",
                 "«Delete» takes a note away, after a question: you delete your own, an Administrator deletes any. The notes are deleted with the registration."
               ]
@@ -9694,6 +9712,8 @@
         "title": "Printing",
         "aside": "{perSheet} on an A4 sheet · {width} × {height} mm",
         "intro": "Badges are printed per role, not per person. An A4 sheet holds {perSheet} badges. The roles need in all: {needed}. At most {max} for a role and {total} in one file.",
+        "introAllNoNumber": "Badges are printed per role. An A4 sheet holds {perSheet}. Roles without a limit start at the people given them. At most {max} per role and {total} in one file.",
+        "introNoNumber": "Badges are printed per role. An A4 sheet holds {perSheet}. Roles with a limit need {needed}; those with none start at the people given them. At most {max} per role and {total} in one file.",
         "introSingle": "One badge for every volunteer. An A4 sheet holds {perSheet} badges. At most {total} in one file.",
         "introMore": "The sheet holds no name and nothing about any volunteer. The name is written by hand at the welcome desk.",
         "language": "The badges' language",
@@ -9704,10 +9724,12 @@
         "count": "How many badges",
         "spares": "Spares",
         "countHelp": "The role needs {needed}. “Spares” are extra badges.",
+        "countHelpNoNumber": "The role has no limit: the box starts at the number of people you gave it ({assigned}). “Spares” are extra badges.",
         "singleTitle": "The badge for everyone",
         "singleHelp": {
           "confirmed": "It starts at the event's confirmed volunteers: {count}. “Spares” are extra badges.",
           "needed": "No volunteer is confirmed yet, so it starts at what the roles ask for together: {count}. “Spares” are extra badges.",
+          "neededNoNumber": "No volunteer is confirmed yet, so it starts at what the roles ask for together, and for a role with no limit at the people you gave it: {count}. “Spares” are extra badges.",
           "fallback": "No volunteer is confirmed yet and no role asks for anyone, so it starts at {count}. “Spares” are extra badges."
         },
         "noRole": "Badges without a role",

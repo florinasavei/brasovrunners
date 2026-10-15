@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.40-2026-10-15 -->
+<!-- PROJECT_BASELINE: BR-V3.41-2026-10-16 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V3.40-2026-10-15`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.41-2026-10-16`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -2148,6 +2148,10 @@ only ones who see the names, addresses and telephone numbers.
    the role given — «Încă niciunul» takes it back — and your own note, never shown publicly), «Șterge
    voluntarul» (the address and the telephone number go with it). «N din M» beside each role counts only the
    people **given** that role («Înscris» and «Confirmat»); the page stops offering a role once it has them.
+   A role may also have **no number** (§784): tick «Fără număr — oricâți oameni» in «Adaugă un rol» (or in the role's «Modifică») instead of typing
+   «Câți oameni trebuie» — the number box goes while the tick is on. Such a role reads «3 · fără număr» on the card, is never full, is always on the event's page and
+   on the volunteers' page, and the page never says a number for it («mai sunt locuri», even with the counts on); the card's closed line counts only the roles with a number
+   («0 din 10 + roluri fără număr»), and «Câte ecusoane» starts it at the people you gave it.
    «Adaugă un voluntar de mână» enters a person yourself — tick what they would do, and give a role if you
    already know it; a role may take more people than it asked; the age, sex, city and ticks are optional there (an age below 14 is refused, and one of 14–17 asks the parent's name, step 8), and drawn only once the notice of step 2 names them.
    A row shows «A mai fost voluntar» and «Din grupul …» as small chips and the rest in one line. «Descarcă CSV» downloads the list, grouped by

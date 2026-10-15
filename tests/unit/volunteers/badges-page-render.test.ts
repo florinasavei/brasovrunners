@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from "vitest";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 import { DEFAULT_BADGE_DESIGN } from "@/modules/volunteers/badges/badge-design";
-import type { BadgeRole } from "@/modules/volunteers/badges/badges";
+import type { BadgeRole, BadgeSingleStart } from "@/modules/volunteers/badges/badges";
 
 /**
  * §764 — «Ecusoane pentru voluntari», its three cards as the server draws them (BR-REQ-050-02): the designer's
@@ -38,9 +38,9 @@ const { default: BadgePrintPanel } = await import("@/modules/volunteers/badges/u
 
 const EVENT = "11111111-1111-4111-8111-111111111111";
 const ROLES: BadgeRole[] = [
-  { id: "22222222-2222-4222-8222-222222222222", nameRo: "Punct de apă", nameEn: "Water point", needed: 3, colour: "#c62828", position: 0, createdAt: new Date("2026-10-14T08:00:00Z"), categoryId: null, categoryRo: null, categoryEn: null, categoryPhone: null },
-  { id: "33333333-3333-4333-8333-333333333333", nameRo: "Sosire", nameEn: "Finish", needed: 2, colour: null, position: 1, createdAt: new Date("2026-10-14T08:00:00Z"), categoryId: null, categoryRo: null, categoryEn: null, categoryPhone: null },
-  { id: "44444444-4444-4444-8444-444444444444", nameRo: "Fotograf", nameEn: "Photographer", needed: 1, colour: "#808080", position: 2, createdAt: new Date("2026-10-14T08:00:00Z"), categoryId: null, categoryRo: null, categoryEn: null, categoryPhone: null },
+  { id: "22222222-2222-4222-8222-222222222222", nameRo: "Punct de apă", nameEn: "Water point", needed: 3, assigned: 0, colour: "#c62828", position: 0, createdAt: new Date("2026-10-14T08:00:00Z"), categoryId: null, categoryRo: null, categoryEn: null, categoryPhone: null },
+  { id: "33333333-3333-4333-8333-333333333333", nameRo: "Sosire", nameEn: "Finish", needed: 2, assigned: 0, colour: null, position: 1, createdAt: new Date("2026-10-14T08:00:00Z"), categoryId: null, categoryRo: null, categoryEn: null, categoryPhone: null },
+  { id: "44444444-4444-4444-8444-444444444444", nameRo: "Fotograf", nameEn: "Photographer", needed: 1, assigned: 0, colour: "#808080", position: 2, createdAt: new Date("2026-10-14T08:00:00Z"), categoryId: null, categoryRo: null, categoryEn: null, categoryPhone: null },
 ];
 
 async function html(draw: () => Promise<unknown>, language: "ro" | "en" = "ro"): Promise<string> {
@@ -321,7 +321,7 @@ describe("§783 «Culorile rolurilor» serve the badges per role only", () => {
 });
 
 describe("§783 «Tipărire» of the one badge", () => {
-  const single = (start: { count: number; basis: "confirmed" | "needed" | "fallback" }, language: "ro" | "en" = "ro") =>
+  const single = (start: BadgeSingleStart, language: "ro" | "en" = "ro") =>
     html(() => BadgePrintPanel({ eventId: EVENT, locale: language, design: DEFAULT_BADGE_DESIGN, roles: ROLES, eventTitle: "Crosul", singleStart: start }), language);
 
   it("is one pile — «Câte ecusoane» and «În plus» — and no role's, no «Ecusoane fără rol»", async () => {
@@ -343,9 +343,12 @@ describe("§783 «Tipărire» of the one badge", () => {
     expect(page).toContain("Un singur ecuson pentru toți voluntarii. Pe o foaie A4 încap 16 ecusoane. Cel mult 1000 într-un fișier.");
   });
 
-  it("says where the number starts: the confirmed volunteers, what the roles need, or the fallback", async () => {
+  it("says where the number starts: the confirmed volunteers, what the roles need, what they need with the people given a role without a number, or the fallback", async () => {
     expect(await single({ count: 37, basis: "confirmed" })).toContain("Începe de la voluntarii confirmați ai evenimentului: 37.");
     expect(await single({ count: 20, basis: "needed" })).toContain("Încă nu e niciun voluntar confirmat, așa că începe de la câți cer rolurile împreună: 20.");
+    // §784: a role without a number adds the people it was given, and the help says so rather than call that what the roles «ask for».
+    expect(await single({ count: 11, basis: "neededNoNumber" })).toContain("începe de la câți cer rolurile împreună și, pentru un rol fără număr, de la oamenii cărora le-ai dat rolul: 11.");
+    expect(await single({ count: 11, basis: "neededNoNumber" }, "en")).toContain("and for a role with no limit at the people you gave it: 11.");
     expect(await single({ count: 10, basis: "fallback" })).toContain("niciun rol nu cere pe nimeni, așa că începe de la 10.");
     expect(await single({ count: 37, basis: "confirmed" }, "en")).toContain("It starts at the event&#x27;s confirmed volunteers: 37.");
   });

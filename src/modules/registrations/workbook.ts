@@ -69,6 +69,12 @@ export type RegistrationSheetRow = Omit<
   country?: string | null;
   city?: string | null;
   tshirtSize?: string | null;
+  /**
+   * «Note interne» (§785): the registration's live notes as the cell's words (`exportNotesCell`), written only
+   * when the workbook is built with `notesHeader` — which the route does for a role that may keep notes. Words
+   * here, never the table: this file does not import the notes module (`notes-never-leave.test.ts`).
+   */
+  notes?: string;
 };
 
 /**
@@ -208,9 +214,24 @@ const COLUMNS: Array<SheetColumn<RegistrationSheetRow>> = [
 /** The header row, exactly as the export writes it — what a re-import matches its columns by. */
 export const REGISTRATION_SHEET_HEADERS = COLUMNS.map((column) => column.header);
 
+/**
+ * «Note interne» (§785), the one column only some roles get: last, wide, with wrap on so the lines of a cell
+ * (one note a line) show as lines. Headed in the reader's language (`notesHeader`, the card's own title) and
+ * text-typed like every cell, so a note that begins with `=` is never evaluated.
+ */
+function notesColumn(header: string): SheetColumn<RegistrationSheetRow> {
+  return { header, width: 60, cell: (row) => ({ value: row.notes ?? "", type: String, wrap: true }) };
+}
+
+/**
+ * The workbook. `notesHeader` adds the «Note interne» column (§785) — passed by the route only for a role that
+ * `canKeepRegistrationNotes`; without it the file has no such column, which is every other caller's file.
+ */
 export async function buildRegistrationsWorkbook(
   rows: readonly RegistrationSheetRow[],
   sheetName: string,
+  options: { notesHeader?: string } = {},
 ): Promise<Buffer> {
-  return writeSheet(COLUMNS, rows, sheetName, "Participants");
+  const columns = options.notesHeader ? [...COLUMNS, notesColumn(options.notesHeader)] : COLUMNS;
+  return writeSheet(columns, rows, sheetName, "Participants");
 }

@@ -317,7 +317,8 @@ export const volunteersFileSchema = z
         z
           .object({
             name: z.object({ ro: text(80), en: text(80) }).strict(),
-            needed: z.number().int().min(1).max(1000),
+            /** How many people the role needs; null is «fără număr» (§784): any number, never full. */
+            needed: z.number().int().min(1).max(1000).nullable(),
             /** The description's document in each language, both or neither; read strictly by the editor's own schema at import. */
             description: z.object({ ro: richDocument, en: richDocument }).strict(),
             colour: z.string().regex(/^#[0-9a-f]{6}$/i).nullable(),

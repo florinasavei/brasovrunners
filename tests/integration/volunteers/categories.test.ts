@@ -6,7 +6,7 @@ import { eventVolunteerCategories, eventVolunteerRoles, eventVolunteers } from "
 import { events } from "@/db/schema/events";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import type { StaffRole } from "@/modules/staff-identity/domain/roles";
-import { groupRolesByCategory } from "@/modules/volunteers/domain/volunteer";
+import { groupRolesByCategory, roleTakesPeople } from "@/modules/volunteers/domain/volunteer";
 import {
   changeVolunteer,
   changeVolunteerCategory,
@@ -488,7 +488,7 @@ describe("§774 the public read: the headings, their roles and the contact perso
       NOW,
     );
     const read = await readPublicVolunteerRoles(db, eventId);
-    const open = read.roles.filter((role) => role.free > 0);
+    const open = read.roles.filter((role) => roleTakesPeople(role));
     expect(groupRolesByCategory(read.categories, open, { withRoles: true }).map((group) => group.category?.nameRo)).toEqual(["Start / Sosire"]);
   });
 });

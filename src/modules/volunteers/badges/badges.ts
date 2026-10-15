@@ -10,7 +10,7 @@ import { canDesignVolunteerBadges } from "@/modules/staff-identity/domain/roles"
 import { DomainError } from "@/shared/errors/domain-error";
 import { isWrittenText, missingLanguage } from "@/shared/forms/both-languages";
 import { isUuid } from "@/shared/ids";
-import { compareCategories, compareRoles, groupRolesByCategory, roleLabel } from "../domain/volunteer";
+import { compareCategories, compareRoles, countsAgainstRole, groupRolesByCategory, roleLabel } from "../domain/volunteer";
 import {
   type BadgeDesign,
   type BadgeDroppedKey,
@@ -46,12 +46,15 @@ function assertMay(actor: Actor): void {
   }
 }
 
-/** One role as the badges read it: its names, how many it needs, its band's colour. */
+/** One role as the badges read it: its names, how many it needs, how many people it was given, its band's colour. */
 export type BadgeRole = {
   id: string;
   nameRo: string;
   nameEn: string;
-  needed: number;
+  /** How many people the role needs; null is «fără număr» (§784). */
+  needed: number | null;
+  /** The people the organizers gave the role (§761's count): what «Câte ecusoane» starts at for a role without a number. */
+  assigned: number;
   /** The colour as stored: a hex, or null for the club's orange. */
   colour: string | null;
   position: number;
@@ -65,6 +68,9 @@ export type BadgeRole = {
   categoryEn: string | null;
   categoryPhone: string | null;
 };
+
+/** What «Câte ecusoane» reads of a role: what it needs, and — for a role without a number (§784) — the people it was given. */
+export type BadgeCountRole = Pick<BadgeRole, "needed"> & { assigned?: number };
 
 /**
  * An event's roles under their categories (§774), in the club's order: the categories in theirs, each one's roles in the order of
@@ -85,7 +91,15 @@ export async function listBadgeRoles<T extends Record<string, unknown>>(db: Data
     .from(eventVolunteerRoles)
     .where(eq(eventVolunteerRoles.eventId, eventId));
   const categories = (await db.select().from(eventVolunteerCategories).where(eq(eventVolunteerCategories.eventId, eventId))).sort(compareCategories);
-  const roles = rows.sort(compareRoles).map((row) => ({ ...row, categoryRo: null as string | null, categoryEn: null as string | null, categoryPhone: null as string | null }));
+  // The people given each role (§761): what a role without a number starts its badges at (§784) — one read for the event, counted here.
+  // Only when some role has no number: the people are read for nothing else (the preview asks for one role's colour and name).
+  const people = rows.some((row) => row.needed === null)
+    ? await db.select({ roleId: eventVolunteers.roleId, state: eventVolunteers.state }).from(eventVolunteers).where(eq(eventVolunteers.eventId, eventId))
+    : [];
+  const assigned = (roleId: string) => people.filter((person) => person.roleId === roleId && countsAgainstRole(person.state)).length;
+  const roles = rows
+    .sort(compareRoles)
+    .map((row) => ({ ...row, assigned: assigned(row.id), categoryRo: null as string | null, categoryEn: null as string | null, categoryPhone: null as string | null }));
   return groupRolesByCategory(categories, roles).flatMap((group) =>
     group.roles.map((role) => ({ ...role, categoryRo: group.category?.nameRo ?? null, categoryEn: group.category?.nameEn ?? null, categoryPhone: group.category?.contactPhone ?? null })),
   );
@@ -416,24 +430,31 @@ export const BADGE_SINGLE_FALLBACK = 10;
 
 /**
  * «Câte ecusoane» of the one badge for everyone, before anyone types (§783): the event's confirmed volunteers; else, with none confirmed
- * yet, the people its roles need together; else ten (`BADGE_SINGLE_FALLBACK`). Never more than a sheet's file holds (`BADGE_TOTAL_MAX`),
- * so the form the page draws is always one the sheet accepts.
+ * yet, the people its roles need together — a role without a number (§784) adding the people it was given, as its own pile would start at —
+ * else ten (`BADGE_SINGLE_FALLBACK`). Never more than a sheet's file holds (`BADGE_TOTAL_MAX`), so the form the page draws is always one the
+ * sheet accepts.
  */
-export function badgeSingleDefault(input: { confirmed: number; needed: number }): number {
+export function badgeSingleDefault(input: { confirmed: number; needed: number; withoutNumber?: boolean }): number {
   return badgeSingleStart(input).count;
 }
 
-/** Where the starting number came from: the confirmed volunteers, what the roles need, or the fallback — what the print card's help names. */
-export type BadgeSingleStart = { count: number; basis: "confirmed" | "needed" | "fallback" };
+/**
+ * Where the starting number came from: the confirmed volunteers, what the roles need (`neededNoNumber` when a role without a number added the
+ * people it was given, §784), or the fallback — what the print card's help names.
+ */
+export type BadgeSingleStart = { count: number; basis: "confirmed" | "needed" | "neededNoNumber" | "fallback" };
 
-export function badgeSingleStart(input: { confirmed: number; needed: number }): BadgeSingleStart {
-  const [wanted, basis] = input.confirmed > 0 ? ([input.confirmed, "confirmed"] as const) : input.needed > 0 ? ([input.needed, "needed"] as const) : ([BADGE_SINGLE_FALLBACK, "fallback"] as const);
+/** `needed` is what the roles ask for together (`badgeRoleNeed`); `withoutNumber` says some role asked by the people it was given instead. */
+export function badgeSingleStart(input: { confirmed: number; needed: number; withoutNumber?: boolean }): BadgeSingleStart {
+  const neededBasis = input.withoutNumber ? "neededNoNumber" : "needed";
+  const [wanted, basis] = input.confirmed > 0 ? ([input.confirmed, "confirmed"] as const) : input.needed > 0 ? ([input.needed, neededBasis] as const) : ([BADGE_SINGLE_FALLBACK, "fallback"] as const);
   return { count: Math.min(wanted, BADGE_TOTAL_MAX), basis };
 }
 
 /**
- * The event's confirmed volunteers, **counted** — the one thing the badges' page reads of the people: a number, never a name, an address or a
- * telephone (a badge carries none). The sign-ups not yet confirmed and the cancelled ones are not in it.
+ * The event's confirmed volunteers, **counted** — with the people given each role without a number (`listBadgeRoles`, §784), all the badges' page
+ * reads of the people: numbers, never a name, an address or a telephone (a badge carries none). The sign-ups not yet confirmed and the
+ * cancelled ones are not in it.
  */
 export async function countConfirmedVolunteers<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<number> {
   const [row] = await db
@@ -443,23 +464,40 @@ export async function countConfirmedVolunteers<T extends Record<string, unknown>
   return Number(row?.confirmed ?? 0);
 }
 
-/** `badgeSingleStart` for an event: its confirmed volunteers counted, its roles' needs added up. */
-export async function readBadgeSingleStart<T extends Record<string, unknown>>(db: Database<T>, eventId: string, roles: readonly Pick<BadgeRole, "needed">[]): Promise<BadgeSingleStart> {
-  return badgeSingleStart({ confirmed: await countConfirmedVolunteers(db, eventId), needed: roles.reduce((sum, role) => sum + Math.max(0, role.needed), 0) });
+/**
+ * `badgeSingleStart` for an event: its confirmed volunteers counted, its roles' needs added up (`badgeRoleNeed`) — a role without a number (§784)
+ * adds the people it was given, or nothing while it has none, never a hole in the sum.
+ */
+export async function readBadgeSingleStart<T extends Record<string, unknown>>(db: Database<T>, eventId: string, roles: readonly BadgeCountRole[]): Promise<BadgeSingleStart> {
+  return badgeSingleStart({
+    confirmed: await countConfirmedVolunteers(db, eventId),
+    needed: roles.reduce((sum, role) => sum + badgeRoleNeed(role), 0),
+    withoutNumber: roles.some((role) => role.needed === null),
+  });
 }
 
 /** `readBadgeSingleStart`'s number: what the sheet's route prints when the print form's box is absent. */
-export async function readBadgeSingleDefault<T extends Record<string, unknown>>(db: Database<T>, eventId: string, roles: readonly Pick<BadgeRole, "needed">[]): Promise<number> {
+export async function readBadgeSingleDefault<T extends Record<string, unknown>>(db: Database<T>, eventId: string, roles: readonly BadgeCountRole[]): Promise<number> {
   return (await readBadgeSingleStart(db, eventId, roles)).count;
+}
+
+/**
+ * What a role asks the badges for before anyone types: the people it needs; a role without a number (§784) has no need to start from, so
+ * the people it was given (`assigned`, or none where the caller did not read them). The one rule both starts use — a role's own pile
+ * (`badgePrintDefault`) and the one pile of the badge for everyone (`readBadgeSingleStart`) — so neither meets a hole in the sum.
+ */
+export function badgeRoleNeed(role: BadgeCountRole): number {
+  return Math.max(0, role.needed ?? role.assigned ?? 0);
 }
 
 /**
  * «Câte ecusoane» before anyone types: the people the role needs, never more than one pile may hold — a role
  * that needs more than `BADGE_COUNT_MAX` (the volunteers allow up to 1 000) starts at the most a pile
- * prints, so the form the page draws is always one the sheet accepts.
+ * prints, so the form the page draws is always one the sheet accepts. A role without a number (§784) starts at the
+ * people it was given (`badgeRoleNeed`), and the box is the club's to raise.
  */
-export function badgePrintDefault(role: Pick<BadgeRole, "needed">): number {
-  return Math.min(Math.max(0, role.needed), BADGE_COUNT_MAX);
+export function badgePrintDefault(role: BadgeCountRole): number {
+  return Math.min(badgeRoleNeed(role), BADGE_COUNT_MAX);
 }
 
 /** The print form's hidden box naming the page's language, and the page's query that carries a refusal back to it. */
@@ -492,7 +530,7 @@ export type BadgePrintRefusal = { refused: "number" | "total" };
  */
 export function readPrintCounts(
   params: URLSearchParams,
-  roles: readonly Pick<BadgeRole, "id" | "needed">[],
+  roles: readonly (Pick<BadgeRole, "id"> & BadgeCountRole)[],
   single?: { defaultCount: number },
 ): BadgePrintCounts | BadgePrintRefusal {
   const number = (name: string, fallback: number, max = BADGE_COUNT_MAX): number | null => {

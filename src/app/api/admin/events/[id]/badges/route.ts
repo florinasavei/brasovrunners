@@ -22,11 +22,13 @@ import { isUuid } from "@/shared/ids";
  *
  * **When the design is the one badge for everyone** (`mode: single`, the default, §783) the sheet is one pile
  * of «VOLUNTAR» badges on the design's colour, no role: `all=40&allx=5` — «Câte ecusoane» (by default the
- * event's confirmed volunteers, else what its roles need together, else ten) and «În plus» (none by default).
- * The role boxes above are not read then. The only thing read of the people is how many are confirmed.
+ * event's confirmed volunteers, else what its roles need together — a role without a number (§784) adding the people it was given — else ten)
+ * and «În plus» (none by default). The role boxes above are not read then. The only things read of the people are numbers: how many are
+ * confirmed, and how many were given a role without a number.
  *
  * A GET that writes nothing, openable in a tab and again (`AGENTS.md` §12.8). Whoever designs the badges
- * (`canDesignVolunteerBadges`), asserted here whatever the page drew. **No volunteer's data is read** (at most how many are confirmed, §783): the sheet
+ * (`canDesignVolunteerBadges`), asserted here whatever the page drew. **No volunteer's data is read** (at most how many are confirmed, §783, and how many
+ * were given a role without a number, §784): the sheet
  * holds the club's words and the roles' names, and the names are written by hand at the desk — so the
  * file carries no personal data and needs no trail of its own.
  */
