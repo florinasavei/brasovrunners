@@ -6536,7 +6536,7 @@
         "readOnly": "Who receives the contact messages is the Administrator’s to set; you see the list in force.",
         "saving": "Saving…",
         "saved": "The contact form's recipients have been saved.",
-        "sender": "The Gmail account the messages leave from, when the road is Gmail, is not changed here: it is the club's Google account, set by a developer in CONTACT_SMTP_USER and CONTACT_SMTP_PASSWORD. The password is shown nowhere in the app."
+        "sender": "The Gmail road's account is not changed here: it is the club's Google account, set by a developer in CONTACT_SMTP_USER and CONTACT_SMTP_PASSWORD. The password is shown nowhere in the app."
       },
       "neverSent": "not sent any more",
       "lastCall": "With the reminder — {reminder} before the start, or as the event chooses — it goes one last time, to whoever has not signed.",

@@ -6536,7 +6536,7 @@
         "readOnly": "Cine primește mesajele de contact stabilește Administratorul; tu vezi lista în vigoare.",
         "saving": "Se salvează…",
         "saved": "Destinatarii formularului de contact au fost salvați.",
-        "sender": "Contul Gmail din care pleacă mesajele, când drumul e Gmail, nu se schimbă de aici: e contul Google al clubului, setat de un dezvoltator în CONTACT_SMTP_USER și CONTACT_SMTP_PASSWORD. Parola nu se vede nicăieri în aplicație."
+        "sender": "Contul drumului Gmail nu se schimbă de aici: e contul Google al clubului, setat de un dezvoltator în CONTACT_SMTP_USER și CONTACT_SMTP_PASSWORD. Parola nu se vede nicăieri în aplicație."
       },
       "neverSent": "nu se mai trimite",
       "lastCall": "Odată cu reminderul — cu {reminder} înainte de start, sau cât e ales pe eveniment — pleacă o ultimă dată, către cine încă nu a semnat.",
