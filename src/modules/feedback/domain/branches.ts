@@ -104,14 +104,14 @@ export const DEFAULT_VIA: Readonly<Record<FeedbackBranch, FeedbackVia>> = {
 };
 
 /**
- * The road the platform recommends and the default of a form that has none saved (§NNN; the owner, 2026-10-15: «ar trebui în
+ * The road the platform recommends and the default of a form that has none saved (§782; the owner, 2026-10-15: «ar trebui în
  * configs să scriu (recomandat)»): Mailgun — no copy in the club's Sent folder, delivery from the verified domain with the
  * person's Reply-To, a status by webhook, no app password and no Gmail daily ceiling. Gmail stays the road behind it.
  */
 export const RECOMMENDED_VIA: FeedbackVia = "mailgun";
 
 /**
- * The road a form has until the club chooses (§NNN, amending §676): Mailgun where it transmits, else the club's Gmail — what the
+ * The road a form has until the club chooses (§782, amending §676): Mailgun where it transmits, else the club's Gmail — what the
  * three forms and «Scrie-ne» did before. Girl Zone stays on Mailgun everywhere (§772): her Gmail road needs the notice's words.
  * Only ever the answer for a form with NO saved road: a road the club chose is never replaced by this.
  */
@@ -142,7 +142,7 @@ export const DEFAULT_FEEDBACK_SETTINGS: FeedbackSettings = {
   safety: { on: false, to: null, via: DEFAULT_VIA.safety, name: null, fallbackToGmail: false },
 };
 
-/** What a deployment has before anything is saved: `DEFAULT_FEEDBACK_SETTINGS` with each form on its road by default (`defaultViaFor`, §NNN). */
+/** What a deployment has before anything is saved: `DEFAULT_FEEDBACK_SETTINGS` with each form on its road by default (`defaultViaFor`, §782). */
 export function defaultFeedbackSettings(roads: FeedbackRoads): FeedbackSettings {
   return {
     howItWent: { ...DEFAULT_FEEDBACK_SETTINGS.howItWent, via: defaultViaFor("howItWent", roads) },

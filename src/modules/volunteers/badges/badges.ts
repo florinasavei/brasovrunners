@@ -1,5 +1,5 @@
-import { and, asc, eq } from "drizzle-orm";
-import { eventVolunteerCategories, eventVolunteerRoles } from "@/db/schema/event-volunteers";
+import { and, asc, count, eq } from "drizzle-orm";
+import { eventVolunteerCategories, eventVolunteerRoles, eventVolunteers } from "@/db/schema/event-volunteers";
 import { eventTranslations, events } from "@/db/schema/events";
 import type { StaffUser } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
@@ -18,16 +18,18 @@ import {
   badgeColourReadable,
   badgeDesignDropped,
   badgeDesignSchema,
+  badgePhoneRow,
   badgeRoleColour,
   BADGE_FREE_TEXT_MAX,
   BADGE_LABEL_MAX,
   BADGE_MARKER_LABEL_MAX,
+  BADGE_MODES,
   BADGE_PHONE_LABEL_MAX,
   BADGE_TITLE_MAX,
   readBadgeDesign,
 } from "./badge-design";
 import { BADGE_CUSTOM_BOUNDS, BADGE_SIZES, type BadgeExtra, badgeSizeMm, badgeSizeRefusal } from "./badge-geometry";
-import { BADGE_DESIGN_FORM_PREFIX, type BadgeDesignFormValues } from "./badge-query";
+import { BADGE_DESIGN_FORM_PREFIX, type BadgeDesignFormValues, TYPED_COLOUR, postedSingleColour, typedColour } from "./badge-query";
 
 /**
  * The volunteer badges' reads and writes (§764): an event's badge design, its roles' band colours, and
@@ -155,6 +157,7 @@ export class BadgeSizeRefusal extends DomainError {
  */
 export function parseBadgeDesignPost(values: BadgeDesignFormValues): BadgeDesign {
   const invalid = (message: string, fields: string[]) => new DomainError("VALIDATION_ERROR", message, fields);
+  if (!(BADGE_MODES as readonly string[]).includes(values.mode)) throw invalid("mode: not one of the two choices", [box("mode")]);
   if (!(BADGE_SIZES as readonly string[]).includes(values.size)) throw invalid("size: not one of the sizes", [box("size")]);
   if (values.size === "custom") {
     const within = (value: number, bounds: { min: number; max: number }) => Number.isInteger(value) && value >= bounds.min && value <= bounds.max;
@@ -189,8 +192,28 @@ export function parseBadgeDesignPost(values: BadgeDesignFormValues): BadgeDesign
   if (values.bandColour !== null && !badgeColourReadable(values.bandColour)) {
     throw new DomainError("BADGE_COLOUR_UNREADABLE", "the band's colour does not carry its words at AA", [box("bandColour")]);
   }
+  // The one badge's colour (§783), held to the rule every band obeys: a typed text that is no `#rrggbb` is refused naming its box, and a colour
+  // no word reads on is `BADGE_COLOUR_UNREADABLE` — as a role's is (`checkedRoleColour`). Per role the box is hidden (the service ignores what the
+  // choice hides): a colour that was typed and cannot be kept is the club's orange, never a refusal about a box the person cannot see.
+  const singleBox = box(values.singleColourChoice === TYPED_COLOUR ? "singleColourTyped" : "singleColourChoice");
+  const postedColour = postedSingleColour(values.singleColourChoice, values.singleColourTyped);
+  const hiddenUnusable = values.mode === "perRole" && (postedColour === undefined || (postedColour !== null && !badgeColourReadable(postedColour)));
+  const singleColour = hiddenUnusable ? null : postedColour;
+  if (singleColour === undefined) throw invalid("the one badge's colour is not #rrggbb nor one of the choices", [singleBox]);
+  if (singleColour !== null && !badgeColourReadable(singleColour)) {
+    throw new DomainError("BADGE_COLOUR_UNREADABLE", "the one badge's colour does not carry its words at AA", [singleBox]);
+  }
+  // One badge for everyone has no category to take a telephone from (§774): the tick needs the number typed, as the free-text tick needs its text.
+  if (values.mode === "single" && values.showPhone && values.phone.trim() === "") {
+    throw invalid("phone: ticked on the one badge with no number typed", [box("phone")]);
+  }
+  // The two boxes of the colour are the form's, not the design's: the design keeps the colour they chose.
+  const fields: Record<string, unknown> = { ...values };
+  delete fields.singleColourChoice;
+  delete fields.singleColourTyped;
   const parsed = badgeDesignSchema.safeParse({
-    ...values,
+    ...fields,
+    singleColour,
     customWidthMm: values.size === "custom" ? values.customWidthMm : Number.isFinite(values.customWidthMm) ? values.customWidthMm : undefined,
     customHeightMm: values.size === "custom" ? values.customHeightMm : Number.isFinite(values.customHeightMm) ? values.customHeightMm : undefined,
   });
@@ -199,7 +222,7 @@ export function parseBadgeDesignPost(values: BadgeDesignFormValues): BadgeDesign
   const tooSmall = badgeSizeRefusal(design, {
     freeText: design.showFreeText && (design.freeTextRo !== "" || design.freeTextEn !== ""),
     // The telephone's row is kept on every badge while the tick is on, whether the number is the design's or each category's (§774).
-    phone: design.showPhone,
+    phone: badgePhoneRow(design),
   });
   if (tooSmall) {
     const { widthMm, heightMm } = badgeSizeMm(design);
@@ -254,19 +277,12 @@ export async function saveBadgeDesign<T extends Record<string, unknown>>(
 /** What the colours' form posts for one role: the choice, and the colour typed beside «Altă culoare». */
 export type PostedRoleColour = { roleId: string; choice: string; typed: string };
 
-/** The choice that means «Altă culoare»: the colour typed beside it. */
-export const TYPED_COLOUR = "typed";
+/** The choice that means «Altă culoare»: the colour typed beside it (`badge-query.ts`, which the preview's island reads too). */
+export { TYPED_COLOUR, typedColour };
 
 /** The box names of one role's colour, as the form posts them and a refusal names them. */
 export function roleColourBoxes(roleId: string): { choice: string; typed: string } {
   return { choice: `role.${roleId}.colour`, typed: `role.${roleId}.typedColour` };
-}
-
-/** A typed colour as kept: `#` and six hex digits, lower case — a missing `#` added — or null for nothing that reads as one. */
-export function typedColour(raw: string): string | null {
-  const text = raw.trim().toLowerCase();
-  const withHash = text.startsWith("#") ? text : `#${text}`;
-  return /^#[0-9a-f]{6}$/.test(withHash) ? withHash : null;
 }
 
 /**
@@ -391,7 +407,51 @@ export type BadgePrintCounts = {
   roles: ReadonlyMap<string, { count: number; spares: number }>;
   /** «Ecusoane fără rol»: badges with «VOLUNTAR» alone. */
   none: number;
+  /** One badge for everyone (§783): «Câte ecusoane» and «În plus» of the single pile, and no role's. Absent in `perRole` mode. */
+  single?: { count: number; spares: number };
 };
+
+/** What «Câte ecusoane» starts at when the event has no confirmed volunteer and no role that needs anyone (§783): ten badges. */
+export const BADGE_SINGLE_FALLBACK = 10;
+
+/**
+ * «Câte ecusoane» of the one badge for everyone, before anyone types (§783): the event's confirmed volunteers; else, with none confirmed
+ * yet, the people its roles need together; else ten (`BADGE_SINGLE_FALLBACK`). Never more than a sheet's file holds (`BADGE_TOTAL_MAX`),
+ * so the form the page draws is always one the sheet accepts.
+ */
+export function badgeSingleDefault(input: { confirmed: number; needed: number }): number {
+  return badgeSingleStart(input).count;
+}
+
+/** Where the starting number came from: the confirmed volunteers, what the roles need, or the fallback — what the print card's help names. */
+export type BadgeSingleStart = { count: number; basis: "confirmed" | "needed" | "fallback" };
+
+export function badgeSingleStart(input: { confirmed: number; needed: number }): BadgeSingleStart {
+  const [wanted, basis] = input.confirmed > 0 ? ([input.confirmed, "confirmed"] as const) : input.needed > 0 ? ([input.needed, "needed"] as const) : ([BADGE_SINGLE_FALLBACK, "fallback"] as const);
+  return { count: Math.min(wanted, BADGE_TOTAL_MAX), basis };
+}
+
+/**
+ * The event's confirmed volunteers, **counted** — the one thing the badges' page reads of the people: a number, never a name, an address or a
+ * telephone (a badge carries none). The sign-ups not yet confirmed and the cancelled ones are not in it.
+ */
+export async function countConfirmedVolunteers<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<number> {
+  const [row] = await db
+    .select({ confirmed: count() })
+    .from(eventVolunteers)
+    .where(and(eq(eventVolunteers.eventId, eventId), eq(eventVolunteers.state, "CONFIRMED")));
+  return Number(row?.confirmed ?? 0);
+}
+
+/** `badgeSingleStart` for an event: its confirmed volunteers counted, its roles' needs added up. */
+export async function readBadgeSingleStart<T extends Record<string, unknown>>(db: Database<T>, eventId: string, roles: readonly Pick<BadgeRole, "needed">[]): Promise<BadgeSingleStart> {
+  return badgeSingleStart({ confirmed: await countConfirmedVolunteers(db, eventId), needed: roles.reduce((sum, role) => sum + Math.max(0, role.needed), 0) });
+}
+
+/** `readBadgeSingleStart`'s number: what the sheet's route prints when the print form's box is absent. */
+export async function readBadgeSingleDefault<T extends Record<string, unknown>>(db: Database<T>, eventId: string, roles: readonly Pick<BadgeRole, "needed">[]): Promise<number> {
+  return (await readBadgeSingleStart(db, eventId, roles)).count;
+}
 
 /**
  * «Câte ecusoane» before anyone types: the people the role needs, never more than one pile may hold — a role
@@ -411,6 +471,9 @@ export const printBoxes = {
   count: (roleId: string) => `n.${roleId}`,
   spares: (roleId: string) => `x.${roleId}`,
   none: "none",
+  /** The one badge for everyone (§783): its «Câte ecusoane» and «În plus». */
+  all: "all",
+  allSpares: "allx",
 } as const;
 
 /** Why a print form was refused: a box that is not a whole number in range, or a total past the file's ceiling. */
@@ -422,15 +485,29 @@ export type BadgePrintRefusal = { refused: "number" | "total" };
  * posted empty means none, so clearing «Câte ecusoane» prints no badge of that role. A refusal — the whole
  * request — for a number that is not a whole number from 0 to `BADGE_COUNT_MAX` (`"number"`), or a total past
  * `BADGE_TOTAL_MAX` (`"total"`); the route says which on the page.
+ *
+ * With `single` (the design is the one badge for everyone, §783) only two boxes are read, `all` and `allx`: «Câte ecusoane»,
+ * absent meaning `single.defaultCount`, and «În plus», absent meaning none — each from 0 to `BADGE_TOTAL_MAX`, the whole pile being everyone; a role's
+ * box, or «Ecusoane fără rol», in such a query is not read.
  */
-export function readPrintCounts(params: URLSearchParams, roles: readonly Pick<BadgeRole, "id" | "needed">[]): BadgePrintCounts | BadgePrintRefusal {
-  const number = (name: string, fallback: number): number | null => {
+export function readPrintCounts(
+  params: URLSearchParams,
+  roles: readonly Pick<BadgeRole, "id" | "needed">[],
+  single?: { defaultCount: number },
+): BadgePrintCounts | BadgePrintRefusal {
+  const number = (name: string, fallback: number, max = BADGE_COUNT_MAX): number | null => {
     const raw = params.get(name);
     if (raw === null) return fallback;
     if (raw.trim() === "") return 0;
     const value = Number(raw.trim());
-    return Number.isInteger(value) && value >= 0 && value <= BADGE_COUNT_MAX ? value : null;
+    return Number.isInteger(value) && value >= 0 && value <= max ? value : null;
   };
+  if (single) {
+    const all = number(printBoxes.all, single.defaultCount, BADGE_TOTAL_MAX);
+    const spares = number(printBoxes.allSpares, 0, BADGE_TOTAL_MAX);
+    if (all === null || spares === null) return { refused: "number" };
+    return all + spares > BADGE_TOTAL_MAX ? { refused: "total" } : { roles: new Map(), none: 0, single: { count: all, spares } };
+  }
   const counts = new Map<string, { count: number; spares: number }>();
   for (const role of roles) {
     const count = number(printBoxes.count(role.id), badgePrintDefault(role));
@@ -450,6 +527,8 @@ export function badgePrintEntries(
   counts: BadgePrintCounts,
   locale: BadgeLocale,
 ): Array<{ role: { name: string; colour: string | null; phone: string | null } | null; count: number }> {
+  // One badge for everyone (§783): a single pile with no role — «VOLUNTAR» alone, on the design's own colour — however many roles the event has.
+  if (counts.single) return counts.single.count + counts.single.spares > 0 ? [{ role: null, count: counts.single.count + counts.single.spares }] : [];
   return [
     ...roles
       .map((role) => {

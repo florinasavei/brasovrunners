@@ -6,7 +6,7 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
 /**
- * BR-REQ-070-04, `DECISIONS.md` §NNN (amends §772; the owner, 2026-10-15: «ar trebui în configs să scriu (recomandat)») — Mailgun is
+ * BR-REQ-070-04, `DECISIONS.md` §782 (amends §772; the owner, 2026-10-15: «ar trebui în configs să scriu (recomandat)») — Mailgun is
  * the recommended road: marked as such on the choice, one line of why once for the card, a quiet caption under a form left on Gmail,
  * and the Gmail choice says plainly that a copy stays in the club's «Trimise». The same words, from the same component, on
  * «Scrie-ne»'s card.
@@ -71,7 +71,7 @@ const radios = (html: string) => [...html.matchAll(/<input[^>]*type="radio"[^>]*
 const checkedOf = (html: string) => radios(html).filter((tag) => /\schecked(=|\s|\/|>)/.test(tag)).map((tag) => /value="(\w+)"/.exec(tag)?.[1]);
 const escape = (sentence: string) => sentence.replace(/'/g, "&#x27;");
 
-describe("§NNN Mailgun is the recommended road", () => {
+describe("§782 Mailgun is the recommended road", () => {
   it("is the platform's recommendation, named once in code", () => {
     expect(RECOMMENDED_VIA).toBe("mailgun");
   });
@@ -132,7 +132,7 @@ describe("§NNN Mailgun is the recommended road", () => {
   });
 });
 
-describe("§NNN «Scrie-ne» has the same pair, the same words and the same default", () => {
+describe("§782 «Scrie-ne» has the same pair, the same words and the same default", () => {
   it("draws «Prin ce trimitem» once, in «Cine primește mesajele de contact», Mailgun recommended, with the one line of why", async () => {
     const out = await contactHtml("mailgun");
     const pair = group(out, "contact-via");

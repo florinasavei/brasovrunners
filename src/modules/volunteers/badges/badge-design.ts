@@ -38,6 +38,16 @@ export const BADGE_FREE_TEXT_MAX = 60;
 export const BADGE_MARKER_LABEL_MAX = 20;
 
 /**
+ * «Un singur ecuson» or «Câte un ecuson pe rol» (§783; the owner, 2026-10-15: «aș vrea să am un singur ecuson de voluntari, fără roluri»):
+ * `single` is ONE badge for everyone — «VOLUNTAR» alone on the band, in the colour the design chooses (`singleColour`), no role anywhere —
+ * and `perRole` is §764's badge per role on the role's own colour. **`single` is the default**, for a design that never chose and so
+ * for every design saved before the choice existed.
+ */
+export const BADGE_MODES = ["single", "perRole"] as const;
+export type BadgeMode = (typeof BADGE_MODES)[number];
+export const DEFAULT_BADGE_MODE: BadgeMode = "single";
+
+/**
  * The header band's colour as stored: a hex triplet, lower case, that carries its words at AA — or null
  * for the club's blue. A colour no word reads on (an imported file, a column written by hand) reads as
  * null, so it never prints and a save never "changes" it without the person touching it.
@@ -66,6 +76,10 @@ export const badgeDesignSchema = z
     size: z.enum(BADGE_SIZES).catch("strip90"),
     customWidthMm: millimetres(BADGE_CUSTOM_BOUNDS.width, BADGE_SIZE_PRESETS.strip90.widthMm),
     customHeightMm: millimetres(BADGE_CUSTOM_BOUNDS.height, BADGE_SIZE_PRESETS.strip90.heightMm),
+    /** «Un singur ecuson» or «Câte un ecuson pe rol» (§783): `single` unless the design chose otherwise — a value no one knows reads as `single` too. */
+    mode: z.enum(BADGE_MODES).catch(DEFAULT_BADGE_MODE),
+    /** The colour of the band of the one badge «fără rol» (`single`), as the header's colour is kept: a hex that carries its words at AA, or null for the club's orange. */
+    singleColour: hexColour,
     /** The header band's colour from the bib's palette, or null for the club's blue. */
     bandColour: hexColour,
     /** A picture across the header instead of the colour, one this site stored, and its crop. */
@@ -108,6 +122,8 @@ export const DEFAULT_BADGE_DESIGN: BadgeDesign = {
   size: "strip90",
   customWidthMm: BADGE_SIZE_PRESETS.strip90.widthMm,
   customHeightMm: BADGE_SIZE_PRESETS.strip90.heightMm,
+  mode: DEFAULT_BADGE_MODE,
+  singleColour: null,
   bandColour: null,
   headerImageSrc: null,
   headerImageCrop: null,
@@ -155,13 +171,21 @@ export const BADGE_DROPPABLE = {
   showMarker: "boolean",
   markerLabelRo: "string",
   markerLabelEn: "string",
+  // §783: the choice of one badge or one per role, and the colour of the one badge's band.
+  mode: "string",
+  singleColour: "string",
 } as const;
 export type BadgeDroppedKey = keyof typeof BADGE_DROPPABLE;
 
 export function badgeDesignDropped(value: unknown): BadgeDroppedKey[] {
   if (typeof value !== "object" || value === null || Array.isArray(value)) return [];
   const stored = value as Record<string, unknown>;
-  return (Object.keys(BADGE_DROPPABLE) as BadgeDroppedKey[]).filter((key) => key in stored && stored[key] !== undefined && stored[key] !== null && typeof stored[key] !== BADGE_DROPPABLE[key]);
+  return (Object.keys(BADGE_DROPPABLE) as BadgeDroppedKey[]).filter((key) => {
+    if (!(key in stored) || stored[key] === undefined || stored[key] === null) return false;
+    // A mode no one knows is as unreadable as one of the wrong type: it reads as the default and the designer says so (§783).
+    if (key === "mode" && typeof stored.mode === "string") return !(BADGE_MODES as readonly string[]).includes(stored.mode);
+    return typeof stored[key] !== BADGE_DROPPABLE[key];
+  });
 }
 
 /** The unsaved design the preview's address carries, read as the save reads it — field by field. */
@@ -205,6 +229,24 @@ export function badgeBandColour(design: Pick<BadgeDesign, "bandColour">): string
  */
 export function badgeRoleColour(colour: string | null | undefined): string {
   return isHex(colour) && badgeColourReadable(colour) ? colour.toLowerCase() : BADGE_ROLE_FALLBACK;
+}
+
+/**
+ * The band of a badge with no role (§783). In `single` mode — the one badge for everyone — it is the design's own colour
+ * (`singleColour`, checked at AA again like a role's), else the club's orange; in `perRole` mode the badges «fără rol» keep
+ * §764's orange, whatever `singleColour` holds, so a design that switches back prints exactly as it did.
+ */
+export function badgeNoRoleColour(design: Pick<BadgeDesign, "mode" | "singleColour">): string {
+  return design.mode === "single" ? badgeRoleColour(design.singleColour) : BADGE_ROLE_FALLBACK;
+}
+
+/**
+ * Whether the badge keeps the telephone's row (§783): the tick, except on the one badge for everyone, which has no
+ * category to take a number from (§774's default), so there «Telefon coordonator» ticked with no number typed keeps no
+ * blank row — a design saved before the choice existed, ticked that way, draws without it rather than with an empty line.
+ */
+export function badgePhoneRow(design: Pick<BadgeDesign, "mode" | "showPhone" | "phone">): boolean {
+  return design.showPhone && (design.mode === "perRole" || design.phone !== "");
 }
 
 // --- Words -----------------------------------------------------------------------------------

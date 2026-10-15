@@ -8,6 +8,10 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V3.40-2026-10-15
+
+- **Mailgun is «recomandat» for the site's forms** — «Prin ce trimitem» marks Mailgun as the recommended road with one line of why under the pairs, a form left on Gmail says a copy stays in the club's mailbox, a form with no saved road now defaults to Mailgun where it transmits, and «Scrie-ne» has the same pair in «Cine primește mesajele de contact». A saved road is never changed. §782.
+- **One volunteer badge for everyone, without roles, is the default** — «Cum arată ecusonul» chooses between «Un singur ecuson pentru toți, fără rol» and «Câte un ecuson pe rol»; the one badge says the club's «VOLUNTAR» alone on a colour chosen in the designer (AA checked), «Câte ecusoane» starts at the confirmed volunteers, and the sheet packs N plus the spares; existing designs read as the one badge until the roles are chosen. §783.
 ## BR-V3.39-2026-10-15
 
 - **The volunteers' page: each category its own card, each role a tile** — a bordered card per category with a deep-blue band (glyph, name, «4 roluri») and the contact line, the roles inside it as tiles whose whole surface ticks the box, the count line under the name, two columns from the tablet width, working with scripts off. §780.

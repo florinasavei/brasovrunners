@@ -50,7 +50,7 @@ const branch = (name: FeedbackBranch, roads: FeedbackRoads) =>
 
 /**
  * What a stored row is read with: anything unreadable is that branch off, never a crash. A road the row does not carry is the form's
- * default for this deployment (`defaultViaFor`, §NNN) — Mailgun where it transmits — and a road it does carry is read as saved, always.
+ * default for this deployment (`defaultViaFor`, §782) — Mailgun where it transmits — and a road it does carry is read as saved, always.
  */
 function storedSchemaFor(roads: FeedbackRoads) {
   const defaults = defaultFeedbackSettings(roads);
@@ -113,7 +113,7 @@ function readStored(value: unknown, roads: FeedbackRoads): FeedbackSettings {
 
 /**
  * The four forms as the club set them. A form with no saved road reads as Mailgun where it transmits and as the club's Gmail
- * where it does not (`defaultViaFor`, §NNN) — `roads` is this deployment's (`feedbackRoads`, its environment). A saved road is
+ * where it does not (`defaultViaFor`, §782) — `roads` is this deployment's (`feedbackRoads`, its environment). A saved road is
  * never replaced.
  */
 export async function readFeedbackSettings<T extends Record<string, unknown>>(db: Database<T>, roads: FeedbackRoads = feedbackRoads()): Promise<FeedbackSettingsState> {

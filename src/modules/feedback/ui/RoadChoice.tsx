@@ -52,7 +52,7 @@ type Props = {
   /** Where the steps of each road are (the «Sarcini» row) and where the legal texts are, already localized. */
   tasksPath: string;
   legalPath: string;
-  /** The quiet caption under a form left on Gmail (§NNN): a copy stays in the club's mailbox. Off for Girl Zone, whose own note says it. */
+  /** The quiet caption under a form left on Gmail (§782): a copy stays in the club's mailbox. Off for Girl Zone, whose own note says it. */
   gmailCopyCaption?: boolean;
   /** What follows the pair inside the same group (Girl Zone's note and her fallback tick). */
   children?: ReactNode;
@@ -62,7 +62,7 @@ type Props = {
 const STEPS_ROW: Readonly<Record<FeedbackVia, string>> = { gmail: "task-contactForm", mailgun: "task-liveEmail" };
 
 /**
- * «Prin ce trimitem» (§772, §NNN): the one pair of native radios — the club's Gmail or Mailgun, Mailgun marked «recomandat» —
+ * «Prin ce trimitem» (§772, §782): the one pair of native radios — the club's Gmail or Mailgun, Mailgun marked «recomandat» —
  * that «Spune-ne ceva» draws under each of its four forms and «Scrie-ne» draws once (`ContactRecipientsPanel`), so the two cards
  * say the same words in the same way. A Server Component with no state; a road the deployment lacks is greyed, with a sentence and
  * a link to its steps, and stays checked when it is what was saved. Never a toggle: a choice is radios.

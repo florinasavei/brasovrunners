@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { privacyNoticeEn, privacyNoticeRo } from "@/modules/legal-documents/templates/privacy-notice";
 
 /**
- * §NNN (amends §149, §778) — «Scrie-ne» leaves by the club's Gmail or by Mailgun, as the club chooses, and by the other when the
+ * §782 (amends §149, §778) — «Scrie-ne» leaves by the club's Gmail or by Mailgun, as the club chooses, and by the other when the
  * chosen one is down; the notice's template says so rather than «Gmail, and Mailgun only when Gmail is down».
  */
 const paragraphs = (body: typeof privacyNoticeRo) => body.sections.flatMap((s) => s.paragraphs);
@@ -12,7 +12,7 @@ const contactParagraph = (body: typeof privacyNoticeRo, marker: string) => {
   return found[0]!;
 };
 
-describe("§NNN the notice's «Scrie-ne» paragraph", () => {
+describe("§782 the notice's «Scrie-ne» paragraph", () => {
   it("ro: names both roads as the club's choice and no longer makes Mailgun a Gmail-only failover", () => {
     const p = contactParagraph(privacyNoticeRo, "Formularul de contact („Scrie-ne”)");
     expect(p).toMatch(/prin Gmail-ul clubului sau prin serviciul de e-mail al clubului \(Mailgun, regiunea UE\), după cum alege clubul/);

@@ -51,7 +51,7 @@ const STEPS_ROW: Readonly<Record<FeedbackVia, string>> = { gmail: "task-contactF
  * who reads the club's content, written by the Administrator. The summary counts what is on.
  *
  * Beside each form's recipient, «Prin ce trimitem» (§772, `RoadChoice`): two native radios — the club's
- * Gmail or Mailgun, Mailgun «recomandat» (§NNN, one line of why under the four pairs) — whose default, for a form with no saved road, is Mailgun where it transmits (`defaultViaFor`). A road this deployment lacks is greyed
+ * Gmail or Mailgun, Mailgun «recomandat» (§782, one line of why under the four pairs) — whose default, for a form with no saved road, is Mailgun where it transmits (`defaultViaFor`). A road this deployment lacks is greyed
  * with a sentence and a link to the steps in «Sarcini»; it stays checked when it is what was saved, so
  * the card shows what the form does, and a save leaves it as it was (`keepUnpostedVia`).
  */
@@ -173,7 +173,7 @@ export default async function FeedbackFormsPanel({ locale, state, noticeDescribe
                           />
                         )}
                       </Stack>
-                      {/* «Prin ce trimitem» (§772, §NNN): the radio pair both cards share (`RoadChoice`), never a toggle; the default is the form's own. */}
+                      {/* «Prin ce trimitem» (§772, §782): the radio pair both cards share (`RoadChoice`), never a toggle; the default is the form's own. */}
                       <RoadChoice
                         name={`${branch}Via`}
                         testId={`feedback-via-${branch}`}
@@ -228,7 +228,7 @@ export default async function FeedbackFormsPanel({ locale, state, noticeDescribe
                   </Fragment>
                 );
               })}
-              {/* Why Mailgun is the recommended road, once for the card (§NNN), under the four pairs. */}
+              {/* Why Mailgun is the recommended road, once for the card (§782), under the four pairs. */}
               <Typography variant="body2" color="text.secondary" data-testid="feedback-via-why">
                 {t("emails.feedbackForms.via.why")}
               </Typography>

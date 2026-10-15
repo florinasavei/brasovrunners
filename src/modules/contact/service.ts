@@ -43,7 +43,7 @@ import { type ContactMessageRoute, renderContactMessage } from "./message";
  * transport since §778: the message is queued in the outbox and the relay's roads carry it (`notifications/relay.ts`).
  */
 export type ContactDelivery = ContactMessageRoute & {
-  /** The road the club chose for «Scrie-ne» (§NNN, amending §149); absent is the club's Gmail, what the form always did. */
+  /** The road the club chose for «Scrie-ne» (§782, amending §149); absent is the club's Gmail, what the form always did. */
   road?: FeedbackVia;
 };
 
@@ -156,7 +156,7 @@ export async function submitContactMessage<T extends Record<string, unknown>>(
     suspicion,
   );
   /*
-    Queued, not sent from here (§778, amending §149): the road is the club's choice (§NNN; the club's Gmail when none was made and Mailgun does not transmit), the other road
+    Queued, not sent from here (§778, amending §149): the road is the club's choice (§782; the club's Gmail when none was made and Mailgun does not transmit), the other road
     takes over when it is down and the message may take it, and the retries are the outbox's. A transport that fails no
     longer loses the message or tells the visitor «nu am putut trimite»: the row is the promise. The first recipient is
     the row's `To`, the rest ride as visible copies with the club's own list, as they always did.

@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.39-2026-10-15 -->
+<!-- PROJECT_BASELINE: BR-V3.40-2026-10-15 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V3.39-2026-10-15`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.40-2026-10-15`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -1356,7 +1356,7 @@ a rolling day (500 is Google's own ceiling, shared with the people who write by 
 race morning that cap, not Mailgun's, is what decides how many confirmations still leave, so raise it there
 before the window if Mailgun is on probation.
 
-**Which road to choose: Mailgun, which the card marks «recomandat» (§NNN; the owner, 2026-10-15: «ar trebui în configs să scriu (recomandat)»).**
+**Which road to choose: Mailgun, which the card marks «recomandat» (§782; the owner, 2026-10-15: «ar trebui în configs să scriu (recomandat)»).**
 The pair «Prin ce trimitem» is on «Pagini» → «Contact» twice with the same words: once for «Scrie-ne» (in «Cine primește mesajele de contact») and
 once under each «Spune-ne ceva» form. Mailgun is recommended because a message leaves from the club's own verified domain (SPF and DKIM), with the
 person's address as `Reply-To` and **no copy in the club's Sent folder** — it arrives in the club's mailbox as mail from outside, not as «from me to
@@ -1365,10 +1365,10 @@ me», which is what a Gmail filter filed out of the Inbox on 2026-10-15; it has 
 form left on Gmail keeps a copy in the club's «Trimise» (the card says so beside it), and either road, when it fails twice, hands the message to the
 other. **The default** of a form with no saved road — a fresh install, a new form, a deployment nobody has chosen on — is Mailgun where it transmits
 (`EMAIL_DELIVERY_MODE` `allowlist` or `live`) and the club's Gmail where it does not; «Girl Zone» stays on Mailgun everywhere. **A road the club
-saved is never changed by a release.** «Scrie-ne» had no road setting before §NNN and always went by Gmail: with nothing saved it now goes by Mailgun
-on a deployment where Mailgun transmits — choose «Gmail-ul clubului» in «Cine primește mesajele de contact» to keep the old road. The privacy notice's template says both roads for «Scrie-ne» too (§NNN); approve the notice from the new template (`/admin/legal`, a lawyer reading that paragraph first) like every change of the notice.
+saved is never changed by a release.** «Scrie-ne» had no road setting before §782 and always went by Gmail: with nothing saved it now goes by Mailgun
+on a deployment where Mailgun transmits — choose «Gmail-ul clubului» in «Cine primește mesajele de contact» to keep the old road. The privacy notice's template says both roads for «Scrie-ne» too (§782); approve the notice from the new template (`/admin/legal`, a lawyer reading that paragraph first) like every change of the notice.
 
-**The form's message is an outbox row since §778, and one road down is no loss.** «Scrie-ne» (the road the club chose, §NNN) and each «Spune-ne ceva» form
+**The form's message is an outbox row since §778, and one road down is no loss.** «Scrie-ne» (the road the club chose, §782) and each «Spune-ne ceva» form
 (the road the club chose on «Pagini» → «Contact») queue their message in the same outbox the emails use, and it leaves at once, after the
 response; the words stay in the row only until it is delivered, then they are deleted and the row stays as the trace («Setări» → «Emailuri» →
 «Mesaje de pe site»: the road chosen, the road it left by, the tries, what each road answered). If the road refuses twice — a revoked app password
@@ -1479,9 +1479,9 @@ club names — which is why a colleague's Yahoo can be on the list.
 deployment: each form leaves by the road the club chooses for it, «Prin ce trimitem» (§772) — the club's
 Gmail, the same account as the form above (`CONTACT_SMTP_USER`, `CONTACT_SMTP_PASSWORD`), or Mailgun
 (`MAILGUN_*`, already set, with the email provider live) — **Mailgun is the one the card marks «recomandat»**,
-with its reasons in one line under the four pairs (§NNN). Until the club chooses, the three ordinary
+with its reasons in one line under the four pairs (§782). Until the club chooses, the three ordinary
 branches («Cum a fost», «O sugestie», «O reclamație») leave by Mailgun where it transmits and by Gmail where
-it does not (before §NNN: always Gmail), and the confidential «Girl Zone» by Mailgun; a form left on
+it does not (before §782: always Gmail), and the confidential «Girl Zone» by Mailgun; a form left on
 Gmail carries the caption «Prin Gmail rămâne o copie în „Trimise”.» A form whose road this deployment lacks is not offered, whatever its switch says, and its
 radio is greyed on the card with a link to the steps in «Sarcini» (the rows «Formularul de contact» for
 Gmail and «Email către participanți reali» for Mailgun). On each deployment (QA has its own):

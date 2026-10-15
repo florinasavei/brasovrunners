@@ -69,7 +69,7 @@ export const contactRecipientsSchema = z
     // §744 (amends §310): a message the form marks «[posibil spam]» is not emailed, only
     // counted. Off on a row saved before it existed — nothing changes on release.
     holdBackSuspected: z.boolean().default(false),
-    // «Prin ce trimitem» (§NNN, amending §149): the road «Scrie-ne» leaves by. Absent on a row saved before the choice existed and
+    // «Prin ce trimitem» (§782, amending §149): the road «Scrie-ne» leaves by. Absent on a row saved before the choice existed and
     // on a deployment nobody has chosen on — then the default stands (`contactViaFor`: Mailgun where it transmits). A road
     // the club chose is stored and never replaced by a release.
     via: z.enum(FEEDBACK_VIAS).optional(),
@@ -92,7 +92,7 @@ export const contactRecipientsSchema = z
 export type ContactRecipients = z.infer<typeof contactRecipientsSchema>;
 
 /**
- * The road «Scrie-ne» leaves by (§NNN): the club's saved choice, else the default of a form with none — Mailgun where it
+ * The road «Scrie-ne» leaves by (§782): the club's saved choice, else the default of a form with none — Mailgun where it
  * transmits, otherwise the club's Gmail, which is what the form always did (`defaultViaFor`).
  */
 export function contactViaFor(setting: Pick<ContactRecipients, "via"> | null, roads: FeedbackRoads): FeedbackVia {
@@ -100,7 +100,7 @@ export function contactViaFor(setting: Pick<ContactRecipients, "via"> | null, ro
 }
 
 /**
- * «Scrie-ne» with the road the club chose for it, joined to the delivery the message is queued on (§NNN): the saved road, else the
+ * «Scrie-ne» with the road the club chose for it, joined to the delivery the message is queued on (§782): the saved road, else the
  * default of point 2 (`contactViaFor`). A road this deployment does not have carries nothing, so the one it has does, rather than
  * a queue that waits for the other's failures. No delivery (the form is off) stays none.
  */
