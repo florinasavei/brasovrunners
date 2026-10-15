@@ -3352,6 +3352,7 @@
         "feedbackForms": "Doar în nota de confidențialitate: numele formularelor „Spune-ne ceva”, între ghilimele. Cu el în nota în vigoare, pagina de contact arată formularele pornite",
         "feedbackFormsNamed": "Doar în nota de confidențialitate: alegerea „Cu nume și prenume” din formularele „Spune-ne ceva”, între ghilimele. Fără el în nota în vigoare, formularele sunt doar anonime",
         "feedbackSafetyGmail": "Doar în nota de confidențialitate: „Gmail-ul clubului”, în propoziția despre mesajele Girl Zone. Fără el în nota în vigoare, ele pleacă doar prin Mailgun",
+        "relayQueue": "Doar în nota de confidențialitate: cât ține site-ul mesajul de la „Scrie-ne” și „Spune-ne ceva” până pleacă. Fără el, /admin/tasks te anunță; mesajele nu se opresc.",
         "membersShop": "Doar în nota de confidențialitate: numele secțiunii „Magazinul clubului”, între ghilimele. Cu el în nota în vigoare, zona membrilor arată magazinul și primește comenzi",
         "volunteers": "Doar în nota de confidențialitate: numele formularului „Vreau să fiu voluntar”, între ghilimele. Cu el în nota în vigoare, un eveniment cu voluntari își arată formularul și păstrează ofertele",
         "volunteerAgreement": "Doar în nota de confidențialitate: titlul „Contract de voluntariat”, între ghilimele. Fără el în nota în vigoare, formularul de voluntari, linkul contractului și „Semnat pe hârtie” sunt oprite",
@@ -4088,6 +4089,15 @@
           "how": [
             "/admin/legal → cardul „GDPR” → „Regenerează din șablon” → confirmă. Paragraful despre formulare din secțiunea 5 spune acum și când mesajul Girl Zone pleacă prin Gmail.",
             "Deschide ciorna, citește, „Salvează ciorna”, apoi „Aprobă și publică”. Odată în vigoare în ambele limbi, mesajele Girl Zone pleacă prin Gmail, fără altă setare."
+          ]
+        },
+        "relayQueueNotice": {
+          "title": "Nota de confidențialitate: coada mesajelor din formulare",
+          "todo": "Nota în vigoare spune că nu păstrăm nicio copie, dar mesajele din „Scrie-ne” și „Spune-ne ceva” stau în coadă până pleacă. Mesajele merg oricum; aprobă o notă nouă.",
+          "done": "Nota în vigoare spune că mesajul stă în coadă doar până pleacă (cel mult trei zile) și că poate pleca prin celălalt serviciu de e-mail.",
+          "how": [
+            "/admin/legal → cardul „GDPR” → „Regenerează din șablon” → confirmă. Paragrafele despre formularul de contact și despre „Spune-ne ceva”, din secțiunea 5, descriu acum coada.",
+            "Deschide ciorna, citește, „Salvează ciorna”, apoi „Aprobă și publică”, în ambele limbi."
           ]
         },
         "teamPageNotice": {
@@ -6696,7 +6706,7 @@
           "stateMailgun": "Mailgun",
           "fallback": "Dacă Mailgun pică, trimite prin Gmail-ul clubului",
           "fallbackHelp": "Doar pentru mesajele Girl Zone. Fără bifă, un mesaj care nu poate pleca prin Mailgun așteaptă până merge. Cu bifă, pleacă din căsuța clubului, iar cei care o citesc îl văd în folderul Trimise.",
-          "fallbackNotice": "Bifa e oprită până când nota de confidențialitate în vigoare spune că mesajele Girl Zone pot pleca prin Gmail."
+          "fallbackNotice": "Bifa nu se poate schimba până când nota de confidențialitate în vigoare spune că mesajele Girl Zone pot pleca prin Gmail."
         },
         "safetyName": "Prenumele afișat",
         "safetyNameHelp": "Formularul îl scrie în propoziția despre cine citește mesajul. Cel mult 40 de caractere.",
@@ -10842,6 +10852,7 @@
     "title": "Spune-ne ceva (anonim)",
     "noticeName": "Spune-ne ceva",
     "noticeSafetyGmail": "Gmail-ul clubului",
+    "noticeRelayQueue": "doar până pleacă — de obicei câteva secunde, cel mult trei zile dacă niciun serviciu de e-mail nu merge — și apoi îl șterge",
     "intro": "Anonim, dacă nu alegi să-ți spui numele. Alege despre ce e vorba.",
     "backToContact": "Înapoi la Contact",
     "door": {
@@ -10867,7 +10878,8 @@
       "clubHint": "Mesajul ajunge în căsuța de e-mail a clubului.",
       "person": "{name}",
       "personHint": "Doar {name}, persoana desemnată de club pentru siguranță. Confidențial.",
-      "personHintGmail": "{name}, persoana desemnată de club pentru siguranță, prin căsuța clubului, unde îl văd și cei care o citesc."
+      "personHintGmail": "{name}, persoana desemnată de club pentru siguranță, prin căsuța clubului, unde îl văd și cei care o citesc.",
+      "personHintFallback": "{name}, persoana desemnată de club pentru siguranță; dacă serviciul de e-mail nu merge, prin căsuța clubului, unde îl văd cei care o citesc."
     },
     "branches": {
       "howItWent": {
@@ -10891,10 +10903,12 @@
       }
     },
     "safety": {
-      "reader": "Mesajul ajunge doar la {name}. Site-ul îl ține doar până pleacă, câteva minute, apoi îl șterge.",
-      "readerGmail": "Mesajul ajunge la {name}, prin căsuța clubului, unde îl văd și cei care o citesc. Site-ul îl ține doar până pleacă, câteva minute, apoi îl șterge.",
-      "readerChoice": "Anonim, mesajul ajunge doar la {name}; cu nume și prenume, alegi tu cine află. Site-ul îl ține doar până pleacă, câteva minute, apoi îl șterge.",
-      "readerChoiceGmail": "Anonim, mesajul ajunge la {name}, prin căsuța clubului, unde îl văd și cei care o citesc; cu nume și prenume, alegi tu cine află. Site-ul îl ține doar până pleacă, câteva minute, apoi îl șterge.",
+      "reader": "Mesajul ajunge doar la {name}. Site-ul îl ține doar până pleacă (cel mult trei zile), apoi îl șterge.",
+      "readerGmail": "Mesajul ajunge la {name}, prin căsuța clubului, unde îl văd și cei care o citesc. Site-ul îl ține doar până pleacă (cel mult trei zile), apoi îl șterge.",
+      "readerChoice": "Anonim, mesajul ajunge doar la {name}; cu nume și prenume, alegi tu cine află. Site-ul îl ține doar până pleacă (cel mult trei zile), apoi îl șterge.",
+      "readerChoiceGmail": "Anonim, mesajul ajunge la {name}, prin căsuța clubului, unde îl văd cei care o citesc; cu nume și prenume, alegi tu cine află. Site-ul îl ține doar până pleacă (cel mult trei zile), apoi îl șterge.",
+      "readerFallback": "Mesajul ajunge la {name}; dacă serviciul de e-mail nu merge, prin căsuța clubului, unde îl văd și cei care o citesc. Site-ul îl ține doar până pleacă (cel mult trei zile), apoi îl șterge.",
+      "readerChoiceFallback": "Anonim, mesajul ajunge la {name}; dacă serviciul de e-mail nu merge, prin căsuța clubului, unde îl văd cei care o citesc. Cu nume și prenume, alegi tu cine află. Site-ul îl ține doar până pleacă (cel mult trei zile), apoi îl șterge.",
       "whereWhen": "Unde și când (opțional)",
       "contact": "Telefon (opțional)",
       "contactHelp": "Doar dacă vrei să te sune {name}."
@@ -10975,8 +10989,8 @@
       "email": "E-mailul",
       "captcha": "Verificarea anti-bot"
     },
-    "privacy": "Site-ul ține mesajul doar până pleacă, câteva minute, apoi îl șterge: mesajul pleacă pe e-mail la club.",
-    "privacySafety": "Site-ul ține mesajul doar până pleacă, câteva minute, apoi îl șterge.",
+    "privacy": "Site-ul ține mesajul doar până pleacă (cel mult trei zile), apoi îl șterge: mesajul pleacă pe e-mail la club.",
+    "privacySafety": "Site-ul ține mesajul doar până pleacă (cel mult trei zile), apoi îl șterge.",
     "privacyLinkLabel": "Nota de confidențialitate",
     "submit": "Trimite",
     "submitting": "Se trimite…",
@@ -10987,7 +11001,8 @@
       "title": "Mesajul a plecat",
       "body": "Mulțumim! Îl citim cu atenție.",
       "safety": "L-a primit doar {name}. Mulțumim că ne-ai spus.",
-      "safetyGmail": "L-a primit {name}, prin căsuța clubului, unde îl văd și cei care o citesc. Mulțumim că ne-ai spus."
+      "safetyGmail": "L-a primit {name}, prin căsuța clubului, unde îl văd și cei care o citesc. Mulțumim că ne-ai spus.",
+      "safetyFallback": "{name} îl primește — dacă serviciul de e-mail nu merge, prin căsuța clubului, unde îl văd cei care o citesc. Mulțumim că ne-ai spus."
     },
     "eventPage": {
       "lead": "Ai fost? Spune-ne cum a fost — anonim, durează un minut.",

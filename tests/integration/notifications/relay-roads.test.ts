@@ -34,6 +34,7 @@ vi.mock("@/infrastructure/email/gmail-adapter", async (importOriginal) => {
   return {
     ...actual,
     createGmailAdapter: (): EmailAdapter => ({
+      name: "gmail",
       async send(message) {
         state.sent.push(message);
         return state.gmail.shift() ?? { outcome: "sent", providerMessageId: "gmail:ok", transport: "gmail", recipients: 1 };

@@ -220,6 +220,16 @@ export const FEEDBACK_FORMS_NAMED_MERGE_FIELD = "feedbackFormsNamed";
 export const FEEDBACK_SAFETY_GMAIL_MERGE_FIELD = "feedbackSafetyGmail";
 
 /**
+ * The privacy notice's marker for the visitor's message queue (§NNN): «Scrie-ne» and «Spune-ne ceva» no longer keep
+ * nothing — the message waits in the outbox, with its words, until it leaves (seconds; three days at the very most when
+ * no service works) and may leave by the other email service when the first one is down. A notice approved before says
+ * «platforma nu păstrează nicio copie» and names one road, so it does not describe this. The queue is not gated on it
+ * (a message must never be lost to wait for a text), so the marker only tells the club: `/admin/tasks`' row
+ * `relayQueueNotice` is open until a notice naming it takes effect in every language (`describesRelayQueue`).
+ */
+export const RELAY_QUEUE_MERGE_FIELD = "relayQueue";
+
+/**
  * The event's own minimum age (§329) as a merge field (§440, amending §393): "16 ani" / "16
  * years", the unit included like `{{holdMinutes}}` so Romanian's "20 de ani" comes out right
  * (`yearsPhrase`). The group-run declarations state it in a sentence of its own — "Declar că am
@@ -512,6 +522,7 @@ export const MERGE_FIELDS = [
   FEEDBACK_FORMS_MERGE_FIELD,
   FEEDBACK_FORMS_NAMED_MERGE_FIELD,
   FEEDBACK_SAFETY_GMAIL_MERGE_FIELD,
+  RELAY_QUEUE_MERGE_FIELD,
   MEMBERS_SHOP_MERGE_FIELD,
   VOLUNTEERS_MERGE_FIELD,
   VOLUNTEER_AGREEMENT_NOTICE_MERGE_FIELD,
@@ -785,6 +796,14 @@ export function describesFeedbackFormsNamed(body: unknown): boolean {
  */
 export function describesFeedbackSafetyGmail(body: unknown): boolean {
   return mergeFieldsIn(body).has(FEEDBACK_SAFETY_GMAIL_MERGE_FIELD);
+}
+
+/**
+ * Whether a privacy notice describes the queue a visitor's message waits in (§NNN): it names `{{relayQueue}}`. What
+ * `/admin/tasks`' row `relayQueueNotice` reads; nothing is gated on it. Pure; asked of the notice in force, in every language.
+ */
+export function describesRelayQueue(body: unknown): boolean {
+  return mergeFieldsIn(body).has(RELAY_QUEUE_MERGE_FIELD);
 }
 
 /** Whether a privacy notice describes the team page (§459): it names `{{teamPage}}`. Pure. */

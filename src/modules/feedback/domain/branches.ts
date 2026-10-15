@@ -168,6 +168,16 @@ export function safetyMessageSeenByMailboxReaders(settings: FeedbackSettings): b
 }
 
 /**
+ * Whether a message for Girl Zone's person may still pass through the club's Gmail without the club having chosen it
+ * (§NNN): the club's tick «Dacă Mailgun pică, trimite prin Gmail-ul clubului» is on, the notice in force says her messages may
+ * leave by Gmail, and the club's Gmail exists here — the cases in which, when Mailgun is down, her message leaves by the club's
+ * mailbox and its readers see it in Sent. The public lines then say so (never «doar la …» where it may not be true).
+ */
+export function safetyMessageMayLeaveByGmail(settings: FeedbackSettings, safetyGmailDescribed: boolean, roads: FeedbackRoads): boolean {
+  return roads.gmail && roads.mailgun && !safetyMessageSeenByMailboxReaders(settings) && fallbackAllowedFor(settings, "person", safetyGmailDescribed);
+}
+
+/**
  * Whether the other road may carry a message when the chosen one is down (§NNN, amending §772). The contact form’s and
  * the three ordinary forms’ messages go to the club’s own mailbox and the notice names both roads for them (§772),
  * so each may take them over from the other — and a message for Girl Zone’s person leaves by Gmail **only** with the club’s

@@ -65,6 +65,7 @@ export type TaskId =
   | "feedbackNotice"
   | "feedbackNamedNotice"
   | "feedbackSafetyGmailNotice"
+  | "relayQueueNotice"
   | "shopNotice"
   | "volunteersNotice"
   | "volunteerAgreementNotice"
@@ -117,6 +118,7 @@ export const TASK_KIND: Record<TaskId, TaskKind> = {
   feedbackNotice: "text",
   feedbackNamedNotice: "text",
   feedbackSafetyGmailNotice: "text",
+  relayQueueNotice: "text",
   shopNotice: "text",
   volunteersNotice: "text",
   volunteerAgreementNotice: "text",
@@ -275,6 +277,12 @@ export type OwnerTaskInputs = {
   feedbackSafetyGmailDescribed: boolean;
   /** Girl Zone's road is saved as Gmail (§772): the row waits only while the club chose it. */
   feedbackSafetyGmailChosen: boolean;
+  /**
+   * Does the notice in force, in every language, say a visitor's message waits in a queue until it leaves and may leave by the
+   * other email service (§NNN, `noticeDescribesRelayQueue`)? Until it does the notice says the platform keeps no copy — which is
+   * not true of the contact and feedback forms now. Nothing is gated on it: the message is kept either way.
+   */
+  relayQueueDescribed: boolean;
   /**
    * Does the notice in force, in every language, describe the members' shop (§683,
    * `noticeDescribesMembersShop`)? Until it does, the members' zone draws no shop and an order is refused.
@@ -628,6 +636,16 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
         state: input.feedbackSafetyGmailDescribed ? "done" : "open",
       });
     }
+    /*
+      The queue a visitor's message waits in (§NNN): the contact form and «Spune-ne ceva» keep the message, in the outbox, until
+      it leaves — the notice approved before says the platform keeps no copy. A row for as long as the notice in force does not
+      name `{{relayQueue}}` (always on: the queue always runs), done by itself the day one naming it takes effect. Nothing is
+      held back meanwhile: a message must never be lost to wait for a text.
+    */
+    push("relayQueueNotice", {
+      owner: "club",
+      state: input.relayQueueDescribed ? "done" : "open",
+    });
     /*
       The members' shop (§683), «Spune-ne ceva»'s shape: open while a product is visible and the notice
       in force does not name `{{membersShop}}` (the club put something in the shop and members see

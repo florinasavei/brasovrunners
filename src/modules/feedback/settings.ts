@@ -167,6 +167,12 @@ export async function updateFeedbackSettings<T extends Record<string, unknown>>(
     throw new DomainError("VALIDATION_ERROR", "safety: Gmail is not described by the privacy notice in force", [boxName(["safety", "via"])]);
   }
 
+  // The tick sends Girl Zone's message through the club's mailbox when Mailgun is down: not newly set while the notice does not say so, or
+  // where the club has no Gmail (§NNN) — the card greys it, and the server says the same (what is saved stays, as the road does).
+  if (next.safety.fallbackToGmail && !before.safety.fallbackToGmail && (!safetyGmailDescribed || !roads.gmail)) {
+    throw new DomainError("VALIDATION_ERROR", "safety: the fallback by Gmail needs the privacy notice's words and the club's Gmail", [boxName(["safety", "fallbackToGmail"])]);
+  }
+
   await db.transaction(async (tx) => {
     await tx
       .insert(platformSettings)

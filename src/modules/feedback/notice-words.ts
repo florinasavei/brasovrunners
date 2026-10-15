@@ -28,9 +28,18 @@ export function feedbackSafetyGmailClause(locale: string): string {
   return locale === "en" ? en.Tell.noticeSafetyGmail : ro.Tell.noticeSafetyGmail;
 }
 
-/** The notice's merge values, beside the newsletter's and the invitations' on the legal pages: the forms' name, the named mode's and Girl Zone's Gmail road. */
-export function feedbackFormsMergeValues(locale: string): { feedbackForms: string; feedbackFormsNamed: string; feedbackSafetyGmail: string } {
+/**
+ * What the privacy notice's `{{relayQueue}}` becomes (§NNN): how long the platform keeps a visitor's message before it
+ * leaves, in the words of `Tell.noticeRelayQueue` — the same for the contact form's and the feedback forms' paragraphs.
+ */
+export function relayQueueClause(locale: string): string {
+  return locale === "en" ? en.Tell.noticeRelayQueue : ro.Tell.noticeRelayQueue;
+}
+
+/** The notice's merge values, beside the newsletter's and the invitations' on the legal pages: the forms' name, the named mode's, Girl Zone's Gmail road and the queue. */
+export function feedbackFormsMergeValues(locale: string): { feedbackForms: string; feedbackFormsNamed: string; feedbackSafetyGmail: string; relayQueue: string } {
   return {
+    relayQueue: relayQueueClause(locale),
     feedbackForms: feedbackFormsClause(locale),
     feedbackFormsNamed: feedbackFormsNamedClause(locale),
     feedbackSafetyGmail: feedbackSafetyGmailClause(locale),

@@ -33,6 +33,7 @@ import {
   noticeDescribesFeedbackForms,
   noticeDescribesFeedbackFormsNamed,
   noticeDescribesFeedbackSafetyGmail,
+  noticeDescribesRelayQueue,
   noticeDescribesMembersShop,
   noticeDescribesVolunteers,
   noticeDescribesVolunteerAgreement,
@@ -492,6 +493,8 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
       // §772: Girl Zone by the club's Gmail waits on its own marker; the row exists only while the club chose that road.
       feedbackSafetyGmailDescribed: await noticeDescribesFeedbackSafetyGmail(db, now),
       feedbackSafetyGmailChosen: (await readFeedbackSettings(db)).safety.via === "gmail",
+      // §NNN: a visitor's message waits in the outbox until it leaves; the notice in force must say so.
+      relayQueueDescribed: await noticeDescribesRelayQueue(db, now),
       // §683: the members' shop, described by the notice in force; the row waits only while a product is visible.
       shopDescribed: await noticeDescribesMembersShop(db, now),
       visibleShopProducts: await countVisibleProducts(db),

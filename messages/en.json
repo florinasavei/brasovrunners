@@ -3352,6 +3352,7 @@
         "feedbackForms": "Privacy notice only: the “Tell us something” forms’ name, in quotation marks. With it in the notice in force, the contact page shows the forms switched on",
         "feedbackFormsNamed": "Privacy notice only: the “With my name” choice of the “Tell us something” forms, in quotation marks. Without it in the notice in force, the forms are anonymous only",
         "feedbackSafetyGmail": "Privacy notice only: “the club's Gmail”, in the sentence about Girl Zone messages. Without it in the notice in force, they leave by Mailgun only",
+        "relayQueue": "Only in the privacy notice: how long the site keeps a “Write to us” or “Tell us something” message before it leaves. Without it, /admin/tasks tells you; messages still go.",
         "membersShop": "Privacy notice only: the section name “The club's shop”, in quotes. With it in the notice in force, the members' area shows the shop and takes orders",
         "volunteers": "Privacy notice only: the form's name “I want to volunteer”, in quotes. With it in the notice in force, an event that takes volunteers shows its form and keeps the offers",
         "volunteerAgreement": "Privacy notice only: the title “Volunteer agreement”, in quotes. Without it in the notice in force, the volunteers' form, the agreement's link and “Signed on paper” are off",
@@ -4088,6 +4089,15 @@
           "how": [
             "/admin/legal → the “GDPR” card → “Regenerate from the template” → confirm. The forms' paragraph in section 5 now also says when a Girl Zone message leaves by Gmail.",
             "Open the draft, read it, “Save draft”, then “Approve and publish”. Once in force in both languages, Girl Zone messages leave by Gmail, with no other setting."
+          ]
+        },
+        "relayQueueNotice": {
+          "title": "Privacy notice: the queue for form messages",
+          "todo": "The notice in force says we keep no copy, but “Write to us” and “Tell us something” messages wait in a queue until they leave. They go anyway; approve a new notice.",
+          "done": "The notice in force says the message waits in the queue only until it leaves (three days at most) and may leave by the other email service.",
+          "how": [
+            "/admin/legal → the “GDPR” card → “Regenerate from template” → confirm. The paragraphs about the contact form and “Tell us something”, in section 5, now describe the queue.",
+            "Open the draft, read it, “Save draft”, then “Approve and publish”, in both languages."
           ]
         },
         "teamPageNotice": {
@@ -6696,7 +6706,7 @@
           "stateMailgun": "Mailgun",
           "fallback": "If Mailgun is down, send through the club's Gmail",
           "fallbackHelp": "Only for Girl Zone messages. Unticked, a message Mailgun cannot send waits until it works. Ticked, it leaves from the club's mailbox, and whoever reads that mailbox sees it in the Sent folder.",
-          "fallbackNotice": "The tick is off until the privacy notice in force says Girl Zone messages may leave through Gmail."
+          "fallbackNotice": "The tick cannot be changed until the privacy notice in force says Girl Zone messages may leave through Gmail."
         },
         "safetyName": "First name shown",
         "safetyNameHelp": "The form writes it in the sentence about who reads the message. At most 40 characters.",
@@ -10842,6 +10852,7 @@
     "title": "Tell us something (anonymous)",
     "noticeName": "Tell us something",
     "noticeSafetyGmail": "the club's Gmail",
+    "noticeRelayQueue": "only until it leaves — usually a few seconds, at most three days if no email service works — and then deletes it",
     "intro": "Anonymous unless you choose to give your name. Choose what it is about.",
     "backToContact": "Back to Contact",
     "door": {
@@ -10867,7 +10878,8 @@
       "clubHint": "The message reaches the club's mailbox.",
       "person": "{name}",
       "personHint": "Only {name}, the person the club designated for safety. Confidential.",
-      "personHintGmail": "{name}, the person the club designated for safety, through the club's mailbox, where whoever reads it sees it too."
+      "personHintGmail": "{name}, the person the club designated for safety, through the club's mailbox, where whoever reads it sees it too.",
+      "personHintFallback": "{name}, the person the club designated for safety; if the email service is down, through the club's mailbox, where its readers see it."
     },
     "branches": {
       "howItWent": {
@@ -10891,10 +10903,12 @@
       }
     },
     "safety": {
-      "reader": "The message reaches {name} only. The site keeps it only until it leaves, a few minutes, then deletes it.",
-      "readerGmail": "The message reaches {name} through the club's mailbox, where whoever reads it sees it too. The site keeps it only until it leaves, a few minutes, then deletes it.",
-      "readerChoice": "Anonymously, the message reaches {name} only; with your name, you choose who hears it. The site keeps it only until it leaves, a few minutes, then deletes it.",
-      "readerChoiceGmail": "Anonymously, the message reaches {name} through the club's mailbox, where whoever reads it sees it too; with your name, you choose who hears it. The site keeps it only until it leaves, a few minutes, then deletes it.",
+      "reader": "The message reaches {name} only. The site keeps it only until it leaves (three days at most), then deletes it.",
+      "readerGmail": "The message reaches {name} through the club's mailbox, where its readers see it. The site keeps it only until it leaves (three days at most), then deletes it.",
+      "readerChoice": "Anonymously, the message reaches {name} only; with your name, you choose who hears it. The site keeps it only until it leaves (three days at most), then deletes it.",
+      "readerChoiceGmail": "Anonymously, the message reaches {name} through the club's mailbox, where its readers see it; with your name, you choose who hears it. The site keeps it only until it leaves (three days at most).",
+      "readerFallback": "The message reaches {name}; if the email service is down, through the club's mailbox, where its readers see it. The site keeps it only until it leaves (three days at most), then deletes it.",
+      "readerChoiceFallback": "Anonymously, the message reaches {name}; if the email service is down, through the club's mailbox, where its readers see it. With your name, you choose who hears it. The site keeps it only until it leaves (three days at most).",
       "whereWhen": "Where and when (optional)",
       "contact": "Phone number (optional)",
       "contactHelp": "Only if you want {name} to call you."
@@ -10975,8 +10989,8 @@
       "email": "The email",
       "captcha": "The anti-bot check"
     },
-    "privacy": "The site keeps the message only until it leaves, a few minutes, then deletes it: the message leaves by email to the club.",
-    "privacySafety": "The site keeps the message only until it leaves, a few minutes, then deletes it.",
+    "privacy": "The site keeps the message only until it leaves (three days at most), then deletes it: the message leaves by email to the club.",
+    "privacySafety": "The site keeps the message only until it leaves (three days at most), then deletes it.",
     "privacyLinkLabel": "Privacy notice",
     "submit": "Send",
     "submitting": "Sending…",
@@ -10987,7 +11001,8 @@
       "title": "Your message is on its way",
       "body": "Thank you! We read it carefully.",
       "safety": "Only {name} received it. Thank you for telling us.",
-      "safetyGmail": "{name} received it, through the club's mailbox, where whoever reads it sees it too. Thank you for telling us."
+      "safetyGmail": "{name} received it, through the club's mailbox, where whoever reads it sees it too. Thank you for telling us.",
+      "safetyFallback": "{name} gets it — if the email service is down, through the club's mailbox, where its readers see it. Thank you for telling us."
     },
     "eventPage": {
       "lead": "Were you there? Tell us how it was — anonymously, it takes a minute.",

@@ -208,8 +208,11 @@ export default async function FeedbackFormsPanel({ locale, state, noticeDescribe
                             {t("emails.feedbackForms.via.safetyNote")}
                           </Typography>
                         )}
-                        {/* «Dacă Mailgun pică, trimite prin Gmail-ul clubului» (§NNN): a real tick, off by default, with the readers' note. */}
-                        {branch === "safety" && (
+                        {/* «Dacă Mailgun pică, trimite prin Gmail-ul clubului» (§NNN): a real tick, off by default, with the readers' note.
+                            Drawn only while Girl Zone leaves by Mailgun: where the club chose Gmail for her the tick means nothing (Mailgun
+                            takes over from Gmail with no tick), so what is saved only travels, in a hidden field. */}
+                        {branch === "safety" && state.safety.via !== "mailgun" && state.safety.fallbackToGmail && <input type="hidden" name="safetyFallbackToGmail" value="on" />}
+                        {branch === "safety" && state.safety.via === "mailgun" && (
                           <Box sx={{ mt: 1 }} data-testid="feedback-fallback">
                             <CheckboxField
                               name="safetyFallbackToGmail"

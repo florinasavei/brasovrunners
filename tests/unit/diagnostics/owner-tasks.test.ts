@@ -37,6 +37,7 @@ const LAUNCHED: OwnerTaskInputs = {
   feedbackNamedDescribed: true,
   feedbackSafetyGmailDescribed: true,
   feedbackSafetyGmailChosen: false,
+  relayQueueDescribed: true,
   shopDescribed: true,
   visibleShopProducts: 1,
   volunteersDescribed: true,
@@ -156,6 +157,17 @@ describe("owner tasks", () => {
     expect(ownerTasks({ ...LAUNCHED, feedbackSafetyGmailDescribed: false }).some((task) => task.id === "feedbackSafetyGmailNotice")).toBe(false);
     for (const catalogue of [ro, en]) {
       const item = catalogue.Admin.tasks.items.feedbackSafetyGmailNotice;
+      expect(item.title && item.todo && item.done && item.how.length > 0).toBeTruthy();
+      expect(item.how.join("\n")).toContain("/admin/legal");
+    }
+  });
+
+  /** §NNN — the queue a visitor's message waits in: a row as long as the notice in force does not name {{relayQueue}}; nothing is held back meanwhile. */
+  it("keeps the relay queue's row open while the notice in force does not name {{relayQueue}}, done once it does", () => {
+    expect(stateOf({ ...LAUNCHED, relayQueueDescribed: false }, "relayQueueNotice")).toBe("open");
+    expect(stateOf(LAUNCHED, "relayQueueNotice")).toBe("done");
+    for (const catalogue of [ro, en]) {
+      const item = catalogue.Admin.tasks.items.relayQueueNotice;
       expect(item.title && item.todo && item.done && item.how.length > 0).toBeTruthy();
       expect(item.how.join("\n")).toContain("/admin/legal");
     }
@@ -517,6 +529,7 @@ describe("owner tasks", () => {
       "newsletterNotice",
       "feedbackNotice",
       "feedbackNamedNotice",
+      "relayQueueNotice",
       "shopNotice",
       "volunteersNotice",
       "volunteerAgreementNotice",

@@ -452,7 +452,7 @@ test.describe("BR-REQ-070-04 «Spune-ne ceva», the anonymous wizard (§676)", (
       // Above the form, in the page's language: who reads it, by the first name the club set.
       // The club may hear a named report too (§678) — the contact form reaches it on this deployment — so the line says the sender chooses then.
       await expect(page.getByTestId("feedback-safety-reader")).toHaveText(
-        `Anonim, mesajul ajunge doar la ${SAFETY_NAME}; cu nume și prenume, alegi tu cine află. Site-ul îl ține doar până pleacă, câteva minute, apoi îl șterge.`,
+        `Anonim, mesajul ajunge doar la ${SAFETY_NAME}; cu nume și prenume, alegi tu cine află. Site-ul îl ține doar până pleacă (cel mult trei zile), apoi îl șterge.`,
       );
       await expect(page.getByTestId("feedback-form-girl-zone")).toBeVisible();
       // The old address, from before it was `girl-zone` (§772): a link in a sent email or on paper still opens

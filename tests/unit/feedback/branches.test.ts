@@ -33,13 +33,14 @@ import {
   readDay,
   readFeedbackQuery,
   SAFETY_SUBJECT,
+  safetyMessageMayLeaveByGmail,
   safetyMessageSeenByMailboxReaders,
   sentReader,
   wizardStep,
 } from "@/modules/feedback/domain/branches";
 import { describesFeedbackForms, describesFeedbackFormsNamed, describesFeedbackSafetyGmail } from "@/modules/legal-documents/domain/merge-fields";
 import { privacyNoticeEn, privacyNoticeRo } from "@/modules/legal-documents/templates/privacy-notice";
-import { feedbackFormsClause, feedbackFormsMergeValues, feedbackFormsNamedClause, feedbackSafetyGmailClause } from "@/modules/feedback/notice-words";
+import { feedbackFormsClause, feedbackFormsMergeValues, feedbackFormsNamedClause, feedbackSafetyGmailClause, relayQueueClause } from "@/modules/feedback/notice-words";
 
 /**
  * BR-REQ-070-04, `DECISIONS.md` §676 — «Spune-ne ceva»'s rules, pure: which branches are offered,
@@ -356,6 +357,17 @@ describe("§772 Girl Zone's road follows the notice in force", () => {
     expect(safetyMessageSeenByMailboxReaders(DEFAULT_FEEDBACK_SETTINGS)).toBe(false);
   });
 
+  it("says «only at …» where it is not true: the club's tick, the notice's words and a Gmail that exists make her message able to leave by the club's mailbox (§NNN)", () => {
+    const ticked = { ...DEFAULT_FEEDBACK_SETTINGS, safety: { ...DEFAULT_FEEDBACK_SETTINGS.safety, fallbackToGmail: true } };
+    const both = { gmail: true, mailgun: true };
+    expect(safetyMessageMayLeaveByGmail(ticked, true, both)).toBe(true);
+    expect(safetyMessageMayLeaveByGmail(ticked, false, both)).toBe(false);
+    expect(safetyMessageMayLeaveByGmail(ticked, true, { gmail: false, mailgun: true })).toBe(false);
+    expect(safetyMessageMayLeaveByGmail(DEFAULT_FEEDBACK_SETTINGS, true, both)).toBe(false);
+    // Already by Gmail: that is the certain case, not the possible one.
+    expect(safetyMessageMayLeaveByGmail(effectiveFeedbackSettings(gmail, true), true, both)).toBe(false);
+  });
+
   it("is a marker of the notice's template, in both languages, read by the same function as the others", () => {
     for (const body of [privacyNoticeRo, privacyNoticeEn]) {
       expect(describesFeedbackSafetyGmail(body)).toBe(true);
@@ -390,7 +402,8 @@ describe("§676 the notice's marker", () => {
   it("§678 fills the named mode's marker with the radio's own words, quoted", () => {
     expect(feedbackFormsNamedClause("ro")).toBe("„Cu nume și prenume”");
     expect(feedbackFormsNamedClause("en")).toBe("“With my name”");
-    expect(feedbackFormsMergeValues("en")).toEqual({ feedbackForms: "“Tell us something”", feedbackFormsNamed: "“With my name”", feedbackSafetyGmail: "the club's Gmail" });
+    expect(feedbackFormsMergeValues("en")).toEqual({ feedbackForms: "“Tell us something”", feedbackFormsNamed: "“With my name”", feedbackSafetyGmail: "the club's Gmail", relayQueue: relayQueueClause("en") });
+    expect(relayQueueClause("ro")).toContain("cel mult trei zile");
     expect(feedbackSafetyGmailClause("ro")).toBe("Gmail-ul clubului");
   });
 });

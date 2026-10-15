@@ -14,6 +14,7 @@ import {
   FEEDBACK_FORMS_MERGE_FIELD,
   FEEDBACK_FORMS_NAMED_MERGE_FIELD,
   FEEDBACK_SAFETY_GMAIL_MERGE_FIELD,
+  RELAY_QUEUE_MERGE_FIELD,
   MEMBERS_SHOP_MERGE_FIELD,
   VOLUNTEERS_MERGE_FIELD,
   VOLUNTEER_AGREEMENT_NOTICE_MERGE_FIELD,
@@ -38,7 +39,7 @@ import { seriesRhythmPhrase } from "@/modules/group-run-declarations/series";
 import { newsletterMergeValues } from "@/modules/newsletter/topic-words";
 import { gmailFallbackClause } from "@/modules/notifications/fallback-notice-words";
 import { eventInvitationsClause } from "@/modules/registrations/invitation-words";
-import { feedbackFormsClause, feedbackFormsNamedClause, feedbackSafetyGmailClause } from "@/modules/feedback/notice-words";
+import { feedbackFormsClause, feedbackFormsNamedClause, feedbackSafetyGmailClause, relayQueueClause } from "@/modules/feedback/notice-words";
 import { membersShopClause } from "@/modules/content/shop/notice-words";
 import { volunteerAgreementClause, volunteerMinorsClause, volunteerProfileClause, volunteersClause } from "@/modules/volunteers/notice-words";
 
@@ -256,6 +257,13 @@ export const DECLARATION_TOKENS: readonly DeclarationToken[] = [
     token: `{{${FEEDBACK_SAFETY_GMAIL_MERGE_FIELD}}}`,
     messageKey: FEEDBACK_SAFETY_GMAIL_MERGE_FIELD,
     example: inBoth((locale) => feedbackSafetyGmailClause(locale)),
+  },
+  // The privacy notice's marker for the queue a visitor's message waits in (§NNN): how long the platform keeps it before it leaves.
+  // Nothing is gated on it; `/admin/tasks` tells the club while the notice in force does not name it (`describesRelayQueue`).
+  {
+    token: `{{${RELAY_QUEUE_MERGE_FIELD}}}`,
+    messageKey: RELAY_QUEUE_MERGE_FIELD,
+    example: inBoth((locale) => relayQueueClause(locale)),
   },
   // The privacy notice's marker for the members' shop (§683): the zone section's name, and the switch —
   // the zone draws the shop, and an order is taken, only while it is named (`describesMembersShop`).
