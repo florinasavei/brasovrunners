@@ -99,6 +99,8 @@ const roleFields = (form: FormData) => ({
   nameRo: field(form, "nameRo"),
   nameEn: field(form, "nameEn"),
   needed: field(form, "needed"),
+  // «Fără număr — oricâți oameni» (§NNN): the house tick posts `on`; the service decides by it, whatever the number box holds.
+  unlimited: form.get("unlimited") === "on" ? "on" : "",
   descriptionRo: field(form, "descriptionRo"),
   descriptionEn: field(form, "descriptionEn"),
   // «Descrierea rolului» (§765): the editor's documents when the form drew the editor; absent otherwise, so a caller with the plain boxes is read as it always was.

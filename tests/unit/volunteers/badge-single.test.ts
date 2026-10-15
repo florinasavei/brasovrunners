@@ -230,7 +230,7 @@ describe("§783 «Câte ecusoane»: where it starts, and the spares", () => {
   });
 
   it("hands the sheet one pile with no role, N plus the spares, however many roles the event has", () => {
-    const role = { id: "a", nameRo: "Punct de apă", nameEn: "Water", needed: 3, colour: "#c62828", position: 0, createdAt: new Date(), categoryId: null, categoryRo: null, categoryEn: null, categoryPhone: null };
+    const role = { id: "a", nameRo: "Punct de apă", nameEn: "Water", needed: 3, assigned: 0, colour: "#c62828", position: 0, createdAt: new Date(), categoryId: null, categoryRo: null, categoryEn: null, categoryPhone: null };
     const counts = readPrintCounts(new URLSearchParams("all=40&allx=5"), [role], { defaultCount: 5 });
     if ("refused" in counts) throw new Error("refused");
     expect(badgePrintEntries([role, { ...role, id: "b" }], counts, "ro")).toEqual([{ role: null, count: 45 }]);

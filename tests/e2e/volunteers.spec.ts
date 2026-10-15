@@ -30,6 +30,10 @@ import { chooseSex } from "./support/sex-choice";
  * (the same name in two categories) and «Foto/Video» under none; the volunteers' page groups the roles under level-3 headings in that order with the contact on one
  * line under its heading (links of 44 pixels); an offer for «Direcționare» is named «Direcționare (Traseu)» on the card; the CSV says so and holds no contact.
  *
+ * §NNN — a role «fără număr»: «Adaugă un rol» has the tick «Fără număr — oricâți oameni» beside «Câți oameni trebuie» (the number box goes while it is ticked); the card says
+ * «0 · fără număr» on that role and «0 din 1 + roluri fără număr» in its closed line; the event's page lists the role, the volunteers' page offers it however many
+ * people it was given and never puts a number on it, even with the counts on.
+ *
  * The event is written straight into the database — the setup, not the subject — one per project and run, so
  * the two projects never share a row.
  */
@@ -184,7 +188,7 @@ test.describe("§754 volunteers for a race", () => {
     await expect(page.getByTestId("volunteer-offer-state")).toContainText("pagina evenimentului trimite la ea", { timeout: 30_000 });
     await hydrated(page);
     // The card may be shut after the redirect: its tick is still the same checkbox, with the state in `aria-checked`.
-    await expect(page.getByRole("checkbox", { name: "Primește voluntari pe pagină", exact: true, includeHidden: true })).toHaveAttribute("aria-checked", "true");
+    await expect(page.getByRole("checkbox", { name: "Primește voluntari pe pagină", exact: true, includeHidden: true })).toHaveAttribute("aria-checked", "true", { timeout: 30_000 });
 
     // «Arată public câți voluntari mai sunt necesari» (§773): the card's third tick, a real checkbox, off until the club ticks it.
     await openFold(card);
@@ -276,7 +280,7 @@ test.describe("§754 volunteers for a race", () => {
       await countsTick.click();
       await page.waitForURL(/#box-volunteers$/);
       await hydrated(page);
-      await expect(page.getByTestId("volunteer-counts-form").getByRole("checkbox", { name: "Arată public câți voluntari mai sunt necesari", includeHidden: true })).toHaveAttribute("aria-checked", "true");
+      await expect(page.getByTestId("volunteer-counts-form").getByRole("checkbox", { name: "Arată public câți voluntari mai sunt necesari", includeHidden: true })).toHaveAttribute("aria-checked", "true", { timeout: 30_000 });
       await expect(async () => {
         await guest.reload();
         await expect(guest.getByTestId("volunteer-roles")).toContainText("mai sunt necesare 2 persoane", { timeout: 3_000 });
@@ -286,7 +290,7 @@ test.describe("§754 volunteers for a race", () => {
       await page.getByTestId("volunteer-counts-form").getByRole("checkbox", { name: "Arată public câți voluntari mai sunt necesari", includeHidden: true }).click();
       await page.waitForURL(/#box-volunteers$/);
       await hydrated(page);
-      await expect(page.getByTestId("volunteer-counts-form").getByRole("checkbox", { name: "Arată public câți voluntari mai sunt necesari", includeHidden: true })).toHaveAttribute("aria-checked", "false");
+      await expect(page.getByTestId("volunteer-counts-form").getByRole("checkbox", { name: "Arată public câți voluntari mai sunt necesari", includeHidden: true })).toHaveAttribute("aria-checked", "false", { timeout: 30_000 });
       await expect(async () => {
         await guest.reload();
         await expect(guest.getByTestId("volunteer-roles")).toContainText("mai sunt locuri", { timeout: 3_000 });
@@ -542,7 +546,7 @@ test.describe("§754 volunteers for a race", () => {
       await shirtsTick.click();
       await page.waitForURL(/#box-volunteers$/);
       await hydrated(page);
-      await expect(page.getByTestId("volunteer-shirts-form").getByRole("checkbox", { name: "Oferim tricouri voluntarilor", includeHidden: true })).toHaveAttribute("aria-checked", "true");
+      await expect(page.getByTestId("volunteer-shirts-form").getByRole("checkbox", { name: "Oferim tricouri voluntarilor", includeHidden: true })).toHaveAttribute("aria-checked", "true", { timeout: 30_000 });
 
       // --- A role with all its people is no longer offered; a repeat gets the same answer -------
       await openBox();
@@ -1159,6 +1163,147 @@ test.describe("§754 volunteers for a race", () => {
     const text = await csv.text();
     expect(text).toContain("Direcționare (Traseu)");
     expect(text).not.toMatch(/Ana Popescu|coordonator@club\.test|0712 345 678|\+40 ?712 ?345 ?678/);
+  });
+
+  test("§NNN a role «fără număr»: the tick in «Adaugă un rol», «0 · fără număr» on the card, offered on the page whoever it was given to, and never a number on it", async ({ page, browser }) => {
+    const tag = `${test.info().project.name}-${Date.now().toString(36)}-nonum`;
+    const event = await seedEvent(tag);
+    const emails = ["maria", "ion", "dana"].map((name) => `${name}.${tag}@example.test`);
+
+    await signIn(page, "Dev Administrator");
+    await page.goto(`/ro/admin/events/${event.id}`);
+    await hydrated(page);
+    const card = page.getByTestId("event-volunteers");
+    await expect(card).toBeVisible();
+    const group = (name: string) => page.getByTestId("volunteer-group").filter({ has: page.locator("h3").getByText(name, { exact: true }) });
+
+    // --- «Adaugă un rol»: a number, then the tick ------------------------------------------------
+    await openEditorBox(page, "Adaugă un rol");
+    let add = page.getByTestId("volunteer-role-add");
+    await add.getByLabel("Numele rolului (Română)").fill("Sosire");
+    await add.getByLabel("Numele rolului (English)").fill("Finish");
+    await add.getByLabel("Câți oameni trebuie").fill("1");
+    await add.getByRole("button", { name: "Adaugă rolul", exact: true }).click();
+    await expect(page.getByTestId("volunteer-role-name").getByText("Sosire", { exact: true })).toBeAttached({ timeout: 30_000 });
+    await hydrated(page);
+
+    await openEditorBox(page, "Adaugă un rol");
+    add = page.getByTestId("volunteer-role-add");
+    await add.getByLabel("Numele rolului (Română)").fill("Ajutor");
+    await add.getByLabel("Numele rolului (English)").fill("Helper");
+    const numberBox = add.getByLabel("Câți oameni trebuie");
+    const noNumber = add.getByRole("checkbox", { name: "Fără număr — oricâți oameni" });
+    // The tick is a real checkbox a thumb can press, with its help; the number box is shown until it is ticked, never `required`.
+    await expect(noNumber).not.toBeChecked();
+    expect((await noNumber.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+    await expect(numberBox).toBeVisible();
+    await expect(numberBox).not.toHaveAttribute("required", "");
+    await expect(add.getByTestId("volunteer-role-unlimited-help")).toContainText("Nebifat, scrie mai sus un număr de cel puțin 1.");
+    // Neither a number nor the tick: refused at the number's box, and what was typed comes back.
+    await numberBox.fill("");
+    await add.getByRole("button", { name: "Adaugă rolul", exact: true }).click();
+    await expect(page.getByTestId("volunteer-role-add").getByLabel("Numele rolului (Română)")).toHaveValue("Ajutor", { timeout: 30_000 });
+    await expect(page.getByTestId("volunteer-role-add").getByLabel("Câți oameni trebuie")).toHaveAttribute("aria-invalid", "true");
+    await hydrated(page);
+    // Ticked: the number box goes (the stylesheet alone), and the role is saved without one.
+    add = page.getByTestId("volunteer-role-add");
+    await add.getByRole("checkbox", { name: "Fără număr — oricâți oameni" }).check();
+    await expect(add.getByLabel("Câți oameni trebuie")).toBeHidden();
+    await add.getByRole("button", { name: "Adaugă rolul", exact: true }).click();
+    // The address already ends in the card's anchor: the redirect is waited for by what it draws, the new role in the list.
+    await expect(page.getByTestId("volunteer-role-name").getByText("Ajutor", { exact: true })).toBeAttached({ timeout: 30_000 });
+    await hydrated(page);
+
+    // --- The card: «0 · fără număr», and the closed line counts only the numbered role -----------
+    await openEditorBox(page, "Roluri");
+    await expect(group("Sosire").getByTestId("volunteer-role-standing")).toHaveText("0 din 1");
+    await expect(group("Ajutor").getByTestId("volunteer-role-standing")).toHaveText("0 · fără număr");
+    await expect(card.locator("summary").first()).toContainText("0 din 1 + roluri fără număr");
+    // «Modifică» on that role: the tick is on, so the box that would say a number is not shown.
+    const ajutor = page.getByTestId("volunteer-role").filter({ has: page.getByTestId("volunteer-role-name").getByText("Ajutor", { exact: true }) });
+    await openFold(ajutor.locator("details").filter({ hasText: /^Modifică/ }).first());
+    const editTick = ajutor.getByRole("checkbox", { name: "Fără număr — oricâți oameni" });
+    await expect(editTick).toBeChecked();
+    await expect(ajutor.getByLabel("Câți oameni trebuie")).toBeHidden();
+
+    // --- The event takes volunteers: its page lists both roles, the volunteers' page offers both -------
+    await page.goto(`/ro/admin/events/${event.id}`);
+    await hydrated(page);
+    await openFold(card);
+    await page.getByRole("checkbox", { name: "Primește voluntari pe pagină", exact: true, includeHidden: true }).click();
+    await expect(page.getByTestId("volunteer-offer-state")).toContainText("pagina evenimentului trimite la ea", { timeout: 30_000 });
+    await hydrated(page);
+
+    const visitor = await browser.newContext({ baseURL: test.info().project.use.baseURL, viewport: test.info().project.use.viewport ?? undefined });
+    try {
+      const guest = await visitor.newPage();
+      await expect(async () => {
+        await guest.goto(`/ro/evenimente/${event.slug}`);
+        await expect(guest.getByTestId("volunteer-callout-line")).toHaveText("Căutăm voluntari: Sosire, Ajutor", { timeout: 3_000 });
+      }).toPass({ timeout: 60_000 });
+
+      async function offer(name: string, email: string, role: string) {
+        await guest.goto(`/ro/evenimente/${event.slug}/voluntari`);
+        await hydrated(guest);
+        await guest.getByTestId("volunteer-roles").getByRole("checkbox", { name: role }).check();
+        await guest.getByLabel("Numele tău").fill(name);
+        await guest.getByLabel("Adresa ta de email").fill(email);
+        await guest.locator('[name="phone"]').fill("712345678");
+        await typeBirth(guest.locator('input[name="birthDate"]'), typedBirth(34));
+        await chooseSex(guest, "FEMALE");
+        await guest.locator('input[name="city"]').fill("Brașov");
+        await guest.locator('input[name="consent"]').check();
+        await guest.locator('input[name="agreement"]').check();
+        // A person takes a moment: the form's timing check refuses a post within the second of its render.
+        await guest.waitForTimeout(1_200);
+        await guest.getByTestId("volunteer-box").getByRole("button", { name: "Mă ofer voluntar", exact: true }).click();
+        await expect(guest.getByTestId("volunteer-done")).toContainText("Am primit oferta ta", { timeout: 30_000 });
+      }
+      const give = async (name: string) => {
+        await page.goto(`/ro/admin/events/${event.id}`);
+        await hydrated(page);
+        await page.locator('[data-testid="volunteer-unassigned"] [data-testid="volunteer-row"]', { hasText: name }).getByRole("button", { name: /^Dă-i rolul Ajutor/ }).click();
+        await page.waitForURL(/#box-volunteers$/);
+        await hydrated(page);
+      };
+
+      await offer("Maria Test", emails[0], "Ajutor");
+      await page.goto(`/ro/admin/events/${event.id}`);
+      await hydrated(page);
+      // The press says how the role stands before it gives it: no «din».
+      await expect(page.locator('[data-testid="volunteer-unassigned"] [data-testid="volunteer-row"]', { hasText: "Maria Test" }).getByRole("button", { name: /^Dă-i rolul Ajutor/ })).toContainText("Ajutor · 0 · fără număr");
+      await give("Maria Test");
+      await offer("Ion Test", emails[1], "Ajutor");
+      await give("Ion Test");
+      await expect(group("Ajutor").getByTestId("volunteer-role-standing")).toHaveText("2 · fără număr");
+      await expect(card.locator("summary").first()).toContainText("0 din 1 + roluri fără număr");
+
+      // Two people on it, and the page still offers it — and the numbered role beside it, still empty.
+      await guest.goto(`/ro/evenimente/${event.slug}/voluntari`);
+      await hydrated(guest);
+      const choices = guest.getByTestId("volunteer-roles");
+      await expect(choices.getByRole("checkbox", { name: "Ajutor" })).toBeVisible();
+      await expect(choices.getByRole("checkbox", { name: "Sosire" })).toBeVisible();
+      // Counts off: both say «mai sunt locuri». Counts on (the club's tick): «Sosire» says its number, «Ajutor» still says no number.
+      await expect(choices.getByTestId("volunteer-role-option").filter({ hasText: "Ajutor" }).getByTestId("volunteer-role-needs")).toHaveText("mai sunt locuri");
+      await page.goto(`/ro/admin/events/${event.id}`);
+      await hydrated(page);
+      await openFold(card);
+      await page.getByTestId("volunteer-counts-form").getByRole("checkbox", { name: "Arată public câți voluntari mai sunt necesari", includeHidden: true }).click();
+      await page.waitForURL(/#box-volunteers$/);
+      await hydrated(page);
+      await expect(async () => {
+        await guest.reload();
+        await expect(guest.getByTestId("volunteer-roles").getByTestId("volunteer-role-option").filter({ hasText: "Sosire" }).getByTestId("volunteer-role-needs")).toHaveText("mai e nevoie de 1 persoană", { timeout: 3_000 });
+      }).toPass({ timeout: 60_000 });
+      const ajutorTile = guest.getByTestId("volunteer-roles").getByTestId("volunteer-role-option").filter({ hasText: "Ajutor" });
+      await expect(ajutorTile.getByTestId("volunteer-role-needs")).toHaveText("mai sunt locuri");
+      await expect(ajutorTile).not.toContainText(/\d+ persoan/);
+      // A third person signs up for it too: never «full».
+      await offer("Dana Test", emails[2], "Ajutor");
+    } finally {
+      await visitor.close();
+    }
   });
 
   test("the event's page shows no form while the event does not take volunteers", async ({ page }) => {

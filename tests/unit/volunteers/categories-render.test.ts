@@ -186,7 +186,7 @@ async function drawCard(over: Partial<ComponentProps<typeof VolunteersCard>> = {
   return html(createElement(NextIntlClientProvider, intl, createElement(TranslateProvider, { offer: { action: translate, setupHref: null } } as ComponentProps<typeof TranslateProvider>, drawn)));
 }
 
-const publicRole = (one: VolunteerRole, free = one.needed): PublicVolunteerRole => ({
+const publicRole = (one: VolunteerRole, free: number | null = one.needed): PublicVolunteerRole => ({
   id: one.id,
   nameRo: one.nameRo,
   nameEn: one.nameEn,
@@ -195,7 +195,7 @@ const publicRole = (one: VolunteerRole, free = one.needed): PublicVolunteerRole 
   descriptionRoJson: null,
   descriptionEnJson: null,
   needed: one.needed,
-  taken: one.needed - free,
+  taken: one.needed === null || free === null ? 0 : one.needed - free,
   free,
   categoryId: one.categoryId,
 });
@@ -397,5 +397,104 @@ describe("§774 the card: «Categorii», «Categoria» and the roles under their
     const english = await drawCard({ volunteers: [maria] }, "en");
     expect(english).toContain("Guidance (Route)");
     expect(english).toContain("Guidance (Start / Finish)");
+  });
+});
+
+describe("§NNN a role without a number", () => {
+  const NO_NUMBER: VolunteerRole = { ...ROUTE_WATER, needed: null };
+  const given = (state: "REGISTERED" | "CONFIRMED") => person({ roleId: NO_NUMBER.id, choiceIds: [NO_NUMBER.id], state });
+  const standingChips = (page: string) => [...new Set([...page.matchAll(/data-testid="volunteer-role-standing"[^>]*>(?:<[^>]*>)*([^<]*)</g)].map((match) => match[1]))];
+  const tickTags = (page: string) => [...page.matchAll(/<input[^>]*name="unlimited"[^>]*>/g)].map((match) => match[0]);
+
+  it("reads «3 · fără număr» in its header where a numbered role reads «0 din 2», and is never drawn as full", async () => {
+    const people = [given("CONFIRMED"), { ...given("REGISTERED"), id: "e2222222-2222-4222-8222-222222222222" }, { ...given("CONFIRMED"), id: "e3333333-3333-4333-8333-333333333333" }];
+    const page = await drawCard({ roles: [AT_START, NO_NUMBER], volunteers: people });
+    expect(standingChips(page)).toEqual(["0 din 2", "3 · fără număr"]);
+    expect(standingChips(await drawCard({ roles: [AT_START, NO_NUMBER], volunteers: people }, "en"))).toEqual(["0 of 2", "3 · no limit"]);
+  });
+
+  it("counts only the numbered roles in the card's summary and adds «+ roluri fără număr» when there is any", async () => {
+    const people = [given("CONFIRMED"), { ...given("CONFIRMED"), id: "e2222222-2222-4222-8222-222222222222" }, person({ id: "e4444444-4444-4444-8444-444444444444", roleId: AT_START.id, state: "CONFIRMED" })];
+    const mixed = await drawCard({ roles: [AT_START, ON_ROUTE, NO_NUMBER], volunteers: people });
+    expect(mixed).toContain("1 din 4 + roluri fără număr");
+    expect(await drawCard({ roles: [AT_START, ON_ROUTE, NO_NUMBER], volunteers: people }, "en")).toContain("1 of 4 + roles with no limit");
+    // No role without a number: the sentence is the old one, and says nothing of them.
+    const numbered = await drawCard({ roles: [AT_START, ON_ROUTE], volunteers: people });
+    expect(numbered).toContain("1 din 4");
+    expect(numbered).not.toContain("fără număr");
+    // Only roles without a number: the people in them, with no «din».
+    const only = await drawCard({ roles: [NO_NUMBER], volunteers: people });
+    expect(only).toContain("2 în roluri fără număr");
+  });
+
+  it("says «fără număr» beside the role's name where an organizer gives it to someone", async () => {
+    const waiting = person({ id: "e5555555-5555-4555-8555-555555555555", roleId: null, choiceIds: [NO_NUMBER.id] });
+    const page = await drawCard({ roles: [AT_START, NO_NUMBER], volunteers: [waiting, given("CONFIRMED")], acceptsVolunteers: true });
+    expect(page).toContain("Punct de hidratare (Traseu) · 1 · fără număr");
+    expect(page).toContain("Direcționare (Start / Sosire) · 0 din 2");
+  });
+
+  it("draws the tick «Fără număr — oricâți oameni» beside «Câți oameni trebuie» in every role form, ticked only on the role without a number, and the number box never required", async () => {
+    const page = await drawCard({ roles: [AT_START, NO_NUMBER] });
+    // «Adaugă un rol» and one «Modifică» per role: three forms, one tick each — a native checkbox, so a form without scripts posts it.
+    const ticks = tickTags(page);
+    expect(ticks).toHaveLength(3);
+    expect(ticks.every((tag) => /type="checkbox"/.test(tag))).toBe(true);
+    expect(ticks.filter((tag) => /\schecked(=|\s|>)/.test(tag))).toHaveLength(1);
+    expect(page).toContain("Fără număr — oricâți oameni");
+    expect((page.match(/data-testid="volunteer-role-needed-group"/g) ?? []).length).toBe(3);
+    // The number box stays in the markup (scripts off: it is shown and ignored while the tick is on) and is not `required`.
+    const boxes = [...page.matchAll(/<input[^>]*name="needed"[^>]*>/g)].map((match) => match[0]);
+    expect(boxes).toHaveLength(3);
+    expect(boxes.some((tag) => /\srequired(=|\s|>)/.test(tag))).toBe(false);
+    // The help names both ways.
+    expect(page).toContain("Cel puțin 1, sau bifează „Fără număr” mai jos.");
+    expect(page).toContain("Nebifat, scrie mai sus un număr de cel puțin 1.");
+    const english = await drawCard({ roles: [AT_START, NO_NUMBER] }, "en");
+    expect(english).toContain("No limit — any number of people");
+    expect(english).toContain("At least 1, or tick “No limit” below.");
+  });
+
+  it("hides the number box with the stylesheet alone while the tick is on, so no script is needed", async () => {
+    locale = "ro";
+    const drawn = (await VolunteersCard({
+      locale: "ro",
+      eventId: EVENT,
+      acceptsVolunteers: false,
+      volunteersShirts: false,
+      volunteersShowCounts: false,
+      eventDay: "2026-11-21",
+      profileDescribed: false,
+      minorsOpen: false,
+      offerClosed: "off",
+      roles: [NO_NUMBER],
+      categories: [START, ROUTE, EMPTY],
+      standings: [standingOf(NO_NUMBER, [])],
+      volunteers: [],
+      agreementInForce: true,
+      agreementNoticeDescribes: true,
+      agreementDocumentIds: {},
+      agreementEvent: {},
+      now: new Date("2026-10-14T10:00:00Z"),
+    })) as ReactElement;
+    const { NextIntlClientProvider } = await import("next-intl");
+    const intl = { locale: "ro", messages: { Translate: messages.ro.Translate, Admin: messages.ro.Admin } } as unknown as ComponentProps<typeof NextIntlClientProvider>;
+    const stream = await renderToReadableStream(createElement(NextIntlClientProvider, intl, createElement(TranslateProvider, { offer: { action: translate, setupHref: null } } as ComponentProps<typeof TranslateProvider>, drawn)), { onError: () => {} });
+    await stream.allReady;
+    const page = await new Response(stream).text();
+    expect(page).toMatch(/:has\(input\[name=['"]?unlimited['"]?\]:checked\)\s*\[data-needed-box\]\{display:none/);
+    expect(page).toContain("data-needed-box");
+  });
+
+  it("is offered on the volunteers' page whatever it was given, and says «mai sunt locuri» — never a number — even with the counts on", async () => {
+    const page = await drawBox({ roles: [publicRole(ON_ROUTE, 1), publicRole(NO_NUMBER, null)], showCounts: true });
+    expect(optionIds(page)).toEqual([ON_ROUTE.id, NO_NUMBER.id]);
+    expect(page).toContain("mai e nevoie de 1 persoană");
+    const tile = page.split('data-testid="volunteer-role-option"')[2] ?? "";
+    expect(tile).toContain(ro.Event.volunteers.needs.open);
+    expect(tile).not.toMatch(/mai (e|sunt) (nevoie|necesare)/);
+    const english = await drawBox({ roles: [publicRole(NO_NUMBER, null)], showCounts: true }, "en");
+    expect(english).toContain(en.Event.volunteers.needs.open);
+    expect(english).not.toMatch(/more people needed|1 more person/);
   });
 });

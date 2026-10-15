@@ -786,3 +786,72 @@ describe("§754 deleting an event", () => {
     expect(await db.select().from(eventVolunteers).where(eq(eventVolunteers.eventId, eventId))).toEqual([]);
   });
 });
+
+describe("§NNN a role «fără număr» — the tick of the role's form", () => {
+  const roleRows = () => listVolunteerRoles(db, eventId);
+
+  it("adds a role with the tick and no number: it is saved without one, the audit says so, and the number box is ignored while the tick is on", async () => {
+    expect(await post(actions.addVolunteerRoleAction, form({ ...ROLE, needed: "", unlimited: "on" }))).toBe("redirected");
+    expect(await post(actions.addVolunteerRoleAction, form({ ...ROLE, nameRo: "Sosire", nameEn: "Finish", needed: "7", unlimited: "on" }))).toBe("redirected");
+    expect((await roleRows()).map((role) => [role.nameRo, role.needed])).toEqual([["Punct de apă", null], ["Sosire", null]]);
+    const added = (await trail()).filter((row) => row.action === "volunteer_role.added");
+    expect(added.map((row) => (row.metadataJson as { needed: unknown }).needed)).toEqual([null, null]);
+  });
+
+  it("reads a form with no tick as before: the number decides", async () => {
+    expect(await post(actions.addVolunteerRoleAction, form({ ...ROLE, needed: "5" }))).toBe("redirected");
+    expect((await roleRows()).map((role) => role.needed)).toEqual([5]);
+  });
+
+  it("refuses neither a number nor the tick at the number's box, keeps every box, and writes nothing", async () => {
+    for (const needed of ["", "0", "x"]) {
+      const outcome = await post(actions.addVolunteerRoleAction, form({ ...ROLE, needed }));
+      expect(outcome, needed).toMatchObject({ error: "VALIDATION_ERROR", fields: ["needed"] });
+      expect((outcome as FormOutcome).values.needed?.[0]).toBe(needed);
+    }
+    expect(await roleRows()).toHaveLength(0);
+    expect(await trail()).toHaveLength(0);
+  });
+
+  it("brings the tick back after a refusal about something else", async () => {
+    const outcome = await post(actions.addVolunteerRoleAction, form({ ...ROLE, nameEn: "", needed: "", unlimited: "on" }));
+    expect(outcome).toMatchObject({ error: "VALIDATION_ERROR", fields: ["nameEn"] });
+    expect((outcome as FormOutcome).values.unlimited?.[0]).toBe("on");
+  });
+
+  it("turns a numbered role into one without a number and back, audits the field, and writes nothing for a save that changes nothing", async () => {
+    const role = await addRole({ needed: "4" });
+    expect(await post(actions.editVolunteerRoleAction, form({ ...ROLE, roleId: role.id, needed: "4", unlimited: "on" }))).toBe("redirected");
+    expect((await roleRows())[0].needed).toBeNull();
+    // The same save again: the role is already without a number, nothing changes, nothing is written.
+    expect(await post(actions.editVolunteerRoleAction, form({ ...ROLE, roleId: role.id, needed: "9", unlimited: "on" }))).toBe("redirected");
+    expect(await post(actions.editVolunteerRoleAction, form({ ...ROLE, roleId: role.id, needed: "6" }))).toBe("redirected");
+    expect((await roleRows())[0].needed).toBe(6);
+    const edited = (await trail()).filter((row) => row.action === "volunteer_role.edited");
+    expect(edited.map((row) => (row.metadataJson as { fields: string[]; needed: unknown }))).toMatchObject([
+      { fields: ["needed"], needed: null },
+      { fields: ["needed"], needed: 6 },
+    ]);
+  });
+
+  it("never counts the role as full: fifty people on it, and the public read still says it takes people", async () => {
+    const role = await addRole({ needed: "", unlimited: "on" });
+    const numbered = await addRole({ nameRo: "Sosire", nameEn: "Finish", needed: "1" });
+    for (let index = 0; index < 5; index += 1) {
+      await addPerson(role.id, { name: `Persoana ${index}`, email: `persoana${index}@example.test` });
+    }
+    await addPerson(numbered.id, { name: "Singura", email: "singura@example.test" });
+    await press(actions.switchVolunteersAction, form({ on: "1" }));
+    await press(actions.switchVolunteersCountsAction, form({ on: "1" }));
+    const read = await readPublicVolunteerRoles(db, eventId);
+    expect(read.roles.map((candidate) => [candidate.nameRo, candidate.needed, candidate.taken, candidate.free])).toEqual([
+      ["Punct de apă", null, 5, null],
+      ["Sosire", 1, 1, 0],
+    ]);
+    // The card's own read: the standing of each role, the one without a number never at zero.
+    expect(volunteerStandings(await roleRows(), await listVolunteers(db, eventId)).map((standing) => [standing.needed, standing.taken, standing.free])).toEqual([
+      [null, 5, null],
+      [1, 1, 0],
+    ]);
+  });
+});
