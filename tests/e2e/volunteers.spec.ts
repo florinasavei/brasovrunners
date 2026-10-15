@@ -1184,7 +1184,7 @@ test.describe("§754 volunteers for a race", () => {
     await add.getByLabel("Numele rolului (English)").fill("Finish");
     await add.getByLabel("Câți oameni trebuie").fill("1");
     await add.getByRole("button", { name: "Adaugă rolul", exact: true }).click();
-    await page.waitForURL(/#box-volunteers$/);
+    await expect(page.getByTestId("volunteer-role-name").getByText("Sosire", { exact: true })).toBeAttached({ timeout: 30_000 });
     await hydrated(page);
 
     await openEditorBox(page, "Adaugă un rol");
@@ -1210,7 +1210,8 @@ test.describe("§754 volunteers for a race", () => {
     await add.getByRole("checkbox", { name: "Fără număr — oricâți oameni" }).check();
     await expect(add.getByLabel("Câți oameni trebuie")).toBeHidden();
     await add.getByRole("button", { name: "Adaugă rolul", exact: true }).click();
-    await page.waitForURL(/#box-volunteers$/);
+    // The address already ends in the card's anchor: the redirect is waited for by what it draws, the new role in the list.
+    await expect(page.getByTestId("volunteer-role-name").getByText("Ajutor", { exact: true })).toBeAttached({ timeout: 30_000 });
     await hydrated(page);
 
     // --- The card: «0 · fără număr», and the closed line counts only the numbered role -----------
@@ -1220,7 +1221,7 @@ test.describe("§754 volunteers for a race", () => {
     await expect(card.locator("summary").first()).toContainText("0 din 1 + roluri fără număr");
     // «Modifică» on that role: the tick is on, so the box that would say a number is not shown.
     const ajutor = page.getByTestId("volunteer-role").filter({ has: page.getByTestId("volunteer-role-name").getByText("Ajutor", { exact: true }) });
-    await ajutor.getByRole("button", { name: /Modifică/ }).first().click();
+    await openFold(ajutor.locator("details").filter({ hasText: /^Modifică/ }).first());
     const editTick = ajutor.getByRole("checkbox", { name: "Fără număr — oricâți oameni" });
     await expect(editTick).toBeChecked();
     await expect(ajutor.getByLabel("Câți oameni trebuie")).toBeHidden();

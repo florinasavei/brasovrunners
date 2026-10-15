@@ -33,7 +33,7 @@ describe("§NNN the role's form: a number, or the tick «Fără număr»", () =>
       expect(volunteerRoleInputSchema.parse({ ...ROLE, needed, unlimited: "on" }), needed).toMatchObject({ needed: null });
     }
     // A post that omits the number box altogether, as a disabled box is omitted: ticked, it is no refusal; unticked, it is the number's.
-    const { needed: _needed, ...withoutBox } = ROLE;
+    const withoutBox = Object.fromEntries(Object.entries(ROLE).filter(([name]) => name !== "needed"));
     expect(volunteerRoleInputSchema.parse({ ...withoutBox, unlimited: "on" })).toMatchObject({ needed: null });
     const unticked = volunteerRoleInputSchema.safeParse(withoutBox);
     expect(unticked.success).toBe(false);

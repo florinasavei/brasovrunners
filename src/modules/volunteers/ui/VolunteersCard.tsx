@@ -62,7 +62,6 @@ import {
   VOLUNTEER_GUARDIAN_NAME_MAX,
   VOLUNTEER_MINIMUM_AGE,
   VOLUNTEER_NAME_MAX,
-  VOLUNTEER_NEEDED_MAX,
   VOLUNTEER_NOTE_MAX,
   VOLUNTEER_ROLE_DESCRIPTION_MAX,
   VOLUNTEER_ROLE_NAME_MAX,
@@ -348,7 +347,8 @@ export default async function VolunteersCard({
           defaultValue={role && role.needed === null ? "" : String(role?.needed ?? 1)}
           size="small"
           data-needed-box=""
-          slotProps={{ htmlInput: { min: 1, max: VOLUNTEER_NEEDED_MAX, inputMode: "numeric" } }}
+          // No `min` or `max` on the box: hidden under the tick, an out-of-range number would block the press where nobody can see it. The server holds 1 to 1000.
+          slotProps={{ htmlInput: { inputMode: "numeric" } }}
         />
         <CheckboxField name="unlimited" defaultChecked={role ? role.needed === null : false} help={t("volunteers.role.unlimitedHelp")} helpTestId="volunteer-role-unlimited-help">
           {t("volunteers.role.unlimited")}
