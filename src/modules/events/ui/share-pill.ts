@@ -4,6 +4,12 @@ export const SHARE_ROW_GAP = 1;
 /** Pixels the invisible tap band reaches above and below a pill: half of `SHARE_ROW_GAP`, never more. */
 export const SHARE_PILL_BAND = 4;
 
+/**
+ * The custom property the event page's share row carries (§778): the calendar pill's offset from the row's
+ * left edge, in pixels, written by `CalendarFoldClose` and read by the panel that opens under the pill.
+ */
+export const CALENDAR_PILL_LEFT_VAR = "--calendar-pill-left";
+
 /** The outlined button's own border: an absolutely placed band is measured from inside it, so it is added to the offset. */
 const SHARE_PILL_BORDER = 1;
 

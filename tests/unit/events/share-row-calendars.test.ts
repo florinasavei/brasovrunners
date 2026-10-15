@@ -6,7 +6,7 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 import { googleCalendarDetails, googleCalendarUrl, isoInZone, outlookCalendarUrl, type CalendarEvent, type CalendarLabels } from "@/modules/events/ical";
 import { CALENDAR_TARGET_NAMESPACE, CALENDAR_TARGETS } from "@/modules/events/ui/calendar-targets";
-import { SHARE_PILL_BAND, SHARE_PILL_SX, SHARE_ROW_GAP } from "@/modules/events/ui/share-pill";
+import { CALENDAR_PILL_LEFT_VAR, SHARE_PILL_BAND, SHARE_PILL_SX, SHARE_ROW_GAP } from "@/modules/events/ui/share-pill";
 
 /**
  * The event page's «Adaugă în calendar» row names the five doors of the subscription panel, and
@@ -284,15 +284,18 @@ describe("the event page's calendar row", () => {
     }
     // Only the summary is in the row's flow; the panel is out of it, so opening the fold moves no pill.
     const source = read("src/modules/events/ui/ShareLinks.tsx");
-    const panel = source.slice(source.indexOf("const CALENDAR_PANEL_SX"), source.indexOf("export default async function ShareLinks"));
+    const panel = source.slice(source.indexOf("const CALENDAR_PANEL_WIDTH"), source.indexOf("export default async function ShareLinks"));
     expect(panel).toMatch(/position: "absolute"/);
-    expect(panel).toMatch(/maxWidth: "min\(26rem, 100%\)"/);
-    expect(panel).toMatch(/left: 0/);
+    // 26rem at most, never wider than the row; its left edge the pill's, pulled back inside the row's width.
+    expect(panel).toMatch(/const CALENDAR_PANEL_WIDTH = "min\(26rem, 100%\)"/);
+    expect(panel).toMatch(/width: CALENDAR_PANEL_WIDTH/);
+    expect(panel).toMatch(/left: `min\(var\(\$\{CALENDAR_PILL_LEFT_VAR\}, 0px\), calc\(100% - \$\{CALENDAR_PANEL_WIDTH\}\)\)`/);
+    expect(panel).toMatch(/boxSizing: "border-box"/);
     // Its own surface, border and shadow from theme tokens, above what follows; no colour literal.
     expect(panel).toMatch(/bgcolor: "background\.paper"/);
     expect(panel).toMatch(/borderColor: "divider"/);
     expect(panel).toMatch(/boxShadow: 3/);
-    expect(panel).toMatch(/zIndex: 3/);
+    expect(panel).toMatch(/zIndex: 1001/);
     expect(panel).not.toMatch(/#[0-9a-fA-F]{3,8}\b|rgba?\(/);
     // The row is its containing block: the panel cannot pass the row's width.
     expect(source).toMatch(/data-testid="event-share-row" sx=\{\{ position: "relative", flexWrap: "wrap"/);
@@ -304,6 +307,10 @@ describe("the event page's calendar row", () => {
     expect(island).toContain('event.key !== "Escape"');
     expect(island).toContain('"pointerdown"');
     expect(island).toMatch(/return null;/);
+    // The pill's offset goes into the custom property the panel's CSS reads, and is kept up to date.
+    expect(island).toContain("CALENDAR_PILL_LEFT_VAR");
+    expect(island).toContain("ResizeObserver");
+    expect(CALENDAR_PILL_LEFT_VAR).toBe("--calendar-pill-left");
     // It is wired by the fold's id, and the fold itself has no `open` and no handler: a native details.
     const html = renderToStaticMarkup(await ShareLinks(props));
     expect(html).toContain('id="event-calendar"');
@@ -318,6 +325,8 @@ describe("the event page's calendar row", () => {
     expect(SHARE_PILL_SX["&::after"]).toMatchObject({ content: '""' });
     // The marker is the pill's chevron, not the browser's, and the chevron turns when the fold opens.
     expect(source).toMatch(/"&::-webkit-details-marker": \{ display: "none" \}/);
+    // A bare summary is content-box where MUI's button is border-box: said, so its 28 pixels stay 28 (§778).
+    expect(source).toMatch(/const CALENDAR_PILL_SX = \{[\s\S]*?boxSizing: "border-box"/);
     expect(source).toMatch(/"details\[open\] > & \[data-chevron\]": \{ transform: "rotate\(180deg\)" \}/);
     expect(source).not.toMatch(/MuiMenu|<Menu\b|useState|"use client"/);
   });

@@ -17,7 +17,7 @@ import { CALENDAR_TARGET_NAMESPACE, CALENDAR_TARGETS, calendarTargetMark, type C
 import CalendarFoldClose from "./CalendarFoldClose";
 import InstagramShareButton from "./InstagramShareButton";
 import NativeShareButton from "./NativeShareButton";
-import { SHARE_PILL_SX, SHARE_ROW_GAP } from "./share-pill";
+import { CALENDAR_PILL_LEFT_VAR, SHARE_PILL_SX, SHARE_ROW_GAP } from "./share-pill";
 
 /**
  * Share this event (`DECISIONS.md` §90, §140): the phone's own share sheet where there is
@@ -97,6 +97,8 @@ function calendarDoor(calendar: NonNullable<Props["calendar"]>, id: CalendarTarg
  */
 const CALENDAR_PILL_SX = {
   ...SHARE_PILL_SX,
+  // MUI's button is border-box; a bare `<summary>` is not, and its 28 pixels would read 34 beside the others (§778).
+  boxSizing: "border-box",
   display: "flex",
   width: "fit-content",
   alignItems: "center",
@@ -121,17 +123,23 @@ const CALENDAR_FOLD_ID = "event-calendar";
 /**
  * The calendar fold's body as a dropdown panel (§778): out of the flow, so opening it never moves the pills
  * (the row, `position: relative`, is its containing block). `top` stays auto — the panel sits where it would
- * have flowed, right under the summary, whichever line of the wrapped row the pill is on — and `left: 0` with
- * a `max-width` of the row's own width keeps it inside the viewport at 320 pixels. Its own surface, border
- * and shadow from theme tokens, above what follows it. A plain object (`AGENTS.md` §14.1).
+ * have flowed, right under the summary, whichever line of the wrapped row the pill is on. Its width is 26rem
+ * at most and never more than the row's own, and its left edge is the pill's (`CalendarFoldClose` writes the
+ * pill's offset into `CALENDAR_PILL_LEFT_VAR`) pulled back so the panel's right edge never passes the row's:
+ * inside the viewport at 320 pixels whatever line the pill wrapped to. Without the script the variable is
+ * absent, the left edge is the row's own, and the panel is still inside the page. Its own surface, border and
+ * shadow from theme tokens, above what follows it. A plain object (`AGENTS.md` §14.1).
  */
+const CALENDAR_PANEL_WIDTH = "min(26rem, 100%)";
 const CALENDAR_PANEL_SX = {
   position: "absolute",
-  left: 0,
-  zIndex: 3,
+  left: `min(var(${CALENDAR_PILL_LEFT_VAR}, 0px), calc(100% - ${CALENDAR_PANEL_WIDTH}))`,
+  // Above the site footer's always-visible bar (1000): on a short page the panel hangs past the end of the page
+  // and would otherwise slide under the bar. Below the header (1100).
+  zIndex: 1001,
   mt: SHARE_ROW_GAP,
-  width: "max-content",
-  maxWidth: "min(26rem, 100%)",
+  boxSizing: "border-box",
+  width: CALENDAR_PANEL_WIDTH,
   p: 1.5,
   bgcolor: "background.paper",
   border: 1,

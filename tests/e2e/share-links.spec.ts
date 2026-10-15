@@ -140,7 +140,8 @@ test.describe("BR-REQ-052-02 criterion 8 — the share buttons", () => {
     for (let index = 0; index < 5; index += 1) {
       const box = (await doors.nth(index).boundingBox())!;
       expect(box.y, `door ${index} under the pill`).toBeGreaterThanOrEqual(pillBottom - 1);
-      expect(box.height, `door ${index}`).toBeLessThanOrEqual(36);
+      // Each door a small pill; the longest word may take a second line in a 320-pixel panel (§778).
+      expect(box.height, `door ${index}`).toBeLessThanOrEqual(48);
     }
     await page.keyboard.press("Space");
     await expect(fold).not.toHaveAttribute("open", /.*/);
@@ -174,14 +175,17 @@ test.describe("BR-REQ-052-02 criterion 8 — the share buttons", () => {
     expect((await page.getByTestId("event-share-row").boundingBox())!.height, "the row did not grow").toBe(rowHeight);
     // The panel hangs under the last line, above what follows: the thing painted at its centre is the panel's own.
     const panel = page.getByTestId("event-calendar-panel");
+    await page.getByTestId("event-calendar-toggle").evaluate((el) => el.scrollIntoView({ block: "start" }));
     const box = (await panel.boundingBox())!;
-    expect(box.y).toBeGreaterThanOrEqual(last.y + last.height - 1);
+    const panelTop = await panel.evaluate((el) => el.getBoundingClientRect().top + window.scrollY);
+    expect(panelTop, "the panel hangs under the last line of the row").toBeGreaterThanOrEqual(last.y + last.height - 1);
     const viewport = page.viewportSize()!;
     expect(box.x, "panel inside the page, left").toBeGreaterThanOrEqual(0);
     expect(box.x + box.width, "panel inside the page, right").toBeLessThanOrEqual(viewport.width);
+    // Painted at its first line (the panel can run past the viewport's foot): the top edge's inside, over the page's own content.
     const painted = await panel.evaluate((el) => {
       const rect = el.getBoundingClientRect();
-      const found = document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height - 3);
+      const found = document.elementFromPoint(rect.x + rect.width - 6, rect.y + 6);
       return found !== null && el.contains(found);
     });
     expect(painted, "the panel is above the content under it").toBe(true);
@@ -191,7 +195,7 @@ test.describe("BR-REQ-052-02 criterion 8 — the share buttons", () => {
     expect(await rowPills(page)).toEqual(before);
   });
 
-  test("closes on Escape and on a press outside, and a door's press leaves it open (§778)", async ({ page }) => {
+  test("closes on Escape and on a press outside, and a press inside the panel leaves it open (§778)", async ({ page }) => {
     await page.goto(EVENT);
     const fold = page.getByTestId("event-calendar");
     const toggle = page.getByTestId("event-calendar-toggle");
@@ -203,11 +207,9 @@ test.describe("BR-REQ-052-02 criterion 8 — the share buttons", () => {
       await expect(fold).not.toHaveAttribute("open", /.*/, { timeout: 500 });
     }).toPass();
     await expect(toggle, "focus stays on the pill after Escape").toBeFocused();
-    // A press outside the fold: the page's own heading is outside it.
+    // A press outside the fold: the row's own caption is outside it, a plain line of text that does nothing.
     await openCalendar(page);
-    const heading = page.locator("#main h1").first();
-    const point = (await heading.boundingBox())!;
-    await page.mouse.click(point.x + 2, point.y + 2);
+    await page.getByTestId("event-share-row").getByText("Dă mai departe:").click();
     await expect(fold).not.toHaveAttribute("open", /.*/);
     // A press inside the panel (the file's note) closes nothing.
     await openCalendar(page);
@@ -257,7 +259,10 @@ test.describe("BR-REQ-052-02 criterion 8 — the share buttons", () => {
       const box = await row.nth(i).boundingBox();
       // The house's small pill: over WCAG 2.2's 24, nowhere near the old 44.
       expect(box?.height ?? 0, `share link ${i}`).toBeGreaterThanOrEqual(24);
-      expect(box?.height ?? 0, `share link ${i}`).toBeLessThanOrEqual(36);
+      // A door in the open panel (§778) has the panel's padding and border less than the row's 288 pixels: the longest word
+      // («Outlook la serviciu sau la școală») may take two lines there, and is still no taller than two of them.
+      const inPanel = await row.nth(i).evaluate((el) => el.closest('[data-testid="event-calendar-panel"]') !== null);
+      expect(box?.height ?? 0, `share link ${i}`).toBeLessThanOrEqual(inPanel ? 48 : 36);
       expect((box?.x ?? 0) + (box?.width ?? 0), `share link ${i} inside the page`).toBeLessThanOrEqual(320);
     }
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
