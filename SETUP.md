@@ -1356,7 +1356,19 @@ a rolling day (500 is Google's own ceiling, shared with the people who write by 
 race morning that cap, not Mailgun's, is what decides how many confirmations still leave, so raise it there
 before the window if Mailgun is on probation.
 
-**The form's message is an outbox row since §778, and one road down is no loss.** «Scrie-ne» (Gmail) and each «Spune-ne ceva» form
+**Which road to choose: Mailgun, which the card marks «recomandat» (§NNN; the owner, 2026-10-15: «ar trebui în configs să scriu (recomandat)»).**
+The pair «Prin ce trimitem» is on «Pagini» → «Contact» twice with the same words: once for «Scrie-ne» (in «Cine primește mesajele de contact») and
+once under each «Spune-ne ceva» form. Mailgun is recommended because a message leaves from the club's own verified domain (SPF and DKIM), with the
+person's address as `Reply-To` and **no copy in the club's Sent folder** — it arrives in the club's mailbox as mail from outside, not as «from me to
+me», which is what a Gmail filter filed out of the Inbox on 2026-10-15; it has a delivery status by webhook; and it has neither Gmail's app password
+(which Google revokes) nor its ceiling of about 500 a day, the club being on Mailgun's paid plan since 2026-10-01. Gmail stays the road behind it: a
+form left on Gmail keeps a copy in the club's «Trimise» (the card says so beside it), and either road, when it fails twice, hands the message to the
+other. **The default** of a form with no saved road — a fresh install, a new form, a deployment nobody has chosen on — is Mailgun where it transmits
+(`EMAIL_DELIVERY_MODE` `allowlist` or `live`) and the club's Gmail where it does not; «Girl Zone» stays on Mailgun everywhere. **A road the club
+saved is never changed by a release.** «Scrie-ne» had no road setting before §NNN and always went by Gmail: with nothing saved it now goes by Mailgun
+on a deployment where Mailgun transmits — choose «Gmail-ul clubului» in «Cine primește mesajele de contact» to keep the old road.
+
+**The form's message is an outbox row since §778, and one road down is no loss.** «Scrie-ne» (the road the club chose, §NNN) and each «Spune-ne ceva» form
 (the road the club chose on «Pagini» → «Contact») queue their message in the same outbox the emails use, and it leaves at once, after the
 response; the words stay in the row only until it is delivered, then they are deleted and the row stays as the trace («Setări» → «Emailuri» →
 «Mesaje de pe site»: the road chosen, the road it left by, the tries, what each road answered). If the road refuses twice — a revoked app password
@@ -1466,9 +1478,11 @@ club names — which is why a colleague's Yahoo can be on the list.
 **«Spune-ne ceva» — the anonymous forms under the contact form, above «Contact direct» and the newsletter (§676, §679, §772).** Nothing to set on the
 deployment: each form leaves by the road the club chooses for it, «Prin ce trimitem» (§772) — the club's
 Gmail, the same account as the form above (`CONTACT_SMTP_USER`, `CONTACT_SMTP_PASSWORD`), or Mailgun
-(`MAILGUN_*`, already set, with the email provider live). Until the club chooses, the three ordinary
-branches («Cum a fost», «O sugestie», «O reclamație») leave by Gmail and the confidential «Girl Zone»
-by Mailgun. A form whose road this deployment lacks is not offered, whatever its switch says, and its
+(`MAILGUN_*`, already set, with the email provider live) — **Mailgun is the one the card marks «recomandat»**,
+with its reasons in one line under the four pairs (§NNN). Until the club chooses, the three ordinary
+branches («Cum a fost», «O sugestie», «O reclamație») leave by Mailgun where it transmits and by Gmail where
+it does not (before §NNN: always Gmail), and the confidential «Girl Zone» by Mailgun; a form left on
+Gmail carries the caption «Prin Gmail rămâne o copie în căsuța clubului.» A form whose road this deployment lacks is not offered, whatever its switch says, and its
 radio is greyed on the card with a link to the steps in «Sarcini» (the rows «Formularul de contact» for
 Gmail and «Email către participanți reali» for Mailgun). On each deployment (QA has its own):
 
@@ -1488,7 +1502,7 @@ Gmail and «Email către participanți reali» for Mailgun). On each deployment 
    offers the safety branch's person whenever her address and first name are saved, switched on or not —
    unticking «Girl Zone» takes away her form, not her; on the safety form «Clubul» is the
    «O reclamație» address, or the contact form's recipients when it has none. Under each form,
-   **«Prin ce trimitem»** (§772): «Gmail-ul clubului („Scrie-ne”)» or «Mailgun», two radios, saved with
+   **«Prin ce trimitem»** (§772): «Gmail-ul clubului („Scrie-ne”)» or «Mailgun (recomandat)», two radios, saved with
    the rest. The road follows the form whose reader the message reaches: a message for the club's
    mailbox leaves by the road of the form it was written on (a Girl Zone message for «Clubul», by
    «O reclamație»'s), and one for the designated person by Girl Zone's own, whatever form it was written
