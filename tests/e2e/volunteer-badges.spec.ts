@@ -15,6 +15,10 @@ import { openEditorBox, openFold } from "./support/fold";
  * texts, sees the preview follow, saves, finds them again after the save, and the sheet still holds the
  * badges asked for; and a size with no room for everything ticked is refused, in words, before anything is kept.
  *
+ * §NNN makes the one badge for everyone, with no role, the default: the first case chooses «Câte un ecuson pe rol» (the badge per role, §764, kept
+ * as it was), and a case of its own prints in the one-badge mode — its colour chosen and refused below AA, «Câte ecusoane» starting at the
+ * confirmed volunteers, «În plus», the PDF holding N plus the spares.
+ *
  * The event and its two roles are written straight into the database — the setup, not the subject — one
  * per project and run, so the two projects never share a row.
  */
@@ -48,6 +52,23 @@ async function seedEvent(tag: string): Promise<{ id: string; water: string; fini
   }
 }
 
+/** `count` confirmed volunteers of the event, written straight into the database: what the one badge's «Câte ecusoane» starts at (§NNN). */
+async function confirmedVolunteers(eventId: string, count: number): Promise<void> {
+  const client = new pg.Client({ connectionString: databaseUrl() });
+  await client.connect();
+  try {
+    for (let n = 1; n <= count; n += 1) {
+      await client.query(
+        `INSERT INTO event_volunteers (event_id, role_id, name, email, canonical_email, canonicalization_version, phone, locale, state, source)
+         VALUES ($1, NULL, $2, $3, $3, 1, '+40712345678', 'ro', 'CONFIRMED', 'STAFF')`,
+        [eventId, `Voluntar ${n}`, `voluntar${n}-${eventId.slice(0, 8)}@example.test`],
+      );
+    }
+  } finally {
+    await client.end();
+  }
+}
+
 test.describe("§764 volunteer badges, designed and printed per role", () => {
   test.describe.configure({ timeout: 180_000 });
 
@@ -66,6 +87,8 @@ test.describe("§764 volunteer badges, designed and printed per role", () => {
     await expect(row.getByTestId("volunteer-role-colour")).toContainText("Portocaliul clubului");
     await openFold(row.locator("summary", { hasText: "Modifică" }).locator("xpath=.."));
     await row.getByLabel("Culoarea benzii").selectOption({ label: "Roșu" });
+    // §NNN: the colour serves the badge per role only, and the role's form says so in one line.
+    await expect(row.getByTestId("badge-colour-per-role-only")).toContainText("doar când ecusonul e pe roluri");
     await row.getByRole("button", { name: "Salvează", exact: true }).click();
     await page.waitForURL(/#box-volunteers$/);
     await hydrated(page);
@@ -89,6 +112,13 @@ test.describe("§764 volunteer badges, designed and printed per role", () => {
     await openFold(designer);
     const preview = page.getByTestId("badge-design-preview").locator("img");
     await expect(preview).toHaveAttribute("src", /[?&]size=strip90(&|$)/);
+    // Since §NNN one badge for everyone is the default: this case is about the badge per role, so it chooses them — and the preview follows.
+    const mode = page.getByTestId("badge-mode");
+    await openFold(page.getByTestId("badge-section-mode"));
+    await expect(mode.getByRole("radio", { name: "Un singur ecuson pentru toți, fără rol" })).toBeChecked();
+    await mode.getByRole("radio", { name: "Câte un ecuson pe rol" }).check();
+    await expect(preview).toHaveAttribute("src", /[?&]mode=perRole(&|$)/, { timeout: 10_000 });
+    await expect(page.getByTestId("badge-per-role-help")).toBeVisible();
     await openFold(page.getByTestId("badge-section-size"));
     const larger = page.getByTestId("badge-size").getByRole("radio", { name: /100 × 40 mm/ });
     await larger.check();
@@ -126,6 +156,10 @@ test.describe("§764 volunteer badges, designed and printed per role", () => {
     // Saved: the closed line says the size and how many fit on a sheet, and the choice is there again.
     await expect(designer.locator("summary").first()).toContainText("100 × 40 mm · 14 pe foaie");
     await openFold(page.getByTestId("badge-design"));
+    // The choice is kept: the closed line says it, and the radio is there again.
+    await expect(page.getByTestId("badge-section-mode").locator("summary")).toContainText("Pe roluri");
+    await openFold(page.getByTestId("badge-section-mode"));
+    await expect(page.getByTestId("badge-mode").getByRole("radio", { name: "Câte un ecuson pe rol" })).toBeChecked();
     await openFold(page.getByTestId("badge-section-size"));
     await expect(page.getByTestId("badge-size").getByRole("radio", { name: /100 × 40 mm/ })).toBeChecked();
     // Both new sections are kept: their closed lines say what is written, and the boxes hold it again.
@@ -176,6 +210,92 @@ test.describe("§764 volunteer badges, designed and printed per role", () => {
     await expect(page.getByTestId("badge-print-refused")).toContainText("prea multe ecusoane");
     // The card with the boxes opens by itself.
     await expect(page.getByTestId("badge-print")).toHaveAttribute("open", "");
+  });
+
+  test("one badge for everyone, no role, is the default: its colour is chosen, the count starts at the confirmed volunteers, the PDF holds N plus the spares (§NNN)", async ({ page }) => {
+    const tag = `${test.info().project.name}-single-${Date.now().toString(36)}`;
+    const event = await seedEvent(tag);
+    await confirmedVolunteers(event.id, 4);
+
+    await signIn(page, "Dev Moderator");
+    await page.goto(`/ro/admin/events/${event.id}/badges`);
+    await hydrated(page);
+    await openFold(page.getByTestId("badge-design"));
+    const preview = page.getByTestId("badge-design-preview").locator("img");
+    // The default, for an event that never chose: one badge for everyone, and the preview is drawn so.
+    const mode = page.getByTestId("badge-mode");
+    await openFold(page.getByTestId("badge-section-mode"));
+    await expect(mode.getByRole("radio", { name: "Un singur ecuson pentru toți, fără rol" })).toBeChecked();
+    await expect(mode.getByRole("radio", { name: "Câte un ecuson pe rol" })).not.toBeChecked();
+    await expect(page.getByTestId("badge-section-mode").locator("summary")).toContainText("Un singur ecuson");
+    await expect(preview).toHaveAttribute("src", /[?&]mode=single(&|$)/);
+    // Its band's colour is chosen like a role's: the select, then «Altă culoare» with the colour typed — shown only then — and its state in words.
+    const single = page.getByTestId("badge-single-colour");
+    await expect(single.getByTestId("badge-single-colour-state")).toContainText("Banda pe ecuson: Portocaliul clubului, contrast");
+    await expect(single.getByLabel("Culoarea scrisă")).toBeHidden();
+    await single.getByLabel("Culoarea benzii pe ecuson").selectOption({ label: "Roșu" });
+    await expect(preview).toHaveAttribute("src", /[?&]singleColour=%23c62828(&|$)/, { timeout: 10_000 });
+    await single.getByLabel("Culoarea benzii pe ecuson").selectOption({ label: "Altă culoare" });
+    await expect(single.getByLabel("Culoarea scrisă")).toBeVisible();
+    await single.getByLabel("Culoarea scrisă").fill("#808080");
+    // A colour no word reads on is refused in words, before anything is kept.
+    const save = page.getByRole("button", { name: "Salvează ecusonul", exact: true });
+    await save.click();
+    await expect(page.getByTestId("form-refusal")).toContainText("textul nu se citește bine pe culoarea aleasă", { timeout: 30_000 });
+    await expect(page.getByTestId("form-refusal").getByRole("link", { name: "Culoarea scrisă" })).toBeVisible();
+    // What was typed is still there, with «Altă culoare» still chosen.
+    await expect(single.getByLabel("Culoarea benzii pe ecuson")).toHaveValue("typed");
+    await expect(single.getByLabel("Culoarea scrisă")).toHaveValue("#808080");
+    await single.getByLabel("Culoarea scrisă").fill("#6a1b9a");
+    await expect(preview).toHaveAttribute("src", /[?&]singleColour=%236a1b9a(&|$)/, { timeout: 10_000 });
+    // The sample of the one badge is a picture, with the designer's unsaved colour.
+    const sample = await page.request.get((await preview.getAttribute("src")) as string);
+    expect(sample.status()).toBe(200);
+    expect(sample.headers()["content-type"]).toBe("image/png");
+    await save.click();
+    await page.waitForURL(/#box-badge-design$/, { timeout: 30_000 });
+    await hydrated(page);
+    // Kept: the closed line says it, and the colour is there again, in words.
+    await openFold(page.getByTestId("badge-design"));
+    await expect(page.getByTestId("badge-section-mode").locator("summary")).toContainText("Un singur ecuson");
+    await openFold(page.getByTestId("badge-section-mode"));
+    await expect(page.getByTestId("badge-single-colour-state")).toContainText("Banda pe ecuson: Violet, contrast");
+    await expect(page.getByTestId("badge-single-colour").getByLabel("Culoarea benzii pe ecuson")).toHaveValue("#6a1b9a");
+    // The roles' colours serve the badge per role only, and the card says so on its closed line.
+    await expect(page.getByTestId("badge-colours").locator("summary")).toContainText("Doar pe roluri");
+
+    // --- «Tipărire»: one pile, «Câte ecusoane» starting at the four confirmed volunteers, «În plus», no role ----
+    const print = page.getByTestId("badge-print");
+    await openFold(print);
+    await expect(print.getByTestId("badge-print-row")).toHaveCount(1);
+    await expect(print.getByTestId("badge-none")).toHaveCount(0);
+    await expect(print.getByTestId("badge-count")).toHaveValue("4");
+    await expect(print.getByTestId("badge-spares")).toHaveValue("0");
+    await expect(print.getByTestId("badge-single-help")).toContainText("voluntarii confirmați ai evenimentului: 4");
+    // The pile's picture is the saved badge: a picture, drawn without a role.
+    const pile = await page.request.get((await print.getByTestId("badge-print-row").locator("img").getAttribute("src")) as string);
+    expect(pile.status()).toBe(200);
+    expect(pile.headers()["content-type"]).toBe("image/png");
+    // The sheet as it stands: the four, one A4 page.
+    const download = print.getByTestId("badge-download");
+    const [plain] = await Promise.all([page.waitForEvent("download"), download.click()]);
+    const plainBytes = readFileSync((await plain.path()) as string).toString("latin1");
+    expect(plainBytes).toContain("(4 badges)");
+    // 20 and 3 spares: 23 badges, two sheets of 16.
+    await print.getByTestId("badge-count").fill("20");
+    await print.getByTestId("badge-spares").fill("3");
+    const [file] = await Promise.all([page.waitForEvent("download"), download.click()]);
+    expect(file.suggestedFilename()).toMatch(/^badges-[0-9a-f]{8}-ro\.pdf$/);
+    const bytes = readFileSync((await file.path()) as string);
+    expect(bytes.subarray(0, 5).toString()).toBe("%PDF-");
+    expect(bytes.toString("latin1")).toContain("(23 badges)");
+    expect(bytes.toString("latin1").match(/\/Type \/Page\b/g)).toHaveLength(2);
+    // A pile past a file's worth comes back to this page with the reason.
+    await print.getByTestId("badge-count").fill("1000");
+    await print.getByTestId("badge-spares").fill("1");
+    await Promise.all([page.waitForURL(/badges\?refused=total$/), download.click()]);
+    await hydrated(page);
+    await expect(page.getByTestId("badge-print-refused")).toContainText("prea multe ecusoane");
   });
 
   test("a size with no room for everything ticked is refused in words, and nothing is kept (§776)", async ({ page }) => {
