@@ -661,10 +661,10 @@ test.describe("BR-REQ-070-04 «Spune-ne ceva», the anonymous wizard (§676)", (
       await expect(page.getByTestId("feedback-sent")).toContainText("Mesajul a plecat");
       // A way on (§NNN): another message, from step 1.
       await expect(page.getByTestId("feedback-send-another")).toHaveAttribute("href", "/ro/contact/spune-ne");
-      // The club's message names the event picked: its subject is «Cum a fost: <title>», as `/devs` shows the capture.
+      // The club's message names the event picked: its subject is «[feedback][cum-a-fost] Cum a fost: <title>» (§NNN), as `/devs` shows the capture.
       await expect(async () => {
         await page.goto("/ro/devs?panel=email");
-        await expect(page.locator("main")).toContainText(`Cum a fost: ${pickedTitle}`, { timeout: 2_000 });
+        await expect(page.locator("main")).toContainText(`[feedback][cum-a-fost] Cum a fost: ${pickedTitle}`, { timeout: 2_000 });
       }).toPass({ timeout: 45_000 });
       // §778: it went through the outbox, by the road the form has — and the page that shows the outbox keeps the trace, never the words.
       await page.goto("/ro/admin/settings/emails");
