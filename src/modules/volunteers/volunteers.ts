@@ -29,6 +29,7 @@ import { consumeRateLimit } from "@/modules/rate-limit/service";
 import { looksLikeSpam } from "@/modules/registrations/service";
 import { canManageVolunteers, isBackofficeRole } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
+import { readTypedDate } from "@/shared/forms/pickers/wall-values";
 import { isUuid } from "@/shared/ids";
 import {
   acceptedRoleNames,
@@ -43,11 +44,13 @@ import {
   standingOf,
   type VolunteerRoleInput,
   VOLUNTEER_MINIMUM_AGE,
+  volunteerAgeOn,
   volunteerEventAhead,
+  volunteerEventDay,
   volunteerOfferClosedFor,
   volunteerPublicSchemaFor,
   volunteerRoleInputSchema,
-  volunteerStaffInputSchema,
+  volunteerStaffInputSchemaFor,
   VOLUNTEER_ROLES_MAX,
   VOLUNTEER_STATES,
   type VolunteerState,
@@ -129,6 +132,8 @@ export type VolunteerItem = {
   note: string | null;
   /** What the person said about themselves (§765), or nulls and false for a row from before — and for one the club typed without. */
   age: number | null;
+  /** The day they were born, `YYYY-MM-DD` (§NNN): the age above is its age on the event's day; null for a row from before, which has an age alone. */
+  dateOfBirth: string | null;
   sex: SexChoice | null;
   city: string | null;
   volunteeredBefore: boolean;
@@ -250,6 +255,7 @@ export async function listVolunteers<T extends Record<string, unknown>>(db: Data
       message: row.message,
       note: row.note,
       age: row.age,
+      dateOfBirth: row.dateOfBirth,
       sex: sexShown(row.sex),
       city: row.city,
       volunteeredBefore: row.volunteeredBefore,
@@ -324,13 +330,13 @@ export type PublicVolunteerRole = {
 export async function readPublicVolunteerRoles<T extends Record<string, unknown>>(
   db: Database<T>,
   eventId: string,
-): Promise<{ acceptsVolunteers: boolean; shirts: boolean; roles: PublicVolunteerRole[] }> {
+): Promise<{ acceptsVolunteers: boolean; shirts: boolean; showCounts: boolean; roles: PublicVolunteerRole[] }> {
   const [event] = await db
-    .select({ accepts: events.acceptsVolunteers, shirts: events.volunteersShirts })
+    .select({ accepts: events.acceptsVolunteers, shirts: events.volunteersShirts, showCounts: events.volunteersShowCounts })
     .from(events)
     .where(eq(events.id, eventId))
     .limit(1);
-  if (!event?.accepts) return { acceptsVolunteers: false, shirts: false, roles: [] };
+  if (!event?.accepts) return { acceptsVolunteers: false, shirts: false, showCounts: false, roles: [] };
   const roles = await listVolunteerRoles(db, eventId);
   const people = await db
     .select({ roleId: eventVolunteers.roleId, state: eventVolunteers.state })
@@ -340,6 +346,8 @@ export async function readPublicVolunteerRoles<T extends Record<string, unknown>
     acceptsVolunteers: true,
     // «Oferim tricouri voluntarilor» (§765): the form asks the size only while it is on.
     shirts: event.shirts,
+    // «Arată public câți voluntari mai sunt necesari» (§NNN): the page says how many a role still needs only while it is on.
+    showCounts: event.showCounts,
     roles: roles.map((role) => {
       const standing = standingOf(role, people);
       return {
@@ -612,7 +620,57 @@ export async function setVolunteersShirts<T extends Record<string, unknown>>(
   return result;
 }
 
-const STAFF_FIELDS = ["assignedRoleId", "name", "email", "phone", "note", "age", "sex", "city", "shirtSize", "guardianName", "guardianEmail"] as const;
+/**
+ * «Arată public câți voluntari mai sunt necesari» on or off (§NNN; the owner, 2026-10-14: «vreau să bifez dacă să afișez sau
+ * nu numărătoarea voluntarilor — știi că am mai avut probleme din astea»; the waiting list's «Arată public câți așteaptă» is
+ * the model, §634): the event's own tick, saved by the «Voluntari» card's own form like the two above — never by the editor's
+ * save. Off by default. Switching it changes only what the public page says: the roles, the people and the card's counts are
+ * untouched, and a role that is full stays unoffered either way (§761).
+ */
+export async function setVolunteersShowCounts<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Actor,
+  request: { eventId: string; on: boolean },
+  now: Date,
+): Promise<{ changed: boolean }> {
+  assertMayManage(actor);
+  assertIds(request.eventId);
+  const result = await db.transaction(async (tx) => {
+    const [event] = await tx.select({ on: events.volunteersShowCounts }).from(events).where(eq(events.id, request.eventId)).for("no key update").limit(1);
+    if (!event) throw new DomainError("NOT_FOUND", "the event is not there");
+    if (event.on === request.on) return { changed: false };
+    // Not `events.version`, like the other two ticks: it is no edit of the page's text and must not make an open editor's save stale.
+    await tx.update(events).set({ volunteersShowCounts: request.on }).where(eq(events.id, request.eventId));
+    await recordAuditEvent(tx, {
+      actorStaffUserId: actor.id,
+      action: "event.volunteers_counts_switched",
+      entityType: "event",
+      entityId: request.eventId,
+      metadata: { on: request.on },
+      now,
+    });
+    return { changed: true };
+  });
+  // The volunteers' page reads the tick through the public cache: it is told once the write has committed.
+  if (result.changed) revalidatePublicContent("events", "places");
+  return result;
+}
+
+const STAFF_FIELDS = ["assignedRoleId", "name", "email", "phone", "note", "birthDate", "sex", "city", "shirtSize", "guardianName", "guardianEmail"] as const;
+
+/**
+ * The day an event's volunteers' ages are counted on (§NNN, `volunteerEventDay`): the gun's day, else the event's, in the event's own
+ * zone — read from the event's row. A missing event is the same refusal every other verb gives.
+ */
+async function eventDayOf<T extends Record<string, unknown>>(db: Database<T>, eventId: string, now: Date): Promise<string> {
+  const [event] = await db
+    .select({ startsAt: events.startsAt, raceStartsAt: events.raceStartsAt, timezone: events.timezone, dateToBeAnnounced: events.dateToBeAnnounced })
+    .from(events)
+    .where(eq(events.id, eventId))
+    .limit(1);
+  if (!event) throw new DomainError("NOT_FOUND", "the event is not there");
+  return volunteerEventDay(event, now);
+}
 
 export type VolunteerRequest =
   | { kind: "add"; eventId: string; fields: Record<string, unknown> }
@@ -630,8 +688,8 @@ function postedIds(value: unknown): string[] {
   return typeof value === "string" && value !== "" ? [value] : [];
 }
 
-function staffInputOf(fields: Record<string, unknown>) {
-  const parsed = volunteerStaffInputSchema.safeParse({
+function staffInputOf(fields: Record<string, unknown>, eventDay: string, keptAge: number | null) {
+  const parsed = volunteerStaffInputSchemaFor(eventDay, keptAge).safeParse({
     ...postedStrings(fields, STAFF_FIELDS),
     roleIds: postedIds(fields.roleIds),
     // The ticks (§765): true only when the form posted them.
@@ -651,20 +709,22 @@ function staffInputOf(fields: Record<string, unknown>) {
 }
 
 /**
- * An age under eighteen typed on the card while the club cannot take a minor (§768), when the parse refused the parent's boxes: the
- * card draws those boxes only while minors are open or the person already is one, so the refusal is on `age` — the box the organizer
- * can see — with the minors-closed sentence, never on a box that is not there. Null when the refusal is something else.
+ * A date of birth typed on the card that makes a person under eighteen on the event's day while the club cannot take a minor (§768), when
+ * the parse refused the parent's boxes: the card draws those boxes only while minors are open or the person already is one, so the
+ * refusal is on `birthDate` — the box the organizer can see — with the minors-closed sentence, never on a box that is not there. Null
+ * when the refusal is something else.
  */
 async function minorsClosedRefusal<T extends Record<string, unknown>>(
   db: Database<T>,
   request: Extract<VolunteerRequest, { kind: "add" | "edit" }>,
   error: unknown,
+  eventDay: string,
   now: Date,
 ): Promise<DomainError | null> {
   if (!(error instanceof DomainError) || error.code !== "VALIDATION_ERROR") return null;
   if (!error.fields.some((field) => field === "guardianName" || field === "guardianEmail")) return null;
-  const typed = typeof request.fields.age === "string" ? request.fields.age.trim() : "";
-  const age = /^\d{1,3}$/.test(typed) ? Number(typed) : null;
+  const typed = typeof request.fields.birthDate === "string" ? readTypedDate(request.fields.birthDate) : "";
+  const age = typed === "" ? null : volunteerAgeOn(typed, eventDay);
   if (age === null || age < VOLUNTEER_MINIMUM_AGE || !isVolunteerMinor(age)) return null;
   if (request.kind === "edit" && isUuid(request.id)) {
     // A person who already is under eighteen has the boxes drawn: their refusal is the boxes'.
@@ -672,11 +732,11 @@ async function minorsClosedRefusal<T extends Record<string, unknown>>(
     if (held && isVolunteerMinor(held.age)) return null;
   }
   if (await volunteerMinorsOpen(db, now)) return null;
-  return new DomainError("VALIDATION_ERROR", "the club cannot take volunteers under eighteen yet", ["age", ...error.fields.filter((field) => field !== "guardianName" && field !== "guardianEmail")]);
+  return new DomainError("VALIDATION_ERROR", "the club cannot take volunteers under eighteen yet", ["birthDate", ...error.fields.filter((field) => field !== "guardianName" && field !== "guardianEmail")]);
 }
 
-/** The answers a person says about themselves, which only a privacy notice that names them (`{{volunteerProfile}}`) lets the platform keep (§765). */
-const PROFILE_BOXES = ["age", "sex", "city", "volunteeredBefore", "clubMember", "shirtSize"] as const;
+/** The answers a person says about themselves, which only a privacy notice that names them (`{{volunteerProfile}}`) lets the platform keep (§765, §NNN: the date of birth is the age's box). */
+const PROFILE_BOXES = ["birthDate", "sex", "city", "volunteeredBefore", "clubMember", "shirtSize"] as const;
 
 /**
  * Staff enter those answers under the same gate as the public form (§765, the §562 / §613 pattern): while the notice in
@@ -686,7 +746,7 @@ const PROFILE_BOXES = ["age", "sex", "city", "volunteeredBefore", "clubMember", 
  */
 function refuseUnnamedProfile(
   input: Pick<ReturnType<typeof staffInputOf>, (typeof PROFILE_BOXES)[number]>,
-  current: { age: number | null; sex: SexChoice | "UNSPECIFIED" | null; city: string | null; volunteeredBefore: boolean; clubMember: boolean; shirtSize: string | null } | null,
+  current: { dateOfBirth: string | null; sex: SexChoice | "UNSPECIFIED" | null; city: string | null; volunteeredBefore: boolean; clubMember: boolean; shirtSize: string | null } | null,
   shirts: boolean,
 ): void {
   const refused = PROFILE_BOXES.filter((box) => {
@@ -694,10 +754,16 @@ function refuseUnnamedProfile(
     if (posted === null || posted === false) return false;
     if (box === "shirtSize" && !shirts) return false;
     if (!current) return true;
-    const held = box === "sex" ? sexShown(current.sex) : current[box];
+    const held = box === "sex" ? sexShown(current.sex) : box === "birthDate" ? current.dateOfBirth : current[box];
     return held !== posted;
   });
   if (refused.length > 0) throw new DomainError("VALIDATION_ERROR", "the privacy notice in force does not name these answers yet", [...refused]);
+}
+
+/** The row's columns for what a save changed: the form's `birthDate` is the column `date_of_birth` (§NNN). */
+function columnsOf<R extends { birthDate: string | null }>(next: R): Omit<R, "birthDate"> & { dateOfBirth: string | null } {
+  const { birthDate, ...rest } = next;
+  return { ...rest, dateOfBirth: birthDate };
 }
 
 const alreadyListed = () => new DomainError("VOLUNTEER_ALREADY_LISTED", "this address is already on the event's volunteers", ["email"]);
@@ -769,11 +835,23 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
   assertMayManage(actor);
   assertIds(request.eventId, ...(request.kind === "add" ? [] : [request.id]));
   let input: ReturnType<typeof staffInputOf> | null = null;
+  // What an empty date box means on a row from before the date existed (§NNN): the age it holds, kept — see `volunteerStaffInputSchemaFor`.
+  let keptAge: number | null = null;
   if (request.kind === "add" || request.kind === "edit") {
+    // The person's age is the date's on the event's day: the gun's, else the event's (`volunteerEventDay`).
+    const eventDay = await eventDayOf(db, request.eventId, now);
+    if (request.kind === "edit") {
+      const [held] = await db
+        .select({ age: eventVolunteers.age, dateOfBirth: eventVolunteers.dateOfBirth })
+        .from(eventVolunteers)
+        .where(and(eq(eventVolunteers.id, request.id), eq(eventVolunteers.eventId, request.eventId)))
+        .limit(1);
+      keptAge = held && held.dateOfBirth === null ? held.age : null;
+    }
     try {
-      input = staffInputOf(request.fields);
+      input = staffInputOf(request.fields, eventDay, keptAge);
     } catch (error) {
-      throw (await minorsClosedRefusal(db, request, error, now)) ?? error;
+      throw (await minorsClosedRefusal(db, request, error, eventDay, now)) ?? error;
     }
   }
   // Whether the notice in force names the profile answers (§765): read before the transaction, like the public sign-up does.
@@ -850,7 +928,7 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
       if (input.assignedRoleId) await assertEventRoles([input.assignedRoleId], "assignedRoleId");
       if (await holderOf(input.identity.canonicalEmail)) throw alreadyListed();
       if (!profileDescribed) refuseUnnamedProfile(input, null, event.shirts);
-      if (input.guardian && !minorsOpen) throw new DomainError("VALIDATION_ERROR", "the club cannot take volunteers under eighteen yet", ["age"]);
+      if (input.guardian && !minorsOpen) throw new DomainError("VALIDATION_ERROR", "the club cannot take volunteers under eighteen yet", ["birthDate"]);
       const [row] = await tx
         .insert(eventVolunteers)
         .values({
@@ -864,7 +942,9 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
           state: "REGISTERED",
           source: "STAFF",
           note: input.note,
+          // The date of birth and its age on the event's day (§NNN): `age` is what every rule reads, the date is what the club asked for.
           age: input.age,
+          dateOfBirth: input.birthDate,
           sex: input.sex,
           city: input.city,
           volunteeredBefore: input.volunteeredBefore,
@@ -943,10 +1023,16 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
       if (holder && holder.id !== current.id) throw alreadyListed();
     }
     if (!profileDescribed) refuseUnnamedProfile(input, current, event.shirts);
+    // The age an empty date box kept was read before this transaction: a row that changed meanwhile is the organizer's to look at again.
+    if (profileDescribed && input.birthDate === null && (current.dateOfBirth === null ? current.age : null) !== keptAge) {
+      throw new DomainError("CONFLICT", "the volunteer changed while the form was open");
+    }
     // While the notice names none of them the boxes are not drawn: what the row holds stays as it was, shown by the card as before.
     const profile = profileDescribed
       ? {
+          // The age is the date's on the event's day, or — an empty date box on a row from before the date — the one it held (§NNN).
           age: input.age,
+          birthDate: input.birthDate,
           sex: input.sex,
           city: input.city,
           volunteeredBefore: input.volunteeredBefore,
@@ -956,19 +1042,22 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
         }
       : {
           age: current.age,
+          birthDate: current.dateOfBirth,
           sex: sexShown(current.sex),
           city: current.city,
           volunteeredBefore: current.volunteeredBefore,
           clubMember: current.clubMember,
           shirtSize: current.shirtSize,
         };
+    // `age` is derived from the date: the trail names the date's box, and the age alone only when it moved with no new date (an event moved).
+    const { age: nextAge, ...nextAnswers } = profile;
     const next = {
       roleId: input.assignedRoleId,
       name: input.name,
       email: input.identity.deliveryEmail,
       phone: input.phone,
       note: input.note,
-      ...profile,
+      ...nextAnswers,
     };
     const before = {
       roleId: current.roleId,
@@ -976,7 +1065,7 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
       email: current.email,
       phone: current.phone,
       note: current.note,
-      age: current.age,
+      birthDate: current.dateOfBirth,
       // The retired «Prefer să nu spun» reads as no answer, as it does everywhere (`sexShown`).
       sex: sexShown(current.sex),
       city: current.city,
@@ -989,6 +1078,7 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
     ).map((row) => row.roleId);
     const changedFields: string[] = (Object.keys(before) as (keyof typeof before)[]).filter((key) => before[key] !== next[key]);
     if (!sameIds(choicesBefore, input.choiceIds)) changedFields.push("roleIds");
+    if (nextAge !== current.age && !changedFields.includes("birthDate")) changedFields.push("age");
 
     // The parent or guardian follows the age typed (§768): a person under eighteen has one — the name, and the address if
     // the organizer has it; an age of eighteen or more (or none) keeps no third person's data, so the guardian's columns,
@@ -997,11 +1087,11 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
     let guardianSet: Partial<typeof eventVolunteers.$inferInsert> = {};
     if (profileDescribed) {
       if (input.guardian) {
-        if (!minorsOpen && !isVolunteerMinor(current.age)) throw new DomainError("VALIDATION_ERROR", "the club cannot take volunteers under eighteen yet", ["age"]);
+        if (!minorsOpen && !isVolunteerMinor(current.age)) throw new DomainError("VALIDATION_ERROR", "the club cannot take volunteers under eighteen yet", ["birthDate"]);
         // «Confirmat» is the guardian's consent's state (setState's rule): a confirmed person who becomes a minor is refused, not
         // quietly demoted — the organizer moves them back to «Înscris» first, then the consent is asked.
         if (current.state === "CONFIRMED" && current.guardianAcceptedAt === null) {
-          throw new DomainError("VOLUNTEER_GUARDIAN_MISSING", "the parent's or guardian's agreement is missing", ["age"]);
+          throw new DomainError("VOLUNTEER_GUARDIAN_MISSING", "the parent's or guardian's agreement is missing", ["birthDate"]);
         }
         const nameChanged = input.guardian.name !== current.guardianName;
         const emailChanged = canonicalOrNull(input.guardian.email ?? "") !== canonicalOrNull(current.guardianEmail ?? "");
@@ -1042,7 +1132,8 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
       await tx
         .update(eventVolunteers)
         .set({
-          ...next,
+          ...columnsOf(next),
+          age: nextAge,
           ...guardianSet,
           canonicalEmail: input.identity.canonicalEmail,
           canonicalizationVersion: input.identity.canonicalizationVersion,
@@ -1145,22 +1236,7 @@ export async function submitVolunteer<T extends Record<string, unknown>>(
   const profileMode = await noticeDescribesVolunteerProfile(db, now);
   // A person under eighteen is taken only while the notice and the agreement in force both describe minors (§768).
   const minorsMode = profileMode && (await volunteerMinorsOpen(db, now));
-  const parsed = volunteerPublicSchemaFor({ profile: profileMode, minors: minorsMode }).safeParse(rawInput);
-  if (!parsed.success) {
-    const fields = refusedFields(parsed.error);
-    throw new DomainError("VALIDATION_ERROR", "the volunteer form is malformed", fields.length > 0 ? fields : ["name"]);
-  }
-  const input = parsed.data;
-  // What the person said about themselves, only when the form asked it (§765).
-  const profile =
-    "age" in input
-      ? { age: input.age, sex: input.sex, city: input.city, volunteeredBefore: input.volunteeredBefore, clubMember: input.clubMember, shirtSize: input.shirtSize }
-      : null;
-  // The parent or guardian of a person under eighteen (§768): the name and the address, or none for an adult.
-  const guardian = "guardian" in input ? input.guardian : null;
-  // The spam defences answer like a success: nothing is kept, nothing says so.
-  if (looksLikeSpam(input, now)) return { outcome: "done" };
-
+  // The event first: the person's age is their date of birth's on the event's own day (§NNN, `volunteerEventDay`), so the form cannot be read without it.
   const [event] = await db
     .select({
       id: events.id,
@@ -1171,11 +1247,30 @@ export async function submitVolunteer<T extends Record<string, unknown>>(
       volunteersShirts: events.volunteersShirts,
       startsAt: events.startsAt,
       endsAt: events.endsAt,
+      raceStartsAt: events.raceStartsAt,
+      timezone: events.timezone,
+      dateToBeAnnounced: events.dateToBeAnnounced,
     })
     .from(events)
     .where(eq(events.id, eventId))
     .limit(1);
   if (!event) throw new DomainError("CONFLICT", "this event takes no volunteers on its page");
+  const parsed = volunteerPublicSchemaFor({ profile: profileMode, minors: minorsMode, eventDay: volunteerEventDay(event, now) }).safeParse(rawInput);
+  if (!parsed.success) {
+    const fields = refusedFields(parsed.error);
+    throw new DomainError("VALIDATION_ERROR", "the volunteer form is malformed", fields.length > 0 ? fields : ["name"]);
+  }
+  const input = parsed.data;
+  // What the person said about themselves, only when the form asked it (§765, §NNN: the date of birth, and the age it gives on the event's day).
+  const profile =
+    "age" in input
+      ? { age: input.age, dateOfBirth: input.birthDate, sex: input.sex, city: input.city, volunteeredBefore: input.volunteeredBefore, clubMember: input.clubMember, shirtSize: input.shirtSize }
+      : null;
+  // The parent or guardian of a person under eighteen (§768): the name and the address, or none for an adult.
+  const guardian = "guardian" in input ? input.guardian : null;
+  // The spam defences answer like a success: nothing is kept, nothing says so.
+  if (looksLikeSpam(input, now)) return { outcome: "done" };
+
   const noticeDescribes = await noticeDescribesVolunteers(db, now);
   // Conditions (a), (c) and (d), the event published, public and still ahead — the one rule the page and the
   // card read; (b), a role that still needs people, is judged under the lock below.
@@ -1269,6 +1364,7 @@ export async function submitVolunteer<T extends Record<string, unknown>>(
         ...(profile
           ? {
               age: profile.age,
+              dateOfBirth: profile.dateOfBirth,
               sex: profile.sex,
               city: profile.city,
               volunteeredBefore: profile.volunteeredBefore,

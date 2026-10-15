@@ -860,7 +860,7 @@ describe("import over an existing event", () => {
  */
 describe("an event's volunteers are not the file's", () => {
   async function withVolunteers(eventId: string) {
-    await db.update(events).set({ acceptsVolunteers: true }).where(eq(events.id, eventId));
+    await db.update(events).set({ acceptsVolunteers: true, volunteersShirts: true, volunteersShowCounts: true }).where(eq(events.id, eventId));
     const [role] = await db
       .insert(eventVolunteerRoles)
       .values({ eventId, nameRo: "Punct de apă Zmeură", nameEn: "Water point Raspberry", needed: 3, descriptionRo: "Pahare la km 5", descriptionEn: "Cups at km 5" })
@@ -907,6 +907,27 @@ describe("an event's volunteers are not the file's", () => {
     expect((await reload(target.id)).acceptsVolunteers).toBe(true);
     expect((await db.select().from(eventVolunteerRoles).where(eq(eventVolunteerRoles.eventId, target.id))).map((row) => row.id)).toEqual([targetRole.id]);
     expect(await db.select().from(eventVolunteers).where(eq(eventVolunteers.eventId, target.id))).toHaveLength(1);
+  });
+
+  it("carries the tick «Arată public câți voluntari mai sunt necesari» in no direction (§NNN): a public number is the club's choice for one date, so the file has none, an import as new shows none and an import over leaves the target's own", async () => {
+    const { event } = await seedRace();
+    await withVolunteers(event.id);
+    // The tick is on for the source event, and the file says nothing of it, nor of the volunteers' shirts or switch.
+    expect((await reload(event.id)).volunteersShowCounts).toBe(true);
+    const file = await fileOf(event.id);
+    expect(JSON.stringify(file)).not.toMatch(/volunteer|showCounts|show_counts/i);
+
+    const created = await importEventAsNew(db, { actor: admin, file, fetchImpl: serving(), now: NOW });
+    expect((await reload(created.eventId)).volunteersShowCounts).toBe(false);
+
+    // Over a target whose club ticked it, and over one whose club did not: each keeps its own choice.
+    const { target } = await seedTarget();
+    await db.update(events).set({ volunteersShowCounts: true }).where(eq(events.id, target.id));
+    await importEventOver(db, await overInput(file, target.id));
+    expect((await reload(target.id)).volunteersShowCounts).toBe(true);
+    await db.update(events).set({ volunteersShowCounts: false }).where(eq(events.id, target.id));
+    await importEventOver(db, await overInput(file, target.id));
+    expect((await reload(target.id)).volunteersShowCounts).toBe(false);
   });
 });
 

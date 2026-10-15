@@ -467,6 +467,8 @@ export type AuditAction =
   | "event.volunteers_switched"
   /** «Oferim tricouri voluntarilor» (§765), entity `event`: metadata `{ on }`. */
   | "event.volunteers_shirts_switched"
+  /** «Arată public câți voluntari mai sunt necesari» (§NNN), entity `event`: the metadata holds `on` and nothing of a person. */
+  | "event.volunteers_counts_switched"
   | "volunteer_role.added"
   | "volunteer_role.edited"
   | "volunteer_role.moved"

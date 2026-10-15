@@ -4,7 +4,9 @@ import type { EventVolunteerSource, EventVolunteerState } from "@/db/schema/even
 import type { RichTextDoc } from "@/modules/content/rich-text/domain/schema";
 import { normalizeTeamText, resolveRichPair, richTextBox } from "@/modules/content/team/fields";
 import { E164_PHONE } from "@/modules/registrations/phone";
+import { ageOn, dayIn, latestBirthDateFor } from "@/modules/registrations/domain/age";
 import { SHIRT_SIZES } from "@/modules/registrations/domain/kit";
+import { isDateValue, normalizeTypedDate } from "@/shared/forms/pickers/wall-values";
 import { SEX_CHOICES } from "@/modules/registrations/domain/sex";
 import { canonicalizeEmail, isValidEmail } from "@/modules/participants/domain/canonical-email";
 
@@ -78,6 +80,63 @@ export function agreementMinimumAge(body: unknown): number {
 /** Whether an age typed says a minor: a number under eighteen. No age (an adult's hand entry, a row from before) is never a minor. */
 export function isVolunteerMinor(age: number | null | undefined): boolean {
   return typeof age === "number" && age < VOLUNTEER_ADULT_AGE;
+}
+
+/**
+ * The calendar day a volunteer's age is judged on (§NNN; the owner, 2026-10-14: «în loc de vârstă vreau să treacă data
+ * nașterii»): the day of the race's gun when the event has one, else the event's own day — in the event's own zone, as the
+ * registration form counts (`formViewOf`) — so a person who turns fourteen on the morning of the race may offer today. An
+ * event whose date is still to be announced has no such day: today stands for it, and the age is judged again at the next
+ * save. An event whose **time alone** is to be announced has one — the public row hides the instant but carries `announcedDay`,
+ * the day on the event's own calendar — so the page and the service count on the same day. Pure.
+ */
+export function volunteerEventDay(
+  event: {
+    startsAt: Date | null;
+    raceStartsAt?: Date | null;
+    timezone?: string | null;
+    dateToBeAnnounced?: boolean | null;
+    announcedDay?: string | null;
+  },
+  now: Date,
+): string {
+  const zone = event.timezone || "Europe/Bucharest";
+  if (event.dateToBeAnnounced === true) return dayIn(now, zone);
+  const at = event.raceStartsAt ?? event.startsAt;
+  if (at) return dayIn(at, zone);
+  return event.announcedDay || dayIn(now, zone);
+}
+
+/** The youngest birth date a volunteer may give: the latest day that still makes `VOLUNTEER_MINIMUM_AGE` on the event's day. */
+export function latestVolunteerBirthDate(eventDay: string): string {
+  return latestBirthDateFor(VOLUNTEER_MINIMUM_AGE, eventDay);
+}
+
+/** The oldest: the earliest day that does not make more than `VOLUNTEER_AGE_MAX` on the event's day (a hundred and one is the day before it). */
+export function earliestVolunteerBirthDate(eventDay: string): string {
+  const over = new Date(`${latestBirthDateFor(VOLUNTEER_AGE_MAX + 1, eventDay)}T00:00:00Z`);
+  over.setUTCDate(over.getUTCDate() + 1);
+  return over.toISOString().slice(0, 10);
+}
+
+/**
+ * The age a birth date gives on the event's day, or null for something that is no calendar day. Negative for a date after the
+ * event: the form refuses it on the box. A born-on-29-February person turns a year older on 1 March in a common year, as every
+ * age here is counted (`ageOn`).
+ */
+export function volunteerAgeOn(birthDate: string, eventDay: string): number | null {
+  // 30 February is no day: `ageOn` would roll it into March and give an age to a date the form refuses.
+  return isDateValue(birthDate) ? ageOn(birthDate, eventDay) : null;
+}
+
+/**
+ * The age a form's date box says on the event's day. An **empty** box on the organizers' entry (`null`, the parsed value) says what
+ * the row already held when it has an age and no date (`kept`: a row from before §NNN); a box that was refused, or never posted
+ * (`undefined`), says nothing — no guardian is asked for an age nobody could read.
+ */
+function ageOfBox(birthDate: unknown, eventDay: string, kept: number | null): number | null {
+  if (typeof birthDate === "string" && birthDate !== "") return volunteerAgeOn(birthDate, eventDay);
+  return birthDate === null ? kept : null;
 }
 
 /** «Înscris» and «Confirmat» count against a role; «Anulat» never does. */
@@ -181,33 +240,38 @@ const uuidField = z.uuid();
 
 /**
  * What a person says about themselves (§765; the owner, 2026-10-14: «vârstă, sex, oraș și o bifă dacă a mai fost
- * voluntar sau nu»): the age in whole years — digits only, one to `VOLUNTEER_AGE_MAX` and at least
- * `VOLUNTEER_MINIMUM_AGE` (the last a rule of the box itself, so a refusal names the age together with the other boxes
- * that failed; the page says «cel puțin 18 ani» rather than «scrie vârsta» by reading the typed age) — the sex as the
- * registration form's two answers, the city as one short line. Required on the public form, optional on the
- * organizers' entry (an empty box is null).
+ * voluntar sau nu»; since §NNN «în loc de vârstă vreau să treacă data nașterii»): the **date of birth** — the registration
+ * form's own box, typed day first and read by `normalizeTypedDate` — whose age on the event's day (`volunteerEventDay`) is at
+ * least `VOLUNTEER_MINIMUM_AGE` and at most `VOLUNTEER_AGE_MAX` (a rule of the box itself, so a refusal names it together with
+ * the other boxes that failed; the page says «cel puțin 14 ani» rather than «scrie data» by reading the typed date) — the sex as
+ * the registration form's two answers, the city as one short line. Required on the public form, optional on the organizers'
+ * entry (an empty box is null). The age every rule reads (`isVolunteerMinor`, the guardian, the agreement) is the date's, derived
+ * on the event's day and kept in the `age` column beside it.
  */
-const ageDigits = z
-  .string()
-  .transform((value) => value.trim())
-  .pipe(z.string().regex(/^\d{1,3}$/))
-  .transform((value) => Number(value))
-  .pipe(
-    z
-      .number()
-      .int()
-      .min(1)
-      .max(VOLUNTEER_AGE_MAX)
-      .refine((age) => age >= VOLUNTEER_MINIMUM_AGE, { message: `volunteers must be at least ${VOLUNTEER_MINIMUM_AGE} years old` }),
-  );
-const requiredAge = z.string().optional().default("").pipe(ageDigits);
-const optionalAge = z
-  .string()
-  .optional()
-  .default("")
-  .transform((value) => value.trim())
-  .pipe(z.union([z.literal(""), ageDigits]))
-  .transform((value) => (value === "" ? null : value));
+function birthDateBox(eventDay: string) {
+  return z
+    .string()
+    .transform((value) => normalizeTypedDate(value))
+    .pipe(z.string().regex(/^\d{4}-\d{2}-\d{2}$/))
+    // A day that does not exist (30 February) passes the shape and would roll over in `ageOn`: refused on the box, as the registration form's `z.iso.date` does.
+    .refine((day) => isDateValue(day))
+    .refine(
+      (day) => {
+        const age = ageOn(day, eventDay);
+        return age !== null && age >= VOLUNTEER_MINIMUM_AGE && age <= VOLUNTEER_AGE_MAX;
+      },
+      { message: `volunteers must be from ${VOLUNTEER_MINIMUM_AGE} to ${VOLUNTEER_AGE_MAX} years old on the event's day` },
+    );
+}
+const requiredBirthDate = (eventDay: string) => z.string().optional().default("").pipe(birthDateBox(eventDay));
+const optionalBirthDate = (eventDay: string) =>
+  z
+    .string()
+    .optional()
+    .default("")
+    .transform((value) => value.trim())
+    .pipe(z.union([z.literal(""), birthDateBox(eventDay)]))
+    .transform((value) => (value === "" ? null : value));
 const requiredSex = z.string().optional().default("").pipe(z.enum(SEX_CHOICES));
 const optionalSex = z
   .string()
@@ -242,19 +306,22 @@ function foldedName(value: string): string {
 /** What the guardian's boxes came to for the age typed: the guardian as kept (or none), and which boxes are refused. */
 type GuardianVerdict = { guardian: { name: string; email: string | null } | null; badName: boolean; badEmail: boolean };
 
+/** What the guardian's boxes are judged against: the event's day, and the age a row from before holds when its date box is empty. */
+type AgeBasis = { eventDay: string; kept: number | null };
+
 /**
- * What the guardian's two boxes mean for the age typed (§768), pure:
+ * What the guardian's two boxes mean for the age the date of birth gives on the event's day (§768, §NNN), pure:
  * - **eighteen or older, or no age** — the boxes are dropped (`null`): nobody keeps a third person's data for an adult;
  * - **a minor, `address: "required"` (the public form)** — the name (`guardianName`) and a valid address
  *   (`guardianEmail`); the volunteer's tick that the parent knows and agrees is the schema's own (`guardianAware`);
  * - **a minor, `address: "optional"` (the organizers' entry)** — the name, and the address only if typed: the consent
  *   may be taken on paper at the desk, which needs no address.
  *
- * Read from the values a failed parse may leave (a box missing, an age that is no number, one under the floor already
+ * Read from the values a failed parse may leave (a box missing, a date that is no date, one under the floor already
  * refused on its own box): none of those is a minor the guardian is asked for.
  */
-function judgeGuardian(value: { age?: unknown; guardianName?: unknown; guardianEmail?: unknown }, address: "required" | "optional"): GuardianVerdict {
-  const age = typeof value.age === "number" ? value.age : null;
+function judgeGuardian(value: { birthDate?: unknown; guardianName?: unknown; guardianEmail?: unknown }, address: "required" | "optional", basis: AgeBasis): GuardianVerdict {
+  const age = ageOfBox(value.birthDate, basis.eventDay, basis.kept);
   if (!isVolunteerMinor(age) || age === null || age < VOLUNTEER_MINIMUM_AGE) return { guardian: null, badName: false, badEmail: false };
   const name = foldedName(typeof value.guardianName === "string" ? value.guardianName : "");
   const email = (typeof value.guardianEmail === "string" ? value.guardianEmail : "").trim();
@@ -268,16 +335,16 @@ function judgeGuardian(value: { age?: unknown; guardianName?: unknown; guardianE
  * (`when`): a person refused for «sex» is told about the parent's boxes in the same pass, not on a second try. The result
  * is shaped by `guardianOf` in the schema's own `transform`.
  */
-function refuseGuardianBoxes<S extends z.ZodType>(schema: S, address: "required" | "optional"): S {
+function refuseGuardianBoxes<S extends z.ZodType>(schema: S, address: "required" | "optional", basis: AgeBasis): S {
   const always = () => true;
   return schema
-    .refine((value) => !judgeGuardian(value as never, address).badName, { path: ["guardianName"], message: "a volunteer under eighteen needs a parent's or guardian's name", when: always })
-    .refine((value) => !judgeGuardian(value as never, address).badEmail, { path: ["guardianEmail"], message: "a volunteer under eighteen needs the parent's or guardian's address", when: always }) as unknown as S;
+    .refine((value) => !judgeGuardian(value as never, address, basis).badName, { path: ["guardianName"], message: "a volunteer under eighteen needs a parent's or guardian's name", when: always })
+    .refine((value) => !judgeGuardian(value as never, address, basis).badEmail, { path: ["guardianEmail"], message: "a volunteer under eighteen needs the parent's or guardian's address", when: always }) as unknown as S;
 }
 
 /** The guardian as kept for a parse that passed, or null (an adult, no age): the one thing the schemas' `transform` shapes. */
-function guardianOf(value: { age: number | null; guardianName: string; guardianEmail: string }, address: "required" | "optional"): { name: string; email: string | null } | null {
-  return judgeGuardian(value, address).guardian;
+function guardianOf(value: { birthDate: string | null; guardianName: string; guardianEmail: string }, address: "required" | "optional", basis: AgeBasis): { name: string; email: string | null } | null {
+  return judgeGuardian(value, address, basis).guardian;
 }
 
 /**
@@ -303,7 +370,8 @@ const assignedRoleField = z
  * person entered with a role given and nothing ticked has that role as their one choice, so every row says what
  * the person offered (`choicesWithAssigned`).
  */
-const volunteerStaffInputBase = z
+const volunteerStaffInputBase = (eventDay: string) =>
+  z
   .object({
     roleIds: roleIdsField,
     assignedRoleId: assignedRoleField,
@@ -316,8 +384,8 @@ const volunteerStaffInputBase = z
     /** E.164, read from what the organizer typed by the registrations' own parser (`typedPhone`, in the action). */
     phone: z.string().regex(E164_PHONE),
     note: optionalLine(VOLUNTEER_NOTE_MAX),
-    /** What the person told the organizers (§765): every box optional here, an age below the minimum refused. */
-    age: optionalAge,
+    /** What the person told the organizers (§765): every box optional here, a date that gives an age below the minimum on the event's day refused (§NNN). */
+    birthDate: optionalBirthDate(eventDay),
     sex: optionalSex,
     city: optionalCity,
     volunteeredBefore: tick,
@@ -333,14 +401,22 @@ const volunteerStaffInputBase = z
     }
   });
 
-/** The organizers' entry: the guardian's boxes refused with the rest, then folded into one `guardian` (an adult's dropped). */
-export const volunteerStaffInputSchema = refuseGuardianBoxes(volunteerStaffInputBase, "optional").transform((value) => {
-  // An age under eighteen needs its guardian; any other age keeps none. The two boxes are read here and leave the result.
-  const { guardianName, guardianEmail, ...rest } = value;
-  return { ...rest, guardian: guardianOf({ age: value.age, guardianName, guardianEmail }, "optional") };
-});
+/**
+ * The organizers' entry (§765, §NNN): the guardian's boxes refused with the rest, then folded into one `guardian` (an adult's
+ * dropped), and the **age** derived from the date of birth on `eventDay` — `volunteerEventDay`, the event's own day — beside it.
+ * `keptAge` is what a row from before the date held: an empty date box on it keeps that age, so saving a phone number of a person
+ * of sixteen never turns them into an adult with no guardian; `null` for a new entry and for a row that has a date.
+ */
+export function volunteerStaffInputSchemaFor(eventDay: string, keptAge: number | null = null) {
+  const basis: AgeBasis = { eventDay, kept: keptAge };
+  return refuseGuardianBoxes(volunteerStaffInputBase(eventDay), "optional", basis).transform((value) => {
+    // An age under eighteen needs its guardian; any other age keeps none. The two boxes are read here and leave the result.
+    const { guardianName, guardianEmail, ...rest } = value;
+    return { ...rest, age: ageOfBox(value.birthDate, eventDay, keptAge), guardian: guardianOf({ birthDate: value.birthDate, guardianName, guardianEmail }, "optional", basis) };
+  });
+}
 
-export type VolunteerStaffInput = z.infer<typeof volunteerStaffInputSchema>;
+export type VolunteerStaffInput = z.infer<ReturnType<typeof volunteerStaffInputSchemaFor>>;
 
 /** The choices a staff entry keeps: what was ticked, or — nothing ticked — the role given, as the one choice. */
 export function choicesWithAssigned(input: Pick<VolunteerStaffInput, "roleIds" | "assignedRoleId">): string[] {
@@ -382,24 +458,25 @@ export type VolunteerPublicInput = z.infer<typeof volunteerPublicInputSchema>;
 
 /**
  * The public form while the notice in force names it (§765, `describesVolunteerProfile`; the owner, 2026-10-14):
- * «Vârsta» (whole years, at least `VOLUNTEER_MINIMUM_AGE` — the tick «Am cel puțin 18 ani» is gone, the age answers
- * it), «Sex» (the registration form's two answers), «Orașul», the optional ticks «Am mai fost voluntar în trecut la
- * alte curse» and «Fac parte din grupul {club}», and «Mărimea tricoului» — which the service keeps only while the
- * event gives a shirt.
+ * «Data nașterii» (§NNN, instead of «Vârsta»: the age on the event's day is at least `VOLUNTEER_MINIMUM_AGE` — the tick «Am
+ * cel puțin 18 ani» is gone, the date answers it), «Sex» (the registration form's two answers), «Orașul», the optional ticks
+ * «Am mai fost voluntar în trecut la alte curse» and «Fac parte din grupul {club}», and «Mărimea tricoului» — which the
+ * service keeps only while the event gives a shirt.
  */
-const volunteerPublicProfileBase = z.object({
-  ...publicBase,
-  age: requiredAge,
-  sex: requiredSex,
-  city: requiredCity,
-  volunteeredBefore: tick,
-  clubMember: tick,
-  shirtSize: shirtField,
-  /** The parent's or guardian's name and address, and the volunteer's tick «Părintele sau tutorele meu știe și e de acord» (§768): asked only of a minor. */
-  guardianName: guardianNameBox,
-  guardianEmail: guardianEmailBox,
-  guardianAware: tick,
-});
+const volunteerPublicProfileBase = (eventDay: string) =>
+  z.object({
+    ...publicBase,
+    birthDate: requiredBirthDate(eventDay),
+    sex: requiredSex,
+    city: requiredCity,
+    volunteeredBefore: tick,
+    clubMember: tick,
+    shirtSize: shirtField,
+    /** The parent's or guardian's name and address, and the volunteer's tick «Părintele sau tutorele meu știe și e de acord» (§768): asked only of a minor. */
+    guardianName: guardianNameBox,
+    guardianEmail: guardianEmailBox,
+    guardianAware: tick,
+  });
 
 /**
  * The profile's form with the minors' path (§768; the owner, 2026-10-14: «voluntarii trebuie să aibă cel puțin 14
@@ -408,41 +485,45 @@ const volunteerPublicProfileBase = z.object({
  * boxes themselves gone; at eighteen or more the guardian's boxes are dropped, whatever was typed in them.
  *
  * `minors` is whether the club may take a minor yet: the privacy notice in force names `{{volunteerMinors}}` and the
- * volunteer agreement `{{volunteerGuardian}}`, in every language (the §562 / §613 pattern). While it does not, an age
- * under eighteen is refused on `age` — the page then says the club cannot take minors yet.
+ * volunteer agreement `{{volunteerGuardian}}`, in every language (the §562 / §613 pattern). While it does not, a date that
+ * gives an age under eighteen is refused on `birthDate` — the page then says the club cannot take minors yet. The age is the
+ * date's on `eventDay` (`volunteerEventDay`): the §768 rules are judged on the event's day, not today's, and the result carries
+ * it as `age` beside the date.
  */
-export function volunteerPublicProfileSchemaFor(minors: boolean) {
+export function volunteerPublicProfileSchemaFor(minors: boolean, eventDay: string) {
   const always = () => true;
-  // A minor the form asks a guardian for: from the floor to seventeen (a number under it is refused on its own box already).
-  const minor = (value: { age?: unknown }) => typeof value.age === "number" && value.age >= VOLUNTEER_MINIMUM_AGE && isVolunteerMinor(value.age);
-  // While the club cannot take a minor the guardian's boxes are not asked at all: the age alone is refused. Every refused box is
+  const basis: AgeBasis = { eventDay, kept: null };
+  // A minor the form asks a guardian for: from the floor to seventeen on the event's day (a date under it is refused on its own box already).
+  const minor = (value: { birthDate?: unknown }) => {
+    const age = ageOfBox(value.birthDate, eventDay, null);
+    return age !== null && age >= VOLUNTEER_MINIMUM_AGE && isVolunteerMinor(age);
+  };
+  // While the club cannot take a minor the guardian's boxes are not asked at all: the date alone is refused. Every refused box is
   // named in one pass, even when another (the sex, the city) was refused too.
   const refused = minors
-    ? refuseGuardianBoxes(volunteerPublicProfileBase, "required").refine((value) => !minor(value) || value.guardianAware === true, {
+    ? refuseGuardianBoxes(volunteerPublicProfileBase(eventDay), "required", basis).refine((value) => !minor(value) || value.guardianAware === true, {
         path: ["guardianAware"],
         message: "the volunteer says the parent knows and agrees",
         when: always,
       })
-    : volunteerPublicProfileBase.refine((value) => !minor(value), { path: ["age"], message: "the club cannot take volunteers under eighteen yet", when: always });
+    : volunteerPublicProfileBase(eventDay).refine((value) => !minor(value), { path: ["birthDate"], message: "the club cannot take volunteers under eighteen yet", when: always });
   return refused.transform((value) => {
     const { guardianName, guardianEmail, guardianAware, ...rest } = value;
     // The tick was read by the refinement above; it leaves the result with the two boxes.
     void guardianAware;
-    return { ...rest, guardian: minors ? guardianOf({ age: value.age, guardianName, guardianEmail }, "required") : null };
+    return { ...rest, age: ageOfBox(value.birthDate, eventDay, null) as number, guardian: minors ? guardianOf({ birthDate: value.birthDate, guardianName, guardianEmail }, "required", basis) : null };
   });
 }
-
-/** The profile's form while the club cannot take minors yet (`minors` false): adults only, an age under eighteen refused on `age`. */
-export const volunteerPublicProfileSchema = volunteerPublicProfileSchemaFor(false);
 
 export type VolunteerPublicProfileInput = z.infer<ReturnType<typeof volunteerPublicProfileSchemaFor>>;
 
 /**
  * The schema a public post is read with: the profile's (with the minors' path while `minors`) while the notice names
- * the profile, §758's otherwise — which takes adults only, by its own tick.
+ * the profile, §758's otherwise — which takes adults only, by its own tick. `eventDay` is the day the date of birth is
+ * counted on (`volunteerEventDay`).
  */
-export function volunteerPublicSchemaFor(mode: { profile: boolean; minors: boolean }) {
-  return mode.profile ? volunteerPublicProfileSchemaFor(mode.minors) : volunteerPublicInputSchema;
+export function volunteerPublicSchemaFor(mode: { profile: boolean; minors: boolean; eventDay: string }) {
+  return mode.profile ? volunteerPublicProfileSchemaFor(mode.minors, mode.eventDay) : volunteerPublicInputSchema;
 }
 
 /** The field names a Zod refusal is about, in the form's own words (names only, never values). */

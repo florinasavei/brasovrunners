@@ -22,7 +22,7 @@ import CheckpointsCard, { CheckpointForms } from "@/modules/content/events/ui/Ch
 import { canEditEventTodos, canReadEventTodos } from "@/modules/event-todos/domain/event-todo";
 import { listEventTodos } from "@/modules/event-todos/event-todos";
 import EventTodoCard from "@/modules/event-todos/ui/EventTodoCard";
-import { volunteerEventAhead, volunteerOfferClosedFor } from "@/modules/volunteers/domain/volunteer";
+import { volunteerEventAhead, volunteerEventDay, volunteerOfferClosedFor } from "@/modules/volunteers/domain/volunteer";
 import VolunteersCard from "@/modules/volunteers/ui/VolunteersCard";
 import { listVolunteerRoles, listVolunteers, volunteerStandings } from "@/modules/volunteers/volunteers";
 import {
@@ -431,6 +431,8 @@ export default async function EditEventPage({ params, searchParams }: Props) {
           profileDescribed: await noticeDescribesVolunteerProfile(db, now),
           // Whether the club may take a person under eighteen (§768): the guardian's boxes, link and paper wait for it.
           minorsOpen: await volunteerMinorsOpen(db, now),
+          // The day the entry's date of birth is counted on (§NNN): the gun's, else the event's.
+          eventDay: volunteerEventDay(event, now),
           offerClosed: volunteerOfferClosedFor({
             acceptsVolunteers: event.acceptsVolunteers,
             standings,
@@ -1433,8 +1435,10 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                   eventId={event.id}
                   acceptsVolunteers={event.acceptsVolunteers}
                   volunteersShirts={event.volunteersShirts}
+                  volunteersShowCounts={event.volunteersShowCounts}
                   profileDescribed={volunteersCard.profileDescribed}
                   minorsOpen={volunteersCard.minorsOpen}
+                  eventDay={volunteersCard.eventDay}
                   offerClosed={volunteersCard.offerClosed}
                   roles={volunteersCard.roles}
                   standings={volunteersCard.standings}

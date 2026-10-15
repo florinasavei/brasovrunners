@@ -28,6 +28,11 @@ export type VolunteerOffer = {
   roles: PublicVolunteerRole[];
   /** «Oferim tricouri voluntarilor» (§765): the form asks the size. */
   shirts: boolean;
+  /**
+   * «Arată public câți voluntari mai sunt necesari» (§NNN): the page says how many people a role still needs only while it is on —
+   * off, a role says only that it still takes people. Every public number about volunteers asks this one flag.
+   */
+  showCounts: boolean;
   /** The notice in force names what a volunteer says about themselves (§765): the form asks it — else §758's tick. */
   profile: boolean;
   /** The club may take a person under eighteen (§768): the notice and the agreement in force both describe minors. */
@@ -39,7 +44,7 @@ export async function readVolunteerOffer(
   now: Date,
   answer: "done" | "full" | "invalid" | "captcha" | "limited" | null = null,
 ): Promise<VolunteerOffer | null> {
-  const { acceptsVolunteers, shirts, roles } = await cachedVolunteerRoles(event.id);
+  const { acceptsVolunteers, shirts, showCounts, roles } = await cachedVolunteerRoles(event.id);
   if (!acceptsVolunteers) return null;
   const closed = volunteerOfferClosedFor({
     acceptsVolunteers,
@@ -57,5 +62,5 @@ export async function readVolunteerOffer(
   const profile = await cachedVolunteerProfileDescribed(now);
   // Minors ride on the profile form: no age is asked without it, so no minor is either (§768).
   const minors = profile && (await cachedVolunteerMinorsOpen(now));
-  return { roles: boxRoles, shirts, profile, minors };
+  return { roles: boxRoles, shirts, showCounts, profile, minors };
 }

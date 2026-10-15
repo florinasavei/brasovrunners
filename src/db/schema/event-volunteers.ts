@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { boolean, check, index, integer, jsonb, pgEnum, pgTable, primaryKey, smallint, text, timestamp, unique, uuid } from "drizzle-orm/pg-core";
+import { boolean, check, date, index, integer, jsonb, pgEnum, pgTable, primaryKey, smallint, text, timestamp, unique, uuid } from "drizzle-orm/pg-core";
 import { events } from "./events";
 import { legalDocuments } from "./legal-documents";
 import { locale } from "./locale";
@@ -152,6 +152,14 @@ export const eventVolunteers = pgTable(
     */
     /** Whole years, as typed; the minimum (`VOLUNTEER_MINIMUM_AGE`) is the code's rule, so a lower one is no migration. */
     age: smallint("age"),
+    /**
+     * «Data nașterii» (§NNN; the owner, 2026-10-14: «în loc de vârstă vreau să treacă data nașterii»): the day the person was
+     * born, the registration form's own box. `age` is derived from it at the event's day (the gun's, else the event's) every
+     * time the row is written, so the §768 rules and everything that reads `age` keep working; a row from before has an age and
+     * no date. Null where the person gave none. Personal data of the same kind as `age`: kept and deleted with the row, named in
+     * the notice's template only (`{{volunteerProfile}}`).
+     */
+    dateOfBirth: date("date_of_birth", { mode: "string" }),
     /** The registration form's own two answers (`domain/sex.ts`); the retired `UNSPECIFIED` is never written here. */
     sex: registrationSex("sex"),
     city: text("city"),

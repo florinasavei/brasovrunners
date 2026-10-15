@@ -17,6 +17,8 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
+import { bornAged } from "../../helpers/volunteer-birth";
+
 /**
  * §765 — what a volunteer says about themselves (age, sex, city, «am mai fost voluntar», the club's group, the
  * T-shirt's size), the role's «Descrierea rolului» as a document, and the event's tick «Oferim tricouri
@@ -55,6 +57,8 @@ const exportRoute = await import("@/app/api/admin/events/[id]/volunteers/route")
 
 const NOW = new Date("2026-10-13T10:00:00.000Z");
 const DAY = 24 * 60 * 60_000;
+/** A date of birth that makes a person `years` old on the event's day (§NNN): the last day of being so. */
+const aged = (years: number) => bornAged(years, new Date(NOW.getTime() + 30 * DAY));
 const RENDERED = new Date(NOW.getTime() - 60_000).toISOString();
 
 let db: TestDatabase;
@@ -176,27 +180,28 @@ describe("§765 the organizers' entry: what the person said about themselves", (
     const role = await addRole();
     const outcome = await post(
       actions.addVolunteerAction,
-      form({ ...PERSON, roleIds: [role.id], assignedRoleId: "", age: " 34 ", sex: "FEMALE", city: "  Brașov ", volunteeredBefore: "on", clubMember: "on" }),
+      form({ ...PERSON, roleIds: [role.id], assignedRoleId: "", birthDate: ` ${aged(34)} `, sex: "FEMALE", city: "  Brașov ", volunteeredBefore: "on", clubMember: "on" }),
     );
     expect(outcome).toBe("redirected");
     const [maria] = await listVolunteers(db, eventId);
-    expect(maria).toMatchObject({ age: 34, sex: "FEMALE", city: "Brașov", volunteeredBefore: true, clubMember: true, shirtSize: null });
+    expect(maria).toMatchObject({ age: 34, dateOfBirth: aged(34), sex: "FEMALE", city: "Brașov", volunteeredBefore: true, clubMember: true, shirtSize: null });
     const [added] = (await trail()).filter((row) => row.action === "volunteer.added");
-    expect(JSON.stringify(added.metadataJson)).not.toMatch(/Brașov|FEMALE|"age"|"city"/);
+    expect(JSON.stringify(added.metadataJson)).not.toMatch(/Brașov|FEMALE|"age"|"city"|"birthDate"/);
+    expect(JSON.stringify(added.metadataJson)).not.toContain(aged(34));
   });
 
   it("takes a person with none of it: every box is optional here, and the ticks read as «nu»", async () => {
     const role = await addRole();
     await post(actions.addVolunteerAction, form({ ...PERSON, roleIds: [role.id], assignedRoleId: "" }));
-    expect((await listVolunteers(db, eventId))[0]).toMatchObject({ age: null, sex: null, city: null, volunteeredBefore: false, clubMember: false, shirtSize: null });
+    expect((await listVolunteers(db, eventId))[0]).toMatchObject({ age: null, dateOfBirth: null, sex: null, city: null, volunteeredBefore: false, clubMember: false, shirtSize: null });
   });
 
-  it("refuses an age under the minimum, a sex that is no answer and a city past the bound — naming the box, keeping what was typed, writing nothing", async () => {
+  it("refuses a date that gives an age under the minimum, one that is no date, a sex that is no answer and a city past the bound — naming the box, keeping what was typed, writing nothing", async () => {
     const role = await addRole();
     for (const [fields, box] of [
       // §768: the floor is fourteen — fifteen is a minor, taken only with a guardian (tests/integration/volunteers/guardian.test.ts).
-      [{ age: "13" }, "age"],
-      [{ age: "abc" }, "age"],
+      [{ birthDate: aged(13) }, "birthDate"],
+      [{ birthDate: "abc" }, "birthDate"],
       [{ sex: "UNSPECIFIED" }, "sex"],
       [{ city: "x".repeat(81) }, "city"],
     ] as const) {
@@ -209,19 +214,19 @@ describe("§765 the organizers' entry: what the person said about themselves", (
 
   it("changes the answers on an edit, audits only the names of the fields changed, and a press that changes nothing writes nothing", async () => {
     const role = await addRole();
-    await post(actions.addVolunteerAction, form({ ...PERSON, roleIds: [role.id], assignedRoleId: "", age: "34", sex: "FEMALE", city: "Brașov" }));
+    await post(actions.addVolunteerAction, form({ ...PERSON, roleIds: [role.id], assignedRoleId: "", birthDate: aged(34), sex: "FEMALE", city: "Brașov" }));
     const [maria] = await listVolunteers(db, eventId);
-    const same = form({ ...PERSON, volunteerId: maria.id, roleIds: [role.id], assignedRoleId: "", age: "34", sex: "FEMALE", city: "Brașov" });
+    const same = form({ ...PERSON, volunteerId: maria.id, roleIds: [role.id], assignedRoleId: "", birthDate: aged(34), sex: "FEMALE", city: "Brașov" });
     expect(await post(actions.editVolunteerAction, same)).toBe("redirected");
     expect((await trail()).filter((row) => row.action === "volunteer.edited")).toHaveLength(0);
     await post(
       actions.editVolunteerAction,
-      form({ ...PERSON, volunteerId: maria.id, roleIds: [role.id], assignedRoleId: "", age: "35", sex: "", city: "Râșnov", volunteeredBefore: "on" }),
+      form({ ...PERSON, volunteerId: maria.id, roleIds: [role.id], assignedRoleId: "", birthDate: aged(35), sex: "", city: "Râșnov", volunteeredBefore: "on" }),
     );
     expect((await listVolunteers(db, eventId))[0]).toMatchObject({ age: 35, sex: null, city: "Râșnov", volunteeredBefore: true, clubMember: false });
     const [edited] = (await trail()).filter((row) => row.action === "volunteer.edited");
-    expect((edited.metadataJson as { fields: string[] }).fields.sort()).toEqual(["age", "city", "sex", "volunteeredBefore"]);
-    expect(JSON.stringify(edited.metadataJson)).not.toMatch(/Râșnov|"age":/);
+    expect((edited.metadataJson as { fields: string[] }).fields.sort()).toEqual(["birthDate", "city", "sex", "volunteeredBefore"]);
+    expect(JSON.stringify(edited.metadataJson)).not.toMatch(/Râșnov|"age":|"birthDate":/);
   });
 
   it("reads the retired «Prefer să nu spun» as no answer: leaving the sex empty on a row that has it is no change", async () => {
@@ -241,10 +246,10 @@ describe("§765 the organizers' entry is gated by the notice too (the §562 / §
     const role = await addRole();
     const outcome = await post(
       actions.addVolunteerAction,
-      form({ ...PERSON, roleIds: [role.id], assignedRoleId: "", age: "34", sex: "FEMALE", city: "Brașov", volunteeredBefore: "on", clubMember: "on" }),
+      form({ ...PERSON, roleIds: [role.id], assignedRoleId: "", birthDate: aged(34), sex: "FEMALE", city: "Brașov", volunteeredBefore: "on", clubMember: "on" }),
     );
     expect(outcome).toMatchObject({ error: "VALIDATION_ERROR" });
-    expect([...(outcome as FormOutcome).fields].sort()).toEqual(["age", "city", "clubMember", "sex", "volunteeredBefore"]);
+    expect([...(outcome as FormOutcome).fields].sort()).toEqual(["birthDate", "city", "clubMember", "sex", "volunteeredBefore"]);
     expect(await listVolunteers(db, eventId)).toHaveLength(0);
     // The person themselves, without a word of it, is entered as ever.
     expect(await post(actions.addVolunteerAction, form({ ...PERSON, roleIds: [role.id], assignedRoleId: "" }))).toBe("redirected");
@@ -254,12 +259,12 @@ describe("§765 the organizers' entry is gated by the notice too (the §562 / §
   it("refuses an edit that sets one, and an edit that posts none leaves what the row holds as it was", async () => {
     await approveNotice(true);
     const role = await addRole();
-    await post(actions.addVolunteerAction, form({ ...PERSON, roleIds: [role.id], assignedRoleId: "", age: "34", sex: "FEMALE", city: "Brașov", volunteeredBefore: "on" }));
+    await post(actions.addVolunteerAction, form({ ...PERSON, roleIds: [role.id], assignedRoleId: "", birthDate: aged(34), sex: "FEMALE", city: "Brașov", volunteeredBefore: "on" }));
     const [maria] = await listVolunteers(db, eventId);
     // A notice that does not name them takes over (a new version without the marker).
     await approveNotice(false, 2);
     const edit = { ...PERSON, volunteerId: maria.id, roleIds: [role.id], assignedRoleId: "" };
-    expect(await post(actions.editVolunteerAction, form({ ...edit, age: "40", sex: "FEMALE", city: "Brașov", volunteeredBefore: "on" }))).toMatchObject({ error: "VALIDATION_ERROR", fields: ["age"] });
+    expect(await post(actions.editVolunteerAction, form({ ...edit, birthDate: aged(40), sex: "FEMALE", city: "Brașov", volunteeredBefore: "on" }))).toMatchObject({ error: "VALIDATION_ERROR", fields: ["birthDate"] });
     // The card draws no boxes then: a post without them changes the name and nothing else.
     expect(await post(actions.editVolunteerAction, form({ ...edit, name: "Maria Nouă" }))).toBe("redirected");
     expect((await listVolunteers(db, eventId))[0]).toMatchObject({ name: "Maria Nouă", age: 34, sex: "FEMALE", city: "Brașov", volunteeredBefore: true });
@@ -391,7 +396,7 @@ function publicForm(roleIds: string[], extra: Record<string, unknown> = {}) {
     ...extra,
   };
 }
-const ANSWERS = { age: "34", sex: "FEMALE", city: " Brașov ", volunteeredBefore: true, clubMember: true, shirtSize: "L" };
+const ANSWERS = { birthDate: aged(34), sex: "FEMALE", city: " Brașov ", volunteeredBefore: true, clubMember: true, shirtSize: "L" };
 
 describe("§765 the public form: asked while the notice names it, §758's tick until then", () => {
   beforeEach(async () => {
@@ -403,7 +408,7 @@ describe("§765 the public form: asked while the notice names it, §758's tick u
     const role = await addRole();
     expect(await submitVolunteer(db, eventId, publicForm([role.id], ANSWERS), NOW)).toEqual({ outcome: "done" });
     const [row] = await db.select().from(eventVolunteers);
-    expect(row).toMatchObject({ age: 34, sex: "FEMALE", city: "Brașov", volunteeredBefore: true, clubMember: true, shirtSize: null, declaredAdult: true, source: "PUBLIC" });
+    expect(row).toMatchObject({ age: 34, dateOfBirth: aged(34), sex: "FEMALE", city: "Brașov", volunteeredBefore: true, clubMember: true, shirtSize: null, declaredAdult: true, source: "PUBLIC" });
     expect(row.agreementDocumentId).not.toBeNull();
   });
 
@@ -417,17 +422,17 @@ describe("§765 the public form: asked while the notice names it, §758's tick u
     expect(rows.map((row) => row.shirtSize).sort()).toEqual(["L", null]);
   });
 
-  it("refuses an age under 18, a missing age, sex or city — naming each box — and keeps nothing", async () => {
+  it("refuses a date under 18 on the event's day, a missing or unreadable date, sex or city — naming each box — and keeps nothing", async () => {
     await approveNotice(true);
     const role = await addRole();
     for (const [extra, boxes] of [
-      [{ ...ANSWERS, age: "17" }, ["age"]],
-      [{ ...ANSWERS, age: "" }, ["age"]],
-      [{ ...ANSWERS, age: "thirty" }, ["age"]],
+      [{ ...ANSWERS, birthDate: aged(17) }, ["birthDate"]],
+      [{ ...ANSWERS, birthDate: "" }, ["birthDate"]],
+      [{ ...ANSWERS, birthDate: "thirty" }, ["birthDate"]],
       [{ ...ANSWERS, sex: "" }, ["sex"]],
       [{ ...ANSWERS, sex: "UNSPECIFIED" }, ["sex"]],
       [{ ...ANSWERS, city: "  " }, ["city"]],
-      [{ ...ANSWERS, age: "", sex: "", city: "" }, ["age", "sex", "city"]],
+      [{ ...ANSWERS, birthDate: "", sex: "", city: "" }, ["birthDate", "sex", "city"]],
       [{ ...ANSWERS, shirtSize: "XXXL" }, ["shirtSize"]],
     ] as const) {
       const error = await submitVolunteer(db, eventId, publicForm([role.id], extra), NOW).catch((caught: unknown) => caught);
@@ -440,8 +445,8 @@ describe("§765 the public form: asked while the notice names it, §758's tick u
   it("takes the optional ticks as «nu» when they are not posted", async () => {
     await approveNotice(true);
     const role = await addRole();
-    await submitVolunteer(db, eventId, publicForm([role.id], { age: "40", sex: "MALE", city: "Săcele" }), NOW);
-    expect((await db.select().from(eventVolunteers))[0]).toMatchObject({ volunteeredBefore: false, clubMember: false, age: 40, sex: "MALE" });
+    await submitVolunteer(db, eventId, publicForm([role.id], { birthDate: aged(40), sex: "MALE", city: "Săcele" }), NOW);
+    expect((await db.select().from(eventVolunteers))[0]).toMatchObject({ volunteeredBefore: false, clubMember: false, age: 40, dateOfBirth: aged(40), sex: "MALE" });
   });
 
   it("is §758's form while the notice does not name them: the tick is required, and an age, sex or city posted anyway is dropped — never kept", async () => {
@@ -457,10 +462,10 @@ describe("§765 the public form: asked while the notice names it, §758's tick u
   it("follows the notice the day a new one is approved: the same post is then read as the profile's form", async () => {
     await approveNotice(false);
     const role = await addRole();
-    const before = await submitVolunteer(db, eventId, publicForm([role.id], { age: "34", sex: "FEMALE", city: "Brașov" }), NOW).catch((caught: unknown) => caught);
+    const before = await submitVolunteer(db, eventId, publicForm([role.id], { birthDate: aged(34), sex: "FEMALE", city: "Brașov" }), NOW).catch((caught: unknown) => caught);
     expect(isDomainError(before)).toBe(true);
     await approveNotice(true, 2);
-    expect(await submitVolunteer(db, eventId, publicForm([role.id], { age: "34", sex: "FEMALE", city: "Brașov" }), NOW)).toEqual({ outcome: "done" });
+    expect(await submitVolunteer(db, eventId, publicForm([role.id], { birthDate: aged(34), sex: "FEMALE", city: "Brașov" }), NOW)).toEqual({ outcome: "done" });
     expect((await db.select().from(eventVolunteers))[0]).toMatchObject({ age: 34, city: "Brașov" });
   });
 
@@ -468,7 +473,7 @@ describe("§765 the public form: asked while the notice names it, §758's tick u
     await approveNotice(true);
     const role = await addRole();
     await submitVolunteer(db, eventId, publicForm([role.id], ANSWERS), NOW);
-    expect(await submitVolunteer(db, eventId, publicForm([role.id], { ...ANSWERS, age: "60", city: "Altul" }), NOW)).toEqual({ outcome: "done" });
+    expect(await submitVolunteer(db, eventId, publicForm([role.id], { ...ANSWERS, birthDate: aged(60), city: "Altul" }), NOW)).toEqual({ outcome: "done" });
     const rows = await db.select().from(eventVolunteers);
     expect(rows).toHaveLength(1);
     expect(rows[0]).toMatchObject({ age: 34, city: "Brașov" });
@@ -485,23 +490,23 @@ describe("§765 the CSV and the card's list carry the answers", () => {
     return exportRoute.GET(new Request(`https://example.test/api/admin/events/${eventId}/volunteers?lang=${lang}`), { params: Promise.resolve({ id: eventId }) });
   }
 
-  it("adds six columns after the moment — age, sex, city, the two claims as the reader's yes and no, the size — empty where the person said nothing", async () => {
+  it("adds seven columns after the moment — age, the date it came from, sex, city, the two claims as the reader's yes and no, the size — empty where the person said nothing", async () => {
     const role = await addRole();
     await press(actions.switchVolunteersShirtsAction, form({ on: "1" }));
     await post(
       actions.addVolunteerAction,
-      form({ ...PERSON, roleIds: [role.id], assignedRoleId: role.id, age: "34", sex: "FEMALE", city: "Brașov, centru", volunteeredBefore: "on", shirtSize: "M" }),
+      form({ ...PERSON, roleIds: [role.id], assignedRoleId: role.id, birthDate: aged(34), sex: "FEMALE", city: "Brașov, centru", volunteeredBefore: "on", shirtSize: "M" }),
     );
     await post(actions.addVolunteerAction, form({ ...PERSON, name: "Ion Test", email: "ion@example.test", roleIds: [role.id], assignedRoleId: role.id }));
     const text = await (await get()).text();
     const lines = text.split("\r\n");
     // §768: the parent or guardian's three columns are appended after the T-shirt, empty for an adult.
-    expect(lines[0].endsWith("Data,Vârsta,Sex,Orașul,A mai fost voluntar,Din grupul clubului,Mărime tricou,Părinte sau tutore,Email părinte sau tutore,Acordul părintelui")).toBe(true);
+    expect(lines[0].endsWith("Data,Vârsta,Data nașterii,Sex,Orașul,A mai fost voluntar,Din grupul clubului,Mărime tricou,Părinte sau tutore,Email părinte sau tutore,Acordul părintelui")).toBe(true);
     const maria = lines.find((line) => line.includes("Maria Test")) ?? "";
-    expect(maria).toMatch(/,34,Female,"Brașov, centru",Da,Nu,M,,,$/);
+    expect(maria).toContain(`,34,${aged(34)},Female,"Brașov, centru",Da,Nu,M,,,`);
     const ion = lines.find((line) => line.includes("Ion Test")) ?? "";
-    expect(ion).toMatch(/,,,,Nu,Nu,,,,$/);
-    expect(await (await get("en")).text()).toMatch(/,34,Female,"Brașov, centru",Yes,No,M/);
+    expect(ion).toMatch(/,,,,,Nu,Nu,,,,$/);
+    expect(await (await get("en")).text()).toContain(`,34,${aged(34)},Female,"Brașov, centru",Yes,No,M`);
   });
 
   it("leaves the size out while the event gives no shirt, even for a row that has one", async () => {
