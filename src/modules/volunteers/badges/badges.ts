@@ -12,13 +12,15 @@ import { isUuid } from "@/shared/ids";
 import { compareRoles } from "../domain/volunteer";
 import {
   type BadgeDesign,
+  type BadgeDroppedKey,
   type BadgeLocale,
   badgeColourReadable,
+  badgeDesignDropped,
   badgeDesignSchema,
   badgeRoleColour,
   readBadgeDesign,
 } from "./badge-design";
-import { BADGE_CUSTOM_BOUNDS, BADGE_SIZES } from "./badge-geometry";
+import { BADGE_CUSTOM_BOUNDS, BADGE_SIZES, type BadgeExtra, badgeSizeMm, badgeSizeRefusal } from "./badge-geometry";
 import { BADGE_DESIGN_FORM_PREFIX, type BadgeDesignFormValues } from "./badge-query";
 
 /**
@@ -70,12 +72,15 @@ export function badgeRoleName(role: Pick<BadgeRole, "nameRo" | "nameEn">, locale
   return locale === "en" ? role.nameEn : role.nameRo;
 }
 
-/** The event as the badges read it: its title in the badge's language and its design. */
+/**
+ * The event as the badges read it: its title in the badge's language, its design, and the §776 settings
+ * the stored design held as something they cannot be and the reader left out (`badgeDesignDropped`).
+ */
 export async function findEventForBadges<T extends Record<string, unknown>>(
   db: Database<T>,
   eventId: string,
   locale: BadgeLocale,
-): Promise<{ title: string; design: BadgeDesign } | undefined> {
+): Promise<{ title: string; design: BadgeDesign; dropped: BadgeDroppedKey[] } | undefined> {
   if (!isUuid(eventId)) return undefined;
   const [row] = await db
     .select({ title: eventTranslations.title, badgeDesign: events.badgeDesign })
@@ -83,19 +88,38 @@ export async function findEventForBadges<T extends Record<string, unknown>>(
     .innerJoin(eventTranslations, and(eq(eventTranslations.eventId, events.id), eq(eventTranslations.locale, locale)))
     .where(eq(events.id, eventId))
     .limit(1);
-  return row ? { title: row.title, design: readBadgeDesign(row.badgeDesign) } : undefined;
+  return row ? { title: row.title, design: readBadgeDesign(row.badgeDesign), dropped: badgeDesignDropped(row.badgeDesign) } : undefined;
 }
 
 /** A form box's full name: what a refusal names, so the summary links to it. */
 const box = (key: string) => `${BADGE_DESIGN_FORM_PREFIX}${key}`;
 
 /**
+ * A size with no room for everything ticked (§776, `BADGE_SIZE_TOO_SMALL`): the rows that do not fit, the
+ * size, and the least height at which they do — the numbers the action puts in the sentence.
+ */
+export class BadgeSizeRefusal extends DomainError {
+  constructor(
+    readonly what: readonly BadgeExtra[],
+    readonly widthMm: number,
+    readonly heightMm: number,
+    readonly minHeightMm: number,
+    fields: readonly string[],
+  ) {
+    super("BADGE_SIZE_TOO_SMALL", "the ticked rows do not fit the badge's size", fields);
+  }
+}
+
+/**
  * The designer's post, held to the rules before it is kept — refused, never quietly changed, where the
  * club typed something that cannot print as typed:
  *
  * - «Altă dimensiune» needs a whole width and height in millimetres within `BADGE_CUSTOM_BOUNDS`;
- * - every text the club types is Romanian **and** English, or neither (§352): the short title, «VOLUNTAR»
- *   and the telephone's label, the empty side named;
+ * - every text the club types is Romanian **and** English, or neither (§352): the short title, «VOLUNTAR»,
+ *   the free-text line, the marker area's label and the telephone's label, the empty side named;
+ * - «Text liber» ticked needs something written in it (§776);
+ * - a size too small for everything ticked is refused (`BADGE_SIZE_TOO_SMALL`, `badgeSizeRefusal`): the free-text
+ *   line and the telephone together need a taller badge, and the sentence says how tall;
  * - «Telefon coordonator» ticked needs a number written like one (the bib's own check, §750);
  * - the header band's colour must carry its words at AA (`BADGE_COLOUR_UNREADABLE`).
  *
@@ -116,6 +140,8 @@ export function parseBadgeDesignPost(values: BadgeDesignFormValues): BadgeDesign
   const pairs = [
     ["titleRo", "titleEn"],
     ["labelRo", "labelEn"],
+    ["freeTextRo", "freeTextEn"],
+    ["markerLabelRo", "markerLabelEn"],
     ["phoneLabelRo", "phoneLabelEn"],
   ] as const;
   const oneLanguage = pairs.flatMap(([ro, en]) => {
@@ -123,6 +149,10 @@ export function parseBadgeDesignPost(values: BadgeDesignFormValues): BadgeDesign
     return missing ? [box(missing === "ro" ? ro : en)] : [];
   });
   if (oneLanguage.length > 0) throw invalid("a text is written in one language only; write it in both, or in neither", oneLanguage);
+  // «Text liber» ticked with nothing in it prints nothing: say so, naming the Romanian box, rather than keep a tick that does nothing.
+  if (values.showFreeText && !isWrittenText(values.freeTextRo) && !isWrittenText(values.freeTextEn)) {
+    throw invalid("free text: ticked with nothing written", [box("freeTextRo")]);
+  }
   // Whatever the tick says: a number typed and not readable as one is refused, never kept as nothing while the box is off.
   if ((values.showPhone || values.phone.trim() !== "") && bibEmergencyPhone(values.phone) === "") throw invalid("phone: not written like a telephone number", [box("phone")]);
   if (values.bandColour !== null && !badgeColourReadable(values.bandColour)) {
@@ -134,7 +164,16 @@ export function parseBadgeDesignPost(values: BadgeDesignFormValues): BadgeDesign
     customHeightMm: values.size === "custom" ? values.customHeightMm : Number.isFinite(values.customHeightMm) ? values.customHeightMm : undefined,
   });
   if (!parsed.success) throw invalid("the design could not be read", []);
-  return parsed.data;
+  const design = parsed.data;
+  const tooSmall = badgeSizeRefusal(design, {
+    freeText: design.showFreeText && (design.freeTextRo !== "" || design.freeTextEn !== ""),
+    phone: design.showPhone && design.phone !== "",
+  });
+  if (tooSmall) {
+    const { widthMm, heightMm } = badgeSizeMm(design);
+    throw new BadgeSizeRefusal(tooSmall.what, widthMm, heightMm, tooSmall.minHeightMm, [box(design.size === "custom" ? "customHeightMm" : "size")]);
+  }
+  return design;
 }
 
 /**

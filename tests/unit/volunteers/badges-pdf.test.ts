@@ -16,7 +16,7 @@ import { COLOR } from "@/theme/brand";
  * `BADGE_SAMPLE_DIR=<folder>` writes a sample sheet and pictures there, to look at.
  */
 
-const WORDS = { title: "Brașov Trail Race", label: "VOLUNTAR", name: "Nume:", phone: "Coordonator: 0712 345 678" };
+const WORDS = { title: "Brașov Trail Race", label: "VOLUNTAR", name: "Nume:", phone: "Coordonator: 0712 345 678", free: null, markerLabel: null };
 const ENTRIES = [
   { role: { name: "Punct de apă", colour: "#c62828" }, count: 5 },
   { role: { name: "Marshal pe traseu", colour: null }, count: 12 },

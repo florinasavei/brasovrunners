@@ -32,6 +32,9 @@ import { badgeDesignValuesFromQuery } from "./badge-query";
 export const BADGE_TITLE_MAX = 60;
 export const BADGE_LABEL_MAX = 24;
 export const BADGE_PHONE_LABEL_MAX = 30;
+/** §776: the free-text line under the role's band, and the label of the marker's area («Tură», «Zona»). */
+export const BADGE_FREE_TEXT_MAX = 60;
+export const BADGE_MARKER_LABEL_MAX = 20;
 
 /**
  * The header band's colour as stored: a hex triplet, lower case, that carries its words at AA — or null
@@ -78,6 +81,14 @@ export const badgeDesignSchema = z
     labelEn: line(BADGE_LABEL_MAX),
     /** One faint line across the writing area, for the marker. */
     writingLine: z.boolean().catch(true),
+    /** «Text liber» (§776): one line of the club's own words under the role's band, in both languages or neither. */
+    showFreeText: z.boolean().catch(false),
+    freeTextRo: line(BADGE_FREE_TEXT_MAX),
+    freeTextEn: line(BADGE_FREE_TEXT_MAX),
+    /** «Spațiu pentru marker» (§776): a second white writing area beside «Nume:», with an optional short label. */
+    showMarker: z.boolean().catch(false),
+    markerLabelRo: line(BADGE_MARKER_LABEL_MAX),
+    markerLabelEn: line(BADGE_MARKER_LABEL_MAX),
     /** «Telefon coordonator»: the tick, the number (the bib's own check), and its label in both languages. */
     showPhone: z.boolean().catch(false),
     phone: z.string().transform(bibEmergencyPhone).catch(""),
@@ -106,6 +117,12 @@ export const DEFAULT_BADGE_DESIGN: BadgeDesign = {
   labelRo: "",
   labelEn: "",
   writingLine: true,
+  showFreeText: false,
+  freeTextRo: "",
+  freeTextEn: "",
+  showMarker: false,
+  markerLabelRo: "",
+  markerLabelEn: "",
   showPhone: false,
   phone: "",
   phoneLabelRo: "",
@@ -122,6 +139,28 @@ export function readBadgeDesign(value: unknown): BadgeDesign {
   const known = Object.fromEntries(Object.keys(DEFAULT_BADGE_DESIGN).filter((key) => key in stored).map((key) => [key, stored[key]]));
   const parsed = badgeDesignSchema.safeParse({ ...DEFAULT_BADGE_DESIGN, ...known });
   return parsed.success ? parsed.data : DEFAULT_BADGE_DESIGN;
+}
+
+/**
+ * The §776 settings a stored design holds as something they cannot be (a text that is a number, a tick that
+ * is a word — a file made by hand, a later release's shape): `readBadgeDesign` leaves each out, as the
+ * platform's own, and the designer says so beside its section, so the club types it again rather than
+ * wonder where it went. An old design without the keys is nothing to say: absent is not unreadable.
+ */
+export const BADGE_DROPPABLE = {
+  showFreeText: "boolean",
+  freeTextRo: "string",
+  freeTextEn: "string",
+  showMarker: "boolean",
+  markerLabelRo: "string",
+  markerLabelEn: "string",
+} as const;
+export type BadgeDroppedKey = keyof typeof BADGE_DROPPABLE;
+
+export function badgeDesignDropped(value: unknown): BadgeDroppedKey[] {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) return [];
+  const stored = value as Record<string, unknown>;
+  return (Object.keys(BADGE_DROPPABLE) as BadgeDroppedKey[]).filter((key) => key in stored && stored[key] !== undefined && stored[key] !== null && typeof stored[key] !== BADGE_DROPPABLE[key]);
 }
 
 /** The unsaved design the preview's address carries, read as the save reads it — field by field. */
@@ -184,6 +223,10 @@ export type BadgeWords = {
   name: string;
   /** «Coordonator: 07xx xxx xxx», or null while the tick is off or no valid number was typed. */
   phone: string | null;
+  /** The club's free-text line in this language, or null while the tick is off or nothing is written in it (§776). */
+  free: string | null;
+  /** The marker area's label with its colon, or null while the tick is off or the club typed none in this language (§776). */
+  markerLabel: string | null;
 };
 
 /**
@@ -197,7 +240,17 @@ export function badgeWords(design: BadgeDesign, locale: BadgeLocale, eventTitle:
   const label = pick(design.labelRo, design.labelEn) || defaults.label;
   const phoneLabel = pick(design.phoneLabelRo, design.phoneLabelEn) || defaults.phoneLabel;
   const phone = design.showPhone && design.phone ? (phoneLabel ? `${phoneLabel}: ${design.phone}` : design.phone) : null;
-  return { title, label, name: defaults.name, phone };
+  const freeText = pick(design.freeTextRo, design.freeTextEn);
+  const markerText = pick(design.markerLabelRo, design.markerLabelEn);
+  return {
+    title,
+    label,
+    name: defaults.name,
+    phone,
+    free: design.showFreeText && freeText ? freeText : null,
+    // «Nume:» has its colon and so has the label beside it, whether or not the club typed one.
+    markerLabel: design.showMarker && markerText ? (markerText.endsWith(":") ? markerText : `${markerText}:`) : null,
+  };
 }
 
 /** A role's name as the band prints it: one line the font can draw, in capitals in the badge's language (ș stays ș). */

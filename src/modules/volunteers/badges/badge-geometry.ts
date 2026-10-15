@@ -9,17 +9,23 @@
  * **A badge is a small, long strip** (the owner, 2026-10-14: «Badge-urile sunt de obicei mai mici și
  * mai lungi și fără nume, numele îl scriem manual cu markerul»): 90 × 35 mm by default, 100 × 40 mm,
  * or the club's own size within `BADGE_CUSTOM_BOUNDS`. Inside a white border of `BADGE_INSET` — the
- * room scissors that miss the line by a millimetre need, as the bib's margin is (§338) — four rows, top
+ * room scissors that miss the line by a millimetre need, as the bib's margin is (§338) — up to five rows, top
  * to bottom:
  *
  * 1. **the header band**: the band's colour (or the club's picture across it), the club's logo at its
  *    left on its own white ground, the event's short title at its right;
  * 2. **the role's band**, in the role's colour: «VOLUNTAR» small above the role's name, large — or, on a
  *    badge «fără rol», «VOLUNTAR» alone, large;
- * 3. **the writing area**, white: «Nume:» at its top left and, when the club wants it, one faint line
- *    for the marker. It never has less than `BADGE_WRITING_MIN` of height: when the size leaves less,
- *    the two bands above give up their share (`badgeRows`);
- * 4. **the coordinator's telephone**, one small line, when the club ticks it.
+ * 3. **the free-text line** (§776), small and centred on the white under the role's band, when the club
+ *    writes one: its own words, in the badge's language;
+ * 4. **the writing area**, white: «Nume:» at its top left and, when the club wants it, one faint line
+ *    for the marker. With «Spațiu pentru marker» (§776) the area is shared beside the name — a faint
+ *    divider, then the club's label («Tură:») and one faint line at the same height, for a word in
+ *    marker; beside, not under, because a strip is short and wide. It never has less than
+ *    `BADGE_WRITING_MIN` of height: when the size leaves less, the two bands above give up their share
+ *    (`badgeRows`) — and a size where they would keep less than `BADGE_BANDS_MIN_SHARE` of it is
+ *    refused at the save (`badgeSizeRefusal`);
+ * 5. **the coordinator's telephone**, one small line, when the club ticks it.
  *
  * Every height is a share of the badge's content (`BADGE_LAYOUT`), so a larger badge is the same badge,
  * larger. Pure: imports the bib's pure measure and A4 only.
@@ -73,6 +79,22 @@ export const BADGE_INSET = 2 * MM;
 export const BADGE_WRITING_MIN = 10 * MM;
 
 /**
+ * The least of its natural height the header and the role's band keep when the rows under them take
+ * theirs (§776): four fifths. A design whose ticked rows (the free-text line, the telephone) would
+ * squeeze the bands further is refused at the save (`badgeSizeRefusal`), never drawn crushed.
+ */
+export const BADGE_BANDS_MIN_SHARE = 0.8;
+
+/**
+ * The widths the two writing areas keep when «Spațiu pentru marker» is ticked (§776): 16 mm for a word in
+ * marker, 24 mm for a name, and 2 mm between them for the divider. `BADGE_CUSTOM_BOUNDS` leaves room for
+ * both at every height — the tallest badge has the widest pad — which a test keeps true.
+ */
+export const BADGE_MARKER_MIN_WIDTH = 16 * MM;
+export const BADGE_NAME_MIN_WIDTH = 24 * MM;
+export const BADGE_MARKER_GAP = 2 * MM;
+
+/**
  * The badge's proportions, as shares of the content's height (the paper less its border), and the
  * least size any line is set at. Both renderers read them through `badgeLayout`, never directly.
  */
@@ -106,6 +128,15 @@ export const BADGE_LAYOUT = {
   /** The telephone's size, of its row, and the least it shrinks to before it is cut. */
   phoneSizeShare: 0.62,
   phoneMinSize: 4.5,
+  /** The free-text line's row, of the content's height (§776): the telephone's own measure, under the role's band. */
+  freeShare: 0.1,
+  /** Its size, of its row, and the least it shrinks to before it is cut. */
+  freeSizeShare: 0.62,
+  freeMinSize: 4.5,
+  /** The marker's area (§776) beside «Nume:»: its share of the writing area's width, never less than the width below. */
+  markerShare: 0.38,
+  /** The divider between the two areas: its inset from the writing area's top and foot, of the pad. */
+  dividerInsetShare: 0.5,
   /** Every shrink goes down by this many points. */
   sizeStep: 0.5,
 } as const;
@@ -114,36 +145,66 @@ export const BADGE_LAYOUT = {
 export type BadgeRow = { top: number; height: number };
 
 /**
- * The four rows of a badge (`BADGE_LAYOUT`'s shares of the content): the bands take their share and the
- * writing area what is left — never less than `BADGE_WRITING_MIN`. When a small size leaves it less, the
- * header and the role's band shrink together, in proportion, until it has it; the telephone's row keeps
- * its own. With no telephone the area takes that row too.
+ * The rows of a badge, top to bottom (`BADGE_LAYOUT`'s shares of the content): the header, the role's band,
+ * the free-text line when the club writes one (§776), the writing area and the telephone. The bands take
+ * their share and the writing area what is left — never less than `BADGE_WRITING_MIN`. When a small size
+ * leaves it less, the header and the role's band shrink together, in proportion, until it has it, and
+ * `squeeze` says how much of their natural height they kept (1 when none was lost); the free-text and
+ * telephone rows keep their own. With no free text or telephone the area takes that row too.
  */
-export function badgeRows(paper: { width: number; height: number }, phoneShown: boolean): {
+export function badgeRows(paper: { width: number; height: number }, phoneShown: boolean, freeShown = false): {
   content: { left: number; top: number; width: number; height: number };
   header: BadgeRow;
   role: BadgeRow;
+  free: BadgeRow | null;
   writing: BadgeRow;
   phone: BadgeRow | null;
+  squeeze: number;
 } {
   const L = BADGE_LAYOUT;
   const content = { left: BADGE_INSET, top: BADGE_INSET, width: paper.width - 2 * BADGE_INSET, height: paper.height - 2 * BADGE_INSET };
   const phoneHeight = phoneShown ? content.height * L.phoneShare : 0;
+  const freeHeight = freeShown ? content.height * L.freeShare : 0;
   let headerHeight = content.height * L.headerShare;
   let roleHeight = content.height * L.roleShare;
-  const left = content.height - headerHeight - roleHeight - phoneHeight;
+  let squeeze = 1;
+  const left = content.height - headerHeight - roleHeight - phoneHeight - freeHeight;
   if (left < BADGE_WRITING_MIN) {
-    const room = Math.max(0, content.height - phoneHeight - BADGE_WRITING_MIN);
-    const factor = room / (headerHeight + roleHeight);
-    headerHeight *= factor;
-    roleHeight *= factor;
+    const room = Math.max(0, content.height - phoneHeight - freeHeight - BADGE_WRITING_MIN);
+    squeeze = room / (headerHeight + roleHeight);
+    headerHeight *= squeeze;
+    roleHeight *= squeeze;
   }
-  const writingHeight = content.height - headerHeight - roleHeight - phoneHeight;
+  const writingHeight = content.height - headerHeight - roleHeight - phoneHeight - freeHeight;
   const header = { top: content.top, height: headerHeight };
   const role = { top: header.top + headerHeight, height: roleHeight };
-  const writing = { top: role.top + roleHeight, height: writingHeight };
+  const free = freeShown ? { top: role.top + roleHeight, height: freeHeight } : null;
+  const writing = { top: role.top + roleHeight + freeHeight, height: writingHeight };
   const phone = phoneShown ? { top: writing.top + writingHeight, height: phoneHeight } : null;
-  return { content, header, role, writing, phone };
+  return { content, header, role, free, writing, phone, squeeze };
+}
+
+/** The rows a ticked extra takes height for: the free-text line and the coordinator's telephone. */
+export type BadgeExtra = "freeText" | "phone";
+
+/**
+ * Whether a size has room for everything ticked (§776), or what does not fit: the ticked rows that take
+ * height, when the bands would keep less than `BADGE_BANDS_MIN_SHARE` of theirs, and the least height
+ * (whole millimetres, at the same width) at which they all do — what the save's refusal says in words. Null
+ * when everything fits. «Spațiu pentru marker» takes width, not height, and is never refused here: the
+ * custom bounds keep both areas their minimum width (`BADGE_MARKER_MIN_WIDTH`, `BADGE_NAME_MIN_WIDTH`).
+ */
+export function badgeSizeRefusal(
+  choice: BadgeSizeChoice,
+  ticked: { freeText: boolean; phone: boolean },
+): { what: BadgeExtra[]; minHeightMm: number } | null {
+  const { widthMm, heightMm } = badgeSizeMm(choice);
+  const fits = (height: number) =>
+    badgeRows(badgePaper({ size: "custom", customWidthMm: widthMm, customHeightMm: height }), ticked.phone, ticked.freeText).squeeze + 1e-9 >= BADGE_BANDS_MIN_SHARE;
+  if (fits(heightMm)) return null;
+  let minHeightMm = heightMm + 1;
+  while (minHeightMm < BADGE_CUSTOM_BOUNDS.height.max && !fits(minHeightMm)) minHeightMm += 1;
+  return { what: [...(ticked.freeText ? (["freeText"] as const) : []), ...(ticked.phone ? (["phone"] as const) : [])], minHeightMm };
 }
 
 /** How wide a text is in ems of its own type: the bold (title, «VOLUNTAR», the role) and the regular (the rest). */
@@ -185,6 +246,10 @@ export type BadgeLayoutWords = {
   role: string | null;
   name: string;
   phone: string | null;
+  /** The club's free-text line in the badge's language (§776), or null for no row. */
+  free: string | null;
+  /** The marker area's label («Tură:»), or null for an area with a line and no label. */
+  markerLabel: string | null;
 };
 
 /** What decides the look of a badge's rows, besides its words. */
@@ -193,6 +258,8 @@ export type BadgeLayoutChoice = BadgeSizeChoice & {
   headerPicture: boolean;
   showLogo: boolean;
   writingLine: boolean;
+  /** «Spațiu pentru marker»: a second writing area beside «Nume:» (§776). */
+  showMarker: boolean;
 };
 
 /** Everything both renderers draw, in points from the paper's top left corner. */
@@ -201,6 +268,7 @@ export type BadgeLayout = {
   content: { left: number; top: number; width: number; height: number };
   header: BadgeRow;
   role: BadgeRow;
+  free: BadgeRow | null;
   writing: BadgeRow;
   phone: BadgeRow | null;
   /** The room inside the content's sides. */
@@ -212,10 +280,23 @@ export type BadgeLayout = {
   label: BadgeTextLine | null;
   /** The band's large line, centred: the role's name, or «VOLUNTAR» alone. */
   roleLine: BadgeTextLine;
+  /** The free-text line, small and centred under the role's band (§776), or null. */
+  freeLine: BadgeTextLine | null;
   /** «Nume:» at the writing area's top left. */
   name: BadgeTextLine & { left: number };
-  /** The faint line across the writing area, or null. */
+  /** The faint line across the name's area (the writing area's whole width, or what the marker's area leaves it), or null. */
   line: { left: number; right: number; y: number } | null;
+  /**
+   * «Spațiu pentru marker» (§776), beside the name's area: a faint divider, the club's label at its top left
+   * when it typed one, and one faint line at the name's own height; null when the tick is off.
+   */
+  marker: {
+    left: number;
+    width: number;
+    divider: { x: number; top: number; bottom: number };
+    label: (BadgeTextLine & { left: number }) | null;
+    line: { left: number; right: number; y: number };
+  } | null;
   /** The telephone, centred in its row. */
   phoneLine: BadgeTextLine | null;
 };
@@ -230,8 +311,8 @@ export type BadgeLayout = {
 export function badgeLayout(choice: BadgeLayoutChoice, words: BadgeLayoutWords, measure: BadgeMeasure): BadgeLayout {
   const L = BADGE_LAYOUT;
   const paper = badgePaper(choice);
-  const rows = badgeRows(paper, words.phone !== null);
-  const { content, header, role, writing, phone } = rows;
+  const rows = badgeRows(paper, words.phone !== null, words.free !== null);
+  const { content, header, role, free, writing, phone } = rows;
   const pad = header.height * L.padShare;
   const centred = (row: BadgeRow, size: number) => row.top + (row.height - badgeLineHeight(size)) / 2;
 
@@ -263,11 +344,40 @@ export function badgeLayout(choice: BadgeLayoutChoice, words: BadgeLayoutWords, 
     roleLine = { ...alone, top: centred(role, alone.size) };
   }
 
+  const freeLine =
+    free && words.free
+      ? (() => {
+          const fitted = badgeFit(words.free, measure.regular, bandWidth, free.height * L.freeSizeShare, L.freeMinSize);
+          return { ...fitted, top: centred(free, fitted.size) };
+        })()
+      : null;
+
+  // The writing area: the name's area at the left and, with the marker's tick, the marker's at its right.
+  const areaLeft = content.left + pad;
+  const areaRight = content.left + content.width - pad;
+  const markerWidth = choice.showMarker ? Math.max(BADGE_MARKER_MIN_WIDTH, bandWidth * L.markerShare) : 0;
+  const nameWidth = choice.showMarker ? Math.max(0, bandWidth - markerWidth - BADGE_MARKER_GAP) : bandWidth;
+  const lineY = writing.top + writing.height * (1 - L.lineFromFootShare);
   const nameSize = content.height * L.nameShare;
-  const nameFitted = badgeFit(words.name, measure.regular, bandWidth, nameSize, Math.min(nameSize, L.phoneMinSize));
-  const name = { ...nameFitted, top: writing.top + pad * L.nameTopShare, left: content.left + pad };
-  const line = choice.writingLine
-    ? { left: content.left + pad, right: content.left + content.width - pad, y: writing.top + writing.height * (1 - L.lineFromFootShare) }
+  const nameFitted = badgeFit(words.name, measure.regular, nameWidth, nameSize, Math.min(nameSize, L.phoneMinSize));
+  const nameTop = writing.top + pad * L.nameTopShare;
+  const name = { ...nameFitted, top: nameTop, left: areaLeft };
+  const line = choice.writingLine ? { left: areaLeft, right: areaLeft + nameWidth, y: lineY } : null;
+  const marker = choice.showMarker
+    ? (() => {
+        const left = areaRight - markerWidth;
+        const label = words.markerLabel
+          ? { ...badgeFit(words.markerLabel, measure.regular, markerWidth, nameSize, Math.min(nameSize, L.phoneMinSize)), top: nameTop, left }
+          : null;
+        const inset = pad * L.dividerInsetShare;
+        return {
+          left,
+          width: markerWidth,
+          divider: { x: areaLeft + nameWidth + BADGE_MARKER_GAP / 2, top: writing.top + inset, bottom: writing.top + writing.height - inset },
+          label,
+          line: { left, right: areaRight, y: lineY },
+        };
+      })()
     : null;
 
   const phoneLine =
@@ -278,7 +388,7 @@ export function badgeLayout(choice: BadgeLayoutChoice, words: BadgeLayoutWords, 
         })()
       : null;
 
-  return { paper, content, header, role, writing, phone, pad, logo, title, label, roleLine, name, line, phoneLine };
+  return { paper, content, header, role, free, writing, phone, pad, logo, title, label, roleLine, freeLine, name, line, marker, phoneLine };
 }
 
 // --- The sheet -------------------------------------------------------------------------------

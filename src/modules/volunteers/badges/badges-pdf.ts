@@ -30,7 +30,8 @@ import { BADGE_LAYOUT, BADGE_PAGE_MARGIN, type BadgeLayout, badgeLayout, badgePa
  * Drawn at `badge-geometry.ts`'s points, as the picture (`badge-image.tsx`) draws them: the header band
  * in its colour or the club's picture across it (the crop drawn by the bib's rule, `pictureDrawingIn`),
  * the logo as its file is — blue on its own white ground, never recoloured — the role's band with its
- * words in white or ink, whichever reads on it, the writing area and the telephone. Every line was fitted
+ * words in white or ink, whichever reads on it, the free-text line (§776), the writing area — with the
+ * marker's area beside «Nume:» when the club ticks it — and the telephone. Every line was fitted
  * by the layout; each is handed to pdfkit with **no width**, so it cannot wrap (the bib's §317 lesson).
  */
 
@@ -109,7 +110,7 @@ export async function renderBadgeSheet(input: BadgeSheetInput): Promise<Buffer> 
     if (!layout) {
       layout = badgeLayout(
         { ...design, headerPicture: header !== null },
-        { title: words.title, label, role: role ? badgeRoleText(role.name, locale) : null, name: words.name, phone: words.phone },
+        { title: words.title, label, role: role ? badgeRoleText(role.name, locale) : null, name: words.name, phone: words.phone, free: words.free, markerLabel: words.markerLabel },
         measure,
       );
       layouts.set(key, layout);
@@ -159,18 +160,22 @@ export async function renderBadgeSheet(input: BadgeSheetInput): Promise<Buffer> 
     const bandWidth = content.width - 2 * pad;
     if (layout.label) text("bold", layout.label, centredX("bold", layout.label, x + content.left + pad, bandWidth), y, roleText);
     text("bold", layout.roleLine, centredX("bold", layout.roleLine, x + content.left + pad, bandWidth), y, roleText);
+    // The free-text line (§776): the club's own words, small and centred under the role's band.
+    if (layout.freeLine) text("body", layout.freeLine, centredX("body", layout.freeLine, x + content.left + pad, bandWidth), y, COLOR.ink);
     // The writing area: «Nume:», and the faint line the name is written on.
     text("body", layout.name, x + layout.name.left, y, COLOR.inkMuted);
-    if (layout.line) {
+    /** A faint hairline, as the writing line is: the name's, the marker's and the divider between them. */
+    const faint = (x1: number, y1: number, x2: number, y2: number) => {
       doc.save();
-      doc
-        .moveTo(x + layout.line.left, y + layout.line.y)
-        .lineTo(x + layout.line.right, y + layout.line.y)
-        .lineWidth(L.lineWeight)
-        .strokeOpacity(L.lineOpacity)
-        .strokeColor(COLOR.inkMuted)
-        .stroke();
+      doc.moveTo(x + x1, y + y1).lineTo(x + x2, y + y2).lineWidth(L.lineWeight).strokeOpacity(L.lineOpacity).strokeColor(COLOR.inkMuted).stroke();
       doc.restore();
+    };
+    if (layout.line) faint(layout.line.left, layout.line.y, layout.line.right, layout.line.y);
+    // «Spațiu pentru marker» (§776): a divider, the club's label and one faint line at the name's height. Blank: it is written at the desk.
+    if (layout.marker) {
+      faint(layout.marker.divider.x, layout.marker.divider.top, layout.marker.divider.x, layout.marker.divider.bottom);
+      if (layout.marker.label) text("body", layout.marker.label, x + layout.marker.label.left, y, COLOR.inkMuted);
+      faint(layout.marker.line.left, layout.marker.line.y, layout.marker.line.right, layout.marker.line.y);
     }
     if (layout.phoneLine) text("body", layout.phoneLine, centredX("body", layout.phoneLine, x + content.left + pad, bandWidth), y, COLOR.ink);
   };

@@ -25,6 +25,7 @@ import FeedbackIcon from "@mui/icons-material/Feedback";
 import FilterAltIcon from "@mui/icons-material/FilterAlt";
 import FlagIcon from "@mui/icons-material/Flag";
 import GavelIcon from "@mui/icons-material/Gavel";
+import GestureIcon from "@mui/icons-material/Gesture";
 import GroupAddIcon from "@mui/icons-material/GroupAdd";
 import GroupsIcon from "@mui/icons-material/Groups";
 import HandshakeIcon from "@mui/icons-material/Handshake";
@@ -73,6 +74,7 @@ import TimerIcon from "@mui/icons-material/Timer";
 import TitleIcon from "@mui/icons-material/Title";
 import TranslateIcon from "@mui/icons-material/Translate";
 import TerrainIcon from "@mui/icons-material/Terrain";
+import TextFieldsIcon from "@mui/icons-material/TextFields";
 import UpdateIcon from "@mui/icons-material/Update";
 import VerticalAlignBottomIcon from "@mui/icons-material/VerticalAlignBottom";
 import VerticalAlignTopIcon from "@mui/icons-material/VerticalAlignTop";
@@ -153,6 +155,9 @@ export const PANEL_GLYPHS = {
   badgeSize: StraightenIcon,
   badgeRole: LabelIcon,
   badgeWriting: BorderColorIcon,
+  // §776: the club's free-text line under the role's band, and the second area to write in with the marker.
+  badgeFreeText: TextFieldsIcon,
+  badgeMarker: GestureIcon,
   badgeCut: ContentCutIcon,
   // «Puncte de control» (§757): the points of the route, a pin on the ground.
   checkpoints: PinDropIcon,

@@ -33,6 +33,12 @@ export type BadgeDesignFormValues = {
   labelRo: string;
   labelEn: string;
   writingLine: boolean;
+  showFreeText: boolean;
+  freeTextRo: string;
+  freeTextEn: string;
+  showMarker: boolean;
+  markerLabelRo: string;
+  markerLabelEn: string;
   showPhone: boolean;
   phone: string;
   phoneLabelRo: string;
@@ -40,8 +46,21 @@ export type BadgeDesignFormValues = {
   cutMarks: boolean;
 };
 
-const SWITCHES = ["showLogo", "showTitle", "writingLine", "showPhone", "cutMarks"] as const;
-const TEXTS = ["size", "titleRo", "titleEn", "labelRo", "labelEn", "phone", "phoneLabelRo", "phoneLabelEn"] as const;
+const SWITCHES = ["showLogo", "showTitle", "writingLine", "showFreeText", "showMarker", "showPhone", "cutMarks"] as const;
+const TEXTS = [
+  "size",
+  "titleRo",
+  "titleEn",
+  "labelRo",
+  "labelEn",
+  "freeTextRo",
+  "freeTextEn",
+  "markerLabelRo",
+  "markerLabelEn",
+  "phone",
+  "phoneLabelRo",
+  "phoneLabelEn",
+] as const;
 const NUMBERS = ["customWidthMm", "customHeightMm"] as const;
 
 /** Whether a form control is one of the designer's: the island listens to these and nothing else. */
@@ -80,6 +99,12 @@ export function readBadgeDesignForm(get: (name: string) => string | null): Badge
     labelRo: text("labelRo"),
     labelEn: text("labelEn"),
     writingLine: at("writingLine") !== null,
+    showFreeText: at("showFreeText") !== null,
+    freeTextRo: text("freeTextRo"),
+    freeTextEn: text("freeTextEn"),
+    showMarker: at("showMarker") !== null,
+    markerLabelRo: text("markerLabelRo"),
+    markerLabelEn: text("markerLabelEn"),
     showPhone: at("showPhone") !== null,
     phone: text("phone"),
     phoneLabelRo: text("phoneLabelRo"),
