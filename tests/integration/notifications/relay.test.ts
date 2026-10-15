@@ -231,9 +231,9 @@ describe("§778 the relay: a visitor's message through the outbox", () => {
       expect(noticeMails).toHaveLength(2);
       const ro = noticeMails.find((message) => message.to === "admin@dev.test")!;
       const en = noticeMails.find((message) => message.to === "super@dev.test")!;
-      expect(ro.subject).toBe("Mailgun nu a trimis un mesaj: a plecat prin Gmail-ul clubului");
+      expect(ro.subject).toBe("[livrare] Mailgun nu a trimis un mesaj: a plecat prin Gmail-ul clubului");
       expect(ro.text).toContain("mailgun 503: unavailable");
-      expect(en.subject).toBe("Mailgun did not carry a message: it left by the club's Gmail");
+      expect(en.subject).toBe("[livrare] Mailgun did not carry a message: it left by the club's Gmail");
       for (const mail of noticeMails) {
         expect(mail.text).not.toContain("Foarte frumos");
         expect(mail.text).toContain("/admin/settings/emails");

@@ -153,7 +153,7 @@ describe("BR-REQ-070-04 CC and BCC on the contact page's messages", () => {
       log.mockRestore();
     }
     const [message] = capture.messages;
-    expect(message.subject.startsWith("[posibil spam] ")).toBe(true);
+    expect(message.subject.startsWith("[contact][posibil spam] ")).toBe(true);
     expect(message.cc).toEqual(["ioana@example.org"]);
     expect(message.bcc).toEqual(["arhiva@example.org"]);
   });

@@ -404,7 +404,7 @@ describe("§639 the Administrators are emailed when a release moves a legal temp
 
     const ro = await renderOutboxMessage(rows.find((row) => row.locale === "ro")!, db, NOW);
     expect(ro.to).toBe("super@dev.test");
-    expect(ro.subject).toBe("Șabloanele textelor legale s-au schimbat: regenerează și aprobă / The legal templates changed: regenerate and approve");
+    expect(ro.subject).toBe("[legal] Șabloanele textelor legale s-au schimbat: regenerează și aprobă / The legal templates changed: regenerate and approve");
     expect(ro.text).toContain("Salut, Ana");
     expect(ro.text).toContain("Șablon nou: GDPR · Termeni de concurs");
     expect(ro.text).toContain("New template: GDPR · Racing TOS");
@@ -421,7 +421,7 @@ describe("§639 the Administrators are emailed when a release moves a legal temp
 
     const en = await renderOutboxMessage(rows.find((row) => row.locale === "en")!, db, NOW);
     expect(en.to).toBe("admin@dev.test");
-    expect(en.subject).toBe("The legal templates changed: regenerate and approve / Șabloanele textelor legale s-au schimbat: regenerează și aprobă");
+    expect(en.subject).toBe("[legal] The legal templates changed: regenerate and approve / Șabloanele textelor legale s-au schimbat: regenerează și aprobă");
     expect(en.text).toContain("Hi John,");
     expect(en.text).toContain("«Legal documents» → «New version» → «Regenerate all»");
     expect(en.text).toContain("Before approving, a lawyer should read the changed texts, above all the terms.");
