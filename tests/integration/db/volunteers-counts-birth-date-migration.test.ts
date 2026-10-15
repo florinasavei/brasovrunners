@@ -27,11 +27,11 @@ beforeAll(async () => {
   const journal = JSON.parse(readFileSync(`${MIGRATIONS}/meta/_journal.json`, "utf8")) as Journal;
   const position = journal.entries.findIndex((entry) => entry.tag === TAG);
   expect(position, "the journal lists the migration").toBeGreaterThan(0);
-  // Sorts after every migration before it (drizzle applies by `when`), and is the last one.
+  // Sorts after every migration before it (drizzle applies by `when`).
   expect(journal.entries[position].when).toBeGreaterThan(journal.entries[position - 1].when);
   expect(journal.entries[position].idx).toBe(journal.entries[position - 1].idx + 1);
   expect(journal.entries[position - 1].tag).toBe("0158_declaration_signature_trace");
-  expect(position).toBe(journal.entries.length - 1);
+  // Not the last any more: `0160_volunteer_role_categories` follows it (this test replays the journal only up to it).
 
   folder = mkdtempSync(path.join(tmpdir(), "volunteer-counts-birth-"));
   cpSync(MIGRATIONS, folder, { recursive: true });
