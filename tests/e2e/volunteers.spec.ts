@@ -949,7 +949,7 @@ test.describe("§754 volunteers for a race", () => {
     const contact = route.getByTestId("volunteer-category-contact");
     await openFold(contact);
     await contact.getByLabel("Numele persoanei de contact").fill("Ana Popescu");
-    await contact.getByLabel("Telefon").fill("0712 345 678");
+    await contact.getByLabel("Telefon", { exact: true }).fill("0712 345 678");
     await contact.getByLabel("Adresa de email").fill("coordonator@club.test");
     await contact.getByRole("button", { name: "Salvează", exact: true }).click();
     await expect(page.getByTestId("volunteer-category").nth(0).getByTestId("volunteer-category-contact-line")).toHaveText(
