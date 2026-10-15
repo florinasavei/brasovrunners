@@ -114,7 +114,7 @@ async function pressed(form: FormData): Promise<string> {
 }
 
 /**
- * What the forms queued (§NNN): «Spune-ne ceva» no longer sends from the action — it writes an outbox row and the relay carries it
+ * What the forms queued (§778): «Spune-ne ceva» no longer sends from the action — it writes an outbox row and the relay carries it
  * after the response, which a test does not run — so what a post leaves is read from the queue, newest first, with its words.
  */
 async function queued() {

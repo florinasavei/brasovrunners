@@ -15,7 +15,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 import { deliverRelay, fakeRoads, relayRow, relayRows, sent } from "../../helpers/relay";
 
 /**
- * §NNN — a visitor's message is an outbox row: sent by the road the club chose, the other road when the chosen one is
+ * §778 — a visitor's message is an outbox row: sent by the road the club chose, the other road when the chosen one is
  * down, deleted the moment it has left. Every address is made up, on `example.org`.
  */
 const T0 = new Date("2026-10-15T09:00:00.000Z");
@@ -45,7 +45,7 @@ const visitorMail = <T extends { to: string }>(messages: readonly T[]): T[] => m
 const serviceDown = (error: string): SendResult => ({ outcome: "transient_failure", error });
 const timedOut = (error: string): SendResult => ({ outcome: "transient_failure", error, mayHaveBeenAccepted: true });
 
-describe("§NNN the relay: a visitor's message through the outbox", () => {
+describe("§778 the relay: a visitor's message through the outbox", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
 

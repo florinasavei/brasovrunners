@@ -4,7 +4,7 @@ import nodemailer from "nodemailer";
  * Plain SMTP to the club's own Gmail (`DECISIONS.md` §149, §443): the connection, its bounded waits and the
  * words for a failure — the one place that knows how the club's Gmail is reached.
  *
- * Until §NNN this file also held the contact form's own transport, a narrow contract beside the outbox's because a
+ * Until §778 this file also held the contact form's own transport, a narrow contract beside the outbox's because a
  * contact message had no row to retry from and a failure was told to the visitor on the spot. It is a row now
  * (`CONTACT_MESSAGE`): «Scrie-ne» and «Spune-ne ceva» are carried by the outbox like every other mail, and the Gmail
  * road they use is `gmail-adapter.ts`, an `EmailAdapter` over `createSmtpConnection` below. What stays here is what

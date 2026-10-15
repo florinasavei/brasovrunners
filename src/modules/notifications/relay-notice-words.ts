@@ -2,7 +2,7 @@ import type { EmailLocale } from "@/infrastructure/email/adapter";
 import type { Road } from "./domain/road-failover";
 
 /**
- * The words of the platform's two notices to the Administrators about the visitors' messages (§NNN, amending §622):
+ * The words of the platform's two notices to the Administrators about the visitors' messages (§778, amending §622):
  * «a road is down» — a message had to leave by the other road — and «a message could not be delivered» — a day passed
  * and neither road carried it, and its words are deleted. Both in Romanian and English, in the language of the
  * person's own row; nothing here names the club (the sender line does), a visitor's words or an address — only the

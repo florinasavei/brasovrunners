@@ -279,7 +279,7 @@ export type OwnerTaskInputs = {
   feedbackSafetyGmailChosen: boolean;
   /**
    * Does the notice in force, in every language, say a visitor's message waits in a queue until it leaves and may leave by the
-   * other email service (§NNN, `noticeDescribesRelayQueue`)? Until it does the notice says the platform keeps no copy — which is
+   * other email service (§778, `noticeDescribesRelayQueue`)? Until it does the notice says the platform keeps no copy — which is
    * not true of the contact and feedback forms now. Nothing is gated on it: the message is kept either way.
    */
   relayQueueDescribed: boolean;
@@ -379,7 +379,7 @@ export type OwnerTaskInputs = {
    */
   emailFailSafe: { stoppedLong: number; failed: number; retryingLate: number };
   /**
-   * The two roads emails leave by (§NNN): the ones that have been failing for over an hour — each with its last short code —
+   * The two roads emails leave by (§778): the ones that have been failing for over an hour — each with its last short code —
    * and the visitors' messages given up on in the last seven days (`relay.ts`).
    */
   emailRoads: { failing: ReadonlyArray<{ road: "gmail" | "mailgun"; error: string | null }>; lostMessages: number };
@@ -637,7 +637,7 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
       });
     }
     /*
-      The queue a visitor's message waits in (§NNN): the contact form and «Spune-ne ceva» keep the message, in the outbox, until
+      The queue a visitor's message waits in (§778): the contact form and «Spune-ne ceva» keep the message, in the outbox, until
       it leaves — the notice approved before says the platform keeps no copy. A row for as long as the notice in force does not
       name `{{relayQueue}}` (always on: the queue always runs), done by itself the day one naming it takes effect. Nothing is
       held back meanwhile: a message must never be lost to wait for a text.
@@ -828,7 +828,7 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
   });
 
   /*
-    A road that has been failing for over an hour (§NNN): Gmail or Mailgun refusing every message — a revoked app password,
+    A road that has been failing for over an hour (§778): Gmail or Mailgun refusing every message — a revoked app password,
     a closed key, a spent plan — while the other road carries what it can. Red, the club's; the detail names the road and
     its last short code. Green otherwise, and always on the list.
   */

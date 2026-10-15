@@ -150,7 +150,7 @@ export type GmailRoad = {
   paceBudgetMs?: number;
 };
 
-/** What a Gmail-only send answers when Gmail took nothing in this batch (a failure before it, or its own earlier one): the relay reads it (§NNN). */
+/** What a Gmail-only send answers when Gmail took nothing in this batch (a failure before it, or its own earlier one): the relay reads it (§778). */
 export const GMAIL_NOT_TAKING_ERROR = "gmail is not taking messages in this batch";
 
 /** Twenty seconds of pacing per batch: three or four Gmail sends at the default six seconds apart, and a function that ends. */

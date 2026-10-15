@@ -99,7 +99,7 @@ export async function readOutboxQueue<T extends Record<string, unknown>>(
   */
   // The roads as the claim splits them: one row by key, and the panel's «late» reads them (§605).
   const roads = await readOutboxRoads(db, now);
-  // A visitor's message has its own panel (§NNN, `relay-view.ts`): it leaves in seconds, on a road of its own, and the
+  // A visitor's message has its own panel (§778, `relay-view.ts`): it leaves in seconds, on a road of its own, and the
   // estimates of «când pleacă» below are about the notifications.
   const notRelay = notInArray(emailOutbox.messageType, [...RELAY_MESSAGE_TYPES]);
   const familyFlag = sql`coalesce((${emailOutbox.payloadJson} ->> 'sittingHeld') = 'true' or (${emailOutbox.payloadJson} ->> 'familyHeld') = 'true', false)`;

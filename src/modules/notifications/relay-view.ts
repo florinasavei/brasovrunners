@@ -6,7 +6,7 @@ import { readRoadFailures, type Road, type RoadFailure } from "./domain/road-fai
 import { readRoadLastSuccess, readRoadStates, type RoadState } from "./road-status";
 
 /**
- * «Mesaje de pe site» on «Setări» → «Emailuri» (§NNN): the visitors' messages the outbox carries, each with the road
+ * «Mesaje de pe site» on «Setări» → «Emailuri» (§778): the visitors' messages the outbox carries, each with the road
  * the club chose, the road it left by, how many tries, what each road answered and whether its words are still kept —
  * and the two roads' own state beside them. **No address and no word of any message:** the recipient is the club's or
  * Girl Zone's person (a confidential reader the Organizer must not learn from a list), and the words are gone the
@@ -100,7 +100,7 @@ export async function readRelayView<T extends Record<string, unknown>>(db: Datab
   };
 }
 
-/** The visitors' messages that no road carried or whose address was refused, in the last seven days: «Sarcini»' `relayLost` (§NNN). */
+/** The visitors' messages that no road carried or whose address was refused, in the last seven days: «Sarcini»' `relayLost` (§778). */
 export async function countLostRelayMessages<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<number> {
   const [row] = await db
     .select({ value: count() })

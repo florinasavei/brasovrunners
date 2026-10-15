@@ -11,7 +11,7 @@ import type { RelayRoads } from "./relay";
 import { recordRoadFailure, withRoadStatus } from "./road-status";
 
 /**
- * The two roads as the relay uses them (§NNN): each one **strictly its own** — a message handed to Gmail is never
+ * The two roads as the relay uses them (§778): each one **strictly its own** — a message handed to Gmail is never
  * sent by Mailgun inside the sender, and the other way round — because which road carries a message, and when the
  * other may, is the relay's decision (`domain/road-failover.ts`), not the sender’s spill-over (§443, §622), which stays what it
  * was for the notifications.

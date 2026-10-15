@@ -8,7 +8,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { auditMigration } from "../../../scripts/migration-check.mjs";
 
 /**
- * Migration `0162_outbox_road_and_failures` (§NNN, amending §149, §676, §772 and §622), proven on real PostgreSQL (PGlite): every
+ * Migration `0162_outbox_road_and_failures` (§778, amending §149, §676, §772 and §622), proven on real PostgreSQL (PGlite): every
  * outbox row the release before wrote keeps its meaning — no road, no failures, its words never marked deleted — the three new message
  * types can be written, a visitor's message carries its road and its per-road failures, and the file only expands.
  */

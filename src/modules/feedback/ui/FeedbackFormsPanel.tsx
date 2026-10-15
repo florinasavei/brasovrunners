@@ -35,7 +35,7 @@ type Props = {
   roads: FeedbackRoads;
   /** The privacy notice in force names `{{feedbackSafetyGmail}}` in every language (§772): until it does, Girl Zone's Gmail is greyed with a link to «Texte legale». */
   safetyGmailDescribed: boolean;
-  /** The club's Gmail account that sends (`CONTACT_SMTP_USER`), or null: a form whose recipient is this very account is warned (§NNN). */
+  /** The club's Gmail account that sends (`CONTACT_SMTP_USER`), or null: a form whose recipient is this very account is warned (§778). */
   gmailAccount?: string | null;
   openWhen?: FoldOpenWhen;
 };
@@ -208,7 +208,7 @@ export default async function FeedbackFormsPanel({ locale, state, noticeDescribe
                             {t("emails.feedbackForms.via.safetyNote")}
                           </Typography>
                         )}
-                        {/* «Dacă Mailgun pică, trimite prin Gmail-ul clubului» (§NNN): a real tick, off by default, with the readers' note.
+                        {/* «Dacă Mailgun pică, trimite prin Gmail-ul clubului» (§778): a real tick, off by default, with the readers' note.
                             Drawn only while Girl Zone leaves by Mailgun: where the club chose Gmail for her the tick means nothing (Mailgun
                             takes over from Gmail with no tick), so what is saved only travels, in a hidden field. */}
                         {branch === "safety" && state.safety.via !== "mailgun" && state.safety.fallbackToGmail && <input type="hidden" name="safetyFallbackToGmail" value="on" />}

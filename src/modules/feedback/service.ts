@@ -31,10 +31,10 @@ import {
 } from "./domain/branches";
 
 /**
- * «Spune-ne ceva» (§676): one anonymous message from a visitor — queued in the outbox the moment it is posted (§NNN) and sent at
+ * «Spune-ne ceva» (§676): one anonymous message from a visitor — queued in the outbox the moment it is posted (§778) and sent at
  * once, after the response, by the relay (`notifications/relay.ts`). The service composes the message, applies the gates and
  * writes the row; it sends nothing itself. The words stay in the row only until the message is delivered, then they are deleted
- * (§NNN, amending §676's «kept nowhere»): no body or address in a log line, and the audit trail has no row about it. *
+ * (§778, amending §676's «kept nowhere»): no body or address in a log line, and the audit trail has no row about it. *
  * **Two roads, chosen by the club for each form (§772, amending §676).** The club's Gmail over SMTP —
  * the way a contact message leaves (§149) — or Mailgun, the configured adapter through the environment's
  * sender (which captures on a laptop and in the tests). The default is what §676 fixed in code: Gmail for
@@ -45,7 +45,7 @@ import {
  * (§310) whichever road carries it. A message for Girl Zone's person has a neutral subject and is never
  * held back or marked. On Gmail the club's mailbox readers see a Girl Zone message — the one Gmail's Sent
  * folder keeps — so the person's confidentiality is the club's choice, said on the card (§772). **A road that
- * refuses is the relay's, no longer the page's (§NNN):** the person is answered «trimis», the message waits in the
+ * refuses is the relay's, no longer the page's (§778):** the person is answered «trimis», the message waits in the
  * outbox and, after two refusals by the service, the other road carries it (`domain/road-failover.ts`) — for Girl Zone's
  * person only with the club's tick and the notice's words (`fallbackAllowedFor`).
  *
@@ -84,7 +84,7 @@ export type FeedbackDeps = {
   clubFallback: readonly string[];
   /**
    * Which roads this deployment has (`feedbackRoads`): the form is offered only where the road the club chose exists. The roads
-   * themselves are the relay’s (§NNN, `notifications/relay-roads.ts`): the service queues, it does not send.
+   * themselves are the relay’s (§778, `notifications/relay-roads.ts`): the service queues, it does not send.
    */
   roads: FeedbackRoads;
   /** Which deployment sends, for the subject's `[QA] ` (§163). */
@@ -185,7 +185,7 @@ export async function submitFeedback<T extends Record<string, unknown>>(
     await refundRateLimit(db, "feedback", branch, now);
     return audience === defaultAudience(branch) ? { outcome: "sent" } : { outcome: "sent", audience };
   }
-  // Queued: it leaves at once, after this response, and by the other road when the chosen one is down (§NNN).
+  // Queued: it leaves at once, after this response, and by the other road when the chosen one is down (§778).
   return logged(branch, audience === defaultAudience(branch) ? { outcome: "sent" } : { outcome: "sent", audience }, audience);
 }
 
@@ -202,7 +202,7 @@ function readersOf(branch: FeedbackBranch, audience: "club" | "person", deps: Fe
 }
 
 /**
- * One message queued, for the road the club chose (§772; §NNN). What the road is does not change what the message
+ * One message queued, for the road the club chose (§772; §778). What the road is does not change what the message
  * is: for the club's mailbox it is screened first on the contact form's signals — held back when the
  * Administrator's tick says so (§744), else marked «[posibil spam]» (§310) — and for Girl Zone's person
  * it never is, because a lost report costs more than a marked one. `Reply-To` is the address typed

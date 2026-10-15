@@ -258,7 +258,7 @@ export const DECLARATION_TOKENS: readonly DeclarationToken[] = [
     messageKey: FEEDBACK_SAFETY_GMAIL_MERGE_FIELD,
     example: inBoth((locale) => feedbackSafetyGmailClause(locale)),
   },
-  // The privacy notice's marker for the queue a visitor's message waits in (§NNN): how long the platform keeps it before it leaves.
+  // The privacy notice's marker for the queue a visitor's message waits in (§778): how long the platform keeps it before it leaves.
   // Nothing is gated on it; `/admin/tasks` tells the club while the notice in force does not name it (`describesRelayQueue`).
   {
     token: `{{${RELAY_QUEUE_MERGE_FIELD}}}`,

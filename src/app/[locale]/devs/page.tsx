@@ -172,7 +172,7 @@ export default async function DevsPage({ params, searchParams }: Props) {
   // and against the Administrator's saved thresholds — the governor's own cached reader — so the
   // colour here is the one Costuri and `/api/health` show.
   const budget = neon.ok ? await budgetOfInForce(neon.consumption.meter, now) : await readNeonBudget(now);
-  // The two roads emails leave by (§NNN): the last message each carried and its last refusal, beside the jobs.
+  // The two roads emails leave by (§778): the last message each carried and its last refusal, beside the jobs.
   const [roadStates, roadLastSuccess] = await Promise.all([readRoadStates(db), readRoadLastSuccess(db)]);
   const jobs = await Promise.all(
     ["registration-maintenance", "email-outbox"].map((jobName) =>
@@ -819,7 +819,7 @@ export default async function DevsPage({ params, searchParams }: Props) {
                 </Typography>
               );
             })}
-            {/* The two roads (§NNN): Gmail and Mailgun, each with the last message it carried, its last refusal and, when failing, since when. */}
+            {/* The two roads (§778): Gmail and Mailgun, each with the last message it carried, its last refusal and, when failing, since when. */}
             {ROADS.map((road) => {
               const state = roadStates[road];
               const at = (value: Date) => formatDay(value, { locale, timeZone: CLUB_TIME_ZONE, style: "short", withTime: true });

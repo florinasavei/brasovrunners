@@ -357,7 +357,7 @@ describe("§772 Girl Zone's road follows the notice in force", () => {
     expect(safetyMessageSeenByMailboxReaders(DEFAULT_FEEDBACK_SETTINGS)).toBe(false);
   });
 
-  it("says «only at …» where it is not true: the club's tick, the notice's words and a Gmail that exists make her message able to leave by the club's mailbox (§NNN)", () => {
+  it("says «only at …» where it is not true: the club's tick, the notice's words and a Gmail that exists make her message able to leave by the club's mailbox (§778)", () => {
     const ticked = { ...DEFAULT_FEEDBACK_SETTINGS, safety: { ...DEFAULT_FEEDBACK_SETTINGS.safety, fallbackToGmail: true } };
     const both = { gmail: true, mailgun: true };
     expect(safetyMessageMayLeaveByGmail(ticked, true, both)).toBe(true);

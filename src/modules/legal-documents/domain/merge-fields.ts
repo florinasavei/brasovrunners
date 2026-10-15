@@ -220,7 +220,7 @@ export const FEEDBACK_FORMS_NAMED_MERGE_FIELD = "feedbackFormsNamed";
 export const FEEDBACK_SAFETY_GMAIL_MERGE_FIELD = "feedbackSafetyGmail";
 
 /**
- * The privacy notice's marker for the visitor's message queue (§NNN): «Scrie-ne» and «Spune-ne ceva» no longer keep
+ * The privacy notice's marker for the visitor's message queue (§778): «Scrie-ne» and «Spune-ne ceva» no longer keep
  * nothing — the message waits in the outbox, with its words, until it leaves (seconds; three days at the very most when
  * no service works) and may leave by the other email service when the first one is down. A notice approved before says
  * «platforma nu păstrează nicio copie» and names one road, so it does not describe this. The queue is not gated on it
@@ -799,7 +799,7 @@ export function describesFeedbackSafetyGmail(body: unknown): boolean {
 }
 
 /**
- * Whether a privacy notice describes the queue a visitor's message waits in (§NNN): it names `{{relayQueue}}`. What
+ * Whether a privacy notice describes the queue a visitor's message waits in (§778): it names `{{relayQueue}}`. What
  * `/admin/tasks`' row `relayQueueNotice` reads; nothing is gated on it. Pure; asked of the notice in force, in every language.
  */
 export function describesRelayQueue(body: unknown): boolean {

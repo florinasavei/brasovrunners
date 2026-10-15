@@ -1,7 +1,7 @@
 import type { SendResult } from "@/infrastructure/email/adapter";
 
 /**
- * Which road carries a visitor's message next, and what a road's answer means (§NNN, amending §149,
+ * Which road carries a visitor's message next, and what a road's answer means (§778, amending §149,
  * §676, §772 and §622). Pure, so the rule can be read as a table and asserted without a provider.
  *
  * **The rule.** A message has a chosen road (the club's choice for the form) and, when the club lets it,
@@ -20,7 +20,7 @@ import type { SendResult } from "@/infrastructure/email/adapter";
  * then a loss — a hanging Mailgun would never fail over. So the pin lets go after `RELAY_PIN_RELEASE_AFTER`
  * failures on the pinned road, and at once when the pinned road is stopped and the other may carry the message;
  * the roads then take turns as for any failure. A person's message that arrives twice is better than one that
- * does not arrive (§NNN, the owner's two asks). (A failure before the service could have taken it — a refused
+ * does not arrive (§778, the owner's two asks). (A failure before the service could have taken it — a refused
  * connection, a login, a DNS answer, the server's own 5xx, a connect timeout — is not ambiguous: nothing was accepted.)
  */
 export type Road = "gmail" | "mailgun";

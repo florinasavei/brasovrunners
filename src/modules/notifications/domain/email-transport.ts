@@ -107,7 +107,7 @@ export const EMAIL_GROUP_OF: Readonly<Record<Exclude<EmailMessageType, RelayMess
  * whatever the message it copies: it goes to the club's own mailbox and carries no link to act on.
  */
 export function emailGroupOf(messageType: EmailMessageType, clubCopy: boolean): EmailGroup {
-  // A visitor's message and the road notice (§NNN) take the road on the row (`road`), never a group's setting: no group lists them.
+  // A visitor's message and the road notice (§778) take the road on the row (`road`), never a group's setting: no group lists them.
   return clubCopy || isRelayMessage(messageType) ? "club" : EMAIL_GROUP_OF[messageType];
 }
 

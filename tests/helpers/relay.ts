@@ -8,7 +8,7 @@ import type { TestDatabase } from "./db";
 
 /**
  * Two roads that answer what a test says, and remember what they were handed — the relay's seam
- * (`notifications/relay.ts`, §NNN) for every test of a visitor's message: the contact form's and
+ * (`notifications/relay.ts`, §778) for every test of a visitor's message: the contact form's and
  * «Spune-ne ceva»'s service queue a row, and this is where the row leaves.
  */
 export type RoadCall = { road: Road; message: OutgoingEmail };
@@ -95,7 +95,7 @@ export type SmtpCapture = {
 
 /**
  * The Gmail road as a recording: every message the relay hands it is kept the way the contact form's transport kept it,
- * so a test can read what the club's mailbox would have received. §NNN: the form queues, this is where the row leaves.
+ * so a test can read what the club's mailbox would have received. §778: the form queues, this is where the row leaves.
  */
 export function smtpCapture(from = { name: "Brașov Runners", address: "club@example.com" }, mailgun?: RoadAnswer): SmtpCapture {
   const messages: CapturedSmtp[] = [];

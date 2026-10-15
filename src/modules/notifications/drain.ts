@@ -118,7 +118,7 @@ export function drainOutboxRowsAfterResponse(ids: readonly string[]): void {
 }
 
 /**
- * A visitor’s message, sent the moment its response is out (§NNN, amending §149, §676 and §68): «Scrie-ne» and
+ * A visitor’s message, sent the moment its response is out (§778, amending §149, §676 and §68): «Scrie-ne» and
  * «Spune-ne ceva» queue a row (`relay.ts`) and call this with its id, **whatever «Când pleacă emailurile» says** — a person
  * who wrote to the club does not wait for the pinger. The same one-shot `after()`, limited to these ids.
  *

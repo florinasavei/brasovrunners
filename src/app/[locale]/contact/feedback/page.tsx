@@ -166,7 +166,7 @@ export default async function FeedbackPage({ params, searchParams }: Props) {
   const offer = offered0 ? effectiveFeedbackSettings(offered0, safetyGmailDescribed === true) : null;
   // By Gmail, the message is in the club's mailbox and its Sent folder: «doar la …» would not be true (§772).
   const safetyByGmail = offer ? safetyMessageSeenByMailboxReaders(offer) : false;
-  // Or only when Mailgun is down, by the club's tick: «doar la …» would not be true then either (§NNN).
+  // Or only when Mailgun is down, by the club's tick: «doar la …» would not be true then either (§778).
   const safetyFallback = offer ? safetyMessageMayLeaveByGmail(offer, safetyGmailDescribed === true, feedbackRoads()) : false;
   // The three ordinary branches only where the SMTP road exists (`CONTACT_FORM_MODE`), as «Scrie-ne» draws no form without one.
   const offered = offer ? offeredBranches(offer, described === true, feedbackRoads()) : [];

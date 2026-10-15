@@ -389,13 +389,13 @@ export type AuditAction =
   /** Which road each group of emails takes, Gmail's cap and pace, the overflow (§443): from and to. */
   | "email_transport.changed"
   /**
-   * A visitor's message left by the other road because the chosen one failed it (§NNN): entity `email_outbox`, the row's id;
+   * A visitor's message left by the other road because the chosen one failed it (§778): entity `email_outbox`, the row's id;
    * `{ type, chosen, via, failures }` — the roads and how many times the chosen one failed — never a word of the message,
    * an address or the visitor. No actor: the platform did it.
    */
   | "email_road.failed_over"
   /**
-   * A visitor's message that no road carried in a day, or whose address was refused (§NNN): its words are deleted and the
+   * A visitor's message that no road carried in a day, or whose address was refused (§778): its words are deleted and the
    * Administrators told. `{ type, chosen, cause }`; never the words. No actor.
    */
   | "email_relay.lost"

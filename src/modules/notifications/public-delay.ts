@@ -158,7 +158,7 @@ function factsFromGroups(groups: readonly FactsGroup[], noticeNamesFallback: boo
     carriedRecently += group.carriedRecently;
     const oldestSent = asDate(group.oldestSentInHour);
     facts.hourFreesAt = earliest(facts.hourFreesAt, oldestSent === null ? null : new Date(oldestSent.getTime() + PACE_WINDOW_MS));
-    // A visitor's message has its own worker and road (§NNN): what it sent through Mailgun counts against the hour above,
+    // A visitor's message has its own worker and road (§778): what it sent through Mailgun counts against the hour above,
     // and nothing of it is a queue a page waits for or one the hour holds.
     if (isRelayMessage(group.messageType)) continue;
     const mailgun = !onGmailRoad(group, roads);

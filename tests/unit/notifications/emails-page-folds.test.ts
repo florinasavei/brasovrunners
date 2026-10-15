@@ -25,7 +25,7 @@ const ROOT = process.cwd();
 const read = (relative: string) => readFileSync(path.join(ROOT, relative), "utf8");
 const markup = (html: string): string => html.replace(/<style[^>]*>[\s\S]*?<\/style>/g, "");
 
-// The cards of the templates: a visitor's message and the road notice (§NNN) have none.
+// The cards of the templates: a visitor's message and the road notice (§778) have none.
 const TYPES = (emailMessageType.enumValues as readonly EmailMessageType[]).filter((type): type is Exclude<EmailMessageType, RelayMessageType> => !isRelayMessage(type));
 
 /** The page fills the club's deadlines into the when-lines (§377); these are the unset ones' words. */

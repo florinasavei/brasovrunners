@@ -13,7 +13,7 @@ import {
 } from "@/modules/notifications/domain/road-failover";
 
 /**
- * §NNN — which road carries a visitor's message next, and what a road's answer means. The rule is the owner's
+ * §778 — which road carries a visitor's message next, and what a road's answer means. The rule is the owner's
  * («dacă pică un serviciu se trimite prin celălalt și invers») with its two safeguards: only the service's failures
  * count, never the recipient's, and a message that may already be with a service never goes to the other one.
  */
@@ -22,7 +22,7 @@ const failed = (count: number, ambiguous = false) => ({ count, ambiguous, lastEr
 const plan = (chosen: Road, failures: RoadFailures, over: Partial<{ available: Record<Road, boolean>; fallbackAllowed: boolean }> = {}) =>
   planRoad({ chosen, failures, available: over.available ?? BOTH, fallbackAllowed: over.fallbackAllowed ?? true });
 
-describe("§NNN planRoad: the chosen road keeps the message until it has failed it twice", () => {
+describe("§778 planRoad: the chosen road keeps the message until it has failed it twice", () => {
   it("fails over after exactly two failures, and says so", () => {
     expect(RELAY_FAILOVER_AFTER).toBe(2);
     expect(plan("mailgun", {})).toEqual({ road: "mailgun", failedOver: false });
@@ -56,7 +56,7 @@ describe("§NNN planRoad: the chosen road keeps the message until it has failed 
   });
 });
 
-describe("§NNN planRoad: a send that may have been accepted is pinned to its road, for a while", () => {
+describe("§778 planRoad: a send that may have been accepted is pinned to its road, for a while", () => {
   it("pins the message to the road whose failure was ambiguous, until the road has failed it three times", () => {
     expect(RELAY_PIN_RELEASE_AFTER).toBe(3);
     expect(plan("mailgun", { mailgun: failed(1, true) })).toEqual({ road: "mailgun", failedOver: false });
@@ -88,7 +88,7 @@ describe("§NNN planRoad: a send that may have been accepted is pinned to its ro
   });
 });
 
-describe("§NNN withFailure and readRoadFailures", () => {
+describe("§778 withFailure and readRoadFailures", () => {
   it("counts one more, keeps the ambiguity once set, and shortens the error to a code", () => {
     const one = withFailure({}, "mailgun", { error: "mailgun 503", ambiguous: false });
     expect(one.mailgun).toEqual({ count: 1, ambiguous: false, lastError: "mailgun 503" });
@@ -114,7 +114,7 @@ describe("§NNN withFailure and readRoadFailures", () => {
   });
 });
 
-describe("§NNN readRoadOutcome: what a road's answer means for one message", () => {
+describe("§778 readRoadOutcome: what a road's answer means for one message", () => {
   const read = (result: SendResult) => readRoadOutcome(result);
 
   it("a send is a send", () => {

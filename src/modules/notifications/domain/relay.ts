@@ -1,7 +1,7 @@
 import { type EmailMessageType, emailMessageType } from "@/db/schema/email-outbox";
 
 /**
- * A visitor's message carried by the outbox (§NNN, amending §149, §676, §772 and §622).
+ * A visitor's message carried by the outbox (§778, amending §149, §676, §772 and §622).
  *
  * «Scrie-ne» and «Spune-ne ceva» used to leave the moment they were posted, straight to Gmail or Mailgun,
  * and kept nothing: a refusal was a sentence on the page and a transport that failed lost the message. They
@@ -34,7 +34,7 @@ export const TEMPLATED_MESSAGE_TYPES: readonly EmailMessageType[] = emailMessage
 export type RelayBodyState = "kept" | "deleted";
 
 /**
- * How long a message may wait to be delivered before it is given up on (§NNN): twenty-four hours. A transient
+ * How long a message may wait to be delivered before it is given up on (§778): twenty-four hours. A transient
  * refusal is never the end of an ordinary email (§622) — but this is somebody's words kept in a table, and
  * the notice says «a few seconds, three days at the very most» (`{{relayQueue}}`). Past the day the Administrators are
  * told, the words are deleted, and the row stays as the record that a message was lost; the retention sweep is the net at

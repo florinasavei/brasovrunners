@@ -649,7 +649,7 @@ test.describe("BR-REQ-070-04 «Spune-ne ceva», the anonymous wizard (§676)", (
         await page.goto("/ro/devs?panel=email");
         await expect(page.locator("main")).toContainText(`Cum a fost: ${pickedTitle}`, { timeout: 2_000 });
       }).toPass({ timeout: 45_000 });
-      // §NNN: it went through the outbox, by the road the form has — and the page that shows the outbox keeps the trace, never the words.
+      // §778: it went through the outbox, by the road the form has — and the page that shows the outbox keeps the trace, never the words.
       await page.goto("/ro/admin/settings/emails");
       const relay = page.getByTestId("relay-messages");
       await expect(relay).toBeVisible();

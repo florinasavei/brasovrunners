@@ -10,7 +10,7 @@ import { type Road, ROADS } from "./domain/road-failover";
 
 /**
  * What each road — Gmail and Mailgun — last did, for `/devs` → Stare, `/admin/tasks` and `/api/health`
- * (§NNN, amending §443 and §622).
+ * (§778, amending §443 and §622).
  *
  * The last **success** is read from the outbox itself (`transport` and `sent_at`, the index the Gmail ledger
  * already uses): it needs no write on the hot path. The last **failure** and when the road **began failing**
@@ -100,7 +100,7 @@ export async function recordRoadSuccess<T extends Record<string, unknown>>(db: D
 }
 
 /**
- * Whether a road has been failing long enough to ring (§NNN): the run began over an hour ago, no success has ended
+ * Whether a road has been failing long enough to ring (§778): the run began over an hour ago, no success has ended
  * it, **and the latest failure is within the last hour**. One failure on a quiet road — Gmail at night, or a Gmail
  * failure whose message Mailgun then carried — is not a road that is down: it can never ring, because the first and
  * the latest failure of a single failure are the same moment, and a run whose failures stopped coming (the road is
@@ -157,7 +157,7 @@ export function roadFailureOf(result: SendResult): { road: Road; error: string }
 }
 
 /**
- * The outbox's sender, noting what each road did (§NNN): a refusal of the service is a failure of that road,
+ * The outbox's sender, noting what each road did (§778): a refusal of the service is a failure of that road,
  * and the first message a failing road carries again clears it. One read per road per batch — once it has been
  * seen working, the rest of the batch writes nothing. Gmail's refusals are also noted by the sender itself
  * (`onFailure`, §443), which is where the `/api/health` reading of them comes from; this one keeps the single

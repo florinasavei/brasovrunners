@@ -162,7 +162,7 @@ describe("owner tasks", () => {
     }
   });
 
-  /** §NNN — the queue a visitor's message waits in: a row as long as the notice in force does not name {{relayQueue}}; nothing is held back meanwhile. */
+  /** §778 — the queue a visitor's message waits in: a row as long as the notice in force does not name {{relayQueue}}; nothing is held back meanwhile. */
   it("keeps the relay queue's row open while the notice in force does not name {{relayQueue}}, done once it does", () => {
     expect(stateOf({ ...LAUNCHED, relayQueueDescribed: false }, "relayQueueNotice")).toBe("open");
     expect(stateOf(LAUNCHED, "relayQueueNotice")).toBe("done");
@@ -603,7 +603,7 @@ describe("owner tasks", () => {
     }
   });
 
-  // §NNN: a road that has been failing for over an hour, and the visitors' messages no road carried.
+  // §778: a road that has been failing for over an hour, and the visitors' messages no road carried.
   it("turns the road row red while Gmail or Mailgun has been failing for over an hour, naming the road and its last code", () => {
     expect(ownerTasks(LAUNCHED).find((task) => task.id === "emailRoadDown")).toMatchObject({ owner: "club", kind: "check", state: "done" });
     const failing = ownerTasks({ ...LAUNCHED, emailRoads: { failing: [{ road: "gmail", error: "gmail: smtp EAUTH" }, { road: "mailgun", error: null }], lostMessages: 0 } }).find((task) => task.id === "emailRoadDown");

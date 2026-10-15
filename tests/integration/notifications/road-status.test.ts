@@ -19,14 +19,14 @@ import {
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — what each road last did, for `/devs`, `/admin/tasks` and the relay: a refusal of the service starts a «failing since»
+ * §778 — what each road last did, for `/devs`, `/admin/tasks` and the relay: a refusal of the service starts a «failing since»
  * that only a message the road carries ends, and a bounce for an address says nothing about the road.
  */
 const T0 = new Date("2026-10-15T09:00:00.000Z");
 const minutes = (n: number) => new Date(T0.getTime() + n * 60_000);
 const MESSAGE: OutgoingEmail = { to: "x@example.org", subject: "s", text: "t", html: "t", locale: "ro", idempotencyKey: "k" };
 
-describe("§NNN the roads' state", () => {
+describe("§778 the roads' state", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
 

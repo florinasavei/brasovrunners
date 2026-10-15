@@ -61,7 +61,7 @@ export const STATUS_GLYPHS = {
   experience: HistoryIcon,
   // A guardian's address that is the volunteer's own (§768): a family on one address, marked on the card, never refused.
   family: FamilyRestroomIcon,
-  // A visitor's message in the outbox (§NNN): a message nobody carried; one that left by the other road; its words kept
+  // A visitor's message in the outbox (§778): a message nobody carried; one that left by the other road; its words kept
   // until it leaves, and gone.
   failed: ErrorOutlinedIcon,
   otherRoad: SwapHorizIcon,

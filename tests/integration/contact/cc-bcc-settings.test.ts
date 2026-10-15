@@ -53,7 +53,7 @@ describe("BR-REQ-070-04 CC and BCC on the contact page's messages", () => {
   let admin: StaffUser;
   let organizer: StaffUser;
 
-  /** One post, then the relay's pass that follows it (§NNN): the form queues, the road carries it. */
+  /** One post, then the relay's pass that follows it (§778): the form queues, the road carries it. */
   const send = async (capture: SmtpCapture, route: ContactDelivery | null, input: Parameters<typeof submitContactMessage>[2], now: Date, page: string, screening?: ContactScreening) => {
     const outcome = await submitContactMessage(db, route, input, now, page, screening);
     await capture.deliver(db, new Date(now.getTime() + 1_000));

@@ -17,7 +17,7 @@ import { canonicalizeEmail, InvalidEmailError } from "@/modules/participants/dom
  * - **«O reclamație»** (`reclamatie`) — what happened, and optionally the event and the date.
  * - **«Girl Zone»** (`girl-zone`; `siguranta` until §772, still read) — confidential, for women who did
  *   not feel safe: it reaches one person the club names, by Mailgun unless the club chose its Gmail
- *   (§772), and the site keeps it only until it leaves (§NNN).
+ *   (§772), and the site keeps it only until it leaves (§778).
  *
  * Anonymous unless the person chooses otherwise (§678): every form opens with «Anonim» (the default)
  * or «Cu nume și prenume», and only the named mode shows — and the server only keeps — a name, which it
@@ -107,7 +107,7 @@ export type BranchSetting = { on: boolean; to: string | null; via: FeedbackVia }
 
 /**
  * The setting `feedbackForms` (`settings.ts`): per branch a switch and a recipient; the safety branch also the first name shown
- * and — §NNN — whether Girl Zone’s messages may leave by the club’s Gmail when Mailgun is down (`fallbackToGmail`, off).
+ * and — §778 — whether Girl Zone’s messages may leave by the club’s Gmail when Mailgun is down (`fallbackToGmail`, off).
  */
 export type FeedbackSettings = {
   howItWent: BranchSetting;
@@ -169,7 +169,7 @@ export function safetyMessageSeenByMailboxReaders(settings: FeedbackSettings): b
 
 /**
  * Whether a message for Girl Zone's person may still pass through the club's Gmail without the club having chosen it
- * (§NNN): the club's tick «Dacă Mailgun pică, trimite prin Gmail-ul clubului» is on, the notice in force says her messages may
+ * (§778): the club's tick «Dacă Mailgun pică, trimite prin Gmail-ul clubului» is on, the notice in force says her messages may
  * leave by Gmail, and the club's Gmail exists here — the cases in which, when Mailgun is down, her message leaves by the club's
  * mailbox and its readers see it in Sent. The public lines then say so (never «doar la …» where it may not be true).
  */
@@ -178,7 +178,7 @@ export function safetyMessageMayLeaveByGmail(settings: FeedbackSettings, safetyG
 }
 
 /**
- * Whether the other road may carry a message when the chosen one is down (§NNN, amending §772). The contact form’s and
+ * Whether the other road may carry a message when the chosen one is down (§778, amending §772). The contact form’s and
  * the three ordinary forms’ messages go to the club’s own mailbox and the notice names both roads for them (§772),
  * so each may take them over from the other — and a message for Girl Zone’s person leaves by Gmail **only** with the club’s
  * tick, «Dacă Mailgun pică, trimite prin Gmail-ul clubului» (off by default), and only while the privacy notice in force says
@@ -193,7 +193,7 @@ export function fallbackAllowedFor(settings: FeedbackSettings, audience: Feedbac
 }
 
 /**
- * Whether a form's recipient is the club's Gmail account itself (§NNN): by the canonicalizer, never a string compare —
+ * Whether a form's recipient is the club's Gmail account itself (§778): by the canonicalizer, never a string compare —
  * a dotted or tagged spelling is the same inbox (§10.4). Gmail files a message from an account to the same account in
  * Sent and All mail, not necessarily in the Inbox, so the card says so beside the box.
  */

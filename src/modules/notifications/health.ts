@@ -187,7 +187,7 @@ export async function checkEmailHealth<T extends Record<string, unknown>>(
     ),
   );
   /*
-    A visitor’s message given up on after a day (§NNN) is a FAILED row too, but not this alarm’s: its words are deleted, so
+    A visitor’s message given up on after a day (§778) is a FAILED row too, but not this alarm’s: its words are deleted, so
     «Reîncearcă emailurile eșuate» cannot put it back, and a 503 that nothing can clear for a week would only teach the
     monitor to be ignored. It has its own row on «Sarcini» (`relayLost`) and the Administrators were emailed.
   */

@@ -68,14 +68,14 @@ export type OutgoingEmail = {
   /**
    * No `Reply-To` at all, not even the club's (§676): «Spune-ne ceva»'s confidential safety form
    * reaches one person, and a "Reply" from her mailbox must not go to a shared club mailbox by
-   * default — the contact line in the body is the only way back. Both roads honour it since §NNN.
+   * default — the contact line in the body is the only way back. Both roads honour it since §778.
    */
   noReplyTo?: true;
   /**
    * The one address a reply to this message goes to, instead of the club's (§772): «Spune-ne ceva»'s
    * named post may leave an address to be answered at, and the reader's «Reply» must reach it. A bare
    * address already through the canonicalizer, never a display name — a name typed by a visitor is a header.
-   * Wins over the configured Reply-To, and is ignored when `noReplyTo` is set. Both roads honour it since §NNN
+   * Wins over the configured Reply-To, and is ignored when `noReplyTo` is set. Both roads honour it since §778
    * (a visitor's message is carried by either). It rides one send; the outbox row holds it only until the
    * message is delivered (`relay.ts`).
    */

@@ -2,7 +2,7 @@
 
 # Runbooks
 
-**Baseline `BR-V3.36-2026-10-15`** · versioned with the whole set · [changelog](../CHANGELOG.md)
+**Baseline `BR-V3.37-2026-10-15`** · versioned with the whole set · [changelog](../CHANGELOG.md)
 
 
 | Runbook | When |
@@ -955,7 +955,7 @@ queued or left in the last hour, and anyone whose five resends of the hour are s
 email it queues carries a new link, so the link in the earlier email stops working. It queues;
 the outbox sends at the road's pace. Three presses an hour per event; no state or deadline moves.
 
-## A way of sending is down: Gmail or Mailgun (§NNN)
+## A way of sending is down: Gmail or Mailgun (§778)
 
 What it looks like: «Sarcini» → «Club» has the red row **«O cale de trimitere nu merge»** (`emailRoadDown`), or **«Mesaje de pe
 site pe care nu le-a dus nimeni»** (`relayLost`), or each Administrator got the email «{road} nu a trimis un mesaj: a plecat
@@ -998,7 +998,7 @@ What to do, by the road's code on the row:
    address, or set its road to Mailgun.
 4. **Mailgun — `mailgun 401` / `403`**: the key or the sending domain (`MAILGUN_API_KEY`, `MAILGUN_DOMAIN`; EU accounts answer at `api.eu.mailgun.net`,
    `SETUP.md` §35). **`420` / `429`**: the plan's allowance or the probation's pause — see «Email has stopped».
-5. **QA only:** a message to an address the allowlist does not name is captured, not sent — one rule for both roads since §NNN. `EMAIL_ALLOWLIST` on the
+5. **QA only:** a message to an address the allowlist does not name is captured, not sent — one rule for both roads since §778. `EMAIL_ALLOWLIST` on the
    QA project names who may receive (`*` for everybody); a captured message shows in the row with 0 recipients and in `/devs`.
 
 The monitors stay quiet for a relay row that waits: `/api/health?deep=1` counts it as `waiting`, and `overdue` after ninety minutes like every other

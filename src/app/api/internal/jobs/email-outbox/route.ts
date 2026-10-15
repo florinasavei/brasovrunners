@@ -32,7 +32,7 @@ export async function POST(request: Request): Promise<Response> {
     // One renderer per batch: each event's words are read once for it (§373, email follow-up).
     const summary = await processOutboxBatch(db, { sender, route, roads, render: createOutboxRenderer({ replyTo }), now });
     // A visitor’s message that the after-response drain could not finish — a retry, a road that was down, a notice —
-    // is the relay’s, claimed apart from the notifications above (§NNN).
+    // is the relay’s, claimed apart from the notifications above (§778).
     const relay = await processRelayBatch(db, { roads: () => createRelayRoads(db), now });
     return { summary: { ...summary, relay }, failed: false };
   });

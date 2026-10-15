@@ -49,14 +49,14 @@ export async function createOutboxSender<T extends Record<string, unknown>>(
       // Every Gmail failure is kept for /admin/emails and /api/health (§443), not only fallen back from.
       onFailure: async (error, at) => {
         await recordGmailFailure(db, error, at);
-        // And on the one record both roads share (§NNN): `/devs`, `/admin/tasks` and the relay read it.
+        // And on the one record both roads share (§778): `/devs`, `/admin/tasks` and the relay read it.
         await recordRoadFailure(db, "gmail", error, at);
       },
     },
   });
   const roads = outboxRoadsFor(setting, configured, noticeNamesFallback);
   return {
-    // Noting what each road did (§NNN): a refusal of the service, and the first message a failing road carries again.
+    // Noting what each road did (§778): a refusal of the service, and the first message a failing road carries again.
     sender: withRoadStatus(db, sender),
     replyTo,
     route: (row) => preferredTransport(setting, row.messageType, isClubCopy(row.payloadJson)),

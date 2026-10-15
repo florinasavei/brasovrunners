@@ -3058,7 +3058,7 @@ const T = {
   },
 } as const;
 
-/** A type with no template — a visitor's message or the road notice (§NNN) is composed when it is queued — never reaches this lookup. */
+/** A type with no template — a visitor's message or the road notice (§778) is composed when it is queued — never reaches this lookup. */
 function templateKey(messageType: EmailMessageType): keyof typeof T.ro {
   if (isRelayMessage(messageType)) throw new Error(`${messageType} has no template: the relay composes it when it is queued`);
   return KEY_BY_MESSAGE_TYPE[messageType];

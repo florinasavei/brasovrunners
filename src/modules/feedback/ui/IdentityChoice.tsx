@@ -29,7 +29,7 @@ type Props = {
   safetyName: string;
   /** Girl Zone's messages leave by the club's Gmail, so the mailbox's readers see them: «Cine să afle?» does not say «doar» then (§772). */
   safetyByGmail: boolean;
-  /** It may leave by the club's Gmail when Mailgun is down (the club's tick, §NNN): the hint says so rather than «doar». */
+  /** It may leave by the club's Gmail when Mailgun is down (the club's tick, §778): the hint says so rather than «doar». */
   safetyFallback?: boolean;
   /** Whom a named message may reach (`audiencesFor`); fewer than two draws no «Cine să afle?». */
   audiences: readonly FeedbackAudience[];

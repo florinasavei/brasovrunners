@@ -12,7 +12,7 @@ import Panel from "@/shared/ui/Panel";
 import StatusChip from "@/shared/ui/StatusChip";
 
 /**
- * «Mesaje de pe site» (§NNN) on «Setări» → «Emailuri», under the queue: what «Scrie-ne» and «Spune-ne ceva»
+ * «Mesaje de pe site» (§778) on «Setări» → «Emailuri», under the queue: what «Scrie-ne» and «Spune-ne ceva»
  * put in the outbox, one row each — the form, the status, the road the club chose and the road it left by (the other
  * one marked «prin cealaltă cale»), the tries, what each road answered, and whether the words are kept until it
  * leaves or already deleted — and the two roads' own state above them: the last message each carried, the last

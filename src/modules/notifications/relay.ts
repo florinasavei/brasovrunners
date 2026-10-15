@@ -24,7 +24,7 @@ import { nextAttemptAt, PROCESSING_LOCK_TIMEOUT_MS, sanitizeProviderError } from
 import { type RelayNoticeFacts, type RelayNoticeKind, relayNoticeContent } from "./relay-notice-words";
 
 /**
- * The worker for a visitor's message (§NNN, amending §149, §676, §772 and §622): `CONTACT_MESSAGE`,
+ * The worker for a visitor's message (§778, amending §149, §676, §772 and §622): `CONTACT_MESSAGE`,
  * `FEEDBACK_MESSAGE` and the platform's own `RELAY_NOTICE` — rows of the same outbox the notifications use, claimed
  * apart from them (`claimOutboxBatch` leaves these types alone) because they have no template, no participant and
  * a road of their own. See `domain/relay.ts` for the three differences and `domain/road-failover.ts` for the rule.

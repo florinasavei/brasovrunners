@@ -14,14 +14,15 @@ decision or a click only the club can make · **released** — on production, wi
 The owner, 2026-10-10: «Soon I need to start a new session from the laptop … You need to save and document everything».
 This section replaces the plan of 2026-09-30; it is what a session with none of today's conversation needs to carry on.
 
-- **Production: `BR-V3.35`** (2026-10-15 11:00: §776 the badge's free text + marker area). Waiting for «prod»: `BR-V3.36`
-  (§777, below), migration `0161` (expand only).
-- **QA: `BR-V3.36`** — internal notes on a registration: a folded card «Note interne» on the registration's page (add,
-  delete, newest first), a marker with the count in the list; Organizers, Administrators and Superadministrators only;
-  never at the desk, in a CSV or on the public list; listed in «Toate datele unei persoane»; one sentence in the
-  notice's template.
-  Building: the email lane — why Gmail did not send on QA, every mail through the outbox, failover Mailgun ↔ Gmail
-  (migration `0162`). The queue is otherwise empty.
+- **Production: `BR-V3.36`** (2026-10-15 13:50: §777 internal notes, migration `0161`). Waiting for «prod»: `BR-V3.37`
+  (§778, below), migration `0162` (expand only).
+- **QA: `BR-V3.37`** — every visitor's message («Scrie-ne», the four «Spune-ne ceva» forms) goes through the outbox with
+  its road, kept only until it leaves; after two service failures the other road (Mailgun ↔ Gmail) carries it, a
+  refused address never fails over, a send that may have left never changes road; Girl Zone falls back to Gmail only
+  with the club's tick; «Mesaje de pe site», `/devs` and «Sarcini» show each road. The QA «Gmail did not send» was a
+  Gmail filter (the owner, 13:20).
+  Building: the Excel export's file name (a production defect: diacritics in the event's title), the volunteers' page
+  with each category its own card, the share row on one line.
 - **Waiting on the owner:** the privacy notice from the new template, approved in `/admin/legal` after a lawyer reads
   the paragraph on what the site loads (its first sentence says what is used is strictly necessary and needs no consent,
   art. 4(6) of Legea nr. 506/2004, while the same paragraph says Strava may set its own cookies without a press — the
@@ -137,6 +138,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V3.37` | every mail through the outbox; failover between Mailgun and Gmail (§778) |
 | `BR-V3.36` | internal notes on a registration for organizers and administrators (§777) |
 | `BR-V3.35` | the volunteer badge: a free-text line and a marker area (§776) |
 | `BR-V3.34` | the templates-changed email as a daily digest (§775) |

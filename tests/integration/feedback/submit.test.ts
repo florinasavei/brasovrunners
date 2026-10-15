@@ -88,7 +88,7 @@ describe("§676 «Spune-ne ceva»", () => {
   });
 
   /*
-    §NNN: «Spune-ne ceva» queues its message and the relay carries it. These tests read what a road was handed, so the
+    §778: «Spune-ne ceva» queues its message and the relay carries it. These tests read what a road was handed, so the
     two roads are the two fakes they always had — Gmail records what it was handed, Mailgun is `mailgun.send` — and every
     submit is followed by one pass of the relay, the way the after-response drain follows it in production.
   */
@@ -196,7 +196,7 @@ describe("§676 «Spune-ne ceva»", () => {
       const logged = vi.spyOn(console, "info").mockImplementation(() => undefined);
       await submitFeedback(db, deps(), HOW, NOW);
       await submitFeedback(db, deps(), SAFETY, NOW);
-      // The row is the record (§NNN): the form, the road chosen and the road it left by — and nothing a person wrote.
+      // The row is the record (§778): the form, the road chosen and the road it left by — and nothing a person wrote.
       const rows = await relayRows(db);
       expect(rows.map((row) => [row.messageType, row.status, row.road, row.transport]).sort((a, b) => String(a[2]).localeCompare(String(b[2])))).toEqual([
         ["FEEDBACK_MESSAGE", "SENT", "gmail", "gmail"],
@@ -402,7 +402,7 @@ describe("§676 «Spune-ne ceva»", () => {
     });
 
     /*
-      §NNN: a refusing road is no longer a sentence on the page. The message is queued, the person is answered «trimis», and the
+      §778: a refusing road is no longer a sentence on the page. The message is queued, the person is answered «trimis», and the
       relay — not the form — carries it: by the other road when the message may take it, waiting when it may not.
     */
     it("answers «sent» for a message its road refuses, and keeps Girl Zone's waiting for Mailgun: never by Gmail without the club's tick", async () => {
@@ -722,7 +722,7 @@ describe("§676 «Spune-ne ceva»", () => {
       expect(saved.suggestion.via).toBe("gmail");
     });
 
-    it("§NNN keeps Girl Zone's «dacă Mailgun pică, trimite prin Gmail» off by default, saves the tick as a word in the audit, and keeps it when a save does not post it", async () => {
+    it("§778 keeps Girl Zone's «dacă Mailgun pică, trimite prin Gmail» off by default, saves the tick as a word in the audit, and keeps it when a save does not post it", async () => {
       expect((await readFeedbackSettings(db)).safety.fallbackToGmail).toBe(false);
       const ticked = await updateFeedbackSettings(db, admin, { ...SETTINGS, safety: { ...SETTINGS.safety, fallbackToGmail: true } }, NOW);
       expect(ticked.safety.fallbackToGmail).toBe(true);

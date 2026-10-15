@@ -3,7 +3,7 @@ import { type ContactRecipients, resolveContactRecipients } from "./domain/recip
 import type { ContactDelivery } from "./service";
 
 /**
- * Where the contact form's configuration meets its recipients (`DECISIONS.md` §149, §164) — and, since §NNN, no
+ * Where the contact form's configuration meets its recipients (`DECISIONS.md` §149, §164) — and, since §778, no
  * longer a transport: the message is queued in the outbox and the relay carries it, by the club's Gmail or, when that
  * is down, Mailgun (`notifications/relay-roads.ts`). This module only says **whether the form can reach anybody**
  * and **who**, and is the only module here that reads `env`.

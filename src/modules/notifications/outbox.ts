@@ -450,7 +450,7 @@ async function claimOutboxBatchWithStop(
   const hourlyAllowance = params.hourlyAllowance !== undefined ? params.hourlyAllowance : (await readEmailPlan(db)).hourlyAllowance;
   const bulkLimit = params.bulkLimit ?? null;
   const staleBefore = new Date(now.getTime() - PROCESSING_LOCK_TIMEOUT_MS);
-  // A visitor’s message and the road notice (§NNN) are the relay’s: no template, no participant, a road of their own.
+  // A visitor’s message and the road notice (§778) are the relay’s: no template, no participant, a road of their own.
   const notRelay = notInArray(emailOutbox.messageType, [...RELAY_MESSAGE_TYPES]);
   const claimable = and(
     notRelay,

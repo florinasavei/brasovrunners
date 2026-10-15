@@ -44,7 +44,7 @@ describe("BR-REQ-070-04 the tick that holds back suspected spam", () => {
   });
 
   /*
-    §NNN: the forms queue their message and the relay carries it. These tests read what the club's Gmail was handed, so every
+    §778: the forms queue their message and the relay carries it. These tests read what the club's Gmail was handed, so every
     post is followed by one pass of the relay with Gmail answering into the capture — and Mailgun into `mailgun.send`.
   */
   const mailgun = { send: vi.fn(async () => ({ outcome: "sent", providerMessageId: "mailgun:1" }) as SendResult) };

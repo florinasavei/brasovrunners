@@ -99,7 +99,7 @@ export async function submitFeedbackAction(form: FormData): Promise<void> {
         // «Clubul» for a named safety report when «O reclamație» has no recipient (§678): the contact form's own.
         clubFallback: contactDelivery(recipients)?.to ?? [],
         // Which roads this deployment has (§772): a form whose road is missing is not offered. The roads themselves
-        // are the relay's (§NNN): the message is queued here and leaves at once, after this response.
+        // are the relay's (§778): the message is queued here and leaves at once, after this response.
         roads: feedbackRoads(),
         appEnv: env.APP_ENV,
         screening: {

@@ -44,7 +44,7 @@ const usage = (over: Partial<GmailUsage> = {}): GmailUsage => ({
 
 describe("§443 the message groups and the setting", () => {
   it("puts every message type in exactly one group, and the newsletter's own three in the newsletter group", () => {
-    // Every type with a template; a visitor's message and the road notice (§NNN) take the road on their row.
+    // Every type with a template; a visitor's message and the road notice (§778) take the road on their row.
     const grouped = emailMessageType.enumValues.filter((type) => !isRelayMessage(type)) as (keyof typeof EMAIL_GROUP_OF)[];
     for (const type of grouped) expect(EMAIL_GROUP_OF[type]).toBeDefined();
     expect(Object.keys(EMAIL_GROUP_OF).sort()).toEqual([...grouped].sort());

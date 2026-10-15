@@ -109,7 +109,7 @@ export function createGmailAdapter(config: GmailAdapterConfig): EmailAdapter {
 }
 
 /**
- * The Reply-To of one message on this road (§NNN): none at all for a confidential one (`noReplyTo`), the address a
+ * The Reply-To of one message on this road (§778): none at all for a confidential one (`noReplyTo`), the address a
  * visitor typed — with the name beside it, which Nodemailer quotes — for a message that carries one, else the
  * club's own as it always was. A transactional message sets neither flag and is exactly what it was.
  */
@@ -164,7 +164,7 @@ export function refusalOf(to: string, answer: { rejected?: unknown; rejectedErro
 }
 
 /**
- * Whether a Gmail failure came **before** the server could have taken the message (§NNN) — told by what
+ * Whether a Gmail failure came **before** the server could have taken the message (§778) — told by what
  * Nodemailer really gives, not by what would be convenient. Nodemailer 10 labels every connection-level
  * error with the command `CONN`, whatever the phase: a timeout while the body waits for Google's `250`
  * is `{code:'ETIMEDOUT', command:'CONN', message:'Timeout'}`, a socket closed after the body is

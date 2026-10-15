@@ -23,7 +23,7 @@ import { EMAIL_HEALTH_THRESHOLDS } from "./health";
  */
 export const RETRY_FAILED_WINDOW_MS = EMAIL_HEALTH_THRESHOLDS.FAILED_WINDOW_MS;
 
-// A visitor’s message given up on has no words left to send (§NNN): never put back.
+// A visitor’s message given up on has no words left to send (§778): never put back.
 const retryable = (now: Date) =>
   and(
     eq(emailOutbox.status, "FAILED"),

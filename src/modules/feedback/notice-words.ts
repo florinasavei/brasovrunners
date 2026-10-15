@@ -29,7 +29,7 @@ export function feedbackSafetyGmailClause(locale: string): string {
 }
 
 /**
- * What the privacy notice's `{{relayQueue}}` becomes (§NNN): how long the platform keeps a visitor's message before it
+ * What the privacy notice's `{{relayQueue}}` becomes (§778): how long the platform keeps a visitor's message before it
  * leaves, in the words of `Tell.noticeRelayQueue` — the same for the contact form's and the feedback forms' paragraphs.
  */
 export function relayQueueClause(locale: string): string {

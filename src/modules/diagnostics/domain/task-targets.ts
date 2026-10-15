@@ -56,7 +56,7 @@ export const TASK_TARGETS: Partial<Record<TaskId, TaskTarget>> = {
   publishEvents: { kind: "section", section: "events" },
   // The queue, its stop header and «Reîncearcă emailurile eșuate» (§622); the switch and the cap are the panel above it.
   emailFailSafe: { kind: "settings", tab: "emails", hash: "outbox-queue" },
-  // The two roads and the visitors' messages beside the queue (§NNN).
+  // The two roads and the visitors' messages beside the queue (§778).
   emailRoadDown: { kind: "settings", tab: "emails", hash: "relay-messages" },
   relayLost: { kind: "settings", tab: "emails", hash: "relay-messages" },
   // What each job did and how often it may run (§334).

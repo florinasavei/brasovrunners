@@ -7,7 +7,7 @@ import { EMAIL_TRANSPORT_SETTING_KEY } from "@/modules/notifications/email-trans
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — `createRelayRoads`, the production wiring of the two roads, over the real sender, the real ledger and the
+ * §778 — `createRelayRoads`, the production wiring of the two roads, over the real sender, the real ledger and the
  * real road state, with only the Gmail adapter (the SMTP connection) stood in for. Every other relay test uses
  * `fakeRoads`, which is how a road state that said «gmail is not taking messages in this batch» instead of the code
  * (`smtp EAUTH`) went unnoticed: this is where the wiring is read.
@@ -50,7 +50,7 @@ const { recordMailgunStop } = await import("@/modules/notifications/mailgun-stop
 
 const MESSAGE: OutgoingEmail = { to: "club@example.org", subject: "s", text: "t", html: "t", locale: "ro", idempotencyKey: "relay:k" };
 
-describe("§NNN createRelayRoads: the two roads as the relay uses them", () => {
+describe("§778 createRelayRoads: the two roads as the relay uses them", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
 

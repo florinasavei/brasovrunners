@@ -73,7 +73,7 @@ const saveSchema = z
       on: z.boolean(),
       to: address,
       via,
-      // «Dacă Mailgun pică, trimite prin Gmail-ul clubului» (§NNN): absent from a post whose box was greyed — then what is saved stays.
+      // «Dacă Mailgun pică, trimite prin Gmail-ul clubului» (§778): absent from a post whose box was greyed — then what is saved stays.
       fallbackToGmail: z.boolean(),
       name: z
         .string()
@@ -168,7 +168,7 @@ export async function updateFeedbackSettings<T extends Record<string, unknown>>(
   }
 
   // The tick sends Girl Zone's message through the club's mailbox when Mailgun is down: not newly set while the notice does not say so, or
-  // where the club has no Gmail (§NNN) — the card greys it, and the server says the same (what is saved stays, as the road does).
+  // where the club has no Gmail (§778) — the card greys it, and the server says the same (what is saved stays, as the road does).
   if (next.safety.fallbackToGmail && !before.safety.fallbackToGmail && (!safetyGmailDescribed || !roads.gmail)) {
     throw new DomainError("VALIDATION_ERROR", "safety: the fallback by Gmail needs the privacy notice's words and the club's Gmail", [boxName(["safety", "fallbackToGmail"])]);
   }
@@ -214,7 +214,7 @@ function keepUnpostedVia(raw: unknown, before: FeedbackSettings): unknown {
 }
 
 /**
- * Girl Zone’s fallback tick (§NNN): a greyed (disabled) box is never posted, and an unticked one posts nothing either, so the
+ * Girl Zone’s fallback tick (§778): a greyed (disabled) box is never posted, and an unticked one posts nothing either, so the
  * form says which it was with `fallbackToGmail: undefined` for the greyed one — and what is saved stays, as the road does.
  */
 function keepUnpostedFallback(raw: unknown, before: FeedbackSettings): unknown {
@@ -237,7 +237,7 @@ export function auditOf(before: FeedbackSettings, next: FeedbackSettings): {
   safetyNameChanged: boolean;
   /** Which form's road moved, and to which (§772): a word, never an address. */
   viaChanged: Array<{ branch: FeedbackBranch; via: FeedbackSettings[FeedbackBranch]["via"] }>;
-  /** Girl Zone's «Dacă Mailgun pică, trimite prin Gmail-ul clubului» moved, and to which (§NNN). */
+  /** Girl Zone's «Dacă Mailgun pică, trimite prin Gmail-ul clubului» moved, and to which (§778). */
   fallbackToGmail: boolean | null;
 } {
   return {

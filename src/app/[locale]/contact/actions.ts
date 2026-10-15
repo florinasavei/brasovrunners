@@ -240,7 +240,7 @@ async function sendOrRefuse(form: FormData, locale: Locale, path: string): Promi
   }
 
   // The two whole-form answers, each a sentence on the page; the message stays typed. A refusal of the road is no
-  // answer any more (§NNN): the message is queued, and the relay’s roads carry it, the other one when the first is down.
+  // answer any more (§778): the message is queued, and the relay’s roads carry it, the other one when the first is down.
   const code = outcome.outcome === "limited" ? "LIMITED" : "UNAVAILABLE";
   await stashFormDraft(form, path);
   redirect(`${path}?error=${code}#${CONTACT_ERROR_SUMMARY_ID}`);

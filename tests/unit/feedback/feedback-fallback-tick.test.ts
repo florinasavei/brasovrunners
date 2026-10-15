@@ -6,7 +6,7 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
 /**
- * §NNN (amending §772) — «Dacă Mailgun pică, trimite prin Gmail-ul clubului»: Girl Zone's own tick, a real checkbox, off by default,
+ * §778 (amending §772) — «Dacă Mailgun pică, trimite prin Gmail-ul clubului»: Girl Zone's own tick, a real checkbox, off by default,
  * with the note that the club's mailbox readers see her message; greyed with its reason while Gmail is missing or the notice in
  * force does not say her messages may leave by it. And the card's warning when a form's recipient is the very Gmail account that
  * sends — Gmail may keep such a message in Sent only. And the rule itself: which messages the other road may carry.
@@ -54,7 +54,7 @@ async function html(saved: ReturnType<typeof state>, over: { gmail?: boolean; de
   return renderToStaticMarkup(element).replace(/<style[\s\S]*?<\/style>/g, "");
 }
 
-describe("§NNN Girl Zone's «dacă Mailgun pică» tick", () => {
+describe("§778 Girl Zone's «dacă Mailgun pică» tick", () => {
   it("is a real checkbox in Girl Zone's group only, off by default, with the readers' note", async () => {
     const out = await html(state());
     expect(out.match(/data-box="safetyFallbackToGmail"/g)).toHaveLength(1);
@@ -101,7 +101,7 @@ describe("§NNN Girl Zone's «dacă Mailgun pică» tick", () => {
   });
 });
 
-describe("§NNN a form whose recipient is the sending Gmail account", () => {
+describe("§778 a form whose recipient is the sending Gmail account", () => {
   it("says so beside the box, by the canonicalizer — a dotted or tagged spelling is the same inbox — and only for a form that leaves by Gmail", async () => {
     const out = await html(state({}, "Club.Runners+site@gmail.com"), { account: "clubrunners@gmail.com" });
     expect(out).toContain('data-testid="feedback-self-howItWent"');
@@ -124,7 +124,7 @@ describe("§NNN a form whose recipient is the sending Gmail account", () => {
   });
 });
 
-describe("§NNN which messages the other road may carry when the chosen one is down", () => {
+describe("§778 which messages the other road may carry when the chosen one is down", () => {
   const settings = (over: Partial<FeedbackSettings["safety"]>): FeedbackSettings => ({ ...DEFAULT_FEEDBACK_SETTINGS, safety: { ...DEFAULT_FEEDBACK_SETTINGS.safety, ...over } });
 
   it("every message for the club's mailbox, by default: both roads are named in the notice for it", () => {

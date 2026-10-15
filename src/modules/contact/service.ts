@@ -15,7 +15,7 @@ import { type ContactMessageRoute, renderContactMessage } from "./message";
 /**
  * "Scrie-ne" (`DECISIONS.md` §149, BR-REQ-070-04): one message from a visitor to the club, queued in the outbox
  * the moment it is posted and sent at once, after the response, by the club's Gmail — or by Mailgun when Gmail is
- * down (§NNN, amending §149: it went by SMTP straight from the request, and a refusal lost it).
+ * down (§778, amending §149: it went by SMTP straight from the request, and a refusal lost it).
  *
  * The guards are the registration form's, in the registration form's order, with one
  * difference in what they say. A bot — the trap field filled, the form posted faster than a
@@ -24,7 +24,7 @@ import { type ContactMessageRoute, renderContactMessage } from "./message";
  * person who has written five times this hour is *told* so, plainly: the throttle exists to
  * keep a script out of the club's mailbox, and a person who hits it is not a script.
  *
- * The words are kept only until the message is delivered (§NNN): the outbox row holds them in `payload_json` and
+ * The words are kept only until the message is delivered (§778): the outbox row holds them in `payload_json` and
  * deletes them the moment the message leaves — the platform keeps no copy after, and the club's mailbox keeps
  * it as ordinary correspondence. The throttle's row holds a hash of the identity, not the address, for the day it lives.
  *
@@ -39,7 +39,7 @@ import { type ContactMessageRoute, renderContactMessage } from "./message";
 
 /**
  * Who receives and from where (the club's recipients, the sender's name, the environment for the subject's mark) — and no
- * transport since §NNN: the message is queued in the outbox and the relay's roads carry it (`notifications/relay.ts`).
+ * transport since §778: the message is queued in the outbox and the relay's roads carry it (`notifications/relay.ts`).
  */
 export type ContactDelivery = ContactMessageRoute;
 
@@ -152,7 +152,7 @@ export async function submitContactMessage<T extends Record<string, unknown>>(
     suspicion,
   );
   /*
-    Queued, not sent from here (§NNN, amending §149): the club's Gmail is the road the form always had, the other road
+    Queued, not sent from here (§778, amending §149): the club's Gmail is the road the form always had, the other road
     takes over when it is down and the message may take it, and the retries are the outbox's. A transport that fails no
     longer loses the message or tells the visitor «nu am putut trimite»: the row is the promise. The first recipient is
     the row's `To`, the rest ride as visible copies with the club's own list, as they always did.

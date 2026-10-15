@@ -458,7 +458,7 @@ export async function pruneExpiredRows<T extends Record<string, unknown>>(
       .returning({ id: emailOutbox.id });
     counts.orphanOutboxMessages = deleted.length;
     /*
-      A visitor's message still holding its words after three days (§NNN): the relay gives a message up at twenty-four hours,
+      A visitor's message still holding its words after three days (§778): the relay gives a message up at twenty-four hours,
       so this is only the net under a worker that never ran — the notice (`{{relayQueue}}`) says the words are kept until the message
       leaves: seconds, and three days at the very most. The words go, the row is FAILED as the record.
     */

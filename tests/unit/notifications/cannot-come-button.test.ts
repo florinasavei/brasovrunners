@@ -73,7 +73,7 @@ function rendered(messageType: EmailMessageType, extra: Record<string, unknown> 
 
 describe("§558 the «Nu mai pot ajunge» button, message type by message type", () => {
   it("the table names every message type, and the platform's list is exactly its «yes» rows", () => {
-    // A visitor's message and the road notice (§NNN) are composed when queued: no template, so no button.
+    // A visitor's message and the road notice (§778) are composed when queued: no template, so no button.
     expect([...TYPES].sort()).toEqual([...emailMessageType.enumValues].filter((type) => !isRelayMessage(type)).sort());
     expect([...CANNOT_COME_MESSAGES].sort()).toEqual(TYPES.filter((type) => EVERY_MESSAGE[type].button).sort());
   });

@@ -345,7 +345,7 @@ export async function noticeDescribesFeedbackSafetyGmail<T extends Record<string
 }
 
 /**
- * Whether the privacy notice in force says a visitor's message waits in a queue until it leaves (§NNN,
+ * Whether the privacy notice in force says a visitor's message waits in a queue until it leaves (§778,
  * `describesRelayQueue`) — in every language. Only `/admin/tasks`' row `relayQueueNotice` reads it: the queue itself is not gated.
  */
 export async function noticeDescribesRelayQueue<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<boolean> {

@@ -6,12 +6,12 @@ import { gmailFailureIsBeforeAcceptance, replyToOf } from "@/infrastructure/emai
 import { createMailgunAdapter, requestNeverReachedMailgun } from "@/infrastructure/email/mailgun-adapter";
 
 /**
- * §NNN — what the two adapters say about a failure, which the relay reads to decide whether the other road may
+ * §778 — what the two adapters say about a failure, which the relay reads to decide whether the other road may
  * carry the message: «nothing was accepted» (a refused connection, a login, a 5xx) and «may have been accepted» (the
  * connection broke where the service might already have the message) are different answers, and only the first
  * lets a message change road.
  */
-describe("§NNN the Gmail road: before or after acceptance", () => {
+describe("§778 the Gmail road: before or after acceptance", () => {
   it("a refused connection, login, DNS answer or TLS is before acceptance — nothing was taken", () => {
     for (const code of ["EDNS", "ETLS", "EAUTH", "ENOAUTH", "EENVELOPE", "EMESSAGE", "ECONNREFUSED", "ENOTFOUND"]) {
       expect(gmailFailureIsBeforeAcceptance({ code }), code).toBe(true);
@@ -47,7 +47,7 @@ describe("§NNN the Gmail road: before or after acceptance", () => {
  * A server that takes the whole body and never answers `250`, and one that drops the socket after the body, are
  * the two ambiguous cases; a closed port and a server that never greets are not.
  */
-describe("§NNN the Gmail road against a real Nodemailer error", () => {
+describe("§778 the Gmail road against a real Nodemailer error", () => {
   type Behaviour = "never-answer" | "drop" | "silent";
 
   async function fakeSmtp(behaviour: Behaviour) {
@@ -158,7 +158,7 @@ describe("§NNN the Gmail road against a real Nodemailer error", () => {
   }
 });
 
-describe("§NNN the Gmail road's Reply-To", () => {
+describe("§778 the Gmail road's Reply-To", () => {
   it("is none at all for a confidential message, even where the club set one", () => {
     expect(replyToOf({ noReplyTo: true }, "club@example.org")).toEqual({});
     expect(replyToOf({ noReplyTo: true, replyTo: "ana@example.org" }, "club@example.org")).toEqual({});
@@ -175,7 +175,7 @@ describe("§NNN the Gmail road's Reply-To", () => {
   });
 });
 
-describe("§NNN Mailgun: a request that never reached it, and one that may have", () => {
+describe("§778 Mailgun: a request that never reached it, and one that may have", () => {
   const undiciError = (code: string) => Object.assign(new TypeError("fetch failed"), { cause: Object.assign(new Error(code), { code }) });
 
   it("never reached it: the name did not resolve, the connection was refused or never made", () => {

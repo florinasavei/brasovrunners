@@ -114,7 +114,7 @@ describe("BR-REQ-070-04 «Cum vrei să trimiți?» (§678)", () => {
     expect(gmail).toContain("unde îl văd și cei care o citesc");
   });
 
-  it("does not say «Doar …» either where the club's tick lets her message leave by its Gmail when Mailgun is down (§NNN)", async () => {
+  it("does not say «Doar …» either where the club's tick lets her message leave by its Gmail when Mailgun is down (§778)", async () => {
     locale = "ro";
     const base = { withPhone: true, named: true, invalid: new Set<FeedbackField>(), kept: () => undefined, safetyName: "Maria", audiences: ["club", "person"] as FeedbackAudience[], audience: "person" as FeedbackAudience };
     const fallback = renderToStaticMarkup(await IdentityChoice({ ...base, safetyByGmail: false, safetyFallback: true }));

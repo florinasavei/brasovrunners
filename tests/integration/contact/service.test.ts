@@ -23,7 +23,7 @@ const PERSON = {
 };
 
 /*
-  §NNN: the form queues its message and the relay carries it. These tests read what the club's Gmail was handed, so the delivery
+  §778: the form queues its message and the relay carries it. These tests read what the club's Gmail was handed, so the delivery
   remembers its capture and every post is followed by one pass of the relay with Gmail answering into it.
 */
 let current: SmtpCapture | null = null;
@@ -233,7 +233,7 @@ describe("BR-REQ-070-04 the contact form", () => {
   });
 
   /*
-    §NNN: a refused send is no longer a sentence on the page. The message is queued, the sender is answered «sent», and what the
+    §778: a refused send is no longer a sentence on the page. The message is queued, the sender is answered «sent», and what the
     road says is the relay's — counted against the road, retried, and taken over by the other road (`relay.test.ts`).
   */
   it("answers «sent» for a message its road refuses: it waits in the outbox with the road's code, and counts as the sender's", async () => {

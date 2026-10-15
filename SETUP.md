@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.36-2026-10-15 -->
+<!-- PROJECT_BASELINE: BR-V3.37-2026-10-15 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V3.36-2026-10-15`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.37-2026-10-15`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -1356,7 +1356,7 @@ a rolling day (500 is Google's own ceiling, shared with the people who write by 
 race morning that cap, not Mailgun's, is what decides how many confirmations still leave, so raise it there
 before the window if Mailgun is on probation.
 
-**The form's message is an outbox row since §NNN, and one road down is no loss.** «Scrie-ne» (Gmail) and each «Spune-ne ceva» form
+**The form's message is an outbox row since §778, and one road down is no loss.** «Scrie-ne» (Gmail) and each «Spune-ne ceva» form
 (the road the club chose on «Pagini» → «Contact») queue their message in the same outbox the emails use, and it leaves at once, after the
 response; the words stay in the row only until it is delivered, then they are deleted and the row stays as the trace («Setări» → «Emailuri» →
 «Mesaje de pe site»: the road chosen, the road it left by, the tries, what each road answered). If the road refuses twice — a revoked app password
@@ -1395,7 +1395,7 @@ club names — which is why a colleague's Yahoo can be on the list.
 3. Vercel → the production project → Settings → Environment Variables (Production):
    `CONTACT_SMTP_USER` = the club's Gmail address; `CONTACT_SMTP_PASSWORD` = the 16
    characters (spaces or not, both work). The same on the QA project (a QA message reaches only an address
-   `EMAIL_ALLOWLIST` names — since §NNN the same rule as for Mailgun — its subject starting with `[QA] ` so it is
+   `EMAIL_ALLOWLIST` names — since §778 the same rule as for Mailgun — its subject starting with `[QA] ` so it is
    never mistaken for a real question; put a test address there if even that is unwelcome).
    `CONTACT_FORM_TO` is **optional since `DECISIONS.md` §164**: it is the fallback list, read
    only while the club has named nobody in the app, and there is no `CONTACT_CC` variable at
@@ -1412,7 +1412,7 @@ club names — which is why a colleague's Yahoo can be on the list.
    with "Reply" addressed to whoever wrote, and the "Formularul de contact" row on
    `/admin/tasks` is green; `/devs` shows the form as `smtp`. A wrong password shows
    `smtp EAUTH` in the row's «Mesaje de pe site» line, in `/devs` → «Stare» and in the function log —
-   never the password — while the message goes by Mailgun (§NNN; before it, the page said «Nu am putut trimite. Scrie-ne
+   never the password — while the message goes by Mailgun (§778; before it, the page said «Nu am putut trimite. Scrie-ne
    direct la …» and the message was lost). Once the password is right, the first message Gmail carries clears the road.
 7. **Optional, in the club's Gmail: file the messages the site marks as possible spam.** A
    message the form lets through but that looks automated still arrives, so that a real person is
