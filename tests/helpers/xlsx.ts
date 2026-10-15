@@ -73,3 +73,38 @@ export function readSheet(buffer: Buffer): { rows: (string | undefined)[][]; she
   const sheetName = unescapeXml(/<sheet [^>]*name="([^"]*)"/.exec(parts.get("xl/workbook.xml") ?? "")?.[1] ?? "");
   return { rows, sheetName };
 }
+
+/**
+ * The start list alone (§NNN): the header and the registrations, without the statistics footer the export writes
+ * under them. The footer starts after one empty row, and no registration's row is ever empty (it carries the id),
+ * so the table ends where the first empty row begins.
+ */
+export function startListRows<Row extends (string | undefined)[] | undefined>(rows: readonly Row[]): Row[] {
+  const end = rows.findIndex((row, index) => index > 0 && (!row || row.every((cell) => cell === undefined)));
+  return end === -1 ? [...rows] : rows.slice(0, end);
+}
+
+/** How one cell is stored: its type attribute (`s` shared text, `inlineStr`, none for a number), its style index and its value. */
+export type RawCell = { type: string | undefined; style: number | undefined; value: string | undefined };
+
+/** Every written cell of the first sheet by reference («B12»), as the file stores it — for the assertions on typing and style. */
+export function rawCells(buffer: Buffer): Map<string, RawCell> {
+  const sheet = unzip(buffer).get("xl/worksheets/sheet1.xml") ?? "";
+  const cells = new Map<string, RawCell>();
+  for (const cell of sheet.matchAll(/<c r="([A-Z]+\d+)"([^>]*?)(?:\/>|>([\s\S]*?)<\/c>)/g)) {
+    const [, reference, attributes, inner = ""] = cell;
+    const style = /\bs="(\d+)"/.exec(attributes)?.[1];
+    cells.set(reference, { type: /\bt="([^"]+)"/.exec(attributes)?.[1], style: style === undefined ? undefined : Number(style), value: /<v>([\s\S]*?)<\/v>/.exec(inner)?.[1] });
+  }
+  return cells;
+}
+
+/** Whether a style index (`RawCell.style`) is a bold font, read from the workbook's own styles part. */
+export function isBoldStyle(buffer: Buffer, style: number | undefined): boolean {
+  if (style === undefined) return false;
+  const styles = unzip(buffer).get("xl/styles.xml") ?? "";
+  const fonts = [...(/<fonts[^>]*>([\s\S]*?)<\/fonts>/.exec(styles)?.[1] ?? "").matchAll(/<font>([\s\S]*?)<\/font>|<font\/>/g)].map((font) => /<b\s*\/?>/.test(font[0]));
+  const formats = [...(/<cellXfs[^>]*>([\s\S]*?)<\/cellXfs>/.exec(styles)?.[1] ?? "").matchAll(/<xf\b([^>]*?)(?:\/>|>[\s\S]*?<\/xf>)/g)];
+  const fontId = Number(/\bfontId="(\d+)"/.exec(formats[style]?.[1] ?? "")?.[1] ?? 0);
+  return fonts[fontId] === true;
+}

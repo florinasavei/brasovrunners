@@ -1127,6 +1127,35 @@
           "SUPERADMIN": "Superadministrator"
         }
       },
+      "statistics": {
+        "title": "Statistics",
+        "total": "Total",
+        "confirmed": "Confirmed (active)",
+        "pendingEmail": "Waiting for the address to be confirmed",
+        "pendingDeclaration": "Waiting for the declaration to be signed",
+        "waitlisted": "On the waiting list",
+        "waitlistOffered": "Offered a place",
+        "cancelled": "Cancelled",
+        "expired": "Expired",
+        "club": "{club}",
+        "clubConfirmed": "{club}, confirmed",
+        "notClub": "Others, not {club}",
+        "allEvents": "All events",
+        "categoryHeader": "Category",
+        "category": "{sex}, {band}",
+        "noCategory": "No category (sex or date of birth missing)",
+        "sexFemale": "Female",
+        "sexMale": "Male",
+        "bandUnder18": "under 18",
+        "bandFrom18": "18-29",
+        "bandFrom30": "30-39",
+        "bandFrom40": "40-49",
+        "bandFrom50": "50-59",
+        "bandFrom60": "60+",
+        "note1": "Active means confirmed: the person has a place and has signed the declaration.",
+        "note2": "«{club}» counts the members on «Echipa», the people who ticked that they are members and the people who typed the club on the form.",
+        "note3": "The category is the sex and the age on the race day. Test registrations are not counted."
+      },
       "auditActorParticipant": "the participant, from their own link",
       "audit": {
         "registration": {
