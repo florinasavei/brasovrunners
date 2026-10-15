@@ -1372,7 +1372,7 @@ log held eight `[feedback] … sent` and no failure line, and the outbox's Gmail
 which road carried those eight: the old log line named no road, and the card was set to Mailgun, so they may all have been Mailgun's. One thing to
 check, in a minute, as a hypothesis: the form's **«Către»**. If it is the club's own Gmail address (the account that sends), Gmail may keep a message
 sent to itself in Sent / All mail and not in the Inbox; the card warns beside the box. Put another address there, or set that form's road to
-Mailgun. From now on «Mesaje de pe site» names the road each message left by, so the question has an answer. On QA the allowlist now applies to Gmail as it does to Mailgun: a
+Mailgun. **Answered by the owner on 2026-10-15 13:20:** the messages had arrived — a Gmail filter had filed them out of the Inbox; no road failed. From now on «Mesaje de pe site» names the road each message left by, so the question has an answer. On QA the allowlist now applies to Gmail as it does to Mailgun: a
 recipient it does not name is captured, not sent (`EMAIL_ALLOWLIST`; `*` names everybody).
 
 **Done on both Vercel projects**, and visible: `/ro/contact` shows the form on production and on
