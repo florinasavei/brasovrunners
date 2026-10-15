@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V3.33-2026-10-15
+
+- **Volunteer roles in categories, each with a contact person** — the «Voluntari» card gets a «Categorii» fold (add, rename, reorder, delete while empty, each with an optional «Persoana de contact») and every role a «Categoria»; the volunteers' page groups the roles under their category's heading with the contact on one line; the contact is in the volunteers' emails' footer and, on a badge with no number typed, the coordinator's telephone; the same role name may stand in several categories, told apart as «Direcționare (Traseu)»; the event's JSON file carries the categories and roles (the import says what it leaves out). Migration `0160`. §774.
 ## BR-V3.32-2026-10-15
 
 - **The volunteers' page, four small things** — «Vreau să fiu voluntar» opens the page in a new tab; «Arată public câți voluntari mai sunt necesari» is a tick on the event (off by default: the page says «mai sunt locuri», not a number); the form asks «Data nașterii» instead of the age, counted on the event's day, with the date beside the age on the card, in the CSV and in the person's data; and the owner's kinder note sits under the roles. Migration `0159`; approve the privacy notice from the new template. §773.

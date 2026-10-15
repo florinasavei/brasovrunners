@@ -1,5 +1,5 @@
 import { and, asc, eq } from "drizzle-orm";
-import { eventVolunteerRoles } from "@/db/schema/event-volunteers";
+import { eventVolunteerCategories, eventVolunteerRoles } from "@/db/schema/event-volunteers";
 import { eventTranslations, events } from "@/db/schema/events";
 import type { StaffUser } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
@@ -9,7 +9,7 @@ import { canDesignVolunteerBadges } from "@/modules/staff-identity/domain/roles"
 import { DomainError } from "@/shared/errors/domain-error";
 import { isWrittenText, missingLanguage } from "@/shared/forms/both-languages";
 import { isUuid } from "@/shared/ids";
-import { compareRoles } from "../domain/volunteer";
+import { compareCategories, compareRoles, groupRolesByCategory, roleLabel } from "../domain/volunteer";
 import {
   type BadgeDesign,
   type BadgeLocale,
@@ -46,9 +46,20 @@ export type BadgeRole = {
   colour: string | null;
   position: number;
   createdAt: Date;
+  /**
+   * The category the role sits under, in both languages (§774), and the telephone of that category's contact person — what the role's
+   * badge prints as the coordinator's number while the design leaves its own empty (`badgePhoneLine`). Null for a role under none.
+   */
+  categoryId: string | null;
+  categoryRo: string | null;
+  categoryEn: string | null;
+  categoryPhone: string | null;
 };
 
-/** An event's roles in the club's order (`compareRoles`, the volunteers' card's own). */
+/**
+ * An event's roles under their categories (§774), in the club's order: the categories in theirs, each one's roles in the order of
+ * `compareRoles` (the volunteers' card's own), then the roles under none — the order «Câte ecusoane» lists them in.
+ */
 export async function listBadgeRoles<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<BadgeRole[]> {
   const rows = await db
     .select({
@@ -59,15 +70,25 @@ export async function listBadgeRoles<T extends Record<string, unknown>>(db: Data
       colour: eventVolunteerRoles.colour,
       position: eventVolunteerRoles.position,
       createdAt: eventVolunteerRoles.createdAt,
+      categoryId: eventVolunteerRoles.categoryId,
     })
     .from(eventVolunteerRoles)
     .where(eq(eventVolunteerRoles.eventId, eventId));
-  return rows.sort(compareRoles);
+  const categories = (await db.select().from(eventVolunteerCategories).where(eq(eventVolunteerCategories.eventId, eventId))).sort(compareCategories);
+  const roles = rows.sort(compareRoles).map((row) => ({ ...row, categoryRo: null as string | null, categoryEn: null as string | null, categoryPhone: null as string | null }));
+  return groupRolesByCategory(categories, roles).flatMap((group) =>
+    group.roles.map((role) => ({ ...role, categoryRo: group.category?.nameRo ?? null, categoryEn: group.category?.nameEn ?? null, categoryPhone: group.category?.contactPhone ?? null })),
+  );
 }
 
-/** A role's name in the badge's language. */
+/** A role's name in the badge's language — what the band prints: the role only, never its category. */
 export function badgeRoleName(role: Pick<BadgeRole, "nameRo" | "nameEn">, locale: BadgeLocale): string {
   return locale === "en" ? role.nameEn : role.nameRo;
+}
+
+/** A role named alone on the page, not on the badge: «Direcționare (Traseu)» (§774). */
+export function badgeRoleLabel(role: Pick<BadgeRole, "nameRo" | "nameEn" | "categoryRo" | "categoryEn">, locale: BadgeLocale): string {
+  return roleLabel(role, locale);
 }
 
 /** The event as the badges read it: its title in the badge's language and its design. */
@@ -123,8 +144,9 @@ export function parseBadgeDesignPost(values: BadgeDesignFormValues): BadgeDesign
     return missing ? [box(missing === "ro" ? ro : en)] : [];
   });
   if (oneLanguage.length > 0) throw invalid("a text is written in one language only; write it in both, or in neither", oneLanguage);
-  // Whatever the tick says: a number typed and not readable as one is refused, never kept as nothing while the box is off.
-  if ((values.showPhone || values.phone.trim() !== "") && bibEmergencyPhone(values.phone) === "") throw invalid("phone: not written like a telephone number", [box("phone")]);
+  // Whatever the tick says: a number typed and not readable as one is refused, never kept as nothing while the box is off. The tick with no number
+  // typed is allowed since §774: each role's badge then prints the telephone of its category's contact person (`badgePhoneLine`).
+  if (values.phone.trim() !== "" && bibEmergencyPhone(values.phone) === "") throw invalid("phone: not written like a telephone number", [box("phone")]);
   if (values.bandColour !== null && !badgeColourReadable(values.bandColour)) {
     throw new DomainError("BADGE_COLOUR_UNREADABLE", "the band's colour does not carry its words at AA", [box("bandColour")]);
   }
@@ -375,12 +397,12 @@ export function badgePrintEntries(
   roles: readonly BadgeRole[],
   counts: BadgePrintCounts,
   locale: BadgeLocale,
-): Array<{ role: { name: string; colour: string | null } | null; count: number }> {
+): Array<{ role: { name: string; colour: string | null; phone: string | null } | null; count: number }> {
   return [
     ...roles
       .map((role) => {
         const wanted = counts.roles.get(role.id) ?? { count: badgePrintDefault(role), spares: 0 };
-        return { role: { name: badgeRoleName(role, locale), colour: badgeRoleColour(role.colour) }, count: wanted.count + wanted.spares };
+        return { role: { name: badgeRoleName(role, locale), colour: badgeRoleColour(role.colour), phone: role.categoryPhone }, count: wanted.count + wanted.spares };
       })
       .filter((entry) => entry.count > 0),
     ...(counts.none > 0 ? [{ role: null, count: counts.none }] : []),

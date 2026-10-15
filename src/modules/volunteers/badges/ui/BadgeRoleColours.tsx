@@ -10,7 +10,7 @@ import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import Panel from "@/shared/ui/Panel";
 import type { BadgeDesign } from "../badge-design";
 import { badgeLabelIn } from "../badge-words";
-import { type BadgeRole, badgeRoleName, roleColourBoxes } from "../badges";
+import { type BadgeRole, badgeRoleLabel, roleColourBoxes } from "../badges";
 import RoleColourFields from "./RoleColourFields";
 import RoleColourSample from "./RoleColourSample";
 
@@ -43,8 +43,8 @@ export default async function BadgeRoleColours({
   const fields: Record<string, string> = {};
   for (const role of roles) {
     const boxes = roleColourBoxes(role.id);
-    fields[boxes.choice] = t("badges.colours.choiceOf", { role: badgeRoleName(role, locale) });
-    fields[boxes.typed] = t("badges.colours.typedOf", { role: badgeRoleName(role, locale) });
+    fields[boxes.choice] = t("badges.colours.choiceOf", { role: badgeRoleLabel(role, locale) });
+    fields[boxes.typed] = t("badges.colours.typedOf", { role: badgeRoleLabel(role, locale) });
   }
   const messages = await refusalMessages(fields);
   const aside = roles.length === 0 ? t("badges.colours.none") : t("badges.colours.aside", { count: String(roles.filter((role) => role.colour).length), total: String(roles.length) });
@@ -70,7 +70,7 @@ export default async function BadgeRoleColours({
                   <Stack spacing={1}>
                     <Stack direction="row" sx={{ alignItems: "center", flexWrap: "wrap", gap: 1.5 }}>
                       <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                        {badgeRoleName(role, locale)}
+                        {badgeRoleLabel(role, locale)}
                       </Typography>
                     </Stack>
                     {/* The band as it prints: the colour, the word in the ink the badge sets on it, and the colour in words. */}

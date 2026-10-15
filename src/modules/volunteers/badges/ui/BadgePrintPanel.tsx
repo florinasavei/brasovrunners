@@ -12,7 +12,7 @@ import RadioField from "@/shared/ui/RadioField";
 import { type BadgeDesign, badgePictureStamp } from "../badge-design";
 import { badgeImageSize, badgePaper, badgeSheetGrid, badgeSizeMm } from "../badge-geometry";
 import { badgePictureSrc } from "../badge-query";
-import { BADGE_COUNT_MAX, BADGE_FROM_BOX, BADGE_TOTAL_MAX, type BadgeRole, badgePrintDefault, badgeRoleName, printBoxes } from "../badges";
+import { BADGE_COUNT_MAX, BADGE_FROM_BOX, BADGE_TOTAL_MAX, type BadgeRole, badgePrintDefault, badgeRoleLabel, printBoxes } from "../badges";
 import { badgeLabelIn } from "../badge-words";
 
 /**
@@ -58,7 +58,7 @@ export default async function BadgePrintPanel({
       eventId,
       locale,
       role: role ? role.id : "none",
-      stamp: badgePictureStamp([design, eventTitle, role ? [role.nameRo, role.nameEn, role.colour] : null]),
+      stamp: badgePictureStamp([design, eventTitle, role ? [role.nameRo, role.nameEn, role.colour, role.categoryPhone] : null]),
     });
   const numberBox = (name: string, label: string, value: number, testId: string) => (
     <RecallField
@@ -78,7 +78,7 @@ export default async function BadgePrintPanel({
           <Box
             component="img"
             src={pictureOf(role)}
-            alt={role ? t("badges.print.pictureAlt", { role: badgeRoleName(role, locale) }) : t("badges.print.pictureAltNone")}
+            alt={role ? t("badges.print.pictureAlt", { role: badgeRoleLabel(role, locale) }) : t("badges.print.pictureAltNone")}
             width={image.width}
             height={image.height}
             loading="lazy"
@@ -87,7 +87,7 @@ export default async function BadgePrintPanel({
         </Box>
         <Stack spacing={1} sx={{ minWidth: 0 }}>
           <Typography variant="body1" sx={{ fontWeight: 600 }}>
-            {role ? badgeRoleName(role, locale) : t("badges.print.noRole")}
+            {role ? badgeRoleLabel(role, locale) : t("badges.print.noRole")}
           </Typography>
           {role ? (
             <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5}>

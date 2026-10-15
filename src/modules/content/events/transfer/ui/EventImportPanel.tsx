@@ -39,6 +39,8 @@ export type EventImportWords = {
   summaryWhenNone: string;
   summaryMedia: Record<"one" | "few" | "other", string>;
   summarySeries: string;
+  summaryVolunteers: string;
+  summaryVolunteersOver: string;
   modeHeading: string;
   asNewTitle: string;
   asNewHelp: string;
@@ -74,7 +76,7 @@ export type EventImportWords = {
   open: string;
   mediaProblemsHeading: string;
   mediaProblems: Record<MediaFailure, string>;
-  notes: { slugSuffixed: string; publicListOff: string; seriesNotApplied: string; checkpointKindsDropped: string; checkpointLimitsDropped: string };
+  notes: { slugSuffixed: string; publicListOff: string; seriesNotApplied: string; volunteersSkipped: string; checkpointKindsDropped: string; checkpointLimitsDropped: string };
   languages: Record<"ro" | "en", string>;
   roles: Record<string, string>;
   fields: Record<string, string>;
@@ -307,6 +309,11 @@ export default function EventImportPanel({
                 {words.summarySeries}
               </Typography>
             )}
+            {preview.summary.volunteers && (
+              <Typography variant="body2" color="text.secondary" data-testid="event-json-volunteers">
+                {words.summaryVolunteers}
+              </Typography>
+            )}
             {preview.summary.fileNotes.map((note) => (
               <Typography key={note.code} variant="body2" color="text.secondary" data-testid="event-json-file-note">
                 {fill(words.notes[note.code], { count: note.count })}
@@ -400,6 +407,11 @@ export default function EventImportPanel({
 
                     {diff.slugsKept && <Typography variant="body2">{words.overSlugsKept}</Typography>}
                     {diff.seriesNotApplied && <Typography variant="body2">{words.summarySeries}</Typography>}
+                    {diff.volunteersNotApplied && (
+                      <Typography variant="body2" data-testid="event-json-volunteers-over">
+                        {words.summaryVolunteersOver}
+                      </Typography>
+                    )}
                     {diff.fileNotes.map((note) => (
                       <Typography key={note.code} variant="body2" data-testid="event-json-file-note">
                         {fill(words.notes[note.code], { count: note.count })}
