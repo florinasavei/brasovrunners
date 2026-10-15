@@ -1039,7 +1039,7 @@ handwritten one, and ticking the box accepts that mode. The privacy notice's tem
 (and the group run's, and the volunteers'), that the IP address and the browser at the moment of signing are kept with
 the signed declaration as proof of the signature, as long as the declaration; it no longer says the IP address is not kept.
 **Template only:** the texts in force do not move, a registration is neither refused nor changed, and nothing is gated, so
-`/admin/tasks` carries no new row; every Administrator is emailed «Șabloanele textelor legale s-au schimbat» once (§639),
+`/admin/tasks` carries no new row; every Administrator is emailed «Șabloanele textelor legale s-au schimbat», in the next morning's digest (§639, §NNN),
 and `/admin/legal` marks the declarations and the notice «Șablon nou». Until the club approves them the signed PDFs
 carry the new line (the IP address and the browser are kept from the first signing after this release, whatever text is
 in force), but the declaration and the notice a person read do not mention it — **approve the notice from the new template on production the same day this release
@@ -1081,6 +1081,28 @@ what stands on the version, and the screen says which before anything is pressed
 
 Every deletion leaves an audit row (`legal_document.deleted` for the first kind,
 `legal_document_version.deleted` for the second) naming who, when and why.
+
+### «Șabloanele textelor legale s-au schimbat» comes once a day, as a digest (§639, §NNN)
+
+A release that moves a legal template used to send this email at once, so six releases in a night sent six.
+Since §NNN it is a digest: **at most one email per environment per club day (Europe/Bucharest)**, from the
+maintenance job's first run **at or after 08:00 club time** (05:00 UTC in summer time, 06:00 UTC in winter time).
+
+- **What it sends.** The first run after 08:00 that finds a text whose template is newer than the text in force, and not
+  already announced, queues ONE email per Administrator and Superadministrator (their staff row's language first,
+  the other language below, as before). It names every text whose template is newer, on one bold line («Șablon nou: …»,
+  the names `/admin/legal` lists), and says to approve them all in one sitting. It carries no section number: the
+  platform keeps no per-text change log, only «this template is newer than the text in force».
+- **What it does not send.** Nothing when nothing changed, however many mornings pass. Nothing before 08:00: a night's
+  releases wait for the morning. Nothing a second time the same day: a template that moves after the day's email is
+  in the next day's, together with the texts still waiting.
+- **Where the mark is.** «The last digest» is `announcedAt` in the `platform_settings` row `legalTemplatesNotice`, the
+  row the hourly check already kept (QA and production each have their own); it is written in the same transaction as
+  the emails, so it survives a restart, a deploy and a redeploy. No table and no column is new. Deleting the row does
+  not make the same change go again: the per-person idempotency key (`legal-templates:<fingerprint>:<staff id>`) refuses an
+  email already queued for it.
+- **What stays.** The recipients (§639: whoever may approve a legal text), `/admin/tasks` with one row per text (the
+  rows, not the email, are the authority), and that the platform drafts and approves nothing.
 
 ### Sample versions, and why the first approved one is not version 1
 

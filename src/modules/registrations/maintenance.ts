@@ -292,9 +292,10 @@ export async function runRegistrationMaintenance<T extends Record<string, unknow
   }
 
   /**
-   * The Administrators' notice of a moved legal template (§639): at most one read of the legal texts'
-   * overview an hour, whatever the pinger does (§479), and one email per Administrator and
-   * Superadministrator per change of the templates. Caught on its own and never retryable: a template
+   * The Administrators' notice of a moved legal template (§639): a daily digest (§NNN) — nothing before
+   * 08:00 club time, at most one email per Administrator and Superadministrator per club day, naming
+   * every newer text — and at most one read of the legal texts' overview an hour inside that window,
+   * whatever the pinger does (§479). Caught on its own and never retryable: a template
    * that cannot be read is logged by its kind — never the error's text — and counted, and the job's
    * other work goes on; the step itself tries again at its next hour, not at the next ping.
    */
