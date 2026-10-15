@@ -20,7 +20,8 @@ import { WAITLIST_CHOICES } from "../waitlist-choice";
  * the zone, the place, the registration settings, the programme, the partners, the route, the bib
  * design, the lists' switches, and — by their public address, with a size and a SHA-256 — the pictures
  * and the GPX the event points to. It never carries a registration, an invitation, a participant, a
- * volunteer, an audit row, a member of staff, an email address or anything else about a person, and
+ * volunteer, an audit row, a member of staff, an email address or anything else about a person — but for
+ * the categories and roles of its volunteers and the contact person the club published for each (§NNN) —, and
  * no identifier that only means something in one database: an event is named by its slug, a
  * declaration by the legal document's key (`EVENT_DECLARATION`, `EVENT_DECLARATION_ROAD`).
  *
@@ -258,8 +259,8 @@ export const eventConfigSchema = z
       .strict(),
     /**
      * The volunteer badges' design (§764) as `readBadgeDesign` answers — its header picture's address among
-     * `media` (role `badge.header`). Never a volunteer and never a role: the roles stay with their event
-     * (§754), and their badge colours with them. A file made before the badges existed has none, and reads
+     * `media` (role `badge.header`). Never a volunteer: the roles, their badge colours and their categories
+     * travel under `volunteers` (§NNN). A file made before the badges existed has none, and reads
      * as the platform's own design, so an import over an event shows that difference before anything is kept.
      * Read forgivingly here, before the diff or the import sees the file: a colour no word reads on, a value out
      * of range and a key from a later release are what `readBadgeDesign` makes of them, so the diff shows only
@@ -293,6 +294,43 @@ const seriesSchema = z
   })
   .strict();
 
+/**
+ * An event's volunteer categories and roles (§NNN, amending §751 and §754) — the words, never a person: see `volunteers.ts`. A role names
+ * its category by its place in `categories` (null for «Alte activități»), never by an id; a place that points at none is read as null. A file
+ * made before the categories existed has none, and reads as an event with no roles to bring.
+ */
+export const volunteersFileSchema = z
+  .object({
+    categories: z
+      .array(
+        z
+          .object({
+            name: z.object({ ro: text(80), en: text(80) }).strict(),
+            /** The contact person the club set for the category's volunteers, or null while none is set. */
+            contact: z.object({ name: nullableText(120), phone: nullableText(40), email: nullableText(320) }).strict().nullable(),
+          })
+          .strict(),
+      )
+      .max(12),
+    roles: z
+      .array(
+        z
+          .object({
+            name: z.object({ ro: text(80), en: text(80) }).strict(),
+            needed: z.number().int().min(1).max(1000),
+            /** The description's document in each language, both or neither; read strictly by the editor's own schema at import. */
+            description: z.object({ ro: richDocument, en: richDocument }).strict(),
+            colour: z.string().regex(/^#[0-9a-f]{6}$/i).nullable(),
+            category: z.number().int().nullable(),
+          })
+          .strict(),
+      )
+      .max(30),
+  })
+  .strict();
+
+export type VolunteersFile = z.infer<typeof volunteersFileSchema>;
+
 export const eventFileSchema = z
   .object({
     format: z.literal(EVENT_FILE_FORMAT),
@@ -301,6 +339,8 @@ export const eventFileSchema = z
     exportedFrom: z.object({ environment: text(40), baseline: text(40) }).strict(),
     series: seriesSchema,
     event: eventConfigSchema,
+    /** The volunteer categories and roles (§NNN): applied where an event is made new, never over an existing one. */
+    volunteers: volunteersFileSchema.default(() => ({ categories: [], roles: [] })),
     media: z.array(mediaEntrySchema).max(MAX_EVENT_FILE_MEDIA),
   })
   .strict();

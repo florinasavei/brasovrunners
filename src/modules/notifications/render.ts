@@ -62,7 +62,7 @@ import { eventInvitations } from "@/db/schema/event-invitations";
 import { eventVolunteers } from "@/db/schema/event-volunteers";
 import { renderVolunteerAgreementPdf, VOLUNTEER_AGREEMENT_PDF_NAME } from "@/modules/volunteers/agreement-pdf";
 import { canonicalOrNull, mintVolunteerAgreementLink, tasksWords, volunteerRoles } from "@/modules/volunteers/agreement";
-import { isVolunteerMinor } from "@/modules/volunteers/domain/volunteer";
+import { isVolunteerMinor, roleLabel, volunteerContactsOf } from "@/modules/volunteers/domain/volunteer";
 import { mintVolunteerGuardianLink } from "@/modules/volunteers/guardian";
 import { shopOrders } from "@/db/schema/shop";
 import { readShopSettings } from "@/modules/content/shop/settings";
@@ -942,12 +942,15 @@ async function renderRow(
     data.participantName = row.messageType === "VOLUNTEER_CLUB_NOTICE" || row.messageType === "VOLUNTEER_GUARDIAN_REQUEST" ? "" : volunteer.name;
     data.volunteer = {
       name: volunteer.name,
-      roleRo: roles.assigned?.nameRo ?? null,
-      roleEn: roles.assigned?.nameEn ?? null,
+      // A role named alone says its category in brackets (§NNN): «Direcționare (Traseu)».
+      roleRo: roles.assigned ? roleLabel(roles.assigned, "ro") : null,
+      roleEn: roles.assigned ? roleLabel(roles.assigned, "en") : null,
       roleDescriptionRo: described(roles.assigned?.descriptionRo ?? null),
       roleDescriptionEn: described(roles.assigned?.descriptionEn ?? null),
-      chosenRo: roles.chosen.map((role) => role.nameRo),
-      chosenEn: roles.chosen.map((role) => role.nameEn),
+      chosenRo: roles.chosen.map((role) => roleLabel(role, "ro")),
+      chosenEn: roles.chosen.map((role) => roleLabel(role, "en")),
+      // The contact person of the category of the role (or roles) concerned (§NNN), when the club has set one: the message's footer says it.
+      contacts: volunteerContactsOf(roles),
       // «Am primit» of a volunteer under eighteen whose guardian has not accepted yet (§768) says their parent was emailed.
       guardianPending: row.messageType === "VOLUNTEER_RECEIVED" && isVolunteerMinor(volunteer.age) && volunteer.guardianName !== null && volunteer.guardianAcceptedAt === null,
     };

@@ -155,8 +155,11 @@ describe("§765 a volunteer role's form may be translated", () => {
     const card = readFileSync(path.join(ROOT, "src/modules/volunteers/ui/VolunteersCard.tsx"), "utf8");
     // `roleFields` draws both the «Adaugă un rol» form and every role's «Modifică».
     expect(card).toMatch(/const roleFields = [\s\S]*<TranslateAllButton \/>[\s\S]*name="descriptionRoBody"[\s\S]*name="descriptionEnBody"/);
-    expect(card.match(/<TranslateAllButton \/>/g)?.length).toBe(1);
+    // …and, since §NNN, `categoryNameFields` draws the one of the «Adaugă o categorie» form and every category's «Modifică» (its English name from the Romanian one).
+    expect(card).toMatch(/const categoryNameFields = [\s\S]*<TranslateAllButton \/>[\s\S]*name="nameEn"/);
+    expect(card.match(/<TranslateAllButton \/>/g)?.length).toBe(2);
     expect(card.match(/roleFields\(/g)?.length).toBeGreaterThanOrEqual(2);
+    expect(card.match(/categoryNameFields\(/g)?.length).toBeGreaterThanOrEqual(2);
   });
 });
 

@@ -38,9 +38,9 @@ const { default: BadgePrintPanel } = await import("@/modules/volunteers/badges/u
 
 const EVENT = "11111111-1111-4111-8111-111111111111";
 const ROLES: BadgeRole[] = [
-  { id: "22222222-2222-4222-8222-222222222222", nameRo: "Punct de apă", nameEn: "Water point", needed: 3, colour: "#c62828", position: 0, createdAt: new Date("2026-10-14T08:00:00Z") },
-  { id: "33333333-3333-4333-8333-333333333333", nameRo: "Sosire", nameEn: "Finish", needed: 2, colour: null, position: 1, createdAt: new Date("2026-10-14T08:00:00Z") },
-  { id: "44444444-4444-4444-8444-444444444444", nameRo: "Fotograf", nameEn: "Photographer", needed: 1, colour: "#808080", position: 2, createdAt: new Date("2026-10-14T08:00:00Z") },
+  { id: "22222222-2222-4222-8222-222222222222", nameRo: "Punct de apă", nameEn: "Water point", needed: 3, colour: "#c62828", position: 0, createdAt: new Date("2026-10-14T08:00:00Z"), categoryId: null, categoryRo: null, categoryEn: null, categoryPhone: null },
+  { id: "33333333-3333-4333-8333-333333333333", nameRo: "Sosire", nameEn: "Finish", needed: 2, colour: null, position: 1, createdAt: new Date("2026-10-14T08:00:00Z"), categoryId: null, categoryRo: null, categoryEn: null, categoryPhone: null },
+  { id: "44444444-4444-4444-8444-444444444444", nameRo: "Fotograf", nameEn: "Photographer", needed: 1, colour: "#808080", position: 2, createdAt: new Date("2026-10-14T08:00:00Z"), categoryId: null, categoryRo: null, categoryEn: null, categoryPhone: null },
 ];
 
 async function html(draw: () => Promise<unknown>, language: "ro" | "en" = "ro"): Promise<string> {

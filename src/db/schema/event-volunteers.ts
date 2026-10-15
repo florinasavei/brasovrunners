@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { boolean, check, date, index, integer, jsonb, pgEnum, pgTable, primaryKey, smallint, text, timestamp, unique, uuid } from "drizzle-orm/pg-core";
+import { boolean, check, date, index, integer, jsonb, pgEnum, pgTable, primaryKey, smallint, text, timestamp, unique, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 import { events } from "./events";
 import { legalDocuments } from "./legal-documents";
 import { locale } from "./locale";
@@ -30,6 +30,50 @@ export const volunteerAgreementMethod = pgEnum("volunteer_agreement_method", ["F
  * member («PAPER»). No «FORM»: the volunteer's own form ticks the agreement for the volunteer, never for the guardian.
  */
 export const volunteerGuardianMethod = pgEnum("volunteer_guardian_method", ["LINK", "PAPER"]);
+
+/**
+ * A heading the club groups an event's roles under (§NNN; the owner, 2026-10-14: «Pentru „ce sunt dispus să fac” trebuie să
+ * am categorii cu sub-categorii, eg: aș pune activități Start/Finish și am putea adăuga ex: direcționare, foto/video, punct
+ * hidratare; Traseu: direcționare, punct hidratare, foto/video. Toate astea configurabile.»): «Start / Sosire», «Traseu».
+ *
+ * The club types the name in both languages (both or neither, the bilingual rule) and `sort` is the order the card and the
+ * public form list the categories in. Each category may carry **one contact person for its volunteers** («trebuie să fie o
+ * persoană de contact pentru voluntari» — «the contact person for each category will be established later»): a name, a
+ * telephone number and an address, every one optional, empty until the club fills them. They are the club's own business
+ * contact, published by its own choice on the volunteers' page and in the volunteers' emails — never a participant's or a
+ * volunteer's data, never in the CSV — so the privacy notice's template needs no word about them.
+ *
+ * The rows go with the event (`ON DELETE CASCADE`). A category with a role under it is not deleted: the service says so
+ * first (`VOLUNTEER_CATEGORY_HAS_ROLES`), and the database refuses it too (`event_volunteer_roles.category_id`).
+ */
+export const eventVolunteerCategories = pgTable(
+  "event_volunteer_categories",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    eventId: uuid("event_id")
+      .notNull()
+      .references(() => events.id, { onDelete: "cascade" }),
+    nameRo: text("name_ro").notNull(),
+    nameEn: text("name_en").notNull(),
+    sort: integer("sort").notNull().default(0),
+    /** «Persoana de contact»: three optional boxes, saved by the category's own form. */
+    contactName: text("contact_name"),
+    contactPhone: text("contact_phone"),
+    contactEmail: text("contact_email"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("event_volunteer_categories_event_idx").on(t.eventId, t.sort),
+    // One name once per event, in each language, whatever the case: «Traseu» twice would be two headings that look the same.
+    uniqueIndex("event_volunteer_categories_event_name_ro_unique").on(t.eventId, sql`lower(${t.nameRo})`),
+    uniqueIndex("event_volunteer_categories_event_name_en_unique").on(t.eventId, sql`lower(${t.nameEn})`),
+    check("event_volunteer_categories_name_length", sql`char_length(${t.nameRo}) BETWEEN 1 AND 80 AND char_length(${t.nameEn}) BETWEEN 1 AND 80`),
+    check("event_volunteer_categories_contact_name_length", sql`${t.contactName} IS NULL OR char_length(${t.contactName}) BETWEEN 1 AND 120`),
+    check("event_volunteer_categories_contact_phone_length", sql`${t.contactPhone} IS NULL OR char_length(${t.contactPhone}) BETWEEN 1 AND 40`),
+    check("event_volunteer_categories_contact_email_length", sql`${t.contactEmail} IS NULL OR char_length(${t.contactEmail}) BETWEEN 3 AND 320`),
+  ],
+);
 
 /**
  * One role an event needs people for (§754; the owner, 2026-10-13: «I want to register volunteers
@@ -80,9 +124,30 @@ export const eventVolunteerRoles = pgTable(
      * before it is saved (`badge-design.ts#badgeColourReadable`); null is the theme's own colour.
      */
     colour: text("colour"),
+    /**
+     * The category the role sits under (§NNN): null is the default heading «Alte activități» / «Other activities» — every role
+     * from before the categories, and any the club leaves unfiled. `NO ACTION`: a category with roles is emptied first, never
+     * deleted from under them (the service says so first, and the database refuses at the end of the statement). Not `RESTRICT`,
+     * which is checked at once: deleting an **event** cascades to both tables in no promised order, and a category removed
+     * before its roles would refuse the whole delete — the end-of-statement check sees both gone (`event_volunteer_role_choices`).
+     */
+    categoryId: uuid("category_id").references(() => eventVolunteerCategories.id),
   },
   (t) => [
     index("event_volunteer_roles_event_idx").on(t.eventId, t.position),
+    index("event_volunteer_roles_category_idx").on(t.categoryId).where(sql`${t.categoryId} IS NOT NULL`),
+    // The same name may stand in several categories («Direcționare» under «Start / Sosire» and under «Traseu»), but once
+    // per category — the uncategorised roles being one group of their own (the nil uuid stands for «no category»).
+    uniqueIndex("event_volunteer_roles_category_name_ro_unique").on(
+      t.eventId,
+      sql`coalesce(${t.categoryId}, '00000000-0000-0000-0000-000000000000'::uuid)`,
+      sql`lower(${t.nameRo})`,
+    ),
+    uniqueIndex("event_volunteer_roles_category_name_en_unique").on(
+      t.eventId,
+      sql`coalesce(${t.categoryId}, '00000000-0000-0000-0000-000000000000'::uuid)`,
+      sql`lower(${t.nameEn})`,
+    ),
     check("event_volunteer_roles_colour_is_hex", sql`${t.colour} IS NULL OR ${t.colour} ~ '^#[0-9a-fA-F]{6}$'`),
     check("event_volunteer_roles_needed_positive", sql`${t.needed} >= 1`),
     check("event_volunteer_roles_name_length", sql`char_length(${t.nameRo}) BETWEEN 1 AND 80 AND char_length(${t.nameEn}) BETWEEN 1 AND 80`),
@@ -319,6 +384,7 @@ export const eventVolunteerRoleChoices = pgTable(
   ],
 );
 
+export type EventVolunteerCategoryRow = typeof eventVolunteerCategories.$inferSelect;
 export type EventVolunteerRoleRow = typeof eventVolunteerRoles.$inferSelect;
 export type EventVolunteerRow = typeof eventVolunteers.$inferSelect;
 export type EventVolunteerState = (typeof eventVolunteerState.enumValues)[number];

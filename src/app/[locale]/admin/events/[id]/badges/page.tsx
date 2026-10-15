@@ -47,7 +47,7 @@ export default async function EventBadgesPage({ params, searchParams }: Props) {
   const t = await getTranslations("Admin");
   // The designer's sample is drawn for the first role (or «fără rol»); its saved name and colour are in the address.
   const sampleRole = roles[0]?.id ?? "none";
-  const version = badgePictureStamp([event.title, roles.map((role) => [role.id, role.nameRo, role.nameEn, role.colour])]);
+  const version = badgePictureStamp([event.title, roles.map((role) => [role.id, role.nameRo, role.nameEn, role.colour, role.categoryPhone])]);
 
   return (
     <Stack spacing={2}>

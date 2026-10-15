@@ -7,6 +7,7 @@ import { atBrasov, nextWeekday, todayInBrasov } from "./sample-dates";
 import { seedSampleLegalDocuments } from "./sample-legal-documents";
 import { seedSampleShop } from "./sample-shop";
 import { seedSampleTeam } from "./sample-team";
+import { seedSampleVolunteers } from "./sample-volunteers";
 
 /**
  * Pilot seed: sample events, published in both languages. A published locale must be complete
@@ -192,6 +193,9 @@ async function seed() {
           excerpt: row[locale].excerpt,
         })),
       );
+
+    // The featured sample race gets two volunteer categories with the owner's example roles (§NNN), so the card's groups can be walked.
+    if ("featured" in row && row.featured) await seedSampleVolunteers(event.id);
   }
 
   console.log(`seeded ${rows.length} events, Romanian and English published, into APP_ENV=${appEnv}`);

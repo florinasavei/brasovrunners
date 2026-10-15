@@ -2,7 +2,7 @@ import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { auditLogs } from "@/db/schema/audit-logs";
 import { emailOutbox } from "@/db/schema/email-outbox";
-import { eventVolunteerRoleChoices, eventVolunteerRoles, eventVolunteers } from "@/db/schema/event-volunteers";
+import { eventVolunteerCategories, eventVolunteerRoleChoices, eventVolunteerRoles, eventVolunteers } from "@/db/schema/event-volunteers";
 import { events } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
 import { registrationInterests } from "@/db/schema/registration-interests";
@@ -120,7 +120,23 @@ describe("BR-REQ-070-01 everything held about a person", () => {
     // An offer to volunteer (§754) is found by the same canonical address, and is everything typed.
     const [volunteerRole] = await db.insert(eventVolunteerRoles).values({ eventId, nameRo: "Punct de apă", nameEn: "Water point", needed: 2 }).returning();
     const [finishRole] = await db.insert(eventVolunteerRoles).values({ eventId, nameRo: "Sosire", nameEn: "Finish", needed: 1, position: 1 }).returning();
-    // §761: an offer nobody has given a role yet, with the two roles she ticked.
+    // §NNN: the same role name under two categories — «Direcționare» at the start and on the route — is two roles to read, so the
+    // person's own copy names each with its category and never «Direcționare, Direcționare».
+    const [startCategory, routeCategory] = await db
+      .insert(eventVolunteerCategories)
+      .values([
+        { eventId, nameRo: "Start / Sosire", nameEn: "Start / Finish", sort: 0 },
+        { eventId, nameRo: "Traseu", nameEn: "Route", sort: 1 },
+      ])
+      .returning();
+    const [guideAtStart, guideOnRoute] = await db
+      .insert(eventVolunteerRoles)
+      .values([
+        { eventId, categoryId: startCategory.id, nameRo: "Direcționare", nameEn: "Guidance", needed: 1, position: 2 },
+        { eventId, categoryId: routeCategory.id, nameRo: "Direcționare", nameEn: "Guidance", needed: 1, position: 3 },
+      ])
+      .returning();
+    // §761: an offer nobody has given a role yet, with the roles she ticked.
     const [offer] = await db.insert(eventVolunteers).values({
       eventId,
       roleId: null,
@@ -144,7 +160,20 @@ describe("BR-REQ-070-01 everything held about a person", () => {
     await db.insert(eventVolunteerRoleChoices).values([
       { volunteerId: offer.id, roleId: finishRole.id },
       { volunteerId: offer.id, roleId: volunteerRole.id },
+      { volunteerId: offer.id, roleId: guideAtStart.id },
+      { volunteerId: offer.id, roleId: guideOnRoute.id },
     ]);
+  });
+
+  it("names the role the organizers gave with its category, as every other place that names a role alone (§NNN)", async () => {
+    const admin = await staff("ADMIN");
+    const [route] = await db.select().from(eventVolunteerCategories).where(eq(eventVolunteerCategories.nameEn, "Route"));
+    const [guide] = await db.select().from(eventVolunteerRoles).where(eq(eventVolunteerRoles.categoryId, route.id));
+    await db.update(eventVolunteers).set({ roleId: guide.id });
+
+    const data = await viewPersonData(db, admin, canonicalLookupOf("ANA.POP+other@gmail.com"), NOW);
+
+    expect(data.volunteerOffers[0]).toMatchObject({ roleNameRo: "Direcționare (Traseu)", roleNameEn: "Guidance (Route)" });
   });
 
   it("finds the person by the canonical address, whichever spelling was typed", async () => {
@@ -175,8 +204,8 @@ describe("BR-REQ-070-01 everything held about a person", () => {
         // No role given yet, and every role she ticked, in the club's order (§761).
         roleNameRo: null,
         roleNameEn: null,
-        chosenRolesRo: ["Punct de apă", "Sosire"],
-        chosenRolesEn: ["Water point", "Finish"],
+        chosenRolesRo: ["Punct de apă", "Sosire", "Direcționare (Start / Sosire)", "Direcționare (Traseu)"],
+        chosenRolesEn: ["Water point", "Finish", "Guidance (Start / Finish)", "Guidance (Route)"],
         state: "REGISTERED",
         source: "PUBLIC",
         name: "Ana Pop",

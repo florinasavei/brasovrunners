@@ -9,11 +9,13 @@ import { requireStaff } from "@/modules/staff-identity/session";
 import { typedPhone } from "@/modules/registrations/answers";
 import {
   changeVolunteer,
+  changeVolunteerCategory,
   changeVolunteerRole,
   ROLE_FORM_COLOUR_BOXES,
   setAcceptsVolunteers,
   setVolunteersShirts,
   setVolunteersShowCounts,
+  type VolunteerCategoryRequest,
   type VolunteerRequest,
   type VolunteerRoleRequest,
 } from "@/modules/volunteers/volunteers";
@@ -92,6 +94,8 @@ const staffFields = (form: FormData) => ({
 });
 
 const roleFields = (form: FormData) => ({
+  // «Categoria» (§NNN): the id of the category chosen, "" for «Alte activități» — only when the form drew the choice, so a form without it leaves the role where it is.
+  ...(form.has("categoryId") ? { categoryId: field(form, "categoryId") } : {}),
   nameRo: field(form, "nameRo"),
   nameEn: field(form, "nameEn"),
   needed: field(form, "needed"),
@@ -108,6 +112,23 @@ const roleFields = (form: FormData) => ({
       }
     : {}),
 });
+
+const categoryFields = (form: FormData) => ({ nameRo: field(form, "nameRo"), nameEn: field(form, "nameEn") });
+
+/**
+ * «Persoana de contact» of a category (§NNN): the three boxes as posted — the telephone read by the parser a staff member's box uses
+ * (`typedPhone`: with the country code, or as a Romanian number; anything it cannot read stays as typed, for the schema's bound).
+ */
+const contactFields = (form: FormData) => ({
+  contactName: field(form, "contactName"),
+  contactPhone: typedPhone(field(form, "contactPhone").trim()),
+  contactEmail: field(form, "contactEmail"),
+});
+
+async function runCategory(request: VolunteerCategoryRequest) {
+  const actor = await requireStaff();
+  return changeVolunteerCategory(getDb(), actor, request, new Date());
+}
 
 async function runRole(request: VolunteerRoleRequest) {
   const actor = await requireStaff();
@@ -164,6 +185,67 @@ export async function switchVolunteersCountsAction(form: FormData): Promise<void
   }
 }
 
+/** «Adaugă o categorie» (§NNN): both names. A refusal keeps what was typed (§315). */
+export async function addVolunteerCategoryAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  try {
+    await runCategory({ kind: "add", eventId: eventIdOf(form), fields: categoryFields(form) });
+  } catch (error) {
+    if (isDomainError(error) && (error.code === "VALIDATION_ERROR" || error.code === "VOLUNTEER_NAME_TAKEN")) return refused(error, form);
+    if (!isDomainError(error)) throw error;
+    return backToCard(form, { error: error.code });
+  }
+  return backToCard(form, { saved: "volunteerCategoryAdded" });
+}
+
+/** «Salvează» under a category's «Modifică»: both names. */
+export async function editVolunteerCategoryAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  let changed: boolean;
+  try {
+    changed = (await runCategory({ kind: "edit", eventId: eventIdOf(form), id: field(form, "categoryId"), fields: categoryFields(form) })).changed;
+  } catch (error) {
+    if (isDomainError(error) && (error.code === "VALIDATION_ERROR" || error.code === "VOLUNTEER_NAME_TAKEN")) return refused(error, form);
+    if (!isDomainError(error)) throw error;
+    return backToCard(form, { error: error.code });
+  }
+  return backToCard(form, { saved: changed ? "volunteerCategorySaved" : "volunteerUnchanged" });
+}
+
+/** «Salvează» under a category's «Persoana de contact»: its own form, its own press. */
+export async function saveVolunteerCategoryContactAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  let changed: boolean;
+  try {
+    changed = (await runCategory({ kind: "contact", eventId: eventIdOf(form), id: field(form, "categoryId"), fields: contactFields(form) })).changed;
+  } catch (error) {
+    if (isDomainError(error) && error.code === "VALIDATION_ERROR") return refused(error, form);
+    if (!isDomainError(error)) throw error;
+    return backToCard(form, { error: error.code });
+  }
+  return backToCard(form, { saved: changed ? "volunteerCategoryContactSaved" : "volunteerUnchanged" });
+}
+
+/** The arrows on a category: one step up or down in the club's order. */
+export async function moveVolunteerCategoryAction(form: FormData): Promise<void> {
+  const direction = field(form, "direction") === "up" ? "up" : "down";
+  try {
+    const result = await runCategory({ kind: "move", eventId: eventIdOf(form), id: field(form, "categoryId"), direction });
+    return backToCard(form, { saved: result.changed ? "volunteerCategoryMoved" : "volunteerUnchanged" });
+  } catch (error) {
+    if (!isDomainError(error)) throw error;
+    return backToCard(form, { error: error.code });
+  }
+}
+
+/** «Șterge categoria»: asks first (§384); a category with roles under it is refused, naming why (`VOLUNTEER_CATEGORY_HAS_ROLES`). */
+export async function deleteVolunteerCategoryAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  try {
+    await runCategory({ kind: "delete", eventId: eventIdOf(form), id: field(form, "categoryId") });
+  } catch (error) {
+    if (!isDomainError(error)) throw error;
+    return backToCard(form, { error: error.code });
+  }
+  return backToCard(form, { saved: "volunteerCategoryDeleted" });
+}
+
 /** «Adaugă rolul»: both names, how many it needs, and what the person would do. A refusal keeps what was typed (§315). */
 export async function addVolunteerRoleAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   try {
@@ -181,7 +263,8 @@ export async function editVolunteerRoleAction(_previous: FormOutcome | null, for
     changed = (await runRole({ kind: "edit", eventId: eventIdOf(form), id: field(form, "roleId"), fields: roleFields(form) })).changed;
   } catch (error) {
     // A colour no word reads on is a box to correct, like a name left empty (§764).
-    if (isDomainError(error) && (error.code === "VALIDATION_ERROR" || error.code === "BADGE_COLOUR_UNREADABLE")) return refused(error, form);
+    // …or a name already under that category (§NNN): the box to change.
+    if (isDomainError(error) && (error.code === "VALIDATION_ERROR" || error.code === "BADGE_COLOUR_UNREADABLE" || error.code === "VOLUNTEER_NAME_TAKEN")) return refused(error, form);
     if (!isDomainError(error)) throw error;
     return backToCard(form, { error: error.code });
   }

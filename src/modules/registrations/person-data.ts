@@ -2,7 +2,7 @@ import { and, asc, desc, eq, inArray, or } from "drizzle-orm";
 import { auditLogs } from "@/db/schema/audit-logs";
 import { type DeclarationAcceptance, declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import { emailOutbox } from "@/db/schema/email-outbox";
-import { eventVolunteerRoleChoices, eventVolunteerRoles, eventVolunteers } from "@/db/schema/event-volunteers";
+import { eventVolunteerCategories, eventVolunteerRoleChoices, eventVolunteerRoles, eventVolunteers } from "@/db/schema/event-volunteers";
 import { eventTranslations } from "@/db/schema/events";
 import { groupRunDeclarations } from "@/db/schema/group-run-declarations";
 import { legalDocuments } from "@/db/schema/legal-documents";
@@ -13,6 +13,7 @@ import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
 import { recordAuditEvent } from "@/modules/audit/repository";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
+import { roleLabel } from "@/modules/volunteers/domain/volunteer";
 import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
 import { openFormDraft, purposeSecret, sealFormDraft } from "./form-draft";
@@ -99,10 +100,13 @@ export type PersonData = {
   volunteerOffers: Array<{
     eventId: string;
     eventTitle: string | null;
-    /** The role the organizers gave, in both languages (the page shows the one of its own locale) — null while none (§761). */
+    /**
+     * The role the organizers gave, in both languages (the page shows the one of its own locale) — null while none (§761). Named as
+     * a role is named alone, with its category: «Direcționare (Traseu)» (§NNN, `roleLabel`).
+     */
     roleNameRo: string | null;
     roleNameEn: string | null;
-    /** The roles the person said they would do (§761), in both languages, in the club's order. */
+    /** The roles the person said they would do (§761), in both languages, in the club's order, each with its category as above. */
     chosenRolesRo: string[];
     chosenRolesEn: string[];
     state: (typeof eventVolunteers.$inferSelect)["state"];
@@ -244,6 +248,8 @@ async function collectPersonData<T extends Record<string, unknown>>(
       eventTitle: eventTranslations.title,
       roleNameRo: eventVolunteerRoles.nameRo,
       roleNameEn: eventVolunteerRoles.nameEn,
+      roleCategoryRo: eventVolunteerCategories.nameRo,
+      roleCategoryEn: eventVolunteerCategories.nameEn,
       state: eventVolunteers.state,
       source: eventVolunteers.source,
       name: eventVolunteers.name,
@@ -276,6 +282,7 @@ async function collectPersonData<T extends Record<string, unknown>>(
     .from(eventVolunteers)
     // The role given, when there is one (§761: an offer nobody placed has none).
     .leftJoin(eventVolunteerRoles, eq(eventVolunteerRoles.id, eventVolunteers.roleId))
+    .leftJoin(eventVolunteerCategories, eq(eventVolunteerCategories.id, eventVolunteerRoles.categoryId))
     .leftJoin(eventTranslations, and(eq(eventTranslations.eventId, eventVolunteers.eventId), eq(eventTranslations.locale, "ro")))
     // The agreement's version number (§758), through the row's own reference.
     .leftJoin(legalDocuments, eq(legalDocuments.id, eventVolunteers.agreementDocumentId))
@@ -289,16 +296,26 @@ async function collectPersonData<T extends Record<string, unknown>>(
             volunteerId: eventVolunteerRoleChoices.volunteerId,
             nameRo: eventVolunteerRoles.nameRo,
             nameEn: eventVolunteerRoles.nameEn,
+            categoryRo: eventVolunteerCategories.nameRo,
+            categoryEn: eventVolunteerCategories.nameEn,
             position: eventVolunteerRoles.position,
           })
           .from(eventVolunteerRoleChoices)
           .innerJoin(eventVolunteerRoles, eq(eventVolunteerRoles.id, eventVolunteerRoleChoices.roleId))
+          .leftJoin(eventVolunteerCategories, eq(eventVolunteerCategories.id, eventVolunteerRoles.categoryId))
           .where(inArray(eventVolunteerRoleChoices.volunteerId, offerRows.map((offer) => offer.id)))
           .orderBy(asc(eventVolunteerRoles.position), asc(eventVolunteerRoles.createdAt), asc(eventVolunteerRoles.id))
       : [];
-  const volunteerOffers = offerRows.map(({ id, ...offer }) => {
+  // A role is named as a role is named alone (§NNN): «Direcționare (Traseu)», so the same name under two categories is two roles to read.
+  const volunteerOffers = offerRows.map(({ id, roleCategoryRo, roleCategoryEn, ...offer }) => {
     const chosen = choiceRows.filter((choice) => choice.volunteerId === id);
-    return { ...offer, chosenRolesRo: chosen.map((choice) => choice.nameRo), chosenRolesEn: chosen.map((choice) => choice.nameEn) };
+    return {
+      ...offer,
+      roleNameRo: offer.roleNameRo === null ? null : roleLabel({ nameRo: offer.roleNameRo, nameEn: offer.roleNameEn ?? "", categoryRo: roleCategoryRo, categoryEn: roleCategoryEn }, "ro"),
+      roleNameEn: offer.roleNameEn === null ? null : roleLabel({ nameRo: offer.roleNameRo ?? "", nameEn: offer.roleNameEn, categoryRo: roleCategoryRo, categoryEn: roleCategoryEn }, "en"),
+      chosenRolesRo: chosen.map((choice) => roleLabel(choice, "ro")),
+      chosenRolesEn: chosen.map((choice) => roleLabel(choice, "en")),
+    };
   });
 
   const groupRuns = await groupRunDeclarationsOf(db, canonicalEmail);

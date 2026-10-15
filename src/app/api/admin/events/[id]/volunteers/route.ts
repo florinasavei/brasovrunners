@@ -6,7 +6,7 @@ import { routing, type Locale } from "@/i18n/routing";
 import { sexCell } from "@/modules/registrations/domain/sex";
 import { shirtSizeShown } from "@/modules/registrations/domain/kit";
 import { buildVolunteersCsv, volunteersCsvFileName } from "@/modules/volunteers/csv";
-import { isVolunteerMinor } from "@/modules/volunteers/domain/volunteer";
+import { isVolunteerMinor, roleLabel, rolesWithCategoryWords } from "@/modules/volunteers/domain/volunteer";
 import { exportVolunteers } from "@/modules/volunteers/volunteers";
 import { canManageVolunteers } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
@@ -48,8 +48,11 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
   }
 
   const t = await getTranslations({ locale, namespace: "Admin" });
-  const roleNames = new Map(data.roles.map((role) => [role.id, locale === "en" ? role.nameEn : role.nameRo]));
-  const order = new Map(data.roles.map((role, index) => [role.id, index]));
+  // The roles under their categories in the club's order, each named alone as «Direcționare (Traseu)» (§NNN); the category's
+  // contact person is never in the file.
+  const roles = rolesWithCategoryWords(data.categories, data.roles);
+  const roleNames = new Map(roles.map((role) => [role.id, roleLabel(role, locale)]));
+  const order = new Map(roles.map((role, index) => [role.id, index]));
   // Grouped by the role given in the club's order — the offers nobody placed yet first (§761) — then oldest first
   // (the list is already oldest first, and the sort is stable).
   const rank = (roleId: string | null) => (roleId === null ? -1 : (order.get(roleId) ?? 0));
