@@ -33,13 +33,18 @@ vi.mock("@/app/[locale]/admin/events/[id]/volunteer-actions", () => {
   const noop = async () => {};
   return {
     addVolunteerAction: noop,
+    addVolunteerCategoryAction: noop,
     addVolunteerRoleAction: noop,
     assignVolunteerAction: noop,
     deleteVolunteerAction: noop,
+    deleteVolunteerCategoryAction: noop,
     deleteVolunteerRoleAction: noop,
     editVolunteerAction: noop,
+    editVolunteerCategoryAction: noop,
     editVolunteerRoleAction: noop,
+    moveVolunteerCategoryAction: noop,
     moveVolunteerRoleAction: noop,
+    saveVolunteerCategoryContactAction: noop,
     recordPaperVolunteerAgreementAction: noop,
     recordPaperVolunteerGuardianAction: noop,
     requestVolunteerAgreementAction: noop,
@@ -335,8 +340,8 @@ describe("§765 the organizers' entry draws the profile boxes only while the not
 describe("§765 the role's form: «Descrierea rolului» in the rich-text editor, with «Copiază și tradu tot»", () => {
   it("draws, in the add form and in every role's edit form, the translate button, one editor per language and no one-line box", async () => {
     const page = await drawCard();
-    // One button per form: «Adaugă un rol» and the three roles' «Modifică».
-    expect((page.match(/data-testid="translate-all"/g) ?? []).length).toBe(4);
+    // One button per form: «Adaugă un rol», the three roles' «Modifică» — and, since §NNN, «Adaugă o categorie» (its own names, with «Copiază și tradu»).
+    expect((page.match(/data-testid="translate-all"/g) ?? []).length).toBe(5);
     expect((page.match(/name="descriptionRoBody"/g) ?? []).length).toBe(4);
     expect((page.match(/name="descriptionEnBody"/g) ?? []).length).toBe(4);
     expect(page).toContain("Descrierea rolului (Română, opțional)");
@@ -353,7 +358,7 @@ describe("§765 the role's form: «Descrierea rolului» in the rich-text editor,
   it("says why the button is grey while the provider is off, like the editor's", async () => {
     const off = await drawCard({}, "ro", { action: null, setupHref: "/admin/tasks#translate" } as never);
     expect(off).toContain('data-translate-state="off"');
-    expect((off.match(/data-translate-state="off"/g) ?? []).length).toBe(4);
+    expect((off.match(/data-translate-state="off"/g) ?? []).length).toBe(5);
     expect(off).toContain(ro.Translate.off);
   });
 
