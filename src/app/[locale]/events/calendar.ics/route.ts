@@ -1,3 +1,4 @@
+import { contentDisposition } from "@/shared/http/content-disposition";
 import { getTranslations } from "next-intl/server";
 import { routing } from "@/i18n/routing";
 import { toCalendarEvent } from "@/modules/events/calendar";
@@ -70,7 +71,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ loc
     headers: {
       "Content-Type": "text/calendar; charset=utf-8",
       // The club's name from the platform's constant (§357), never written in: "brasov-runners-ro.ics".
-      "Content-Disposition": `inline; filename="${calendarFeedFileName(known)}"`,
+      "Content-Disposition": contentDisposition("inline", calendarFeedFileName(known), "calendar"),
       // No Cache-Control of its own (§549): Next writes the static response's, and a write expires the CDN's copy.
     },
   });

@@ -1,3 +1,4 @@
+import { contentDisposition } from "@/shared/http/content-disposition";
 import { hasLocale } from "next-intl";
 import { NextResponse } from "next/server";
 import { z } from "zod";
@@ -157,7 +158,7 @@ export async function GET(
     status: 200,
     headers: {
       "Content-Type": "application/pdf",
-      "Content-Disposition": `attachment; filename="bibs-${id.slice(0, 8)}${suffix}.pdf"`,
+      "Content-Disposition": contentDisposition("attachment", `bibs-${id.slice(0, 8)}${suffix}.pdf`, "bibs"),
       "Content-Length": String(pdf.byteLength),
       "Cache-Control": "private, no-store",
     },

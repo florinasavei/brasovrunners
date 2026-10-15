@@ -223,7 +223,7 @@ describe("§550 the newsletter's subscribers, their CSV, the unsubscribe, and th
     const response = await downloadSubscribers(new Request("http://localhost/api/admin/newsletter/subscribers?lang=ro&topic=GEAR_TESTING"));
     expect(response.status).toBe(200);
     expect(response.headers.get("Content-Type")).toBe("text/csv; charset=utf-8");
-    expect(response.headers.get("Content-Disposition")).toMatch(/^attachment; filename="newsletter-abonati-\d{4}-\d{2}-\d{2}\.csv"$/);
+    expect(response.headers.get("Content-Disposition")).toMatch(/^attachment; filename="newsletter-abonati-\d{4}-\d{2}-\d{2}\.csv"; filename\*=UTF-8''/);
     const body = new TextDecoder("utf-8", { ignoreBOM: true }).decode(await response.arrayBuffer());
     expect(body.startsWith(CSV_BOM)).toBe(true);
     const lines = body.slice(CSV_BOM.length).split("\r\n");
