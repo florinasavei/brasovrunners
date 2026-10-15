@@ -10,7 +10,6 @@ import { env } from "@/shared/config/env";
 import { LEGAL_DOCUMENT_KEYS } from "./domain/keys";
 import {
   isUnannouncedChange,
-  legalTemplatesCheckDue,
   legalTemplatesDigestDue,
   legalTemplatesIdempotencyKey,
   type LegalTemplatesNotice,
@@ -18,8 +17,7 @@ import {
   templatePairs,
   templatesFingerprint,
 } from "./domain/templates-notice";
-import { computeContentHash } from "./domain/content-hash";
-import { readLegalOverview, templateTranslations } from "./service";
+import { readLegalOverview } from "./service";
 import { type ClubFacts, clubFactsFromEnv } from "./templates/club-facts";
 
 /**
@@ -31,22 +29,22 @@ import { type ClubFacts, clubFactsFromEnv } from "./templates/club-facts";
  * replacement).
  *
  * A step of the maintenance job (`registrations/maintenance.ts`), so no new schedule and no process
- * of its own: it runs when the job runs, and reads the overview at most once an hour per environment
+ * of its own: it runs when the job runs, and reads the overview once a club day per environment
  * (`domain/templates-notice.ts`). Each environment has its own row and its own staff: QA announces
  * QA's templates to QA's Administrators, production production's.
  *
- * **One email a day, a digest (§NNN; the owner, 2026-10-15: six releases in a night sent six emails).**
- * The first run at or after 08:00 club time (Europe/Bucharest) that finds a template newer than the
- * ones the last email carried sends ONE email naming every text whose template is newer; nothing is
- * sent when nothing changed, and a change that lands after the day's email waits for the next day's.
- * The mark of «the last digest» is `announcedAt` in this same row — the house keeps its job marks in
- * `platform_settings` (the hourly check, the translation budget, the newsletter's alert lock) — so it
- * survives a restart and costs no table.
+ * **One look a day, a digest (§NNN; the owner, 2026-10-15: six releases in a night sent six emails).**
+ * The first run at or after 08:00 club time (Europe/Bucharest) looks once; if a template is newer than
+ * the ones the last email carried it sends ONE email naming every text whose template is newer, and
+ * nothing when nothing changed. A change that lands after the day's look — at 10:00, at 22:30 — waits
+ * for the next morning's. The mark is `checkedAt` in this same row — the house keeps its job marks in
+ * `platform_settings` (the translation budget, the newsletter's alert lock) — so it survives a
+ * restart and costs no table.
  *
  * **It asks; it never does.** `readLegalOverview` is read-only, and nothing here drafts, approves or
  * writes a legal text (AGENTS.md §10.8, §29): the email tells a person to regenerate, read and approve.
  *
- * **A change approved within the hour is never announced**: by the next check nothing is newer than
+ * **A change approved before the morning's look is never announced**: by the look nothing is newer than
  * the text in force, so there is nothing to say — which is the point.
  */
 
@@ -81,17 +79,8 @@ export async function legalFactsInForce<T extends Record<string, unknown>>(db: D
   return clubFactsFromEnv(env, await shownContactAddresses(db));
 }
 
-/**
- * The templates' own words as this release ships them — every text's template with no fact written
- * in, hashed: computed from the code alone, no query, so every run can afford it. A release that moves
- * a template changes it; the club's facts do not (the hourly check reads those).
- */
-export function legalTemplatesStamp(): string {
-  return templatesFingerprint(LEGAL_DOCUMENT_KEYS.map((key) => `${key}:${computeContentHash(templateTranslations(key, {}))}`));
-}
-
 export type LegalTemplatesNoticeRun = {
-  /** Whether this run read the overview (false: not the digest's turn — before 08:00 club time or today's email has gone — or inside the hour since the last read). */
+  /** Whether this run read the overview (false: not the digest's turn — before 08:00 club time, or today's look has been made). */
   checked: boolean;
   /** Emails queued this run: one per Administrator and Superadministrator, on a change, else none. */
   queued: number;
@@ -105,18 +94,16 @@ export async function announceLegalTemplateChanges<T extends Record<string, unkn
   now: Date,
 ): Promise<LegalTemplatesNoticeRun> {
   const notice = await readLegalTemplatesNotice(db);
-  // The digest's turn first (§NNN): before 08:00 club time, or once today's email has gone, the step
-  // reads the one row and nothing else — a release at 09:00 waits for tomorrow's digest.
+  // The digest's turn first (§NNN): before 08:00 club time, or once today's look has been made, the
+  // step reads the one row and nothing else — a release at 10:00 or at 22:30 waits for tomorrow's.
   if (!legalTemplatesDigestDue(notice, now)) return { checked: false, queued: 0, keys: [] };
-  const templatesStamp = legalTemplatesStamp();
-  if (!legalTemplatesCheckDue(notice, now, templatesStamp)) return { checked: false, queued: 0, keys: [] };
 
   /*
-    The hour is claimed before the overview is read, so a template that cannot be read or a fact that
-    fails is tried again an hour later rather than at every ping in between (§479); everything else
+    The day's look is claimed before the overview is read, so a template that cannot be read or a fact
+    that fails is tried again tomorrow rather than at every ping in between (§479); everything else
     the row remembers is kept until an announcement replaces it.
   */
-  await writeLegalTemplatesNotice(db, { ...notice, checkedAt: now.toISOString(), templatesStamp }, now);
+  await writeLegalTemplatesNotice(db, { ...notice, checkedAt: now.toISOString() }, now);
 
   const overview = await readLegalOverview(db, await loadFacts(), now);
   const newer = LEGAL_DOCUMENT_KEYS.filter((key) => overview[key].templateNewer).map((key) => ({
@@ -150,7 +137,7 @@ export async function announceLegalTemplateChanges<T extends Record<string, unkn
     }
     await writeLegalTemplatesNotice(
       tx,
-      { checkedAt: now.toISOString(), templatesStamp, fingerprint, announcedAt: now.toISOString(), keys, pairs },
+      { checkedAt: now.toISOString(), fingerprint, announcedAt: now.toISOString(), keys, pairs },
       now,
     );
   });

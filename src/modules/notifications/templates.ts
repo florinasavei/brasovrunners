@@ -1765,7 +1765,7 @@ const T = {
           // A digest (§NNN): one email a day for everything that moved, so one sitting approves it all.
           "Aprobă-le pe toate într-o singură ședință, nu pe rând, în zile diferite.",
           lawyerReads("ro", d.legalTemplateKeys ?? []),
-          `«${w.tasks}» arată aceleași rânduri până când textele sunt aprobate. Mesajul acesta vine cel mult o dată pe zi, după ora ${LEGAL_TEMPLATES_DIGEST_CLOCK} (ora României), cu tot ce s-a schimbat de la cel dinainte, fiecărui Administrator și Superadministrator.`,
+          `«${w.tasks}» arată aceleași rânduri până când textele sunt aprobate. Mesajul acesta vine cel mult o dată pe zi, după ora ${LEGAL_TEMPLATES_DIGEST_CLOCK} (ora României), cu tot ce așteaptă încă aprobarea, fiecărui Administrator și Superadministrator.`,
         ];
       },
       // The screen the button opens and what is done there (§654): «Versiune nouă» regenerates; approving is on «Documente legale».
@@ -2565,7 +2565,7 @@ const T = {
           `A text that already has a draft waiting shows «${w.draftExists}»: approve it or delete it first, then regenerate it.`,
           "Approve them all in one sitting, not one at a time over several days.",
           lawyerReads("en", d.legalTemplateKeys ?? []),
-          `«${w.tasks}» shows the same rows until the texts are approved. This message comes at most once a day, after ${LEGAL_TEMPLATES_DIGEST_CLOCK} Romanian time, with everything that changed since the one before, to every Administrator and Superadministrator.`,
+          `«${w.tasks}» shows the same rows until the texts are approved. This message comes at most once a day, after ${LEGAL_TEMPLATES_DIGEST_CLOCK} Romanian time, with everything still waiting for approval, to every Administrator and Superadministrator.`,
         ];
       },
       action: `${legalTemplatesWords("en").newVersion}: regenerate the texts`,
