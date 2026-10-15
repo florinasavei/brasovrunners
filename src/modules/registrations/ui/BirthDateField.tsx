@@ -41,9 +41,9 @@ export type BirthDateFieldProps = {
    */
   tooOld?: string;
   autoComplete?: string;
-  /** The backoffice's compact boxes (the volunteers' card, §NNN); the public forms keep the default. */
+  /** The backoffice's compact boxes (the volunteers' card, §773); the public forms keep the default. */
   size?: "small" | "medium";
-  /** The box fills its row (the volunteers' form lays it beside the sex box, §NNN). */
+  /** The box fills its row (the volunteers' form lays it beside the sex box, §773). */
   fullWidth?: boolean;
 };
 

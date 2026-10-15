@@ -914,7 +914,7 @@ describe("an event's volunteers are not the file's — only their categories and
     expect(await db.select().from(eventVolunteers).where(eq(eventVolunteers.eventId, target.id))).toHaveLength(1);
   });
 
-  it("carries the tick «Arată public câți voluntari mai sunt necesari» in no direction (§NNN): a public number is the club's choice for one date, so the file has none, an import as new shows none and an import over leaves the target's own", async () => {
+  it("carries the tick «Arată public câți voluntari mai sunt necesari» in no direction (§773): a public number is the club's choice for one date, so the file has none, an import as new shows none and an import over leaves the target's own", async () => {
     const { event } = await seedRace();
     await withVolunteers(event.id);
     // The tick is on for the source event, and the file says nothing of it, nor of the volunteers' shirts or switch.

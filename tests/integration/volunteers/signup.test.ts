@@ -449,7 +449,7 @@ describe("§754 the volunteers' public sign-up", () => {
     await seedAssigned(event.id, water.id, "dat@example.test");
     const read = await readPublicVolunteerRoles(db, event.id);
     expect(read.acceptsVolunteers).toBe(true);
-    // §NNN: a public number is the club's tick, off until ticked — the read carries it, the counts stay in the roles.
+    // §773: a public number is the club's tick, off until ticked — the read carries it, the counts stay in the roles.
     expect(read.showCounts).toBe(false);
     expect(read.roles.map((role) => [role.nameRo, role.needed, role.taken, role.free])).toEqual([
       ["Punct de apă", 2, 1, 1],

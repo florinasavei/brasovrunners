@@ -8,7 +8,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { auditMigration } from "../../../scripts/migration-check.mjs";
 
 /**
- * Migration `0159_volunteers_counts_birth_date` (§NNN, amending §761, §765 and §768), proven on real PostgreSQL (PGlite): a
+ * Migration `0159_volunteers_counts_birth_date` (§773, amending §761, §765 and §768), proven on real PostgreSQL (PGlite): a
  * volunteer listed before it keeps their age and has no date of birth; an event shows no public count of volunteers until the club
  * ticks it; the date is a calendar day, nullable, held beside the age; and the file only expands.
  */

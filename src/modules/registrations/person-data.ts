@@ -114,7 +114,7 @@ export type PersonData = {
     note: string | null;
     /** What the person said about themselves (§765), every answer as stored: nulls and false for a row from before. */
     age: number | null;
-    /** The date of birth the age was derived from, `YYYY-MM-DD` (§NNN): a row from before has none (art. 15 GDPR: every column of the row). */
+    /** The date of birth the age was derived from, `YYYY-MM-DD` (§773): a row from before has none (art. 15 GDPR: every column of the row). */
     dateOfBirth: string | null;
     sex: (typeof eventVolunteers.$inferSelect)["sex"];
     city: string | null;

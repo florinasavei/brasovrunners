@@ -35,7 +35,7 @@ import { bornAged, bornAgedOn } from "../../helpers/volunteer-birth";
 const NOW = new Date("2026-10-13T10:00:00.000Z");
 const LATER = new Date("2026-10-14T10:00:00.000Z");
 const DAY = 24 * 60 * 60_000;
-/** A date of birth that makes a person `years` old on the event's day (§NNN): the last day of being so. */
+/** A date of birth that makes a person `years` old on the event's day (§773): the last day of being so. */
 const aged = (years: number) => bornAged(years, new Date(NOW.getTime() + 30 * DAY));
 const RENDERED = new Date(NOW.getTime() - 60_000).toISOString();
 
@@ -366,6 +366,18 @@ describe("§768 volunteers under eighteen and their guardian", () => {
       expect(await outboxOf("VOLUNTEER_GUARDIAN_REQUEST")).toHaveLength(0);
       const [listed] = await listVolunteers(db, event.id);
       expect(guardianStandingOf(listed, NOW)).toBe("notNeeded");
+    });
+
+    it("refuses a day that does not exist on the date's own box — a refusal, never a value the database rejects, on the page's post and on the organizers' entry alike", async () => {
+      const { event, role } = await seedEvent();
+      for (const birthDate of ["1990-02-30", "2009-02-31", "30.02.1990"]) {
+        await expect(submitVolunteer(db, event.id, form(role.id, { birthDate }), NOW), birthDate).rejects.toMatchObject({ code: "VALIDATION_ERROR", fields: ["birthDate"] });
+        await expect(
+          changeVolunteer(db, admin, { kind: "add", eventId: event.id, fields: { roleIds: [role.id], assignedRoleId: "", name: "Dan", email: "dan@example.test", phone: "+40712345679", note: "", birthDate } }, NOW),
+          birthDate,
+        ).rejects.toMatchObject({ code: "VALIDATION_ERROR", fields: ["birthDate"] });
+      }
+      expect(await db.select().from(eventVolunteers)).toHaveLength(0);
     });
 
     it("throttles the guardian's address too: three an hour, so a script cannot spend a parent's mailbox", async () => {
@@ -792,7 +804,7 @@ describe("§768 volunteers under eighteen and their guardian", () => {
     });
   });
 
-  describe("§NNN the date of birth: the age is counted on the event's day, not today's", () => {
+  describe("§773 the date of birth: the age is counted on the event's day, not today's", () => {
     /** The event's day in its own zone: NOW + 30 days at 10:00 UTC is 12 November 2026 in Brașov. */
     const EVENT_DAY = "2026-11-12";
     /** The day after a date, `YYYY-MM-DD`. */

@@ -112,7 +112,7 @@ export default async function EventVolunteersPage({ params, searchParams }: Prop
         categories={offer.categories}
         shirts={offer.shirts}
         showCounts={offer.showCounts}
-        // The day the date of birth is counted on (§NNN): the gun's, else the event's, in the event's own zone.
+        // The day the date of birth is counted on (§773): the gun's, else the event's, in the event's own zone.
         eventDay={volunteerEventDay(event, now)}
         profile={offer.profile}
         minors={offer.minors}

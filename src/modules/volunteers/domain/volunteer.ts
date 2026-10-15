@@ -6,7 +6,7 @@ import { normalizeTeamText, resolveRichPair, richTextBox } from "@/modules/conte
 import { E164_PHONE } from "@/modules/registrations/phone";
 import { ageOn, dayIn, latestBirthDateFor } from "@/modules/registrations/domain/age";
 import { SHIRT_SIZES } from "@/modules/registrations/domain/kit";
-import { normalizeTypedDate } from "@/shared/forms/pickers/wall-values";
+import { isDateValue, normalizeTypedDate } from "@/shared/forms/pickers/wall-values";
 import { SEX_CHOICES } from "@/modules/registrations/domain/sex";
 import { canonicalizeEmail, isValidEmail } from "@/modules/participants/domain/canonical-email";
 
@@ -88,19 +88,28 @@ export function isVolunteerMinor(age: number | null | undefined): boolean {
 }
 
 /**
- * The calendar day a volunteer's age is judged on (§NNN; the owner, 2026-10-14: «în loc de vârstă vreau să treacă data
+ * The calendar day a volunteer's age is judged on (§773; the owner, 2026-10-14: «în loc de vârstă vreau să treacă data
  * nașterii»): the day of the race's gun when the event has one, else the event's own day — in the event's own zone, as the
  * registration form counts (`formViewOf`) — so a person who turns fourteen on the morning of the race may offer today. An
  * event whose date is still to be announced has no such day: today stands for it, and the age is judged again at the next
- * save. Pure.
+ * save. An event whose **time alone** is to be announced has one — the public row hides the instant but carries `announcedDay`,
+ * the day on the event's own calendar — so the page and the service count on the same day. Pure.
  */
 export function volunteerEventDay(
-  event: { startsAt: Date | null; raceStartsAt?: Date | null; timezone?: string | null; dateToBeAnnounced?: boolean | null },
+  event: {
+    startsAt: Date | null;
+    raceStartsAt?: Date | null;
+    timezone?: string | null;
+    dateToBeAnnounced?: boolean | null;
+    announcedDay?: string | null;
+  },
   now: Date,
 ): string {
   const zone = event.timezone || "Europe/Bucharest";
-  const at = event.dateToBeAnnounced === true ? now : (event.raceStartsAt ?? event.startsAt ?? now);
-  return dayIn(at, zone);
+  if (event.dateToBeAnnounced === true) return dayIn(now, zone);
+  const at = event.raceStartsAt ?? event.startsAt;
+  if (at) return dayIn(at, zone);
+  return event.announcedDay || dayIn(now, zone);
 }
 
 /** The youngest birth date a volunteer may give: the latest day that still makes `VOLUNTEER_MINIMUM_AGE` on the event's day. */
@@ -121,16 +130,17 @@ export function earliestVolunteerBirthDate(eventDay: string): string {
  * age here is counted (`ageOn`).
  */
 export function volunteerAgeOn(birthDate: string, eventDay: string): number | null {
-  return ageOn(birthDate, eventDay);
+  // 30 February is no day: `ageOn` would roll it into March and give an age to a date the form refuses.
+  return isDateValue(birthDate) ? ageOn(birthDate, eventDay) : null;
 }
 
 /**
  * The age a form's date box says on the event's day. An **empty** box on the organizers' entry (`null`, the parsed value) says what
- * the row already held when it has an age and no date (`kept`: a row from before §NNN); a box that was refused, or never posted
+ * the row already held when it has an age and no date (`kept`: a row from before §773); a box that was refused, or never posted
  * (`undefined`), says nothing — no guardian is asked for an age nobody could read.
  */
 function ageOfBox(birthDate: unknown, eventDay: string, kept: number | null): number | null {
-  if (typeof birthDate === "string" && birthDate !== "") return ageOn(birthDate, eventDay);
+  if (typeof birthDate === "string" && birthDate !== "") return volunteerAgeOn(birthDate, eventDay);
   return birthDate === null ? kept : null;
 }
 
@@ -343,7 +353,7 @@ const uuidField = z.uuid();
 
 /**
  * What a person says about themselves (§765; the owner, 2026-10-14: «vârstă, sex, oraș și o bifă dacă a mai fost
- * voluntar sau nu»; since §NNN «în loc de vârstă vreau să treacă data nașterii»): the **date of birth** — the registration
+ * voluntar sau nu»; since §773 «în loc de vârstă vreau să treacă data nașterii»): the **date of birth** — the registration
  * form's own box, typed day first and read by `normalizeTypedDate` — whose age on the event's day (`volunteerEventDay`) is at
  * least `VOLUNTEER_MINIMUM_AGE` and at most `VOLUNTEER_AGE_MAX` (a rule of the box itself, so a refusal names it together with
  * the other boxes that failed; the page says «cel puțin 14 ani» rather than «scrie data» by reading the typed date) — the sex as
@@ -356,6 +366,8 @@ function birthDateBox(eventDay: string) {
     .string()
     .transform((value) => normalizeTypedDate(value))
     .pipe(z.string().regex(/^\d{4}-\d{2}-\d{2}$/))
+    // A day that does not exist (30 February) passes the shape and would roll over in `ageOn`: refused on the box, as the registration form's `z.iso.date` does.
+    .refine((day) => isDateValue(day))
     .refine(
       (day) => {
         const age = ageOn(day, eventDay);
@@ -411,7 +423,7 @@ type GuardianVerdict = { guardian: { name: string; email: string | null } | null
 type AgeBasis = { eventDay: string; kept: number | null };
 
 /**
- * What the guardian's two boxes mean for the age the date of birth gives on the event's day (§768, §NNN), pure:
+ * What the guardian's two boxes mean for the age the date of birth gives on the event's day (§768, §773), pure:
  * - **eighteen or older, or no age** — the boxes are dropped (`null`): nobody keeps a third person's data for an adult;
  * - **a minor, `address: "required"` (the public form)** — the name (`guardianName`) and a valid address
  *   (`guardianEmail`); the volunteer's tick that the parent knows and agrees is the schema's own (`guardianAware`);
@@ -485,7 +497,7 @@ const volunteerStaffInputBase = (eventDay: string) =>
     /** E.164, read from what the organizer typed by the registrations' own parser (`typedPhone`, in the action). */
     phone: z.string().regex(E164_PHONE),
     note: optionalLine(VOLUNTEER_NOTE_MAX),
-    /** What the person told the organizers (§765): every box optional here, a date that gives an age below the minimum on the event's day refused (§NNN). */
+    /** What the person told the organizers (§765): every box optional here, a date that gives an age below the minimum on the event's day refused (§773). */
     birthDate: optionalBirthDate(eventDay),
     sex: optionalSex,
     city: optionalCity,
@@ -503,7 +515,7 @@ const volunteerStaffInputBase = (eventDay: string) =>
   });
 
 /**
- * The organizers' entry (§765, §NNN): the guardian's boxes refused with the rest, then folded into one `guardian` (an adult's
+ * The organizers' entry (§765, §773): the guardian's boxes refused with the rest, then folded into one `guardian` (an adult's
  * dropped), and the **age** derived from the date of birth on `eventDay` — `volunteerEventDay`, the event's own day — beside it.
  * `keptAge` is what a row from before the date held: an empty date box on it keeps that age, so saving a phone number of a person
  * of sixteen never turns them into an adult with no guardian; `null` for a new entry and for a row that has a date.
@@ -559,7 +571,7 @@ export type VolunteerPublicInput = z.infer<typeof volunteerPublicInputSchema>;
 
 /**
  * The public form while the notice in force names it (§765, `describesVolunteerProfile`; the owner, 2026-10-14):
- * «Data nașterii» (§NNN, instead of «Vârsta»: the age on the event's day is at least `VOLUNTEER_MINIMUM_AGE` — the tick «Am
+ * «Data nașterii» (§773, instead of «Vârsta»: the age on the event's day is at least `VOLUNTEER_MINIMUM_AGE` — the tick «Am
  * cel puțin 18 ani» is gone, the date answers it), «Sex» (the registration form's two answers), «Orașul», the optional ticks
  * «Am mai fost voluntar în trecut la alte curse» and «Fac parte din grupul {club}», and «Mărimea tricoului» — which the
  * service keeps only while the event gives a shirt.

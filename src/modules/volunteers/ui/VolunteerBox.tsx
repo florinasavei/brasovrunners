@@ -65,7 +65,7 @@ import { VOLUNTEER_BOX_ID, type VolunteerBox as BoxName, type VolunteerOutcome, 
  * action asks again.
  *
  * What the person says about themselves (§765; the owner, 2026-10-14): while the notice in force names it (`profile`),
- * the form asks «Data nașterii» (§NNN, instead of «Vârsta»: the registration form's own `BirthDateField`, the age on the
+ * the form asks «Data nașterii» (§773, instead of «Vârsta»: the registration form's own `BirthDateField`, the age on the
  * event's day at least 14 since §768 — the tick «Am cel puțin 18 ani» is gone, the date answers it), «Sex» (the registration form's own `SexField`, its words), «Orașul» (its city
  * box's words), the optional ticks «Am mai fost voluntar în trecut la alte curse» and «Fac parte din grupul {club}» (the
  * club's name from `CLUB_NAME`, as the registration form's member tick draws it — the person's claim, checked against
@@ -107,11 +107,11 @@ export default async function VolunteerBox({
   /** «Oferim tricouri voluntarilor» is on for this event (§765): the form asks «Mărimea tricoului». */
   shirts: boolean;
   /**
-   * «Arată public câți voluntari mai sunt necesari» is on for this event (§NNN): each role says how many people it still needs. Off, it says
+   * «Arată public câți voluntari mai sunt necesari» is on for this event (§773): each role says how many people it still needs. Off, it says
    * only that it still takes people — the one flag every public number about volunteers asks (`VolunteerOffer.showCounts`).
    */
   showCounts: boolean;
-  /** The day the date of birth is counted on, `YYYY-MM-DD` (`volunteerEventDay`, §NNN): the gun's, else the event's. */
+  /** The day the date of birth is counted on, `YYYY-MM-DD` (`volunteerEventDay`, §773): the gun's, else the event's. */
   eventDay: string;
   /** The notice in force names what a volunteer says about themselves (§765): the form asks it — else §758's tick «Am cel puțin 18 ani». */
   profile: boolean;
@@ -137,7 +137,7 @@ export default async function VolunteerBox({
   const headed = groupsNeedHeadings(groups);
   const roleDoc = (role: PublicVolunteerRole) => (locale === "en" ? role.descriptionEnJson : role.descriptionRoJson);
   const roleWords = (role: PublicVolunteerRole) => (locale === "en" ? role.descriptionEn : role.descriptionRo);
-  // «mai sunt necesare 10 persoane» only while the club ticked «Arată public câți voluntari mai sunt necesari»; else «mai sunt locuri» (§NNN).
+  // «mai sunt necesare 10 persoane» only while the club ticked «Arată public câți voluntari mai sunt necesari»; else «mai sunt locuri» (§773).
   const needs = (role: PublicVolunteerRole) => (showCounts ? t(`volunteers.needs.${countForm(role.free, locale)}`, { count: role.free }) : t("volunteers.needs.open"));
   const countrySearchWords = {
     search: tForm("countrySearch.search"),
@@ -152,16 +152,26 @@ export default async function VolunteerBox({
   // The roles ticked before a refusal (§142), still offered: a role that filled meanwhile is simply not drawn.
   const ticked = new Set((typed.roleIds ?? "").split(",").filter((id) => roles.some((role) => role.id === id)));
   /*
-    «Data nașterii» says one of three sentences after a refusal (§NNN, the age's three of §768): a date that gives under eighteen on the
+    «Data nașterii» says one of three sentences after a refusal (§773, the age's three of §768): a date that gives under eighteen on the
     event's day, while the club cannot take minors yet, says so; one that gives under the minimum (fourteen), or a day after the event,
     says «cel puțin 14 ani»; anything else — no date, half a date, a century ago — is the registration form's «Scrie data ca zi, lună, an».
   */
   const typedDate = readTypedDate(typed.birthDate ?? "");
   const typedAge = typedDate === "" ? null : ageOn(typedDate, eventDay);
   const birthSentence =
-    typedAge === null ? "birthDate" : typedAge < VOLUNTEER_ADULT_AGE && !minors ? "birthDateMinors" : typedAge < VOLUNTEER_MINIMUM_AGE ? "birthDateMinimum" : "birthDate";
+    typedAge === null
+      ? "birthDate"
+      : typedAge < VOLUNTEER_MINIMUM_AGE
+        ? "birthDateMinimum"
+        : typedAge < VOLUNTEER_ADULT_AGE && !minors
+          ? "birthDateMinors"
+          : "birthDate";
   /** A refusal's sentence for one box, in the form's own words (`{age}` is the minimum's phrase, §758's tick says eighteen). */
-  const refusal = (name: BoxName) => t(`volunteers.errors.${name === "birthDate" ? birthSentence : name}`, { age: name === "adult" ? adultAge : age });
+  const refusal = (name: BoxName) => {
+    // «Scrie data ca zi, lună, an» is the registration form's own sentence, the box's live one too (`tForm`): one set of words for one rule.
+    if (name === "birthDate" && birthSentence === "birthDate") return tForm("birthDateUnreadable");
+    return t(`volunteers.errors.${name === "birthDate" ? birthSentence : name}`, { age: name === "adult" ? adultAge : age });
+  };
 
   return (
     <Box id={VOLUNTEER_BOX_ID} component="section" aria-label={t("volunteers.title")} data-testid="volunteer-box" sx={{ scrollMarginTop: 16 }}>
@@ -286,7 +296,7 @@ export default async function VolunteerBox({
                 ))}
               </Stack>
               {/*
-                The kinder note (§NNN; the owner, 2026-10-14: «Și pusă o notă mai drăguță»), right under the roles' list: the person may be
+                The kinder note (§773; the owner, 2026-10-14: «Și pusă o notă mai drăguță»), right under the roles' list: the person may be
                 asked to cover another responsibility, thanked, and told they will be contacted. The short instruction above the roles stays
                 short; this one is a caption in the form's own style (`body2`, secondary), read with the group.
               */}
@@ -342,7 +352,7 @@ export default async function VolunteerBox({
             {profile && (
               <Stack spacing={2} data-testid="volunteer-profile">
                 {/*
-                  «Data nașterii» and «Sex» (§765, §NNN; the owner, 2026-10-14: «în loc de vârstă vreau să treacă data nașterii»): the registration
+                  «Data nașterii» and «Sex» (§765, §773; the owner, 2026-10-14: «în loc de vârstă vreau să treacă data nașterii»): the registration
                   form's own date box — `BirthDateField`, typed day first with its mask and, with scripts off, a plain text box the server reads —
                   whose age on the event's day is at least the platform's minimum, so the tick «Am cel puțin 18 ani» is gone; and the
                   registration form's own sex box.

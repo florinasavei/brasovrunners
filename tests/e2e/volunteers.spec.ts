@@ -41,7 +41,7 @@ function databaseUrl(): string {
 }
 
 /**
- * The birth dates the form asks (§NNN, «Data nașterii»): the seed puts the event thirty days ahead, and a volunteer's age is counted on
+ * The birth dates the form asks (§773, «Data nașterii»): the seed puts the event thirty days ahead, and a volunteer's age is counted on
  * the event's day, so a person is `years` old when they turned it a hundred days before the event — never the boundary's own day, which
  * a run across midnight could cross (the boundaries are the unit and database tests'). Typed as a person types it: eight digits, the box
  * puts the dots in.
@@ -186,7 +186,7 @@ test.describe("§754 volunteers for a race", () => {
     // The card may be shut after the redirect: its tick is still the same checkbox, with the state in `aria-checked`.
     await expect(page.getByRole("checkbox", { name: "Primește voluntari pe pagină", exact: true, includeHidden: true })).toHaveAttribute("aria-checked", "true");
 
-    // «Arată public câți voluntari mai sunt necesari» (§NNN): the card's third tick, a real checkbox, off until the club ticks it.
+    // «Arată public câți voluntari mai sunt necesari» (§773): the card's third tick, a real checkbox, off until the club ticks it.
     await openFold(card);
     const countsTick = page.getByTestId("volunteer-counts-form").getByRole("checkbox", { name: "Arată public câți voluntari mai sunt necesari" });
     await expect(countsTick).toHaveAttribute("aria-checked", "false");
@@ -210,7 +210,7 @@ test.describe("§754 volunteers for a race", () => {
       const callButton = callout.getByRole("link", { name: "Vreau să fiu voluntar" });
       expect((await callButton.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
       await expect(callButton).toHaveAttribute("href", `/ro/evenimente/${event.slug}/voluntari`);
-      // §NNN: the button opens the volunteers' page in a new tab — target and rel, the new-tab mark, and words that say so.
+      // §773: the button opens the volunteers' page in a new tab — target and rel, the new-tab mark, and words that say so.
       await expect(callButton).toHaveAttribute("target", "_blank");
       await expect(callButton).toHaveAttribute("rel", "noopener");
       await expect(callButton).toHaveAttribute("aria-label", "Vreau să fiu voluntar — se deschide într-o filă nouă");
@@ -242,7 +242,7 @@ test.describe("§754 volunteers for a race", () => {
       // «Ce ești dispus(ă) să faci»: one box per role that still needs people, with what it still needs.
       const choices = guest.getByTestId("volunteer-roles");
       await expect(choices).toContainText("Ce ești dispus(ă) să faci");
-      // §NNN: the club has not ticked «Arată public câți voluntari mai sunt necesari», so the page says only that a role still takes people — no number.
+      // §773: the club has not ticked «Arată public câți voluntari mai sunt necesari», so the page says only that a role still takes people — no number.
       await expect(choices).toContainText("mai sunt locuri");
       await expect(choices).not.toContainText("mai sunt necesare");
       await expect(choices.getByTestId("volunteer-role-option").first()).not.toContainText(/\d+ persoane/);
@@ -261,10 +261,10 @@ test.describe("§754 volunteers for a race", () => {
       const finishDescription = choices.getByTestId("volunteer-role-option").filter({ hasText: "Sosire" }).getByTestId("volunteer-role-description");
       await expect(finishDescription).not.toHaveAttribute("data-folded", "true");
       await expect(finishDescription).toContainText("Stai la linia de sosire.");
-      // The owner's note, right under the roles' list (§NNN), and the short instruction above it.
+      // The owner's note, right under the roles' list (§773), and the short instruction above it.
       await expect(choices.getByTestId("volunteer-roles-note")).toHaveText("În funcție de numărul de doritori, există posibilitatea să fie nevoie să acoperi o altă responsabilitate. Mulțumim pentru dorința de a ajuta. Te vom contacta curând.");
       await expect(choices).toContainText("Bifează tot ce ai face, cel puțin un rol.");
-      // The date of birth, instead of the age: the registration form's own box (§NNN) — digits typed, the box puts the dots in.
+      // The date of birth, instead of the age: the registration form's own box (§773) — digits typed, the box puts the dots in.
       const birthBox = guest.locator('input[name="birthDate"]');
       await expect(guest.locator('input[name="age"]')).toHaveCount(0);
       await expect(birthBox).toHaveAttribute("placeholder", "ZZ.LL.AAAA");
@@ -318,7 +318,7 @@ test.describe("§754 volunteers for a race", () => {
         await page2.getByLabel("Numele tău").fill(name);
         await page2.getByLabel("Adresa ta de email").fill(email);
         await page2.locator('[name="phone"]').fill("712345678");
-        // What the person says about themselves (§765): the date of birth — digits typed, the dots put in by the box (§NNN) — the sex, the city, two optional ticks and, while the event gives T-shirts, the size.
+        // What the person says about themselves (§765): the date of birth — digits typed, the dots put in by the box (§773) — the sex, the city, two optional ticks and, while the event gives T-shirts, the size.
         await typeBirth(page2.locator('input[name="birthDate"]'), typedBirth(about.years));
         await expect(page2.locator('input[name="birthDate"]')).toHaveValue(shownBirth(about.years));
         // The line under the box says the age on the event's day, in words.
@@ -411,7 +411,7 @@ test.describe("§754 volunteers for a race", () => {
       // What she said about herself (§765): two small chips in words, and one line of the rest — no T-shirt while the event gives none.
       await expect(row.getByTestId("volunteer-before")).toHaveText("A mai fost voluntar");
       await expect(row.getByTestId("volunteer-club")).toContainText("Din grupul");
-      // «34 de ani (12.03.1992)»: the age on the event's day and the date it came from (§NNN).
+      // «34 de ani (12.03.1992)»: the age on the event's day and the date it came from (§773).
       await expect(row.getByTestId("volunteer-facts")).toHaveText(new RegExp(`^34 de ani \\(${shownBirth(34).replace(/\./g, "\\.")}\\) · .+ · Oraș: Brașov$`));
       await expect(row.getByTestId("volunteer-facts")).not.toContainText("Tricou");
       await expect(row.getByTestId("volunteer-email")).toHaveText(maria);
@@ -472,7 +472,7 @@ test.describe("§754 volunteers for a race", () => {
       expect(file).toContain("Rolul dat,S-a oferit pentru,Nume");
       expect(file).toContain(`Sosire,"Punct de apă, Sosire",Maria Test`);
       expect(file).toContain(maria);
-      // Seven columns after the moment (§765, §NNN): the age and the date of birth beside it, the sex (the registrations' own word), the city, the two ticks as «Da»/«Nu», the size (empty: no T-shirts).
+      // Seven columns after the moment (§765, §773): the age and the date of birth beside it, the sex (the registrations' own word), the city, the two ticks as «Da»/«Nu», the size (empty: no T-shirts).
       expect(file).toContain("Data,Vârsta,Data nașterii,Sex,Orașul,A mai fost voluntar,Din grupul clubului,Mărime tricou");
       // …then the parent's three (§768), empty for an adult.
       expect(file).toContain(`,34,${keptBirth(34)},Female,Brașov,Da,Da,,,,`);
@@ -570,7 +570,7 @@ test.describe("§754 volunteers for a race", () => {
       await add.getByRole("textbox", { name: "Telefon", exact: true }).fill("0712 345 678");
       // What the person told the organizers (§765): every box optional here, no T-shirt box while the event gives none.
       await expect(add.getByLabel("Mărimea tricoului")).toHaveCount(0);
-      // §NNN: the date of birth, the registration form's own box — digits typed, the dots put in.
+      // §773: the date of birth, the registration form's own box — digits typed, the dots put in.
       await expect(add.locator('input[name="age"]')).toHaveCount(0);
       if (about.years) {
         await typeBirth(add.locator('input[name="birthDate"]'), typedBirth(about.years));
@@ -702,7 +702,7 @@ test.describe("§754 volunteers for a race", () => {
         const guest = await visitor.newPage();
         await guest.goto(`/ro/evenimente/${event.slug}/voluntari`);
         await hydrated(guest);
-        // The parent's boxes follow the date typed (§NNN, counted on the event's day): shown for a date that gives under eighteen, hidden for the others and before any is typed.
+        // The parent's boxes follow the date typed (§773, counted on the event's day): shown for a date that gives under eighteen, hidden for the others and before any is typed.
         const block = guest.getByTestId("volunteer-guardian-block");
         const birth = guest.locator('input[name="birthDate"]');
         await expect(block).toBeHidden();

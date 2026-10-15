@@ -31,7 +31,7 @@ export type VolunteerOffer = {
   /** «Oferim tricouri voluntarilor» (§765): the form asks the size. */
   shirts: boolean;
   /**
-   * «Arată public câți voluntari mai sunt necesari» (§NNN): the page says how many people a role still needs only while it is on —
+   * «Arată public câți voluntari mai sunt necesari» (§773): the page says how many people a role still needs only while it is on —
    * off, a role says only that it still takes people. Every public number about volunteers asks this one flag.
    */
   showCounts: boolean;

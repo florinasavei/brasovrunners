@@ -68,7 +68,7 @@ const { default: VolunteerBox } = await import("@/modules/volunteers/ui/Voluntee
 const translate: TranslateAction = async () => ({ ok: false, reason: "notConfigured" });
 const EVENT = "11111111-1111-4111-8111-111111111111";
 const WATER = "22222222-2222-4222-8222-222222222222";
-/** The day the ages are counted on (§NNN): the event's. */
+/** The day the ages are counted on (§773): the event's. */
 const EVENT_DAY = "2026-11-21";
 /** The last day of being `years` old on it, typed as the form posts it back. */
 const aged = (years: number) => bornAgedOn(years, EVENT_DAY);
@@ -494,9 +494,16 @@ describe("§765 the public form while the notice names the profile", () => {
     expect(young).toContain("Voluntarii trebuie să aibă cel puțin 14 ani în ziua evenimentului.");
     expect(young).not.toContain("Clubul nu primește încă");
     const typo = await drawBox({ outcome: "invalid", refused: ["birthDate"], typed: { ...typed, birthDate: "abc" } });
-    expect(typo).toContain("Scrie data nașterii ca zi, lună, an: 11.05.1990.");
+    expect(typo).toContain("Scrie data ca zi, lună, an: 11.05.1990.");
     expect(typo).not.toContain("Voluntarii trebuie să aibă cel puțin");
     expect(typo).not.toContain("Clubul nu primește încă");
+    // A date after the event day is negative: the minimum's sentence, not the minors' one, while minors are closed.
+    const future = await drawBox({ outcome: "invalid", refused: ["birthDate"], typed: { ...typed, birthDate: "2030-01-01" } });
+    expect(future).toContain("Voluntarii trebuie să aibă cel puțin 14 ani în ziua evenimentului.");
+    expect(future).not.toContain("Clubul nu primește încă");
+    // A day that does not exist is the registration form's «scrie data», not an age sentence.
+    const noDay = await drawBox({ outcome: "invalid", refused: ["birthDate"], typed: { ...typed, birthDate: "1990-02-30" } });
+    expect(noDay).toContain("Scrie data ca zi, lună, an: 11.05.1990.");
     // The summary links to the box.
     expect(under).toContain('href="#volunteer-birthDate"');
     const missing = await drawBox({ outcome: "invalid", refused: ["sex", "city"], typed: {} });
@@ -838,7 +845,7 @@ describe("§768 the event page keeps one line and one button", () => {
   });
 });
 
-describe("§NNN «Arată public câți voluntari mai sunt necesari» is the card's third tick, the same as the other two", () => {
+describe("§773 «Arată public câți voluntari mai sunt necesari» is the card's third tick, the same as the other two", () => {
   it("is a submit drawn as the checkbox with its one-line help, the state it wants posted, and no «Salvează» beside it", async () => {
     const off = await drawCard({ volunteersShowCounts: false });
     const form = /<form[^>]*data-testid="volunteer-counts-form"[\s\S]*?<\/form>/.exec(off)?.[0] ?? "";
@@ -878,7 +885,7 @@ describe("§NNN «Arată public câți voluntari mai sunt necesari» is the card
   });
 });
 
-describe("§NNN the public page says how many people a role needs only while the club ticked it", () => {
+describe("§773 the public page says how many people a role needs only while the club ticked it", () => {
   it("says only that a role still takes people while the tick is off, in both languages — and no number anywhere on the page", async () => {
     for (const [language, open, counted] of [
       ["ro", "mai sunt locuri", /mai sunt necesare|mai e nevoie de/],
@@ -926,7 +933,7 @@ describe("§NNN the public page says how many people a role needs only while the
   });
 });
 
-describe("§NNN the owner's note under the roles' list", () => {
+describe("§773 the owner's note under the roles' list", () => {
   const NOTE_RO = "În funcție de numărul de doritori, există posibilitatea să fie nevoie să acoperi o altă responsabilitate. Mulțumim pentru dorința de a ajuta. Te vom contacta curând.";
   const NOTE_EN = "Depending on how many people sign up, you may be asked to cover a different responsibility. Thank you for wanting to help. We will contact you soon.";
 
@@ -934,7 +941,7 @@ describe("§NNN the owner's note under the roles' list", () => {
     expect(ro.Event.volunteers.choicesNote).toBe(NOTE_RO);
     expect(en.Event.volunteers.choicesNote).toBe(NOTE_EN);
     // The short instruction stays as it was, above the roles.
-    expect(ro.Event.volunteers.choicesHelp).toBe("Bifează tot ce ai face, cel puțin un rol. Organizatorii îți aleg unul și îți scriu.");
+    expect(ro.Event.volunteers.choicesHelp).toBe("Bifează tot ce ai face, cel puțin un rol.");
   });
 
   it("is drawn right under the last role's box, before the next field, and the short instruction stays above the roles", async () => {
@@ -966,7 +973,7 @@ describe("§NNN the owner's note under the roles' list", () => {
   });
 });
 
-describe("§NNN the event page's button opens the volunteers' page in a new tab", () => {
+describe("§773 the event page's button opens the volunteers' page in a new tab", () => {
   async function drawCallout(language: "ro" | "en") {
     const { default: VolunteerCallout } = await import("@/modules/volunteers/ui/VolunteerCallout");
     const { NextIntlClientProvider } = await import("next-intl");
@@ -1002,7 +1009,7 @@ describe("§NNN the event page's button opens the volunteers' page in a new tab"
   });
 });
 
-describe("§NNN the date of birth on the card's entry and on the public form", () => {
+describe("§773 the date of birth on the card's entry and on the public form", () => {
   it("draws the registration form's own box on the entry: day first, its placeholder, the echo's template, no age box — and a row's date as it was typed", async () => {
     const page = await drawCard({ profileDescribed: true });
     const box = tagOf(page, "input", "birthDate");

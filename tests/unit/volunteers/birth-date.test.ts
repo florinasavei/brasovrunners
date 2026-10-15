@@ -16,7 +16,7 @@ import {
 import { bornAgedOn } from "../../helpers/volunteer-birth";
 
 /**
- * §NNN — «Data nașterii» instead of the age (the owner, 2026-10-14: «în loc de vârstă vreau să treacă data nașterii»): the pure
+ * §773 — «Data nașterii» instead of the age (the owner, 2026-10-14: «în loc de vârstă vreau să treacă data nașterii»): the pure
  * rules. The age is the date's **on the event's day** — the gun's, else the event's, in the event's own zone — and the minimum
  * (fourteen) and the guardian under eighteen (§768) are judged from it. No database (`tests/integration/volunteers/guardian.test.ts`
  * keeps the same boundaries in the rows).
@@ -41,7 +41,7 @@ const STAFF = { roleIds: [ID], assignedRoleId: "", name: "Ana Test", email: "ana
 /** The day after a day, `YYYY-MM-DD`. */
 const nextDay = (day: string) => new Date(Date.parse(`${day}T00:00:00Z`) + 86_400_000).toISOString().slice(0, 10);
 
-describe("§NNN the day a volunteer's age is counted on", () => {
+describe("§773 the day a volunteer's age is counted on", () => {
   const event = { startsAt: new Date("2026-11-21T07:00:00.000Z"), raceStartsAt: null as Date | null, timezone: "Europe/Bucharest", dateToBeAnnounced: false };
 
   it("is the gun's day when the race has a gun, else the event's day — in the event's own zone", () => {
@@ -62,6 +62,18 @@ describe("§NNN the day a volunteer's age is counted on", () => {
     expect(volunteerEventDay({ ...event, startsAt: null }, now)).toBe("2026-10-14");
   });
 
+  it("is the announced day for an event whose time alone is still to be announced: the public page and the service count on one day", () => {
+    const now = new Date("2026-10-14T10:00:00.000Z");
+    // The service reads the raw row: the start's instant is there.
+    const service = volunteerEventDay(event, now);
+    // The public row hides the instant (`unlessDateToBeAnnounced`) but carries the day on the event's own calendar (`announcedDay`).
+    const page = volunteerEventDay({ startsAt: null, raceStartsAt: null, timezone: "Europe/Bucharest", dateToBeAnnounced: false, announcedDay: "2026-11-21" }, now);
+    expect(page).toBe("2026-11-21");
+    expect(page).toBe(service);
+    // A date to be announced wins over a day: there is none.
+    expect(volunteerEventDay({ startsAt: null, dateToBeAnnounced: true, announcedDay: "2026-11-21" }, now)).toBe("2026-10-14");
+  });
+
   it("bounds the date box by the same day: not younger than the minimum, not older than the ceiling", () => {
     expect(latestVolunteerBirthDate(EVENT_DAY)).toBe("2012-11-21");
     expect(volunteerAgeOn(latestVolunteerBirthDate(EVENT_DAY), EVENT_DAY)).toBe(VOLUNTEER_MINIMUM_AGE);
@@ -75,7 +87,7 @@ describe("§NNN the day a volunteer's age is counted on", () => {
   });
 });
 
-describe("§NNN the boundary by date, on the public form", () => {
+describe("§773 the boundary by date, on the public form", () => {
   const open = volunteerPublicProfileSchemaFor(true, EVENT_DAY);
   const closed = volunteerPublicProfileSchemaFor(false, EVENT_DAY);
 
@@ -124,6 +136,15 @@ describe("§NNN the boundary by date, on the public form", () => {
     expect(open.safeParse({ ...PUBLIC, birthDate: "29.02.2009", ...GUARDIAN }).success).toBe(false);
   });
 
+  it("refuses a day that does not exist on the box, in any shape — never a value the database would reject", () => {
+    // `1990-02-30` is the posted shape (autofill, a direct POST): it passes the shape and would roll into March in `ageOn`.
+    for (const birthDate of ["1990-02-30", "2009-02-31", "30.02.1990", "1990-13-01", "1990-00-10"]) {
+      const verdict = open.safeParse({ ...PUBLIC, birthDate, ...GUARDIAN });
+      expect(verdict.success, birthDate).toBe(false);
+      if (!verdict.success) expect(refusedFields(verdict.error), birthDate).toEqual(["birthDate"]);
+    }
+  });
+
   it("derives the age it keeps: the schema's `age` is the date's on the event's day, `birthDate` the day as the box posts it", () => {
     const parsed = open.parse({ ...PUBLIC, birthDate: "11.05.1984" });
     expect(parsed).toMatchObject({ birthDate: "1984-05-11", age: 42 });
@@ -132,7 +153,7 @@ describe("§NNN the boundary by date, on the public form", () => {
   });
 });
 
-describe("§NNN the boundary by date, on the organizers' entry", () => {
+describe("§773 the boundary by date, on the organizers' entry", () => {
   const entry = volunteerStaffInputSchemaFor(EVENT_DAY);
 
   it("asks a guardian's name of a person who is seventeen on the event's day, none of one who turns eighteen that morning, and nothing of an empty box", () => {
@@ -146,7 +167,7 @@ describe("§NNN the boundary by date, on the organizers' entry", () => {
   });
 
   it("refuses thirteen on the event's day, a day after the event and a date that is none, each on the date's box", () => {
-    for (const birthDate of [nextDay(bornAgedOn(14, EVENT_DAY)), "2026-11-22", "2999-01-01", "31.02.1990", "abc"]) {
+    for (const birthDate of [nextDay(bornAgedOn(14, EVENT_DAY)), "2026-11-22", "2999-01-01", "31.02.1990", "1990-02-30", "2009-02-31", "abc"]) {
       const verdict = entry.safeParse({ ...STAFF, birthDate });
       expect(verdict.success, birthDate).toBe(false);
       if (!verdict.success) expect(refusedFields(verdict.error), birthDate).toEqual(["birthDate"]);
@@ -154,7 +175,7 @@ describe("§NNN the boundary by date, on the organizers' entry", () => {
   });
 });
 
-describe("§NNN the words are in both catalogues, the same keys", () => {
+describe("§773 the words are in both catalogues, the same keys", () => {
   const keys = (value: unknown, prefix = ""): string[] =>
     value && typeof value === "object" ? Object.entries(value).flatMap(([key, child]) => keys(child, `${prefix}${key}.`)) : [prefix.slice(0, -1)];
 
@@ -162,7 +183,6 @@ describe("§NNN the words are in both catalogues, the same keys", () => {
     for (const path of [
       "Event.volunteers.choicesNote",
       "Event.volunteers.needs.open",
-      "Event.volunteers.errors.birthDate",
       "Event.volunteers.errors.birthDateMinimum",
       "Event.volunteers.errors.birthDateMinors",
       "Event.volunteers.profile.birthDateHelp",

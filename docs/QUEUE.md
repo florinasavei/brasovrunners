@@ -14,15 +14,13 @@ decision or a click only the club can make · **released** — on production, wi
 The owner, 2026-10-10: «Soon I need to start a new session from the laptop … You need to save and document everything».
 This section replaces the plan of 2026-09-30; it is what a session with none of today's conversation needs to carry on.
 
-- **Production: `BR-V3.29`** (2026-10-15 01:20: §770). Waiting for «prod», in order: `BR-V3.30` (§771 the declaration's
-  five clauses and the signature's trace, migration `0158`) and `BR-V3.31` (§772, below) — no migration in the latter.
-- **QA: `BR-V3.31`** — four small asks: the Girl Zone form's address is `?tip=girl-zone` (`siguranta` kept as an alias
-  that redirects); each «Spune-ne ceva» form chooses its road, the club's Gmail or Mailgun («Prin ce trimitem», today's
-  defaults); the optional email beside the name is validated and becomes the Reply-To, never stored; the event page's
-  five calendar doors sit behind one folded «Adaugă în calendar» pill.
-  Building: the volunteers' follow-ups (new tab, the counts tick, the date of birth, a kinder note; migration `0159`).
-  Next: volunteer role categories with a contact person each.
-- **Lanes:** the phone session took the calendar on 2026-10-12; one release at a time between
+- **Production: `BR-V3.31`** (2026-10-15 03:35: §772 the small asks). Waiting for «prod»: `BR-V3.32` (§773, below),
+  migration `0159` (expand only).
+- **QA: `BR-V3.32`** — the volunteers' page: «Vreau să fiu voluntar» opens it in a new tab; a tick «Arată public câți
+  voluntari mai sunt necesari» (off by default) governs every public volunteer number; the form asks «Data nașterii»
+  and derives the age on the event's day (14, a guardian under 18); the owner's note under the roles.
+  Building: volunteer roles in configurable categories (Start / Sosire, Traseu …), each with an optional contact
+  person (migration `0160`) — the last lane of the 2026-10-14 queue.
   sessions — no label `ship` while a `release.yml` or `migrate.yml` run is in progress.
 - **Waiting on the owner:** the privacy notice from the new template, approved in `/admin/legal` after a lawyer reads
   the paragraph on what the site loads (its first sentence says what is used is strictly necessary and needs no consent,
@@ -139,6 +137,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V3.32` | the volunteers' page: the button in a new tab, the public counts a tick, the date of birth, a kinder note (§773) |
 | `BR-V3.31` | small asks: the Girl Zone address, Mailgun or Gmail per form, an optional email, the calendar fold (§772) |
 | `BR-V3.30` | five more clauses in the declaration; the signature's trace (§771) |
 | `BR-V3.29` | a «Direcționare» checkpoint; its cut-off as a time limit from the gun (§770) |
