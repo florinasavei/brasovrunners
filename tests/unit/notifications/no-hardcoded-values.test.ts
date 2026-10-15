@@ -208,6 +208,13 @@ describe("§369 the club's name leaves the platform only through the constant", 
           // The list's members' tick and its help (§650), and the guide's step that names it.
           "Admin.registrations.clubMemberOnly",
           "Admin.registrations.clubMemberOnlyHelp",
+          // The Excel's statistics block (§NNN): the club's lines and the sentence that says who counts as the club,
+          // read through `statisticsWordsFrom`, which hands each the constant (`statistics-footer.test.ts` reads them filled).
+          "Admin.registrations.statistics.club",
+          "Admin.registrations.statistics.clubConfirmed",
+          "Admin.registrations.statistics.notClub",
+          "Admin.registrations.statistics.note2",
+          "Admin.registrations.statistics.note3",
           "Admin.guide.sections.4.tasks.16.steps.2",
           "Admin.tasks.items.contactForm.how.1",
           "Admin.tasks.items.inviteKey.how.0",

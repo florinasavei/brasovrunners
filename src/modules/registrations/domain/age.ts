@@ -123,6 +123,13 @@ export function dayIn(at: Date, timeZone: string): string {
   return `${part("year")}-${part("month")}-${part("day")}`;
 }
 
+/** The `HH:mm` of an instant on a time zone's clock (§NNN: tells two events of one day and title apart). */
+export function timeIn(at: Date, timeZone: string): string {
+  const parts = new Intl.DateTimeFormat("en-CA", { timeZone, hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).formatToParts(at);
+  const part = (type: string) => parts.find((entry) => entry.type === type)?.value ?? "";
+  return `${part("hour")}:${part("minute")}`;
+}
+
 /**
  * Whole years between a birth date and a day, both `YYYY-MM-DD`; negative for a birth date after
  * the day, null when either is not a date — the schema says what is wrong with a malformed one,

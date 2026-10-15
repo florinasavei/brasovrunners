@@ -10,7 +10,7 @@ import { resolveDisplayName } from "@/modules/registrations/names";
 import { addRegistrationNote, deleteRegistrationNote, listRegistrationNotesForExport } from "@/modules/registrations/notes";
 import { canKeepRegistrationNotes, canReadRegistrations, STAFF_ROLES, type StaffRole } from "@/modules/staff-identity/domain/roles";
 import { isDomainError } from "@/shared/errors/domain-error";
-import { readSheet } from "../../helpers/xlsx";
+import { readSheet, startListRows } from "../../helpers/xlsx";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
@@ -128,7 +128,8 @@ const url = (eventId: string, extra = "") => `http://localhost/api/admin/registr
 
 async function sheetOf(response: Response) {
   expect(response.status).toBe(200);
-  return readSheet(Buffer.from(await response.arrayBuffer())).rows;
+  // The start list alone: the statistics footer under it (§NNN) is `statistics-footer.test.ts`'s to read.
+  return startListRows(readSheet(Buffer.from(await response.arrayBuffer())).rows);
 }
 
 describe("§785 the spreadsheet's «Note interne» column, through the route", () => {

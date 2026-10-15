@@ -1127,6 +1127,37 @@
           "SUPERADMIN": "Superadministrator"
         }
       },
+      "statistics": {
+        "title": "Statistics",
+        "total": "Total",
+        "confirmed": "Confirmed (active)",
+        "pendingEmail": "Waiting for the address to be confirmed",
+        "pendingDeclaration": "Waiting for the declaration to be signed",
+        "waitlisted": "On the waiting list",
+        "waitlistOffered": "Offered a place",
+        "cancelled": "Cancelled",
+        "expired": "Expired",
+        "club": "{club}",
+        "clubConfirmed": "{club}, confirmed",
+        "notClub": "Others, not {club}",
+        "allEvents": "All events",
+        "untitled": "Untitled event",
+        "categoryHeader": "Category",
+        "category": "{sex}, {band}",
+        "noCategory": "No category",
+        "sexFemale": "Female",
+        "sexMale": "Male",
+        "bandUnder18": "under 18",
+        "bandFrom18": "18-29",
+        "bandFrom30": "30-39",
+        "bandFrom40": "40-49",
+        "bandFrom50": "50-59",
+        "bandFrom60": "60+",
+        "note1": "Active means confirmed: the person has a place and has signed the declaration.",
+        "note2": "«{club}» counts the members on «Echipa», the people who ticked that they are members and the people who typed the club on the form.",
+        "note3": "«{club}», as «Total», counts every state; the ones who come are in «{club}, confirmed».",
+        "note4": "The category is the sex and the age on the race day; a row missing either is under «No category». Test registrations are not counted."
+      },
       "auditActorParticipant": "the participant, from their own link",
       "audit": {
         "registration": {
@@ -7476,6 +7507,7 @@
                 "Tick «Only with offers and benefits» to see only who said yes to offers; the export follows the filter.",
                 "Press «Export to Excel» (or «Export CSV»). The file holds exactly the filtered rows, without test registrations.",
                 "The file ends with «Internal notes»: one note a line, with the author's role. The column is named in the language of the page where you pressed the button.",
+                "Under the table, after one empty row, «Statistics» counts the same rows: the total, the confirmed (the active ones), each other state, how many are the club's own runners and, by sex and age band, each category. It is in the Excel only, never in the CSV.",
                 "The file carries identity documents and phone numbers: never send it to a group, and delete it within 7 days of the event."
               ]
             },

@@ -1127,6 +1127,37 @@
           "SUPERADMIN": "Superadministrator"
         }
       },
+      "statistics": {
+        "title": "Statistici",
+        "total": "Total",
+        "confirmed": "Confirmați (activi)",
+        "pendingEmail": "Așteaptă confirmarea adresei",
+        "pendingDeclaration": "Așteaptă semnarea declarației",
+        "waitlisted": "Pe lista de așteptare",
+        "waitlistOffered": "Au o ofertă de loc",
+        "cancelled": "Anulați",
+        "expired": "Expirați",
+        "club": "{club}",
+        "clubConfirmed": "{club}, confirmați",
+        "notClub": "Alții, nu {club}",
+        "allEvents": "Toate evenimentele",
+        "untitled": "Eveniment fără titlu",
+        "categoryHeader": "Categorie",
+        "category": "{sex}, {band}",
+        "noCategory": "Fără categorie",
+        "sexFemale": "Feminin",
+        "sexMale": "Masculin",
+        "bandUnder18": "sub 18 ani",
+        "bandFrom18": "18-29 ani",
+        "bandFrom30": "30-39 ani",
+        "bandFrom40": "40-49 ani",
+        "bandFrom50": "50-59 ani",
+        "bandFrom60": "60+ ani",
+        "note1": "Activi sunt cei confirmați: au un loc și declarația semnată.",
+        "note2": "La «{club}» se numără membrii din «Echipa», cei care au bifat că sunt membri și cei care au scris clubul în formular.",
+        "note3": "La «{club}», ca la «Total», se numără toate stările; cei care vin sunt la «{club}, confirmați».",
+        "note4": "Categoria este sexul și vârsta la data cursei; cine nu are una dintre ele este la «Fără categorie». Înscrierile de test nu se numără."
+      },
       "auditActorParticipant": "participantul, din linkul propriu",
       "audit": {
         "registration": {
@@ -7476,6 +7507,7 @@
                 "Bifează «Doar cu oferte și beneficii» ca să vezi doar cine a spus da la oferte; exportul ia același filtru.",
                 "Apasă «Exportă Excel» (sau «Exportă CSV»). Fișierul are exact rândurile filtrate, fără înscrierile de test.",
                 "Fișierul se termină cu «Note interne»: o notă pe rând, cu rolul celui care a scris. Coloana are cuvintele limbii paginii pe care ai apăsat butonul.",
+                "Sub tabel, după un rând gol, «Statistici» numără aceleași rânduri: totalul, cei confirmați (activii), fiecare altă stare, câți sunt din club și, pe categorii (sex și vârstă), fiecare grup. Apare doar în Excel, niciodată în CSV.",
                 "Fișierul are acte de identitate și telefoane: nu-l trimite pe grupuri și șterge-l în cel mult 7 zile de la eveniment."
               ]
             },

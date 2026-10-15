@@ -10,6 +10,7 @@ import { shirtSizeShown } from "./domain/kit";
 import { raceNumberOf } from "./domain/race-number";
 import { memberBibExportCell, membershipCell } from "./csv";
 import { sexCell } from "./domain/sex";
+import { statisticsCells, statisticsOf, type StatisticsWords } from "./statistics";
 
 /**
  * The start list as a spreadsheet the club can actually work in (§172; the owner: "CSV is
@@ -75,6 +76,16 @@ export type RegistrationSheetRow = Omit<
    * here, never the table: this file does not import the notes module (`notes-never-leave.test.ts`).
    */
   notes?: string;
+  /**
+   * The statistics footer's inputs (§NNN), none of them a column: the row is one of the club's runners
+   * (`domain/club-runner.ts#isClubRunner`), and the event it belongs to (`eventId`, with `eventLabel` — the title
+   * and the day — for a file of several events). Absent reads as no and as one event: a caller that builds no
+   * footer never needs them.
+   */
+  clubRunner?: boolean;
+  eventId?: string;
+  eventLabel?: string;
+  eventStartsAt?: Date;
 };
 
 /**
@@ -121,9 +132,17 @@ export type SheetColumn<Row> = {
  * The one writer every spreadsheet the backoffice hands out goes through — the start list here, the
  * sponsor list (§581, `sponsor-sheet.ts`): a bold header row kept on screen, the columns' widths,
  * the club's date format, and a sheet name Excel accepts (at most 31 characters, none of `: \ / ? * [ ]`).
+ * `footer` is rows of ready cells written under the table (§NNN, the start list's statistics): none for every
+ * other sheet. The sheet declares no autofilter and no table, so nothing here can pull a footer into a sort.
  */
-export async function writeSheet<Row>(columns: readonly SheetColumn<Row>[], rows: readonly Row[], sheetName: string, fallbackName: string): Promise<Buffer> {
-  const data = [columns.map((column) => bold(column.header)), ...rows.map((row) => columns.map((column) => column.cell(row)))];
+export async function writeSheet<Row>(
+  columns: readonly SheetColumn<Row>[],
+  rows: readonly Row[],
+  sheetName: string,
+  fallbackName: string,
+  footer: Array<Array<Record<string, unknown>>> = [],
+): Promise<Buffer> {
+  const data = [columns.map((column) => bold(column.header)), ...rows.map((row) => columns.map((column) => column.cell(row))), ...footer];
   return writeExcelFile(data, {
     sheet: sheetName.replace(/[:\\/?*[\]]/g, " ").slice(0, 31) || fallbackName,
     columns: columns.map((column) => ({ width: column.width })),
@@ -226,12 +245,19 @@ function notesColumn(header: string): SheetColumn<RegistrationSheetRow> {
 /**
  * The workbook. `notesHeader` adds the «Note interne» column (§785) — passed by the route only for a role that
  * `canKeepRegistrationNotes`; without it the file has no such column, which is every other caller's file.
+ * `statistics` adds the footer under the rows (`statistics.ts`).
  */
 export async function buildRegistrationsWorkbook(
   rows: readonly RegistrationSheetRow[],
   sheetName: string,
-  options: { notesHeader?: string } = {},
+  options: { notesHeader?: string; statistics?: StatisticsWords } = {},
 ): Promise<Buffer> {
   const columns = options.notesHeader ? [...COLUMNS, notesColumn(options.notesHeader)] : COLUMNS;
-  return writeSheet(columns, rows, sheetName, "Participants");
+  /*
+    «Statistici» (§NNN): the counts of these rows under them, after an empty row, for the caller that passes its
+    words — the export route, in the reader's language. Every other caller's file is rows only, as it was, and
+    so is the CSV, whose readers would take a footer for registrations.
+  */
+  const footer = options.statistics ? statisticsCells(statisticsOf(rows, options.statistics), options.statistics) : [];
+  return writeSheet(columns, rows, sheetName, "Participants", footer);
 }
