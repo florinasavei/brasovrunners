@@ -10,7 +10,6 @@ import { groupRolesByCategory } from "@/modules/volunteers/domain/volunteer";
 import {
   changeVolunteer,
   changeVolunteerCategory,
-  changeVolunteerRole,
   listVolunteerCategories,
   listVolunteerRoles,
   listVolunteers,

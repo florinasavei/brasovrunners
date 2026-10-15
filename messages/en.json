@@ -4957,7 +4957,7 @@
       "categories": {
         "title": "Categories",
         "count": "Categories: {count}",
-        "intro": "A category groups roles under one heading, on this card and on the volunteers' page: for example “Start / Finish” and “Route”. The same role can stand in several categories. The order here is the order on the page.",
+        "intro": "A category groups roles under one heading, on this card and on the volunteers' page, for example “Route”. The same role can stand in several categories. The order here is the page's order.",
         "empty": "No categories yet. The roles are listed without headings. Add the first one below: for example “Route”.",
         "rolesUnder": "Roles under it: {count}",
         "contactIs": "Contact person: {contact}",

@@ -26,6 +26,10 @@ import { chooseSex } from "./support/sex-choice";
  * shown from the age typed (always, without scripts); the parent accepts from a single-use link, the card says «Acordul
  * părintelui lipsește» and refuses «Confirmă» until then, and the organizers can take the consent on paper.
  *
+ * §NNN — categories and the contact person: an Administrator adds two categories, moves one, saves a contact person for it, defines «Direcționare» under each
+ * (the same name in two categories) and «Foto/Video» under none; the volunteers' page groups the roles under level-3 headings in that order with the contact on one
+ * line under its heading (links of 44 pixels); an offer for «Direcționare» is named «Direcționare (Traseu)» on the card; the CSV says so and holds no contact.
+ *
  * The event is written straight into the database — the setup, not the subject — one per project and run, so
  * the two projects never share a row.
  */
@@ -893,6 +897,179 @@ test.describe("§754 volunteers for a race", () => {
     } finally {
       await client.end();
     }
+  });
+
+  test("§NNN a category with its contact person: the card's «Categorii» and «Categoria», the roles grouped under their headings on the volunteers' page with the contact line, an offer for a role named «Direcționare (Traseu)», and no contact in the CSV", async ({
+    page,
+    browser,
+  }) => {
+    const tag = `${test.info().project.name}-${Date.now().toString(36)}-cat`;
+    const event = await seedEvent(tag);
+    const ana = `ana.${tag}@example.test`;
+
+    // --- The Administrator: two categories, the second moved first, a contact for it --------------
+    await signIn(page, "Dev Administrator");
+    await page.goto(`/ro/admin/events/${event.id}`);
+    await hydrated(page);
+    const card = page.getByTestId("event-volunteers");
+    await expect(card).toBeVisible();
+    await openFold(card);
+    // The fold is there and empty: «Nicio categorie încă», and the roles' form draws no «Categoria» yet.
+    await openEditorBox(page, "Categorii");
+    await expect(page.getByTestId("volunteer-categories-empty")).toContainText("Nicio categorie încă");
+    await expect(page.getByTestId("volunteer-role-category")).toHaveCount(0);
+
+    async function addCategory(nameRo: string, nameEn: string, expected: number) {
+      await openEditorBox(page, "Adaugă o categorie");
+      const add = page.getByTestId("volunteer-category-add");
+      await add.getByLabel("Numele categoriei (Română)").fill(nameRo);
+      await add.getByLabel("Numele categoriei (English)").fill(nameEn);
+      await add.getByRole("button", { name: "Adaugă categoria", exact: true }).click();
+      await expect(page.getByTestId("volunteer-category")).toHaveCount(expected, { timeout: 30_000 });
+      await hydrated(page);
+    }
+    await addCategory("Start / Sosire", "Start / Finish", 1);
+    await addCategory("Traseu", "Route", 2);
+    await openEditorBox(page, "Categorii");
+    const categoryRows = page.getByTestId("volunteer-category-name");
+    await expect(categoryRows).toHaveText(["Start / Sosire", "Traseu"]);
+    // The first has no contact; the arrows are drawn only where a step is possible (the first has no «up», the last no «down»).
+    await expect(page.getByTestId("volunteer-category").nth(0).getByTestId("volunteer-category-contact-line")).toHaveText("Nicio persoană de contact încă.");
+    await expect(page.getByTestId("volunteer-category").nth(0).getByRole("button", { name: /Mută mai sus/ })).toHaveCount(0);
+    await expect(page.getByTestId("volunteer-category").nth(1).getByRole("button", { name: /Mută mai jos/ })).toHaveCount(0);
+    const moveUp = page.getByTestId("volunteer-category").nth(1).getByRole("button", { name: /Mută mai sus/ });
+    expect((await moveUp.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+    await moveUp.click();
+    await expect(categoryRows).toHaveText(["Traseu", "Start / Sosire"], { timeout: 30_000 });
+    await hydrated(page);
+
+    // «Persoana de contact»: three optional boxes with a «Salvează» of their own; the telephone is read as a Romanian number.
+    await openEditorBox(page, "Categorii");
+    const route = page.getByTestId("volunteer-category").nth(0);
+    const contact = route.getByTestId("volunteer-category-contact");
+    await openFold(contact);
+    await contact.getByLabel("Numele persoanei de contact").fill("Ana Popescu");
+    await contact.getByLabel("Telefon").fill("0712 345 678");
+    await contact.getByLabel("Adresa de email").fill("coordonator@club.test");
+    await contact.getByRole("button", { name: "Salvează", exact: true }).click();
+    await expect(page.getByTestId("volunteer-category").nth(0).getByTestId("volunteer-category-contact-line")).toHaveText(
+      "Persoana de contact: Ana Popescu · +40712345678 · coordonator@club.test",
+      { timeout: 30_000 },
+    );
+    await hydrated(page);
+
+    // --- Roles under them: «Categoria» is a choice, the same name stands in two categories ----------
+    async function addRole(nameRo: string, nameEn: string, needed: string, category: string | null) {
+      const before = await page.getByTestId("volunteer-role").count();
+      await openEditorBox(page, "Adaugă un rol");
+      const add = page.getByTestId("volunteer-role-add");
+      if (category !== null) await add.getByTestId("volunteer-role-category").selectOption({ label: category });
+      await add.getByLabel("Numele rolului (Română)").fill(nameRo);
+      await add.getByLabel("Numele rolului (English)").fill(nameEn);
+      await add.getByLabel("Câți oameni trebuie").fill(needed);
+      await add.getByRole("button", { name: "Adaugă rolul", exact: true }).click();
+      await expect(page.getByTestId("volunteer-role")).toHaveCount(before + 1, { timeout: 30_000 });
+      await hydrated(page);
+    }
+    await openEditorBox(page, "Roluri");
+    await addRole("Direcționare", "Guidance", "2", "Traseu");
+    await addRole("Direcționare", "Guidance", "1", "Start / Sosire");
+    await addRole("Foto/Video", "Photo/Video", "1", null);
+    // The same name twice under one category is refused with its own sentence, and nothing is added.
+    await openEditorBox(page, "Adaugă un rol");
+    const addAgain = page.getByTestId("volunteer-role-add");
+    await addAgain.getByTestId("volunteer-role-category").selectOption({ label: "Traseu" });
+    await addAgain.getByLabel("Numele rolului (Română)").fill("direcționare");
+    await addAgain.getByLabel("Numele rolului (English)").fill("Marshal");
+    await addAgain.getByLabel("Câți oameni trebuie").fill("1");
+    await addAgain.getByRole("button", { name: "Adaugă rolul", exact: true }).click();
+    await expect(page.getByText("Numele există deja în această categorie")).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByTestId("volunteer-role")).toHaveCount(3);
+    // The card lists the roles under their category's heading, in the category's order, «Alte activități» last.
+    await openEditorBox(page, "Roluri");
+    await expect(page.getByTestId("volunteer-role-group-heading")).toHaveText(["Traseu", "Start / Sosire", "Alte activități"]);
+    // A category with roles under it is not deleted: the sentence says why, and the category stays.
+    await openEditorBox(page, "Categorii");
+    const routeRow = page.getByTestId("volunteer-category").nth(0);
+    await openFold(routeRow.getByText("Modifică", { exact: true }));
+    await routeRow.getByRole("button", { name: "Șterge categoria", exact: true }).click();
+    await page.getByRole("dialog").getByRole("button", { name: "Șterge categoria", exact: true }).click();
+    await page.waitForURL(/volunteerError=VOLUNTEER_CATEGORY_HAS_ROLES/);
+    await hydrated(page);
+    await expect(page.getByText("Categoria nu s-a șters")).toBeVisible();
+    await openFold(card);
+    await openEditorBox(page, "Categorii");
+    await expect(page.getByTestId("volunteer-category")).toHaveCount(2);
+
+    // The event takes volunteers on its page.
+    await page.getByRole("checkbox", { name: "Primește voluntari pe pagină", exact: true, includeHidden: true }).click();
+    await expect(page.getByTestId("volunteer-offer-state")).toContainText("pagina evenimentului trimite la ea", { timeout: 30_000 });
+    await hydrated(page);
+
+    // --- A visitor: the roles under their headings, the contact under the heading that has one ------
+    const visitor = await browser.newContext({ baseURL: test.info().project.use.baseURL, viewport: test.info().project.use.viewport ?? undefined });
+    try {
+      const guest = await visitor.newPage();
+      await expect(async () => {
+        await guest.goto(`/ro/evenimente/${event.slug}/voluntari`);
+        await expect(guest.getByTestId("volunteer-category-heading").first()).toBeVisible({ timeout: 3_000 });
+      }).toPass({ timeout: 60_000 });
+      await hydrated(guest);
+      await expect(guest.getByTestId("volunteer-category-heading")).toHaveText(["Traseu", "Start / Sosire", "Alte activități"]);
+      // Each heading is a level-3 heading, and each role stands under its own.
+      await expect(guest.getByRole("heading", { level: 3, name: "Traseu" })).toBeVisible();
+      const under = (heading: string) => guest.getByTestId("volunteer-category").filter({ has: guest.getByRole("heading", { level: 3, name: heading, exact: true }) });
+      await expect(under("Traseu").getByTestId("volunteer-role-option")).toHaveCount(1);
+      await expect(under("Start / Sosire").getByTestId("volunteer-role-option")).toHaveCount(1);
+      await expect(under("Alte activități").getByRole("checkbox", { name: "Foto/Video" })).toBeVisible();
+      await expect(under("Traseu").getByRole("checkbox", { name: "Direcționare" })).toBeVisible();
+      // The contact: one line under the heading of the category that has one, nowhere else; links a thumb can press.
+      await expect(guest.getByTestId("volunteer-contact")).toHaveCount(1);
+      const line = under("Traseu").getByTestId("volunteer-contact");
+      await expect(line).toContainText("Întrebări?");
+      await expect(line).toContainText("Ana Popescu");
+      const phone = line.getByTestId("volunteer-contact-phone");
+      const mail = line.getByTestId("volunteer-contact-email");
+      await expect(phone).toHaveAttribute("href", "tel:+40712345678");
+      await expect(mail).toHaveAttribute("href", "mailto:coordonator@club.test");
+      expect((await phone.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+      expect((await mail.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+      await expect(under("Start / Sosire").getByTestId("volunteer-contact")).toHaveCount(0);
+      expect(await guest.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+
+      // She offers for «Direcționare» on the route.
+      await under("Traseu").getByRole("checkbox", { name: "Direcționare" }).check();
+      await guest.getByLabel("Numele tău").fill("Ana Test");
+      await guest.getByLabel("Adresa ta de email").fill(ana);
+      await guest.locator('[name="phone"]').fill("712345678");
+      await typeBirth(guest.locator('input[name="birthDate"]'), typedBirth(34));
+      await chooseSex(guest, "FEMALE");
+      await guest.locator('input[name="city"]').fill("Brașov");
+      await guest.locator('input[name="consent"]').check();
+      await guest.locator('input[name="agreement"]').check();
+      await guest.waitForTimeout(1_200);
+      await guest.getByTestId("volunteer-box").getByRole("button", { name: "Mă ofer voluntar", exact: true }).click();
+      await expect(guest.getByTestId("volunteer-done")).toBeVisible({ timeout: 30_000 });
+    } finally {
+      await visitor.close();
+    }
+
+    // --- The Administrator: the offer names the role with its category; the CSV names it so and holds no contact ----
+    await page.goto(`/ro/admin/events/${event.id}`);
+    await hydrated(page);
+    const row = page.getByTestId("volunteer-unassigned").getByTestId("volunteer-row");
+    await expect(row.getByTestId("volunteer-choice")).toHaveText(["Direcționare (Traseu)"]);
+    const assign = row.getByRole("button", { name: /^Dă-i rolul Direcționare \(Traseu\)/ });
+    expect((await assign.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+    await assign.click();
+    await expect(page.getByTestId("volunteer-group").filter({ has: page.locator("h3").getByText("Direcționare (Traseu)", { exact: true }) }).getByTestId("volunteer-role-standing")).toHaveText("1 din 2", {
+      timeout: 30_000,
+    });
+    const csv = await page.request.get(`/api/admin/events/${event.id}/volunteers?lang=ro`);
+    expect(csv.status()).toBe(200);
+    const text = await csv.text();
+    expect(text).toContain("Direcționare (Traseu)");
+    expect(text).not.toMatch(/Ana Popescu|coordonator@club\.test|0712 345 678|\+40712345678/);
   });
 
   test("the event's page shows no form while the event does not take volunteers", async ({ page }) => {

@@ -4957,7 +4957,7 @@
       "categories": {
         "title": "Categorii",
         "count": "Categorii: {count}",
-        "intro": "O categorie grupează rolurile sub un titlu, pe card și pe pagina voluntarilor: de exemplu „Start / Sosire” și „Traseu”. Același rol poate sta în mai multe categorii. Ordinea de aici e ordinea de pe pagină.",
+        "intro": "O categorie grupează rolurile sub un titlu, pe card și pe pagina voluntarilor, de exemplu „Traseu”. Același rol poate sta în mai multe categorii. Ordinea de aici e ordinea de pe pagină.",
         "empty": "Nicio categorie încă. Rolurile se arată într-o listă, fără titluri. Adaugă prima mai jos: de exemplu „Traseu”.",
         "rolesUnder": "Roluri în ea: {count}",
         "contactIs": "Persoana de contact: {contact}",
