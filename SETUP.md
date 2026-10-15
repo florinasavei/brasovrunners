@@ -1534,9 +1534,9 @@ Every email the site sends **to the club or to a colleague** starts with fixed t
 ASCII, never translated, so one Gmail filter files a message whichever language it was written in (`DECISIONS.md` §NNN;
 the tags are `src/modules/notifications/domain/subject-tags.ts`'s, the one place that knows them). The words come
 after: `[feedback][cum-a-fost] Cum a fost: <event>`. On QA the environment's mark comes first and is joined to
-the tags: `[QA][feedback][cum-a-fost] …`. A message to a runner, a volunteer, a subscriber or an invitee of the public
-**has no tags** — their subjects are what they were. The club's copy of a runner's message keeps its own mark,
-`[Copie club]`.
+the tags: `[QA][feedback][cum-a-fost] …`. A message to a runner, a volunteer, a subscriber, an invitee of the public
+or a member (their shop receipts, their invitation to the members' zone) **has no tags** — their subjects are what
+they were. The club's copy of a runner's message keeps its own mark, `[Copie club]`.
 
 | Tag | What arrives under it |
 | --- | --- |
@@ -1548,14 +1548,16 @@ the tags: `[QA][feedback][cum-a-fost] …`. A message to a runner, a volunteer, 
 | `[legal]` | the Administrators' digest of legal templates that moved |
 | `[livrare]` | the platform's notices about the email roads: a road is down, a message could not be delivered |
 | `[sistem]` | the platform's alerts: the database unreachable, and back |
-| `[magazin]` | the members' shop: an order placed, paid, the club's notice |
-| `[echipa]` | an invitation to the backoffice or to the members' zone |
+| `[magazin]` | the members' shop: the club's notice of an order |
+| `[echipa]` | a colleague's invitation to the backoffice |
 
 **Ready-to-paste filters.** In Gmail: the search box → **Show search options** → paste into **Has the words** →
 **Create filter** → tick **Apply the label** (a new one) and, if you like, **Skip the Inbox** → **Create filter**. Gmail
 searches the words and ignores the brackets, so a quoted phrase is exact enough: a subject whose human words repeat
 the tag's word («Comandă nouă în magazin», «Ești în echipa …») names the same family anyway. `[QA]` in front
-changes nothing for these filters.
+changes nothing for these filters. **A filter matches the words anywhere in the subject**, so an event's title or a
+visitor's name that repeats a tag's words («Girl Zone Run») can be filed under it by mistake: it mislabels, it forwards
+nothing. For the confidential filter, the stricter `subject:"[feedback][girl-zone]"` narrows it.
 
 ```text
 subject:"[contact]"                                  label «Site / Contact»
@@ -1569,6 +1571,8 @@ subject:"[voluntari]"                                label «Site / Voluntari»
 subject:"[legal]"                                    label «Site / Legal»
 subject:"[livrare]" OR subject:"[sistem]"            label «Site / Platformă»  (a road down, the database away: read these)
 subject:"[magazin]"                                  label «Site / Magazin»
+subject:"[echipa]"                                   label «Site / Echipa»  (a colleague's invitation)
+subject:"[Copie club]"                               label «Site / Copii»  (the club's copy of a runner's message: no tag, its own mark)
 subject:"[QA]"                                       label «QA»  (skip the Inbox; the tests of a QA release)
 ```
 
@@ -1577,7 +1581,9 @@ receives them (or of the club's, when the club chose Gmail for that form), with 
 «Forward it to»**, never in a filter another account can read, and never in a mailbox shared wider than the form's
 card says. The `[feedback]` filter above excludes `[girl-zone]` for the same reason: a forward or a shared label made
 from it would carry her messages along. The subject's words stay neutral on purpose («Mesaj confidențial de pe
-site»); the tag is the one thing that tells the person's own filter what it is.
+site»); the tag is the one thing that tells the person's own filter what it is. **The tag shows in a notification's
+preview** (a lock screen included), which the neutral words alone would not: the person can hide previews or silence
+notifications for the «Girl Zone» label in the mail app.
 
 Changing a tag is changing every mailbox's filter, so a tag moves only by a decision.
 

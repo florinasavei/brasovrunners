@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { EmailMessageType } from "@/db/schema/email-outbox";
+import { readFileSync } from "node:fs";
 import { markSubjectForEnvironment } from "@/infrastructure/email/delivery";
 import { renderContactMessage } from "@/modules/contact/message";
 import { composeFeedbackEmail, FEEDBACK_BRANCHES, feedbackFields, type FeedbackInput, SAFETY_SUBJECT } from "@/modules/feedback/domain/branches";
@@ -9,6 +10,7 @@ import {
   FEEDBACK_FORM_TAGS,
   feedbackTags,
   markAfterTags,
+  MEMBER_FACING,
   startsWithTag,
   SUBJECT_TAGS,
   SUBJECT_TAGS_OF,
@@ -24,7 +26,8 @@ import { buildOutgoingEmail, type TemplateData } from "@/modules/notifications/t
  * club or a colleague receives: fixed ASCII, one map, the human words after, QA's mark in front, and every participant's
  * or volunteer's subject exactly what it was.
  */
-const STAFF_BOUND: EmailMessageType[] = [...messageTypesFor("club"), ...messageTypesFor("staff")];
+// The audience map files a member's shop receipts and invitation under «staff»; they go to the member and are not tagged.
+const STAFF_BOUND: EmailMessageType[] = [...messageTypesFor("club"), ...messageTypesFor("staff")].filter((type) => !(MEMBER_FACING as readonly string[]).includes(type));
 const ALL_TYPES = Object.keys(EMAIL_AUDIENCE) as EmailMessageType[];
 
 const DATA: TemplateData = {
@@ -47,6 +50,13 @@ describe("the tag vocabulary", () => {
     expect(FEEDBACK_FORM_TAGS).toEqual({ howItWent: "cum-a-fost", suggestion: "sugestie", complaint: "reclamatie", safety: "girl-zone" });
     expect(Object.keys(FEEDBACK_FORM_TAGS).sort()).toEqual([...FEEDBACK_BRANCHES].sort());
     expect(tagsOfMessageType("CONTACT_MESSAGE")).toEqual(["contact"]);
+  });
+
+  it("is in no translation file: the tags are never translated", () => {
+    for (const file of ["messages/ro.json", "messages/en.json"]) {
+      const text = readFileSync(file, "utf8");
+      for (const tag of SUBJECT_TAGS) expect(text, `${file} carries [${tag}]`).not.toContain(`[${tag}]`);
+    }
   });
 
   it("is used: every tag of the map is in the vocabulary, and every tag of the vocabulary is somebody's", () => {
@@ -93,11 +103,8 @@ describe("the walk over every message type that reaches the club or a colleague"
       RELAY_NOTICE: "livrare",
       UNREACHABLE_WINDOW_OPENED: "sistem",
       UNREACHABLE_WINDOW_CLOSED: "sistem",
-      SHOP_ORDER_PLACED: "magazin",
-      SHOP_ORDER_PAID: "magazin",
       SHOP_ORDER_CLUB_NOTICE: "magazin",
       STAFF_INVITATION: "echipa",
-      MEMBER_INVITATION: "echipa",
     };
     for (const [type, tag] of Object.entries(expected)) expect(tagsOfMessageType(type as EmailMessageType)).toEqual([tag]);
     expect(render("VOLUNTEER_CLUB_NOTICE").subject).toBe("[voluntari] Voluntar nou la Crosul aniversar / New volunteer for Crosul aniversar");
@@ -120,7 +127,20 @@ describe("participant-, volunteer- and public-facing subjects are unchanged", ()
     expect(subject).toContain(" / ");
   });
 
+  it("leaves a member's receipts and invitation out of the tagged set, though the audience map says «staff»", () => {
+    expect([...MEMBER_FACING].sort()).toEqual(["MEMBER_INVITATION", "SHOP_ORDER_PAID", "SHOP_ORDER_PLACED"]);
+    for (const type of MEMBER_FACING) {
+      expect(EMAIL_AUDIENCE[type]).toBe("staff");
+      expect(OTHERS).toContain(type);
+      expect(tagsOfMessageType(type)).toEqual([]);
+    }
+    // The club's own notice of an order and a colleague's invitation keep theirs.
+    expect(tagsOfMessageType("SHOP_ORDER_CLUB_NOTICE")).toEqual(["magazin"]);
+    expect(tagsOfMessageType("STAFF_INVITATION")).toEqual(["echipa"]);
+  });
+
   it("pins a few as literals", () => {
+    for (const type of MEMBER_FACING) expect(startsWithTag(render(type).subject), type).toBe(false);
     expect(render("REGISTRATION_CONFIRMED").subject).toBe("Înscrierea este confirmată / Your registration is confirmed");
     expect(render("VOLUNTEER_RECEIVED").subject).toBe("Ți-am primit oferta de voluntar pentru Crosul aniversar / We received your offer to volunteer for Crosul aniversar");
     expect(render("EVENT_CANCELLED").subject).toBe("Evenimentul „Crosul aniversar” a fost anulat / “Crosul aniversar” has been cancelled");
@@ -200,8 +220,17 @@ describe("the mark helpers", () => {
     expect(markSubjectForEnvironment("[contact] x", "qa")).toBe("[QA][contact] x");
     expect(markSubjectForEnvironment("Confirmă-ți înscrierea", "qa")).toBe("[QA] Confirmă-ți înscrierea");
     expect(markSubjectForEnvironment("[Copie club] Confirmat", "qa")).toBe("[QA] [Copie club] Confirmat");
+    // A word the club typed in brackets is not a tag: «[QA] » keeps its space.
+    expect(markSubjectForEnvironment("[nou] Detalii", "qa")).toBe("[QA] [nou] Detalii");
+    expect(startsWithTag("[nou] x")).toBe(false);
     expect(markSubjectForEnvironment("[contact] x", "production")).toBe("[contact] x");
     expect(markSubjectForEnvironment("[contact] x", "local")).toBe("[contact] x");
+  });
+
+  it("marks a templated staff subject on QA right after QA's mark, the tags joined to it", () => {
+    const { subject } = render("VOLUNTEER_CLUB_NOTICE");
+    expect(markSubjectForEnvironment(subject, "qa").startsWith("[QA][voluntari] ")).toBe(true);
+    expect(markSubjectForEnvironment(markSubjectForEnvironment(subject, "qa"), "qa")).toBe(markSubjectForEnvironment(subject, "qa"));
   });
 
   it("is idempotent on a message marked once already", () => {
@@ -215,5 +244,8 @@ describe("the mark helpers", () => {
     expect(markAfterTags("[contact] Mesaj", "[posibil spam]")).toBe("[contact][posibil spam] Mesaj");
     expect(markAfterTags("[QA][feedback][sugestie] Mesaj", "[posibil spam]")).toBe("[QA][feedback][sugestie][posibil spam] Mesaj");
     expect(tagSubject([], "Salut")).toBe("Salut");
+    // No tag at all: the mark keeps a space before the words.
+    expect(markAfterTags("Foo", "[posibil spam]")).toBe("[posibil spam] Foo");
+    expect(markAfterTags("[QA] Foo", "[posibil spam]")).toBe("[QA][posibil spam] Foo");
   });
 });

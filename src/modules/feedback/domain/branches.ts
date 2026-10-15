@@ -676,10 +676,11 @@ export const NO_CONTACT_LINE = "(fără contact lăsat)";
 export const ANONYMOUS_NAME_LINE = "(anonim)";
 
 /**
- * The safety branch's subject (§676): neutral, so a notification on a phone's lock screen says
- * nothing of what is inside. The other three name their branch, because the club files them.
- * The tags come before it (§NNN): `[feedback][girl-zone] Mesaj confidențial de pe site` — the owner asked for the
- * filter, the human words stay neutral.
+ * The safety branch's subject words (§676): neutral, so they say nothing of what is inside. The other three name their
+ * branch, because the club files them. The tags come before them (§NNN): `[feedback][girl-zone] Mesaj confidențial de
+ * pe site` — the human words stay neutral and the tag names the route, a trade-off the owner accepted: the tag does show
+ * on a phone's lock screen, so the person who receives it can hide previews or silence that label (`SETUP.md` §
+ * Filtre în Gmail).
  */
 export const SAFETY_SUBJECT = "Mesaj confidențial de pe site";
 
@@ -765,7 +766,7 @@ export function feedbackLines(input: FeedbackInput, context: FeedbackContext): {
 export type FeedbackEmail = { subject: string; text: string; html: string };
 
 /**
- * The message one branch sends: its subject (the environment's `[QA] ` first, §163), and the text
+ * The message one branch sends: its subject (the environment's `[QA]` first, joined to the tags, §163, §NNN), and the text
  * and the HTML of the same lines. Nothing the person did not fill; never an address of theirs but
  * the one they typed for an answer.
  */

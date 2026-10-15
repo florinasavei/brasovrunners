@@ -11,9 +11,11 @@ import type { EMAIL_AUDIENCE } from "./email-audience";
  * relay's notice and every staff-bound template build theirs from `SUBJECT_TAGS` and `tagSubject`, and the test that walks
  * the audience map fails when a type that reaches the club or a colleague has none.
  *
- * **What is never tagged.** An email to a participant, a volunteer, a subscriber or an invitee of the public keeps its
- * subject, word for word: those are the people's own messages, and a club's filter is not their business. The club's
- * copy of a participant's message keeps its own «[Copie club]» mark (§320).
+ * **What is never tagged.** An email to a participant, a volunteer, a subscriber, an invitee of the public or a member
+ * keeps its subject, word for word: those are the people's own messages, and a club's filter is not their business.
+ * That includes the three the audience map files loosely under «staff» although they go to a member (`MEMBER_FACING`:
+ * the shop's receipts and the member's invitation). The club's copy of a participant's message keeps its own
+ * «[Copie club]» mark (§320).
  *
  * The shape, whichever environment: `[tag][tag] human words` — and on QA the environment's mark comes first and is
  * joined to the tags: `[QA][feedback][cum-a-fost] human words` (`markSubjectForEnvironment`, §307).
@@ -39,10 +41,19 @@ export const SUBJECT_TAGS = [
 ] as const;
 export type SubjectTag = (typeof SUBJECT_TAGS)[number];
 
-/** The message types that reach the club's mailboxes or a colleague: the audiences «club» and «staff» (§670). */
+/**
+ * The three types the audience map (§670) files under «staff» although they are sent to a member, in their own inbox: a
+ * member's shop receipts (an order placed, an order paid, §683) and a member's invitation to the members' zone (§524). A
+ * club's filter is not a member's business, so they keep their subjects untagged; only `SHOP_ORDER_CLUB_NOTICE` (to the
+ * club) and `STAFF_INVITATION` (to a colleague) carry the shop's and the team's tags.
+ */
+export const MEMBER_FACING = ["SHOP_ORDER_PLACED", "SHOP_ORDER_PAID", "MEMBER_INVITATION"] as const satisfies readonly EmailMessageType[];
+type MemberFacing = (typeof MEMBER_FACING)[number];
+
+/** The message types that reach the club's mailboxes or a colleague: the audiences «club» and «staff» (§670), but a member's own mail. */
 type StaffBound = {
-  [K in EmailMessageType]: (typeof EMAIL_AUDIENCE)[K] extends "club" | "staff" ? K : never;
-}[EmailMessageType];
+  [K in Exclude<EmailMessageType, MemberFacing>]: (typeof EMAIL_AUDIENCE)[K] extends "club" | "staff" ? K : never;
+}[Exclude<EmailMessageType, MemberFacing>];
 
 /**
  * The tags of each message type that reaches the club or a colleague — a `Record` over the types the audience map says
@@ -58,8 +69,8 @@ type StaffBound = {
  * | `[legal]` | the Administrators' digest of moved legal templates (§639, §775) |
  * | `[livrare]` | the platform's notice about the email roads: a road is down, a message could not be delivered (§778) |
  * | `[sistem]` | the platform's alerts: the database unreachable and back (§657) |
- * | `[magazin]` | the members' shop: an order placed, paid, the club's notice (§683) |
- * | `[echipa]` | a colleague's or a member's invitation to the backoffice or the members' zone (§141, §524) |
+ * | `[magazin]` | the members' shop: the club's notice of an order (§683); a member's own receipts are not tagged |
+ * | `[echipa]` | a colleague's invitation to the backoffice (§141); a member's invitation is not tagged |
  *
  * `FEEDBACK_MESSAGE`'s entry is the family alone; the form's own tag follows it (`feedbackTags`).
  */
@@ -74,11 +85,8 @@ export const SUBJECT_TAGS_OF: Readonly<Record<StaffBound, readonly SubjectTag[]>
   LEGAL_TEMPLATES_CHANGED: ["legal"],
   UNREACHABLE_WINDOW_OPENED: ["sistem"],
   UNREACHABLE_WINDOW_CLOSED: ["sistem"],
-  SHOP_ORDER_PLACED: ["magazin"],
-  SHOP_ORDER_PAID: ["magazin"],
   SHOP_ORDER_CLUB_NOTICE: ["magazin"],
   STAFF_INVITATION: ["echipa"],
-  MEMBER_INVITATION: ["echipa"],
 };
 
 /**
@@ -118,9 +126,13 @@ export function tagSubject(tags: readonly SubjectTag[], humanSubject: string): s
   return tags.length === 0 ? humanSubject : `${tagPrefix(tags)} ${humanSubject}`;
 }
 
-/** A subject that starts with a tag (`[feedback]…`): lowercase ASCII in brackets — never «[QA]» or «[Copie club]». */
-const STARTS_WITH_TAG = /^\[[a-z0-9-]+\]/;
-const LEAD = /^(?:\[QA\])?(?:\[[a-z0-9-]+\])*/;
+/**
+ * A subject that starts with a tag of the closed vocabulary (`[feedback]…`) — never «[QA]», «[Copie club]» or a word
+ * the club typed between brackets («[nou] …»): the regexes are built from `SUBJECT_TAGS`, so a tag nobody chose is not one.
+ */
+const TAG = String.raw`\[(?:${SUBJECT_TAGS.join("|")})\]`;
+const STARTS_WITH_TAG = new RegExp(`^${TAG}`);
+const LEAD = new RegExp(String.raw`^(?:\[QA\])?(?:${TAG})*`);
 
 export function startsWithTag(subject: string): boolean {
   return STARTS_WITH_TAG.test(subject);
@@ -132,5 +144,7 @@ export function startsWithTag(subject: string): boolean {
  */
 export function markAfterTags(subject: string, mark: string): string {
   const lead = LEAD.exec(subject)?.[0] ?? "";
-  return `${lead}${mark}${subject.slice(lead.length)}`;
+  const rest = subject.slice(lead.length);
+  // After a tag the words already begin with their space; with no tag at all («Foo», «[QA]Foo») the mark needs its own.
+  return lead.endsWith("]") && lead !== "[QA]" ? `${lead}${mark}${rest}` : `${lead}${mark} ${rest.trimStart()}`;
 }
