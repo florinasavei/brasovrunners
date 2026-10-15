@@ -2039,7 +2039,7 @@ only ones who see the names, addresses and telephone numbers.
    (greyed, with the steps, until the translation key of `/admin/tasks` is set). The description is read under the
    role's tick on the public form (folded «Detalii» when long), on the card's role header, and — in plain
    words — in the agreement's «Ce presupune rolul», its PDF and the emails.
-   Roles belong to **one date**: a weekly run's dates, and a copy of an event, start with none. ↑ / ↓
+   Roles belong to **one date**: a weekly run's dates, and a copy of an event, start with none (the event's JSON file carries them, step 9). Roles may be grouped in **categories**, each with a contact person: step 9. ↑ / ↓
    set the order the page lists them in; a role with people on it — cancelled ones too — cannot be
    deleted: move them to another role or delete them first. An event's volunteers are not accounts:
    whoever works the race-day desk also needs an account on «Echipa», with the role Voluntar (§34) — the
@@ -2195,3 +2195,34 @@ only ones who see the names, addresses and telephone numbers.
      So for a parent's request, find the minor's row on the event's «Voluntari» card (the parent's address is on it, and the CSV lists it), read or
      export it from there, and erase by deleting the row — that is the manual route; no tool searches by a guardian's address, because the platform
      keeps no list of guardians (a table of them was refused, `DECISIONS.md` §768).
+
+9. **Group the roles in categories, and name a contact person for each** (`DECISIONS.md` §NNN; the owner, 2026-10-14: «Pentru „ce sunt
+   dispus să fac” trebuie să am categorii cu sub-categorii … Toate astea configurabile», and «trebuie să fie o persoană de contact pentru
+   voluntari» — «the contact person for each category will be established later»). No category is needed: an event with none lists its roles as
+   before.
+   - **«Categorii»** — the card «Voluntari» → the fold «Categorii» → «Adaugă o categorie»: the name in Română **and** English (both or neither;
+     «Copiază și tradu tot» fills the English one), for example «Start / Sosire» and «Traseu»; at most 12 on an event, a name once per event.
+     ↑ / ↓ set the order the card and the page list them in; «Modifică» renames; «Șterge categoria» asks first and is **refused with a sentence while
+     any role sits under it** — move or delete the roles first.
+   - **«Categoria» of a role** — «Adaugă un rol» and each role's «Modifică» gain a choice: one of the categories, or «Alte activități» (no category; every
+     role from before the categories is there). **The same role name may stand in two categories** («Direcționare» under «Start / Sosire» and under «Traseu»),
+     never twice in one. A role is then told apart as **«Direcționare (Traseu)»** wherever it is named alone — the «Dă-i rolul …» buttons and select, the
+     chips, the email «Rolul tău de voluntar», the CSV's role columns and the agreement's sentences; the badge's band shows the role only. The card lists
+     the roles under their category's heading, in the category's order; ↑ / ↓ on a role move it inside its category; a role moved to another category goes
+     to the end of it.
+   - **On the volunteers' page** the roles show under a heading per category, in the category's order, each with its tick, description and count line
+     as before; a category with no role still needing people is not shown, the roles under none follow under «Alte activități», and an event with no
+     category shows no heading at all.
+   - **«Persoana de contact»** on each category's own row: a name, a telephone number and an email, **each optional and empty when the category is
+     made**, with a «Salvează» of its own — fill it in when the club knows who it is (the telephone is read as a Romanian number or with the country
+     code). The trail names the boxes that changed, never the words. Once set, the contact appears: under the category's heading on the volunteers' page,
+     as one line «Întrebări? Ana Popescu · +40 712 345 678 · ana@…» with the telephone and the address as links; in the footer of the volunteers'
+     emails — «Ți-am primit oferta», «Rolul tău» and the parent's request — the contact of the category of the role (or roles) concerned; and on the
+     badges: tick «Telefonul coordonatorului» in the badge's designer and leave the number empty, and each role's badge prints its category's
+     telephone (a number typed in the designer wins on every role). **Never in the CSV.** It is the club's own business contact, published by the
+     club's choice, nothing of a volunteer's or a participant's: the privacy notice's template needs no change — but name only a person who agreed to be on a public page.
+   - **In the event's JSON file** (§751) the categories (with their contact) and the roles travel as the file's own key `volunteers`: their words, how many each
+     needs, the description, the colour and the category by its place in the list — never a person, an id or the tick «Primește voluntari». «Ca eveniment
+     nou» writes them into the new draft through the card's own rules (an entry the card would refuse is skipped); an import over an existing event leaves
+     its roles and categories as they are.
+   - **Local and QA databases** get two categories with the owner's example roles on the sample race (`yarn db:seed`; never production, `DECISIONS.md` §30).
