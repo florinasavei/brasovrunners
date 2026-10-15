@@ -39,6 +39,11 @@ export function sexCell(sex: RegistrationSex | null | undefined): string {
   return shown === "MALE" ? "Male" : shown === "FEMALE" ? "Female" : "";
 }
 
+/** The inverse of `sexCell`: the answer a spreadsheet cell's words stand for, or null for an empty cell. */
+export function sexOfCell(cell: string | null | undefined): SexChoice | null {
+  return SEX_CHOICES.find((choice) => sexCell(choice) === cell) ?? null;
+}
+
 /**
  * A form kept before this release (§446, `pending_family_entries.fields`) may hold the retired
  * answer: pressed through after it, the answer is dropped rather than the person refused — the

@@ -1,5 +1,6 @@
 import type { EmailLocale } from "@/infrastructure/email/adapter";
 import type { Road } from "./domain/road-failover";
+import { SUBJECT_TAGS_OF, tagSubject } from "./domain/subject-tags";
 
 /**
  * The words of the platform's two notices to the Administrators about the visitors' messages (§778, amending §622):
@@ -101,7 +102,8 @@ export function relayNoticeContent(
   const { subject, paragraphs } = relayNoticeWords(kind, locale, facts);
   const escape = (value: string) => value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   return {
-    subject,
+    // `[livrare] Mailgun nu a trimis…` (§786): the notice is the club's own mail, so its subject starts with its tag.
+    subject: tagSubject(SUBJECT_TAGS_OF.RELAY_NOTICE, subject),
     text: paragraphs.join("\n\n"),
     html: paragraphs.map((paragraph) => `<p>${escape(paragraph)}</p>`).join(""),
   };

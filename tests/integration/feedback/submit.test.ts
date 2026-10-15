@@ -32,6 +32,9 @@ import { RATE_LIMITS } from "@/modules/rate-limit/service";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 import { deliverRelay, fakeRoads, relayRows, sent } from "../../helpers/relay";
 
+/** Girl Zone's subject as it leaves (§786): the neutral words behind the confidential route's tags. */
+const TAGGED_SAFETY = `[feedback][girl-zone] ${SAFETY_SUBJECT}`;
+
 /**
  * BR-REQ-070-04, BR-REQ-080-01, `DECISIONS.md` §676 — «Spune-ne ceva»: each branch by its own road
  * and nothing kept anywhere; the gates in the contact form's order; one bucket per branch; the
@@ -152,7 +155,7 @@ describe("§676 «Spune-ne ceva»", () => {
       expect(await submitFeedback(db, deps(), COMPLAINT, NOW)).toEqual({ outcome: "sent" });
       expect(mailgun.send).not.toHaveBeenCalled();
       expect(smtp.messages.map((message) => message.to)).toEqual([["how@example.org"], ["ideas@example.org"], ["complaints@example.org"]]);
-      expect(smtp.messages.map((message) => message.subject)).toEqual(["Cum a fost: Crosul de toamnă", "O sugestie de pe site", "O reclamație de pe site"]);
+      expect(smtp.messages.map((message) => message.subject)).toEqual(["[feedback][cum-a-fost] Cum a fost: Crosul de toamnă", "[feedback][sugestie] O sugestie de pe site", "[feedback][reclamatie] O reclamație de pe site"]);
       // Reply-To only when an address was typed; the anonymity line otherwise.
       expect(smtp.messages[0].replyTo).toBeUndefined();
       expect(smtp.messages[0].text).toContain(`Contact: ${NO_CONTACT_LINE}`);
@@ -187,7 +190,7 @@ describe("§676 «Spune-ne ceva»", () => {
       expect(mailgun.send).toHaveBeenCalledTimes(1);
       const [message] = mailgun.send.mock.calls[0];
       expect(message.to).toBe("safety@example.org");
-      expect(message.subject).toBe(SAFETY_SUBJECT);
+      expect(message.subject).toBe(TAGGED_SAFETY);
       expect(message.noReplyTo).toBe(true);
       expect(message.cc).toBeUndefined();
       expect(message.bcc).toBeUndefined();
@@ -223,16 +226,16 @@ describe("§676 «Spune-ne ceva»", () => {
     it("marks an ordinary branch «[posibil spam]» on the contact form's signals, and never the safety branch", async () => {
       const screening: ContactScreening = { botCheckOn: true, tokenPresent: false, turnstileVerdict: "unavailable", clubHost: null };
       expect(await submitFeedback(db, deps({ screening }), SUGGESTION, NOW)).toEqual({ outcome: "sent" });
-      expect(smtp.messages[0].subject).toBe("[posibil spam] O sugestie de pe site");
+      expect(smtp.messages[0].subject).toBe("[feedback][sugestie][posibil spam] O sugestie de pe site");
       await submitFeedback(db, deps({ screening }), SAFETY, NOW);
-      expect(mailgun.send.mock.calls[0][0].subject).toBe(SAFETY_SUBJECT);
+      expect(mailgun.send.mock.calls[0][0].subject).toBe(TAGGED_SAFETY);
     });
 
     it("puts [QA] in front of every subject on QA", async () => {
       await submitFeedback(db, deps({ appEnv: "qa" }), SUGGESTION, NOW);
       await submitFeedback(db, deps({ appEnv: "qa" }), SAFETY, NOW);
-      expect(smtp.messages[0].subject).toBe("[QA] O sugestie de pe site");
-      expect(mailgun.send.mock.calls[0][0].subject).toBe(`[QA] ${SAFETY_SUBJECT}`);
+      expect(smtp.messages[0].subject).toBe("[QA][feedback][sugestie] O sugestie de pe site");
+      expect(mailgun.send.mock.calls[0][0].subject).toBe(`[QA]${TAGGED_SAFETY}`);
     });
   });
 
@@ -244,7 +247,7 @@ describe("§676 «Spune-ne ceva»", () => {
       expect(smtp.messages).toHaveLength(0);
       const [message] = mailgun.send.mock.calls[0];
       expect(message.to).toBe("safety@example.org");
-      expect(message.subject).toBe(SAFETY_SUBJECT);
+      expect(message.subject).toBe(TAGGED_SAFETY);
       // The address the person typed beside the name (§772): «Reply» reaches them, not the shared club mailbox.
       expect(message.replyTo).toBe("ana@example.org");
       expect(message.noReplyTo).toBeUndefined();
@@ -263,7 +266,7 @@ describe("§676 «Spune-ne ceva»", () => {
       expect(smtp.messages).toHaveLength(0);
       const [message] = mailgun.send.mock.calls[0];
       expect(message.to).toBe("safety@example.org");
-      expect(message.subject).toBe(SAFETY_SUBJECT);
+      expect(message.subject).toBe(TAGGED_SAFETY);
       expect(message.replyTo).toBe("ana@example.org");
       expect(message.text).toContain("Din formularul: „O sugestie”");
       // Her own form stays closed.
@@ -283,7 +286,7 @@ describe("§676 «Spune-ne ceva»", () => {
       expect(await submitFeedback(db, deps(), toClub, NOW)).toEqual({ outcome: "sent", audience: "club" });
       expect(mailgun.send).not.toHaveBeenCalled();
       expect(smtp.messages[0].to).toEqual(["complaints@example.org"]);
-      expect(smtp.messages[0].subject).toBe(SAFETY_SUBJECT);
+      expect(smtp.messages[0].subject).toBe(TAGGED_SAFETY);
       expect(smtp.messages[0].replyTo).toBeUndefined();
       expect(smtp.messages[0].text).toContain("Contact: 0700 000 000");
 
@@ -493,10 +496,10 @@ describe("§676 «Spune-ne ceva»", () => {
 
   describe("§772 the road is the club's choice, per form", () => {
     const FORMS: ReadonlyArray<[FeedbackBranch, Record<string, unknown>, string, string]> = [
-      ["howItWent", HOW, "how@example.org", "Cum a fost: Crosul de toamnă"],
-      ["suggestion", SUGGESTION, "ideas@example.org", "O sugestie de pe site"],
-      ["complaint", COMPLAINT, "complaints@example.org", "O reclamație de pe site"],
-      ["safety", SAFETY, "safety@example.org", SAFETY_SUBJECT],
+      ["howItWent", HOW, "how@example.org", "[feedback][cum-a-fost] Cum a fost: Crosul de toamnă"],
+      ["suggestion", SUGGESTION, "ideas@example.org", "[feedback][sugestie] O sugestie de pe site"],
+      ["complaint", COMPLAINT, "complaints@example.org", "[feedback][reclamatie] O reclamație de pe site"],
+      ["safety", SAFETY, "safety@example.org", TAGGED_SAFETY],
     ];
     const choosing = (branch: FeedbackBranch, via: FeedbackVia): FeedbackSettings => ({ ...SETTINGS, [branch]: { ...SETTINGS[branch], via } });
 
@@ -559,7 +562,7 @@ describe("§676 «Spune-ne ceva»", () => {
         it("screens a message for the club's mailbox the same way by either road: marked «[posibil spam]», or held back on the Administrator's tick", async () => {
       const screening: ContactScreening = { botCheckOn: true, tokenPresent: false, turnstileVerdict: "unavailable", clubHost: null };
       await submitFeedback(db, deps({ screening, settings: choosing("suggestion", "mailgun") }), SUGGESTION, NOW);
-      expect(mailgun.send.mock.calls[0][0].subject).toBe("[posibil spam] O sugestie de pe site");
+      expect(mailgun.send.mock.calls[0][0].subject).toBe("[feedback][sugestie][posibil spam] O sugestie de pe site");
       expect(mailgun.send.mock.calls[0][0].text).toContain("---");
       // The tick (§744): counted, not sent, whichever road it would have taken.
       const held: ContactScreening = { ...screening, holdBack: true };
@@ -570,7 +573,7 @@ describe("§676 «Spune-ne ceva»", () => {
       // Girl Zone's person is never held back or marked, on Gmail either.
       await submitFeedback(db, deps({ screening: held, settings: choosing("safety", "gmail") }), SAFETY, NOW);
       expect(smtp.messages).toHaveLength(1);
-      expect(smtp.messages[0].subject).toBe(SAFETY_SUBJECT);
+      expect(smtp.messages[0].subject).toBe(TAGGED_SAFETY);
     });
 
     it("sends a Girl Zone message the sender gave the club by the road of «O reclamație», the mailbox it reaches — not Girl Zone's own", async () => {
@@ -582,7 +585,7 @@ describe("§676 «Spune-ne ceva»", () => {
       // And a message for her goes by hers, whatever form it was written on.
       expect(await submitFeedback(db, deps({ settings }), { ...SUGGESTION, audience: "person" }, NOW)).toEqual({ outcome: "sent", audience: "person" });
       expect(smtp.messages.map((message) => message.to)).toEqual([["safety@example.org"]]);
-      expect(smtp.messages[0].subject).toBe(SAFETY_SUBJECT);
+      expect(smtp.messages[0].subject).toBe(TAGGED_SAFETY);
     });
 
     it("refuses «Cine să afle?» the person where Girl Zone's road is missing, and the club where the club's is", async () => {

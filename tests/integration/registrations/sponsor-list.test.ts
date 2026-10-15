@@ -17,7 +17,7 @@ import { buildSponsorListCsv, promoListed, readSponsorShareGate, sponsorList, sp
 import { SPONSOR_SHEET_COLUMNS, sponsorSheetHeaders } from "@/modules/registrations/sponsor-sheet";
 import { countRegistrationsForAdmin, listRegistrationsForAdmin } from "@/modules/registrations/admin-repository";
 import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
-import { readSheet } from "../../helpers/xlsx";
+import { readSheet, startListRows } from "../../helpers/xlsx";
 import { sharedWithSponsors } from "@/modules/registrations/domain/sponsor-share";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { atTheClock } from "../../helpers/clock";
@@ -535,7 +535,8 @@ describe("§581 «Doar cu oferte și beneficii» on the registrations list, and 
     expect((await exported("")).length - 1).toBe(5);
     // The Excel export follows the filter too.
     const workbook = await exportRegistrations(new Request(`http://localhost/api/admin/registrations/export?format=xlsx&eventId=${event.id}&promo=1`));
-    expect(readSheet(Buffer.from(await workbook.arrayBuffer())).rows).toHaveLength(4);
+    // The start list alone: the statistics footer under it (§787) is `statistics-footer.test.ts`'s to read.
+    expect(startListRows(readSheet(Buffer.from(await workbook.arrayBuffer())).rows)).toHaveLength(4);
   });
 });
 

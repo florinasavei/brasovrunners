@@ -9,6 +9,9 @@ import { cancelReasonCell } from "@/modules/registrations/domain/cancel-reason";
 import { familyColumn, familyOf } from "@/modules/registrations/family-marker";
 import { recordAuditEvent } from "@/modules/audit/repository";
 import { buildRegistrationsWorkbook, workbookExtras } from "@/modules/registrations/workbook";
+import { isClubRunner } from "@/modules/registrations/domain/club-runner";
+import { statisticsWordsFrom } from "@/modules/registrations/statistics";
+import { CLUB_NAME } from "@/theme/brand";
 import {
   listEventsWithRegistrations,
   listLatestDeclarationAcceptances,
@@ -18,7 +21,7 @@ import {
 import { defaultEventFilter } from "@/modules/registrations/domain/default-event-filter";
 import { identityDocumentsOf } from "@/modules/registrations/domain/identity-documents";
 import { rowDeadlineOf } from "@/modules/registrations/domain/row-deadline";
-import { ageOnRaceDay } from "@/modules/registrations/domain/age";
+import { ageOnRaceDay, dayIn, timeIn } from "@/modules/registrations/domain/age";
 import { exportNotesCell, type ExportNotesWords, listRegistrationNotesForExport } from "@/modules/registrations/notes";
 import { STAFF_ROLES, canKeepRegistrationNotes, canReadRegistrations } from "@/modules/staff-identity/domain/roles";
 import { requireStaff } from "@/modules/staff-identity/session";
@@ -190,6 +193,32 @@ export async function GET(request: Request): Promise<Response> {
     const eventTitle = scope.eventId ? (rows.find((row) => row.eventTitle)?.eventTitle ?? null) : null;
     // Sex, age, origin and t-shirt, for the sheet only (§322) — one query for the exported rows.
     const details = await listWorkbookDetails(db, rows.map((row) => row.id));
+    /*
+      «Statistici» (§787; the owner: «the Excel should have a statistics footer so that I can show „how many Brașov
+      Runners”, how many active, etc., grouped by category»): the counts of these rows under them, in the reader's
+      language, for the spreadsheet only — a footer in the CSV would be read as registrations. The rows are already
+      the screen's rows without a test registration, so the counts are too.
+    */
+    const statsT = await getTranslations({ locale, namespace: "Admin" });
+    const statistics = statisticsWordsFrom((key, values) => statsT(`registrations.statistics.${key}`, values), CLUB_NAME);
+    // What an event is called in a file of several: its title and its day on its own clock.
+    // A title is the event's, in the registration's language; one with none is «Eveniment fără titlu», never its id.
+    const eventLabelBase = (row: (typeof rows)[number]) => {
+      const [year, month, day] = dayIn(row.eventStartsAt, row.eventTimezone).split("-");
+      return `${row.eventTitle ?? statistics.untitled} · ${day}.${month}.${year}`;
+    };
+    // Two events with one title on one day (two distances modelled as events) are told apart by their start time.
+    const eventsByLabel = new Map<string, Set<string>>();
+    for (const row of rows) {
+      const own = eventsByLabel.get(eventLabelBase(row)) ?? new Set<string>();
+      own.add(row.eventId);
+      eventsByLabel.set(eventLabelBase(row), own);
+    }
+    const eventLabelOf = (row: (typeof rows)[number]) => {
+      const base = eventLabelBase(row);
+      if ((eventsByLabel.get(base)?.size ?? 0) < 2) return base;
+      return `${base} · ${timeIn(row.eventStartsAt, row.eventTimezone)}`;
+    };
     const workbook = await buildRegistrationsWorkbook(
       rows.map((row) => ({
         ...workbookExtras(details.get(row.id)),
@@ -233,9 +262,14 @@ export async function GET(request: Request): Promise<Response> {
         deadline: deadlineOf(row)?.at ?? null,
         deadlineFor: deadlineOf(row)?.kind ?? null,
         notes: notes.get(row.id) ?? "",
+        // The footer's inputs (§787): is this one of the club's runners, and which event.
+        clubRunner: isClubRunner(row),
+        eventId: row.eventId,
+        eventLabel: eventLabelOf(row),
+        eventStartsAt: row.eventStartsAt,
       })),
       eventTitle ?? "Participants",
-      { notesHeader },
+      { notesHeader, statistics },
     );
 
     return new NextResponse(new Uint8Array(workbook), {

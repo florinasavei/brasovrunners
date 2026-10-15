@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { ADDRESS_QUERY, type PickerChip, readPickerChip } from "./event-picker";
 import { type AppEnvironment, markSubjectForEnvironment } from "@/infrastructure/email/delivery";
+import { feedbackTags, tagSubject } from "@/modules/notifications/domain/subject-tags";
 import { canonicalizeEmail, InvalidEmailError } from "@/modules/participants/domain/canonical-email";
 
 /**
@@ -675,8 +676,11 @@ export const NO_CONTACT_LINE = "(fără contact lăsat)";
 export const ANONYMOUS_NAME_LINE = "(anonim)";
 
 /**
- * The safety branch's subject (§676): neutral, so a notification on a phone's lock screen says
- * nothing of what is inside. The other three name their branch, because the club files them.
+ * The safety branch's subject words (§676): neutral, so they say nothing of what is inside. The other three name their
+ * branch, because the club files them. The tags come before them (§786): `[feedback][girl-zone] Mesaj confidențial de
+ * pe site` — the human words stay neutral and the tag names the route, a trade-off the owner accepted: the tag does show
+ * on a phone's lock screen, so the person who receives it can hide previews or silence that label (`SETUP.md` §
+ * Filtre în Gmail).
  */
 export const SAFETY_SUBJECT = "Mesaj confidențial de pe site";
 
@@ -762,7 +766,7 @@ export function feedbackLines(input: FeedbackInput, context: FeedbackContext): {
 export type FeedbackEmail = { subject: string; text: string; html: string };
 
 /**
- * The message one branch sends: its subject (the environment's `[QA] ` first, §163), and the text
+ * The message one branch sends: its subject (the environment's `[QA]` first, joined to the tags, §163, §786), and the text
  * and the HTML of the same lines. Nothing the person did not fill; never an address of theirs but
  * the one they typed for an answer.
  */
@@ -799,7 +803,9 @@ export function composeFeedbackEmail(input: FeedbackInput, context: FeedbackCont
     `<p><strong>${escapeHtml(contact.label)}:</strong> ${escapeHtml(contact.value)}</p>`,
     `<p><em>${escapeHtml(footer)}</em></p>`,
   ].join("");
-  return { subject: markSubjectForEnvironment(oneLine(subjectBase), appEnv), text, html };
+  // `[feedback][cum-a-fost] Cum a fost: …` (§786): the tags a filter reads, then the words; on QA the mark is joined in front.
+  const subject = tagSubject(feedbackTags(input.branch, context.toPerson === true), oneLine(subjectBase));
+  return { subject: markSubjectForEnvironment(subject, appEnv), text, html };
 }
 
 /** The feedback page's address for one event and day, as the thank-you email and the event page link it. */

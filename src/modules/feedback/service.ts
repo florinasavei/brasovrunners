@@ -1,10 +1,11 @@
 import type { Database } from "@/db/types";
-import { type AppEnvironment, QA_SUBJECT_PREFIX } from "@/infrastructure/email/delivery";
+import type { AppEnvironment } from "@/infrastructure/email/delivery";
 import { contactSuspicion } from "@/modules/contact/domain/suspicion";
 import { recordHeldBack, shouldHoldBack } from "@/modules/contact/held-back";
-import { SUSPICIOUS_SUBJECT_PREFIX, suspicionFooter } from "@/modules/contact/message";
+import { SUSPICIOUS_SUBJECT_MARK, suspicionFooter } from "@/modules/contact/message";
 import type { ContactScreening } from "@/modules/contact/service";
 import { drainRelayAfterResponse } from "@/modules/notifications/drain";
+import { markAfterTags } from "@/modules/notifications/domain/subject-tags";
 import { enqueueRelay } from "@/modules/notifications/relay";
 import { consumeRateLimit, refundRateLimit } from "@/modules/rate-limit/service";
 import { looksLikeSpam } from "@/modules/registrations/service";
@@ -292,14 +293,8 @@ async function screenForClub<T extends Record<string, unknown>>(
   if (!marked) return email;
   const text = [email.text, "", "---", marked.heading, ...marked.reasons.map((line) => `• ${line}`), marked.signals].join("\n");
   const html = `${email.html}<hr><p><strong>${escapeHtml(marked.heading)}</strong></p><ul>${marked.reasons.map((line) => `<li>${escapeHtml(line)}</li>`).join("")}</ul><p><small>${escapeHtml(marked.signals)}</small></p>`;
-  // On QA the environment's mark comes first — «[QA] [posibil spam] …» — as on the contact form.
-  return { subject: markAfterEnvironment(email.subject), text, html };
-}
-
-function markAfterEnvironment(subject: string): string {
-  return subject.startsWith(QA_SUBJECT_PREFIX)
-    ? `${QA_SUBJECT_PREFIX}${SUSPICIOUS_SUBJECT_PREFIX}${subject.slice(QA_SUBJECT_PREFIX.length)}`
-    : `${SUSPICIOUS_SUBJECT_PREFIX}${subject}`;
+  // After the environment's mark and the tags — «[QA][feedback][sugestie][posibil spam] …» — as on the contact form (§786).
+  return { subject: markAfterTags(email.subject, SUSPICIOUS_SUBJECT_MARK), text, html };
 }
 
 function escapeHtml(value: string): string {

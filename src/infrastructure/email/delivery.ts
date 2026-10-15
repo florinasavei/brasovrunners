@@ -1,6 +1,7 @@
 import { ALLOW_EVERY_RECIPIENT } from "@/shared/config/env-enums";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
 import { GMAIL_CAP_DEFERRED_ERROR, type GmailAtCap, gmailJitterCeilingMs, type GmailLedger } from "@/modules/notifications/domain/email-transport";
+import { startsWithTag } from "@/modules/notifications/domain/subject-tags";
 import type { EmailAdapter, OutgoingEmail, SendResult } from "./adapter";
 
 /**
@@ -95,7 +96,11 @@ export const QA_SUBJECT_PREFIX = "[QA] ";
  */
 export function markSubjectForEnvironment(subject: string, appEnv: AppEnvironment): string {
   if (appEnv !== "qa") return subject;
-  return subject.startsWith(QA_SUBJECT_PREFIX) ? subject : `${QA_SUBJECT_PREFIX}${subject}`;
+  // Marked already: the bare «[QA]», whatever followed it (a manual resend, a subject built with the mark in it).
+  if (subject.startsWith(QA_SUBJECT_PREFIX.trimEnd())) return subject;
+  // A message for the club starts with its tags (§786): the mark is joined to them — «[QA][feedback][cum-a-fost] …» — so the tags
+  // stay one run a filter reads; any other subject takes the mark and a space, as it always did.
+  return startsWithTag(subject) ? `${QA_SUBJECT_PREFIX.trimEnd()}${subject}` : `${QA_SUBJECT_PREFIX}${subject}`;
 }
 
 export type EmailSender = {

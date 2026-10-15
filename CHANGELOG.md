@@ -8,6 +8,10 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V3.42-2026-10-16
+
+- **Filterable tags at the start of the club's email subjects** — «Scrie-ne» is `[contact]`, the four «Spune-ne ceva» forms `[feedback][cum-a-fost]`, `[sugestie]`, `[reclamatie]`, `[girl-zone]`, and the staff notices `[inscrieri]`, `[declaratii]`, `[voluntari]`, `[legal]`, `[livrare]`, `[sistem]`, `[magazin]` (the club's notice of a shop order), `[echipa]` (a colleague's invitation); QA's mark comes first (`[QA][feedback][cum-a-fost] …`); runners', volunteers' and members' subjects are unchanged; SETUP.md has the Gmail filters, and a note that Girl Zone's messages are never forwarded. §786.
+- **A statistics footer in the registrations Excel** — under the rows, after one empty row, «Statistici» counts what the file carries: the total, the confirmed (the active ones), every other state, how many are Brașov Runners (a member, the ticked box or the typed club) and how many are not, and one row per category (sex and age band) — per event first when the file holds several, in the list's language, never in the CSV. §787.
 ## BR-V3.41-2026-10-16
 
 - **A volunteer role without a number** — «Fără număr — oricâți oameni» in «Adaugă un rol» and «Modifică»: the role is never full and always offered, reads «3 · fără număr» on the card, says «mai sunt locuri» on the page, and «Câte ecusoane» starts at the people given it. §784.
