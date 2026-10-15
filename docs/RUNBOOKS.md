@@ -972,13 +972,17 @@ What the platform does by itself, so there is little to do at the moment itself 
   allowance or a pause. After **two** such failures of one message the other road gets its turn, both ways (Mailgun to Gmail, Gmail to
   Mailgun); the row then says «Trimis prin cealaltă cale», a line `[email-relay] … left by gmail` goes to the function log, an audit row
   `email_road.failed_over` names the roads (never a word of the message or an address), and each Administrator and Superadministrator is
-  emailed once a day per road. A road Mailgun has stopped (a pause, the allowance) or a road this deployment does not have is skipped at once.
-- **Never twice.** A refused address is the recipient's, not the road's: the message ends «Adresă refuzată», the other road is not tried.
-  A send whose connection broke where the service may already have the message (a timeout during the message itself) pins it to that
-  road: it is retried there only, because nothing can say whether the first road delivered, and another road would risk a
-  second copy.
+  emailed once per club day per road. A road Mailgun has stopped (a pause, the allowance) or a road this deployment does not have is skipped at once.
+- **A pin that lets go.** A refused address is the recipient's, not the road's: the message ends «Adresă refuzată», the other road is not tried.
+  A send whose connection broke where the service may already have the message (a plain `Timeout`, a socket error after the connection was made,
+  a connection closed with no answer — Nodemailer calls them all `CONN`, so the message decides) pins it to that road for **three tries**: nothing
+  can say whether the first road delivered, but retrying the same road risks a second copy exactly as much as the other would, and a pin that
+  never let go would lose the message at the day's end while the other road was healthy. After three, or at once if that road is stopped, the
+  other road carries it (the row says «rămâne deocamdată pe această cale» while it is pinned). A message that may not take the other road
+  (Girl Zone without the tick) keeps its own and is given up on at a day, with the Administrators told.
 - **Girl Zone** goes by Gmail only if the club ticked «Dacă Mailgun pică, trimite prin Gmail-ul clubului» on «Pagini» → «Contact» AND the notice in
-  force names Gmail for her messages (the tick is greyed until it does). Without the tick her message waits for Mailgun, never by the club's mailbox.
+  force names Gmail for her messages (the tick is greyed until it does). Without the tick her message waits for Mailgun, never by the club's mailbox;
+  with it, the public form says her message may leave by the club's mailbox when the email service is down.
 - **A day without a road** (`RELAY_GIVE_UP_MS`): the message is FAILED, its words deleted, the Administrators emailed «Un mesaj de pe site
   nu a putut fi trimis», an audit row `email_relay.lost` written. «Reîncearcă emailurile eșuate» does not put it back — there is nothing left to send.
 
@@ -988,6 +992,7 @@ What to do, by the road's code on the row:
    password in the club's Google account (`SETUP.md` §38 steps 1–2), put it in `CONTACT_SMTP_PASSWORD` on the Vercel project (never in the
    repository), redeploy. The row turns green with the first message Gmail carries.
 2. **Gmail — `smtp ETIMEDOUT` / `ECONNECTION`**: Google or the network. Nothing to change unless it lasts; the other road carries meanwhile.
+   A road rings red on «Sarcini» only while its failures have gone on for over an hour and are still coming — one failure on a quiet road does not.
 3. **Gmail accepted it and nobody saw it**: look at the form's «Către» on «Pagini» → «Contact». If it is the club's own Gmail address — the
    account that sends — Gmail may keep the message in Sent / All mail and not in the Inbox (the card warns beside the box); give the form another
    address, or set its road to Mailgun.

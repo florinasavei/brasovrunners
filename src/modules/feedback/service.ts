@@ -231,25 +231,30 @@ async function deliver<T extends Record<string, unknown>>(
     content = screened;
   }
   const fallbackAllowed = fallbackAllowedFor(deps.settings, audience, deps.safetyGmailDescribed);
-  const queued: string[] = [];
-  for (const address of recipients.map((entry) => entry.replace(/[\r\n]+/g, " ").trim())) {
-    const row = await enqueueRelay(db, {
-      type: "FEEDBACK_MESSAGE",
-      road: via,
-      to: address,
-      locale: input.locale,
-      content: {
-        subject: content.subject,
-        text: content.text,
-        html: content.html,
-        fallbackAllowed,
-        form: "feedback",
-        ...(replyAddress ? { replyTo: replyAddress, ...(input.name ? { replyToName: input.name } : {}) } : { noReplyTo: true as const }),
-      },
-      now,
-    });
-    if (row) queued.push(row.id);
-  }
+  // All the rows or none: a second insert that fails must not leave the first one queued while the visitor is told it failed (and
+  // the rate limit is given back), or a resubmit would send the first recipient's copy twice.
+  const queued = await db.transaction(async (tx) => {
+    const ids: string[] = [];
+    for (const address of recipients.map((entry) => entry.replace(/[\r\n]+/g, " ").trim())) {
+      const row = await enqueueRelay(tx, {
+        type: "FEEDBACK_MESSAGE",
+        road: via,
+        to: address,
+        locale: input.locale,
+        content: {
+          subject: content.subject,
+          text: content.text,
+          html: content.html,
+          fallbackAllowed,
+          form: "feedback",
+          ...(replyAddress ? { replyTo: replyAddress, ...(input.name ? { replyToName: input.name } : {}) } : { noReplyTo: true as const }),
+        },
+        now,
+      });
+      if (row) ids.push(row.id);
+    }
+    return ids;
+  });
   drainRelayAfterResponse(queued);
   return "queued";
 }

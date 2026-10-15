@@ -1361,12 +1361,18 @@ before the window if Mailgun is on probation.
 response; the words stay in the row only until it is delivered, then they are deleted and the row stays as the trace («Setări» → «Emailuri» →
 «Mesaje de pe site»: the road chosen, the road it left by, the tries, what each road answered). If the road refuses twice — a revoked app password
 (`smtp EAUTH`, Google's `535-5.7.8`), a timeout, a `5xx` — the **other road** carries it (Gmail to Mailgun, Mailgun to Gmail) and the Administrators
-are emailed; a wrong password is no longer a sentence on the page, and `/devs` → «Stare» says which road fails. Girl Zone leaves by Gmail only with
-the tick «Dacă Mailgun pică, trimite prin Gmail-ul clubului» and the notice naming it. What to do when a road stays down: `docs/RUNBOOKS.md` § A way
-of sending is down. **The diagnosis of 2026-10-15** (QA «Spune-ne ceva» «did not send by Gmail»): Gmail had accepted every message — QA's function
-log held eight `[feedback] … sent` and no refusal, the outbox's Gmail road carried twenty a day — so the transport was never the fault. Check the form's
-**«Către»**: if it is the club's own Gmail address (the account that sends), Gmail may keep the message in Sent / All mail and not in the Inbox; the card
-warns beside the box. Put another address there, or set that form's road to Mailgun. On QA the allowlist now applies to Gmail as it does to Mailgun: a
+are emailed (once per club day per road); a timeout that may have come after the message was handed over keeps it on that road for three tries, then the
+other road carries it — a possible second copy beats a lost message; a wrong password is no longer a sentence on the page, and `/devs` → «Stare» says which road fails. Girl Zone leaves by Gmail only with
+the tick «Dacă Mailgun pică, trimite prin Gmail-ul clubului» and the notice naming it — and while the tick is in force the public form says so.
+**Approve the privacy notice from the new template** (`/admin/legal`, with the other texts of the release): its contact and feedback paragraphs now say the
+platform keeps a message only until it leaves (seconds, three days at the very most) — until then the notice in force says «nicio copie» and
+`/admin/tasks` has the row «Nota de confidențialitate: coada mesajelor din formulare» (the queue runs meanwhile). What to do when a road stays down: `docs/RUNBOOKS.md` § A way
+of sending is down. **The diagnosis of 2026-10-15** (QA «Spune-ne ceva» «did not send by Gmail»): what is proven is that no refusal was ever logged — QA's function
+log held eight `[feedback] … sent` and no failure line, and the outbox's Gmail road on the same account carried twenty a day. What is **not** proven is
+which road carried those eight: the old log line named no road, and the card was set to Mailgun, so they may all have been Mailgun's. One thing to
+check, in a minute, as a hypothesis: the form's **«Către»**. If it is the club's own Gmail address (the account that sends), Gmail may keep a message
+sent to itself in Sent / All mail and not in the Inbox; the card warns beside the box. Put another address there, or set that form's road to
+Mailgun. From now on «Mesaje de pe site» names the road each message left by, so the question has an answer. On QA the allowlist now applies to Gmail as it does to Mailgun: a
 recipient it does not name is captured, not sent (`EMAIL_ALLOWLIST`; `*` names everybody).
 
 **Done on both Vercel projects**, and visible: `/ro/contact` shows the form on production and on

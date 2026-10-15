@@ -36,8 +36,9 @@ export type RelayBodyState = "kept" | "deleted";
 /**
  * How long a message may wait to be delivered before it is given up on (§NNN): twenty-four hours. A transient
  * refusal is never the end of an ordinary email (§622) — but this is somebody's words kept in a table, and
- * the notice promises «minutes, never after». Past the day the Administrators are told, the words are
- * deleted, and the row stays as the record that a message was lost.
+ * the notice says «a few seconds, three days at the very most» (`{{relayQueue}}`). Past the day the Administrators are
+ * told, the words are deleted, and the row stays as the record that a message was lost; the retention sweep is the net at
+ * three days under a worker that never ran.
  */
 export const RELAY_GIVE_UP_MS = 24 * 60 * 60_000;
 
