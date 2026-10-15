@@ -252,7 +252,7 @@ export default async function VolunteerBox({
                 </FormHelperText>
               )}
               {/*
-                The roles, each category its own card (§778, amending §774; the owner, 2026-10-15: «nu e clară gruparea pe categorii!»): a bordered
+                The roles, each category its own card (§NNN, amending §774; the owner, 2026-10-15: «nu e clară gruparea pe categorii!»): a bordered
                 box with a coloured band — the category's glyph, its name as the level-3 heading, «4 roluri» — the contact line (§774) when the
                 club set one, and the roles inside it as tiles (`VolunteerRoleTile`: the whole tile is the checkbox's label), a clear step between
                 two cards, «Alte activități» last with the same look. An event with no category shows the tiles under no heading, as before.

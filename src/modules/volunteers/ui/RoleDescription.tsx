@@ -32,7 +32,7 @@ export default function RoleDescription({
   bodyId?: string;
   testId?: string;
   /**
-   * The caller indents it (§778: the role's tile puts it under the name, past the tick): no left or right padding of its own. Off, it is
+   * The caller indents it (§NNN: the role's tile puts it under the name, past the tick): no left or right padding of its own. Off, it is
    * indented under the box of a `CheckboxField` as before.
    */
   flush?: boolean;

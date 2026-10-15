@@ -61,7 +61,7 @@ export default async function BranchChoice({ branches, chosen }: { branches: rea
                 alignItems: "flex-start",
                 gap: 1.5,
                 p: 1.5,
-                // The house's selectable card (`CHOICE_CARD_SX`, shared with the volunteers' role tiles, §778).
+                // The house's selectable card (`CHOICE_CARD_SX`, shared with the volunteers' role tiles, §NNN).
                 ...CHOICE_CARD_SX,
                 cursor: "pointer",
                 "& input": { ...CHOICE_INPUT_SX, mt: 1.25, ml: "auto" },
