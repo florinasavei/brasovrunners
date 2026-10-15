@@ -8,12 +8,12 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { auditMigration } from "../../../scripts/migration-check.mjs";
 
 /**
- * Migration `0161_outbox_road_and_failures` (§NNN, amending §149, §676, §772 and §622), proven on real PostgreSQL (PGlite): every
+ * Migration `0162_outbox_road_and_failures` (§NNN, amending §149, §676, §772 and §622), proven on real PostgreSQL (PGlite): every
  * outbox row the release before wrote keeps its meaning — no road, no failures, its words never marked deleted — the three new message
  * types can be written, a visitor's message carries its road and its per-road failures, and the file only expands.
  */
 const MIGRATIONS = "src/db/migrations";
-const TAG = "0161_outbox_road_and_failures";
+const TAG = "0162_outbox_road_and_failures";
 
 type Journal = { entries: Array<{ idx: number; tag: string; when: number }> };
 
@@ -30,7 +30,7 @@ beforeAll(async () => {
   // Sorts after every migration before it (drizzle applies by `when`), and numbered right after the one it follows.
   expect(journal.entries[position].when).toBeGreaterThan(journal.entries[position - 1].when);
   expect(journal.entries[position].idx).toBe(journal.entries[position - 1].idx + 1);
-  expect(journal.entries[position - 1].tag).toBe("0160_volunteer_role_categories");
+  expect(journal.entries[position - 1].tag).toBe("0161_registration_notes");
 
   folder = mkdtempSync(path.join(tmpdir(), "outbox-road-"));
   cpSync(MIGRATIONS, folder, { recursive: true });
@@ -52,7 +52,7 @@ afterAll(async () => {
   if (folder) rmSync(folder, { recursive: true, force: true });
 });
 
-describe("migration 0161: the outbox row gains its road, its failures and a body that can be deleted", () => {
+describe("migration 0162: the outbox row gains its road, its failures and a body that can be deleted", () => {
   it("leaves a row from before as it was: no road, no failures, words never deleted", async () => {
     const { rows } = await client.query<{ road: string | null; road_failures: unknown; body_deleted_at: string | null; message_type: string; transport: string }>(
       `SELECT road, road_failures, body_deleted_at, message_type, transport FROM email_outbox WHERE id = '${OLD_ROW}'`,

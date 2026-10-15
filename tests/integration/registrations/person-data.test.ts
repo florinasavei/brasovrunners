@@ -240,7 +240,7 @@ describe("BR-REQ-070-01 everything held about a person", () => {
     expect(data.registrations).toHaveLength(1);
     const [entry] = await db.select().from(auditLogs).where(eq(auditLogs.action, "participant.data_exported"));
     expect([entry.actorStaffUserId, entry.entityType, entry.entityId]).toEqual([admin.id, "participant", participantId]);
-    expect(entry.metadataJson).toEqual({ registrations: 1, declarationAcceptances: 0, messages: 1, announcementRequests: 1, volunteerOffers: 1, groupRunDeclarations: 0, auditRows: 0 });
+    expect(entry.metadataJson).toEqual({ registrations: 1, declarationAcceptances: 0, messages: 1, announcementRequests: 1, volunteerOffers: 1, groupRunDeclarations: 0, notes: 0, auditRows: 0 });
     expect(JSON.stringify(entry.metadataJson)).not.toMatch(/astm|gmail|Ana/);
   });
 

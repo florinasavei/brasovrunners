@@ -1,5 +1,5 @@
 {
-  "id": "44282af1-adf5-42f4-b507-c48a115fbfe1",
+  "id": "fc31fe9a-5138-474a-b4f2-7e98ecc83a54",
   "prevId": "6fb4d3d2-4391-4b8c-9b94-e414c22f12f4",
   "version": "7",
   "dialect": "postgresql",
@@ -855,25 +855,6 @@
         "retried_via": {
           "name": "retried_via",
           "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "road": {
-          "name": "road",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "road_failures": {
-          "name": "road_failures",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'{}'::jsonb"
-        },
-        "body_deleted_at": {
-          "name": "body_deleted_at",
-          "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": false
         }
@@ -6731,6 +6712,118 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
+    "public.registration_notes": {
+      "name": "registration_notes",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "registration_id": {
+          "name": "registration_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "author_staff_user_id": {
+          "name": "author_staff_user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "body": {
+          "name": "body",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "registration_notes_registration_idx": {
+          "name": "registration_notes_registration_idx",
+          "columns": [
+            {
+              "expression": "registration_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "registration_notes_registration_id_registrations_id_fk": {
+          "name": "registration_notes_registration_id_registrations_id_fk",
+          "tableFrom": "registration_notes",
+          "tableTo": "registrations",
+          "columnsFrom": [
+            "registration_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "registration_notes_author_staff_user_id_staff_users_id_fk": {
+          "name": "registration_notes_author_staff_user_id_staff_users_id_fk",
+          "tableFrom": "registration_notes",
+          "tableTo": "staff_users",
+          "columnsFrom": [
+            "author_staff_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "registration_notes_body_length": {
+          "name": "registration_notes_body_length",
+          "value": "char_length(\"registration_notes\".\"body\") <= 2000"
+        }
+      },
+      "isRLSEnabled": false
+    },
     "public.registrations": {
       "name": "registrations",
       "schema": "",
@@ -9207,10 +9300,7 @@
         "VOLUNTEER_AGREEMENT_REQUEST",
         "VOLUNTEER_AGREEMENT_ACCEPTED",
         "VOLUNTEER_ROLE_ASSIGNED",
-        "VOLUNTEER_GUARDIAN_REQUEST",
-        "CONTACT_MESSAGE",
-        "FEEDBACK_MESSAGE",
-        "RELAY_NOTICE"
+        "VOLUNTEER_GUARDIAN_REQUEST"
       ]
     },
     "public.email_outbox_status": {
