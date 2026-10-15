@@ -241,7 +241,7 @@ test.describe("§754 volunteers for a race", () => {
       // §NNN: the club has not ticked «Arată public câți voluntari mai sunt necesari», so the page says only that a role still takes people — no number.
       await expect(choices).toContainText("mai sunt locuri");
       await expect(choices).not.toContainText("mai sunt necesare");
-      await expect(choices.getByTestId("volunteer-role-option").first().locator("p")).not.toContainText(/\d+ persoane/);
+      await expect(choices.getByTestId("volunteer-role-option").first()).not.toContainText(/\d+ persoane/);
       const waterBox = choices.getByRole("checkbox", { name: "Punct de apă" });
       const finishBox = choices.getByRole("checkbox", { name: "Sosire" });
       await expect(waterBox).toBeVisible();
