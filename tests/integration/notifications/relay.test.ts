@@ -5,6 +5,7 @@ import { emailOutbox } from "@/db/schema/email-outbox";
 import { staffUsers } from "@/db/schema/staff-users";
 import type { SendResult } from "@/infrastructure/email/adapter";
 import { DELETED_RELAY_PAYLOAD, RELAY_GIVE_UP_MS } from "@/modules/notifications/domain/relay";
+import { pruneExpiredRows } from "@/modules/jobs/retention";
 import { processOutboxBatch } from "@/modules/notifications/outbox";
 import { retryFailedEmails } from "@/modules/notifications/retry-failed";
 import { checkEmailHealth } from "@/modules/notifications/health";
@@ -416,6 +417,21 @@ describe("§NNN the relay: a visitor's message through the outbox", () => {
       const rows = await relayRows(db);
       expect(rows).toHaveLength(1);
       expect(rows[0].status).toBe("FAILED");
+    });
+  });
+
+  describe("the retention net", () => {
+    it("deletes the words of a message still holding them after three days — the net under a worker that never ran — and leaves younger ones and delivered ones alone", async () => {
+      const stale = await queue({ idempotencyKey: "relay:stale", now: T0 });
+      const young = await queue({ idempotencyKey: "relay:young", now: new Date(T0.getTime() + 2 * 24 * 3_600_000) });
+      const later = new Date(T0.getTime() + 3 * 24 * 3_600_000 + 60_000);
+      await pruneExpiredRows(db, later);
+      const swept = await relayRow(db, stale.id);
+      expect(swept).toMatchObject({ status: "FAILED", nextAttemptAt: null, payloadJson: { deleted: true } });
+      expect(swept.bodyDeletedAt).not.toBeNull();
+      expect(swept.lastError).toContain("retention sweep");
+      // Two days old: the relay still has the rest of its day.
+      expect(await relayRow(db, young.id)).toMatchObject({ status: "PENDING", bodyDeletedAt: null });
     });
   });
 

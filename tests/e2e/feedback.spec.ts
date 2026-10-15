@@ -194,7 +194,7 @@ async function checkRoadRadios(page: Page): Promise<void> {
   await expect(form.getByTestId("feedback-via-safety-note")).toContainText("Gmail");
   await expect(form.getByTestId("feedback-via-safety-note")).toHaveCount(1);
   // The footer says the road is chosen per form.
-  await expect(panel).toContainText("Calea de trimitere se alege pentru fiecare formular în parte");
+  await expect(panel).toContainText("Calea se alege pentru fiecare formular în parte");
   await expect(panel).not.toContainText("Girl Zone doar prin Mailgun");
 }
 
@@ -653,6 +653,8 @@ test.describe("BR-REQ-070-04 «Spune-ne ceva», the anonymous wizard (§676)", (
       await page.goto("/ro/admin/settings/emails");
       const relay = page.getByTestId("relay-messages");
       await expect(relay).toBeVisible();
+      // Folded while nothing needs a person (§336): open it the way a person does.
+      if (!(await relay.evaluate((element) => (element as HTMLDetailsElement).open))) await relay.locator("summary").first().click();
       const sentRow = relay.getByTestId("relay-row").filter({ hasText: "Spune-ne ceva" }).first();
       await expect(sentRow).toHaveAttribute("data-status", "SENT");
       await expect(sentRow.getByTestId("relay-body-deleted")).toBeVisible();

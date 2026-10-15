@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { FOLD_LINE } from "../../src/shared/ui/footer-target";
-import { HUMAN_PAUSE_MS } from "./support/featured-event";
+import { HUMAN_PAUSE_MS, signIn } from "./support/featured-event";
 
 /**
  * BR-REQ-070-04 (`DECISIONS.md` §149) — "Scrie-ne", through the browser, at 320px and on a
@@ -110,6 +110,8 @@ test.describe("BR-REQ-070-04 the contact form", () => {
   });
 
   test("sends a message and says so, naming where the answer goes", async ({ page }) => {
+    // The message is followed into the mail sink and onto the staff page (§NNN): more than the default half minute.
+    test.setTimeout(120_000);
     await page.goto("/ro/contact");
     const email = `e2e-contact-${test.info().project.name}-${Date.now().toString(36)}@test.invalid`;
     await page.locator('[name="name"]').fill("Ana Popescu");
@@ -138,7 +140,8 @@ test.describe("BR-REQ-070-04 the contact form", () => {
     await expect(page.getByText("Mesajul a plecat.")).toBeVisible();
     await expect(page.getByTestId("toast-live")).toHaveCount(0);
 
-    // §NNN: the message went through the outbox — the mail sink holds what the club's mailbox would have received...
+    // §NNN: the message went through the outbox — the mail sink holds what the club's mailbox would have received (a staff page)...
+    await signIn(page, "Dev Superadministrator");
     await expect(async () => {
       await page.goto("/ro/devs?panel=email");
       await expect(page.locator("main")).toContainText("Mesaj de pe site: Ana Popescu", { timeout: 2_000 });
@@ -147,6 +150,8 @@ test.describe("BR-REQ-070-04 the contact form", () => {
     await page.goto("/ro/admin/settings/emails");
     const relay = page.getByTestId("relay-messages");
     await expect(relay).toBeVisible();
+    // Folded while nothing needs a person (§336): open it the way a person does.
+    if (!(await relay.evaluate((element) => (element as HTMLDetailsElement).open))) await relay.locator("summary").first().click();
     const row = relay.getByTestId("relay-row").filter({ hasText: "Scrie-ne" }).first();
     await expect(row).toHaveAttribute("data-status", "SENT");
     await expect(row.getByTestId("relay-body-deleted")).toBeVisible();

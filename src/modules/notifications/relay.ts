@@ -392,7 +392,7 @@ async function giveUp(db: Db, row: OutboxRow, payload: RelayPayload, failures: R
 /** A message left by the other road: the operations-log line, the audit row, and the day’s notice that the chosen road is down. */
 async function noteFailover(db: Db, row: OutboxRow, payload: RelayPayload, chosen: Road, via: Road, failures: RoadFailures, at: Date, passingNotices: boolean): Promise<string[]> {
   const count = failures[chosen]?.count ?? 0;
-  console.warn(`[email-relay] ${row.messageType} left by ${via}: ${chosen} failed it ${count} time(s)`);
+  console.warn(`[email-relay] ${row.messageType} left by ${via}: ${chosen} ${count > 0 ? `failed it ${count} time(s)` : "was not available"}`);
   await recordAuditEvent(db, { actorStaffUserId: null, action: "email_road.failed_over", entityType: "email_outbox", entityId: row.id, metadata: { type: row.messageType, chosen, via, failures: count }, now: at });
   if (payload.notice || passingNotices) return [];
   const error = failures[chosen]?.lastError;
