@@ -11,7 +11,7 @@ import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import type { Locale } from "@/i18n/routing";
 import { FEEDBACK_BRANCH_GLYPH } from "@/modules/feedback/ui/branch-glyph";
 import { getPathname } from "@/i18n/navigation";
-import { branchesSwitchedOn, FEEDBACK_BRANCHES, sendsToItself, FEEDBACK_VIAS, type FeedbackBranch, type FeedbackRoads, type FeedbackVia } from "@/modules/feedback/domain/branches";
+import { branchesSwitchedOn, FEEDBACK_BRANCHES, sendsToItself, type FeedbackBranch, type FeedbackRoads, type FeedbackVia } from "@/modules/feedback/domain/branches";
 import { SAFETY_NAME_MAX, type FeedbackSettingsState } from "@/modules/feedback/settings";
 import { confirmWords } from "@/shared/feedback/confirm-words";
 import ActionForm from "@/shared/forms/ActionForm";
@@ -21,7 +21,7 @@ import CheckboxField from "@/shared/ui/CheckboxField";
 import type { FoldOpenWhen } from "@/shared/ui/fold";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import Panel from "@/shared/ui/Panel";
-import RadioField from "@/shared/ui/RadioField";
+import RoadChoice, { roadWords } from "./RoadChoice";
 import { INLINE_TAP_TARGET } from "@/shared/ui/tap-target";
 
 type Props = {
@@ -50,14 +50,15 @@ const STEPS_ROW: Readonly<Record<FeedbackVia, string>> = { gmail: "task-contactF
  * shape (§164): a Server Component, one form, a Save behind the §384 confirmation; read by everybody
  * who reads the club's content, written by the Administrator. The summary counts what is on.
  *
- * Beside each form's recipient, «Prin ce trimitem» (§772): two native radios (`RadioField`) — the club's
- * Gmail or Mailgun — whose default is what §676 fixed in code. A road this deployment lacks is greyed
+ * Beside each form's recipient, «Prin ce trimitem» (§772, `RoadChoice`): two native radios — the club's
+ * Gmail or Mailgun, Mailgun «recomandat» (§782, one line of why under the four pairs) — whose default, for a form with no saved road, is Mailgun where it transmits (`defaultViaFor`). A road this deployment lacks is greyed
  * with a sentence and a link to the steps in «Sarcini»; it stays checked when it is what was saved, so
  * the card shows what the form does, and a save leaves it as it was (`keepUnpostedVia`).
  */
 export default async function FeedbackFormsPanel({ locale, state, noticeDescribes, mayEdit, roads, safetyGmailDescribed, gmailAccount = null, openWhen }: Props) {
   const t = await getTranslations("Admin");
   const words = await confirmWords();
+  const roadWordsOfCard = roadWords((key) => t(key as never));
   const on = branchesSwitchedOn(state).length;
   const label = (branch: FeedbackBranch) => t(`emails.feedbackForms.branches.${branch}`);
   const tasksPath = getPathname({ locale, href: "/admin/tasks" });
@@ -172,37 +173,17 @@ export default async function FeedbackFormsPanel({ locale, state, noticeDescribe
                           />
                         )}
                       </Stack>
-                      {/* «Prin ce trimitem» (§772): a radio pair, never a toggle; the default is the form's own (§676). */}
-                      <Box component="fieldset" sx={{ border: 0, m: 0, mt: 1.5, p: 0, minWidth: 0 }} data-testid={`feedback-via-${branch}`}>
-                        <Typography component="legend" variant="body2" sx={{ fontWeight: 600, p: 0 }} data-via-legend="">
-                          {t("emails.feedbackForms.via.legend")}
-                        </Typography>
-                        {FEEDBACK_VIAS.map((via) => (
-                          <Box key={via} data-testid={`feedback-via-${branch}-${via}`}>
-                            <RadioField name={`${branch}Via`} value={via} defaultChecked={state[branch].via === via} disabled={blocked(branch, via) !== null}>
-                              {t(`emails.feedbackForms.via.${via}`)}
-                            </RadioField>
-                            <Typography variant="caption" color="text.secondary" sx={{ display: "block", ml: 6, mt: -0.5 }}>
-                              {t(`emails.feedbackForms.via.${via}Hint`)}
-                            </Typography>
-                            {blocked(branch, via) === "missing" && (
-                              <Typography variant="caption" color="text.secondary" sx={{ display: "block", ml: 6 }} data-testid={`feedback-via-${branch}-${via}-missing`}>
-                                {t(`emails.feedbackForms.via.${via}Missing`)}{" "}
-                                <MuiLink href={`${tasksPath}#${STEPS_ROW[via]}`} sx={INLINE_TAP_TARGET}>
-                                  {t("emails.feedbackForms.via.steps")}
-                                </MuiLink>
-                              </Typography>
-                            )}
-                            {blocked(branch, via) === "notice" && (
-                              <Typography variant="caption" color="text.secondary" sx={{ display: "block", ml: 6 }} data-testid="feedback-via-safety-gmail-notice">
-                                {t("emails.feedbackForms.via.gmailNotice")}{" "}
-                                <MuiLink href={legalPath} sx={INLINE_TAP_TARGET}>
-                                  {t("emails.feedbackForms.via.noticeSteps")}
-                                </MuiLink>
-                              </Typography>
-                            )}
-                          </Box>
-                        ))}
+                      {/* «Prin ce trimitem» (§772, §782): the radio pair both cards share (`RoadChoice`), never a toggle; the default is the form's own. */}
+                      <RoadChoice
+                        name={`${branch}Via`}
+                        testId={`feedback-via-${branch}`}
+                        current={state[branch].via}
+                        words={roadWordsOfCard}
+                        blocked={{ gmail: blocked(branch, "gmail"), mailgun: blocked(branch, "mailgun") }}
+                        tasksPath={tasksPath}
+                        legalPath={legalPath}
+                        gmailCopyCaption={branch !== "safety"}
+                      >
                         {branch === "safety" && (
                           <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5 }} data-testid="feedback-via-safety-note">
                             {t("emails.feedbackForms.via.safetyNote")}
@@ -242,11 +223,15 @@ export default async function FeedbackFormsPanel({ locale, state, noticeDescribe
                             )}
                           </Box>
                         )}
-                      </Box>
+                      </RoadChoice>
                     </Box>
                   </Fragment>
                 );
               })}
+              {/* Why Mailgun is the recommended road, once for the card (§782), under the four pairs. */}
+              <Typography variant="body2" color="text.secondary" data-testid="feedback-via-why">
+                {t("emails.feedbackForms.via.why")}
+              </Typography>
               <Box>
                 <GlyphSubmitButton label={t("emails.feedbackForms.save")} pendingLabel={t("emails.feedbackForms.saving")} icon="save" />
               </Box>

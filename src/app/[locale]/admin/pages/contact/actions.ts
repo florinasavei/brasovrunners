@@ -43,7 +43,15 @@ export async function updateContactRecipientsAction(_previous: FormOutcome | nul
 
   try {
     const actor = await requireStaffCapability(canManageClubSettings);
-    await updateContactRecipients(getDb(), actor, { to: list("to"), cc: list("cc"), bcc: list("bcc"), holdBackSuspected: form.get("holdBackSuspected") === "on" }, new Date());
+    // `via` is absent when its radio was greyed (a disabled radio is never posted): the road already saved stays (§782).
+    const via = form.get("via");
+    await updateContactRecipients(
+      getDb(),
+      actor,
+      { to: list("to"), cc: list("cc"), bcc: list("bcc"), holdBackSuspected: form.get("holdBackSuspected") === "on", via: typeof via === "string" ? via : undefined },
+      new Date(),
+      feedbackRoads(),
+    );
   } catch (error) {
     // Which entry is not an address, or which list is too long, in the sentence (§457).
     const outcome = refused(error, form);

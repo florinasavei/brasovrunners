@@ -221,6 +221,8 @@ export const FIELD_LABELS = [
   "badges.design.size",
   "badges.design.customWidthMm",
   "badges.design.customHeightMm",
+  "badges.design.mode",
+  "badges.design.singleColour",
   "badges.design.bandColour",
   "badges.design.headerImageSrc",
   "badges.design.headerImageCrop",

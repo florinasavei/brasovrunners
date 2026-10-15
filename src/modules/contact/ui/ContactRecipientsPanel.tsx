@@ -16,6 +16,9 @@ import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import CheckboxField from "@/shared/ui/CheckboxField";
 import { countForm } from "@/i18n/count-form";
+import { getPathname } from "@/i18n/navigation";
+import type { FeedbackRoads, FeedbackVia } from "@/modules/feedback/domain/branches";
+import RoadChoice, { roadWords } from "@/modules/feedback/ui/RoadChoice";
 
 type Props = {
   locale: Locale;
@@ -29,6 +32,10 @@ type Props = {
   mayEdit: boolean;
   /** Messages the tick held back in the last 30 days (§744 (amends §310)): a count, never a message. */
   heldBack: number;
+  /** The road «Scrie-ne» leaves by now: the saved choice, else the default (`contactViaFor`, §782). */
+  via: FeedbackVia;
+  /** Which roads this deployment has (`feedbackRoads`): one it lacks is greyed, with the steps that give it. */
+  roads: FeedbackRoads;
   /** Why the fold opens by itself, as the page knows it: this panel's save just landed (§336). */
   openWhen?: FoldOpenWhen;
 };
@@ -43,9 +50,11 @@ type Props = {
  * a Gmail app password belongs in the environment, not in a table the backoffice can read
  * (AGENTS.md §14.5) — so the panel names the two variables and shows neither's value.
  */
-export default async function ContactRecipientsPanel({ locale, recipients, resolved, mayEdit, heldBack, openWhen }: Props) {
+export default async function ContactRecipientsPanel({ locale, recipients, resolved, mayEdit, heldBack, via, roads, openWhen }: Props) {
   const t = await getTranslations("Admin");
   const words = await confirmWords();
+  const tasksPath = getPathname({ locale, href: "/admin/tasks" });
+  const legalPath = getPathname({ locale, href: "/admin/legal" });
 
   /*
     Closed by default (§336; the owner, 2026-09-23: "'Cine primește mesajele de contact' should
@@ -109,6 +118,10 @@ export default async function ContactRecipientsPanel({ locale, recipients, resol
           <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }} data-testid="contact-hold-back-state">
             {t(recipients.holdBackSuspected ? "emails.contacts.holdBackOn" : "emails.contacts.holdBackOff")}
           </Typography>
+          {/* The road «Scrie-ne» leaves by, as the four forms' card says it (§782). */}
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }} data-testid="contact-via-state">
+            {t("emails.feedbackForms.via.legend")}: {t(`emails.feedbackForms.via.state${via === "gmail" ? "Gmail" : "Mailgun"}`)}
+          </Typography>
           {heldBackCount}
         </>
       ) : (
@@ -116,7 +129,7 @@ export default async function ContactRecipientsPanel({ locale, recipients, resol
       {/* A refused list comes back as typed, so one mistyped address is corrected, not retyped (§315). */}
       <ActionForm
         action={updateContactRecipientsAction}
-        messages={await refusalMessages({ to: t("emails.contacts.to"), cc: t("emails.contacts.cc"), bcc: t("emails.contacts.bcc") })}
+        messages={await refusalMessages({ to: t("emails.contacts.to"), cc: t("emails.contacts.cc"), bcc: t("emails.contacts.bcc"), via: t("emails.feedbackForms.via.legend") })}
         // Three forms share /admin/emails; each summary and box id carries its own prefix (`fieldId`).
         confirm={{ title: t("confirm.contactRecipientsTitle"), body: t("confirm.contactRecipientsBody"), confirmLabel: t("emails.contacts.save"), cancelLabel: words.cancel }}
         scope="contacts"
@@ -161,6 +174,20 @@ export default async function ContactRecipientsPanel({ locale, recipients, resol
           />
           <Typography variant="caption" color="text.secondary">
             {t("emails.contacts.repeats")}
+          </Typography>
+          {/* «Prin ce trimitem» (§772, §782): the pair the four forms' card draws (`RoadChoice`), Mailgun recommended; the default of a form with no saved road. */}
+          <RoadChoice
+            name="via"
+            testId="contact-via"
+            current={via}
+            words={roadWords((key) => t(key as never))}
+            blocked={{ gmail: roads.gmail ? null : "missing", mailgun: roads.mailgun ? null : "missing" }}
+            tasksPath={tasksPath}
+            legalPath={legalPath}
+            gmailCopyCaption
+          />
+          <Typography variant="caption" color="text.secondary" data-testid="contact-via-why">
+            {t("emails.feedbackForms.via.why")}
           </Typography>
           {/* §744 (amends §310): off by default; ticked, a «[posibil spam]» message is counted and not emailed. */}
           <CheckboxField name="holdBackSuspected" defaultChecked={recipients.holdBackSuspected} help={t("emails.contacts.holdBackHelp")}>

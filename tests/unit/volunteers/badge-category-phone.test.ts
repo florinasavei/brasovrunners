@@ -10,7 +10,8 @@ import { renderBadgeSheet } from "@/modules/volunteers/badges/badges-pdf";
  * and its layout gives the writing area the room.
  */
 const DEFAULTS = { label: "VOLUNTAR", name: "Nume:", phoneLabel: "Coordonator" };
-const ticked: BadgeDesign = { ...DEFAULT_BADGE_DESIGN, showPhone: true };
+// The badge per role (§764): the category's telephone is a thing of the roles; the one badge for everyone (§783, the default) has none, see `badge-single.test.ts`.
+const ticked: BadgeDesign = { ...DEFAULT_BADGE_DESIGN, mode: "perRole", showPhone: true };
 const WORDS = badgeWords(ticked, "ro", "Brașov Trail Race", DEFAULTS);
 
 const ENTRIES = [

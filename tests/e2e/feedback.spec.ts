@@ -141,8 +141,8 @@ type Branch = "howItWent" | "suggestion" | "complaint" | "safety";
 type Branches = Partial<Record<Branch, boolean>>;
 type Roads = Partial<Record<Branch, "gmail" | "mailgun">>;
 
-/** What §676 fixed in code and the card's radios open on: the seed's and the finally block's roads. */
-const DEFAULT_ROADS: Required<Roads> = { howItWent: "gmail", suggestion: "gmail", complaint: "gmail", safety: "mailgun" };
+/** What the card's radios open on where Mailgun transmits (§782, amending §676): Mailgun for each of the four, the seed's and the finally block's roads. */
+const DEFAULT_ROADS: Required<Roads> = { howItWent: "mailgun", suggestion: "mailgun", complaint: "mailgun", safety: "mailgun" };
 
 /** The four switches as the Administrator sets them on «Pagini» → «Contact» → «Spune-ne ceva», and, where `roads` says, «Prin ce trimitem». */
 async function setBranches(page: Page, on: Branches, roads: Roads = {}): Promise<void> {
@@ -185,7 +185,10 @@ async function checkRoadRadios(page: Page): Promise<void> {
     const radios = group.getByRole("radio");
     await expect(radios).toHaveCount(2);
     await expect(group.getByRole("radio", { name: "Gmail-ul clubului („Scrie-ne”)" })).toBeEnabled();
-    await expect(group.getByRole("radio", { name: "Mailgun" })).toBeEnabled();
+    // Mailgun is the recommended road (§782): said on the choice itself, in words.
+    await expect(group.getByRole("radio", { name: "Mailgun (recomandat)" })).toBeEnabled();
+    // The caption of a form left on Gmail: none while the form is on Mailgun, the default where it transmits.
+    await expect(group.getByTestId(`feedback-via-${branch}-gmail-copy`)).toHaveCount(0);
     await expect(group.locator('input[type="radio"]:checked')).toHaveValue(DEFAULT_ROADS[branch]);
     for (let index = 0; index < 2; index += 1) expect((await radios.nth(index).locator("xpath=ancestor::label").boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
     await expect(group.getByTestId(`feedback-via-${branch}-gmail-missing`)).toHaveCount(0);
@@ -196,6 +199,20 @@ async function checkRoadRadios(page: Page): Promise<void> {
   // The footer says the road is chosen per form.
   await expect(panel).toContainText("Calea se alege pentru fiecare formular în parte");
   await expect(panel).not.toContainText("Girl Zone doar prin Mailgun");
+  // Why Mailgun is recommended: one line for the whole card, under the four pairs (§782).
+  await expect(form.getByTestId("feedback-via-why")).toHaveCount(1);
+  await expect(form.getByTestId("feedback-via-why")).toContainText("Mailgun pleacă de pe domeniul clubului, cu adresa persoanei ca Reply-To, fără nicio copie în folderul „Trimise” al clubului; Gmail rămâne drum de rezervă acolo unde e permis.");
+
+  // «Scrie-ne» has the same pair, the same words and the same default, in «Cine primește mesajele de contact» (§782).
+  const contact = page.getByTestId("contact-recipients");
+  if ((await contact.getAttribute("open")) === null) await contact.locator(":scope > summary").press("Enter");
+  const pair = contact.getByTestId("contact-via");
+  await expect(pair).toContainText("Prin ce trimitem");
+  await expect(pair.getByRole("radio")).toHaveCount(2);
+  await expect(pair.getByRole("radio", { name: "Mailgun (recomandat)" })).toBeEnabled();
+  await expect(pair.getByRole("radio", { name: "Gmail-ul clubului („Scrie-ne”)" })).toBeEnabled();
+  await expect(pair.locator('input[type="radio"]:checked')).toHaveValue("mailgun");
+  await expect(contact.getByTestId("contact-via-why")).toContainText("Mailgun pleacă de pe domeniul clubului");
 }
 
 /** How many races and how many group runs the spec publishes for the picker: eight events and «Altceva», over the island's threshold. */

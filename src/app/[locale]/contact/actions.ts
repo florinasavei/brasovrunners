@@ -7,7 +7,9 @@ import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { contactDelivery } from "@/modules/contact/delivery";
 import { CONTACT_ERROR_SUMMARY_ID } from "@/modules/contact/fields";
+import { withContactRoad } from "@/modules/contact/domain/recipients";
 import { readContactRecipients } from "@/modules/contact/recipients";
+import { feedbackRoads } from "@/modules/feedback/roads";
 import { submitContactMessage } from "@/modules/contact/service";
 import { stashDraftValues, stashFormDraft } from "@/modules/registrations/form-draft";
 import { requestNewsletterManageLink, subscribeToNewsletter } from "@/modules/newsletter/service";
@@ -190,7 +192,7 @@ async function sendOrRefuse(form: FormData, locale: Locale, path: string): Promi
   try {
     outcome = await submitContactMessage(
       db,
-      contactDelivery(recipients),
+      withContactRoad(contactDelivery(recipients), recipients, feedbackRoads()),
       {
         name: text(form, "name"),
         email: text(form, "email"),
