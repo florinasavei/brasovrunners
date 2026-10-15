@@ -917,7 +917,7 @@ test.describe("§754 volunteers for a race", () => {
     // The fold is there and empty: «Nicio categorie încă», and the roles' form draws no «Categoria» yet.
     await openEditorBox(page, "Categorii");
     await expect(page.getByTestId("volunteer-categories-empty")).toContainText("Nicio categorie încă");
-    await expect(page.getByTestId("volunteer-role-category")).toHaveCount(0);
+    await expect(page.locator('select[name="categoryId"]')).toHaveCount(0);
 
     async function addCategory(nameRo: string, nameEn: string, expected: number) {
       await openEditorBox(page, "Adaugă o categorie");
@@ -963,7 +963,7 @@ test.describe("§754 volunteers for a race", () => {
       const before = await page.getByTestId("volunteer-role").count();
       await openEditorBox(page, "Adaugă un rol");
       const add = page.getByTestId("volunteer-role-add");
-      if (category !== null) await add.getByTestId("volunteer-role-category").selectOption({ label: category });
+      if (category !== null) await add.locator('select[name="categoryId"]').selectOption({ label: category });
       await add.getByLabel("Numele rolului (Română)").fill(nameRo);
       await add.getByLabel("Numele rolului (English)").fill(nameEn);
       await add.getByLabel("Câți oameni trebuie").fill(needed);
@@ -978,7 +978,7 @@ test.describe("§754 volunteers for a race", () => {
     // The same name twice under one category is refused with its own sentence, and nothing is added.
     await openEditorBox(page, "Adaugă un rol");
     const addAgain = page.getByTestId("volunteer-role-add");
-    await addAgain.getByTestId("volunteer-role-category").selectOption({ label: "Traseu" });
+    await addAgain.locator('select[name="categoryId"]').selectOption({ label: "Traseu" });
     await addAgain.getByLabel("Numele rolului (Română)").fill("direcționare");
     await addAgain.getByLabel("Numele rolului (English)").fill("Marshal");
     await addAgain.getByLabel("Câți oameni trebuie").fill("1");
@@ -991,13 +991,14 @@ test.describe("§754 volunteers for a race", () => {
     // A category with roles under it is not deleted: the sentence says why, and the category stays.
     await openEditorBox(page, "Categorii");
     const routeRow = page.getByTestId("volunteer-category").nth(0);
-    await openFold(routeRow.getByText("Modifică", { exact: true }));
+    await openFold(routeRow.locator("details").filter({ hasText: /^Modifică/ }));
     await routeRow.getByRole("button", { name: "Șterge categoria", exact: true }).click();
     await page.getByRole("dialog").getByRole("button", { name: "Șterge categoria", exact: true }).click();
     await page.waitForURL(/volunteerError=VOLUNTEER_CATEGORY_HAS_ROLES/);
     await hydrated(page);
-    await expect(page.getByText("Categoria nu s-a șters")).toBeVisible();
+    // The card is shut after the redirect: its banner says why, once it is opened.
     await openFold(card);
+    await expect(page.getByText("Categoria nu s-a șters")).toBeVisible();
     await openEditorBox(page, "Categorii");
     await expect(page.getByTestId("volunteer-category")).toHaveCount(2);
 
@@ -1041,7 +1042,8 @@ test.describe("§754 volunteers for a race", () => {
       await under("Traseu").getByRole("checkbox", { name: "Direcționare" }).check();
       await guest.getByLabel("Numele tău").fill("Ana Test");
       await guest.getByLabel("Adresa ta de email").fill(ana);
-      await guest.locator('[name="phone"]').fill("712345678");
+      // Not the contact person's number: the CSV below must hold the volunteer's own and nobody else's.
+      await guest.locator('[name="phone"]').fill("722000111");
       await typeBirth(guest.locator('input[name="birthDate"]'), typedBirth(34));
       await chooseSex(guest, "FEMALE");
       await guest.locator('input[name="city"]').fill("Brașov");
