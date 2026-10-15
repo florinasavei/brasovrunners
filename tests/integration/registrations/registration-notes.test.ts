@@ -96,7 +96,7 @@ async function failureOf(operation: Promise<unknown>) {
 
 const WORDS = "cere tricou S și vine cu un copil de 4 ani";
 
-describe("the table and its cascade (migration 0162)", () => {
+describe("the table and its cascade (migration 0161)", () => {
   it("keeps a note until its registration goes, and then keeps nothing — a deleted one too", async () => {
     const race = await createRace();
     const { id } = await register(race);

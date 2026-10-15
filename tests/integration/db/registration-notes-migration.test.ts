@@ -8,14 +8,14 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { auditMigration } from "../../../scripts/migration-check.mjs";
 
 /**
- * Migration `0162_registration_notes` (§NNN; the owner, 2026-10-15), proven on real PostgreSQL (PGlite): one new
+ * Migration `0161_registration_notes` (§NNN; the owner, 2026-10-15), proven on real PostgreSQL (PGlite): one new
  * table, `registration_notes`, that expands and nothing else — a note's registration (`ON DELETE CASCADE`), its
  * author (`ON DELETE SET NULL`), the words (text, at most 2000 characters), and a nullable `deleted_at`. A
  * registration written before it simply has no notes; the file only expands, and the journal lists it last,
  * later than every migration before it.
  */
 const MIGRATIONS = "src/db/migrations";
-const TAG = "0162_registration_notes";
+const TAG = "0161_registration_notes";
 
 type Journal = { entries: Array<{ idx: number; tag: string; when: number }> };
 
@@ -57,7 +57,7 @@ afterAll(async () => {
   if (folder) rmSync(folder, { recursive: true, force: true });
 });
 
-describe("migration 0162_registration_notes — internal notes on a registration", () => {
+describe("migration 0161_registration_notes — internal notes on a registration", () => {
   it("adds the table with the words required and the soft-delete stamp nullable", async () => {
     const result = await client.query<{ column_name: string; data_type: string; is_nullable: string }>(
       `SELECT column_name, data_type, is_nullable FROM information_schema.columns WHERE table_name = 'registration_notes' ORDER BY column_name`,

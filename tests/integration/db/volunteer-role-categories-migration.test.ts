@@ -41,7 +41,7 @@ beforeAll(async () => {
   expect(journal.entries[position].when).toBeGreaterThan(journal.entries[position - 1].when);
   expect(journal.entries[position].idx).toBe(journal.entries[position - 1].idx + 1);
   expect(journal.entries[position - 1].tag).toBe("0159_volunteers_counts_birth_date");
-  // It was the last entry when it shipped; a later migration may follow it (`0162_registration_notes` does), and the run below
+  // It was the last entry when it shipped; a later migration may follow it (`0161_registration_notes` does), and the run below
   // stops just before this one either way.
 
   folder = mkdtempSync(path.join(tmpdir(), "volunteer-role-categories-"));
