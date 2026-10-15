@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V3.34-2026-10-15
+
+- **The «Șabloanele textelor legale s-au schimbat» email is a daily digest** — one look a day, from 08:00 Romanian time; if it finds changed templates it sends one email naming every text still waiting, with the sentence that one sitting approves them all, and a release later in the day waits for the next morning; six releases in a night no longer mean six emails. Amends §639. §775.
 ## BR-V3.33-2026-10-15
 
 - **Volunteer roles in categories, each with a contact person** — the «Voluntari» card gets a «Categorii» fold (add, rename, reorder, delete while empty, each with an optional «Persoana de contact») and every role a «Categoria»; the volunteers' page groups the roles under their category's heading with the contact on one line; the contact is in the volunteers' emails' footer and, on a badge with no number typed, the coordinator's telephone; the same role name may stand in several categories, told apart as «Direcționare (Traseu)»; the event's JSON file carries the categories and roles (the import says what it leaves out). Migration `0160`. §774.
