@@ -274,6 +274,12 @@ describe("§511 the backoffice says one plain sentence per field, the rest behin
       // How long the place is held, and the per-address limit: said behind the «?», never lost.
       expect(emails.whenMore.COMPLETE_DECLARATION).toContain("{hold}");
       expect(emails.whenMore.REGISTER_ANOTHER_PERSON).toContain("{people}");
+      // §NNN: the digest's hour is the one constant (`LEGAL_TEMPLATES_DIGEST_CLOCK`), filled in by the page, never typed twice.
+      expect(emails.when.LEGAL_TEMPLATES_CHANGED).toContain("{digestHour}");
+      expect(emails.whenMore.LEGAL_TEMPLATES_CHANGED).toContain("{digestHour}");
+      expect(emails.when.LEGAL_TEMPLATES_CHANGED + emails.whenMore.LEGAL_TEMPLATES_CHANGED).not.toMatch(/\d\d:\d\d/);
+      // …to every Administrator and Superadministrator, as the email says (canWriteLegalTexts).
+      expect(emails.when.LEGAL_TEMPLATES_CHANGED).toMatch(/Superadministrator/);
       expect(queue.simulateMore).toContain("{hold}");
       // Only for the messages whose line had more to say, and each one a message that exists.
       expect(Object.keys(emails.whenMore).every((type) => type in emails.when)).toBe(true);

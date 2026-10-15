@@ -1,6 +1,8 @@
 import { createHash } from "node:crypto";
 import { z } from "zod";
 import type { LegalDocumentKey } from "@/db/schema/legal-documents";
+import { CLUB_TIME_ZONE } from "@/i18n/dates";
+import { fromWallTimeInput, toWallTimeInput } from "@/modules/events/domain/zoned-time";
 import { LEGAL_DOCUMENT_KEYS } from "./keys";
 
 /**
@@ -9,12 +11,17 @@ import { LEGAL_DOCUMENT_KEYS } from "./keys";
  * change of the templates, and what it remembers in `platform_settings` so each change is announced
  * once, on each environment separately.
  *
- * - **How often.** At most once an hour (`LEGAL_TEMPLATES_CHECK_MINUTES`), whatever the pinger does:
- *   reading every text's overview is a dozen queries, and the job may run every fifteen minutes
- *   (§479, §549: a job step must be cheap). Between two checks the step reads one row and nothing else
- *   — except on the first real run of a release whose templates differ from the ones the last check
- *   read (`templatesStamp`, the templates' own words, no fact and no query): that run checks at once,
- *   so a release is never kept waiting by an hour an earlier release started.
+ * - **A digest, not a notice per change** (§NNN; the owner, 2026-10-15: «Parcă totuși șabloanele
+ *   textelor se schimbă prea des, că tot primesc email, de ce?» — six releases in one night sent six
+ *   emails). ONE look at the templates per club day (`LEGAL_TEMPLATES_DIGEST_HOUR`, Europe/Bucharest),
+ *   made by the first run at or after 08:00 club time; if it finds a change the last email did not
+ *   carry, it sends ONE email naming every text whose template is newer than the text in force. A
+ *   change that lands after the day's look — at 10:00, at 22:30 — waits for tomorrow's. The mark is
+ *   `checkedAt` in the same row, so it survives a restart and a deploy, and no table or column is new.
+ * - **How often.** Once a day, so the step reads one row and nothing else on every other run: reading
+ *   every text's overview is a dozen queries and the job may run every fifteen minutes (§479, §549: a
+ *   job step must be cheap). The claim is written before the overview is read, so a read that fails
+ *   is tried again tomorrow, not at every ping.
  * - **What is newer.** The keys `/admin/legal` marks «Șablon nou» — `readLegalOverview`'s
  *   `templateNewer`, the one predicate (§539); never a second definition here.
  * - **What is new.** A `key:filledHash` pair the last announcement did not carry. A subset of what
@@ -22,18 +29,22 @@ import { LEGAL_DOCUMENT_KEYS } from "./keys";
  *   not announced again: `/admin/tasks` stays the standing reminder, the email is the knock.
  */
 
-/** The least time between two reads of the overview, per environment (§479). */
-export const LEGAL_TEMPLATES_CHECK_MINUTES = 60;
+/**
+ * The club hour from which the day's digest may go (§NNN): the first run at or after it. Before it a
+ * night's releases wait, so the one email is read in the morning and not at 03:00.
+ */
+export const LEGAL_TEMPLATES_DIGEST_HOUR = 8;
+
+/** The same hour as the email writes it, «08:00» — read from the one constant, never typed twice. */
+export const LEGAL_TEMPLATES_DIGEST_CLOCK = `${String(LEGAL_TEMPLATES_DIGEST_HOUR).padStart(2, "0")}:00`;
 
 const KEY = z.enum(LEGAL_DOCUMENT_KEYS);
 const PAIR = /^[A-Z_]+:[0-9a-f]{64}$/;
 
 export const legalTemplatesNoticeSchema = z
   .object({
-    /** When the job last read the overview — what the hour is counted from. */
+    /** When the job last made the day's look at the overview — the digest's mark: one look per club day. */
     checkedAt: z.iso.datetime(),
-    /** The templates' own words the last check read (`legalTemplatesStamp`), or none yet. */
-    templatesStamp: z.string().regex(/^[0-9a-f]{64}$/).nullable(),
     /** The last announcement's fingerprint (`templatesFingerprint`), or none yet. */
     fingerprint: z.string().regex(/^[0-9a-f]{64}$/).nullable(),
     announcedAt: z.iso.datetime().nullable(),
@@ -41,15 +52,15 @@ export const legalTemplatesNoticeSchema = z
     keys: z.array(KEY),
     /** …and the template each was announced at, `KEY:filledHash`: what a later change is told apart by. */
     pairs: z.array(z.string().regex(PAIR)),
-  })
-  .strict();
+  });
+// Not strict (§NNN): rows written before the digest carry a `templatesStamp` this code no longer uses,
+// and refusing one would read as «never announced» and send the whole list again.
 
 export type LegalTemplatesNotice = z.infer<typeof legalTemplatesNoticeSchema>;
 
 /** Never checked, never announced: what a missing or unreadable row reads as. */
 export const NO_LEGAL_TEMPLATES_NOTICE: LegalTemplatesNotice = {
   checkedAt: new Date(0).toISOString(),
-  templatesStamp: null,
   fingerprint: null,
   announcedAt: null,
   keys: [],
@@ -62,12 +73,31 @@ export function readLegalTemplatesNoticeValue(value: unknown): LegalTemplatesNot
 }
 
 /**
- * Whether this run reads the overview: the first time, once the hour since the last read has passed,
- * and at once when this release's templates are not the ones the last check read.
+ * The instant the club day of `now` opens its digest: 08:00 on the wall clock of `CLUB_TIME_ZONE`
+ * that day — 05:00Z in summer time, 06:00Z in winter — so the hour holds across the two changes of
+ * the clock (the wall clock, never «plus 24 hours»; the changes happen between 03:00 and 04:00, so
+ * 08:00 is never in a gap or an overlap).
  */
-export function legalTemplatesCheckDue(notice: LegalTemplatesNotice, now: Date, templatesStamp: string): boolean {
-  if (notice.templatesStamp !== templatesStamp) return true;
-  return now.getTime() - Date.parse(notice.checkedAt) >= LEGAL_TEMPLATES_CHECK_MINUTES * 60_000;
+export function legalTemplatesDigestOpensAt(now: Date): Date {
+  const today = toWallTimeInput(now, CLUB_TIME_ZONE).slice(0, 10);
+  const opens = fromWallTimeInput(`${today}T${LEGAL_TEMPLATES_DIGEST_CLOCK}`, CLUB_TIME_ZONE);
+  if (!opens) throw new Error(`cannot place ${LEGAL_TEMPLATES_DIGEST_CLOCK} on ${today} in ${CLUB_TIME_ZONE}`);
+  return opens;
+}
+
+/**
+ * Whether it is the digest's turn (§NNN): `now` is at or after today's 08:00 club time, and the day's
+ * look has not been made — ONE look per club day, by the first run at or after 08:00. A change that
+ * lands after that look, at 10:00 or at 22:30, waits for tomorrow's: the day's look found what it
+ * found, and no second email follows it the same day. A run before 08:00 reads nothing, so a night's
+ * releases are all in the one morning email. `checkedAt` is the mark (the claim is written before the
+ * overview is read, §479, so a read that fails is not retried until tomorrow); never looked is due
+ * from the first morning.
+ */
+export function legalTemplatesDigestDue(notice: LegalTemplatesNotice, now: Date): boolean {
+  const opensAt = legalTemplatesDigestOpensAt(now);
+  if (now.getTime() < opensAt.getTime()) return false;
+  return Date.parse(notice.checkedAt) < opensAt.getTime();
 }
 
 export type NewerTemplate = { key: LegalDocumentKey; filledHash: string };

@@ -4,8 +4,9 @@ import { describe, expect, it } from "vitest";
 import { emailMessageType } from "@/db/schema/email-outbox";
 import {
   isUnannouncedChange,
-  LEGAL_TEMPLATES_CHECK_MINUTES,
-  legalTemplatesCheckDue,
+  LEGAL_TEMPLATES_DIGEST_CLOCK,
+  legalTemplatesDigestDue,
+  legalTemplatesDigestOpensAt,
   legalTemplatesIdempotencyKey,
   legalTemplatesNoticeSchema,
   NO_LEGAL_TEMPLATES_NOTICE,
@@ -13,7 +14,6 @@ import {
   templatePairs,
   templatesFingerprint,
 } from "@/modules/legal-documents/domain/templates-notice";
-import { legalTemplatesStamp } from "@/modules/legal-documents/templates-notice";
 import { EMAIL_GROUP_OF } from "@/modules/notifications/domain/email-transport";
 import { isWaitedFor } from "@/modules/notifications/domain/email-delay";
 import { CANNOT_COME_MESSAGES } from "@/modules/notifications/domain/cannot-come";
@@ -29,34 +29,8 @@ import ro from "../../../messages/ro.json";
  * §639 — «Șabloanele textelor legale s-au schimbat», the pure half: when the job looks, what a change
  * is, the email's place among the message types, and the backoffice words it quotes.
  */
-const NOW = new Date("2026-10-02T08:00:00.000Z");
 const HASH_A = "a".repeat(64);
 const HASH_B = "b".repeat(64);
-
-describe("§639 when the maintenance job reads the legal texts' overview", () => {
-  const stamp = legalTemplatesStamp();
-  const checkedAgo = (minutes: number) => ({
-    ...NO_LEGAL_TEMPLATES_NOTICE,
-    checkedAt: new Date(NOW.getTime() - minutes * 60_000).toISOString(),
-    templatesStamp: stamp,
-  });
-
-  it("the first time, then at most once an hour", () => {
-    expect(legalTemplatesCheckDue(readLegalTemplatesNoticeValue(undefined), NOW, stamp)).toBe(true);
-    expect(legalTemplatesCheckDue(checkedAgo(15), NOW, stamp)).toBe(false);
-    expect(legalTemplatesCheckDue(checkedAgo(LEGAL_TEMPLATES_CHECK_MINUTES - 1), NOW, stamp)).toBe(false);
-    expect(legalTemplatesCheckDue(checkedAgo(LEGAL_TEMPLATES_CHECK_MINUTES), NOW, stamp)).toBe(true);
-  });
-
-  it("at once when this release's templates are not the ones the last check read", () => {
-    expect(legalTemplatesCheckDue({ ...checkedAgo(5), templatesStamp: HASH_A }, NOW, stamp)).toBe(true);
-  });
-
-  it("stamps the templates from the code alone, the same every time", () => {
-    expect(stamp).toMatch(/^[0-9a-f]{64}$/);
-    expect(legalTemplatesStamp()).toBe(stamp);
-  });
-});
 
 describe("§639 what counts as a change of the templates", () => {
   const pairs = templatePairs([
@@ -88,11 +62,87 @@ describe("§639 what counts as a change of the templates", () => {
     expect(legalTemplatesIdempotencyKey(HASH_A, "staff-1")).toBe(`legal-templates:${HASH_A}:staff-1`);
   });
 
-  it("keeps a strict row, and reads an unreadable one as never checked", () => {
+  it("reads an unreadable row as never checked, and a row written before the digest as it was", () => {
     expect(legalTemplatesNoticeSchema.safeParse(NO_LEGAL_TEMPLATES_NOTICE).success).toBe(true);
     expect(legalTemplatesNoticeSchema.safeParse({ ...NO_LEGAL_TEMPLATES_NOTICE, keys: ["NOT_A_TEXT"] }).success).toBe(false);
-    expect(legalTemplatesNoticeSchema.safeParse({ ...NO_LEGAL_TEMPLATES_NOTICE, other: 1 }).success).toBe(false);
     expect(readLegalTemplatesNoticeValue({ checkedAt: "yesterday" })).toEqual(NO_LEGAL_TEMPLATES_NOTICE);
+    // §NNN: rows kept by the hourly check carry a `templatesStamp` the digest no longer uses. Refusing one
+    // would read as «never announced» and send the whole list again, so the extra field is dropped, not an error.
+    const old = { ...NO_LEGAL_TEMPLATES_NOTICE, checkedAt: "2026-10-02T08:00:00.000Z", fingerprint: HASH_A, announcedAt: "2026-10-02T08:00:00.000Z", pairs: [`TERMS:${HASH_B}`], keys: ["TERMS"], templatesStamp: HASH_B };
+    expect(readLegalTemplatesNoticeValue(old)).toEqual({ ...old, templatesStamp: undefined });
+    expect(readLegalTemplatesNoticeValue(old).fingerprint).toBe(HASH_A);
+  });
+});
+
+/**
+ * §NNN — the digest's turn: at most one email per club day (Europe/Bucharest), the first run at or
+ * after 08:00 club time. Every instant below is handed to the function as `now`; nothing reads the
+ * real clock, so `yarn test:clock` has nothing to move here.
+ */
+describe("§NNN the digest opens at 08:00 club time, on the wall clock, across both changes of the clock", () => {
+  const at = (iso: string) => new Date(iso);
+
+  it("is 05:00Z in summer time and 06:00Z in winter time", () => {
+    expect(LEGAL_TEMPLATES_DIGEST_CLOCK).toBe("08:00");
+    expect(legalTemplatesDigestOpensAt(at("2026-07-15T12:00:00Z")).toISOString()).toBe("2026-07-15T05:00:00.000Z");
+    expect(legalTemplatesDigestOpensAt(at("2026-12-15T12:00:00Z")).toISOString()).toBe("2026-12-15T06:00:00.000Z");
+  });
+
+  it("moves with the clock on the day of each change: the last Sundays of October and March", () => {
+    // 2026-10-25: summer time ends at 04:00 local (01:00Z); 08:00 that day is winter time, 06:00Z.
+    expect(legalTemplatesDigestOpensAt(at("2026-10-24T12:00:00Z")).toISOString()).toBe("2026-10-24T05:00:00.000Z");
+    expect(legalTemplatesDigestOpensAt(at("2026-10-25T12:00:00Z")).toISOString()).toBe("2026-10-25T06:00:00.000Z");
+    // 2026-03-29: summer time starts at 03:00 local (01:00Z); 08:00 that day is summer time, 05:00Z.
+    expect(legalTemplatesDigestOpensAt(at("2026-03-28T12:00:00Z")).toISOString()).toBe("2026-03-28T06:00:00.000Z");
+    expect(legalTemplatesDigestOpensAt(at("2026-03-29T12:00:00Z")).toISOString()).toBe("2026-03-29T05:00:00.000Z");
+  });
+
+  it("reads the club's day, not the UTC day: 00:30 in Brașov is already the next day, and before its 08:00", () => {
+    // 2026-10-02T21:30Z is 00:30 on 3 October in Brașov.
+    expect(legalTemplatesDigestOpensAt(at("2026-10-02T21:30:00Z")).toISOString()).toBe("2026-10-03T05:00:00.000Z");
+    expect(legalTemplatesDigestDue(NO_LEGAL_TEMPLATES_NOTICE, at("2026-10-02T21:30:00Z"))).toBe(false);
+  });
+
+  it("is due from the first minute of 08:00, never before, in summer time", () => {
+    expect(legalTemplatesDigestDue(NO_LEGAL_TEMPLATES_NOTICE, at("2026-10-24T04:59:59Z"))).toBe(false);
+    expect(legalTemplatesDigestDue(NO_LEGAL_TEMPLATES_NOTICE, at("2026-10-24T05:00:00Z"))).toBe(true);
+  });
+
+  it("is due from the first minute of 08:00 in winter time, so the day the clock goes back opens an hour later in UTC", () => {
+    expect(legalTemplatesDigestDue(NO_LEGAL_TEMPLATES_NOTICE, at("2026-10-25T05:59:59Z"))).toBe(false);
+    expect(legalTemplatesDigestDue(NO_LEGAL_TEMPLATES_NOTICE, at("2026-10-25T06:00:00Z"))).toBe(true);
+  });
+
+  it("opens an hour earlier in UTC the day the clock goes forward", () => {
+    expect(legalTemplatesDigestDue(NO_LEGAL_TEMPLATES_NOTICE, at("2026-03-29T04:59:59Z"))).toBe(false);
+    expect(legalTemplatesDigestDue(NO_LEGAL_TEMPLATES_NOTICE, at("2026-03-29T05:00:00Z"))).toBe(true);
+  });
+
+  it("is not due again the same club day once the day's look has been made, and is the next morning", () => {
+    const looked = { ...NO_LEGAL_TEMPLATES_NOTICE, checkedAt: "2026-10-24T05:03:00.000Z" };
+    expect(legalTemplatesDigestDue(looked, at("2026-10-24T05:03:00Z"))).toBe(false);
+    expect(legalTemplatesDigestDue(looked, at("2026-10-24T20:00:00Z"))).toBe(false);
+    // 24 hours later is 07:03 local the day the clock goes back: still before 08:00, so not due.
+    expect(legalTemplatesDigestDue(looked, at("2026-10-25T05:59:59Z"))).toBe(false);
+    expect(legalTemplatesDigestDue(looked, at("2026-10-25T06:00:00Z"))).toBe(true);
+  });
+
+  it("counts a look made at 08:00 sharp as today's, and one made yesterday as no look for today", () => {
+    expect(legalTemplatesDigestDue({ ...NO_LEGAL_TEMPLATES_NOTICE, checkedAt: "2026-10-24T05:00:00.000Z" }, at("2026-10-24T09:00:00Z"))).toBe(false);
+    expect(legalTemplatesDigestDue({ ...NO_LEGAL_TEMPLATES_NOTICE, checkedAt: "2026-10-23T05:00:00.000Z" }, at("2026-10-24T09:00:00Z"))).toBe(true);
+  });
+
+  it("is one look a day even when the day's look found nothing: a change at 10:00 or 22:30 waits for tomorrow", () => {
+    // 08:00 the 3rd (05:00Z): the look found nothing, and was still the day's look — `announcedAt` stays empty.
+    const looked = { ...NO_LEGAL_TEMPLATES_NOTICE, checkedAt: "2026-10-03T05:00:00.000Z", announcedAt: null };
+    for (const when of ["2026-10-03T07:00:00Z", "2026-10-03T11:00:00Z", "2026-10-03T19:30:00Z", "2026-10-03T20:59:00Z", "2026-10-03T21:30:00Z", "2026-10-04T04:59:00Z"]) {
+      expect(legalTemplatesDigestDue(looked, at(when)), when).toBe(false);
+    }
+    expect(legalTemplatesDigestDue(looked, at("2026-10-04T05:00:00Z"))).toBe(true);
+  });
+
+  it("keeps the mark on the row's existing field, so no column or table is new", () => {
+    expect(Object.keys(NO_LEGAL_TEMPLATES_NOTICE).sort()).toEqual(["announcedAt", "checkedAt", "fingerprint", "keys", "pairs"]);
   });
 });
 

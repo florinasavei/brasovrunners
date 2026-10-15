@@ -5,12 +5,11 @@ import { platformSettings } from "@/db/schema/platform-settings";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import { getPathname } from "@/i18n/navigation";
 import { textToBody } from "@/modules/legal-documents/domain/body-text";
-import { legalTemplatesNoticeSchema, LEGAL_TEMPLATES_CHECK_MINUTES } from "@/modules/legal-documents/domain/templates-notice";
+import { legalTemplatesNoticeSchema } from "@/modules/legal-documents/domain/templates-notice";
 import { approveVersion, createDraftVersion, readLegalOverview, templateTranslations } from "@/modules/legal-documents/service";
 import {
   announceLegalTemplateChanges,
   LEGAL_TEMPLATES_NOTICE_SETTING_KEY,
-  legalTemplatesStamp,
   readLegalTemplatesNotice,
 } from "@/modules/legal-documents/templates-notice";
 import { type ClubFacts, clubFactsFromEnv } from "@/modules/legal-documents/templates/club-facts";
@@ -23,12 +22,14 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
  * §639 — «Șabloanele textelor legale s-au schimbat»: when a release moves a legal template, the
  * maintenance job emails every Administrator and Superadministrator, once per change, and the
  * platform still approves nothing. The trigger is `/admin/legal`'s own «Șablon nou» predicate
- * (`readLegalOverview`'s `templateNewer`); the throttle is one overview read an hour; the memory is
- * one `platform_settings` row.
+ * (`readLegalOverview`'s `templateNewer`); the throttle is one overview read a club day, the first run
+ * after 08:00 (§NNN); the memory is one `platform_settings` row.
  */
 const NOW = new Date("2026-10-02T08:00:00.000Z");
 const minutes = (count: number) => new Date(NOW.getTime() + count * 60_000);
-const HOUR_LATER = minutes(LEGAL_TEMPLATES_CHECK_MINUTES);
+const HOUR_LATER = minutes(60);
+// §NNN: one email per club day, so a second look at the same change is a day on (11:00 club time again).
+const DAY_LATER = minutes(24 * 60);
 
 const FACTS: ClubFacts = clubFactsFromEnv({
   CLUB_LEGAL_NAME: "Asociația Exemplu",
@@ -73,9 +74,9 @@ describe("§639 the Administrators are emailed when a release moves a legal temp
   });
 
   /** The club approves a text of its own words: from then on the template reads as newer than it. */
-  async function approveOwn(key: "TERMS" | "PRIVACY_NOTICE", suffix: string) {
-    const draft = await createDraftVersion(db, admin, { key, translations: ownWords(suffix) }, NOW);
-    await approveVersion(db, admin, draft, NOW);
+  async function approveOwn(key: "TERMS" | "PRIVACY_NOTICE", suffix: string, at: Date = NOW) {
+    const draft = await createDraftVersion(db, admin, { key, translations: ownWords(suffix) }, at);
+    await approveVersion(db, admin, draft, at);
   }
 
   /** The club approves the template's own words, its facts written in: «Șablon nou» goes. */
@@ -113,7 +114,7 @@ describe("§639 the Administrators are emailed when a release moves a legal temp
     expect(byAddress["admin@dev.test"].idempotencyKey).toBe(`legal-templates:${fingerprint}:${admin.id}`);
   });
 
-  it("records the announcement in its platform_settings row, in the strict shape", async () => {
+  it("records the announcement in its platform_settings row, in its shape", async () => {
     await approveOwn("TERMS", "v1");
     await approveOwn("PRIVACY_NOTICE", "v1");
     await announceLegalTemplateChanges(db, facts, NOW);
@@ -122,39 +123,43 @@ describe("§639 the Administrators are emailed when a release moves a legal temp
     const value = legalTemplatesNoticeSchema.parse(row.value);
     expect(value.checkedAt).toBe(NOW.toISOString());
     expect(value.announcedAt).toBe(NOW.toISOString());
-    expect(value.templatesStamp).toBe(legalTemplatesStamp());
     expect(value.fingerprint).toMatch(/^[0-9a-f]{64}$/);
     // In the catalogue's order, and each with the template it was announced at.
     expect(value.keys).toEqual(["PRIVACY_NOTICE", "TERMS"]);
     expect(value.pairs).toHaveLength(2);
     expect(value.pairs.every((pair) => /^(PRIVACY_NOTICE|TERMS):[0-9a-f]{64}$/.test(pair))).toBe(true);
-    // Strict: a field this code does not know is refused, never silently kept.
-    expect(legalTemplatesNoticeSchema.safeParse({ ...value, extra: true }).success).toBe(false);
+    // A field this code does not know is dropped, never kept and never an error (rows kept before the digest carry one).
+    expect(legalTemplatesNoticeSchema.parse({ ...value, extra: true })).toEqual(value);
     // Nobody wrote it: the job did.
     expect(row.updatedByStaffUserId).toBeNull();
   });
 
-  it("reads nothing and queues nothing a second time within the hour", async () => {
+  it("reads nothing and queues nothing a second time the same day", async () => {
     await approveOwn("TERMS", "v1");
     expect((await announceLegalTemplateChanges(db, facts, NOW)).queued).toBe(2);
 
     const loadFacts = vi.fn(facts);
     const again = await announceLegalTemplateChanges(db, loadFacts, minutes(15));
     expect(again).toEqual({ checked: false, queued: 0, keys: [] });
-    // The throttle answers from the row alone: the facts were not even asked for.
+    // The day's look answers from the row alone: the facts were not even asked for.
     expect(loadFacts).not.toHaveBeenCalled();
     expect((await readLegalTemplatesNotice(db)).checkedAt).toBe(NOW.toISOString());
     expect(await notices()).toHaveLength(2);
   });
 
-  it("checks again after the hour, and queues nothing for the same change", async () => {
+  it("checks again the next day, and queues nothing for the same change", async () => {
     await approveOwn("TERMS", "v1");
     await announceLegalTemplateChanges(db, facts, NOW);
 
-    const later = await announceLegalTemplateChanges(db, facts, HOUR_LATER);
+    // The same day, even after the hour, it is not the digest's turn again: the row alone answers.
+    const sameDay = vi.fn(facts);
+    expect(await announceLegalTemplateChanges(db, sameDay, HOUR_LATER)).toEqual({ checked: false, queued: 0, keys: [] });
+    expect(sameDay).not.toHaveBeenCalled();
+
+    const later = await announceLegalTemplateChanges(db, facts, DAY_LATER);
     expect(later).toEqual({ checked: true, queued: 0, keys: ["TERMS"] });
     expect(await notices()).toHaveLength(2);
-    expect((await readLegalTemplatesNotice(db)).checkedAt).toBe(HOUR_LATER.toISOString());
+    expect((await readLegalTemplatesNotice(db)).checkedAt).toBe(DAY_LATER.toISOString());
     // The announcement itself is remembered as it was.
     expect((await readLegalTemplatesNotice(db)).announcedAt).toBe(NOW.toISOString());
   });
@@ -164,7 +169,7 @@ describe("§639 the Administrators are emailed when a release moves a legal temp
     await announceLegalTemplateChanges(db, facts, NOW);
     await approveTemplate("TERMS", FACTS, minutes(30));
 
-    const after = await announceLegalTemplateChanges(db, facts, HOUR_LATER);
+    const after = await announceLegalTemplateChanges(db, facts, DAY_LATER);
     expect(after).toEqual({ checked: true, queued: 0, keys: [] });
     expect(await notices()).toHaveLength(2);
   });
@@ -185,7 +190,7 @@ describe("§639 the Administrators are emailed when a release moves a legal temp
     expect((await announceLegalTemplateChanges(db, facts, NOW)).queued).toBe(2);
     await approveTemplate("PRIVACY_NOTICE", FACTS, minutes(10));
 
-    expect(await announceLegalTemplateChanges(db, facts, HOUR_LATER)).toEqual({ checked: true, queued: 0, keys: ["TERMS"] });
+    expect(await announceLegalTemplateChanges(db, facts, DAY_LATER)).toEqual({ checked: true, queued: 0, keys: ["TERMS"] });
     expect(await notices()).toHaveLength(2);
   });
 
@@ -198,25 +203,30 @@ describe("§639 the Administrators are emailed when a release moves a legal temp
     // The terms' filled template now reads differently (here through the facts written into it, as a
     // release that rewrote a sentence would): «Șablon nou» on the terms too.
     const moved: ClubFacts = { ...FACTS, contactEmail: "nou@example.test", contactEmailEn: "nou@example.test" };
-    const later = await announceLegalTemplateChanges(db, async () => moved, HOUR_LATER);
+    const later = await announceLegalTemplateChanges(db, async () => moved, DAY_LATER);
     expect(later).toEqual({ checked: true, queued: 2, keys: ["PRIVACY_NOTICE", "TERMS"] });
 
     const second = await readLegalTemplatesNotice(db);
     expect(second.fingerprint).not.toBe(first.fingerprint);
-    expect(second.announcedAt).toBe(HOUR_LATER.toISOString());
+    expect(second.announcedAt).toBe(DAY_LATER.toISOString());
     const rows = await notices();
     expect(rows).toHaveLength(4);
     expect(new Set(rows.map((row) => row.idempotencyKey)).size).toBe(4);
   });
 
-  it("checks at once, inside the hour, on the first run of a release whose templates differ", async () => {
+  it("reads a row the hourly check kept before the digest: its stamp is ignored, its announcement still counts", async () => {
     await approveOwn("TERMS", "v1");
-    await db.insert(platformSettings).values({
-      key: LEGAL_TEMPLATES_NOTICE_SETTING_KEY,
-      // The last check, five minutes ago, read another release's templates.
-      value: { checkedAt: minutes(-5).toISOString(), templatesStamp: "0".repeat(64), fingerprint: null, announcedAt: null, keys: [], pairs: [] },
-    });
-    expect(await announceLegalTemplateChanges(db, facts, NOW)).toEqual({ checked: true, queued: 2, keys: ["TERMS"] });
+    await announceLegalTemplateChanges(db, facts, NOW);
+    const [row] = await db.select().from(platformSettings).where(eq(platformSettings.key, LEGAL_TEMPLATES_NOTICE_SETTING_KEY));
+    // As the row looked before §NNN: the same fields and a `templatesStamp`, the last look yesterday.
+    await db
+      .update(platformSettings)
+      .set({ value: { ...(row.value as object), templatesStamp: "0".repeat(64), checkedAt: new Date(NOW.getTime() - 24 * 60 * 60_000).toISOString() } })
+      .where(eq(platformSettings.key, LEGAL_TEMPLATES_NOTICE_SETTING_KEY));
+    // Today's look is due, finds the same change, and says nothing again: no second email.
+    expect(await announceLegalTemplateChanges(db, facts, NOW)).toEqual({ checked: true, queued: 0, keys: ["TERMS"] });
+    expect(await notices()).toHaveLength(2);
+    expect(await readLegalTemplatesNotice(db)).not.toHaveProperty("templatesStamp");
   });
 
   it("sends one email per person per change, whatever happens to the settings row", async () => {
@@ -227,6 +237,163 @@ describe("§639 the Administrators are emailed when a release moves a legal temp
     // The row is gone, so the same change reads as unannounced — and the idempotency key holds.
     expect((await announceLegalTemplateChanges(db, facts, minutes(5))).queued).toBe(0);
     expect(await notices()).toHaveLength(2);
+  });
+
+  /*
+    §NNN — the digest. 2026-10-03 in Brașov is summer time (UTC+3): 00:00Z is 03:00, 05:00Z is 08:00.
+    Every instant is the run's `now`, handed in; nothing here reads the real clock. All of them come
+    after NOW, when the club's own texts were approved, so each template reads as newer.
+  */
+  const NIGHT = new Date("2026-10-03T00:00:00.000Z"); // 03:00 club time
+  const BEFORE_EIGHT = new Date("2026-10-03T04:59:00.000Z"); // 07:59
+  const MORNING = new Date("2026-10-03T05:30:00.000Z"); // 08:30
+  const MID_MORNING = new Date("2026-10-03T06:00:00.000Z"); // 09:00
+  const NEXT_MORNING = new Date("2026-10-04T05:30:00.000Z"); // 08:30 the next day
+
+  it("two changes before the morning, one email per person naming both texts", async () => {
+    // Two releases in a night: the terms' template moves, the runs before 08:00 say nothing, then the notice's moves too.
+    await approveOwn("TERMS", "v1");
+    const early = vi.fn(facts);
+    expect(await announceLegalTemplateChanges(db, early, NIGHT)).toEqual({ checked: false, queued: 0, keys: [] });
+    await approveOwn("PRIVACY_NOTICE", "v1");
+    expect(await announceLegalTemplateChanges(db, early, BEFORE_EIGHT)).toEqual({ checked: false, queued: 0, keys: [] });
+    // Before 08:00 the step reads the row and nothing else: not the overview, not the facts.
+    expect(early).not.toHaveBeenCalled();
+    expect(await notices()).toHaveLength(0);
+
+    expect(await announceLegalTemplateChanges(db, facts, MORNING)).toEqual({ checked: true, queued: 2, keys: ["PRIVACY_NOTICE", "TERMS"] });
+    const rows = await notices();
+    expect(rows).toHaveLength(2);
+    for (const row of rows) expect((row.payloadJson as { keys: string[] }).keys).toEqual(["PRIVACY_NOTICE", "TERMS"]);
+    // The email names both texts, grouped on its one bold line.
+    const mail = await renderOutboxMessage(rows.find((row) => row.locale === "ro")!, db, MORNING);
+    expect(mail.text).toContain("Șablon nou: GDPR · Termeni de concurs");
+  });
+
+  it("sends nothing when nothing changed, that morning or the next", async () => {
+    await approveTemplate("TERMS", FACTS, NOW);
+    expect(await announceLegalTemplateChanges(db, facts, MORNING)).toEqual({ checked: true, queued: 0, keys: [] });
+    expect(await announceLegalTemplateChanges(db, facts, NEXT_MORNING)).toEqual({ checked: true, queued: 0, keys: [] });
+    expect(await notices()).toHaveLength(0);
+    expect((await readLegalTemplatesNotice(db)).announcedAt).toBeNull();
+  });
+
+  it("holds a change that lands after the day's digest for the next day's, which names it with the rest", async () => {
+    await approveOwn("TERMS", "v1");
+    expect((await announceLegalTemplateChanges(db, facts, MORNING)).queued).toBe(2);
+
+    // 09:00: another template moves. Not the digest's turn again today, however often the job runs.
+    await approveOwn("PRIVACY_NOTICE", "v1", MID_MORNING);
+    const sameDay = vi.fn(facts);
+    for (const at of [MID_MORNING, new Date("2026-10-03T15:00:00.000Z"), new Date("2026-10-03T20:59:00.000Z")]) {
+      expect(await announceLegalTemplateChanges(db, sameDay, at)).toEqual({ checked: false, queued: 0, keys: [] });
+    }
+    expect(sameDay).not.toHaveBeenCalled();
+    expect(await notices()).toHaveLength(2);
+
+    // 08:30 the next day: one more email each, naming the new text and the one still waiting.
+    expect(await announceLegalTemplateChanges(db, facts, NEXT_MORNING)).toEqual({ checked: true, queued: 2, keys: ["PRIVACY_NOTICE", "TERMS"] });
+    const rows = await notices();
+    expect(rows).toHaveLength(4);
+    expect(new Set(rows.map((row) => row.idempotencyKey)).size).toBe(4);
+    expect((await readLegalTemplatesNotice(db)).announcedAt).toBe(NEXT_MORNING.toISOString());
+  });
+
+  it("is one look a day: after a morning that found nothing, changes at 10:00 and 14:00 send nothing that day and one email the next morning naming both", async () => {
+    // 08:30: nothing newer than the text in force, so nothing is sent — and that was the day's look.
+    await approveTemplate("TERMS", FACTS, NOW);
+    await approveTemplate("PRIVACY_NOTICE", FACTS, NOW);
+    expect(await announceLegalTemplateChanges(db, facts, MORNING)).toEqual({ checked: true, queued: 0, keys: [] });
+
+    // 10:00 (07:00Z) the terms' template moves, 14:00 (11:00Z) the notice's: a club's own text goes in force over each.
+    await approveOwn("TERMS", "v1", new Date("2026-10-03T07:00:00.000Z"));
+    await approveOwn("PRIVACY_NOTICE", "v1", new Date("2026-10-03T11:00:00.000Z"));
+    const sameDay = vi.fn(facts);
+    // Every fifteen minutes from 10:00 to 22:45 club time (07:00Z–19:45Z): the row alone answers, never a second email.
+    for (let at = Date.parse("2026-10-03T07:00:00.000Z"); at <= Date.parse("2026-10-03T19:45:00.000Z"); at += 15 * 60_000) {
+      expect(await announceLegalTemplateChanges(db, sameDay, new Date(at))).toEqual({ checked: false, queued: 0, keys: [] });
+    }
+    expect(sameDay).not.toHaveBeenCalled();
+    expect(await notices()).toHaveLength(0);
+
+    // 08:30 the next day: ONE email each, naming both.
+    expect(await announceLegalTemplateChanges(db, facts, NEXT_MORNING)).toEqual({ checked: true, queued: 2, keys: ["PRIVACY_NOTICE", "TERMS"] });
+    const rows = await notices();
+    expect(rows).toHaveLength(2);
+    for (const row of rows) expect((row.payloadJson as { keys: string[] }).keys).toEqual(["PRIVACY_NOTICE", "TERMS"]);
+  });
+
+  it("a release at 22:30 is not emailed that night: the hourly night runs at 23:00 and 00:00 say nothing, 08:00 does", async () => {
+    await approveTemplate("TERMS", FACTS, NOW);
+    expect(await announceLegalTemplateChanges(db, facts, MORNING)).toEqual({ checked: true, queued: 0, keys: [] });
+
+    // 22:30 club time is 19:30Z; the night runs are hourly, at :02.
+    await approveOwn("TERMS", "v1", new Date("2026-10-03T19:30:00.000Z"));
+    for (const at of ["2026-10-03T20:02:00.000Z", "2026-10-03T21:02:00.000Z", "2026-10-04T00:02:00.000Z", "2026-10-04T04:02:00.000Z"]) {
+      expect(await announceLegalTemplateChanges(db, facts, new Date(at)), at).toEqual({ checked: false, queued: 0, keys: [] });
+    }
+    expect(await notices()).toHaveLength(0);
+    expect((await announceLegalTemplateChanges(db, facts, NEXT_MORNING)).queued).toBe(2);
+  });
+
+  it("at most one digest per environment per day, however often the job runs", async () => {
+    await approveOwn("TERMS", "v1");
+    let queued = 0;
+    // Every fifteen minutes from 07:00 to 20:00 club time (04:00Z–17:00Z).
+    for (let at = Date.parse("2026-10-03T04:00:00.000Z"); at <= Date.parse("2026-10-03T17:00:00.000Z"); at += 15 * 60_000) {
+      queued += (await announceLegalTemplateChanges(db, facts, new Date(at))).queued;
+    }
+    expect(queued).toBe(2);
+    expect(await notices()).toHaveLength(2);
+  });
+
+  it("keeps «the last digest» in storage: a restart reads the mark back and sends nothing again", async () => {
+    await approveOwn("TERMS", "v1");
+    expect((await announceLegalTemplateChanges(db, facts, MORNING)).queued).toBe(2);
+
+    // What survives a restart is the row, read raw: the mark is `announcedAt`, in the strict shape.
+    const [row] = await db.select().from(platformSettings).where(eq(platformSettings.key, LEGAL_TEMPLATES_NOTICE_SETTING_KEY));
+    expect(legalTemplatesNoticeSchema.parse(row.value).announcedAt).toBe(MORNING.toISOString());
+
+    // A new process: every module loaded afresh, nothing remembered but what the database holds.
+    vi.resetModules();
+    const fresh = await import("@/modules/legal-documents/templates-notice");
+    await approveOwn("PRIVACY_NOTICE", "v1", MID_MORNING);
+    const afterRestart = vi.fn(facts);
+    expect(await fresh.announceLegalTemplateChanges(db, afterRestart, MID_MORNING)).toEqual({ checked: false, queued: 0, keys: [] });
+    expect(afterRestart).not.toHaveBeenCalled();
+    expect((await fresh.readLegalTemplatesNotice(db)).announcedAt).toBe(MORNING.toISOString());
+    // …and the next day it sends, from the same row.
+    expect((await fresh.announceLegalTemplateChanges(db, facts, NEXT_MORNING)).queued).toBe(2);
+    expect(await notices()).toHaveLength(4);
+  });
+
+  it("goes only to Administrators and Superadministrators, each once a day, never an Organizer, a Tehnic, a Redactor or a member", async () => {
+    await approveOwn("TERMS", "v1");
+    await announceLegalTemplateChanges(db, facts, MORNING);
+    await announceLegalTemplateChanges(db, facts, MID_MORNING);
+    expect((await notices()).map((row) => row.recipientEmail).sort()).toEqual(["admin@dev.test", "super@dev.test"]);
+  });
+
+  it("opens at 08:00 club time in winter time too: 06:00Z, not 05:00Z", async () => {
+    await approveOwn("TERMS", "v1");
+    // 2026-11-10 is winter time (UTC+2): 05:30Z is 07:30 — too early — and 06:00Z is 08:00.
+    expect(await announceLegalTemplateChanges(db, facts, new Date("2026-11-10T05:59:00.000Z"))).toEqual({ checked: false, queued: 0, keys: [] });
+    expect((await announceLegalTemplateChanges(db, facts, new Date("2026-11-10T06:00:00.000Z"))).queued).toBe(2);
+  });
+
+  it("says so in both languages: one sitting approves them all, and the email comes at most once a day", async () => {
+    await approveOwn("TERMS", "v1");
+    await announceLegalTemplateChanges(db, facts, MORNING);
+    const rows = await notices();
+    const ro = await renderOutboxMessage(rows.find((row) => row.locale === "ro")!, db, MORNING);
+    expect(ro.text).toContain("Aprobă-le pe toate într-o singură ședință");
+    expect(ro.text).toContain("cel mult o dată pe zi, după ora 08:00 (ora României), cu tot ce așteaptă încă aprobarea");
+    expect(ro.text).not.toContain("o singură dată pentru fiecare schimbare");
+    const en = await renderOutboxMessage(rows.find((row) => row.locale === "en")!, db, MORNING);
+    expect(en.text).toContain("Approve them all in one sitting");
+    expect(en.text).toContain("at most once a day, after 08:00 Romanian time, with everything still waiting for approval");
+    expect(en.text).not.toContain("once for each change");
   });
 
   it("renders in the recipient's language first, names the texts, and links «Versiune nouă» on APP_BASE_URL", async () => {
