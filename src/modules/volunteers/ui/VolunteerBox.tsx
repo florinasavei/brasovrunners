@@ -29,6 +29,8 @@ import BirthDateField from "@/modules/registrations/ui/BirthDateField";
 import { readTypedDate } from "@/shared/forms/pickers/wall-values";
 import {
   earliestVolunteerBirthDate,
+  groupRolesByCategory,
+  groupsNeedHeadings,
   latestVolunteerBirthDate,
   VOLUNTEER_ADULT_AGE,
   VOLUNTEER_CITY_MAX,
@@ -39,7 +41,8 @@ import {
 } from "../domain/volunteer";
 import GuardianFields from "./GuardianFields";
 import RoleDescription from "./RoleDescription";
-import type { PublicVolunteerRole } from "../volunteers";
+import VolunteerContactLine from "./VolunteerContactLine";
+import type { PublicVolunteerCategory, PublicVolunteerRole } from "../volunteers";
 import { VOLUNTEER_BOX_ID, type VolunteerBox as BoxName, type VolunteerOutcome, type VolunteerTyped } from "./volunteer-box";
 
 /**
@@ -80,6 +83,7 @@ export default async function VolunteerBox({
   locale,
   slug,
   roles,
+  categories = [],
   shirts,
   showCounts,
   eventDay,
@@ -95,6 +99,11 @@ export default async function VolunteerBox({
   slug: string;
   /** Only the roles that still need people, in the club's order. */
   roles: readonly PublicVolunteerRole[];
+  /**
+   * The event's categories (§774), in the club's order: the roles are listed under their headings, a category with no open role
+   * is not drawn, and the roles under none follow under «Alte activități» — or are simply listed when the event has no category.
+   */
+  categories?: readonly PublicVolunteerCategory[];
   /** «Oferim tricouri voluntarilor» is on for this event (§765): the form asks «Mărimea tricoului». */
   shirts: boolean;
   /**
@@ -123,6 +132,9 @@ export default async function VolunteerBox({
   const siteKey = turnstileSiteKey();
   const invalid = new Set<BoxName>(refused);
   const roleName = (role: PublicVolunteerRole) => (locale === "en" ? role.nameEn : role.nameRo);
+  // The roles under their categories (§774): only the headings that have a role still needing people; the heading words are the club's.
+  const groups = groupRolesByCategory(categories, roles, { withRoles: true });
+  const headed = groupsNeedHeadings(groups);
   const roleDoc = (role: PublicVolunteerRole) => (locale === "en" ? role.descriptionEnJson : role.descriptionRoJson);
   const roleWords = (role: PublicVolunteerRole) => (locale === "en" ? role.descriptionEn : role.descriptionRo);
   // «mai sunt necesare 10 persoane» only while the club ticked «Arată public câți voluntari mai sunt necesari»; else «mai sunt locuri» (§773).
@@ -239,28 +251,49 @@ export default async function VolunteerBox({
                 </FormHelperText>
               )}
               <Stack sx={{ mt: 0.5 }}>
-                {roles.map((role) => {
-                  const described = roleDoc(role) != null && (roleWords(role) ?? "").trim() !== "";
-                  const descriptionId = `volunteer-role-${role.id}-description`;
-                  return (
-                    <Box key={role.id} data-testid="volunteer-role-option">
-                      <CheckboxField
-                        name="roleIds"
-                        value={role.id}
-                        id={`volunteer-role-${role.id}`}
-                        defaultChecked={ticked.has(role.id)}
-                        help={needs(role)}
-                        describedBy={described ? descriptionId : undefined}
+                {groups.map((group) => (
+                  <Box key={group.category?.id ?? "other"} data-testid="volunteer-category" role={headed ? "group" : undefined} aria-labelledby={headed ? `volunteer-category-${group.category?.id ?? "other"}` : undefined}>
+                    {/*
+                      A level-3 heading per category (§774; the owner, 2026-10-14: «categorii cu sub-categorii»), in the club's order, then
+                      «Alte activități» for the roles under none — drawn only when the event has a category at all — and, when the club set
+                      the category's contact person, the one line «Întrebări? …» under it.
+                    */}
+                    {headed && (
+                      <Typography
+                        component="h3"
+                        variant="subtitle1"
+                        id={`volunteer-category-${group.category?.id ?? "other"}`}
+                        data-testid="volunteer-category-heading"
+                        sx={{ fontWeight: 700, mt: 1.5 }}
                       >
-                        <Box component="span" sx={{ fontWeight: 600 }}>
-                          {roleName(role)}
+                        {group.category ? (locale === "en" ? group.category.nameEn : group.category.nameRo) : t("volunteers.otherCategory")}
+                      </Typography>
+                    )}
+                    {group.category && <VolunteerContactLine contact={group.category.contact} label={t("volunteers.contactLabel")} />}
+                    {group.roles.map((role) => {
+                      const described = roleDoc(role) != null && (roleWords(role) ?? "").trim() !== "";
+                      const descriptionId = `volunteer-role-${role.id}-description`;
+                      return (
+                        <Box key={role.id} data-testid="volunteer-role-option">
+                          <CheckboxField
+                            name="roleIds"
+                            value={role.id}
+                            id={`volunteer-role-${role.id}`}
+                            defaultChecked={ticked.has(role.id)}
+                            help={needs(role)}
+                            describedBy={described ? descriptionId : undefined}
+                          >
+                            <Box component="span" sx={{ fontWeight: 600 }}>
+                              {roleName(role)}
+                            </Box>
+                          </CheckboxField>
+                          {/* «Descrierea rolului» (§765): the editor's document under the tick, folded «Detalii» past about three lines. */}
+                          <RoleDescription doc={roleDoc(role)} words={roleWords(role)} detailsLabel={t("volunteers.details")} bodyId={descriptionId} />
                         </Box>
-                      </CheckboxField>
-                      {/* «Descrierea rolului» (§765): the editor's document under the tick, folded «Detalii» past about three lines. */}
-                      <RoleDescription doc={roleDoc(role)} words={roleWords(role)} detailsLabel={t("volunteers.details")} bodyId={descriptionId} />
-                    </Box>
-                  );
-                })}
+                      );
+                    })}
+                  </Box>
+                ))}
               </Stack>
               {/*
                 The kinder note (§773; the owner, 2026-10-14: «Și pusă o notă mai drăguță»), right under the roles' list: the person may be

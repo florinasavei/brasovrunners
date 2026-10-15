@@ -60,7 +60,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
     design,
     locale: badgeLocale,
     words: badgeWords(design, badgeLocale, event.title, await badgeDefaultWords(badgeLocale)),
-    role: role ? { name: badgeRoleName(role, badgeLocale), colour: role.colour } : null,
+    role: role ? { name: badgeRoleName(role, badgeLocale), colour: role.colour, phone: role.categoryPhone } : null,
     headerPicture: bibPictureForImage(loaded.header),
   });
   image.headers.set("Cache-Control", sample ? "private, no-store" : "private, max-age=3600");

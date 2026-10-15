@@ -25,6 +25,10 @@ export type DomainErrorCode =
   | "BADGE_COLOUR_UNREADABLE"
   // A volunteer role removed while people are on it (§754): move them first, so no one is deleted by a click on a role.
   | "VOLUNTEER_ROLE_HAS_PEOPLE"
+  // A volunteer category removed while roles sit under it (§774): move or delete them first, so a click on a heading never orphans a role.
+  | "VOLUNTEER_CATEGORY_HAS_ROLES"
+  // A role named twice under one category, or a category named twice on one event (§774): the same name may stand in two categories, not twice in one.
+  | "VOLUNTEER_NAME_TAKEN"
   // The same address entered twice for one event's volunteers (§754): one row per person per event, so the card says so.
   | "VOLUNTEER_ALREADY_LISTED"
   // «Trimite linkul contractului» or a paper acceptance while no volunteer agreement is in force (§758): approve one first.

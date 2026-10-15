@@ -3,7 +3,8 @@ import { namesVolunteerGuardian } from "@/modules/legal-documents/domain/merge-f
 import type { EventVolunteerSource, EventVolunteerState } from "@/db/schema/event-volunteers";
 import type { RichTextDoc } from "@/modules/content/rich-text/domain/schema";
 import { normalizeTeamText, resolveRichPair, richTextBox } from "@/modules/content/team/fields";
-import { E164_PHONE } from "@/modules/registrations/phone";
+import { isPhoneNumberShaped } from "@/modules/contact/domain/public-phone";
+import { E164_PHONE, formatPhone } from "@/modules/registrations/phone";
 import { ageOn, dayIn, latestBirthDateFor } from "@/modules/registrations/domain/age";
 import { SHIRT_SIZES } from "@/modules/registrations/domain/kit";
 import { isDateValue, normalizeTypedDate } from "@/shared/forms/pickers/wall-values";
@@ -39,6 +40,11 @@ export const VOLUNTEER_MESSAGE_MAX = 300;
 export const VOLUNTEER_NOTE_MAX = 500;
 /** How many roles one event may define: a list a person can read, and a bound on a forged form. */
 export const VOLUNTEER_ROLES_MAX = 30;
+/** How many categories one event may define (§774): headings a person can read on a phone, and a bound on a forged form. */
+export const VOLUNTEER_CATEGORIES_MAX = 12;
+/** The category's contact person (§774): the name's own bound is the volunteer's, the telephone's and the address's are the database's. */
+export const VOLUNTEER_CONTACT_PHONE_MAX = 40;
+export const VOLUNTEER_CONTACT_EMAIL_MAX = 320;
 
 /**
  * How old a volunteer must be (§768; the owner, 2026-10-14: «voluntarii trebuie să aibă cel puțin 14 ani, nu 18»,
@@ -228,6 +234,125 @@ export const volunteerRoleInputSchema = z
       descriptionWordsEn: en.plain,
     };
   });
+
+/**
+ * A category as the club types it (§774): both names — the bilingual rule, never one language's heading under the other's page.
+ * The field names are the form's own `name`s, so a refusal's summary links to the box.
+ */
+export const volunteerCategoryInputSchema = z.object({
+  nameRo: line(VOLUNTEER_ROLE_NAME_MAX),
+  nameEn: line(VOLUNTEER_ROLE_NAME_MAX),
+});
+
+export type VolunteerCategoryInput = z.infer<typeof volunteerCategoryInputSchema>;
+
+/**
+ * «Persoana de contact» of a category (§774): a name, a telephone number and an address, each optional and empty until the club
+ * fills them («the contact person for each category will be established later»). The address is read as an address; the telephone is
+ * what the card's box posted after `typedPhone` (E.164 when it can be read, else as typed) and is bounded and must be written like a telephone number (`isPhoneNumberShaped`, the check «Telefon public» and the badge share) — so a foreign
+ * or a landline number passes, and words do not: a dead `tel:` link and a badge line that silently vanishes are what the check prevents.
+ */
+export const volunteerCategoryContactSchema = z.object({
+  contactName: optionalLine(VOLUNTEER_NAME_MAX),
+  contactPhone: optionalLine(VOLUNTEER_CONTACT_PHONE_MAX).refine((value) => value === null || isPhoneNumberShaped(value)),
+  contactEmail: optionalLine(VOLUNTEER_CONTACT_EMAIL_MAX).refine((value) => value === null || isValidEmail(value)),
+});
+
+export type VolunteerCategoryContactInput = z.infer<typeof volunteerCategoryContactSchema>;
+
+/** The three boxes of a category's contact, as the database holds them. */
+export type CategoryContactColumns = { contactName: string | null; contactPhone: string | null; contactEmail: string | null };
+
+/** A category's contact person as the pages and the emails read it: the three words, or null while the club has set none of them. */
+export type CategoryContact = { name: string | null; phone: string | null; email: string | null };
+
+export function categoryContactOf(columns: CategoryContactColumns): CategoryContact | null {
+  const contact = { name: columns.contactName, phone: columns.contactPhone, email: columns.contactEmail };
+  return contact.name === null && contact.phone === null && contact.email === null ? null : contact;
+}
+
+/**
+ * A contact's words in their order — the name, the telephone, the address — leaving out what is not set: «Ana · +40 712 345 678 ·
+ * ana@club.test». The telephone is read as a person reads it (`formatPhone`, grouped), never as it is stored (E.164); its `tel:`
+ * link takes the stored digits.
+ */
+export function contactParts(contact: CategoryContact): string[] {
+  return [contact.name, contact.phone === null ? null : formatPhone(contact.phone), contact.email].filter(
+    (part): part is string => part !== null && part !== "",
+  );
+}
+
+export type CategoryContactOf = CategoryContact & { categoryRo?: string; categoryEn?: string };
+
+type ContactRole = { contact?: CategoryContact | null; categoryRo?: string | null; categoryEn?: string | null };
+
+/**
+ * The contact persons a volunteer's message names (§774): the one of the category of the role the organizers gave, else those of the
+ * categories of the roles the person offered for — each once, in the club's order, and none for a role under no category or a
+ * category with no contact set. The volunteer's emails (received, role given, the guardian's request) say them in their footer.
+ */
+export function volunteerContactsOf(roles: { assigned: ContactRole | null; chosen: readonly ContactRole[] }): CategoryContactOf[] {
+  const concerned = roles.assigned ? [roles.assigned] : roles.chosen;
+  const seen = new Set<string>();
+  const contacts: CategoryContactOf[] = [];
+  for (const { contact, categoryRo, categoryEn } of concerned) {
+    if (!contact) continue;
+    const key = JSON.stringify(contact);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    // The category's name rides along so a message naming two persons can say whose each is.
+    contacts.push(categoryRo && categoryEn ? { ...contact, categoryRo, categoryEn } : contact);
+  }
+  return contacts;
+}
+
+/** The categories in the order the club set them: `sort`, then age, then the id (a total order), as the roles' own. */
+export function compareCategories(
+  a: { sort: number; createdAt: Date; id: string },
+  b: { sort: number; createdAt: Date; id: string },
+): number {
+  return a.sort - b.sort || a.createdAt.getTime() - b.createdAt.getTime() || a.id.localeCompare(b.id);
+}
+
+/** One heading of the card or the form: a category (null is «Alte activități», the roles with none) and its roles, in their order. */
+export type RoleGroup<C, R> = { category: C | null; roles: R[] };
+
+/**
+ * An event's roles under their categories (§774), in the order the club set the categories (`categories` arrives sorted); the roles
+ * keep the order they come in. The roles with no category — or one that is not in the list — are the last group, `category: null`.
+ * A category with no role is a group with none (the card shows it, to add one; the public form leaves it out, `withRoles`).
+ * An event with no category at all is one group with `category: null`: callers draw no heading for it (`groupsNeedHeadings`).
+ */
+export function groupRolesByCategory<C extends { id: string }, R extends { categoryId: string | null }>(
+  categories: readonly C[],
+  roles: readonly R[],
+  options: { withRoles?: boolean } = {},
+): RoleGroup<C, R>[] {
+  const known = new Set(categories.map((category) => category.id));
+  const groups: RoleGroup<C, R>[] = categories.map((category) => ({ category, roles: roles.filter((role) => role.categoryId === category.id) }));
+  const loose = roles.filter((role) => role.categoryId === null || !known.has(role.categoryId));
+  const all: RoleGroup<C, R>[] = loose.length > 0 || categories.length === 0 ? [...groups, { category: null, roles: [...loose] }] : groups;
+  return options.withRoles ? all.filter((group) => group.roles.length > 0) : all;
+}
+
+/**
+ * An event's roles in the order the card lists them — under their categories, in the club's order (`groupRolesByCategory`) — each with
+ * the words of its category (§774), ready for `roleLabel`: the role's own words stay as they are, `categoryRo` / `categoryEn` are null
+ * for a role under none.
+ */
+export function rolesWithCategoryWords<R extends { categoryId: string | null }>(
+  categories: readonly { id: string; nameRo: string; nameEn: string }[],
+  roles: readonly R[],
+): (R & { categoryRo: string | null; categoryEn: string | null })[] {
+  return groupRolesByCategory(categories, roles).flatMap((group) =>
+    group.roles.map((role) => ({ ...role, categoryRo: group.category?.nameRo ?? null, categoryEn: group.category?.nameEn ?? null })),
+  );
+}
+
+/** Whether a heading is drawn for the groups: not when there is no category at all, whose roles are simply listed. */
+export function groupsNeedHeadings(groups: readonly RoleGroup<unknown, unknown>[]): boolean {
+  return groups.some((group) => group.category !== null);
+}
 
 /** Whether a document holds a picture or a video block (top-level blocks, `schema.ts`). */
 function hasMedia(doc: RichTextDoc): boolean {
@@ -577,8 +702,29 @@ export function openChoices(ticked: readonly string[], standings: ReadonlyMap<st
   return ticked.filter((roleId) => (standings.get(roleId)?.free ?? 0) > 0);
 }
 
-/** A role's words as the agreement and the emails name it, in both languages. */
-export type RoleWords = { nameRo: string; nameEn: string; descriptionRo: string | null; descriptionEn: string | null };
+/**
+ * A role's words as the agreement and the emails name it, in both languages — with the heading it sits under, when it has one (§774):
+ * a role is named «Direcționare (Traseu)» wherever it is named alone, because «Direcționare» may stand in two categories.
+ */
+export type RoleWords = {
+  nameRo: string;
+  nameEn: string;
+  descriptionRo: string | null;
+  descriptionEn: string | null;
+  categoryRo?: string | null;
+  categoryEn?: string | null;
+};
+
+/**
+ * A role named alone (§774): «Direcționare (Traseu)» in the language asked — the category in brackets when the role has one, the name
+ * alone when it sits under none. What the assignment chips, the email's «Dă-i rolul …», the CSV's role columns and the agreement's
+ * sentences say; the badge's band keeps the role's name only (the owner decided it so).
+ */
+export function roleLabel(role: Pick<RoleWords, "nameRo" | "nameEn" | "categoryRo" | "categoryEn">, locale: "ro" | "en"): string {
+  const name = locale === "en" ? role.nameEn : role.nameRo;
+  const category = locale === "en" ? role.categoryEn : role.categoryRo;
+  return category ? `${name} (${category})` : name;
+}
 
 /**
  * A role's description as the agreement's sentence takes it: «Ce presupune rolul: {{volunteerTasks}}.» ends with
@@ -664,7 +810,7 @@ export function agreementRoleWords(
   locale: "ro" | "en",
   textNamesChoices: boolean,
 ): AgreementRoleValues {
-  const name = (role: RoleWords) => (locale === "en" ? role.nameEn : role.nameRo);
+  const name = (role: RoleWords) => roleLabel(role, locale);
   const description = (role: RoleWords) => tasksWords((locale === "en" ? role.descriptionEn : role.descriptionRo) ?? "");
   if (roles.assigned) return { role: name(roles.assigned), tasks: description(roles.assigned), choices: "", choiceTasks: "" };
   const names = roleNames(roles.chosen, locale);
@@ -679,7 +825,7 @@ export function agreementRoleWords(
 
 /** Roles' names as the agreement and the card name them: «Masă, Traseu», in the order given. */
 export function roleNames(roles: readonly RoleWords[], locale: "ro" | "en"): string {
-  return roles.map((role) => (locale === "en" ? role.nameEn : role.nameRo)).join(", ");
+  return roles.map((role) => roleLabel(role, locale)).join(", ");
 }
 
 /**
