@@ -279,6 +279,13 @@ describe("§NNN several events: per event first, the categories inside, all of t
     expect(startListRows(rows)).toHaveLength(1 + 5);
   });
 
+  it("orders the events by the day they start, whatever order the list is sorted in", () => {
+    const later = { eventId: "b", eventLabel: "B · 25.10.2026", eventStartsAt: new Date("2026-10-25T08:00:00.000Z") };
+    const earlier = { eventId: "a", eventLabel: "A · 18.10.2026", eventStartsAt: new Date("2026-10-18T08:00:00.000Z") };
+    const blocks = statisticsOf([sheetRow(later), sheetRow(earlier), sheetRow(later)], RO);
+    expect(blocks.map((block) => [block.label, block.tally.total])).toEqual([["A · 18.10.2026", 1], ["B · 25.10.2026", 2], [RO.allEvents, 3]]);
+  });
+
   it("groups one event unlabelled and has no all-events block", () => {
     const blocks = statisticsOf([sheetRow({ eventId: "e1", eventLabel: "A · 01.01.2027" }), sheetRow({ eventId: "e1", eventLabel: "A · 01.01.2027" })], RO);
     expect(blocks.map((block) => block.label)).toEqual([null]);

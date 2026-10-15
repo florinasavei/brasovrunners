@@ -58,6 +58,8 @@ export type StatisticsRow = {
   /** What the footer calls the event when the file holds several (the title and the day). */
   eventLabel?: string | null;
   eventTitle?: string | null;
+  /** When the event starts, so the groups come in the order the events are run. */
+  eventStartsAt?: Date | null;
 };
 
 /** The footer's words, in the reader's language: the route reads them from the catalogue (`Admin.registrations.statistics`). */
@@ -213,19 +215,21 @@ function blockOf(label: string | null, rows: readonly StatisticsRow[], words: St
 
 /**
  * The footer's groups. A file of one event (or none) is one unlabelled group; a file of several is one group per
- * event, in the order the rows reach each, then the all-events group last.
+ * event, in the order the events start, then the all-events group last.
  */
 export function statisticsOf(rows: readonly StatisticsRow[], words: StatisticsWords): StatisticsBlock[] {
-  const groups = new Map<string, { label: string; rows: StatisticsRow[] }>();
+  const groups = new Map<string, { label: string; startsAt: number; rows: StatisticsRow[] }>();
   for (const row of rows) {
     const label = row.eventLabel ?? row.eventTitle ?? "";
     const key = row.eventId ?? label;
-    const group = groups.get(key) ?? { label, rows: [] };
+    const group = groups.get(key) ?? { label, startsAt: row.eventStartsAt?.getTime() ?? Number.MAX_SAFE_INTEGER, rows: [] };
     group.rows.push(row);
     groups.set(key, group);
   }
   if (groups.size <= 1) return [blockOf(null, rows, words)];
-  return [...[...groups.values()].map((group) => blockOf(group.label, group.rows, words)), blockOf(words.allEvents, rows, words)];
+  // The events in the order they are run, not the order the list happens to be sorted in; one without a day last.
+  const ordered = [...groups.values()].sort((a, b) => a.startsAt - b.startsAt || a.label.localeCompare(b.label));
+  return [...ordered.map((group) => blockOf(group.label, group.rows, words)), blockOf(words.allEvents, rows, words)];
 }
 
 /** One cell of the sheet, in the writer's shape. */

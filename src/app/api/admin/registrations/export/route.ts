@@ -253,6 +253,7 @@ export async function GET(request: Request): Promise<Response> {
         clubRunner: isClubRunner(row),
         eventId: row.eventId,
         eventLabel: eventLabelOf(row),
+        eventStartsAt: row.eventStartsAt,
       })),
       eventTitle ?? "Participants",
       { notesHeader, statistics },

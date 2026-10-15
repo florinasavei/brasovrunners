@@ -85,6 +85,7 @@ export type RegistrationSheetRow = Omit<
   clubRunner?: boolean;
   eventId?: string;
   eventLabel?: string;
+  eventStartsAt?: Date;
 };
 
 /**
