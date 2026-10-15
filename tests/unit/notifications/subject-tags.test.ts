@@ -22,7 +22,7 @@ import { relayNoticeContent } from "@/modules/notifications/relay-notice-words";
 import { buildOutgoingEmail, type TemplateData } from "@/modules/notifications/templates";
 
 /**
- * BR-REQ-080-03, BR-REQ-070-04, `DECISIONS.md` §NNN (amending §307, §676, §778) — the tags at the start of every email the
+ * BR-REQ-080-03, BR-REQ-070-04, `DECISIONS.md` §786 (amending §307, §676, §778) — the tags at the start of every email the
  * club or a colleague receives: fixed ASCII, one map, the human words after, QA's mark in front, and every participant's
  * or volunteer's subject exactly what it was.
  */

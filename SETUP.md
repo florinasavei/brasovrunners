@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.41-2026-10-16 -->
+<!-- PROJECT_BASELINE: BR-V3.42-2026-10-16 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V3.41-2026-10-16`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.42-2026-10-16`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -1520,7 +1520,7 @@ Gmail and «Email către participanți reali» for Mailgun). On each deployment 
    and is kept nowhere; Girl Zone's form has it too, with a «Telefon (opțional)» box beside it
    (the telephone goes in the message and is no `Reply-To`).
 3. Check: `/ro/contact` shows «Spune-ne ceva» under the contact form, above «Contact direct» and the newsletter (the newsletter last); a message sent from QA arrives
-   with `[QA][feedback][…]` in front of its subject (the tags, §NNN: «Filtre în Gmail» below), its first line «Nume: (anonim)» or the name the person gave. The site keeps no copy of any message, so the inbox is the
+   with `[QA][feedback][…]` in front of its subject (the tags, §786: «Filtre în Gmail» below), its first line «Nume: (anonim)» or the name the person gave. The site keeps no copy of any message, so the inbox is the
    only place to look.
 
 To take the form away, clear the recipients on «Pagini» → «Contact» (`/admin/pages/contact`) and leave `CONTACT_FORM_TO`
@@ -1531,7 +1531,7 @@ which is more than a club receives; the form's own limit is five an hour per sen
 ### Filtre în Gmail — the tags at the start of every message the club receives
 
 Every email the site sends **to the club or to a colleague** starts with fixed tags in square brackets, in lowercase
-ASCII, never translated, so one Gmail filter files a message whichever language it was written in (`DECISIONS.md` §NNN;
+ASCII, never translated, so one Gmail filter files a message whichever language it was written in (`DECISIONS.md` §786;
 the tags are `src/modules/notifications/domain/subject-tags.ts`'s, the one place that knows them). The words come
 after: `[feedback][cum-a-fost] Cum a fost: <event>`. On QA the environment's mark comes first and is joined to
 the tags: `[QA][feedback][cum-a-fost] …`. A message to a runner, a volunteer, a subscriber, an invitee of the public

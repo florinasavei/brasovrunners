@@ -12,7 +12,7 @@ import { readSheet, startListRows } from "../../helpers/xlsx";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN (amends §172 and §581; BR-REQ-060-01, BR-REQ-037-03) — «the Excel should have a statistics footer so that I
+ * §787 (amends §172 and §581; BR-REQ-060-01, BR-REQ-037-03) — «the Excel should have a statistics footer so that I
  * can show „how many Brașov Runners”, how many active, etc., grouped by category» (the owner, 2026-10-15), from a
  * real database and through the export route itself: the footer counts the rows the file carries — the filters
  * apply (§581), a test registration is never in them (§30) — in the reader's language, per event for a file of
@@ -144,7 +144,7 @@ function footerOf(rows: (string | undefined)[][], title = "Statistici") {
   return Array.from({ length: rows.length - at }, (_, index) => rows[at + index] ?? []);
 }
 
-describe("§NNN the footer, through the route", () => {
+describe("§787 the footer, through the route", () => {
   it("counts the rows of the file by state, club and category, and never a test registration", async () => {
     const race = await seedRace();
     const rows = await download(`eventId=${race.id}&format=xlsx`);

@@ -2,7 +2,7 @@ import { membershipOf } from "./membership";
 import { namesTheClub } from "./public-list-club";
 
 /**
- * «Brașov Runners» in the registrations Excel's statistics footer (§NNN): whether a registration is one of the
+ * «Brașov Runners» in the registrations Excel's statistics footer (§787): whether a registration is one of the
  * club's runners, for the footer's «how many are ours» (the owner, 2026-10-15: «I can show „how many Brașov
  * Runners”, how many active, etc.»).
  *

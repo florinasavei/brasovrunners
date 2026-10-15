@@ -77,7 +77,7 @@ export type RegistrationSheetRow = Omit<
    */
   notes?: string;
   /**
-   * The statistics footer's inputs (§NNN), none of them a column: the row is one of the club's runners
+   * The statistics footer's inputs (§787), none of them a column: the row is one of the club's runners
    * (`domain/club-runner.ts#isClubRunner`), and the event it belongs to (`eventId`, with `eventLabel` — the title
    * and the day — for a file of several events). Absent reads as no and as one event: a caller that builds no
    * footer never needs them.
@@ -132,7 +132,7 @@ export type SheetColumn<Row> = {
  * The one writer every spreadsheet the backoffice hands out goes through — the start list here, the
  * sponsor list (§581, `sponsor-sheet.ts`): a bold header row kept on screen, the columns' widths,
  * the club's date format, and a sheet name Excel accepts (at most 31 characters, none of `: \ / ? * [ ]`).
- * `footer` is rows of ready cells written under the table (§NNN, the start list's statistics): none for every
+ * `footer` is rows of ready cells written under the table (§787, the start list's statistics): none for every
  * other sheet. The sheet declares no autofilter and no table, so nothing here can pull a footer into a sort.
  */
 export async function writeSheet<Row>(
@@ -254,7 +254,7 @@ export async function buildRegistrationsWorkbook(
 ): Promise<Buffer> {
   const columns = options.notesHeader ? [...COLUMNS, notesColumn(options.notesHeader)] : COLUMNS;
   /*
-    «Statistici» (§NNN): the counts of these rows under them, after an empty row, for the caller that passes its
+    «Statistici» (§787): the counts of these rows under them, after an empty row, for the caller that passes its
     words — the export route, in the reader's language. Every other caller's file is rows only, as it was, and
     so is the CSV, whose readers would take a footer for registrations.
   */

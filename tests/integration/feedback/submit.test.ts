@@ -32,7 +32,7 @@ import { RATE_LIMITS } from "@/modules/rate-limit/service";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 import { deliverRelay, fakeRoads, relayRows, sent } from "../../helpers/relay";
 
-/** Girl Zone's subject as it leaves (§NNN): the neutral words behind the confidential route's tags. */
+/** Girl Zone's subject as it leaves (§786): the neutral words behind the confidential route's tags. */
 const TAGGED_SAFETY = `[feedback][girl-zone] ${SAFETY_SUBJECT}`;
 
 /**

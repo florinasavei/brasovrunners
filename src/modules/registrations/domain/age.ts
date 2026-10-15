@@ -123,7 +123,7 @@ export function dayIn(at: Date, timeZone: string): string {
   return `${part("year")}-${part("month")}-${part("day")}`;
 }
 
-/** The `HH:mm` of an instant on a time zone's clock (§NNN: tells two events of one day and title apart). */
+/** The `HH:mm` of an instant on a time zone's clock (§787: tells two events of one day and title apart). */
 export function timeIn(at: Date, timeZone: string): string {
   const parts = new Intl.DateTimeFormat("en-CA", { timeZone, hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).formatToParts(at);
   const part = (type: string) => parts.find((entry) => entry.type === type)?.value ?? "";

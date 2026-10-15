@@ -661,7 +661,7 @@ test.describe("BR-REQ-070-04 «Spune-ne ceva», the anonymous wizard (§676)", (
       await expect(page.getByTestId("feedback-sent")).toContainText("Mesajul a plecat");
       // A way on (§NNN): another message, from step 1.
       await expect(page.getByTestId("feedback-send-another")).toHaveAttribute("href", "/ro/contact/spune-ne");
-      // The club's message names the event picked: its subject is «[feedback][cum-a-fost] Cum a fost: <title>» (§NNN), as `/devs` shows the capture.
+      // The club's message names the event picked: its subject is «[feedback][cum-a-fost] Cum a fost: <title>» (§786), as `/devs` shows the capture.
       await expect(async () => {
         await page.goto("/ro/devs?panel=email");
         await expect(page.locator("main")).toContainText(`[feedback][cum-a-fost] Cum a fost: ${pickedTitle}`, { timeout: 2_000 });

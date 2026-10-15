@@ -10,7 +10,7 @@ import ro from "../../../messages/ro.json";
 import { isBoldStyle, rawCells, readSheet, startListRows, unzip } from "../../helpers/xlsx";
 
 /**
- * §NNN (amends §172 and §581) — «the Excel should have a statistics footer so that I can show „how many Brașov
+ * §787 (amends §172 and §581) — «the Excel should have a statistics footer so that I can show „how many Brașov
  * Runners”, how many active, etc., grouped by category» (the owner, 2026-10-15): the counts under the rows of the
  * registrations spreadsheet, read back from the bytes. What the route asks and for whom is in
  * `tests/integration/registrations/statistics-footer.test.ts`; the real download is `tests/e2e/statistics-footer.spec.ts`.
@@ -76,7 +76,7 @@ function footerOf(rows: (string | undefined)[][], title = "Statistici"): (string
   return Array.from({ length: rows.length - at }, (_, index) => rows[at + index] ?? []);
 }
 
-describe("§NNN the footer's numbers, for a mixed fixture", () => {
+describe("§787 the footer's numbers, for a mixed fixture", () => {
   it("counts every row once, by state, so the states add up to the total", async () => {
     const { rows } = readSheet(await build(mixed()));
     const footer = footerOf(rows);
@@ -148,7 +148,7 @@ describe("§NNN the footer's numbers, for a mixed fixture", () => {
   });
 });
 
-describe("§NNN the footer's place and typing in the file", () => {
+describe("§787 the footer's place and typing in the file", () => {
   it("starts after one empty row, under the table's first column, outside the rows a sort or a filter takes", async () => {
     const data = mixed();
     const buffer = await build(data);
@@ -245,7 +245,7 @@ describe("§NNN the footer's place and typing in the file", () => {
   });
 });
 
-describe("§NNN several events: per event first, the categories inside, all of them at the end", () => {
+describe("§787 several events: per event first, the categories inside, all of them at the end", () => {
   const event = (id: string, label: string) => ({ eventId: id, eventLabel: label, eventTitle: "Alergare" });
 
   it("groups by event id, so two events with one title are two groups, each with its own categories", async () => {
@@ -304,7 +304,7 @@ describe("§NNN several events: per event first, the categories inside, all of t
   });
 });
 
-describe("§NNN the footer's words, in both languages", () => {
+describe("§787 the footer's words, in both languages", () => {
   it("says the same things in English with the club's name from the one constant", async () => {
     const { rows } = readSheet(await build(mixed(), EN));
     const footer = footerOf(rows, "Statistics");

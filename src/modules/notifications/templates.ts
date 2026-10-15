@@ -729,7 +729,7 @@ export function renderBilingual(
   const a = renderContent(first, locale);
   const b = renderContent(second, OTHER_LOCALE[locale]);
   return {
-    // A message for the club or a colleague starts with its tags, once, before the two halves (§NNN); every other type has none.
+    // A message for the club or a colleague starts with its tags, once, before the two halves (§786); every other type has none.
     subject: tagSubject(tagsOfMessageType(messageType), `${first.subject} / ${second.subject}`),
     html: card([a.htmlParts, b.htmlParts]),
     text: [...a.textLines, "", "— — —", "", ...b.textLines].join("\n"),

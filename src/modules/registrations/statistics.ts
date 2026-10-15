@@ -1,7 +1,7 @@
 import { sexOfCell, type SexChoice } from "./domain/sex";
 
 /**
- * The statistics footer of the registrations Excel (§NNN, amending §172 and §581; the owner, 2026-10-15: «the
+ * The statistics footer of the registrations Excel (§787, amending §172 and §581; the owner, 2026-10-15: «the
  * Excel should have a statistics footer so that I can show „how many Brașov Runners”, how many active, etc.,
  * grouped by category»): the counts of the rows the file carries, written under them.
  *

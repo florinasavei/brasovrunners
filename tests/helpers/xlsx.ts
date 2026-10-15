@@ -75,7 +75,7 @@ export function readSheet(buffer: Buffer): { rows: (string | undefined)[][]; she
 }
 
 /**
- * The start list alone (§NNN): the header and the registrations, without the statistics footer the export writes
+ * The start list alone (§787): the header and the registrations, without the statistics footer the export writes
  * under them. The footer starts after one empty row, and no registration's row is ever empty (it carries the id),
  * so the table ends where the first empty row begins.
  */

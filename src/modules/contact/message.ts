@@ -60,7 +60,7 @@ function headerSafe(value: string): string {
 }
 
 /**
- * The subject of «Scrie-ne»'s message: `[contact]` and the human words (§NNN; the tags are `notifications/domain/subject-tags.ts`'s,
+ * The subject of «Scrie-ne»'s message: `[contact]` and the human words (§786; the tags are `notifications/domain/subject-tags.ts`'s,
  * so a Gmail filter on `subject:"[contact]"` files every one).
  */
 export function contactSubject(name: string): string {
@@ -72,7 +72,7 @@ export function contactSubject(name: string): string {
  * (`domain/suspicion.ts`; the owner, 2026-09-23, of SEO spam through the form). Stable, because
  * the club filters on it — a Gmail filter on `subject:"[posibil spam]"` (`SETUP.md` §38) — so a
  * change to these characters is a change to every club mailbox's filter. Placed after the tags and before the human words
- * (`markAfterTags`, §NNN): «[contact][posibil spam] Mesaj de pe site: …».
+ * (`markAfterTags`, §786): «[contact][posibil spam] Mesaj de pe site: …».
  */
 export const SUSPICIOUS_SUBJECT_MARK = "[posibil spam]";
 

@@ -5,7 +5,7 @@ import { readSheet, startListRows } from "../helpers/xlsx";
 import { hydrated, signIn } from "./support/featured-event";
 
 /**
- * §NNN (amends §172 and §581) — «the Excel should have a statistics footer so that I can show „how many Brașov
+ * §787 (amends §172 and §581) — «the Excel should have a statistics footer so that I can show „how many Brașov
  * Runners”, how many active, etc., grouped by category» (the owner, 2026-10-15). The button on the registrations
  * list hands over the Excel of an event with registrations in every shape the footer tells apart; the file is read
  * back as a workbook and the «Statistici» block under the table — after one empty row — says the counts: the
@@ -108,7 +108,7 @@ function footerOf(rows: (string | undefined)[][], title: string) {
   return Array.from({ length: rows.length - at }, (_, index) => rows[at + index] ?? []);
 }
 
-test.describe("§NNN «Statistici» under the registrations Excel", () => {
+test.describe("§787 «Statistici» under the registrations Excel", () => {
   test("the Excel the list's button downloads ends with the statistics: states, club, categories, no test row", async ({ page }) => {
     test.setTimeout(120_000);
     const seeded = await seed(`${test.info().project.name}-${Date.now().toString(36)}`);

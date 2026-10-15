@@ -535,7 +535,7 @@ describe("§581 «Doar cu oferte și beneficii» on the registrations list, and 
     expect((await exported("")).length - 1).toBe(5);
     // The Excel export follows the filter too.
     const workbook = await exportRegistrations(new Request(`http://localhost/api/admin/registrations/export?format=xlsx&eventId=${event.id}&promo=1`));
-    // The start list alone: the statistics footer under it (§NNN) is `statistics-footer.test.ts`'s to read.
+    // The start list alone: the statistics footer under it (§787) is `statistics-footer.test.ts`'s to read.
     expect(startListRows(readSheet(Buffer.from(await workbook.arrayBuffer())).rows)).toHaveLength(4);
   });
 });

@@ -2,7 +2,7 @@ import type { EmailMessageType } from "@/db/schema/email-outbox";
 import type { EMAIL_AUDIENCE } from "./email-audience";
 
 /**
- * The tags at the start of every email the CLUB or its STAFF receive (§NNN; amending §307, §676 and §778): fixed ASCII,
+ * The tags at the start of every email the CLUB or its STAFF receive (§786; amending §307, §676 and §778): fixed ASCII,
  * lowercase, never translated, so one Gmail filter on `subject:"[feedback]"` or `subject:"[girl-zone]"` files a message
  * whichever language the sender wrote in or the platform answered in. The owner, 2026-10-15: «I need better email
  * names so I can filter in Gmail.»

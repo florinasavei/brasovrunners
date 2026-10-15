@@ -194,7 +194,7 @@ export async function GET(request: Request): Promise<Response> {
     // Sex, age, origin and t-shirt, for the sheet only (§322) — one query for the exported rows.
     const details = await listWorkbookDetails(db, rows.map((row) => row.id));
     /*
-      «Statistici» (§NNN; the owner: «the Excel should have a statistics footer so that I can show „how many Brașov
+      «Statistici» (§787; the owner: «the Excel should have a statistics footer so that I can show „how many Brașov
       Runners”, how many active, etc., grouped by category»): the counts of these rows under them, in the reader's
       language, for the spreadsheet only — a footer in the CSV would be read as registrations. The rows are already
       the screen's rows without a test registration, so the counts are too.
@@ -262,7 +262,7 @@ export async function GET(request: Request): Promise<Response> {
         deadline: deadlineOf(row)?.at ?? null,
         deadlineFor: deadlineOf(row)?.kind ?? null,
         notes: notes.get(row.id) ?? "",
-        // The footer's inputs (§NNN): is this one of the club's runners, and which event.
+        // The footer's inputs (§787): is this one of the club's runners, and which event.
         clubRunner: isClubRunner(row),
         eventId: row.eventId,
         eventLabel: eventLabelOf(row),

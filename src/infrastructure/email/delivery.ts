@@ -98,7 +98,7 @@ export function markSubjectForEnvironment(subject: string, appEnv: AppEnvironmen
   if (appEnv !== "qa") return subject;
   // Marked already: the bare «[QA]», whatever followed it (a manual resend, a subject built with the mark in it).
   if (subject.startsWith(QA_SUBJECT_PREFIX.trimEnd())) return subject;
-  // A message for the club starts with its tags (§NNN): the mark is joined to them — «[QA][feedback][cum-a-fost] …» — so the tags
+  // A message for the club starts with its tags (§786): the mark is joined to them — «[QA][feedback][cum-a-fost] …» — so the tags
   // stay one run a filter reads; any other subject takes the mark and a space, as it always did.
   return startsWithTag(subject) ? `${QA_SUBJECT_PREFIX.trimEnd()}${subject}` : `${QA_SUBJECT_PREFIX}${subject}`;
 }

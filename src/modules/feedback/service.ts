@@ -293,7 +293,7 @@ async function screenForClub<T extends Record<string, unknown>>(
   if (!marked) return email;
   const text = [email.text, "", "---", marked.heading, ...marked.reasons.map((line) => `• ${line}`), marked.signals].join("\n");
   const html = `${email.html}<hr><p><strong>${escapeHtml(marked.heading)}</strong></p><ul>${marked.reasons.map((line) => `<li>${escapeHtml(line)}</li>`).join("")}</ul><p><small>${escapeHtml(marked.signals)}</small></p>`;
-  // After the environment's mark and the tags — «[QA][feedback][sugestie][posibil spam] …» — as on the contact form (§NNN).
+  // After the environment's mark and the tags — «[QA][feedback][sugestie][posibil spam] …» — as on the contact form (§786).
   return { subject: markAfterTags(email.subject, SUSPICIOUS_SUBJECT_MARK), text, html };
 }
 

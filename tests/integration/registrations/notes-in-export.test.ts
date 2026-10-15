@@ -128,7 +128,7 @@ const url = (eventId: string, extra = "") => `http://localhost/api/admin/registr
 
 async function sheetOf(response: Response) {
   expect(response.status).toBe(200);
-  // The start list alone: the statistics footer under it (§NNN) is `statistics-footer.test.ts`'s to read.
+  // The start list alone: the statistics footer under it (§787) is `statistics-footer.test.ts`'s to read.
   return startListRows(readSheet(Buffer.from(await response.arrayBuffer())).rows);
 }
 
