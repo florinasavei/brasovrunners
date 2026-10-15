@@ -23,7 +23,7 @@ export type DomainErrorCode =
   | "SHOP_SIZE_HAS_ORDERS"
   // A volunteer badge's colour whose words would not read at AA on it (§764): the save names the box and asks for another.
   | "BADGE_COLOUR_UNREADABLE"
-  // A volunteer badge's size with no room for everything ticked (§776): the free-text line and the telephone need a taller badge.
+  // A volunteer badge's size with no room for everything ticked (§NNN): the free-text line and the telephone need a taller badge.
   | "BADGE_SIZE_TOO_SMALL"
   // A volunteer role removed while people are on it (§754): move them first, so no one is deleted by a click on a role.
   | "VOLUNTEER_ROLE_HAS_PEOPLE"

@@ -85,7 +85,7 @@ export default async function BadgeDesignPanel({
   eventId: string;
   locale: Locale;
   design: BadgeDesign;
-  /** The §776 settings the stored design held as something they cannot be, left out by the reader: said beside their section. */
+  /** The §NNN settings the stored design held as something they cannot be, left out by the reader: said beside their section. */
   dropped?: readonly BadgeDroppedKey[];
   /** The role the preview's sample is drawn for: the event's first, or `none`. */
   sampleRole: string;
@@ -121,7 +121,7 @@ export default async function BadgeDesignPanel({
   const ratioWords = new Intl.NumberFormat(locale, { maximumFractionDigits: 1 });
   const initialSrc = badgePreviewUrl({ eventId, locale, role: sampleRole, design, version });
   const { widthMm, heightMm } = badgeSizeMm(design);
-  // The limit in words (§776): the free-text line and the telephone together need this height at the saved width, when the saved size is shorter.
+  // The limit in words (§NNN): the free-text line and the telephone together need this height at the saved width, when the saved size is shorter.
   const extrasNeed = badgeSizeRefusal({ size: "custom", customWidthMm: widthMm, customHeightMm: BADGE_CUSTOM_BOUNDS.height.min }, { freeText: true, phone: true })?.minHeightMm ?? null;
   const perSheet = (size: (typeof BADGE_SIZES)[number]) =>
     size === "custom" ? null : badgeSheetGrid(badgePaper({ size, customWidthMm: 0, customHeightMm: 0 })).perSheet;
@@ -187,7 +187,7 @@ export default async function BadgeDesignPanel({
   const writingAside = design.writingLine ? t("badges.design.writingLine") : t("badges.design.writingPlain");
   const freeAside = design.showFreeText && design.freeTextRo ? `${design.freeTextRo} / ${design.freeTextEn}` : t("badges.design.freeTextOff");
   const markerAside = design.showMarker ? (design.markerLabelRo ? `${design.markerLabelRo} / ${design.markerLabelEn}` : t("badges.design.markerNoLabel")) : t("badges.design.markerOff");
-  /** What a section says when the stored design held one of its settings as something it cannot be (§776). */
+  /** What a section says when the stored design held one of its settings as something it cannot be (§NNN). */
   const droppedNote = (...keys: BadgeDroppedKey[]) =>
     keys.some((key) => dropped.includes(key)) ? (
       <Typography variant="caption" color="text.secondary" role="status" data-testid="badge-dropped">
@@ -380,7 +380,7 @@ export default async function BadgeDesignPanel({
             </Stack>
           </Panel>
 
-          {/* «Text liber» (§776): one line of the club's own words, small, on the white under the role's band. */}
+          {/* «Text liber» (§NNN): one line of the club's own words, small, on the white under the role's band. */}
           <Panel glyph="badgeFreeText" collapsible level={5} title={t("badges.design.sections.freeText")} aside={freeAside} data-testid="badge-section-free">
             <Stack spacing={1.5}>
               <Typography variant="caption" color="text.secondary">
@@ -425,7 +425,7 @@ export default async function BadgeDesignPanel({
             </Stack>
           </Panel>
 
-          {/* «Spațiu pentru marker» (§776): a second white area beside «Nume:», blank, for one more word in marker at the desk. */}
+          {/* «Spațiu pentru marker» (§NNN): a second white area beside «Nume:», blank, for one more word in marker at the desk. */}
           <Panel glyph="badgeMarker" collapsible level={5} title={t("badges.design.sections.marker")} aside={markerAside} data-testid="badge-section-marker">
             <Stack spacing={1.5}>
               <Typography variant="caption" color="text.secondary">

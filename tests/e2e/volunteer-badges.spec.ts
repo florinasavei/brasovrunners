@@ -11,6 +11,10 @@ import { openEditorBox, openFold } from "./support/fold";
  * typed with its spares, the other's left at the people it needs, and a few badges «fără rol». The PDF
  * downloads with exactly that many badges (the file's own properties say how many), on the pages they take.
  *
+ * §NNN adds the free-text line and the marker area: the Organizer ticks both in the designer, types the
+ * texts, sees the preview follow, saves, finds them again after the save, and the sheet still holds the
+ * badges asked for; and a size with no room for everything ticked is refused, in words, before anything is kept.
+ *
  * The event and its two roles are written straight into the database — the setup, not the subject — one
  * per project and run, so the two projects never share a row.
  */
@@ -92,6 +96,28 @@ test.describe("§764 volunteer badges, designed and printed per role", () => {
     const picture = await page.request.get((await preview.getAttribute("src")) as string);
     expect(picture.status()).toBe(200);
     expect(picture.headers()["content-type"]).toBe("image/png");
+
+    // --- «Text liber» and «Spațiu pentru marker» (§NNN): each behind its own tick; the preview follows ----
+    const free = page.getByTestId("badge-section-free");
+    await openFold(free);
+    await expect(free.locator("summary")).toContainText("Fără text liber");
+    await page.getByRole("checkbox", { name: "O linie de text liber" }).check();
+    await page.getByLabel("Text liber (română)").fill("Bea apă la fiecare punct");
+    await page.getByLabel("Text liber (engleză)").fill("Drink water at every point");
+    await expect(preview).toHaveAttribute("src", /[?&]showFreeText=1(&|$)/, { timeout: 10_000 });
+    await expect(preview).toHaveAttribute("src", /[?&]freeTextRo=Bea\+ap/);
+    const marker = page.getByTestId("badge-section-marker");
+    await openFold(marker);
+    await expect(marker.locator("summary")).toContainText("Fără spațiu pentru marker");
+    await page.getByRole("checkbox", { name: "Un spațiu pentru marker, lângă nume" }).check();
+    await page.getByLabel("Eticheta spațiului (română)").fill("Tură");
+    await page.getByLabel("Eticheta spațiului (engleză)").fill("Shift");
+    await expect(preview).toHaveAttribute("src", /[?&]showMarker=1(&|$)/, { timeout: 10_000 });
+    await expect(preview).toHaveAttribute("src", /[?&]markerLabelRo=Tur/);
+    // The sample with both is a picture, not a refusal.
+    const both = await page.request.get((await preview.getAttribute("src")) as string);
+    expect(both.status()).toBe(200);
+    expect(both.headers()["content-type"]).toBe("image/png");
     const save = page.getByRole("button", { name: "Salvează ecusonul", exact: true });
     expect((await save.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
     await save.click();
@@ -102,6 +128,21 @@ test.describe("§764 volunteer badges, designed and printed per role", () => {
     await openFold(page.getByTestId("badge-design"));
     await openFold(page.getByTestId("badge-section-size"));
     await expect(page.getByTestId("badge-size").getByRole("radio", { name: /100 × 40 mm/ })).toBeChecked();
+    // Both new sections are kept: their closed lines say what is written, and the boxes hold it again.
+    await expect(page.getByTestId("badge-section-free").locator("summary")).toContainText("Bea apă la fiecare punct");
+    await expect(page.getByTestId("badge-section-marker").locator("summary")).toContainText("Tură / Shift");
+    await openFold(page.getByTestId("badge-section-free"));
+    await expect(page.getByRole("checkbox", { name: "O linie de text liber" })).toBeChecked();
+    await expect(page.getByLabel("Text liber (română)")).toHaveValue("Bea apă la fiecare punct");
+    await expect(page.getByLabel("Text liber (engleză)")).toHaveValue("Drink water at every point");
+    await openFold(page.getByTestId("badge-section-marker"));
+    await expect(page.getByRole("checkbox", { name: "Un spațiu pentru marker, lângă nume" })).toBeChecked();
+    await expect(page.getByLabel("Eticheta spațiului (română)")).toHaveValue("Tură");
+    await expect(page.getByLabel("Eticheta spațiului (engleză)")).toHaveValue("Shift");
+    // The saved badge's own picture draws with both: the address carries no unsaved design, so this is the stored one.
+    const savedPicture = await page.request.get(`/api/admin/events/${event.id}/badges/preview?locale=ro&role=${event.water}&v=x`);
+    expect(savedPicture.status()).toBe(200);
+    expect(savedPicture.headers()["content-type"]).toBe("image/png");
 
     // --- «Tipărire»: per role, with spares and the badges «fără rol» ---------------------------
     const print = page.getByTestId("badge-print");
@@ -135,6 +176,49 @@ test.describe("§764 volunteer badges, designed and printed per role", () => {
     await expect(page.getByTestId("badge-print-refused")).toContainText("prea multe ecusoane");
     // The card with the boxes opens by itself.
     await expect(page.getByTestId("badge-print")).toHaveAttribute("open", "");
+  });
+
+  test("a size with no room for everything ticked is refused in words, and nothing is kept (§NNN)", async ({ page }) => {
+    const tag = `${test.info().project.name}-small-${Date.now().toString(36)}`;
+    const event = await seedEvent(tag);
+    await signIn(page, "Dev Moderator");
+    await page.goto(`/ro/admin/events/${event.id}/badges`);
+    await hydrated(page);
+    await openFold(page.getByTestId("badge-design"));
+    // The limit said before the save: how tall a badge the line and the telephone need together.
+    await openFold(page.getByTestId("badge-section-size"));
+    await expect(page.getByTestId("badge-extras-need")).toContainText("34 mm");
+    await page.getByTestId("badge-size").getByRole("radio", { name: "Altă dimensiune" }).check();
+    await page.getByLabel("Lățimea (mm)").fill("60");
+    await page.getByLabel("Înălțimea (mm)").fill("30");
+    await openFold(page.getByTestId("badge-section-free"));
+    await page.getByRole("checkbox", { name: "O linie de text liber" }).check();
+    await page.getByLabel("Text liber (română)").fill("Bea apă");
+    await page.getByLabel("Text liber (engleză)").fill("Drink");
+    await openFold(page.getByTestId("badge-section-phone"));
+    await page.getByRole("checkbox", { name: "Telefonul coordonatorului" }).check();
+    await page.getByLabel("Numărul de telefon").fill("0712 345 678");
+    await page.getByRole("button", { name: "Salvează ecusonul", exact: true }).click();
+    const refusal = page.getByTestId("form-refusal");
+    await expect(refusal).toContainText("un ecuson de 60 × 30 mm nu are loc pentru tot ce ai bifat", { timeout: 30_000 });
+    await expect(refusal).toContainText("linia de text liber, telefonul coordonatorului");
+    await expect(refusal).toContainText("34 mm");
+    // The refusal links the height's box; what was typed is still there.
+    await expect(refusal.getByRole("link", { name: "Înălțimea (mm)" })).toBeVisible();
+    await expect(page.getByLabel("Text liber (română)")).toHaveValue("Bea apă");
+    // Nothing was kept: the event's design is still empty.
+    const client = new pg.Client({ connectionString: databaseUrl() });
+    await client.connect();
+    try {
+      const { rows } = await client.query<{ badge_design: unknown }>("SELECT badge_design FROM events WHERE id = $1", [event.id]);
+      expect(rows[0].badge_design).toBeNull();
+    } finally {
+      await client.end();
+    }
+    // The height the sentence named saves.
+    await page.getByLabel("Înălțimea (mm)").fill("34");
+    await page.getByRole("button", { name: "Salvează ecusonul", exact: true }).click();
+    await page.waitForURL(/#box-badge-design$/, { timeout: 30_000 });
   });
 
   test("the Tehnic role meets the 404 an unknown page gets, and the sheet refuses it", async ({ page }) => {

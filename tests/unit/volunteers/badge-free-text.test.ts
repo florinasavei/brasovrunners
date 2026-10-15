@@ -31,7 +31,7 @@ import {
 import { badgeDesignQuery, readBadgeDesignForm } from "@/modules/volunteers/badges/badge-query";
 
 /**
- * §776 — the volunteer badge's free-text line and marker area (BR-REQ-050-02), amending §764: both drawn
+ * §NNN — the volunteer badge's free-text line and marker area (BR-REQ-050-02), amending §764: both drawn
  * through the one geometry on every size, a size too small for everything ticked refused in words, and
  * the design's two new optional keys read forgivingly (an old design draws as before). Pure.
  */
@@ -45,7 +45,7 @@ const WORDS: BadgeLayoutWords = { title: "Brașov Trail Race", label: "VOLUNTAR"
 const layoutOf = (size: BadgeSizeChoice, words: Partial<BadgeLayoutWords> = {}, showMarker = false, writingLine = true) =>
   badgeLayout({ ...size, headerPicture: false, showLogo: true, writingLine, showMarker }, { ...WORDS, ...words }, MEASURE);
 
-describe("§776 both areas fit on the two strips", () => {
+describe("§NNN both areas fit on the two strips", () => {
   const everything = { free: FREE, markerLabel: "Tură:", phone: "Coordonator: 0712 345 678" };
 
   it.each([
@@ -124,7 +124,7 @@ describe("§776 both areas fit on the two strips", () => {
   });
 });
 
-describe("§776 at the bounds of the custom size", () => {
+describe("§NNN at the bounds of the custom size", () => {
   const widths = [BADGE_CUSTOM_BOUNDS.width.min, 90, 133, BADGE_CUSTOM_BOUNDS.width.max];
   const heights = [BADGE_CUSTOM_BOUNDS.height.min, 35, 61, BADGE_CUSTOM_BOUNDS.height.max];
   const cases = widths.flatMap((width) => heights.map((height) => [`${width} × ${height}`, custom(width, height)] as const));
@@ -157,7 +157,7 @@ describe("§776 at the bounds of the custom size", () => {
   });
 });
 
-describe("§776 a size too small for everything ticked", () => {
+describe("§NNN a size too small for everything ticked", () => {
   it("is refused, naming what does not fit and the height that would, at the smallest custom size", () => {
     const refusal = badgeSizeRefusal(custom(60, 30), { freeText: true, phone: true });
     expect(refusal).not.toBeNull();
@@ -193,7 +193,7 @@ describe("§776 a size too small for everything ticked", () => {
   });
 });
 
-describe("§776 the free line: shrunk, then cut", () => {
+describe("§NNN the free line: shrunk, then cut", () => {
   it("keeps its size on a short line and shrinks a longer one before cutting it", () => {
     // On the narrowest strip that takes the line with the telephone (a 60-character line never overflows 90 mm but in wide letters).
     const small = custom(60, 34);
@@ -221,7 +221,7 @@ describe("§776 the free line: shrunk, then cut", () => {
   });
 });
 
-describe("§776 a badge with neither is the badge of before", () => {
+describe("§NNN a badge with neither is the badge of before", () => {
   it("adds no row, no line and no marker, and draws the name's line across the whole width as it always did", () => {
     for (const size of [STRIP90, STRIP100, custom(60, 30), custom(200, 100)]) {
       const plain = layoutOf(size);
@@ -238,7 +238,7 @@ describe("§776 a badge with neither is the badge of before", () => {
   });
 });
 
-describe("§776 the design's two new optional keys", () => {
+describe("§NNN the design's two new optional keys", () => {
   it("reads an old design, without them, as before: both off, nothing written, nothing said", () => {
     const old = { size: "strip100", showTitle: false, phone: "0712 345 678", showPhone: true };
     const read = readBadgeDesign(old);
@@ -304,7 +304,7 @@ describe("§776 the design's two new optional keys", () => {
   });
 });
 
-describe("§776 the words a badge prints", () => {
+describe("§NNN the words a badge prints", () => {
   const defaults = { label: "VOLUNTAR", name: "Nume:", phoneLabel: "Coordonator" };
   const design: BadgeDesign = {
     ...DEFAULT_BADGE_DESIGN,
