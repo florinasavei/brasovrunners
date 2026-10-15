@@ -352,7 +352,7 @@ describe("«Toate datele unei persoane» lists the notes (art. 15 GDPR)", () => 
 });
 
 describe("where a note never appears", () => {
-  it("is on no row of the list, the desk, the public list or the CSV", async () => {
+  it("is on no row of the list, the desk, the public list or a file whose writer was not given a notes header", async () => {
     const race = await createRace();
     const { id } = await register(race, { listOptOut: false });
     const organizer = await staff("MODERATOR");
@@ -371,9 +371,9 @@ describe("where a note never appears", () => {
     const publicList = await listPublicStartList(db, race);
     expect(JSON.stringify(publicList)).not.toContain("tricou");
 
-    // The spreadsheet has no column for it: its header names none. The CSV's rows come from the export route's own
-    // query, which never reads `registration_notes`; the guard for that is structural —
-    // `tests/unit/registrations/notes-never-leave.test.ts` lists the only files that may import the table.
+    // The files' writers have no column for it unless the route asks for one (§NNN: a role that may keep notes,
+    // read in `notes-in-export.test.ts`): their own header names none. The guard for who reads the table is
+    // structural — `tests/unit/registrations/notes-never-leave.test.ts` lists the only files that may import it.
     const [header] = buildRegistrationsCsv([]).split("\n");
     expect(header).not.toMatch(/note/i);
   });

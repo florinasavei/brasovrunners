@@ -1009,7 +1009,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           */}
           <GlyphButton
             icon="spreadsheet"
-            href={`/api/admin/registrations/export?format=xlsx${exportQueryString ? `&${exportQueryString}` : ""}`}
+            href={`/api/admin/registrations/export?format=xlsx&lang=${locale}${exportQueryString ? `&${exportQueryString}` : ""}`}
             variant="outlined"
             size="small"
             sx={TAP_TARGET}
@@ -1018,7 +1018,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
           </GlyphButton>
           <GlyphButton
             icon="download"
-            href={`/api/admin/registrations/export${exportQueryString ? `?${exportQueryString}` : ""}`}
+            href={`/api/admin/registrations/export?lang=${locale}${exportQueryString ? `&${exportQueryString}` : ""}`}
             variant="text"
             size="small"
             sx={TAP_TARGET}
