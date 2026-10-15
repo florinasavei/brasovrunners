@@ -57,7 +57,7 @@ const { openFormDraft } = await import("@/modules/registrations/form-draft");
 
 /** As the panel posts it: «O sugestie» and «O reclamație» off, their boxes empty. */
 const SETTINGS = {
-  howItWent: { on: true, to: "how@example.org" },
+  howItWent: { on: true, to: "how@example.org", via: "gmail" },
   suggestion: { on: false, to: "" },
   complaint: { on: false, to: "" },
   safety: { on: true, to: "safety@example.org", name: "Maria" },

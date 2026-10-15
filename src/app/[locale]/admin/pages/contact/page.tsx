@@ -6,7 +6,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
 import { routing } from "@/i18n/routing";
-import { resolveContactRecipients } from "@/modules/contact/domain/recipients";
+import { contactViaFor, resolveContactRecipients } from "@/modules/contact/domain/recipients";
 import { configuredGmailAddress, resolveShownContactAddresses } from "@/modules/contact/domain/shown-address";
 import { countHeldBack } from "@/modules/contact/held-back";
 import { readContactRecipients } from "@/modules/contact/recipients";
@@ -63,11 +63,12 @@ export default async function AdminContactSettingsPage({ params, searchParams }:
     countHeldBack(db, now),
     readShownContactAddress(db),
     readPublicPhone(db),
-    readFeedbackSettings(db),
+    readFeedbackSettings(db, feedbackRoads()),
     noticeDescribesFeedbackForms(db, now),
     noticeDescribesFeedbackSafetyGmail(db, now),
   ]);
   const mayEdit = canManageClubSettings(actor.role);
+  const roads = feedbackRoads();
 
   return (
     <Stack spacing={3}>
@@ -87,6 +88,8 @@ export default async function AdminContactSettingsPage({ params, searchParams }:
         resolved={resolveContactRecipients(recipients, env.CONTACT_FORM_TO)}
         mayEdit={mayEdit}
         heldBack={heldBack}
+        via={contactViaFor(recipients, roads)}
+        roads={roads}
         openWhen={{ primary: true, saved: saved === "contactRecipients" }}
       />
 
@@ -96,7 +99,7 @@ export default async function AdminContactSettingsPage({ params, searchParams }:
         state={feedbackForms}
         noticeDescribes={feedbackNoticeDescribes}
         mayEdit={mayEdit}
-        roads={feedbackRoads()}
+        roads={roads}
         safetyGmailDescribed={safetyGmailDescribed}
         gmailAccount={env.CONTACT_SMTP_USER ?? null}
         openWhen={{ primary: true, saved: saved === "feedbackForms" }}

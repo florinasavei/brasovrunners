@@ -232,6 +232,17 @@ describe("BR-REQ-070-04 the contact form", () => {
     expect(await db.select().from(rateLimitBuckets)).toHaveLength(0);
   });
 
+  it("§782 queues the message for the road the club chose for «Scrie-ne», and for the club's Gmail when the delivery names none", async () => {
+    const capture = smtpCapture();
+    await queueContact(db, delivery(capture), PERSON, NOW, PAGE);
+    await queueContact(db, { ...delivery(capture), road: "mailgun" }, { ...PERSON, email: "ioana@example.com" }, NOW, PAGE);
+    const rows = await relayRows(db);
+    expect(rows.map((row) => row.road).sort()).toEqual(["gmail", "mailgun"]);
+    // Whatever the road, the other one may carry it when this one is down (§778), and the visitor's address is its Reply-To.
+    for (const row of rows) expect(readRelayPayload(row.payloadJson)).toMatchObject({ fallbackAllowed: true, form: "contact" });
+    expect(rows.map((row) => readRelayPayload(row.payloadJson)?.replyTo).sort()).toEqual(["ana@example.com", "ioana@example.com"]);
+  });
+
   /*
     §778: a refused send is no longer a sentence on the page. The message is queued, the sender is answered «sent», and what the
     road says is the relay's — counted against the road, retried, and taken over by the other road (`relay.test.ts`).
