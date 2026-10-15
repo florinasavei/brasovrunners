@@ -81,9 +81,10 @@ export default function VolunteerRoleTile({
           gap: 1.5,
           p: 1.5,
           cursor: "pointer",
-          "& input": { ...CHOICE_INPUT_SX, mt: "1px" },
+          "& input": { ...CHOICE_INPUT_SX, mt: "1px", position: "relative", zIndex: 1 },
           // The label's press area reaches over the whole tile (the tile is the positioned box), so the blank space under a short name
-          // beside a taller neighbour ticks the box too; the description, a layer above, keeps its own links and fold.
+          // beside a taller neighbour ticks the box too. The box and the words (and the description, below) are a layer above it, so each is its
+          // own hit target; a press on any of them still reaches the label.
           "&::after": { content: '""', position: "absolute", inset: 0 },
         }}
       >
@@ -96,7 +97,7 @@ export default function VolunteerRoleTile({
           aria-labelledby={`${base}-name`}
           aria-describedby={[`${base}-needs`, described ? descriptionId : null].filter(Boolean).join(" ")}
         />
-        <Box component="span" sx={{ minWidth: 0, flex: 1 }}>
+        <Box component="span" sx={{ minWidth: 0, flex: 1, position: "relative", zIndex: 1 }}>
           <Typography id={`${base}-name`} component="span" sx={{ display: "block", fontWeight: 600, overflowWrap: "anywhere" }}>
             {name}
           </Typography>
