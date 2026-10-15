@@ -7497,6 +7497,7 @@
                 "Bifează «Doar cu oferte și beneficii» ca să vezi doar cine a spus da la oferte; exportul ia același filtru.",
                 "Apasă «Exportă Excel» (sau «Exportă CSV»). Fișierul are exact rândurile filtrate, fără înscrierile de test.",
                 "Fișierul se termină cu «Note interne»: o notă pe rând, cu rolul celui care a scris. Coloana are cuvintele limbii paginii pe care ai apăsat butonul.",
+                "Sub tabel, după un rând gol, «Statistici» numără aceleași rânduri: totalul, cei confirmați (activii), fiecare altă stare, câți sunt din club și, pe categorii (sex și vârstă), fiecare grup. Apare doar în Excel, niciodată în CSV.",
                 "Fișierul are acte de identitate și telefoane: nu-l trimite pe grupuri și șterge-l în cel mult 7 zile de la eveniment."
               ]
             },
