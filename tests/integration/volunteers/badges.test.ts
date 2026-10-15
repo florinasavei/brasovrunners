@@ -3,7 +3,7 @@ import { eq } from "drizzle-orm";
 import PDFDocument from "pdfkit";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { auditLogs } from "@/db/schema/audit-logs";
-import { eventVolunteerRoles } from "@/db/schema/event-volunteers";
+import { eventVolunteerRoles, eventVolunteers } from "@/db/schema/event-volunteers";
 import { eventTranslations, events } from "@/db/schema/events";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import { duplicateEvent } from "@/modules/content/events/service";
@@ -11,7 +11,7 @@ import { readEventConfig } from "@/modules/content/events/transfer/export";
 import type { StaffRole } from "@/modules/staff-identity/domain/roles";
 import { DEFAULT_BADGE_DESIGN, readBadgeDesign } from "@/modules/volunteers/badges/badge-design";
 import { readBadgeDesignForm } from "@/modules/volunteers/badges/badge-query";
-import { BADGE_COUNT_MAX, badgePrintDefault, findEventForBadges, listBadgeRoles, readPrintCounts, saveBadgeDesign, saveBadgeRoleColours } from "@/modules/volunteers/badges/badges";
+import { BADGE_COUNT_MAX, badgePrintDefault, badgePrintEntries, findEventForBadges, listBadgeRoles, readPrintCounts, saveBadgeDesign, saveBadgeRoleColours } from "@/modules/volunteers/badges/badges";
 import { changeVolunteerRole } from "@/modules/volunteers/volunteers";
 import { DomainError } from "@/shared/errors/domain-error";
 import type { FormOutcome } from "@/shared/forms/outcome";
@@ -640,4 +640,46 @@ describe("§776 the free-text line and the marker area", () => {
     expect(sample.status).toBe(200);
     expect(sample.headers.get("content-type")).toBe("image/png");
   }, 60_000);
+});
+
+describe("§782 «Câte ecusoane» for a role without a number", () => {
+  const person = (roleId: string, name: string, state: "REGISTERED" | "CONFIRMED" | "CANCELLED") => ({
+    eventId,
+    roleId,
+    name,
+    email: `${name.toLowerCase()}@example.test`,
+    canonicalEmail: `${name.toLowerCase()}@example.test`,
+    canonicalizationVersion: 1,
+    phone: "+40712345678",
+    state,
+    source: "PUBLIC" as const,
+  });
+
+  it("starts it at the people the organizers gave the role — never the cancelled — where a numbered role starts at its number", async () => {
+    const [free] = await db.insert(eventVolunteerRoles).values({ eventId, nameRo: "Ajutoare", nameEn: "Helpers", needed: null, position: 2 }).returning({ id: eventVolunteerRoles.id });
+    await db.insert(eventVolunteers).values([person(free.id, "Ana", "CONFIRMED"), person(free.id, "Bogdan", "REGISTERED"), person(free.id, "Cora", "CANCELLED"), person(waterId, "Dan", "CONFIRMED")]);
+    const roles = await listBadgeRoles(db, eventId);
+    expect(roles.map((role) => [role.nameRo, role.needed, role.assigned])).toEqual([
+      ["Punct de apă", 3, 1],
+      ["Marshal", 5, 0],
+      ["Ajutoare", null, 2],
+    ]);
+    const counts = readPrintCounts(new URLSearchParams(), roles);
+    if ("refused" in counts) throw new Error("the defaults are never a refusal");
+    expect([...counts.roles.values()].map((entry) => entry.count)).toEqual([3, 5, 2]);
+    expect(badgePrintDefault(roles[2])).toBe(2);
+    // The sheet's piles: what each role starts at, so a press without a change prints 3 + 5 + 2 badges.
+    expect(badgePrintEntries(roles, counts, "ro").map((entry) => entry.count)).toEqual([3, 5, 2]);
+    // The box is the club's to change: a typed number replaces the start.
+    const typed = readPrintCounts(new URLSearchParams(`n.${free.id}=12`), roles);
+    if ("refused" in typed) throw new Error("a number in range is no refusal");
+    expect(typed.roles.get(free.id)).toEqual({ count: 12, spares: 0 });
+  });
+
+  it("starts at nothing while nobody has been given the role, and says so in the sheet", async () => {
+    await db.insert(eventVolunteerRoles).values({ eventId, nameRo: "Ajutoare", nameEn: "Helpers", needed: null, position: 2 });
+    const roles = await listBadgeRoles(db, eventId);
+    expect(roles.at(-1)).toMatchObject({ needed: null, assigned: 0 });
+    expect(badgePrintDefault(roles.at(-1)!)).toBe(0);
+  });
 });

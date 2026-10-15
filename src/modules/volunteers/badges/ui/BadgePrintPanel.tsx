@@ -47,7 +47,9 @@ export default async function BadgePrintPanel({
   const grid = badgeSheetGrid(badgePaper(design));
   const { widthMm, heightMm } = badgeSizeMm(design);
   const image = badgeImageSize(design);
-  const needed = roles.reduce((sum, role) => sum + role.needed, 0);
+  // The roles with a number say what they need; a role without one (§782) is said once beside the total.
+  const needed = roles.reduce((sum, role) => sum + (role.needed ?? 0), 0);
+  const someWithoutNumber = roles.some((role) => role.needed === null);
   // What the boxes start at, and so what a press without a change prints: a page whose defaults add up to
   // nothing (an event with no roles yet) says so, rather than offering a download of an empty sheet.
   const startsAt = roles.reduce((sum, role) => sum + badgePrintDefault(role), 0);
@@ -98,7 +100,11 @@ export default async function BadgePrintPanel({
             numberBox(printBoxes.none, t("badges.print.noRoleCount"), 0, "badge-none")
           )}
           <Typography variant="caption" color="text.secondary">
-            {role ? t("badges.print.countHelp", { needed: String(role.needed) }) : t("badges.print.noRoleHelp", { label })}
+            {role
+              ? role.needed === null
+                ? t("badges.print.countHelpNoNumber", { assigned: String(role.assigned) })
+                : t("badges.print.countHelp", { needed: String(role.needed) })
+              : t("badges.print.noRoleHelp", { label })}
           </Typography>
         </Stack>
       </Stack>
@@ -121,7 +127,7 @@ export default async function BadgePrintPanel({
         <input type="hidden" name={BADGE_FROM_BOX} value={locale} />
         <Stack spacing={2}>
           <Typography variant="body2" color="text.secondary">
-            {t("badges.print.intro", { perSheet: String(grid.perSheet), needed: String(needed), max: String(BADGE_COUNT_MAX), total: String(BADGE_TOTAL_MAX) })}
+            {t(someWithoutNumber ? "badges.print.introNoNumber" : "badges.print.intro", { perSheet: String(grid.perSheet), needed: String(needed), max: String(BADGE_COUNT_MAX), total: String(BADGE_TOTAL_MAX) })}
             <QuietHelp text={t("badges.print.introMore")} />
           </Typography>
           <Box component="fieldset" sx={{ border: 0, p: 0, m: 0, minWidth: 0 }} data-testid="badge-print-language">

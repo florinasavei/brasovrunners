@@ -139,7 +139,9 @@ export default async function VolunteerBox({
   const roleDoc = (role: PublicVolunteerRole) => (locale === "en" ? role.descriptionEnJson : role.descriptionRoJson);
   const roleWords = (role: PublicVolunteerRole) => (locale === "en" ? role.descriptionEn : role.descriptionRo);
   // «mai sunt necesare 10 persoane» only while the club ticked «Arată public câți voluntari mai sunt necesari»; else «mai sunt locuri» (§773).
-  const needs = (role: PublicVolunteerRole) => (showCounts ? t(`volunteers.needs.${countForm(role.free, locale)}`, { count: role.free }) : t("volunteers.needs.open"));
+  // A role without a number (§782) has none to say: it reads «mai sunt locuri» whatever the setting, never a count.
+  const needs = (role: PublicVolunteerRole) =>
+    showCounts && role.free !== null ? t(`volunteers.needs.${countForm(role.free, locale)}`, { count: role.free }) : t("volunteers.needs.open");
   const countrySearchWords = {
     search: tForm("countrySearch.search"),
     noMatch: tForm("countrySearch.noMatch"),

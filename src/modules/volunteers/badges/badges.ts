@@ -1,5 +1,5 @@
 import { and, asc, eq } from "drizzle-orm";
-import { eventVolunteerCategories, eventVolunteerRoles } from "@/db/schema/event-volunteers";
+import { eventVolunteerCategories, eventVolunteerRoles, eventVolunteers } from "@/db/schema/event-volunteers";
 import { eventTranslations, events } from "@/db/schema/events";
 import type { StaffUser } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
@@ -10,7 +10,7 @@ import { canDesignVolunteerBadges } from "@/modules/staff-identity/domain/roles"
 import { DomainError } from "@/shared/errors/domain-error";
 import { isWrittenText, missingLanguage } from "@/shared/forms/both-languages";
 import { isUuid } from "@/shared/ids";
-import { compareCategories, compareRoles, groupRolesByCategory, roleLabel } from "../domain/volunteer";
+import { compareCategories, compareRoles, countsAgainstRole, groupRolesByCategory, roleLabel } from "../domain/volunteer";
 import {
   type BadgeDesign,
   type BadgeDroppedKey,
@@ -44,12 +44,15 @@ function assertMay(actor: Actor): void {
   }
 }
 
-/** One role as the badges read it: its names, how many it needs, its band's colour. */
+/** One role as the badges read it: its names, how many it needs, how many people it was given, its band's colour. */
 export type BadgeRole = {
   id: string;
   nameRo: string;
   nameEn: string;
-  needed: number;
+  /** How many people the role needs; null is «fără număr» (§782). */
+  needed: number | null;
+  /** The people the organizers gave the role (§761's count): what «Câte ecusoane» starts at for a role without a number. */
+  assigned: number;
   /** The colour as stored: a hex, or null for the club's orange. */
   colour: string | null;
   position: number;
@@ -63,6 +66,9 @@ export type BadgeRole = {
   categoryEn: string | null;
   categoryPhone: string | null;
 };
+
+/** What «Câte ecusoane» reads of a role: what it needs, and — for a role without a number (§782) — the people it was given. */
+export type BadgeCountRole = Pick<BadgeRole, "needed"> & { assigned?: number };
 
 /**
  * An event's roles under their categories (§774), in the club's order: the categories in theirs, each one's roles in the order of
@@ -83,7 +89,12 @@ export async function listBadgeRoles<T extends Record<string, unknown>>(db: Data
     .from(eventVolunteerRoles)
     .where(eq(eventVolunteerRoles.eventId, eventId));
   const categories = (await db.select().from(eventVolunteerCategories).where(eq(eventVolunteerCategories.eventId, eventId))).sort(compareCategories);
-  const roles = rows.sort(compareRoles).map((row) => ({ ...row, categoryRo: null as string | null, categoryEn: null as string | null, categoryPhone: null as string | null }));
+  // The people given each role (§761): what a role without a number starts its badges at (§782) — one read for the event, counted here.
+  const people = await db.select({ roleId: eventVolunteers.roleId, state: eventVolunteers.state }).from(eventVolunteers).where(eq(eventVolunteers.eventId, eventId));
+  const assigned = (roleId: string) => people.filter((person) => person.roleId === roleId && countsAgainstRole(person.state)).length;
+  const roles = rows
+    .sort(compareRoles)
+    .map((row) => ({ ...row, assigned: assigned(row.id), categoryRo: null as string | null, categoryEn: null as string | null, categoryPhone: null as string | null }));
   return groupRolesByCategory(categories, roles).flatMap((group) =>
     group.roles.map((role) => ({ ...role, categoryRo: group.category?.nameRo ?? null, categoryEn: group.category?.nameEn ?? null, categoryPhone: group.category?.contactPhone ?? null })),
   );
@@ -396,10 +407,11 @@ export type BadgePrintCounts = {
 /**
  * «Câte ecusoane» before anyone types: the people the role needs, never more than one pile may hold — a role
  * that needs more than `BADGE_COUNT_MAX` (the volunteers allow up to 1 000) starts at the most a pile
- * prints, so the form the page draws is always one the sheet accepts.
+ * prints, so the form the page draws is always one the sheet accepts. A role without a number (§782) has no
+ * need to start from: it starts at the people it was given, and the box is the club's to raise.
  */
-export function badgePrintDefault(role: Pick<BadgeRole, "needed">): number {
-  return Math.min(Math.max(0, role.needed), BADGE_COUNT_MAX);
+export function badgePrintDefault(role: BadgeCountRole): number {
+  return Math.min(Math.max(0, role.needed ?? role.assigned ?? 0), BADGE_COUNT_MAX);
 }
 
 /** The print form's hidden box naming the page's language, and the page's query that carries a refusal back to it. */
@@ -423,7 +435,7 @@ export type BadgePrintRefusal = { refused: "number" | "total" };
  * request — for a number that is not a whole number from 0 to `BADGE_COUNT_MAX` (`"number"`), or a total past
  * `BADGE_TOTAL_MAX` (`"total"`); the route says which on the page.
  */
-export function readPrintCounts(params: URLSearchParams, roles: readonly Pick<BadgeRole, "id" | "needed">[]): BadgePrintCounts | BadgePrintRefusal {
+export function readPrintCounts(params: URLSearchParams, roles: readonly (Pick<BadgeRole, "id"> & BadgeCountRole)[]): BadgePrintCounts | BadgePrintRefusal {
   const number = (name: string, fallback: number): number | null => {
     const raw = params.get(name);
     if (raw === null) return fallback;

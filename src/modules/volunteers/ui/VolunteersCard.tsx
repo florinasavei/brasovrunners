@@ -224,8 +224,11 @@ export default async function VolunteersCard({
   const standingOf = new Map(standings.map((standing) => [standing.roleId, standing]));
 
   const pending = volunteers.filter((volunteer) => volunteer.state === "REGISTERED").length;
-  const totalNeeded = roles.reduce((sum, role) => sum + role.needed, 0);
-  const totalTaken = standings.reduce((sum, standing) => sum + standing.taken, 0);
+  // The summary counts only the roles with a number (§782): a role without one has nothing to be «din» — it is said once beside them.
+  const numbered = standings.filter((standing) => standing.needed !== null);
+  const withoutNumber = standings.filter((standing) => standing.needed === null);
+  const totalNeeded = numbered.reduce((sum, standing) => sum + (standing.needed ?? 0), 0);
+  const totalTaken = numbered.reduce((sum, standing) => sum + standing.taken, 0);
   const roleName = (role: Pick<VolunteerRole, "nameRo" | "nameEn">) => (locale === "en" ? role.nameEn : role.nameRo);
   // The roles in the order the card lists them — under their categories (§774) — each with its category's words, so a role named alone
   // says «Direcționare (Traseu)»: the assignment chips, the select, the ticks, the chips, the agreement's roles. The role's own header,
@@ -329,16 +332,28 @@ export default async function VolunteersCard({
         size="small"
         slotProps={{ htmlInput: { maxLength: VOLUNTEER_ROLE_NAME_MAX } }}
       />
-      <RecallField
-        name="needed"
-        type="number"
-        label={t("volunteers.role.needed")}
-        helperText={t("volunteers.role.neededHelp")}
-        defaultValue={String(role?.needed ?? 1)}
-        required
-        size="small"
-        slotProps={{ htmlInput: { min: 1, max: VOLUNTEER_NEEDED_MAX, inputMode: "numeric" } }}
-      />
+      {/* «Câți oameni trebuie» or «Fără număr — oricâți oameni» (§782): a number, or the house's tick (never a toggle). Ticked, the number box is hidden by
+          the stylesheet alone (`:has`) — no script, so a form without scripts keeps working with the box shown; the box is never `required` (a hidden
+          required box would block the press), the server decides by the tick and says «Verifică acest câmp» at the number when neither is given. */}
+      <Stack
+        spacing={0.5}
+        data-testid="volunteer-role-needed-group"
+        sx={{ "&:has(input[name='unlimited']:checked) [data-needed-box]": { display: "none" } }}
+      >
+        <RecallField
+          name="needed"
+          type="number"
+          label={t("volunteers.role.needed")}
+          helperText={t("volunteers.role.neededHelp")}
+          defaultValue={role && role.needed === null ? "" : String(role?.needed ?? 1)}
+          size="small"
+          data-needed-box=""
+          slotProps={{ htmlInput: { min: 1, max: VOLUNTEER_NEEDED_MAX, inputMode: "numeric" } }}
+        />
+        <CheckboxField name="unlimited" defaultChecked={role ? role.needed === null : false} help={t("volunteers.role.unlimitedHelp")} helpTestId="volunteer-role-unlimited-help">
+          {t("volunteers.role.unlimited")}
+        </CheckboxField>
+      </Stack>
       {/* «Descrierea rolului» (§765): the house's rich-text editor, one fold per language, both languages or neither; its plain words are what the agreement and the emails say. */}
       <Stack spacing={1} data-testid="volunteer-role-description-field">
         <LazyRichTextEditor
@@ -565,6 +580,10 @@ export default async function VolunteersCard({
   const standingChip = (role: VolunteerRole) => {
     const standing = standingOf.get(role.id);
     if (!standing) return null;
+    // A role without a number (§782) is never «full»: «3 · fără număr», the open glyph and no warning colour (nothing is owed).
+    if (standing.needed === null) {
+      return <StatusChip glyph="open" variant="outlined" label={t("volunteers.standingNoNumber", { taken: String(standing.taken) })} testId="volunteer-role-standing" />;
+    }
     return (
       <StatusChip
         glyph={standing.free === 0 ? "done" : "open"}
@@ -768,7 +787,9 @@ export default async function VolunteersCard({
 
   /** A role's name with how it stands, «Sosire · 1 din 1»: what the organizer sees before one press fills it. */
   const roleStanding = (role: VolunteerRole) =>
-    t("volunteers.assign.standing", { role: labelOf(role), taken: String(standingOf.get(role.id)?.taken ?? 0), needed: String(role.needed) });
+    role.needed === null
+      ? t("volunteers.assign.standingNoNumber", { role: labelOf(role), taken: String(standingOf.get(role.id)?.taken ?? 0) })
+      : t("volunteers.assign.standing", { role: labelOf(role), taken: String(standingOf.get(role.id)?.taken ?? 0), needed: String(role.needed) });
 
   /**
    * «Dă-i rolul …» (§761), on the offers «De repartizat» only — a person given a role changes it in «Modifică» →
@@ -1237,7 +1258,10 @@ export default async function VolunteersCard({
     roles.length === 0
       ? t("volunteers.summaryNone")
       : [
-          t("volunteers.summary", { taken: String(totalTaken), needed: String(totalNeeded) }),
+          // «3 din 10», «3 din 10 + roluri fără număr»; with no numbered role at all, only the people in the roles without one (§782).
+          numbered.length > 0
+            ? t(withoutNumber.length > 0 ? "volunteers.summaryPlusNoNumber" : "volunteers.summary", { taken: String(totalTaken), needed: String(totalNeeded) })
+            : t("volunteers.summaryOnlyNoNumber", { taken: String(withoutNumber.reduce((sum, standing) => sum + standing.taken, 0)) }),
           ...(waitingForRole > 0 ? [t("volunteers.summaryUnassigned", { count: String(waitingForRole) })] : []),
           ...(pending > 0 ? [t("volunteers.summaryPending", { count: String(pending) })] : []),
         ].join(" · ");

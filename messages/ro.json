@@ -4816,10 +4816,13 @@
       "intro": "Oamenii care ajută la eveniment: fiecare bifează ce ar face, tu îi dai un rol. Rolurile se definesc aici, în ambele limbi. Adresele și telefoanele nu apar pe nicio pagină publică.",
       "notAccounts": "Voluntarii de aici nu sunt conturi: cine lucrează la masa de ridicare primește un cont din „Echipa”, cu rolul Voluntar.",
       "summary": "{taken} din {needed}",
+      "summaryPlusNoNumber": "{taken} din {needed} + roluri fără număr",
+      "summaryOnlyNoNumber": "{taken} în roluri fără număr",
       "summaryNone": "Încă niciun rol",
       "summaryPending": "{count} de confirmat",
       "summaryUnassigned": "{count} de repartizat",
       "standing": "{taken} din {needed}",
+      "standingNoNumber": "{taken} · fără număr",
       "offer": {
         "open": "Pagina „Vreau să fiu voluntar” e deschisă: pagina evenimentului trimite la ea.",
         "closed": {
@@ -4844,7 +4847,9 @@
         "nameRo": "Numele rolului (Română)",
         "nameEn": "Numele rolului (English)",
         "needed": "Câți oameni trebuie",
-        "neededHelp": "Cel puțin 1. Se numără doar oamenii cărora le-ai dat rolul. Când are atâția, formularul public nu-l mai oferă.",
+        "neededHelp": "Cel puțin 1, sau bifează „Fără număr” mai jos. Se numără doar oamenii cărora le-ai dat rolul. Când are atâția, formularul public nu-l mai oferă.",
+        "unlimited": "Fără număr — oricâți oameni",
+        "unlimitedHelp": "Rolul se oferă mereu, oricâți oameni ar avea deja. Nebifat, scrie mai sus un număr de cel puțin 1.",
         "descriptionRo": "Descrierea rolului (Română, opțional)",
         "descriptionEn": "Descrierea rolului (English, opțional)",
         "descriptionHelp": "Ce presupune rolul: unde stă voluntarul, ce are de făcut, de la ce oră. Cel mult {max} de caractere de text în fiecare limbă; în ambele limbi sau în niciuna.",
@@ -4877,7 +4882,8 @@
         "button": "Dă-i rolul {role}",
         "other": "Alt rol",
         "otherSubmit": "Dă-i rolul ales",
-        "standing": "{role} · {taken} din {needed}"
+        "standing": "{role} · {taken} din {needed}",
+        "standingNoNumber": "{role} · {taken} · fără număr"
       },
       "person": {
         "role": "Rol",
@@ -9674,6 +9680,7 @@
         "title": "Tipărire",
         "aside": "{perSheet} pe o foaie A4 · {width} × {height} mm",
         "intro": "Ecusoanele se tipăresc pe roluri, nu pe persoane. Pe o foaie A4 încap {perSheet} ecusoane. Rolurile cer în total: {needed}. Cel mult {max} pe un rol și {total} într-un fișier.",
+        "introNoNumber": "Ecusoanele se tipăresc pe roluri. Pe o foaie A4 încap {perSheet}. Rolurile cu număr cer {needed}; cele fără număr pornesc de la oamenii dați lor. Cel mult {max} pe rol și {total} într-un fișier.",
         "introMore": "Foaia nu are niciun nume și nicio dată a vreunui voluntar. Numele se scrie de mână, la masa de primire.",
         "language": "Limba ecusoanelor",
         "languages": {
@@ -9683,6 +9690,7 @@
         "count": "Câte ecusoane",
         "spares": "În plus",
         "countHelp": "Rolul are nevoie de {needed}. „În plus” sunt rezerve.",
+        "countHelpNoNumber": "Rolul nu are număr: caseta pornește de la cei {assigned} cărora le-ai dat rolul. „În plus” sunt rezerve.",
         "noRole": "Ecusoane fără rol",
         "noRoleCount": "Câte ecusoane fără rol",
         "noRoleHelp": "Doar „{label}”, pentru cine vine fără rol.",

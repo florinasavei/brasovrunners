@@ -4816,10 +4816,13 @@
       "intro": "The people who help at this event: each ticks what they would do, you give them a role. Roles are set here, in both languages. Addresses and telephone numbers never appear on a public page.",
       "notAccounts": "The volunteers here are not accounts: whoever works the race-day desk gets an account on “Echipa”, with the role Voluntar.",
       "summary": "{taken} of {needed}",
+      "summaryPlusNoNumber": "{taken} of {needed} + roles with no limit",
+      "summaryOnlyNoNumber": "{taken} in roles with no limit",
       "summaryNone": "No roles yet",
       "summaryPending": "{count} to confirm",
       "summaryUnassigned": "{count} to place",
       "standing": "{taken} of {needed}",
+      "standingNoNumber": "{taken} · no limit",
       "offer": {
         "open": "The “I want to volunteer” page is open: the event's page links to it.",
         "closed": {
@@ -4844,7 +4847,9 @@
         "nameRo": "Role name (Română)",
         "nameEn": "Role name (English)",
         "needed": "People needed",
-        "neededHelp": "At least 1. Only the people you gave the role count. Once it has that many, the public form stops offering it.",
+        "neededHelp": "At least 1, or tick “No limit” below. Only the people you gave the role count. Once it has that many, the public form stops offering it.",
+        "unlimited": "No limit — any number of people",
+        "unlimitedHelp": "The role is always offered, however many people it already has. Unticked, type a number of at least 1 above.",
         "descriptionRo": "Role description (Română, optional)",
         "descriptionEn": "Role description (English, optional)",
         "descriptionHelp": "What the role involves: where the volunteer stands, what they do, from what hour. At most {max} characters of text in each language; in both languages or neither.",
@@ -4877,7 +4882,8 @@
         "button": "Give them {role}",
         "other": "Another role",
         "otherSubmit": "Give the chosen role",
-        "standing": "{role} · {taken} of {needed}"
+        "standing": "{role} · {taken} of {needed}",
+        "standingNoNumber": "{role} · {taken} · no limit"
       },
       "person": {
         "role": "Role",
@@ -9674,6 +9680,7 @@
         "title": "Printing",
         "aside": "{perSheet} on an A4 sheet · {width} × {height} mm",
         "intro": "Badges are printed per role, not per person. An A4 sheet holds {perSheet} badges. The roles need in all: {needed}. At most {max} for a role and {total} in one file.",
+        "introNoNumber": "Badges are printed per role. An A4 sheet holds {perSheet}. Roles with a limit need {needed}; those with none start at the people given them. At most {max} per role and {total} in one file.",
         "introMore": "The sheet holds no name and nothing about any volunteer. The name is written by hand at the welcome desk.",
         "language": "The badges' language",
         "languages": {
@@ -9683,6 +9690,7 @@
         "count": "How many badges",
         "spares": "Spares",
         "countHelp": "The role needs {needed}. “Spares” are extra badges.",
+        "countHelpNoNumber": "The role has no limit: the box starts at the {assigned} people you gave the role. “Spares” are extra badges.",
         "noRole": "Badges without a role",
         "noRoleCount": "How many badges without a role",
         "noRoleHelp": "Only “{label}”, for whoever comes without a role.",
