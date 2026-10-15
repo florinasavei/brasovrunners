@@ -1566,7 +1566,15 @@ export async function submitVolunteer<T extends Record<string, unknown>>(
     if (kept.length === 0) return { outcome: "full", dropped: true };
     const dropped = kept.length < input.roleIds.length;
     // The roles as the agreement names them (§765): the plain words of «Descrierea rolului», never the old one-line column.
-    const chosen = ticked.filter((role) => kept.includes(role.id)).map(roleOf).sort(compareRoles);
+    // …each with the words of the category it sits under (§NNN), so the sentence says «Direcționare (Traseu)».
+    const categoryWords = new Map(
+      (await tx.select({ id: eventVolunteerCategories.id, nameRo: eventVolunteerCategories.nameRo, nameEn: eventVolunteerCategories.nameEn }).from(eventVolunteerCategories).where(eq(eventVolunteerCategories.eventId, eventId))).map((category) => [category.id, category]),
+    );
+    const chosen = ticked
+      .filter((role) => kept.includes(role.id))
+      .map(roleOf)
+      .sort(compareRoles)
+      .map((role) => ({ ...role, categoryRo: categoryWords.get(role.categoryId ?? "")?.nameRo ?? null, categoryEn: categoryWords.get(role.categoryId ?? "")?.nameEn ?? null }));
 
     // A repeat of the same person: the same answer a new one gets, nothing changed, nothing sent — whatever the row's state is.
     const [existing] = await tx
