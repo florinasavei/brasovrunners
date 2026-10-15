@@ -156,6 +156,12 @@ export type RegistrationCsvRow = {
    */
   memberBibOffered?: boolean;
   memberBibWanted?: boolean;
+  /**
+   * «Note interne» (§NNN): the registration's live notes as the cell's words (`exportNotesCell` — one a line,
+   * newest first, the author's role), written only when the file is built with `notesHeader`, last. Words, never
+   * the table: this file does not import the notes module (`notes-never-leave.test.ts`).
+   */
+  notes?: string;
 };
 
 const HEADER = [
@@ -213,11 +219,17 @@ const HEADER = [
   "Member bib",
 ];
 
-export function buildRegistrationsCsv(rows: readonly RegistrationCsvRow[]): string {
+/**
+ * The file. `notesHeader` adds the «Note interne» column (§NNN) after «Member bib», the last — passed by the
+ * route only for a role that `canKeepRegistrationNotes`; without it no such column, which is every other
+ * caller's file. A note's line breaks stay inside the quoted cell (`csvCell` quotes on `\n`).
+ */
+export function buildRegistrationsCsv(rows: readonly RegistrationCsvRow[], options: { notesHeader?: string } = {}): string {
+  const header = options.notesHeader ? [...HEADER, options.notesHeader] : HEADER;
   const lines = [
     // Through the same cell function as the data. No header needs quoting today; one added
     // later with a comma in it would silently split every row into an extra column.
-    HEADER.map(csvCell).join(","),
+    header.map(csvCell).join(","),
     ...rows.map((row) =>
       [
         row.eventTitle,
@@ -255,6 +267,7 @@ export function buildRegistrationsCsv(rows: readonly RegistrationCsvRow[]): stri
         row.country ?? "",
         row.city ?? "",
         memberBibExportCell(row),
+        ...(options.notesHeader ? [row.notes ?? ""] : []),
       ]
         .map(csvCell)
         .join(","),

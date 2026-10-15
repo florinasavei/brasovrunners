@@ -24,6 +24,19 @@ describe("§777 the notice's internal-notes sentence", () => {
     expect(paragraph).toMatch(/cerere de acces ți le dăm și pe ele/);
   });
 
+  /** §NNN — the notes are also a column of the registrations export, so the notice says where they are seen. */
+  it("ro: says they are seen in the administration page and in the registrations export the organizers download", () => {
+    const paragraph = registrationParagraph(privacyNoticeRo, /^2\./);
+    expect(paragraph).toMatch(/în pagina de administrare și în exportul înscrierilor \(Excel sau CSV\) pe care îl descarcă/);
+    expect(paragraph).toMatch(/fișierul exportat se șterge în termenele din aceeași secțiune/);
+  });
+
+  it("en: the same, in both file formats and with the exported file's deletion pointed at section 7", () => {
+    const paragraph = registrationParagraph(privacyNoticeEn, /^2\./);
+    expect(paragraph).toMatch(/in the backoffice and in the registrations export \(Excel or CSV\) they download/);
+    expect(paragraph).toMatch(/an exported file is deleted within the times in the same section/);
+  });
+
   it("en: the same, in the same paragraph as the registration's history", () => {
     const paragraph = registrationParagraph(privacyNoticeEn, /^2\./);
     expect(paragraph).toMatch(/The organisers may also keep internal notes about a registration, for organising the event/);

@@ -1114,7 +1114,18 @@
         "add": "Adaugă o notă",
         "label": "Nota",
         "limit": "Cel mult {max} de caractere.",
-        "save": "Salvează nota"
+        "save": "Salvează nota",
+        "exportMore": "… (mai multe note pe pagina înscrierii)",
+        "exportGone": "cont șters",
+        "exportRole": {
+          "MEMBER": "Membru",
+          "CONTRIBUTOR": "Voluntar",
+          "COPYWRITER": "Redactor",
+          "MODERATOR": "Organizator",
+          "DEV": "Tehnic",
+          "ADMIN": "Administrator",
+          "SUPERADMIN": "Superadministrator"
+        }
       },
       "auditActorParticipant": "participantul, din linkul propriu",
       "audit": {
@@ -7445,7 +7456,7 @@
               "steps": [
                 "«Înscrieri» → caută numele → deschide înscrierea → «Note interne». Cardul închis spune câte note are.",
                 "Scrie în «Adaugă o notă» și apasă «Salvează nota». Notele apar de la cea mai nouă, cu numele celui care a scris și momentul.",
-                "Doar organizatorii și administratorii văd notele. Nu apar la masă, în export sau pe lista publică. Nu scrie date medicale sau alte date sensibile.",
+                "Doar organizatorii și administratorii văd notele. Nu apar la masă sau pe lista publică; în exportul Excel și CSV sunt ultima coloană, «Note interne». Nu scrie date medicale sau alte date sensibile.",
                 "Pe lista înscrierilor, un rând cu note are un semn cu numărul lor; apasă-l ca să deschizi notele.",
                 "«Șterge» scoate o notă, după o întrebare: pe a ta o ștergi tu, pe oricare o șterge un Administrator. Notele se șterg odată cu înscrierea."
               ]
@@ -7456,6 +7467,7 @@
                 "«Înscrieri» → alege evenimentul → «Filtrează».",
                 "Bifează «Doar cu oferte și beneficii» ca să vezi doar cine a spus da la oferte; exportul ia același filtru.",
                 "Apasă «Exportă Excel» (sau «Exportă CSV»). Fișierul are exact rândurile filtrate, fără înscrierile de test.",
+                "Fișierul se termină cu «Note interne»: o notă pe rând, cu rolul celui care a scris. Coloana are cuvintele limbii paginii pe care ai apăsat butonul.",
                 "Fișierul are acte de identitate și telefoane: nu-l trimite pe grupuri și șterge-l în cel mult 7 zile de la eveniment."
               ]
             },
@@ -7779,7 +7791,7 @@
               "steps": [
                 "«Înscrieri» → caută numele → deschide înscrierea → «Note interne». Cardul închis spune câte note are.",
                 "Scrie în «Adaugă o notă» și apasă «Salvează nota». Notele apar de la cea mai nouă, cu numele celui care a scris și momentul.",
-                "Doar organizatorii și administratorii văd notele. Nu apar la masă, în export sau pe lista publică. Nu scrie date medicale sau alte date sensibile.",
+                "Doar organizatorii și administratorii văd notele. Nu apar la masă sau pe lista publică; în exportul Excel și CSV sunt ultima coloană, «Note interne». Nu scrie date medicale sau alte date sensibile.",
                 "Pe lista înscrierilor, un rând cu note are un semn cu numărul lor; apasă-l ca să deschizi notele.",
                 "«Șterge» scoate o notă, după o întrebare: pe a ta o ștergi tu, pe oricare o șterge un Administrator. Notele se șterg odată cu înscrierea."
               ]
