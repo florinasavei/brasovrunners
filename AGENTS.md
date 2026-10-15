@@ -2856,6 +2856,14 @@ BR-REQ-037-05):
      Organizer's too since §289** (`canReadRegistrations`, a set that excludes DEV); cancel,
      erase, rename, resend and the printing mark stay Administrator-only
      (`canManageRegistrations`). Each verb is audited under the volunteer's own id.
+   - **One thing the Organizer writes, and it is not the registration (§NNN).** An internal note on a
+     registration («Note interne», `registration_notes`): the Organizer, the Administrator and the
+     Superadministrator read and write them (`canKeepRegistrationNotes`, the same set as
+     `canReadRegistrations`, asserted in `notes.ts`); Tehnic and the volunteer get neither the card nor an
+     action that answers. The Organizer still changes nothing *on the registration* — no state, place, number
+     or answer — and deletes only their own note (an Administrator, any). A note is personal data: erased
+     with its registration (`ON DELETE CASCADE`), listed in «Toate datele unei persoane» (art. 15), never on the
+     desk, in an export, on the public list or in an email, and the trail names who and when, never the words.
 
 6. **«Lista de invitați speciali» (2026-10-02, §643; named «Lista ascunsă», drawn as a radio and given
    the event's switch by §647; renamed «Lista de invitați speciali», and explained on every screen that shows it, by §649 on 2026-10-03).** The Administrator (`canManageRegistrations`; the Organizer reads the chip, the pill and

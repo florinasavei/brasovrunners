@@ -1093,6 +1093,24 @@
         "noRecipient": "destinatar nenotat"
       },
       "auditActorRemoved": "cont șters",
+      "notes": {
+        "title": "Note interne",
+        "none": "nicio notă",
+        "mark": "Note interne la {name}: {counted}",
+        "count": {
+          "one": "{count} notă",
+          "few": "{count} note",
+          "other": "{count} de note"
+        },
+        "help": "Doar organizatorii și administratorii văd notele. Nu scrie date medicale sau alte date sensibile.",
+        "empty": "Nicio notă încă.",
+        "by": "{name} · {date}",
+        "delete": "Șterge",
+        "add": "Adaugă o notă",
+        "label": "Nota",
+        "limit": "Cel mult {max} de caractere.",
+        "save": "Salvează nota"
+      },
       "auditActorParticipant": "participantul, din linkul propriu",
       "audit": {
         "registration": {
@@ -1125,7 +1143,9 @@
           "hold_moved_by_window": "Termenul semnării mutat după fereastra de confirmare schimbată",
           "not_revived_for_outage": "Nereluat după întreruperea site-ului: termenul trecuse cât nu putea fi accesat, iar locul fusese dat între timp sau cererea expirase deja",
           "answer_corrected": "Răspuns corectat: {field}",
-          "answers_viewed": "Datele înscrierii deschise, cu telefonul și persoana de contact"
+          "answers_viewed": "Datele înscrierii deschise, cu telefonul și persoana de contact",
+          "note_added": "Notă internă adăugată",
+          "note_deleted": "Notă internă ștearsă"
         },
         "event": {
           "capacity_raised_for_offer": "Loc suplimentar adăugat pentru o ofertă («Trimite-i oferta»): {from} → {to}",
@@ -1809,11 +1829,15 @@
       "memberClearTitle": "Scoți bifa de membru?",
       "memberClearBody": "Scoți bifa de membru de la {name}; nimic altceva nu se schimbă, niciun email.",
       "memberSetTitle": "Pui bifa de membru?",
-      "memberSetBody": "Pui bifa de membru la {name}; pe listă clubul devine {club}. Nimic altceva nu se schimbă, niciun email."
+      "memberSetBody": "Pui bifa de membru la {name}; pe listă clubul devine {club}. Nimic altceva nu se schimbă, niciun email.",
+      "noteDeleteTitle": "Ștergi nota?",
+      "noteDeleteBody": "Nota se șterge definitiv, împreună cu textul ei. În jurnal rămân doar cine a șters-o și când."
     },
     "errors": {
       "PICTURE_IN_USE": "Imaginea este folosită într-o pagină, într-un eveniment sau într-un album. Scoate-o de acolo mai întâi.",
       "NOTHING_SELECTED": "Nu ai bifat nicio înscriere.",
+      "NOTE_EMPTY": "Nota trebuie să aibă cuvinte: scrie ceva înainte să o salvezi.",
+      "NOTE_TOO_LONG": "Nota e prea lungă. Scurtează-o sau împarte-o în două note.",
       "UNAUTHENTICATED": "Sesiunea a expirat. Autentifică-te din nou.",
       "FORBIDDEN": "Rolul tău nu permite această acțiune.",
       "NOT_FOUND": "Înregistrarea nu mai există.",
@@ -5822,6 +5846,9 @@
       "groupRuns": "Declarații de alergare de grup ({count})",
       "traceVolunteer": "Urma semnăturii voluntarului: IP {ip} · browser {browser}",
       "traceGuardian": "Urma semnăturii părintelui sau tutorelui: IP {ip} · browser {browser}",
+      "notes": "Note interne ({count})",
+      "noteBy": "{role} · {date} · {event}",
+      "noteAuthorGone": "cont șters",
       "audit": "Jurnal ({count})",
       "none": "Niciuna.",
       "newSearch": "Altă căutare"
@@ -7109,7 +7136,7 @@
               "steps": [
                 "Voluntarul: masa din ziua cursei — caută, confirmă pe declarația de hârtie semnată de participant, dă un loc liber, un număr, marchează prezența. Vede nume, stare și număr, niciodată o adresă de email.",
                 "Redactorul: textele evenimentelor și paginile site-ului, în ambele limbi. Nu schimbă setările unui eveniment și nu publică.",
-                "Organizatorul: vede evenimentele, toate înscrierile, exportul și numerele de concurs; trimite mesaje participanților; lucrează la masă. Nu schimbă un eveniment, nu anulează și nu șterge o înscriere.",
+                "Organizatorul: vede evenimentele, toate înscrierile, exportul și numerele de concurs; trimite mesaje participanților; lucrează la masă; lasă note interne pe o înscriere. Nu schimbă un eveniment, nu anulează și nu șterge o înscriere.",
                 "Rolul Tehnic: pagina de configurație a site-ului, ca să depaneze. Nu schimbă evenimente și nu vede înscrierile.",
                 "Administratorul conduce clubul: tot ce fac Organizatorul și Redactorul, plus evenimentele («Eveniment nou», «Editează», «Creează și publică»), corectarea, anularea și ștergerea unei înscrieri, retrimiterea emailurilor, «Alocă numerele», «Termene», planul Mailgun, documentele legale (versiune nouă, aprobare, retragere, ștergere) și conturile din «Echipa» (adaugă, schimbă rolul, retrage accesul) — în afară de rolul și rândul unui Superadministrator.",
                 "Superadministratorul: tot ce face Administratorul, plus setările tehnice care pot opri serviciul — «Cât de des verifică site-ul», «Limitele bazei de date», pragurile din «Bugetul lunii» și «Anti-robot» — și numirea altui Superadministrator. O sarcină din ghid care cere acest rol începe cu „Rol necesar: Superadministrator”; dacă nu-l ai, roagă un Superadministrator să o facă."
@@ -7323,6 +7350,16 @@
                 "Cineva întreabă unde e înscrierea lui — la telefon, pe mesaj sau la masă: «Înscrieri» → caută numele → deschide înscrierea. Administratorul și Organizatorul o văd la fel.",
                 "Sub «Parcursul înscrierii», «Ce îi spui» are propozițiile de spus, în limba în care s-a înscris: aceleași cuvinte pe care le-a citit el pe pagina lui și în emailuri, cu termenul lui — și până când e valabil linkul din email, doar când e altă oră decât termenul.",
                 "«Copiază» le pune în clipboard, pentru un mesaj. Blocul nu arată nicio adresă și niciun link: un link nou pleacă doar pe email; dacă trebuie retrimis, îl retrimite Administratorul."
+              ]
+            },
+            {
+              "title": "Lasă o notă pe o înscriere",
+              "steps": [
+                "«Înscrieri» → caută numele → deschide înscrierea → «Note interne». Cardul închis spune câte note are.",
+                "Scrie în «Adaugă o notă» și apasă «Salvează nota». Notele apar de la cea mai nouă, cu numele celui care a scris și momentul.",
+                "Doar organizatorii și administratorii văd notele. Nu apar la masă, în export sau pe lista publică. Nu scrie date medicale sau alte date sensibile.",
+                "Pe lista înscrierilor, un rând cu note are un semn cu numărul lor; apasă-l ca să deschizi notele.",
+                "«Șterge» scoate o notă, după o întrebare: pe a ta o ștergi tu, pe oricare o șterge un Administrator. Notele se șterg odată cu înscrierea."
               ]
             },
             {
@@ -7647,6 +7684,16 @@
                 "Cineva întreabă unde e înscrierea lui — la telefon, pe mesaj sau la masă: «Înscrieri» → caută numele → deschide înscrierea. Administratorul și Organizatorul o văd la fel.",
                 "Sub «Parcursul înscrierii», «Ce îi spui» are propozițiile de spus, în limba în care s-a înscris: aceleași cuvinte pe care le-a citit el pe pagina lui și în emailuri, cu termenul lui — și până când e valabil linkul din email, doar când e altă oră decât termenul.",
                 "«Copiază» le pune în clipboard, pentru un mesaj. Blocul nu arată nicio adresă și niciun link: un link nou pleacă doar pe email; dacă trebuie retrimis, îl retrimite Administratorul."
+              ]
+            },
+            {
+              "title": "Lasă o notă pe o înscriere",
+              "steps": [
+                "«Înscrieri» → caută numele → deschide înscrierea → «Note interne». Cardul închis spune câte note are.",
+                "Scrie în «Adaugă o notă» și apasă «Salvează nota». Notele apar de la cea mai nouă, cu numele celui care a scris și momentul.",
+                "Doar organizatorii și administratorii văd notele. Nu apar la masă, în export sau pe lista publică. Nu scrie date medicale sau alte date sensibile.",
+                "Pe lista înscrierilor, un rând cu note are un semn cu numărul lor; apasă-l ca să deschizi notele.",
+                "«Șterge» scoate o notă, după o întrebare: pe a ta o ștergi tu, pe oricare o șterge un Administrator. Notele se șterg odată cu înscrierea."
               ]
             },
             {
@@ -11404,6 +11451,8 @@
         "other": "Bifa de membru scoasă la {count} de înscrieri."
       },
       "answersCorrected": "Date corectate: {fields}.",
+      "noteAdded": "Nota a fost salvată.",
+      "noteDeleted": "Nota a fost ștearsă.",
       "shopProductCreated": "Produsul a fost adăugat.",
       "shopProductSaved": "Produsul a fost salvat.",
       "shopProductMoved": "Ordinea produselor a fost schimbată.",
