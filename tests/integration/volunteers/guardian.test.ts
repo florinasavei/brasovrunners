@@ -35,7 +35,7 @@ import { bornAged, bornAgedOn } from "../../helpers/volunteer-birth";
 const NOW = new Date("2026-10-13T10:00:00.000Z");
 const LATER = new Date("2026-10-14T10:00:00.000Z");
 const DAY = 24 * 60 * 60_000;
-/** A date of birth that makes a person `years` old on the event's day (§NNN): the last day of being so. */
+/** A date of birth that makes a person `years` old on the event's day (§773): the last day of being so. */
 const aged = (years: number) => bornAged(years, new Date(NOW.getTime() + 30 * DAY));
 const RENDERED = new Date(NOW.getTime() - 60_000).toISOString();
 
@@ -804,7 +804,7 @@ describe("§768 volunteers under eighteen and their guardian", () => {
     });
   });
 
-  describe("§NNN the date of birth: the age is counted on the event's day, not today's", () => {
+  describe("§773 the date of birth: the age is counted on the event's day, not today's", () => {
     /** The event's day in its own zone: NOW + 30 days at 10:00 UTC is 12 November 2026 in Brașov. */
     const EVENT_DAY = "2026-11-12";
     /** The day after a date, `YYYY-MM-DD`. */

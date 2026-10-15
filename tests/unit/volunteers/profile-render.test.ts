@@ -63,7 +63,7 @@ const { default: VolunteerBox } = await import("@/modules/volunteers/ui/Voluntee
 const translate: TranslateAction = async () => ({ ok: false, reason: "notConfigured" });
 const EVENT = "11111111-1111-4111-8111-111111111111";
 const WATER = "22222222-2222-4222-8222-222222222222";
-/** The day the ages are counted on (§NNN): the event's. */
+/** The day the ages are counted on (§773): the event's. */
 const EVENT_DAY = "2026-11-21";
 /** The last day of being `years` old on it, typed as the form posts it back. */
 const aged = (years: number) => bornAgedOn(years, EVENT_DAY);
@@ -837,7 +837,7 @@ describe("§768 the event page keeps one line and one button", () => {
   });
 });
 
-describe("§NNN «Arată public câți voluntari mai sunt necesari» is the card's third tick, the same as the other two", () => {
+describe("§773 «Arată public câți voluntari mai sunt necesari» is the card's third tick, the same as the other two", () => {
   it("is a submit drawn as the checkbox with its one-line help, the state it wants posted, and no «Salvează» beside it", async () => {
     const off = await drawCard({ volunteersShowCounts: false });
     const form = /<form[^>]*data-testid="volunteer-counts-form"[\s\S]*?<\/form>/.exec(off)?.[0] ?? "";
@@ -877,7 +877,7 @@ describe("§NNN «Arată public câți voluntari mai sunt necesari» is the card
   });
 });
 
-describe("§NNN the public page says how many people a role needs only while the club ticked it", () => {
+describe("§773 the public page says how many people a role needs only while the club ticked it", () => {
   it("says only that a role still takes people while the tick is off, in both languages — and no number anywhere on the page", async () => {
     for (const [language, open, counted] of [
       ["ro", "mai sunt locuri", /mai sunt necesare|mai e nevoie de/],
@@ -925,7 +925,7 @@ describe("§NNN the public page says how many people a role needs only while the
   });
 });
 
-describe("§NNN the owner's note under the roles' list", () => {
+describe("§773 the owner's note under the roles' list", () => {
   const NOTE_RO = "În funcție de numărul de doritori, există posibilitatea să fie nevoie să acoperi o altă responsabilitate. Mulțumim pentru dorința de a ajuta. Te vom contacta curând.";
   const NOTE_EN = "Depending on how many people sign up, you may be asked to cover a different responsibility. Thank you for wanting to help. We will contact you soon.";
 
@@ -965,7 +965,7 @@ describe("§NNN the owner's note under the roles' list", () => {
   });
 });
 
-describe("§NNN the event page's button opens the volunteers' page in a new tab", () => {
+describe("§773 the event page's button opens the volunteers' page in a new tab", () => {
   async function drawCallout(language: "ro" | "en") {
     const { default: VolunteerCallout } = await import("@/modules/volunteers/ui/VolunteerCallout");
     const { NextIntlClientProvider } = await import("next-intl");
@@ -1001,7 +1001,7 @@ describe("§NNN the event page's button opens the volunteers' page in a new tab"
   });
 });
 
-describe("§NNN the date of birth on the card's entry and on the public form", () => {
+describe("§773 the date of birth on the card's entry and on the public form", () => {
   it("draws the registration form's own box on the entry: day first, its placeholder, the echo's template, no age box — and a row's date as it was typed", async () => {
     const page = await drawCard({ profileDescribed: true });
     const box = tagOf(page, "input", "birthDate");

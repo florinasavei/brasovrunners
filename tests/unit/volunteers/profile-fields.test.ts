@@ -41,7 +41,7 @@ import { bornAgedOn } from "../../helpers/volunteer-birth";
  * name both before the form asks: the pure rules, no database (`tests/integration/volunteers/profile.test.ts`
  * keeps them in the rows).
  */
-/** The event's day, the day every age is counted on (§NNN); `aged(n)` is the last day of being `n` on it. */
+/** The event's day, the day every age is counted on (§773); `aged(n)` is the last day of being `n` on it. */
 const EVENT_DAY = "2026-11-21";
 const aged = (years: number) => bornAgedOn(years, EVENT_DAY);
 const volunteerPublicProfileSchema = volunteerPublicProfileSchemaFor(false, EVENT_DAY);

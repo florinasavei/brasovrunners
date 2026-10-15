@@ -431,7 +431,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
           profileDescribed: await noticeDescribesVolunteerProfile(db, now),
           // Whether the club may take a person under eighteen (§768): the guardian's boxes, link and paper wait for it.
           minorsOpen: await volunteerMinorsOpen(db, now),
-          // The day the entry's date of birth is counted on (§NNN): the gun's, else the event's.
+          // The day the entry's date of birth is counted on (§773): the gun's, else the event's.
           eventDay: volunteerEventDay(event, now),
           offerClosed: volunteerOfferClosedFor({
             acceptsVolunteers: event.acceptsVolunteers,

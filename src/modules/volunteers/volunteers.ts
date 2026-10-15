@@ -132,7 +132,7 @@ export type VolunteerItem = {
   note: string | null;
   /** What the person said about themselves (§765), or nulls and false for a row from before — and for one the club typed without. */
   age: number | null;
-  /** The day they were born, `YYYY-MM-DD` (§NNN): the age above is its age on the event's day; null for a row from before, which has an age alone. */
+  /** The day they were born, `YYYY-MM-DD` (§773): the age above is its age on the event's day; null for a row from before, which has an age alone. */
   dateOfBirth: string | null;
   sex: SexChoice | null;
   city: string | null;
@@ -346,7 +346,7 @@ export async function readPublicVolunteerRoles<T extends Record<string, unknown>
     acceptsVolunteers: true,
     // «Oferim tricouri voluntarilor» (§765): the form asks the size only while it is on.
     shirts: event.shirts,
-    // «Arată public câți voluntari mai sunt necesari» (§NNN): the page says how many a role still needs only while it is on.
+    // «Arată public câți voluntari mai sunt necesari» (§773): the page says how many a role still needs only while it is on.
     showCounts: event.showCounts,
     roles: roles.map((role) => {
       const standing = standingOf(role, people);
@@ -621,7 +621,7 @@ export async function setVolunteersShirts<T extends Record<string, unknown>>(
 }
 
 /**
- * «Arată public câți voluntari mai sunt necesari» on or off (§NNN; the owner, 2026-10-14: «vreau să bifez dacă să afișez sau
+ * «Arată public câți voluntari mai sunt necesari» on or off (§773; the owner, 2026-10-14: «vreau să bifez dacă să afișez sau
  * nu numărătoarea voluntarilor — știi că am mai avut probleme din astea»; the waiting list's «Arată public câți așteaptă» is
  * the model, §634): the event's own tick, saved by the «Voluntari» card's own form like the two above — never by the editor's
  * save. Off by default. Switching it changes only what the public page says: the roles, the people and the card's counts are
@@ -659,7 +659,7 @@ export async function setVolunteersShowCounts<T extends Record<string, unknown>>
 const STAFF_FIELDS = ["assignedRoleId", "name", "email", "phone", "note", "birthDate", "sex", "city", "shirtSize", "guardianName", "guardianEmail"] as const;
 
 /**
- * The day an event's volunteers' ages are counted on (§NNN, `volunteerEventDay`): the gun's day, else the event's, in the event's own
+ * The day an event's volunteers' ages are counted on (§773, `volunteerEventDay`): the gun's day, else the event's, in the event's own
  * zone — read from the event's row. A missing event is the same refusal every other verb gives.
  */
 async function eventDayOf<T extends Record<string, unknown>>(db: Database<T>, eventId: string, now: Date): Promise<string> {
@@ -735,7 +735,7 @@ async function minorsClosedRefusal<T extends Record<string, unknown>>(
   return new DomainError("VALIDATION_ERROR", "the club cannot take volunteers under eighteen yet", ["birthDate", ...error.fields.filter((field) => field !== "guardianName" && field !== "guardianEmail")]);
 }
 
-/** The answers a person says about themselves, which only a privacy notice that names them (`{{volunteerProfile}}`) lets the platform keep (§765, §NNN: the date of birth is the age's box). */
+/** The answers a person says about themselves, which only a privacy notice that names them (`{{volunteerProfile}}`) lets the platform keep (§765, §773: the date of birth is the age's box). */
 const PROFILE_BOXES = ["birthDate", "sex", "city", "volunteeredBefore", "clubMember", "shirtSize"] as const;
 
 /**
@@ -760,7 +760,7 @@ function refuseUnnamedProfile(
   if (refused.length > 0) throw new DomainError("VALIDATION_ERROR", "the privacy notice in force does not name these answers yet", [...refused]);
 }
 
-/** The row's columns for what a save changed: the form's `birthDate` is the column `date_of_birth` (§NNN). */
+/** The row's columns for what a save changed: the form's `birthDate` is the column `date_of_birth` (§773). */
 function columnsOf<R extends { birthDate: string | null }>(next: R): Omit<R, "birthDate"> & { dateOfBirth: string | null } {
   const { birthDate, ...rest } = next;
   return { ...rest, dateOfBirth: birthDate };
@@ -835,7 +835,7 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
   assertMayManage(actor);
   assertIds(request.eventId, ...(request.kind === "add" ? [] : [request.id]));
   let input: ReturnType<typeof staffInputOf> | null = null;
-  // What an empty date box means on a row from before the date existed (§NNN): the age it holds, kept — see `volunteerStaffInputSchemaFor`.
+  // What an empty date box means on a row from before the date existed (§773): the age it holds, kept — see `volunteerStaffInputSchemaFor`.
   let keptAge: number | null = null;
   if (request.kind === "add" || request.kind === "edit") {
     // The person's age is the date's on the event's day: the gun's, else the event's (`volunteerEventDay`).
@@ -942,7 +942,7 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
           state: "REGISTERED",
           source: "STAFF",
           note: input.note,
-          // The date of birth and its age on the event's day (§NNN): `age` is what every rule reads, the date is what the club asked for.
+          // The date of birth and its age on the event's day (§773): `age` is what every rule reads, the date is what the club asked for.
           age: input.age,
           dateOfBirth: input.birthDate,
           sex: input.sex,
@@ -1030,7 +1030,7 @@ export async function changeVolunteer<T extends Record<string, unknown>>(
     // While the notice names none of them the boxes are not drawn: what the row holds stays as it was, shown by the card as before.
     const profile = profileDescribed
       ? {
-          // The age is the date's on the event's day, or — an empty date box on a row from before the date — the one it held (§NNN).
+          // The age is the date's on the event's day, or — an empty date box on a row from before the date — the one it held (§773).
           age: input.age,
           birthDate: input.birthDate,
           sex: input.sex,
@@ -1236,7 +1236,7 @@ export async function submitVolunteer<T extends Record<string, unknown>>(
   const profileMode = await noticeDescribesVolunteerProfile(db, now);
   // A person under eighteen is taken only while the notice and the agreement in force both describe minors (§768).
   const minorsMode = profileMode && (await volunteerMinorsOpen(db, now));
-  // The event first: the person's age is their date of birth's on the event's own day (§NNN, `volunteerEventDay`), so the form cannot be read without it.
+  // The event first: the person's age is their date of birth's on the event's own day (§773, `volunteerEventDay`), so the form cannot be read without it.
   const [event] = await db
     .select({
       id: events.id,
@@ -1261,7 +1261,7 @@ export async function submitVolunteer<T extends Record<string, unknown>>(
     throw new DomainError("VALIDATION_ERROR", "the volunteer form is malformed", fields.length > 0 ? fields : ["name"]);
   }
   const input = parsed.data;
-  // What the person said about themselves, only when the form asked it (§765, §NNN: the date of birth, and the age it gives on the event's day).
+  // What the person said about themselves, only when the form asked it (§765, §773: the date of birth, and the age it gives on the event's day).
   const profile =
     "age" in input
       ? { age: input.age, dateOfBirth: input.birthDate, sex: input.sex, city: input.city, volunteeredBefore: input.volunteeredBefore, clubMember: input.clubMember, shirtSize: input.shirtSize }

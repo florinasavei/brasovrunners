@@ -10,7 +10,7 @@ const GUARDIAN_BOXES = ["guardianName", "guardianEmail", "guardianAware"] as con
 
 /**
  * Whether a date of birth says a person the club takes with a guardian: from the minimum (fourteen) to seventeen **on the event's
- * day** (§NNN, `volunteerEventDay`) — a person who is seventeen today and eighteen on the morning of the race is not asked for a
+ * day** (§773, `volunteerEventDay`) — a person who is seventeen today and eighteen on the morning of the race is not asked for a
  * parent. Anything else — no date yet, one that makes a younger person or an adult — is not asked here: the server judges it, and a
  * person of thirteen is told the floor, not asked for a parent.
  */
@@ -22,7 +22,7 @@ function saysMinor(birthDate: string, eventDay: string, minimumAge: number, adul
 
 /**
  * The parent's or guardian's boxes on the volunteers' page (§768; the owner, 2026-10-14: «atunci fă cu acord ceva» for a
- * volunteer under 18): shown while the date of birth typed (§NNN: «Data nașterii», the registration form's own box, which this
+ * volunteer under 18): shown while the date of birth typed (§773: «Data nașterii», the registration form's own box, which this
  * island reads by its id as `GuardianForMinor` does, `useBirthDateValue`) gives from the minimum to seventeen on the event's day,
  * hidden otherwise — and **always shown without scripts**.
  *

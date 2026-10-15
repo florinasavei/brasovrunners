@@ -37,7 +37,7 @@ const PUBLIC = {
 };
 const GUARDIAN = { guardianName: "  Maria   Popescu ", guardianEmail: " maria@example.test ", guardianAware: true };
 const NOW = new Date("2026-10-14T10:00:00Z");
-/** The day the ages are counted on (§NNN): the event's. `aged(n)` is the last day of being `n` on it. */
+/** The day the ages are counted on (§773): the event's. `aged(n)` is the last day of being `n` on it. */
 const EVENT_DAY = "2026-11-21";
 const aged = (years: number) => bornAgedOn(years, EVENT_DAY);
 const volunteerStaffInputSchema = volunteerStaffInputSchemaFor(EVENT_DAY);

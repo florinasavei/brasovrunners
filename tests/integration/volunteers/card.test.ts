@@ -588,7 +588,7 @@ describe("§754 «Primește voluntari»", () => {
   });
 });
 
-describe("§NNN «Arată public câți voluntari mai sunt necesari» is the third tick of the card", () => {
+describe("§773 «Arată public câți voluntari mai sunt necesari» is the third tick of the card", () => {
   const countsTrail = async () => (await trail()).filter((row) => row.action === "event.volunteers_counts_switched").map((row) => row.metadataJson);
 
   it("is off for a new event, switches through its own form, audits a change and not a repeat, and leaves the event's version alone", async () => {
@@ -763,7 +763,7 @@ describe("§754 a copy of an event is not its volunteers", () => {
     expect((await db.select().from(events).where(eq(events.id, copyId)))[0].acceptsVolunteers).toBe(false);
   });
 
-  it("does not copy the tick «Arată public câți voluntari mai sunt necesari» either: a copy shows no number until the club says so (§NNN)", async () => {
+  it("does not copy the tick «Arată public câți voluntari mai sunt necesari» either: a copy shows no number until the club says so (§773)", async () => {
     await db.update(events).set({ volunteersShowCounts: true }).where(eq(events.id, eventId));
     await db.insert(eventTranslations).values([
       { eventId, locale: "ro", slug: "cursa", title: "Cursa" },

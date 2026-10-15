@@ -37,7 +37,7 @@ export type VolunteerCsvRow = {
   signedUpAt: Date;
   /** What the person said about themselves (§765): empty for an unanswered box. */
   age: number | null;
-  /** The day they were born, `YYYY-MM-DD` — the date the age was derived from, beside it (§NNN); empty for a row from before. */
+  /** The day they were born, `YYYY-MM-DD` — the date the age was derived from, beside it (§773); empty for a row from before. */
   dateOfBirth: string | null;
   sex: string;
   city: string | null;

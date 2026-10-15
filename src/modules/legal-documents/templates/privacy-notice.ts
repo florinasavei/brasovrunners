@@ -136,7 +136,7 @@
  * and keeps their answers, only while the notice in force names this marker too (`describesVolunteerProfile`); until then it
  * is §758's form, and `/admin/tasks` carries the row `volunteerProfileNotice`. **Open for counsel:** whether the sex, a
  * personal datum the registration form also asks, needs more than the purpose written here for a volunteer.
- * Since §NNN that paragraph says «data nașterii» / «date of birth» where §765's said the age: the form asks the date of birth
+ * Since §773 that paragraph says «data nașterii» / «date of birth» where §765's said the age: the form asks the date of birth
  * (the registration form's own box) and the club works out the age on the day of the event; the box's label inside
  * `{{volunteerProfile}}` is the registration form's («Data nașterii»). The gate is unchanged (`describesVolunteerProfile`): a notice
  * approved from the earlier template keeps saying «vârsta» in that sentence until the club approves a new version from this one — the

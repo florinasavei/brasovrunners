@@ -128,9 +128,9 @@ type Props = {
   acceptsVolunteers: boolean;
   /** «Oferim tricouri voluntarilor», as saved (§765): the people's rows show their size, and the entry's box asks it. */
   volunteersShirts: boolean;
-  /** «Arată public câți voluntari mai sunt necesari», as saved (§NNN): the volunteers' page says how many a role needs only while it is on; the card always does. */
+  /** «Arată public câți voluntari mai sunt necesari», as saved (§773): the volunteers' page says how many a role needs only while it is on; the card always does. */
   volunteersShowCounts: boolean;
-  /** The day the entry's date of birth is counted on, `YYYY-MM-DD` (§NNN, `volunteerEventDay`): the gun's, else the event's. */
+  /** The day the entry's date of birth is counted on, `YYYY-MM-DD` (§773, `volunteerEventDay`): the gun's, else the event's. */
   eventDay: string;
   /** The notice in force names what a volunteer says about themselves (§765): the public form asks it — else it is §758's tick. */
   profileDescribed: boolean;
@@ -199,7 +199,7 @@ export default async function VolunteersCard({
   error,
 }: Props) {
   const t = await getTranslations("Admin");
-  // The registration form's own words for its date-of-birth box (§NNN): the echo, the placeholder, «Scrie data ca zi, lună, an».
+  // The registration form's own words for its date-of-birth box (§773): the echo, the placeholder, «Scrie data ca zi, lună, an».
   const tReg = await getTranslations("Registration");
   const words = await confirmWords();
   // The editor's own control names, for the role's description (§765).
@@ -384,7 +384,7 @@ export default async function VolunteersCard({
       {profileDescribed && (
         <>
         <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5}>
-          {/* «Data nașterii» (§NNN, instead of «Vârsta»): the registration form's own box, its mask and its echo, counted on the event's day. A row from
+          {/* «Data nașterii» (§773, instead of «Vârsta»): the registration form's own box, its mask and its echo, counted on the event's day. A row from
               before the date has an age and no date: the box is empty, and the line says the age it keeps until a date is typed. */}
           <VolunteerBirthDateField
             label={t("volunteers.person.birthDate")}
@@ -833,7 +833,7 @@ export default async function VolunteersCard({
       {(() => {
         const size = shirtSizeShown(volunteersShirts, person.shirtSize);
         const facts = [
-          // «17 ani (12.03.2009)» (§NNN): the age on the event's day and the date it came from; a row from before the date shows the age alone.
+          // «17 ani (12.03.2009)» (§773): the age on the event's day and the date it came from; a row from before the date shows the age alone.
           person.age !== null ? `${yearsPhrase(person.age, locale)}${person.dateOfBirth !== null ? ` (${shownTypedDate(person.dateOfBirth)})` : ""}` : null,
           person.sex !== null ? t(`registrations.answers.sex.${person.sex}`) : null,
           person.city !== null ? t("volunteers.person.cityValue", { city: person.city }) : null,
@@ -1114,7 +1114,7 @@ export default async function VolunteersCard({
               {t("volunteers.shirts.help")}
             </Typography>
           </Box>
-          {/* «Arată public câți voluntari mai sunt necesari» (§NNN; the §634 rule on the waiting list's count): the same tick as the two above — a submit
+          {/* «Arată public câți voluntari mai sunt necesari» (§773; the §634 rule on the waiting list's count): the same tick as the two above — a submit
               drawn as the checkbox that posts the state it wants. Off, the volunteers' page says only that a role still takes people, never how many;
               the numbers on this card are the club's own and are always shown. */}
           <Box component="form" action={switchVolunteersCountsAction} data-testid="volunteer-counts-form">

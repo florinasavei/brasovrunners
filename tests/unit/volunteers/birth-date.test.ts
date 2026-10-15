@@ -16,7 +16,7 @@ import {
 import { bornAgedOn } from "../../helpers/volunteer-birth";
 
 /**
- * §NNN — «Data nașterii» instead of the age (the owner, 2026-10-14: «în loc de vârstă vreau să treacă data nașterii»): the pure
+ * §773 — «Data nașterii» instead of the age (the owner, 2026-10-14: «în loc de vârstă vreau să treacă data nașterii»): the pure
  * rules. The age is the date's **on the event's day** — the gun's, else the event's, in the event's own zone — and the minimum
  * (fourteen) and the guardian under eighteen (§768) are judged from it. No database (`tests/integration/volunteers/guardian.test.ts`
  * keeps the same boundaries in the rows).
@@ -41,7 +41,7 @@ const STAFF = { roleIds: [ID], assignedRoleId: "", name: "Ana Test", email: "ana
 /** The day after a day, `YYYY-MM-DD`. */
 const nextDay = (day: string) => new Date(Date.parse(`${day}T00:00:00Z`) + 86_400_000).toISOString().slice(0, 10);
 
-describe("§NNN the day a volunteer's age is counted on", () => {
+describe("§773 the day a volunteer's age is counted on", () => {
   const event = { startsAt: new Date("2026-11-21T07:00:00.000Z"), raceStartsAt: null as Date | null, timezone: "Europe/Bucharest", dateToBeAnnounced: false };
 
   it("is the gun's day when the race has a gun, else the event's day — in the event's own zone", () => {
@@ -87,7 +87,7 @@ describe("§NNN the day a volunteer's age is counted on", () => {
   });
 });
 
-describe("§NNN the boundary by date, on the public form", () => {
+describe("§773 the boundary by date, on the public form", () => {
   const open = volunteerPublicProfileSchemaFor(true, EVENT_DAY);
   const closed = volunteerPublicProfileSchemaFor(false, EVENT_DAY);
 
@@ -153,7 +153,7 @@ describe("§NNN the boundary by date, on the public form", () => {
   });
 });
 
-describe("§NNN the boundary by date, on the organizers' entry", () => {
+describe("§773 the boundary by date, on the organizers' entry", () => {
   const entry = volunteerStaffInputSchemaFor(EVENT_DAY);
 
   it("asks a guardian's name of a person who is seventeen on the event's day, none of one who turns eighteen that morning, and nothing of an empty box", () => {
@@ -175,7 +175,7 @@ describe("§NNN the boundary by date, on the organizers' entry", () => {
   });
 });
 
-describe("§NNN the words are in both catalogues, the same keys", () => {
+describe("§773 the words are in both catalogues, the same keys", () => {
   const keys = (value: unknown, prefix = ""): string[] =>
     value && typeof value === "object" ? Object.entries(value).flatMap(([key, child]) => keys(child, `${prefix}${key}.`)) : [prefix.slice(0, -1)];
 

@@ -246,7 +246,7 @@ describe("§768 the one read the event page's box and this page share", () => {
   });
 });
 
-describe("§NNN the public count of volunteers is the club's tick, and the date of birth is counted on the event's day", () => {
+describe("§773 the public count of volunteers is the club's tick, and the date of birth is counted on the event's day", () => {
   const event = { id: EVENT.id, eventStatus: "SCHEDULED", startsAt: EVENT.startsAt, endsAt: null as Date | null };
 
   it("hands the form the tick: off by default, on when the club ticked it — one flag for every public number", async () => {

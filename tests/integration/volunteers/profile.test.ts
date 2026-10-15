@@ -57,7 +57,7 @@ const exportRoute = await import("@/app/api/admin/events/[id]/volunteers/route")
 
 const NOW = new Date("2026-10-13T10:00:00.000Z");
 const DAY = 24 * 60 * 60_000;
-/** A date of birth that makes a person `years` old on the event's day (§NNN): the last day of being so. */
+/** A date of birth that makes a person `years` old on the event's day (§773): the last day of being so. */
 const aged = (years: number) => bornAged(years, new Date(NOW.getTime() + 30 * DAY));
 const RENDERED = new Date(NOW.getTime() - 60_000).toISOString();
 

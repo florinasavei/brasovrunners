@@ -462,7 +462,7 @@ describe("§754 the CSV", () => {
     // §761: the role given, then the roles chosen — a comma inside them quoted.
     expect(lines[1].startsWith('Punct de apă,"Punct de apă, Sosire",')).toBe(true);
     // §765: what the person said about themselves comes after the moment, so no earlier column moves; a comma in the city is quoted.
-    // §NNN: the date of birth the age came from is beside it, `YYYY-MM-DD`, and empty for a row from before.
+    // §773: the date of birth the age came from is beside it, `YYYY-MM-DD`, and empty for a row from before.
     expect(csv.split("\r\n")[0].includes("Data,Vârsta,Data nașterii,Sex,Orașul,A mai fost voluntar,Din grupul clubului,Mărime tricou")).toBe(true);
     // §768: the parent or guardian of a volunteer under eighteen, appended after the T-shirt: name, address, and the consent as «Da» / «Nu».
     expect(csv.split("\r\n")[0].endsWith("Mărime tricou,Părinte sau tutore,Email părinte sau tutore,Acordul părintelui")).toBe(true);

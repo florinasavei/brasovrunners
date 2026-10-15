@@ -2983,7 +2983,7 @@ function blankEventRow(now: Date): EditableEvent {
     acceptsVolunteers: false,
     // «Oferim tricouri voluntarilor» (§765): off the same way.
     volunteersShirts: false,
-    // «Arată public câți voluntari mai sunt necesari» (§NNN): off the same way — a public number is the club's choice, event by event.
+    // «Arată public câți voluntari mai sunt necesari» (§773): off the same way — a public number is the club's choice, event by event.
     volunteersShowCounts: false,
     difficulty: null,
     difficultyLevel: null,

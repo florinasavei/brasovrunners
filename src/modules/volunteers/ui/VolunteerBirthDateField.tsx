@@ -4,7 +4,7 @@ import BirthDateField from "@/modules/registrations/ui/BirthDateField";
 import { useRecall } from "@/shared/forms/recall";
 
 /**
- * «Data nașterii» on the organizers' entry of a volunteer (§NNN; the owner, 2026-10-14: «în loc de vârstă vreau să treacă data
+ * «Data nașterii» on the organizers' entry of a volunteer (§773; the owner, 2026-10-14: «în loc de vârstă vreau să treacă data
  * nașterii»): the registration form's own box — `BirthDateField`, its mask, its echo «11.05.1990 · 34 de ani în ziua evenimentului»
  * and its plain-text fallback with scripts off — made to come back filled after a refused save, like every other box of the card
  * (`RecallField`, §315). The bounds are the service's: not younger than the minimum on the event's day, not older than the

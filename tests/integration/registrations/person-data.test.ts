@@ -184,7 +184,7 @@ describe("BR-REQ-070-01 everything held about a person", () => {
         message: "Sunt liberă sâmbătă",
         privacyNoticeVersion: 3,
         age: 34,
-        // §NNN: the date of birth the age came from is hers too, every column of the row (art. 15 GDPR).
+        // §773: the date of birth the age came from is hers too, every column of the row (art. 15 GDPR).
         dateOfBirth: "1992-03-12",
         sex: "FEMALE",
         city: "Brașov",
