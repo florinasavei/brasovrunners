@@ -9488,7 +9488,7 @@
         "writingHelp": "Nu se tipărește niciun nume. Rămâne o zonă albă cu „Nume:”, unde numele se scrie de mână.",
         "writingLine": "O linie subțire pentru nume",
         "writingPlain": "Doar „Nume:”",
-        "markerHelp": "A doua zonă albă, lângă „Nume:”, rămâne goală pe hârtie: acolo scrii cu markerul, la recepție, ceva în plus, de pildă tura sau zona.",
+        "markerHelp": "A doua zonă albă, lângă „Nume:”, rămâne goală pe hârtie: acolo scrii cu markerul, la masa de primire, ceva în plus, de pildă tura sau zona.",
         "showMarker": "Un spațiu pentru marker, lângă nume",
         "markerLabelRo": "Eticheta spațiului (română)",
         "markerLabelEn": "Eticheta spațiului (engleză)",
@@ -9503,7 +9503,7 @@
         "phoneLabelEn": "Eticheta (engleză)",
         "phoneLabelHelp": "Gol în ambele limbi: Coordonator și Coordinator. Cel mult {max} caractere.",
         "phoneOff": "Fără telefon",
-        "extrasNeed": "Linia de text liber și telefonul, împreună, cer un ecuson de cel puțin {height} mm înălțime, la {width} mm lățime.",
+        "extrasNeed": "Linia de text liber și telefonul, împreună, cer un ecuson de cel puțin {height} mm înălțime.",
         "dropped": "O valoare salvată în această secțiune nu s-a putut citi și a fost lăsată deoparte. Scrie-o din nou și salvează.",
         "extras": {
           "freeText": "linia de text liber",

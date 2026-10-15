@@ -59,6 +59,9 @@ function Legend({ children }: { children: string }) {
   );
 }
 
+/** The most letters of the free-text line the closed section shows in its heading. */
+const FREE_ASIDE_MAX = 30;
+
 /** Two boxes side by side on a computer, one under the other on a phone: a club text in both languages. */
 const PAIR = { direction: { xs: "column", sm: "row" }, spacing: 1.5 } as const;
 
@@ -121,7 +124,7 @@ export default async function BadgeDesignPanel({
   const ratioWords = new Intl.NumberFormat(locale, { maximumFractionDigits: 1 });
   const initialSrc = badgePreviewUrl({ eventId, locale, role: sampleRole, design, version });
   const { widthMm, heightMm } = badgeSizeMm(design);
-  // The limit in words (§NNN): the free-text line and the telephone together need this height at the saved width, when the saved size is shorter.
+  // The limit in words (§NNN): the free-text line and the telephone together need this height, whatever the width — said beside the size, always.
   const extrasNeed = badgeSizeRefusal({ size: "custom", customWidthMm: widthMm, customHeightMm: BADGE_CUSTOM_BOUNDS.height.min }, { freeText: true, phone: true })?.minHeightMm ?? null;
   const perSheet = (size: (typeof BADGE_SIZES)[number]) =>
     size === "custom" ? null : badgeSheetGrid(badgePaper({ size, customWidthMm: 0, customHeightMm: 0 })).perSheet;
@@ -185,7 +188,9 @@ export default async function BadgeDesignPanel({
   );
   const roleAside = design.labelRo ? `${design.labelRo} / ${design.labelEn}` : t("badges.design.labelDefaultAside");
   const writingAside = design.writingLine ? t("badges.design.writingLine") : t("badges.design.writingPlain");
-  const freeAside = design.showFreeText && design.freeTextRo ? `${design.freeTextRo} / ${design.freeTextEn}` : t("badges.design.freeTextOff");
+  // The Romanian line only, cut short: the closed line sits in the section's heading, and a typed text may be 60 characters.
+  const freeLetters = Array.from(design.freeTextRo);
+  const freeAside = design.showFreeText && freeLetters.length > 0 ? `${freeLetters.slice(0, FREE_ASIDE_MAX).join("")}${freeLetters.length > FREE_ASIDE_MAX ? "…" : ""}` : t("badges.design.freeTextOff");
   const markerAside = design.showMarker ? (design.markerLabelRo ? `${design.markerLabelRo} / ${design.markerLabelEn}` : t("badges.design.markerNoLabel")) : t("badges.design.markerOff");
   /** What a section says when the stored design held one of its settings as something it cannot be (§NNN). */
   const droppedNote = (...keys: BadgeDroppedKey[]) =>
@@ -273,7 +278,7 @@ export default async function BadgeDesignPanel({
               </OnlyWhenChosen>
               {extrasNeed !== null && (
                 <Typography variant="caption" color="text.secondary" data-testid="badge-extras-need">
-                  {t("badges.design.extrasNeed", { width: String(widthMm), height: String(extrasNeed) })}
+                  {t("badges.design.extrasNeed", { height: String(extrasNeed) })}
                 </Typography>
               )}
               <Typography variant="caption" color="text.secondary" data-testid="badge-per-sheet">

@@ -81,7 +81,8 @@ export const BADGE_WRITING_MIN = 10 * MM;
 /**
  * The least of its natural height the header and the role's band keep when the rows under them take
  * theirs (§NNN): four fifths. A design whose ticked rows (the free-text line, the telephone) would
- * squeeze the bands further is refused at the save (`badgeSizeRefusal`), never drawn crushed.
+ * squeeze the bands further is refused at the save (`badgeSizeRefusal`). That is a save-time rule: an imported event file or a copy of the event is read forgivingly and
+ * may draw with the bands under four fifths of their height, which the drawing survives (`badgeRows` clamps).
  */
 export const BADGE_BANDS_MIN_SHARE = 0.8;
 

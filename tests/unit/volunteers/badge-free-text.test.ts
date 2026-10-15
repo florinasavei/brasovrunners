@@ -193,6 +193,19 @@ describe("§NNN a size too small for everything ticked", () => {
   });
 });
 
+describe("§NNN the longest marker label in the narrowest marker area", () => {
+  it("is fitted inside the area — shrunk to its least size, then cut — on the narrowest custom size and on a strip", () => {
+    // Twenty wide capitals and the colon the badge prints after the label: the widest the box allows.
+    const text = `${"W".repeat(BADGE_MARKER_LABEL_MAX)}:`;
+    for (const size of [custom(BADGE_CUSTOM_BOUNDS.width.min, BADGE_CUSTOM_BOUNDS.height.min), STRIP90]) {
+      const layout = layoutOf(size, { markerLabel: text }, true);
+      const label = layout.marker!.label!;
+      expect(MEASURE.regular(label.text) * label.size, JSON.stringify(size)).toBeLessThanOrEqual(layout.marker!.width + 1e-9);
+      expect(label.size, JSON.stringify(size)).toBeGreaterThanOrEqual(Math.min(layout.name.size, BADGE_LAYOUT.phoneMinSize) - 1e-9);
+    }
+  });
+});
+
 describe("§NNN the free line: shrunk, then cut", () => {
   it("keeps its size on a short line and shrinks a longer one before cutting it", () => {
     // On the narrowest strip that takes the line with the telephone (a 60-character line never overflows 90 mm but in wide letters).

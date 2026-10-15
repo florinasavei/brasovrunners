@@ -5,6 +5,7 @@ import type { StaffUser } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
 import { recordAuditEvent } from "@/modules/audit/repository";
 import { bibEmergencyPhone } from "@/modules/registrations/bib-design";
+import { bibFooterText } from "@/modules/registrations/bib-footer";
 import { canDesignVolunteerBadges } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
 import { isWrittenText, missingLanguage } from "@/shared/forms/both-languages";
@@ -18,6 +19,11 @@ import {
   badgeDesignDropped,
   badgeDesignSchema,
   badgeRoleColour,
+  BADGE_FREE_TEXT_MAX,
+  BADGE_LABEL_MAX,
+  BADGE_MARKER_LABEL_MAX,
+  BADGE_PHONE_LABEL_MAX,
+  BADGE_TITLE_MAX,
   readBadgeDesign,
 } from "./badge-design";
 import { BADGE_CUSTOM_BOUNDS, BADGE_SIZES, type BadgeExtra, badgeSizeMm, badgeSizeRefusal } from "./badge-geometry";
@@ -159,20 +165,23 @@ export function parseBadgeDesignPost(values: BadgeDesignFormValues): BadgeDesign
     if (wrong.length > 0) throw invalid("the custom size is not whole millimetres within the bounds", wrong);
   }
   const pairs = [
-    ["titleRo", "titleEn"],
-    ["labelRo", "labelEn"],
-    ["freeTextRo", "freeTextEn"],
-    ["markerLabelRo", "markerLabelEn"],
-    ["phoneLabelRo", "phoneLabelEn"],
+    ["titleRo", "titleEn", BADGE_TITLE_MAX],
+    ["labelRo", "labelEn", BADGE_LABEL_MAX],
+    ["freeTextRo", "freeTextEn", BADGE_FREE_TEXT_MAX],
+    ["markerLabelRo", "markerLabelEn", BADGE_MARKER_LABEL_MAX],
+    ["phoneLabelRo", "phoneLabelEn", BADGE_PHONE_LABEL_MAX],
   ] as const;
-  const oneLanguage = pairs.flatMap(([ro, en]) => {
-    const missing = missingLanguage({ ro: values[ro], en: values[en] }, isWrittenText);
+  // The pair rule and the empty tick are held to what the schema will keep: a text made only of what the font cannot draw (an emoji)
+  // is nothing once stored, so it is nothing here too — otherwise it would be saved as an empty side with the other language written.
+  const kept = (key: (typeof pairs)[number][0 | 1], max: number) => bibFooterText(values[key], max);
+  const oneLanguage = pairs.flatMap(([ro, en, max]) => {
+    const missing = missingLanguage({ ro: kept(ro, max), en: kept(en, max) }, isWrittenText);
     return missing ? [box(missing === "ro" ? ro : en)] : [];
   });
   if (oneLanguage.length > 0) throw invalid("a text is written in one language only; write it in both, or in neither", oneLanguage);
-  // «Text liber» ticked with nothing in it prints nothing: say so, naming the Romanian box, rather than keep a tick that does nothing.
-  if (values.showFreeText && !isWrittenText(values.freeTextRo) && !isWrittenText(values.freeTextEn)) {
-    throw invalid("free text: ticked with nothing written", [box("freeTextRo")]);
+  // «Text liber» ticked with nothing in it prints nothing: say so, naming both boxes (the person writes both), rather than keep a tick that does nothing.
+  if (values.showFreeText && !isWrittenText(kept("freeTextRo", BADGE_FREE_TEXT_MAX)) && !isWrittenText(kept("freeTextEn", BADGE_FREE_TEXT_MAX))) {
+    throw invalid("free text: ticked with nothing written", [box("freeTextRo"), box("freeTextEn")]);
   }
   // Whatever the tick says: a number typed and not readable as one is refused, never kept as nothing while the box is off. The tick with no number
   // typed is allowed since §774: each role's badge then prints the telephone of its category's contact person (`badgePhoneLine`).
@@ -222,7 +231,10 @@ export async function saveBadgeDesign<T extends Record<string, unknown>>(
     const [row] = await tx.select({ badgeDesign: events.badgeDesign }).from(events).where(eq(events.id, eventId)).for("no key update").limit(1);
     if (!row) throw new DomainError("NOT_FOUND", "no such event");
     const before = readBadgeDesign(row.badgeDesign);
-    const changedKeys = (Object.keys(design) as Array<keyof BadgeDesign>).filter((key) => JSON.stringify(design[key]) !== JSON.stringify(before[key]));
+    // A stored value the reader left out (a wrong type: `badgeDesignDropped`) is a change too: saving writes the design as read, so the designer's
+    // «could not be read» note is cleared by the press that follows it, whatever the boxes show.
+    const droppedKeys = badgeDesignDropped(row.badgeDesign);
+    const changedKeys = (Object.keys(design) as Array<keyof BadgeDesign>).filter((key) => droppedKeys.includes(key as BadgeDroppedKey) || JSON.stringify(design[key]) !== JSON.stringify(before[key]));
     // Nothing new — the platform's own design saved over a column still null included — writes nothing.
     if (changedKeys.length === 0) return { changed: false };
     const written = await tx.update(events).set({ badgeDesign: design }).where(eq(events.id, eventId)).returning({ id: events.id });

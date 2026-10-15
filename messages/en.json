@@ -9503,7 +9503,7 @@
         "phoneLabelEn": "Label (English)",
         "phoneLabelHelp": "Empty in both languages: Coordonator and Coordinator. At most {max} characters.",
         "phoneOff": "No phone",
-        "extrasNeed": "The free-text line and the phone together need a badge at least {height} mm tall, at {width} mm wide.",
+        "extrasNeed": "The free-text line and the phone together need a badge at least {height} mm tall.",
         "dropped": "A value saved in this section could not be read and was left out. Write it again and save.",
         "extras": {
           "freeText": "the free-text line",

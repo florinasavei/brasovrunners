@@ -562,10 +562,22 @@ describe("§NNN the free-text line and the marker area", () => {
     expect((await findEventForBadges(db, otherEventId, "ro"))!.dropped).toEqual([]);
   });
 
+  it("writes the design as read when a stored value was dropped, even with the boxes unchanged, so the note goes", async () => {
+    await db.update(events).set({ badgeDesign: { ...readBadgeDesign(null), showFreeText: "yes" } }).where(eq(events.id, eventId));
+    expect((await findEventForBadges(db, eventId, "ro"))!.dropped).toEqual(["showFreeText"]);
+    expect(await post(actions.saveBadgeDesignAction, designForm({}))).toBe("redirected");
+    expect((await stored()) as Record<string, unknown>).toMatchObject({ showFreeText: false });
+    expect((await findEventForBadges(db, eventId, "ro"))!.dropped).toEqual([]);
+  });
+
   it.each([
     ["a free text in one language only", { "badge.design.showFreeText": "on", "badge.design.freeTextRo": "Bea apă" }, "badge.design.freeTextEn"],
     ["a free text in English only", { "badge.design.showFreeText": "on", "badge.design.freeTextEn": "Drink" }, "badge.design.freeTextRo"],
     ["the free text ticked with nothing written", { "badge.design.showFreeText": "on" }, "badge.design.freeTextRo"],
+    ["the free text ticked with nothing written, English too", { "badge.design.showFreeText": "on" }, "badge.design.freeTextEn"],
+    ["the free text ticked with only what the font cannot draw", { "badge.design.showFreeText": "on", "badge.design.freeTextRo": "😀", "badge.design.freeTextEn": "😀" }, "badge.design.freeTextRo"],
+    ["a free text with an emoji only in one language", { "badge.design.showFreeText": "on", "badge.design.freeTextRo": "😀", "badge.design.freeTextEn": "Drink" }, "badge.design.freeTextRo"],
+    ["a marker label with an emoji only in one language", { "badge.design.showMarker": "on", "badge.design.markerLabelRo": "😀", "badge.design.markerLabelEn": "Shift" }, "badge.design.markerLabelRo"],
     ["the marker's label in one language only", { "badge.design.showMarker": "on", "badge.design.markerLabelRo": "Tură" }, "badge.design.markerLabelEn"],
   ])("refuses %s, naming the box and keeping what was typed", async (_name, fields, box) => {
     const result = (await post(actions.saveBadgeDesignAction, designForm(fields))) as FormOutcome;

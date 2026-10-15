@@ -2156,7 +2156,7 @@ only ones who see the names, addresses and telephone numbers.
      characters, for example «Tură» or «Zona») and a faint line to write on. The preview shows both as you
      type. A badge that is too short for everything you ticked is refused when you save, with a sentence
      saying what does not fit and how tall it must be: the free-text line and the coordinator's telephone
-     together need a custom size at least 34 mm tall; the two strips take everything.
+     together need a custom size at least 34 mm tall; both ready-made sizes (90 × 35 and 100 × 40 mm) take everything.
    - **A role's colour** is part of the role: «Adaugă un rol» and each role's «Modifică» in the card, or
      all the roles at once under «Culorile rolurilor» on the badges' page. «Portocaliul clubului», one of
      the palette, or «Altă culoare» typed as `#rrggbb`; it is kept only when white or black text reads on
