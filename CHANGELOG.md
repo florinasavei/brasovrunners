@@ -8,6 +8,13 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V3.39-2026-10-15
+
+- **The volunteers' page: each category its own card, each role a tile** — a bordered card per category with a deep-blue band (glyph, name, «4 roluri») and the contact line, the roles inside it as tiles whose whole surface ticks the box, the count line under the name, two columns from the tablet width, working with scripts off. §780.
+- **The share row and «Adaugă în calendar» on one line** — the calendar pill is the row's last pill, and its five doors open as a dropdown under it that moves nothing; Escape or a click outside closes it (a click, not a pointer press: a scroll swipe that starts outside leaves it open). §781.
+## BR-V3.38-2026-10-15
+
+- **The participants' Excel export works again** — an event whose title has «Ș», «ț», «ă» or a long dash made the download fail with an error; every file the site hands out now carries a plain name and the real one, so the Excel is saved under the event's own title. §779.
 ## BR-V3.37-2026-10-15
 
 - **«Scrie-ne» and «Spune-ne ceva» through the outbox, with failover** — a visitor's message is queued, sent at once after the response, and carried by the other road (Gmail or Mailgun) when the chosen one fails twice; its words are deleted the moment it leaves (three days at the very most when no service works), a refused address is never retried elsewhere, a send that may already be delivered stays on its road for three tries and then the other carries it, and Girl Zone falls back to Gmail only with the club's tick and says so to the visitor; «Mesaje de pe site», `/devs` and «Sarcini» show each road's state and the Administrators are emailed when a road is down or a message is lost; `/admin/tasks` asks the club to approve the privacy notice that says so. What is proven about QA's «did not send by Gmail» is that no refusal was logged: §778.

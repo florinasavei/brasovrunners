@@ -235,7 +235,7 @@ test.describe.serial("BR-REQ-011-01 «Traseul»'s maps and GPX (§718)", () => {
     const answer = await page.request.get((await download.getAttribute("href")) ?? "");
     expect(answer.status()).toBe(200);
     expect(answer.headers()["content-type"]).toBe("application/gpx+xml");
-    expect(answer.headers()["content-disposition"]).toBe('attachment; filename="traseu-tampa.gpx"');
+    expect(answer.headers()["content-disposition"]).toBe("attachment; filename=\"traseu-tampa.gpx\"; filename*=UTF-8''traseu-tampa.gpx");
     expect(Buffer.from(await answer.body()).equals(TRACK)).toBe(true);
     // Garmin's tab was never chosen: nothing was asked of Garmin.
     expect(seen.some((made) => /garmin/.test(new URL(made.url()).hostname))).toBe(false);

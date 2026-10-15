@@ -1,3 +1,4 @@
+import { contentDisposition } from "@/shared/http/content-disposition";
 import { and, eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { getTranslations } from "next-intl/server";
@@ -82,7 +83,7 @@ export async function GET(request: Request): Promise<Response> {
     : [];
   const day = new Intl.DateTimeFormat("en-CA", { timeZone: CLUB_TIME_ZONE, year: "numeric", month: "2-digit", day: "2-digit" }).format(now);
   const fileName = sponsorListFileName(eventId ? (slug?.slug ?? "eveniment") : null, day, format);
-  const headers = { "Content-Disposition": `attachment; filename="${fileName}"`, "X-Robots-Tag": "noindex", "Cache-Control": "private, no-store" };
+  const headers = { "Content-Disposition": contentDisposition("attachment", fileName, "sponsor-list"), "X-Robots-Tag": "noindex", "Cache-Control": "private, no-store" };
 
   if (format === "xlsx") {
     // Every tick beside the five (§581): the declaration signed is one query for the rows in the file.

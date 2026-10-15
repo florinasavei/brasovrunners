@@ -1,3 +1,4 @@
+import { contentDisposition } from "@/shared/http/content-disposition";
 import { getTranslations } from "next-intl/server";
 import { routing } from "@/i18n/routing";
 import { eventShareImage, type ShareShape } from "@/modules/events/share-image";
@@ -26,7 +27,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ loca
     timeToBeAnnounced: t("timeToBeAnnounced"),
     t: (key, values) => t(key, values),
   });
-  image.headers.set("Content-Disposition", `attachment; filename="${slug}-${shape}.png"`);
+  image.headers.set("Content-Disposition", contentDisposition("attachment", `${slug}-${shape}.png`, "event"));
   /*
     Kept by the CDN for an hour, then served once more while it is drawn again (§549): the file
     depends on `?shape=`, so it stays a function, and a shared cache is what spares it being drawn

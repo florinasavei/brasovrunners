@@ -1,3 +1,4 @@
+import { contentDisposition } from "@/shared/http/content-disposition";
 import { NextResponse } from "next/server";
 import { getDb } from "@/db/client";
 import { exportEvent } from "@/modules/content/events/transfer/export";
@@ -36,7 +37,7 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
     return new NextResponse(serializeEventFile(file), {
       headers: {
         "Content-Type": "application/json; charset=utf-8",
-        "Content-Disposition": `attachment; filename="${fileName}"`,
+        "Content-Disposition": contentDisposition("attachment", fileName, "event"),
         "X-Robots-Tag": "noindex",
         "Cache-Control": "private, no-store",
       },

@@ -227,7 +227,7 @@ describe("BR-REQ-050-02 the GPX file (§718)", () => {
     const response = await serveMedia(new Request(`http://localhost/api/media/${gpx.key}`), { params: Promise.resolve({ key: gpx.key.split("/") }) });
     expect(response.status).toBe(200);
     expect(response.headers.get("content-type")).toBe("application/gpx+xml");
-    expect(response.headers.get("content-disposition")).toBe('attachment; filename="traseu-tampa.gpx"');
+    expect(response.headers.get("content-disposition")).toBe("attachment; filename=\"traseu-tampa.gpx\"; filename*=UTF-8''traseu-tampa.gpx");
     expect(Buffer.from(await response.arrayBuffer()).equals(TRACK)).toBe(true);
   });
 
