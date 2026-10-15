@@ -1,6 +1,5 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { rateLimitBuckets } from "@/db/schema/rate-limit";
-import { QA_SUBJECT_PREFIX } from "@/infrastructure/email/delivery";
 import { contactDeliveryFor } from "@/modules/contact/delivery";
 import { renderContactMessage } from "@/modules/contact/message";
 import { type ContactDelivery, type ContactScreening, submitContactMessage as queueContact } from "@/modules/contact/service";
@@ -66,7 +65,7 @@ describe("BR-REQ-070-04 the contact form", () => {
     expect(message.to).toEqual(["club@example.com"]);
     expect(message.cc).toEqual(["ioana@example.org"]);
     expect(message.replyTo).toEqual({ name: "Ana Popescu", address: "ana@example.com" });
-    expect(message.subject).toBe("Mesaj de pe site: Ana Popescu");
+    expect(message.subject).toBe("[contact] Mesaj de pe site: Ana Popescu");
     expect(message.text).toContain(PAGE);
 
     // Nothing of the message in the database: the throttle's row is a hash, never the address.
@@ -78,7 +77,7 @@ describe("BR-REQ-070-04 the contact form", () => {
   it("marks a QA message's subject, because the club's real mailboxes are on both projects", async () => {
     const capture = smtpCapture();
     await submitContactMessage(db, delivery(capture, "qa"), PERSON, NOW, PAGE);
-    expect(capture.messages[0]?.subject).toBe(`${QA_SUBJECT_PREFIX}Mesaj de pe site: Ana Popescu`);
+    expect(capture.messages[0]?.subject).toBe("[QA][contact] Mesaj de pe site: Ana Popescu");
   });
 
   it("answers a bot as sent and sends nothing — the trap field, or an instant post", async () => {
@@ -146,7 +145,7 @@ describe("BR-REQ-070-04 the contact form", () => {
 
         expect(capture.messages).toHaveLength(1);
         const [message] = capture.messages;
-        expect(message.subject).toBe("[posibil spam] Mesaj de pe site: Jaqueline Denehy");
+        expect(message.subject).toBe("[contact][posibil spam] Mesaj de pe site: Jaqueline Denehy");
         expect([...message.to, ...(message.cc ?? [])]).toEqual(["club@example.com", "ioana@example.org"]);
         expect(message.replyTo).toEqual({ name: "Jaqueline Denehy", address: "domains@search-club.example" });
         expect(message.text).toContain(SCRIPT_POST.message);
@@ -183,7 +182,7 @@ describe("BR-REQ-070-04 the contact form", () => {
       } finally {
         log.mockRestore();
       }
-      expect(capture.messages[0]?.subject).toBe("[posibil spam] Mesaj de pe site: Ana Popescu");
+      expect(capture.messages[0]?.subject).toBe("[contact][posibil spam] Mesaj de pe site: Ana Popescu");
       // Reply still reaches her.
       expect(capture.messages[0]?.replyTo).toEqual({ name: "Ana Popescu", address: "ana@example.com" });
     });
@@ -261,7 +260,7 @@ describe("BR-REQ-070-04 the contact form", () => {
     expect(rows).toHaveLength(limit);
     expect(rows.every((row) => row.status === "PENDING" && row.lastError === "gmail: smtp EAUTH" && row.road === "gmail")).toBe(true);
     // Their words wait for the road; nothing reached the club's mailbox yet.
-    expect(readRelayPayload(rows[0].payloadJson)).toMatchObject({ subject: "Mesaj de pe site: Ana Popescu", fallbackAllowed: true, form: "contact" });
+    expect(readRelayPayload(rows[0].payloadJson)).toMatchObject({ subject: "[contact] Mesaj de pe site: Ana Popescu", fallbackAllowed: true, form: "contact" });
     expect(capture.messages).toHaveLength(0);
   });
 

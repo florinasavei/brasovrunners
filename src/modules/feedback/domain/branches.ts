@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { ADDRESS_QUERY, type PickerChip, readPickerChip } from "./event-picker";
 import { type AppEnvironment, markSubjectForEnvironment } from "@/infrastructure/email/delivery";
+import { feedbackTags, tagSubject } from "@/modules/notifications/domain/subject-tags";
 import { canonicalizeEmail, InvalidEmailError } from "@/modules/participants/domain/canonical-email";
 
 /**
@@ -677,6 +678,8 @@ export const ANONYMOUS_NAME_LINE = "(anonim)";
 /**
  * The safety branch's subject (§676): neutral, so a notification on a phone's lock screen says
  * nothing of what is inside. The other three name their branch, because the club files them.
+ * The tags come before it (§NNN): `[feedback][girl-zone] Mesaj confidențial de pe site` — the owner asked for the
+ * filter, the human words stay neutral.
  */
 export const SAFETY_SUBJECT = "Mesaj confidențial de pe site";
 
@@ -799,7 +802,9 @@ export function composeFeedbackEmail(input: FeedbackInput, context: FeedbackCont
     `<p><strong>${escapeHtml(contact.label)}:</strong> ${escapeHtml(contact.value)}</p>`,
     `<p><em>${escapeHtml(footer)}</em></p>`,
   ].join("");
-  return { subject: markSubjectForEnvironment(oneLine(subjectBase), appEnv), text, html };
+  // `[feedback][cum-a-fost] Cum a fost: …` (§NNN): the tags a filter reads, then the words; on QA the mark is joined in front.
+  const subject = tagSubject(feedbackTags(input.branch, context.toPerson === true), oneLine(subjectBase));
+  return { subject: markSubjectForEnvironment(subject, appEnv), text, html };
 }
 
 /** The feedback page's address for one event and day, as the thank-you email and the event page link it. */

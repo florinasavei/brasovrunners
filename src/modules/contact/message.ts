@@ -1,5 +1,6 @@
 import { type AppEnvironment, markSubjectForEnvironment } from "@/infrastructure/email/delivery";
 import type { SmtpAddress, SmtpMessage } from "@/infrastructure/email/smtp-adapter";
+import { markAfterTags, SUBJECT_TAGS_OF, tagSubject } from "@/modules/notifications/domain/subject-tags";
 import type { ContactSignals, ContactSuspicion, SuspicionReason } from "./domain/suspicion";
 
 /**
@@ -58,17 +59,22 @@ function headerSafe(value: string): string {
   return value.replace(/[\r\n]+/g, " ").trim();
 }
 
+/**
+ * The subject of «Scrie-ne»'s message: `[contact]` and the human words (§NNN; the tags are `notifications/domain/subject-tags.ts`'s,
+ * so a Gmail filter on `subject:"[contact]"` files every one).
+ */
 export function contactSubject(name: string): string {
-  return `Mesaj de pe site: ${headerSafe(name)}`;
+  return tagSubject(SUBJECT_TAGS_OF.CONTACT_MESSAGE, `Mesaj de pe site: ${headerSafe(name)}`);
 }
 
 /**
  * The mark on a message the gates let through that still looks like a program's
  * (`domain/suspicion.ts`; the owner, 2026-09-23, of SEO spam through the form). Stable, because
  * the club filters on it — a Gmail filter on `subject:"[posibil spam]"` (`SETUP.md` §38) — so a
- * change to these characters is a change to every club mailbox's filter.
+ * change to these characters is a change to every club mailbox's filter. Placed after the tags and before the human words
+ * (`markAfterTags`, §NNN): «[contact][posibil spam] Mesaj de pe site: …».
  */
-export const SUSPICIOUS_SUBJECT_PREFIX = "[posibil spam] ";
+export const SUSPICIOUS_SUBJECT_MARK = "[posibil spam]";
 
 /** One line per reason, in Romanian whatever the form's language: the club is the reader (this module's first note). */
 function reasonLine(reason: SuspicionReason): string {
@@ -174,7 +180,7 @@ export function renderContactMessage(
         `<p><small>${escapeHtml(marked.signals)}</small></p>`,
       ].join("")
     : html;
-  const subject = marked ? `${SUSPICIOUS_SUBJECT_PREFIX}${contactSubject(name)}` : contactSubject(name);
+  const subject = marked ? markAfterTags(contactSubject(name), SUSPICIOUS_SUBJECT_MARK) : contactSubject(name);
 
   return {
     from: route.from,
@@ -187,7 +193,7 @@ export function renderContactMessage(
     // The sender's, marked or not: a real person whose browser never ran the widget is answered
     // with "Reply" like anybody else.
     replyTo: { name, address: input.email },
-    // On QA the environment's mark comes first — "[QA] [posibil spam] …" — and a filter on the
+    // On QA the environment's mark comes first — "[QA][contact][posibil spam] …" — and a filter on the
     // phrase matches either way.
     subject: markSubjectForEnvironment(subject, route.appEnv),
     text: markedText,
