@@ -7135,7 +7135,7 @@
               "steps": [
                 "The Volunteer: the race-day desk — finds a runner, confirms on the paper declaration the participant signed, gives a free place, a number, checks people in. Sees a name, a state and a number, never an email address.",
                 "The Redactor: the events' texts and the site's pages, in both languages. Does not change an event's settings and does not publish.",
-                "The Organizer: reads the events, every registration, the export and the race numbers; messages participants; works the desk. Does not change an event, cancel or erase a registration.",
+                "The Organizer: reads the events, every registration, the export and the race numbers; messages participants; works the desk; leaves internal notes on a registration. Does not change an event, cancel or erase a registration.",
                 "The Tehnic role: the site's configuration page, for troubleshooting. Does not change events and does not see the registrations.",
                 "The Administrator runs the club: everything the Organizer and the Redactor do, plus the events («New event», «Edit», «Create and publish»), correcting, cancelling and erasing a registration, resending emails, «Assign numbers», «Deadlines», the Mailgun plan, the legal documents (new version, approval, withdrawal, deletion) and the accounts under «Staff» (add, change role, revoke access) — except a Superadministrator's role and row.",
                 "The Superadministrator: everything the Administrator does, plus the technical settings that can stop the service — «How often the site checks», «The database's limits», the thresholds in «This month's budget» and «Anti-bot» — and naming another Superadministrator. A task in this guide that needs this role starts with “Role needed: Superadministrator”; if you do not have it, ask a Superadministrator to do it."
@@ -7349,6 +7349,16 @@
                 "Someone asks where their registration stands — on the phone, by message or at the desk: «Registrations» → search the name → open the registration. The Administrator and the Organizer see it alike.",
                 "Under «The registration's journey», «What to tell them» has the sentences to say, in the language they registered in: the same words they read on their page and in the emails, with their deadline — and until when the email's link is valid, only when that is another time than the deadline.",
                 "«Copy» puts them on the clipboard, for a message. The block shows no address and no link: a new link goes only by email; if it must be resent, the Administrator resends it."
+              ]
+            },
+            {
+              "title": "Leave a note on a registration",
+              "steps": [
+                "«Registrations» → search the name → open the registration → «Internal notes». The closed card says how many notes it holds.",
+                "Write in «Add a note» and press «Save the note». The notes come newest first, with the name of who wrote them and the moment.",
+                "Only organizers and administrators see the notes. They do not show at the desk, in the export or on the public list. Do not write medical or other sensitive data.",
+                "On the registrations list, a row with notes has a marker with their number; press it to open the notes.",
+                "«Delete» takes a note away, after a question: you delete your own, an Administrator deletes any. The notes are deleted with the registration."
               ]
             },
             {
@@ -7673,6 +7683,16 @@
                 "Someone asks where their registration stands — on the phone, by message or at the desk: «Registrations» → search the name → open the registration. The Administrator and the Organizer see it alike.",
                 "Under «The registration's journey», «What to tell them» has the sentences to say, in the language they registered in: the same words they read on their page and in the emails, with their deadline — and until when the email's link is valid, only when that is another time than the deadline.",
                 "«Copy» puts them on the clipboard, for a message. The block shows no address and no link: a new link goes only by email; if it must be resent, the Administrator resends it."
+              ]
+            },
+            {
+              "title": "Leave a note on a registration",
+              "steps": [
+                "«Registrations» → search the name → open the registration → «Internal notes». The closed card says how many notes it holds.",
+                "Write in «Add a note» and press «Save the note». The notes come newest first, with the name of who wrote them and the moment.",
+                "Only organizers and administrators see the notes. They do not show at the desk, in the export or on the public list. Do not write medical or other sensitive data.",
+                "On the registrations list, a row with notes has a marker with their number; press it to open the notes.",
+                "«Delete» takes a note away, after a question: you delete your own, an Administrator deletes any. The notes are deleted with the registration."
               ]
             },
             {

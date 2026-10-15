@@ -51,6 +51,17 @@ async function seed(tag: string): Promise<Seeded> {
   }
 }
 
+/** A note written straight into the table, with no author: its account is gone, as after a colleague leaves the team. */
+async function seedNote(seeded: Seeded, body: string): Promise<void> {
+  const client = new pg.Client({ connectionString: databaseUrl() });
+  await client.connect();
+  try {
+    await client.query("INSERT INTO registration_notes (registration_id, body) VALUES ($1, $2)", [seeded.registrationId, body]);
+  } finally {
+    await client.end();
+  }
+}
+
 async function cleanup(seeded: Seeded): Promise<void> {
   const client = new pg.Client({ connectionString: databaseUrl() });
   await client.connect();
@@ -149,19 +160,41 @@ test.describe("§NNN «Note interne» on a registration", () => {
     }
   });
 
-  test("the Tehnic role gets no registration page, so no card; the Administrator sees the card", async ({ page }) => {
+  test("the Tehnic role gets no registration page, so no card and no marker", async ({ page }) => {
     test.setTimeout(90_000);
-    const seeded = await seed(`${test.info().project.name}-roles-${Date.now().toString(36)}`);
+    const seeded = await seed(`${test.info().project.name}-tehnic-${Date.now().toString(36)}`);
     try {
+      await seedNote(seeded, "doar pentru organizatori");
       await signIn(page, "Dev Technical");
       const response = await page.goto(detailUrl(seeded));
       expect(response?.status()).toBe(404);
       await expect(page.locator("details#note-interne")).toHaveCount(0);
+      await expect(page.locator("body")).not.toContainText("doar pentru organizatori");
+    } finally {
+      await cleanup(seeded);
+    }
+  });
 
+  test("an Administrator sees a colleague's note on the card and deletes it", async ({ page }) => {
+    test.setTimeout(90_000);
+    const seeded = await seed(`${test.info().project.name}-admin-${Date.now().toString(36)}`);
+    try {
+      // A note whose author's account is gone: nobody's own, so only an Administrator may delete it.
+      await seedNote(seeded, "scrisă de un coleg");
       await signIn(page, "Dev Administrator");
       await page.goto(detailUrl(seeded));
       await hydrated(page);
-      await expect(page.locator("details#note-interne")).toBeVisible();
+      const card = page.locator("details#note-interne");
+      await expect(card.locator("summary")).toContainText("1 notă");
+      await card.locator("summary").click();
+      await expect(card.getByTestId("note-body")).toHaveText("scrisă de un coleg");
+      await expect(card.getByTestId("note-by")).toContainText("cont șters");
+      await card.getByRole("button", { name: "Șterge" }).click();
+      await confirmDialog(page, "Ștergi nota?");
+      await expect(page).toHaveURL(new RegExp(`${seeded.registrationId}\\?saved=noteDeleted#note-interne$`));
+      await hydrated(page);
+      await expect(page.getByTestId("note")).toHaveCount(0);
+      await expect(page.locator("details#note-interne summary")).toContainText("nicio notă");
     } finally {
       await cleanup(seeded);
     }
