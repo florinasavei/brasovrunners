@@ -4,6 +4,24 @@ export const SHARE_ROW_GAP = 1;
 /** Pixels the invisible tap band reaches above and below a pill: half of `SHARE_ROW_GAP`, never more. */
 export const SHARE_PILL_BAND = 4;
 
+/**
+ * The custom property the event page's share row carries (§NNN): the calendar pill's offset from the row's
+ * left edge, in pixels, written by `CalendarFoldClose` and read by the panel that opens under the pill.
+ */
+export const CALENDAR_PILL_LEFT_VAR = "--calendar-pill-left";
+
+/**
+ * The surface of a dropdown panel opened from a native fold (§NNN; the calendar page's help panel wears the same):
+ * the paper, a hairline in the divider's colour and the rounded corner, all theme tokens. Each panel keeps its own
+ * padding, shadow, position and layer. A plain object: a Server Component hands sx an object, never a function.
+ */
+export const DROPDOWN_PANEL_SURFACE_SX = {
+  bgcolor: "background.paper",
+  border: 1,
+  borderColor: "divider",
+  borderRadius: 2,
+} as const;
+
 /** The outlined button's own border: an absolutely placed band is measured from inside it, so it is added to the offset. */
 const SHARE_PILL_BORDER = 1;
 
