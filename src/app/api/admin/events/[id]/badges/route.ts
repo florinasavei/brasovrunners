@@ -8,7 +8,7 @@ import { canDesignVolunteerBadges } from "@/modules/staff-identity/domain/roles"
 import { requireStaff } from "@/modules/staff-identity/session";
 import { type BadgeLocale, badgeWords } from "@/modules/volunteers/badges/badge-design";
 import { badgeDefaultWords } from "@/modules/volunteers/badges/badge-words";
-import { BADGE_FROM_BOX, BADGE_REFUSED_PARAM, badgePrintEntries, findEventForBadges, listBadgeRoles, readBadgeSingleDefault, readPrintCounts } from "@/modules/volunteers/badges/badges";
+import { BADGE_FROM_BOX, BADGE_REFUSED_PARAM, badgePrintEntries, findEventForBadges, listBadgeRoles, printBoxes, readBadgeSingleDefault, readPrintCounts } from "@/modules/volunteers/badges/badges";
 import { renderBadgeSheet } from "@/modules/volunteers/badges/badges-pdf";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { isUuid } from "@/shared/ids";
@@ -52,7 +52,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
   if (!event) return NextResponse.json({ error: "NOT_FOUND" }, { status: 404 });
   const roles = await listBadgeRoles(db, id);
   // One badge for everyone (§NNN): one pile, «Câte ecusoane» starting at the confirmed volunteers; per role (§764): a pile per role.
-  const counts = readPrintCounts(url.searchParams, roles, event.design.mode === "single" ? { defaultCount: await readBadgeSingleDefault(db, id, roles) } : undefined);
+  const counts = readPrintCounts(url.searchParams, roles, event.design.mode === "single" ? { defaultCount: url.searchParams.has(printBoxes.all) ? 0 : await readBadgeSingleDefault(db, id, roles) } : undefined);
   if ("refused" in counts) {
     // The form (§764) says which page it came from: a refusal is told there, with the limits, not as bare JSON
     // that would replace the page. A caller that sends no `from` is a script, and gets the 400.

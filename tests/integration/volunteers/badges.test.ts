@@ -723,6 +723,13 @@ describe("§NNN one badge for everyone, no role — the default", () => {
     expect(await stored()).toBeNull();
   });
 
+  it("does not refuse a colour the club hid by choosing a badge per role: typed text that is no colour, or one no word reads on, saves the club's orange", async () => {
+    for (const typed of ["green", "#808080"]) {
+      expect(await post(actions.saveBadgeDesignAction, designForm({ "badge.design.mode": "perRole", "badge.design.singleColourChoice": "typed", "badge.design.singleColourTyped": typed }))).toBe("redirected");
+      expect(readBadgeDesign(await stored())).toMatchObject({ mode: "perRole", singleColour: null });
+    }
+  });
+
   it("allows the telephone ticked with no number on the badges per role (§774), and with the number typed on the one badge", async () => {
     expect(await post(actions.saveBadgeDesignAction, designForm({ "badge.design.mode": "perRole", "badge.design.showPhone": "on" }))).toBe("redirected");
     expect(readBadgeDesign(await stored())).toMatchObject({ mode: "perRole", showPhone: true, phone: "" });

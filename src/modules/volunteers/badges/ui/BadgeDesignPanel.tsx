@@ -254,7 +254,7 @@ export default async function BadgeDesignPanel({
             />
           </Box>
 
-          {/* «Câte feluri de ecusoane» (§NNN): one badge for everyone — the default — or one per role; the one badge's band colour with it. */}
+          {/* «Un ecuson sau pe roluri» (§NNN): one badge for everyone — the default — or one per role; the one badge's band colour with it. */}
           <Panel glyph="badgeMode" collapsible level={5} title={t("badges.design.sections.mode")} aside={modeAside} data-testid="badge-section-mode">
             <Stack spacing={1.5}>
               <Typography variant="caption" color="text.secondary">

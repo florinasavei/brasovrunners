@@ -192,10 +192,13 @@ export function parseBadgeDesignPost(values: BadgeDesignFormValues): BadgeDesign
   if (values.bandColour !== null && !badgeColourReadable(values.bandColour)) {
     throw new DomainError("BADGE_COLOUR_UNREADABLE", "the band's colour does not carry its words at AA", [box("bandColour")]);
   }
-  // The one badge's colour (§NNN), held to the rule every band obeys, whichever mode is chosen: a typed text that is no `#rrggbb` is refused naming
-  // its box, and a colour no word reads on is `BADGE_COLOUR_UNREADABLE` — as a role's is (`checkedRoleColour`).
+  // The one badge's colour (§NNN), held to the rule every band obeys: a typed text that is no `#rrggbb` is refused naming its box, and a colour
+  // no word reads on is `BADGE_COLOUR_UNREADABLE` — as a role's is (`checkedRoleColour`). Per role the box is hidden (the service ignores what the
+  // choice hides): a colour that was typed and cannot be kept is the club's orange, never a refusal about a box the person cannot see.
   const singleBox = box(values.singleColourChoice === TYPED_COLOUR ? "singleColourTyped" : "singleColourChoice");
-  const singleColour = postedSingleColour(values.singleColourChoice, values.singleColourTyped);
+  const postedColour = postedSingleColour(values.singleColourChoice, values.singleColourTyped);
+  const hiddenUnusable = values.mode === "perRole" && (postedColour === undefined || (postedColour !== null && !badgeColourReadable(postedColour)));
+  const singleColour = hiddenUnusable ? null : postedColour;
   if (singleColour === undefined) throw invalid("the one badge's colour is not #rrggbb nor one of the choices", [singleBox]);
   if (singleColour !== null && !badgeColourReadable(singleColour)) {
     throw new DomainError("BADGE_COLOUR_UNREADABLE", "the one badge's colour does not carry its words at AA", [singleBox]);
