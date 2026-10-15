@@ -20,7 +20,7 @@ export const VOLUNTEER_BOXES = [
   "name",
   "email",
   "phone",
-  "age",
+  "birthDate",
   "guardianName",
   "guardianEmail",
   "guardianAware",
@@ -44,7 +44,8 @@ export function parseVolunteerBoxes(value: string | undefined): VolunteerBox[] {
 /**
  * What was typed before a refusal, from the sealed draft (§142): never the consent tick, the agreement's or the
  * age's (§758) — each is the person's own act each time. The person's answers about themselves come back (§765): the
- * age, the sex, the city, the size, and the two optional ticks as "on" or nothing — they are claims, not consents.
+ * date of birth as typed (§773, instead of the age), the sex, the city, the size, and the two optional ticks as "on" or
+ * nothing — they are claims, not consents.
  */
 export type VolunteerTyped = {
   name?: string;
@@ -54,7 +55,8 @@ export type VolunteerTyped = {
   /** The roles ticked (§761), their ids joined by commas: the sealed draft keeps one string a name. */
   roleIds?: string;
   message?: string;
-  age?: string;
+  /** The date of birth as typed (§773), day first or `YYYY-MM-DD`: the box shows it back as it was. */
+  birthDate?: string;
   /** The parent's or guardian's name and address (§768) come back with the rest; the tick «știe și e de acord» never does — it is the person's own act each time. */
   guardianName?: string;
   guardianEmail?: string;

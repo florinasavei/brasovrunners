@@ -37,6 +37,8 @@ export type VolunteerCsvRow = {
   signedUpAt: Date;
   /** What the person said about themselves (§765): empty for an unanswered box. */
   age: number | null;
+  /** The day they were born, `YYYY-MM-DD` — the date the age was derived from, beside it (§773); empty for a row from before. */
+  dateOfBirth: string | null;
   sex: string;
   city: string | null;
   /** «Da» / «Nu» in the reader's words. */
@@ -61,6 +63,7 @@ export type VolunteerCsvHeader = {
   note: string;
   signedUpAt: string;
   age: string;
+  dateOfBirth: string;
   sex: string;
   city: string;
   volunteeredBefore: string;
@@ -73,7 +76,7 @@ export type VolunteerCsvHeader = {
 
 export function buildVolunteersCsv(header: VolunteerCsvHeader, rows: readonly VolunteerCsvRow[]): string {
   const lines = [
-    [header.role, header.choices, header.name, header.email, header.phone, header.state, header.source, header.message, header.note, header.signedUpAt, header.age, header.sex, header.city, header.volunteeredBefore, header.clubMember, header.shirtSize, header.guardianName, header.guardianEmail, header.guardianConsent]
+    [header.role, header.choices, header.name, header.email, header.phone, header.state, header.source, header.message, header.note, header.signedUpAt, header.age, header.dateOfBirth, header.sex, header.city, header.volunteeredBefore, header.clubMember, header.shirtSize, header.guardianName, header.guardianEmail, header.guardianConsent]
       .map(csvCell)
       .join(","),
     ...rows.map((row) =>
@@ -89,6 +92,7 @@ export function buildVolunteersCsv(header: VolunteerCsvHeader, rows: readonly Vo
         row.note ?? "",
         row.signedUpAt.toISOString(),
         row.age === null ? "" : String(row.age),
+        row.dateOfBirth ?? "",
         row.sex,
         row.city ?? "",
         row.volunteeredBefore,

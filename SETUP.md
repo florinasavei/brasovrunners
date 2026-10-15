@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.31-2026-10-15 -->
+<!-- PROJECT_BASELINE: BR-V3.32-2026-10-15 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V3.31-2026-10-15`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.32-2026-10-15`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -2095,8 +2095,11 @@ only ones who see the names, addresses and telephone numbers.
    the address, the telephone number, «Ce ești dispus(ă) să faci» — one box per role that still needs
    people, as many ticked as the person would do, at least one (§761) —, an optional
    message, the consent tick, «Am citit și accept contractul de voluntariat» (linking the text in force)
-   and — once the notice of step 2 names them — «Vârsta» (14 or more; it replaces the tick «Am cel puțin 18 ani»), «Sex», «Orașul», the optional ticks «Am mai fost voluntar în trecut la alte curse»
-   and «Fac parte din grupul …», behind the same anti-bot checks as the registration form. The page answers **404** while the form could not be sent —
+   and — once the notice of step 2 names them — «Data nașterii» (the registration form's own box, typed day first: the age on the day of the event, the gun's day when the race has one, must be 14 or more, with a parent or guardian under 18; it replaces the tick «Am cel puțin 18 ani» and, since §773, the old «Vârsta»), «Sex», «Orașul», the optional ticks «Am mai fost voluntar în trecut la alte curse»
+   and «Fac parte din grupul …», behind the same anti-bot checks as the registration form. Under the roles' list the form says, kindly, that a person may be asked to cover another responsibility and will be contacted (§773).
+   The button on the event's page opens this page **in a new tab**. **«Arată public câți voluntari mai sunt necesari»** (a third tick on the card, **off by default**, one press like the other two)
+   decides whether the page tells each role how many people it still needs («mai sunt necesare 3 persoane») or only that it still has room («mai sunt locuri»): leave it off unless you want the number public —
+   the card always shows «N din M». **Approve the privacy notice from the template once more** (§773): its volunteers' paragraph now says «data nașterii» where it said the age; until then the notice in force keeps saying «vârsta» beside the new box's name. A volunteer entered before this release keeps the age they had (no date); typing a date on their row replaces it. The page answers **404** while the form could not be sent —
    the same conditions as the line above — never a form that cannot work, and after a send it says «Am primit oferta ta» on that page, with a toast;
    it is never in the sitemap or a search index, like the registration page. **«Oferim tricouri voluntarilor»** (a tick on the card, off by
    default, one press like «Primește voluntari pe pagină») adds «Mărimea tricoului» to the form and to every row; the club gives no T-shirts today.

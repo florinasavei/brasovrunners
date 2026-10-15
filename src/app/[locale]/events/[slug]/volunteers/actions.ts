@@ -76,8 +76,9 @@ export async function submitVolunteerAction(form: FormData): Promise<void> {
         // The roles ticked (§761), one string in the draft: their ids joined by commas.
         roleIds: roleIdsOf(form).join(","),
         message: text(form, "message"),
-        // What the person said about themselves (§765) comes back too — never the consent, the agreement or the age tick.
-        age: text(form, "age").trim(),
+        // What the person said about themselves (§765) comes back too — never the consent, the agreement or the age tick. The date of birth
+        // comes back as typed (§773); the box shows it as it was.
+        birthDate: text(form, "birthDate").trim(),
         // Their parent's or guardian's name and address (§768) too; the tick that the parent agrees is never kept.
         guardianName: text(form, "guardianName").trim(),
         guardianEmail: text(form, "guardianEmail").trim(),
@@ -120,8 +121,9 @@ export async function submitVolunteerAction(form: FormData): Promise<void> {
         agreement: form.get("agreement") === "on",
         adult: form.get("adult") === "on",
         // What the person says about themselves (§765), read by the service only while the notice in force names it:
-        // the age as typed, the sex, the city, the size, and the two optional ticks — posted as "on" only when ticked.
-        age: text(form, "age"),
+        // the date of birth as typed (§773; the service reads it day first and derives the age on the event's day), the sex, the city, the
+        // size, and the two optional ticks — posted as "on" only when ticked.
+        birthDate: text(form, "birthDate"),
         sex: text(form, "sex"),
         city: text(form, "city"),
         shirtSize: text(form, "shirtSize"),
