@@ -15,8 +15,10 @@ import { toCalendarEvent } from "@/modules/events/calendar";
 import { datedOrNull } from "@/modules/events/domain/dated";
 import { EVENT_LINK_KINDS, type EventLinkKind } from "@/modules/events/domain/links";
 import { registrationState } from "@/modules/events/domain/registration-window";
-import type { Checkpoint } from "@/modules/event-checkpoints/domain/checkpoint";
+import { type Checkpoint, profileMarkers } from "@/modules/event-checkpoints/domain/checkpoint";
 import { checkpointFinish, withCutoffClocks } from "@/modules/event-checkpoints/domain/start";
+import type { ElevationProfileWords } from "@/modules/routes/elevation/ElevationProfile";
+import type { ElevationProfileData } from "@/modules/routes/elevation/parse";
 import { hasRouteSection } from "@/modules/events/domain/route-section";
 import { isStorageConfigured } from "@/modules/media/storage";
 import type { RouteMapWords } from "@/modules/events/ui/EventRoute";
@@ -120,10 +122,13 @@ export default async function EventPageView({
   visit,
   preview,
   checkpoints = [],
+  elevation = null,
 }: {
   event: PublicEventPage;
   /** The route's checkpoints (§757), read by the caller through the public cache; none draws no section. */
   checkpoints?: readonly Checkpoint[];
+  /** The route's elevation profile (§NNN), read by the caller from the GPX (the public cache's `cachedRouteElevation`); null draws no chart. */
+  elevation?: ElevationProfileData | null;
   locale: "ro" | "en";
   slug: string;
   now: Date;
@@ -302,6 +307,17 @@ export default async function EventPageView({
         openRouteLabel={t("openRoute")}
         kindLabels={linkKindLabels}
         mapWords={t.raw("routeMaps") as RouteMapWords}
+        profile={
+          elevation
+            ? {
+                data: elevation,
+                // The route's length as the club typed it: the chart spans it, so a pin's kilometre and the line agree.
+                distanceMeters: event.distanceMeters ?? null,
+                markers: profileMarkers(checkpoints, locale),
+                words: t.raw("profile") as ElevationProfileWords,
+              }
+            : null
+        }
       />
 
       {/* «Puncte de control» (§757), under `#checkpoints`: right under the route's maps, the kilometre,

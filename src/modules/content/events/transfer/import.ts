@@ -237,6 +237,7 @@ export function importedCheckpoints(config: EventConfig): Omit<CheckpointInput, 
         cutoffMinutesPart: splitDuration(row.cutoffMinutes).minutes,
         noteRo: row.note.ro ?? "",
         noteEn: row.note.en ?? "",
+        onProfile: row.onProfile,
         remove: false,
         index,
       })),
@@ -249,6 +250,7 @@ export function importedCheckpoints(config: EventConfig): Omit<CheckpointInput, 
       cutoffMinutes: row.cutoffMinutes,
       noteRo: row.noteRo,
       noteEn: row.noteEn,
+      onProfile: row.onProfile,
     }));
   } catch (error) {
     if (!(error instanceof CheckpointRefusal)) throw error;

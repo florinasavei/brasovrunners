@@ -9,6 +9,7 @@ import {
   type EventFile,
   MAX_EVENT_FILE_BYTES,
   readEventFile,
+  serializeEventFile,
 } from "@/modules/content/events/transfer/file-format";
 import { collectMediaRefs, isFetchableMediaUrl, mapMediaUrls, MEDIA_ROLE_KEYS, mediaRoleKey, sha256Hex, storeKeyOfUrl } from "@/modules/content/events/transfer/media";
 import { DEFAULT_BIB_DESIGN } from "@/modules/registrations/bib-design";
@@ -75,8 +76,8 @@ function sampleConfig(): EventConfig {
       gpx: { name: "traseu.gpx", url: GPX },
       // The route's checkpoints (§757, §770): one with a time limit in minutes and a note, one without either and with a direction kind.
       checkpoints: [
-        { km: 7.5, name: { ro: "Apă la cabană", en: "Water at the hut" }, kinds: ["WATER", "FOOD"], cutoffMinutes: 45, note: { ro: "Și banane", en: "Bananas too" } },
-        { km: 15, name: { ro: "Cronometrare", en: "Timing" }, kinds: ["TIMING", "DIRECTION"], cutoffMinutes: null, note: { ro: null, en: null } },
+        { km: 7.5, name: { ro: "Apă la cabană", en: "Water at the hut" }, kinds: ["WATER", "FOOD"], cutoffMinutes: 45, note: { ro: "Și banane", en: "Bananas too" }, onProfile: true },
+        { km: 15, name: { ro: "Cronometrare", en: "Timing" }, kinds: ["TIMING", "DIRECTION"], cutoffMinutes: null, note: { ro: null, en: null }, onProfile: true },
       ],
     },
     links: [],
@@ -136,6 +137,22 @@ describe("the event file's reader", () => {
     const read = readEventFile(JSON.stringify(sampleFile()));
     expect(read.ok).toBe(true);
     if (read.ok) expect(read.file.event.translations.ro.title).toBe("Cursa ro");
+  });
+
+  it("writes a checkpoint's profile tick only when it is off, so a file of ticked points stays readable by the release before the tick (§NNN)", () => {
+    const file = sampleFile();
+    file.event.route.checkpoints[1].onProfile = false;
+    const written = serializeEventFile(file);
+    const points = (JSON.parse(written) as { event: { route: { checkpoints: Array<Record<string, unknown>> } } }).event.route.checkpoints;
+    expect(points[0]).not.toHaveProperty("onProfile");
+    expect(points[1]).toHaveProperty("onProfile", false);
+    // And «not written» reads back as on, the unticked point as off.
+    const read = readEventFile(written);
+    if (!read.ok) throw new Error("the file did not read back");
+    expect(read.file.event.route.checkpoints.map((row) => row.onProfile)).toEqual([true, false]);
+    // A file with every point ticked has the key nowhere.
+    file.event.route.checkpoints[1].onProfile = true;
+    expect(serializeEventFile(file)).not.toContain("onProfile");
   });
 
   it("refuses what is not one of ours, saying which of the five reasons it is", () => {

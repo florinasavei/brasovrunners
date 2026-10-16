@@ -108,6 +108,8 @@ type Row = {
   noteRo?: string | null;
   noteEn?: string | null;
   remove?: boolean;
+  /** «Arată pe profilul traseului»: true or false as the form drew and posted it; undefined for a form that did not draw the box. */
+  onProfile?: boolean;
 };
 
 /** The card's form: one row per entry, numbered from 0, with the boxes' own names. */
@@ -127,6 +129,11 @@ function form(rows: Row[], extra: Record<string, string> = {}, forEvent = eventI
     data.set(`cp[${index}].noteRo`, row.noteRo ?? "");
     data.set(`cp[${index}].noteEn`, row.noteEn ?? "");
     if (row.remove) data.set(`cp[${index}].remove`, "on");
+    // The profile's tick (§NNN): a form that drew the box posts its marker, and «on» when it is ticked; undefined is a form drawn before the box existed.
+    if (row.onProfile !== undefined) {
+      data.set(`cp[${index}].onProfileShown`, "1");
+      if (row.onProfile) data.set(`cp[${index}].onProfile`, "on");
+    }
   });
   for (const [name, value] of Object.entries(extra)) data.set(name, value);
   return data;
@@ -615,5 +622,109 @@ describe("§757 the picture stamp covers the checkpoints", () => {
     expect(await stamp()).not.toBe(gun);
     await save([{ ...WATER, id: water.id, remove: true }]);
     expect(await stamp()).toBe(none);
+  });
+});
+
+describe("§NNN «Arată pe profilul traseului» — the tick on each point", () => {
+  const onProfileOf = async () => Object.fromEntries((await listCheckpoints(db, eventId)).map((row) => [row.nameRo, row.onProfile]));
+
+  it("is on for a new point and for any point the form did not carry the box for", async () => {
+    // A form drawn before the box existed posts neither the box nor its marker: the point is on, as the column's default says.
+    await save([WATER]);
+    expect(await onProfileOf()).toEqual({ Apă: true });
+    // A form that drew the box and had it ticked.
+    await save([{ ...FOOD, onProfile: true }]);
+    expect(await onProfileOf()).toEqual({ Apă: true, Mâncare: true });
+  });
+
+  it("saves an unticked box as off, reads it back, and says so in the audit trail", async () => {
+    await save([{ ...WATER, onProfile: false }]);
+    expect(await onProfileOf()).toEqual({ Apă: false });
+    const stored = await db.select().from(eventCheckpoints).where(eq(eventCheckpoints.eventId, eventId));
+    expect(stored.map((row) => row.onProfile)).toEqual([false]);
+  });
+
+  it("changes with the tick alone: a saved point ticked off is an edit, ticked on again another, and an unchanged save records nothing", async () => {
+    await save([{ ...WATER, onProfile: true }]);
+    const [water] = await listCheckpoints(db, eventId);
+    expect(await actions()).toEqual(["event_checkpoints.changed"]);
+    await save([{ ...WATER, id: water.id, onProfile: false }]);
+    expect(await onProfileOf()).toEqual({ Apă: false });
+    // The trail says what changed: the tick is in the line, so `from` and `to` are not the same words.
+    expect((await trail())[1].metadataJson).toMatchObject({
+      added: 0,
+      edited: 1,
+      removed: 0,
+      from: [{ name: "Apă", onProfile: true }],
+      to: [{ name: "Apă", onProfile: false }],
+    });
+    await save([{ ...WATER, id: water.id, onProfile: false }]);
+    expect(await trail()).toHaveLength(2);
+    await save([{ ...WATER, id: water.id, onProfile: true }]);
+    expect(await onProfileOf()).toEqual({ Apă: true });
+    expect(await trail()).toHaveLength(3);
+  });
+
+  it("keeps a point's tick when a form that did not draw the box saves it: «not posted» is never «unticked»", async () => {
+    await save([{ ...WATER, onProfile: false }]);
+    const [water] = await listCheckpoints(db, eventId);
+    // A stale form from before the release: the same point, no box, no marker — and a new point beside it.
+    await save([{ ...WATER, id: water.id, nameEn: "Water point" }, FOOD]);
+    expect(await onProfileOf()).toEqual({ Apă: false, Mâncare: true });
+    expect((await listCheckpoints(db, eventId)).find((row) => row.nameRo === "Apă")?.nameEn).toBe("Water point");
+  });
+
+  it("keeps the ticks of the points a form was not told about", async () => {
+    await save([{ ...WATER, onProfile: false }, { ...FOOD, onProfile: true }]);
+    const [water] = await listCheckpoints(db, eventId);
+    // A colleague's list in the form has only the food: the water, unticked, survives the save as it was.
+    await save([{ ...FOOD, id: (await listCheckpoints(db, eventId))[1].id, onProfile: true }]);
+    expect(await onProfileOf()).toEqual({ Apă: false, Mâncare: true });
+    expect(water.onProfile).toBe(false);
+  });
+
+  it("puts a point taken from the GPX on the chart", async () => {
+    const stored = await storeRouteGpx(getStorage(), {
+      bytes: Buffer.from(
+        `<?xml version="1.0"?><gpx version="1.1" creator="test"><wpt lat="45.6" lon="25.6"><name>Izvor</name><sym>Drinking Water</sym></wpt><trk><trkseg>${Array.from({ length: 55 }, (_, step) => `<trkpt lat="45.6" lon="${(25.5 + step * 0.005).toFixed(3)}"><ele>600</ele></trkpt>`).join("")}</trkseg></trk></gpx>`,
+      ),
+      name: "Traseu.gpx",
+      environment: "test",
+      now: new Date("2026-10-13T10:00:00.000Z"),
+    });
+    await db.update(events).set({ routeGpx: stored as never }).where(eq(events.id, eventId));
+    const waypoints = await loadGpxWaypoints((stored as { key: string }).key);
+    expect(waypoints?.proposals.length).toBeGreaterThan(0);
+    const data = new FormData();
+    data.set("uiLocale", "ro");
+    data.set("eventId", eventId);
+    data.set("gpxKey", (stored as { key: string }).key);
+    data.append("pick", "0");
+    data.set("cp[0].nameRo", "Izvorul");
+    data.set("cp[0].nameEn", "The spring");
+    expect(await post(addGpxCheckpointsAction, data)).toBe("redirected");
+    expect(await onProfileOf()).toEqual({ Izvorul: true });
+  });
+
+  it("leaves the race number's picture alone: the tick is not part of its stamp", async () => {
+    await db.insert(eventTranslations).values({ eventId, locale: "ro", slug: "cursa", title: "Cursa" });
+    const stamp = async () => {
+      const [row] = await db
+        .select({ stamp: BIB_STAMP })
+        .from(events)
+        .innerJoin(eventTranslations, eq(eventTranslations.eventId, events.id))
+        .where(eq(events.id, eventId));
+      return row.stamp;
+    };
+    await save([{ ...WATER, onProfile: true }]);
+    const ticked = await stamp();
+    const [water] = await listCheckpoints(db, eventId);
+    await save([{ ...WATER, id: water.id, onProfile: false }]);
+    expect(await stamp()).toBe(ticked);
+  });
+
+  it("keeps the table's list whole: every point is listed, ticked or not", async () => {
+    await save([{ ...WATER, onProfile: false }, { ...FOOD, onProfile: true }]);
+    expect((await listCheckpoints(db, eventId)).map((row) => row.nameRo)).toEqual(["Apă", "Mâncare"]);
   });
 });

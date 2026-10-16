@@ -4,6 +4,7 @@ import { existsSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import pg from "pg";
+import { elevationGpx } from "../helpers/elevation-gpx";
 import { hydrated, signIn } from "./support/featured-event";
 import { openEditorBox, openFold } from "./support/fold";
 
@@ -310,6 +311,246 @@ test.describe("§757 the route's checkpoints and the race's time limit", () => {
     } finally {
       await context.close();
     }
+  });
+});
+
+/*
+  §NNN (amending §718, §741, §757; the owner, 2026-10-16: «I would like to have a widget actually! And read it from the
+  GPX» — «select which ones to show on the elevation profile»): the route's elevation profile on the event page, above
+  the table «Puncte de control», with the pins of the checkpoints the club left ticked and the pointer's readout, and
+  the same chart as a preview in the editor's card with the tick on each point. A race of 9 km with the sample GPX's
+  altitudes and four checkpoints: water at 3.8 km, food at 4.5, water at 6.2, and a first-aid point at 7.5 that is
+  unticked — in the table, not on the chart.
+*/
+const POINTS = [
+  { km: 3.8, ro: "Punct izvor", en: "Spring point", kinds: "WATER", onProfile: true },
+  { km: 4.5, ro: "Punct cabană", en: "Hut point", kinds: "FOOD", onProfile: true },
+  { km: 6.2, ro: "Punct vârf", en: "Summit point", kinds: "WATER", onProfile: true },
+  { km: 7.5, ro: "Punct ascuns", en: "Hidden point", kinds: "FIRST_AID", onProfile: false },
+] as const;
+
+/** A 9 km race with the sample GPX attached and the four checkpoints above, published. */
+async function seedProfileRace(tag: string): Promise<{ id: string; slug: string }> {
+  const race = await seedRace(tag);
+  const key = `${appEnv()}/route-gpx/${randomUUID()}/profil.gpx`;
+  const gpx = elevationGpx();
+  const file = path.join(process.cwd(), ".media", key);
+  await mkdir(path.dirname(file), { recursive: true });
+  await writeFile(file, gpx);
+  await withDatabase(async (client) => {
+    await client.query(`UPDATE events SET distance_meters = 9000, route_gpx = $2::jsonb WHERE id = $1`, [
+      race.id,
+      JSON.stringify({ key, name: "profil.gpx", size: Buffer.byteLength(gpx), uploadedAt: new Date().toISOString() }),
+    ]);
+    for (const [position, point] of POINTS.entries()) {
+      await client.query(
+        `INSERT INTO event_checkpoints (event_id, position, name_ro, name_en, km, kinds, on_profile) VALUES ($1, $2, $3, $4, $5, ARRAY[$6]::event_checkpoint_kind[], $7)`,
+        [race.id, position, point.ro, point.en, point.km, point.kinds, point.onProfile],
+      );
+    }
+  });
+  await publish(race.id);
+  return race;
+}
+
+test.describe("§NNN the route's elevation profile", () => {
+  test.describe.configure({ timeout: 180_000 });
+
+  test("the page draws the chart above the table, with a pin for each ticked point and the unticked one only in the table; the pointer reads the route", async ({ page }, testInfo) => {
+    const project = testInfo.project.name;
+    const race = await seedProfileRace(`${project}-${Date.now().toString(36)}-profile`);
+    await page.goto(`/ro/evenimente/${race.slug}`);
+    await hydrated(page);
+
+    // One chart is on screen: the narrow one on a phone, the wide one on a desktop.
+    const section = page.getByTestId("route-elevation");
+    await expect(section).toBeVisible();
+    const chart = section.locator('[data-testid="elevation-chart"]:visible');
+    await expect(chart).toHaveCount(1);
+    await expect(chart).toHaveAttribute("data-size", project === "mobile" ? "narrow" : "wide");
+    await expect(chart).toHaveAttribute("aria-label", /^Profilul traseului: 9,0 km, de la \d+ la \d+ m$/);
+
+    // The pins: the three ticked points, a glyph each; the first-aid point the club unticked is not on the chart.
+    const pins = chart.getByTestId("elevation-pin");
+    await expect(pins).toHaveCount(3);
+    await expect(pins.nth(0)).toHaveAttribute("data-glyph", "water");
+    await expect(pins.nth(1)).toHaveAttribute("data-glyph", "food");
+    await expect(pins.nth(2)).toHaveAttribute("data-glyph", "water");
+    await expect(section).not.toContainText("Punct ascuns");
+    await expect(chart.locator("text", { hasText: "Alt" })).toHaveCount(1);
+    await expect(chart.locator("text", { hasText: /^km$/ })).toHaveCount(1);
+
+    // The table lists every point, the unticked one too, and comes after the chart.
+    const rows = page.getByTestId("checkpoint-row");
+    await expect(rows).toHaveCount(4);
+    await expect(rows.nth(3)).toContainText("Punct ascuns");
+    const chartBox = (await section.boundingBox())!;
+    const tableBox = (await page.getByTestId("event-checkpoints").boundingBox())!;
+    expect(chartBox.y + chartBox.height).toBeLessThanOrEqual(tableBox.y + 1);
+
+    // Nothing sticks out of the screen, and the labels are 11 px or more as drawn.
+    const widths = await page.evaluate(() => ({ page: document.documentElement.scrollWidth, window: window.innerWidth }));
+    expect(widths.page).toBeLessThanOrEqual(widths.window);
+    const smallest = await chart.evaluate((svg) => {
+      const scale = svg.getBoundingClientRect().width / (svg as SVGSVGElement).viewBox.baseVal.width;
+      return Math.min(...[...svg.querySelectorAll("text")].map((text) => parseFloat(getComputedStyle(text).fontSize) * scale));
+    });
+    expect(smallest).toBeGreaterThanOrEqual(10.9);
+
+    // The pointer: nothing before the first event, then the kilometre and the altitude, and the point's name where there is one.
+    const readout = page.getByTestId("elevation-pointer-readout");
+    await expect(readout).toHaveCount(0);
+    // On screen first: a box is measured where the page is scrolled to, and a pointer lands where the screen is.
+    await section.scrollIntoViewIfNeeded();
+    const shown = (await section.boundingBox())!;
+    const hut = (await pins.nth(1).locator("circle").first().boundingBox())!;
+    const at = { x: hut.x + hut.width / 2, y: hut.y + hut.height / 2 };
+    if (project === "mobile") await page.touchscreen.tap(at.x, at.y);
+    else await page.mouse.move(at.x, at.y);
+    await expect(readout).toBeVisible();
+    await expect(readout).toHaveText(/^4,[45] km · \d+ m · Punct cabană$/);
+    await expect(page.getByTestId("elevation-pointer-line")).toBeVisible();
+    // The readout that names a point stays on the screen — whole, never widening the page — at every named pin, on a 320 px phone too.
+    const readoutInside = async () => {
+      const box = (await readout.boundingBox())!;
+      const screen = await page.evaluate(() => ({ width: window.innerWidth, scroll: document.documentElement.scrollWidth }));
+      expect(box.x).toBeGreaterThanOrEqual(-0.5);
+      expect(box.x + box.width).toBeLessThanOrEqual(screen.width + 0.5);
+      expect(screen.scroll).toBeLessThanOrEqual(screen.width);
+    };
+    await readoutInside();
+    for (const index of [0, 2]) {
+      const pin = (await pins.nth(index).locator("circle").first().boundingBox())!;
+      const pinAt = { x: pin.x + pin.width / 2, y: pin.y + pin.height / 2 };
+      if (project === "mobile") await page.touchscreen.tap(pinAt.x, pinAt.y);
+      else await page.mouse.move(pinAt.x, pinAt.y);
+      await expect(readout).toHaveText(index === 0 ? /^3,[78] km · \d+ m · Punct izvor$/ : /^6,[12] km · \d+ m · Punct vârf$/);
+      await readoutInside();
+    }
+    // Back on the hut for the shot below.
+    if (project === "mobile") await page.touchscreen.tap(at.x, at.y);
+    else await page.mouse.move(at.x, at.y);
+    await expect(readout).toHaveText(/^4,[45] km · \d+ m · Punct cabană$/);
+    await readoutInside();
+    // Between two points, no name: the readout says the kilometre and the altitude only.
+    const far = shown.x + shown.width * 0.25;
+    if (project === "mobile") await page.touchscreen.tap(far, at.y);
+    else await page.mouse.move(far, at.y);
+    await expect(readout).toHaveText(/^\d,\d km · \d+ m$/);
+    await page.screenshot({ path: `test-results/l46-pointer-${project}.png`, clip: { x: 0, y: Math.max(0, shown.y - 8), width: page.viewportSize()!.width, height: shown.height + 16 } });
+    // A mouse leaving takes the line away; a finger lifting leaves it.
+    if (project !== "mobile") {
+      await page.mouse.move(2, 2);
+      await expect(readout).toHaveCount(0);
+    }
+
+    // The keys: the chart is a tab stop; home, end and the arrows read the kilometre and the altitude, said politely for a screen reader.
+    const pointer = page.getByTestId("elevation-pointer");
+    await pointer.focus();
+    await page.keyboard.press("Home");
+    await expect(readout).toHaveText(/^0,0 km · \d+ m$/);
+    await expect(pointer.getByRole("status")).toHaveText(/^0,0 km · \d+ m$/);
+    await page.keyboard.press("End");
+    await expect(readout).toHaveText(/^9,0 km · \d+ m$/);
+    await expect(pointer.getByRole("status")).toHaveText(/^9,0 km · \d+ m$/);
+    await page.keyboard.press("ArrowLeft");
+    await expect(readout).toHaveText(/^8,9 km · \d+ m$/);
+    await readoutInside();
+
+    // The route section, chart and table, as a visitor sees them.
+    // The picture is of the section, not of the bars that float over the page: hidden for the shot only.
+    await page.evaluate(() => {
+      for (const element of document.querySelectorAll<HTMLElement>("body *")) {
+        const position = getComputedStyle(element).position;
+        if (position === "fixed" || position === "sticky") element.style.visibility = "hidden";
+      }
+    });
+    const scrolled = await page.evaluate(() => window.scrollY);
+    const chartNow = (await section.boundingBox())!;
+    const tableNow = (await page.getByTestId("event-checkpoints").boundingBox())!;
+    await page.screenshot({
+      path: `test-results/l46-page-${project}.png`,
+      fullPage: true,
+      clip: { x: 0, y: scrolled + chartNow.y - 56, width: page.viewportSize()!.width, height: tableNow.y + tableNow.height - chartNow.y + 64 },
+    });
+
+    // The English page: the English words and the English names.
+    await page.goto(`/en/events/checkpoints-${race.slug.replace(/^puncte-/, "")}`);
+    const english = page.getByTestId("route-elevation").locator('[data-testid="elevation-chart"]:visible');
+    await expect(english).toHaveAttribute("aria-label", /^Route profile: 9\.0 km, from \d+ to \d+ m$/);
+    await expect(english.getByTestId("elevation-pin")).toHaveCount(3);
+    await expect(english.getByTestId("elevation-pin").nth(1).locator("title")).toHaveText("Hut point");
+  });
+
+  test("with scripts off the static chart stands", async ({ browser }) => {
+    const race = await seedProfileRace(`${test.info().project.name}-${Date.now().toString(36)}-nojs`);
+    const context = await browser.newContext({ javaScriptEnabled: false, baseURL: test.info().project.use.baseURL, viewport: test.info().project.use.viewport ?? undefined });
+    const page = await context.newPage();
+    try {
+      await page.goto(`/ro/evenimente/${race.slug}`);
+      const chart = page.getByTestId("route-elevation").locator('[data-testid="elevation-chart"]:visible');
+      await expect(chart).toHaveCount(1);
+      await expect(chart.getByTestId("elevation-pin")).toHaveCount(3);
+    } finally {
+      await context.close();
+    }
+  });
+
+  test("the editor's card previews it, ticks each point, and a saved tick takes the pin off the page", async ({ page }, testInfo) => {
+    const project = testInfo.project.name;
+    const race = await seedProfileRace(`${project}-${Date.now().toString(36)}-editor`);
+    await signIn(page, "Dev Administrator");
+    await page.goto(`/ro/admin/events/${race.id}`);
+    await hydrated(page);
+    const card = await openEditorBox(page, "Puncte de control");
+
+    // «Așa apare pe pagină»: the compact chart, three pins, above the rows, with the sentence that it follows a save.
+    const preview = card.getByTestId("checkpoints-preview");
+    await expect(preview).toBeVisible();
+    await expect(preview).toContainText("Așa apare pe pagină");
+    await expect(preview).toContainText("Se schimbă după „Salvează punctele”, nu în timp ce scrii.");
+    const chart = preview.getByTestId("elevation-chart");
+    await expect(chart).toHaveCount(1);
+    await expect(preview.getByTestId("elevation-pin")).toHaveCount(3);
+    await expect(preview).toContainText("Numărul de concurs le arată după setarea „Punctele de control pe profil”");
+    // The preview's labels are 11 px or more as drawn in the editor's card — on a 320 px phone the card leaves the chart about 204 px.
+    const previewSmallest = await chart.evaluate((svg) => {
+      const scale = svg.getBoundingClientRect().width / (svg as SVGSVGElement).viewBox.baseVal.width;
+      return Math.min(...[...svg.querySelectorAll("text")].map((text) => parseFloat(getComputedStyle(text).fontSize) * scale));
+    });
+    expect(previewSmallest).toBeGreaterThanOrEqual(10.9);
+
+    // The tick on each point: on for a new row, off for the point the club left off.
+    // (Counted by the boxes' own names: the saved points and the spare rows sit in folds that are closed.)
+    await expect(card.locator('input[name$=".onProfile"]')).toHaveCount(4 + 3);
+    await expect(card.locator('input[name="cp[4].onProfile"]')).toBeChecked();
+    await expect(card.locator('input[name="cp[3].onProfile"]')).not.toBeChecked();
+    await openFold(card.getByTestId("checkpoint-card").nth(3));
+    await expect(card.getByTestId("checkpoint-card").nth(3).getByRole("checkbox", { name: "Arată pe profilul traseului" })).not.toBeChecked();
+    await card.screenshot({ path: `test-results/l46-editor-${project}.png` });
+
+    // Untick the hut and save: the preview refreshes with the save, and the page loses the pin but keeps the row.
+    const hut = card.getByTestId("checkpoint-card").nth(1);
+    await openFold(hut);
+    await hut.getByRole("checkbox", { name: "Arată pe profilul traseului" }).uncheck();
+    await card.getByRole("button", { name: "Salvează punctele" }).click();
+    await expect(page.getByTestId("toast-live")).toContainText("Punctele de control au fost salvate.", { timeout: 20_000 });
+    await hydrated(page);
+    await expect(page.getByTestId("checkpoints-preview").getByTestId("elevation-pin")).toHaveCount(2);
+    const stored = await withDatabase((client) => client.query<{ name_ro: string; on_profile: boolean }>(`SELECT name_ro, on_profile FROM event_checkpoints WHERE event_id = $1 ORDER BY km`, [race.id]));
+    expect(stored.rows.map((row) => [row.name_ro, row.on_profile])).toEqual([
+      ["Punct izvor", true],
+      ["Punct cabană", false],
+      ["Punct vârf", true],
+      ["Punct ascuns", false],
+    ]);
+
+    await expect(async () => {
+      await page.goto(`/ro/evenimente/${race.slug}`);
+      await expect(page.getByTestId("route-elevation").locator('[data-testid="elevation-chart"]:visible').getByTestId("elevation-pin")).toHaveCount(2);
+    }).toPass({ timeout: 30_000 });
+    await expect(page.getByTestId("checkpoint-row")).toHaveCount(4);
+    await expect(page.getByTestId("event-checkpoints")).toContainText("Punct cabană");
   });
 });
 

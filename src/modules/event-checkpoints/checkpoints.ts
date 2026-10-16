@@ -51,6 +51,7 @@ const toCheckpoint = (row: EventCheckpointRow, clockOf: (minutes: number | null)
   cutoffClock: clockOf(row.cutoffMinutes),
   noteRo: row.noteRo,
   noteEn: row.noteEn,
+  onProfile: row.onProfile,
 });
 
 /**
@@ -129,16 +130,18 @@ const toPosted = (row: Checkpoint, index: number): PostedCheckpoint => {
     cutoffMinutesPart: limit.minutes,
     noteRo: row.noteRo ?? "",
     noteEn: row.noteEn ?? "",
+    onProfile: row.onProfile,
     remove: false,
     index,
   };
 };
 
-/** One line of the audit trail: where, what and by when (the time limit in minutes) — never a participant. */
-const summary = (rows: readonly Pick<Checkpoint, "km" | "nameRo" | "cutoffMinutes">[]) => rows.map((row) => ({ km: row.km, name: row.nameRo, cutoffMinutes: row.cutoffMinutes }));
+/** One line of the audit trail: where, what, by when (the time limit in minutes) and whether the profile draws it (§NNN) — never a participant. */
+const summary = (rows: readonly Pick<Checkpoint, "km" | "nameRo" | "cutoffMinutes" | "onProfile">[]) =>
+  rows.map((row) => ({ km: row.km, name: row.nameRo, cutoffMinutes: row.cutoffMinutes, onProfile: row.onProfile }));
 
 /** Whether two rows say the same thing, whatever their id and place in the list. */
-function sameWords(a: Omit<CheckpointInput, "id">, b: Pick<Checkpoint, "nameRo" | "nameEn" | "km" | "cutoffMinutes" | "noteRo" | "noteEn" | "kinds">): boolean {
+function sameWords(a: Omit<CheckpointInput, "id">, b: Pick<Checkpoint, "nameRo" | "nameEn" | "km" | "cutoffMinutes" | "noteRo" | "noteEn" | "kinds" | "onProfile">): boolean {
   return (
     a.nameRo === b.nameRo &&
     a.nameEn === b.nameEn &&
@@ -146,6 +149,7 @@ function sameWords(a: Omit<CheckpointInput, "id">, b: Pick<Checkpoint, "nameRo" 
     a.cutoffMinutes === b.cutoffMinutes &&
     a.noteRo === b.noteRo &&
     a.noteEn === b.noteEn &&
+    a.onProfile === b.onProfile &&
     a.kinds.join() === b.kinds.join()
   );
 }
@@ -212,6 +216,7 @@ export async function copyCheckpoints<T extends Record<string, unknown>>(db: Dat
       cutoffMinutes: row.cutoffMinutes,
       noteRo: row.noteRo,
       noteEn: row.noteEn,
+      onProfile: row.onProfile,
       createdAt: now,
     });
   }
@@ -253,6 +258,7 @@ export async function replaceCheckpoints<T extends Record<string, unknown>>(
         cutoffMinutes: row.cutoffMinutes,
         noteRo: row.noteRo,
         noteEn: row.noteEn,
+        onProfile: row.onProfile,
         createdAt: now,
       });
     }
@@ -328,7 +334,10 @@ export async function changeCheckpoints<T extends Record<string, unknown>>(
         this form was open, or the id is another event's — is dropped, never written as a new point:
         a stale form must not bring back what somebody took off the page and the bib.
       */
-      const posted = request.rows.filter((row) => row.id === "" || known.has(row.id));
+      const posted = request.rows
+        .filter((row) => row.id === "" || known.has(row.id))
+        // A form that did not carry the profile's box (drawn before it existed) leaves the point as it was: a new point is on.
+        .map((row) => (row.onProfile === null ? { ...row, onProfile: current.find((saved) => saved.id === row.id)?.onProfile ?? true } : row));
       const named = new Set(posted.map((row) => row.id).filter((id) => id !== ""));
       wanted = [...posted, ...current.filter((row) => !named.has(row.id)).map((row, at) => toPosted(row, 1000 + at))];
     } else {
@@ -355,6 +364,8 @@ export async function changeCheckpoints<T extends Record<string, unknown>>(
           cutoffMinutesPart: "",
           noteRo: "",
           noteEn: "",
+          // A point taken from the GPX is on the chart until the club unticks it (§NNN).
+          onProfile: true,
           remove: false,
           index: pick.at,
         }));
@@ -378,6 +389,7 @@ export async function changeCheckpoints<T extends Record<string, unknown>>(
         cutoffMinutes: row.cutoffMinutes,
         noteRo: row.noteRo,
         noteEn: row.noteEn,
+        onProfile: row.onProfile,
         position,
       };
       if (!existing) {

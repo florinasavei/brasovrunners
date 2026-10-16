@@ -160,8 +160,16 @@ export async function publicRead<T>(
    * announces it: the email queue's (§623), a minute. Stretched by the month's budget like the day's.
    */
   ceilingSeconds: number = PUBLIC_CACHE_CEILING_SECONDS,
+  /**
+   * A read that asks the object store and never the database (§NNN, the route's elevation profile): it stays out of the
+   * database's breaker — an open breaker would hide a chart the store could give, and a store read's success would reset the
+   * back-off of a database that is still away — and out of the red month's cache-only rule and the saved copy, which are
+   * about sparing Neon. Its failures are the caller's to answer.
+   */
+  how: { storeOnly?: boolean } = {},
 ): Promise<T> {
   if (!insideNextServer() || process.env.NODE_ENV !== "production" || prerenderingAtBuild()) return load();
+  const storeOnly = how.storeOnly === true;
 
   // A miss asks the database through the breaker (§447): while this instance knows the database
   // is away, a miss fails at once and `readWithLastGood` serves the copy, instead of every page
@@ -183,9 +191,10 @@ export async function publicRead<T>(
     Nor for the email queue (§623): an old «emailurile întârzie» is as wrong as an old silence, and a
     page that cannot ask says nothing about it.
   */
-  const copyKey = contents.includes("places") || contents.includes("email") ? null : `cache:${key.map(String).join(":")}`;
+  const copyKey = storeOnly || contents.includes("places") || contents.includes("email") ? null : `cache:${key.map(String).join(":")}`;
   const loadAndKeep = async () => {
-    const value = await throughBreaker(load);
+    // A store-only read is not the database's to count (`how.storeOnly`).
+    const value = storeOnly ? await load() : await throughBreaker(load);
     if (copyKey) keepCopy(copyKey, value);
     return tagDates(value);
   };
@@ -196,8 +205,8 @@ export async function publicRead<T>(
     read does — so the organizer who saved sees the page as saved, never the copy from before the
     save. Whatever else was queued rides the same wake.
   */
-  const readInRequest = effects.publicMissRefreshMinutes === 0 || computeAwakeFromWrite();
-  if (effects.publicMissRefreshMinutes > 0 && readInRequest) flushMissRefreshes(effects.publicMissRefreshMinutes);
+  const readInRequest = storeOnly || effects.publicMissRefreshMinutes === 0 || computeAwakeFromWrite();
+  if (effects.publicMissRefreshMinutes > 0 && readInRequest && !storeOnly) flushMissRefreshes(effects.publicMissRefreshMinutes);
 
   if (readInRequest) {
     /*

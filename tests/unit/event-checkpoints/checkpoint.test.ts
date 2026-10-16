@@ -47,6 +47,7 @@ const row = (index: number, over: Partial<PostedCheckpoint> = {}): PostedCheckpo
   cutoffMinutesPart: "",
   noteRo: "",
   noteEn: "",
+  onProfile: true,
   remove: false,
   ...over,
 });
@@ -388,6 +389,7 @@ describe("§757 the table the event page draws", () => {
     cutoffClock,
     noteRo: null,
     noteEn: null,
+    onProfile: true,
   });
 
   it("is nothing without checkpoints, even with a time limit: the finish alone is no section", () => {
@@ -411,7 +413,7 @@ describe("§757 the table the event page draws", () => {
 });
 
 describe("§757 the picture stamp covers the checkpoints", () => {
-  const base: Checkpoint = { id: "a", nameRo: "Apă", nameEn: "Water", km: 5, kinds: ["WATER"], cutoffMinutes: 60, cutoffClock: "10:00", noteRo: null, noteEn: null };
+  const base: Checkpoint = { id: "a", nameRo: "Apă", nameEn: "Water", km: 5, kinds: ["WATER"], cutoffMinutes: 60, cutoffClock: "10:00", noteRo: null, noteEn: null, onProfile: true };
 
   it("changes with a kilometre, a kind, a limit or the clock it closes at, and not with a name or an id", () => {
     const stamp = checkpointsStampPart([base]);

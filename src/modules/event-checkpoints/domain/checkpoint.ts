@@ -56,6 +56,8 @@ export type Checkpoint = {
   cutoffClock: string | null;
   noteRo: string | null;
   noteEn: string | null;
+  /** Whether the route's elevation profile draws this point (§NNN); the table lists it either way. */
+  onProfile: boolean;
 };
 
 /** What the editor posts for one row, before any rule is applied: strings as typed. */
@@ -71,6 +73,13 @@ export type PostedCheckpoint = {
   cutoffMinutesPart: string;
   noteRo: string;
   noteEn: string;
+  /**
+   * «Arată pe profilul traseului» ticked (§NNN): a box that posts nothing when it is not, so the form also posts a marker
+   * that it drew the box (`cp[i].onProfileShown`). **Null when the form did not carry the box** — a page drawn before the
+   * tick existed, saved after it: the service then keeps what the point had (a new point: on), never reads «not posted» as
+   * «unticked».
+   */
+  onProfile: boolean | null;
   /** «Scoate» ticked on a saved row. */
   remove: boolean;
   /** The row's number in the form, for naming a box the refusal is about. */
@@ -162,7 +171,7 @@ export class CheckpointRefusal extends DomainError {
 /** The boxes' names: `cp[3].km` — the row's number in the form, so a refusal links to the box. */
 export const checkpointBox = (
   index: number,
-  field: "id" | "nameRo" | "nameEn" | "km" | "kinds" | "cutoffHours" | "cutoffMinutesPart" | "noteRo" | "noteEn" | "remove",
+  field: "id" | "nameRo" | "nameEn" | "km" | "kinds" | "cutoffHours" | "cutoffMinutesPart" | "noteRo" | "noteEn" | "onProfile" | "onProfileShown" | "remove",
 ): string => `cp[${index}].${field}`;
 
 /** The whole of a row's text, folded: one line, no run of spaces. */
@@ -355,6 +364,7 @@ export function prepareCheckpoints(posted: readonly PostedCheckpoint[], context:
       cutoffMinutes: limit,
       noteRo: noteRo === "" ? null : noteRo,
       noteEn: noteEn === "" ? null : noteEn,
+      onProfile: row.onProfile ?? true,
       index: row.index,
       label,
     });
@@ -390,6 +400,7 @@ export function prepareCheckpoints(posted: readonly PostedCheckpoint[], context:
     cutoffMinutes: row.cutoffMinutes,
     noteRo: row.noteRo,
     noteEn: row.noteEn,
+    onProfile: row.onProfile,
   }));
 }
 
@@ -456,6 +467,19 @@ export function checkpointRows(
   }));
   if (finish.limit && finish.minutes) rows.push({ kind: "finish", km: finish.km, cutoffMinutes: finish.minutes, cutoffClock: finish.limit });
   return rows;
+}
+
+/**
+ * The checkpoints the elevation profile pins (§NNN; the owner, 2026-10-16: «select which ones to show on the elevation
+ * profile»): the ones the club left ticked «Arată pe profilul traseului», by distance, each with its name in the page's
+ * language. A row without the flag — a copy of the list kept by the public cache before the column existed — is on, as the
+ * column's default is. The table «Puncte de control» never uses this: it lists every point.
+ */
+export function profileMarkers(
+  checkpoints: readonly (Pick<Checkpoint, "km" | "kinds" | "nameRo" | "nameEn"> & { onProfile?: boolean })[],
+  locale: "ro" | "en",
+): { km: number; kinds: readonly CheckpointKind[]; name: string }[] {
+  return sortedByKm(checkpoints.filter((row) => row.onProfile !== false)).map((row) => ({ km: row.km, kinds: row.kinds, name: locale === "ro" ? row.nameRo : row.nameEn }));
 }
 
 /**

@@ -4,6 +4,8 @@ import Box from "@mui/material/Box";
 import Link from "@mui/material/Link";
 import Typography from "@mui/material/Typography";
 import RichText from "@/modules/content/rich-text/ui/RichText";
+import ElevationProfile, { type ElevationProfileMarker, type ElevationProfileWords } from "@/modules/routes/elevation/ElevationProfile";
+import type { ElevationProfileData } from "@/modules/routes/elevation/parse";
 import { getStorage, isStorageConfigured } from "@/modules/media/storage";
 import { env } from "@/shared/config/env";
 import SocialIcon from "@/shared/ui/SocialIcon";
@@ -36,7 +38,8 @@ export type RouteMapWords = {
  *
  * Since §718, the event's own maps and file under them: Garmin Connect and Strava in tabs (the
  * owner's layout, Strava first since §738; one service alone needs no tabs), each map behind its own press
- * (`RouteMapPanel`), then the GPX the club uploaded, «Descarcă traseul (GPX)», whether or not there
+ * (`RouteMapPanel`), then the route's elevation profile when the GPX has altitudes (§NNN,
+ * `routes/elevation/`), then the GPX the club uploaded, «Descarcă traseul (GPX)», whether or not there
  * is a map. The route link is not drawn when it is the very Strava route the Strava tab opens.
  *
  * Nothing at all when this language has no description and the event has no map and no file
@@ -58,6 +61,7 @@ export default function EventRoute({
   openRouteLabel,
   kindLabels,
   mapWords,
+  profile,
 }: {
   /** This language's route description as stored (a rich-text document, or null). */
   descriptionJson: unknown;
@@ -76,6 +80,11 @@ export default function EventRoute({
   kindLabels: Record<EventLinkKind, string>;
   /** The maps' and the file's words; without them the section draws neither. */
   mapWords?: RouteMapWords;
+  /**
+   * The elevation profile (§NNN): the GPX's parsed series, the route's typed length in metres (or null for the track's own),
+   * the checkpoints to pin — the ones the club left ticked — and the words. Null or absent: no chart.
+   */
+  profile?: { data: ElevationProfileData; distanceMeters: number | null; markers: readonly ElevationProfileMarker[]; words: ElevationProfileWords } | null;
 }) {
   if (!hasRouteSection({ routeDescriptionJson: descriptionJson, routeMaps, routeGpx }, isStorageConfigured())) return null;
 
@@ -117,6 +126,14 @@ export default function EventRoute({
               <RouteMapPanel key={map.provider} map={map} words={mapWords[map.provider]} origin={origin} tab={ids(map.provider)} />
             ))}
           </RouteMapTabs>
+        </Box>
+      )}
+      {/* The route's elevation profile (§NNN), under the maps and above the file and the table «Puncte de control»: only when
+          the GPX has altitudes, and only the checkpoints the club left ticked. The picture is built from the club's own file
+          on its own storage — no third party is asked, so no notice changes. */}
+      {profile && (
+        <Box sx={{ mb: 1.5 }} data-testid="route-elevation">
+          <ElevationProfile variant="page" profile={profile.data} distanceMeters={profile.distanceMeters} markers={profile.markers} locale={locale} words={profile.words} />
         </Box>
       )}
       {mapWords && gpx && (
