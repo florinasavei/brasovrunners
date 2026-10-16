@@ -280,6 +280,9 @@ test.describe("§754 volunteers for a race", () => {
       // The owner's note, right under the roles' list (§773), and the short instruction above it.
       await expect(choices.getByTestId("volunteer-roles-note")).toHaveText("În funcție de numărul de doritori, există posibilitatea să fie nevoie să acoperi o altă responsabilitate. Mulțumim pentru dorința de a ajuta. Te vom contacta curând.");
       await expect(choices).toContainText("Bifează tot ce ai face, cel puțin un rol.");
+      // A banner (§NNN): the information Alert, static text — `note`, never MUI's live `alert` — and the fieldset names it.
+      await expect(choices.getByTestId("volunteer-roles-note")).toHaveAttribute("role", "note");
+      await expect(choices.getByTestId("volunteer-roles-note").locator(".MuiAlert-icon svg")).toBeVisible();
       // The date of birth, instead of the age: the registration form's own box (§773) — digits typed, the box puts the dots in.
       const birthBox = guest.locator('input[name="birthDate"]');
       await expect(guest.locator('input[name="age"]')).toHaveCount(0);
