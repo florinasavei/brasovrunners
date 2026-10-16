@@ -8,7 +8,8 @@ import type { Locale } from "@/i18n/routing";
 import { findPublishedEventBySlug } from "@/modules/events/repository";
 import { botCheckIsOn } from "@/modules/registrations/bot-check";
 import { TURNSTILE_FIELD } from "@/modules/registrations/domain/turnstile-widget";
-import { clearFormDraft, stashDraftValues } from "@/modules/registrations/form-draft";
+import { cachedEmailLeavesAt } from "@/modules/public-cache/reads";
+import { clearFormDraft, stashDraftValues, stashSubmittedFacts } from "@/modules/registrations/form-draft";
 import { composePhone } from "@/modules/registrations/phone";
 import { verifyTurnstile } from "@/modules/registrations/turnstile";
 import { flashPublic } from "@/shared/feedback/flash";
@@ -156,6 +157,16 @@ export async function submitVolunteerAction(form: FormData): Promise<void> {
     redirect(`${path}?volunteer=${outcome.outcome}${since}#${VOLUNTEER_BOX_ID}`);
   }
   await clearFormDraft(path);
+  /*
+    What the thank-you screen needs to greet the person and say when the receipt leaves (§NNN; the registration's «Aproape gata, Ana!»
+    does the same): the first name, the address, the scheduled pass the email leaves on — computed once, here, so a reload after the
+    pass says it left instead of naming the next one — and the send's instant. Its own sealed cookie on this page's path, ten
+    minutes, never the address (§14.5). The same for a new person and a repeat: it is what was typed, not what the list held.
+  */
+  const sentAt = new Date();
+  // A timing the cache cannot tell (the database away) is no time at all — the screen then promises no hour — never a failed send after the offer was kept.
+  const leavesAt = await cachedEmailLeavesAt(sentAt).catch(() => undefined);
+  await stashSubmittedFacts({ email: text(form, "email").trim(), firstName: text(form, "name"), leavesAt, submittedAt: sentAt }, path);
   // The thank-you is on the volunteers' page, said twice the house's way: the banner the address asks for, and the toast the flash carries (§427).
   await flashPublic("volunteerSent");
   redirect(`${path}?volunteer=1#${VOLUNTEER_BOX_ID}`);

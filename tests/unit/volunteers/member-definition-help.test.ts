@@ -63,6 +63,9 @@ async function drawBox(language: "ro" | "en", over: Partial<ComponentProps<typeo
   const drawn = (await VolunteerBox({
     locale: language,
     slug: "cursa",
+    eventTitle: "Crosul de toamnă",
+    when: "sâmbătă, 21 nov. 2026, 09:00",
+    sent: null,
     roles: [ROLE],
     shirts: false,
     showCounts: true,

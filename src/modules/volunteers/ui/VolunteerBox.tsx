@@ -44,6 +44,8 @@ import {
 import GuardianFields from "./GuardianFields";
 import VolunteerCategoryCard from "./VolunteerCategoryCard";
 import VolunteerContactLine, { hasVolunteerContact } from "./VolunteerContactLine";
+import VolunteerDone, { type VolunteerSent } from "./VolunteerDone";
+import VolunteerSteps from "./VolunteerSteps";
 import VolunteerRoleChip, { RoleChipRow } from "./VolunteerRoleChip";
 import type { PublicVolunteerCategory, PublicVolunteerRole } from "../volunteers";
 import { VOLUNTEER_BOX_ID, type VolunteerBox as BoxName, type VolunteerOutcome, type VolunteerTyped } from "./volunteer-box";
@@ -85,6 +87,9 @@ import { VOLUNTEER_BOX_ID, type VolunteerBox as BoxName, type VolunteerOutcome, 
 export default async function VolunteerBox({
   locale,
   slug,
+  eventTitle,
+  when,
+  sent,
   roles,
   categories = [],
   shirts,
@@ -100,6 +105,11 @@ export default async function VolunteerBox({
 }: {
   locale: Locale;
   slug: string;
+  /** The event's title and its start in its own zone and the page's language (null when held back, §533): the thank-you names them (§NNN). */
+  eventTitle: string;
+  when: string | null;
+  /** What the send kept for the thank-you (§NNN): the first name, the address and when the receipt leaves; null when the browser has none. */
+  sent: VolunteerSent | null;
   /** Only the roles that still need people, in the club's order. */
   roles: readonly PublicVolunteerRole[];
   /**
@@ -138,6 +148,8 @@ export default async function VolunteerBox({
   // The roles under their categories (§774): only the headings that have a role still needing people; the heading words are the club's.
   const groups = groupRolesByCategory(categories, roles, { withRoles: true });
   const headed = groupsNeedHeadings(groups);
+  // Some category drawn has a contact person (§774): the steps and the thank-you point to it («scrisă la categoria ta»).
+  const hasContact = headed && groups.some((group) => group.category !== null && hasVolunteerContact(group.category.contact));
   const roleDoc = (role: PublicVolunteerRole) => (locale === "en" ? role.descriptionEnJson : role.descriptionRoJson);
   const roleWords = (role: PublicVolunteerRole) => (locale === "en" ? role.descriptionEn : role.descriptionRo);
   // «mai sunt necesare 10 persoane» only while the club ticked «Arată public câți voluntari mai sunt necesari» (§773); otherwise nothing: a role
@@ -185,15 +197,12 @@ export default async function VolunteerBox({
         {outcome === "done" ? (
           // The same sentence whether the person was new or already on the list (BR-REQ-031-01 criterion 3).
           <>
-            <Alert severity="success" role="status" data-testid="volunteer-done" sx={{ mt: 1 }}>
-              {t("volunteers.done")}
-              {/* Where the club takes minors, the same extra sentence for everybody: never a hint about who was typed (§768). */}
-              {minors && (
-                <Box component="span" sx={{ display: "block", mt: 1 }} data-testid="volunteer-done-guardian">
-                  {t("volunteers.doneGuardian")}
-                </Box>
-              )}
-            </Alert>
+            {/*
+              The thank-you is the registration's «Aproape gata, Ana!» for a volunteer (§NNN): the green-disc heading, the lead, when the
+              receipt leaves and «Ce urmează» (`VolunteerDone`). Where the club takes minors, the parent's consent is on the list for
+              everybody — never a hint about who was typed (§768).
+            */}
+            {await VolunteerDone({ locale, eventTitle, when, sent, minors, contact: hasContact })}
             {/* The toast the send flashed (§427), here and on no other state of this page. */}
             <PublicFlash accept={["volunteerSent"]} />
           </>
@@ -203,7 +212,7 @@ export default async function VolunteerBox({
             {t("volunteers.allFull")}
           </Alert>
         ) : (
-          <Stack component="form" action={submitVolunteerAction} spacing={2} data-testid="volunteer-form" sx={{ mt: 1, maxWidth: 560 }}>
+          <Stack component="form" action={submitVolunteerAction} spacing={2} data-testid="volunteer-form" sx={{ mt: 1 }}>
             <input type="hidden" name="locale" value={locale} />
             <input type="hidden" name="slug" value={slug} />
             {/* Bots fill every field; a human never sees or fills this one. */}
@@ -213,6 +222,13 @@ export default async function VolunteerBox({
             <Typography variant="body2" color="text.secondary">
               {t("volunteers.intro")}
             </Typography>
+
+            {/*
+              «Cum funcționează voluntariatul» (§NNN; the owner, 2026-10-16: «trebuie să îi spunem voluntarului care sunt pașii și că urmează să
+              îl aprobăm»): the four steps, under the intro and above the roles, folded the way the register page draws its own (`RegistrationSteps
+              folded`) — the third step is where the page says the organizers choose the role and confirm the person, once.
+            */}
+            {await VolunteerSteps({ folded: true, minors, contact: hasContact })}
 
             {outcome && (
               <Alert severity={outcome === "full" ? "warning" : "error"} role="alert" data-testid={`volunteer-${outcome}`}>
@@ -315,6 +331,19 @@ export default async function VolunteerBox({
               </Alert>
             </Box>
 
+            {/*
+              The boxes in two columns from `md` up, one below — the registration form's own pairing (`registration-form.tsx`, BR-REQ-041-01 is
+              phone-first and the phone is unchanged): on the left what a volunteer cannot be reached without — the name, the address, the
+              telephone number and an optional message — beside what they say about themselves. §NNN (the owner, 2026-10-16: «e prea
+              îngust tot formularul»): the page is the register page's width (`PAGE_WIDTH`) and the form is no longer capped at 560 pixels, so
+              the categories' cards and the chips above span the whole column and the boxes below keep half of it each. The consents and the
+              button close the form at full width, never looking like part of one half.
+            */}
+            <Box
+              data-testid="volunteer-fields"
+              sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, columnGap: 4, rowGap: 2, alignItems: "start" }}
+            >
+            <Stack spacing={2} sx={{ minWidth: 0 }}>
             <TextField
               id={fieldId("name")}
               name="name"
@@ -359,6 +388,22 @@ export default async function VolunteerBox({
               helperText={invalid.has("phone") ? tForm("errors.phone") : t("volunteers.phoneHelp")}
             />
 
+            <TextField
+              id={fieldId("message")}
+              name="message"
+              label={t("volunteers.message")}
+              helperText={t("volunteers.messageHelp", { max: VOLUNTEER_MESSAGE_MAX })}
+              fullWidth
+              multiline
+              minRows={2}
+              defaultValue={typed.message}
+              error={invalid.has("message")}
+              slotProps={{ htmlInput: { maxLength: VOLUNTEER_MESSAGE_MAX } }}
+            />
+            </Stack>
+
+            {/* …and, beside them from `md` up, what the person says about themselves (§765): the right column of the registration form's own pairing. */}
+            <Stack spacing={2} sx={{ minWidth: 0 }}>
             {profile && (
               <Stack spacing={2} data-testid="volunteer-profile">
                 {/*
@@ -506,18 +551,8 @@ export default async function VolunteerBox({
               </Stack>
             )}
 
-            <TextField
-              id={fieldId("message")}
-              name="message"
-              label={t("volunteers.message")}
-              helperText={t("volunteers.messageHelp", { max: VOLUNTEER_MESSAGE_MAX })}
-              fullWidth
-              multiline
-              minRows={2}
-              defaultValue={typed.message}
-              error={invalid.has("message")}
-              slotProps={{ htmlInput: { maxLength: VOLUNTEER_MESSAGE_MAX } }}
-            />
+            </Stack>
+            </Box>
 
             {siteKey && (
               <Box sx={BOT_CHECK_SLOT_SX}>

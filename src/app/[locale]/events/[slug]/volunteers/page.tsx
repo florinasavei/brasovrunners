@@ -11,7 +11,7 @@ import { getPathname } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { startHeldBack } from "@/modules/events/domain/dated";
 import { parseInterestSince } from "@/modules/registrations/interest-box";
-import { readFormDraft } from "@/modules/registrations/form-draft";
+import { readFormDraft, readSubmittedFacts } from "@/modules/registrations/form-draft";
 import { formEventBySlug } from "@/modules/resilience/event-copy";
 import { readOrWhileAway } from "@/modules/resilience/optional-read";
 import { volunteerEventDay } from "@/modules/volunteers/domain/volunteer";
@@ -19,6 +19,7 @@ import { readVolunteerOffer } from "@/modules/volunteers/offer";
 import VolunteerBox from "@/modules/volunteers/ui/VolunteerBox";
 import { parseVolunteerBoxes, parseVolunteerOutcome, type VolunteerTyped } from "@/modules/volunteers/ui/volunteer-box";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
+import { PAGE_WIDTH } from "@/theme/brand";
 import { DENSITY } from "@/theme/density";
 
 type Props = {
@@ -81,6 +82,8 @@ export default async function EventVolunteersPage({ params, searchParams }: Prop
 
   // What was typed before a refusal (§142), read only when the page is the answer to one.
   const typed: VolunteerTyped = outcome !== null && outcome !== "done" ? ((await readFormDraft()) ?? {}) : {};
+  // …and, on the thank-you only, what the send kept for it (§NNN): the first name, the address and when the receipt leaves.
+  const sent = outcome === "done" ? await readSubmittedFacts() : null;
   const t = await getTranslations("Event");
   const eventHref = getPathname({ locale, href: { pathname: "/events/[slug]", params: { slug } } });
   // The date and the place in one short line, in the event's own zone and the page's language (§349); a start to be announced says none (§533).
@@ -89,7 +92,7 @@ export default async function EventVolunteersPage({ params, searchParams }: Prop
   const line = [when, where].filter((part): part is string => part !== null).join(" · ");
 
   return (
-    <Container id="main" component="main" maxWidth="md" sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
+    <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
       <Typography variant="body2" sx={{ mb: 2 }}>
         {/* The house's back link (§469, `EventPageView`): a left arrow before the words, 44 pixels tall. */}
         <MuiLink href={eventHref} data-testid="volunteers-back" sx={{ display: "inline-flex", alignItems: "center", gap: 0.5, ...TAP_TARGET }}>
@@ -108,6 +111,9 @@ export default async function EventVolunteersPage({ params, searchParams }: Prop
       <VolunteerBox
         locale={locale}
         slug={slug}
+        eventTitle={event.title}
+        when={when}
+        sent={sent}
         roles={offer.roles}
         categories={offer.categories}
         shirts={offer.shirts}

@@ -160,6 +160,13 @@ export type SubmittedFacts = Readonly<{
   names?: readonly string[];
   /** The club's window was 0 (§519): each person's email left on its own, so nothing promises one email. */
   atOnce?: boolean;
+  /**
+   * When the email this send queued leaves, as the action computed it once (the volunteers' screen, §NNN): `null` when the
+   * request itself sends it, a time when the club sends on the scheduler's tick; `undefined` when the cookie kept none.
+   */
+  leavesAt?: Date | null;
+  /** When the form was sent, so a reload a minute later says the email left. */
+  submittedAt?: Date;
 }>;
 
 /**
@@ -182,7 +189,7 @@ export function submittedFactsMaxAgeSeconds(sittingCookieMaxAge: number | null):
 }
 
 export async function stashSubmittedFacts(
-  facts: { email: string; firstName: string; names?: readonly string[]; atOnce?: boolean },
+  facts: { email: string; firstName: string; names?: readonly string[]; atOnce?: boolean; leavesAt?: Date | null; submittedAt?: Date },
   path: string,
   sittingCookieMaxAge: number | null = null,
 ): Promise<void> {
@@ -191,6 +198,9 @@ export async function stashSubmittedFacts(
     firstName: firstNameOf(facts.firstName) ?? "",
     names: (facts.names ?? []).join("\n"),
     atOnce: facts.atOnce ? "1" : "",
+    // The volunteers' screen (§NNN) says when its receipt leaves: the instant, "now" for a send by the request itself, or nothing.
+    leavesAt: facts.leavesAt === undefined ? "" : facts.leavesAt === null ? "now" : facts.leavesAt.toISOString(),
+    submittedAt: facts.submittedAt ? facts.submittedAt.toISOString() : "",
   });
   if (!sealed) return;
   const jar = await cookies();
@@ -212,5 +222,11 @@ export async function readSubmittedFacts(): Promise<SubmittedFacts | null> {
   const email = typeof opened.email === "string" && opened.email !== "" ? opened.email : null;
   const firstName = firstNameOf(opened.firstName);
   const names = typeof opened.names === "string" ? opened.names.split("\n").filter((name) => name.trim() !== "") : [];
-  return { email, firstName, names, atOnce: opened.atOnce === "1" };
+  const instant = (text: unknown): Date | undefined => {
+    const at = typeof text === "string" && text !== "" ? new Date(text) : null;
+    return at && Number.isFinite(at.getTime()) ? at : undefined;
+  };
+  const leaves = opened.leavesAt === "now" ? null : instant(opened.leavesAt);
+  const submittedAt = instant(opened.submittedAt);
+  return { email, firstName, names, atOnce: opened.atOnce === "1", ...(leaves !== undefined ? { leavesAt: leaves } : {}), ...(submittedAt ? { submittedAt } : {}) };
 }
