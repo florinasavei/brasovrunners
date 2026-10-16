@@ -162,7 +162,7 @@ export default async function AdminMembersPage({ params, searchParams }: Props) 
       <TextCard text="zone" settings={settings} locale={locale} words={t} messages={messages} rich={rich} mayEdit={mayEdit} />
 
       {/* «Cine e membru» (§NNN): the sentence behind the «?» of the member tick on the two public forms; saved whatever the page's state. */}
-      <DefinitionCard definition={definition} platformWords={platformWords} locale={locale} words={t} messages={messages} mayEdit={mayEdit} />
+      <DefinitionCard definition={definition} platformWords={platformWords} locale={locale} words={t} messages={messages} mayEdit={mayEdit} saved={saved} />
 
       {/* «Coduri de reducere» (§552): shown only inside the members' zone, never on a public page. */}
       <CodesCard

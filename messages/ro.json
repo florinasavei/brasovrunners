@@ -9087,12 +9087,12 @@
       "textHelp": "În ambele limbi sau în niciuna, cel mult {max} de caractere în fiecare. Ca într-o pagină: titluri, liste, linkuri, poze, un tabel.",
       "definition": {
         "heading": "Cine e membru",
-        "intro": "Apare la bifa „Sunt membru al grupului” de pe formularul de înscriere și pe cel al voluntarilor, în spatele unui „?”.",
+        "intro": "Apare în spatele unui „?” lângă bifa de membru, pe formularul de înscriere și pe cel al voluntarilor.",
         "asideWritten": "textul clubului",
         "asideDefault": "textul de bază",
         "ro": "Cine e membru (română)",
         "en": "Cine e membru (engleză)",
-        "help": "O propoziție, cel mult {max} de caractere, în ambele limbi sau în niciuna. Nescrisă, formularele spun textul de bază, cel cenușiu din căsuțe."
+        "help": "O propoziție, cel mult {max} de caractere, în ambele limbi sau în niciuna. Nescrisă, formularele spun textul de bază, cel din căsuțe."
       },
       "codes": {
         "heading": "Coduri de reducere",

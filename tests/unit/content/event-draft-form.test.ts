@@ -340,7 +340,7 @@ describe("§NNN the «?» after «Sunt membru al grupului» says what the club s
     expect(html).not.toContain("în ultimul an");
     state.locale = "en";
     expect(memberTickHelp(await render(draft()))).toContain(`aria-label="${en.Registration.clubMemberDefinition}"`);
-    expect(en.Registration.clubMemberDefinition).toBe("I have joined at least 3 group runs in the last 6 months.");
+    expect(en.Registration.clubMemberDefinition).toBe("I have taken part in at least 3 group runs in the last 6 months.");
   });
 
   it("reaches the real form's caller too: the register page, the invitation page and the preview all hand the form the sentence", () => {

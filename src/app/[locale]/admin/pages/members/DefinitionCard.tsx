@@ -42,6 +42,7 @@ export default function DefinitionCard({
   words: t,
   messages,
   mayEdit,
+  saved,
 }: {
   definition: MemberDefinition;
   platformWords: Record<"ro" | "en", string>;
@@ -49,6 +50,8 @@ export default function DefinitionCard({
   words: Words;
   messages: RefusalMessages;
   mayEdit: boolean;
+  /** The query's `saved` code: the card opens by itself after its own save (`Panel` `openWhen`, §336). */
+  saved?: string;
 }) {
   const written = definition.ro !== null && definition.en !== null;
   const inForce = memberDefinitionFor(locale, written ? definition : DEFAULT_MEMBER_DEFINITION) ?? platformWords[locale];
@@ -56,6 +59,7 @@ export default function DefinitionCard({
     <Panel
       glyph="memberDefinition"
       collapsible
+      openWhen={{ saved: saved === "memberDefinitionSaved" }}
       title={t("members.definition.heading")}
       aside={written ? t("members.definition.asideWritten") : t("members.definition.asideDefault")}
       intro={t("members.definition.intro")}
@@ -87,7 +91,7 @@ export default function DefinitionCard({
                         fullWidth
                         multiline
                         minRows={2}
-                        slotProps={{ htmlInput: { maxLength: MEMBER_DEFINITION_MAX, lang: language.locale } }}
+                        slotProps={{ htmlInput: { maxLength: MEMBER_DEFINITION_MAX, lang: language.locale }, inputLabel: { shrink: true } }}
                       />
                       {/* «Tradu din română» (§464): the English sentence from the Romanian one. */}
                       {language.locale === "en" && <TranslateFieldButton en="memberDefinitionEn" />}

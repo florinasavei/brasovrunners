@@ -85,7 +85,23 @@ describe("§NNN the «Cine e membru» card on «Membri»", () => {
     expect(tagOf(page, "textarea", "memberDefinitionRo")).toContain(`placeholder="${PLATFORM.ro}"`);
     expect(tagOf(page, "textarea", "memberDefinitionEn")).toContain(`placeholder="${PLATFORM.en}"`);
     expect(PLATFORM.ro).toBe("Am fost la cel puțin 3 alergări de grup în ultimele 6 luni.");
-    expect(PLATFORM.en).toBe("I have joined at least 3 group runs in the last 6 months.");
+    expect(PLATFORM.en).toBe("I have taken part in at least 3 group runs in the last 6 months.");
+  });
+
+  it("shrinks the label so the placeholder shows without a focus, and says nothing about a colour", async () => {
+    const page = await draw();
+    // MUI hides a placeholder under an unshrunk label until the box has the focus.
+    expect(page.match(/data-shrink="true"/g)?.length).toBe(2);
+    expect(page).not.toContain('data-shrink="false"');
+    expect(ro.Admin.members.definition.help).not.toMatch(/cenușiu/);
+    expect(en.Admin.members.definition.help).not.toMatch(/grey/);
+  });
+
+  it("opens by itself after its own save, and stays closed otherwise", async () => {
+    const open = (page: string) => /<details[^>]*id="members-definition"[^>]*\sopen/.test(page);
+    expect(open(await draw({ saved: "memberDefinitionSaved" }))).toBe(true);
+    expect(open(await draw({ saved: "other" }))).toBe(false);
+    expect(open(await draw())).toBe(false);
   });
 
   it("opens with the club's own words in the boxes and says so on its line", async () => {
