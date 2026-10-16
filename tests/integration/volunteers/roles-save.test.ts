@@ -5,6 +5,7 @@ import { eventVolunteerCategories, eventVolunteerRoles } from "@/db/schema/event
 import { events } from "@/db/schema/events";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import type { StaffRole } from "@/modules/staff-identity/domain/roles";
+import { encodeRoleBaseline, roleBaselineOf } from "@/modules/volunteers/role-baseline";
 import { roleBox } from "@/modules/volunteers/role-rows";
 import { changeVolunteerRoles, listVolunteerRoles, type VolunteerRolesRowRequest, VolunteerRoleRowError } from "@/modules/volunteers/volunteers";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
@@ -369,10 +370,10 @@ describe("§NNN who may save, and what is not this event's", () => {
     expect((await save([row(a.id, { nameEn: "Administrator" })], admin)).edited).toBe(1);
   });
 
-  it("refuses a role of another event or a malformed id as «not there», and writes nothing of the rows before it", async () => {
+  it("refuses a role of another event as «gone» (named), a malformed id as «not there», and writes nothing of the rows before it", async () => {
     const mine = await seed("A", start.id);
     const foreign = await seed("F", null, { eventId: otherEventId, position: 0 });
-    await expect(save([row(mine.id, { nameEn: "Changed" }), row(foreign.id, { nameEn: "Hacked" })])).rejects.toMatchObject({ code: "NOT_FOUND" });
+    await expect(save([row(mine.id, { nameEn: "Changed" }), row(foreign.id, { nameRo: "F", nameEn: "Hacked" })])).rejects.toMatchObject({ code: "VOLUNTEER_ROLE_INVALID", problem: "gone" });
     await expect(save([row("not-an-id", { nameEn: "x" })])).rejects.toMatchObject({ code: "NOT_FOUND" });
     await expect(changeVolunteerRoles(db, admin, { eventId: "nope", rows: [row(mine.id, {})] }, NOW)).rejects.toMatchObject({ code: "NOT_FOUND" });
     expect((await listVolunteerRoles(db, eventId))[0].nameEn).toBe("A EN");
@@ -384,5 +385,103 @@ describe("§NNN who may save, and what is not this event's", () => {
     await expect(save([row(a.id, { nameEn: "One" }), row(a.id, { nameEn: "Two" }, "again")])).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
     expect((await listVolunteerRoles(db, eventId))[0].nameEn).toBe("A EN");
     expect(await trail()).toHaveLength(0);
+  });
+});
+
+/** The hidden box the card draws in a saved role's row: the role as the form was drawn, at its place among its category's roles. */
+const drawn = (role: typeof eventVolunteerRoles.$inferSelect, rank: number) => encodeRoleBaseline(roleBaselineOf(role, rank));
+/** A saved role's row as the form posts it: every box with the value it was drawn with, the baseline, and what the person changes. */
+const drawnRow = (role: typeof eventVolunteerRoles.$inferSelect, rank: number, changes: Record<string, unknown> = {}) =>
+  row(role.id, {
+    nameRo: role.nameRo,
+    nameEn: role.nameEn,
+    needed: role.needed === null ? "" : String(role.needed),
+    unlimited: role.needed === null ? "on" : "",
+    categoryId: role.categoryId ?? "",
+    position: String(rank),
+    was: drawn(role, rank),
+    ...changes,
+  });
+
+describe("§NNN a form opened before another save", () => {
+  it("does not write the old values back over a role the person never touched — nor the order another session set", async () => {
+    const x = await seed("X", start.id, { needed: 4 });
+    const y = await seed("Y", start.id);
+    const z = await seed("Z", start.id);
+    // The form is drawn: X, Y, Z at 1, 2, 3.
+    const drawnX = x;
+    const drawnY = y;
+    const drawnZ = z;
+    // Another session renames X, raises its number and moves it to the end.
+    await save([row(x.id, { nameRo: "Bar", nameEn: "Bar EN", needed: "6", position: "3" })]);
+    expect(await names()).toEqual(["Y", "Z", "Bar"]);
+    cache.revalidatePublicContent.mockClear();
+    const audited = (await trail()).length;
+    // This form, drawn before, changes only Y's name and posts everything else as it was drawn.
+    const result = await save([drawnRow(drawnX, 1), drawnRow(drawnY, 2, { nameEn: "Why" }), drawnRow(drawnZ, 3)]);
+    expect(result).toEqual({ changed: true, edited: 1, created: 0 });
+    const roles = await listVolunteerRoles(db, eventId);
+    expect(roles.map((role) => role.nameRo)).toEqual(["Y", "Z", "Bar"]);
+    expect(roles.find((role) => role.id === x.id)).toMatchObject({ nameRo: "Bar", nameEn: "Bar EN", needed: 6 });
+    expect(roles.find((role) => role.id === y.id)?.nameEn).toBe("Why");
+    const entries = (await trail()).slice(audited);
+    expect(entries).toHaveLength(1);
+    expect(entries[0].metadataJson).toMatchObject({ roleId: y.id, fields: ["nameEn"] });
+  });
+
+  it("writes nothing and audits nothing when the form is saved as drawn, however the roles have changed since", async () => {
+    const x = await seed("X", start.id);
+    await save([row(x.id, { nameEn: "Elsewhere" })]);
+    const before = await db.select().from(eventVolunteerRoles);
+    const audited = (await trail()).length;
+    expect(await save([drawnRow(x, 1)])).toEqual({ changed: false, edited: 0, created: 0 });
+    expect(await db.select().from(eventVolunteerRoles)).toEqual(before);
+    expect(await trail()).toHaveLength(audited);
+  });
+
+  it("refuses a role the person touched when someone else changed it meanwhile — «stale», named, nothing written — and a role deleted meanwhile as «gone»", async () => {
+    const x = await seed("X", start.id);
+    const y = await seed("Y", start.id);
+    await save([row(x.id, { nameEn: "Theirs" })]);
+    const refused = await refusal([drawnRow(y, 2, { nameEn: "Mine" }), drawnRow(x, 1, { nameEn: "Mine too" })]);
+    expect(refused).toBeInstanceOf(VolunteerRoleRowError);
+    expect(refused.code).toBe("VOLUNTEER_ROLE_INVALID");
+    expect(refused.problem).toBe("stale");
+    expect(refused.row).toMatchObject({ id: x.id, name: "X", categoryRo: "Start / Sosire" });
+    expect(refused.fields).toEqual([roleBox(x.id, "nameRo")]);
+    expect((await listVolunteerRoles(db, eventId)).map((role) => role.nameEn)).toEqual(["Theirs", "Y EN"]);
+    // The place typed on a role whose place moved meanwhile is stale too.
+    await save([row(y.id, { position: "1" })]);
+    expect((await refusal([drawnRow(x, 1, { position: "2" })])).problem).toBe("stale");
+    // Deleted meanwhile: said by its name.
+    await db.delete(eventVolunteerRoles).where(eq(eventVolunteerRoles.id, y.id));
+    const gone = await refusal([drawnRow(y, 1, { nameEn: "Late" })]);
+    expect(gone.problem).toBe("gone");
+    expect(gone.row.name).toBe("Y");
+    expect(gone.fields).toEqual([roleBox(y.id, "nameRo")]);
+  });
+
+  it("does not let a role left alone collide with a name another session gave a different role", async () => {
+    const x = await seed("X", start.id);
+    const y = await seed("Y", start.id);
+    // Another session renames X «Zed» and Y «X» (a swap that left Y's old name free): this form still carries X as «X» and Y as «Y».
+    await save([row(x.id, { nameRo: "Zed", nameEn: "Zed EN" }), row(y.id, { nameRo: "X", nameEn: "X EN" })]);
+    const result = await save([drawnRow(x, 1), drawnRow(y, 2)]);
+    expect(result).toEqual({ changed: false, edited: 0, created: 0 });
+    expect(await names()).toEqual(["Zed", "X"]);
+  });
+
+  it("takes a «Poziția» as typed only when it differs from the number the box was drawn with — so a role moved to another category with the box left alone goes last", async () => {
+    const a = await seed("A", start.id);
+    await seed("B", start.id);
+    await seed("T1", route.id);
+    await seed("T2", route.id);
+    // The box reads 1 (A's place among the start's roles): left alone, the role goes to the end of the route.
+    await save([drawnRow(a, 1, { categoryId: route.id })]);
+    expect((await listVolunteerRoles(db, eventId)).filter((role) => role.categoryId === route.id).map((role) => role.nameRo)).toEqual(["T1", "T2", "A"]);
+    // A number other than the one drawn is the place asked for.
+    const [moved] = await db.select().from(eventVolunteerRoles).where(eq(eventVolunteerRoles.id, a.id));
+    await save([drawnRow(moved, 3, { categoryId: start.id, position: "1" })]);
+    expect((await listVolunteerRoles(db, eventId)).filter((role) => role.categoryId === start.id).map((role) => role.nameRo)).toEqual(["A", "B"]);
   });
 });

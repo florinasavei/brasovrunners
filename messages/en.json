@@ -4893,13 +4893,13 @@
         "descriptionRo": "Role description (Română, optional)",
         "descriptionEn": "Role description (English, optional)",
         "descriptionHelp": "What the role involves: where the volunteer stands, what they do, from what hour. At most {max} characters of text in each language; in both languages or neither.",
+        "descriptionTitle": "Role description",
         "delete": "Delete the role",
         "deleting": "Deleting…",
         "deleteTitle": "Delete this role?",
         "deleteBody": "The role “{name}” is removed. A role given to someone, or ticked by someone, cannot be deleted: change their roles or delete them first.",
         "descriptionEmpty": "No description yet.",
         "more": "More",
-        "categoryHelp": "The heading the role appears under. “Other roles” means none. The same name can stand in two categories, but not twice in one.",
         "col": {
           "nameRo": "Name (RO)",
           "nameEn": "Name (EN)",
@@ -4933,7 +4933,9 @@
           "position": "the position is a whole number, from 1",
           "category": "the category is no longer on this event",
           "taken": "the chosen category already has a role with this name",
-          "tooMany": "an event has at most {max} roles"
+          "tooMany": "an event has at most {max} roles",
+          "stale": "someone else changed the role meanwhile; reload the page and make the change again",
+          "gone": "the role no longer exists (it was deleted meanwhile)"
         }
       },
       "move": {

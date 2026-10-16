@@ -4893,13 +4893,13 @@
         "descriptionRo": "Descrierea rolului (Română, opțional)",
         "descriptionEn": "Descrierea rolului (English, opțional)",
         "descriptionHelp": "Ce presupune rolul: unde stă voluntarul, ce are de făcut, de la ce oră. Cel mult {max} de caractere de text în fiecare limbă; în ambele limbi sau în niciuna.",
+        "descriptionTitle": "Descrierea rolului",
         "delete": "Șterge rolul",
         "deleting": "Se șterge…",
         "deleteTitle": "Ștergi acest rol?",
         "deleteBody": "Rolul „{name}” se șterge. Un rol dat cuiva sau bifat de cineva nu poate fi șters: schimbă-le întâi rolurile sau șterge-i.",
         "descriptionEmpty": "Încă nicio descriere.",
         "more": "Mai multe",
-        "categoryHelp": "Titlul sub care apare rolul. „Alte roluri” înseamnă fără categorie. Același nume poate sta în două categorii, dar nu de două ori într-una.",
         "col": {
           "nameRo": "Nume (RO)",
           "nameEn": "Nume (EN)",
@@ -4933,7 +4933,9 @@
           "position": "poziția e un număr întreg, de la 1",
           "category": "categoria nu mai există pe acest eveniment",
           "taken": "în categoria aleasă există deja un rol cu acest nume",
-          "tooMany": "un eveniment are cel mult {max} de roluri"
+          "tooMany": "un eveniment are cel mult {max} de roluri",
+          "stale": "altcineva a schimbat rolul între timp; reîncarcă pagina și fă din nou schimbarea",
+          "gone": "rolul nu mai există (a fost șters între timp)"
         }
       },
       "move": {

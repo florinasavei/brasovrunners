@@ -86,6 +86,7 @@ import {
   type VolunteerOfferClosed,
   type VolunteerState,
 } from "../domain/volunteer";
+import { encodeRoleBaseline, roleBaselineOf } from "../role-baseline";
 import { newRoleRowKey, type RoleRowBox, roleBox, roleColourBoxesOf } from "../role-rows";
 import type { VolunteerCategory, VolunteerItem, VolunteerRole } from "../volunteers";
 import VolunteerBirthDateField from "./VolunteerBirthDateField";
@@ -329,16 +330,17 @@ export default async function VolunteersCard({
         sx={{ borderTop: 1, borderColor: "divider", pt: 1.5, pb: 1, "&:first-of-type": { borderTop: 0, pt: 0 } }}
       >
         {role === null && (
-          <Stack spacing={0} sx={{ mb: 1 }}>
-            <Typography component="p" variant="subtitle2" sx={{ fontWeight: 600 }}>
-              {t("volunteers.role.newRow")}
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              {t("volunteers.role.newRowHint")}
-            </Typography>
-          </Stack>
+          <Typography component="p" variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>
+            {t("volunteers.role.newRow")}
+            <QuietHelp text={t("volunteers.role.newRowHint")} />
+          </Typography>
         )}
+        {/* What the form was drawn with (`role-baseline.ts`): the boxes below are compared with it, never with the role as it is stored by then. */}
+        {role && <input type="hidden" name={box("was")} value={encodeRoleBaseline(roleBaselineOf(role, index + 1))} />}
+        {/* The row's boxes are one group, named by the role, so a reader of the screen knows whose «Nume (RO)» it is in. */}
         <Box
+          role="group"
+          aria-label={title}
           sx={{
             display: "grid",
             gap: 1.5,
@@ -372,9 +374,13 @@ export default async function VolunteersCard({
               // No `min`, `max` or whole-number `step` on the box: hidden under the tick, an out-of-range or decimal number would block the press where nobody can see it. The server holds the whole numbers 1 to 1000.
               slotProps={{ htmlInput: { inputMode: "numeric", step: "any" } }}
             />
-            <CheckboxField name={box("unlimited")} defaultChecked={role ? role.needed === null : false}>
-              {t("volunteers.role.col.unlimited")}
-            </CheckboxField>
+            <Stack direction="row" sx={{ alignItems: "center", flexWrap: "wrap" }}>
+              <CheckboxField name={box("unlimited")} defaultChecked={role ? role.needed === null : false}>
+                {t("volunteers.role.col.unlimited")}
+              </CheckboxField>
+              {/* The sentence about «Câte persoane» and «Nelimitat» (§784), once per card — on its first row, next to the tick it explains. */}
+              {index === 0 && <QuietHelp text={t("volunteers.rolesNeededHelp")} />}
+            </Stack>
           </Stack>
           {/* «Categoria» (§774): the heading the role sits under — the house's native select; «Alte roluri» is none. Drawn only once the event has a
               category: a form without the box leaves the role where it is. */}
@@ -433,6 +439,11 @@ export default async function VolunteersCard({
             {/* «Descrierea rolului» (§765): the house's rich-text editor, one Română | English strip (§572, the event editor's), both languages or neither;
                 its plain words are what the agreement and the emails say. Each editor mounts when its tab comes forward (§96, §363). */}
             <Stack spacing={1} data-testid="volunteer-role-description-field">
+              {/* What the description is for stays behind the «?» (§511): the title is the only line the strip needs above it. */}
+              <Typography component="p" variant="body2" sx={{ fontWeight: 600 }}>
+                {t("volunteers.role.descriptionTitle")}
+                <QuietHelp text={t("volunteers.role.descriptionHelp", { max: String(VOLUNTEER_ROLE_DESCRIPTION_MAX) })} />
+              </Typography>
               <LocaleTabPanels
                 idPrefix={`role-${key}`}
                 watch={{ names: [`roles[${key}].description{Locale}Body`], rule: "parity" }}
@@ -462,9 +473,6 @@ export default async function VolunteersCard({
                   };
                 })}
               />
-              <Typography variant="caption" color="text.secondary" sx={{ px: 1.75 }}>
-                {t("volunteers.role.descriptionHelp", { max: String(VOLUNTEER_ROLE_DESCRIPTION_MAX) })}
-              </Typography>
             </Stack>
             {/* The role's band on its volunteer badge (§764): the same two boxes as the badges' page, saved by the same rule. */}
             <RoleColourFields names={roleColourBoxesOf(key)} colour={role?.colour ?? null} />
@@ -1459,7 +1467,6 @@ export default async function VolunteersCard({
                 <Stack direction="row" sx={{ alignItems: "flex-start", gap: 1, mb: 1.5 }}>
                   <Typography variant="body2" color="text.secondary" sx={{ flex: 1, minWidth: 0 }} data-testid="volunteer-roles-intro">
                     {t("volunteers.rolesIntro")}
-                    <QuietHelp text={t("volunteers.rolesNeededHelp")} />
                   </Typography>
                   <TranslateCardButton />
                 </Stack>

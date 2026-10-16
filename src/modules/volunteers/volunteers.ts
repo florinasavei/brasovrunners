@@ -64,6 +64,7 @@ import {
 } from "./domain/volunteer";
 import { agreementAcceptance, canonicalOrNull, readAgreementFacts } from "./agreement";
 import { checkedRoleColour } from "./badges/badges";
+import { decodeRoleBaseline, descriptionDigest, roleBaselineOf } from "./role-baseline";
 import { type RoleRowBox, roleBox, roleColourBoxesOf } from "./role-rows";
 
 /**
@@ -681,7 +682,11 @@ export type VolunteerRoleRowProblem =
   | "position"
   | "category"
   | "taken"
-  | "tooMany";
+  | "tooMany"
+  /** Another session changed the role since the form was drawn (§NNN): nothing is written over it. */
+  | "stale"
+  /** The role is no longer there (deleted meanwhile) or is not this event's. */
+  | "gone";
 
 /** The role a refusal is about, in the words the sentence names it by: the Romanian name typed (or saved) and its category's two names. */
 export type VolunteerRoleRowName = { id: string | null; name: string; categoryRo: string | null; categoryEn: string | null };
@@ -799,6 +804,8 @@ export async function changeVolunteerRoles<T extends Record<string, unknown>>(
       colour: string | null;
       categoryId: string | null;
       posted: number | null;
+      /** Whether «Poziția» was typed: a number other than the one the form was drawn with. */
+      typed: boolean;
       changedFields: string[];
     };
 
@@ -806,8 +813,13 @@ export async function changeVolunteerRoles<T extends Record<string, unknown>>(
     const prepared: Prepared[] = [];
     for (const row of request.rows) {
       const current = row.id === null ? null : (storedById.get(row.id) ?? null);
-      if (row.id !== null && !current) throw new DomainError("NOT_FOUND", "the role is not there");
-      const boxes = postedBoxes(row.fields);
+      const { was, ...boxes } = postedBoxes(row.fields);
+      if (row.id !== null && !current) {
+        // A role another session deleted while the form was open (or one that is not this event's): said by its name, nothing saved.
+        const goneIn = categoryById.get((boxes.categoryId ?? "").trim());
+        const goneName = (boxes.nameRo ?? "").trim() || (decodeRoleBaseline(was)?.nameRo ?? "");
+        throw new VolunteerRoleRowError({ id: null, name: goneName, categoryRo: goneIn?.nameRo ?? null, categoryEn: goneIn?.nameEn ?? null }, "gone", [roleBox(row.key, "nameRo")]);
+      }
       // The blank row of a category: no name in either language is no role.
       if (!current && (boxes.nameRo ?? "").trim() === "" && (boxes.nameEn ?? "").trim() === "") continue;
 
@@ -865,7 +877,53 @@ export async function changeVolunteerRoles<T extends Record<string, unknown>>(
       const posted = postedPosition(boxes.position);
       if (posted === undefined) refuse("position", "position");
 
-      prepared.push({ row, current, id: current?.id ?? `new:${row.key}`, input, colour, categoryId, posted: posted ?? null, changedFields: [] });
+      // What the person touched: the boxes against the role as the form was DRAWN (`role-baseline.ts`), never against the role as it is stored now —
+      // a form opened before another session's save would otherwise write the old values back over it, on every role it carries and on the order.
+      // A row that posted no baseline (a script, a test) is read against the stored role, as the singular writer does.
+      let changedFields: string[] = [];
+      let typed = false;
+      if (current) {
+        const stored = roleBaselineOf(current, rankBefore.get(current.id) ?? 0);
+        const drawn = decodeRoleBaseline(was) ?? stored;
+        const after = { nameRo: input.nameRo, nameEn: input.nameEn, needed: input.needed, colour, categoryId };
+        changedFields = (["nameRo", "nameEn", "needed", "colour", "categoryId"] as const).filter((key) => drawn[key] !== after[key]);
+        if (descriptionDigest(input.descriptionRoJson) !== drawn.descriptionRo) changedFields.push("descriptionRo");
+        if (descriptionDigest(input.descriptionEnJson) !== drawn.descriptionEn) changedFields.push("descriptionEn");
+        // A number counts as typed only when it differs from the one the box was drawn with.
+        typed = posted !== null && posted !== drawn.rank;
+        if (changedFields.length > 0 || typed) {
+          // Written over by this row: refuse when the stored role is no longer the one the form showed (the order too, when the place was typed).
+          const overtaken =
+            (["nameRo", "nameEn", "needed", "colour", "categoryId", "descriptionRo", "descriptionEn"] as const).some((key) => drawn[key] !== stored[key]) ||
+            (typed && drawn.rank !== stored.rank);
+          if (overtaken) refuse("stale", "nameRo");
+        }
+      }
+      // A row the person left alone is the stored role, whatever the form carried: it is neither written nor allowed to collide.
+      const untouched = current !== null && changedFields.length === 0;
+      prepared.push({
+        row,
+        current,
+        id: current?.id ?? `new:${row.key}`,
+        input:
+          untouched && current
+            ? {
+                ...input,
+                nameRo: current.nameRo,
+                nameEn: current.nameEn,
+                needed: current.needed,
+                descriptionRoJson: (current.descriptionRoJson as RichTextDoc | null) ?? null,
+                descriptionEnJson: (current.descriptionEnJson as RichTextDoc | null) ?? null,
+                descriptionWordsRo: current.descriptionWordsRo,
+                descriptionWordsEn: current.descriptionWordsEn,
+              }
+            : input,
+        colour: untouched && current ? current.colour : colour,
+        categoryId: untouched && current ? current.categoryId : categoryId,
+        posted: posted ?? null,
+        typed,
+        changedFields,
+      });
     }
 
     const creating = prepared.filter((one) => !one.current);
@@ -908,16 +966,7 @@ export async function changeVolunteerRoles<T extends Record<string, unknown>>(
       }
     }
 
-    // ---- 3. What changed, role by role -------------------------------------------------------------
-    for (const one of prepared) {
-      const current = one.current;
-      if (!current) continue;
-      const before = { nameRo: current.nameRo, nameEn: current.nameEn, needed: current.needed, colour: current.colour, categoryId: current.categoryId };
-      const after = { nameRo: one.input.nameRo, nameEn: one.input.nameEn, needed: one.input.needed, colour: one.colour, categoryId: one.categoryId };
-      one.changedFields = (Object.keys(before) as (keyof typeof before)[]).filter((key) => before[key] !== after[key]);
-      if (!sameDescription(current.descriptionRoJson, one.input.descriptionRoJson)) one.changedFields.push("descriptionRo");
-      if (!sameDescription(current.descriptionEnJson, one.input.descriptionEnJson)) one.changedFields.push("descriptionEn");
-    }
+    // ---- 3. What changed was decided with each row, against the baseline the form was drawn from (step 1) ----
 
     // ---- 4. The order: each category sorted by the numbers posted ----------------------------------
     type Member = { id: string; position: number; bias: number; tie: number };
@@ -931,7 +980,7 @@ export async function changeVolunteerRoles<T extends Record<string, unknown>>(
       let position = rank;
       let bias = 0;
       if (one) {
-        const typed = one.posted !== null && one.posted !== rank;
+        const typed = one.typed;
         if (categoryId !== role.categoryId) {
           // To another category: its end, unless a number was typed — then that place, before the role it ties with.
           position = typed && one.posted !== null ? one.posted : Number.POSITIVE_INFINITY;
@@ -959,7 +1008,7 @@ export async function changeVolunteerRoles<T extends Record<string, unknown>>(
       const current = one.current;
       if (!current || one.categoryId !== current.categoryId) continue;
       const rank = rankBefore.get(current.id) ?? 0;
-      if (one.posted !== null && one.posted !== rank && rankAfter.get(current.id) !== rank) one.changedFields.push("position");
+      if (one.typed && rankAfter.get(current.id) !== rank) one.changedFields.push("position");
     }
     const edited = prepared.filter((one) => one.current && one.changedFields.length > 0);
     if (edited.length + creating.length === 0) return { changed: false, edited: 0, created: 0 };

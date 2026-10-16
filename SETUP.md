@@ -2138,7 +2138,10 @@ only ones who see the names, addresses and telephone numbers.
    words — in the agreement's «Ce presupune rolul», its PDF and the emails.
    Roles belong to **one date**: a weekly run's dates, and a copy of an event, start with none (the event's JSON file carries them, step 9). Roles may be grouped in **categories**, each with a contact person: step 9.
    **«Poziția»** sets the order inside a category, from 1: type the place you want, the others make room (a role you did not
-   touch keeps its place); a role moved to another category goes to the end of it unless you type a place. A role
+   touch keeps its place); a role moved to another category goes to the end of it unless you type a place other than the number the box showed.
+   The save writes only the roles **you changed** on the page you were looking at: if a colleague saved while your page was open,
+   their roles and their order stay as they left them, and a role you changed that they changed too (or deleted) is refused by
+   name — «altcineva a schimbat rolul între timp; reîncarcă pagina» — with nothing saved. A role
    with people on it — cancelled ones too — cannot be
    deleted: move them to another role or delete them first (**«Șterge rolul»** on its line asks first and is its own press, not part of the save). An event's volunteers are not accounts:
    whoever works the race-day desk also needs an account on «Echipa», with the role Voluntar (§34) — the

@@ -390,3 +390,50 @@ describe("§NNN the words", () => {
     expect(ro.Admin.errors.VOLUNTEER_ROLE_INVALID).toBe("„{role}” din „{category}”: {problem}. Nimic nu s-a salvat.");
   });
 });
+
+describe("§NNN what each row remembers, how it is named, and what hides behind the «?»", () => {
+  const escaped = (text: string) => text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#x27;");
+  const decode = (value: string) => JSON.parse(value.replace(/&quot;/g, '"').replace(/&amp;/g, "&")) as Record<string, unknown>;
+
+  it("draws, in every saved role's row and in no blank row, a hidden «was» box holding the role as drawn — names, number, category, colour, its place among its category's roles — so a save can tell what the person touched", async () => {
+    const page = await drawCard();
+    const was = (id: string) => /<input[^>]*type="hidden"[^>]*name="roles\[[^"]*\]\.was"[^>]*>/.exec(new RegExp(`<li[^>]*data-role-id="${id}"[\\s\\S]*?</li>`).exec(page)?.[0] ?? "")?.[0] ?? "";
+    const value = (tag: string) => /value="([^"]*)"/.exec(tag)?.[1] ?? "";
+    expect(decode(value(was(ON_ROUTE_ID)))).toMatchObject({ nameRo: "Direcționare", nameEn: "Guidance", needed: 2, categoryId: ROUTE_ID, colour: "#1b5e20", rank: 1 });
+    expect(decode(value(was(WATER_ID)))).toMatchObject({ nameRo: "Punct de hidratare", needed: 2, categoryId: ROUTE_ID, colour: null, rank: 2 });
+    expect(decode(value(was(LOOSE_ID)))).toMatchObject({ needed: null, categoryId: null, rank: 1 });
+    expect(page.match(/\.was"/g) ?? []).toHaveLength(ROLES.length);
+    const blank = /<li[^>]*data-testid="volunteer-role-new"[\s\S]*?<\/li>/.exec(page)?.[0] ?? "";
+    expect(blank).not.toContain(".was");
+  });
+
+  it("names each row's boxes as a group by its role, so a reader of the screen knows whose «Nume (RO)» it is", async () => {
+    const page = await drawCard();
+    const li = (id: string) => new RegExp(`<li[^>]*data-role-id="${id}"[\\s\\S]*?</li>`).exec(page)?.[0] ?? "";
+    expect(li(WATER_ID)).toContain('role="group" aria-label="Punct de hidratare"');
+    expect(li(LOOSE_ID)).toContain('role="group" aria-label="Foto/Video"');
+    expect(page).toContain('role="group" aria-label="Rol nou"');
+  });
+
+  it("keeps the description's help, the blank row's hint and the number's sentence behind a «?», never as a caption — the number's once per card, beside «Nelimitat»", async () => {
+    const page = await drawCard();
+    const description = escaped(ro.Admin.volunteers.role.descriptionHelp.replace("{max}", "2000"));
+    const hint = escaped(ro.Admin.volunteers.role.newRowHint);
+    const needed = escaped(ro.Admin.volunteers.rolesNeededHelp);
+    for (const text of [description, hint, needed]) {
+      expect(page.split(`>${text}<`).length - 1, text.slice(0, 30)).toBe(0);
+      expect(page).toContain(`aria-label="${text}"`);
+    }
+    // The description's sentence once per row (a «?» in each fold), the hint once per blank row, the number's once per card.
+    expect(page.split(`aria-label="${description}"`).length - 1).toBe(ROLES.length + 4);
+    expect(page.split(`aria-label="${hint}"`).length - 1).toBe(4);
+    expect(page.split(`aria-label="${needed}"`).length - 1).toBe(4);
+    const intro = /data-testid="volunteer-roles-intro"[\s\S]*?<\/p>/.exec(page)?.[0] ?? "";
+    expect(intro).not.toContain("quiet-help");
+    // Beside the tick of the first row of a card, not at the end of the intro.
+    const first = new RegExp(`<li[^>]*data-role-id="${AT_START_ID}"[\\s\\S]*?</li>`).exec(page)?.[0] ?? "";
+    expect(first.indexOf(needed)).toBeGreaterThan(first.indexOf("Nelimitat"));
+    const second = new RegExp(`<li[^>]*data-role-id="${WATER_ID}"[\\s\\S]*?</li>`).exec(page)?.[0] ?? "";
+    expect(second).not.toContain(needed);
+  });
+});

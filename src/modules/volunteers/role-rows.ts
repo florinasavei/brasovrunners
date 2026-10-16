@@ -28,6 +28,8 @@ export const ROLE_ROW_BOXES = [
   "descriptionEn",
   "colourChoice",
   "colourTyped",
+  // What the role was when the form was drawn (`role-baseline.ts`): a saved role's hidden box, never typed.
+  "was",
 ] as const;
 
 export type RoleRowBox = (typeof ROLE_ROW_BOXES)[number];
