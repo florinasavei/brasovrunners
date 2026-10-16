@@ -17,6 +17,7 @@ import {
   BLANK,
   type BlankTest,
   descriptionSummary,
+  healthNoteSummary,
   identicalLocales,
   incompleteLocales,
   minAgeSummary,
@@ -29,6 +30,7 @@ import { missingForPublish, missingInLanguage, type PublishGapBox, storedPublish
 import SlugFromTitle from "../SlugFromTitle";
 import { AddressFields, DescriptionFields, RulesFields, TitleSummaryFields } from "../TranslationFields";
 import { BoxNote, type LanguageEntry, requiredLine, summaryWords } from "./box-kit";
+import ConditionsGroup, { asksHealthNoteOnForm } from "./ConditionsGroup";
 import CoverBox, { coverPicture } from "./CoverBox";
 
 /**
@@ -246,6 +248,12 @@ export async function DescriptionBox({ languages, heading }: { languages: readon
  * A group run keeps §440's note under it — its self-declaration is for adults, so only a number
  * above eighteen changes what it asks. A role without settings rights reads the number instead of
  * the box; the server refuses its change regardless (`canEditEventFields`, BR-REQ-060-01).
+ *
+ * **«Condiții de participare» is the last thing in it** (§557, moved in §799; the owner, 2026-10-16:
+ * «cardul ăsta ar trebui mutat în ăsta»): a level-4 static `Panel` (`ConditionsGroup`) under the minimum
+ * age, outside the tabs, holding the «Informații medicale» tick. The closed line gains «Informații
+ * medicale: da/nu» where the event registers on the site. It had a card of its own, `#box-conditions`;
+ * a link to that anchor now opens this card, `#box-rules`.
  */
 export async function RulesBox({
   languages,
@@ -261,7 +269,15 @@ export async function RulesBox({
   const locale = await getLocale();
   // Never under fourteen (§515): an event saved with less under §329 opens at fourteen, which the box accepts.
   const minAge = effectiveMinimumAge(event?.minAge);
-  const aside = [rulesSummary(words, languages.map(summaryOf)), minAgeSummary(words, minAge, locale)].join(words.separator);
+  // «Informații medicale: da/nu» joins the line where there is a form to ask it on (§111, moved here in §799).
+  const aside = [
+    rulesSummary(words, languages.map(summaryOf)),
+    minAgeSummary(words, minAge, locale),
+    asksHealthNoteOnForm(event) ? healthNoteSummary(words, event?.askHealthNote ?? false) : null,
+  ]
+    .filter(Boolean)
+    .join(words.separator);
+  const conditions = await ConditionsGroup({ event, mayEditSettings });
   return (
     <Panel glyph="rules" collapsible level={3} id="box-rules" title={t("editor.boxes.rules.title")} aside={aside}>
       <LanguageTabs
@@ -290,6 +306,8 @@ export async function RulesBox({
           <BoxNote testId="group-run-min-age-note">{t("editor.groupRunDeclaration.minAgeHelp")}</BoxNote>
         </OnlyForType>
       </Stack>
+      {/* «Condiții de participare» (§557, moved here in §799): not translated text, so outside the tabs; under the minimum age, who may take part read with what the form asks. */}
+      <Stack sx={{ mt: 2 }}>{conditions}</Stack>
     </Panel>
   );
 }

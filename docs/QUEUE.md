@@ -14,14 +14,14 @@ decision or a click only the club can make · **released** — on production, wi
 The owner, 2026-10-10: «Soon I need to start a new session from the laptop … You need to save and document everything».
 This section replaces the plan of 2026-09-30; it is what a session with none of today's conversation needs to carry on.
 
-- **Production: `BR-V3.47`** (2026-10-16 16:46: §796 the Excel's «Member tick (declared)» column, the blue by the
-  tick, lavender for the other club runners, the special guests in peach and italic; no migration). Waiting for
-  «prod»: `BR-V3.48` (§797, below) — no migration.
-- **QA: `BR-V3.48`** — on the volunteers' page the kinder note under the roles («În funcție de numărul de doritori…»,
-  §773) is the house's information banner (`Alert severity="info"`, its glyph, `role="note"`), words, id and test id
-  unchanged (§797).
-- **Building:** nothing. The queue of 2026-10-16 (the owner's screenshots and asks, lanes 31–40) is done once
-  `BR-V3.48` is on production.
+- **Production: `BR-V3.48`** (2026-10-16 18:14: §797 the volunteers' kinder note as an information banner; no
+  migration). Waiting for «prod»: `BR-V3.49` (§798, §799, below) — no migration.
+- **QA: `BR-V3.49`** — on the event page the race's «Timp limită» row stands under «Traseu», before «Cost» (§798);
+  in the editor «Condiții de participare» is a boxed group at the foot of «Regulamentul», under «Vârsta minimă de
+  participare» — the «Informații medicale» tick or the one applicable note — and «Regulamentul»'s closed line ends
+  with «Informații medicale: da/nu»; the separate card is gone, the form posts the same names (§799).
+- **Building:** nothing. The queue of 2026-10-16 (the owner's screenshots and asks, lanes 31–42) is done once
+  `BR-V3.49` is on production.
 - **Waiting on the owner:** the privacy notice from the new template, approved in `/admin/legal` after a lawyer reads
   the paragraph on what the site loads (its first sentence says what is used is strictly necessary and needs no consent,
   art. 4(6) of Legea nr. 506/2004, while the same paragraph says Strava may set its own cookies without a press — the
@@ -137,6 +137,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V3.49` | the event page: «Timp limită» under «Traseu» (§798) · the event editor: «Condiții de participare» inside «Regulamentul», beside the minimum age (§799) |
 | `BR-V3.48` | the volunteers' page: the kinder note as an information banner (§797) |
 | `BR-V3.47` | the Excel export: the member tick as its own column, the club's blue follows it, a lavender for the other club runners, the special guests marked in peach (§796) |
 | `BR-V3.46` | the volunteers' form: a calendar button opens the native date picker beside «Data nașterii» (§793) · the Excel «Statistici»: the special guests counted on their own lines, and the confirmed who take a place (§794) · the Excel export: «Status» right after the BIB, as a drop-down list (§795) |
