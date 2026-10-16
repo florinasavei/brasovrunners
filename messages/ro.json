@@ -1142,6 +1142,7 @@
         "expired": "Expirați",
         "club": "{club}",
         "clubConfirmed": "{club}, confirmați",
+        "clubTicked": "Au bifat că sunt membri {club}",
         "notClub": "Alții, nu {club}",
         "specialGuests": "Invitați speciali",
         "specialGuestsConfirmed": "Invitați speciali, confirmați",
@@ -1161,6 +1162,7 @@
         "bandFrom60": "60+ ani",
         "note1": "Activi sunt cei confirmați: au declarația semnată; cei care ocupă un loc sunt la «Confirmați care ocupă un loc».",
         "note2": "La «{club}» se numără membrii din «Echipa», cei care au bifat că sunt membri și cei care au scris clubul în formular.",
+        "note7": "«Au bifat că sunt membri {club}» numără doar bifa din formular, fără conturile de membru și clubul scris de mână.",
         "note3": "La «{club}», ca la «Total», se numără toate stările; cei care vin sunt la «{club}, confirmați».",
         "note4": "Categoria este sexul și vârsta la data cursei; cine nu are una dintre ele este la «Fără categorie». Înscrierile de test nu se numără.",
         "note5": "Numerele sunt formule peste rândurile de mai sus: schimbi o stare, un sex sau o vârstă și se recalculează singure, la fel și culorile rândurilor. Un rând sub ultimul alergător nu se numără.",
@@ -1170,7 +1172,9 @@
         "legendPending": "Galben, așteaptă un răspuns",
         "legendWaitlist": "Albastru deschis, pe lista de așteptare",
         "legendEnded": "Gri, anulat sau expirat",
-        "legendMember": "Albastru, alergător al clubului: coloanele «Club member», «Club runner» și «Member bib», când «Club runner» spune «Yes»."
+        "legendMember": "Albastru: a bifat că e membru {club} — coloanele «Club member», «Member tick (declared)», «Club runner» și «Member bib»",
+        "legendClubRunner": "Lila: alergător al clubului fără bifă — cont de membru sau clubul scris în formular",
+        "legendGuest": "Piersică, cursiv: invitat special — nu ocupă un loc"
       },
       "auditActorParticipant": "participantul, din linkul propriu",
       "audit": {
@@ -7575,7 +7579,7 @@
                 "Apasă «Exportă Excel» (sau «Exportă CSV»). Fișierul are exact rândurile filtrate, fără înscrierile de test.",
                 "Fișierul se termină cu «Note interne»: o notă pe rând, cu rolul celui care a scris. Coloana are cuvintele limbii paginii pe care ai apăsat butonul.",
                 "Sub tabel, după un rând gol, «Statistici» numără aceleași rânduri: totalul, cei confirmați (activii), fiecare altă stare, câți sunt din club și, pe categorii (sex și vârstă), fiecare grup. Apare doar în Excel, niciodată în CSV.",
-                "În Excel, rândul are culoarea stării, iar celulele de membru sunt albastre când coloana Club runner spune Yes. Numerele din «Statistici» sunt formule: le schimbi offline și se recalculează singure.",
+                "În Excel, rândul are culoarea stării, celulele de membru sunt albastre când coloana Member tick (declared) spune Yes, și lila pentru alt alergător al clubului. Numărul și numele unui invitat special sunt piersică și cursiv. Numerele din «Statistici» sunt formule: le schimbi offline și se recalculează singure.",
                 "Fișierul are acte de identitate și telefoane: nu-l trimite pe grupuri și șterge-l în cel mult 7 zile de la eveniment."
               ]
             },

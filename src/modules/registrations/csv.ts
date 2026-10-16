@@ -229,7 +229,7 @@ const HEADER = [
     «Member bib» just above: the spreadsheet puts the column beside «Club member» (it is matched by header), the CSV
     appends it so a script that reads by position still finds every earlier column. It is the one answer the footer
     counts the club's runners by — a member on «Echipa», the box, or a typed club that names the club — as "Yes" or
-    empty, so the file says why a row is blue.
+    empty, so the file names the club's runners (the lavender on those without the tick).
   */
   "Club runner",
 ];

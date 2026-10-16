@@ -81,7 +81,7 @@ describe("§787 the footer's numbers, for a mixed fixture", () => {
   it("counts every row once, by state, so the states add up to the total", async () => {
     const { rows } = readSheet(await build(mixed()));
     const footer = footerOf(rows);
-    expect(footer.slice(0, 15)).toEqual([
+    expect(footer.slice(0, 16)).toEqual([
       ["Statistici"],
       ["Total", "9"],
       ["Confirmați (activi)", "3"],
@@ -93,6 +93,8 @@ describe("§787 the footer's numbers, for a mixed fixture", () => {
       ["Expirați", "1"],
       [CLUB_NAME, "5"],
       [`${CLUB_NAME}, confirmați`, "2"],
+      // The tick alone (§NNN): two of the five club runners ticked the box.
+      [`Au bifat că sunt membri ${CLUB_NAME}`, "2"],
       [`Alții, nu ${CLUB_NAME}`, "4"],
       // The special guests (§643): none in this fixture, so the confirmed part of the places line is all the confirmed (§615).
       ["Invitați speciali", "0"],
@@ -315,7 +317,7 @@ describe("§787 the footer's words, in both languages", () => {
   it("says the same things in English with the club's name from the one constant", async () => {
     const { rows } = readSheet(await build(mixed(), EN));
     const footer = footerOf(rows, "Statistics");
-    expect(footer.slice(0, 12).map((row) => row[0])).toEqual([
+    expect(footer.slice(0, 13).map((row) => row[0])).toEqual([
       "Statistics",
       "Total",
       "Confirmed (active)",
@@ -327,6 +329,7 @@ describe("§787 the footer's words, in both languages", () => {
       "Expired",
       CLUB_NAME,
       `${CLUB_NAME}, confirmed`,
+      `Ticked as members of ${CLUB_NAME}`,
       `Others, not ${CLUB_NAME}`,
     ]);
     expect(footer.map((row) => row[0])).toContain("Female, 18-29");
@@ -341,7 +344,7 @@ describe("§787 the footer's words, in both languages", () => {
     for (const words of [RO, EN]) {
       const everything = [
         words.title, words.total, words.confirmed, words.pendingEmail, words.pendingDeclaration, words.waitlisted, words.waitlistOffered, words.cancelled,
-        words.expired, words.club, words.clubConfirmed, words.notClub, words.specialGuests, words.specialGuestsConfirmed, words.confirmedInPlaces, words.allEvents, words.categoryHeader, words.noCategory,
+        words.expired, words.club, words.clubConfirmed, words.clubTicked, words.notClub, words.specialGuests, words.specialGuestsConfirmed, words.confirmedInPlaces, words.allEvents, words.categoryHeader, words.noCategory,
         ...Object.values(words.sex), ...Object.values(words.bands), ...words.notes, ...Object.values(words.legend),
       ];
       for (const word of everything) {
@@ -350,7 +353,8 @@ describe("§787 the footer's words, in both languages", () => {
         expect(word.length).toBeLessThanOrEqual(200);
       }
       expect(words.category).toBe("{sex}, {band}");
-      expect(words.notes).toHaveLength(6);
+      // note7 (§NNN) joined the six: the tick's own line has its sentence.
+      expect(words.notes).toHaveLength(7);
       expect(words.club).toBe(CLUB_NAME);
     }
     const keys = (catalogue: typeof ro) => Object.keys(catalogue.Admin.registrations.statistics).sort();

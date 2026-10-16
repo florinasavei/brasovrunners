@@ -124,7 +124,7 @@ test.describe("§787 «Statistici» under the registrations Excel", () => {
       expect(rows[7]).toBeUndefined();
       expect(rows[8]).toEqual(["Statistici"]);
       const footer = footerOf(rows, "Statistici");
-      expect(footer.slice(1, 15)).toEqual([
+      expect(footer.slice(1, 16)).toEqual([
         ["Total", "6"],
         ["Confirmați (activi)", "3"],
         ["Așteaptă confirmarea adresei", "1"],
@@ -135,6 +135,8 @@ test.describe("§787 «Statistici» under the registrations Excel", () => {
         ["Expirați", "0"],
         ["Brașov Runners", "2"],
         ["Brașov Runners, confirmați", "2"],
+        // The tick alone (§NNN): one of the two club runners ticked the box.
+        ["Au bifat că sunt membri Brașov Runners", "1"],
         ["Alții, nu Brașov Runners", "4"],
         // The special guests (§643): none in this race, so the confirmed part of the places line is all the confirmed (§615).
         ["Invitați speciali", "0"],
