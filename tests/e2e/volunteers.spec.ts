@@ -301,14 +301,25 @@ test.describe("§754 volunteers for a race", () => {
       // The text box keeps room for «ZZ.LL.AAAA» at the narrowest width (320 px).
       expect(typedBox.width).toBeGreaterThanOrEqual(110);
       expect(await guest.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
-      const nativeDate = guest.getByTestId("birth-date-native");
+      const nativeDate = guest.locator('input[type="date"][data-testid$="-native"]');
       await expect(nativeDate).toHaveAttribute("type", "date");
       await expect(nativeDate).not.toHaveAttribute("name", /.+/);
       expect(await nativeDate.getAttribute("min")).toMatch(/^\d{4}-\d{2}-\d{2}$/);
       expect(await nativeDate.getAttribute("max")).toMatch(/^\d{4}-\d{2}-\d{2}$/);
       expect(await birthBox.getAttribute("data-min")).toBe(await nativeDate.getAttribute("min"));
       expect(await birthBox.getAttribute("data-max")).toBe(await nativeDate.getAttribute("max"));
+      // A press reaches the browser's picker: `showPicker` is stubbed to record the call, and focus comes back to the button, never stays on the hidden handle.
+      await guest.evaluate(() => {
+        const w = window as unknown as { __showPicker: number };
+        w.__showPicker = 0;
+        HTMLInputElement.prototype.showPicker = function () {
+          w.__showPicker += 1;
+        };
+      });
+      await pickerButton.click();
+      expect(await guest.evaluate(() => (window as unknown as { __showPicker: number }).__showPicker)).toBe(1);
       await nativeDate.fill("1990-05-11");
+      await expect(pickerButton).toBeFocused();
       await expect(birthBox).toHaveValue("11.05.1990");
       await expect(guest.getByTestId("volunteer-profile")).toContainText(/Vineri, 11 mai 1990 · \d+ de ani în ziua evenimentului/);
       // Typing still works after a pick: the box is the one source of truth.
@@ -459,7 +470,7 @@ test.describe("§754 volunteers for a race", () => {
         if (about.picked) {
           // The calendar button's hidden date input (§773, the owner, 2026-10-16): the day chosen in the browser's picker is written into the typed box.
           await expect(page2.getByRole("button", { name: "Alege data din calendar" })).toBeVisible();
-          await page2.getByTestId("birth-date-native").fill(keptBirth(about.years));
+          await page2.locator('input[type="date"][data-testid$="-native"]').fill(keptBirth(about.years));
         } else {
           await typeBirth(page2.locator('input[name="birthDate"]'), typedBirth(about.years));
         }
@@ -736,6 +747,8 @@ test.describe("§754 volunteers for a race", () => {
         await typeBirth(add.locator('input[name="birthDate"]'), typedBirth(about.years));
         await expect(add.locator('input[name="birthDate"]')).toHaveValue(shownBirth(about.years));
       }
+      // The calendar button is in the organizers' entry too (§773), one per box.
+      await expect(add.getByRole("button", { name: "Alege data din calendar" })).toBeVisible();
       if (about.city) await add.locator('input[name="city"]').fill(about.city);
       if (about.before) await add.getByRole("checkbox", { name: "A mai fost voluntar în trecut la alte curse" }).check();
       // The box says «cel puțin 14 ani» itself and the browser would stop a press on a date under the floor: lifted, so what is read is the server's refusal.

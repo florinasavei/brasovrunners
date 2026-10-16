@@ -23,12 +23,15 @@ import { openNativePicker, pickerValue } from "./birth-date-picker";
  * text box of §561 with no button that does nothing.
  */
 export default function BirthDatePicker({
+  id,
   label,
   text,
   min,
   max,
   onPick,
 }: {
+  /** The box's id: the hidden input's test id is derived from it, so a card with many boxes has no two alike. */
+  id: string;
   /** The button's accessible name: «Alege data din calendar». */
   label: string;
   /** What the box holds now. */
@@ -40,13 +43,16 @@ export default function BirthDatePicker({
   onPick: (picked: string) => void;
 }) {
   const handle = useRef<HTMLInputElement>(null);
+  const button = useRef<HTMLButtonElement>(null);
   return (
     <Box component="span" sx={{ position: "relative", display: "inline-flex", mr: -1 }}>
-      {/* A plain button like the country box's (`CountryPicker`): the house has no icon-only primitive, and `primitives.test.ts` refuses a bare MUI IconButton here. */}
+      {/* A plain `<button>` drawn here, as `PictureLightbox` and `RouteMapTabs` draw theirs: a bare MUI IconButton would need an allowlist line in `primitives.test.ts`. The title is the tooltip a mouse user reads. */}
       <Box
         component="button"
         type="button"
+        ref={button}
         aria-label={label}
+        title={label}
         onClick={() => {
           if (handle.current) openNativePicker(handle.current);
         }}
@@ -72,13 +78,17 @@ export default function BirthDatePicker({
       <input
         ref={handle}
         type="date"
-        data-testid="birth-date-native"
+        data-testid={`${id}-native`}
         tabIndex={-1}
         aria-hidden="true"
         min={min}
         max={max}
         value={pickerValue(text, min, max)}
-        onChange={(event) => onPick(event.currentTarget.value)}
+        onChange={(event) => {
+          // Focus goes back to the button (not to the typed box: on a phone that would raise the keyboard over the form as the wheel closes), never left on the hidden handle.
+          button.current?.focus();
+          onPick(event.currentTarget.value);
+        }}
         style={{ position: "absolute", inset: 0, width: "100%", height: "100%", margin: 0, padding: 0, border: 0, opacity: 0, pointerEvents: "none" }}
       />
     </Box>

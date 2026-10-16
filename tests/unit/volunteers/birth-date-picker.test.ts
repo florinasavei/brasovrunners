@@ -59,7 +59,7 @@ describe("off by default — the registration form's box is the box it always wa
     const html = field();
     expect(html).not.toContain("<button");
     expect(html).not.toContain('type="date"');
-    expect(html).not.toContain("birth-date-native");
+    expect(html).not.toContain("-native");
     expect(field({ picker: undefined })).toBe(html);
   });
 
@@ -89,19 +89,23 @@ describe("off by default — the registration form's box is the box it always wa
 });
 
 describe("the button and the hidden date input", () => {
-  const html = (text: string) => renderToStaticMarkup(createElement(BirthDatePicker, { label: ro.Registration.birthDatePicker, text, min: MIN, max: MAX, onPick: () => {} }));
+  const html = (text: string) => renderToStaticMarkup(createElement(BirthDatePicker, { id: "vol-birth", label: ro.Registration.birthDatePicker, text, min: MIN, max: MAX, onPick: () => {} }));
 
   it("is a button of its own that submits nothing, named in words, with a calendar glyph", () => {
     const markup = html("");
     const button = markup.match(/<button[^>]*>/)?.[0] ?? "";
     expect(button).toContain('type="button"');
     expect(button).toContain('aria-label="Alege data din calendar"');
+    // The tooltip a mouse user reads: the button has a glyph and no words.
+    expect(button).toContain('title="Alege data din calendar"');
     expect(markup).toContain('data-testid="CalendarMonthIcon"');
   });
 
   it("owns a date input that posts nothing, is out of the tab order and hidden from a screen reader, bounded as the box is", () => {
     const input = html("").match(/<input[^>]*>/)?.[0] ?? "";
     expect(input).toContain('type="date"');
+    // Derived from the box's id: the organizers' card draws one box per volunteer and one to add, so no two share a test id.
+    expect(input).toContain('data-testid="vol-birth-native"');
     expect(input).toContain(`min="${MIN}"`);
     expect(input).toContain(`max="${MAX}"`);
     expect(input).toContain('tabindex="-1"');

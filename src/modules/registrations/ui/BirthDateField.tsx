@@ -251,6 +251,7 @@ export default function BirthDateField({
                 endAdornment: (
                   <InputAdornment position="end">
                     <BirthDatePicker
+                      id={id}
                       label={picker.label}
                       text={text}
                       min={min}
