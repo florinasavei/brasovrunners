@@ -50,6 +50,7 @@ yarn db:migrate:env  apply migrations to local|qa|production — the only suppor
                   migrate a deployed database (AGENTS.md §7.6, DECISIONS.md §31)
 yarn smoke        ask a deployment's /api/health?deep=1 whether it works; ends every deploy
 yarn idle:measure  Neon's wakes and Vercel's requests while nobody visited (docs/PLATFORM.md § Idle cost)
+yarn db:sizes     the database's size, its largest tables and 30-day growth; `--env qa|production` (read-only; docs/PLATFORM.md § Keeping Neon and Vercel light)
 yarn release      versioned archive and share copies under dist/
 yarn batch:merge  merge branches into the one checked out; the journal, catalogues and tests by rule
 yarn docs:land    land a batch's documents: a dispatcher's manifest, or `--tree` for the branch's
