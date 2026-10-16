@@ -24,6 +24,7 @@ import type { FormOutcome } from "@/shared/forms/outcome";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
+import { NEW_ROW, rowBoxes } from "../../helpers/role-rows";
 
 /**
  * §754 — an event's «Voluntari» card (BR-REQ-050-02, BR-REQ-060-01), through the real Server Actions:
@@ -111,6 +112,9 @@ function form(fields: Record<string, string | readonly string[]>, event = eventI
   return data;
 }
 
+/** One row of the «Roluri» card's one form (§NNN) as a post: a saved role's boxes under its id, the blank row's under `new-none`. */
+const rowForm = (key: string, fields: Record<string, string>, event = eventId) => form(rowBoxes(key, fields), event);
+
 type Stateful = (previous: FormOutcome | null, form: FormData) => Promise<FormOutcome | null>;
 
 /** Runs an action that redirects on success and returns its refusal otherwise. */
@@ -146,7 +150,7 @@ const trail = (id = eventId) => db.select().from(auditLogs).where(eq(auditLogs.e
 const actionsOf = async () => (await trail()).map((row) => row.action);
 
 async function addRole(fields: Record<string, string> = {}) {
-  expect(await post(actions.addVolunteerRoleAction, form({ ...ROLE, ...fields }))).toBe("redirected");
+  expect(await post(actions.saveVolunteerRolesAction, rowForm(NEW_ROW, { ...ROLE, ...fields }))).toBe("redirected");
   const roles = await listVolunteerRoles(db, eventId);
   return roles[roles.length - 1];
 }
@@ -175,9 +179,10 @@ describe("§754 an event's volunteer roles", () => {
       [{ needed: "x" }, "needed"],
       [{ descriptionRo: "Dai apă" }, "descriptionEn"],
     ] as const) {
-      const outcome = await post(actions.addVolunteerRoleAction, form({ ...ROLE, ...fields }));
-      expect(outcome, box).toMatchObject({ error: "VALIDATION_ERROR", fields: [box] });
-      expect((outcome as FormOutcome).values.nameRo?.[0]).toBe(fields.nameRo ?? ROLE.nameRo);
+      const outcome = await post(actions.saveVolunteerRolesAction, rowForm(NEW_ROW, { ...ROLE, ...fields }));
+      // The refusal names the role's row and the box to correct (§NNN), and every box keeps what was typed.
+      expect(outcome, box).toMatchObject({ error: "VOLUNTEER_ROLE_INVALID", fields: [`roles[${NEW_ROW}].${box}`] });
+      expect((outcome as FormOutcome).values[`roles[${NEW_ROW}].nameRo`]?.[0]).toBe(fields.nameRo ?? ROLE.nameRo);
     }
     expect(await listVolunteerRoles(db, eventId)).toHaveLength(0);
     expect(await trail()).toHaveLength(0);
@@ -192,30 +197,36 @@ describe("§754 an event's volunteer roles", () => {
 
   it("changes a role, audits which fields changed, and writes nothing for a save that changes nothing", async () => {
     const role = await addRole();
-    expect(await post(actions.editVolunteerRoleAction, form({ ...ROLE, roleId: role.id, needed: "6", nameEn: "Hydration point" }))).toBe("redirected");
+    expect(await post(actions.saveVolunteerRolesAction, rowForm(role.id, { ...ROLE, needed: "6", nameEn: "Hydration point" }))).toBe("redirected");
     expect(await listVolunteerRoles(db, eventId)).toMatchObject([{ id: role.id, needed: 6, nameEn: "Hydration point", nameRo: "Punct de apă" }]);
     const edited = (await trail()).filter((row) => row.action === "volunteer_role.edited");
     expect(edited).toHaveLength(1);
     expect(edited[0].metadataJson).toMatchObject({ fields: ["nameEn", "needed"] });
-    expect(await post(actions.editVolunteerRoleAction, form({ ...ROLE, roleId: role.id, needed: "6", nameEn: "Hydration point" }))).toBe("redirected");
+    expect(await post(actions.saveVolunteerRolesAction, rowForm(role.id, { ...ROLE, needed: "6", nameEn: "Hydration point" }))).toBe("redirected");
     expect((await trail()).filter((row) => row.action === "volunteer_role.edited")).toHaveLength(1);
   });
 
-  it("moves a role up and down, never past the ends, and renumbers positions without gaps", async () => {
+  it("orders the roles by the position typed, never past the ends, and renumbers positions without gaps", async () => {
     const a = await addRole({ nameRo: "A", nameEn: "A" });
     const b = await addRole({ nameRo: "B", nameEn: "B" });
     const c = await addRole({ nameRo: "C", nameEn: "C" });
     const order = async () => (await listVolunteerRoles(db, eventId)).map((role) => role.nameRo);
-    await press(actions.moveVolunteerRoleAction, form({ roleId: c.id, direction: "up" }));
+    const place = (role: { id: string }, position: string) => post(actions.saveVolunteerRolesAction, rowForm(role.id, { position }));
+    // C takes the second place: the role it ties with goes after it.
+    expect(await place(c, "2")).toBe("redirected");
     expect(await order()).toEqual(["A", "C", "B"]);
-    await press(actions.moveVolunteerRoleAction, form({ roleId: a.id, direction: "up" }));
+    // A takes the first place it already holds: nothing moves, nothing is written.
+    expect(await place(a, "1")).toBe("redirected");
     expect(await order()).toEqual(["A", "C", "B"]);
-    await press(actions.moveVolunteerRoleAction, form({ roleId: a.id, direction: "down" }));
+    // A takes the second: C keeps its number and A goes after it.
+    expect(await place(a, "2")).toBe("redirected");
     expect(await order()).toEqual(["C", "A", "B"]);
-    await press(actions.moveVolunteerRoleAction, form({ roleId: b.id, direction: "down" }));
+    // B asks for a place past the end: it is the last.
+    expect(await place(b, "99")).toBe("redirected");
     expect(await order()).toEqual(["C", "A", "B"]);
     expect((await listVolunteerRoles(db, eventId)).map((role) => role.position)).toEqual([0, 1, 2]);
-    expect((await actionsOf()).filter((action) => action === "volunteer_role.moved")).toHaveLength(2);
+    expect((await actionsOf()).filter((action) => action === "volunteer_role.moved")).toHaveLength(0);
+    expect((await trail()).filter((row) => row.action === "volunteer_role.edited").map((row) => (row.metadataJson as { fields: string[] }).fields)).toEqual([["position"], ["position"]]);
   });
 
   it("removes a role nobody is on, but never one with people on it — cancelled ones included — until they are moved or gone", async () => {
@@ -257,8 +268,8 @@ describe("§754 an event's volunteer roles", () => {
 
   it("takes at most thirty roles on an event", async () => {
     for (let index = 0; index < 30; index += 1) await addRole({ nameRo: `Rol ${index}`, nameEn: `Role ${index}` });
-    const outcome = await post(actions.addVolunteerRoleAction, form({ ...ROLE, nameRo: "Încă unul", nameEn: "One more" }));
-    expect(outcome).toMatchObject({ error: "VALIDATION_ERROR" });
+    const outcome = await post(actions.saveVolunteerRolesAction, rowForm(NEW_ROW, { ...ROLE, nameRo: "Încă unul", nameEn: "One more" }));
+    expect(outcome).toMatchObject({ error: "VOLUNTEER_ROLE_INVALID", fields: [`roles[${NEW_ROW}].nameRo`] });
     expect(await listVolunteerRoles(db, eventId)).toHaveLength(30);
   });
 });
@@ -663,7 +674,7 @@ describe("§754 who may do what (BR-REQ-060-01) — the service asserts it, what
     const superadmin = await person("SUPERADMIN", "Sara Superadmin");
     for (const actor of [staff.MODERATOR!, staff.ADMIN!, superadmin]) {
       state.actor = actor;
-      const outcome = await post(actions.addVolunteerRoleAction, form({ ...ROLE, nameRo: `Rol ${actor.role}`, nameEn: `Role ${actor.role}` }));
+      const outcome = await post(actions.saveVolunteerRolesAction, rowForm(NEW_ROW, { ...ROLE, nameRo: `Rol ${actor.role}`, nameEn: `Role ${actor.role}` }));
       expect(outcome, actor.role).toBe("redirected");
     }
     expect(await listVolunteerRoles(db, eventId)).toHaveLength(3);
@@ -674,16 +685,12 @@ describe("§754 who may do what (BR-REQ-060-01) — the service asserts it, what
     const maria = await addPerson(role.id);
     for (const key of ["DEV", "COPYWRITER", "CONTRIBUTOR", "MEMBER"] as const) {
       state.actor = staff[key];
-      // An «add» keeps what was typed and says why; an «edit» goes back to the card with the code in the address.
-      const refusals = [
-        await post(actions.addVolunteerRoleAction, form({ ...ROLE, nameRo: "Alt rol", nameEn: "Other role" })),
-        await post(actions.addVolunteerAction, form({ ...PERSON, roleIds: [role.id], email: "alt@example.test" })),
-      ];
-      for (const refusal of refusals) expect(refusal, key).toMatchObject({ error: "FORBIDDEN" });
-      expect(await pressStateful(actions.editVolunteerRoleAction, form({ ...ROLE, roleId: role.id, needed: "9" })), key).toContain("volunteerError=FORBIDDEN");
+      // An «add» of a person keeps what was typed and says why; the roles' one save, like an «edit», goes back to the card with the code in the address.
+      expect(await post(actions.addVolunteerAction, form({ ...PERSON, roleIds: [role.id], email: "alt@example.test" })), key).toMatchObject({ error: "FORBIDDEN" });
+      expect(await pressStateful(actions.saveVolunteerRolesAction, rowForm(NEW_ROW, { ...ROLE, nameRo: "Alt rol", nameEn: "Other role" })), key).toContain("volunteerError=FORBIDDEN");
+      expect(await pressStateful(actions.saveVolunteerRolesAction, rowForm(role.id, { ...ROLE, needed: "9" })), key).toContain("volunteerError=FORBIDDEN");
       expect(await pressStateful(actions.editVolunteerAction, form({ ...PERSON, volunteerId: maria.id, roleIds: [role.id], name: "Schimbat" })), key).toContain("volunteerError=FORBIDDEN");
       for (const [name, action, fields] of [
-        ["move", actions.moveVolunteerRoleAction, { roleId: role.id, direction: "down" }],
         ["state", actions.setVolunteerStateAction, { volunteerId: maria.id, state: "CONFIRMED" }],
         // «Dă-i rolul …» (§761): the same set of roles may, nobody else.
         ["assign", actions.assignVolunteerAction, { volunteerId: maria.id, roleId: role.id }],
@@ -791,41 +798,41 @@ describe("§784 a role «fără număr» — the tick of the role's form", () =>
   const roleRows = () => listVolunteerRoles(db, eventId);
 
   it("adds a role with the tick and no number: it is saved without one, the audit says so, and the number box is ignored while the tick is on", async () => {
-    expect(await post(actions.addVolunteerRoleAction, form({ ...ROLE, needed: "", unlimited: "on" }))).toBe("redirected");
-    expect(await post(actions.addVolunteerRoleAction, form({ ...ROLE, nameRo: "Sosire", nameEn: "Finish", needed: "7", unlimited: "on" }))).toBe("redirected");
+    expect(await post(actions.saveVolunteerRolesAction, rowForm(NEW_ROW, { ...ROLE, needed: "", unlimited: "on" }))).toBe("redirected");
+    expect(await post(actions.saveVolunteerRolesAction, rowForm(NEW_ROW, { ...ROLE, nameRo: "Sosire", nameEn: "Finish", needed: "7", unlimited: "on" }))).toBe("redirected");
     expect((await roleRows()).map((role) => [role.nameRo, role.needed])).toEqual([["Punct de apă", null], ["Sosire", null]]);
     const added = (await trail()).filter((row) => row.action === "volunteer_role.added");
     expect(added.map((row) => (row.metadataJson as { needed: unknown }).needed)).toEqual([null, null]);
   });
 
   it("reads a form with no tick as before: the number decides", async () => {
-    expect(await post(actions.addVolunteerRoleAction, form({ ...ROLE, needed: "5" }))).toBe("redirected");
+    expect(await post(actions.saveVolunteerRolesAction, rowForm(NEW_ROW, { ...ROLE, needed: "5" }))).toBe("redirected");
     expect((await roleRows()).map((role) => role.needed)).toEqual([5]);
   });
 
   it("refuses neither a number nor the tick at the number's box, keeps every box, and writes nothing", async () => {
     for (const needed of ["", "0", "x"]) {
-      const outcome = await post(actions.addVolunteerRoleAction, form({ ...ROLE, needed }));
-      expect(outcome, needed).toMatchObject({ error: "VALIDATION_ERROR", fields: ["needed"] });
-      expect((outcome as FormOutcome).values.needed?.[0]).toBe(needed);
+      const outcome = await post(actions.saveVolunteerRolesAction, rowForm(NEW_ROW, { ...ROLE, needed }));
+      expect(outcome, needed).toMatchObject({ error: "VOLUNTEER_ROLE_INVALID", fields: [`roles[${NEW_ROW}].needed`] });
+      expect((outcome as FormOutcome).values[`roles[${NEW_ROW}].needed`]?.[0]).toBe(needed);
     }
     expect(await roleRows()).toHaveLength(0);
     expect(await trail()).toHaveLength(0);
   });
 
   it("brings the tick back after a refusal about something else", async () => {
-    const outcome = await post(actions.addVolunteerRoleAction, form({ ...ROLE, nameEn: "", needed: "", unlimited: "on" }));
-    expect(outcome).toMatchObject({ error: "VALIDATION_ERROR", fields: ["nameEn"] });
-    expect((outcome as FormOutcome).values.unlimited?.[0]).toBe("on");
+    const outcome = await post(actions.saveVolunteerRolesAction, rowForm(NEW_ROW, { ...ROLE, nameEn: "", needed: "", unlimited: "on" }));
+    expect(outcome).toMatchObject({ error: "VOLUNTEER_ROLE_INVALID", fields: [`roles[${NEW_ROW}].nameEn`] });
+    expect((outcome as FormOutcome).values[`roles[${NEW_ROW}].unlimited`]?.[0]).toBe("on");
   });
 
   it("turns a numbered role into one without a number and back, audits the field, and writes nothing for a save that changes nothing", async () => {
     const role = await addRole({ needed: "4" });
-    expect(await post(actions.editVolunteerRoleAction, form({ ...ROLE, roleId: role.id, needed: "4", unlimited: "on" }))).toBe("redirected");
+    expect(await post(actions.saveVolunteerRolesAction, rowForm(role.id, { ...ROLE, needed: "4", unlimited: "on" }))).toBe("redirected");
     expect((await roleRows())[0].needed).toBeNull();
     // The same save again: the role is already without a number, nothing changes, nothing is written.
-    expect(await post(actions.editVolunteerRoleAction, form({ ...ROLE, roleId: role.id, needed: "9", unlimited: "on" }))).toBe("redirected");
-    expect(await post(actions.editVolunteerRoleAction, form({ ...ROLE, roleId: role.id, needed: "6" }))).toBe("redirected");
+    expect(await post(actions.saveVolunteerRolesAction, rowForm(role.id, { ...ROLE, needed: "9", unlimited: "on" }))).toBe("redirected");
+    expect(await post(actions.saveVolunteerRolesAction, rowForm(role.id, { ...ROLE, needed: "6" }))).toBe("redirected");
     expect((await roleRows())[0].needed).toBe(6);
     const edited = (await trail()).filter((row) => row.action === "volunteer_role.edited");
     expect(edited.map((row) => (row.metadataJson as { fields: string[]; needed: unknown }))).toMatchObject([

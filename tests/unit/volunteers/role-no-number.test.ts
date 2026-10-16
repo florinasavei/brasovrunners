@@ -165,9 +165,8 @@ describe("§784 the words", () => {
     ["Admin", "volunteers", "summaryOnlyNoNumber"],
     ["Admin", "volunteers", "standingNoNumber"],
     ["Admin", "volunteers", "assign", "standingNoNumber"],
-    ["Admin", "volunteers", "role", "unlimited"],
-    ["Admin", "volunteers", "role", "unlimitedHelp"],
-    ["Admin", "volunteers", "role", "neededHelp"],
+    ["Admin", "volunteers", "role", "col", "unlimited"],
+    ["Admin", "volunteers", "rolesNeededHelp"],
     ["Admin", "badges", "print", "countHelpNoNumber"],
     ["Admin", "badges", "print", "introNoNumber"],
     ["Admin", "badges", "print", "introAllNoNumber"],
@@ -181,13 +180,13 @@ describe("§784 the words", () => {
         for (const sentence of (words as string).split(/(?<=[.!?])\s+/)) expect(sentence.length, `${language} ${keys.join(".")}`).toBeLessThanOrEqual(200);
       }
     }
-    expect(ro.Admin.volunteers.role.unlimited).toBe("Fără număr — oricâți oameni");
-    expect(en.Admin.volunteers.role.unlimited).toBe("No limit — any number of people");
-    // The help names both ways, the number and the tick.
-    expect(ro.Admin.volunteers.role.neededHelp).toContain("Cel puțin 1");
-    expect(ro.Admin.volunteers.role.neededHelp).toContain("Fără număr");
-    expect(en.Admin.volunteers.role.neededHelp).toContain("At least 1");
-    expect(en.Admin.volunteers.role.neededHelp).toContain("No limit");
+    // The roles' one form (§NNN) says the tick in one word, «Nelimitat», and its «?» names both ways, the number and the tick.
+    expect(ro.Admin.volunteers.role.col.unlimited).toBe("Nelimitat");
+    expect(en.Admin.volunteers.role.col.unlimited).toBe("No limit");
+    expect(ro.Admin.volunteers.rolesNeededHelp).toContain("cel puțin 1");
+    expect(ro.Admin.volunteers.rolesNeededHelp).toContain("Nelimitat");
+    expect(en.Admin.volunteers.rolesNeededHelp).toContain("at least 1");
+    expect(en.Admin.volunteers.rolesNeededHelp).toContain("No limit");
   });
 
   it("keeps the placeholders of every new sentence the same in both languages", () => {

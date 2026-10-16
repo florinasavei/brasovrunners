@@ -33,17 +33,15 @@ vi.mock("@/app/[locale]/admin/events/[id]/volunteer-actions", () => {
     [
       "addVolunteerAction",
       "addVolunteerCategoryAction",
-      "addVolunteerRoleAction",
       "assignVolunteerAction",
       "deleteVolunteerAction",
       "deleteVolunteerCategoryAction",
       "deleteVolunteerRoleAction",
       "editVolunteerAction",
       "editVolunteerCategoryAction",
-      "editVolunteerRoleAction",
       "moveVolunteerCategoryAction",
-      "moveVolunteerRoleAction",
       "saveVolunteerCategoryContactAction",
+      "saveVolunteerRolesAction",
       "recordPaperVolunteerAgreementAction",
       "recordPaperVolunteerGuardianAction",
       "requestVolunteerAgreementAction",
@@ -348,15 +346,16 @@ describe("§774 the card: «Categorii», «Categoria» and the roles under their
     expect(page).toContain("Delete the category");
   });
 
-  it("offers «Categoria» as a native choice — «Alte activități» first, then each category — on the add form and every role's «Modifică», the role's own selected", async () => {
+  it("offers «Categoria» as a native choice — «Alte roluri» first, then each category — in every role's row and in the blank row of each category, the row's own selected", async () => {
     const page = await drawCard();
-    const selects = [...page.matchAll(/<select[^>]*name="categoryId"[^>]*>[\s\S]*?<\/select>/g)].map((match) => match[0]);
-    // «Adaugă un rol» and the four roles' «Modifică».
-    expect(selects).toHaveLength(5);
+    const selects = [...page.matchAll(/<select[^>]*name="roles\[[^"]*\]\.categoryId"[^>]*>[\s\S]*?<\/select>/g)].map((match) => match[0]);
+    // The four roles' rows and the blank row of each of the four headings (the three categories and «Alte roluri»).
+    expect(selects).toHaveLength(8);
     for (const select of selects) {
-      expect([...select.matchAll(/<option[^>]*>([^<]*)<\/option>/g)].map((match) => match[1])).toEqual(["Alte activități", "Start / Sosire", "Traseu", "Goală"]);
+      expect([...select.matchAll(/<option[^>]*>([^<]*)<\/option>/g)].map((match) => match[1])).toEqual(["Alte roluri", "Start / Sosire", "Traseu", "Goală"]);
     }
-    expect(selects.filter((select) => new RegExp(`value="${ROUTE_ID}"[^>]*selected`).test(select) || new RegExp(`selected[^>]*value="${ROUTE_ID}"`).test(select))).toHaveLength(2);
+    // The route's two roles and its blank row start on «Traseu».
+    expect(selects.filter((select) => new RegExp(`value="${ROUTE_ID}"[^>]*selected`).test(select) || new RegExp(`selected[^>]*value="${ROUTE_ID}"`).test(select))).toHaveLength(3);
     expect(page).toContain("Categoria");
     // Not a toggle: a choice of one among several, never a button that flips.
     expect(selects.join("")).not.toContain('role="checkbox"');
@@ -364,19 +363,21 @@ describe("§774 the card: «Categorii», «Categoria» and the roles under their
 
   it("draws no «Categoria» box while the event has no category, so a save leaves every role where it is", async () => {
     const page = await drawCard({ categories: [], roles: ROLES.map((one) => ({ ...one, categoryId: null })) });
-    expect(page).not.toContain('name="categoryId"');
+    expect(page).not.toContain('.categoryId"');
     expect(page).toContain("Nicio categorie încă");
-    expect(page).not.toContain('data-testid="volunteer-role-group-heading"');
+    // No category, no sub-card: the rows are listed as they were, in one list.
+    expect(page).not.toContain('data-testid="volunteer-role-group"');
   });
 
-  it("lists the roles under their category's heading in the category order, the loose ones last, and moves only inside a heading", async () => {
+  it("lists the roles in a sub-card per category in the category order, the loose ones last in «Alte roluri», with no arrows to move them", async () => {
     const page = await drawCard();
-    const groups = [...page.matchAll(/data-testid="volunteer-role-group-heading"[^>]*>([^<]*)</g)].map((match) => match[1]);
-    expect(groups).toEqual(["Start / Sosire", "Traseu", "Alte activități"]);
-    // The route's two roles: «up» on the first and «down» on the last are not drawn; the start's single role and the loose one move nowhere.
-    const roleList = /data-testid="volunteer-role-groups"[\s\S]*?data-testid="volunteer-role-add"/.exec(page)?.[0] ?? "";
-    expect((roleList.match(/name="direction"/g) ?? []).length).toBe(2);
-    // A role's own header stays its name; the category is the heading above it.
+    const groups = [...page.matchAll(/<section[^>]*data-testid="volunteer-role-group"[^>]*><h4[^>]*>([\s\S]*?)<\/h4>/g)].map((match) => match[1].replace(/<[^>]*>/g, ""));
+    expect(groups).toEqual(["Start / Sosire1 rol", "Traseu2 roluri", "Goală0 roluri", "Alte roluri1 rol"]);
+    // The order is the position box now: not one arrow in the roles' form.
+    const roleList = /<form[^>]*data-testid="volunteer-roles-form"[\s\S]*?<\/form>/.exec(page)?.[0] ?? "";
+    expect(roleList).toContain('data-testid="volunteer-role-groups"');
+    expect(roleList).not.toContain('name="direction"');
+    // A role's own row keeps its name; the category is the card above it.
     expect(roleList).toContain("Punct de hidratare");
   });
 
@@ -404,7 +405,7 @@ describe("§784 a role without a number", () => {
   const NO_NUMBER: VolunteerRole = { ...ROUTE_WATER, needed: null };
   const given = (state: "REGISTERED" | "CONFIRMED") => person({ roleId: NO_NUMBER.id, choiceIds: [NO_NUMBER.id], state });
   const standingChips = (page: string) => [...new Set([...page.matchAll(/data-testid="volunteer-role-standing"[^>]*>(?:<[^>]*>)*([^<]*)</g)].map((match) => match[1]))];
-  const tickTags = (page: string) => [...page.matchAll(/<input[^>]*name="unlimited"[^>]*>/g)].map((match) => match[0]);
+  const tickTags = (page: string) => [...page.matchAll(/<input[^>]*name="roles\[[^"]*\]\.unlimited"[^>]*>/g)].map((match) => match[0]);
 
   it("reads «3 · fără număr» in its header where a numbered role reads «0 din 2», and is never drawn as full", async () => {
     const people = [given("CONFIRMED"), { ...given("REGISTERED"), id: "e2222222-2222-4222-8222-222222222222" }, { ...given("CONFIRMED"), id: "e3333333-3333-4333-8333-333333333333" }];
@@ -434,25 +435,24 @@ describe("§784 a role without a number", () => {
     expect(page).toContain("Direcționare (Start / Sosire) · 0 din 2");
   });
 
-  it("draws the tick «Fără număr — oricâți oameni» beside «Câți oameni trebuie» in every role form, ticked only on the role without a number, and the number box never required", async () => {
+  it("draws the tick «Nelimitat» beside «Câte persoane» in every role's row and in each blank row, ticked only on the role without a number, and the number box never required", async () => {
     const page = await drawCard({ roles: [AT_START, NO_NUMBER] });
-    // «Adaugă un rol» and one «Modifică» per role: three forms, one tick each — a native checkbox, so a form without scripts posts it.
+    // Two rows and the blank row of each of the three categories: five ticks — a native checkbox, so a form without scripts posts it.
     const ticks = tickTags(page);
-    expect(ticks).toHaveLength(3);
+    expect(ticks).toHaveLength(5);
     expect(ticks.every((tag) => /type="checkbox"/.test(tag))).toBe(true);
     expect(ticks.filter((tag) => /\schecked(=|\s|>)/.test(tag))).toHaveLength(1);
-    expect(page).toContain("Fără număr — oricâți oameni");
-    expect((page.match(/data-testid="volunteer-role-needed-group"/g) ?? []).length).toBe(3);
+    expect(page).toContain("Nelimitat");
+    expect((page.match(/data-testid="volunteer-role-needed-group"/g) ?? []).length).toBe(5);
     // The number box stays in the markup (scripts off: it is shown and ignored while the tick is on) and is not `required`.
-    const boxes = [...page.matchAll(/<input[^>]*name="needed"[^>]*>/g)].map((match) => match[0]);
-    expect(boxes).toHaveLength(3);
+    const boxes = [...page.matchAll(/<input[^>]*name="roles\[[^"]*\]\.needed"[^>]*>/g)].map((match) => match[0]);
+    expect(boxes).toHaveLength(5);
     expect(boxes.some((tag) => /\srequired(=|\s|>)/.test(tag))).toBe(false);
-    // The help names both ways.
-    expect(page).toContain("Cel puțin 1, sau bifează „Fără număr” mai jos.");
-    expect(page).toContain("Nebifat, scrie mai sus un număr de cel puțin 1.");
+    // The card's «?» names both ways, the number and the tick (the tooltip carries it).
+    expect(page).toContain("Câte persoane: cel puțin 1, sau bifează „Nelimitat”.");
     const english = await drawCard({ roles: [AT_START, NO_NUMBER] }, "en");
-    expect(english).toContain("No limit — any number of people");
-    expect(english).toContain("At least 1, or tick “No limit” below.");
+    expect(english).toContain("No limit");
+    expect(english).toContain("People: at least 1, or tick “No limit”.");
   });
 
   it("hides the number box with the stylesheet alone while the tick is on, so no script is needed", async () => {
@@ -482,7 +482,7 @@ describe("§784 a role without a number", () => {
     const stream = await renderToReadableStream(createElement(NextIntlClientProvider, intl, createElement(TranslateProvider, { offer: { action: translate, setupHref: null } } as ComponentProps<typeof TranslateProvider>, drawn)), { onError: () => {} });
     await stream.allReady;
     const page = await new Response(stream).text();
-    expect(page).toMatch(/:has\(input\[name=['"]?unlimited['"]?\]:checked\)\s*\[data-needed-box\]\{display:none/);
+    expect(page).toMatch(/:has\(input\[name\$=['"]?\.unlimited['"]?\]:checked\)\s*\[data-needed-box\]\{display:none/);
     expect(page).toContain("data-needed-box");
   });
 

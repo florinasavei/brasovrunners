@@ -11,7 +11,10 @@
  * all spell them one way.
  */
 
-/** The boxes of one role's row, as the form posts them (the part after `roles[<key>].`). */
+/**
+ * The boxes of one role's row, as the form posts them (the part after `roles[<key>].`). The description is the editor's two documents
+ * (`descriptionRoBody` / `descriptionEnBody`); the two plain boxes are for a caller without the editor — a script, a test — and read as paragraphs.
+ */
 export const ROLE_ROW_BOXES = [
   "categoryId",
   "nameRo",
@@ -21,6 +24,8 @@ export const ROLE_ROW_BOXES = [
   "position",
   "descriptionRoBody",
   "descriptionEnBody",
+  "descriptionRo",
+  "descriptionEn",
   "colourChoice",
   "colourTyped",
 ] as const;

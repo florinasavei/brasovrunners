@@ -725,10 +725,14 @@ function postedPosition(value: unknown): number | null | undefined {
   return number >= 1 ? number : undefined;
 }
 
-/** The box a zod issue's path names, in the row's own spelling: the plain description boxes are the editor's two documents. */
-function roleBoxOfIssue(name: string): RoleRowBox | null {
-  const box = name === "descriptionRo" ? "descriptionRoBody" : name === "descriptionEn" ? "descriptionEnBody" : name;
-  return (["nameRo", "nameEn", "needed", "descriptionRoBody", "descriptionEnBody"] as const).find((known) => known === box) ?? null;
+/**
+ * The box a zod issue's path names, in the row's own spelling: a description's refusal names the editor's document when the row posted one,
+ * the plain box when the row (a script, a test) posted that.
+ */
+function roleBoxOfIssue(name: string, posted: Record<string, string>): RoleRowBox | null {
+  const side = name.startsWith("descriptionRo") ? "Ro" : name.startsWith("descriptionEn") ? "En" : null;
+  if (side) return `description${side}Body` in posted || !(`description${side}` in posted) ? `description${side}Body` : `description${side}`;
+  return (["nameRo", "nameEn", "needed"] as const).find((known) => known === name) ?? null;
 }
 
 /**
@@ -824,7 +828,7 @@ export async function changeVolunteerRoles<T extends Record<string, unknown>>(
         input = roleInputOf({ ...(current ? postedDefaultsOf(current) : {}), ...boxes });
       } catch (error) {
         if (!isDomainError(error) || error.code !== "VALIDATION_ERROR") throw error;
-        const at = [...new Set(error.fields.flatMap((name) => roleBoxOfIssue(name) ?? []))];
+        const at = [...new Set(error.fields.flatMap((name) => roleBoxOfIssue(name, boxes) ?? []))];
         const first = error.fields[0] ?? "";
         const typed = (name: "nameRo" | "nameEn") => (boxes[name] ?? current?.[name] ?? "").trim();
         if (first === "nameRo") refuse(typed("nameRo") === "" ? "nameRoMissing" : "nameRoLong", ...at);

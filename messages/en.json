@@ -4890,10 +4890,6 @@
       "rolesSaving": "Saving the roles…",
       "rolesEmpty": "No roles yet. Add the first one below: for example “Water point” — 4 people.",
       "role": {
-        "nameRo": "Role name (Română)",
-        "nameEn": "Role name (English)",
-        "needed": "People needed",
-        "unlimited": "No limit — any number of people",
         "descriptionRo": "Role description (Română, optional)",
         "descriptionEn": "Role description (English, optional)",
         "descriptionHelp": "What the role involves: where the volunteer stands, what they do, from what hour. At most {max} characters of text in each language; in both languages or neither.",
@@ -4903,7 +4899,6 @@
         "deleteBody": "The role “{name}” is removed. A role given to someone, or ticked by someone, cannot be deleted: change their roles or delete them first.",
         "descriptionEmpty": "No description yet.",
         "more": "More",
-        "category": "Category",
         "categoryHelp": "The heading the role appears under. “Other roles” means none. The same name can stand in two categories, but not twice in one.",
         "col": {
           "nameRo": "Name (RO)",

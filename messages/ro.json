@@ -4890,10 +4890,6 @@
       "rolesSaving": "Se salvează rolurile…",
       "rolesEmpty": "Încă niciun rol. Adaugă-l pe primul mai jos: de exemplu „Punct de apă” — 4 persoane.",
       "role": {
-        "nameRo": "Numele rolului (Română)",
-        "nameEn": "Numele rolului (English)",
-        "needed": "Câți oameni trebuie",
-        "unlimited": "Fără număr — oricâți oameni",
         "descriptionRo": "Descrierea rolului (Română, opțional)",
         "descriptionEn": "Descrierea rolului (English, opțional)",
         "descriptionHelp": "Ce presupune rolul: unde stă voluntarul, ce are de făcut, de la ce oră. Cel mult {max} de caractere de text în fiecare limbă; în ambele limbi sau în niciuna.",
@@ -4903,7 +4899,6 @@
         "deleteBody": "Rolul „{name}” se șterge. Un rol dat cuiva sau bifat de cineva nu poate fi șters: schimbă-le întâi rolurile sau șterge-i.",
         "descriptionEmpty": "Încă nicio descriere.",
         "more": "Mai multe",
-        "category": "Categoria",
         "categoryHelp": "Titlul sub care apare rolul. „Alte roluri” înseamnă fără categorie. Același nume poate sta în două categorii, dar nu de două ori într-una.",
         "col": {
           "nameRo": "Nume (RO)",

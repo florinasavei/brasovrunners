@@ -16,6 +16,7 @@ import type { FormOutcome } from "@/shared/forms/outcome";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
+import { NEW_ROW, rowBoxes } from "../../helpers/role-rows";
 
 import { bornAged } from "../../helpers/volunteer-birth";
 
@@ -143,6 +144,8 @@ function form(fields: Record<string, string | readonly string[]>): FormData {
   }
   return data;
 }
+/** One row of the «Roluri» card's one form (§NNN) as a post: a saved role's boxes under its id, the blank row's under `new-none`. */
+const rowForm = (key: string, fields: Record<string, string>) => form(rowBoxes(key, fields));
 type Stateful = (previous: FormOutcome | null, form: FormData) => Promise<FormOutcome | null>;
 async function post(action: Stateful, data: FormData) {
   return action(null, data).catch((error: unknown) => {
@@ -165,7 +168,7 @@ const PERSON = { name: "Maria Test", email: "maria@example.test", phone: "0712 3
 const trail = () => db.select().from(auditLogs).where(eq(auditLogs.entityId, eventId)).orderBy(auditLogs.createdAt);
 
 async function addRole(fields: Record<string, string> = {}) {
-  expect(await post(actions.addVolunteerRoleAction, form({ ...ROLE, ...fields }))).toBe("redirected");
+  expect(await post(actions.saveVolunteerRolesAction, rowForm(NEW_ROW, { ...ROLE, ...fields }))).toBe("redirected");
   const roles = await listVolunteerRoles(db, eventId);
   return roles[roles.length - 1];
 }
@@ -344,8 +347,8 @@ describe("§765 «Descrierea rolului», a document per language", () => {
   });
 
   it("refuses one language alone, naming the empty editor, and writes nothing", async () => {
-    const outcome = await post(actions.addVolunteerRoleAction, form({ ...ROLE, descriptionRoBody: docOf("Dai apă."), descriptionEnBody: docOf() }));
-    expect(outcome).toMatchObject({ error: "VALIDATION_ERROR", fields: ["descriptionEnBody"] });
+    const outcome = await post(actions.saveVolunteerRolesAction, rowForm(NEW_ROW, { ...ROLE, descriptionRoBody: docOf("Dai apă."), descriptionEnBody: docOf() }));
+    expect(outcome).toMatchObject({ error: "VOLUNTEER_ROLE_INVALID", fields: [`roles[${NEW_ROW}].descriptionEnBody`] });
     expect(await listVolunteerRoles(db, eventId)).toHaveLength(0);
   });
 
@@ -359,7 +362,7 @@ describe("§765 «Descrierea rolului», a document per language", () => {
 
   it("changes a description on an edit — the field named in the trail — and a press that changes nothing writes nothing, whatever order the database gives the keys in", async () => {
     const role = await addRole({ descriptionRoBody: docOf("Dai apă."), descriptionEnBody: docOf("Hand out water.") });
-    const edit = (fields: Record<string, string>) => post(actions.editVolunteerRoleAction, form({ ...ROLE, roleId: role.id, ...fields }));
+    const edit = (fields: Record<string, string>) => post(actions.saveVolunteerRolesAction, rowForm(role.id, { ...ROLE, ...fields }));
     expect(await edit({ descriptionRoBody: docOf("Dai apă."), descriptionEnBody: docOf("Hand out water.") })).toBe("redirected");
     expect((await trail()).filter((row) => row.action === "volunteer_role.edited")).toHaveLength(0);
     expect(await edit({ descriptionRoBody: docOf("Dai apă și fructe."), descriptionEnBody: docOf("Hand out water.") })).toBe("redirected");

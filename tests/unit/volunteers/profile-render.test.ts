@@ -34,17 +34,15 @@ vi.mock("@/app/[locale]/admin/events/[id]/volunteer-actions", () => {
   return {
     addVolunteerAction: noop,
     addVolunteerCategoryAction: noop,
-    addVolunteerRoleAction: noop,
     assignVolunteerAction: noop,
     deleteVolunteerAction: noop,
     deleteVolunteerCategoryAction: noop,
     deleteVolunteerRoleAction: noop,
     editVolunteerAction: noop,
     editVolunteerCategoryAction: noop,
-    editVolunteerRoleAction: noop,
     moveVolunteerCategoryAction: noop,
-    moveVolunteerRoleAction: noop,
     saveVolunteerCategoryContactAction: noop,
+    saveVolunteerRolesAction: noop,
     recordPaperVolunteerAgreementAction: noop,
     recordPaperVolunteerGuardianAction: noop,
     requestVolunteerAgreementAction: noop,
@@ -337,45 +335,62 @@ describe("§765 the organizers' entry draws the profile boxes only while the not
   });
 });
 
-describe("§765 the role's form: «Descrierea rolului» in the rich-text editor, with «Copiază și tradu tot»", () => {
-  it("draws, in the add form and in every role's edit form, the translate button, one editor per language and no one-line box", async () => {
+describe("§765 the role's row: «Descrierea rolului» in the rich-text editor, one Română | English strip, with «Tradu cardul» (§NNN)", () => {
+  it("draws, in every role's row and in the blank row, one strip of two tabs, one editor per language and no one-line box", async () => {
     const page = await drawCard();
-    // One button per form: «Adaugă un rol», the three roles' «Modifică» — and, since §774, «Adaugă o categorie» (its own names, with «Copiază și tradu»).
-    expect((page.match(/data-testid="translate-all"/g) ?? []).length).toBe(5);
-    expect((page.match(/name="descriptionRoBody"/g) ?? []).length).toBe(4);
-    expect((page.match(/name="descriptionEnBody"/g) ?? []).length).toBe(4);
+    // The three roles and the blank row: four strips, a Română tab and an English tab each — never two folds side by side.
+    expect((page.match(/data-locale-tabs=""/g) ?? []).length).toBe(4);
+    expect((page.match(/name="roles\[[^"]*\]\.descriptionRoBody"/g) ?? []).length).toBe(4);
+    expect((page.match(/name="roles\[[^"]*\]\.descriptionEnBody"/g) ?? []).length).toBe(4);
     expect(page).toContain("Descrierea rolului (Română, opțional)");
     expect(page).toContain("Descrierea rolului (English, opțional)");
     expect(page).toContain(ro.Admin.volunteers.role.descriptionHelp.replace("{max}", "2000"));
     // The old one-line box and its 200-character help are gone.
-    expect(page).not.toMatch(/<input[^>]*name="descriptionRo"/);
-    expect(page).not.toMatch(/<input[^>]*name="descriptionEn"/);
+    expect(page).not.toMatch(/<input[^>]*name="[^"]*descriptionRo"/);
+    expect(page).not.toMatch(/<input[^>]*name="[^"]*descriptionEn"/);
     expect(page).not.toContain('maxlength="200"');
     // The stored document is what the editor posts until it is opened.
     expect(page).toContain("Stai la km 5.");
   });
 
-  it("says why the button is grey while the provider is off, like the editor's", async () => {
-    const off = await drawCard({}, "ro", { action: null, setupHref: "/admin/tasks#translate" } as never);
-    expect(off).toContain('data-translate-state="off"');
-    expect((off.match(/data-translate-state="off"/g) ?? []).length).toBe(5);
-    expect(off).toContain(ro.Translate.off);
+  it("puts the translate buttons the house already has: the card's once in its header, the box's under every English name and description", async () => {
+    const page = await drawCard();
+    // «Tradu cardul: RO → EN» (§514) once for the whole card, «Tradu din română» (§464) under each English name and each English description.
+    expect((page.match(/data-testid="translate-card"/g) ?? []).length).toBe(1);
+    for (const id of [WATER, FINISH, "44444444-4444-4444-8444-444444444444", "new-none"]) {
+      expect(page, id).toContain(`data-translate-for="roles[${id}].nameEn"`);
+      expect(page, id).toContain(`data-translate-for="roles[${id}].descriptionEnBody"`);
+    }
+    // «Copiază și tradu tot» is left to the small forms that have no strips (the category's names), not the roles'.
+    expect((page.match(/data-testid="translate-all"/g) ?? []).length).toBe(1);
+    // The card's scope: its button is inside the form and names the card in the toast.
+    expect(page).toContain('data-translate-scope="Roluri"');
   });
 
-  it("shows the role's first line on the card and folds the rest behind a glyphed «Restul»", async () => {
+  it("says why the buttons are grey while the provider is off, like the editor's", async () => {
+    const off = await drawCard({}, "ro", { action: null, setupHref: "/admin/tasks#translate" } as never);
+    expect(off).toContain('data-testid="translate-card-off"');
+    expect(off).toContain('data-reason="off"');
+    expect(off).toContain(ro.Translate.off);
+    // No «Tradu din română» under a box where nothing can translate: the card's greyed button carries the reason.
+    expect(off).not.toContain("data-translate-for=");
+  });
+
+  it("shows the role's first line beside «Mai multe», which holds the description and the colour inside the one form", async () => {
     const page = await drawCard();
-    const header = /<li[^>]*data-testid="volunteer-role"[^>]*data-role-id="22222222[\s\S]*?<details[\s\S]*?<\/details>/.exec(page)?.[0] ?? "";
-    expect(header).toContain('data-testid="volunteer-role-description-first"');
-    expect(header).toContain("Stai la km 5.");
-    expect(header).toMatch(/<summary[^>]*>.*Restul<\/summary>/);
-    // A one-line description has nothing to fold; none says nothing.
-    const finish = /<li[^>]*data-testid="volunteer-role"[^>]*data-role-id="33333333[\s\S]*?<\/li>/.exec(page)?.[0] ?? "";
-    expect(finish).toContain("Aplauze la sosire");
-    expect(/<li[^>]*data-testid="volunteer-role"[^>]*data-role-id="44444444[\s\S]*?<\/li>/.exec(page)?.[0]).not.toContain('data-testid="volunteer-role-description"');
+    const row = /<li[^>]*data-testid="volunteer-role"[^>]*data-role-id="22222222[\s\S]*?<\/li>/.exec(page)?.[0] ?? "";
+    // From the fold's own tag to the end of the row: the editors inside it are folds too, so no tag closes it before the row does.
+    const more = row.slice(row.indexOf('data-testid="volunteer-role-more"'));
+    expect(more).not.toBe("");
+    expect(more).toMatch(/<summary[^>]*>[\s\S]*Mai multe[\s\S]*Stai la km 5\./);
+    expect(more).toContain('data-locale-tabs=""');
+    expect(more).toContain("colourChoice");
+    // None says nothing beside the title.
+    const none = /<li[^>]*data-testid="volunteer-role"[^>]*data-role-id="44444444[\s\S]*?<\/li>/.exec(page)?.[0] ?? "";
+    expect(/<details[^>]*data-testid="volunteer-role-more"[\s\S]*?<\/summary>/.exec(none)?.[0]).not.toMatch(/Stai|Aplauze/);
     // English, the English words.
     const english = await drawCard({}, "en");
-    expect(english).toContain('data-testid="volunteer-role-description-first"');
-    expect(english).toContain("Stand at km 5.");
+    expect(/<details[^>]*data-testid="volunteer-role-more"[\s\S]*?<\/summary>/.exec(english)?.[0]).toContain("Stand at km 5.");
   });
 });
 
