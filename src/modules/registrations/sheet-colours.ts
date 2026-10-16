@@ -1,6 +1,6 @@
 import type { RegistrationStatus } from "@/db/schema/registrations";
 import { SHEET_TINT } from "@/theme/brand";
-import { CLUB_RUNNER_YES } from "./domain/club-runner";
+import { YES_CELL } from "./domain/club-runner";
 
 /**
  * The colours of the registrations spreadsheet (§787, amended; the owner, 2026-10-16: «în excel export aș vrea
@@ -10,6 +10,12 @@ import { CLUB_RUNNER_YES } from "./domain/club-runner";
  * row must change colour, untick a member and its cells must lose the blue. So nothing here paints a cell; it writes
  * rules — «this fill, when `$M2` says CONFIRMED» — that Excel and LibreOffice evaluate on the cell's own value.
  * The one place a fill is baked is the legend under the statistics, which is a key, static by nature.
+ *
+ * **Three markings besides the status** (§796, amending §790; the owner, 2026-10-16: «în funcție de bifă să colorez» and
+ * «also I wanna mark special guests differently»): the club's blue on the member cells follows the person's own tick
+ * («Member tick (declared)» = "Yes"); a club runner without the tick — a member account, or the club typed in the form —
+ * gets a pale lavender on the same cells, so the knowledge is not lost; and a special guest's identity cells (the race
+ * number, the names, the «Special guest» cell) take a pale peach and an italic font, which reads even printed in grey.
  *
  * **One tint per kind of state**, not per state: the desk's chip says `success` for a confirmed registration and
  * `warning` for every other live one (`ui/DeskRow.tsx`), and gives a cancelled or expired one the error colour; the
@@ -43,7 +49,7 @@ export function statusesOfTint(tint: RowTint): RegistrationStatus[] {
 }
 
 /** The fill of a tint, in the writer's own words (`#rrggbb`). */
-export const TINT_FILL: Record<RowTint | "member", string> = SHEET_TINT;
+export const TINT_FILL: Record<RowTint | "member" | "clubRunner" | "guest", string> = SHEET_TINT;
 
 type Cell = { row: number; column: number };
 
@@ -51,7 +57,7 @@ type Cell = { row: number; column: number };
 export type ColourRule = {
   cellRange: { from: Cell; to: Cell };
   condition: { formula: string };
-  style: { backgroundColor: string };
+  style: { backgroundColor: string; fontStyle?: "italic" };
 };
 
 /**
@@ -60,9 +66,19 @@ export type ColourRule = {
  */
 export type ColourLayout = {
   statusColumn: number;
+  /** «Member tick (declared)»: the blue follows it. */
+  memberTickColumn: number;
+  /** «Club runner»: a "Yes" here without the tick is the lavender. */
   clubRunnerColumn: number;
-  /** The first and last of the club-runner cells (`Club member`, `Club runner`, `Member bib`), which sit side by side. */
+  /** The first and last of the member cells (`Club member`, `Member tick (declared)`, `Club runner`, `Member bib`), which sit side by side. */
   memberColumns: readonly [number, number];
+  /** «Special guest», the Boolean column a guest's rule reads. */
+  specialGuestColumn: number;
+  /**
+   * The special guest's identity cells as runs of side-by-side columns, first to last, each run its own rule (a rule
+   * colours one rectangle): the race number, the names, and the «Special guest» cell itself.
+   */
+  guestCells: ReadonlyArray<readonly [number, number]>;
   lastColumn: number;
   rowCount: number;
 };
@@ -76,21 +92,39 @@ const quoted = (word: string) => `"${word}"`;
 
 /**
  * The rules, highest priority first (the writer numbers them in the order given, and where two rules colour one
- * cell the lower number wins): the club's blue on a runner's membership cells beats the status tint under it,
- * then one rule per row tint over the whole row. A formula is `$M2="CONFIRMED"` written for the top-left cell of
- * its range — the column fixed, the row relative — with no leading `=`, which is how the file stores it. None for
- * a file without rows.
+ * cell the lower number wins): first the special guest's identity cells in peach and italic (one rule per run of
+ * columns, since a rule colours one rectangle), then the club's blue on the member cells when the person ticked, then
+ * the lavender on the same cells for a club runner without the tick — the guests' cells and the member cells do not
+ * overlap, so only the order of the three groups against the status tints matters — and last one rule per row tint
+ * over the whole row. A formula is `$M2="CONFIRMED"` written for the top-left cell of its range — the column fixed,
+ * the row relative — with no leading `=`, which is how the file stores it. None for a file without rows.
  */
 export function colourRules(layout: ColourLayout): ColourRule[] {
   if (layout.rowCount < 1) return [];
   const firstRow = 2;
   const lastRow = layout.rowCount + 1;
   const [firstMember, lastMember] = layout.memberColumns;
+  const cell = (column: number) => `$${columnLetters(column)}${firstRow}`;
+  const memberCells = { from: { row: firstRow, column: firstMember + 1 }, to: { row: lastRow, column: lastMember + 1 } };
+  // A Boolean column: the criterion is the logical TRUE, not the text "TRUE" (as the footer's guest lines, §794).
+  const guestRules = layout.guestCells.map(
+    ([first, last]): ColourRule => ({
+      cellRange: { from: { row: firstRow, column: first + 1 }, to: { row: lastRow, column: last + 1 } },
+      condition: { formula: `${cell(layout.specialGuestColumn)}=TRUE` },
+      style: { backgroundColor: TINT_FILL.guest, fontStyle: "italic" },
+    }),
+  );
   const rules: ColourRule[] = [
+    ...guestRules,
     {
-      cellRange: { from: { row: firstRow, column: firstMember + 1 }, to: { row: lastRow, column: lastMember + 1 } },
-      condition: { formula: `$${columnLetters(layout.clubRunnerColumn)}${firstRow}=${quoted(CLUB_RUNNER_YES)}` },
+      cellRange: memberCells,
+      condition: { formula: `${cell(layout.memberTickColumn)}=${quoted(YES_CELL)}` },
       style: { backgroundColor: TINT_FILL.member },
+    },
+    {
+      cellRange: memberCells,
+      condition: { formula: `AND(${cell(layout.clubRunnerColumn)}=${quoted(YES_CELL)},${cell(layout.memberTickColumn)}<>${quoted(YES_CELL)})` },
+      style: { backgroundColor: TINT_FILL.clubRunner },
     },
   ];
   const status = `$${columnLetters(layout.statusColumn)}${firstRow}`;

@@ -239,10 +239,14 @@ export const GRADIENT = {
  *
  * Paper-pale on purpose: they sit behind ordinary black text in Excel (the file has no dark mode and its
  * words are the sheet's automatic colour), so each is far past AA under black — `tests/unit/registrations/excel-live.test.ts`
- * measures all five — and none says a thing by colour alone, since the «Status» column spells the state out.
+ * measures every one — and none says a thing by colour alone, since the «Status» column spells the state out.
  * One tint per chip colour of the desk (`DeskRow`: confirmed `success`, a waiting or pending state `warning`);
  * the waiting list is the sky blue and a cancelled or expired row is grey, never red — a whole red row shouts.
- * `member` is the club's own blue walked pale, a step stronger than the sky so the two blues are told apart.
+ * `member` is the club's own blue walked pale, a step stronger than the sky so the two blues are told apart: it
+ * follows the person's own tick (§796). `clubRunner` is a pale lavender for the club's runners without the tick (a
+ * member account or the club typed in the form), and `guest` a pale peach for a special guest's identity cells (it comes
+ * with an italic font, so a guest reads differently even printed in grey); both sit apart from the amber `warning`
+ * and from each other, and the sheet's tests hold every pair distinct and every one at AA under black.
  */
 export const SHEET_TINT = {
   success: "#d9f0dc",
@@ -250,6 +254,8 @@ export const SHEET_TINT = {
   info: "#d7edf8",
   neutral: "#e4e4e4",
   member: "#c5d1ff",
+  clubRunner: "#e2d4f4",
+  guest: "#ffd9c0",
 } as const;
 
 /**

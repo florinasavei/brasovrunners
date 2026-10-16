@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V3.47-2026-10-16
+
+- **The Excel export: the member tick as its own column, the club's blue follows it, special guests in peach** — a new «Member tick (declared)» column («Yes») after «Club member», the blue on the member cells now means the person ticked, a pale lavender marks the other club runners (a member account or a typed club), a special guest's number, names and flag are peach and italic, «Statistici» gains «Au bifat că sunt membri {club}» as a live formula, and the legend says all of it; the CSV is unchanged. §796.
 ## BR-V3.46-2026-10-16
 
 - **A calendar button beside «Data nașterii» on the volunteers' form** — it opens the browser's own date picker (the phone's wheel, the desktop's calendar) and writes the chosen day into the typed box; the organizers' entry of a volunteer has it too, the registration form does not. §793.

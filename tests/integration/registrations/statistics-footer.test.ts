@@ -153,7 +153,7 @@ describe("§787 the footer, through the route", () => {
     expect(rows[11]).toBeUndefined();
     expect(rows[12]).toEqual(["Statistici"]);
     const footer = footerOf(rows);
-    expect(footer.slice(0, 15)).toEqual([
+    expect(footer.slice(0, 16)).toEqual([
       ["Statistici"],
       ["Total", "10"],
       ["Confirmați (activi)", "4"],
@@ -165,6 +165,8 @@ describe("§787 the footer, through the route", () => {
       ["Expirați", "1"],
       [CLUB_NAME, "5"],
       [`${CLUB_NAME}, confirmați`, "3"],
+      // The tick alone (§796): the confirmed and the pending runner who ticked the box.
+      [`Au bifat că sunt membri ${CLUB_NAME}`, "2"],
       [`Alții, nu ${CLUB_NAME}`, "5"],
       // Nobody on «Lista de invitați speciali» in this race: the confirmed part of the places line is all the confirmed (§643, §615).
       ["Invitați speciali", "0"],
@@ -207,7 +209,7 @@ describe("§787 the footer, through the route", () => {
     await register(race.id, "CONFIRMED", { sex: "FEMALE", age: 30, outsideCapacity: true, kind: "TEST" });
     const rows = await download(`eventId=${race.id}&format=xlsx`);
     const footer = footerOf(rows);
-    expect(footer.slice(0, 15)).toEqual([
+    expect(footer.slice(0, 16)).toEqual([
       ["Statistici"],
       ["Total", "4"],
       ["Confirmați (activi)", "3"],
@@ -219,6 +221,7 @@ describe("§787 the footer, through the route", () => {
       ["Expirați", "0"],
       [CLUB_NAME, "1"],
       [`${CLUB_NAME}, confirmați`, "1"],
+      [`Au bifat că sunt membri ${CLUB_NAME}`, "1"],
       [`Alții, nu ${CLUB_NAME}`, "3"],
       ["Invitați speciali", "3"],
       ["Invitați speciali, confirmați", "2"],
@@ -227,7 +230,7 @@ describe("§787 the footer, through the route", () => {
     // The note says it in a sentence, and the English file says it in English.
     expect(footer.map((row) => row[0])).toContain("Invitații speciali, puși de un administrator pe «Lista de invitați speciali», nu ocupă un loc; sunt numărați la «Total» și la starea lor.");
     const english = footerOf(await download(`eventId=${race.id}&format=xlsx&lang=en`), "Statistics");
-    expect(english.slice(12, 15)).toEqual([["Special guests", "3"], ["Special guests, confirmed", "2"], ["Confirmed who take a place", "1"]]);
+    expect(english.slice(13, 16)).toEqual([["Special guests", "3"], ["Special guests, confirmed", "2"], ["Confirmed who take a place", "1"]]);
     // The column the formulas read is the sheet's own, filled from the registration's «outside the capacity» flag.
     const header = rows[0] as string[];
     // Last but for «Note interne» (§785), which an Administrator's file carries after it.
