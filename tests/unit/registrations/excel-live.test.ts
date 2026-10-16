@@ -1327,8 +1327,12 @@ describe("§787 the legend of the colours, under the statistics, in both languag
     expect(en.Admin.registrations.statistics.legendMember).toBe("Blue: ticked that they are a member of {club} — the columns «Club member», «Member tick (declared)», «Club runner» and «Member bib»");
     expect(en.Admin.registrations.statistics.legendClubRunner).toBe("Lavender: a club runner without the tick — a member account or the club typed in the form");
     expect(en.Admin.registrations.statistics.legendGuest).toBe("Peach, italic: a special guest — takes no place");
-    // The two notes that name the tick stay inside the plain-words ceiling.
-    for (const catalogue of [ro, en]) expect(catalogue.Admin.registrations.statistics.note2.split(/(?<=\.)\s/).every((sentence) => sentence.length <= 200)).toBe(true);
+    // The note that says what the tick's line counts is in the file, under the plain-words ceiling, in both languages.
+    for (const [words, catalogue] of [[RO, ro], [EN, en]] as const) {
+      const note = catalogue.Admin.registrations.statistics.note7;
+      expect(note.length).toBeLessThanOrEqual(200);
+      expect(words.notes).toContain(note.replace("{club}", CLUB_NAME));
+    }
   });
 
   it("is worded in both catalogues with the same keys and no sentence over two hundred characters", () => {

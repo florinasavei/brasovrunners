@@ -152,8 +152,8 @@ export function statisticsWordsFrom(t: (key: string, values?: Record<string, str
       from50: t("bandFrom50"),
       from60: t("bandFrom60"),
     },
-    // note6 sits before note5 on purpose: the note on the formulas stays last, above the colours' legend.
-    notes: [t("note1"), t("note2", withClub), t("note3", withClub), t("note4"), t("note6"), t("note5")],
+    // note7 (the tick's own line, §NNN) and note6 sit before note5 on purpose: the note on the formulas stays last, above the colours' legend.
+    notes: [t("note1"), t("note2", withClub), t("note3", withClub), t("note4"), t("note7", withClub), t("note6"), t("note5")],
     legend: {
       title: t("legendTitle"),
       confirmed: t("legendConfirmed"),
