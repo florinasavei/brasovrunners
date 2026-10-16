@@ -457,7 +457,7 @@ test.describe("BR-REQ-011-01 the featured event leads the landing page", () => {
     await page.goto("/ro/evenimente");
 
     // A card since §470, still a region named by its title. Its frame says "the lead" (the owner, 2026-10-16: no chip,
-    // «îmi e suficient acel border»), so «Alergarea principală» is no chip: it is visually hidden in the title's link,
+    // «îmi e suficient acel border»), so «Alergarea principală» is no chip: it is visually hidden in the title's heading,
     // which is why the region's name begins with it.
     const hero = page.getByRole("region", { name: /Crosul aniversar/ });
     await expect(hero).toBeVisible();

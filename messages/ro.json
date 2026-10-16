@@ -11067,6 +11067,7 @@
     "noticeSafetyGmail": "Gmail-ul clubului",
     "noticeRelayQueue": "doar până pleacă — de obicei câteva secunde, cel mult trei zile dacă niciun serviciu de e-mail nu merge — și apoi îl șterge",
     "intro": "Poți scrie anonim sau cu numele tău. Alege despre ce e vorba.",
+    "introAnonymous": "Mesajul tău e anonim. Alege despre ce e vorba.",
     "backToContact": "Înapoi la Contact",
     "door": {
       "intro": "Cum a fost la o alergare, o sugestie sau o reclamație — anonim, dacă vrei.",

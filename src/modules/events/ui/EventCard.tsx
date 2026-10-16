@@ -7,6 +7,7 @@ import { formatDay } from "@/i18n/dates";
 import { getPathname, Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { durationPhrase } from "@/modules/deadlines/domain/duration-words";
+import { SR_ONLY_SX } from "@/shared/ui/sr-only";
 import { DENSITY } from "@/theme/density";
 import { riseIn } from "@/theme/motion";
 import { featuredCard, specialCard } from "@/theme/surfaces";
@@ -15,7 +16,7 @@ import { raceWeek } from "../domain/race-week";
 import type { PublicEventPage } from "../repository";
 import { datedOrNull } from "../domain/dated";
 import CardDoor from "./CardDoor";
-import { CARD_BODY_SX, CARD_CHIPS_SX, CARD_DOOR_SX, CARD_SR_ONLY_SX, CARD_TAP_SX, CARD_TITLE_SX, GROUP_GAP } from "./card-layout";
+import { CARD_BODY_SX, CARD_CHIPS_SX, CARD_DOOR_SX, CARD_TAP_SX, CARD_TITLE_SX, GROUP_GAP } from "./card-layout";
 import EventExcerpt from "./EventExcerpt";
 import EventFacts from "./EventFacts";
 import EventKindChips from "./EventKindChips";
@@ -151,14 +152,10 @@ export default async function EventCard({
             (`CARD_TITLE_SX`): the club's blue, visited or not, underlined under a pointer or the
             keyboard. A screen reader hears the title, not every word on the card. */}
         <Typography variant="h2" component={titleAs} id={featured ? "featured-event-title" : undefined} sx={CARD_TITLE_SX}>
-          <Link href={{ pathname: "/events/[slug]", params: { slug: event.slug } }}>
-            {tEvents && (
-              <>
-                <Box component="span" sx={CARD_SR_ONLY_SX}>{`${tEvents("featured")}:`}</Box>{" "}
-              </>
-            )}
-            {event.title}
-          </Link>
+          {/* The lead's words ride in the heading, before the link, so the region's and the heading's names begin with them
+              and the link's own name is exactly its visible title (WCAG 2.5.3, voice control). */}
+          {tEvents && <Box component="span" sx={SR_ONLY_SX}>{`${tEvents("featured")}: `}</Box>}
+          <Link href={{ pathname: "/events/[slug]", params: { slug: event.slug } }}>{event.title}</Link>
         </Typography>
 
         {/* The short description as it was written, picture and all (§73), three lines of it and

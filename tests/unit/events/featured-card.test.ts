@@ -13,7 +13,7 @@ import type { PublicEvent } from "@/modules/events/repository";
  * structure, told apart by its frame and background — and, in the club's race week (§78), the countdown and the
  * desk's sentence once registration has closed. It had a «Alergarea principală» chip from 2026-10-10 to 2026-10-16;
  * the owner: «când am „alergarea principală” nu vreau și încă un cip, îmi e suficient acel border» — the frame says it
- * to the eye, and the same words are visually hidden inside the title's link for a screen reader.
+ * to the eye, and the same words are visually hidden in the title's heading for a screen reader.
  * The page draws it as the first `<li>` of the one grid the other cards are in.
  */
 let currentLocale: "ro" | "en" = "ro";
@@ -113,28 +113,29 @@ function cardRules(html: string): string {
 }
 
 describe("§470 the featured event is a card like the others", () => {
-  it("draws no «Alergarea principală» chip, keeps the frame, and says the words to a screen reader inside the title's link (§470 amended)", async () => {
+  it("draws no «Alergarea principală» chip, keeps the frame, and says the words to a screen reader in the title's heading (§470 amended)", async () => {
     const html = withoutStyles(await card(race(), RACE_WEEK));
     // No chip carries the words: the first chip is what the event is («Concurs»), as on any card.
     expect(chipLabels(html)).not.toContain("Alergarea principală");
     expect(chipLabels(html)[0]).toBe("Concurs");
     expect(html).toMatch(/<li\b[^>]*data-featured="true"/);
     expect(html).toMatch(/<section\b[^>]*aria-labelledby="featured-event-title"/);
-    // The words are in the heading's link, in a visually hidden span; the section is named by that heading.
+    // The words are in the heading, before the link, in a visually hidden span; the section is named by that heading
+    // and the link's own name is exactly its visible title.
     expect(html).toMatch(
-      /<h2\b[^>]*id="featured-event-title"[^>]*>\s*<a href="\/ro\/evenimente\/crosul-aniversar"><span class="[^"]*">Alergarea principală:<\/span> (?:<!-- -->)?Crosul aniversar<\/a>/,
+      /<h2\b[^>]*id="featured-event-title"[^>]*>\s*<span class="[^"]*">Alergarea principală: <\/span><a href="\/ro\/evenimente\/crosul-aniversar">Crosul aniversar<\/a>/,
     );
     // The frame stays: the featured card's own class, the one that says it to the eye.
     expect(cardRules(await card(race(), RACE_WEEK))).toContain("box-shadow:0 0 0 1px var(--mui-palette-primary-main)");
     currentLocale = "en";
     const english = withoutStyles(await card(race(), RACE_WEEK));
     expect(chipLabels(english)).not.toContain("Featured event");
-    expect(english).toMatch(/<a href="\/en\/evenimente\/crosul-aniversar"><span class="[^"]*">Featured event:<\/span> (?:<!-- -->)?Crosul aniversar<\/a>/);
+    expect(english).toMatch(/<span class="[^"]*">Featured event: <\/span><a href="\/en\/evenimente\/crosul-aniversar">Crosul aniversar<\/a>/);
   });
 
   it("hides those words with the one visually hidden rule, never display:none, so a screen reader still reads them", async () => {
     const raw = await card(race(), RACE_WEEK);
-    const cls = /<span class="([^"]*)">Alergarea principală:<\/span>/.exec(raw)?.[1] ?? "";
+    const cls = /<span class="([^"]*)">Alergarea principală: <\/span>/.exec(raw)?.[1] ?? "";
     expect(cls).not.toBe("");
     const rule = [...raw.matchAll(new RegExp(`\\.${cls.split(" ").pop()}\\{([^}]*)\\}`, "g"))].map((match) => match[1]).join(";");
     expect(rule).toContain("clip:rect(0 0 0 0)");
@@ -161,7 +162,7 @@ describe("§470 the featured event is a card like the others", () => {
         .replace(/<section aria-labelledby="featured-event-title"/, "<div")
         .replace(/<\/section>/, "</div>")
         .replace(/ id="featured-event-title"/, "")
-        .replace(/<span>Alergarea principală:<\/span> (?:<!-- -->)?/, "");
+        .replace(/<span>Alergarea principală: <\/span>/, "");
     const fromTitle = (html: string) => strip(html).slice(strip(html).indexOf("<h2"));
     expect(lead).not.toContain('data-testid="race-week-countdown"');
     expect(chipLabels(lead)).toEqual(chipLabels(plain));

@@ -11067,6 +11067,7 @@
     "noticeSafetyGmail": "the club's Gmail",
     "noticeRelayQueue": "only until it leaves — usually a few seconds, at most three days if no email service works — and then deletes it",
     "intro": "You can write anonymously or with your name. Choose what it is about.",
+    "introAnonymous": "Your message is anonymous. Choose what it is about.",
     "backToContact": "Back to Contact",
     "door": {
       "intro": "How an event went, a suggestion or a complaint — anonymously, if you like.",
