@@ -796,7 +796,7 @@ export function sameDescription(a: unknown, b: unknown): boolean {
   return canonicalDescription(a) === canonicalDescription(b);
 }
 
-/** A description document as one string whose keys are sorted: what `sameDescription` compares, and what the «Roluri» form's baseline hashes (§NNN). */
+/** A description document as one string whose keys are sorted: what `sameDescription` compares, and what the «Roluri» form's baseline hashes (§791). */
 export function canonicalDescription(value: unknown): string {
   const canonical = (value: unknown): unknown =>
     Array.isArray(value)

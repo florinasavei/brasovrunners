@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { NEW_ROLE_ROW_PREFIX, newRoleRowKey, postedRoleRows, ROLE_ROW_BOXES, roleBox, roleColourBoxesOf } from "@/modules/volunteers/role-rows";
 
 /**
- * §NNN — the names the «Roluri» card's one form posts under, spelled once for the card that draws them, the action that reads them and the
+ * §791 — the names the «Roluri» card's one form posts under, spelled once for the card that draws them, the action that reads them and the
  * service that names a refused box: `roles[<key>].<box>`, a saved role's key its id, a blank row's `new-<category id>` or `new-none`.
  */
 const ID = "d1111111-1111-4111-8111-111111111111";

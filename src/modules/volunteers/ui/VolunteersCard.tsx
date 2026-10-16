@@ -184,7 +184,7 @@ function shortText(text: string): string {
  * «Voluntari» (§754): one card in the event editor, folded, with a summary line «N din M» and open on
  * arrival while anybody waits for an answer. The event's tick «Primește voluntari» and what keeps the public
  * form off the page; the event's **roles** — bilingual, how many each needs, in the order the club sets — in ONE form with one
- * «Salvează toate rolurile» (§NNN: a card per category, a line per role, a blank line that adds one, the delete of each a small form beside it);
+ * «Salvează toate rolurile» (§791: a card per category, a line per role, a blank line that adds one, the delete of each a small form beside it);
  * the **people** grouped by role with «N din M» each — entered by hand, changed, confirmed, cancelled,
  * deleted; and the CSV. Backoffice only: the Organizer and the Administrators read and write it, and nobody
  * else gets the card (`canManageVolunteers`, asserted again by every action and the export).
@@ -257,7 +257,7 @@ export default async function VolunteersCard({
     contactPhone: t("volunteers.category.contactPhone"),
     contactEmail: t("volunteers.category.contactEmail"),
   });
-  // The refusal summary names a box of the one «Roluri» form by its role (§NNN): one label per row, `roles[<key>]`, which `fieldLabelOf` falls back to
+  // The refusal summary names a box of the one «Roluri» form by its role (§791): one label per row, `roles[<key>]`, which `fieldLabelOf` falls back to
   // for every box of that row — the sentence above the list says what is wrong, the link goes to the box. A blank row is «Rol nou · Traseu».
   const roleBoxes = await refusalMessages({
     ...Object.fromEntries(roles.map((role) => [`roles[${role.id}]`, role.nameRo])),
@@ -294,7 +294,7 @@ export default async function VolunteersCard({
   const deleteFormId = (role: VolunteerRole) => `delete-role-${role.id}`;
 
   /**
-   * One role's row in the «Roluri» card (§NNN; the owner, 2026-10-16: «să pot face batch edit la roluri, nu să dau save de fiecare dată, ci un
+   * One role's row in the «Roluri» card (§791; the owner, 2026-10-16: «să pot face batch edit la roluri, nu să dau save de fiecare dată, ci un
    * Save All»): a saved role, or the blank one at the end of a category — every box named by its row's key (`role-rows.ts`), all of them posted by
    * the card's one form. The names, «Câte persoane» with «Nelimitat», «Categoria» and «Poziția» stand on one line (stacked at 320 pixels); the
    * «N din M» chip, the band's sample and «Șterge rolul» under them; the description (one Română | English strip, §572) and the band's colour in
@@ -1145,7 +1145,7 @@ export default async function VolunteersCard({
   );
 
   /**
-   * One category's sub-card in the «Roluri» card (§NNN): a named card (the house's `Panel`, nested like every named card of the backoffice) titled
+   * One category's sub-card in the «Roluri» card (§791): a named card (the house's `Panel`, nested like every named card of the backoffice) titled
    * with the category's name, «4 roluri» beside it and the contact person (§774) under it; then its roles' rows and, last, the blank row that adds a role.
    * The roles under no category are the last card, «Alte roluri». An event with no category has no sub-card: the rows are listed as they were.
    */
@@ -1450,7 +1450,7 @@ export default async function VolunteersCard({
           </Stack>
         </Panel>
 
-        {/* The roles: bilingual, how many each needs, the club's order — every one saved by the one «Salvează toate rolurile» (§NNN). */}
+        {/* The roles: bilingual, how many each needs, the club's order — every one saved by the one «Salvează toate rolurile» (§791). */}
         <Panel glyph="volunteers" collapsible level={3} title={t("volunteers.rolesTitle")} aside={t("volunteers.rolesCount", { count: String(roles.length) })} id="box-volunteer-roles" data-testid="volunteer-roles">
           <Stack spacing={1.5}>
             {roles.length === 0 && (

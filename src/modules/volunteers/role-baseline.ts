@@ -1,7 +1,7 @@
 import { canonicalDescription } from "./domain/volunteer";
 
 /**
- * What a role was when the «Roluri» card's form was drawn (§NNN), posted back in the row's hidden `roles[<id>].was` box.
+ * What a role was when the «Roluri» card's form was drawn (§791), posted back in the row's hidden `roles[<id>].was` box.
  *
  * «Salvează toate rolurile» posts every role, so it must know which of them the person touched: a role whose boxes still read what the form was
  * drawn with is not theirs to write, and a role someone else changed since is not theirs to overwrite. Comparing the posted boxes with the role as

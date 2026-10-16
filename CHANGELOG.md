@@ -8,6 +8,10 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V3.44-2026-10-16
+
+- **The registrations Excel, live** — a row takes a pale colour by its status (green confirmed, yellow waiting for an answer, light blue on the waiting list, grey cancelled or expired) and the club's runners' cells are blue, both following the cell if you edit it offline; the «Statistici» numbers are formulas that recount by themselves; a new «Club runner» column («Yes») follows «Club member» in the Excel (the CSV's last column), a file of several events gains an «Event» column, and a legend of the colours closes the footer. §790.
+- **The volunteers' roles are saved all at once** — the event editor's «Roluri» groups them in a card per category (its contact person under the title), each role is one line — names, how many or «Nelimitat», category, position — and ONE «Salvează toate rolurile» saves every change (or none, naming the role that is wrong); the empty line at the end of a category adds a role, «Poziția» replaces the arrows, the description is one Română | English strip with «Tradu din română» and the card's «Tradu cardul: RO → EN». §791.
 ## BR-V3.43-2026-10-16
 
 - **The volunteers' page, calmer** — each category a calm card with no filled band, each role a pill with its tick visible, the default «mai sunt locuri» gone (the count words only when the club asked for them), and a role's description behind a round «?» on its pill. §788.

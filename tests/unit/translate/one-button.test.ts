@@ -140,7 +140,7 @@ describe("§482 «Echipa»'s words may be translated", () => {
   });
 });
 
-describe("§765 a volunteer role's form may be translated, §NNN row by row", () => {
+describe("§765 a volunteer role's form may be translated, §791 row by row", () => {
   const ID = "d1111111-1111-4111-8111-111111111111";
 
   it("allows each role's English name and description by its row's key, knows the description is a rich text and finds the Romanian twin in the same row", () => {

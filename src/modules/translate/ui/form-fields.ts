@@ -238,7 +238,7 @@ export async function translateBoxes(form: HTMLFormElement | null, englishNames:
 
 /**
  * The words a person reads for a box: its label, or a rich text's fold title, or its name — and, in a card of many rows that each carry the same
- * labels (the volunteers' «Roluri», §NNN: «Nume (EN)» in every row), the row's own name first, from the nearest `data-translate-row`:
+ * labels (the volunteers' «Roluri», §791: «Nume (EN)» in every row), the row's own name first, from the nearest `data-translate-row`:
  * «Punct de apă: Nume (EN)».
  */
 export function labelOfBox(form: HTMLFormElement | null, name: string): string {

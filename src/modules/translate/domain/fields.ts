@@ -34,7 +34,7 @@
  *   «Nu e nimic de tradus» over a Romanian text already written.
  *
  * - «Cine e membru al grupului» (§789): the sentence behind the member tick's «?» (`memberDefinitionEn`, plain);
- * - An event's volunteer roles (§765, §NNN): the «Roluri» card is one form for every role, so each role's boxes carry its key —
+ * - An event's volunteer roles (§765, §791): the «Roluri» card is one form for every role, so each role's boxes carry its key —
  *   `roles[<key>].nameEn` and the description, a rich text, `roles[<key>].descriptionRoBody` / `roles[<key>].descriptionEnBody`
  *   (`role-rows.ts`); a category's name (`nameEn`, below) is its own small form;
  *
@@ -100,7 +100,7 @@ const ENGLISH_FIELD_PATTERNS: readonly RegExp[] = [
   /^memberDefinitionEn$/,
   // A volunteer category's name (§774), one small form per category.
   /^nameEn$/,
-  // An event's volunteer roles (§765, §NNN): the card is one form for every role, each box named by its role's key.
+  // An event's volunteer roles (§765, §791): the card is one form for every role, each box named by its role's key.
   /^roles\[[\w-]{1,80}\]\.(nameEn|descriptionEnBody)$/,
 ];
 
@@ -110,7 +110,7 @@ const NEWSLETTER_RICH_TEXT = /^newsletterBodyEn$/;
 /**
  * The rich texts that spell their pair `…RoBody` / `…EnBody`: «Echipa»'s bio and introduction
  * (§474), a shop product's description (§697), a question's answer on «Întrebări frecvente» (§525), «Membri»'s two texts (§524, §572) and a
- * volunteer role's description (§765, §NNN).
+ * volunteer role's description (§765, §791).
  */
 const TEAM_RICH_TEXT = /^(?:bio|intro|description|body|benefits|zone|faq\[\d{1,3}\]\.answer|roles\[[\w-]{1,80}\]\.description)EnBody$/;
 

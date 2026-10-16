@@ -313,7 +313,7 @@ describe("§754 §761 BR-REQ-031-01 people offer for a role's last place at once
     expect(kept.every((row) => row.colour !== null)).toBe(true);
   });
 
-  it("§NNN «Salvează toate rolurile» — renaming, ordering and adding roles in one save — racing sign-ups ticking both roles in opposite orders, a role move and a second save: all settle, no deadlock, and the order is never half written", async () => {
+  it("§791 «Salvează toate rolurile» — renaming, ordering and adding roles in one save — racing sign-ups ticking both roles in opposite orders, a role move and a second save: all settle, no deadlock, and the order is never half written", async () => {
     // The plural writer takes the locks every other writer of the roles takes, in the same order: the event (NO KEY UPDATE, so a sign-up's KEY SHARE on
     // it does not close a cycle), its categories, then its roles by id. Two saves at once queue on the event; a save and a sign-up ticking the roles in
     // either order never hold one role each and wait on the other.

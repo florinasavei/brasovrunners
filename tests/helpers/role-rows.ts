@@ -1,7 +1,7 @@
 import { roleBox, type RoleRowBox } from "@/modules/volunteers/role-rows";
 
 /**
- * One row of the event editor's «Roluri» form as a post (§NNN): a role's boxes by their short names, each under its row's key —
+ * One row of the event editor's «Roluri» form as a post (§791): a role's boxes by their short names, each under its row's key —
  * `roles[<id>].needed` — the way the card names them (`src/modules/volunteers/role-rows.ts`). A saved role's key is its id; the blank row of a
  * category is `new-<category id>`, of the roles under none `new-none`.
  */

@@ -105,7 +105,7 @@ function form(fields: Record<string, string | readonly string[]>, event = eventI
   return data;
 }
 
-/** One row of the «Roluri» card's one form (§NNN) as a post: a saved role's boxes under its id, the blank row's under `new-none`. */
+/** One row of the «Roluri» card's one form (§791) as a post: a saved role's boxes under its id, the blank row's under `new-none`. */
 const rowForm = (key: string, fields: Record<string, string>, event = eventId) => form(rowBoxes(key, fields), event);
 
 type Stateful = (previous: FormOutcome | null, form: FormData) => Promise<FormOutcome | null>;

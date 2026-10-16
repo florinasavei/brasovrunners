@@ -335,7 +335,7 @@ describe("§765 the organizers' entry draws the profile boxes only while the not
   });
 });
 
-describe("§765 the role's row: «Descrierea rolului» in the rich-text editor, one Română | English strip, with «Tradu cardul» (§NNN)", () => {
+describe("§765 the role's row: «Descrierea rolului» in the rich-text editor, one Română | English strip, with «Tradu cardul» (§791)", () => {
   it("draws, in every role's row and in the blank row, one strip of two tabs, one editor per language and no one-line box", async () => {
     const page = await drawCard();
     // The three roles and the blank row: four strips, a Română tab and an English tab each — never two folds side by side.

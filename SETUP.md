@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.43-2026-10-16 -->
+<!-- PROJECT_BASELINE: BR-V3.44-2026-10-16 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V3.43-2026-10-16`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.44-2026-10-16`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -2122,7 +2122,7 @@ voluntar» until the steps below are done. Since §768 the form is a **page of i
 declaration, no row on the public list, no account — and the Organizer and the Administrators are the
 only ones who see the names, addresses and telephone numbers.
 
-1. **Define the roles.** The event's editor → the card **«Voluntari»** → «Roluri» (one form for every role, §NNN): each
+1. **Define the roles.** The event's editor → the card **«Voluntari»** → «Roluri» (one form for every role, §791): each
    role is **one line** — «Nume (RO)» and «Nume (EN)» (both or neither, like every text the club types), «Câte persoane»
    (or the tick «Nelimitat»), «Categoria» and «Poziția» — and the **empty line at the end** of each category («Rol nou»)
    adds a role when you type its names. Change as many roles as you like, then press **«Salvează toate rolurile» once**: it
@@ -2217,7 +2217,7 @@ only ones who see the names, addresses and telephone numbers.
    the role given — «Încă niciunul» takes it back — and your own note, never shown publicly), «Șterge
    voluntarul» (the address and the telephone number go with it). «N din M» beside each role counts only the
    people **given** that role («Înscris» and «Confirmat»); the page stops offering a role once it has them.
-   A role may also have **no number** (§784): tick «Nelimitat» on its line (§NNN) instead of typing
+   A role may also have **no number** (§784): tick «Nelimitat» on its line (§791) instead of typing
    «Câte persoane» — the number box goes while the tick is on. Such a role reads «3 · fără număr» on the card, is never full, is always on the event's page and
    on the volunteers' page, and the page never says a number for it («mai sunt locuri», even with the counts on); the card's closed line counts only the roles with a number
    («0 din 10 + roluri fără număr»), and «Câte ecusoane» starts it at the people you gave it.

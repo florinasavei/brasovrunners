@@ -3,7 +3,7 @@ import { hydrated } from "./featured-event";
 import { openFold } from "./fold";
 
 /**
- * The event editor's «Roluri» card as a person uses it (§NNN): one form for every role, a sub-card per category, a blank row at the end of each,
+ * The event editor's «Roluri» card as a person uses it (§791): one form for every role, a sub-card per category, a blank row at the end of each,
  * ONE «Salvează toate rolurile». The specs that define roles to test something else go through these, so a change of the card is one file's.
  */
 

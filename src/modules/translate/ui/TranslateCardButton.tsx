@@ -55,7 +55,7 @@ function Words({ children }: { children: string }) {
  * card's boxes outside its tabs too (the programme's timed rows), since the card is the nearest
  * `Panel` around the strip (`cardOf`). The rest of the form is untouched.
  *
- * **A card with no tab row of its own** (§NNN: the volunteers' «Roluri», whose strips are one per role, in each role's fold) puts the button in
+ * **A card with no tab row of its own** (§791: the volunteers' «Roluri», whose strips are one per role, in each role's fold) puts the button in
  * its header row and marks the card's body `data-translate-scope="<the card's title>"`: with no strip around it, the button translates the boxes inside
  * that element and names it in the toast — never the whole form.
  *
@@ -146,7 +146,7 @@ function TranslateCardButtonIsland({ onTranslated }: { onTranslated?: () => void
     () => {
       const here = anchor.current;
       const strip = here?.closest("[data-locale-tabs]") ?? null;
-      // A card with no tab row of its own (the volunteers' «Roluri», §NNN: one strip per role, none for the card) marks its scope with the
+      // A card with no tab row of its own (the volunteers' «Roluri», §791: one strip per role, none for the card) marks its scope with the
       // card's title, and the button sits in the card's header row: what it translates is everything inside that scope.
       const scope = strip ? null : (here?.closest("[data-translate-scope]") ?? null);
       const card = strip ? cardOf(strip) : scope;

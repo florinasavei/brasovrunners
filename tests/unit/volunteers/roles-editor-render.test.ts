@@ -8,7 +8,7 @@ import { standingOf } from "@/modules/volunteers/domain/volunteer";
 import type { VolunteerCategory, VolunteerRole } from "@/modules/volunteers/volunteers";
 
 /**
- * §NNN — the event editor's «Roluri» card as the server draws it (the owner, 2026-10-16: «mai bine grupate … un Save All»; «taburi și traducere
+ * §791 — the event editor's «Roluri» card as the server draws it (the owner, 2026-10-16: «mai bine grupate … un Save All»; «taburi și traducere
  * automată cu AI din RO în EN»): a named sub-card per category with «4 roluri» and the contact person, one compact row per role, ONE form around
  * every row with ONE «Salvează toate rolurile», each role's delete a small form beside it (never nested), the blank row at the end of each
  * category, «Mai multe» inside the form with the description as one Română | English strip and the band's colour, the house's translate buttons.
@@ -151,7 +151,7 @@ async function drawCard(over: Partial<ComponentProps<typeof VolunteersCard>> = {
 /** The one form of «Salvează toate rolurile»: from its tag to its closing tag — forms never nest, so the first `</form>` is its own. */
 const formOf = (page: string) => /<form[^>]*data-testid="volunteer-roles-form"[\s\S]*?<\/form>/.exec(page)?.[0] ?? "";
 
-describe("§NNN the roles are grouped in a sub-card per category", () => {
+describe("§791 the roles are grouped in a sub-card per category", () => {
   it("draws a named card per category in the club's order — an empty one too — with the glyph, «N roluri» beside the title and the contact person under it, «Alte roluri» last", async () => {
     const page = await drawCard();
     const cards = [...page.matchAll(/<section[^>]*id="box-volunteer-roles-([^"]*)"[^>]*data-testid="volunteer-role-group"[^>]*>([\s\S]*?)<\/section>/g)];
@@ -193,7 +193,7 @@ describe("§NNN the roles are grouped in a sub-card per category", () => {
   });
 });
 
-describe("§NNN one form for every role", () => {
+describe("§791 one form for every role", () => {
   it("is ONE form around every row, with ONE submit button «Salvează toate rolurile» at its end", async () => {
     const page = await drawCard();
     const form = formOf(page);
@@ -268,7 +268,7 @@ describe("§NNN one form for every role", () => {
   });
 });
 
-describe("§NNN the blank row adds a role", () => {
+describe("§791 the blank row adds a role", () => {
   it("ends every sub-card with one empty «Rol nou» row of the same boxes — no name, no tick, no delete — whose names are not required", async () => {
     const page = await drawCard();
     const cards = [...page.matchAll(/<section[^>]*id="box-volunteer-roles-([^"]*)"[^>]*data-testid="volunteer-role-group"[^>]*>([\s\S]*?)<\/section>/g)];
@@ -295,7 +295,7 @@ describe("§NNN the blank row adds a role", () => {
   });
 });
 
-describe("§NNN «Mai multe»: the description as one strip of two tabs, and the colour, inside the form", () => {
+describe("§791 «Mai multe»: the description as one strip of two tabs, and the colour, inside the form", () => {
   it("holds, in each row's fold inside the one form, one Română | English strip over the two editors, and the band's colour outside the tabs", async () => {
     const page = await drawCard();
     const form = formOf(page);
@@ -340,7 +340,7 @@ describe("§NNN «Mai multe»: the description as one strip of two tabs, and the
   });
 });
 
-describe("§NNN the translate buttons are the house's own, once per level", () => {
+describe("§791 the translate buttons are the house's own, once per level", () => {
   it("puts «Tradu cardul: RO → EN» once in the card's header, inside the form and its scope, and «Tradu din română» under each English name and description", async () => {
     const page = await drawCard();
     const form = formOf(page);
@@ -377,7 +377,7 @@ describe("§NNN the translate buttons are the house's own, once per level", () =
   });
 });
 
-describe("§NNN the words", () => {
+describe("§791 the words", () => {
   it("says the new way under the title in both languages, plain words, no sentence over 200 characters, and the toast counts", () => {
     for (const words of [ro.Admin.volunteers.rolesIntro, en.Admin.volunteers.rolesIntro]) {
       for (const sentence of words.split(/(?<=[.!?”])\s+/)) expect(sentence.length).toBeLessThanOrEqual(200);
@@ -391,7 +391,7 @@ describe("§NNN the words", () => {
   });
 });
 
-describe("§NNN what each row remembers, how it is named, and what hides behind the «?»", () => {
+describe("§791 what each row remembers, how it is named, and what hides behind the «?»", () => {
   const escaped = (text: string) => text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#x27;");
   const decode = (value: string) => JSON.parse(value.replace(/&quot;/g, '"').replace(/&amp;/g, "&")) as Record<string, unknown>;
 

@@ -5,7 +5,7 @@ import { decodeRoleBaseline, descriptionDigest, encodeRoleBaseline, roleBaseline
 import { ROLE_ROW_BOXES } from "@/modules/volunteers/role-rows";
 
 /**
- * §NNN — what the «Roluri» card's form remembers of each role (`role-baseline.ts`), posted back in the hidden `was` box so «Salvează toate
+ * §791 — what the «Roluri» card's form remembers of each role (`role-baseline.ts`), posted back in the hidden `was` box so «Salvează toate
  * rolurile» compares the boxes with the role as DRAWN, never with the role as stored by the time the press arrives.
  */
 const role = { nameRo: "Apă", nameEn: "Water", needed: 3, categoryId: "c1111111-1111-4111-8111-111111111111", colour: "#1b5e20", descriptionRoJson: null, descriptionEnJson: null };

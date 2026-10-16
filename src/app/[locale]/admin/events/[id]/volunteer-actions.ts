@@ -238,7 +238,7 @@ export async function deleteVolunteerCategoryAction(_previous: FormOutcome | nul
 }
 
 /**
- * What a refused row of «Salvează toate rolurile» says (§NNN): the role and its category in the sentence's placeholders, and the problem in
+ * What a refused row of «Salvează toate rolurile» says (§791): the role and its category in the sentence's placeholders, and the problem in
  * the club's words — computed here, in the language of the page the form came from, because only the action knows which row and why.
  */
 async function rowRefusal(error: VolunteerRoleRowError, form: FormData): Promise<FormOutcome> {
@@ -258,7 +258,7 @@ async function rowRefusal(error: VolunteerRoleRowError, form: FormData): Promise
 }
 
 /**
- * «Salvează toate rolurile» (§NNN; the owner, 2026-10-16: «să pot face batch edit la roluri, nu să dau save de fiecare dată, ci un Save All»): every
+ * «Salvează toate rolurile» (§791; the owner, 2026-10-16: «să pot face batch edit la roluri, nu să dau save de fiecare dată, ci un Save All»): every
  * role of the card — each category's rows and the blank row at its end — in one post, saved in one transaction (`changeVolunteerRoles`) or, when any
  * row is refused, none: the sentence names the role and its category, the boxes name what to correct, and every box keeps what was typed (§315).
  * The toast counts the roles saved.

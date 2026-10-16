@@ -1,5 +1,5 @@
 /**
- * The names the event editor's «Roluri» card posts under (§NNN; the owner, 2026-10-16: «să pot face batch edit la roluri, nu să dau save de
+ * The names the event editor's «Roluri» card posts under (§791; the owner, 2026-10-16: «să pot face batch edit la roluri, nu să dau save de
  * fiecare dată, ci un Save All»): one form for every role, so every box carries the role it belongs to — `roles[<key>].nameRo`.
  *
  * The key of a saved role is its id; the blank row at the end of each category is `new-<category id>` (or `new-none` under «Alte roluri»).

@@ -112,7 +112,7 @@ function form(fields: Record<string, string | readonly string[]>, event = eventI
   return data;
 }
 
-/** One row of the «Roluri» card's one form (§NNN) as a post: a saved role's boxes under its id, the blank row's under `new-none`. */
+/** One row of the «Roluri» card's one form (§791) as a post: a saved role's boxes under its id, the blank row's under `new-none`. */
 const rowForm = (key: string, fields: Record<string, string>, event = eventId) => form(rowBoxes(key, fields), event);
 
 type Stateful = (previous: FormOutcome | null, form: FormData) => Promise<FormOutcome | null>;
@@ -180,7 +180,7 @@ describe("§754 an event's volunteer roles", () => {
       [{ descriptionRo: "Dai apă" }, "descriptionEn"],
     ] as const) {
       const outcome = await post(actions.saveVolunteerRolesAction, rowForm(NEW_ROW, { ...ROLE, ...fields }));
-      // The refusal names the role's row and the box to correct (§NNN), and every box keeps what was typed.
+      // The refusal names the role's row and the box to correct (§791), and every box keeps what was typed.
       expect(outcome, box).toMatchObject({ error: "VOLUNTEER_ROLE_INVALID", fields: [`roles[${NEW_ROW}].${box}`] });
       expect((outcome as FormOutcome).values[`roles[${NEW_ROW}].nameRo`]?.[0]).toBe(fields.nameRo ?? ROLE.nameRo);
     }

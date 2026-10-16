@@ -11,12 +11,12 @@ import { changeVolunteerRoles, listVolunteerRoles, type VolunteerRolesRowRequest
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 import { roleDescription } from "../../helpers/role-description";
 
-/** The public cache's expiry, watched: one save of many roles tells the public page once (§NNN). */
+/** The public cache's expiry, watched: one save of many roles tells the public page once (§791). */
 const cache = vi.hoisted(() => ({ revalidatePublicContent: vi.fn() }));
 vi.mock("@/modules/public-cache/cache", () => cache);
 
 /**
- * §NNN — the event editor's «Roluri» card saved at once (`changeVolunteerRoles`; the owner, 2026-10-16: «să pot face batch edit la roluri, nu să dau
+ * §791 — the event editor's «Roluri» card saved at once (`changeVolunteerRoles`; the owner, 2026-10-16: «să pot face batch edit la roluri, nu să dau
  * save de fiecare dată, ci un Save All»), straight through the service: every row read before anything is written and the first refused one
  * refusing the whole save, naming the role; then, in one transaction, only the roles that differ written — one audit row each — the blank
  * row of a category ignored until a name is typed in it, the position box ordering each category, and the public page told once.
@@ -87,7 +87,7 @@ const refusal = async (rows: VolunteerRolesRowRequest[]) => save(rows).then(
   (error: unknown) => error as VolunteerRoleRowError,
 );
 
-describe("§NNN a save that changes nothing", () => {
+describe("§791 a save that changes nothing", () => {
   it("writes nothing, audits nothing, tells the public page nothing — a row that posts what the role already is", async () => {
     const water = await seed("Apă", route.id);
     const finish = await seed("Sosire", start.id, { needed: null, ...roleDescription("Aplauze.", "Cheer.") });
@@ -113,7 +113,7 @@ describe("§NNN a save that changes nothing", () => {
   });
 });
 
-describe("§NNN several roles saved at once", () => {
+describe("§791 several roles saved at once", () => {
   it("writes only the roles that differ — two changed, one untouched — with one audit row each and one expiry of the public page", async () => {
     const a = await seed("A", start.id);
     const b = await seed("B", start.id);
@@ -189,7 +189,7 @@ describe("§NNN several roles saved at once", () => {
   });
 });
 
-describe("§NNN the blank row of a category adds a role", () => {
+describe("§791 the blank row of a category adds a role", () => {
   it("ignores a blank row — both names empty, whatever else it holds — and creates a role with a name, in its category, last", async () => {
     await seed("A", start.id);
     await seed("T1", route.id);
@@ -233,7 +233,7 @@ describe("§NNN the blank row of a category adds a role", () => {
   });
 });
 
-describe("§NNN «Poziția» orders each category", () => {
+describe("§791 «Poziția» orders each category", () => {
   it("moves a role to the place typed — before the role it ties with when it moves up, after it when it moves down — and rewrites the order without gaps", async () => {
     const [a, b, c, d] = [await seed("A", start.id, { position: 10 }), await seed("B", start.id, { position: 20 }), await seed("C", start.id, { position: 30 }), await seed("D", start.id, { position: 40 })];
     // D to the first place: the others keep their order after it.
@@ -289,7 +289,7 @@ describe("§NNN «Poziția» orders each category", () => {
   });
 });
 
-describe("§NNN «Categoria» moves a role", () => {
+describe("§791 «Categoria» moves a role", () => {
   it("moves a role to another category — to the end of it unless a place is typed — and audits the category it left and the one it joined", async () => {
     const a = await seed("A", start.id);
     await seed("B", start.id);
@@ -337,7 +337,7 @@ describe("§NNN «Categoria» moves a role", () => {
   });
 });
 
-describe("§NNN «Nelimitat» and the number", () => {
+describe("§791 «Nelimitat» and the number", () => {
   it("saves a role without a number when the tick is posted, whatever the number box holds, and a number again when it is not", async () => {
     const a = await seed("A", start.id);
     await save([row(a.id, { needed: "7", unlimited: "on" })]);
@@ -357,7 +357,7 @@ describe("§NNN «Nelimitat» and the number", () => {
   });
 });
 
-describe("§NNN who may save, and what is not this event's", () => {
+describe("§791 who may save, and what is not this event's", () => {
   it("lets the Organizer and the Administrator, refuses the others on the first call and writes nothing", async () => {
     const a = await seed("A", start.id);
     for (const actor of [staff.DEV!, staff.COPYWRITER!, staff.CONTRIBUTOR!, staff.MEMBER!]) {
@@ -403,7 +403,7 @@ const drawnRow = (role: typeof eventVolunteerRoles.$inferSelect, rank: number, c
     ...changes,
   });
 
-describe("§NNN a form opened before another save", () => {
+describe("§791 a form opened before another save", () => {
   it("does not write the old values back over a role the person never touched — nor the order another session set", async () => {
     const x = await seed("X", start.id, { needed: 4 });
     const y = await seed("Y", start.id);

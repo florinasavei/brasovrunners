@@ -39,7 +39,7 @@ class FakeBox extends EventTarget {
   labels: { textContent: string }[];
   form: FakeForm | null = null;
   current: string;
-  /** The `data-translate-row` of the element the box sits in (§NNN), when it sits in one. */
+  /** The `data-translate-row` of the element the box sits in (§791), when it sits in one. */
   row: string | null = null;
   closest(selector: string) {
     return this.row !== null && selector.includes("data-translate-row") ? { getAttribute: () => this.row } : null;
@@ -180,7 +180,7 @@ describe("§482 «Copiază și tradu tot» reads the form before it runs", () =>
     expect(labelOfBox(asForm(eventForm()), "translations.en.title")).toBe("Title (EN)");
   });
 
-  it("names a box in a card of rows by its row first — every row of the volunteers' «Roluri» says «Nume (EN)» — and a box in no row by its label alone (§NNN)", () => {
+  it("names a box in a card of rows by its row first — every row of the volunteers' «Roluri» says «Nume (EN)» — and a box in no row by its label alone (§791)", () => {
     const water = new FakeInput("roles[a].nameEn", "", { label: "Nume (EN) *" });
     water.row = "Punct de apă";
     const finish = new FakeInput("roles[b].nameEn", "", { label: "Nume (EN) *" });

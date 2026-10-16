@@ -305,7 +305,7 @@ describe("§514 every translatable tab row carries the card's button", () => {
   });
 });
 
-describe("§514 adapted for a card with no tab row of its own (§NNN: the volunteers' «Roluri»)", () => {
+describe("§514 adapted for a card with no tab row of its own (§791: the volunteers' «Roluri»)", () => {
   it("puts the button in the card's header and marks the card's scope, which the press reads when no strip is around it", () => {
     const button = source("src/modules/translate/ui/TranslateCardButton.tsx");
     // No strip around the button: the nearest element marked `data-translate-scope` is the card, and its value is the card's name for the toast.

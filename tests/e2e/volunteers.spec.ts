@@ -119,7 +119,7 @@ test.describe("§754 volunteers for a race", () => {
     // its text, so a folded card (nobody waiting) still answers.
     const group = (name: string) => page.getByTestId("volunteer-group").filter({ has: page.locator("h3").getByText(name, { exact: true }) });
 
-    /** One role through the «Roluri» card's blank row and its one «Salvează toate rolurile» (§NNN), the description typed in the row's «Mai multe». */
+    /** One role through the «Roluri» card's blank row and its one «Salvează toate rolurile» (§791), the description typed in the row's «Mai multe». */
     async function addRole(nameRo: string, nameEn: string, needed: string, description?: { ro: readonly string[]; en: readonly string[] }) {
       await openEditorBox(page, "Roluri");
       const blank = blankRoleRow(page);
@@ -136,7 +136,7 @@ test.describe("§754 volunteers for a race", () => {
     // Open on arrival? The card keeps its closed line: «0 din 3».
     await expect(card.locator("summary").first()).toContainText("0 din 3");
 
-    // Reorder and change two roles, saved by ONE press (§NNN): «Sosire» takes the first place by its position box and «Punct de apă» needs three people.
+    // Reorder and change two roles, saved by ONE press (§791): «Sosire» takes the first place by its position box and «Punct de apă» needs three people.
     await openEditorBox(page, "Roluri");
     const roleNames = () => page.locator('[data-testid="volunteer-role"] input[name$=".nameRo"]').evaluateAll((boxes) => boxes.map((box) => (box as HTMLInputElement).value));
     expect(await roleNames()).toEqual(["Punct de apă", "Sosire"]);
@@ -1087,7 +1087,7 @@ test.describe("§754 volunteers for a race", () => {
     async function addRole(nameRo: string, nameEn: string, needed: string, category: string | null) {
       const before = await page.getByTestId("volunteer-role").count();
       await openEditorBox(page, "Roluri");
-      // The blank row at the end of the category's sub-card (§NNN); a role under none is typed in the first card's and filed by «Categoria».
+      // The blank row at the end of the category's sub-card (§791); a role under none is typed in the first card's and filed by «Categoria».
       await fillRoleRow(blankRoleRow(page, category ?? "Traseu"), { nameRo, nameEn, needed, ...(category === null ? { category: "Alte roluri" } : {}) });
       await saveAllRoles(page);
       await expect(page.getByTestId("volunteer-role")).toHaveCount(before + 1, { timeout: 30_000 });

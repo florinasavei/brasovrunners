@@ -180,7 +180,7 @@ describe("§784 the words", () => {
         for (const sentence of (words as string).split(/(?<=[.!?])\s+/)) expect(sentence.length, `${language} ${keys.join(".")}`).toBeLessThanOrEqual(200);
       }
     }
-    // The roles' one form (§NNN) says the tick in one word, «Nelimitat», and its «?» names both ways, the number and the tick.
+    // The roles' one form (§791) says the tick in one word, «Nelimitat», and its «?» names both ways, the number and the tick.
     expect(ro.Admin.volunteers.role.col.unlimited).toBe("Nelimitat");
     expect(en.Admin.volunteers.role.col.unlimited).toBe("No limit");
     expect(ro.Admin.volunteers.rolesNeededHelp).toContain("cel puțin 1");

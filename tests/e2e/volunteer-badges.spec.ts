@@ -83,7 +83,7 @@ test.describe("§764 volunteer badges, designed and printed per role", () => {
     await openEditorBox(page, "Voluntari");
     await openEditorBox(page, "Roluri");
     // A role's colour is part of its definition: the role's row, its «Mai multe», «Culoarea benzii» — and the one press of «Salvează toate rolurile» saves it
-    // with every other role's change (§NNN): two roles' colours here, one press.
+    // with every other role's change (§791): two roles' colours here, one press.
     const row = page.locator(`[data-testid="volunteer-role"][data-role-id="${event.water}"]`);
     const finishRow = page.locator(`[data-testid="volunteer-role"][data-role-id="${event.finish}"]`);
     await expect(row.getByTestId("volunteer-role-colour")).toContainText("Portocaliul clubului");

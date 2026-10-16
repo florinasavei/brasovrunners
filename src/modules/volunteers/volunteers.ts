@@ -683,7 +683,7 @@ export type VolunteerRoleRowProblem =
   | "category"
   | "taken"
   | "tooMany"
-  /** Another session changed the role since the form was drawn (§NNN): nothing is written over it. */
+  /** Another session changed the role since the form was drawn (§791): nothing is written over it. */
   | "stale"
   /** The role is no longer there (deleted meanwhile) or is not this event's. */
   | "gone";
@@ -741,7 +741,7 @@ function roleBoxOfIssue(name: string, posted: Record<string, string>): RoleRowBo
 }
 
 /**
- * Every role of an event's card saved at once (§NNN; the owner, 2026-10-16: «să pot face batch edit la roluri, nu să dau save de fiecare dată, ci
+ * Every role of an event's card saved at once (§791; the owner, 2026-10-16: «să pot face batch edit la roluri, nu să dau save de fiecare dată, ci
  * un Save All»), by one staff member — the plural of `changeVolunteerRole`, which stays for the delete and for the older callers. Each row is a
  * saved role (`id`) or the blank row at the end of a category (no `id`; blank names are ignored, a name typed creates the role). A box a row leaves
  * out keeps what the role has — the colour, the description, the category, the number — so a caller posts only what it changes.

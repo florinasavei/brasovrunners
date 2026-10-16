@@ -141,7 +141,7 @@ const NOTHING_HAPPENED: ReadonlySet<string> = new Set([
   "eventTodoUnchanged",
   // The same on an event's volunteers (§754).
   "volunteerUnchanged",
-  // «Salvează toate rolurile» with every role as it was (§NNN).
+  // «Salvează toate rolurile» with every role as it was (§791).
   "volunteerRolesUnchanged",
   // «Salvează punctele» with the list as it was (§757).
   "checkpointsUnchanged",
