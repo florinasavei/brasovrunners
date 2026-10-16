@@ -7118,7 +7118,7 @@
         "difficulty": "The fifteen steps",
         "difficultyNote": "One gauge per step: the band's segments lit, the needle at the step, the step's dots.",
         "marks": "The card's marks",
-        "marksNote": "What a card wears above its title: the featured event, a special edition, the repeat, a partnership, the members, the night, the state.",
+        "marksNote": "What a card wears above its title: a special edition, the repeat, a partnership, the members, the night, the state. The featured event wears no chip: its frame says it.",
         "weekly": "Weekly",
         "partner": "Partnership",
         "series": "Series",
@@ -11091,11 +11091,12 @@
     "emailMismatch": "The two addresses are not the same — check the letters."
   },
   "Tell": {
-    "title": "Tell us something (anonymous)",
+    "title": "Tell us something",
     "noticeName": "Tell us something",
     "noticeSafetyGmail": "the club's Gmail",
     "noticeRelayQueue": "only until it leaves — usually a few seconds, at most three days if no email service works — and then deletes it",
-    "intro": "Anonymous unless you choose to give your name. Choose what it is about.",
+    "intro": "You can write anonymously or with your name. Choose what it is about.",
+    "introAnonymous": "Your message is anonymous. Choose what it is about.",
     "backToContact": "Back to Contact",
     "door": {
       "intro": "How an event went, a suggestion or a complaint — anonymously, if you like.",

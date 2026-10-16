@@ -22,7 +22,6 @@ import RestaurantIcon from "@mui/icons-material/Restaurant";
 import ScheduleIcon from "@mui/icons-material/Schedule";
 import ScienceIcon from "@mui/icons-material/Science";
 import SportsScoreIcon from "@mui/icons-material/SportsScore";
-import StarIcon from "@mui/icons-material/Star";
 import StraightenIcon from "@mui/icons-material/Straighten";
 import TerrainIcon from "@mui/icons-material/Terrain";
 import TimerIcon from "@mui/icons-material/Timer";
@@ -101,13 +100,12 @@ export const CHECKPOINT_GLYPH: Record<CheckpointKind, Glyph> = {
 
 /**
  * Every glyph by a name a Server Component can hand to `GlyphChip`: `type:RACE`,
- * `surface:TRAIL`, `difficulty:EASY`, `cost:FREE`, `featured` for the hero's star,
+ * `surface:TRAIL`, `difficulty:EASY`, `cost:FREE`,
  * `special` for an edition apart (§168), and
  * `distance` and `elevation` for the two numbers of a route (§356).
  *
- * The star is taken: it is the one event the site leads with. A special edition is the
- * sparkle beside it — "this one is not an ordinary Wednesday" — which is a different claim
- * from "read this one first", and any number of events may make it.
+ * A special edition is the sparkle — "this one is not an ordinary Wednesday" — and any number of events may
+ * wear it. (The lead event wears no chip: its frame says it, §470 amended.)
  *
  * The two numbers are metaphors too, written down like the rest: the distance is a ruler, the
  * climb a line that rises — the calendar entry writes the same climb with "↗" (`ical.ts`). They
@@ -147,7 +145,6 @@ export const GLYPHS = {
   ...prefixed("difficulty", DIFFICULTY_LEVEL_ICONS),
   ...prefixed("cost", COST_GLYPH),
   ...prefixed("checkpoint", CHECKPOINT_GLYPH),
-  featured: StarIcon,
   special: AutoAwesomeIcon,
   // The repeat chip on a listing card (§486) — the single date of a series, the series card and
   // the featured card alike: a wheel of arrows, «ca o rotiță» (the owner), not the calendar

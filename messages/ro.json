@@ -7118,7 +7118,7 @@
         "difficulty": "Cele cincisprezece trepte",
         "difficultyNote": "Un indicator per treaptă: segmentele benzii aprinse, acul la treaptă, punctele treptei.",
         "marks": "Marcajele cardului",
-        "marksNote": "Ce poartă un card deasupra titlului: evenimentul principal, ediția specială, repetarea, colaborarea, membrii, noaptea, starea.",
+        "marksNote": "Ce poartă un card deasupra titlului: ediția specială, repetarea, colaborarea, membrii, noaptea, starea. Evenimentul principal nu poartă cip: îl spune chenarul.",
         "weekly": "Săptămânal",
         "partner": "Colaborare",
         "series": "Serie",
@@ -11091,11 +11091,12 @@
     "emailMismatch": "Cele două adrese nu sunt aceeași — verifică literele."
   },
   "Tell": {
-    "title": "Spune-ne ceva (anonim)",
+    "title": "Spune-ne ceva",
     "noticeName": "Spune-ne ceva",
     "noticeSafetyGmail": "Gmail-ul clubului",
     "noticeRelayQueue": "doar până pleacă — de obicei câteva secunde, cel mult trei zile dacă niciun serviciu de e-mail nu merge — și apoi îl șterge",
-    "intro": "Anonim, dacă nu alegi să-ți spui numele. Alege despre ce e vorba.",
+    "intro": "Poți scrie anonim sau cu numele tău. Alege despre ce e vorba.",
+    "introAnonymous": "Mesajul tău e anonim. Alege despre ce e vorba.",
     "backToContact": "Înapoi la Contact",
     "door": {
       "intro": "Cum a fost la o alergare, o sugestie sau o reclamație — anonim, dacă vrei.",
