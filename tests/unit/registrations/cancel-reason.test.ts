@@ -49,6 +49,7 @@ describe("§558 the cancellation reason", () => {
       status: "CANCELLED",
       clubMemberDeclared: false,
       memberVerified: false,
+      clubRunner: false,
       fitnessDeclaredAt: null,
       stravaUrl: "",
       instagramHandle: "",
@@ -61,10 +62,10 @@ describe("§558 the cancellation reason", () => {
       cancelReason: cancelReasonCell("OTHER", "=cmd, nunta"),
     };
     const [header, line] = buildRegistrationsCsv([row]).split("\r\n");
-    // Followed by the offers and benefits (§562), the special guest (§643) and, in the CSV, «Până când»'s two (§650) and the age, the country and the city (§660), then «Member bib» (§664).
-    expect(header.split(",").slice(-9, -7)).toEqual(["Cancellation reason", "Offers and benefits"]);
+    // Followed by the offers and benefits (§562), the special guest (§643) and, in the CSV, «Până când»'s two (§650) and the age, the country and the city (§660), then «Member bib» (§664) and «Club runner» (§787).
+    expect(header.split(",").slice(-10, -8)).toEqual(["Cancellation reason", "Offers and benefits"]);
     // A reason is typed on a public form: neutralized and quoted like every other cell — then the offers' cell, empty here.
-    expect(line.endsWith(',"Another reason: =cmd, nunta",,,,,,,,')).toBe(true);
+    expect(line.endsWith(',"Another reason: =cmd, nunta",,,,,,,,,')).toBe(true);
     expect(REGISTRATION_SHEET_HEADERS.slice(-3, -1)).toEqual(["Cancellation reason", "Offers and benefits"]);
   });
 });

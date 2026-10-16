@@ -1155,7 +1155,14 @@
         "note1": "Active means confirmed: the person has a place and has signed the declaration.",
         "note2": "«{club}» counts the members on «Echipa», the people who ticked that they are members and the people who typed the club on the form.",
         "note3": "«{club}», as «Total», counts every state; the ones who come are in «{club}, confirmed».",
-        "note4": "The category is the sex and the age on the race day; a row missing either is under «No category». Test registrations are not counted."
+        "note4": "The category is the sex and the age on the race day; a row missing either is under «No category». Test registrations are not counted.",
+        "note5": "The numbers are formulas over the rows above: change a status, a sex or an age and they recalculate by themselves, and so do the colours of the rows. A row below the last runner is not counted.",
+        "legendTitle": "Colours",
+        "legendConfirmed": "Green, confirmed",
+        "legendPending": "Yellow, waiting for an answer",
+        "legendWaitlist": "Light blue, on the waiting list",
+        "legendEnded": "Grey, cancelled or expired",
+        "legendMember": "Blue, a club runner: the columns «Club member», «Club runner» and «Member bib», when «Club runner» says «Yes»."
       },
       "auditActorParticipant": "the participant, from their own link",
       "audit": {
@@ -7507,6 +7514,7 @@
                 "Press «Export to Excel» (or «Export CSV»). The file holds exactly the filtered rows, without test registrations.",
                 "The file ends with «Internal notes»: one note a line, with the author's role. The column is named in the language of the page where you pressed the button.",
                 "Under the table, after one empty row, «Statistics» counts the same rows: the total, the confirmed (the active ones), each other state, how many are the club's own runners and, by sex and age band, each category. It is in the Excel only, never in the CSV.",
+                "In Excel, a row takes the colour of its state, and the member cells are blue when the Club runner column says Yes. The numbers in «Statistics» are formulas: change something offline and they recount by themselves.",
                 "The file carries identity documents and phone numbers: never send it to a group, and delete it within 7 days of the event."
               ]
             },
