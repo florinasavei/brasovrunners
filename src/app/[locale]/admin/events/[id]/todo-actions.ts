@@ -49,8 +49,10 @@ async function backToCard(form: FormData, outcome: { saved?: string; error?: str
   const params = new URLSearchParams();
   if (field(form, "mine") === "1") params.set("mine", "1");
   if (outcome.error) params.set("todoError", outcome.error);
+  // A press that worked is shown by «Sarcini» (§752): the address says so for a page without scripts, and the fragment names the fold.
+  if (outcome.saved) params.set("todoSaved", "1");
   const query = params.size > 0 ? `?${params}` : "";
-  redirect(`${path}${query}#box-todos`);
+  redirect(`${path}${query}#box-todos-own`);
 }
 
 async function run(request: EventTodoRequest) {
