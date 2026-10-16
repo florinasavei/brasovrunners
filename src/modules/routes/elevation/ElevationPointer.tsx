@@ -32,7 +32,7 @@ const SR_ONLY = { position: "absolute", width: "1px", height: "1px", p: 0, m: "-
 const fill = (template: string, values: Record<string, string>): string => template.replace(/\{(\w+)\}/g, (whole, key: string) => values[key] ?? whole);
 
 /** Where the overlay stands, in pixels from the wrapper's top left, measured when the pointer last moved. */
-type Overlay = { index: number; spoken: boolean; left: number; top: number; height: number; dotTop: number; flip: boolean };
+type Overlay = { index: number; spoken: boolean; left: number; top: number; height: number; dotTop: number; flip: boolean; atFoot: boolean };
 
 /**
  * The elevation chart's pointer (§NNN; the owner, 2026-10-16: «a pointer line “4.5 KM”»): a thin line down the chart and
@@ -109,6 +109,8 @@ export default function ElevationPointer({
       dotTop: box.top - host.top + y * scale,
       // Past the middle the readout sits on the line's left, so it never leaves the chart.
       flip: left > host.width / 2,
+      // The readout stands in the half of the plot the profile is not in: at the foot, in the area's tint, where the line is high.
+      atFoot: y < (chart.plotTop + chart.plotBottom) / 2,
     };
   };
 
@@ -180,8 +182,8 @@ export default function ElevationPointer({
             sx={{
               position: "absolute",
               left: at.left,
-              top: at.top,
-              transform: at.flip ? "translate(calc(-100% - 8px), 0)" : "translate(8px, 0)",
+              top: at.atFoot ? at.top + at.height : at.top,
+              transform: `translate(${at.flip ? "calc(-100% - 8px)" : "8px"}, ${at.atFoot ? "calc(-100% - 6px)" : "0"})`,
               px: 1,
               py: 0.25,
               borderRadius: 1,
