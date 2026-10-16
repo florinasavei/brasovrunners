@@ -548,8 +548,7 @@
       "needs": {
         "one": "1 more person needed",
         "few": "{count} more people needed",
-        "other": "{count} more people needed",
-        "open": "spots still open"
+        "other": "{count} more people needed"
       },
       "name": "Your name",
       "email": "Your email address",
@@ -588,7 +587,7 @@
         "guardianAware": "Tick that your parent or guardian knows and agrees.",
         "birthDateMinors": "The club does not take volunteers under 18 yet. You can help when you turn 18, or write to us from the contact page."
       },
-      "details": "Details",
+      "roleHelp": "What the role {name} involves",
       "profile": {
         "birthDateHelp": "You must be at least {age} old on the day of the event.",
         "city": "City",
@@ -5041,7 +5040,7 @@
       },
       "counts": {
         "label": "Show publicly how many volunteers are still needed",
-        "help": "Ticked, the volunteers' page tells each role how many more people it needs. Unticked, it only says the role still has room; here you always see the numbers."
+        "help": "Ticked, the volunteers' page tells each role how many more people it needs. Unticked, it shows no number; here you always see the numbers."
       },
       "chips": {
         "before": "Volunteered before",
@@ -9085,6 +9084,15 @@
       "textEmpty": "Not written yet.",
       "tabEmpty": "empty",
       "textHelp": "In both languages or in neither, at most {max} characters each. As on a page: headings, lists, links, pictures, a table.",
+      "definition": {
+        "heading": "Who is a member",
+        "intro": "Shown behind a “?” beside the member tick, on the registration form and on the volunteers' form.",
+        "asideWritten": "the club's text",
+        "asideDefault": "the standard text",
+        "ro": "Who is a member (Romanian)",
+        "en": "Who is a member (English)",
+        "help": "One sentence, at most {max} characters, in both languages or in neither. Left empty, the forms say the standard text shown in the boxes."
+      },
       "codes": {
         "heading": "Discount codes",
         "count": {
@@ -10074,7 +10082,7 @@
     "privacyBannerWithList": "Nothing you write here appears on the site, with one exception: your name and club go on this event's public list only if you tick the box below; without the tick you are only counted. We use your details only to run the race: the organizing team and the providers that host the site and send the emails see them. The signed declaration is emailed to you, and a copy, with your identity document masked, goes to the club's archive. We keep the registration for three years after the event.",
     "healthIntro": "Only what the organizers should know if you need help. Only they see it, and it is deleted seven days after the event.",
     "fitnessDeclared": "I declare on my own responsibility that I am medically fit to take part.",
-    "clubMemberHint": "I have been to at least 3 group runs in the past year.",
+    "clubMemberDefinition": "I have taken part in at least 3 group runs in the last 6 months.",
     "rules": {
       "open": "Read the race conditions",
       "reading": "Press the box or the button: the conditions open here, you read them to the end, and only then is the box ticked.",
@@ -11537,6 +11545,7 @@
         "other": "Done: {count} boxes translated in “{card}”, but some texts were cut at their box's limit. Check them under English and press Save."
       },
       "membersTextSaved": "The members' pages text was saved.",
+      "memberDefinitionSaved": "The “Who is a member” sentence was saved.",
       "membersPagePublished": "The members' benefits page is on the site, in both languages.",
       "membersPageUnpublished": "The members' benefits page was taken off the site.",
       "membersInvited": {
@@ -11670,7 +11679,7 @@
       "volunteersShirtsOn": "The public form now asks for the T-shirt size.",
       "volunteersShirtsOff": "The public form no longer asks for the T-shirt size. Sizes already given are kept.",
       "volunteersCountsOn": "The volunteers' page now says how many more people each role needs.",
-      "volunteersCountsOff": "The volunteers' page no longer says how many more people each role needs, only that it still has room.",
+      "volunteersCountsOff": "The volunteers' page no longer says how many more people each role needs.",
       "volunteerGuardianRequested": "The link to the parent is on its way by email.",
       "volunteerGuardianRecorded": "The parent's consent is recorded as signed on paper.",
       "volunteerCategoryAdded": "Category added.",

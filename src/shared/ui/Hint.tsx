@@ -13,7 +13,8 @@ import { readingTimeMs, TOOLTIP_TEXT_SX } from "./tooltip-text";
  * care să zică «am fost la cel puțin 3 alergări de grup în ultimul an»". The claim needs a
  * definition — it decides nothing on its own (§48) but the club reads it — and a definition
  * printed under every tick would lengthen a form whose length is already the thing people
- * complain about.
+ * complain about. (Since §789 the member tick's sentence is the club's own, `cachedMemberDefinition`;
+ * the platform's default is `Registration.clubMemberDefinition`, «ultimele 6 luni».)
  *
  * ## What the text may be
  *

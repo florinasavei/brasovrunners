@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.42-2026-10-16 -->
+<!-- PROJECT_BASELINE: BR-V3.43-2026-10-16 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V3.42-2026-10-16`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.43-2026-10-16`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -26811,3 +26811,33 @@ Baseline `BR-V3.42-2026-10-16`.
 **Tests that moved.** The notes' integration tests read the export's rows through `startListRows`, which stops at the empty row, so they still read the start list and not the footer.
 
 Baseline `BR-V3.42-2026-10-16`.
+
+## 788. The volunteers' page, calmer: roles as chips, the description behind a «?»
+
+**The owner, 2026-10-16 ~07:20, on a screenshot of «Vreau să fiu voluntar la …» → «Ce ești dispus(ă) să faci» as §780 drew it:** «nu-mi place designul pt asta». The screenshot showed a saturated navy band across the top of each category card, white boxed tiles two per row in a 560 px form, «mai sunt locuri» repeated under every one of the seven roles although every role shown has places, role names lowercase as the club typed them, and a role's description inline in its tile — boxes inside boxes, loud bands, repeated words. **At ~07:35, on a second screenshot with the description inline:** «Și aici ar trebui să fie colapsată descrierea și cu o cuinița de semnul întrebării».
+
+**Decision (amends §780, and §773 and §765 for the words and the descriptions that moved; the fields, the server rules, the counts and the agreement are untouched).** The grouping stays obvious — it was the owner's first priority (§780) — but calm: each category is still a bordered, rounded card on the page's paper surface with a clear space between cards (`VolunteerCategoryCard`), and the filled band is gone. The header sits on the card's surface: the volunteers glyph in a 36 px soft disc (the primary's 12 % wash), the category's name as the level-3 heading, «4 roluri» muted beside it (under it at 320 px), a hairline, then the contact line (§774) and the roles. Theme tokens only, so both looks and both colour schemes follow.
+
+**Roles are chips** (`VolunteerRoleChip`, replacing `VolunteerRoleTile` and its two-column grid): a pill — a `<label>` around a native checkbox named `roleIds`, the small box visible at its left (the tick is the state, never the colour alone), the role's name — in a wrap row, 44 px tall at least, a one-pixel border, the primary border, a 12 % tint and an inset ring when ticked, the keyboard ring on `:focus-visible`. The surface is shared with the feedback page's branch cards (`CHOICE_CARD_SX`: hover border, checked border, ring; `CHOICE_INPUT_SX`: the box); added here are the pill's border and radius and the stronger tint. A long name wraps inside its pill. The name's first letter is capitalised by CSS (`::first-letter` on an inline-block span): the club's typed text is stored as typed.
+
+**The words.** The default «mai sunt locuri» is gone — a role shown has places by construction (§761) — so the key `Event.volunteers.needs.open` is removed in both languages. Only when the event's «Arată public câți voluntari mai sunt necesari» (§773) is ticked do the count words («mai e nevoie de 1 persoană», «mai sunt necesare N persoane») follow the name inside the pill, after a middle dot, muted; a role without a number (§784) says none. The box's `aria-describedby` names them only when they are drawn.
+
+**The description (§765) is behind a «?».** A role with a description has a round 44 px «?» glyph at its pill's right end, **outside the label** (a press on it never ticks the box), as the `<summary>` of a native `<details>` — closed by default, working with scripts off — named «Ce presupune rolul {name}» / "What the role {name} involves" (new key `Event.volunteers.roleHelp`). Open, the pill takes the whole row and the description shows under the name, flush, never folded a second time inside (the «Detalii» fold of §765 and its key `Event.volunteers.details` are retired with the tile; `RoleDescription` now draws the words only); a link in it works. A role without a description has no «?». The house's `QuietHelp` tooltip was not used: it holds a sentence, not a rich-text document with links.
+
+**Refused.** A per-category fold (the grouping must be visible without a press); a new surface for the chip (the feedback page's is shared); a client island for the open state (`:has(details[open])` does it); keeping a «mai sunt locuri» default under a setting (it says nothing a shown role does not already say); a link inside the label (a label may not hold one).
+
+Baseline `BR-V3.43-2026-10-16`.
+
+## 789. «Sunt membru al grupului»: the «?» says what the club says a member is, written on «Pagini» → «Membri»
+
+**The owner, 2026-10-16, after the volunteers' page:** «Also I need that question mark with a tooltip for "sunt membru Brașov Runners" with the same explanation: am fost la cel puțin 3 alergări în ultimele 6 luni (asta ar trebui configurabil în back-office ce înseamnă să fii membru)».
+
+**What there was.** The registration form's tick «Sunt membru al grupului {club}» (§189, amended by §48's claim that decides nothing) already had a «?» (`shared/ui/Hint`) beside it, its words fixed in the catalogue — «Am fost la cel puțin 3 alergări de grup în ultimul an.» — which nobody but a developer could change; the volunteers' form (§765) asked the same tick, «Fac parte din grupul {club}», with no explanation at all.
+
+**Decision.** What being a member means is the club's to say, so it is a setting: «Cine e membru», one sentence in Română and English (both or neither, §352; at most 200 characters), one `platform_settings` row under the key `memberDefinition` — the table is a key-value store, so no migration (§100) — written by the members' pages' writers (`canEditMembersPage`: the Redactor and the Administrator, §524) and audited as `member_definition.saved` with whether the club has its own words, never the words (§12.12). It is edited on «Pagini» → «Membri» (§525, amended) in a named card «Cine e membru» — the house's `Panel` with a glyph, the page's own `LocaleTabPanels` tabs «RO» | «EN», `RecallField` boxes, «Tradu din română» (§464) under the English one — by its own form, so it is saved whether or not «Beneficiile membrilor» is on the site. The two public forms read it through the public cache (`cachedMemberDefinition`, filed under `settings`, which the save expires) and hand `Hint` the string: the registration form (register page, invitation page, and the editor's preview straight from the database, §579) and the volunteers' form, so the owner's «same explanation» is one setting and one «?». Left unwritten, the forms say the platform's own words, now «Am fost la cel puțin 3 alergări de grup în ultimele 6 luni.» / «I have taken part in at least 3 group runs in the last 6 months.» (`Registration.clubMemberDefinition`, which replaces `clubMemberHint` and its «în ultimul an»); the empty boxes show them as their placeholder, so the club sees what is said until it writes its own. A stored value with one language only reads as none: a page never shows one language's words in the other (§28).
+
+**Kept.** The tick is still a claim and grants nothing (§48): what it means for the Excel statistics (§787), the backoffice's «Din grupul clubului» and the member accounts on «Echipa» (§524, §662) is untouched; the setting only says to the person ticking what the club means by it.
+
+**Refused.** A second, discreet `QuietHelp` «?» beside the one the registration form already draws — two glyphs for one question on two forms; the form's own `Hint` (a 44-pixel target, text colour) is the one the owner pointed at, so the volunteers' form gets that one. A column or a table for one sentence. A free-text rich editor: a tooltip is one plain sentence.
+
+Baseline `BR-V3.43-2026-10-16`.

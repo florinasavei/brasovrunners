@@ -2,7 +2,7 @@ import { HOVER_OK } from "@/theme/motion";
 
 /**
  * The house's selectable card, written once (§676 step 1, §780): the feedback page's branch cards (`BranchChoice`, a native radio)
- * and the volunteers' page's role tiles (`VolunteerRoleTile`, a native checkbox) are the same surface — a bordered, rounded tile
+ * and the volunteers' page's role chips (`VolunteerRoleChip`, a native checkbox) are the same surface — a bordered, rounded tile
  * whose outline and tint follow the native input's `:checked` and whose keyboard ring follows its `:focus-visible`, in CSS alone
  * (`:has`), so the keyboard, a screen reader and a page with no script behave exactly as with a plain input.
  *

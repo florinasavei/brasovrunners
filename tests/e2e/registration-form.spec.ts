@@ -288,6 +288,24 @@ test.describe("BR-REQ-041-01 the optional half of the form is open, and foldable
     await expect(page.getByTestId("check-email-form-in")).toHaveText("Formularul pentru Ana a ajuns.");
   });
 
+  test("the «?» after «Sunt membru al grupului» says what a member is, and pressing it does not tick the box (§789)", async ({ page }) => {
+    await signIn(page, "Dev Administrator");
+    await ensureRegistrationIsOpen(page);
+    await page.goto(registerPath);
+    await hydrated(page);
+
+    // The tick's own label holds the button: the platform's words here, the club's own once it writes them on «Pagini» → «Membri».
+    const tick = page.locator("label", { has: page.locator('[name="clubMemberDeclared"]') });
+    const help = tick.getByRole("button");
+    await expect(help).toHaveCount(1);
+    await expect(help).toHaveAttribute("aria-label", "Am fost la cel puțin 3 alergări de grup în ultimele 6 luni.");
+
+    await help.click();
+    // Said by the tooltip, not by a line under the box; and a press on the «?» is not a press on the tick.
+    await expect(page.getByRole("tooltip")).toContainText("cel puțin 3 alergări de grup în ultimele 6 luni");
+    await expect(page.locator('[name="clubMemberDeclared"]')).not.toBeChecked();
+  });
+
   test("a tick given under terms that changed comes back unticked, says so, and the next tick is taken", async ({ page }) => {
     /*
       §421. The service refuses a tick whose rendered version (`termsVersionShown`) is no longer the

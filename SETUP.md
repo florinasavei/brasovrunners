@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.42-2026-10-16 -->
+<!-- PROJECT_BASELINE: BR-V3.43-2026-10-16 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V3.42-2026-10-16`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.43-2026-10-16`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -2190,7 +2190,7 @@ only ones who see the names, addresses and telephone numbers.
    and — once the notice of step 2 names them — «Data nașterii» (the registration form's own box, typed day first: the age on the day of the event, the gun's day when the race has one, must be 14 or more, with a parent or guardian under 18; it replaces the tick «Am cel puțin 18 ani» and, since §773, the old «Vârsta»), «Sex», «Orașul», the optional ticks «Am mai fost voluntar în trecut la alte curse»
    and «Fac parte din grupul …», behind the same anti-bot checks as the registration form. Under the roles' list the form says, kindly, that a person may be asked to cover another responsibility and will be contacted (§773).
    The button on the event's page opens this page **in a new tab**. **«Arată public câți voluntari mai sunt necesari»** (a third tick on the card, **off by default**, one press like the other two)
-   decides whether the page tells each role how many people it still needs («mai sunt necesare 3 persoane») or only that it still has room («mai sunt locuri»): leave it off unless you want the number public —
+   decides whether the page tells each role how many people it still needs («mai sunt necesare 3 persoane») or shows no number at all: leave it off unless you want the number public —
    the card always shows «N din M». **Approve the privacy notice from the template once more** (§773): its volunteers' paragraph now says «data nașterii» where it said the age; until then the notice in force keeps saying «vârsta» beside the new box's name. A volunteer entered before this release keeps the age they had (no date); typing a date on their row replaces it. The page answers **404** while the form could not be sent —
    the same conditions as the line above — never a form that cannot work, and after a send it says «Am primit oferta ta» on that page, with a toast;
    it is never in the sitemap or a search index, like the registration page. **«Oferim tricouri voluntarilor»** (a tick on the card, off by
@@ -2209,7 +2209,7 @@ only ones who see the names, addresses and telephone numbers.
    people **given** that role («Înscris» and «Confirmat»); the page stops offering a role once it has them.
    A role may also have **no number** (§784): tick «Fără număr — oricâți oameni» in «Adaugă un rol» (or in the role's «Modifică») instead of typing
    «Câți oameni trebuie» — the number box goes while the tick is on. Such a role reads «3 · fără număr» on the card, is never full, is always on the event's page and
-   on the volunteers' page, and the page never says a number for it («mai sunt locuri», even with the counts on); the card's closed line counts only the roles with a number
+   on the volunteers' page, and the page never says a number for it, even with the counts on; the card's closed line counts only the roles with a number
    («0 din 10 + roluri fără număr»), and «Câte ecusoane» starts it at the people you gave it.
    «Adaugă un voluntar de mână» enters a person yourself — tick what they would do, and give a role if you
    already know it; a role may take more people than it asked; the age, sex, city and ticks are optional there (an age below 14 is refused, and one of 14–17 asks the parent's name, step 8), and drawn only once the notice of step 2 names them.
