@@ -6,7 +6,7 @@ import { CLUB_RUNNER_YES, clubRunnerCell, isClubRunner } from "@/modules/registr
 import { colourRules, ROW_TINTS, STATUS_TINT, statusesOfTint, TINT_FILL } from "@/modules/registrations/sheet-colours";
 import { buildSponsorListWorkbook } from "@/modules/registrations/sponsor-sheet";
 import { statisticsCells, statisticsOf, statisticsWordsFrom, type StatisticsWords } from "@/modules/registrations/statistics";
-import { buildRegistrationsWorkbook, REGISTRATION_SHEET_HEADERS, type RegistrationSheetRow } from "@/modules/registrations/workbook";
+import { buildRegistrationsWorkbook, REGISTRATION_SHEET_HEADERS, writeSheet, type RegistrationSheetRow } from "@/modules/registrations/workbook";
 import { contrastRatio } from "@/modules/appearance/domain/tint-contrast";
 import { CLUB_NAME, SHEET_TINT } from "@/theme/brand";
 import en from "../../../messages/en.json";
@@ -601,6 +601,159 @@ describe("§787 a file of several events: an «Event» column the per-event coun
   });
 });
 
+/** The sheet's data validations as written: each rule's attributes and its inline list, in file order. */
+function validationsOf(buffer: Buffer) {
+  const sheet = unzip(buffer).get("xl/worksheets/sheet1.xml") ?? "";
+  const block = /<dataValidations count="(\d+)">([\s\S]*?)<\/dataValidations>/.exec(sheet);
+  const rules = [...(block?.[2] ?? "").matchAll(/<dataValidation ([^>]*)><formula1>([\s\S]*?)<\/formula1><\/dataValidation>/g)].map((rule) => {
+    const attributes = Object.fromEntries([...rule[1].matchAll(/(\w+)="([^"]*)"/g)].map((pair) => [pair[1], unescapeXml(pair[2])]));
+    return { attributes, list: unescapeXml(rule[2]) };
+  });
+  return { sheet, count: block ? Number(block[1]) : 0, rules };
+}
+
+describe("§790 (amended) «Status» right after the race number, and a drop-down, not free text", () => {
+  const PICK = { ro: { title: ro.Admin.registrations.sheetpick.title, error: ro.Admin.registrations.sheetpick.error }, en: { title: en.Admin.registrations.sheetpick.title, error: en.Admin.registrations.sheetpick.error } };
+  const buildPick = (rows: RegistrationSheetRow[], locale: "ro" | "en" = "ro", extra: { notesHeader?: string } = {}) =>
+    buildRegistrationsWorkbook(rows, "Crosul Tâmpei", { ...extra, statistics: locale === "ro" ? RO : EN, statusPick: PICK[locale] });
+
+  it("puts «Status» third, after «Race number (BIB)» and before «Name»; every other column keeps its relative order", async () => {
+    const { rows } = readSheet(await buildPick(mixed()));
+    expect((rows[0] as string[]).slice(0, 4)).toEqual(["ID", "Race number (BIB)", "Status", "Name"]);
+    expect(REGISTRATION_SHEET_HEADERS.slice(0, 4)).toEqual(["ID", "Race number (BIB)", "Status", "Name"]);
+    // Taking «Status» out leaves the columns in the order they had before it moved (§172, §510, §650, §662, §787).
+    expect(REGISTRATION_SHEET_HEADERS.filter((header) => header !== "Status").slice(0, 14)).toEqual([
+      "ID", "Race number (BIB)", "Name", "First name", "Last name", "Club", "Sex", "Age on race day", "Nationality", "Country", "City", "T-shirt size", "Until when", "Waiting on",
+    ]);
+    // The cells say what they said: the state's word, in the new column.
+    expect(rows.slice(1, 10).map((line) => line?.[2])).toEqual(mixed().map((data) => data.status));
+    expect(rows[0]?.filter((header) => header === "Status")).toHaveLength(1);
+  });
+
+  it("leaves the CSV's header exactly as it was: scripts read it by position", () => {
+    const base: RegistrationCsvRow = {
+      eventTitle: "Test", registeredName: "Ana", firstName: "Ana", lastName: "Pop", idDocument: "", email: "a@example.ro", status: "CONFIRMED", clubMemberDeclared: false,
+      memberVerified: false, clubRunner: false, fitnessDeclaredAt: null, stravaUrl: "", instagramHandle: "", guardianName: "", guardianIdDocument: "", submittedAt: "", confirmedAt: "", checkedInAt: "", emailBounced: false,
+    };
+    expect(buildRegistrationsCsv([base]).split("\r\n")[0]).toBe(
+      "Event,Name,First name,Last name,Identity document,Email,Status,Club member,Medically fit (declared),Strava,Instagram,Socials on the public list,Public list & results,Guardian,Guardian identity document,Submitted,Confirmed,Race number (BIB),Checked in,Email bounced,Terms version,Terms accepted,Declaration version,Declaration signed,family,Cancellation reason,Offers and benefits,Special guest,Until when,Waiting on,Age on race day,Country,City,Member bib,Club runner",
+    );
+  });
+
+  it("reads the status column at the letter the header puts it: every formula range, every colour rule, in every shape of file", async () => {
+    const several = [
+      row({ eventId: "e1", eventLabel: "A · 18.10.2026", eventTitle: "A", eventStartsAt: new Date("2026-10-18T08:00:00.000Z"), status: "CONFIRMED", sex: "Female", ageOnRaceDay: 25 }),
+      row({ eventId: "e2", eventLabel: "B · 25.10.2026", eventTitle: "B", eventStartsAt: new Date("2026-10-25T08:00:00.000Z"), status: "CANCELLED", sex: "Male", ageOnRaceDay: 45 }),
+    ];
+    for (const [name, buffer, data] of [
+      ["one event", await buildPick(mixed()), mixed()],
+      ["several events", await buildPick(several), several],
+      ["with the notes column", await buildPick(mixed(), "en", { notesHeader: "Internal notes" }), mixed()],
+    ] as const) {
+      const header = readSheet(buffer).rows[0] as string[];
+      const letter = columnLetter(header.indexOf("Status"));
+      expect(letter, name).toBe("C");
+      // Every footer formula that counts a status word names the status column, and no other column's letter stands for it.
+      const counting = [...formulasOf(buffer).values()].map((cell) => cell.formula).filter((formula) => registrationStatus.enumValues.some((status) => formula.includes(`"${status}"`)));
+      expect(counting.length, name).toBeGreaterThan(0);
+      for (const formula of counting) {
+        const ranges = [...formula.matchAll(/(\$[A-Z]+\$2:\$[A-Z]+\$\d+),"([A-Z_]+)"/g)].filter((pair) => (registrationStatus.enumValues as readonly string[]).includes(pair[2]));
+        expect(ranges.length, formula).toBeGreaterThan(0);
+        for (const [, range] of ranges) expect(range, formula).toBe(`$${letter}$2:$${letter}$${data.length + 1}`);
+      }
+      // …and every colour rule that tests a status word reads `$<letter>2`.
+      const tinting = rulesOf(buffer).filter((rule) => rule.sqref.startsWith("A2:"));
+      expect(tinting, name).toHaveLength(ROW_TINTS.length);
+      for (const rule of tinting) {
+        const tests = [...rule.formula.matchAll(/(\$[A-Z]+\d+)="([A-Z_]+)"/g)];
+        expect(tests.length, rule.formula).toBeGreaterThan(0);
+        for (const [, reference] of tests) expect(reference, rule.formula).toBe(`$${letter}2`);
+      }
+      // The validation sits on the same column.
+      expect(validationsOf(buffer).rules[0].attributes.sqref, name).toBe(`${letter}2:${letter}${data.length + 1}`);
+    }
+  });
+
+  it("puts one list validation over exactly the data rows of the status column, and none on the header or the footer", async () => {
+    const data = mixed();
+    const buffer = await buildPick(data);
+    const { sheet, count, rules } = validationsOf(buffer);
+    expect(count).toBe(1);
+    expect(rules).toHaveLength(1);
+    const [{ attributes, list }] = rules;
+    expect(attributes).toMatchObject({ type: "list", allowBlank: "0", showErrorMessage: "1", sqref: `C2:C${data.length + 1}` });
+    // showDropDown="1" would HIDE the arrow in Excel: it must stay out of the rule.
+    expect(attributes).not.toHaveProperty("showDropDown");
+    // Row 1 is the header and everything after the last registration is the footer: outside the range.
+    expect(Number(/^C2:C(\d+)$/.exec(attributes.sqref)![1])).toBe(readSheet(buffer).rows.findIndex((line) => line?.[0] === RO.title) - 1);
+    // The list is a quoted, comma-separated string holding every state a cell can carry, in the filter's order, and fits Excel's 255.
+    expect(list).toBe(`"${registrationStatus.enumValues.join(",")}"`);
+    expect(list.length - 2).toBeLessThanOrEqual(255);
+    expect(list.slice(1, -1).split(",")).toEqual([...registrationStatus.enumValues]);
+    // One list: the words the colours and the legend know are the words the drop-down offers.
+    expect(Object.keys(STATUS_TINT).sort()).toEqual([...registrationStatus.enumValues].sort());
+    // Every status the mixed rows carry is in the list, so no existing cell is invalid.
+    for (const status of new Set(data.map((entry) => entry.status))) expect(list.slice(1, -1).split(",")).toContain(status);
+    // Where the schema wants it: after the last conditionalFormatting, before anything that follows, inside the worksheet.
+    expect(sheet.lastIndexOf("</conditionalFormatting>")).toBeLessThan(sheet.indexOf("<dataValidations"));
+    expect(sheet.indexOf("</sheetData>")).toBeLessThan(sheet.indexOf("<dataValidations"));
+    expect(sheet.indexOf("</dataValidations>")).toBeLessThan(sheet.indexOf("</worksheet>"));
+    expect(sheet.match(/<dataValidations/g)).toHaveLength(1);
+  });
+
+  it.each([
+    ["ro", "Alege o stare din listă."],
+    ["en", "Pick a status from the list."],
+  ] as const)("says what is wrong in the reader's language (%s)", async (locale, error) => {
+    const { attributes } = validationsOf(await buildPick(mixed(), locale)).rules[0];
+    expect(attributes.error).toBe(error);
+    expect(attributes.errorTitle).toBe(PICK[locale].title);
+    // Excel's own ceilings on the box: 32 characters of title, 255 of message.
+    expect(attributes.errorTitle.length).toBeLessThanOrEqual(32);
+    expect(attributes.error.length).toBeLessThanOrEqual(255);
+  });
+
+  it("escapes what the box says, and refuses a list that would not fit inline or holds a comma", async () => {
+    const odd = await buildRegistrationsWorkbook(mixed(), "S", { statusPick: { title: 'A & "B"', error: "<x> & y" } });
+    const { attributes } = validationsOf(odd).rules[0];
+    expect(attributes.errorTitle).toBe('A & "B"');
+    expect(attributes.error).toBe("<x> & y");
+    expect(unzip(odd).get("xl/worksheets/sheet1.xml")).toContain('errorTitle="A &amp; &quot;B&quot;"');
+    const one = [{ header: "H", width: 5, cell: () => ({ value: "x", type: String }) }];
+    await expect(writeSheet(one, [1], "S", "S", [], [], { column: 0, words: ["a,b"], title: "t", error: "e" })).rejects.toThrow(/comma/);
+    await expect(writeSheet(one, [1], "S", "S", [], [], { column: 0, words: ["x".repeat(200), "y".repeat(100)], title: "t", error: "e" })).rejects.toThrow(/255/);
+  });
+
+  it("writes no drop-down for a file without rows, or for a caller that asks for none — the cells are then plain text", async () => {
+    expect(validationsOf(await buildPick([])).count).toBe(0);
+    expect(unzip(await buildPick([])).get("xl/worksheets/sheet1.xml")).not.toContain("dataValidation");
+    expect(unzip(await build(mixed())).get("xl/worksheets/sheet1.xml")).not.toContain("dataValidation");
+    expect(unzip(await buildRegistrationsWorkbook(mixed(), "S")).get("xl/worksheets/sheet1.xml")).not.toContain("dataValidation");
+  });
+
+  it("changes nothing else: the same cells, rules, formulas and cached numbers with and without the drop-down", async () => {
+    const data = mixed();
+    const withPick = await buildPick(data);
+    const without = await build(data);
+    expect(readSheet(withPick).rows).toEqual(readSheet(without).rows);
+    expect(rulesOf(withPick)).toEqual(rulesOf(without));
+    expect(formulasOf(withPick)).toEqual(formulasOf(without));
+    expect(unzip(withPick).get("xl/styles.xml")).toBe(unzip(without).get("xl/styles.xml"));
+    expect(unzip(withPick).get("xl/workbook.xml")).toBe(unzip(without).get("xl/workbook.xml"));
+    expect(unzip(withPick).get("xl/worksheets/sheet1.xml")!.replace(/<dataValidations[\s\S]*?<\/dataValidations>/, "")).toBe(unzip(without).get("xl/worksheets/sheet1.xml"));
+  });
+
+  it("is a drop-down with the footer's numbers still live after an edit that picks another state", async () => {
+    const buffer = await buildPick(mixed());
+    const grid = gridOf(buffer);
+    const rows = readSheet(buffer).rows;
+    const edited = grid.map((line) => (line ? [...line] : line)) as Grid;
+    edited[1][headerAt("Status")] = "CANCELLED";
+    const confirmed = evaluated(buffer, edited).get(`B${rows.findIndex((line) => line?.[0] === RO.confirmed) + 1}`);
+    expect(confirmed).toBe(2);
+  });
+});
+
 describe("§787 the sponsor list's sheet is untouched by it", () => {
   it("has no colour rule, no formula and no recalculation request: the shared writer adds them only when asked", async () => {
     const sheet = ro.Admin.sponsors.sheet;
@@ -614,7 +767,7 @@ describe("§787 the sponsor list's sheet is untouched by it", () => {
       ],
     );
     const parts = unzip(buffer);
-    expect(parts.get("xl/worksheets/sheet1.xml")).not.toMatch(/<f>|conditionalFormatting/);
+    expect(parts.get("xl/worksheets/sheet1.xml")).not.toMatch(/<f>|conditionalFormatting|dataValidation/);
     expect(parts.get("xl/styles.xml")).not.toContain("<dxfs");
     expect(parts.get("xl/workbook.xml")).not.toContain("fullCalcOnLoad");
   });

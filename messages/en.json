@@ -1126,6 +1126,10 @@
           "SUPERADMIN": "Superadministrator"
         }
       },
+      "sheetpick": {
+        "title": "Status not allowed",
+        "error": "Pick a status from the list."
+      },
       "statistics": {
         "title": "Statistics",
         "total": "Total",

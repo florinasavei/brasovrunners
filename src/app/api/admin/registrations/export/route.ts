@@ -269,7 +269,8 @@ export async function GET(request: Request): Promise<Response> {
         eventStartsAt: row.eventStartsAt,
       })),
       eventTitle ?? "Participants",
-      { notesHeader, statistics },
+      // «Status» is a drop-down (§790), its error box in the reader's language.
+      { notesHeader, statistics, statusPick: { title: statsT("registrations.sheetpick.title"), error: statsT("registrations.sheetpick.error") } },
     );
 
     return new NextResponse(new Uint8Array(workbook), {
