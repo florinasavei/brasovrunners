@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { elevationGpx } from "../../helpers/elevation-gpx";
 
 /**
- * §NNN (amending §333, §718) — `cachedRouteElevation(eventId, gpxKey)`: the route's elevation profile kept by the event and
+ * §802 (amending §333, §718) — `cachedRouteElevation(eventId, gpxKey)`: the route's elevation profile kept by the event and
  * **the GPX's own storage key**, under the `events` tag the event page's other reads are expired with; read from the store
  * and never the database; a file that was read is kept (with or without a profile), a failed read is not — and a page made
  * without its chart for a failed read is kept a minute, not a day, and the store read stays out of the database's breaker.
@@ -84,7 +84,7 @@ afterEach(() => {
   vi.unstubAllEnvs();
 });
 
-describe("§NNN the cached elevation profile", () => {
+describe("§802 the cached elevation profile", () => {
   it("is keyed by the event and the GPX's storage key, under the tag the event page's reads are expired with", async () => {
     await cachedRouteElevation(EVENT, KEY);
     expect(cacheState.calls).toHaveLength(1);

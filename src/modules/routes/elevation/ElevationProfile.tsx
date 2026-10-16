@@ -7,7 +7,7 @@ import { fill } from "./pointer";
 import { VISUALLY_HIDDEN } from "@/shared/ui/visually-hidden";
 
 /**
- * The route's elevation profile as a picture (§NNN, amending §718 and §757; the owner, 2026-10-16: «I would like to have a
+ * The route's elevation profile as a picture (§802, amending §718 and §757; the owner, 2026-10-16: «I would like to have a
  * widget actually! And read it from the GPX»): the one chart of the event page and of the editor's «Puncte de control»
  * preview, drawn from `geometry.ts` — the same core the race number's strip will draw from.
  *

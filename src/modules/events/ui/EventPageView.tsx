@@ -127,7 +127,7 @@ export default async function EventPageView({
   event: PublicEventPage;
   /** The route's checkpoints (§757), read by the caller through the public cache; none draws no section. */
   checkpoints?: readonly Checkpoint[];
-  /** The route's elevation profile (§NNN), read by the caller from the GPX (the public cache's `cachedRouteElevation`); null draws no chart. */
+  /** The route's elevation profile (§802), read by the caller from the GPX (the public cache's `cachedRouteElevation`); null draws no chart. */
   elevation?: ElevationProfileData | null;
   locale: "ro" | "en";
   slug: string;

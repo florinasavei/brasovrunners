@@ -28,7 +28,7 @@ export function clearElevationCache(): void {
 }
 
 /**
- * The elevation profile of the route file stored under `key` (§NNN): the bytes from the site's store, decoded, parsed
+ * The elevation profile of the route file stored under `key` (§802): the bytes from the site's store, decoded, parsed
  * (`parse.ts`). Null when there is no store to ask or the file has no profile (no altitudes, too short); throws
  * `ElevationUnreadable` when the store fails or the object is missing. Reads the store only — never the database — so a
  * public page that asks for it costs no wake of Neon.

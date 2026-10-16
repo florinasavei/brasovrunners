@@ -385,7 +385,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   const checkpoints = await listCheckpoints(db, event.id);
   const gpxWaypoints = await loadGpxWaypoints(readRouteGpx(event.routeGpx)?.key);
   const checkpointRouteKm = eventCheckpointContext(event, gpxWaypoints?.trackMeters ?? null).routeKm;
-  // The same GPX's elevation profile (§NNN), for the card's preview «Așa apare pe pagină»: the saved file, read from the store (kept in this process by the file's key), a file the store cannot give left out.
+  // The same GPX's elevation profile (§802), for the card's preview «Așa apare pe pagină»: the saved file, read from the store (kept in this process by the file's key), a file the store cannot give left out.
   const profileKey = readRouteGpx(event.routeGpx)?.key ?? null;
   const checkpointsProfile = profileKey ? await readRouteElevation(profileKey).catch(() => null) : null;
   // The service offers the same list by the same function, so the `pick` indexes the preview posts mean the same rows.

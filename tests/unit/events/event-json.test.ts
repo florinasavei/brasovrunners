@@ -123,7 +123,7 @@ function sampleFile(): EventFile {
     format: EVENT_FILE_FORMAT,
     version: EVENT_FILE_VERSION,
     exportedAt: "2026-10-13T10:00:00.000Z",
-    exportedFrom: { environment: "production", baseline: "BR-V3.50-2026-10-16" },
+    exportedFrom: { environment: "production", baseline: "BR-V3.51-2026-10-16" },
     series: { partOfASeries: false, rule: null },
     event: sampleConfig(),
     // The volunteers' categories and roles (§774): none in the sample; the round trip with some is in the integration test.
@@ -139,7 +139,7 @@ describe("the event file's reader", () => {
     if (read.ok) expect(read.file.event.translations.ro.title).toBe("Cursa ro");
   });
 
-  it("writes a checkpoint's profile tick only when it is off, so a file of ticked points stays readable by the release before the tick (§NNN)", () => {
+  it("writes a checkpoint's profile tick only when it is off, so a file of ticked points stays readable by the release before the tick (§802)", () => {
     const file = sampleFile();
     file.event.route.checkpoints[1].onProfile = false;
     const written = serializeEventFile(file);

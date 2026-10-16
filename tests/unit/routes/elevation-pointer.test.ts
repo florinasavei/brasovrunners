@@ -5,13 +5,13 @@ import ElevationPointer from "@/modules/routes/elevation/ElevationPointer";
 import { fill, indexAtShare, nearestMarkerName, POINTER_MARKER_REACH_KM, READOUT_GAP, readoutAt, readoutLeft, shareAtX, stepIndex, xAtShare } from "@/modules/routes/elevation/pointer";
 
 /**
- * §NNN — the elevation chart's pointer: the arithmetic behind «4,5 km · 712 m» (`routes/elevation/pointer.ts`) and what the
+ * §802 — the elevation chart's pointer: the arithmetic behind «4,5 km · 712 m» (`routes/elevation/pointer.ts`) and what the
  * island (`ElevationPointer.tsx`) draws before anybody touches it.
  */
 const SCALE = { plotLeft: 40, plotRight: 340, mirrored: false };
 const POINTS = Array.from({ length: 101 }, (_, i) => [i * 90, 600 + i] as const);
 
-describe("§NNN where the pointer's readout stands", () => {
+describe("§802 where the pointer's readout stands", () => {
   // The page's inner width at a 320 px phone, and the readouts the owner's own route gives: «3,8 km · 805 m · Punct izvor» is about 190 px wide.
   const HOST = 288;
   const inside = (left: number, width: number) => left >= 0 && left + width <= HOST;
@@ -46,7 +46,7 @@ describe("§NNN where the pointer's readout stands", () => {
   });
 });
 
-describe("§NNN the pointer's arithmetic", () => {
+describe("§802 the pointer's arithmetic", () => {
   it("turns a position on the chart into a share of the route, clamped to the plot", () => {
     expect(shareAtX(SCALE, 40)).toBe(0);
     expect(shareAtX(SCALE, 190)).toBe(0.5);
@@ -111,7 +111,7 @@ describe("§NNN the pointer's arithmetic", () => {
   });
 });
 
-describe("§NNN the pointer island before any event", () => {
+describe("§802 the pointer island before any event", () => {
   const props: ComponentProps<typeof ElevationPointer> = {
     charts: [{ size: "narrow", viewWidth: 360, viewHeight: 240, plotLeft: 40, plotRight: 340, plotTop: 60, plotBottom: 200, altitudeMin: 590, altitudeMax: 840 }],
     points: POINTS,

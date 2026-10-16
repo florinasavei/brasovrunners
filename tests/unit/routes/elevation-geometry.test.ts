@@ -14,7 +14,7 @@ import { ELEVATION_GLYPH_PATHS } from "@/modules/routes/elevation/glyphs";
 import { type ElevationProfileData } from "@/modules/routes/elevation/parse";
 
 /**
- * §NNN (amending §718, §750, §757) — the elevation profile's geometry, `routes/elevation/geometry.ts`: where the line, the
+ * §802 (amending §718, §750, §757) — the elevation profile's geometry, `routes/elevation/geometry.ts`: where the line, the
  * scales, the labels and the checkpoints' pins stand in a box of any aspect, which the event page, the editor's preview and
  * the race number's strip all draw from.
  */
@@ -57,7 +57,7 @@ const labelBox = (label: { x: number; text: string; anchor: string }, size: numb
   return label.anchor === "start" ? [label.x, label.x + w] : label.anchor === "end" ? [label.x - w, label.x] : [label.x - w / 2, label.x + w / 2];
 };
 
-describe("§NNN the kilometre scale", () => {
+describe("§802 the kilometre scale", () => {
   it("steps by 1 km up to 12 km, 2 km up to 25 km and 5 km beyond", () => {
     expect(kmStep(9)).toBe(1);
     expect(kmStep(12)).toBe(1);
@@ -116,7 +116,7 @@ describe("§NNN the kilometre scale", () => {
   });
 });
 
-describe("§NNN the altitude scale", () => {
+describe("§802 the altitude scale", () => {
   it("picks round values in a step of 10, 25, 50, 100, 200 or 500 metres, at most as many as asked", () => {
     expect(niceAltitudes(595, 841, 4)).toEqual([600, 700, 800]);
     // A range that straddles zero has a zero, never a negative one: Intl prints −0 as «-0».
@@ -177,7 +177,7 @@ describe("§NNN the altitude scale", () => {
   });
 });
 
-describe("§NNN the extremes", () => {
+describe("§802 the extremes", () => {
   it("labels the highest and the lowest point where they are, inside the box", () => {
     const g = elevationGeometry(ramp(9, 600, 800), [], { ...STRIP, extremes: true });
     expect(g.extremes.map((extreme) => extreme.kind)).toEqual(["max", "min"]);
@@ -209,7 +209,7 @@ describe("§NNN the extremes", () => {
   });
 });
 
-describe("§NNN the markers", () => {
+describe("§802 the markers", () => {
   const point = (km: number, kinds: string[] = ["WATER"], label?: string): ElevationMarkerInput => ({ km, kinds, label });
 
   it("gives one marker per checkpoint handed in, on the line, in the order handed in", () => {
@@ -305,7 +305,7 @@ describe("§NNN the markers", () => {
   });
 });
 
-describe("§NNN the compact mode", () => {
+describe("§802 the compact mode", () => {
   it("drops the marker labels and keeps the pins, keeps at most two altitude ticks and labels only the highest", () => {
     const markers: ElevationMarkerInput[] = [{ km: 3, kinds: ["WATER"], label: "km 3" }];
     const full = elevationGeometry(ramp(9), markers, { ...WIDE, kmScale: false, extremes: true, altitudeTicks: 5 });
@@ -321,7 +321,7 @@ describe("§NNN the compact mode", () => {
   });
 });
 
-describe("§NNN the mirror", () => {
+describe("§802 the mirror", () => {
   it("flips every x across the box and the anchors with it, and nothing else", () => {
     const markers: ElevationMarkerInput[] = [{ km: 3, kinds: ["FOOD"], label: "km 3" }];
     const options: ElevationOptions = { ...WIDE, extremes: true, endWords: { start: "Start", finish: "Sosire" } };
@@ -360,7 +360,7 @@ describe("§NNN the mirror", () => {
   });
 });
 
-describe("§NNN the line and the area", () => {
+describe("§802 the line and the area", () => {
   it("hands them over as point arrays, one per profile point, inside the plot, the area closed under the line", () => {
     const profile = ramp(9);
     const g = elevationGeometry(profile, [], WIDE);

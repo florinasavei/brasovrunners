@@ -136,7 +136,7 @@ const toPosted = (row: Checkpoint, index: number): PostedCheckpoint => {
   };
 };
 
-/** One line of the audit trail: where, what, by when (the time limit in minutes) and whether the profile draws it (§NNN) — never a participant. */
+/** One line of the audit trail: where, what, by when (the time limit in minutes) and whether the profile draws it (§802) — never a participant. */
 const summary = (rows: readonly Pick<Checkpoint, "km" | "nameRo" | "cutoffMinutes" | "onProfile">[]) =>
   rows.map((row) => ({ km: row.km, name: row.nameRo, cutoffMinutes: row.cutoffMinutes, onProfile: row.onProfile }));
 
@@ -364,7 +364,7 @@ export async function changeCheckpoints<T extends Record<string, unknown>>(
           cutoffMinutesPart: "",
           noteRo: "",
           noteEn: "",
-          // A point taken from the GPX is on the chart until the club unticks it (§NNN).
+          // A point taken from the GPX is on the chart until the club unticks it (§802).
           onProfile: true,
           remove: false,
           index: pick.at,

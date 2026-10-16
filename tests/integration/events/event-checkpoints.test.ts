@@ -129,7 +129,7 @@ function form(rows: Row[], extra: Record<string, string> = {}, forEvent = eventI
     data.set(`cp[${index}].noteRo`, row.noteRo ?? "");
     data.set(`cp[${index}].noteEn`, row.noteEn ?? "");
     if (row.remove) data.set(`cp[${index}].remove`, "on");
-    // The profile's tick (§NNN): a form that drew the box posts its marker, and «on» when it is ticked; undefined is a form drawn before the box existed.
+    // The profile's tick (§802): a form that drew the box posts its marker, and «on» when it is ticked; undefined is a form drawn before the box existed.
     if (row.onProfile !== undefined) {
       data.set(`cp[${index}].onProfileShown`, "1");
       if (row.onProfile) data.set(`cp[${index}].onProfile`, "on");
@@ -625,7 +625,7 @@ describe("§757 the picture stamp covers the checkpoints", () => {
   });
 });
 
-describe("§NNN «Arată pe profilul traseului» — the tick on each point", () => {
+describe("§802 «Arată pe profilul traseului» — the tick on each point", () => {
   const onProfileOf = async () => Object.fromEntries((await listCheckpoints(db, eventId)).map((row) => [row.nameRo, row.onProfile]));
 
   it("is on for a new point and for any point the form did not carry the box for", async () => {

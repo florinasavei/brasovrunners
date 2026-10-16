@@ -56,7 +56,7 @@ export const eventCheckpoints = pgTable(
     noteRo: text("note_ro"),
     noteEn: text("note_en"),
     /**
-     * Whether the route's elevation profile draws this point (§NNN; the owner, 2026-10-16: «select which ones to show on the
+     * Whether the route's elevation profile draws this point (§802; the owner, 2026-10-16: «select which ones to show on the
      * elevation profile»). On by default: a new point is on the chart until the club unticks it. Only the chart reads it — the
      * public table lists every point, ticked or not.
      */

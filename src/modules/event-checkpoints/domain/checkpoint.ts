@@ -56,7 +56,7 @@ export type Checkpoint = {
   cutoffClock: string | null;
   noteRo: string | null;
   noteEn: string | null;
-  /** Whether the route's elevation profile draws this point (§NNN); the table lists it either way. */
+  /** Whether the route's elevation profile draws this point (§802); the table lists it either way. */
   onProfile: boolean;
 };
 
@@ -74,7 +74,7 @@ export type PostedCheckpoint = {
   noteRo: string;
   noteEn: string;
   /**
-   * «Arată pe profilul traseului» ticked (§NNN): a box that posts nothing when it is not, so the form also posts a marker
+   * «Arată pe profilul traseului» ticked (§802): a box that posts nothing when it is not, so the form also posts a marker
    * that it drew the box (`cp[i].onProfileShown`). **Null when the form did not carry the box** — a page drawn before the
    * tick existed, saved after it: the service then keeps what the point had (a new point: on), never reads «not posted» as
    * «unticked».
@@ -470,7 +470,7 @@ export function checkpointRows(
 }
 
 /**
- * The checkpoints the elevation profile pins (§NNN; the owner, 2026-10-16: «select which ones to show on the elevation
+ * The checkpoints the elevation profile pins (§802; the owner, 2026-10-16: «select which ones to show on the elevation
  * profile»): the ones the club left ticked «Arată pe profilul traseului», by distance, each with its name in the page's
  * language. A row without the flag — a copy of the list kept by the public cache before the column existed — is on, as the
  * column's default is. The table «Puncte de control» never uses this: it lists every point.
