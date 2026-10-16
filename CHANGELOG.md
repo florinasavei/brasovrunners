@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V3.51-2026-10-16
+
+- **The route's elevation profile** — the event page draws the GPX's profile between the maps and the table «Puncte de control» (axes, area, a pin with its glyph for each checkpoint the club ticks «Arată pe profilul traseului», a pointer that reads the kilometre and the altitude), the editor's card previews it, and the shared core is what the race number will draw from. §802.
 ## BR-V3.50-2026-10-16
 
 - **The volunteers' page says what happens, and the form is wider** — four steps under the intro (open at once, the page being the form), a thank-you like the registration's with «Ce urmează» and where the receipt comes, the same facts in the receipt email, and a form as wide as the register page with its boxes in two columns on a desktop. The privacy notice's template names the volunteers' form among those that set the ten-minute cookies. §800.

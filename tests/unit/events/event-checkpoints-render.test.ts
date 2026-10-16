@@ -32,6 +32,7 @@ const point = (id: string, km: number, over: Partial<Checkpoint> = {}): Checkpoi
   cutoffClock: null,
   noteRo: null,
   noteEn: null,
+  onProfile: true,
   ...over,
 });
 

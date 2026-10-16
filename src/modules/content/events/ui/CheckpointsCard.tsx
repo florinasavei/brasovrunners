@@ -16,7 +16,10 @@ import {
   CHECKPOINTS_MAX,
   type Checkpoint,
   checkpointBox,
+  profileMarkers,
 } from "@/modules/event-checkpoints/domain/checkpoint";
+import ElevationProfile, { type ElevationProfileWords } from "@/modules/routes/elevation/ElevationProfile";
+import type { ElevationProfileData } from "@/modules/routes/elevation/parse";
 import { type GpxProposal, MAX_OFF_TRACK_METERS } from "@/modules/event-checkpoints/domain/gpx-waypoints";
 import DetachedActionForm, { DetachedFields, DetachedForm } from "@/shared/forms/DetachedActionForm";
 import RecallField from "@/shared/forms/recall";
@@ -34,6 +37,9 @@ const RemoveGlyph = ACTION_ICONS.delete;
 
 /** The glyph before «Timp limită»: the one the race's own box wears (`WhenBox`), the deadlines' clock. */
 const LimitGlyph = PANEL_GLYPHS.deadlines;
+
+/** The glyph before «Arată pe profilul traseului»: the profile's own, by name from the panels' registry. */
+const ProfileGlyph = PANEL_GLYPHS.routeProfile;
 
 /** How many empty rows the card draws under the saved ones, for points to be typed in this sitting. */
 const SPARE_ROWS = 3;
@@ -91,6 +97,10 @@ type Props = {
   mayEdit: boolean;
   /** The route's length in kilometres (the distance typed, else the GPX's), or null while the event says none. */
   routeKm: number | null;
+  /** The saved GPX's elevation profile (§802), or null while the route has no file with altitudes: the preview above the rows is drawn from it. */
+  profile: ElevationProfileData | null;
+  /** The route's length as the club typed it, in metres, or null: the preview spans it as the page does. */
+  distanceMeters: number | null;
   /**
    * The route's GPX waypoints that can be placed on its track, or null while the file has none (or
    * is not readable): offers «Ia punctele din GPX». `key` is the file the preview is made from.
@@ -122,8 +132,10 @@ type Props = {
  * The list is in distance order — the club never orders it, it types the kilometre. A saved point is
  * removed by ticking «Scoate» on it; the rows left empty at the foot are for new ones.
  */
-export default async function CheckpointsCard({ locale, eventId, checkpoints, mayEdit, routeKm, gpx, previewOpen }: Props) {
+export default async function CheckpointsCard({ locale, eventId, checkpoints, mayEdit, routeKm, profile, distanceMeters, gpx, previewOpen }: Props) {
   const t = await getTranslations("Admin");
+  // The chart's words are the public page's (`Event.profile`), in the language the editor is read in.
+  const tEvent = await getTranslations({ locale, namespace: "Event" });
   const count = checkpoints.length;
   const km = (value: number) => new Intl.NumberFormat(locale, { maximumFractionDigits: 2 }).format(value);
 
@@ -208,6 +220,14 @@ export default async function CheckpointsCard({ locale, eventId, checkpoints, ma
           slotProps={{ htmlInput: { maxLength: CHECKPOINT_NOTE_MAX } }}
         />
       </Stack>
+      {/* «Arată pe profilul traseului» (§802): on for a new point and for any saved one the club has not unticked; an unticked box posts nothing. */}
+      <input type="hidden" name={checkpointBox(index, "onProfileShown")} value="1" form={CHECKPOINTS_FORM} />
+      <CheckboxField name={checkpointBox(index, "onProfile")} defaultChecked={saved ? saved.onProfile : true} help={t("checkpoints.field.onProfileHelp")}>
+        <Box component="span" sx={{ display: "inline-flex", alignItems: "center", gap: 0.75 }}>
+          <ProfileGlyph aria-hidden fontSize="small" />
+          {t("checkpoints.field.onProfile")}
+        </Box>
+      </CheckboxField>
       {saved && (
         <CheckboxField name={checkpointBox(index, "remove")} help={t("checkpoints.removeHelp")}>
           <Box component="span" sx={{ display: "inline-flex", alignItems: "center", gap: 0.75 }}>
@@ -377,6 +397,23 @@ export default async function CheckpointsCard({ locale, eventId, checkpoints, ma
             {t("checkpoints.routeLength", { km: km(routeKm) })}
           </Typography>
         )}
+        {/* «Așa apare pe pagină» (§802): the page's own chart, small, from the saved file and the saved rows — drawn on the server at page load, so it follows a save and not the typing. */}
+        <Panel glyph="routeProfile" static level={4} title={t("checkpoints.preview.title")} intro={mayEdit ? t("checkpoints.preview.help") : undefined} data-testid="checkpoints-preview">
+          {profile ? (
+            <ElevationProfile
+              variant="compact"
+              profile={profile}
+              distanceMeters={distanceMeters}
+              markers={profileMarkers(checkpoints, locale)}
+              locale={locale}
+              words={tEvent.raw("profile") as ElevationProfileWords}
+            />
+          ) : (
+            <Typography variant="body2" color="text.secondary" data-testid="checkpoints-preview-none">
+              {t("checkpoints.preview.none")}
+            </Typography>
+          )}
+        </Panel>
         {!mayEdit ? (
           readOnly
         ) : (

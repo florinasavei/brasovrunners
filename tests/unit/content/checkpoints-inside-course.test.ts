@@ -65,7 +65,7 @@ const language = (locale: "ro" | "en"): LanguageEntry => ({
   label: locale === "ro" ? "Română" : "English",
 });
 
-const POINT: Checkpoint = { id: "22222222-2222-4222-8222-222222222222", nameRo: "Cabana", nameEn: "The hut", km: 7.5, kinds: ["WATER"], cutoffMinutes: 90, cutoffClock: "11:00", noteRo: null, noteEn: null };
+const POINT: Checkpoint = { id: "22222222-2222-4222-8222-222222222222", nameRo: "Cabana", nameEn: "The hut", km: 7.5, kinds: ["WATER"], cutoffMinutes: 90, cutoffClock: "11:00", noteRo: null, noteEn: null, onProfile: true };
 
 async function html(element: ReactElement): Promise<string> {
   const { NextIntlClientProvider } = await import("next-intl");
@@ -83,6 +83,8 @@ async function editor(options: { mayEditSettings?: boolean; mayEditCheckpoints?:
     checkpoints: [POINT],
     mayEdit: mayEditCheckpoints,
     routeKm: 21,
+    profile: null,
+    distanceMeters: null,
     gpx: gpx ? { key: "test/route-gpx/00000000-0000-4000-8000-000000000000/t.gpx", offered: [{ name: "Izvor", km: 0.8, kinds: [], offMeters: 4, tooFar: false }], ignored: 0 } : null,
     previewOpen: gpx,
   });

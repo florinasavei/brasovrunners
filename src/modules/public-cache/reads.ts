@@ -36,6 +36,8 @@ import { memberDefinitionFor, parseMemberDefinition, readMemberDefinition } from
 import { readPublicMembersPage } from "@/modules/content/members/page-settings";
 import { readPublicTeamPage } from "@/modules/content/team/repository";
 import { listCheckpoints } from "@/modules/event-checkpoints/checkpoints";
+import type { ElevationProfileData } from "@/modules/routes/elevation/parse";
+import { ElevationUnreadable, readRouteElevation } from "@/modules/routes/elevation/read";
 import { resolveLocaleSwitch } from "@/modules/events/locale-switch";
 import {
   findEventForRegistrationById,
@@ -105,7 +107,7 @@ import { readWithLastGood } from "@/modules/resilience/last-good";
 import { isDatabaseAwayError } from "@/modules/resilience/domain/database-away";
 import { answeringFromCacheOnly, type PublicContent, publicRead } from "./cache";
 import { type ChangesWhen, clockWindow } from "./clock";
-import { holdPageUntil, renderKind } from "./page-lifetime";
+import { DEGRADED_PAGE_SECONDS, holdPageFor, holdPageUntil, renderKind } from "./page-lifetime";
 
 /**
  * Every read a public page makes, through the data cache (`DECISIONS.md` §333).
@@ -240,6 +242,30 @@ export async function cachedPublishedEventBySlug(locale: Locale, slug: string) {
  */
 export async function cachedEventCheckpoints(eventId: string) {
   return publicRead(["events.checkpoints", eventId], ["events"], () => listCheckpoints(getDb(), eventId));
+}
+
+/**
+ * The route's elevation profile (§802, amending §718): `readRouteGpx`'s file read from the store and parsed by
+ * `routes/elevation/parse.ts`, kept by the event and **the file's own storage key** — a new upload gets a new key
+ * (`events/domain/route-gpx.ts`), so an entry never goes stale and a visitor never reads the 4 MB file. Under the `events`
+ * tag with the checkpoints beside it, so whatever expires the event page's reads expires this one too. It reads the store
+ * and never the database, so a visitor costs no wake of Neon.
+ *
+ * A file that was read — with or without a profile in it — is kept; **a failed read is not**: the store's bad moment must
+ * not leave the page without its chart for a day, so `ElevationUnreadable` passes through the cache (which never keeps a
+ * throw) and is answered here with `null`, the chart left out of this view only — **and the static page made without it is
+ * kept a minute, not a day** (`holdPageFor`, §549, as every other part left out of a page): the CDN would otherwise serve a
+ * chartless page until the `events` tag expired. The read is `storeOnly`: it stays out of the database's breaker (§447), so
+ * a resting database never hides a chart the store can give and a store read never resets the database's back-off.
+ */
+export async function cachedRouteElevation(eventId: string, gpxKey: string): Promise<ElevationProfileData | null> {
+  try {
+    return await publicRead(["events.elevation", eventId, gpxKey], ["events"], () => readRouteElevation(gpxKey), undefined, { storeOnly: true });
+  } catch (error) {
+    if (!(error instanceof ElevationUnreadable)) throw error;
+    await holdPageFor(DEGRADED_PAGE_SECONDS);
+    return null;
+  }
 }
 
 /** `findPublishedTranslations`: the event page's `hreflang` alternates. */

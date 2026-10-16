@@ -15,7 +15,10 @@ import {
   cachedEventCheckpoints,
   cachedPublishedEventBySlug,
   cachedPublishedTranslations,
+  cachedRouteElevation,
 } from "@/modules/public-cache/reads";
+import { readRouteGpx } from "@/modules/events/domain/route-gpx";
+import { isStorageConfigured } from "@/modules/media/storage";
 import { parseInterestOutcome, parseInterestSince } from "@/modules/registrations/interest-box";
 import { openRoleNames } from "@/modules/volunteers/domain/volunteer";
 import { readVolunteerOffer } from "@/modules/volunteers/offer";
@@ -211,6 +214,12 @@ export default async function EventDetailPage({ params, query, canEdit = false, 
   const weather = dated ? await forecastForEvent(dated, now) : null;
   // The route's checkpoints (§757): a part of the page, never its content — left out while the database is away.
   const checkpoints = await readOrWhileAway(() => cachedEventCheckpoints(event.id), []);
+  // The route's elevation profile (§802): read from the GPX in the store and kept by the file's key (no wake of the database,
+  // no 4 MB read per visitor) — a part of the page too, so a store that cannot answer leaves the chart out and nothing else.
+  // A members' event's checkpoints and profile go through the same cache, keyed by its id and its file: the same accepted exception as
+  // the checkpoints above — this point is reached only after the members gate, and the key is unguessable without the id.
+  const gpxKey = isStorageConfigured() ? (readRouteGpx(event.routeGpx)?.key ?? null) : null;
+  const elevation = gpxKey ? await readOrWhileAway(() => cachedRouteElevation(event.id, gpxKey), null) : null;
   return (
     <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
       {/* No structured data for a members' event (§552): nothing on its page is for a search engine. */}
@@ -238,6 +247,7 @@ export default async function EventDetailPage({ params, query, canEdit = false, 
         weather={weather}
         membersOnly={membersOnly}
         checkpoints={checkpoints}
+        elevation={elevation}
         editHref={editHref}
         visit={{
           interestBox,
