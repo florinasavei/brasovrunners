@@ -186,8 +186,9 @@ describe("§650 the export carries the moment and what it is for", () => {
     expect(none.split(",").slice(-7, -5)).toEqual(["", ""]);
   });
 
-  it("the spreadsheet: «Until when» and «Waiting on» right after «Status», as on the list", () => {
-    const status = REGISTRATION_SHEET_HEADERS.indexOf("Status");
-    expect(REGISTRATION_SHEET_HEADERS.slice(status, status + 3)).toEqual(["Status", "Until when", "Waiting on"]);
+  it("the spreadsheet: «Until when» and «Waiting on» side by side, in that order, before «Email» (§790 moved «Status» up beside the race number; they kept their place)", () => {
+    const until = REGISTRATION_SHEET_HEADERS.indexOf("Until when");
+    expect(REGISTRATION_SHEET_HEADERS.slice(until, until + 3)).toEqual(["Until when", "Waiting on", "Email"]);
+    expect(REGISTRATION_SHEET_HEADERS.indexOf("Status")).toBe(REGISTRATION_SHEET_HEADERS.indexOf("Race number (BIB)") + 1);
   });
 });

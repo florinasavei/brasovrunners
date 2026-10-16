@@ -81,7 +81,7 @@ describe("§787 the footer's numbers, for a mixed fixture", () => {
   it("counts every row once, by state, so the states add up to the total", async () => {
     const { rows } = readSheet(await build(mixed()));
     const footer = footerOf(rows);
-    expect(footer.slice(0, 12)).toEqual([
+    expect(footer.slice(0, 15)).toEqual([
       ["Statistici"],
       ["Total", "9"],
       ["Confirmați (activi)", "3"],
@@ -94,6 +94,10 @@ describe("§787 the footer's numbers, for a mixed fixture", () => {
       [CLUB_NAME, "5"],
       [`${CLUB_NAME}, confirmați`, "2"],
       [`Alții, nu ${CLUB_NAME}`, "4"],
+      // The special guests (§643): none in this fixture, so the confirmed part of the places line is all the confirmed (§615).
+      ["Invitați speciali", "0"],
+      ["Invitați speciali, confirmați", "0"],
+      ["Confirmați care ocupă un loc", "3"],
     ]);
     // 3 + 1 + 1 + 1 + 1 + 1 + 1: nothing counted twice, nothing dropped.
     expect(3 + 1 + 1 + 1 + 1 + 1 + 1).toBe(9);
@@ -337,7 +341,7 @@ describe("§787 the footer's words, in both languages", () => {
     for (const words of [RO, EN]) {
       const everything = [
         words.title, words.total, words.confirmed, words.pendingEmail, words.pendingDeclaration, words.waitlisted, words.waitlistOffered, words.cancelled,
-        words.expired, words.club, words.clubConfirmed, words.notClub, words.allEvents, words.categoryHeader, words.noCategory,
+        words.expired, words.club, words.clubConfirmed, words.notClub, words.specialGuests, words.specialGuestsConfirmed, words.confirmedInPlaces, words.allEvents, words.categoryHeader, words.noCategory,
         ...Object.values(words.sex), ...Object.values(words.bands), ...words.notes, ...Object.values(words.legend),
       ];
       for (const word of everything) {
@@ -346,7 +350,7 @@ describe("§787 the footer's words, in both languages", () => {
         expect(word.length).toBeLessThanOrEqual(200);
       }
       expect(words.category).toBe("{sex}, {band}");
-      expect(words.notes).toHaveLength(5);
+      expect(words.notes).toHaveLength(6);
       expect(words.club).toBe(CLUB_NAME);
     }
     const keys = (catalogue: typeof ro) => Object.keys(catalogue.Admin.registrations.statistics).sort();
@@ -359,7 +363,7 @@ describe("§787 the footer's words, in both languages", () => {
     const { rows } = readSheet(await build(mixed(), RO));
     const all = rows.filter((row) => row?.[0]).map((row) => row![0]!);
     // The definitions are followed by the legend of the colours (§787, amended), so they are found by their first words.
-    const first = all.indexOf("Activi sunt cei confirmați: au un loc și declarația semnată.");
+    const first = all.indexOf("Activi sunt cei confirmați: au declarația semnată; cei care ocupă un loc sunt la «Confirmați care ocupă un loc».");
     expect(first).toBeGreaterThan(0);
     const [, second, third, fourth] = all.slice(first, first + 4);
     expect(second).toContain(`«${CLUB_NAME}»`);

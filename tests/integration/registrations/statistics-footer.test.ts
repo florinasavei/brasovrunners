@@ -8,7 +8,7 @@ import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email
 import { resolveDisplayName } from "@/modules/registrations/names";
 import type { StaffRole } from "@/modules/staff-identity/domain/roles";
 import { CLUB_NAME } from "@/theme/brand";
-import { readSheet, startListRows } from "../../helpers/xlsx";
+import { readSheet, startListRows, unzip } from "../../helpers/xlsx";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
@@ -153,7 +153,7 @@ describe("§787 the footer, through the route", () => {
     expect(rows[11]).toBeUndefined();
     expect(rows[12]).toEqual(["Statistici"]);
     const footer = footerOf(rows);
-    expect(footer.slice(0, 12)).toEqual([
+    expect(footer.slice(0, 15)).toEqual([
       ["Statistici"],
       ["Total", "10"],
       ["Confirmați (activi)", "4"],
@@ -166,6 +166,10 @@ describe("§787 the footer, through the route", () => {
       [CLUB_NAME, "5"],
       [`${CLUB_NAME}, confirmați`, "3"],
       [`Alții, nu ${CLUB_NAME}`, "5"],
+      // Nobody on «Lista de invitați speciali» in this race: the confirmed part of the places line is all the confirmed (§643, §615).
+      ["Invitați speciali", "0"],
+      ["Invitați speciali, confirmați", "0"],
+      ["Confirmați care ocupă un loc", "4"],
     ]);
     const at = footer.findIndex((row) => row[0] === "Categorie");
     expect(footer.slice(at, at + 9)).toEqual([
@@ -177,7 +181,7 @@ describe("§787 the footer, through the route", () => {
       ["Masculin, 30-39 ani", "2", "1", "1", "1"],
       ["Fără categorie", "1", "0", "0", "0"],
       [],
-      ["Activi sunt cei confirmați: au un loc și declarația semnată."],
+      ["Activi sunt cei confirmați: au declarația semnată; cei care ocupă un loc sunt la «Confirmați care ocupă un loc»."],
     ]);
   });
 
@@ -191,6 +195,44 @@ describe("§787 the footer, through the route", () => {
     const [cancelled] = await db.select({ name: registrations.registeredName }).from(registrations).where(eq(registrations.status, "CANCELLED"));
     const searched = footerOf(await download(`eventId=${race.id}&format=xlsx&q=${encodeURIComponent(cancelled.name)}`));
     expect(searched.slice(1, 3)).toEqual([["Total", "1"], ["Confirmați (activi)", "0"]]);
+  });
+
+  it("names the special guests on lines of their own: inside «Total» and their state, and out of the places line's confirmed part (§643, §615)", async () => {
+    const race = await createRace("Crosul Invitaților", "2099-11-21T08:00:00.000Z");
+    await register(race.id, "CONFIRMED", { sex: "FEMALE", age: 25 });
+    await register(race.id, "CONFIRMED", { sex: "MALE", age: 35, outsideCapacity: true });
+    await register(race.id, "CONFIRMED", { sex: "MALE", age: 36, outsideCapacity: true, clubMemberDeclared: true });
+    await register(race.id, "WAITLISTED", { sex: "FEMALE", age: 30, outsideCapacity: true });
+    // A test registration is in no count, a guest or not (§30).
+    await register(race.id, "CONFIRMED", { sex: "FEMALE", age: 30, outsideCapacity: true, kind: "TEST" });
+    const rows = await download(`eventId=${race.id}&format=xlsx`);
+    const footer = footerOf(rows);
+    expect(footer.slice(0, 15)).toEqual([
+      ["Statistici"],
+      ["Total", "4"],
+      ["Confirmați (activi)", "3"],
+      ["Așteaptă confirmarea adresei", "0"],
+      ["Așteaptă semnarea declarației", "0"],
+      ["Pe lista de așteptare", "1"],
+      ["Au o ofertă de loc", "0"],
+      ["Anulați", "0"],
+      ["Expirați", "0"],
+      [CLUB_NAME, "1"],
+      [`${CLUB_NAME}, confirmați`, "1"],
+      [`Alții, nu ${CLUB_NAME}`, "3"],
+      ["Invitați speciali", "3"],
+      ["Invitați speciali, confirmați", "2"],
+      ["Confirmați care ocupă un loc", "1"],
+    ]);
+    // The note says it in a sentence, and the English file says it in English.
+    expect(footer.map((row) => row[0])).toContain("Invitații speciali, puși de un administrator pe «Lista de invitați speciali», nu ocupă un loc; sunt numărați la «Total» și la starea lor.");
+    const english = footerOf(await download(`eventId=${race.id}&format=xlsx&lang=en`), "Statistics");
+    expect(english.slice(12, 15)).toEqual([["Special guests", "3"], ["Special guests, confirmed", "2"], ["Confirmed who take a place", "1"]]);
+    // The column the formulas read is the sheet's own, filled from the registration's «outside the capacity» flag.
+    const header = rows[0] as string[];
+    // Last but for «Note interne» (§785), which an Administrator's file carries after it.
+    expect(header.slice(-2)).toEqual(["Special guest", "Note interne"]);
+    expect(startListRows(rows).slice(1).map((row) => row[header.indexOf("Special guest")]).sort()).toEqual(["0", "1", "1", "1"]);
   });
 
   it("is in the reader's language with ?lang=en, and Română for any other", async () => {
@@ -257,6 +299,19 @@ describe("§787 the footer, through the route", () => {
     expect(labels).toContain("Alergarea dublă · 02.11.2099 · 14:00");
     expect(labels).toContain("Eveniment fără titlu · 03.11.2099");
     expect(labels.some((label) => label?.includes(untitled.id))).toBe(false);
+  });
+
+  it("makes «Status» the third column a drop-down over the data rows, in the reader's language (§790)", async () => {
+    const race = await seedRace();
+    for (const [lang, error] of [["ro", "Alege o stare din listă."], ["en", "Pick a status from the list."]] as const) {
+      const response = await exportRegistrations(new Request(url(`eventId=${race.id}&format=xlsx&lang=${lang}`)));
+      const sheet = unzip(Buffer.from(await response.arrayBuffer())).get("xl/worksheets/sheet1.xml") ?? "";
+      expect(sheet).toMatch(/<dataValidation type="list" allowBlank="0" showErrorMessage="1" errorTitle="[^"]+" error="[^"]*" sqref="C2:C11">/);
+      expect(sheet).toContain(`error="${error}"`);
+      expect(sheet).toContain('<formula1>"PENDING_EMAIL_CONFIRMATION,PENDING_DECLARATION,WAITLISTED,WAITLIST_OFFERED,CONFIRMED,CANCELLED,EXPIRED"</formula1>');
+    }
+    const header = (await download(`eventId=${race.id}&format=xlsx`))[0] as string[];
+    expect(header.slice(0, 3)).toEqual(["ID", "Race number (BIB)", "Status"]);
   });
 
   it("is never in the CSV, whose file stays the rows", async () => {
