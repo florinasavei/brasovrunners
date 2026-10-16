@@ -5,6 +5,7 @@ import ro from "../../../messages/ro.json";
 import type { EditableEvent } from "@/modules/content/events/repository";
 import type { LanguageEntry } from "@/modules/content/events/ui/boxes/box-kit";
 import { blankTranslation } from "@/modules/content/events/ui/TranslationFields";
+import { RETENTION_PERIODS } from "@/modules/jobs/domain/retention-periods";
 
 /**
  * §760 — the event editor in fewer cards, rendered: the cards are the HTML the server sends, so what
@@ -114,7 +115,7 @@ describe("§760 «Participare, înscrieri și regulament»", () => {
     const outer = fold(markup, "box-registration");
     expect(outer.heading).toBe("h2");
     expect(markup).toContain("6 · Participare, înscrieri și regulament — apare pe pagină");
-    const ids = ["box-registration-window", "box-confirmation", "box-reminder", "box-rules", "box-declaration", "box-conditions", "box-schedule", "box-kit", "box-bibs", "box-start-list"];
+    const ids = ["box-registration-window", "box-confirmation", "box-reminder", "box-rules", "box-declaration", "box-schedule", "box-kit", "box-bibs", "box-start-list"];
     const cards = ids.map((id) => fold(markup, id));
     // Inside the card, in that order, each closed, each a level below.
     expect(cards.map((card) => card.at)).toEqual([...cards.map((card) => card.at)].sort((a, b) => a - b));
@@ -195,6 +196,107 @@ describe("§760 «Participare, înscrieri și regulament»", () => {
     expect(reader).toContain('id="box-rules"');
     expect(reader).toContain('id="box-start-list"');
     expect(reader).not.toContain('name="event.capacity"');
+  });
+});
+
+/** The markup of «Regulamentul» (`#box-rules`): from its opening tag to the declaration card that follows it. */
+function rulesCard(markup: string): string {
+  const start = markup.indexOf('id="box-rules"');
+  expect(start, "#box-rules is drawn").toBeGreaterThan(-1);
+  return markup.slice(markup.lastIndexOf("<details", start), markup.indexOf('id="box-declaration"', start));
+}
+
+/** Every `name="…"` a form control in the markup posts, in document order. */
+function postedNames(markup: string): string[] {
+  return [...markup.matchAll(/<(?:input|textarea|select)\b[^>]*?\sname="([^"]+)"/g)].map((match) => match[1]);
+}
+
+describe("§799 «Condiții de participare» inside «Regulamentul»", () => {
+  const registration = async (event: EditableEvent, mayEditSettings = true) =>
+    html(
+      (await RegistrationBox({
+        event,
+        mayEditSettings,
+        languages: [language("ro"), language("en")],
+        declarations,
+        locale: "ro",
+        clubDeadlines: deadlines,
+      })) as ReactElement,
+    );
+
+  it("is a group at the foot of the rules card, under the minimum age and outside the language tabs", async () => {
+    const rules = rulesCard(await registration({ ...RACE, declarationDocumentId: declarations[0].id } as EditableEvent));
+    const group = rules.indexOf('data-testid="conditions-group"');
+    expect(group, "the group is inside #box-rules").toBeGreaterThan(-1);
+    // After the tabs and the minimum age: the tick is not translated text.
+    expect(group).toBeGreaterThan(rules.indexOf('name="event.minAge"'));
+    expect(group).toBeGreaterThan(rules.lastIndexOf('name="rules"'));
+    // A level-4 heading with the glyph before the words (a static Panel, as «Clubul pe lista publică»).
+    const section = rules.slice(rules.lastIndexOf("<section", group));
+    expect(section).toMatch(/<h4\b[^>]*>(?:<svg[^>]*data-testid="MedicalServicesIcon")/);
+    expect(section.indexOf("Condiții de participare")).toBeGreaterThan(section.indexOf('data-testid="MedicalServicesIcon"'));
+    expect(section).toContain('name="event.askHealthNote"');
+    expect(section).toContain(`se șterg la ${RETENTION_PERIODS.identityAndHealthDaysAfterEvent} zile după eveniment.`);
+    // Unticked at the start; its marker posts with it.
+    expect(section).not.toMatch(/<input[^>]*name="event.askHealthNote"[^>]*checked/);
+    expect(section).toMatch(/<input[^>]*type="hidden"[^>]*name="event.askHealthNote.present"[^>]*value="1"/);
+  });
+
+  it("says «Informații medicale: da/nu» last on the rules card's closed line, and starts ticked when asked", async () => {
+    const asked = rulesCard(await registration({ ...RACE, askHealthNote: true, declarationDocumentId: declarations[0].id } as EditableEvent));
+    expect(asked).toMatch(/<input[^>]*name="event.askHealthNote"[^>]*checked/);
+    expect(line(asked, "box-rules")).toMatch(/vârsta minimă 14 ani · Informații medicale: da$/);
+    const unticked = rulesCard(await registration({ ...RACE, declarationDocumentId: declarations[0].id } as EditableEvent));
+    expect(line(unticked, "box-rules")).toMatch(/vârsta minimă 14 ani · Informații medicale: nu$/);
+  });
+
+  it("leaves the health words off the closed line, and says why, where there is no form to ask it on (§111)", async () => {
+    const groupRun = rulesCard(await registration({ ...RACE, type: "GROUP_RUN", registrationMode: "NONE", askHealthNote: true } as EditableEvent));
+    expect(line(groupRun, "box-rules")).not.toContain("Informații medicale");
+    expect(groupRun).toContain('data-testid="conditions-not-registering"');
+    const elsewhere = rulesCard(await registration({ ...RACE, registrationMode: "EXTERNAL", askHealthNote: true } as EditableEvent));
+    expect(line(elsewhere, "box-rules")).not.toContain("Informații medicale");
+    expect(elsewhere).toContain('data-testid="conditions-not-here"');
+    // Hidden, never removed: the tick stays in the document for a form that switches the mode back.
+    expect(elsewhere).toContain('name="event.askHealthNote"');
+  });
+
+  it("is its heading and its line alone for a reader who may not change the event (§542)", async () => {
+    const rules = rulesCard(await registration({ ...RACE, askHealthNote: true } as EditableEvent, false));
+    expect(rules).toContain('data-testid="conditions-group"');
+    expect(rules).toContain("Informații medicale: da");
+    expect(rules).not.toContain('name="event.askHealthNote"');
+  });
+
+  it("leaves no card of its own, and posts the two names it always posted, once each", async () => {
+    const markup = await registration({ ...RACE, declarationDocumentId: declarations[0].id } as EditableEvent);
+    expect(markup).not.toContain('id="box-conditions"');
+    const names = postedNames(markup);
+    expect(names.filter((name) => name === "event.askHealthNote")).toHaveLength(1);
+    expect(names.filter((name) => name === "event.askHealthNote.present")).toHaveLength(1);
+    // The tick sits between the minimum age and the declaration's choice, in the rules card.
+    expect(names.indexOf("event.minAge")).toBeLessThan(names.indexOf("event.askHealthNote.present"));
+    expect(names.indexOf("event.askHealthNote.present")).toBeLessThan(names.indexOf("event.askHealthNote"));
+    expect(names.indexOf("event.askHealthNote")).toBeLessThan(names.indexOf("event.declarationDocumentId"));
+  });
+
+  it("posts exactly the names the editor posted before the move, for a race registering on the site", async () => {
+    // Taken from the editor as it was before the move (BR-V3.48): the same controls, only the tick's place in the
+    // document changed. A name added or lost here is a field the server reads differently.
+    const before = [
+      "event.askHealthNote", "event.askHealthNote.present", "event.bibStartNumber", "event.capacity", "event.confirmationDeadlineDaysBefore",
+      "event.confirmationOpensDaysBefore", "event.declarationDocumentId", "event.externalProvider", "event.externalRegistrationUrl", "event.hiddenList.present",
+      "event.hiddenListBibStart", "event.hiddenListCounted", "event.hiddenListEnabled", "event.hiddenListPublic", "event.kitShirt", "event.kitShirt.present",
+      "event.minAge", "event.participantCountPublic", "event.participantCountPublic.present", "event.participantListVisibility", "event.publicListClub",
+      "event.publicListClub", "event.publicListClub", "event.registrationClosesAtDate", "event.registrationClosesAtTime", "event.registrationMode",
+      "event.registrationOpensAtDate", "event.registrationOpensAtTime", "event.registrationOpensSoon", "event.registrationOpensSoon.present",
+      "event.reminderHoursBefore", "event.schedule[0].date", "event.schedule[0].en", "event.schedule[0].endTime", "event.schedule[0].place",
+      "event.schedule[0].ro", "event.schedule[0].time", "event.waitlistAutoOffer", "event.waitlistCapacity", "event.waitlistCountPublic",
+      "event.waitlistCountPublic.present", "event.waitlistMode", "event.waitlistPublic", "translations.en.checklist", "translations.en.rules",
+      "translations.en.schedule", "translations.ro.checklist", "translations.ro.rules", "translations.ro.schedule",
+    ];
+    const markup = await registration({ ...RACE, declarationDocumentId: declarations[0].id } as EditableEvent);
+    expect([...postedNames(markup)].sort()).toEqual(before);
   });
 });
 

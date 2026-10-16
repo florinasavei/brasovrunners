@@ -51,7 +51,7 @@ import OnlyForType from "../OnlyForType";
 import WaitlistLimitOnly from "../WaitlistLimitOnly";
 import WallTimeField from "../WallTimeField";
 import { BoxNote, type BoxProps, type LanguageEntry, RiskLine, SettingsReadOnly, summaryWords } from "./box-kit";
-import ConditionsBox from "./ConditionsBox";
+import { asksHealthNoteOnForm } from "./ConditionsGroup";
 import DeclarationCard, { declarationLine } from "./DeclarationCard";
 import ProgrammeBox from "./ProgrammeBox";
 import StartListBox from "./StartListBox";
@@ -84,8 +84,9 @@ function box(field: EventFieldName, extra: Record<string, unknown> = {}) {
  *    dinaintea startului» (`#box-reminder`) — the registration's life, in time;
  * 2. what a participant agrees to: «Regulamentul» with the minimum age (`#box-rules`, §505), right
  *    above «Declarația pe propria răspundere» (`#box-declaration`, §448) — the age and the declaration
- *    side by side, so the sentence that sent the reader from one card to the other is gone — then
- *    «Condiții de participare» (`#box-conditions`, §557), what the form asks;
+ *    side by side, so the sentence that sent the reader from one card to the other is gone. What the
+ *    form asks — «Condiții de participare», the «Informații medicale» tick (§557) — is a group at the
+ *    foot of «Regulamentul», under the minimum age (§799); there is no `#box-conditions` any more;
  * 3. the day itself: «Programul zilei și ce să aduci» (`#box-schedule`), then, while the club
  *    registers them here, «Kit de participare» (`#box-kit`, §554) and «Numere de concurs (BIB)»
  *    (`#box-bibs`, with the designer and, on the editor, allocation and printing);
@@ -231,7 +232,6 @@ export default async function RegistrationBox({
   // The rules hold the minimum age, for every type (§505).
   const rules = await RulesBox({ languages, event, mayEditSettings });
   const declarationCard = await DeclarationCard({ event, mayEditSettings, groupRunDeclarations, declarations, words });
-  const conditions = await ConditionsBox({ event, mayEditSettings });
   const startList = await StartListBox({ event, mayEditSettings });
 
   /*
@@ -250,8 +250,8 @@ export default async function RegistrationBox({
       locale,
       creating: event === null,
     }),
-    !(registers && event?.registrationMode === "INTERNAL") ? line.text : null,
-    registers && event?.registrationMode === "INTERNAL" ? healthNoteSummary(words, event.askHealthNote ?? false) : null,
+    !asksHealthNoteOnForm(event) ? line.text : null,
+    asksHealthNoteOnForm(event) ? healthNoteSummary(words, event?.askHealthNote ?? false) : null,
     programmeSummary(words, event, hasProgramme(initialType), translations, locale),
     t("editor.boxes.registration.rulesLine", { state: rulesSummary(words, translations) }),
     minAgeSummary(words, effectiveMinimumAge(event?.minAge), locale),
@@ -568,10 +568,9 @@ export default async function RegistrationBox({
       <Stack spacing={2}>
         {/* 6.1 — how people register, and the registration's life. A reader is told once that the settings are not theirs (§358). */}
         {mayEditSettings ? registrationFields : <SettingsReadOnly />}
-        {/* 6.2 — what a participant agrees to: the rules and the minimum age, the declaration, what the form asks (§505, §448, §557). */}
+        {/* 6.2 — what a participant agrees to: the rules, with the minimum age and what the form asks, then the declaration (§505, §448, §557, §799). */}
         {rules}
         {declarationCard}
-        {conditions}
         {/* 6.3 — the day: the programme and what to bring, then the kit and the numbers. */}
         {programme}
         {mayEditSettings
