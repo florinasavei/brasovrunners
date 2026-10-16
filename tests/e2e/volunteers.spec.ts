@@ -382,12 +382,15 @@ test.describe("§754 volunteers for a race", () => {
         await expect(bareChips.getByRole("checkbox", { name: "Punct de apă" })).not.toBeChecked();
         await bareChips.getByTestId("volunteer-role-option").filter({ hasText: "Sosire" }).getByTestId("volunteer-role-name").click();
         await expect(bareChips.getByRole("checkbox", { name: "Sosire" })).toBeChecked();
-        // Sent with nothing else: the server refuses, names the boxes, and the page comes back with «Sosire» ticked.
+        // Sent with a date of birth under the floor (the browser's own checks pass, the server's refuse): the page comes back with «Sosire» ticked.
         await bare.getByLabel("Numele tău").fill("Fără Script");
         await bare.getByLabel("Adresa ta de email").fill("fara-script@example.test");
         await bare.locator('[name="phone"]').fill("712345678");
-        await bare.locator('input[name="birthDate"]').fill("01.01.1990");
+        await bare.locator('input[name="birthDate"]').fill("01.01.2020");
+        await bare.locator('select[name="sex"]').selectOption("FEMALE");
         await bare.locator('input[name="city"]').fill("Brașov");
+        await bare.locator('input[name="consent"]').check();
+        await bare.locator('input[name="agreement"]').check();
         await bare.waitForTimeout(1_200);
         await bare.getByTestId("volunteer-box").getByRole("button", { name: "Mă ofer voluntar", exact: true }).click();
         await expect(bare.getByTestId("volunteer-invalid")).toBeVisible({ timeout: 30_000 });
