@@ -7,7 +7,7 @@ import { readMembersPageSettings } from "@/modules/content/members/page-settings
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — «Cine e membru» through its Server Action, over a real database and the real session (the
+ * §789 — «Cine e membru» through its Server Action, over a real database and the real session (the
  * development switcher's cookie): the Administrator and the Redactor save it and land on the card; one
  * language alone is returned as a refusal naming the empty box with both boxes as typed; a member, a
  * Contributor and an Organizer write nothing; and the sentence is saved whether or not «Beneficiile
@@ -46,7 +46,7 @@ function form(fields: Record<string, string>): FormData {
   return data;
 }
 
-describe("§NNN the «Cine e membru» action", () => {
+describe("§789 the «Cine e membru» action", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   const staff: Record<string, StaffUser> = {};

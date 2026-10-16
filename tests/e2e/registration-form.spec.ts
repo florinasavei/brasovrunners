@@ -288,7 +288,7 @@ test.describe("BR-REQ-041-01 the optional half of the form is open, and foldable
     await expect(page.getByTestId("check-email-form-in")).toHaveText("Formularul pentru Ana a ajuns.");
   });
 
-  test("the «?» after «Sunt membru al grupului» says what a member is, and pressing it does not tick the box (§NNN)", async ({ page }) => {
+  test("the «?» after «Sunt membru al grupului» says what a member is, and pressing it does not tick the box (§789)", async ({ page }) => {
     await signIn(page, "Dev Administrator");
     await ensureRegistrationIsOpen(page);
     await page.goto(registerPath);

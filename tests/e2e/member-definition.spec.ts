@@ -3,7 +3,7 @@ import { ensureRegistrationIsOpen, FEATURED, hydrated, signIn } from "./support/
 import { openFold } from "./support/fold";
 
 /**
- * §NNN — «Pagini» → «Membri» → «Cine e membru»: the sentence behind the «?» after «Sunt membru al grupului»
+ * §789 — «Pagini» → «Membri» → «Cine e membru»: the sentence behind the «?» after «Sunt membru al grupului»
  * on the registration form is the club's own once it writes it, in both languages or neither, and the
  * platform's again once it clears it.
  *
@@ -19,7 +19,7 @@ const PLATFORM = "Am fost la cel puțin 3 alergări de grup în ultimele 6 luni.
 const CLUB_RO = "Ai fost la cel puțin 5 alergări de grup în ultimele 3 luni.";
 const CLUB_EN = "You have joined at least 5 group runs in the last 3 months.";
 
-test.describe.serial("§NNN «Cine e membru» on «Membri»", () => {
+test.describe.serial("§789 «Cine e membru» on «Membri»", () => {
   test("the club's sentence replaces the platform's behind the «?» on the registration form; one language alone is refused; cleared, the platform's is back", async ({ page }) => {
     test.setTimeout(150_000);
     await signIn(page, "Dev Administrator");

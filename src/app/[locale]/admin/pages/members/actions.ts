@@ -64,7 +64,7 @@ export async function saveMembersTextAction(_previous: FormOutcome | null, form:
 }
 
 /**
- * «Cine e membru» (§NNN): the sentence behind the «?» of the member tick, both languages or neither.
+ * «Cine e membru» (§789): the sentence behind the «?» of the member tick, both languages or neither.
  * Saved whether or not the members' page is on the site; a refusal returns, so both boxes come back as
  * typed (§315). The door is the members' pages' writers, asked again in the service (BR-REQ-060-01).
  */

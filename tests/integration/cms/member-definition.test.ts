@@ -18,7 +18,7 @@ import { isDomainError } from "@/shared/errors/domain-error";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — «Cine e membru»: the club's own sentence behind the «?» after the tick «Sunt membru al
+ * §789 — «Cine e membru»: the club's own sentence behind the «?» after the tick «Sunt membru al
  * grupului» on the registration form and on the volunteers' form. One `platform_settings` row (no
  * migration), both languages or neither, the members' pages' writers', audited without the words,
  * and none until the club writes one — the forms then say the platform's own.
@@ -27,7 +27,7 @@ const NOW = new Date("2026-10-16T08:00:00.000Z");
 const RO = "Ai fost la cel puțin 5 alergări de grup în ultimele 3 luni.";
 const EN = "You have joined at least 5 group runs in the last 3 months.";
 
-describe("§NNN who is a member, as the club says it", () => {
+describe("§789 who is a member, as the club says it", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   const staff: Partial<Record<StaffRole, StaffUser>> = {};

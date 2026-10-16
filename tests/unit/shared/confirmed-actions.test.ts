@@ -254,7 +254,7 @@ export const NOT_CONFIRMED: Readonly<Record<string, string>> = {
   moveStripPictureAction: "reorders the home page's photo strip, undone by moving back",
   replaceShopPictureAction: "a new crop or another stored picture in the same place of the strip, undone by saving the previous one again",
   saveTeamPageIntroAction: "an editorial save of the page's introduction; publishing the page asks",
-  saveMemberDefinitionAction: "an editorial save of one sentence (§NNN), like the members' pages' words beside it; nothing is sent or published by it",
+  saveMemberDefinitionAction: "an editorial save of one sentence (§789), like the members' pages' words beside it; nothing is sent or published by it",
   saveMembersTextAction: "an editorial save of the members' pages' words (§524), like a page's; publishing the page asks",
   createLegalVersionAction: "a draft, never in force until approved, which asks",
   updateLegalVersionAction: "a draft, never in force until approved, which asks",

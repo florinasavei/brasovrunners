@@ -8,7 +8,7 @@ import { MEMBER_DEFINITION_MAX } from "@/modules/content/members/member-definiti
 import TranslateProvider, { type TranslateAction } from "@/modules/translate/ui/TranslateProvider";
 
 /**
- * §NNN — «Pagini» → «Membri» → «Cine e membru» as the server draws it: a named card (the house's `Panel`
+ * §789 — «Pagini» → «Membri» → «Cine e membru» as the server draws it: a named card (the house's `Panel`
  * with its glyph and its state on the line), the helper sentence, the two languages as the page's own tabs
  * «RO» | «EN» over two boxes, the platform's words as the empty boxes' placeholder, «Tradu din română» under
  * the English one only, and for a reader who may not write it the sentence in force and no form.
@@ -50,7 +50,7 @@ async function draw(over: Partial<ComponentProps<typeof DefinitionCard>> = {}, l
 /** One element's opening tag by its name. */
 const tagOf = (page: string, element: "input" | "textarea", name: string) => new RegExp(`<${element}\\b[^>]*\\bname="${name}"[^>]*>`).exec(page)?.[0] ?? "";
 
-describe("§NNN the «Cine e membru» card on «Membri»", () => {
+describe("§789 the «Cine e membru» card on «Membri»", () => {
   it("is a named card with its glyph, the helper sentence and the state on its line", async () => {
     const page = await draw();
     expect(page).toContain('data-testid="members-definition"');
@@ -141,7 +141,7 @@ describe("§NNN the «Cine e membru» card on «Membri»", () => {
   });
 });
 
-describe("§NNN the card is wired the house's way", () => {
+describe("§789 the card is wired the house's way", () => {
   const read = (file: string) => readFileSync(file, "utf8");
 
   it("is on the members' page, saved by its own action, never behind the page's publish switch", () => {

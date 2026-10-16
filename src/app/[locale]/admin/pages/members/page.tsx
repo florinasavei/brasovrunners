@@ -95,7 +95,7 @@ export default async function AdminMembersPage({ params, searchParams }: Props) 
     listDiscountCodesForAdmin(db),
     readMemberDefinition(db),
   ]);
-  // The platform's own sentence, each language's, shown in the boxes while the club wrote none (§NNN).
+  // The platform's own sentence, each language's, shown in the boxes while the club wrote none (§789).
   const platformWords = {
     ro: (await getTranslations({ locale: "ro", namespace: "Registration" }))("clubMemberDefinition"),
     en: (await getTranslations({ locale: "en", namespace: "Registration" }))("clubMemberDefinition"),
@@ -108,7 +108,7 @@ export default async function AdminMembersPage({ params, searchParams }: Props) 
     benefitsEnBody: t("members.benefitsEn"),
     zoneRoBody: t("members.zoneRo"),
     zoneEnBody: t("members.zoneEn"),
-    // «Cine e membru» (§NNN), by the names its form posts.
+    // «Cine e membru» (§789), by the names its form posts.
     memberDefinitionRo: t("members.definition.ro"),
     memberDefinitionEn: t("members.definition.en"),
     // The discount codes' boxes (§552), by the names their forms post.
@@ -161,7 +161,7 @@ export default async function AdminMembersPage({ params, searchParams }: Props) 
       />
       <TextCard text="zone" settings={settings} locale={locale} words={t} messages={messages} rich={rich} mayEdit={mayEdit} />
 
-      {/* «Cine e membru» (§NNN): the sentence behind the «?» of the member tick on the two public forms; saved whatever the page's state. */}
+      {/* «Cine e membru» (§789): the sentence behind the «?» of the member tick on the two public forms; saved whatever the page's state. */}
       <DefinitionCard definition={definition} platformWords={platformWords} locale={locale} words={t} messages={messages} mayEdit={mayEdit} saved={saved} />
 
       {/* «Coduri de reducere» (§552): shown only inside the members' zone, never on a public page. */}

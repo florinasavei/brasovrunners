@@ -11,7 +11,7 @@ import { DomainError } from "@/shared/errors/domain-error";
 import { isWrittenText, refuseOneLanguage } from "@/shared/forms/both-languages";
 
 /**
- * «Cine e membru al grupului» (§NNN; the owner, 2026-10-16: the question mark with the explanation
+ * «Cine e membru al grupului» (§789; the owner, 2026-10-16: the question mark with the explanation
  * «am fost la cel puțin 3 alergări în ultimele 6 luni», and «asta ar trebui configurabil în
  * back-office ce înseamnă să fii membru»): the club's own sentence saying what being a member of
  * the group means — the words behind the «?» after the tick «Sunt membru al grupului {club}» on

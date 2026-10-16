@@ -29,7 +29,7 @@ const state = vi.hoisted(() => ({
   termsVersion: 3 as number | null,
   noticeDescribesEverything: true,
   termsDescribeRefusal: false,
-  /** «Cine e membru» (§NNN) as the club saved it; none: the platform's words. */
+  /** «Cine e membru» (§789) as the club saved it; none: the platform's words. */
   definition: { ro: null, en: null } as { ro: string | null; en: string | null },
 }));
 
@@ -312,7 +312,7 @@ describe("§579 amended — formViewOf, what the form takes from the event", () 
 /** The «?» after the member tick: the button inside the tick's own label, its accessible name the sentence. */
 const memberTickHelp = (html: string) => /name="clubMemberDeclared"[\s\S]*?<\/label>/.exec(html)?.[0] ?? "";
 
-describe("§NNN the «?» after «Sunt membru al grupului» says what the club says a member is", () => {
+describe("§789 the «?» after «Sunt membru al grupului» says what the club says a member is", () => {
   const CLUB_RO = "Ai fost la cel puțin 5 alergări de grup în ultimele 3 luni.";
   const CLUB_EN = "You have joined at least 5 group runs in the last 3 months.";
 
