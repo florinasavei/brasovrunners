@@ -980,7 +980,7 @@ describe("§773 the owner's note under the roles' list", () => {
     }
   });
 
-  it("is a banner (§796): the house's information Alert with its own glyph, the id and the test id on it, and not a live message", async () => {
+  it("is a banner (§NNN): the house's information Alert with its own glyph, the id and the test id on it, and not a live message", async () => {
     for (const language of ["ro", "en"] as const) {
       const page = await drawBox({}, language);
       const tag = /<div\b[^>]*data-testid="volunteer-roles-note"[^>]*>/.exec(page)?.[0] ?? "";

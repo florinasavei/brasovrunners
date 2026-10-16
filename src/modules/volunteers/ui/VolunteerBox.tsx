@@ -297,7 +297,7 @@ export default async function VolunteerBox({
               </Stack>
               {/*
                 The kinder note (§773; the owner, 2026-10-14: «Și pusă o notă mai drăguță»), right under the roles' list: the person may be
-                asked to cover another responsibility, thanked, and told they will be contacted. A banner (§796; the owner, 2026-10-16: «Asta ar
+                asked to cover another responsibility, thanked, and told they will be contacted. A banner (§NNN; the owner, 2026-10-16: «Asta ar
                 trebui să fie într-un banner, să fie mai vizibil»): the house's information notice — the `Alert` of `severity="info"` as
                 the register page and the check-your-email screen draw theirs, with its own info glyph — a clear step above and below.
                 Static text, not a live message: the Alert's default `role="alert"` is replaced by `role="note"`, so a screen reader reads it
