@@ -2640,7 +2640,7 @@
         },
         "profileSourceHelp": "The drawing comes from the event's GPX file, not from Strava: the site cannot read a Strava map. With a picture you put what you want on the strip, the food stations for example.",
         "profileImageSrc": "The profile picture",
-        "profileImageSrcHelp": "Recommended: a wide picture, placed whole, never cropped. With the figures beside the profile: {ratioBeside} to 1, for example {widthBeside} × {height} px at {dpi} dpi. Without them, or when the event has no figures to show: {ratioAlone} to 1, for example {widthAlone} × {height} px.",
+        "profileImageSrcHelp": "Recommended: a wide picture, placed whole, never cropped. With the figures beside the profile: {ratioBeside} to 1, that is {widthBeside} × {height} px at {dpi} dpi. Without them, or with none to show: {ratioAlone} to 1, that is {widthAlone} × {height} px.",
         "showProfileFigures": "Show the distance and the elevation gain beside the profile",
         "showProfileFiguresHelp": "Ticked: the two figures at the profile's right. Unticked: the profile or the picture takes the whole width.",
         "profileOrientation": "The profile's orientation",

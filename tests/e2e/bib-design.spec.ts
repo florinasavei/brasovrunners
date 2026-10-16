@@ -249,7 +249,7 @@ test.describe("§750 §759 the designer's sections: header, footer, the profile 
     await expect(profilePicture).toBeVisible();
     await expect(scale).toBeHidden();
     // The recommended shape, said before any upload (§NNN): both shapes, the strip beside the figures (380 × 36 points) and the whole one.
-    await expect(profilePicture).toContainText("Cu cifrele lângă profil: 10,6 la 1, de exemplu 1580 × 150 px la 300 dpi");
+    await expect(profilePicture).toContainText("Cu cifrele lângă profil: 10,6 la 1, adică 1580 × 150 px la 300 dpi");
     // Its own sub-card with its «Calitate» row, and never a crop box: the picture is fitted whole.
     await expect(profilePicture.getByTestId("image-quality")).toBeVisible();
     // A wide strip, at least 200 pixels on each side: the upload's own floor for any picture (`media/limits.ts`).

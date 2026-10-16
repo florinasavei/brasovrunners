@@ -265,12 +265,12 @@ describe("§759 the bib designer in named sections", () => {
     const ratio = (figures: boolean, language: "ro" | "en") => new Intl.NumberFormat(language, { maximumFractionDigits: 1 }).format(bibProfilePictureRatio(figures));
     const size = (figures: boolean) => bibProfilePictureExample(figures);
     const pictured = (figures: boolean) => ({ ...DEFAULT_BIB_DESIGN, showProfile: true, profileSource: "picture" as const, showProfileFigures: figures });
-    const ro = `Recomandat: o imagine lată, pusă întreagă, fără decupaj. Cu cifrele lângă profil: ${ratio(true, "ro")} la 1, de exemplu ${size(true).width} × ${size(true).height} px la ${BIB_PICTURE_PRINT_DPI} dpi. Fără ele, sau când evenimentul nu are cifre de arătat: ${ratio(false, "ro")} la 1, de exemplu ${size(false).width} × ${size(false).height} px.`;
+    const ro = `Recomandat: o imagine lată, întreagă, fără decupaj. Cu cifrele lângă profil: ${ratio(true, "ro")} la 1, adică ${size(true).width} × ${size(true).height} px la ${BIB_PICTURE_PRINT_DPI} dpi. Fără ele, sau fără cifre de arătat: ${ratio(false, "ro")} la 1, adică ${size(false).width} × ${size(false).height} px.`;
     // The same sentence for the figures ticked and unticked: the box under the picture is not saved yet when the club reads it.
     expect(section(await render(pictured(true)), "profile")).toContain(ro);
     expect(section(await render(pictured(false)), "profile")).toContain(ro);
     expect(section(await render(pictured(true), "en"), "profile")).toContain(
-      `Recommended: a wide picture, placed whole, never cropped. With the figures beside the profile: ${ratio(true, "en")} to 1, for example ${size(true).width} × ${size(true).height} px at ${BIB_PICTURE_PRINT_DPI} dpi. Without them, or when the event has no figures to show: ${ratio(false, "en")} to 1, for example ${size(false).width} × ${size(false).height} px.`,
+      `Recommended: a wide picture, placed whole, never cropped. With the figures beside the profile: ${ratio(true, "en")} to 1, that is ${size(true).width} × ${size(true).height} px at ${BIB_PICTURE_PRINT_DPI} dpi. Without them, or with none to show: ${ratio(false, "en")} to 1, that is ${size(false).width} × ${size(false).height} px.`,
     );
     // The numbers are the geometry's: 380 / 36 and 523.28 / 36, an example at 300 dpi in the same proportion.
     expect(bibProfilePictureRatio(true)).toBeCloseTo(BIB_LAYOUT.profileChartWidth / BIB_LAYOUT.profilePictureHeight, 6);

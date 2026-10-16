@@ -2640,7 +2640,7 @@
         },
         "profileSourceHelp": "Desenul vine din fișierul GPX al evenimentului, nu din Strava: harta Strava nu poate fi citită de site. Cu o poză pui pe fâșie ce vrei tu, de exemplu punctele de alimentare.",
         "profileImageSrc": "Poza profilului",
-        "profileImageSrcHelp": "Recomandat: o imagine lată, pusă întreagă, fără decupaj. Cu cifrele lângă profil: {ratioBeside} la 1, de exemplu {widthBeside} × {height} px la {dpi} dpi. Fără ele, sau când evenimentul nu are cifre de arătat: {ratioAlone} la 1, de exemplu {widthAlone} × {height} px.",
+        "profileImageSrcHelp": "Recomandat: o imagine lată, întreagă, fără decupaj. Cu cifrele lângă profil: {ratioBeside} la 1, adică {widthBeside} × {height} px la {dpi} dpi. Fără ele, sau fără cifre de arătat: {ratioAlone} la 1, adică {widthAlone} × {height} px.",
         "showProfileFigures": "Arată distanța și diferența de nivel lângă profil",
         "showProfileFiguresHelp": "Bifat: cele două cifre în dreapta profilului. Debifat: profilul sau poza ocupă toată lățimea.",
         "profileOrientation": "Orientarea profilului",
