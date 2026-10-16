@@ -1323,7 +1323,7 @@ describe("§787 the legend of the colours, under the statistics, in both languag
   it("says the same in Romanian and English, in the words the owner chose", () => {
     expect(ro.Admin.registrations.statistics.legendMember).toBe("Albastru: a bifat că e membru {club} — coloanele «Club member», «Member tick (declared)», «Club runner» și «Member bib»");
     expect(ro.Admin.registrations.statistics.legendClubRunner).toBe("Lila: alergător al clubului fără bifă — cont de membru sau clubul scris în formular");
-    expect(ro.Admin.registrations.statistics.legendGuest).toBe("Piersică, înclinat: invitat special — nu ocupă un loc");
+    expect(ro.Admin.registrations.statistics.legendGuest).toBe("Piersică, cursiv: invitat special — nu ocupă un loc");
     expect(en.Admin.registrations.statistics.legendMember).toBe("Blue: ticked that they are a member of {club} — the columns «Club member», «Member tick (declared)», «Club runner» and «Member bib»");
     expect(en.Admin.registrations.statistics.legendClubRunner).toBe("Lavender: a club runner without the tick — a member account or the club typed in the form");
     expect(en.Admin.registrations.statistics.legendGuest).toBe("Peach, italic: a special guest — takes no place");
@@ -1332,6 +1332,15 @@ describe("§787 the legend of the colours, under the statistics, in both languag
       const note = catalogue.Admin.registrations.statistics.note7;
       expect(note.length).toBeLessThanOrEqual(200);
       expect(words.notes).toContain(note.replace("{club}", CLUB_NAME));
+    }
+  });
+
+  it("tells the backoffice guide the colours the file really has", () => {
+    for (const catalogue of [ro, en]) {
+      const step = (catalogue as unknown as { Admin: { guide: { sections: Array<{ tasks?: Array<{ steps: string[] }> }> } } }).Admin.guide.sections[3]?.tasks?.[3]?.steps[5] ?? "";
+      expect(step).toContain("Member tick (declared)");
+      expect(step).not.toContain("Club runner column");
+      expect(step).not.toContain("coloana Club runner");
     }
   });
 

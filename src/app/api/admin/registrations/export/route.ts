@@ -296,7 +296,7 @@ export async function GET(request: Request): Promise<Response> {
       status: row.status,
       clubMemberDeclared: row.clubMemberDeclared,
       memberVerified: row.memberVerified,
-      // «Club runner» (§787): the same answer as the spreadsheet's, "Yes" or empty, so the file says why a row is blue.
+      // «Club runner» (§787): the same answer as the spreadsheet's, "Yes" or empty, so the file names the club's runners (the lavender on those without the tick).
       clubRunner: isClubRunner(row),
       // «Member bib» (§664): yes, asked or empty.
       memberBibOffered: row.memberBibOffered,

@@ -302,7 +302,7 @@ const COLUMNS: Array<SheetColumn<RegistrationSheetRow>> = [
     the cell offline moves both. In the spreadsheet only: the CSV keeps its order, which scripts read by position, and
     already has the tick inside «Club member»'s words.
   */
-  { header: "Member tick (declared)", width: 12, cell: (row) => ({ value: memberTickCell(row.clubMemberDeclared), type: String }) },
+  { header: "Member tick (declared)", width: 22, cell: (row) => ({ value: memberTickCell(row.clubMemberDeclared), type: String }) },
   /*
     «Club runner» (§787, amended; the owner: «color codes … dacă sunt membri BVR»): "Yes" for one of the club's runners, from the
     one predicate the footer counts by (`isClubRunner`) — written as a cell so the lavender rule (a club runner without the tick)

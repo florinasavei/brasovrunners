@@ -10,7 +10,7 @@
     },
     {
       "requirement": "BR-REQ-060-01",
-      "text": "Amends criterion 160. Given the registrations export in Excel, when a row's «Special guest» cell is the logical TRUE, then its «Race number (BIB)», «Name», «First name», «Last name» and «Special guest» cells take a pale peach fill and an italic font by conditional formatting that outranks the member and status rules, read from the «Special guest» column's header letter, so that marking a row special offline turns those cells peach and the rest of the row keeps its status tint (2026-10-16, `DECISIONS.md` §NNN)."
+      "text": "Amends criterion 160. Given the registrations export in Excel, when a row's «Special guest» cell is the logical TRUE, then its «Race number (BIB)», «Name», «First name», «Last name» and «Special guest» cells (and, in a file of several events, the «Event» cell between them) take a pale peach fill and an italic font by conditional formatting that outranks the member and status rules, read from the «Special guest» column's header letter, so that marking a row special offline turns those cells peach and the rest of the row keeps its status tint (2026-10-16, `DECISIONS.md` §NNN)."
     }
   ],
   "docsNotes": "",

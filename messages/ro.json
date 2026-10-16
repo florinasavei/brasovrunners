@@ -1174,7 +1174,7 @@
         "legendEnded": "Gri, anulat sau expirat",
         "legendMember": "Albastru: a bifat că e membru {club} — coloanele «Club member», «Member tick (declared)», «Club runner» și «Member bib»",
         "legendClubRunner": "Lila: alergător al clubului fără bifă — cont de membru sau clubul scris în formular",
-        "legendGuest": "Piersică, înclinat: invitat special — nu ocupă un loc"
+        "legendGuest": "Piersică, cursiv: invitat special — nu ocupă un loc"
       },
       "auditActorParticipant": "participantul, din linkul propriu",
       "audit": {
@@ -7579,7 +7579,7 @@
                 "Apasă «Exportă Excel» (sau «Exportă CSV»). Fișierul are exact rândurile filtrate, fără înscrierile de test.",
                 "Fișierul se termină cu «Note interne»: o notă pe rând, cu rolul celui care a scris. Coloana are cuvintele limbii paginii pe care ai apăsat butonul.",
                 "Sub tabel, după un rând gol, «Statistici» numără aceleași rânduri: totalul, cei confirmați (activii), fiecare altă stare, câți sunt din club și, pe categorii (sex și vârstă), fiecare grup. Apare doar în Excel, niciodată în CSV.",
-                "În Excel, rândul are culoarea stării, iar celulele de membru sunt albastre când coloana Club runner spune Yes. Numerele din «Statistici» sunt formule: le schimbi offline și se recalculează singure.",
+                "În Excel, rândul are culoarea stării, celulele de membru sunt albastre când coloana Member tick (declared) spune Yes, și lila pentru alt alergător al clubului. Numărul și numele unui invitat special sunt piersică și cursiv. Numerele din «Statistici» sunt formule: le schimbi offline și se recalculează singure.",
                 "Fișierul are acte de identitate și telefoane: nu-l trimite pe grupuri și șterge-l în cel mult 7 zile de la eveniment."
               ]
             },
