@@ -16,6 +16,7 @@ import {
   cachedFamilyRegistrationOpen,
   cachedListSocialsDisclosed,
   cachedListStatesDisclosed,
+  cachedMemberDefinition,
   cachedPromotionalMaterialsOffered,
   cachedPromotionalMaterialsShared,
   cachedPublicAvailability,
@@ -329,6 +330,18 @@ export default async function RegisterPage({ params, searchParams }: Props) {
     }
   }
   /*
+    §789: the club's own sentence behind the «?» after «Sunt membru al grupului», in this page's
+    language, from the public cache. None written (or unread): the platform's words.
+  */
+  let memberDefinition: string | null = null;
+  if (!resting) {
+    try {
+      memberDefinition = await cachedMemberDefinition(locale);
+    } catch (failure) {
+      unstable_rethrow(failure);
+    }
+  }
+  /*
     The club's terms in force (§421): the tick names their version, read from the text in force and
     never typed. The public cache's read, as the legal page makes it; the service asks the database
     again when the form is sent and records the version it finds. None approved: the form says
@@ -608,7 +621,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
             locale,
             slug,
             now,
-            settings: { termsVersion, refusalOn, listStatesOn, listSocialsOn, promoOn, promoShared, capMax, familyOpen, siteKey },
+            settings: { termsVersion, refusalOn, listStatesOn, listSocialsOn, promoOn, promoShared, capMax, familyOpen, memberDefinition, siteKey },
             address: member
               ? { kind: "member", email: member.email }
               : familyForm && sitting

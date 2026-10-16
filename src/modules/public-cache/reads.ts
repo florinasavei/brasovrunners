@@ -32,6 +32,7 @@ import {
   listPublishedPages,
 } from "@/modules/content/pages/repository";
 import { readPublicFaqPage } from "@/modules/content/faq/repository";
+import { memberDefinitionFor, parseMemberDefinition, readMemberDefinition } from "@/modules/content/members/member-definition";
 import { readPublicMembersPage } from "@/modules/content/members/page-settings";
 import { readPublicTeamPage } from "@/modules/content/team/repository";
 import { listCheckpoints } from "@/modules/event-checkpoints/checkpoints";
@@ -938,6 +939,27 @@ export async function cachedHomePage(): Promise<HomePageSetting> {
     return parseHomePage(read.value);
   } catch {
     return DEFAULT_HOME_PAGE_SETTING;
+  }
+}
+
+/**
+ * «Cine e membru al grupului» (§789): the club's sentence behind the «?» after the member tick, in
+ * this language — read by the registration page, the invitation page and the volunteers' page, so
+ * it is cached beside the settings, and a save expires it (`saveMemberDefinition`). Null where the
+ * club wrote none, and when the database cannot answer (after the last good copy, §447): the forms
+ * then say the platform's own words, never a page that fails over a tooltip.
+ */
+export async function cachedMemberDefinition(locale: Locale): Promise<string | null> {
+  try {
+    const read = await readWithLastGood("settings:member-definition", () =>
+      publicRead(["settings.member-definition"], ["settings"], async () => {
+        const { ro, en } = await readMemberDefinition(getDb());
+        return { ro, en };
+      }),
+    );
+    return memberDefinitionFor(locale, parseMemberDefinition(read.value));
+  } catch {
+    return null;
   }
 }
 

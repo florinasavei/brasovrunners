@@ -243,28 +243,49 @@ test.describe("§754 volunteers for a race", () => {
       expect(await guest.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
       const box = guest.getByTestId("volunteer-box");
       await expect(box).toBeVisible();
-      // «Ce ești dispus(ă) să faci»: one box per role that still needs people, with what it still needs.
+      // «Ce ești dispus(ă) să faci»: one chip per role that still needs people.
       const choices = guest.getByTestId("volunteer-roles");
       await expect(choices).toContainText("Ce ești dispus(ă) să faci");
-      // §773: the club has not ticked «Arată public câți voluntari mai sunt necesari», so the page says only that a role still takes people — no number.
-      await expect(choices).toContainText("mai sunt locuri");
+      // §773: the club has not ticked «Arată public câți voluntari mai sunt necesari», so the page says nothing of how many — no number, and no
+      // «mai sunt locuri» either: a role shown has places by construction (§780, amended).
+      await expect(choices).not.toContainText("mai sunt locuri");
       await expect(choices).not.toContainText("mai sunt necesare");
+      await expect(choices.getByTestId("volunteer-role-needs")).toHaveCount(0);
       await expect(choices.getByTestId("volunteer-role-option").first()).not.toContainText(/\d+ persoane/);
       const waterBox = choices.getByRole("checkbox", { name: "Punct de apă" });
       const finishBox = choices.getByRole("checkbox", { name: "Sosire" });
       await expect(waterBox).toBeVisible();
       await expect(finishBox).toBeVisible();
-      // «Descrierea rolului» under each tick: the long one folded behind «Detalii», the one-line one simply there (§765).
-      const waterDescription = choices.getByTestId("volunteer-role-option").filter({ hasText: "Punct de apă" }).getByTestId("volunteer-role-description");
-      await expect(waterDescription).toHaveAttribute("data-folded", "true");
-      await expect(waterDescription.locator("summary")).toHaveText("Detalii");
+      // «Descrierea rolului» behind a round «?» on the chip, closed by default (§765, amended by §780): a press on it opens the words under the name
+      // and never ticks the role; a second press closes it; the chip takes the whole row while it is open.
+      const waterChip = choices.getByTestId("volunteer-role-option").filter({ hasText: "Punct de apă" });
+      const waterDescription = waterChip.getByTestId("volunteer-role-description");
+      const helpButton = waterChip.getByTestId("volunteer-role-help");
+      await expect(helpButton).toHaveAttribute("aria-label", "Ce presupune rolul Punct de apă");
+      expect((await helpButton.boundingBox())?.width ?? 0).toBeGreaterThanOrEqual(44);
+      expect((await helpButton.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+      await expect(waterDescription).not.toHaveAttribute("open", "");
       await expect(waterDescription.getByTestId("volunteer-role-description-body")).toBeHidden();
-      await waterDescription.locator("summary").click();
+      const closedWidth = (await waterChip.boundingBox())!.width;
+      await helpButton.click();
       await expect(waterDescription.getByTestId("volunteer-role-description-body")).toContainText("Umpli paharele înainte de primii alergători.");
       expect(await waterDescription.getByTestId("volunteer-role-description-body").locator("p").count()).toBe(4);
-      const finishDescription = choices.getByTestId("volunteer-role-option").filter({ hasText: "Sosire" }).getByTestId("volunteer-role-description");
-      await expect(finishDescription).not.toHaveAttribute("data-folded", "true");
-      await expect(finishDescription).toContainText("Stai la linia de sosire.");
+      // The press on the «?» did not tick the role.
+      await expect(choices.getByRole("checkbox", { name: "Punct de apă" })).not.toBeChecked();
+      // Open, the chip stretches to the whole row (wider than it was, and as wide as the group).
+      expect((await waterChip.boundingBox())!.width).toBeGreaterThan(closedWidth);
+      const rowWidth = (await choices.getByTestId("volunteer-role-chips").first().boundingBox())!.width;
+      expect((await waterChip.boundingBox())!.width).toBeGreaterThanOrEqual(rowWidth - 2);
+      await helpButton.click();
+      await expect(waterDescription.getByTestId("volunteer-role-description-body")).toBeHidden();
+      expect(Math.abs((await waterChip.boundingBox())!.width - closedWidth)).toBeLessThan(2);
+      // The one-line description is behind a «?» as well: never open on its own.
+      const finishChip = choices.getByTestId("volunteer-role-option").filter({ hasText: "Sosire" });
+      await expect(finishChip.getByTestId("volunteer-role-description-body")).toBeHidden();
+      await finishChip.getByTestId("volunteer-role-help").click();
+      await expect(finishChip.getByTestId("volunteer-role-description-body")).toContainText("Stai la linia de sosire.");
+      await expect(choices.getByRole("checkbox", { name: "Sosire" })).not.toBeChecked();
+      await finishChip.getByTestId("volunteer-role-help").click();
       // The owner's note, right under the roles' list (§773), and the short instruction above it.
       await expect(choices.getByTestId("volunteer-roles-note")).toHaveText("În funcție de numărul de doritori, există posibilitatea să fie nevoie să acoperi o altă responsabilitate. Mulțumim pentru dorința de a ajuta. Te vom contacta curând.");
       await expect(choices).toContainText("Bifează tot ce ai face, cel puțin un rol.");
@@ -293,9 +314,11 @@ test.describe("§754 volunteers for a race", () => {
       await expect(page.getByTestId("volunteer-counts-form").getByRole("checkbox", { name: "Arată public câți voluntari mai sunt necesari", includeHidden: true })).toHaveAttribute("aria-checked", "false", { timeout: 30_000 });
       await expect(async () => {
         await guest.reload();
-        await expect(guest.getByTestId("volunteer-roles")).toContainText("mai sunt locuri", { timeout: 3_000 });
+        await expect(guest.getByTestId("volunteer-roles").getByTestId("volunteer-role-chips").first()).toBeVisible({ timeout: 3_000 });
+        await expect(guest.getByTestId("volunteer-roles").getByTestId("volunteer-role-needs")).toHaveCount(0, { timeout: 3_000 });
       }).toPass({ timeout: 60_000 });
       await expect(guest.getByTestId("volunteer-roles")).not.toContainText("mai sunt necesare");
+      await expect(guest.getByTestId("volunteer-roles")).not.toContainText("mai sunt locuri");
       // The card's own numbers are there whichever way the tick is.
       await expect(group("Punct de apă").getByTestId("volunteer-role-standing")).toHaveText("0 din 2");
 
@@ -308,8 +331,8 @@ test.describe("§754 volunteers for a race", () => {
       // A row a thumb can press; no horizontal scroll at the project's width.
       expect((await choices.locator("label").first().boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
       expect(await guest.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
-      // §780: a role is a tile — the whole tile is the checkbox's label, so a press on the count line (not the box) ticks it, and again unticks it;
-      // the ticked tile's border changes; each tile is a thumb's height; one column at a phone's width, two from the tablet's.
+      // §780: a role is a chip — the whole pill is the checkbox's label, so a press on its name (not the box) ticks it, and again unticks it;
+      // the ticked chip's border changes; each chip is a thumb's height; the chips wrap in a row and never leave the page sideways.
       const waterTile = choices.getByTestId("volunteer-role-option").filter({ hasText: "Punct de apă" });
       const finishTile = choices.getByTestId("volunteer-role-option").filter({ hasText: "Sosire" });
       // The pointer is parked away from the tile first: a hovered tile has the primary border too.
@@ -318,26 +341,85 @@ test.describe("§754 volunteers for a race", () => {
         return waterTile.evaluate((tile) => getComputedStyle(tile).borderTopColor);
       };
       const borderBefore = await tileBorder();
-      await waterTile.getByTestId("volunteer-role-needs").click();
+      await waterTile.getByTestId("volunteer-role-name").click();
       await expect(waterBox).toBeChecked();
       // The border moves over 120 ms: read it until it has settled.
       await expect.poll(tileBorder).not.toBe(borderBefore);
-      await waterTile.getByTestId("volunteer-role-needs").click();
+      await waterTile.getByTestId("volunteer-role-name").click();
       await expect(waterBox).not.toBeChecked();
       await expect.poll(tileBorder).toBe(borderBefore);
       expect((await waterTile.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
       const viewportWidth = await guest.evaluate(() => window.innerWidth);
       const water = (await waterTile.boundingBox())!;
       const finish = (await finishTile.boundingBox())!;
+      // Neither chip leaves the page sideways, whatever the width.
+      for (const chip of [water, finish]) {
+        expect(chip.x).toBeGreaterThanOrEqual(0);
+        expect(chip.x + chip.width).toBeLessThanOrEqual(viewportWidth + 1);
+      }
       if (viewportWidth >= 600) {
-        // Two columns: the two tiles of one group stand side by side.
+        // Room for both on a line: the two chips of one group stand side by side, each as wide as its name — not half the row each.
         expect(Math.abs(water.y - finish.y)).toBeLessThan(4);
-        expect(Math.abs(water.x - finish.x)).toBeGreaterThan(100);
-      } else {
-        // One column: stacked, the same left edge and the same width.
-        expect(Math.abs(water.x - finish.x)).toBeLessThan(2);
-        expect(Math.abs(water.width - finish.width)).toBeLessThan(2);
-        expect(Math.abs(water.y - finish.y)).toBeGreaterThan(40);
+        expect(Math.abs(water.x - finish.x)).toBeGreaterThan(60);
+        expect(water.width).toBeLessThan(400);
+      }
+      // The pill's box is visible inside it, at its left edge (the tick is the state, never the colour alone).
+      const waterBoxShape = (await waterBox.boundingBox())!;
+      expect(waterBoxShape.width).toBeGreaterThan(14);
+      expect(waterBoxShape.x).toBeGreaterThanOrEqual(water.x);
+      expect(waterBoxShape.x - water.x).toBeLessThan(24);
+      // A long name wraps inside its own pill (never sideways, never under the «?»): «Sosire» has a description, so it has its «?»; its name is
+      // swapped in the page for one of sixty characters, and the pill must stay inside the row, grow taller than one line, and hold the «?».
+      await finishTile.getByTestId("volunteer-role-name").evaluate((el) => {
+        el.textContent = "coordonator al punctului de sosire și al zonei de refacere a alergătorilor";
+      });
+      const longChip = (await finishTile.boundingBox())!;
+      const longRow = (await finishTile.locator('xpath=ancestor::*[@data-testid="volunteer-role-chips"]').boundingBox())!;
+      const longHelp = (await finishTile.getByTestId("volunteer-role-help").boundingBox())!;
+      expect(longChip.x).toBeGreaterThanOrEqual(longRow.x - 1);
+      expect(longChip.x + longChip.width).toBeLessThanOrEqual(longRow.x + longRow.width + 1);
+      expect(longChip.height).toBeGreaterThan(44);
+      expect(longHelp.x).toBeGreaterThanOrEqual(longChip.x);
+      expect(longHelp.x + longHelp.width).toBeLessThanOrEqual(longChip.x + longChip.width + 1);
+      expect(longHelp.y).toBeGreaterThanOrEqual(longChip.y - 1);
+      expect(longHelp.y + longHelp.height).toBeLessThanOrEqual(longChip.y + longChip.height + 1);
+      // Closed, the «?» sits at the pill's middle, clear of the curved end beside the first line.
+      expect(Math.abs(longHelp.y + longHelp.height / 2 - (longChip.y + longChip.height / 2))).toBeLessThan(3);
+      // The capital is the stylesheet's: the stored text stays as typed, the first letter is drawn upper-case.
+      expect(await finishTile.getByTestId("volunteer-role-name").evaluate((el) => getComputedStyle(el, "::first-letter").textTransform)).toBe("uppercase");
+      await finishTile.getByTestId("volunteer-role-name").evaluate((el) => {
+        el.textContent = "Sosire";
+      });
+      // Scripts off: the «?» still opens its description (a native details), a press on a name still ticks (a native label), and a refused post
+      // comes back with the tick it had (§142).
+      const bareContext = await browser.newContext({ baseURL: test.info().project.use.baseURL, viewport: test.info().project.use.viewport ?? undefined, javaScriptEnabled: false });
+      try {
+        const bare = await bareContext.newPage();
+        await bare.goto(`/ro/evenimente/${event.slug}/voluntari`);
+        const bareChips = bare.getByTestId("volunteer-roles");
+        const bareWater = bareChips.getByTestId("volunteer-role-option").filter({ hasText: "Punct de apă" });
+        await expect(bareWater.getByTestId("volunteer-role-description-body")).toBeHidden();
+        await bareWater.getByTestId("volunteer-role-help").click();
+        await expect(bareWater.getByTestId("volunteer-role-description-body")).toContainText("Umpli paharele înainte de primii alergători.");
+        await expect(bareChips.getByRole("checkbox", { name: "Punct de apă" })).not.toBeChecked();
+        await bareChips.getByTestId("volunteer-role-option").filter({ hasText: "Sosire" }).getByTestId("volunteer-role-name").click();
+        await expect(bareChips.getByRole("checkbox", { name: "Sosire" })).toBeChecked();
+        // Sent with a date of birth under the floor (the browser's own checks pass, the server's refuse): the page comes back with «Sosire» ticked.
+        await bare.getByLabel("Numele tău").fill("Fără Script");
+        await bare.getByLabel("Adresa ta de email").fill("fara-script@example.test");
+        await bare.locator('[name="phone"]').fill("712345678");
+        await bare.locator('input[name="birthDate"]').fill("01.01.2020");
+        await bare.locator('select[name="sex"]').selectOption("FEMALE");
+        await bare.locator('input[name="city"]').fill("Brașov");
+        await bare.locator('input[name="consent"]').check();
+        await bare.locator('input[name="agreement"]').check();
+        await bare.waitForTimeout(1_200);
+        await bare.getByTestId("volunteer-box").getByRole("button", { name: "Mă ofer voluntar", exact: true }).click();
+        await expect(bare.getByTestId("volunteer-invalid")).toBeVisible({ timeout: 30_000 });
+        await expect(bare.getByTestId("volunteer-roles").getByRole("checkbox", { name: "Sosire" })).toBeChecked();
+        await expect(bare.getByTestId("volunteer-roles").getByRole("checkbox", { name: "Punct de apă" })).not.toBeChecked();
+      } finally {
+        await bareContext.close();
       }
       const submit = box.getByRole("button", { name: "Mă ofer voluntar", exact: true });
       expect((await submit.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
@@ -425,9 +507,9 @@ test.describe("§754 volunteers for a race", () => {
       await expect(guest.getByLabel("Numele tău")).toHaveValue("Maria Test");
       await expect(guest.getByLabel("Adresa ta de email")).toHaveValue(maria);
 
-      // §780: a ticked role tile survives a refused post. One tile is ticked by a press on its count line, the post is refused again (the
-      // consent and the age are still wrong), and the page comes back with that box checked and the tile's border the ticked one.
-      await guest.getByTestId("volunteer-roles").getByTestId("volunteer-role-option").filter({ hasText: "Sosire" }).getByTestId("volunteer-role-needs").click();
+      // §780: a ticked role chip survives a refused post. One chip is ticked by a press on its name, the post is refused again (the
+      // consent and the age are still wrong), and the page comes back with that box checked and the chip's border the ticked one.
+      await guest.getByTestId("volunteer-roles").getByTestId("volunteer-role-option").filter({ hasText: "Sosire" }).getByTestId("volunteer-role-name").click();
       await expect(guest.getByTestId("volunteer-roles").getByRole("checkbox", { name: "Sosire" })).toBeChecked();
       await guest.getByTestId("volunteer-form").evaluate((form: HTMLFormElement) => {
         form.noValidate = true;
@@ -1097,7 +1179,7 @@ test.describe("§754 volunteers for a race", () => {
       await expect(under("Start / Sosire").getByTestId("volunteer-contact")).toHaveCount(0);
       expect(await guest.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 
-      // §780: each category is a card of its own — its band names it and counts its roles, its tiles are inside it, and a clear space stands between two cards.
+      // §780: each category is a card of its own — its header names it and counts its roles (no filled band), its chips are inside it, and a clear space stands between two cards.
       await expect(guest.getByTestId("volunteer-category")).toHaveCount(3);
       await expect(guest.getByTestId("volunteer-category-count")).toHaveText(["2 roluri", "1 rol", "1 rol"]);
       const cards = guest.getByTestId("volunteer-category");
@@ -1105,10 +1187,10 @@ test.describe("§754 volunteers for a race", () => {
       for (let index = 0; index < 3; index++) cardBoxes.push((await cards.nth(index).boundingBox())!);
       for (let index = 0; index < 3; index++) {
         const card = cardBoxes[index];
-        const band = (await cards.nth(index).getByTestId("volunteer-category-band").boundingBox())!;
+        const band = (await cards.nth(index).getByTestId("volunteer-category-header").boundingBox())!;
         const tile = (await cards.nth(index).getByTestId("volunteer-role-option").first().boundingBox())!;
-        // The band is the card's top; the tile is inside the card, under the band; nothing leaves the card sideways.
-        expect(band.y).toBeLessThanOrEqual(card.y + 1);
+        // The header is the card's top; the chip is inside the card, under the header; nothing leaves the card sideways.
+        expect(band.y).toBeLessThanOrEqual(card.y + 2);
         expect(tile.y).toBeGreaterThanOrEqual(band.y + band.height);
         expect(tile.x).toBeGreaterThanOrEqual(card.x);
         expect(tile.x + tile.width).toBeLessThanOrEqual(card.x + card.width + 1);
@@ -1116,20 +1198,19 @@ test.describe("§754 volunteers for a race", () => {
         // At least sixteen pixels of empty space between this card and the next one.
         if (index < 2) expect(cardBoxes[index + 1].y - (card.y + card.height)).toBeGreaterThanOrEqual(16);
       }
-      // The route's two tiles, inside one card: side by side from the tablet's width, stacked (the same width) on a phone.
+      // The route's two chips, inside one card, in one wrap row: neither leaves the card, whatever the width.
       const [first, second] = await Promise.all([0, 1].map(async (index) => (await cards.nth(0).getByTestId("volunteer-role-option").nth(index).boundingBox())!));
-      if ((await guest.evaluate(() => window.innerWidth)) >= 600) {
-        expect(Math.abs(first.y - second.y)).toBeLessThan(4);
-        expect(second.x).toBeGreaterThan(first.x + 100);
-      } else {
-        expect(Math.abs(first.x - second.x)).toBeLessThan(2);
-        expect(second.y).toBeGreaterThan(first.y + first.height);
+      for (const chip of [first, second]) {
+        expect(chip.x).toBeGreaterThanOrEqual(cardBoxes[0].x);
+        expect(chip.x + chip.width).toBeLessThanOrEqual(cardBoxes[0].x + cardBoxes[0].width + 1);
+        expect(chip.height).toBeGreaterThanOrEqual(44);
       }
-      // The heading's band is the loudest line of the card: the name at 20 px or more.
-      expect(await cards.first().getByTestId("volunteer-category-heading").evaluate((heading) => parseFloat(getComputedStyle(heading).fontSize))).toBeGreaterThanOrEqual(20);
+      // The heading is the card's loudest line: the name at 18 px or more, bold, on the card's own surface (no filled band behind it).
+      expect(await cards.first().getByTestId("volunteer-category-heading").evaluate((heading) => parseFloat(getComputedStyle(heading).fontSize))).toBeGreaterThanOrEqual(18);
+      expect(await cards.first().getByTestId("volunteer-category-header").evaluate((header) => getComputedStyle(header).backgroundColor)).toBe("rgba(0, 0, 0, 0)");
 
-      // She offers for «Direcționare» on the route: a press on the tile's count line (not on the box) ticks it (§780).
-      await under("Traseu").getByTestId("volunteer-role-option").filter({ hasText: "Direcționare" }).getByTestId("volunteer-role-needs").click();
+      // She offers for «Direcționare» on the route: a press on the chip's name (not on the box) ticks it (§780).
+      await under("Traseu").getByTestId("volunteer-role-option").filter({ hasText: "Direcționare" }).getByTestId("volunteer-role-name").click();
       await expect(under("Traseu").getByRole("checkbox", { name: "Direcționare" })).toBeChecked();
       await guest.getByLabel("Numele tău").fill("Ana Test");
       await guest.getByLabel("Adresa ta de email").fill(ana);
@@ -1284,8 +1365,8 @@ test.describe("§754 volunteers for a race", () => {
       const choices = guest.getByTestId("volunteer-roles");
       await expect(choices.getByRole("checkbox", { name: "Ajutor" })).toBeVisible();
       await expect(choices.getByRole("checkbox", { name: "Sosire" })).toBeVisible();
-      // Counts off: both say «mai sunt locuri». Counts on (the club's tick): «Sosire» says its number, «Ajutor» still says no number.
-      await expect(choices.getByTestId("volunteer-role-option").filter({ hasText: "Ajutor" }).getByTestId("volunteer-role-needs")).toHaveText("mai sunt locuri");
+      // Counts off: neither says a word about how many. Counts on (the club's tick): «Sosire» says its number, «Ajutor» still says no number.
+      await expect(choices.getByTestId("volunteer-role-needs")).toHaveCount(0);
       await page.goto(`/ro/admin/events/${event.id}`);
       await hydrated(page);
       await openFold(card);
@@ -1297,7 +1378,7 @@ test.describe("§754 volunteers for a race", () => {
         await expect(guest.getByTestId("volunteer-roles").getByTestId("volunteer-role-option").filter({ hasText: "Sosire" }).getByTestId("volunteer-role-needs")).toHaveText("mai e nevoie de 1 persoană", { timeout: 3_000 });
       }).toPass({ timeout: 60_000 });
       const ajutorTile = guest.getByTestId("volunteer-roles").getByTestId("volunteer-role-option").filter({ hasText: "Ajutor" });
-      await expect(ajutorTile.getByTestId("volunteer-role-needs")).toHaveText("mai sunt locuri");
+      await expect(ajutorTile.getByTestId("volunteer-role-needs")).toHaveCount(0);
       await expect(ajutorTile).not.toContainText(/\d+ persoan/);
       // A third person signs up for it too: never «full».
       await offer("Dana Test", emails[2], "Ajutor");

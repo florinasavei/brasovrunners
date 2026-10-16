@@ -28,7 +28,7 @@ import { type InvitationLink, isRefusedKind, readInvitationLink, type RefusedKin
 import { registrationFacts, registrationForm } from "@/modules/registrations/ui/registration-form";
 import RegistrationJourney from "@/modules/registrations/ui/RegistrationJourney";
 import { spamHintWords } from "@/modules/registrations/ui/link-wait-words";
-import { cachedListSocialsDisclosed, cachedListStatesDisclosed, cachedPromotionalMaterialsOffered, cachedPromotionalMaterialsShared, cachedRefusalDisclosed } from "@/modules/public-cache/reads";
+import { cachedListSocialsDisclosed, cachedListStatesDisclosed, cachedMemberDefinition, cachedPromotionalMaterialsOffered, cachedPromotionalMaterialsShared, cachedRefusalDisclosed } from "@/modules/public-cache/reads";
 import { CLUB_NAME, PAGE_WIDTH } from "@/theme/brand";
 import { DENSITY } from "@/theme/density";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
@@ -133,13 +133,14 @@ export default async function InvitationPage({ params, searchParams }: Props) {
   const event = found ? datedOrNull(found) : null;
   if (!event || event.id !== link.eventId) notFound();
   const view = formViewOf(event, now);
-  const [termsVersion, refusalOn, listStatesOn, listSocialsOn, promoOn, promoShared] = await Promise.all([
+  const [termsVersion, refusalOn, listStatesOn, listSocialsOn, promoOn, promoShared, memberDefinition] = await Promise.all([
     findCurrentApprovedDocument(getDb(), "TERMS", locale, now).then((document) => document?.version ?? null),
     cachedRefusalDisclosed(now),
     view.publishesList ? cachedListStatesDisclosed(now) : Promise.resolve(false),
     view.publishesList ? cachedListSocialsDisclosed(now) : Promise.resolve(false),
     cachedPromotionalMaterialsOffered(now),
     cachedPromotionalMaterialsShared(now),
+    cachedMemberDefinition(locale),
   ]);
 
   const markers = (fields ?? "").split(",");
@@ -193,7 +194,7 @@ export default async function InvitationPage({ params, searchParams }: Props) {
         slug: link.slug,
         now,
         // No family, no limit per address, no bot check: one person, behind a link only the inbox holds.
-        settings: { termsVersion, refusalOn, listStatesOn, listSocialsOn, promoOn, promoShared, capMax: null, familyOpen: false, siteKey: undefined },
+        settings: { termsVersion, refusalOn, listStatesOn, listSocialsOn, promoOn, promoShared, capMax: null, familyOpen: false, memberDefinition, siteKey: undefined },
         address: { kind: "invitation", email: link.email, token },
         invalid,
         refusal: { tooYoung, emergencySame: markers.includes("emergencySame"), captchaFailed: false, tooFast: false, retry: false },

@@ -536,19 +536,21 @@ describe("§765 each role's description under its tick on the public form", () =
     expect(english).not.toContain("Stai la km 5.");
   });
 
-  it("folds a description past about three lines behind «Detalii» and shows a short one as it is", async () => {
+  it("holds every description behind a «?» — long or short — in a native closed <details>, never folded a second time inside", async () => {
     const page = await drawBox();
-    // The four-line description is folded, in a native <details> with the glyphed summary.
-    const [water, finish] = page.split('data-testid="volunteer-role-option"').slice(1);
-    expect(water).toMatch(/<details[^>]*data-testid="volunteer-role-description"[^>]*data-folded="true"/);
-    expect(water).toMatch(/<summary[^>]*><svg[^>]*aria-hidden="true"[\s\S]*?<\/svg>Detalii<\/summary>/);
-    expect((page.match(/data-folded="true"/g) ?? []).length).toBe(1);
-    // The one-line one is plain text under the box, not a fold.
+    const [water, finish, desk] = page.split('data-testid="volunteer-role-option"').slice(1);
+    for (const chip of [water, finish]) {
+      expect(chip).toMatch(/<details[^>]*data-testid="volunteer-role-description"/);
+      expect(chip).not.toMatch(/<details[^>]*\sopen(=|\s|>)/);
+      expect(chip).toMatch(/<summary[^>]*aria-label="Ce presupune rolul [^"]+"[^>]*><svg[^>]*aria-hidden="true"/);
+    }
+    expect(page).not.toContain("data-folded");
+    expect(page).not.toContain("Detalii");
     expect(finish).toContain("Aplauze la sosire");
-    expect(finish).not.toContain("<details");
-    expect(finish).toMatch(/<div[^>]*data-testid="volunteer-role-description"/);
+    // A role with no description has no «?».
+    expect(desk).not.toContain("<summary");
     const english = await drawBox({}, "en");
-    expect(english).toContain(">Details</summary>");
+    expect(english).toMatch(/aria-label="What the role Water point involves"/);
   });
 
   it("ties the description to the role's tick: the box names the description's id in aria-describedby, folded or not, and a role with none names nothing", async () => {
@@ -886,18 +888,16 @@ describe("§773 «Arată public câți voluntari mai sunt necesari» is the card
 });
 
 describe("§773 the public page says how many people a role needs only while the club ticked it", () => {
-  it("says only that a role still takes people while the tick is off, in both languages — and no number anywhere on the page", async () => {
+  it("says nothing of how many are needed while the tick is off, in both languages — no «mai sunt locuri» either, a role shown has places (§780, amended)", async () => {
     for (const [language, open, counted] of [
       ["ro", "mai sunt locuri", /mai sunt necesare|mai e nevoie de/],
       ["en", "spots still open", /more people needed|more person needed/],
     ] as const) {
       const page = await drawBox({ showCounts: false }, language);
-      expect((page.match(new RegExp(open, "g")) ?? []).length, language).toBe(3);
+      expect(page, language).not.toContain(open);
       expect(page, language).not.toMatch(counted);
-      // No number is said about a role: no figure in any role's help line.
-      for (const help of page.split('data-testid="volunteer-role-option"').slice(1)) {
-        expect(/<span[^>]*class="[^"]*MuiFormHelperText[^"]*"[^>]*>([^<]*)</.exec(help)?.[1] ?? "", language).not.toMatch(/\d/);
-      }
+      // No count words are drawn on any chip at all.
+      expect(page, language).not.toContain("volunteer-role-needs");
     }
   });
 
@@ -924,7 +924,7 @@ describe("§773 the public page says how many people a role needs only while the
 
   it("keeps the line in the source one flag: the form asks `showCounts` and nothing else says a number about volunteers publicly", () => {
     const box = readFileSync("src/modules/volunteers/ui/VolunteerBox.tsx", "utf8");
-    expect(box).toMatch(/showCounts \?/);
+    expect(box).toMatch(/showCounts &&/);
     // The callout names the roles only; the page and the callout never print `free`, `taken` or `needed` on their own.
     const callout = readFileSync("src/modules/volunteers/ui/VolunteerCallout.tsx", "utf8");
     expect(callout).not.toMatch(/\.free|\.taken|\.needed|countForm/);

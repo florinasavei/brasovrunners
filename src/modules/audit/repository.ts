@@ -623,6 +623,8 @@ export type AuditAction =
   | "members_page.published"
   | "members_page.unpublished"
   | "members_page.text_saved"
+  /** «Cine e membru al grupului» (§789): the club's sentence behind the «?» of the member tick, saved or cleared — whether it is written, never the words. */
+  | "member_definition.saved"
   /**
    * The members' discount codes (§552): a code added, written, hidden or shown again, moved, or
    * deleted. The code's row id and the shape of the change — never the code, the partner or the words.

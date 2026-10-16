@@ -8,6 +8,10 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V3.43-2026-10-16
+
+- **The volunteers' page, calmer** — each category a calm card with no filled band, each role a pill with its tick visible, the default «mai sunt locuri» gone (the count words only when the club asked for them), and a role's description behind a round «?» on its pill. §788.
+- **«Sunt membru al grupului»: the «?» says what the club says** — on the registration form and now also on the volunteers' form, the sentence behind the «?» is the club's own, written in Română and English on «Pagini» → «Membri» → «Cine e membru»; unwritten, the platform's «cel puțin 3 alergări de grup în ultimele 6 luni». §789.
 ## BR-V3.42-2026-10-16
 
 - **Filterable tags at the start of the club's email subjects** — «Scrie-ne» is `[contact]`, the four «Spune-ne ceva» forms `[feedback][cum-a-fost]`, `[sugestie]`, `[reclamatie]`, `[girl-zone]`, and the staff notices `[inscrieri]`, `[declaratii]`, `[voluntari]`, `[legal]`, `[livrare]`, `[sistem]`, `[magazin]` (the club's notice of a shop order), `[echipa]` (a colleague's invitation); QA's mark comes first (`[QA][feedback][cum-a-fost] …`); runners', volunteers' and members' subjects are unchanged; SETUP.md has the Gmail filters, and a note that Girl Zone's messages are never forwarded. §786.

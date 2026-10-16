@@ -199,6 +199,8 @@ export const PANEL_GLYPHS = {
   deletedVersions: DeleteSweepIcon,
   invite: PersonAddIcon,
   members: GroupAddIcon,
+  // «Cine e membru al grupului» (§789): the card on «Membri» that says what being a member means.
+  memberDefinition: CardMembershipIcon,
   appearance: PaletteIcon,
   // «Pagina principală» (§714): the home page at the site's root, under «Aspect».
   home: HomeIcon,
