@@ -258,7 +258,7 @@ export async function GET(request: Request): Promise<Response> {
         // The consent to offers and benefits (§562): its moment, blank for no.
         promoConsentAt: row.promoConsent ? row.promoConsentAt : null,
         outsideCapacity: row.outsideCapacity,
-        // «Până când» (§650), beside «Status»: the moment on the club's clock and what it is for, in words.
+        // «Până când» (§650): the moment on the club's clock and what it is for, in words.
         deadline: deadlineOf(row)?.at ?? null,
         deadlineFor: deadlineOf(row)?.kind ?? null,
         notes: notes.get(row.id) ?? "",
@@ -269,7 +269,7 @@ export async function GET(request: Request): Promise<Response> {
         eventStartsAt: row.eventStartsAt,
       })),
       eventTitle ?? "Participants",
-      // «Status» is a drop-down (§790), its error box in the reader's language.
+      // «Status» is a drop-down (§790, amended), its error box in the reader's language.
       { notesHeader, statistics, statusPick: { title: statsT("registrations.sheetpick.title"), error: statsT("registrations.sheetpick.error") } },
     );
 
