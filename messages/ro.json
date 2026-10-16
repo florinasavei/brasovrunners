@@ -548,8 +548,7 @@
       "needs": {
         "one": "mai e nevoie de 1 persoană",
         "few": "mai sunt necesare {count} persoane",
-        "other": "mai sunt necesare {count} de persoane",
-        "open": "mai sunt locuri"
+        "other": "mai sunt necesare {count} de persoane"
       },
       "name": "Numele tău",
       "email": "Adresa ta de email",
@@ -588,7 +587,7 @@
         "guardianAware": "Bifează că părintele sau tutorele tău știe și e de acord.",
         "birthDateMinors": "Clubul nu primește încă voluntari sub 18 ani. Poți ajuta când împlinești 18 ani sau ne poți scrie din pagina de contact."
       },
-      "details": "Detalii",
+      "roleHelp": "Ce presupune rolul {name}",
       "profile": {
         "birthDateHelp": "Trebuie să ai cel puțin {age} în ziua evenimentului.",
         "city": "Orașul",
@@ -5041,7 +5040,7 @@
       },
       "counts": {
         "label": "Arată public câți voluntari mai sunt necesari",
-        "help": "Bifat, pagina de voluntari spune la fiecare rol câte persoane mai sunt necesare. Debifat, spune doar că rolul mai are locuri; aici vezi mereu numerele."
+        "help": "Bifat, pagina de voluntari spune la fiecare rol câte persoane mai sunt necesare. Debifat, nu spune nicio cifră; aici vezi mereu numerele."
       },
       "chips": {
         "before": "A mai fost voluntar",
@@ -11680,7 +11679,7 @@
       "volunteersShirtsOn": "Formularul public cere acum mărimea tricoului.",
       "volunteersShirtsOff": "Formularul public nu mai cere mărimea tricoului. Mărimile deja date se păstrează.",
       "volunteersCountsOn": "Pagina de voluntari spune acum câte persoane mai sunt necesare la fiecare rol.",
-      "volunteersCountsOff": "Pagina de voluntari nu mai spune câte persoane mai sunt necesare, doar că rolul mai are locuri.",
+      "volunteersCountsOff": "Pagina de voluntari nu mai spune câte persoane mai sunt necesare.",
       "volunteerGuardianRequested": "Linkul pentru părinte pleacă pe email.",
       "volunteerGuardianRecorded": "Acordul părintelui, înregistrat ca semnat pe hârtie.",
       "volunteerCategoryAdded": "Categorie adăugată.",

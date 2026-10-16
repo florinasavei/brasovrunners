@@ -1,49 +1,36 @@
-import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import Box from "@mui/material/Box";
 import RichText from "@/modules/content/rich-text/ui/RichText";
-import { DISCLOSURE_OPEN_ARROW, DISCLOSURE_SUMMARY_SX, FOLD_GLYPH_INLINE_SX } from "@/shared/ui/disclosure";
-import { descriptionNeedsFold } from "../domain/volunteer";
 
 /**
- * A role's «Descrierea rolului» under its tick on the public form (§765; the owner, 2026-10-14: «I need the rich text
- * editor here for responsibilities»): the editor's document drawn by `RichText` — the one renderer every page uses, the
- * allowlist it was validated by — indented under the box it belongs to. A description that runs past about three
- * lines (`descriptionNeedsFold`, read off its plain words) sits behind a native `<details>` «Detalii», so a long list
- * of tasks does not push the form away; a short one is simply there. A Server Component and a native fold: it works
- * with scripts off, and the summary is the 44 pixels every fold on a public page is.
+ * A role's «Descrierea rolului» on the public form (§765; the owner, 2026-10-14: «I need the rich text editor here for
+ * responsibilities»): the editor's document drawn by `RichText` — the one renderer every page uses, the allowlist it was
+ * validated by.
+ *
+ * Since §780 (amended; the owner, 2026-10-16: «colapsată descrierea și cu o cuinița de semnul întrebării») the description is
+ * never drawn open on its own: the role's chip (`VolunteerRoleChip`) holds it behind a «?» — a native `<details>` — so this
+ * draws the words only, flush under the name, never folded a second time inside (the old «Detalii» fold of §765 is gone with
+ * the tile). A Server Component; a link in the document works, the chip drawing it outside the checkbox's label.
  *
  * Nothing is drawn for a role with no description in this language — never the other language's text (§28, §352).
  */
 export default function RoleDescription({
   doc,
   words,
-  detailsLabel,
   bodyId,
   testId = "volunteer-role-description",
-  flush = false,
 }: {
   /** The stored document for the page's language, or null. */
   doc: unknown;
-  /** Its plain words: what decides whether it folds. */
+  /** Its plain words: a blank one is no description. */
   words: string | null;
-  /** «Detalii» / "Details". */
-  detailsLabel: string;
-  /** The id of the words' box, so the role's tick can name it in `aria-describedby` (it is read with the box, folded or not). */
+  /** The id of the words' box, so the role's tick can name it in `aria-describedby` (it is read with the box, open or not). */
   bodyId?: string;
   testId?: string;
-  /**
-   * The caller indents it (§780: the role's tile puts it under the name, past the tick): no left or right padding of its own. Off, it is
-   * indented under the box of a `CheckboxField` as before.
-   */
-  flush?: boolean;
 }) {
   if (doc === null || doc === undefined || words === null || words.trim() === "") return null;
-  const body = (
+  return (
     <Box
       sx={{
-        // Under the box's label, not under the box: the tick is 44 pixels wide and the words start after it.
-        pl: flush ? 0 : { xs: 4.5, sm: 5 },
-        pr: flush ? 0 : 1,
         color: "text.secondary",
         typography: "body2",
         overflowWrap: "anywhere",
@@ -54,23 +41,6 @@ export default function RoleDescription({
       data-testid={`${testId}-body`}
     >
       <RichText body={doc} />
-    </Box>
-  );
-  if (!descriptionNeedsFold(words)) {
-    return <Box data-testid={testId}>{body}</Box>;
-  }
-  return (
-    <Box
-      component="details"
-      data-testid={testId}
-      data-folded="true"
-      sx={{ pl: flush ? 0 : { xs: 4.5, sm: 5 }, "& > summary": { ...DISCLOSURE_SUMMARY_SX, py: 0.5 }, ...DISCLOSURE_OPEN_ARROW, "& > div": { pl: 0 } }}
-    >
-      <Box component="summary">
-        <InfoOutlinedIcon aria-hidden sx={FOLD_GLYPH_INLINE_SX} />
-        {detailsLabel}
-      </Box>
-      {body}
     </Box>
   );
 }

@@ -182,7 +182,7 @@ describe("§773 the words are in both catalogues, the same keys", () => {
   it("has every new sentence in Romanian and in English", () => {
     for (const path of [
       "Event.volunteers.choicesNote",
-      "Event.volunteers.needs.open",
+      "Event.volunteers.roleHelp",
       "Event.volunteers.errors.birthDateMinimum",
       "Event.volunteers.errors.birthDateMinors",
       "Event.volunteers.profile.birthDateHelp",
@@ -225,8 +225,10 @@ describe("§773 the words are in both catalogues, the same keys", () => {
     for (const note of [ro.Event.volunteers.choicesNote, en.Event.volunteers.choicesNote]) {
       for (const sentence of note.split(/(?<=[.!?])\s+/)) expect(sentence.length, sentence).toBeLessThanOrEqual(200);
     }
-    // The counts' words say what is shown publicly and what is not.
-    expect(ro.Event.volunteers.needs.open).toBe("mai sunt locuri");
-    expect(en.Event.volunteers.needs.open).toBe("spots still open");
+    // The counts' words say what is shown publicly and what is not; the default «mai sunt locuri» is gone (§780, amended): a role shown has places.
+    expect(ro.Event.volunteers.needs).not.toHaveProperty("open");
+    expect(en.Event.volunteers.needs).not.toHaveProperty("open");
+    expect(ro.Event.volunteers.roleHelp).toBe("Ce presupune rolul {name}");
+    expect(en.Event.volunteers.roleHelp).toBe("What the role {name} involves");
   });
 });

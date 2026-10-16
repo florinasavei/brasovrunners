@@ -32,7 +32,7 @@ export type VolunteerOffer = {
   shirts: boolean;
   /**
    * «Arată public câți voluntari mai sunt necesari» (§773): the page says how many people a role still needs only while it is on —
-   * off, a role says only that it still takes people. Every public number about volunteers asks this one flag.
+   * off, a role draws no count, never how many. Every public number about volunteers asks this one flag.
    */
   showCounts: boolean;
   /** The notice in force names what a volunteer says about themselves (§765): the form asks it — else §758's tick. */

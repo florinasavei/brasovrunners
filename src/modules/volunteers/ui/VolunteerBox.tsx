@@ -44,7 +44,7 @@ import {
 import GuardianFields from "./GuardianFields";
 import VolunteerCategoryCard from "./VolunteerCategoryCard";
 import VolunteerContactLine, { hasVolunteerContact } from "./VolunteerContactLine";
-import VolunteerRoleTile, { RoleTileGrid } from "./VolunteerRoleTile";
+import VolunteerRoleChip, { RoleChipRow } from "./VolunteerRoleChip";
 import type { PublicVolunteerCategory, PublicVolunteerRole } from "../volunteers";
 import { VOLUNTEER_BOX_ID, type VolunteerBox as BoxName, type VolunteerOutcome, type VolunteerTyped } from "./volunteer-box";
 
@@ -52,8 +52,8 @@ import { VOLUNTEER_BOX_ID, type VolunteerBox as BoxName, type VolunteerOutcome, 
  * «Vreau să fiu voluntar» — the form of the volunteers' own page (§754; the owner, 2026-10-13: «I want to register
  * volunteers for a race»; since §768, 2026-10-14: «formularul trebuie să fie pagină separată, nu embedded în pagina
  * evenimentului», so it lives at `/evenimente/<slug>/voluntari`, not in a fold of the event's page): one plain form —
- * «Ce ești dispus(ă) să faci», one box per role that still needs people with its description and how many it still
- * needs, as many ticked as the person would do (§761; the owner, 2026-10-14: «poate bifa mai multe atribuțiuni din ce e
+ * «Ce ești dispus(ă) să faci», one chip per role that still needs people, its description behind a «?» and, when the club
+ * ticked «Arată public câți voluntari mai sunt necesari», how many it still needs, as many ticked as the person would do (§761; the owner, 2026-10-14: «poate bifa mai multe atribuțiuni din ce e
  * dispus să facă»), the name, the address, the telephone number, an optional message, the consent tick that names the
  * privacy notice, and — since §758 — the tick that accepts the volunteer agreement in force. The organizers then give
  * the person one role. The page owns the title and the event's date and place; this is the form and the answers to it.
@@ -73,7 +73,7 @@ import { VOLUNTEER_BOX_ID, type VolunteerBox as BoxName, type VolunteerOutcome, 
  * box's words), the optional ticks «Am mai fost voluntar în trecut la alte curse» and «Fac parte din grupul {club}» (the
  * club's name from `CLUB_NAME`, as the registration form's member tick draws it — the person's claim, checked against
  * nothing) and, only while the event gives T-shirts (`shirts`), «Mărimea tricoului» — the kit's sizes. While it does not,
- * the form is §758's, with its tick, and takes adults only. Each role's description is its document, under its tick
+ * the form is §758's, with its tick, and takes adults only. Each role's description is its document, behind the «?» on its chip
  * (`RoleDescription`).
  *
  * **Under eighteen (§768).** While the notice in force names `{{volunteerMinors}}` and the agreement `{{volunteerGuardian}}`
@@ -110,8 +110,8 @@ export default async function VolunteerBox({
   /** «Oferim tricouri voluntarilor» is on for this event (§765): the form asks «Mărimea tricoului». */
   shirts: boolean;
   /**
-   * «Arată public câți voluntari mai sunt necesari» is on for this event (§773): each role says how many people it still needs. Off, it says
-   * only that it still takes people — the one flag every public number about volunteers asks (`VolunteerOffer.showCounts`).
+   * «Arată public câți voluntari mai sunt necesari» is on for this event (§773): each role's chip says how many people it still needs. Off, it says
+   * nothing of the kind (a role shown has places by construction, §761; §780 amended) — the one flag every public number about volunteers asks (`VolunteerOffer.showCounts`).
    */
   showCounts: boolean;
   /** The day the date of birth is counted on, `YYYY-MM-DD` (`volunteerEventDay`, §773): the gun's, else the event's. */
@@ -140,10 +140,11 @@ export default async function VolunteerBox({
   const headed = groupsNeedHeadings(groups);
   const roleDoc = (role: PublicVolunteerRole) => (locale === "en" ? role.descriptionEnJson : role.descriptionRoJson);
   const roleWords = (role: PublicVolunteerRole) => (locale === "en" ? role.descriptionEn : role.descriptionRo);
-  // «mai sunt necesare 10 persoane» only while the club ticked «Arată public câți voluntari mai sunt necesari»; else «mai sunt locuri» (§773).
-  // A role without a number (§784) has none to say: it reads «mai sunt locuri» whatever the setting, never a count.
+  // «mai sunt necesare 10 persoane» only while the club ticked «Arată public câți voluntari mai sunt necesari» (§773); otherwise nothing: a role
+  // shown has places by construction (§761), so the default «mai sunt locuri» that every chip repeated is gone (§780, amended). A role without
+  // a number (§784) has none to say, whatever the setting.
   const needs = (role: PublicVolunteerRole) =>
-    showCounts ? (role.free === null ? t("volunteers.needs.open") : t(`volunteers.needs.${countForm(role.free, locale)}`, { count: role.free })) : t("volunteers.needs.open");
+    showCounts && role.free !== null ? t(`volunteers.needs.${countForm(role.free, locale)}`, { count: role.free }) : null;
   const countrySearchWords = {
     search: tForm("countrySearch.search"),
     noMatch: tForm("countrySearch.noMatch"),
@@ -230,8 +231,8 @@ export default async function VolunteerBox({
             )}
 
             {/*
-              «Ce ești dispus(ă) să faci» (§761): one box per role that still needs people — its name, what it asks and
-              how many it still needs, in plain words — ticked as many as the person would do. Native checkboxes
+              «Ce ești dispus(ă) să faci» (§761): one chip per role that still needs people — its name, then, when the club asked, how
+              many it still needs, and its description behind a «?» — ticked as many as the person would do. Native checkboxes
               posting one name (`roleIds`) with several values, so it works with scripts off; at least one is the
               service's rule, said at the group after a refused post (and in the summary above, linking here).
             */}
@@ -257,16 +258,17 @@ export default async function VolunteerBox({
               )}
               {/*
                 The roles, each category its own card (§780, amending §774; the owner, 2026-10-15: «nu e clară gruparea pe categorii!»): a bordered
-                box with a coloured band — the category's glyph, its name as the level-3 heading, «4 roluri» — the contact line (§774) when the
-                club set one, and the roles inside it as tiles (`VolunteerRoleTile`: the whole tile is the checkbox's label), a clear step between
-                two cards, «Alte activități» last with the same look. An event with no category shows the tiles under no heading, as before.
+                box on the paper surface, calm — a header with the category's glyph, its name as the level-3 heading, «4 roluri», a hairline, the
+                contact line (§774) when the club set one, and the roles inside it as chips in a wrap row (`VolunteerRoleChip`: the pill is the
+                checkbox's label, a «?» on it opens the role's description), a clear step between two cards, «Alte activități» last with the
+                same look (the owner, 2026-10-16: «nu-mi place designul pt asta»). An event with no category shows the chips under no heading.
               */}
-              <Stack spacing={{ xs: 3, sm: 3.5 }} sx={{ mt: 1.5 }} data-testid="volunteer-role-groups">
+              <Stack spacing={3} sx={{ mt: 1.5 }} data-testid="volunteer-role-groups">
                 {groups.map((group) => {
-                  const tiles = (
-                    <RoleTileGrid>
+                  const chips = (
+                    <RoleChipRow>
                       {group.roles.map((role) => (
-                        <VolunteerRoleTile
+                        <VolunteerRoleChip
                           key={role.id}
                           id={role.id}
                           name={roleName(role)}
@@ -274,12 +276,12 @@ export default async function VolunteerBox({
                           ticked={ticked.has(role.id)}
                           doc={roleDoc(role)}
                           words={roleWords(role)}
-                          detailsLabel={t("volunteers.details")}
+                          helpLabel={t("volunteers.roleHelp", { name: roleName(role) })}
                         />
                       ))}
-                    </RoleTileGrid>
+                    </RoleChipRow>
                   );
-                  if (!headed) return <Box key="all">{tiles}</Box>;
+                  if (!headed) return <Box key="all">{chips}</Box>;
                   return (
                     <VolunteerCategoryCard
                       key={group.category?.id ?? "other"}
@@ -288,7 +290,7 @@ export default async function VolunteerBox({
                       count={t(`volunteers.roleCount.${countForm(group.roles.length, locale)}`, { count: group.roles.length })}
                       contact={group.category && hasVolunteerContact(group.category.contact) ? <VolunteerContactLine contact={group.category.contact} label={t("volunteers.contactLabel")} /> : undefined}
                     >
-                      {tiles}
+                      {chips}
                     </VolunteerCategoryCard>
                   );
                 })}
