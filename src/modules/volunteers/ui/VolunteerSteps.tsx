@@ -49,7 +49,7 @@ export async function volunteerStepWords(
 }
 
 /**
- * «Cum funcționează voluntariatul» — what happens between the form and the day, in four steps with a glyph each (§NNN; the owner,
+ * «Cum funcționează voluntariatul» — what happens between the form and the day, in four steps with a glyph each (§800; the owner,
  * 2026-10-16: «trebuie să îi spunem voluntarului care sunt pașii și că urmează să îl aprobăm (similar cu flow-ul participanților)»).
  * The shape is the registration's (`RegistrationSteps`, §91): the same `StepList`, and, `folded`, the same `<details>` with the
  * house's fold look — closed, a numbered-list glyph and the title in its summary — the way the register page draws them.

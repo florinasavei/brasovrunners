@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 
 /**
  * The house's list of steps: a numbered `ol`, each step a glyph in a round disc, a title and a few plain words under it
- * (`DECISIONS.md` §91, the registration's «Cum funcționează înscrierea»; §NNN, the volunteers' page draws the same list). One place
+ * (`DECISIONS.md` §91, the registration's «Cum funcționează înscrierea»; §800, the volunteers' page draws the same list). One place
  * for the shape, so the registration form, its «Aproape gata» screen and the volunteers' page cannot drift apart: a reader who saw
  * the steps on the form recognises them on the screen after it.
  *

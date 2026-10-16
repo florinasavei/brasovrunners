@@ -54,7 +54,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
  * în pagina evenimentului»): `/evenimente/<slug>/voluntari` and `/en/events/<slug>/volunteers` — «Vreau să fiu voluntar la
  * <eveniment>», the event's date and place in one short line, the roles that still need people with their descriptions
  * and how many places each has, the form, and the agreement's links. The event's own page keeps only a short box that
- * links here (`VolunteerCallout`). The page is as wide as the register page (`PAGE_WIDTH`, §NNN; the owner, 2026-10-16: «e prea îngust
+ * links here (`VolunteerCallout`). The page is as wide as the register page (`PAGE_WIDTH`, §800; the owner, 2026-10-16: «e prea îngust
  * tot formularul»).
  *
  * **404 while the form could not be sent** (`readVolunteerOffer`): the event is not published or is a members' event, takes
@@ -83,7 +83,7 @@ export default async function EventVolunteersPage({ params, searchParams }: Prop
 
   // What was typed before a refusal (§142), read only when the page is the answer to one.
   const typed: VolunteerTyped = outcome !== null && outcome !== "done" ? ((await readFormDraft()) ?? {}) : {};
-  // …and, on the thank-you only, what the send kept for it (§NNN): the first name and the address typed.
+  // …and, on the thank-you only, what the send kept for it (§800): the first name and the address typed.
   const sent = outcome === "done" ? await readSubmittedFacts() : null;
   const t = await getTranslations("Event");
   const eventHref = getPathname({ locale, href: { pathname: "/events/[slug]", params: { slug } } });

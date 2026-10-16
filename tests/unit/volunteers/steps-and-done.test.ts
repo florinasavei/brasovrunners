@@ -6,7 +6,7 @@ import ro from "../../../messages/ro.json";
 import type { PublicVolunteerCategory, PublicVolunteerRole } from "@/modules/volunteers/volunteers";
 
 /**
- * §NNN — the volunteers' page tells the volunteer the steps and that the organizers will confirm them (the owner, 2026-10-16:
+ * §800 — the volunteers' page tells the volunteer the steps and that the organizers will confirm them (the owner, 2026-10-16:
  * «trebuie să îi spunem voluntarului care sunt pașii și că urmează să îl aprobăm (similar cu flow-ul participanților)»; then «e prea
  * îngust tot formularul»): «Cum funcționează voluntariatul» — four steps with a glyph each, folded under the intro as the register page
  * folds its own, its summary saying that the organizers confirm — the thank-you with «Ce urmează» and the one sentence about the receipt
@@ -93,7 +93,7 @@ async function draw(over: Partial<ComponentProps<typeof VolunteerBox>> = {}, lan
 
 const text = (markup: string) => markup.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ");
 
-describe("§NNN «Cum funcționează voluntariatul»: four steps, a glyph each, in both languages", () => {
+describe("§800 «Cum funcționează voluntariatul»: four steps, a glyph each, in both languages", () => {
   it("lists the four steps in order — the form, the receipt email, the role and the confirmation, the day — each with its glyph and its number", async () => {
     const open = await steps();
     expect(open).toContain('data-testid="volunteer-steps"');
@@ -174,7 +174,7 @@ describe("§NNN «Cum funcționează voluntariatul»: four steps, a glyph each, 
   });
 });
 
-describe("§NNN the steps stand on the volunteers' form, under the intro and above the roles — and the intro does not say it twice", () => {
+describe("§800 the steps stand on the volunteers' form, under the intro and above the roles — and the intro does not say it twice", () => {
   it("draws the intro, then the open steps, then «Ce ești dispus(ă) să faci»", async () => {
     const page = await draw();
     const intro = page.indexOf("Evenimentul are nevoie de ajutor");
@@ -211,7 +211,7 @@ describe("§NNN the steps stand on the volunteers' form, under the intro and abo
   });
 });
 
-describe("§NNN the form spans the page: no 560-pixel cap, the boxes in two columns from md up", () => {
+describe("§800 the form spans the page: no 560-pixel cap, the boxes in two columns from md up", () => {
   it("has no 560-pixel cap on the form, and the roles' cards are not capped either", async () => {
     const page = await draw({}, "ro", { styles: true });
     expect(page).not.toMatch(/max-width:\s*560px/);
@@ -252,7 +252,7 @@ describe("§NNN the form spans the page: no 560-pixel cap, the boxes in two colu
   });
 });
 
-describe("§NNN the thank-you: «Mulțumim, Ana!», the lead, when the receipt leaves and «Ce urmează»", () => {
+describe("§800 the thank-you: «Mulțumim, Ana!», the lead, when the receipt leaves and «Ce urmează»", () => {
   beforeEach(() => {
     vi.useFakeTimers({ toFake: ["Date"] });
     // 10:00 in Brașov (UTC+3 in October 2026).

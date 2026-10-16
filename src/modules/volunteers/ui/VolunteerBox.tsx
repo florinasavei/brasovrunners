@@ -66,7 +66,7 @@ import { VOLUNTEER_BOX_ID, type VolunteerBox as BoxName, type VolunteerOutcome, 
  * on, and the answer comes back as a sentence after a redirect to the same page — the same one for a new person and for
  * a repeat (BR-REQ-031-01 criterion 3) — with the house's flash toast beside it (§427).
  *
- * **Steps, thank-you and width (§NNN; the owner, 2026-10-16: «trebuie să îi spunem voluntarului care sunt pașii și că urmează să îl
+ * **Steps, thank-you and width (§800; the owner, 2026-10-16: «trebuie să îi spunem voluntarului care sunt pașii și că urmează să îl
  * aprobăm», then «e prea îngust tot formularul»).** Under the intro stands «Cum funcționează voluntariatul» (`VolunteerSteps`, open at once: the page is the
  * form itself, as the registration form's steps are open; the fold is for a page that is not the form); after a send the box is the thank-you with «Ce urmează» (`VolunteerDone`); and the form spans the
  * page, which is the register page's width, its boxes in two columns from `md` up as the registration form's.
@@ -110,10 +110,10 @@ export default async function VolunteerBox({
 }: {
   locale: Locale;
   slug: string;
-  /** The event's title and its start in its own zone and the page's language, written to stand inside a sentence — lower-case weekday, «la» before the hour (§452); null when held back (§533): the thank-you's lead names them (§NNN). */
+  /** The event's title and its start in its own zone and the page's language, written to stand inside a sentence — lower-case weekday, «la» before the hour (§452); null when held back (§533): the thank-you's lead names them (§800). */
   eventTitle: string;
   whenInSentence: string | null;
-  /** What the send kept for the thank-you (§NNN): the first name and the address typed; null when the browser has none. */
+  /** What the send kept for the thank-you (§800): the first name and the address typed; null when the browser has none. */
   sent: VolunteerSent | null;
   /** Only the roles that still need people, in the club's order. */
   roles: readonly PublicVolunteerRole[];
@@ -203,7 +203,7 @@ export default async function VolunteerBox({
           // The same sentence whether the person was new or already on the list (BR-REQ-031-01 criterion 3).
           <>
             {/*
-              The thank-you is the registration's «Aproape gata, Ana!» for a volunteer (§NNN): the green-disc heading, the lead, when the
+              The thank-you is the registration's «Aproape gata, Ana!» for a volunteer (§800): the green-disc heading, the lead, when the
               receipt email comes and «Ce urmează» (`VolunteerDone`). Where the club takes minors, the parent's consent is on the list for
               everybody — never a hint about who was typed (§768).
             */}
@@ -229,7 +229,7 @@ export default async function VolunteerBox({
             </Typography>
 
             {/*
-              «Cum funcționează voluntariatul» (§NNN; the owner, 2026-10-16: «trebuie să îi spunem voluntarului care sunt pașii și că urmează să
+              «Cum funcționează voluntariatul» (§800; the owner, 2026-10-16: «trebuie să îi spunem voluntarului care sunt pașii și că urmează să
               îl aprobăm»): the four steps, under the intro and above the roles, folded the way the register page draws its own (`RegistrationSteps
               folded`), the summary saying the one fact a visitor wants first — that the organizers choose the role and confirm the person —
               and the third step saying it in full.
@@ -340,7 +340,7 @@ export default async function VolunteerBox({
             {/*
               The boxes in two columns from `md` up, one below — the registration form's own pairing (`registration-form.tsx`, BR-REQ-041-01 is
               phone-first and the phone is unchanged): on the left what a volunteer cannot be reached without — the name, the address and
-              the telephone number — beside what they say about themselves. §NNN (the owner, 2026-10-16: «e prea îngust tot formularul»): the
+              the telephone number — beside what they say about themselves. §800 (the owner, 2026-10-16: «e prea îngust tot formularul»): the
               page is the register page's width (`PAGE_WIDTH`) and the form is no longer capped at 560 pixels, so the categories' cards and
               the chips above span the whole column and the boxes below keep half of it each. **Two columns only while there is a right one**
               (`profile`): without it the three boxes take the whole width, never half of it beside nothing. The optional message, the

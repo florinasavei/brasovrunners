@@ -291,7 +291,7 @@ describe("§773 the public count of volunteers is the club's tick, and the date 
   });
 });
 
-describe("§NNN the page is the register page's width, and hands the thank-you what the send kept", () => {
+describe("§800 the page is the register page's width, and hands the thank-you what the send kept", () => {
   it("draws the page in the one width the register page uses (`PAGE_WIDTH`), never the narrow `md` column", async () => {
     const { PAGE_WIDTH } = await import("@/theme/brand");
     expect(PAGE_WIDTH).toBe("xl");

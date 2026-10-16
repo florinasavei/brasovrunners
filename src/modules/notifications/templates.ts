@@ -1828,7 +1828,7 @@ const T = {
         ...(d.volunteer?.guardianPending
           ? ["Fiind sub 18 ani, ai nevoie și de acordul unui părinte sau tutore. Părintelui sau tutorelui pe care l-ai trecut i-am trimis un email cu un link; până își dă acordul, organizatorii nu te pot confirma."]
           : []),
-        // «Ce urmează» (§NNN), the facts the volunteers' page and its thank-you give as steps: the organizers choose the role and confirm, the role comes by email, nothing is owed until then, and the day.
+        // «Ce urmează» (§800), the facts the volunteers' page and its thank-you give as steps: the organizers choose the role and confirm, the role comes by email, nothing is owed until then, and the day.
         "Ce urmează: organizatorii îți aleg rolul și te confirmă. Îți scriem pe email rolul tău, cu data și locul, și te căutăm pe email sau la telefon dacă mai trebuie ceva. Ora de întâlnire și ce mai e de știut le afli de la organizatori, înainte de eveniment. Până atunci nu ai nimic de făcut: oferta nu e o înscriere la cursă și nu ține loc.",
         "În ziua evenimentului vii la ora și la locul pe care ți le spun organizatorii.",
         `Dacă nu tu ai trimis oferta, scrie-ne din pagina de contact și o ștergem; altfel rămâne la organizatori cel mult ${volunteerDays("ro")} de la începutul evenimentului sau de la trimiterea ofertei, dacă e mai târziu.`,

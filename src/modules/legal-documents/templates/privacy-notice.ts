@@ -111,7 +111,7 @@
  * names it in every language (`describesMembersShop`). **Open for counsel:** the accounting period in
  * years, and whether section 7's list should name it; the platform deletes no order by itself yet.
  *
- * `{{volunteers}}` also stands in section 10's sentence about the two ten-minute cookies (§NNN): the volunteers' form sets the
+ * `{{volunteers}}` also stands in section 10's sentence about the two ten-minute cookies (§800): the volunteers' form sets the
  * second one, the address and first name for its thank-you screen, so the list of forms that set them names it — the same marker,
  * the same quoted name, no new switch (a notice approved before says «formularul de înscriere, declarația, …» and keeps saying it
  * until the club approves the new template).

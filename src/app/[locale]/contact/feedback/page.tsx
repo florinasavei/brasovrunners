@@ -108,7 +108,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;
   if (!hasLocale(routing.locales, locale)) return {};
   const t = await getTranslations({ locale, namespace: "Tell" });
-  // The description says a name may be given only where the form takes one (§NNN): while the notice in force names it.
+  // The description says a name may be given only where the form takes one (§801): while the notice in force names it.
   const named = (await orNull(() => cachedFeedbackFormsNamedDescribed(new Date()))) === true;
   // A form, not content: kept out of the index, like the pages a link opens.
   return { title: t("title"), description: t(named ? "intro" : "introAnonymous"), robots: { index: false, follow: false } };
@@ -165,7 +165,7 @@ export default async function FeedbackPage({ params, searchParams }: Props) {
     orNull(() => cachedFeedbackSafetyGmailDescribed(now)),
     orNull(() => cachedFeedbackFormsNamedDescribed(now)),
   ]);
-  // Whether the form takes a name at all (§678): the intro and the form's words follow it, so the page never offers one it cannot take (§NNN).
+  // Whether the form takes a name at all (§678): the intro and the form's words follow it, so the page never offers one it cannot take (§801).
   const namedDescribed = namedDescribedRead === true;
   // The settings as they act (§772): Girl Zone's road is Gmail only while the notice in force says so, and the words below follow it.
   const offer = offered0 ? effectiveFeedbackSettings(offered0, safetyGmailDescribed === true) : null;
@@ -273,7 +273,7 @@ function ChooseStep({
   path: string;
   query: ReturnType<typeof readFeedbackQuery>;
   t: T;
-  /** The notice in force lets a name be given: the intro says so; otherwise it says the message is anonymous (§NNN). */
+  /** The notice in force lets a name be given: the intro says so; otherwise it says the message is anonymous (§801). */
   named: boolean;
 }) {
   const chosen = query.branch && branches.includes(query.branch) ? query.branch : branches[0];
@@ -495,7 +495,7 @@ async function BranchForm({
             in force says a name may be given; until then the form is anonymous only, with no way back.
           */}
           {!identity && (
-            // Anonymous only (the notice in force does not yet name a name, §678): no radios, so one line says it, in the radio's own words (§NNN).
+            // Anonymous only (the notice in force does not yet name a name, §678): no radios, so one line says it, in the radio's own words (§801).
             <Typography variant="body1" data-testid="feedback-anonymous-only">
               {t("identity.anonymous")} — {t("identity.anonymousHint")}
             </Typography>

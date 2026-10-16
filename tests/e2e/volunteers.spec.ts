@@ -234,7 +234,7 @@ test.describe("§754 volunteers for a race", () => {
       expect(await guest.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
       const box = guest.getByTestId("volunteer-box");
       await expect(box).toBeVisible();
-      // §NNN «Cum funcționează voluntariatul»: the steps, open at once under the intro and above the roles (the page is the form), as the registration form's are.
+      // §800 «Cum funcționează voluntariatul»: the steps, open at once under the intro and above the roles (the page is the form), as the registration form's are.
       const steps = guest.getByTestId("volunteer-steps");
       await expect(steps).toBeVisible();
       await expect(steps.locator("summary")).toHaveCount(0);
@@ -255,7 +255,7 @@ test.describe("§754 volunteers for a race", () => {
       // Above the roles, under the intro.
       const stepsAt = (await steps.boundingBox())!;
       expect(stepsAt.y).toBeLessThan((await guest.getByTestId("volunteer-roles").boundingBox())!.y);
-      // §NNN the form spans the page (the register page's width), no longer a 560-pixel column; from `md` up its boxes stand in two columns.
+      // §800 the form spans the page (the register page's width), no longer a 560-pixel column; from `md` up its boxes stand in two columns.
       const viewport = guest.viewportSize()!.width;
       const formBox = (await guest.getByTestId("volunteer-form").boundingBox())!;
       const mainBox = (await guest.locator("main#main").boundingBox())!;
@@ -533,7 +533,7 @@ test.describe("§754 volunteers for a race", () => {
         await page2.getByTestId("volunteer-box").getByRole("button", { name: "Mă ofer voluntar", exact: true }).click();
         await expect(page2.getByTestId("volunteer-done")).toBeVisible({ timeout: 30_000 });
         await expect(page2.getByTestId("volunteer-done")).toContainText("Am primit oferta ta");
-        // §NNN the thank-you says what comes next, like the registration's «Aproape gata»: the first name, where the receipt comes, «Ce urmează». The lead's date reads inside the sentence: lower-case weekday, «la» before the hour.
+        // §800 the thank-you says what comes next, like the registration's «Aproape gata»: the first name, where the receipt comes, «Ce urmează». The lead's date reads inside the sentence: lower-case weekday, «la» before the hour.
         await expect(page2.getByTestId("volunteer-done-lead")).toContainText(/, [a-zăâîșț]+, \d{1,2} \S+ \d{4}, la \d{2}:\d{2}\.$/);
         const thanks = page2.getByTestId("volunteer-done");
         await expect(thanks.getByRole("heading", { level: 2 })).toHaveText(`Mulțumim, ${name.split(" ")[0]}!`);

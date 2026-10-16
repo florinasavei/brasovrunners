@@ -4,7 +4,7 @@ import Typography from "@mui/material/Typography";
 
 /**
  * The heading of a «thank you, it is done» screen: a green disc with a celebration glyph and the words beside it, level 2
- * (`CheckYourEmail`'s «Aproape gata, Ana!», the owner: the screen "should be more fun"; §NNN, the volunteers' «Mulțumim, Ana!» draws
+ * (`CheckYourEmail`'s «Aproape gata, Ana!», the owner: the screen "should be more fun"; §800, the volunteers' «Mulțumim, Ana!» draws
  * the same one). The glyph is decoration; the words say it. Theme tokens only (`success.main`).
  */
 export default function DoneHeading({ children }: { children: string }) {

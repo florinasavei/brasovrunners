@@ -5,7 +5,7 @@ import { buildOutgoingEmail, type TemplateData } from "@/modules/notifications/t
 import { CLUB_NAME } from "@/theme/brand";
 
 /**
- * §NNN — the receipt email a volunteer gets (`VOLUNTEER_RECEIVED`, §754) says what comes next in the facts the volunteers' page and its
+ * §800 — the receipt email a volunteer gets (`VOLUNTEER_RECEIVED`, §754) says what comes next in the facts the volunteers' page and its
  * thank-you give as steps: the organizers choose the role and confirm, the role comes by email with the date and the place, nothing is
  * owed until then, the day. Placeholders only (§357): no number, no deadline, no club name, nothing the club could change elsewhere.
  */
@@ -20,7 +20,7 @@ function receipt(data: TemplateData = DATA) {
   return buildOutgoingEmail({ to: "ana@example.test", locale: "ro", idempotencyKey: "test:VOLUNTEER_RECEIVED", messageType: "VOLUNTEER_RECEIVED", data });
 }
 
-describe("§NNN the receipt says «ce urmează» in both languages", () => {
+describe("§800 the receipt says «ce urmează» in both languages", () => {
   it("names the organizers' choice, the role by email with the date and place, nothing owed until then, and the day", () => {
     const { text } = receipt();
     expect(text).toContain("Ce urmează: organizatorii îți aleg rolul și te confirmă. Îți scriem pe email rolul tău, cu data și locul");
@@ -74,7 +74,7 @@ describe("§NNN the receipt says «ce urmează» in both languages", () => {
   });
 });
 
-describe("§NNN the club's copy editor starts from the new words, and a text the club saved is not touched", () => {
+describe("§800 the club's copy editor starts from the new words, and a text the club saved is not touched", () => {
   it("starts from the platform's words — «Ce urmează» in the editor's prefill, in both languages, with the event as its one field", () => {
     for (const [locale, lead, day] of [
       ["ro", "Ce urmează: organizatorii îți aleg rolul și te confirmă.", "În ziua evenimentului vii la ora și la locul pe care ți le spun organizatorii."],

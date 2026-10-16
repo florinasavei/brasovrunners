@@ -21,7 +21,7 @@ export type VolunteerSent = {
 const AHEAD: readonly VolunteerStepKey[] = ["email", "role", "day"];
 
 /**
- * «Mulțumim, Ana!» — the screen after the volunteers' form (§NNN; the owner, 2026-10-16: «trebuie să îi spunem voluntarului care
+ * «Mulțumim, Ana!» — the screen after the volunteers' form (§800; the owner, 2026-10-16: «trebuie să îi spunem voluntarului care
  * sunt pașii și că urmează să îl aprobăm (similar cu flow-ul participanților)»), the registration's «Aproape gata, Ana!»
  * (`CheckYourEmail`) for a volunteer: the same green-disc heading (`DoneHeading`), the lead that names the event and its date, the
  * receipt email's line in bold and then «Ce urmează» as a list of glyphs (`StepList`, no numbers, as the registration's), whose words are
