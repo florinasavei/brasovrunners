@@ -182,7 +182,8 @@ function shortText(text: string): string {
 /**
  * «Voluntari» (§754): one card in the event editor, folded, with a summary line «N din M» and open on
  * arrival while anybody waits for an answer. The event's tick «Primește voluntari» and what keeps the public
- * form off the page; the event's **roles** — bilingual, how many each needs, in the order the club sets;
+ * form off the page; the event's **roles** — bilingual, how many each needs, in the order the club sets — in ONE form with one
+ * «Salvează toate rolurile» (§NNN: a card per category, a line per role, a blank line that adds one, the delete of each a small form beside it);
  * the **people** grouped by role with «N din M» each — entered by hand, changed, confirmed, cancelled,
  * deleted; and the CSV. Backoffice only: the Organizer and the Administrators read and write it, and nobody
  * else gets the card (`canManageVolunteers`, asserted again by every action and the export).

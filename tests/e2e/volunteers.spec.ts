@@ -144,6 +144,10 @@ test.describe("§754 volunteers for a race", () => {
     const moreLine = (name: string) => roleRow(page, name).getByTestId("volunteer-role-more").locator(":scope > summary");
     await expect(moreLine("Punct de apă")).toContainText("Stai la masa cu apă, la kilometrul 5.");
     await expect(moreLine("Sosire")).toContainText("Stai la linia de sosire.");
+    // The description is one strip of two tabs (§572) in the fold, and the card's «Tradu cardul» is greyed with its reason where there is no translation key (§482).
+    await openFold(roleRow(page, "Punct de apă").getByTestId("volunteer-role-more"));
+    await expect(roleRow(page, "Punct de apă").getByRole("tab")).toHaveText([/Română/, /English/]);
+    await expect(page.getByTestId("translate-card-off")).toBeVisible();
     // The position box and the number are boxes a thumb can use: 44 pixels tall.
     expect((await roleRow(page, "Sosire").getByLabel("Poziția").boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(40);
     await fillRoleRow(roleRow(page, "Sosire"), { position: "1" });
@@ -161,6 +165,7 @@ test.describe("§754 volunteers for a race", () => {
     expect(await roleNames()).toEqual(["Punct de apă", "Sosire"]);
     // A press that changes nothing says so, and writes nothing.
     await saveAllRoles(page, "nothing");
+    await openEditorBox(page, "Roluri");
 
     // The form is off until the event takes volunteers: the card says why.
     await expect(page.getByTestId("volunteer-offer-state")).toContainText("Formularul public e oprit");

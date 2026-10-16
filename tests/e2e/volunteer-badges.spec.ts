@@ -92,14 +92,14 @@ test.describe("§764 volunteer badges, designed and printed per role", () => {
     // §783: the colour serves the badge per role only, and the role's form says so in one line.
     await expect(row.getByTestId("badge-colour-per-role-only")).toContainText("doar când ecusonul e pe roluri");
     await openFold(finishRow.getByTestId("volunteer-role-more"));
-    await finishRow.getByLabel("Culoarea benzii").selectOption({ label: "Verde" });
+    await finishRow.getByLabel("Culoarea benzii").selectOption({ label: "Violet" });
     await page.getByRole("button", { name: "Salvează toate rolurile", exact: true }).click();
     await expect(page.getByTestId("toast")).toContainText("Am salvat 2 roluri.", { timeout: 30_000 });
     await hydrated(page);
     await openEditorBox(page, "Voluntari");
     await openEditorBox(page, "Roluri");
     await expect(row.getByTestId("volunteer-role-colour")).toContainText("Roșu");
-    await expect(finishRow.getByTestId("volunteer-role-colour")).toContainText("Verde");
+    await expect(finishRow.getByTestId("volunteer-role-colour")).toContainText("Violet");
     const link = page.getByTestId("volunteer-badges-link");
     expect((await link.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
     await link.click();

@@ -79,7 +79,11 @@ export async function describeRole(row: Locator, ro: readonly string[], en: read
  * hydrated again. The toast is what is waited for — the address already ends in the card's anchor, so it says nothing.
  */
 export async function saveAllRoles(page: Page, saved: "some" | "nothing" = "some"): Promise<void> {
+  // The toast of the press before may still be on screen — and the toast is what is waited for: put it away first, or its words would be taken for this press's.
+  const stale = page.getByTestId("toast").getByRole("button");
+  if (await stale.count()) await stale.first().click();
+  await expect(page.getByTestId("toast")).toHaveCount(0);
   await page.getByRole("button", { name: "Salvează toate rolurile", exact: true }).click();
-  await expect(page.getByTestId("toast")).toContainText(saved === "some" ? /Am salvat \d+ (de )?roluri?\./ : "Nimic de schimbat la roluri.", { timeout: 30_000 });
+  await expect(page.getByTestId("toast")).toContainText(saved === "some" ? /Am salvat \d+ (de )?rol(uri)?\./ : "Nimic de schimbat la roluri.", { timeout: 30_000 });
   await hydrated(page);
 }
