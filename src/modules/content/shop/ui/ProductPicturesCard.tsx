@@ -5,7 +5,7 @@ import Typography from "@mui/material/Typography";
 import type { getTranslations } from "next-intl/server";
 import { countForm } from "@/i18n/count-form";
 import type { Locale } from "@/i18n/routing";
-import GlyphChip from "@/modules/events/ui/GlyphChip";
+import StatusChip from "@/shared/ui/StatusChip";
 import { PICTURES_MAX } from "@/modules/content/shop/domain";
 import type { AdminShopProduct, ShopPictureRow } from "@/modules/content/shop/repository";
 import TeamPhotoField, { type TeamPhotoLabels } from "@/modules/content/team/ui/TeamPhotoField";
@@ -143,7 +143,7 @@ function PictureRow({
         )}
         <Stack spacing={0.5}>
           <Stack direction="row" sx={{ gap: 0.5, flexWrap: "wrap", alignItems: "center" }}>
-            {first && <GlyphChip glyph="featured" color="primary" label={t("members.shop.pictures.cover")} testId="picture-cover" />}
+            {first && <StatusChip glyph="cover" color="primary" label={t("members.shop.pictures.cover")} testId="picture-cover" />}
             <Typography variant="body2" color="text.secondary">
               {t("members.shop.pictures.position", { number: picture.position })}
             </Typography>

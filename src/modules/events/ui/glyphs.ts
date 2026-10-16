@@ -22,7 +22,6 @@ import RestaurantIcon from "@mui/icons-material/Restaurant";
 import ScheduleIcon from "@mui/icons-material/Schedule";
 import ScienceIcon from "@mui/icons-material/Science";
 import SportsScoreIcon from "@mui/icons-material/SportsScore";
-import StarIcon from "@mui/icons-material/Star";
 import StraightenIcon from "@mui/icons-material/Straighten";
 import TerrainIcon from "@mui/icons-material/Terrain";
 import TimerIcon from "@mui/icons-material/Timer";
@@ -147,7 +146,6 @@ export const GLYPHS = {
   ...prefixed("difficulty", DIFFICULTY_LEVEL_ICONS),
   ...prefixed("cost", COST_GLYPH),
   ...prefixed("checkpoint", CHECKPOINT_GLYPH),
-  featured: StarIcon,
   special: AutoAwesomeIcon,
   // The repeat chip on a listing card (§486) — the single date of a series, the series card and
   // the featured card alike: a wheel of arrows, «ca o rotiță» (the owner), not the calendar
