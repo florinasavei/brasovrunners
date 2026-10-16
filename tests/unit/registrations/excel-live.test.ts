@@ -102,8 +102,12 @@ function formulasOf(buffer: Buffer): Map<string, { formula: string; cached: stri
 
 type Grid = (string | undefined)[][];
 
+/** The evaluator's stand-in for the logical `TRUE` criterion: no text a cell holds can equal it. */
+const TRUE_CRITERION = "\u0000TRUE";
+
 /** A spreadsheet criterion against a cell: `>=n`, `<n`, or whole-text equality (`=text` with `~` shielding a wildcard). */
 function matches(value: string | undefined, criterion: string): boolean {
+  if (criterion === TRUE_CRITERION) return value === "1";
   const operator = /^(>=|<=|<|>|=)/.exec(criterion)?.[1];
   const operand = operator ? criterion.slice(operator.length) : criterion;
   if (operator === ">=" || operator === "<=" || operator === "<" || operator === ">") {
@@ -130,7 +134,11 @@ function evaluate(formula: string, grid: Grid, formulas: ReadonlyMap<string, { f
   let found: RegExpExecArray | null;
   if ((found = /^COUNTA\((\$[A-Z]+\$\d+:\$[A-Z]+\$\d+)\)$/.exec(formula))) return cells(found[1]).filter((value) => value !== undefined && value !== "").length;
   if ((found = /^COUNTIFS?\((.*)\)$/.exec(formula))) {
-    const pairs = [...found[1].matchAll(/(\$[A-Z]+\$\d+:\$[A-Z]+\$\d+),"((?:[^"]|"")*)"/g)].map((pair) => ({ values: cells(pair[1]), criterion: pair[2].replace(/""/g, '"') }));
+    // A criterion is a quoted text or — for the Boolean «Special guest» column — the logical TRUE, which a stored boolean (`t="b"`, `1`) meets.
+    const pairs = [...found[1].matchAll(/(\$[A-Z]+\$\d+:\$[A-Z]+\$\d+),(?:"((?:[^"]|"")*)"|(TRUE))/g)].map((pair) => ({
+      values: cells(pair[1]),
+      criterion: pair[3] ? TRUE_CRITERION : pair[2].replace(/""/g, '"'),
+    }));
     expect(pairs.map((pair) => `${pair.values.length}`).filter((length, _, all) => length !== all[0])).toEqual([]);
     return pairs[0].values.filter((_, at) => pairs.every((pair) => matches(pair.values[at], pair.criterion))).length;
   }
@@ -400,8 +408,8 @@ describe("§787 the statistics are formulas with today's number cached beside th
     const buffer = await build(mixed());
     const formulas = formulasOf(buffer);
     const results = evaluated(buffer);
-    // Eleven lines and six categories of four numbers each.
-    expect(results.size).toBe(11 + 6 * 4);
+    // Fourteen lines (the three of the special guests among them) and six categories of four numbers each.
+    expect(results.size).toBe(14 + 6 * 4);
     for (const [reference, result] of results) expect(String(result), `${reference}: ${formulas.get(reference)!.formula}`).toBe(formulas.get(reference)!.cached);
   });
 
@@ -594,10 +602,212 @@ describe("§787 a file of several events: an «Event» column the per-event coun
     const at = rows.findIndex((line) => line?.[0] === long);
     expect(at).toBeGreaterThan(0);
     const formulas = formulasOf(buffer);
-    for (let line = at + 2; line < at + 12; line += 1) expect(formulas.has(`B${line}`), `B${line}`).toBe(false);
+    // The fourteen lines of the block (the special guests' three among them) are plain numbers.
+    for (let line = at + 2; line < at + 16; line += 1) expect(formulas.has(`B${line}`), `B${line}`).toBe(false);
     expect(rows[at + 1]?.[1]).toBe("1");
     // The other event's block is still live.
     expect(formulas.has(`B${rows.findIndex((cells) => cells?.[0] === "scurt") + 2}`)).toBe(true);
+  });
+});
+
+describe("§787 (amended) the special guests: three lines of their own, formulas over the «Special guest» column", () => {
+  /** Six rows: two confirmed guests (one the club's), a waiting-list guest, a cancelled guest, a confirmed runner and a pending one. */
+  const withGuests = () => [
+    row({ status: "CONFIRMED", sex: "Female", ageOnRaceDay: 25, outsideCapacity: true }),
+    row({ status: "CONFIRMED", sex: "Male", ageOnRaceDay: 35, clubMemberDeclared: true, outsideCapacity: true }),
+    row({ status: "WAITLISTED", sex: "Male", ageOnRaceDay: 45, outsideCapacity: true }),
+    row({ status: "CANCELLED", sex: "Female", ageOnRaceDay: 25, outsideCapacity: true }),
+    row({ status: "CONFIRMED", sex: "Female", ageOnRaceDay: 25, outsideCapacity: false }),
+    row({ status: "PENDING_DECLARATION", sex: "Male", ageOnRaceDay: 35 }),
+  ];
+  const lineAt = (rows: Grid, label: string, from = 0) => rows.findIndex((line, index) => index >= from && line?.[0] === label) + 1;
+  const SPECIAL = columnLetter(headerAt("Special guest"));
+
+  it("sits after the club's lines and before the categories, in this order, with the tallies' numbers cached beside a formula", async () => {
+    const data = withGuests();
+    const buffer = await build(data);
+    const formulas = formulasOf(buffer);
+    const { rows } = readSheet(buffer);
+    const [block] = statisticsOf(data, RO);
+    expect(block.tally).toMatchObject({ total: 6, confirmed: 3, specialGuests: 4, specialGuestsConfirmed: 2 });
+    const notClub = lineAt(rows, RO.notClub);
+    expect([RO.specialGuests, RO.specialGuestsConfirmed, RO.confirmedInPlaces].map((label) => lineAt(rows, label))).toEqual([notClub + 1, notClub + 2, notClub + 3]);
+    expect(lineAt(rows, RO.categoryHeader)).toBe(notClub + 5);
+    const cached: Array<[string, number]> = [
+      [RO.specialGuests, 4],
+      [RO.specialGuestsConfirmed, 2],
+      [RO.confirmedInPlaces, 1],
+    ];
+    for (const [label, value] of cached) {
+      const cell = formulas.get(`B${lineAt(rows, label)}`);
+      expect(cell, `${label} is a formula`).toBeDefined();
+      expect(cell!.cached, `${label} carries its number`).toBe(String(value));
+    }
+    // The sum rule of the block is untouched: the states still add up to «Total».
+    const stateSum = [RO.confirmed, RO.pendingEmail, RO.pendingDeclaration, RO.waitlisted, RO.waitlistOffered, RO.cancelled, RO.expired].reduce((sum, label) => sum + Number(rows[lineAt(rows, label) - 1]?.[1]), 0);
+    expect(stateSum).toBe(Number(rows[lineAt(rows, RO.total) - 1]?.[1]));
+  });
+
+  it("writes COUNTIF of TRUE over the Boolean column, COUNTIFS with the confirmed status word, and a difference of two cells", async () => {
+    const data = withGuests();
+    const buffer = await build(data);
+    const formulas = formulasOf(buffer);
+    const { rows } = readSheet(buffer);
+    const range = `$${SPECIAL}$2:$${SPECIAL}$${data.length + 1}`;
+    const status = `$${STATUS}$2:$${STATUS}$${data.length + 1}`;
+    expect(formulas.get(`B${lineAt(rows, RO.specialGuests)}`)!.formula).toBe(`COUNTIF(${range},TRUE)`);
+    expect(formulas.get(`B${lineAt(rows, RO.specialGuestsConfirmed)}`)!.formula).toBe(`COUNTIFS(${range},TRUE,${status},"CONFIRMED")`);
+    expect(formulas.get(`B${lineAt(rows, RO.confirmedInPlaces)}`)!.formula).toBe(`B${lineAt(rows, RO.confirmed)}-B${lineAt(rows, RO.specialGuestsConfirmed)}`);
+    // The column the range reads is the sheet's last fixed one, headed as the file has always headed it.
+    expect(REGISTRATION_SHEET_HEADERS.at(-1)).toBe("Special guest");
+  });
+
+  it("matches the cells the file really carries: a stored boolean, `1` for a guest and `0` otherwise, never text", async () => {
+    const data = withGuests();
+    const buffer = await build(data);
+    const cells = rawCells(buffer);
+    data.forEach((entry, index) => {
+      const cell = cells.get(`${SPECIAL}${index + 2}`);
+      expect(cell?.type, `row ${index + 2}`).toBe("b");
+      expect(cell?.value, `row ${index + 2}`).toBe(entry.outsideCapacity ? "1" : "0");
+    });
+    // The formula counts exactly the rows whose cell is `1`.
+    const results = evaluated(buffer);
+    const { rows } = readSheet(buffer);
+    expect(results.get(`B${lineAt(rows, RO.specialGuests)}`)).toBe(data.filter((entry) => entry.outsideCapacity).length);
+  });
+
+  it("evaluates, over the sheet's own cells, to the number cached beside it, in both languages", async () => {
+    for (const words of [RO, EN]) {
+      const buffer = await build(withGuests(), words);
+      const formulas = formulasOf(buffer);
+      const results = evaluated(buffer);
+      // Fourteen lines and the categories' four numbers each, the «no category» row included.
+      for (const [reference, result] of results) expect(String(result), `${reference}: ${formulas.get(reference)!.formula}`).toBe(formulas.get(reference)!.cached);
+      const { rows } = readSheet(buffer);
+      expect(results.get(`B${lineAt(rows, words.specialGuests)}`)).toBe(4);
+      expect(results.get(`B${lineAt(rows, words.specialGuestsConfirmed)}`)).toBe(2);
+      expect(results.get(`B${lineAt(rows, words.confirmedInPlaces)}`)).toBe(1);
+    }
+  });
+
+  it("is zero on every line when nobody is a guest, and the places line equals the confirmed", async () => {
+    const buffer = await build(mixed());
+    const { rows } = readSheet(buffer);
+    const results = evaluated(buffer);
+    expect(results.get(`B${lineAt(rows, RO.specialGuests)}`)).toBe(0);
+    expect(results.get(`B${lineAt(rows, RO.specialGuestsConfirmed)}`)).toBe(0);
+    expect(results.get(`B${lineAt(rows, RO.confirmedInPlaces)}`)).toBe(results.get(`B${lineAt(rows, RO.confirmed)}`));
+    expect(formulasOf(buffer).get(`B${lineAt(rows, RO.specialGuests)}`)!.cached).toBe("0");
+  });
+
+  it("follows an offline edit: mark a runner a guest, unmark a guest, or cancel a confirmed guest, and all three lines move together", async () => {
+    const data = withGuests();
+    const buffer = await build(data);
+    const grid = gridOf(buffer);
+    const { rows } = readSheet(buffer);
+    const column = headerAt("Special guest");
+    const numbers = (where: Grid) => {
+      const results = evaluated(buffer, where);
+      return [RO.specialGuests, RO.specialGuestsConfirmed, RO.confirmedInPlaces, RO.confirmed, RO.total].map((label) => results.get(`B${lineAt(rows, label)}`));
+    };
+    expect(numbers(grid)).toEqual([4, 2, 1, 3, 6]);
+    const copy = () => grid.map((line) => (line ? [...line] : line)) as Grid;
+
+    // The confirmed runner (row 6) is marked a guest: one more guest, one more confirmed guest, one place fewer.
+    const marked = copy();
+    marked[5][column] = "1";
+    expect(numbers(marked)).toEqual([5, 3, 0, 3, 6]);
+
+    // A confirmed guest (row 2) is taken off the list: she takes a place again.
+    const unmarked = copy();
+    unmarked[1][column] = "0";
+    expect(numbers(unmarked)).toEqual([3, 1, 2, 3, 6]);
+
+    // A confirmed guest (row 3) is cancelled: still a guest and still in «Total», no longer confirmed, no place held.
+    const cancelled = copy();
+    cancelled[2][headerAt("Status")] = "CANCELLED";
+    expect(numbers(cancelled)).toEqual([4, 1, 1, 2, 6]);
+
+    // The pending runner is confirmed: a place taken.
+    const confirmed = copy();
+    confirmed[6][headerAt("Status")] = "CONFIRMED";
+    expect(numbers(confirmed)).toEqual([4, 2, 2, 4, 6]);
+  });
+
+  it("is in every block of a file of several events, each filtered by its event, and over all of them in the last", async () => {
+    const event = (id: string, label: string, startsAt: string) => ({ eventId: id, eventLabel: label, eventTitle: "Alergare", eventStartsAt: new Date(startsAt) });
+    const e1 = event("e1", "Alergare · 18.10.2026", "2026-10-18T08:00:00.000Z");
+    const e2 = event("e2", "Alergare · 25.10.2026", "2026-10-25T08:00:00.000Z");
+    const data = [
+      row({ ...e1, status: "CONFIRMED", outsideCapacity: true }),
+      row({ ...e1, status: "CONFIRMED" }),
+      row({ ...e2, status: "CONFIRMED", outsideCapacity: true }),
+      row({ ...e2, status: "CONFIRMED", outsideCapacity: true }),
+      row({ ...e2, status: "WAITLISTED", outsideCapacity: true }),
+    ];
+    const buffer = await build(data);
+    const formulas = formulasOf(buffer);
+    const results = evaluated(buffer);
+    const { rows } = readSheet(buffer);
+    for (const [reference, result] of results) expect(String(result), `${reference}: ${formulas.get(reference)!.formula}`).toBe(formulas.get(reference)!.cached);
+    const header = rows[0] as string[];
+    const eventRange = `$${columnLetter(header.indexOf("Event"))}$2:$${columnLetter(header.indexOf("Event"))}$6`;
+    const specialRange = `$${columnLetter(header.indexOf("Special guest"))}$2:$${columnLetter(header.indexOf("Special guest"))}$6`;
+    const statusRange = `$${columnLetter(header.indexOf("Status"))}$2:$${columnLetter(header.indexOf("Status"))}$6`;
+    // [guests, confirmed guests, confirmed who take a place] per block.
+    const blocks: Array<[string, [number, number, number]]> = [["Alergare · 18.10.2026", [1, 1, 1]], ["Alergare · 25.10.2026", [3, 2, 0]], [RO.allEvents, [4, 3, 1]]];
+    let from = 0;
+    for (const [label, [guests, confirmedGuests, inPlaces]] of blocks) {
+      const start = lineAt(rows, label, from);
+      from = start;
+      const at = (word: string) => lineAt(rows, word, start);
+      expect(results.get(`B${at(RO.specialGuests)}`), `${label} guests`).toBe(guests);
+      expect(results.get(`B${at(RO.specialGuestsConfirmed)}`), `${label} confirmed guests`).toBe(confirmedGuests);
+      expect(results.get(`B${at(RO.confirmedInPlaces)}`), `${label} places`).toBe(inPlaces);
+      // The all-events block filters by no event; the others add the event filter in front, as every other line does.
+      const all = label === RO.allEvents;
+      const scope = all ? "" : `${eventRange},"=${label}",`;
+      expect(formulas.get(`B${at(RO.specialGuests)}`)!.formula).toBe(`${all ? "COUNTIF" : "COUNTIFS"}(${scope}${specialRange},TRUE)`);
+      expect(formulas.get(`B${at(RO.specialGuestsConfirmed)}`)!.formula).toBe(`COUNTIFS(${scope}${specialRange},TRUE,${statusRange},"CONFIRMED")`);
+      expect(formulas.get(`B${at(RO.confirmedInPlaces)}`)!.formula).toBe(`B${at(RO.confirmed)}-B${at(RO.specialGuestsConfirmed)}`);
+    }
+  });
+
+  it("leaves the CSV and the sponsor sheet as they were, and the sheet's columns the same", async () => {
+    const base: RegistrationCsvRow = {
+      eventTitle: "Test", registeredName: "Ana", firstName: "Ana", lastName: "Pop", idDocument: "", email: "a@example.ro", status: "CONFIRMED", clubMemberDeclared: false,
+      memberVerified: false, clubRunner: false, fitnessDeclaredAt: null, stravaUrl: "", instagramHandle: "", guardianName: "", guardianIdDocument: "", submittedAt: "", confirmedAt: "", checkedInAt: "", emailBounced: false,
+      outsideCapacity: true,
+    };
+    const [header, guest] = buildRegistrationsCsv([base]).split("\r\n");
+    const columns = header.split(",");
+    // The special guest is last but for the deadline pair and the notes (§650, §785), «Yes» or empty, as ever.
+    expect(columns).toContain("Special guest");
+    expect(guest.split(",")[columns.indexOf("Special guest")]).toBe("Yes");
+    expect(buildRegistrationsCsv([base])).not.toMatch(/Statistici|COUNTIF|Invitați speciali|Special guests/);
+    // The sheet has the same columns with and without the footer, and the footer only words them.
+    const plain = await buildRegistrationsWorkbook(withGuests(), "S");
+    expect(readSheet(plain).rows[0]).toEqual([...REGISTRATION_SHEET_HEADERS]);
+    expect(JSON.stringify(readSheet(plain).rows)).not.toContain(RO.specialGuests);
+    expect(readSheet(await build(withGuests())).rows[0]).toEqual([...REGISTRATION_SHEET_HEADERS]);
+  });
+
+  it("says in a note that a guest takes no place and is inside «Total», in both languages", async () => {
+    for (const [words, catalogue] of [[RO, ro], [EN, en]] as const) {
+      const note = catalogue.Admin.registrations.statistics.note6;
+      expect(words.notes).toContain(note);
+      expect(note.length).toBeLessThanOrEqual(200);
+      const { rows } = readSheet(await build(withGuests(), words));
+      expect(rows.some((line) => line?.[0] === note)).toBe(true);
+    }
+    expect(ro.Admin.registrations.statistics.note6).toBe("Invitații speciali, puși de un administrator pe «Lista de invitați speciali», nu ocupă un loc; sunt numărați la «Total» și la starea lor.");
+    // Without a sheet around it (no ranges) the lines are plain numbers.
+    const bare = statisticsCells(statisticsOf(withGuests(), RO), RO);
+    const bareLine = (label: string) => bare.find((cells) => (cells[0] as { value?: string } | undefined)?.value === label)?.[1] as { value: number; type: unknown };
+    expect(bareLine(RO.specialGuests)).toMatchObject({ value: 4, type: Number });
+    expect(bareLine(RO.specialGuestsConfirmed)).toMatchObject({ value: 2, type: Number });
+    expect(bareLine(RO.confirmedInPlaces)).toMatchObject({ value: 1, type: Number });
   });
 });
 

@@ -18,6 +18,9 @@ import { columnLetters, ROW_TINTS, statusesOfTint, TINT_FILL, type RowTint } fro
  *   offer, a cancelled and an expired registration are each their own line, so the lines add up to the total.
  * - **The club's** are the rows `domain/club-runner.ts#isClubRunner` says (a member on «Echipa», the box
  *   ticked, or a typed club that names the club); the others are the rest.
+ * - **A special guest** is a row an Administrator put on «Lista de invitați speciali» (§643): it takes no place,
+ *   and it is a row like any other — inside «Total» and its state's line. Three lines under the club's name them:
+ *   the guests, the confirmed guests, and the confirmed who do take a place (what the event's places line counts).
  * - **A category is the sex and an age band**, the age on the event's day (`ageOnRaceDay`, §322). The club has
  *   defined no categories of its own (`domain/age.ts#ageOnRaceDay`: «the club has defined no age bands»), so the bands are the
  *   ordinary ones of a road race, ten years wide from eighteen; a minor's band is its own because an event's
@@ -63,6 +66,8 @@ export type StatisticsRow = {
   /** The sheet's «Sex» cell, in its own words (`sexCell`). */
   sex?: string | null;
   ageOnRaceDay?: number | null;
+  /** The row is on «Lista de invitați speciali» (§643): it takes no place; the sheet's «Special guest» column. Absent reads as no. */
+  outsideCapacity?: boolean;
   /** The event's id, so two events with one title (a weekly run) are two groups. */
   eventId?: string | null;
   /** What the footer calls the event when the file holds several (the title and the day). */
@@ -87,6 +92,10 @@ export type StatisticsWords = {
   club: string;
   clubConfirmed: string;
   notClub: string;
+  /** The special guests (§643, amended §787): every state, the confirmed, and the confirmed who take a place. */
+  specialGuests: string;
+  specialGuestsConfirmed: string;
+  confirmedInPlaces: string;
   allEvents: string;
   /** An event with no title in the registration's language, in a file of several events. */
   untitled: string;
@@ -121,6 +130,9 @@ export function statisticsWordsFrom(t: (key: string, values?: Record<string, str
     club: t("club", withClub),
     clubConfirmed: t("clubConfirmed", withClub),
     notClub: t("notClub", withClub),
+    specialGuests: t("specialGuests"),
+    specialGuestsConfirmed: t("specialGuestsConfirmed"),
+    confirmedInPlaces: t("confirmedInPlaces"),
     allEvents: t("allEvents"),
     untitled: t("untitled"),
     categoryHeader: t("categoryHeader"),
@@ -135,7 +147,7 @@ export function statisticsWordsFrom(t: (key: string, values?: Record<string, str
       from50: t("bandFrom50"),
       from60: t("bandFrom60"),
     },
-    notes: [t("note1"), t("note2", withClub), t("note3", withClub), t("note4"), t("note5")],
+    notes: [t("note1"), t("note2", withClub), t("note3", withClub), t("note4"), t("note6"), t("note5")],
     legend: {
       title: t("legendTitle"),
       confirmed: t("legendConfirmed"),
@@ -159,6 +171,9 @@ export type Tally = {
   expired: number;
   club: number;
   clubConfirmed: number;
+  /** The rows on «Lista de invitați speciali» (§643), in every state, and the confirmed among them. */
+  specialGuests: number;
+  specialGuestsConfirmed: number;
 };
 
 const emptyTally = (): Tally => ({
@@ -172,6 +187,8 @@ const emptyTally = (): Tally => ({
   expired: 0,
   club: 0,
   clubConfirmed: 0,
+  specialGuests: 0,
+  specialGuestsConfirmed: 0,
 });
 
 const STATE_TALLY: Record<string, keyof Tally | undefined> = {
@@ -191,6 +208,10 @@ function add(tally: Tally, row: StatisticsRow): void {
   if (row.clubRunner) {
     tally.club += 1;
     if (row.status === "CONFIRMED") tally.clubConfirmed += 1;
+  }
+  if (row.outsideCapacity) {
+    tally.specialGuests += 1;
+    if (row.status === "CONFIRMED") tally.specialGuestsConfirmed += 1;
   }
 }
 
@@ -317,6 +338,8 @@ export type StatisticsRanges = {
   id: string;
   status: string;
   clubRunner: string;
+  /** The «Special guest» column (§643): Boolean cells, TRUE for a row on «Lista de invitați speciali». */
+  specialGuest: string;
   sex: string;
   age: string;
   /** The «Event» column; null in a file of one event, which has none. */
@@ -382,7 +405,9 @@ export function statisticsCells(blocks: readonly StatisticsBlock[], words: Stati
     if (!ranges) return [];
     const filters: Filter[] = [];
     if (key === "club" || key === "clubConfirmed") filters.push([ranges.clubRunner, quote(CLUB_RUNNER_YES)]);
-    const status = key === "clubConfirmed" ? "CONFIRMED" : STATUS_OF[key];
+    // A Boolean column: the criterion is the logical TRUE, not the text "TRUE" (§643, amended §787).
+    if (key === "specialGuests" || key === "specialGuestsConfirmed") filters.push([ranges.specialGuest, "TRUE"]);
+    const status = key === "clubConfirmed" || key === "specialGuestsConfirmed" ? "CONFIRMED" : STATUS_OF[key];
     if (status) filters.push([ranges.status, quote(status)]);
     return filters;
   };
@@ -420,6 +445,16 @@ export function statisticsCells(blocks: readonly StatisticsBlock[], words: Stati
     line("club", words.club);
     line("clubConfirmed", words.clubConfirmed);
     rows.push([bold(words.notClub), scope ? formulaCell(`B${lineAt.total}-B${lineAt.club}`, t.total - t.club) : count(t.total - t.club)]);
+    /*
+      The special guests (§643, amended §787; the owner, 2026-10-16: «în statistici trebuie să includ și invitații pe
+      lista specială»): a guest takes no place and is a row like any other, so «Total» and the state's line hold them;
+      these lines name them. «Confirmed who take a place» is what the event's places line counts: the confirmed, less
+      the confirmed guests — a difference of two cells, so an offline change moves all three.
+    */
+    line("specialGuests", words.specialGuests);
+    line("specialGuestsConfirmed", words.specialGuestsConfirmed);
+    const inPlaces = t.confirmed - t.specialGuestsConfirmed;
+    rows.push([bold(words.confirmedInPlaces), scope ? formulaCell(`B${lineAt.confirmed}-B${lineAt.specialGuestsConfirmed}`, inPlaces) : count(inPlaces)]);
 
     if (block.categories.length > 0) {
       rows.push([]);

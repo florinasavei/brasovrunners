@@ -344,6 +344,7 @@ export async function buildRegistrationsWorkbook(
     id: range("ID"),
     status: range("Status"),
     clubRunner: range("Club runner"),
+    specialGuest: range("Special guest"),
     sex: range("Sex"),
     age: range("Age on race day"),
     event: several ? range(EVENT_COLUMN.header) : null,
