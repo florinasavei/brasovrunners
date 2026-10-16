@@ -1073,17 +1073,6 @@ export default async function EventFacts({
   ];
 
   /*
-    «Timp limită» (§757; the owner, 2026-10-13: «trebuie să pot pune timp limită»): a race's time limit,
-    the editor's «Durata» box, said under «Când» as «2 h 30 min» — how long the runners have from the
-    gun until the finish closes. Only a race's: every other event's length is when it ends, not a limit.
-    The time the finish closes is the checkpoints table's last row (`EventCheckpoints`).
-  */
-  const timeLimit = startsAt ? raceTimeLimitMinutes({ type: event.type, startsAt, raceStartsAt: event.raceStartsAt, endsAt: event.endsAt }) : null;
-  if (timeLimit) {
-    rows.push({ key: "timeLimit", label: t("timeLimit"), icon: TimerIcon, value: <span data-testid="race-time-limit">{durationShort(timeLimit)}</span> });
-  }
-
-  /*
     Where: the place's name — the map link when the organizer pasted one — and its address on the
     line under it, in the smaller grey type of a second line. The address used to stand on its own
     further down the page, under "Adresă", with no glyph and a second link to the same map (the
@@ -1175,6 +1164,19 @@ export default async function EventFacts({
         </>
       ),
     });
+  }
+
+  /*
+    «Timp limită» (§757; the owner, 2026-10-13: «trebuie să pot pune timp limită»): a race's time limit,
+    the editor's «Durata» box, said as «2 h 30 min» — how long the runners have from the gun until
+    the finish closes. Only a race's: every other event's length is when it ends, not a limit.
+    Its place is under «Traseu» (§NNN; the owner, 2026-10-16: «Timp limită trebuie să apară sub
+    traseu»): after the route's row, before «Cost» — the limit belongs with the course, not with
+    the date. The time the finish closes is the checkpoints table's last row (`EventCheckpoints`).
+  */
+  const timeLimit = startsAt ? raceTimeLimitMinutes({ type: event.type, startsAt, raceStartsAt: event.raceStartsAt, endsAt: event.endsAt }) : null;
+  if (timeLimit) {
+    rows.push({ key: "timeLimit", label: t("timeLimit"), icon: TimerIcon, value: <span data-testid="race-time-limit">{durationShort(timeLimit)}</span> });
   }
 
   /*

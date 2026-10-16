@@ -150,6 +150,28 @@ describe("BR-REQ-041-01 the event page's facts are grouped by question (§356)",
     expect(withoutStyles(html)).toMatch(/<section\b[^>]*\bid="partners"/);
   });
 
+  it("puts «Timp limită» right under «Traseu» and before «Cost» — in Romanian and in English (§NNN; the owner, 2026-10-16)", async () => {
+    // The gun at 09:00 and the finish closing at 11:30: two and a half hours, from the gun.
+    const race = { raceStartsAt: new Date("2026-09-26T06:00:00Z"), endsAt: new Date("2026-09-26T08:30:00Z"), routeUrl: "https://routes.example.test/trasa" };
+    const ro = await page(race);
+    expect(rows(ro).map((r) => r.label)).toEqual(["Când", "Unde", "Traseu", "Timp limită", "Cost"]);
+    expect(text(row(ro, "Timp limită").dd)).toBe("2 h 30 min");
+    expect(row(ro, "Timp limită").dd).toContain('data-testid="race-time-limit"');
+    expect(row(ro, "Timp limită").dt).toContain('data-testid="TimerIcon"');
+    // The «Când» row no longer carries it: nothing of the limit stands between the date and the place.
+    expect(row(ro, "Când").dd).not.toContain("race-time-limit");
+    currentLocale = "en";
+    const en = await page(race);
+    expect(rows(en).map((r) => r.label)).toEqual(["When", "Where", "Route", "Time limit", "Cost"]);
+    expect(text(row(en, "Time limit").dd)).toBe("2 h 30 min");
+  });
+
+  it("keeps «Timp limită» between the place and the cost when the race states no route, and draws it for a race only", async () => {
+    const race = { surface: null, distanceMeters: null, elevationGainMeters: null, difficultyLevel: null, raceStartsAt: new Date("2026-09-26T06:00:00Z"), endsAt: new Date("2026-09-26T08:30:00Z") };
+    expect(rows(await page(race)).map((r) => r.label)).toEqual(["Când", "Unde", "Timp limită", "Cost"]);
+    expect(rows(await page({ ...race, type: "GROUP_RUN" })).map((r) => r.label)).not.toContain("Timp limită");
+  });
+
   it("the partners' fold has no `open` attribute, and two names join with «·» (§376 fix round finding 5)", async () => {
     const html = withoutStyles(
       await page({ coHosts: [{ name: "Salvamont", links: [] }, { name: "Brașov Marathon", links: [] }] }),
