@@ -9,7 +9,7 @@ import { VISUALLY_HIDDEN } from "@/shared/ui/visually-hidden";
 /**
  * The route's elevation profile as a picture (§NNN, amending §718 and §757; the owner, 2026-10-16: «I would like to have a
  * widget actually! And read it from the GPX»): the one chart of the event page and of the editor's «Puncte de control»
- * preview, drawn from `geometry.ts` — the same core the race number's strip will draw from.
+ * preview, drawn from `geometry.ts` — the same core the race number's strip draws from.
  *
  * A **Server Component** with plain-data props: the profile (`parse.ts`), the checkpoints to draw (the caller has already
  * left out the ones the club unticked), the words as the catalogue's templates (`Event.profile`) and the language.
@@ -103,7 +103,7 @@ function chartOf(
     compact,
   });
   // Without pins the top holds the «Alt» caption's line (the page's charts), so the caption never meets the highest altitude label.
-  const topFor = (rows: number) => (markers.length === 0 ? Math.ceil(textSize * (compact ? 0.8 : 1.4)) : Math.ceil(gap + rows * rowStep + 1));
+  const topFor = (rows: number) => (markers.length === 0 ? Math.ceil(textSize * (compact ? 0.8 : 1.7)) : Math.ceil(gap + rows * rowStep + 1));
   // The altitude labels are the round values the core drew — a top tick one digit longer than the route's highest («1000» over a 990 m summit) is common — so the left room follows them.
   const leftOf = (drawn: ElevationGeometry) => leftFor(Math.max(...drawn.altitudeTicks.map((tick) => tick.label.text.length)));
   let top = topFor(3);

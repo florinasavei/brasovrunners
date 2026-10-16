@@ -9672,9 +9672,9 @@
         "noteRo": "Note (Romanian)",
         "noteEn": "Note (English)",
         "noteHelp": "Optional, in both languages or neither; at most {max} characters.",
-        "onProfile": "Show on the route profile"
+        "onProfile": "Show on the route profile",
+        "onProfileHelp": "Unticked points stay in the table and on the page; neither the page's profile nor the race number's draws them."
       },
-      "profileHelp": "Unticked points stay in the table and on the page; neither the page's profile nor the race number's draws them.",
       "preview": {
         "title": "How it appears on the page",
         "help": "It changes after “Save the points”, not while you type.",

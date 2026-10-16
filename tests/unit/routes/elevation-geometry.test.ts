@@ -119,6 +119,10 @@ describe("§NNN the kilometre scale", () => {
 describe("§NNN the altitude scale", () => {
   it("picks round values in a step of 10, 25, 50, 100, 200 or 500 metres, at most as many as asked", () => {
     expect(niceAltitudes(595, 841, 4)).toEqual([600, 700, 800]);
+    // A range that straddles zero has a zero, never a negative one: Intl prints −0 as «-0».
+    const straddling = niceAltitudes(-3, 17, 4);
+    expect(straddling.some((value) => Object.is(value, -0))).toBe(false);
+    expect(straddling).toContain(0);
     expect(niceAltitudes(595, 841, 5)).toEqual([600, 650, 700, 750, 800]);
     expect(niceAltitudes(0, 100, 5)).toEqual([0, 25, 50, 75, 100]);
     expect(niceAltitudes(0, 600, 4)).toEqual([0, 200, 400, 600]);

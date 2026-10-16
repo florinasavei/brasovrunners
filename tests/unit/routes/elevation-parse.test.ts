@@ -62,6 +62,20 @@ describe("§NNN the GPX's elevation profile", () => {
     expect(parseGpxElevation(text)?.distanceMeters).toBe(profile.distanceMeters);
   });
 
+  it("reads every form of a decimal a GPX may carry — «+600», «.5», «600.», a negative fraction — not only «600» and «600.5»", () => {
+    const forms = ["+600", "600.", "600.5", ".5", "-3.5", "+0.25"];
+    const point = (i: number, ele: string) => `<trkpt lat="+45.60" lon="${(25.5 + i * 0.0006).toFixed(6)}"><ele>${ele}</ele></trkpt>`;
+    // Eighty points, so one skipped for its form would change the count the distance is made of.
+    const text = `<gpx><trk><trkseg>${Array.from({ length: 80 }, (_, i) => point(i, forms[i % forms.length])).join("")}</trkseg></trk></gpx>`;
+    const read = parseGpxElevation(text)!;
+    expect(read.distanceMeters).toBeGreaterThan(3_400);
+    expect(read.minAltitude).toBeLessThan(100);
+    expect(read.maxAltitude).toBeGreaterThan(300);
+    // Every form was read: the same track with each form written plainly has the same length.
+    const plain = `<gpx><trk><trkseg>${Array.from({ length: 80 }, (_, i) => `<trkpt lat="45.60" lon="${(25.5 + i * 0.0006).toFixed(6)}"><ele>${Number(forms[i % forms.length])}</ele></trkpt>`).join("")}</trkseg></trk></gpx>`;
+    expect(read.distanceMeters).toBe(parseGpxElevation(plain)!.distanceMeters);
+  });
+
   it("keeps a flat track flat: its range is one altitude", () => {
     const flat = parseGpxElevation(elevationGpx({ low: 300, high: 300 }))!;
     expect(flat.minAltitude).toBe(300);

@@ -250,10 +250,12 @@ describe("§NNN the profile's tick and preview on the card", () => {
     expect(tickOf(html, 4)).toContain("checked");
   });
 
-  it("says in one sentence that an unticked point stays in the table and on the page, and where the race number follows", async () => {
+  it("says beside each tick that an unticked point stays in the table and on the page, and that neither the page's profile nor the race number's draws it", async () => {
     const html = await render();
-    expect(html).toContain('data-testid="checkpoints-profile-help"');
-    expect(html).toContain("Punctele debifate rămân în tabel și pe pagină; doar profilul nu le desenează. Numărul de concurs le arată după setarea lui din „Numere”.");
+    // The sentence is the tick's own help, in its own row: no standalone paragraph at the top of the card.
+    expect(html).not.toContain('data-testid="checkpoints-profile-help"');
+    expect(html).toContain("Punctele debifate rămân în tabel și pe pagină; nici profilul paginii, nici cel de pe numărul de concurs nu le desenează.");
+    expect(html).not.toContain("Numărul de concurs le arată după setarea");
   });
 
   it("draws the preview «Așa apare pe pagină» above the rows: the page's chart, small, with the pins of the ticked points only", async () => {
@@ -293,9 +295,10 @@ describe("§NNN the profile's tick and preview on the card", () => {
     try {
       const html = await render({ locale: "en", profile: PROFILE, checkpoints: [point("a", 5, { onProfile: false }), point("c", 8, { kinds: ["FOOD"] })] });
       expect(html).toContain("Show on the route profile");
-      expect(html).toContain("Unticked points stay in the table and on the page; only the profile leaves them out. The race number shows them as its “Race numbers” setting says.");
+      expect(html).toContain("Unticked points stay in the table and on the page; neither the page's profile nor the race number's draws them.");
       expect(html).toContain("How it appears on the page");
       expect(html).toContain("It changes after “Save the points”, not while you type.");
+      expect(html).not.toContain("The race number shows them");
       expect(html).toContain("Route profile: 9.0 km, from 608 to 828 m");
       expect(html).toContain("<title>Point c</title>");
       expect(html).not.toContain("<title>Point a</title>");

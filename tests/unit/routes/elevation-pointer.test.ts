@@ -2,7 +2,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { type ComponentProps, createElement } from "react";
 import { describe, expect, it } from "vitest";
 import ElevationPointer from "@/modules/routes/elevation/ElevationPointer";
-import { indexAtShare, nearestMarkerName, POINTER_MARKER_REACH_KM, readoutAt, shareAtX, stepIndex, xAtShare } from "@/modules/routes/elevation/pointer";
+import { fill, indexAtShare, nearestMarkerName, POINTER_MARKER_REACH_KM, READOUT_GAP, readoutAt, readoutLeft, shareAtX, stepIndex, xAtShare } from "@/modules/routes/elevation/pointer";
 
 /**
  * §NNN — the elevation chart's pointer: the arithmetic behind «4,5 km · 712 m» (`routes/elevation/pointer.ts`) and what the
@@ -10,6 +10,41 @@ import { indexAtShare, nearestMarkerName, POINTER_MARKER_REACH_KM, readoutAt, sh
  */
 const SCALE = { plotLeft: 40, plotRight: 340, mirrored: false };
 const POINTS = Array.from({ length: 101 }, (_, i) => [i * 90, 600 + i] as const);
+
+describe("§NNN where the pointer's readout stands", () => {
+  // The page's inner width at a 320 px phone, and the readouts the owner's own route gives: «3,8 km · 805 m · Punct izvor» is about 190 px wide.
+  const HOST = 288;
+  const inside = (left: number, width: number) => left >= 0 && left + width <= HOST;
+
+  it("stands beside the line, to its right in the first half and to its left in the second, when it fits", () => {
+    expect(readoutLeft(40, 100, HOST)).toBe(40 + READOUT_GAP);
+    expect(readoutLeft(250, 100, HOST)).toBe(250 - READOUT_GAP - 100);
+  });
+
+  it("never leaves the wrapper, whatever the width and the place of the line — a name must not widen the page nor lose its first words", () => {
+    for (const width of [60, 150, 190, 203, 260, 288]) {
+      for (let line = 0; line <= HOST; line += 4) expect(inside(readoutLeft(line, width, HOST), width)).toBe(true);
+    }
+  });
+
+  it("takes the side that fits when the preferred one does not: a long readout at 3,8 km goes to the left of its line, not off the screen", () => {
+    // The line at 150 px (the first half): to its right 158 + 190 would reach 348 > 288, so it stands on the left (150 − 8 − 190 < 0 does not fit either → clamped to 0).
+    expect(readoutLeft(150, 190, HOST)).toBe(0);
+    // Narrower: fits on the left of a line past the middle only.
+    expect(readoutLeft(200, 150, HOST)).toBe(200 - READOUT_GAP - 150);
+    expect(readoutLeft(120, 190, HOST)).toBe(HOST - 190);
+  });
+
+  it("starts at 0 for a readout as wide as, or wider than, the wrapper (the caller lets it wrap)", () => {
+    expect(readoutLeft(100, HOST, HOST)).toBe(0);
+    expect(readoutLeft(100, HOST + 40, HOST)).toBe(0);
+  });
+
+  it("fills a template's placeholders and leaves one it was not handed as written", () => {
+    expect(fill("{km} km · {altitude} m", { km: "4,5", altitude: "827" })).toBe("4,5 km · 827 m");
+    expect(fill("{km} · {name}", { km: "4,5" })).toBe("4,5 · {name}");
+  });
+});
 
 describe("§NNN the pointer's arithmetic", () => {
   it("turns a position on the chart into a share of the route, clamped to the plot", () => {

@@ -6,7 +6,7 @@
  */
 
 /** A catalogue template with its `{placeholders}` filled; one that is not handed stays as written. The chart and its pointer share it. */
-export const fill = (template: string, values: Record<string, string>): string => template.replace(/{(w+)}/g, (whole, key: string) => values[key] ?? whole);
+export const fill = (template: string, values: Record<string, string>): string => template.replace(/\{(\w+)\}/g, (whole, key: string) => values[key] ?? whole);
 
 /** A checkpoint is named by the pointer when it stands within this many kilometres of it. */
 export const POINTER_MARKER_REACH_KM = 0.2;

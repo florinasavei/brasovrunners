@@ -9672,9 +9672,9 @@
         "noteRo": "Notă (română)",
         "noteEn": "Notă (engleză)",
         "noteHelp": "Opțională, în ambele limbi sau în niciuna; cel mult {max} de caractere.",
-        "onProfile": "Arată pe profilul traseului"
+        "onProfile": "Arată pe profilul traseului",
+        "onProfileHelp": "Punctele debifate rămân în tabel și pe pagină; nici profilul paginii, nici cel de pe numărul de concurs nu le desenează."
       },
-      "profileHelp": "Punctele debifate rămân în tabel și pe pagină; nici profilul paginii, nici cel de pe numărul de concurs nu le desenează.",
       "preview": {
         "title": "Așa apare pe pagină",
         "help": "Se schimbă după „Salvează punctele”, nu în timp ce scrii.",
