@@ -793,6 +793,11 @@ export function descriptionHead(words: string | null | undefined): { first: stri
  * and audit nothing.
  */
 export function sameDescription(a: unknown, b: unknown): boolean {
+  return canonicalDescription(a) === canonicalDescription(b);
+}
+
+/** A description document as one string whose keys are sorted: what `sameDescription` compares, and what the «Roluri» form's baseline hashes (§791). */
+export function canonicalDescription(value: unknown): string {
   const canonical = (value: unknown): unknown =>
     Array.isArray(value)
       ? value.map(canonical)
@@ -803,7 +808,7 @@ export function sameDescription(a: unknown, b: unknown): boolean {
               .map(([key, inner]) => [key, canonical(inner)]),
           )
         : value;
-  return JSON.stringify(canonical(a ?? null)) === JSON.stringify(canonical(b ?? null));
+  return JSON.stringify(canonical(value ?? null));
 }
 
 /** The agreement's role blanks for one person: the role given and its tasks, or the roles chosen and what each asks. */
