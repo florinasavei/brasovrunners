@@ -13,13 +13,7 @@ import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
 import { getPathname } from "@/i18n/navigation";
 import { routing, type Locale } from "@/i18n/routing";
-import {
-  DEFAULT_MEMBER_DEFINITION,
-  MEMBER_DEFINITION_MAX,
-  type MemberDefinition,
-  memberDefinitionFor,
-  readMemberDefinition,
-} from "@/modules/content/members/member-definition";
+import { readMemberDefinition } from "@/modules/content/members/member-definition";
 import {
   MEMBERS_TEXT_MAX,
   type MembersPageSettings,
@@ -43,18 +37,16 @@ import {
 import { countMembers } from "@/modules/staff-identity/repository";
 import { requireStaff } from "@/modules/staff-identity/session";
 import TranslateAllButton from "@/modules/translate/ui/TranslateAllButton";
-import TranslateFieldButton from "@/modules/translate/ui/TranslateFieldButton";
 import { confirmWords } from "@/shared/feedback/confirm-words";
 import ActionForm, { type RefusalMessages } from "@/shared/forms/ActionForm";
-import RecallField from "@/shared/forms/recall";
 import { refusalMessages } from "@/shared/forms/refusal-messages";
 import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import LocaleTabPanels from "@/shared/ui/LocaleTabPanels";
-import Panel from "@/shared/ui/Panel";
-import { saveMemberDefinitionAction, saveMembersTextAction, setMembersPagePublishedAction } from "./actions";
+import { saveMembersTextAction, setMembersPagePublishedAction } from "./actions";
 import CodesCard from "./CodesCard";
+import DefinitionCard from "./DefinitionCard";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -197,94 +189,6 @@ export default async function AdminMembersPage({ params, searchParams }: Props) 
         </Typography>
       )}
     </Stack>
-  );
-}
-
-/**
- * «Cine e membru» (§788; the owner, 2026-10-16: «asta ar trebui configurabil în back-office ce înseamnă
- * să fii membru»): the club's one sentence, in both languages or neither, behind the «?» after the tick
- * «Sunt membru al grupului» on the registration form and on the volunteers' form. Nothing is checked
- * against it: the tick stays a claim (§48). Written, or left empty — the forms then say the platform's own
- * words, which the empty boxes show as their placeholder. The house's `Panel` (closed until opened, its
- * state on the line) with the page's own `LocaleTabPanels` tabs «RO» | «EN», each box a `RecallField`
- * (§315) and, under the English one, «Tradu din română» (§464). Saved by its own form, never through the
- * members' page's switch.
- */
-function DefinitionCard({
-  definition,
-  platformWords,
-  locale,
-  words: t,
-  messages,
-  mayEdit,
-}: {
-  definition: MemberDefinition;
-  platformWords: Record<"ro" | "en", string>;
-  locale: Locale;
-  words: Words;
-  messages: RefusalMessages;
-  mayEdit: boolean;
-}) {
-  const written = definition.ro !== null && definition.en !== null;
-  const inForce = memberDefinitionFor(locale, written ? definition : DEFAULT_MEMBER_DEFINITION) ?? platformWords[locale];
-  return (
-    <Panel
-      glyph="memberDefinition"
-      collapsible
-      title={t("members.definition.heading")}
-      aside={written ? t("members.definition.asideWritten") : t("members.definition.asideDefault")}
-      intro={t("members.definition.intro")}
-      id="members-definition"
-      data-testid="members-definition"
-    >
-      {mayEdit ? (
-        <ActionForm action={saveMemberDefinitionAction} messages={messages} scope="definition" data-testid="members-definition-form">
-          <input type="hidden" name="uiLocale" value={locale} />
-          <Stack spacing={1.5}>
-            <LocaleTabPanels
-              idPrefix="members-definition"
-              watch={{ names: ["memberDefinition{Locale}"], rule: "parity" }}
-              markLabel={t("members.tabEmpty")}
-              panels={LANGUAGES.map((language) => {
-                const other = language.locale === "ro" ? definition.en : definition.ro;
-                const own = definition[language.locale];
-                return {
-                  locale: language.locale,
-                  label: language.code,
-                  incompleteLabel: own === null && other !== null ? t("members.tabEmpty") : undefined,
-                  content: (
-                    <Stack spacing={1}>
-                      <RecallField
-                        name={`memberDefinition${language.suffix}`}
-                        label={t(`members.definition.${language.locale}`)}
-                        placeholder={platformWords[language.locale]}
-                        defaultValue={own ?? ""}
-                        fullWidth
-                        multiline
-                        minRows={2}
-                        slotProps={{ htmlInput: { maxLength: MEMBER_DEFINITION_MAX, lang: language.locale } }}
-                      />
-                      {/* «Tradu din română» (§464): the English sentence from the Romanian one. */}
-                      {language.locale === "en" && <TranslateFieldButton en="memberDefinitionEn" />}
-                    </Stack>
-                  ),
-                };
-              })}
-            />
-            <Typography variant="caption" color="text.secondary" sx={{ px: 1.75 }}>
-              {t("members.definition.help", { max: MEMBER_DEFINITION_MAX })}
-            </Typography>
-          </Stack>
-          <Box sx={{ mt: 2 }}>
-            <GlyphSubmitButton label={t("editor.save")} pendingLabel={t("editor.saving")} icon="save" size="medium" />
-          </Box>
-        </ActionForm>
-      ) : (
-        <Typography variant="body2" data-testid="members-definition-words">
-          {inForce}
-        </Typography>
-      )}
-    </Panel>
   );
 }
 

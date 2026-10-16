@@ -29,6 +29,8 @@ const state = vi.hoisted(() => ({
   termsVersion: 3 as number | null,
   noticeDescribesEverything: true,
   termsDescribeRefusal: false,
+  /** «Cine e membru» (§788) as the club saved it; none: the platform's words. */
+  definition: { ro: null, en: null } as { ro: string | null; en: string | null },
 }));
 
 vi.mock("next-intl/server", async () => {
@@ -59,6 +61,10 @@ vi.mock("@/modules/legal-documents/domain/merge-fields", () => ({
   describesPromotionalMaterialsShared: () => state.noticeDescribesEverything,
 }));
 vi.mock("@/modules/registrations/address-cap", () => ({ readAddressCap: async () => ({ cap: { registrationsPerAddress: 4 }, updatedAt: null }) }));
+vi.mock("@/modules/content/members/member-definition", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/modules/content/members/member-definition")>()),
+  readMemberDefinition: async () => ({ ...state.definition, updatedAt: null }),
+}));
 vi.mock("@/modules/registrations/ui/EmailDeliveryNotice", () => ({ default: () => null }));
 vi.mock("@/modules/registrations/ui/RegistrationJourney", () => ({ default: () => null }));
 vi.mock("@/modules/registrations/ui/RegistrationSteps", () => ({ default: () => null }));
@@ -126,6 +132,7 @@ beforeEach(() => {
   state.termsVersion = 3;
   state.noticeDescribesEverything = true;
   state.termsDescribeRefusal = false;
+  state.definition = { ro: null, en: null };
 });
 
 describe("§579 amended — which boxes the draft's settings switch on", () => {
@@ -299,6 +306,51 @@ describe("§579 amended — formViewOf, what the form takes from the event", () 
     expect(view.minAge).toBe(14);
     expect(view.askShirt).toBe(false);
     expect(view.askHealth).toBe(false);
+  });
+});
+
+/** The «?» after the member tick: the button inside the tick's own label, its accessible name the sentence. */
+const memberTickHelp = (html: string) => /name="clubMemberDeclared"[\s\S]*?<\/label>/.exec(html)?.[0] ?? "";
+
+describe("§788 the «?» after «Sunt membru al grupului» says what the club says a member is", () => {
+  const CLUB_RO = "Ai fost la cel puțin 5 alergări de grup în ultimele 3 luni.";
+  const CLUB_EN = "You have joined at least 5 group runs in the last 3 months.";
+
+  it("is the club's sentence in the page's language, in the button's name and its tooltip — and nowhere else on the page", async () => {
+    state.definition = { ro: CLUB_RO, en: CLUB_EN };
+    const html = (await render(draft())).replaceAll("&#x27;", "'");
+    const tick = memberTickHelp(html);
+    expect(tick).toContain("Sunt membru al grupului");
+    expect(tick).toMatch(new RegExp(`<button[^>]*aria-label="${CLUB_RO}"`));
+    // No visible line under the box: the sentence is said once, by the «?».
+    expect(html.split(CLUB_RO)).toHaveLength(2);
+    expect(html).not.toContain(CLUB_EN);
+
+    state.locale = "en";
+    const english = (await render(draft())).replaceAll("&#x27;", "'");
+    expect(memberTickHelp(english)).toMatch(new RegExp(`<button[^>]*aria-label="${CLUB_EN}"`));
+    expect(english.split(CLUB_EN)).toHaveLength(2);
+    expect(english).not.toContain(CLUB_RO);
+  });
+
+  it("is the platform's words while the club wrote none, and its old sentence is gone", async () => {
+    const html = (await render(draft())).replaceAll("&#x27;", "'");
+    expect(memberTickHelp(html)).toContain(`aria-label="${ro.Registration.clubMemberDefinition}"`);
+    expect(ro.Registration.clubMemberDefinition).toBe("Am fost la cel puțin 3 alergări de grup în ultimele 6 luni.");
+    expect(html).not.toContain("în ultimul an");
+    state.locale = "en";
+    expect(memberTickHelp(await render(draft()))).toContain(`aria-label="${en.Registration.clubMemberDefinition}"`);
+    expect(en.Registration.clubMemberDefinition).toBe("I have joined at least 3 group runs in the last 6 months.");
+  });
+
+  it("reaches the real form's caller too: the register page, the invitation page and the preview all hand the form the sentence", () => {
+    const form = readFileSync("src/modules/registrations/ui/registration-form.tsx", "utf8");
+    expect(form).toContain("memberDefinition ?? t(\"clubMemberDefinition\")");
+    expect(form).not.toContain("clubMemberHint");
+    for (const caller of ["src/app/[locale]/events/[slug]/register/page.tsx", "src/app/[locale]/registrations/invitation/[token]/page.tsx"]) {
+      expect(readFileSync(caller, "utf8"), caller).toContain("cachedMemberDefinition(locale)");
+    }
+    expect(readFileSync("src/modules/content/events/draft-form.tsx", "utf8")).toContain("readMemberDefinition(db)");
   });
 });
 

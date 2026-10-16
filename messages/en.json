@@ -9089,10 +9089,10 @@
         "heading": "Who is a member",
         "intro": "Shown behind a “?” beside the tick “I am a member of the group” on the registration form and on the volunteers' form.",
         "asideWritten": "the club's text",
-        "asideDefault": "the platform's text",
+        "asideDefault": "the standard text",
         "ro": "Who is a member (Romanian)",
         "en": "Who is a member (English)",
-        "help": "One sentence, at most {max} characters, in both languages or in neither. Left empty, the forms say the platform's own words; they show here in the boxes, in grey."
+        "help": "One sentence, at most {max} characters, in both languages or in neither. Left empty, the forms say the standard text, the grey one in the boxes."
       },
       "codes": {
         "heading": "Discount codes",

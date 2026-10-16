@@ -9089,10 +9089,10 @@
         "heading": "Cine e membru",
         "intro": "Apare la bifa „Sunt membru al grupului” de pe formularul de înscriere și pe cel al voluntarilor, în spatele unui „?”.",
         "asideWritten": "textul clubului",
-        "asideDefault": "textul platformei",
+        "asideDefault": "textul de bază",
         "ro": "Cine e membru (română)",
         "en": "Cine e membru (engleză)",
-        "help": "O propoziție, cel mult {max} de caractere, în ambele limbi sau în niciuna. Nescrisă, formularele spun cuvintele platformei; ele apar aici în căsuțe, cenușii."
+        "help": "O propoziție, cel mult {max} de caractere, în ambele limbi sau în niciuna. Nescrisă, formularele spun textul de bază, cel cenușiu din căsuțe."
       },
       "codes": {
         "heading": "Coduri de reducere",
