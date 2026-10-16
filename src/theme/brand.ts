@@ -34,7 +34,7 @@
  *
  * `ink` is not pure black and `paper` is not pure white: full-contrast black on white is
  * harsher on a phone in daylight than the near-neutrals below, and both still clear the
- * contrast ratio asserted in `tests/unit/registrations/excel-live.test.ts`.
+ * contrast ratio asserted in `tests/unit/theme/brand.test.ts`.
  */
 export const COLOR = {
   /** Primary, exactly as the supplied logo states it. 8.22:1 on paper, 8.59:1 on a card. */
@@ -58,7 +58,7 @@ export const COLOR = {
     The new look's tokens (§708; `docs/REDESIGN.md` § The visual system, decision 1): drawn only
     under «Aspectul nou», on the public pages, never in the backoffice, an email, a PDF, a race
     number or a share card — those keep the logo blue. Each has a twin in `COLOR_DARK` and its pairs
-    in `brand-pairs.ts` (`LOOK_PAIRS`), held at AA by `tests/unit/registrations/excel-live.test.ts`.
+    in `brand-pairs.ts` (`LOOK_PAIRS`), held at AA by `tests/unit/theme/brand.test.ts`.
   */
   /** The hot pink: the mark, a rule, a large word. 4.77:1 on the page, white on it 4.99:1. */
   accent: "#d6176f",
@@ -90,7 +90,7 @@ export const COLOR = {
  * so the order — resting, then hover — reads the same way. Paper and surface are warm greys,
  * not black, for the reason `paper` is not white. The orange stays; it was chosen as a fill
  * under dark text, and that pair holds on either scheme. Every pair below is asserted in
- * `tests/unit/registrations/excel-live.test.ts` exactly as the light ones are.
+ * `tests/unit/theme/brand.test.ts` exactly as the light ones are.
  */
 export const COLOR_DARK = {
   /** Primary as text and outlines: 7.6:1 on the dark page. */
@@ -152,7 +152,7 @@ export const PROVIDER_LOGO = {
  * The owner asked for "a slight shade of blue (club colours)": white, the club's blue laid over
  * white at about 4 % and about 8 %, and a blue-grey. Each is a page colour under white cards, so
  * every text colour that sits on it has to clear AA and the cards have to stay visible without the
- * page turning into a wash — `tests/unit/registrations/excel-live.test.ts` asserts both over every preset, and
+ * page turning into a wash — `tests/unit/theme/brand.test.ts` asserts both over every preset, and
  * the same two rules refuse a «Personalizat» colour the club types
  * (`modules/appearance/domain/tint-contrast.ts`).
  */
@@ -224,7 +224,7 @@ export const GRADIENT = {
    * NOT the kit ramp above. A hero carries a heading, two paragraphs, a countdown and a
    * button, so its background has to stay a *surface*: these are the card colour walked a
    * few steps towards the club's blue, which is about as far as a background can move before
-   * body text on it stops clearing AA. `tests/unit/registrations/excel-live.test.ts` asserts ink and
+   * body text on it stops clearing AA. `tests/unit/theme/brand.test.ts` asserts ink and
    * muted ink against both ends of both schemes, which is what makes that a rule rather than
    * a claim. The kit ramp stays for a surface that carries no text.
    */
@@ -297,7 +297,7 @@ export const LOOK_ACCENT = {
  * blue, and at 9.9:1 under white it is also the blue that carries white text at AA. The cards are
  * the card colour, their words the ink, the role title the club's blue (8.59:1 on a card), the boxes
  * the hero's tint — the card colour walked towards the blue, already asserted under ink and muted
- * ink. `tests/unit/registrations/excel-live.test.ts` holds every pair.
+ * ink. `tests/unit/theme/brand.test.ts` holds every pair.
  */
 export const TEAM_CANVAS = {
   canvas: COLOR.blueInk,
@@ -386,7 +386,7 @@ export const FONT = {
  *
  * Deliberately unaccented and deliberately not from the message catalogues. It matches the
  * kit, which is printed BRASOV RUNNERS, and it is the same in both locales because a logotype
- * is not translated. `tests/unit/registrations/excel-live.test.ts` asserts it stays ASCII — put an ș in
+ * is not translated. `tests/unit/theme/brand.test.ts` asserts it stays ASCII — put an ș in
  * here and Facón cannot render it.
  *
  * The club's actual name, correctly spelled, is `CLUB_NAME` below, and is what prose, page

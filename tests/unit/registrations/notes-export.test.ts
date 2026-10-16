@@ -185,7 +185,8 @@ describe("§785 the CSV's «Note interne» column", () => {
     const csv = buildRegistrationsCsv([csvRow({ notes: TWO_NOTES }), csvRow({ registeredName: "Fără Note" })], { notesHeader: "Note interne" });
     const header = csv.split("\r\n")[0].split(",");
     expect(header.at(-1)).toBe("Note interne");
-    expect(header.at(-2)).toBe("Member bib");
+    expect(header.at(-2)).toBe("Club runner");
+    expect(header.at(-3)).toBe("Member bib");
     // The cell is quoted and holds the newline: the file is one header and two records, not four lines.
     expect(csv).toContain(`"${TWO_NOTES}"`);
     const records = csv.split("\r\n");
@@ -197,7 +198,7 @@ describe("§785 the CSV's «Note interne» column", () => {
     const csv = buildRegistrationsCsv([csvRow({ notes: TWO_NOTES })]);
     expect(csv).not.toContain("Note interne");
     expect(csv).not.toContain("prima");
-    expect(csv.split("\r\n")[0].split(",").at(-1)).toBe("Member bib");
+    expect(csv.split("\r\n")[0].split(",").at(-1)).toBe("Club runner");
   });
 });
 

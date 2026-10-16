@@ -231,10 +231,10 @@ describe("CSV formula neutralization", () => {
     const [header, accepted, staff, older] = csv.split("\r\n");
     const columns = header.split(",");
     // §425's two, now followed by the declaration's two (§499), the family column (§543), the cancellation reason (§558) and the offers and benefits (§562).
-    expect(columns.slice(-14, -12)).toEqual(["Terms version", "Terms accepted"]);
-    expect(accepted.split(",").slice(-14, -12)).toEqual(["3", "2026-09-25T10:00:00.000Z"]);
-    expect(staff.split(",").slice(-14, -12)).toEqual(["", ""]);
-    expect(older.split(",").slice(-14, -12)).toEqual(["", ""]);
+    expect(columns.slice(-15, -13)).toEqual(["Terms version", "Terms accepted"]);
+    expect(accepted.split(",").slice(-15, -13)).toEqual(["3", "2026-09-25T10:00:00.000Z"]);
+    expect(staff.split(",").slice(-15, -13)).toEqual(["", ""]);
+    expect(older.split(",").slice(-15, -13)).toEqual(["", ""]);
   });
 
   /**
@@ -271,10 +271,10 @@ describe("CSV formula neutralization", () => {
     ]);
     const [header, signed, unsigned, older] = csv.split("\r\n");
     // Before the family column (§543), the cancellation reason (§558) and the offers and benefits (§562), which is last.
-    expect(header.split(",").slice(-12, -10)).toEqual(["Declaration version", "Declaration signed"]);
-    expect(signed.split(",").slice(-14, -10)).toEqual(["3", "2026-09-25T10:00:00.000Z", "2", "2026-09-26T08:30:00.000Z"]);
-    expect(unsigned.split(",").slice(-12, -10)).toEqual(["", ""]);
-    expect(older.split(",").slice(-12, -10)).toEqual(["", ""]);
+    expect(header.split(",").slice(-13, -11)).toEqual(["Declaration version", "Declaration signed"]);
+    expect(signed.split(",").slice(-15, -11)).toEqual(["3", "2026-09-25T10:00:00.000Z", "2", "2026-09-26T08:30:00.000Z"]);
+    expect(unsigned.split(",").slice(-13, -11)).toEqual(["", ""]);
+    expect(older.split(",").slice(-13, -11)).toEqual(["", ""]);
   });
 
   // §500 — whether the public list prints the socials: right after Instagram, as on the spreadsheet, "Yes" or empty.
@@ -312,7 +312,7 @@ describe("CSV formula neutralization", () => {
     expect(listed.split(",")[at + 1]).toBe("Yes");
     expect(unlisted.split(",")[at + 1]).toBe("");
     // The declaration's pair stays after the terms (§499), then the family column (§543), the cancellation reason (§558) and the offers and benefits, last (§562).
-    expect(header.split(",").slice(-12, -4)).toEqual(["Declaration version", "Declaration signed", "family", "Cancellation reason", "Offers and benefits", "Special guest", "Until when", "Waiting on"]);
+    expect(header.split(",").slice(-13, -5)).toEqual(["Declaration version", "Declaration signed", "family", "Cancellation reason", "Offers and benefits", "Special guest", "Until when", "Waiting on"]);
   });
 
   // §543 — the family marker in the export: the other people on the same address at the event, last, «; »-joined.
@@ -340,9 +340,9 @@ describe("CSV formula neutralization", () => {
     };
     const [header, family, alone] = buildRegistrationsCsv([{ ...base, family: "Mihai Pop; Ioana Pop" }, base]).split("\r\n");
     // Just before the cancellation reason (§558) and the offers and benefits, which came last with §562.
-    expect(header.split(",").at(-10)).toBe("family");
-    expect(family.split(",").at(-10)).toBe("Mihai Pop; Ioana Pop");
-    expect(alone.split(",").at(-10)).toBe("");
+    expect(header.split(",").at(-11)).toBe("family");
+    expect(family.split(",").at(-11)).toBe("Mihai Pop; Ioana Pop");
+    expect(alone.split(",").at(-11)).toBe("");
   });
 
   // §660 — the list's «Vârstă» and «Oraș» in the CSV: last, under the spreadsheet's headers, blank when the row has none.
@@ -373,10 +373,10 @@ describe("CSV formula neutralization", () => {
       { ...base, ageOnRaceDay: 17, country: "RO", city: "Brașov" },
       base,
     ]).split("\r\n");
-    expect(header.split(",").slice(-4, -1)).toEqual(["Age on race day", "Country", "City"]);
+    expect(header.split(",").slice(-5, -2)).toEqual(["Age on race day", "Country", "City"]);
     // Two columns, not the list's «Bristol (GB)»: a sheet filters by either.
-    expect(abroad.split(",").slice(-4, -1)).toEqual(["34", "GB", "Bristol"]);
-    expect(home.split(",").slice(-4, -1)).toEqual(["17", "RO", "Brașov"]);
-    expect(none.split(",").slice(-4, -1)).toEqual(["", "", ""]);
+    expect(abroad.split(",").slice(-5, -2)).toEqual(["34", "GB", "Bristol"]);
+    expect(home.split(",").slice(-5, -2)).toEqual(["17", "RO", "Brașov"]);
+    expect(none.split(",").slice(-5, -2)).toEqual(["", "", ""]);
   });
 });
