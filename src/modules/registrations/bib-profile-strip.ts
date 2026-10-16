@@ -104,7 +104,7 @@ function clearOfPins(label: ElevationLabel, geometry: ElevationGeometry, textSiz
   return nearest ?? null;
 }
 
-const asText =(label: ElevationLabel): BibStripText => ({ text: label.text, x: label.x, baseline: label.y, anchor: label.anchor });
+const asText = (label: ElevationLabel): BibStripText => ({ text: label.text, x: label.x, baseline: label.y, anchor: label.anchor });
 
 export function bibProfileStrip(drawing: BibProfileDrawing, options: BibStripOptions): BibStrip {
   const L = BIB_LAYOUT;
