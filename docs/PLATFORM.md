@@ -670,7 +670,10 @@ not done) or **the owner decides** (a period or a plan only the club can choose)
 «Baza de date» (the database's size, the eight largest tables, what each table that grows gained in thirty
 days, the registrations by state and by the age of their event) and «Vercel: consumul lunii» (the Usage
 page's lines, read from Vercel's billing API, and the builds by project); the deployments line above them
-now says how many of this project's deployments built, by branch. `yarn db:sizes [--env qa|production]`
+now says how many of this project's deployments built, by branch, and no longer reads the build minutes against
+the 6,000 a month the code once held (Vercel's current pages list no such Hobby allowance; `VERCEL_HOBBY_BUILD_MINUTES_PER_MONTH`
+is marked unconfirmed and only «Costuri» still reads it). The card counts only the `Usage` charges: a credit, a
+tax or an adjustment is never a service's consumption. `yarn db:sizes [--env qa|production]`
 prints the first from a terminal with the very same queries. `/admin/tasks` carries one informational row,
 «Retenția datelor: perioade de decis», that opens the first card. The Vercel card reads
 `GET /v1/billing/charges` (Vercel's FOCUS charges: one object per day, service and project), which answered
@@ -718,7 +721,7 @@ shows, the dashboard follows the billing cycle):**
 
 The owner's screenshot ($11.66 for build minutes, $14.25 of $20) is the same month a day later. **The
 decisive finding: on Hobby the builds cost nothing, and the figure that would stop the site is Active CPU** —
-a Hobby team that exceeds an included allowance is paused (below). At the October pace the club would pass
+a Hobby team that exceeds an included allowance cannot use that feature for about 30 days, and Vercel may pause the team (below). At the October pace the club would pass
 its four CPU-hours around the 18th of the month.
 
 **What drives the Active CPU, as far as 15 days show.** A day without a build used about **0.09 CPU-hours
@@ -758,8 +761,8 @@ shorter period needs the notice's template changed and a Romanian lawyer's readi
 
 | Data | In force today (code and notice) | Proposed | Reason, and what it saves | Status |
 | --- | --- | --- | --- | --- |
-| registration and signed declaration (with its notes and acceptance rows, which go with it) | deleted **3 years** after the event's start, the participant with their last registration (Codul civil art. 2517, §95) | keep the declaration 3 years; anonymise the **registration row** earlier (see 3) | the declaration is the club's evidence for a claim; the registration's contact data is not | the owner decides |
-| audit log (`audit_logs`, metadata only) | **3 years** | 24 months in full, then only action, entity and date until the 3 years | almost no bytes (the rows are small); the reason is minimisation, and a lawyer decides whether the claim period covers staff actions at all | proposed |
+| registration and signed declaration (with its notes and acceptance rows, which go with it) | deleted **3 years** after the event's start, the participant with their last registration (Codul civil art. 2517, §95) | keep the declaration 3 years; minimise (pseudonymise) the **registration row** earlier (see 3) | the declaration is the club's evidence for a claim; the registration's contact data is not | the owner decides |
+| audit log (`audit_logs`, metadata only) | **3 years** | 24 months in full, then only action, entity and date until the 3 years | almost no bytes (the rows are small); the reason is that `metadata_json` can hold a name before and after and a reason an organizer typed, so compacting removes typed personal text from a table nobody reads again. It would be a **new `UPDATE` sweep on a table that is insert-only today**, the notice's section 7 would have to state it, and a lawyer decides whether the claim period covers staff actions at all | proposed |
 | sent messages (`email_outbox`) | **90 days** after sending; a failed, bounced or complained row stays with its registration | keep 90 days; delete the failed ones 90 days after the event | the address in each row is personal data; bytes are negligible | proposed (the 90 days are done) |
 | messages about nobody (an interest box, an invitation) | **90 days** after queueing, any status | as today | — | done |
 | Mailgun's delivery events | **no table**: the webhook writes the state onto the outbox row (`email_outbox`) | nothing to prune | the brief expected a table; there is none | done |
@@ -768,22 +771,31 @@ shorter period needs the notice's template changed and a Romanian lawyer's readi
 | unconfirmed registrations; ended invitations | **30 days** | as today | nothing to prove: nobody confirmed the address | done |
 | identity document, health note, emergency contact | cleared **7 days** after the event | as today | special-category data (§95) | done |
 | volunteers | **30 days** after the event (§754) | as today | — | done |
+| group-run declarations (`group_run_declarations`: the typed signature name, the address the copy went to, the IP address and browser) | **no time window**: kept while the signer takes part in the club's runs and deleted at their request (§503); only the identity document is cleared 7 days after the run; an Administrator's hold (§556) stops any erase | an inactivity period (for example: erased 24 months after the signer's last run) | the one table of personal data kept with no period. `/devs` → «Baza de date» now counts it (rows and the last 30 days) so the period is chosen on a number | the owner decides |
 | job runs; throttle buckets | **30 days**; **1 day** | as today | — | done |
 | newsletter | unconfirmed addresses after the email-link window; confirmed ones until they unsubscribe (§445) | as today | the notice says so | done |
 | staff sessions | **no table**: sign-in is a signed cookie (`auth.ts`, JWT); each lives by its own expiry | nothing to prune | the brief expected rows; there are none | done |
 
-**3. The personal data of past events — anonymise the registration, keep the evidence.** Proposed: **N months
-after an event (12 is the starting point) the registration row loses what identifies the person** — the
+**3. The personal data of past events — minimise the registration, keep the evidence.** Proposed: **N months
+after an event (12 is the starting point) the registration row loses most of what identifies the person** — the
 name becomes the initials, the telephone number, the date of birth, the club, the notes and the address in
 the participant row that no other registration needs are erased — while the **status, the counts, the race
 number, the distance and the dates stay**, so every statistic the club is given is the same. The signed
 declaration is not touched: it is the evidence the 3 years exist for, and it carries the signer's name by
-its nature. What must be checked before anybody writes the code: (i) the **family flow** (§389, §446): a
+its nature. **This is pseudonymisation, not anonymisation:** initials, the race number and the event's date can
+be matched to a start list, and the full name stays in the declaration beside it, so the row remains personal
+data (GDPR recital 26). The notice's section 7 must **not** say «anonymised» unless the lawyer confirms the
+remaining fields identify no one — that is a question put to the lawyer, in those words. What must be checked
+before anybody writes the code: (i) the **family flow** (§389, §446): a
 person's past registrations on an address are listed to whoever holds the address's link, and an anonymised
 row there would read as a stranger; (ii) the **members' zone** and the discount codes (§524) read a member's
 past registrations; (iii) **returning runners** are prefilled from the participant row and the last
 registration; (iv) **the privacy notice's template must say the period** (section 7) and a lawyer reads it;
-(v) the public start list shows names only for the confirmed of a current event, so it is untouched. The
+(v) the public start list shows names only for the confirmed of a current event, so it is untouched; (vi) **the
+declaration retention hold (§556)**: `jobs/retention.ts` skips a registration whose declaration is held
+(`notHeld`, `retention_hold`) in every step that deletes one, and a registration held for a complaint or a
+dispute must keep its contact data with its declaration — the minimising step uses the same condition, so a
+hold freezes the row as it freezes the 3-year delete. The
 saving is not money (Neon's storage is 1.4 cents) but the amount of personal data the club holds.
 
 ### (c) Vercel after December
@@ -795,7 +807,7 @@ saving is not money (Neon's storage is 1.4 cents) but the amount of personal dat
 | --- | --- |
 | builds | Basic build machines are included (builds beyond one at a time run in a queue: **1 concurrent build**); build machine 2 vCPU, 8 GB; **a build may take 45 minutes** (vercel.com/docs/limits) |
 | deployments | **100 a day**, and a build cancelled by an ignored build step still counts (vercel.com/docs/project-configuration/project-settings § Ignored Build Step); the club does about 14 a day |
-| what happens past an allowance | «Hobby plans will be paused when they exceed the included free tier usage» (vercel.com/docs/plans, usage FAQ): **a pause of about 30 days, not a bill** |
+| what happens past an allowance | «Hobby plans will be paused when they exceed the included free tier usage» (vercel.com/docs/plans, usage FAQ): **about 30 days without the feature, and Vercel may pause the team: not a bill** |
 | team members | none: the Hobby plan has no team collaboration; Pro's developer seats are $20 each and viewers are free |
 | functions | 300 seconds maximum duration; cron jobs at most once a day (the club's pingers are external, so unaffected) |
 | projects and domains | 200 projects; 50 domains per project |
@@ -826,8 +838,8 @@ No deletion, no retention job, no setting, no change to a project at Vercel or N
 and this plan only. The next change comes after the owner's decisions and does them in this order:
 (1) read the wakes (`yarn idle:measure`) and the ISR routes, and fix what they name; (2) set the retention
 periods the owner chose as platform settings — the row on `/admin/tasks` turns off when one is set — and
-change the privacy notice's template with them; (3) the anonymisation of past events' registrations, after the
-lawyer and the four checks above; (4) the December decision on Hobby against the rule above.
+change the privacy notice's template with them; (3) the minimisation of past events' registrations, after the
+lawyer and the six checks above; (4) the December decision on Hobby against the rule above.
 
 **To read the numbers again:** `/devs` → «Configurație» (the two cards and the deployments line);
 `yarn db:sizes --env qa` or `--env production` (asks Neon: about five minutes of compute); `yarn idle:measure`;
