@@ -124,7 +124,19 @@ async function main() {
   const client = await pool.connect();
   try {
     await client.query("BEGIN READ ONLY");
-    const run = async (text) => (await client.query(text)).rows;
+    // Each statement in a savepoint: the reading tolerates one count failing (a table that vanished between the
+    // catalogue and the count), and in one transaction a failed statement would otherwise fail every later one (25P02).
+    const run = async (text) => {
+      await client.query("SAVEPOINT one");
+      try {
+        const rows = (await client.query(text)).rows;
+        await client.query("RELEASE SAVEPOINT one");
+        return rows;
+      } catch (error) {
+        await client.query("ROLLBACK TO SAVEPOINT one");
+        throw error;
+      }
+    };
     const sizes = await readDatabaseSizes(run, new Date());
     console.log("");
     for (const line of formatSizes(sizes)) console.log(line);

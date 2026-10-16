@@ -8,12 +8,17 @@ import type { Env } from "@/shared/config/env";
  * API looked to have no usage endpoint; on 2026-10-16 its billing charges (`GET
  * /v1/billing/charges`, FOCUS) turned out to carry exactly the Usage page's lines, and
  * `vercel-usage.ts` reads them. What this file reads is the list of deployments, and from it the
- * Hobby ceilings a small club can meet: the builds a month and the deployments a day (100) — the
- * ones a busy evening of pushes spends — and, since §NNN, how many of the deployments built, by
- * branch: a build is what costs.
+ * Hobby ceiling a small club can meet — the deployments a day (100), which a busy evening of pushes
+ * spends — and, since §NNN, how many of the deployments built, by branch: a build is what Vercel
+ * meters.
  */
 
-/** Hobby, from vercel.com/docs/limits on 2026-09-19. */
+/**
+ * Hobby, from vercel.com/docs/limits on 2026-09-19. The 6,000 build minutes a month are **not
+ * confirmed**: Vercel's current pages (read 2026-10-16) list no monthly build-minute allowance for
+ * Hobby — a build is metered as Build CPU Minutes, which Hobby does not bill. `/devs` no longer reads
+ * the month against it (§NNN); «Costuri» still does, until a later lane re-reads the figure there.
+ */
 export const VERCEL_HOBBY_BUILD_MINUTES_PER_MONTH = 6_000;
 export const VERCEL_HOBBY_DEPLOYMENTS_PER_DAY = 100;
 export const VERCEL_LIMITS_CHECKED_ON = "2026-09-19";
@@ -21,8 +26,8 @@ export const VERCEL_LIMITS_CHECKED_ON = "2026-09-19";
 /**
  * Hobby's included Active CPU, in CPU-hours a month — the allowance the club's functions come
  * closest to: Vercel's Hobby page (vercel.com/docs/plans/hobby, last updated 2026-09-14, read
- * 2026-10-16) lists «Active CPU: 4 CPU-hrs», and a Hobby team that exceeds an included allowance is
- * paused for thirty days. Read against `readVercelUsage`'s Fluid Active CPU line (§NNN).
+ * 2026-10-16) lists «Active CPU: 4 CPU-hrs», and a Hobby team that exceeds an included allowance cannot
+ * use that feature for about thirty days, and Vercel may pause the team. Read against `readVercelUsage`'s Fluid Active CPU line (§NNN).
  */
 export const VERCEL_HOBBY_ACTIVE_CPU_HOURS_PER_MONTH = 4;
 

@@ -4461,7 +4461,7 @@
           "done": "Perioadele de păstrare sunt hotărâte.",
           "how": [
             "Deschide Setări → Configurație: cardul «Baza de date» arată cât ocupă fiecare tabel și cât a crescut în 30 de zile.",
-            "În același loc, la «Documente», deschide «PLATFORM»: secțiunea «Keeping Neon and Vercel light, long term» are tabelul cu perioadele propuse.",
+            "Pe același card, deschide «Planul de păstrare a datelor și perioadele propuse»: secțiunea «Keeping Neon and Vercel light, long term» are tabelul cu perioadele propuse.",
             "Hotărăște perioadele; pentru datele personale ale celor de la evenimentele trecute, cere întâi părerea unui avocat. Până atunci nimic nu se schimbă."
           ]
         }
@@ -10917,10 +10917,10 @@
       "id": "Id deploy: {id}",
       "notOnVercel": "Nu rulează pe Vercel (local sau test).",
       "usageLink": "Deschide Vercel → Usage.",
-      "month": "Luna aceasta: {deployments} deploy-uri ({today} azi, din {perDay} pe zi), {minutes} minute de build din {of} ({percent}%), {errored} eșuate.",
+      "month": "Luna aceasta: {deployments} deploy-uri ({today} azi, din {perDay} pe zi), {minutes} minute de build, {errored} eșuate.",
       "unavailable": "Nu este configurat: pune VERCEL_API_TOKEN și VERCEL_PROJECT_ID în variabilele proiectului. Pașii sunt pe /admin/tasks.",
       "failed": "Vercel nu a răspuns: {reason}.",
-      "builds": "Build-uri luna aceasta, pe acest proiect: {builds} ({branches}). Doar build-urile costă."
+      "builds": "Build-uri luna aceasta, pe acest proiect: {builds} ({branches})."
     },
     "neon": {
       "title": "Baza de date (Neon)",
@@ -10994,7 +10994,7 @@
     "dbSize": {
       "title": "Baza de date: mărime și creștere",
       "intro": "Cât ocupă baza de date și ce a crescut în ultimele 30 de zile. Aici se măsoară doar: nimic nu se șterge.",
-      "introMore": "Cifrele sunt baza pe care clubul alege cât timp păstrăm fiecare fel de date. Rândurile estimate sunt cele pe care baza nu le-a numărat încă.",
+      "introMore": "Pe cifrele astea alege clubul cât timp se păstrează fiecare fel de date. Rândurile estimate nu au fost numărate exact.",
       "aside": "{size} MB",
       "total": "Toată baza de date: {size} MB.",
       "unread": "Nu am putut citi mărimea bazei de date acum: poate e oprită sau departe. Încearcă din nou peste puțin.",
@@ -11013,10 +11013,11 @@
         "registration_notes": "Notele de la înscrieri",
         "event_volunteers": "Voluntarii",
         "registrations": "Înscrierile",
-        "declaration_acceptances": "Declarațiile semnate"
+        "declaration_acceptances": "Declarațiile semnate",
+        "group_run_declarations": "Declarațiile de la alergările de grup"
       },
       "growthLine": "{recent} noi, din {total}",
-      "settled": "{count} nu mai pot fi folosite",
+      "settled": "Nefolosibile: {count}",
       "registrationsTitle": "Înscrieri după stare și vechimea evenimentului",
       "registrationsMore": "Include și înscrierile de probă: aici se măsoară spațiul, nu un număr dat clubului. Vechimea se socotește de la începutul evenimentului.",
       "registrationsNone": "Nu există înscrieri.",
@@ -11035,7 +11036,7 @@
     "vercelUsage": {
       "title": "Vercel: consumul lunii",
       "intro": "Liniile din pagina Usage a Vercel, de la începutul lunii, citite din API-ul lor de facturare.",
-      "introMore": "Prețurile sunt cele de listă. Pe Hobby nu se plătește nimic, dar o limită inclusă depășită oprește contul pe 30 de zile.",
+      "introMore": "Prețurile sunt cele de listă. Pe Hobby nu se plătește nimic, dar o echipă Hobby care depășește o limită inclusă nu poate folosi acea funcție circa 30 de zile, iar Vercel poate opri echipa.",
       "aside": "{usd} $",
       "unconfigured": "Fără VERCEL_API_TOKEN nu se poate citi consumul.",
       "cannot": "Vercel nu dă consumul cu această cheie ({reason}). Liniile sunt doar pe pagina Usage a contului.",
@@ -11043,7 +11044,9 @@
       "totalHobby": "Consum până acum: {usd} $ la prețul de listă.",
       "cycleMore": "Luna calendaristică, în UTC. Pagina Usage a Vercel numără de la începutul ciclului de facturare, care începe în altă zi.",
       "subscription": "Abonamentul în sine: {usd} $ până acum.",
-      "cpu": "Timp de CPU al funcțiilor: {hours} ore luna aceasta; planul Hobby include {of} pe lună.",
+      "cpu": "Timp de CPU al funcțiilor: {hours} din cele {of} ore de CPU incluse pe lună în planul Hobby ({percent}%).",
+        "cpuNear": "Aproape de limită: {hours} din cele {of} ore de CPU incluse pe lună în planul Hobby ({percent}%). Peste ea, pe Hobby nu se mai poate folosi acea funcție circa 30 de zile.",
+        "cpuUnknown": "Timpul de CPU al funcțiilor nu se poate compara cu limita Hobby: Vercel l-a dat în «{unit}», nu în ore.",
       "linesTitle": "Pe servicii",
       "line": "{quantity} {unit} · {usd} $",
       "buildsTitle": "Build-uri pe proiect",

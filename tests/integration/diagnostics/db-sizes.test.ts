@@ -3,13 +3,18 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vites
 import { auditLogs } from "@/db/schema/audit-logs";
 import { emailActionTokens } from "@/db/schema/email-action-tokens";
 import { emailOutbox } from "@/db/schema/email-outbox";
+import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import { events } from "@/db/schema/events";
+import { eventVolunteers } from "@/db/schema/event-volunteers";
 import { familyPlaceHolds } from "@/db/schema/family-entries";
+import { groupRunDeclarations } from "@/db/schema/group-run-declarations";
 import { participants } from "@/db/schema/participants";
 import { registrationNotes } from "@/db/schema/registration-notes";
 import { registrations, type RegistrationStatus } from "@/db/schema/registrations";
 import { LARGEST_TABLES, readDatabaseSizes, sizeQueries, tableRows } from "@/modules/diagnostics/domain/db-sizes";
 import { readDatabaseSizesForPage, readDatabaseSizesFrom } from "@/modules/diagnostics/db-sizes";
+import { computeContentHash } from "@/modules/legal-documents/domain/content-hash";
+import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
@@ -154,6 +159,67 @@ describe("the database's size and growth", () => {
     expect(of("registration_notes")).toMatchObject({ total: 2, last30Days: 1 });
     expect(of("email_action_tokens")).toEqual({ table: "email_action_tokens", total: 3, last30Days: 2, settled: 2 });
     expect(of("registrations")).toMatchObject({ total: 3, last30Days: 3 });
+  });
+
+  it("counts the volunteers, the race's signed declarations and the group runs' signatures, in and out of the thirty days", async () => {
+    const past = await event(monthsAgo(1));
+    const { registration } = await register(past.id, "CONFIRMED", daysAgo(2));
+    const volunteer = (stamp: Date, n: number) => ({
+      eventId: past.id,
+      name: "Vlad V",
+      email: `v${n}@example.test`,
+      canonicalEmail: `v${n}@example.test`,
+      canonicalizationVersion: 1,
+      phone: "+40712345678",
+      source: "PUBLIC" as const,
+      createdAt: stamp,
+    });
+    await db.insert(eventVolunteers).values([volunteer(daysAgo(3), 1), volunteer(daysAgo(40), 2)]);
+
+    const translations = [
+      { locale: "ro" as const, title: "Declarație", body: { sections: [{ paragraphs: ["text"] }] } },
+      { locale: "en" as const, title: "Declaration", body: { sections: [{ paragraphs: ["text"] }] } },
+    ];
+    const version = await insertLegalDocumentVersion(db, {
+      key: "EVENT_DECLARATION",
+      version: 1,
+      effectiveAt: NOW,
+      isApproved: true,
+      contentSha256: computeContentHash(translations),
+      translations,
+      now: NOW,
+    });
+    const signed = { legalDocumentId: version, declarationVersion: 1, contentSha256: computeContentHash(translations), locale: "ro" as const, typedName: "Ana Pop", acceptedAt: NOW };
+    // One registration carries one declaration: the second, older one belongs to another.
+    const other = await register(past.id, "CONFIRMED", daysAgo(50));
+    await db.insert(declarationAcceptances).values([
+      { ...signed, registrationId: registration.id, createdAt: daysAgo(2) },
+      { ...signed, registrationId: other.registration.id, createdAt: daysAgo(50) },
+    ]);
+    await db.insert(groupRunDeclarations).values([
+      { ...signed, eventId: past.id, email: "g1@example.test", createdAt: daysAgo(5) },
+      { ...signed, eventId: past.id, email: "g2@example.test", signerKey: "second", createdAt: daysAgo(45) },
+      { ...signed, eventId: past.id, email: "g3@example.test", signerKey: "third", createdAt: daysAgo(100) },
+    ]);
+
+    const sizes = await readDatabaseSizesFrom(db, NOW);
+    const of = (table: string) => sizes.growth.find((entry) => entry.table === table);
+    expect(of("event_volunteers")).toEqual({ table: "event_volunteers", total: 2, last30Days: 1, settled: null });
+    expect(of("declaration_acceptances")).toEqual({ table: "declaration_acceptances", total: 2, last30Days: 1, settled: null });
+    expect(of("group_run_declarations")).toEqual({ table: "group_run_declarations", total: 3, last30Days: 1, settled: null });
+  });
+
+  it("measures the past-event ages by calendar month: at a month's end the threshold is the month's last day, not the next month's first", async () => {
+    const endOfOctober = new Date("2026-10-31T12:00:00.000Z");
+    // Six months before 31 October is 30 April (April has no 31st); twelve is 31 October 2025.
+    const justInside = await event(new Date("2026-04-30T23:00:00.000Z"));
+    const justPast = await event(new Date("2026-04-30T11:00:00.000Z"));
+    const yearInside = await event(new Date("2025-10-31T13:00:00.000Z"));
+    const yearPast = await event(new Date("2025-10-31T11:00:00.000Z"));
+    for (const target of [justInside, justPast, yearInside, yearPast]) await register(target.id, "CONFIRMED");
+
+    const sizes = await readDatabaseSizesFrom(db, endOfOctober);
+    expect(sizes.registrations).toEqual([{ status: "CONFIRMED", total: 4, pastSixMonths: 3, pastTwelveMonths: 1 }]);
   });
 
   it("counts registrations per state, and how many belong to an event more than six and twelve months past", async () => {

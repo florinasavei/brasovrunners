@@ -34,6 +34,7 @@ vi.mock("@/i18n/navigation", async () => {
 });
 
 const { default: DatabaseSizesPanel } = await import("@/modules/diagnostics/ui/DatabaseSizesPanel");
+const { default: VercelBuildsLine } = await import("@/modules/diagnostics/ui/VercelBuildsLine");
 const { default: VercelUsagePanel } = await import("@/modules/diagnostics/ui/VercelUsagePanel");
 
 const MB = 1024 * 1024;
@@ -68,6 +69,7 @@ const USAGE: VercelUsage = {
     { project: "site-qa", minutes: 1572, usd: 5.47 },
   ],
   activeCpuHours: 3.66,
+  activeCpuUnit: null,
   periodStart: new Date("2026-10-01T00:00:00.000Z"),
   periodEnd: new Date("2026-10-17T00:00:00.000Z"),
 };
@@ -93,7 +95,7 @@ describe("§NNN «Baza de date» on /devs", () => {
     expect(out).toContain("Rânduri: necunoscut");
     expect(out).toMatch(/1\.234 noi în ultimele 30 de zile/);
     expect(out).toContain("Linkurile din emailuri");
-    expect(out).toMatch(/450 nu mai pot fi folosite/);
+    expect(out).toMatch(/Nefolosibile: 450/);
     expect(out).toMatch(/100 în total · 40 la evenimente de peste 6 luni · 10 la evenimente de peste 12 luni/);
     // The states come in the order a registration goes through them, in the club's words.
     expect(out.indexOf("Confirmate")).toBeLessThan(out.indexOf("Anulate"));
@@ -147,7 +149,7 @@ describe("§NNN «Vercel: consumul lunii» on /devs", () => {
     expect(out).toMatch(/3\.156 minute · 10,99 \$/);
     expect(out).toContain("site-production");
     expect(out).toMatch(/1\.584 minute de CPU de build · 5,52 \$/);
-    expect(out).toMatch(/Timp de CPU al funcțiilor: 3,7 ore luna aceasta; planul Hobby include 4 pe lună/);
+    expect(out).toMatch(/Aproape de limită: 3,7 din cele 4 ore de CPU incluse pe lună în planul Hobby \(92%\)/);
     // 3.66 of 4 is past eighty percent: the one figure that decides whether the club fits on Hobby is amber.
     expect(out).toContain('data-near="true"');
   });
@@ -159,7 +161,7 @@ describe("§NNN «Vercel: consumul lunii» on /devs", () => {
     expect(out).toContain("Vercel: this month's usage");
     expect(out).toMatch(/Used so far: \$11\.61 at list price/);
     expect(out).toMatch(/1,584 build CPU minutes · \$5\.52/);
-    expect(out).toMatch(/Function CPU time: 1 hours this month; the Hobby plan includes 4 a month/);
+    expect(out).toMatch(/Function CPU time: 1 of the 4 CPU-hours the Hobby plan includes a month \(25%\)/);
     expect(out).toContain('data-near="false"');
     expect(out).not.toContain("vercel-usage-subscription");
   });
@@ -187,5 +189,42 @@ describe("§NNN «Vercel: consumul lunii» on /devs", () => {
       const out = await html(VercelUsagePanel({ reading: { ok: false, reason: "unconfigured" }, creditUsd: 0 }));
       expect(out).toContain(sentence);
     }
+  });
+});
+
+describe("§NNN the CPU line says how near the allowance is, and does not compare what it cannot", () => {
+  it("is calm under eighty percent, says the share near it, and names a unit that is not hours instead of guessing", async () => {
+    state.locale = "en";
+    const calm = await html(VercelUsagePanel({ reading: { ok: true, usage: { ...USAGE, activeCpuHours: 2 } }, creditUsd: 0 }));
+    expect(calm).toMatch(/Function CPU time: 2 of the 4 CPU-hours the Hobby plan includes a month \(50%\)/);
+    expect(calm).toContain('data-near="false"');
+
+    const near = await html(VercelUsagePanel({ reading: { ok: true, usage: { ...USAGE, activeCpuHours: 3.4 } }, creditUsd: 0 }));
+    expect(near).toMatch(/Close to the allowance: 3\.4 of the 4 CPU-hours/);
+    expect(near).toContain('data-near="true"');
+
+    const unknown = await html(VercelUsagePanel({ reading: { ok: true, usage: { ...USAGE, activeCpuHours: null, activeCpuUnit: "GB-Hrs" } }, creditUsd: 0 }));
+    expect(unknown).toContain("«GB-Hrs», not in hours");
+    expect(unknown).toContain('data-near="false"');
+
+    state.locale = "ro";
+    const ro = await html(VercelUsagePanel({ reading: { ok: true, usage: { ...USAGE, activeCpuHours: 1 } }, creditUsd: 0 }));
+    expect(ro).toMatch(/Timp de CPU al funcțiilor: 1 din cele 4 ore de CPU incluse pe lună în planul Hobby \(25%\)/);
+  });
+});
+
+describe("§NNN the builds line under the deployments", () => {
+  it("names the count and the branches in both languages, and a dash when no branch built", async () => {
+    const byBranch = [
+      { branch: "qa", count: 7 },
+      { branch: "main", count: 2 },
+    ];
+    state.locale = "ro";
+    expect(await html(VercelBuildsLine({ builds: 9, byBranch }))).toContain("Build-uri luna aceasta, pe acest proiect: 9 (qa 7, main 2).");
+    state.locale = "en";
+    const en = await html(VercelBuildsLine({ builds: 9, byBranch }));
+    expect(en).toContain("Builds this month, on this project: 9 (qa 7, main 2).");
+    expect(en).not.toContain("cost money");
+    expect(await html(VercelBuildsLine({ builds: 0, byBranch: [] }))).toContain("0 (—).");
   });
 });

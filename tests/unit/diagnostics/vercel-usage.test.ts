@@ -8,10 +8,10 @@ import { readVercelMonth } from "@/modules/diagnostics/vercel";
  * 2026-10-16 — «Build CPU Minutes» per project, «Fluid Active CPU», an unmetered «Pro» line for the
  * seat — with invented numbers and no account id.
  */
-const line = (service: string, unit: string | null, quantity: number, usd: number, project?: string, day = "2026-10-01") =>
+const line = (service: string, unit: string | null, quantity: number, usd: number, project?: string, day = "2026-10-01", category = "Usage") =>
   JSON.stringify({
     ChargePeriodStart: `${day}T07:00:00.000Z`,
-    ChargeCategory: "Usage",
+    ChargeCategory: category,
     EffectiveCost: usd,
     BilledCost: usd,
     ServiceName: service,
@@ -31,7 +31,7 @@ const BODY = [
   line("CDN Requests", "Requests", 12_000, 0),
   line("Image Optimization Cache Reads", "Reads", 3, 0.001),
   // The subscription: no unit, so no consumption — kept apart from the usage the credit is spent on.
-  line("Pro", null, 1, 10.5),
+  line("Pro", null, 1, 10.5, undefined, "2026-10-01", "Purchase"),
   "not json at all",
   "",
 ].join("\n");
@@ -60,6 +60,41 @@ describe("Vercel's month, from its billing charges", () => {
       ["site-production", 140],
       ["site-qa", 60],
     ]);
+  });
+
+  it("counts only `Usage` rows: a credit, a tax or an adjustment never nets a service, the subscription or the CPU hours", () => {
+    const noisy = [
+      BODY,
+      // A credit against the CPU line, with a unit, and a tax and an adjustment with none.
+      line("Fluid Active CPU", "hour", -1, -0.5, "site-production", "2026-10-03", "Credit"),
+      line("Build CPU Minutes", "minute", -30, -0.1, "site-production", "2026-10-03", "Credit"),
+      line("Vercel Tax", null, 0, 2.2, undefined, "2026-10-03", "Tax"),
+      line("Pro", null, 1, -3, undefined, "2026-10-03", "Adjustment"),
+      // A row with no category at all is not consumption either.
+      JSON.stringify({ ServiceName: "Observability Events", ConsumedQuantity: 9_999, ConsumedUnit: "Events", EffectiveCost: 9 }),
+    ].join("\n");
+    const clean = summariseVercelCharges(BODY, PERIOD_START, PERIOD_END);
+    const usage = summariseVercelCharges(noisy, PERIOD_START, PERIOD_END);
+
+    expect(usage.lines).toEqual(clean.lines);
+    expect(usage.usageUsd).toBeCloseTo(clean.usageUsd, 5);
+    expect(usage.subscriptionUsd).toBeCloseTo(10.5, 5);
+    expect(usage.activeCpuHours).toBeCloseTo(2.25, 5);
+    expect(usage.buildsByProject).toEqual(clean.buildsByProject);
+  });
+
+  it("turns Active CPU into hours from seconds or milliseconds, and compares nothing in a unit it does not know", () => {
+    const seconds = summariseVercelCharges([line("Fluid Active CPU", "second", 7_200, 0.2), line("Fluid Active CPU", "Seconds", 3_600, 0.1)].join("\n"), PERIOD_START, PERIOD_END);
+    expect(seconds.activeCpuHours).toBeCloseTo(3, 5);
+    expect(seconds.activeCpuUnit).toBeNull();
+    const millis = summariseVercelCharges(line("Fluid Active CPU", "millisecond", 5_400_000, 0.2), PERIOD_START, PERIOD_END);
+    expect(millis.activeCpuHours).toBeCloseTo(1.5, 5);
+
+    const odd = summariseVercelCharges([line("Fluid Active CPU", "hour", 1, 0.2), line("Fluid Active CPU", "GB-Hrs", 5, 0.1)].join("\n"), PERIOD_START, PERIOD_END);
+    expect(odd.activeCpuHours).toBeNull();
+    expect(odd.activeCpuUnit).toBe("GB-Hrs");
+    // The line itself is still printed as Vercel wrote it.
+    expect(odd.lines[0]).toMatchObject({ service: "Fluid Active CPU" });
   });
 
   it("asks for the calendar month so far and sends the token, the team and nothing else of either", async () => {

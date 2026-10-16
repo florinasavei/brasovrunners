@@ -4461,7 +4461,7 @@
           "done": "The retention periods are decided.",
           "how": [
             "Open Settings → Configuration: the «The database» card shows what each table takes and how much it grew in 30 days.",
-            "There, under «Documents», open «PLATFORM»: the section «Keeping Neon and Vercel light, long term» has the table of proposed periods.",
+            "On that card, open «The plan for keeping data and the proposed periods»: the section «Keeping Neon and Vercel light, long term» has the table of proposed periods.",
             "Decide the periods; for the personal data of past events, ask a lawyer first. Until then nothing changes."
           ]
         }
@@ -10917,10 +10917,10 @@
       "id": "Deployment id: {id}",
       "notOnVercel": "Not running on Vercel (local or test).",
       "usageLink": "Open Vercel → Usage.",
-      "month": "This month: {deployments} deployments ({today} today, of {perDay} a day), {minutes} build minutes of {of} ({percent}%), {errored} failed.",
+      "month": "This month: {deployments} deployments ({today} today, of {perDay} a day), {minutes} build minutes, {errored} failed.",
       "unavailable": "Not configured: set VERCEL_API_TOKEN and VERCEL_PROJECT_ID in the project's variables. The steps are on /admin/tasks.",
       "failed": "Vercel did not answer: {reason}.",
-      "builds": "Builds this month, on this project: {builds} ({branches}). Only builds cost money."
+      "builds": "Builds this month, on this project: {builds} ({branches})."
     },
     "neon": {
       "title": "Database (Neon)",
@@ -10994,7 +10994,7 @@
     "dbSize": {
       "title": "The database: size and growth",
       "intro": "How big the database is and what grew in the last 30 days. This only measures: nothing is deleted.",
-      "introMore": "These numbers are what the club chooses how long to keep each kind of data on. Estimated rows are ones the database has not counted yet.",
+      "introMore": "These numbers are what the club chooses how long to keep each kind of data on. Estimated rows were not counted exactly.",
       "aside": "{size} MB",
       "total": "The whole database: {size} MB.",
       "unread": "The database's size could not be read just now: it may be asleep or away. Try again in a moment.",
@@ -11013,7 +11013,8 @@
         "registration_notes": "Notes on registrations",
         "event_volunteers": "Volunteers",
         "registrations": "Registrations",
-        "declaration_acceptances": "Signed declarations"
+        "declaration_acceptances": "Signed declarations",
+        "group_run_declarations": "Group-run declarations"
       },
       "growthLine": "{recent} new, of {total}",
       "settled": "{count} can no longer be used",
@@ -11035,7 +11036,7 @@
     "vercelUsage": {
       "title": "Vercel: this month's usage",
       "intro": "The lines of Vercel's Usage page since the start of the month, read from their billing API.",
-      "introMore": "Prices are list prices. Hobby costs nothing, but going past an included allowance pauses the account for 30 days.",
+      "introMore": "Prices are list prices. Hobby costs nothing, but a Hobby team past an included allowance cannot use that feature for about 30 days, and Vercel may pause the team.",
       "aside": "${usd}",
       "unconfigured": "Without VERCEL_API_TOKEN the usage cannot be read.",
       "cannot": "Vercel does not give usage to this key ({reason}). The lines are only on the account's Usage page.",
@@ -11043,7 +11044,9 @@
       "totalHobby": "Used so far: ${usd} at list price.",
       "cycleMore": "The calendar month, in UTC. Vercel's Usage page counts from the start of the billing cycle, which begins on another day.",
       "subscription": "The subscription itself: ${usd} so far.",
-      "cpu": "Function CPU time: {hours} hours this month; the Hobby plan includes {of} a month.",
+      "cpu": "Function CPU time: {hours} of the {of} CPU-hours the Hobby plan includes a month ({percent}%).",
+        "cpuNear": "Close to the allowance: {hours} of the {of} CPU-hours the Hobby plan includes a month ({percent}%). Past it, Hobby cannot use that feature for about 30 days.",
+        "cpuUnknown": "Function CPU time cannot be compared with the Hobby allowance: Vercel gave it in «{unit}», not in hours.",
       "linesTitle": "By service",
       "line": "{quantity} {unit} · ${usd}",
       "buildsTitle": "Builds by project",

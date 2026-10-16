@@ -35,18 +35,25 @@ export type VercelUsage = {
   lines: VercelUsageLine[];
   /** The sum of `lines`: the usage the plan's included credit is spent on. */
   usageUsd: number;
-  /** What the plan's subscription itself charged to date, from the unmetered lines («Pro»); 0 on Hobby. */
+  /** What the plan's subscription itself charged to date, from the unmetered `Purchase` lines («Pro»); 0 on Hobby. */
   subscriptionUsd: number;
   /** «Build CPU Minutes» by project, the minutes and their list price — builds are the cost. */
   buildsByProject: { project: string; minutes: number; usd: number }[];
-  /** Fluid Active CPU, in CPU-hours: Hobby includes four a month, and this is the figure that decides whether it fits. */
-  activeCpuHours: number;
+  /**
+   * Fluid Active CPU, in CPU-hours: Hobby includes four a month, and this is the figure that decides whether it fits.
+   * Null when Vercel gave it in a unit that is not an hour, a second or a millisecond: nothing is then compared.
+   */
+  activeCpuHours: number | null;
+  /** The unit of that line as Vercel wrote it, only when it could not be turned into hours; null otherwise. */
+  activeCpuUnit: string | null;
   periodStart: Date;
   /** The day after the last charge asked for. */
   periodEnd: Date;
 };
 
 type FocusRow = {
+  /** `Adjustment | Credit | Purchase | Tax | Usage` (required in Vercel's reference): only `Usage` is consumption. */
+  ChargeCategory?: string;
   ServiceName?: string;
   ConsumedQuantity?: number | null;
   ConsumedUnit?: string | null;
@@ -56,6 +63,15 @@ type FocusRow = {
 
 const BUILD_SERVICE = "Build CPU Minutes";
 const ACTIVE_CPU_SERVICE = "Fluid Active CPU";
+
+/** The hours in one unit of a Fluid Active CPU line, or null for a unit this does not know (never guessed, §1.2). */
+function hoursPerUnit(unit: string | null): number | null {
+  const name = (unit ?? "").trim().toLowerCase();
+  if (/^(cpu[- ]?)?(hours?|hrs?|h)$/.test(name)) return 1;
+  if (/^(seconds?|secs?|s)$/.test(name)) return 1 / 3_600;
+  if (/^(milliseconds?|millis|ms)$/.test(name)) return 1 / 3_600_000;
+  return null;
+}
 
 /** A cost under this is a rounding of a service that cost nothing: it is not a line. */
 const NEGLIGIBLE_USD = 0.005;
@@ -69,6 +85,7 @@ export function summariseVercelCharges(body: string, periodStart: Date, periodEn
   const builds = new Map<string, { minutes: number; usd: number }>();
   let subscriptionUsd = 0;
   let activeCpuHours = 0;
+  let activeCpuUnit: string | null = null;
 
   for (const text of body.split("\n")) {
     if (!text.trim()) continue;
@@ -83,15 +100,21 @@ export function summariseVercelCharges(body: string, periodStart: Date, periodEn
     const usd = Number(row.EffectiveCost ?? 0) || 0;
     const quantity = Number(row.ConsumedQuantity ?? 0) || 0;
     const unit = row.ConsumedUnit ?? null;
-    if (unit === null) {
-      subscriptionUsd += usd;
+    // A credit, a tax or an adjustment is not consumption: it would net a service's cost and its hours.
+    if (row.ChargeCategory === "Purchase") {
+      if (unit === null) subscriptionUsd += usd;
       continue;
     }
+    if (row.ChargeCategory !== "Usage" || unit === null) continue;
     const line = services.get(service) ?? { service, unit, quantity: 0, usd: 0 };
     line.quantity += quantity;
     line.usd += usd;
     services.set(service, line);
-    if (service === ACTIVE_CPU_SERVICE) activeCpuHours += quantity;
+    if (service === ACTIVE_CPU_SERVICE) {
+      const perUnit = hoursPerUnit(unit);
+      if (perUnit === null) activeCpuUnit ??= unit;
+      else activeCpuHours += quantity * perUnit;
+    }
     if (service === BUILD_SERVICE) {
       const project = row.Tags?.ProjectName || "?";
       const build = builds.get(project) ?? { minutes: 0, usd: 0 };
@@ -107,7 +130,8 @@ export function summariseVercelCharges(body: string, periodStart: Date, periodEn
     usageUsd: lines.reduce((sum, line) => sum + line.usd, 0),
     subscriptionUsd,
     buildsByProject: [...builds].map(([project, value]) => ({ project, ...value })).sort((a, b) => b.minutes - a.minutes || a.project.localeCompare(b.project)),
-    activeCpuHours,
+    activeCpuHours: activeCpuUnit === null ? activeCpuHours : null,
+    activeCpuUnit,
     periodStart,
     periodEnd,
   };
@@ -115,8 +139,11 @@ export function summariseVercelCharges(body: string, periodStart: Date, periodEn
 
 export type VercelUsageRead = { ok: true; usage: VercelUsage } | { ok: false; reason: "unconfigured" | string };
 
-/** The call and its fetch, five times a deployments list's patience: the body is megabytes of mostly zero lines. */
-const TIMEOUT_MS = 20_000;
+/**
+ * The call and its fetch. A hanging endpoint holds `/devs`' status view for this long (the read sits beside
+ * the size read), so it is short; the body is a few megabytes and an hour's cache means it is seldom fetched.
+ */
+const TIMEOUT_MS = 8_000;
 
 export async function readVercelUsage(
   env: Pick<Env, "VERCEL_API_TOKEN" | "VERCEL_TEAM_ID">,

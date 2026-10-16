@@ -38,8 +38,10 @@ export default async function VercelUsagePanel({ reading, creditUsd }: Props) {
   const usd = (value: number) => format.number(value, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const amount = (value: number) => format.number(value, { maximumFractionDigits: value < 10 ? 1 : 0 });
   const usage = reading.ok ? reading.usage : null;
-  const cpuHours = usage?.activeCpuHours ?? 0;
-  const cpuNearLimit = cpuHours >= VERCEL_HOBBY_ACTIVE_CPU_HOURS_PER_MONTH * CPU_WARN_SHARE;
+  // Null hours: Vercel gave the line in a unit that is not an hour, so nothing is compared with Hobby's four.
+  const cpuHours = usage ? usage.activeCpuHours : 0;
+  const cpuShare = cpuHours === null ? 0 : cpuHours / VERCEL_HOBBY_ACTIVE_CPU_HOURS_PER_MONTH;
+  const cpuNearLimit = cpuShare >= CPU_WARN_SHARE;
 
   return (
     <Panel
@@ -72,9 +74,15 @@ export default async function VercelUsagePanel({ reading, creditUsd }: Props) {
             </Typography>
           )}
 
-          {/* The figure that decides Hobby: its allowance is four CPU-hours, and a Hobby team past an allowance is paused. */}
+          {/* The figure that decides Hobby: its allowance is four CPU-hours, and a Hobby team past an allowance loses that feature for about thirty days. */}
           <Alert severity={cpuNearLimit ? "warning" : "info"} data-testid="vercel-usage-cpu" data-near={cpuNearLimit ? "true" : "false"}>
-            {t("vercelUsage.cpu", { hours: format.number(cpuHours, { maximumFractionDigits: 1 }), of: VERCEL_HOBBY_ACTIVE_CPU_HOURS_PER_MONTH })}
+            {cpuHours === null
+              ? t("vercelUsage.cpuUnknown", { unit: usage.activeCpuUnit ?? "?" })
+              : t(cpuNearLimit ? "vercelUsage.cpuNear" : "vercelUsage.cpu", {
+                  hours: format.number(cpuHours, { maximumFractionDigits: 1 }),
+                  of: VERCEL_HOBBY_ACTIVE_CPU_HOURS_PER_MONTH,
+                  percent: Math.round(cpuShare * 100),
+                })}
           </Alert>
 
           <Box component="section">

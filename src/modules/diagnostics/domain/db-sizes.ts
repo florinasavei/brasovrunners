@@ -60,6 +60,7 @@ export const GROWTH_TABLES = [
   "event_volunteers",
   "registrations",
   "declaration_acceptances",
+  "group_run_declarations",
 ] as const;
 export type GrowthTable = (typeof GROWTH_TABLES)[number];
 
@@ -109,12 +110,6 @@ function instant(date: Date): string {
   return date.toISOString();
 }
 
-function monthsBefore(now: Date, months: number): Date {
-  const result = new Date(now.getTime());
-  result.setUTCMonth(result.getUTCMonth() - months);
-  return result;
-}
-
 function daysBefore(now: Date, days: number): Date {
   return new Date(now.getTime() - days * 86_400_000);
 }
@@ -122,9 +117,11 @@ function daysBefore(now: Date, days: number): Date {
 /** The statements, built for one instant. Nothing in them comes from a user. */
 export function sizeQueries(now: Date) {
   const since = instant(daysBefore(now, GROWTH_DAYS));
-  const sixMonths = instant(monthsBefore(now, PAST_EVENT_MONTHS[0]));
-  const twelveMonths = instant(monthsBefore(now, PAST_EVENT_MONTHS[1]));
   const at = instant(now);
+  // Months are subtracted in SQL, which clamps to the month's last day (31 October minus six months is 30 April), as setUTCMonth does not.
+  const monthsAgo = (months: number) => `('${at}'::timestamptz AT TIME ZONE 'UTC' - interval '${Math.trunc(months)} months') AT TIME ZONE 'UTC'`;
+  const sixMonths = monthsAgo(PAST_EVENT_MONTHS[0]);
+  const twelveMonths = monthsAgo(PAST_EVENT_MONTHS[1]);
   const last = (column = "created_at") => `count(*) FILTER (WHERE ${column} >= '${since}'::timestamptz)::bigint`;
 
   return {
@@ -156,6 +153,7 @@ export function sizeQueries(now: Date) {
         event_volunteers: part("event_volunteers", "NULL::bigint"),
         registrations: part("registrations", "NULL::bigint"),
         declaration_acceptances: part("declaration_acceptances", "NULL::bigint"),
+        group_run_declarations: part("group_run_declarations", "NULL::bigint"),
       };
       const present = GROWTH_TABLES.filter((table) => existing.has(table));
       return present.length === 0 ? null : present.map((table) => parts[table]).join("\n      UNION ALL ");
@@ -163,8 +161,8 @@ export function sizeQueries(now: Date) {
     registrations: `
       SELECT r.status::text AS status,
              count(*)::bigint AS total,
-             count(*) FILTER (WHERE e.starts_at < '${sixMonths}'::timestamptz)::bigint AS past_six,
-             count(*) FILTER (WHERE e.starts_at < '${twelveMonths}'::timestamptz)::bigint AS past_twelve
+             count(*) FILTER (WHERE e.starts_at < ${sixMonths})::bigint AS past_six,
+             count(*) FILTER (WHERE e.starts_at < ${twelveMonths})::bigint AS past_twelve
         FROM registrations r
         JOIN events e ON e.id = r.event_id
        GROUP BY r.status

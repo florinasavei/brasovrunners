@@ -40,9 +40,10 @@ import { budgetOfInForce, readNeonBudget } from "@/modules/diagnostics/neon-budg
 import NeonBudgetPanel from "@/modules/diagnostics/ui/NeonBudgetPanel";
 import { readNeonPlan } from "@/modules/diagnostics/neon-plan";
 import { describeNeonBlock, effectiveNeonPlan, NEON_PLANS, NEON_PLANS_CHECKED_ON } from "@/modules/diagnostics/domain/neon-plan";
-import { readVercelMonth, VERCEL_HOBBY_BUILD_MINUTES_PER_MONTH, VERCEL_HOBBY_DEPLOYMENTS_PER_DAY } from "@/modules/diagnostics/vercel";
+import { readVercelMonth, VERCEL_HOBBY_DEPLOYMENTS_PER_DAY } from "@/modules/diagnostics/vercel";
 import { readDatabaseSizesForPage } from "@/modules/diagnostics/db-sizes";
 import DatabaseSizesPanel from "@/modules/diagnostics/ui/DatabaseSizesPanel";
+import VercelBuildsLine from "@/modules/diagnostics/ui/VercelBuildsLine";
 import VercelUsagePanel from "@/modules/diagnostics/ui/VercelUsagePanel";
 import { VERCEL_PLANS } from "@/modules/diagnostics/domain/vercel-plan";
 import { readVercelPlan } from "@/modules/diagnostics/vercel-plan";
@@ -654,9 +655,10 @@ export default async function DevsPage({ params, searchParams }: Props) {
             <DatabaseSizesPanel sizes={dbSizes} />
           </Box>
           {/*
-            Hosting (the owner: "as a dev I should also see the DB usage and Vercel usage"). Vercel
-            publishes no usage figure to a Hobby project's own code, so this is what the platform
-            injects about the running deployment, and the one link to the usage dashboard.
+            Hosting (the owner: "as a dev I should also see the DB usage and Vercel usage"): what the
+            platform injects about the running deployment, the month's deployments and builds, the usage
+            card from Vercel's billing API (§NNN), and its link to the usage dashboard. Hobby has no
+            build-minute allowance to read them against: the usage card's Active CPU is the figure.
           */}
           <Typography variant="h3" sx={{ fontSize: "1rem", mt: 3, mb: 1 }}>
             {t("vercel.title")}
@@ -681,22 +683,12 @@ export default async function DevsPage({ params, searchParams }: Props) {
             </Typography>
           )}
           {vercel.ok ? (
-            <Alert
-              severity={
-                vercel.month.buildMinutes >= VERCEL_HOBBY_BUILD_MINUTES_PER_MONTH * 0.8 ||
-                vercel.month.deploymentsToday >= VERCEL_HOBBY_DEPLOYMENTS_PER_DAY * 0.8
-                  ? "warning"
-                  : "success"
-              }
-              sx={{ mb: 1 }}
-            >
+            <Alert severity={vercel.month.deploymentsToday >= VERCEL_HOBBY_DEPLOYMENTS_PER_DAY * 0.8 ? "warning" : "success"} sx={{ mb: 1 }}>
               {t("vercel.month", {
                 deployments: vercel.month.deployments,
                 today: vercel.month.deploymentsToday,
                 perDay: VERCEL_HOBBY_DEPLOYMENTS_PER_DAY,
                 minutes: Math.round(vercel.month.buildMinutes),
-                of: VERCEL_HOBBY_BUILD_MINUTES_PER_MONTH,
-                percent: Math.round((vercel.month.buildMinutes / VERCEL_HOBBY_BUILD_MINUTES_PER_MONTH) * 100),
                 errored: vercel.month.errored,
               })}
             </Alert>
@@ -705,15 +697,8 @@ export default async function DevsPage({ params, searchParams }: Props) {
               {vercel.reason === "unconfigured" ? t("vercel.unavailable") : t("vercel.failed", { reason: vercel.reason })}
             </Alert>
           )}
-          {/* Builds are the cost (§NNN): how many of this project's deployments built, and for which branch. */}
-          {vercel.ok && (
-            <Typography variant="body2" sx={{ mb: 1 }} data-testid="vercel-builds">
-              {t("vercel.builds", {
-                builds: vercel.month.builds,
-                branches: vercel.month.buildsByBranch.map((entry) => `${entry.branch} ${entry.count}`).join(", ") || "—",
-              })}
-            </Typography>
-          )}
+          {/* How many of this project's deployments built, and for which branch (§NNN). */}
+          {vercel.ok && <VercelBuildsLine builds={vercel.month.builds} byBranch={vercel.month.buildsByBranch} />}
           {/* The Usage page's lines from Vercel's billing API, or one sentence saying it would not tell (§NNN). */}
           {vercelUsage && (
             <Box sx={{ mt: 1 }}>
