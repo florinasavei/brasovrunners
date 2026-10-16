@@ -5169,6 +5169,23 @@
         "bibDesign": "The race numbers have no chosen look: they print in the simple default.",
         "declaration": "The declaration participants sign is not approved: nobody can register."
       },
+      "fold": {
+        "pageRows": {
+          "one": "{count} row",
+          "few": "{count} rows",
+          "other": "{count} rows"
+        },
+        "pageNone": "Nothing is missing",
+        "pageNoneBody": "The page has everything it needs.",
+        "ownCount": "{count} to do",
+        "ownNone": "no open tasks",
+        "mine": "{count} mine",
+        "overdue": {
+          "one": "{count} overdue",
+          "few": "{count} overdue",
+          "other": "{count} overdue"
+        }
+      },
       "chip": "{count} to do"
     },
     "clubTodo": {

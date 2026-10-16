@@ -5169,6 +5169,23 @@
         "bibDesign": "Numerele de concurs n-au un aspect ales: se tipăresc în varianta simplă.",
         "declaration": "Declarația semnată de participanți nu e aprobată: nimeni nu se poate înscrie."
       },
+      "fold": {
+        "pageRows": {
+          "one": "{count} rând",
+          "few": "{count} rânduri",
+          "other": "{count} de rânduri"
+        },
+        "pageNone": "Nimic nu lipsește",
+        "pageNoneBody": "Pagina are tot ce îi trebuie.",
+        "ownCount": "{count} de făcut",
+        "ownNone": "nicio sarcină deschisă",
+        "mine": "{count} ale mele",
+        "overdue": {
+          "one": "{count} întârziată",
+          "few": "{count} întârziate",
+          "other": "{count} întârziate"
+        }
+      },
       "chip": "{count} de făcut"
     },
     "clubTodo": {

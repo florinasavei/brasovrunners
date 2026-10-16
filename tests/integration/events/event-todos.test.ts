@@ -116,7 +116,9 @@ describe("§749 an event's own to-dos", () => {
       dueOn: "2026-11-10",
       doneAt: null,
     });
-    expect(state.redirected[0]).toContain("#box-todos");
+    // Back to «Sarcini» (§752): the fragment names the fold and `todoSaved` opens it without a script.
+    expect(state.redirected[0]).toContain("#box-todos-own");
+    expect(state.redirected[0]).toContain("todoSaved=1");
     const [row] = await trail();
     expect(row).toMatchObject({ action: "event_todo.added", entityType: "event", actorStaffUserId: staff.ADMIN!.id });
     expect(row.metadataJson).toMatchObject({ itemId: item.id, text: "Confirmă barierele", priority: "URGENT" });

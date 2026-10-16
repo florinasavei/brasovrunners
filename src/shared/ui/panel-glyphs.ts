@@ -2,6 +2,7 @@ import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import AddIcon from "@mui/icons-material/Add";
 import AlternateEmailIcon from "@mui/icons-material/AlternateEmail";
 import AnnouncementIcon from "@mui/icons-material/Announcement";
+import AssignmentLateIcon from "@mui/icons-material/AssignmentLate";
 import BadgeIcon from "@mui/icons-material/Badge";
 import BarChartIcon from "@mui/icons-material/BarChart";
 import BorderColorIcon from "@mui/icons-material/BorderColor";
@@ -57,6 +58,7 @@ import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import PhoneIcon from "@mui/icons-material/Phone";
 import EventAvailableIcon from "@mui/icons-material/EventAvailable";
 import PlaceIcon from "@mui/icons-material/Place";
+import PlaylistAddCheckIcon from "@mui/icons-material/PlaylistAddCheck";
 import PrintIcon from "@mui/icons-material/Print";
 import PublicIcon from "@mui/icons-material/Public";
 import ReorderIcon from "@mui/icons-material/Reorder";
@@ -145,6 +147,9 @@ export const PANEL_GLYPHS = {
   save: SaveIcon,
   // «De făcut pentru pagina evenimentului» (§749): what the page still lacks and the club's own lines.
   todo: ChecklistIcon,
+  // The card's two folds (§752): what the page still lacks, and the club's own tasks.
+  todoPage: AssignmentLateIcon,
+  todoOwn: PlaylistAddCheckIcon,
   // «Adaugă un rând» on that card (§749).
   add: AddIcon,
   // «Voluntari» on an event's editor (§754): the roles and the people.

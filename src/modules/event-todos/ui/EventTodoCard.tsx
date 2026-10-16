@@ -3,7 +3,9 @@ import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
+import type { ReactNode } from "react";
 import { addEventTodoAction, deleteEventTodoAction, editEventTodoAction, setEventTodoDoneAction } from "@/app/[locale]/admin/events/[id]/todo-actions";
+import { countForm } from "@/i18n/count-form";
 import { CLUB_TIME_ZONE, formatCalendarDay, formatDay } from "@/i18n/dates";
 import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
@@ -23,6 +25,7 @@ import type { StatusGlyphName } from "@/shared/ui/status-glyphs";
 import { EVENT_TODO_PRIORITIES, EVENT_TODO_TEXT_MAX, type EventTodoPriority, isTodoOverdue } from "../domain/event-todo";
 import type { EventTodoItem } from "../event-todos";
 import { eventTodoRows, type TodoRow } from "../rows";
+import { summariseTodoFolds } from "../summary";
 
 /**
  * A priority's chip: its word, its glyph and its tone (`StatusChip`'s palette colours, never a
@@ -60,16 +63,23 @@ type Props = {
   today: string;
   /** A refused one-button form's code, already translated. */
   error?: string;
+  /** A press of the card's own forms just worked (`?todoSaved=1`): «Sarcini» shows its result. */
+  saved?: boolean;
 };
+
+/**
+ * A row's address inside the card: `#event-todo-own-<id>` or `#event-todo-page-<rule>` names the row, and
+ * the backoffice shell's `OpenFoldFromHash` (§336) opens the fold around it — and the card — on arrival.
+ */
+function rowId(key: string): string {
+  return `event-todo-${key.replace(":", "-")}`;
+}
 
 /** A line's words cut for an accessible name. */
 function shortText(text: string): string {
   const flat = text.replace(/\s+/g, " ").trim();
   return flat.length > 80 ? `${flat.slice(0, 79)}…` : flat;
 }
-
-/** The group headings: small, bold, secondary — a label over a list, not a card. */
-const GROUP_HEADING_SX = { fontWeight: 700, color: "text.secondary", fontSize: "0.8rem", letterSpacing: 0.4, textTransform: "uppercase" } as const;
 
 /** One row of a list: a hairline under it, nothing else. */
 const ROW_SX = { borderBottom: 1, borderColor: "divider", "&:last-of-type": { borderBottom: 0 } } as const;
@@ -106,11 +116,20 @@ const TICK_SX = { minWidth: 44, width: 44, height: 44, p: 0, borderRadius: 1, "&
 /**
  * «De făcut pentru pagina evenimentului» (§749, drawn as a plain list by §752): one card in the event
  * editor, folded, with a summary line «N de făcut» and open on arrival while anything is left. Two
- * short lists under it — «Lipsește pe pagină» (computed from the event, each row a link to the card
- * that fills it, gone once filled) and «Sarcini» (the club's own, each a tick box, the words and, small
- * on the right, the priority, who and by when, with a pencil that opens the row's edit form in place) —
- * and the ticked rows folded under «Gata». Each list is in the order priority, then the due day, then
- * age. Backoffice only; `/admin/tasks` stays the club's list.
+ * named folds inside it, **both closed on arrival** (§752, amended: the owner, 2026-10-16, «Astea
+ * trebuie să fie separate mai bine și collapsed by default») — `Panel` with `collapsible`, the house's
+ * boxed `<details>`, whose `openWhen` (`shared/ui/fold.ts`) says why one opens by itself:
+ * «Lipsește pe pagină» (computed from the event, each row a link to the card that fills it, gone once
+ * filled) and «Sarcini» (the chips «Toate / Ale mele», the add row, and the club's own rows, each a tick
+ * box, the words and, small on the right, the priority, who and by when, with a pencil that opens the
+ * row's edit form in place; the ticked rows folded under «Gata»). Each fold's row says what is inside
+ * while it is shut (`summariseTodoFolds`: how many, the most pressing priority, «ale mele»,
+ * «întârziate»), counted over all the data and never over the filter. Each list is in the order
+ * priority, then the due day, then age. Backoffice only; `/admin/tasks` stays the club's list.
+ *
+ * «Sarcini» opens by itself only for a refusal of its own forms, a press that just worked, «Ale mele»
+ * being on, or an address (`#box-todos-own`, a row's id) that names it or something inside it
+ * (`OpenFoldFromHash`); «Lipsește pe pagină» only for an address that names it or one of its rows.
  *
  * A Server Component of plain forms, like the club's checklist it follows (`ClubTodoPanel`): the tick,
  * the add, the edit and the delete each post to a Server Action, so the card works with scripts off, and
@@ -121,15 +140,19 @@ const TICK_SX = { minWidth: 44, width: 44, height: 44, p: 0, borderRadius: 1, "&
  * action of the backoffice does (`todo-actions.ts`). A row's edit form lives in the `<details>` its line is
  * the summary of; the fold is keyed on the row's words, so a save that changed them draws it closed.
  */
-export default async function EventTodoCard({ locale, eventId, computed, items, staff, languageNames, mayEdit, currentStaffId, mine, today, error }: Props) {
+export default async function EventTodoCard({ locale, eventId, computed, items, staff, languageNames, mayEdit, currentStaffId, mine, today, error, saved = false }: Props) {
   const t = await getTranslations("Admin");
   const words = await confirmWords();
 
-  const rows = eventTodoRows(computed, items, mine ? { mineOf: currentStaffId } : {});
-  const pageRows = rows.open.filter((row): row is Extract<TodoRow, { kind: "page" }> => row.kind === "page");
+  // «Ale mele» filters the club's tasks only (it sits inside «Sarcini»): what the page lacks has nobody,
+  // so «Lipsește pe pagină» is drawn from all the rows whatever the filter.
+  const everything = eventTodoRows(computed, items);
+  const rows = mine ? eventTodoRows(computed, items, { mineOf: currentStaffId }) : everything;
+  const pageRows = everything.open.filter((row): row is Extract<TodoRow, { kind: "page" }> => row.kind === "page");
   const ownRows = rows.open.filter((row): row is Extract<TodoRow, { kind: "own" }> => row.kind === "own");
-  // The summary counts what is left whatever the filter, so the closed line never depends on the view.
-  const openCount = computed.length + items.filter((item) => item.doneAt === null).length;
+  // The closed lines count what is left whatever the filter, so a closed fold never depends on the view.
+  const summary = summariseTodoFolds(computed, items, currentStaffId, today);
+  const openCount = summary.page.count + summary.own.count;
   const eventPath = getPathname({ locale, href: { pathname: "/admin/events/[id]", params: { id: eventId } } });
 
   const boxMessages = await refusalMessages({
@@ -177,13 +200,32 @@ export default async function EventTodoCard({ locale, eventId, computed, items, 
     </>
   );
 
-  const priorityChip = (priority: EventTodoPriority) => (
-    <StatusChip
-      glyph={PRIORITY_CHIP[priority].glyph}
-      color={PRIORITY_CHIP[priority].color}
-      label={t(`eventTodos.priority.${priority}`)}
-      testId="event-todo-priority"
-    />
+  const priorityChip = (priority: EventTodoPriority, testId = "event-todo-priority") => (
+    <StatusChip glyph={PRIORITY_CHIP[priority].glyph} color={PRIORITY_CHIP[priority].color} label={t(`eventTodos.priority.${priority}`)} testId={testId} />
+  );
+
+  /** A closed fold's row: its parts after the title, a middle dot between, the priority as a chip at the end. */
+  const foldLine = (parts: readonly string[], top: EventTodoPriority | null): ReactNode => (
+    <>
+      {parts.join(" · ")}
+      {top && (
+        <Box component="span" sx={{ ml: 0.75, display: "inline-block", verticalAlign: "middle" }}>
+          {priorityChip(top, "event-todo-fold-priority")}
+        </Box>
+      )}
+    </>
+  );
+  const pageLine = foldLine(
+    [summary.page.count > 0 ? t(`eventTodos.fold.pageRows.${countForm(summary.page.count, locale)}`, { count: summary.page.count }) : t("eventTodos.fold.pageNone")],
+    summary.page.top,
+  );
+  const ownLine = foldLine(
+    [
+      summary.own.count > 0 ? t("eventTodos.fold.ownCount", { count: summary.own.count }) : t("eventTodos.fold.ownNone"),
+      ...(summary.own.mine > 0 ? [t("eventTodos.fold.mine", { count: summary.own.mine })] : []),
+      ...(summary.own.overdue > 0 ? [t(`eventTodos.fold.overdue.${countForm(summary.own.overdue, locale)}`, { count: summary.own.overdue })] : []),
+    ],
+    summary.own.top,
   );
 
   /** «Lipsește pe pagină»: the whole row is the link to the card that fills the field. */
@@ -191,7 +233,7 @@ export default async function EventTodoCard({ locale, eventId, computed, items, 
     const { todo } = row;
     const text = t(`eventTodos.page.${todo.rule}`, { language: todo.locale ? (languageNames[todo.locale] ?? todo.locale) : "" });
     return (
-      <Box component="li" key={row.key} data-testid="event-todo-page-row" data-rule={todo.id} sx={ROW_SX}>
+      <Box component="li" key={row.key} id={rowId(row.key)} data-testid="event-todo-page-row" data-rule={todo.id} sx={ROW_SX}>
         {/* A plain in-page link — the browser's own hash change opens the folds around the field
             (`OpenFoldFromHash`, §336), which a soft navigation of the locale-aware `Link` would not. */}
         <Box
@@ -264,7 +306,7 @@ export default async function EventTodoCard({ locale, eventId, computed, items, 
 
     if (!mayEdit) {
       return (
-        <Box component="li" key={row.key} data-testid="event-todo-item" data-item-id={item.id} sx={ROW_SX}>
+        <Box component="li" key={row.key} id={rowId(row.key)} data-testid="event-todo-item" data-item-id={item.id} sx={ROW_SX}>
           <Box sx={{ ...LINE_SX, gridTemplateColumns: { xs: "minmax(0, 1fr)", sm: "minmax(0, 1fr) auto" }, gridTemplateAreas: { xs: '"words" "facts"', sm: '"words facts"' } }}>
             {wordsBlock}
             {facts(item, done)}
@@ -274,7 +316,7 @@ export default async function EventTodoCard({ locale, eventId, computed, items, 
     }
 
     return (
-      <Box component="li" key={row.key} data-testid="event-todo-item" data-item-id={item.id} sx={{ ...ROW_SX, display: "flex", alignItems: "flex-start", gap: 0.5 }}>
+      <Box component="li" key={row.key} id={rowId(row.key)} data-testid="event-todo-item" data-item-id={item.id} sx={{ ...ROW_SX, display: "flex", alignItems: "flex-start", gap: 0.5 }}>
         {/* The tick posts the state it wants, not a toggle: a form, so it works with scripts off. */}
         <Box component="form" action={setEventTodoDoneAction} sx={{ flex: "none" }} data-testid="event-todo-tick-form">
           {hidden}
@@ -354,7 +396,7 @@ export default async function EventTodoCard({ locale, eventId, computed, items, 
     );
   };
 
-  const nothing = pageRows.length === 0 && ownRows.length === 0;
+  const nothing = summary.page.count === 0 && summary.own.count === 0 && everything.done.length === 0;
 
   return (
     <Panel
@@ -372,80 +414,92 @@ export default async function EventTodoCard({ locale, eventId, computed, items, 
         {!mayEdit && <Alert severity="info">{t("eventTodos.readOnly")}</Alert>}
         {error && <Alert severity="error">{error}</Alert>}
 
-        {/* «Toate» / «Ale mele»: the lines given to the reader. Two links, 44 pixels tall, the state in the address (no script). */}
-        <Stack component="nav" aria-label={t("eventTodos.filterLabel")} direction="row" sx={{ flexWrap: "wrap", alignItems: "center", columnGap: 0.5, justifyContent: "flex-end" }}>
-          <ChipLink href={`${eventPath}#box-todos`} label={t("eventTodos.filterAll")} active={!mine} current={!mine ? "page" : undefined} />
-          <ChipLink href={`${eventPath}?mine=1#box-todos`} label={t("eventTodos.filterMine")} active={mine} current={mine ? "page" : undefined} />
-        </Stack>
-
-        {pageRows.length > 0 && (
-          <Box component="section" aria-labelledby="event-todos-page-heading">
-            <Typography id="event-todos-page-heading" component="h3" sx={GROUP_HEADING_SX}>
-              {t("eventTodos.groupPage")}
-            </Typography>
+        {/* «Lipsește pe pagină»: a named fold, shut on arrival, whose row says how many and how pressing. Nothing missing
+            is a fold too, shut, saying so — never a hidden one. Opens by itself only for an address that names it or a row. */}
+        <Panel glyph="todoPage" collapsible level={3} id="box-todos-page" title={t("eventTodos.groupPage")} aside={pageLine} data-testid="event-todos-page">
+          {pageRows.length > 0 ? (
             <Box component="ul" aria-label={t("eventTodos.groupPage")} sx={{ listStyle: "none", m: 0, p: 0 }} data-testid="event-todos-page-list">
               {pageRows.map(pageRow)}
             </Box>
-          </Box>
-        )}
-
-        <Box component="section" aria-labelledby="event-todos-own-heading">
-          <Typography id="event-todos-own-heading" component="h3" sx={GROUP_HEADING_SX}>
-            {t("eventTodos.groupOwn")}
-          </Typography>
-
-          {/* One line to add a task: the words, the priority, «Adaugă» — Enter sends it; who and by when behind «Mai multe». */}
-          {mayEdit && (
-            <ActionForm action={addEventTodoAction} scope="todo-new" messages={boxMessages} data-testid="event-todo-add">
-              {hidden}
-              <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "flex-start", gap: 1, pt: 1 }}>
-                <RecallField
-                  name="text"
-                  label={t("eventTodos.add.label")}
-                  required
-                  size="small"
-                  sx={{ flex: "1 1 220px", minWidth: 0 }}
-                  slotProps={{ htmlInput: { maxLength: EVENT_TODO_TEXT_MAX } }}
-                />
-                <RecallField
-                  name="priority"
-                  select
-                  label={t("eventTodos.field.priority")}
-                  defaultValue="NORMAL"
-                  size="small"
-                  sx={{ flex: "0 0 140px" }}
-                  slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}
-                >
-                  {priorityOptions}
-                </RecallField>
-                <GlyphSubmitButton label={t("eventTodos.add.save")} pendingLabel={t("eventTodos.add.saving")} icon="add" />
-              </Box>
-              <Panel glyph="add" collapsible level={3} title={t("eventTodos.add.more")}>
-                <Stack spacing={1.5} sx={{ pb: 1.5, pt: 0.5, maxWidth: 640 }}>
-                  {whoAndWhen(null)}
-                </Stack>
-              </Panel>
-            </ActionForm>
-          )}
-
-          {ownRows.length > 0 ? (
-            <Box component="ul" aria-label={t("eventTodos.groupOwn")} sx={{ listStyle: "none", m: 0, mt: 0.5, p: 0 }} data-testid="event-todos-list">
-              {ownRows.map(ownRow)}
-            </Box>
           ) : (
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }} data-testid="event-todos-empty">
-              {mine ? t("eventTodos.emptyMine") : nothing || !mayEdit ? t("eventTodos.empty") : t("eventTodos.noTasks")}
+            <Typography variant="body2" color="text.secondary" data-testid="event-todos-page-none">
+              {t("eventTodos.fold.pageNoneBody")}
             </Typography>
           )}
-        </Box>
+        </Panel>
 
-        {rows.done.length > 0 && (
-          <Panel glyph="confirmation" collapsible level={3} title={t("eventTodos.doneTitle", { count: rows.done.length })} data-testid="event-todos-done">
-            <Box component="ul" sx={{ listStyle: "none", m: 0, p: 0 }}>
-              {rows.done.map(ownRow)}
-            </Box>
-          </Panel>
-        )}
+        {/* «Sarcini»: the club's own rows with everything that belongs to them — the filter, the add row, «Gata». It opens by
+            itself for a refusal of its forms, a press that worked, «Ale mele» on, or an address that names it. */}
+        <Panel
+          glyph="todoOwn"
+          collapsible
+          level={3}
+          id="box-todos-own"
+          title={t("eventTodos.groupOwn")}
+          aside={ownLine}
+          openWhen={{ refused: Boolean(error), saved, inUse: mine }}
+          data-testid="event-todos-own"
+        >
+          <Stack spacing={1}>
+            {/* «Toate» / «Ale mele»: the lines given to the reader. Two links, 44 pixels tall, the state in the address (no script). */}
+            <Stack component="nav" aria-label={t("eventTodos.filterLabel")} direction="row" sx={{ flexWrap: "wrap", alignItems: "center", columnGap: 0.5 }}>
+              <ChipLink href={`${eventPath}#box-todos-own`} label={t("eventTodos.filterAll")} active={!mine} current={!mine ? "page" : undefined} />
+              <ChipLink href={`${eventPath}?mine=1#box-todos-own`} label={t("eventTodos.filterMine")} active={mine} current={mine ? "page" : undefined} />
+            </Stack>
+
+            {/* One line to add a task: the words, the priority, «Adaugă» — Enter sends it; who and by when behind «Mai multe». */}
+            {mayEdit && (
+              <ActionForm action={addEventTodoAction} scope="todo-new" messages={boxMessages} data-testid="event-todo-add">
+                {hidden}
+                <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "flex-start", gap: 1, pt: 0.5 }}>
+                  <RecallField
+                    name="text"
+                    label={t("eventTodos.add.label")}
+                    required
+                    size="small"
+                    sx={{ flex: "1 1 220px", minWidth: 0 }}
+                    slotProps={{ htmlInput: { maxLength: EVENT_TODO_TEXT_MAX } }}
+                  />
+                  <RecallField
+                    name="priority"
+                    select
+                    label={t("eventTodos.field.priority")}
+                    defaultValue="NORMAL"
+                    size="small"
+                    sx={{ flex: "0 0 140px" }}
+                    slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}
+                  >
+                    {priorityOptions}
+                  </RecallField>
+                  <GlyphSubmitButton label={t("eventTodos.add.save")} pendingLabel={t("eventTodos.add.saving")} icon="add" />
+                </Box>
+                <Panel glyph="add" collapsible level={4} title={t("eventTodos.add.more")}>
+                  <Stack spacing={1.5} sx={{ pb: 1.5, pt: 0.5, maxWidth: 640 }}>
+                    {whoAndWhen(null)}
+                  </Stack>
+                </Panel>
+              </ActionForm>
+            )}
+
+            {ownRows.length > 0 ? (
+              <Box component="ul" aria-label={t("eventTodos.groupOwn")} sx={{ listStyle: "none", m: 0, p: 0 }} data-testid="event-todos-list">
+                {ownRows.map(ownRow)}
+              </Box>
+            ) : (
+              <Typography variant="body2" color="text.secondary" data-testid="event-todos-empty">
+                {mine ? t("eventTodos.emptyMine") : nothing || !mayEdit ? t("eventTodos.empty") : t("eventTodos.noTasks")}
+              </Typography>
+            )}
+
+            {rows.done.length > 0 && (
+              <Panel glyph="confirmation" collapsible level={4} title={t("eventTodos.doneTitle", { count: rows.done.length })} data-testid="event-todos-done">
+                <Box component="ul" sx={{ listStyle: "none", m: 0, p: 0 }}>
+                  {rows.done.map(ownRow)}
+                </Box>
+              </Panel>
+            )}
+          </Stack>
+        </Panel>
       </Stack>
     </Panel>
   );
