@@ -76,9 +76,10 @@ export type RegistrationCsvRow = {
   memberVerified: boolean;
   /**
    * The row is one of the club's runners (`domain/club-runner.ts#isClubRunner`, §787): the «Club runner» cell, "Da" or
-   * empty, which the spreadsheet's colour rules and the statistics footer's formulas read. Absent reads as no.
+   * empty, which the spreadsheet's colour rules and the statistics footer's formulas read. Required: a caller that
+   * forgot it would silently write no blue cell and a club count of 0.
    */
-  clubRunner?: boolean;
+  clubRunner: boolean;
   /** When the entrant ticked "I am medically fit" (§171); empty for a desk or phone entry. */
   fitnessDeclaredAt: string | null;
   /** The optional socials (§106), empty when not given. */
@@ -180,13 +181,6 @@ const HEADER = [
   "Status",
   // Declared or verified (§662): the cell says which. Same position, so a script reading by position still finds it.
   "Club member",
-  /*
-    Right after it (§787, amended; the owner's «color codes … dacă sunt membri BVR»), as on the spreadsheet: the one
-    answer the footer counts the club's runners by — a member on «Echipa», the box, or a typed club that names the
-    club — as "Da" or empty, so the file says why a row is blue. Every column after it moved one to the right; the
-    ones a script reads from the end did not.
-  */
-  "Club runner",
   "Medically fit (declared)",
   "Strava",
   "Instagram",
@@ -230,6 +224,14 @@ const HEADER = [
   "City",
   // Last (§664), for the same reason: the members' race number — "yes", "asked" or empty.
   "Member bib",
+  /*
+    Last (§787, amended; the owner's «color codes … dacă sunt membri BVR»), for the same reason — the precedent is
+    «Member bib» just above: the spreadsheet puts the column beside «Club member» (it is matched by header), the CSV
+    appends it so a script that reads by position still finds every earlier column. It is the one answer the footer
+    counts the club's runners by — a member on «Echipa», the box, or a typed club that names the club — as "Da" or
+    empty, so the file says why a row is blue.
+  */
+  "Club runner",
 ];
 
 /**
@@ -253,7 +255,6 @@ export function buildRegistrationsCsv(rows: readonly RegistrationCsvRow[], optio
         row.email,
         row.status,
         membershipCell(row),
-        clubRunnerCell(row.clubRunner),
         row.fitnessDeclaredAt ?? "",
         row.stravaUrl,
         row.instagramHandle,
@@ -281,6 +282,7 @@ export function buildRegistrationsCsv(rows: readonly RegistrationCsvRow[], optio
         row.country ?? "",
         row.city ?? "",
         memberBibExportCell(row),
+        clubRunnerCell(row.clubRunner),
         ...(options.notesHeader ? [row.notes ?? ""] : []),
       ]
         .map(csvCell)

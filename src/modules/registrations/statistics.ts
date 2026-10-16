@@ -425,7 +425,16 @@ export function statisticsCells(blocks: readonly StatisticsBlock[], words: Stati
       rows.push([]);
       rows.push([bold(words.categoryHeader), bold(words.total), bold(words.confirmed), bold(words.club), bold(words.clubConfirmed)]);
       const categoryRows: number[] = [];
-      for (const category of block.categories) {
+      /*
+        «No category» is always a row of a live table: a file in which every runner is categorised today has none in
+        `block.categories`, and the club's offline edit that blanks a sex or an age would then count the runner in
+        «Total» and in no row, so the table would stop adding up. Its formulas are differences, cached 0 now.
+      */
+      const categories =
+        scope && !block.categories.some((category) => !category.of)
+          ? [...block.categories, { label: words.noCategory, tally: emptyTally(), of: null }]
+          : block.categories;
+      for (const category of categories) {
         const here = nextRow();
         const cells = CATEGORY_COLUMNS.map((key, column): StatisticsCell => {
           const value = category.tally[key];

@@ -1162,7 +1162,7 @@
         "legendConfirmed": "Green, confirmed",
         "legendPending": "Yellow, waiting for an answer",
         "legendWaitlist": "Light blue, on the waiting list",
-        "legendEnded": "Grey, ended",
+        "legendEnded": "Grey, cancelled or expired",
         "legendMember": "Blue, a club runner: the columns «Club member», «Club runner» and «Member bib», when «Club runner» says «Da»."
       },
       "auditActorParticipant": "the participant, from their own link",
@@ -7515,6 +7515,7 @@
                 "Press «Export to Excel» (or «Export CSV»). The file holds exactly the filtered rows, without test registrations.",
                 "The file ends with «Internal notes»: one note a line, with the author's role. The column is named in the language of the page where you pressed the button.",
                 "Under the table, after one empty row, «Statistics» counts the same rows: the total, the confirmed (the active ones), each other state, how many are the club's own runners and, by sex and age band, each category. It is in the Excel only, never in the CSV.",
+                "In Excel, a row takes the colour of its state, and the member cells are blue when «Club runner» says «Da». The numbers in «Statistics» are formulas: change something offline and they recount by themselves.",
                 "The file carries identity documents and phone numbers: never send it to a group, and delete it within 7 days of the event."
               ]
             },

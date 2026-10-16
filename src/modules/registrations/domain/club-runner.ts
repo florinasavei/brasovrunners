@@ -32,6 +32,6 @@ export function isClubRunner(row: { clubMemberDeclared: boolean; memberVerified:
  */
 export const CLUB_RUNNER_YES = "Da";
 
-export function clubRunnerCell(clubRunner: boolean | undefined): string {
+export function clubRunnerCell(clubRunner: boolean): string {
   return clubRunner ? CLUB_RUNNER_YES : "";
 }

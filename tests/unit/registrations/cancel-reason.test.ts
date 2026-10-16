@@ -49,6 +49,7 @@ describe("§558 the cancellation reason", () => {
       status: "CANCELLED",
       clubMemberDeclared: false,
       memberVerified: false,
+      clubRunner: false,
       fitnessDeclaredAt: null,
       stravaUrl: "",
       instagramHandle: "",

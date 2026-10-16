@@ -166,6 +166,7 @@ describe("§650 the export carries the moment and what it is for", () => {
     status: "PENDING_DECLARATION",
     clubMemberDeclared: false,
     memberVerified: false,
+    clubRunner: false,
     fitnessDeclaredAt: null,
     stravaUrl: "",
     instagramHandle: "",

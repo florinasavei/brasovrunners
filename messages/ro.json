@@ -1162,7 +1162,7 @@
         "legendConfirmed": "Verde, confirmat",
         "legendPending": "Galben, așteaptă un răspuns",
         "legendWaitlist": "Albastru deschis, pe lista de așteptare",
-        "legendEnded": "Gri, încheiat",
+        "legendEnded": "Gri, anulat sau expirat",
         "legendMember": "Albastru, alergător al clubului: coloanele «Club member», «Club runner» și «Member bib», când «Club runner» spune «Da»."
       },
       "auditActorParticipant": "participantul, din linkul propriu",
@@ -7515,6 +7515,7 @@
                 "Apasă «Exportă Excel» (sau «Exportă CSV»). Fișierul are exact rândurile filtrate, fără înscrierile de test.",
                 "Fișierul se termină cu «Note interne»: o notă pe rând, cu rolul celui care a scris. Coloana are cuvintele limbii paginii pe care ai apăsat butonul.",
                 "Sub tabel, după un rând gol, «Statistici» numără aceleași rânduri: totalul, cei confirmați (activii), fiecare altă stare, câți sunt din club și, pe categorii (sex și vârstă), fiecare grup. Apare doar în Excel, niciodată în CSV.",
+                "În Excel, rândul are culoarea stării, iar celulele de membru sunt albastre când «Club runner» spune «Da». Numerele din «Statistici» sunt formule: le schimbi offline și se recalculează singure.",
                 "Fișierul are acte de identitate și telefoane: nu-l trimite pe grupuri și șterge-l în cel mult 7 zile de la eveniment."
               ]
             },

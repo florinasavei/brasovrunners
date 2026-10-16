@@ -202,6 +202,7 @@ describe("§562 the exports", () => {
     status: "CONFIRMED",
     clubMemberDeclared: false,
     memberVerified: false,
+    clubRunner: false,
     fitnessDeclaredAt: null,
     stravaUrl: "",
     instagramHandle: "",

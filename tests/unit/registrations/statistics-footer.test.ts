@@ -38,6 +38,7 @@ const sheetRow = (over: Partial<RegistrationSheetRow> = {}): RegistrationSheetRo
     clubName: "",
     clubMemberDeclared: false,
     memberVerified: false,
+    clubRunner: false,
     fitnessDeclaredAt: null,
     stravaUrl: "",
     instagramHandle: "",

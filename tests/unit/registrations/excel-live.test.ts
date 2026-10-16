@@ -5,7 +5,7 @@ import { buildRegistrationsCsv, type RegistrationCsvRow } from "@/modules/regist
 import { CLUB_RUNNER_YES, clubRunnerCell, isClubRunner } from "@/modules/registrations/domain/club-runner";
 import { colourRules, ROW_TINTS, STATUS_TINT, statusesOfTint, TINT_FILL } from "@/modules/registrations/sheet-colours";
 import { buildSponsorListWorkbook } from "@/modules/registrations/sponsor-sheet";
-import { statisticsOf, statisticsWordsFrom, type StatisticsWords } from "@/modules/registrations/statistics";
+import { statisticsCells, statisticsOf, statisticsWordsFrom, type StatisticsWords } from "@/modules/registrations/statistics";
 import { buildRegistrationsWorkbook, REGISTRATION_SHEET_HEADERS, type RegistrationSheetRow } from "@/modules/registrations/workbook";
 import { contrastRatio } from "@/modules/appearance/domain/tint-contrast";
 import { CLUB_NAME, SHEET_TINT } from "@/theme/brand";
@@ -46,6 +46,7 @@ const sheetRow = (over: Partial<RegistrationSheetRow> = {}): RegistrationSheetRo
     clubName: "",
     clubMemberDeclared: false,
     memberVerified: false,
+    clubRunner: false,
     fitnessDeclaredAt: null,
     stravaUrl: "",
     instagramHandle: "",
@@ -215,21 +216,25 @@ describe("§787 the «Club runner» column: the one predicate, written where a f
     expect(CLUB_RUNNER_YES).toBe("Da");
     expect(clubRunnerCell(true)).toBe("Da");
     expect(clubRunnerCell(false)).toBe("");
-    expect(clubRunnerCell(undefined)).toBe("");
   });
 
-  it("is in the CSV too, in the same place, with the same cell", () => {
+  it("is in the CSV too, as the last fixed column (the file's convention, §425/§664), with the same cell", () => {
     const base: RegistrationCsvRow = {
       eventTitle: "Test", registeredName: "Ana", firstName: "Ana", lastName: "Pop", idDocument: "", email: "a@example.ro", status: "CONFIRMED", clubMemberDeclared: false,
-      memberVerified: false, fitnessDeclaredAt: null, stravaUrl: "", instagramHandle: "", guardianName: "", guardianIdDocument: "", submittedAt: "", confirmedAt: "", checkedInAt: "", emailBounced: false,
+      memberVerified: false, clubRunner: false, fitnessDeclaredAt: null, stravaUrl: "", instagramHandle: "", guardianName: "", guardianIdDocument: "", submittedAt: "", confirmedAt: "", checkedInAt: "", emailBounced: false,
     };
-    const [header, club, other, absent] = buildRegistrationsCsv([{ ...base, clubRunner: true }, { ...base, clubRunner: false }, base]).split("\r\n");
+    const [header, club, other] = buildRegistrationsCsv([{ ...base, clubRunner: true }, base]).split("\r\n");
     const columns = header.split(",");
-    expect(columns[columns.indexOf("Club member") + 1]).toBe("Club runner");
+    // Last, after «Member bib», as a script that reads by position expects: every earlier column keeps its index.
+    expect(columns.at(-1)).toBe("Club runner");
+    expect(columns.at(-2)).toBe("Member bib");
+    expect(columns.indexOf("Club member") + 1).toBe(columns.indexOf("Medically fit (declared)"));
     const at = columns.indexOf("Club runner");
     expect(club.split(",")[at]).toBe("Da");
     expect(other.split(",")[at]).toBe("");
-    expect(absent.split(",")[at]).toBe("");
+    // With «Note interne» the notes stay the very last column.
+    const withNotes = buildRegistrationsCsv([base], { notesHeader: "Note interne" }).split("\r\n")[0].split(",");
+    expect(withNotes.slice(-2)).toEqual(["Club runner", "Note interne"]);
     // The same rows, no styling and no footer: the legend and the statistics are the spreadsheet's alone.
     expect(buildRegistrationsCsv([base]).split("\r\n")).toHaveLength(2);
     expect(buildRegistrationsCsv([base])).not.toMatch(/Culori|Colours|Statistici|COUNTIF/);
@@ -432,6 +437,48 @@ describe("§787 the statistics are formulas with today's number cached beside th
     const categories = [...Array(noCategory - (rows.findIndex((line) => line?.[0] === RO.categoryHeader) + 1)).keys()].map((index) => rows.findIndex((line) => line?.[0] === RO.categoryHeader) + 2 + index);
     const total = (column: string) => categories.reduce((sum, rowNumber) => sum + evaluated(buffer, edited).get(`${column}${rowNumber}`)!, 0) + evaluated(buffer, edited).get(`${column}${noCategory + 1}`)!;
     expect(total("B")).toBe(9);
+  });
+
+  it("always holds a «No category» row, so an offline edit that blanks a runner's age or sex still leaves the table adding up", async () => {
+    // Every runner is categorised when the file is written: the tally has no «no category» group today.
+    const data = [
+      row({ status: "CONFIRMED", sex: "Female", ageOnRaceDay: 25, clubMemberDeclared: true }),
+      row({ status: "CONFIRMED", sex: "Male", ageOnRaceDay: 35 }),
+      row({ status: "PENDING_DECLARATION", sex: "Female", ageOnRaceDay: 45 }),
+      row({ status: "WAITLISTED", sex: "Male", ageOnRaceDay: 55 }),
+      row({ status: "CONFIRMED", sex: "Male", ageOnRaceDay: 16 }),
+    ];
+    const buffer = await build(data);
+    const rows = readSheet(buffer).rows;
+    const formulas = formulasOf(buffer);
+    const header = rows.findIndex((line) => line?.[0] === RO.categoryHeader);
+    const noCategory = rows.findIndex((line) => line?.[0] === RO.noCategory);
+    expect(noCategory).toBeGreaterThan(header);
+    // The row is the table's last, a difference of the group's count and the rows above it, cached 0 today.
+    const totalRow = rows.findIndex((line) => line?.[0] === RO.total) + 1;
+    expect(formulas.get(`B${noCategory + 1}`)).toEqual({ formula: `B${totalRow}-SUM(B${header + 2}:B${noCategory})`, cached: "0" });
+    for (const column of "BCDE") expect(formulas.get(`${column}${noCategory + 1}`)?.cached, column).toBe("0");
+    for (const [reference, result] of evaluated(buffer)) expect(String(result), reference).toBe(formulas.get(reference)!.cached);
+
+    // The club blanks one age offline: «Total» still counts the runner and the table still adds up, through that row.
+    const grid = gridOf(buffer);
+    const edited = grid.map((line) => (line ? [...line] : line)) as Grid;
+    edited[2][headerAt("Age on race day")] = undefined;
+    const after = evaluated(buffer, edited);
+    const categoryRows = Array.from({ length: noCategory - header - 1 }, (_, index) => header + 2 + index);
+    // Each column's lines above the table: the group's total, confirmed, club and club-confirmed.
+    const lineOf = (label: string) => rows.findIndex((line) => line?.[0] === label) + 1;
+    const group = { B: lineOf(RO.total), C: lineOf(RO.confirmed), D: lineOf(RO.club), E: lineOf(RO.clubConfirmed) };
+    for (const [column, line] of Object.entries(group)) {
+      const summed = categoryRows.reduce((sum, rowNumber) => sum + after.get(`${column}${rowNumber}`)!, 0) + after.get(`${column}${noCategory + 1}`)!;
+      expect(summed, `column ${column}`).toBe(after.get(`B${line}`));
+    }
+    expect(after.get(`B${totalRow}`)).toBe(5);
+    expect(after.get(`B${noCategory + 1}`)).toBe(1);
+    expect(after.get(`C${noCategory + 1}`)).toBe(1);
+    // Without a sheet around it (no ranges) the table is the tally's own rows, as before.
+    const bare = statisticsCells(statisticsOf(data, RO), RO);
+    expect(bare.some((cells) => cells[0] && (cells[0] as { value?: string }).value === RO.noCategory)).toBe(false);
   });
 
   it("asks the workbook to recalculate on open, and only when there is a formula to recalculate", async () => {
