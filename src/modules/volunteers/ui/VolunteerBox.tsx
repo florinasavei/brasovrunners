@@ -67,8 +67,8 @@ import { VOLUNTEER_BOX_ID, type VolunteerBox as BoxName, type VolunteerOutcome, 
  * a repeat (BR-REQ-031-01 criterion 3) — with the house's flash toast beside it (§427).
  *
  * **Steps, thank-you and width (§NNN; the owner, 2026-10-16: «trebuie să îi spunem voluntarului care sunt pașii și că urmează să îl
- * aprobăm», then «e prea îngust tot formularul»).** Under the intro stands «Cum funcționează voluntariatul» (`VolunteerSteps`, folded as
- * the register page folds its own); after a send the box is the thank-you with «Ce urmează» (`VolunteerDone`); and the form spans the
+ * aprobăm», then «e prea îngust tot formularul»).** Under the intro stands «Cum funcționează voluntariatul» (`VolunteerSteps`, open at once: the page is the
+ * form itself, as the registration form's steps are open; the fold is for a page that is not the form); after a send the box is the thank-you with «Ce urmează» (`VolunteerDone`); and the form spans the
  * page, which is the register page's width, its boxes in two columns from `md` up as the registration form's.
  *
  * The page draws this only while the offer's conditions hold (`readVolunteerOffer`, `volunteerOfferClosedFor`); the
@@ -234,7 +234,7 @@ export default async function VolunteerBox({
               folded`), the summary saying the one fact a visitor wants first — that the organizers choose the role and confirm the person —
               and the third step saying it in full.
             */}
-            <VolunteerSteps folded minors={minors} contact={hasContact} />
+            <VolunteerSteps minors={minors} contact={hasContact} />
 
             {outcome && (
               <Alert severity={outcome === "full" ? "warning" : "error"} role="alert" data-testid={`volunteer-${outcome}`}>

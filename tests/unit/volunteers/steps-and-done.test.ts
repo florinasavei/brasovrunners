@@ -175,7 +175,7 @@ describe("§NNN «Cum funcționează voluntariatul»: four steps, a glyph each, 
 });
 
 describe("§NNN the steps stand on the volunteers' form, under the intro and above the roles — and the intro does not say it twice", () => {
-  it("draws the intro, then the folded steps, then «Ce ești dispus(ă) să faci»", async () => {
+  it("draws the intro, then the open steps, then «Ce ești dispus(ă) să faci»", async () => {
     const page = await draw();
     const intro = page.indexOf("Evenimentul are nevoie de ajutor");
     const fold = page.indexOf('data-testid="volunteer-steps"');
@@ -185,17 +185,19 @@ describe("§NNN the steps stand on the volunteers' form, under the intro and abo
     expect(roles).toBeGreaterThan(fold);
   });
 
-  it("says «Organizatorii îți aleg rolul și te confirmă» in the third step and in the fold's summary — never in the intro — and the intro keeps «nu ține loc»", async () => {
+  it("says «Organizatorii îți aleg rolul și te confirmă» in the third step only — open, no summary; never in the intro — and the intro keeps «nu ține loc»", async () => {
     const page = await draw();
-    // The step's title (capital) once; the summary (lower case) once, so a closed fold still tells the visitor.
+    // The step's title (capital) once; the page is the form, so the steps are open and no lower-case fold summary repeats it.
     expect(page.match(/Organizatorii îți aleg rolul și te confirmă/g)).toHaveLength(1);
-    expect(page.match(/organizatorii îți aleg rolul și te confirmă/g)).toHaveLength(1);
+    expect(page.match(/organizatorii îți aleg rolul și te confirmă/g)).toBeNull();
+    expect(page).not.toContain("<details data-testid=\"volunteer-steps\"");
+    expect(page).toContain('data-testid="volunteer-step-role"');
     expect(page).toContain("Nu e o înscriere la cursă și nu ține loc.");
     expect(ro.Event.volunteers.intro).not.toMatch(/te confirmă/);
     expect(en.Event.volunteers.intro).not.toMatch(/confirm you/);
     const english = await draw({}, "en");
     expect(english.match(/The organizers choose your role and confirm you/g)).toHaveLength(1);
-    expect(english.match(/the organizers choose your role and confirm you/g)).toHaveLength(1);
+    expect(english.match(/the organizers choose your role and confirm you/g)).toBeNull();
   });
 
   it("passes the minors and the contact to the steps: the parent's sentence only with minors, the contact sentence only with a contact", async () => {

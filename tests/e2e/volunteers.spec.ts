@@ -234,14 +234,12 @@ test.describe("§754 volunteers for a race", () => {
       expect(await guest.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
       const box = guest.getByTestId("volunteer-box");
       await expect(box).toBeVisible();
-      // §NNN «Cum funcționează voluntariatul»: the steps, folded under the intro and above the roles, the way the register page folds its own.
+      // §NNN «Cum funcționează voluntariatul»: the steps, open at once under the intro and above the roles (the page is the form), as the registration form's are.
       const steps = guest.getByTestId("volunteer-steps");
       await expect(steps).toBeVisible();
-      await expect(steps).not.toHaveAttribute("open", "");
-      await expect(steps.getByTestId("volunteer-steps-summary")).toContainText("Cum funcționează: organizatorii îți aleg rolul și te confirmă");
-      expect((await steps.getByTestId("volunteer-steps-summary").boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
-      await expect(steps.getByTestId("volunteer-step-role")).toBeHidden();
-      await steps.getByTestId("volunteer-steps-summary").click();
+      await expect(steps.locator("summary")).toHaveCount(0);
+      await expect(steps.getByRole("heading", { name: "Cum funcționează voluntariatul" })).toBeVisible();
+      await expect(steps.getByTestId("volunteer-step-role")).toBeVisible();
       for (const [key, words] of [
         ["form", "1. Completezi formularul"],
         ["email", "2. Primești emailul de primire"],
@@ -257,7 +255,6 @@ test.describe("§754 volunteers for a race", () => {
       // Above the roles, under the intro.
       const stepsAt = (await steps.boundingBox())!;
       expect(stepsAt.y).toBeLessThan((await guest.getByTestId("volunteer-roles").boundingBox())!.y);
-      await steps.getByTestId("volunteer-steps-summary").click();
       // §NNN the form spans the page (the register page's width), no longer a 560-pixel column; from `md` up its boxes stand in two columns.
       const viewport = guest.viewportSize()!.width;
       const formBox = (await guest.getByTestId("volunteer-form").boundingBox())!;
