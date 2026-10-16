@@ -226,6 +226,23 @@ export const CARD_FOLD_SX = {
 export const CARD_DOOR_SX = { mt: 0.5 } as const;
 
 /**
+ * Words a screen reader hears and nobody sees (§470, amended: the lead card's «Alergarea principală» is
+ * said inside its title's link, not drawn as a chip beside it). Pixel sizes as strings, never the bare
+ * numbers: `sx` turns a number in `(0, 1]` into a percentage (`GlyphChip.tsx` explains).
+ */
+export const CARD_SR_ONLY_SX = {
+  position: "absolute",
+  width: "1px",
+  height: "1px",
+  padding: 0,
+  margin: "-1px",
+  overflow: "hidden",
+  clip: "rect(0 0 0 0)",
+  whiteSpace: "nowrap",
+  border: 0,
+} as const;
+
+/**
  * The listing's one grid of cards (§470): one column on a phone, two from `md`, three from `xl` —
  * every card the same width, the featured one included (the owner, 2026-09-26: "nu neaparat mai lat
  * pe desktop, e ok sa afisam 2 sau 3 carduri, dar toate cardurile trebuie sa aiba aceeasi latime").

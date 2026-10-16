@@ -61,7 +61,6 @@ export default async function PillSection({ locale }: { locale: Locale }) {
 
       <Block title={t("design.pills.marks")} note={t("design.pills.marksNote")}>
         <Box sx={{ ...ROW_SX, gap: 1 }} data-testid="design-marks">
-          <GlyphChip glyph="featured" color="primary" label={tEvents("featured")} />
           <GlyphChip glyph="special" color="secondary" label={tEvent("special")} />
           <GlyphChip glyph="repeat" variant="outlined" label={t("design.pills.weekly")} />
           <GlyphChip glyph="partner" variant="outlined" label={t("design.pills.partner")} />

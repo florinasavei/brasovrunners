@@ -15,7 +15,7 @@ import { raceWeek } from "../domain/race-week";
 import type { PublicEventPage } from "../repository";
 import { datedOrNull } from "../domain/dated";
 import CardDoor from "./CardDoor";
-import { CARD_BODY_SX, CARD_CHIPS_SX, CARD_DOOR_SX, CARD_TAP_SX, CARD_TITLE_SX, GROUP_GAP } from "./card-layout";
+import { CARD_BODY_SX, CARD_CHIPS_SX, CARD_DOOR_SX, CARD_SR_ONLY_SX, CARD_TAP_SX, CARD_TITLE_SX, GROUP_GAP } from "./card-layout";
 import EventExcerpt from "./EventExcerpt";
 import EventFacts from "./EventFacts";
 import EventKindChips from "./EventKindChips";
@@ -59,7 +59,10 @@ import { repeatTooltip, rhythmLabel } from "./series-sentence";
  * 2026-09-26: "vreau doar sa fie primul, nu neaparat mai lat pe desktop, e ok sa afisam 2 sau 3
  * carduri, dar toate cardurile trebuie sa aiba aceeasi latime"). Given `featured`, it is the first
  * card of the grid, at the grid's one width, and differs only by its frame and background
- * (`featuredCard`) and the «Evenimentul principal» chip first among its marks — plus, in the club's
+ * (`featuredCard`) — and no chip: the frame is the mark (the owner, 2026-10-16: «când am „alergarea
+ * principală” nu vreau și încă un cip, îmi e suficient acel border»), so «Alergarea principală» is
+ * said to a screen reader only, visually hidden inside the title's link, which names the region
+ * too (`aria-labelledby`) — plus, in the club's
  * race week (§78, §377), the countdown line and the desk's "come with the QR" once registration has
  * closed, which are the one thing a visitor wants that week. It is a region named by its title, as
  * the hero was, so a screen reader can still jump to "the event the club leads with".
@@ -126,8 +129,6 @@ export default async function EventCard({
         sx={CARD_BODY_SX}
       >
         <Box sx={CARD_CHIPS_SX}>
-          {/* The one mark that says "the event the club leads with" (§470), first. */}
-          {tEvents && <GlyphChip glyph="featured" color="primary" label={tEvents("featured")} />}
           {/* What it is, with its glyph (§112). What it is run on is a pill with the facts below,
               said once on the card (§366). */}
           <EventKindChips type={event.type} surface={null} />
@@ -150,7 +151,14 @@ export default async function EventCard({
             (`CARD_TITLE_SX`): the club's blue, visited or not, underlined under a pointer or the
             keyboard. A screen reader hears the title, not every word on the card. */}
         <Typography variant="h2" component={titleAs} id={featured ? "featured-event-title" : undefined} sx={CARD_TITLE_SX}>
-          <Link href={{ pathname: "/events/[slug]", params: { slug: event.slug } }}>{event.title}</Link>
+          <Link href={{ pathname: "/events/[slug]", params: { slug: event.slug } }}>
+            {tEvents && (
+              <>
+                <Box component="span" sx={CARD_SR_ONLY_SX}>{`${tEvents("featured")}:`}</Box>{" "}
+              </>
+            )}
+            {event.title}
+          </Link>
         </Typography>
 
         {/* The short description as it was written, picture and all (§73), three lines of it and
