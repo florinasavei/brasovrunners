@@ -170,6 +170,8 @@ export const PANEL_GLYPHS = {
   badgeCut: ContentCutIcon,
   // «Puncte de control» (§757): the points of the route, a pin on the ground.
   checkpoints: PinDropIcon,
+  // The route's elevation profile (§802): the card's preview «Așa apare pe pagină» and the tick on each point — the ground's own outline.
+  routeProfile: TerrainIcon,
   // What an event's registrations are, once it has them.
   registrations: ListAltIcon,
   queue: HourglassTopIcon,

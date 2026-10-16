@@ -14,18 +14,18 @@ decision or a click only the club can make · **released** — on production, wi
 The owner, 2026-10-10: «Soon I need to start a new session from the laptop … You need to save and document everything».
 This section replaces the plan of 2026-09-30; it is what a session with none of today's conversation needs to carry on.
 
-- **Production: `BR-V3.49`** (2026-10-16 21:00: §798 «Timp limită» under «Traseu», §799 «Condiții de participare»
-  inside «Regulamentul»; no migration). Waiting for «prod»: `BR-V3.50` (§800, §801, below) — no migration.
-- **QA: `BR-V3.50`** — the volunteers' page tells the steps («Cum funcționează voluntariatul», open, on the shared
-  step list the registration uses too), the done screen mirrors «Aproape gata» with «Ce urmează», the receipt email
-  says the same, and the form is as wide as the register page (§800); the feedback page is titled «Spune-ne ceva»
-  and the lead event's card keeps its border without the «Alergarea principală» chip (§801).
-- **Building (2026-10-16 evening):** one elevation profile from the GPX — the shared pure core
-  `src/modules/routes/elevation`, the page widget above «Puncte de control» with the checkpoints the club ticks
-  «Arată pe profilul traseului» (migration `0164`), previewed in the editor (`feat/elevation-core-and-page`); then
-  the race number's strip drawn from the same core + the picture's recommended shape (`feat/bib-profile-scale`,
-  stacked); `/devs` with the database's size and growth and the month's builds, and the plan for keeping Neon and
-  Vercel light (`feat/db-and-vercel-light`).
+- **Production: `BR-V3.49`** (2026-10-16 21:00: §798, §799; no migration). Waiting for «prod», in order: `BR-V3.50`
+  (§800 the volunteers' steps and a wider form, §801 «Spune-ne ceva» and the lead card without its chip — PR #510,
+  no migration) and then `BR-V3.51` (§802, below — **migration `0164`**).
+- **QA: `BR-V3.51`** — one elevation profile from the GPX: a pure core (`src/modules/routes/elevation`: parse,
+  geometry, glyphs), the widget on the event page under the maps and above «Puncte de control» with the checkpoints
+  the club ticks «Arată pe profilul traseului» (migration `0164`, `event_checkpoints.on_profile`), a pointer readout
+  «4,5 km · 712 m», the same widget compact as a preview in the editor's «Puncte de control» card (§802).
+- **Building (2026-10-16 evening):** the race number's strip drawn from the same core — kilometres, altitudes, the
+  aid stations named, the unticked points off the strip too — and the picture's recommended shape said before the
+  upload (`feat/bib-profile-scale`, stacked on §802's branch); `/devs` with the database's size and growth and the
+  month's builds, `yarn db:sizes`, and the plan for keeping Neon and Vercel light — a retention proposal table and
+  the Vercel-Hobby fit (`feat/db-and-vercel-light`).
 - **Waiting on the owner:** the privacy notice from the new template, approved in `/admin/legal` after a lawyer reads
   the paragraph on what the site loads (its first sentence says what is used is strictly necessary and needs no consent,
   art. 4(6) of Legea nr. 506/2004, while the same paragraph says Strava may set its own cookies without a press — the
@@ -141,6 +141,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V3.51` | one elevation profile from the GPX: on the event page with the checkpoints the club ticks, previewed in the editor; the core the race number will draw from (§802) |
 | `BR-V3.50` | the volunteers' page: the steps and «we will confirm you», before the form and after it, and in the receipt email; a wider form; the notice's cookie sentence names the form (§800) · the feedback page's title without «(anonim)»; the featured card keeps its border and loses its chip (§801) |
 | `BR-V3.49` | the event page: «Timp limită» under «Traseu» (§798) · the event editor: «Condiții de participare» inside «Regulamentul», beside the minimum age (§799) |
 | `BR-V3.48` | the volunteers' page: the kinder note as an information banner (§797) |

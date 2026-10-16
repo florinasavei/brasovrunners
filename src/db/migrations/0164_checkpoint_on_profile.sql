@@ -1,0 +1,1 @@
+ALTER TABLE "event_checkpoints" ADD COLUMN "on_profile" boolean DEFAULT true NOT NULL;

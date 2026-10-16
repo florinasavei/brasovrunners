@@ -17,6 +17,7 @@ import { eventCheckpointContext, listCheckpoints } from "@/modules/event-checkpo
 import { offerableProposals } from "@/modules/event-checkpoints/domain/gpx-waypoints";
 import { canEditCheckpoints } from "@/modules/event-checkpoints/domain/checkpoint";
 import { loadGpxWaypoints } from "@/modules/event-checkpoints/gpx-file";
+import { readRouteElevation } from "@/modules/routes/elevation/read";
 import { readRouteGpx } from "@/modules/events/domain/route-gpx";
 import CheckpointsCard, { CheckpointForms } from "@/modules/content/events/ui/CheckpointsCard";
 import { canEditEventTodos, canReadEventTodos } from "@/modules/event-todos/domain/event-todo";
@@ -384,6 +385,9 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   const checkpoints = await listCheckpoints(db, event.id);
   const gpxWaypoints = await loadGpxWaypoints(readRouteGpx(event.routeGpx)?.key);
   const checkpointRouteKm = eventCheckpointContext(event, gpxWaypoints?.trackMeters ?? null).routeKm;
+  // The same GPX's elevation profile (§802), for the card's preview «Așa apare pe pagină»: the saved file, read from the store (kept in this process by the file's key), a file the store cannot give left out.
+  const profileKey = readRouteGpx(event.routeGpx)?.key ?? null;
+  const checkpointsProfile = profileKey ? await readRouteElevation(profileKey).catch(() => null) : null;
   // The service offers the same list by the same function, so the `pick` indexes the preview posts mean the same rows.
   const gpxPlaced = gpxWaypoints ? offerableProposals(gpxWaypoints.proposals, checkpointRouteKm) : null;
   const checkpointsGpx =
@@ -1086,6 +1090,8 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                         checkpoints={checkpoints}
                         mayEdit={canEditCheckpoints(staffUser.role)}
                         routeKm={checkpointRouteKm}
+                        profile={checkpointsProfile}
+                        distanceMeters={event.distanceMeters}
                         gpx={checkpointsGpx}
                         previewOpen={query.checkpointsGpx === "1"}
                       />
