@@ -216,6 +216,8 @@ export default async function EventDetailPage({ params, query, canEdit = false, 
   const checkpoints = await readOrWhileAway(() => cachedEventCheckpoints(event.id), []);
   // The route's elevation profile (§NNN): read from the GPX in the store and kept by the file's key (no wake of the database,
   // no 4 MB read per visitor) — a part of the page too, so a store that cannot answer leaves the chart out and nothing else.
+  // A members' event's checkpoints and profile go through the same cache, keyed by its id and its file: the same accepted exception as
+  // the checkpoints above — this point is reached only after the members gate, and the key is unguessable without the id.
   const gpxKey = isStorageConfigured() ? (readRouteGpx(event.routeGpx)?.key ?? null) : null;
   const elevation = gpxKey ? await readOrWhileAway(() => cachedRouteElevation(event.id, gpxKey), null) : null;
   return (

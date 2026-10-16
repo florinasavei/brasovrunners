@@ -156,7 +156,7 @@ export function niceAltitudes(low: number, high: number, count: number): number[
   let best: number[] = [];
   for (const step of ALTITUDE_STEPS) {
     const values: number[] = [];
-    for (let value = Math.ceil(low / step) * step; value <= high + 1e-9; value += step) values.push(Math.round(value * 1000) / 1000);
+    for (let value = Math.ceil(low / step) * step; value <= high + 1e-9; value += step) values.push(Math.round(value * 1000) / 1000 + 0); // + 0: a rounded −0.0004 is −0, which prints as «-0»
     best = values;
     if (values.length <= count) return values;
   }

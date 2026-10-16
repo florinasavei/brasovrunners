@@ -52,16 +52,23 @@ function haversine(a: { lat: number; lon: number }, b: { lat: number; lon: numbe
   return 2 * EARTH_RADIUS_M * Math.asin(Math.min(1, Math.sqrt(h)));
 }
 
-type TrackPoint = { lat: number; lon: number; ele: number };
+/** An xsd:decimal as a GPX writes it: an optional sign, then digits with an optional fraction — «600», «-3.5», «+600», «.5», «600.». */
+const DECIMAL = "[+-]?(?:\\d+(?:\\.\\d*)?|\\.\\d+)";
+// Built once: a track has tens of thousands of points, and none of these keeps state between calls (no `g` flag).
+const LAT = new RegExp(`\\blat\\s*=\\s*["']\\s*(${DECIMAL})\\s*["']`);
+const LON = new RegExp(`\\blon\\s*=\\s*["']\\s*(${DECIMAL})\\s*["']`);
+const ELE = new RegExp(`<(?:\\w+:)?ele>\\s*(${DECIMAL})\\s*</(?:\\w+:)?ele>`);
+
+type TrackPoint ={ lat: number; lon: number; ele: number };
 
 function pointsOf(text: string, element: "trkpt" | "rtept"): TrackPoint[] {
   const found: TrackPoint[] = [];
   const pattern = new RegExp(`<(?:\\w+:)?${element}\\b([^>]*?)(?:/>|>([\\s\\S]*?)</(?:\\w+:)?${element}\\s*>)`, "g");
   for (const match of text.matchAll(pattern)) {
     const attributes = match[1] ?? "";
-    const lat = /\blat\s*=\s*["']\s*(-?\d+(?:\.\d+)?)\s*["']/.exec(attributes)?.[1];
-    const lon = /\blon\s*=\s*["']\s*(-?\d+(?:\.\d+)?)\s*["']/.exec(attributes)?.[1];
-    const ele = /<(?:\w+:)?ele>\s*(-?\d+(?:\.\d+)?)\s*<\/(?:\w+:)?ele>/.exec(match[2] ?? "")?.[1];
+    const lat = LAT.exec(attributes)?.[1];
+    const lon = LON.exec(attributes)?.[1];
+    const ele = ELE.exec(match[2] ?? "")?.[1];
     if (lat === undefined || lon === undefined || ele === undefined) continue;
     const point = { lat: Number(lat), lon: Number(lon), ele: Number(ele) };
     if (Math.abs(point.lat) <= 90 && Math.abs(point.lon) <= 180 && Number.isFinite(point.ele)) found.push(point);

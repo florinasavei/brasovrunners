@@ -3,6 +3,8 @@ import ElevationPointer, { type PointerChart } from "./ElevationPointer";
 import { elevationGeometry, type ElevationGeometry, type ElevationMarkerInput, pathOf } from "./geometry";
 import { ELEVATION_GLYPH_PATHS, GLYPH_EVEN_ODD } from "./glyphs";
 import type { ElevationProfileData } from "./parse";
+import { fill } from "./pointer";
+import { VISUALLY_HIDDEN } from "@/shared/ui/visually-hidden";
 
 /**
  * The route's elevation profile as a picture (§NNN, amending §718 and §757; the owner, 2026-10-16: «I would like to have a
@@ -23,7 +25,8 @@ import type { ElevationProfileData } from "./parse";
  * a wide one (1000 × 280, labels 19 units, 11 px from 700 px of screen), the one that fits shown by CSS alone — a single
  * viewBox would scale its labels with the screen, 11 px on a phone and 30 px on a desktop. Each is decided by the core
  * for its own box, so the labels dropped by crowding on the phone are the phone's. `variant: "compact"` is the editor's
- * preview: one small chart (400 × 170, labels 16 units), the core's compact mode (no marker words, two altitude ticks).
+ * preview: one small chart (300 × 160, labels 17 units: 11.6 px in the editor's card at a 320 px phone, where the chart is about
+ * 204 px wide), the core's compact mode (no marker words, two altitude ticks).
  * The page's chart is wrapped in the pointer island (`ElevationPointer`, which reads the point under a finger or key); the
  * preview is not interactive.
  *
@@ -54,18 +57,13 @@ type Frame = { width: number; height: number; textSize: number; altitudeTicks: n
 const FRAMES = {
   narrow: { width: 360, height: 240, textSize: 14, altitudeTicks: 4 },
   wide: { width: 1000, height: 280, textSize: 19, altitudeTicks: 5 },
-  compact: { width: 400, height: 170, textSize: 16, altitudeTicks: 2 },
+  compact: { width: 300, height: 160, textSize: 17, altitudeTicks: 2 },
 } as const satisfies Record<string, Frame>;
 
 /** The screen width, in CSS pixels, from which the wide chart is shown instead of the narrow one. */
 const WIDE_FROM_PX = 700;
 
-/** Text a screen reader reads and the eye never sees (`'1px'` strings: MUI's `sx` would turn the number 1 into a hundred per cent). */
-const SR_ONLY = { position: "absolute", width: "1px", height: "1px", p: 0, m: "-1px", overflow: "hidden", clip: "rect(0 0 0 0)", whiteSpace: "nowrap", border: 0 } as const;
-
-const fill = (template: string, values: Record<string, string>): string => template.replace(/\{(\w+)\}/g, (whole, key: string) => values[key] ?? whole);
-
-/** The geometry of one chart: two passes, the second with exactly the band of pin rows the first found it needed. */
+/** The geometry of one chart: passes until the room it leaves — the band of pin rows above, the width of the altitude labels at the left — is the room its own result needed. */
 function chartOf(
   frame: Frame,
   profile: ElevationProfileData,
@@ -84,12 +82,13 @@ function chartOf(
   const gap = radius / 2;
   const rowStep = radius * 2 + gap;
   const input: ElevationMarkerInput[] = markers.map((marker) => ({ km: marker.km, kinds: marker.kinds, label: null }));
-  const options = (top: number) => ({
+  const leftFor = (digits: number) => Math.ceil(digits * textSize * 0.6 + textSize * 0.4 + 4);
+  const options = (top: number, left: number) => ({
     width: frame.width,
     height: frame.height,
     inset: {
       top,
-      left: Math.ceil(widestAltitude * textSize * 0.6 + textSize * 0.4 + 4),
+      left,
       // Room for the last kilometre label's right half, the gap and the unit word.
       right: Math.ceil((widestKm * textSize * 0.6) / 2 + textSize * 0.3 + unitWidth + 3),
       bottom: Math.ceil(textSize * 1.5 + 4),
@@ -103,9 +102,22 @@ function chartOf(
     pinRadius: radius,
     compact,
   });
-  if (markers.length === 0) return elevationGeometry(profile, input, options(Math.ceil(textSize * 0.8)));
-  const probe = elevationGeometry(profile, input, options(Math.ceil(gap + 3 * rowStep + 1)));
-  return elevationGeometry(profile, input, options(Math.ceil(gap + probe.pinRows * rowStep + 1)));
+  // Without pins the top holds the «Alt» caption's line (the page's charts), so the caption never meets the highest altitude label.
+  const topFor = (rows: number) => (markers.length === 0 ? Math.ceil(textSize * (compact ? 0.8 : 1.4)) : Math.ceil(gap + rows * rowStep + 1));
+  // The altitude labels are the round values the core drew — a top tick one digit longer than the route's highest («1000» over a 990 m summit) is common — so the left room follows them.
+  const leftOf = (drawn: ElevationGeometry) => leftFor(Math.max(...drawn.altitudeTicks.map((tick) => tick.label.text.length)));
+  let top = topFor(3);
+  let left = leftFor(widestAltitude);
+  let drawn = elevationGeometry(profile, input, options(top, left));
+  for (let pass = 0; pass < 3; pass++) {
+    const nextTop = topFor(drawn.pinRows);
+    const nextLeft = drawn.altitudeTicks.length > 0 ? leftOf(drawn) : left;
+    if (nextTop === top && nextLeft === left) break;
+    top = nextTop;
+    left = nextLeft;
+    drawn = elevationGeometry(profile, input, options(top, left));
+  }
+  return drawn;
 }
 
 const INK = { fill: "currentColor" } as const;
@@ -213,7 +225,7 @@ export default function ElevationProfile({
   // The picture's own list for a screen reader, outside the SVG: the start, each pin by distance, the finish.
   const kmWords = new Intl.NumberFormat(locale, { maximumFractionDigits: 2 });
   const list = (
-    <Box component="ul" aria-label={words.points} data-testid="elevation-points" sx={SR_ONLY}>
+    <Box component="ul" aria-label={words.points} data-testid="elevation-points" sx={VISUALLY_HIDDEN}>
       <li>{fill(words.point, { name: words.start, km: kmWords.format(0) })}</li>
       {markers.map((marker, index) => (
         <li key={index}>{fill(words.point, { name: marker.name, km: kmWords.format(marker.km) })}</li>
@@ -225,7 +237,7 @@ export default function ElevationProfile({
   if (variant === "compact") {
     const geometry = chartOf(FRAMES.compact, profile, distance, markers, words, locale, true);
     return (
-      <Box component="figure" data-testid="elevation-profile" data-variant="compact" data-pins={markers.length} sx={{ m: 0, maxWidth: 440, position: "relative" }}>
+      <Box component="figure" data-testid="elevation-profile" data-variant="compact" data-pins={markers.length} sx={{ m: 0, maxWidth: FRAMES.compact.width, position: "relative" }}>
         <ProfileSvg geometry={geometry} size="compact" label={label} markers={markers} words={words} sx={{}} />
         {list}
       </Box>

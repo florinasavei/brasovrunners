@@ -107,7 +107,7 @@ import { readWithLastGood } from "@/modules/resilience/last-good";
 import { isDatabaseAwayError } from "@/modules/resilience/domain/database-away";
 import { answeringFromCacheOnly, type PublicContent, publicRead } from "./cache";
 import { type ChangesWhen, clockWindow } from "./clock";
-import { holdPageUntil, renderKind } from "./page-lifetime";
+import { DEGRADED_PAGE_SECONDS, holdPageFor, holdPageUntil, renderKind } from "./page-lifetime";
 
 /**
  * Every read a public page makes, through the data cache (`DECISIONS.md` §333).
@@ -253,15 +253,18 @@ export async function cachedEventCheckpoints(eventId: string) {
  *
  * A file that was read — with or without a profile in it — is kept; **a failed read is not**: the store's bad moment must
  * not leave the page without its chart for a day, so `ElevationUnreadable` passes through the cache (which never keeps a
- * throw) and is answered here with `null`, the chart left out of this view only. The breaker (§447) counts only the
- * database's own failures, so a store that is away opens nothing.
+ * throw) and is answered here with `null`, the chart left out of this view only — **and the static page made without it is
+ * kept a minute, not a day** (`holdPageFor`, §549, as every other part left out of a page): the CDN would otherwise serve a
+ * chartless page until the `events` tag expired. The read is `storeOnly`: it stays out of the database's breaker (§447), so
+ * a resting database never hides a chart the store can give and a store read never resets the database's back-off.
  */
 export async function cachedRouteElevation(eventId: string, gpxKey: string): Promise<ElevationProfileData | null> {
   try {
-    return await publicRead(["events.elevation", eventId, gpxKey], ["events"], () => readRouteElevation(gpxKey));
+    return await publicRead(["events.elevation", eventId, gpxKey], ["events"], () => readRouteElevation(gpxKey), undefined, { storeOnly: true });
   } catch (error) {
-    if (error instanceof ElevationUnreadable) return null;
-    throw error;
+    if (!(error instanceof ElevationUnreadable)) throw error;
+    await holdPageFor(DEGRADED_PAGE_SECONDS);
+    return null;
   }
 }
 

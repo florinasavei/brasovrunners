@@ -1,8 +1,9 @@
 "use client";
 
 import Box from "@mui/material/Box";
-import { type KeyboardEvent, type PointerEvent, type ReactNode, useEffect, useRef, useState } from "react";
-import { indexAtShare, nearestMarkerName, readoutAt, shareAtX, stepIndex, xAtShare } from "./pointer";
+import { type KeyboardEvent, type PointerEvent, type ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { VISUALLY_HIDDEN } from "@/shared/ui/visually-hidden";
+import { fill, indexAtShare, nearestMarkerName, readoutAt, readoutLeft, shareAtX, stepIndex, xAtShare } from "./pointer";
 
 /** One drawn chart's frame, plain numbers in its own viewBox: where the plot stands and what altitude it spans. */
 export type PointerChart = {
@@ -26,13 +27,8 @@ export type PointerWords = {
   hint: string;
 };
 
-/** Text a screen reader reads and the eye never sees (`'1px'` strings: MUI's `sx` would turn the number 1 into a hundred per cent). */
-const SR_ONLY = { position: "absolute", width: "1px", height: "1px", p: 0, m: "-1px", overflow: "hidden", clip: "rect(0 0 0 0)", whiteSpace: "nowrap", border: 0 } as const;
-
-const fill = (template: string, values: Record<string, string>): string => template.replace(/\{(\w+)\}/g, (whole, key: string) => values[key] ?? whole);
-
 /** Where the overlay stands, in pixels from the wrapper's top left, measured when the pointer last moved. */
-type Overlay = { index: number; spoken: boolean; left: number; top: number; height: number; dotTop: number; flip: boolean; atFoot: boolean };
+type Overlay = { index: number; spoken: boolean; left: number; top: number; height: number; dotTop: number; hostWidth: number; atFoot: boolean };
 
 /**
  * The elevation chart's pointer (§NNN; the owner, 2026-10-16: «a pointer line “4.5 KM”»): a thin line down the chart and
@@ -68,7 +64,10 @@ export default function ElevationPointer({
   children: ReactNode;
 }) {
   const root = useRef<HTMLDivElement>(null);
+  const readoutBox = useRef<HTMLDivElement>(null);
   const [at, setAt] = useState<Overlay | null>(null);
+  /** The readout's own width, measured after it is drawn, so it can be kept inside the wrapper (`readoutLeft`). */
+  const [readoutWidth, setReadoutWidth] = useState(0);
   const kmFormat = new Intl.NumberFormat(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
   const metresFormat = new Intl.NumberFormat(locale, { maximumFractionDigits: 0 });
 
@@ -107,8 +106,7 @@ export default function ElevationPointer({
       top: box.top - host.top + chart.plotTop * scale,
       height: (chart.plotBottom - chart.plotTop) * scale,
       dotTop: box.top - host.top + y * scale,
-      // Past the middle the readout sits on the line's left, so it never leaves the chart.
-      flip: left > host.width / 2,
+      hostWidth: host.width,
       // The readout stands in the half of the plot the profile is not in: at the foot, in the area's tint, where the line is high.
       atFoot: y < (chart.plotTop + chart.plotBottom) / 2,
     };
@@ -124,7 +122,7 @@ export default function ElevationPointer({
 
   const key = (event: KeyboardEvent<HTMLDivElement>) => {
     const last = points.length - 1;
-    // From nothing, a key lands on the end it moves toward; after that it steps.
+    // From nothing, a key enters from the end it moves away from (right and up land on the start, left and down on the finish); after that it steps.
     const toStart = event.key === "ArrowRight" || event.key === "ArrowUp" || event.key === "PageUp" || event.key === "Home";
     const next = at === null ? (stepIndex(0, points.length, event.key) === null ? null : toStart ? 0 : last) : stepIndex(at.index, points.length, event.key);
     if (next === null) return;
@@ -141,6 +139,12 @@ export default function ElevationPointer({
       altitude: metresFormat.format(reading.altitude),
       name: name ?? "",
     });
+
+  // The readout's width is known only once it is drawn: measured before the browser paints, so it is never seen in the wrong place.
+  useLayoutEffect(() => {
+    const width = readoutBox.current?.offsetWidth ?? 0;
+    if (width !== readoutWidth) setReadoutWidth(width);
+  }, [at, text, readoutWidth]);
 
   return (
     <Box
@@ -177,13 +181,17 @@ export default function ElevationPointer({
             sx={{ position: "absolute", left: at.left, top: at.dotTop, width: 10, height: 10, ml: "-5px", mt: "-5px", borderRadius: "50%", bgcolor: "primary.main", border: 2, borderColor: "background.paper", pointerEvents: "none" }}
           />
           <Box
+            ref={readoutBox}
             aria-hidden="true"
             data-testid="elevation-pointer-readout"
             sx={{
               position: "absolute",
-              left: at.left,
+              // Beside the line, and always inside the wrapper: a name that reaches past the screen would widen the page on a phone.
+              left: readoutLeft(at.left, readoutWidth, at.hostWidth),
               top: at.atFoot ? at.top + at.height : at.top,
-              transform: `translate(${at.flip ? "calc(-100% - 8px)" : "8px"}, ${at.atFoot ? "calc(-100% - 6px)" : "0"})`,
+              transform: at.atFoot ? "translateY(calc(-100% - 6px))" : "none",
+              width: "max-content",
+              maxWidth: at.hostWidth,
               px: 1,
               py: 0.25,
               borderRadius: 1,
@@ -194,7 +202,6 @@ export default function ElevationPointer({
               fontSize: "0.8125rem",
               fontWeight: 600,
               lineHeight: 1.4,
-              whiteSpace: "nowrap",
               pointerEvents: "none",
             }}
           >
@@ -203,7 +210,7 @@ export default function ElevationPointer({
         </>
       )}
       {/* Said for keys only: a drag would be a sentence per pixel. */}
-      <Box role="status" aria-live="polite" sx={SR_ONLY}>
+      <Box role="status" aria-live="polite" sx={VISUALLY_HIDDEN}>
         {at?.spoken ? text : ""}
       </Box>
     </Box>

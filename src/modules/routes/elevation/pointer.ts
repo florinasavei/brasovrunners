@@ -5,11 +5,32 @@
  * and its test share one rule, and nothing here needs a DOM.
  */
 
+/** A catalogue template with its `{placeholders}` filled; one that is not handed stays as written. The chart and its pointer share it. */
+export const fill = (template: string, values: Record<string, string>): string => template.replace(/{(w+)}/g, (whole, key: string) => values[key] ?? whole);
+
 /** A checkpoint is named by the pointer when it stands within this many kilometres of it. */
 export const POINTER_MARKER_REACH_KM = 0.2;
 
 /** Where the plot stands in the chart's own box, and which way it runs. */
 export type PointerScale = { plotLeft: number; plotRight: number; mirrored: boolean };
+
+/** The space between the pointer's line and the readout beside it, in pixels. */
+export const READOUT_GAP = 8;
+
+/**
+ * Where the readout's left edge stands, in pixels from the wrapper's left: beside the line, on the side of it the line is
+ * not in (the readout stays over the plot as the finger moves) when it fits there, on the other side when only that fits,
+ * and in every case **inside the wrapper** — `[0, hostWidth − width]` — so a long name never widens the page on a phone
+ * nor loses its first words at the screen's edge. A readout wider than the wrapper starts at 0 (the caller lets it wrap).
+ */
+export function readoutLeft(line: number, width: number, hostWidth: number): number {
+  const right = line + READOUT_GAP;
+  const left = line - READOUT_GAP - width;
+  const fitsRight = right + width <= hostWidth;
+  const fitsLeft = left >= 0;
+  const side = line > hostWidth / 2 ? (fitsLeft || !fitsRight ? left : right) : fitsRight || !fitsLeft ? right : left;
+  return Math.min(Math.max(0, hostWidth - width), Math.max(0, side));
+}
 
 /** The share (0 to 1) of the route's length a position on the chart stands at, clamped to the plot. */
 export function shareAtX(scale: PointerScale, x: number): number {
@@ -69,7 +90,7 @@ export function nearestMarkerName(markers: ReadonlyArray<{ km: number; name: str
   for (const marker of markers) {
     const gap = Math.abs(marker.km - km);
     // A hair of slack: 4.5 − 4.3 is 0.2000000000000002 in floating point and is two hundred metres all the same.
-    if (gap <= POINTER_MARKER_REACH_KM + 1e-9 &&(best === null || gap < best.gap)) best = { name: marker.name, gap };
+    if (gap <= POINTER_MARKER_REACH_KM + 1e-9 && (best === null || gap < best.gap)) best = { name: marker.name, gap };
   }
   return best?.name ?? null;
 }
