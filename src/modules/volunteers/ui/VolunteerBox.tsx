@@ -377,6 +377,7 @@ export default async function VolunteerBox({
                     placeholder={tForm("birthDatePlaceholder")}
                     unreadable={tForm("birthDateUnreadable")}
                     tooYoung={t("volunteers.errors.birthDateMinimum", { age })}
+                    picker={{ label: tForm("birthDatePicker") }}
                   />
                   <SexField
                     id={fieldId("sex")}

@@ -1,11 +1,14 @@
 "use client";
 
 import { useMaskito } from "@maskito/react";
+import InputAdornment from "@mui/material/InputAdornment";
 import TextField from "@mui/material/TextField";
-import { type FormEvent, useCallback, useEffect, useRef, useState } from "react";
+import { type FormEvent, useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { readTypedDate, shownTypedDate, TYPED_DATE_PATTERN } from "@/shared/forms/pickers/wall-values";
 import { birthDateEchoText } from "./birth-date-echo";
 import { birthDateMaskOptions } from "./birth-date-mask";
+import { writePickedDay } from "./birth-date-picker";
+import BirthDatePicker from "./BirthDatePicker";
 
 export type BirthDateFieldProps = {
   id: string;
@@ -45,6 +48,13 @@ export type BirthDateFieldProps = {
   size?: "small" | "medium";
   /** The box fills its row (the volunteers' form lays it beside the sex box, §773). */
   fullWidth?: boolean;
+  /**
+   * A calendar button at the box's end that opens the browser's own date picker and writes the chosen day into
+   * the box (the volunteers' two places, §561 amended and §773; `label` is the button's accessible name). Off
+   * by default: the registration form and the desk's «Înscriere nouă» draw exactly the box they always did.
+   * Drawn after hydration only — with scripts off the box is the plain text box, with no button.
+   */
+  picker?: { label: string };
 };
 
 /** The box's own refusal: "" when it holds a date in range, or nothing at all (`required` says the rest). */
@@ -132,6 +142,10 @@ export function birthDateHelper({
  *   and fires no `onChange`, so the date in words would lag a keystroke behind. Without
  *   JavaScript the box is the plain text box above, and the server reads what it posts.
  *
+ * - **A calendar button, where asked** (`picker`, the volunteers' two places, §773): it opens the browser's own
+ *   date picker through a hidden `<input type="date">` (`BirthDatePicker.tsx`, no MUI X: §345 stands) and the day
+ *   chosen is written into this box as typing would be (`writePickedDay`) — the box stays the one source of truth.
+ *
  * Uncontrolled: whatever was typed before the island hydrated stays in the box (§211's lesson).
  * `GuardianForMinor`, `HiddenForMinor` read the same input by its id (`useBirthDateValue`,
  * through `readTypedDate`).
@@ -157,11 +171,18 @@ export default function BirthDateField({
   autoComplete,
   size,
   fullWidth,
+  picker,
 }: BirthDateFieldProps) {
   const drawn = shownTypedDate(defaultValue);
   const [text, setText] = useState(drawn);
   const input = useRef<HTMLInputElement | null>(null);
   const mask = useMaskito({ options: birthDateMaskOptions });
+  // The calendar button is the island's: false on the server and while hydrating, so scripts off draw no button.
+  const hydrated = useSyncExternalStore(
+    useCallback(() => () => {}, []),
+    () => true,
+    () => false,
+  );
   // One ref for both: ours for the custom validity, Maskito's to mask the input it is given.
   const inputRef = useCallback(
     (node: HTMLInputElement | null) => {
@@ -223,6 +244,28 @@ export default function BirthDateField({
         )
       }
       slotProps={{
+        // The picker's button sits after the digits, in the box's own end: the text never runs under it (§561's overlap lesson).
+        ...(picker && hydrated
+          ? {
+              input: {
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <BirthDatePicker
+                      id={id}
+                      label={picker.label}
+                      text={text}
+                      min={min}
+                      max={max}
+                      onPick={(picked) => {
+                        // Through the typed box's own road: the mask, the echo, the helper and the validity all hear it.
+                        if (input.current) writePickedDay(input.current, picked);
+                      }}
+                    />
+                  </InputAdornment>
+                ),
+              },
+            }
+          : {}),
         inputLabel: { shrink: true },
         // Read out when the words change: the date in words is the check that the day is the one meant.
         formHelperText: { "aria-live": "polite" },

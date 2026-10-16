@@ -34,7 +34,7 @@ export default function VolunteerBirthDateField({
   /** The event's day the age is counted on, `YYYY-MM-DD`. */
   eventDay: string;
   locale: string;
-  words: { echoTemplate: string; placeholder: string; unreadable: string; tooYoung: string };
+  words: { echoTemplate: string; placeholder: string; unreadable: string; tooYoung: string; pickerLabel: string };
 }) {
   const recall = useRecall();
   const named = recall.named("birthDate");
@@ -56,6 +56,7 @@ export default function VolunteerBirthDateField({
       placeholder={words.placeholder}
       unreadable={words.unreadable}
       tooYoung={words.tooYoung}
+      picker={{ label: words.pickerLabel }}
       autoComplete="off"
       size="small"
       fullWidth
