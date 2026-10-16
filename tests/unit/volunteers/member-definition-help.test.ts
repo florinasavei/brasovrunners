@@ -8,7 +8,7 @@ import type { PublicVolunteerRole } from "@/modules/volunteers/volunteers";
 import { CLUB_NAME } from "@/theme/brand";
 
 /**
- * §788 — the volunteers' form's tick «Fac parte din grupul {club}» carries the same «?» as the registration
+ * §NNN — the volunteers' form's tick «Fac parte din grupul {club}» carries the same «?» as the registration
  * form's member tick, with the same words: the club's sentence from «Pagini» → «Membri» in the page's language,
  * else the platform's (`Registration.clubMemberDefinition`). The form reads it through the public cache, so
  * what is stood in for here is that read (`cachedMemberDefinition`, proved against a database in
@@ -85,7 +85,7 @@ async function drawBox(language: "ro" | "en", over: Partial<ComponentProps<typeo
 /** The member tick's own label, from its box to the label's end. */
 const memberTick = (page: string) => /name="clubMember"[\s\S]*?<\/label>/.exec(page)?.[0] ?? "";
 
-describe("§788 the volunteers' member tick has the «?»", () => {
+describe("§NNN the volunteers' member tick has the «?»", () => {
   it("says the club's sentence in the page's language, behind a button that submits nothing", async () => {
     state.sentence = CLUB;
     const page = await drawBox("ro");

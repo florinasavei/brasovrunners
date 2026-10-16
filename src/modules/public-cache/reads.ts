@@ -943,7 +943,7 @@ export async function cachedHomePage(): Promise<HomePageSetting> {
 }
 
 /**
- * «Cine e membru al grupului» (§788): the club's sentence behind the «?» after the member tick, in
+ * «Cine e membru al grupului» (§NNN): the club's sentence behind the «?» after the member tick, in
  * this language — read by the registration page, the invitation page and the volunteers' page, so
  * it is cached beside the settings, and a save expires it (`saveMemberDefinition`). Null where the
  * club wrote none, and when the database cannot answer (after the last good copy, §447): the forms

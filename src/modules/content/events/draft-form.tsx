@@ -55,7 +55,7 @@ export async function readDraftFormSettings<T extends Record<string, unknown>>(
     // A members' event registers one person per account (§552): no family, no limit to say.
     capMax: input.membersOnly ? null : addressCap.cap.registrationsPerAddress,
     familyOpen: input.membersOnly ? false : input.familyOpen,
-    // The club's sentence behind the member tick's «?» (§788), in the preview's language.
+    // The club's sentence behind the member tick's «?» (§NNN), in the preview's language.
     memberDefinition: memberDefinitionFor(input.locale, memberDefinition),
     siteKey: undefined,
   };

@@ -486,7 +486,7 @@ export default async function VolunteerBox({
                   </CheckboxField>
                   <CheckboxField name="clubMember" id={fieldId("clubMember")} defaultChecked={typed.clubMember === "on"}>
                     {t("volunteers.profile.club", { club: CLUB_NAME })}
-                    {/* The «?» of the registration form's own member tick, with the same words (§788): the club's sentence from «Pagini» → «Membri», else the platform's. */}
+                    {/* The «?» of the registration form's own member tick, with the same words (§NNN): the club's sentence from «Pagini» → «Membri», else the platform's. */}
                     <Hint text={(await cachedMemberDefinition(locale)) ?? tForm("clubMemberDefinition")} />
                   </CheckboxField>
                 </Box>

@@ -26,7 +26,7 @@ const LANGUAGES = [
 ] as const;
 
 /**
- * «Cine e membru» (§788; the owner, 2026-10-16: «asta ar trebui configurabil în back-office ce înseamnă
+ * «Cine e membru» (§NNN; the owner, 2026-10-16: «asta ar trebui configurabil în back-office ce înseamnă
  * să fii membru»): the club's one sentence, in both languages or neither, behind the «?» after the tick
  * «Sunt membru al grupului» on the registration form and on the volunteers' form. Nothing is checked
  * against it: the tick stays a claim (§48). Written, or left empty — the forms then say the platform's own

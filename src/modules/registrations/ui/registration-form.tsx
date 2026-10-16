@@ -112,7 +112,7 @@ export type RegistrationFormSettings = {
   capMax: number | null;
   familyOpen: boolean;
   /**
-   * «Cine e membru al grupului» (§788): the club's sentence behind the «?» after the member tick, in
+   * «Cine e membru al grupului» (§NNN): the club's sentence behind the «?» after the member tick, in
    * this page's language, or null while the club wrote none — the platform's words then
    * (`clubMemberDefinition`). Read by the caller, through the public cache or, in a preview, the database.
    */
@@ -860,7 +860,7 @@ export async function registrationForm({
                     "echipă", because the club is a group somebody runs with and not a squad
                     somebody is selected for, and the tooltip says where the line is — in the
                     club's own words when it wrote them on «Pagini» → «Membri», else the
-                    platform's (§788). The same «?» the volunteers' form draws. */}
+                    platform's (§NNN). The same «?» the volunteers' form draws. */}
                 <Hint text={memberDefinition ?? t("clubMemberDefinition")} />
               </CheckboxField>
 

@@ -330,7 +330,7 @@ export default async function RegisterPage({ params, searchParams }: Props) {
     }
   }
   /*
-    §788: the club's own sentence behind the «?» after «Sunt membru al grupului», in this page's
+    §NNN: the club's own sentence behind the «?» after «Sunt membru al grupului», in this page's
     language, from the public cache. None written (or unread): the platform's words.
   */
   let memberDefinition: string | null = null;
