@@ -374,7 +374,7 @@ test.describe("§754 volunteers for a race", () => {
         el.textContent = "coordonator al punctului de sosire și al zonei de refacere a alergătorilor";
       });
       const longChip = (await finishTile.boundingBox())!;
-      const longRow = (await choices.getByTestId("volunteer-role-chips").filter({ has: finishTile }).boundingBox())!;
+      const longRow = (await finishTile.locator('xpath=ancestor::*[@data-testid="volunteer-role-chips"]').boundingBox())!;
       const longHelp = (await finishTile.getByTestId("volunteer-role-help").boundingBox())!;
       expect(longChip.x).toBeGreaterThanOrEqual(longRow.x - 1);
       expect(longChip.x + longChip.width).toBeLessThanOrEqual(longRow.x + longRow.width + 1);
