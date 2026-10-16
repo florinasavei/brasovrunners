@@ -70,7 +70,7 @@ export type Growth = {
   /** Rows created in the last `GROWTH_DAYS` days. */
   last30Days: number;
   /**
-   * Rows that can never be used again: a token spent, withdrawn or expired; a hold released or
+   * Rows that can never be used again: a token spent, withdrawn or expired; a family's hold
    * expired. Null for a table with no such state.
    */
   settled: number | null;
@@ -151,7 +151,7 @@ export function sizeQueries(now: Date) {
         audit_logs: part("audit_logs", "NULL::bigint"),
         email_outbox: part("email_outbox", "NULL::bigint"),
         email_action_tokens: part("email_action_tokens", settledWhen(`used_at IS NOT NULL OR invalidated_at IS NOT NULL OR expires_at < '${at}'::timestamptz`)),
-        family_place_holds: part("family_place_holds", settledWhen(`released_at IS NOT NULL OR expires_at < '${at}'::timestamptz`)),
+        family_place_holds: part("family_place_holds", settledWhen(`expires_at < '${at}'::timestamptz`)),
         registration_notes: part("registration_notes", "NULL::bigint"),
         event_volunteers: part("event_volunteers", "NULL::bigint"),
         registrations: part("registrations", "NULL::bigint"),

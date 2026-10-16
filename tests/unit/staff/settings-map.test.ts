@@ -213,6 +213,13 @@ describe("§516 «Sarcini» → «Club» rows point into the map", () => {
     expect(read("src/modules/diagnostics/ui/TaskTargetLink.tsx")).toContain('`${t("nav.pages")} → ${t("pages.tabContact")}`');
   });
 
+  it("sends «Retenția datelor» to «Setări» → «Configurație», the card that carries the database's numbers (§NNN)", () => {
+    expect(TASK_TARGETS.retentionPeriods).toEqual({ kind: "devs", hash: "db-size" });
+    expect(targetRoute(TASK_TARGETS.retentionPeriods!)).toEqual({ pathname: "/devs", hash: "db-size" });
+    expect(read("src/modules/diagnostics/ui/TaskTargetLink.tsx")).toContain('`${t("nav.settings")} → ${t("settingsTabs.configuration")}`');
+    expect(read("src/modules/diagnostics/ui/DatabaseSizesPanel.tsx")).toContain('id="db-size"');
+  });
+
   it("draws the link on the row, 44 pixels tall, named by the navigation's own words", () => {
     const page = read("src/app/[locale]/admin/tasks/page.tsx");
     expect(page).toContain('<TaskTargetLink locale={locale} role={actor.role} target={TASK_TARGETS[task.id]} />');

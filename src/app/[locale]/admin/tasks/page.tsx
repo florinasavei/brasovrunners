@@ -554,6 +554,8 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
       // The club's own setting first, the deployment's variable as the fallback (§244).
       declarationArchiveConfigured: volume.archiveConfigured,
       vercelUsageConfigured: Boolean(env.VERCEL_API_TOKEN && env.VERCEL_PROJECT_ID),
+      // No setting records a chosen retention period yet (§NNN): the row stays open and informational until one does.
+      retentionPeriodsDecided: false,
       // «Tradu din română» (§464): DeepL chosen and its key set; `off` reads as done — nothing owed.
       translationConfigured: isTranslationConfigured(env) || env.TRANSLATE_PROVIDER === "off",
       translationCredit: deeplCredit,

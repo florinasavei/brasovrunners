@@ -4461,7 +4461,7 @@
           "done": "The retention periods are decided.",
           "how": [
             "Open Settings → Configuration: the «The database» card shows what each table takes and how much it grew in 30 days.",
-            "There, under «Documents», open PLATFORM: the section «Keeping Neon and Vercel light, long term» has the table of proposed periods.",
+            "There, under «Documents», open «PLATFORM»: the section «Keeping Neon and Vercel light, long term» has the table of proposed periods.",
             "Decide the periods; for the personal data of past events, ask a lawyer first. Until then nothing changes."
           ]
         }

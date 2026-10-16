@@ -98,6 +98,7 @@ yarn db:seed:legal       the sample legal documents alone; never deletes, safe o
 yarn db:migrate:env      apply migrations to one named environment (local|qa|production)
 yarn smoke               ask a deployment's /api/health?deep=1 whether it actually works
 yarn idle:measure        Neon's wakes (and, with --vercel-project, the last hour of requests) while nobody visited; docs/PLATFORM.md § Idle cost
+yarn db:sizes            the database's size, the eight largest tables, 30-day growth and registrations by event age; --env qa|production (asks Neon, read-only); docs/PLATFORM.md § Keeping Neon and Vercel light
 yarn test:e2e:ui         the same, in Playwright's UI mode
 yarn test:e2e:dev        every backoffice and public route against `next dev` (E2E_DEV=1; port 4784, or a running `yarn dev` via E2E_PORT); minutes; not on the docs-check CI a pull request waits on — `.github/workflows/e2e-dev-nightly.yml` runs it once a night at 01:37 UTC on `qa` instead (§370, §426)
 yarn typecheck           tsc --noEmit

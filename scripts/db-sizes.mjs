@@ -32,7 +32,11 @@ export function parseEnvironment(args) {
   return ENVIRONMENTS.includes(value) ? value : null;
 }
 
-/** `DATABASE_URL_<ENV>`; `local` alone falls back to `DATABASE_URL`, as `db:migrate:env` does. */
+/**
+ * `DATABASE_URL_<ENV>`; `local` alone falls back to `DATABASE_URL`, as `db:migrate:env` does.
+ * @param {string} environment
+ * @param {Record<string, string | undefined>} [env]
+ */
 export function resolveUrl(environment, env = process.env) {
   const named = env[`DATABASE_URL_${environment.toUpperCase()}`];
   if (named) return named;
@@ -84,7 +88,11 @@ export function formatSizes(sizes) {
   for (const entry of sizes.registrations) {
     lines.push(`  ${pad(entry.status, 28)}${padLeft(count(entry.total), 8)}${padLeft(count(entry.pastSixMonths), 12)}${padLeft(count(entry.pastTwelveMonths), 12)}`);
   }
-  lines.push("", "  'settled': tokens spent, withdrawn or expired; holds released or expired. '> N months': the event started more than N months ago.");
+  lines.push(
+    "",
+    "  'settled': tokens spent, withdrawn or expired; family holds expired.",
+    "  '> N months': the registration's event started more than N months ago.",
+  );
   return lines;
 }
 

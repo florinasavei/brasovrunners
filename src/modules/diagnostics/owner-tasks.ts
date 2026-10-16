@@ -447,6 +447,12 @@ export type OwnerTaskInputs = {
   /** Are `VERCEL_API_TOKEN` + `VERCEL_PROJECT_ID` set (§101)? Off, `/devs` links to the dashboard. */
   vercelUsageConfigured: boolean;
   /**
+   * Has the club decided how long each kind of data is kept (§NNN)? No setting records that yet — the
+   * lane that adds one passes it here — so the page says `false` and the row «Retenția datelor» stays
+   * open, informational, until then.
+   */
+  retentionPeriodsDecided: boolean;
+  /**
    * Is «Tradu din română» set up (§464): `TRANSLATE_PROVIDER=deepl` with `DEEPL_API_KEY`, or
    * switched `off` on purpose? Off by absence, the buttons are simply not drawn.
    */
@@ -1058,7 +1064,7 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
     never red — the sweep already deletes on the windows the privacy notice states; what is open is
     whether to shorten them (`docs/PLATFORM.md` § Keeping Neon and Vercel light, long term).
   */
-  push("retentionPeriods", { owner: "club", state: "open" });
+  push("retentionPeriods", { owner: "club", state: input.retentionPeriodsDecided ? "done" : "open" });
 
   /*
     The club's side of «Email respins» (§671). A club mailbox that refuses the archive copy, the
