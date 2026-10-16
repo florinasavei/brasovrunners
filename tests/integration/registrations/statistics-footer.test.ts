@@ -8,7 +8,7 @@ import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email
 import { resolveDisplayName } from "@/modules/registrations/names";
 import type { StaffRole } from "@/modules/staff-identity/domain/roles";
 import { CLUB_NAME } from "@/theme/brand";
-import { readSheet, startListRows } from "../../helpers/xlsx";
+import { readSheet, startListRows, unzip } from "../../helpers/xlsx";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
@@ -299,6 +299,19 @@ describe("§787 the footer, through the route", () => {
     expect(labels).toContain("Alergarea dublă · 02.11.2099 · 14:00");
     expect(labels).toContain("Eveniment fără titlu · 03.11.2099");
     expect(labels.some((label) => label?.includes(untitled.id))).toBe(false);
+  });
+
+  it("makes «Status» the third column a drop-down over the data rows, in the reader's language (§790)", async () => {
+    const race = await seedRace();
+    for (const [lang, error] of [["ro", "Alege o stare din listă."], ["en", "Pick a status from the list."]] as const) {
+      const response = await exportRegistrations(new Request(url(`eventId=${race.id}&format=xlsx&lang=${lang}`)));
+      const sheet = unzip(Buffer.from(await response.arrayBuffer())).get("xl/worksheets/sheet1.xml") ?? "";
+      expect(sheet).toMatch(/<dataValidation type="list" allowBlank="0" showErrorMessage="1" errorTitle="[^"]+" error="[^"]*" sqref="C2:C11">/);
+      expect(sheet).toContain(`error="${error}"`);
+      expect(sheet).toContain('<formula1>"PENDING_EMAIL_CONFIRMATION,PENDING_DECLARATION,WAITLISTED,WAITLIST_OFFERED,CONFIRMED,CANCELLED,EXPIRED"</formula1>');
+    }
+    const header = (await download(`eventId=${race.id}&format=xlsx`))[0] as string[];
+    expect(header.slice(0, 3)).toEqual(["ID", "Race number (BIB)", "Status"]);
   });
 
   it("is never in the CSV, whose file stays the rows", async () => {

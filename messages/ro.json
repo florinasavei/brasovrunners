@@ -1126,6 +1126,10 @@
           "SUPERADMIN": "Superadministrator"
         }
       },
+      "sheetpick": {
+        "title": "Stare nepermisă",
+        "error": "Alege o stare din listă."
+      },
       "statistics": {
         "title": "Statistici",
         "total": "Total",

@@ -4,7 +4,7 @@ import writeExcelFile, { type Feature } from "write-excel-file/node";
 import { CLUB_TIME_ZONE } from "@/i18n/dates";
 import { toWallTimeInput } from "@/modules/events/domain/zoned-time";
 import type { RegistrationCsvRow } from "./csv";
-import type { RegistrationStatus } from "@/db/schema/registrations";
+import { registrationStatus, type RegistrationStatus } from "@/db/schema/registrations";
 import type { WorkbookDetails } from "./admin-repository";
 import { ageOnRaceDay } from "./domain/age";
 import { ROW_DEADLINE_EXPORT_WORDS, type RowDeadlineKind } from "./domain/row-deadline";
@@ -138,9 +138,11 @@ export type SheetColumn<Row> = {
  * `footer` is rows of ready cells written under the table (§787, the start list's statistics): none for every
  * other sheet. The sheet declares no autofilter and no table, so nothing here can pull a footer into a sort.
  *
+ * `listColumn` (§790, amended) makes one column a drop-down over the data rows; the sponsor list passes none.
+ *
  * Two things the start list adds and the sponsor list never asks for (§787, amended): `rules`, the sheet's
  * conditional formatting (`sheet-colours.ts`), and a footer cell of type `"Formula"` — `value` the formula without its
- * `=`, `cached` the number it comes to today. The writer stores a formula, but not the result beside it; `liveFormulas`
+ * `=`, `cached` the number it comes to today. The writer stores a formula, but not the result beside it; `sheetExtras`
  * adds the `<v>` and asks the workbook to recalculate on open, so a viewer that never recalculates shows the cached
  * number and Excel or LibreOffice recount.
  */
@@ -151,6 +153,7 @@ export async function writeSheet<Row>(
   fallbackName: string,
   footer: Array<Array<Record<string, unknown>>> = [],
   rules: readonly ColourRule[] = [],
+  listColumn?: ListColumn,
 ): Promise<Buffer> {
   // Where each formula sits (the header is row 1, the table follows, then the footer) and what it comes to now.
   const cached = new Map<string, number>();
@@ -174,30 +177,72 @@ export async function writeSheet<Row>(
       dateFormat: STAMP_FORMAT,
       ...(rules.length > 0 ? { conditionalFormatting: [...rules] } : {}),
     },
-    cached.size > 0 ? { features: [liveFormulas(cached)] } : {},
+    cached.size > 0 || listColumn ? { features: [sheetExtras(cached, listColumn, rows.length)] } : {},
   ).toBuffer();
 }
 
 /**
- * The formulas' half the writer leaves out (§787, amended): each `<c r="B13"><f>…</f></c>` gains the `<v>` of the number
- * it counted when the file was written, and the workbook's `calcPr` asks for a full recalculation on load.
- * Without the cached value a viewer that does not recalculate — a phone's preview, Google's — shows an empty cell;
- * without `fullCalcOnLoad` Excel trusts the cache and a number the club changed offline would wait for a keystroke.
+ * A column whose cells are picked from a fixed list, not typed (§790, amended; the owner, 2026-10-16: «the status should
+ * come right after BIB and it should be a select, not free text»). `column` is 0-based; `words` is the whole list — the
+ * cells' own words, so a pick is always a word the formulas and the colour rules count. `title` and `error` are the box
+ * Excel shows for anything else, in the reader's language (the box takes at most 32 and 255 characters).
  */
-function liveFormulas(cached: ReadonlyMap<string, number>): Feature<Stream | Buffer | Blob> {
+export type ListColumn = { column: number; words: readonly string[]; title: string; error: string };
+
+/** The longest list Excel keeps inline in a rule; a longer one would need its words on a sheet of their own. */
+export const INLINE_LIST_LIMIT = 255;
+
+const escapeXml = (value: string) => value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+
+/**
+ * The `<dataValidations>` of a list column over the data rows (row 2 to the last registration): the header and the
+ * footer are outside it. A list rule, blank not allowed, the stop-style box on a word that is not in the list, and
+ * `showDropDown` left out — which, perversely, is the value that SHOWS the arrow. The words ride inline in the rule
+ * (`"A,B,C"`) while they fit Excel's 255 characters; a word with a comma could not, so it is refused here.
+ */
+function dataValidation(list: ListColumn, rowCount: number): string {
+  if (list.words.some((word) => word.includes(",") || word.includes('"'))) throw new Error("a list word cannot hold a comma or a quote");
+  const inline = list.words.join(",");
+  if (inline.length > INLINE_LIST_LIMIT) throw new Error(`the list is ${inline.length} characters; Excel keeps at most ${INLINE_LIST_LIMIT} inline`);
+  const letters = columnLetters(list.column);
+  return (
+    `<dataValidations count="1"><dataValidation type="list" allowBlank="0" showErrorMessage="1" errorTitle="${escapeXml(list.title)}" ` +
+    `error="${escapeXml(list.error)}" sqref="${letters}2:${letters}${rowCount + 1}"><formula1>"${escapeXml(inline)}"</formula1></dataValidation></dataValidations>`
+  );
+}
+
+/**
+ * What the writer leaves out of the sheet, added after it (§787, amended; §790, amended). Two halves, either alone:
+ *
+ * - The formulas' (`cached` not empty): each `<c r="B13"><f>…</f></c>` gains the `<v>` of the number it counted when the
+ *   file was written, and the workbook's `calcPr` asks for a full recalculation on load. Without the cached value a
+ *   viewer that does not recalculate — a phone's preview, Google's — shows an empty cell; without `fullCalcOnLoad` Excel
+ *   trusts the cache and a number the club changed offline would wait for a keystroke.
+ * - The list column's (`list` and at least one row): the `<dataValidations>`. `write-excel-file` has no such option. The
+ *   schema puts it after `conditionalFormatting` and before `hyperlinks`, `printOptions`, `pageMargins` and the rest, so it
+ *   goes before the first of those that is there and else at the end — `CT_Worksheet`'s order, which Excel repairs a
+ *   file for when it is broken.
+ */
+function sheetExtras(cached: ReadonlyMap<string, number>, list: ListColumn | undefined, rowCount: number): Feature<Stream | Buffer | Blob> {
+  const validations = list && rowCount > 0 ? dataValidation(list, rowCount) : "";
   return {
     files: {
       transform: {
         "xl/worksheets/sheet{id}.xml": {
-          transform: (xml) =>
-            xml.replace(/<c r="([A-Z]+\d+)"([^>]*)><f>([\s\S]*?)<\/f><\/c>/g, (cell, reference: string, attributes: string, formula: string) => {
+          transform: (xml) => {
+            const withValues = xml.replace(/<c r="([A-Z]+\d+)"([^>]*)><f>([\s\S]*?)<\/f><\/c>/g, (cell, reference: string, attributes: string, formula: string) => {
               const result = cached.get(reference);
               return result === undefined ? cell : `<c r="${reference}"${attributes}><f>${formula}</f><v>${result}</v></c>`;
-            }),
+            });
+            if (!validations) return withValues;
+            const after = withValues.search(/<(?:hyperlinks|printOptions|pageMargins|pageSetup|headerFooter|rowBreaks|colBreaks|customProperties|cellWatches|ignoredErrors|smartTags|drawing|legacyDrawing|picture|oleObjects|controls|webPublishItems|tableParts|extLst)[\s/>]/);
+            const at = after >= 0 ? after : withValues.lastIndexOf("</worksheet>");
+            return `${withValues.slice(0, at)}${validations}${withValues.slice(at)}`;
+          },
         },
-        "xl/workbook.xml": {
-          transformElementAttributes: (tagName, attributes) => (tagName === "calcPr" ? { ...attributes, fullCalcOnLoad: 1 } : attributes),
-        },
+        ...(cached.size > 0
+          ? { "xl/workbook.xml": { transformElementAttributes: (tagName: string, attributes: Record<string, string | number>) => (tagName === "calcPr" ? { ...attributes, fullCalcOnLoad: 1 } : attributes) } }
+          : {}),
       },
     },
   };
@@ -215,6 +260,13 @@ const COLUMNS: Array<SheetColumn<RegistrationSheetRow>> = [
   // number: a column headed by a truncated word is what makes somebody widen it by hand.
   // Empty until the registration is confirmed (§548), as on every screen.
   { header: "Race number (BIB)", width: 18, cell: (row) => ({ value: raceNumberOf({ status: row.status as RegistrationStatus, bibNumber: row.bibNumber ?? null }), type: Number }) },
+  /*
+    «Status» (§790, amended; the owner, 2026-10-16: «the status should come right after BIB and it should be a select, not
+    free text»): right after the race number, where the eye goes on race morning, and a pick from the list — the drop-down
+    `buildRegistrationsWorkbook` puts over this column's data rows (`STATUS_WORDS`). In the spreadsheet only: the CSV keeps its
+    order, which scripts read by position. The formulas and the colour rules find the column by this header, never by a letter.
+  */
+  { header: "Status", width: 22, cell: (row) => ({ value: row.status, type: String }) },
   { header: "Name", width: 28, cell: (row) => ({ value: row.registeredName, type: String }) },
   { header: "First name", width: 18, cell: (row) => ({ value: row.firstName, type: String }) },
   { header: "Last name", width: 18, cell: (row) => ({ value: row.lastName, type: String }) },
@@ -233,10 +285,9 @@ const COLUMNS: Array<SheetColumn<RegistrationSheetRow>> = [
   { header: "Country", width: 12, cell: (row) => ({ value: row.country ?? "", type: String }) },
   { header: "City", width: 18, cell: (row) => ({ value: row.city ?? "", type: String }) },
   { header: "T-shirt size", width: 12, cell: (row) => ({ value: row.tshirtSize && row.tshirtSize !== "NONE" ? row.tshirtSize : "", type: String }) },
-  { header: "Status", width: 22, cell: (row) => ({ value: row.status, type: String }) },
   /*
-    The list's «Până când» (§650), beside the state it is the deadline of, as on the list: the moment on the
-    club's clock, then what it is for in words — the CSV has the two last, as a token. Blank when none.
+    The list's «Până când» (§650): the moment on the club's clock, then what it is for in words — the CSV has the two
+    last, as a token. Blank when none. (They sat beside «Status» until §790 moved it up next to the race number.)
   */
   { header: "Until when", width: 18, cell: (row) => ({ value: onClubClock(row.deadline ?? null), type: Date, format: STAMP_FORMAT }) },
   { header: "Waiting on", width: 30, cell: (row) => ({ value: row.deadlineFor ? ROW_DEADLINE_EXPORT_WORDS[row.deadlineFor] : "", type: String }) },
@@ -307,9 +358,21 @@ function notesColumn(header: string): SheetColumn<RegistrationSheetRow> {
 }
 
 /**
+ * Every word a «Status» cell can carry: the registration states, in the order the backoffice's filter lists them
+ * (`registrationStatus.enumValues`). The one list — the drop-down offers exactly these, and `STATUS_TINT` and the
+ * statistics count exactly these (`excel-live.test.ts` holds the three together), so a pick is always a word the
+ * formulas and the colour rules know.
+ */
+const STATUS_WORDS: readonly string[] = registrationStatus.enumValues;
+
+/** The drop-down's error box, in the reader's language: its title (Excel keeps 32 characters) and the sentence under it. */
+export type StatusPickWords = { title: string; error: string };
+
+/**
  * The workbook. `notesHeader` adds the «Note interne» column (§785) — passed by the route only for a role that
  * `canKeepRegistrationNotes`; without it the file has no such column, which is every other caller's file.
- * `statistics` adds the footer under the rows (`statistics.ts`).
+ * `statistics` adds the footer under the rows (`statistics.ts`). `statusPick` makes «Status» a drop-down over the data
+ * rows (§790, amended) — a pick from `STATUS_WORDS`, anything else refused with these words; without it the cells are free text.
  *
  * **Live** (§787, amended; the owner, 2026-10-16: «color codes în funcție de status și dacă sunt membri BVR» and
  * «statisticile din Excel trebuie să se actualizeze automat offline, gen să fie formule în Excel»): the rows are
@@ -320,7 +383,7 @@ function notesColumn(header: string): SheetColumn<RegistrationSheetRow> {
 export async function buildRegistrationsWorkbook(
   rows: readonly RegistrationSheetRow[],
   sheetName: string,
-  options: { notesHeader?: string; statistics?: StatisticsWords } = {},
+  options: { notesHeader?: string; statistics?: StatisticsWords; statusPick?: StatusPickWords } = {},
 ): Promise<Buffer> {
   const several = options.statistics !== undefined && hasSeveralEvents(rows);
   // What each row's event is called, one string to one event, for the column and for the footer's blocks alike.
@@ -357,5 +420,6 @@ export async function buildRegistrationsWorkbook(
     lastColumn: columns.length - 1,
     rowCount: rows.length,
   });
-  return writeSheet(columns, sheetRows, sheetName, "Participants", footer, rules);
+  const statusList = options.statusPick ? { column: at("Status"), words: STATUS_WORDS, ...options.statusPick } : undefined;
+  return writeSheet(columns, sheetRows, sheetName, "Participants", footer, rules, statusList);
 }
