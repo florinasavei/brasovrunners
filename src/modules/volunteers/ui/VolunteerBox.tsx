@@ -297,12 +297,21 @@ export default async function VolunteerBox({
               </Stack>
               {/*
                 The kinder note (§773; the owner, 2026-10-14: «Și pusă o notă mai drăguță»), right under the roles' list: the person may be
-                asked to cover another responsibility, thanked, and told they will be contacted. The short instruction above the roles stays
-                short; this one is a caption in the form's own style (`body2`, secondary), read with the group.
+                asked to cover another responsibility, thanked, and told they will be contacted. A banner (§796; the owner, 2026-10-16: «Asta ar
+                trebui să fie într-un banner, să fie mai vizibil»): the house's information notice — the `Alert` of `severity="info"` as
+                the register page and the check-your-email screen draw theirs, with its own info glyph — a clear step above and below.
+                Static text, not a live message: the Alert's default `role="alert"` is cleared on its root, so a screen reader reads it with
+                the group (the fieldset names its id) and does not announce it on load.
               */}
-              <Typography id={`${fieldId("roleIds")}-note`} variant="body2" color="text.secondary" sx={{ mt: 2 }} data-testid="volunteer-roles-note">
+              <Alert
+                id={`${fieldId("roleIds")}-note`}
+                severity="info"
+                slotProps={{ root: { role: undefined } }}
+                sx={{ mt: 2, mb: 1 }}
+                data-testid="volunteer-roles-note"
+              >
                 {t("volunteers.choicesNote")}
-              </Typography>
+              </Alert>
             </Box>
 
             <TextField
