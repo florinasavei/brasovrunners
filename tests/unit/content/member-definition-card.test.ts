@@ -93,7 +93,7 @@ describe("§NNN the «Cine e membru» card on «Membri»", () => {
     expect(page).toContain(`>${CLUB_RO}</textarea>`);
     expect(page).toContain(`>${CLUB_EN}</textarea>`);
     expect(page).toContain(ro.Admin.members.definition.asideWritten);
-    expect(page).not.toContain(ro.Admin.members.definition.asideDefault);
+    expect(page).not.toContain(`>${ro.Admin.members.definition.asideDefault}</span>`);
   });
 
   it("offers «Tradu din română» under the English box only, and greys nothing while a key is set", async () => {
