@@ -656,6 +656,183 @@ visitor waits on asks the name.
 if a monitor calls the deployment's own address. Whatever the monitors call, the deadlines are moved
 at the first real run after the name is back.
 
+## Keeping Neon and Vercel light, long term (2026-10-16)
+
+The owner, 2026-10-16, with two screenshots: «cumva mă interesează să țin baza de date light long term»
+(Neon, Launch, $6.10 for Oct 1–16 against a $15 spending alert) and «mă interesează să țin Vercel free
+după decembrie» (Vercel, Pro, $14.25 of the $20 included credit with 13 days left in the cycle). This
+section is the plan, written from numbers rather than from guesses. **This change measures and writes the
+plan: it deletes nothing, adds no job and changes no setting.** Every lever below says what it saves, what
+it costs and where it stands — **done** (already in the code or the settings), **proposed** (written down,
+not done) or **the owner decides** (a period or a plan only the club can choose).
+
+**Where the numbers are read now, and kept.** `/devs` → «Configurație» (the status panel) has two new cards:
+«Baza de date» (the database's size, the eight largest tables, what each table that grows gained in thirty
+days, the registrations by state and by the age of their event) and «Vercel: consumul lunii» (the Usage
+page's lines, read from Vercel's billing API, and the builds by project); the deployments line above them
+now says how many of this project's deployments built, by branch. `yarn db:sizes [--env qa|production]`
+prints the first from a terminal with the very same queries. `/admin/tasks` carries one informational row,
+«Retenția datelor: perioade de decis», that opens the first card. The Vercel card reads
+`GET /v1/billing/charges` (Vercel's FOCUS charges: one object per day, service and project), which answered
+for the club's team on 2026-10-16 with the same lines as the dashboard; whether the token a deployment holds
+may call it is Vercel's answer, and when it refuses, the card says so and links the Usage page.
+
+### (a) What was measured, and what it means
+
+**Neon, the owner's console reading for Oct 1–16 (organisation-wide, both projects):** compute 57.43
+CU-hours = $6.09, storage 0.04 GB-month = $0.01, **total $6.10**.
+
+| Figure | Arithmetic | Meaning |
+| --- | --- | --- |
+| 57.43 CU-hours in 16 days | 3.6 CU-hours a day; at 0.25 CU (the floor) that is **about 14 hours awake a day**, both projects together | the compute is awake most of the day; the 04:00 window alone would be minutes |
+| a month at that pace | about 108 CU-hours, **about $11.4** | under the $15 alert, over what an idle platform should cost |
+| the two projects' limits | (100 + 30) CU-hours × $0.106 = **$13.78** | the worst case: a project at its limit is suspended until the next period (`SETUP.md` §40), so the bill cannot pass it |
+| storage 0.04 GB-month | × $0.35 = **about 1.4 cents** | ten times the data would be 14 cents: **rows are not a cost lever; they are a privacy and tidiness one** |
+
+**The first guess does not survive §334 and §577.** The brief for this plan assumed the 15-minute daytime
+pings keep the database awake. Since §334 a ping with nothing due answers from Next's data cache and
+opens no connection, and since §577 the safety run waits for the 04:00 window: an idle platform wakes
+its database about once a day (`docs/PLATFORM.md` § Idle cost). So about 14 awake hours a day are
+**people and deployments**, not pings. Which ones is not known from here: the console total is
+organisation-wide and this change could not read either project's operations log. The next step is the
+measurement, not a guess: `/devs` on each environment (its own month and its own pace), then
+`yarn idle:measure --hours 24` on a quiet day, whose `other` wakes are the people and the deployments.
+
+**Vercel, the club's billing lines, Sep 30 – Oct 15 (16 days; the calendar month so far is what the card
+shows, the dashboard follows the billing cycle):**
+
+| Line | Consumed | List price | Hobby's included allowance | 30-day pace |
+| --- | --- | --- | --- | --- |
+| Build CPU Minutes | 3,156 CPU-min (production 1,584 · QA 1,572) | $10.99 | builds on the Basic machine are included; Hobby has no build-minute charge | n/a |
+| Fluid Active CPU | **3.66 CPU-hours** (production 2.70 · QA 0.95) | $0.62 | **4 CPU-hours** | **6.9 CPU-hours: 1.7 times the allowance** |
+| Fluid Provisioned Memory | 16.8 GB-hours | $0.22 | 360 GB-hours | 31.6 (9%) |
+| Function Invocations | 105,183 | $0.06 | 1,000,000 | 197,000 (20%) |
+| Fast Origin Transfer | 1.58 GB | $0.10 | 10 GB | 3.0 GB (30%) |
+| CDN Requests | 152,473 | $0.00 | 1,000,000 | 286,000 (29%) |
+| Fast Data Transfer | 2.12 GB | $0.00 | 100 GB | 4.0 GB (4%) |
+| Observability Events | 600,351 | $0.53 | not listed on Hobby's page | confirm on the Usage page after the downgrade |
+| Function Storage | 149.7 GB | $0.50 | not listed | confirm |
+| ISR Writes · ISR Reads | 70,190 · 34,648 | $0.34 · $0.02 | not listed | confirm |
+| Deployment Storage | 15.5 GB | $0.05 | not listed | confirm |
+| **Usage, all lines** | | **$13.43** (about $25 a month) | | the Pro seat is $20 with $20 of credit: **about $5 over the credit at this pace** |
+
+The owner's screenshot ($11.66 for build minutes, $14.25 of $20) is the same month a day later. **The
+decisive finding: on Hobby the builds cost nothing, and the figure that would stop the site is Active CPU** —
+a Hobby team that exceeds an included allowance is paused (below). At the October pace the club would pass
+its four CPU-hours around the 18th of the month.
+
+**What drives the Active CPU, as far as 15 days show.** A day without a build used about **0.09 CPU-hours
+(about 2.7 a month: inside Hobby's four)**; every 100 build CPU-minutes in a day added about 0.07 CPU-hours
+(a fit over Oct 1–15 with r ≈ 0.55 — release days and traffic travel together, so this is a hypothesis to
+test, not a result). Release days are the peaks: Oct 1 alone was 0.76 CPU-hours, 15,572 ISR writes,
+175,560 observability events and 34,482 invocations (a fifth to a third of the 16 days), and the quiet
+days Oct 3–7 were 0.08–0.12 CPU-hours. A new deployment starts with an empty ISR cache and cold functions;
+every release pays that twice, once per project.
+
+### (b) Neon: three levers
+
+**1. Time awake — the only lever that moves the bill.**
+
+| Candidate waker | What it costs | Measured? | Status |
+| --- | --- | --- | --- |
+| a release's production build holds `scripts/wait-for-migration.mjs`: it opens the database and polls it every 15 seconds, up to 20 minutes, until the migration run is approved | at least one wake and five idle minutes per build (both projects build as «production» for their own branch), the whole wait when a migration is pending | no | proposed: read the wakes at release times with `yarn idle:measure`; fewer releases a day is the lever |
+| staff and testers: every backoffice page reads the database; `/devs` also asks Neon | one wake per visit after five idle minutes | no | by design; the owner's testing days are most of it |
+| crawlers and scanners on routes that render per request (§577: about two thirds of the wakes measured on 2026-09-29/30 were at random minutes, some at night) | one wake each | partly | proposed: the firewall rules §577 recommended and did not apply (deny `*.php`, `/wp-*`, `/.env`, `/.git`) |
+| the jobs' pings | none when nothing is due (§334); one real run at 04:00 (§577) | yes | **done** |
+| the hourly and six-hourly health monitors | none: the shallow check opens no database (§577) | yes | **done** |
+| the month's governor (§447): at amber the jobs' floor is 60 minutes and the data cache's safety net doubles, at red 120 minutes, the health's answer is reused ten minutes and anonymous traffic is served from the cache only | slower jobs and emails, only while the month runs ahead | yes | **done** |
+| the Administrator's «Cât de des verifică platforma» (on demand, 15, 30, 60 or 120 minutes) | a longer minimum between two real runs | yes | **done** |
+
+**What the brief proposed and why it is not on the list.** «QA's pings from hourly to two or three hours»
+and «a shorter production day window» would each save nothing today, because a ping with nothing due never
+reached the database (§334) and the only scheduled look is the one at 04:00 (§577). The trade-off §447 names
+stands, and is documented here: a slower cadence delays an email or a waiting list hand-over by up to the
+interval and saves a wake only when something was due. Where a cadence does matter is the day work is due —
+a registration window opening, a reminder: the governor already slows exactly that when the month runs
+ahead.
+
+**2. Rows that grow — a retention proposal, each row «proposed / the owner decides».** The sweep exists
+and is wider than the brief assumed: `jobs/retention.ts` runs at 04:00 and deletes on the windows the privacy
+notice's section 7 states (§322). **Shortening any window changes what the notice promised a runner, so a
+shorter period needs the notice's template changed and a Romanian lawyer's reading first.**
+
+| Data | In force today (code and notice) | Proposed | Reason, and what it saves | Status |
+| --- | --- | --- | --- | --- |
+| registration and signed declaration (with its notes and acceptance rows, which go with it) | deleted **3 years** after the event's start, the participant with their last registration (Codul civil art. 2517, §95) | keep the declaration 3 years; anonymise the **registration row** earlier (see 3) | the declaration is the club's evidence for a claim; the registration's contact data is not | the owner decides |
+| audit log (`audit_logs`, metadata only) | **3 years** | 24 months in full, then only action, entity and date until the 3 years | almost no bytes (the rows are small); the reason is minimisation, and a lawyer decides whether the claim period covers staff actions at all | proposed |
+| sent messages (`email_outbox`) | **90 days** after sending; a failed, bounced or complained row stays with its registration | keep 90 days; delete the failed ones 90 days after the event | the address in each row is personal data; bytes are negligible | proposed (the 90 days are done) |
+| messages about nobody (an interest box, an invitation) | **90 days** after queueing, any status | as today | — | done |
+| Mailgun's delivery events | **no table**: the webhook writes the state onto the outbox row (`email_outbox`) | nothing to prune | the brief expected a table; there is none | done |
+| action tokens (`email_action_tokens`) | **30 days** after use, invalidation or expiry | 7 days | a hash and a link; 30 days answers «did my link work?» about a recent race, so the saving is tidiness only | the owner decides |
+| a family's place holds, pending entries | held rows go **24 hours** after expiry; pending entries at their expiry | as today | — | done |
+| unconfirmed registrations; ended invitations | **30 days** | as today | nothing to prove: nobody confirmed the address | done |
+| identity document, health note, emergency contact | cleared **7 days** after the event | as today | special-category data (§95) | done |
+| volunteers | **30 days** after the event (§754) | as today | — | done |
+| job runs; throttle buckets | **30 days**; **1 day** | as today | — | done |
+| newsletter | unconfirmed addresses after the email-link window; confirmed ones until they unsubscribe (§445) | as today | the notice says so | done |
+| staff sessions | **no table**: sign-in is a signed cookie (`auth.ts`, JWT); each lives by its own expiry | nothing to prune | the brief expected rows; there are none | done |
+
+**3. The personal data of past events — anonymise the registration, keep the evidence.** Proposed: **N months
+after an event (12 is the starting point) the registration row loses what identifies the person** — the
+name becomes the initials, the telephone number, the date of birth, the club, the notes and the address in
+the participant row that no other registration needs are erased — while the **status, the counts, the race
+number, the distance and the dates stay**, so every statistic the club is given is the same. The signed
+declaration is not touched: it is the evidence the 3 years exist for, and it carries the signer's name by
+its nature. What must be checked before anybody writes the code: (i) the **family flow** (§389, §446): a
+person's past registrations on an address are listed to whoever holds the address's link, and an anonymised
+row there would read as a stranger; (ii) the **members' zone** and the discount codes (§524) read a member's
+past registrations; (iii) **returning runners** are prefilled from the participant row and the last
+registration; (iv) **the privacy notice's template must say the period** (section 7) and a lawyer reads it;
+(v) the public start list shows names only for the confirmed of a current event, so it is untouched. The
+saving is not money (Neon's storage is 1.4 cents) but the amount of personal data the club holds.
+
+### (c) Vercel after December
+
+**What Hobby allows, per Vercel's pages as read on 2026-10-16.** The plan page (vercel.com/docs/plans/hobby,
+«last updated 2026-09-14») lists the included usage in the fit table above, and:
+
+| Topic | Hobby |
+| --- | --- |
+| builds | Basic build machines are included (builds beyond one at a time run in a queue: **1 concurrent build**); build machine 2 vCPU, 8 GB; **a build may take 45 minutes** (vercel.com/docs/limits) |
+| deployments | **100 a day**, and a build cancelled by an ignored build step still counts (vercel.com/docs/project-configuration/project-settings § Ignored Build Step); the club does about 14 a day |
+| what happens past an allowance | «Hobby plans will be paused when they exceed the included free tier usage» (vercel.com/docs/plans, usage FAQ): **a pause of about 30 days, not a bill** |
+| team members | none: the Hobby plan has no team collaboration; Pro's developer seats are $20 each and viewers are free |
+| functions | 300 seconds maximum duration; cron jobs at most once a day (the club's pingers are external, so unaffected) |
+| projects and domains | 200 projects; 50 domains per project |
+| logs and firewall | runtime logs for 1 hour; up to 3 custom firewall rules and 3 IP blocks |
+| commercial use | «restricted to non-commercial personal use only»; **asking for donations does not count**, but «advertising the sale of a product or service» and «receiving payment to create, update, or host the site» do (vercel.com/docs/limits/fair-use-guidelines § Commercial usage) |
+
+**The fit.** Everything fits with room except **Active CPU** (the table above: 6.9 CPU-hours at the October
+pace against 4), and a pause would take the site down. **Decision rule proposed: go back to Hobby in
+December only if two consecutive months show under 3 CPU-hours (read on `/devs` → «Vercel: consumul lunii»);
+otherwise stay on Pro — $20 a month, one seat — and apply the levers below to bring the usage back inside
+the $20 credit.** Two things to decide with a lawyer or the owner before Hobby at all: the members' shop
+(products with prices on the site) may be «advertising the sale of a product»; and sponsors' logos on the
+event pages. Neither is decided here; the fallback already recorded (limit 3 above) is Render Free in Frankfurt.
+
+| Lever | What it saves | What it costs | Status |
+| --- | --- | --- | --- |
+| **One release a day** (the rule «deploy less often», 2026-09-23, and §313's `vercel.json`): the 2026-10-16 count was 7 releases, about 14 builds | build CPU (about 85% of $11.66 on Pro); and, with fewer cold starts and ISR refills, much of the Active CPU the fit above shows | a fix reaches production a day later; a hot fix is the exception | proposed (a habit, not a setting) |
+| **Build machine: Basic on both projects.** Read 2026-10-16: both projects use an Elastic «standard» machine, 4 vCPU, billed per CPU-minute; Basic is 2 vCPU | half the build CPU-minutes for the same wall time; Basic is what Hobby gives | builds may take longer (the 45-minute limit is far away) | proposed — the owner's click: each project → Settings → Build and Deployment → Build Machine |
+| **`ignoreCommand` in `vercel.json`** that skips the build when nothing under `src/`, `messages/`, `public/`, `scripts/`, `package.json`, `yarn.lock`, `next.config.ts` or `vercel.json` changed | little: **every release changes `CHANGELOG.md`**, whose top heading is the baseline inlined at build (`next.config.ts`), and `yarn ship` waits for production to report the new baseline — so a release must always build; only a merge that is not a release (a test, a runbook) would be skipped | it **overrides each project's dashboard setting** (today «build only when `VERCEL_ENV` is production»), so the command must repeat that test or a preview would build; a cancelled build still counts toward the 100 a day | proposed, **not recommended on its own**; worth it only after one release a day, and never without `CHANGELOG.md` in the list |
+| **Observability events off or sampled** | $0.53 of the 16 days; Hobby lists no allowance for them | route-level detail, which Hobby does not have anyway | proposed: read the line on Hobby's Usage page after the downgrade; no per-project switch for the basic events was found in Vercel's REST reference |
+| **ISR writes**: which pages revalidate and how often | $0.34 of the 16 days; the public pages are kept for at most a day (`PUBLIC_PAGE_CEILING_SECONDS`, §549) and a write expires what it changed (§333); a quiet day still wrote 1.6–2.3 thousand | a longer ceiling shows a changed row later (writes already expire what they changed) | proposed: find the routes first (the project's Observability → ISR graphs in the dashboard), then decide |
+| **The scanners' renders** (§577 B4): about 150 a day of the 404 page rendered per probe | a few CPU-minutes a month | none: the application serves no `.php`, `/wp-*`, `/.env` or `/.git` | proposed, recommended in §577 and still not applied: the owner's four firewall rules |
+| **Function region and memory** | little: Provisioned Memory is $0.22 of the 16 days | — | QA's project reads `iad1` and Node 24 on 2026-10-16, while `SETUP.md` §26 says `fra1` and `22.x`: **the owner decides whether that is deliberate**; production is `fra1` and `22.x` |
+
+### (d) What this change did not do
+
+No deletion, no retention job, no setting, no change to a project at Vercel or Neon: the measurements
+and this plan only. The next change comes after the owner's decisions and does them in this order:
+(1) read the wakes (`yarn idle:measure`) and the ISR routes, and fix what they name; (2) set the retention
+periods the owner chose as platform settings — the row on `/admin/tasks` turns off when one is set — and
+change the privacy notice's template with them; (3) the anonymisation of past events' registrations, after the
+lawyer and the four checks above; (4) the December decision on Hobby against the rule above.
+
+**To read the numbers again:** `/devs` → «Configurație» (the two cards and the deployments line);
+`yarn db:sizes --env qa` or `--env production` (asks Neon: about five minutes of compute); `yarn idle:measure`;
+Vercel's Usage page. Quote a figure here only with its date.
+
 ## Cost
 
 Three services are paid now — Neon Launch since 2026-09-22, one Vercel Pro seat since 2026-09-30 and
