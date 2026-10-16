@@ -195,7 +195,7 @@ describe("§787 the «Club runner» column: the one predicate, written where a f
     expect(new Set(REGISTRATION_SHEET_HEADERS).size).toBe(REGISTRATION_SHEET_HEADERS.length);
   });
 
-  it("says «Da» exactly when isClubRunner does — by a member, the box or a typed club — and nothing otherwise", async () => {
+  it("says «Yes» exactly when isClubRunner does — by a member, the box or a typed club — and nothing otherwise", async () => {
     const cases: Array<[Partial<RegistrationSheetRow>, boolean]> = [
       [{ memberVerified: true }, true],
       [{ clubMemberDeclared: true }, true],
@@ -212,9 +212,9 @@ describe("§787 the «Club runner» column: the one predicate, written where a f
       expect(isClubRunner(rows[index]), JSON.stringify(cases[index][0])).toBe(expected);
       expect(grid[index + 1]?.[at], JSON.stringify(cases[index][0])).toBe(expected ? CLUB_RUNNER_YES : undefined);
     });
-    // The cell is text, so a formula reading it with `"Da"` finds it; the word itself comes from the one place.
-    expect(CLUB_RUNNER_YES).toBe("Da");
-    expect(clubRunnerCell(true)).toBe("Da");
+    // The cell is text, so a formula reading it with `"Yes"` finds it; the word itself comes from the one place.
+    expect(CLUB_RUNNER_YES).toBe("Yes");
+    expect(clubRunnerCell(true)).toBe("Yes");
     expect(clubRunnerCell(false)).toBe("");
   });
 
@@ -230,7 +230,7 @@ describe("§787 the «Club runner» column: the one predicate, written where a f
     expect(columns.at(-2)).toBe("Member bib");
     expect(columns.indexOf("Club member") + 1).toBe(columns.indexOf("Medically fit (declared)"));
     const at = columns.indexOf("Club runner");
-    expect(club.split(",")[at]).toBe("Da");
+    expect(club.split(",")[at]).toBe("Yes");
     expect(other.split(",")[at]).toBe("");
     // With «Note interne» the notes stay the very last column.
     const withNotes = buildRegistrationsCsv([base], { notesHeader: "Note interne" }).split("\r\n")[0].split(",");
@@ -290,7 +290,7 @@ describe("§787 the colours are conditional formatting, never a baked fill", () 
     const first = columnLetter(headerAt("Club member"));
     const last = columnLetter(headerAt("Member bib"));
     expect(member[0].sqref).toBe(`${first}2:${last}${data.length + 1}`);
-    expect(member[0].formula).toBe(`$${CLUB_RUNNER}2="Da"`);
+    expect(member[0].formula).toBe(`$${CLUB_RUNNER}2="Yes"`);
     expect(stylesOf(buffer).dxfs[member[0].dxfId].fill).toBe(argb(SHEET_TINT.member));
     // «Club member», «Club runner» and «Member bib» are side by side, so the one range is exactly those three.
     expect([headerAt("Club member"), headerAt("Club runner"), headerAt("Member bib")]).toEqual([headerAt("Club member"), headerAt("Club member") + 1, headerAt("Club member") + 2]);
@@ -378,8 +378,8 @@ describe("§787 the statistics are formulas with today's number cached beside th
     expect(formulaOf(RO.waitlistOffered)).toBe(`COUNTIF(${range("Status")},"WAITLIST_OFFERED")`);
     expect(formulaOf(RO.cancelled)).toBe(`COUNTIF(${range("Status")},"CANCELLED")`);
     expect(formulaOf(RO.expired)).toBe(`COUNTIF(${range("Status")},"EXPIRED")`);
-    expect(formulaOf(RO.club)).toBe(`COUNTIF(${range("Club runner")},"Da")`);
-    expect(formulaOf(RO.clubConfirmed)).toBe(`COUNTIFS(${range("Club runner")},"Da",${range("Status")},"CONFIRMED")`);
+    expect(formulaOf(RO.club)).toBe(`COUNTIF(${range("Club runner")},"Yes")`);
+    expect(formulaOf(RO.clubConfirmed)).toBe(`COUNTIFS(${range("Club runner")},"Yes",${range("Status")},"CONFIRMED")`);
     // Women 18-29 (the first category row): the sex cell's words and the band's two edges — the last band open-ended.
     const women = rows.findIndex((line) => line?.[0] === "Feminin, 18-29 ani");
     expect(formulas.get(`B${women + 1}`)!.formula).toBe(`COUNTIFS(${range("Sex")},"Female",${range("Age on race day")},">=18",${range("Age on race day")},"<30")`);

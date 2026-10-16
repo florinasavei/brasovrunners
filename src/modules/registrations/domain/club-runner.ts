@@ -23,14 +23,14 @@ export function isClubRunner(row: { clubMemberDeclared: boolean; memberVerified:
 }
 
 /**
- * The «Club runner» cell of both exports (§787, amended): "Da" for one of the club's runners, empty otherwise —
- * never "Nu", for the reason «Club member»'s cell never says "No" (§662). It is `isClubRunner`'s answer written
+ * The «Club runner» cell of both exports (§787, amended): "Yes" for one of the club's runners, empty otherwise —
+ * never "No", for the reason «Club member»'s cell never says "No" (§662). It is `isClubRunner`'s answer written
  * where a spreadsheet's own formulas and colour rules can read it: the typed-club match (§753) cannot be written
  * as a formula, so the footer's `COUNTIF` and the blue on a runner's cells look at this column instead of redoing
- * the rule. The word is Romanian like the club's own copy; the rules and the formulas read it from here, so no
- * file says it twice.
+ * the rule. The word is English like the sheet's other words ("yes", "verified", "declared"); the rules and
+ * the formulas read it from here, so no file says it twice.
  */
-export const CLUB_RUNNER_YES = "Da";
+export const CLUB_RUNNER_YES = "Yes";
 
 export function clubRunnerCell(clubRunner: boolean): string {
   return clubRunner ? CLUB_RUNNER_YES : "";

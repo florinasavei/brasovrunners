@@ -75,7 +75,7 @@ export type RegistrationCsvRow = {
    */
   memberVerified: boolean;
   /**
-   * The row is one of the club's runners (`domain/club-runner.ts#isClubRunner`, §787): the «Club runner» cell, "Da" or
+   * The row is one of the club's runners (`domain/club-runner.ts#isClubRunner`, §787): the «Club runner» cell, "Yes" or
    * empty, which the spreadsheet's colour rules and the statistics footer's formulas read. Required: a caller that
    * forgot it would silently write no blue cell and a club count of 0.
    */
@@ -228,7 +228,7 @@ const HEADER = [
     Last (§787, amended; the owner's «color codes … dacă sunt membri BVR»), for the same reason — the precedent is
     «Member bib» just above: the spreadsheet puts the column beside «Club member» (it is matched by header), the CSV
     appends it so a script that reads by position still finds every earlier column. It is the one answer the footer
-    counts the club's runners by — a member on «Echipa», the box, or a typed club that names the club — as "Da" or
+    counts the club's runners by — a member on «Echipa», the box, or a typed club that names the club — as "Yes" or
     empty, so the file says why a row is blue.
   */
   "Club runner",

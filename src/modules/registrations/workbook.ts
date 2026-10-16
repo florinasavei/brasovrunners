@@ -245,7 +245,7 @@ const COLUMNS: Array<SheetColumn<RegistrationSheetRow>> = [
   // Declared or verified (§662), as the list's chip: "verified", "declared" or blank.
   { header: "Club member", width: 12, cell: (row) => ({ value: membershipCell(row), type: String }) },
   /*
-    «Club runner» (§787, amended; the owner: «color codes … dacă sunt membri BVR»): "Da" for one of the club's runners, from the
+    «Club runner» (§787, amended; the owner: «color codes … dacă sunt membri BVR»): "Yes" for one of the club's runners, from the
     one predicate the footer counts by (`isClubRunner`) — written as a cell so the colour rule on the three membership cells
     and the footer's `COUNTIF` read it from the sheet itself, which the typed-club match (§753) could never be as a formula.
   */
