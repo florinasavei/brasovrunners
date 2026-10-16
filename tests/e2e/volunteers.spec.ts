@@ -288,6 +288,46 @@ test.describe("§754 volunteers for a race", () => {
       await birthBox.pressSequentially("1203");
       await expect(birthBox).toHaveValue("12.03.");
       await birthBox.fill("");
+      // The calendar button beside it (§773): a thumb's size, after the digits and never over them, with the browser's own date input behind it —
+      // bounded as the box is, posting nothing. The day chosen there is written into the typed box, and the line under it follows.
+      const pickerButton = guest.getByRole("button", { name: "Alege data din calendar" });
+      await expect(pickerButton).toBeVisible();
+      await expect(pickerButton).toHaveAttribute("type", "button");
+      const buttonBox = (await pickerButton.boundingBox())!;
+      expect(buttonBox.width).toBeGreaterThanOrEqual(44);
+      expect(buttonBox.height).toBeGreaterThanOrEqual(44);
+      const typedBox = (await birthBox.boundingBox())!;
+      expect(typedBox.x + typedBox.width).toBeLessThanOrEqual(buttonBox.x + 1);
+      // The text box keeps room for «ZZ.LL.AAAA» at the narrowest width (320 px).
+      expect(typedBox.width).toBeGreaterThanOrEqual(110);
+      expect(await guest.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+      const nativeDate = guest.locator('input[type="date"][data-testid$="-native"]');
+      await expect(nativeDate).toHaveAttribute("type", "date");
+      await expect(nativeDate).not.toHaveAttribute("name", /.+/);
+      expect(await nativeDate.getAttribute("min")).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+      expect(await nativeDate.getAttribute("max")).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+      expect(await birthBox.getAttribute("data-min")).toBe(await nativeDate.getAttribute("min"));
+      expect(await birthBox.getAttribute("data-max")).toBe(await nativeDate.getAttribute("max"));
+      // A press reaches the browser's picker: `showPicker` is stubbed to record the call, and focus comes back to the button, never stays on the hidden handle.
+      await guest.evaluate(() => {
+        const w = window as unknown as { __showPicker: number };
+        w.__showPicker = 0;
+        HTMLInputElement.prototype.showPicker = function () {
+          w.__showPicker += 1;
+        };
+      });
+      await pickerButton.click();
+      expect(await guest.evaluate(() => (window as unknown as { __showPicker: number }).__showPicker)).toBe(1);
+      await nativeDate.fill("1990-05-11");
+      await expect(pickerButton).toBeFocused();
+      await expect(birthBox).toHaveValue("11.05.1990");
+      await expect(guest.getByTestId("volunteer-profile")).toContainText(/Vineri, 11 mai 1990 · \d+ de ani în ziua evenimentului/);
+      // Typing still works after a pick: the box is the one source of truth.
+      await birthBox.fill("");
+      await expect(nativeDate).toHaveValue("");
+      await birthBox.pressSequentially("1203");
+      await expect(birthBox).toHaveValue("12.03.");
+      await birthBox.fill("");
       // The club ticks the count: the page says the number as it always did, and unticks it again: the number goes.
       await countsTick.click();
       await page.waitForURL(/#box-volunteers$/);
@@ -420,14 +460,20 @@ test.describe("§754 volunteers for a race", () => {
         name: string,
         email: string,
         ticked: readonly string[],
-        about: { years: number; sex?: "FEMALE" | "MALE"; city: string; before?: boolean; club?: boolean; shirt?: string } = { years: 34, city: "Brașov" },
+        about: { years: number; sex?: "FEMALE" | "MALE"; city: string; before?: boolean; club?: boolean; shirt?: string; picked?: boolean } = { years: 34, city: "Brașov" },
       ) {
         for (const role of ticked) await page2.getByTestId("volunteer-roles").getByRole("checkbox", { name: role }).check();
         await page2.getByLabel("Numele tău").fill(name);
         await page2.getByLabel("Adresa ta de email").fill(email);
         await page2.locator('[name="phone"]').fill("712345678");
         // What the person says about themselves (§765): the date of birth — digits typed, the dots put in by the box (§773) — the sex, the city, two optional ticks and, while the event gives T-shirts, the size.
-        await typeBirth(page2.locator('input[name="birthDate"]'), typedBirth(about.years));
+        if (about.picked) {
+          // The calendar button's hidden date input (§773, the owner, 2026-10-16): the day chosen in the browser's picker is written into the typed box.
+          await expect(page2.getByRole("button", { name: "Alege data din calendar" })).toBeVisible();
+          await page2.locator('input[type="date"][data-testid$="-native"]').fill(keptBirth(about.years));
+        } else {
+          await typeBirth(page2.locator('input[name="birthDate"]'), typedBirth(about.years));
+        }
         await expect(page2.locator('input[name="birthDate"]')).toHaveValue(shownBirth(about.years));
         // The line under the box says the age on the event's day, in words.
         await expect(page2.getByTestId("volunteer-profile")).toContainText("în ziua evenimentului");
@@ -631,7 +677,7 @@ test.describe("§754 volunteers for a race", () => {
         await expect(guest.locator('select[name="shirtSize"]')).toHaveCount(1, { timeout: 3_000 });
       }).toPass({ timeout: 60_000 });
       await expect(guest.getByLabel("Mărimea tricoului")).toBeVisible();
-      await offer(guest, "Ion Test", ion, ["Punct de apă"], { years: 52, sex: "MALE", city: "Cluj-Napoca", shirt: "L" });
+      await offer(guest, "Ion Test", ion, ["Punct de apă"], { years: 52, sex: "MALE", city: "Cluj-Napoca", shirt: "L", picked: true });
       // Maria again: the same «am primit», and one row still.
       await openBox();
       await offer(guest, "Maria Din Nou", maria.replace("maria", "Maria").replace("@example", "@Example"), ["Punct de apă"]);
@@ -701,6 +747,8 @@ test.describe("§754 volunteers for a race", () => {
         await typeBirth(add.locator('input[name="birthDate"]'), typedBirth(about.years));
         await expect(add.locator('input[name="birthDate"]')).toHaveValue(shownBirth(about.years));
       }
+      // The calendar button is in the organizers' entry too (§773), one per box.
+      await expect(add.getByRole("button", { name: "Alege data din calendar" })).toBeVisible();
       if (about.city) await add.locator('input[name="city"]').fill(about.city);
       if (about.before) await add.getByRole("checkbox", { name: "A mai fost voluntar în trecut la alte curse" }).check();
       // The box says «cel puțin 14 ani» itself and the browser would stop a press on a date under the floor: lifted, so what is read is the server's refusal.

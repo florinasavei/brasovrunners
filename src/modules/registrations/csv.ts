@@ -214,7 +214,7 @@ const HEADER = [
   "Special guest",
   /*
     Last (§650), for the same reason: the list's «Până când» — the moment the row waits on, then what it
-    is for, as the kind's token. The spreadsheet puts the two beside «Status»; it is matched by header.
+    is for, as the kind's token. The spreadsheet puts the two after «T-shirt size», before «Email»; it is matched by header.
   */
   "Until when",
   "Waiting on",

@@ -1126,6 +1126,10 @@
           "SUPERADMIN": "Superadministrator"
         }
       },
+      "sheetpick": {
+        "title": "Stare nepermisă",
+        "error": "Alege o stare din listă."
+      },
       "statistics": {
         "title": "Statistici",
         "total": "Total",
@@ -1139,6 +1143,9 @@
         "club": "{club}",
         "clubConfirmed": "{club}, confirmați",
         "notClub": "Alții, nu {club}",
+        "specialGuests": "Invitați speciali",
+        "specialGuestsConfirmed": "Invitați speciali, confirmați",
+        "confirmedInPlaces": "Confirmați care ocupă un loc",
         "allEvents": "Toate evenimentele",
         "untitled": "Eveniment fără titlu",
         "categoryHeader": "Categorie",
@@ -1152,11 +1159,12 @@
         "bandFrom40": "40-49 ani",
         "bandFrom50": "50-59 ani",
         "bandFrom60": "60+ ani",
-        "note1": "Activi sunt cei confirmați: au un loc și declarația semnată.",
+        "note1": "Activi sunt cei confirmați: au declarația semnată; cei care ocupă un loc sunt la «Confirmați care ocupă un loc».",
         "note2": "La «{club}» se numără membrii din «Echipa», cei care au bifat că sunt membri și cei care au scris clubul în formular.",
         "note3": "La «{club}», ca la «Total», se numără toate stările; cei care vin sunt la «{club}, confirmați».",
         "note4": "Categoria este sexul și vârsta la data cursei; cine nu are una dintre ele este la «Fără categorie». Înscrierile de test nu se numără.",
         "note5": "Numerele sunt formule peste rândurile de mai sus: schimbi o stare, un sex sau o vârstă și se recalculează singure, la fel și culorile rândurilor. Un rând sub ultimul alergător nu se numără.",
+        "note6": "Invitații speciali, puși de un administrator pe «Lista de invitați speciali», nu ocupă un loc; sunt numărați la «Total» și la starea lor.",
         "legendTitle": "Culori",
         "legendConfirmed": "Verde, confirmat",
         "legendPending": "Galben, așteaptă un răspuns",
@@ -9969,6 +9977,7 @@
     "birthDateEcho": "{date} · {age} în ziua evenimentului",
     "birthDatePlaceholder": "ZZ.LL.AAAA",
     "birthDateUnreadable": "Scrie data ca zi, lună, an: 11.05.1990.",
+    "birthDatePicker": "Alege data din calendar",
     "ageRule": {
       "minimumAndGuardian": "Vârsta minimă: {age}. Sub 18 ani, înscrierea se face de un părinte sau tutore, cu acordul acestuia.",
       "minimumAndConsent": "Vârsta minimă: {age}. Sub 18 ani, participarea se face cu acordul unui părinte.",

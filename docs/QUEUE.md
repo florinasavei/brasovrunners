@@ -14,17 +14,17 @@ decision or a click only the club can make · **released** — on production, wi
 The owner, 2026-10-10: «Soon I need to start a new session from the laptop … You need to save and document everything».
 This section replaces the plan of 2026-09-30; it is what a session with none of today's conversation needs to carry on.
 
-- **Production: `BR-V3.43`** (2026-10-16 10:41: §788 the volunteers' page calmer, §789 «Sunt membru al grupului»
-  explained by the club's own sentence; no migration). Waiting for «prod», in order: `BR-V3.44` (§790 the live Excel,
-  §791 the roles editor saves every role at once — PR #498) and then `BR-V3.45` (§792, below) — no migration in either.
-- **QA: `BR-V3.45`** — the event's «De făcut» card is two folds shut on arrival, «Lipsește pe pagină» and «Sarcini»,
-  each with a summary line (counts over the whole data, the most pressing priority's chip, «ale mele», «întârziate»,
-  or the empty words); the filter chips, the add row and «Mai multe» inside «Sarcini», «Ale mele» filtering the club's
-  tasks only; a fold opens by itself only on its own refusal or save, a row's hash, or the «Ale mele» filter (§792).
-- **Building (2026-10-16, the owner's asks of the late morning):** the volunteers' form — a calendar button beside
-  «Data nașterii» opening the native date picker into the typed box (`feat/volunteer-birth-datepicker`); the Excel's
-  «Statistici» — the special guests on their own lines and «Confirmați care ocupă un loc» (`feat/statistics-special-guests`);
-  the Excel's «Status» right after the BIB, as a drop-down list (`feat/excel-status-column`). The three land together.
+- **Production: `BR-V3.45`** (2026-10-16 13:36: §790 the live Excel, §791 the roles editor saves every role at once,
+  §792 the event's «De făcut» card in two folds; no migration). Waiting for «prod»: `BR-V3.46` (§793–§795, below) —
+  no migration.
+- **QA: `BR-V3.46`** — the volunteers' «Data nașterii» box has a calendar button that opens the browser's own date
+  picker and writes the chosen day into the typed box (on in the volunteers' two places only; §793); the Excel
+  «Statistici» counts the special guests on three live-formula lines of their own — «Invitați speciali», «Invitați
+  speciali, confirmați», «Confirmați care ocupă un loc» — with a note that a guest takes no place (§794); «Status» is
+  the Excel's third column, right after the race number, with a drop-down list of the status words the formulas and
+  the colour rules count; the CSV's order is untouched (§795).
+- **Building:** nothing. The queue of 2026-10-16 (the owner's morning screenshots and asks, lanes 31–38) is done once
+  `BR-V3.46` is on production.
 - **Waiting on the owner:** the privacy notice from the new template, approved in `/admin/legal` after a lawyer reads
   the paragraph on what the site loads (its first sentence says what is used is strictly necessary and needs no consent,
   art. 4(6) of Legea nr. 506/2004, while the same paragraph says Strava may set its own cookies without a press — the
@@ -140,6 +140,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V3.46` | the volunteers' form: a calendar button opens the native date picker beside «Data nașterii» (§793) · the Excel «Statistici»: the special guests counted on their own lines, and the confirmed who take a place (§794) · the Excel export: «Status» right after the BIB, as a drop-down list (§795) |
 | `BR-V3.45` | the event's «De făcut» card: two folds closed by default, each with a summary line (§792) |
 | `BR-V3.44` | the Excel export, live: colours by status and membership as conditional formatting, the statistics as formulas (§790) · the roles editor: categories as sub-cards, one «Salvează toate rolurile», tabs and translation for the descriptions (§791) |
 | `BR-V3.43` | the volunteers' page: calm category cards, roles as chips, the description behind «?» (§788) · „Sunt membru”: a «?» with the club's own definition, set on «Pagini» → «Membri» (§789) |
