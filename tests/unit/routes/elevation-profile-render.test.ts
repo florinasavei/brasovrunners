@@ -169,7 +169,7 @@ describe("§NNN the elevation profile widget: the editor's preview", () => {
   it("draws one small chart, no pointer island, no «Alt» caption, at most two altitude labels", () => {
     const charts = chartsIn(html);
     expect(charts).toHaveLength(1);
-    expect(charts[0]).toMatchObject({ size: "compact", width: 400, height: 170 });
+    expect(charts[0]).toMatchObject({ size: "compact", width: 300, height: 160 });
     expect(html).toContain('data-variant="compact"');
     expect(html).not.toContain("elevation-pointer");
     expect(html).not.toContain(">Alt</text>");
@@ -178,12 +178,82 @@ describe("§NNN the elevation profile widget: the editor's preview", () => {
 
   it("keeps its labels at 11 px or more in the editor's card on a 320 px phone", () => {
     const [chart] = chartsIn(html);
-    // The card sits inside the editor's own padding: at 320 px about 270 px of it is the chart's.
-    expect((chart.fontSize * 270) / chart.width).toBeGreaterThanOrEqual(10.5);
+    // The width the chart really has there: the editor's page gutters and the nested cards leave it about 204 px (measured in the
+    // editor's own e2e at 320 px, which holds this figure to the browser's).
+    expect((chart.fontSize * 204) / chart.width).toBeGreaterThanOrEqual(11);
+    // And it is never drawn larger than it was made: the figure's width stops at the box's.
+    expect(html).toContain("max-width:300px");
   });
 
   it("pins the same checkpoints as the page", () => {
     expect([...html.matchAll(/data-glyph="(\w+)"/g)].map((match) => match[1])).toEqual(["water", "food", "water"]);
+  });
+});
+
+/** Every <text> of one chart, with the box its words fill: the estimate the core itself uses (0.6 em a character), in the viewBox's units. */
+function textsOf(html: string, chart: ReturnType<typeof chartsIn>[number]) {
+  const start = html.indexOf(chart.tag);
+  const part = html.slice(start, html.indexOf("</svg>", start));
+  return [...part.matchAll(/<text x="(-?[\d.]+)" y="(-?[\d.]+)" text-anchor="(\w+)"[^>]*>([^<]*)<\/text>/g)].map((match) => {
+    const [x, y, anchor, text] = [Number(match[1]), Number(match[2]), match[3], match[4]];
+    const width = text.length * chart.fontSize * 0.6;
+    const left = anchor === "end" ? x - width : anchor === "middle" ? x - width / 2 : x;
+    return { text, anchor, left, right: left + width, top: y - chart.fontSize * 0.72, bottom: y + chart.fontSize * 0.2 };
+  });
+}
+
+describe("§NNN the altitude axis's room and the «Alt» caption", () => {
+  // A route from 800 to 990 m: its top round tick, «1000», is one digit longer than the highest altitude, and sits close to the top of the plot.
+  const tall = parseGpxElevation(elevationGpx({ low: 800, high: 990 }))!;
+  const renderTall = (variant: "page" | "compact", markers: readonly ElevationProfileMarker[]) =>
+    renderToStaticMarkup(createElement(ElevationProfile, { variant, profile: tall, distanceMeters: null, markers, locale: "ro", words: wordsOf("ro") }));
+  const cases = [
+    ["with pins", profileMarkers(CHECKPOINTS, "ro")],
+    ["without pins", []],
+  ] as const;
+
+  for (const [name, markers] of cases) {
+    it(`keeps every word inside the box when the top tick is «1000», on the narrow, the wide and the compact chart, ${name}`, () => {
+      for (const variant of ["page", "compact"] as const) {
+        const html = renderTall(variant, markers);
+        for (const chart of chartsIn(html)) {
+          const texts = textsOf(html, chart);
+          expect(texts.map((entry) => entry.text)).toContain("1000");
+          for (const entry of texts) {
+            expect(entry.left, `${chart.size} «${entry.text}» leaves at the left`).toBeGreaterThanOrEqual(0);
+            expect(entry.right, `${chart.size} «${entry.text}» leaves at the right`).toBeLessThanOrEqual(chart.width + 0.5);
+          }
+        }
+      }
+    });
+  }
+
+  it("keeps the «Alt» caption clear of every other word, on a chart with no pins whose top tick is near the top", () => {
+    const html = renderTall("page", []);
+    const charts = chartsIn(html);
+    expect(charts.length).toBe(2);
+    for (const chart of charts) {
+      const texts = textsOf(html, chart);
+      const caption = texts.find((entry) => entry.text === "Alt")!;
+      expect(caption).toBeDefined();
+      for (const other of texts.filter((entry) => entry !== caption)) {
+        const apart = other.right <= caption.left || other.left >= caption.right || other.bottom <= caption.top || other.top >= caption.bottom;
+        expect(apart, `${chart.size}: «Alt» and «${other.text}» overlap`).toBe(true);
+      }
+    }
+  });
+
+  it("holds for the owner's own route too: 608 to 828 m, with and without pins, nothing touches the caption", () => {
+    for (const markers of [profileMarkers(CHECKPOINTS, "ro"), []]) {
+      const html = render("page", "ro", markers);
+      for (const chart of chartsIn(html)) {
+        const texts = textsOf(html, chart);
+        const caption = texts.find((entry) => entry.text === "Alt")!;
+        for (const other of texts.filter((entry) => entry !== caption)) {
+          expect(other.right <= caption.left || other.left >= caption.right || other.bottom <= caption.top || other.top >= caption.bottom).toBe(true);
+        }
+      }
+    }
   });
 });
 

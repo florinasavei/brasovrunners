@@ -222,7 +222,7 @@ export default async function CheckpointsCard({ locale, eventId, checkpoints, ma
       </Stack>
       {/* «Arată pe profilul traseului» (§NNN): on for a new point and for any saved one the club has not unticked; an unticked box posts nothing. */}
       <input type="hidden" name={checkpointBox(index, "onProfileShown")} value="1" form={CHECKPOINTS_FORM} />
-      <CheckboxField name={checkpointBox(index, "onProfile")} defaultChecked={saved ? saved.onProfile : true}>
+      <CheckboxField name={checkpointBox(index, "onProfile")} defaultChecked={saved ? saved.onProfile : true} help={t("checkpoints.field.onProfileHelp")}>
         <Box component="span" sx={{ display: "inline-flex", alignItems: "center", gap: 0.75 }}>
           <ProfileGlyph aria-hidden fontSize="small" />
           {t("checkpoints.field.onProfile")}
@@ -395,11 +395,6 @@ export default async function CheckpointsCard({ locale, eventId, checkpoints, ma
         {routeKm !== null && (
           <Typography variant="body2" data-testid="checkpoints-route-length">
             {t("checkpoints.routeLength", { km: km(routeKm) })}
-          </Typography>
-        )}
-        {mayEdit && (
-          <Typography variant="body2" color="text.secondary" data-testid="checkpoints-profile-help">
-            {t("checkpoints.profileHelp")}
           </Typography>
         )}
         {/* «Așa apare pe pagină» (§NNN): the page's own chart, small, from the saved file and the saved rows — drawn on the server at page load, so it follows a save and not the typing. */}

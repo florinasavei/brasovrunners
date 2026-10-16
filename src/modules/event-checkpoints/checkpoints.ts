@@ -136,8 +136,9 @@ const toPosted = (row: Checkpoint, index: number): PostedCheckpoint => {
   };
 };
 
-/** One line of the audit trail: where, what and by when (the time limit in minutes) — never a participant. */
-const summary = (rows: readonly Pick<Checkpoint, "km" | "nameRo" | "cutoffMinutes">[]) => rows.map((row) => ({ km: row.km, name: row.nameRo, cutoffMinutes: row.cutoffMinutes }));
+/** One line of the audit trail: where, what, by when (the time limit in minutes) and whether the profile draws it (§NNN) — never a participant. */
+const summary = (rows: readonly Pick<Checkpoint, "km" | "nameRo" | "cutoffMinutes" | "onProfile">[]) =>
+  rows.map((row) => ({ km: row.km, name: row.nameRo, cutoffMinutes: row.cutoffMinutes, onProfile: row.onProfile }));
 
 /** Whether two rows say the same thing, whatever their id and place in the list. */
 function sameWords(a: Omit<CheckpointInput, "id">, b: Pick<Checkpoint, "nameRo" | "nameEn" | "km" | "cutoffMinutes" | "noteRo" | "noteEn" | "kinds" | "onProfile">): boolean {

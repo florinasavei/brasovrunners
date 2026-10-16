@@ -650,7 +650,14 @@ describe("§NNN «Arată pe profilul traseului» — the tick on each point", ()
     expect(await actions()).toEqual(["event_checkpoints.changed"]);
     await save([{ ...WATER, id: water.id, onProfile: false }]);
     expect(await onProfileOf()).toEqual({ Apă: false });
-    expect((await trail())[1].metadataJson).toMatchObject({ added: 0, edited: 1, removed: 0 });
+    // The trail says what changed: the tick is in the line, so `from` and `to` are not the same words.
+    expect((await trail())[1].metadataJson).toMatchObject({
+      added: 0,
+      edited: 1,
+      removed: 0,
+      from: [{ name: "Apă", onProfile: true }],
+      to: [{ name: "Apă", onProfile: false }],
+    });
     await save([{ ...WATER, id: water.id, onProfile: false }]);
     expect(await trail()).toHaveLength(2);
     await save([{ ...WATER, id: water.id, onProfile: true }]);

@@ -9663,12 +9663,12 @@
         "noteRo": "Notă (română)",
         "noteEn": "Notă (engleză)",
         "noteHelp": "Opțională, în ambele limbi sau în niciuna; cel mult {max} de caractere.",
-        "onProfile": "Arată pe profilul traseului"
+        "onProfile": "Arată pe profilul traseului",
+        "onProfileHelp": "Punctele debifate rămân în tabel și pe pagină; doar profilul nu le desenează."
       },
-      "profileHelp": "Punctele debifate rămân în tabel și pe pagină; doar profilul nu le desenează. Numărul de concurs le arată după setarea lui din „Numere”.",
       "preview": {
         "title": "Așa apare pe pagină",
-        "help": "Se schimbă după „Salvează punctele”, nu în timp ce scrii.",
+        "help": "Se schimbă după „Salvează punctele”, nu în timp ce scrii. Numărul de concurs le arată după setarea „Punctele de control pe profil” din „Numere de concurs (BIB)”.",
         "none": "Profilul apare pe pagină când traseul are un fișier GPX cu altitudini."
       },
       "kinds": {

@@ -414,8 +414,14 @@ export function upgradeCheckpoints(file: EventFile): { file: EventFile; notes: F
   return { file: { ...file, event: { ...event, route: { ...event.route, checkpoints } } }, notes };
 }
 
-/** The file as it is downloaded: readable, two spaces, a newline at the end. The size the reader measures is this one's. */
-export const serializeEventFile = (file: EventFile): string => `${JSON.stringify(file, null, 2)}\n`;
+/**
+ * The file as it is downloaded: readable, two spaces, a newline at the end. The size the reader measures is this one's.
+ *
+ * A checkpoint's tick «Arată pe profilul traseului» (`onProfile`, §NNN) is written only when it is **off**: «on» is what a
+ * file without it means, and leaving it out keeps a file whose points are all ticked readable by the release before the tick
+ * existed (its checkpoint schema refuses a key it does not know) — QA ships a day before production, and its files travel.
+ */
+export const serializeEventFile = (file: EventFile): string => `${JSON.stringify(file, (key, value) => (key === "onProfile" && value === true ? undefined : value), 2)}\n`;
 
 /** Why a file was refused, as a code the page says in words (`Admin.eventJson.refusals.<code>`). */
 export type EventFileRefusal = "tooLarge" | "notJson" | "notAnEventFile" | "unknownVersion" | "invalid";

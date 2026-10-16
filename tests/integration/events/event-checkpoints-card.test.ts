@@ -250,10 +250,12 @@ describe("§NNN the profile's tick and preview on the card", () => {
     expect(tickOf(html, 4)).toContain("checked");
   });
 
-  it("says in one sentence that an unticked point stays in the table and on the page, and where the race number follows", async () => {
+  it("says beside each tick that an unticked point stays in the table and on the page, and in the preview's intro where the race number follows", async () => {
     const html = await render();
-    expect(html).toContain('data-testid="checkpoints-profile-help"');
-    expect(html).toContain("Punctele debifate rămân în tabel și pe pagină; doar profilul nu le desenează. Numărul de concurs le arată după setarea lui din „Numere”.");
+    // The sentence is the tick's own help, in its own row: no standalone paragraph at the top of the card.
+    expect(html).not.toContain('data-testid="checkpoints-profile-help"');
+    expect(html).toContain("Punctele debifate rămân în tabel și pe pagină; doar profilul nu le desenează.");
+    expect(html).toContain("Numărul de concurs le arată după setarea „Punctele de control pe profil” din „Numere de concurs (BIB)”.");
   });
 
   it("draws the preview «Așa apare pe pagină» above the rows: the page's chart, small, with the pins of the ticked points only", async () => {

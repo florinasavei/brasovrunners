@@ -9663,12 +9663,12 @@
         "noteRo": "Note (Romanian)",
         "noteEn": "Note (English)",
         "noteHelp": "Optional, in both languages or neither; at most {max} characters.",
-        "onProfile": "Show on the route profile"
+        "onProfile": "Show on the route profile",
+        "onProfileHelp": "Unticked points stay in the table and on the page; only the profile leaves them out."
       },
-      "profileHelp": "Unticked points stay in the table and on the page; only the profile leaves them out. The race number shows them as its “Race numbers” setting says.",
       "preview": {
         "title": "How it appears on the page",
-        "help": "It changes after “Save the points”, not while you type.",
+        "help": "It changes after “Save the points”, not while you type. The race number shows them as its setting “Checkpoints on the profile” in “Race numbers (bibs)” says.",
         "none": "The profile appears on the page once the route has a GPX file with altitudes."
       },
       "kinds": {

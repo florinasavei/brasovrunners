@@ -477,7 +477,7 @@ test.describe("§NNN the route's elevation profile", () => {
     const chart = preview.getByTestId("elevation-chart");
     await expect(chart).toHaveCount(1);
     await expect(preview.getByTestId("elevation-pin")).toHaveCount(3);
-    await expect(card.getByTestId("checkpoints-profile-help")).toContainText("Punctele debifate rămân în tabel și pe pagină");
+    await expect(preview).toContainText("Numărul de concurs le arată după setarea „Punctele de control pe profil”");
 
     // The tick on each point: on for a new row, off for the point the club left off.
     // (Counted by the boxes' own names: the saved points and the spare rows sit in folds that are closed.)

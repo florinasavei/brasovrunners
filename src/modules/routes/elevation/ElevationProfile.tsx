@@ -103,7 +103,7 @@ function chartOf(
     compact,
   });
   // Without pins the top holds the «Alt» caption's line (the page's charts), so the caption never meets the highest altitude label.
-  const topFor = (rows: number) => (markers.length === 0 ? Math.ceil(textSize * (compact ? 0.8 : 1.4)) : Math.ceil(gap + rows * rowStep + 1));
+  const topFor = (rows: number) => (markers.length === 0 ? Math.ceil(textSize * (compact ? 0.8 : 1.7)) : Math.ceil(gap + rows * rowStep + 1));
   // The altitude labels are the round values the core drew — a top tick one digit longer than the route's highest («1000» over a 990 m summit) is common — so the left room follows them.
   const leftOf = (drawn: ElevationGeometry) => leftFor(Math.max(...drawn.altitudeTicks.map((tick) => tick.label.text.length)));
   let top = topFor(3);
