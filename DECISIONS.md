@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.47-2026-10-16 -->
+<!-- PROJECT_BASELINE: BR-V3.48-2026-10-16 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V3.47-2026-10-16`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.48-2026-10-16`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -26975,3 +26975,13 @@ Baseline `BR-V3.46-2026-10-16`.
 **Refused.** Putting the tick in the CSV (a column inserted in the middle moves every index a script reads); colouring the whole row of a guest (it would hide the status, which is what the row colours are for); a baked fill (the file is the club's to edit offline); one formula rule with `COLUMN()` tests to make the guest marking a single rule (it reads worse in Excel's rule manager and breaks when a column is inserted).
 
 Baseline `BR-V3.47-2026-10-16`.
+
+## 797. The volunteers' page: the kinder note is an information banner
+
+**The owner, 2026-10-16, from a screenshot of the volunteers' page:** «Asta ar trebui să fie într-un banner, să fie mai vizibil: acest disclaimer». The note under the roles (§773: «În funcție de numărul de doritori, există posibilitatea să fie nevoie să acoperi o altă responsabilitate. Mulțumim pentru dorința de a ajuta. Te vom contacta curând.») was a grey `body2` line between the last category card and «Numele tău», easy to miss.
+
+**Decision (amending §773 and §788; the words, the roles, the chips, the «?» and the server are untouched).** The note is the house's public information notice: the MUI `Alert` of `severity="info"`, drawn as the register page and the check-your-email screen draw theirs, with the Alert's own info glyph before the words, full width of the form's column, a clear step above and below (`mt: 2`, `mb: 1`). Theme tokens only, so its palette is the info palette of both looks. The id `<roleIds>-note` (named by the roles' fieldset in `aria-describedby`) and the test id `volunteer-roles-note` sit on the Alert's root. It is static text, not a live message: MUI's default `role="alert"` is replaced by `role="note"` (an `undefined` role passed from the Server Component did not survive to the client Alert: the browser kept `alert`), so a screen reader reads it with the group and does not announce it on load; the render and end-to-end tests assert it.
+
+**Refused.** A new component or a coloured div of our own (the house already has the notice); `role="status"` (it would be announced as a live region); a warning severity (it is thanks, not a fault); changing the words.
+
+Baseline `BR-V3.48-2026-10-16`.

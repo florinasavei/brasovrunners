@@ -14,16 +14,14 @@ decision or a click only the club can make · **released** — on production, wi
 The owner, 2026-10-10: «Soon I need to start a new session from the laptop … You need to save and document everything».
 This section replaces the plan of 2026-09-30; it is what a session with none of today's conversation needs to carry on.
 
-- **Production: `BR-V3.46`** (2026-10-16 14:18: §793 the volunteers' calendar button, §794 the special guests in
-  «Statistici», §795 «Status» after the BIB as a drop-down; no migration). Waiting for «prod»: `BR-V3.47` (§796,
-  below) — no migration.
-- **QA: `BR-V3.47`** — the Excel gains «Member tick (declared)» («Yes» when the person ticked «Sunt membru al
-  grupului», right after «Club member»); the club's blue on the member cells follows that tick, a club runner without
-  it reads lavender, a special guest's number, names and «Special guest» cell are peach and italic above every other
-  tint; the «Statistici» footer has a live «Au bifat că sunt membri {club}» line; the legend and the backoffice guide
-  say the new rule; the CSV is untouched (§796).
-- **Building:** nothing. The queue of 2026-10-16 (the owner's screenshots and asks, lanes 31–39) is done once
-  `BR-V3.47` is on production.
+- **Production: `BR-V3.47`** (2026-10-16 16:46: §796 the Excel's «Member tick (declared)» column, the blue by the
+  tick, lavender for the other club runners, the special guests in peach and italic; no migration). Waiting for
+  «prod»: `BR-V3.48` (§797, below) — no migration.
+- **QA: `BR-V3.48`** — on the volunteers' page the kinder note under the roles («În funcție de numărul de doritori…»,
+  §773) is the house's information banner (`Alert severity="info"`, its glyph, `role="note"`), words, id and test id
+  unchanged (§797).
+- **Building:** nothing. The queue of 2026-10-16 (the owner's screenshots and asks, lanes 31–40) is done once
+  `BR-V3.48` is on production.
 - **Waiting on the owner:** the privacy notice from the new template, approved in `/admin/legal` after a lawyer reads
   the paragraph on what the site loads (its first sentence says what is used is strictly necessary and needs no consent,
   art. 4(6) of Legea nr. 506/2004, while the same paragraph says Strava may set its own cookies without a press — the
@@ -139,6 +137,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V3.48` | the volunteers' page: the kinder note as an information banner (§797) |
 | `BR-V3.47` | the Excel export: the member tick as its own column, the club's blue follows it, a lavender for the other club runners, the special guests marked in peach (§796) |
 | `BR-V3.46` | the volunteers' form: a calendar button opens the native date picker beside «Data nașterii» (§793) · the Excel «Statistici»: the special guests counted on their own lines, and the confirmed who take a place (§794) · the Excel export: «Status» right after the BIB, as a drop-down list (§795) |
 | `BR-V3.45` | the event's «De făcut» card: two folds closed by default, each with a summary line (§792) |
