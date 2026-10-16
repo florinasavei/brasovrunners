@@ -28,8 +28,8 @@ export function postedCheckpoints(form: FormData): PostedCheckpoint[] {
       cutoffMinutesPart: text(checkpointBox(index, "cutoffMinutesPart")),
       noteRo: text(checkpointBox(index, "noteRo")),
       noteEn: text(checkpointBox(index, "noteEn")),
-      // A ticked box posts «on»; an unticked one posts nothing at all.
-      onProfile: text(checkpointBox(index, "onProfile")) === "on",
+      // A ticked box posts «on»; an unticked one posts nothing at all — so the marker says the form drew the box, and without it the answer is «not asked».
+      onProfile: text(checkpointBox(index, "onProfileShown")) === "" ? null : text(checkpointBox(index, "onProfile")) === "on",
       remove: text(checkpointBox(index, "remove")) === "on",
     }));
 }

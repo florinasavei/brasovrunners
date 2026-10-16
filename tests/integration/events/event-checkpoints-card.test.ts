@@ -5,7 +5,9 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 import type { Checkpoint } from "@/modules/event-checkpoints/domain/checkpoint";
 import type { GpxProposal } from "@/modules/event-checkpoints/domain/gpx-waypoints";
+import { parseGpxElevation } from "@/modules/routes/elevation/parse";
 import { withClientWords } from "../../helpers/client-words";
+import { elevationGpx } from "../../helpers/elevation-gpx";
 
 /**
  * §757 — the card «Puncte de control» as the editor draws it (BR-REQ-050-02, BR-REQ-041-01 criterion 6):
@@ -219,6 +221,85 @@ describe("§757 the card «Puncte de control»", () => {
       expect(html).toContain("time limit 1 h 15 min · closes at 10:15");
       expect(html).not.toContain("Cut-off");
       expect(html).toContain("The route is 21.1 km long");
+    } finally {
+      language = "ro";
+    }
+  });
+});
+
+describe("§NNN the profile's tick and preview on the card", () => {
+  const PROFILE = parseGpxElevation(elevationGpx())!;
+  const tickOf = (html: string, index: number) => new RegExp(`<input\\b[^>]*name="cp\\[${index}\\]\\.onProfile"[^>]*>`).exec(html)?.[0] ?? "";
+
+  it("draws «Arată pe profilul traseului» on every saved point and every spare row, with the marker that the box was drawn", async () => {
+    const html = await render({ checkpoints: [point("a", 5), point("b", 7, { onProfile: false })] });
+    // Two saved points and three spare rows: five boxes, five markers.
+    expect(html.match(/name="cp\[\d\]\.onProfile"/g)).toHaveLength(5);
+    expect(html.match(/name="cp\[\d\]\.onProfileShown" value="1"/g)).toHaveLength(5);
+    expect(html.match(/Arată pe profilul traseului/g)?.length).toBeGreaterThanOrEqual(5);
+    // Every one of them posts with the list's form (§763), like the other boxes.
+    for (const box of html.match(/<input\b[^>]*name="cp\[\d\]\.onProfile(?:Shown)?"[^>]*>/g) ?? []) expect(box, box).toContain('form="checkpoints-form"');
+  });
+
+  it("is ticked for a saved point that is on the chart and a new row, and unticked for a point the club took off", async () => {
+    const html = await render({ checkpoints: [point("a", 5), point("b", 7, { onProfile: false })] });
+    expect(tickOf(html, 0)).toContain("checked");
+    expect(tickOf(html, 1)).not.toContain("checked");
+    // The spare rows begin ticked.
+    expect(tickOf(html, 2)).toContain("checked");
+    expect(tickOf(html, 4)).toContain("checked");
+  });
+
+  it("says in one sentence that an unticked point stays in the table and on the page, and where the race number follows", async () => {
+    const html = await render();
+    expect(html).toContain('data-testid="checkpoints-profile-help"');
+    expect(html).toContain("Punctele debifate rămân în tabel și pe pagină; doar profilul nu le desenează. Numărul de concurs le arată după setarea lui din „Numere”.");
+  });
+
+  it("draws the preview «Așa apare pe pagină» above the rows: the page's chart, small, with the pins of the ticked points only", async () => {
+    const html = await render({ profile: PROFILE, checkpoints: [point("a", 5), point("b", 7, { onProfile: false }), point("c", 8, { kinds: ["FOOD"] })] });
+    expect(html).toContain('data-testid="checkpoints-preview"');
+    expect(html).toContain("Așa apare pe pagină");
+    expect(html).toContain('data-variant="compact"');
+    expect(html.match(/data-testid="elevation-pin"/g)).toHaveLength(2);
+    expect(html).toContain("<title>Punct a</title>");
+    expect(html).not.toContain("<title>Punct b</title>");
+    expect(html).toContain("Se schimbă după „Salvează punctele”, nu în timp ce scrii.");
+    // Above the rows: before the boxes of the first point.
+    expect(html.indexOf('data-testid="checkpoints-preview"')).toBeLessThan(html.indexOf('data-testid="checkpoints-fields"'));
+    expect(html).toContain("Profilul traseului: 9,0 km, de la 608 la 828 m");
+  });
+
+  it("spans the route's typed length, as the page does", async () => {
+    expect(await render({ profile: PROFILE, distanceMeters: 21_100 })).toContain("Profilul traseului: 21,1 km, de la");
+  });
+
+  it("says where the profile comes from when the route has no GPX with altitudes, and draws no chart", async () => {
+    const html = await render({ profile: null });
+    expect(html).toContain('data-testid="checkpoints-preview-none"');
+    expect(html).toContain("Profilul apare pe pagină când traseul are un fișier GPX cu altitudini.");
+    expect(html).not.toContain('data-testid="elevation-chart"');
+  });
+
+  it("is drawn for a role that may only read, without the sentence about saving, and with no box to tick", async () => {
+    const html = await render({ mayEdit: false, profile: PROFILE, checkpoints: [point("a", 5)] });
+    expect(html).toContain('data-testid="checkpoints-preview"');
+    expect(html).not.toContain("Se schimbă după");
+    expect(html).not.toContain("onProfile");
+  });
+
+  it("is in both languages", async () => {
+    language = "en";
+    try {
+      const html = await render({ locale: "en", profile: PROFILE, checkpoints: [point("a", 5, { onProfile: false }), point("c", 8, { kinds: ["FOOD"] })] });
+      expect(html).toContain("Show on the route profile");
+      expect(html).toContain("Unticked points stay in the table and on the page; only the profile leaves them out. The race number shows them as its “Race numbers” setting says.");
+      expect(html).toContain("How it appears on the page");
+      expect(html).toContain("It changes after “Save the points”, not while you type.");
+      expect(html).toContain("Route profile: 9.0 km, from 608 to 828 m");
+      expect(html).toContain("<title>Point c</title>");
+      expect(html).not.toContain("<title>Point a</title>");
+      expect(await render({ locale: "en", profile: null })).toContain("The profile appears on the page once the route has a GPX file with altitudes.");
     } finally {
       language = "ro";
     }

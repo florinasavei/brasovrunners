@@ -325,8 +325,10 @@ export function elevationGeometry(profile: ElevationProfileData, markers: readon
       const unit: ElevationLabel = mirrored
         ? { x: round(last.from - textSize * 0.3), y: footY, text: options.kmUnit, anchor: "end" }
         : { x: round(last.to + textSize * 0.3), y: footY, text: options.kmUnit, anchor: "start" };
+      // The word is kept clear of everything but the label it follows: that one it stands beside on purpose.
       const box = boxOf(unit);
-      if (box.from >= 0 && box.to <= width && !touches(box)) kmUnit = unit;
+      const crowded = taken.some((other) => other !== last && box.from < other.to + minGap && box.to > other.from - minGap);
+      if (box.from >= 0 && box.to <= width && !crowded) kmUnit = unit;
     }
   }
 

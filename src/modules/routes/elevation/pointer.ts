@@ -68,7 +68,8 @@ export function nearestMarkerName(markers: ReadonlyArray<{ km: number; name: str
   let best: { name: string; gap: number } | null = null;
   for (const marker of markers) {
     const gap = Math.abs(marker.km - km);
-    if (gap <= POINTER_MARKER_REACH_KM && (best === null || gap < best.gap)) best = { name: marker.name, gap };
+    // A hair of slack: 4.5 − 4.3 is 0.2000000000000002 in floating point and is two hundred metres all the same.
+    if (gap <= POINTER_MARKER_REACH_KM + 1e-9 &&(best === null || gap < best.gap)) best = { name: marker.name, gap };
   }
   return best?.name ?? null;
 }

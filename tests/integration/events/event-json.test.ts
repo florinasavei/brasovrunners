@@ -13,6 +13,7 @@ import { createEvent, publishEvent, repeatEvent } from "@/modules/content/events
 import { comparable, diffConfigs } from "@/modules/content/events/transfer/diff";
 import { exportEvent, readEventConfig } from "@/modules/content/events/transfer/export";
 import { type EventFile, readEventFile } from "@/modules/content/events/transfer/file-format";
+import { eventCheckpoints } from "@/db/schema/event-checkpoints";
 import { diffEventImport, importEventAsNew, importEventOver } from "@/modules/content/events/transfer/import";
 import { readVolunteersFile } from "@/modules/content/events/transfer/volunteers";
 import { storeKeyOfUrl } from "@/modules/content/events/transfer/media";
@@ -1188,8 +1189,8 @@ describe("§757 the route's checkpoints travel in the file", () => {
     await seedCheckpoints(event.id);
     const file = await fileOf(event.id);
     expect(file.event.route.checkpoints).toEqual([
-      { km: 7.5, name: { ro: "Apă la cabană", en: "Water at the hut" }, kinds: ["WATER", "FOOD"], cutoffMinutes: 60, note: { ro: "Și banane", en: "Bananas too" } },
-      { km: 15, name: { ro: "Cronometrare", en: "Timing" }, kinds: ["TIMING"], cutoffMinutes: 120, note: { ro: null, en: null } },
+      { km: 7.5, name: { ro: "Apă la cabană", en: "Water at the hut" }, kinds: ["WATER", "FOOD"], cutoffMinutes: 60, note: { ro: "Și banane", en: "Bananas too" }, onProfile: true },
+      { km: 15, name: { ro: "Cronometrare", en: "Timing" }, kinds: ["TIMING"], cutoffMinutes: 120, note: { ro: null, en: null }, onProfile: true },
     ]);
     // Minutes, never a time of the day (§770).
     expect(JSON.stringify(file.event.route.checkpoints)).not.toContain('"cutoff"');
@@ -1209,6 +1210,64 @@ describe("§757 the route's checkpoints travel in the file", () => {
     const trail = await db.select().from(auditLogs).where(and(eq(auditLogs.action, "event_checkpoints.changed"), eq(auditLogs.entityId, created.eventId)));
     expect(trail).toHaveLength(1);
     expect(trail[0].metadataJson).toMatchObject({ source: "import", added: 2, removed: 0 });
+  });
+
+  it("carries each point's tick «Arată pe profilul traseului» (§NNN): exported as it is, imported as new as it was, the round trip the same", async () => {
+    const { event } = await seedRace({}, {}, false);
+    await seedCheckpoints(event.id);
+    // The hut is taken off the chart.
+    await db.update(eventCheckpoints).set({ onProfile: false }).where(and(eq(eventCheckpoints.eventId, event.id), eq(eventCheckpoints.nameRo, "Apă la cabană")));
+    const file = await fileOf(event.id);
+    expect(file.event.route.checkpoints.map((row) => [row.name.ro, row.onProfile])).toEqual([
+      ["Apă la cabană", false],
+      ["Cronometrare", true],
+    ]);
+    const created = await importEventAsNew(db, { actor: admin, file, fetchImpl: serving(), now: NOW });
+    expect((await listCheckpoints(db, created.eventId)).map((row) => [row.nameRo, row.onProfile])).toEqual([
+      ["Apă la cabană", false],
+      ["Cronometrare", true],
+    ]);
+    const back = await fileOf(created.eventId);
+    expect(diffConfigs(back.event, file.event).map((change) => change.key).sort()).toEqual(["translations.en.slug", "translations.ro.slug"]);
+  });
+
+  it("reads a file made before the tick existed — no `onProfile` on its points — with every point on the chart", async () => {
+    const { event } = await seedRace({}, {}, false);
+    await seedCheckpoints(event.id);
+    const file = await fileOf(event.id);
+    const old = JSON.parse(JSON.stringify(file)) as { event: { route: { checkpoints: Array<Record<string, unknown>> } } };
+    for (const row of old.event.route.checkpoints) delete row.onProfile;
+    expect(JSON.stringify(old)).not.toContain("onProfile");
+    const read = readEventFile(JSON.stringify(old));
+    if (!read.ok) throw new Error(`a file without the tick did not read: ${read.refusal} ${read.detail ?? ""}`);
+    expect(read.file.event.route.checkpoints.map((row) => row.onProfile)).toEqual([true, true]);
+    const created = await importEventAsNew(db, { actor: admin, file: read.file, fetchImpl: serving(), now: NOW });
+    expect((await listCheckpoints(db, created.eventId)).map((row) => row.onProfile)).toEqual([true, true]);
+  });
+
+  it("refuses a tick that is not true or false", async () => {
+    const { event } = await seedRace({}, {}, false);
+    await seedCheckpoints(event.id);
+    const bad = JSON.parse(JSON.stringify(await fileOf(event.id))) as { event: { route: { checkpoints: Array<Record<string, unknown>> } } };
+    bad.event.route.checkpoints[0].onProfile = "yes";
+    expect(readEventFile(JSON.stringify(bad)).ok).toBe(false);
+  });
+
+  it("sees a changed tick as a change of the list, and writes the file's tick over an event", async () => {
+    const { event } = await seedRace({}, {}, false);
+    await seedCheckpoints(event.id);
+    const { target } = await seedTarget();
+    await seedCheckpoints(target.id);
+    const file = await fileOf(event.id);
+    const unticked = JSON.parse(JSON.stringify(file)) as EventFile;
+    unticked.event.route.checkpoints[1].onProfile = false;
+    const diff = await diffEventImport(db, { actor: admin, file: unticked, eventId: target.id });
+    expect(diff.changes.map((change) => change.key)).toContain("route.checkpoints");
+    await importEventOver(db, await overInput(unticked, target.id));
+    expect((await listCheckpoints(db, target.id)).map((row) => [row.nameRo, row.onProfile])).toEqual([
+      ["Apă la cabană", true],
+      ["Cronometrare", false],
+    ]);
   });
 
   it("carries the race's time limit, counted from the gun, and the two bib ticks", async () => {

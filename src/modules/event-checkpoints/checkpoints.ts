@@ -333,7 +333,10 @@ export async function changeCheckpoints<T extends Record<string, unknown>>(
         this form was open, or the id is another event's — is dropped, never written as a new point:
         a stale form must not bring back what somebody took off the page and the bib.
       */
-      const posted = request.rows.filter((row) => row.id === "" || known.has(row.id));
+      const posted = request.rows
+        .filter((row) => row.id === "" || known.has(row.id))
+        // A form that did not carry the profile's box (drawn before it existed) leaves the point as it was: a new point is on.
+        .map((row) => (row.onProfile === null ? { ...row, onProfile: current.find((saved) => saved.id === row.id)?.onProfile ?? true } : row));
       const named = new Set(posted.map((row) => row.id).filter((id) => id !== ""));
       wanted = [...posted, ...current.filter((row) => !named.has(row.id)).map((row, at) => toPosted(row, 1000 + at))];
     } else {

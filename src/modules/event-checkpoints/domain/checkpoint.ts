@@ -73,8 +73,13 @@ export type PostedCheckpoint = {
   cutoffMinutesPart: string;
   noteRo: string;
   noteEn: string;
-  /** «Arată pe profilul traseului» ticked (§NNN): a box that posts nothing when it is not. */
-  onProfile: boolean;
+  /**
+   * «Arată pe profilul traseului» ticked (§NNN): a box that posts nothing when it is not, so the form also posts a marker
+   * that it drew the box (`cp[i].onProfileShown`). **Null when the form did not carry the box** — a page drawn before the
+   * tick existed, saved after it: the service then keeps what the point had (a new point: on), never reads «not posted» as
+   * «unticked».
+   */
+  onProfile: boolean | null;
   /** «Scoate» ticked on a saved row. */
   remove: boolean;
   /** The row's number in the form, for naming a box the refusal is about. */
@@ -166,7 +171,7 @@ export class CheckpointRefusal extends DomainError {
 /** The boxes' names: `cp[3].km` — the row's number in the form, so a refusal links to the box. */
 export const checkpointBox = (
   index: number,
-  field: "id" | "nameRo" | "nameEn" | "km" | "kinds" | "cutoffHours" | "cutoffMinutesPart" | "noteRo" | "noteEn" | "onProfile" | "remove",
+  field: "id" | "nameRo" | "nameEn" | "km" | "kinds" | "cutoffHours" | "cutoffMinutesPart" | "noteRo" | "noteEn" | "onProfile" | "onProfileShown" | "remove",
 ): string => `cp[${index}].${field}`;
 
 /** The whole of a row's text, folded: one line, no run of spaces. */
@@ -359,7 +364,7 @@ export function prepareCheckpoints(posted: readonly PostedCheckpoint[], context:
       cutoffMinutes: limit,
       noteRo: noteRo === "" ? null : noteRo,
       noteEn: noteEn === "" ? null : noteEn,
-      onProfile: row.onProfile,
+      onProfile: row.onProfile ?? true,
       index: row.index,
       label,
     });
