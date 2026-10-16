@@ -764,6 +764,9 @@ export async function changeVolunteerRoles<T extends Record<string, unknown>>(
   assertMayManage(actor);
   assertIds(request.eventId, ...request.rows.flatMap((row) => (row.id === null ? [] : [row.id])));
   if (request.rows.length === 0) return { changed: false, edited: 0, created: 0 };
+  // A form names each role once (its boxes are grouped by their row's key); a caller that names one twice would have it audited twice.
+  const named = request.rows.flatMap((row) => (row.id === null ? [] : [row.id]));
+  if (new Set(named).size !== named.length) throw new DomainError("VALIDATION_ERROR", "a role is named twice in one save");
 
   const result = await db.transaction(async (tx): Promise<VolunteerRolesResult> => {
     // The locks, in the order every other change of the roles takes them: the event (NO KEY UPDATE, see `changeVolunteerRole`), its categories, its roles.

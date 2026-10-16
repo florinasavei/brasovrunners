@@ -75,15 +75,30 @@ export async function describeRole(row: Locator, ro: readonly string[], en: read
 }
 
 /**
- * The one press: «Salvează toate rolurile», then the toast that says how many roles it saved (or that there was nothing to change), the card
- * hydrated again. The toast is what is waited for — the address already ends in the card's anchor, so it says nothing.
+ * Puts away every toast on screen and every one queued behind it: the toast is one at a time, and dismissing the one showing brings the next. What a press
+ * says is read from the toast, so the toasts of earlier presses must be gone first, or their words would be taken for this press's.
  */
-export async function saveAllRoles(page: Page, saved: "some" | "nothing" = "some"): Promise<void> {
-  // The toast of the press before may still be on screen — and the toast is what is waited for: put it away first, or its words would be taken for this press's.
-  const stale = page.getByTestId("toast").getByRole("button");
-  if (await stale.count()) await stale.first().click();
-  await expect(page.getByTestId("toast")).toHaveCount(0);
+async function clearToasts(page: Page): Promise<void> {
+  const toast = page.getByTestId("toast");
+  for (let quiet = 0; quiet < 2; ) {
+    if (await toast.count()) {
+      await toast.getByRole("button").first().click();
+      quiet = 0;
+    } else {
+      await page.waitForTimeout(250);
+      quiet += 1;
+    }
+  }
+}
+
+/**
+ * The one press: «Salvează toate rolurile», then the toast that says how many roles it saved — or, with `toast`, the sentence the caller expects, such as
+ * «Nimic de schimbat la roluri.» — and the card hydrated again. The toast is what is waited for: the address already ends in the card's anchor, so it says
+ * nothing, and the server's answer comes before the page has taken it in.
+ */
+export async function saveAllRoles(page: Page, toast: string | RegExp = /Am salvat \d+ (de )?rol(uri)?\./): Promise<void> {
+  await clearToasts(page);
   await page.getByRole("button", { name: "Salvează toate rolurile", exact: true }).click();
-  await expect(page.getByTestId("toast")).toContainText(saved === "some" ? /Am salvat \d+ (de )?rol(uri)?\./ : "Nimic de schimbat la roluri.", { timeout: 30_000 });
+  await expect(page.getByTestId("toast")).toContainText(toast, { timeout: 30_000 });
   await hydrated(page);
 }

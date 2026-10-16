@@ -147,13 +147,12 @@ test.describe("§754 volunteers for a race", () => {
     // The description is one strip of two tabs (§572) in the fold, and the card's «Tradu cardul» is greyed with its reason where there is no translation key (§482).
     await openFold(roleRow(page, "Punct de apă").getByTestId("volunteer-role-more"));
     await expect(roleRow(page, "Punct de apă").getByRole("tab")).toHaveText([/Română/, /English/]);
-    await expect(page.getByTestId("translate-card-off")).toBeVisible();
+    await expect(page.getByTestId("volunteer-roles-form").getByTestId("translate-card-off")).toBeVisible();
     // The position box and the number are boxes a thumb can use: 44 pixels tall.
     expect((await roleRow(page, "Sosire").getByLabel("Poziția").boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(40);
     await fillRoleRow(roleRow(page, "Sosire"), { position: "1" });
     await fillRoleRow(roleRow(page, "Punct de apă"), { needed: "3" });
-    await saveAllRoles(page);
-    await expect(page.getByTestId("toast")).toContainText("Am salvat 2 roluri.");
+    await saveAllRoles(page, "Am salvat 2 roluri.");
     await openEditorBox(page, "Roluri");
     expect(await roleNames()).toEqual(["Sosire", "Punct de apă"]);
     await expect(roleRow(page, "Punct de apă").getByLabel("Câte persoane")).toHaveValue("3");
@@ -164,7 +163,7 @@ test.describe("§754 volunteers for a race", () => {
     await openEditorBox(page, "Roluri");
     expect(await roleNames()).toEqual(["Punct de apă", "Sosire"]);
     // A press that changes nothing says so, and writes nothing.
-    await saveAllRoles(page, "nothing");
+    await saveAllRoles(page, "Nimic de schimbat la roluri.");
     await openEditorBox(page, "Roluri");
 
     // The form is off until the event takes volunteers: the card says why.

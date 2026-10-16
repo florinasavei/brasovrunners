@@ -378,4 +378,11 @@ describe("§NNN who may save, and what is not this event's", () => {
     expect((await listVolunteerRoles(db, eventId))[0].nameEn).toBe("A EN");
     expect((await db.select().from(eventVolunteerRoles).where(eq(eventVolunteerRoles.id, foreign.id)))[0].nameEn).toBe("F EN");
   });
+
+  it("refuses a save that names one role twice — its change would be audited twice — and writes nothing", async () => {
+    const a = await seed("A", start.id);
+    await expect(save([row(a.id, { nameEn: "One" }), row(a.id, { nameEn: "Two" }, "again")])).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
+    expect((await listVolunteerRoles(db, eventId))[0].nameEn).toBe("A EN");
+    expect(await trail()).toHaveLength(0);
+  });
 });

@@ -12,7 +12,7 @@ import { computeContentHash, type LegalDocumentTranslationInput } from "@/module
 import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
 import { LEGAL_TEMPLATES } from "@/modules/legal-documents/templates/catalogue";
 import { saveBadgeRoleColours } from "@/modules/volunteers/badges/badges";
-import { changeVolunteer, changeVolunteerRole, submitVolunteer } from "@/modules/volunteers/volunteers";
+import { changeVolunteer, changeVolunteerRole, changeVolunteerRoles, submitVolunteer } from "@/modules/volunteers/volunteers";
 
 /**
  * §754, §761 — the volunteers' public form and the organizers' card under real connections racing (BR-REQ-031-01).
@@ -311,5 +311,39 @@ describe("§754 §761 BR-REQ-031-01 people offer for a role's last place at once
     }
     const kept = await db.select({ id: eventVolunteerRoles.id, colour: eventVolunteerRoles.colour }).from(eventVolunteerRoles).where(eq(eventVolunteerRoles.eventId, event.id));
     expect(kept.every((row) => row.colour !== null)).toBe(true);
+  });
+
+  it("§NNN «Salvează toate rolurile» — renaming, ordering and adding roles in one save — racing sign-ups ticking both roles in opposite orders, a role move and a second save: all settle, no deadlock, and the order is never half written", async () => {
+    // The plural writer takes the locks every other writer of the roles takes, in the same order: the event (NO KEY UPDATE, so a sign-up's KEY SHARE on
+    // it does not close a cycle), its categories, then its roles by id. Two saves at once queue on the event; a save and a sign-up ticking the roles in
+    // either order never hold one role each and wait on the other.
+    const { event, role } = await eventWithRole(60);
+    const [other] = await db.insert(eventVolunteerRoles).values({ eventId: event.id, nameRo: "Start", nameEn: "Start", needed: 50, position: 1 }).returning();
+    const rounds = 20;
+    for (let round = 0; round < rounds; round++) {
+      const results = await Promise.allSettled([
+        offer(event.id, [role.id, other.id], `plural-a-${round}`),
+        offer(event.id, [other.id, role.id], `plural-b-${round}`),
+        changeVolunteerRoles(
+          db,
+          admin!,
+          {
+            eventId: event.id,
+            rows: [
+              { key: role.id, id: role.id, fields: { nameEn: `Water ${round}`, position: round % 2 === 0 ? "2" : "1" } },
+              { key: other.id, id: other.id, fields: { needed: String(40 + (round % 3)) } },
+            ],
+          },
+          NOW,
+        ),
+        changeVolunteerRoles(db, admin!, { eventId: event.id, rows: [{ key: "new-none", id: null, fields: { nameRo: `Nou ${round}`, nameEn: `New ${round}`, needed: "1", categoryId: "" } }] }, NOW),
+        changeVolunteerRole(db, admin!, { kind: "move", eventId: event.id, id: other.id, direction: round % 2 === 0 ? "up" : "down" }, NOW),
+      ]);
+      expect(results.map((result) => (result.status === "rejected" ? String(result.reason) : "ok"))).toEqual(["ok", "ok", "ok", "ok", "ok"]);
+    }
+    // Both roles stay, the twenty new ones were each created once, and every role has a place of its own: 0 … n-1, no two alike.
+    const roles = await db.select().from(eventVolunteerRoles).where(eq(eventVolunteerRoles.eventId, event.id));
+    expect(roles).toHaveLength(2 + rounds);
+    expect(roles.map((row) => row.position).sort((a, b) => a - b)).toEqual(Array.from({ length: 2 + rounds }, (_, index) => index));
   });
 });
