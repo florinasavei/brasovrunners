@@ -54,7 +54,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
  * în pagina evenimentului»): `/evenimente/<slug>/voluntari` and `/en/events/<slug>/volunteers` — «Vreau să fiu voluntar la
  * <eveniment>», the event's date and place in one short line, the roles that still need people with their descriptions
  * and how many places each has, the form, and the agreement's links. The event's own page keeps only a short box that
- * links here (`VolunteerCallout`).
+ * links here (`VolunteerCallout`). The page is as wide as the register page (`PAGE_WIDTH`, §NNN; the owner, 2026-10-16: «e prea îngust
+ * tot formularul»).
  *
  * **404 while the form could not be sent** (`readVolunteerOffer`): the event is not published or is a members' event, takes
  * no volunteers, is cancelled or over, no role needs people, or the privacy notice or the volunteer agreement in force
