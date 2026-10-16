@@ -228,9 +228,16 @@ describe("§NNN the kilometres and the altitudes on the strip", () => {
   });
 
   it("keeps the lowest altitude's label off the end words, the checkpoints' words and the kilometres", () => {
-    // 608 m at the start, under «Start»: dropped rather than printed over it.
+    // 608 m at the start, under «Start» (and at the finish, under «Sosire»: the sample is a loop): printed beside the word, not over it.
     const strip = bibProfileStrip(BASE, STRIP);
-    expect(strip.geometry.extremes.map((extreme) => extreme.kind)).toEqual(["max"]);
+    expect(strip.geometry.extremes.map((extreme) => extreme.kind)).toEqual(["max", "min"]);
+    const low = strip.geometry.extremes.find((extreme) => extreme.kind === "min")!;
+    const start = strip.geometry.endWords!.start;
+    expect(low.label.text).toBe("608 m");
+    expect(low.label.anchor).toBe("start");
+    expect(low.label.y).toBe(start.y);
+    expect(low.label.x).toBeGreaterThanOrEqual(start.x + start.text.length * BIB_LAYOUT.profileLabelSize * 0.6 + BIB_LAYOUT.checkpointTimeGap);
+    expect(strip.texts.map((text) => text.text)).toContain("608 m");
     // A route that bottoms out in the middle gets its «m» label in the foot row, and no kilometre stands over it.
     const valley = parseGpxElevation(elevationGpx().replace(/<ele>([\d.]+)<\/ele>/g, (_, value: string) => `<ele>${(1400 - Number(value)).toFixed(1)}</ele>`))!;
     const g = bibProfileStrip(bibProfileDrawing(valley, {}, "ro", SAY), STRIP).geometry;
