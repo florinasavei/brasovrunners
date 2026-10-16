@@ -3,7 +3,7 @@ import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
-import type { ReactNode } from "react";
+import { Fragment, type ReactNode } from "react";
 import { addEventTodoAction, deleteEventTodoAction, editEventTodoAction, setEventTodoDoneAction } from "@/app/[locale]/admin/events/[id]/todo-actions";
 import { countForm } from "@/i18n/count-form";
 import { CLUB_TIME_ZONE, formatCalendarDay, formatDay } from "@/i18n/dates";
@@ -209,10 +209,13 @@ export default async function EventTodoCard({ locale, eventId, computed, items, 
     <>
       {/* Each part stays on one line ("5 rânduri" never breaks after the figure); the line wraps between parts. */}
       {parts.map((part, index) => (
-        <Box component="span" key={part} sx={{ whiteSpace: "nowrap" }}>
-          {index > 0 ? " · " : ""}
-          {part}
-        </Box>
+        <Fragment key={part}>
+          {" "}
+          <Box component="span" sx={{ whiteSpace: "nowrap" }}>
+            {part}
+            {index < parts.length - 1 ? " ·" : ""}
+          </Box>
+        </Fragment>
       ))}
       {top && (
         <Box component="span" sx={{ ml: 0.75, display: "inline-block", verticalAlign: "middle" }}>
