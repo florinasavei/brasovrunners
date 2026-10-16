@@ -5115,6 +5115,7 @@
       "empty": "Nothing to do: the page has all it needs and the club has written nothing here.",
       "emptyMine": "Nothing open in your name.",
       "noTasks": "No open tasks. Write one above.",
+      "noTasksRead": "No open tasks.",
       "tick": "Tick: {text}",
       "untick": "Untick: {text}",
       "tickWord": "Tick",
@@ -5175,11 +5176,15 @@
           "few": "{count} rows",
           "other": "{count} rows"
         },
-        "pageNone": "Nothing is missing",
+        "pageNone": "nothing is missing",
         "pageNoneBody": "The page has everything it needs.",
         "ownCount": "{count} to do",
         "ownNone": "no open tasks",
-        "mine": "{count} mine",
+        "mine": {
+          "one": "{count} mine",
+          "few": "{count} mine",
+          "other": "{count} mine"
+        },
         "overdue": {
           "one": "{count} overdue",
           "few": "{count} overdue",

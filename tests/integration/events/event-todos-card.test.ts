@@ -187,7 +187,7 @@ describe("§749 the card «De făcut pentru pagina evenimentului»", () => {
     const html = await render({ computed: [page("cover", "cover", "NORMAL", "box-cover")], items: [mine, theirs], mine: true });
     // The filter is on the club's tasks only (§752: the chips sit inside «Sarcini»); what the page lacks has nobody and stays.
     expect(order(html)).toEqual(["cover", "mine"]);
-    expect(html).toContain("?mine=1#box-todos");
+    expect(html).toContain("?mine=1&amp;todos=1#box-todos-own");
     expect(html).toContain("Ale mele");
   });
 
@@ -290,10 +290,10 @@ describe("§752 amended — the card's two folds, closed by default, each with a
     expect(text(summaryOf(many, "box-todos-page"))).toContain("20 de rânduri");
   });
 
-  it("keeps «Lipsește pe pagină» drawn, shut, saying «Nimic nu lipsește» when nothing is missing", async () => {
+  it("keeps «Lipsește pe pagină» drawn, shut, saying «nimic nu lipsește» when nothing is missing", async () => {
     const html = await render({ computed: [], items: someTasks });
     const line = summaryOf(html, "box-todos-page");
-    expect(text(line)).toContain("Nimic nu lipsește");
+    expect(text(line)).toContain("nimic nu lipsește");
     expect(line).not.toContain("event-todo-fold-priority");
     expect(foldOpen(html, "box-todos-page")).toBe(false);
     expect(html).toContain("Pagina are tot ce îi trebuie.");
@@ -305,6 +305,10 @@ describe("§752 amended — the card's two folds, closed by default, each with a
     const line = summaryOf(html, "box-todos-own");
     expect(text(line)).toContain("3 de făcut");
     expect(text(line)).toContain("2 ale mele");
+    // One task is «1 a mea», never «1 ale mele».
+    const one = await render({ computed: [], items: [item("m", "A mea", { assigneeStaffUserId: ME, assigneeName: "Ana Admin" })] });
+    expect(text(summaryOf(one, "box-todos-own"))).toContain("1 a mea");
+    expect(text(summaryOf(one, "box-todos-own"))).not.toContain("1 ale mele");
     expect(text(line)).toContain("1 întârziată");
     expect(line).toContain(">Mare<");
     expect(line).not.toContain(">Mică<");
@@ -375,6 +379,45 @@ describe("§752 amended — the card's two folds, closed by default, each with a
     expect(foldOpen(html, "box-todos-page")).toBe(false);
   });
 
+  it("keeps «Sarcini» open for «Toate» too: the chips' addresses carry the marker, and the marker holds the fold", async () => {
+    const html = await render({ computed: [page("cover", "cover", "NORMAL", "box-cover")], items: someTasks, inUse: true });
+    expect(foldOpen(html, "box-todos-own")).toBe(true);
+    expect(foldOpen(html, "box-todos-page")).toBe(false);
+    // Both chips keep the fold in use, with or without scripts.
+    expect(html).toMatch(/href="[^"]*\?todos=1#box-todos-own"/);
+    expect(html).toMatch(/href="[^"]*\?mine=1&amp;todos=1#box-todos-own"/);
+  });
+
+  it("opens the shut card itself for a press that just worked, even when nothing is left open", async () => {
+    const html = await render({ computed: [], items: [], saved: true });
+    expect(foldOpen(html, "box-todos")).toBe(true);
+    expect(foldOpen(html, "box-todos-own")).toBe(true);
+    const refused = await render({ computed: [], items: [], error: "Nu ai voie." });
+    expect(foldOpen(refused, "box-todos")).toBe(true);
+    const calm = await render({ computed: [], items: [] });
+    expect(foldOpen(calm, "box-todos")).toBe(false);
+  });
+
+  it("does not tell a reader «clubul n-a scris nimic» while the page lacks rows or ticked tasks exist", async () => {
+    const lacking = await render({ computed: [page("cover", "cover", "NORMAL", "box-cover")], items: [], mayEdit: false });
+    const ownLacking = lacking.slice(lacking.indexOf('id="box-todos-own"'));
+    expect(ownLacking).not.toContain("clubul n-a scris nimic aici");
+    expect(ownLacking).toContain("Nicio sarcină deschisă.");
+    expect(ownLacking).not.toContain("Scrie una mai sus");
+    const ticked = await render({ computed: [], items: [someTasks[3]], mayEdit: false });
+    expect(ticked).not.toContain("clubul n-a scris nimic aici");
+    expect(ticked).toContain("Gata (1)");
+    // Nothing at all: the all-clear stays true, for a reader too.
+    const nothing = await render({ computed: [], items: [], mayEdit: false });
+    expect(nothing).toContain("clubul n-a scris nimic aici");
+  });
+
+  it("puts the priority chip of a shut line in a span, never a div inside the heading", async () => {
+    const html = await render({ computed: [page("declaration", "declaration", "URGENT", "box-declaration")], items: [] });
+    expect(summaryOf(html, "box-todos-page")).toMatch(/<span[^>]*data-testid="event-todo-fold-priority"[^>]*MuiChip-root/);
+    expect(summaryOf(html, "box-todos-page")).not.toMatch(/<div[^>]*(?:MuiChip-root|event-todo-fold-priority)/);
+  });
+
   it("opens nothing else by itself: not for an urgent row, not for an overdue task, not for one of mine", async () => {
     const html = await render({ computed: [page("declaration", "declaration", "URGENT", "box-declaration")], items: [item("a", "a", { priority: "URGENT", dueOn: "2026-10-01", assigneeStaffUserId: ME })] });
     expect(foldOpen(html, "box-todos-page")).toBe(false);
@@ -416,7 +459,7 @@ describe("§752 amended — the card's two folds, closed by default, each with a
       expect(text(summaryOf(html, "box-todos-own"))).toContain("2 mine");
       expect(text(summaryOf(html, "box-todos-own"))).toContain("1 overdue");
       const none = await render({ computed: [], items: [], locale: "en" as never });
-      expect(text(summaryOf(none, "box-todos-page"))).toContain("Nothing is missing");
+      expect(text(summaryOf(none, "box-todos-page"))).toContain("nothing is missing");
       expect(text(summaryOf(none, "box-todos-own"))).toContain("no open tasks");
     } finally {
       language = "ro";

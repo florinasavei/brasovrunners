@@ -148,6 +148,14 @@ test.describe("§749 the event's «De făcut»", () => {
     await expect(page.getByTestId("event-todos-list").locator("li")).toHaveCount(1);
     await expect(page.getByTestId("event-todo-page-row")).toHaveCount(lacking);
 
+    // «Toate» keeps «Sarcini» open: the fold the person is using never shuts under them.
+    await page.getByRole("link", { name: "Toate", exact: true }).click();
+    await expect(page).toHaveURL(/todos=1/);
+    await expect(page.getByTestId("event-todos-own")).toHaveAttribute("open", "");
+    await page.getByRole("link", { name: "Ale mele" }).click();
+    await expect(page).toHaveURL(/mine=1/);
+    await expect(page.getByTestId("event-todos-own")).toHaveAttribute("open", "");
+
     // Tick it from its box: it leaves the open list and waits under «Gata», and «Ale mele» is still on.
     await page.getByRole("checkbox", { name: /^Bifează: Cere aprobarea/ }).click();
     await expect(page.getByTestId("event-todos-empty")).toBeVisible();
@@ -203,7 +211,7 @@ test.describe("§749 the event's «De făcut»", () => {
     await hydrated(page);
     await expect(ownFold).not.toHaveAttribute("open", "");
     const line = ownFold.locator("summary").first();
-    await expect(line).toContainText(/Sarcini\s*1 de făcut · 1 ale mele/);
+    await expect(line).toContainText(/Sarcini\s*1 de făcut · 1 a mea/);
     await expect(line.getByTestId("event-todo-fold-priority")).toHaveText("Urgentă");
     await card.scrollIntoViewIfNeeded();
     await card.screenshot({ path: `test-results/todos-folds-shut-${testInfo.project.name}.png` });
@@ -230,6 +238,19 @@ test.describe("§749 the event's «De făcut»", () => {
     await hydrated(page);
     await expect(page.getByTestId("event-todos-own")).toHaveAttribute("open", "");
     await expect(page.getByTestId("event-todos-page")).not.toHaveAttribute("open", "");
+  });
+
+  test("opens «Sarcini» by itself for a press that worked, «Ale mele» and «Toate», on a fresh load", async ({ page }, testInfo) => {
+    const tag = `${testInfo.project.name}-${Date.now().toString(36)}`;
+    const eventId = await seedEvent(tag);
+    await signIn(page, "Dev Administrator");
+    for (const query of ["todoSaved=1", "mine=1", "todos=1"]) {
+      await page.goto("about:blank");
+      await page.goto(`/ro/admin/events/${eventId}?${query}#box-todos-own`);
+      await hydrated(page);
+      await expect(page.getByTestId("event-todos-own"), query).toHaveAttribute("open", "");
+      await expect(page.getByTestId("event-todos-page"), query).not.toHaveAttribute("open", "");
+    }
   });
 
   for (const identity of ["Dev Administrator", "Dev Superadministrator"]) {

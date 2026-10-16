@@ -65,6 +65,8 @@ type Props = {
   error?: string;
   /** A press of the card's own forms just worked (`?todoSaved=1`): «Sarcini» shows its result. */
   saved?: boolean;
+  /** «Toate» was pressed (`?todos=1`): the person is using «Sarcini», so it stays open (the filter chips' address, with scripts or without). */
+  inUse?: boolean;
 };
 
 /**
@@ -128,7 +130,7 @@ const TICK_SX = { minWidth: 44, width: 44, height: 44, p: 0, borderRadius: 1, "&
  * priority, then the due day, then age. Backoffice only; `/admin/tasks` stays the club's list.
  *
  * «Sarcini» opens by itself only for a refusal of its own forms, a press that just worked, «Ale mele»
- * being on, or an address (`#box-todos-own`, a row's id) that names it or something inside it
+ * being on or «Toate» pressed (`?todos=1`, so the fold the person is using never shuts under them), or an address (`#box-todos-own`, a row's id) that names it or something inside it
  * (`OpenFoldFromHash`); «Lipsește pe pagină» only for an address that names it or one of its rows.
  *
  * A Server Component of plain forms, like the club's checklist it follows (`ClubTodoPanel`): the tick,
@@ -140,7 +142,7 @@ const TICK_SX = { minWidth: 44, width: 44, height: 44, p: 0, borderRadius: 1, "&
  * action of the backoffice does (`todo-actions.ts`). A row's edit form lives in the `<details>` its line is
  * the summary of; the fold is keyed on the row's words, so a save that changed them draws it closed.
  */
-export default async function EventTodoCard({ locale, eventId, computed, items, staff, languageNames, mayEdit, currentStaffId, mine, today, error, saved = false }: Props) {
+export default async function EventTodoCard({ locale, eventId, computed, items, staff, languageNames, mayEdit, currentStaffId, mine, today, error, saved = false, inUse = false }: Props) {
   const t = await getTranslations("Admin");
   const words = await confirmWords();
 
@@ -200,17 +202,18 @@ export default async function EventTodoCard({ locale, eventId, computed, items, 
     </>
   );
 
-  const priorityChip = (priority: EventTodoPriority, testId = "event-todo-priority") => (
-    <StatusChip glyph={PRIORITY_CHIP[priority].glyph} color={PRIORITY_CHIP[priority].color} label={t(`eventTodos.priority.${priority}`)} testId={testId} />
+  const priorityChip = (priority: EventTodoPriority, testId = "event-todo-priority", inline = false) => (
+    <StatusChip glyph={PRIORITY_CHIP[priority].glyph} color={PRIORITY_CHIP[priority].color} label={t(`eventTodos.priority.${priority}`)} testId={testId} inline={inline} />
   );
 
   /** A closed fold's row: its parts after the title, a middle dot between, the priority as a chip at the end. */
   const foldLine = (parts: readonly string[], top: EventTodoPriority | null): ReactNode => (
     <>
-      {/* Each part stays on one line ("5 rânduri" never breaks after the figure); the line wraps between parts. */}
+      {/* Each part stays on one line ("5 rânduri" never breaks after the figure); the line wraps between parts. The first
+          part is led by a break opportunity, not a space: the title's gap is the aside's margin, and a space would double it. */}
       {parts.map((part, index) => (
         <Fragment key={part}>
-          {" "}
+          {index === 0 ? <wbr /> : " "}
           <Box component="span" sx={{ whiteSpace: "nowrap" }}>
             {part}
             {index < parts.length - 1 ? " ·" : ""}
@@ -219,7 +222,7 @@ export default async function EventTodoCard({ locale, eventId, computed, items, 
       ))}
       {top && (
         <Box component="span" sx={{ ml: 0.75, display: "inline-block", verticalAlign: "middle" }}>
-          {priorityChip(top, "event-todo-fold-priority")}
+          {priorityChip(top, "event-todo-fold-priority", true)}
         </Box>
       )}
     </>
@@ -231,7 +234,7 @@ export default async function EventTodoCard({ locale, eventId, computed, items, 
   const ownLine = foldLine(
     [
       summary.own.count > 0 ? t("eventTodos.fold.ownCount", { count: summary.own.count }) : t("eventTodos.fold.ownNone"),
-      ...(summary.own.mine > 0 ? [t("eventTodos.fold.mine", { count: summary.own.mine })] : []),
+      ...(summary.own.mine > 0 ? [t(`eventTodos.fold.mine.${countForm(summary.own.mine, locale)}`, { count: summary.own.mine })] : []),
       ...(summary.own.overdue > 0 ? [t(`eventTodos.fold.overdue.${countForm(summary.own.overdue, locale)}`, { count: summary.own.overdue })] : []),
     ],
     summary.own.top,
@@ -405,6 +408,7 @@ export default async function EventTodoCard({ locale, eventId, computed, items, 
     );
   };
 
+  const isUsed = mine || inUse;
   const nothing = summary.page.count === 0 && summary.own.count === 0 && everything.done.length === 0;
 
   return (
@@ -416,7 +420,7 @@ export default async function EventTodoCard({ locale, eventId, computed, items, 
       aside={openCount > 0 ? t("eventTodos.summary", { count: openCount }) : t("eventTodos.summaryNone")}
       intro={t("eventTodos.intro")}
       introMore={t("eventTodos.introMore", { max: String(EVENT_TODO_TEXT_MAX) })}
-      openWhen={{ attention: openCount > 0 }}
+      openWhen={{ attention: openCount > 0, refused: Boolean(error), saved, inUse: isUsed }}
       data-testid="event-todos"
     >
       <Stack spacing={1.5}>
@@ -446,14 +450,14 @@ export default async function EventTodoCard({ locale, eventId, computed, items, 
           id="box-todos-own"
           title={t("eventTodos.groupOwn")}
           aside={ownLine}
-          openWhen={{ refused: Boolean(error), saved, inUse: mine }}
+          openWhen={{ refused: Boolean(error), saved, inUse: isUsed }}
           data-testid="event-todos-own"
         >
           <Stack spacing={1}>
             {/* «Toate» / «Ale mele»: the lines given to the reader. Two links, 44 pixels tall, the state in the address (no script). */}
             <Stack component="nav" aria-label={t("eventTodos.filterLabel")} direction="row" sx={{ flexWrap: "wrap", alignItems: "center", columnGap: 0.5 }}>
-              <ChipLink href={`${eventPath}#box-todos-own`} label={t("eventTodos.filterAll")} active={!mine} current={!mine ? "page" : undefined} />
-              <ChipLink href={`${eventPath}?mine=1#box-todos-own`} label={t("eventTodos.filterMine")} active={mine} current={mine ? "page" : undefined} />
+              <ChipLink href={`${eventPath}?todos=1#box-todos-own`} label={t("eventTodos.filterAll")} active={!mine} current={!mine ? "page" : undefined} />
+              <ChipLink href={`${eventPath}?mine=1&todos=1#box-todos-own`} label={t("eventTodos.filterMine")} active={mine} current={mine ? "page" : undefined} />
             </Stack>
 
             {/* One line to add a task: the words, the priority, «Adaugă» — Enter sends it; who and by when behind «Mai multe». */}
@@ -496,7 +500,7 @@ export default async function EventTodoCard({ locale, eventId, computed, items, 
               </Box>
             ) : (
               <Typography variant="body2" color="text.secondary" data-testid="event-todos-empty">
-                {mine ? t("eventTodos.emptyMine") : nothing || !mayEdit ? t("eventTodos.empty") : t("eventTodos.noTasks")}
+                {mine ? t("eventTodos.emptyMine") : nothing ? t("eventTodos.empty") : mayEdit ? t("eventTodos.noTasks") : t("eventTodos.noTasksRead")}
               </Typography>
             )}
 
