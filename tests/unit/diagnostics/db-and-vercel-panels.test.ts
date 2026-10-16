@@ -5,7 +5,7 @@ import type { DatabaseSizes } from "@/modules/diagnostics/domain/db-sizes";
 import type { VercelUsage } from "@/modules/diagnostics/vercel-usage";
 
 /**
- * §NNN — the two cards on `/devs`, rendered to HTML on the server through next-intl's own
+ * §803 — the two cards on `/devs`, rendered to HTML on the server through next-intl's own
  * translator over the real catalogues, in both languages: «Baza de date» with the size, the tables,
  * the growth and the registrations by age, and its sentence when the database could not be asked;
  * «Vercel: consumul lunii» with the lines, the builds by project and the CPU against Hobby's
@@ -78,7 +78,7 @@ async function html(node: Promise<ReactElement>): Promise<string> {
   return renderToStaticMarkup(await node).replace(/&#x27;/g, "'");
 }
 
-describe("§NNN «Baza de date» on /devs", () => {
+describe("§803 «Baza de date» on /devs", () => {
   it("draws the size, the tables with their split and rows, the growth and the registrations by age, in Română", async () => {
     state.locale = "ro";
     const out = await html(DatabaseSizesPanel({ sizes: SIZES }));
@@ -136,7 +136,7 @@ describe("§NNN «Baza de date» on /devs", () => {
   });
 });
 
-describe("§NNN «Vercel: consumul lunii» on /devs", () => {
+describe("§803 «Vercel: consumul lunii» on /devs", () => {
   it("draws the lines, the builds by project and the CPU against Hobby's four hours, amber near it", async () => {
     state.locale = "ro";
     const out = await html(VercelUsagePanel({ reading: { ok: true, usage: USAGE }, creditUsd: 20 }));
@@ -192,7 +192,7 @@ describe("§NNN «Vercel: consumul lunii» on /devs", () => {
   });
 });
 
-describe("§NNN the CPU line says how near the allowance is, and does not compare what it cannot", () => {
+describe("§803 the CPU line says how near the allowance is, and does not compare what it cannot", () => {
   it("is calm under eighty percent, says the share near it, and names a unit that is not hours instead of guessing", async () => {
     state.locale = "en";
     const calm = await html(VercelUsagePanel({ reading: { ok: true, usage: { ...USAGE, activeCpuHours: 2 } }, creditUsd: 0 }));
@@ -213,7 +213,7 @@ describe("§NNN the CPU line says how near the allowance is, and does not compar
   });
 });
 
-describe("§NNN the builds line under the deployments", () => {
+describe("§803 the builds line under the deployments", () => {
   it("names the count and the branches in both languages, and a dash when no branch built", async () => {
     const byBranch = [
       { branch: "qa", count: 7 },

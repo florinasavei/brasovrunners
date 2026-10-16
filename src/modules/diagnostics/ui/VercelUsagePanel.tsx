@@ -23,7 +23,7 @@ const USAGE_URL = "https://vercel.com/dashboard/usage";
 const CPU_WARN_SHARE = 0.8;
 
 /**
- * «Vercel: consumul lunii» on `/devs` (§NNN; the owner, 2026-10-16: «mă interesează să țin Vercel
+ * «Vercel: consumul lunii» on `/devs` (§803; the owner, 2026-10-16: «mă interesează să țin Vercel
  * free după decembrie»): the lines of Vercel's Usage page — build CPU minutes, function CPU,
  * observability events, ISR writes — and the builds by project, read from Vercel's billing API with
  * the token the page already holds. When Vercel refuses the token, or none is set, the card says

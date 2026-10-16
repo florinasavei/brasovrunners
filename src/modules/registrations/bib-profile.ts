@@ -1,6 +1,6 @@
 /**
  * The route's profile on a race number (§750; the owner, 2026-10-13: the elevation over distance, with
- * the distance and the gain; amended §NNN: the strip draws from the same elevation core as the event's
+ * the distance and the gain; amended §804: the strip draws from the same elevation core as the event's
  * page — «mi-ar plăcea cumva să refolosesc acel widget … să fie și pe pagină și pe BIB»): the profile
  * read once on the server from the event's route GPX (§718) by the core's own parser
  * (`routes/elevation/parse.ts#parseGpxElevation`), the two facts beside it, and the words the strip is

@@ -9,7 +9,7 @@ import { describeTarget, ENVIRONMENTS, formatSizes, parseEnvironment, resolveUrl
 import { createTestDatabase, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — `yarn db:sizes`: the same queries as `/devs` → «Baza de date», printed as a table. The
+ * §803 — `yarn db:sizes`: the same queries as `/devs` → «Baza de date», printed as a table. The
  * report is checked on PGlite's real PostgreSQL (the local database is not needed); the target
  * resolution is `db:migrate:env`'s, and the script never prints a connection string.
  */

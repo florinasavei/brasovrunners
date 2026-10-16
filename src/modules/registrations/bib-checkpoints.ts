@@ -1,7 +1,7 @@
 /**
  * The route's checkpoints on a race number's profile strip (§757, amending §750; the owner, 2026-10-13:
  * «I need to put checkpoints and limit times», and on the bib: «nu pot să văd unde e punctul de
- * alimentare pe acel număr»; amended §NNN: the strip draws from the same elevation core as the event's page,
+ * alimentare pe acel număr»; amended §804: the strip draws from the same elevation core as the event's page,
  * and a checkpoint the club unticked «Arată pe profilul traseului» is on neither).
  *
  * This file decides **which** checkpoints the strip pins and **what each says**; **where** they stand, their

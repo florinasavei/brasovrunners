@@ -208,7 +208,7 @@ export default async function DevsPage({ params, searchParams }: Props) {
   const pictures = await countMediaAssets(db, now);
   const databaseBytes = await readDatabaseSizeBytes(db);
   /*
-    The database's size and growth, and Vercel's month (§NNN): the status panel's two cards, read only
+    The database's size and growth, and Vercel's month (§803): the status panel's two cards, read only
     where they are drawn. The size goes through the page's own guarded read (a database that is away is
     a sentence, never the page); Vercel's lines from the hour-long cache, because the body is megabytes.
   */
@@ -650,14 +650,14 @@ export default async function DevsPage({ params, searchParams }: Props) {
           <Box sx={{ mt: 2 }}>
             <NeonBudgetPanel locale={locale} reading={budget} />
           </Box>
-          {/* How big the database is and what grew in thirty days — the numbers a retention period is chosen on (§NNN). */}
+          {/* How big the database is and what grew in thirty days — the numbers a retention period is chosen on (§803). */}
           <Box sx={{ mt: 2 }}>
             <DatabaseSizesPanel sizes={dbSizes} />
           </Box>
           {/*
             Hosting (the owner: "as a dev I should also see the DB usage and Vercel usage"): what the
             platform injects about the running deployment, the month's deployments and builds, the usage
-            card from Vercel's billing API (§NNN), and its link to the usage dashboard. Hobby has no
+            card from Vercel's billing API (§803), and its link to the usage dashboard. Hobby has no
             build-minute allowance to read them against: the usage card's Active CPU is the figure.
           */}
           <Typography variant="h3" sx={{ fontSize: "1rem", mt: 3, mb: 1 }}>
@@ -697,9 +697,9 @@ export default async function DevsPage({ params, searchParams }: Props) {
               {vercel.reason === "unconfigured" ? t("vercel.unavailable") : t("vercel.failed", { reason: vercel.reason })}
             </Alert>
           )}
-          {/* How many of this project's deployments built, and for which branch (§NNN). */}
+          {/* How many of this project's deployments built, and for which branch (§803). */}
           {vercel.ok && <VercelBuildsLine builds={vercel.month.builds} byBranch={vercel.month.buildsByBranch} />}
-          {/* The Usage page's lines from Vercel's billing API, or one sentence saying it would not tell (§NNN). */}
+          {/* The Usage page's lines from Vercel's billing API, or one sentence saying it would not tell (§803). */}
           {vercelUsage && (
             <Box sx={{ mt: 1 }}>
               <VercelUsagePanel

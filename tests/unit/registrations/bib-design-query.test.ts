@@ -53,7 +53,7 @@ const EVERYTHING_OFF: BibDesign = {
   showCheckpoints: false,
   // «…cu orele limită» (§757): on, the other way from its default (off).
   showCheckpointTimes: true,
-  // «Kilometrii și altitudinile pe profil» (§NNN): off, the other way from its default (on).
+  // «Kilometrii și altitudinile pe profil» (§804): off, the other way from its default (on).
   showProfileScale: false,
   // The profile from the club's picture, the figures off and the strip turned (§759): each away from its default.
   profileSource: "picture",
@@ -227,7 +227,7 @@ describe("§249 the form, read the same way for the save and for the preview", (
       // The unticked upside-down box posts nothing, which reads off (§750); so does the checkpoints' (§757).
       emergencyUpsideDown: false,
       showCheckpoints: false,
-      // «Arată distanța și diferența de nivel lângă profil» unposted is off too (§759), and so is the scale's (§NNN).
+      // «Arată distanța și diferența de nivel lângă profil» unposted is off too (§759), and so is the scale's (§804).
       showProfileFigures: false,
       showProfileScale: false,
     });
@@ -295,7 +295,7 @@ describe("§249 the form, read the same way for the save and for the preview", (
       // An unposted box is an unticked one, the checkpoints' too (§757).
       showCheckpoints: false,
       showCheckpointTimes: false,
-      // An unposted box is an unticked one, the scale's too (§NNN).
+      // An unposted box is an unticked one, the scale's too (§804).
       showProfileScale: false,
       showEmergency: false,
       emergencyPhone: "",

@@ -491,7 +491,7 @@ export function profileMarkers(
  */
 export function checkpointsStampPart(checkpoints: readonly (Pick<Checkpoint, "km" | "kinds" | "cutoffMinutes" | "cutoffClock"> & { onProfile?: boolean })[]): string {
   return sortedByKm(checkpoints)
-    // A point the club unticked «Arată pe profilul traseului» (§802) ends in «!»: the strip does not draw it either (§NNN), so the picture changes.
+    // A point the club unticked «Arată pe profilul traseului» (§802) ends in «!»: the strip does not draw it either (§804), so the picture changes.
     .map((row) => `${row.km.toFixed(2)}:${row.kinds.join("+")}:${row.cutoffMinutes ?? ""}@${row.cutoffClock ?? ""}${row.onProfile === false ? "!" : ""}`)
     .join("|");
 }

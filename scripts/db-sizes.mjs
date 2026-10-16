@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * How big a database is and where it grows (§NNN) — `yarn db:sizes`.
+ * How big a database is and where it grows (§803) — `yarn db:sizes`.
  *
  * Usage: yarn db:sizes [--env local|qa|production]
  *

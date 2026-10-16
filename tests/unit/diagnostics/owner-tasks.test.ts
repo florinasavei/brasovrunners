@@ -446,7 +446,7 @@ describe("owner tasks", () => {
     // The queued work: developer-owned, always open, after the club's rows.
     const developer = ownerTasks(LAUNCHED).filter((task) => task.owner === "developer").map((task) => task.id);
     expect(developer).toEqual(["scheduler"]);
-    // The retention periods (§NNN): informational and open — never blocking, never red — until a setting records them.
+    // The retention periods (§803): informational and open — never blocking, never red — until a setting records them.
     expect(stateOf({ ...LAUNCHED, retentionPeriodsDecided: false }, "retentionPeriods")).toBe("open");
     expect(stateOf(LAUNCHED, "retentionPeriods")).toBe("done");
     const retention = ownerTasks({ ...LAUNCHED, retentionPeriodsDecided: false }).find((task) => task.id === "retentionPeriods");
@@ -965,7 +965,7 @@ describe("the counter and the filters", () => {
     expect(clubOpen.map((task) => task.state)).toEqual(sortTasks(clubOpen).map((task) => task.state));
 
     // The counter follows the filter: it counts the rows shown, not the board — four
-    // decision-kind rows now that neonLimits is one (§335) and retentionPeriods another (§NNN), both inherited "done" in MIXED.
+    // decision-kind rows now that neonLimits is one (§335) and retentionPeriods another (§803), both inherited "done" in MIXED.
     expect(countTasks(filterTasks(tasks, { kind: "decision" }))).toEqual({ pending: 1, done: 3 });
   });
 

@@ -4,7 +4,7 @@ import { BIB_LAYOUT } from "./bib-geometry";
 import type { BibProfileDrawing } from "./bib-profile";
 
 /**
- * The strip on a race number laid out **once** by the shared elevation core (§NNN, amending §750, §757, §759; the
+ * The strip on a race number laid out **once** by the shared elevation core (§804, amending §750, §757, §759; the
  * owner, 2026-10-16: «I like how it looks when we display from GPX but I want to show the KM & Elevation and
  * hydration points» and «mi-ar plăcea cumva să refolosesc acel widget … să fie și pe pagină și pe BIB»): the line, the
  * area under it, the kilometre scale, the highest and the lowest altitude, the pins and the words in the foot row, all
@@ -30,7 +30,7 @@ import type { BibProfileDrawing } from "./bib-profile";
 /** What the design asks of the strip, and the width the row decided (`bib-profile-row.ts`). */
 export type BibStripOptions = {
   chartWidth: number;
-  /** «Kilometrii și altitudinile pe profil» (§NNN): the kilometre ticks and labels, the highest and the lowest altitude. */
+  /** «Kilometrii și altitudinile pe profil» (§804): the kilometre ticks and labels, the highest and the lowest altitude. */
   showScale: boolean;
   /** «Punctele de control pe profil» (§757): the pins of the checkpoints the drawing carries. */
   showCheckpoints: boolean;

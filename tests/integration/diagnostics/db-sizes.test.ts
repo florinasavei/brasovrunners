@@ -22,7 +22,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 vi.mock("next/cache", () => ({ revalidateTag: vi.fn(), unstable_cache: vi.fn() }));
 
 /**
- * §NNN — the database's size and growth, on PGlite: the queries `/devs` and `yarn db:sizes` share.
+ * §803 — the database's size and growth, on PGlite: the queries `/devs` and `yarn db:sizes` share.
  * Sizes present and ordered; the thirty-day counts right on seeded rows; the registrations per
  * state and the age of their event; a table missing from a database one release behind skipped
  * rather than aborting the reading; the page's reader answering null instead of throwing.

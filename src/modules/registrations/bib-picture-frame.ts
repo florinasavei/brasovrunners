@@ -47,7 +47,7 @@ export const BIB_PICTURE_RATIO: Record<BibPictureSlot, number> = {
 };
 
 /**
- * **The one rule for the profile picture's shape** (§NNN; the owner, 2026-10-16: «if we choose to put a picture, we need to
+ * **The one rule for the profile picture's shape** (§804; the owner, 2026-10-16: «if we choose to put a picture, we need to
  * say what is the aspect ratio recommended for it»): the box the picture is fitted whole in — `bibProfileChartWidth`
  * wide, `profilePictureHeight` tall — as width over height, for the design's current «Arată distanța și diferența de
  * nivel lângă profil». The crop box's «Forma» line (`BIB_PICTURE_RATIO.profile`) and the sentence the panel prints

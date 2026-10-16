@@ -90,7 +90,7 @@ export type BibDesignFormValues = {
   showCheckpoints: boolean;
   /** «…cu orele limită» (§757): the cut-offs beside the points; off by default. */
   showCheckpointTimes: boolean;
-  /** «Kilometrii și altitudinile pe profil» (§NNN): on by default, drawn on the GPX strip only. */
+  /** «Kilometrii și altitudinile pe profil» (§804): on by default, drawn on the GPX strip only. */
   showProfileScale: boolean;
   showEmergency: boolean;
   emergencyPhone: string;

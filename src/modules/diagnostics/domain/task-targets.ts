@@ -79,7 +79,7 @@ export const TASK_TARGETS: Partial<Record<TaskId, TaskTarget>> = {
   unreachableWindow: { kind: "section", section: "events" },
   // The club's mailboxes that refuse its emails (§671), under «Copiile clubului» that names them.
   clubMailboxRefusals: { kind: "settings", tab: "emails", hash: "club-mailbox-rejections" },
-  // The database's size and growth, the numbers the retention periods are decided on (§NNN).
+  // The database's size and growth, the numbers the retention periods are decided on (§803).
   retentionPeriods: { kind: "devs", hash: "db-size" },
 };
 

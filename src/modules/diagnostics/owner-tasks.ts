@@ -447,7 +447,7 @@ export type OwnerTaskInputs = {
   /** Are `VERCEL_API_TOKEN` + `VERCEL_PROJECT_ID` set (§101)? Off, `/devs` links to the dashboard. */
   vercelUsageConfigured: boolean;
   /**
-   * Has the club decided how long each kind of data is kept (§NNN)? No setting records that yet — the
+   * Has the club decided how long each kind of data is kept (§803)? No setting records that yet — the
    * lane that adds one passes it here — so the page says `false` and the row «Retenția datelor» stays
    * open, informational, until then.
    */
@@ -1058,7 +1058,7 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
   });
 
   /*
-    The retention periods the club has not decided (§NNN; the owner, 2026-10-16: «cumva mă interesează să țin
+    The retention periods the club has not decided (§803; the owner, 2026-10-16: «cumva mă interesează să țin
     baza de date light long term»). Informational for now and says so: nothing in the system knows a period
     was chosen, so the row stays `open` until the lane that adds the setting turns it off. Never blocking,
     never red — the sweep already deletes on the windows the privacy notice states; what is open is

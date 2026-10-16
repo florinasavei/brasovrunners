@@ -1,5 +1,5 @@
 /**
- * How big the database is and where it grows — the queries and their reading, as plain data (§NNN).
+ * How big the database is and where it grows — the queries and their reading, as plain data (§803).
  *
  * The owner, 2026-10-16: «cumva mă interesează să țin baza de date light long term». Before a
  * retention period is chosen (`docs/PLATFORM.md` § Keeping Neon and Vercel light, long term) the

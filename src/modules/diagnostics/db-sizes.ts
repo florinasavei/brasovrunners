@@ -4,7 +4,7 @@ import { readOrWhileAway } from "@/modules/resilience/optional-read";
 import { type DatabaseSizes, readDatabaseSizes, type SqlRow } from "./domain/db-sizes";
 
 /**
- * The database's size and growth for `/devs` (§NNN), through the application's own connection.
+ * The database's size and growth for `/devs` (§803), through the application's own connection.
  *
  * The SQL and the reading are `domain/db-sizes.ts`'s, shared with `yarn db:sizes`; this file only
  * says how a statement is run here: `db.execute`, whose result is `{ rows }` on `node-postgres`

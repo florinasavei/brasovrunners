@@ -250,7 +250,7 @@ describe("§750 §759 the picture's stamp follows the mark", () => {
   });
 
   it("is past drawing version 3, which made existing members' numbers draw a star where they drew a ring and a check", () => {
-    // 4 since §NNN (the strip drawn by the elevation core): every address stamped before it is a new one.
+    // 4 since §804 (the strip drawn by the elevation core): every address stamped before it is a new one.
     expect(BIB_DRAWING_VERSION).toBeGreaterThanOrEqual(3);
   });
 });

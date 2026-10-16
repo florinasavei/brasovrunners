@@ -2,7 +2,7 @@ import { unstable_cache } from "next/cache";
 import type { Env } from "@/shared/config/env";
 
 /**
- * The lines of Vercel's Usage page, read from Vercel (§NNN; the owner, 2026-10-16: «mă interesează
+ * The lines of Vercel's Usage page, read from Vercel (§803; the owner, 2026-10-16: «mă interesează
  * să țin Vercel free după decembrie»).
  *
  * `vercel.ts` says Vercel's REST API has no usage endpoint (checked 2026-09-19). Read again on

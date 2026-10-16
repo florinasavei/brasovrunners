@@ -233,7 +233,7 @@ test.describe("§750 §759 the designer's sections: header, footer, the profile 
     await expect(extras).toContainText("Evenimentul nu are GPX: încarcă-l în „Traseul” sau alege o poză.");
     const source = page.getByTestId("bib-profile-source");
     await expect(source.getByRole("radio", { name: "Desenat din traseul evenimentului (GPX)" })).toBeChecked();
-    // «Kilometrii și altitudinile pe profil» (§NNN): on by default, only with the drawn profile.
+    // «Kilometrii și altitudinile pe profil» (§804): on by default, only with the drawn profile.
     const scale = extras.getByRole("checkbox", { name: "Kilometrii și altitudinile pe profil" });
     await expect(scale).toBeChecked();
     expect((await scale.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
@@ -248,7 +248,7 @@ test.describe("§750 §759 the designer's sections: header, footer, the profile 
     await expect(preview).toHaveAttribute("src", /[?&]profileSource=picture(&|$)/, { timeout: 10_000 });
     await expect(profilePicture).toBeVisible();
     await expect(scale).toBeHidden();
-    // The recommended shape, said before any upload (§NNN): both shapes, the strip beside the figures (380 × 36 points) and the whole one.
+    // The recommended shape, said before any upload (§804): both shapes, the strip beside the figures (380 × 36 points) and the whole one.
     await expect(profilePicture).toContainText("Cu cifrele lângă profil: 10,6 la 1, adică 1580 × 150 px la 300 dpi");
     // Its own sub-card with its «Calitate» row, and never a crop box: the picture is fitted whole.
     await expect(profilePicture.getByTestId("image-quality")).toBeVisible();

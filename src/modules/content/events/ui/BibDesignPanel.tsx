@@ -213,7 +213,7 @@ export default async function BibDesignPanel({
         : place === "member"
           ? t("editor.bibDesign.member.headerImageSrcHelp")
           : slot === "profile"
-            ? // Never cropped, and said before the upload (§NNN): both shapes, with the figures and without, so the sentence is
+            ? // Never cropped, and said before the upload (§804): both shapes, with the figures and without, so the sentence is
               // true whatever the box beside it says before a save; the ratios and the example sizes come from
               // `bibProfilePictureRatio` and `bibProfilePictureExample`, the resolution from `BIB_PICTURE_PRINT_DPI`.
               t("editor.bibDesign.profileImageSrcHelp", {

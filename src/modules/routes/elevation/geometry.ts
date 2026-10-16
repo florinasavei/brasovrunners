@@ -135,7 +135,7 @@ export type ElevationOptions = {
    * words and the marker labels — dropped when it would touch a marker label, and set beside the end word when it would touch that (the
    * lowest point is the start or the finish: a loop's every time) — and the kilometre labels then give way to it, so «608 m» is never
    * printed over «3». Off by default: the labels are then placed where their points are, whatever else stands there (a chart
-   * with room round the plot, like the page's, has no such crowd). A small strip turns it on (§NNN, the race number).
+   * with room round the plot, like the page's, has no such crowd). A small strip turns it on (§804, the race number).
    */
   clearExtremes?: boolean;
   /** A route that climbs less than this is drawn flat in a range this wide, in metres. 20 by default. */

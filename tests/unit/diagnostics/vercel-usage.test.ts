@@ -3,7 +3,7 @@ import { readVercelUsage, summariseVercelCharges } from "@/modules/diagnostics/v
 import { readVercelMonth } from "@/modules/diagnostics/vercel";
 
 /**
- * §NNN — Vercel's Usage page's lines, read from its billing charges API (`GET /v1/billing/charges`,
+ * §803 — Vercel's Usage page's lines, read from its billing charges API (`GET /v1/billing/charges`,
  * FOCUS, one JSON object per line). The lines are shaped like the ones the club's team answered on
  * 2026-10-16 — «Build CPU Minutes» per project, «Fluid Active CPU», an unmetered «Pro» line for the
  * seat — with invented numbers and no account id.

@@ -8,7 +8,7 @@ import { type BibStrip, bibProfileStrip } from "./bib-profile-strip";
  * renderers so the sheet and the picture cannot disagree:
  *
  * - `gpx` — «Desenat din traseul evenimentului (GPX)»: the line drawn from the route's file by the shared
- *   elevation core, with its «Start» and «Sosire», the kilometres and the altitudes (§NNN), the checkpoints'
+ *   elevation core, with its «Start» and «Sosire», the kilometres and the altitudes (§804), the checkpoints'
  *   pins, and the distance and the gain beside it. The core's answer — `strip`, in the strip's own box — is
  *   asked for here, once, and both renderers draw it.
  * - `picture` — «O poză încărcată»: the club's own picture of the profile, fitted whole; no marks (the

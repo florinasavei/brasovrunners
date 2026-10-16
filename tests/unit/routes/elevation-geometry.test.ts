@@ -209,7 +209,7 @@ describe("§802 the extremes", () => {
   });
 });
 
-describe("§NNN the extremes keep the foot row clear (`clearExtremes`, the race number's strip)", () => {
+describe("§804 the extremes keep the foot row clear (`clearExtremes`, the race number's strip)", () => {
   /** A route that falls to its lowest point at 5 km of 9 and rises again: the lowest label stands in the foot row at that kilometre. */
   function valley(count = 91): ElevationProfileData {
     const points = Array.from({ length: count }, (_, i) => {

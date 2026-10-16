@@ -42,7 +42,7 @@ import { drawnRuns } from "../../helpers/pdf-drawn";
 import { elevationGpx } from "../../helpers/elevation-gpx";
 
 /**
- * §757 (amending §750) and §NNN, BR-REQ-011-01 — the route's checkpoints on the bib's profile strip, which the shared elevation
+ * §757 (amending §750) and §804, BR-REQ-011-01 — the route's checkpoints on the bib's profile strip, which the shared elevation
  * core lays out for both renderers: which checkpoints the strip pins (the ones the club left ticked «Arată pe profilul traseului»,
  * within the printed distance) and what each says («km 5 · apă», «km 9 · hrană», «km 12 · 11:30»), the crowding rule (the times
  * go first, all of them), the pins that would touch, and the two renderers drawing the same points. The sheet through what pdfkit
@@ -113,7 +113,7 @@ describe("§757 which checkpoints the strip pins, and what each says", () => {
   });
 });
 
-describe("§NNN the strip's geometry comes from the elevation core", () => {
+describe("§804 the strip's geometry comes from the elevation core", () => {
   it("asks the core once for the strip's own box, with the words, the pins and the options the bib needs", () => {
     spy.geometry.mockClear();
     const drawing = drawingOf([at(3, null, ["WATER"])]);
@@ -171,7 +171,7 @@ describe("§NNN the strip's geometry comes from the elevation core", () => {
   });
 });
 
-describe("§NNN the kilometres and the altitudes on the strip", () => {
+describe("§804 the kilometres and the altitudes on the strip", () => {
   it("draws ticks and numbers at the foot, the unit once after the last number, and the highest altitude above the line", () => {
     const strip = bibProfileStrip(BASE, STRIP);
     const g = strip.geometry;
@@ -365,7 +365,7 @@ describe("§757 the pins stand side by side, never over one another", () => {
   });
 });
 
-describe("§NNN the unticked checkpoint is not on the strip", () => {
+describe("§804 the unticked checkpoint is not on the strip", () => {
   it("is absent from the markers and the words, though it stays in the checkpoints the event has", () => {
     const sources = [at(3, "09:45", ["WATER"], false), at(6, "10:30", ["FOOD"], true)];
     const strip = bibProfileStrip(drawingOf(sources), { ...STRIP, showTimes: true });
@@ -425,7 +425,7 @@ async function widthOf(text: string): Promise<number> {
   return doc.font("body").fontSize(BIB_LAYOUT.profileLabelSize).widthOfString(text);
 }
 
-describe("§NNN the sheet and the picture draw the same points", () => {
+describe("§804 the sheet and the picture draw the same points", () => {
   for (const showTimes of [false, true]) {
     it(`puts every text, pin and point of the strip at the same place in both — cut-offs ${showTimes ? "on" : "off"}`, async () => {
       const drawing = drawingOf(SOURCES);
@@ -584,7 +584,7 @@ describe("§757 the extras read the checkpoints only where the design asks", () 
   });
 });
 
-describe("§NNN «Kilometrii și altitudinile pe profil»: the design's tick", () => {
+describe("§804 «Kilometrii și altitudinile pe profil»: the design's tick", () => {
   it("is on by default and for every design saved before the key", () => {
     expect(DEFAULT_BIB_DESIGN.showProfileScale).toBe(true);
     expect(bibDesignSchema.parse({}).showProfileScale).toBe(true);

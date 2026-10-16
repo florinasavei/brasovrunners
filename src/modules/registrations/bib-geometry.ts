@@ -131,7 +131,7 @@ export const BIB_LAYOUT = {
   memberMarkGap: 10,
   memberMarkTop: 12,
   /**
-   * The route's profile (§750, amended §757 and §NNN): a full-width strip `profileHeight` points tall across the card less its
+   * The route's profile (§750, amended §757 and §804): a full-width strip `profileHeight` points tall across the card less its
    * inset, between the name under the number and the small print — a row of its own, so it can never
    * cover the number (which keeps the area that is left) or the name; the chart takes the strip's width
    * but for the figures' room at its right (the owner's trail example, §750). The strip is **one box**,
@@ -156,7 +156,7 @@ export const BIB_LAYOUT = {
   profileDistanceTop: 9,
   profileGainTop: 20,
   /**
-   * The kilometre scale and the altitudes on the strip (§NNN): a tick `profileKmTick` points long under the
+   * The kilometre scale and the altitudes on the strip (§804): a tick `profileKmTick` points long under the
    * plot at each kilometre of the step the core chooses (1, 2 or 5), stroked `profileKmTickWeight`, a foot
    * rule of the same weight under the plot, all at `profileScaleOpacity` of the ink so the scale never
    * outweighs the line; the highest and the lowest altitude in the labels' size.
@@ -172,7 +172,7 @@ export const BIB_LAYOUT = {
   profilePictureTop: 1,
   profilePictureHeight: 36,
   /**
-   * The checkpoints on the profile (§757, amended §NNN; `bib-profile-strip.ts`): a pin for each — a ring
+   * The checkpoints on the profile (§757, amended §804; `bib-profile-strip.ts`): a pin for each — a ring
    * `profilePinRadius` points in radius stroked `profilePinWeight`, in the band above the plot, with the
    * kind's glyph from the elevation core inside it (a drop, a fork, a cross, a stopwatch, an arrow, a dot) —
    * a stem from the pin down to the plot's foot stroked `checkpointTickWeight`, and a dot
@@ -289,7 +289,7 @@ export const BIB_TEXT_LINE = 2400 / 2048;
 /**
  * Where Roboto's baseline stands inside a line, as a fraction of its size: the ascender, 1900 of 2048
  * units. A line drawn at `top` (pdfkit's `text` y; the picture's `top` with a `BIB_TEXT_LINE` line height)
- * has its baseline `BIB_TEXT_ASCENT × size` below it — so a text the core placed by its baseline (§NNN)
+ * has its baseline `BIB_TEXT_ASCENT × size` below it — so a text the core placed by its baseline (§804)
  * is drawn at `baseline − BIB_TEXT_ASCENT × size`, in both renderers.
  */
 export const BIB_TEXT_ASCENT = 1900 / 2048;

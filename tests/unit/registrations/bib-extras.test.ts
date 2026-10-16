@@ -92,7 +92,7 @@ describe("§750 the design's new keys", () => {
   });
 });
 
-describe("§750, §NNN the profile from a GPX, read by the elevation core", () => {
+describe("§750, §804 the profile from a GPX, read by the elevation core", () => {
   it("reduces the track to the core's few hundred points with its distance and gain", () => {
     const profile = parseGpxElevation(track())!;
     expect(profile.points.length).toBeGreaterThanOrEqual(64);

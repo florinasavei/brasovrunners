@@ -14,18 +14,18 @@ decision or a click only the club can make · **released** — on production, wi
 The owner, 2026-10-10: «Soon I need to start a new session from the laptop … You need to save and document everything».
 This section replaces the plan of 2026-09-30; it is what a session with none of today's conversation needs to carry on.
 
-- **Production: `BR-V3.49`** (2026-10-16 21:00: §798, §799; no migration). Waiting for «prod», in order: `BR-V3.50`
-  (§800 the volunteers' steps and a wider form, §801 «Spune-ne ceva» and the lead card without its chip — PR #510,
-  no migration) and then `BR-V3.51` (§802, below — **migration `0164`**).
-- **QA: `BR-V3.51`** — one elevation profile from the GPX: a pure core (`src/modules/routes/elevation`: parse,
-  geometry, glyphs), the widget on the event page under the maps and above «Puncte de control» with the checkpoints
-  the club ticks «Arată pe profilul traseului» (migration `0164`, `event_checkpoints.on_profile`), a pointer readout
-  «4,5 km · 712 m», the same widget compact as a preview in the editor's «Puncte de control» card (§802).
-- **Building (2026-10-16 evening):** the race number's strip drawn from the same core — kilometres, altitudes, the
-  aid stations named, the unticked points off the strip too — and the picture's recommended shape said before the
-  upload (`feat/bib-profile-scale`, stacked on §802's branch); `/devs` with the database's size and growth and the
-  month's builds, `yarn db:sizes`, and the plan for keeping Neon and Vercel light — a retention proposal table and
-  the Vercel-Hobby fit (`feat/db-and-vercel-light`).
+- **Production: `BR-V3.51`** (2026-10-17 00:58: §802 one elevation profile from the GPX on the event page, the
+  checkpoints the club ticks, the editor's preview — **migration `0164`** applied). Waiting for «prod»: `BR-V3.52`
+  (§803, §804, below) — no migration.
+- **QA: `BR-V3.52`** — `/devs` shows the database's size and growth and the month's builds and usage, `yarn db:sizes`,
+  and `docs/PLATFORM.md` § «Keeping Neon and Vercel light» carries the plan: the retention table (today's sweep vs the
+  proposal), the anonymisation proposal, the Vercel-Hobby fit (Active CPU is the binding limit) and the levers; the
+  row «Retenția datelor: perioade de decis» on `/admin/tasks` (§803); the race number's strip draws from the same
+  elevation core as the page — kilometres, altitudes, the aid stations named, the unticked points off the number too,
+  the tick «Kilometrii și altitudinile pe profil», the picture's recommended shape before the upload (§804).
+- **Building:** nothing. The queue of 2026-10-16 (the owner's screenshots and asks, lanes 31–49) is done once
+  `BR-V3.52` is on production. The owner's decisions from §803 (retention periods, December on Hobby or Pro, the
+  Basic build machine, QA's region/Node) are open.
 - **Waiting on the owner:** the privacy notice from the new template, approved in `/admin/legal` after a lawyer reads
   the paragraph on what the site loads (its first sentence says what is used is strictly necessary and needs no consent,
   art. 4(6) of Legea nr. 506/2004, while the same paragraph says Strava may set its own cookies without a press — the
@@ -141,6 +141,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V3.52` | /devs shows the database's size and growth and the month's builds; the plan for keeping Neon and Vercel light (§803) · the race number's strip draws from the same elevation core as the page: kilometres, altitudes, the aid stations named; the picture's recommended shape (§804) |
 | `BR-V3.51` | one elevation profile from the GPX: on the event page with the checkpoints the club ticks, previewed in the editor; the core the race number will draw from (§802) |
 | `BR-V3.50` | the volunteers' page: the steps and «we will confirm you», before the form and after it, and in the receipt email; a wider form; the notice's cookie sentence names the form (§800) · the feedback page's title without «(anonim)»; the featured card keeps its border and loses its chip (§801) |
 | `BR-V3.49` | the event page: «Timp limită» under «Traseu» (§798) · the event editor: «Condiții de participare» inside «Regulamentul», beside the minimum age (§799) |

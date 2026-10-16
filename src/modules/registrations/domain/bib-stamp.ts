@@ -7,7 +7,7 @@ import { fnv1a } from "@/shared/hash";
  * two lines beside the badge, the date under its real height, the badge centred (§755). 3: the member
  * mark a star by default where §750 drew a ring and a check, and the emergency line fitted to the card
  * (§759). 4: the profile's strip drawn by the shared elevation core — the kilometre scale, the altitudes, the pins
- * with the core's glyphs, the aid stations' words (§NNN). The bibs page's stamp (`bibPictureStamp`) and the desk's
+ * with the core's glyphs, the aid stations' words (§804). The bibs page's stamp (`bibPictureStamp`) and the desk's
  * (`events/repository.ts#BIB_STAMP`) both carry it.
  */
 export const BIB_DRAWING_VERSION = 4;

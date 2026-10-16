@@ -429,7 +429,7 @@ describe("§757 the picture stamp covers the checkpoints", () => {
     expect(checkpointsStampPart([])).toBe("");
   });
 
-  it("changes when the club unticks «Arată pe profilul traseului», which the strip no longer draws (§NNN)", () => {
+  it("changes when the club unticks «Arată pe profilul traseului», which the strip no longer draws (§804)", () => {
     const stamp = checkpointsStampPart([base]);
     expect(checkpointsStampPart([{ ...base, onProfile: false }])).toBe(`${stamp}!`);
     expect(checkpointsStampPart([{ ...base, onProfile: true }])).toBe(stamp);

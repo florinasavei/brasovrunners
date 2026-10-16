@@ -213,7 +213,7 @@ describe("§516 «Sarcini» → «Club» rows point into the map", () => {
     expect(read("src/modules/diagnostics/ui/TaskTargetLink.tsx")).toContain('`${t("nav.pages")} → ${t("pages.tabContact")}`');
   });
 
-  it("sends «Retenția datelor» to «Setări» → «Configurație», the card that carries the database's numbers (§NNN)", () => {
+  it("sends «Retenția datelor» to «Setări» → «Configurație», the card that carries the database's numbers (§803)", () => {
     expect(TASK_TARGETS.retentionPeriods).toEqual({ kind: "devs", hash: "db-size" });
     expect(targetRoute(TASK_TARGETS.retentionPeriods!)).toEqual({ pathname: "/devs", hash: "db-size" });
     expect(read("src/modules/diagnostics/ui/TaskTargetLink.tsx")).toContain('`${t("nav.settings")} → ${t("settingsTabs.configuration")}`');
