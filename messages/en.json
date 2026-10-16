@@ -1984,7 +1984,8 @@
       "VOLUNTEER_GUARDIAN_NO_EMAIL": "The parent or guardian has no email address entered, so there is nowhere to send the link. Take the consent on paper, or add the address under “Edit”.",
       "VOLUNTEER_MINORS_CLOSED": "The club does not take volunteers under 18 yet: the privacy notice and the agreement in force do not describe minors. Approve them first; “Tasks” says how.",
       "VOLUNTEER_CATEGORY_HAS_ROLES": "The category was not deleted: it has roles under it. Move or delete the roles first.",
-      "VOLUNTEER_NAME_TAKEN": "That name is already used in this category (or among the event's categories). Choose another: the same name can stand in two categories, but not twice in one."
+      "VOLUNTEER_NAME_TAKEN": "That name is already used in this category (or among the event's categories). Choose another: the same name can stand in two categories, but not twice in one.",
+      "VOLUNTEER_ROLE_INVALID": "“{role}” in “{category}”: {problem}. Nothing was saved."
     },
     "editor": {
       "draftPreview": {
@@ -4883,29 +4884,62 @@
       "switchOn": "Take volunteers on the page",
       "rolesTitle": "Roles",
       "rolesCount": "Roles: {count}",
-      "rolesIntro": "A role needs a name in Romanian and in English, and how many people it needs. The order here is the order the page lists them in.",
+      "rolesIntro": "Change what you like on any number of roles, then press “Save all roles” once. The position sets the order inside a category; an empty row at the end adds a role.",
+      "rolesNeededHelp": "People: at least 1, or tick “No limit”. Only the people you gave the role count; once it has that many, the public form stops offering it.",
+      "rolesSave": "Save all roles",
+      "rolesSaving": "Saving the roles…",
       "rolesEmpty": "No roles yet. Add the first one below: for example “Water point” — 4 people.",
       "role": {
         "nameRo": "Role name (Română)",
         "nameEn": "Role name (English)",
         "needed": "People needed",
-        "neededHelp": "At least 1, or tick “No limit” below. Only the people you gave the role count. Once it has that many, the public form stops offering it.",
         "unlimited": "No limit — any number of people",
-        "unlimitedHelp": "The role is always offered, however many people it already has. Unticked, type a number of at least 1 above.",
         "descriptionRo": "Role description (Română, optional)",
         "descriptionEn": "Role description (English, optional)",
         "descriptionHelp": "What the role involves: where the volunteer stands, what they do, from what hour. At most {max} characters of text in each language; in both languages or neither.",
-        "addTitle": "Add a role",
-        "add": "Add the role",
-        "adding": "Adding…",
         "delete": "Delete the role",
         "deleting": "Deleting…",
         "deleteTitle": "Delete this role?",
         "deleteBody": "The role “{name}” is removed. A role given to someone, or ticked by someone, cannot be deleted: change their roles or delete them first.",
         "descriptionEmpty": "No description yet.",
-        "more": "The rest",
+        "more": "More",
         "category": "Category",
-        "categoryHelp": "The heading the role appears under. “Other activities” means none. The same name can stand in two categories, but not twice in one."
+        "categoryHelp": "The heading the role appears under. “Other roles” means none. The same name can stand in two categories, but not twice in one.",
+        "col": {
+          "nameRo": "Name (RO)",
+          "nameEn": "Name (EN)",
+          "needed": "People",
+          "unlimited": "No limit",
+          "category": "Category",
+          "position": "Position"
+        },
+        "newRow": "New role",
+        "newRowName": "new role",
+        "newRowHint": "Write the name in Romanian and in English to add a role; an empty row does nothing.",
+        "positionLast": "last",
+        "count": {
+          "one": "{count} role",
+          "few": "{count} roles",
+          "other": "{count} roles"
+        },
+        "language": {
+          "ro": "Română",
+          "en": "English"
+        },
+        "problems": {
+          "nameRoMissing": "the Romanian name is missing",
+          "nameEnMissing": "the English name is missing",
+          "nameRoLong": "the Romanian name is over {max} characters",
+          "nameEnLong": "the English name is over {max} characters",
+          "needed": "type how many people it needs (1 to {max}) or tick “No limit”",
+          "description": "the description is written in both languages or in neither, with no pictures, at most {max} characters in each",
+          "colour": "the band colour is neither one of the choices nor written as #rrggbb",
+          "colourUnreadable": "the letters cannot be read on the band colour; choose another",
+          "position": "the position is a whole number, from 1",
+          "category": "the category is no longer on this event",
+          "taken": "the chosen category already has a role with this name",
+          "tooMany": "an event has at most {max} roles"
+        }
       },
       "move": {
         "up": "Move up",
@@ -5071,7 +5105,7 @@
         "paperBody": "This records that {name}'s parent or guardian signed the printed agreement, the version in force, and that you recorded the signature. Keep the signed sheet.",
         "minorsClosed": "The parent's link and “Parent's consent on paper” wait: the notice or the agreement in force does not describe minors (“Tasks”)."
       },
-      "otherCategory": "Other activities",
+      "otherCategory": "Other roles",
       "categories": {
         "title": "Categories",
         "count": "Categories: {count}",
@@ -11478,10 +11512,13 @@
       "eventTodoUnchanged": "The row already said this; nothing to change.",
       "volunteersOn": "The event now takes volunteers on its page, while a role still needs people.",
       "volunteersOff": "The event's volunteers' page takes no more offers. The roles and the people stay.",
-      "volunteerRoleAdded": "Role added.",
-      "volunteerRoleSaved": "Role saved.",
-      "volunteerRoleMoved": "Role moved.",
       "volunteerRoleDeleted": "Role deleted.",
+      "volunteerRolesSaved": {
+        "one": "Saved {count} role.",
+        "few": "Saved {count} roles.",
+        "other": "Saved {count} roles."
+      },
+      "volunteerRolesUnchanged": "Nothing to change in the roles.",
       "volunteerAdded": "Volunteer added.",
       "volunteerSaved": "Volunteer saved.",
       "volunteerConfirmed": "Volunteer confirmed.",

@@ -34,6 +34,8 @@ export type DomainErrorCode =
   | "VOLUNTEER_CATEGORY_HAS_ROLES"
   // A role named twice under one category, or a category named twice on one event (§774): the same name may stand in two categories, not twice in one.
   | "VOLUNTEER_NAME_TAKEN"
+  // One role of the «Roluri» card's one save refused (§NNN): the sentence names the role and its category, the boxes name what to correct, and nothing of the save was written.
+  | "VOLUNTEER_ROLE_INVALID"
   // The same address entered twice for one event's volunteers (§754): one row per person per event, so the card says so.
   | "VOLUNTEER_ALREADY_LISTED"
   // «Trimite linkul contractului» or a paper acceptance while no volunteer agreement is in force (§758): approve one first.

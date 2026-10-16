@@ -33,8 +33,9 @@
  *   until §572, so «Copiază și tradu tot» above them found no English box it could fill and said
  *   «Nu e nimic de tradus» over a Romanian text already written.
  *
- * - An event's volunteer roles (§765): the role's name (`nameEn`) and its description — a rich text,
- *   `descriptionRoBody` / `descriptionEnBody` — one form per role, in the «Voluntari» card;
+ * - An event's volunteer roles (§765, §NNN): the «Roluri» card is one form for every role, so each role's boxes carry its key —
+ *   `roles[<key>].nameEn` and the description, a rich text, `roles[<key>].descriptionRoBody` / `roles[<key>].descriptionEnBody`
+ *   (`role-rows.ts`); a category's name (`nameEn`, below) is its own small form;
  *
  * **Deliberately not on it:** a page's address (`slug` — an address, not words); anything under
  * `/admin/legal` (counsel-reviewed, §418, and the legal editor posts other names anyway); and
@@ -94,8 +95,10 @@ const ENGLISH_FIELD_PATTERNS: readonly RegExp[] = [
   /^newsletterBodyEn$/,
   // «Membri» (§524, §572): the public page's benefits and the members' zone, one rich text each.
   /^(benefits|zone)EnBody$/,
-  // An event's volunteer role (§765): its name (its description is `descriptionEnBody`, above) — one form per role.
+  // A volunteer category's name (§774), one small form per category.
   /^nameEn$/,
+  // An event's volunteer roles (§765, §NNN): the card is one form for every role, each box named by its role's key.
+  /^roles\[[\w-]{1,80}\]\.(nameEn|descriptionEnBody)$/,
 ];
 
 /** The newsletter composer's body (§550): a rich text posting as `newsletterBodyRo` / `newsletterBodyEn`. */
@@ -103,9 +106,10 @@ const NEWSLETTER_RICH_TEXT = /^newsletterBodyEn$/;
 
 /**
  * The rich texts that spell their pair `…RoBody` / `…EnBody`: «Echipa»'s bio and introduction
- * (§474), a shop product's description (§697), a question's answer on «Întrebări frecvente» (§525), and «Membri»'s two texts (§524, §572).
+ * (§474), a shop product's description (§697), a question's answer on «Întrebări frecvente» (§525), «Membri»'s two texts (§524, §572) and a
+ * volunteer role's description (§765, §NNN).
  */
-const TEAM_RICH_TEXT = /^(?:bio|intro|description|body|benefits|zone|faq\[\d{1,3}\]\.answer)EnBody$/;
+const TEAM_RICH_TEXT = /^(?:bio|intro|description|body|benefits|zone|faq\[\d{1,3}\]\.answer|roles\[[\w-]{1,80}\]\.description)EnBody$/;
 
 /** Whether `name` is an English box the club types words into — the whole of what may be translated. */
 export function isTranslatableEnglishField(name: string): boolean {
