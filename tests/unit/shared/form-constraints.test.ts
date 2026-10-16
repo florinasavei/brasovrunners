@@ -61,7 +61,7 @@ const NOT_A_BOX = new Set([
   "waitlistAutoOffer",
   // «Lista de așteptare» (§633): a native select of three answers, all valid, beside the places; its number reads `waitlistLimitSchema`.
   "waitlistMode",
-  // «Condiții de participare» → «Informații medicale» (§557): a tick in «Program, regulament și declarație».
+  // «Regulamentul» › «Condiții de participare» › «Informații medicale» (§557, §799): a tick in «Participare, înscrieri și regulament».
   "askHealthNote",
   // «Estimativ» beside «Diferență de nivel (m)» (§585): a tick in «Traseu».
   "elevationGainEstimated",

@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.48-2026-10-16 -->
+<!-- PROJECT_BASELINE: BR-V3.49-2026-10-16 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V3.48-2026-10-16`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.49-2026-10-16`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -26985,3 +26985,27 @@ Baseline `BR-V3.47-2026-10-16`.
 **Refused.** A new component or a coloured div of our own (the house already has the notice); `role="status"` (it would be announced as a live region); a warning severity (it is thanks, not a fault); changing the words.
 
 Baseline `BR-V3.48-2026-10-16`.
+
+## 798. The race's «Timp limită» stands under «Traseu»
+
+**The owner, 2026-10-16, from a screenshot of the event page's facts** (when, «Timp limită · 2 h», where, route, cost): «Timp limită trebuie să apară sub traseu».
+
+**Decision.** Amends §757, which put the row right under «Când». The facts now read in this order: «Când», «Unde», «Traseu» (the pills and its links), «Timp limită», «Cost». It is a pure reorder on the event page and its staff preview, which draw the same rows: the row's words, its stopwatch, its test id `race-time-limit` and the rule that draws it (a race with a start, counted from the gun, else from the start; no other type has it) are unchanged. The reasons: a limit is a fact of the course the runners will run, not of the date, and between «Când» and «Unde» it separated two lines that read together. When a race states no route, the row stands between «Unde» and «Cost».
+
+**Not touched.** The listing card's compact lines (`cardLine`), the «Când» row's second line «Ora startului cursei se anunță.», and the checkpoints table, whose last row still says the time the finish closes. No migration, no new text, no new setting.
+
+**Tests.** `tests/unit/events/event-facts-pills.test.ts` asserts the order in Romanian and in English, with and without a route row, and that a group run has no such row.
+
+Baseline `BR-V3.49-2026-10-16`.
+
+## 799. «Condiții de participare» moves into «Regulamentul», beside the minimum age
+
+**The owner, 2026-10-16**, from a screenshot of an event's editor: the open card «Regulamentul · RO: gol · EN: gol · vârsta minimă 14 ani», then the closed cards «Declarația pe propria răspundere» and «Condiții de participare · Informații medicale: nu», an arrow from the last into the first, beside the minimum age: «cardul ăsta ar trebui mutat în ăsta».
+
+**What was.** §557 gave the «Informații medicale» tick (`event.askHealthNote`, with its `.present` marker) a level-3 card of its own after the declaration, and §760 kept it inside «Participare, înscrieri și regulament». The tick is one switch about who may take part and what the form asks of them, which is what the rules card already holds with the minimum age (§505): two cards for one subject, and a closed card that said little.
+
+**Decision.** (1) The tick, its help and the two notes that stand in its place are a small titled group, «Condiții de participare», at the foot of «Regulamentul», under «Vârsta minimă de participare» and outside the Română | English tabs, since it is not translated text. It is a level-4 static `Panel` with its glyph before the heading, the pattern «Clubul pe lista publică» uses inside the public list's card (§753), so a heading and a frame without a second fold to open. (2) The rules card's closed line gains the health words where the event registers on the site — «RO: gol · EN: gol · vârsta minimă 14 ani · Informații medicale: nu» — the same condition the old card's line used (§111); the registration card's own line keeps its summary (§760). (3) The old card is gone from the editor, `#box-conditions` with it: nothing links to that anchor any more, and a link or a test that wanted it opens `#box-rules`. (4) The messages keep their keys (`editor.boxes.conditions.title` is the group's heading), the form posts the same two names — `event.askHealthNote.present` and `event.askHealthNote` — and the server reads them as before (§557), so nothing behind the editor changes. For a role that may only read the settings, the group is its heading and its line (§542).
+
+**Refused.** Moving the public page's «Condiții de participare» section (§498, §505): it is the page a runner reads, a different thing with the same name. A second tick or a button to toggle the note (a setting is a real tick box). A migration or a renamed field.
+
+Baseline `BR-V3.49-2026-10-16`.

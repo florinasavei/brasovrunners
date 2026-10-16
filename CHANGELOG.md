@@ -8,6 +8,10 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V3.49-2026-10-16
+
+- **«Timp limită» under «Traseu»** — on the event page the race's time limit now stands right after the route and before the cost, no longer between the date and the place. §798.
+- **«Condiții de participare» inside «Regulamentul»** — the editor's health-note tick sits under the minimum age in the rules card, whose closed line now says «Informații medicale: da/nu»; the separate card is gone. §799.
 ## BR-V3.48-2026-10-16
 
 - **The volunteers' page: the kinder note is a banner** — the note under the roles (thanks, and «you may cover another responsibility») is now the house's information notice with its glyph instead of a grey line, and is not announced as an alert. §797.
