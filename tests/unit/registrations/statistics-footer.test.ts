@@ -94,7 +94,7 @@ describe("§787 the footer's numbers, for a mixed fixture", () => {
       [CLUB_NAME, "5"],
       [`${CLUB_NAME}, confirmați`, "2"],
       [`Alții, nu ${CLUB_NAME}`, "4"],
-      // The special guests (§643): none in this fixture, so the places line is the confirmed.
+      // The special guests (§643): none in this fixture, so the confirmed part of the places line is all the confirmed (§615).
       ["Invitați speciali", "0"],
       ["Invitați speciali, confirmați", "0"],
       ["Confirmați care ocupă un loc", "3"],
@@ -363,7 +363,7 @@ describe("§787 the footer's words, in both languages", () => {
     const { rows } = readSheet(await build(mixed(), RO));
     const all = rows.filter((row) => row?.[0]).map((row) => row![0]!);
     // The definitions are followed by the legend of the colours (§787, amended), so they are found by their first words.
-    const first = all.indexOf("Activi sunt cei confirmați: au un loc și declarația semnată.");
+    const first = all.indexOf("Activi sunt cei confirmați: au declarația semnată; cei care ocupă un loc sunt la «Confirmați care ocupă un loc».");
     expect(first).toBeGreaterThan(0);
     const [, second, third, fourth] = all.slice(first, first + 4);
     expect(second).toContain(`«${CLUB_NAME}»`);

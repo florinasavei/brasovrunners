@@ -1155,7 +1155,7 @@
         "bandFrom40": "40-49 ani",
         "bandFrom50": "50-59 ani",
         "bandFrom60": "60+ ani",
-        "note1": "Activi sunt cei confirmați: au un loc și declarația semnată.",
+        "note1": "Activi sunt cei confirmați: au declarația semnată; cei care ocupă un loc sunt la «Confirmați care ocupă un loc».",
         "note2": "La «{club}» se numără membrii din «Echipa», cei care au bifat că sunt membri și cei care au scris clubul în formular.",
         "note3": "La «{club}», ca la «Total», se numără toate stările; cei care vin sunt la «{club}, confirmați».",
         "note4": "Categoria este sexul și vârsta la data cursei; cine nu are una dintre ele este la «Fără categorie». Înscrierile de test nu se numără.",

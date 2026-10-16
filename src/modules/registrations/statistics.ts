@@ -20,7 +20,7 @@ import { columnLetters, ROW_TINTS, statusesOfTint, TINT_FILL, type RowTint } fro
  *   ticked, or a typed club that names the club); the others are the rest.
  * - **A special guest** is a row an Administrator put on «Lista de invitați speciali» (§643): it takes no place,
  *   and it is a row like any other — inside «Total» and its state's line. Three lines under the club's name them:
- *   the guests, the confirmed guests, and the confirmed who do take a place (what the event's places line counts).
+ *   the guests, the confirmed guests, and the confirmed who do take a place (the confirmed part of the event's places line, «N confirmați», §615).
  * - **A category is the sex and an age band**, the age on the event's day (`ageOnRaceDay`, §322). The club has
  *   defined no categories of its own (`domain/age.ts#ageOnRaceDay`: «the club has defined no age bands»), so the bands are the
  *   ordinary ones of a road race, ten years wide from eighteen; a minor's band is its own because an event's
@@ -147,6 +147,7 @@ export function statisticsWordsFrom(t: (key: string, values?: Record<string, str
       from50: t("bandFrom50"),
       from60: t("bandFrom60"),
     },
+    // note6 sits before note5 on purpose: the note on the formulas stays last, above the colours' legend.
     notes: [t("note1"), t("note2", withClub), t("note3", withClub), t("note4"), t("note6"), t("note5")],
     legend: {
       title: t("legendTitle"),
@@ -448,7 +449,7 @@ export function statisticsCells(blocks: readonly StatisticsBlock[], words: Stati
     /*
       The special guests (§643, amended §787; the owner, 2026-10-16: «în statistici trebuie să includ și invitații pe
       lista specială»): a guest takes no place and is a row like any other, so «Total» and the state's line hold them;
-      these lines name them. «Confirmed who take a place» is what the event's places line counts: the confirmed, less
+      these lines name them. «Confirmed who take a place» is the confirmed part of the event's places line («N confirmați», §615): the confirmed, less
       the confirmed guests — a difference of two cells, so an offline change moves all three.
     */
     line("specialGuests", words.specialGuests);

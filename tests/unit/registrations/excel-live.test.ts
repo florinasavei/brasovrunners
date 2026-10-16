@@ -691,7 +691,7 @@ describe("§787 (amended) the special guests: three lines of their own, formulas
     }
   });
 
-  it("is zero on every line when nobody is a guest, and the places line equals the confirmed", async () => {
+  it("is zero on every line when nobody is a guest, and the places line's confirmed part equals the confirmed", async () => {
     const buffer = await build(mixed());
     const { rows } = readSheet(buffer);
     const results = evaluated(buffer);

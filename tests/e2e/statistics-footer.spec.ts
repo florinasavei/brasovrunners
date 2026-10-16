@@ -136,7 +136,7 @@ test.describe("§787 «Statistici» under the registrations Excel", () => {
         ["Brașov Runners", "2"],
         ["Brașov Runners, confirmați", "2"],
         ["Alții, nu Brașov Runners", "4"],
-        // The special guests (§643): none in this race, so the places line is the confirmed.
+        // The special guests (§643): none in this race, so the confirmed part of the places line is all the confirmed (§615).
         ["Invitați speciali", "0"],
         ["Invitați speciali, confirmați", "0"],
         ["Confirmați care ocupă un loc", "3"],

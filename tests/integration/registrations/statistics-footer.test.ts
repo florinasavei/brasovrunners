@@ -166,7 +166,7 @@ describe("§787 the footer, through the route", () => {
       [CLUB_NAME, "5"],
       [`${CLUB_NAME}, confirmați`, "3"],
       [`Alții, nu ${CLUB_NAME}`, "5"],
-      // Nobody on «Lista de invitați speciali» in this race: the places line is the confirmed (§643).
+      // Nobody on «Lista de invitați speciali» in this race: the confirmed part of the places line is all the confirmed (§643, §615).
       ["Invitați speciali", "0"],
       ["Invitați speciali, confirmați", "0"],
       ["Confirmați care ocupă un loc", "4"],
@@ -181,7 +181,7 @@ describe("§787 the footer, through the route", () => {
       ["Masculin, 30-39 ani", "2", "1", "1", "1"],
       ["Fără categorie", "1", "0", "0", "0"],
       [],
-      ["Activi sunt cei confirmați: au un loc și declarația semnată."],
+      ["Activi sunt cei confirmați: au declarația semnată; cei care ocupă un loc sunt la «Confirmați care ocupă un loc»."],
     ]);
   });
 
@@ -197,7 +197,7 @@ describe("§787 the footer, through the route", () => {
     expect(searched.slice(1, 3)).toEqual([["Total", "1"], ["Confirmați (activi)", "0"]]);
   });
 
-  it("names the special guests on lines of their own: inside «Total» and their state, and out of the places line (§643)", async () => {
+  it("names the special guests on lines of their own: inside «Total» and their state, and out of the places line's confirmed part (§643, §615)", async () => {
     const race = await createRace("Crosul Invitaților", "2099-11-21T08:00:00.000Z");
     await register(race.id, "CONFIRMED", { sex: "FEMALE", age: 25 });
     await register(race.id, "CONFIRMED", { sex: "MALE", age: 35, outsideCapacity: true });
