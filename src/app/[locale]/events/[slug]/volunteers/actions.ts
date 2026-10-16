@@ -8,7 +8,7 @@ import type { Locale } from "@/i18n/routing";
 import { findPublishedEventBySlug } from "@/modules/events/repository";
 import { botCheckIsOn } from "@/modules/registrations/bot-check";
 import { TURNSTILE_FIELD } from "@/modules/registrations/domain/turnstile-widget";
-import { clearFormDraft, stashDraftValues } from "@/modules/registrations/form-draft";
+import { clearFormDraft, stashDraftValues, stashSubmittedFacts } from "@/modules/registrations/form-draft";
 import { composePhone } from "@/modules/registrations/phone";
 import { verifyTurnstile } from "@/modules/registrations/turnstile";
 import { flashPublic } from "@/shared/feedback/flash";
@@ -156,6 +156,13 @@ export async function submitVolunteerAction(form: FormData): Promise<void> {
     redirect(`${path}?volunteer=${outcome.outcome}${since}#${VOLUNTEER_BOX_ID}`);
   }
   await clearFormDraft(path);
+  /*
+    What the thank-you screen needs to greet the person and name the address (§NNN; the registration's «Aproape gata, Ana!» does the
+    same): the first name and the address, in the registration's sealed facts cookie on this page's path, ten minutes, never in the URL
+    (§14.5). The same for a new person and a repeat: it is what was typed, not what the list held — so it says no hour and no state of
+    the email: a repeat, a honeypot hit and a lost race queue none, and the screen cannot tell them from a first offer.
+  */
+  await stashSubmittedFacts({ email: text(form, "email").trim(), firstName: text(form, "name") }, path);
   // The thank-you is on the volunteers' page, said twice the house's way: the banner the address asks for, and the toast the flash carries (§427).
   await flashPublic("volunteerSent");
   redirect(`${path}?volunteer=1#${VOLUNTEER_BOX_ID}`);

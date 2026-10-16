@@ -11,7 +11,7 @@ import { getPathname } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { startHeldBack } from "@/modules/events/domain/dated";
 import { parseInterestSince } from "@/modules/registrations/interest-box";
-import { readFormDraft } from "@/modules/registrations/form-draft";
+import { readFormDraft, readSubmittedFacts } from "@/modules/registrations/form-draft";
 import { formEventBySlug } from "@/modules/resilience/event-copy";
 import { readOrWhileAway } from "@/modules/resilience/optional-read";
 import { volunteerEventDay } from "@/modules/volunteers/domain/volunteer";
@@ -19,6 +19,7 @@ import { readVolunteerOffer } from "@/modules/volunteers/offer";
 import VolunteerBox from "@/modules/volunteers/ui/VolunteerBox";
 import { parseVolunteerBoxes, parseVolunteerOutcome, type VolunteerTyped } from "@/modules/volunteers/ui/volunteer-box";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
+import { PAGE_WIDTH } from "@/theme/brand";
 import { DENSITY } from "@/theme/density";
 
 type Props = {
@@ -53,7 +54,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
  * în pagina evenimentului»): `/evenimente/<slug>/voluntari` and `/en/events/<slug>/volunteers` — «Vreau să fiu voluntar la
  * <eveniment>», the event's date and place in one short line, the roles that still need people with their descriptions
  * and how many places each has, the form, and the agreement's links. The event's own page keeps only a short box that
- * links here (`VolunteerCallout`).
+ * links here (`VolunteerCallout`). The page is as wide as the register page (`PAGE_WIDTH`, §NNN; the owner, 2026-10-16: «e prea îngust
+ * tot formularul»).
  *
  * **404 while the form could not be sent** (`readVolunteerOffer`): the event is not published or is a members' event, takes
  * no volunteers, is cancelled or over, no role needs people, or the privacy notice or the volunteer agreement in force
@@ -81,15 +83,20 @@ export default async function EventVolunteersPage({ params, searchParams }: Prop
 
   // What was typed before a refusal (§142), read only when the page is the answer to one.
   const typed: VolunteerTyped = outcome !== null && outcome !== "done" ? ((await readFormDraft()) ?? {}) : {};
+  // …and, on the thank-you only, what the send kept for it (§NNN): the first name and the address typed.
+  const sent = outcome === "done" ? await readSubmittedFacts() : null;
   const t = await getTranslations("Event");
   const eventHref = getPathname({ locale, href: { pathname: "/events/[slug]", params: { slug } } });
   // The date and the place in one short line, in the event's own zone and the page's language (§349); a start to be announced says none (§533).
   const when = event.startsAt && !startHeldBack(event) ? formatDay(event.startsAt, { locale, timeZone: event.timezone, style: "long", withTime: true }) : null;
   const where = event.locationName?.trim() ? event.locationName.trim() : null;
   const line = [when, where].filter((part): part is string => part !== null).join(" · ");
+  // The same start inside the thank-you's sentence («…, duminică, 15 nov. 2026, la 20:04.»): lower case, the hour with its «la» (§452), as the register page's lead.
+  const whenInSentence =
+    event.startsAt && !startHeldBack(event) ? formatDay(event.startsAt, { locale, timeZone: event.timezone, style: "long", withTime: true, position: "inline" }) : null;
 
   return (
-    <Container id="main" component="main" maxWidth="md" sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
+    <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
       <Typography variant="body2" sx={{ mb: 2 }}>
         {/* The house's back link (§469, `EventPageView`): a left arrow before the words, 44 pixels tall. */}
         <MuiLink href={eventHref} data-testid="volunteers-back" sx={{ display: "inline-flex", alignItems: "center", gap: 0.5, ...TAP_TARGET }}>
@@ -108,6 +115,9 @@ export default async function EventVolunteersPage({ params, searchParams }: Prop
       <VolunteerBox
         locale={locale}
         slug={slug}
+        eventTitle={event.title}
+        whenInSentence={whenInSentence}
+        sent={sent}
         roles={offer.roles}
         categories={offer.categories}
         shirts={offer.shirts}

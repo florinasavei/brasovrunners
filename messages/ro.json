@@ -541,7 +541,29 @@
     },
     "volunteers": {
       "title": "Vreau să fiu voluntar",
-      "intro": "Evenimentul are nevoie de ajutor. Bifează ce ești dispus(ă) să faci și spune-ne cum te găsim. Organizatorii îți aleg apoi rolul și te confirmă. Nu e o înscriere la cursă și nu ține loc.",
+      "intro": "Evenimentul are nevoie de ajutor. Bifează ce ești dispus(ă) să faci și spune-ne cum te găsim. Nu e o înscriere la cursă și nu ține loc.",
+      "steps": {
+        "title": "Cum funcționează voluntariatul",
+        "summary": "Cum funcționează: organizatorii îți aleg rolul și te confirmă",
+        "form": {
+          "title": "Completezi formularul",
+          "body": "Bifezi ce ești dispus(ă) să faci și ne spui cum te găsim: nume, email și telefon. Durează un minut."
+        },
+        "email": {
+          "title": "Primești emailul de primire",
+          "body": "Vine cu contractul de voluntariat pe care l-ai acceptat, atașat. Nu ai nimic de apăsat în el."
+        },
+        "role": {
+          "title": "Organizatorii îți aleg rolul și te confirmă",
+          "body": "Îți scriem pe email rolul tău, cu data și locul. Ora de întâlnire și ce mai e de știut le afli de la organizatori. Până atunci nu ai nimic de făcut."
+        },
+        "day": {
+          "title": "În ziua evenimentului",
+          "body": "Vii la ora și la locul pe care ți le spun organizatorii și te prezinți la ei.",
+          "bodyContact": "Vii la ora și la locul pe care ți le spun organizatorii și te prezinți la ei. Pentru întrebări, scrie persoanei de contact scrisă la categoria rolului, mai jos.",
+          "bodyContactDone": "Vii la ora și la locul pe care ți le spun organizatorii și te prezinți la ei. Pentru întrebări, scrie persoanei de contact din emailul de primire."
+        }
+      },
       "choices": "Ce ești dispus(ă) să faci",
       "choicesHelp": "Bifează tot ce ai face, cel puțin un rol.",
       "choicesNote": "În funcție de numărul de doritori, există posibilitatea să fie nevoie să acoperi o altă responsabilitate. Mulțumim pentru dorința de a ajuta. Te vom contacta curând.",
@@ -563,7 +585,6 @@
       "adult": "Am cel puțin {age}.",
       "submit": "Mă ofer voluntar",
       "submitting": "Se trimite…",
-      "done": "Mulțumim! Am primit oferta ta. Organizatorii îți aleg rolul, îți scriu când ți l-au dat și te caută pe email sau la telefon dacă mai trebuie ceva.",
       "invalid": "Ceva din formular mai cere o privire:",
       "captcha": "Verificarea anti-bot nu a reușit. Bifează din nou căsuța „Nu sunt robot” și retrimite.",
       "limited": "Sunt multe încercări pentru o adresă sau pentru un eveniment într-o oră. Așteaptă puțin și încearcă din nou.",
@@ -605,6 +626,14 @@
         "line": "Căutăm voluntari: {roles}"
       },
       "doneGuardian": "Dacă ai sub 18 ani, părintele sau tutorele tău primește un email cu un link prin care își dă acordul; până atunci organizatorii nu te pot confirma.",
+      "doneHeading": "Mulțumim!",
+      "doneHeadingNamed": "Mulțumim, {name}!",
+      "doneLead": "Am primit oferta ta pentru {event}, {date}.",
+      "doneLeadNoDate": "Am primit oferta ta pentru {event}.",
+      "doneEmail": "Emailul de primire vine la {email}; dacă ai mai trimis oferta pentru acest eveniment, l-ai primit deja pe primul.",
+      "doneEmailPlain": "Emailul de primire vine la adresa pe care ai scris-o; dacă ai mai trimis oferta pentru acest eveniment, l-ai primit deja pe primul.",
+      "doneNextTitle": "Ce urmează",
+      "doneGuardianTitle": "Părintele sau tutorele își dă acordul",
       "guardian": {
         "title": "Dacă ai sub 18 ani",
         "intro": "Un voluntar sub 18 ani are nevoie de acordul unui părinte sau tutore, care primește un email cu un link și acceptă contractul în nume propriu.",

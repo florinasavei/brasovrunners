@@ -26,6 +26,8 @@ const state = vi.hoisted(() => ({
   minors: true,
   draft: null as null | Record<string, string>,
   draftReads: 0,
+  factsReads: 0,
+  facts: null as null | Record<string, unknown>,
   locale: "ro" as "ro" | "en",
 }));
 
@@ -75,6 +77,10 @@ vi.mock("@/i18n/navigation", () => ({
 }));
 vi.mock("@/modules/resilience/event-copy", () => ({ formEventBySlug: async () => state.event }));
 vi.mock("@/modules/registrations/form-draft", () => ({
+  readSubmittedFacts: async () => {
+    state.factsReads += 1;
+    return state.facts;
+  },
   readFormDraft: async () => {
     state.draftReads += 1;
     return state.draft;
@@ -103,6 +109,9 @@ vi.mock("@/modules/volunteers/ui/VolunteerBox", () => ({
         outcome: props.outcome,
         refused: props.refused,
         typed: props.typed,
+        eventTitle: props.eventTitle,
+        whenInSentence: props.whenInSentence,
+        sent: props.sent,
       }),
     }),
 }));
@@ -127,6 +136,8 @@ beforeEach(() => {
   state.minors = true;
   state.draft = null;
   state.draftReads = 0;
+  state.factsReads = 0;
+  state.facts = null;
   state.locale = "ro";
 });
 
@@ -277,6 +288,29 @@ describe("§773 the public count of volunteers is the club's tick, and the date 
     // No gun: the event's own start.
     state.event = { ...EVENT, startsAt: new Date("2026-11-21T22:30:00.000Z"), raceStartsAt: null };
     expect(boxOf((await visit()) ?? "")).toMatchObject({ eventDay: "2026-11-22" });
+  });
+});
+
+describe("§NNN the page is the register page's width, and hands the thank-you what the send kept", () => {
+  it("draws the page in the one width the register page uses (`PAGE_WIDTH`), never the narrow `md` column", async () => {
+    const { PAGE_WIDTH } = await import("@/theme/brand");
+    expect(PAGE_WIDTH).toBe("xl");
+    const page = (await visit()) ?? "";
+    expect(page).toContain("MuiContainer-maxWidthXl");
+    expect(page).not.toContain("MuiContainer-maxWidthMd");
+  });
+
+  it("hands the box the event's title and its date in the page's language, and reads the send's facts only on the thank-you", async () => {
+    state.facts = { firstName: "Ana", email: "ana@example.test" };
+    const plain = boxOf((await visit()) ?? "");
+    expect(plain).toMatchObject({ eventTitle: "Crosul de toamnă", sent: null });
+    // The thank-you's lead reads the date inside a sentence (§452): a lower-case weekday and «la» before the hour — never the line's «Sâmbătă, …, 10:00».
+    expect(plain.whenInSentence).toMatch(/^sâmbătă, 21 nov\. 2026, la 10:00$/);
+    await visit({ volunteer: "invalid", vfields: "name" });
+    expect(state.factsReads).toBe(0);
+    const done = boxOf((await visit({ volunteer: "1" })) ?? "");
+    expect(state.factsReads).toBe(1);
+    expect(done.sent).toEqual({ firstName: "Ana", email: "ana@example.test" });
   });
 });
 

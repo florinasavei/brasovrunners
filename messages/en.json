@@ -541,7 +541,29 @@
     },
     "volunteers": {
       "title": "I want to volunteer",
-      "intro": "The event needs a hand. Tick what you are willing to do and tell us how to reach you. The organizers then choose your role and confirm you. It is not a race registration and it holds no place.",
+      "intro": "The event needs a hand. Tick what you are willing to do and tell us how to reach you. It is not a race registration and it holds no place.",
+      "steps": {
+        "title": "How volunteering works",
+        "summary": "How it works: the organizers choose your role and confirm you",
+        "form": {
+          "title": "You fill in the form",
+          "body": "You tick what you are willing to do and tell us how to reach you: name, email and telephone. It takes a minute."
+        },
+        "email": {
+          "title": "You get the receipt email",
+          "body": "It comes with the volunteer agreement you accepted, attached. There is nothing to press in it."
+        },
+        "role": {
+          "title": "The organizers choose your role and confirm you",
+          "body": "We email you your role, with the date and place. The meeting time and anything else you need to know come from the organizers. Until then there is nothing for you to do."
+        },
+        "day": {
+          "title": "On the day of the event",
+          "body": "You come at the time and place the organizers tell you and report to them.",
+          "bodyContact": "You come at the time and place the organizers tell you and report to them. For questions, write to the contact person under the category of your role, below.",
+          "bodyContactDone": "You come at the time and place the organizers tell you and report to them. For questions, write to the contact person named in the receipt email."
+        }
+      },
       "choices": "What you are willing to do",
       "choicesHelp": "Tick everything you would do, at least one role.",
       "choicesNote": "Depending on how many people sign up, you may be asked to cover a different responsibility. Thank you for wanting to help. We will contact you soon.",
@@ -563,7 +585,6 @@
       "adult": "I am at least {age} old.",
       "submit": "Offer to volunteer",
       "submitting": "Sending…",
-      "done": "Thank you! We received your offer. The organizers choose your role, write to you when they have given it, and get in touch by email or phone if anything else is needed.",
       "invalid": "Something in the form needs another look:",
       "captcha": "The anti-bot check did not pass. Tick the “I am not a robot” box again and resend.",
       "limited": "That is a lot of attempts for one address or one event in an hour. Wait a little and try again.",
@@ -605,6 +626,14 @@
         "line": "We are looking for volunteers: {roles}"
       },
       "doneGuardian": "If you are under 18, your parent or guardian is emailed a link to give their consent; until then the organizers cannot confirm you.",
+      "doneHeading": "Thank you!",
+      "doneHeadingNamed": "Thank you, {name}!",
+      "doneLead": "We received your offer for {event}, {date}.",
+      "doneLeadNoDate": "We received your offer for {event}.",
+      "doneEmail": "The receipt email comes to {email}; if you already sent an offer for this event, you got the first one.",
+      "doneEmailPlain": "The receipt email comes to the address you wrote; if you already sent an offer for this event, you got the first one.",
+      "doneNextTitle": "What happens next",
+      "doneGuardianTitle": "Your parent or guardian gives consent",
       "guardian": {
         "title": "If you are under 18",
         "intro": "A volunteer under 18 needs a parent's or guardian's consent: they get an email with a link and accept the agreement in their own name.",
