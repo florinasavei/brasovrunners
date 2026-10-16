@@ -28,10 +28,22 @@ export function isClubRunner(row: { clubMemberDeclared: boolean; memberVerified:
  * where a spreadsheet's own formulas and colour rules can read it: the typed-club match (§753) cannot be written
  * as a formula, so the footer's `COUNTIF` and the blue on a runner's cells look at this column instead of redoing
  * the rule. The word is English like the sheet's other words ("yes", "verified", "declared"); the rules and
- * the formulas read it from here, so no file says it twice.
+ * the formulas read it from here, so no file says it twice. It is the spreadsheet's one «Yes», shared by «Club runner»
+ * and «Member tick (declared)» (§NNN), so it carries the neutral name `YES_CELL`.
  */
-export const CLUB_RUNNER_YES = "Yes";
+export const YES_CELL = "Yes";
 
 export function clubRunnerCell(clubRunner: boolean): string {
-  return clubRunner ? CLUB_RUNNER_YES : "";
+  return clubRunner ? YES_CELL : "";
+}
+
+/**
+ * The «Member tick (declared)» cell of the spreadsheet (§NNN; the owner, 2026-10-16: «vreau în excel separat să văd bifa
+ * „E din Brașov Runners” și în funcție de asta să colorez»): "Yes" when the person ticked «Sunt membru al grupului {club}»
+ * (`clubMemberDeclared`), empty otherwise — the tick alone, apart from «Club member»'s words (which mix the tick with a
+ * member account) and from «Club runner» (which adds a typed club). The colour rules and the footer's line read it from
+ * the sheet, so an offline edit of the cell moves both.
+ */
+export function memberTickCell(declared: boolean): string {
+  return declared ? YES_CELL : "";
 }

@@ -1,4 +1,4 @@
-import { CLUB_RUNNER_YES } from "./domain/club-runner";
+import { YES_CELL } from "./domain/club-runner";
 import { sexCell, sexOfCell, type SexChoice } from "./domain/sex";
 import { columnLetters, ROW_TINTS, statusesOfTint, TINT_FILL, type RowTint } from "./sheet-colours";
 
@@ -63,6 +63,8 @@ export type StatisticsRow = {
   status: string;
   /** The row is one of the club's runners (`isClubRunner`); absent reads as no. */
   clubRunner?: boolean;
+  /** The person ticked «Sunt membru al grupului {club}» (§NNN): the sheet's «Member tick (declared)» column, counted on a line of its own. Absent reads as no. */
+  clubMemberDeclared?: boolean;
   /** The sheet's «Sex» cell, in its own words (`sexCell`). */
   sex?: string | null;
   ageOnRaceDay?: number | null;
@@ -91,6 +93,8 @@ export type StatisticsWords = {
   /** The club's name, from the platform's one constant (§357). */
   club: string;
   clubConfirmed: string;
+  /** «Ticked as members of {club}» (§NNN): the people who ticked the box, whatever else they are. */
+  clubTicked: string;
   notClub: string;
   /** The special guests (§643, amended §787): every state, the confirmed, and the confirmed who take a place. */
   specialGuests: string;
@@ -108,7 +112,7 @@ export type StatisticsWords = {
   /** The definitions, a sentence a line, written under the numbers. */
   notes: readonly string[];
   /** The legend under them (§787, amended): what each colour of the rows stands for. The status words are the cells', listed beside it. */
-  legend: { title: string; confirmed: string; pending: string; waitlist: string; ended: string; member: string };
+  legend: { title: string; confirmed: string; pending: string; waitlist: string; ended: string; member: string; clubRunner: string; guest: string };
 };
 
 /**
@@ -129,6 +133,7 @@ export function statisticsWordsFrom(t: (key: string, values?: Record<string, str
     expired: t("expired"),
     club: t("club", withClub),
     clubConfirmed: t("clubConfirmed", withClub),
+    clubTicked: t("clubTicked", withClub),
     notClub: t("notClub", withClub),
     specialGuests: t("specialGuests"),
     specialGuestsConfirmed: t("specialGuestsConfirmed"),
@@ -155,7 +160,9 @@ export function statisticsWordsFrom(t: (key: string, values?: Record<string, str
       pending: t("legendPending"),
       waitlist: t("legendWaitlist"),
       ended: t("legendEnded"),
-      member: t("legendMember"),
+      member: t("legendMember", withClub),
+      clubRunner: t("legendClubRunner"),
+      guest: t("legendGuest"),
     },
   };
 }
@@ -172,6 +179,8 @@ export type Tally = {
   expired: number;
   club: number;
   clubConfirmed: number;
+  /** The rows whose «Member tick (declared)» says «Yes» (§NNN), in every state: the box ticked, apart from the club lines' wider rule. */
+  clubTicked: number;
   /** The rows on «Lista de invitați speciali» (§643), in every state, and the confirmed among them. */
   specialGuests: number;
   specialGuestsConfirmed: number;
@@ -188,6 +197,7 @@ const emptyTally = (): Tally => ({
   expired: 0,
   club: 0,
   clubConfirmed: 0,
+  clubTicked: 0,
   specialGuests: 0,
   specialGuestsConfirmed: 0,
 });
@@ -210,6 +220,7 @@ function add(tally: Tally, row: StatisticsRow): void {
     tally.club += 1;
     if (row.status === "CONFIRMED") tally.clubConfirmed += 1;
   }
+  if (row.clubMemberDeclared) tally.clubTicked += 1;
   if (row.outsideCapacity) {
     tally.specialGuests += 1;
     if (row.status === "CONFIRMED") tally.specialGuestsConfirmed += 1;
@@ -339,6 +350,8 @@ export type StatisticsRanges = {
   id: string;
   status: string;
   clubRunner: string;
+  /** The «Member tick (declared)» column (§NNN): "Yes" where the person ticked the box. */
+  memberTick: string;
   /** The «Special guest» column (§643): Boolean cells, TRUE for a row on «Lista de invitați speciali». */
   specialGuest: string;
   sex: string;
@@ -405,7 +418,9 @@ export function statisticsCells(blocks: readonly StatisticsBlock[], words: Stati
   const extras = (key: keyof Tally): Filter[] => {
     if (!ranges) return [];
     const filters: Filter[] = [];
-    if (key === "club" || key === "clubConfirmed") filters.push([ranges.clubRunner, quote(CLUB_RUNNER_YES)]);
+    if (key === "club" || key === "clubConfirmed") filters.push([ranges.clubRunner, quote(YES_CELL)]);
+    // The tick alone, in every state (§NNN): no status filter, like «Club» and unlike «Club, confirmed».
+    if (key === "clubTicked") filters.push([ranges.memberTick, quote(YES_CELL)]);
     // A Boolean column: the criterion is the logical TRUE, not the text "TRUE" (§643, amended §787).
     if (key === "specialGuests" || key === "specialGuestsConfirmed") filters.push([ranges.specialGuest, "TRUE"]);
     const status = key === "clubConfirmed" || key === "specialGuestsConfirmed" ? "CONFIRMED" : STATUS_OF[key];
@@ -445,6 +460,8 @@ export function statisticsCells(blocks: readonly StatisticsBlock[], words: Stati
     line("expired", words.expired);
     line("club", words.club);
     line("clubConfirmed", words.clubConfirmed);
+    // Informational like the club lines, not one of the states' sum (§NNN): the people who ticked the box, whatever else they are.
+    line("clubTicked", words.clubTicked);
     rows.push([bold(words.notClub), scope ? formulaCell(`B${lineAt.total}-B${lineAt.club}`, t.total - t.club) : count(t.total - t.club)]);
     /*
       The special guests (§643, amended §787; the owner, 2026-10-16: «în statistici trebuie să includ și invitații pe
@@ -500,5 +517,8 @@ export function statisticsCells(blocks: readonly StatisticsBlock[], words: Stati
     rows.push([{ value: `${words.legend[LEGEND_WORDS[tint]]}: ${statusesOfTint(tint).join(", ")}`, type: String, backgroundColor: TINT_FILL[tint] }]);
   }
   rows.push([{ value: words.legend.member, type: String, backgroundColor: TINT_FILL.member }]);
+  rows.push([{ value: words.legend.clubRunner, type: String, backgroundColor: TINT_FILL.clubRunner }]);
+  // The guest's key is italic too, as its cells are, so the legend shows what the colour alone would not in grey.
+  rows.push([{ value: words.legend.guest, type: String, backgroundColor: TINT_FILL.guest, fontStyle: "italic" }]);
   return rows;
 }

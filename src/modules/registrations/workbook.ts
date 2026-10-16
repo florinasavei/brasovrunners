@@ -11,7 +11,7 @@ import { ROW_DEADLINE_EXPORT_WORDS, type RowDeadlineKind } from "./domain/row-de
 import { shirtSizeShown } from "./domain/kit";
 import { raceNumberOf } from "./domain/race-number";
 import { memberBibExportCell, membershipCell } from "./csv";
-import { clubRunnerCell } from "./domain/club-runner";
+import { clubRunnerCell, memberTickCell } from "./domain/club-runner";
 import { sexCell } from "./domain/sex";
 import { colourRules, columnLetters, type ColourRule } from "./sheet-colours";
 import { eventLabelsOf, hasSeveralEvents, statisticsCells, statisticsOf, type StatisticsRanges, type StatisticsWords } from "./statistics";
@@ -296,8 +296,16 @@ const COLUMNS: Array<SheetColumn<RegistrationSheetRow>> = [
   // Declared or verified (§662), as the list's chip: "verified", "declared" or blank.
   { header: "Club member", width: 12, cell: (row) => ({ value: membershipCell(row), type: String }) },
   /*
+    «Member tick (declared)» (§NNN; the owner, 2026-10-16: «vreau în excel separat să văd bifa „E din Brașov Runners” și în
+    funcție de asta să colorez»): "Yes" when the person ticked «Sunt membru al grupului {club}», the tick alone — «Club member»
+    above mixes it with a member account. The club's blue and the footer's «ticked» line read it from the sheet, so editing
+    the cell offline moves both. In the spreadsheet only: the CSV keeps its order, which scripts read by position, and
+    already has the tick inside «Club member»'s words.
+  */
+  { header: "Member tick (declared)", width: 12, cell: (row) => ({ value: memberTickCell(row.clubMemberDeclared), type: String }) },
+  /*
     «Club runner» (§787, amended; the owner: «color codes … dacă sunt membri BVR»): "Yes" for one of the club's runners, from the
-    one predicate the footer counts by (`isClubRunner`) — written as a cell so the colour rule on the three membership cells
+    one predicate the footer counts by (`isClubRunner`) — written as a cell so the lavender rule (a club runner without the tick)
     and the footer's `COUNTIF` read it from the sheet itself, which the typed-club match (§753) could never be as a formula.
   */
   { header: "Club runner", width: 11, cell: (row) => ({ value: clubRunnerCell(row.clubRunner), type: String }) },
@@ -407,6 +415,7 @@ export async function buildRegistrationsWorkbook(
     id: range("ID"),
     status: range("Status"),
     clubRunner: range("Club runner"),
+    memberTick: range("Member tick (declared)"),
     specialGuest: range("Special guest"),
     sex: range("Sex"),
     age: range("Age on race day"),
@@ -415,8 +424,12 @@ export async function buildRegistrationsWorkbook(
   const footer = options.statistics ? statisticsCells(statisticsOf(sheetRows, options.statistics), options.statistics, ranges) : [];
   const rules = colourRules({
     statusColumn: at("Status"),
+    memberTickColumn: at("Member tick (declared)"),
     clubRunnerColumn: at("Club runner"),
     memberColumns: [at("Club member"), at("Member bib")],
+    specialGuestColumn: at("Special guest"),
+    // A special guest's identity cells (§NNN): the race number, the names («Event», in a file of several, sits between «Name» and «First name»), the flag itself.
+    guestCells: [[at("Race number (BIB)"), at("Race number (BIB)")], [at("Name"), at("Last name")], [at("Special guest"), at("Special guest")]],
     lastColumn: columns.length - 1,
     rowCount: rows.length,
   });

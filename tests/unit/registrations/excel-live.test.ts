@@ -2,7 +2,7 @@ import { createTranslator } from "next-intl";
 import { describe, expect, it } from "vitest";
 import { registrationStatus } from "@/db/schema/registrations";
 import { buildRegistrationsCsv, type RegistrationCsvRow } from "@/modules/registrations/csv";
-import { CLUB_RUNNER_YES, clubRunnerCell, isClubRunner } from "@/modules/registrations/domain/club-runner";
+import { YES_CELL, clubRunnerCell, isClubRunner, memberTickCell } from "@/modules/registrations/domain/club-runner";
 import { colourRules, ROW_TINTS, STATUS_TINT, statusesOfTint, TINT_FILL } from "@/modules/registrations/sheet-colours";
 import { buildSponsorListWorkbook } from "@/modules/registrations/sponsor-sheet";
 import { statisticsCells, statisticsOf, statisticsWordsFrom, type StatisticsWords } from "@/modules/registrations/statistics";
@@ -176,6 +176,15 @@ function stylesOf(buffer: Buffer) {
 
 const argb = (hex: string) => `FF${hex.slice(1).toUpperCase()}`;
 
+/** Whether a cell's style index is an italic font, read from the workbook's own styles part (the twin of `isBoldStyle`). */
+function isItalicStyle(buffer: Buffer, style: number | undefined): boolean {
+  if (style === undefined) return false;
+  const styles = unzip(buffer).get("xl/styles.xml") ?? "";
+  const fonts = [...(/<fonts[^>]*>([\s\S]*?)<\/fonts>/.exec(styles)?.[1] ?? "").matchAll(/<font>([\s\S]*?)<\/font>|<font\/>/g)].map((font) => /<i\s*\/?>/.test(font[0]));
+  const formats = [...(/<cellXfs[^>]*>([\s\S]*?)<\/cellXfs>/.exec(styles)?.[1] ?? "").matchAll(/<xf\b([^>]*?)(?:\/>|>[\s\S]*?<\/xf>)/g)];
+  return fonts[Number(/\bfontId="(\d+)"/.exec(formats[style]?.[1] ?? "")?.[1] ?? 0)] === true;
+}
+
 type Rule = { sqref: string; type: string; dxfId: number; priority: number; formula: string };
 
 /** The conditional-formatting rules of the sheet, as written. */
@@ -193,13 +202,48 @@ function rulesOf(buffer: Buffer): Rule[] {
 const LAST_COLUMN = columnLetter(REGISTRATION_SHEET_HEADERS.length - 1);
 const STATUS = columnLetter(headerAt("Status"));
 const CLUB_RUNNER = columnLetter(headerAt("Club runner"));
+const MEMBER_TICK = columnLetter(headerAt("Member tick (declared)"));
+const GUEST_COLUMN = columnLetter(headerAt("Special guest"));
+
+/**
+ * Whether a rule's formula holds on a sheet row of the grid: the shapes the colour rules write (`$X2="word"`, `$X2<>"word"`,
+ * `$X2=TRUE`, `AND(…)`, `OR(…)`), read over the sheet's own cells, so an offline edit of a cell can be followed to the colour
+ * it ends in. The formulas are written for row 2: the row number is the one place that changes, as in a spreadsheet.
+ */
+function holds(formula: string, grid: Grid, sheetRow: number): boolean {
+  const compound = /^(AND|OR)\((.*)\)$/.exec(formula);
+  if (compound) {
+    const parts = compound[2].split(",");
+    return compound[1] === "AND" ? parts.every((part) => holds(part, grid, sheetRow)) : parts.some((part) => holds(part, grid, sheetRow));
+  }
+  const atom = /^\$([A-Z]+)2(=|<>)(.+)$/.exec(formula);
+  if (!atom) throw new Error(`a rule this test cannot read: ${formula}`);
+  const value = grid[sheetRow - 1]?.[letterIndex(atom[1])];
+  // A Boolean cell is stored `1`/`0`; the logical TRUE is what a guest's rule asks for.
+  const equal = atom[3] === "TRUE" ? value === "1" : (value ?? "").toLowerCase() === atom[3].replace(/^"|"$/g, "").toLowerCase();
+  return atom[2] === "=" ? equal : !equal;
+}
+
+/** The differential format a cell ends up with: the highest-priority rule whose range holds the cell and whose formula is true. */
+function appliedFormat(buffer: Buffer, grid: Grid, reference: string) {
+  const [, column, rowNumber] = /^([A-Z]+)(\d+)$/.exec(reference)!;
+  const at = letterIndex(column);
+  const { dxfs } = stylesOf(buffer);
+  const inside = (rule: Rule) => {
+    const [, from, fromRow, to, toRow] = /^([A-Z]+)(\d+):([A-Z]+)(\d+)$/.exec(rule.sqref)!;
+    return at >= letterIndex(from) && at <= letterIndex(to) && Number(rowNumber) >= Number(fromRow) && Number(rowNumber) <= Number(toRow);
+  };
+  const rule = rulesOf(buffer).filter((candidate) => inside(candidate) && holds(candidate.formula, grid, Number(rowNumber))).sort((a, b) => a.priority - b.priority)[0];
+  return rule ? { fill: dxfs[rule.dxfId].fill, italic: dxfs[rule.dxfId].markup.includes("<i/>") } : undefined;
+}
 
 describe("§787 the «Club runner» column: the one predicate, written where a formula and a rule can read it", () => {
-  it("sits right after «Club member» in the spreadsheet, and the rest of the header is what it was", () => {
-    expect(REGISTRATION_SHEET_HEADERS[headerAt("Club member") + 1]).toBe("Club runner");
+  it("sits right after «Member tick (declared)», which is right after «Club member», and the rest of the header is what it was", () => {
+    expect(REGISTRATION_SHEET_HEADERS[headerAt("Club member") + 1]).toBe("Member tick (declared)");
+    expect(REGISTRATION_SHEET_HEADERS[headerAt("Member tick (declared)") + 1]).toBe("Club runner");
     expect(REGISTRATION_SHEET_HEADERS[headerAt("Club runner") + 1]).toBe("Member bib");
-    const without = REGISTRATION_SHEET_HEADERS.filter((header) => header !== "Club runner");
-    expect(without).toHaveLength(REGISTRATION_SHEET_HEADERS.length - 1);
+    const without = REGISTRATION_SHEET_HEADERS.filter((header) => header !== "Club runner" && header !== "Member tick (declared)");
+    expect(without).toHaveLength(REGISTRATION_SHEET_HEADERS.length - 2);
     expect(new Set(REGISTRATION_SHEET_HEADERS).size).toBe(REGISTRATION_SHEET_HEADERS.length);
   });
 
@@ -218,10 +262,10 @@ describe("§787 the «Club runner» column: the one predicate, written where a f
     const at = headerAt("Club runner");
     cases.forEach(([, expected], index) => {
       expect(isClubRunner(rows[index]), JSON.stringify(cases[index][0])).toBe(expected);
-      expect(grid[index + 1]?.[at], JSON.stringify(cases[index][0])).toBe(expected ? CLUB_RUNNER_YES : undefined);
+      expect(grid[index + 1]?.[at], JSON.stringify(cases[index][0])).toBe(expected ? YES_CELL : undefined);
     });
     // The cell is text, so a formula reading it with `"Yes"` finds it; the word itself comes from the one place.
-    expect(CLUB_RUNNER_YES).toBe("Yes");
+    expect(YES_CELL).toBe("Yes");
     expect(clubRunnerCell(true)).toBe("Yes");
     expect(clubRunnerCell(false)).toBe("");
   });
@@ -249,14 +293,69 @@ describe("§787 the «Club runner» column: the one predicate, written where a f
   });
 });
 
+describe("§NNN the «Member tick (declared)» column: the tick alone, in the spreadsheet only", () => {
+  it("says «Yes» exactly when the person ticked the box — a member account or a typed club alone leave it empty", async () => {
+    const cases: Array<[Partial<RegistrationSheetRow>, boolean]> = [
+      [{ clubMemberDeclared: true }, true],
+      [{ clubMemberDeclared: true, memberVerified: true }, true],
+      [{ clubMemberDeclared: true, clubName: "Brașov Runners" }, true],
+      [{ memberVerified: true }, false],
+      [{ clubName: "Brașov Runners" }, false],
+      [{}, false],
+    ];
+    const rows = cases.map(([over]) => row(over));
+    const { rows: grid } = readSheet(await build(rows));
+    const at = headerAt("Member tick (declared)");
+    cases.forEach(([, expected], index) => {
+      expect(grid[index + 1]?.[at], JSON.stringify(cases[index][0])).toBe(expected ? YES_CELL : undefined);
+      expect(memberTickCell(rows[index].clubMemberDeclared)).toBe(expected ? "Yes" : "");
+    });
+    // The tick is the box itself, so a verified member who never ticked is a club runner without it.
+    expect(grid[4]?.[headerAt("Club runner")]).toBe("Yes");
+    expect(grid[4]?.[at]).toBeUndefined();
+  });
+
+  it("is written as text, never a number or a boolean, so a formula or a rule reading the word «Yes» finds it", async () => {
+    const buffer = await build(mixed());
+    const cell = rawCells(buffer).get(`${MEMBER_TICK}2`);
+    expect(cell?.type).not.toBe("n");
+    expect(cell?.type).not.toBe("b");
+    expect(readSheet(buffer).rows[1]?.[headerAt("Member tick (declared)")]).toBe("Yes");
+  });
+
+  it("is not in the CSV: its header is byte-identical to what it was, and the tick stays inside «Club member»'s words", () => {
+    const base: RegistrationCsvRow = {
+      eventTitle: "Test", registeredName: "Ana", firstName: "Ana", lastName: "Pop", idDocument: "", email: "a@example.ro", status: "CONFIRMED", clubMemberDeclared: true,
+      memberVerified: false, clubRunner: true, fitnessDeclaredAt: null, stravaUrl: "", instagramHandle: "", guardianName: "", guardianIdDocument: "", submittedAt: "", confirmedAt: "", checkedInAt: "", emailBounced: false,
+    };
+    const [header, line] = buildRegistrationsCsv([base]).split("\r\n");
+    expect(header).toBe(
+      "Event,Name,First name,Last name,Identity document,Email,Status,Club member,Medically fit (declared),Strava,Instagram,Socials on the public list,Public list & results,Guardian,Guardian identity document,Submitted,Confirmed,Race number (BIB),Checked in,Email bounced,Terms version,Terms accepted,Declaration version,Declaration signed,family,Cancellation reason,Offers and benefits,Special guest,Until when,Waiting on,Age on race day,Country,City,Member bib,Club runner",
+    );
+    expect(header).not.toContain("Member tick");
+    expect(line.split(",")[header.split(",").indexOf("Club member")]).toBe("declared");
+  });
+});
+
 describe("§787 the colours are conditional formatting, never a baked fill", () => {
-  it("has one differential format per tint, each a solid pale fill from the brand's palette", async () => {
+  /** The rules for a special guest: the ones that read the «Special guest» column. */
+  const guestRulesOf = (buffer: Buffer) => rulesOf(buffer).filter((rule) => rule.formula === `$${GUEST_COLUMN}2=TRUE`);
+
+  it("has a differential format for every rule, each a solid pale fill from the brand's palette — one per tint, the guest's run repeating its own", async () => {
     const buffer = await build(mixed());
     const { dxfs } = stylesOf(buffer);
-    expect(dxfs).toHaveLength(ROW_TINTS.length + 1);
-    expect(dxfs.map((dxf) => dxf.fill).sort()).toEqual(Object.values(SHEET_TINT).map(argb).sort());
+    // The writer gives every rule its own format, and a rule colours one rectangle: the guest's cells are three runs of
+    // columns (the race number, the names, the flag), so the seven tints are nine formats.
+    const GUEST_RUNS = 3;
+    expect(Object.keys(SHEET_TINT)).toHaveLength(ROW_TINTS.length + 3);
+    expect(dxfs).toHaveLength(ROW_TINTS.length + 2 + GUEST_RUNS);
+    expect([...new Set(dxfs.map((dxf) => dxf.fill))].sort()).toEqual(Object.values(SHEET_TINT).map(argb).sort());
+    for (const tint of Object.values(SHEET_TINT)) expect(dxfs.some((dxf) => dxf.fill === argb(tint)), tint).toBe(true);
     for (const dxf of dxfs) expect(dxf.markup).toContain('patternType="solid"');
-    expect(unzip(buffer).get("xl/styles.xml")).toMatch(/<dxfs count="5">/);
+    expect(unzip(buffer).get("xl/styles.xml")).toMatch(new RegExp(`<dxfs count="${dxfs.length}">`));
+    // Italic only on the guest's: the other tints keep the cell's own font.
+    expect(dxfs.filter((dxf) => dxf.markup.includes("<i/>"))).toHaveLength(GUEST_RUNS);
+    for (const dxf of dxfs.filter((entry) => entry.markup.includes("<i/>"))) expect(dxf.fill).toBe(argb(SHEET_TINT.guest));
   });
 
   it("colours a row by its status: one expression rule a tint over exactly the data rows, every status the list knows", async () => {
@@ -289,22 +388,145 @@ describe("§787 the colours are conditional formatting, never a baked fill", () 
     for (const rule of rowRules) expect(rule.formula.replace(/"[A-Z_]+"/g, "").match(/\$[A-Z]+/g)?.every((column) => column === `$${STATUS}`)).toBe(true);
   });
 
-  it("colours the three membership cells blue by the «Club runner» column, and that rule outranks the status tints", async () => {
+  it("colours the four member cells blue by the «Member tick (declared)» column, and that rule outranks the status tints", async () => {
     const data = mixed();
     const buffer = await build(data);
     const rules = rulesOf(buffer);
-    const member = rules.filter((rule) => !rule.sqref.startsWith("A2:"));
-    expect(member).toHaveLength(1);
     const first = columnLetter(headerAt("Club member"));
     const last = columnLetter(headerAt("Member bib"));
-    expect(member[0].sqref).toBe(`${first}2:${last}${data.length + 1}`);
-    expect(member[0].formula).toBe(`$${CLUB_RUNNER}2="Yes"`);
-    expect(stylesOf(buffer).dxfs[member[0].dxfId].fill).toBe(argb(SHEET_TINT.member));
-    // «Club member», «Club runner» and «Member bib» are side by side, so the one range is exactly those three.
-    expect([headerAt("Club member"), headerAt("Club runner"), headerAt("Member bib")]).toEqual([headerAt("Club member"), headerAt("Club member") + 1, headerAt("Club member") + 2]);
+    const memberRange = `${first}2:${last}${data.length + 1}`;
+    const blue = rules.filter((rule) => rule.sqref === memberRange && stylesOf(buffer).dxfs[rule.dxfId].fill === argb(SHEET_TINT.member));
+    expect(blue).toHaveLength(1);
+    // The blue reads the tick's letter, derived from the header — never the club runner's.
+    expect(blue[0].formula).toBe(`$${MEMBER_TICK}2="Yes"`);
+    expect(MEMBER_TICK).not.toBe(CLUB_RUNNER);
+    // «Club member», «Member tick (declared)», «Club runner» and «Member bib» are side by side, so the one range is exactly those four.
+    expect([headerAt("Club member"), headerAt("Member tick (declared)"), headerAt("Club runner"), headerAt("Member bib")]).toEqual([0, 1, 2, 3].map((step) => headerAt("Club member") + step));
     // The lower the number, the higher the priority: the blue wins over the row's tint on those cells.
-    for (const rule of rules.filter((rule) => rule.sqref.startsWith("A2:"))) expect(member[0].priority).toBeLessThan(rule.priority);
+    for (const rule of rules.filter((candidate) => candidate.sqref.startsWith("A2:"))) expect(blue[0].priority).toBeLessThan(rule.priority);
     expect(new Set(rules.map((rule) => rule.priority)).size).toBe(rules.length);
+    expect(rules.map((rule) => rule.priority).sort((a, b) => a - b)).toEqual(rules.map((_, index) => index + 1));
+  });
+
+  it("colours a club runner without the tick lavender on the same cells, reading both letters from the header, after the blue", async () => {
+    const data = mixed();
+    const buffer = await build(data);
+    const rules = rulesOf(buffer);
+    const { dxfs } = stylesOf(buffer);
+    const memberRange = `${columnLetter(headerAt("Club member"))}2:${columnLetter(headerAt("Member bib"))}${data.length + 1}`;
+    const lavender = rules.filter((rule) => dxfs[rule.dxfId].fill === argb(SHEET_TINT.clubRunner));
+    expect(lavender).toHaveLength(1);
+    expect(lavender[0].sqref).toBe(memberRange);
+    expect(lavender[0].formula).toBe(`AND($${CLUB_RUNNER}2="Yes",$${MEMBER_TICK}2<>"Yes")`);
+    const blue = rules.find((rule) => dxfs[rule.dxfId].fill === argb(SHEET_TINT.member))!;
+    // Blue first, then lavender, both before every status rule: the two never hold at once, the order only settles the status tints.
+    expect(blue.priority).toBeLessThan(lavender[0].priority);
+    for (const rule of rules.filter((candidate) => candidate.sqref.startsWith("A2:"))) expect(lavender[0].priority).toBeLessThan(rule.priority);
+    expect(SHEET_TINT.clubRunner).not.toBe(SHEET_TINT.member);
+  });
+
+  it("follows the tick offline: tick → blue, untick a club runner → lavender, and the status tint keeps the rest of the row", async () => {
+    const data = mixed();
+    const buffer = await build(data);
+    const grid = gridOf(buffer);
+    const tick = headerAt("Member tick (declared)");
+    const copy = () => grid.map((line) => (line ? [...line] : line)) as Grid;
+    const club = (reference: string, where: Grid) => appliedFormat(buffer, where, reference)?.fill;
+    const memberCells = (rowNumber: number) => ["Club member", "Member tick (declared)", "Club runner", "Member bib"].map((header) => `${columnLetter(headerAt(header))}${rowNumber}`);
+    // Row 2 ticked the box: blue on all four. Row 3 typed the club («BVR»), no tick: lavender. Row 4 is neither: the status tint alone.
+    for (const reference of memberCells(2)) expect(club(reference, grid), reference).toBe(argb(SHEET_TINT.member));
+    for (const reference of memberCells(3)) expect(club(reference, grid), reference).toBe(argb(SHEET_TINT.clubRunner));
+    for (const reference of memberCells(4)) expect(club(reference, grid), reference).toBe(argb(TINT_FILL[STATUS_TINT.CONFIRMED!]));
+    // The identity cells keep the status tint whatever the member cells are.
+    expect(club(`${columnLetter(headerAt("Name"))}2`, grid)).toBe(argb(TINT_FILL.success));
+    // Untick row 2 (the cell emptied): it is still a club runner by the box's trace in «Club runner» → lavender.
+    const unticked = copy();
+    unticked[1][tick] = undefined;
+    for (const reference of memberCells(2)) expect(club(reference, unticked), reference).toBe(argb(SHEET_TINT.clubRunner));
+    // Tick row 3 offline (it types «Yes»): blue, whatever its club runner cell says.
+    const ticked = copy();
+    ticked[2][tick] = "Yes";
+    for (const reference of memberCells(3)) expect(club(reference, ticked), reference).toBe(argb(SHEET_TINT.member));
+    // The tick alone, with «Club runner» emptied, is still blue: the tick is what the colour follows.
+    const alone = copy();
+    alone[1][headerAt("Club runner")] = undefined;
+    for (const reference of memberCells(2)) expect(club(reference, alone), reference).toBe(argb(SHEET_TINT.member));
+    // A club runner emptied of both: back to the status tint.
+    const none = copy();
+    none[2][headerAt("Club runner")] = undefined;
+    for (const reference of memberCells(3)) expect(club(reference, none), reference).toBe(argb(TINT_FILL.success));
+  });
+
+  it("marks a special guest's identity cells peach and italic: one rule a run of columns, each reading the «Special guest» letter, before every other", async () => {
+    const data = mixed();
+    const buffer = await build(data);
+    const rules = rulesOf(buffer);
+    const { dxfs } = stylesOf(buffer);
+    const guest = guestRulesOf(buffer);
+    const last = data.length + 1;
+    const letter = (header: string) => columnLetter(headerAt(header));
+    // The race number, the three names (side by side), and the flag itself — never the status, the club or the member cells.
+    expect(guest.map((rule) => rule.sqref)).toEqual([`${letter("Race number (BIB)")}2:${letter("Race number (BIB)")}${last}`, `${letter("Name")}2:${letter("Last name")}${last}`, `${GUEST_COLUMN}2:${GUEST_COLUMN}${last}`]);
+    expect([headerAt("Name"), headerAt("First name"), headerAt("Last name")]).toEqual([0, 1, 2].map((step) => headerAt("Name") + step));
+    for (const rule of guest) {
+      expect(rule.type).toBe("expression");
+      expect(dxfs[rule.dxfId].fill).toBe(argb(SHEET_TINT.guest));
+      expect(dxfs[rule.dxfId].markup).toContain("<i/>");
+    }
+    // Priority 1 upwards: the guest's rules come before the blue, the lavender and the status rules.
+    expect(guest.map((rule) => rule.priority)).toEqual([1, 2, 3]);
+    const blue = rules.find((rule) => dxfs[rule.dxfId].fill === argb(SHEET_TINT.member))!;
+    expect(blue.priority).toBe(4);
+    for (const rule of rules.filter((candidate) => candidate.formula !== guest[0].formula)) expect(rule.priority).toBeGreaterThan(3);
+    // Their cells and the member cells are different columns, so the two markings never fight for a cell.
+    const memberFirst = headerAt("Club member");
+    const memberLast = headerAt("Member bib");
+    for (const header of ["Race number (BIB)", "Name", "First name", "Last name", "Special guest"]) expect(headerAt(header) < memberFirst || headerAt(header) > memberLast, header).toBe(true);
+    expect(headerAt("Status")).toBeGreaterThan(headerAt("Race number (BIB)"));
+    expect(headerAt("Status")).toBeLessThan(headerAt("Name"));
+  });
+
+  it("reads every column for a guest from the header, in a file of several events and with the notes column too", async () => {
+    const event = (id: string, label: string, startsAt: string) => ({ eventId: id, eventLabel: label, eventTitle: "Alergare", eventStartsAt: new Date(startsAt) });
+    const data = [
+      row({ ...event("e1", "A · 18.10.2026", "2026-10-18T08:00:00.000Z"), status: "CONFIRMED", outsideCapacity: true, clubMemberDeclared: true }),
+      row({ ...event("e2", "B · 25.10.2026", "2026-10-25T08:00:00.000Z"), status: "WAITLISTED" }),
+    ];
+    const buffer = await build(data, RO, { notesHeader: "Note interne" });
+    const header = readSheet(buffer).rows[0] as string[];
+    const letter = (name: string) => columnLetter(header.indexOf(name));
+    const guest = rulesOf(buffer).filter((rule) => rule.formula === `$${letter("Special guest")}2=TRUE`);
+    // «Event» sits between «Name» and «First name»: the names' run takes it along, and every letter moves with the header.
+    expect(guest.map((rule) => rule.sqref)).toEqual([`${letter("Race number (BIB)")}2:${letter("Race number (BIB)")}3`, `${letter("Name")}2:${letter("Last name")}3`, `${letter("Special guest")}2:${letter("Special guest")}3`]);
+    expect(guest[0].formula).toBe(`$${letter("Special guest")}2=TRUE`);
+    const rules = rulesOf(buffer);
+    expect(rules.some((rule) => rule.formula === `$${letter("Member tick (declared)")}2="Yes"`)).toBe(true);
+    expect(rules.some((rule) => rule.formula === `AND($${letter("Club runner")}2="Yes",$${letter("Member tick (declared)")}2<>"Yes")`)).toBe(true);
+    expect(rules.find((rule) => rule.sqref.startsWith("A2:"))!.sqref).toBe(`A2:${columnLetter(header.length - 1)}3`);
+  });
+
+  it("follows the flag offline: mark a row special and its identity cells turn peach and italic, unmark it and the status tint returns", async () => {
+    const data = mixed();
+    const buffer = await build(data);
+    const grid = gridOf(buffer);
+    const column = headerAt("Special guest");
+    const identity = ["Race number (BIB)", "Name", "First name", "Last name", "Special guest"].map((header) => (row: number) => `${columnLetter(headerAt(header))}${row}`);
+    // Nobody is a guest: every identity cell has the status tint, upright.
+    for (const cell of identity) expect(appliedFormat(buffer, grid, cell(2)), cell(2)).toEqual({ fill: argb(TINT_FILL.success), italic: false });
+    // Mark row 2 special offline («1» is the stored TRUE): peach and italic on exactly those five cells.
+    const marked = grid.map((line) => (line ? [...line] : line)) as Grid;
+    marked[1][column] = "1";
+    for (const cell of identity) expect(appliedFormat(buffer, marked, cell(2)), cell(2)).toEqual({ fill: argb(SHEET_TINT.guest), italic: true });
+    // The rest of the row keeps its status tint: «Status», «Club», the member cells, and the next row's identity.
+    expect(appliedFormat(buffer, marked, `${columnLetter(headerAt("Status"))}2`)).toEqual({ fill: argb(TINT_FILL.success), italic: false });
+    expect(appliedFormat(buffer, marked, `${columnLetter(headerAt("Club"))}2`)).toEqual({ fill: argb(TINT_FILL.success), italic: false });
+    expect(appliedFormat(buffer, marked, `${columnLetter(headerAt("Name"))}3`)).toEqual({ fill: argb(TINT_FILL.success), italic: false });
+    // A guest who is also a ticked member: the identity is peach, the member cells blue — two markings, no cell with both.
+    expect(appliedFormat(buffer, marked, `${columnLetter(headerAt("Member tick (declared)"))}2`)?.fill).toBe(argb(SHEET_TINT.member));
+    // The flag set back to 0: the status tint returns.
+    const unmarked = marked.map((line) => (line ? [...line] : line)) as Grid;
+    unmarked[1][column] = "0";
+    expect(appliedFormat(buffer, unmarked, `${columnLetter(headerAt("Name"))}2`)).toEqual({ fill: argb(TINT_FILL.success), italic: false });
   });
 
   it("bakes no fill into a data cell or the header: only the legend's own cells carry one", async () => {
@@ -325,10 +547,13 @@ describe("§787 the colours are conditional formatting, never a baked fill", () 
 
   it("writes the rules for a header without a footer too, and none for a file without rows", async () => {
     const plain = await buildRegistrationsWorkbook(mixed(), "Crosul Tâmpei");
-    expect(rulesOf(plain)).toHaveLength(ROW_TINTS.length + 1);
+    // The status tints, the blue, the lavender and the guest's three runs of columns.
+    expect(rulesOf(plain)).toHaveLength(ROW_TINTS.length + 2 + 3);
     expect(unzip(plain).get("xl/worksheets/sheet1.xml")).not.toContain("<f>");
     expect(rulesOf(await build([]))).toEqual([]);
-    expect(colourRules({ statusColumn: 12, clubRunnerColumn: 19, memberColumns: [18, 20], lastColumn: 38, rowCount: 0 })).toEqual([]);
+    expect(
+      colourRules({ statusColumn: 12, memberTickColumn: 19, clubRunnerColumn: 20, memberColumns: [18, 21], specialGuestColumn: 38, guestCells: [[1, 1], [3, 5], [38, 38]], lastColumn: 38, rowCount: 0 }),
+    ).toEqual([]);
   });
 
   it("keeps ink on every tint at AA", () => {
@@ -348,9 +573,10 @@ describe("§787 the statistics are formulas with today's number cached beside th
     const lines: Array<[string, number]> = [
       [RO.total, block.tally.total], [RO.confirmed, block.tally.confirmed], [RO.pendingEmail, block.tally.pendingEmail], [RO.pendingDeclaration, block.tally.pendingDeclaration],
       [RO.waitlisted, block.tally.waitlisted], [RO.waitlistOffered, block.tally.waitlistOffered], [RO.cancelled, block.tally.cancelled], [RO.expired, block.tally.expired],
-      [RO.club, block.tally.club], [RO.clubConfirmed, block.tally.clubConfirmed], [RO.notClub, block.tally.total - block.tally.club],
+      [RO.club, block.tally.club], [RO.clubConfirmed, block.tally.clubConfirmed], [RO.clubTicked, block.tally.clubTicked], [RO.notClub, block.tally.total - block.tally.club],
     ];
-    expect(lines.map(([, value]) => value)).toEqual([9, 3, 1, 1, 1, 1, 1, 1, 5, 2, 4]);
+    // Five club runners (a tick, a typed club, a member account, a typed club again, a tick), two of whom ticked the box.
+    expect(lines.map(([, value]) => value)).toEqual([9, 3, 1, 1, 1, 1, 1, 1, 5, 2, 2, 4]);
     for (const [label, value] of lines) {
       const reference = `B${at(label) + 1}`;
       const cell = formulas.get(reference);
@@ -388,6 +614,8 @@ describe("§787 the statistics are formulas with today's number cached beside th
     expect(formulaOf(RO.expired)).toBe(`COUNTIF(${range("Status")},"EXPIRED")`);
     expect(formulaOf(RO.club)).toBe(`COUNTIF(${range("Club runner")},"Yes")`);
     expect(formulaOf(RO.clubConfirmed)).toBe(`COUNTIFS(${range("Club runner")},"Yes",${range("Status")},"CONFIRMED")`);
+    // The tick alone, in every state, over the «Member tick (declared)» column — never the club runner's.
+    expect(formulaOf(RO.clubTicked)).toBe(`COUNTIF(${range("Member tick (declared)")},"Yes")`);
     // Women 18-29 (the first category row): the sex cell's words and the band's two edges — the last band open-ended.
     const women = rows.findIndex((line) => line?.[0] === "Feminin, 18-29 ani");
     expect(formulas.get(`B${women + 1}`)!.formula).toBe(`COUNTIFS(${range("Sex")},"Female",${range("Age on race day")},">=18",${range("Age on race day")},"<30")`);
@@ -408,8 +636,8 @@ describe("§787 the statistics are formulas with today's number cached beside th
     const buffer = await build(mixed());
     const formulas = formulasOf(buffer);
     const results = evaluated(buffer);
-    // Fourteen lines (the three of the special guests among them) and six categories of four numbers each.
-    expect(results.size).toBe(14 + 6 * 4);
+    // Fifteen lines (the three of the special guests and the tick's among them) and six categories of four numbers each.
+    expect(results.size).toBe(15 + 6 * 4);
     for (const [reference, result] of results) expect(String(result), `${reference}: ${formulas.get(reference)!.formula}`).toBe(formulas.get(reference)!.cached);
   });
 
@@ -445,6 +673,69 @@ describe("§787 the statistics are formulas with today's number cached beside th
     const categories = [...Array(noCategory - (rows.findIndex((line) => line?.[0] === RO.categoryHeader) + 1)).keys()].map((index) => rows.findIndex((line) => line?.[0] === RO.categoryHeader) + 2 + index);
     const total = (column: string) => categories.reduce((sum, rowNumber) => sum + evaluated(buffer, edited).get(`${column}${rowNumber}`)!, 0) + evaluated(buffer, edited).get(`${column}${noCategory + 1}`)!;
     expect(total("B")).toBe(9);
+  });
+
+  it("counts the tick on a line of its own, under «{club}, confirmed», outside the states' sum, and an offline edit of the tick moves it", async () => {
+    const data = mixed();
+    const buffer = await build(data);
+    const grid = gridOf(buffer);
+    const rows = readSheet(buffer).rows;
+    const lineOf = (label: string) => rows.findIndex((line) => line?.[0] === label) + 1;
+    // Right under «{club}, confirmed» and above «Others»; the cached number is the tally's.
+    expect(lineOf(RO.clubTicked)).toBe(lineOf(RO.clubConfirmed) + 1);
+    expect(lineOf(RO.notClub)).toBe(lineOf(RO.clubTicked) + 1);
+    const cell = formulasOf(buffer).get(`B${lineOf(RO.clubTicked)}`)!;
+    expect(cell.cached).toBe("2");
+    expect(cell.cached).toBe(String(statisticsOf(data, RO)[0].tally.clubTicked));
+    const numberOf = (label: string, where: Grid) => evaluated(buffer, where).get(`B${lineOf(label)}`);
+    const tick = headerAt("Member tick (declared)");
+    expect(numberOf(RO.clubTicked, grid)).toBe(2);
+    // Untick row 2: one fewer on the tick's line; the club lines (they count «Club runner») stay where they were.
+    const edited = grid.map((line) => (line ? [...line] : line)) as Grid;
+    edited[1][tick] = undefined;
+    expect(numberOf(RO.clubTicked, edited)).toBe(1);
+    expect(numberOf(RO.club, edited)).toBe(5);
+    // Tick two more rows by hand (a cancelled runner counts: no status filter): three more.
+    edited[8][tick] = "Yes";
+    edited[3][tick] = "Yes";
+    expect(numberOf(RO.clubTicked, edited)).toBe(3);
+    // The block's states still add up to «Total», the tick's line being outside that sum.
+    const stateSum = [RO.confirmed, RO.pendingEmail, RO.pendingDeclaration, RO.waitlisted, RO.waitlistOffered, RO.cancelled, RO.expired].reduce((sum, label) => sum + Number(numberOf(label, edited)), 0);
+    expect(stateSum).toBe(numberOf(RO.total, edited));
+    // In English too, with the club's name in the words.
+    expect(EN.clubTicked).toBe(`Ticked as members of ${CLUB_NAME}`);
+    expect(RO.clubTicked).toBe(`Au bifat că sunt membri ${CLUB_NAME}`);
+  });
+
+  it("counts the tick per event with the event filter, and over all of them without", async () => {
+    const e1 = { eventId: "e1", eventLabel: "Alergare · 18.10.2026", eventTitle: "Alergare", eventStartsAt: new Date("2026-10-18T08:00:00.000Z") };
+    const e2 = { eventId: "e2", eventLabel: "Alergare · 25.10.2026", eventTitle: "Alergare", eventStartsAt: new Date("2026-10-25T08:00:00.000Z") };
+    const data = [
+      row({ ...e1, status: "CONFIRMED", clubMemberDeclared: true }),
+      row({ ...e1, status: "CANCELLED", clubMemberDeclared: true }),
+      row({ ...e1, status: "CONFIRMED", memberVerified: true }),
+      row({ ...e2, status: "CONFIRMED", clubMemberDeclared: true }),
+      row({ ...e2, status: "WAITLISTED", clubName: "BVR" }),
+    ];
+    const buffer = await build(data);
+    const formulas = formulasOf(buffer);
+    const { rows } = readSheet(buffer);
+    const header = rows[0] as string[];
+    const range = (name: string) => `$${columnLetter(header.indexOf(name))}$2:$${columnLetter(header.indexOf(name))}$6`;
+    const results = evaluated(buffer);
+    for (const [reference, result] of results) expect(String(result), `${reference}: ${formulas.get(reference)!.formula}`).toBe(formulas.get(reference)!.cached);
+    let from = 0;
+    for (const [label, expected] of [["Alergare · 18.10.2026", 2], ["Alergare · 25.10.2026", 1], [RO.allEvents, 3]] as const) {
+      const start = rows.findIndex((line, index) => index >= from && line?.[0] === label);
+      from = start;
+      const at = rows.findIndex((line, index) => index > start && line?.[0] === RO.clubTicked) + 1;
+      expect(results.get(`B${at}`), label).toBe(expected);
+      const scope = label === RO.allEvents ? "" : `${range("Event")},"=${label}",`;
+      expect(formulas.get(`B${at}`)!.formula, label).toBe(`${label === RO.allEvents ? "COUNTIF" : "COUNTIFS"}(${scope}${range("Member tick (declared)")},"Yes")`);
+    }
+    // A bare footer (no sheet around it) is a plain number, the tally's own.
+    const bare = statisticsCells(statisticsOf(data, RO), RO);
+    expect(bare.find((cells) => (cells[0] as { value?: string } | undefined)?.value === RO.clubTicked)?.[1]).toMatchObject({ value: 2, type: Number });
   });
 
   it("always holds a «No category» row, so an offline edit that blanks a runner's age or sex still leaves the table adding up", async () => {
@@ -602,8 +893,8 @@ describe("§787 a file of several events: an «Event» column the per-event coun
     const at = rows.findIndex((line) => line?.[0] === long);
     expect(at).toBeGreaterThan(0);
     const formulas = formulasOf(buffer);
-    // The fourteen lines of the block (the special guests' three among them) are plain numbers.
-    for (let line = at + 2; line < at + 16; line += 1) expect(formulas.has(`B${line}`), `B${line}`).toBe(false);
+    // The fifteen lines of the block (the special guests' three and the tick's among them) are plain numbers.
+    for (let line = at + 2; line < at + 17; line += 1) expect(formulas.has(`B${line}`), `B${line}`).toBe(false);
     expect(rows[at + 1]?.[1]).toBe("1");
     // The other event's block is still live.
     expect(formulas.has(`B${rows.findIndex((cells) => cells?.[0] === "scurt") + 2}`)).toBe(true);
@@ -1010,27 +1301,51 @@ describe("§787 the legend of the colours, under the statistics, in both languag
       expect(fillOfStyle(cells.get(`A${title + 2 + index}`)!.style), text).toBe(argb(TINT_FILL[tint]));
     });
     const member = title + 1 + lines.length;
-    expect(rows[member]?.[0]).toBe(catalogue.legendMember);
+    // The blue names the tick and the four columns; the lavender the club runner without it; the peach the special guest.
+    expect(rows[member]?.[0]).toBe(catalogue.legendMember.replace("{club}", CLUB_NAME));
+    expect(rows[member]?.[0]).toContain("Member tick (declared)");
     expect(fillOfStyle(cells.get(`A${member + 1}`)!.style)).toBe(argb(SHEET_TINT.member));
+    expect(rows[member + 1]?.[0]).toBe(catalogue.legendClubRunner);
+    expect(fillOfStyle(cells.get(`A${member + 2}`)!.style)).toBe(argb(SHEET_TINT.clubRunner));
+    expect(rows[member + 2]?.[0]).toBe(catalogue.legendGuest);
+    expect(fillOfStyle(cells.get(`A${member + 3}`)!.style)).toBe(argb(SHEET_TINT.guest));
+    // The guest's key is italic like its cells; the others' are upright.
+    const italic = (reference: string) => isItalicStyle(buffer, cells.get(reference)!.style);
+    expect(italic(`A${member + 3}`)).toBe(true);
+    expect(italic(`A${member + 1}`)).toBe(false);
+    expect(italic(`A${member + 2}`)).toBe(false);
     // The legend is the last thing in the file, and one line a tint.
-    expect(rows).toHaveLength(member + 1);
+    expect(rows).toHaveLength(member + 3);
     // Its fills are baked — a key, static by nature — while the rows above carry none.
     expect(new Set(lines.map(([, tint]) => TINT_FILL[tint])).size).toBe(4);
   });
 
+  it("says the same in Romanian and English, in the words the owner chose", () => {
+    expect(ro.Admin.registrations.statistics.legendMember).toBe("Albastru: a bifat că e membru {club} — coloanele «Club member», «Member tick (declared)», «Club runner» și «Member bib»");
+    expect(ro.Admin.registrations.statistics.legendClubRunner).toBe("Lila: alergător al clubului fără bifă — cont de membru sau clubul scris în formular");
+    expect(ro.Admin.registrations.statistics.legendGuest).toBe("Piersică, înclinat: invitat special — nu ocupă un loc");
+    expect(en.Admin.registrations.statistics.legendMember).toBe("Blue: ticked that they are a member of {club} — the columns «Club member», «Member tick (declared)», «Club runner» and «Member bib»");
+    expect(en.Admin.registrations.statistics.legendClubRunner).toBe("Lavender: a club runner without the tick — a member account or the club typed in the form");
+    expect(en.Admin.registrations.statistics.legendGuest).toBe("Peach, italic: a special guest — takes no place");
+    // The two notes that name the tick stay inside the plain-words ceiling.
+    for (const catalogue of [ro, en]) expect(catalogue.Admin.registrations.statistics.note2.split(/(?<=\.)\s/).every((sentence) => sentence.length <= 200)).toBe(true);
+  });
+
   it("is worded in both catalogues with the same keys and no sentence over two hundred characters", () => {
-    const legend = ["legendTitle", "legendConfirmed", "legendPending", "legendWaitlist", "legendEnded", "legendMember"] as const;
+    const legend = ["legendTitle", "legendConfirmed", "legendPending", "legendWaitlist", "legendEnded", "legendMember", "legendClubRunner", "legendGuest"] as const;
     for (const catalogue of [ro, en]) {
       for (const key of legend) {
         const word = catalogue.Admin.registrations.statistics[key];
         expect(word, key).not.toBe("");
         expect(word.length, key).toBeLessThanOrEqual(200);
-        expect(word, key).not.toMatch(/\{|\}/);
+        // The club's name is the one placeholder, in the blue's line alone; the file shows it spelt out.
+        expect(word.replace("{club}", ""), key).not.toMatch(/\{|\}/);
+        expect(word.includes("{club}"), key).toBe(key === "legendMember");
       }
     }
     expect(ro.Admin.registrations.statistics.legendTitle).toBe("Culori");
     expect(en.Admin.registrations.statistics.legendTitle).toBe("Colours");
-    expect(Object.values(RO.legend)).toEqual(legend.map((key) => ro.Admin.registrations.statistics[key]));
+    expect(Object.values(RO.legend)).toEqual(legend.map((key) => ro.Admin.registrations.statistics[key].replace("{club}", CLUB_NAME)));
   });
 
   it("is not in a file without a footer", async () => {
