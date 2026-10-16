@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.45-2026-10-16 -->
+<!-- PROJECT_BASELINE: BR-V3.46-2026-10-16 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V3.45-2026-10-16`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.46-2026-10-16`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -26906,3 +26906,53 @@ Nothing else changes: the verbs and their actions, the audit, the roles, the sor
 **Refused:** hiding the page fold when nothing is missing (a closed line that says «Nimic nu lipsește» is the answer, and a fold that vanishes reads as a bug); counting the summaries over the filter; opening «Sarcini» for an overdue or urgent task (a card that opens itself for everything is a card nobody can read); a second filter for the computed rows (they have nobody to be «ale mele»); a new client component (every fold is a `<details>` drawn on the server).
 
 Baseline `BR-V3.45-2026-10-16`.
+
+## 793. The volunteers' birth-date box gets a calendar button that opens the browser's own date picker
+
+**The owner, 2026-10-16:** «La formularul de voluntari aș vrea datepicker la data nașterii.»
+
+**What was there.** The volunteers' public form and the organizers' entry of a volunteer (the card's «Adaugă un voluntar») both draw the registration form's own birth-date box (§561, §578, §773): a typed text box, digits only, the dots put in by Maskito's mask, the date in words and the age on the event's day under it, a plain text box with scripts off. §561 refused the backoffice's MUI date picker on a public page, and §345 keeps MUI X and its date library off every public page (`pickers-backoffice-only.test.ts`): their weight is every visitor's, and a birth date decades back is faster typed than paged to.
+
+**Decision.** The typed box stays as it is and, in the volunteers' two places only, gains a calendar button at its end (`picker` on `BirthDateField`, off by default). A press opens the *browser's own* picker — the phone's wheel, the desktop's calendar — through a hidden `<input type="date">` that `BirthDatePicker` owns: `showPicker()` first (Chrome, Edge, Safari 16+, Firefox 101+), and where it is missing or throws, the input is focused and clicked, which is the most a browser lets a page ask. The hidden input carries the box's own bounds (the youngest allowed on the event's day, the platform's ceiling), so the wheel refuses a year the server would refuse, and it holds the box's day only while that day is inside them — a control holding a day outside its own `min`/`max` is invalid, and a browser will not submit a form for an invalid control nobody can see. It has no `name` (it posts nothing), is out of the tab order and hidden from a screen reader; the button is the control.
+
+**The box stays the one source of truth.** The day chosen is written into the typed box as `DD.MM.YYYY` and an `input` event is sent that bubbles: Maskito's listener, the box's own `onInput` (the date in words, the minimum-age helper, the custom validity) and the islands that read the box by its id all hear it, in the order a keystroke is heard. The posted field is still `birthDate`, in the shape the server reads today; what was typed before a refusal is kept (§315); typing works as before. The button is drawn after hydration only, so with scripts off the box is the plain text box of §561, with no button that does nothing — the markup the server draws is the same with and without the prop.
+
+**What was refused.** The backoffice's MUI date field on the public form (§345 stands: no MUI X, no date library, no new dependency); a native `type="date"` as the visible box (§561: the digits are drawn in the browser's order, «05/11/1990» for 11 May); a bare MUI `IconButton` (it would need a line in the design guard's allowlist: the button is a plain 44-pixel `<button>` drawn in the file, as `PictureLightbox` and `RouteMapTabs` draw theirs). The registration form and the desk's «Înscriere nouă» keep the typed box alone — the owner may ask for the button there later, it is one prop.
+
+**Focus and tests.** The hidden input's test id is derived from the box's id (the organizers' card draws one box per volunteer), and once a day is chosen focus returns to the calendar button — not to the typed box, which on a phone would raise the keyboard over the form as the wheel closes. **Words.** The button's accessible name, and its tooltip, is `Registration.birthDatePicker` («Alege data din calendar» / "Pick the date from a calendar"), beside the box's other words; no new visible sentence.
+
+Baseline `BR-V3.46-2026-10-16`.
+
+## 794. The Excel «Statistici» counts the special guests on lines of their own (amending §787, §790 and §643)
+
+**The owner, 2026-10-16, from his phone:** «în statistici trebuie să includ și invitații pe lista specială». **Amends §787** (the statistics block under the registrations Excel), **§790** (its numbers as formulas) and **§643's export side** (the «Special guest» column).
+
+**What was missing.** A registration an Administrator put on «Lista de invitați speciali» (§643, §648) consumes no place and is a row like any other: it is inside «Total» and inside its state's line, and the sheet's last fixed column «Special guest» says so, but the footer never named them, so the club could not read from the file how many of the confirmed take a place.
+
+**Decision.** Three lines in every block (each event's, and the all-events block), right after «Alții, nu {club}» and before the categories, all formulas over the «Special guest» column like every other number (§790), each with today's number stored beside it:
+
+- **«Invitați speciali»** ("Special guests"): every state, `COUNTIF(<Special guest>,TRUE)`.
+- **«Invitați speciali, confirmați»**: `COUNTIFS(<Special guest>,TRUE,<Status>,"CONFIRMED")`.
+- **«Confirmați care ocupă un loc»** ("Confirmed who take a place"): the «Confirmați (activi)» cell less the confirmed guests' cell, a difference of two cells like «Alții» and «Fără categorie», so an offline edit that marks, unmarks, cancels or confirms a row moves all three together. It is the confirmed part of the event's places line («N confirmați», §615; §643's one explicit exclusion) — the line's first number also counts the registrations still in progress.
+
+A per-event block adds the event filter in front, as every other line does; a block whose event label a criterion cannot hold stays plain numbers, the three lines with it. **The criterion is the logical `TRUE`, unquoted,** because the column is Boolean: the writer stores a `t="b"` cell with `1` or `0`, which Excel and LibreOffice both meet with `TRUE`; the text "TRUE" would match nothing. A test reads the stored cells and evaluates the formulas over them. A new note (`statistics.note6`, after the definition of the category and before the note on the formulas) says in a sentence that a special guest takes no place and is counted in «Total» and in their state. The sum rule of the block is untouched: the states still add up to «Total», and the three new lines are outside that sum.
+
+**Kept.** The CSV, the sheet's columns and the sponsor list's sheet are unchanged; a test registration is still in no count (§30); the row colours, the legend and the recalculation on open are as §790 left them. **No migration.** **The note's wording:** the brief's proposed sentence had its explanation in a parenthesis of eight words, which the backoffice's plain-words test (§511) refuses over six; the same words stand between commas.
+
+Baseline `BR-V3.46-2026-10-16`.
+
+## 795. The Excel export: «Status» right after the race number, as a drop-down list (amending §790 and §172)
+
+**The owner, 2026-10-16, from his phone:** «In the excel export the status should come right after BIB and it should be a select, not free text». **Amends §790** (the live Excel), **§650** (the deadline pair no longer sits beside «Status»: SPECS criterion 116) and **§172** (the start list as a spreadsheet, its columns in `workbook.ts`).
+
+**Where.** «Status» is the third column of the spreadsheet, between «Race number (BIB)» and «Name». It was far to the right, beside «Until when» and «Waiting on» (§650); those two stay where they were, so every other column keeps its place relative to the others. **The CSV is untouched:** its order is read by position by the club's scripts (§425, §664), and a test holds its header byte for byte. Nothing in the formulas or the colour rules named a letter: the statistics ranges (`workbook.ts`, `range("Status")`) and the conditional-formatting rules (`sheet-colours.ts`, `statusColumn`) were both derived from the header's index, so the move changed the letter from `M` to `C` and nothing else. A test now builds files of one event, of several and with the notes column, and asserts that every formula range and every rule reads the letter the header gives «Status», so a later reorder cannot break the counts silently.
+
+**A drop-down, not free text.** The data rows of the column carry a list data validation (`<dataValidation type="list" allowBlank="0" showErrorMessage="1">` over `C2:C<last registration>`, the stop style, `showDropDown` left out because in the file format that attribute HIDES the arrow). Offline, the club picks a state from the list instead of typing one, so the footer's `COUNTIF`s and the row colours, which count exact words, can never be missed by a typo or a translation. The list is `registrationStatus.enumValues`, in the order the backoffice's filter lists them — the one source `STATUS_TINT`, the statistics and the legend already agree with (a test holds them together) — and rides inline in the rule (`"A,B,C"`), 102 characters against Excel's 255; `writeSheet` refuses a list longer than 255 or with a comma in a word instead of writing a rule Excel would repair. The header, the empty row and the whole footer are outside the range; a file with no registrations has none. The error box says «Alege o stare din listă.» / "Pick a status from the list." in the reader's language (`Admin.registrations.sheetpick`), under the title «Stare nepermisă» / "Status not allowed". Tokens, not translated words, in the list: the cells keep the status token (`CONFIRMED`), as the filter, the CSV and the formulas already say it — a translated list would not match the cells.
+
+**How it is written.** `write-excel-file` has no data-validation option, so the existing post-processing next to the formulas' cached values (`liveFormulas`, now `sheetExtras`) writes the `<dataValidations>` block into `xl/worksheets/sheet1.xml` where `CT_Worksheet` wants it: after `conditionalFormatting`, before `hyperlinks`, `printOptions`, `pageMargins` and the rest (the writer emits none of them today, so it lands before `</worksheet>`). `buildRegistrationsWorkbook` takes `statusPick` (the two words) and the export route passes it; a caller that passes none gets plain text cells, as before. The sponsor sheet is untouched and its test now asserts it has no data validation either.
+
+**Refused.** Moving «Until when» and «Waiting on» along with «Status» (the brief moved one column); a hidden helper sheet for the list (it fits inline); a translated list; a different column order in the CSV; a new dependency; a migration.
+
+**Tests.** `registrations/excel-live.test.ts` (new describe): the header's third cell, the other columns' relative order, the CSV header unchanged, the ranges and rules at the header's letter in three shapes of file, the validation over exactly the data rows with the words, the position and the absence of `showDropDown`, the error words in both languages and their escaping, the refusals, no validation for no rows or no words, nothing else changed in the bytes, an edit that picks another state; and the sponsor sheet; `integration/registrations/statistics-footer.test.ts` downloads the file through the route and reads the drop-down in both languages. `row-deadline.test.ts` no longer says the deadline pair sits right after «Status». The file also loads in openpyxl with the validation readable. **Consequences.** `registrations/workbook.ts`, the export route, `messages/{ro,en}.json` (`Admin.registrations.sheetpick`), `docs/VIBECODING.md`. No migration, no dependency.
+
+Baseline `BR-V3.46-2026-10-16`.

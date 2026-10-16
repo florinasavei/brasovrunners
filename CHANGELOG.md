@@ -8,6 +8,11 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V3.46-2026-10-16
+
+- **A calendar button beside «Data nașterii» on the volunteers' form** — it opens the browser's own date picker (the phone's wheel, the desktop's calendar) and writes the chosen day into the typed box; the organizers' entry of a volunteer has it too, the registration form does not. §793.
+- **The Excel «Statistici» counts the special guests** — «Invitați speciali», «Invitați speciali, confirmați» and «Confirmați care ocupă un loc», live formulas in every block, and a note that a guest takes no place. §794.
+- **The Excel export: «Status» right after the race number, as a drop-down list** — pick a state from the list instead of typing one, so the statistics and the row colours always count it; the CSV keeps its order. §795.
 ## BR-V3.45-2026-10-16
 
 - **The event's «De făcut» card in two folds, shut, each with a summary line** — «Lipsește pe pagină» and «Sarcini» are two named folds inside the card, closed on arrival, saying «5 rânduri» and the priority, or «1 de făcut · 1 a mea · 1 întârziată»; the filter, the add line and «Gata» moved inside «Sarcini», which opens by itself after a press, a refusal, «Ale mele», «Toate» or an address. §792.
