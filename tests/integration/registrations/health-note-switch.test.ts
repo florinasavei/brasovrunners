@@ -16,7 +16,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 
 /**
  * §557 (amending §47 and §171 on the form, §322 on where it shows; §554's pattern) — the health note (BR-REQ-031-05) only when the event asks
- * it: «Condiții de participare» → «Informații medicale» (`events.ask_health_note`, false by default).
+ * it: «Regulamentul» › «Condiții de participare» › «Informații medicale» (`events.ask_health_note`, false by default).
  * With the tick off, a posted note is ignored — never refused, even without its consent — and the
  * row stores null; with it on, the note is kept as before. Decided off the locked row at every
  * door; the backoffice page and the emergency sheet show a note only for an event that asks it,
