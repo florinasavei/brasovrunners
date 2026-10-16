@@ -207,7 +207,13 @@ export default async function EventTodoCard({ locale, eventId, computed, items, 
   /** A closed fold's row: its parts after the title, a middle dot between, the priority as a chip at the end. */
   const foldLine = (parts: readonly string[], top: EventTodoPriority | null): ReactNode => (
     <>
-      {parts.join(" · ")}
+      {/* Each part stays on one line ("5 rânduri" never breaks after the figure); the line wraps between parts. */}
+      {parts.map((part, index) => (
+        <Box component="span" key={part} sx={{ whiteSpace: "nowrap" }}>
+          {index > 0 ? " · " : ""}
+          {part}
+        </Box>
+      ))}
       {top && (
         <Box component="span" sx={{ ml: 0.75, display: "inline-block", verticalAlign: "middle" }}>
           {priorityChip(top, "event-todo-fold-priority")}
@@ -473,7 +479,7 @@ export default async function EventTodoCard({ locale, eventId, computed, items, 
                   </RecallField>
                   <GlyphSubmitButton label={t("eventTodos.add.save")} pendingLabel={t("eventTodos.add.saving")} icon="add" />
                 </Box>
-                <Panel glyph="add" collapsible level={4} title={t("eventTodos.add.more")}>
+                <Panel glyph="add" collapsible level={4} title={t("eventTodos.add.more")} data-testid="event-todo-add-more">
                   <Stack spacing={1.5} sx={{ pb: 1.5, pt: 0.5, maxWidth: 640 }}>
                     {whoAndWhen(null)}
                   </Stack>
