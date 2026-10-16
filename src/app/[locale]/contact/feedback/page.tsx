@@ -108,8 +108,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;
   if (!hasLocale(routing.locales, locale)) return {};
   const t = await getTranslations({ locale, namespace: "Tell" });
+  // The description says a name may be given only where the form takes one (§801): while the notice in force names it.
+  const named = (await orNull(() => cachedFeedbackFormsNamedDescribed(new Date()))) === true;
   // A form, not content: kept out of the index, like the pages a link opens.
-  return { title: t("title"), description: t("intro"), robots: { index: false, follow: false } };
+  return { title: t("title"), description: t(named ? "intro" : "introAnonymous"), robots: { index: false, follow: false } };
 }
 
 const fieldId = feedbackFieldId;
@@ -157,11 +159,14 @@ export default async function FeedbackPage({ params, searchParams }: Props) {
   const t = await getTranslations("Tell");
 
   // Tolerant of an outage like every read on the contact page (§281): no answer is no door.
-  const [offered0, described, safetyGmailDescribed] = await Promise.all([
+  const [offered0, described, safetyGmailDescribed, namedDescribedRead] = await Promise.all([
     orNull(() => cachedFeedbackOffer()),
     orNull(() => cachedFeedbackFormsDescribed(now)),
     orNull(() => cachedFeedbackSafetyGmailDescribed(now)),
+    orNull(() => cachedFeedbackFormsNamedDescribed(now)),
   ]);
+  // Whether the form takes a name at all (§678): the intro and the form's words follow it, so the page never offers one it cannot take (§801).
+  const namedDescribed = namedDescribedRead === true;
   // The settings as they act (§772): Girl Zone's road is Gmail only while the notice in force says so, and the words below follow it.
   const offer = offered0 ? effectiveFeedbackSettings(offered0, safetyGmailDescribed === true) : null;
   // By Gmail, the message is in the club's mailbox and its Sent folder: «doar la …» would not be true (§772).
@@ -182,7 +187,6 @@ export default async function FeedbackPage({ params, searchParams }: Props) {
   // The named mode (§678): only while the notice in force names it, and then whom a named message may reach.
   let identity: Identity | null = null;
   if (step.kind === "form" && offer) {
-    const namedDescribed = (await orNull(() => cachedFeedbackFormsNamedDescribed(now))) === true;
     const clubFallback = namedDescribed && step.branch === "safety" ? (await orNull(() => cachedContactFormReaches())) === true : false;
     identity = namedModeFor(step.branch, offer, namedDescribed, { ...feedbackRoads(), clubFallback });
   }
@@ -230,7 +234,7 @@ export default async function FeedbackPage({ params, searchParams }: Props) {
         </Button>
         </>
       ) : step.kind === "choose" ? (
-        <ChooseStep branches={step.branches} path={path} query={query} t={t} />
+        <ChooseStep branches={step.branches} path={path} query={query} t={t} named={namedDescribed} />
       ) : (
         <BranchForm
           branch={step.branch}
@@ -258,12 +262,25 @@ type Identity = { audiences: FeedbackAudience[] };
  * Step 1: one card per branch on (`BranchChoice`), and «Continuă» — a `GET`, so `?tip=` is the step;
  * the branch `?tip=` named stays chosen, else the first.
  */
-function ChooseStep({ branches, path, query, t }: { branches: FeedbackBranch[]; path: string; query: ReturnType<typeof readFeedbackQuery>; t: T }) {
+function ChooseStep({
+  branches,
+  path,
+  query,
+  t,
+  named,
+}: {
+  branches: FeedbackBranch[];
+  path: string;
+  query: ReturnType<typeof readFeedbackQuery>;
+  t: T;
+  /** The notice in force lets a name be given: the intro says so; otherwise it says the message is anonymous (§801). */
+  named: boolean;
+}) {
   const chosen = query.branch && branches.includes(query.branch) ? query.branch : branches[0];
   return (
     <>
       <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
-        {t("intro")}
+        {t(named ? "intro" : "introAnonymous")}
       </Typography>
       <form method="get" action={path} data-testid="feedback-choose">
         {/* The event, the day and the chip a link chose ride on to the form, unread until it draws. */}
@@ -477,6 +494,12 @@ async function BranchForm({
             The very first thing (§678): anonymous, the default, or with one's name — only while the notice
             in force says a name may be given; until then the form is anonymous only, with no way back.
           */}
+          {!identity && (
+            // Anonymous only (the notice in force does not yet name a name, §678): no radios, so one line says it, in the radio's own words (§801).
+            <Typography variant="body1" data-testid="feedback-anonymous-only">
+              {t("identity.anonymous")} — {t("identity.anonymousHint")}
+            </Typography>
+          )}
           {identity && (
             <IdentityChoice
               withPhone={fields.includes("contact")}
