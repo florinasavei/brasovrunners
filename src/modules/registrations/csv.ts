@@ -12,6 +12,7 @@
  */
 
 import type { RegistrationStatus } from "@/db/schema/registrations";
+import { clubRunnerCell } from "./domain/club-runner";
 import { raceNumberOf } from "./domain/race-number";
 import { memberBibCell } from "./domain/member-bib";
 import { MEMBERSHIP_EXPORT_WORDS, membershipOf } from "./domain/membership";
@@ -73,6 +74,11 @@ export type RegistrationCsvRow = {
    * cell reads "verified", "declared" or empty (`membershipOf`) — still never "No".
    */
   memberVerified: boolean;
+  /**
+   * The row is one of the club's runners (`domain/club-runner.ts#isClubRunner`, §787): the «Club runner» cell, "Da" or
+   * empty, which the spreadsheet's colour rules and the statistics footer's formulas read. Absent reads as no.
+   */
+  clubRunner?: boolean;
   /** When the entrant ticked "I am medically fit" (§171); empty for a desk or phone entry. */
   fitnessDeclaredAt: string | null;
   /** The optional socials (§106), empty when not given. */
@@ -174,6 +180,13 @@ const HEADER = [
   "Status",
   // Declared or verified (§662): the cell says which. Same position, so a script reading by position still finds it.
   "Club member",
+  /*
+    Right after it (§787, amended; the owner's «color codes … dacă sunt membri BVR»), as on the spreadsheet: the one
+    answer the footer counts the club's runners by — a member on «Echipa», the box, or a typed club that names the
+    club — as "Da" or empty, so the file says why a row is blue. Every column after it moved one to the right; the
+    ones a script reads from the end did not.
+  */
+  "Club runner",
   "Medically fit (declared)",
   "Strava",
   "Instagram",
@@ -240,6 +253,7 @@ export function buildRegistrationsCsv(rows: readonly RegistrationCsvRow[], optio
         row.email,
         row.status,
         membershipCell(row),
+        clubRunnerCell(row.clubRunner),
         row.fitnessDeclaredAt ?? "",
         row.stravaUrl,
         row.instagramHandle,

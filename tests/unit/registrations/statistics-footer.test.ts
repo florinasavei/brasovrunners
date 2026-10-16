@@ -241,7 +241,9 @@ describe("§787 the footer's place and typing in the file", () => {
     // Stored as text (a shared or inline string), never as a formula.
     const cell = rawCells(buffer).get(`A${at + 1}`)!;
     expect(["s", "inlineStr"]).toContain(cell.type);
-    expect(unzip(buffer).get("xl/worksheets/sheet1.xml")).not.toMatch(/<f>/);
+    // The label's own cell holds no formula; the counts beside the labels are the footer's formulas (§787, amended).
+    const sheet = unzip(buffer).get("xl/worksheets/sheet1.xml") ?? "";
+    expect(new RegExp(`<c r="A${at + 1}"[^>]*>(?:(?!</c>)[\\s\\S])*</c>`).exec(sheet)?.[0]).not.toContain("<f>");
   });
 });
 
@@ -335,7 +337,7 @@ describe("§787 the footer's words, in both languages", () => {
       const everything = [
         words.title, words.total, words.confirmed, words.pendingEmail, words.pendingDeclaration, words.waitlisted, words.waitlistOffered, words.cancelled,
         words.expired, words.club, words.clubConfirmed, words.notClub, words.allEvents, words.categoryHeader, words.noCategory,
-        ...Object.values(words.sex), ...Object.values(words.bands), ...words.notes,
+        ...Object.values(words.sex), ...Object.values(words.bands), ...words.notes, ...Object.values(words.legend),
       ];
       for (const word of everything) {
         expect(word, "a word").not.toBe("");
@@ -343,7 +345,7 @@ describe("§787 the footer's words, in both languages", () => {
         expect(word.length).toBeLessThanOrEqual(200);
       }
       expect(words.category).toBe("{sex}, {band}");
-      expect(words.notes).toHaveLength(4);
+      expect(words.notes).toHaveLength(5);
       expect(words.club).toBe(CLUB_NAME);
     }
     const keys = (catalogue: typeof ro) => Object.keys(catalogue.Admin.registrations.statistics).sort();
@@ -354,10 +356,13 @@ describe("§787 the footer's words, in both languages", () => {
 
   it("tells the reader what «active» and «Brașov Runners» mean, in a sentence of its own", async () => {
     const { rows } = readSheet(await build(mixed(), RO));
-    const last = rows.filter((row) => row?.[0]).map((row) => row![0]!);
-    expect(last.at(-4)).toBe("Activi sunt cei confirmați: au un loc și declarația semnată.");
-    expect(last.at(-3)).toContain(`«${CLUB_NAME}»`);
-    expect(last.at(-2)).toContain("se numără toate stările");
-    expect(last.at(-1)).toContain("Înscrierile de test nu se numără");
+    const all = rows.filter((row) => row?.[0]).map((row) => row![0]!);
+    // The definitions are followed by the legend of the colours (§787, amended), so they are found by their first words.
+    const first = all.indexOf("Activi sunt cei confirmați: au un loc și declarația semnată.");
+    expect(first).toBeGreaterThan(0);
+    const [, second, third, fourth] = all.slice(first, first + 4);
+    expect(second).toContain(`«${CLUB_NAME}»`);
+    expect(third).toContain("se numără toate stările");
+    expect(fourth).toContain("Înscrierile de test nu se numără");
   });
 });

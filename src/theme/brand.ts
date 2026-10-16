@@ -234,6 +234,25 @@ export const GRADIENT = {
 } as const;
 
 /**
+ * The registrations spreadsheet's tints (§787, amended; the owner, 2026-10-16: «color codes în funcție de status și dacă
+ * sunt membri BVR»): the pale fills a row takes by its state, and the club's blue for its runners' cells.
+ *
+ * Paper-pale on purpose: they sit behind ordinary black text in Excel (the file has no dark mode and its
+ * words are the sheet's automatic colour), so each is far past AA under black — `tests/unit/theme/brand.test.ts`
+ * measures all five — and none says a thing by colour alone, since the «Status» column spells the state out.
+ * One tint per chip colour of the desk (`DeskRow`: confirmed `success`, a waiting or pending state `warning`);
+ * the waiting list is the sky blue and a cancelled or expired row is grey, never red — a whole red row shouts.
+ * `member` is the club's own blue walked pale, a step stronger than the sky so the two blues are told apart.
+ */
+export const SHEET_TINT = {
+  success: "#d9f0dc",
+  warning: "#fff0c2",
+  info: "#d7edf8",
+  neutral: "#e4e4e4",
+  member: "#c5d1ff",
+} as const;
+
+/**
  * The new look's accent presets (§723, amending §708; the owner, 2026-10-11: «this should be a
  * configuration in the theme»): «Setări» → «Aspect» → «Aspectul nou» → «Culoarea de accent». Each is
  * the four shades the look wears — `accent` (the mark, a rule, a large word), `accentInk` (the words:

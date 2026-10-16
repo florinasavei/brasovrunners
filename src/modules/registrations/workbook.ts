@@ -1,4 +1,6 @@
-import writeExcelFile from "write-excel-file/node";
+import type { Blob } from "node:buffer";
+import type { Stream } from "node:stream";
+import writeExcelFile, { type Feature } from "write-excel-file/node";
 import { CLUB_TIME_ZONE } from "@/i18n/dates";
 import { toWallTimeInput } from "@/modules/events/domain/zoned-time";
 import type { RegistrationCsvRow } from "./csv";
@@ -9,8 +11,10 @@ import { ROW_DEADLINE_EXPORT_WORDS, type RowDeadlineKind } from "./domain/row-de
 import { shirtSizeShown } from "./domain/kit";
 import { raceNumberOf } from "./domain/race-number";
 import { memberBibExportCell, membershipCell } from "./csv";
+import { clubRunnerCell } from "./domain/club-runner";
 import { sexCell } from "./domain/sex";
-import { statisticsCells, statisticsOf, type StatisticsWords } from "./statistics";
+import { colourRules, columnLetters, type ColourRule } from "./sheet-colours";
+import { eventLabelsOf, hasSeveralEvents, statisticsCells, statisticsOf, type StatisticsRanges, type StatisticsWords } from "./statistics";
 
 /**
  * The start list as a spreadsheet the club can actually work in (§172; the owner: "CSV is
@@ -77,12 +81,11 @@ export type RegistrationSheetRow = Omit<
    */
   notes?: string;
   /**
-   * The statistics footer's inputs (§787), none of them a column: the row is one of the club's runners
-   * (`domain/club-runner.ts#isClubRunner`), and the event it belongs to (`eventId`, with `eventLabel` — the title
-   * and the day — for a file of several events). Absent reads as no and as one event: a caller that builds no
-   * footer never needs them.
+   * The statistics footer's inputs (§787): the event the row belongs to (`eventId`, with `eventLabel` — the title
+   * and the day — for a file of several events, whose «Event» column repeats it). Absent reads as one event: a
+   * caller that builds no footer never needs them. Whether the row is one of the club's runners
+   * (`domain/club-runner.ts#isClubRunner`) is `clubRunner`, from the CSV's row type: it is the «Club runner» column.
    */
-  clubRunner?: boolean;
   eventId?: string;
   eventLabel?: string;
   eventStartsAt?: Date;
@@ -134,6 +137,12 @@ export type SheetColumn<Row> = {
  * the club's date format, and a sheet name Excel accepts (at most 31 characters, none of `: \ / ? * [ ]`).
  * `footer` is rows of ready cells written under the table (§787, the start list's statistics): none for every
  * other sheet. The sheet declares no autofilter and no table, so nothing here can pull a footer into a sort.
+ *
+ * Two things the start list adds and the sponsor list never asks for (§787, amended): `rules`, the sheet's
+ * conditional formatting (`sheet-colours.ts`), and a footer cell of type `"Formula"` — `value` the formula without its
+ * `=`, `cached` the number it comes to today. The writer stores a formula, but not the result beside it; `liveFormulas`
+ * adds the `<v>` and asks the workbook to recalculate on open, so a viewer that never recalculates shows the cached
+ * number and Excel or LibreOffice recount.
  */
 export async function writeSheet<Row>(
   columns: readonly SheetColumn<Row>[],
@@ -141,15 +150,57 @@ export async function writeSheet<Row>(
   sheetName: string,
   fallbackName: string,
   footer: Array<Array<Record<string, unknown>>> = [],
+  rules: readonly ColourRule[] = [],
 ): Promise<Buffer> {
-  const data = [columns.map((column) => bold(column.header)), ...rows.map((row) => columns.map((column) => column.cell(row))), ...footer];
-  return writeExcelFile(data, {
-    sheet: sheetName.replace(/[:\\/?*[\]]/g, " ").slice(0, 31) || fallbackName,
-    columns: columns.map((column) => ({ width: column.width })),
-    // The header stays on screen while somebody scrolls two hundred runners.
-    stickyRowsCount: 1,
-    dateFormat: STAMP_FORMAT,
-  }).toBuffer();
+  // Where each formula sits (the header is row 1, the table follows, then the footer) and what it comes to now.
+  const cached = new Map<string, number>();
+  const footerFrom = rows.length + 2;
+  const footerCells = footer.map((cells, rowAt) =>
+    cells.map((cell, columnAt) => {
+      if (cell.type !== "Formula") return cell;
+      const { cached: result, ...rest } = cell;
+      cached.set(`${columnLetters(columnAt)}${footerFrom + rowAt}`, Number(result));
+      return rest;
+    }),
+  );
+  const data = [columns.map((column) => bold(column.header)), ...rows.map((row) => columns.map((column) => column.cell(row))), ...footerCells];
+  return writeExcelFile(
+    data,
+    {
+      sheet: sheetName.replace(/[:\\/?*[\]]/g, " ").slice(0, 31) || fallbackName,
+      columns: columns.map((column) => ({ width: column.width })),
+      // The header stays on screen while somebody scrolls two hundred runners.
+      stickyRowsCount: 1,
+      dateFormat: STAMP_FORMAT,
+      ...(rules.length > 0 ? { conditionalFormatting: [...rules] } : {}),
+    },
+    cached.size > 0 ? { features: [liveFormulas(cached)] } : {},
+  ).toBuffer();
+}
+
+/**
+ * The formulas' half the writer leaves out (§787, amended): each `<c r="B13"><f>…</f></c>` gains the `<v>` of the number
+ * it counted when the file was written, and the workbook's `calcPr` asks for a full recalculation on load.
+ * Without the cached value a viewer that does not recalculate — a phone's preview, Google's — shows an empty cell;
+ * without `fullCalcOnLoad` Excel trusts the cache and a number the club changed offline would wait for a keystroke.
+ */
+function liveFormulas(cached: ReadonlyMap<string, number>): Feature<Stream | Buffer | Blob> {
+  return {
+    files: {
+      transform: {
+        "xl/worksheets/sheet{id}.xml": {
+          transform: (xml) =>
+            xml.replace(/<c r="([A-Z]+\d+)"([^>]*)><f>([\s\S]*?)<\/f><\/c>/g, (cell, reference: string, attributes: string, formula: string) => {
+              const result = cached.get(reference);
+              return result === undefined ? cell : `<c r="${reference}"${attributes}><f>${formula}</f><v>${result}</v></c>`;
+            }),
+        },
+        "xl/workbook.xml": {
+          transformElementAttributes: (tagName, attributes) => (tagName === "calcPr" ? { ...attributes, fullCalcOnLoad: 1 } : attributes),
+        },
+      },
+    },
+  };
 }
 
 /**
@@ -193,6 +244,12 @@ const COLUMNS: Array<SheetColumn<RegistrationSheetRow>> = [
   { header: "Identity document", width: 18, cell: (row) => ({ value: row.idDocument, type: String }) },
   // Declared or verified (§662), as the list's chip: "verified", "declared" or blank.
   { header: "Club member", width: 12, cell: (row) => ({ value: membershipCell(row), type: String }) },
+  /*
+    «Club runner» (§787, amended; the owner: «color codes … dacă sunt membri BVR»): "Da" for one of the club's runners, from the
+    one predicate the footer counts by (`isClubRunner`) — written as a cell so the colour rule on the three membership cells
+    and the footer's `COUNTIF` read it from the sheet itself, which the typed-club match (§753) could never be as a formula.
+  */
+  { header: "Club runner", width: 11, cell: (row) => ({ value: clubRunnerCell(row.clubRunner), type: String }) },
   // Beside it (§664): the members' race number — "yes" when it prints, "asked" when the address is no member's, blank.
   { header: "Member bib", width: 11, cell: (row) => ({ value: memberBibExportCell(row), type: String }) },
   { header: "Medically fit (declared)", width: 18, cell: (row) => ({ value: onClubClock(row.fitnessDeclaredAt), type: Date, format: STAMP_FORMAT }) },
@@ -234,6 +291,13 @@ const COLUMNS: Array<SheetColumn<RegistrationSheetRow>> = [
 export const REGISTRATION_SHEET_HEADERS = COLUMNS.map((column) => column.header);
 
 /**
+ * «Event» (§787, amended), the column a file of several events gets after «Name»: the event's label as the footer's blocks
+ * carry it (the title and the day), the string a per-event `COUNTIFS` filters by. The CSV has it first, always; the sheet of
+ * one event has no use for it.
+ */
+const EVENT_COLUMN: SheetColumn<RegistrationSheetRow> = { header: "Event", width: 34, cell: (row) => ({ value: row.eventLabel ?? row.eventTitle, type: String }) };
+
+/**
  * «Note interne» (§785), the one column only some roles get: last, wide, with wrap on so the lines of a cell
  * (one note a line) show as lines. Headed in the reader's language (`notesHeader`, the card's own title) and
  * text-typed like every cell, so a note that begins with `=` is never evaluated.
@@ -246,18 +310,51 @@ function notesColumn(header: string): SheetColumn<RegistrationSheetRow> {
  * The workbook. `notesHeader` adds the «Note interne» column (§785) — passed by the route only for a role that
  * `canKeepRegistrationNotes`; without it the file has no such column, which is every other caller's file.
  * `statistics` adds the footer under the rows (`statistics.ts`).
+ *
+ * **Live** (§787, amended; the owner, 2026-10-16: «color codes în funcție de status și dacă sunt membri BVR» and
+ * «statisticile din Excel trebuie să se actualizeze automat offline, gen să fie formule în Excel»): the rows are
+ * coloured by conditional formatting (`sheet-colours.ts`) and the footer's numbers are formulas over the rows'
+ * columns, so the file stays right after the club edits it offline. A file of several events — only with a
+ * footer to count them — gains an «Event» column after «Name», so a per-event count has something to filter by.
  */
 export async function buildRegistrationsWorkbook(
   rows: readonly RegistrationSheetRow[],
   sheetName: string,
   options: { notesHeader?: string; statistics?: StatisticsWords } = {},
 ): Promise<Buffer> {
-  const columns = options.notesHeader ? [...COLUMNS, notesColumn(options.notesHeader)] : COLUMNS;
+  const several = options.statistics !== undefined && hasSeveralEvents(rows);
+  // What each row's event is called, one string to one event, for the column and for the footer's blocks alike.
+  const labels = several ? eventLabelsOf(rows) : [];
+  const sheetRows = several ? rows.map((row, at) => ({ ...row, eventLabel: labels[at] })) : rows;
+  const columns = [...COLUMNS];
+  if (several) columns.splice(columns.findIndex((column) => column.header === "Name") + 1, 0, EVENT_COLUMN);
+  if (options.notesHeader) columns.push(notesColumn(options.notesHeader));
+  const at = (header: string) => columns.findIndex((column) => column.header === header);
+
   /*
     «Statistici» (§787): the counts of these rows under them, after an empty row, for the caller that passes its
     words — the export route, in the reader's language. Every other caller's file is rows only, as it was, and
-    so is the CSV, whose readers would take a footer for registrations.
+    so is the CSV, whose readers would take a footer for registrations. The counts are formulas over these
+    absolute ranges: the header is row 1, the registrations 2 to N+1, and the footer starts after them.
   */
-  const footer = options.statistics ? statisticsCells(statisticsOf(rows, options.statistics), options.statistics) : [];
-  return writeSheet(columns, rows, sheetName, "Participants", footer);
+  const lastRow = Math.max(rows.length + 1, 2);
+  const range = (header: string) => `$${columnLetters(at(header))}$2:$${columnLetters(at(header))}$${lastRow}`;
+  const ranges: StatisticsRanges = {
+    firstRow: rows.length + 2,
+    id: range("ID"),
+    status: range("Status"),
+    clubRunner: range("Club runner"),
+    sex: range("Sex"),
+    age: range("Age on race day"),
+    event: several ? range(EVENT_COLUMN.header) : null,
+  };
+  const footer = options.statistics ? statisticsCells(statisticsOf(sheetRows, options.statistics), options.statistics, ranges) : [];
+  const rules = colourRules({
+    statusColumn: at("Status"),
+    clubRunnerColumn: at("Club runner"),
+    memberColumns: [at("Club member"), at("Member bib")],
+    lastColumn: columns.length - 1,
+    rowCount: rows.length,
+  });
+  return writeSheet(columns, sheetRows, sheetName, "Participants", footer, rules);
 }
