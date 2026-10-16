@@ -368,6 +368,28 @@ test.describe("§754 volunteers for a race", () => {
       expect(waterBoxShape.width).toBeGreaterThan(14);
       expect(waterBoxShape.x).toBeGreaterThanOrEqual(water.x);
       expect(waterBoxShape.x - water.x).toBeLessThan(24);
+      // A long name wraps inside its own pill (never sideways, never under the «?»): «Sosire» has a description, so it has its «?»; its name is
+      // swapped in the page for one of sixty characters, and the pill must stay inside the row, grow taller than one line, and hold the «?».
+      await finishTile.getByTestId("volunteer-role-name").evaluate((el) => {
+        el.textContent = "coordonator al punctului de sosire și al zonei de refacere a alergătorilor";
+      });
+      const longChip = (await finishTile.boundingBox())!;
+      const longRow = (await choices.getByTestId("volunteer-role-chips").filter({ has: finishTile }).boundingBox())!;
+      const longHelp = (await finishTile.getByTestId("volunteer-role-help").boundingBox())!;
+      expect(longChip.x).toBeGreaterThanOrEqual(longRow.x - 1);
+      expect(longChip.x + longChip.width).toBeLessThanOrEqual(longRow.x + longRow.width + 1);
+      expect(longChip.height).toBeGreaterThan(44);
+      expect(longHelp.x).toBeGreaterThanOrEqual(longChip.x);
+      expect(longHelp.x + longHelp.width).toBeLessThanOrEqual(longChip.x + longChip.width + 1);
+      expect(longHelp.y).toBeGreaterThanOrEqual(longChip.y - 1);
+      expect(longHelp.y + longHelp.height).toBeLessThanOrEqual(longChip.y + longChip.height + 1);
+      // Closed, the «?» sits at the pill's middle, clear of the curved end beside the first line.
+      expect(Math.abs(longHelp.y + longHelp.height / 2 - (longChip.y + longChip.height / 2))).toBeLessThan(3);
+      // The capital is the stylesheet's: the stored text stays as typed, the first letter is drawn upper-case.
+      expect(await finishTile.getByTestId("volunteer-role-name").evaluate((el) => getComputedStyle(el, "::first-letter").textTransform)).toBe("uppercase");
+      await finishTile.getByTestId("volunteer-role-name").evaluate((el) => {
+        el.textContent = "Sosire";
+      });
       // Scripts off: the «?» still opens its description (a native details), a press on a name still ticks (a native label), and a refused post
       // comes back with the tick it had (§142).
       const bareContext = await browser.newContext({ baseURL: test.info().project.use.baseURL, viewport: test.info().project.use.viewport ?? undefined, javaScriptEnabled: false });

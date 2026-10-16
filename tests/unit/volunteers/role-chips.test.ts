@@ -286,9 +286,13 @@ describe("§780 each role is a chip whose face is the checkbox's label", () => {
   it("capitalises the name's first letter by CSS on an inline-block span, and stores the text as typed", async () => {
     const id = "d5555555-5555-4555-8555-555555555555";
     const page = await draw({ roles: [role(id, null, "direcționare", "guidance", 1)], categories: [] }, "ro", { styles: true });
-    expect(page).toMatch(/::first-letter\{[^}]*text-transform:uppercase/);
-    expect(page).toMatch(new RegExp(`<span[^>]*id="volunteer-role-${id}-name"[^>]*>direcționare</span>`));
-    expect(page).toMatch(/display:inline-block/);
+    const span = new RegExp(`<span[^>]*class="([^"]+)"[^>]*id="volunteer-role-${id}-name"[^>]*>direcționare</span>|<span[^>]*id="volunteer-role-${id}-name"[^>]*class="([^"]+)"[^>]*>direcționare</span>`).exec(page);
+    expect(span, "the name span, stored as typed").not.toBeNull();
+    // The rule must sit on the name span's own class, not on any other element of the page.
+    const classes = (span![1] ?? span![2]).split(/\s+/);
+    const own = (selector: RegExp) => classes.some((name) => new RegExp(`\\.${name}${selector.source}`).test(page));
+    expect(own(/\{[^}]*display:inline-block/)).toBe(true);
+    expect(own(/::first-letter\{[^}]*text-transform:uppercase/)).toBe(true);
   });
 
   it("draws the ticked state from the native box: only the roles ticked before a refusal are checked, and a role no longer offered is ignored", async () => {
@@ -327,6 +331,22 @@ describe("§780 the wrap row and the page without scripts", () => {
     expect(page).not.toMatch(/grid-template-columns:\s*repeat\(2/);
     // A chip may not be wider than the row, and a long name wraps inside it.
     expect(page).toMatch(/max-width:100%/);
+  });
+
+  it("centres the closed «?» on the pill and lights the border only under the label, never under the «?»", async () => {
+    const page = await draw({}, "ro", { styles: true });
+    expect(page).toMatch(/:not\(\[open\]\)>summary\{[^}]*top:50%;[^}]*transform:translateY\(-50%\)/);
+    expect(page).toMatch(/>summary\{[^}]*position:absolute;[^}]*top:0;[^}]*right:0/);
+    expect(page).toMatch(/:has\(label:hover\)\{border-color:/);
+  });
+
+  it("no longer says in the backoffice or its toast that a role «still has room»: the page shows no number at all", () => {
+    for (const catalogue of [ro, en]) {
+      const words = [catalogue.Admin.volunteers.counts.help, catalogue.Feedback.toast.volunteersCountsOff].join(" ");
+      expect(words).not.toMatch(/mai are locuri|still has room|still takes people/);
+    }
+    expect(ro.Admin.volunteers.counts.help).toContain("nu spune nicio cifră");
+    expect(en.Admin.volunteers.counts.help).toContain("shows no number");
   });
 
   it("is plain markup with no script: the boxes are native inputs inside the form, the cards and chips are Server Components", async () => {

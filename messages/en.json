@@ -5040,7 +5040,7 @@
       },
       "counts": {
         "label": "Show publicly how many volunteers are still needed",
-        "help": "Ticked, the volunteers' page tells each role how many more people it needs. Unticked, it only says the role still has room; here you always see the numbers."
+        "help": "Ticked, the volunteers' page tells each role how many more people it needs. Unticked, it shows no number; here you always see the numbers."
       },
       "chips": {
         "before": "Volunteered before",
@@ -11669,7 +11669,7 @@
       "volunteersShirtsOn": "The public form now asks for the T-shirt size.",
       "volunteersShirtsOff": "The public form no longer asks for the T-shirt size. Sizes already given are kept.",
       "volunteersCountsOn": "The volunteers' page now says how many more people each role needs.",
-      "volunteersCountsOff": "The volunteers' page no longer says how many more people each role needs, only that it still has room.",
+      "volunteersCountsOff": "The volunteers' page no longer says how many more people each role needs.",
       "volunteerGuardianRequested": "The link to the parent is on its way by email.",
       "volunteerGuardianRecorded": "The parent's consent is recorded as signed on paper.",
       "volunteerCategoryAdded": "Category added.",

@@ -5040,7 +5040,7 @@
       },
       "counts": {
         "label": "Arată public câți voluntari mai sunt necesari",
-        "help": "Bifat, pagina de voluntari spune la fiecare rol câte persoane mai sunt necesare. Debifat, spune doar că rolul mai are locuri; aici vezi mereu numerele."
+        "help": "Bifat, pagina de voluntari spune la fiecare rol câte persoane mai sunt necesare. Debifat, nu spune nicio cifră; aici vezi mereu numerele."
       },
       "chips": {
         "before": "A mai fost voluntar",
@@ -11669,7 +11669,7 @@
       "volunteersShirtsOn": "Formularul public cere acum mărimea tricoului.",
       "volunteersShirtsOff": "Formularul public nu mai cere mărimea tricoului. Mărimile deja date se păstrează.",
       "volunteersCountsOn": "Pagina de voluntari spune acum câte persoane mai sunt necesare la fiecare rol.",
-      "volunteersCountsOff": "Pagina de voluntari nu mai spune câte persoane mai sunt necesare, doar că rolul mai are locuri.",
+      "volunteersCountsOff": "Pagina de voluntari nu mai spune câte persoane mai sunt necesare.",
       "volunteerGuardianRequested": "Linkul pentru părinte pleacă pe email.",
       "volunteerGuardianRecorded": "Acordul părintelui, înregistrat ca semnat pe hârtie.",
       "volunteerCategoryAdded": "Categorie adăugată.",

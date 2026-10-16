@@ -92,6 +92,8 @@ export default function VolunteerRoleChip({
         position: "relative",
         minWidth: 0,
         maxWidth: "100%",
+        // The border lights only under the label: the «?» is a separate target, and a pointer on it is not a pointer on the role.
+        [HOVER_OK]: { "&:hover": { borderColor: "divider" }, "&:has(label:hover)": { borderColor: "primary.main" } },
         "&:has(input:checked)": { ...checked, bgcolor: paletteWash("primary", 12), boxShadow: "inset 0 0 0 1px var(--mui-palette-primary-main)" },
         "&:has(details[open])": { flexBasis: "100%", borderRadius: 3 },
       }}
@@ -146,7 +148,15 @@ export default function VolunteerRoleChip({
       {described && (
         // «Descrierea rolului» (§765) behind a «?»: a native fold, outside the label (a label may hold neither a link nor a fold). The summary
         // is drawn over the label's reserved right padding; closed, the fold has no height of its own.
-        <Box component="details" data-testid="volunteer-role-description" sx={{ "& > summary": { position: "absolute", top: 0, right: 0 } }}>
+        // Closed, the «?» is centred on the pill, clear of the curved end when the name wraps to several lines; open, it stays beside the name's first line.
+        <Box
+          component="details"
+          data-testid="volunteer-role-description"
+          sx={{
+            "& > summary": { position: "absolute", top: 0, right: 0 },
+            "&:not([open]) > summary": { top: "50%", transform: "translateY(-50%)" },
+          }}
+        >
           <Box
             component="summary"
             aria-label={helpLabel}
