@@ -234,6 +234,48 @@ test.describe("§754 volunteers for a race", () => {
       expect(await guest.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
       const box = guest.getByTestId("volunteer-box");
       await expect(box).toBeVisible();
+      // §NNN «Cum funcționează voluntariatul»: the steps, folded under the intro and above the roles, the way the register page folds its own.
+      const steps = guest.getByTestId("volunteer-steps");
+      await expect(steps).toBeVisible();
+      await expect(steps).not.toHaveAttribute("open", "");
+      await expect(steps.getByTestId("volunteer-steps-summary")).toContainText("Cum funcționează voluntariatul");
+      expect((await steps.getByTestId("volunteer-steps-summary").boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+      await expect(steps.getByTestId("volunteer-step-role")).toBeHidden();
+      await steps.getByTestId("volunteer-steps-summary").click();
+      for (const [key, words] of [
+        ["form", "1. Completezi formularul"],
+        ["email", "2. Primești emailul de primire"],
+        ["role", "3. Organizatorii îți aleg rolul și te confirmă"],
+        ["day", "4. În ziua evenimentului"],
+      ] as const) {
+        await expect(steps.getByTestId(`volunteer-step-${key}`)).toBeVisible();
+        await expect(steps.getByTestId(`volunteer-step-${key}`)).toContainText(words);
+      }
+      // The third step says who decides and that nothing is owed meanwhile — and, where the club takes minors, that the parent's consent comes first.
+      await expect(steps.getByTestId("volunteer-step-role")).toContainText("Până atunci nu ai nimic de făcut");
+      expect(await guest.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+      // Above the roles, under the intro.
+      const stepsAt = (await steps.boundingBox())!;
+      expect(stepsAt.y).toBeLessThan((await guest.getByTestId("volunteer-roles").boundingBox())!.y);
+      await steps.getByTestId("volunteer-steps-summary").click();
+      // §NNN the form spans the page (the register page's width), no longer a 560-pixel column; from `md` up its boxes stand in two columns.
+      const viewport = guest.viewportSize()!.width;
+      const formBox = (await guest.getByTestId("volunteer-form").boundingBox())!;
+      const mainBox = (await guest.locator("main#main").boundingBox())!;
+      expect(formBox.width).toBeGreaterThanOrEqual(mainBox.width - 2 * 24 - 2);
+      if (viewport >= 900) expect(formBox.width).toBeGreaterThan(560);
+      const fieldsBox = (await guest.getByTestId("volunteer-fields").boundingBox())!;
+      const nameBox = (await guest.getByLabel("Numele tău").boundingBox())!;
+      const birthAt = (await guest.locator('input[name="birthDate"]').boundingBox())!;
+      if (viewport >= 900) {
+        expect(nameBox.width).toBeLessThan(fieldsBox.width * 0.6);
+        expect(birthAt.x).toBeGreaterThan(nameBox.x + nameBox.width);
+      } else {
+        // A phone: one column, the box takes the width (nothing clipped).
+        expect(nameBox.width).toBeGreaterThanOrEqual(fieldsBox.width - 2);
+        expect(birthAt.x).toBeGreaterThanOrEqual(fieldsBox.x - 1);
+        expect(birthAt.x + birthAt.width).toBeLessThanOrEqual(fieldsBox.x + fieldsBox.width + 1);
+      }
       // «Ce ești dispus(ă) să faci»: one chip per role that still needs people.
       const choices = guest.getByTestId("volunteer-roles");
       await expect(choices).toContainText("Ce ești dispus(ă) să faci");
@@ -494,6 +536,15 @@ test.describe("§754 volunteers for a race", () => {
         await page2.getByTestId("volunteer-box").getByRole("button", { name: "Mă ofer voluntar", exact: true }).click();
         await expect(page2.getByTestId("volunteer-done")).toBeVisible({ timeout: 30_000 });
         await expect(page2.getByTestId("volunteer-done")).toContainText("Am primit oferta ta");
+        // §NNN the thank-you says what comes next, like the registration's «Aproape gata»: the first name, when the receipt leaves, «Ce urmează».
+        const thanks = page2.getByTestId("volunteer-done");
+        await expect(thanks.getByRole("heading", { level: 2 })).toHaveText(`Mulțumim, ${name.split(" ")[0]}!`);
+        await expect(thanks.getByTestId("volunteer-done-leaves")).toContainText(/Emailul de primire (către .+ (pleacă|a plecat)|ajunge la adresa)/);
+        await expect(thanks.getByTestId("volunteer-done-next")).toContainText("Ce urmează");
+        await expect(thanks.getByTestId("volunteer-done-email")).toContainText("1. Primești emailul de primire");
+        await expect(thanks.getByTestId("volunteer-done-role")).toContainText("Organizatorii îți aleg rolul și te confirmă");
+        await expect(thanks.getByTestId("volunteer-done-day")).toContainText("În ziua evenimentului");
+        expect(await page2.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
         // The thank-you is on the volunteers' own page (the house's redirect-with-flash, §427), never the event's.
         await expect(page2).toHaveURL(/\/voluntari\?volunteer=1/);
       }

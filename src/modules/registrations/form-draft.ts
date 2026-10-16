@@ -199,8 +199,9 @@ export async function stashSubmittedFacts(
     names: (facts.names ?? []).join("\n"),
     atOnce: facts.atOnce ? "1" : "",
     // The volunteers' screen (§NNN) says when its receipt leaves: the instant, "now" for a send by the request itself, or nothing.
-    leavesAt: facts.leavesAt === undefined ? "" : facts.leavesAt === null ? "now" : facts.leavesAt.toISOString(),
-    submittedAt: facts.submittedAt ? facts.submittedAt.toISOString() : "",
+    // Only when given: the registration's cookie is exactly what it always was.
+    ...(facts.leavesAt === undefined ? {} : { leavesAt: facts.leavesAt === null ? "now" : facts.leavesAt.toISOString() }),
+    ...(facts.submittedAt ? { submittedAt: facts.submittedAt.toISOString() } : {}),
   });
   if (!sealed) return;
   const jar = await cookies();

@@ -397,7 +397,11 @@ describe("§754 the volunteers' public sign-up", () => {
     expect(message.subject).toBe("Ți-am primit oferta de voluntar pentru Crosul / We received your offer to volunteer for The cross");
     expect(message.text).toContain("Te-ai oferit pentru: Punct de apă, Sosire");
     expect(message.text).toContain("You offered for: Water point, Finish");
-    expect(message.text).toContain("Organizatorii îți aleg rolul");
+    // «Ce urmează» (§NNN): the facts of the page's steps, in both languages, in the receipt.
+    expect(message.text).toContain("Ce urmează: organizatorii îți aleg rolul și te confirmă. Îți scriem pe email rolul tău, cu data și locul");
+    expect(message.text).toContain("În ziua evenimentului vii la ora și la locul pe care ți le spun organizatorii.");
+    expect(message.text).toContain("What happens next: the organizers choose your role and confirm you. We email you your role, with the date and place");
+    expect(message.text).toContain("On the day of the event you come at the time and place the organizers tell you.");
     expect(message.text).toContain("nu e o înscriere la cursă");
     expect(message.text).not.toMatch(/token|\/registrations\//i);
     expect(message.text).not.toContain(admin.email);
