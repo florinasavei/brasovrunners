@@ -2516,7 +2516,9 @@
         "showProfileHelp": "Bifat: pe fiecare număr, sub nume, o fâșie cu profilul traseului. Alegi mai jos de unde vine și cum stă.",
         "showProfileNoGpx": "Evenimentul nu are GPX: încarcă-l în „Traseul” sau alege o poză.",
         "showCheckpoints": "Punctele de control pe profil",
-        "showCheckpointsHelp": "Bifat: pe profil, la fiecare punct, o cană unde e apă, o furculiță unde e mâncare, o bulină la celelalte. Dedesubt, „km 12” unde încape. Apare doar cu profilul traseului.",
+        "showCheckpointsHelp": "Bifat: un cerc cu semnul lui deasupra profilului, la fiecare punct bifat „Arată pe profilul traseului”, și dedesubt „km 5 · apă” sau „km 12”, unde încape. Doar la profilul desenat din GPX.",
+        "showProfileScale": "Kilometrii și altitudinile pe profil",
+        "showProfileScaleHelp": "Bifat: sub profil, liniuțe la distanțe egale, cu kilometrul lor, și altitudinea cea mai mare și cea mai mică. Apar doar unde încap, la profilul desenat din GPX.",
         "showCheckpointTimes": "…cu orele limită",
         "showCheckpointTimesHelp": "Bifat: lângă fiecare punct, și ora la care se închide, „km 12 · 11:30”. Dacă nu încap toate orele, nu se scrie niciuna; apoi pleacă kilometrii care nu încap. Semnele rămân mereu.",
         "showCheckpointsNone": "Evenimentul nu are puncte de control: adaugă-le în „Traseul” › „Puncte de control”.",
@@ -2638,7 +2640,7 @@
         },
         "profileSourceHelp": "Desenul vine din fișierul GPX al evenimentului, nu din Strava: harta Strava nu poate fi citită de site. Cu o poză pui pe fâșie ce vrei tu, de exemplu punctele de alimentare.",
         "profileImageSrc": "Poza profilului",
-        "profileImageSrcHelp": "Se pune întreagă, fără decupaj, într-o fâșie de circa {alone} la 1; cu distanța și diferența de nivel alături, {beside} la 1. Cel mai bine: o imagine la fel de lată, pe fundal alb.",
+        "profileImageSrcHelp": "Recomandat: o imagine lată, întreagă, fără decupaj. Cu cifrele lângă profil: {ratioBeside} la 1, adică {widthBeside} × {height} px la {dpi} dpi. Fără ele, sau fără cifre de arătat: {ratioAlone} la 1, adică {widthAlone} × {height} px.",
         "showProfileFigures": "Arată distanța și diferența de nivel lângă profil",
         "showProfileFiguresHelp": "Bifat: cele două cifre în dreapta profilului. Debifat: profilul sau poza ocupă toată lățimea.",
         "profileOrientation": "Orientarea profilului",
@@ -6005,6 +6007,11 @@
       "profileFinish": "Sosire",
       "checkpointKm": "km {km}",
       "checkpointKmTime": "km {km} · {time}",
+      "checkpointKmWater": "km {km} · apă",
+      "checkpointKmFood": "km {km} · hrană",
+      "checkpointKmBoth": "km {km} · apă + hrană",
+      "profileKmUnit": "km",
+      "profileAltitudeUnit": "m",
       "profileDistance": "Distanță: {km} km",
       "profileGain": "Diferență de nivel: +{m} m",
       "emergencyLabel": "Urgențe",
@@ -8618,6 +8625,7 @@
             "showProfile": "Număr: profilul traseului",
             "showCheckpoints": "Număr: punctele de control pe profil",
             "showCheckpointTimes": "Număr: orele limită pe profil",
+            "showProfileScale": "Număr: kilometrii și altitudinile pe profil",
             "showDistance": "Număr: insigna distanței",
             "showEmergency": "Număr: telefonul de urgență",
             "emergencyPhone": "Număr: numărul de urgență",
@@ -9693,11 +9701,11 @@
         "noteEn": "Notă (engleză)",
         "noteHelp": "Opțională, în ambele limbi sau în niciuna; cel mult {max} de caractere.",
         "onProfile": "Arată pe profilul traseului",
-        "onProfileHelp": "Punctele debifate rămân în tabel și pe pagină; doar profilul nu le desenează."
+        "onProfileHelp": "Punctele debifate rămân în tabel și pe pagină; nici profilul paginii, nici cel de pe numărul de concurs nu le desenează."
       },
       "preview": {
         "title": "Așa apare pe pagină",
-        "help": "Se schimbă după „Salvează punctele”, nu în timp ce scrii. Numărul de concurs le arată după setarea „Punctele de control pe profil” din „Numere de concurs (BIB)”.",
+        "help": "Se schimbă după „Salvează punctele”, nu în timp ce scrii.",
         "none": "Profilul apare pe pagină când traseul are un fișier GPX cu altitudini."
       },
       "kinds": {

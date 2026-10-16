@@ -90,6 +90,8 @@ export type BibDesignFormValues = {
   showCheckpoints: boolean;
   /** «…cu orele limită» (§757): the cut-offs beside the points; off by default. */
   showCheckpointTimes: boolean;
+  /** «Kilometrii și altitudinile pe profil» (§NNN): on by default, drawn on the GPX strip only. */
+  showProfileScale: boolean;
   showEmergency: boolean;
   emergencyPhone: string;
   /** «Eticheta telefonului», each number's own label and the second number (§759), as typed. */
@@ -142,6 +144,7 @@ const SWITCHES = [
   "showProfileFigures",
   "showCheckpoints",
   "showCheckpointTimes",
+  "showProfileScale",
   "showEmergency",
   "emergencyUpsideDown",
   "showDistance",
@@ -197,6 +200,7 @@ export function readBibDesignForm(get: (name: string) => string | null): BibDesi
     profileOrientation: field("profileOrientation")?.trim() || "normal",
     showCheckpoints: field("showCheckpoints") === "on",
     showCheckpointTimes: field("showCheckpointTimes") === "on",
+    showProfileScale: field("showProfileScale") === "on",
     showEmergency: field("showEmergency") === "on",
     emergencyPhone: field("emergencyPhone") ?? "",
     emergencyLabel: field("emergencyLabel") ?? "",

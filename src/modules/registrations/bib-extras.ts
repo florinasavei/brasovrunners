@@ -2,19 +2,17 @@ import { getTranslations } from "next-intl/server";
 import type { Database } from "@/db/types";
 import { listCheckpoints } from "@/modules/event-checkpoints/checkpoints";
 import type { RouteGpx } from "@/modules/events/domain/route-gpx";
-import { getStorage } from "@/modules/media/storage";
+import { readRouteElevation } from "@/modules/routes/elevation/read";
+import type { ElevationProfileData } from "@/modules/routes/elevation/parse";
 import { type BibDesign, bibDistanceBadge } from "./bib-design";
-import { type BibCheckpointSource, bibCheckpointMarks } from "./bib-checkpoints";
-import { bibProfileChartWidth } from "./bib-geometry";
+import { type BibCheckpointSource, bibStripCheckpoints } from "./bib-checkpoints";
 import {
-  type BibProfile,
   type BibProfileDrawing,
   type BibProfileFigureLines,
   type BibProfileSay,
   bibProfileDrawing,
   bibProfileFigures,
   bibProfileFigureWords,
-  parseGpxProfile,
 } from "./bib-profile";
 
 /**
@@ -25,8 +23,9 @@ import {
  * Both routes that draw a number (the sheet and the picture) call this and hand the answer to the
  * renderer, which stays pure over its inputs: a store that is slow or a file that is not readable is
  * `null` here, and the number prints as it does without a profile, never a failed sheet — the rule
- * every picture of the design follows (`bib-pictures.ts`). The GPX is read once and reduced to a few
- * dozen points (`bib-profile.ts`), never carried whole.
+ * every picture of the design follows (`bib-pictures.ts`). The GPX is read once by the elevation core's reader
+ * (`routes/elevation/read.ts`, §802 — the one the event page and the editor's preview read through, with its own
+ * small cache by the file's store key) and reduced to a few hundred points, never carried whole.
  */
 export type BibExtras = {
   profile: BibProfileDrawing | null;
@@ -77,35 +76,13 @@ export async function withBibCheckpoints<T extends Record<string, unknown>, E ex
   return { ...event, checkpoints: await listCheckpoints(db, eventId) };
 }
 
-/**
- * The parsed profiles by the GPX's store key (§750): a new upload gets a new key, so an entry never goes
- * stale, and the 64 points are small. Without it every picture on the bibs page and the desk, and
- * every redraw of the editor's preview, downloaded the whole file (up to 4 MB) and parsed it again.
- * Only an answer is kept — a file that was read, with or without a profile in it — never a failed read,
- * which may be the store's bad moment. Oldest out beyond `PROFILE_CACHE_SIZE`.
- */
-const PROFILE_CACHE_SIZE = 16;
-const profileCache = new Map<string, BibProfile | null>();
-
-/** Forgets every cached profile — for the tests, which count the store's reads. */
-export function clearBibProfileCache(): void {
-  profileCache.clear();
-}
-
-async function profileOf(key: string): Promise<BibProfile | null> {
-  if (profileCache.has(key)) {
-    const kept = profileCache.get(key) ?? null;
-    // Most recently used goes last.
-    profileCache.delete(key);
-    profileCache.set(key, kept);
-    return kept;
+/** The route's profile by the core's reader, or null: a file with no profile in it, no store, or a store that failed — the number prints without it. */
+async function profileOf(key: string): Promise<ElevationProfileData | null> {
+  try {
+    return await readRouteElevation(key);
+  } catch {
+    return null;
   }
-  const bytes = await getStorage().get(key);
-  if (!bytes) return null;
-  const parsed = parseGpxProfile(new TextDecoder().decode(bytes));
-  profileCache.set(key, parsed);
-  if (profileCache.size > PROFILE_CACHE_SIZE) profileCache.delete(profileCache.keys().next().value as string);
-  return parsed;
 }
 
 export async function loadBibExtras(
@@ -122,9 +99,13 @@ export async function loadBibExtras(
       ? admin("bibs.profileStart")
       : key === "finish"
         ? admin("bibs.profileFinish")
-        : key === "distance"
-          ? admin("bibs.profileDistance", { km: values?.km ?? "" })
-          : admin("bibs.profileGain", { m: values?.m ?? "" });
+        : key === "kmUnit"
+          ? admin("bibs.profileKmUnit")
+          : key === "altitudeUnit"
+            ? admin("bibs.profileAltitudeUnit")
+            : key === "distance"
+              ? admin("bibs.profileDistance", { km: values?.km ?? "" })
+              : admin("bibs.profileGain", { m: values?.m ?? "" });
   let profile: BibProfileDrawing | null = null;
   let profileFigures: BibProfileFigureLines | null = null;
   /*
@@ -133,14 +114,7 @@ export async function loadBibExtras(
   */
   if (design.showProfile && design.profileSource === "picture") {
     if (design.showProfileFigures !== false) {
-      let parsed: BibProfile | null = null;
-      if (event.routeGpx) {
-        try {
-          parsed = await profileOf(event.routeGpx.key);
-        } catch {
-          parsed = null;
-        }
-      }
+      const parsed = event.routeGpx ? await profileOf(event.routeGpx.key) : null;
       const figures = parsed
         ? bibProfileFigures(parsed, event)
         : { distanceMeters: event.distanceMeters ?? null, gainMeters: event.elevationGainMeters ?? null };
@@ -150,35 +124,24 @@ export async function loadBibExtras(
     return { profile: null, profileFigures, emergencyLabel: design.showEmergency ? admin("bibs.emergencyLabel") : "", distanceBadge };
   }
   if (design.showProfile && event.routeGpx) {
-    try {
-      const parsed = await profileOf(event.routeGpx.key);
-      if (parsed) {
-        const drawing = bibProfileDrawing(parsed, event, locale, say);
-        // The route's checkpoints (§757) on the strip, where the design asks and the event has some:
-        // placed by the figure the bib prints, the club's own distance first, as the strip's right end is;
-        // «km 12» in the sheet's language, «km 12 · 11:30» with «…cu orele limită».
-        const kmWords = new Intl.NumberFormat(locale, { maximumFractionDigits: 1 });
-        const marks =
-          design.showCheckpoints !== false && event.checkpoints && event.checkpoints.length > 0
-            ? bibCheckpointMarks({
-                checkpoints: event.checkpoints,
-                routeKm: bibProfileFigures(parsed, event).distanceMeters / 1000,
-                points: parsed.points,
-                // Measured in the chart's own width: the whole strip with the figures off (§759).
-                chartWidth: bibProfileChartWidth(design.showProfileFigures !== false),
-                showTimes: design.showCheckpointTimes === true,
-                startWord: drawing.start,
-                finishWord: drawing.finish,
-                label: (row, withTime) =>
-                  withTime && row.cutoffClock
-                    ? admin("bibs.checkpointKmTime", { km: kmWords.format(row.km), time: row.cutoffClock })
-                    : admin("bibs.checkpointKm", { km: kmWords.format(row.km) }),
-              })
-            : null;
-        profile = { ...drawing, checkpoints: marks };
-      }
-    } catch {
-      profile = null;
+    const parsed = await profileOf(event.routeGpx.key);
+    if (parsed) {
+      const drawing = bibProfileDrawing(parsed, event, locale, say);
+      // The route's checkpoints (§757) on the strip, where the design asks and the event has some: the ones the club left ticked
+      // «Arată pe profilul traseului» (§802), placed by the figure the bib prints — the club's own distance first, as the strip's
+      // right end is — each with its words in the sheet's language: «km 12», «km 5 · apă», and with the cut-off «km 12 · 11:30».
+      const kmWords = new Intl.NumberFormat(locale, { maximumFractionDigits: 1 });
+      const checkpoints =
+        design.showCheckpoints !== false && event.checkpoints && event.checkpoints.length > 0
+          ? bibStripCheckpoints(event.checkpoints, drawing.distanceMeters, {
+              km: (km) => admin("bibs.checkpointKm", { km: kmWords.format(km) }),
+              kmWater: (km) => admin("bibs.checkpointKmWater", { km: kmWords.format(km) }),
+              kmFood: (km) => admin("bibs.checkpointKmFood", { km: kmWords.format(km) }),
+              kmBoth: (km) => admin("bibs.checkpointKmBoth", { km: kmWords.format(km) }),
+              kmTime: (km, clock) => admin("bibs.checkpointKmTime", { km: kmWords.format(km), time: clock }),
+            })
+          : [];
+      profile = { ...drawing, checkpoints };
     }
   }
   return { profile, profileFigures: null, emergencyLabel: design.showEmergency ? admin("bibs.emergencyLabel") : "", distanceBadge };

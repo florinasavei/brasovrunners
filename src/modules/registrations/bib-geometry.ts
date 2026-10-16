@@ -131,28 +131,39 @@ export const BIB_LAYOUT = {
   memberMarkGap: 10,
   memberMarkTop: 12,
   /**
-   * The route's profile (§750): a full-width strip `profileHeight` points tall across the card less its
+   * The route's profile (§750, amended §757 and §NNN): a full-width strip `profileHeight` points tall across the card less its
    * inset, between the name under the number and the small print — a row of its own, so it can never
    * cover the number (which keeps the area that is left) or the name; the chart takes the strip's width
-   * but for the figures' room at its right (the owner's trail example, §750). At the left, the chart: a box
-   * `profileChartWidth` × `profileChartHeight`, `profileChartTop` into the row, the line stroked
-   * `profileLineWeight` thick over a faint area, with «Start» and «Sosire» under its two ends at
-   * `profileLabelSize` points, `profileLabelTop` into the row. At its right, `profileTextGap` away,
-   * the distance and the elevation gain in two lines of `profileTextSize` points, their tops
-   * `profileDistanceTop` and `profileGainTop` into the row. Both renderers place them at these points.
+   * but for the figures' room at its right (the owner's trail example, §750). The strip is **one box**,
+   * `chartWidth` × `profileHeight`, whose insides the shared elevation core lays out (`bib-profile-strip.ts`):
+   * the pins' band above the plot (`profileTopRoom`, or `profileTopBare` with nothing to say there), the plot,
+   * and the foot row under it (`profileFootRoom`) that holds «Start» and «Sosire», the kilometres and the
+   * points' words at `profileLabelSize` points. The line is stroked `profileLineWeight` thick over a faint
+   * area. At the box's right, `profileTextGap` away, the distance and the elevation gain in two lines of
+   * `profileTextSize` points, their tops `profileDistanceTop` and `profileGainTop` into the row. Both
+   * renderers place everything at the points the core gives.
    */
   profileHeight: 38,
   profileChartWidth: 380,
-  profileChartHeight: 24,
-  profileChartTop: 3,
   profileLineWeight: 1.2,
   profileAreaOpacity: 0.14,
   profileLabelSize: 6.5,
-  profileLabelTop: 28.5,
+  profileTopRoom: 9,
+  profileTopBare: 3,
+  profileFootRoom: 9,
   profileTextSize: 8,
   profileTextGap: 12,
   profileDistanceTop: 9,
   profileGainTop: 20,
+  /**
+   * The kilometre scale and the altitudes on the strip (§NNN): a tick `profileKmTick` points long under the
+   * plot at each kilometre of the step the core chooses (1, 2 or 5), stroked `profileKmTickWeight`, a foot
+   * rule of the same weight under the plot, all at `profileScaleOpacity` of the ink so the scale never
+   * outweighs the line; the highest and the lowest altitude in the labels' size.
+   */
+  profileKmTick: 1.6,
+  profileKmTickWeight: 0.4,
+  profileScaleOpacity: 0.6,
   /**
    * «O poză încărcată» (§759): the club's own picture of the profile, fitted whole (never cropped) in a
    * box `profilePictureHeight` points tall, `profilePictureTop` into the row, as wide as the chart would
@@ -161,22 +172,18 @@ export const BIB_LAYOUT = {
   profilePictureTop: 1,
   profilePictureHeight: 36,
   /**
-   * The checkpoints on the profile (§757, `bib-checkpoints.ts`): at each one's kilometre an aid
-   * station's glyph — a cup, a fork — `checkpointGlyphWidth` × `checkpointGlyphHeight` points, stroked
-   * `checkpointGlyphWeight`, `checkpointGlyphGap` points above the line (under it where the line runs
-   * too high), or for any other point a dot `checkpointDot` points in radius on the line; a tick down to
-   * the chart's foot stroked `checkpointTickWeight`; «km 12» (and «· 11:30») in the labels' row,
-   * `profileLabelSize` points, centred under the tick. Two marks closer than `checkpointMinGap` points
-   * keep one; two labels closer than `checkpointTimeGap` points, or one over «Start» or «Sosire», are
-   * the crowding rule's to settle. Both renderers place them at these points.
+   * The checkpoints on the profile (§757, amended §NNN; `bib-profile-strip.ts`): a pin for each — a ring
+   * `profilePinRadius` points in radius stroked `profilePinWeight`, in the band above the plot, with the
+   * kind's glyph from the elevation core inside it (a drop, a fork, a cross, a stopwatch, an arrow, a dot) —
+   * a stem from the pin down to the plot's foot stroked `checkpointTickWeight`, and a dot
+   * `checkpointDot` points in radius on the line; «km 12» (and «· 11:30») in the foot row under the
+   * stem. Two pins that would touch keep one; two labels closer than `checkpointTimeGap` points, or one
+   * over «Start» or «Sosire», are the core's to settle. Both renderers place them at these points.
    */
+  profilePinRadius: 3.2,
+  profilePinWeight: 0.6,
   checkpointDot: 1.3,
-  checkpointGlyphWidth: 3.6,
-  checkpointGlyphHeight: 4.6,
-  checkpointGlyphGap: 1.2,
-  checkpointGlyphWeight: 0.8,
   checkpointTickWeight: 0.6,
-  checkpointMinGap: 6,
   checkpointTimeGap: 3,
   /**
    * The emergency phone (§750): one centred line `emergencyHeight` points tall under the profile's
@@ -278,6 +285,14 @@ export function bibHeaderReserve(badgeDrawn: boolean): number {
  * picture sets (`lineHeight`). What a line of the header takes.
  */
 export const BIB_TEXT_LINE = 2400 / 2048;
+
+/**
+ * Where Roboto's baseline stands inside a line, as a fraction of its size: the ascender, 1900 of 2048
+ * units. A line drawn at `top` (pdfkit's `text` y; the picture's `top` with a `BIB_TEXT_LINE` line height)
+ * has its baseline `BIB_TEXT_ASCENT × size` below it — so a text the core placed by its baseline (§NNN)
+ * is drawn at `baseline − BIB_TEXT_ASCENT × size`, in both renderers.
+ */
+export const BIB_TEXT_ASCENT = 1900 / 2048;
 
 /**
  * The room between the title's last line and the date: what a 13-point title at `titleTop` always left

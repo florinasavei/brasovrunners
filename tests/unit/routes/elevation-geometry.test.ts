@@ -209,6 +209,80 @@ describe("§802 the extremes", () => {
   });
 });
 
+describe("§NNN the extremes keep the foot row clear (`clearExtremes`, the race number's strip)", () => {
+  /** A route that falls to its lowest point at 5 km of 9 and rises again: the lowest label stands in the foot row at that kilometre. */
+  function valley(count = 91): ElevationProfileData {
+    const points = Array.from({ length: count }, (_, i) => {
+      const share = i / (count - 1);
+      return [9000 * share, 600 + 200 * Math.abs(share - 5 / 9) * (share < 5 / 9 ? 1.8 : 2.25)] as const;
+    });
+    const altitudes = points.map((point) => point[1]);
+    return { points, distanceMeters: 9000, minAltitude: Math.min(...altitudes), maxAltitude: Math.max(...altitudes), gainMeters: 100 };
+  }
+  const wide = (g: ElevationGeometry, label: { x: number; text: string; anchor: string }) => labelBox(label, 6);
+  const touches = (a: number[], b: number[], gap: number) => a[0] < b[1] + gap && a[1] > b[0] - gap;
+
+  it("is off by default: the lowest label is where its point is, whatever stands there", () => {
+    const g = elevationGeometry(valley(), [], { ...STRIP, extremes: true });
+    const min = g.extremes.find((extreme) => extreme.kind === "min")!;
+    expect(min).toBeDefined();
+    // The kilometre «5» stands at the same place, over it: nothing kept them apart.
+    expect(g.kmLabels.some((label) => touches(wide(g, label), wide(g, min.label), 0))).toBe(true);
+  });
+
+  it("keeps the lowest label and lets the kilometres give way to it", () => {
+    const g = elevationGeometry(valley(), [], { ...STRIP, extremes: true, clearExtremes: true });
+    const min = g.extremes.find((extreme) => extreme.kind === "min")!;
+    expect(min).toBeDefined();
+    expect(min.label.y).toBeGreaterThan(g.plot.bottom);
+    expect(g.kmLabels.length).toBeGreaterThan(0);
+    for (const label of g.kmLabels) expect(touches(wide(g, label), wide(g, min.label), STRIP.minGap)).toBe(false);
+    // The ticks stay: only the words went.
+    expect(g.kmTicks).toHaveLength(10);
+  });
+
+  it("sets the lowest label beside the end word it would touch — right of «Start», left of «Sosire» — and the highest stays above the line", () => {
+    // The ramp's lowest point is its start, under «Start».
+    const rising = elevationGeometry(ramp(9, 600, 800), [], { ...STRIP, extremes: true, clearExtremes: true });
+    expect(rising.extremes.map((extreme) => extreme.kind)).toEqual(["max", "min"]);
+    const low = rising.extremes[1].label;
+    const start = rising.endWords!.start;
+    expect(low.anchor).toBe("start");
+    expect(low.y).toBe(start.y);
+    expect(low.x).toBeGreaterThanOrEqual(labelBox(start, 6)[1] + STRIP.minGap);
+    // The falling ramp's lowest point is its finish, under «Sosire».
+    const falling = elevationGeometry(ramp(9, 800, 600), [], { ...STRIP, extremes: true, clearExtremes: true });
+    const end = falling.extremes.find((extreme) => extreme.kind === "min")!.label;
+    expect(end.anchor).toBe("end");
+    expect(end.x).toBeLessThanOrEqual(labelBox(falling.endWords!.finish, 6)[0] - STRIP.minGap);
+    // Both mirrored: the words swap sides and the label follows its word.
+    const mirrored = elevationGeometry(ramp(9, 600, 800), [], { ...STRIP, extremes: true, clearExtremes: true, orientation: "mirrored" });
+    const flipped = mirrored.extremes.find((extreme) => extreme.kind === "min")!.label;
+    expect(flipped.anchor).toBe("end");
+    expect(flipped.x).toBeLessThanOrEqual(labelBox(mirrored.endWords!.start, 6)[0] - STRIP.minGap);
+    // No end words: nothing to touch, the label stays where its point is.
+    const bare = elevationGeometry(ramp(9, 600, 800), [], { ...STRIP, endWords: null, extremes: true, clearExtremes: true });
+    expect(bare.extremes.map((extreme) => extreme.kind)).toEqual(["max", "min"]);
+  });
+
+  it("drops the lowest label where it would touch a marker's words", () => {
+    const marked = elevationGeometry(valley(), [{ km: 5, kinds: ["WATER"], label: "km 5" }], { ...STRIP, extremes: true, clearExtremes: true });
+    expect(marked.markers[0].label).not.toBeNull();
+    expect(marked.extremes.map((extreme) => extreme.kind)).toEqual(["max"]);
+  });
+
+  it("changes nothing else: the line, the area, the pins and the ticks are the same with or without it", () => {
+    const options = { ...STRIP, extremes: true };
+    const markers: ElevationMarkerInput[] = [{ km: 2, kinds: ["FOOD"], label: "km 2" }];
+    const plain = elevationGeometry(valley(), markers, options);
+    const clear = elevationGeometry(valley(), markers, { ...options, clearExtremes: true });
+    expect(clear.line).toEqual(plain.line);
+    expect(clear.area).toEqual(plain.area);
+    expect(clear.markers).toEqual(plain.markers);
+    expect(clear.kmTicks).toEqual(plain.kmTicks);
+  });
+});
+
 describe("§802 the markers", () => {
   const point = (km: number, kinds: string[] = ["WATER"], label?: string): ElevationMarkerInput => ({ km, kinds, label });
 

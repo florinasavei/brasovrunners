@@ -42,18 +42,33 @@ export const BIB_PICTURE_RATIO: Record<BibPictureSlot, number> = {
   header: BIB_PICTURE_BOX.header.width / BIB_PICTURE_BOX.header.height,
   sponsors: BIB_PICTURE_BOX.sponsors.width / BIB_PICTURE_BOX.sponsors.height,
   memberCard: BIB_PICTURE_BOX.memberCard.width / BIB_PICTURE_BOX.memberCard.height,
-  profile: BIB_PICTURE_BOX.profile.width / BIB_PICTURE_BOX.profile.height,
+  // The largest box the profile's picture is fitted in — the strip alone — by the one rule for its shape (`bibProfilePictureRatio`).
+  profile: bibProfilePictureRatio(false),
 };
 
 /**
- * The profile's picture box, width over height (§759): the strip alone, about 14.5, and beside the
- * distance and the elevation gain, about 10.6. The picture is never cropped, so the editor names both
- * shapes in the place's help — the crop box's own «Forma» line never shows for it.
+ * **The one rule for the profile picture's shape** (§NNN; the owner, 2026-10-16: «if we choose to put a picture, we need to
+ * say what is the aspect ratio recommended for it»): the box the picture is fitted whole in — `bibProfileChartWidth`
+ * wide, `profilePictureHeight` tall — as width over height, for the design's current «Arată distanța și diferența de
+ * nivel lângă profil». The crop box's «Forma» line (`BIB_PICTURE_RATIO.profile`) and the sentence the panel prints
+ * before the upload (`bibProfilePictureExample`) both come from here, never from a number typed in a message.
  */
-export const BIB_PROFILE_PICTURE_RATIOS = {
-  alone: bibProfileChartWidth(false) / BIB_LAYOUT.profilePictureHeight,
-  beside: bibProfileChartWidth(true) / BIB_LAYOUT.profilePictureHeight,
-} as const;
+export function bibProfilePictureRatio(figuresShown: boolean): number {
+  return bibProfileChartWidth(figuresShown) / BIB_LAYOUT.profilePictureHeight;
+}
+
+/** The print resolution the recommended example size is given at: dots per inch, the usual one for a picture on paper. */
+export const BIB_PICTURE_PRINT_DPI = 300;
+
+/**
+ * An example size for the profile picture, in pixels, at `BIB_PICTURE_PRINT_DPI` over the picture's box on the paper (72
+ * points an inch), rounded to tens: for the strip beside the figures about 1 580 × 150, alone about 2 180 × 150. The
+ * proportion is `bibProfilePictureRatio`'s, to within the rounding.
+ */
+export function bibProfilePictureExample(figuresShown: boolean): { width: number; height: number } {
+  const pixels = (points: number) => Math.round(((points / 72) * BIB_PICTURE_PRINT_DPI) / 10) * 10;
+  return { width: pixels(bibProfileChartWidth(figuresShown)), height: pixels(BIB_LAYOUT.profilePictureHeight) };
+}
 
 /**
  * What a place does with a picture that has no crop — every design saved before crops existed, and

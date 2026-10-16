@@ -197,6 +197,7 @@ export const FIELD_LABELS = [
   "bib.design.profileOrientation",
   "bib.design.showCheckpoints",
   "bib.design.showCheckpointTimes",
+  "bib.design.showProfileScale",
   "bib.design.showDistance",
   "bib.design.showEmergency",
   "bib.design.emergencyPhone",
