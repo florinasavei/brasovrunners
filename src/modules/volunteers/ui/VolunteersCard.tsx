@@ -568,6 +568,7 @@ export default async function VolunteersCard({
               echoTemplate: tReg("birthDateEcho", { date: "{date}", age: "{age}" }),
               placeholder: tReg("birthDatePlaceholder"),
               unreadable: tReg("birthDateUnreadable"),
+              pickerLabel: tReg("birthDatePicker"),
               tooYoung: t("volunteers.person.birthDateTooYoung", { age: yearsPhrase(VOLUNTEER_MINIMUM_AGE, locale) }),
             }}
           />
