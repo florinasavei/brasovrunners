@@ -238,7 +238,7 @@ test.describe("§754 volunteers for a race", () => {
       const steps = guest.getByTestId("volunteer-steps");
       await expect(steps).toBeVisible();
       await expect(steps).not.toHaveAttribute("open", "");
-      await expect(steps.getByTestId("volunteer-steps-summary")).toContainText("Cum funcționează voluntariatul");
+      await expect(steps.getByTestId("volunteer-steps-summary")).toContainText("Cum funcționează: organizatorii îți aleg rolul și te confirmă");
       expect((await steps.getByTestId("volunteer-steps-summary").boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
       await expect(steps.getByTestId("volunteer-step-role")).toBeHidden();
       await steps.getByTestId("volunteer-steps-summary").click();
@@ -251,7 +251,7 @@ test.describe("§754 volunteers for a race", () => {
         await expect(steps.getByTestId(`volunteer-step-${key}`)).toBeVisible();
         await expect(steps.getByTestId(`volunteer-step-${key}`)).toContainText(words);
       }
-      // The third step says who decides and that nothing is owed meanwhile — and, where the club takes minors, that the parent's consent comes first.
+      // The third step says who decides and that nothing is owed meanwhile (the parent's consent is asserted on the thank-you, where minors are taken).
       await expect(steps.getByTestId("volunteer-step-role")).toContainText("Până atunci nu ai nimic de făcut");
       expect(await guest.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
       // Above the roles, under the intro.
@@ -536,12 +536,17 @@ test.describe("§754 volunteers for a race", () => {
         await page2.getByTestId("volunteer-box").getByRole("button", { name: "Mă ofer voluntar", exact: true }).click();
         await expect(page2.getByTestId("volunteer-done")).toBeVisible({ timeout: 30_000 });
         await expect(page2.getByTestId("volunteer-done")).toContainText("Am primit oferta ta");
-        // §NNN the thank-you says what comes next, like the registration's «Aproape gata»: the first name, when the receipt leaves, «Ce urmează».
+        // §NNN the thank-you says what comes next, like the registration's «Aproape gata»: the first name, where the receipt comes, «Ce urmează». The lead's date reads inside the sentence: lower-case weekday, «la» before the hour.
+        await expect(page2.getByTestId("volunteer-done-lead")).toContainText(/, [a-zăâîșț]+, \d{1,2} \S+ \d{4}, la \d{2}:\d{2}\.$/);
         const thanks = page2.getByTestId("volunteer-done");
         await expect(thanks.getByRole("heading", { level: 2 })).toHaveText(`Mulțumim, ${name.split(" ")[0]}!`);
-        await expect(thanks.getByTestId("volunteer-done-leaves")).toContainText(/Emailul de primire (către .+ (pleacă|a plecat)|ajunge la adresa)/);
+        // One sentence, true whether or not this post queued the email: no hour and no «a plecat».
+        await expect(thanks.getByTestId("volunteer-done-email-line")).toContainText(/Emailul de primire vine la .+; dacă ai mai trimis oferta/);
+        await expect(thanks.getByTestId("volunteer-done-email-line")).not.toContainText(/pleacă|a plecat/);
         await expect(thanks.getByTestId("volunteer-done-next")).toContainText("Ce urmează");
-        await expect(thanks.getByTestId("volunteer-done-email")).toContainText("1. Primești emailul de primire");
+        await expect(thanks.getByTestId("volunteer-done-email")).toHaveText(/^Primești emailul de primire/);
+        // The thank-you has no category cards: nothing on it points «mai jos».
+        await expect(thanks).not.toContainText("mai jos");
         await expect(thanks.getByTestId("volunteer-done-role")).toContainText("Organizatorii îți aleg rolul și te confirmă");
         await expect(thanks.getByTestId("volunteer-done-day")).toContainText("În ziua evenimentului");
         expect(await page2.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);

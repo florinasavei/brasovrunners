@@ -268,7 +268,7 @@ describe("§754 submitVolunteerAction's redirects", () => {
     expect(lastDraft()?.options.maxAge).toBe(0);
   });
 
-  it("keeps the first name, the address and the send's instant for the thank-you, in the registration's facts cookie on the volunteers' own path — never in the address", async () => {
+  it("keeps the first name and the address for the thank-you, in the registration's facts cookie on the volunteers' own path — never in the address", async () => {
     await seedEvent(true);
     const url = await pressed(post());
     const facts = sets.find((set) => set.name === "br_submitted_to");
@@ -278,7 +278,9 @@ describe("§754 submitVolunteerAction's redirects", () => {
     expect(facts?.options.maxAge).toBe(600);
     const opened = openFormDraft(facts?.value ?? "");
     expect(opened).toMatchObject({ email: "maria@example.test", firstName: "Maria" });
-    expect(Number.isFinite(new Date(opened?.submittedAt ?? "").getTime())).toBe(true);
+    // No hour and no state of the email: a repeat or a lost race queues none, and the screen cannot tell them from a first offer.
+    expect(opened).not.toHaveProperty("leavesAt");
+    expect(opened).not.toHaveProperty("submittedAt");
     // Nothing typed rides in the address (§14.5).
     expect(url.search).toBe("?volunteer=1");
     // A refused send keeps no thank-you facts.

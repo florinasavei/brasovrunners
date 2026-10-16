@@ -1822,15 +1822,15 @@ const T = {
       facts: (d: TemplateData) => volunteerFacts("ro", d, { map: "Harta punctului de întâlnire", strava: "Evenimentul pe Strava" }),
       body: (d: TemplateData) => [
         `Mulțumim! Am primit oferta ta de a ajuta ca voluntar la ${d.eventTitle ?? "eveniment"}; ce ești dispus(ă) să faci e scris mai sus, lângă data și locul.`,
-        // «Ce urmează» (§NNN), the facts the volunteers' page and its thank-you give as steps: the organizers choose the role and confirm, the role comes by email, nothing is owed until then, and the day.
-        "Ce urmează: organizatorii îți aleg rolul și te confirmă. Îți scriem pe email rolul tău, cu data și locul, și te caută pe email sau la telefon dacă mai trebuie ceva. Ora de întâlnire și ce mai e de știut le afli de la ei, înainte de eveniment. Până atunci nu ai nimic de făcut: oferta nu e o înscriere la cursă și nu ține loc.",
-        "În ziua evenimentului vii la ora și la locul pe care ți le spun organizatorii.",
         // The agreement accepted with the offer (§758): the person's copy, attached — said only when it is.
         ...(d.volunteer?.agreementAttached ? ["Contractul de voluntariat pe care l-ai acceptat e atașat, ca PDF. Păstrează-l: e copia ta."] : []),
-        // Under eighteen (§768): the parent or guardian was emailed their own link; until they accept, the organizers cannot confirm.
+        // Under eighteen (§768): the parent or guardian was emailed their own link; until they accept, the organizers cannot confirm. Said before «Ce urmează», so a minor reads the parent's condition before «te confirmă».
         ...(d.volunteer?.guardianPending
           ? ["Fiind sub 18 ani, ai nevoie și de acordul unui părinte sau tutore. Părintelui sau tutorelui pe care l-ai trecut i-am trimis un email cu un link; până își dă acordul, organizatorii nu te pot confirma."]
           : []),
+        // «Ce urmează» (§NNN), the facts the volunteers' page and its thank-you give as steps: the organizers choose the role and confirm, the role comes by email, nothing is owed until then, and the day.
+        "Ce urmează: organizatorii îți aleg rolul și te confirmă. Îți scriem pe email rolul tău, cu data și locul, și te căutăm pe email sau la telefon dacă mai trebuie ceva. Ora de întâlnire și ce mai e de știut le afli de la organizatori, înainte de eveniment. Până atunci nu ai nimic de făcut: oferta nu e o înscriere la cursă și nu ține loc.",
+        "În ziua evenimentului vii la ora și la locul pe care ți le spun organizatorii.",
         `Dacă nu tu ai trimis oferta, scrie-ne din pagina de contact și o ștergem; altfel rămâne la organizatori cel mult ${volunteerDays("ro")} de la începutul evenimentului sau de la trimiterea ofertei, dacă e mai târziu.`,
       ],
     },
@@ -2619,12 +2619,12 @@ const T = {
       facts: (d: TemplateData) => volunteerFacts("en", d, { map: "Map of the meeting point", strava: "The event on Strava" }),
       body: (d: TemplateData) => [
         `Thank you! We received your offer to help as a volunteer at ${d.eventTitle ?? "the event"}; what you are willing to do is written above, with the date and place.`,
-        "What happens next: the organizers choose your role and confirm you. We email you your role, with the date and place, and get in touch by email or phone if anything else is needed. The meeting time and anything else you need to know come from them, before the event. Until then there is nothing for you to do: the offer is not a race registration and holds no place.",
-        "On the day of the event you come at the time and place the organizers tell you.",
         ...(d.volunteer?.agreementAttached ? ["The volunteer agreement you accepted is attached as a PDF. Keep it: it is your copy."] : []),
         ...(d.volunteer?.guardianPending
           ? ["Being under 18, you also need a parent's or guardian's consent. We emailed the parent or guardian you named a link; until they give it, the organizers cannot confirm you."]
           : []),
+        "What happens next: the organizers choose your role and confirm you. We email you your role, with the date and place, and get in touch by email or phone if anything else is needed. The meeting time and anything else you need to know come from the organizers, before the event. Until then there is nothing for you to do: the offer is not a race registration and holds no place.",
+        "On the day of the event you come at the time and place the organizers tell you.",
         `If you did not send the offer, write to us from the contact page and we will delete it; otherwise the organizers keep it at most ${volunteerDays("en")} from the event's start or from the offer, whichever is later.`,
       ],
     },

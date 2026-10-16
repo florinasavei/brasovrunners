@@ -28,11 +28,13 @@ export type VolunteerStepKey = (typeof VOLUNTEER_STEPS)[number]["key"];
  * - The third step adds the minor's sentence (`volunteers.doneGuardian`, the very words of the thank-you) only where the club
  *   takes minors (`minors`, §768) — the notice and the agreement in force describe them; where it does not, the page does not
  *   speak of a parent.
- * - The last step points to the contact person written under the categories (§774) only when some category has one.
+ * - The last step points to the contact person written under the categories (§774) only when some category has one. On the form
+ *   (`where: "form"`) it says where: «scrisă la categoria rolului, mai jos»; on the thank-you (`"done"`) the categories are gone
+ *   from the page, so it points to the receipt email, which carries the contacts of the ticked roles' categories.
  */
 export async function volunteerStepWords(
   key: VolunteerStepKey,
-  { minors, contact }: { minors: boolean; contact: boolean },
+  { minors, contact, where = "form" }: { minors: boolean; contact: boolean; where?: "form" | "done" },
 ): Promise<{ title: string; body: string }> {
   const t = await getTranslations("Event");
   const title = t(`volunteers.steps.${key}.title`);
@@ -40,7 +42,9 @@ export async function volunteerStepWords(
     const body = t("volunteers.steps.role.body");
     return { title, body: minors ? `${body} ${t("volunteers.doneGuardian")}` : body };
   }
-  if (key === "day") return { title, body: contact ? t("volunteers.steps.day.bodyContact") : t("volunteers.steps.day.body") };
+  if (key === "day") {
+    return { title, body: contact ? t(where === "done" ? "volunteers.steps.day.bodyContactDone" : "volunteers.steps.day.bodyContact") : t("volunteers.steps.day.body") };
+  }
   return { title, body: t(`volunteers.steps.${key}.body`) };
 }
 
@@ -100,7 +104,8 @@ export default async function VolunteerSteps({
     >
       <Typography component="summary" variant="body1" data-testid="volunteer-steps-summary">
         <FormatListNumberedIcon aria-hidden sx={FOLD_GLYPH_SX} />
-        {t("volunteers.steps.title")}
+        {/* The summary says the one fact a visitor wants before the form — that the organizers confirm — with the fold closed. */}
+        {t("volunteers.steps.summary")}
       </Typography>
       <Box sx={{ pb: 2 }}>{list}</Box>
     </Box>

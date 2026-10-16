@@ -544,6 +544,7 @@
       "intro": "Evenimentul are nevoie de ajutor. Bifează ce ești dispus(ă) să faci și spune-ne cum te găsim. Nu e o înscriere la cursă și nu ține loc.",
       "steps": {
         "title": "Cum funcționează voluntariatul",
+        "summary": "Cum funcționează: organizatorii îți aleg rolul și te confirmă",
         "form": {
           "title": "Completezi formularul",
           "body": "Bifezi ce ești dispus(ă) să faci și ne spui cum te găsim: nume, email și telefon. Durează un minut."
@@ -559,7 +560,8 @@
         "day": {
           "title": "În ziua evenimentului",
           "body": "Vii la ora și la locul pe care ți le spun organizatorii și te prezinți la ei.",
-          "bodyContact": "Vii la ora și la locul pe care ți le spun organizatorii și te prezinți la ei. Pentru întrebări, scrie persoanei de contact scrisă la categoria ta, mai jos."
+          "bodyContact": "Vii la ora și la locul pe care ți le spun organizatorii și te prezinți la ei. Pentru întrebări, scrie persoanei de contact scrisă la categoria rolului, mai jos.",
+          "bodyContactDone": "Vii la ora și la locul pe care ți le spun organizatorii și te prezinți la ei. Pentru întrebări, scrie persoanei de contact din emailul de primire."
         }
       },
       "choices": "Ce ești dispus(ă) să faci",
@@ -628,11 +630,8 @@
       "doneHeadingNamed": "Mulțumim, {name}!",
       "doneLead": "Am primit oferta ta pentru {event}, {date}.",
       "doneLeadNoDate": "Am primit oferta ta pentru {event}.",
-      "doneLeavesNow": "Emailul de primire către {email} pleacă acum.",
-      "doneLeavesToday": "Emailul de primire către {email} pleacă la {at}.",
-      "doneLeavesOn": "Emailul de primire către {email} pleacă {at}.",
-      "doneLeft": "Emailul de primire către {email} a plecat.",
-      "doneEmailPlain": "Emailul de primire ajunge la adresa pe care ai scris-o.",
+      "doneEmail": "Emailul de primire vine la {email}; dacă ai mai trimis oferta pentru acest eveniment, l-ai primit deja pe primul.",
+      "doneEmailPlain": "Emailul de primire vine la adresa pe care ai scris-o; dacă ai mai trimis oferta pentru acest eveniment, l-ai primit deja pe primul.",
       "doneNextTitle": "Ce urmează",
       "doneGuardianTitle": "Părintele sau tutorele își dă acordul",
       "guardian": {

@@ -83,7 +83,7 @@ export default async function EventVolunteersPage({ params, searchParams }: Prop
 
   // What was typed before a refusal (§142), read only when the page is the answer to one.
   const typed: VolunteerTyped = outcome !== null && outcome !== "done" ? ((await readFormDraft()) ?? {}) : {};
-  // …and, on the thank-you only, what the send kept for it (§NNN): the first name, the address and when the receipt leaves.
+  // …and, on the thank-you only, what the send kept for it (§NNN): the first name and the address typed.
   const sent = outcome === "done" ? await readSubmittedFacts() : null;
   const t = await getTranslations("Event");
   const eventHref = getPathname({ locale, href: { pathname: "/events/[slug]", params: { slug } } });
@@ -91,6 +91,9 @@ export default async function EventVolunteersPage({ params, searchParams }: Prop
   const when = event.startsAt && !startHeldBack(event) ? formatDay(event.startsAt, { locale, timeZone: event.timezone, style: "long", withTime: true }) : null;
   const where = event.locationName?.trim() ? event.locationName.trim() : null;
   const line = [when, where].filter((part): part is string => part !== null).join(" · ");
+  // The same start inside the thank-you's sentence («…, duminică, 15 nov. 2026, la 20:04.»): lower case, the hour with its «la» (§452), as the register page's lead.
+  const whenInSentence =
+    event.startsAt && !startHeldBack(event) ? formatDay(event.startsAt, { locale, timeZone: event.timezone, style: "long", withTime: true, position: "inline" }) : null;
 
   return (
     <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
@@ -113,7 +116,7 @@ export default async function EventVolunteersPage({ params, searchParams }: Prop
         locale={locale}
         slug={slug}
         eventTitle={event.title}
-        when={when}
+        whenInSentence={whenInSentence}
         sent={sent}
         roles={offer.roles}
         categories={offer.categories}

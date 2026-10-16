@@ -110,7 +110,7 @@ vi.mock("@/modules/volunteers/ui/VolunteerBox", () => ({
         refused: props.refused,
         typed: props.typed,
         eventTitle: props.eventTitle,
-        when: props.when,
+        whenInSentence: props.whenInSentence,
         sent: props.sent,
       }),
     }),
@@ -301,15 +301,16 @@ describe("§NNN the page is the register page's width, and hands the thank-you w
   });
 
   it("hands the box the event's title and its date in the page's language, and reads the send's facts only on the thank-you", async () => {
-    state.facts = { firstName: "Ana", email: "ana@example.test", leavesAt: null, submittedAt: new Date("2026-10-14T09:59:30.000Z") };
+    state.facts = { firstName: "Ana", email: "ana@example.test" };
     const plain = boxOf((await visit()) ?? "");
     expect(plain).toMatchObject({ eventTitle: "Crosul de toamnă", sent: null });
-    expect(plain.when).toMatch(/21 nov\. 2026[^<]*10:00/);
+    // The thank-you's lead reads the date inside a sentence (§452): a lower-case weekday and «la» before the hour — never the line's «Sâmbătă, …, 10:00».
+    expect(plain.whenInSentence).toMatch(/^sâmbătă, 21 nov\. 2026, la 10:00$/);
     await visit({ volunteer: "invalid", vfields: "name" });
     expect(state.factsReads).toBe(0);
     const done = boxOf((await visit({ volunteer: "1" })) ?? "");
     expect(state.factsReads).toBe(1);
-    expect(done.sent).toMatchObject({ firstName: "Ana", email: "ana@example.test", leavesAt: null });
+    expect(done.sent).toEqual({ firstName: "Ana", email: "ana@example.test" });
   });
 });
 

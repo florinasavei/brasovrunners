@@ -64,7 +64,7 @@ async function drawBox(language: "ro" | "en", over: Partial<ComponentProps<typeo
     locale: language,
     slug: "cursa",
     eventTitle: "Crosul de toamnă",
-    when: "sâmbătă, 21 nov. 2026, 09:00",
+    whenInSentence: "sâmbătă, 21 nov. 2026, la 09:00",
     sent: null,
     roles: [ROLE],
     shirts: false,

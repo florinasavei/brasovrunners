@@ -93,7 +93,7 @@ export default async function VolunteerBox({
   locale,
   slug,
   eventTitle,
-  when,
+  whenInSentence,
   sent,
   roles,
   categories = [],
@@ -110,10 +110,10 @@ export default async function VolunteerBox({
 }: {
   locale: Locale;
   slug: string;
-  /** The event's title and its start in its own zone and the page's language (null when held back, §533): the thank-you names them (§NNN). */
+  /** The event's title and its start in its own zone and the page's language, written to stand inside a sentence — lower-case weekday, «la» before the hour (§452); null when held back (§533): the thank-you's lead names them (§NNN). */
   eventTitle: string;
-  when: string | null;
-  /** What the send kept for the thank-you (§NNN): the first name, the address and when the receipt leaves; null when the browser has none. */
+  whenInSentence: string | null;
+  /** What the send kept for the thank-you (§NNN): the first name and the address typed; null when the browser has none. */
   sent: VolunteerSent | null;
   /** Only the roles that still need people, in the club's order. */
   roles: readonly PublicVolunteerRole[];
@@ -204,10 +204,10 @@ export default async function VolunteerBox({
           <>
             {/*
               The thank-you is the registration's «Aproape gata, Ana!» for a volunteer (§NNN): the green-disc heading, the lead, when the
-              receipt leaves and «Ce urmează» (`VolunteerDone`). Where the club takes minors, the parent's consent is on the list for
+              receipt email comes and «Ce urmează» (`VolunteerDone`). Where the club takes minors, the parent's consent is on the list for
               everybody — never a hint about who was typed (§768).
             */}
-            {await VolunteerDone({ locale, eventTitle, when, sent, minors, contact: hasContact })}
+            <VolunteerDone eventTitle={eventTitle} when={whenInSentence} sent={sent} minors={minors} contact={hasContact} />
             {/* The toast the send flashed (§427), here and on no other state of this page. */}
             <PublicFlash accept={["volunteerSent"]} />
           </>
@@ -231,9 +231,10 @@ export default async function VolunteerBox({
             {/*
               «Cum funcționează voluntariatul» (§NNN; the owner, 2026-10-16: «trebuie să îi spunem voluntarului care sunt pașii și că urmează să
               îl aprobăm»): the four steps, under the intro and above the roles, folded the way the register page draws its own (`RegistrationSteps
-              folded`) — the third step is where the page says the organizers choose the role and confirm the person, once.
+              folded`), the summary saying the one fact a visitor wants first — that the organizers choose the role and confirm the person —
+              and the third step saying it in full.
             */}
-            {await VolunteerSteps({ folded: true, minors, contact: hasContact })}
+            <VolunteerSteps folded minors={minors} contact={hasContact} />
 
             {outcome && (
               <Alert severity={outcome === "full" ? "warning" : "error"} role="alert" data-testid={`volunteer-${outcome}`}>
@@ -338,15 +339,17 @@ export default async function VolunteerBox({
 
             {/*
               The boxes in two columns from `md` up, one below — the registration form's own pairing (`registration-form.tsx`, BR-REQ-041-01 is
-              phone-first and the phone is unchanged): on the left what a volunteer cannot be reached without — the name, the address, the
-              telephone number and an optional message — beside what they say about themselves. §NNN (the owner, 2026-10-16: «e prea
-              îngust tot formularul»): the page is the register page's width (`PAGE_WIDTH`) and the form is no longer capped at 560 pixels, so
-              the categories' cards and the chips above span the whole column and the boxes below keep half of it each. The consents and the
-              button close the form at full width, never looking like part of one half.
+              phone-first and the phone is unchanged): on the left what a volunteer cannot be reached without — the name, the address and
+              the telephone number — beside what they say about themselves. §NNN (the owner, 2026-10-16: «e prea îngust tot formularul»): the
+              page is the register page's width (`PAGE_WIDTH`) and the form is no longer capped at 560 pixels, so the categories' cards and
+              the chips above span the whole column and the boxes below keep half of it each. **Two columns only while there is a right one**
+              (`profile`): without it the three boxes take the whole width, never half of it beside nothing. The optional message, the
+              consents and the button close the form at full width, after every required box — the registration form's order, on a phone and
+              in the tab order.
             */}
             <Box
               data-testid="volunteer-fields"
-              sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, columnGap: 4, rowGap: 2, alignItems: "start" }}
+              sx={profile ? { display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, columnGap: 4, rowGap: 2, alignItems: "start" } : undefined}
             >
             <Stack spacing={2} sx={{ minWidth: 0 }}>
             <TextField
@@ -392,25 +395,11 @@ export default async function VolunteerBox({
               error={invalid.has("phone")}
               helperText={invalid.has("phone") ? tForm("errors.phone") : t("volunteers.phoneHelp")}
             />
-
-            <TextField
-              id={fieldId("message")}
-              name="message"
-              label={t("volunteers.message")}
-              helperText={t("volunteers.messageHelp", { max: VOLUNTEER_MESSAGE_MAX })}
-              fullWidth
-              multiline
-              minRows={2}
-              defaultValue={typed.message}
-              error={invalid.has("message")}
-              slotProps={{ htmlInput: { maxLength: VOLUNTEER_MESSAGE_MAX } }}
-            />
             </Stack>
 
             {/* …and, beside them from `md` up, what the person says about themselves (§765): the right column of the registration form's own pairing. */}
-            <Stack spacing={2} sx={{ minWidth: 0 }}>
             {profile && (
-              <Stack spacing={2} data-testid="volunteer-profile">
+              <Stack spacing={2} sx={{ minWidth: 0 }} data-testid="volunteer-profile">
                 {/*
                   «Data nașterii» and «Sex» (§765, §773; the owner, 2026-10-14: «în loc de vârstă vreau să treacă data nașterii»): the registration
                   form's own date box — `BirthDateField`, typed day first with its mask and, with scripts off, a plain text box the server reads —
@@ -555,9 +544,21 @@ export default async function VolunteerBox({
                 </Box>
               </Stack>
             )}
-
-            </Stack>
             </Box>
+
+            {/* The optional message, after the required boxes and at the form's full width. */}
+            <TextField
+              id={fieldId("message")}
+              name="message"
+              label={t("volunteers.message")}
+              helperText={t("volunteers.messageHelp", { max: VOLUNTEER_MESSAGE_MAX })}
+              fullWidth
+              multiline
+              minRows={2}
+              defaultValue={typed.message}
+              error={invalid.has("message")}
+              slotProps={{ htmlInput: { maxLength: VOLUNTEER_MESSAGE_MAX } }}
+            />
 
             {siteKey && (
               <Box sx={BOT_CHECK_SLOT_SX}>

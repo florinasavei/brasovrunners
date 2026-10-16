@@ -24,11 +24,13 @@ describe("§NNN the receipt says «ce urmează» in both languages", () => {
   it("names the organizers' choice, the role by email with the date and place, nothing owed until then, and the day", () => {
     const { text } = receipt();
     expect(text).toContain("Ce urmează: organizatorii îți aleg rolul și te confirmă. Îți scriem pe email rolul tău, cu data și locul");
-    expect(text).toContain("Ora de întâlnire și ce mai e de știut le afli de la ei, înainte de eveniment. Până atunci nu ai nimic de făcut");
+    // One subject in the sentence: «Îți scriem … și te căutăm», never «…și te caută» after «îți scriem».
+    expect(text).toContain("Îți scriem pe email rolul tău, cu data și locul, și te căutăm pe email sau la telefon dacă mai trebuie ceva.");
+    expect(text).toContain("Ora de întâlnire și ce mai e de știut le afli de la organizatori, înainte de eveniment. Până atunci nu ai nimic de făcut");
     expect(text).toContain("nu e o înscriere la cursă și nu ține loc");
     expect(text).toContain("În ziua evenimentului vii la ora și la locul pe care ți le spun organizatorii.");
     expect(text).toContain("What happens next: the organizers choose your role and confirm you. We email you your role, with the date and place");
-    expect(text).toContain("The meeting time and anything else you need to know come from them, before the event. Until then there is nothing for you to do");
+    expect(text).toContain("The meeting time and anything else you need to know come from the organizers, before the event. Until then there is nothing for you to do");
     expect(text).toContain("On the day of the event you come at the time and place the organizers tell you.");
   });
 
@@ -46,6 +48,17 @@ describe("§NNN the receipt says «ce urmează» in both languages", () => {
     expect(minor.text).toContain("Being under 18, you also need a parent's or guardian's consent.");
     expect(minor.text).toContain("Ce urmează: organizatorii îți aleg rolul și te confirmă.");
     expect(receipt().text).not.toContain("Fiind sub 18 ani");
+  });
+
+  it("says the agreement and the parent's condition before «Ce urmează», so a minor reads the condition before «te confirmă»", () => {
+    const { text } = receipt({ ...DATA, volunteer: { ...DATA.volunteer!, guardianPending: true } });
+    const next = text.indexOf("Ce urmează:");
+    expect(text.indexOf("Contractul de voluntariat pe care l-ai acceptat")).toBeLessThan(next);
+    expect(text.indexOf("Fiind sub 18 ani")).toBeLessThan(next);
+    expect(text.indexOf("Being under 18")).toBeLessThan(text.indexOf("What happens next:"));
+    expect(text.indexOf("The volunteer agreement you accepted")).toBeLessThan(text.indexOf("What happens next:"));
+    // …and the not-you line stays last.
+    expect(text.indexOf("Dacă nu tu ai trimis oferta")).toBeGreaterThan(text.indexOf("În ziua evenimentului vii la ora"));
   });
 
   it("holds no number, no deadline and no club name of its own in the new paragraphs", () => {

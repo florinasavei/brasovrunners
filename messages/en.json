@@ -544,6 +544,7 @@
       "intro": "The event needs a hand. Tick what you are willing to do and tell us how to reach you. It is not a race registration and it holds no place.",
       "steps": {
         "title": "How volunteering works",
+        "summary": "How it works: the organizers choose your role and confirm you",
         "form": {
           "title": "You fill in the form",
           "body": "You tick what you are willing to do and tell us how to reach you: name, email and telephone. It takes a minute."
@@ -559,7 +560,8 @@
         "day": {
           "title": "On the day of the event",
           "body": "You come at the time and place the organizers tell you and report to them.",
-          "bodyContact": "You come at the time and place the organizers tell you and report to them. For questions, write to the contact person under your category, below."
+          "bodyContact": "You come at the time and place the organizers tell you and report to them. For questions, write to the contact person under the category of your role, below.",
+          "bodyContactDone": "You come at the time and place the organizers tell you and report to them. For questions, write to the contact person named in the receipt email."
         }
       },
       "choices": "What you are willing to do",
@@ -628,11 +630,8 @@
       "doneHeadingNamed": "Thank you, {name}!",
       "doneLead": "We received your offer for {event}, {date}.",
       "doneLeadNoDate": "We received your offer for {event}.",
-      "doneLeavesNow": "The receipt email to {email} is leaving now.",
-      "doneLeavesToday": "The receipt email to {email} leaves at {at}.",
-      "doneLeavesOn": "The receipt email to {email} leaves {at}.",
-      "doneLeft": "The receipt email to {email} has left.",
-      "doneEmailPlain": "The receipt email comes to the address you wrote.",
+      "doneEmail": "The receipt email comes to {email}; if you already sent an offer for this event, you got the first one.",
+      "doneEmailPlain": "The receipt email comes to the address you wrote; if you already sent an offer for this event, you got the first one.",
       "doneNextTitle": "What happens next",
       "doneGuardianTitle": "Your parent or guardian gives consent",
       "guardian": {
