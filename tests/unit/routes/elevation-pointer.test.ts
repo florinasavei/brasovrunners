@@ -1,5 +1,5 @@
 import { renderToStaticMarkup } from "react-dom/server";
-import { createElement } from "react";
+import { type ComponentProps, createElement } from "react";
 import { describe, expect, it } from "vitest";
 import ElevationPointer from "@/modules/routes/elevation/ElevationPointer";
 import { indexAtShare, nearestMarkerName, POINTER_MARKER_REACH_KM, readoutAt, shareAtX, stepIndex, xAtShare } from "@/modules/routes/elevation/pointer";
@@ -77,21 +77,16 @@ describe("§NNN the pointer's arithmetic", () => {
 });
 
 describe("§NNN the pointer island before any event", () => {
-  const render = () =>
-    renderToStaticMarkup(
-      createElement(
-        ElevationPointer,
-        {
-          charts: [{ size: "narrow", viewWidth: 360, viewHeight: 240, plotLeft: 40, plotRight: 340, plotTop: 60, plotBottom: 200, altitudeMin: 590, altitudeMax: 840 }],
-          points: POINTS,
-          distanceMeters: 9000,
-          markers: [{ km: 4.5, name: "Izvorul" }],
-          locale: "ro",
-          words: { readout: "{km} km · {altitude} m", readoutNamed: "{km} km · {altitude} m · {name}", hint: "Profilul traseului: săgețile." },
-        },
-        createElement("svg", { "data-size": "narrow" }),
-      ),
-    );
+  const props: ComponentProps<typeof ElevationPointer> = {
+    charts: [{ size: "narrow", viewWidth: 360, viewHeight: 240, plotLeft: 40, plotRight: 340, plotTop: 60, plotBottom: 200, altitudeMin: 590, altitudeMax: 840 }],
+    points: POINTS,
+    distanceMeters: 9000,
+    markers: [{ km: 4.5, name: "Izvorul" }],
+    locale: "ro",
+    words: { readout: "{km} km · {altitude} m", readoutNamed: "{km} km · {altitude} m · {name}", hint: "Profilul traseului: săgețile." },
+    children: createElement("svg", { "data-size": "narrow" }),
+  };
+  const render = () => renderToStaticMarkup(createElement(ElevationPointer, props));
 
   it("draws nothing of its own: the static chart stands, with a tab stop and a polite, empty readout", () => {
     const html = render();

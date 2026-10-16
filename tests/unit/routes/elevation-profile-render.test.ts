@@ -97,7 +97,14 @@ describe("§NNN the elevation profile widget: the page", () => {
     expect(list).toContain('aria-label="Punctele de pe profil"');
     expect(list).toContain("Punct izvor, la 3,8 km");
     expect(list).toContain("Punct cabana, la 4,5 km");
-    expect(list.match(/<li>/g)).toHaveLength(3);
+    // The start, the three ticked points by distance, the finish.
+    expect([...list.matchAll(/<li>([^<]*)<\/li>/g)].map((match) => match[1])).toEqual([
+      "Start, la 0 km",
+      "Punct izvor, la 3,8 km",
+      "Punct cabana, la 4,5 km",
+      "Punct sosire, la 6,2 km",
+      "Sosire, la 9 km",
+    ]);
     expect(html.indexOf("</svg>")).toBeLessThan(html.indexOf('data-testid="elevation-points"'));
   });
 
@@ -135,10 +142,10 @@ describe("§NNN the elevation profile widget: the page", () => {
     expect(english).toContain("Point izvor, at 3.8 km");
   });
 
-  it("draws with no pin and no list at all when no checkpoint is ticked, and still draws the profile", () => {
+  it("draws no pin when no checkpoint is ticked — the list has only the start and the finish — and still draws the profile", () => {
     const none = render("page", "ro", []);
     expect(none).not.toContain("elevation-pin");
-    expect(none).not.toContain("elevation-points");
+    expect(none.match(/<li>/g)).toHaveLength(2);
     expect(none).toContain("<path");
     expect(chartsIn(none)).toHaveLength(2);
   });

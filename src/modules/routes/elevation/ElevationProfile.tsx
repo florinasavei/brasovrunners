@@ -210,11 +210,15 @@ export default function ElevationProfile({
   const whole = new Intl.NumberFormat(locale, { maximumFractionDigits: 0, useGrouping: false });
   const label = fill(words.label, { km: oneDecimal.format(distance / 1000), low: whole.format(profile.minAltitude), high: whole.format(profile.maxAltitude) });
 
-  const list = markers.length > 0 && (
+  // The picture's own list for a screen reader, outside the SVG: the start, each pin by distance, the finish.
+  const kmWords = new Intl.NumberFormat(locale, { maximumFractionDigits: 2 });
+  const list = (
     <Box component="ul" aria-label={words.points} data-testid="elevation-points" sx={SR_ONLY}>
+      <li>{fill(words.point, { name: words.start, km: kmWords.format(0) })}</li>
       {markers.map((marker, index) => (
-        <li key={index}>{fill(words.point, { name: marker.name, km: new Intl.NumberFormat(locale, { maximumFractionDigits: 2 }).format(marker.km) })}</li>
+        <li key={index}>{fill(words.point, { name: marker.name, km: kmWords.format(marker.km) })}</li>
       ))}
+      <li>{fill(words.point, { name: words.finish, km: kmWords.format(distance / 1000) })}</li>
     </Box>
   );
 
