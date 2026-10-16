@@ -5,13 +5,15 @@ import sharp from "sharp";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const stored = vi.hoisted(() => ({ get: vi.fn() }));
-vi.mock("@/modules/media/storage", () => ({ getStorage: () => ({ get: stored.get }) }));
+vi.mock("@/modules/media/storage", () => ({ getStorage: () => ({ get: stored.get }), isStorageConfigured: () => true }));
 vi.mock("next-intl/server", () => ({
   getTranslations: async () => (key: string, values?: { km?: string; m?: string }) => `${key}${values?.km ?? values?.m ?? ""}`,
 }));
 
 import { type BibDesign, bibDistanceBadge, DEFAULT_BIB_DESIGN, readBibDesign } from "@/modules/registrations/bib-design";
-import { clearBibProfileCache, loadBibExtras } from "@/modules/registrations/bib-extras";
+import { loadBibExtras } from "@/modules/registrations/bib-extras";
+import { clearElevationCache } from "@/modules/routes/elevation/read";
+import { parseGpxElevation } from "@/modules/routes/elevation/parse";
 import {
   BIB_CARD,
   BIB_DIGIT,
@@ -25,7 +27,7 @@ import {
 } from "@/modules/registrations/bib-geometry";
 import { bibHeader } from "@/modules/registrations/bib-header";
 import { renderBibImage } from "@/modules/registrations/bib-image";
-import { type BibProfileDrawing, bibProfileDrawing, parseGpxProfile } from "@/modules/registrations/bib-profile";
+import { type BibProfileDrawing, bibProfileDrawing } from "@/modules/registrations/bib-profile";
 import { bibSheetFooterLines, renderBibSheet } from "@/modules/registrations/bibs-pdf";
 import { bibPictureStamp } from "@/modules/registrations/domain/bib-stamp";
 import { drawnRuns } from "../../helpers/pdf-drawn";
@@ -48,10 +50,10 @@ function track(): string {
 }
 
 const DRAWING: BibProfileDrawing = bibProfileDrawing(
-  parseGpxProfile(track())!,
+  parseGpxElevation(track())!,
   {},
   "ro",
-  (key, values) => ({ start: "Start", finish: "Sosire", distance: `Distanță: ${values?.km} km`, gain: `Diferență de nivel: +${values?.m} m` })[key],
+  (key, values) => ({ start: "Start", finish: "Sosire", kmUnit: "km", altitudeUnit: "m", distance: `Distanță: ${values?.km} km`, gain: `Diferență de nivel: +${values?.m} m` })[key],
 );
 
 const SHEET = {
@@ -300,7 +302,7 @@ describe("§750 the stamp follows the three new keys", () => {
 
 describe("§750 the profile is read once", () => {
   beforeEach(() => {
-    clearBibProfileCache();
+    clearElevationCache();
     stored.get.mockReset();
     stored.get.mockResolvedValue(new TextEncoder().encode(track()));
   });
@@ -311,8 +313,8 @@ describe("§750 the profile is read once", () => {
     const first = await loadBibExtras(event("route/a.gpx"), { showProfile: true, showEmergency: false, showDistance: true }, "ro");
     const second = await loadBibExtras(event("route/a.gpx"), { showProfile: true, showEmergency: true, showDistance: true }, "ro");
     expect(stored.get).toHaveBeenCalledTimes(1);
-    expect(first.profile?.points).toHaveLength(64);
-    expect(second.profile?.points).toEqual(first.profile?.points);
+    expect(first.profile?.profile.points.length).toBeGreaterThanOrEqual(64);
+    expect(second.profile?.profile.points).toEqual(first.profile?.profile.points);
     expect(first.distanceBadge).toBe("21K");
   });
 

@@ -175,7 +175,7 @@ describe("§249 the bib's design, saved and read back", () => {
     // Nor the sponsors' place, the profile and the emergency phone (§750): they read «Jos de tot», off and none.
     // Nor the profile's source, picture, figures and orientation, the phone's label and second number (§759).
     const footerKeys = [
-      "showEmail", "showPartners", "showEventInFooter", "showWebsite", "footerText", "headerImageCrop", "sponsorImageCrop", "member", "numberFormat", "sponsorPlace", "showProfile", "showEmergency", "emergencyPhone", "emergencyUpsideDown", "showDistance", "numberStubs", "showCheckpoints", "showCheckpointTimes",
+      "showEmail", "showPartners", "showEventInFooter", "showWebsite", "footerText", "headerImageCrop", "sponsorImageCrop", "member", "numberFormat", "sponsorPlace", "showProfile", "showEmergency", "emergencyPhone", "emergencyUpsideDown", "showDistance", "numberStubs", "showCheckpoints", "showCheckpointTimes", "showProfileScale",
       "profileSource", "profileImageSrc", "showProfileFigures", "profileOrientation", "emergencyLabel", "emergencyPhoneLabel", "emergencyPhone2", "emergencyPhone2Label",
     ];
     const before = Object.fromEntries(

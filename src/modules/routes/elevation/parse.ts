@@ -2,7 +2,7 @@
  * The route's elevation profile, read from a GPX document's text (§NNN, amending §718 and §757; the owner,
  * 2026-10-16: «I would like to have a widget actually! And read it from the GPX»): the distance along the
  * track and the altitude at that distance — the one series the event page's chart, the editor's preview and
- * (a later lane) the race number's strip all draw.
+ * the race number's strip all draw.
  *
  * **Pure, importing nothing**: no `node:` builtin, no storage, no React, and nothing from `registrations/`
  * or `content/` — so a Server Component, a client island, a PDF writer and a test all read it the same way.
@@ -13,10 +13,8 @@
  * `<ele>`, which is all a profile is made of. A file with fewer than two of them, or a track shorter than
  * `MIN_TRACK_METERS`, has no profile (null) — and a chart is then simply not drawn.
  *
- * The race number's own reader, `registrations/bib-profile.ts#parseGpxProfile`, stays until the bib switches
- * to this one; both measure the same distance (the haversine sum of the track) and the same gain (the sum of
- * the climbs of a 200-sample smoothed series), which `tests/unit/routes/elevation-parse.test.ts` holds to
- * one per cent on the sample route.
+ * The race number's strip reads through this parser too (`registrations/bib-extras.ts` by `read.ts`); its own
+ * reader is gone.
  */
 
 /** A track shorter than this has no profile worth drawing. */

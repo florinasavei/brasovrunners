@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 import { ELEVATION_MAX_POINTS, MIN_TRACK_METERS, parseGpxElevation } from "@/modules/routes/elevation/parse";
-import { parseGpxProfile } from "@/modules/registrations/bib-profile";
 import { elevationGpx } from "../../helpers/elevation-gpx";
 
 /**
@@ -61,12 +60,6 @@ describe("§NNN the GPX's elevation profile", () => {
   it("skips a point without an altitude or outside the globe instead of refusing the file", () => {
     const text = elevationGpx().replace("</trkseg>", '<trkpt lat="95" lon="25"><ele>5</ele></trkpt><trkpt lat="45.6" lon="25.9"/></trkseg>');
     expect(parseGpxElevation(text)?.distanceMeters).toBe(profile.distanceMeters);
-  });
-
-  it("agrees with the race number's reader on the distance and the climb, within one per cent", () => {
-    const bib = parseGpxProfile(elevationGpx())!;
-    expect(Math.abs(profile.distanceMeters - bib.distanceMeters) / bib.distanceMeters).toBeLessThan(0.01);
-    expect(Math.abs(profile.gainMeters - bib.gainMeters) / bib.gainMeters).toBeLessThan(0.01);
   });
 
   it("keeps a flat track flat: its range is one altitude", () => {

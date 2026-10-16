@@ -5,7 +5,7 @@ import sharp from "sharp";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const stored = vi.hoisted(() => ({ get: vi.fn() }));
-vi.mock("@/modules/media/storage", () => ({ getStorage: () => ({ get: stored.get }) }));
+vi.mock("@/modules/media/storage", () => ({ getStorage: () => ({ get: stored.get }), isStorageConfigured: () => true }));
 vi.mock("next-intl/server", () => ({
   getTranslations: async () => (key: string, values?: { km?: string; m?: string; time?: string }) =>
     key === "bibs.profileDistance"
@@ -16,7 +16,11 @@ vi.mock("next-intl/server", () => ({
           ? "Urgențe"
           : key === "bibs.checkpointKm"
             ? `km ${values?.km}`
-            : key,
+            : key === "bibs.profileKmUnit"
+              ? "km"
+              : key === "bibs.profileAltitudeUnit"
+                ? "m"
+                : key,
 }));
 
 import {
@@ -27,8 +31,10 @@ import {
   DEFAULT_BIB_DESIGN,
   readBibDesign,
 } from "@/modules/registrations/bib-design";
-import { bibCheckpointMarks } from "@/modules/registrations/bib-checkpoints";
-import { clearBibProfileCache, bibNeedsCheckpoints, loadBibExtras } from "@/modules/registrations/bib-extras";
+import type { BibStripCheckpoint } from "@/modules/registrations/bib-checkpoints";
+import { bibNeedsCheckpoints, loadBibExtras } from "@/modules/registrations/bib-extras";
+import { clearElevationCache } from "@/modules/routes/elevation/read";
+import { parseGpxElevation } from "@/modules/routes/elevation/parse";
 import { bibFooterWidth } from "@/modules/registrations/bib-footer";
 import {
   BIB_CARD,
@@ -42,8 +48,9 @@ import {
   bibProfileChartWidth,
 } from "@/modules/registrations/bib-geometry";
 import { bibExtrasBlock, renderBibImage } from "@/modules/registrations/bib-image";
-import { type BibProfileDrawing, bibProfileDrawing, parseGpxProfile } from "@/modules/registrations/bib-profile";
+import { type BibProfileDrawing, bibProfileDrawing } from "@/modules/registrations/bib-profile";
 import { bibProfileRow } from "@/modules/registrations/bib-profile-row";
+import { thinBibCheckpoints } from "@/modules/registrations/bib-profile-strip";
 import { BIB_PICTURE_SLOTS } from "@/modules/registrations/bib-picture-frame";
 import { BIB_DRAWING_VERSION, bibPictureStamp } from "@/modules/registrations/domain/bib-stamp";
 import { renderBibSheet } from "@/modules/registrations/bibs-pdf";
@@ -69,8 +76,8 @@ function track(): string {
   return `<?xml version="1.0"?><gpx version="1.1"><trk><trkseg>${body}</trkseg></trk></gpx>`;
 }
 
-const DRAWING: BibProfileDrawing = bibProfileDrawing(parseGpxProfile(track())!, {}, "ro", (key, values) =>
-  ({ start: "Start", finish: "Sosire", distance: `Distanță: ${values?.km} km`, gain: `Diferență de nivel: +${values?.m} m` })[key],
+const DRAWING: BibProfileDrawing = bibProfileDrawing(parseGpxElevation(track())!, {}, "ro", (key, values) =>
+  ({ start: "Start", finish: "Sosire", kmUnit: "km", altitudeUnit: "m", distance: `Distanță: ${values?.km} km`, gain: `Diferență de nivel: +${values?.m} m` })[key],
 );
 
 const SHEET = { eventTitle: "Crosul de toamnă", eventDate: "21 noiembrie 2026", generatedAt: new Date("2026-10-10T12:00:00Z") };
@@ -318,15 +325,12 @@ describe("§759 the profile turned for the runner, and with the phone as one blo
     expect(profileTurned.equals(block)).toBe(false);
   });
 
-  it("measures the checkpoints' crowding in the chart's own width: a strip without figures keeps marks a narrow one drops", () => {
-    const points = parseGpxProfile(track())!.points;
-    const close = [
-      { km: 50, kinds: ["WATER"], cutoffClock: null },
-      { km: 51.3, kinds: ["FOOD"], cutoffClock: null },
-    ];
-    const say = { startWord: "Start", finishWord: "Sosire", showTimes: false, label: () => "km" };
-    expect(bibCheckpointMarks({ checkpoints: close, routeKm: 100, points, ...say })?.marks).toHaveLength(1);
-    expect(bibCheckpointMarks({ checkpoints: close, routeKm: 100, points, ...say, chartWidth: bibProfileChartWidth(false) })?.marks).toHaveLength(2);
+  it("measures the pins' crowding in the chart's own width: a strip without figures keeps pins a narrow one drops", () => {
+    const point = (km: number, kinds: string[]): BibStripCheckpoint => ({ km, kinds, label: "km", kmLabel: "km", timeLabel: null });
+    const close = [point(50, ["WATER"]), point(52, ["FOOD"])];
+    const radius = BIB_LAYOUT.profilePinRadius;
+    expect(thinBibCheckpoints(close, bibProfileChartWidth(true), 100_000, radius)).toHaveLength(1);
+    expect(thinBibCheckpoints(close, bibProfileChartWidth(false), 100_000, radius)).toHaveLength(2);
   });
 });
 
@@ -381,7 +385,7 @@ describe("§759 «Eticheta telefonului» and two numbers on one line", () => {
 
 describe("§759 the extras for a picture of the profile", () => {
   beforeEach(() => {
-    clearBibProfileCache();
+    clearElevationCache();
     stored.get.mockReset();
     stored.get.mockResolvedValue(new TextEncoder().encode(track()));
   });

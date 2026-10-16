@@ -24,7 +24,7 @@ import type { BibProfileDrawing } from "./bib-profile";
  * - **The checkpoints' pins never overlap** (a strip 380 points wide holds at most `chartWidth / 7.5` heads in a row, and
  *   it has one row): the ones that would touch are thinned before the core is asked — the first of two stays, unless
  *   the later is an aid station and the earlier is not (§757's rule, kept) — and the highest altitude's label, which
- *   stands above its point, is not drawn over a pin or its stem.
+ *   stands above its point, is moved beside a pin it would cover (or its stem), or not drawn where there is no room.
  */
 
 /** What the design asks of the strip, and the width the row decided (`bib-profile-row.ts`). */
@@ -54,8 +54,8 @@ export type BibStrip = {
   texts: readonly BibStripText[];
 };
 
-/** The glyph's scale inside a pin's ring: the core's glyphs are drawn in a 16-unit box (`glyphs.ts`), about 1.44 times the ring's radius across. */
-export const bibPinGlyphScale = (pinRadius: number): number => (pinRadius * 0.72) / 7.5;
+/** The glyph's scale inside a pin's ring: the core's glyphs are drawn in a 16-unit box (`glyphs.ts`), about 1.56 times the ring's radius across. */
+export const bibPinGlyphScale = (pinRadius: number): number => (pinRadius * 0.78) / 7.5;
 
 const isAid = (kinds: readonly string[]): boolean => kinds.includes("WATER") || kinds.includes("FOOD");
 
@@ -78,7 +78,33 @@ export function thinBibCheckpoints(checkpoints: readonly BibStripCheckpoint[], c
   return kept.map((item) => item.checkpoint);
 }
 
-const asText = (label: ElevationLabel): BibStripText => ({ text: label.text, x: label.x, baseline: label.y, anchor: label.anchor });
+/**
+ * The altitude label that stands above the line (the highest point's) kept off the pins: not over a head, and not across a stem
+ * (a stem runs from its head down to the foot, so it crosses whatever stands above the line at its x). Where the label's own place
+ * touches one it moves to the side of that pin — its end against the pin's left, else its start against the pin's right — and
+ * where neither is free it is not drawn. A label in the foot row (the lowest point's) is the core's to keep clear (`clearExtremes`).
+ */
+function clearOfPins(label: ElevationLabel, geometry: ElevationGeometry, textSize: number): ElevationLabel | null {
+  if (label.y > geometry.plot.bottom) return label;
+  const width = label.text.length * textSize * 0.6 + textSize * 0.2;
+  const room = geometry.pinRadius + 1;
+  const boxOf = (candidate: ElevationLabel): [number, number] =>
+    candidate.anchor === "start" ? [candidate.x, candidate.x + width] : candidate.anchor === "end" ? [candidate.x - width, candidate.x] : [candidate.x - width / 2, candidate.x + width / 2];
+  const free = (candidate: ElevationLabel): boolean => {
+    const [from, to] = boxOf(candidate);
+    return from >= 0 && to <= geometry.width && geometry.markers.every((marker) => marker.headX + room <= from || marker.headX - room >= to);
+  };
+  if (free(label)) return label;
+  const beside = geometry.markers.flatMap((marker): ElevationLabel[] => [
+    { ...label, anchor: "end", x: Math.round((marker.headX - room) * 100) / 100 },
+    { ...label, anchor: "start", x: Math.round((marker.headX + room) * 100) / 100 },
+  ]);
+  const [centre] = boxOf(label);
+  const nearest = beside.filter(free).sort((a, b) => Math.abs(boxOf(a)[0] - centre) - Math.abs(boxOf(b)[0] - centre))[0];
+  return nearest ?? null;
+}
+
+const asText =(label: ElevationLabel): BibStripText => ({ text: label.text, x: label.x, baseline: label.y, anchor: label.anchor });
 
 export function bibProfileStrip(drawing: BibProfileDrawing, options: BibStripOptions): BibStrip {
   const L = BIB_LAYOUT;
@@ -118,13 +144,9 @@ export function bibProfileStrip(drawing: BibProfileDrawing, options: BibStripOpt
     }
   }
 
-  // The highest altitude stands above its point: not over a pin's head or the stem under it.
-  const charWidth = textSize * 0.6;
-  const extremes = geometry.extremes.filter((extreme) => {
-    if (extreme.label.y > geometry.plot.bottom) return true;
-    const half = (extreme.label.text.length * charWidth) / 2;
-    const centre = extreme.label.anchor === "start" ? extreme.label.x + half : extreme.label.anchor === "end" ? extreme.label.x - half : extreme.label.x;
-    return geometry.markers.every((marker) => Math.abs(marker.headX - centre) >= half + geometry.pinRadius);
+  const extremes = geometry.extremes.flatMap((extreme) => {
+    const label = clearOfPins(extreme.label, geometry, textSize);
+    return label ? [{ ...extreme, label }] : [];
   });
 
   const texts: BibStripText[] = [];

@@ -180,7 +180,7 @@ export const BIB_LAYOUT = {
    * stem. Two pins that would touch keep one; two labels closer than `checkpointTimeGap` points, or one
    * over «Start» or «Sosire», are the core's to settle. Both renderers place them at these points.
    */
-  profilePinRadius: 3,
+  profilePinRadius: 3.2,
   profilePinWeight: 0.6,
   checkpointDot: 1.3,
   checkpointTickWeight: 0.6,

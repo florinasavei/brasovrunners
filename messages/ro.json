@@ -2487,7 +2487,7 @@
         "showProfileHelp": "Bifat: pe fiecare număr, sub nume, o fâșie cu profilul traseului. Alegi mai jos de unde vine și cum stă.",
         "showProfileNoGpx": "Evenimentul nu are GPX: încarcă-l în „Traseul” sau alege o poză.",
         "showCheckpoints": "Punctele de control pe profil",
-        "showCheckpointsHelp": "Bifat: pe profil, la fiecare punct, un ac cu semnul lui: o picătură pentru apă, o furculiță pentru mâncare, o cruce pentru prim ajutor, o bulină pentru restul. Dedesubt, „km 5 · apă” sau „km 12”, unde încape. Apar doar punctele bifate „Arată pe profilul traseului”, și doar cu profilul desenat din GPX.",
+        "showCheckpointsHelp": "Bifat: un ac la fiecare punct bifat „Arată pe profilul traseului”, cu semnul lui, și dedesubt „km 5 · apă” sau „km 12”, unde încape. Doar la profilul desenat din GPX.",
         "showProfileScale": "Kilometrii și altitudinile pe profil",
         "showProfileScaleHelp": "Bifat: sub profil, o liniuță la fiecare kilometru, cu numărul lui, și altitudinea cea mai mare și cea mai mică. Apar doar unde încap, la profilul desenat din GPX.",
         "showCheckpointTimes": "…cu orele limită",

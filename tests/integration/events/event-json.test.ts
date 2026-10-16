@@ -1271,12 +1271,12 @@ describe("§757 the route's checkpoints travel in the file", () => {
   });
 
   it("carries the race's time limit, counted from the gun, and the two bib ticks", async () => {
-    const { event } = await seedRace({ bibDesign: { ...DEFAULT_BIB_DESIGN, showProfile: true, showCheckpoints: false, showCheckpointTimes: true } }, {}, false);
+    const { event } = await seedRace({ bibDesign: { ...DEFAULT_BIB_DESIGN, showProfile: true, showCheckpoints: false, showCheckpointTimes: true, showProfileScale: false } }, {}, false);
     // The gun is at 10:00 and the box said 150 minutes: the finish closes at 12:30 (10:30 UTC).
     expect((await reload(event.id)).endsAt?.toISOString()).toBe("2026-11-21T10:30:00.000Z");
     const file = await fileOf(event.id);
     expect(file.event.durationMinutes).toBe(150);
-    expect(file.event.bib.design).toMatchObject({ showCheckpoints: false, showCheckpointTimes: true });
+    expect(file.event.bib.design).toMatchObject({ showCheckpoints: false, showCheckpointTimes: true, showProfileScale: false });
     const created = await importEventAsNew(db, { actor: admin, file, fetchImpl: serving(), now: NOW });
     expect((await reload(created.eventId)).endsAt?.toISOString()).toBe("2026-11-21T10:30:00.000Z");
   });

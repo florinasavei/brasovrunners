@@ -8,7 +8,7 @@ import { CHECKPOINT_KM_MAX, CHECKPOINT_NAME_MAX, type CheckpointKind } from "./c
  * Pure and importing nothing from the platform: no storage, no React. `checkpoints.ts` reads the
  * file from the site's store and hands its text here, the editor draws the answer as a preview the
  * club confirms, and nothing is added by this module. It is not a validating XML parse — like
- * `registrations/bib-profile.ts`, which reads the same file's `<trkpt>` for the bib, it reads the
+ * `routes/elevation/parse.ts`, which reads the same file's `<trkpt>` for the profile and the bib, it reads the
  * few elements it needs: `<wpt lat lon>` with its `<name>`, `<sym>`, `<type>`, and the track's
  * `<trkpt>` (else `<rtept>`) points. A waypoint's elevation is not needed and not read.
  */

@@ -429,6 +429,12 @@ describe("§757 the picture stamp covers the checkpoints", () => {
     expect(checkpointsStampPart([])).toBe("");
   });
 
+  it("changes when the club unticks «Arată pe profilul traseului», which the strip no longer draws (§NNN)", () => {
+    const stamp = checkpointsStampPart([base]);
+    expect(checkpointsStampPart([{ ...base, onProfile: false }])).toBe(`${stamp}!`);
+    expect(checkpointsStampPart([{ ...base, onProfile: true }])).toBe(stamp);
+  });
+
   it("is the same whatever order the rows come in", () => {
     const other: Checkpoint = { ...base, id: "b", km: 9, cutoffMinutes: null, cutoffClock: null };
     expect(checkpointsStampPart([base, other])).toBe(checkpointsStampPart([other, base]));
