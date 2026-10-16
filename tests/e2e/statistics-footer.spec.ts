@@ -124,7 +124,7 @@ test.describe("§787 «Statistici» under the registrations Excel", () => {
       expect(rows[7]).toBeUndefined();
       expect(rows[8]).toEqual(["Statistici"]);
       const footer = footerOf(rows, "Statistici");
-      expect(footer.slice(1, 12)).toEqual([
+      expect(footer.slice(1, 15)).toEqual([
         ["Total", "6"],
         ["Confirmați (activi)", "3"],
         ["Așteaptă confirmarea adresei", "1"],
@@ -136,6 +136,10 @@ test.describe("§787 «Statistici» under the registrations Excel", () => {
         ["Brașov Runners", "2"],
         ["Brașov Runners, confirmați", "2"],
         ["Alții, nu Brașov Runners", "4"],
+        // The special guests (§643): none in this race, so the places line is the confirmed.
+        ["Invitați speciali", "0"],
+        ["Invitați speciali, confirmați", "0"],
+        ["Confirmați care ocupă un loc", "3"],
       ]);
       const at = footer.findIndex((row) => row[0] === "Categorie");
       expect(footer.slice(at, at + 5)).toEqual([
