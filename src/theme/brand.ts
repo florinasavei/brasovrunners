@@ -243,7 +243,7 @@ export const GRADIENT = {
  * One tint per chip colour of the desk (`DeskRow`: confirmed `success`, a waiting or pending state `warning`);
  * the waiting list is the sky blue and a cancelled or expired row is grey, never red — a whole red row shouts.
  * `member` is the club's own blue walked pale, a step stronger than the sky so the two blues are told apart: it
- * follows the person's own tick (§NNN). `clubRunner` is a pale lavender for the club's runners without the tick (a
+ * follows the person's own tick (§796). `clubRunner` is a pale lavender for the club's runners without the tick (a
  * member account or the club typed in the form), and `guest` a pale peach for a special guest's identity cells (it comes
  * with an italic font, so a guest reads differently even printed in grey); both sit apart from the amber `warning`
  * and from each other, and the sheet's tests hold every pair distinct and every one at AA under black.

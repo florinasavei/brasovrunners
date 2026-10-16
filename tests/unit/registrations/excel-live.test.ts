@@ -293,7 +293,7 @@ describe("§787 the «Club runner» column: the one predicate, written where a f
   });
 });
 
-describe("§NNN the «Member tick (declared)» column: the tick alone, in the spreadsheet only", () => {
+describe("§796 the «Member tick (declared)» column: the tick alone, in the spreadsheet only", () => {
   it("says «Yes» exactly when the person ticked the box — a member account or a typed club alone leave it empty", async () => {
     const cases: Array<[Partial<RegistrationSheetRow>, boolean]> = [
       [{ clubMemberDeclared: true }, true],

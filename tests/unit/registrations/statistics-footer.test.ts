@@ -93,7 +93,7 @@ describe("§787 the footer's numbers, for a mixed fixture", () => {
       ["Expirați", "1"],
       [CLUB_NAME, "5"],
       [`${CLUB_NAME}, confirmați`, "2"],
-      // The tick alone (§NNN): two of the five club runners ticked the box.
+      // The tick alone (§796): two of the five club runners ticked the box.
       [`Au bifat că sunt membri ${CLUB_NAME}`, "2"],
       [`Alții, nu ${CLUB_NAME}`, "4"],
       // The special guests (§643): none in this fixture, so the confirmed part of the places line is all the confirmed (§615).
@@ -353,7 +353,7 @@ describe("§787 the footer's words, in both languages", () => {
         expect(word.length).toBeLessThanOrEqual(200);
       }
       expect(words.category).toBe("{sex}, {band}");
-      // note7 (§NNN) joined the six: the tick's own line has its sentence.
+      // note7 (§796) joined the six: the tick's own line has its sentence.
       expect(words.notes).toHaveLength(7);
       expect(words.club).toBe(CLUB_NAME);
     }

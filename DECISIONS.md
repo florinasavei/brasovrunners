@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.46-2026-10-16 -->
+<!-- PROJECT_BASELINE: BR-V3.47-2026-10-16 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V3.46-2026-10-16`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.47-2026-10-16`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -26956,3 +26956,22 @@ Baseline `BR-V3.46-2026-10-16`.
 **Tests.** `registrations/excel-live.test.ts` (new describe): the header's third cell, the other columns' relative order, the CSV header unchanged, the ranges and rules at the header's letter in three shapes of file, the validation over exactly the data rows with the words, the position and the absence of `showDropDown`, the error words in both languages and their escaping, the refusals, no validation for no rows or no words, nothing else changed in the bytes, an edit that picks another state; and the sponsor sheet; `integration/registrations/statistics-footer.test.ts` downloads the file through the route and reads the drop-down in both languages. `row-deadline.test.ts` no longer says the deadline pair sits right after «Status». The file also loads in openpyxl with the validation readable. **Consequences.** `registrations/workbook.ts`, the export route, `messages/{ro,en}.json` (`Admin.registrations.sheetpick`), `docs/VIBECODING.md`. No migration, no dependency.
 
 Baseline `BR-V3.46-2026-10-16`.
+
+## 796. The Excel export: the member tick as its own column, the blue follows it, the special guests marked in peach
+
+**The owner, 2026-10-16, from his phone:** «vreau în excel separat să văd bifa „E din Brașov Runners” și în funcție de asta să colorez», and at once after: "Also I wanna mark special guests differently".
+
+**What was wrong.** §790 painted the club's blue on «Club member», «Club runner» and «Member bib» when «Club runner» said «Yes». «Club runner» is the wide rule (§787: a member account, the ticked box or a typed club the §753 matcher accepts), and «Club member» says «verified» or «declared» in one word, so the tick itself — what the person said about themselves — could not be seen apart, nor coloured by, nor counted.
+
+**Decision.**
+
+1. **A new column «Member tick (declared)»**, right after «Club member» and before «Club runner»: «Yes» when the person ticked «Sunt membru al grupului {club}» (`clubMemberDeclared`), empty otherwise, never «No» (the reason of §662). One helper beside `clubRunnerCell` (`memberTickCell`), and one shared word: `CLUB_RUNNER_YES` is renamed `YES_CELL`, since the two columns now say the same «Yes». **In the spreadsheet only**: the CSV's order stays (scripts read it by position, §425, §664) and already has the tick inside «Club member»'s words; a test pins its header byte for byte.
+2. **The club's blue follows the tick**, not «Club runner»: the four member cells («Club member», «Member tick (declared)», «Club runner», «Member bib», side by side) are blue when the tick says «Yes». A club runner without the tick — a member account, or the club typed in the form — gets a pale **lavender** (`SHEET_TINT.clubRunner`) on the same cells, so what the old blue said is not lost. Edit the tick offline and the blue follows; untick a club runner and the cells turn lavender.
+3. **The special guests marked differently**: a row whose «Special guest» cell is the logical TRUE (the Boolean column, §794) gets a pale **peach** fill (`SHEET_TINT.guest`) **and an italic font** on its identity cells — «Race number (BIB)», «Name», «First name», «Last name» and the «Special guest» cell itself — so a guest reads differently even printed in grey. The member cells and these are different columns, and the status tint keeps the rest of the row, so no cell is asked for two markings. Mark a row special offline and the peach appears. The three tints are paper-pale and each is at AA under black (the test measures all seven), distinct from each other and from the amber of a pending row.
+4. **The rules, in priority order**: the guest's rules first, then the blue, then the lavender, then the status tints. The writer (`write-excel-file`) gives each rule one rectangle and its own format, and the guest's identity cells are three runs of columns (the race number, the names — «Event», in a file of several events, sits between «Name» and «First name» and goes with them — and the flag), so the guest marking is **three rules of one tint** (priorities 1 to 3), and the sheet holds nine differential formats for seven tints. Every rule finds its columns by their headers (§795), never by a letter.
+5. **The footer gains one live line**, «Au bifat că sunt membri {club}» / "Ticked as members of {club}", under «{club}, confirmați» in every block: `COUNTIF(<Member tick range>, "Yes")` (with the event filter in a per-event block), today's number cached beside it, every state counted (like «{club}», unlike «{club}, confirmați»). It is informational like the club lines and outside the states' sum. The «{club}» lines keep counting the wider rule, and a new note says what the tick's line counts.
+6. **The legend**: the blue's line says «a bifat că e membru {club}» and names the four columns; a lavender line («Lila: alergător al clubului fără bifă — cont de membru sau clubul scris în formular»); a peach line («Piersică, înclinat: invitat special — nu ocupă un loc»), its own cell italic like the cells it explains.
+
+**Refused.** Putting the tick in the CSV (a column inserted in the middle moves every index a script reads); colouring the whole row of a guest (it would hide the status, which is what the row colours are for); a baked fill (the file is the club's to edit offline); one formula rule with `COLUMN()` tests to make the guest marking a single rule (it reads worse in Excel's rule manager and breaks when a column is inserted).
+
+Baseline `BR-V3.47-2026-10-16`.

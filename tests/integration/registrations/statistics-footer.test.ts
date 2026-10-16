@@ -165,7 +165,7 @@ describe("§787 the footer, through the route", () => {
       ["Expirați", "1"],
       [CLUB_NAME, "5"],
       [`${CLUB_NAME}, confirmați`, "3"],
-      // The tick alone (§NNN): the confirmed and the pending runner who ticked the box.
+      // The tick alone (§796): the confirmed and the pending runner who ticked the box.
       [`Au bifat că sunt membri ${CLUB_NAME}`, "2"],
       [`Alții, nu ${CLUB_NAME}`, "5"],
       // Nobody on «Lista de invitați speciali» in this race: the confirmed part of the places line is all the confirmed (§643, §615).

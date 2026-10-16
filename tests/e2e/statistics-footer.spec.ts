@@ -135,7 +135,7 @@ test.describe("§787 «Statistici» under the registrations Excel", () => {
         ["Expirați", "0"],
         ["Brașov Runners", "2"],
         ["Brașov Runners, confirmați", "2"],
-        // The tick alone (§NNN): one of the two club runners ticked the box.
+        // The tick alone (§796): one of the two club runners ticked the box.
         ["Au bifat că sunt membri Brașov Runners", "1"],
         ["Alții, nu Brașov Runners", "4"],
         // The special guests (§643): none in this race, so the confirmed part of the places line is all the confirmed (§615).

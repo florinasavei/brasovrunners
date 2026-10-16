@@ -11,7 +11,7 @@ import { YES_CELL } from "./domain/club-runner";
  * rules — «this fill, when `$M2` says CONFIRMED» — that Excel and LibreOffice evaluate on the cell's own value.
  * The one place a fill is baked is the legend under the statistics, which is a key, static by nature.
  *
- * **Three markings besides the status** (§NNN, amending §790; the owner, 2026-10-16: «în funcție de bifă să colorez» and
+ * **Three markings besides the status** (§796, amending §790; the owner, 2026-10-16: «în funcție de bifă să colorez» and
  * «also I wanna mark special guests differently»): the club's blue on the member cells follows the person's own tick
  * («Member tick (declared)» = "Yes"); a club runner without the tick — a member account, or the club typed in the form —
  * gets a pale lavender on the same cells, so the knowledge is not lost; and a special guest's identity cells (the race

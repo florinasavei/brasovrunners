@@ -296,7 +296,7 @@ const COLUMNS: Array<SheetColumn<RegistrationSheetRow>> = [
   // Declared or verified (§662), as the list's chip: "verified", "declared" or blank.
   { header: "Club member", width: 12, cell: (row) => ({ value: membershipCell(row), type: String }) },
   /*
-    «Member tick (declared)» (§NNN; the owner, 2026-10-16: «vreau în excel separat să văd bifa „E din Brașov Runners” și în
+    «Member tick (declared)» (§796; the owner, 2026-10-16: «vreau în excel separat să văd bifa „E din Brașov Runners” și în
     funcție de asta să colorez»): "Yes" when the person ticked «Sunt membru al grupului {club}», the tick alone — «Club member»
     above mixes it with a member account. The club's blue and the footer's «ticked» line read it from the sheet, so editing
     the cell offline moves both. In the spreadsheet only: the CSV keeps its order, which scripts read by position, and
@@ -428,7 +428,7 @@ export async function buildRegistrationsWorkbook(
     clubRunnerColumn: at("Club runner"),
     memberColumns: [at("Club member"), at("Member bib")],
     specialGuestColumn: at("Special guest"),
-    // A special guest's identity cells (§NNN): the race number, the names («Event», in a file of several, sits between «Name» and «First name»), the flag itself.
+    // A special guest's identity cells (§796): the race number, the names («Event», in a file of several, sits between «Name» and «First name»), the flag itself.
     guestCells: [[at("Race number (BIB)"), at("Race number (BIB)")], [at("Name"), at("Last name")], [at("Special guest"), at("Special guest")]],
     lastColumn: columns.length - 1,
     rowCount: rows.length,

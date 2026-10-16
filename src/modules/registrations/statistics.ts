@@ -63,7 +63,7 @@ export type StatisticsRow = {
   status: string;
   /** The row is one of the club's runners (`isClubRunner`); absent reads as no. */
   clubRunner?: boolean;
-  /** The person ticked «Sunt membru al grupului {club}» (§NNN): the sheet's «Member tick (declared)» column, counted on a line of its own. Absent reads as no. */
+  /** The person ticked «Sunt membru al grupului {club}» (§796): the sheet's «Member tick (declared)» column, counted on a line of its own. Absent reads as no. */
   clubMemberDeclared?: boolean;
   /** The sheet's «Sex» cell, in its own words (`sexCell`). */
   sex?: string | null;
@@ -93,7 +93,7 @@ export type StatisticsWords = {
   /** The club's name, from the platform's one constant (§357). */
   club: string;
   clubConfirmed: string;
-  /** «Ticked as members of {club}» (§NNN): the people who ticked the box, whatever else they are. */
+  /** «Ticked as members of {club}» (§796): the people who ticked the box, whatever else they are. */
   clubTicked: string;
   notClub: string;
   /** The special guests (§643, amended §787): every state, the confirmed, and the confirmed who take a place. */
@@ -152,7 +152,7 @@ export function statisticsWordsFrom(t: (key: string, values?: Record<string, str
       from50: t("bandFrom50"),
       from60: t("bandFrom60"),
     },
-    // note7 (the tick's own line, §NNN) and note6 sit before note5 on purpose: the note on the formulas stays last, above the colours' legend.
+    // note7 (the tick's own line, §796) and note6 sit before note5 on purpose: the note on the formulas stays last, above the colours' legend.
     notes: [t("note1"), t("note2", withClub), t("note3", withClub), t("note4"), t("note7", withClub), t("note6"), t("note5")],
     legend: {
       title: t("legendTitle"),
@@ -179,7 +179,7 @@ export type Tally = {
   expired: number;
   club: number;
   clubConfirmed: number;
-  /** The rows whose «Member tick (declared)» says «Yes» (§NNN), in every state: the box ticked, apart from the club lines' wider rule. */
+  /** The rows whose «Member tick (declared)» says «Yes» (§796), in every state: the box ticked, apart from the club lines' wider rule. */
   clubTicked: number;
   /** The rows on «Lista de invitați speciali» (§643), in every state, and the confirmed among them. */
   specialGuests: number;
@@ -350,7 +350,7 @@ export type StatisticsRanges = {
   id: string;
   status: string;
   clubRunner: string;
-  /** The «Member tick (declared)» column (§NNN): "Yes" where the person ticked the box. */
+  /** The «Member tick (declared)» column (§796): "Yes" where the person ticked the box. */
   memberTick: string;
   /** The «Special guest» column (§643): Boolean cells, TRUE for a row on «Lista de invitați speciali». */
   specialGuest: string;
@@ -419,7 +419,7 @@ export function statisticsCells(blocks: readonly StatisticsBlock[], words: Stati
     if (!ranges) return [];
     const filters: Filter[] = [];
     if (key === "club" || key === "clubConfirmed") filters.push([ranges.clubRunner, quote(YES_CELL)]);
-    // The tick alone, in every state (§NNN): no status filter, like «Club» and unlike «Club, confirmed».
+    // The tick alone, in every state (§796): no status filter, like «Club» and unlike «Club, confirmed».
     if (key === "clubTicked") filters.push([ranges.memberTick, quote(YES_CELL)]);
     // A Boolean column: the criterion is the logical TRUE, not the text "TRUE" (§643, amended §787).
     if (key === "specialGuests" || key === "specialGuestsConfirmed") filters.push([ranges.specialGuest, "TRUE"]);
@@ -460,7 +460,7 @@ export function statisticsCells(blocks: readonly StatisticsBlock[], words: Stati
     line("expired", words.expired);
     line("club", words.club);
     line("clubConfirmed", words.clubConfirmed);
-    // Informational like the club lines, not one of the states' sum (§NNN): the people who ticked the box, whatever else they are.
+    // Informational like the club lines, not one of the states' sum (§796): the people who ticked the box, whatever else they are.
     line("clubTicked", words.clubTicked);
     rows.push([bold(words.notClub), scope ? formulaCell(`B${lineAt.total}-B${lineAt.club}`, t.total - t.club) : count(t.total - t.club)]);
     /*
