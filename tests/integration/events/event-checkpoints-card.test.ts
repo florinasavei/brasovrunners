@@ -295,9 +295,9 @@ describe("§NNN the profile's tick and preview on the card", () => {
     try {
       const html = await render({ locale: "en", profile: PROFILE, checkpoints: [point("a", 5, { onProfile: false }), point("c", 8, { kinds: ["FOOD"] })] });
       expect(html).toContain("Show on the route profile");
-      expect(html).toContain("Unticked points stay in the table and on the page; only the profile leaves them out. The race number shows them as its “Race numbers” setting says.");
+      expect(html).toContain("Unticked points stay in the table and on the page; only the profile leaves them out.");
       expect(html).toContain("How it appears on the page");
-      expect(html).toContain("It changes after “Save the points”, not while you type.");
+      expect(html).toContain("It changes after “Save the points”, not while you type. The race number shows them as its setting “Checkpoints on the profile” in “Race numbers (bibs)” says.");
       expect(html).toContain("Route profile: 9.0 km, from 608 to 828 m");
       expect(html).toContain("<title>Point c</title>");
       expect(html).not.toContain("<title>Point a</title>");
