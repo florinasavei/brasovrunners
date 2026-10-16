@@ -102,7 +102,7 @@ describe("§757 the page's «Timp limită» and the finish row", () => {
     expect(checkpointFinish({ ...race, type: "GROUP_RUN" }).limit).toBeNull();
   });
 
-  it("draws the page's row under «Când» with the stopwatch and «2 h 30 min»", () => {
+  it("draws the page's row under «Traseu» with the stopwatch and «2 h 30 min»", () => {
     const facts = readFileSync("src/modules/events/ui/EventFacts.tsx", "utf8");
     expect(facts).toContain('rows.push({ key: "timeLimit", label: t("timeLimit"), icon: TimerIcon');
     expect(facts).toContain("durationShort(timeLimit)");
