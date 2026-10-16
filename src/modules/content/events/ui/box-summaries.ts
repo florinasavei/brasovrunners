@@ -80,7 +80,7 @@ export type SummaryWords = {
   confirmation: { sentence: string; atStart: string; off: string };
   /** «Kit de participare»'s closed line (§554): "Tricou: da" / "Tricou: nu". */
   kit: { shirtYes: string; shirtNo: string };
-  /** The health words, the end of the closed line of «Regulamentul» and of «Participare, înscrieri și regulament» (§557, moved in §NNN): "Informații medicale: da" / "Informații medicale: nu". */
+  /** The health words, the end of the closed line of «Regulamentul» and of «Participare, înscrieri și regulament» (§557, moved in §799): "Informații medicale: da" / "Informații medicale: nu". */
   health: { asked: string; notAsked: string };
   bibs: { from: string; clubColour: string; allocated: string; toPrint: string; spares: string };
   bibDesign: { parts: string; footer: string };
@@ -484,7 +484,7 @@ export function kitSummary(words: SummaryWords, kitShirt: boolean): string {
   return kitShirt ? words.kit.shirtYes : words.kit.shirtNo;
 }
 
-/** Whether the form asks the health note (§557): the one tick of the «Condiții de participare» group inside «Regulamentul» (moved in §NNN). */
+/** Whether the form asks the health note (§557): the one tick of the «Condiții de participare» group inside «Regulamentul» (moved in §799). */
 export function healthNoteSummary(words: SummaryWords, askHealthNote: boolean): string {
   return askHealthNote ? words.health.asked : words.health.notAsked;
 }

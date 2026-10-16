@@ -86,7 +86,7 @@ function box(field: EventFieldName, extra: Record<string, unknown> = {}) {
  *    above «Declarația pe propria răspundere» (`#box-declaration`, §448) — the age and the declaration
  *    side by side, so the sentence that sent the reader from one card to the other is gone. What the
  *    form asks — «Condiții de participare», the «Informații medicale» tick (§557) — is a group at the
- *    foot of «Regulamentul», under the minimum age (§NNN); there is no `#box-conditions` any more;
+ *    foot of «Regulamentul», under the minimum age (§799); there is no `#box-conditions` any more;
  * 3. the day itself: «Programul zilei și ce să aduci» (`#box-schedule`), then, while the club
  *    registers them here, «Kit de participare» (`#box-kit`, §554) and «Numere de concurs (BIB)»
  *    (`#box-bibs`, with the designer and, on the editor, allocation and printing);
@@ -568,7 +568,7 @@ export default async function RegistrationBox({
       <Stack spacing={2}>
         {/* 6.1 — how people register, and the registration's life. A reader is told once that the settings are not theirs (§358). */}
         {mayEditSettings ? registrationFields : <SettingsReadOnly />}
-        {/* 6.2 — what a participant agrees to: the rules, with the minimum age and what the form asks, then the declaration (§505, §448, §557, §NNN). */}
+        {/* 6.2 — what a participant agrees to: the rules, with the minimum age and what the form asks, then the declaration (§505, §448, §557, §799). */}
         {rules}
         {declarationCard}
         {/* 6.3 — the day: the programme and what to bring, then the kit and the numbers. */}

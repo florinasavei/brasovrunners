@@ -211,7 +211,7 @@ function postedNames(markup: string): string[] {
   return [...markup.matchAll(/<(?:input|textarea|select)\b[^>]*?\sname="([^"]+)"/g)].map((match) => match[1]);
 }
 
-describe("§NNN «Condiții de participare» inside «Regulamentul»", () => {
+describe("§799 «Condiții de participare» inside «Regulamentul»", () => {
   const registration = async (event: EditableEvent, mayEditSettings = true) =>
     html(
       (await RegistrationBox({

@@ -150,7 +150,7 @@ describe("BR-REQ-041-01 the event page's facts are grouped by question (§356)",
     expect(withoutStyles(html)).toMatch(/<section\b[^>]*\bid="partners"/);
   });
 
-  it("puts «Timp limită» right under «Traseu» and before «Cost» — in Romanian and in English (§NNN; the owner, 2026-10-16)", async () => {
+  it("puts «Timp limită» right under «Traseu» and before «Cost» — in Romanian and in English (§798; the owner, 2026-10-16)", async () => {
     // The gun at 09:00 and the finish closing at 11:30: two and a half hours, from the gun.
     const race = { raceStartsAt: new Date("2026-09-26T06:00:00Z"), endsAt: new Date("2026-09-26T08:30:00Z"), routeUrl: "https://routes.example.test/trasa" };
     const ro = await page(race);

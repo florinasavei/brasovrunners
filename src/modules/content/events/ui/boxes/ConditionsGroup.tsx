@@ -21,7 +21,7 @@ export function asksHealthNoteOnForm(event: Pick<EditableEvent, "type" | "regist
 }
 
 /**
- * «Condiții de participare», the group at the foot of «Regulamentul» (§557, moved in §NNN; the owner,
+ * «Condiții de participare», the group at the foot of «Regulamentul» (§557, moved in §799; the owner,
  * 2026-10-16, pointing from the closed card to the rules card beside the minimum age: «cardul ăsta ar
  * trebui mutat în ăsta»). It was a level-3 card of its own after the declaration; it is now a level-4
  * static `Panel` — the boxed frame with a heading and no fold, as «Clubul pe lista publică» is inside

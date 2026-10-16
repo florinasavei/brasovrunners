@@ -427,7 +427,7 @@ test.describe("§554 the race kit card", () => {
 });
 
 /*
-  §557 — «Condiții de participare» inside «Regulamentul» (§NNN; the owner, 2026-09-29:
+  §557 — «Condiții de participare» inside «Regulamentul» (§799; the owner, 2026-09-29:
   «e mai bine să avem o bifă în backoffice la Condiții de participare»; 2026-10-16: «cardul ăsta ar
   trebui mutat în ăsta»): a group under the minimum age, whose tick starts unticked, on an event
   registering on the site; the tick only for a type that registers on the site, a group run getting a
@@ -438,7 +438,7 @@ test.describe("§557 the participation conditions group", () => {
     await signIn(page, "Dev Administrator");
     await page.goto("/ro/admin/events/new");
     await hydrated(page);
-    // «Condiții de participare» is a group inside «Regulamentul», under the minimum age (§NNN).
+    // «Condiții de participare» is a group inside «Regulamentul», under the minimum age (§799).
     const rules = await openEditorBox(page, "Regulamentul");
     const conditions = rules.getByTestId("conditions-group");
     await expect(page.locator("#box-conditions")).toHaveCount(0);

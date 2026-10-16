@@ -91,7 +91,7 @@ describe("§760 «Participare, înscrieri și regulament»: cards 6 and 9 in one
     expect(day).toContain('<OnlyForMode mode="INTERNAL" initialMode={initialMode}>');
   });
 
-  it("has no card of its own for «Condiții de participare»: the rules card holds it (§NNN)", () => {
+  it("has no card of its own for «Condiții de participare»: the rules card holds it (§799)", () => {
     expect(REGISTRATION).not.toContain("ConditionsBox");
     expect(existsSync(path.join(ROOT, BOXES, "ConditionsBox.tsx"))).toBe(false);
     const rules = TEXTS.slice(at(TEXTS, "export async function RulesBox"), at(TEXTS, "export async function AddressBox"));

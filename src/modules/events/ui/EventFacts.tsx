@@ -1170,7 +1170,7 @@ export default async function EventFacts({
     «Timp limită» (§757; the owner, 2026-10-13: «trebuie să pot pune timp limită»): a race's time limit,
     the editor's «Durata» box, said as «2 h 30 min» — how long the runners have from the gun until
     the finish closes. Only a race's: every other event's length is when it ends, not a limit.
-    Its place is under «Traseu» (§NNN; the owner, 2026-10-16: «Timp limită trebuie să apară sub
+    Its place is under «Traseu» (§798; the owner, 2026-10-16: «Timp limită trebuie să apară sub
     traseu»): after the route's row, before «Cost» — the limit belongs with the course, not with
     the date. The time the finish closes is the checkpoints table's last row (`EventCheckpoints`).
   */

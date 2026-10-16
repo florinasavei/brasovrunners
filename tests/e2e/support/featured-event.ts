@@ -260,7 +260,7 @@ export async function ensureRegistrationIsOpen(page: Page) {
 
     // The form asks the health note only when the event does (§557): the seed ticks it on the sample
     // race, and this ticks it on a database seeded before the column, so the medical fold is there.
-    // «Condiții de participare» is a group inside «Regulamentul» since §NNN.
+    // «Condiții de participare» is a group inside «Regulamentul» since §799.
     const health = (await openEditorBox(page, "Regulamentul")).locator('[name="event.askHealthNote"]');
     if (!(await health.isChecked())) await health.check();
 

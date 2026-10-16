@@ -9,7 +9,7 @@ import { RETENTION_PERIODS } from "@/modules/jobs/domain/retention-periods";
 import { PANEL_GLYPHS } from "@/shared/ui/panel-glyphs";
 
 /**
- * §557, moved in §NNN — «Condiții de participare» as a group inside «Regulamentul» (the owner,
+ * §557, moved in §799 — «Condiții de participare» as a group inside «Regulamentul» (the owner,
  * 2026-10-16: «cardul ăsta ar trebui mutat în ăsta»): a level-4 boxed section with a glyph, holding
  * one tick — «Informații medicale» — and one sentence that names the days from the retention
  * constant, and the tick only where registration happens on the site (§111). The rules card's own
@@ -43,7 +43,7 @@ async function render(event: EditableEvent | null, mayEditSettings = true) {
   return (await new Response(stream).text()).replace(/<style[^>]*>[\s\S]*?<\/style>/g, "");
 }
 
-describe("§NNN the «Condiții de participare» group", () => {
+describe("§799 the «Condiții de participare» group", () => {
   it("is a boxed section, not a fold, with a level-4 heading and a glyph before the words", async () => {
     const html = await render(RACE);
     expect(html).toMatch(/^<section[^>]*data-testid="conditions-group"/);
