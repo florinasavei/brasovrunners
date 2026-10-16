@@ -82,6 +82,9 @@ async function draw(over: Partial<ComponentProps<typeof VolunteerBox>> = {}, lan
   const drawn = (await VolunteerBox({
     locale: language,
     slug: "cursa",
+    eventTitle: "Crosul de toamnă",
+    whenInSentence: "sâmbătă, 21 nov. 2026, la 09:00",
+    sent: null,
     roles: ROLES,
     categories: CATEGORIES,
     shirts: false,

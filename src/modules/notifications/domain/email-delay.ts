@@ -68,8 +68,9 @@ const NOT_WAITED_FOR: ReadonlySet<EmailMessageType> = new Set<EmailMessageType>(
   "SHOP_ORDER_PLACED",
   "SHOP_ORDER_PAID",
   "SHOP_ORDER_CLUB_NOTICE",
-  // A volunteer's sign-up (§754): the answer page says thank you and that the organizers will confirm — it
-  // promises no email, so nobody on a public page waits for the «am primit».
+  // A volunteer's sign-up (§754): the answer page says thank you, that the receipt email comes to the address written and
+  // that the organizers will confirm — but names no hour and no state of that email (§800), so nobody on a public page
+  // waits on the «am primit» as on a registration's «Verifică-ți emailul».
   "VOLUNTEER_RECEIVED",
   "VOLUNTEER_CLUB_NOTICE",
   // The volunteer agreement (§758): the link leaves at an organizer's press, to somebody on no page; the accepted

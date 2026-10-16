@@ -3,21 +3,9 @@ import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import { durationShort } from "@/i18n/dates";
 import { type Checkpoint, checkpointRows, type CheckpointRow } from "@/modules/event-checkpoints/domain/checkpoint";
+import { SR_ONLY_SX } from "@/shared/ui/sr-only";
 import { DENSITY } from "@/theme/density";
 import GlyphChip from "./GlyphChip";
-
-/** Text a screen reader reads and the eye never sees (`GlyphChip`'s technique, `'1px'` strings and not numbers). */
-const SR_ONLY = {
-  position: "absolute",
-  width: "1px",
-  height: "1px",
-  padding: 0,
-  margin: "-1px",
-  overflow: "hidden",
-  clip: "rect(0 0 0 0)",
-  whiteSpace: "nowrap",
-  border: 0,
-} as const;
 
 /**
  * «Puncte de control» / "Checkpoints" under `#checkpoints` (§757; the owner, 2026-10-13: «I need to put
@@ -147,7 +135,7 @@ export default async function EventCheckpoints({
                   ) : (
                     <>
                       <span aria-hidden="true">—</span>
-                      <Box component="span" sx={SR_ONLY}>
+                      <Box component="span" sx={SR_ONLY_SX}>
                         {t("checkpoints.kmUnknown")}
                       </Box>
                     </>
@@ -175,7 +163,7 @@ export default async function EventCheckpoints({
                   ) : (
                     <>
                       <span aria-hidden="true">—</span>
-                      <Box component="span" sx={SR_ONLY}>
+                      <Box component="span" sx={SR_ONLY_SX}>
                         {t("checkpoints.noKinds")}
                       </Box>
                     </>
@@ -192,7 +180,7 @@ export default async function EventCheckpoints({
                   ) : (
                     <>
                       <span aria-hidden="true">—</span>
-                      <Box component="span" sx={SR_ONLY}>
+                      <Box component="span" sx={SR_ONLY_SX}>
                         {t("checkpoints.noCutoff")}
                       </Box>
                     </>

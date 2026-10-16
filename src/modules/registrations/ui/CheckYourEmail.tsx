@@ -1,6 +1,5 @@
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { glyphSx, WITH_GLYPH_SX } from "@/shared/ui/button-glyph";
-import CelebrationIcon from "@mui/icons-material/Celebration";
 import DrawIcon from "@mui/icons-material/Draw";
 import MarkEmailReadIcon from "@mui/icons-material/MarkEmailRead";
 import QrCode2Icon from "@mui/icons-material/QrCode2";
@@ -14,6 +13,8 @@ import { Link } from "@/i18n/navigation";
 import { daysPhrase, hoursPhrase, minutesPhrase } from "@/modules/deadlines/domain/duration-words";
 import { emailLeavesWords } from "@/modules/notifications/domain/email-wait";
 import { cachedDeadlines, cachedEmailLeavesAt, cachedEmailWaitMinutes } from "@/modules/public-cache/reads";
+import DoneHeading from "@/shared/ui/DoneHeading";
+import { StepItem, StepList } from "@/shared/ui/StepList";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { doneFamilySentence, offerHint, shortScreenEmailLeft } from "../domain/family-sitting";
 import type { SubmittedFacts } from "../form-draft";
@@ -109,27 +110,7 @@ export default async function CheckYourEmail({ eventTitle, whenLabel, eventHref,
     2026-09-28: the name twice in a row).
   */
   const heading = (named: boolean) => (
-    <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 1 }}>
-      <Box
-        aria-hidden="true"
-        sx={{
-          width: 48,
-          height: 48,
-          flexShrink: 0,
-          borderRadius: "50%",
-          bgcolor: "success.main",
-          color: "success.contrastText",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <CelebrationIcon />
-      </Box>
-      <Typography component="h2" variant="h2" sx={{ fontSize: { xs: "1.5rem", sm: "1.75rem" } }}>
-        {named && facts?.firstName ? t("done.headingNamed", { name: facts.firstName }) : t("done.heading")}
-      </Typography>
-    </Box>
+    <DoneHeading>{named && facts?.firstName ? t("done.headingNamed", { name: facts.firstName }) : t("done.heading")}</DoneHeading>
   );
 
   if (offer) {
@@ -235,35 +216,11 @@ export default async function CheckYourEmail({ eventTitle, whenLabel, eventHref,
         <Typography id="check-email-next" component="h3" variant="h3" sx={{ fontSize: "1.125rem", mb: 1.5 }}>
           {t("done.nextTitle")}
         </Typography>
-        <Stack component="ol" spacing={1.5} sx={{ listStyle: "none", p: 0, m: 0 }}>
+        <StepList>
           {NEXT.map(({ key, Icon }, index) => (
-            <Box component="li" key={key} sx={{ display: "grid", gridTemplateColumns: "40px 1fr", columnGap: 1.5, alignItems: "start" }}>
-              <Box
-                aria-hidden="true"
-                sx={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: "50%",
-                  bgcolor: index === 0 ? "primary.main" : "action.selected",
-                  color: index === 0 ? "primary.contrastText" : "text.primary",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <Icon fontSize="small" />
-              </Box>
-              <Box>
-                <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                  {t(`done.next.${key}.title`)}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {stepBody(key)}
-                </Typography>
-              </Box>
-            </Box>
+            <StepItem key={key} icon={<Icon fontSize="small" />} tone={index === 0 ? "primary" : "quiet"} title={t(`done.next.${key}.title`)} body={stepBody(key)} />
           ))}
-        </Stack>
+        </StepList>
       </Box>
 
       <Box sx={{ borderLeft: 3, borderColor: "primary.main", pl: 2 }}>

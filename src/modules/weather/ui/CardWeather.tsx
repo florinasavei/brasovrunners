@@ -1,5 +1,6 @@
 import WaterDropIcon from "@mui/icons-material/WaterDrop";
 import Box from "@mui/material/Box";
+import { SR_ONLY_SX } from "@/shared/ui/sr-only";
 import { rainLikely, type WeatherReading } from "../domain/forecast";
 import { weatherListWords, weatherWords } from "../words";
 import { WEATHER_GLYPH } from "./glyphs";
@@ -84,15 +85,3 @@ export default function CardWeather({ reading, locale }: { reading: WeatherReadi
     </Box>
   );
 }
-
-const SR_ONLY_SX = {
-  position: "absolute",
-  width: "1px",
-  height: "1px",
-  padding: 0,
-  margin: "-1px",
-  overflow: "hidden",
-  clip: "rect(0 0 0 0)",
-  whiteSpace: "nowrap",
-  border: 0,
-} as const;

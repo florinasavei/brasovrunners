@@ -6,35 +6,11 @@ import Chip from "@mui/material/Chip";
 import type { SxProps, Theme } from "@mui/material/styles";
 import Tooltip from "@mui/material/Tooltip";
 import { useState } from "react";
+import { SR_ONLY_SX } from "@/shared/ui/sr-only";
 import { readingTimeMs } from "@/shared/ui/tooltip-text";
 import type { DifficultyTooltipBlock as TooltipBlock } from "../domain/difficulty";
 import DifficultyTooltipBlock from "./DifficultyTooltipBlock";
 import { GLYPHS, type GlyphName } from "./glyphs";
-
-/**
- * Clipped to a single pixel and kept out of the flow, the standard technique for text a screen
- * reader must read and a sighted visitor never sees — unlike an `aria-label`, this works on any
- * element, including the plain, roleless `<div>` MUI's `Chip` renders when it is not `clickable`
- * (ARIA 1.2 does not allow naming a generic element, and browse-mode screen readers read such a
- * chip's own text and ignore the attribute).
- *
- * `'1px'`/`'-1px'` as strings, never the bare numbers `1`/`-1`: MUI's `sx` runs every `width`,
- * `height` and `margin` value through its spacing transform, which turns a number in `(0, 1]`
- * into a *percentage* of the theme's spacing unit read as a fraction — `width: 1` becomes
- * `100%`, not `1px` — so the "single pixel" box was in fact as wide and as tall as the chip
- * itself, sized like ordinary content rather than clipped out of the way.
- */
-const srOnlySx: SxProps<Theme> = {
-  position: "absolute",
-  width: "1px",
-  height: "1px",
-  padding: 0,
-  margin: "-1px",
-  overflow: "hidden",
-  clip: "rect(0 0 0 0)",
-  whiteSpace: "nowrap",
-  border: 0,
-};
 
 /**
  * A chip with a glyph in front of its word (§112), for a Server Component to render.
@@ -124,14 +100,14 @@ export default function GlyphChip({
         {srLabel ? (
           <>
             <span aria-hidden="true">{label}</span>
-            <Box component="span" sx={srOnlySx}>
+            <Box component="span" sx={SR_ONLY_SX}>
               {srLabel}
             </Box>
           </>
         ) : (
           label
         )}
-        {srSuffix && <Box component="span" sx={srOnlySx}>{` — ${srSuffix}`}</Box>}
+        {srSuffix && <Box component="span" sx={SR_ONLY_SX}>{` — ${srSuffix}`}</Box>}
         {closeMark && <CloseIcon aria-hidden="true" sx={{ fontSize: 14, ml: 0.5, verticalAlign: "-2px" }} />}
       </>
     ) : (
