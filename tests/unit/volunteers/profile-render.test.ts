@@ -975,9 +975,30 @@ describe("§773 the owner's note under the roles' list", () => {
       const help = page.indexOf(instruction);
       expect(help, language).toBeGreaterThan(0);
       expect(help).toBeLessThan(page.indexOf('data-testid="volunteer-role-option"'));
-      // A caption in the form's own style, read with the group: the fieldset names it.
+      // Read with the group: the fieldset names it.
       expect(page).toMatch(/<fieldset[^>]*aria-describedby="[^"]*volunteer-roleIds-note/);
-      expect(/<p[^>]*id="volunteer-roleIds-note"[^>]*class="[^"]*MuiTypography-body2/.test(page) || /<p[^>]*class="[^"]*MuiTypography-body2[^"]*"[^>]*id="volunteer-roleIds-note"/.test(page)).toBe(true);
+    }
+  });
+
+  it("is a banner (§797): the house's information Alert with its own glyph, the id and the test id on it, and not a live message", async () => {
+    for (const language of ["ro", "en"] as const) {
+      const page = await drawBox({}, language);
+      const tag = /<div\b[^>]*data-testid="volunteer-roles-note"[^>]*>/.exec(page)?.[0] ?? "";
+      expect(tag, language).not.toBe("");
+      // The Alert of severity info (MUI 9 draws it as `MuiAlert-colorInfo`), the fieldset's description target.
+      expect(tag).toContain("MuiAlert-root");
+      expect(tag).toContain("MuiAlert-colorInfo");
+      expect(tag).toContain('id="volunteer-roleIds-note"');
+      // Static text: MUI's default `role="alert"` is replaced by `note`, so it is not announced on load.
+      expect(tag).not.toContain('role="alert"');
+      expect(tag).toContain('role="note"');
+      // The glyph is the Alert's own, before the words; the words are the catalogue's, unchanged.
+      const from = page.indexOf(tag);
+      const body = page.slice(from, page.indexOf("</div></div>", from) + 12);
+      expect(body).toContain("MuiAlert-icon");
+      expect(body).toContain("<svg");
+      expect(body.indexOf("<svg")).toBeLessThan(body.indexOf("MuiAlert-message"));
+      expect(body).toContain(messages[language].Event.volunteers.choicesNote.replace("'", "&#x27;"));
     }
   });
 
