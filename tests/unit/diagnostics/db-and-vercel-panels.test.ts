@@ -126,7 +126,7 @@ describe("§NNN «Baza de date» on /devs", () => {
     }
   });
 
-  it("links the plan and keeps the link 44 pixels tall", async () => {
+  it("links the plan document from the card", async () => {
     state.locale = "ro";
     const out = await html(DatabaseSizesPanel({ sizes: SIZES }));
     expect(out).toContain('data-testid="db-size-plan-link"');
