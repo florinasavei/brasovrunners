@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V3.48-2026-10-16
+
+- **The volunteers' page: the kinder note is a banner** — the note under the roles (thanks, and «you may cover another responsibility») is now the house's information notice with its glyph instead of a grey line, and is not announced as an alert. §797.
 ## BR-V3.47-2026-10-16
 
 - **The Excel export: the member tick as its own column, the club's blue follows it, special guests in peach** — a new «Member tick (declared)» column («Yes») after «Club member», the blue on the member cells now means the person ticked, a pale lavender marks the other club runners (a member account or a typed club), a special guest's number, names and flag are peach and italic, «Statistici» gains «Au bifat că sunt membri {club}» as a live formula, and the legend says all of it; the CSV is unchanged. §796.
