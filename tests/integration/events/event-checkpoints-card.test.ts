@@ -48,12 +48,13 @@ const point = (id: string, km: number, over: Partial<Checkpoint> = {}): Checkpoi
   cutoffClock: null,
   noteRo: null,
   noteEn: null,
+  onProfile: true,
   ...over,
 });
 
 const proposal = (name: string, km: number, over: Partial<GpxProposal> = {}): GpxProposal => ({ name, km, kinds: [], offMeters: 4, tooFar: false, ...over });
 
-const base = { locale: "ro" as const, eventId: EVENT, checkpoints: [] as Checkpoint[], mayEdit: true, routeKm: 21.1 as number | null, gpx: null, previewOpen: false };
+const base = { locale: "ro" as const, eventId: EVENT, checkpoints: [] as Checkpoint[], mayEdit: true, routeKm: 21.1 as number | null, profile: null, distanceMeters: null, gpx: null, previewOpen: false };
 
 async function render(props: Partial<Parameters<typeof CheckpointsCard>[0]> = {}) {
   return renderToStaticMarkup(withClientWords(await CheckpointsCard({ ...base, ...props }), language));

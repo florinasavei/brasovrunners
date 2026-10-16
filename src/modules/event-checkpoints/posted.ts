@@ -28,6 +28,8 @@ export function postedCheckpoints(form: FormData): PostedCheckpoint[] {
       cutoffMinutesPart: text(checkpointBox(index, "cutoffMinutesPart")),
       noteRo: text(checkpointBox(index, "noteRo")),
       noteEn: text(checkpointBox(index, "noteEn")),
+      // A ticked box posts «on»; an unticked one posts nothing at all.
+      onProfile: text(checkpointBox(index, "onProfile")) === "on",
       remove: text(checkpointBox(index, "remove")) === "on",
     }));
 }

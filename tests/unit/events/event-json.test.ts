@@ -75,8 +75,8 @@ function sampleConfig(): EventConfig {
       gpx: { name: "traseu.gpx", url: GPX },
       // The route's checkpoints (§757, §770): one with a time limit in minutes and a note, one without either and with a direction kind.
       checkpoints: [
-        { km: 7.5, name: { ro: "Apă la cabană", en: "Water at the hut" }, kinds: ["WATER", "FOOD"], cutoffMinutes: 45, note: { ro: "Și banane", en: "Bananas too" } },
-        { km: 15, name: { ro: "Cronometrare", en: "Timing" }, kinds: ["TIMING", "DIRECTION"], cutoffMinutes: null, note: { ro: null, en: null } },
+        { km: 7.5, name: { ro: "Apă la cabană", en: "Water at the hut" }, kinds: ["WATER", "FOOD"], cutoffMinutes: 45, note: { ro: "Și banane", en: "Bananas too" }, onProfile: true },
+        { km: 15, name: { ro: "Cronometrare", en: "Timing" }, kinds: ["TIMING", "DIRECTION"], cutoffMinutes: null, note: { ro: null, en: null }, onProfile: true },
       ],
     },
     links: [],

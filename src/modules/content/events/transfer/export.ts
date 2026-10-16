@@ -139,6 +139,7 @@ export function configFromRows(event: EditableEvent, rows: readonly EditableTran
         kinds: [...row.kinds],
         cutoffMinutes: row.cutoffMinutes,
         note: { ro: row.noteRo, en: row.noteEn },
+        onProfile: row.onProfile,
       })),
     },
     links: readEventLinks(event.links),

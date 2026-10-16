@@ -516,6 +516,18 @@
       },
       "gpx": "Download the route (GPX)"
     },
+    "profile": {
+      "alt": "Alt",
+      "km": "km",
+      "start": "Start",
+      "finish": "Finish",
+      "label": "Route profile: {km} km, from {low} to {high} m",
+      "points": "Points on the profile",
+      "point": "{name}, at {km} km",
+      "readout": "{km} km · {altitude} m",
+      "readoutNamed": "{km} km · {altitude} m · {name}",
+      "pointer": "Route profile: use the left and right arrow keys to read the kilometre and the altitude."
+    },
     "video": {
       "title": "Event film (YouTube)",
       "notice": "The player is YouTube's and loads only when you open it.",
@@ -9650,7 +9662,14 @@
         "cutoffHelp": "From the start: the last runner has to pass by then. Leave empty for no limit.",
         "noteRo": "Note (Romanian)",
         "noteEn": "Note (English)",
-        "noteHelp": "Optional, in both languages or neither; at most {max} characters."
+        "noteHelp": "Optional, in both languages or neither; at most {max} characters.",
+        "onProfile": "Show on the route profile"
+      },
+      "profileHelp": "Unticked points stay in the table and on the page; only the profile leaves them out. The race number shows them as its “Race numbers” setting says.",
+      "preview": {
+        "title": "How it appears on the page",
+        "help": "It changes after “Save the points”, not while you type.",
+        "none": "The profile appears on the page once the route has a GPX file with altitudes."
       },
       "kinds": {
         "WATER": "Water",

@@ -1160,6 +1160,7 @@ async function seedCheckpoints(eventId: string) {
     cutoffMinutesPart: "",
     noteRo: "",
     noteEn: "",
+    onProfile: true,
     remove: false,
     index,
     ...over,

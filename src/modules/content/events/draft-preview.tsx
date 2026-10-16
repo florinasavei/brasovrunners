@@ -13,9 +13,11 @@ import { CARD_GRID_SX } from "@/modules/events/ui/card-layout";
 import EventCard from "@/modules/events/ui/EventCard";
 import EventPageView from "@/modules/events/ui/EventPageView";
 import { draftRegistrationDoor } from "@/modules/events/ui/registration-door";
+import { readRouteElevation } from "@/modules/routes/elevation/read";
 import { canPreviewEventDraft } from "@/modules/staff-identity/domain/roles";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { renderDraftForm } from "./draft-form";
+import { routeGpxKeyOf } from "./route-gpx";
 import { eventFormFieldName } from "./form-names";
 import { previewPageOf } from "./preview-view";
 import { findEventForEditing, listSeriesDates } from "./repository";
@@ -117,6 +119,9 @@ export async function renderEventDraftPreview<T extends Record<string, unknown>>
   const form = await renderDraftForm(db, { view, door: previewDoor.door, locale: input.locale, now, word: previewDoor.word, steps });
   // The route's checkpoints as saved (§757): they have a card and a save of their own, so the draft shows what is stored.
   const checkpoints = input.eventId ? await listCheckpoints(db, input.eventId) : [];
+  // And the route's elevation profile from the draft's GPX (§NNN), read from the store directly — the preview reads no public cache; a file that cannot be read leaves the chart out.
+  const gpxKey = routeGpxKeyOf(view.routeGpx);
+  const elevation = gpxKey ? await readRouteElevation(gpxKey).catch(() => null) : null;
 
   return {
     outcome: "ready",
@@ -128,7 +133,7 @@ export async function renderEventDraftPreview<T extends Record<string, unknown>>
     ),
     page: (
       <Box data-testid="draft-preview-page">
-        <EventPageView event={view} locale={input.locale} slug={view.slug} now={now} weather={null} membersOnly={view.membersOnly} checkpoints={checkpoints} preview={{ door: previewDoor, steps }} />
+        <EventPageView event={view} locale={input.locale} slug={view.slug} now={now} weather={null} membersOnly={view.membersOnly} checkpoints={checkpoints} elevation={elevation} preview={{ door: previewDoor, steps }} />
       </Box>
     ),
     form,

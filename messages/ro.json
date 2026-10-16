@@ -516,6 +516,18 @@
       },
       "gpx": "Descarcă traseul (GPX)"
     },
+    "profile": {
+      "alt": "Alt",
+      "km": "km",
+      "start": "Start",
+      "finish": "Sosire",
+      "label": "Profilul traseului: {km} km, de la {low} la {high} m",
+      "points": "Punctele de pe profil",
+      "point": "{name}, la {km} km",
+      "readout": "{km} km · {altitude} m",
+      "readoutNamed": "{km} km · {altitude} m · {name}",
+      "pointer": "Profilul traseului: cu săgețile stânga și dreapta vezi kilometrul și altitudinea."
+    },
     "video": {
       "title": "Filmul evenimentului (YouTube)",
       "notice": "Playerul este al YouTube și se încarcă abia când îl deschizi.",
@@ -9650,7 +9662,14 @@
         "cutoffHelp": "De la start: până atunci trebuie să treacă ultimul alergător. Lasă gol dacă nu e limită.",
         "noteRo": "Notă (română)",
         "noteEn": "Notă (engleză)",
-        "noteHelp": "Opțională, în ambele limbi sau în niciuna; cel mult {max} de caractere."
+        "noteHelp": "Opțională, în ambele limbi sau în niciuna; cel mult {max} de caractere.",
+        "onProfile": "Arată pe profilul traseului"
+      },
+      "profileHelp": "Punctele debifate rămân în tabel și pe pagină; doar profilul nu le desenează. Numărul de concurs le arată după setarea lui din „Numere”.",
+      "preview": {
+        "title": "Așa apare pe pagină",
+        "help": "Se schimbă după „Salvează punctele”, nu în timp ce scrii.",
+        "none": "Profilul apare pe pagină când traseul are un fișier GPX cu altitudini."
       },
       "kinds": {
         "WATER": "Apă",

@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { check, index, integer, numeric, pgEnum, pgTable, text, time, timestamp, uuid } from "drizzle-orm/pg-core";
+import { boolean, check, index, integer, numeric, pgEnum, pgTable, text, time, timestamp, uuid } from "drizzle-orm/pg-core";
 import { events } from "./events";
 
 /**
@@ -55,6 +55,12 @@ export const eventCheckpoints = pgTable(
     cutoffMinutes: integer("cutoff_minutes"),
     noteRo: text("note_ro"),
     noteEn: text("note_en"),
+    /**
+     * Whether the route's elevation profile draws this point (§NNN; the owner, 2026-10-16: «select which ones to show on the
+     * elevation profile»). On by default: a new point is on the chart until the club unticks it. Only the chart reads it — the
+     * public table lists every point, ticked or not.
+     */
+    onProfile: boolean("on_profile").notNull().default(true),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [

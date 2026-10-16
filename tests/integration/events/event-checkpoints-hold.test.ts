@@ -91,6 +91,7 @@ const posted = (index: number, over: Partial<PostedCheckpoint>): PostedCheckpoin
   cutoffMinutesPart: "",
   noteRo: "",
   noteEn: "",
+  onProfile: true,
   remove: false,
   index,
   ...over,
