@@ -41,7 +41,7 @@ export type RoleBoxes = {
 export async function fillRoleRow(row: Locator, boxes: RoleBoxes): Promise<void> {
   if (boxes.nameRo !== undefined) await row.getByLabel("Nume (RO)").fill(boxes.nameRo);
   if (boxes.nameEn !== undefined) await row.getByLabel("Nume (EN)").fill(boxes.nameEn);
-  if (boxes.needed !== undefined) await row.getByLabel("Câte persoane").fill(boxes.needed);
+  if (boxes.needed !== undefined) await row.getByLabel("Câte persoane", { exact: true }).fill(boxes.needed);
   if (boxes.unlimited !== undefined) {
     const tick = row.getByRole("checkbox", { name: "Nelimitat" });
     if (boxes.unlimited) await tick.check();

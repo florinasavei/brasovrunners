@@ -155,7 +155,7 @@ test.describe("§754 volunteers for a race", () => {
     await saveAllRoles(page, "Am salvat 2 roluri.");
     await openEditorBox(page, "Roluri");
     expect(await roleNames()).toEqual(["Sosire", "Punct de apă"]);
-    await expect(roleRow(page, "Punct de apă").getByLabel("Câte persoane")).toHaveValue("3");
+    await expect(roleRow(page, "Punct de apă").getByLabel("Câte persoane", { exact: true })).toHaveValue("3");
     await expect(roleRow(page, "Punct de apă").getByLabel("Poziția")).toHaveValue("2");
     // Back as they were, again by one press: the first place to «Punct de apă», two people.
     await fillRoleRow(roleRow(page, "Punct de apă"), { position: "1", needed: "2" });
@@ -1168,7 +1168,7 @@ test.describe("§754 volunteers for a race", () => {
     await openEditorBox(page, "Roluri");
     let blank = blankRoleRow(page);
     await fillRoleRow(blank, { nameRo: "Ajutor", nameEn: "Helper" });
-    const numberBox = blank.getByLabel("Câte persoane");
+    const numberBox = blank.getByLabel("Câte persoane", { exact: true });
     const noNumber = blank.getByRole("checkbox", { name: "Nelimitat" });
     // The tick is a real checkbox a thumb can press; the number box is shown until it is ticked, never `required`.
     await expect(noNumber).not.toBeChecked();
@@ -1182,10 +1182,10 @@ test.describe("§754 volunteers for a race", () => {
     await hydrated(page);
     blank = blankRoleRow(page);
     await expect(blank.getByLabel("Nume (RO)")).toHaveValue("Ajutor");
-    await expect(blank.getByLabel("Câte persoane")).toHaveAttribute("aria-invalid", "true");
+    await expect(blank.getByLabel("Câte persoane", { exact: true })).toHaveAttribute("aria-invalid", "true");
     // Ticked: the number box goes (the stylesheet alone), and the role is saved without one.
     await blank.getByRole("checkbox", { name: "Nelimitat" }).check();
-    await expect(blank.getByLabel("Câte persoane")).toBeHidden();
+    await expect(blank.getByLabel("Câte persoane", { exact: true })).toBeHidden();
     await saveAllRoles(page);
     await expect(roleRow(page, "Ajutor")).toBeAttached({ timeout: 30_000 });
 
@@ -1197,7 +1197,7 @@ test.describe("§754 volunteers for a race", () => {
     // The role's row: the tick is on, so the box that would say a number is not shown.
     const ajutor = roleRow(page, "Ajutor");
     await expect(ajutor.getByRole("checkbox", { name: "Nelimitat" })).toBeChecked();
-    await expect(ajutor.getByLabel("Câte persoane")).toBeHidden();
+    await expect(ajutor.getByLabel("Câte persoane", { exact: true })).toBeHidden();
 
     // --- The event takes volunteers: its page lists both roles, the volunteers' page offers both -------
     await page.goto(`/ro/admin/events/${event.id}`);
