@@ -8,7 +8,6 @@ import MarkEmailReadIcon from "@mui/icons-material/MarkEmailRead";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import QrCode2Icon from "@mui/icons-material/QrCode2";
 import Box from "@mui/material/Box";
-import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { getLocale, getTranslations } from "next-intl/server";
 import { unstable_rethrow } from "next/navigation";
@@ -17,6 +16,7 @@ import { daysPhrase, deadlineWords, leadPhrase } from "@/modules/deadlines/domai
 import { cachedDeadlines, cachedFamilyRegistrationOpen, cachedRefusalDisclosed } from "@/modules/public-cache/reads";
 import { confirmationDueAtStart, confirmationDueWords } from "@/modules/registrations/domain/hold-deadlines";
 import { DISCLOSURE_OPEN_ARROW, DISCLOSURE_SUMMARY_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
+import { StepItem, StepList } from "@/shared/ui/StepList";
 
 const STEPS = [
   { key: "form", Icon: PersonAddIcon },
@@ -104,50 +104,11 @@ export default async function RegistrationSteps({ folded = false, window = null,
         : t(`steps.${key}.body`, values);
 
   const list = (
-    <Stack component="ol" spacing={1.5} sx={{ listStyle: "none", p: 0, m: 0 }}>
+    <StepList>
       {STEPS.map(({ key, Icon }, index) => (
-        <Box component="li" key={key} sx={{ display: "grid", gridTemplateColumns: "40px 1fr", columnGap: 1.5, alignItems: "start" }}>
-          <Box
-            sx={{
-              width: 40,
-              height: 40,
-              borderRadius: "50%",
-              bgcolor: "primary.main",
-              color: "primary.contrastText",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-            aria-hidden="true"
-          >
-            <Icon fontSize="small" />
-          </Box>
-          <Box>
-            <Typography variant="body1" sx={{ fontWeight: 600 }}>
-              {index + 1}. {t(`steps.${key}.title`)}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              {stepBody(key)}
-            </Typography>
-          </Box>
-        </Box>
+        <StepItem key={key} icon={<Icon fontSize="small" />} title={`${index + 1}. ${t(`steps.${key}.title`)}`} body={stepBody(key)} />
       ))}
-      <Box component="li" sx={{ display: "grid", gridTemplateColumns: "40px 1fr", columnGap: 1.5, alignItems: "start" }}>
-        <Box
-          sx={{ width: 40, height: 40, borderRadius: "50%", bgcolor: "action.selected", display: "flex", alignItems: "center", justifyContent: "center" }}
-          aria-hidden="true"
-        >
-          <HourglassTopIcon fontSize="small" />
-        </Box>
-        <Box>
-          <Typography variant="body1" sx={{ fontWeight: 600 }}>
-            {t("steps.waitingList.title")}
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            {t("steps.waitingList.body", values)}
-          </Typography>
-        </Box>
-      </Box>
+      <StepItem tone="quiet" icon={<HourglassTopIcon fontSize="small" />} title={t("steps.waitingList.title")} body={t("steps.waitingList.body", values)} />
       {/*
         A family on one address (§389; the owner: "document this … then that person can receive up
         to 4 QR codes"): the one way to add a second runner is to send the form again, and the next
@@ -157,22 +118,7 @@ export default async function RegistrationSteps({ folded = false, window = null,
         everybody (§39).
       */}
       {familyOpen && (
-        <Box component="li" sx={{ display: "grid", gridTemplateColumns: "40px 1fr", columnGap: 1.5, alignItems: "start" }} data-testid="steps-family">
-          <Box
-            sx={{ width: 40, height: 40, borderRadius: "50%", bgcolor: "action.selected", display: "flex", alignItems: "center", justifyContent: "center" }}
-            aria-hidden="true"
-          >
-            <FamilyRestroomIcon fontSize="small" />
-          </Box>
-          <Box>
-            <Typography variant="body1" sx={{ fontWeight: 600 }}>
-              {t("steps.family.title")}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              {t("steps.family.body")}
-            </Typography>
-          </Box>
-        </Box>
+        <StepItem tone="quiet" testId="steps-family" icon={<FamilyRestroomIcon fontSize="small" />} title={t("steps.family.title")} body={t("steps.family.body")} />
       )}
       {/*
         The club's right to refuse a registration (§636; the owner, 2026-10-02: «La edițiile următoare
@@ -182,24 +128,9 @@ export default async function RegistrationSteps({ folded = false, window = null,
         the fold is exactly what it was.
       */}
       {refusalOn && (
-        <Box component="li" sx={{ display: "grid", gridTemplateColumns: "40px 1fr", columnGap: 1.5, alignItems: "start" }} data-testid="steps-refusal">
-          <Box
-            sx={{ width: 40, height: 40, borderRadius: "50%", bgcolor: "action.selected", display: "flex", alignItems: "center", justifyContent: "center" }}
-            aria-hidden="true"
-          >
-            <GavelIcon fontSize="small" />
-          </Box>
-          <Box>
-            <Typography variant="body1" sx={{ fontWeight: 600 }}>
-              {t("steps.refusal.title")}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              {t("steps.refusal.body")}
-            </Typography>
-          </Box>
-        </Box>
+        <StepItem tone="quiet" testId="steps-refusal" icon={<GavelIcon fontSize="small" />} title={t("steps.refusal.title")} body={t("steps.refusal.body")} />
       )}
-    </Stack>
+    </StepList>
   );
 
   if (!folded) {

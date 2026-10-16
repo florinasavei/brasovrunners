@@ -8,6 +8,10 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V3.50-2026-10-16
+
+- **The volunteers' page says what happens, and the form is wider** — four steps under the intro (open at once, the page being the form), a thank-you like the registration's with «Ce urmează» and where the receipt comes, the same facts in the receipt email, and a form as wide as the register page with its boxes in two columns on a desktop. The privacy notice's template names the volunteers' form among those that set the ten-minute cookies. §800.
+- **The feedback page is «Spune-ne ceva», and the lead card has no chip** — the title no longer says «(anonim)» above the choice to give a name, and the featured event keeps its border without a second «Alergarea principală» chip (the words stay for a screen reader). §801.
 ## BR-V3.49-2026-10-16
 
 - **«Timp limită» under «Traseu»** — on the event page the race's time limit now stands right after the route and before the cost, no longer between the date and the place. §798.

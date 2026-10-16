@@ -16,6 +16,7 @@ import PriorityHighIcon from "@mui/icons-material/PriorityHigh";
 import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 import RemoveIcon from "@mui/icons-material/Remove";
 import ScheduleIcon from "@mui/icons-material/Schedule";
+import StarIcon from "@mui/icons-material/Star";
 import StorefrontIcon from "@mui/icons-material/Storefront";
 import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 import TranslateIcon from "@mui/icons-material/Translate";
@@ -48,6 +49,9 @@ export const STATUS_GLYPHS = {
   club: GroupsIcon,
   // The shop's product page, a team member's links, a repeated event's count (§113).
   shop: StorefrontIcon,
+  // The first picture of a product, its cover (§707). The public table had `featured` — the star on the lead event's chip — until
+  // §470 was amended (the lead card wears its frame and no chip): a name no public file draws leaves that table.
+  cover: StarIcon,
   link: LinkIcon,
   series: EventRepeatIcon,
   // An event's own to-do's priority (§749): a word and a glyph, never the colour alone.

@@ -44,6 +44,8 @@ import {
 import GuardianFields from "./GuardianFields";
 import VolunteerCategoryCard from "./VolunteerCategoryCard";
 import VolunteerContactLine, { hasVolunteerContact } from "./VolunteerContactLine";
+import VolunteerDone, { type VolunteerSent } from "./VolunteerDone";
+import VolunteerSteps from "./VolunteerSteps";
 import VolunteerRoleChip, { RoleChipRow } from "./VolunteerRoleChip";
 import type { PublicVolunteerCategory, PublicVolunteerRole } from "../volunteers";
 import { VOLUNTEER_BOX_ID, type VolunteerBox as BoxName, type VolunteerOutcome, type VolunteerTyped } from "./volunteer-box";
@@ -63,6 +65,11 @@ import { VOLUNTEER_BOX_ID, type VolunteerBox as BoxName, type VolunteerOutcome, 
  * its own), the honeypot and the rendering time ride along as hidden fields, Turnstile shows when the club switched it
  * on, and the answer comes back as a sentence after a redirect to the same page — the same one for a new person and for
  * a repeat (BR-REQ-031-01 criterion 3) — with the house's flash toast beside it (§427).
+ *
+ * **Steps, thank-you and width (§800; the owner, 2026-10-16: «trebuie să îi spunem voluntarului care sunt pașii și că urmează să îl
+ * aprobăm», then «e prea îngust tot formularul»).** Under the intro stands «Cum funcționează voluntariatul» (`VolunteerSteps`, open at once: the page is the
+ * form itself, as the registration form's steps are open; the fold is for a page that is not the form); after a send the box is the thank-you with «Ce urmează» (`VolunteerDone`); and the form spans the
+ * page, which is the register page's width, its boxes in two columns from `md` up as the registration form's.
  *
  * The page draws this only while the offer's conditions hold (`readVolunteerOffer`, `volunteerOfferClosedFor`); the
  * action asks again.
@@ -85,6 +92,9 @@ import { VOLUNTEER_BOX_ID, type VolunteerBox as BoxName, type VolunteerOutcome, 
 export default async function VolunteerBox({
   locale,
   slug,
+  eventTitle,
+  whenInSentence,
+  sent,
   roles,
   categories = [],
   shirts,
@@ -100,6 +110,11 @@ export default async function VolunteerBox({
 }: {
   locale: Locale;
   slug: string;
+  /** The event's title and its start in its own zone and the page's language, written to stand inside a sentence — lower-case weekday, «la» before the hour (§452); null when held back (§533): the thank-you's lead names them (§800). */
+  eventTitle: string;
+  whenInSentence: string | null;
+  /** What the send kept for the thank-you (§800): the first name and the address typed; null when the browser has none. */
+  sent: VolunteerSent | null;
   /** Only the roles that still need people, in the club's order. */
   roles: readonly PublicVolunteerRole[];
   /**
@@ -138,6 +153,8 @@ export default async function VolunteerBox({
   // The roles under their categories (§774): only the headings that have a role still needing people; the heading words are the club's.
   const groups = groupRolesByCategory(categories, roles, { withRoles: true });
   const headed = groupsNeedHeadings(groups);
+  // Some category drawn has a contact person (§774): the steps and the thank-you point to it («scrisă la categoria ta»).
+  const hasContact = headed && groups.some((group) => group.category !== null && hasVolunteerContact(group.category.contact));
   const roleDoc = (role: PublicVolunteerRole) => (locale === "en" ? role.descriptionEnJson : role.descriptionRoJson);
   const roleWords = (role: PublicVolunteerRole) => (locale === "en" ? role.descriptionEn : role.descriptionRo);
   // «mai sunt necesare 10 persoane» only while the club ticked «Arată public câți voluntari mai sunt necesari» (§773); otherwise nothing: a role
@@ -185,15 +202,12 @@ export default async function VolunteerBox({
         {outcome === "done" ? (
           // The same sentence whether the person was new or already on the list (BR-REQ-031-01 criterion 3).
           <>
-            <Alert severity="success" role="status" data-testid="volunteer-done" sx={{ mt: 1 }}>
-              {t("volunteers.done")}
-              {/* Where the club takes minors, the same extra sentence for everybody: never a hint about who was typed (§768). */}
-              {minors && (
-                <Box component="span" sx={{ display: "block", mt: 1 }} data-testid="volunteer-done-guardian">
-                  {t("volunteers.doneGuardian")}
-                </Box>
-              )}
-            </Alert>
+            {/*
+              The thank-you is the registration's «Aproape gata, Ana!» for a volunteer (§800): the green-disc heading, the lead, when the
+              receipt email comes and «Ce urmează» (`VolunteerDone`). Where the club takes minors, the parent's consent is on the list for
+              everybody — never a hint about who was typed (§768).
+            */}
+            <VolunteerDone eventTitle={eventTitle} when={whenInSentence} sent={sent} minors={minors} contact={hasContact} />
             {/* The toast the send flashed (§427), here and on no other state of this page. */}
             <PublicFlash accept={["volunteerSent"]} />
           </>
@@ -203,7 +217,7 @@ export default async function VolunteerBox({
             {t("volunteers.allFull")}
           </Alert>
         ) : (
-          <Stack component="form" action={submitVolunteerAction} spacing={2} data-testid="volunteer-form" sx={{ mt: 1, maxWidth: 560 }}>
+          <Stack component="form" action={submitVolunteerAction} spacing={2} data-testid="volunteer-form" sx={{ mt: 1 }}>
             <input type="hidden" name="locale" value={locale} />
             <input type="hidden" name="slug" value={slug} />
             {/* Bots fill every field; a human never sees or fills this one. */}
@@ -213,6 +227,14 @@ export default async function VolunteerBox({
             <Typography variant="body2" color="text.secondary">
               {t("volunteers.intro")}
             </Typography>
+
+            {/*
+              «Cum funcționează voluntariatul» (§800; the owner, 2026-10-16: «trebuie să îi spunem voluntarului care sunt pașii și că urmează să
+              îl aprobăm»): the four steps, under the intro and above the roles, folded the way the register page draws its own (`RegistrationSteps
+              folded`), the summary saying the one fact a visitor wants first — that the organizers choose the role and confirm the person —
+              and the third step saying it in full.
+            */}
+            <VolunteerSteps minors={minors} contact={hasContact} />
 
             {outcome && (
               <Alert severity={outcome === "full" ? "warning" : "error"} role="alert" data-testid={`volunteer-${outcome}`}>
@@ -315,6 +337,21 @@ export default async function VolunteerBox({
               </Alert>
             </Box>
 
+            {/*
+              The boxes in two columns from `md` up, one below — the registration form's own pairing (`registration-form.tsx`, BR-REQ-041-01 is
+              phone-first and the phone is unchanged): on the left what a volunteer cannot be reached without — the name, the address and
+              the telephone number — beside what they say about themselves. §800 (the owner, 2026-10-16: «e prea îngust tot formularul»): the
+              page is the register page's width (`PAGE_WIDTH`) and the form is no longer capped at 560 pixels, so the categories' cards and
+              the chips above span the whole column and the boxes below keep half of it each. **Two columns only while there is a right one**
+              (`profile`): without it the three boxes take the whole width, never half of it beside nothing. The optional message, the
+              consents and the button close the form at full width, after every required box — the registration form's order, on a phone and
+              in the tab order.
+            */}
+            <Box
+              data-testid="volunteer-fields"
+              sx={profile ? { display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, columnGap: 4, rowGap: 2, alignItems: "start" } : undefined}
+            >
+            <Stack spacing={2} sx={{ minWidth: 0 }}>
             <TextField
               id={fieldId("name")}
               name="name"
@@ -358,9 +395,11 @@ export default async function VolunteerBox({
               error={invalid.has("phone")}
               helperText={invalid.has("phone") ? tForm("errors.phone") : t("volunteers.phoneHelp")}
             />
+            </Stack>
 
+            {/* …and, beside them from `md` up, what the person says about themselves (§765): the right column of the registration form's own pairing. */}
             {profile && (
-              <Stack spacing={2} data-testid="volunteer-profile">
+              <Stack spacing={2} sx={{ minWidth: 0 }} data-testid="volunteer-profile">
                 {/*
                   «Data nașterii» and «Sex» (§765, §773; the owner, 2026-10-14: «în loc de vârstă vreau să treacă data nașterii»): the registration
                   form's own date box — `BirthDateField`, typed day first with its mask and, with scripts off, a plain text box the server reads —
@@ -505,7 +544,9 @@ export default async function VolunteerBox({
                 </Box>
               </Stack>
             )}
+            </Box>
 
+            {/* The optional message, after the required boxes and at the form's full width. */}
             <TextField
               id={fieldId("message")}
               name="message"

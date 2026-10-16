@@ -16,9 +16,15 @@ const RACE = "Crosul aniversar Brașov Runners";
 const TRAIL_RUN = "Tură pe Tâmpa";
 const INTERVALS = "Antrenament de intervale";
 
+/**
+ * The lead card's heading begins with its visually hidden «Alergarea principală:» (§470 amended: no chip, the frame says it),
+ * and Playwright's text matcher reads clipped text too, so a title is matched with that prefix allowed.
+ */
+const titled = (name: string) =>
+  new RegExp(`^\\s*(?:Alergarea principală:\\s*)?${name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*$`);
 /** A card's or the hero's title, by its exact words — found in a closed fold too (the phone's "other events" folds past four cards). */
 const heading = (page: Page, name: string) =>
-  page.locator("#main").locator("h1, h2, h3").filter({ hasText: new RegExp(`^\\s*${name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*$`) });
+  page.locator("#main").locator("h1, h2, h3").filter({ hasText: titled(name) });
 const panel = (page: Page) => page.locator("#main").getByTestId("listing-filters");
 /** A box by its own name and value — found in a closed fold too, where it has no role to find it by. */
 const box = (page: Page, name: string, value: string) => panel(page).locator(`input[type="checkbox"][name="${name}"][value="${value}"]`);
@@ -136,7 +142,7 @@ test.describe("BR-REQ-041-01 the listing's filters are one collapsed button", ()
     // both projects, so the past panel is reached from an address that ticks two kinds — a box the
     // address ticks is always offered (§413, criterion 75) — never from a count of past rows.
     const ahead = (name: string) =>
-      page.getByTestId("listing-cards").locator("h1, h2, h3").filter({ hasText: new RegExp(`^\\s*${name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*$`) });
+      page.getByTestId("listing-cards").locator("h1, h2, h3").filter({ hasText: titled(name) });
     await page.goto("/ro/evenimente?past-type=RACE&past-type=GROUP_RUN");
     await hydrated(page);
     const section = page.locator("#main").getByTestId("past-events");

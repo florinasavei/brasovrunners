@@ -15,6 +15,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
  */
 let locale: "ro" | "en" = "ro";
 let draft: Record<string, string> | null = null;
+let namedOffered = false;
 let branches = { howItWent: true, suggestion: true };
 
 vi.mock("next-intl/server", async () => {
@@ -46,7 +47,7 @@ vi.mock("@/modules/public-cache/reads", () => ({
   cachedBotCheckSiteKey: async () => null,
   cachedContactFormReaches: async () => true,
   cachedFeedbackFormsDescribed: async () => true,
-  cachedFeedbackFormsNamedDescribed: async () => false,
+  cachedFeedbackFormsNamedDescribed: async () => namedOffered,
   cachedFeedbackOffer: async () => ({
     howItWent: { on: branches.howItWent, to: "club@example.org", via: "gmail" },
     suggestion: { on: branches.suggestion, to: "club@example.org", via: "gmail" },
@@ -87,6 +88,7 @@ function element(html: string, id: string): string {
 afterEach(() => {
   locale = "ro";
   draft = null;
+  namedOffered = false;
   branches = { howItWent: true, suggestion: true };
 });
 
@@ -113,6 +115,47 @@ describe("BR-REQ-070-04 «Spune-ne ceva», wider and clearer (§NNN)", () => {
     expect(other).toContain('data-testid="SwapHorizIcon"');
     expect(other).toContain(words);
     expect(html.indexOf('data-testid="feedback-other-branches"')).toBeLessThan(html.indexOf("<form"));
+  });
+
+  const H1 = /<h1\b[^>]*>([\s\S]*?)<\/h1>/g;
+  const h1s = (html: string) => [...html.matchAll(H1)].map((match) => match[1]);
+
+  it.each([
+    ["ro", "Spune-ne ceva", "(anonim)", "Anonim", "Poți scrie anonim sau cu numele tău."],
+    ["en", "Tell us something", "(anonymous)", "Anonymous", "You can write anonymously or with your name."],
+  ] as const)("the h1 is the form's name without «(anonim)»; where a name may be given the intro says so and the radios carry the reassurance (%s)", async (lang, title, suffix, radio, intro) => {
+    locale = lang;
+    namedOffered = true;
+    // The step-1 page: one h1, its intro, no suffix anywhere in the page's words.
+    const choose = await render({});
+    expect(h1s(choose)).toEqual([title]);
+    expect(choose).toContain(intro);
+    expect(choose).not.toContain(suffix);
+    // The form step: still one h1 without the suffix, and the identity radios (unchanged) say it instead.
+    const form = await render({ tip: "cum-a-fost" });
+    expect(h1s(form)).toEqual([title]);
+    expect(form).not.toContain(suffix);
+    expect(form).toContain('name="identity"');
+    expect(form).toContain('>' + radio + '<');
+    expect(form).not.toContain('data-testid="feedback-anonymous-only"');
+  });
+
+  it.each([
+    ["ro", "Mesajul tău e anonim.", "cu numele tău", "Anonim — Nu ne spui cine ești."],
+    ["en", "Your message is anonymous.", "with your name", "Anonymous — You do not tell us who you are."],
+  ] as const)("where the notice in force does not yet name a name, the page does not offer one and says the message is anonymous (%s)", async (lang, anonymous, offered, line) => {
+    locale = lang;
+    namedOffered = false;
+    // Step 1: the intro is the anonymous sentence, never «you can … with your name».
+    const choose = await render({});
+    expect(choose).toContain(anonymous);
+    expect(choose).not.toContain(offered);
+    // Step 2: no radios and no name box, and one line says what the radios would have: anonymous.
+    const form = await render({ tip: "cum-a-fost" });
+    expect(form).not.toContain('name="identity"');
+    expect(form).not.toContain(offered);
+    const said = /data-testid="feedback-anonymous-only"[^>]*>([\s\S]*?)<\/p>/.exec(form)?.[1].replace(/<!-- -->/g, "");
+    expect(said).toBe(line);
   });
 
   it("draws no «change the kind» button when one branch is on", async () => {
