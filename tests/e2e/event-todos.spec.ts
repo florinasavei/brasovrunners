@@ -5,7 +5,7 @@ import { hydrated, signIn } from "./support/featured-event";
 import { openEditorBox, openFold } from "./support/fold";
 
 /**
- * §749, amended by §752 — «De făcut pentru pagina evenimentului» (BR-REQ-050-01, BR-REQ-060-01): an
+ * §749, amended by §752 — «De făcut pentru pagina evenimentului» (two folds, shut on arrival, each with a summary line: every action opens its fold first) (BR-REQ-050-01, BR-REQ-060-01): an
  * Administrator and a Superadministrator open an event whose page lacks its cover, see the computed row
  * under «Lipsește pe pagină» and follow its link to the cover's card, add a task with Enter, change every
  * one of its fields through the pencil, tick it from its box and find it under «Gata», untick it, and
@@ -75,6 +75,11 @@ test.describe("§749 the event's «De făcut»", () => {
     await expect(card.locator("summary").first()).toContainText(/\d+ de făcut/);
     await expect(card.getByRole("heading", { name: "Lipsește pe pagină" })).toBeVisible();
     await expect(card.getByRole("heading", { name: "Sarcini" })).toBeVisible();
+    // …and its two folds are shut: the rows are one press away, behind a summary that says what is in them.
+    const pageFold = page.getByTestId("event-todos-page");
+    const ownFold = page.getByTestId("event-todos-own");
+    await expect(pageFold).not.toHaveAttribute("open", "");
+    await expect(ownFold).not.toHaveAttribute("open", "");
 
     // The events list says the same count beside the event: the computed rows (no typed line yet).
     const openLine = (await card.locator("summary").first().innerText()).match(/(\d+) de făcut/);
@@ -86,7 +91,8 @@ test.describe("§749 the event's «De făcut»", () => {
     await page.goto(`/ro/admin/events/${eventId}`);
     await hydrated(page);
 
-    // A computed row: no cover photo — a link with a priority word, no tick, no edit, no delete.
+    // A computed row: no cover photo — a link with a priority word, no tick, no edit, no delete. Open its fold first.
+    await openFold(pageFold);
     const cover = card.locator('[data-testid="event-todo-page-row"][data-rule="cover"]');
     await expect(cover).toContainText("Evenimentul nu are fotografie de copertă.");
     await expect(cover.getByTestId("event-todo-priority")).toHaveText("Normală");
@@ -101,9 +107,10 @@ test.describe("§749 the event's «De făcut»", () => {
     await expect(page.locator("#box-cover")).toHaveAttribute("open", "");
     await expect(page.getByTestId("cover-box")).toBeVisible();
 
-    // A task of the club's own, «Urgentă»: it is first among «Sarcini», and Enter sends it.
+    // A task of the club's own, «Urgentă»: it is first among «Sarcini», and Enter sends it. Open «Sarcini» first.
     await page.goto(`/ro/admin/events/${eventId}`);
     await hydrated(page);
+    await openFold(page.getByTestId("event-todos-own"));
     const add = page.getByTestId("event-todo-add");
     await add.getByLabel("Adaugă o sarcină").fill("Cere aprobarea pentru traseu");
     await add.getByLabel("Prioritate").selectOption("URGENT");
@@ -123,18 +130,31 @@ test.describe("§749 the event's «De făcut»", () => {
     await page.goto(`/ro/admin/events/${eventId}`);
     await hydrated(page);
 
-    // Give it to herself through the pencil.
+    // Give it to herself through the pencil — «Sarcini» is shut again on a fresh load.
+    await expect(page.getByTestId("event-todos-own")).not.toHaveAttribute("open", "");
+    await openFold(page.getByTestId("event-todos-own"));
     const row = page.getByTestId("event-todos-list").locator("li").first();
     await openFold(row.getByTestId("event-todo-edit"));
     await row.getByLabel("Cine").selectOption({ label: "Dev Administrator" });
     await row.getByRole("button", { name: "Salvează", exact: true }).click();
     await expect(page.getByTestId("event-todos-list").locator("li").first().getByTestId("event-todo-assignee")).toContainText("Pentru Dev Administrator");
 
-    // «Ale mele» keeps this row and drops the computed ones, which have nobody.
+    // «Ale mele» (inside «Sarcini») keeps this row among the tasks; the page's own rows have nobody and stay in their fold.
     await page.getByRole("link", { name: "Ale mele" }).click();
     await expect(page).toHaveURL(/mine=1/);
+    // Pressing it opens «Sarcini» by itself, and leaves «Lipsește pe pagină» shut.
+    await expect(page.getByTestId("event-todos-own")).toHaveAttribute("open", "");
+    await expect(page.getByTestId("event-todos-page")).not.toHaveAttribute("open", "");
     await expect(page.getByTestId("event-todos-list").locator("li")).toHaveCount(1);
-    await expect(page.getByTestId("event-todo-page-row")).toHaveCount(0);
+    await expect(page.getByTestId("event-todo-page-row")).toHaveCount(lacking);
+
+    // «Toate» keeps «Sarcini» open: the fold the person is using never shuts under them.
+    await page.getByRole("link", { name: "Toate", exact: true }).click();
+    await expect(page).toHaveURL(/todos=1/);
+    await expect(page.getByTestId("event-todos-own")).toHaveAttribute("open", "");
+    await page.getByRole("link", { name: "Ale mele" }).click();
+    await expect(page).toHaveURL(/mine=1/);
+    await expect(page.getByTestId("event-todos-own")).toHaveAttribute("open", "");
 
     // Tick it from its box: it leaves the open list and waits under «Gata», and «Ale mele» is still on.
     await page.getByRole("checkbox", { name: /^Bifează: Cere aprobarea/ }).click();
@@ -150,6 +170,89 @@ test.describe("§749 the event's «De făcut»", () => {
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
   });
 
+  test("arrives with both folds shut, and each shut line reads right at this width", async ({ page }, testInfo) => {
+    const tag = `${testInfo.project.name}-${Date.now().toString(36)}`;
+    const eventId = await seedEvent(tag);
+    await signIn(page, "Dev Administrator");
+    await page.goto(`/ro/admin/events/${eventId}`);
+    await hydrated(page);
+    const card = page.getByTestId("event-todos");
+    const pageFold = page.getByTestId("event-todos-page");
+    const ownFold = page.getByTestId("event-todos-own");
+
+    // Both shut, and each fold's row is on the screen: its words, how many, how pressing.
+    await expect(card).toHaveAttribute("open", "");
+    await expect(pageFold).not.toHaveAttribute("open", "");
+    await expect(ownFold).not.toHaveAttribute("open", "");
+    await expect(pageFold.locator("summary").first()).toBeVisible();
+    await expect(pageFold.locator("summary").first()).toContainText(/Lipsește pe pagină\s*\d+ (?:de )?rânduri/);
+    await expect(pageFold.locator("summary").first().getByTestId("event-todo-fold-priority").first()).toBeVisible();
+    await expect(ownFold.locator("summary").first()).toContainText(/Sarcini\s*nicio sarcină deschisă/);
+    // Nothing of «Sarcini» is drawn while it is shut: not the add line, not the chips.
+    await expect(card.getByTestId("event-todo-add")).toBeHidden();
+    await expect(card.getByRole("navigation", { name: "Ce rânduri arăt" })).toBeHidden();
+    // The two summaries are targets a thumb can hit.
+    for (const fold of [pageFold, ownFold]) expect((await fold.locator("summary").first().boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+
+    // An urgent task of mine says so on the shut line after a fresh load.
+    await openFold(ownFold);
+    const add = card.getByTestId("event-todo-add");
+    await add.getByLabel("Adaugă o sarcină").fill("Banda cu sponsori");
+    await add.getByLabel("Prioritate").selectOption("URGENT");
+    await openFold(add.getByTestId("event-todo-add-more"));
+    await add.getByLabel("Cine").selectOption({ label: "Dev Administrator" });
+    await add.getByLabel("Adaugă o sarcină").press("Enter");
+    await expect(page.getByTestId("toast-live")).toContainText("Rând adăugat", { timeout: 20_000 });
+    // The press that worked leaves «Sarcini» open on its result, «Lipsește pe pagină» shut.
+    await expect(page.getByTestId("event-todos-own")).toHaveAttribute("open", "");
+    await expect(page.getByTestId("event-todos-page")).not.toHaveAttribute("open", "");
+
+    await page.goto(`/ro/admin/events/${eventId}`);
+    await hydrated(page);
+    await expect(ownFold).not.toHaveAttribute("open", "");
+    const line = ownFold.locator("summary").first();
+    await expect(line).toContainText(/Sarcini\s*1 de făcut · 1 a mea/);
+    await expect(line.getByTestId("event-todo-fold-priority")).toHaveText("Urgentă");
+    await card.scrollIntoViewIfNeeded();
+    await card.screenshot({ path: `test-results/todos-folds-shut-${testInfo.project.name}.png` });
+    // Inside the screen, whichever width the project has — 320 pixels on the phone project.
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
+  });
+
+  test("opens the fold an address names, and only that one", async ({ page }, testInfo) => {
+    const tag = `${testInfo.project.name}-${Date.now().toString(36)}`;
+    const eventId = await seedEvent(tag);
+    await signIn(page, "Dev Administrator");
+
+    // A row of «Lipsește pe pagină» in the address: that fold opens, the card around it too, «Sarcini» stays shut.
+    await page.goto(`/ro/admin/events/${eventId}#event-todo-page-cover`);
+    await hydrated(page);
+    await expect(page.getByTestId("event-todos")).toHaveAttribute("open", "");
+    await expect(page.getByTestId("event-todos-page")).toHaveAttribute("open", "");
+    await expect(page.getByTestId("event-todos-own")).not.toHaveAttribute("open", "");
+
+    // «Sarcini» by its own address, on a fresh load (a change of the fragment alone keeps the folds the reader opened):
+    // that one opens, the other stays shut.
+    await page.goto("about:blank");
+    await page.goto(`/ro/admin/events/${eventId}#box-todos-own`);
+    await hydrated(page);
+    await expect(page.getByTestId("event-todos-own")).toHaveAttribute("open", "");
+    await expect(page.getByTestId("event-todos-page")).not.toHaveAttribute("open", "");
+  });
+
+  test("opens «Sarcini» by itself for a press that worked, «Ale mele» and «Toate», on a fresh load", async ({ page }, testInfo) => {
+    const tag = `${testInfo.project.name}-${Date.now().toString(36)}`;
+    const eventId = await seedEvent(tag);
+    await signIn(page, "Dev Administrator");
+    for (const query of ["todoSaved=1", "mine=1", "todos=1"]) {
+      await page.goto("about:blank");
+      await page.goto(`/ro/admin/events/${eventId}?${query}#box-todos-own`);
+      await hydrated(page);
+      await expect(page.getByTestId("event-todos-own"), query).toHaveAttribute("open", "");
+      await expect(page.getByTestId("event-todos-page"), query).not.toHaveAttribute("open", "");
+    }
+  });
+
   for (const identity of ["Dev Administrator", "Dev Superadministrator"]) {
     test(`${identity} changes every part of a task, and the card stays the reader's own after each press`, async ({ page }, testInfo) => {
       const tag = `${testInfo.project.name}-${Date.now().toString(36)}`;
@@ -160,6 +263,9 @@ test.describe("§749 the event's «De făcut»", () => {
       const card = page.getByTestId("event-todos");
       const add = card.getByTestId("event-todo-add");
       const open = card.getByTestId("event-todos-list");
+
+      // Every action is inside «Sarcini», shut on arrival: open it through its summary first.
+      await openFold(card.getByTestId("event-todos-own"));
 
       // Add with Enter, the words only: «Normală», nobody, no day.
       await add.getByLabel("Adaugă o sarcină").fill("Banda cu sponsori");

@@ -20,13 +20,16 @@ export default function StatusChip({
   color = "default",
   variant = "filled",
   testId,
+  inline = false,
 }: {
   glyph: StatusGlyphName;
   label: string;
   color?: "default" | "primary" | "secondary" | "success" | "warning" | "error";
   variant?: "filled" | "outlined";
   testId?: string;
+  /** Drawn as a `<span>`, for a chip inside a heading or a summary, where a `<div>` is not phrasing content. */
+  inline?: boolean;
 }) {
   const Icon = STATUS_GLYPHS[glyph];
-  return <Chip size="small" color={color} variant={variant} icon={<Icon />} label={label} {...(testId ? { "data-testid": testId } : {})} />;
+  return <Chip size="small" {...(inline ? { component: "span" } : {})} color={color} variant={variant} icon={<Icon />} label={label} {...(testId ? { "data-testid": testId } : {})} />;
 }

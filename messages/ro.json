@@ -5157,6 +5157,7 @@
       "empty": "Nimic de făcut: pagina are tot ce îi trebuie și clubul n-a scris nimic aici.",
       "emptyMine": "Nimic deschis pe numele tău.",
       "noTasks": "Nicio sarcină deschisă. Scrie una mai sus.",
+      "noTasksRead": "Nicio sarcină deschisă.",
       "tick": "Bifează: {text}",
       "untick": "Debifează: {text}",
       "tickWord": "Bifează",
@@ -5210,6 +5211,27 @@
         "capacity": "Cursa cu înscriere pe site nu are număr de locuri (acum fără limită).",
         "bibDesign": "Numerele de concurs n-au un aspect ales: se tipăresc în varianta simplă.",
         "declaration": "Declarația semnată de participanți nu e aprobată: nimeni nu se poate înscrie."
+      },
+      "fold": {
+        "pageRows": {
+          "one": "{count} rând",
+          "few": "{count} rânduri",
+          "other": "{count} de rânduri"
+        },
+        "pageNone": "nimic nu lipsește",
+        "pageNoneBody": "Pagina are tot ce îi trebuie.",
+        "ownCount": "{count} de făcut",
+        "ownNone": "nicio sarcină deschisă",
+        "mine": {
+          "one": "{count} a mea",
+          "few": "{count} ale mele",
+          "other": "{count} ale mele"
+        },
+        "overdue": {
+          "one": "{count} întârziată",
+          "few": "{count} întârziate",
+          "other": "{count} întârziate"
+        }
       },
       "chip": "{count} de făcut"
     },

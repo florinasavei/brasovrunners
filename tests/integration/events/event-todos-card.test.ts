@@ -185,8 +185,9 @@ describe("§749 the card «De făcut pentru pagina evenimentului»", () => {
     const mine = item("mine", "al meu", { assigneeStaffUserId: ME, assigneeName: "Ana Admin" });
     const theirs = item("theirs", "al lor", { assigneeStaffUserId: "someone" });
     const html = await render({ computed: [page("cover", "cover", "NORMAL", "box-cover")], items: [mine, theirs], mine: true });
-    expect(order(html)).toEqual(["mine"]);
-    expect(html).toContain("?mine=1#box-todos");
+    // The filter is on the club's tasks only (§752: the chips sit inside «Sarcini»); what the page lacks has nobody and stays.
+    expect(order(html)).toEqual(["cover", "mine"]);
+    expect(html).toContain("?mine=1&amp;todos=1#box-todos-own");
     expect(html).toContain("Ale mele");
   });
 
@@ -222,6 +223,244 @@ describe("§749 the card «De făcut pentru pagina evenimentului»", () => {
       expect(html).toContain("Tasks");
       expect(html).toContain(">Urgent<");
       expect(html).toContain("The event has no cover photo.");
+    } finally {
+      language = "ro";
+    }
+  });
+});
+
+/** Whether the `<details>` with this id is drawn open. */
+const foldOpen = (html: string, id: string) => {
+  const tag = html.match(new RegExp(`<details[^>]*id="${id}"[^>]*>`))?.[0];
+  if (!tag) throw new Error(`no fold ${id}`);
+  return /\sopen(?:=""|\s|>)/.test(tag);
+};
+
+/** The closed line of a fold: from its opening tag to the end of its `<summary>`. */
+const summaryOf = (html: string, id: string) => {
+  const from = html.indexOf(`id="${id}"`);
+  expect(from, id).toBeGreaterThan(-1);
+  return html.slice(from, html.indexOf("</summary>", from));
+};
+
+const text = (html: string) => html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ");
+
+describe("§752 amended — the card's two folds, closed by default, each with a summary line", () => {
+  const someTasks = [
+    item("late", "Întârziată", { priority: "HIGH", assigneeStaffUserId: ME, assigneeName: "Ana Admin", dueOn: "2026-10-01" }),
+    item("mine", "A mea", { assigneeStaffUserId: ME, assigneeName: "Ana Admin" }),
+    item("low", "Oricine", { priority: "LOW" }),
+    item("done", "Terminat", { doneAt: new Date("2026-10-10T08:00:00.000Z"), doneByName: "Ana Admin" }),
+  ];
+
+  it("draws «Lipsește pe pagină» and «Sarcini» as two named folds inside the card, both shut on arrival", async () => {
+    const html = await render({ computed: [page("cover", "cover", "NORMAL", "box-cover")], items: someTasks });
+    expect(html).toContain('data-testid="event-todos-page"');
+    expect(html).toContain('data-testid="event-todos-own"');
+    expect(foldOpen(html, "box-todos")).toBe(true);
+    expect(foldOpen(html, "box-todos-page")).toBe(false);
+    expect(foldOpen(html, "box-todos-own")).toBe(false);
+    // Each is a heading inside its summary (level 3, under the card's own), so a screen reader finds a shut fold by name.
+    expect(summaryOf(html, "box-todos-page")).toMatch(/<h3[^>]*>[\s\S]*Lipsește pe pagină/);
+    expect(summaryOf(html, "box-todos-own")).toMatch(/<h3[^>]*>[\s\S]*Sarcini/);
+    // The two are siblings in the card, a step apart: neither holds the other.
+    expect(html.indexOf('id="box-todos-own"')).toBeGreaterThan(html.indexOf('id="box-todos-page"'));
+    expect(html.slice(html.indexOf('id="box-todos-page"'), html.indexOf('id="box-todos-own"'))).toContain("</details>");
+  });
+
+  it("puts a glyph before each fold's words", async () => {
+    const html = await render({ computed: [page("cover", "cover", "NORMAL", "box-cover")], items: someTasks });
+    expect(summaryOf(html, "box-todos-page")).toMatch(/<svg[^>]*aria-hidden="true"[^>]*data-testid="AssignmentLateIcon"[\s\S]*?Lipsește pe pagină/);
+    expect(summaryOf(html, "box-todos-own")).toMatch(/<svg[^>]*aria-hidden="true"[^>]*data-testid="PlaylistAddCheckIcon"[\s\S]*?Sarcini/);
+  });
+
+  it("says on the shut «Lipsește pe pagină» how many rows and the most pressing priority as a chip", async () => {
+    const html = await render({ computed: [page("cover", "cover", "NORMAL", "box-cover"), page("declaration", "declaration", "URGENT", "box-declaration")], items: [] });
+    const line = summaryOf(html, "box-todos-page");
+    expect(text(line)).toContain("2 rânduri");
+    expect(line).toMatch(/data-testid="event-todo-fold-priority"/);
+    expect(line).toContain(">Urgentă<");
+    expect(line).not.toContain(">Normală<");
+  });
+
+  it("declines «rând» the way Romanian does", async () => {
+    const one = await render({ computed: [page("cover", "cover", "NORMAL", "box-cover")], items: [] });
+    expect(text(summaryOf(one, "box-todos-page"))).toContain("1 rând ");
+    const many = await render({ computed: Array.from({ length: 20 }, (_, index) => page(`t${index}`, "cover", "LOW", "box-cover")), items: [] });
+    expect(text(summaryOf(many, "box-todos-page"))).toContain("20 de rânduri");
+  });
+
+  it("keeps «Lipsește pe pagină» drawn, shut, saying «nimic nu lipsește» when nothing is missing", async () => {
+    const html = await render({ computed: [], items: someTasks });
+    const line = summaryOf(html, "box-todos-page");
+    expect(text(line)).toContain("nimic nu lipsește");
+    expect(line).not.toContain("event-todo-fold-priority");
+    expect(foldOpen(html, "box-todos-page")).toBe(false);
+    expect(html).toContain("Pagina are tot ce îi trebuie.");
+    expect(html).not.toContain('data-testid="event-todos-page-list"');
+  });
+
+  it("says on the shut «Sarcini» how many are left, how many are mine, how many are late, and the most pressing priority", async () => {
+    const html = await render({ computed: [], items: someTasks });
+    const line = summaryOf(html, "box-todos-own");
+    expect(text(line)).toContain("3 de făcut");
+    expect(text(line)).toContain("2 ale mele");
+    // One task is «1 a mea», never «1 ale mele».
+    const one = await render({ computed: [], items: [item("m", "A mea", { assigneeStaffUserId: ME, assigneeName: "Ana Admin" })] });
+    expect(text(summaryOf(one, "box-todos-own"))).toContain("1 a mea");
+    expect(text(summaryOf(one, "box-todos-own"))).not.toContain("1 ale mele");
+    expect(text(line)).toContain("1 întârziată");
+    expect(line).toContain(">Mare<");
+    expect(line).not.toContain(">Mică<");
+    // A ticked task is not counted.
+    expect(text(line)).not.toContain("4 de făcut");
+  });
+
+  it("leaves «ale mele» and «întârziate» out when there are none, and speaks the plural", async () => {
+    const none = await render({ computed: [], items: [item("a", "a"), item("b", "b")] });
+    const line = text(summaryOf(none, "box-todos-own"));
+    expect(line).toContain("2 de făcut");
+    expect(line).not.toContain("ale mele");
+    expect(line).not.toContain("întârziat");
+    const late = await render({ computed: [], items: [item("a", "a", { dueOn: "2026-10-01" }), item("b", "b", { dueOn: "2026-10-02" })] });
+    expect(text(summaryOf(late, "box-todos-own"))).toContain("2 întârziate");
+  });
+
+  it("says «nicio sarcină deschisă» with no chip when no task is open", async () => {
+    const html = await render({ computed: [], items: [someTasks[3]] });
+    const line = summaryOf(html, "box-todos-own");
+    expect(text(line)).toContain("nicio sarcină deschisă");
+    expect(line).not.toContain("event-todo-fold-priority");
+  });
+
+  it("counts over all the data, never over «Ale mele»", async () => {
+    const all = await render({ computed: [page("cover", "cover", "NORMAL", "box-cover")], items: someTasks });
+    const filtered = await render({ computed: [page("cover", "cover", "NORMAL", "box-cover")], items: someTasks, mine: true });
+    // «Ale mele» opens «Sarcini»: the one difference is the fold's `open`, not a word of its line.
+    expect(summaryOf(filtered, "box-todos-own").replace(' open=""', "")).toBe(summaryOf(all, "box-todos-own"));
+    expect(text(summaryOf(filtered, "box-todos-page"))).toBe(text(summaryOf(all, "box-todos-page")));
+    expect(text(filtered)).toContain("4 de făcut");
+  });
+
+  it("holds the filter chips, the add row and «Mai multe» inside «Sarcini», and only the rows inside «Lipsește pe pagină»", async () => {
+    const html = await render({ computed: [page("cover", "cover", "NORMAL", "box-cover")], items: someTasks });
+    const pageFold = html.slice(html.indexOf('id="box-todos-page"'), html.indexOf('id="box-todos-own"'));
+    const ownFold = html.slice(html.indexOf('id="box-todos-own"'));
+    // Nothing of «Sarcini» above or inside the first fold…
+    for (const own of ['aria-label="Ce rânduri arăt"', 'data-testid="event-todo-add"', "Mai multe: cine, termen", 'name="priority"']) {
+      expect(pageFold, own).not.toContain(own);
+      expect(ownFold, own).toContain(own);
+    }
+    expect(html.slice(0, html.indexOf('id="box-todos-page"'))).not.toContain('aria-label="Ce rânduri arăt"');
+    // …and the order inside «Sarcini»: chips, then the add row, then the rows.
+    expect(ownFold.indexOf('aria-label="Ce rânduri arăt"')).toBeLessThan(ownFold.indexOf('data-testid="event-todo-add"'));
+    expect(ownFold.indexOf('data-testid="event-todo-add"')).toBeLessThan(ownFold.indexOf('data-testid="event-todos-list"'));
+    // The page fold holds its row as the one link, and the priority chip.
+    expect(pageFold).toContain('data-testid="event-todo-fill"');
+    expect(pageFold).toContain('data-testid="event-todo-priority"');
+  });
+
+  it("opens «Sarcini» alone for a refusal of its forms", async () => {
+    const html = await render({ computed: [page("cover", "cover", "NORMAL", "box-cover")], items: someTasks, error: "Nu ai voie." });
+    expect(foldOpen(html, "box-todos-own")).toBe(true);
+    expect(foldOpen(html, "box-todos-page")).toBe(false);
+    expect(html).toContain("Nu ai voie.");
+  });
+
+  it("opens «Sarcini» alone for a press that just worked", async () => {
+    const html = await render({ computed: [page("cover", "cover", "NORMAL", "box-cover")], items: someTasks, saved: true });
+    expect(foldOpen(html, "box-todos-own")).toBe(true);
+    expect(foldOpen(html, "box-todos-page")).toBe(false);
+  });
+
+  it("opens «Sarcini» alone while «Ale mele» is on", async () => {
+    const html = await render({ computed: [page("cover", "cover", "NORMAL", "box-cover")], items: someTasks, mine: true });
+    expect(foldOpen(html, "box-todos-own")).toBe(true);
+    expect(foldOpen(html, "box-todos-page")).toBe(false);
+  });
+
+  it("keeps «Sarcini» open for «Toate» too: the chips' addresses carry the marker, and the marker holds the fold", async () => {
+    const html = await render({ computed: [page("cover", "cover", "NORMAL", "box-cover")], items: someTasks, inUse: true });
+    expect(foldOpen(html, "box-todos-own")).toBe(true);
+    expect(foldOpen(html, "box-todos-page")).toBe(false);
+    // Both chips keep the fold in use, with or without scripts.
+    expect(html).toMatch(/href="[^"]*\?todos=1#box-todos-own"/);
+    expect(html).toMatch(/href="[^"]*\?mine=1&amp;todos=1#box-todos-own"/);
+  });
+
+  it("opens the shut card itself for a press that just worked, even when nothing is left open", async () => {
+    const html = await render({ computed: [], items: [], saved: true });
+    expect(foldOpen(html, "box-todos")).toBe(true);
+    expect(foldOpen(html, "box-todos-own")).toBe(true);
+    const refused = await render({ computed: [], items: [], error: "Nu ai voie." });
+    expect(foldOpen(refused, "box-todos")).toBe(true);
+    const calm = await render({ computed: [], items: [] });
+    expect(foldOpen(calm, "box-todos")).toBe(false);
+  });
+
+  it("does not tell a reader «clubul n-a scris nimic» while the page lacks rows or ticked tasks exist", async () => {
+    const lacking = await render({ computed: [page("cover", "cover", "NORMAL", "box-cover")], items: [], mayEdit: false });
+    const ownLacking = lacking.slice(lacking.indexOf('id="box-todos-own"'));
+    expect(ownLacking).not.toContain("clubul n-a scris nimic aici");
+    expect(ownLacking).toContain("Nicio sarcină deschisă.");
+    expect(ownLacking).not.toContain("Scrie una mai sus");
+    const ticked = await render({ computed: [], items: [someTasks[3]], mayEdit: false });
+    expect(ticked).not.toContain("clubul n-a scris nimic aici");
+    expect(ticked).toContain("Gata (1)");
+    // Nothing at all: the all-clear stays true, for a reader too.
+    const nothing = await render({ computed: [], items: [], mayEdit: false });
+    expect(nothing).toContain("clubul n-a scris nimic aici");
+  });
+
+  it("puts the priority chip of a shut line in a span, never a div inside the heading", async () => {
+    const html = await render({ computed: [page("declaration", "declaration", "URGENT", "box-declaration")], items: [] });
+    expect(summaryOf(html, "box-todos-page")).toMatch(/<span[^>]*data-testid="event-todo-fold-priority"[^>]*MuiChip-root/);
+    expect(summaryOf(html, "box-todos-page")).not.toMatch(/<div[^>]*(?:MuiChip-root|event-todo-fold-priority)/);
+  });
+
+  it("opens nothing else by itself: not for an urgent row, not for an overdue task, not for one of mine", async () => {
+    const html = await render({ computed: [page("declaration", "declaration", "URGENT", "box-declaration")], items: [item("a", "a", { priority: "URGENT", dueOn: "2026-10-01", assigneeStaffUserId: ME })] });
+    expect(foldOpen(html, "box-todos-page")).toBe(false);
+    expect(foldOpen(html, "box-todos-own")).toBe(false);
+  });
+
+  it("gives each fold and each row an address, so a hash opens the fold around it (OpenFoldFromHash)", async () => {
+    const html = await render({ computed: [page("cover", "cover", "NORMAL", "box-cover")], items: [item("a", "Un rând")] });
+    const pageAt = html.indexOf('id="box-todos-page"');
+    const ownAt = html.indexOf('id="box-todos-own"');
+    const pageRowAt = html.indexOf('id="event-todo-page-cover"');
+    const ownRowAt = html.indexOf('id="event-todo-own-a"');
+    expect(pageRowAt).toBeGreaterThan(pageAt);
+    expect(pageRowAt).toBeLessThan(ownAt);
+    expect(ownRowAt).toBeGreaterThan(ownAt);
+    // The chips point at «Sarcini», so a press lands on it open.
+    expect(html).toContain("#box-todos-own");
+  });
+
+  it("keeps both folds for a role that only reads, with no form in either", async () => {
+    const html = await render({ computed: [page("cover", "cover", "NORMAL", "box-cover")], items: someTasks, mayEdit: false });
+    expect(html).toContain('id="box-todos-page"');
+    expect(html).toContain('id="box-todos-own"');
+    expect(text(summaryOf(html, "box-todos-own"))).toContain("3 de făcut");
+    expect(html).not.toContain('data-testid="event-todo-add"');
+    expect(html).not.toContain('role="checkbox"');
+  });
+
+  it("speaks English on the shut lines", async () => {
+    language = "en";
+    try {
+      const html = await render({
+        computed: [page("cover", "cover", "NORMAL", "box-cover"), page("declaration", "declaration", "URGENT", "box-declaration")],
+        items: someTasks,
+        locale: "en" as never,
+      });
+      expect(text(summaryOf(html, "box-todos-page"))).toContain("2 rows");
+      expect(text(summaryOf(html, "box-todos-own"))).toContain("3 to do");
+      expect(text(summaryOf(html, "box-todos-own"))).toContain("2 mine");
+      expect(text(summaryOf(html, "box-todos-own"))).toContain("1 overdue");
+      const none = await render({ computed: [], items: [], locale: "en" as never });
+      expect(text(summaryOf(none, "box-todos-page"))).toContain("nothing is missing");
+      expect(text(summaryOf(none, "box-todos-own"))).toContain("no open tasks");
     } finally {
       language = "ro";
     }

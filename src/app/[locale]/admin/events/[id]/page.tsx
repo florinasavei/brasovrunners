@@ -163,7 +163,7 @@ import { startBoxValues, typedStartOrNull } from "@/modules/events/domain/provis
 
 type Props = {
   params: Promise<{ locale: string; id: string }>;
-  searchParams: Promise<{ error?: string; saved?: string; assigned?: string; total?: string; created?: string; applied?: string; offered?: string; notConfirmed?: string; test?: string; notPublished?: string; announced?: string; notice?: string; queued?: string; moved?: string; movedTo?: string; movedSent?: string; count?: string; from?: string; to?: string; erased?: string; recent?: string; limited?: string; testQueued?: string; mine?: string; todoError?: string; volunteerError?: string; checkpointsGpx?: string } & Partial<Record<keyof PlacesTaken, string>>>;
+  searchParams: Promise<{ error?: string; saved?: string; assigned?: string; total?: string; created?: string; applied?: string; offered?: string; notConfirmed?: string; test?: string; notPublished?: string; announced?: string; notice?: string; queued?: string; moved?: string; movedTo?: string; movedSent?: string; count?: string; from?: string; to?: string; erased?: string; recent?: string; limited?: string; testQueued?: string; mine?: string; todos?: string; todoError?: string; todoSaved?: string; volunteerError?: string; checkpointsGpx?: string } & Partial<Record<keyof PlacesTaken, string>>>;
 };
 
 export const dynamic = "force-dynamic";
@@ -1032,6 +1032,8 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                 mine={query.mine === "1"}
                 today={dayIn(now, CLUB_TIME_ZONE)}
                 error={todoErrorCode ? t(`errors.${todoErrorCode}`) : undefined}
+                saved={query.todoSaved === "1"}
+                inUse={query.todos === "1"}
               />
               {/*
                 «Puncte de control» (§757) is a named card of «Traseul», inside it in the document (§763). Its
