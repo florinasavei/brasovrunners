@@ -51,6 +51,7 @@ import OnlyForType from "../OnlyForType";
 import WaitlistLimitOnly from "../WaitlistLimitOnly";
 import WallTimeField from "../WallTimeField";
 import { BoxNote, type BoxProps, type LanguageEntry, RiskLine, SettingsReadOnly, summaryWords } from "./box-kit";
+import { asksHealthNoteOnForm } from "./ConditionsGroup";
 import DeclarationCard, { declarationLine } from "./DeclarationCard";
 import ProgrammeBox from "./ProgrammeBox";
 import StartListBox from "./StartListBox";
@@ -249,8 +250,8 @@ export default async function RegistrationBox({
       locale,
       creating: event === null,
     }),
-    !(registers && event?.registrationMode === "INTERNAL") ? line.text : null,
-    registers && event?.registrationMode === "INTERNAL" ? healthNoteSummary(words, event.askHealthNote ?? false) : null,
+    !asksHealthNoteOnForm(event) ? line.text : null,
+    asksHealthNoteOnForm(event) ? healthNoteSummary(words, event?.askHealthNote ?? false) : null,
     programmeSummary(words, event, hasProgramme(initialType), translations, locale),
     t("editor.boxes.registration.rulesLine", { state: rulesSummary(words, translations) }),
     minAgeSummary(words, effectiveMinimumAge(event?.minAge), locale),

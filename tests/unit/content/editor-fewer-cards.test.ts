@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 
@@ -97,9 +97,19 @@ describe("§760 «Participare, înscrieri și regulament»: cards 6 and 9 in one
     const rules = TEXTS.slice(at(TEXTS, "export async function RulesBox"), at(TEXTS, "export async function AddressBox"));
     expect(rules).toContain("await ConditionsGroup({ event, mayEditSettings })");
     expect(rules).toContain("healthNoteSummary(words");
-    // Nothing links to the old anchor any more: the editor's source never names it as a target.
-    const linking = ["domain/page-todos.ts", "ui/page-flow.ts", "ui/SectionMap.tsx", "ui/publish-check.ts"];
-    for (const file of linking) expect(read(`src/modules/content/events/${file}`), file).not.toContain("box-conditions");
+    // Nothing links to the old anchor any more: no source file under src/ names it as a target (the
+    // comments that say it is gone write it with the hash, `#box-conditions`, and are the only mentions).
+    const sources = (dir: string): string[] =>
+      readdirSync(path.join(ROOT, dir), { withFileTypes: true }).flatMap((entry) => {
+        const child = `${dir}/${entry.name}`;
+        if (entry.isDirectory()) return sources(child);
+        return /\.tsx?$/.test(entry.name) ? [child] : [];
+      });
+    for (const file of sources("src")) {
+      const mentions = read(file).split("box-conditions").length - 1;
+      const gone = read(file).split("`#box-conditions`").length - 1;
+      expect(mentions, file).toBe(gone);
+    }
   });
 
   it("drops the sentence that sent the reader from one card to the other", () => {
