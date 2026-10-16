@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V3.45-2026-10-16
+
+- **The event's «De făcut» card in two folds, shut, each with a summary line** — «Lipsește pe pagină» and «Sarcini» are two named folds inside the card, closed on arrival, saying «5 rânduri» and the priority, or «1 de făcut · 1 a mea · 1 întârziată»; the filter, the add line and «Gata» moved inside «Sarcini», which opens by itself after a press, a refusal, «Ale mele», «Toate» or an address. §792.
 ## BR-V3.44-2026-10-16
 
 - **The registrations Excel, live** — a row takes a pale colour by its status (green confirmed, yellow waiting for an answer, light blue on the waiting list, grey cancelled or expired) and the club's runners' cells are blue, both following the cell if you edit it offline; the «Statistici» numbers are formulas that recount by themselves; a new «Club runner» column («Yes») follows «Club member» in the Excel (the CSV's last column), a file of several events gains an «Event» column, and a legend of the colours closes the footer. §790.

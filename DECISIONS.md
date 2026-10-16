@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.44-2026-10-16 -->
+<!-- PROJECT_BASELINE: BR-V3.45-2026-10-16 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V3.44-2026-10-16`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.45-2026-10-16`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -26888,3 +26888,21 @@ Baseline `BR-V3.44-2026-10-16`.
 **Refused:** a save per role (the owner's whole complaint); a partial save that writes the valid rows and leaves the refused one (a half-saved card says nothing about which half); arrows that post at once; a nested `<form>` for the delete; a second translate implementation; a per-strip «Tradu cardul» (it would translate one role, not the card); a migration (none was needed: no column changed). **Amends** §761, §765, §774 (the editor's side), §514 (a card with no tab row) and §784's wording of the tick.
 
 Baseline `BR-V3.44-2026-10-16`.
+
+## 792. The event's «De făcut» card in two folds, shut on arrival, each with a summary line
+
+**The owner, 2026-10-16**, with the event editor's «De făcut pentru pagina evenimentului · 2 de făcut» open in front of him (§749, drawn as two plain lists by §752): «Astea trebuie să fie separate mai bine și collapsed by default». The card showed, open, the «Toate / Ale mele» chips floating on the right, a small grey heading «LIPSEȘTE PE PAGINĂ» over its computed rows, then a small grey heading «SARCINI» over the add line, «Mai multe: cine, termen» and the club's rows — two lists under two labels, nothing between them but the labels.
+
+**Decision.** The card keeps its title, its «N de făcut» line, its roles, its sort, its audit and its data (§749, §752), and is still drawn open on arrival while anything is left. Inside it the two groups are two named folds (`Panel` over `<details>`, level 3 — the house's boxed fold, nested the way every card of the backoffice nests), a step apart, **both shut on arrival**, each with the glyph of its subject before its words (`todoPage`, `todoOwn` in `panel-glyphs.ts`): «Lipsește pe pagină» holds only its computed rows (each still the one link, the arrow, the words and the priority's chip, 44 pixels); «Sarcini» holds everything that is about the club's own rows — the chips «Toate / Ale mele» (they filter tasks only), the add line and its «Mai multe: cine, termen», the rows, and the folded «Gata (N)».
+
+**What a shut fold says (`summariseTodoFolds`).** «Lipsește pe pagină»: «N rânduri» (Romanian's three forms, no ICU plural) and the most pressing priority present as its `StatusChip`, or «nimic nu lipsește» with no chip — the fold is drawn shut with that line and a sentence inside, never hidden. «Sarcini»: «N de făcut», «K ale mele» («1 a mea» for one) when the signed-in person has some, «J întârziate» when any open task is past its day (`isTodoOverdue`), and the most pressing priority as its chip, or «nicio sarcină deschisă». Counted over all the data and never over «Ale mele» (the rule the card's own count already follows, §749); a ticked task is not counted. Each part of the line stays on one line (the line wraps between parts), so «5 rânduri» never breaks after the figure at 320 pixels.
+
+**When a fold opens by itself (`shared/ui/fold.ts`).** «Sarcini» opens for a refusal of its own forms (`?todoError=` through the card's banner, or a kept form's refusal, which `ActionForm` opens the folds around), for a press that just worked (the actions redirect to `#box-todos-own` with `?todoSaved=1`, so it works with scripts off too), while «Ale mele» is on, and for an address that names it or one of its rows. «Lipsește pe pagină» opens only for an address that names it or one of its rows (`#box-todos-page`, `#event-todo-page-<rule>`; a row of «Sarcini» is `#event-todo-own-<id>`), through `OpenFoldFromHash` (§336). Nothing else opens either: not an urgent row, not an overdue task, not a task of the reader's.
+
+**One change of behaviour, said plainly.** «Ale mele» used to drop the computed rows from the card; the chips now sit inside «Sarcini» and filter the tasks only, so «Lipsește pe pagină» keeps showing what the page lacks whatever the filter — otherwise a shut fold's count («5 rânduri») would disagree with its own body. The chips link to `#box-todos-own` and carry `?todos=1` (`?mine=1&todos=1` for «Ale mele»), a marker that keeps «Sarcini» in use, so pressing either lands on it open, with scripts or without — «Toate» pressed from «Ale mele» does not shut the fold under the person. The card itself opens for the same reasons as «Sarcini» (a press that worked, a refusal, a filter in use), so a press that ticks the last open task does not close it. A reader who may only read, with nothing typed, is told «Nicio sarcină deschisă.», never that the club wrote nothing while the page lacks rows or ticked tasks exist. The summary's priority chip is a `<span>` (`StatusChip` `inline`), the first part of a line is led by a break opportunity rather than a space.
+
+Nothing else changes: the verbs and their actions, the audit, the roles, the sort, the words of the rows, `ClubTodoPanel` (the club's checklist on `/admin`). No migration.
+
+**Refused:** hiding the page fold when nothing is missing (a closed line that says «Nimic nu lipsește» is the answer, and a fold that vanishes reads as a bug); counting the summaries over the filter; opening «Sarcini» for an overdue or urgent task (a card that opens itself for everything is a card nobody can read); a second filter for the computed rows (they have nobody to be «ale mele»); a new client component (every fold is a `<details>` drawn on the server).
+
+Baseline `BR-V3.45-2026-10-16`.

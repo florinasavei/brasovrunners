@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.44-2026-10-16 -->
+<!-- PROJECT_BASELINE: BR-V3.45-2026-10-16 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V3.44-2026-10-16`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.45-2026-10-16`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -2060,6 +2060,9 @@ way through every step, and none of them is a way around the allocator.
 29. Given the Organizer, an Administrator or a Superadministrator, when «Sarcini» renders, then a one-line form on top takes the words, a priority (default «Normală») and «Adaugă», sends on Enter, and keeps who and the due day behind a fold «Mai multe: cine, termen»; and each open row is a tick box at its start (a plain form that posts the state it wants and works with scripts off, 44 pixels), the words, and, small, the priority as a word with a glyph, who, the day — «Întârziat» for a day gone by — and a pencil named «Modifică» that opens the row's edit form (words, priority, who, day, «Șterge») in place; there is no full-width tick button (2026-10-13, `DECISIONS.md` §752).
 30. Given a ticked row, when the card renders, then it is under the folded «Gata (N)», struck through, with who ticked it and when and a box that unticks it, and «Toate» and «Ale mele» sit small on the card's top right and «Ale mele» survives a tick, a save and a delete (2026-10-13, `DECISIONS.md` §752).
 31. Given an Administrator or a Superadministrator on an event's editor, when they add a task with Enter, change its words, priority, who and day through the pencil, tick it from its box, find it under «Gata», untick it and delete it, then every press works, each answers with the toast's sentence, and the card stays the same element after a press, so nothing the reader opened or typed is replaced (verification: e2e `event-todos.spec.ts`, 320 pixels and desktop) (2026-10-13, `DECISIONS.md` §752).
+32. Given an event's editor, when its «De făcut pentru pagina evenimentului» card renders, then inside the card the computed rows are in a named fold «Lipsește pe pagină» and the club's own in a named fold «Sarcini», each a boxed fold with its subject's glyph before its words, both shut on arrival, a step apart; the rows computed from the event are the only thing in the first, and «Toate» and «Ale mele», the add line with «Mai multe: cine, termen», the open rows and the folded «Gata (N)» are inside the second. Replaces criterion 28 where it says the two groups are headings, and criterion 30 where it puts the chips at the card's top right (2026-10-16, `DECISIONS.md` §792).
+33. Given the card's two shut folds, when they render, then each one's row says what is in it: «Lipsește pe pagină» says how many rows («1 rând», «2 rânduri», «20 de rânduri») and the most pressing priority as a chip with its glyph, or «nimic nu lipsește» with no chip, the fold still drawn; «Sarcini» says «N de făcut», «K ale mele» («1 a mea») when the reader has some, «J întârziate» when any open task is overdue, and the most pressing priority as a chip, or «nicio sarcină deschisă»; all counted over every row and never over «Ale mele», a ticked task not counted (2026-10-16, `DECISIONS.md` §792).
+34. Given the card's two folds, when the page arrives, then «Sarcini» is open only for a refusal of its own forms, for a press of them that just worked (`?todoSaved=1`, the fragment `#box-todos-own`), while «Ale mele» is on or «Toate» was pressed (`?todos=1`), or for an address naming it or one of its rows, and «Lipsește pe pagină» only for an address naming it or one of its rows; an urgent row, an overdue task or a task given to the reader opens neither. «Ale mele» filters the club's tasks only: the computed rows stay in their fold. Replaces criterion 26 where it says the computed rows are not listed under «Ale mele» (verification: integration `events/event-todos-card.test.ts`, `events/event-todos.test.ts`; e2e `event-todos.spec.ts`, 320 pixels and desktop) (2026-10-16, `DECISIONS.md` §792).
 
 **Verification:** integration `cms/boundary.test.ts`
 
