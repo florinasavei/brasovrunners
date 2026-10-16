@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { getDb } from "@/db/client";
 import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
+import { saveMemberDefinition } from "@/modules/content/members/member-definition";
 import { MEMBERS_TEXTS, type MembersText, saveMembersText, setMembersPagePublished } from "@/modules/content/members/page-settings";
 import {
   createDiscountCode,
@@ -60,6 +61,25 @@ export async function saveMembersTextAction(_previous: FormOutcome | null, form:
   }
   await flashOutcome({ saved: "membersTextSaved" });
   redirect(`${screen(form)}?saved=membersTextSaved#members-${which}`);
+}
+
+/**
+ * «Cine e membru» (§788): the sentence behind the «?» of the member tick, both languages or neither.
+ * Saved whether or not the members' page is on the site; a refusal returns, so both boxes come back as
+ * typed (§315). The door is the members' pages' writers, asked again in the service (BR-REQ-060-01).
+ */
+export async function saveMemberDefinitionAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  try {
+    const actor = await requireStaffCapability(canEditMembersPage);
+    await saveMemberDefinition(getDb(), {
+      actor,
+      fields: { memberDefinitionRo: text(form, "memberDefinitionRo"), memberDefinitionEn: text(form, "memberDefinitionEn") },
+    });
+  } catch (error) {
+    return refused(error, form);
+  }
+  await flashOutcome({ saved: "memberDefinitionSaved" });
+  redirect(`${screen(form)}?saved=memberDefinitionSaved#members-definition`);
 }
 
 /** Put «Beneficiile membrilor» on the site in both languages, or take it off — asks first on the screen (§384). */

@@ -25,7 +25,9 @@ import LegalLink from "@/shared/ui/LegalLink";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import { CLUB_NAME } from "@/theme/brand";
 import { ageOn, yearsPhrase } from "@/modules/registrations/domain/age";
+import { cachedMemberDefinition } from "@/modules/public-cache/reads";
 import BirthDateField from "@/modules/registrations/ui/BirthDateField";
+import Hint from "@/shared/ui/Hint";
 import { readTypedDate } from "@/shared/forms/pickers/wall-values";
 import {
   earliestVolunteerBirthDate,
@@ -484,6 +486,8 @@ export default async function VolunteerBox({
                   </CheckboxField>
                   <CheckboxField name="clubMember" id={fieldId("clubMember")} defaultChecked={typed.clubMember === "on"}>
                     {t("volunteers.profile.club", { club: CLUB_NAME })}
+                    {/* The «?» of the registration form's own member tick, with the same words (§788): the club's sentence from «Pagini» → «Membri», else the platform's. */}
+                    <Hint text={(await cachedMemberDefinition(locale)) ?? tForm("clubMemberDefinition")} />
                   </CheckboxField>
                 </Box>
               </Stack>

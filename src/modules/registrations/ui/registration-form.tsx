@@ -111,6 +111,12 @@ export type RegistrationFormSettings = {
   /** The club's limit per address (§389, §576), and whether the schema takes a family at all. */
   capMax: number | null;
   familyOpen: boolean;
+  /**
+   * «Cine e membru al grupului» (§788): the club's sentence behind the «?» after the member tick, in
+   * this page's language, or null while the club wrote none — the platform's words then
+   * (`clubMemberDefinition`). Read by the caller, through the public cache or, in a preview, the database.
+   */
+  memberDefinition: string | null;
   /** Cloudflare's widget, when drawn (§97, §254): never in a preview (§577). */
   siteKey: string | undefined;
 };
@@ -302,7 +308,7 @@ export async function registrationForm({
   preview,
 }: RegistrationFormInput): Promise<ReactNode> {
   const { event, hasRules, askShirt, askHealth, askMemberBib, minAge } = view;
-  const { termsVersion, refusalOn, listStatesOn, listSocialsOn, promoOn, promoShared, capMax, familyOpen } = settings;
+  const { termsVersion, refusalOn, listStatesOn, listSocialsOn, promoOn, promoShared, capMax, familyOpen, memberDefinition } = settings;
   const siteKey = preview ? undefined : settings.siteKey;
   const { tooYoung, emergencySame, captchaFailed, tooFast, retry } = refusal;
   const member = address.kind === "member" ? address : null;
@@ -852,8 +858,10 @@ export async function registrationForm({
                 {t("clubMemberDeclared", { club: CLUB_NAME })}
                 {/* What the claim means, where it is claimed (§189): "grup" rather than
                     "echipă", because the club is a group somebody runs with and not a squad
-                    somebody is selected for, and the tooltip says where the line is. */}
-                <Hint text={t("clubMemberHint")} />
+                    somebody is selected for, and the tooltip says where the line is — in the
+                    club's own words when it wrote them on «Pagini» → «Membri», else the
+                    platform's (§788). The same «?» the volunteers' form draws. */}
+                <Hint text={memberDefinition ?? t("clubMemberDefinition")} />
               </CheckboxField>
 
               {/* «Vreau numărul de membru» (§664), only while the event offers the members' bib:

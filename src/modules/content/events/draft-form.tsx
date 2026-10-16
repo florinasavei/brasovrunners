@@ -6,6 +6,7 @@ import type { Database } from "@/db/types";
 import { formatDay } from "@/i18n/dates";
 import { type Locale, routing } from "@/i18n/routing";
 import type { Deadlines } from "@/modules/deadlines/domain/deadlines";
+import { memberDefinitionFor, readMemberDefinition } from "@/modules/content/members/member-definition";
 import { datedOrNull } from "@/modules/events/domain/dated";
 import type { RegistrationCta } from "@/modules/events/domain/registration-cta";
 import type { PublicEventPage } from "@/modules/events/repository";
@@ -35,10 +36,11 @@ export async function readDraftFormSettings<T extends Record<string, unknown>>(
   db: Database<T>,
   input: { locale: Locale; now: Date; membersOnly: boolean; familyOpen: boolean; refusalOn: boolean },
 ): Promise<RegistrationFormSettings> {
-  const [terms, notices, addressCap] = await Promise.all([
+  const [terms, notices, addressCap, memberDefinition] = await Promise.all([
     findCurrentApprovedDocument(db, "TERMS", input.locale, input.now),
     Promise.all(routing.locales.map((locale) => findCurrentApprovedDocument(db, "PRIVACY_NOTICE", locale, input.now))),
     readAddressCap(db),
+    readMemberDefinition(db),
   ]);
   // The notice in force, in every language, describes it — the public cache's reading (`reads.ts`).
   const everyNotice = (describes: (body: unknown) => boolean) => notices.every((notice) => notice !== undefined && describes(notice.body));
@@ -53,6 +55,8 @@ export async function readDraftFormSettings<T extends Record<string, unknown>>(
     // A members' event registers one person per account (§552): no family, no limit to say.
     capMax: input.membersOnly ? null : addressCap.cap.registrationsPerAddress,
     familyOpen: input.membersOnly ? false : input.familyOpen,
+    // The club's sentence behind the member tick's «?» (§788), in the preview's language.
+    memberDefinition: memberDefinitionFor(input.locale, memberDefinition),
     siteKey: undefined,
   };
 }
