@@ -9085,6 +9085,15 @@
       "textEmpty": "Nescris încă.",
       "tabEmpty": "gol",
       "textHelp": "În ambele limbi sau în niciuna, cel mult {max} de caractere în fiecare. Ca într-o pagină: titluri, liste, linkuri, poze, un tabel.",
+      "definition": {
+        "heading": "Cine e membru",
+        "intro": "Apare în spatele unui „?” lângă bifa de membru, pe formularul de înscriere și pe cel al voluntarilor.",
+        "asideWritten": "textul clubului",
+        "asideDefault": "textul de bază",
+        "ro": "Cine e membru (română)",
+        "en": "Cine e membru (engleză)",
+        "help": "O propoziție, cel mult {max} de caractere, în ambele limbi sau în niciuna. Nescrisă, formularele spun textul de bază, cel din căsuțe."
+      },
       "codes": {
         "heading": "Coduri de reducere",
         "count": {
@@ -10074,7 +10083,7 @@
     "privacyBannerWithList": "Datele tale nu apar pe site, cu o excepție: numele tău și clubul apar pe lista publică a acestui eveniment doar dacă bifezi mai jos; fără bifă ești doar numărat. Le folosim doar ca să organizăm cursa: le văd echipa de organizare și furnizorii care găzduiesc site-ul și trimit emailurile. Declarația semnată îți vine pe email, iar o copie, cu actul de identitate mascat, ajunge în arhiva clubului. Păstrăm înscrierea trei ani de la eveniment.",
     "healthIntro": "Doar ce ar trebui să știe organizatorii dacă ai nevoie de ajutor. O văd doar ei și se șterge la șapte zile după eveniment.",
     "fitnessDeclared": "Declar pe propria răspundere că sunt apt medical să particip.",
-    "clubMemberHint": "Am fost la cel puțin 3 alergări de grup în ultimul an.",
+    "clubMemberDefinition": "Am fost la cel puțin 3 alergări de grup în ultimele 6 luni.",
     "rules": {
       "open": "Citește condițiile concursului",
       "reading": "Apasă pe căsuță sau pe buton: condițiile se deschid aici, le citești până la capăt și abia apoi se bifează.",
@@ -11537,6 +11546,7 @@
         "other": "Gata: {count} de câmpuri traduse în „{card}”, dar unele texte au fost scurtate la limita câmpului. Verifică-le în English și apasă Salvează."
       },
       "membersTextSaved": "Textul paginilor membrilor a fost salvat.",
+      "memberDefinitionSaved": "Propoziția „Cine e membru” a fost salvată.",
       "membersPagePublished": "Pagina Beneficiile membrilor este pe site, în ambele limbi.",
       "membersPageUnpublished": "Pagina Beneficiile membrilor a fost retrasă de pe site.",
       "membersInvited": {

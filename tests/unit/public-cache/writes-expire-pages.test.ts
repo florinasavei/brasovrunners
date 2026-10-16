@@ -181,6 +181,8 @@ const WRITES: Record<string, Expected> = {
   },
   // «Telefon public» (§565): the footer's «Contact» on every page.
   "src/modules/contact/public-phone.ts#updatePublicPhone": ["settings"],
+  // «Cine e membru» (§NNN): the sentence behind the member tick's «?» on the registration and volunteers' forms.
+  "src/modules/content/members/member-definition.ts#saveMemberDefinition": ["settings"],
   "src/modules/appearance/site-tint.ts#updateSiteTint": ["settings"],
   "src/modules/appearance/site-font-size.ts#updateSiteFontSize": ["settings"],
   "src/modules/appearance/site-look.ts#updateSiteLook": ["settings"],

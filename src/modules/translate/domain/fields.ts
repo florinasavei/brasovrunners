@@ -33,6 +33,7 @@
  *   until §572, so «Copiază și tradu tot» above them found no English box it could fill and said
  *   «Nu e nimic de tradus» over a Romanian text already written.
  *
+ * - «Cine e membru al grupului» (§NNN): the sentence behind the member tick's «?» (`memberDefinitionEn`, plain);
  * - An event's volunteer roles (§765): the role's name (`nameEn`) and its description — a rich text,
  *   `descriptionRoBody` / `descriptionEnBody` — one form per role, in the «Voluntari» card;
  *
@@ -94,6 +95,8 @@ const ENGLISH_FIELD_PATTERNS: readonly RegExp[] = [
   /^newsletterBodyEn$/,
   // «Membri» (§524, §572): the public page's benefits and the members' zone, one rich text each.
   /^(benefits|zone)EnBody$/,
+  // «Cine e membru al grupului» (§NNN), on «Membri»: one plain sentence.
+  /^memberDefinitionEn$/,
   // An event's volunteer role (§765): its name (its description is `descriptionEnBody`, above) — one form per role.
   /^nameEn$/,
 ];
