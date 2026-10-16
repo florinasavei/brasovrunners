@@ -2122,18 +2122,28 @@ voluntar» until the steps below are done. Since §768 the form is a **page of i
 declaration, no row on the public list, no account — and the Organizer and the Administrators are the
 only ones who see the names, addresses and telephone numbers.
 
-1. **Define the roles.** The event's editor → the card **«Voluntari»** → «Roluri» → «Adaugă un rol»:
-   the name in Română **and** English (both or neither, like every text the club types), how many
-   people the role needs, and optionally «Descrierea rolului» — what the person does, where they stand, from
-   what hour — written in the same editor the pages use, in both languages or neither (about 2000 characters
-   of words each; lists and paragraphs, no tables or pictures; `DECISIONS.md` §765). **«Copiază și tradu tot:
-   RO → EN»** at the top of the role's form fills the English name and description from the Romanian ones
-   (greyed, with the steps, until the translation key of `/admin/tasks` is set). The description is read under the
-   role's tick on the public form (folded «Detalii» when long), on the card's role header, and — in plain
+1. **Define the roles.** The event's editor → the card **«Voluntari»** → «Roluri» (one form for every role, §NNN): each
+   role is **one line** — «Nume (RO)» and «Nume (EN)» (both or neither, like every text the club types), «Câte persoane»
+   (or the tick «Nelimitat»), «Categoria» and «Poziția» — and the **empty line at the end** of each category («Rol nou»)
+   adds a role when you type its names. Change as many roles as you like, then press **«Salvează toate rolurile» once**: it
+   saves every change together, or — when one line is wrong — none of them, the sentence naming that role and its category
+   («„Punct de apă” din „Traseu”: lipsește numele în engleză»), with everything you typed still in the boxes. The role's
+   **«Mai multe»** holds «Descrierea rolului» — what the person does, where they stand, from what hour — written in the same
+   editor the pages use, one tab per language (Română | English), both languages or neither (about 2000 characters
+   of words each; lists and paragraphs, no tables or pictures; `DECISIONS.md` §765) and the band's colour.
+   **«Tradu cardul: RO → EN»** at the top of the card fills every English name and description from the Romanian ones in one
+   press, and «Tradu din română» under an English box does the one box (both greyed, with the steps, until the translation
+   key of `/admin/tasks` is set). The description is read under the
+   role's tick on the public form (folded «Detalii» when long), beside «Mai multe» on the card, and — in plain
    words — in the agreement's «Ce presupune rolul», its PDF and the emails.
-   Roles belong to **one date**: a weekly run's dates, and a copy of an event, start with none (the event's JSON file carries them, step 9). Roles may be grouped in **categories**, each with a contact person: step 9. ↑ / ↓
-   set the order the page lists them in; a role with people on it — cancelled ones too — cannot be
-   deleted: move them to another role or delete them first. An event's volunteers are not accounts:
+   Roles belong to **one date**: a weekly run's dates, and a copy of an event, start with none (the event's JSON file carries them, step 9). Roles may be grouped in **categories**, each with a contact person: step 9.
+   **«Poziția»** sets the order inside a category, from 1: type the place you want, the others make room (a role you did not
+   touch keeps its place); a role moved to another category goes to the end of it unless you type a place other than the number the box showed.
+   The save writes only the roles **you changed** on the page you were looking at: if a colleague saved while your page was open,
+   their roles and their order stay as they left them, and a role you changed that they changed too (or deleted) is refused by
+   name — «altcineva a schimbat rolul între timp; reîncarcă pagina» — with nothing saved. A role
+   with people on it — cancelled ones too — cannot be
+   deleted: move them to another role or delete them first (**«Șterge rolul»** on its line asks first and is its own press, not part of the save). An event's volunteers are not accounts:
    whoever works the race-day desk also needs an account on «Echipa», with the role Voluntar (§34) — the
    staff role of the same name, which this card neither gives nor needs.
 2. **Approve the privacy notice that names volunteers** — before the form can show. `/admin/legal` →
@@ -2207,9 +2217,9 @@ only ones who see the names, addresses and telephone numbers.
    the role given — «Încă niciunul» takes it back — and your own note, never shown publicly), «Șterge
    voluntarul» (the address and the telephone number go with it). «N din M» beside each role counts only the
    people **given** that role («Înscris» and «Confirmat»); the page stops offering a role once it has them.
-   A role may also have **no number** (§784): tick «Fără număr — oricâți oameni» in «Adaugă un rol» (or in the role's «Modifică») instead of typing
-   «Câți oameni trebuie» — the number box goes while the tick is on. Such a role reads «3 · fără număr» on the card, is never full, is always on the event's page and
-   on the volunteers' page, and the page never says a number for it, even with the counts on; the card's closed line counts only the roles with a number
+   A role may also have **no number** (§784): tick «Nelimitat» on its line (§NNN) instead of typing
+   «Câte persoane» — the number box goes while the tick is on. Such a role reads «3 · fără număr» on the card, is never full, is always on the event's page and
+   on the volunteers' page, and the page never says a number for it («mai sunt locuri», even with the counts on); the card's closed line counts only the roles with a number
    («0 din 10 + roluri fără număr»), and «Câte ecusoane» starts it at the people you gave it.
    «Adaugă un voluntar de mână» enters a person yourself — tick what they would do, and give a role if you
    already know it; a role may take more people than it asked; the age, sex, city and ticks are optional there (an age below 14 is refused, and one of 14–17 asks the parent's name, step 8), and drawn only once the notice of step 2 names them.
@@ -2253,7 +2263,7 @@ only ones who see the names, addresses and telephone numbers.
      type. A badge that is too short for everything you ticked is refused when you save, with a sentence
      saying what does not fit and how tall it must be: the free-text line and the coordinator's telephone
      together need a custom size at least 34 mm tall; both ready-made sizes (90 × 35 and 100 × 40 mm) take everything.
-   - **A role's colour** is part of the role: «Adaugă un rol» and each role's «Modifică» in the card, or
+   - **A role's colour** is part of the role: «Mai multe» on its line in the card (saved with «Salvează toate rolurile»), or
      all the roles at once under «Culorile rolurilor» on the badges' page. «Portocaliul clubului», one of
      the palette, or «Altă culoare» typed as `#rrggbb`; it is kept only when white or black text reads on
      it at a contrast of 4.5 to 1, and the page says each role's contrast in words. A colour already kept is
@@ -2308,12 +2318,12 @@ only ones who see the names, addresses and telephone numbers.
      «Copiază și tradu tot» fills the English one), for example «Start / Sosire» and «Traseu»; at most 12 on an event, a name once per event.
      ↑ / ↓ set the order the card and the page list them in; «Modifică» renames; «Șterge categoria» asks first and is **refused with a sentence while
      any role sits under it** — move or delete the roles first.
-   - **«Categoria» of a role** — «Adaugă un rol» and each role's «Modifică» gain a choice: one of the categories, or «Alte activități» (no category; every
+   - **«Categoria» of a role** — each role's line (and the empty line that adds one) has a choice: one of the categories, or «Alte roluri» (no category; every
      role from before the categories is there). **The same role name may stand in two categories** («Direcționare» under «Start / Sosire» and under «Traseu»),
      never twice in one. A role is then told apart as **«Direcționare (Traseu)»** wherever it is named alone — the «Dă-i rolul …» buttons and select, the
      chips, the email «Rolul tău de voluntar», the CSV's role columns and the agreement's sentences; the badge's band shows the role only. The card lists
-     the roles under their category's heading, in the category's order; ↑ / ↓ on a role move it inside its category; a role moved to another category goes
-     to the end of it. **Filing a role that people already signed for under a category** (or moving it to another) changes the words it is named
+     the roles in a card per category (with its contact person under the title), in the category's order, «Alte roluri» last; «Poziția» orders a role inside its
+     category; a role moved to another category goes to the end of it. **Filing a role that people already signed for under a category** (or moving it to another) changes the words it is named
      with, so the card adds a note on their rows — «the accepted text named other roles» — as renaming a role always did; **the signatures stay valid**.
      The same holds for a paper agreement already printed: rename or move a role or a category after printing and **print the agreement again** before
      «Semnat pe hârtie», because the sheet names the role with its category.

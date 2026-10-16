@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { getDb } from "@/db/client";
 import { getPathname } from "@/i18n/navigation";
 import { type Locale, routing } from "@/i18n/routing";
@@ -11,14 +12,18 @@ import {
   changeVolunteer,
   changeVolunteerCategory,
   changeVolunteerRole,
-  ROLE_FORM_COLOUR_BOXES,
+  changeVolunteerRoles,
   setAcceptsVolunteers,
   setVolunteersShirts,
   setVolunteersShowCounts,
   type VolunteerCategoryRequest,
   type VolunteerRequest,
   type VolunteerRoleRequest,
+  VolunteerRoleRowError,
+  type VolunteerRolesRequest,
 } from "@/modules/volunteers/volunteers";
+import { VOLUNTEER_NEEDED_MAX, VOLUNTEER_ROLE_DESCRIPTION_MAX, VOLUNTEER_ROLE_NAME_MAX, VOLUNTEER_ROLES_MAX } from "@/modules/volunteers/domain/volunteer";
+import { postedRoleRows } from "@/modules/volunteers/role-rows";
 import { recordPaperVolunteerAgreement, requestVolunteerAgreement } from "@/modules/volunteers/agreement";
 import { recordPaperVolunteerGuardian, requestVolunteerGuardian } from "@/modules/volunteers/guardian";
 import { isDomainError } from "@/shared/errors/domain-error";
@@ -53,10 +58,10 @@ function eventIdOf(form: FormData): string {
  * Back to the card, with the toast's word in the flash cookie (§384) or, for a one-button form that has
  * no boxes to keep, the refusal's code in the address for the card's banner.
  */
-async function backToCard(form: FormData, outcome: { saved?: string; error?: string }): Promise<never> {
+async function backToCard(form: FormData, outcome: { saved?: string; error?: string; count?: string }): Promise<never> {
   const locale = localeOf(form);
   const id = eventIdOf(form);
-  if (outcome.saved) await flashOutcome({ saved: outcome.saved });
+  if (outcome.saved) await flashOutcome({ saved: outcome.saved, ...(outcome.count ? { count: outcome.count } : {}) });
   const path = getPathname({ locale, href: { pathname: "/admin/events/[id]", params: { id } } });
   revalidatePath(path);
   const query = outcome.error ? `?volunteerError=${encodeURIComponent(outcome.error)}` : "";
@@ -93,28 +98,6 @@ const staffFields = (form: FormData) => ({
   clubMember: form.get("clubMember") === "on",
 });
 
-const roleFields = (form: FormData) => ({
-  // «Categoria» (§774): the id of the category chosen, "" for «Alte activități» — only when the form drew the choice, so a form without it leaves the role where it is.
-  ...(form.has("categoryId") ? { categoryId: field(form, "categoryId") } : {}),
-  nameRo: field(form, "nameRo"),
-  nameEn: field(form, "nameEn"),
-  needed: field(form, "needed"),
-  // «Fără număr — oricâți oameni» (§784): the house tick posts `on`; the service decides by it, whatever the number box holds.
-  unlimited: form.get("unlimited") === "on" ? "on" : "",
-  descriptionRo: field(form, "descriptionRo"),
-  descriptionEn: field(form, "descriptionEn"),
-  // «Descrierea rolului» (§765): the editor's documents when the form drew the editor; absent otherwise, so a caller with the plain boxes is read as it always was.
-  ...(form.has("descriptionRoBody") ? { descriptionRoBody: field(form, "descriptionRoBody") } : {}),
-  ...(form.has("descriptionEnBody") ? { descriptionEnBody: field(form, "descriptionEnBody") } : {}),
-  // The band's colour (§764): only when the form drew its boxes — a form without them leaves the colour as it is.
-  ...(form.has(ROLE_FORM_COLOUR_BOXES.choice)
-    ? {
-        [ROLE_FORM_COLOUR_BOXES.choice]: field(form, ROLE_FORM_COLOUR_BOXES.choice),
-        [ROLE_FORM_COLOUR_BOXES.typed]: field(form, ROLE_FORM_COLOUR_BOXES.typed),
-      }
-    : {}),
-});
-
 const categoryFields = (form: FormData) => ({ nameRo: field(form, "nameRo"), nameEn: field(form, "nameEn") });
 
 /**
@@ -132,9 +115,15 @@ async function runCategory(request: VolunteerCategoryRequest) {
   return changeVolunteerCategory(getDb(), actor, request, new Date());
 }
 
+/** The one thing left of the single-role verbs: «Șterge rolul». Everything else about the roles is `runRoles`. */
 async function runRole(request: VolunteerRoleRequest) {
   const actor = await requireStaff();
   return changeVolunteerRole(getDb(), actor, request, new Date());
+}
+
+async function runRoles(request: VolunteerRolesRequest) {
+  const actor = await requireStaff();
+  return changeVolunteerRoles(getDb(), actor, request, new Date());
 }
 
 async function runVolunteer(request: VolunteerRequest) {
@@ -248,41 +237,44 @@ export async function deleteVolunteerCategoryAction(_previous: FormOutcome | nul
   return backToCard(form, { saved: "volunteerCategoryDeleted" });
 }
 
-/** «Adaugă rolul»: both names, how many it needs, and what the person would do. A refusal keeps what was typed (§315). */
-export async function addVolunteerRoleAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
-  try {
-    await runRole({ kind: "add", eventId: eventIdOf(form), fields: roleFields(form) });
-  } catch (error) {
-    return refused(error, form);
-  }
-  return backToCard(form, { saved: "volunteerRoleAdded" });
+/**
+ * What a refused row of «Salvează toate rolurile» says (§NNN): the role and its category in the sentence's placeholders, and the problem in
+ * the club's words — computed here, in the language of the page the form came from, because only the action knows which row and why.
+ */
+async function rowRefusal(error: VolunteerRoleRowError, form: FormData): Promise<FormOutcome> {
+  const locale = localeOf(form);
+  const t = await getTranslations({ locale, namespace: "Admin.volunteers" });
+  const max = { nameRoLong: VOLUNTEER_ROLE_NAME_MAX, nameEnLong: VOLUNTEER_ROLE_NAME_MAX, description: VOLUNTEER_ROLE_DESCRIPTION_MAX, tooMany: VOLUNTEER_ROLES_MAX, needed: VOLUNTEER_NEEDED_MAX } as const;
+  const limit = (max as Record<string, number>)[error.problem] ?? 0;
+  const category = (locale === "en" ? error.row.categoryEn : error.row.categoryRo) ?? t("otherCategory");
+  return {
+    ...refused(error, form),
+    errorValues: {
+      role: error.row.name === "" ? t("role.newRowName") : error.row.name,
+      category,
+      problem: t(`role.problems.${error.problem}`, { max: String(limit) }),
+    },
+  };
 }
 
-/** «Salvează» under a role's «Modifică». */
-export async function editVolunteerRoleAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
-  let changed: boolean;
+/**
+ * «Salvează toate rolurile» (§NNN; the owner, 2026-10-16: «să pot face batch edit la roluri, nu să dau save de fiecare dată, ci un Save All»): every
+ * role of the card — each category's rows and the blank row at its end — in one post, saved in one transaction (`changeVolunteerRoles`) or, when any
+ * row is refused, none: the sentence names the role and its category, the boxes name what to correct, and every box keeps what was typed (§315).
+ * The toast counts the roles saved.
+ */
+export async function saveVolunteerRolesAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  let saved: { changed: boolean; edited: number; created: number };
   try {
-    changed = (await runRole({ kind: "edit", eventId: eventIdOf(form), id: field(form, "roleId"), fields: roleFields(form) })).changed;
+    saved = await runRoles({ eventId: eventIdOf(form), rows: postedRoleRows(form.entries()) });
   } catch (error) {
-    // A colour no word reads on is a box to correct, like a name left empty (§764).
-    // …or a name already under that category (§774): the box to change.
-    if (isDomainError(error) && (error.code === "VALIDATION_ERROR" || error.code === "BADGE_COLOUR_UNREADABLE" || error.code === "VOLUNTEER_NAME_TAKEN")) return refused(error, form);
+    if (error instanceof VolunteerRoleRowError) return rowRefusal(error, form);
+    // A role another session deleted meanwhile is a refusal that keeps the boxes, like a name left empty.
+    if (isDomainError(error) && (error.code === "VALIDATION_ERROR" || error.code === "NOT_FOUND")) return refused(error, form);
     if (!isDomainError(error)) throw error;
     return backToCard(form, { error: error.code });
   }
-  return backToCard(form, { saved: changed ? "volunteerRoleSaved" : "volunteerUnchanged" });
-}
-
-/** The arrows: one step up or down in the club's order. */
-export async function moveVolunteerRoleAction(form: FormData): Promise<void> {
-  const direction = field(form, "direction") === "up" ? "up" : "down";
-  try {
-    const result = await runRole({ kind: "move", eventId: eventIdOf(form), id: field(form, "roleId"), direction });
-    return backToCard(form, { saved: result.changed ? "volunteerRoleMoved" : "volunteerUnchanged" });
-  } catch (error) {
-    if (!isDomainError(error)) throw error;
-    return backToCard(form, { error: error.code });
-  }
+  return backToCard(form, saved.changed ? { saved: "volunteerRolesSaved", count: String(saved.edited + saved.created) } : { saved: "volunteerRolesUnchanged" });
 }
 
 /** «Șterge rolul»: asks first (§384); a role with people on it is refused, naming why (`VOLUNTEER_ROLE_HAS_PEOPLE`). */

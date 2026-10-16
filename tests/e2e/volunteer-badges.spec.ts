@@ -82,19 +82,24 @@ test.describe("§764 volunteer badges, designed and printed per role", () => {
     // One button on the «Voluntari» card opens the badges' page.
     await openEditorBox(page, "Voluntari");
     await openEditorBox(page, "Roluri");
-    // A role's colour is part of its definition: «Modifică» on the role's row, «Culoarea benzii», «Salvează».
+    // A role's colour is part of its definition: the role's row, its «Mai multe», «Culoarea benzii» — and the one press of «Salvează toate rolurile» saves it
+    // with every other role's change (§NNN): two roles' colours here, one press.
     const row = page.locator(`[data-testid="volunteer-role"][data-role-id="${event.water}"]`);
+    const finishRow = page.locator(`[data-testid="volunteer-role"][data-role-id="${event.finish}"]`);
     await expect(row.getByTestId("volunteer-role-colour")).toContainText("Portocaliul clubului");
-    await openFold(row.locator("summary", { hasText: "Modifică" }).locator("xpath=.."));
+    await openFold(row.getByTestId("volunteer-role-more"));
     await row.getByLabel("Culoarea benzii").selectOption({ label: "Roșu" });
     // §783: the colour serves the badge per role only, and the role's form says so in one line.
     await expect(row.getByTestId("badge-colour-per-role-only")).toContainText("doar când ecusonul e pe roluri");
-    await row.getByRole("button", { name: "Salvează", exact: true }).click();
-    await page.waitForURL(/#box-volunteers$/);
+    await openFold(finishRow.getByTestId("volunteer-role-more"));
+    await finishRow.getByLabel("Culoarea benzii").selectOption({ label: "Violet" });
+    await page.getByRole("button", { name: "Salvează toate rolurile", exact: true }).click();
+    await expect(page.getByTestId("toast")).toContainText("Am salvat 2 roluri.", { timeout: 30_000 });
     await hydrated(page);
     await openEditorBox(page, "Voluntari");
     await openEditorBox(page, "Roluri");
     await expect(row.getByTestId("volunteer-role-colour")).toContainText("Roșu");
+    await expect(finishRow.getByTestId("volunteer-role-colour")).toContainText("Violet");
     const link = page.getByTestId("volunteer-badges-link");
     expect((await link.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
     await link.click();

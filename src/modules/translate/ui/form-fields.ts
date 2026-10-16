@@ -236,8 +236,18 @@ export async function translateBoxes(form: HTMLFormElement | null, englishNames:
   return { kind: "done", count: items.length, cut };
 }
 
-/** The words a person reads for a box: its label, or a rich text's fold title, or its name. */
+/**
+ * The words a person reads for a box: its label, or a rich text's fold title, or its name — and, in a card of many rows that each carry the same
+ * labels (the volunteers' «Roluri», §NNN: «Nume (EN)» in every row), the row's own name first, from the nearest `data-translate-row`:
+ * «Punct de apă: Nume (EN)».
+ */
 export function labelOfBox(form: HTMLFormElement | null, name: string): string {
+  const own = ownLabelOfBox(form, name);
+  const row = boxNamed(form, name)?.closest("[data-translate-row]")?.getAttribute("data-translate-row");
+  return row ? `${row}: ${own}` : own;
+}
+
+function ownLabelOfBox(form: HTMLFormElement | null, name: string): string {
   if (isRichTextField(name)) {
     const scope: ParentNode = form ?? document;
     const summary = scope.querySelector(`[data-rich-text-fold="${CSS.escape(name)}"] > summary`);

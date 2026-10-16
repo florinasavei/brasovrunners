@@ -1990,7 +1990,8 @@
       "VOLUNTEER_GUARDIAN_NO_EMAIL": "Părintele sau tutorele nu are un email trecut, deci nu are cui să-i plece linkul. Acordul se ia pe hârtie, sau adaugă emailul în „Modifică”.",
       "VOLUNTEER_MINORS_CLOSED": "Clubul nu primește încă voluntari sub 18 ani: nota de confidențialitate și contractul în vigoare nu descriu încă minorii. Aprobă-le întâi; «Sarcini» spune cum.",
       "VOLUNTEER_CATEGORY_HAS_ROLES": "Categoria nu s-a șters: are roluri în ea. Mută sau șterge întâi rolurile.",
-      "VOLUNTEER_NAME_TAKEN": "Numele există deja în această categorie (sau printre categoriile evenimentului). Alege alt nume: același nume poate sta în două categorii, dar nu de două ori într-una."
+      "VOLUNTEER_NAME_TAKEN": "Numele există deja în această categorie (sau printre categoriile evenimentului). Alege alt nume: același nume poate sta în două categorii, dar nu de două ori într-una.",
+      "VOLUNTEER_ROLE_INVALID": "„{role}” din „{category}”: {problem}. Nimic nu s-a salvat."
     },
     "editor": {
       "draftPreview": {
@@ -4889,29 +4890,59 @@
       "switchOn": "Primește voluntari pe pagină",
       "rolesTitle": "Roluri",
       "rolesCount": "Roluri: {count}",
-      "rolesIntro": "Un rol are nevoie de un nume în română și în engleză și de câți oameni îi trebuie. Ordinea de aici e ordinea în care le arată pagina.",
+      "rolesIntro": "Schimbă ce vrei la oricâte roluri și apasă o dată „Salvează toate rolurile”. Poziția dă ordinea din categorie; un rând gol la final adaugă un rol.",
+      "rolesNeededHelp": "Câte persoane: cel puțin 1, sau bifează „Nelimitat”. Se numără doar oamenii cărora le-ai dat rolul; când are atâția, formularul public nu-l mai oferă.",
+      "rolesSave": "Salvează toate rolurile",
+      "rolesSaving": "Se salvează rolurile…",
       "rolesEmpty": "Încă niciun rol. Adaugă-l pe primul mai jos: de exemplu „Punct de apă” — 4 persoane.",
       "role": {
-        "nameRo": "Numele rolului (Română)",
-        "nameEn": "Numele rolului (English)",
-        "needed": "Câți oameni trebuie",
-        "neededHelp": "Cel puțin 1, sau bifează „Fără număr” mai jos. Se numără doar oamenii cărora le-ai dat rolul. Când are atâția, formularul public nu-l mai oferă.",
-        "unlimited": "Fără număr — oricâți oameni",
-        "unlimitedHelp": "Rolul se oferă mereu, oricâți oameni ar avea deja. Nebifat, scrie mai sus un număr de cel puțin 1.",
         "descriptionRo": "Descrierea rolului (Română, opțional)",
         "descriptionEn": "Descrierea rolului (English, opțional)",
         "descriptionHelp": "Ce presupune rolul: unde stă voluntarul, ce are de făcut, de la ce oră. Cel mult {max} de caractere de text în fiecare limbă; în ambele limbi sau în niciuna.",
-        "addTitle": "Adaugă un rol",
-        "add": "Adaugă rolul",
-        "adding": "Se adaugă…",
+        "descriptionTitle": "Descrierea rolului",
         "delete": "Șterge rolul",
         "deleting": "Se șterge…",
         "deleteTitle": "Ștergi acest rol?",
         "deleteBody": "Rolul „{name}” se șterge. Un rol dat cuiva sau bifat de cineva nu poate fi șters: schimbă-le întâi rolurile sau șterge-i.",
         "descriptionEmpty": "Încă nicio descriere.",
-        "more": "Restul",
-        "category": "Categoria",
-        "categoryHelp": "Titlul sub care apare rolul. „Alte activități” înseamnă fără categorie. Același nume poate sta în două categorii, dar nu de două ori într-una."
+        "more": "Mai multe",
+        "col": {
+          "nameRo": "Nume (RO)",
+          "nameEn": "Nume (EN)",
+          "needed": "Câte persoane",
+          "unlimited": "Nelimitat",
+          "category": "Categoria",
+          "position": "Poziția"
+        },
+        "newRow": "Rol nou",
+        "newRowName": "rol nou",
+        "newRowHint": "Scrie numele în română și în engleză ca să adaugi un rol; un rând gol nu face nimic.",
+        "positionLast": "ultimul",
+        "count": {
+          "one": "{count} rol",
+          "few": "{count} roluri",
+          "other": "{count} de roluri"
+        },
+        "language": {
+          "ro": "Română",
+          "en": "English"
+        },
+        "problems": {
+          "nameRoMissing": "lipsește numele în română",
+          "nameEnMissing": "lipsește numele în engleză",
+          "nameRoLong": "numele în română are peste {max} de caractere",
+          "nameEnLong": "numele în engleză are peste {max} de caractere",
+          "needed": "scrie câte persoane trebuie (de la 1 la {max}) sau bifează „Nelimitat”",
+          "description": "descrierea se scrie în ambele limbi sau în niciuna, fără poze, cu cel mult {max} de caractere în fiecare",
+          "colour": "culoarea benzii nu e una dintre alegeri și nici scrisă ca #rrggbb",
+          "colourUnreadable": "pe culoarea benzii nu se citesc literele; alege alta",
+          "position": "poziția e un număr întreg, de la 1",
+          "category": "categoria nu mai există pe acest eveniment",
+          "taken": "în categoria aleasă există deja un rol cu acest nume",
+          "tooMany": "un eveniment are cel mult {max} de roluri",
+          "stale": "altcineva a schimbat rolul între timp; reîncarcă pagina și fă din nou schimbarea",
+          "gone": "rolul nu mai există (a fost șters între timp)"
+        }
       },
       "move": {
         "up": "Mută mai sus",
@@ -5077,7 +5108,7 @@
         "paperBody": "Se înregistrează că părintele sau tutorele lui {name} a semnat contractul tipărit, versiunea în vigoare, și că tu ai înregistrat semnătura. Păstrează foaia semnată.",
         "minorsClosed": "Linkul părintelui și „Acordul părintelui pe hârtie” așteaptă: nota sau contractul în vigoare nu descriu minorii («Sarcini»)."
       },
-      "otherCategory": "Alte activități",
+      "otherCategory": "Alte roluri",
       "categories": {
         "title": "Categorii",
         "count": "Categorii: {count}",
@@ -11494,10 +11525,13 @@
       "eventTodoUnchanged": "Rândul spunea deja asta; nimic de schimbat.",
       "volunteersOn": "Evenimentul primește acum voluntari pe pagina lui, cât timp un rol mai are nevoie de oameni.",
       "volunteersOff": "Pagina de voluntari a evenimentului nu mai primește oferte. Rolurile și oamenii rămân.",
-      "volunteerRoleAdded": "Rol adăugat.",
-      "volunteerRoleSaved": "Rol salvat.",
-      "volunteerRoleMoved": "Rol mutat.",
       "volunteerRoleDeleted": "Rol șters.",
+      "volunteerRolesSaved": {
+        "one": "Am salvat {count} rol.",
+        "few": "Am salvat {count} roluri.",
+        "other": "Am salvat {count} de roluri."
+      },
+      "volunteerRolesUnchanged": "Nimic de schimbat la roluri.",
       "volunteerAdded": "Voluntar adăugat.",
       "volunteerSaved": "Voluntar salvat.",
       "volunteerConfirmed": "Voluntar confirmat.",

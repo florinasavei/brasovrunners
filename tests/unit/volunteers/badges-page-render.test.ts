@@ -314,7 +314,7 @@ describe("§783 «Culorile rolurilor» serve the badges per role only", () => {
     expect(await html(() => RoleColourFields({ names, colour: null, forSingle: true }))).not.toContain("badge-colour-per-role-only");
     expect(await html(() => RoleColourFields({ names, colour: null }), "en")).toContain("The colour is used only when the badge is per role.");
     // The role's form in the «Voluntari» card draws the same boxes, so it says the same line.
-    expect(readFileSync("src/modules/volunteers/ui/VolunteersCard.tsx", "utf8")).toContain("<RoleColourFields names={ROLE_FORM_COLOUR_BOXES}");
+    expect(readFileSync("src/modules/volunteers/ui/VolunteersCard.tsx", "utf8")).toContain("<RoleColourFields names={roleColourBoxesOf(key)}");
     // The badges' page's card shows every role's boxes, and keeps the line out of each of them.
     expect(readFileSync("src/modules/volunteers/badges/ui/BadgeRoleColours.tsx", "utf8")).toContain("perRoleHelp={false}");
   });

@@ -29,7 +29,7 @@ import { emailBucketKey } from "@/modules/rate-limit/domain/key";
 import { consumeRateLimit } from "@/modules/rate-limit/service";
 import { looksLikeSpam } from "@/modules/registrations/service";
 import { canManageVolunteers, isBackofficeRole } from "@/modules/staff-identity/domain/roles";
-import { DomainError } from "@/shared/errors/domain-error";
+import { DomainError, isDomainError } from "@/shared/errors/domain-error";
 import { readTypedDate } from "@/shared/forms/pickers/wall-values";
 import { isUuid } from "@/shared/ids";
 import {
@@ -64,6 +64,8 @@ import {
 } from "./domain/volunteer";
 import { agreementAcceptance, canonicalOrNull, readAgreementFacts } from "./agreement";
 import { checkedRoleColour } from "./badges/badges";
+import { decodeRoleBaseline, descriptionDigest, roleBaselineOf } from "./role-baseline";
+import { type RoleRowBox, roleBox, roleColourBoxesOf } from "./role-rows";
 
 /**
  * An event's volunteers (§754; the owner, 2026-10-13: «I want to register volunteers for a race and be
@@ -651,6 +653,438 @@ export async function changeVolunteerRole<T extends Record<string, unknown>>(
     return { changed: true, role: { id: current.id, nameRo: input.nameRo } };
   });
   // The public page lists the roles and what each still needs: it is told once the write has committed.
+  if (result.changed) revalidatePublicContent("places");
+  return result;
+}
+
+// ---------------------------------------------------------------------------------------------
+// The «Roluri» card's one save
+// ---------------------------------------------------------------------------------------------
+
+/** One row of the card's form: its key (`role-rows.ts`), the saved role it is (null for a blank row), and its boxes by their short names. */
+export type VolunteerRolesRowRequest = { key: string; id: string | null; fields: Record<string, unknown> };
+
+export type VolunteerRolesRequest = { eventId: string; rows: readonly VolunteerRolesRowRequest[] };
+
+/** What a save did: the roles it changed and the roles it created. `changed` is false when it wrote nothing. */
+export type VolunteerRolesResult = { changed: boolean; edited: number; created: number };
+
+/** Why a row was refused, for the sentence after the role's name («lipsește numele în engleză»). */
+export type VolunteerRoleRowProblem =
+  | "nameRoMissing"
+  | "nameEnMissing"
+  | "nameRoLong"
+  | "nameEnLong"
+  | "needed"
+  | "description"
+  | "colour"
+  | "colourUnreadable"
+  | "position"
+  | "category"
+  | "taken"
+  | "tooMany"
+  /** Another session changed the role since the form was drawn (§NNN): nothing is written over it. */
+  | "stale"
+  /** The role is no longer there (deleted meanwhile) or is not this event's. */
+  | "gone";
+
+/** The role a refusal is about, in the words the sentence names it by: the Romanian name typed (or saved) and its category's two names. */
+export type VolunteerRoleRowName = { id: string | null; name: string; categoryRo: string | null; categoryEn: string | null };
+
+/**
+ * One row of the «Roluri» card's one save, refused (`VOLUNTEER_ROLE_INVALID`): the role and its category for the sentence, the problem for the
+ * words after it, and the boxes — `roles[<key>].nameEn` — for the summary's links. Names and codes only, never a typed value.
+ */
+export class VolunteerRoleRowError extends DomainError {
+  readonly row: VolunteerRoleRowName;
+  readonly problem: VolunteerRoleRowProblem;
+
+  constructor(row: VolunteerRoleRowName, problem: VolunteerRoleRowProblem, fields: readonly string[]) {
+    super("VOLUNTEER_ROLE_INVALID", `a role of the form cannot be saved: ${problem}`, fields);
+    this.row = row;
+    this.problem = problem;
+  }
+}
+
+/** The boxes a role's saved values stand for, as the form would post them: what a row that leaves a box out keeps. */
+function postedDefaultsOf(role: typeof eventVolunteerRoles.$inferSelect): Record<string, string> {
+  return {
+    nameRo: role.nameRo,
+    nameEn: role.nameEn,
+    needed: role.needed === null ? "" : String(role.needed),
+    unlimited: role.needed === null ? "on" : "",
+  };
+}
+
+/** The boxes a row posted, as strings: a box left out is a box the role keeps. */
+function postedBoxes(fields: Record<string, unknown>): Record<string, string> {
+  return Object.fromEntries(Object.entries(fields).filter((entry): entry is [string, string] => typeof entry[1] === "string"));
+}
+
+/** «Poziția» as typed: empty is none (the role keeps its place, a new one goes last), a whole number from 1 otherwise, else `undefined` (the box's refusal). */
+function postedPosition(value: unknown): number | null | undefined {
+  const text = typeof value === "string" ? value.trim() : "";
+  if (text === "") return null;
+  if (!/^\d{1,4}$/.test(text)) return undefined;
+  const number = Number(text);
+  return number >= 1 ? number : undefined;
+}
+
+/**
+ * The box a zod issue's path names, in the row's own spelling: a description's refusal names the editor's document when the row posted one,
+ * the plain box when the row (a script, a test) posted that.
+ */
+function roleBoxOfIssue(name: string, posted: Record<string, string>): RoleRowBox | null {
+  const side = name.startsWith("descriptionRo") ? "Ro" : name.startsWith("descriptionEn") ? "En" : null;
+  if (side) return `description${side}Body` in posted || !(`description${side}` in posted) ? `description${side}Body` : `description${side}`;
+  return (["nameRo", "nameEn", "needed"] as const).find((known) => known === name) ?? null;
+}
+
+/**
+ * Every role of an event's card saved at once (§NNN; the owner, 2026-10-16: «să pot face batch edit la roluri, nu să dau save de fiecare dată, ci
+ * un Save All»), by one staff member — the plural of `changeVolunteerRole`, which stays for the delete and for the older callers. Each row is a
+ * saved role (`id`) or the blank row at the end of a category (no `id`; blank names are ignored, a name typed creates the role). A box a row leaves
+ * out keeps what the role has — the colour, the description, the category, the number — so a caller posts only what it changes.
+ *
+ * **All or nothing.** Every row is read first, by the singular's own rules (`roleInputOf`, `checkedRoleColour`: both names, a number of at least one
+ * or «Nelimitat», the description in both languages or neither, the colour at AA) and the first refused row, in the form's order, refuses the whole
+ * save with `VOLUNTEER_ROLE_INVALID` naming that row (`VolunteerRoleRowError`) and the boxes to correct; so is a name already under the category it ends
+ * in (the same name may stand in two categories, never twice in one), a position that is not a whole number from 1, a category that is not the event's,
+ * and more than `VOLUNTEER_ROLES_MAX` roles. Only then, in one transaction, is each role that differs from the stored one written — field by field, one
+ * audit row each (`volunteer_role.edited`, naming the boxes that changed, with «position» among them when the role's own place moved), the new roles
+ * created (`volunteer_role.added`) — and the public page told once. A save that changes nothing writes and records nothing.
+ *
+ * **«Poziția»** is the role's place among the roles of its own category, from 1. Saving sorts each category by the number posted, a role that left
+ * its number alone keeping its place and one that took a new number taking it — before the role it ties with when it moved up, after when it moved
+ * down; a role moved to another category goes to its end unless a number was typed, a new role goes last unless one was typed. The stored order is
+ * then rewritten compactly (0, 1, 2 … through the categories in the club's order, «Alte roluri» last), which also closes the gaps a delete left; a
+ * role that only moved because another did is rewritten silently, never audited as edited.
+ */
+export async function changeVolunteerRoles<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Actor,
+  request: VolunteerRolesRequest,
+  now: Date,
+): Promise<VolunteerRolesResult> {
+  assertMayManage(actor);
+  assertIds(request.eventId, ...request.rows.flatMap((row) => (row.id === null ? [] : [row.id])));
+  if (request.rows.length === 0) return { changed: false, edited: 0, created: 0 };
+  // A form names each role once (its boxes are grouped by their row's key); a caller that names one twice would have it audited twice.
+  const named = request.rows.flatMap((row) => (row.id === null ? [] : [row.id]));
+  if (new Set(named).size !== named.length) throw new DomainError("VALIDATION_ERROR", "a role is named twice in one save");
+
+  const result = await db.transaction(async (tx): Promise<VolunteerRolesResult> => {
+    // The locks, in the order every other change of the roles takes them: the event (NO KEY UPDATE, see `changeVolunteerRole`), its categories, its roles.
+    const [event] = await tx.select({ id: events.id }).from(events).where(eq(events.id, request.eventId)).for("no key update").limit(1);
+    if (!event) throw new DomainError("NOT_FOUND", "the event is not there");
+    const categories = (
+      await tx.select().from(eventVolunteerCategories).where(eq(eventVolunteerCategories.eventId, request.eventId)).orderBy(asc(eventVolunteerCategories.id)).for("update")
+    ).sort(compareCategories);
+    const categoryById = new Map(categories.map((category) => [category.id, category]));
+    const stored = (
+      await tx.select().from(eventVolunteerRoles).where(eq(eventVolunteerRoles.eventId, request.eventId)).orderBy(asc(eventVolunteerRoles.id)).for("update")
+    ).sort(compareRoles);
+    const storedById = new Map(stored.map((role) => [role.id, role]));
+    // Each stored role's place among the roles of its own category, from 1: what «Poziția» shows and what a row that leaves it alone keeps.
+    const rankBefore = new Map<string, number>();
+    const perCategory = new Map<string | null, number>();
+    for (const role of stored) {
+      const rank = (perCategory.get(role.categoryId) ?? 0) + 1;
+      perCategory.set(role.categoryId, rank);
+      rankBefore.set(role.id, rank);
+    }
+
+    type Stored = typeof eventVolunteerRoles.$inferSelect;
+    type Prepared = {
+      row: VolunteerRolesRowRequest;
+      current: Stored | null;
+      /** The id the roles are told apart by while the order is worked out: the saved id, or `new:<key>`. */
+      id: string;
+      input: VolunteerRoleInput;
+      colour: string | null;
+      categoryId: string | null;
+      posted: number | null;
+      /** Whether «Poziția» was typed: a number other than the one the form was drawn with. */
+      typed: boolean;
+      changedFields: string[];
+    };
+
+    // ---- 1. Every row read, the first refused one refusing the save --------------------------------
+    const prepared: Prepared[] = [];
+    for (const row of request.rows) {
+      const current = row.id === null ? null : (storedById.get(row.id) ?? null);
+      const { was, ...boxes } = postedBoxes(row.fields);
+      if (row.id !== null && !current) {
+        // A role another session deleted while the form was open (or one that is not this event's): said by its name, nothing saved.
+        const goneIn = categoryById.get((boxes.categoryId ?? "").trim());
+        const goneName = (boxes.nameRo ?? "").trim() || (decodeRoleBaseline(was)?.nameRo ?? "");
+        throw new VolunteerRoleRowError({ id: null, name: goneName, categoryRo: goneIn?.nameRo ?? null, categoryEn: goneIn?.nameEn ?? null }, "gone", [roleBox(row.key, "nameRo")]);
+      }
+      // The blank row of a category: no name in either language is no role.
+      if (!current && (boxes.nameRo ?? "").trim() === "" && (boxes.nameEn ?? "").trim() === "") continue;
+
+      const postedCategory = typeof boxes.categoryId === "string" ? boxes.categoryId.trim() : undefined;
+      const categoryId = postedCategory === undefined ? (current?.categoryId ?? null) : postedCategory === "" ? null : postedCategory;
+      const categoryRow = categoryId === null ? undefined : categoryById.get(categoryId);
+      const named: VolunteerRoleRowName = {
+        id: current?.id ?? null,
+        name: (boxes.nameRo ?? current?.nameRo ?? "").trim() || (boxes.nameEn ?? current?.nameEn ?? "").trim(),
+        categoryRo: categoryRow?.nameRo ?? null,
+        categoryEn: categoryRow?.nameEn ?? null,
+      };
+      const refuse = (problem: VolunteerRoleRowProblem, ...at: readonly RoleRowBox[]): never => {
+        throw new VolunteerRoleRowError(named, problem, at.map((box) => roleBox(row.key, box)));
+      };
+
+      if (categoryId !== null && !categoryRow) refuse("category", "categoryId");
+
+      let input: VolunteerRoleInput;
+      try {
+        input = roleInputOf({ ...(current ? postedDefaultsOf(current) : {}), ...boxes });
+      } catch (error) {
+        if (!isDomainError(error) || error.code !== "VALIDATION_ERROR") throw error;
+        const at = [...new Set(error.fields.flatMap((name) => roleBoxOfIssue(name, boxes) ?? []))];
+        const first = error.fields[0] ?? "";
+        const typed = (name: "nameRo" | "nameEn") => (boxes[name] ?? current?.[name] ?? "").trim();
+        if (first === "nameRo") refuse(typed("nameRo") === "" ? "nameRoMissing" : "nameRoLong", ...at);
+        if (first === "nameEn") refuse(typed("nameEn") === "" ? "nameEnMissing" : "nameEnLong", ...at);
+        refuse(first === "needed" ? "needed" : "description", ...(at.length > 0 ? at : (["nameRo"] as const)));
+        throw error;
+      }
+      // A row that posted no description box at all keeps the role's: the editor always posts both, a caller that changes only a name does not.
+      if (current && !(["descriptionRoBody", "descriptionEnBody", "descriptionRo", "descriptionEn"] as const).some((box) => box in boxes)) {
+        input = {
+          ...input,
+          descriptionRoJson: (current.descriptionRoJson as RichTextDoc | null) ?? null,
+          descriptionEnJson: (current.descriptionEnJson as RichTextDoc | null) ?? null,
+          descriptionWordsRo: current.descriptionWordsRo,
+          descriptionWordsEn: current.descriptionWordsEn,
+        };
+      }
+
+      let colour = current?.colour ?? null;
+      if (typeof boxes.colourChoice === "string") {
+        try {
+          colour = checkedRoleColour({ choice: boxes.colourChoice, typed: boxes.colourTyped ?? "" }, current?.colour ?? null, roleColourBoxesOf(row.key));
+        } catch (error) {
+          if (isDomainError(error) && (error.code === "VALIDATION_ERROR" || error.code === "BADGE_COLOUR_UNREADABLE")) {
+            throw new VolunteerRoleRowError(named, error.code === "BADGE_COLOUR_UNREADABLE" ? "colourUnreadable" : "colour", error.fields);
+          }
+          throw error;
+        }
+      }
+
+      const posted = postedPosition(boxes.position);
+      if (posted === undefined) refuse("position", "position");
+
+      // What the person touched: the boxes against the role as the form was DRAWN (`role-baseline.ts`), never against the role as it is stored now —
+      // a form opened before another session's save would otherwise write the old values back over it, on every role it carries and on the order.
+      // A row that posted no baseline (a script, a test) is read against the stored role, as the singular writer does.
+      let changedFields: string[] = [];
+      let typed = false;
+      if (current) {
+        const stored = roleBaselineOf(current, rankBefore.get(current.id) ?? 0);
+        const drawn = decodeRoleBaseline(was) ?? stored;
+        const after = { nameRo: input.nameRo, nameEn: input.nameEn, needed: input.needed, colour, categoryId };
+        changedFields = (["nameRo", "nameEn", "needed", "colour", "categoryId"] as const).filter((key) => drawn[key] !== after[key]);
+        if (descriptionDigest(input.descriptionRoJson) !== drawn.descriptionRo) changedFields.push("descriptionRo");
+        if (descriptionDigest(input.descriptionEnJson) !== drawn.descriptionEn) changedFields.push("descriptionEn");
+        // A number counts as typed only when it differs from the one the box was drawn with.
+        typed = posted !== null && posted !== drawn.rank;
+        if (changedFields.length > 0 || typed) {
+          // Written over by this row: refuse when the stored role is no longer the one the form showed (the order too, when the place was typed).
+          const overtaken =
+            (["nameRo", "nameEn", "needed", "colour", "categoryId", "descriptionRo", "descriptionEn"] as const).some((key) => drawn[key] !== stored[key]) ||
+            (typed && drawn.rank !== stored.rank);
+          if (overtaken) refuse("stale", "nameRo");
+        }
+      }
+      // A row the person left alone is the stored role, whatever the form carried: it is neither written nor allowed to collide.
+      const untouched = current !== null && changedFields.length === 0;
+      prepared.push({
+        row,
+        current,
+        id: current?.id ?? `new:${row.key}`,
+        input:
+          untouched && current
+            ? {
+                ...input,
+                nameRo: current.nameRo,
+                nameEn: current.nameEn,
+                needed: current.needed,
+                descriptionRoJson: (current.descriptionRoJson as RichTextDoc | null) ?? null,
+                descriptionEnJson: (current.descriptionEnJson as RichTextDoc | null) ?? null,
+                descriptionWordsRo: current.descriptionWordsRo,
+                descriptionWordsEn: current.descriptionWordsEn,
+              }
+            : input,
+        colour: untouched && current ? current.colour : colour,
+        categoryId: untouched && current ? current.categoryId : categoryId,
+        posted: posted ?? null,
+        typed,
+        changedFields,
+      });
+    }
+
+    const creating = prepared.filter((one) => !one.current);
+    const overflow = creating[Math.max(0, VOLUNTEER_ROLES_MAX - stored.length)];
+    if (stored.length + creating.length > VOLUNTEER_ROLES_MAX && overflow) {
+      throw new VolunteerRoleRowError(
+        { id: null, name: overflow.input.nameRo, categoryRo: categoryById.get(overflow.categoryId ?? "")?.nameRo ?? null, categoryEn: categoryById.get(overflow.categoryId ?? "")?.nameEn ?? null },
+        "tooMany",
+        [roleBox(overflow.row.key, "nameRo")],
+      );
+    }
+
+    // ---- 2. What each role would be, and the names it would collide on -----------------------------
+    const preparedById = new Map(prepared.map((one) => [one.id, one]));
+    const finalOf = (role: Stored) => {
+      const one = preparedById.get(role.id);
+      return one ? { nameRo: one.input.nameRo, nameEn: one.input.nameEn, categoryId: one.categoryId } : { nameRo: role.nameRo, nameEn: role.nameEn, categoryId: role.categoryId };
+    };
+    const finals = new Map<string, { nameRo: string; nameEn: string; categoryId: string | null }>([
+      ...stored.map((role) => [role.id, finalOf(role)] as const),
+      ...creating.map((one) => [one.id, { nameRo: one.input.nameRo, nameEn: one.input.nameEn, categoryId: one.categoryId }] as const),
+    ]);
+    const same = (a: string, b: string) => a.toLowerCase() === b.toLowerCase();
+    for (const one of prepared) {
+      const mine = finals.get(one.id);
+      if (!mine) continue;
+      const moved = !one.current || mine.nameRo !== one.current.nameRo || mine.nameEn !== one.current.nameEn || mine.categoryId !== one.current.categoryId;
+      // A pair that was already twins and was not touched here is not this save's to refuse.
+      if (!moved) continue;
+      const named: VolunteerRoleRowName = {
+        id: one.current?.id ?? null,
+        name: mine.nameRo,
+        categoryRo: categoryById.get(mine.categoryId ?? "")?.nameRo ?? null,
+        categoryEn: categoryById.get(mine.categoryId ?? "")?.nameEn ?? null,
+      };
+      for (const [otherId, other] of finals) {
+        if (otherId === one.id || other.categoryId !== mine.categoryId) continue;
+        if (same(other.nameRo, mine.nameRo)) throw new VolunteerRoleRowError(named, "taken", [roleBox(one.row.key, "nameRo")]);
+        if (same(other.nameEn, mine.nameEn)) throw new VolunteerRoleRowError(named, "taken", [roleBox(one.row.key, "nameEn")]);
+      }
+    }
+
+    // ---- 3. What changed was decided with each row, against the baseline the form was drawn from (step 1) ----
+
+    // ---- 4. The order: each category sorted by the numbers posted ----------------------------------
+    type Member = { id: string; position: number; bias: number; tie: number };
+    const members = new Map<string | null, Member[]>();
+    const place = (categoryId: string | null, member: Member) => members.set(categoryId, [...(members.get(categoryId) ?? []), member]);
+    let tie = 0;
+    for (const role of stored) {
+      const one = preparedById.get(role.id);
+      const rank = rankBefore.get(role.id) ?? 0;
+      const categoryId = one ? one.categoryId : role.categoryId;
+      let position = rank;
+      let bias = 0;
+      if (one) {
+        const typed = one.typed;
+        if (categoryId !== role.categoryId) {
+          // To another category: its end, unless a number was typed — then that place, before the role it ties with.
+          position = typed && one.posted !== null ? one.posted : Number.POSITIVE_INFINITY;
+          bias = -0.5;
+        } else if (typed && one.posted !== null) {
+          position = one.posted;
+          bias = one.posted < rank ? -0.5 : 0.5;
+        }
+      }
+      place(categoryId, { id: role.id, position, bias, tie: tie++ });
+    }
+    for (const one of creating) place(one.categoryId, { id: one.id, position: one.posted ?? Number.POSITIVE_INFINITY, bias: one.posted === null ? 0 : -0.5, tie: tie++ });
+    const rankAfter = new Map<string, number>();
+    const positionOf = new Map<string, number>();
+    let next = 0;
+    for (const categoryId of [...categories.map((category) => category.id), null]) {
+      const ordered = [...(members.get(categoryId) ?? [])].sort((a, b) => (a.position === b.position ? 0 : a.position < b.position ? -1 : 1) || a.bias - b.bias || a.tie - b.tie);
+      ordered.forEach((member, at) => {
+        rankAfter.set(member.id, at + 1);
+        positionOf.set(member.id, next++);
+      });
+    }
+    // A role's own place counts as an edit only when it typed a number and landed elsewhere: a role pushed along by another is not edited.
+    for (const one of prepared) {
+      const current = one.current;
+      if (!current || one.categoryId !== current.categoryId) continue;
+      const rank = rankBefore.get(current.id) ?? 0;
+      if (one.typed && rankAfter.get(current.id) !== rank) one.changedFields.push("position");
+    }
+    const edited = prepared.filter((one) => one.current && one.changedFields.length > 0);
+    if (edited.length + creating.length === 0) return { changed: false, edited: 0, created: 0 };
+
+    // ---- 5. The writes ------------------------------------------------------------------------------
+    const audit = (action: AuditAction, metadata: Record<string, unknown>) =>
+      recordAuditEvent(tx, { actorStaffUserId: actor.id, action, entityType: "event", entityId: request.eventId, metadata, now });
+    const renamed = edited.filter((one) => one.changedFields.some((field) => field === "nameRo" || field === "nameEn" || field === "categoryId"));
+    // Two roles that swap names (or one that takes the name another is leaving) cannot be written one by one under the unique index: park them first.
+    const swaps = renamed.some((one) =>
+      renamed.some((other) => {
+        const mine = finals.get(one.id);
+        return other !== one && other.current !== null && mine !== undefined && other.current.categoryId === mine.categoryId && (same(other.current.nameRo, mine.nameRo) || same(other.current.nameEn, mine.nameEn));
+      }),
+    );
+    if (swaps) {
+      for (const one of renamed) {
+        if (one.current) await tx.update(eventVolunteerRoles).set({ nameRo: one.current.id, nameEn: one.current.id }).where(eq(eventVolunteerRoles.id, one.current.id));
+      }
+    }
+    for (const role of stored) {
+      const one = preparedById.get(role.id);
+      const position = positionOf.get(role.id) ?? role.position;
+      const set: Partial<typeof eventVolunteerRoles.$inferInsert> = {};
+      if (one && one.changedFields.some((field) => field !== "position")) {
+        Object.assign(set, {
+          nameRo: one.input.nameRo,
+          nameEn: one.input.nameEn,
+          needed: one.input.needed,
+          descriptionRoJson: one.input.descriptionRoJson,
+          descriptionEnJson: one.input.descriptionEnJson,
+          descriptionWordsRo: one.input.descriptionWordsRo,
+          descriptionWordsEn: one.input.descriptionWordsEn,
+          colour: one.colour,
+          categoryId: one.categoryId,
+        });
+      }
+      if (position !== role.position) set.position = position;
+      if (Object.keys(set).length > 0) await tx.update(eventVolunteerRoles).set(set).where(eq(eventVolunteerRoles.id, role.id));
+    }
+    for (const one of edited) {
+      const current = one.current;
+      if (!current) continue;
+      await audit("volunteer_role.edited", {
+        roleId: current.id,
+        fields: one.changedFields,
+        nameRo: one.input.nameRo,
+        needed: one.input.needed,
+        ...(one.changedFields.includes("categoryId") ? { categoryFrom: current.categoryId, categoryTo: one.categoryId } : {}),
+        ...(one.changedFields.includes("colour") ? { colourFrom: current.colour, colourTo: one.colour } : {}),
+        ...(one.changedFields.includes("position") ? { positionFrom: rankBefore.get(current.id), positionTo: rankAfter.get(current.id) } : {}),
+      });
+    }
+    for (const one of creating) {
+      const [row] = await tx
+        .insert(eventVolunteerRoles)
+        .values({
+          eventId: request.eventId,
+          nameRo: one.input.nameRo,
+          nameEn: one.input.nameEn,
+          needed: one.input.needed,
+          descriptionRoJson: one.input.descriptionRoJson,
+          descriptionEnJson: one.input.descriptionEnJson,
+          descriptionWordsRo: one.input.descriptionWordsRo,
+          descriptionWordsEn: one.input.descriptionWordsEn,
+          colour: one.colour,
+          categoryId: one.categoryId,
+          position: positionOf.get(one.id) ?? stored.length,
+          createdAt: now,
+        })
+        .returning({ id: eventVolunteerRoles.id });
+      await audit("volunteer_role.added", { roleId: row.id, nameRo: one.input.nameRo, nameEn: one.input.nameEn, needed: one.input.needed, colour: one.colour, categoryId: one.categoryId });
+    }
+    return { changed: true, edited: edited.length, created: creating.length };
+  });
+  // The public page lists the roles and what each still needs: it is told once for the whole save, after the write has committed.
   if (result.changed) revalidatePublicContent("places");
   return result;
 }

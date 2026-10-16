@@ -4,6 +4,7 @@ import pg from "pg";
 import { hydrated, signIn } from "./support/featured-event";
 import { openEditorBox, openFold } from "./support/fold";
 import { chooseSex } from "./support/sex-choice";
+import { blankRoleRow, describeRole, fillRoleRow, roleGroup, roleRow, saveAllRoles } from "./support/volunteer-roles";
 
 /**
  * §754 — «Voluntari» (BR-REQ-050-02, BR-REQ-060-01, BR-REQ-031-01): an Administrator defines two roles on a
@@ -30,7 +31,7 @@ import { chooseSex } from "./support/sex-choice";
  * (the same name in two categories) and «Foto/Video» under none; the volunteers' page groups the roles under level-3 headings in that order with the contact on one
  * line under its heading (links of 44 pixels); an offer for «Direcționare» is named «Direcționare (Traseu)» on the card; the CSV says so and holds no contact.
  *
- * §784 — a role «fără număr»: «Adaugă un rol» has the tick «Fără număr — oricâți oameni» beside «Câți oameni trebuie» (the number box goes while it is ticked); the card says
+ * §784 — a role «fără număr»: a role's row has the tick «Nelimitat» beside «Câte persoane» (the number box goes while it is ticked); the card says
  * «0 · fără număr» on that role and «0 din 1 + roluri fără număr» in its closed line; the event's page lists the role, the volunteers' page offers it however many
  * people it was given and never puts a number on it, even with the counts on.
  *
@@ -118,33 +119,13 @@ test.describe("§754 volunteers for a race", () => {
     // its text, so a folded card (nobody waiting) still answers.
     const group = (name: string) => page.getByTestId("volunteer-group").filter({ has: page.locator("h3").getByText(name, { exact: true }) });
 
-    /** «Descrierea rolului»: one paragraph per line, typed into the house's editor — Romanian and English (both or neither). */
-    async function describeRole(scope: Locator, ro: readonly string[], en: readonly string[]) {
-      for (const [name, lines] of [
-        ["descriptionRoBody", ro],
-        ["descriptionEnBody", en],
-      ] as const) {
-        const fold = scope.locator(`details[data-rich-text-fold="${name}"]`);
-        await openFold(fold);
-        const editor = fold.locator(".ProseMirror");
-        await editor.click();
-        for (const [index, line] of lines.entries()) {
-          if (index > 0) await page.keyboard.press("Enter");
-          await page.keyboard.type(line);
-        }
-      }
-    }
-
+    /** One role through the «Roluri» card's blank row and its one «Salvează toate rolurile» (§NNN), the description typed in the row's «Mai multe». */
     async function addRole(nameRo: string, nameEn: string, needed: string, description?: { ro: readonly string[]; en: readonly string[] }) {
-      await openEditorBox(page, "Adaugă un rol");
-      const add = page.getByTestId("volunteer-role-add");
-      await add.getByLabel("Numele rolului (Română)").fill(nameRo);
-      await add.getByLabel("Numele rolului (English)").fill(nameEn);
-      await add.getByLabel("Câți oameni trebuie").fill(needed);
-      if (description) await describeRole(add, description.ro, description.en);
-      await add.getByRole("button", { name: "Adaugă rolul", exact: true }).click();
-      await page.waitForURL(/#box-volunteers$/);
-      await hydrated(page);
+      await openEditorBox(page, "Roluri");
+      const blank = blankRoleRow(page);
+      await fillRoleRow(blank, { nameRo, nameEn, needed });
+      if (description) await describeRole(blank, description.ro, description.en);
+      await saveAllRoles(page);
     }
     // «Punct de apă» has a long description (four lines: it folds behind «Detalii»); «Sosire» a one-line one.
     await addRole("Punct de apă", "Water point", "2", {
@@ -155,25 +136,35 @@ test.describe("§754 volunteers for a race", () => {
     // Open on arrival? The card keeps its closed line: «0 din 3».
     await expect(card.locator("summary").first()).toContainText("0 din 3");
 
-    // Reorder: «Sosire» moves up, then back — the club's order is the page's.
+    // Reorder and change two roles, saved by ONE press (§NNN): «Sosire» takes the first place by its position box and «Punct de apă» needs three people.
     await openEditorBox(page, "Roluri");
-    const roles = page.getByTestId("volunteer-role-name");
-    await expect(roles).toHaveText(["Punct de apă", "Sosire"]);
-    // The role's header: the first line of its description's plain words, the rest folded (§765).
-    await expect(page.getByTestId("volunteer-role").nth(0).getByTestId("volunteer-role-description-first")).toHaveText("Stai la masa cu apă, la kilometrul 5.");
-    await expect(page.getByTestId("volunteer-role").nth(1).getByTestId("volunteer-role-description-first")).toHaveText("Stai la linia de sosire.");
-    const moveUp = page.getByTestId("volunteer-role").nth(1).getByRole("button", { name: /Mută mai sus/ });
-    expect((await moveUp.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
-    await moveUp.click();
-    await page.waitForURL(/#box-volunteers$/);
-    await hydrated(page);
+    const roleNames = () => page.locator('[data-testid="volunteer-role"] input[name$=".nameRo"]').evaluateAll((boxes) => boxes.map((box) => (box as HTMLInputElement).value));
+    expect(await roleNames()).toEqual(["Punct de apă", "Sosire"]);
+    // The role's fold line: the first line of its description's plain words beside «Mai multe» (§765).
+    const moreLine = (name: string) => roleRow(page, name).getByTestId("volunteer-role-more").locator(":scope > summary");
+    await expect(moreLine("Punct de apă")).toContainText("Stai la masa cu apă, la kilometrul 5.");
+    await expect(moreLine("Sosire")).toContainText("Stai la linia de sosire.");
+    // The description is one strip of two tabs (§572) in the fold, and the card's «Tradu cardul» is greyed with its reason where there is no translation key (§482).
+    await openFold(roleRow(page, "Punct de apă").getByTestId("volunteer-role-more"));
+    await expect(roleRow(page, "Punct de apă").getByRole("tab")).toHaveText([/Română/, /English/]);
+    await expect(page.getByTestId("volunteer-roles-form").getByTestId("translate-card-off")).toBeVisible();
+    // The position box and the number are boxes a thumb can use: 44 pixels tall.
+    expect((await roleRow(page, "Sosire").getByLabel("Poziția").boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(40);
+    await fillRoleRow(roleRow(page, "Sosire"), { position: "1" });
+    await fillRoleRow(roleRow(page, "Punct de apă"), { needed: "3" });
+    await saveAllRoles(page, "Am salvat 2 roluri.");
     await openEditorBox(page, "Roluri");
-    await expect(page.getByTestId("volunteer-role-name")).toHaveText(["Sosire", "Punct de apă"]);
-    await page.getByTestId("volunteer-role").nth(1).getByRole("button", { name: /Mută mai sus/ }).click();
-    await page.waitForURL(/#box-volunteers$/);
-    await hydrated(page);
+    expect(await roleNames()).toEqual(["Sosire", "Punct de apă"]);
+    await expect(roleRow(page, "Punct de apă").getByLabel("Câte persoane", { exact: true })).toHaveValue("3");
+    await expect(roleRow(page, "Punct de apă").getByLabel("Poziția")).toHaveValue("2");
+    // Back as they were, again by one press: the first place to «Punct de apă», two people.
+    await fillRoleRow(roleRow(page, "Punct de apă"), { position: "1", needed: "2" });
+    await saveAllRoles(page);
     await openEditorBox(page, "Roluri");
-    await expect(page.getByTestId("volunteer-role-name")).toHaveText(["Punct de apă", "Sosire"]);
+    expect(await roleNames()).toEqual(["Punct de apă", "Sosire"]);
+    // A press that changes nothing says so, and writes nothing.
+    await saveAllRoles(page, "Nimic de schimbat la roluri.");
+    await openEditorBox(page, "Roluri");
 
     // The form is off until the event takes volunteers: the card says why.
     await expect(page.getByTestId("volunteer-offer-state")).toContainText("Formularul public e oprit");
@@ -686,14 +677,9 @@ test.describe("§754 volunteers for a race", () => {
     await signIn(page, "Dev Administrator");
     await page.goto(`/ro/admin/events/${event.id}`);
     await hydrated(page);
-    await openEditorBox(page, "Adaugă un rol");
-    const addRole = page.getByTestId("volunteer-role-add");
-    await addRole.getByLabel("Numele rolului (Română)").fill("Punct de apă");
-    await addRole.getByLabel("Numele rolului (English)").fill("Water point");
-    await addRole.getByLabel("Câți oameni trebuie").fill("3");
-    await addRole.getByRole("button", { name: "Adaugă rolul", exact: true }).click();
-    await page.waitForURL(/#box-volunteers$/);
-    await hydrated(page);
+    await openEditorBox(page, "Roluri");
+    await fillRoleRow(blankRoleRow(page), { nameRo: "Punct de apă", nameEn: "Water point", needed: "3" });
+    await saveAllRoles(page);
 
     /** A person entered by hand (§761): the role ticked as what they would do and, when `give`, given too. */
     async function fillByHand(name: string, email: string, give: boolean, about: { years?: number; city?: string; before?: boolean } = {}) {
@@ -1100,34 +1086,30 @@ test.describe("§754 volunteers for a race", () => {
     // --- Roles under them: «Categoria» is a choice, the same name stands in two categories ----------
     async function addRole(nameRo: string, nameEn: string, needed: string, category: string | null) {
       const before = await page.getByTestId("volunteer-role").count();
-      await openEditorBox(page, "Adaugă un rol");
-      const add = page.getByTestId("volunteer-role-add");
-      if (category !== null) await add.locator('select[name="categoryId"]').selectOption({ label: category });
-      await add.getByLabel("Numele rolului (Română)").fill(nameRo);
-      await add.getByLabel("Numele rolului (English)").fill(nameEn);
-      await add.getByLabel("Câți oameni trebuie").fill(needed);
-      await add.getByRole("button", { name: "Adaugă rolul", exact: true }).click();
+      await openEditorBox(page, "Roluri");
+      // The blank row at the end of the category's sub-card (§NNN); a role under none is typed in the first card's and filed by «Categoria».
+      await fillRoleRow(blankRoleRow(page, category ?? "Traseu"), { nameRo, nameEn, needed, ...(category === null ? { category: "Alte roluri" } : {}) });
+      await saveAllRoles(page);
       await expect(page.getByTestId("volunteer-role")).toHaveCount(before + 1, { timeout: 30_000 });
-      await hydrated(page);
     }
     await openEditorBox(page, "Roluri");
     await addRole("Direcționare", "Guidance", "2", "Traseu");
     await addRole("Direcționare", "Guidance", "1", "Start / Sosire");
     await addRole("Foto/Video", "Photo/Video", "1", null);
     await addRole("Punct de hidratare", "Water point", "3", "Traseu");
-    // The same name twice under one category is refused with its own sentence, and nothing is added.
-    await openEditorBox(page, "Adaugă un rol");
-    const addAgain = page.getByTestId("volunteer-role-add");
-    await addAgain.locator('select[name="categoryId"]').selectOption({ label: "Traseu" });
-    await addAgain.getByLabel("Numele rolului (Română)").fill("direcționare");
-    await addAgain.getByLabel("Numele rolului (English)").fill("Marshal");
-    await addAgain.getByLabel("Câți oameni trebuie").fill("1");
-    await addAgain.getByRole("button", { name: "Adaugă rolul", exact: true }).click();
-    await expect(page.getByText("Numele există deja în această categorie")).toBeVisible({ timeout: 30_000 });
-    await expect(page.getByTestId("volunteer-role")).toHaveCount(4);
-    // The card lists the roles under their category's heading, in the category's order, «Alte activități» last.
+    // The same name twice under one category is refused, naming the role and its category, and nothing is saved — what was typed stays in the row.
     await openEditorBox(page, "Roluri");
-    await expect(page.getByTestId("volunteer-role-group-heading")).toHaveText(["Traseu", "Start / Sosire", "Alte activități"]);
+    const again = blankRoleRow(page, "Traseu");
+    await fillRoleRow(again, { nameRo: "direcționare", nameEn: "Marshal", needed: "1" });
+    await page.getByRole("button", { name: "Salvează toate rolurile", exact: true }).click();
+    await expect(page.getByText(/„direcționare” din „Traseu”: în categoria aleasă există deja un rol cu acest nume/)).toBeVisible({ timeout: 30_000 });
+    await expect(blankRoleRow(page, "Traseu").getByLabel("Nume (RO)")).toHaveValue("direcționare");
+    await expect(page.getByTestId("volunteer-role")).toHaveCount(4);
+    // The card lists the roles in a sub-card per category, in the category's order, «Alte roluri» last.
+    await openEditorBox(page, "Roluri");
+    await expect(page.getByTestId("volunteer-role-group").locator("h4")).toContainText(["Traseu", "Start / Sosire", "Alte roluri"]);
+    await expect(roleGroup(page, "Traseu").locator("h4")).toContainText("2 roluri");
+    await expect(roleGroup(page, "Traseu")).toContainText("Persoana de contact: Ana Popescu · +40 712 345 678 · coordonator@club.test");
     // A category with roles under it is not deleted: the sentence says why, and the category stays.
     await openEditorBox(page, "Categorii");
     const routeRow = page.getByTestId("volunteer-category").nth(0);
@@ -1246,7 +1228,7 @@ test.describe("§754 volunteers for a race", () => {
     expect(text).not.toMatch(/Ana Popescu|coordonator@club\.test|0712 345 678|\+40 ?712 ?345 ?678/);
   });
 
-  test("§784 a role «fără număr»: the tick in «Adaugă un rol», «0 · fără număr» on the card, offered on the page whoever it was given to, and never a number on it", async ({ page, browser }) => {
+  test("§784 a role «fără număr»: the tick «Nelimitat» on the role's row, «0 · fără număr» on the card, offered on the page whoever it was given to, and never a number on it", async ({ page, browser }) => {
     const tag = `${test.info().project.name}-${Date.now().toString(36)}-nonum`;
     const event = await seedEvent(tag);
     const emails = ["maria", "ion", "dana"].map((name) => `${name}.${tag}@example.test`);
@@ -1258,54 +1240,45 @@ test.describe("§754 volunteers for a race", () => {
     await expect(card).toBeVisible();
     const group = (name: string) => page.getByTestId("volunteer-group").filter({ has: page.locator("h3").getByText(name, { exact: true }) });
 
-    // --- «Adaugă un rol»: a number, then the tick ------------------------------------------------
-    await openEditorBox(page, "Adaugă un rol");
-    let add = page.getByTestId("volunteer-role-add");
-    await add.getByLabel("Numele rolului (Română)").fill("Sosire");
-    await add.getByLabel("Numele rolului (English)").fill("Finish");
-    await add.getByLabel("Câți oameni trebuie").fill("1");
-    await add.getByRole("button", { name: "Adaugă rolul", exact: true }).click();
-    await expect(page.getByTestId("volunteer-role-name").getByText("Sosire", { exact: true })).toBeAttached({ timeout: 30_000 });
-    await hydrated(page);
+    // --- The blank row: a number, then the tick ---------------------------------------------------
+    await openEditorBox(page, "Roluri");
+    await fillRoleRow(blankRoleRow(page), { nameRo: "Sosire", nameEn: "Finish", needed: "1" });
+    await saveAllRoles(page);
+    await expect(roleRow(page, "Sosire")).toBeAttached({ timeout: 30_000 });
 
-    await openEditorBox(page, "Adaugă un rol");
-    add = page.getByTestId("volunteer-role-add");
-    await add.getByLabel("Numele rolului (Română)").fill("Ajutor");
-    await add.getByLabel("Numele rolului (English)").fill("Helper");
-    const numberBox = add.getByLabel("Câți oameni trebuie");
-    const noNumber = add.getByRole("checkbox", { name: "Fără număr — oricâți oameni" });
-    // The tick is a real checkbox a thumb can press, with its help; the number box is shown until it is ticked, never `required`.
+    await openEditorBox(page, "Roluri");
+    let blank = blankRoleRow(page);
+    await fillRoleRow(blank, { nameRo: "Ajutor", nameEn: "Helper" });
+    const numberBox = blank.getByLabel("Câte persoane", { exact: true });
+    const noNumber = blank.getByRole("checkbox", { name: "Nelimitat" });
+    // The tick is a real checkbox a thumb can press; the number box is shown until it is ticked, never `required`.
     await expect(noNumber).not.toBeChecked();
     expect((await noNumber.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
     await expect(numberBox).toBeVisible();
     await expect(numberBox).not.toHaveAttribute("required", "");
-    await expect(add.getByTestId("volunteer-role-unlimited-help")).toContainText("Nebifat, scrie mai sus un număr de cel puțin 1.");
-    // Neither a number nor the tick: refused at the number's box, and what was typed comes back.
+    // Neither a number nor the tick: refused, the sentence naming the role, and what was typed comes back.
     await numberBox.fill("");
-    await add.getByRole("button", { name: "Adaugă rolul", exact: true }).click();
-    await expect(page.getByTestId("volunteer-role-add").getByLabel("Numele rolului (Română)")).toHaveValue("Ajutor", { timeout: 30_000 });
-    await expect(page.getByTestId("volunteer-role-add").getByLabel("Câți oameni trebuie")).toHaveAttribute("aria-invalid", "true");
+    await page.getByRole("button", { name: "Salvează toate rolurile", exact: true }).click();
+    await expect(page.getByText(/„Ajutor” din „Alte roluri”: scrie câte persoane trebuie/)).toBeVisible({ timeout: 30_000 });
     await hydrated(page);
+    blank = blankRoleRow(page);
+    await expect(blank.getByLabel("Nume (RO)")).toHaveValue("Ajutor");
+    await expect(blank.getByLabel("Câte persoane", { exact: true })).toHaveAttribute("aria-invalid", "true");
     // Ticked: the number box goes (the stylesheet alone), and the role is saved without one.
-    add = page.getByTestId("volunteer-role-add");
-    await add.getByRole("checkbox", { name: "Fără număr — oricâți oameni" }).check();
-    await expect(add.getByLabel("Câți oameni trebuie")).toBeHidden();
-    await add.getByRole("button", { name: "Adaugă rolul", exact: true }).click();
-    // The address already ends in the card's anchor: the redirect is waited for by what it draws, the new role in the list.
-    await expect(page.getByTestId("volunteer-role-name").getByText("Ajutor", { exact: true })).toBeAttached({ timeout: 30_000 });
-    await hydrated(page);
+    await blank.getByRole("checkbox", { name: "Nelimitat" }).check();
+    await expect(blank.getByLabel("Câte persoane", { exact: true })).toBeHidden();
+    await saveAllRoles(page);
+    await expect(roleRow(page, "Ajutor")).toBeAttached({ timeout: 30_000 });
 
     // --- The card: «0 · fără număr», and the closed line counts only the numbered role -----------
     await openEditorBox(page, "Roluri");
     await expect(group("Sosire").getByTestId("volunteer-role-standing")).toHaveText("0 din 1");
     await expect(group("Ajutor").getByTestId("volunteer-role-standing")).toHaveText("0 · fără număr");
     await expect(card.locator("summary").first()).toContainText("0 din 1 + roluri fără număr");
-    // «Modifică» on that role: the tick is on, so the box that would say a number is not shown.
-    const ajutor = page.getByTestId("volunteer-role").filter({ has: page.getByTestId("volunteer-role-name").getByText("Ajutor", { exact: true }) });
-    await openFold(ajutor.locator("details").filter({ hasText: /^Modifică/ }).first());
-    const editTick = ajutor.getByRole("checkbox", { name: "Fără număr — oricâți oameni" });
-    await expect(editTick).toBeChecked();
-    await expect(ajutor.getByLabel("Câți oameni trebuie")).toBeHidden();
+    // The role's row: the tick is on, so the box that would say a number is not shown.
+    const ajutor = roleRow(page, "Ajutor");
+    await expect(ajutor.getByRole("checkbox", { name: "Nelimitat" })).toBeChecked();
+    await expect(ajutor.getByLabel("Câte persoane", { exact: true })).toBeHidden();
 
     // --- The event takes volunteers: its page lists both roles, the volunteers' page offers both -------
     await page.goto(`/ro/admin/events/${event.id}`);
