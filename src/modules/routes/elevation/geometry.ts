@@ -130,6 +130,13 @@ export type ElevationOptions = {
   extremes?: boolean;
   /** Two extremes closer than this, in metres, are one: only the highest is labelled. 20 by default. */
   minAltitudeGapMeters?: number;
+  /**
+   * An extreme's label that stands in the foot row (the lowest point's, under the line near the plot's foot) keeps clear of the end
+   * words and the marker labels — dropped when it would touch one — and the kilometre labels then give way to it, so «608 m» is
+   * never printed over «3». Off by default: the labels are then placed where their points are, whatever else stands there (a chart
+   * with room round the plot, like the page's, has no such crowd). A small strip turns it on (§NNN, the race number).
+   */
+  clearExtremes?: boolean;
   /** A route that climbs less than this is drawn flat in a range this wide, in metres. 20 by default. */
   minSpanMeters?: number;
   /** Room above and below the line, as a share of the span; 0.06 by default. */
@@ -302,6 +309,30 @@ export function elevationGeometry(profile: ElevationProfileData, markers: readon
     };
   });
 
+  // The extremes, placed before the kilometre scale so that, with `clearExtremes`, the kilometres give way to a label in the foot row.
+  const extremes: ElevationGeometry["extremes"] = [];
+  if (options.extremes) {
+    const gap = options.minAltitudeGapMeters ?? 20;
+    const place = (kind: "min" | "max", altitude: number) => {
+      const [x, y] = line[altitudes.indexOf(altitude)];
+      const text = options.format.altitude(altitude);
+      // The highest above its point, the lowest under it; the other side where the first would leave the box.
+      let baseline = kind === "max" ? y - labelGap : y + labelGap + textSize * 0.8;
+      if (baseline - textSize < 0) baseline = y + labelGap + textSize * 0.8;
+      else if (baseline > height) baseline = y - labelGap;
+      const label = centred(x, text, round(baseline));
+      if (options.clearExtremes === true && baseline > normal.bottom) {
+        // In the foot row: clear of the end words, the marker labels and what was kept before — or not drawn at all.
+        const box = boxOf(label);
+        if (touches(box)) return;
+        taken.push(box);
+      }
+      extremes.push({ kind, x, y, label });
+    };
+    place("max", highest);
+    if (!compact && highest - lowest >= gap) place("min", lowest);
+  }
+
   // The kilometre scale.
   const kmTicks: ElevationGeometry["kmTicks"] = [];
   const kmLabels: ElevationLabel[] = [];
@@ -358,26 +389,6 @@ export function elevationGeometry(profile: ElevationProfileData, markers: readon
         gridTo: round(plot.right),
       });
     }
-  }
-
-  // The extremes.
-  const extremes: ElevationGeometry["extremes"] = [];
-  if (options.extremes) {
-    const gap = options.minAltitudeGapMeters ?? 20;
-    const at = (altitude: number): number => altitudes.indexOf(altitude);
-    const place = (kind: "min" | "max", altitude: number) => {
-      const i = at(altitude);
-      const [x, y] = line[i];
-      const text = options.format.altitude(altitude);
-      // The highest above its point, the lowest under it; the other side where the first would leave the box.
-      const above = kind === "max";
-      let baseline = above ? y - labelGap : y + labelGap + textSize * 0.8;
-      if (baseline - textSize < 0) baseline = y + labelGap + textSize * 0.8;
-      else if (baseline > height) baseline = y - labelGap;
-      extremes.push({ kind, x, y, label: centred(x, text, round(baseline)) });
-    };
-    place("max", highest);
-    if (!compact && highest - lowest >= gap) place("min", lowest);
   }
 
   return {

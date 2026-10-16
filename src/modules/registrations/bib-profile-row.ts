@@ -1,13 +1,16 @@
 import type { BibDesign } from "./bib-design";
 import { bibProfileChartWidth } from "./bib-geometry";
 import type { BibProfileDrawing, BibProfileFigureLines } from "./bib-profile";
+import { type BibStrip, bibProfileStrip } from "./bib-profile-strip";
 
 /**
  * What the profile's row under the number holds (§750, amending it §759), decided once for both
  * renderers so the sheet and the picture cannot disagree:
  *
- * - `gpx` — «Desenat din traseul evenimentului (GPX)»: the line drawn from the route's file, with its
- *   «Start» and «Sosire», the checkpoints' marks on it, and the distance and the gain beside it.
+ * - `gpx` — «Desenat din traseul evenimentului (GPX)»: the line drawn from the route's file by the shared
+ *   elevation core, with its «Start» and «Sosire», the kilometres and the altitudes (§NNN), the checkpoints'
+ *   pins, and the distance and the gain beside it. The core's answer — `strip`, in the strip's own box — is
+ *   asked for here, once, and both renderers draw it.
  * - `picture` — «O poză încărcată»: the club's own picture of the profile, fitted whole; no marks (the
  *   club drew what it wanted), the figures beside it when known.
  *
@@ -20,11 +23,11 @@ import type { BibProfileDrawing, BibProfileFigureLines } from "./bib-profile";
  * club's picture.
  */
 export type BibProfileRow =
-  | { kind: "gpx"; drawing: BibProfileDrawing; chartWidth: number; figures: BibProfileFigureLines | null }
+  | { kind: "gpx"; drawing: BibProfileDrawing; chartWidth: number; figures: BibProfileFigureLines | null; strip: BibStrip }
   | { kind: "picture"; chartWidth: number; figures: BibProfileFigureLines | null };
 
 export function bibProfileRow(
-  design: Pick<BibDesign, "showProfile" | "profileSource" | "showProfileFigures">,
+  design: Pick<BibDesign, "showProfile" | "profileSource" | "showProfileFigures"> & Partial<Pick<BibDesign, "showProfileScale" | "showCheckpoints" | "showCheckpointTimes">>,
   extras: { profile: BibProfileDrawing | null; profileFigures: BibProfileFigureLines | null },
   pictureLoaded: boolean,
 ): BibProfileRow | null {
@@ -36,5 +39,12 @@ export function bibProfileRow(
   }
   if (!extras.profile) return null;
   const figures = design.showProfileFigures ? { distance: extras.profile.distance, gain: extras.profile.gain } : null;
-  return { kind: "gpx", drawing: extras.profile, chartWidth: bibProfileChartWidth(figures !== null), figures };
+  const chartWidth = bibProfileChartWidth(figures !== null);
+  const strip = bibProfileStrip(extras.profile, {
+    chartWidth,
+    showScale: design.showProfileScale !== false,
+    showCheckpoints: design.showCheckpoints !== false,
+    showTimes: design.showCheckpointTimes === true,
+  });
+  return { kind: "gpx", drawing: extras.profile, chartWidth, figures, strip };
 }

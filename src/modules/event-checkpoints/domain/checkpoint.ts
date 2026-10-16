@@ -489,8 +489,9 @@ export function profileMarkers(
  * strip prints, is a new picture address and no old picture is served. The names are not in it: the
  * strip draws no name.
  */
-export function checkpointsStampPart(checkpoints: readonly Pick<Checkpoint, "km" | "kinds" | "cutoffMinutes" | "cutoffClock">[]): string {
+export function checkpointsStampPart(checkpoints: readonly (Pick<Checkpoint, "km" | "kinds" | "cutoffMinutes" | "cutoffClock"> & { onProfile?: boolean })[]): string {
   return sortedByKm(checkpoints)
-    .map((row) => `${row.km.toFixed(2)}:${row.kinds.join("+")}:${row.cutoffMinutes ?? ""}@${row.cutoffClock ?? ""}`)
+    // A point the club unticked «Arată pe profilul traseului» ends in «!» (§NNN): the strip does not draw it, so the picture changes.
+    .map((row) => `${row.km.toFixed(2)}:${row.kinds.join("+")}:${row.cutoffMinutes ?? ""}@${row.cutoffClock ?? ""}${row.onProfile === false ? "!" : ""}`)
     .join("|");
 }

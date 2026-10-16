@@ -15,9 +15,10 @@ import {
   DEFAULT_BIB_DESIGN,
   numberScaleFactor,
 } from "./bib-design";
-import { checkpointGlyphLines } from "./bib-checkpoints";
+import { ELEVATION_GLYPH_PATHS, GLYPH_EVEN_ODD } from "@/modules/routes/elevation/glyphs";
 import type { BibProfileDrawing, BibProfileFigureLines } from "./bib-profile";
 import { bibProfileRow } from "./bib-profile-row";
+import { bibPinGlyphScale } from "./bib-profile-strip";
 import { bibFooterLines, bibFooterParts, bibFooterWidth } from "./bib-footer";
 import { BIB_MEMBER_MARK_PATHS, BIB_MEMBER_MARK_VIEWBOX, bibMemberMarkBox, isVectorMark } from "./bib-member-mark";
 import { BIB_PICTURE_BOX, type BibPictureSlot, bibPictureDrawing } from "./bib-picture-frame";
@@ -28,6 +29,7 @@ import {
   BIB_LAYOUT,
   BIB_MARGIN,
   BIB_PAPER,
+  BIB_TEXT_ASCENT,
   type BibHeaderLayout,
   bibEmergencyFit,
   bibExtrasHeight,
@@ -689,45 +691,46 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
         drawFigures();
         return;
       }
-      const profile = profileRow.drawing;
-      const chartTop = rowTop + L.profileChartTop;
-      const at = (point: readonly [number, number]) => [chartLeft + point[0] * chartWidth, chartTop + (1 - point[1]) * L.profileChartHeight] as const;
-      const first = at(profile.points[0]);
-      const last = at(profile.points[profile.points.length - 1]);
+      // The strip is the core's answer in its own box (`bib-profile-strip.ts`): `chartWidth` × `profileHeight` points from the row's top left.
+      const { strip } = profileRow;
+      const g = strip.geometry;
+      const at = (point: readonly [number, number]) => [chartLeft + point[0], rowTop + point[1]] as const;
       doc.save();
-      doc.moveTo(first[0], chartTop + L.profileChartHeight);
-      profile.points.forEach((point) => doc.lineTo(...at(point)));
-      doc.lineTo(last[0], chartTop + L.profileChartHeight).closePath().fillOpacity(L.profileAreaOpacity).fill(ink);
+      g.area.forEach((point, index) => (index === 0 ? doc.moveTo(...at(point)) : doc.lineTo(...at(point))));
+      doc.closePath().fillOpacity(L.profileAreaOpacity).fill(ink);
       doc.fillOpacity(1);
       doc.lineWidth(L.profileLineWeight).strokeColor(ink).lineJoin("round").lineCap("round");
-      profile.points.forEach((point, index) => (index === 0 ? doc.moveTo(...at(point)) : doc.lineTo(...at(point))));
+      g.line.forEach((point, index) => (index === 0 ? doc.moveTo(...at(point)) : doc.lineTo(...at(point))));
       doc.stroke();
-      doc.circle(first[0], first[1], 1.8).fill(ink);
-      doc.circle(last[0], last[1], 1.8).fill(ink);
-      // The route's checkpoints (§757, `bib-checkpoints.ts`): a tick down to the chart's foot, and an aid
-      // station's cup or fork beside the line — any other point a dot on it — at the picture's points.
-      for (const mark of profile.checkpoints?.marks ?? []) {
-        const markX = chartLeft + mark.x * chartWidth;
-        doc.lineWidth(L.checkpointTickWeight).strokeColor(ink).moveTo(markX, chartTop + mark.tickFrom).lineTo(markX, chartTop + L.profileChartHeight).stroke();
-        if (mark.glyph === null || mark.glyphY === null) {
-          doc.circle(markX, chartTop + (1 - mark.y) * L.profileChartHeight, L.checkpointDot).fill(ink);
-          continue;
-        }
-        const glyphTop = chartTop + mark.glyphY;
-        doc.lineWidth(L.checkpointGlyphWeight).strokeColor(ink).lineJoin("round").lineCap("round");
-        for (const stroke of checkpointGlyphLines(mark.glyph)) {
-          stroke.forEach(([x, y], index) => (index === 0 ? doc.moveTo(markX + x, glyphTop + y) : doc.lineTo(markX + x, glyphTop + y)));
-          doc.stroke();
-        }
+      doc.circle(...at(g.line[0]), 1.8).fill(ink);
+      doc.circle(...at(g.line[g.line.length - 1]), 1.8).fill(ink);
+      // The scale (§NNN): a foot rule and a tick at each kilometre the core kept, faint beside the line.
+      if (strip.scale) {
+        doc.strokeOpacity(L.profileScaleOpacity).lineWidth(L.profileKmTickWeight).strokeColor(ink);
+        doc.moveTo(...at([g.plot.left, g.plot.bottom])).lineTo(...at([g.plot.right, g.plot.bottom])).stroke();
+        for (const tick of g.kmTicks) doc.moveTo(...at([tick.x, g.plot.bottom])).lineTo(...at([tick.x, g.plot.bottom + L.profileKmTick])).stroke();
+        doc.strokeOpacity(1);
+      }
+      // The route's checkpoints (§757, `bib-checkpoints.ts`), where the core puts them: a stem from the pin down to the plot's foot, a dot
+      // on the line, and in the band above the plot a ring with the kind's glyph from the core's set.
+      const glyphScale = bibPinGlyphScale(g.pinRadius);
+      for (const marker of g.markers) {
+        doc.lineWidth(L.checkpointTickWeight).strokeColor(ink).moveTo(...at([marker.headX, marker.headY + g.pinRadius])).lineTo(...at([marker.x, marker.tickTo])).stroke();
+        doc.circle(...at([marker.x, marker.y]), L.checkpointDot).fill(ink);
+        doc.lineWidth(L.profilePinWeight).circle(...at([marker.headX, marker.headY]), g.pinRadius).stroke();
+        doc.save();
+        doc.translate(...at([marker.headX, marker.headY])).scale(glyphScale);
+        doc.path(ELEVATION_GLYPH_PATHS[marker.glyph]).fill(ink, GLYPH_EVEN_ODD[marker.glyph] ? "even-odd" : "nonzero");
+        doc.restore();
       }
       doc.restore();
+      // Every word of the strip at the baseline the core gave it: «Start» and «Sosire», the points' words, the kilometres and their unit,
+      // the altitudes — aligned by the text's anchor, its line's top where the baseline needs it (`BIB_TEXT_ASCENT`).
       doc.font("body").fontSize(L.profileLabelSize).fillColor(ink);
-      doc.text(profile.start, chartLeft, rowTop + L.profileLabelTop, { lineBreak: false });
-      doc.text(profile.finish, chartLeft + chartWidth - doc.widthOfString(profile.finish), rowTop + L.profileLabelTop, { lineBreak: false });
-      // Their words, «km 12» or «km 12 · 11:30», centred under the ticks in the labels' row — where the crowding rule kept them.
-      for (const mark of profile.checkpoints?.marks ?? []) {
-        if (!mark.label) continue;
-        doc.text(mark.label, chartLeft + mark.x * chartWidth - doc.widthOfString(mark.label) / 2, rowTop + L.profileLabelTop, { lineBreak: false });
+      for (const text of strip.texts) {
+        const width = doc.widthOfString(text.text);
+        const x = text.anchor === "start" ? text.x : text.anchor === "end" ? text.x - width : text.x - width / 2;
+        doc.text(text.text, chartLeft + x, rowTop + text.baseline - BIB_TEXT_ASCENT * L.profileLabelSize, { lineBreak: false });
       }
       drawFigures();
     };

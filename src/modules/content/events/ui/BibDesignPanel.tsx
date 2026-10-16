@@ -33,7 +33,7 @@ import { BIB_MEMBER_MARK_PATHS, BIB_MEMBER_MARK_VIEWBOX, BIB_MEMBER_MARKS, isVec
 import { CLUB_NAME, HEADER_CLEARANCE_PX, LOGO } from "@/theme/brand";
 import { bibPreviewUrl } from "@/modules/registrations/bib-design-query";
 import { BIB_FOOTER_TEXT_MAX, bibWebsiteHost } from "@/modules/registrations/bib-footer";
-import { BIB_PICTURE_RATIO, BIB_PROFILE_PICTURE_RATIOS, type BibPictureSlot } from "@/modules/registrations/bib-picture-frame";
+import { BIB_PICTURE_RATIO, type BibPictureSlot, bibProfilePictureExample, bibProfilePictureRatio } from "@/modules/registrations/bib-picture-frame";
 import { readBibPictureFacts } from "@/modules/registrations/bib-pictures";
 import { env } from "@/shared/config/env";
 import { ACTION_ICONS } from "@/shared/ui/action-icons";
@@ -148,6 +148,9 @@ export default async function BibDesignPanel({
   const rich = richTextEditorLabels(await getTranslations("Admin.richText"));
   const ratioWords = new Intl.NumberFormat(locale, { maximumFractionDigits: 0 });
   const cardRatioWords = new Intl.NumberFormat(locale, { maximumFractionDigits: 2 });
+  // The profile picture's shape is read to a tenth («14,5 la 1»): its two shapes, 10,6 and 14,5, must not both round to a whole one.
+  const profileRatioWords = new Intl.NumberFormat(locale, { maximumFractionDigits: 1 });
+  const sizeWords = new Intl.NumberFormat(locale, { maximumFractionDigits: 0, useGrouping: false });
   // What the footer's two switches would print here: this deployment's own values, never a
   // literal — on QA the host is QA's, and the mailbox may not be set at all (§317).
   const siteHost = bibWebsiteHost(env.APP_BASE_URL);
@@ -210,10 +213,13 @@ export default async function BibDesignPanel({
         : place === "member"
           ? t("editor.bibDesign.member.headerImageSrcHelp")
           : slot === "profile"
-            ? // Never cropped, so no crop box says its shape: the help names both of the strip's (§759).
-              t("editor.bibDesign.profileImageSrcHelp", {
-                alone: ratioWords.format(BIB_PROFILE_PICTURE_RATIOS.alone),
-                beside: ratioWords.format(BIB_PROFILE_PICTURE_RATIOS.beside),
+            ? // Never cropped, and said before the upload (§NNN): the shape for the design's figures setting first, an example size,
+              // then the other shape — all from `bibProfilePictureRatio` and `bibProfilePictureExample`, never a number in a message.
+              t(design.showProfileFigures ? "editor.bibDesign.profileImageSrcHelpBeside" : "editor.bibDesign.profileImageSrcHelp", {
+                ratio: profileRatioWords.format(bibProfilePictureRatio(design.showProfileFigures)),
+                width: sizeWords.format(bibProfilePictureExample(design.showProfileFigures).width),
+                height: sizeWords.format(bibProfilePictureExample(design.showProfileFigures).height),
+                other: profileRatioWords.format(bibProfilePictureRatio(!design.showProfileFigures)),
               })
             : t(`editor.bibDesign.${field}Help`),
       none: t("editor.bibDesign.noPicture"),
@@ -244,7 +250,12 @@ export default async function BibDesignPanel({
       },
       // The place's shape in words: the paper's width to the strip's height (`bib-picture-frame.ts`).
       // The card's 1.54 would round to «2 la 1»; the strips' 9 and 22 read whole (§NNN).
-      shape: t(`editor.bibDesign.picture.shape.${slot}`, { ratio: (card ? cardRatioWords : ratioWords).format(BIB_PICTURE_RATIO[slot]) }),
+      shape: t(`editor.bibDesign.picture.shape.${slot}`, {
+        ratio:
+          slot === "profile"
+            ? profileRatioWords.format(bibProfilePictureRatio(design.showProfileFigures))
+            : (card ? cardRatioWords : ratioWords).format(BIB_PICTURE_RATIO[slot]),
+      }),
       chosen: rich.imageChosen,
       stored: rich.imageStored,
       picked: rich.imageFromGalleryPicked,
@@ -486,6 +497,10 @@ export default async function BibDesignPanel({
                     box posts nothing, so its stored tick is carried in a hidden field and adding checkpoints later finds it. */}
                 <OnlyWhenChosen name="event.bibDesign.profileSource" value="gpx" initial={design.profileSource}>
                   <Stack spacing={1}>
+                    {/* «Kilometrii și altitudinile pe profil» (`bib-profile-strip.ts`): the core's scale on the strip; on by default, whatever the event has. */}
+                    <CheckboxField name="event.bibDesign.showProfileScale" defaultChecked={design.showProfileScale} help={t("editor.bibDesign.showProfileScaleHelp")}>
+                      {t("editor.bibDesign.showProfileScale")}
+                    </CheckboxField>
                     <CheckboxField
                       name="event.bibDesign.showCheckpoints"
                       defaultChecked={design.showCheckpoints}
