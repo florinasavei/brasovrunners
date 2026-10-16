@@ -47,16 +47,6 @@ export const BIB_PICTURE_RATIO: Record<BibPictureSlot, number> = {
 };
 
 /**
- * The profile's picture box, width over height (§759): the strip alone, about 14.5, and beside the
- * distance and the elevation gain, about 10.6. The picture is never cropped, so the editor names both
- * shapes in the place's help — the crop box's own «Forma» line never shows for it.
- */
-export const BIB_PROFILE_PICTURE_RATIOS = {
-  alone: bibProfilePictureRatio(false),
-  beside: bibProfilePictureRatio(true),
-} as const;
-
-/**
  * **The one rule for the profile picture's shape** (§NNN; the owner, 2026-10-16: «if we choose to put a picture, we need to
  * say what is the aspect ratio recommended for it»): the box the picture is fitted whole in — `bibProfileChartWidth`
  * wide, `profilePictureHeight` tall — as width over height, for the design's current «Arată distanța și diferența de

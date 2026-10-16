@@ -10,7 +10,7 @@ import type { BibProfileDrawing } from "./bib-profile";
  * area under it, the kilometre scale, the highest and the lowest altitude, the pins and the words in the foot row, all
  * in the strip's own box — `chartWidth` × `profileHeight` points — as `routes/elevation/geometry.ts` decides them for
  * the event's page. Both renderers draw what this returns (`bibs-pdf.ts` with vectors, `bib-image.tsx` with an SVG)
- * at the same points, so the sheet and the picture cannot disagree (`tests/unit/registrations/bib-profile-strip.test.ts`).
+ * at the same points, so the sheet and the picture cannot disagree (`tests/unit/registrations/bib-checkpoints.test.ts`).
  *
  * Pure: the core, the layout constants and the drawing's own words; no storage, no React.
  *
@@ -61,7 +61,9 @@ const isAid = (kinds: readonly string[]): boolean => kinds.includes("WATER") || 
 
 /**
  * The pins that fit side by side: one that would touch the one kept before it — less than a head's diameter and its gap
- * away — is not drawn, and the aid station takes the place of a point that is not one. `checkpoints` are by distance.
+ * away — is not drawn, and the aid station takes the place of a point that is not one. Two aid stations that touch are one
+ * pin that says both («km 4 · apă + hrană»), so a water point followed by a food point never reads as «no food here».
+ * `checkpoints` are by distance.
  */
 export function thinBibCheckpoints(checkpoints: readonly BibStripCheckpoint[], chartWidth: number, distanceMeters: number, pinRadius: number): BibStripCheckpoint[] {
   const reach = pinRadius * 2 + pinRadius * 0.5;
@@ -71,6 +73,12 @@ export function thinBibCheckpoints(checkpoints: readonly BibStripCheckpoint[], c
     const last = kept[kept.length - 1];
     if (last && x - last.x < reach) {
       if (isAid(checkpoint.kinds) && !isAid(last.checkpoint.kinds)) kept[kept.length - 1] = { x, checkpoint };
+      else if (isAid(checkpoint.kinds)) {
+        const kinds = [...new Set([...last.checkpoint.kinds, ...checkpoint.kinds])];
+        const says = (k: readonly string[]) => k.includes("WATER") && k.includes("FOOD");
+        // The kept pin's own words, unless the two together are a water and a food station and it alone is not.
+        if (says(kinds) && !says(last.checkpoint.kinds)) last.checkpoint = { ...last.checkpoint, kinds, label: last.checkpoint.bothLabel };
+      }
       continue;
     }
     kept.push({ x, checkpoint });

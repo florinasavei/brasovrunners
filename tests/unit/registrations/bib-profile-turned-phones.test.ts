@@ -326,7 +326,7 @@ describe("§759 the profile turned for the runner, and with the phone as one blo
   });
 
   it("measures the pins' crowding in the chart's own width: a strip without figures keeps pins a narrow one drops", () => {
-    const point = (km: number, kinds: string[]): BibStripCheckpoint => ({ km, kinds, label: "km", kmLabel: "km", timeLabel: null });
+    const point = (km: number, kinds: string[]): BibStripCheckpoint => ({ km, kinds, label: "km", bothLabel: "km", kmLabel: "km", timeLabel: null });
     const close = [point(50, ["WATER"]), point(52, ["FOOD"])];
     const radius = BIB_LAYOUT.profilePinRadius;
     expect(thinBibCheckpoints(close, bibProfileChartWidth(true), 100_000, radius)).toHaveLength(1);

@@ -24,7 +24,7 @@ import {
  * renderer, which stays pure over its inputs: a store that is slow or a file that is not readable is
  * `null` here, and the number prints as it does without a profile, never a failed sheet — the rule
  * every picture of the design follows (`bib-pictures.ts`). The GPX is read once by the elevation core's reader
- * (`routes/elevation/read.ts`, §NNN — the one the event page and the editor's preview read through, with its own
+ * (`routes/elevation/read.ts`, §802 — the one the event page and the editor's preview read through, with its own
  * small cache by the file's store key) and reduced to a few hundred points, never carried whole.
  */
 export type BibExtras = {
@@ -128,7 +128,7 @@ export async function loadBibExtras(
     if (parsed) {
       const drawing = bibProfileDrawing(parsed, event, locale, say);
       // The route's checkpoints (§757) on the strip, where the design asks and the event has some: the ones the club left ticked
-      // «Arată pe profilul traseului» (§NNN), placed by the figure the bib prints — the club's own distance first, as the strip's
+      // «Arată pe profilul traseului» (§802), placed by the figure the bib prints — the club's own distance first, as the strip's
       // right end is — each with its words in the sheet's language: «km 12», «km 5 · apă», and with the cut-off «km 12 · 11:30».
       const kmWords = new Intl.NumberFormat(locale, { maximumFractionDigits: 1 });
       const checkpoints =

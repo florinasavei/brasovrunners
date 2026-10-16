@@ -256,11 +256,13 @@ describe("§NNN the kilometres and the altitudes on the strip", () => {
     const strip = bibProfileStrip(drawingOf([at(4.5, null, ["WATER"])]), STRIP);
     const max = strip.geometry.extremes.find((extreme) => extreme.kind === "max");
     const head = strip.geometry.markers[0].headX;
-    if (max) {
-      const w = max.label.text.length * BIB_LAYOUT.profileLabelSize * 0.6;
-      const [from, to] = max.label.anchor === "start" ? [max.label.x, max.label.x + w] : max.label.anchor === "end" ? [max.label.x - w, max.label.x] : [max.label.x - w / 2, max.label.x + w / 2];
-      expect(to <= head - strip.geometry.pinRadius || from >= head + strip.geometry.pinRadius).toBe(true);
-    }
+    // Moved, not dropped: the label is still there, standing against the pin's side.
+    expect(max).toBeDefined();
+    expect(max!.label.anchor).not.toBe("middle");
+    const w = max!.label.text.length * BIB_LAYOUT.profileLabelSize * 0.6;
+    const [from, to] = max!.label.anchor === "start" ? [max!.label.x, max!.label.x + w] : max!.label.anchor === "end" ? [max!.label.x - w, max!.label.x] : [max!.label.x - w / 2, max!.label.x + w / 2];
+    expect(to <= head - strip.geometry.pinRadius || from >= head + strip.geometry.pinRadius).toBe(true);
+    expect(strip.texts.map((text) => text.text)).toContain(max!.label.text);
   });
 });
 
@@ -320,7 +322,7 @@ describe("§757 the words under the pins, and the crowding rule", () => {
 });
 
 describe("§757 the pins stand side by side, never over one another", () => {
-  const point = (km: number, kinds: string[]) => ({ km, kinds, label: "km", kmLabel: "km", timeLabel: null });
+  const point = (km: number, kinds: string[]) => ({ km, kinds, label: "km", bothLabel: "km both", kmLabel: "km", timeLabel: null });
   const radius = BIB_LAYOUT.profilePinRadius;
 
   it("keeps the aid station when two pins would touch, whichever comes first", () => {
@@ -330,6 +332,21 @@ describe("§757 the pins stand side by side, never over one another", () => {
     const waterFirst = thinBibCheckpoints([point(5, ["WATER"]), point(5 + close, ["TIMING"])], BIB_LAYOUT.profileChartWidth, 9_000, radius);
     expect(waterFirst.map((row) => row.kinds)).toEqual([["WATER"]]);
     expect(thinBibCheckpoints([point(5, ["TIMING"]), point(5 + close, ["DIRECTION"])], BIB_LAYOUT.profileChartWidth, 9_000, radius)).toHaveLength(1);
+  });
+
+  it("says both when a water station and a food station are too close to pin apart, in either order — «km 4 · apă + hrană», the drop", () => {
+    const sources = (first: string, second: string) => [at(4, null, [first]), at(4.1, null, [second])];
+    for (const [first, second] of [["WATER", "FOOD"], ["FOOD", "WATER"]]) {
+      const strip = bibProfileStrip(drawingOf(sources(first, second)), STRIP);
+      expect(strip.geometry.markers).toHaveLength(1);
+      expect(strip.checkpoints).toHaveLength(1);
+      expect(strip.checkpoints[0].kinds).toEqual([first, second]);
+      expect(strip.texts.map((text) => text.text)).toContain("km 4 · apă + hrană");
+      expect(strip.geometry.markers[0].glyph).toBe("water");
+    }
+    // Two of the same kind stay what they are; an aid station and a plain point stay the aid station's words.
+    expect(bibProfileStrip(drawingOf([at(4, null, ["WATER"]), at(4.1, null, ["WATER"])]), STRIP).texts.map((text) => text.text)).toContain("km 4 · apă");
+    expect(bibProfileStrip(drawingOf([at(4, null, ["FOOD"]), at(4.1, null, ["TIMING"])]), STRIP).texts.map((text) => text.text)).toContain("km 4 · hrană");
   });
 
   it("keeps pins that stand a head's reach apart, and the heads of what is drawn never touch", () => {
@@ -472,6 +489,21 @@ describe("§NNN the sheet and the picture draw the same points", () => {
       expect(calls.filter((call) => call.name === "path")).toHaveLength(SOURCES.length);
     });
   }
+
+  it("leaves the picture's SVG room for the ring of a pin at km 0 and at the printed distance, so it is not clipped", () => {
+    const L = BIB_LAYOUT;
+    const { nodes, row } = imageNodes(drawingOf([at(0, null, ["WATER"]), at(9, null, ["FOOD"])]), {});
+    expect(row.kind).toBe("gpx");
+    if (row.kind !== "gpx") return;
+    const rings = row.strip.geometry.markers.map((marker) => marker.headX);
+    expect(rings).toEqual([0, row.strip.geometry.width]);
+    const svg = nodes.find((node) => node.type === "svg" && typeof node.props.viewBox === "string");
+    expect(svg).toBeDefined();
+    const [left, , width] = (svg!.props.viewBox as string).split(" ").map(Number);
+    const reach = L.profilePinRadius + L.profilePinWeight / 2;
+    expect(-left).toBeGreaterThanOrEqual(reach);
+    expect(left + width).toBeGreaterThanOrEqual(row.strip.geometry.width + reach);
+  });
 
   it("draws no ticks, scale or altitudes in either with the tick off", async () => {
     const drawing = drawingOf(SOURCES);

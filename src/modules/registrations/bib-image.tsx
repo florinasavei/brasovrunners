@@ -192,8 +192,8 @@ function logo(): Promise<string> {
   return logoDataUrl;
 }
 
-/** The room the profile's SVG keeps round its chart so the line's stroke and the end dots are not clipped, in points. */
-const PROFILE_PAD = 2;
+/** The room the profile's SVG keeps round its chart so the line's stroke, the end dots and a pin's ring at either end (a point at km 0 or at the printed distance) are not clipped, in points. */
+const PROFILE_PAD = Math.ceil(BIB_LAYOUT.profilePinRadius + BIB_LAYOUT.profilePinWeight / 2);
 /** The box a text of the strip is aligned in, in points: wider than any label the core keeps (`bib-profile-strip.ts`), so nothing is clipped. */
 const STRIP_TEXT_BOX = 120;
 
@@ -333,7 +333,7 @@ function profileRowElement(row: BibProfileRow, ink: string, picture: BibImagePic
         <path d={pathOf(g.line)} fill="none" stroke={ink} strokeWidth={L.profileLineWeight} strokeLinecap="round" strokeLinejoin="round" />
         <circle cx={g.line[0][0]} cy={g.line[0][1]} r={1.8} fill={ink} />
         <circle cx={g.line[g.line.length - 1][0]} cy={g.line[g.line.length - 1][1]} r={1.8} fill={ink} />
-        {/* The scale (§NNN): a foot rule and a tick at each kilometre the core kept, faint beside the line. */}
+        {/* The scale (§NNN): a foot rule and a tick at each step the core chose (1, 2 or 5 km), faint beside the line. */}
         {strip.scale ? (
           <g data-testid="bib-profile-scale">
             <line x1={g.plot.left} y1={g.plot.bottom} x2={g.plot.right} y2={g.plot.bottom} {...scaleStyle} />

@@ -33,7 +33,7 @@ import { BIB_MEMBER_MARK_PATHS, BIB_MEMBER_MARK_VIEWBOX, BIB_MEMBER_MARKS, isVec
 import { CLUB_NAME, HEADER_CLEARANCE_PX, LOGO } from "@/theme/brand";
 import { bibPreviewUrl } from "@/modules/registrations/bib-design-query";
 import { BIB_FOOTER_TEXT_MAX, bibWebsiteHost } from "@/modules/registrations/bib-footer";
-import { BIB_PICTURE_RATIO, type BibPictureSlot, bibProfilePictureExample, bibProfilePictureRatio } from "@/modules/registrations/bib-picture-frame";
+import { BIB_PICTURE_PRINT_DPI, BIB_PICTURE_RATIO, type BibPictureSlot, bibProfilePictureExample, bibProfilePictureRatio } from "@/modules/registrations/bib-picture-frame";
 import { readBibPictureFacts } from "@/modules/registrations/bib-pictures";
 import { env } from "@/shared/config/env";
 import { ACTION_ICONS } from "@/shared/ui/action-icons";
@@ -213,13 +213,16 @@ export default async function BibDesignPanel({
         : place === "member"
           ? t("editor.bibDesign.member.headerImageSrcHelp")
           : slot === "profile"
-            ? // Never cropped, and said before the upload (§NNN): the shape for the design's figures setting first, an example size,
-              // then the other shape — all from `bibProfilePictureRatio` and `bibProfilePictureExample`, never a number in a message.
-              t(design.showProfileFigures ? "editor.bibDesign.profileImageSrcHelpBeside" : "editor.bibDesign.profileImageSrcHelp", {
-                ratio: profileRatioWords.format(bibProfilePictureRatio(design.showProfileFigures)),
-                width: sizeWords.format(bibProfilePictureExample(design.showProfileFigures).width),
-                height: sizeWords.format(bibProfilePictureExample(design.showProfileFigures).height),
-                other: profileRatioWords.format(bibProfilePictureRatio(!design.showProfileFigures)),
+            ? // Never cropped, and said before the upload (§NNN): both shapes, with the figures and without, so the sentence is
+              // true whatever the box beside it says before a save; the ratios and the example sizes come from
+              // `bibProfilePictureRatio` and `bibProfilePictureExample`, the resolution from `BIB_PICTURE_PRINT_DPI`.
+              t("editor.bibDesign.profileImageSrcHelp", {
+                ratioBeside: profileRatioWords.format(bibProfilePictureRatio(true)),
+                ratioAlone: profileRatioWords.format(bibProfilePictureRatio(false)),
+                widthBeside: sizeWords.format(bibProfilePictureExample(true).width),
+                widthAlone: sizeWords.format(bibProfilePictureExample(false).width),
+                height: sizeWords.format(bibProfilePictureExample(true).height),
+                dpi: BIB_PICTURE_PRINT_DPI,
               })
             : t(`editor.bibDesign.${field}Help`),
       none: t("editor.bibDesign.noPicture"),

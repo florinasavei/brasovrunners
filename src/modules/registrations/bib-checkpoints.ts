@@ -37,6 +37,8 @@ export type BibStripCheckpoint = {
   kinds: readonly string[];
   /** «km 5 · apă», «km 9 · hrană», «km 5 · apă + hrană» for an aid station, «km 12» for any other point: the words without the times. */
   label: string;
+  /** «km 5 · apă + hrană»: the words of this point were it both a water and a food station — what two aid stations too close to pin apart say together. */
+  bothLabel: string;
   /** «km 12»: the words of a point that has no cut-off while the cut-offs are printed. */
   kmLabel: string;
   /** «km 12 · 11:30», or null with no cut-off. */
@@ -73,6 +75,7 @@ export function bibStripCheckpoints(checkpoints: readonly BibCheckpointSource[],
       km: row.km,
       kinds: row.kinds,
       label: aidLabel(row.km, row.kinds, words),
+      bothLabel: words.kmBoth(row.km),
       kmLabel: words.km(row.km),
       timeLabel: row.cutoffClock !== null ? words.kmTime(row.km, row.cutoffClock) : null,
     }));

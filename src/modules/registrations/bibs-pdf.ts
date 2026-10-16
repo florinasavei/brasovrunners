@@ -704,7 +704,7 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
       doc.stroke();
       doc.circle(...at(g.line[0]), 1.8).fill(ink);
       doc.circle(...at(g.line[g.line.length - 1]), 1.8).fill(ink);
-      // The scale (§NNN): a foot rule and a tick at each kilometre the core kept, faint beside the line.
+      // The scale (§NNN): a foot rule and a tick at each step the core chose (1, 2 or 5 km), faint beside the line.
       if (strip.scale) {
         doc.strokeOpacity(L.profileScaleOpacity).lineWidth(L.profileKmTickWeight).strokeColor(ink);
         doc.moveTo(...at([g.plot.left, g.plot.bottom])).lineTo(...at([g.plot.right, g.plot.bottom])).stroke();
