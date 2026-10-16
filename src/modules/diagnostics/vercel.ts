@@ -4,19 +4,27 @@ import type { Env } from "@/shared/config/env";
 /**
  * What the hosting did this month, read from Vercel (`DECISIONS.md` §101; BR-REQ-090-07).
  *
- * The owner asked for "Vercel usage" next to the database's month. Vercel's public REST API
- * has no usage endpoint — bandwidth, invocations and CPU exist on the dashboard's Usage page
- * and nowhere a token can reach (checked against the endpoint index on 2026-09-19; the
- * `billing` endpoints are FOCUS charges for paid teams). What a token *can* read is the list
- * of deployments, and from it the two Hobby ceilings a small club can actually meet: the
- * builds a month (6,000 minutes) and the deployments a day (100) — the ones a busy evening of
- * pushes spends. This reads those, says so, and links to the dashboard for the rest.
+ * The owner asked for "Vercel usage" next to the database's month. On 2026-09-19 the public REST
+ * API looked to have no usage endpoint; on 2026-10-16 its billing charges (`GET
+ * /v1/billing/charges`, FOCUS) turned out to carry exactly the Usage page's lines, and
+ * `vercel-usage.ts` reads them. What this file reads is the list of deployments, and from it the
+ * Hobby ceilings a small club can meet: the builds a month and the deployments a day (100) — the
+ * ones a busy evening of pushes spends — and, since §NNN, how many of the deployments built, by
+ * branch: a build is what costs.
  */
 
 /** Hobby, from vercel.com/docs/limits on 2026-09-19. */
 export const VERCEL_HOBBY_BUILD_MINUTES_PER_MONTH = 6_000;
 export const VERCEL_HOBBY_DEPLOYMENTS_PER_DAY = 100;
 export const VERCEL_LIMITS_CHECKED_ON = "2026-09-19";
+
+/**
+ * Hobby's included Active CPU, in CPU-hours a month — the allowance the club's functions come
+ * closest to: Vercel's Hobby page (vercel.com/docs/plans/hobby, last updated 2026-09-14, read
+ * 2026-10-16) lists «Active CPU: 4 CPU-hrs», and a Hobby team that exceeds an included allowance is
+ * paused for thirty days. Read against `readVercelUsage`'s Fluid Active CPU line (§NNN).
+ */
+export const VERCEL_HOBBY_ACTIVE_CPU_HOURS_PER_MONTH = 4;
 
 export type VercelMonth = {
   /** Deployments created since the first of the month, UTC, on this project. */
@@ -30,6 +38,13 @@ export type VercelMonth = {
   /** When the newest READY deployment finished, or null when none did this month. */
   lastReadyAt: Date | null;
   periodStart: Date;
+  /**
+   * Deployments that actually built this month — one that never reached the build (cancelled in the
+   * queue, or skipped by an ignored build step) costs nothing and is not counted (§NNN: builds are the cost).
+   */
+  builds: number;
+  /** The same builds by the branch that caused them, most first; a deployment with no branch is "?". */
+  buildsByBranch: { branch: string; count: number }[];
 };
 
 type DeploymentRow = {
@@ -39,6 +54,8 @@ type DeploymentRow = {
   ready?: number;
   readyState?: string;
   state?: string;
+  /** The Git metadata Vercel keeps on a deployment made from a push. */
+  meta?: { githubCommitRef?: string };
 };
 
 type ListAnswer = {
@@ -94,6 +111,8 @@ export async function readVercelMonth(
   let deploymentsToday = 0;
   let lastReadyAt: Date | null = null;
   let deployments = 0;
+  let builds = 0;
+  const branches = new Map<string, number>();
   for (const row of rows) {
     const id = row.uid ?? `${row.createdAt ?? ""}`;
     if (seen.has(id)) continue;
@@ -105,6 +124,11 @@ export async function readVercelMonth(
     if (state === "ERROR") errored += 1;
     if (row.buildingAt && row.ready && row.ready > row.buildingAt) {
       buildMinutes += (row.ready - row.buildingAt) / 60_000;
+    }
+    if (row.buildingAt) {
+      builds += 1;
+      const branch = row.meta?.githubCommitRef || "?";
+      branches.set(branch, (branches.get(branch) ?? 0) + 1);
     }
     if (state === "READY" && row.ready && (!lastReadyAt || row.ready > lastReadyAt.getTime())) {
       lastReadyAt = new Date(row.ready);
@@ -120,6 +144,10 @@ export async function readVercelMonth(
       errored,
       lastReadyAt,
       periodStart,
+      builds,
+      buildsByBranch: [...branches]
+        .map(([branch, count]) => ({ branch, count }))
+        .sort((a, b) => b.count - a.count || a.branch.localeCompare(b.branch)),
     },
   };
 }

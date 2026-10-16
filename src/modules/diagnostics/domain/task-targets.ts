@@ -20,7 +20,9 @@ export type TaskTarget =
   | { kind: "settings"; tab: SettingsTab; hash: string }
   /** A standard page of «Pagini» (§525): «Contact» left «Setări» for it on 2026-09-28. */
   | { kind: "pages"; entry: "contact"; hash: string }
-  | { kind: "section"; section: "legal" | "staff" | "events" };
+  | { kind: "section"; section: "legal" | "staff" | "events" }
+  /** `/devs`, «Setări» → «Configurație» — a tab of the settings row that is not a settings route (§520); the card the `#` opens. */
+  | { kind: "devs"; hash: string };
 
 export const TASK_TARGETS: Partial<Record<TaskId, TaskTarget>> = {
   // A text to approve is written and approved on «Documente legale» (§46).
@@ -77,6 +79,8 @@ export const TASK_TARGETS: Partial<Record<TaskId, TaskTarget>> = {
   unreachableWindow: { kind: "section", section: "events" },
   // The club's mailboxes that refuse its emails (§671), under «Copiile clubului» that names them.
   clubMailboxRefusals: { kind: "settings", tab: "emails", hash: "club-mailbox-rejections" },
+  // The database's size and growth, the numbers the retention periods are decided on (§NNN).
+  retentionPeriods: { kind: "devs", hash: "db-size" },
 };
 
 /** The internal route a section target opens. */
@@ -89,7 +93,8 @@ export const SECTION_TARGET_ROUTE = {
 type TargetPathname =
   | (typeof SETTINGS_TAB_ROUTE)[SettingsTab]
   | (typeof PAGES_ROW_ROUTE)["contact"]
-  | (typeof SECTION_TARGET_ROUTE)[keyof typeof SECTION_TARGET_ROUTE];
+  | (typeof SECTION_TARGET_ROUTE)[keyof typeof SECTION_TARGET_ROUTE]
+  | "/devs";
 
 /** The internal route and the fragment of a target, for `getPathname`. */
 export function targetRoute(target: TaskTarget): { pathname: TargetPathname; hash?: string } {
@@ -98,6 +103,8 @@ export function targetRoute(target: TaskTarget): { pathname: TargetPathname; has
       return { pathname: SETTINGS_TAB_ROUTE[target.tab], hash: target.hash };
     case "pages":
       return { pathname: PAGES_ROW_ROUTE[target.entry], hash: target.hash };
+    case "devs":
+      return { pathname: "/devs", hash: target.hash };
     default:
       return { pathname: SECTION_TARGET_ROUTE[target.section] };
   }

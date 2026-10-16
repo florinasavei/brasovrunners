@@ -4454,6 +4454,16 @@
             "Textul nu se mai poate recupera, iar site-ul nu știe cine l-a scris. Repară calea (rândul de mai sus) sau adresa formularului, ca să nu se mai întâmple.",
             "Rândul se face verde după 7 zile fără niciun mesaj pierdut."
           ]
+        },
+        "retentionPeriods": {
+          "title": "Retenția datelor: perioade de decis",
+          "todo": "Baza de date crește și nu toate perioadele de păstrare sunt hotărâte. Rândul e doar informativ deocamdată: nimic nu se șterge din cauza lui.",
+          "done": "Perioadele de păstrare sunt hotărâte.",
+          "how": [
+            "Deschide Setări → Configurație: cardul «Baza de date» arată cât ocupă fiecare tabel și cât a crescut în 30 de zile.",
+            "În același loc, la «Documente», deschide PLATFORM: secțiunea «Keeping Neon and Vercel light, long term» are tabelul cu perioadele propuse.",
+            "Hotărăște perioadele; pentru datele personale ale celor de la evenimentele trecute, cere întâi părerea unui avocat. Până atunci nimic nu se schimbă."
+          ]
         }
       },
       "freeVerdict": {
@@ -10910,7 +10920,7 @@
       "month": "Luna aceasta: {deployments} deploy-uri ({today} azi, din {perDay} pe zi), {minutes} minute de build din {of} ({percent}%), {errored} eșuate.",
       "unavailable": "Nu este configurat: pune VERCEL_API_TOKEN și VERCEL_PROJECT_ID în variabilele proiectului. Pașii sunt pe /admin/tasks.",
       "failed": "Vercel nu a răspuns: {reason}.",
-      "notInApi": "Traficul și invocările nu sunt expuse de API-ul Vercel; se văd doar în dashboard."
+      "builds": "Build-uri luna aceasta, pe acest proiect: {builds} ({branches}). Doar build-urile costă."
     },
     "neon": {
       "title": "Baza de date (Neon)",
@@ -10937,8 +10947,7 @@
       "awake": "Compute activ: {hours} h din {elapsed} h scurse",
       "period": "Perioada se încheie {date}",
       "unavailable": "Nu este configurat: pune NEON_API_KEY și NEON_PROJECT_ID în variabilele proiectului Vercel, apoi redeploy. Pașii sunt pe /admin/tasks.",
-      "failed": "Neon nu a răspuns: {reason}",
-      "vercel": "Găzduirea (Vercel): consumul se vede în panoul Vercel → Usage; planul Hobby are limite mult peste ce folosește site-ul (sub 1% în septembrie 2026)."
+      "failed": "Neon nu a răspuns: {reason}"
     },
     "sentThisMonth": "Trimise luna aceasta",
     "emailPlanLabel": "Plan Mailgun",
@@ -10981,6 +10990,64 @@
       "neverOk": "niciun mesaj trimis încă",
       "lastFailure": "ultima refuzare {when} ({error})",
       "since": "din {when}"
+    },
+    "dbSize": {
+      "title": "Baza de date: mărime și creștere",
+      "intro": "Cât ocupă baza de date și ce a crescut în ultimele 30 de zile. Aici se măsoară doar: nimic nu se șterge.",
+      "introMore": "Cifrele sunt baza pe care clubul alege cât timp păstrăm fiecare fel de date. Rândurile estimate sunt cele pe care baza nu le-a numărat încă.",
+      "aside": "{size} MB",
+      "total": "Toată baza de date: {size} MB.",
+      "unread": "Nu am putut citi mărimea bazei de date acum: poate e oprită sau departe. Încearcă din nou peste puțin.",
+      "tablesTitle": "Cele opt tabele mai mari",
+      "row": "{total} MB, din care {data} MB date și {indexes} MB indecși",
+      "rowsExact": "Rânduri: {count}",
+      "rowsEstimated": "Rânduri: circa {count}",
+      "rowsUnknown": "Rânduri: necunoscut",
+      "gained": "{count} noi în ultimele {days} de zile",
+      "growthTitle": "Ce a crescut în ultimele {days} de zile",
+      "growth": {
+        "audit_logs": "Jurnalul acțiunilor personalului",
+        "email_outbox": "Emailurile, în coadă și trimise",
+        "email_action_tokens": "Linkurile din emailuri",
+        "family_place_holds": "Locurile ținute pentru familii",
+        "registration_notes": "Notele de la înscrieri",
+        "event_volunteers": "Voluntarii",
+        "registrations": "Înscrierile",
+        "declaration_acceptances": "Declarațiile semnate"
+      },
+      "growthLine": "{recent} noi, din {total}",
+      "settled": "{count} nu mai pot fi folosite",
+      "registrationsTitle": "Înscrieri după stare și vechimea evenimentului",
+      "registrationsMore": "Include și înscrierile de probă: aici se măsoară spațiul, nu un număr dat clubului. Vechimea se socotește de la începutul evenimentului.",
+      "registrationsNone": "Nu există înscrieri.",
+      "registrationsLine": "{total} în total · {six} la evenimente de peste {sixMonths} luni · {twelve} la evenimente de peste {twelveMonths} luni",
+      "status": {
+        "PENDING_EMAIL_CONFIRMATION": "Adresa neconfirmată",
+        "PENDING_DECLARATION": "Așteaptă declarația",
+        "WAITLISTED": "Pe lista de așteptare",
+        "WAITLIST_OFFERED": "Ofertă din lista de așteptare",
+        "CONFIRMED": "Confirmate",
+        "CANCELLED": "Anulate",
+        "EXPIRED": "Expirate"
+      },
+      "planLink": "Planul de păstrare a datelor și perioadele propuse"
+    },
+    "vercelUsage": {
+      "title": "Vercel: consumul lunii",
+      "intro": "Liniile din pagina Usage a Vercel, de la începutul lunii, citite din API-ul lor de facturare.",
+      "introMore": "Prețurile sunt cele de listă. Pe Hobby nu se plătește nimic, dar o limită inclusă depășită oprește contul pe 30 de zile.",
+      "aside": "{usd} $",
+      "unconfigured": "Fără VERCEL_API_TOKEN nu se poate citi consumul.",
+      "cannot": "Vercel nu dă consumul cu această cheie ({reason}). Liniile sunt doar pe pagina Usage a contului.",
+      "totalCredit": "Consum până acum: {usd} $ din creditul inclus de {credit} $.",
+      "totalHobby": "Consum până acum: {usd} $ la prețul de listă.",
+      "cycleMore": "Luna calendaristică, în UTC. Pagina Usage a Vercel numără de la începutul ciclului de facturare, care începe în altă zi.",
+      "subscription": "Abonamentul în sine: {usd} $ până acum.",
+      "cpu": "Timp de CPU al funcțiilor: {hours} ore luna aceasta; planul Hobby include {of} pe lună.",
+      "linesTitle": "Pe servicii",
+      "line": "{quantity} {unit} · {usd} $",
+      "buildsTitle": "Build-uri pe proiect",
+      "buildLine": "{minutes} minute de CPU de build · {usd} $"
     }
   },
   "Error": {

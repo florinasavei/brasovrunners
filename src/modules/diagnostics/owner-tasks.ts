@@ -98,6 +98,7 @@ export type TaskId =
   | "domainRenewal"
   | "unreachableWindow"
   | "neonLimits"
+  | "retentionPeriods"
   | "clubMailboxRefusals"
   | "deliveryReports"
   | "emailAttention";
@@ -151,6 +152,7 @@ export const TASK_KIND: Record<TaskId, TaskKind> = {
   domainRenewal: "decision",
   unreachableWindow: "check",
   neonLimits: "decision",
+  retentionPeriods: "decision",
   clubMailboxRefusals: "check",
   deliveryReports: "account",
   emailAttention: "check",
@@ -1048,6 +1050,15 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
     // about to suspend the database", which is the one thing this row exists to say in time.
     text: nearLimit ? "broken" : undefined,
   });
+
+  /*
+    The retention periods the club has not decided (§NNN; the owner, 2026-10-16: «cumva mă interesează să țin
+    baza de date light long term»). Informational for now and says so: nothing in the system knows a period
+    was chosen, so the row stays `open` until the lane that adds the setting turns it off. Never blocking,
+    never red — the sweep already deletes on the windows the privacy notice states; what is open is
+    whether to shorten them (`docs/PLATFORM.md` § Keeping Neon and Vercel light, long term).
+  */
+  push("retentionPeriods", { owner: "club", state: "open" });
 
   /*
     The club's side of «Email respins» (§671). A club mailbox that refuses the archive copy, the

@@ -41,6 +41,12 @@ import NeonBudgetPanel from "@/modules/diagnostics/ui/NeonBudgetPanel";
 import { readNeonPlan } from "@/modules/diagnostics/neon-plan";
 import { describeNeonBlock, effectiveNeonPlan, NEON_PLANS, NEON_PLANS_CHECKED_ON } from "@/modules/diagnostics/domain/neon-plan";
 import { readVercelMonth, VERCEL_HOBBY_BUILD_MINUTES_PER_MONTH, VERCEL_HOBBY_DEPLOYMENTS_PER_DAY } from "@/modules/diagnostics/vercel";
+import { readDatabaseSizesForPage } from "@/modules/diagnostics/db-sizes";
+import DatabaseSizesPanel from "@/modules/diagnostics/ui/DatabaseSizesPanel";
+import VercelUsagePanel from "@/modules/diagnostics/ui/VercelUsagePanel";
+import { VERCEL_PLANS } from "@/modules/diagnostics/domain/vercel-plan";
+import { readVercelPlan } from "@/modules/diagnostics/vercel-plan";
+import { readVercelUsageCached } from "@/modules/diagnostics/vercel-usage";
 import { OPERATIONAL_LIMITS } from "@/modules/diagnostics/platform-plans";
 import MuiLink from "@mui/material/Link";
 import { getPathname, Link } from "@/i18n/navigation";
@@ -200,6 +206,15 @@ export default async function DevsPage({ params, searchParams }: Props) {
   const emailHealth = await checkEmailHealth(db, now, budget.effects.jobFloorMinutes);
   const pictures = await countMediaAssets(db, now);
   const databaseBytes = await readDatabaseSizeBytes(db);
+  /*
+    The database's size and growth, and Vercel's month (§NNN): the status panel's two cards, read only
+    where they are drawn. The size goes through the page's own guarded read (a database that is away is
+    a sentence, never the page); Vercel's lines from the hour-long cache, because the body is megabytes.
+  */
+  const [dbSizes, vercelUsage, vercelPlanStated] =
+    panel === "status"
+      ? await Promise.all([readDatabaseSizesForPage(db, now), readVercelUsageCached(env, now), readVercelPlan(db).catch(() => null)])
+      : [null, null, null];
   // The weather forecast's service and its last answer (§402): the cached entry the pages read, so no extra request inside the hour.
   const weather = await readWeatherStatus();
   /**
@@ -634,6 +649,10 @@ export default async function DevsPage({ params, searchParams }: Props) {
           <Box sx={{ mt: 2 }}>
             <NeonBudgetPanel locale={locale} reading={budget} />
           </Box>
+          {/* How big the database is and what grew in thirty days — the numbers a retention period is chosen on (§NNN). */}
+          <Box sx={{ mt: 2 }}>
+            <DatabaseSizesPanel sizes={dbSizes} />
+          </Box>
           {/*
             Hosting (the owner: "as a dev I should also see the DB usage and Vercel usage"). Vercel
             publishes no usage figure to a Hobby project's own code, so this is what the platform
@@ -686,12 +705,24 @@ export default async function DevsPage({ params, searchParams }: Props) {
               {vercel.reason === "unconfigured" ? t("vercel.unavailable") : t("vercel.failed", { reason: vercel.reason })}
             </Alert>
           )}
-          <Typography variant="body2" color="text.secondary">
-            {t("vercel.notInApi")} {t("neon.vercel")}{" "}
-            <MuiLink href="https://vercel.com/dashboard/usage" target="_blank" rel="noopener noreferrer">
-              {t("vercel.usageLink")}
-            </MuiLink>
-          </Typography>
+          {/* Builds are the cost (§NNN): how many of this project's deployments built, and for which branch. */}
+          {vercel.ok && (
+            <Typography variant="body2" sx={{ mb: 1 }} data-testid="vercel-builds">
+              {t("vercel.builds", {
+                builds: vercel.month.builds,
+                branches: vercel.month.buildsByBranch.map((entry) => `${entry.branch} ${entry.count}`).join(", ") || "—",
+              })}
+            </Typography>
+          )}
+          {/* The Usage page's lines from Vercel's billing API, or one sentence saying it would not tell (§NNN). */}
+          {vercelUsage && (
+            <Box sx={{ mt: 1 }}>
+              <VercelUsagePanel
+                reading={vercelUsage}
+                creditUsd={vercelPlanStated ? VERCEL_PLANS[vercelPlanStated.plan].usdUsageCreditPerMonth : 0}
+              />
+            </Box>
+          )}
           <Typography variant="body2" sx={{ mt: 2 }}>
             <Link href="/devs/theme">{t("theme.link")}</Link>
           </Typography>
