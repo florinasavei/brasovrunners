@@ -410,6 +410,28 @@ test.describe("§NNN the route's elevation profile", () => {
     await expect(readout).toBeVisible();
     await expect(readout).toHaveText(/^4,[45] km · \d+ m · Punct cabană$/);
     await expect(page.getByTestId("elevation-pointer-line")).toBeVisible();
+    // The readout that names a point stays on the screen — whole, never widening the page — at every named pin, on a 320 px phone too.
+    const readoutInside = async () => {
+      const box = (await readout.boundingBox())!;
+      const screen = await page.evaluate(() => ({ width: window.innerWidth, scroll: document.documentElement.scrollWidth }));
+      expect(box.x).toBeGreaterThanOrEqual(-0.5);
+      expect(box.x + box.width).toBeLessThanOrEqual(screen.width + 0.5);
+      expect(screen.scroll).toBeLessThanOrEqual(screen.width);
+    };
+    await readoutInside();
+    for (const index of [0, 2]) {
+      const pin = (await pins.nth(index).locator("circle").first().boundingBox())!;
+      const pinAt = { x: pin.x + pin.width / 2, y: pin.y + pin.height / 2 };
+      if (project === "mobile") await page.touchscreen.tap(pinAt.x, pinAt.y);
+      else await page.mouse.move(pinAt.x, pinAt.y);
+      await expect(readout).toHaveText(index === 0 ? /^3,[78] km · \d+ m · Punct izvor$/ : /^6,[12] km · \d+ m · Punct vârf$/);
+      await readoutInside();
+    }
+    // Back on the hut for the shot below.
+    if (project === "mobile") await page.touchscreen.tap(at.x, at.y);
+    else await page.mouse.move(at.x, at.y);
+    await expect(readout).toHaveText(/^4,[45] km · \d+ m · Punct cabană$/);
+    await readoutInside();
     // Between two points, no name: the readout says the kilometre and the altitude only.
     const far = shown.x + shown.width * 0.25;
     if (project === "mobile") await page.touchscreen.tap(far, at.y);
@@ -421,6 +443,19 @@ test.describe("§NNN the route's elevation profile", () => {
       await page.mouse.move(2, 2);
       await expect(readout).toHaveCount(0);
     }
+
+    // The keys: the chart is a tab stop; home, end and the arrows read the kilometre and the altitude, said politely for a screen reader.
+    const pointer = page.getByTestId("elevation-pointer");
+    await pointer.focus();
+    await page.keyboard.press("Home");
+    await expect(readout).toHaveText(/^0,0 km · \d+ m$/);
+    await expect(pointer.getByRole("status")).toHaveText(/^0,0 km · \d+ m$/);
+    await page.keyboard.press("End");
+    await expect(readout).toHaveText(/^9,0 km · \d+ m$/);
+    await expect(pointer.getByRole("status")).toHaveText(/^9,0 km · \d+ m$/);
+    await page.keyboard.press("ArrowLeft");
+    await expect(readout).toHaveText(/^8,9 km · \d+ m$/);
+    await readoutInside();
 
     // The route section, chart and table, as a visitor sees them.
     // The picture is of the section, not of the bars that float over the page: hidden for the shot only.
@@ -478,6 +513,12 @@ test.describe("§NNN the route's elevation profile", () => {
     await expect(chart).toHaveCount(1);
     await expect(preview.getByTestId("elevation-pin")).toHaveCount(3);
     await expect(preview).toContainText("Numărul de concurs le arată după setarea „Punctele de control pe profil”");
+    // The preview's labels are 11 px or more as drawn in the editor's card — on a 320 px phone the card leaves the chart about 204 px.
+    const previewSmallest = await chart.evaluate((svg) => {
+      const scale = svg.getBoundingClientRect().width / (svg as SVGSVGElement).viewBox.baseVal.width;
+      return Math.min(...[...svg.querySelectorAll("text")].map((text) => parseFloat(getComputedStyle(text).fontSize) * scale));
+    });
+    expect(previewSmallest).toBeGreaterThanOrEqual(10.9);
 
     // The tick on each point: on for a new row, off for the point the club left off.
     // (Counted by the boxes' own names: the saved points and the spare rows sit in folds that are closed.)
