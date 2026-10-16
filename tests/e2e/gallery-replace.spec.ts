@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import sharp from "sharp";
 import { confirmDialog } from "./support/confirm";
-import { fillDateField, signIn } from "./support/featured-event";
+import { fillDateField, hydrated, signIn } from "./support/featured-event";
 
 /**
  * «Înlocuiește» on an album's photo (§673; BR-REQ-054-01) — through the browser, at both viewports.
@@ -89,6 +89,8 @@ test.describe.serial("§673 «Înlocuiește» on an album's photo", () => {
   test("removes the album afterwards", async ({ page }) => {
     await signIn(page, "Dev Administrator");
     await page.goto(editorUrl);
+    // The dialog is React's (§384): a press that lands before the page has hydrated opens none, and a slow runner gets there first.
+    await hydrated(page);
     await page.getByRole("button", { name: "Șterge albumul" }).click();
     await confirmDialog(page);
     await page.waitForURL(/\/admin\/gallery\?saved=deleted/);
