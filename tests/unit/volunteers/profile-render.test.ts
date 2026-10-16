@@ -989,8 +989,9 @@ describe("§773 the owner's note under the roles' list", () => {
       expect(tag).toContain("MuiAlert-root");
       expect(tag).toContain("MuiAlert-colorInfo");
       expect(tag).toContain('id="volunteer-roleIds-note"');
-      // Static text: MUI's default `role="alert"` is cleared, so it is not announced on load.
-      expect(tag).not.toContain("role=");
+      // Static text: MUI's default `role="alert"` is replaced by `note`, so it is not announced on load.
+      expect(tag).not.toContain('role="alert"');
+      expect(tag).toContain('role="note"');
       // The glyph is the Alert's own, before the words; the words are the catalogue's, unchanged.
       const from = page.indexOf(tag);
       const body = page.slice(from, page.indexOf("</div></div>", from) + 12);

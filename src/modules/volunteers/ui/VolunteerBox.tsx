@@ -300,13 +300,14 @@ export default async function VolunteerBox({
                 asked to cover another responsibility, thanked, and told they will be contacted. A banner (§796; the owner, 2026-10-16: «Asta ar
                 trebui să fie într-un banner, să fie mai vizibil»): the house's information notice — the `Alert` of `severity="info"` as
                 the register page and the check-your-email screen draw theirs, with its own info glyph — a clear step above and below.
-                Static text, not a live message: the Alert's default `role="alert"` is cleared on its root, so a screen reader reads it with
-                the group (the fieldset names its id) and does not announce it on load.
+                Static text, not a live message: the Alert's default `role="alert"` is replaced by `role="note"`, so a screen reader reads it
+                with the group (the fieldset names its id) and does not announce it on load. (An `undefined` role passed through `slotProps` from
+                this Server Component does not survive the hand-over to the client Alert — the browser kept `role="alert"` — hence the string.)
               */}
               <Alert
                 id={`${fieldId("roleIds")}-note`}
                 severity="info"
-                slotProps={{ root: { role: undefined } }}
+                role="note"
                 sx={{ mt: 2, mb: 1 }}
                 data-testid="volunteer-roles-note"
               >
