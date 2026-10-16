@@ -66,10 +66,13 @@ export default function BirthDatePicker({
           p: 0,
           border: 0,
           borderRadius: "50%",
-          bgcolor: "transparent",
           color: "action.active",
           cursor: "pointer",
-          "&:hover": { bgcolor: "action.hover" },
+          // The hover disc is drawn 40 px inside the 44 px hit area, so in a small box (40 px) it never pokes past the outline.
+          position: "relative",
+          "&::before": { content: '""', position: "absolute", inset: 2, borderRadius: "50%" },
+          "&:hover::before": { bgcolor: "action.hover" },
+          "& > svg": { position: "relative" },
           "&:focus-visible": { outline: 2, outlineStyle: "solid", outlineColor: "primary.main", outlineOffset: -2 },
         }}
       >
