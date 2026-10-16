@@ -113,21 +113,36 @@ test.describe("§425 the accepted terms on the registration's page and in the ex
       const [header, ...lines] = (await response.text()).split("\r\n");
       // The terms' two columns, then the declaration's two (§499), then the family column (§543),
       // then the participant's reason for cancelling (§558), then the offers and benefits (§562), then
-      // «Special guest» (§643, named by §647, renamed since), then the list's «Până când» (§650): the moment and what for, then the age on race day, the country and the city (§660), then the members' race number (§664), then «Note interne» (§785), the last.
-      expect(header.split(",").slice(-15, -11)).toEqual(["Terms version", "Terms accepted", "Declaration version", "Declaration signed"]);
-      expect(header.split(",").at(-11)).toBe("family");
-      expect(header.split(",").at(-10)).toBe("Cancellation reason");
-      expect(header.split(",").at(-9)).toBe("Offers and benefits");
-      expect(header.split(",").at(-8)).toBe("Special guest");
-      expect(header.split(",").slice(-7, -5)).toEqual(["Until when", "Waiting on"]);
-      expect(header.split(",").slice(-5, -2)).toEqual(["Age on race day", "Country", "City"]);
-      expect(header.split(",").at(-2)).toBe("Member bib");
-      // …and, for the Administrator who downloaded it, the internal notes, the very last (§785).
-      expect(header.split(",").at(-1)).toBe("Note interne");
+      // «Special guest» (§643, named by §647, renamed since), then the list's «Până când» (§650): the moment and what for, then the age on race day, the country and the city (§660), then the members' race number (§664), then «Club runner» (§790), last of the file's own columns.
+      // Read by NAME and in order, never counted from the end: §790 added a column and every index counted from the end moved by one.
+      const columns = header.split(",");
+      const at = (name: string): number => columns.indexOf(name);
+      const appended = [
+        "Terms version",
+        "Terms accepted",
+        "Declaration version",
+        "Declaration signed",
+        "family",
+        "Cancellation reason",
+        "Offers and benefits",
+        "Special guest",
+        "Until when",
+        "Waiting on",
+        "Age on race day",
+        "Country",
+        "City",
+        "Member bib",
+        "Club runner",
+      ];
+      expect(columns.filter((name) => appended.includes(name))).toEqual(appended);
+      // …and, for the Administrator who downloaded it, the internal notes after all of them, the very last (§785).
+      expect(columns.at(-1)).toBe("Note interne");
       const publicLine = lines.find((line) => line.includes("Termeni public"));
       const staffLine = lines.find((line) => line.includes("Termeni staff"));
-      expect(publicLine?.split(",").slice(-15, -13)).toEqual(["1", ACCEPTED_AT]);
-      expect(staffLine?.split(",").slice(-15, -13)).toEqual(["", ""]);
+      // The same two columns in the rows, by the header's own positions. Counted from the start: nothing in these two rows before them carries a comma.
+      const termsOf = (line: string | undefined) => [line?.split(",")[at("Terms version")], line?.split(",")[at("Terms accepted")]];
+      expect(termsOf(publicLine)).toEqual(["1", ACCEPTED_AT]);
+      expect(termsOf(staffLine)).toEqual(["", ""]);
     } finally {
       await cleanup(seeded);
     }

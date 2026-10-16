@@ -55,6 +55,10 @@ function Words({ children }: { children: string }) {
  * card's boxes outside its tabs too (the programme's timed rows), since the card is the nearest
  * `Panel` around the strip (`cardOf`). The rest of the form is untouched.
  *
+ * **A card with no tab row of its own** (§791: the volunteers' «Roluri», whose strips are one per role, in each role's fold) puts the button in
+ * its header row and marks the card's body `data-translate-scope="<the card's title>"`: with no strip around it, the button translates the boxes inside
+ * that element and names it in the toast — never the whole form.
+ *
  * The same press as the whole editor's (`useTranslateAll`): it asks first only when English words
  * already written would be replaced («Înlocuiește tot» / «Doar cele goale») or the text is large,
  * says what happened in a toast naming the card (§496, «Gata: 3 câmpuri traduse în „Descrierea
@@ -142,9 +146,16 @@ function TranslateCardButtonIsland({ onTranslated }: { onTranslated?: () => void
     () => {
       const here = anchor.current;
       const strip = here?.closest("[data-locale-tabs]") ?? null;
-      const card = strip ? cardOf(strip) : null;
+      // A card with no tab row of its own (the volunteers' «Roluri», §791: one strip per role, none for the card) marks its scope with the
+      // card's title, and the button sits in the card's header row: what it translates is everything inside that scope.
+      const scope = strip ? null : (here?.closest("[data-translate-scope]") ?? null);
+      const card = strip ? cardOf(strip) : scope;
       // Never `within: null` while the button is mounted: that would be the whole form.
-      return { form: here?.closest("form") ?? null, within: card ?? here ?? null, card: card ? cardTitleOf(card) : null };
+      return {
+        form: here?.closest("form") ?? null,
+        within: card ?? here ?? null,
+        card: scope ? scope.getAttribute("data-translate-scope") || null : card ? cardTitleOf(card) : null,
+      };
     },
     t("confirm.cardBigTitle"),
     onTranslated,

@@ -20,6 +20,7 @@ import type { FormOutcome } from "@/shared/forms/outcome";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
+import { NEW_ROW, rowBoxes } from "../../helpers/role-rows";
 
 /**
  * §774 — an event's volunteer roles in configurable categories, each with a contact person (the owner, 2026-10-14: «categorii cu
@@ -104,6 +105,9 @@ function form(fields: Record<string, string | readonly string[]>, event = eventI
   return data;
 }
 
+/** One row of the «Roluri» card's one form (§791) as a post: a saved role's boxes under its id, the blank row's under `new-none`. */
+const rowForm = (key: string, fields: Record<string, string>, event = eventId) => form(rowBoxes(key, fields), event);
+
 type Stateful = (previous: FormOutcome | null, form: FormData) => Promise<FormOutcome | null>;
 
 async function post(action: Stateful, data: FormData) {
@@ -143,10 +147,13 @@ async function addCategory(fields: Record<string, string> = START, event = event
   return all[all.length - 1];
 }
 
+/** A role added through the blank row of the card's one form: the one that was not there before (the save files it under its category, not at the end of the event's list). */
 async function addRole(fields: Record<string, string> = {}, event = eventId) {
-  expect(await post(actions.addVolunteerRoleAction, form({ ...GUIDANCE, ...fields }, event))).toBe("redirected");
-  const all = await listVolunteerRoles(db, event);
-  return all[all.length - 1];
+  const before = new Set((await listVolunteerRoles(db, event)).map((role) => role.id));
+  expect(await post(actions.saveVolunteerRolesAction, rowForm(NEW_ROW, { ...GUIDANCE, ...fields }, event))).toBe("redirected");
+  const created = (await listVolunteerRoles(db, event)).filter((role) => !before.has(role.id));
+  expect(created).toHaveLength(1);
+  return created[0];
 }
 
 describe("§774 the table: categories, and a role's name once per category", () => {
@@ -387,8 +394,8 @@ describe("§774 a role's «Categoria»", () => {
     expect((await addRole({ nameRo: "Fără alegere", nameEn: "No choice" })).categoryId).toBeNull();
     const foreign = await addCategory(START, otherEventId);
     for (const categoryId of [foreign.id, "7d2c7f1c-0000-4000-8000-000000000000", "not-an-id"]) {
-      const outcome = await post(actions.addVolunteerRoleAction, form({ ...GUIDANCE, nameRo: "Alta", nameEn: "Other", categoryId }));
-      expect(outcome, categoryId).toMatchObject({ error: "VALIDATION_ERROR", fields: ["categoryId"] });
+      const outcome = await post(actions.saveVolunteerRolesAction, rowForm(NEW_ROW, { ...GUIDANCE, nameRo: "Alta", nameEn: "Other", categoryId }));
+      expect(outcome, categoryId).toMatchObject({ error: "VOLUNTEER_ROLE_INVALID", fields: [`roles[${NEW_ROW}].categoryId`] });
     }
     expect(await listVolunteerRoles(db, eventId)).toHaveLength(2);
     expect(route.id).toBeTruthy();
@@ -398,14 +405,14 @@ describe("§774 a role's «Categoria»", () => {
     const start = await addCategory(START);
     const route = await addCategory(ROUTE);
     await addRole({ categoryId: route.id });
-    expect(await post(actions.addVolunteerRoleAction, form({ ...GUIDANCE, nameRo: "DIRECȚIONARE", nameEn: "Other", categoryId: route.id }))).toMatchObject({ error: "VOLUNTEER_NAME_TAKEN", fields: ["nameRo"] });
-    expect(await post(actions.addVolunteerRoleAction, form({ ...GUIDANCE, nameRo: "Alta", categoryId: route.id }))).toMatchObject({ error: "VOLUNTEER_NAME_TAKEN", fields: ["nameEn"] });
+    expect(await post(actions.saveVolunteerRolesAction, rowForm(NEW_ROW, { ...GUIDANCE, nameRo: "DIRECȚIONARE", nameEn: "Other", categoryId: route.id }))).toMatchObject({ error: "VOLUNTEER_ROLE_INVALID", fields: [`roles[${NEW_ROW}].nameRo`] });
+    expect(await post(actions.saveVolunteerRolesAction, rowForm(NEW_ROW, { ...GUIDANCE, nameRo: "Alta", categoryId: route.id }))).toMatchObject({ error: "VOLUNTEER_ROLE_INVALID", fields: [`roles[${NEW_ROW}].nameEn`] });
     await addRole({ categoryId: start.id });
     await addRole({ categoryId: "" });
     expect(await listVolunteerRoles(db, eventId)).toHaveLength(3);
     // A role's own name saved again under its own category is no clash.
-    const [first] = await listVolunteerRoles(db, eventId);
-    expect(await post(actions.editVolunteerRoleAction, form({ ...GUIDANCE, roleId: first.id, categoryId: route.id, needed: "5" }))).toBe("redirected");
+    const first = (await listVolunteerRoles(db, eventId)).find((role) => role.categoryId === route.id)!;
+    expect(await post(actions.saveVolunteerRolesAction, rowForm(first.id, { ...GUIDANCE, categoryId: route.id, needed: "5" }))).toBe("redirected");
   });
 
   it("moves a role to another category on «Modifică» — to the end of it — leaves it where it is when the form draws no choice, and refuses a name that clashes there", async () => {
@@ -415,9 +422,9 @@ describe("§774 a role's «Categoria»", () => {
     const b = await addRole({ nameRo: "B", nameEn: "B", categoryId: route.id });
     const c = await addRole({ nameRo: "C", nameEn: "C", categoryId: start.id });
     // A saved by a form with no «Categoria» box (a caller before the categories): the role stays.
-    await post(actions.editVolunteerRoleAction, form({ ...GUIDANCE, roleId: a.id, nameRo: "A", nameEn: "A", needed: "3" }));
+    await post(actions.saveVolunteerRolesAction, rowForm(a.id, { ...GUIDANCE, nameRo: "A", nameEn: "A", needed: "3" }));
     expect((await listVolunteerRoles(db, eventId)).find((role) => role.id === a.id)).toMatchObject({ categoryId: start.id, needed: 3 });
-    await post(actions.editVolunteerRoleAction, form({ ...GUIDANCE, roleId: a.id, nameRo: "A", nameEn: "A", needed: "3", categoryId: route.id }));
+    await post(actions.saveVolunteerRolesAction, rowForm(a.id, { ...GUIDANCE, nameRo: "A", nameEn: "A", needed: "3", categoryId: route.id }));
     const roles = await listVolunteerRoles(db, eventId);
     expect(roles.find((role) => role.id === a.id)).toMatchObject({ categoryId: route.id });
     const grouped = groupRolesByCategory(await listVolunteerCategories(db, eventId), roles);
@@ -427,11 +434,11 @@ describe("§774 a role's «Categoria»", () => {
     expect(edited.metadataJson).toMatchObject({ roleId: a.id, fields: ["categoryId"], categoryFrom: start.id, categoryTo: route.id });
     // «B» under the route already: «B» from the start cannot join it.
     const clash = await addRole({ nameRo: "B", nameEn: "B2", categoryId: start.id });
-    expect(await post(actions.editVolunteerRoleAction, form({ ...GUIDANCE, roleId: clash.id, nameRo: "B", nameEn: "B2", categoryId: route.id }))).toMatchObject({ error: "VOLUNTEER_NAME_TAKEN" });
+    expect(await post(actions.saveVolunteerRolesAction, rowForm(clash.id, { ...GUIDANCE, nameRo: "B", nameEn: "B2", categoryId: route.id }))).toMatchObject({ error: "VOLUNTEER_ROLE_INVALID", fields: [`roles[${clash.id}].nameRo`] });
     expect(b.id && c.id).toBeTruthy();
   });
 
-  it("moves a role up and down inside its own category only, the others' places untouched", async () => {
+  it("orders the roles inside their own category by «Poziția» only, the others' places untouched", async () => {
     const start = await addCategory(START);
     const route = await addCategory(ROUTE);
     const r1 = await addRole({ nameRo: "R1", nameEn: "R1", categoryId: route.id });
@@ -440,13 +447,14 @@ describe("§774 a role's «Categoria»", () => {
     const s2 = await addRole({ nameRo: "S2", nameEn: "S2", categoryId: start.id });
     const grouped = async () => groupRolesByCategory(await listVolunteerCategories(db, eventId), await listVolunteerRoles(db, eventId)).map((group) => group.roles.map((role) => role.nameRo));
     expect(await grouped()).toEqual([["S1", "S2"], ["R1", "R2"]]);
-    await press(actions.moveVolunteerRoleAction, form({ roleId: r2.id, direction: "up" }));
+    const place = (role: { id: string }, position: string) => post(actions.saveVolunteerRolesAction, rowForm(role.id, { position }));
+    await place(r2, "1");
     expect(await grouped()).toEqual([["S1", "S2"], ["R2", "R1"]]);
-    // «Up» of the first role of a category is nothing, though other roles are above it in the event's order.
-    await press(actions.moveVolunteerRoleAction, form({ roleId: s1.id, direction: "up" }));
-    await press(actions.moveVolunteerRoleAction, form({ roleId: r2.id, direction: "up" }));
+    // The first place of a category held again is nothing, though other roles are above it in the event's order.
+    await place(s1, "1");
+    await place(r2, "1");
     expect(await grouped()).toEqual([["S1", "S2"], ["R2", "R1"]]);
-    await press(actions.moveVolunteerRoleAction, form({ roleId: s1.id, direction: "down" }));
+    await place(s1, "2");
     expect(await grouped()).toEqual([["S2", "S1"], ["R2", "R1"]]);
     expect((await listVolunteerRoles(db, eventId)).map((role) => role.position)).toEqual([0, 1, 2, 3]);
     expect(r1.id && s2.id).toBeTruthy();

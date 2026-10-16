@@ -12,6 +12,7 @@
  */
 
 import type { RegistrationStatus } from "@/db/schema/registrations";
+import { clubRunnerCell } from "./domain/club-runner";
 import { raceNumberOf } from "./domain/race-number";
 import { memberBibCell } from "./domain/member-bib";
 import { MEMBERSHIP_EXPORT_WORDS, membershipOf } from "./domain/membership";
@@ -73,6 +74,12 @@ export type RegistrationCsvRow = {
    * cell reads "verified", "declared" or empty (`membershipOf`) — still never "No".
    */
   memberVerified: boolean;
+  /**
+   * The row is one of the club's runners (`domain/club-runner.ts#isClubRunner`, §787): the «Club runner» cell, "Yes" or
+   * empty, which the spreadsheet's colour rules and the statistics footer's formulas read. Required: a caller that
+   * forgot it would silently write no blue cell and a club count of 0.
+   */
+  clubRunner: boolean;
   /** When the entrant ticked "I am medically fit" (§171); empty for a desk or phone entry. */
   fitnessDeclaredAt: string | null;
   /** The optional socials (§106), empty when not given. */
@@ -217,6 +224,14 @@ const HEADER = [
   "City",
   // Last (§664), for the same reason: the members' race number — "yes", "asked" or empty.
   "Member bib",
+  /*
+    Last (§787, amended; the owner's «color codes … dacă sunt membri BVR»), for the same reason — the precedent is
+    «Member bib» just above: the spreadsheet puts the column beside «Club member» (it is matched by header), the CSV
+    appends it so a script that reads by position still finds every earlier column. It is the one answer the footer
+    counts the club's runners by — a member on «Echipa», the box, or a typed club that names the club — as "Yes" or
+    empty, so the file says why a row is blue.
+  */
+  "Club runner",
 ];
 
 /**
@@ -267,6 +282,7 @@ export function buildRegistrationsCsv(rows: readonly RegistrationCsvRow[], optio
         row.country ?? "",
         row.city ?? "",
         memberBibExportCell(row),
+        clubRunnerCell(row.clubRunner),
         ...(options.notesHeader ? [row.notes ?? ""] : []),
       ]
         .map(csvCell)

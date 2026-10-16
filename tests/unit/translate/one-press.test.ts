@@ -39,6 +39,11 @@ class FakeBox extends EventTarget {
   labels: { textContent: string }[];
   form: FakeForm | null = null;
   current: string;
+  /** The `data-translate-row` of the element the box sits in (§791), when it sits in one. */
+  row: string | null = null;
+  closest(selector: string) {
+    return this.row !== null && selector.includes("data-translate-row") ? { getAttribute: () => this.row } : null;
+  }
   constructor(name: string, value: string, options: { type?: string; label?: string } = {}) {
     super();
     this.name = name;
@@ -173,6 +178,18 @@ describe("§482 «Copiază și tradu tot» reads the form before it runs", () =>
 
   it("names a box by its label, the required mark dropped", () => {
     expect(labelOfBox(asForm(eventForm()), "translations.en.title")).toBe("Title (EN)");
+  });
+
+  it("names a box in a card of rows by its row first — every row of the volunteers' «Roluri» says «Nume (EN)» — and a box in no row by its label alone (§791)", () => {
+    const water = new FakeInput("roles[a].nameEn", "", { label: "Nume (EN) *" });
+    water.row = "Punct de apă";
+    const finish = new FakeInput("roles[b].nameEn", "", { label: "Nume (EN) *" });
+    finish.row = "Sosire";
+    const alone = new FakeInput("nameEn", "", { label: "Numele (EN)" });
+    const form = asForm(new FakeForm([water, finish, alone]));
+    expect(labelOfBox(form, "roles[a].nameEn")).toBe("Punct de apă: Nume (EN)");
+    expect(labelOfBox(form, "roles[b].nameEn")).toBe("Sosire: Nume (EN)");
+    expect(labelOfBox(form, "nameEn")).toBe("Numele (EN)");
   });
 
   it("names the characters above the threshold, counted as the service counts them", () => {

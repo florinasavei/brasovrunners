@@ -14,18 +14,19 @@ decision or a click only the club can make · **released** — on production, wi
 The owner, 2026-10-10: «Soon I need to start a new session from the laptop … You need to save and document everything».
 This section replaces the plan of 2026-09-30; it is what a session with none of today's conversation needs to carry on.
 
-- **Production: `BR-V3.42`** (2026-10-16 01:47: §786 filterable email subject tags, §787 the Excel's «Statistici»
-  footer; no migration). Waiting for «prod»: `BR-V3.43` (§788, §789, below) — no migration.
-- **QA: `BR-V3.43`** — the volunteers' page is calmer: each category a bordered card with no filled band, the roles
-  as pills in a wrap row (the native box visible, the first letter capitalised by CSS, the count words only when the
-  event's §773 tick is on), a role's description collapsed behind a «?» on its pill (§788); the club writes what
-  «membru» means on «Pagini» → «Membri» → «Cine e membru», and a «?» after the member tick says it on the registration
-  form and the volunteers' form (§789; unwritten, the platform's «cel puțin 3 alergări de grup în ultimele 6 luni»).
-- **Building (2026-10-16 morning, the owner's screenshots):** the event editor's «Roluri» card — one sub-card per
-  category, ONE «Salvează toate rolurile» for every role, the description as Română | English tabs with the house's
-  RO → EN translation buttons (`feat/volunteer-roles-editor-batch`); the Excel export made live — rows tinted by status
-  and the member cells by club membership as conditional formatting, the «Statistici» numbers as formulas with cached
-  values, a «Club runner» column and a colour legend (`feat/excel-colour-codes`). Each lands as its own release.
+- **Production: `BR-V3.43`** (2026-10-16 10:41: §788 the volunteers' page calmer — category cards with no band,
+  roles as pills, the description behind a «?»; §789 «Sunt membru al grupului» explained by the club's own sentence
+  from «Pagini» → «Membri»; no migration). Waiting for «prod»: `BR-V3.44` (§790, §791, below) — no migration.
+- **QA: `BR-V3.44`** — the registrations Excel stays right after an offline edit: rows tinted by status and the member
+  cells by club membership through conditional formatting, the «Statistici» numbers as formulas with cached values and
+  recalculation on open, a «Club runner» column («Yes» when §787's predicate says so; last in the CSV), an «Event»
+  column in a multi-event file, «Fără categorie» always present, a colour legend (§790); the event editor's «Roluri»
+  card is one form with one «Salvează toate rolurile» — a sub-card per category, each role one line, «Poziția» for the
+  order, a blank «Rol nou» row adds, delete its own confirmed form, the description as Română | English tabs with the
+  house's RO → EN translation, a save drawn from a page older than someone else's save refused (§791).
+- **Building (2026-10-16 morning, the owner's screenshots):** the event's «De făcut» card as two folds closed by
+  default («Lipsește pe pagină», «Sarcini»), each with a summary line, the filter chips and the add row inside «Sarcini»
+  (`feat/event-todo-folds`). Lands as its own release.
 - **Waiting on the owner:** the privacy notice from the new template, approved in `/admin/legal` after a lawyer reads
   the paragraph on what the site loads (its first sentence says what is used is strictly necessary and needs no consent,
   art. 4(6) of Legea nr. 506/2004, while the same paragraph says Strava may set its own cookies without a press — the
@@ -141,6 +142,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V3.44` | the Excel export, live: colours by status and membership as conditional formatting, the statistics as formulas (§790) · the roles editor: categories as sub-cards, one «Salvează toate rolurile», tabs and translation for the descriptions (§791) |
 | `BR-V3.43` | the volunteers' page: calm category cards, roles as chips, the description behind «?» (§788) · „Sunt membru”: a «?» with the club's own definition, set on «Pagini» → «Membri» (§789) |
 | `BR-V3.42` | filterable tags at the start of the club's email subjects (§786) · a statistics footer in the registrations Excel (§787) |
 | `BR-V3.41` | a volunteer role without a number (§784) · internal notes in the Excel export (§785) |

@@ -140,26 +140,40 @@ describe("§482 «Echipa»'s words may be translated", () => {
   });
 });
 
-describe("§765 a volunteer role's form may be translated", () => {
-  it("allows the role's English name and its description, and knows the description is a rich text", () => {
+describe("§765 a volunteer role's form may be translated, §791 row by row", () => {
+  const ID = "d1111111-1111-4111-8111-111111111111";
+
+  it("allows each role's English name and description by its row's key, knows the description is a rich text and finds the Romanian twin in the same row", () => {
+    for (const name of [`roles[${ID}].nameEn`, `roles[${ID}].descriptionEnBody`, "roles[new-none].nameEn", "roles[new-c1111111-1111-4111-8111-111111111111].descriptionEnBody"]) {
+      expect(isTranslatableEnglishField(name), name).toBe(true);
+    }
+    for (const name of [`roles[${ID}].nameRo`, `roles[${ID}].descriptionRoBody`, `roles[${ID}].needed`, `roles[${ID}].colourChoice`, `roles[${ID}].categoryId`, `roles[${ID}].position`, `roles[${ID}].unlimited`, "roles[a b].nameEn", "roles[].nameEn", `roles[${ID}].nameEn.x`]) {
+      expect(isTranslatableEnglishField(name), name).toBe(false);
+    }
+    expect(isRichTextField(`roles[${ID}].descriptionEnBody`)).toBe(true);
+    expect(isRichTextField(`roles[${ID}].nameEn`)).toBe(false);
+    expect(romanianTwinCandidates(`roles[${ID}].nameEn`)[0]).toBe(`roles[${ID}].nameRo`);
+    expect(romanianTwinCandidates(`roles[${ID}].descriptionEnBody`)).toEqual([`roles[${ID}].descriptionRoBody`]);
+    // A category's name is its own small form's, as before.
     expect(isTranslatableEnglishField("nameEn")).toBe(true);
-    expect(isTranslatableEnglishField("descriptionEnBody")).toBe(true);
-    for (const name of ["nameRo", "descriptionRoBody", "needed", "colourChoice"]) expect(isTranslatableEnglishField(name), name).toBe(false);
-    expect(isRichTextField("descriptionEnBody")).toBe(true);
     expect(isRichTextField("nameEn")).toBe(false);
     expect(romanianTwinCandidates("nameEn")[0]).toBe("nameRo");
-    expect(romanianTwinCandidates("descriptionEnBody")).toEqual(["descriptionRoBody"]);
   });
 
-  it("is mounted on the role's own form, new and saved, beside the description's two editors", () => {
+  it("is mounted once on the «Roluri» card — the card's «Tradu cardul» in its header, the box's «Tradu din română» under every English name and description — and never twice over", () => {
     const card = readFileSync(path.join(ROOT, "src/modules/volunteers/ui/VolunteersCard.tsx"), "utf8");
-    // `roleFields` draws both the «Adaugă un rol» form and every role's «Modifică».
-    expect(card).toMatch(/const roleFields = [\s\S]*<TranslateAllButton \/>[\s\S]*name="descriptionRoBody"[\s\S]*name="descriptionEnBody"/);
-    // …and, since §774, `categoryNameFields` draws the one of the «Adaugă o categorie» form and every category's «Modifică» (its English name from the Romanian one).
+    // The card's press, inside the one form's scope (`data-translate-scope`), once.
+    expect(card.match(/<TranslateCardButton \/>/g)?.length).toBe(1);
+    expect(card).toMatch(/<ActionForm action=\{saveVolunteerRolesAction\}[\s\S]*data-translate-scope=\{t\("volunteers\.rolesTitle"\)\}[\s\S]*<TranslateCardButton \/>/);
+    // The box's press, under the English name and under the English description's editor, of every row.
+    expect(card).toMatch(/<TranslateFieldButton en=\{box\("nameEn"\)\} \/>/);
+    expect(card).toMatch(/<TranslateFieldButton en=\{box\("descriptionEnBody"\)\} \/>/);
+    // The whole-form press is left to the category's small names form, which has no strip: not the roles' (their form is the card's).
+    expect(card.match(/<TranslateAllButton \/>/g)?.length).toBe(1);
     expect(card).toMatch(/const categoryNameFields = [\s\S]*<TranslateAllButton \/>[\s\S]*name="nameEn"/);
-    expect(card.match(/<TranslateAllButton \/>/g)?.length).toBe(2);
-    expect(card.match(/roleFields\(/g)?.length).toBeGreaterThanOrEqual(2);
     expect(card.match(/categoryNameFields\(/g)?.length).toBeGreaterThanOrEqual(2);
+    // The strips of the rows do not draw a card button of their own: the nearest card of a strip would be the row's fold, not the card.
+    expect(card).not.toMatch(/<LocaleTabPanels[^>]*translateCard/);
   });
 });
 
