@@ -9,11 +9,12 @@ import { CHOICE_CARD_SX, CHOICE_INPUT_SX } from "@/shared/ui/choice-card";
 import type { PublicVolunteerCategory, PublicVolunteerRole } from "@/modules/volunteers/volunteers";
 
 /**
- * §780 — the volunteers' page's roles as the server draws them: each category its own card (a band with its glyph, its name as the
- * level-3 heading and «4 roluri», its contact line, its tiles inside), «Alte activități» last with the same look, no card at all for an
- * event with no category; each role a tile whose whole surface is the checkbox's label (the name, the count line under the name, the
- * description outside the label); the ticked state, which the CSS draws from `:checked`; the grid's one column and its two from the tablet
- * width; native inputs only, so scripts off works and a refused post comes back with its ticks; the words in both languages.
+ * §780 (amended 2026-10-16) — the volunteers' page's roles as the server draws them: each category its own calm card (a header on the
+ * card's surface with its glyph, its name as the level-3 heading and «4 roluri», a hairline, its contact line, its chips inside, no
+ * filled band), «Alte activități» last with the same look, no card at all for an event with no category; each role a chip — a pill whose
+ * face is the checkbox's label (the box visible, the name, the §773 count words only when the club ticked them) — with a «?» outside the
+ * label, a native closed `<details>`, only for a role with a description; the ticked state, which the CSS draws from `:checked`; the wrap
+ * row; native inputs only, so scripts off works and a refused post comes back with its ticks; the words in both languages.
  */
 const messages = { ro, en } as const;
 let locale: "ro" | "en" = "ro";
@@ -105,12 +106,12 @@ async function draw(over: Partial<ComponentProps<typeof VolunteerBox>> = {}, lan
 
 /** The cards in the order drawn, each as its own markup: from its testid to the next card's (the last to the note's). */
 const cards = (page: string) => page.split('data-testid="volunteer-category"').slice(1).map((card) => card.split('data-testid="volunteer-roles-note"')[0]);
-/** The tiles of a chunk, each as its own markup. */
-const tiles = (chunk: string) => chunk.split('data-testid="volunteer-role-option"').slice(1);
+/** The chips of a chunk, each as its own markup. */
+const chips = (chunk: string) => chunk.split('data-testid="volunteer-role-option"').slice(1);
 /** The checkbox tags of a page, in the order drawn. */
 const boxes = (page: string) => [...page.matchAll(/<input[^>]*name="roleIds"[^>]*>/g)].map((match) => match[0]);
 
-describe("§780 each category is a card of its own", () => {
+describe("§780 each category is a calm card of its own", () => {
   it("draws one card per category in the club's order, «Alte activități» last, each with its glyph, its name as a level-3 heading and how many roles it offers", async () => {
     const page = await draw();
     const drawn = cards(page);
@@ -120,12 +121,15 @@ describe("§780 each category is a card of its own", () => {
     const counts = drawn.map((card) => /data-testid="volunteer-category-count"[^>]*>([^<]*)</.exec(card)?.[1]);
     expect(counts).toEqual(["1 rol", "2 roluri", "1 rol"]);
     for (const card of drawn) {
-      // The band holds the glyph (decoration: aria-hidden) before the name and the count.
-      const band = /data-testid="volunteer-category-band"[\s\S]*?<h3/.exec(card)?.[0] ?? "";
-      expect(band).toMatch(/<svg[^>]*aria-hidden="true"/);
+      // The header holds the glyph (decoration: aria-hidden) before the name and the count.
+      const header = /data-testid="volunteer-category-header"[\s\S]*?<h3/.exec(card)?.[0] ?? "";
+      expect(header).toMatch(/<svg[^>]*aria-hidden="true"/);
+      // A hairline under the header, before the roles.
+      expect(card).toMatch(/<hr[^>]*>/);
+      expect(card.indexOf("<hr")).toBeLessThan(card.indexOf('data-testid="volunteer-role-option"'));
     }
     // Each role stands in its own card: the start's one, the route's two, the loose one.
-    expect(drawn.map((card) => tiles(card).length)).toEqual([1, 2, 1]);
+    expect(drawn.map((card) => chips(card).length)).toEqual([1, 2, 1]);
     expect(drawn.map((card) => boxes(card).map((tag) => /value="([^"]+)"/.exec(tag)?.[1]))).toEqual([[GUIDE_START.id], [GUIDE_ROUTE.id, WATER.id], [PHOTO.id]]);
     // The group is named by its heading, for a screen reader.
     expect(page).toMatch(new RegExp(`role="group"[^>]*aria-labelledby="volunteer-category-${START_ID}"`));
@@ -145,11 +149,11 @@ describe("§780 each category is a card of its own", () => {
     const last = page.lastIndexOf('data-testid="volunteer-category"');
     expect(help).toBeGreaterThan(-1);
     expect(help).toBeLessThan(first);
-    // One contact line, in the route's card (the second), under its band and above its tiles.
+    // One contact line, in the route's card (the second), under its header and above its chips.
     expect((page.match(/data-testid="volunteer-contact"/g) ?? []).length).toBe(1);
     const route = cards(page)[1];
     expect(route).toContain('data-testid="volunteer-contact"');
-    expect(route.indexOf('data-testid="volunteer-contact"')).toBeGreaterThan(route.indexOf('data-testid="volunteer-category-band"'));
+    expect(route.indexOf('data-testid="volunteer-contact"')).toBeGreaterThan(route.indexOf('data-testid="volunteer-category-header"'));
     expect(route.indexOf('data-testid="volunteer-contact"')).toBeLessThan(route.indexOf('data-testid="volunteer-role-option"'));
     expect(contact).toBeGreaterThan(first);
     expect(note).toBeGreaterThan(last);
@@ -161,15 +165,31 @@ describe("§780 each category is a card of its own", () => {
     expect(cards(page).map((card) => /data-testid="volunteer-category-count"[^>]*>([^<]*)</.exec(card)?.[1])).toEqual(["1 rol", "1 rol"]);
   });
 
-  it("draws the tiles under no heading and in no card for an event with no category", async () => {
+  it("draws the chips under no heading and in no card for an event with no category", async () => {
     const flat = await draw({ categories: [], roles: ROLES.map((one) => ({ ...one, categoryId: null })) });
     expect(flat).not.toContain('data-testid="volunteer-category"');
-    expect(flat).not.toContain("volunteer-category-band");
+    expect(flat).not.toContain("volunteer-category-header");
     expect(flat).not.toContain("<h3");
     expect(flat).not.toContain("Alte activități");
-    expect(tiles(flat)).toHaveLength(4);
-    // Every tile in one grid.
-    expect((flat.match(/data-testid="volunteer-role-grid"/g) ?? []).length).toBe(1);
+    expect(chips(flat)).toHaveLength(4);
+    // Every chip in one wrap row.
+    expect((flat.match(/data-testid="volunteer-role-chips"/g) ?? []).length).toBe(1);
+  });
+
+  it("has no filled band: no band test id, no deep shade, the card on the page's paper surface, the glyph on the primary's soft wash, theme tokens only", () => {
+    const card = readFileSync(new URL("../../../src/modules/volunteers/ui/VolunteerCategoryCard.tsx", import.meta.url), "utf8");
+    expect(card).not.toContain("volunteer-category-band");
+    expect(card).not.toContain("primary.dark");
+    expect(card).not.toContain("contrastText");
+    expect(card).toContain('bgcolor: "background.paper"');
+    expect(card).toContain('paletteWash("primary", 12)');
+    expect(card).toContain('color: "primary.main"');
+    // The heading is the level-3 one, 1.125rem, bold, in the primary text colour; the count is muted.
+    expect(card).toContain('fontSize: "1.125rem"');
+    expect(card).toContain('color: "text.primary"');
+    expect(card).toContain('color="text.secondary"');
+    // And no colour literal: every colour is a theme token.
+    expect(card).not.toMatch(/#[0-9a-fA-F]{3,8}\b|rgba?\(/);
   });
 
   it("counts the roles with Romanian's three forms and English's two — the same keys in both catalogues", () => {
@@ -185,47 +205,90 @@ describe("§780 each category is a card of its own", () => {
   });
 });
 
-describe("§780 each role is a tile the whole of which is the checkbox's label", () => {
-  it("wraps the box, the name and the count line in one label, the count under the name, and keeps the description outside it", async () => {
+describe("§780 each role is a chip whose face is the checkbox's label", () => {
+  it("wraps the visible box and the name in one label, with the description's fold outside it", async () => {
     const page = await draw();
-    const [guide, , water] = tiles(page);
-    // The label holds the native box, then the name, then the count line — in that order, in one element.
+    const [guide, , water] = chips(page);
+    // The label holds the native box, then the name — in that order, in one element.
     const label = /<label[^>]*data-testid="volunteer-role-label"[\s\S]*?<\/label>/.exec(guide)?.[0] ?? "";
     expect(label).not.toBe("");
     expect(label).toMatch(/<input[^>]*type="checkbox"[^>]*name="roleIds"/);
     expect(label.indexOf("<input")).toBeLessThan(label.indexOf("Direcționare"));
+    // The count words follow the name after a middle dot, muted, while the club ticked them.
     expect(label.indexOf("Direcționare")).toBeLessThan(label.indexOf('data-testid="volunteer-role-needs"'));
+    expect(label).toMatch(/aria-hidden="true"[^>]*>·</);
     expect(label).toContain("mai e nevoie de 1 persoană");
-    // The description is under the label, not in it: it may hold a link and a native fold, which a label may not.
-    const folded = /<label[^>]*data-testid="volunteer-role-label"[\s\S]*?<\/label>/.exec(water)?.[0] ?? "";
-    expect(folded).not.toContain("<details");
-    expect(folded).not.toContain("Stai la kilometrul 5.");
+    // The «?» and the description are beside the label, not in it: a label may hold neither a link nor a fold.
+    const withHelp = /<label[^>]*data-testid="volunteer-role-label"[\s\S]*?<\/label>/.exec(water)?.[0] ?? "";
+    expect(withHelp).not.toContain("<details");
+    expect(withHelp).not.toContain("<summary");
+    expect(withHelp).not.toContain("Stai la kilometrul 5.");
     expect(water.indexOf("</label>")).toBeLessThan(water.indexOf("<details"));
-    expect(water).toMatch(/<details[^>]*data-testid="volunteer-role-description"[^>]*data-folded="true"/);
-    // A short description is plain text under the label, not a fold.
-    const photo = tiles(page)[3];
-    expect(photo).not.toContain("<details");
-    expect(photo.indexOf("</label>")).toBeLessThan(photo.indexOf("Faci poze"));
+    // A short description is behind a «?» as well: the description is never drawn open on its own.
+    const photo = chips(page)[3];
+    expect(photo.indexOf("</label>")).toBeLessThan(photo.indexOf("<details"));
+    expect(photo).toContain("Faci poze");
   });
 
-  it("names the box by the role's name alone and describes it by the count line and the description", async () => {
+  it("names the box by the role's name alone and describes it by the count words and the description", async () => {
     const page = await draw();
-    const [guide, , water] = tiles(page);
-    const box = (tile: string) => /<input[^>]*name="roleIds"[^>]*>/.exec(tile)?.[0] ?? "";
+    const [guide, , water] = chips(page);
+    const box = (chip: string) => /<input[^>]*name="roleIds"[^>]*>/.exec(chip)?.[0] ?? "";
     const nameId = `volunteer-role-${GUIDE_START.id}-name`;
     expect(box(guide)).toContain(`aria-labelledby="${nameId}"`);
     expect(guide).toContain(`id="${nameId}"`);
     expect(box(guide)).toContain(`aria-describedby="volunteer-role-${GUIDE_START.id}-needs"`);
     expect(box(water)).toMatch(new RegExp(`aria-describedby="volunteer-role-${WATER.id}-needs volunteer-role-${WATER.id}-description"`));
     expect(water).toContain(`id="volunteer-role-${WATER.id}-description"`);
+    // Without the count words the box is described by the description alone, and a role with neither names nothing.
+    const quiet = await draw({ showCounts: false });
+    const [quietGuide, , quietWater] = chips(quiet);
+    expect(box(quietGuide)).not.toContain("aria-describedby");
+    expect(box(quietWater)).toContain(`aria-describedby="volunteer-role-${WATER.id}-description"`);
   });
 
-  it("says the count line as before — a number only while the club ticked it — and keeps the same words in English", async () => {
+  it("draws a «?» only for a role with a description: outside the label, the summary of a native details, closed by default, named by the role", async () => {
+    const page = await draw();
+    const [guide, , water, photo] = chips(page);
+    expect(guide).not.toContain("<details");
+    expect(guide).not.toContain("volunteer-role-help");
+    for (const [chip, name] of [
+      [water, "Punct de hidratare"],
+      [photo, "Foto/Video"],
+    ] as const) {
+      const fold = /<details[^>]*data-testid="volunteer-role-description"[^>]*>/.exec(chip)?.[0] ?? "";
+      expect(fold, name).not.toBe("");
+      // Closed by default: no `open` attribute.
+      expect(fold, name).not.toMatch(/\sopen(=|\s|>)/);
+      const summary = /<summary[^>]*data-testid="volunteer-role-help"[^>]*>[\s\S]*?<\/summary>/.exec(chip)?.[0] ?? "";
+      expect(summary, name).toContain(`aria-label="Ce presupune rolul ${name}"`);
+      expect(summary, name).toMatch(/<svg[^>]*aria-hidden="true"/);
+      // The words are in the fold under the summary, never the other language's.
+      expect(chip.indexOf("<summary")).toBeLessThan(chip.indexOf("volunteer-role-description-body"));
+    }
+    expect(water).not.toContain("Stand at km 5.");
+    const english = await draw({}, "en");
+    expect(english).toContain('aria-label="What the role Water point involves"');
+    expect(english).toContain("Stand at km 5.");
+  });
+
+  it("says the count words only while the club ticked them: no «mai sunt locuri» ever, nothing by default, the same words in English", async () => {
     expect(await draw({ showCounts: true })).toContain("mai sunt necesare 3 persoane");
     const hidden = await draw({ showCounts: false });
     expect(hidden).not.toContain("mai sunt necesare");
-    expect((hidden.match(/mai sunt locuri/g) ?? []).length).toBe(4);
+    expect(hidden).not.toContain("mai e nevoie");
+    expect(hidden).not.toContain("mai sunt locuri");
+    expect(hidden).not.toContain("volunteer-role-needs");
     expect(await draw({ showCounts: true }, "en")).toContain("3 more people needed");
+    expect(await draw({ showCounts: false }, "en")).not.toContain("more people needed");
+  });
+
+  it("capitalises the name's first letter by CSS on an inline-block span, and stores the text as typed", async () => {
+    const id = "d5555555-5555-4555-8555-555555555555";
+    const page = await draw({ roles: [role(id, null, "direcționare", "guidance", 1)], categories: [] }, "ro", { styles: true });
+    expect(page).toMatch(/::first-letter\{[^}]*text-transform:uppercase/);
+    expect(page).toMatch(new RegExp(`<span[^>]*id="volunteer-role-${id}-name"[^>]*>direcționare</span>`));
+    expect(page).toMatch(/display:inline-block/);
   });
 
   it("draws the ticked state from the native box: only the roles ticked before a refusal are checked, and a role no longer offered is ignored", async () => {
@@ -237,41 +300,36 @@ describe("§780 each role is a tile the whole of which is the checkbox's label",
     expect(boxes(await draw())).not.toContainEqual(expect.stringMatching(/\schecked/));
   });
 
-  it("draws the ticked state in CSS from the box's :checked, with the keyboard's ring and a 22-pixel box", async () => {
+  it("draws the ticked state in CSS from the box's :checked, with the keyboard's ring, a 22-pixel box and the pill's shape", async () => {
     expect(CHOICE_CARD_SX["&:has(input:checked)"].borderColor).toBe("primary.main");
-    expect(CHOICE_CARD_SX["&:has(input:checked)"].bgcolor).toContain("color-mix");
     expect(CHOICE_CARD_SX["&:has(input:focus-visible)"].outline).toContain("2px solid");
-    // Two pixels wide always, so ticking a tile never moves its words.
-    expect(CHOICE_CARD_SX.border).toBe(2);
     expect(CHOICE_INPUT_SX.width).toBe(22);
-    // And the drawn tile really carries it: the page's own CSS has the rules, so a tile that stopped spreading the shared surface fails here.
+    // The drawn chip really carries it: the page's own CSS has the rules, so a chip that stopped spreading the shared surface fails here.
     // (No theme provider in this draw, so the colours are MUI's defaults, not variables: the test reads the rules, not the hues.)
     const page = await draw({}, "ro", { styles: true });
     expect(page).toMatch(/:has\(input:checked\)\{[^}]*border-color:[^;}]+;/);
+    expect(page).toMatch(/:has\(input:checked\)\{[^}]*color-mix\(in srgb, var\(--mui-palette-primary-main\) 12%, transparent\)/);
     expect(page).toMatch(/:has\(input:focus-visible\)\{[^}]*outline:2px solid/);
-    // The hover border only where a pointer hovers: on a phone `:hover` sticks after a tap and would keep an unticked tile's border.
+    // A pill: the full radius.
+    expect(page).toMatch(/border-radius:999px/);
+    // An open «?» stretches the chip to the whole row.
+    expect(page).toMatch(/:has\(details\[open\]\)\{[^}]*flex-basis:100%/);
+    // The hover border only where a pointer hovers: on a phone `:hover` sticks after a tap and would keep an unticked chip's border.
     expect(page).toMatch(/@media \(hover: hover\)\{\.css-[\w-]+:hover\{border-color:/);
-    expect(page).not.toMatch(/\}\.css-[\w-]+:hover\{border-color:/.source.length ? /(?<!\{)\.css-[\w-]+:hover\{border-color:/ : /x^/);
-  });
-
-  it("stretches the label over the whole tile, and the band is the deep shade of the primary, never the pure blue", async () => {
-    const page = await draw({}, "ro", { styles: true });
-    expect(page).toMatch(/::after\{[^}]*position:absolute[^}]*inset:0/);
-    const card = readFileSync(new URL("../../../src/modules/volunteers/ui/VolunteerCategoryCard.tsx", import.meta.url), "utf8");
-    expect(card).toContain('bgcolor: "primary.dark"');
-    expect(card).not.toContain('bgcolor: "primary.main"');
   });
 });
 
-describe("§780 the grid and the page without scripts", () => {
-  it("is one column on a phone and two from the tablet width, in the columns a long name cannot stretch", async () => {
+describe("§780 the wrap row and the page without scripts", () => {
+  it("is a wrap row of chips, never a grid of tiles", async () => {
     const page = await draw({}, "ro", { styles: true });
-    // Emotion writes the rule as `grid-template-columns: minmax(0, 1fr)` and, under the `sm` breakpoint, `repeat(2, minmax(0, 1fr))`.
-    expect(page).toMatch(/grid-template-columns:\s*minmax\(0,\s*1fr\)/);
-    expect(page).toMatch(/@media[^{]*min-width:\s*600px[^{]*\{[^}]*grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)/);
+    expect(page).toMatch(/display:flex;[^}]*flex-wrap:wrap;[^}]*gap:/);
+    expect(page).not.toContain("volunteer-role-grid");
+    expect(page).not.toMatch(/grid-template-columns:\s*repeat\(2/);
+    // A chip may not be wider than the row, and a long name wraps inside it.
+    expect(page).toMatch(/max-width:100%/);
   });
 
-  it("is plain markup with no script: the boxes are native inputs inside the form, the cards and tiles are Server Components", async () => {
+  it("is plain markup with no script: the boxes are native inputs inside the form, the cards and chips are Server Components", async () => {
     const page = await draw();
     const form = /<form[\s\S]*?<\/form>/.exec(page)?.[0] ?? "";
     expect(form).not.toBe("");
@@ -279,17 +337,27 @@ describe("§780 the grid and the page without scripts", () => {
     // Native: no MUI checkbox wrapper around the role boxes.
     for (const tag of boxes(form)) expect(tag).toContain('type="checkbox"');
     expect(form).not.toMatch(/MuiCheckbox-input[^>]*name="roleIds"/);
-    for (const file of ["VolunteerRoleTile.tsx", "VolunteerCategoryCard.tsx"]) {
+    for (const file of ["VolunteerRoleChip.tsx", "VolunteerCategoryCard.tsx", "RoleDescription.tsx"]) {
       const source = readFileSync(new URL(`../../../src/modules/volunteers/ui/${file}`, import.meta.url), "utf8");
       expect(source, file).not.toMatch(/^\s*["']use client["']/m);
     }
   });
 
-  it("gives every tile the 44 pixels a thumb needs and a glyph on the band, never the barrel", () => {
-    const tile = readFileSync(new URL("../../../src/modules/volunteers/ui/VolunteerRoleTile.tsx", import.meta.url), "utf8");
-    expect(tile).toContain("...TAP_TARGET");
+  it("gives every chip and every «?» the 44 pixels a thumb needs, and a glyph on the header and the «?», never the barrel", () => {
+    const chip = readFileSync(new URL("../../../src/modules/volunteers/ui/VolunteerRoleChip.tsx", import.meta.url), "utf8");
+    expect(chip).toContain("...TAP_TARGET");
+    expect(chip).toContain("const HELP_SIZE = 44");
+    expect(chip).toContain('from "@mui/icons-material/HelpOutlineOutlined"');
+    expect(chip).not.toMatch(/from "@mui\/icons-material"/);
     const card = readFileSync(new URL("../../../src/modules/volunteers/ui/VolunteerCategoryCard.tsx", import.meta.url), "utf8");
     expect(card).toContain('from "@mui/icons-material/VolunteerActivism"');
     expect(card).not.toMatch(/from "@mui\/icons-material"/);
+  });
+
+  it("keeps the old tile and its grid out of the source", () => {
+    expect(() => readFileSync(new URL("../../../src/modules/volunteers/ui/VolunteerRoleTile.tsx", import.meta.url), "utf8")).toThrow();
+    const box = readFileSync(new URL("../../../src/modules/volunteers/ui/VolunteerBox.tsx", import.meta.url), "utf8");
+    expect(box).not.toContain("RoleTileGrid");
+    expect(box).not.toContain("VolunteerRoleTile");
   });
 });

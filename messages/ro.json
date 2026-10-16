@@ -548,8 +548,7 @@
       "needs": {
         "one": "mai e nevoie de 1 persoană",
         "few": "mai sunt necesare {count} persoane",
-        "other": "mai sunt necesare {count} de persoane",
-        "open": "mai sunt locuri"
+        "other": "mai sunt necesare {count} de persoane"
       },
       "name": "Numele tău",
       "email": "Adresa ta de email",
@@ -588,7 +587,7 @@
         "guardianAware": "Bifează că părintele sau tutorele tău știe și e de acord.",
         "birthDateMinors": "Clubul nu primește încă voluntari sub 18 ani. Poți ajuta când împlinești 18 ani sau ne poți scrie din pagina de contact."
       },
-      "details": "Detalii",
+      "roleHelp": "Ce presupune rolul {name}",
       "profile": {
         "birthDateHelp": "Trebuie să ai cel puțin {age} în ziua evenimentului.",
         "city": "Orașul",

@@ -548,8 +548,7 @@
       "needs": {
         "one": "1 more person needed",
         "few": "{count} more people needed",
-        "other": "{count} more people needed",
-        "open": "spots still open"
+        "other": "{count} more people needed"
       },
       "name": "Your name",
       "email": "Your email address",
@@ -588,7 +587,7 @@
         "guardianAware": "Tick that your parent or guardian knows and agrees.",
         "birthDateMinors": "The club does not take volunteers under 18 yet. You can help when you turn 18, or write to us from the contact page."
       },
-      "details": "Details",
+      "roleHelp": "What the role {name} involves",
       "profile": {
         "birthDateHelp": "You must be at least {age} old on the day of the event.",
         "city": "City",

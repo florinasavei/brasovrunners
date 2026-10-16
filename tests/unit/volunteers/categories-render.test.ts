@@ -273,7 +273,7 @@ describe("§774 the volunteers' page: the roles under their headings", () => {
     expect(page).toContain(`value="${ON_ROUTE.id}"`);
     const hidden = await drawBox({ roles: [publicRole(ON_ROUTE, 1)], showCounts: false });
     expect(hidden).not.toContain("mai e nevoie de 1 persoană");
-    expect(hidden).toContain(ro.Event.volunteers.needs.open);
+    expect(hidden).not.toMatch(/mai (sunt locuri|e nevoie|sunt necesare)/);
   });
 });
 
@@ -486,15 +486,15 @@ describe("§784 a role without a number", () => {
     expect(page).toContain("data-needed-box");
   });
 
-  it("is offered on the volunteers' page whatever it was given, and says «mai sunt locuri» — never a number — even with the counts on", async () => {
+  it("is offered on the volunteers' page whatever it was given, and says no count words — never a number — even with the counts on", async () => {
     const page = await drawBox({ roles: [publicRole(ON_ROUTE, 1), publicRole(NO_NUMBER, null)], showCounts: true });
     expect(optionIds(page)).toEqual([ON_ROUTE.id, NO_NUMBER.id]);
     expect(page).toContain("mai e nevoie de 1 persoană");
     const tile = page.split('data-testid="volunteer-role-option"')[2] ?? "";
-    expect(tile).toContain(ro.Event.volunteers.needs.open);
-    expect(tile).not.toMatch(/mai (e|sunt) (nevoie|necesare)/);
+    expect(tile).not.toContain("volunteer-role-needs");
+    expect(tile).not.toMatch(/mai (e|sunt) (nevoie|necesare|locuri)/);
     const english = await drawBox({ roles: [publicRole(NO_NUMBER, null)], showCounts: true }, "en");
-    expect(english).toContain(en.Event.volunteers.needs.open);
+    expect(english).not.toContain("spots still open");
     expect(english).not.toMatch(/more people needed|1 more person/);
   });
 });
