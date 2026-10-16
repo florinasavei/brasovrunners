@@ -279,6 +279,25 @@ describe("§NNN «Condiții de participare» inside «Regulamentul»", () => {
     expect(names.indexOf("event.askHealthNote.present")).toBeLessThan(names.indexOf("event.askHealthNote"));
     expect(names.indexOf("event.askHealthNote")).toBeLessThan(names.indexOf("event.declarationDocumentId"));
   });
+
+  it("posts exactly the names the editor posted before the move, for a race registering on the site", async () => {
+    // Taken from the editor as it was before the move (BR-V3.48): the same controls, only the tick's place in the
+    // document changed. A name added or lost here is a field the server reads differently.
+    const before = [
+      "event.askHealthNote", "event.askHealthNote.present", "event.bibStartNumber", "event.capacity", "event.confirmationDeadlineDaysBefore",
+      "event.confirmationOpensDaysBefore", "event.declarationDocumentId", "event.externalProvider", "event.externalRegistrationUrl", "event.hiddenList.present",
+      "event.hiddenListBibStart", "event.hiddenListCounted", "event.hiddenListEnabled", "event.hiddenListPublic", "event.kitShirt", "event.kitShirt.present",
+      "event.minAge", "event.participantCountPublic", "event.participantCountPublic.present", "event.participantListVisibility", "event.publicListClub",
+      "event.publicListClub", "event.publicListClub", "event.registrationClosesAtDate", "event.registrationClosesAtTime", "event.registrationMode",
+      "event.registrationOpensAtDate", "event.registrationOpensAtTime", "event.registrationOpensSoon", "event.registrationOpensSoon.present",
+      "event.reminderHoursBefore", "event.schedule[0].date", "event.schedule[0].en", "event.schedule[0].endTime", "event.schedule[0].place",
+      "event.schedule[0].ro", "event.schedule[0].time", "event.waitlistAutoOffer", "event.waitlistCapacity", "event.waitlistCountPublic",
+      "event.waitlistCountPublic.present", "event.waitlistMode", "event.waitlistPublic", "translations.en.checklist", "translations.en.rules",
+      "translations.en.schedule", "translations.ro.checklist", "translations.ro.rules", "translations.ro.schedule",
+    ];
+    const markup = await registration({ ...RACE, declarationDocumentId: declarations[0].id } as EditableEvent);
+    expect([...postedNames(markup)].sort()).toEqual(before);
+  });
 });
 
 describe("§760 «Ce fel de eveniment» holds «Evidențiere pe site»", () => {

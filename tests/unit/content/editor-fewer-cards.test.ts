@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 
@@ -79,7 +79,7 @@ describe("§760 «Participare, înscrieri și regulament»: cards 6 and 9 in one
   const body = REGISTRATION.slice(at(REGISTRATION, "  return (\n    <Panel glyph=\"registration\""));
 
   it("holds its named cards in the order a registration happens, the public list last", () => {
-    const order = ["registrationFields", "{rules}", "{declarationCard}", "{conditions}", "{programme}", "kitAndBibs", "{startList}"].map((needle) => at(body, needle));
+    const order = ["registrationFields", "{rules}", "{declarationCard}", "{programme}", "kitAndBibs", "{startList}"].map((needle) => at(body, needle));
     expect([...order].sort((a, b) => a - b)).toEqual(order);
     // The registration's life inside its fields, in time: the period, the confirmation, the reminder.
     const fields = REGISTRATION.slice(at(REGISTRATION, "const registrationFields = ("), at(REGISTRATION, "const kitAndBibs = ("));
@@ -89,6 +89,17 @@ describe("§760 «Participare, înscrieri și regulament»: cards 6 and 9 in one
     const day = REGISTRATION.slice(at(REGISTRATION, "const kitAndBibs = ("), at(REGISTRATION, "  return (\n    <Panel glyph=\"registration\""));
     expect(at(day, 'id="box-kit"')).toBeLessThan(at(day, 'id="box-bibs"'));
     expect(day).toContain('<OnlyForMode mode="INTERNAL" initialMode={initialMode}>');
+  });
+
+  it("has no card of its own for «Condiții de participare»: the rules card holds it (§NNN)", () => {
+    expect(REGISTRATION).not.toContain("ConditionsBox");
+    expect(existsSync(path.join(ROOT, BOXES, "ConditionsBox.tsx"))).toBe(false);
+    const rules = TEXTS.slice(at(TEXTS, "export async function RulesBox"), at(TEXTS, "export async function AddressBox"));
+    expect(rules).toContain("await ConditionsGroup({ event, mayEditSettings })");
+    expect(rules).toContain("healthNoteSummary(words");
+    // Nothing links to the old anchor any more: the editor's source never names it as a target.
+    const linking = ["domain/page-todos.ts", "ui/page-flow.ts", "ui/SectionMap.tsx", "ui/publish-check.ts"];
+    for (const file of linking) expect(read(`src/modules/content/events/${file}`), file).not.toContain("box-conditions");
   });
 
   it("drops the sentence that sent the reader from one card to the other", () => {
