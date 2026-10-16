@@ -264,7 +264,7 @@ test.describe.serial("§406 the editor is the page, top to bottom", () => {
     // What were cards 6 and 9, one card since §760: the registration's life, what a participant
     // agrees to, the day, the public list last (§512) — each a card of its own inside it.
     const cards = await page.locator("#box-registration details[id^='box-']").evaluateAll((nodes) => nodes.map((node) => node.id));
-    const inside = ["box-registration-window", "box-confirmation", "box-reminder", "box-rules", "box-declaration", "box-conditions", "box-schedule", "box-kit", "box-bibs", "box-start-list"];
+    const inside = ["box-registration-window", "box-confirmation", "box-reminder", "box-rules", "box-declaration", "box-schedule", "box-kit", "box-bibs", "box-start-list"];
     expect(cards.filter((id) => inside.includes(id))).toEqual(inside);
     await expect(page.locator("#box-programme")).toHaveCount(0);
     await expect(page.locator("#box-rules #box-declaration")).toHaveCount(0);
@@ -427,24 +427,27 @@ test.describe("§554 the race kit card", () => {
 });
 
 /*
-  §557 — «Condiții de participare» inside «Participare, înscrieri și regulament» (§760; the owner, 2026-09-29:
-  «e mai bine să avem o bifă în backoffice la Condiții de participare»): a closed fold whose line says
-  «Informații medicale: nu» until the box is ticked, on a saved event registering on the site; the tick only for a type that registers on the
-  site, a group run getting a sentence in its place (§111).
+  §557 — «Condiții de participare» inside «Regulamentul» (§NNN; the owner, 2026-09-29:
+  «e mai bine să avem o bifă în backoffice la Condiții de participare»; 2026-10-16: «cardul ăsta ar
+  trebui mutat în ăsta»): a group under the minimum age, whose tick starts unticked, on an event
+  registering on the site; the tick only for a type that registers on the site, a group run getting a
+  sentence in its place (§111). The rules card's line says «Informații medicale: nu» on a saved event.
 */
-test.describe("§557 the participation conditions card", () => {
+test.describe("§557 the participation conditions group", () => {
   test("a sentence on a group run, the tick closed and unticked for a race registering on the site", async ({ page }) => {
     await signIn(page, "Dev Administrator");
     await page.goto("/ro/admin/events/new");
     await hydrated(page);
-    const conditions = page.locator("#box-conditions");
+    // «Condiții de participare» is a group inside «Regulamentul», under the minimum age (§NNN).
+    const rules = await openEditorBox(page, "Regulamentul");
+    const conditions = rules.getByTestId("conditions-group");
+    await expect(page.locator("#box-conditions")).toHaveCount(0);
 
-    // A new event is a group run: the card says there is no form to ask it on.
-    await openEditorBox(page, "Condiții de participare");
-    await expect(page.getByTestId("conditions-not-registering")).toBeVisible();
+    // A new event is a group run: the group says there is no form to ask it on.
+    await expect(conditions.getByTestId("conditions-not-registering")).toBeVisible();
     await expect(conditions.locator('[name="event.askHealthNote"]')).toBeHidden();
-    // Nor does its line name the note, as the outer card's does not: the line is drawn from the saved type.
-    await expect(conditions.locator(":scope > summary")).not.toContainText("Informații medicale");
+    // Nor does the card's line name the note, as the outer card's does not: the line is drawn from the saved type.
+    await expect(rules.locator(":scope > summary")).not.toContainText("Informații medicale");
 
     await openEditorBox(page, "Participare, înscrieri și regulament");
     await page.getByRole("combobox", { name: /Tip eveniment/ }).click();
@@ -452,11 +455,15 @@ test.describe("§557 the participation conditions card", () => {
     await page.getByRole("combobox", { name: "Modul de înscriere" }).click();
     await page.getByRole("option", { name: "Înscrieri pe site" }).click();
 
-    await expect(conditions.locator(":scope > summary")).toContainText("Condiții de participare");
-    // A glyph before the heading, like every fold (§521); by its element, as the kit card's.
-    await expect(conditions.locator(":scope > summary svg").first()).toBeVisible();
+    await expect(conditions.getByRole("heading", { name: "Condiții de participare" })).toBeVisible();
+    // A glyph before the heading, like every card (§521); by its element, as the kit card's.
+    await expect(conditions.getByRole("heading", { name: "Condiții de participare" }).locator("svg").first()).toBeVisible();
+    // Under the minimum age, in the same card.
+    const ageBox = await rules.locator('[name="event.minAge"]').boundingBox();
+    const groupBox = await conditions.boundingBox();
+    expect(groupBox!.y).toBeGreaterThan(ageBox!.y);
 
-    const box = await openEditorBox(page, "Condiții de participare");
+    const box = conditions;
     const tick = box.locator('[name="event.askHealthNote"]');
     await expect(tick).toBeVisible();
     await expect(tick).not.toBeChecked();
