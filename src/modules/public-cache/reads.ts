@@ -245,7 +245,7 @@ export async function cachedEventCheckpoints(eventId: string) {
 }
 
 /**
- * The route's elevation profile (§NNN, amending §718): `readRouteGpx`'s file read from the store and parsed by
+ * The route's elevation profile (§802, amending §718): `readRouteGpx`'s file read from the store and parsed by
  * `routes/elevation/parse.ts`, kept by the event and **the file's own storage key** — a new upload gets a new key
  * (`events/domain/route-gpx.ts`), so an entry never goes stale and a visitor never reads the 4 MB file. Under the `events`
  * tag with the checkpoints beside it, so whatever expires the event page's reads expires this one too. It reads the store

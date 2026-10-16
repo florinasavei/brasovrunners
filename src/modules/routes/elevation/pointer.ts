@@ -1,5 +1,5 @@
 /**
- * What the chart's pointer reads (§NNN): the arithmetic behind «4,5 km · 712 m» — which point of the profile is nearest
+ * What the chart's pointer reads (§802): the arithmetic behind «4,5 km · 712 m» — which point of the profile is nearest
  * to a position on the chart, how far along the route that is, what a key moves it by, and which checkpoint stands close
  * enough to name. Pure numbers in and out, so `ElevationPointer.tsx` (the client island, which only listens and draws)
  * and its test share one rule, and nothing here needs a DOM.

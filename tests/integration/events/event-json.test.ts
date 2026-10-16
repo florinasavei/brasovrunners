@@ -1212,7 +1212,7 @@ describe("§757 the route's checkpoints travel in the file", () => {
     expect(trail[0].metadataJson).toMatchObject({ source: "import", added: 2, removed: 0 });
   });
 
-  it("carries each point's tick «Arată pe profilul traseului» (§NNN): exported as it is, imported as new as it was, the round trip the same", async () => {
+  it("carries each point's tick «Arată pe profilul traseului» (§802): exported as it is, imported as new as it was, the round trip the same", async () => {
     const { event } = await seedRace({}, {}, false);
     await seedCheckpoints(event.id);
     // The hut is taken off the chart.

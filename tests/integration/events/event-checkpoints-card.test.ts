@@ -227,7 +227,7 @@ describe("§757 the card «Puncte de control»", () => {
   });
 });
 
-describe("§NNN the profile's tick and preview on the card", () => {
+describe("§802 the profile's tick and preview on the card", () => {
   const PROFILE = parseGpxElevation(elevationGpx())!;
   const tickOf = (html: string, index: number) => new RegExp(`<input\\b[^>]*name="cp\\[${index}\\]\\.onProfile"[^>]*>`).exec(html)?.[0] ?? "";
 

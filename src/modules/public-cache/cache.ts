@@ -161,7 +161,7 @@ export async function publicRead<T>(
    */
   ceilingSeconds: number = PUBLIC_CACHE_CEILING_SECONDS,
   /**
-   * A read that asks the object store and never the database (§NNN, the route's elevation profile): it stays out of the
+   * A read that asks the object store and never the database (§802, the route's elevation profile): it stays out of the
    * database's breaker — an open breaker would hide a chart the store could give, and a store read's success would reset the
    * back-off of a database that is still away — and out of the red month's cache-only rule and the saved copy, which are
    * about sparing Neon. Its failures are the caller's to answer.

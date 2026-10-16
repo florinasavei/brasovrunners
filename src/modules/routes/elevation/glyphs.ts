@@ -1,7 +1,7 @@
 import type { ElevationGlyph } from "./geometry";
 
 /**
- * The pins' glyphs as SVG path data (§NNN): one small solid shape per kind of checkpoint, each drawn in a 16 × 16 box
+ * The pins' glyphs as SVG path data (§802): one small solid shape per kind of checkpoint, each drawn in a 16 × 16 box
  * centred on (0, 0), to be scaled to the pin head and filled with the head's ink. Plain strings — no MUI icon inside an
  * SVG (an icon is a component, and a Server Component must not hand one to a client island; §370), and the same data a
  * PDF writer can walk.

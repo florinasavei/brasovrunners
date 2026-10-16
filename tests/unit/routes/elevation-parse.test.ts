@@ -3,11 +3,11 @@ import { ELEVATION_MAX_POINTS, MIN_TRACK_METERS, parseGpxElevation } from "@/mod
 import { elevationGpx } from "../../helpers/elevation-gpx";
 
 /**
- * §NNN (amending §718, §750, §757) — the elevation profile's reader, `routes/elevation/parse.ts`: the distance along the
+ * §802 (amending §718, §750, §757) — the elevation profile's reader, `routes/elevation/parse.ts`: the distance along the
  * track and the altitude at that distance, from the GPX's text, for the page's chart, the editor's preview and the race
  * number's strip.
  */
-describe("§NNN the GPX's elevation profile", () => {
+describe("§802 the GPX's elevation profile", () => {
   const profile = parseGpxElevation(elevationGpx())!;
 
   it("reads the distance, the altitude range and the climb of a 9 km track", () => {

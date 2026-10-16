@@ -9,7 +9,7 @@ import { parseGpxElevation } from "@/modules/routes/elevation/parse";
 import { elevationGpx } from "../../helpers/elevation-gpx";
 
 /**
- * §NNN — the elevation profile widget (`routes/elevation/ElevationProfile.tsx`) as the event page and the editor's preview
+ * §802 — the elevation profile widget (`routes/elevation/ElevationProfile.tsx`) as the event page and the editor's preview
  * draw it: its two sizes, the words, the pins of the checkpoints the club left ticked and the glyph of each kind, and
  * nothing outside its box.
  */
@@ -44,7 +44,7 @@ const chartsIn = (html: string) =>
     return { tag, width: Number(viewBox[1]), height: Number(viewBox[2]), size: /data-size="(\w+)"/.exec(tag)![1], fontSize: Number(/font-size:(\d+(?:\.\d+)?)px/.exec(tag)![1]) };
   });
 
-describe("§NNN the elevation profile widget: the page", () => {
+describe("§802 the elevation profile widget: the page", () => {
   const html = render("page");
 
   it("draws a narrow chart and a wide one, the right one shown by CSS alone, both role=img with the same label", () => {
@@ -163,7 +163,7 @@ describe("§NNN the elevation profile widget: the page", () => {
   });
 });
 
-describe("§NNN the elevation profile widget: the editor's preview", () => {
+describe("§802 the elevation profile widget: the editor's preview", () => {
   const html = render("compact");
 
   it("draws one small chart, no pointer island, no «Alt» caption, at most two altitude labels", () => {
@@ -202,7 +202,7 @@ function textsOf(html: string, chart: ReturnType<typeof chartsIn>[number]) {
   });
 }
 
-describe("§NNN the altitude axis's room and the «Alt» caption", () => {
+describe("§802 the altitude axis's room and the «Alt» caption", () => {
   // A route from 800 to 990 m: its top round tick, «1000», is one digit longer than the highest altitude, and sits close to the top of the plot.
   const tall = parseGpxElevation(elevationGpx({ low: 800, high: 990 }))!;
   const renderTall = (variant: "page" | "compact", markers: readonly ElevationProfileMarker[]) =>
@@ -257,7 +257,7 @@ describe("§NNN the altitude axis's room and the «Alt» caption", () => {
   });
 });
 
-describe("§NNN the checkpoints the profile pins", () => {
+describe("§802 the checkpoints the profile pins", () => {
   it("leaves out the unticked ones, keeps the order by distance and names each in the page's language", () => {
     const rows = [point("b", 9, ["FOOD"]), point("a", 2, ["WATER"]), point("c", 5, [], { onProfile: false })];
     expect(profileMarkers(rows, "ro")).toEqual([

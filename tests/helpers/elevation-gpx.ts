@@ -1,5 +1,5 @@
 /**
- * A GPX for the elevation profile's tests and its e2e (§NNN): a track east along one parallel — so its length is the
+ * A GPX for the elevation profile's tests and its e2e (§802): a track east along one parallel — so its length is the
  * longitude's span and nothing else — whose altitude climbs from `low` to a summit at the middle and comes down to a
  * second, lower rise, never flat and never jagged: the shape the owner's screenshot had (608 to 828 m over about 9 km).
  */

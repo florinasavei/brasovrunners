@@ -97,7 +97,7 @@ type Props = {
   mayEdit: boolean;
   /** The route's length in kilometres (the distance typed, else the GPX's), or null while the event says none. */
   routeKm: number | null;
-  /** The saved GPX's elevation profile (§NNN), or null while the route has no file with altitudes: the preview above the rows is drawn from it. */
+  /** The saved GPX's elevation profile (§802), or null while the route has no file with altitudes: the preview above the rows is drawn from it. */
   profile: ElevationProfileData | null;
   /** The route's length as the club typed it, in metres, or null: the preview spans it as the page does. */
   distanceMeters: number | null;
@@ -220,7 +220,7 @@ export default async function CheckpointsCard({ locale, eventId, checkpoints, ma
           slotProps={{ htmlInput: { maxLength: CHECKPOINT_NOTE_MAX } }}
         />
       </Stack>
-      {/* «Arată pe profilul traseului» (§NNN): on for a new point and for any saved one the club has not unticked; an unticked box posts nothing. */}
+      {/* «Arată pe profilul traseului» (§802): on for a new point and for any saved one the club has not unticked; an unticked box posts nothing. */}
       <input type="hidden" name={checkpointBox(index, "onProfileShown")} value="1" form={CHECKPOINTS_FORM} />
       <CheckboxField name={checkpointBox(index, "onProfile")} defaultChecked={saved ? saved.onProfile : true} help={t("checkpoints.field.onProfileHelp")}>
         <Box component="span" sx={{ display: "inline-flex", alignItems: "center", gap: 0.75 }}>
@@ -397,7 +397,7 @@ export default async function CheckpointsCard({ locale, eventId, checkpoints, ma
             {t("checkpoints.routeLength", { km: km(routeKm) })}
           </Typography>
         )}
-        {/* «Așa apare pe pagină» (§NNN): the page's own chart, small, from the saved file and the saved rows — drawn on the server at page load, so it follows a save and not the typing. */}
+        {/* «Așa apare pe pagină» (§802): the page's own chart, small, from the saved file and the saved rows — drawn on the server at page load, so it follows a save and not the typing. */}
         <Panel glyph="routeProfile" static level={4} title={t("checkpoints.preview.title")} intro={mayEdit ? t("checkpoints.preview.help") : undefined} data-testid="checkpoints-preview">
           {profile ? (
             <ElevationProfile

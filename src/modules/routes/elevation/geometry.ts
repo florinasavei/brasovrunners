@@ -1,7 +1,7 @@
 import type { ElevationProfileData } from "./parse";
 
 /**
- * The geometry of an elevation profile, decided once (§NNN; the owner, 2026-10-16: «mi-ar plăcea cumva să refolosesc acel
+ * The geometry of an elevation profile, decided once (§802; the owner, 2026-10-16: «mi-ar plăcea cumva să refolosesc acel
  * widget … adică să fie și pe pagină și pe BIB»): where the line, the area under it, the scales, the labels and the
  * checkpoints' pins stand in a box of **any aspect and any unit** — the event page's SVG at 1000 × 240, the editor's preview
  * at 400 × 150, a race number's strip at 380 × 38 points — and nothing about how they are drawn.
@@ -152,7 +152,7 @@ export type ElevationOptions = {
 /** The round steps an altitude scale is cut in, metres. */
 export const ALTITUDE_STEPS: readonly number[] = [10, 25, 50, 100, 200, 500, 1000, 2000, 5000];
 
-/** The distance between two kilometre ticks for a route this long (§NNN): 1 km up to 12, 2 km up to 25, 5 km beyond. */
+/** The distance between two kilometre ticks for a route this long (§802): 1 km up to 12, 2 km up to 25, 5 km beyond. */
 export function kmStep(totalKm: number): number {
   return totalKm <= 12 ? 1 : totalKm <= 25 ? 2 : 5;
 }

@@ -1,5 +1,5 @@
 /**
- * The route's elevation profile, read from a GPX document's text (§NNN, amending §718 and §757; the owner,
+ * The route's elevation profile, read from a GPX document's text (§802, amending §718 and §757; the owner,
  * 2026-10-16: «I would like to have a widget actually! And read it from the GPX»): the distance along the
  * track and the altitude at that distance — the one series the event page's chart, the editor's preview and
  * the race number's strip all draw.

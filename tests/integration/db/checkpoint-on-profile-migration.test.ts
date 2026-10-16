@@ -8,7 +8,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { auditMigration } from "../../../scripts/migration-check.mjs";
 
 /**
- * Migration `0164_checkpoint_on_profile` (§NNN), proven on real PostgreSQL (PGlite): `event_checkpoints.on_profile` is a
+ * Migration `0164_checkpoint_on_profile` (§802), proven on real PostgreSQL (PGlite): `event_checkpoints.on_profile` is a
  * boolean the elevation profile reads, NOT NULL, true by default — so every checkpoint written before it stays on the chart
  * and a point added without saying is on it — and the file only expands (a column with a default never rewrites a reader).
  */

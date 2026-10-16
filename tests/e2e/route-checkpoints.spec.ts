@@ -315,7 +315,7 @@ test.describe("§757 the route's checkpoints and the race's time limit", () => {
 });
 
 /*
-  §NNN (amending §718, §741, §757; the owner, 2026-10-16: «I would like to have a widget actually! And read it from the
+  §802 (amending §718, §741, §757; the owner, 2026-10-16: «I would like to have a widget actually! And read it from the
   GPX» — «select which ones to show on the elevation profile»): the route's elevation profile on the event page, above
   the table «Puncte de control», with the pins of the checkpoints the club left ticked and the pointer's readout, and
   the same chart as a preview in the editor's card with the tick on each point. A race of 9 km with the sample GPX's
@@ -353,7 +353,7 @@ async function seedProfileRace(tag: string): Promise<{ id: string; slug: string 
   return race;
 }
 
-test.describe("§NNN the route's elevation profile", () => {
+test.describe("§802 the route's elevation profile", () => {
   test.describe.configure({ timeout: 180_000 });
 
   test("the page draws the chart above the table, with a pin for each ticked point and the unticked one only in the table; the pointer reads the route", async ({ page }, testInfo) => {

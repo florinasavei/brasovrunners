@@ -214,7 +214,7 @@ export default async function EventDetailPage({ params, query, canEdit = false, 
   const weather = dated ? await forecastForEvent(dated, now) : null;
   // The route's checkpoints (§757): a part of the page, never its content — left out while the database is away.
   const checkpoints = await readOrWhileAway(() => cachedEventCheckpoints(event.id), []);
-  // The route's elevation profile (§NNN): read from the GPX in the store and kept by the file's key (no wake of the database,
+  // The route's elevation profile (§802): read from the GPX in the store and kept by the file's key (no wake of the database,
   // no 4 MB read per visitor) — a part of the page too, so a store that cannot answer leaves the chart out and nothing else.
   // A members' event's checkpoints and profile go through the same cache, keyed by its id and its file: the same accepted exception as
   // the checkpoints above — this point is reached only after the members gate, and the key is unguessable without the id.

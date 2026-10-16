@@ -151,7 +151,7 @@ const checkpointSchema = z
     /** The first answer's time of the day (versions 1 and 2): read, converted by `upgradeCheckpoints`, never written. */
     cutoff: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/).nullable().optional(),
     note: z.object({ ro: nullableText(CHECKPOINT_NOTE_MAX), en: nullableText(CHECKPOINT_NOTE_MAX) }).strict(),
-    /** Whether the route's elevation profile draws the point (§NNN); a file made before the tick existed has none: on. */
+    /** Whether the route's elevation profile draws the point (§802); a file made before the tick existed has none: on. */
     onProfile: z.boolean().default(true),
   })
   .strict();
@@ -417,7 +417,7 @@ export function upgradeCheckpoints(file: EventFile): { file: EventFile; notes: F
 /**
  * The file as it is downloaded: readable, two spaces, a newline at the end. The size the reader measures is this one's.
  *
- * A checkpoint's tick «Arată pe profilul traseului» (`onProfile`, §NNN) is written only when it is **off**: «on» is what a
+ * A checkpoint's tick «Arată pe profilul traseului» (`onProfile`, §802) is written only when it is **off**: «on» is what a
  * file without it means, and leaving it out keeps a file whose points are all ticked readable by the release before the tick
  * existed (its checkpoint schema refuses a key it does not know) — QA ships a day before production, and its files travel.
  */

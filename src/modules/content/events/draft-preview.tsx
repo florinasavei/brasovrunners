@@ -120,7 +120,7 @@ export async function renderEventDraftPreview<T extends Record<string, unknown>>
   const form = await renderDraftForm(db, { view, door: previewDoor.door, locale: input.locale, now, word: previewDoor.word, steps });
   // The route's checkpoints as saved (§757): they have a card and a save of their own, so the draft shows what is stored.
   const checkpoints = input.eventId ? await listCheckpoints(db, input.eventId) : [];
-  // And the route's elevation profile from the draft's GPX (§NNN), read from the store directly — the preview reads no public cache; a file that cannot be read leaves the chart out.
+  // And the route's elevation profile from the draft's GPX (§802), read from the store directly — the preview reads no public cache; a file that cannot be read leaves the chart out.
   // Only this environment's file, as the save asks (`assertRouteGpxOfThisEnvironment`): a forged post must not make this site read another environment's file.
   const postedKey = routeGpxKeyOf(view.routeGpx);
   const gpxKey = postedKey?.startsWith(`${env.APP_ENV}/route-gpx/`) ? postedKey : null;

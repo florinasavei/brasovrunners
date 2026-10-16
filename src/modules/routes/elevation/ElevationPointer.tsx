@@ -31,7 +31,7 @@ export type PointerWords = {
 type Overlay = { index: number; spoken: boolean; left: number; top: number; height: number; dotTop: number; hostWidth: number; atFoot: boolean };
 
 /**
- * The elevation chart's pointer (§NNN; the owner, 2026-10-16: «a pointer line “4.5 KM”»): a thin line down the chart and
+ * The elevation chart's pointer (§802; the owner, 2026-10-16: «a pointer line “4.5 KM”»): a thin line down the chart and
  * «4,5 km · 712 m» at the profile point nearest the finger, the mouse or the arrow keys, the name of a checkpoint within
  * two hundred metres added to it. It wraps the server-drawn SVGs (the page draws a narrow chart and a wide one and shows
  * the one that fits, so this finds the visible one) and draws only an overlay of its own: nothing before the first event,
