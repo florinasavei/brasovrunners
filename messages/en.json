@@ -2630,6 +2630,11 @@
           "sponsors": "sponsors: {place}",
           "sponsorsNone": "no sponsors' strip",
           "phone": "emergency phone",
+          "figures": {
+            "right": "figures beside the profile",
+            "below": "figures under the profile",
+            "header": "figures in the header"
+          },
           "pictureMissing": "An uploaded picture — none yet",
           "gpxMissing": "Drawn from the GPX — the event has none",
           "nothing": "nothing",
@@ -2645,7 +2650,14 @@
         "profileImageSrc": "The profile picture",
         "profileImageSrcHelp": "Recommended: a wide picture, placed whole, never cropped. With the figures beside the profile: {ratioBeside} to 1, that is {widthBeside} × {height} px at {dpi} dpi. Without them, or with none to show: {ratioAlone} to 1, that is {widthAlone} × {height} px.",
         "showProfileFigures": "Show the distance and the elevation gain beside the profile",
-        "showProfileFiguresHelp": "Ticked: the two figures at the profile's right. Unticked: the profile or the picture takes the whole width.",
+        "showProfileFiguresHelp": "Ticked: the distance and the elevation gain print on the bib, where you choose below. Unticked: they do not, and the profile or the picture takes the whole width.",
+        "profileFiguresPlace": "Where the figures stand",
+        "profileFiguresPlaces": {
+          "right": "At the profile's right",
+          "below": "Under the profile, on one line",
+          "header": "In the header, under the date"
+        },
+        "profileFiguresPlaceHelp": "At the right the profile is narrowed; under the profile or in the header the figures fit on one line, and the profile or the picture takes the whole width.",
         "profileOrientation": "The profile's orientation",
         "profileOrientations": {
           "normal": "Normal",
@@ -8661,6 +8673,7 @@
             "profileSource": "Bib: where the profile comes from",
             "profileImageSrc": "Bib: profile picture",
             "showProfileFigures": "Bib: distance and elevation gain beside the profile",
+            "profileFiguresPlace": "Bib: where the profile's figures stand",
             "profileOrientation": "Bib: profile orientation",
             "emergencyLabel": "Bib: phone label",
             "emergencyPhoneLabel": "Bib: first phone's name",

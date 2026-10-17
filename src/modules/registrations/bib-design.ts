@@ -360,6 +360,17 @@ export type BibProfileSource = (typeof BIB_PROFILE_SOURCES)[number];
 export const BIB_PROFILE_ORIENTATIONS = ["normal", "turned"] as const;
 export type BibProfileOrientation = (typeof BIB_PROFILE_ORIENTATIONS)[number];
 
+/**
+ * «Unde stau cifrele» (§804, amended; the owner, 2026-10-17: «Pe BIB vreau să controlez unde apare asta»): where
+ * the distance and the elevation gain stand while «Arată distanța și diferența de nivel» is on —
+ * `right`, «În dreapta profilului»: two lines at the strip's right, the strip narrowed to make room (what §750
+ * drew, and what every design stored before this says); `below`, «Sub profil, pe un rând»: one centred line under
+ * the strip, which then takes the whole width; `header`, «În antet, sub dată»: the same line in the header's small
+ * text under the date, the strip taking the whole width. Decided once for both renderers (`bib-profile-row.ts`).
+ */
+export const BIB_PROFILE_FIGURES_PLACES = ["right", "below", "header"] as const;
+export type BibProfileFiguresPlace = (typeof BIB_PROFILE_FIGURES_PLACES)[number];
+
 /** A phone number's own label, as stored: the footer line's rules (§317), cut at `BIB_EMERGENCY_NAME_MAX`. */
 const emergencyName = z
   .string()
@@ -441,6 +452,8 @@ export const bibDesignSchema = z
      * owner: with his own picture «o să-mi apară mie ce vreau acolo»).
      */
     showProfileFigures: z.boolean().catch(true),
+    /** «Unde stau cifrele» (§804): beside the strip (today's drawing, so every stored design keeps it), under it, or in the header. */
+    profileFiguresPlace: z.enum(BIB_PROFILE_FIGURES_PLACES).catch("right"),
     /** «Orientarea profilului» (§759): normal, or turned half a circle for the runner. */
     profileOrientation: z.enum(BIB_PROFILE_ORIENTATIONS).catch("normal"),
     /**
@@ -520,6 +533,7 @@ export const DEFAULT_BIB_DESIGN: BibDesign = {
   profileSource: "gpx",
   profileImageSrc: null,
   showProfileFigures: true,
+  profileFiguresPlace: "right",
   profileOrientation: "normal",
   showCheckpoints: true,
   showCheckpointTimes: false,

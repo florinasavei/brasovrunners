@@ -156,6 +156,21 @@ export const BIB_LAYOUT = {
   profileDistanceTop: 9,
   profileGainTop: 20,
   /**
+   * The figures under the profile (§804, amended; «Sub profil, pe un rând»): one centred line of
+   * `profileTextSize` points whose top stands `profileFiguresTop` into the row — just under the strip's
+   * `profileHeight` — in `profileFiguresRoom` points the row then takes beyond the strip's own height
+   * (`bibProfileRowHeight`). Any other place of the figures leaves the row exactly `profileHeight`.
+   */
+  profileFiguresTop: 39,
+  profileFiguresRoom: 11,
+  /**
+   * The figures in the header (§804, amended; «În antet, sub dată»): one line under the date, in the date's
+   * own size and colour (`dateSize`), `headerFiguresGap` points under it (`bibHeaderLayout`). The band does
+   * not grow: with the date off the figures take the date's line, and the title and the lines move up
+   * to make room, as they do for a second line of the title.
+   */
+  headerFiguresGap: 1,
+  /**
    * The kilometre scale and the altitudes on the strip (§804): a tick `profileKmTick` points long under the
    * plot at each kilometre of the step the core chooses (1, 2 or 5), stroked `profileKmTickWeight`, a foot
    * rule of the same weight under the plot, all at `profileScaleOpacity` of the ink so the scale never
@@ -222,17 +237,26 @@ export const BIB_LAYOUT = {
  * What the profile's row and the emergency line take from the number's area (§750): their heights
  * when drawn, nothing when not — so a design with neither keeps every number as it was.
  */
-export function bibExtrasHeight(profileDrawn: boolean, emergencyDrawn: boolean): number {
-  return (profileDrawn ? BIB_LAYOUT.profileHeight : 0) + (emergencyDrawn ? BIB_LAYOUT.emergencyHeight : 0);
+export function bibExtrasHeight(profileDrawn: boolean, emergencyDrawn: boolean, figuresBelow = false): number {
+  return (profileDrawn ? bibProfileRowHeight(figuresBelow) : 0) + (emergencyDrawn ? BIB_LAYOUT.emergencyHeight : 0);
+}
+
+/**
+ * How tall the profile's row is (§804, amended): the strip's `profileHeight`, and one text line more while the
+ * figures stand under it (`profileFiguresRoom`). The phone's line, when drawn, follows the row's real foot.
+ */
+export function bibProfileRowHeight(figuresBelow: boolean): number {
+  return BIB_LAYOUT.profileHeight + (figuresBelow ? BIB_LAYOUT.profileFiguresRoom : 0);
 }
 
 /**
  * How wide the profile's chart — or the club's picture of it — is (§759): beside the figures, the
- * chart's own `profileChartWidth`; with «Arată distanța și diferența de nivel lângă profil» off, or
- * nothing to say there, the strip's whole width, the card less its inset on each side.
+ * chart's own `profileChartWidth`; with the figures off, nothing to say, or standing elsewhere than at the
+ * strip's right («Unde stau cifrele»: under the profile or in the header, §804), the strip's whole width, the
+ * card less its inset on each side. `figuresBeside` is true only for the figures at the right.
  */
-export function bibProfileChartWidth(figuresShown: boolean): number {
-  return figuresShown ? BIB_LAYOUT.profileChartWidth : BIB_CARD.width - 2 * BIB_LAYOUT.inset;
+export function bibProfileChartWidth(figuresBeside: boolean): number {
+  return figuresBeside ? BIB_LAYOUT.profileChartWidth : BIB_CARD.width - 2 * BIB_LAYOUT.inset;
 }
 
 /**
@@ -319,6 +343,12 @@ export type BibHeaderText = {
   badge: boolean;
   /** The members' label on the band itself, under the badge (§664); never on a picture or a card's stripe. */
   label: boolean;
+  /**
+   * The distance and the gain on one line («Distanță: 9,0 km · Diferență de nivel: +400 m»), while the club put
+   * them «În antet, sub dată» (§804, amended; `bib-profile-row.ts#bibProfileFiguresLine`): set in the date's size
+   * under the date — on the date's line when there is no date. Absent for any other place of the figures.
+   */
+  figures?: string | null;
 };
 
 /** How wide a text is in ems of its own type: the title's bold, the date's regular — the font tables both renderers' text is measured by. */
@@ -338,6 +368,8 @@ export type BibHeaderLayout = {
   right: number;
   title: { size: number; lines: BibHeaderLine[]; cut: boolean } | null;
   date: BibHeaderLine | null;
+  /** The figures' line under the date (§804, amended), or `null`: not asked for, or no room for it beside a long title and the members' label. */
+  figures: BibHeaderLine | null;
   /** The badge's top from the card's top, whether or not one is drawn. */
   badgeTop: number;
 };
@@ -391,11 +423,20 @@ export function bibHeaderLayout(text: BibHeaderText, measure: BibHeaderMeasure):
   const foot = text.label ? BIB_MEMBER_LABEL_LINE : L.bandHeight - L.headerPad;
   const badgeTop = ((text.label ? L.memberTagTop : L.bandHeight) - L.badgeHeight) / 2;
   const dateText = text.date?.trim() ? oneLine(text.date.trim(), measure.date, width / L.dateSize) : null;
+  const figuresText = text.figures?.trim() ? oneLine(text.figures.trim(), measure.date, width / L.dateSize) : null;
+  // The small lines under the title, in the date's size: the date, then the figures (§804, amended) — the figures take the date's line when there is no date.
+  const small = [dateText, figuresText].filter((line): line is string => line !== null);
+  const smallStep = BIB_TEXT_LINE * L.dateSize + L.headerFiguresGap;
+  const smallLines = (first: number): { date: BibHeaderLine | null; figures: BibHeaderLine | null } => {
+    const at = (index: number): BibHeaderLine => ({ text: small[index], top: first + index * smallStep });
+    return { date: dateText ? at(0) : null, figures: figuresText ? at(dateText ? 1 : 0) : null };
+  };
   const units = titleUnits(text.title ?? "");
   if (units.length === 0) {
-    return { left, right, title: null, date: dateText ? { text: dateText, top: L.dateTopAlone } : null, badgeTop };
+    // One small line sits at `dateTopAlone` as ever; two stand about it, centred where the one was.
+    return { left, right, title: null, ...smallLines(L.dateTopAlone - ((small.length - 1) * smallStep) / 2), badgeTop };
   }
-  const dateRoom = dateText ? BIB_TITLE_DATE_GAP + BIB_TEXT_LINE * L.dateSize : 0;
+  const dateRoom = small.length > 0 ? BIB_TITLE_DATE_GAP + small.length * BIB_TEXT_LINE * L.dateSize + (small.length - 1) * L.headerFiguresGap : 0;
   const blockHeight = (lines: number, size: number) => lines * BIB_TEXT_LINE * size + dateRoom;
   let chosen: { size: number; lines: string[]; cut: boolean } | null = null;
   const steps = Math.round((L.titleSize - L.titleMinSize) / L.titleSizeStep);
@@ -404,6 +445,8 @@ export function bibHeaderLayout(text: BibHeaderText, measure: BibHeaderMeasure):
     const lines = titleLines(units, measure.title, width / size);
     if (lines && blockHeight(lines.length, size) <= foot - L.headerPad) chosen = { size, lines, cut: false };
   }
+  // No size fits the title with the figures' line (a long title, the members' label under the date): the figures give way, the title keeps its place.
+  if (chosen === null && figuresText) return bibHeaderLayout({ ...text, figures: null }, measure);
   chosen ??= { size: L.titleMinSize, lines: cutTitle(units, measure.title, width / L.titleMinSize), cut: true };
   const height = blockHeight(chosen.lines.length, chosen.size);
   const top = L.titleTop + height <= foot ? L.titleTop : Math.max(L.headerPad, L.headerPad + (foot - L.headerPad - height) / 2);
@@ -412,7 +455,7 @@ export function bibHeaderLayout(text: BibHeaderText, measure: BibHeaderMeasure):
     left,
     right,
     title: { size: chosen.size, cut: chosen.cut, lines: chosen.lines.map((line, index) => ({ text: line, top: top + index * lineHeight })) },
-    date: dateText ? { text: dateText, top: top + chosen.lines.length * lineHeight + BIB_TITLE_DATE_GAP } : null,
+    ...smallLines(top + chosen.lines.length * lineHeight + BIB_TITLE_DATE_GAP),
     badgeTop,
   };
 }

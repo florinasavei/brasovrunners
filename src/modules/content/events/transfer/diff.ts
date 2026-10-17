@@ -195,6 +195,7 @@ export const FIELD_LABELS = [
   "bib.design.profileSource",
   "bib.design.profileImageSrc",
   "bib.design.showProfileFigures",
+  "bib.design.profileFiguresPlace",
   "bib.design.profileOrientation",
   "bib.design.showCheckpoints",
   "bib.design.showCheckpointTimes",

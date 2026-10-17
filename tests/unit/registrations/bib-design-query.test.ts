@@ -59,6 +59,8 @@ const EVERYTHING_OFF: BibDesign = {
   profileSource: "picture",
   profileImageSrc: OURS,
   showProfileFigures: false,
+  // «Unde stau cifrele» (§804): away from its default (the strip's right).
+  profileFiguresPlace: "header",
   profileOrientation: "turned",
   showEmergency: true,
   emergencyPhone: "+40 722 000 000",
@@ -291,6 +293,8 @@ describe("§249 the form, read the same way for the save and for the preview", (
       profileSource: "gpx",
       profileImageSrc: null,
       showProfileFigures: false,
+      // No place posted (§804): the strip's right, what every design stored before the choice draws.
+      profileFiguresPlace: "right",
       profileOrientation: "normal",
       // An unposted box is an unticked one, the checkpoints' too (§757).
       showCheckpoints: false,
