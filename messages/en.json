@@ -3510,7 +3510,7 @@
         "volunteerProfile": "Privacy notice only: the volunteers' form boxes about the person, in quotes. Without it in the notice in force, the form asks only the minimum-age tick",
         "volunteerGuardian": "Only in the volunteer agreement: the name of a minor volunteer's parent or guardian. For an adult the sentence is left out. Without it in the agreement in force, no minors are taken",
         "volunteerMinors": "Only in the privacy notice: the parent's boxes of the volunteers' form, in quotation marks; without it, the club takes no volunteers under 18",
-        "results": "In the privacy notice and in the terms: the name of the section “Results”, in quotation marks. With it in both texts in force, an administrator can publish a race's results and the race's page shows them"
+        "results": "In the privacy notice and the terms: the name of the section “Results”, in quotation marks. With it in both texts in force, an administrator can publish the results and the race's page shows them"
       },
       "removeBlockedReferenced": "Can neither be withdrawn nor deleted permanently: {signatures}, {events} and {acknowledgements} depend on it. “Delete” on its row takes it off the list.",
       "removeBlockedCurrent": "In force right now — it can neither be withdrawn nor deleted. Approve its successor first; then this one can go.",
@@ -4526,7 +4526,7 @@
         },
         "resultsTerms": {
           "title": "Terms: the races' results",
-          "todo": "The terms in force do not describe the results yet: the older ones promised to ask separately before results with names. Until the club approves terms from the template, no results can be published on a race's page.",
+          "todo": "The terms in force do not describe the results yet: the older ones promised to ask first. Until the club approves terms from the template, no results can be published.",
           "done": "The terms in force describe the results, so publishing no longer waits for them.",
           "how": [
             "/admin/legal → the “Terms” card (it says «New template») → “Regenerate from the template” → confirm. Section 7 says how the results are published.",
@@ -4537,7 +4537,7 @@
         "resultsNotice": {
           "title": "Privacy notice: the races' results",
           "todo": "The notice in force does not describe the results yet, so no results can be published on a race's page. You can type and rank them in the backoffice meanwhile.",
-          "done": "The notice in force describes the results: an administrator can publish them on the race's page. The name appears only for those who ticked the participants & results list, under this notice or a later one.",
+          "done": "The notice in force describes the results: an administrator can publish them on the race's page. A name appears only for those who ticked the list, under this notice or a later one.",
           "how": [
             "Before approving, read the template's paragraph with a lawyer: what the results show (the place, the number, the time, the category), who appears with a name and until when.",
             "/admin/legal → the “GDPR” card → “Regenerate from the template” → confirm. The section on the public list describes the results too.",

@@ -3510,7 +3510,7 @@
         "volunteerProfile": "Doar în nota de confidențialitate: casetele formularului de voluntari despre persoană, între ghilimele. Fără el în nota în vigoare, formularul cere doar bifa vârstei minime",
         "volunteerGuardian": "Doar în contractul de voluntariat: numele părintelui sau tutorelui unui voluntar minor. La un adult, propoziția dispare. Fără el în contractul în vigoare, nu se primesc minori",
         "volunteerMinors": "Doar în nota de confidențialitate: casetele părintelui din formularul de voluntari, între ghilimele; fără el, clubul nu primește voluntari sub 18 ani",
-        "results": "În nota de confidențialitate și în termeni: numele secțiunii „Clasament”, între ghilimele. Cu el în ambele texte în vigoare, un administrator poate publica clasamentul unei curse, iar pagina cursei îl arată"
+        "results": "Numele secțiunii „Clasament”, între ghilimele, în nota de confidențialitate și în termeni. Cu el în ambele texte în vigoare, un administrator poate publica clasamentul, iar pagina cursei îl arată"
       },
       "removeBlockedReferenced": "Nu se poate nici retrage, nici șterge definitiv: {signatures}, {events} și {acknowledgements} depind de ea. «Șterge» de pe rândul ei o scoate din listă.",
       "removeBlockedCurrent": "În vigoare acum — nu se poate nici retrage, nici șterge. Aprobă întâi versiunea următoare; apoi aceasta se poate scoate.",
@@ -4526,7 +4526,7 @@
         },
         "resultsTerms": {
           "title": "Termenii: clasamentul curselor",
-          "todo": "Termenii în vigoare nu descriu încă clasamentul: cei vechi promiteau că te întreabă separat înainte de un clasament cu nume. Până când clubul aprobă termeni din șablon, niciun clasament nu poate fi publicat pe pagina unei curse.",
+          "todo": "Termenii în vigoare nu descriu încă clasamentul: cei vechi promiteau că te întreabă înainte. Până îi aprobă clubul din șablon, niciun clasament nu se poate publica.",
           "done": "Termenii în vigoare descriu clasamentul, deci publicarea nu mai așteaptă după ei.",
           "how": [
             "/admin/legal → cardul „Termeni” (scrie «Șablon nou») → „Regenerează din șablon” → confirmă. Secțiunea 7 spune cum se publică clasamentul.",

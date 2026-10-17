@@ -317,6 +317,14 @@ describe("§NNN the page, in Romanian", () => {
     expect(text(await render())).toContain("Descarcă clasamentul (CSV)");
   });
 
+  it("draws the summary chips with their own glyphs: did not start, dropped out and disqualified are no clock, calendar or question mark", async () => {
+    await runners();
+    const html = await render();
+    const chips = html.slice(html.indexOf('data-testid="results-summary"'), html.indexOf('data-testid="results-published-chip"'));
+    for (const icon of ["CheckCircleIcon", "DoNotDisturbIcon", "FlagIcon", "ErrorOutlinedIcon"]) expect(chips, icon).toContain(`data-testid="${icon}"`);
+    for (const icon of ["HelpIcon", "ScheduleIcon", "EventBusyIcon"]) expect(chips, icon).not.toContain(`data-testid="${icon}"`);
+  });
+
   it("counts the results by state in chips", async () => {
     await runners();
     const words = text(await render());

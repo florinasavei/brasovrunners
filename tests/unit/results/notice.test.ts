@@ -64,7 +64,7 @@ describe("§NNN the terms and the retention say the same", () => {
   });
 
   it("has a line in section 7 for how long the results stay — with the race's registrations, three years — in both languages, and says registrants of an older notice appear by number", () => {
-    const section7 = (body: LegalDocumentBody) => (body.sections.find((section) => section.heading.startsWith("7.")) as { paragraphs: string[] }).paragraphs.join("\n");
+    const section7 = (body: LegalDocumentBody) => (body.sections.find((section) => section.heading?.startsWith("7.")) as { paragraphs: string[] }).paragraphs.join("\n");
     expect(section7(privacyNoticeRo)).toContain("Clasamentul unei curse");
     expect(section7(privacyNoticeRo)).toContain("trei ani de la cursă");
     expect(section7(privacyNoticeEn)).toContain("A race's results");

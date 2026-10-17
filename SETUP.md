@@ -2357,23 +2357,28 @@ enter them; **only the Administrator and the Superadministrator make them public
 
 1. **Approve the privacy notice that names the results — a lawyer reads it first.** `/admin/legal` → the «GDPR» card →
    «Regenerează din șablon» → confirm. Section 4 gains two paragraphs where it said «Rezultate cu nume nu publicăm încă»:
-   what the ranking shows (the place overall, by sex and in the category, the race number, the time, whether the runner finished,
+   what the results show (the place overall, by sex and in the category, the race number, the time, whether the runner finished,
    dropped out, did not start or was disqualified, and the category — the sex and the age group on the race day, the Excel's own
    bands), that the name appears **only for those who ticked «Vreau să apar pe lista de participanți & rezultate»** (one tick for
    the list and the results, withdrawn the same way, and the name then leaves the ranking too), that everyone else is
-   «Participant #numărul de concurs» without a name, that the ranking closes with the public list in the same period, and where the
-   data stays (as long as the race's registrations; a name the club typed for a runner who did not register, three years after the race at most).
-   The lawyer reads, first: the legitimate interest for the unticked rows (art. 6(1)(f)), and whether registrations made under an
-   earlier notice — which promised only that a later notice would «spune dinainte ce arată rezultatele» — are covered by the tick they
-   already gave. **Approve the terms from the template in the same sitting**: their sentence about results changed too («Clasamentul unei
-   curse îl publicăm doar în condițiile din nota de confidențialitate…»). Until a notice naming `{{results}}` is in force in **both**
-   languages, ticking «Clasamentul e public pe pagina evenimentului» is refused with a sentence and a link here, and `/admin/tasks` shows
-   the row «Nota de confidențialitate: clasamentul curselor». Entering, importing and ranking work meanwhile.
+   «Participant #numărul de concurs» without a name — **and so is anyone who registered under an older notice, which said «Rezultate cu
+   nume nu publicăm încă», whatever they ticked** (the §421 rule the public list's states already follow: a tick given then agreed to a list,
+   not to a ranking by name) — that the ranking closes with the public list in the same period, and where the data stays (section 7:
+   three years from the race, with its registrations). The lawyer reads, first: the legitimate interest for the unticked rows
+   (art. 6(1)(f)); naming the earlier registrants is **not** a default — it would be the owner's separate decision, asking them by email first.
+   **Approve the terms from the template in the same sitting**: the older terms promised «te vom întreba separat» before a named result,
+   and their sentence now says the ranking is published only after the race and only on the notice's terms, naming `{{results}}` too.
+   Until a notice **and** terms naming `{{results}}` are in force in **both** languages, ticking «Clasamentul e public pe pagina
+   evenimentului» is refused with a sentence and a link here, and `/admin/tasks` shows the rows «Nota de confidențialitate: clasamentul
+   curselor» and «Termenii: clasamentul curselor». Entering, importing and ranking work meanwhile.
 2. **After the race, open «Clasament».** The race's editor → the card «Înscrieri» → «Clasament», or the registrations list with the race
    chosen (both links are drawn for a race that has started; a typed address works for any race). The page has a line for every
    registered runner who holds a race number — the checked-in first, then by number — with four boxes: **«Timp»** (`h:mm:ss`, `mm:ss` or
-   `mm:ss.t`), **«Status»** (Sosit, Abandon, Neprezentat, Descalificat), **«Timp cip»** (optional) and **«Notă»**. A line with every box empty is
-   no result. A time typed with no status is «Sosit»; a note alone is «Neprezentat»; abandon, neprezentat and descalificat are written without a time.
+   `mm:ss.t`), **«Stare»** (Sosit, Abandon, Neprezentat, Descalificat), **«Timp cip»** (optional) and **«Notă»**. A line with every box empty is
+   no result. The blank choice of «Stare» reads «Din timp (Sosit / Neprezentat)» because it is exactly that: a time typed with no state is
+   «Sosit»; a note alone is «Neprezentat»; abandon, neprezentat and descalificat are written without a time. A number a **cancelled or
+   expired** registration holds is refused («numărul aparține unei înscrieri neconfirmate»): a result is never filed under a cancelled
+   person. When the desk changes a runner's number, the result moves with the runner.
 3. **«Importă din CSV»** (the first card, closed): paste the text of a file or choose it — `număr, timp`, then the chip's time and a status
    if there are any, with or without a header row, separated by a comma, a semicolon or a tab; the status as its code or its word in Romanian
    or English. The rows read **fill the boxes and save nothing**; a number no registration holds becomes a new line under «Alergători
@@ -2381,13 +2386,19 @@ enter them; **only the Administrator and the Superadministrator make them public
 4. **«Salvează tot clasamentul»** — ONE button for the whole page: it writes every line in one go or, when a line is wrong, none — the sentence
    names the runner and the problem, and every box keeps what was typed. A line you cleared (or left out) is a result removed. The places are
    computed on every save: overall among the finishers by the gun time, by sex, and in the category (sex and age band on the race day; ties share
-   the place and the next is skipped); a runner without a sex or a birth date has no category, and nobody is guessed into one. A page opened before a
+   the place and the next is skipped); a runner without a sex or a birth date has no category, and nobody is guessed into one. A corrected
+   answer or an erased registration changes the places at once: the page and the public read rank again from the live answers. A page opened before a
    colleague saved is refused («Altcineva a salvat între timp. Reîncarcă pagina…») rather than written over theirs. **«Șterge»** on a line is its own press and asks first.
    «Descarcă clasamentul (CSV)» is the file with the names as the backoffice sees them; the download is recorded in the trail, without a name.
 5. **«Clasamentul e public pe pagina evenimentului»** (the Administrator's tick, with its own «Salvează», asks first): off for every event. It
-   only works under the notice of step 1. The public read — `readPublicEventResults` — shows a name **only for a registered runner who ticked**; a
-   runner the club typed by hand is never named in public, because no staff member may tick for a runner. **The event's page draws the ranking in the
+   only works **after the race has started** (you may type the results before) and under the notice and terms of step 1. The public read —
+   `readPublicEventResults` — shows a name **only for a registered runner who ticked, whose registration is confirmed, who is not a special
+   guest the event hides, and who registered under a notice that described the results**; a runner the club typed by hand is never named in
+   public, because no staff member may tick for a runner. **The event's page draws the ranking in the
    next release** (the lane that follows this one); until it ships, the tick records the decision and nothing more.
 6. **What stays where.** The audit trail names the race number, the state and the times, never a runner. Erasing a registration leaves its result,
-   nameless and with its place, so the other runners do not move. Three years after the race the sweep clears the typed names, sexes, birth dates and every
-   note, and keeps the times and the places. The Excel of the registrations is unchanged.
+   nameless, with its number, its time and its overall place, and clears the category and the places by sex and by category that described the
+   person, so the other runners' overall places do not move. **Three years after the race the sweep deletes the race's results with its registrations**
+   (a registration held for a dispute keeps its result until the hold is cleared), as section 7 of the notice says; the results file you download is a
+   copy the sweep cannot reach, so delete it within the same period. «Toate datele unei persoane» lists a person's results and its file carries them.
+   The Excel of the registrations is unchanged.

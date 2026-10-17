@@ -86,7 +86,7 @@ describe("§NNN the results download", () => {
     for (const lang of ["en", "ro"]) {
       const { body } = await download(lang);
       const rows = parseResultsCsv(body);
-      expect(rows.map((row) => [row.bibNumber, row.status]).sort((a, b) => a[0] - b[0]), lang).toEqual([[101, "FINISHED"], [103, "FINISHED"], [104, "DNF"], [105, "DSQ"]]);
+      expect(rows.map((row) => [row.bibNumber, row.status] as const).sort((a, b) => a[0] - b[0]), lang).toEqual([[101, "FINISHED"], [103, "FINISHED"], [104, "DNF"], [105, "DSQ"]]);
       expect(rows.find((row) => row.bibNumber === 103)?.gunTimeMs).toBe(45 * 60_000);
     }
   });

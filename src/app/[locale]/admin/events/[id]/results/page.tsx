@@ -50,9 +50,6 @@ type Props = {
   searchParams: Promise<{ resultsError?: string }>;
 };
 
-/** The chip glyph of each state in the summary (`status-glyphs.ts`): done, did not start, dropped out, disqualified. */
-const SUMMARY_GLYPH = { FINISHED: "done", DNS: "didNotStart", DNF: "droppedOut", DSQ: "failed" } as const;
-
 /** Reads the stored rows and is returned to right after a save. */
 export const dynamic = "force-dynamic";
 
@@ -227,7 +224,7 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
       </Typography>
       <Stack direction="row" sx={{ flexWrap: "wrap", gap: 1, alignItems: "center" }} data-testid="results-summary">
         {RESULT_STATUSES.map((status) => (
-          <StatusChip key={status} glyph={SUMMARY_GLYPH[status]} variant="outlined" label={t(`results.summary.${status}`, { count: String(view.counts[status]) })} />
+          <StatusChip key={status} glyph={status === "FINISHED" ? "done" : status === "DNS" ? "didNotStart" : status === "DNF" ? "droppedOut" : "failed"} variant="outlined" label={t(`results.summary.${status}`, { count: String(view.counts[status]) })} />
         ))}
         <StatusChip glyph={event.resultsPublished ? "visible" : "hidden"} color={event.resultsPublished ? "success" : "default"} label={event.resultsPublished ? t("results.publish.stateOn") : t("results.publish.stateOff")} testId="results-published-chip" />
       </Stack>
