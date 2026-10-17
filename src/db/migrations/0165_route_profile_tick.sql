@@ -1,0 +1,1 @@
+ALTER TABLE "events" ADD COLUMN "show_route_profile" boolean DEFAULT true NOT NULL;

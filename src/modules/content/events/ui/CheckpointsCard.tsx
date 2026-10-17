@@ -101,6 +101,8 @@ type Props = {
   profile: ElevationProfileData | null;
   /** The route's length as the club typed it, in metres, or null: the preview spans it as the page does. */
   distanceMeters: number | null;
+  /** «Arată profilul traseului pe pagină» as saved (§802, §805): off, the preview still draws what it would show and says the page does not. Absent is on. */
+  profileShown?: boolean;
   /**
    * The route's GPX waypoints that can be placed on its track, or null while the file has none (or
    * is not readable): offers «Ia punctele din GPX». `key` is the file the preview is made from.
@@ -132,7 +134,7 @@ type Props = {
  * The list is in distance order — the club never orders it, it types the kilometre. A saved point is
  * removed by ticking «Scoate» on it; the rows left empty at the foot are for new ones.
  */
-export default async function CheckpointsCard({ locale, eventId, checkpoints, mayEdit, routeKm, profile, distanceMeters, gpx, previewOpen }: Props) {
+export default async function CheckpointsCard({ locale, eventId, checkpoints, mayEdit, routeKm, profile, distanceMeters, profileShown = true, gpx, previewOpen }: Props) {
   const t = await getTranslations("Admin");
   // The chart's words are the public page's (`Event.profile`), in the language the editor is read in.
   const tEvent = await getTranslations({ locale, namespace: "Event" });
@@ -399,20 +401,31 @@ export default async function CheckpointsCard({ locale, eventId, checkpoints, ma
         )}
         {/* «Așa apare pe pagină» (§802): the page's own chart, small, from the saved file and the saved rows — drawn on the server at page load, so it follows a save and not the typing. */}
         <Panel glyph="routeProfile" static level={4} title={t("checkpoints.preview.title")} intro={mayEdit ? t("checkpoints.preview.help") : undefined} data-testid="checkpoints-preview">
-          {profile ? (
-            <ElevationProfile
-              variant="compact"
-              profile={profile}
-              distanceMeters={distanceMeters}
-              markers={profileMarkers(checkpoints, locale)}
-              locale={locale}
-              words={tEvent.raw("profile") as ElevationProfileWords}
-            />
-          ) : (
-            <Typography variant="body2" color="text.secondary" data-testid="checkpoints-preview-none">
-              {t("checkpoints.preview.none")}
-            </Typography>
-          )}
+          <Stack spacing={1.5}>
+            {/* The event's tick is off (§802, §805): the chart below is what the page would show, and the page does not. */}
+            {!profileShown && (
+              <Typography variant="body2" sx={{ fontWeight: 600 }} data-testid="checkpoints-preview-off">
+                {t("checkpoints.preview.off")}
+              </Typography>
+            )}
+            {profile ? (
+              <ElevationProfile
+                variant="compact"
+                profile={profile}
+                distanceMeters={distanceMeters}
+                markers={profileMarkers(checkpoints, locale)}
+                locale={locale}
+                words={tEvent.raw("profile") as ElevationProfileWords}
+              />
+            ) : (
+              // The tick's off sentence above already says the page shows no profile: a second sentence about a missing file would contradict it.
+              profileShown && (
+                <Typography variant="body2" color="text.secondary" data-testid="checkpoints-preview-none">
+                  {t("checkpoints.preview.none")}
+                </Typography>
+              )
+            )}
+          </Stack>
         </Panel>
         {!mayEdit ? (
           readOnly

@@ -329,8 +329,8 @@ const POINTS = [
   { km: 7.5, ro: "Punct ascuns", en: "Hidden point", kinds: "FIRST_AID", onProfile: false },
 ] as const;
 
-/** A 9 km race with the sample GPX attached and the four checkpoints above, published. */
-async function seedProfileRace(tag: string): Promise<{ id: string; slug: string }> {
+/** A 9 km race with the sample GPX attached and the four checkpoints above, published (a draft when `publishIt` is false). */
+async function seedProfileRace(tag: string, publishIt = true): Promise<{ id: string; slug: string }> {
   const race = await seedRace(tag);
   const key = `${appEnv()}/route-gpx/${randomUUID()}/profil.gpx`;
   const gpx = elevationGpx();
@@ -349,7 +349,7 @@ async function seedProfileRace(tag: string): Promise<{ id: string; slug: string 
       );
     }
   });
-  await publish(race.id);
+  if (publishIt) await publish(race.id);
   return race;
 }
 
@@ -550,6 +550,61 @@ test.describe("§802 the route's elevation profile", () => {
     }).toPass({ timeout: 30_000 });
     await expect(page.getByTestId("checkpoint-row")).toHaveCount(4);
     await expect(page.getByTestId("event-checkpoints")).toContainText("Punct cabană");
+  });
+
+  /*
+    §802, §805 (the owner, 2026-10-17: «vreau și bifă pentru „arată profilul cursei”»): the event's own tick in «Traseul»,
+    «Arată profilul traseului pe pagină», on for every event. Unticked and saved, the page draws no chart — the table «Puncte
+    de control» stays — and the editor's card still previews the chart, with the sentence that the page does not show it.
+  */
+  test("the tick «Arată profilul traseului pe pagină» in «Traseul»: unticked and saved, the chart is gone from the page and the table stays", async ({ page }, testInfo) => {
+    const project = testInfo.project.name;
+    const race = await seedProfileRace(`${project}-${Date.now().toString(36)}-tick`, false);
+    await signIn(page, "Dev Administrator");
+    await page.goto(`/ro/admin/events/${race.id}`);
+    await hydrated(page);
+
+    // On for an event that had a file before the tick existed, with its help under it and no «no file» note.
+    const course = await openEditorBox(page, "Traseul");
+    const tick = course.getByRole("checkbox", { name: "Arată profilul traseului pe pagină" });
+    await expect(tick).toBeChecked();
+    await expect(course.getByTestId("show-route-profile-help")).toContainText("Debifat, pagina nu desenează profilul din GPX");
+    await expect(course.getByTestId("show-route-profile-no-gpx")).toHaveCount(0);
+    expect((await tick.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+    // Nothing is said about the page while the tick is on.
+    await expect(page.getByTestId("checkpoints-preview-off")).toHaveCount(0);
+
+    await tick.uncheck();
+    await page.getByRole("button", { name: "Salvează", exact: true }).click();
+    await page.waitForURL(/saved=event/);
+    await hydrated(page);
+    const stored = await withDatabase((client) => client.query<{ show_route_profile: boolean }>(`SELECT show_route_profile FROM events WHERE id = $1`, [race.id]));
+    expect(stored.rows[0].show_route_profile).toBe(false);
+
+    // The editor: the tick comes back unticked; the card's preview still draws the chart and says the page does not.
+    const again = await openEditorBox(page, "Traseul");
+    await expect(again.getByRole("checkbox", { name: "Arată profilul traseului pe pagină" })).not.toBeChecked();
+    const checkpoints = await openEditorBox(page, "Puncte de control");
+    const preview = checkpoints.getByTestId("checkpoints-preview");
+    await expect(preview.getByTestId("checkpoints-preview-off")).toHaveText("Profilul e oprit pe pagină: vezi „Arată profilul traseului pe pagină” în «Traseul».");
+    await expect(preview.getByTestId("elevation-pin")).toHaveCount(3);
+
+    // The page, once published: no chart, the table with every point, the maps' section and the GPX download as before.
+    await publish(race.id);
+    await page.goto(`/ro/evenimente/${race.slug}`);
+    await hydrated(page);
+    await expect(page.getByTestId("route-elevation")).toHaveCount(0);
+    await expect(page.getByTestId("elevation-chart")).toHaveCount(0);
+    await expect(page.getByTestId("checkpoint-row")).toHaveCount(4);
+    await expect(page.getByTestId("event-checkpoints")).toContainText("Punct ascuns");
+    await expect(page.getByTestId("route-gpx-download")).toHaveCount(1);
+    const widths = await page.evaluate(() => ({ page: document.documentElement.scrollWidth, window: window.innerWidth }));
+    expect(widths.page).toBeLessThanOrEqual(widths.window);
+
+    // And the English page.
+    await page.goto(`/en/events/checkpoints-${race.slug.replace(/^puncte-/, "")}`);
+    await expect(page.getByTestId("route-elevation")).toHaveCount(0);
+    await expect(page.getByTestId("checkpoint-row")).toHaveCount(4);
   });
 });
 

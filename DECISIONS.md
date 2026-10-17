@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.52-2026-10-17 -->
+<!-- PROJECT_BASELINE: BR-V3.53-2026-10-17 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V3.52-2026-10-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.53-2026-10-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -27103,3 +27103,19 @@ Baseline `BR-V3.52-2026-10-17`.
 **Refused.** A second reader of the GPX for the bib (one reader, the core's); drawing the strip with `compact` (it drops the words); dropping pins in the core (the page keeps every pin); an altitude axis down the side of the strip (it has no room, and the figures stand beside it already); the checkpoints' unticked state following a setting of the number's own (one meaning, on every profile).
 
 Baseline `BR-V3.52-2026-10-17`.
+
+## 805. The event editor: a tick «Arată profilul traseului pe pagină»
+
+**The owner, 2026-10-17 (~03:40, of §802's chart):** «vreau și bifă pentru „arată profilul cursei”». §802 drew the route's elevation profile on the event page whenever the GPX parsed, with a tick on each checkpoint («Arată pe profilul traseului») for which points are pinned on it. What a club could not do was keep a GPX for the download and the map and leave the chart off.
+
+**Decision.** One new column, `events.show_route_profile boolean NOT NULL DEFAULT true` (migration `0165`, an expand: a column with a default rewrites no reader), so every event that had a GPX keeps its chart and a new event starts with it on. The tick is «Arată profilul traseului pe pagină» in the editor's «Traseul» card, under the two maps and above the route description, a real tick box with one help sentence («Debifat, pagina nu desenează profilul din GPX; tabelul «Puncte de control» și hărțile rămân. Numărul de concurs are setarea lui în „Cum arată numărul de concurs”.»). The GPX file itself is uploaded in «Linkuri și fișiere» (§718), not in «Traseul»; so the tick stays a box that can be ticked with no file yet and says in one line, under it, that no file is saved yet and so there is nothing to draw until one is uploaded and saved — it is not greyed, because a disabled box posts nothing and a file uploaded in the same sitting must be drawn as the club chose. It is posted as `event.showRouteProfile` with the marker `event.showRouteProfile.present`, as «Informații medicale» (§557): a form that did not carry the card (a role that may only read the settings, a fixture) is «not editing it», never «off». It is saved with the event — the version moves and the row names the staff member who saved it, as for the other plain settings; the tick is a display switch over a file the club already published, so it has no audit action of its own (unlike the settings that decide what the public is told about people, §634, §753) — carried to every date of a series (`SERIES_COLUMNS`, with the file it draws) and by «Duplică».
+
+**The page.** The chart is drawn only when the tick is on **and** the GPX parses: `events/[slug]/page.tsx` does not even read the file from the store when it is off, and `EventPageView` gates the `profile` it hands `EventRoute` on the event's own `showRouteProfile` (the public columns carry it, so the public cache's event read does, and the page's existing invalidation on save covers it). Off, the maps, the GPX download and the table «Puncte de control» stay exactly as they were. The editor's draft preview reads the draft's own tick, so a club sees the page as the save would leave it.
+
+**The editor's preview.** The «Puncte de control» card (§757, §802) still draws its compact chart «Așa apare pe pagină» — what the page would show — and, with the tick off, one sentence above it (and then not the line about a missing file, which would contradict it): «Profilul e oprit pe pagină: vezi „Arată profilul traseului pe pagină” în «Traseul».»
+
+**Travel.** The event JSON file (§751) carries `route.showRouteProfile`, optional on import and true when absent, **written to a downloaded file only when it is off** — the checkpoints' `onProfile` rule (§802), so a file of an event that shows its chart stays readable by the release before this one, which refuses a key it does not know (QA ships a day before production and its files travel). The file's version stays 3: a reader without the key reads «on», and the only file an older release cannot read is one from an event whose club switched the chart off. The diff of an import over an event names it («Profilul traseului arătat pe pagină»).
+
+**Refused.** A second tick for the race number's strip: the bib has its own design tick «Profilul traseului» (§750, §804), a different thing that this change leaves alone, as it does the per-checkpoint ticks and the maps. An audit action for a display switch. Greying the box when there is no file (see above).
+
+Baseline `BR-V3.53-2026-10-17`.
