@@ -125,7 +125,7 @@ export async function renderEventDraftPreview<T extends Record<string, unknown>>
   const postedKey = routeGpxKeyOf(view.routeGpx);
   const gpxKey = postedKey?.startsWith(`${env.APP_ENV}/route-gpx/`) ? postedKey : null;
   // Off by the draft's own tick (§802, §NNN): the preview then draws no chart, as the page will not.
-  const elevation = gpxKey && view.showRouteProfile ? await readRouteElevation(gpxKey).catch(() => null) : null;
+  const elevation = gpxKey && view.showRouteProfile !== false ? await readRouteElevation(gpxKey).catch(() => null) : null;
 
   return {
     outcome: "ready",

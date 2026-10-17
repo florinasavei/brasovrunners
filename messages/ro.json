@@ -2295,8 +2295,8 @@
       "routeStrava": "Strava: linkul sau codul de încorporare",
       "routeStravaHelp": "Lipește linkul traseului de pe Strava (strava.com/routes/…) sau codul de încorporare (Share → Embed). Pe pagină apar harta, încărcată doar când vizitatorul apasă, și linkul.",
       "showRouteProfile": "Arată profilul traseului pe pagină",
-      "showRouteProfileHelp": "Debifat, pagina nu desenează profilul din GPX; tabelul «Puncte de control» și harta rămân. Numărul de concurs are setarea lui în „Cum arată numărul de concurs”.",
-      "showRouteProfileNoGpx": "Nu există încă un fișier GPX, deci nu e nimic de desenat: încarcă unul la «Linkuri și fișiere».",
+      "showRouteProfileHelp": "Debifat, pagina nu desenează profilul din GPX; tabelul «Puncte de control» și hărțile rămân. Numărul de concurs are setarea lui în „Cum arată numărul de concurs”.",
+      "showRouteProfileNoGpx": "Încă nu e salvat un fișier GPX, deci nu e nimic de desenat: încarcă unul la «Linkuri și fișiere» și salvează.",
       "routeGpx": {
         "label": "Fișierul GPX al traseului",
         "help": "Încarcă fișierul de pe calculator sau telefon; apare pe pagină sub hărți, ca «Descarcă traseul (GPX)». Un GPX ținut în altă parte îl poți adăuga mai jos ca link.",

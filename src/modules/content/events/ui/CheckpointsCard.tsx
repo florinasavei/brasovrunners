@@ -418,9 +418,12 @@ export default async function CheckpointsCard({ locale, eventId, checkpoints, ma
                 words={tEvent.raw("profile") as ElevationProfileWords}
               />
             ) : (
-              <Typography variant="body2" color="text.secondary" data-testid="checkpoints-preview-none">
-                {t("checkpoints.preview.none")}
-              </Typography>
+              // The tick's off sentence above already says the page shows no profile: a second sentence about a missing file would contradict it.
+              profileShown && (
+                <Typography variant="body2" color="text.secondary" data-testid="checkpoints-preview-none">
+                  {t("checkpoints.preview.none")}
+                </Typography>
+              )
             )}
           </Stack>
         </Panel>

@@ -15,7 +15,7 @@ import { elevationGpx } from "../../helpers/elevation-gpx";
  * `event.showRouteProfile.present` — as «Informații medicale» (§557) — checked for an event that says nothing, unchecked when the
  * club switched it off, its help under it, a note when there is no GPX file yet, both languages; nothing of it for a role that
  * may only read the settings. And the «Puncte de control» card's preview: the chart still drawn with one sentence when the tick
- * is off. The page's own gate is proved in `route-profile-page.test.ts`.
+ * is off. The page's own gate is proved in `tests/integration/cms/event-draft-preview.test.ts`.
  */
 let language: "ro" | "en" = "ro";
 const messages = { ro, en };
@@ -94,7 +94,7 @@ describe("§802 the tick «Arată profilul traseului pe pagină» in «Traseul»
     expect(markup).toContain('<input type="hidden" name="event.showRouteProfile.present" value="1"/>');
     expect(markup).toContain("Arată profilul traseului pe pagină");
     expect(markup).toContain('data-testid="show-route-profile-help"');
-    expect(markup).toContain("Debifat, pagina nu desenează profilul din GPX; tabelul «Puncte de control» și harta rămân.");
+    expect(markup).toContain("Debifat, pagina nu desenează profilul din GPX; tabelul «Puncte de control» și hărțile rămân.");
     expect(markup).toContain("Numărul de concurs are setarea lui în „Cum arată numărul de concurs”.");
     // Never a toggle button: the setting is the box.
     expect(markup).not.toMatch(/role="switch"/);
@@ -107,7 +107,7 @@ describe("§802 the tick «Arată profilul traseului pe pagină» in «Traseul»
     const markup = await course(race({ routeGpx: GPX }));
     expect(tickOf(markup)).toContain("checked");
     expect(markup).toContain("Show the route profile on the page");
-    expect(markup).toContain("Unticked, the page draws no profile from the GPX; the «Checkpoints» table and the map stay.");
+    expect(markup).toContain("Unticked, the page draws no profile from the GPX; the «Checkpoints» table and the maps stay.");
     expect(markup).toContain("The race number has its own setting in “What the race number looks like”.");
     language = "ro";
   });
@@ -131,9 +131,9 @@ describe("§802 the tick «Arată profilul traseului pe pagină» in «Traseul»
     const markup = await course(race());
     expect(tickOf(markup)).toContain('type="checkbox"');
     expect(markup).toContain('data-testid="show-route-profile-no-gpx"');
-    expect(markup).toContain("Nu există încă un fișier GPX, deci nu e nimic de desenat: încarcă unul la «Linkuri și fișiere».");
+    expect(markup).toContain("Încă nu e salvat un fișier GPX, deci nu e nimic de desenat: încarcă unul la «Linkuri și fișiere» și salvează.");
     language = "en";
-    expect(await course(race())).toContain("There is no GPX file yet, so there is nothing to draw: upload one in «Links and files».");
+    expect(await course(race())).toContain("No GPX file is saved yet, so there is nothing to draw: upload one in «Links and files» and save.");
     language = "ro";
   });
 
@@ -169,6 +169,24 @@ describe("§802 the «Puncte de control» card's preview when the tick is off", 
     const english = await html(createElement(CheckpointForms, { locale: "en", eventId: EVENT_ID, mayEdit: true }, await CheckpointsCard({ ...base, locale: "en", profileShown: false })));
     expect(english).toContain('data-testid="elevation-chart"');
     expect(english).toContain("The profile is off on the page: see “Show the route profile on the page” in «The course».");
+    language = "ro";
+  });
+
+  it("with no usable profile as well, says only that the tick is off, never the missing-file line beside it, in both languages", async () => {
+    language = "ro";
+    const off = await card({ profileShown: false, profile: null });
+    expect(off).toContain('data-testid="checkpoints-preview-off"');
+    expect(off).not.toContain('data-testid="checkpoints-preview-none"');
+    expect(off).not.toContain('data-testid="elevation-chart"');
+    // Ticked, with no profile, the missing-file line is the only sentence.
+    const on = await card({ profileShown: true, profile: null });
+    expect(on).toContain('data-testid="checkpoints-preview-none"');
+    expect(on).not.toContain('data-testid="checkpoints-preview-off"');
+    language = "en";
+    const english = await html(createElement(CheckpointForms, { locale: "en", eventId: EVENT_ID, mayEdit: true }, await CheckpointsCard({ ...base, locale: "en", profileShown: false, profile: null })));
+    expect(english).toContain('data-testid="checkpoints-preview-off"');
+    expect(english).not.toContain('data-testid="checkpoints-preview-none"');
+    expect(english).not.toContain('data-testid="elevation-chart"');
     language = "ro";
   });
 

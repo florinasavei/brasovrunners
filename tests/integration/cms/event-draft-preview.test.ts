@@ -597,7 +597,9 @@ describe("§802 the event's tick «Arată profilul traseului pe pagină» in the
     expect(await draw(true, profile)).toContain('data-testid="route-elevation"');
     expect(await draw(false, profile)).not.toContain('data-testid="route-elevation"');
     expect(await draw(true, null)).not.toContain('data-testid="route-elevation"');
-    // Off, the maps' section and the GPX stay, in English too.
+    // A last-good copy made before the field existed has no key: that is on; only an explicit false hides the chart.
+    expect(await draw(undefined as unknown as boolean, profile)).toContain('data-testid="route-elevation"');
+    // Off, the maps' section and the GPX stay.
     const off = await draw(false, profile);
     expect(off).toContain('data-testid="route-gpx-download"');
   });
