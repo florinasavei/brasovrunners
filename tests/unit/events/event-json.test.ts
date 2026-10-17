@@ -74,6 +74,7 @@ function sampleConfig(): EventConfig {
       url: null,
       maps: [{ provider: "garmin", id: "987654321" }],
       gpx: { name: "traseu.gpx", url: GPX },
+      showRouteProfile: true,
       // The route's checkpoints (§757, §770): one with a time limit in minutes and a note, one without either and with a direction kind.
       checkpoints: [
         { km: 7.5, name: { ro: "Apă la cabană", en: "Water at the hut" }, kinds: ["WATER", "FOOD"], cutoffMinutes: 45, note: { ro: "Și banane", en: "Bananas too" }, onProfile: true },
@@ -153,6 +154,25 @@ describe("the event file's reader", () => {
     // A file with every point ticked has the key nowhere.
     file.event.route.checkpoints[1].onProfile = true;
     expect(serializeEventFile(file)).not.toContain("onProfile");
+  });
+
+  it("writes the route's profile tick only when it is off, reads «not written» as on, and keeps the version (§802, §NNN)", () => {
+    const file = sampleFile();
+    expect(file.version).toBe(3);
+    expect(serializeEventFile(file)).not.toContain("showRouteProfile");
+    const readOn = readEventFile(serializeEventFile(file));
+    if (!readOn.ok) throw new Error("the file did not read back");
+    expect(readOn.file.event.route.showRouteProfile).toBe(true);
+
+    file.event.route.showRouteProfile = false;
+    const written = serializeEventFile(file);
+    expect((JSON.parse(written) as { event: { route: Record<string, unknown> } }).event.route).toHaveProperty("showRouteProfile", false);
+    const read = readEventFile(written);
+    if (!read.ok) throw new Error("the file did not read back");
+    expect(read.file.event.route.showRouteProfile).toBe(false);
+    expect(read.file.version).toBe(3);
+    // The checkpoints' own tick is a different key and is not touched by it.
+    expect(written).not.toContain("onProfile");
   });
 
   it("refuses what is not one of ours, saying which of the five reasons it is", () => {

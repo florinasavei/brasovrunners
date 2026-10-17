@@ -2294,6 +2294,9 @@
       "routeGarminHelp": "Paste the course's link from Garmin Connect (…/course/…) or its embed code (Share → Embed). The page shows the map, loaded only when the visitor presses, and the link.",
       "routeStrava": "Strava: the link or the embed code",
       "routeStravaHelp": "Paste the route's link from Strava (strava.com/routes/…) or its embed code (Share → Embed). The page shows the map, loaded only when the visitor presses, and the link.",
+      "showRouteProfile": "Show the route profile on the page",
+      "showRouteProfileHelp": "Unticked, the page draws no profile from the GPX; the «Checkpoints» table and the maps stay. The race number has its own setting in “What the race number looks like”.",
+      "showRouteProfileNoGpx": "No GPX file is saved yet, so there is nothing to draw: upload one in «Links and files» and save.",
       "routeGpx": {
         "label": "The route's GPX file",
         "help": "Upload the file from a computer or a phone; it shows on the page under the maps, as «Download the route (GPX)». A GPX kept elsewhere can be added below as a link.",
@@ -8547,7 +8550,8 @@
             "name": "GPX file name",
             "url": "GPX file"
           },
-          "checkpoints": "Checkpoints"
+          "checkpoints": "Checkpoints",
+          "showRouteProfile": "Route profile shown on the page"
         },
         "links": "Links and files",
         "partners": "Partners",
@@ -9716,7 +9720,8 @@
       "preview": {
         "title": "How it appears on the page",
         "help": "It changes after “Save the points”, not while you type.",
-        "none": "The profile appears on the page once the route has a GPX file with altitudes."
+        "none": "The profile appears on the page once the route has a GPX file with altitudes.",
+        "off": "The profile is off on the page: see “Show the route profile on the page” in «The course»."
       },
       "kinds": {
         "WATER": "Water",

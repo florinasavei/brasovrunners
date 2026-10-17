@@ -132,6 +132,7 @@ export function configFromRows(event: EditableEvent, rows: readonly EditableTran
       url: event.routeUrl,
       maps: readRouteMaps(event.routeMaps) as unknown as Array<Record<string, unknown>>,
       gpx: gpx && context.gpxUrl ? { name: gpx.name, url: context.gpxUrl } : null,
+      showRouteProfile: event.showRouteProfile,
       // By distance, the order every reader draws them in; no id — a row means something in one database only.
       checkpoints: sortedByKm(context.checkpoints ?? []).map((row) => ({
         km: row.km,

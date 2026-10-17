@@ -10,6 +10,7 @@ import { readScheduleItems } from "@/modules/events/domain/schedule";
 import { startBoxValues } from "@/modules/events/domain/provisional-start";
 import { toWallTimeInput } from "@/modules/events/domain/zoned-time";
 import { clubNightEvent, nightPlace } from "@/modules/events/night-event";
+import { readRouteGpx } from "@/modules/events/domain/route-gpx";
 import { routeMapFieldValue, routeMapOf } from "@/modules/events/domain/route-maps";
 import { env } from "@/shared/config/env";
 import { textFieldConstraints } from "@/shared/forms/constraints";
@@ -264,6 +265,22 @@ export default async function CourseBox({
           maxRows={4}
           {...textFieldConstraints(eventInputConstraints("routeStrava"), { spellCheck: false, autoCapitalize: "off", autoCorrect: "off" })}
         />
+        {/* «Arată profilul traseului pe pagină» (§802, §NNN): the event's own switch for the elevation chart the GPX
+            gives; the checkpoints' ticks and the race number's design tick are other settings. Read by the save only
+            with its marker, as «Informații medicale» (§557): a form without the card is never "off". Kept enabled with no
+            file, so a file uploaded in «Linkuri și fișiere» in the same sitting is drawn as the club chose. */}
+        <Box>
+          <input type="hidden" name="event.showRouteProfile.present" value="1" />
+          <CheckboxField
+            name="event.showRouteProfile"
+            defaultChecked={event?.showRouteProfile ?? true}
+            help={t("editor.showRouteProfileHelp")}
+            helpTestId="show-route-profile-help"
+          >
+            {t("editor.showRouteProfile")}
+          </CheckboxField>
+          {event && !readRouteGpx(event.routeGpx) && <BoxNote testId="show-route-profile-no-gpx">{t("editor.showRouteProfileNoGpx")}</BoxNote>}
+        </Box>
         {routeDescription}
         {checkpoints}
       </Stack>

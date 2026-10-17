@@ -291,6 +291,15 @@ export const events = pgTable(
      */
     routeGpx: jsonb("route_gpx"),
 
+    /**
+     * «Arată profilul traseului pe pagină» (§802, §NNN): whether the event page draws the elevation profile
+     * the GPX gives (`routes/elevation/`). On by default, so every event that had a file keeps its chart; off, the
+     * page draws no chart — the maps, the GPX download and the table «Puncte de control» stay as they were. The
+     * checkpoints' own «Arată pe profilul traseului» and the race number's design tick (§750) are other settings.
+     * Carried by a series and a duplicate like the route (§49).
+     */
+    showRouteProfile: boolean("show_route_profile").notNull().default(true),
+
     // No `video_url` / `video_poster_url` here any more (§481, §491): a film is a `youtube` node in
     // the description (§266), carrying its own stored poster (§403); migration 0092 moved every
     // stored film there. BR-V2.10 stopped declaring the two columns and `events_video_url_is_https`;

@@ -1092,6 +1092,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                         routeKm={checkpointRouteKm}
                         profile={checkpointsProfile}
                         distanceMeters={event.distanceMeters}
+                        profileShown={event.showRouteProfile}
                         gpx={checkpointsGpx}
                         previewOpen={query.checkpointsGpx === "1"}
                       />

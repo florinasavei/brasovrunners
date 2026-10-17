@@ -12,7 +12,7 @@ import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import { createEvent, publishEvent, repeatEvent } from "@/modules/content/events/service";
 import { comparable, diffConfigs } from "@/modules/content/events/transfer/diff";
 import { exportEvent, readEventConfig } from "@/modules/content/events/transfer/export";
-import { type EventFile, readEventFile } from "@/modules/content/events/transfer/file-format";
+import { type EventFile, readEventFile, serializeEventFile } from "@/modules/content/events/transfer/file-format";
 import { eventCheckpoints } from "@/db/schema/event-checkpoints";
 import { diffEventImport, importEventAsNew, importEventOver } from "@/modules/content/events/transfer/import";
 import { readVolunteersFile } from "@/modules/content/events/transfer/volunteers";
@@ -1490,5 +1490,81 @@ describe("§757 the route's checkpoints travel in the file", () => {
     expect(await codeOf(importEventOver(db, await overInput(cases[0], target.id)))).toBe("VALIDATION_ERROR");
     expect(await listCheckpoints(db, target.id)).toEqual([]);
     expect((await reload(target.id)).capacity).toBe(50);
+  });
+});
+
+// --- «Arată profilul traseului pe pagină» (§802, §NNN) ---------------------------------------------
+
+describe("§802 the event's tick «Arată profilul traseului pe pagină» travels in the file", () => {
+  it("is exported as it is, written in the downloaded text only when it is off, and the file's version stays 3", async () => {
+    const { event } = await seedRace({}, {}, false);
+    const on = await fileOf(event.id);
+    expect(on.version).toBe(3);
+    expect(on.event.route.showRouteProfile).toBe(true);
+    // «On» is what a file without the key means: left out, so a release before the tick still reads the file.
+    expect(serializeEventFile(on)).not.toContain("showRouteProfile");
+
+    await db.update(events).set({ showRouteProfile: false }).where(eq(events.id, event.id));
+    const off = await fileOf(event.id);
+    expect(off.version).toBe(3);
+    expect(off.event.route.showRouteProfile).toBe(false);
+    expect(serializeEventFile(off)).toContain('"showRouteProfile": false');
+  });
+
+  it("is imported as new as it was, and the round trip is the same", async () => {
+    const { event } = await seedRace({}, {}, false);
+    await db.update(events).set({ showRouteProfile: false }).where(eq(events.id, event.id));
+    const file = await fileOf(event.id);
+    const created = await importEventAsNew(db, { actor: admin, file, fetchImpl: serving(), now: NOW });
+    expect((await reload(created.eventId)).showRouteProfile).toBe(false);
+    const back = await fileOf(created.eventId);
+    expect(diffConfigs(back.event, file.event).map((change) => change.key).sort()).toEqual(["translations.en.slug", "translations.ro.slug"]);
+
+    // An event that is on comes back on.
+    const { event: shown } = await seedRace({}, { ro: { slug: "alta-cursa-cu-profil", title: "Altă cursă" }, en: { slug: "another-race-with-profile", title: "Another race" } }, false);
+    const copy = await importEventAsNew(db, { actor: admin, file: await fileOf(shown.id), fetchImpl: serving(), now: NOW });
+    expect((await reload(copy.eventId)).showRouteProfile).toBe(true);
+  });
+
+  it("reads a file made before the tick existed — no `showRouteProfile` — as on, and imports it so", async () => {
+    const { event } = await seedRace({}, {}, false);
+    await db.update(events).set({ showRouteProfile: false }).where(eq(events.id, event.id));
+    const old = JSON.parse(serializeEventFile(await fileOf(event.id))) as { event: { route: Record<string, unknown> } };
+    delete old.event.route.showRouteProfile;
+    expect(JSON.stringify(old)).not.toContain("showRouteProfile");
+    const read = readEventFile(JSON.stringify(old));
+    if (!read.ok) throw new Error(`a file without the tick did not read: ${read.refusal} ${read.detail ?? ""}`);
+    expect(read.file.event.route.showRouteProfile).toBe(true);
+    const created = await importEventAsNew(db, { actor: admin, file: read.file, fetchImpl: serving(), now: NOW });
+    expect((await reload(created.eventId)).showRouteProfile).toBe(true);
+  });
+
+  it("refuses a tick that is not true or false", async () => {
+    const { event } = await seedRace({}, {}, false);
+    const bad = JSON.parse(JSON.stringify(await fileOf(event.id))) as { event: { route: Record<string, unknown> } };
+    bad.event.route.showRouteProfile = "no";
+    expect(readEventFile(JSON.stringify(bad)).ok).toBe(false);
+  });
+
+  it("sees a changed tick in the diff, and writes the file's tick over an event — both ways", async () => {
+    const { event } = await seedRace({}, {}, false);
+    const { target } = await seedTarget();
+    // The file's is on, the target's off: the diff names it, the import turns it on.
+    await db.update(events).set({ showRouteProfile: false }).where(eq(events.id, target.id));
+    const on = await fileOf(event.id);
+    const diff = await diffEventImport(db, { actor: admin, file: on, eventId: target.id });
+    const change = diff.changes.find((candidate) => candidate.key === "route.showRouteProfile");
+    expect(change).toMatchObject({ label: "route.showRouteProfile", from: { type: "boolean", value: false }, to: { type: "boolean", value: true } });
+    await importEventOver(db, await overInput(on, target.id));
+    expect((await reload(target.id)).showRouteProfile).toBe(true);
+
+    // The other way: the file's off, the target's on.
+    await db.update(events).set({ showRouteProfile: false }).where(eq(events.id, event.id));
+    const off = await fileOf(event.id);
+    await importEventOver(db, await overInput(off, target.id));
+    expect((await reload(target.id)).showRouteProfile).toBe(false);
+    // And a second import of the same file changes nothing about it.
+    const after = await diffEventImport(db, { actor: admin, file: off, eventId: target.id });
+    expect(after.changes.map((candidate) => candidate.key)).not.toContain("route.showRouteProfile");
   });
 });
