@@ -2516,7 +2516,9 @@
         "showProfileHelp": "Bifat: pe fiecare număr, sub nume, o fâșie cu profilul traseului. Alegi mai jos de unde vine și cum stă.",
         "showProfileNoGpx": "Evenimentul nu are GPX: încarcă-l în „Traseul” sau alege o poză.",
         "showCheckpoints": "Punctele de control pe profil",
-        "showCheckpointsHelp": "Bifat: pe profil, la fiecare punct, o cană unde e apă, o furculiță unde e mâncare, o bulină la celelalte. Dedesubt, „km 12” unde încape. Apare doar cu profilul traseului.",
+        "showCheckpointsHelp": "Bifat: un cerc cu semnul lui deasupra profilului, la fiecare punct bifat „Arată pe profilul traseului”, și dedesubt „km 5 · apă” sau „km 12”, unde încape. Doar la profilul desenat din GPX.",
+        "showProfileScale": "Kilometrii și altitudinile pe profil",
+        "showProfileScaleHelp": "Bifat: sub profil, liniuțe la distanțe egale, cu kilometrul lor, și altitudinea cea mai mare și cea mai mică. Apar doar unde încap, la profilul desenat din GPX.",
         "showCheckpointTimes": "…cu orele limită",
         "showCheckpointTimesHelp": "Bifat: lângă fiecare punct, și ora la care se închide, „km 12 · 11:30”. Dacă nu încap toate orele, nu se scrie niciuna; apoi pleacă kilometrii care nu încap. Semnele rămân mereu.",
         "showCheckpointsNone": "Evenimentul nu are puncte de control: adaugă-le în „Traseul” › „Puncte de control”.",
@@ -2638,7 +2640,7 @@
         },
         "profileSourceHelp": "Desenul vine din fișierul GPX al evenimentului, nu din Strava: harta Strava nu poate fi citită de site. Cu o poză pui pe fâșie ce vrei tu, de exemplu punctele de alimentare.",
         "profileImageSrc": "Poza profilului",
-        "profileImageSrcHelp": "Se pune întreagă, fără decupaj, într-o fâșie de circa {alone} la 1; cu distanța și diferența de nivel alături, {beside} la 1. Cel mai bine: o imagine la fel de lată, pe fundal alb.",
+        "profileImageSrcHelp": "Recomandat: o imagine lată, întreagă, fără decupaj. Cu cifrele lângă profil: {ratioBeside} la 1, adică {widthBeside} × {height} px la {dpi} dpi. Fără ele, sau fără cifre de arătat: {ratioAlone} la 1, adică {widthAlone} × {height} px.",
         "showProfileFigures": "Arată distanța și diferența de nivel lângă profil",
         "showProfileFiguresHelp": "Bifat: cele două cifre în dreapta profilului. Debifat: profilul sau poza ocupă toată lățimea.",
         "profileOrientation": "Orientarea profilului",
@@ -4495,6 +4497,16 @@
             "Textul nu se mai poate recupera, iar site-ul nu știe cine l-a scris. Repară calea (rândul de mai sus) sau adresa formularului, ca să nu se mai întâmple.",
             "Rândul se face verde după 7 zile fără niciun mesaj pierdut."
           ]
+        },
+        "retentionPeriods": {
+          "title": "Retenția datelor: perioade de decis",
+          "todo": "Baza de date crește și nu toate perioadele de păstrare sunt hotărâte. Rândul e doar informativ deocamdată: nimic nu se șterge din cauza lui.",
+          "done": "Perioadele de păstrare sunt hotărâte.",
+          "how": [
+            "Deschide Setări → Configurație: cardul «Mărimea bazei de date» arată cât ocupă fiecare tabel și cât a crescut în 30 de zile.",
+            "Pe același card, deschide «Planul de păstrare a datelor și perioadele propuse»: secțiunea «Keeping Neon and Vercel light, long term» are tabelul cu perioadele propuse.",
+            "Hotărăște perioadele; pentru datele personale ale celor de la evenimentele trecute, cere întâi părerea unui avocat. Până atunci nimic nu se schimbă."
+          ]
         }
       },
       "freeVerdict": {
@@ -6005,6 +6017,11 @@
       "profileFinish": "Sosire",
       "checkpointKm": "km {km}",
       "checkpointKmTime": "km {km} · {time}",
+      "checkpointKmWater": "km {km} · apă",
+      "checkpointKmFood": "km {km} · hrană",
+      "checkpointKmBoth": "km {km} · apă + hrană",
+      "profileKmUnit": "km",
+      "profileAltitudeUnit": "m",
       "profileDistance": "Distanță: {km} km",
       "profileGain": "Diferență de nivel: +{m} m",
       "emergencyLabel": "Urgențe",
@@ -8618,6 +8635,7 @@
             "showProfile": "Număr: profilul traseului",
             "showCheckpoints": "Număr: punctele de control pe profil",
             "showCheckpointTimes": "Număr: orele limită pe profil",
+            "showProfileScale": "Număr: kilometrii și altitudinile pe profil",
             "showDistance": "Număr: insigna distanței",
             "showEmergency": "Număr: telefonul de urgență",
             "emergencyPhone": "Număr: numărul de urgență",
@@ -9693,11 +9711,11 @@
         "noteEn": "Notă (engleză)",
         "noteHelp": "Opțională, în ambele limbi sau în niciuna; cel mult {max} de caractere.",
         "onProfile": "Arată pe profilul traseului",
-        "onProfileHelp": "Punctele debifate rămân în tabel și pe pagină; doar profilul nu le desenează."
+        "onProfileHelp": "Punctele debifate rămân în tabel și pe pagină; nici profilul paginii, nici cel de pe numărul de concurs nu le desenează."
       },
       "preview": {
         "title": "Așa apare pe pagină",
-        "help": "Se schimbă după „Salvează punctele”, nu în timp ce scrii. Numărul de concurs le arată după setarea „Punctele de control pe profil” din „Numere de concurs (BIB)”.",
+        "help": "Se schimbă după „Salvează punctele”, nu în timp ce scrii.",
         "none": "Profilul apare pe pagină când traseul are un fișier GPX cu altitudini."
       },
       "kinds": {
@@ -10955,10 +10973,10 @@
       "id": "Id deploy: {id}",
       "notOnVercel": "Nu rulează pe Vercel (local sau test).",
       "usageLink": "Deschide Vercel → Usage.",
-      "month": "Luna aceasta: {deployments} deploy-uri ({today} azi, din {perDay} pe zi), {minutes} minute de build din {of} ({percent}%), {errored} eșuate.",
+      "month": "Luna aceasta: {deployments} deploy-uri ({today} azi, din {perDay} pe zi), {minutes} minute de build, {errored} eșuate.",
       "unavailable": "Nu este configurat: pune VERCEL_API_TOKEN și VERCEL_PROJECT_ID în variabilele proiectului. Pașii sunt pe /admin/tasks.",
       "failed": "Vercel nu a răspuns: {reason}.",
-      "notInApi": "Traficul și invocările nu sunt expuse de API-ul Vercel; se văd doar în dashboard."
+      "builds": "Build-uri luna aceasta, pe acest proiect: {builds} ({branches})."
     },
     "neon": {
       "title": "Baza de date (Neon)",
@@ -10985,8 +11003,7 @@
       "awake": "Compute activ: {hours} h din {elapsed} h scurse",
       "period": "Perioada se încheie {date}",
       "unavailable": "Nu este configurat: pune NEON_API_KEY și NEON_PROJECT_ID în variabilele proiectului Vercel, apoi redeploy. Pașii sunt pe /admin/tasks.",
-      "failed": "Neon nu a răspuns: {reason}",
-      "vercel": "Găzduirea (Vercel): consumul se vede în panoul Vercel → Usage; planul Hobby are limite mult peste ce folosește site-ul (sub 1% în septembrie 2026)."
+      "failed": "Neon nu a răspuns: {reason}"
     },
     "sentThisMonth": "Trimise luna aceasta",
     "emailPlanLabel": "Plan Mailgun",
@@ -11029,6 +11046,67 @@
       "neverOk": "niciun mesaj trimis încă",
       "lastFailure": "ultima refuzare {when} ({error})",
       "since": "din {when}"
+    },
+    "dbSize": {
+      "title": "Mărimea bazei de date",
+      "intro": "Cât ocupă baza de date și ce a crescut în ultimele 30 de zile. Aici se măsoară doar: nimic nu se șterge.",
+      "introMore": "Pe cifrele astea alege clubul cât timp se păstrează fiecare fel de date. Rândurile estimate nu au fost numărate exact.",
+      "aside": "{size} MB",
+      "total": "Toată baza de date: {size} MB.",
+      "unread": "Nu am putut citi mărimea bazei de date acum: poate e oprită sau departe. Încearcă din nou peste puțin.",
+      "tablesTitle": "Cele opt tabele mai mari",
+      "row": "{total} MB, din care {data} MB date și {indexes} MB indecși",
+      "rowsExact": "Rânduri: {count}",
+      "rowsEstimated": "Rânduri: circa {count}",
+      "rowsUnknown": "Rânduri: necunoscut",
+      "gained": "{count} noi în ultimele {days} de zile",
+      "growthTitle": "Ce a crescut în ultimele {days} de zile",
+      "growth": {
+        "audit_logs": "Jurnalul acțiunilor personalului",
+        "email_outbox": "Emailurile, în coadă și trimise",
+        "email_action_tokens": "Linkurile din emailuri",
+        "family_place_holds": "Locurile ținute pentru familii",
+        "registration_notes": "Notele de la înscrieri",
+        "event_volunteers": "Voluntarii",
+        "registrations": "Înscrierile",
+        "declaration_acceptances": "Declarațiile semnate",
+        "group_run_declarations": "Declarațiile de la alergările de grup"
+      },
+      "growthLine": "{recent} noi, din {total}",
+      "settled": "Nefolosibile: {count}",
+      "registrationsTitle": "Înscrieri după stare și vechimea evenimentului",
+      "registrationsMore": "Include și înscrierile de probă: aici se măsoară spațiul, nu un număr dat clubului. Vechimea se socotește de la începutul evenimentului.",
+      "registrationsNone": "Nu există înscrieri.",
+      "registrationsLine": "{total} în total · {six} la evenimente de peste {sixMonths} luni · {twelve} la evenimente de peste {twelveMonths} luni",
+      "status": {
+        "PENDING_EMAIL_CONFIRMATION": "Adresa neconfirmată",
+        "PENDING_DECLARATION": "Așteaptă declarația",
+        "WAITLISTED": "Pe lista de așteptare",
+        "WAITLIST_OFFERED": "Ofertă din lista de așteptare",
+        "CONFIRMED": "Confirmate",
+        "CANCELLED": "Anulate",
+        "EXPIRED": "Expirate"
+      },
+      "planLink": "Planul de păstrare a datelor și perioadele propuse"
+    },
+    "vercelUsage": {
+      "title": "Vercel: consumul lunii",
+      "intro": "Liniile din pagina Usage a Vercel, de la începutul lunii, citite din API-ul lor de facturare.",
+      "introMore": "Prețurile sunt cele de listă. Pe Hobby nu se plătește nimic, dar o echipă Hobby care depășește o limită inclusă nu poate folosi acea funcție circa 30 de zile, iar Vercel poate opri echipa.",
+      "aside": "{usd} $",
+      "unconfigured": "Fără VERCEL_API_TOKEN nu se poate citi consumul.",
+      "cannot": "Vercel nu dă consumul cu această cheie ({reason}). Liniile sunt doar pe pagina Usage a contului.",
+      "totalCredit": "Consum până acum: {usd} $ din creditul inclus de {credit} $.",
+      "totalHobby": "Consum până acum: {usd} $ la prețul de listă.",
+      "cycleMore": "Luna calendaristică, în UTC. Pagina Usage a Vercel numără de la începutul ciclului de facturare, care începe în altă zi.",
+      "subscription": "Abonamentul în sine: {usd} $ până acum.",
+      "cpu": "Timp de CPU al funcțiilor: {hours} din cele {of} ore de CPU incluse pe lună în planul Hobby ({percent}%).",
+        "cpuNear": "Aproape de limită: {hours} din cele {of} ore de CPU incluse pe lună în planul Hobby ({percent}%). Peste ea, pe Hobby nu se mai poate folosi acea funcție circa 30 de zile.",
+        "cpuUnknown": "Timpul de CPU al funcțiilor nu se poate compara cu limita Hobby: Vercel l-a dat în «{unit}», nu în ore.",
+      "linesTitle": "Pe servicii",
+      "line": "{quantity} {unit} · {usd} $",
+      "buildsTitle": "Build-uri pe proiect",
+      "buildLine": "{minutes} minute de CPU de build · {usd} $"
     }
   },
   "Error": {

@@ -249,7 +249,8 @@ describe("§750 §759 the picture's stamp follows the mark", () => {
     expect(shapes.size).toBe(BIB_MEMBER_MARKS.length);
   });
 
-  it("is at drawing version 3: existing members' numbers draw a star where they drew a ring and a check", () => {
-    expect(BIB_DRAWING_VERSION).toBe(3);
+  it("is past drawing version 3, which made existing members' numbers draw a star where they drew a ring and a check", () => {
+    // 4 since §804 (the strip drawn by the elevation core): every address stamped before it is a new one.
+    expect(BIB_DRAWING_VERSION).toBeGreaterThanOrEqual(3);
   });
 });

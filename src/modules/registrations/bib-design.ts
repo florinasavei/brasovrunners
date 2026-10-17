@@ -457,6 +457,14 @@ export const bibDesignSchema = z
      * on a number is a promise the club cannot change after the sheet is printed.
      */
     showCheckpointTimes: z.boolean().catch(false),
+    /**
+     * «Kilometrii și altitudinile pe profil» (§804; the owner, 2026-10-16: «I want to show the KM & Elevation»): on the
+     * strip drawn from the GPX, the kilometre ticks with their numbers and the highest and the lowest altitude, laid out by
+     * the shared elevation core (`bib-profile-strip.ts`). **On by default**, whatever a design saved before this key says: a
+     * strip with the scale is the strip the club was shown when it was made. Off, the strip is the line, «Start» and
+     * «Sosire» and the checkpoints' pins, as before.
+     */
+    showProfileScale: z.boolean().catch(true),
     /** «Telefon pentru urgențe» (§750): the tick, and the number the club types (`bibEmergencyPhone`). */
     showEmergency: z.boolean().catch(false),
     emergencyPhone: z.string().transform(bibEmergencyPhone).catch(""),
@@ -515,6 +523,7 @@ export const DEFAULT_BIB_DESIGN: BibDesign = {
   profileOrientation: "normal",
   showCheckpoints: true,
   showCheckpointTimes: false,
+  showProfileScale: true,
   showEmergency: false,
   emergencyPhone: "",
   emergencyLabel: "",

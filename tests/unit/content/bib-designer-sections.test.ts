@@ -4,7 +4,9 @@ import { describe, expect, it, vi } from "vitest";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 import { type BibDesign, DEFAULT_BIB_DESIGN, DEFAULT_BIB_MEMBER_DESIGN } from "@/modules/registrations/bib-design";
+import { BIB_CARD, BIB_LAYOUT } from "@/modules/registrations/bib-geometry";
 import { BIB_MEMBER_MARK_PATHS, BIB_MEMBER_MARKS } from "@/modules/registrations/bib-member-mark";
+import { BIB_PICTURE_PRINT_DPI, bibProfilePictureExample, bibProfilePictureRatio } from "@/modules/registrations/bib-picture-frame";
 
 /**
  * BR-REQ-038-01, §759 (amending §750) — the bib designer in named sections. The owner, 2026-10-13, of
@@ -126,6 +128,7 @@ describe("§759 the bib designer in named sections", () => {
         "event.bibDesign.profileImageSrc",
         "event.bibDesign.showProfileFigures",
         "event.bibDesign.profileOrientation",
+        "event.bibDesign.showProfileScale",
         "event.bibDesign.showCheckpoints",
         "event.bibDesign.showCheckpointTimes",
         "event.bibDesign.showEmergency",
@@ -257,10 +260,61 @@ describe("§759 the bib designer in named sections", () => {
     expect(closed(await render({ ...pictured, profileImageSrc: null }, "en"))).toContain("An uploaded picture — none yet");
   });
 
-  it("names the profile picture's two shapes in its help, computed from the strip, in both languages", async () => {
-    // Never cropped, so no crop box says its shape: 523.28 × 36 alone, 380 × 36 beside the figures.
-    expect(section(await render(), "profile")).toContain("într-o fâșie de circa 15 la 1; cu distanța și diferența de nivel alături, 11 la 1.");
-    expect(section(await render(DEFAULT_BIB_DESIGN, "en"), "profile")).toContain("in a strip of about 15 to 1; with the distance and the elevation gain beside it, 11 to 1.");
+  it("says the profile picture's recommended shape before the upload, both shapes, from the strip's geometry — whatever the figures box says", async () => {
+    // Never cropped, so no crop box says its shape: the strip's box beside the figures (380 pt) or across the whole strip (523.28 pt), 36 pt tall.
+    const ratio = (figures: boolean, language: "ro" | "en") => new Intl.NumberFormat(language, { maximumFractionDigits: 1 }).format(bibProfilePictureRatio(figures));
+    const size = (figures: boolean) => bibProfilePictureExample(figures);
+    const pictured = (figures: boolean) => ({ ...DEFAULT_BIB_DESIGN, showProfile: true, profileSource: "picture" as const, showProfileFigures: figures });
+    const ro = `Recomandat: o imagine lată, întreagă, fără decupaj. Cu cifrele lângă profil: ${ratio(true, "ro")} la 1, adică ${size(true).width} × ${size(true).height} px la ${BIB_PICTURE_PRINT_DPI} dpi. Fără ele, sau fără cifre de arătat: ${ratio(false, "ro")} la 1, adică ${size(false).width} × ${size(false).height} px.`;
+    // The same sentence for the figures ticked and unticked: the box under the picture is not saved yet when the club reads it.
+    expect(section(await render(pictured(true)), "profile")).toContain(ro);
+    expect(section(await render(pictured(false)), "profile")).toContain(ro);
+    expect(section(await render(pictured(true), "en"), "profile")).toContain(
+      `Recommended: a wide picture, placed whole, never cropped. With the figures beside the profile: ${ratio(true, "en")} to 1, that is ${size(true).width} × ${size(true).height} px at ${BIB_PICTURE_PRINT_DPI} dpi. Without them, or with none to show: ${ratio(false, "en")} to 1, that is ${size(false).width} × ${size(false).height} px.`,
+    );
+    // The numbers are the geometry's: 380 / 36 and 523.28 / 36, an example at 300 dpi in the same proportion.
+    expect(bibProfilePictureRatio(true)).toBeCloseTo(BIB_LAYOUT.profileChartWidth / BIB_LAYOUT.profilePictureHeight, 6);
+    expect(bibProfilePictureRatio(false)).toBeCloseTo((BIB_CARD.width - 2 * BIB_LAYOUT.inset) / BIB_LAYOUT.profilePictureHeight, 6);
+    expect(ratio(true, "ro")).toBe("10,6");
+    expect(ratio(false, "en")).toBe("14.5");
+    for (const figures of [true, false]) expect(size(figures).width / size(figures).height).toBeCloseTo(bibProfilePictureRatio(figures), 1);
+  });
+
+  it("shows the recommended shape only for the picture source, and never as a number typed in a message", async () => {
+    const gpx = section(await render({ ...DEFAULT_BIB_DESIGN, showProfile: true }), "profile");
+    // The place is drawn but hidden while «Desenat din traseul evenimentului (GPX)» is the choice.
+    expect(hiddenAround(gpx, "Recomandat: o imagine lată")).toBe(true);
+    const picture = section(await render({ ...DEFAULT_BIB_DESIGN, showProfile: true, profileSource: "picture" }), "profile");
+    expect(hiddenAround(picture, "Recomandat: o imagine lată")).toBe(false);
+    for (const catalogue of [ro, en]) {
+      const sentence = catalogue.Admin.editor.bibDesign.profileImageSrcHelp;
+      for (const hole of ["{ratioBeside}", "{ratioAlone}", "{widthBeside}", "{widthAlone}", "{height}", "{dpi}"]) expect(sentence).toContain(hole);
+      expect(sentence).not.toMatch(/\d\d?[.,]\d|\d{3}/);
+    }
+  });
+
+  it("says the same shape in the crop dialog's «Forma» line as in the sentence: one function gives both", async () => {
+    const html = await render({ ...DEFAULT_BIB_DESIGN, showProfile: true, profileSource: "picture", showProfileFigures: true });
+    const shape = new Intl.NumberFormat("ro", { maximumFractionDigits: 1 }).format(bibProfilePictureRatio(true));
+    expect(shape).toBe("10,6");
+    expect(ro.Admin.editor.bibDesign.picture.shape.profile).toBe("Forma: {ratio} la 1, cât fâșia profilului.");
+    // The sentence names that same ratio for the figures beside the profile.
+    expect(section(html, "profile")).toContain(`Cu cifrele lângă profil: ${shape} la 1`);
+  });
+
+  it("offers «Kilometrii și altitudinile pe profil», ticked by default, beside the checkpoints' tick, for the GPX source only", async () => {
+    const gpx = section(await render({ ...DEFAULT_BIB_DESIGN, showProfile: true }), "profile");
+    expect(gpx).toMatch(/<input[^>]*name="event.bibDesign.showProfileScale"[^>]*checked/);
+    expect(gpx).toContain("Kilometrii și altitudinile pe profil");
+    expect(gpx).toContain("Bifat: sub profil, liniuțe la distanțe egale, cu kilometrul lor");
+    expect(gpx.indexOf('name="event.bibDesign.showProfileScale"')).toBeLessThan(gpx.indexOf('name="event.bibDesign.showCheckpoints"'));
+    expect(hiddenAround(gpx, 'name="event.bibDesign.showProfileScale"')).toBe(false);
+    const picture = section(await render({ ...DEFAULT_BIB_DESIGN, showProfile: true, profileSource: "picture" }), "profile");
+    expect(hiddenAround(picture, 'name="event.bibDesign.showProfileScale"')).toBe(true);
+    // Unticked it stays unticked; the English twin says the same.
+    const off = section(await render({ ...DEFAULT_BIB_DESIGN, showProfile: true, showProfileScale: false }), "profile");
+    expect(off).not.toMatch(/<input[^>]*name="event.bibDesign.showProfileScale"[^>]*checked/);
+    expect(section(await render(DEFAULT_BIB_DESIGN, "en"), "profile")).toContain("Kilometres and altitudes on the profile");
   });
 
   it("draws a glyph before the figures' tick, and the club's logo on a white plate", async () => {

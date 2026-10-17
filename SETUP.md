@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.51-2026-10-16 -->
+<!-- PROJECT_BASELINE: BR-V3.52-2026-10-17 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V3.51-2026-10-16`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.52-2026-10-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -1019,8 +1019,10 @@ Operations/privacy:
 
 - [ ] Legal/privacy/terms/declaration approved — the club; `docs/RUNBOOKS.md` § Legal document
       version. Production refuses every registration until then, correctly.
-- [ ] Retention/deletion policy — erasure exists (BR-REQ-037-06); a written retention period is
-      the club's decision.
+- [ ] Retention/deletion policy — erasure exists (BR-REQ-037-06) and the 04:00 sweep deletes on the
+      windows the privacy notice states (§322); whether to shorten any of them is the club's decision,
+      with the numbers on `/devs` → «Baza de date» (`yarn db:sizes`) and the proposal table in
+      `docs/PLATFORM.md` § Keeping Neon and Vercel light, long term.
 - [ ] Participant/profile/photo support process — the club.
 - [ ] Backups and restore test — Neon's own restore, not rehearsed (§25).
 - [ ] Monitoring/alerts — `/api/health` and `yarn smoke` exist; `/devs` shows the database's

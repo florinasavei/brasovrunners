@@ -19,9 +19,11 @@ import {
   numberScaleFactor,
 } from "./bib-design";
 import { BIB_FOOTER_EMS, bibFooterLines, bibFooterParts, bibFooterWidth } from "./bib-footer";
-import { checkpointGlyphLines } from "./bib-checkpoints";
-import { type BibProfileDrawing, type BibProfileFigureLines, bibProfilePaths } from "./bib-profile";
+import { pathOf } from "@/modules/routes/elevation/geometry";
+import { ELEVATION_GLYPH_PATHS, GLYPH_EVEN_ODD } from "@/modules/routes/elevation/glyphs";
+import type { BibProfileDrawing, BibProfileFigureLines } from "./bib-profile";
 import { type BibProfileRow, bibProfileRow } from "./bib-profile-row";
+import { bibPinGlyphScale } from "./bib-profile-strip";
 import { BIB_MEMBER_MARK_PATHS, BIB_MEMBER_MARK_VIEWBOX, type BibMemberMark, bibMemberMarkBox, isVectorMark } from "./bib-member-mark";
 import { BIB_PICTURE_BOX, type BibPictureSlot, bibPictureDrawing } from "./bib-picture-frame";
 import {
@@ -31,6 +33,7 @@ import {
   BIB_IMAGE_SCALE,
   BIB_LAYOUT,
   BIB_MARGIN,
+  BIB_TEXT_ASCENT,
   BIB_TEXT_LINE,
   type BibHeaderLayout,
   bibEmergencyFit,
@@ -189,10 +192,10 @@ function logo(): Promise<string> {
   return logoDataUrl;
 }
 
-/** The room the profile's SVG keeps round its chart so the line's stroke and the end dots are not clipped, in points. */
-const PROFILE_PAD = 2;
-/** The box a checkpoint's words are centred in, in points: wider than any label the crowding rule keeps (`bib-checkpoints.ts`). */
-const CHECKPOINT_LABEL_BOX = 90;
+/** The room the profile's SVG keeps round its chart so the line's stroke, the end dots and a pin's ring at either end (a point at km 0 or at the printed distance) are not clipped, in points. */
+const PROFILE_PAD = Math.ceil(BIB_LAYOUT.profilePinRadius + BIB_LAYOUT.profilePinWeight / 2);
+/** The box a text of the strip is aligned in, in points: wider than any label the core keeps (`bib-profile-strip.ts`), so nothing is clipped. */
+const STRIP_TEXT_BOX = 120;
 
 /** One line of text that never wraps and is cut with "…" where the sheet's would be. */
 const ONE_LINE = { display: "flex", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } as const;
@@ -311,88 +314,71 @@ function profileRowElement(row: BibProfileRow, ink: string, picture: BibImagePic
       </div>
     );
   }
-  const profile = row.drawing;
-  const paths = bibProfilePaths(profile.points, chartWidth, L.profileChartHeight);
+  // The strip is the core's answer in its own box (`bib-profile-strip.ts`): `chartWidth` × `profileHeight` points from the row's top left.
+  const { strip } = row;
+  const g = strip.geometry;
+  const size = L.profileLabelSize;
+  const scaleStyle = { stroke: ink, strokeOpacity: L.profileScaleOpacity, strokeWidth: L.profileKmTickWeight } as const;
+  const glyphScale = bibPinGlyphScale(g.pinRadius);
   return (
     <div data-testid="bib-profile-row" data-source="gpx" style={{ display: "flex", flexShrink: 0, position: "relative", height: px(L.profileHeight) }}>
       <svg
         width={px(chartWidth + 2 * PROFILE_PAD)}
-        height={px(L.profileChartHeight + 2 * PROFILE_PAD)}
-        viewBox={`${-PROFILE_PAD} ${-PROFILE_PAD} ${chartWidth + 2 * PROFILE_PAD} ${L.profileChartHeight + 2 * PROFILE_PAD}`}
+        height={px(L.profileHeight + 2 * PROFILE_PAD)}
+        viewBox={`${-PROFILE_PAD} ${-PROFILE_PAD} ${chartWidth + 2 * PROFILE_PAD} ${L.profileHeight + 2 * PROFILE_PAD}`}
         data-testid="bib-profile"
-        style={{ position: "absolute", left: px(L.inset - PROFILE_PAD), top: px(L.profileChartTop - PROFILE_PAD) }}
+        style={{ position: "absolute", left: px(L.inset - PROFILE_PAD), top: px(-PROFILE_PAD) }}
       >
-        <path d={paths.area} fill={ink} fillOpacity={L.profileAreaOpacity} stroke="none" />
-        <path d={paths.line} fill="none" stroke={ink} strokeWidth={L.profileLineWeight} strokeLinecap="round" strokeLinejoin="round" />
-        <circle cx={profile.points[0][0] * chartWidth} cy={(1 - profile.points[0][1]) * L.profileChartHeight} r={1.8} fill={ink} />
-        <circle
-          cx={profile.points[profile.points.length - 1][0] * chartWidth}
-          cy={(1 - profile.points[profile.points.length - 1][1]) * L.profileChartHeight}
-          r={1.8}
-          fill={ink}
-        />
-        {/* The route's checkpoints (`bib-checkpoints.ts`), at the sheet's points: a tick to the chart's foot, and
-            an aid station's cup or fork beside the line — any other point a dot on it. */}
-        {(profile.checkpoints?.marks ?? []).map((mark) => {
-          const markX = mark.x * chartWidth;
-          return (
-            <g key={mark.x} data-testid="bib-checkpoint-mark" data-glyph={mark.glyph ?? "dot"}>
-              <line x1={markX} y1={mark.tickFrom} x2={markX} y2={L.profileChartHeight} stroke={ink} strokeWidth={L.checkpointTickWeight} />
-              {mark.glyph === null || mark.glyphY === null ? (
-                <circle cx={markX} cy={(1 - mark.y) * L.profileChartHeight} r={L.checkpointDot} fill={ink} />
-              ) : (
-                checkpointGlyphLines(mark.glyph).map((stroke, at) => (
-                  <polyline
-                    key={at}
-                    points={stroke.map(([x, y]) => `${(markX + x).toFixed(2)},${((mark.glyphY ?? 0) + y).toFixed(2)}`).join(" ")}
-                    fill="none"
-                    stroke={ink}
-                    strokeWidth={L.checkpointGlyphWeight}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                ))
-              )}
-            </g>
-          );
-        })}
+        <path d={pathOf(g.area, true)} fill={ink} fillOpacity={L.profileAreaOpacity} stroke="none" />
+        <path d={pathOf(g.line)} fill="none" stroke={ink} strokeWidth={L.profileLineWeight} strokeLinecap="round" strokeLinejoin="round" />
+        <circle cx={g.line[0][0]} cy={g.line[0][1]} r={1.8} fill={ink} />
+        <circle cx={g.line[g.line.length - 1][0]} cy={g.line[g.line.length - 1][1]} r={1.8} fill={ink} />
+        {/* The scale (§804): a foot rule and a tick at each step the core chose (1, 2 or 5 km), faint beside the line. */}
+        {strip.scale ? (
+          <g data-testid="bib-profile-scale">
+            <line x1={g.plot.left} y1={g.plot.bottom} x2={g.plot.right} y2={g.plot.bottom} {...scaleStyle} />
+            {g.kmTicks.map((tick) => (
+              <line key={tick.km} x1={tick.x} y1={g.plot.bottom} x2={tick.x} y2={g.plot.bottom + L.profileKmTick} {...scaleStyle} />
+            ))}
+          </g>
+        ) : null}
+        {/* The route's checkpoints (`bib-checkpoints.ts`), where the core puts them: a stem from the pin down to the plot's foot, a dot on
+            the line, and in the band above the plot a ring with the kind's glyph from the core's set. */}
+        {g.markers.map((marker) => (
+          <g key={marker.index} data-testid="bib-checkpoint-mark" data-glyph={marker.glyph}>
+            <line x1={marker.headX} y1={marker.headY + g.pinRadius} x2={marker.x} y2={marker.tickTo} stroke={ink} strokeWidth={L.checkpointTickWeight} />
+            <circle cx={marker.x} cy={marker.y} r={L.checkpointDot} fill={ink} />
+            <circle cx={marker.headX} cy={marker.headY} r={g.pinRadius} fill="none" stroke={ink} strokeWidth={L.profilePinWeight} />
+            <path
+              d={ELEVATION_GLYPH_PATHS[marker.glyph]}
+              transform={`translate(${marker.headX} ${marker.headY}) scale(${glyphScale})`}
+              fill={ink}
+              fillRule={GLYPH_EVEN_ODD[marker.glyph] ? "evenodd" : "nonzero"}
+            />
+          </g>
+        ))}
       </svg>
-      <div
-        style={{
-          display: "flex",
-          position: "absolute",
-          left: px(L.inset),
-          top: px(L.profileLabelTop),
-          width: px(chartWidth),
-          justifyContent: "space-between",
-          fontSize: px(L.profileLabelSize),
-          color: ink,
-        }}
-      >
-        <div style={{ display: "flex" }}>{profile.start}</div>
-        <div style={{ display: "flex" }}>{profile.finish}</div>
-      </div>
-      {/* Their words (§757), «km 12» or «km 12 · 11:30», centred under the ticks in the labels' row — where the crowding rule kept them. */}
-      {(profile.checkpoints?.marks ?? []).map((mark) =>
-        mark.label ? (
-          <div
-            key={mark.x}
-            data-testid="bib-checkpoint-label"
-            style={{
-              ...ONE_LINE,
-              position: "absolute",
-              left: px(L.inset + mark.x * chartWidth - CHECKPOINT_LABEL_BOX / 2),
-              top: px(L.profileLabelTop),
-              width: px(CHECKPOINT_LABEL_BOX),
-              justifyContent: "center",
-              fontSize: px(L.profileLabelSize),
-              color: ink,
-            }}
-          >
-            {mark.label}
-          </div>
-        ) : null,
-      )}
+      {/* Every word of the strip at the baseline the core gave it: «Start» and «Sosire», the points' words, the kilometres and their
+          unit, the altitudes — a box of its own, aligned by the text's anchor, its line's top where the baseline needs it. */}
+      {strip.texts.map((text, at) => (
+        <div
+          key={at}
+          data-testid="bib-profile-text"
+          style={{
+            ...ONE_LINE,
+            position: "absolute",
+            left: px(L.inset + (text.anchor === "start" ? text.x : text.anchor === "end" ? text.x - STRIP_TEXT_BOX : text.x - STRIP_TEXT_BOX / 2)),
+            top: px(text.baseline - BIB_TEXT_ASCENT * size),
+            width: px(STRIP_TEXT_BOX),
+            justifyContent: text.anchor === "start" ? "flex-start" : text.anchor === "end" ? "flex-end" : "center",
+            fontSize: px(size),
+            lineHeight: `${px(BIB_TEXT_LINE * size)}px`,
+            color: ink,
+          }}
+        >
+          {text.text}
+        </div>
+      ))}
       {figures}
     </div>
   );

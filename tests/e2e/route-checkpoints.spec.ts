@@ -512,7 +512,6 @@ test.describe("§802 the route's elevation profile", () => {
     const chart = preview.getByTestId("elevation-chart");
     await expect(chart).toHaveCount(1);
     await expect(preview.getByTestId("elevation-pin")).toHaveCount(3);
-    await expect(preview).toContainText("Numărul de concurs le arată după setarea „Punctele de control pe profil”");
     // The preview's labels are 11 px or more as drawn in the editor's card — on a 320 px phone the card leaves the chart about 204 px.
     const previewSmallest = await chart.evaluate((svg) => {
       const scale = svg.getBoundingClientRect().width / (svg as SVGSVGElement).viewBox.baseVal.width;

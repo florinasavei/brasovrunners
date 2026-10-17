@@ -2,7 +2,7 @@ import Box from "@mui/material/Box";
 import { getTranslations } from "next-intl/server";
 import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
-import { canManageStaff, canReadContent, type StaffRole } from "@/modules/staff-identity/domain/roles";
+import { canManageStaff, canReadContent, canSeeDiagnostics, type StaffRole } from "@/modules/staff-identity/domain/roles";
 import { canOpenSettingsTab } from "@/modules/staff-identity/domain/settings-tabs";
 import { type TaskTarget, targetRoute } from "../domain/task-targets";
 
@@ -21,9 +21,11 @@ export default async function TaskTargetLink({ locale, role, target }: { locale:
       ? canOpenSettingsTab(role, target.tab)
       : target.kind === "pages"
         ? canReadContent(role)
-        : target.section === "staff"
-          ? canManageStaff(role)
-          : canReadContent(role);
+        : target.kind === "devs"
+          ? canSeeDiagnostics(role)
+          : target.section === "staff"
+            ? canManageStaff(role)
+            : canReadContent(role);
   if (!allowed) return null;
   const t = await getTranslations("Admin");
   const route = targetRoute(target);
@@ -33,7 +35,9 @@ export default async function TaskTargetLink({ locale, role, target }: { locale:
       ? `${t("nav.settings")} → ${t(`settingsTabs.${target.tab}`)}`
       : target.kind === "pages"
         ? `${t("nav.pages")} → ${t("pages.tabContact")}`
-        : t(`nav.${target.section}`);
+        : target.kind === "devs"
+          ? `${t("nav.settings")} → ${t("settingsTabs.configuration")}`
+          : t(`nav.${target.section}`);
 
   return (
     <Box

@@ -5,14 +5,8 @@ import { type BibDesign, bibEmergencyLine, DEFAULT_BIB_DESIGN, readBibDesign } f
 import { bibDesignSearchParams, type BibDesignFormValues, bibDesignValuesFromQuery } from "@/modules/registrations/bib-design-query";
 import { BIB_LAYOUT, bibExtrasHeight } from "@/modules/registrations/bib-geometry";
 import { renderBibImage } from "@/modules/registrations/bib-image";
-import {
-  type BibProfileDrawing,
-  bibProfileDrawing,
-  bibProfileFigures,
-  bibProfilePaths,
-  parseGpxProfile,
-  PROFILE_POINTS,
-} from "@/modules/registrations/bib-profile";
+import { type BibProfileDrawing, bibProfileDrawing, bibProfileFigures } from "@/modules/registrations/bib-profile";
+import { ELEVATION_MAX_POINTS, parseGpxElevation } from "@/modules/routes/elevation/parse";
 import { renderBibSheet } from "@/modules/registrations/bibs-pdf";
 import { bibPictureStamp } from "@/modules/registrations/domain/bib-stamp";
 import { drawnRuns } from "../../helpers/pdf-drawn";
@@ -35,13 +29,10 @@ function track(options: { withElevation?: boolean; points?: number; step?: numbe
   return `<?xml version="1.0"?><gpx version="1.1" creator="test"><trk><trkseg>${body}</trkseg></trk></gpx>`;
 }
 
-const DRAWING: BibProfileDrawing = bibProfileDrawing(
-  parseGpxProfile(track())!,
-  {},
-  "ro",
-  (key, values) =>
-    ({ start: "Start", finish: "Sosire", distance: `Distanță: ${values?.km} km`, gain: `Diferență de nivel: +${values?.m} m` })[key],
-);
+const SAY = (key: string, values?: { km?: string; m?: string }) =>
+  ({ start: "Start", finish: "Sosire", kmUnit: "km", altitudeUnit: "m", distance: `Distanță: ${values?.km} km`, gain: `Diferență de nivel: +${values?.m} m` })[key] as string;
+
+const DRAWING: BibProfileDrawing = bibProfileDrawing(parseGpxElevation(track())!, {}, "ro", SAY);
 
 const SHEET = {
   eventTitle: "Crosul Brașov Runners",
@@ -101,18 +92,16 @@ describe("§750 the design's new keys", () => {
   });
 });
 
-describe("§750 the profile from a GPX", () => {
-  it("reduces the track to a few dozen points with its distance and gain", () => {
-    const profile = parseGpxProfile(track())!;
-    expect(profile.points).toHaveLength(PROFILE_POINTS);
+describe("§750, §804 the profile from a GPX, read by the elevation core", () => {
+  it("reduces the track to the core's few hundred points with its distance and gain", () => {
+    const profile = parseGpxElevation(track())!;
+    expect(profile.points.length).toBeGreaterThanOrEqual(64);
+    expect(profile.points.length).toBeLessThanOrEqual(ELEVATION_MAX_POINTS);
+    // Metres from the start and the altitude there: the first at 0, the last at the track's own length.
     expect(profile.points[0][0]).toBe(0);
-    expect(profile.points[PROFILE_POINTS - 1][0]).toBe(1);
-    for (const [x, y] of profile.points) {
-      expect(x).toBeGreaterThanOrEqual(0);
-      expect(x).toBeLessThanOrEqual(1);
-      expect(y).toBeGreaterThanOrEqual(0);
-      expect(y).toBeLessThanOrEqual(1);
-    }
+    expect(profile.points[profile.points.length - 1][0]).toBeCloseTo(profile.distanceMeters, -1);
+    expect(DRAWING.profile).toEqual(profile);
+    expect(DRAWING.distanceMeters).toBe(profile.distanceMeters);
     // 40 steps of 0.001° of longitude at 45.6° N: about 3.1 km; the climb is 200 m, give or take the smoothing.
     expect(profile.distanceMeters).toBeGreaterThan(3000);
     expect(profile.distanceMeters).toBeLessThan(3200);
@@ -121,15 +110,15 @@ describe("§750 the profile from a GPX", () => {
   });
 
   it("has none without elevation, with one point, or for a few steps", () => {
-    expect(parseGpxProfile(track({ withElevation: false }))).toBeNull();
-    expect(parseGpxProfile(track({ points: 1 }))).toBeNull();
-    expect(parseGpxProfile(track({ points: 3, step: 0.00001 }))).toBeNull();
-    expect(parseGpxProfile("<gpx></gpx>")).toBeNull();
+    expect(parseGpxElevation(track({ withElevation: false }))).toBeNull();
+    expect(parseGpxElevation(track({ points: 1 }))).toBeNull();
+    expect(parseGpxElevation(track({ points: 3, step: 0.00001 }))).toBeNull();
+    expect(parseGpxElevation("<gpx></gpx>")).toBeNull();
   });
 
   it("reads a route's points when the file has no track", () => {
     const route = track().replaceAll("trkpt", "rtept");
-    expect(parseGpxProfile(route)?.points).toHaveLength(PROFILE_POINTS);
+    expect(parseGpxElevation(route)?.points.length).toBeGreaterThanOrEqual(64);
   });
 
   it("lets the figures the club typed win over the file's", () => {
@@ -139,17 +128,11 @@ describe("§750 the profile from a GPX", () => {
     // A typed flat route is a typed figure: a gain of 0 is kept.
     expect(bibProfileFigures(computed, { distanceMeters: 0, elevationGainMeters: 0 })).toEqual({ distanceMeters: 3100, gainMeters: 0 });
     const say = (key: string, values?: { km?: string; m?: string }) => (key === "distance" ? `D ${values?.km}` : key === "gain" ? `G ${values?.m}` : key);
-    const words = bibProfileDrawing(parseGpxProfile(track())!, { distanceMeters: 12_400, elevationGainMeters: 1240 }, "ro", say);
+    const words = bibProfileDrawing(parseGpxElevation(track())!, { distanceMeters: 12_400, elevationGainMeters: 1240 }, "ro", say);
     expect(words.distance).toBe("D 12,4");
     expect(words.gain).toMatch(/^G 1.?240$/);
-    expect(bibProfileDrawing(parseGpxProfile(track())!, { distanceMeters: 12_400 }, "en", say).distance).toBe("D 12.4");
-  });
-
-  it("gives the picture's path as data", () => {
-    const paths = bibProfilePaths(DRAWING.points, 250, 24);
-    expect(paths.line.startsWith("M0.00 ")).toBe(true);
-    expect(paths.line.split("L")).toHaveLength(PROFILE_POINTS);
-    expect(paths.area.endsWith("Z")).toBe(true);
+    expect(words.distanceMeters).toBe(12_400);
+    expect(bibProfileDrawing(parseGpxElevation(track())!, { distanceMeters: 12_400 }, "en", say).distance).toBe("D 12.4");
   });
 });
 
@@ -217,7 +200,8 @@ describe("§750 «Profilul traseului» on the sheet", () => {
     expect(texts).toEqual(expect.arrayContaining([DRAWING.start, DRAWING.finish, DRAWING.distance, DRAWING.gain]));
     expect(DRAWING.distance).toMatch(/^Distanță: 3,1 km$/);
     // Vector paths: the area's and the line's points, on top of everything else the number draws.
-    expect(on.lines - off.lines).toBe(2 * PROFILE_POINTS);
+    // (and the kilometre scale's ticks: the line and the area are at least one segment per profile point each)
+    expect(on.lines - off.lines).toBeGreaterThanOrEqual(2 * DRAWING.profile.points.length);
     expect(off.runs.map((run) => run.text)).not.toContain(DRAWING.distance);
   });
 

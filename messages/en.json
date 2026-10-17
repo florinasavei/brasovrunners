@@ -2516,7 +2516,9 @@
         "showProfileHelp": "Ticked: every number carries a strip with the route's profile, under the name. Choose below where it comes from and how it sits.",
         "showProfileNoGpx": "The event has no GPX: upload it in “The route” or choose a picture.",
         "showCheckpoints": "Checkpoints on the profile",
-        "showCheckpointsHelp": "Ticked: on the profile, at each point, a cup for water, a fork for food, a dot for the rest. Under it, “km 12” where it fits. Drawn only with the route's profile.",
+        "showCheckpointsHelp": "Ticked: a ring with its sign above the profile, at each point ticked “Show on the route profile”, and under it “km 5 · water” or “km 12”, where it fits. Only on the profile drawn from the GPX.",
+        "showProfileScale": "Kilometres and altitudes on the profile",
+        "showProfileScaleHelp": "Ticked: under the profile, ticks at regular distances with their kilometre, and the highest and the lowest altitude. They appear only where they fit, on the profile drawn from the GPX.",
         "showCheckpointTimes": "…with the cut-off times",
         "showCheckpointTimesHelp": "Ticked: beside each point, the time it closes too, “km 12 · 11:30”. If not every time fits, none is printed; then the kilometres that do not fit go. The marks always stay.",
         "showCheckpointsNone": "The event has no checkpoints: add them in “The course” › “Checkpoints”.",
@@ -2638,7 +2640,7 @@
         },
         "profileSourceHelp": "The drawing comes from the event's GPX file, not from Strava: the site cannot read a Strava map. With a picture you put what you want on the strip, the food stations for example.",
         "profileImageSrc": "The profile picture",
-        "profileImageSrcHelp": "Fitted whole, never cropped, in a strip of about {alone} to 1; with the distance and the elevation gain beside it, {beside} to 1. Best: a picture just as wide, on a white background.",
+        "profileImageSrcHelp": "Recommended: a wide picture, placed whole, never cropped. With the figures beside the profile: {ratioBeside} to 1, that is {widthBeside} × {height} px at {dpi} dpi. Without them, or with none to show: {ratioAlone} to 1, that is {widthAlone} × {height} px.",
         "showProfileFigures": "Show the distance and the elevation gain beside the profile",
         "showProfileFiguresHelp": "Ticked: the two figures at the profile's right. Unticked: the profile or the picture takes the whole width.",
         "profileOrientation": "The profile's orientation",
@@ -4495,6 +4497,16 @@
             "The words cannot be recovered, and the site does not know who wrote them. Fix the way (the row above) or the form's address, so it does not happen again.",
             "The row turns green after 7 days without a lost message."
           ]
+        },
+        "retentionPeriods": {
+          "title": "Data retention: periods to decide",
+          "todo": "The database grows and not every retention period is decided. This row is only informational for now: nothing is deleted because of it.",
+          "done": "The retention periods are decided.",
+          "how": [
+            "Open Settings → Configuration: the «Database size» card shows what each table takes and how much it grew in 30 days.",
+            "On that card, open «The plan for keeping data and the proposed periods»: the section «Keeping Neon and Vercel light, long term» has the table of proposed periods.",
+            "Decide the periods; for the personal data of past events, ask a lawyer first. Until then nothing changes."
+          ]
         }
       },
       "freeVerdict": {
@@ -6005,6 +6017,11 @@
       "profileFinish": "Finish",
       "checkpointKm": "km {km}",
       "checkpointKmTime": "km {km} · {time}",
+      "checkpointKmWater": "km {km} · water",
+      "checkpointKmFood": "km {km} · food",
+      "checkpointKmBoth": "km {km} · water + food",
+      "profileKmUnit": "km",
+      "profileAltitudeUnit": "m",
       "profileDistance": "Distance: {km} km",
       "profileGain": "Elevation gain: +{m} m",
       "emergencyLabel": "Emergency",
@@ -8618,6 +8635,7 @@
             "showProfile": "Bib: route profile",
             "showCheckpoints": "Bib: checkpoints on the profile",
             "showCheckpointTimes": "Bib: cut-off times on the profile",
+            "showProfileScale": "Bib: kilometres and altitudes on the profile",
             "showDistance": "Bib: distance badge",
             "showEmergency": "Bib: emergency phone",
             "emergencyPhone": "Bib: emergency number",
@@ -9693,11 +9711,11 @@
         "noteEn": "Note (English)",
         "noteHelp": "Optional, in both languages or neither; at most {max} characters.",
         "onProfile": "Show on the route profile",
-        "onProfileHelp": "Unticked points stay in the table and on the page; only the profile leaves them out."
+        "onProfileHelp": "Unticked points stay in the table and on the page; neither the page's profile nor the race number's draws them."
       },
       "preview": {
         "title": "How it appears on the page",
-        "help": "It changes after “Save the points”, not while you type. The race number shows them as its setting “Checkpoints on the profile” in “Race numbers (bibs)” says.",
+        "help": "It changes after “Save the points”, not while you type.",
         "none": "The profile appears on the page once the route has a GPX file with altitudes."
       },
       "kinds": {
@@ -10955,10 +10973,10 @@
       "id": "Deployment id: {id}",
       "notOnVercel": "Not running on Vercel (local or test).",
       "usageLink": "Open Vercel → Usage.",
-      "month": "This month: {deployments} deployments ({today} today, of {perDay} a day), {minutes} build minutes of {of} ({percent}%), {errored} failed.",
+      "month": "This month: {deployments} deployments ({today} today, of {perDay} a day), {minutes} build minutes, {errored} failed.",
       "unavailable": "Not configured: set VERCEL_API_TOKEN and VERCEL_PROJECT_ID in the project's variables. The steps are on /admin/tasks.",
       "failed": "Vercel did not answer: {reason}.",
-      "notInApi": "Bandwidth and invocations are not exposed by Vercel's API; they are only on the dashboard."
+      "builds": "Builds this month, on this project: {builds} ({branches})."
     },
     "neon": {
       "title": "Database (Neon)",
@@ -10985,8 +11003,7 @@
       "awake": "Compute awake: {hours} h of {elapsed} h elapsed",
       "period": "Period ends {date}",
       "unavailable": "Not configured: set NEON_API_KEY and NEON_PROJECT_ID in the Vercel project's variables, then redeploy. The steps are on /admin/tasks.",
-      "failed": "Neon did not answer: {reason}",
-      "vercel": "Hosting (Vercel): consumption is on the Vercel dashboard → Usage; the Hobby plan's limits are far above what the site uses (under 1% in September 2026)."
+      "failed": "Neon did not answer: {reason}"
     },
     "sentThisMonth": "Sent this month",
     "emailPlanLabel": "Mailgun plan",
@@ -11029,6 +11046,67 @@
       "neverOk": "no message carried yet",
       "lastFailure": "last refusal {when} ({error})",
       "since": "since {when}"
+    },
+    "dbSize": {
+      "title": "Database size",
+      "intro": "How big the database is and what grew in the last 30 days. This only measures: nothing is deleted.",
+      "introMore": "These numbers are what the club chooses how long to keep each kind of data on. Estimated rows were not counted exactly.",
+      "aside": "{size} MB",
+      "total": "The whole database: {size} MB.",
+      "unread": "The database's size could not be read just now: it may be asleep or away. Try again in a moment.",
+      "tablesTitle": "The eight largest tables",
+      "row": "{total} MB, of which {data} MB data and {indexes} MB indexes",
+      "rowsExact": "Rows: {count}",
+      "rowsEstimated": "Rows: about {count}",
+      "rowsUnknown": "Rows: unknown",
+      "gained": "{count} new in the last {days} days",
+      "growthTitle": "What grew in the last {days} days",
+      "growth": {
+        "audit_logs": "The staff action log",
+        "email_outbox": "Emails, queued and sent",
+        "email_action_tokens": "The links in emails",
+        "family_place_holds": "Places held for families",
+        "registration_notes": "Notes on registrations",
+        "event_volunteers": "Volunteers",
+        "registrations": "Registrations",
+        "declaration_acceptances": "Signed declarations",
+        "group_run_declarations": "Group-run declarations"
+      },
+      "growthLine": "{recent} new, of {total}",
+      "settled": "{count} can no longer be used",
+      "registrationsTitle": "Registrations by state and how long ago the event was",
+      "registrationsMore": "Test registrations are included: this measures space, not a number given to the club. Age counts from the event's start.",
+      "registrationsNone": "There are no registrations.",
+      "registrationsLine": "{total} in all · {six} at events more than {sixMonths} months ago · {twelve} at events more than {twelveMonths} months ago",
+      "status": {
+        "PENDING_EMAIL_CONFIRMATION": "Address not confirmed",
+        "PENDING_DECLARATION": "Waiting for the declaration",
+        "WAITLISTED": "On the waiting list",
+        "WAITLIST_OFFERED": "Waiting-list offer",
+        "CONFIRMED": "Confirmed",
+        "CANCELLED": "Cancelled",
+        "EXPIRED": "Expired"
+      },
+      "planLink": "The plan for keeping data and the proposed periods"
+    },
+    "vercelUsage": {
+      "title": "Vercel: this month's usage",
+      "intro": "The lines of Vercel's Usage page since the start of the month, read from their billing API.",
+      "introMore": "Prices are list prices. Hobby costs nothing, but a Hobby team past an included allowance cannot use that feature for about 30 days, and Vercel may pause the team.",
+      "aside": "${usd}",
+      "unconfigured": "Without VERCEL_API_TOKEN the usage cannot be read.",
+      "cannot": "Vercel does not give usage to this key ({reason}). The lines are only on the account's Usage page.",
+      "totalCredit": "Used so far: ${usd} of the included ${credit} credit.",
+      "totalHobby": "Used so far: ${usd} at list price.",
+      "cycleMore": "The calendar month, in UTC. Vercel's Usage page counts from the start of the billing cycle, which begins on another day.",
+      "subscription": "The subscription itself: ${usd} so far.",
+      "cpu": "Function CPU time: {hours} of the {of} CPU-hours the Hobby plan includes a month ({percent}%).",
+        "cpuNear": "Close to the allowance: {hours} of the {of} CPU-hours the Hobby plan includes a month ({percent}%). Past it, Hobby cannot use that feature for about 30 days.",
+        "cpuUnknown": "Function CPU time cannot be compared with the Hobby allowance: Vercel gave it in «{unit}», not in hours.",
+      "linesTitle": "By service",
+      "line": "{quantity} {unit} · ${usd}",
+      "buildsTitle": "Builds by project",
+      "buildLine": "{minutes} build CPU minutes · ${usd}"
     }
   },
   "Error": {
