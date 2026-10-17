@@ -5,7 +5,9 @@ import { readEventLinks } from "@/modules/events/domain/links";
 import { readRouteGpx } from "@/modules/events/domain/route-gpx";
 import { readRouteMaps } from "@/modules/events/domain/route-maps";
 import { readScheduleItems } from "@/modules/events/domain/schedule";
+import { publicListClosesAt } from "@/modules/deadlines/domain/deadlines";
 import type { EventTodoPriority } from "@/modules/event-todos/domain/event-todo";
+import { eventTakesResults } from "@/modules/results/domain/event-type";
 import { missingForPublish, storedPublishReader, type StoredPublishTranslation } from "../ui/publish-check";
 
 /**
@@ -30,7 +32,9 @@ import { missingForPublish, storedPublishReader, type StoredPublishTranslation }
  * - a programme for a hike, a coffee or a meetup: only a race is expected to have timed rows.
  *
  * An event that is over, cancelled or archived has nothing left to do for its page, so it has no
- * computed rows (`isOver`); the club's own typed lines stay.
+ * computed rows (`isOver`); the club's own typed lines stay. **One exception, `results`** (§809, race results part 2): a race
+ * that is over and whose «Clasament» is not published has something left to do — publish it — for as long as the public list's
+ * period (§421) lasts, after which the page could not show it anyway.
  */
 
 export const PAGE_TODO_RULES = [
@@ -48,6 +52,8 @@ export const PAGE_TODO_RULES = [
   "capacity",
   "bibDesign",
   "declaration",
+  "results",
+  "resultsStart",
 ] as const;
 export type PageTodoRule = (typeof PAGE_TODO_RULES)[number];
 
@@ -64,7 +70,9 @@ export type PageTodoAnchor =
   | "box-kind"
   | "box-registration"
   | "box-bibs"
-  | "box-declaration";
+  | "box-declaration"
+  // Not a card of this editor: the race's results page (`/admin/events/[id]/results`, §809). The card draws a link to the route.
+  | "page-results";
 
 /** One thing the page lacks: which rule, in which language when it is a language's, how pressing, and where it is filled. */
 export type PageTodo = {
@@ -98,6 +106,8 @@ export type PageTodoEvent = {
   capacity: number | null;
   bibDesign: unknown;
   declarationDocumentId: string | null;
+  /** «Clasamentul e public pe pagina evenimentului» (§809): the Administrator's tick on the results page. */
+  resultsPublished: boolean;
 };
 
 /** What the rules read of one language. */
@@ -112,6 +122,15 @@ export type PageTodoContext = {
   storageConfigured: boolean;
   /** The ids of the approved declaration versions (`listApprovedRaceDeclarations`). */
   approvedDeclarationIds: ReadonlySet<string>;
+  /** "Termene": the days after an event its public list, and with it its results, stay on the page (`publicListDays`, §421). */
+  publicListDays: number;
+  /**
+   * Whether the «results» row may be raised for this viewer (§809): they may open the results page (`canEnterResults`, the page 404s
+   * otherwise) and publishing would be accepted — the privacy notice and the terms in force both describe `{{results}}`. Otherwise the
+   * row would promise a step they cannot take; the gap in the texts is `/admin/tasks`' to say. The «resultsStart» row is not gated:
+   * it is about the event's own start, which the editor's reader can fix.
+   */
+  resultsRow: boolean;
 };
 
 /** Over, cancelled or archived: the page has nothing left to be finished for. */
@@ -121,13 +140,49 @@ function isOver(event: PageTodoEvent, now: Date): boolean {
   return (event.endsAt ?? event.startsAt).getTime() < now.getTime();
 }
 
+/**
+ * «Cursa s-a terminat și clasamentul nu e publicat» (§809): the one row an event that is over still has. A race — the only type that
+ * takes results — that was published on the site, is not cancelled or archived, whose date and time are announced, whose end has
+ * passed (a race saved without an end is over a day after it starts: the start is the meeting time, not the finish), whose results are
+ * not on the page, and whose period has not closed (after it `readPublicEventResults` shows nothing, so publishing would change nothing).
+ * It is high: the people who ran are waiting for it. It links to the results page, not to a card (`page-results`).
+ */
+function resultsOverdue(event: PageTodoEvent, context: PageTodoContext): boolean {
+  if (!context.resultsRow || event.resultsPublished) return false;
+  if (event.timeToBeAnnounced) return false;
+  return raceOverInPeriod(event, context);
+}
+
+/**
+ * «Ora startului încă se anunță: clasamentul nu poate apărea pe pagină» (§809): a race whose day has passed but whose hour was never
+ * announced. The public pages keep a held-back start out of the picture (`startHeldBack`, `startsAt` NULL), so the «Clasament» can
+ * never show for it — published or not — and the row says so instead of asking for a publication that would change nothing.
+ */
+function resultsStartMissing(event: PageTodoEvent, context: PageTodoContext): boolean {
+  return event.timeToBeAnnounced && raceOverInPeriod(event, context);
+}
+
+/** A race published on the site, not cancelled or archived, with its day announced, whose end has passed and whose period is still open. */
+function raceOverInPeriod(event: PageTodoEvent, context: PageTodoContext): boolean {
+  if (!eventTakesResults(event.type)) return false;
+  if (event.editorialStatus !== "PUBLISHED" || event.eventStatus === "CANCELLED") return false;
+  if (event.dateToBeAnnounced) return false;
+  const DAY = 24 * 60 * 60_000;
+  const over = event.endsAt ?? new Date(event.startsAt.getTime() + DAY);
+  if (over.getTime() >= context.now.getTime()) return false;
+  return context.now.getTime() <= publicListClosesAt(event, { publicListDays: context.publicListDays }).getTime();
+}
+
 const hasDoc = (json: unknown) => json !== null && json !== undefined && hasRichTextContent(readRichText(json));
 
 export function eventPageTodos(event: PageTodoEvent, translations: readonly PageTodoTranslation[], context: PageTodoContext): PageTodo[] {
-  if (isOver(event, context.now)) return [];
   const found: PageTodo[] = [];
   const add = (rule: PageTodoRule, priority: EventTodoPriority, anchor: PageTodoAnchor, locale: string | null = null) =>
     found.push({ id: locale ? `${rule}:${locale}` : rule, rule, locale, priority, anchor });
+  // The exception to "nothing left once it is over": the results still to publish (§809). Said before the early return.
+  if (resultsOverdue(event, context)) add("results", "HIGH", "page-results");
+  if (resultsStartMissing(event, context)) add("resultsStart", "HIGH", "box-when");
+  if (isOver(event, context.now)) return found;
   const isRace = event.type === "RACE";
 
   /*

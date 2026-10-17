@@ -229,6 +229,11 @@ export const routing = defineRouting({
      * like `urgente`: a backoffice address, read by the club.
      */
     "/admin/events/[id]/mesaje": "/admin/events/[id]/mesaje",
+    /**
+     * «Clasament» (§808): a race's results entered or imported by race number, ranked, and made public by an Administrator. One
+     * spelling in both locales, like `mesaje` and `urgente`: a backoffice address, read by the club.
+     */
+    "/admin/events/[id]/results": "/admin/events/[id]/results",
     "/admin/staff": "/admin/staff",
     "/admin/registrations": "/admin/registrations",
     "/admin/tasks": "/admin/tasks",

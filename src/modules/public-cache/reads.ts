@@ -1,4 +1,5 @@
 import { getDb } from "@/db/client";
+import { type PublicEventResults, readPublicEventResults } from "@/modules/results/results";
 import type { PublicListClub } from "@/db/schema/events";
 import type { LegalDocumentKey } from "@/db/schema/legal-documents";
 import { parseLocalizedPath } from "@/i18n/alternate-path";
@@ -75,6 +76,7 @@ import {
   describesNewsletter,
   describesPromotionalMaterials,
   describesPromotionalMaterialsShared,
+  describesResults,
   describesVolunteerAgreement,
   describesVolunteerMinors,
   describesVolunteerProfile,
@@ -83,7 +85,7 @@ import {
 } from "@/modules/legal-documents/domain/merge-fields";
 import { readPublicVolunteerRoles } from "@/modules/volunteers/volunteers";
 import { describesRefusal } from "@/modules/legal-documents/domain/refusal-clause";
-import { findCurrentApprovedDocument, findFirstStatesNoticeVersion, listEffectiveDates } from "@/modules/legal-documents/repository";
+import { findCurrentApprovedDocument, findFirstResultsNoticeVersion, findFirstStatesNoticeVersion, listEffectiveDates } from "@/modules/legal-documents/repository";
 import { DEFAULT_BOT_CHECK, readBotCheck } from "@/modules/registrations/bot-check";
 import { DEFAULT_PUBLIC_LIST_CLUB } from "@/modules/registrations/domain/public-list-club";
 import {
@@ -537,6 +539,45 @@ export async function cachedFirstStatesNoticeVersion(): Promise<number | null> {
 }
 
 /**
+ * The first approved privacy notice that described a race's results (`findFirstResultsNoticeVersion`, §808), or null — the line below
+ * which a tick was given under a notice that said no named results were published yet: those runners appear in the published
+ * results as «Participant #numărul». Expired with every legal text, like the states' twin above.
+ */
+export async function cachedFirstResultsNoticeVersion(): Promise<number | null> {
+  return publicRead(["legal.first-results-notice"], ["legal"], () => findFirstResultsNoticeVersion(getDb()));
+}
+
+/**
+ * A race's published results, the rows the event page draws (§809, race results part 2): `readPublicEventResults` through the data
+ * cache, filed under `places` and `events` — the tags the results' save, its publish switch, a confirmation, a cancellation, an erasure and
+ * somebody leaving the list already expire, so a name is never shown after its owner withdrew it and a correction is on the page at
+ * once. Like the start list's rows it has **no saved copy** (`places` is never kept): a stale ranking is a wrong place, so a month
+ * that cannot be asked leaves the section out and the page stands (`ResultsSection`).
+ *
+ * The key carries every input that decides the answer — the event, the club's period, the two notices' verdicts and the version
+ * below which nobody is named — so an approval or a change of "Termene" reads a new entry, never an old one. The clock is **not**
+ * in it: the entry is made at a request, and the page checks `closesAt` against its own `now` again (a date passing is no write),
+ * holding itself until then (`resultsClockInstants`).
+ */
+export async function cachedPublicEventResults(
+  eventId: string,
+  gates: { deadlines: Pick<Deadlines, "publicListDays">; noticeDescribes: boolean; termsDescribe: boolean; firstResultsNoticeVersion: number | null },
+): Promise<PublicEventResults | null> {
+  return publicRead(
+    [
+      "places.results",
+      eventId,
+      gates.deadlines.publicListDays,
+      gates.noticeDescribes ? "notice" : "no-notice",
+      gates.termsDescribe ? "terms" : "no-terms",
+      gates.firstResultsNoticeVersion ?? "none",
+    ],
+    ["places", "events"],
+    () => readPublicEventResults(getDb(), eventId, { now: new Date(), ...gates }),
+  );
+}
+
+/**
  * Whether the public list may show the states, and the pending and waiting groups (§396): the
  * privacy notice in force describes them (`describesListStates`), in every language. Read
  * through `cachedCurrentApprovedDocument`, so an approval expires it and a version approved for
@@ -611,6 +652,17 @@ export async function cachedNewsletterOffered(now: Date): Promise<boolean> {
 export async function cachedVolunteersDescribed(now: Date): Promise<boolean> {
   const notices = await Promise.all(routing.locales.map((locale) => cachedCurrentApprovedDocument("PRIVACY_NOTICE", locale, now)));
   return notices.every((notice) => notice !== undefined && describesVolunteers(notice.body));
+}
+
+/**
+ * Whether an event's page may show its published results (§808): the privacy notice in force describes them
+ * (`describesResults`), in every language — `cachedVolunteersDescribed`'s reading, so an approval opens the
+ * section the moment the notice itself changes. `noticeDescribesResults` is the uncached twin
+ * `setResultsPublished` asks again at every press.
+ */
+export async function cachedResultsDescribed(now: Date): Promise<boolean> {
+  const notices = await Promise.all(routing.locales.map((locale) => cachedCurrentApprovedDocument("PRIVACY_NOTICE", locale, now)));
+  return notices.every((notice) => notice !== undefined && describesResults(notice.body));
 }
 
 /**
@@ -740,6 +792,16 @@ function withoutAddresses(settings: FeedbackSettings): FeedbackSettings {
 export async function cachedRefusalDisclosed(now: Date): Promise<boolean> {
   const terms = await Promise.all(routing.locales.map((locale) => cachedCurrentApprovedDocument("TERMS", locale, now)));
   return terms.every((document) => document !== undefined && describesRefusal(document.body));
+}
+
+/**
+ * Whether the terms in force describe a race's published results (§808, `termsDescribeResults`), in every language — the second
+ * condition, beside the notice's (`cachedResultsDescribed`), for the event page to show them. Read through
+ * `cachedCurrentApprovedDocument`, so an approval expires it on the day the terms change.
+ */
+export async function cachedResultsTermsDescribed(now: Date): Promise<boolean> {
+  const terms = await Promise.all(routing.locales.map((locale) => cachedCurrentApprovedDocument("TERMS", locale, now)));
+  return terms.every((document) => document !== undefined && describesResults(document.body));
 }
 
 // --- Legal texts ------------------------------------------------------------------------------

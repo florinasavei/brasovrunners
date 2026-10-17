@@ -384,12 +384,12 @@ export const registrations = pgTable(
     /**
      * "Keep my name off the public start list" (BR-REQ-039-01).
      *
-     * A separate answer from `results_name_consent`, which is about the *results* after the
-     * event, and deliberately shaped the other way round: the club decides per event whether a
-     * start list is published at all (`events.participant_list_visibility`, HIDDEN by default),
-     * and this is one participant's refusal within an event that publishes one. Two questions,
-     * two columns — folding them together would mean a person who wants to be listed at the
-     * start line and not in a permanent results table cannot say so.
+     * The one tick for the list **and the race's published results** (§808, race results part 1: «Vreau să apar pe lista de participanți
+     * & rezultate», one box, withdrawn the same way): `readPublicEventResults` names a runner only with this on, a confirmed registration
+     * and a notice version that described the results (`findFirstResultsNoticeVersion`). `results_name_consent` below, a separate
+     * answer once meant for the results alone, is **not read by anything** — always false since §322 — and a contract release may drop it.
+     * Deliberately shaped the other way round from the old column: the club decides per event whether a start list is published at all
+     * (`events.participant_list_visibility`, HIDDEN by default), and this is one participant's refusal within an event that publishes one.
      *
      * Defaults to **not listed** since §323 (migration `0060`). Every insert in the code states
      * the answer the person gave, so the default decides nothing today; it is there so that a row

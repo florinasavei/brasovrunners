@@ -1,0 +1,6 @@
+ALTER TABLE "event_results" ADD COLUMN "name_agreed_at" timestamp with time zone;--> statement-breakpoint
+ALTER TABLE "event_results" ADD COLUMN "name_agreed_by_staff_user_id" uuid;--> statement-breakpoint
+ALTER TABLE "event_results" ADD CONSTRAINT "event_results_name_agreed_by_staff_user_id_staff_users_id_fk" FOREIGN KEY ("name_agreed_by_staff_user_id") REFERENCES "public"."staff_users"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "event_results" ADD CONSTRAINT "event_results_name_agreed_actor" CHECK ("event_results"."name_agreed_by_staff_user_id" IS NULL OR "event_results"."name_agreed_at" IS NOT NULL);--> statement-breakpoint
+ALTER TABLE "event_results" ADD CONSTRAINT "event_results_name_agreed_typed_only" CHECK ("event_results"."name_agreed_at" IS NULL OR "event_results"."registration_id" IS NULL);--> statement-breakpoint
+ALTER TABLE "event_results" ADD CONSTRAINT "event_results_name_agreed_needs_name" CHECK ("event_results"."name_agreed_at" IS NULL OR "event_results"."display_name" IS NOT NULL);

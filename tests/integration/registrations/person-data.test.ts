@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { auditLogs } from "@/db/schema/audit-logs";
 import { emailOutbox } from "@/db/schema/email-outbox";
+import { eventResults } from "@/db/schema/event-results";
 import { eventVolunteerCategories, eventVolunteerRoleChoices, eventVolunteerRoles, eventVolunteers } from "@/db/schema/event-volunteers";
 import { events } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
@@ -232,6 +233,27 @@ describe("BR-REQ-070-01 everything held about a person", () => {
     ]);
   });
 
+  /**
+   * §808 — a race's results are personal data tied to the registration: the access answer lists them, every column as the platform stores
+   * it (the race number, how it ended, the times, the places, the category, the note, whether the race's results are public), and the file
+   * carries them too — an answer without them would be incomplete.
+   */
+  it("lists the results entered for the person's registrations, every column, in the page's data and the file", async () => {
+    const admin = await staff("ADMIN");
+    await db.insert(eventResults).values({ eventId, registrationId, bibNumber: 101, status: "FINISHED", gunTimeMs: 3_000_000, chipTimeMs: 2_990_000, positionOverall: 3, positionSex: 2, positionCategory: 1, categoryKey: "FEMALE:from30", note: "a venit cu bastoane" });
+    await db.update(events).set({ resultsPublished: true }).where(eq(events.id, eventId));
+    // Another person's result on the same race is not hers.
+    await db.insert(eventResults).values({ eventId, bibNumber: 900, displayName: "Ion Vasile", status: "FINISHED", gunTimeMs: 2_900_000 });
+
+    for (const data of [await viewPersonData(db, admin, canonicalLookupOf("ana.pop@gmail.com"), NOW), await exportPersonData(db, admin, canonicalLookupOf("ana.pop@gmail.com"), NOW)]) {
+      expect(data.results).toHaveLength(1);
+      expect(data.results[0]).toMatchObject({ registrationId, eventId, bibNumber: 101, status: "FINISHED", gunTimeMs: 3_000_000, chipTimeMs: 2_990_000, positionOverall: 3, positionSex: 2, positionCategory: 1, categoryKey: "FEMALE:from30", note: "a venit cu bastoane", published: true });
+      expect(JSON.stringify(data.results)).not.toContain("Ion Vasile");
+    }
+    const [entry] = await db.select().from(auditLogs).where(eq(auditLogs.action, "participant.data_exported"));
+    expect((entry.metadataJson as { results: number }).results).toBe(1);
+  });
+
   it("records the file as an export, with counts and no value", async () => {
     const admin = await staff("SUPERADMIN");
 
@@ -240,7 +262,7 @@ describe("BR-REQ-070-01 everything held about a person", () => {
     expect(data.registrations).toHaveLength(1);
     const [entry] = await db.select().from(auditLogs).where(eq(auditLogs.action, "participant.data_exported"));
     expect([entry.actorStaffUserId, entry.entityType, entry.entityId]).toEqual([admin.id, "participant", participantId]);
-    expect(entry.metadataJson).toEqual({ registrations: 1, declarationAcceptances: 0, messages: 1, announcementRequests: 1, volunteerOffers: 1, groupRunDeclarations: 0, notes: 0, auditRows: 0 });
+    expect(entry.metadataJson).toEqual({ registrations: 1, declarationAcceptances: 0, messages: 1, announcementRequests: 1, volunteerOffers: 1, groupRunDeclarations: 0, results: 0, notes: 0, auditRows: 0 });
     expect(JSON.stringify(entry.metadataJson)).not.toMatch(/astm|gmail|Ana/);
   });
 

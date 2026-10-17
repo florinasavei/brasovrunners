@@ -2969,6 +2969,8 @@ function blankEventRow(now: Date): EditableEvent {
     routeMaps: null,
     routeGpx: null,
     showRouteProfile: true,
+    resultsPublished: false,
+    resultsPublishedAt: null,
     repeatRule: null,
     repeatOf: null,
     scheduleItems: null,
