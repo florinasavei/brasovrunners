@@ -12,7 +12,7 @@ import {
   serializeEventFile,
 } from "@/modules/content/events/transfer/file-format";
 import { collectMediaRefs, isFetchableMediaUrl, mapMediaUrls, MEDIA_ROLE_KEYS, mediaRoleKey, sha256Hex, storeKeyOfUrl } from "@/modules/content/events/transfer/media";
-import { DEFAULT_BIB_DESIGN } from "@/modules/registrations/bib-design";
+import { DEFAULT_BIB_DESIGN, readBibDesign } from "@/modules/registrations/bib-design";
 import { DEFAULT_BADGE_DESIGN } from "@/modules/volunteers/badges/badge-design";
 
 /**
@@ -512,6 +512,18 @@ describe("the diff", () => {
     expect(changes[0]).toMatchObject({ from: { type: "boolean", value: false }, to: { type: "boolean", value: true } });
     expect(changes[1]).toMatchObject({ label: "registration.capacity", from: { type: "text", value: "100" }, to: { type: "text", value: "80" } });
     expect(changes[2]).toMatchObject({ label: "translations.title", locale: "en", to: { type: "text", value: "The race" } });
+  });
+
+  it("carries where the profile's figures stand on the bib: a file that changes it shows the change, one that does not say is the strip's right", () => {
+    const incoming = sampleConfig();
+    incoming.bib.design = { ...incoming.bib.design, profileFiguresPlace: "header" };
+    const changes = diffConfigs(same(incoming), same(sampleConfig()));
+    expect(changes.map((change) => change.key)).toEqual(["bib.design.profileFiguresPlace"]);
+    expect(changes[0]).toMatchObject({ label: "bib.design.profileFiguresPlace", from: { type: "text", value: "right" }, to: { type: "text", value: "header" } });
+    // A file made before the choice has no such key: read through the design's schema it is the strip's right, as every number printed before.
+    const old: Record<string, unknown> = { ...sampleConfig().bib.design };
+    delete old.profileFiguresPlace;
+    expect(readBibDesign(old).profileFiguresPlace).toBe("right");
   });
 
   it("treats a picture as its bytes: the same hash under another address is no change, another hash is", () => {

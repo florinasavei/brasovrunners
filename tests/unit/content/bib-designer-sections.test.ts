@@ -198,6 +198,46 @@ describe("§759 the bib designer in named sections", () => {
     expect(hiddenAround(picture, 'name="event.bibDesign.showCheckpoints"')).toBe(true);
   });
 
+  it("offers «Unde stau cifrele» as three radios with their glyphs, the strip's right chosen, shown only while the figures' tick is on", async () => {
+    const part = section(await render({ ...DEFAULT_BIB_DESIGN, showProfile: true }), "profile");
+    expect(radios(part, "event.bibDesign.profileFiguresPlace")).toEqual([
+      { value: "right", checked: true },
+      { value: "below", checked: false },
+      { value: "header", checked: false },
+    ]);
+    expect(part).toContain("Unde stau cifrele");
+    expect(part).toMatch(/data-testid="FormatAlignRightIcon"[\s\S]*?În dreapta profilului/);
+    expect(part).toMatch(/data-testid="VerticalAlignBottomIcon"[\s\S]*?Sub profil, pe un rând/);
+    expect(part).toMatch(/data-testid="VerticalAlignTopIcon"[\s\S]*?În antet, sub dată/);
+    // The help, one sentence, under the group; the group right under the figures' tick.
+    expect(part).toContain(ro.Admin.editor.bibDesign.profileFiguresPlaceHelp);
+    expect(part.indexOf('name="event.bibDesign.showProfileFigures"')).toBeLessThan(part.indexOf('name="event.bibDesign.profileFiguresPlace"'));
+    expect(part.indexOf('name="event.bibDesign.profileFiguresPlace"')).toBeLessThan(part.indexOf('name="event.bibDesign.profileOrientation"'));
+    expect(hiddenAround(part, 'data-testid="bib-profile-figures-place"')).toBe(false);
+    // The stored choice is the one checked.
+    const header = section(await render({ ...DEFAULT_BIB_DESIGN, showProfile: true, profileFiguresPlace: "header" }), "profile");
+    expect(radios(header, "event.bibDesign.profileFiguresPlace").find((radio) => radio.checked)?.value).toBe("header");
+    // With the figures unticked the group is hidden — still in the form, so the choice is kept.
+    const off = section(await render({ ...DEFAULT_BIB_DESIGN, showProfile: true, showProfileFigures: false, profileFiguresPlace: "below" }), "profile");
+    expect(hiddenAround(off, 'data-testid="bib-profile-figures-place"')).toBe(true);
+    expect(radios(off, "event.bibDesign.profileFiguresPlace").find((radio) => radio.checked)?.value).toBe("below");
+  });
+
+  it("names the place in the profile's closed line while the figures are on, and in English too", async () => {
+    const closed = (html: string) => {
+      const part = section(html, "profile");
+      return part.slice(part.indexOf("<summary"), part.indexOf("</summary>"));
+    };
+    expect(closed(await render({ ...DEFAULT_BIB_DESIGN, showProfile: true }))).toContain("cifre lângă profil");
+    expect(closed(await render({ ...DEFAULT_BIB_DESIGN, showProfile: true, profileFiguresPlace: "below" }))).toContain("cifre sub profil");
+    expect(closed(await render({ ...DEFAULT_BIB_DESIGN, showProfile: true, profileFiguresPlace: "header" }))).toContain("cifre în antet");
+    expect(closed(await render({ ...DEFAULT_BIB_DESIGN, showProfile: true, showProfileFigures: false, profileFiguresPlace: "header" }))).not.toContain("cifre");
+    expect(closed(await render({ ...DEFAULT_BIB_DESIGN, showProfile: true }, "en"))).toContain("figures beside the profile");
+    const en = section(await render({ ...DEFAULT_BIB_DESIGN, showProfile: true, profileFiguresPlace: "below" }, "en"), "profile");
+    for (const words of ["Where the figures stand", "At the profile", "Under the profile, on one line", "In the header, under the date"]) expect(en).toContain(words);
+    expect(radios(en, "event.bibDesign.profileFiguresPlace").find((radio) => radio.checked)?.value).toBe("below");
+  });
+
   it("says why the GPX draws nothing when the event has none, and never greys the profile's tick: a picture needs no GPX", async () => {
     const part = section(await render(DEFAULT_BIB_DESIGN, "ro", false), "profile");
     expect(part).toContain("Evenimentul nu are GPX: încarcă-l în „Traseul” sau alege o poză.");

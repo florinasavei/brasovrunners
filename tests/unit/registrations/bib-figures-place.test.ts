@@ -21,6 +21,7 @@ import {
   BIB_IMAGE_SCALE,
   BIB_LAYOUT,
   BIB_MARGIN,
+  BIB_MEMBER_LABEL_LINE,
   BIB_TEXT_LINE,
   BIB_TITLE_DATE_GAP,
   bibExtrasHeight,
@@ -221,13 +222,20 @@ describe("§804 the header's figures line", () => {
     expect(narrow.figures!.text.endsWith("…")).toBe(true);
   });
 
-  it("gives way where the members' label leaves no room under a long title, the title keeping its place", () => {
+  it("stays above the members' label's line, the title shrinking for it", () => {
     const long = "CROSUL DE TOAMNĂ AL ALERGĂTORILOR – EDIȚIA A II-A 2026";
-    const crowded = { title: long, date: "Sâmbătă, 21 nov 2026", logo: true, badge: true, label: true };
-    const without = bibHeader(crowded);
+    const asked = bibHeader({ title: long, date: "Sâmbătă, 21 nov 2026", logo: true, badge: true, label: true, figures: LINE });
+    expect(asked.figures).not.toBeNull();
+    expect(asked.figures!.top + BIB_TEXT_LINE * L.dateSize).toBeLessThanOrEqual(BIB_MEMBER_LABEL_LINE + 1e-9);
+    expect(asked.title!.size).toBeLessThan(bibHeader({ title: long, date: "Sâmbătă, 21 nov 2026", logo: true, badge: true, label: true }).title!.size + 1e-9);
+  });
+
+  it("gives way where no size of the title leaves it room, the title keeping the place it has without", () => {
+    const endless = Array.from({ length: 14 }, (_, i) => `ALERGAREA${i + 1} PE-DEAL`).join(" ");
+    const crowded = { title: endless, date: "Sâmbătă, 21 nov 2026", logo: true, badge: true, label: true };
     const asked = bibHeader({ ...crowded, figures: LINE });
     expect(asked.figures).toBeNull();
-    expect(asked).toEqual(without);
+    expect(asked).toEqual(bibHeader(crowded));
   });
 });
 
@@ -414,4 +422,4 @@ describe("§804 the drawing version, and the numbers printed so far", () => {
   });
 });
 
-const GOLDEN_RIGHT = "CAPTURE";
+const GOLDEN_RIGHT = "9c92ff5a184e4dd96706768cf138dfc6031e5ea7b388a2db3c8780308c02b6b7";
