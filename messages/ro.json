@@ -764,8 +764,8 @@
     "results": {
       "title": "Clasament",
       "anonymous": "Participant #{bib}",
-      "published": "Publicat la {published} · rămâne pe pagină până la {until}",
-      "until": "Rămâne pe pagină până la {until}",
+      "published": "Publicat {published} · rămâne pe pagină până {until}",
+      "until": "Rămâne pe pagină până {until}",
       "caption": "Clasamentul cursei: întâi cei care au terminat, în ordinea sosirii, apoi cei care nu au terminat.",
       "columnPlace": "Loc",
       "columnNumber": "Nr.",

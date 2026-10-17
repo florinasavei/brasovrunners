@@ -9,7 +9,7 @@ import { readOrWhileAway } from "@/modules/resilience/optional-read";
 import { DISCLOSURE_OPEN_ARROW, DISCLOSURE_SUMMARY_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 import { SR_ONLY_SX } from "@/shared/ui/sr-only";
 import { DENSITY } from "@/theme/density";
-import { categoryLabelOf } from "../category-words";
+import { categoryLabeller } from "../category-labels";
 import { formatResultTime } from "../domain/result-time";
 import { readEventResultsForPage } from "../public-page";
 import { categoriesPresent } from "./results-filter";
@@ -64,8 +64,7 @@ async function resultsSectionOrThrow({ event }: { event: ResultsEvent }) {
   const locale = await getLocale();
   const t = await getTranslations("Event");
   // The category words are the club's statistics' (§787): the same «Feminin, 30-39 ani» in the Excel, the CSV and here.
-  const admin = await getTranslations({ locale, namespace: "Admin" });
-  const categoryLabel = (key: string | null) => categoryLabelOf(key, (statisticsKey) => admin.raw(`registrations.statistics.${statisticsKey}`) as string);
+  const categoryLabel = await categoryLabeller(locale);
 
   const { rows } = results;
   const categories = categoriesPresent(rows.map((row) => row.categoryKey)).map((key) => ({ key, label: categoryLabel(key) }));
