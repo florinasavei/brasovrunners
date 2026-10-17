@@ -1097,9 +1097,9 @@ sees them as Voluntar, Redactor, Organizator, Tehnic, Administrator, Superadmini
 ```text
 CONTRIBUTOR  the volunteer: the race-day desk and the guide, nothing else
 COPYWRITER   the words of any event and any page, at any status; submit a draft for review
-MODERATOR    the organizer: read the events (no change to one, §542), the gallery; read the registrations, the export, the bibs; the messages
+MODERATOR    the organizer: read the events (no change to one, §542), the gallery; read the registrations, the export, the bibs; the messages; enter, import and rank a race's results (`canEnterResults`, §NNN)
 DEV          + the configuration report (/devs). No participant data — and, by §289, not the list either
-ADMIN        + every event (create, configure, publish, cancel, a series: `canEditEventFields`, §542), changing a registration, legal texts, emails, tasks, delete an event
+ADMIN        + every event (create, configure, publish, cancel, a series: `canEditEventFields`, §542), changing a registration, legal texts, emails, tasks, delete an event, make a race's results public (`canPublishResults`, §NNN)
 SUPERADMIN   + staff administration: the list itself, and every role on it
 ```
 

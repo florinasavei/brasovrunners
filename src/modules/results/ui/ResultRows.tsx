@@ -2,11 +2,12 @@
 
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRecall } from "@/shared/forms/recall";
+import { openFoldsAround } from "@/shared/ui/fold";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import StatusChip from "@/shared/ui/StatusChip";
-import { typedRowCountOf, typedRowKey, resultBox, type ResultRowBox } from "../rows";
+import { RESULT_ROW_BOXES, resultBox, type ResultRowBox, typedRowCountOf, typedRowKey } from "../rows";
 import { RESULT_NAME_MAX, RESULT_NOTE_MAX } from "../domain/ranking";
 
 /**
@@ -305,10 +306,22 @@ export function TypedResultLines({ lines, words }: { lines: readonly TypedLine[]
 function TypedLinesOf({ lines, words }: { lines: readonly TypedLine[]; words: ResultWords }) {
   const recall = useRecall();
   const [extra, setExtra] = useState(0);
-  const posted = typedRowCountOf(recall.names());
+  // The lines the form posted that hold anything: the blank one at the end, posted empty, is not one — or every press would add another.
+  const named = typedRowCountOf(recall.names());
+  let posted = 0;
+  for (let index = 0; index < named; index += 1) {
+    if (RESULT_ROW_BOXES.some((box) => (recall.value(resultBox(typedRowKey(index), box)) ?? "").trim() !== "")) posted = index + 1;
+  }
   const count = Math.max(lines.length, posted) + 1 + extra;
+  const container = useRef<HTMLDivElement>(null);
+  // An import that added a number no registration holds puts a line here with the name left to write: the fold around it opens by itself
+  // (§336 — a closed fold hides what needs doing), so the line is on the screen when the notice says it is there.
+  const added = posted > lines.length;
+  useEffect(() => {
+    if (added) openFoldsAround(container.current);
+  }, [added]);
   return (
-    <Box data-testid="typed-lines">
+    <Box ref={container} data-testid="typed-lines">
       <Box component="ul" sx={{ listStyle: "none", m: 0, p: 0 }}>
         {Array.from({ length: count }, (_, index) => {
           const line = lines[index];
