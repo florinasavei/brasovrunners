@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V3.53-2026-10-17
+
+- **Show the route profile on the page — or not** — the event editor's «Traseul» card has a tick «Arată profilul traseului pe pagină» (on for every event): unticked, the page draws no elevation chart from the GPX, while the maps, the GPX download and the table «Puncte de control» stay; the checkpoints' card still previews the chart and says it is off on the page; the event JSON file, «Duplică» and a series carry it. §805.
 ## BR-V3.52-2026-10-17
 
 - **/devs shows the database's size and growth and the month's builds** — «Mărimea bazei de date» (size, largest tables, 30-day growth, registrations by event age), «Vercel: consumul lunii» (the Usage page's lines from Vercel's billing API), builds by branch, `yarn db:sizes`, an informational «Retenția datelor» row, and the plan for keeping Neon and Vercel light in `docs/PLATFORM.md`. §803.

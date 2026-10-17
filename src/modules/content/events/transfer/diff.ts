@@ -127,6 +127,7 @@ export const FIELD_LABELS = [
   "route.gpx.name",
   "route.gpx.url",
   "route.checkpoints",
+  "route.showRouteProfile",
   "links",
   "partners",
   "stravaEventUrl",

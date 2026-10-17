@@ -219,7 +219,8 @@ export default async function EventDetailPage({ params, query, canEdit = false, 
   // A members' event's checkpoints and profile go through the same cache, keyed by its id and its file: the same accepted exception as
   // the checkpoints above — this point is reached only after the members gate, and the key is unguessable without the id.
   const gpxKey = isStorageConfigured() ? (readRouteGpx(event.routeGpx)?.key ?? null) : null;
-  const elevation = gpxKey ? await readOrWhileAway(() => cachedRouteElevation(event.id, gpxKey), null) : null;
+  // «Arată profilul traseului pe pagină» (§802, §805): off, the file is not even read — the page draws no chart. Only an explicit `false` turns it off: a last-good copy made before the field existed carries none.
+  const elevation = gpxKey && event.showRouteProfile !== false ? await readOrWhileAway(() => cachedRouteElevation(event.id, gpxKey), null) : null;
   return (
     <Container id="main" component="main" maxWidth={PAGE_WIDTH} sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
       {/* No structured data for a members' event (§552): nothing on its page is for a search engine. */}

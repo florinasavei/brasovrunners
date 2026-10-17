@@ -308,7 +308,8 @@ export default async function EventPageView({
         kindLabels={linkKindLabels}
         mapWords={t.raw("routeMaps") as RouteMapWords}
         profile={
-          elevation
+          // «Arată profilul traseului pe pagină» (§802, §805): the chart needs the club's tick as well as a GPX that parses.
+          elevation && event.showRouteProfile !== false
             ? {
                 data: elevation,
                 // The route's length as the club typed it: the chart spans it, so a pin's kilometre and the line agree.

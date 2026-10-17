@@ -14,17 +14,14 @@ decision or a click only the club can make · **released** — on production, wi
 The owner, 2026-10-10: «Soon I need to start a new session from the laptop … You need to save and document everything».
 This section replaces the plan of 2026-09-30; it is what a session with none of today's conversation needs to carry on.
 
-- **Production: `BR-V3.51`** (2026-10-17 00:58: §802 one elevation profile from the GPX on the event page, the
-  checkpoints the club ticks, the editor's preview — **migration `0164`** applied). Waiting for «prod»: `BR-V3.52`
-  (§803, §804, below) — no migration.
-- **QA: `BR-V3.52`** — `/devs` shows the database's size and growth and the month's builds and usage, `yarn db:sizes`,
-  and `docs/PLATFORM.md` § «Keeping Neon and Vercel light» carries the plan: the retention table (today's sweep vs the
-  proposal), the anonymisation proposal, the Vercel-Hobby fit (Active CPU is the binding limit) and the levers; the
-  row «Retenția datelor: perioade de decis» on `/admin/tasks` (§803); the race number's strip draws from the same
-  elevation core as the page — kilometres, altitudes, the aid stations named, the unticked points off the number too,
-  the tick «Kilometrii și altitudinile pe profil», the picture's recommended shape before the upload (§804).
-- **Building:** nothing. The queue of 2026-10-16 (the owner's screenshots and asks, lanes 31–49) is done once
-  `BR-V3.52` is on production. The owner's decisions from §803 (retention periods, December on Hobby or Pro, the
+- **Production: `BR-V3.52`** (2026-10-17 03:33: §803 /devs measures the database and Vercel, the plan for keeping
+  them light; §804 the race number's strip from the elevation core; no migration). Waiting for «prod»: `BR-V3.53`
+  (§805, below — **migration `0165`**).
+- **QA: `BR-V3.53`** — the event editor's tick «Arată profilul traseului pe pagină» in «Traseul», on by default,
+  saved with the event and carried by the series, «Duplică» and the JSON file; unticked, the page draws no elevation
+  chart and reads no GPX, the maps and «Puncte de control» stay, the editor's preview says the profile is off (§805).
+- **Building:** nothing. The queue of 2026-10-16/17 (the owner's screenshots and asks, lanes 31–50) is done once
+  `BR-V3.53` is on production. The owner's decisions from §803 (retention periods, December on Hobby or Pro, the
   Basic build machine, QA's region/Node) are open.
 - **Waiting on the owner:** the privacy notice from the new template, approved in `/admin/legal` after a lawyer reads
   the paragraph on what the site loads (its first sentence says what is used is strictly necessary and needs no consent,
@@ -141,6 +138,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V3.53` | the event editor: a tick «Arată profilul traseului pe pagină» (§805) |
 | `BR-V3.52` | /devs shows the database's size and growth and the month's builds; the plan for keeping Neon and Vercel light (§803) · the race number's strip draws from the same elevation core as the page: kilometres, altitudes, the aid stations named; the picture's recommended shape (§804) |
 | `BR-V3.51` | one elevation profile from the GPX: on the event page with the checkpoints the club ticks, previewed in the editor; the core the race number will draw from (§802) |
 | `BR-V3.50` | the volunteers' page: the steps and «we will confirm you», before the form and after it, and in the receipt email; a wider form; the notice's cookie sentence names the form (§800) · the feedback page's title without «(anonim)»; the featured card keeps its border and loses its chip (§801) |
