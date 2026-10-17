@@ -114,6 +114,19 @@ export const LIST_SOCIALS_MERGE_FIELD = "participantListSocials";
 export const LIST_NUMBERS_MERGE_FIELD = "participantListNumbers";
 
 /**
+ * The privacy notice's marker for a race's published results (§NNN, race results part 1; the owner, 2026-10-17:
+ * «Aș vrea să pot pune și clasament la final după cursă»; replacing the sentence «Rezultate cu nume nu publicăm
+ * încă» of section 4). The same two-in-one as the states, the socials and the numbers above: filled, when the
+ * notice is shown, with the public section's own name, quoted (`results/notice-words.ts`) — «Clasament» /
+ * “Results” — in the paragraph that says what the results show (the position, the race number, the time, the
+ * category; the name only of those who ticked the list's own box), for how long and how the tick is withdrawn;
+ * and the switch: an Administrator may make a race's results public (`setResultsPublished`), and the page shows
+ * them, only while the notice in force, in every language, names it (`describesResults`). A notice approved before
+ * it does not, and the club's results stay in the backoffice; `/admin/tasks` carries the row `resultsNotice`.
+ */
+export const RESULTS_MERGE_FIELD = "results";
+
+/**
  * The privacy notice's marker for the club's invitations by email (§647): the backoffice section's own
  * name, quoted (`registrations/invitation-words.ts`) — «Invitații» / “Invitations” — in the sentence
  * that says the club may enter an invited person's name and address to send one invitation. Like the
@@ -512,6 +525,7 @@ export const MERGE_FIELDS = [
   LIST_STATES_MERGE_FIELD,
   LIST_SOCIALS_MERGE_FIELD,
   LIST_NUMBERS_MERGE_FIELD,
+  RESULTS_MERGE_FIELD,
   NEWSLETTER_MERGE_FIELD,
   TEAM_PAGE_MERGE_FIELD,
   PROMOTIONAL_MATERIALS_MERGE_FIELD,
@@ -687,6 +701,16 @@ export function describesListSocials(body: unknown): boolean {
  */
 export function describesListNumbers(body: unknown): boolean {
   return mergeFieldsIn(body).has(LIST_NUMBERS_MERGE_FIELD);
+}
+
+/**
+ * Whether a privacy notice describes a race's published results (§NNN): it names `{{results}}`. The gate for making
+ * a race's results public and for showing them — the club's approval of such a text is the switch, as for the
+ * states (§396), the socials (§500) and the numbers (§613) — and what `/admin/tasks`' row `resultsNotice` reads. Pure;
+ * the caller asks it of the notice in force, in every language.
+ */
+export function describesResults(body: unknown): boolean {
+  return mergeFieldsIn(body).has(RESULTS_MERGE_FIELD);
 }
 
 /**

@@ -58,6 +58,7 @@ export type TaskId =
   | "listStatesNotice"
   | "listSocialsNotice"
   | "listNumbersNotice"
+  | "resultsNotice"
   | "invitationsNotice"
   | "promoNotice"
   | "sponsorNotice"
@@ -112,6 +113,7 @@ export const TASK_KIND: Record<TaskId, TaskKind> = {
   listStatesNotice: "text",
   listSocialsNotice: "text",
   listNumbersNotice: "text",
+  resultsNotice: "text",
   invitationsNotice: "text",
   promoNotice: "text",
   sponsorNotice: "text",
@@ -237,6 +239,12 @@ export type OwnerTaskInputs = {
    * on the public list (§613, `noticeDescribesListNumbers`)? Until it does, the list shows no number.
    */
   listNumbersDescribed: boolean;
+  /**
+   * Does the notice in force, in every language, describe a race's published results (§NNN,
+   * `noticeDescribesResults`)? Until it does, an Administrator cannot make a race's results public and the event
+   * page shows none; the club may enter and rank them in the backoffice meanwhile.
+   */
+  resultsDescribed: boolean;
   /**
    * Does the notice in force, in every language, describe the club's invitations by email (§647,
    * `noticeDescribesEventInvitations`)? The club may invite meanwhile (§389's precedent); the row says
@@ -571,6 +579,15 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
     push("listNumbersNotice", {
       owner: "club",
       state: input.listNumbersDescribed ? "done" : "open",
+    });
+    /*
+      A race's published results (§NNN), the same shape: open, never blocking — the club may enter, import and
+      rank the results meanwhile, and only making them public is refused — and done by itself the day a notice
+      naming `{{results}}` takes effect.
+    */
+    push("resultsNotice", {
+      owner: "club",
+      state: input.resultsDescribed ? "done" : "open",
     });
     /*
       The invitations by email (§647), the same shape: open, never blocking — nothing is refused, the

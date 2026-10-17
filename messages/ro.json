@@ -760,6 +760,10 @@
       "noKinds": "nimic marcat",
       "kmUnknown": "distanța nu e scrisă",
       "finish": "Sosire"
+    },
+    "results": {
+      "title": "Clasament",
+      "anonymous": "Participant #{bib}"
     }
   },
   "Admin": {
@@ -2044,7 +2048,11 @@
       "VOLUNTEER_MINORS_CLOSED": "Clubul nu primește încă voluntari sub 18 ani: nota de confidențialitate și contractul în vigoare nu descriu încă minorii. Aprobă-le întâi; «Sarcini» spune cum.",
       "VOLUNTEER_CATEGORY_HAS_ROLES": "Categoria nu s-a șters: are roluri în ea. Mută sau șterge întâi rolurile.",
       "VOLUNTEER_NAME_TAKEN": "Numele există deja în această categorie (sau printre categoriile evenimentului). Alege alt nume: același nume poate sta în două categorii, dar nu de două ori într-una.",
-      "VOLUNTEER_ROLE_INVALID": "„{role}” din „{category}”: {problem}. Nimic nu s-a salvat."
+      "VOLUNTEER_ROLE_INVALID": "„{role}” din „{category}”: {problem}. Nimic nu s-a salvat.",
+      "RESULT_ROW_INVALID": "„{runner}”: {problem}. Nimic nu s-a salvat.",
+      "RESULTS_IMPORT_INVALID": "Fișierul CSV nu poate fi citit: {where}{problem}. Nimic nu s-a importat.",
+      "RESULTS_NOTICE": "Nota de confidențialitate în vigoare nu descrie încă clasamentul. Aprobă o notă nouă din șablon, în «Documente legale»; «Sarcini» spune cum.",
+      "RESULTS_NOT_OPEN": "Doar o cursă are clasament."
     },
     "editor": {
       "draftPreview": {
@@ -3499,7 +3507,8 @@
         "volunteerChoiceTasks": "Doar în contractul de voluntariat: ce face fiecare rol bifat, din descrierile lor. Cu rol dat sau fără descrieri, propoziția dispare",
         "volunteerProfile": "Doar în nota de confidențialitate: casetele formularului de voluntari despre persoană, între ghilimele. Fără el în nota în vigoare, formularul cere doar bifa vârstei minime",
         "volunteerGuardian": "Doar în contractul de voluntariat: numele părintelui sau tutorelui unui voluntar minor. La un adult, propoziția dispare. Fără el în contractul în vigoare, nu se primesc minori",
-        "volunteerMinors": "Doar în nota de confidențialitate: casetele părintelui din formularul de voluntari, între ghilimele; fără el, clubul nu primește voluntari sub 18 ani"
+        "volunteerMinors": "Doar în nota de confidențialitate: casetele părintelui din formularul de voluntari, între ghilimele; fără el, clubul nu primește voluntari sub 18 ani",
+        "results": "Doar în nota de confidențialitate: numele secțiunii „Clasament”, între ghilimele. Cu el în nota în vigoare, un administrator poate publica clasamentul unei curse, iar pagina cursei îl arată"
       },
       "removeBlockedReferenced": "Nu se poate nici retrage, nici șterge definitiv: {signatures}, {events} și {acknowledgements} depind de ea. «Șterge» de pe rândul ei o scoate din listă.",
       "removeBlockedCurrent": "În vigoare acum — nu se poate nici retrage, nici șterge. Aprobă întâi versiunea următoare; apoi aceasta se poate scoate.",
@@ -3710,7 +3719,8 @@
         "whoGone": "un cont șters între timp",
         "reason": "Motivul: {reason}",
         "read": "Citește textul"
-      }
+      },
+      "resultsMissing": "Nota în vigoare nu descrie încă clasamentul curselor, deci niciun clasament nu poate fi publicat. Aprobă o notă nouă din șablon."
     },
     "tasks": {
       "title": "Ce mai este de făcut",
@@ -4509,6 +4519,18 @@
             "Deschide Setări → Configurație: cardul «Mărimea bazei de date» arată cât ocupă fiecare tabel și cât a crescut în 30 de zile.",
             "Pe același card, deschide «Planul de păstrare a datelor și perioadele propuse»: secțiunea «Keeping Neon and Vercel light, long term» are tabelul cu perioadele propuse.",
             "Hotărăște perioadele; pentru datele personale ale celor de la evenimentele trecute, cere întâi părerea unui avocat. Până atunci nimic nu se schimbă."
+          ]
+        },
+        "resultsNotice": {
+          "title": "Nota de confidențialitate: clasamentul curselor",
+          "todo": "Nota în vigoare nu descrie încă clasamentul, așa că niciun clasament nu poate fi publicat pe pagina unei curse. Îl poți scrie și calcula în backoffice între timp.",
+          "done": "Nota în vigoare descrie clasamentul: un administrator îl poate publica pe pagina cursei. Numele apare doar la cine a bifat lista de participanți & rezultate.",
+          "how": [
+            "Înainte de aprobare, citește cu un avocat paragraful din șablon: ce arată clasamentul (locul, numărul, timpul, categoria), cine apare cu nume și până când.",
+            "/admin/legal → cardul „GDPR” → „Regenerează din șablon” → confirmă. Secțiunea despre lista publică descrie și clasamentul.",
+            "Deschide ciorna, citește, completează ce a rămas, „Salvează ciorna”, apoi „Aprobă și publică”.",
+            "Aprobă și termenii din șablon, ca să spună același lucru despre clasament.",
+            "După cursă: /admin/events → cursa → „Clasament”. Scrie timpii sau importă un CSV, apasă „Salvează tot clasamentul” și bifează „Clasamentul e public pe pagina evenimentului”."
           ]
         }
       },
@@ -9928,6 +9950,140 @@
         "download": "Descarcă ecusoanele (PDF)",
         "savedOnly": "Foaia folosește designul salvat. Salvează întâi schimbările de mai sus."
       }
+    },
+    "results": {
+      "title": "Clasament: {event}",
+      "backToEvent": "Înapoi la eveniment",
+      "link": "Clasament",
+      "registrationsLink": "Înscrierile evenimentului",
+      "intro": "Scrie timpii, importă-i dintr-un CSV și salvează tot dintr-o dată. Locurile se calculează singure.",
+      "introMore": "Un rând pe alergător, după numărul de concurs. Locurile sunt în total, la sexul alergătorului și la categoria lui; timpurile egale împart locul.",
+      "notRace": "Doar o cursă are clasament. Alergările de grup și celelalte evenimente nu au.",
+      "notStarted": "Cursa nu a început încă. Poți scrie rezultate de pe acum.",
+      "summary": {
+        "FINISHED": "Sosiți: {count}",
+        "DNF": "Abandon: {count}",
+        "DNS": "Neprezentați: {count}",
+        "DSQ": "Descalificați: {count}"
+      },
+      "status": {
+        "none": "Fără rezultat",
+        "FINISHED": "Sosit",
+        "DNF": "Abandon",
+        "DNS": "Neprezentat",
+        "DSQ": "Descalificat"
+      },
+      "import": {
+        "title": "Importă din CSV",
+        "aside": "un fișier sau text lipit",
+        "intro": "Lipește textul unui CSV sau alege fișierul. Rândurile citite intră în tabel; nimic nu se salvează până apeși „Salvează tot clasamentul”.",
+        "more": "Câte un rând pe alergător: număr, timp, apoi timpul cip și statusul, dacă sunt. Merge cu virgulă, punct și virgulă sau tab, cu sau fără cap de tabel. Un număr fără înscriere devine un rând nou, cu numele de scris.",
+        "textLabel": "Text CSV",
+        "fileLabel": "Sau alege un fișier (CSV, TSV)",
+        "button": "Importă din CSV",
+        "pending": "Se citește…"
+      },
+      "registered": {
+        "title": "Alergători înscriși",
+        "aside": "{count} cu număr",
+        "empty": "Niciun înscris nu are încă număr de concurs. Numerele se dau la confirmare sau la masa de predare."
+      },
+      "typed": {
+        "title": "Alergători neînscriși",
+        "aside": "{count} salvați",
+        "intro": "Un număr pe care nu-l are nicio înscriere. Scrie numele, care nu apare niciodată pe site, și, pentru o categorie, sexul și data nașterii."
+      },
+      "col": {
+        "time": "Timp",
+        "status": "Status",
+        "chip": "Timp cip",
+        "note": "Notă",
+        "bib": "Nr.",
+        "name": "Nume",
+        "sex": "Sex",
+        "sexNone": "Fără sex",
+        "birthDate": "Data nașterii",
+        "place": "Loc"
+      },
+      "timePlaceholder": "h:mm:ss",
+      "birthDatePlaceholder": "ZZ.LL.AAAA",
+      "present": "Prezent",
+      "publicLine": {
+        "named": "Pe site: cu numele",
+        "anonymous": "Pe site: {label}"
+      },
+      "nameless": "Fără nume: înscrierea a fost ștearsă. Rezultatul rămâne, fără nume.",
+      "addRow": "Adaugă un alergător neînscris",
+      "typedRow": "Alergător neînscris",
+      "noPlace": "fără loc încă",
+      "place": {
+        "sex": "la sex: {position}",
+        "category": "la categorie ({category}): {position}"
+      },
+      "save": "Salvează tot clasamentul",
+      "saving": "Se salvează…",
+      "slow": "Un clasament mare durează câteva secunde. Nu apăsa din nou.",
+      "delete": "Șterge",
+      "deleteFor": "Șterge rezultatul: {runner}",
+      "deleteTitle": "Ștergi rezultatul?",
+      "deleteBody": "Rezultatul alergătorului cu numărul {bibNumber} dispare din clasament. Locurile celorlalți se recalculează.",
+      "publish": {
+        "title": "Pe pagina evenimentului",
+        "label": "Clasamentul e public pe pagina evenimentului",
+        "help": "Pagina arată locul, numărul, timpul și categoria. Numele apare doar la cine a bifat „Vreau să apar pe lista de participanți & rezultate”; ceilalți apar ca „Participant #număr”.",
+        "gate": "Nota de confidențialitate în vigoare nu descrie încă clasamentul, așa că nu-l poți publica.",
+        "gateLink": "Documente legale",
+        "adminOnly": "Doar un administrator poate publica clasamentul.",
+        "empty": "Nu e niciun rezultat salvat încă.",
+        "save": "Salvează",
+        "saving": "Se salvează…",
+        "stateOn": "Public",
+        "stateOff": "Nepublic"
+      },
+      "export": "Descarcă clasamentul (CSV)",
+      "csvColumns": {
+        "position": "Loc",
+        "positionSex": "Loc la sex",
+        "positionCategory": "Loc la categorie",
+        "bib": "Număr",
+        "name": "Nume",
+        "sex": "Sex",
+        "category": "Categorie",
+        "status": "Status",
+        "time": "Timp",
+        "chip": "Timp cip",
+        "note": "Notă"
+      },
+      "problems": {
+        "noNumber": "(fără număr)",
+        "bib": "numărul de concurs nu e un număr întreg",
+        "bibDuplicate": "același număr e pe două rânduri",
+        "status": "statusul nu e unul dintre cele patru",
+        "time": "timpul nu e într-o formă citibilă (h:mm:ss, mm:ss sau mm:ss.t)",
+        "timeMissing": "un alergător sosit are nevoie de timp",
+        "timeWithStatus": "abandon, neprezentat și descalificat se scriu fără timp",
+        "chip": "timpul cip nu e într-o formă citibilă",
+        "note": "nota are peste {max} de caractere",
+        "nameMissing": "numărul nu aparține niciunei înscrieri: scrie numele",
+        "nameLong": "numele are peste {max} de caractere",
+        "sex": "sexul trebuie să fie Feminin sau Masculin",
+        "birthDate": "data nașterii nu e o zi reală sau e după cursă",
+        "tooMany": "sunt prea multe rânduri"
+      },
+      "csvWhere": "rândul {line}: ",
+      "csvProblems": {
+        "empty": "fișierul nu are niciun rând",
+        "tooLarge": "fișierul e prea mare",
+        "tooMany": "fișierul are prea multe rânduri",
+        "headerBib": "primul rând e un cap de tabel fără coloana numărului de concurs",
+        "bib": "numărul de concurs nu e un număr întreg",
+        "duplicate": "același număr apare a doua oară",
+        "time": "timpul nu e într-o formă citibilă",
+        "chip": "timpul cip nu e într-o formă citibilă",
+        "status": "statusul nu e cunoscut",
+        "needsTime": "un alergător sosit are nevoie de timp",
+        "timeWithStatus": "abandon, neprezentat și descalificat se scriu fără timp"
+      }
     }
   },
   "NotFound": {
@@ -11895,7 +12051,27 @@
       "volunteerCategorySaved": "Categorie salvată.",
       "volunteerCategoryMoved": "Categorie mutată.",
       "volunteerCategoryDeleted": "Categorie ștearsă.",
-      "volunteerCategoryContactSaved": "Persoana de contact a fost salvată."
+      "volunteerCategoryContactSaved": "Persoana de contact a fost salvată.",
+      "resultsSaved": {
+        "one": "Am salvat {count} rezultat.",
+        "few": "Am salvat {count} rezultate.",
+        "other": "Am salvat {count} de rezultate."
+      },
+      "resultsUnchanged": "Nimic de schimbat în clasament.",
+      "resultsImported": {
+        "one": "Am citit {count} rând din CSV și l-am pus în tabel. Nimic nu s-a salvat încă.",
+        "few": "Am citit {count} rânduri din CSV și le-am pus în tabel. Nimic nu s-a salvat încă.",
+        "other": "Am citit {count} de rânduri din CSV și le-am pus în tabel. Nimic nu s-a salvat încă."
+      },
+      "resultsImportedNew": {
+        "one": "Am citit {count} rând din CSV. Numerele fără înscriere ({new}) sunt rânduri noi: scrie-le numele. Nimic nu s-a salvat încă.",
+        "few": "Am citit {count} rânduri din CSV. Numerele fără înscriere ({new}) sunt rânduri noi: scrie-le numele. Nimic nu s-a salvat încă.",
+        "other": "Am citit {count} de rânduri din CSV. Numerele fără înscriere ({new}) sunt rânduri noi: scrie-le numele. Nimic nu s-a salvat încă."
+      },
+      "resultDeleted": "Rezultat șters. Locurile celorlalți s-au recalculat.",
+      "resultsPublished": "Clasamentul e acum public pe pagina evenimentului.",
+      "resultsUnpublished": "Clasamentul nu mai e public pe pagina evenimentului.",
+      "resultsPublicUnchanged": "Era deja așa; nimic de schimbat."
     }
   },
   "Network": {

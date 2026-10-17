@@ -760,6 +760,10 @@
       "noKinds": "nothing marked",
       "kmUnknown": "distance not given",
       "finish": "Finish"
+    },
+    "results": {
+      "title": "Results",
+      "anonymous": "Participant #{bib}"
     }
   },
   "Admin": {
@@ -2044,7 +2048,11 @@
       "VOLUNTEER_MINORS_CLOSED": "The club does not take volunteers under 18 yet: the privacy notice and the agreement in force do not describe minors. Approve them first; “Tasks” says how.",
       "VOLUNTEER_CATEGORY_HAS_ROLES": "The category was not deleted: it has roles under it. Move or delete the roles first.",
       "VOLUNTEER_NAME_TAKEN": "That name is already used in this category (or among the event's categories). Choose another: the same name can stand in two categories, but not twice in one.",
-      "VOLUNTEER_ROLE_INVALID": "“{role}” in “{category}”: {problem}. Nothing was saved."
+      "VOLUNTEER_ROLE_INVALID": "“{role}” in “{category}”: {problem}. Nothing was saved.",
+      "RESULT_ROW_INVALID": "“{runner}”: {problem}. Nothing was saved.",
+      "RESULTS_IMPORT_INVALID": "The CSV file cannot be read: {where}{problem}. Nothing was imported.",
+      "RESULTS_NOTICE": "The privacy notice in force does not describe the ranking yet. Approve a new one from the template in «Legal documents»; «Tasks» says how.",
+      "RESULTS_NOT_OPEN": "Only a race has results."
     },
     "editor": {
       "draftPreview": {
@@ -3499,7 +3507,8 @@
         "volunteerChoiceTasks": "In the volunteer agreement only: what each ticked role does, from their descriptions. With a role given or no descriptions, the sentence is left out",
         "volunteerProfile": "Privacy notice only: the volunteers' form boxes about the person, in quotes. Without it in the notice in force, the form asks only the minimum-age tick",
         "volunteerGuardian": "Only in the volunteer agreement: the name of a minor volunteer's parent or guardian. For an adult the sentence is left out. Without it in the agreement in force, no minors are taken",
-        "volunteerMinors": "Only in the privacy notice: the parent's boxes of the volunteers' form, in quotation marks; without it, the club takes no volunteers under 18"
+        "volunteerMinors": "Only in the privacy notice: the parent's boxes of the volunteers' form, in quotation marks; without it, the club takes no volunteers under 18",
+        "results": "Only in the privacy notice: the name of the section “Results”, in quotation marks. With it in the notice in force, an administrator can publish a race's ranking and the race's page shows it"
       },
       "removeBlockedReferenced": "Can neither be withdrawn nor deleted permanently: {signatures}, {events} and {acknowledgements} depend on it. “Delete” on its row takes it off the list.",
       "removeBlockedCurrent": "In force right now — it can neither be withdrawn nor deleted. Approve its successor first; then this one can go.",
@@ -3710,7 +3719,8 @@
         "whoGone": "an account since removed",
         "reason": "The reason: {reason}",
         "read": "Read the text"
-      }
+      },
+      "resultsMissing": "The notice in force does not describe the races' ranking yet, so no ranking can be published. Approve a new notice from the template."
     },
     "tasks": {
       "title": "What is still to do",
@@ -4509,6 +4519,18 @@
             "Open Settings → Configuration: the «Database size» card shows what each table takes and how much it grew in 30 days.",
             "On that card, open «The plan for keeping data and the proposed periods»: the section «Keeping Neon and Vercel light, long term» has the table of proposed periods.",
             "Decide the periods; for the personal data of past events, ask a lawyer first. Until then nothing changes."
+          ]
+        },
+        "resultsNotice": {
+          "title": "Privacy notice: the races' ranking",
+          "todo": "The notice in force does not describe the ranking yet, so no ranking can be published on a race's page. You can write and work it out in the backoffice meanwhile.",
+          "done": "The notice in force describes the ranking: an administrator can publish it on the race's page. The name appears only for those who ticked the participants & results list.",
+          "how": [
+            "Before approving, read the template's paragraph with a lawyer: what the ranking shows (the place, the number, the time, the category), who appears with a name and until when.",
+            "/admin/legal → the “GDPR” card → “Regenerate from the template” → confirm. The section on the public list describes the ranking too.",
+            "Open the draft, read it, fill in what is left, “Save draft”, then “Approve and publish”.",
+            "Approve the terms from the template as well, so they say the same about the ranking.",
+            "After the race: /admin/events → the race → “Results”. Type the times or import a CSV, press “Save the whole ranking” and tick “The ranking is public on the event's page”."
           ]
         }
       },
@@ -9928,6 +9950,140 @@
         "download": "Download the badges (PDF)",
         "savedOnly": "The sheet uses the saved design. Save the changes above first."
       }
+    },
+    "results": {
+      "title": "Results: {event}",
+      "backToEvent": "Back to the event",
+      "link": "Results",
+      "registrationsLink": "The event's registrations",
+      "intro": "Type the times, import them from a CSV and save everything at once. The places work themselves out.",
+      "introMore": "One line per runner, by race number. The places are overall, among the runner's sex and in their category; equal times share a place.",
+      "notRace": "Only a race has results. Group runs and the other events have none.",
+      "notStarted": "The race has not started yet. You can type results already.",
+      "summary": {
+        "FINISHED": "Finished: {count}",
+        "DNF": "Dropped out: {count}",
+        "DNS": "Did not start: {count}",
+        "DSQ": "Disqualified: {count}"
+      },
+      "status": {
+        "none": "No result",
+        "FINISHED": "Finished",
+        "DNF": "Dropped out",
+        "DNS": "Did not start",
+        "DSQ": "Disqualified"
+      },
+      "import": {
+        "title": "Import from CSV",
+        "aside": "a file or pasted text",
+        "intro": "Paste the text of a CSV or choose the file. The rows read go into the table; nothing is saved until you press “Save the whole ranking”.",
+        "more": "One row per runner: number, time, then the chip time and the status, if there are any. Commas, semicolons or tabs work, with or without a header row. A number with no registration becomes a new row, with the name left to write.",
+        "textLabel": "CSV text",
+        "fileLabel": "Or choose a file (CSV, TSV)",
+        "button": "Import from CSV",
+        "pending": "Reading…"
+      },
+      "registered": {
+        "title": "Registered runners",
+        "aside": "{count} with a number",
+        "empty": "No registration has a race number yet. Numbers are given at confirmation or at the kit desk."
+      },
+      "typed": {
+        "title": "Runners who did not register",
+        "aside": "{count} saved",
+        "intro": "A number that no registration holds. Write the name, which never appears on the site, and, for a category, the sex and the date of birth."
+      },
+      "col": {
+        "time": "Time",
+        "status": "Status",
+        "chip": "Chip time",
+        "note": "Note",
+        "bib": "No.",
+        "name": "Name",
+        "sex": "Sex",
+        "sexNone": "No sex",
+        "birthDate": "Date of birth",
+        "place": "Place"
+      },
+      "timePlaceholder": "h:mm:ss",
+      "birthDatePlaceholder": "DD.MM.YYYY",
+      "present": "Present",
+      "publicLine": {
+        "named": "On the site: with the name",
+        "anonymous": "On the site: {label}"
+      },
+      "nameless": "No name: the registration was erased. The result stays, nameless.",
+      "addRow": "Add a runner who did not register",
+      "typedRow": "Unregistered runner",
+      "noPlace": "no place yet",
+      "place": {
+        "sex": "by sex: {position}",
+        "category": "in the category ({category}): {position}"
+      },
+      "save": "Save the whole ranking",
+      "saving": "Saving…",
+      "slow": "A big ranking takes a few seconds. Do not press again.",
+      "delete": "Delete",
+      "deleteFor": "Delete the result: {runner}",
+      "deleteTitle": "Delete the result?",
+      "deleteBody": "The result of the runner with number {bibNumber} leaves the ranking. The others' places are worked out again.",
+      "publish": {
+        "title": "On the event's page",
+        "label": "The ranking is public on the event's page",
+        "help": "The page shows the place, the number, the time and the category. The name appears only for those who ticked “I want to appear on the participants & results list”; everyone else is “Participant #number”.",
+        "gate": "The privacy notice in force does not describe the ranking yet, so you cannot publish it.",
+        "gateLink": "Legal documents",
+        "adminOnly": "Only an administrator can publish the ranking.",
+        "empty": "No result is saved yet.",
+        "save": "Save",
+        "saving": "Saving…",
+        "stateOn": "Public",
+        "stateOff": "Not public"
+      },
+      "export": "Download the ranking (CSV)",
+      "csvColumns": {
+        "position": "Place",
+        "positionSex": "Place by sex",
+        "positionCategory": "Place in category",
+        "bib": "Number",
+        "name": "Name",
+        "sex": "Sex",
+        "category": "Category",
+        "status": "Status",
+        "time": "Time",
+        "chip": "Chip time",
+        "note": "Note"
+      },
+      "problems": {
+        "noNumber": "(no number)",
+        "bib": "the race number is not a whole number",
+        "bibDuplicate": "the same number is on two rows",
+        "status": "the status is not one of the four",
+        "time": "the time is not in a readable form (h:mm:ss, mm:ss or mm:ss.t)",
+        "timeMissing": "a runner who finished needs a time",
+        "timeWithStatus": "dropped out, did not start and disqualified are written without a time",
+        "chip": "the chip time is not in a readable form",
+        "note": "the note is over {max} characters",
+        "nameMissing": "the number belongs to no registration: write the name",
+        "nameLong": "the name is over {max} characters",
+        "sex": "the sex must be Female or Male",
+        "birthDate": "the date of birth is not a real day or is after the race",
+        "tooMany": "there are too many rows"
+      },
+      "csvWhere": "row {line}: ",
+      "csvProblems": {
+        "empty": "the file has no rows",
+        "tooLarge": "the file is too big",
+        "tooMany": "the file has too many rows",
+        "headerBib": "the first row is a header with no race number column",
+        "bib": "the race number is not a whole number",
+        "duplicate": "the same number appears a second time",
+        "time": "the time is not in a readable form",
+        "chip": "the chip time is not in a readable form",
+        "status": "the status is not known",
+        "needsTime": "a runner who finished needs a time",
+        "timeWithStatus": "dropped out, did not start and disqualified are written without a time"
+      }
     }
   },
   "NotFound": {
@@ -11895,7 +12051,27 @@
       "volunteerCategorySaved": "Category saved.",
       "volunteerCategoryMoved": "Category moved.",
       "volunteerCategoryDeleted": "Category deleted.",
-      "volunteerCategoryContactSaved": "The contact person was saved."
+      "volunteerCategoryContactSaved": "The contact person was saved.",
+      "resultsSaved": {
+        "one": "Saved {count} result.",
+        "few": "Saved {count} results.",
+        "other": "Saved {count} results."
+      },
+      "resultsUnchanged": "Nothing to change in the ranking.",
+      "resultsImported": {
+        "one": "Read {count} row from the CSV and put it in the table. Nothing is saved yet.",
+        "few": "Read {count} rows from the CSV and put them in the table. Nothing is saved yet.",
+        "other": "Read {count} rows from the CSV and put them in the table. Nothing is saved yet."
+      },
+      "resultsImportedNew": {
+        "one": "Read {count} row from the CSV. Numbers with no registration ({new}) are new rows: write their names. Nothing is saved yet.",
+        "few": "Read {count} rows from the CSV. Numbers with no registration ({new}) are new rows: write their names. Nothing is saved yet.",
+        "other": "Read {count} rows from the CSV. Numbers with no registration ({new}) are new rows: write their names. Nothing is saved yet."
+      },
+      "resultDeleted": "Result deleted. The others' places were worked out again.",
+      "resultsPublished": "The ranking is now public on the event's page.",
+      "resultsUnpublished": "The ranking is no longer public on the event's page.",
+      "resultsPublicUnchanged": "It was already so; nothing to change."
     }
   },
   "Network": {

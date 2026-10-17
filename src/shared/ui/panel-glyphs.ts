@@ -38,6 +38,7 @@ import HowToRegIcon from "@mui/icons-material/HowToReg";
 import HubIcon from "@mui/icons-material/Hub";
 import ImageIcon from "@mui/icons-material/Image";
 import LabelIcon from "@mui/icons-material/Label";
+import LeaderboardIcon from "@mui/icons-material/Leaderboard";
 import LinkIcon from "@mui/icons-material/Link";
 import ListAltIcon from "@mui/icons-material/ListAlt";
 import MailIcon from "@mui/icons-material/Mail";
@@ -76,6 +77,7 @@ import StorageIcon from "@mui/icons-material/Storage";
 import TaskAltIcon from "@mui/icons-material/TaskAlt";
 import TimerIcon from "@mui/icons-material/Timer";
 import TitleIcon from "@mui/icons-material/Title";
+import UploadFileIcon from "@mui/icons-material/UploadFile";
 import TranslateIcon from "@mui/icons-material/Translate";
 import TerrainIcon from "@mui/icons-material/Terrain";
 import TextFieldsIcon from "@mui/icons-material/TextFields";
@@ -223,6 +225,9 @@ export const PANEL_GLYPHS = {
   menuOrder: ReorderIcon,
   // «Previzualizare» (§579): the event's card and page as a visitor will see them, before saving.
   preview: VisibilityIcon,
+  // «Clasament» (§NNN): a race's results page, its cards and the link to it from the event editor — and its «Importă din CSV» card, the file going up.
+  results: LeaderboardIcon,
+  importCsv: UploadFileIcon,
 } satisfies Record<string, ComponentType<SvgIconProps>>;
 
 export type PanelGlyphName = keyof typeof PANEL_GLYPHS;

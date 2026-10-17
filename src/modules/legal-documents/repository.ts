@@ -36,6 +36,7 @@ import {
   describesNewsletter,
   describesPromotionalMaterials,
   describesPromotionalMaterialsShared,
+  describesResults,
   describesTeamPage,
   MINIMUM_AGE_MERGE_FIELD,
   mergeFieldsIn,
@@ -373,6 +374,17 @@ export async function noticeDescribesMembersShop<T extends Record<string, unknow
 export async function noticeDescribesVolunteers<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<boolean> {
   const notices = await Promise.all(routing.locales.map((locale) => findCurrentApprovedDocument(db, "PRIVACY_NOTICE", locale, now)));
   return notices.every((notice) => notice !== undefined && describesVolunteers(notice.body));
+}
+
+/**
+ * Whether the privacy notice in force describes a race's published results (§NNN, `describesResults`) — in every
+ * language, like `noticeDescribesVolunteers`: one list serves both pages, and a reader in either was told only what
+ * their language's notice says. For `setResultsPublished`, which asks again at every press, and `/admin/tasks`; the
+ * event page reads the cached twin (`cachedResultsDescribed`).
+ */
+export async function noticeDescribesResults<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<boolean> {
+  const notices = await Promise.all(routing.locales.map((locale) => findCurrentApprovedDocument(db, "PRIVACY_NOTICE", locale, now)));
+  return notices.every((notice) => notice !== undefined && describesResults(notice.body));
 }
 
 /**

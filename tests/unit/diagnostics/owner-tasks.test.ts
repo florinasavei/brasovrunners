@@ -28,6 +28,7 @@ const LAUNCHED: OwnerTaskInputs = {
   listStatesDescribed: true,
   listSocialsDescribed: true,
   listNumbersDescribed: true,
+  resultsDescribed: true,
   invitationsDescribed: true,
   promoDescribed: true,
   sponsorShareDescribed: true,
@@ -111,6 +112,18 @@ describe("owner tasks", () => {
     expect(ownerTasks({ ...LAUNCHED, hasApprovedPrivacyNotice: false }).some((task) => task.id === "listStatesNotice")).toBe(false);
     for (const catalogue of [ro, en]) {
       const item = catalogue.Admin.tasks.items.listStatesNotice;
+      expect(item.title && item.todo && item.done && item.how.length > 0).toBeTruthy();
+      expect(item.how.join("\n")).toContain("/admin/legal");
+    }
+  });
+
+  /** §NNN — a race's published results wait on the club's notice: open until it names `{{results}}`, never blocking, and no row without a notice at all. */
+  it("keeps the results row open while the notice in force does not describe them, and never blocking", () => {
+    expect(stateOf({ ...LAUNCHED, resultsDescribed: false }, "resultsNotice")).toBe("open");
+    expect(stateOf(LAUNCHED, "resultsNotice")).toBe("done");
+    expect(ownerTasks({ ...LAUNCHED, hasApprovedPrivacyNotice: false }).some((task) => task.id === "resultsNotice")).toBe(false);
+    for (const catalogue of [ro, en]) {
+      const item = catalogue.Admin.tasks.items.resultsNotice;
       expect(item.title && item.todo && item.done && item.how.length > 0).toBeTruthy();
       expect(item.how.join("\n")).toContain("/admin/legal");
     }
@@ -530,6 +543,7 @@ describe("owner tasks", () => {
       "listStatesNotice",
       "listSocialsNotice",
       "listNumbersNotice",
+      "resultsNotice",
       "invitationsNotice",
       "promoNotice",
       "sponsorNotice",

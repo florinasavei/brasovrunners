@@ -53,7 +53,15 @@ export type DomainErrorCode =
   // «Trimite linkul părintelui» for a volunteer with no guardian address (§768): the consent is taken on paper.
   | "VOLUNTEER_GUARDIAN_NO_EMAIL"
   // The guardian's link or paper record while the privacy notice and the agreement in force do not both describe minors (§768).
-  | "VOLUNTEER_MINORS_CLOSED";
+  | "VOLUNTEER_MINORS_CLOSED"
+  // One row of the race's results refused (§NNN): the sentence names the runner, the boxes name what to correct, and nothing of the save was written.
+  | "RESULT_ROW_INVALID"
+  // The CSV file of results cannot be read (§NNN): the sentence names the line and what is wrong with it; nothing was imported.
+  | "RESULTS_IMPORT_INVALID"
+  // «Clasamentul e public» ticked while the privacy notice in force does not describe the results (§NNN, `{{results}}`): approve one first.
+  | "RESULTS_NOTICE"
+  // Results entered or published for an event that is not a race, or that has not started yet (§NNN): the page says so, and so does the save.
+  | "RESULTS_NOT_OPEN";
 
 export class DomainError extends Error {
   readonly code: DomainErrorCode;

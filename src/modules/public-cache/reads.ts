@@ -75,6 +75,7 @@ import {
   describesNewsletter,
   describesPromotionalMaterials,
   describesPromotionalMaterialsShared,
+  describesResults,
   describesVolunteerAgreement,
   describesVolunteerMinors,
   describesVolunteerProfile,
@@ -611,6 +612,17 @@ export async function cachedNewsletterOffered(now: Date): Promise<boolean> {
 export async function cachedVolunteersDescribed(now: Date): Promise<boolean> {
   const notices = await Promise.all(routing.locales.map((locale) => cachedCurrentApprovedDocument("PRIVACY_NOTICE", locale, now)));
   return notices.every((notice) => notice !== undefined && describesVolunteers(notice.body));
+}
+
+/**
+ * Whether an event's page may show its published results (§NNN): the privacy notice in force describes them
+ * (`describesResults`), in every language — `cachedVolunteersDescribed`'s reading, so an approval opens the
+ * section the moment the notice itself changes. `noticeDescribesResults` is the uncached twin
+ * `setResultsPublished` asks again at every press.
+ */
+export async function cachedResultsDescribed(now: Date): Promise<boolean> {
+  const notices = await Promise.all(routing.locales.map((locale) => cachedCurrentApprovedDocument("PRIVACY_NOTICE", locale, now)));
+  return notices.every((notice) => notice !== undefined && describesResults(notice.body));
 }
 
 /**

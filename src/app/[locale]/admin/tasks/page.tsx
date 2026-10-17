@@ -24,6 +24,7 @@ import {
   findCurrentApprovedDocument,
   noticeDescribesEventInvitations,
   noticeDescribesListNumbers,
+  noticeDescribesResults,
   noticeDescribesListSocials,
   noticeDescribesGmailFallback,
   noticeDescribesPromotionalMaterials,
@@ -479,6 +480,8 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
       listSocialsDescribed: await noticeDescribesListSocials(db, now),
       // §613: the same switch for the race number beside a confirmed name on the public list.
       listNumbersDescribed: await noticeDescribesListNumbers(db, now),
+      // §NNN: a race's published results, described by the notice in force; only making them public waits for it.
+      resultsDescribed: await noticeDescribesResults(db, now),
       // §647: the invitations by email, described by the notice in force; nothing waits for it.
       invitationsDescribed: await noticeDescribesEventInvitations(db, now),
       promoDescribed: await noticeDescribesPromotionalMaterials(db, now),

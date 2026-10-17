@@ -7,6 +7,7 @@ import { emailActionTokens } from "@/db/schema/email-action-tokens";
 import { emailOutbox } from "@/db/schema/email-outbox";
 import { eventInvitations } from "@/db/schema/event-invitations";
 import { eventCheckpoints } from "@/db/schema/event-checkpoints";
+import { eventResults } from "@/db/schema/event-results";
 import { eventTodos } from "@/db/schema/event-todos";
 import { eventVolunteerCategories, eventVolunteerRoles, eventVolunteers } from "@/db/schema/event-volunteers";
 import { eventTranslations, events } from "@/db/schema/events";
@@ -129,6 +130,8 @@ export async function resetTables(db: TestDatabase): Promise<void> {
   await db.delete(galleryAlbumTranslations);
   await db.delete(galleryAlbums);
   await db.delete(mediaAssets);
+  // An event's results (§NNN) cascade from it and point at its registrations: before both.
+  await db.delete(eventResults);
   // An event's own to-dos (§749) cascade from it; deleted first like the translations.
   await db.delete(eventTodos);
   // An event's volunteers (§754) cascade from it, and their role is `RESTRICT`: the people first, then the roles.

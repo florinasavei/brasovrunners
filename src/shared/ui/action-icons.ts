@@ -36,6 +36,7 @@ import HeightIcon from "@mui/icons-material/Height";
 import HourglassTopIcon from "@mui/icons-material/HourglassTop";
 import HowToRegIcon from "@mui/icons-material/HowToReg";
 import ImageIcon from "@mui/icons-material/Image";
+import LeaderboardIcon from "@mui/icons-material/Leaderboard";
 import ListAltIcon from "@mui/icons-material/ListAlt";
 import LockIcon from "@mui/icons-material/Lock";
 import LockOpenIcon from "@mui/icons-material/LockOpen";
@@ -251,7 +252,9 @@ export type ActionIconName =
   // «Tabelul de mărimi» (§697): the ruler on the product editor's size chart fold — the measures per size in centimetres.
   | "sizeChart"
   // «Ecusoane pentru voluntari» (§764): the name badge, on the «Voluntari» card's link to the badges' page.
-  | "badges";
+  | "badges"
+  // «Clasament» (§NNN): the podium bars, on the links to a race's results page — never the trophy, which is the desk's.
+  | "results";
 // No runner here: the public send buttons wear it through `SubmitButton`'s own `runner` flag,
 // because this table must never reach a public page (above).
 
@@ -350,4 +353,5 @@ export const ACTION_ICONS: Record<ActionIconName, ComponentType<SvgIconProps>> =
   intro: SubjectIcon,
   sizeChart: StraightenIcon,
   badges: BadgeIcon,
+  results: LeaderboardIcon,
 };
