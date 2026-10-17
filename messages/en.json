@@ -4537,7 +4537,7 @@
         "resultsNotice": {
           "title": "Privacy notice: the races' results",
           "todo": "The notice in force does not describe the results yet, so no results can be published on a race's page. You can type and rank them in the backoffice meanwhile.",
-          "done": "The notice in force describes the results: an administrator can publish them on the race's page. A name appears only for those who ticked the list, under this notice or a later one, and for runners added by hand whom the organizers recorded as agreeing.",
+          "done": "The notice in force describes the results: an administrator can publish them on the race's page. A name appears only for those who ticked the list under this notice or later, or who agreed.",
           "how": [
             "Before approving, read the template's paragraph with a lawyer: what the results show (the place, the number, the time, the category), who appears with a name and until when.",
             "/admin/legal → the “GDPR” card → “Regenerate from the template” → confirm. The section on the public list describes the results too.",
@@ -10050,7 +10050,7 @@
       "publish": {
         "title": "On the event's page",
         "label": "The results are public on the event's page",
-        "help": "The page shows place, number, time and category. A name appears only for those who ticked “I want to appear on the participants & results list”, and for runners added by hand whose agreement you ticked; the rest are “Participant #number”.",
+        "help": "The page shows place, number, time and category. A name appears only for those who ticked the list, or for a runner added by hand who agreed; the rest are “Participant #number”.",
         "confirmOnTitle": "Make the results public?",
         "confirmOnBody": "Anyone can read the results on the event's page, with the name only of those who ticked or agreed.",
         "confirmOffTitle": "Take the results off the site?",

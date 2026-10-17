@@ -441,7 +441,7 @@ describe("§NNN the agreement tick on the typed lines", () => {
     expect(words).toContain("Tick only if the person told you so; who ticked it and when stay in the log.");
   });
 
-  it("says the public rule of the typed runners in the intro and in the publish help, both languages", async () => {
+  it("says the public rule of the typed runners in the typed card's intro, both languages", async () => {
     await runners();
     expect(text(await render())).toContain("Pe site apare „Participant #număr”, afară de cazul în care bifezi că persoana a acceptat numele.");
     expect(text(await render(raceId, "en"))).toContain("The site shows “Participant #number” unless you tick that the person agreed to the name.");

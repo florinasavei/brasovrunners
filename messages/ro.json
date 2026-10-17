@@ -4537,7 +4537,7 @@
         "resultsNotice": {
           "title": "Nota de confidențialitate: clasamentul curselor",
           "todo": "Nota în vigoare nu descrie încă clasamentul, așa că niciun clasament nu poate fi publicat pe pagina unei curse. Îl poți scrie și calcula în backoffice între timp.",
-          "done": "Nota în vigoare descrie clasamentul: un administrator îl poate publica pe pagina cursei. Numele apare doar la cine a bifat lista de participanți & rezultate, sub această notă sau una mai nouă, și la alergătorii adăugați de mână, dacă organizatorii au notat că au acceptat.",
+          "done": "Nota în vigoare descrie clasamentul: un administrator îl poate publica pe pagina cursei. Numele apare doar la cine a bifat lista sub această notă sau una mai nouă, ori a acceptat.",
           "how": [
             "Înainte de aprobare, citește cu un avocat paragraful din șablon: ce arată clasamentul (locul, numărul, timpul, categoria), cine apare cu nume și până când.",
             "/admin/legal → cardul „GDPR” → „Regenerează din șablon” → confirmă. Secțiunea despre lista publică descrie și clasamentul.",
@@ -10050,7 +10050,7 @@
       "publish": {
         "title": "Pe pagina evenimentului",
         "label": "Clasamentul e public pe pagina evenimentului",
-        "help": "Pagina arată locul, numărul, timpul și categoria. Numele apare doar la cine a bifat „Vreau să apar pe lista de participanți & rezultate” și la alergătorii adăugați de mână pentru care ai bifat acceptul; ceilalți apar ca „Participant #număr”.",
+        "help": "Pagina arată locul, numărul, timpul și categoria. Numele apare doar la cine a bifat lista sau la cel adăugat de mână și acceptat; ceilalți apar ca „Participant #număr”.",
         "confirmOnTitle": "Faci clasamentul public?",
         "confirmOnBody": "Oricine poate citi clasamentul pe pagina evenimentului, cu numele doar al celor care au bifat sau au acceptat.",
         "confirmOffTitle": "Scoți clasamentul de pe site?",
