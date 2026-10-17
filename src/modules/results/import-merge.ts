@@ -1,6 +1,6 @@
 import type { ImportedResultRow } from "./results";
 import { formatResultTime } from "./domain/result-time";
-import { registeredRowKey, resultBox, typedRowCountOf, typedRowKey } from "./rows";
+import { RESULT_ROW_BOXES, registeredRowKey, resultBox, typedRowCountOf, typedRowKey } from "./rows";
 
 /**
  * «Importă din CSV» puts what a file says into the boxes of the table (§NNN), and saves nothing.
@@ -29,6 +29,12 @@ export function mergeImportedRows(
     if (bib > 0) typedByBib.set(bib, typedRowKey(index));
   }
 
+  // The blank typed lines the page drew (every box empty) are free: an import's new numbers go into them before any line is added.
+  const free: number[] = [];
+  for (let index = 0; index < typedCount; index += 1) {
+    if (RESULT_ROW_BOXES.every((box) => (next[resultBox(typedRowKey(index), box)]?.[0] ?? "").trim() === "")) free.push(index);
+  }
+
   let placed = 0;
   let added = 0;
   for (const row of rows) {
@@ -41,8 +47,9 @@ export function mergeImportedRows(
       key = typedByBib.get(row.bibNumber) as string;
       placed += 1;
     } else {
-      key = typedRowKey(typedCount);
-      typedCount += 1;
+      const reused = free.shift();
+      key = typedRowKey(reused ?? typedCount);
+      if (reused === undefined) typedCount += 1;
       next[resultBox(key, "bib")] = [String(row.bibNumber)];
       typedByBib.set(row.bibNumber, key);
       added += 1;

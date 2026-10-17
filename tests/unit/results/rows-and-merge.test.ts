@@ -70,13 +70,20 @@ describe("§NNN mergeImportedRows", () => {
     expect(merged.values["r[101].status"]).toEqual(["DNF"]);
   });
 
-  it("makes a number with no line a new typed row at the end, with its times and the name left empty", () => {
+  it("puts a number with no line into the blank typed line the page drew, with its times and the name left empty", () => {
     const merged = mergeImportedRows(posted({ "r[101].time": "", "n[0].bib": "", "n[0].name": "" }), [row(555, { matched: false, name: null })]);
-    expect(merged.values["n[1].bib"]).toEqual(["555"]);
-    expect(merged.values["n[1].time"]).toEqual(["0:45:12"]);
-    expect(merged.values["n[1].status"]).toEqual(["FINISHED"]);
-    expect(merged.values["n[1].name"]).toBeUndefined();
+    expect(merged.values["n[0].bib"]).toEqual(["555"]);
+    expect(merged.values["n[0].time"]).toEqual(["0:45:12"]);
+    expect(merged.values["n[0].status"]).toEqual(["FINISHED"]);
+    expect(merged.values["n[0].name"]).toEqual([""]);
+    expect(Object.keys(merged.values).some((name) => name.startsWith("n[1]"))).toBe(false);
     expect(merged).toMatchObject({ placed: 0, added: 1 });
+  });
+
+  it("adds a new typed row at the end when every line already holds something", () => {
+    const merged = mergeImportedRows(posted({ "n[0].bib": "900", "n[0].name": "Ion" }), [row(555, { matched: false, name: null })]);
+    expect(merged.values["n[1].bib"]).toEqual(["555"]);
+    expect(merged.values["n[0].bib"]).toEqual(["900"]);
   });
 
   it("fills a typed row that already holds the number instead of adding another", () => {
