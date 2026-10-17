@@ -558,6 +558,9 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes, option
       ? {}
       : { routeMaps: routeMapsToStore([fields.routeGarmin ?? null, fields.routeStrava ?? null]) }),
     ...(fields.routeGpx === undefined ? {} : { routeGpx: fields.routeGpx }),
+    // «Arată profilul traseului pe pagină» (§802, amended), by the same discipline: a caller that did not post the
+    // tick writes nothing, so no save takes the chart off a page by not mentioning it.
+    ...(fields.showRouteProfile === undefined ? {} : { showRouteProfile: fields.showRouteProfile }),
     // No `video_url` (§481): a film is a figure in the description (§266); the column is unread
     // and leaves the database in BR-V2.11 (§491).
     stravaEventUrl: fields.stravaEventUrl,
@@ -1858,6 +1861,8 @@ const SERIES_COLUMNS = [
   // same map every Wednesday, and "from this date" carries a new one.
   "routeMaps",
   "routeGpx",
+  // Whether the page draws the GPX's profile (§802, amended) travels with the file it draws.
+  "showRouteProfile",
   "coHosts",
   // Not `locationName` and `locationAddress`: the place travels by what each language's page
   // shows (`placesShown`, §362), in `applyToSeries` below, with the names on each language's row.
@@ -2963,6 +2968,7 @@ function blankEventRow(now: Date): EditableEvent {
     links: null,
     routeMaps: null,
     routeGpx: null,
+    showRouteProfile: true,
     repeatRule: null,
     repeatOf: null,
     scheduleItems: null,
@@ -3565,6 +3571,8 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     // only when the last of them lets go of it.
     routeMaps: source.routeMaps,
     routeGpx: source.routeGpx,
+    // The profile's switch travels with the file it draws (§802, amended).
+    showRouteProfile: source.showRouteProfile,
     // «Copertă» (§709), like the route: every date of a repeat wears the series' cover, and a
     // duplicate starts with last year's until the club picks this year's.
     coverMediaAssetId: source.coverMediaAssetId,

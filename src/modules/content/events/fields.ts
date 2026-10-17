@@ -802,6 +802,12 @@ export const eventFieldsSchema = z
     routeStrava: routeMapField(parseStravaRoute, "the Strava route: paste the route's link (strava.com/routes/…) or the embed code Strava gives").optional(),
     routeGarmin: routeMapField(parseGarminCourse, "the Garmin Connect course: paste the course's link (connect.garmin.com/…/course/…) or the embed code Garmin gives").optional(),
     /**
+     * «Arată profilul traseului pe pagină» (§802, amended): whether the page draws the elevation profile from the GPX.
+     * Absent means this caller is not editing it, by the kit's discipline (§554) — no save switches the chart off by
+     * not mentioning it; the editor posts it with a marker, as «Informații medicale» (§557).
+     */
+    showRouteProfile: z.boolean().optional(),
+    /**
      * «Traseul»'s GPX (§718): the editor's hidden input — the JSON the upload answered
      * (`/api/admin/route-gpx`), or "" after «Scoate». Absent means this caller is not editing it.
      * Anything that is not a GPX the upload wrote is refused; the save also asks that it be this

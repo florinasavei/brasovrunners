@@ -99,6 +99,7 @@ export function eventFieldsFromConfig(context: PostedFieldsContext): Record<stri
     routeStrava: mapBox(config, "strava"),
     routeGarmin: mapBox(config, "garmin"),
     ...(context.routeGpx === undefined ? {} : { routeGpx: context.routeGpx ? JSON.stringify(context.routeGpx) : "" }),
+    showRouteProfile: config.route.showRouteProfile,
     stravaEventUrl: asText(config.stravaEventUrl),
     facebookEventUrl: asText(config.facebookEventUrl),
     coHosts: config.partners.map((partner) => ({

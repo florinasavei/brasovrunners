@@ -74,6 +74,7 @@ function sampleConfig(): EventConfig {
       url: null,
       maps: [{ provider: "garmin", id: "987654321" }],
       gpx: { name: "traseu.gpx", url: GPX },
+      showRouteProfile: true,
       // The route's checkpoints (§757, §770): one with a time limit in minutes and a note, one without either and with a direction kind.
       checkpoints: [
         { km: 7.5, name: { ro: "Apă la cabană", en: "Water at the hut" }, kinds: ["WATER", "FOOD"], cutoffMinutes: 45, note: { ro: "Și banane", en: "Bananas too" }, onProfile: true },

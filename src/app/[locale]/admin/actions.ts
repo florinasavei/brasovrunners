@@ -339,6 +339,9 @@ function eventFieldsFrom(form: FormData) {
     routeStrava: form.has("event.routeStrava") ? value("routeStrava") : undefined,
     routeGarmin: form.has("event.routeGarmin") ? value("routeGarmin") : undefined,
     routeGpx: form.has("event.routeGpx") ? value("routeGpx") : undefined,
+    // «Arată profilul traseului pe pagină» (§802, amended): a checkbox, read only when the form carried its marker
+    // — a form without the card is "not editing it" (a reader who may not change the settings), never "off".
+    showRouteProfile: form.get("event.showRouteProfile.present") === "1" ? form.get("event.showRouteProfile") === "on" : undefined,
     distanceMeters: value("distanceMeters"),
     // «Aproximativ» (§598): a checkbox beside the distance; `service.ts` drops it when the distance is empty.
     distanceEstimated: form.get("event.distanceEstimated") === "on",

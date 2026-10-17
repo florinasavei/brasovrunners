@@ -2294,6 +2294,9 @@
       "routeGarminHelp": "Lipește linkul traseului de pe Garmin Connect (…/course/…) sau codul de încorporare (Share → Embed). Pe pagină apar harta, încărcată doar când vizitatorul apasă, și linkul.",
       "routeStrava": "Strava: linkul sau codul de încorporare",
       "routeStravaHelp": "Lipește linkul traseului de pe Strava (strava.com/routes/…) sau codul de încorporare (Share → Embed). Pe pagină apar harta, încărcată doar când vizitatorul apasă, și linkul.",
+      "showRouteProfile": "Arată profilul traseului pe pagină",
+      "showRouteProfileHelp": "Debifat, pagina nu desenează profilul din GPX; tabelul «Puncte de control» și harta rămân. Numărul de concurs are setarea lui în „Cum arată numărul de concurs”.",
+      "showRouteProfileNoGpx": "Nu există încă un fișier GPX, deci nu e nimic de desenat: încarcă unul la «Linkuri și fișiere».",
       "routeGpx": {
         "label": "Fișierul GPX al traseului",
         "help": "Încarcă fișierul de pe calculator sau telefon; apare pe pagină sub hărți, ca «Descarcă traseul (GPX)». Un GPX ținut în altă parte îl poți adăuga mai jos ca link.",
@@ -8547,7 +8550,8 @@
             "name": "Numele fișierului GPX",
             "url": "Fișierul GPX"
           },
-          "checkpoints": "Punctele de control"
+          "checkpoints": "Punctele de control",
+          "showRouteProfile": "Profilul traseului arătat pe pagină"
         },
         "links": "Linkuri și fișiere",
         "partners": "Parteneri",
@@ -9716,7 +9720,8 @@
       "preview": {
         "title": "Așa apare pe pagină",
         "help": "Se schimbă după „Salvează punctele”, nu în timp ce scrii.",
-        "none": "Profilul apare pe pagină când traseul are un fișier GPX cu altitudini."
+        "none": "Profilul apare pe pagină când traseul are un fișier GPX cu altitudini.",
+        "off": "Profilul e oprit pe pagină («Traseul» → «Arată profilul traseului pe pagină»)."
       },
       "kinds": {
         "WATER": "Apă",
