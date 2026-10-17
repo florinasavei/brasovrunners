@@ -29,6 +29,7 @@ import FactCheckIcon from "@mui/icons-material/FactCheck";
 import FilterAltIcon from "@mui/icons-material/FilterAlt";
 import FilterAltOffIcon from "@mui/icons-material/FilterAltOff";
 import FamilyRestroomIcon from "@mui/icons-material/FamilyRestroom";
+import FormatAlignRightIcon from "@mui/icons-material/FormatAlignRight";
 import ForwardToInboxIcon from "@mui/icons-material/ForwardToInbox";
 import GridOnIcon from "@mui/icons-material/GridOn";
 import HandshakeIcon from "@mui/icons-material/Handshake";
@@ -77,6 +78,8 @@ import TranslateIcon from "@mui/icons-material/Translate";
 import UndoIcon from "@mui/icons-material/Undo";
 import UploadIcon from "@mui/icons-material/Upload";
 import VerifiedIcon from "@mui/icons-material/Verified";
+import VerticalAlignBottomIcon from "@mui/icons-material/VerticalAlignBottom";
+import VerticalAlignTopIcon from "@mui/icons-material/VerticalAlignTop";
 import ViewAgendaIcon from "@mui/icons-material/ViewAgenda";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import type { SvgIconProps } from "@mui/material/SvgIcon";
@@ -178,8 +181,12 @@ export type ActionIconName =
   | "route"
   | "upright"
   | "turned"
-  // The tick beside them, «Arată distanța și diferența de nivel lângă profil» (§759): up and down, the gain.
+  // The tick beside them, «Arată distanța și diferența de nivel» (§759): up and down, the gain.
   | "profileFigures"
+  // «Unde stau cifrele» (§804): at the profile's right, under it, or in the header under the date.
+  | "figuresRight"
+  | "figuresBelow"
+  | "figuresHeader"
   // The people on the waiting list (§626): the hourglass «Coada» wears on its panel (`panel-glyphs.ts`) and the queue's line title, beside the «Înscrieri» tab's badge.
   | "waiting"
   // Those holding a place who still have to finish (§632): the pen the participant's own declaration step wears (`RegistrationSteps`), in the «Înscrieri» tab's pill.
@@ -307,6 +314,9 @@ export const ACTION_ICONS: Record<ActionIconName, ComponentType<SvgIconProps>> =
   upright: TextRotationNoneIcon,
   turned: ScreenRotationAltIcon,
   profileFigures: HeightIcon,
+  figuresRight: FormatAlignRightIcon,
+  figuresBelow: VerticalAlignBottomIcon,
+  figuresHeader: VerticalAlignTopIcon,
   waiting: HourglassTopIcon,
   declaration: DrawIcon,
   emailConfirmation: MarkEmailReadIcon,

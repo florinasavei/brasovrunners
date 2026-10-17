@@ -179,7 +179,7 @@ describe("§759 the bib designer in named sections", () => {
     expect(part).toContain("O poză încărcată");
     expect(part).toMatch(/data-testid="RouteIcon"[\s\S]*?Desenat din traseul/);
     expect(part).toMatch(/<input[^>]*name="event.bibDesign.showProfileFigures"[^>]*checked/);
-    expect(part).toContain("Arată distanța și diferența de nivel lângă profil");
+    expect(part).toContain("Arată distanța și diferența de nivel");
     expect(radios(part, "event.bibDesign.profileOrientation")).toEqual([
       { value: "normal", checked: true },
       { value: "turned", checked: false },
@@ -196,6 +196,48 @@ describe("§759 the bib designer in named sections", () => {
     const picture = section(await render({ ...DEFAULT_BIB_DESIGN, showProfile: true, profileSource: "picture" }), "profile");
     expect(hiddenAround(picture, 'data-testid="bib-picture-profile"')).toBe(false);
     expect(hiddenAround(picture, 'name="event.bibDesign.showCheckpoints"')).toBe(true);
+  });
+
+  it("offers «Unde stau cifrele» as three radios with their glyphs, the strip's right chosen, shown only while the figures' tick is on", async () => {
+    const part = section(await render({ ...DEFAULT_BIB_DESIGN, showProfile: true }), "profile");
+    expect(radios(part, "event.bibDesign.profileFiguresPlace")).toEqual([
+      { value: "right", checked: true },
+      { value: "below", checked: false },
+      { value: "header", checked: false },
+    ]);
+    expect(part).toContain("Unde stau cifrele");
+    expect(part).toMatch(/data-testid="FormatAlignRightIcon"[\s\S]*?În dreapta profilului/);
+    expect(part).toMatch(/data-testid="VerticalAlignBottomIcon"[\s\S]*?Sub profil, pe un rând/);
+    expect(part).toMatch(/data-testid="VerticalAlignTopIcon"[\s\S]*?În antet, sub dată/);
+    // The help, one sentence, under the group; the group right under the figures' tick.
+    expect(part).toContain(ro.Admin.editor.bibDesign.profileFiguresPlaceHelp);
+    expect(part.indexOf('name="event.bibDesign.showProfileFigures"')).toBeLessThan(part.indexOf('name="event.bibDesign.profileFiguresPlace"'));
+    expect(part.indexOf('name="event.bibDesign.profileFiguresPlace"')).toBeLessThan(part.indexOf('name="event.bibDesign.profileOrientation"'));
+    expect(hiddenAround(part, 'data-testid="bib-profile-figures-place"')).toBe(false);
+    // The stored choice is the one checked.
+    const header = section(await render({ ...DEFAULT_BIB_DESIGN, showProfile: true, profileFiguresPlace: "header" }), "profile");
+    expect(radios(header, "event.bibDesign.profileFiguresPlace").find((radio) => radio.checked)?.value).toBe("header");
+    // With the figures unticked the group is hidden — still in the form, so the choice is kept.
+    const off = section(await render({ ...DEFAULT_BIB_DESIGN, showProfile: true, showProfileFigures: false, profileFiguresPlace: "below" }), "profile");
+    expect(hiddenAround(off, 'data-testid="bib-profile-figures-place"')).toBe(true);
+    expect(radios(off, "event.bibDesign.profileFiguresPlace").find((radio) => radio.checked)?.value).toBe("below");
+  });
+
+  it("names the place in the profile's closed line while the figures are on, and in English too", async () => {
+    const closed = (html: string) => {
+      const part = section(html, "profile");
+      return part.slice(part.indexOf("<summary"), part.indexOf("</summary>"));
+    };
+    expect(closed(await render({ ...DEFAULT_BIB_DESIGN, showProfile: true }))).toContain("cifre lângă profil");
+    expect(closed(await render({ ...DEFAULT_BIB_DESIGN, showProfile: true, profileFiguresPlace: "below" }))).toContain("cifre sub profil");
+    expect(closed(await render({ ...DEFAULT_BIB_DESIGN, showProfile: true, profileFiguresPlace: "header" }))).toContain("cifre în antet");
+    expect(closed(await render({ ...DEFAULT_BIB_DESIGN, showProfile: true, showProfileFigures: false, profileFiguresPlace: "header" }))).not.toContain("cifre");
+    // A picture for a header carries no words, so the drawing puts the figures under the profile and the line says so.
+    expect(closed(await render({ ...DEFAULT_BIB_DESIGN, showProfile: true, profileFiguresPlace: "header", headerImageSrc: "/api/media/x/web.webp" }))).toContain("cifre sub profil");
+    expect(closed(await render({ ...DEFAULT_BIB_DESIGN, showProfile: true }, "en"))).toContain("figures beside the profile");
+    const en = section(await render({ ...DEFAULT_BIB_DESIGN, showProfile: true, profileFiguresPlace: "below" }, "en"), "profile");
+    for (const words of ["Where the figures stand", "At the profile", "Under the profile, on one line", "In the header, under the date"]) expect(en).toContain(words);
+    expect(radios(en, "event.bibDesign.profileFiguresPlace").find((radio) => radio.checked)?.value).toBe("below");
   });
 
   it("says why the GPX draws nothing when the event has none, and never greys the profile's tick: a picture needs no GPX", async () => {
@@ -265,12 +307,12 @@ describe("§759 the bib designer in named sections", () => {
     const ratio = (figures: boolean, language: "ro" | "en") => new Intl.NumberFormat(language, { maximumFractionDigits: 1 }).format(bibProfilePictureRatio(figures));
     const size = (figures: boolean) => bibProfilePictureExample(figures);
     const pictured = (figures: boolean) => ({ ...DEFAULT_BIB_DESIGN, showProfile: true, profileSource: "picture" as const, showProfileFigures: figures });
-    const ro = `Recomandat: o imagine lată, întreagă, fără decupaj. Cu cifrele lângă profil: ${ratio(true, "ro")} la 1, adică ${size(true).width} × ${size(true).height} px la ${BIB_PICTURE_PRINT_DPI} dpi. Fără ele, sau fără cifre de arătat: ${ratio(false, "ro")} la 1, adică ${size(false).width} × ${size(false).height} px.`;
+    const ro = `Recomandat: o imagine lată, întreagă, fără decupaj. Cu cifrele în dreapta profilului: ${ratio(true, "ro")} la 1, adică ${size(true).width} × ${size(true).height} px la ${BIB_PICTURE_PRINT_DPI} dpi. Altfel (sub profil, în antet, fără cifre): ${ratio(false, "ro")} la 1, adică ${size(false).width} × ${size(false).height} px.`;
     // The same sentence for the figures ticked and unticked: the box under the picture is not saved yet when the club reads it.
     expect(section(await render(pictured(true)), "profile")).toContain(ro);
     expect(section(await render(pictured(false)), "profile")).toContain(ro);
     expect(section(await render(pictured(true), "en"), "profile")).toContain(
-      `Recommended: a wide picture, placed whole, never cropped. With the figures beside the profile: ${ratio(true, "en")} to 1, that is ${size(true).width} × ${size(true).height} px at ${BIB_PICTURE_PRINT_DPI} dpi. Without them, or with none to show: ${ratio(false, "en")} to 1, that is ${size(false).width} × ${size(false).height} px.`,
+      `Recommended: a wide picture, placed whole, never cropped. With the figures at the right: ${ratio(true, "en")} to 1, that is ${size(true).width} × ${size(true).height} px at ${BIB_PICTURE_PRINT_DPI} dpi. Otherwise (under it, in the header, none): ${ratio(false, "en")} to 1, that is ${size(false).width} × ${size(false).height} px.`,
     );
     // The numbers are the geometry's: 380 / 36 and 523.28 / 36, an example at 300 dpi in the same proportion.
     expect(bibProfilePictureRatio(true)).toBeCloseTo(BIB_LAYOUT.profileChartWidth / BIB_LAYOUT.profilePictureHeight, 6);
@@ -299,7 +341,7 @@ describe("§759 the bib designer in named sections", () => {
     expect(shape).toBe("10,6");
     expect(ro.Admin.editor.bibDesign.picture.shape.profile).toBe("Forma: {ratio} la 1, cât fâșia profilului.");
     // The sentence names that same ratio for the figures beside the profile.
-    expect(section(html, "profile")).toContain(`Cu cifrele lângă profil: ${shape} la 1`);
+    expect(section(html, "profile")).toContain(`Cu cifrele în dreapta profilului: ${shape} la 1`);
   });
 
   it("offers «Kilometrii și altitudinile pe profil», ticked by default, beside the checkpoints' tick, for the GPX source only", async () => {
@@ -319,7 +361,7 @@ describe("§759 the bib designer in named sections", () => {
 
   it("draws a glyph before the figures' tick, and the club's logo on a white plate", async () => {
     const part = section(await render(), "profile");
-    expect(part).toMatch(/name="event.bibDesign.showProfileFigures"[\s\S]*?data-testid="HeightIcon"[\s\S]*?Arată distanța și diferența de nivel lângă profil/);
+    expect(part).toMatch(/name="event.bibDesign.showProfileFigures"[\s\S]*?data-testid="HeightIcon"[\s\S]*?Arată distanța și diferența de nivel/);
     // The bib prints the blue lockup on its own white ground; the radio shows it the same way (never recoloured, §711).
     const design: BibDesign = { ...DEFAULT_BIB_DESIGN, member: { ...DEFAULT_BIB_MEMBER_DESIGN, enabled: true, mark: true } };
     expect(section(await render(design), "members")).toMatch(/<span[^>]*>\s*<img[^>]*src="\/brand\/logo\.svg"[^>]*>\s*<\/span>/);
@@ -329,7 +371,7 @@ describe("§759 the bib designer in named sections", () => {
     const html = await render(DEFAULT_BIB_DESIGN, "en");
     const titles = ["Header", "The number", "The name", "Profile and emergencies", "Footer and sponsors", "Members"];
     SECTIONS.forEach((name, index) => expect(section(html, name)).toMatch(new RegExp(`<h5[^>]*>[\\s\\S]*?${titles[index]}`)));
-    expect(section(html, "profile")).toContain("Show the distance and the elevation gain beside the profile");
+    expect(section(html, "profile")).toContain("Show the distance and the elevation gain");
     expect(section(html, "profile")).toContain("Turned, for the runner to read");
   });
 });

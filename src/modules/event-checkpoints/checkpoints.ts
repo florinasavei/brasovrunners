@@ -61,12 +61,12 @@ const toCheckpoint = (row: EventCheckpointRow, clockOf: (minutes: number | null)
  */
 export async function listCheckpoints<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<Checkpoint[]> {
   const rows = await db
-    .select({ row: eventCheckpoints, startsAt: events.startsAt, raceStartsAt: events.raceStartsAt, timezone: events.timezone })
+    .select({ row: eventCheckpoints, type: events.type, startsAt: events.startsAt, raceStartsAt: events.raceStartsAt, timezone: events.timezone })
     .from(eventCheckpoints)
     .innerJoin(events, eq(events.id, eventCheckpoints.eventId))
     .where(eq(eventCheckpoints.eventId, eventId))
     .orderBy(asc(eventCheckpoints.km), asc(eventCheckpoints.position), asc(eventCheckpoints.createdAt), asc(eventCheckpoints.id));
-  return rows.map(({ row, startsAt, raceStartsAt, timezone }) => toCheckpoint(row, checkpointClock({ startsAt, raceStartsAt, timezone })));
+  return rows.map(({ row, type, startsAt, raceStartsAt, timezone }) => toCheckpoint(row, checkpointClock({ type, startsAt, raceStartsAt, timezone })));
 }
 
 /** What the rules measure a checkpoint against: the event's own columns. */

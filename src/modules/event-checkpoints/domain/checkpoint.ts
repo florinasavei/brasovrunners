@@ -174,6 +174,13 @@ export const checkpointBox = (
   field: "id" | "nameRo" | "nameEn" | "km" | "kinds" | "cutoffHours" | "cutoffMinutesPart" | "noteRo" | "noteEn" | "onProfile" | "onProfileShown" | "remove",
 ): string => `cp[${index}].${field}`;
 
+/**
+ * The names of the GPX preview's two name boxes (§757): `gp[2].nameRo`, `gp[2].nameEn` — the proposal's own number in the offered list.
+ * Not `cp[…]`: the preview and the list's saved rows are on one page in two forms, and «Tradu din română» (§464) finds a box by its name,
+ * so a name used by both would translate into whichever stands first. The action that adds the ticked points reads these.
+ */
+export const gpxProposalBox = (at: number, field: "nameRo" | "nameEn"): string => `gp[${at}].${field}`;
+
 /** The whole of a row's text, folded: one line, no run of spaces. */
 const oneLine = (value: string): string => value.replace(/\s+/g, " ").trim();
 
@@ -440,13 +447,14 @@ export type CheckpointRow =
       noteRo: string | null;
       noteEn: string | null;
     }
-  | { kind: "finish"; km: number | null; cutoffMinutes: number; cutoffClock: string };
+  | { kind: "finish"; km: number | null; cutoffMinutes: number; cutoffClock: string | null };
 
 /**
  * The table «Puncte de control» as rows (§757): the checkpoints by distance and — **the finish as the
  * last row when the event has a time limit**, its limit being the event's «Timp limită» in minutes and
- * the clock it closes at, the event's end on the event's clock (§770), at the route's length when the
- * event has one. Nothing at all with no checkpoints: the section is not drawn for a finish alone.
+ * the clock it closes at, the event's end on the event's clock (§770) — **null while the race's gun time is
+ * not set**, when the row says the duration alone (`start.ts#cutoffClockStart`) — at the route's length when
+ * the event has one. Nothing at all with no checkpoints: the section is not drawn for a finish alone.
  */
 export function checkpointRows(
   checkpoints: readonly Checkpoint[],
@@ -465,7 +473,7 @@ export function checkpointRows(
     noteRo: row.noteRo,
     noteEn: row.noteEn,
   }));
-  if (finish.limit && finish.minutes) rows.push({ kind: "finish", km: finish.km, cutoffMinutes: finish.minutes, cutoffClock: finish.limit });
+  if (finish.minutes) rows.push({ kind: "finish", km: finish.km, cutoffMinutes: finish.minutes, cutoffClock: finish.limit });
   return rows;
 }
 

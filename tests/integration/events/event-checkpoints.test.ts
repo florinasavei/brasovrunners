@@ -164,8 +164,11 @@ describe("§757 an event's checkpoints", () => {
       [5, "Apă", "Water", 60],
       [12.5, "Mâncare", "Food", 135],
     ]);
-    // The clock follows the start: 09:00 on the event's own clock, so one hour is 10:00 and two hours and a quarter 11:15.
-    expect(rows.map((row) => row.cutoffClock)).toEqual(["10:00", "11:15"]);
+    // The race's gun time is not set (`race_starts_at` null): the minutes are known, a clock is not — «se închide la» would count from the meeting (§757).
+    expect(rows.map((row) => row.cutoffClock)).toEqual([null, null]);
+    // The gun is set to the event's own start, 09:00 on its clock: one hour is 10:00 and two hours and a quarter 11:15.
+    await db.update(events).set({ raceStartsAt: new Date("2026-11-21T07:00:00.000Z") }).where(eq(events.id, eventId));
+    expect((await listCheckpoints(db, eventId)).map((row) => row.cutoffClock)).toEqual(["10:00", "11:15"]);
     // The closed set's own order, whatever order the boxes were ticked in; the note in both languages.
     expect(rows[1].kinds).toEqual(["WATER", "FOOD"]);
     expect(rows[1]).toMatchObject({ noteRo: "Banane", noteEn: "Bananas" });
@@ -239,17 +242,23 @@ describe("§757 an event's checkpoints", () => {
     expect((await listCheckpoints(db, eventId)).map((row) => [row.cutoffMinutes, row.cutoffClock])).toEqual([[90, "11:30"]]);
   });
 
-  it("moves every clock with the start and keeps the minutes: the time limit is a duration", async () => {
+  it("moves every clock with the gun and keeps the minutes: the time limit is a duration, and a clock waits for the gun", async () => {
     await save([WATER, FOOD]);
+    // No gun time yet: the durations only.
+    expect((await listCheckpoints(db, eventId)).map((row) => [row.cutoffMinutes, row.cutoffClock])).toEqual([[60, null], [135, null]]);
+    await db.update(events).set({ raceStartsAt: new Date("2026-11-21T07:00:00.000Z") }).where(eq(events.id, eventId));
     expect((await listCheckpoints(db, eventId)).map((row) => row.cutoffClock)).toEqual(["10:00", "11:15"]);
     // The club moves the race to start at 10:30 (08:30Z) — with the same three hours, ending at 13:30.
-    await db.update(events).set({ startsAt: new Date("2026-11-21T08:30:00.000Z"), endsAt: new Date("2026-11-21T11:30:00.000Z") }).where(eq(events.id, eventId));
+    await db.update(events).set({ startsAt: new Date("2026-11-21T08:30:00.000Z"), raceStartsAt: new Date("2026-11-21T08:30:00.000Z"), endsAt: new Date("2026-11-21T11:30:00.000Z") }).where(eq(events.id, eventId));
     const moved = await listCheckpoints(db, eventId);
     expect(moved.map((row) => row.cutoffMinutes)).toEqual([60, 135]);
     expect(moved.map((row) => row.cutoffClock)).toEqual(["11:30", "12:45"]);
     // And a gun later than the meeting time takes the clocks with it.
     await db.update(events).set({ raceStartsAt: new Date("2026-11-21T09:00:00.000Z") }).where(eq(events.id, eventId));
     expect((await listCheckpoints(db, eventId)).map((row) => row.cutoffClock)).toEqual(["12:00", "13:15"]);
+    // The gun taken back («Startul cursei nu e stabilit»): the minutes stay, the clocks go.
+    await db.update(events).set({ raceStartsAt: null }).where(eq(events.id, eventId));
+    expect((await listCheckpoints(db, eventId)).map((row) => [row.cutoffMinutes, row.cutoffClock])).toEqual([[60, null], [135, null]]);
   });
 
   it("refuses a time limit while the start has no hour to count it from, and keeps a saved limit that is posted unchanged", async () => {
@@ -411,8 +420,11 @@ describe("§757 an event's checkpoints", () => {
     expect((await actions()).filter((action) => action === "event_checkpoints.changed")).toHaveLength(2);
   });
 
-  it("hands the bib's strip and the event page the same clock: one converter, the gun's hour plus the limit (§770)", async () => {
+  it("hands the bib's strip and the event page the same clock: one converter, the gun's hour plus the limit (§770) — and none while the gun is not set", async () => {
     await save([WATER, FOOD]);
+    const unset: BibProfileSource = { routeGpx: { key: "route/a.gpx" } as never, distanceMeters: 21_100, elevationGainMeters: null };
+    expect((await withBibCheckpoints(db, eventId, unset, { showProfile: true, showCheckpoints: true })).checkpoints?.map((row) => row.cutoffClock)).toEqual([null, null]);
+    await db.update(events).set({ raceStartsAt: new Date("2026-11-21T07:00:00.000Z") }).where(eq(events.id, eventId));
     const source: BibProfileSource = { routeGpx: { key: "route/a.gpx" } as never, distanceMeters: 21_100, elevationGainMeters: null };
     const strip = await withBibCheckpoints(db, eventId, source, { showProfile: true, showCheckpoints: true });
     expect(strip.checkpoints?.map((row) => [row.km, row.cutoffClock])).toEqual([
@@ -452,8 +464,8 @@ function pickForm(gpxKey: string, picks: Array<[number, string, string]>): FormD
   const data = form([], { gpxKey });
   for (const [at, nameRo, nameEn] of picks) {
     data.append("pick", String(at));
-    data.set(`cp[${at}].nameRo`, nameRo);
-    data.set(`cp[${at}].nameEn`, nameEn);
+    data.set(`gp[${at}].nameRo`, nameRo);
+    data.set(`gp[${at}].nameEn`, nameEn);
   }
   return data;
 }
@@ -501,9 +513,9 @@ describe("§757 «Ia punctele din GPX»", () => {
     const gpx = await uploadTrack(WAYPOINTS);
     await db.update(events).set({ routeGpx: gpx }).where(eq(events.id, eventId));
     const refused = await post(addGpxCheckpointsAction, pickForm(gpx.key, [[1, "Cabana", ""]]));
-    expect(refused).toMatchObject({ error: "CHECKPOINT_NAME_MISSING", fields: ["cp[1].nameEn"] });
+    expect(refused).toMatchObject({ error: "CHECKPOINT_NAME_MISSING", fields: ["gp[1].nameEn"] });
     // What was typed stays in the preview's boxes.
-    expect((refused as FormOutcome).values["cp[1].nameRo"]).toEqual(["Cabana"]);
+    expect((refused as FormOutcome).values["gp[1].nameRo"]).toEqual(["Cabana"]);
     expect(await listCheckpoints(db, eventId)).toEqual([]);
   });
 
@@ -592,6 +604,18 @@ describe("§757 the picture stamp covers the checkpoints", () => {
       .where(eq(events.id, eventId));
     return row.stamp;
   };
+
+  it("changes for a race whose gun time is not set — its limits have no clock — and not for another type with the same rows (§757)", async () => {
+    await db.insert(eventTranslations).values({ eventId, locale: "ro", slug: "cursa", title: "Cursa" });
+    await save([WATER]);
+    const race = await stamp();
+    // The same rows on an event with no gun: the address a race with no gun time had before the clocks went.
+    await db.update(events).set({ type: "HIKE" }).where(eq(events.id, eventId));
+    const hike = await stamp();
+    expect(hike).not.toBe(race);
+    await db.update(events).set({ type: "RACE", raceStartsAt: new Date("2026-11-21T07:00:00.000Z") }).where(eq(events.id, eventId));
+    expect(await stamp()).not.toBe(race);
+  });
 
   it("changes with a point added, moved, retimed or given another kind, and not with a name", async () => {
     await db.insert(eventTranslations).values({ eventId, locale: "ro", slug: "cursa", title: "Cursa" });
@@ -700,8 +724,8 @@ describe("§802 «Arată pe profilul traseului» — the tick on each point", ()
     data.set("eventId", eventId);
     data.set("gpxKey", (stored as { key: string }).key);
     data.append("pick", "0");
-    data.set("cp[0].nameRo", "Izvorul");
-    data.set("cp[0].nameEn", "The spring");
+    data.set("gp[0].nameRo", "Izvorul");
+    data.set("gp[0].nameEn", "The spring");
     expect(await post(addGpxCheckpointsAction, data)).toBe("redirected");
     expect(await onProfileOf()).toEqual({ Izvorul: true });
   });

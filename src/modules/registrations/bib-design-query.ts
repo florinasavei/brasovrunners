@@ -82,8 +82,10 @@ export type BibDesignFormValues = {
   profileSource: string;
   /** The profile's picture (§759): its address, or null; never cropped. */
   profileImageSrc: string | null;
-  /** «Arată distanța și diferența de nivel lângă profil» (§759): on by default. */
+  /** «Arată distanța și diferența de nivel» (§759): on by default. */
   showProfileFigures: boolean;
+  /** «Unde stau cifrele» (§804): `right`, `below` or `header`. */
+  profileFiguresPlace: string;
   /** «Orientarea profilului» (§759): `normal` or `turned`. */
   profileOrientation: string;
   /** «Punctele de control pe profil» (§757): on by default, drawn only with the profile and the event's checkpoints. */
@@ -150,7 +152,7 @@ const SWITCHES = [
   "showDistance",
   "numberStubs",
 ] as const;
-const CHOICES = ["numberScale", "numberFormat", "namePosition", "sponsorPlace", "profileSource", "profileOrientation"] as const;
+const CHOICES = ["numberScale", "numberFormat", "namePosition", "sponsorPlace", "profileSource", "profileFiguresPlace", "profileOrientation"] as const;
 /** The pictures' addresses; the profile's is never cropped, so it has no crop beside it (§759). */
 const PICTURES = ["headerImageSrc", "sponsorImageSrc", "profileImageSrc"] as const;
 /** Each picture's crop, beside the picture it belongs to: absent with no picture or no crop (§560). */
@@ -197,6 +199,7 @@ export function readBibDesignForm(get: (name: string) => string | null): BibDesi
     profileSource: field("profileSource")?.trim() || "gpx",
     profileImageSrc: field("profileImageSrc")?.trim() || null,
     showProfileFigures: field("showProfileFigures") === "on",
+    profileFiguresPlace: field("profileFiguresPlace")?.trim() || "right",
     profileOrientation: field("profileOrientation")?.trim() || "normal",
     showCheckpoints: field("showCheckpoints") === "on",
     showCheckpointTimes: field("showCheckpointTimes") === "on",

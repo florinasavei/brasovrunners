@@ -7,7 +7,7 @@ import { fill, indexAtShare, nearestMarkerName, readoutAt, readoutLeft, shareAtX
 
 /** One drawn chart's frame, plain numbers in its own viewBox: where the plot stands and what altitude it spans. */
 export type PointerChart = {
-  size: "narrow" | "wide";
+  size: "narrow" | "wide" | "full";
   viewWidth: number;
   viewHeight: number;
   plotLeft: number;
@@ -33,8 +33,8 @@ type Overlay = { index: number; spoken: boolean; left: number; top: number; heig
 /**
  * The elevation chart's pointer (§802; the owner, 2026-10-16: «a pointer line “4.5 KM”»): a thin line down the chart and
  * «4,5 km · 712 m» at the profile point nearest the finger, the mouse or the arrow keys, the name of a checkpoint within
- * two hundred metres added to it. It wraps the server-drawn SVGs (the page draws a narrow chart and a wide one and shows
- * the one that fits, so this finds the visible one) and draws only an overlay of its own: nothing before the first event,
+ * two hundred metres added to it. It wraps the server-drawn SVGs (the page draws a narrow chart, a wide one and a full one and
+ * shows the one that fits, so this finds the visible one) and draws only an overlay of its own: nothing before the first event,
  * and with scripts off the static chart stands as it is.
  *
  * Props are plain data — numbers, strings, no element and no function (§370); the arithmetic is `pointer.ts`, so the

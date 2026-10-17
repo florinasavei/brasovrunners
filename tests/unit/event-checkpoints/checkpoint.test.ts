@@ -20,7 +20,7 @@ import {
   sortedByKm,
 } from "@/modules/event-checkpoints/domain/checkpoint";
 import { savedDurationMinutes } from "@/modules/content/events/duration";
-import { checkpointClock, checkpointFinish, checkpointStart, cutoffClockOf, minutesFromClock, withCutoffClocks } from "@/modules/event-checkpoints/domain/start";
+import { checkpointClock, checkpointFinish, checkpointStart, cutoffClockOf, cutoffClockStart, minutesFromClock, withCutoffClocks } from "@/modules/event-checkpoints/domain/start";
 import { STAFF_ROLES } from "@/modules/staff-identity/domain/roles";
 
 /**
@@ -146,16 +146,46 @@ describe("§770 the one converter between a clock and a time limit", () => {
   });
 
   it("gives a reader the clocks of the event it draws, and none while the start has no date or hour", () => {
-    const event = { startsAt: new Date("2026-11-21T07:00:00Z"), raceStartsAt: null, timezone: "Europe/Bucharest" };
+    // A hike or a group run has no gun: its start is the event's own.
+    const event = { type: "HIKE", startsAt: new Date("2026-11-21T07:00:00Z"), raceStartsAt: null, timezone: "Europe/Bucharest" };
     expect(checkpointClock(event)(150)).toBe("11:30");
     expect(checkpointClock(event)(null)).toBeNull();
     // The gun, not the meeting time, is what a limit counts from.
-    expect(checkpointClock({ ...event, raceStartsAt: new Date("2026-11-21T08:00:00Z") })(90)).toBe("11:30");
+    expect(checkpointClock({ ...event, type: "RACE", raceStartsAt: new Date("2026-11-21T08:00:00Z") })(90)).toBe("11:30");
     // No hour typed: the provisional start (§545) says nothing a clock could be counted from.
     expect(checkpointClock({ ...event, startsAt: new Date("2026-11-21T10:00:01Z") })(150)).toBeNull();
     const withClocks = withCutoffClocks([{ cutoffMinutes: 30 }, { cutoffMinutes: null }], event);
     expect(withClocks.map((r) => r.cutoffClock)).toEqual(["09:30", null]);
     expect(withCutoffClocks([{ cutoffMinutes: 30 }], null)[0].cutoffClock).toBeNull();
+  });
+
+  // §757 amended (the owner, 2026-10-17): a closing clock is a promise about the gun, so a race has one only once the gun time is set.
+  describe("a race's closing clock waits for its gun time", () => {
+    const race = { type: "RACE", startsAt: new Date("2026-11-21T07:00:00Z"), raceStartsAt: null as Date | null, timezone: "Europe/Bucharest" };
+
+    it("has no clock while the gun time is not set — for a point, for every point, and through withCutoffClocks", () => {
+      expect(cutoffClockStart(race)).toBeNull();
+      expect(checkpointClock(race)(150)).toBeNull();
+      expect(withCutoffClocks([{ cutoffMinutes: 30 }, { cutoffMinutes: 90 }, { cutoffMinutes: null }], race).map((r) => r.cutoffClock)).toEqual([null, null, null]);
+      // The duration from the gun is still said: only the clock is held back.
+      expect(withCutoffClocks([{ cutoffMinutes: 30 }], race)[0].cutoffMinutes).toBe(30);
+      // The writer still counts minutes from the event's start while the gun is open (limits are minutes, not clocks).
+      expect(checkpointStart(race)).toEqual(race.startsAt);
+    });
+
+    it("has its clocks once the gun time is set, a gun later than the meeting or the same instant as it", () => {
+      const later = new Date("2026-11-21T08:00:00Z");
+      expect(cutoffClockStart({ ...race, raceStartsAt: later })).toEqual(later);
+      expect(withCutoffClocks([{ cutoffMinutes: 90 }], { ...race, raceStartsAt: later })[0].cutoffClock).toBe("11:30");
+      // A gun time equal to the event's start is a gun time that is set.
+      expect(withCutoffClocks([{ cutoffMinutes: 90 }], { ...race, raceStartsAt: race.startsAt })[0].cutoffClock).toBe("10:30");
+    });
+
+    it("leaves every other event type its clocks from the event's own start, and a blank start none", () => {
+      for (const type of ["GROUP_RUN", "HIKE", "MEETUP"]) expect(withCutoffClocks([{ cutoffMinutes: 90 }], { ...race, type })[0].cutoffClock).toBe("10:30");
+      expect(withCutoffClocks([{ cutoffMinutes: 90 }], { ...race, raceStartsAt: race.startsAt, startsAt: new Date("2026-11-21T10:00:01Z") })[0].cutoffClock).toBe("10:30");
+      expect(cutoffClockStart({ ...race, type: "HIKE", startsAt: new Date("2026-11-21T10:00:01Z") })).toBeNull();
+    });
   });
 });
 
@@ -367,9 +397,13 @@ describe("§757 what the event says the points are measured against", () => {
       timezone: "Europe/Bucharest",
       distanceMeters: 21097,
     };
-    expect(checkpointFinish(event)).toEqual({ km: 21.1, limit: "12:00", minutes: 180 });
-    expect(checkpointFinish({ ...event, endsAt: null, distanceMeters: null })).toEqual({ km: null, limit: null, minutes: null });
-    expect(checkpointFinish({ ...event, endsAt: new Date("2026-11-21T06:00:00Z") }).limit).toBeNull();
+    // The gun time is set (here: the event's own start): the finish has its clock.
+    const gunSet = { ...event, raceStartsAt: event.startsAt };
+    expect(checkpointFinish(gunSet)).toEqual({ km: 21.1, limit: "12:00", minutes: 180 });
+    expect(checkpointFinish({ ...gunSet, endsAt: null, distanceMeters: null })).toEqual({ km: null, limit: null, minutes: null });
+    expect(checkpointFinish({ ...gunSet, endsAt: new Date("2026-11-21T06:00:00Z") }).limit).toBeNull();
+    // The gun time not set: the duration from the event's start is known, the clock is not (§757, amended 2026-10-17).
+    expect(checkpointFinish(event)).toEqual({ km: 21.1, limit: null, minutes: 180 });
     // Counted from the gun when the race has one, as the race's own «Timp limită» is.
     expect(checkpointFinish({ ...event, raceStartsAt: new Date("2026-11-21T08:00:00Z") })).toMatchObject({ limit: "12:00", minutes: 120 });
     // Only a race closes its finish: a group run's end is when it ends, no limit — no finish row.
@@ -401,6 +435,11 @@ describe("§757 the table the event page draws", () => {
     expect(rows.map((r) => (r.kind === "point" ? r.id : "finish"))).toEqual(["a", "b", "finish"]);
     expect(rows[2]).toEqual({ kind: "finish", km: 21.1, cutoffMinutes: 180, cutoffClock: "12:00" });
     expect(rows[0]).toMatchObject({ cutoffMinutes: 45, cutoffClock: "09:45" });
+  });
+
+  it("keeps the finish row, with its duration and no clock, while the race's gun time is not set", () => {
+    const rows = checkpointRows([point("a", 5, 45)], { km: 21.1, limit: null, minutes: 180 });
+    expect(rows[1]).toEqual({ kind: "finish", km: 21.1, cutoffMinutes: 180, cutoffClock: null });
   });
 
   it("has no finish row without a time limit", () => {
