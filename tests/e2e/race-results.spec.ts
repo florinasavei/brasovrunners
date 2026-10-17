@@ -84,6 +84,18 @@ async function textNamesResults(key: "PRIVACY_NOTICE" | "TERMS"): Promise<boolea
   }
 }
 
+/** Whether the staff's record that a typed runner agreed to appear by name is on the row of this race number, and who recorded it (§NNN). */
+async function agreementOf(eventId: string, bib: number): Promise<{ recorded: boolean; byStaff: boolean }> {
+  const client = new pg.Client({ connectionString: databaseUrl() });
+  await client.connect();
+  try {
+    const { rows } = await client.query<{ at: Date | null; by: string | null }>(`SELECT name_agreed_at AS at, name_agreed_by_staff_user_id AS by FROM event_results WHERE event_id = $1 AND bib_number = $2`, [eventId, bib]);
+    return { recorded: rows[0]?.at != null, byStaff: rows[0]?.by != null };
+  } finally {
+    await client.end();
+  }
+}
+
 const resultsUrl = (eventId: string) => `/ro/admin/events/${eventId}/results`;
 
 /** The place cell of one runner's line: the overall position and what follows it. */
@@ -155,6 +167,17 @@ test.describe("§NNN a race's results", () => {
     await expect(timeBox(page, 101)).toHaveValue("0:50:00");
     await expect(page.locator('[name="n[0].time"]')).toHaveValue("0:47:00");
 
+    // ---- The typed line's tick: only the typed lines have one, it starts unticked, and ticked with no name it is refused with its own sentence ----
+    const agreed = page.getByTestId("typed-agreed").first().getByRole("checkbox");
+    await expect(page.locator('[name^="r["][name$=".agreed"]')).toHaveCount(0);
+    await expect(agreed).not.toBeChecked();
+    await agreed.check();
+    await page.getByRole("button", { name: "Salvează tot clasamentul" }).click();
+    await expect(refusal).toContainText("ai bifat că a acceptat să apară cu numele");
+    // The refusal gives the tick back as it was posted, with the other boxes.
+    await expect(agreed).toBeChecked();
+    await expect(page.locator('[name="n[0].time"]')).toHaveValue("0:47:00");
+
     // ---- …then the name is written, and the one save writes the lot ----------------------------------------------------
     await page.locator('[name="n[0].name"]').fill("Ion Vasile");
     await page.getByRole("button", { name: "Salvează tot clasamentul" }).click();
@@ -172,6 +195,10 @@ test.describe("§NNN a race's results", () => {
     await expect(placeOf(page, 103)).not.toContainText("încă");
     await expect(page.getByTestId("typed-line").first().getByTestId("result-place")).toContainText("2");
     await expect(page.locator('[name="n[0].name"]')).toHaveValue("Ion Vasile");
+    // The agreement was recorded with the line — on the typed line only — and it is drawn ticked again from what is stored.
+    await expect(page.getByTestId("typed-agreed").first().getByRole("checkbox")).toBeChecked();
+    expect(await agreementOf(eventId, 555)).toEqual({ recorded: true, byStaff: true });
+    expect(await agreementOf(eventId, 101)).toEqual({ recorded: false, byStaff: false });
     await expect(page.getByTestId("results-summary")).toContainText("Sosiți: 3");
     await expect(page.getByTestId("results-summary")).toContainText("Abandon: 1");
 

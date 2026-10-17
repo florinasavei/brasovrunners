@@ -642,9 +642,11 @@ export async function pruneExpiredRows<T extends Record<string, unknown>>(
 
   /*
     A race's results (§NNN): a result row holds a race number, a time, the positions and the category — the sex and the age band of a
-    person — and, for a runner typed by hand, a name, a sex and a birth date the club wrote. The privacy notice says the results stay as
+    person — and, for a runner typed by hand, a name, a sex and a birth date the club wrote, and the moment and the staff member of the
+    agreement to the name (`name_agreed_at`, §NNN). The privacy notice says the results stay as
     long as the race's registrations (sections 4 and 7), so they go with them: three years after the race the rows go, every one the
-    registrations step above left without a registration — the typed runners', the erased and the deleted ones'. A registration an
+    registrations step above left without a registration — the typed runners', the erased and the deleted ones'. The rows go whole, so the
+    typed name and its agreement go together (the two columns are never cleared on their own). A registration an
     Administrator holds (§556) is still there, and its row stays with it until the hold is cleared; the next run takes it. Nothing is
     kept of an old race's ranking, so no other runner's place can move, and the page that showed it closed with the public list long
     before (§421), so no cache needs telling.

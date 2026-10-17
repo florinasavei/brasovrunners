@@ -4,6 +4,7 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { useEffect, useRef, useState } from "react";
 import { useRecall } from "@/shared/forms/recall";
+import CheckboxField from "@/shared/ui/CheckboxField";
 import { openFoldsAround } from "@/shared/ui/fold";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import StatusChip from "@/shared/ui/StatusChip";
@@ -52,6 +53,9 @@ export type ResultWords = {
   addRow: string;
   /** The title of a typed runner's line, and its hint. */
   typedRow: string;
+  /** «A acceptat să apară cu numele în clasament» — the typed line's tick (§NNN), and the line of help under it. */
+  agreed: string;
+  agreedHelp: string;
   /** «fără loc încă» in place of a position, on a line with no result yet. */
   noPlace: string;
   /** «fără loc» on a line whose saved result has none — a runner who dropped out, did not start or was disqualified. */
@@ -75,6 +79,10 @@ export type RegisteredLine = {
 
 export type TypedLine = {
   values: LineValues & { bib: string; name: string; sex: string; birthDate: string };
+  /** The staff recorded that the person agreed to appear by name in the public ranking (`name_agreed_at` is set). */
+  agreed: boolean;
+  /** «Pe site: cu numele» or «Pe site: Participant #900» — what the published ranking would say of the stored line (`publicResultName`'s own answer), the registered lines' caption. */
+  publicLine: string;
   place: PlaceView | null;
   hasResult: boolean;
 };
@@ -345,9 +353,21 @@ function TypedLinesOf({ lines, words }: { lines: readonly TypedLine[]; words: Re
                 <LineBox name={box("name")} caption={words.name} label={`${words.name}: ${runner}`} initial={initial.name} maxLength={RESULT_NAME_MAX} testId="typed-name" />
                 <LineBox name={box("sex")} caption={words.sex} label={`${words.sex}: ${runner}`} initial={initial.sex} kind="select" options={words.sexOptions} />
                 <LineBox name={box("birthDate")} caption={words.birthDate} label={`${words.birthDate}: ${runner}`} initial={initial.birthDate} placeholder={words.birthDatePlaceholder} maxLength={10} inputMode="numeric" />
+                {/* The agreement the person gave the staff (§NNN): off unless ticked, posted with the line, back as posted after a refusal. */}
+                <Box sx={{ gridColumn: "1 / -1" }} data-testid="typed-agreed">
+                  <CheckboxField name={box("agreed")} defaultChecked={line?.agreed ?? false} help={words.agreedHelp}>
+                    {words.agreed}
+                  </CheckboxField>
+                </Box>
                 {line && initial.name === "" && (
                   <Typography variant="caption" color="text.secondary" sx={{ gridColumn: "1 / -1" }}>
                     {words.nameless}
+                  </Typography>
+                )}
+                {/* What the site would print for the stored line, drawn as the registered lines draw theirs: a tick saved while no notice describes the results names nobody. */}
+                {line && (
+                  <Typography variant="caption" color="text.secondary" sx={{ gridColumn: "1 / -1" }} data-testid="typed-public-line">
+                    {line.publicLine}
                   </Typography>
                 )}
               </Box>

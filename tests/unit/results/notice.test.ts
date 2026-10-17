@@ -37,6 +37,23 @@ describe("§NNN the platform's notice describes the results", () => {
     for (const word of ["the place", "the race number", "the time", "the category", "I want to appear on the participants & results list", "“Participant #race number”"]) expect(en1, word).toContain(word);
   });
 
+  it("says who is named among the runners entered by hand: only if they told the organizers (a minor's guardian does), recorded with who and when, withdrawable", () => {
+    const ro1 = text(privacyNoticeRo);
+    for (const phrase of ["al cărui timp l-au scris organizatorii de mână", "doar dacă le-a spus că vrea", "pentru un minor, le spune părintele sau tutorele", "cine l-a notat și când", "își poate retrage acordul oricând"]) expect(ro1, phrase).toContain(phrase);
+    const en1 = text(privacyNoticeEn);
+    for (const phrase of ["whose time the organizers entered by hand", "only if they told the organizers they want to", "for a minor, the parent or guardian tells them", "who recorded it and when", "can withdraw the agreement at any time"]) expect(en1, phrase).toContain(phrase);
+  });
+
+  it("scopes the terms' sentence to the registered, so it does not contradict the notice", () => {
+    expect(text(termsRo)).toContain("cu numele, dintre cei înscriși, doar al celor care au bifat");
+    expect(text(termsRo)).toContain("ceilalți înscriși apar fără nume");
+    expect(text(termsEn)).toContain("with the name, among those registered, only of those who ticked");
+    expect(text(termsEn)).toContain("the other registered runners appear without a name");
+    // The gate keys on the quoted clause alone: rewording around it keeps the terms describing the results.
+    expect(describesResults(termsRo)).toBe(true);
+    expect(describesResults(termsEn)).toBe(true);
+  });
+
   it("closes with the public list, in its period: the notice names the period once for the list and once for the retention, never a third number", () => {
     for (const body of [privacyNoticeRo, privacyNoticeEn]) {
       expect(text(body).split("{{publicListPeriod}}").length - 1).toBe(2);

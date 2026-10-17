@@ -20,11 +20,13 @@ export type FingerprintedResult = {
   gunTimeMs: number | null;
   chipTimeMs: number | null;
   note: string | null;
+  /** When the staff recorded that a typed runner agreed to appear by name (§NNN); absent or null for none. */
+  nameAgreedAt?: Date | null;
 };
 
 export function resultsFingerprint(rows: readonly FingerprintedResult[]): string {
   const lines = [...rows]
     .sort((a, b) => a.bibNumber - b.bibNumber)
-    .map((row) => [row.bibNumber, row.registrationId ?? "", row.displayName ?? "", row.sex ?? "", row.birthDate ?? "", row.status, row.gunTimeMs ?? "", row.chipTimeMs ?? "", row.note ?? ""].join("\u001f"));
+    .map((row) => [row.bibNumber, row.registrationId ?? "", row.displayName ?? "", row.sex ?? "", row.birthDate ?? "", row.status, row.gunTimeMs ?? "", row.chipTimeMs ?? "", row.note ?? "", row.nameAgreedAt?.getTime() ?? ""].join("\u001f"));
   return createHash("sha256").update(lines.join("\u001e")).digest("hex").slice(0, 16);
 }

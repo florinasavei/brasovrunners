@@ -4549,7 +4549,7 @@
         "resultsNotice": {
           "title": "Nota de confidențialitate: clasamentul curselor",
           "todo": "Nota în vigoare nu descrie încă clasamentul, așa că niciun clasament nu poate fi publicat pe pagina unei curse. Îl poți scrie și calcula în backoffice între timp.",
-          "done": "Nota în vigoare descrie clasamentul: un administrator îl poate publica pe pagina cursei. Numele apare doar la cine a bifat lista de participanți & rezultate, sub această notă sau una mai nouă.",
+          "done": "Nota în vigoare descrie clasamentul: un administrator îl poate publica. Numele apare doar la cine a bifat lista sub această notă sau una mai nouă, ori, adăugat de mână, a acceptat să apară.",
           "how": [
             "Înainte de aprobare, citește cu un avocat paragraful din șablon: ce arată clasamentul (locul, numărul, timpul, categoria), cine apare cu nume și până când.",
             "/admin/legal → cardul „GDPR” → „Regenerează din șablon” → confirmă. Secțiunea despre lista publică descrie și clasamentul.",
@@ -10021,7 +10021,7 @@
       "typed": {
         "title": "Alergători neînscriși",
         "aside": "{count} salvați",
-        "intro": "Un număr pe care nu-l are nicio înscriere. Scrie numele, care nu apare niciodată pe site, și, pentru o categorie, sexul și data nașterii."
+        "intro": "Un număr pe care nu-l are nicio înscriere. Scrie numele și, pentru o categorie, sexul și data nașterii. Pe site apare „Participant #număr”; cu numele doar dacă bifezi că a acceptat."
       },
       "col": {
         "time": "Timp",
@@ -10045,6 +10045,8 @@
       "nameless": "Fără nume: înscrierea a fost ștearsă. Rezultatul rămâne, fără nume.",
       "addRow": "Adaugă un alergător neînscris",
       "typedRow": "Alergător neînscris",
+      "agreed": "A acceptat să apară cu numele în clasament",
+      "agreedHelp": "Bifezi doar dacă persoana ți-a spus-o; pentru un minor, părintele sau tutorele. Cine a bifat și când rămân în jurnal.",
       "noPlace": "fără loc încă",
       "noPlaceSettled": "fără loc",
       "place": {
@@ -10061,9 +10063,9 @@
       "publish": {
         "title": "Pe pagina evenimentului",
         "label": "Clasamentul e public pe pagina evenimentului",
-        "help": "Pagina arată locul, numărul, timpul și categoria. Numele apare doar la cine a bifat „Vreau să apar pe lista de participanți & rezultate”; ceilalți apar ca „Participant #număr”.",
+        "help": "Pagina arată locul, numărul, timpul și categoria. Numele apare doar la cine a bifat lista sau la cel adăugat de mână care a acceptat să apară cu numele; ceilalți apar ca „Participant #număr”.",
         "confirmOnTitle": "Faci clasamentul public?",
-        "confirmOnBody": "Oricine poate citi clasamentul pe pagina evenimentului, cu numele doar al celor care au bifat.",
+        "confirmOnBody": "Oricine poate citi clasamentul pe pagina evenimentului, cu numele doar al celor care au bifat sau au acceptat.",
         "confirmOffTitle": "Scoți clasamentul de pe site?",
         "confirmOffBody": "Pagina evenimentului nu mai arată clasamentul. Rezultatele rămân salvate.",
         "gate": "Nota de confidențialitate în vigoare nu descrie încă clasamentul, așa că nu-l poți publica.",
@@ -10105,6 +10107,7 @@
         "note": "nota are peste {max} de caractere",
         "nameMissing": "numărul nu aparține niciunei înscrieri: scrie numele",
         "nameLong": "numele are peste {max} de caractere",
+        "agreedNameMissing": "ai bifat că a acceptat să apară cu numele, dar nu ai scris numele",
         "sex": "sexul trebuie să fie Feminin sau Masculin",
         "birthDate": "data nașterii nu e o zi reală sau e după cursă",
         "tooMany": "sunt prea multe rânduri"

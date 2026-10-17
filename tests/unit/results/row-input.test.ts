@@ -81,3 +81,29 @@ describe("§NNN readResultRow — what is typed about a runner the club typed", 
     expect(row(readResultRow(boxes({ name: "Altcineva", sex: "FEMALE", birthDate: "01.01.1990", time: "45:12" }), DAY))).toMatchObject({ sex: null, birthDate: null });
   });
 });
+
+describe("§NNN readResultRow — the agreement tick of a typed runner", () => {
+  it("reads the tick as «on» and anything else as unticked; a typed row without the box is unticked", () => {
+    expect(row(readResultRow(typed({ bib: "900", name: "Ion Vasile", time: "50:00", agreed: "on" }), DAY))).toMatchObject({ name: "Ion Vasile", nameAgreed: true });
+    expect(row(readResultRow(typed({ bib: "900", name: "Ion Vasile", time: "50:00" }), DAY))).toMatchObject({ nameAgreed: false });
+    for (const agreed of ["", "off", "true", "1", " "]) expect(row(readResultRow(typed({ bib: "900", name: "Ion Vasile", time: "50:00", agreed }), DAY)), agreed).toMatchObject({ nameAgreed: false });
+  });
+
+  it("refuses the tick on a line with no name to show, naming the name's box", () => {
+    expect(refused(readResultRow(typed({ bib: "900", time: "50:00", agreed: "on" }), DAY))).toEqual({ problem: "agreedNameMissing", boxes: ["name"] });
+    expect(refused(readResultRow(typed({ bib: "900", name: "   ", time: "50:00", agreed: "on" }), DAY))).toEqual({ problem: "agreedNameMissing", boxes: ["name"] });
+  });
+
+  it("takes a tick alone on an otherwise empty typed line for no result at all", () => {
+    expect(readResultRow(typed({ bib: "", agreed: "on" }), DAY)).toEqual({ kind: "blank" });
+  });
+
+  it("ignores the tick on a registered row: their name follows their own tick on the form", () => {
+    expect(row(readResultRow(boxes({ time: "45:12", agreed: "on" }), DAY))).toMatchObject({ nameAgreed: false });
+    expect(readResultRow(boxes({ agreed: "on" }), DAY)).toEqual({ kind: "blank" });
+  });
+
+  it("asks the earlier rules first: a bad time is the line's refusal even when the name is missing", () => {
+    expect(refused(readResultRow(typed({ bib: "900", time: "x", agreed: "on" }), DAY))).toEqual({ problem: "time", boxes: ["time"] });
+  });
+});

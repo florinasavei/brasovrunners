@@ -36,6 +36,19 @@ describe("§NNN the form's box names", () => {
     expect(row.bib).toBe("101");
   });
 
+  it("posts a typed line's agreement tick as its `agreed` box and ignores a forged one on a registered line", () => {
+    const rows = postedResultRows([
+      ["n[0].bib", "900"],
+      ["n[0].name", "Ion"],
+      ["n[0].agreed", "on"],
+      ["n[1].bib", "901"],
+      ["r[101].time", "45:12"],
+      ["r[101].agreed", "on"],
+    ]);
+    expect(rows.map((row) => [row.key, row.agreed])).toEqual([["n[0]", "on"], ["n[1]", ""], ["r[101]", ""]]);
+    expect(resultBox(typedRowKey(0), "agreed")).toBe("n[0].agreed");
+  });
+
   it("counts the typed rows a form names, from 0", () => {
     expect(typedRowCountOf(["r[1].time", "uiLocale"])).toBe(0);
     expect(typedRowCountOf(["n[0].bib", "n[1].name", "n[4].time"])).toBe(5);
@@ -105,5 +118,25 @@ describe("§NNN mergeImportedRows", () => {
     const given = posted({ "r[101].time": "" });
     mergeImportedRows(given, [row(101)]);
     expect(given["r[101].time"]).toEqual([""]);
+  });
+});
+
+describe("§NNN mergeImportedRows and the agreement tick", () => {
+  const posted = (entries: Record<string, string>) => Object.fromEntries(Object.entries(entries).map(([name, value]) => [name, [value]]));
+  const imported = (bibNumber: number) => ({ bibNumber, status: "FINISHED" as const, gunTimeMs: 45 * 60_000, chipTimeMs: null, matched: false, name: null });
+
+  it("never gives an imported number a tick: a new line starts unticked, and a line already ticked keeps its tick for its own number only", () => {
+    const merged = mergeImportedRows(posted({ "n[0].bib": "900", "n[0].name": "Ion", "n[0].agreed": "on" }), [imported(900), imported(555)]);
+    expect(merged.values["n[0].agreed"]).toEqual(["on"]);
+    expect(merged.values["n[1].bib"]).toEqual(["555"]);
+    expect("n[1].agreed" in merged.values).toBe(false);
+  });
+
+  it("does not hand a ticked, otherwise empty line to an imported number: the tick would be another person's", () => {
+    const merged = mergeImportedRows(posted({ "n[0].bib": "", "n[0].name": "", "n[0].agreed": "on" }), [imported(555)]);
+    expect(merged.values["n[0].agreed"]).toEqual(["on"]);
+    expect(merged.values["n[0].bib"]).toEqual([""]);
+    expect(merged.values["n[1].bib"]).toEqual(["555"]);
+    expect("n[1].agreed" in merged.values).toBe(false);
   });
 });
