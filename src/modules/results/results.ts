@@ -6,9 +6,10 @@ import type { StaffUser } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
 import { type AuditAction, recordAuditEvent } from "@/modules/audit/repository";
 import { type Deadlines, publicListClosesAt, publicListStillOpen } from "@/modules/deadlines/domain/deadlines";
-import { noticeDescribesResults } from "@/modules/legal-documents/repository";
+import { findFirstResultsNoticeVersion, noticeDescribesResults, termsDescribeResults } from "@/modules/legal-documents/repository";
 import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import { ageOnRaceDay, dayIn } from "@/modules/registrations/domain/age";
+import { hiddenListShownPublicly } from "@/modules/registrations/domain/hidden-list";
 import { type SexChoice, sexShown } from "@/modules/registrations/domain/sex";
 import { canEnterResults, canPublishResults } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
@@ -32,14 +33,17 @@ import { type PostedResultRow, resultBox } from "./rows";
  * the registration's name, sex and birth date and writes none of them; no state, no place, no number moves.
  *
  * **One race, one list.** Only a `RACE` takes results (`RESULTS_NOT_OPEN` for any other type). A row is a race number: found among
- * the event's registrations (any state, never a test row) it is that runner's, taking the registration's name, sex and age at read;
- * not found, it is a runner the club typed by hand and needs a name. «Salvează tot clasamentul» is the whole list — a row left out is a
+ * the event's **confirmed** registrations (never a test row) it is that runner's, taking the registration's name, sex and age at read;
+ * not found, it is a runner the club typed by hand and needs a name. A number a registration holds that is not confirmed (cancelled,
+ * expired) is refused (`bibNotConfirmed`), never attached silently and never a typed name thrown away. A stored result follows its
+ * **registration**, not the number it was saved under: when the desk changes a runner's number the row moves with it. «Salvează tot clasamentul» is the whole list — a row left out is a
  * result removed — saved in **one transaction** or not at all: the first refused row refuses the save, naming it (`ResultRowError`,
  * §791's pattern), and a form drawn before another session saved is refused with CONFLICT (`resultsFingerprint`).
  *
  * **Rankings are computed on save and stored** (`domain/ranking.ts`): overall among the finishers by gun time, by sex, and by
  * category — the sex and the age band on the event's day, `statistics.ts`' own bands (§787). Ties share a position and the next
- * skips. One audit row per result created, changed or deleted (`event_result.*`: the number, the state, the times and the names of the
+ * skips. **The page and the public read re-rank from the live answers** (a corrected sex, a moved race day, an erased registration), the
+ * stored positions being what the last save, or an erasure, wrote — a cache, rewritten on the next save. One audit row per result created, changed or deleted (`event_result.*`: the number, the state, the times and the names of the
  * boxes that changed, never a name), and the public cache is told once.
  */
 
@@ -72,9 +76,26 @@ type RegisteredRunner = {
   ticked: boolean;
   checkedIn: boolean;
   status: string;
+  /** Sits «În afara locurilor» (§643): never named on a public list the event does not show its special guests on (§743). */
+  outsideCapacity: boolean;
+  /** The privacy notice version the registration recorded: a tick under an older notice does not name the runner in the results (§421's line). */
+  noticeVersion: number;
 };
 
-type EventFacts = { id: string; type: string; startsAt: Date; endsAt: Date | null; timezone: string; resultsPublished: boolean; resultsPublishedAt: Date | null };
+/** The event's registered runners, by race number and by registration. */
+type Runners = { byBib: Map<number, RegisteredRunner>; byRegistration: Map<string, RegisteredRunner> };
+
+type EventFacts = {
+  id: string;
+  type: string;
+  startsAt: Date;
+  endsAt: Date | null;
+  timezone: string;
+  resultsPublished: boolean;
+  resultsPublishedAt: Date | null;
+  hiddenListEnabled: boolean;
+  hiddenListPublic: boolean;
+};
 
 function assertMayEnter(actor: Actor): void {
   if (!canEnterResults(actor.role)) throw new DomainError("FORBIDDEN", `role ${actor.role} may not enter or read a race's results`);
@@ -95,6 +116,8 @@ async function loadEvent<T extends Record<string, unknown>>(db: Database<T>, eve
       timezone: events.timezone,
       resultsPublished: events.resultsPublished,
       resultsPublishedAt: events.resultsPublishedAt,
+      hiddenListEnabled: events.hiddenListEnabled,
+      hiddenListPublic: events.hiddenListPublic,
     })
     .from(events)
     .where(eq(events.id, eventId))
@@ -104,8 +127,8 @@ async function loadEvent<T extends Record<string, unknown>>(db: Database<T>, eve
   return event;
 }
 
-/** The registrations of the event that hold a race number — any state, never a test row — by that number. */
-async function loadRegisteredRunners<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<Map<number, RegisteredRunner>> {
+/** The registrations of the event that hold a race number — any state, never a test row — by that number and by registration. */
+async function loadRegisteredRunners<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<Runners> {
   const rows = await db
     .select({
       registrationId: registrations.id,
@@ -116,13 +139,15 @@ async function loadRegisteredRunners<T extends Record<string, unknown>>(db: Data
       listOptOut: registrations.listOptOut,
       checkedInAt: registrations.checkedInAt,
       status: registrations.status,
+      outsideCapacity: registrations.outsideCapacity,
+      noticeVersion: registrations.privacyNoticeVersion,
     })
     .from(registrations)
     .where(and(eq(registrations.eventId, eventId), eq(registrations.kind, "REAL"), isNotNull(registrations.bibNumber)));
-  const runners = new Map<number, RegisteredRunner>();
+  const runners: Runners = { byBib: new Map(), byRegistration: new Map() };
   for (const row of rows) {
     if (row.bibNumber === null) continue;
-    runners.set(row.bibNumber, {
+    const runner: RegisteredRunner = {
       registrationId: row.registrationId,
       bibNumber: row.bibNumber,
       displayName: row.displayName,
@@ -131,9 +156,40 @@ async function loadRegisteredRunners<T extends Record<string, unknown>>(db: Data
       ticked: !row.listOptOut,
       checkedIn: row.checkedInAt !== null,
       status: row.status,
-    });
+      outsideCapacity: row.outsideCapacity,
+      noticeVersion: row.noticeVersion,
+    };
+    runners.byBib.set(row.bibNumber, runner);
+    runners.byRegistration.set(row.registrationId, runner);
   }
   return runners;
+}
+
+/**
+ * Which stored row is whose. A row follows its **registration** (`registration_id`), wherever the number it was saved under was —
+ * the desk may change a runner's number (§548) — and a row no registered runner holds (typed by hand, or left by a registration
+ * that has no number any more) is found by its own number.
+ */
+type StoredIndex = { byRegistration: Map<string, EventResultRow>; freeByBib: Map<number, EventResultRow> };
+
+function indexStored(stored: readonly EventResultRow[], runners: Runners): StoredIndex {
+  const index: StoredIndex = { byRegistration: new Map(), freeByBib: new Map() };
+  for (const row of stored) {
+    if (row.registrationId !== null && runners.byRegistration.has(row.registrationId)) index.byRegistration.set(row.registrationId, row);
+    else index.freeByBib.set(row.bibNumber, row);
+  }
+  return index;
+}
+
+/**
+ * The result row of a registered runner, or undefined, and whether the runner is on the page and in the save: a **confirmed**
+ * registration always is, taking its own row or else the typed row at its number; one that is not confirmed (cancelled, expired) only
+ * when a result was already entered for that very registration — never newly, never by number alone.
+ */
+function claimOf(runner: RegisteredRunner, index: StoredIndex): { attached: boolean; row: EventResultRow | undefined } {
+  const own = index.byRegistration.get(runner.registrationId);
+  if (runner.status === "CONFIRMED") return { attached: true, row: own ?? index.freeByBib.get(runner.bibNumber) };
+  return { attached: own !== undefined, row: own };
 }
 
 async function loadStored<T extends Record<string, unknown>>(db: Database<T>, eventId: string, lock: boolean): Promise<EventResultRow[]> {
@@ -144,21 +200,27 @@ async function loadStored<T extends Record<string, unknown>>(db: Database<T>, ev
 const fingerprintOf = (rows: readonly EventResultRow[]) => resultsFingerprint(rows satisfies readonly FingerprintedResult[]);
 
 /** The sex and the age on the race's day a result is ranked and categorised by: the registration's for a registered runner, the row's own for a typed one. */
-function answersOf(row: { registrationId: string | null; sex: RegistrationSex | null; birthDate: string | null; bibNumber: number }, runners: ReadonlyMap<number, RegisteredRunner>, event: EventFacts) {
-  const runner = row.registrationId !== null ? runners.get(row.bibNumber) : undefined;
+function answersOf(row: { registrationId: string | null; sex: RegistrationSex | null; birthDate: string | null }, runners: ReadonlyMap<string, RegisteredRunner>, event: EventFacts) {
+  const runner = row.registrationId !== null ? runners.get(row.registrationId) : undefined;
   const sex = runner ? runner.sex : sexShown(row.sex);
   const birthDate = runner ? runner.birthDate : row.birthDate;
   return { sex, ageOnRaceDay: ageOnRaceDay(birthDate, event.startsAt, event.timezone) };
 }
 
-/** The rankings of a whole list, by bib (`rankResults`), with the answers read as above. */
+/** The rankings of a whole list, by the number each row is listed under (`rankResults`), with the answers read as above. */
 function rankingOf(
   rows: readonly { bibNumber: number; registrationId: string | null; sex: RegistrationSex | null; birthDate: string | null; status: ResultStatus; gunTimeMs: number | null }[],
-  runners: ReadonlyMap<number, RegisteredRunner>,
+  runners: ReadonlyMap<string, RegisteredRunner>,
   event: EventFacts,
 ): Map<number, Ranked> {
   const rankable: Rankable[] = rows.map((row) => ({ bibNumber: row.bibNumber, status: row.status, gunTimeMs: row.gunTimeMs, ...answersOf(row, runners, event) }));
   return rankResults(rankable);
+}
+
+/** The rankings of the event's stored rows read from the live answers — what every page and file shows, whatever the last save stored — by stored number. */
+async function loadLiveRanking<T extends Record<string, unknown>>(db: Database<T>, event: EventFacts): Promise<Map<number, Ranked>> {
+  const [runners, stored] = await Promise.all([loadRegisteredRunners(db, event.id), loadStored(db, event.id, false)]);
+  return rankingOf(stored, runners.byRegistration, event);
 }
 
 // ---- Reading for the backoffice ------------------------------------------------------------------------
@@ -171,6 +233,8 @@ export type ResultRunner = {
   registered: boolean;
   /** The registration's tick, null for a typed runner (who has none). */
   ticked: boolean | null;
+  /** Whether the published results would name this runner (`publicResultName`: the tick, a confirmed registration, not hidden, made under a notice that described the results); null for a typed runner, who is never named. */
+  named: boolean | null;
   checkedIn: boolean;
   sex: SexChoice | null;
   /** A typed runner's birth date, `YYYY-MM-DD` — what the box shows; null for a registered one, whose registration answers. */
@@ -192,7 +256,7 @@ export type EventResultsView = {
   event: EventFacts;
   /** Registered runners with a race number — checked-in first, then by number — each with its result when it has one. */
   registered: ResultRunner[];
-  /** Rows no registration holds the number of: typed by hand, or left nameless by an erased registration. */
+  /** Rows no registration holds the number of: typed by hand, or left nameless by an erased registration's. */
   typed: ResultRunner[];
   /** What the stored rows were when this was read (`resultsFingerprint`): posted back with the form. */
   fingerprint: string;
@@ -200,16 +264,17 @@ export type EventResultsView = {
   counts: Record<ResultStatus, number>;
 };
 
-function resultOf(row: EventResultRow): NonNullable<ResultRunner["result"]> {
+/** A stored row as the page and the file show it: its own times and note, **the positions and the category read from the live answers** (`rankingOf`). */
+function resultOf(row: EventResultRow, ranked: Ranked): NonNullable<ResultRunner["result"]> {
   return {
     status: row.status,
     gunTimeMs: row.gunTimeMs,
     chipTimeMs: row.chipTimeMs,
     note: row.note,
-    positionOverall: row.positionOverall,
-    positionSex: row.positionSex,
-    positionCategory: row.positionCategory,
-    categoryKey: row.categoryKey,
+    positionOverall: ranked.positionOverall,
+    positionSex: ranked.positionSex,
+    positionCategory: ranked.positionCategory,
+    categoryKey: ranked.categoryKey,
   };
 }
 
@@ -217,45 +282,67 @@ function resultOf(row: EventResultRow): NonNullable<ResultRunner["result"]> {
  * The page's data (§NNN), for whoever may enter results: the event, every registered runner that holds a race number — those with a
  * stored result carry it — and every stored row no registration holds the number of. Refuses a role that may not (FORBIDDEN) and an
  * event that is not there (NOT_FOUND); an event that is not a race is read all the same, so the page can say a group run has none.
+ * A result is read by its **registration** first and by number second, and its positions come from the live answers, so what the page
+ * says is what the public read says.
  */
 export async function readEventResults<T extends Record<string, unknown>>(db: Database<T>, actor: Actor, eventId: string): Promise<EventResultsView> {
   assertMayEnter(actor);
   assertIds(eventId);
   const event = await loadEvent(db, eventId, false);
-  const [runners, stored] = await Promise.all([loadRegisteredRunners(db, eventId), loadStored(db, eventId, false)]);
-  const storedByBib = new Map(stored.map((row) => [row.bibNumber, row]));
+  const [runners, stored, firstResultsNoticeVersion] = await Promise.all([loadRegisteredRunners(db, eventId), loadStored(db, eventId, false), findFirstResultsNoticeVersion(db)]);
+  const index = indexStored(stored, runners);
+  const ranking = rankingOf(stored, runners.byRegistration, event);
+  const rankedOf = (row: EventResultRow) => ranking.get(row.bibNumber) as Ranked;
+  const hiddenShown = hiddenListShownPublicly(event);
 
   const registered: ResultRunner[] = [];
-  for (const runner of runners.values()) {
-    const row = storedByBib.get(runner.bibNumber) ?? null;
-    // A runner whose registration did not reach «Confirmat» is on the page only if a result was already entered for the number.
-    if (runner.status !== "CONFIRMED" && row === null) continue;
+  // The typed rows a registered runner took over: a runner at that number with no result of its own shows the row as its own.
+  const taken = new Set<string>();
+  const heldBibs = new Set<number>();
+  for (const runner of runners.byBib.values()) {
+    const { attached, row } = claimOf(runner, index);
+    // A runner whose registration did not reach «Confirmat» is on the page only if a result was already entered for that registration.
+    if (!attached) continue;
+    heldBibs.add(runner.bibNumber);
+    if (row && index.byRegistration.get(runner.registrationId) !== row) taken.add(row.id);
     registered.push({
       bibNumber: runner.bibNumber,
       name: runner.displayName,
       registered: true,
       ticked: runner.ticked,
+      named:
+        publicResultName({
+          registered: true,
+          ticked: runner.ticked,
+          displayName: runner.displayName,
+          confirmed: runner.status === "CONFIRMED",
+          hidden: runner.outsideCapacity && !hiddenShown,
+          noticeVersion: runner.noticeVersion,
+          firstResultsNoticeVersion,
+        }) !== null,
       checkedIn: runner.checkedIn,
       sex: runner.sex,
       birthDate: null,
       ageOnRaceDay: ageOnRaceDay(runner.birthDate, event.startsAt, event.timezone),
-      result: row ? resultOf(row) : null,
+      result: row ? resultOf(row, rankedOf(row)) : null,
     });
   }
   registered.sort((a, b) => Number(b.checkedIn) - Number(a.checkedIn) || a.bibNumber - b.bibNumber);
 
-  const typed: ResultRunner[] = stored
-    .filter((row) => !runners.has(row.bibNumber))
+  const typed: ResultRunner[] = [...index.freeByBib.values()]
+    .filter((row) => !taken.has(row.id) && !heldBibs.has(row.bibNumber))
+    .sort((a, b) => a.bibNumber - b.bibNumber)
     .map((row) => ({
       bibNumber: row.bibNumber,
       name: row.displayName,
       registered: false,
       ticked: null,
+      named: null,
       checkedIn: false,
       sex: sexShown(row.sex),
       birthDate: row.birthDate,
       ageOnRaceDay: ageOnRaceDay(row.birthDate, event.startsAt, event.timezone),
-      result: resultOf(row),
+      result: resultOf(row, rankedOf(row)),
     }));
 
   const counts: Record<ResultStatus, number> = { FINISHED: 0, DNF: 0, DNS: 0, DSQ: 0 };
@@ -283,6 +370,7 @@ function boxesOf(key: string, boxes: readonly string[]): string[] {
 /** Which of a result's own columns differ — by the names the audit records, never the values of the personal ones. */
 function changedBoxesOf(before: EventResultRow, after: ReadRow & { registrationId: string | null; displayName: string | null; sex: string | null; birthDate: string | null }): string[] {
   const changed: string[] = [];
+  if (before.bibNumber !== after.bibNumber) changed.push("bib");
   if (before.status !== after.status) changed.push("status");
   if (before.gunTimeMs !== after.gunTimeMs) changed.push("time");
   if (before.chipTimeMs !== after.chipTimeMs) changed.push("chip");
@@ -317,41 +405,50 @@ export async function saveEventResults<T extends Record<string, unknown>>(db: Da
     if (request.fingerprint != null && request.fingerprint !== fingerprintOf(stored)) {
       throw new DomainError("CONFLICT", "another session changed the results since the form was drawn");
     }
-    const storedByBib = new Map(stored.map((row) => [row.bibNumber, row]));
+    const index = indexStored(stored, runners);
     const eventDay = dayIn(event.startsAt, event.timezone);
 
     // ---- 1. Every row read, the first refused one refusing the save -------------------------------------
-    type Prepared = ReadRow & { registrationId: string | null; displayName: string | null; sex: SexChoice | null; birthDate: string | null };
+    // `before` is the stored row the line is the next state of: a registered runner's own, wherever its number was when it was saved.
+    type Prepared = ReadRow & { registrationId: string | null; displayName: string | null; sex: SexChoice | null; birthDate: string | null; before: EventResultRow | undefined };
     const prepared = new Map<number, Prepared>();
     for (const posted of request.rows) {
       const registeredKey = posted.key.startsWith("r[");
       const read = readResultRow({ kind: registeredKey ? "registered" : "typed", bib: posted.bib, name: posted.name, sex: posted.sex, birthDate: posted.birthDate, time: posted.time, status: posted.status, chip: posted.chip, note: posted.note }, eventDay);
       if (read.kind === "blank") continue;
-      if (read.kind === "refused") throw new ResultRowError(read.problem, boxesOf(posted.key, read.boxes), Number(posted.bib) > 0 ? Number(posted.bib) : null, runners.get(Number(posted.bib))?.displayName ?? null);
+      if (read.kind === "refused") throw new ResultRowError(read.problem, boxesOf(posted.key, read.boxes), Number(posted.bib) > 0 ? Number(posted.bib) : null, runners.byBib.get(Number(posted.bib))?.displayName ?? null);
       const { row } = read;
-      const runner = runners.get(row.bibNumber);
+      const runner = runners.byBib.get(row.bibNumber);
       const refuse = (problem: ResultRowProblem, ...boxes: string[]): never => {
         throw new ResultRowError(problem, boxesOf(posted.key, boxes), row.bibNumber, runner?.displayName ?? row.name);
       };
       if (prepared.has(row.bibNumber)) refuse("bibDuplicate", registeredKey ? "time" : "bib");
       if (prepared.size >= RESULTS_MAX) refuse("tooMany", registeredKey ? "time" : "bib");
       if (runner) {
-        // A registered runner's name, sex and birth date are the registration's: nothing typed about them is kept.
-        prepared.set(row.bibNumber, { ...row, registrationId: runner.registrationId, displayName: null, sex: null, birthDate: null });
-        continue;
+        const claim = claimOf(runner, index);
+        if (claim.attached) {
+          // A number a confirmed registration holds is that runner's: a line typed by hand for it has nowhere to put its name.
+          if (!registeredKey) refuse("bibRegistered", "bib");
+          // A registered runner's name, sex and birth date are the registration's: nothing typed about them is kept.
+          prepared.set(row.bibNumber, { ...row, registrationId: runner.registrationId, displayName: null, sex: null, birthDate: null, before: claim.row });
+          continue;
+        }
+        // A registration that is not confirmed holds the number, and nothing of it is stored: attaching a result would file it under a
+        // cancelled person and discard the name typed beside it. Only a typed result already stored under that number may stay.
+        if (!index.freeByBib.has(row.bibNumber)) refuse("bibNotConfirmed", registeredKey ? "time" : "bib");
       }
       // A runner no registration holds the number of: typed by hand, so it needs a name — unless the row is already stored with none (an
       // erased registration's), which stays as it is.
-      const existing = storedByBib.get(row.bibNumber);
-      const keepsNoName = existing !== undefined && existing.registrationId === null && existing.displayName === null;
+      const existing = index.freeByBib.get(row.bibNumber);
+      const keepsNoName = existing !== undefined && existing.displayName === null;
       if (row.name === null && !keepsNoName) refuse("nameMissing", registeredKey ? "time" : "name");
-      prepared.set(row.bibNumber, { ...row, registrationId: null, displayName: row.name, sex: row.sex, birthDate: row.birthDate });
+      prepared.set(row.bibNumber, { ...row, registrationId: null, displayName: row.name, sex: row.sex, birthDate: row.birthDate, before: existing });
     }
 
     // ---- 2. The rankings of the list as it will be ------------------------------------------------------
-    const ranking = rankingOf([...prepared.values()], runners, event);
+    const ranking = rankingOf([...prepared.values()], runners.byRegistration, event);
 
-    // ---- 3. The writes: created, changed, deleted, and the rows only the rankings moved ------------------
+    // ---- 3. The writes: deleted, moved off their numbers, then created, changed and the rows only the rankings moved ----------
     let created = 0;
     let updated = 0;
     let deleted = 0;
@@ -359,9 +456,24 @@ export async function saveEventResults<T extends Record<string, unknown>>(db: Da
     const audit = (action: AuditAction, metadata: Record<string, unknown>) =>
       recordAuditEvent(tx, { actorStaffUserId: actor.id, action, entityType: "event", entityId: event.id, metadata, now });
 
+    // Deleted first: a number the club left out may be the one another line now takes.
+    const kept = new Set<string>();
+    for (const row of prepared.values()) if (row.before) kept.add(row.before.id);
+    const gone = stored.filter((row) => !kept.has(row.id));
+    if (gone.length > 0) {
+      await tx.delete(eventResults).where(inArray(eventResults.id, gone.map((row) => row.id)));
+      deleted = gone.length;
+      for (const row of gone) await audit("event_result.deleted", { bibNumber: row.bibNumber, status: row.status });
+    }
+    // A row whose runner's number changed leaves its old number first, so two rows trading numbers never meet at the unique index.
+    let parked = 2_000_000_000;
+    for (const [bibNumber, row] of prepared) {
+      if (row.before && row.before.bibNumber !== bibNumber) await tx.update(eventResults).set({ bibNumber: (parked += 1) }).where(eq(eventResults.id, row.before.id));
+    }
+
     for (const [bibNumber, row] of prepared) {
       const ranked = ranking.get(bibNumber) as Ranked;
-      const before = storedByBib.get(bibNumber);
+      const before = row.before;
       if (!before) {
         await tx.insert(eventResults).values({
           eventId: event.id,
@@ -386,7 +498,7 @@ export async function saveEventResults<T extends Record<string, unknown>>(db: Da
         await audit("event_result.created", { bibNumber, status: row.status, gunTimeMs: row.gunTimeMs, chipTimeMs: row.chipTimeMs });
         continue;
       }
-      const changedBoxes = changedBoxesOf(before, row);
+      const changedBoxes = changedBoxesOf(before, { ...row, bibNumber });
       const rankMoved =
         before.positionOverall !== ranked.positionOverall ||
         before.positionSex !== ranked.positionSex ||
@@ -397,6 +509,7 @@ export async function saveEventResults<T extends Record<string, unknown>>(db: Da
         .update(eventResults)
         .set({
           registrationId: row.registrationId,
+          bibNumber,
           displayName: row.displayName,
           sex: row.sex,
           birthDate: row.birthDate,
@@ -416,12 +529,6 @@ export async function saveEventResults<T extends Record<string, unknown>>(db: Da
         await audit("event_result.updated", { bibNumber, status: row.status, gunTimeMs: row.gunTimeMs, chipTimeMs: row.chipTimeMs, changed: changedBoxes });
       } else rewritten += 1;
     }
-    const gone = stored.filter((row) => !prepared.has(row.bibNumber));
-    if (gone.length > 0) {
-      await tx.delete(eventResults).where(inArray(eventResults.id, gone.map((row) => row.id)));
-      deleted = gone.length;
-      for (const row of gone) await audit("event_result.deleted", { bibNumber: row.bibNumber, status: row.status });
-    }
 
     const ranked = [...ranking.values()].filter((row) => row.positionOverall !== null).length;
     return { changed: created + updated + deleted > 0, created, updated, deleted, rewritten, ranked };
@@ -434,8 +541,9 @@ export async function saveEventResults<T extends Record<string, unknown>>(db: Da
 
 /**
  * The row's own «Șterge» (§NNN, outside the big form like §791's delete): one result removed after a confirmation, the others'
- * positions recomputed, one audit row, the cache told. A number with no stored result is NOT_FOUND (a second press, another session
- * got there first) — the page says so and nothing is written.
+ * positions recomputed, one audit row, the cache told. The number is the one the page drew — a registered runner's current one, wherever
+ * its row was saved under — and a number with no stored result is NOT_FOUND (a second press, another session got there first): the
+ * page says so and nothing is written.
  */
 export async function deleteEventResult<T extends Record<string, unknown>>(db: Database<T>, actor: Actor, request: { eventId: string; bibNumber: number }, now: Date): Promise<void> {
   assertMayEnter(actor);
@@ -443,37 +551,62 @@ export async function deleteEventResult<T extends Record<string, unknown>>(db: D
   await db.transaction(async (tx) => {
     const event = await loadEvent(tx, request.eventId, true);
     const [runners, stored] = await Promise.all([loadRegisteredRunners(tx, event.id), loadStored(tx, event.id, true)]);
-    const target = stored.find((row) => row.bibNumber === request.bibNumber);
+    const index = indexStored(stored, runners);
+    const runner = runners.byBib.get(request.bibNumber);
+    const target = (runner ? claimOf(runner, index).row : undefined) ?? index.freeByBib.get(request.bibNumber);
     if (!target) throw new DomainError("NOT_FOUND", "there is no result for that number");
     await tx.delete(eventResults).where(eq(eventResults.id, target.id));
     await recordAuditEvent(tx, { actorStaffUserId: actor.id, action: "event_result.deleted", entityType: "event", entityId: event.id, metadata: { bibNumber: target.bibNumber, status: target.status }, now });
-    const rest = stored.filter((row) => row.id !== target.id);
-    const ranking = rankingOf(rest, runners, event);
-    for (const row of rest) {
-      const ranked = ranking.get(row.bibNumber) as Ranked;
-      if (
-        row.positionOverall === ranked.positionOverall &&
-        row.positionSex === ranked.positionSex &&
-        row.positionCategory === ranked.positionCategory &&
-        row.categoryKey === ranked.categoryKey
-      )
-        continue;
-      await tx
-        .update(eventResults)
-        .set({ positionOverall: ranked.positionOverall, positionSex: ranked.positionSex, positionCategory: ranked.positionCategory, categoryKey: ranked.categoryKey })
-        .where(eq(eventResults.id, row.id));
-    }
+    await writeRanking(tx, event, runners, stored.filter((row) => row.id !== target.id));
   });
   revalidatePublicContent("events", "places");
+}
+
+/** Writes the rankings of `rows` where they differ from what is stored; returns how many rows were rewritten. */
+async function writeRanking<T extends Record<string, unknown>>(db: Database<T>, event: EventFacts, runners: Runners, rows: readonly EventResultRow[]): Promise<number> {
+  const ranking = rankingOf(rows, runners.byRegistration, event);
+  let rewritten = 0;
+  for (const row of rows) {
+    const ranked = ranking.get(row.bibNumber) as Ranked;
+    if (
+      row.positionOverall === ranked.positionOverall &&
+      row.positionSex === ranked.positionSex &&
+      row.positionCategory === ranked.positionCategory &&
+      row.categoryKey === ranked.categoryKey
+    )
+      continue;
+    await db
+      .update(eventResults)
+      .set({ positionOverall: ranked.positionOverall, positionSex: ranked.positionSex, positionCategory: ranked.positionCategory, categoryKey: ranked.categoryKey })
+      .where(eq(eventResults.id, row.id));
+    rewritten += 1;
+  }
+  return rewritten;
+}
+
+/**
+ * Ranks an event's stored results again from the live answers (§NNN), in the caller's transaction, and returns how many rows changed.
+ * **Erasing a registration calls it** (`eraseRegistration`): the row is left nameless by `ON DELETE SET NULL`, and with no registration
+ * left to answer for it the sex, the age band and the positions by sex and by category it carried are cleared, and the other runners'
+ * places are counted again without it — nothing that describes the erased person stays on their number. An event with no results is a
+ * no-op. Every page and file already ranks from the live answers when it reads, so this only keeps what is stored honest.
+ */
+export async function rerankEventResults<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<number> {
+  const stored = await loadStored(db, eventId, true);
+  if (stored.length === 0) return 0;
+  const event = await loadEvent(db, eventId, false);
+  const runners = await loadRegisteredRunners(db, eventId);
+  return writeRanking(db, event, runners, stored);
 }
 
 // ---- Publishing -------------------------------------------------------------------------------------------
 
 /**
  * «Clasamentul e public pe pagina evenimentului» (§NNN): the Administrator's switch, the disclosure itself. Refused for any other role
- * (FORBIDDEN). **Switching it on is refused (`RESULTS_NOTICE`) while the privacy notice in force, in every language, does not name
- * `{{results}}`** — the club's approval of the text is what lets a result reach the page, as for the list's states (§396); switching it
- * off never is. A press that changes nothing writes and records nothing. The moment of the last switching on is kept, and the cache is told.
+ * (FORBIDDEN). **Switching it on is refused** until the race has started (`RESULTS_NOT_STARTED`: the notice says the results appear «doar
+ * după cursă»), while the privacy notice in force, in every language, does not name `{{results}}` (`RESULTS_NOTICE`) — the club's
+ * approval of the text is what lets a result reach the page, as for the list's states (§396) — and while the terms in force do not
+ * (`RESULTS_TERMS`: the older terms promised to ask separately before a named result); switching it off never is. A press that changes nothing writes and records nothing. The moment of the last switching on is kept, and the cache is told.
  */
 export async function setResultsPublished<T extends Record<string, unknown>>(db: Database<T>, actor: Actor, eventId: string, on: boolean, now: Date): Promise<{ changed: boolean }> {
   if (!canPublishResults(actor.role)) throw new DomainError("FORBIDDEN", `role ${actor.role} may not publish a race's results`);
@@ -483,7 +616,11 @@ export async function setResultsPublished<T extends Record<string, unknown>>(db:
     if (event.resultsPublished === on) return { changed: false };
     if (on) {
       if (!eventTakesResults(event.type)) throw new DomainError("RESULTS_NOT_OPEN", "only a race takes results");
+      // The notice promises the results appear only after the race: entering them stays open before the gun, publishing does not.
+      if (event.startsAt.getTime() > now.getTime()) throw new DomainError("RESULTS_NOT_STARTED", "the race has not started yet");
       if (!(await noticeDescribesResults(tx, now))) throw new DomainError("RESULTS_NOTICE", "the privacy notice in force does not describe the results");
+      // The terms a runner accepted promised «te vom întreba separat» before any named result: the club approves the new terms first.
+      if (!(await termsDescribeResults(tx, now))) throw new DomainError("RESULTS_TERMS", "the terms in force do not describe the results");
     }
     await tx.update(events).set({ resultsPublished: on, resultsPublishedAt: on ? now : null }).where(eq(events.id, event.id));
     await recordAuditEvent(tx, { actorStaffUserId: actor.id, action: on ? "event_results.published" : "event_results.unpublished", entityType: "event", entityId: event.id, metadata: {}, now });
@@ -509,7 +646,7 @@ export type ImportedResultRow = {
 
 /**
  * «Importă din CSV» (§NNN): a CSV or TSV read into rows (`parseResultsCsv`, `bib,time[,chip][,status]`, with a header or without) and
- * matched by race number to the event's registrations — any state, never a test row. **It writes nothing**: the page puts the rows in
+ * matched by race number to the event's confirmed registrations — never a test row. **It writes nothing**: the page puts the rows in
  * the table's boxes, a number no registration holds becomes a row needing a typed name, and «Salvează tot clasamentul» is the one
  * thing that saves. A file with a bad line is refused whole, naming the line (`ResultsCsvError`, `RESULTS_IMPORT_INVALID`).
  */
@@ -519,10 +656,14 @@ export async function importResultsCsv<T extends Record<string, unknown>>(db: Da
   const parsed = parseResultsCsv(text);
   const event = await loadEvent(db, eventId, false);
   if (!eventTakesResults(event.type)) throw new DomainError("RESULTS_NOT_OPEN", "only a race takes results");
-  const runners = await loadRegisteredRunners(db, eventId);
+  const [runners, stored] = await Promise.all([loadRegisteredRunners(db, eventId), loadStored(db, eventId, false)]);
+  const index = indexStored(stored, runners);
   return parsed.map((row) => {
-    const runner = runners.get(row.bibNumber);
-    return { bibNumber: row.bibNumber, status: row.status, gunTimeMs: row.gunTimeMs, chipTimeMs: row.chipTimeMs, matched: runner !== undefined, name: runner?.displayName ?? null };
+    // The table's own rule (`claimOf`): a confirmed registration's number is matched, a cancelled one's is not — it stays a line that asks
+    // for a name and the save says whose number it is.
+    const runner = runners.byBib.get(row.bibNumber);
+    const matched = runner !== undefined && claimOf(runner, index).attached;
+    return { bibNumber: row.bibNumber, status: row.status, gunTimeMs: row.gunTimeMs, chipTimeMs: row.chipTimeMs, matched, name: matched ? (runner?.displayName ?? null) : null };
   });
 }
 
@@ -611,41 +752,62 @@ export type PublicEventResults = {
 
 /**
  * What the event page shows of a race's results (§NNN) — for the page lane, the public list's rule extended: **nothing** unless the
- * Administrator published them (`events.results_published`), the privacy notice in force describes them (`noticeDescribes`, the cached
- * read, passed in), the race is a race and the public list's period has not passed (`publicListStillOpen`, §421, checked here at
- * request time because a date passing is no write). Then every stored row, in the sheet's order, with a name **only** for a registered
- * runner whose tick is on (`publicResultName`) — the same tick as the list's, withdrawn the same way — and never an address, a phone
+ * Administrator published them (`events.results_published`), the privacy notice **and** the terms in force describe them
+ * (`noticeDescribes`, `termsDescribe`, the cached reads, passed in), the race is a race, **it has started**, and the public list's
+ * period has not passed (`publicListStillOpen`, §421, checked here at request time because a date passing is no write). Then every
+ * stored row, in the sheet's order, ranked from the live answers, with a name **only** for a runner `publicResultName` names: the
+ * public list's own conditions (confirmed, ticked, not a hidden special guest, §743) and a registration made under a notice that
+ * described the results (`firstResultsNoticeVersion`, §421's line) — everyone else is «Participant #bib». Never an address, a phone
  * number, a document, a note or a registration's id: the select names its columns.
  */
 export async function readPublicEventResults<T extends Record<string, unknown>>(
   db: Database<T>,
   eventId: string,
-  options: { now: Date; deadlines: Pick<Deadlines, "publicListDays">; noticeDescribes: boolean },
+  options: {
+    now: Date;
+    deadlines: Pick<Deadlines, "publicListDays">;
+    noticeDescribes: boolean;
+    termsDescribe: boolean;
+    /** The first approved notice that described the results (`cachedFirstResultsNoticeVersion`); null when none did — then nobody is named. Required, so no caller can forget it. */
+    firstResultsNoticeVersion: number | null;
+  },
 ): Promise<PublicEventResults | null> {
-  if (!isUuid(eventId) || !options.noticeDescribes) return null;
+  if (!isUuid(eventId) || !options.noticeDescribes || !options.termsDescribe) return null;
   const [event] = await db
-    .select({ type: events.type, startsAt: events.startsAt, endsAt: events.endsAt, resultsPublished: events.resultsPublished, resultsPublishedAt: events.resultsPublishedAt })
+    .select({
+      id: events.id,
+      type: events.type,
+      startsAt: events.startsAt,
+      endsAt: events.endsAt,
+      timezone: events.timezone,
+      resultsPublished: events.resultsPublished,
+      resultsPublishedAt: events.resultsPublishedAt,
+      hiddenListEnabled: events.hiddenListEnabled,
+      hiddenListPublic: events.hiddenListPublic,
+    })
     .from(events)
     .where(eq(events.id, eventId))
     .limit(1);
   if (!event || !event.resultsPublished || !eventTakesResults(event.type)) return null;
+  if (options.now.getTime() < event.startsAt.getTime()) return null;
   if (!publicListStillOpen(event, options.now, options.deadlines)) return null;
 
+  const ranking = await loadLiveRanking(db, event);
+  const hiddenShown = hiddenListShownPublicly(event);
   const rows = await db
     .select({
       bibNumber: eventResults.bibNumber,
       registrationId: eventResults.registrationId,
       registeredName: registrations.displayName,
       listOptOut: registrations.listOptOut,
+      registrationStatus: registrations.status,
+      outsideCapacity: registrations.outsideCapacity,
+      noticeVersion: registrations.privacyNoticeVersion,
       registeredSex: registrations.sex,
       typedSex: eventResults.sex,
       status: eventResults.status,
       gunTimeMs: eventResults.gunTimeMs,
       chipTimeMs: eventResults.chipTimeMs,
-      positionOverall: eventResults.positionOverall,
-      positionSex: eventResults.positionSex,
-      positionCategory: eventResults.positionCategory,
-      categoryKey: eventResults.categoryKey,
     })
     .from(eventResults)
     .leftJoin(registrations, and(eq(registrations.id, eventResults.registrationId), eq(registrations.kind, "REAL")))
@@ -653,16 +815,25 @@ export async function readPublicEventResults<T extends Record<string, unknown>>(
 
   const shown = rows.map((row): PublicResultRow => {
     const registered = row.registrationId !== null && row.listOptOut !== null;
+    const ranked = ranking.get(row.bibNumber) as Ranked;
     return {
       bibNumber: row.bibNumber,
-      name: publicResultName({ registered, ticked: row.listOptOut === false, displayName: row.registeredName }),
+      name: publicResultName({
+        registered,
+        ticked: row.listOptOut === false,
+        displayName: row.registeredName,
+        confirmed: row.registrationStatus === "CONFIRMED",
+        hidden: row.outsideCapacity === true && !hiddenShown,
+        noticeVersion: row.noticeVersion,
+        firstResultsNoticeVersion: options.firstResultsNoticeVersion,
+      }),
       status: row.status,
       gunTimeMs: row.gunTimeMs,
       chipTimeMs: row.chipTimeMs,
-      positionOverall: row.positionOverall,
-      positionSex: row.positionSex,
-      positionCategory: row.positionCategory,
-      categoryKey: row.categoryKey,
+      positionOverall: ranked.positionOverall,
+      positionSex: ranked.positionSex,
+      positionCategory: ranked.positionCategory,
+      categoryKey: ranked.categoryKey,
       sex: registered ? sexShown(row.registeredSex) : sexShown(row.typedSex),
     };
   });

@@ -60,7 +60,11 @@ export type DomainErrorCode =
   | "RESULTS_IMPORT_INVALID"
   // «Clasamentul e public» ticked while the privacy notice in force does not describe the results (§NNN, `{{results}}`): approve one first.
   | "RESULTS_NOTICE"
-  // Results entered or published for an event that is not a race, or that has not started yet (§NNN): the page says so, and so does the save.
+  // «Clasamentul e public» ticked while the terms in force do not describe the results (§NNN): the older terms promised to ask separately first.
+  | "RESULTS_TERMS"
+  // «Clasamentul e public» ticked before the race has started (§NNN): the notice says the results appear only after the race. Entering them stays open.
+  | "RESULTS_NOT_STARTED"
+  // Results entered, imported or published for an event that is not a race (§NNN): the page says so, and so does the save.
   | "RESULTS_NOT_OPEN";
 
 export class DomainError extends Error {

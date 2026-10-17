@@ -40,7 +40,7 @@ import { RETENTION_PERIODS } from "./domain/retention-periods";
  *     messages about nobody            90 days after queueing, any status
  *     unconfirmed registrations        30 days after the address lapsed unconfirmed
  *     registrations and declarations   3 years after the event's start, then the participant
- *     a race's typed names and notes   3 years after the race (cleared, the results rows stay; §NNN)
+ *     a race's results                 3 years after the race, with its registrations (§NNN)
  *     audit log                        3 years
  *
  * **`privacy-notice.ts` §7 states these; change both together.** The notice is what the club
@@ -178,8 +178,8 @@ export type PruneCounts = {
   invitations: number;
   /** Volunteer offers, gone thirty days after the event started (§754). */
   volunteers: number;
-  /** Results rows whose typed name, sex, birth date and note were cleared, three years after the race (§NNN); the rows and their times stay. */
-  resultNames: number;
+  /** A race's results rows deleted with its registrations, three years after the race (§NNN). */
+  results: number;
 };
 
 /**
@@ -201,7 +201,7 @@ export const PRUNE_STEPS = [
   "newsletter",
   "invitations",
   "volunteers",
-  "event-results-names",
+  "event-results",
 ] as const;
 export type PruneStep = (typeof PRUNE_STEPS)[number];
 
@@ -279,7 +279,7 @@ export async function pruneExpiredRows<T extends Record<string, unknown>>(
     newsletter: 0,
     invitations: 0,
     volunteers: 0,
-    resultNames: 0,
+    results: 0,
   };
   const failures: PruneFailure[] = [];
 
@@ -641,26 +641,21 @@ export async function pruneExpiredRows<T extends Record<string, unknown>>(
   });
 
   /*
-    A race's results (§NNN): a result row holds a race number, a time and the positions — nothing that names anybody on its own, and the
-    club's ranking of an old race stays. What a person typed about a runner does not stay: the name, the sex and the birth date the club
-    wrote for a runner who never registered, and the free-text note on any row, which may name somebody, are cleared three years after the
-    race, with the registrations (the privacy notice's section 4 says «în același termen»). A registered runner's name was never copied here:
-    it is the registration's, and goes with it, leaving the row nameless (`ON DELETE SET NULL`). The rows and their times stay, so no
-    other runner's place moves; nothing public shows a typed name, so no cache needs telling.
+    A race's results (§NNN): a result row holds a race number, a time, the positions and the category — the sex and the age band of a
+    person — and, for a runner typed by hand, a name, a sex and a birth date the club wrote. The privacy notice says the results stay as
+    long as the race's registrations (sections 4 and 7), so they go with them: three years after the race the rows go, every one the
+    registrations step above left without a registration — the typed runners', the erased and the deleted ones'. A registration an
+    Administrator holds (§556) is still there, and its row stays with it until the hold is cleared; the next run takes it. Nothing is
+    kept of an old race's ranking, so no other runner's place can move, and the page that showed it closed with the public list long
+    before (§421), so no cache needs telling.
   */
-  await step("event-results-names", async (tx) => {
+  await step("event-results", async (tx) => {
     const over = tx.select({ id: events.id }).from(events).where(lt(events.startsAt, yearsBefore(now, RETENTION.registrationsYearsAfterEvent)));
-    const cleared = await tx
-      .update(eventResults)
-      .set({ displayName: null, sex: null, birthDate: null, note: null })
-      .where(
-        and(
-          inArray(eventResults.eventId, over),
-          or(isNotNull(eventResults.displayName), isNotNull(eventResults.sex), isNotNull(eventResults.birthDate), isNotNull(eventResults.note)),
-        ),
-      )
+    const deleted = await tx
+      .delete(eventResults)
+      .where(and(inArray(eventResults.eventId, over), isNull(eventResults.registrationId)))
       .returning({ id: eventResults.id });
-    counts.resultNames = cleared.length;
+    counts.results = deleted.length;
   });
 
   return { ...counts, failures };
@@ -686,7 +681,7 @@ export function totalPruned(counts: PruneCounts): number {
     counts.newsletter +
     counts.invitations +
     counts.volunteers +
-    counts.resultNames
+    counts.results
   );
 }
 

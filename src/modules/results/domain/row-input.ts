@@ -27,6 +27,8 @@ import { isResultStatus, RESULT_NAME_MAX, RESULT_NOTE_MAX, type ResultStatus } f
 export type ResultRowProblem =
   | "bib"
   | "bibDuplicate"
+  | "bibNotConfirmed"
+  | "bibRegistered"
   | "status"
   | "time"
   | "timeMissing"

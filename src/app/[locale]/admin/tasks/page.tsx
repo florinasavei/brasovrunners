@@ -42,6 +42,7 @@ import {
   volunteerMinorsOpen,
   noticeDescribesTeamPage,
   termsDescribeRefusal,
+  termsDescribeResults,
   volunteerAgreementInForce,
   volunteerAgreementNamesRoleChoices,
   raceDeclarationsCurrent,
@@ -482,6 +483,8 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
       listNumbersDescribed: await noticeDescribesListNumbers(db, now),
       // §NNN: a race's published results, described by the notice in force; only making them public waits for it.
       resultsDescribed: await noticeDescribesResults(db, now),
+      // §NNN: the terms in force describe them too — the older ones promised to ask separately before a named result.
+      resultsTermsDescribed: await termsDescribeResults(db, now),
       // §647: the invitations by email, described by the notice in force; nothing waits for it.
       invitationsDescribed: await noticeDescribesEventInvitations(db, now),
       promoDescribed: await noticeDescribesPromotionalMaterials(db, now),

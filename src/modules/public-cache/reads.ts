@@ -84,7 +84,7 @@ import {
 } from "@/modules/legal-documents/domain/merge-fields";
 import { readPublicVolunteerRoles } from "@/modules/volunteers/volunteers";
 import { describesRefusal } from "@/modules/legal-documents/domain/refusal-clause";
-import { findCurrentApprovedDocument, findFirstStatesNoticeVersion, listEffectiveDates } from "@/modules/legal-documents/repository";
+import { findCurrentApprovedDocument, findFirstResultsNoticeVersion, findFirstStatesNoticeVersion, listEffectiveDates } from "@/modules/legal-documents/repository";
 import { DEFAULT_BOT_CHECK, readBotCheck } from "@/modules/registrations/bot-check";
 import { DEFAULT_PUBLIC_LIST_CLUB } from "@/modules/registrations/domain/public-list-club";
 import {
@@ -538,6 +538,15 @@ export async function cachedFirstStatesNoticeVersion(): Promise<number | null> {
 }
 
 /**
+ * The first approved privacy notice that described a race's results (`findFirstResultsNoticeVersion`, §NNN), or null — the line below
+ * which a tick was given under a notice that said no named results were published yet: those runners appear in the published
+ * results as «Participant #numărul». Expired with every legal text, like the states' twin above.
+ */
+export async function cachedFirstResultsNoticeVersion(): Promise<number | null> {
+  return publicRead(["legal.first-results-notice"], ["legal"], () => findFirstResultsNoticeVersion(getDb()));
+}
+
+/**
  * Whether the public list may show the states, and the pending and waiting groups (§396): the
  * privacy notice in force describes them (`describesListStates`), in every language. Read
  * through `cachedCurrentApprovedDocument`, so an approval expires it and a version approved for
@@ -752,6 +761,16 @@ function withoutAddresses(settings: FeedbackSettings): FeedbackSettings {
 export async function cachedRefusalDisclosed(now: Date): Promise<boolean> {
   const terms = await Promise.all(routing.locales.map((locale) => cachedCurrentApprovedDocument("TERMS", locale, now)));
   return terms.every((document) => document !== undefined && describesRefusal(document.body));
+}
+
+/**
+ * Whether the terms in force describe a race's published results (§NNN, `termsDescribeResults`), in every language — the second
+ * condition, beside the notice's (`cachedResultsDescribed`), for the event page to show them. Read through
+ * `cachedCurrentApprovedDocument`, so an approval expires it on the day the terms change.
+ */
+export async function cachedResultsTermsDescribed(now: Date): Promise<boolean> {
+  const terms = await Promise.all(routing.locales.map((locale) => cachedCurrentApprovedDocument("TERMS", locale, now)));
+  return terms.every((document) => document !== undefined && describesResults(document.body));
 }
 
 // --- Legal texts ------------------------------------------------------------------------------
