@@ -62,16 +62,21 @@ async function seedRace(tag: string): Promise<Seeded> {
   }
 }
 
-/** Whether the privacy notice in force, in both languages, names `{{results}}` — what the Administrator's tick is gated on. */
+/** Whether the privacy notice **and** the terms in force, in both languages, name `{{results}}` — what the Administrator's tick is gated on. */
 async function noticeNamesResults(): Promise<boolean> {
+  return (await textNamesResults("PRIVACY_NOTICE")) && (await textNamesResults("TERMS"));
+}
+
+async function textNamesResults(key: "PRIVACY_NOTICE" | "TERMS"): Promise<boolean> {
   const client = new pg.Client({ connectionString: databaseUrl() });
   await client.connect();
   try {
     const { rows } = await client.query<{ locale: string; body: string }>(
       `SELECT t.locale, t.body_json::text AS body
          FROM legal_documents d JOIN legal_document_translations t ON t.legal_document_id = d.id
-        WHERE d.key = 'PRIVACY_NOTICE' AND d.is_approved AND d.withdrawn_at IS NULL AND d.effective_at <= now()
-          AND d.version = (SELECT max(version) FROM legal_documents WHERE key = 'PRIVACY_NOTICE' AND is_approved AND withdrawn_at IS NULL AND effective_at <= now())`,
+        WHERE d.key = $1 AND d.is_approved AND d.withdrawn_at IS NULL AND d.effective_at <= now()
+          AND d.version = (SELECT max(version) FROM legal_documents WHERE key = $1 AND is_approved AND withdrawn_at IS NULL AND effective_at <= now())`,
+      [key],
     );
     return rows.length >= 2 && rows.every((row) => row.body.includes("{{results}}"));
   } finally {
@@ -162,7 +167,9 @@ test.describe("§NNN a race's results", () => {
     await expect(placeOf(page, 102)).toContainText("la sex: 1");
     await expect(placeOf(page, 102)).toContainText("Feminin, 40-49 ani");
     await expect(placeOf(page, 101)).toContainText("3");
-    await expect(placeOf(page, 103)).toContainText("fără loc încă");
+    // 103's dropout is saved: it will never have a place, so the line says «fără loc», and «încă» only for a line with no result yet.
+    await expect(placeOf(page, 103)).toContainText("fără loc");
+    await expect(placeOf(page, 103)).not.toContainText("încă");
     await expect(page.getByTestId("typed-line").first().getByTestId("result-place")).toContainText("2");
     await expect(page.locator('[name="n[0].name"]')).toHaveValue("Ion Vasile");
     await expect(page.getByTestId("results-summary")).toContainText("Sosiți: 3");
@@ -198,7 +205,7 @@ test.describe("§NNN a race's results", () => {
     const described = await noticeNamesResults();
     const tick = page.getByRole("checkbox", { name: "Clasamentul e public pe pagina evenimentului" });
     await expect(tick).not.toBeChecked();
-    if (!described) await expect(page.getByTestId("results-notice-missing")).toContainText("nu descrie încă clasamentul");
+    if (!described) await expect(page.getByTestId("results-notice-missing").or(page.getByTestId("results-terms-missing")).first()).toContainText(/nu descrie(?:u)? încă clasamentul/);
     await tick.check();
     await page.getByTestId("results-publish-form").getByRole("button", { name: "Salvează" }).click();
     await confirmDialog(page, "Faci clasamentul public?");
@@ -215,7 +222,7 @@ test.describe("§NNN a race's results", () => {
     } else {
       const publishRefusal = page.getByTestId("results-publish-form").getByTestId("form-refusal");
       await expect(publishRefusal).toBeVisible();
-      await expect(publishRefusal).toContainText("Nota de confidențialitate în vigoare nu descrie încă clasamentul");
+      await expect(publishRefusal).toContainText(/(Nota de confidențialitate|Termenii) în vigoare nu descrie(?:u)? încă clasamentul/);
       await expect(page.getByRole("checkbox", { name: "Clasamentul e public pe pagina evenimentului" })).not.toBeChecked();
       await expect(page.getByTestId("results-published-chip")).toContainText("Nepublic");
     }
@@ -231,7 +238,21 @@ test.describe("§NNN a race's results", () => {
     await expect(page.locator('[data-testid="result-line"]')).toHaveCount(3);
     await expect(page.getByRole("checkbox", { name: "Clasamentul e public pe pagina evenimentului" })).toHaveCount(0);
     await expect(page.getByTestId("results-publish-admin-only")).toContainText("Doar un administrator poate publica clasamentul");
-    // The Organizer enters a result: one save, and the toast counts it.
+    // The house's file picker: choose a file and its name shows under the button; «Importă din CSV» then fills the box, saving nothing.
+    await page.getByTestId("results-import").locator("summary").click();
+    await page.getByTestId("results-import-file").setInputFiles({ name: "rezultate.csv", mimeType: "text/csv", buffer: Buffer.from("102,51:10\n") });
+    await expect(page.getByTestId("results-import-file-name")).toHaveText("rezultate.csv");
+    await page.getByRole("button", { name: "Importă din CSV" }).click();
+    await expect(page.getByTestId("toast-live")).toContainText("Nimic nu s-a salvat încă", { timeout: 20_000 });
+    await expect(timeBox(page, 102)).toHaveValue("0:51:10");
+    // «Adaugă un alergător neînscris» adds a line of its own, in the card that holds them (closed until it is in use).
+    await page.getByTestId("results-typed").locator("summary").click();
+    const typedBefore = await page.getByTestId("typed-line").count();
+    await page.getByRole("button", { name: "Adaugă un alergător neînscris" }).click();
+    await expect(page.getByTestId("typed-line")).toHaveCount(typedBefore + 1);
+    // The Organizer enters a result: one save, and the toast counts it. The imported line is taken back to blank first (the import also set its status).
+    await timeBox(page, 102).fill("");
+    await page.locator('[name="r[102].status"]').selectOption("");
     await timeBox(page, 101).fill("48:30");
     await page.getByRole("button", { name: "Salvează tot clasamentul" }).click();
     await expect(page.getByTestId("toast-live")).toContainText("Am salvat 1 rezultat", { timeout: 30_000 });
