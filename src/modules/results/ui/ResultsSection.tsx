@@ -6,7 +6,7 @@ import { CLUB_TIME_ZONE, formatDay } from "@/i18n/dates";
 import type { PublicEvent } from "@/modules/events/repository";
 import { formatRaceNumber } from "@/modules/registrations/domain/race-number";
 import { readOrWhileAway } from "@/modules/resilience/optional-read";
-import { DISCLOSURE_OPEN_ARROW, DISCLOSURE_SUMMARY_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
+import { DISCLOSURE_OPEN_ARROW, DISCLOSURE_SUMMARY_SX, FOLD_GLYPH_INLINE_SX } from "@/shared/ui/disclosure";
 import { SR_ONLY_SX } from "@/shared/ui/sr-only";
 import { DENSITY } from "@/theme/density";
 import { categoryLabeller } from "../category-labels";
@@ -92,10 +92,13 @@ async function resultsSectionOrThrow({ event }: { event: ResultsEvent }) {
           "&[open]": { pb: 2 },
         }}
       >
-        <Typography component="summary" id="results-title" variant="h2" sx={{ fontSize: "1.25rem" }}>
-          <LeaderboardIcon aria-hidden sx={FOLD_GLYPH_SX} />
-          {t("results.title")}
-        </Typography>
+        {/* A real `h2` inside the summary, so the heading stays in a screen reader's list while the fold is shut (§336, the rules' fold). */}
+        <Box component="summary">
+          <Typography component="h2" id="results-title" variant="h2" sx={{ fontSize: "1.25rem" }}>
+            <LeaderboardIcon aria-hidden sx={FOLD_GLYPH_INLINE_SX} />
+            {t("results.title")}
+          </Typography>
+        </Box>
 
         <Typography variant="body2" color="text.secondary" data-testid="results-published" sx={{ pb: 1 }}>
           {line}

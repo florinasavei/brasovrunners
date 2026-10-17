@@ -90,7 +90,6 @@ export default function ResultsFilter({
         slotProps={{
           htmlInput: { inputMode: "numeric", pattern: "[0-9]*", enterKeyHint: "search", "data-testid": "results-bib-search" },
           input: {
-            sx: { minHeight: 44 },
             startAdornment: (
               <InputAdornment position="start">
                 <SearchIcon aria-hidden fontSize="small" />
@@ -98,7 +97,8 @@ export default function ResultsFilter({
             ),
           },
         }}
-        sx={{ width: "100%", maxWidth: "16rem", mt: 0.5 }}
+        // 44 pixels is the native box itself, not only the frame around it (BR-REQ-041-01 criterion 6): the input is what a thumb lands on.
+        sx={{ width: "100%", maxWidth: "16rem", mt: 0.5, "& .MuiInputBase-input": { height: 44, boxSizing: "border-box", py: 0 } }}
       />
       {/* Nothing matches: said in words, for the eye and — as a status — for a screen reader. */}
       <Typography role="status" variant="body2" color="text.secondary" data-testid="results-none" sx={{ mt: visible === 0 ? 1 : 0 }}>
