@@ -6,11 +6,13 @@ import { events } from "@/db/schema/events";
 import { registrations } from "@/db/schema/registrations";
 import type { StaffUser } from "@/db/schema/staff-users";
 import { DEFAULT_DEADLINES } from "@/modules/deadlines/domain/deadlines";
-import { importResultsCsv, ResultRowError, deleteEventResult, exportEventResults, readEventResults, readPublicEventResults, saveEventResults, setResultsPublished } from "@/modules/results/results";
+import { deleteRegistrationByStaff } from "@/modules/registrations/admin-service";
+import { findFirstResultsNoticeVersion } from "@/modules/legal-documents/repository";
+import { importResultsCsv, ResultRowError, deleteEventResult, exportEventResults, readEventResults, readPublicEventResults, rerankEventResults, saveEventResults, setResultsPublished } from "@/modules/results/results";
 import type { PostedResultRow } from "@/modules/results/rows";
 import type { StaffRole } from "@/modules/staff-identity/domain/roles";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
-import { A_YEAR_AFTER, AFTER_THE_RACE, approvePrivacyNotice, createRace, person, registerRunner, resetNoticeCounter } from "../../helpers/results";
+import { A_YEAR_AFTER, AFTER_THE_RACE, approvePrivacyNotice, approveResultsTexts, approveTerms, createRace, person, RACE_STARTS_AT, registerRunner, resetNoticeCounter } from "../../helpers/results";
 
 /**
  * §NNN — a race's results, through the service on real PostgreSQL (BR-REQ-050-02, BR-REQ-039-01, BR-REQ-053-01, BR-REQ-060-01): the table
@@ -246,10 +248,10 @@ describe("§NNN the save: a runner the club types by hand", () => {
     expect(await stored()).toEqual([]);
   });
 
-  it("reads a typed row whose number a registration holds as that registration's, and ignores the name typed", async () => {
-    const { ana } = await field();
-    await save([typed(0, { bib: "101", name: "Altcineva", sex: "male", birthDate: "01.01.2000", time: "49:00" })]);
-    expect(await byBib(101)).toMatchObject({ registrationId: ana.id, displayName: null, sex: null, birthDate: null, categoryKey: "FEMALE:from30" });
+  it("refuses a typed line for a number a confirmed registration holds, instead of throwing the typed name away", async () => {
+    await field();
+    await expect(save([typed(0, { bib: "101", name: "Altcineva", sex: "male", birthDate: "01.01.2000", time: "49:00" })])).rejects.toMatchObject({ code: "RESULT_ROW_INVALID", problem: "bibRegistered", fields: ["n[0].bib"], bibNumber: 101 });
+    expect(await stored()).toEqual([]);
   });
 
   it("lets a nameless row stay nameless — the one an erased registration left — and refuses it as a new typed row", async () => {
@@ -334,7 +336,7 @@ describe("§NNN the roles are asserted by the service (BR-REQ-060-01)", () => {
   });
 
   it("lets only the Administrators publish: the Organizer enters the results and cannot make them public", async () => {
-    await approvePrivacyNotice(db, { results: true });
+    await approveResultsTexts(db);
     for (const role of ["MODERATOR", "DEV", "CONTRIBUTOR", "COPYWRITER", "MEMBER"] as const) {
       await expect(setResultsPublished(db, staff[role]!, raceId, true, NOW), role).rejects.toMatchObject({ code: "FORBIDDEN" });
     }
@@ -343,7 +345,7 @@ describe("§NNN the roles are asserted by the service (BR-REQ-060-01)", () => {
 
   it("takes results only for a race: a group run's save, import and publish are refused", async () => {
     const group = await createRace(db, { type: "GROUP_RUN" });
-    await approvePrivacyNotice(db, { results: true });
+    await approveResultsTexts(db);
     await expect(saveEventResults(db, staff.ADMIN!, { eventId: group.id, rows: [line(1, { time: "10:00" })] }, NOW)).rejects.toMatchObject({ code: "RESULTS_NOT_OPEN" });
     await expect(importResultsCsv(db, staff.ADMIN!, group.id, "1,10:00")).rejects.toMatchObject({ code: "RESULTS_NOT_OPEN" });
     await expect(setResultsPublished(db, staff.ADMIN!, group.id, true, NOW)).rejects.toMatchObject({ code: "RESULTS_NOT_OPEN" });
@@ -362,8 +364,8 @@ describe("§NNN the publish gate", () => {
     expect(await trailActions()).not.toContain("event_results.published");
   });
 
-  it("accepts it under a notice from the platform's template, records the moment and the audit row, and takes it off again without the notice", async () => {
-    await approvePrivacyNotice(db, { results: true });
+  it("accepts it under a notice and terms from the platform's templates, records the moment and the audit row, and takes it off again without the notice", async () => {
+    await approveResultsTexts(db);
     await expect(setResultsPublished(db, staff.ADMIN!, raceId, true, NOW)).resolves.toEqual({ changed: true });
     expect((await db.select().from(events).where(eq(events.id, raceId)))[0]).toMatchObject({ resultsPublished: true, resultsPublishedAt: NOW });
     // A second press that changes nothing writes nothing.
@@ -389,14 +391,37 @@ describe("§NNN the publish gate", () => {
   });
 });
 
+describe("§NNN the publish gate: the terms and the race's start", () => {
+  it("refuses to make the results public while the terms in force do not describe them, though the notice does: the older terms promised to ask first", async () => {
+    await approvePrivacyNotice(db, { results: true });
+    await expect(setResultsPublished(db, staff.ADMIN!, raceId, true, NOW)).rejects.toMatchObject({ code: "RESULTS_TERMS" });
+    await approveTerms(db, { results: false });
+    await expect(setResultsPublished(db, staff.ADMIN!, raceId, true, NOW)).rejects.toMatchObject({ code: "RESULTS_TERMS" });
+    await approveTerms(db, { results: true });
+    await expect(setResultsPublished(db, staff.ADMIN!, raceId, true, NOW)).resolves.toEqual({ changed: true });
+  });
+
+  it("refuses to make them public before the race has started, while entering them stays open", async () => {
+    await approveResultsTexts(db);
+    await field();
+    const before = new Date(RACE_STARTS_AT.getTime() - 60 * 60 * 1000);
+    await expect(setResultsPublished(db, staff.ADMIN!, raceId, true, before)).rejects.toMatchObject({ code: "RESULTS_NOT_STARTED" });
+    await expect(saveEventResults(db, staff.ADMIN!, { eventId: raceId, rows: [line(101, { time: "50:00" })] }, before)).resolves.toMatchObject({ created: 1 });
+    expect((await db.select({ published: events.resultsPublished }).from(events).where(eq(events.id, raceId)))[0].published).toBe(false);
+    // Once the gun has gone off it goes through, and the same press turned off is never refused.
+    await expect(setResultsPublished(db, staff.ADMIN!, raceId, true, RACE_STARTS_AT)).resolves.toEqual({ changed: true });
+    await expect(setResultsPublished(db, staff.ADMIN!, raceId, false, before)).resolves.toEqual({ changed: true });
+  });
+});
+
 describe("§NNN the public read: a name only for a registered runner who ticked", () => {
-  const options = { now: AFTER_THE_RACE, deadlines: DEFAULT_DEADLINES, noticeDescribes: true };
+  const options = { now: AFTER_THE_RACE, deadlines: DEFAULT_DEADLINES, noticeDescribes: true, termsDescribe: true, firstResultsNoticeVersion: 1 as number | null };
 
   async function published() {
     await field();
     await registerRunner(db, raceId, { name: "Fost Inscris", bibNumber: 105, sex: "MALE", birthDate: "1990-01-01" });
     await save([line(101, { time: "50:00", note: "secret" }), line(102, { time: "45:00" }), line(103, { time: "40:00" }), line(104, { status: "DNF" }), line(105, { time: "55:00" }), typed(0, { bib: "900", name: "Ion Vasile", sex: "male", time: "42:00" })]);
-    await approvePrivacyNotice(db, { results: true });
+    await approveResultsTexts(db);
     await setResultsPublished(db, staff.ADMIN!, raceId, true, NOW);
   }
 
@@ -450,6 +475,7 @@ describe("§NNN the public read: a name only for a registered runner who ticked"
   it("shows nothing when the notice in force no longer describes the results, or the public list's period has passed", async () => {
     await published();
     expect(await readPublicEventResults(db, raceId, { ...options, noticeDescribes: false })).toBeNull();
+    expect(await readPublicEventResults(db, raceId, { ...options, termsDescribe: false })).toBeNull();
     expect(await readPublicEventResults(db, raceId, { ...options, now: A_YEAR_AFTER })).toBeNull();
     const open = await readPublicEventResults(db, raceId, options);
     expect(open?.closesAt.getTime()).toBe(new Date("2026-11-21T07:00:00.000Z").getTime() + 30 * 24 * 60 * 60 * 1000);
@@ -464,7 +490,7 @@ describe("§NNN the public read: a name only for a registered runner who ticked"
 });
 
 describe("§NNN the import, matched by bib", () => {
-  it("matches a number to the event's registrations (any state, never a test row) and says which numbers need a name", async () => {
+  it("matches a number to the event's confirmed registrations (never a cancelled one, never a test row) and says which numbers need a name", async () => {
     await field();
     await registerRunner(db, raceId, { name: "Anulat", bibNumber: 150, status: "CANCELLED" });
     await registerRunner(db, raceId, { name: "De proba", bibNumber: 151, kind: "TEST" });
@@ -472,7 +498,7 @@ describe("§NNN the import, matched by bib", () => {
     expect(rows.map((row) => [row.bibNumber, row.matched, row.name, row.status])).toEqual([
       [101, true, "Ana Popescu", "FINISHED"],
       [102, true, "Bia Marin", "DNF"],
-      [150, true, "Anulat", "FINISHED"],
+      [150, false, null, "FINISHED"],
       [151, false, null, "FINISHED"],
       [999, false, null, "FINISHED"],
     ]);
@@ -529,5 +555,167 @@ describe("§NNN the delete and the export", () => {
     expect(view.registered[1].result).toBeNull();
     // The fingerprint is a short hash, never the rows.
     expect(view.fingerprint).toMatch(/^[0-9a-f]{16}$/);
+  });
+});
+
+describe("§NNN the public name is the public list's rule, and one rule more: the notice line", () => {
+  const options = { now: AFTER_THE_RACE, deadlines: DEFAULT_DEADLINES, noticeDescribes: true, termsDescribe: true };
+
+  async function publish() {
+    await approveTerms(db, { results: true });
+    await setResultsPublished(db, staff.ADMIN!, raceId, true, NOW);
+  }
+
+  it("names nobody who registered under a notice that did not describe the results, though they ticked; a registration under the new notice is named", async () => {
+    await approvePrivacyNotice(db, { results: false });
+    await registerRunner(db, raceId, { name: "Ana Veche", bibNumber: 101, noticeVersion: 1 });
+    await approvePrivacyNotice(db, { results: true });
+    await registerRunner(db, raceId, { name: "Bia Noua", bibNumber: 102, noticeVersion: 2 });
+    await save([line(101, { time: "50:00" }), line(102, { time: "45:00" })]);
+    await publish();
+    // The first approved notice that names `{{results}}` is version 2: the line below which a tick agreed to a list only.
+    const first = await findFirstResultsNoticeVersion(db);
+    expect(first).toBe(2);
+    const result = await readPublicEventResults(db, raceId, { ...options, firstResultsNoticeVersion: first });
+    expect(result?.rows.map((row) => [row.bibNumber, row.name])).toEqual([[102, "Bia Noua"], [101, null]]);
+    // The page's own preview says the same: «Participant #101» for the older registration, the name for the newer.
+    const view = await readEventResults(db, staff.ADMIN!, raceId);
+    expect(view.registered.map((runner) => [runner.bibNumber, runner.ticked, runner.named])).toEqual([[101, true, false], [102, true, true]]);
+    // With no notice that describes them there is no line at all: nobody is named.
+    expect((await readPublicEventResults(db, raceId, { ...options, firstResultsNoticeVersion: null }))?.rows.map((row) => row.name)).toEqual([null, null]);
+  });
+
+  it("names nobody whose registration is not confirmed, nor a special guest the event hides, but a guest it shows", async () => {
+    await approveResultsTexts(db);
+    await registerRunner(db, raceId, { name: "Ana Confirmata", bibNumber: 101 });
+    const cancelled = await registerRunner(db, raceId, { name: "Bia Anulata", bibNumber: 102 });
+    await registerRunner(db, raceId, { name: "Dan Invitat", bibNumber: 103, outsideCapacity: true });
+    await save([line(101, { time: "50:00" }), line(102, { time: "45:00" }), line(103, { time: "40:00" })]);
+    await publish();
+    // The registration is cancelled after its result was typed: the result stays in the club's list, the name never reaches the page.
+    await db.update(registrations).set({ status: "CANCELLED" }).where(eq(registrations.id, cancelled.id));
+    const names = async () => (await readPublicEventResults(db, raceId, { ...options, firstResultsNoticeVersion: 1 }))?.rows.map((row) => [row.bibNumber, row.name]);
+    expect(await names()).toEqual([[103, null], [102, null], [101, "Ana Confirmata"]]);
+    // The event shows its special guests publicly (§743): then, and only then, the guest who ticked is named.
+    await db.update(events).set({ hiddenListEnabled: true, hiddenListPublic: true }).where(eq(events.id, raceId));
+    expect(await names()).toEqual([[103, "Dan Invitat"], [102, null], [101, "Ana Confirmata"]]);
+    // The backoffice preview follows the same rule.
+    const view = await readEventResults(db, staff.ADMIN!, raceId);
+    expect(view.registered.map((runner) => [runner.bibNumber, runner.named])).toEqual([[101, true], [102, false], [103, true]]);
+  });
+
+  it("shows nothing before the race has started, even for a race switched on and an old row", async () => {
+    await approveResultsTexts(db);
+    await registerRunner(db, raceId, { name: "Ana Popescu", bibNumber: 101 });
+    await save([line(101, { time: "50:00" })]);
+    await publish();
+    expect(await readPublicEventResults(db, raceId, { ...options, now: new Date(RACE_STARTS_AT.getTime() - 1000), firstResultsNoticeVersion: 1 })).toBeNull();
+    expect(await readPublicEventResults(db, raceId, { ...options, now: RACE_STARTS_AT, firstResultsNoticeVersion: 1 })).not.toBeNull();
+  });
+});
+
+describe("§NNN a number a registration holds that is not confirmed is refused, never attached", () => {
+  it("refuses a result and a typed name for a cancelled registration's number, naming the box, and writes nothing", async () => {
+    await registerRunner(db, raceId, { name: "Anulat", bibNumber: 150, status: "CANCELLED" });
+    await expect(save([typed(0, { bib: "150", name: "Ion Vasile", time: "50:00" })])).rejects.toMatchObject({ code: "RESULT_ROW_INVALID", problem: "bibNotConfirmed", fields: ["n[0].bib"], bibNumber: 150 });
+    expect(await stored()).toEqual([]);
+  });
+
+  it("keeps the result already entered for a registration that was cancelled since, and still names nobody", async () => {
+    const { ana } = await field();
+    await save([line(101, { time: "50:00" })]);
+    await db.update(registrations).set({ status: "CANCELLED" }).where(eq(registrations.id, ana.id));
+    // The page still draws the line (a result was entered for that very registration), and saving it as it is changes nothing.
+    const view = await readEventResults(db, staff.ADMIN!, raceId);
+    expect(view.registered.map((runner) => runner.bibNumber)).toContain(101);
+    await expect(save([line(101, { time: "50:00" })])).resolves.toMatchObject({ changed: false });
+    expect((await byBib(101))?.registrationId).toBe(ana.id);
+  });
+});
+
+describe("§NNN a result follows its registration when the desk changes the number", () => {
+  /** The desk set a runner's number by hand (§548). */
+  const renumber = (registrationId: string, bibNumber: number) => db.update(registrations).set({ bibNumber }).where(eq(registrations.id, registrationId));
+
+  it("draws the result at the runner's new number, saves it there, and the public read says the same", async () => {
+    const { ana } = await field();
+    await save([line(101, { time: "50:00" }), line(102, { time: "45:00" })]);
+    const rowId = (await byBib(101))?.id;
+    await renumber(ana.id, 99);
+    const view = await readEventResults(db, staff.ADMIN!, raceId);
+    expect(view.registered.find((runner) => runner.bibNumber === 99)?.result).toMatchObject({ gunTimeMs: 3_000_000, positionOverall: 2 });
+    expect(view.typed).toEqual([]);
+    // Saving the page as drawn moves the row, with its id, its moment of creation and one audit row naming the box.
+    const outcome = await save([line(99, { time: "50:00" }), line(102, { time: "45:00" })], view.fingerprint);
+    expect(outcome).toMatchObject({ changed: true, created: 0, updated: 1, deleted: 0 });
+    expect(await byBib(99)).toMatchObject({ id: rowId, registrationId: ana.id });
+    expect(await byBib(101)).toBeUndefined();
+    expect((await resultsTrail()).at(-1)?.metadataJson).toMatchObject({ bibNumber: 99, changed: ["bib"] });
+    await approveResultsTexts(db);
+    await setResultsPublished(db, staff.ADMIN!, raceId, true, NOW);
+    const publicRows = await readPublicEventResults(db, raceId, { now: AFTER_THE_RACE, deadlines: DEFAULT_DEADLINES, noticeDescribes: true, termsDescribe: true, firstResultsNoticeVersion: 1 });
+    expect(publicRows?.rows.map((row) => [row.bibNumber, row.name, row.positionOverall])).toEqual([[102, "Bia Marin", 1], [99, "Ana Popescu", 2]]);
+  });
+
+  it("lets two runners trade numbers in one save without meeting at the unique index", async () => {
+    const { ana, bia } = await field();
+    await save([line(101, { time: "50:00" }), line(102, { time: "45:00" })]);
+    await renumber(ana.id, 999);
+    await renumber(bia.id, 101);
+    await renumber(ana.id, 102);
+    const view = await readEventResults(db, staff.ADMIN!, raceId);
+    await save([line(101, { time: "45:00" }), line(102, { time: "50:00" })], view.fingerprint);
+    expect(await byBib(101)).toMatchObject({ registrationId: bia.id, gunTimeMs: 2_700_000 });
+    expect(await byBib(102)).toMatchObject({ registrationId: ana.id, gunTimeMs: 3_000_000 });
+  });
+
+  it("does not hand a new runner the old runner's result when a number is reused", async () => {
+    const { ana } = await field();
+    await save([line(101, { time: "50:00" })]);
+    await renumber(ana.id, 99);
+    const newcomer = await registerRunner(db, raceId, { name: "Nou Venit", bibNumber: 101 });
+    const view = await readEventResults(db, staff.ADMIN!, raceId);
+    expect(view.registered.find((runner) => runner.bibNumber === 101)?.result).toBeNull();
+    expect(view.registered.find((runner) => runner.bibNumber === 99)?.result?.gunTimeMs).toBe(3_000_000);
+    await save([line(99, { time: "50:00" }), line(101, { time: "48:00" })], view.fingerprint);
+    expect((await byBib(101))?.registrationId).toBe(newcomer.id);
+    expect((await byBib(99))?.registrationId).toBe(ana.id);
+  });
+});
+
+describe("§NNN the places follow the live answers, and an erasure leaves nothing that describes the person", () => {
+  it("reads a corrected sex and a moved birth date at once, on the page and in the public read, with no save in between", async () => {
+    const { eli } = await field();
+    await save([line(101, { time: "50:00" }), line(104, { time: "55:00" })]);
+    expect(await byBib(104)).toMatchObject({ categoryKey: null });
+    await db.update(registrations).set({ birthDate: "1990-01-01" }).where(eq(registrations.id, eli.id));
+    // The stored columns are a cache written by the last save; every read ranks again.
+    expect(await byBib(104)).toMatchObject({ categoryKey: null });
+    const view = await readEventResults(db, staff.ADMIN!, raceId);
+    expect(view.registered.find((runner) => runner.bibNumber === 104)?.result).toMatchObject({ categoryKey: "MALE:from30", positionCategory: 1 });
+    await approveResultsTexts(db);
+    await setResultsPublished(db, staff.ADMIN!, raceId, true, NOW);
+    const publicRows = await readPublicEventResults(db, raceId, { now: AFTER_THE_RACE, deadlines: DEFAULT_DEADLINES, noticeDescribes: true, termsDescribe: true, firstResultsNoticeVersion: 1 });
+    expect(publicRows?.rows.find((row) => row.bibNumber === 104)).toMatchObject({ categoryKey: "MALE:from30", positionCategory: 1, sex: "MALE" });
+  });
+
+  it("clears the category and the places by sex and by category of an erased registration's row in the same transaction, and counts the others again", async () => {
+    const { ana, bia } = await field();
+    await save([line(101, { time: "50:00" }), line(102, { time: "45:00" })]);
+    expect(await byBib(101)).toMatchObject({ categoryKey: "FEMALE:from30", positionSex: 2, positionCategory: 1 });
+    await deleteRegistrationByStaff(db, staff.ADMIN!, bia.id, "asked to be erased", clock());
+    // Her number, time and overall place stay, nameless; the sex and the band that described her do not, and the other woman is first among women now.
+    expect(await byBib(102)).toMatchObject({ registrationId: null, displayName: null, sex: null, birthDate: null, categoryKey: null, positionSex: null, positionCategory: null, gunTimeMs: 2_700_000, positionOverall: 1 });
+    expect(await byBib(101)).toMatchObject({ registrationId: ana.id, positionSex: 1, positionCategory: 1 });
+  });
+
+  it("rerankEventResults writes only what moved, and an event with no results is a no-op", async () => {
+    const { bia } = await field();
+    expect(await rerankEventResults(db, raceId)).toBe(0);
+    await save([line(101, { time: "50:00" }), line(102, { time: "45:00" })]);
+    expect(await rerankEventResults(db, raceId)).toBe(0);
+    await db.delete(registrations).where(eq(registrations.id, bia.id));
+    expect(await rerankEventResults(db, raceId)).toBe(2);
+    expect(await rerankEventResults(db, raceId)).toBe(0);
   });
 });

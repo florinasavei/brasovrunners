@@ -8,7 +8,7 @@ import type { StaffRole } from "@/modules/staff-identity/domain/roles";
 import { withClientWords } from "../../helpers/client-words";
 import { atTheClock } from "../../helpers/clock";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
-import { AFTER_THE_RACE, approvePrivacyNotice, createRace, person, registerRunner, resetNoticeCounter } from "../../helpers/results";
+import { AFTER_THE_RACE, approvePrivacyNotice, approveResultsTexts, approveTerms, createRace, person, registerRunner, resetNoticeCounter } from "../../helpers/results";
 
 /**
  * §NNN — «Clasament» as the server draws it, in both languages (BR-REQ-050-02, BR-REQ-041-01 criterion 6, BR-REQ-060-01): a line per registered runner
@@ -126,12 +126,81 @@ describe("§NNN the page, in Romanian", () => {
     expect(words).toContain("fără loc încă");
   });
 
-  it("says what the published list would call each runner: «Participant #bib» for one who did not tick, the name for one who did", async () => {
+  it("says what the published list would call each runner: «Participant #bib» for one who did not tick, the name for one who did — once a notice describes the results", async () => {
     await runners();
+    await approvePrivacyNotice(db, { results: true });
     const words = text(await render());
     expect(words).toContain("Pe site: Participant #102");
     expect(words).toContain("Pe site: cu numele");
     expect(words).toContain("Prezent");
+  });
+
+  it("says «Participant #bib» for every runner while no approved notice describes the results, ticked or not — never a guess from the tick alone", async () => {
+    await runners();
+    const words = text(await render());
+    expect(words).toContain("Pe site: Participant #101");
+    expect(words).toContain("Pe site: Participant #102");
+    expect(words).not.toContain("Pe site: cu numele");
+  });
+
+  it("says «Participant #bib» for a runner who registered under an older notice than the first that described the results, though they ticked", async () => {
+    await approvePrivacyNotice(db, { results: false });
+    await registerRunner(db, raceId, { name: "Ana Veche", bibNumber: 101, noticeVersion: 1 });
+    await approvePrivacyNotice(db, { results: true });
+    await registerRunner(db, raceId, { name: "Bia Noua", bibNumber: 102, noticeVersion: 2 });
+    const words = text(await render());
+    expect(words).toContain("Pe site: Participant #101");
+    expect(words).toContain("Pe site: cu numele");
+  });
+
+  it("says «fără loc» for a saved runner who dropped out and «fără loc încă» only for one with no result yet", async () => {
+    await runners();
+    await saveEventResults(db, staff.ADMIN!, { eventId: raceId, rows: [row(101, { time: "50:00" }), row(103, { status: "DNF" })] }, AFTER_THE_RACE);
+    const html = await render();
+    const placeOf = (bib: number) => text(html.slice(html.indexOf(`data-bib="${bib}"`)).split('data-testid="result-place"')[1].split("</div>")[0]);
+    expect(placeOf(103)).toContain("fără loc");
+    expect(placeOf(103)).not.toContain("încă");
+    expect(placeOf(102)).toContain("fără loc încă");
+  });
+
+  it("names the blank status option for what it does: the status comes from the time", async () => {
+    await runners();
+    const words = text(await render());
+    expect(words).toContain("Din timp (Sosit / Neprezentat)");
+    expect(words).not.toContain("Fără rezultat");
+  });
+
+  it("gives the note box the sixth column from the medium width up, and the whole line only on a phone", async () => {
+    await runners();
+    const html = await render();
+    expect(html).toMatch(/@media \(min-width:900px\)\{\.css-[\w-]+\{grid-column:auto;\}\}/);
+  });
+
+  it("offers the house's file picker: a button wearing a glyph as the label of a hidden input named importFile, and the file's name under it", async () => {
+    await runners();
+    const html = await render();
+    expect(html).toMatch(/<label[^>]*for="results-import-file"[^>]*>[\s\S]*?<svg[\s\S]*?Alege un fișier/);
+    const input = /<input[^>]*id="results-import-file"[^>]*>/.exec(html)?.[0] ?? "";
+    expect(input).toContain('type="file"');
+    expect(input).toContain('name="importFile"');
+    expect(input).toContain("hidden");
+    expect(text(html)).toContain("Niciun fișier ales.");
+  });
+
+  it("links the event's registrations by a plain path with its own locale once: /ro/admin/registrations?eventId=…, never /ro/ro/", async () => {
+    await runners();
+    const html = await render();
+    expect(html).toContain(`href="/ro/admin/registrations?eventId=${raceId}"`);
+    expect(html).not.toContain("/ro/ro/");
+    expect(await render(raceId, "en")).toContain(`href="/en/admin/registrations?eventId=${raceId}"`);
+  });
+
+  it("draws «Adaugă un alergător neînscris» as a submit of the one form (intent=addRow), so it works with scripts off", async () => {
+    await runners();
+    const tag = /<button[^>]*data-testid="typed-add"[^>]*>/.exec(await render())?.[0] ?? "";
+    expect(tag).toContain('type="submit"');
+    expect(tag).toContain('name="intent"');
+    expect(tag).toContain('value="addRow"');
   });
 
   it("draws the runners typed by hand with their boxes and one blank line more, and the button that adds another", async () => {
@@ -203,9 +272,26 @@ describe("§NNN the page, in Romanian", () => {
     expect(gate).toMatch(/<a[^>]*href="[^"]*\/admin\/legal"/);
   });
 
-  it("drops the gate's sentence once a notice from the template is in force, and shows the tick ticked after it is switched on", async () => {
+  it("says the terms' own sentence while the terms in force do not describe the results, though the notice does", async () => {
     await runners();
     await approvePrivacyNotice(db, { results: true });
+    const html = await render();
+    expect(html).not.toContain('data-testid="results-notice-missing"');
+    const gate = html.slice(html.indexOf('data-testid="results-terms-missing"'));
+    expect(text(gate)).toContain("Termenii în vigoare nu descriu încă clasamentul");
+    await approveTerms(db, { results: true });
+    expect(await render()).not.toContain('data-testid="results-terms-missing"');
+  });
+
+  it("says the race's start is the gate while the race is ahead, and nothing of it once the gun has gone", async () => {
+    const future = await createRace(db, { startsAt: new Date("2027-05-01T07:00:00Z") });
+    expect(text(await render(future.id))).toContain("Clasamentul se poate publica după ce a început cursa");
+    expect(await render()).not.toContain('data-testid="results-publish-not-started"');
+  });
+
+  it("drops the gate's sentences once a notice and terms from the templates are in force, and shows the tick ticked after it is switched on", async () => {
+    await runners();
+    await approveResultsTexts(db);
     expect(await render()).not.toContain('data-testid="results-notice-missing"');
     const { setResultsPublished } = await import("@/modules/results/results");
     await setResultsPublished(db, staff.ADMIN!, raceId, true, new Date("2026-11-22T10:00:00Z"));
@@ -268,10 +354,10 @@ describe("§NNN the page, in English", () => {
     const html = await render(raceId, "en");
     const words = text(html);
     expect(words).toContain("Results: Tampa Race");
-    for (const phrase of ["Import from CSV", "Save the whole ranking", "The ranking is public on the event's page", "The privacy notice in force does not describe the ranking yet", "On the site: Participant #102", "Add a runner who did not register", "Download the ranking (CSV)", "Finished: 3"]) {
+    for (const phrase of ["Import from CSV", "Save all the results", "The results are public on the event's page", "The privacy notice in force does not describe the results yet", "On the site: Participant #102", "Add a runner who did not register", "Download the results (CSV)", "Finished: 3", "Choose a file", "From the time (Finished / Did not start)"]) {
       expect(words, phrase).toContain(phrase);
     }
-    expect([...html.matchAll(/<button[^>]*>([\s\S]*?)<\/button>/g)].filter((match) => text(match[1]).includes("Save the whole ranking"))).toHaveLength(1);
+    expect([...html.matchAll(/<button[^>]*>([\s\S]*?)<\/button>/g)].filter((match) => text(match[1]).includes("Save all the results"))).toHaveLength(1);
     expect(html).toContain(`href="/api/admin/events/${raceId}/results?lang=en"`);
     expect(words).toContain("in the category (Female, 40-49): 1");
   });

@@ -1,4 +1,7 @@
 import { describe, expect, it } from "vitest";
+import en from "../../../messages/en.json";
+import ro from "../../../messages/ro.json";
+import { RESULT_STATUSES } from "@/modules/results/domain/ranking";
 import { parseResultsCsv, RESULTS_CSV_MAX_CHARS, ResultsCsvError, resultStatusOfWord } from "@/modules/results/domain/import-csv";
 
 /**
@@ -115,5 +118,29 @@ describe("§NNN parseResultsCsv — the first bad line refuses the whole file, n
     } catch (error) {
       expect(error).toMatchObject({ code: "RESULTS_IMPORT_INVALID", fields: ["importText"] });
     }
+  });
+});
+
+describe("§NNN the file the backoffice downloads can be imported again, in either language", () => {
+  it("knows every state's word as the page writes it in Romanian and in English — «Dropped out» included", () => {
+    for (const catalogue of [ro, en]) {
+      for (const status of RESULT_STATUSES) {
+        const word = catalogue.Admin.results.status[status];
+        expect(resultStatusOfWord(word), word).toBe(status);
+      }
+    }
+  });
+
+  it("reads a row of the English download whole: the status column's word, the time as written", () => {
+    expect(parseResultsCsv("Number,Time,Status\n104,,Dropped out\n105,,Did not start\n106,,Disqualified\n107,45:12,Finished")).toEqual([
+      { line: 2, bibNumber: 104, status: "DNF", gunTimeMs: null, chipTimeMs: null },
+      { line: 3, bibNumber: 105, status: "DNS", gunTimeMs: null, chipTimeMs: null },
+      { line: 4, bibNumber: 106, status: "DSQ", gunTimeMs: null, chipTimeMs: null },
+      { line: 5, bibNumber: 107, status: "FINISHED", gunTimeMs: T, chipTimeMs: null },
+    ]);
+  });
+
+  it("reads the Romanian download's header, «Stare» included", () => {
+    expect(parseResultsCsv("Număr;Timp;Stare\n104;;Abandon")[0]).toMatchObject({ bibNumber: 104, status: "DNF" });
   });
 });

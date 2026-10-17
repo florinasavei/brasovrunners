@@ -8,7 +8,7 @@ import type { StaffUser } from "@/db/schema/staff-users";
 import type { StaffRole } from "@/modules/staff-identity/domain/roles";
 import type { FormOutcome } from "@/shared/forms/outcome";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
-import { approvePrivacyNotice, createRace, person, registerRunner, resetNoticeCounter } from "../../helpers/results";
+import { approvePrivacyNotice, approveResultsTexts, approveTerms, createRace, person, registerRunner, resetNoticeCounter } from "../../helpers/results";
 
 /**
  * §NNN — «Clasament»'s Server Actions as the page posts them (BR-REQ-050-02, BR-REQ-060-01): the one «Salvează tot clasamentul» (saved, refused on
@@ -16,7 +16,7 @@ import { approvePrivacyNotice, createRace, person, registerRunner, resetNoticeCo
  * the row's own delete, and the Administrator's tick behind the notice's gate. The session, the cookies and navigation are
  * `event-todos.test.ts`'s stand-ins.
  */
-const state = vi.hoisted(() => ({ db: undefined as unknown, actor: undefined as unknown, redirected: [] as string[] }));
+const state = vi.hoisted(() => ({ db: undefined as unknown, actor: undefined as unknown, redirected: [] as string[], cookies: [] as Array<[string, string]> }));
 const messages = { ro, en } as const;
 
 vi.mock("next/navigation", async (importOriginal) => ({
@@ -26,7 +26,7 @@ vi.mock("next/navigation", async (importOriginal) => ({
     throw new Error("NEXT_REDIRECT");
   },
 }));
-vi.mock("next/headers", () => ({ cookies: async () => ({ get: () => undefined, set: () => {}, delete: () => {} }) }));
+vi.mock("next/headers", () => ({ cookies: async () => ({ get: () => undefined, set: (name: string, value: string) => void state.cookies.push([name, value]), delete: () => {} }) }));
 vi.mock("next/cache", () => ({ revalidatePath: () => {}, revalidateTag: () => {}, unstable_cache: (fn: unknown) => fn }));
 vi.mock("@/db/client", () => ({ getDb: () => state.db }));
 vi.mock("@/modules/staff-identity/session", () => ({
@@ -60,11 +60,13 @@ beforeEach(async () => {
   await resetTables(db);
   resetNoticeCounter();
   for (const [role, name] of [["ADMIN", "Ana Admin"], ["MODERATOR", "Oana Organizator"], ["DEV", "Tudor Tehnic"]] as const) staff[role] = await person(db, role, name);
-  raceId = (await createRace(db)).id;
+  // A race that has started: the Administrator's tick is refused before the gun, and the actions read the real clock.
+  raceId = (await createRace(db, { startsAt: new Date("2026-06-01T07:00:00.000Z") })).id;
   await registerRunner(db, raceId, { name: "Ana Popescu", bibNumber: 101, sex: "FEMALE", birthDate: "1996-05-01" });
   await registerRunner(db, raceId, { name: "Bia Marin", bibNumber: 102, sex: "FEMALE", birthDate: "1985-03-10" });
   state.actor = staff.ADMIN;
   state.redirected.length = 0;
+  state.cookies.length = 0;
 });
 
 function form(fields: Record<string, string>): FormData {
@@ -244,8 +246,26 @@ describe("§NNN the Administrator's tick behind the notice's gate", () => {
     expect(event.published).toBe(false);
   });
 
-  it("accepts it under a notice that names {{results}}, and takes it off with the box unticked", async () => {
+  it("refuses it ticked while the terms do not describe the results either, and says so with its own code", async () => {
     await approvePrivacyNotice(db, { results: true });
+    expect(outcome(await post(setResultsPublishedAction, form({ published: "on" }))).error).toBe("RESULTS_TERMS");
+    await approveTerms(db, { results: true });
+    expect(await post(setResultsPublishedAction, form({ published: "on" }))).toBe("redirected");
+  });
+
+  it("refuses it ticked before the race has started, with the box unticked, for a race still ahead", async () => {
+    await approveResultsTexts(db);
+    const ahead = (await createRace(db, { startsAt: new Date("2099-06-01T07:00:00.000Z") })).id;
+    const data = form({ published: "on" });
+    data.set("eventId", ahead);
+    const result = outcome(await post(setResultsPublishedAction, data));
+    expect(result.error).toBe("RESULTS_NOT_STARTED");
+    expect(result.values.published).toBeUndefined();
+    expect((await db.select({ published: events.resultsPublished }).from(events).where(eq(events.id, ahead)))[0].published).toBe(false);
+  });
+
+  it("accepts it under a notice and terms that name {{results}}, and takes it off with the box unticked", async () => {
+    await approveResultsTexts(db);
     expect(await post(setResultsPublishedAction, form({ published: "on" }))).toBe("redirected");
     expect((await db.select({ published: events.resultsPublished }).from(events).where(eq(events.id, raceId)))[0].published).toBe(true);
     expect(await post(setResultsPublishedAction, form({}))).toBe("redirected");
@@ -253,10 +273,34 @@ describe("§NNN the Administrator's tick behind the notice's gate", () => {
   });
 
   it("is the Administrator's alone: the Organizer is sent back with the code and nothing changes", async () => {
-    await approvePrivacyNotice(db, { results: true });
+    await approveResultsTexts(db);
     state.actor = staff.MODERATOR;
     expect(await post(setResultsPublishedAction, form({ published: "on" }))).toBe("redirected");
     expect(state.redirected.at(-1)).toContain("resultsError=FORBIDDEN");
     expect((await db.select({ published: events.resultsPublished }).from(events).where(eq(events.id, raceId)))[0].published).toBe(false);
+  });
+});
+
+describe("§NNN «Adaugă un alergător neînscris» and the toast of a save that only moved places", () => {
+  it("answers a script-less press with the boxes as they stand and one blank typed line more, asked for again by the next press", async () => {
+    const first = outcome(await post(saveEventResultsAction, form({ intent: "addRow", "r[101].time": "50:00", "n[0].bib": "900", "n[0].name": "Ion Vasile", "n[0].time": "49:00" })));
+    expect(first.error).toBeUndefined();
+    expect(first.notice).toMatchObject({ kind: "info", key: "resultsRowAdded" });
+    expect(first.values).toMatchObject({ "r[101].time": ["50:00"], "n[0].name": ["Ion Vasile"], extraRows: ["1"] });
+    // Nothing was saved: the press only asks the page for another line.
+    expect(await stored()).toEqual([]);
+    const second = outcome(await post(saveEventResultsAction, form({ intent: "addRow", extraRows: "1", "n[0].name": "Ion Vasile" })));
+    expect(second.values.extraRows).toEqual(["2"]);
+  });
+
+  it("says the places were worked out again, not «0 rezultate», when a save wrote no result but a corrected answer moved a category", async () => {
+    await post(saveEventResultsAction, form({ "r[101].time": "50:00", "r[102].time": "45:00" }));
+    state.cookies.length = 0;
+    const { registrations } = await import("@/db/schema/registrations");
+    await db.update(registrations).set({ birthDate: "2000-01-01" }).where(eq(registrations.bibNumber, 101));
+    expect(await post(saveEventResultsAction, form({ "r[101].time": "50:00", "r[102].time": "45:00" }))).toBe("redirected");
+    const [, value] = state.cookies.at(-1) as [string, string];
+    expect(decodeURIComponent(value)).toContain('"resultsRecalculated"');
+    expect(decodeURIComponent(value)).not.toContain('"resultsSaved"');
   });
 });

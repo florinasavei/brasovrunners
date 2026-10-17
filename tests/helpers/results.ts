@@ -5,6 +5,7 @@ import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import { computeContentHash, type LegalDocumentBody } from "@/modules/legal-documents/domain/content-hash";
 import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
 import { privacyNoticeEn, privacyNoticeRo } from "@/modules/legal-documents/templates/privacy-notice";
+import { termsEn, termsRo } from "@/modules/legal-documents/templates/terms";
 import { resolveDisplayName } from "@/modules/registrations/names";
 import type { StaffRole } from "@/modules/staff-identity/domain/roles";
 import type { TestDatabase } from "./db";
@@ -50,6 +51,10 @@ export type Runner = {
   status?: RegistrationStatus;
   checkedInAt?: Date | null;
   kind?: "REAL" | "TEST";
+  /** The privacy notice version the registration recorded (defaults to 1, the first notice). */
+  noticeVersion?: number;
+  /** Sits «În afara locurilor» (the special guests' hidden list, §643). */
+  outsideCapacity?: boolean;
 };
 
 /** A registration holding a race number, with the answers a category is made of. */
@@ -70,7 +75,8 @@ export async function registerRunner(db: TestDatabase, eventId: string, input: R
       locale: "ro",
       registeredName: input.name,
       displayName: resolveDisplayName({ legalName: input.name }),
-      privacyNoticeVersion: 1,
+      privacyNoticeVersion: input.noticeVersion ?? 1,
+      outsideCapacity: input.outsideCapacity ?? false,
       privacyAcknowledgedAt: AFTER_THE_RACE,
       resultsNameConsent: false,
       resultsConsentVersion: 1,
@@ -109,6 +115,36 @@ export async function approvePrivacyNotice(db: TestDatabase, options: { results:
   });
 }
 
+let nextTermsVersion = 1;
+
+/** Puts terms in force, both languages: the platform's template as it is, or with `{{results}}` taken out (what the older terms read like). */
+export async function approveTerms(db: TestDatabase, options: { results: boolean }) {
+  const strip = (body: LegalDocumentBody) => JSON.parse(JSON.stringify(body).split("{{results}}").join("")) as LegalDocumentBody;
+  const bodies = options.results ? { ro: termsRo, en: termsEn } : { ro: strip(termsRo), en: strip(termsEn) };
+  const translations = [
+    { locale: "ro" as const, title: "Termeni", body: bodies.ro },
+    { locale: "en" as const, title: "Terms", body: bodies.en },
+  ];
+  const version = nextTermsVersion++;
+  const now = new Date("2026-10-01T10:00:00.000Z");
+  await insertLegalDocumentVersion(db, {
+    key: "TERMS",
+    version,
+    effectiveAt: new Date(now.getTime() + version * 60_000),
+    isApproved: true,
+    contentSha256: computeContentHash(translations),
+    translations,
+    now,
+  });
+}
+
+/** What the club must have approved before an Administrator can publish: the notice and the terms, both naming the results. */
+export async function approveResultsTexts(db: TestDatabase) {
+  await approvePrivacyNotice(db, { results: true });
+  await approveTerms(db, { results: true });
+}
+
 export function resetNoticeCounter() {
   nextVersion = 1;
+  nextTermsVersion = 1;
 }

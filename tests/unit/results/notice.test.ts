@@ -53,6 +53,27 @@ describe("§NNN the platform's notice describes the results", () => {
   });
 });
 
+describe("§NNN the terms and the retention say the same", () => {
+  it("names {{results}} in the terms in both languages, and no longer promises to ask separately: the terms gate the publishing too", () => {
+    expect(describesResults(termsRo)).toBe(true);
+    expect(describesResults(termsEn)).toBe(true);
+    expect(text(termsRo)).not.toContain("te vom întreba separat");
+    expect(text(termsEn)).not.toContain("we will ask you separately");
+    // The notice and the terms are two texts: one naming it does not open the other.
+    expect(describesResults(JSON.parse(JSON.stringify(termsRo).replace("{{results}}", "")))).toBe(false);
+  });
+
+  it("has a line in section 7 for how long the results stay — with the race's registrations, three years — in both languages, and says registrants of an older notice appear by number", () => {
+    const section7 = (body: LegalDocumentBody) => (body.sections.find((section) => section.heading.startsWith("7.")) as { paragraphs: string[] }).paragraphs.join("\n");
+    expect(section7(privacyNoticeRo)).toContain("Clasamentul unei curse");
+    expect(section7(privacyNoticeRo)).toContain("trei ani de la cursă");
+    expect(section7(privacyNoticeEn)).toContain("A race's results");
+    expect(section7(privacyNoticeEn)).toContain("three years from the race");
+    expect(text(privacyNoticeRo)).toContain("sub o versiune mai veche a acestei note, care nu descria clasamentul, apari în el doar cu numărul");
+    expect(text(privacyNoticeEn)).toContain("older version of this notice, which did not describe the results, you appear in them only by number");
+  });
+});
+
 describe("§NNN a notice that does not name it", () => {
   it("does not describe the results: an older notice, a text with the marker taken out, anything that is not a body", () => {
     expect(describesResults({ sections: [{ heading: "4. Lista publică", paragraphs: ["Rezultate cu nume nu publicăm încă."] }] })).toBe(false);
@@ -78,6 +99,14 @@ describe("§NNN the field is known and explained", () => {
     for (const catalogue of [ro, en]) {
       const item = catalogue.Admin.tasks.items.resultsNotice;
       expect(item.title && item.todo && item.done).toBeTruthy();
+      expect(item.how.join("\n")).toContain("/admin/legal");
+    }
+  });
+
+  it("has a second row for the terms, with steps in both languages", () => {
+    for (const catalogue of [ro, en]) {
+      const item = catalogue.Admin.tasks.items.resultsTerms;
+      expect(item.title && item.todo && item.done && item.how.length > 0).toBeTruthy();
       expect(item.how.join("\n")).toContain("/admin/legal");
     }
   });
