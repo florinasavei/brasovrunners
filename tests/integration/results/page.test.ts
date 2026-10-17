@@ -415,7 +415,7 @@ describe("§NNN the agreement tick on the typed lines", () => {
     for (const bib of [101, 102, 103]) expect(html).not.toContain(`name="r[${bib}].agreed"`);
     const words = text(html);
     expect(words).toContain("A acceptat să apară cu numele în clasament");
-    expect(words).toContain("Bifezi doar dacă persoana ți-a spus-o; cine a bifat și când rămân în jurnal.");
+    expect(words).toContain("Bifezi doar dacă persoana ți-a spus-o; pentru un minor, părintele sau tutorele. Cine a bifat și când rămân în jurnal.");
     // The tick is a real tick box of the house (a labelled input), not a button wearing a toggle's glyph.
     expect(html).toMatch(/<label[^>]*>[\s\S]*?name="n\[0\]\.agreed"[\s\S]*?A acceptat să apară cu numele în clasament/);
   });
@@ -438,13 +438,30 @@ describe("§NNN the agreement tick on the typed lines", () => {
     await runners();
     const words = text(await render(raceId, "en"));
     expect(words).toContain("Agreed to appear by name in the results");
-    expect(words).toContain("Tick only if the person told you so; who ticked it and when stay in the log.");
+    expect(words).toContain("Tick only if the person told you so; for a minor, the parent or guardian. Who ticked it and when stay in the log.");
   });
 
   it("says the public rule of the typed runners in the typed card's intro, both languages", async () => {
     await runners();
-    expect(text(await render())).toContain("Pe site apare „Participant #număr”, afară de cazul în care bifezi că persoana a acceptat numele.");
-    expect(text(await render(raceId, "en"))).toContain("The site shows “Participant #number” unless you tick that the person agreed to the name.");
+    expect(text(await render())).toContain("Pe site apare „Participant #număr”; cu numele doar dacă bifezi că a acceptat.");
+    expect(text(await render(raceId, "en"))).toContain("The site shows “Participant #number”; by name only if you tick that they agreed.");
+  });
+
+  it("says on each stored typed line what the site will print: «Participant #bib» while no notice describes the results, the name once one does and the tick stands", async () => {
+    await runners();
+    await saveEventResults(
+      db,
+      staff.ADMIN!,
+      { eventId: raceId, rows: [{ ...row(0), key: "n[0]", bib: "900", name: "Ion Vasile", time: "42:00", agreed: "on" }, { ...row(0), key: "n[1]", bib: "901", name: "Maria Pop", time: "43:00" }] },
+      AFTER_THE_RACE,
+    );
+    const lines = (html: string) => [...html.matchAll(/data-testid="typed-public-line"[^>]*>([^<]*)</g)].map((match) => match[1]);
+    // No notice yet: the tick is saved but names nobody, and the caption says so for both lines.
+    expect(lines(await render(raceId, "ro"))).toEqual(["Pe site: Participant #900", "Pe site: Participant #901"]);
+    expect(lines(await render(raceId, "en"))).toEqual(["On the site: Participant #900", "On the site: Participant #901"]);
+    await approvePrivacyNotice(db, { results: true });
+    expect(lines(await render(raceId, "ro"))).toEqual(["Pe site: cu numele", "Pe site: Participant #901"]);
+    expect(lines(await render(raceId, "en"))).toEqual(["On the site: with the name", "On the site: Participant #901"]);
   });
 
   it("draws the stored agreement ticked whether or not a notice describes the results yet", async () => {

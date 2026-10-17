@@ -20,8 +20,9 @@ import ro from "../../../../messages/ro.json";
  * above; the owner, 2026-10-17: «ar trebui să-l putem adăuga totuși în sistem manual … să-l punem în rezultat»): only while a staff
  * member **recorded that the person agreed** to appear by name (`event_results.name_agreed_at`, the actor and the moment kept — the
  * race-day desk's paper declaration has the same shape, §67: the participant agrees, a staff member records it), the typed name is not
- * blank, and the notice in force describes the results (`firstResultsNoticeVersion` is not null: the person agreed to the words the
- * staff read to them, the notice's own). A registered runner's row ignores the staff mark entirely: their name follows their own tick.
+ * blank, and the notice in force describes the results (`firstResultsNoticeVersion` is not null: honoured from the first notice that
+ * describes them, whenever the agreement was recorded; nothing is published before). A registered runner's row ignores the staff mark
+ * entirely — also on a number a confirmed registration took after the mark was made: their name follows their own tick.
  *
  * Every other row — an unticked runner, a typed runner nobody recorded an agreement for, one whose registration was erased, cancelled or
  * hidden, or one who registered before the notice — is «Participant #bib»: the position, the number, the time and the category, with no

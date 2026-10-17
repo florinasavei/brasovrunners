@@ -4537,7 +4537,7 @@
         "resultsNotice": {
           "title": "Privacy notice: the races' results",
           "todo": "The notice in force does not describe the results yet, so no results can be published on a race's page. You can type and rank them in the backoffice meanwhile.",
-          "done": "The notice in force describes the results: an administrator can publish them on the race's page. A name appears only for those who ticked the list under this notice or later, or who agreed.",
+          "done": "The notice in force describes the results: an administrator can publish them on the race page. A name shows only for those who ticked the list under it or later, or, added by hand, agreed to appear.",
           "how": [
             "Before approving, read the template's paragraph with a lawyer: what the results show (the place, the number, the time, the category), who appears with a name and until when.",
             "/admin/legal → the “GDPR” card → “Regenerate from the template” → confirm. The section on the public list describes the results too.",
@@ -10008,7 +10008,7 @@
       "typed": {
         "title": "Runners who did not register",
         "aside": "{count} saved",
-        "intro": "A number that no registration holds. Write the name and, for a category, the sex and the date of birth. The site shows “Participant #number” unless you tick that the person agreed to the name."
+        "intro": "A number that no registration holds. Write the name and, for a category, the sex and the date of birth. The site shows “Participant #number”; by name only if you tick that they agreed."
       },
       "col": {
         "time": "Time",
@@ -10033,7 +10033,7 @@
       "addRow": "Add a runner who did not register",
       "typedRow": "Unregistered runner",
       "agreed": "Agreed to appear by name in the results",
-      "agreedHelp": "Tick only if the person told you so; who ticked it and when stay in the log.",
+      "agreedHelp": "Tick only if the person told you so; for a minor, the parent or guardian. Who ticked it and when stay in the log.",
       "noPlace": "no place yet",
       "noPlaceSettled": "no place",
       "place": {

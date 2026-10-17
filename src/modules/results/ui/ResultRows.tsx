@@ -81,6 +81,8 @@ export type TypedLine = {
   values: LineValues & { bib: string; name: string; sex: string; birthDate: string };
   /** The staff recorded that the person agreed to appear by name in the public ranking (`name_agreed_at` is set). */
   agreed: boolean;
+  /** «Pe site: cu numele» or «Pe site: Participant #900» — what the published ranking would say of the stored line (`publicResultName`'s own answer), the registered lines' caption. */
+  publicLine: string;
   place: PlaceView | null;
   hasResult: boolean;
 };
@@ -360,6 +362,12 @@ function TypedLinesOf({ lines, words }: { lines: readonly TypedLine[]; words: Re
                 {line && initial.name === "" && (
                   <Typography variant="caption" color="text.secondary" sx={{ gridColumn: "1 / -1" }}>
                     {words.nameless}
+                  </Typography>
+                )}
+                {/* What the site would print for the stored line, drawn as the registered lines draw theirs: a tick saved while no notice describes the results names nobody. */}
+                {line && (
+                  <Typography variant="caption" color="text.secondary" sx={{ gridColumn: "1 / -1" }} data-testid="typed-public-line">
+                    {line.publicLine}
                   </Typography>
                 )}
               </Box>

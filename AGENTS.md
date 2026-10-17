@@ -1508,6 +1508,12 @@ below exists because of that (BR-BUS-039, BR-REQ-039-01).
 - it MUST NOT be switched on until the approved privacy notice describes the disclosure. The
   sample notice carries the paragraph with the club's facts as placeholders (§29,
   `DECISIONS.md` §29);
+- a race's published results (§NNN) follow the same rule with one exception: a runner the club typed
+  by hand (no registration, so no tick) is named only while a staff member recorded on the line that
+  the person agreed — for a minor, that the parent or guardian did — with the actor and the moment on
+  the row and in the audit trail (`event_results.name_agreed_at`, `publicResultName`), and never when
+  a confirmed registration holds the number: a registered runner's name follows their own tick, never
+  a staff mark;
 - `tests/privacy/public-surface.test.ts` is where these are asserted. That file may be extended
   and MUST NOT be weakened.
 

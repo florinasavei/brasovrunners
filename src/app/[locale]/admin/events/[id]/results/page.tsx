@@ -195,6 +195,8 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
       ...valuesOf(runner),
     },
     agreed: runner.nameAgreed === true,
+    // The registered lines' caption, from the same answer (`publicResultName`): a tick saved while no notice describes the results names nobody yet.
+    publicLine: runner.named ? t("results.publicLine.named") : t("results.publicLine.anonymous", { label: anonymousResultLabel(locale, runner.bibNumber) }),
     place: placeOf(runner),
     hasResult: true,
   }));

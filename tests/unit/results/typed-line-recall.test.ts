@@ -36,6 +36,7 @@ const words: ResultWords = {
 const stored = (agreed: boolean, bib: string, name: string): TypedLine => ({
   values: { bib, name, sex: "", birthDate: "", time: "0:42:00", status: "FINISHED", chip: "", note: "" },
   agreed,
+  publicLine: "Pe site: Participant #900",
   place: null,
   hasResult: true,
 });

@@ -2386,8 +2386,11 @@ enter them; **only the Administrator and the Superadministrator make them public
    **A runner you type by hand and the public ranking.** Such a runner (no registration, so no form to tick) shows on the site as «Participant
    #număr» unless the person told you they want their name there. If they did, tick **«A acceptat să apară cu numele în clasament»** on their
    line and save: the ranking then shows the name you typed (only while a privacy notice that describes the results is in force). Tick it only
-   when the person said so — the record keeps who ticked it and when, never the name, exactly as a paper declaration at the desk names the
-   staff member who recorded it. Taking the tick off takes the name off the next read. The tick needs a name written on the line (otherwise the
+   when the person said so (for a minor, the parent or guardian) — the record keeps who ticked it and when, never the name, exactly as a paper
+   declaration at the desk names the staff member who recorded it. A line shows under its boxes what the site will print for it («Pe site:
+   Participant #număr» or «Pe site: cu numele»; the name needs a privacy notice that describes the results in force). Changing the name on a
+   ticked line records the agreement again under whoever saves it, so write the new name only after the new person said so. A registered
+   runner who takes the number later is named by their own tick alone. Taking the tick off takes the name off the next read. The tick needs a name written on the line (otherwise the
    save is refused), a CSV never carries it, a registered runner's line has none (their name follows their own tick on the form), and every
    role that may enter results may tick it.
 4. **«Salvează tot clasamentul»** — ONE button for the whole page: it writes every line in one go or, when a line is wrong, none — the sentence
