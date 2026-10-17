@@ -25,6 +25,7 @@
     "db:migrate:env": "node --env-file-if-exists=.env.local scripts/db-migrate.mjs",
     "smoke": "node scripts/smoke.mjs",
     "idle:measure": "node scripts/idle-cost.mjs",
+    "db:sizes": "node --import tsx --env-file-if-exists=.env.local scripts/db-sizes.mjs",
     "ship": "node scripts/ship.mjs",
     "handoff": "node scripts/handoff.mjs",
     "domain:bind": "node scripts/bind-domain.mjs",

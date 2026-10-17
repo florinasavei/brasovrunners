@@ -8,6 +8,10 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V3.52-2026-10-17
+
+- **/devs shows the database's size and growth and the month's builds** — «Mărimea bazei de date» (size, largest tables, 30-day growth, registrations by event age), «Vercel: consumul lunii» (the Usage page's lines from Vercel's billing API), builds by branch, `yarn db:sizes`, an informational «Retenția datelor» row, and the plan for keeping Neon and Vercel light in `docs/PLATFORM.md`. §803.
+- **The race number's profile strip draws from the same elevation core as the page** — kilometre ticks and numbers, the highest altitude above its point and the lowest in the foot row (beside «Start» or «Sosire» when it is the start or the finish), pins with a drop, a fork or a cross, the aid stations named («km 5 · apă», «km 9 · hrană», «km 4 · apă + hrană» for two that touch, or «km 12 · 11:30» with the cut-offs), the points unticked «Arată pe profilul traseului» left off the number too; the tick «Kilometrii și altitudinile pe profil» (on by default) turns the scale off; and the designer says the recommended shape of an uploaded picture before the upload. §804.
 ## BR-V3.51-2026-10-16
 
 - **The route's elevation profile** — the event page draws the GPX's profile between the maps and the table «Puncte de control» (axes, area, a pin with its glyph for each checkpoint the club ticks «Arată pe profilul traseului», a pointer that reads the kilometre and the altitude), the editor's card previews it, and the shared core is what the race number will draw from. §802.

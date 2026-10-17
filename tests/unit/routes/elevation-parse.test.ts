@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 import { ELEVATION_MAX_POINTS, MIN_TRACK_METERS, parseGpxElevation } from "@/modules/routes/elevation/parse";
-import { parseGpxProfile } from "@/modules/registrations/bib-profile";
 import { elevationGpx } from "../../helpers/elevation-gpx";
 
 /**
@@ -61,33 +60,6 @@ describe("§802 the GPX's elevation profile", () => {
   it("skips a point without an altitude or outside the globe instead of refusing the file", () => {
     const text = elevationGpx().replace("</trkseg>", '<trkpt lat="95" lon="25"><ele>5</ele></trkpt><trkpt lat="45.6" lon="25.9"/></trkseg>');
     expect(parseGpxElevation(text)?.distanceMeters).toBe(profile.distanceMeters);
-  });
-
-  it("agrees with the race number's reader on the distance and the climb, within one per cent", () => {
-    const bib = parseGpxProfile(elevationGpx())!;
-    expect(Math.abs(profile.distanceMeters - bib.distanceMeters) / bib.distanceMeters).toBeLessThan(0.01);
-    expect(Math.abs(profile.gainMeters - bib.gainMeters) / bib.gainMeters).toBeLessThan(0.01);
-  });
-
-  it("agrees with the race number's reader on a jittery recording with uneven spacing too — the two readers are copies until the number switches to this one", () => {
-    // A real watch's track: fixes a few metres apart then a few dozen, the altitude shaking by a metre or two on top of the hill.
-    let seed = 7;
-    const random = () => {
-      seed = (seed * 16807) % 2147483647;
-      return seed / 2147483647;
-    };
-    let lon = 25.5;
-    const body = Array.from({ length: 900 }, (_, i) => {
-      lon += 0.00002 + random() * 0.00022;
-      const share = i / 899;
-      const altitude = 620 + 180 * Math.sin(Math.PI * share) ** 1.3 + (random() - 0.5) * 4;
-      return `<trkpt lat="45.6" lon="${lon.toFixed(6)}"><ele>${altitude.toFixed(1)}</ele></trkpt>`;
-    }).join("");
-    const text = `<gpx version="1.1"><trk><trkseg>${body}</trkseg></trk></gpx>`;
-    const ours = parseGpxElevation(text)!;
-    const bib = parseGpxProfile(text)!;
-    expect(Math.abs(ours.distanceMeters - bib.distanceMeters) / bib.distanceMeters).toBeLessThan(0.01);
-    expect(Math.abs(ours.gainMeters - bib.gainMeters) / bib.gainMeters).toBeLessThan(0.01);
   });
 
   it("reads every form of a decimal a GPX may carry — «+600», «.5», «600.», a negative fraction — not only «600» and «600.5»", () => {

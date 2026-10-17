@@ -706,7 +706,7 @@ describe("§802 «Arată pe profilul traseului» — the tick on each point", ()
     expect(await onProfileOf()).toEqual({ Izvorul: true });
   });
 
-  it("leaves the race number's picture alone: the tick is not part of its stamp", async () => {
+  it("changes the race number's picture address: the strip draws only the ticked points, so the tick is part of its stamp", async () => {
     await db.insert(eventTranslations).values({ eventId, locale: "ro", slug: "cursa", title: "Cursa" });
     const stamp = async () => {
       const [row] = await db
@@ -720,6 +720,10 @@ describe("§802 «Arată pe profilul traseului» — the tick on each point", ()
     const ticked = await stamp();
     const [water] = await listCheckpoints(db, eventId);
     await save([{ ...WATER, id: water.id, onProfile: false }]);
+    const unticked = await stamp();
+    expect(unticked).not.toBe(ticked);
+    // Ticking it again is the picture it was.
+    await save([{ ...WATER, id: water.id, onProfile: true }]);
     expect(await stamp()).toBe(ticked);
   });
 
