@@ -6,7 +6,7 @@ import type { VercelUsage } from "@/modules/diagnostics/vercel-usage";
 
 /**
  * §803 — the two cards on `/devs`, rendered to HTML on the server through next-intl's own
- * translator over the real catalogues, in both languages: «Baza de date» with the size, the tables,
+ * translator over the real catalogues, in both languages: «Mărimea bazei de date» with the size, the tables,
  * the growth and the registrations by age, and its sentence when the database could not be asked;
  * «Vercel: consumul lunii» with the lines, the builds by project and the CPU against Hobby's
  * allowance, and the one sentence that says Vercel would not tell, with a link to its Usage page.
@@ -78,14 +78,14 @@ async function html(node: Promise<ReactElement>): Promise<string> {
   return renderToStaticMarkup(await node).replace(/&#x27;/g, "'");
 }
 
-describe("§803 «Baza de date» on /devs", () => {
+describe("§803 «Mărimea bazei de date» on /devs", () => {
   it("draws the size, the tables with their split and rows, the growth and the registrations by age, in Română", async () => {
     state.locale = "ro";
     const out = await html(DatabaseSizesPanel({ sizes: SIZES }));
 
     expect(out).toContain('data-testid="db-size"');
     expect(out).toContain('id="db-size"');
-    expect(out).toContain("Baza de date: mărime și creștere");
+    expect(out).toContain("Mărimea bazei de date");
     expect(out).toMatch(/Toată baza de date: 12,3 MB/);
     expect(out).toContain("audit_logs");
     expect(out).toMatch(/3,0 MB, din care 1,0 MB date și 2,0 MB indecși/);
@@ -105,7 +105,7 @@ describe("§803 «Baza de date» on /devs", () => {
     state.locale = "en";
     const out = await html(DatabaseSizesPanel({ sizes: SIZES }));
 
-    expect(out).toContain("The database: size and growth");
+    expect(out).toContain("Database size");
     expect(out).toMatch(/The whole database: 12\.3 MB/);
     expect(out).toMatch(/3\.0 MB, of which 1\.0 MB data and 2\.0 MB indexes/);
     expect(out).toMatch(/Rows: about 40,000/);

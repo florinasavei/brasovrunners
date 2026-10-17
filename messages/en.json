@@ -4503,7 +4503,7 @@
           "todo": "The database grows and not every retention period is decided. This row is only informational for now: nothing is deleted because of it.",
           "done": "The retention periods are decided.",
           "how": [
-            "Open Settings → Configuration: the «The database» card shows what each table takes and how much it grew in 30 days.",
+            "Open Settings → Configuration: the «Database size» card shows what each table takes and how much it grew in 30 days.",
             "On that card, open «The plan for keeping data and the proposed periods»: the section «Keeping Neon and Vercel light, long term» has the table of proposed periods.",
             "Decide the periods; for the personal data of past events, ask a lawyer first. Until then nothing changes."
           ]
@@ -11048,7 +11048,7 @@
       "since": "since {when}"
     },
     "dbSize": {
-      "title": "The database: size and growth",
+      "title": "Database size",
       "intro": "How big the database is and what grew in the last 30 days. This only measures: nothing is deleted.",
       "introMore": "These numbers are what the club chooses how long to keep each kind of data on. Estimated rows were not counted exactly.",
       "aside": "{size} MB",

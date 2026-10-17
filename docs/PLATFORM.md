@@ -667,7 +667,7 @@ it costs and where it stands — **done** (already in the code or the settings),
 not done) or **the owner decides** (a period or a plan only the club can choose).
 
 **Where the numbers are read now, and kept.** `/devs` → «Configurație» (the status panel) has two new cards:
-«Baza de date» (the database's size, the eight largest tables, what each table that grows gained in thirty
+«Mărimea bazei de date» (the database's size, the eight largest tables, what each table that grows gained in thirty
 days, the registrations by state and by the age of their event) and «Vercel: consumul lunii» (the Usage
 page's lines, read from Vercel's billing API, and the builds by project); the deployments line above them
 now says how many of this project's deployments built, by branch, and no longer reads the build minutes against
@@ -771,7 +771,7 @@ shorter period needs the notice's template changed and a Romanian lawyer's readi
 | unconfirmed registrations; ended invitations | **30 days** | as today | nothing to prove: nobody confirmed the address | done |
 | identity document, health note, emergency contact | cleared **7 days** after the event | as today | special-category data (§95) | done |
 | volunteers | **30 days** after the event (§754) | as today | — | done |
-| group-run declarations (`group_run_declarations`: the typed signature name, the address the copy went to, the IP address and browser) | **no time window**: kept while the signer takes part in the club's runs and deleted at their request (§503); only the identity document is cleared 7 days after the run; an Administrator's hold (§556) stops any erase | an inactivity period (for example: erased 24 months after the signer's last run) | the one table of personal data kept with no period. `/devs` → «Baza de date» now counts it (rows and the last 30 days) so the period is chosen on a number | the owner decides |
+| group-run declarations (`group_run_declarations`: the typed signature name, the address the copy went to, the IP address and browser) | **no time window**: kept while the signer takes part in the club's runs and deleted at their request (§503); only the identity document is cleared 7 days after the run; an Administrator's hold (§556) stops any erase | an inactivity period (for example: erased 24 months after the signer's last run) | the one table of personal data kept with no period. `/devs` → «Mărimea bazei de date» now counts it (rows and the last 30 days) so the period is chosen on a number | the owner decides |
 | job runs; throttle buckets | **30 days**; **1 day** | as today | — | done |
 | newsletter | unconfirmed addresses after the email-link window; confirmed ones until they unsubscribe (§445) | as today | the notice says so | done |
 | staff sessions | **no table**: sign-in is a signed cookie (`auth.ts`, JWT); each lives by its own expiry | nothing to prune | the brief expected rows; there are none | done |

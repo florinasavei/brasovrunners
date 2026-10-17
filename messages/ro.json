@@ -4503,7 +4503,7 @@
           "todo": "Baza de date crește și nu toate perioadele de păstrare sunt hotărâte. Rândul e doar informativ deocamdată: nimic nu se șterge din cauza lui.",
           "done": "Perioadele de păstrare sunt hotărâte.",
           "how": [
-            "Deschide Setări → Configurație: cardul «Baza de date» arată cât ocupă fiecare tabel și cât a crescut în 30 de zile.",
+            "Deschide Setări → Configurație: cardul «Mărimea bazei de date» arată cât ocupă fiecare tabel și cât a crescut în 30 de zile.",
             "Pe același card, deschide «Planul de păstrare a datelor și perioadele propuse»: secțiunea «Keeping Neon and Vercel light, long term» are tabelul cu perioadele propuse.",
             "Hotărăște perioadele; pentru datele personale ale celor de la evenimentele trecute, cere întâi părerea unui avocat. Până atunci nimic nu se schimbă."
           ]
@@ -11048,7 +11048,7 @@
       "since": "din {when}"
     },
     "dbSize": {
-      "title": "Baza de date: mărime și creștere",
+      "title": "Mărimea bazei de date",
       "intro": "Cât ocupă baza de date și ce a crescut în ultimele 30 de zile. Aici se măsoară doar: nimic nu se șterge.",
       "introMore": "Pe cifrele astea alege clubul cât timp se păstrează fiecare fel de date. Rândurile estimate nu au fost numărate exact.",
       "aside": "{size} MB",

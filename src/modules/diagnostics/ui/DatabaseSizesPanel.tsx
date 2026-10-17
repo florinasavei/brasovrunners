@@ -17,7 +17,7 @@ type Props = {
 const STATES = ["PENDING_EMAIL_CONFIRMATION", "PENDING_DECLARATION", "WAITLISTED", "WAITLIST_OFFERED", "CONFIRMED", "CANCELLED", "EXPIRED"] as const;
 
 /**
- * «Baza de date» on `/devs` (§803; the owner, 2026-10-16: «cumva mă interesează să țin baza de
+ * «Mărimea bazei de date» on `/devs` (§803; the owner, 2026-10-16: «cumva mă interesează să țin baza de
  * date light long term»): how big the database is, the eight largest tables and what each of the
  * tables that grow gained in thirty days — the numbers a retention period would be chosen on,
  * read from the database itself and measured only: nothing is deleted from here.
