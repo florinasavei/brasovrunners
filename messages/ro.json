@@ -2630,6 +2630,11 @@
           "sponsors": "sponsori: {place}",
           "sponsorsNone": "fără bandă cu sponsori",
           "phone": "telefon de urgență",
+          "figures": {
+            "right": "cifre lângă profil",
+            "below": "cifre sub profil",
+            "header": "cifre în antet"
+          },
           "pictureMissing": "O poză încărcată — lipsește poza",
           "gpxMissing": "Desenat din GPX — evenimentul nu are GPX",
           "nothing": "nimic",
@@ -2643,9 +2648,16 @@
         },
         "profileSourceHelp": "Desenul vine din fișierul GPX al evenimentului, nu din Strava: harta Strava nu poate fi citită de site. Cu o poză pui pe fâșie ce vrei tu, de exemplu punctele de alimentare.",
         "profileImageSrc": "Poza profilului",
-        "profileImageSrcHelp": "Recomandat: o imagine lată, întreagă, fără decupaj. Cu cifrele lângă profil: {ratioBeside} la 1, adică {widthBeside} × {height} px la {dpi} dpi. Fără ele, sau fără cifre de arătat: {ratioAlone} la 1, adică {widthAlone} × {height} px.",
-        "showProfileFigures": "Arată distanța și diferența de nivel lângă profil",
-        "showProfileFiguresHelp": "Bifat: cele două cifre în dreapta profilului. Debifat: profilul sau poza ocupă toată lățimea.",
+        "profileImageSrcHelp": "Recomandat: o imagine lată, întreagă, fără decupaj. Cu cifrele în dreapta profilului: {ratioBeside} la 1, adică {widthBeside} × {height} px la {dpi} dpi. Altfel (sub profil, în antet, fără cifre): {ratioAlone} la 1, adică {widthAlone} × {height} px.",
+        "showProfileFigures": "Arată distanța și diferența de nivel",
+        "showProfileFiguresHelp": "Bifat: distanța și diferența de nivel apar pe număr, unde alegi mai jos. Debifat: nu apar, iar profilul sau poza ocupă toată lățimea.",
+        "profileFiguresPlace": "Unde stau cifrele",
+        "profileFiguresPlaces": {
+          "right": "În dreapta profilului",
+          "below": "Sub profil, pe un rând",
+          "header": "În antet, sub dată"
+        },
+        "profileFiguresPlaceHelp": "Sub profil sau în antet profilul ocupă toată lățimea. Cu o imagine în locul benzii (sau a celei pentru membri), cifrele trec sub profil; un titlu foarte lung le poate scoate din antet.",
         "profileOrientation": "Orientarea profilului",
         "profileOrientations": {
           "normal": "Normal",
@@ -8660,7 +8672,8 @@
             },
             "profileSource": "Număr: de unde vine profilul",
             "profileImageSrc": "Număr: poza profilului",
-            "showProfileFigures": "Număr: distanța și diferența de nivel lângă profil",
+            "showProfileFigures": "Număr: distanța și diferența de nivel",
+            "profileFiguresPlace": "Număr: unde stau cifrele profilului",
             "profileOrientation": "Număr: orientarea profilului",
             "emergencyLabel": "Număr: eticheta telefonului",
             "emergencyPhoneLabel": "Număr: numele primului telefon",

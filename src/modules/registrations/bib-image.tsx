@@ -22,7 +22,7 @@ import { BIB_FOOTER_EMS, bibFooterLines, bibFooterParts, bibFooterWidth } from "
 import { pathOf } from "@/modules/routes/elevation/geometry";
 import { ELEVATION_GLYPH_PATHS, GLYPH_EVEN_ODD } from "@/modules/routes/elevation/glyphs";
 import type { BibProfileDrawing, BibProfileFigureLines } from "./bib-profile";
-import { type BibProfileRow, bibProfileRow } from "./bib-profile-row";
+import { type BibProfileRow, bibFiguresBelow, bibHeaderFiguresLine, bibProfileFiguresLine, bibProfileRow } from "./bib-profile-row";
 import { bibPinGlyphScale } from "./bib-profile-strip";
 import { BIB_MEMBER_MARK_PATHS, BIB_MEMBER_MARK_VIEWBOX, type BibMemberMark, bibMemberMarkBox, isVectorMark } from "./bib-member-mark";
 import { BIB_PICTURE_BOX, type BibPictureSlot, bibPictureDrawing } from "./bib-picture-frame";
@@ -42,6 +42,7 @@ import {
   bibNameReserve,
   bibNumberArea,
   bibNumberFit,
+  bibProfileRowHeight,
   bibStubScale,
 } from "./bib-geometry";
 import { bibHeader } from "./bib-header";
@@ -232,6 +233,18 @@ export function bibHeaderLines(words: BibHeaderLayout, colour: string) {
           </div>,
         ]
       : []),
+    // The figures' line under the date (§804, amended), in the date's size and colour; present only while the club put the figures in the header.
+    ...(words.figures
+      ? [
+          <div
+            key="figures"
+            data-testid="bib-header-figures"
+            style={{ ...ONE_LINE, ...box, top: px(words.figures.top), fontSize: px(L.dateSize), lineHeight: `${px(BIB_TEXT_LINE * L.dateSize)}px` }}
+          >
+            {words.figures.text}
+          </div>,
+        ]
+      : []),
   ];
 }
 
@@ -282,7 +295,20 @@ export function bibMemberMarkElement(shape: BibMemberMark, ink: string, logoSrc:
 function profileRowElement(row: BibProfileRow, ink: string, picture: BibImagePicture | null) {
   const L = BIB_LAYOUT;
   const chartWidth = row.chartWidth;
-  const figures = row.figures
+  const rowHeight = px(bibProfileRowHeight(bibFiguresBelow(row)));
+  // The figures where the row decided (§804, amended): two lines at the strip's right, or one centred line under the strip; in the header they are not the row's.
+  const belowLine = row.figures?.place === "below" ? bibProfileFiguresLine(row.figures) : null;
+  const figures = belowLine
+    ? (
+        <div
+          key="figures-below"
+          data-testid="bib-profile-figures"
+          style={{ ...ONE_LINE, position: "absolute", left: px(L.inset), width: px(BIB_CARD.width - 2 * L.inset), top: px(L.profileFiguresTop), justifyContent: "center", fontSize: px(L.profileTextSize), color: ink }}
+        >
+          {belowLine}
+        </div>
+      )
+    : row.figures?.place === "right"
     ? [
         row.figures.distance ? (
           <div key="distance" style={{ ...ONE_LINE, position: "absolute", left: px(L.inset + chartWidth + L.profileTextGap), top: px(L.profileDistanceTop), fontSize: px(L.profileTextSize), color: ink }}>
@@ -298,7 +324,7 @@ function profileRowElement(row: BibProfileRow, ink: string, picture: BibImagePic
     : null;
   if (row.kind === "picture") {
     return (
-      <div data-testid="bib-profile-row" data-source="picture" style={{ display: "flex", flexShrink: 0, position: "relative", height: px(L.profileHeight) }}>
+      <div data-testid="bib-profile-row" data-source="picture" style={{ display: "flex", flexShrink: 0, position: "relative", height: rowHeight }}>
         {picture ? (
           // eslint-disable-next-line @next/next/no-img-element -- Satori draws it
           <img
@@ -321,7 +347,7 @@ function profileRowElement(row: BibProfileRow, ink: string, picture: BibImagePic
   const scaleStyle = { stroke: ink, strokeOpacity: L.profileScaleOpacity, strokeWidth: L.profileKmTickWeight } as const;
   const glyphScale = bibPinGlyphScale(g.pinRadius);
   return (
-    <div data-testid="bib-profile-row" data-source="gpx" style={{ display: "flex", flexShrink: 0, position: "relative", height: px(L.profileHeight) }}>
+    <div data-testid="bib-profile-row" data-source="gpx" style={{ display: "flex", flexShrink: 0, position: "relative", height: rowHeight }}>
       <svg
         width={px(chartWidth + 2 * PROFILE_PAD)}
         height={px(L.profileHeight + 2 * PROFILE_PAD)}
@@ -516,7 +542,7 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
     name: design.showName ? L.nameBlock : 0,
     sponsors: sponsorRow,
     stripe: stripe ? L.memberStripeHeight : 0,
-    extras: bibExtrasHeight(profileRow !== null, emergency !== null),
+    extras: bibExtrasHeight(profileRow !== null, emergency !== null, bibFiguresBelow(profileRow)),
   });
   const numberSize = px(bibNumberFit(digits, numberScaleFactor(design), numberArea));
   // The background's own box: under an opaque stripe it stops half-way, so the flow's sub-pixel
@@ -533,6 +559,7 @@ export async function renderBibImage(input: BibImageInput): Promise<ImageRespons
     logo: design.showLogo,
     badge: badge !== null,
     label: memberLabel !== "" && !asCard && header === null,
+    figures: bibHeaderFiguresLine(profileRow),
   });
   // The badge: the header's text colour as the tag, the band's colour on it (the card's white tag takes the body ink).
   const badgeInk = asCard ? COLOR.ink : band;

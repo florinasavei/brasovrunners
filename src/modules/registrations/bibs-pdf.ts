@@ -17,7 +17,7 @@ import {
 } from "./bib-design";
 import { ELEVATION_GLYPH_PATHS, GLYPH_EVEN_ODD } from "@/modules/routes/elevation/glyphs";
 import type { BibProfileDrawing, BibProfileFigureLines } from "./bib-profile";
-import { bibProfileRow } from "./bib-profile-row";
+import { bibFiguresBelow, bibHeaderFiguresLine, bibProfileFiguresLine, bibProfileRow } from "./bib-profile-row";
 import { bibPinGlyphScale } from "./bib-profile-strip";
 import { bibFooterLines, bibFooterParts, bibFooterWidth } from "./bib-footer";
 import { BIB_MEMBER_MARK_PATHS, BIB_MEMBER_MARK_VIEWBOX, bibMemberMarkBox, isVectorMark } from "./bib-member-mark";
@@ -37,6 +37,7 @@ import {
   bibNameReserve,
   bibNumberArea,
   bibNumberFit,
+  bibProfileRowHeight,
   bibStubScale,
 } from "./bib-geometry";
 import { bibHeader } from "./bib-header";
@@ -280,7 +281,9 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
   const profileRow = bibProfileRow(design, { profile: input.profile ?? null, profileFigures: input.profileFigures ?? null }, profilePicture !== null);
   const emergencyText = bibEmergencyLine(design, input.emergencyLabel ?? "");
   const emergency = emergencyText ? bibEmergencyFit(emergencyText, bibFooterWidth) : null;
-  const extrasHeight = bibExtrasHeight(profileRow !== null, emergency !== null);
+  const figuresBelow = bibFiguresBelow(profileRow);
+  const profileRowHeight = bibProfileRowHeight(figuresBelow);
+  const extrasHeight = bibExtrasHeight(profileRow !== null, emergency !== null, figuresBelow);
   const turn = bibExtrasTurn({
     profile: profileRow !== null,
     profileTurned: design.profileOrientation === "turned",
@@ -376,6 +379,7 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
       logo: design.showLogo,
       badge: badge !== null,
       label,
+      figures: bibHeaderFiguresLine(profileRow),
     });
   const eventHeader = {
     picture: headerPicture,
@@ -480,6 +484,11 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
       if (words.date) {
         doc.font("body").fontSize(L.dateSize).fillColor(textColour);
         doc.text(words.date.text, columnRight - doc.widthOfString(words.date.text), top + words.date.top, { lineBreak: false });
+      }
+      // The figures under the date (§804, amended), in the date's size and colour — only while the club put them in the header.
+      if (words.figures) {
+        doc.font("body").fontSize(L.dateSize).fillColor(textColour);
+        doc.text(words.figures.text, columnRight - doc.widthOfString(words.figures.text), top + words.figures.top, { lineBreak: false });
       }
     };
 
@@ -661,7 +670,7 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
     // The block under the name: the profile's row, then the phone's line (§750); turned as `turn` says (§759).
     const blockTop = regionFoot - stripeHeight - extrasHeight;
     const profileTop = blockTop;
-    const emergencyTop = blockTop + (profileRow !== null ? L.profileHeight : 0);
+    const emergencyTop = blockTop + (profileRow !== null ? profileRowHeight : 0);
     const centreX = left + BIB_CARD.width / 2;
     /** Half a circle about a box's own centre: what the runner reads looking down at the chest. */
     const turned = (boxTop: number, boxHeight: number, draw: () => void) => {
@@ -675,13 +684,21 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
       const rowTop = profileTop;
       const chartLeft = left + L.inset;
       const chartWidth = profileRow.chartWidth;
-      // The figures beside the chart or the picture, when the club shows them and they are known (§759).
+      // The figures where the row decided (§759, §804 amended): beside the chart or the picture in two lines, or under the strip in
+      // one centred line; in the header they are the header's, not the row's.
       const drawFigures = () => {
-        if (!profileRow.figures) return;
+        const figures = profileRow.figures;
+        if (!figures) return;
         doc.font("body").fontSize(L.profileTextSize).fillColor(ink);
+        if (figures.place === "below") {
+          const line = bibProfileFiguresLine(figures);
+          if (line) doc.text(line, left + (BIB_CARD.width - doc.widthOfString(line)) / 2, rowTop + L.profileFiguresTop, { lineBreak: false });
+          return;
+        }
+        if (figures.place !== "right") return;
         const textLeft = chartLeft + chartWidth + L.profileTextGap;
-        if (profileRow.figures.distance) doc.text(profileRow.figures.distance, textLeft, rowTop + L.profileDistanceTop, { lineBreak: false });
-        if (profileRow.figures.gain) doc.text(profileRow.figures.gain, textLeft, rowTop + L.profileGainTop, { lineBreak: false });
+        if (figures.distance) doc.text(figures.distance, textLeft, rowTop + L.profileDistanceTop, { lineBreak: false });
+        if (figures.gain) doc.text(figures.gain, textLeft, rowTop + L.profileGainTop, { lineBreak: false });
       };
       // «O poză încărcată» (§759): the club's picture, fitted whole in the chart's box, no marks on it.
       if (profileRow.kind === "picture") {
@@ -758,7 +775,7 @@ export async function renderBibSheet(input: BibSheetInput): Promise<Buffer> {
         drawEmergency();
       });
     } else {
-      if (turn.profile) turned(profileTop, L.profileHeight, drawProfile);
+      if (turn.profile) turned(profileTop, profileRowHeight, drawProfile);
       else drawProfile();
       if (turn.phone) turned(emergencyTop, L.emergencyHeight, drawEmergency);
       else drawEmergency();
