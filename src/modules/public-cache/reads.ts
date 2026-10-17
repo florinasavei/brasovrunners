@@ -1,4 +1,5 @@
 import { getDb } from "@/db/client";
+import { type PublicEventResults, readPublicEventResults } from "@/modules/results/results";
 import type { PublicListClub } from "@/db/schema/events";
 import type { LegalDocumentKey } from "@/db/schema/legal-documents";
 import { parseLocalizedPath } from "@/i18n/alternate-path";
@@ -544,6 +545,36 @@ export async function cachedFirstStatesNoticeVersion(): Promise<number | null> {
  */
 export async function cachedFirstResultsNoticeVersion(): Promise<number | null> {
   return publicRead(["legal.first-results-notice"], ["legal"], () => findFirstResultsNoticeVersion(getDb()));
+}
+
+/**
+ * A race's published results, the rows the event page draws (§NNN, race results part 2): `readPublicEventResults` through the data
+ * cache, filed under `places` and `events` — the tags the results' save, its publish switch, a confirmation, a cancellation, an erasure and
+ * somebody leaving the list already expire, so a name is never shown after its owner withdrew it and a correction is on the page at
+ * once. Like the start list's rows it has **no saved copy** (`places` is never kept): a stale ranking is a wrong place, so a month
+ * that cannot be asked leaves the section out and the page stands (`ResultsSection`).
+ *
+ * The key carries every input that decides the answer — the event, the club's period, the two notices' verdicts and the version
+ * below which nobody is named — so an approval or a change of "Termene" reads a new entry, never an old one. The clock is **not**
+ * in it: the entry is made at a request, and the page checks `closesAt` against its own `now` again (a date passing is no write),
+ * holding itself until then (`resultsClockInstants`).
+ */
+export async function cachedPublicEventResults(
+  eventId: string,
+  gates: { deadlines: Pick<Deadlines, "publicListDays">; noticeDescribes: boolean; termsDescribe: boolean; firstResultsNoticeVersion: number | null },
+): Promise<PublicEventResults | null> {
+  return publicRead(
+    [
+      "places.results",
+      eventId,
+      gates.deadlines.publicListDays,
+      gates.noticeDescribes ? "notice" : "no-notice",
+      gates.termsDescribe ? "terms" : "no-terms",
+      gates.firstResultsNoticeVersion ?? "none",
+    ],
+    ["places", "events"],
+    () => readPublicEventResults(getDb(), eventId, { now: new Date(), ...gates }),
+  );
 }
 
 /**

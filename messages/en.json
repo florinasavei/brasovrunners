@@ -763,7 +763,34 @@
     },
     "results": {
       "title": "Results",
-      "anonymous": "Participant #{bib}"
+      "anonymous": "Participant #{bib}",
+      "published": "Published {published} · on this page until {until}",
+      "until": "On this page until {until}",
+      "caption": "The race results: first those who finished, in order of arrival, then those who did not.",
+      "columnPlace": "Place",
+      "columnNumber": "No.",
+      "columnNumberFull": "race number",
+      "columnName": "Name",
+      "columnTime": "Time",
+      "columnCategory": "Category",
+      "chipTime": "Chip time: {time}",
+      "categoryPlace": "place {position}",
+      "noCategory": "No category",
+      "noPlace": "No place",
+      "status": {
+        "FINISHED": "Finished",
+        "DNF": "Dropped out",
+        "DNS": "Did not start",
+        "DSQ": "Disqualified"
+      },
+      "note": "A name is shown only for those who ticked “I want to appear on the participants & results list”; the others appear as “Participant #number”, with place, time and category.",
+      "filter": {
+        "label": "Filter the results",
+        "category": "Category",
+        "all": "All",
+        "search": "Search by number",
+        "none": "No row matches."
+      }
     }
   },
   "Admin": {
@@ -5309,7 +5336,8 @@
         "difficulty": "The difficulty level is not chosen; the page shows no label.",
         "capacity": "A race registered on the site has no number of places (now unlimited).",
         "bibDesign": "The race numbers have no chosen look: they print in the simple default.",
-        "declaration": "The declaration participants sign is not approved: nobody can register."
+        "declaration": "The declaration participants sign is not approved: nobody can register.",
+        "results": "The race is over and the results are not published."
       },
       "fold": {
         "pageRows": {

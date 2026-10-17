@@ -55,6 +55,7 @@ function complete(overrides: Partial<PageTodoEvent> = {}): PageTodoEvent {
     capacity: 200,
     bibDesign: { showName: true },
     declarationDocumentId: DECLARATION,
+    resultsPublished: false,
     ...overrides,
   };
 }
@@ -65,6 +66,7 @@ const context: PageTodoContext = {
   locales: ["ro", "en"],
   storageConfigured: true,
   approvedDeclarationIds: new Set([DECLARATION]),
+  publicListDays: 30,
 };
 
 const rules = (todos: PageTodo[]) => todos.map((todo) => todo.id);
@@ -165,7 +167,8 @@ describe("§749 eventPageTodos", () => {
   });
 
   it("has no computed rows for an event that is over, cancelled or archived", () => {
-    const lacking = { coverMediaAssetId: null, declarationDocumentId: null };
+    // Results published: the one row an event that is over can still have (below) is not what this is about.
+    const lacking = { coverMediaAssetId: null, declarationDocumentId: null, resultsPublished: true };
     expect(eventPageTodos(complete({ ...lacking, startsAt: new Date("2026-10-01T08:00:00.000Z") }), texts, context)).toEqual([]);
     expect(eventPageTodos(complete({ ...lacking, eventStatus: "CANCELLED" }), texts, context)).toEqual([]);
     expect(eventPageTodos(complete({ ...lacking, eventStatus: "COMPLETED" }), texts, context)).toEqual([]);
@@ -173,6 +176,53 @@ describe("§749 eventPageTodos", () => {
     // An event that has begun but not ended is not over.
     const running = eventPageTodos(complete({ ...lacking, startsAt: new Date("2026-10-13T07:00:00.000Z"), endsAt: new Date("2026-10-13T12:00:00.000Z") }), texts, context);
     expect(rules(running)).toContain("cover");
+  });
+
+  describe("§NNN «Cursa s-a terminat și clasamentul nu e publicat» — the one row an event that is over still has", () => {
+    // The race of 2026-10-10, which ended at noon; NOW is 2026-10-13 and the club keeps results thirty days.
+    const over = { startsAt: new Date("2026-10-10T08:00:00.000Z"), endsAt: new Date("2026-10-10T12:00:00.000Z") };
+
+    it("is high, leads to the results page and is the only row of a race that is over and not published", () => {
+      const todos = eventPageTodos(complete(over), texts, context);
+      expect(rules(todos)).toEqual(["results"]);
+      expect(only(todos, "results")).toMatchObject({ priority: "HIGH", anchor: "page-results", locale: null });
+    });
+
+    it("is gone once the results are published", () => {
+      expect(eventPageTodos(complete({ ...over, resultsPublished: true }), texts, context)).toEqual([]);
+    });
+
+    it("is not there for a race still to run, or running", () => {
+      expect(rules(eventPageTodos(complete(), texts, context))).not.toContain("results");
+      const running = eventPageTodos(complete({ startsAt: new Date("2026-10-13T07:00:00.000Z"), endsAt: new Date("2026-10-13T12:00:00.000Z") }), texts, context);
+      expect(rules(running)).not.toContain("results");
+    });
+
+    it("counts a race saved without an end as over a day after it starts: the start is the meeting time, not the finish", () => {
+      const starts = new Date("2026-10-13T07:00:00.000Z");
+      expect(rules(eventPageTodos(complete({ startsAt: starts, endsAt: null }), texts, context))).not.toContain("results");
+      expect(rules(eventPageTodos(complete({ startsAt: starts, endsAt: null }), texts, { ...context, now: new Date("2026-10-14T08:00:00.000Z") }))).toContain("results");
+    });
+
+    it("is not there for a group run, a hike or any event that takes no results", () => {
+      for (const type of ["GROUP_RUN", "HIKE", "COFFEE", "MEETUP", "GEAR_TEST", "EXTERNAL"] as const) {
+        expect(rules(eventPageTodos(complete({ ...over, type, registrationMode: "NONE", declarationDocumentId: null, capacity: null }), texts, context)), type).toEqual([]);
+      }
+    });
+
+    it("is not there for a race that was cancelled, archived or never published, nor while its date is still to be announced", () => {
+      expect(eventPageTodos(complete({ ...over, eventStatus: "CANCELLED" }), texts, context)).toEqual([]);
+      expect(eventPageTodos(complete({ ...over, editorialStatus: "ARCHIVED" }), texts, context)).toEqual([]);
+      expect(eventPageTodos(complete({ ...over, editorialStatus: "DRAFT" }), texts, context)).toEqual([]);
+      expect(eventPageTodos(complete({ ...over, dateToBeAnnounced: true }), texts, context)).toEqual([]);
+    });
+
+    it("is a race the club marked completed too, and stops when the public list's period is over — publishing would show nothing", () => {
+      expect(rules(eventPageTodos(complete({ ...over, eventStatus: "COMPLETED" }), texts, context))).toEqual(["results"]);
+      // Ended 2026-10-10 12:00, thirty days: until 2026-11-09 12:00.
+      expect(rules(eventPageTodos(complete(over), texts, { ...context, now: new Date("2026-11-09T11:00:00.000Z") }))).toEqual(["results"]);
+      expect(eventPageTodos(complete(over), texts, { ...context, now: new Date("2026-11-09T13:00:00.000Z") })).toEqual([]);
+    });
   });
 
   it("gives every row an id that is unique within the event", () => {

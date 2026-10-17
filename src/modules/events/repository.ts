@@ -255,6 +255,9 @@ const PUBLIC_COLUMNS = {
   // «Clubul pe lista publică» (§753): what the list's «Club» column says — read by `StartList` through
   // `publicListClubOf`, and by the cached reads that make its rows.
   publicListClub: events.publicListClub,
+  // «Clasamentul e public pe pagina evenimentului» (§NNN): one boolean, so the listing's «Clasament» chip and the event page know
+  // whether to ask for the results at all, with no query of their own. Never a time, a name or a row of the results.
+  resultsPublished: events.resultsPublished,
   // The meeting point is one fact on the event row (`DECISIONS.md` §36); its *name* is read in
   // the page's language when the club gave it one (migration `0058`), else in the club's own
   // words as before. Never the other language's: a blank name reads the event, not the other

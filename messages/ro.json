@@ -763,7 +763,34 @@
     },
     "results": {
       "title": "Clasament",
-      "anonymous": "Participant #{bib}"
+      "anonymous": "Participant #{bib}",
+      "published": "Publicat la {published} · rămâne pe pagină până la {until}",
+      "until": "Rămâne pe pagină până la {until}",
+      "caption": "Clasamentul cursei: întâi cei care au terminat, în ordinea sosirii, apoi cei care nu au terminat.",
+      "columnPlace": "Loc",
+      "columnNumber": "Nr.",
+      "columnNumberFull": "numărul de concurs",
+      "columnName": "Nume",
+      "columnTime": "Timp",
+      "columnCategory": "Categorie",
+      "chipTime": "Timp cip: {time}",
+      "categoryPlace": "loc {position}",
+      "noCategory": "Fără categorie",
+      "noPlace": "Fără loc",
+      "status": {
+        "FINISHED": "Sosit",
+        "DNF": "Abandon",
+        "DNS": "Neprezentat",
+        "DSQ": "Descalificat"
+      },
+      "note": "Numele apare doar pentru cei care au bifat „Vreau să apar pe lista de participanți & rezultate”; ceilalți apar ca „Participant #număr”, cu locul, timpul și categoria.",
+      "filter": {
+        "label": "Filtrează clasamentul",
+        "category": "Categorie",
+        "all": "Toate",
+        "search": "Caută după număr",
+        "none": "Niciun rând nu se potrivește."
+      }
     }
   },
   "Admin": {
@@ -5309,7 +5336,8 @@
         "difficulty": "Nivelul de dificultate nu e ales; pagina nu arată nicio etichetă.",
         "capacity": "Cursa cu înscriere pe site nu are număr de locuri (acum fără limită).",
         "bibDesign": "Numerele de concurs n-au un aspect ales: se tipăresc în varianta simplă.",
-        "declaration": "Declarația semnată de participanți nu e aprobată: nimeni nu se poate înscrie."
+        "declaration": "Declarația semnată de participanți nu e aprobată: nimeni nu se poate înscrie.",
+        "results": "Cursa s-a terminat și clasamentul nu e publicat."
       },
       "fold": {
         "pageRows": {

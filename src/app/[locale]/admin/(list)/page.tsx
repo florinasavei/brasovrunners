@@ -186,7 +186,7 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
   const typedTodos = eventsAndTodos.typed;
   const storageConfigured = isStorageConfigured();
   const todoCount = (row: (typeof events)[number]) =>
-    eventPageTodos(row.event, row.translations, { now, locales: routing.locales, storageConfigured, approvedDeclarationIds }).length +
+    eventPageTodos(row.event, row.translations, { now, locales: routing.locales, storageConfigured, approvedDeclarationIds, publicListDays: deadlines.publicListDays }).length +
     (typedTodos.get(row.event.id) ?? 0);
 
   // Race day, give or take: from the day before the start to the day after (§83).

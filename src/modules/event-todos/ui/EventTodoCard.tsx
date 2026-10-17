@@ -240,9 +240,13 @@ export default async function EventTodoCard({ locale, eventId, computed, items, 
     summary.own.top,
   );
 
-  /** «Lipsește pe pagină»: the whole row is the link to the card that fills the field. */
+  /** Where the results row leads (§NNN): the race's own results page, not a card of this editor. */
+  const resultsPath = getPathname({ locale, href: { pathname: "/admin/events/[id]/results", params: { id: eventId } } });
+
+  /** «Lipsește pe pagină»: the whole row is the link to the card that fills the field — or, for the results, to the page that does. */
   const pageRow = (row: Extract<TodoRow, { kind: "page" }>) => {
     const { todo } = row;
+    const target = todo.anchor === "page-results" ? resultsPath : `#${todo.anchor}`;
     const text = t(`eventTodos.page.${todo.rule}`, { language: todo.locale ? (languageNames[todo.locale] ?? todo.locale) : "" });
     return (
       <Box component="li" key={row.key} id={rowId(row.key)} data-testid="event-todo-page-row" data-rule={todo.id} sx={ROW_SX}>
@@ -250,7 +254,7 @@ export default async function EventTodoCard({ locale, eventId, computed, items, 
             (`OpenFoldFromHash`, §336), which a soft navigation of the locale-aware `Link` would not. */}
         <Box
           component="a"
-          href={`#${todo.anchor}`}
+          href={target}
           data-testid="event-todo-fill"
           aria-label={t("eventTodos.fillRow", { text })}
           title={t("eventTodos.fill")}

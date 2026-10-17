@@ -378,6 +378,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
     locales: routing.locales,
     storageConfigured: isStorageConfigured(),
     approvedDeclarationIds: new Set(declarations.map((declaration) => declaration.id)),
+    publicListDays: deadlines.publicListDays,
   });
   /*
     «Puncte de control» (§757): the route's points as saved, the route's length they are measured
