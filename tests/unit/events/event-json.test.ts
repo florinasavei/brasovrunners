@@ -156,6 +156,25 @@ describe("the event file's reader", () => {
     expect(serializeEventFile(file)).not.toContain("onProfile");
   });
 
+  it("writes the route's profile tick only when it is off, reads «not written» as on, and keeps the version (§802, amended)", () => {
+    const file = sampleFile();
+    expect(file.version).toBe(3);
+    expect(serializeEventFile(file)).not.toContain("showRouteProfile");
+    const readOn = readEventFile(serializeEventFile(file));
+    if (!readOn.ok) throw new Error("the file did not read back");
+    expect(readOn.file.event.route.showRouteProfile).toBe(true);
+
+    file.event.route.showRouteProfile = false;
+    const written = serializeEventFile(file);
+    expect((JSON.parse(written) as { event: { route: Record<string, unknown> } }).event.route).toHaveProperty("showRouteProfile", false);
+    const read = readEventFile(written);
+    if (!read.ok) throw new Error("the file did not read back");
+    expect(read.file.event.route.showRouteProfile).toBe(false);
+    expect(read.file.version).toBe(3);
+    // The checkpoints' own tick is a different key and is not touched by it.
+    expect(written).not.toContain("onProfile");
+  });
+
   it("refuses what is not one of ours, saying which of the five reasons it is", () => {
     const refusal = (raw: string) => {
       const read = readEventFile(raw);

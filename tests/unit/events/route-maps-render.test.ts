@@ -172,7 +172,8 @@ describe("BR-REQ-050-02 the editor's «Traseul» card (§718)", () => {
     const source = readFileSync(path.join(process.cwd(), "src/modules/content/events/ui/boxes/CourseBox.tsx"), "utf8");
     expect(source.indexOf('name="event.routeGarmin"')).toBeGreaterThan(source.indexOf('name="event.routeUrl"'));
     expect(source.indexOf('name="event.routeStrava"')).toBeGreaterThan(source.indexOf('name="event.routeGarmin"'));
-    expect(source).not.toContain("event.routeGpx");
+    // The upload's own input lives in «Linkuri și fișiere»; the course card only reads the saved file (§802, amended) to say there is none.
+    expect(source).not.toContain('name="event.routeGpx"');
     const links = readFileSync(path.join(process.cwd(), "src/modules/content/events/ui/boxes/LinksBox.tsx"), "utf8");
     expect(links.indexOf('name="event.routeGpx"')).toBeGreaterThan(0);
     expect(links.indexOf('name="event.routeGpx"')).toBeLessThan(links.indexOf("<LinkRowsEditor"));
