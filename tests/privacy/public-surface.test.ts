@@ -597,3 +597,20 @@ describe("BR-REQ-070-01 the public event query", () => {
     expect(JSON.stringify(row)).not.toContain("@");
   });
 });
+
+describe("§NNN what a race's public results may contain — a name only for a runner who ticked, nothing else about anybody", () => {
+  it("names no address, phone, document, health note, identity, note or registration id in its select, and leaves the typed name out of it", () => {
+    const source = readFileSync("src/modules/results/results.ts", "utf8");
+    const start = "export async function readPublicEventResults<";
+    const at = source.indexOf(start);
+    expect(at).toBeGreaterThan(-1);
+    const next = source.slice(at + start.length).search(/\n(export )?(async )?function /);
+    const body = next === -1 ? source.slice(at) : source.slice(at, at + start.length + next);
+    const code = body.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
+    // The select list it guards is in the slice: a slice that missed the query would prove nothing.
+    expect(code).toMatch(/\.select\(/);
+    for (const forbidden of ["email", "phone", "identityDocument", "healthNote", "emergency", "birthDate", "participantId", "declaration", "stravaUrl", "instagram", "note:", "displayName: eventResults"]) {
+      expect(code, forbidden).not.toContain(forbidden);
+    }
+  });
+});

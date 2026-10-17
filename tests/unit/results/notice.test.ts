@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
+import type { LegalDocumentBody } from "@/modules/legal-documents/domain/content-hash";
 import { describesResults, MERGE_FIELDS, mergeFieldsIn, mergeText, RESULTS_MERGE_FIELD } from "@/modules/legal-documents/domain/merge-fields";
 import { privacyNoticeEn, privacyNoticeRo } from "@/modules/legal-documents/templates/privacy-notice";
 import { termsEn, termsRo } from "@/modules/legal-documents/templates/terms";
@@ -13,7 +14,7 @@ import { ownerTasks } from "@/modules/diagnostics/owner-tasks";
  * in section 4 of the platform's template, in both languages; it is a known merge field with a legend entry, filled with the public
  * section's own name; a notice that does not name it does not describe the results.
  */
-const text = (body: { sections: { paragraphs: string[] }[] }) => body.sections.flatMap((section) => section.paragraphs).join("\n");
+const text = (body: LegalDocumentBody) => body.sections.flatMap((section) => section.paragraphs).join("\n");
 
 describe("§NNN the platform's notice describes the results", () => {
   it("names {{results}} in both languages, so the gate opens the day it is approved", () => {

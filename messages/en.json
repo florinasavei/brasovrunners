@@ -9957,7 +9957,7 @@
       "link": "Results",
       "registrationsLink": "The event's registrations",
       "intro": "Type the times, import them from a CSV and save everything at once. The places work themselves out.",
-      "introMore": "One line per runner, by race number. The places are overall, among the runner's sex and in their category; equal times share a place.",
+      "introMore": "One line per runner, by race number. Places are overall, by sex and by category; equal times share a place. A line with only a note means did not start.",
       "notRace": "Only a race has results. Group runs and the other events have none.",
       "notStarted": "The race has not started yet. You can type results already.",
       "summary": {

@@ -9957,7 +9957,7 @@
       "link": "Clasament",
       "registrationsLink": "Înscrierile evenimentului",
       "intro": "Scrie timpii, importă-i dintr-un CSV și salvează tot dintr-o dată. Locurile se calculează singure.",
-      "introMore": "Un rând pe alergător, după numărul de concurs. Locurile sunt în total, la sexul alergătorului și la categoria lui; timpurile egale împart locul.",
+      "introMore": "Un rând pe alergător, după numărul de concurs. Locurile sunt în total, la sex și la categorie; timpurile egale împart locul. Un rând cu doar o notă înseamnă neprezentat.",
       "notRace": "Doar o cursă are clasament. Alergările de grup și celelalte evenimente nu au.",
       "notStarted": "Cursa nu a început încă. Poți scrie rezultate de pe acum.",
       "summary": {
