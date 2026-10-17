@@ -14,6 +14,7 @@ vi.mock("next-intl/server", async () => {
 import type { Checkpoint } from "@/modules/event-checkpoints/domain/checkpoint";
 import { CHECKPOINT_GLYPH } from "@/modules/events/ui/glyphs";
 import EventCheckpoints from "@/modules/events/ui/EventCheckpoints";
+import { checkpointFinish, withCutoffClocks } from "@/modules/event-checkpoints/domain/start";
 
 /**
  * §757, §770, BR-REQ-011-01 — the table «Puncte de control» on the event page: the kilometre, the point,
@@ -111,6 +112,46 @@ describe("§757 the checkpoints' table on the event page", () => {
     expect(withLimit[1]).toContain("21,1 km");
     expect(withLimit[1]).toContain("Timp limită: 3 h · se închide la 12:00");
     expect(rowsOf(await render([point("a", 5)], NO_LIMIT))).toHaveLength(1);
+  });
+
+  // §757 amended (the owner, 2026-10-17: «Asta nu e corect pentru că încă nu știm exact la ce oră dăm startul cursei»): the page
+  // draws what the event gives it, through the same two functions the event page calls — so the test is the page's, not a copy of it.
+  describe("a race whose gun time is not set", () => {
+    const race = {
+      type: "RACE",
+      startsAt: new Date("2026-11-21T07:00:00Z"), // 09:00 in Bucharest: the meeting
+      raceStartsAt: null as Date | null,
+      endsAt: new Date("2026-11-21T09:00:00Z"), // two hours later
+      timezone: "Europe/Bucharest",
+      distanceMeters: 21_100,
+    };
+    const rows = [point("a", 5, { cutoffMinutes: 45 }), point("b", 12, { cutoffMinutes: 90 })];
+    const drawn = (event: typeof race, locale: "ro" | "en") => render(withCutoffClocks(rows, event), checkpointFinish(event), locale);
+
+    it("says «Timp limită: 2 h» on the finish and the duration on every point, with no «se închide la», in Romanian", async () => {
+      const found = rowsOf(await drawn(race, "ro"));
+      expect(found).toHaveLength(3);
+      expect(found[0]).toContain("Timp limită: 45 min");
+      expect(found[1]).toContain("Timp limită: 1 h 30 min");
+      expect(found[2]).toContain('data-testid="checkpoint-finish"');
+      expect(found[2]).toContain("Timp limită: 2 h");
+      for (const row of found) expect(row).not.toContain("se închide");
+    });
+
+    it("says the same in English: «Time limit: 2 h», never «closes at»", async () => {
+      const found = rowsOf(await drawn(race, "en"));
+      expect(found).toHaveLength(3);
+      expect(found[2]).toContain("Time limit: 2 h");
+      for (const row of found) expect(row).not.toContain("closes at");
+    });
+
+    it("says the clocks as soon as the gun time is set, in both languages", async () => {
+      const gun = { ...race, raceStartsAt: new Date("2026-11-21T08:00:00Z"), endsAt: new Date("2026-11-21T10:00:00Z") }; // 10:00 gun, 12:00 end
+      const found = rowsOf(await drawn(gun, "ro"));
+      expect(found[0]).toContain("Timp limită: 45 min · se închide la 10:45");
+      expect(found[2]).toContain("Timp limită: 2 h · se închide la 12:00");
+      expect(rowsOf(await drawn(gun, "en"))[2]).toContain("Time limit: 2 h · closes at 12:00");
+    });
   });
 
   it("shows the finish without a distance as a dash the eye sees and words a screen reader reads", async () => {

@@ -440,13 +440,14 @@ export type CheckpointRow =
       noteRo: string | null;
       noteEn: string | null;
     }
-  | { kind: "finish"; km: number | null; cutoffMinutes: number; cutoffClock: string };
+  | { kind: "finish"; km: number | null; cutoffMinutes: number; cutoffClock: string | null };
 
 /**
  * The table «Puncte de control» as rows (§757): the checkpoints by distance and — **the finish as the
  * last row when the event has a time limit**, its limit being the event's «Timp limită» in minutes and
- * the clock it closes at, the event's end on the event's clock (§770), at the route's length when the
- * event has one. Nothing at all with no checkpoints: the section is not drawn for a finish alone.
+ * the clock it closes at, the event's end on the event's clock (§770) — **null while the race's gun time is
+ * not set**, when the row says the duration alone (`start.ts#cutoffClockStart`) — at the route's length when
+ * the event has one. Nothing at all with no checkpoints: the section is not drawn for a finish alone.
  */
 export function checkpointRows(
   checkpoints: readonly Checkpoint[],
@@ -465,7 +466,7 @@ export function checkpointRows(
     noteRo: row.noteRo,
     noteEn: row.noteEn,
   }));
-  if (finish.limit && finish.minutes) rows.push({ kind: "finish", km: finish.km, cutoffMinutes: finish.minutes, cutoffClock: finish.limit });
+  if (finish.minutes) rows.push({ kind: "finish", km: finish.km, cutoffMinutes: finish.minutes, cutoffClock: finish.limit });
   return rows;
 }
 
