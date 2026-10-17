@@ -2648,8 +2648,8 @@
         },
         "profileSourceHelp": "The drawing comes from the event's GPX file, not from Strava: the site cannot read a Strava map. With a picture you put what you want on the strip, the food stations for example.",
         "profileImageSrc": "The profile picture",
-        "profileImageSrcHelp": "Recommended: a wide picture, placed whole, never cropped. With the figures beside the profile: {ratioBeside} to 1, that is {widthBeside} × {height} px at {dpi} dpi. Without them, or with none to show: {ratioAlone} to 1, that is {widthAlone} × {height} px.",
-        "showProfileFigures": "Show the distance and the elevation gain beside the profile",
+        "profileImageSrcHelp": "Recommended: a wide picture, placed whole, never cropped. With the figures at the right: {ratioBeside} to 1, that is {widthBeside} × {height} px at {dpi} dpi. Otherwise (under it, in the header, none): {ratioAlone} to 1, that is {widthAlone} × {height} px.",
+        "showProfileFigures": "Show the distance and the elevation gain",
         "showProfileFiguresHelp": "Ticked: the distance and the elevation gain print on the bib, where you choose below. Unticked: they do not, and the profile or the picture takes the whole width.",
         "profileFiguresPlace": "Where the figures stand",
         "profileFiguresPlaces": {
@@ -2657,7 +2657,7 @@
           "below": "Under the profile, on one line",
           "header": "In the header, under the date"
         },
-        "profileFiguresPlaceHelp": "Under the profile or in the header the figures take one line and the profile takes the whole width; with a picture in place of the header, they go under the profile.",
+        "profileFiguresPlaceHelp": "Under the profile or in the header, the profile takes the whole width. With a picture for the band (or the members' band) the figures go under it; a very long title can drop them from the header.",
         "profileOrientation": "The profile's orientation",
         "profileOrientations": {
           "normal": "Normal",
@@ -8672,7 +8672,7 @@
             },
             "profileSource": "Bib: where the profile comes from",
             "profileImageSrc": "Bib: profile picture",
-            "showProfileFigures": "Bib: distance and elevation gain beside the profile",
+            "showProfileFigures": "Bib: distance and elevation gain",
             "profileFiguresPlace": "Bib: where the profile's figures stand",
             "profileOrientation": "Bib: profile orientation",
             "emergencyLabel": "Bib: phone label",

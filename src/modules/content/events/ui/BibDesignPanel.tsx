@@ -35,7 +35,7 @@ import { CLUB_NAME, HEADER_CLEARANCE_PX, LOGO } from "@/theme/brand";
 import { bibPreviewUrl } from "@/modules/registrations/bib-design-query";
 import { BIB_FOOTER_TEXT_MAX, bibWebsiteHost } from "@/modules/registrations/bib-footer";
 import { BIB_PICTURE_PRINT_DPI, BIB_PICTURE_RATIO, type BibPictureSlot, bibProfilePictureExample, bibProfilePictureRatio } from "@/modules/registrations/bib-picture-frame";
-import { bibFiguresBeside } from "@/modules/registrations/bib-profile-row";
+import { bibFiguresBeside, bibHeaderCarriesWords } from "@/modules/registrations/bib-profile-row";
 import { readBibPictureFacts } from "@/modules/registrations/bib-pictures";
 import { env } from "@/shared/config/env";
 import { ACTION_ICONS } from "@/shared/ui/action-icons";
@@ -310,10 +310,12 @@ export default async function BibDesignPanel({
       : hasRouteGpx
         ? t("editor.bibDesign.profileSources.gpx")
         : t("editor.bibDesign.sectionSummary.gpxMissing");
+  // The same rule the drawing follows (`bibProfileRow`): «În antet» with a picture for a header stands under the profile.
+  const figuresPlace = design.profileFiguresPlace === "header" && !bibHeaderCarriesWords(design) ? "below" : design.profileFiguresPlace;
   const profileAside =
     words(
       profileWords,
-      design.showProfile && design.showProfileFigures && t(`editor.bibDesign.sectionSummary.figures.${design.profileFiguresPlace}`),
+      design.showProfile && design.showProfileFigures && t(`editor.bibDesign.sectionSummary.figures.${figuresPlace}`),
       bibEmergencyLine(design, "x") !== null && t("editor.bibDesign.sectionSummary.phone"),
     ) ||
     t("editor.bibDesign.sectionSummary.nothing");

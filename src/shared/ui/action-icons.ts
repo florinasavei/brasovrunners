@@ -181,7 +181,7 @@ export type ActionIconName =
   | "route"
   | "upright"
   | "turned"
-  // The tick beside them, «Arată distanța și diferența de nivel lângă profil» (§759): up and down, the gain.
+  // The tick beside them, «Arată distanța și diferența de nivel» (§759): up and down, the gain.
   | "profileFigures"
   // «Unde stau cifrele» (§804): at the profile's right, under it, or in the header under the date.
   | "figuresRight"

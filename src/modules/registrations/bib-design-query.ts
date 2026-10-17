@@ -82,11 +82,11 @@ export type BibDesignFormValues = {
   profileSource: string;
   /** The profile's picture (§759): its address, or null; never cropped. */
   profileImageSrc: string | null;
-  /** «Arată distanța și diferența de nivel lângă profil» (§759): on by default. */
+  /** «Arată distanța și diferența de nivel» (§759): on by default. */
   showProfileFigures: boolean;
-  /** «Orientarea profilului» (§759): `normal` or `turned`. */
   /** «Unde stau cifrele» (§804): `right`, `below` or `header`. */
   profileFiguresPlace: string;
+  /** «Orientarea profilului» (§759): `normal` or `turned`. */
   profileOrientation: string;
   /** «Punctele de control pe profil» (§757): on by default, drawn only with the profile and the event's checkpoints. */
   showCheckpoints: boolean;

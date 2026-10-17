@@ -229,7 +229,7 @@ describe("§249 the form, read the same way for the save and for the preview", (
       // The unticked upside-down box posts nothing, which reads off (§750); so does the checkpoints' (§757).
       emergencyUpsideDown: false,
       showCheckpoints: false,
-      // «Arată distanța și diferența de nivel lângă profil» unposted is off too (§759), and so is the scale's (§804).
+      // «Arată distanța și diferența de nivel» unposted is off too (§759), and so is the scale's (§804).
       showProfileFigures: false,
       showProfileScale: false,
     });

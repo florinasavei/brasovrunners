@@ -447,7 +447,7 @@ export const bibDesignSchema = z
     /** «O poză încărcată»'s picture, one this site stored (§759); fitted whole, never cropped. */
     profileImageSrc: storedPicture,
     /**
-     * «Arată distanța și diferența de nivel lângă profil» (§759): **on by default**, the figures at the
+     * «Arată distanța și diferența de nivel» (§759): **on by default**, the figures at the
      * strip's right as §750 drew them; off, the chart or the picture takes the strip's whole width (the
      * owner: with his own picture «o să-mi apară mie ce vreau acolo»).
      */
