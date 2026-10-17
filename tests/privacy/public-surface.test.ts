@@ -601,7 +601,7 @@ describe("BR-REQ-070-01 the public event query", () => {
   });
 });
 
-describe("§NNN what a race's public results may contain — a name only for a runner who agreed, nothing else about anybody", () => {
+describe("§810 what a race's public results may contain — a name only for a runner who agreed, nothing else about anybody", () => {
   /** The code of readPublicEventResults, without its comments: the select list it guards and the mapping of its rows. */
   function publicReadCode(): string {
     const source = readFileSync("src/modules/results/results.ts", "utf8");

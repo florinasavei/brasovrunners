@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 
 /**
- * What a race's stored results were when the page was drawn (§NNN): a short fingerprint of every row's own columns, posted back in
+ * What a race's stored results were when the page was drawn (§808): a short fingerprint of every row's own columns, posted back in
  * the form's hidden box. «Salvează tot clasamentul» writes the list as the boxes show it — rows left out are deleted — so a form
  * opened before another session saved would otherwise put the old rows back over the new ones, or delete the ones the other
  * session added. The save compares this with the rows as they are stored by then and, when they differ, refuses with CONFLICT
@@ -20,7 +20,7 @@ export type FingerprintedResult = {
   gunTimeMs: number | null;
   chipTimeMs: number | null;
   note: string | null;
-  /** When the staff recorded that a typed runner agreed to appear by name (§NNN); absent or null for none. */
+  /** When the staff recorded that a typed runner agreed to appear by name (§810); absent or null for none. */
   nameAgreedAt?: Date | null;
 };
 

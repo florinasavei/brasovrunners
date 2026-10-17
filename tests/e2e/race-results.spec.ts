@@ -5,7 +5,7 @@ import { confirmDialog } from "./support/confirm";
 import { hydrated, signIn } from "./support/featured-event";
 
 /**
- * §NNN — «Clasament», a race's results (BR-REQ-050-02, BR-REQ-039-01, BR-REQ-053-01, BR-REQ-060-01), walked as the Administrator does at 320 pixels
+ * §808 — «Clasament», a race's results (BR-REQ-050-02, BR-REQ-039-01, BR-REQ-053-01, BR-REQ-060-01), walked as the Administrator does at 320 pixels
  * and on a desk: open the page of a race that has started, import a small CSV (the boxes fill, nothing is saved), write the name of the number no
  * registration holds, press the ONE «Salvează tot clasamentul», read the places it gave, delete one result (it asks first), tick «Clasamentul e
  * public pe pagina evenimentului» — refused or accepted according to the privacy notice the database holds — and open the file. The Organizer
@@ -84,7 +84,7 @@ async function textNamesResults(key: "PRIVACY_NOTICE" | "TERMS"): Promise<boolea
   }
 }
 
-/** Whether the staff's record that a typed runner agreed to appear by name is on the row of this race number, and who recorded it (§NNN). */
+/** Whether the staff's record that a typed runner agreed to appear by name is on the row of this race number, and who recorded it (§810). */
 async function agreementOf(eventId: string, bib: number): Promise<{ recorded: boolean; byStaff: boolean }> {
   const client = new pg.Client({ connectionString: databaseUrl() });
   await client.connect();
@@ -107,7 +107,7 @@ async function noHorizontalScroll(page: Page) {
   expect(overflow).toBeLessThanOrEqual(1);
 }
 
-test.describe("§NNN a race's results", () => {
+test.describe("§808 a race's results", () => {
   // Toasts queue, one read after the other: a later sentence waits for the earlier one to hide.
   test.describe.configure({ timeout: 240_000 });
 

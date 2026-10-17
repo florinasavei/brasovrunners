@@ -1,5 +1,5 @@
 /**
- * The names the race's «Clasament» page posts under (§NNN): one form for every runner, so every box carries the row it belongs to.
+ * The names the race's «Clasament» page posts under (§808): one form for every runner, so every box carries the row it belongs to.
  *
  * Two kinds of row, both in the one form of «Salvează tot clasamentul»:
  *
@@ -15,7 +15,7 @@
 
 /**
  * The boxes of a registered runner's row and, with the first four and `agreed`, of a typed runner's. `agreed` is the one tick box of a
- * line — «A acceptat să apară cu numele în clasament» (§NNN) — posted as `on` when ticked and not at all when not; a registered line
+ * line — «A acceptat să apară cu numele în clasament» (§810) — posted as `on` when ticked and not at all when not; a registered line
  * draws none and a forged one is ignored.
  */
 export const RESULT_ROW_BOXES = ["bib", "name", "sex", "birthDate", "time", "status", "chip", "note", "agreed"] as const;
@@ -78,7 +78,7 @@ export function postedResultRows(entries: Iterable<readonly [string, unknown]>):
     const box = match[3] as ResultRowBox;
     // A registered row's number is its key's: a forged `r[101].bib` cannot move the row to another runner.
     if (kind === "r" && box === "bib") continue;
-    // The agreement is a typed line's: a registered runner's name follows their own tick, never a staff mark (§NNN).
+    // The agreement is a typed line's: a registered runner's name follows their own tick, never a staff mark (§810).
     if (kind === "r" && box === "agreed") continue;
     row[box] = value;
   }

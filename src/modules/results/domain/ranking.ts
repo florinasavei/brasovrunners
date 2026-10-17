@@ -2,7 +2,7 @@ import { categoryKeyOf } from "@/modules/registrations/statistics";
 import type { SexChoice } from "@/modules/registrations/domain/sex";
 
 /**
- * Race results, part 1 (§NNN): what a result is and how a list of them is ranked.
+ * Race results, part 1 (§808): what a result is and how a list of them is ranked.
  *
  * Pure — no database, no React, no catalogue. The service (`../results.ts`) reads the rows and the
  * runners' answers, asks this module for the positions and writes them; a test asks the same function.

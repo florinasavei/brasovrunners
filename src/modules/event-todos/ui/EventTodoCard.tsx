@@ -240,7 +240,7 @@ export default async function EventTodoCard({ locale, eventId, computed, items, 
     summary.own.top,
   );
 
-  /** Where the results row leads (§NNN): the race's own results page, not a card of this editor. */
+  /** Where the results row leads (§809): the race's own results page, not a card of this editor. */
   const resultsPath = getPathname({ locale, href: { pathname: "/admin/events/[id]/results", params: { id: eventId } } });
 
   /** «Lipsește pe pagină»: the whole row is the link to the card that fills the field — or, for the results, to the page that does. */

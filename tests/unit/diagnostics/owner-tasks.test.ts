@@ -118,7 +118,7 @@ describe("owner tasks", () => {
     }
   });
 
-  /** §NNN — a race's published results wait on the club's notice: open until it names `{{results}}`, never blocking, and no row without a notice at all. */
+  /** §808 — a race's published results wait on the club's notice: open until it names `{{results}}`, never blocking, and no row without a notice at all. */
   it("keeps the results row open while the notice in force does not describe them, and never blocking", () => {
     expect(stateOf({ ...LAUNCHED, resultsDescribed: false }, "resultsNotice")).toBe("open");
     expect(stateOf(LAUNCHED, "resultsNotice")).toBe("done");
@@ -130,7 +130,7 @@ describe("owner tasks", () => {
     }
   });
 
-  /** §NNN — the terms' row: open until the terms in force name `{{results}}` too, never blocking, and no row without terms at all. */
+  /** §808 — the terms' row: open until the terms in force name `{{results}}` too, never blocking, and no row without terms at all. */
   it("keeps the results terms row open while the terms in force do not describe them, and never blocking", () => {
     expect(stateOf({ ...LAUNCHED, resultsTermsDescribed: false }, "resultsTerms")).toBe("open");
     expect(stateOf(LAUNCHED, "resultsTerms")).toBe("done");

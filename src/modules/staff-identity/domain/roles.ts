@@ -729,7 +729,7 @@ export function canManageVolunteers(subject: StaffSubject): boolean {
 }
 
 /**
- * **A race's results (§NNN)** — «Clasament»: entering the times, importing them from a CSV and ranking them.
+ * **A race's results (§808)** — «Clasament»: entering the times, importing them from a CSV and ranking them.
  * Whoever reads the participant list (`canReadRegistrations`): **the Organizer, the Administrator and the
  * Superadministrator**, written as that function so moving the line moves both. Like the volunteers (§754) and
  * unlike a registration (§289), the Organizer writes here too: a result is the race's own record, typed by whoever
@@ -742,7 +742,7 @@ export function canEnterResults(subject: StaffSubject): boolean {
 }
 
 /**
- * **Publishing a race's results (§NNN)** — «Clasamentul e public pe pagina evenimentului»: the disclosure itself,
+ * **Publishing a race's results (§808)** — «Clasamentul e public pe pagina evenimentului»: the disclosure itself,
  * like the public participant list's switch (§201) and unlike the entering. **The Administrator and the
  * Superadministrator** alone (`canManageRegistrations`: whoever decides what the club tells the public about the
  * people it registered); the Organizer enters and reads the results and cannot make them public. Asserted in the

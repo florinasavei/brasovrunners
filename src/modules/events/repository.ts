@@ -257,7 +257,7 @@ const PUBLIC_COLUMNS = {
   // «Clubul pe lista publică» (§753): what the list's «Club» column says — read by `StartList` through
   // `publicListClubOf`, and by the cached reads that make its rows.
   publicListClub: events.publicListClub,
-  // «Clasamentul e public pe pagina evenimentului» (§NNN): one boolean, so the listing's «Clasament» chip and the event page know
+  // «Clasamentul e public pe pagina evenimentului» (§809): one boolean, so the listing's «Clasament» chip and the event page know
   // whether to ask for the results at all, with no query of their own. Never a time, a name or a row of the results. It is true only
   // when the Administrator's tick is on **and** the race has at least one result row: a published race with an empty sheet draws no
   // section (`ResultsSection`), so it must not wear a chip that links to one — the chip, the hold and the section read this one fact.

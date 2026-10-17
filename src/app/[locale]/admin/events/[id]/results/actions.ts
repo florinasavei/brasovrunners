@@ -19,7 +19,7 @@ import { isUuid } from "@/shared/ids";
 import { RESULTS_CSV_MAX_CHARS } from "@/modules/results/domain/import-csv";
 
 /*
-  A race's results (§NNN): the Server Actions behind «Clasament». Each is a plain form that works with scripts off; every one asks
+  A race's results (§808): the Server Actions behind «Clasament». Each is a plain form that works with scripts off; every one asks
   the service, which asserts the role again (the Organizer and the Administrators enter, import and delete; only the Administrators
   publish — BR-REQ-060-01), so the buttons the page draws are a courtesy.
 */

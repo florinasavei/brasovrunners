@@ -12,7 +12,7 @@ import { EXTRA_ROWS, RESULT_ROW_BOXES, resultBox, type ResultRowBox, typedRowCou
 import { RESULT_NAME_MAX, RESULT_NOTE_MAX } from "../domain/ranking";
 
 /**
- * The lines of «Clasament»'s one form (§NNN): a line per runner, each with its boxes — «Timp», «Status», «Timp cip», «Notă» — named by
+ * The lines of «Clasament»'s one form (§808): a line per runner, each with its boxes — «Timp», «Status», «Timp cip», «Notă» — named by
  * the line's key (`rows.ts`), all posted by the page's one «Salvează tot clasamentul».
  *
  * **Native boxes, not MUI's.** A race has a few hundred runners and a line is four to eight boxes: a `TextField` each is a thousand
@@ -53,7 +53,7 @@ export type ResultWords = {
   addRow: string;
   /** The title of a typed runner's line, and its hint. */
   typedRow: string;
-  /** «A acceptat să apară cu numele în clasament» — the typed line's tick (§NNN), and the line of help under it. */
+  /** «A acceptat să apară cu numele în clasament» — the typed line's tick (§810), and the line of help under it. */
   agreed: string;
   agreedHelp: string;
   /** «fără loc încă» in place of a position, on a line with no result yet. */
@@ -353,7 +353,7 @@ function TypedLinesOf({ lines, words }: { lines: readonly TypedLine[]; words: Re
                 <LineBox name={box("name")} caption={words.name} label={`${words.name}: ${runner}`} initial={initial.name} maxLength={RESULT_NAME_MAX} testId="typed-name" />
                 <LineBox name={box("sex")} caption={words.sex} label={`${words.sex}: ${runner}`} initial={initial.sex} kind="select" options={words.sexOptions} />
                 <LineBox name={box("birthDate")} caption={words.birthDate} label={`${words.birthDate}: ${runner}`} initial={initial.birthDate} placeholder={words.birthDatePlaceholder} maxLength={10} inputMode="numeric" />
-                {/* The agreement the person gave the staff (§NNN): off unless ticked, posted with the line, back as posted after a refusal. */}
+                {/* The agreement the person gave the staff (§810): off unless ticked, posted with the line, back as posted after a refusal. */}
                 <Box sx={{ gridColumn: "1 / -1" }} data-testid="typed-agreed">
                   <CheckboxField name={box("agreed")} defaultChecked={line?.agreed ?? false} help={words.agreedHelp}>
                     {words.agreed}

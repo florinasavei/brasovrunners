@@ -1,7 +1,7 @@
 import { splitCategoryKey } from "./domain/ranking";
 
 /**
- * A stored category (`FEMALE:from30`) in words (§NNN): «Feminin, 30-39 ani» — the Excel's own footer's words (§787,
+ * A stored category (`FEMALE:from30`) in words (§808): «Feminin, 30-39 ani» — the Excel's own footer's words (§787,
  * `Admin.registrations.statistics`: `sexFemale`, `sexMale`, `bandUnder18` … `bandFrom60`, joined by `category`), so a race's
  * category reads the same on the results page, in the CSV and in the club's statistics.
  *

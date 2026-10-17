@@ -17,7 +17,7 @@ import { type CategoryGlyph, rowMatches } from "./results-filter";
 const CATEGORY_GLYPH = { all: GroupsIcon, female: FemaleIcon, male: MaleIcon } as const satisfies Record<CategoryGlyph, unknown>;
 
 /**
- * The «Clasament» section's filter: a chip per category present and a box for the race number (§NNN, race results part 2).
+ * The «Clasament» section's filter: a chip per category present and a box for the race number (§809, race results part 2).
  *
  * **Why this is a client island, and the only one.** The table is a Server Component's, drawn whole, so it reads in full with no
  * script and a search engine or a phone on a bad connection gets every row. Narrowing it as someone types is the one thing a

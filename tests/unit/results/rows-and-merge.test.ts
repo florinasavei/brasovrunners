@@ -3,10 +3,10 @@ import { mergeImportedRows } from "@/modules/results/import-merge";
 import { postedResultRows, registeredRowKey, resultBox, typedRowCountOf, typedRowKey } from "@/modules/results/rows";
 
 /**
- * §NNN, BR-REQ-050-02 — the names the one form posts under, and what «Importă din CSV» does to the boxes: it fills them and saves nothing,
+ * §808, BR-REQ-050-02 — the names the one form posts under, and what «Importă din CSV» does to the boxes: it fills them and saves nothing,
  * a number the table has a line for gets its times in that line, an unknown number becomes a new typed row with the name left to write.
  */
-describe("§NNN the form's box names", () => {
+describe("§808 the form's box names", () => {
   it("spells a registered runner's boxes by the race number and a typed one's by its place", () => {
     expect(resultBox(registeredRowKey(101), "time")).toBe("r[101].time");
     expect(resultBox(typedRowKey(2), "name")).toBe("n[2].name");
@@ -55,7 +55,7 @@ describe("§NNN the form's box names", () => {
   });
 });
 
-describe("§NNN mergeImportedRows", () => {
+describe("§808 mergeImportedRows", () => {
   const posted = (entries: Record<string, string>) => Object.fromEntries(Object.entries(entries).map(([name, value]) => [name, [value]]));
   const row = (bibNumber: number, over: Partial<Parameters<typeof mergeImportedRows>[1][number]> = {}) => ({
     bibNumber,
@@ -121,7 +121,7 @@ describe("§NNN mergeImportedRows", () => {
   });
 });
 
-describe("§NNN mergeImportedRows and the agreement tick", () => {
+describe("§810 mergeImportedRows and the agreement tick", () => {
   const posted = (entries: Record<string, string>) => Object.fromEntries(Object.entries(entries).map(([name, value]) => [name, [value]]));
   const imported = (bibNumber: number) => ({ bibNumber, status: "FINISHED" as const, gunTimeMs: 45 * 60_000, chipTimeMs: null, matched: false, name: null });
 

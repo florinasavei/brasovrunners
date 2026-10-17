@@ -54,17 +54,17 @@ export type DomainErrorCode =
   | "VOLUNTEER_GUARDIAN_NO_EMAIL"
   // The guardian's link or paper record while the privacy notice and the agreement in force do not both describe minors (§768).
   | "VOLUNTEER_MINORS_CLOSED"
-  // One row of the race's results refused (§NNN): the sentence names the runner, the boxes name what to correct, and nothing of the save was written.
+  // One row of the race's results refused (§808): the sentence names the runner, the boxes name what to correct, and nothing of the save was written.
   | "RESULT_ROW_INVALID"
-  // The CSV file of results cannot be read (§NNN): the sentence names the line and what is wrong with it; nothing was imported.
+  // The CSV file of results cannot be read (§808): the sentence names the line and what is wrong with it; nothing was imported.
   | "RESULTS_IMPORT_INVALID"
-  // «Clasamentul e public» ticked while the privacy notice in force does not describe the results (§NNN, `{{results}}`): approve one first.
+  // «Clasamentul e public» ticked while the privacy notice in force does not describe the results (§808, `{{results}}`): approve one first.
   | "RESULTS_NOTICE"
-  // «Clasamentul e public» ticked while the terms in force do not describe the results (§NNN): the older terms promised to ask separately first.
+  // «Clasamentul e public» ticked while the terms in force do not describe the results (§808): the older terms promised to ask separately first.
   | "RESULTS_TERMS"
-  // «Clasamentul e public» ticked before the race has started (§NNN): the notice says the results appear only after the race. Entering them stays open.
+  // «Clasamentul e public» ticked before the race has started (§808): the notice says the results appear only after the race. Entering them stays open.
   | "RESULTS_NOT_STARTED"
-  // Results entered, imported or published for an event that is not a race (§NNN): the page says so, and so does the save.
+  // Results entered, imported or published for an event that is not a race (§808): the page says so, and so does the save.
   | "RESULTS_NOT_OPEN";
 
 export class DomainError extends Error {

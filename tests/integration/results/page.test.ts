@@ -11,7 +11,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 import { AFTER_THE_RACE, approvePrivacyNotice, approveResultsTexts, approveTerms, createRace, person, registerRunner, resetNoticeCounter } from "../../helpers/results";
 
 /**
- * §NNN — «Clasament» as the server draws it, in both languages (BR-REQ-050-02, BR-REQ-041-01 criterion 6, BR-REQ-060-01): a line per registered runner
+ * §808 — «Clasament» as the server draws it, in both languages (BR-REQ-050-02, BR-REQ-041-01 criterion 6, BR-REQ-060-01): a line per registered runner
  * with its boxes and its place, the runners typed by hand and one blank line, the CSV box above the table, ONE «Salvează tot clasamentul», each line's
  * «Șterge» naming the page's one hidden delete form, the Administrator's tick with the gate's sentence and the link to «Documente legale», the
  * file's link, and nothing at all for a group run or a role that may not.
@@ -101,7 +101,7 @@ const strip = (html: string) => html.replace(/<style[\s\S]*?<\/style>/g, "");
 const text = (html: string) => strip(html).replace(/<[^>]+>/g, " ").replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&#x27;/g, "'").replace(/\s+/g, " ");
 const inputValue = (html: string, name: string) => new RegExp(`<input[^>]*name="${name.replace(/[[\]]/g, "\\$&")}"[^>]*>`).exec(html)?.[0].match(/value="([^"]*)"/)?.[1];
 
-describe("§NNN the page, in Romanian", () => {
+describe("§808 the page, in Romanian", () => {
   it("draws a line per registered runner, checked-in first, each with its four boxes named by its race number and its saved values", async () => {
     await runners();
     const html = await render();
@@ -356,7 +356,7 @@ describe("§NNN the page, in Romanian", () => {
   });
 });
 
-describe("§NNN the page, in English", () => {
+describe("§808 the page, in English", () => {
   it("says the same in English: the lines, the CSV box, the one save, the tick and the gate", async () => {
     await runners();
     const html = await render(raceId, "en");
@@ -371,7 +371,7 @@ describe("§NNN the page, in English", () => {
   });
 });
 
-describe("§NNN who may open it", () => {
+describe("§808 who may open it", () => {
   it("answers a group run with the sentence that says it has no results, and draws no form", async () => {
     const group = await createRace(db, { type: "GROUP_RUN" });
     const html = await render(group.id);
@@ -399,7 +399,7 @@ describe("§NNN who may open it", () => {
   });
 });
 
-describe("§NNN the agreement tick on the typed lines", () => {
+describe("§810 the agreement tick on the typed lines", () => {
   /** The checkbox input of a box name, as drawn. */
   const checkbox = (html: string, name: string) => new RegExp(`<input[^>]*name="${name.replace(/[[\]]/g, "\\$&")}"[^>]*>`).exec(html)?.[0] ?? "";
   const isChecked = (tag: string) => /\schecked(=|\s|\/|>)/.test(tag);

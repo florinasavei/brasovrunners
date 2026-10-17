@@ -11,7 +11,7 @@ import type { StaffRole } from "@/modules/staff-identity/domain/roles";
 import type { TestDatabase } from "./db";
 
 /**
- * The fixtures the race-results tests share (§NNN): a race, runners who registered with a number, the staff of every role, and the
+ * The fixtures the race-results tests share (§808): a race, runners who registered with a number, the staff of every role, and the
  * privacy notice in force — the platform's own (it names `{{results}}`) or an older one that does not.
  */
 

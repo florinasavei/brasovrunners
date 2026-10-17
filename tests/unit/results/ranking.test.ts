@@ -3,7 +3,7 @@ import { categoryKeyOf, STATISTICS_AGE_BANDS } from "@/modules/registrations/sta
 import { type Rankable, rankResults, RESULT_STATUSES, splitCategoryKey } from "@/modules/results/domain/ranking";
 
 /**
- * §NNN, BR-REQ-050-02 — the rankings a save stores: overall among the finishers by gun time, by sex, by category (the Excel's
+ * §808, BR-REQ-050-02 — the rankings a save stores: overall among the finishers by gun time, by sex, by category (the Excel's
  * own bands, §787). Ties share the position and the next one skips; a runner who did not finish has none; a missing answer is
  * never guessed into a category.
  */
@@ -16,7 +16,7 @@ const runner = (bibNumber: number, gunMinutes: number | null, sex: Rankable["sex
   ageOnRaceDay,
 });
 
-describe("§NNN rankResults — overall", () => {
+describe("§808 rankResults — overall", () => {
   it("orders the finishers by gun time, fastest first", () => {
     const ranked = rankResults([runner(3, 50, "MALE", 30), runner(1, 40, "MALE", 30), runner(2, 45, "FEMALE", 30)]);
     expect([1, 2, 3].map((bib) => ranked.get(bib)?.positionOverall)).toEqual([1, 2, 3]);
@@ -48,7 +48,7 @@ describe("§NNN rankResults — overall", () => {
   });
 });
 
-describe("§NNN rankResults — by sex", () => {
+describe("§808 rankResults — by sex", () => {
   it("counts each sex apart, ties sharing as overall does", () => {
     const ranked = rankResults([runner(1, 40, "MALE", 30), runner(2, 41, "FEMALE", 30), runner(3, 42, "MALE", 30), runner(4, 42, "FEMALE", 30), runner(5, 50, "FEMALE", 30)]);
     expect([1, 3].map((bib) => ranked.get(bib)?.positionSex)).toEqual([1, 2]);
@@ -62,7 +62,7 @@ describe("§NNN rankResults — by sex", () => {
   });
 });
 
-describe("§NNN rankResults — by category, the statistics' own bands", () => {
+describe("§808 rankResults — by category, the statistics' own bands", () => {
   it("is the sex and the band of the age on the race's day", () => {
     const ranked = rankResults([runner(1, 40, "FEMALE", 29), runner(2, 41, "FEMALE", 30), runner(3, 42, "FEMALE", 39), runner(4, 43, "FEMALE", 40), runner(5, 44, "MALE", 30)]);
     expect([1, 2, 3, 4, 5].map((bib) => ranked.get(bib)?.categoryKey)).toEqual(["FEMALE:from18", "FEMALE:from30", "FEMALE:from30", "FEMALE:from40", "MALE:from30"]);
@@ -91,7 +91,7 @@ describe("§NNN rankResults — by category, the statistics' own bands", () => {
   });
 });
 
-describe("§NNN the closed set and the stored key", () => {
+describe("§808 the closed set and the stored key", () => {
   it("offers the four states in the order the select does", () => {
     expect(RESULT_STATUSES).toEqual(["FINISHED", "DNF", "DNS", "DSQ"]);
   });

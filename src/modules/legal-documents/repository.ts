@@ -377,7 +377,7 @@ export async function noticeDescribesVolunteers<T extends Record<string, unknown
 }
 
 /**
- * Whether the privacy notice in force describes a race's published results (§NNN, `describesResults`) — in every
+ * Whether the privacy notice in force describes a race's published results (§808, `describesResults`) — in every
  * language, like `noticeDescribesVolunteers`: one list serves both pages, and a reader in either was told only what
  * their language's notice says. For `setResultsPublished`, which asks again at every press, and `/admin/tasks`; the
  * event page reads the cached twin (`cachedResultsDescribed`).
@@ -507,7 +507,7 @@ export async function termsDescribeRefusal<T extends Record<string, unknown>>(db
 }
 
 /**
- * Whether the terms in force describe a race's published results (§NNN, `describesResults` read on the terms: they name
+ * Whether the terms in force describe a race's published results (§808, `describesResults` read on the terms: they name
  * `{{results}}`) — in every language, like the notice's fields: a runner accepted the terms in their own language, and the older
  * ones promised «Rezultate cu nume nu publicăm încă; când o vom face, te vom întreba separat». The second gate of
  * `setResultsPublished` beside the notice's, with `/admin/tasks`' row `resultsTerms`; the event page reads the cached twin. False
@@ -601,7 +601,7 @@ export async function findFirstStatesNoticeVersion<T extends Record<string, unkn
 
 /**
  * The first approved, not withdrawn privacy notice whose body — in **every** language — names a merge field (`describes`), or null.
- * One reading for the list's states (§421) and a race's results (§NNN), so the two lines cannot be drawn two ways; the same
+ * One reading for the list's states (§421) and a race's results (§808), so the two lines cannot be drawn two ways; the same
  * assumption holds for both (see `findFirstStatesNoticeVersion`): once a version names the field, no later one drops it.
  */
 async function findFirstNoticeVersionDescribing<T extends Record<string, unknown>>(db: Database<T>, describes: (body: unknown) => boolean): Promise<number | null> {
@@ -625,7 +625,7 @@ async function findFirstNoticeVersionDescribing<T extends Record<string, unknown
 
 /**
  * The lowest version of an approved, not withdrawn privacy notice that describes a race's published results in **every** language
- * (`describesResults`), or null when none does — `findFirstStatesNoticeVersion`'s twin for the results (§NNN, the §421 rule).
+ * (`describesResults`), or null when none does — `findFirstStatesNoticeVersion`'s twin for the results (§808, the §421 rule).
  *
  * The line between two kinds of consent. A runner who ticked «Vreau să apar pe lista de participanți & rezultate» under a notice
  * that said «Rezultate cu nume nu publicăm încă» (and under terms that promised to ask separately first) agreed to a list, not to a

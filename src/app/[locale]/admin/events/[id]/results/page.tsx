@@ -59,7 +59,7 @@ export const metadata: Metadata = { robots: { index: false, follow: false } };
 const BANNER_ERRORS = ["FORBIDDEN", "NOT_FOUND", "RESULTS_NOT_OPEN", "RESULTS_NOTICE", "RESULTS_TERMS", "RESULTS_NOT_STARTED"] as const;
 
 /**
- * «Clasament» (`DECISIONS.md` §NNN; the owner, 2026-10-17: «Aș vrea să pot pune și clasament la final după cursă»): one race's results, on
+ * «Clasament» (`DECISIONS.md` §808; the owner, 2026-10-17: «Aș vrea să pot pune și clasament la final după cursă»): one race's results, on
  * a page of their own under the event like its bibs and its messages — the event editor is long enough, and its «Înscrieri» card links here.
  *
  * ONE form, ONE «Salvează tot clasamentul» (§791's model): above the lines, «Importă din CSV» — a file or pasted text whose rows fill the

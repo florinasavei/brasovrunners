@@ -295,7 +295,7 @@ export default async function PersonDataPage({ params, searchParams }: Props) {
                 )}
               </Box>
               <Divider />
-              {/* The results entered for this person's registrations (§NNN): every column, the positions and the category as stored. */}
+              {/* The results entered for this person's registrations (§808): every column, the positions and the category as stored. */}
               <Box component="section" data-testid="person-results">
                 <Typography variant="h3" sx={{ fontSize: "1rem", mb: 1 }}>
                   {t("person.results", { count: data.results.length })}

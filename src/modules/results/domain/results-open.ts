@@ -14,7 +14,7 @@ export type ResultsOpenEvent = {
 };
 
 /**
- * Whether an event's published results are **on show** at `now` (§NNN, race results part 2): the cheap half of the rule
+ * Whether an event's published results are **on show** at `now` (§809, race results part 2): the cheap half of the rule
  * `readPublicEventResults` applies — a race, the Administrator's tick, the race has started, the public list's period has not
  * passed (§421). Pure, so the listing's «Clasament» chip and the page's holds read the very test the page's section does,
  * never a second opinion.

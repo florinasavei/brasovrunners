@@ -11,7 +11,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 import { approvePrivacyNotice, approveResultsTexts, approveTerms, createRace, person, registerRunner, resetNoticeCounter } from "../../helpers/results";
 
 /**
- * §NNN — «Clasament»'s Server Actions as the page posts them (BR-REQ-050-02, BR-REQ-060-01): the one «Salvează tot clasamentul» (saved, refused on
+ * §808 — «Clasament»'s Server Actions as the page posts them (BR-REQ-050-02, BR-REQ-060-01): the one «Salvează tot clasamentul» (saved, refused on
  * the first bad row with the runner and the problem in the club's words, refused when the form is stale), the import that only fills the boxes,
  * the row's own delete, and the Administrator's tick behind the notice's gate. The session, the cookies and navigation are
  * `event-todos.test.ts`'s stand-ins.
@@ -87,7 +87,7 @@ async function post(action: (previous: FormOutcome | null, form: FormData) => Pr
 const stored = () => db.select().from(eventResults).where(eq(eventResults.eventId, raceId)).orderBy(eventResults.bibNumber);
 const outcome = (value: Awaited<ReturnType<typeof post>>) => value as FormOutcome;
 
-describe("§NNN «Salvează tot clasamentul»", () => {
+describe("§808 «Salvează tot clasamentul»", () => {
   it("saves every line posted, then goes back to the page with the toast's word", async () => {
     expect(await post(saveEventResultsAction, form({ "r[101].time": "50:00", "r[101].status": "", "r[102].time": "45:12", "r[102].note": "bine" }))).toBe("redirected");
     expect((await stored()).map((row) => [row.bibNumber, row.status, row.gunTimeMs, row.note, row.positionOverall])).toEqual([
@@ -149,7 +149,7 @@ describe("§NNN «Salvează tot clasamentul»", () => {
   });
 });
 
-describe("§NNN «Importă din CSV» fills the boxes and saves nothing", () => {
+describe("§808 «Importă din CSV» fills the boxes and saves nothing", () => {
   const posted = (extra: Record<string, string> = {}) =>
     form({ intent: "import", "r[101].time": "", "r[101].status": "", "r[101].chip": "", "r[101].note": "", "r[102].time": "", "r[102].status": "", "r[102].chip": "", "r[102].note": "ceva", ...extra });
 
@@ -215,7 +215,7 @@ describe("§NNN «Importă din CSV» fills the boxes and saves nothing", () => {
   });
 });
 
-describe("§NNN the row's own delete", () => {
+describe("§808 the row's own delete", () => {
   it("deletes the result of the number posted and goes back; a number with no result goes back with the code", async () => {
     await post(saveEventResultsAction, form({ "r[101].time": "50:00", "r[102].time": "45:00" }));
     state.redirected.length = 0;
@@ -236,7 +236,7 @@ describe("§NNN the row's own delete", () => {
   });
 });
 
-describe("§NNN the Administrator's tick behind the notice's gate", () => {
+describe("§808 the Administrator's tick behind the notice's gate", () => {
   it("refuses it ticked while the notice does not describe the results, and comes back unticked", async () => {
     const result = outcome(await post(setResultsPublishedAction, form({ published: "on" })));
     expect(result.error).toBe("RESULTS_NOTICE");
@@ -281,7 +281,7 @@ describe("§NNN the Administrator's tick behind the notice's gate", () => {
   });
 });
 
-describe("§NNN «Adaugă un alergător neînscris» and the toast of a save that only moved places", () => {
+describe("§808 «Adaugă un alergător neînscris» and the toast of a save that only moved places", () => {
   it("answers a script-less press with the boxes as they stand and one blank typed line more, asked for again by the next press", async () => {
     const first = outcome(await post(saveEventResultsAction, form({ intent: "addRow", "r[101].time": "50:00", "n[0].bib": "900", "n[0].name": "Ion Vasile", "n[0].time": "49:00" })));
     expect(first.error).toBeUndefined();

@@ -32,7 +32,7 @@ import { missingForPublish, storedPublishReader, type StoredPublishTranslation }
  * - a programme for a hike, a coffee or a meetup: only a race is expected to have timed rows.
  *
  * An event that is over, cancelled or archived has nothing left to do for its page, so it has no
- * computed rows (`isOver`); the club's own typed lines stay. **One exception, `results`** (§NNN, race results part 2): a race
+ * computed rows (`isOver`); the club's own typed lines stay. **One exception, `results`** (§809, race results part 2): a race
  * that is over and whose «Clasament» is not published has something left to do — publish it — for as long as the public list's
  * period (§421) lasts, after which the page could not show it anyway.
  */
@@ -71,7 +71,7 @@ export type PageTodoAnchor =
   | "box-registration"
   | "box-bibs"
   | "box-declaration"
-  // Not a card of this editor: the race's results page (`/admin/events/[id]/results`, §NNN). The card draws a link to the route.
+  // Not a card of this editor: the race's results page (`/admin/events/[id]/results`, §809). The card draws a link to the route.
   | "page-results";
 
 /** One thing the page lacks: which rule, in which language when it is a language's, how pressing, and where it is filled. */
@@ -106,7 +106,7 @@ export type PageTodoEvent = {
   capacity: number | null;
   bibDesign: unknown;
   declarationDocumentId: string | null;
-  /** «Clasamentul e public pe pagina evenimentului» (§NNN): the Administrator's tick on the results page. */
+  /** «Clasamentul e public pe pagina evenimentului» (§809): the Administrator's tick on the results page. */
   resultsPublished: boolean;
 };
 
@@ -125,7 +125,7 @@ export type PageTodoContext = {
   /** "Termene": the days after an event its public list, and with it its results, stay on the page (`publicListDays`, §421). */
   publicListDays: number;
   /**
-   * Whether the «results» row may be raised for this viewer (§NNN): they may open the results page (`canEnterResults`, the page 404s
+   * Whether the «results» row may be raised for this viewer (§809): they may open the results page (`canEnterResults`, the page 404s
    * otherwise) and publishing would be accepted — the privacy notice and the terms in force both describe `{{results}}`. Otherwise the
    * row would promise a step they cannot take; the gap in the texts is `/admin/tasks`' to say. The «resultsStart» row is not gated:
    * it is about the event's own start, which the editor's reader can fix.
@@ -141,7 +141,7 @@ function isOver(event: PageTodoEvent, now: Date): boolean {
 }
 
 /**
- * «Cursa s-a terminat și clasamentul nu e publicat» (§NNN): the one row an event that is over still has. A race — the only type that
+ * «Cursa s-a terminat și clasamentul nu e publicat» (§809): the one row an event that is over still has. A race — the only type that
  * takes results — that was published on the site, is not cancelled or archived, whose date and time are announced, whose end has
  * passed (a race saved without an end is over a day after it starts: the start is the meeting time, not the finish), whose results are
  * not on the page, and whose period has not closed (after it `readPublicEventResults` shows nothing, so publishing would change nothing).
@@ -154,7 +154,7 @@ function resultsOverdue(event: PageTodoEvent, context: PageTodoContext): boolean
 }
 
 /**
- * «Ora startului încă se anunță: clasamentul nu poate apărea pe pagină» (§NNN): a race whose day has passed but whose hour was never
+ * «Ora startului încă se anunță: clasamentul nu poate apărea pe pagină» (§809): a race whose day has passed but whose hour was never
  * announced. The public pages keep a held-back start out of the picture (`startHeldBack`, `startsAt` NULL), so the «Clasament» can
  * never show for it — published or not — and the row says so instead of asking for a publication that would change nothing.
  */
@@ -179,7 +179,7 @@ export function eventPageTodos(event: PageTodoEvent, translations: readonly Page
   const found: PageTodo[] = [];
   const add = (rule: PageTodoRule, priority: EventTodoPriority, anchor: PageTodoAnchor, locale: string | null = null) =>
     found.push({ id: locale ? `${rule}:${locale}` : rule, rule, locale, priority, anchor });
-  // The exception to "nothing left once it is over": the results still to publish (§NNN). Said before the early return.
+  // The exception to "nothing left once it is over": the results still to publish (§809). Said before the early return.
   if (resultsOverdue(event, context)) add("results", "HIGH", "page-results");
   if (resultsStartMissing(event, context)) add("resultsStart", "HIGH", "box-when");
   if (isOver(event, context.now)) return found;

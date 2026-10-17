@@ -1259,7 +1259,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                             {t("participantMessages.link")}
                           </GlyphButton>
                         )}
-                        {/* «Clasament» (§NNN): a race's results, entered or imported by race number — for a race that has started, to whoever enters them. */}
+                        {/* «Clasament» (§808): a race's results, entered or imported by race number — for a race that has started, to whoever enters them. */}
                         {canEnterResults(staffUser.role) && eventTakesResults(event.type) && event.startsAt.getTime() <= now.getTime() && (
                           <GlyphButton
                             icon="results"

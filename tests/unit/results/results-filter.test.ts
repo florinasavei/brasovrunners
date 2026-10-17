@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { bibQuery, categoriesPresent, rowMatches } from "@/modules/results/ui/results-filter";
 
 /**
- * §NNN, race results part 2 (BR-REQ-039-01) — what the «Clasament» section's small filter decides: which categories get a chip, in
+ * §809, race results part 2 (BR-REQ-039-01) — what the «Clasament» section's small filter decides: which categories get a chip, in
  * what order, and which rows a chip and the number box leave standing. The island only hides what the server drew, so this rule is
  * all the logic there is.
  */

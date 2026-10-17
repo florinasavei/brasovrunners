@@ -2,11 +2,11 @@ import { describe, expect, it } from "vitest";
 import { anonymousResultLabel, type PublicNameInput, publicResultName } from "@/modules/results/domain/public-name";
 
 /**
- * §NNN, BR-REQ-039-01 — whose name a published result carries: the public list's rule (§143, §396, §743) extended to the results, and §421's
+ * §808, BR-REQ-039-01 — whose name a published result carries: the public list's rule (§143, §396, §743) extended to the results, and §421's
  * notice line. A name only for a registered runner who ticked «Vreau să apar pe lista de participanți & rezultate», whose registration is
  * confirmed, is not a special guest the event hides, and was made under a notice that described the results; everyone else — unticked,
  * typed by hand without the staff's record of an agreement, erased, cancelled, hidden, registered before the notice — is «Participant #bib»; a
- * runner typed by hand is named once the staff recorded that the person agreed (§NNN, amending the results decision).
+ * runner typed by hand is named once the staff recorded that the person agreed (§810, amending the results decision).
  */
 const named: PublicNameInput = {
   registered: true,
@@ -19,10 +19,10 @@ const named: PublicNameInput = {
   typedNameAgreed: false,
   typedDisplayName: null,
 };
-/** A runner the club typed by hand, with the staff's record that the person agreed to appear by name (§NNN): no registration, so none of the registration's answers. */
+/** A runner the club typed by hand, with the staff's record that the person agreed to appear by name (§810): no registration, so none of the registration's answers. */
 const typedAgreed: PublicNameInput = { registered: false, ticked: false, displayName: null, confirmed: false, hidden: false, noticeVersion: null, firstResultsNoticeVersion: 2, typedNameAgreed: true, typedDisplayName: "Ion Vasile" };
 
-describe("§NNN publicResultName", () => {
+describe("§808 publicResultName", () => {
   it("shows the registration's display name of a confirmed, ticked, shown runner who registered under a notice that described the results", () => {
     expect(publicResultName(named)).toBe("Ana Popescu");
     expect(publicResultName({ ...named, displayName: "  Ana  " })).toBe("Ana");
@@ -85,7 +85,7 @@ describe("§NNN publicResultName", () => {
   });
 });
 
-describe("§NNN anonymousResultLabel", () => {
+describe("§808 anonymousResultLabel", () => {
   it("says «Participant #bib» in both languages, from the catalogue the page reads", () => {
     expect(anonymousResultLabel("ro", 123)).toBe("Participant #123");
     expect(anonymousResultLabel("en", 7)).toBe("Participant #7");

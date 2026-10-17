@@ -9,7 +9,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 import { createRace, registerRunner } from "../../helpers/results";
 
 /**
- * §NNN — the retention sweep's step for a race's results: the privacy notice says a race's results stay as long as its registrations
+ * §808 — the retention sweep's step for a race's results: the privacy notice says a race's results stay as long as its registrations
  * (sections 4 and 7), so three years after the race the rows go with them — the typed runners', the erased and the deleted registrations'
  * rows, with every category and place that describes a person — and a younger race is left exactly as it is. A registration an
  * Administrator holds for a dispute keeps its result with it until the hold is cleared.
@@ -30,7 +30,7 @@ async function resultsOf(eventId: string) {
   return db.select().from(eventResults).where(eq(eventResults.eventId, eventId)).orderBy(eventResults.bibNumber);
 }
 
-describe("§NNN the sweep deletes a race's results with its registrations, three years after the race", () => {
+describe("§808 the sweep deletes a race's results with its registrations, three years after the race", () => {
   it("is a step of its own, listed with the others", () => {
     expect(PRUNE_STEPS).toContain("event-results");
   });

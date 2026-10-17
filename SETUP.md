@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.54-2026-10-17 -->
+<!-- PROJECT_BASELINE: BR-V3.55-2026-10-17 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V3.54-2026-10-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.55-2026-10-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -2350,7 +2350,7 @@ only ones who see the names, addresses and telephone numbers.
 
 ## 45. Clasament — put a race's results in the backoffice, and make them public only when the notice says so
 
-A race's results (`DECISIONS.md` §NNN; the owner, 2026-10-17: «Aș vrea să pot pune și clasament la final după cursă») are
+A race's results (`DECISIONS.md` §808; the owner, 2026-10-17: «Aș vrea să pot pune și clasament la final după cursă») are
 built in the backoffice and **closed to the public until the privacy notice describes them**. Only a **race** has results (a
 group run and the other events have none; the page says so). The Organizer, the Administrator and the Superadministrator
 enter them; **only the Administrator and the Superadministrator make them public**.

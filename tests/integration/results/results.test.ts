@@ -15,7 +15,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 import { A_YEAR_AFTER, AFTER_THE_RACE, approvePrivacyNotice, approveResultsTexts, approveTerms, createRace, person, RACE_STARTS_AT, registerRunner, resetNoticeCounter } from "../../helpers/results";
 
 /**
- * §NNN — a race's results, through the service on real PostgreSQL (BR-REQ-050-02, BR-REQ-039-01, BR-REQ-053-01, BR-REQ-060-01): the table
+ * §808 — a race's results, through the service on real PostgreSQL (BR-REQ-050-02, BR-REQ-039-01, BR-REQ-053-01, BR-REQ-060-01): the table
  * of migration 0166 and its constraints, the one save (created, changed, unchanged, deleted, refused on the first bad row, refused on a stale
  * form), the rankings it stores, the audit rows that never name a runner, the roles asserted by the service, the publish gate on the notice, the
  * import matched by bib, the delete, the export, and what the public read shows — a name only for a registered runner who ticked.
@@ -69,7 +69,7 @@ async function field() {
   return { ana, bia, dan, eli };
 }
 
-describe("§NNN the table (migration 0166)", () => {
+describe("§808 the table (migration 0166)", () => {
   it("holds a result per race number and per registration, cascades from the event and leaves the row nameless when the registration goes", async () => {
     const { ana } = await field();
     await save([line(101, { time: "45:12" })]);
@@ -110,7 +110,7 @@ describe("§NNN the table (migration 0166)", () => {
   });
 });
 
-describe("§NNN the save: created, ranked, audited", () => {
+describe("§808 the save: created, ranked, audited", () => {
   it("writes a result for every line with a value, by race number, linked to the registration, and ranks overall, by sex and by category", async () => {
     const { ana, bia, dan } = await field();
     const outcome = await save([line(101, { time: "50:00" }), line(102, { time: "45:00" }), line(103, { time: "40:00" }), line(104, { status: "DNF" })]);
@@ -178,7 +178,7 @@ describe("§NNN the save: created, ranked, audited", () => {
   });
 });
 
-describe("§NNN the save: changed, unchanged, deleted", () => {
+describe("§808 the save: changed, unchanged, deleted", () => {
   it("writes only the rows that changed, audits each with the names of the boxes, and re-ranks the others silently", async () => {
     await field();
     await save([line(101, { time: "50:00" }), line(102, { time: "45:00" }), line(103, { time: "40:00" })]);
@@ -235,7 +235,7 @@ describe("§NNN the save: changed, unchanged, deleted", () => {
   });
 });
 
-describe("§NNN the save: a runner the club types by hand", () => {
+describe("§808 the save: a runner the club types by hand", () => {
   it("keeps a name, a sex and a birth date for a number no registration holds, and ranks it by them", async () => {
     await field();
     await save([line(101, { time: "50:00" }), typed(0, { bib: "900", name: "  Ion Vasile  ", sex: "male", birthDate: "05.03.1985", time: "49:00" })]);
@@ -266,7 +266,7 @@ describe("§NNN the save: a runner the club types by hand", () => {
   });
 });
 
-describe("§NNN the save: the first bad row refuses everything, naming it", () => {
+describe("§808 the save: the first bad row refuses everything, naming it", () => {
   it("writes nothing when the second of three rows is bad, whatever the first and the third said", async () => {
     await field();
     const error = await save([line(101, { time: "50:00" }), line(102, { time: "soon" }), line(103, { time: "40:00" })]).catch((caught: unknown) => caught);
@@ -315,7 +315,7 @@ describe("§NNN the save: the first bad row refuses everything, naming it", () =
   });
 });
 
-describe("§NNN the roles are asserted by the service (BR-REQ-060-01)", () => {
+describe("§808 the roles are asserted by the service (BR-REQ-060-01)", () => {
   it("lets the Organizer and the Administrators enter, read, import, export and delete; refuses everyone else", async () => {
     await field();
     for (const role of ["ADMIN", "MODERATOR"] as const) {
@@ -354,7 +354,7 @@ describe("§NNN the roles are asserted by the service (BR-REQ-060-01)", () => {
   });
 });
 
-describe("§NNN the publish gate", () => {
+describe("§808 the publish gate", () => {
   it("refuses to make the results public while no privacy notice describes them, whatever is in force", async () => {
     await expect(setResultsPublished(db, staff.ADMIN!, raceId, true, NOW)).rejects.toMatchObject({ code: "RESULTS_NOTICE" });
     await approvePrivacyNotice(db, { results: false });
@@ -391,7 +391,7 @@ describe("§NNN the publish gate", () => {
   });
 });
 
-describe("§NNN the publish gate: the terms and the race's start", () => {
+describe("§808 the publish gate: the terms and the race's start", () => {
   it("refuses to make the results public while the terms in force do not describe them, though the notice does: the older terms promised to ask first", async () => {
     await approvePrivacyNotice(db, { results: true });
     await expect(setResultsPublished(db, staff.ADMIN!, raceId, true, NOW)).rejects.toMatchObject({ code: "RESULTS_TERMS" });
@@ -414,7 +414,7 @@ describe("§NNN the publish gate: the terms and the race's start", () => {
   });
 });
 
-describe("§NNN the public read: a name only for a registered runner who ticked", () => {
+describe("§808 the public read: a name only for a registered runner who ticked", () => {
   const options = { now: AFTER_THE_RACE, deadlines: DEFAULT_DEADLINES, noticeDescribes: true, termsDescribe: true, firstResultsNoticeVersion: 1 as number | null };
 
   async function published() {
@@ -489,7 +489,7 @@ describe("§NNN the public read: a name only for a registered runner who ticked"
   });
 });
 
-describe("§NNN the import, matched by bib", () => {
+describe("§808 the import, matched by bib", () => {
   it("matches a number to the event's confirmed registrations (never a cancelled one, never a test row) and says which numbers need a name", async () => {
     await field();
     await registerRunner(db, raceId, { name: "Anulat", bibNumber: 150, status: "CANCELLED" });
@@ -516,7 +516,7 @@ describe("§NNN the import, matched by bib", () => {
   });
 });
 
-describe("§NNN the delete and the export", () => {
+describe("§808 the delete and the export", () => {
   it("deletes one result, recomputes the others' positions and audits it; a second press finds nothing", async () => {
     await field();
     await save([line(101, { time: "50:00" }), line(102, { time: "45:00" }), line(103, { time: "40:00" })]);
@@ -558,7 +558,7 @@ describe("§NNN the delete and the export", () => {
   });
 });
 
-describe("§NNN the public name is the public list's rule, and one rule more: the notice line", () => {
+describe("§808 the public name is the public list's rule, and one rule more: the notice line", () => {
   const options = { now: AFTER_THE_RACE, deadlines: DEFAULT_DEADLINES, noticeDescribes: true, termsDescribe: true };
 
   async function publish() {
@@ -614,7 +614,7 @@ describe("§NNN the public name is the public list's rule, and one rule more: th
   });
 });
 
-describe("§NNN a number a registration holds that is not confirmed is refused, never attached", () => {
+describe("§808 a number a registration holds that is not confirmed is refused, never attached", () => {
   it("refuses a result and a typed name for a cancelled registration's number, naming the box, and writes nothing", async () => {
     await registerRunner(db, raceId, { name: "Anulat", bibNumber: 150, status: "CANCELLED" });
     await expect(save([typed(0, { bib: "150", name: "Ion Vasile", time: "50:00" })])).rejects.toMatchObject({ code: "RESULT_ROW_INVALID", problem: "bibNotConfirmed", fields: ["n[0].bib"], bibNumber: 150 });
@@ -633,7 +633,7 @@ describe("§NNN a number a registration holds that is not confirmed is refused, 
   });
 });
 
-describe("§NNN a result follows its registration when the desk changes the number", () => {
+describe("§808 a result follows its registration when the desk changes the number", () => {
   /** The desk set a runner's number by hand (§548). */
   const renumber = (registrationId: string, bibNumber: number) => db.update(registrations).set({ bibNumber }).where(eq(registrations.id, registrationId));
 
@@ -683,7 +683,7 @@ describe("§NNN a result follows its registration when the desk changes the numb
   });
 });
 
-describe("§NNN the places follow the live answers, and an erasure leaves nothing that describes the person", () => {
+describe("§808 the places follow the live answers, and an erasure leaves nothing that describes the person", () => {
   it("reads a corrected sex and a moved birth date at once, on the page and in the public read, with no save in between", async () => {
     const { eli } = await field();
     await save([line(101, { time: "50:00" }), line(104, { time: "55:00" })]);

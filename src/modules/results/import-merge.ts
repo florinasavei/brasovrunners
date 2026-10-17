@@ -3,7 +3,7 @@ import { formatResultTime } from "./domain/result-time";
 import { RESULT_ROW_BOXES, registeredRowKey, resultBox, typedRowCountOf, typedRowKey } from "./rows";
 
 /**
- * «Importă din CSV» puts what a file says into the boxes of the table (§NNN), and saves nothing.
+ * «Importă din CSV» puts what a file says into the boxes of the table (§808), and saves nothing.
  *
  * `values` is what the form posted (`keptValuesOf`), by box name; the rows are the file's, already matched by number
  * (`importResultsCsv`). The merge, pure so a test can walk it:

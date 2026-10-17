@@ -240,7 +240,7 @@ const CATEGORY_ORDER: readonly CategoryKey[] = [
 /**
  * A category's key from its two answers: the sex and the band of the age on the event's day (`ageOnRaceDay`), or
  * null when either is missing. The one definition of a category — the Excel's footer counts by it, and the
- * race results rank by it (§NNN), so the two can never disagree about who is in which band.
+ * race results rank by it (§808), so the two can never disagree about who is in which band.
  */
 export function categoryKeyOf(sex: SexChoice | null | undefined, age: number | null | undefined): `${SexChoice}:${StatisticsBandKey}` | null {
   const band = ageBandOf(age);

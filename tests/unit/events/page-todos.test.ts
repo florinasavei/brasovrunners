@@ -179,7 +179,7 @@ describe("§749 eventPageTodos", () => {
     expect(rules(running)).toContain("cover");
   });
 
-  describe("§NNN «Cursa s-a terminat și clasamentul nu e publicat» — the one row an event that is over still has", () => {
+  describe("§809 «Cursa s-a terminat și clasamentul nu e publicat» — the one row an event that is over still has", () => {
     // The race of 2026-10-10, which ended at noon; NOW is 2026-10-13 and the club keeps results thirty days.
     const over = { startsAt: new Date("2026-10-10T08:00:00.000Z"), endsAt: new Date("2026-10-10T12:00:00.000Z") };
 

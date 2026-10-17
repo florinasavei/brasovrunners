@@ -175,7 +175,7 @@ export const GLYPHS = {
   planned: ScheduleIcon,
   // «Toate evenimentele» on the calendar's kind chips (`KindChips.tsx`, public); the backoffice's «placed by the club» chip draws it through `StatusChip` (§707).
   club: GroupsIcon,
-  // «Clasament» on a finished race's card (§NNN): a ranked list, the way the results are drawn — not a trophy, which says one winner
+  // «Clasament» on a finished race's card (§809): a ranked list, the way the results are drawn — not a trophy, which says one winner
   // where the table has every finisher (the chequered flag is the race itself, above). Always beside its word.
   results: LeaderboardIcon,
 };

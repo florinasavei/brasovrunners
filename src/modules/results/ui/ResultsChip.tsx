@@ -3,7 +3,7 @@ import GlyphChip from "@/modules/events/ui/GlyphChip";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 
 /**
- * The «Clasament» chip on a finished race's card (§NNN, race results part 2): the leaderboard glyph and the word, a link to the
+ * The «Clasament» chip on a finished race's card (§809, race results part 2): the leaderboard glyph and the word, a link to the
  * event page's `#clasament`. Drawn only for an event whose results are on show (`eventsWithResultsChip`, the same rule the section applies).
  *
  * **The link is the 44-pixel box, the chip is its content.** A `GlyphChip` with an `href` is a 24-pixel anchor, and every link on a

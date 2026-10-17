@@ -13,7 +13,7 @@ import { canEnterResults, type StaffRole } from "@/modules/staff-identity/domain
 import type { PublicEventResults } from "./results";
 
 /**
- * What the public pages ask of the results (§NNN, race results part 2): the event page's «Clasament» section and the listing's
+ * What the public pages ask of the results (§809, race results part 2): the event page's «Clasament» section and the listing's
  * «Clasament» chip, from the one place, so the two cannot disagree about whether a race's results are on show.
  *
  * Everything here is a cached read (`public-cache/reads.ts`) — the club's period, the two notices' verdicts, the version below
@@ -77,7 +77,7 @@ export async function readEventResultsForPage(event: ResultsOpenEvent & { id: st
 }
 
 /**
- * `PageTodoContext.resultsRow` (§NNN): whether the editor's «Cursa s-a terminat și clasamentul nu e publicat» row is for this
+ * `PageTodoContext.resultsRow` (§809): whether the editor's «Cursa s-a terminat și clasamentul nu e publicat» row is for this
  * viewer — they may open the results page, and the notice and the terms in force describe `{{results}}`, so the Administrator's
  * publish would be accepted. Cached verdicts, the same ones the public page reads.
  */

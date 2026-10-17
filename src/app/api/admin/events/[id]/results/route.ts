@@ -14,7 +14,7 @@ import { isDomainError } from "@/shared/errors/domain-error";
 import { isUuid } from "@/shared/ids";
 
 /**
- * «Descarcă clasamentul (CSV)» on a race's «Clasament» page (§NNN): the results of one event, in the sheet's order — the finishers by
+ * «Descarcă clasamentul (CSV)» on a race's «Clasament» page (§808): the results of one event, in the sheet's order — the finishers by
  * position, then the others — in the reader's language (`lang`), names as the backoffice sees them, as a UTF-8 file with a BOM.
  *
  * Whoever may enter the results may take the file — `canEnterResults`, the page's own gate, asserted here again (BR-REQ-060-01): the

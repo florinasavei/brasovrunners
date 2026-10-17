@@ -9,7 +9,7 @@ import GlyphButton from "@/shared/ui/GlyphButton";
 export const RESULTS_IMPORT_FILE_ID = "results-import-file";
 
 /**
- * «Alege un fișier» of «Importă din CSV» (§NNN): the house's picker — `GlyphButton` as a label for a hidden file input
+ * «Alege un fișier» of «Importă din CSV» (§808): the house's picker — `GlyphButton` as a label for a hidden file input
  * (`RouteGpxField`, `EventImportPanel`), so the button wears its glyph and its words in the page's language rather than the browser's —
  * and, beside it, the name of the file chosen. The input is named `importFile` and sits inside the page's one form, so it posts with the
  * rest, with scripts off too; the name under the button is the only thing that needs a script.

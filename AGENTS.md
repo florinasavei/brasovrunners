@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.54-2026-10-17 -->
+<!-- PROJECT_BASELINE: BR-V3.55-2026-10-17 -->
 
 # Brașov Runners — Agent and Engineering Guide
 
-**Baseline `BR-V3.54-2026-10-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.55-2026-10-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Canonical architecture, implementation, security, testing, deployment, CMS, registration, and AI-review rules for every developer or coding agent working in this repository.
@@ -1097,9 +1097,9 @@ sees them as Voluntar, Redactor, Organizator, Tehnic, Administrator, Superadmini
 ```text
 CONTRIBUTOR  the volunteer: the race-day desk and the guide, nothing else
 COPYWRITER   the words of any event and any page, at any status; submit a draft for review
-MODERATOR    the organizer: read the events (no change to one, §542), the gallery; read the registrations, the export, the bibs; the messages; enter, import and rank a race's results (`canEnterResults`, §NNN)
+MODERATOR    the organizer: read the events (no change to one, §542), the gallery; read the registrations, the export, the bibs; the messages; enter, import and rank a race's results (`canEnterResults`, §808)
 DEV          + the configuration report (/devs). No participant data — and, by §289, not the list either
-ADMIN        + every event (create, configure, publish, cancel, a series: `canEditEventFields`, §542), changing a registration, legal texts, emails, tasks, delete an event, make a race's results public (`canPublishResults`, §NNN)
+ADMIN        + every event (create, configure, publish, cancel, a series: `canEditEventFields`, §542), changing a registration, legal texts, emails, tasks, delete an event, make a race's results public (`canPublishResults`, §808)
 SUPERADMIN   + staff administration: the list itself, and every role on it
 ```
 
@@ -1508,7 +1508,7 @@ below exists because of that (BR-BUS-039, BR-REQ-039-01).
 - it MUST NOT be switched on until the approved privacy notice describes the disclosure. The
   sample notice carries the paragraph with the club's facts as placeholders (§29,
   `DECISIONS.md` §29);
-- a race's published results (§NNN) follow the same rule with one exception: a runner the club typed
+- a race's published results (§810) follow the same rule with one exception: a runner the club typed
   by hand (no registration, so no tick) is named only while a staff member recorded on the line that
   the person agreed — for a minor, that the parent or guardian did — with the actor and the moment on
   the row and in the audit trail (`event_results.name_agreed_at`, `publicResultName`), and never when

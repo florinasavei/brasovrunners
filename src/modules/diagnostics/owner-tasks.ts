@@ -242,13 +242,13 @@ export type OwnerTaskInputs = {
    */
   listNumbersDescribed: boolean;
   /**
-   * Does the notice in force, in every language, describe a race's published results (§NNN,
+   * Does the notice in force, in every language, describe a race's published results (§808,
    * `noticeDescribesResults`)? Until it does, an Administrator cannot make a race's results public and the event
    * page shows none; the club may enter and rank them in the backoffice meanwhile.
    */
   resultsDescribed: boolean;
   /**
-   * Do the terms in force, in every language, describe a race's published results (§NNN, `termsDescribeResults`)? The older terms
+   * Do the terms in force, in every language, describe a race's published results (§808, `termsDescribeResults`)? The older terms
    * promised «te vom întreba separat» before any named result, so until the club approves terms that name `{{results}}` an Administrator
    * cannot make a race's results public either; entering and ranking them stays open.
    */
@@ -589,7 +589,7 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
       state: input.listNumbersDescribed ? "done" : "open",
     });
     /*
-      A race's published results (§NNN), the same shape: open, never blocking — the club may enter, import and
+      A race's published results (§808), the same shape: open, never blocking — the club may enter, import and
       rank the results meanwhile, and only making them public is refused — and done by itself the day a notice
       naming `{{results}}` takes effect.
     */
@@ -795,7 +795,7 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
   }
 
   /*
-    A race's published results, in the terms (§NNN): the same shape as the notice's row — open, never blocking, done by itself the day
+    A race's published results, in the terms (§808): the same shape as the notice's row — open, never blocking, done by itself the day
     terms naming `{{results}}` take effect in every language. Its own gate, the terms in force: the older terms promised to ask separately
     before a named result, and publishing waits until they say what the notice says.
   */

@@ -5,7 +5,7 @@ import { confirmDialog } from "./support/confirm";
 import { hydrated, signIn } from "./support/featured-event";
 
 /**
- * §NNN — «Clasament» on the race's page (BR-REQ-039-01, BR-REQ-041-01 criterion 6), walked end to end at 320 pixels and on a desk: the
+ * §809 — «Clasament» on the race's page (BR-REQ-039-01, BR-REQ-041-01 criterion 6), walked end to end at 320 pixels and on a desk: the
  * Administrator enters four results and, before publishing, the page shows no heading and no sentence about them; publishes (or is refused,
  * when the privacy notice or the terms the database holds do not name the results yet — then the public page must still show nothing); the page
  * then shows the ranking with «Participant #număr» for the runner who did not tick, the chip time under the time, the runner who dropped out last
@@ -107,7 +107,7 @@ async function noHorizontalScroll(page: Page) {
   expect(overflow).toBeLessThanOrEqual(1);
 }
 
-test.describe("§NNN «Clasament» on the race's page", () => {
+test.describe("§809 «Clasament» on the race's page", () => {
   test.describe.configure({ timeout: 240_000 });
 
   test("is absent until it is published, then ranks the field, narrows by category and by number, and leads from the listing; the editor's reminder goes with it", async ({ page }) => {

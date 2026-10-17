@@ -1,5 +1,5 @@
 /**
- * What the «Clasament» section's small filter decides (§NNN, race results part 2), pure so a unit test holds it without a browser.
+ * What the «Clasament» section's small filter decides (§809, race results part 2), pure so a unit test holds it without a browser.
  *
  * The table is drawn whole by the server; the filter only **hides** rows (`ResultsFilter`), so with no script every row shows.
  * A row carries two facts for it: its category key (`FEMALE:from30`, or none) and its race number as an integer.

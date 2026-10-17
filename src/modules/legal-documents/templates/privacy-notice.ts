@@ -45,9 +45,9 @@
  * notice in force, in every language, names it (`describesListNumbers`). Only the number a
  * confirmation drew (`bib_number`), never one held before it (§214, §548).
  *
- * `{{results}}` in section 4 (§NNN, race results part 1) replaces «Rezultate cu nume nu publicăm încă» with what a race's
+ * `{{results}}` in section 4 (§808, race results part 1) replaces «Rezultate cu nume nu publicăm încă» with what a race's
  * published results show — the place, the race number, the time, the state and the category; the name only of those who ticked the
- * list's own box, and — §NNN, amending the results decision — a runner the organizers entered by hand only if they told the organizers they want
+ * list's own box, and — §810, amending the results decision — a runner the organizers entered by hand only if they told the organizers they want
  * to (the staff record it, with who and when), everyone else «Participant #numărul de concurs» — and the period, `{{publicListPeriod}}`'s. It is the same two-in-one: the
  * public section's own name, quoted (`results/notice-words.ts`), and the switch — an Administrator may make a race's results public,
  * and the page shows them, only while the notice in force, in every language, names it (`describesResults`); `/admin/tasks`

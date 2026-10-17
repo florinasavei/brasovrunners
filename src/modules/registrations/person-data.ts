@@ -167,7 +167,7 @@ export type PersonData = {
     userAgent: string | null;
   }>;
   /**
-   * The results of a race entered for this person's registrations (§NNN; art. 15 GDPR): the race number, how the race ended, the times,
+   * The results of a race entered for this person's registrations (§808; art. 15 GDPR): the race number, how the race ended, the times,
    * the positions and the category as the platform stores them, the club's note, and whether the race's results are public. Found through
    * the registration, so it is the person's own; a result row of a typed runner holds a name only the club wrote, and is not here.
    */
@@ -353,7 +353,7 @@ async function collectPersonData<T extends Record<string, unknown>>(
 
   const groupRuns = await groupRunDeclarationsOf(db, canonicalEmail);
 
-  // The results entered for these registrations (§NNN): this person's own rows, by their registrations.
+  // The results entered for these registrations (§808): this person's own rows, by their registrations.
   const results =
     registrationIds.length > 0
       ? await db

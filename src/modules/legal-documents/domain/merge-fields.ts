@@ -114,7 +114,7 @@ export const LIST_SOCIALS_MERGE_FIELD = "participantListSocials";
 export const LIST_NUMBERS_MERGE_FIELD = "participantListNumbers";
 
 /**
- * The privacy notice's marker for a race's published results (§NNN, race results part 1; the owner, 2026-10-17:
+ * The privacy notice's marker for a race's published results (§808, race results part 1; the owner, 2026-10-17:
  * «Aș vrea să pot pune și clasament la final după cursă»; replacing the sentence «Rezultate cu nume nu publicăm
  * încă» of section 4). The same two-in-one as the states, the socials and the numbers above: filled, when the
  * notice is shown, with the public section's own name, quoted (`results/notice-words.ts`) — «Clasament» /
@@ -704,7 +704,7 @@ export function describesListNumbers(body: unknown): boolean {
 }
 
 /**
- * Whether a privacy notice describes a race's published results (§NNN): it names `{{results}}`. The gate for making
+ * Whether a privacy notice describes a race's published results (§808): it names `{{results}}`. The gate for making
  * a race's results public and for showing them — the club's approval of such a text is the switch, as for the
  * states (§396), the socials (§500) and the numbers (§613) — and what `/admin/tasks`' row `resultsNotice` reads. Pure;
  * the caller asks it of the notice in force, in every language.

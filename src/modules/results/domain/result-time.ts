@@ -1,5 +1,5 @@
 /**
- * A race time as the club types it and as the page says it (§NNN, race results part 1).
+ * A race time as the club types it and as the page says it (§808, race results part 1).
  *
  * Stored as whole milliseconds from the gun (`event_results.gun_time_ms`), typed in the shapes a stopwatch
  * and a timing sheet use:

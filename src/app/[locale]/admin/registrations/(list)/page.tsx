@@ -392,7 +392,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   const sweepOpen = mayManage && memberSweep === "1";
   const sweepRows = sweepOpen ? await previewMemberTickSweep(db, actor, { eventId: filters.eventId }, new Date()) : [];
   const sweepEvent = filters.eventId ? (events.find((event) => event.id === filters.eventId)?.title ?? filters.eventId) : null;
-  // «Clasament» (§NNN): a race that has started — a group run and a race still ahead have none to enter yet.
+  // «Clasament» (§808): a race that has started — a group run and a race still ahead have none to enter yet.
   const chosenEvent = filters.eventId ? events.find((event) => event.id === filters.eventId) : undefined;
   const resultsOpen = chosenEvent !== undefined && eventTakesResults(chosenEvent.type) && chosenEvent.startsAt.getTime() <= deadlinesNow.getTime();
   // The sweep's dialog counts the rows still ticked at the press (`bodyCount`, §532's shape).
@@ -1042,7 +1042,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               {t("participantMessages.link")}
             </GlyphButton>
           )}
-          {/* With one race chosen that has started, its results (§NNN): the other door to «Clasament», beside the file of the people. */}
+          {/* With one race chosen that has started, its results (§808): the other door to «Clasament», beside the file of the people. */}
           {filters.eventId && canEnterResults(actor.role) && resultsOpen && (
             <GlyphButton
               icon="results"

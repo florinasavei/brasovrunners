@@ -2,12 +2,12 @@ import { describe, expect, it } from "vitest";
 import { formatResultTime, parseResultTime, RESULT_TIME_MAX_MS } from "@/modules/results/domain/result-time";
 
 /**
- * §NNN, BR-REQ-050-02 — a race time as the club types it (`h:mm:ss`, `m:ss`, `mm:ss.t`) and as the page says it. Stored as whole
+ * §808, BR-REQ-050-02 — a race time as the club types it (`h:mm:ss`, `m:ss`, `mm:ss.t`) and as the page says it. Stored as whole
  * milliseconds from the gun; read in the three shapes a stopwatch and a timing sheet use, refused for anything else.
  */
 const sec = (n: number) => n * 1000;
 
-describe("§NNN parseResultTime", () => {
+describe("§808 parseResultTime", () => {
   it("reads h:mm:ss", () => {
     expect(parseResultTime("1:23:45")).toBe(sec(1 * 3600 + 23 * 60 + 45));
     expect(parseResultTime("0:45:12")).toBe(sec(45 * 60 + 12));
@@ -43,7 +43,7 @@ describe("§NNN parseResultTime", () => {
   });
 });
 
-describe("§NNN formatResultTime", () => {
+describe("§808 formatResultTime", () => {
   it("says h:mm:ss, with a fraction only when there is one", () => {
     expect(formatResultTime(sec(45 * 60 + 12))).toBe("0:45:12");
     expect(formatResultTime(sec(3600 + 23 * 60 + 45))).toBe("1:23:45");

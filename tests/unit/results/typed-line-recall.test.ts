@@ -5,7 +5,7 @@ import { RecallProvider } from "@/shared/forms/recall";
 import { type ResultWords, type TypedLine, TypedResultLines } from "@/modules/results/ui/ResultRows";
 
 /**
- * §NNN, BR-REQ-050-02 — the typed line's agreement tick comes back as it was posted after a refused save (§315): an unticked box posts
+ * §810, BR-REQ-050-02 — the typed line's agreement tick comes back as it was posted after a refused save (§315): an unticked box posts
  * nothing, so «not posted» is «unticked», never the stored state — and a refusal that names the tick's line leaves the others as they were.
  */
 const words: ResultWords = {
@@ -48,7 +48,7 @@ const draw = (lines: TypedLine[], posted: Record<string, string[]> | null): stri
 const tick = (html: string, name: string) => new RegExp(`<input[^>]*name="${name.replace(/[[\]]/g, "\\$&")}"[^>]*>`).exec(html)?.[0] ?? "";
 const isChecked = (tag: string) => /\schecked(=|\s|\/|>)/.test(tag);
 
-describe("§NNN the typed line's tick, before and after a refusal", () => {
+describe("§810 the typed line's tick, before and after a refusal", () => {
   it("draws the stored state when no save was refused", () => {
     const html = draw([stored(true, "900", "Ion Vasile"), stored(false, "901", "Maria Pop")], null);
     expect(isChecked(tick(html, "n[0].agreed"))).toBe(true);

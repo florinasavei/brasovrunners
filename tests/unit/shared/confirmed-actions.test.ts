@@ -216,7 +216,7 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   deleteClubTodoAction: [],
   // «Tradu din română»'s daily character budget (§464): what the club may spend from now on.
   updateTranslationBudgetAction: [],
-  // A race's results (§NNN): a result deleted is gone from the ranking, and the Administrator's tick makes the ranking public or takes it off the site.
+  // A race's results (§808): a result deleted is gone from the ranking, and the Administrator's tick makes the ranking public or takes it off the site.
   deleteEventResultAction: [],
   setResultsPublishedAction: [],
 };

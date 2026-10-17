@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { resultsClockInstants, resultsOnShow } from "@/modules/results/domain/results-open";
 
 /**
- * §NNN, race results part 2 (BR-REQ-039-01) — the cheap half of the rule that puts a race's results on its page and its card: a race,
+ * §809, race results part 2 (BR-REQ-039-01) — the cheap half of the rule that puts a race's results on its page and its card: a race,
  * the Administrator's tick, the race has started, the public list's period (§421) is not over — and, passed in, the notice and the
  * terms in force describing them. The listing's chip and the page's section ask this one function.
  */

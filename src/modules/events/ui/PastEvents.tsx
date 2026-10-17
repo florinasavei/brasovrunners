@@ -89,7 +89,7 @@ export default async function PastEvents({
   keep?: Record<string, string>;
   /** The cards ahead's ticks, as query parameters: the panel's form and links keep them. */
   carry?: Record<string, string | string[]>;
-  /** The events whose «Clasament» is on show (§NNN, `eventsWithResultsChip`), worked out once for the page: their cards wear the chip. */
+  /** The events whose «Clasament» is on show (§809, `eventsWithResultsChip`), worked out once for the page: their cards wear the chip. */
   withResults?: ReadonlySet<string>;
 }) {
   const filtered = activeFilterCount(filter) > 0;

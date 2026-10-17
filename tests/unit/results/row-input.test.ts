@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { type ReadResult, type RowBoxes, readResultRow } from "@/modules/results/domain/row-input";
 
 /**
- * §NNN, BR-REQ-050-02 — one row of the «Clasament» form, read: blank, a row with values, or refused naming the problem and the box. The
+ * §808, BR-REQ-050-02 — one row of the «Clasament» form, read: blank, a row with values, or refused naming the problem and the box. The
  * rules in the order they are asked: the number, the status, the time with the status, the note, then what is typed for a typed runner.
  */
 const DAY = "2026-11-21";
@@ -12,7 +12,7 @@ const refused = (result: ReadResult) => (result.kind === "refused" ? { problem: 
 const row = (result: ReadResult) => (result.kind === "row" ? result.row : result);
 const MIN = 60_000;
 
-describe("§NNN readResultRow — blank, and what the status defaults to", () => {
+describe("§808 readResultRow — blank, and what the status defaults to", () => {
   it("is blank when every box is empty: most lines stay empty until the runner finishes", () => {
     expect(readResultRow(boxes(), DAY)).toEqual({ kind: "blank" });
     expect(readResultRow(typed({ bib: "" }), DAY)).toEqual({ kind: "blank" });
@@ -29,7 +29,7 @@ describe("§NNN readResultRow — blank, and what the status defaults to", () =>
   });
 });
 
-describe("§NNN readResultRow — the refusals, each naming its box", () => {
+describe("§808 readResultRow — the refusals, each naming its box", () => {
   it("refuses a bad race number on a typed row", () => {
     for (const bib of ["abc", "0", "-3", "1.5", "1234567"]) expect(refused(readResultRow(typed({ bib, time: "45:12" }), DAY)), bib).toEqual({ problem: "bib", boxes: ["bib"] });
     expect(refused(readResultRow(typed({ bib: "", time: "45:12" }), DAY))).toEqual({ problem: "bib", boxes: ["bib"] });
@@ -58,7 +58,7 @@ describe("§NNN readResultRow — the refusals, each naming its box", () => {
   });
 });
 
-describe("§NNN readResultRow — what is typed about a runner the club typed", () => {
+describe("§808 readResultRow — what is typed about a runner the club typed", () => {
   it("keeps the name, the sex and the birth date, day first", () => {
     expect(row(readResultRow(typed({ bib: "900", name: "  Ion Vasile ", sex: "male", birthDate: "05.03.1985", time: "50:00" }), DAY))).toMatchObject({
       bibNumber: 900,
@@ -82,7 +82,7 @@ describe("§NNN readResultRow — what is typed about a runner the club typed", 
   });
 });
 
-describe("§NNN readResultRow — the agreement tick of a typed runner", () => {
+describe("§810 readResultRow — the agreement tick of a typed runner", () => {
   it("reads the tick as «on» and anything else as unticked; a typed row without the box is unticked", () => {
     expect(row(readResultRow(typed({ bib: "900", name: "Ion Vasile", time: "50:00", agreed: "on" }), DAY))).toMatchObject({ name: "Ion Vasile", nameAgreed: true });
     expect(row(readResultRow(typed({ bib: "900", name: "Ion Vasile", time: "50:00" }), DAY))).toMatchObject({ nameAgreed: false });

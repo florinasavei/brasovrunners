@@ -186,7 +186,7 @@ export default async function EventsPage({ params, query: asked }: Props) {
   // internal event among these rows, the entry its card and its page read too, and nothing for any
   // other row (`readRegistrationDoor`, §409).
   const facts: FilterFacts<PublicEventPage> = { night: isNight, door: await readRegistrationDoors([...events, ...pastRows], now) };
-  // «Clasament» (§NNN, race results part 2): which of these races have results on show, worked out once for the page from the cached
+  // «Clasament» (§809, race results part 2): which of these races have results on show, worked out once for the page from the cached
   // gates and the rows' own columns — no query per card — and nothing at all while the database is away.
   const withResults = await readOrWhileAway(() => eventsWithResultsChip([...events, ...pastRows], now), new Set<string>());
   // The undated section under the cards, narrowed by the same filters: when it shows something, a
@@ -418,7 +418,7 @@ async function ListingBody({
   now: Date;
   /** The «Data se anunță» section (§533) shows something under this grid: no "nothing" sentence then. */
   undatedBelow?: boolean;
-  /** The races whose «Clasament» is on show (§NNN): between seasons the last race is an ordinary card, and wears the chip. */
+  /** The races whose «Clasament» is on show (§809): between seasons the last race is an ordinary card, and wears the chip. */
   withResults: ReadonlySet<string>;
 }) {
   const t = await getTranslations("Events");

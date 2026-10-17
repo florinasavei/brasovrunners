@@ -16,7 +16,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 import { A_YEAR_AFTER, AFTER_THE_RACE, approvePrivacyNotice, approveResultsTexts, approveTerms, createRace, person, RACE_STARTS_AT, registerRunner, resetNoticeCounter } from "../../helpers/results";
 
 /**
- * §NNN, race results part 2 (BR-REQ-039-01, BR-REQ-041-01 criterion 6) — «Clasament» as the event page draws it, and the chip the
+ * §809, race results part 2 (BR-REQ-039-01, BR-REQ-041-01 criterion 6) — «Clasament» as the event page draws it, and the chip the
  * listing's card wears, from a real database (PGlite) through the public cache's read-through outside a Next server:
  *
  * - the section in Romanian and in English: named and «Participant #bib» rows, the chip time under the time, the three who did not
@@ -187,7 +187,7 @@ function rowsOf(html: string) {
   });
 }
 
-describe("§NNN «Clasament» on the event page — in Romanian", () => {
+describe("§809 «Clasament» on the event page — in Romanian", () => {
   it("draws the finishers by place, then the three who did not finish, without a place and with their word", async () => {
     await publishedRace();
     const html = await section();
@@ -312,7 +312,7 @@ describe("§NNN «Clasament» on the event page — in Romanian", () => {
   });
 });
 
-describe("§NNN «Clasament» on the event page — in English", () => {
+describe("§809 «Clasament» on the event page — in English", () => {
   it("draws the same rows with the English words, the English catalogue's category and the date in English", async () => {
     language = "en";
     await publishedRace();
@@ -333,7 +333,7 @@ describe("§NNN «Clasament» on the event page — in English", () => {
   });
 });
 
-describe("§NNN «Clasament» is absent, with no heading and no «în curând», unless every condition holds", () => {
+describe("§809 «Clasament» is absent, with no heading and no «în curând», unless every condition holds", () => {
   it("draws nothing while the Administrator has not published", async () => {
     await publishedRace();
     await setResultsPublished(db, admin, raceId, false, AFTER_THE_RACE);
@@ -374,7 +374,7 @@ describe("§NNN «Clasament» is absent, with no heading and no «în curând»,
   });
 });
 
-describe("§NNN the listing card's «Clasament» chip", () => {
+describe("§809 the listing card's «Clasament» chip", () => {
   const rowOf = async (over: Partial<typeof events.$inferSelect> = {}) => {
     const [row] = await db.select().from(events).where(eq(events.id, raceId));
     return { ...row, ...over };

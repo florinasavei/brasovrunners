@@ -260,7 +260,7 @@ export type ActionIconName =
   | "sizeChart"
   // «Ecusoane pentru voluntari» (§764): the name badge, on the «Voluntari» card's link to the badges' page.
   | "badges"
-  // «Clasament» (§NNN): the podium bars, on the links to a race's results page — never the trophy, which is the desk's.
+  // «Clasament» (§808): the podium bars, on the links to a race's results page — never the trophy, which is the desk's.
   | "results";
 // No runner here: the public send buttons wear it through `SubmitButton`'s own `runner` flag,
 // because this table must never reach a public page (above).

@@ -25,7 +25,7 @@ import { type ReadRow, type ResultRowProblem, readResultRow } from "./domain/row
 import { type PostedResultRow, resultBox } from "./rows";
 
 /**
- * A race's results, part 1 (§NNN; the owner, 2026-10-17: «Aș vrea să pot pune și clasament la final după cursă»): the rows entered or
+ * A race's results, part 1 (§808; the owner, 2026-10-17: «Aș vrea să pot pune și clasament la final după cursă»): the rows entered or
  * imported in the backoffice, ranked, and — only when an Administrator publishes them and the privacy notice in force describes
  * them — read by the event page.
  *
@@ -37,7 +37,7 @@ import { type PostedResultRow, resultBox } from "./rows";
  * **One race, one list.** Only a `RACE` takes results (`RESULTS_NOT_OPEN` for any other type). A row is a race number: found among
  * the event's **confirmed** registrations (never a test row) it is that runner's, taking the registration's name, sex and age at read;
  * not found, it is a runner the club typed by hand and needs a name — and, to stand **by name** in the public ranking, the staff's tick that
- * the person agreed to it (`name_agreed_at`, §NNN: the desk's paper declaration has the same shape — the participant agrees, a staff member records it). A number a registration holds that is not confirmed (cancelled,
+ * the person agreed to it (`name_agreed_at`, §810: the desk's paper declaration has the same shape — the participant agrees, a staff member records it). A number a registration holds that is not confirmed (cancelled,
  * expired) is refused (`bibNotConfirmed`), never attached silently and never a typed name thrown away. A stored result follows its
  * **registration**, not the number it was saved under: when the desk changes a runner's number the row moves with it. «Salvează tot clasamentul» is the whole list — a row left out is a
  * result removed — saved in **one transaction** or not at all: the first refused row refuses the save, naming it (`ResultRowError`,
@@ -244,7 +244,7 @@ export type ResultRunner = {
    * made under a notice that described the results; a typed one by the staff-recorded agreement, a name to show and a notice that described them.
    */
   named: boolean;
-  /** A typed runner: the staff recorded that the person agreed to appear by name (§NNN); null for a registered runner, whose own tick answers. */
+  /** A typed runner: the staff recorded that the person agreed to appear by name (§810); null for a registered runner, whose own tick answers. */
   nameAgreed: boolean | null;
   checkedIn: boolean;
   sex: SexChoice | null;
@@ -290,7 +290,7 @@ function resultOf(row: EventResultRow, ranked: Ranked): NonNullable<ResultRunner
 }
 
 /**
- * The page's data (§NNN), for whoever may enter results: the event, every registered runner that holds a race number — those with a
+ * The page's data (§808), for whoever may enter results: the event, every registered runner that holds a race number — those with a
  * stored result carry it — and every stored row no registration holds the number of. Refuses a role that may not (FORBIDDEN) and an
  * event that is not there (NOT_FOUND); an event that is not a race is read all the same, so the page can say a group run has none.
  * A result is read by its **registration** first and by number second, and its positions come from the live answers, so what the page
@@ -410,7 +410,7 @@ function changedBoxesOf(before: EventResultRow, after: ReadRow & { registrationI
 }
 
 /**
- * «Salvează tot clasamentul» (§NNN): the whole list of a race's results, by one staff member, in one transaction.
+ * «Salvează tot clasamentul» (§808): the whole list of a race's results, by one staff member, in one transaction.
  *
  * Every row is read first (`readResultRow`) and the first refused one refuses the save with `RESULT_ROW_INVALID` naming that row
  * (`ResultRowError`) and the boxes to correct: a bad number, status, time, chip, note, name, sex or birth date; a number named twice; a
@@ -585,7 +585,7 @@ export async function saveEventResults<T extends Record<string, unknown>>(db: Da
 }
 
 /**
- * The row's own «Șterge» (§NNN, outside the big form like §791's delete): one result removed after a confirmation, the others'
+ * The row's own «Șterge» (§808, outside the big form like §791's delete): one result removed after a confirmation, the others'
  * positions recomputed, one audit row, the cache told. The number is the one the page drew — a registered runner's current one, wherever
  * its row was saved under — and a number with no stored result is NOT_FOUND (a second press, another session got there first): the
  * page says so and nothing is written.
@@ -630,7 +630,7 @@ async function writeRanking<T extends Record<string, unknown>>(db: Database<T>, 
 }
 
 /**
- * Ranks an event's stored results again from the live answers (§NNN), in the caller's transaction, and returns how many rows changed.
+ * Ranks an event's stored results again from the live answers (§808), in the caller's transaction, and returns how many rows changed.
  * **Erasing a registration calls it** (`eraseRegistration`): the row is left nameless by `ON DELETE SET NULL`, and with no registration
  * left to answer for it the sex, the age band and the positions by sex and by category it carried are cleared, and the other runners'
  * places are counted again without it — nothing that describes the erased person stays on their number. An event with no results is a
@@ -647,7 +647,7 @@ export async function rerankEventResults<T extends Record<string, unknown>>(db: 
 // ---- Publishing -------------------------------------------------------------------------------------------
 
 /**
- * «Clasamentul e public pe pagina evenimentului» (§NNN): the Administrator's switch, the disclosure itself. Refused for any other role
+ * «Clasamentul e public pe pagina evenimentului» (§808): the Administrator's switch, the disclosure itself. Refused for any other role
  * (FORBIDDEN). **Switching it on is refused** until the race has started (`RESULTS_NOT_STARTED`: the notice says the results appear «doar
  * după cursă»), while the privacy notice in force, in every language, does not name `{{results}}` (`RESULTS_NOTICE`) — the club's
  * approval of the text is what lets a result reach the page, as for the list's states (§396) — and while the terms in force do not
@@ -690,7 +690,7 @@ export type ImportedResultRow = {
 };
 
 /**
- * «Importă din CSV» (§NNN): a CSV or TSV read into rows (`parseResultsCsv`, `bib,time[,chip][,status]`, with a header or without) and
+ * «Importă din CSV» (§808): a CSV or TSV read into rows (`parseResultsCsv`, `bib,time[,chip][,status]`, with a header or without) and
  * matched by race number to the event's confirmed registrations — never a test row. **It writes nothing**: the page puts the rows in
  * the table's boxes, a number no registration holds becomes a row needing a typed name, and «Salvează tot clasamentul» is the one
  * thing that saves. A file with a bad line is refused whole, naming the line (`ResultsCsvError`, `RESULTS_IMPORT_INVALID`).
@@ -737,7 +737,7 @@ function sheetOrder<T extends { status: ResultStatus; positionOverall: number | 
 }
 
 /**
- * The race's results as a file's rows (§NNN), for whoever may enter them — names as the backoffice sees them: the registration's, the
+ * The race's results as a file's rows (§808), for whoever may enter them — names as the backoffice sees them: the registration's, the
  * typed one, none for a row an erased registration left. The download is recorded (`event_results.exported`: who, how many rows, never
  * a name) because a file that leaves the site is the one copy the retention sweep cannot reach.
  */
@@ -770,12 +770,12 @@ export async function exportEventResults<T extends Record<string, unknown>>(db: 
   return { event: view.event, rows };
 }
 
-/** One row of the public results (§NNN): a number, a name only for a runner who ticked, the times, the positions and the category. Never an address, a phone, a document, a note or a registration's id. */
+/** One row of the public results (§808): a number, a name only for a runner who ticked, the times, the positions and the category. Never an address, a phone, a document, a note or a registration's id. */
 export type PublicResultRow = {
   bibNumber: number;
   /**
    * The registration's display name — only for a registered runner who ticked the list's box — or the typed name of a runner the club entered by hand
-   * **and recorded as having agreed** (§NNN); null otherwise, and the page says «Participant #bib» (`anonymousResultLabel`).
+   * **and recorded as having agreed** (§810); null otherwise, and the page says «Participant #bib» (`anonymousResultLabel`).
    */
   name: string | null;
   status: ResultStatus;
@@ -799,7 +799,7 @@ export type PublicEventResults = {
 };
 
 /**
- * What the event page shows of a race's results (§NNN) — for the page lane, the public list's rule extended: **nothing** unless the
+ * What the event page shows of a race's results (§808) — for the page lane, the public list's rule extended: **nothing** unless the
  * Administrator published them (`events.results_published`), the privacy notice **and** the terms in force describe them
  * (`noticeDescribes`, `termsDescribe`, the cached reads, passed in), the race is a race, **it has started**, and the public list's
  * period has not passed (`publicListStillOpen`, §421, checked here at request time because a date passing is no write). Then every
@@ -878,7 +878,7 @@ export async function readPublicEventResults<T extends Record<string, unknown>>(
         hidden: row.outsideCapacity === true && !hiddenShown,
         noticeVersion: row.noticeVersion,
         firstResultsNoticeVersion: options.firstResultsNoticeVersion,
-        // A runner the club typed by hand: the staff-recorded agreement (§NNN), on a row no registration holds (the database's check says the same)
+        // A runner the club typed by hand: the staff-recorded agreement (§810), on a row no registration holds (the database's check says the same)
         // and whose number no confirmed registration has taken since: the backoffice already draws that number as the registered runner's, whose
         // name follows their own tick and never a staff mark, so until the next save re-files the row the line is «Participant #bib».
         typedNameAgreed: row.registrationId === null && row.typedNameAgreedAt !== null && runners.byBib.get(row.bibNumber)?.status !== "CONFIRMED",

@@ -234,7 +234,7 @@ describe("BR-REQ-070-01 everything held about a person", () => {
   });
 
   /**
-   * §NNN — a race's results are personal data tied to the registration: the access answer lists them, every column as the platform stores
+   * §808 — a race's results are personal data tied to the registration: the access answer lists them, every column as the platform stores
    * it (the race number, how it ended, the times, the places, the category, the note, whether the race's results are public), and the file
    * carries them too — an answer without them would be incomplete.
    */

@@ -3,7 +3,7 @@ import en from "../../../../messages/en.json";
 import ro from "../../../../messages/ro.json";
 
 /**
- * Whose name a published result carries (§NNN, extending the public list's rule — §143, §396, §421, §743, BR-REQ-039-01).
+ * Whose name a published result carries (§808, extending the public list's rule — §143, §396, §421, §743, BR-REQ-039-01).
  *
  * The same tick, one for the list and the results: «Vreau să apar pe lista de participanți & rezultate». A result shows a name
  * only for a runner who passes **every** condition the public list asks of a name, and one more:
@@ -17,7 +17,7 @@ import ro from "../../../../messages/ro.json";
  *   or above `firstResultsNoticeVersion`, §421's line for the states): a tick given under the older notice — «Rezultate cu nume nu
  *   publicăm încă», with terms that promised to ask separately first — agreed to a list, not to a ranking by name.
  *
- * **A runner the club typed by hand** (no registration, so no form and no tick) is named under a rule of its own (§NNN, amending the
+ * **A runner the club typed by hand** (no registration, so no form and no tick) is named under a rule of its own (§810, amending the
  * above; the owner, 2026-10-17: «ar trebui să-l putem adăuga totuși în sistem manual … să-l punem în rezultat»): only while a staff
  * member **recorded that the person agreed** to appear by name (`event_results.name_agreed_at`, the actor and the moment kept — the
  * race-day desk's paper declaration has the same shape, §67: the participant agrees, a staff member records it), the typed name is not

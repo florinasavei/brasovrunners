@@ -26,7 +26,7 @@ const TABLE_ID = "results-table";
 type ResultsEvent = Pick<PublicEvent, "id" | "type" | "resultsPublished" | "startsAt" | "endsAt" | "raceNumberFormat">;
 
 /**
- * **«Clasament»** — a race's published results on its page, under `#clasament` (§NNN, race results part 2; the owner, 2026-10-17:
+ * **«Clasament»** — a race's published results on its page, under `#clasament` (§809, race results part 2; the owner, 2026-10-17:
  * «Aș vrea să pot pune și clasament la final după cursă»). Drawn by `EventPageView` after «Cine vine», the way the start list is: a
  * native `<details>` in the same outlined shape, **open** on arrival — after a race the results are what a visitor came for.
  *

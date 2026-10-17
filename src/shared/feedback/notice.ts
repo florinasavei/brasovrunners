@@ -145,7 +145,7 @@ const NOTHING_HAPPENED: ReadonlySet<string> = new Set([
   "volunteerRolesUnchanged",
   // «Salvează punctele» with the list as it was (§757).
   "checkpointsUnchanged",
-  // «Salvează tot clasamentul» with every result as it was, and the publish tick pressed as it already stood (§NNN).
+  // «Salvează tot clasamentul» with every result as it was, and the publish tick pressed as it already stood (§808).
   "resultsUnchanged",
   "resultsPublicUnchanged",
   // The newsletter (§445): the same form pressed twice, and an address that was not on the list.

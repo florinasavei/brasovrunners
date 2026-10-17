@@ -225,7 +225,7 @@ export const PANEL_GLYPHS = {
   menuOrder: ReorderIcon,
   // «Previzualizare» (§579): the event's card and page as a visitor will see them, before saving.
   preview: VisibilityIcon,
-  // «Clasament» (§NNN): a race's results page, its cards and the link to it from the event editor — and its «Importă din CSV» card, the file going up.
+  // «Clasament» (§808): a race's results page, its cards and the link to it from the event editor — and its «Importă din CSV» card, the file going up.
   results: LeaderboardIcon,
   importCsv: UploadFileIcon,
 } satisfies Record<string, ComponentType<SvgIconProps>>;

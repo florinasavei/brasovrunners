@@ -8,12 +8,12 @@ import { eventTakesResults } from "@/modules/results/domain/event-type";
 import { resultsFingerprint } from "@/modules/results/domain/fingerprint";
 
 /**
- * §NNN, BR-REQ-050-02 — the download of a race's results (the registrations export's rules, reused), a category in the Excel footer's own words,
+ * §808, BR-REQ-050-02 — the download of a race's results (the registrations export's rules, reused), a category in the Excel footer's own words,
  * which events take results, and the fingerprint the form posts back to refuse a stale save.
  */
 const statistics = (locale: "ro" | "en") => (key: string) => (locale === "ro" ? ro : en).Admin.registrations.statistics[key as "category"] as string;
 
-describe("§NNN categoryLabelOf — the Excel footer's words", () => {
+describe("§808 categoryLabelOf — the Excel footer's words", () => {
   it("joins the sex and the band the way the statistics do, in both languages", () => {
     expect(categoryLabelOf("FEMALE:from30", statistics("ro"))).toBe("Feminin, 30-39 ani");
     expect(categoryLabelOf("MALE:under18", statistics("ro"))).toBe("Masculin, sub 18 ani");
@@ -37,7 +37,7 @@ describe("§NNN categoryLabelOf — the Excel footer's words", () => {
   });
 });
 
-describe("§NNN buildResultsCsv", () => {
+describe("§808 buildResultsCsv", () => {
   const header = { position: "Loc", positionSex: "Loc la sex", positionCategory: "Loc la categorie", bib: "Număr", name: "Nume", sex: "Sex", category: "Categorie", status: "Status", time: "Timp", chip: "Timp cip", note: "Notă" };
 
   it("writes a BOM, CRLF and one row per result, empty cells for what a runner who did not finish has not", () => {
@@ -65,14 +65,14 @@ describe("§NNN buildResultsCsv", () => {
   });
 });
 
-describe("§NNN which events take results", () => {
+describe("§808 which events take results", () => {
   it("takes only the race", () => {
     expect(eventTakesResults("RACE")).toBe(true);
     for (const type of ["GROUP_RUN", "HIKE", "COFFEE", "MEETUP", "GEAR_TEST", "EXTERNAL", ""]) expect(eventTakesResults(type), type).toBe(false);
   });
 });
 
-describe("§NNN resultsFingerprint", () => {
+describe("§808 resultsFingerprint", () => {
   const row = (bibNumber: number, over: Partial<Parameters<typeof resultsFingerprint>[0][number]> = {}) => ({
     bibNumber,
     registrationId: null,

@@ -5,7 +5,7 @@ import { RESULT_STATUSES } from "@/modules/results/domain/ranking";
 import { parseResultsCsv, RESULTS_CSV_MAX_CHARS, ResultsCsvError, resultStatusOfWord } from "@/modules/results/domain/import-csv";
 
 /**
- * §NNN, BR-REQ-050-02 — «Importă din CSV»: `bib,time[,chip][,status]`, with a header or without, separated by a comma, a semicolon or a
+ * §808, BR-REQ-050-02 — «Importă din CSV»: `bib,time[,chip][,status]`, with a header or without, separated by a comma, a semicolon or a
  * tab; times as the boxes take them; the status as its code or its word in either language. The first bad line refuses the whole file.
  */
 const sec = (n: number) => n * 1000;
@@ -21,7 +21,7 @@ function refusal(text: string): { line: number; problem: string } {
   throw new Error("the file was read");
 }
 
-describe("§NNN parseResultsCsv — the shape", () => {
+describe("§808 parseResultsCsv — the shape", () => {
   it("reads bib,time with no header", () => {
     expect(parseResultsCsv("101,45:12\n102,1:02:03")).toEqual([
       { line: 1, bibNumber: 101, status: "FINISHED", gunTimeMs: T, chipTimeMs: null },
@@ -74,7 +74,7 @@ describe("§NNN parseResultsCsv — the shape", () => {
   });
 });
 
-describe("§NNN parseResultsCsv — the status words", () => {
+describe("§808 parseResultsCsv — the status words", () => {
   it("knows the four codes and their words in Romanian and English", () => {
     const words: Record<string, string[]> = {
       FINISHED: ["FINISHED", "finished", "Sosit", "terminat", "fin"],
@@ -87,7 +87,7 @@ describe("§NNN parseResultsCsv — the status words", () => {
   });
 });
 
-describe("§NNN parseResultsCsv — the first bad line refuses the whole file, naming it", () => {
+describe("§808 parseResultsCsv — the first bad line refuses the whole file, naming it", () => {
   it("names the line and the problem", () => {
     expect(refusal("101,45:12\nabc,46:00")).toEqual({ line: 2, problem: "bib" });
     expect(refusal("101,45:12\n102,nope")).toEqual({ line: 2, problem: "time" });
@@ -121,7 +121,7 @@ describe("§NNN parseResultsCsv — the first bad line refuses the whole file, n
   });
 });
 
-describe("§NNN the file the backoffice downloads can be imported again, in either language", () => {
+describe("§808 the file the backoffice downloads can be imported again, in either language", () => {
   it("knows every state's word as the page writes it in Romanian and in English — «Dropped out» included", () => {
     for (const catalogue of [ro, en]) {
       for (const status of RESULT_STATUSES) {

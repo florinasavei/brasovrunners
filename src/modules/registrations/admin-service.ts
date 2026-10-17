@@ -1561,7 +1561,7 @@ async function eraseRegistration<T extends Record<string, unknown>>(
     await tx.delete(declarationAcceptances).where(eq(declarationAcceptances.registrationId, current.id));
     await tx.delete(registrations).where(eq(registrations.id, current.id));
     /*
-      A result entered for the person (§NNN) stays, nameless, on its bib (`ON DELETE SET NULL`), and nothing that describes the person
+      A result entered for the person (§808) stays, nameless, on its bib (`ON DELETE SET NULL`), and nothing that describes the person
       stays with it: the sex, the age band and the positions by sex and by category it carried are cleared and the others' places are
       counted again without it, in this transaction (`rerankEventResults`).
     */

@@ -301,7 +301,7 @@ export const events = pgTable(
     showRouteProfile: boolean("show_route_profile").notNull().default(true),
 
     /**
-     * «Clasamentul e public pe pagina evenimentului» (§NNN, race results part 1): whether the event page shows the
+     * «Clasamentul e public pe pagina evenimentului» (§808, race results part 1): whether the event page shows the
      * results entered in the backoffice (`event_results`). Off for every event that exists and every one created
      * after this column — results are a disclosure, like the public participant list (`participant_list_visibility`):
      * only an Administrator switches it on, and only while the privacy notice in force describes the results

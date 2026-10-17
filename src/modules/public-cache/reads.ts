@@ -539,7 +539,7 @@ export async function cachedFirstStatesNoticeVersion(): Promise<number | null> {
 }
 
 /**
- * The first approved privacy notice that described a race's results (`findFirstResultsNoticeVersion`, §NNN), or null — the line below
+ * The first approved privacy notice that described a race's results (`findFirstResultsNoticeVersion`, §808), or null — the line below
  * which a tick was given under a notice that said no named results were published yet: those runners appear in the published
  * results as «Participant #numărul». Expired with every legal text, like the states' twin above.
  */
@@ -548,7 +548,7 @@ export async function cachedFirstResultsNoticeVersion(): Promise<number | null> 
 }
 
 /**
- * A race's published results, the rows the event page draws (§NNN, race results part 2): `readPublicEventResults` through the data
+ * A race's published results, the rows the event page draws (§809, race results part 2): `readPublicEventResults` through the data
  * cache, filed under `places` and `events` — the tags the results' save, its publish switch, a confirmation, a cancellation, an erasure and
  * somebody leaving the list already expire, so a name is never shown after its owner withdrew it and a correction is on the page at
  * once. Like the start list's rows it has **no saved copy** (`places` is never kept): a stale ranking is a wrong place, so a month
@@ -655,7 +655,7 @@ export async function cachedVolunteersDescribed(now: Date): Promise<boolean> {
 }
 
 /**
- * Whether an event's page may show its published results (§NNN): the privacy notice in force describes them
+ * Whether an event's page may show its published results (§808): the privacy notice in force describes them
  * (`describesResults`), in every language — `cachedVolunteersDescribed`'s reading, so an approval opens the
  * section the moment the notice itself changes. `noticeDescribesResults` is the uncached twin
  * `setResultsPublished` asks again at every press.
@@ -795,7 +795,7 @@ export async function cachedRefusalDisclosed(now: Date): Promise<boolean> {
 }
 
 /**
- * Whether the terms in force describe a race's published results (§NNN, `termsDescribeResults`), in every language — the second
+ * Whether the terms in force describe a race's published results (§808, `termsDescribeResults`), in every language — the second
  * condition, beside the notice's (`cachedResultsDescribed`), for the event page to show them. Read through
  * `cachedCurrentApprovedDocument`, so an approval expires it on the day the terms change.
  */

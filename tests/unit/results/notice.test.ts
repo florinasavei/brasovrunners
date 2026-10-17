@@ -10,13 +10,13 @@ import { resultsClause, resultsMergeValues } from "@/modules/results/notice-word
 import { ownerTasks } from "@/modules/diagnostics/owner-tasks";
 
 /**
- * §NNN, BR-REQ-053-01 — the notice's gate for a race's published results: `{{results}}` replaces «Rezultate cu nume nu publicăm încă»
+ * §808, BR-REQ-053-01 — the notice's gate for a race's published results: `{{results}}` replaces «Rezultate cu nume nu publicăm încă»
  * in section 4 of the platform's template, in both languages; it is a known merge field with a legend entry, filled with the public
  * section's own name; a notice that does not name it does not describe the results.
  */
 const text = (body: LegalDocumentBody) => body.sections.flatMap((section) => section.paragraphs).join("\n");
 
-describe("§NNN the platform's notice describes the results", () => {
+describe("§808 the platform's notice describes the results", () => {
   it("names {{results}} in both languages, so the gate opens the day it is approved", () => {
     expect(describesResults(privacyNoticeRo)).toBe(true);
     expect(describesResults(privacyNoticeEn)).toBe(true);
@@ -70,7 +70,7 @@ describe("§NNN the platform's notice describes the results", () => {
   });
 });
 
-describe("§NNN the terms and the retention say the same", () => {
+describe("§808 the terms and the retention say the same", () => {
   it("names {{results}} in the terms in both languages, and no longer promises to ask separately: the terms gate the publishing too", () => {
     expect(describesResults(termsRo)).toBe(true);
     expect(describesResults(termsEn)).toBe(true);
@@ -91,7 +91,7 @@ describe("§NNN the terms and the retention say the same", () => {
   });
 });
 
-describe("§NNN a notice that does not name it", () => {
+describe("§808 a notice that does not name it", () => {
   it("does not describe the results: an older notice, a text with the marker taken out, anything that is not a body", () => {
     expect(describesResults({ sections: [{ heading: "4. Lista publică", paragraphs: ["Rezultate cu nume nu publicăm încă."] }] })).toBe(false);
     expect(describesResults(JSON.parse(JSON.stringify(privacyNoticeRo).replace("{{results}}", "")))).toBe(false);
@@ -100,7 +100,7 @@ describe("§NNN a notice that does not name it", () => {
   });
 });
 
-describe("§NNN the field is known and explained", () => {
+describe("§808 the field is known and explained", () => {
   it("is in the merge fields and in the legal editor's legend, with a sentence in both languages", () => {
     expect(MERGE_FIELDS).toContain(RESULTS_MERGE_FIELD);
     const entry = DECLARATION_TOKENS.find((token) => token.token === "{{results}}");

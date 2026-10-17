@@ -2,7 +2,7 @@ import { CSV_BOM } from "@/modules/newsletter/subscribers-csv";
 import { csvCell } from "@/modules/registrations/csv";
 
 /**
- * «Descarcă clasamentul (CSV)» (§NNN): a race's results as a file, for the club's own use — names as the backoffice sees them, the
+ * «Descarcă clasamentul (CSV)» (§808): a race's results as a file, for the club's own use — names as the backoffice sees them, the
  * words of the page it was downloaded from, one row per result in the sheet's order (the finishers by position, then the others).
  *
  * The registrations export's rules (`registrations/csv.ts`), reused rather than copied, as the volunteers' file does (§754): every

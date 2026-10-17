@@ -384,7 +384,7 @@ export const registrations = pgTable(
     /**
      * "Keep my name off the public start list" (BR-REQ-039-01).
      *
-     * The one tick for the list **and the race's published results** (§NNN, race results part 1: «Vreau să apar pe lista de participanți
+     * The one tick for the list **and the race's published results** (§808, race results part 1: «Vreau să apar pe lista de participanți
      * & rezultate», one box, withdrawn the same way): `readPublicEventResults` names a runner only with this on, a confirmed registration
      * and a notice version that described the results (`findFirstResultsNoticeVersion`). `results_name_consent` below, a separate
      * answer once meant for the results alone, is **not read by anything** — always false since §322 — and a contract release may drop it.

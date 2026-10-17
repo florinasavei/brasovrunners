@@ -230,7 +230,7 @@ export const routing = defineRouting({
      */
     "/admin/events/[id]/mesaje": "/admin/events/[id]/mesaje",
     /**
-     * «Clasament» (§NNN): a race's results entered or imported by race number, ranked, and made public by an Administrator. One
+     * «Clasament» (§808): a race's results entered or imported by race number, ranked, and made public by an Administrator. One
      * spelling in both locales, like `mesaje` and `urgente`: a backoffice address, read by the club.
      */
     "/admin/events/[id]/results": "/admin/events/[id]/results",

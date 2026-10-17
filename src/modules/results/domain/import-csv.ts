@@ -5,7 +5,7 @@ import { parseResultTime } from "./result-time";
 import { isResultStatus, RESULTS_MAX, type ResultStatus } from "./ranking";
 
 /**
- * «Importă din CSV» (§NNN): the file a timing sheet or a spreadsheet gives the club, read into rows — nothing else.
+ * «Importă din CSV» (§808): the file a timing sheet or a spreadsheet gives the club, read into rows — nothing else.
  * It never touches the database and never saves: the page shows what was read in the boxes of the table, the club
  * reviews it, and «Salvează tot clasamentul» is the one thing that writes.
  *

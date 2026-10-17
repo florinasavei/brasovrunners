@@ -13,7 +13,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 import { AFTER_THE_RACE, approvePrivacyNotice, approveResultsTexts, approveTerms, createRace, person, registerRunner, resetNoticeCounter } from "../../helpers/results";
 
 /**
- * §NNN — a runner the club entered by hand stands by name in the public ranking once the staff record that the person agreed
+ * §810 — a runner the club entered by hand stands by name in the public ranking once the staff record that the person agreed
  * (BR-REQ-039-01, BR-REQ-050-02): migration 0167's columns and checks, the save that sets and clears the record with its audit row (who and when,
  * never the name), the page's data, the public read's rule, the fingerprint that makes a stale form a conflict, and the retention sweep.
  * Modelled on the race-day desk's paper declaration (§67): the participant agrees, a staff member records it.
@@ -56,7 +56,7 @@ const byBib = async (bib: number) => (await stored()).find((row) => row.bibNumbe
 const trail = () => db.select().from(auditLogs).where(eq(auditLogs.entityId, raceId)).orderBy(auditLogs.createdAt, auditLogs.id);
 const resultsTrail = async () => (await trail()).filter((row) => row.action.startsWith("event_result."));
 
-describe("§NNN migration 0167: the columns and their checks", () => {
+describe("§810 migration 0167: the columns and their checks", () => {
   const insert = (values: Partial<typeof eventResults.$inferInsert>) => db.insert(eventResults).values({ eventId: raceId, bibNumber: 900, status: "DNS", ...values });
 
   it("starts every row with no agreement recorded, registered or typed", async () => {
@@ -103,7 +103,7 @@ describe("§NNN migration 0167: the columns and their checks", () => {
   });
 });
 
-describe("§NNN the save records, keeps and withdraws the agreement", () => {
+describe("§810 the save records, keeps and withdraws the agreement", () => {
   it("sets the moment and the actor when the tick comes with a new typed line, and audits it without the name", async () => {
     await save([ion()], null, staff.MODERATOR!);
     const at = new Date(NOW.getTime() + ticks * 1000);
@@ -242,7 +242,7 @@ describe("§NNN the save records, keeps and withdraws the agreement", () => {
   });
 });
 
-describe("§NNN the page's data and the export", () => {
+describe("§810 the page's data and the export", () => {
   it("tells the page which typed lines are ticked, and whether the public list would name them", async () => {
     await registerRunner(db, raceId, { name: "Ana Popescu", bibNumber: 101 });
     await save([line(101, { time: "50:00" }), ion(), typed(1, { bib: "901", name: "Maria Pop", time: "43:00" })]);
@@ -263,7 +263,7 @@ describe("§NNN the page's data and the export", () => {
   });
 });
 
-describe("§NNN the public read: a typed runner is named only while the staff's record stands", () => {
+describe("§810 the public read: a typed runner is named only while the staff's record stands", () => {
   const options = { now: AFTER_THE_RACE, deadlines: DEFAULT_DEADLINES, noticeDescribes: true, termsDescribe: true, firstResultsNoticeVersion: 1 as number | null };
 
   async function published(rows: PostedResultRow[]) {
@@ -335,7 +335,7 @@ describe("§NNN the public read: a typed runner is named only while the staff's 
   });
 });
 
-describe("§NNN retention: the agreement goes with the row, three years after the race", () => {
+describe("§810 retention: the agreement goes with the row, three years after the race", () => {
   it("deletes a typed row whole — the name, the moment and the actor with it", async () => {
     expect(PRUNE_STEPS).toContain("event-results");
     const old = await createRace(db, { startsAt: new Date("2026-11-21T07:00:00.000Z") });

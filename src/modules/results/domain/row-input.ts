@@ -5,7 +5,7 @@ import { parseResultTime } from "./result-time";
 import { isResultStatus, RESULT_NAME_MAX, RESULT_NOTE_MAX, type ResultStatus } from "./ranking";
 
 /**
- * One row of the «Clasament» form, read (§NNN): what the boxes say, as values, or what is wrong with them. Pure — the service asks
+ * One row of the «Clasament» form, read (§808): what the boxes say, as values, or what is wrong with them. Pure — the service asks
  * it row by row and adds the two things only the database knows (whether a registration holds the race number, and whether another
  * row names the same one).
  *
@@ -19,7 +19,7 @@ import { isResultStatus, RESULT_NAME_MAX, RESULT_NOTE_MAX, type ResultStatus } f
  *    question), a **sex** blank or one of the registration form's two answers, and a **birth date** blank or a day that is not after
  *    the race's.
  *
- * 6. for a typed runner, the **agreement tick** («A acceptat să apară cu numele în clasament», §NNN) needs a name to show: ticked with the
+ * 6. for a typed runner, the **agreement tick** («A acceptat să apară cu numele în clasament», §810) needs a name to show: ticked with the
  *    name left blank is `agreedNameMissing`. A registered runner's row ignores the tick — their name follows their own.
  *
  * A row with every box empty is not a result and is `blank`: the table draws a line for every registered runner, and most lines

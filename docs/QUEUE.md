@@ -14,22 +14,20 @@ decision or a click only the club can make · **released** — on production, wi
 The owner, 2026-10-10: «Soon I need to start a new session from the laptop … You need to save and document everything».
 This section replaces the plan of 2026-09-30; it is what a session with none of today's conversation needs to carry on.
 
-- **Production: `BR-V3.53`** (2026-10-17 08:14: §805 the event editor's tick «Arată profilul traseului pe pagină»;
-  **migration `0165`**). Waiting for «prod»: `BR-V3.54` (§806–§807, below — no migration).
-- **QA: `BR-V3.54`** — §806 the race number's distance and gain stand where the club chooses (beside the profile,
-  under it on one line, or in the header; default beside, every stored design unchanged); §807 the route's checkpoints:
-  «Tradu din română» on the GPX points' English names, the elevation profile across the page with a dotted line at each
-  point, no closing clock while the race's gun time is not set, the fork over the drop on a pin with food and water.
-- **Building (the race results, three stacked lanes → `BR-V3.55`, migrations `0166` + `0167`):** `feat/race-results-v1`
-  (reviewed, shipped by its lane: the `event_results` table, the backoffice page `/admin/events/[id]/results` with one
-  «Salvează tot clasamentul», CSV import by bib, rankings overall / by sex / by category, the Administrator's publish tick
-  gated by the notice's `{{results}}` paragraph and the terms, the `/admin/tasks` row `resultsNotice`);
-  `feat/race-results-typed-name` (stacked: a runner entered by hand stands by name in the public ranking once the staff
-  record, audited, that they agreed — the desk's paper-declaration pattern); `feat/race-results-public` (stacked: the
-  event page's «Clasament» after the race with a category filter and a bib search, the listing chip, the editor's
-  «De făcut» row). Not decided by the owner: the email «Rezultatul tău», result columns in the Excel, a timing provider.
-  The owner's decisions from §803 (retention periods, December on Hobby or Pro, the Basic build machine, QA's
-  region/Node) are open.
+- **Production: `BR-V3.54`** (2026-10-17 21:50: §806 the race number's figures where the club chooses; §807 the route's
+  checkpoints — «Tradu din română» on the GPX names, the profile across the page with a dotted guide at each point, no closing
+  clock before the gun time, the fork over the drop; no migration). Waiting for «prod»: `BR-V3.55` (§808–§810, below —
+  **migrations `0166` + `0167`**, applied by the gated run `yarn ship` approves).
+- **QA: `BR-V3.55`** — the race results: §808 the `event_results` table, the backoffice page `/admin/events/[id]/results` with one
+  «Salvează tot clasamentul», CSV import by race number, rankings overall / by sex / by category, the Administrator's publish tick
+  gated by the notice's `{{results}}` paragraph and the terms (`/admin/tasks` row `resultsNotice`); §809 the event page's
+  «Clasament» after the race with a category filter and a bib search, the listing chip, the editor's «De făcut» row; §810 a runner
+  entered by hand stands by name once the staff record, audited, that they agreed (the desk's paper-declaration pattern).
+  **The club's step:** approve the privacy notice and the terms from the new templates (both name `{{results}}`) before a
+  ranking can be made public — `SETUP.md` §45. Not decided by the owner: the email «Rezultatul tău», result columns in the
+  Excel, a timing provider; the bib's strip keeps the drop over the fork until its next drawing version.
+- **Building:** nothing. The owner's decisions from §803 (retention periods, December on Hobby or Pro, the Basic build
+  machine, QA's region/Node) are open.
 - **Waiting on the owner:** the privacy notice from the new template, approved in `/admin/legal` after a lawyer reads
   the paragraph on what the site loads (its first sentence says what is used is strictly necessary and needs no consent,
   art. 4(6) of Legea nr. 506/2004, while the same paragraph says Strava may set its own cookies without a press — the
@@ -145,6 +143,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V3.55` | race results, part 1: entered or imported by bib in the backoffice, ranked overall, by sex and by category, published only when the notice says so (§808) · race results, part 2: the public «Clasament» on the event page after the race, with a category filter and a bib search, the listing chip and the editor's «De făcut» row (§809) · race results: a runner entered by hand stands by name in the public ranking once the staff record that they agreed (§810) |
 | `BR-V3.54` | the race number's distance and gain stand where the club chooses: beside the profile, under it on one line, or in the header (§806) · the GPX points' English names get «Tradu din română», the elevation profile spans the page's width, a dotted line marks every checkpoint's km, the food glyph wins on a pin, no closing clock while the race's start is not set (§807) |
 | `BR-V3.53` | the event editor: a tick «Arată profilul traseului pe pagină» (§805) |
 | `BR-V3.52` | /devs shows the database's size and growth and the month's builds; the plan for keeping Neon and Vercel light (§803) · the race number's strip draws from the same elevation core as the page: kilometres, altitudes, the aid stations named; the picture's recommended shape (§804) |

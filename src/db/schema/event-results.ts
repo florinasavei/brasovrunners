@@ -5,14 +5,14 @@ import { registrations, registrationSex } from "./registrations";
 import { staffUsers } from "./staff-users";
 
 /**
- * How a runner's race ended (§NNN): finished with a time, did not finish, did not start, disqualified.
+ * How a runner's race ended (§808): finished with a time, did not finish, did not start, disqualified.
  * A closed set at the database, like every other state here — «Sosit», «Abandon», «Neprezentat»,
  * «Descalificat» in the backoffice's words; a fifth is a migration.
  */
 export const eventResultStatus = pgEnum("event_result_status", ["FINISHED", "DNF", "DNS", "DSQ"]);
 
 /**
- * One runner's result in one race (§NNN; the owner, 2026-10-17: «Aș vrea să pot pune și clasament la final după cursă»).
+ * One runner's result in one race (§808; the owner, 2026-10-17: «Aș vrea să pot pune și clasament la final după cursă»).
  *
  * **One race is one list**: a row per race number (`bib_number`), entered in the backoffice or imported from a
  * CSV, by bib. A runner who registered is found by the bib (`registration_id`) and **takes the registration's
@@ -55,7 +55,7 @@ export const eventResults = pgTable(
     sex: registrationSex("sex"),
     birthDate: date("birth_date", { mode: "string" }),
     /**
-     * When the staff recorded that a runner typed by hand agreed to appear **by name** in the public ranking (§NNN, amending the
+     * When the staff recorded that a runner typed by hand agreed to appear **by name** in the public ranking (§810, amending the
      * results decision: the owner, 2026-10-17: «ar trebui să-l putem adăuga totuși în sistem manual … să-l punem în rezultat»). Null
      * is no agreement. Only a row with no registration carries one — a registered runner's name follows their own tick on the form,
      * never a staff mark — and only with a name to show.
@@ -91,7 +91,7 @@ export const eventResults = pgTable(
     check("event_results_chip_only_finished", sql`${t.chipTimeMs} IS NULL OR ${t.status} = 'FINISHED'`),
     check("event_results_note_length", sql`${t.note} IS NULL OR char_length(${t.note}) BETWEEN 1 AND 200`),
     check("event_results_name_length", sql`${t.displayName} IS NULL OR char_length(btrim(${t.displayName})) BETWEEN 1 AND 120`),
-    // The staff mark of a typed runner's agreement (§NNN): the actor only with the moment (the account may be removed, `SET NULL`, the moment stays),
+    // The staff mark of a typed runner's agreement (§810): the actor only with the moment (the account may be removed, `SET NULL`, the moment stays),
     // on a row no registration holds, and with a name to show.
     check("event_results_name_agreed_actor", sql`${t.nameAgreedByStaffUserId} IS NULL OR ${t.nameAgreedAt} IS NOT NULL`),
     check("event_results_name_agreed_typed_only", sql`${t.nameAgreedAt} IS NULL OR ${t.registrationId} IS NULL`),

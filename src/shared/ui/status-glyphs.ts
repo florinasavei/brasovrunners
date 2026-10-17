@@ -73,7 +73,7 @@ export const STATUS_GLYPHS = {
   otherRoad: SwapHorizIcon,
   wordsKept: LockClockIcon,
   wordsGone: DeleteForeverIcon,
-  // A runner's race that did not end in a time (§NNN): did not start, dropped out. A disqualified runner wears `failed`.
+  // A runner's race that did not end in a time (§808): did not start, dropped out. A disqualified runner wears `failed`.
   didNotStart: DoNotDisturbIcon,
   droppedOut: FlagIcon,
 } satisfies Record<string, ComponentType<SvgIconProps>>;

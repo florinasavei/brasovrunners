@@ -234,7 +234,7 @@ const BACKOFFICE_FILES: ReadonlySet<string> = new Set([
   "src/modules/newsletter/ui/SubscriberListFields.tsx",
   // The event editor's «Voluntari» card (§754): the staff's; the public form beside it, `VolunteerBox`, stays public.
   "src/modules/volunteers/ui/VolunteersCard.tsx",
-  // A race's «Clasament» lines (§NNN): the staff's; the public results beside them are another file of the same area.
+  // A race's «Clasament» lines (§808): the staff's; the public results beside them are another file of the same area.
   "src/modules/results/ui/ResultRows.tsx",
   "src/modules/registrations/ui/DeskRow.tsx",
   "src/modules/registrations/ui/InviteForm.tsx",

@@ -9,7 +9,7 @@ import { createTestDatabase, resetTables, type TestDatabase } from "../../helper
 import { AFTER_THE_RACE, createRace, person, registerRunner, resetNoticeCounter } from "../../helpers/results";
 
 /**
- * §NNN — «Descarcă clasamentul (CSV)» (BR-REQ-050-02, BR-REQ-060-01): the file in the reader's language, the sex in that language's word beside the
+ * §808 — «Descarcă clasamentul (CSV)» (BR-REQ-050-02, BR-REQ-060-01): the file in the reader's language, the sex in that language's word beside the
  * category's, and — what the file promises — a download in either language that the page's own import reads back, every state's word included
  * («Dropped out» as much as «Abandon»).
  */
@@ -60,7 +60,7 @@ const download = async (lang: string) => {
   return { response, body: (await response.text()).replace(/^﻿/, "") };
 };
 
-describe("§NNN the results download", () => {
+describe("§808 the results download", () => {
   it("writes the sex in the reader's own words in Romanian, beside the category's «Feminin, 30-39 ani»", async () => {
     const { response, body } = await download("ro");
     expect(response.status).toBe(200);

@@ -197,7 +197,7 @@ export const DECLARATION_TOKENS: readonly DeclarationToken[] = [
     messageKey: LIST_NUMBERS_MERGE_FIELD,
     example: inBoth((locale) => listNumbersClause(locale)),
   },
-  // The privacy notice's marker for a race's published results (§NNN): filled with the public section's own name,
+  // The privacy notice's marker for a race's published results (§808): filled with the public section's own name,
   // and the switch that lets an Administrator publish them and the page show them (`describesResults`).
   {
     token: `{{${RESULTS_MERGE_FIELD}}}`,

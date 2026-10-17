@@ -2,7 +2,7 @@ import { getTranslations } from "next-intl/server";
 import { categoryLabelOf } from "./category-words";
 
 /**
- * A stored category (`FEMALE:from30`) in the page's language (§NNN, race results part 2): the words of the club's statistics
+ * A stored category (`FEMALE:from30`) in the page's language (§809, race results part 2): the words of the club's statistics
  * (§787, `Admin.registrations.statistics`), so the public table reads «Feminin, 30-39 ani» exactly as the Excel and the CSV do.
  * The catalogue's namespace is read here, not in the section, so the section's own `Event` keys stay unambiguous for the checker
  * that matches a file's keys against every namespace it names.

@@ -102,7 +102,7 @@ export default async function EventCard({
   /** The title's heading level: `h2` on the listing; `h3` under a section's own `h2` (the home page). */
   titleAs?: "h2" | "h3";
   /**
-   * «Clasament» (§NNN, race results part 2): this race's results are on show, so the chip links to the page's `#clasament`. The listing
+   * «Clasament» (§809, race results part 2): this race's results are on show, so the chip links to the page's `#clasament`. The listing
    * works it out once for the whole page (`eventsWithResultsChip`) and hands each card a boolean; a card never asks the database.
    * Absent on every card but a finished race's — a group run, an upcoming race, the home page's, the preview's.
    */
@@ -151,7 +151,7 @@ export default async function EventCard({
           {event.membersOnly && <GlyphChip glyph="membersOnly" color="primary" label={tEvent("membersOnly")} />}
           {/* Held with a partner (§367, amended §375, §379): the handshake and the generic "Colaborare" / "Partnership". */}
           <PartnerChip event={event} />
-          {/* The results are on the event's page (§NNN): a link to them, 44 pixels tall around the small chip. */}
+          {/* The results are on the event's page (§809): a link to them, 44 pixels tall around the small chip. */}
           {resultsChip && <ResultsChip href={`${page}#clasament`} label={tEvent("results.title")} />}
           {/* BR-REQ-020-01 criterion 2: a cancelled event stays listed and says so. */}
           {event.eventStatus === "CANCELLED" && <Chip size="small" color="error" label={tEvent("cancelled")} />}
