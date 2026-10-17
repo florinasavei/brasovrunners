@@ -246,18 +246,19 @@ export default async function EventTodoCard({ locale, eventId, computed, items, 
   /** «Lipsește pe pagină»: the whole row is the link to the card that fills the field — or, for the results, to the page that does. */
   const pageRow = (row: Extract<TodoRow, { kind: "page" }>) => {
     const { todo } = row;
-    const target = todo.anchor === "page-results" ? resultsPath : `#${todo.anchor}`;
+    const toResults = todo.anchor === "page-results";
+    const target = toResults ? resultsPath : `#${todo.anchor}`;
     const text = t(`eventTodos.page.${todo.rule}`, { language: todo.locale ? (languageNames[todo.locale] ?? todo.locale) : "" });
     return (
       <Box component="li" key={row.key} id={rowId(row.key)} data-testid="event-todo-page-row" data-rule={todo.id} sx={ROW_SX}>
-        {/* A plain in-page link — the browser's own hash change opens the folds around the field
+        {/* A plain link — in the editor, the browser's own hash change opens the folds around the field
             (`OpenFoldFromHash`, §336), which a soft navigation of the locale-aware `Link` would not. */}
         <Box
           component="a"
           href={target}
           data-testid="event-todo-fill"
-          aria-label={t("eventTodos.fillRow", { text })}
-          title={t("eventTodos.fill")}
+          aria-label={toResults ? t("eventTodos.openResultsRow", { text }) : t("eventTodos.fillRow", { text })}
+          title={toResults ? t("eventTodos.openResults") : t("eventTodos.fill")}
           sx={{ ...LINE_SX, color: "inherit", textDecoration: "none", "&:hover": { bgcolor: "action.hover" } }}
         >
           <Box sx={{ gridArea: "words", display: "flex", alignItems: "center", gap: 1, minWidth: 0 }}>

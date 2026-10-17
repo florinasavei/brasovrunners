@@ -28,7 +28,7 @@ import { A_YEAR_AFTER, AFTER_THE_RACE, approvePrivacyNotice, approveResultsTexts
  */
 const messages = { ro, en };
 let language: "ro" | "en" = "ro";
-const state = vi.hoisted(() => ({ db: undefined as unknown }));
+const state = vi.hoisted(() => ({ db: undefined as unknown, gateReads: 0, holds: [] as Date[][] }));
 
 vi.mock("next/cache", () => ({ revalidatePath: () => {}, revalidateTag: () => {}, unstable_cache: (fn: unknown) => fn }));
 vi.mock("@/db/client", () => ({ getDb: () => state.db }));
@@ -42,6 +42,33 @@ vi.mock("next-intl/server", () => ({
     return createTranslator({ locale, messages: messages[locale] as never, namespace: namespace as never });
   },
 }));
+/** The cached gate reads and the page's hold, passed through but counted: a page with nothing to show asks no gate, a race holds the page to its clock. */
+vi.mock("@/modules/public-cache/reads", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/modules/public-cache/reads")>();
+  const counted =
+    <A extends unknown[], R>(read: (...args: A) => R) =>
+    (...args: A): R => {
+      state.gateReads += 1;
+      return read(...args);
+    };
+  return {
+    ...actual,
+    cachedDeadlines: counted(actual.cachedDeadlines),
+    cachedResultsDescribed: counted(actual.cachedResultsDescribed),
+    cachedResultsTermsDescribed: counted(actual.cachedResultsTermsDescribed),
+    cachedFirstResultsNoticeVersion: counted(actual.cachedFirstResultsNoticeVersion),
+  };
+});
+vi.mock("@/modules/public-cache/page-lifetime", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/modules/public-cache/page-lifetime")>();
+  return {
+    ...actual,
+    holdPageUntil: (instants: Date[], now: Date) => {
+      state.holds.push(instants);
+      return actual.holdPageUntil(instants, now);
+    },
+  };
+});
 /** The locale-aware link, as a plain anchor: the event's page is `/<locale>/evenimente/<slug>`. */
 vi.mock("@/i18n/navigation", () => {
   const path = (href: { pathname?: string; params?: { slug?: string } }) => `/${language}/evenimente/${href.params?.slug ?? ""}`;
@@ -55,6 +82,7 @@ vi.mock("@/i18n/navigation", () => {
 const { default: ResultsSection } = await import("@/modules/results/ui/ResultsSection");
 const { default: EventCard } = await import("@/modules/events/ui/EventCard");
 const { eventsWithResultsChip } = await import("@/modules/results/public-page");
+const { anonymousResultLabel } = await import("@/modules/results/domain/public-name");
 const { saveEventResults, setResultsPublished } = await import("@/modules/results/results");
 
 let db: TestDatabase;
@@ -72,6 +100,8 @@ beforeEach(async () => {
   await resetTables(db);
   resetNoticeCounter();
   language = "ro";
+  state.gateReads = 0;
+  state.holds = [];
   admin = await person(db, "ADMIN", "Ana Admin");
   raceId = (await createRace(db)).id;
 });
@@ -219,7 +249,7 @@ describe("§NNN «Clasament» on the event page — in Romanian", () => {
     await publishedRace();
     const html = await section();
     const line = /data-testid="results-published"[^>]*>([^<]*)</.exec(html)![1];
-    expect(line).toMatch(/^Publicat .+, la 12:00 · rămâne pe pagină până .+/);
+    expect(line).toMatch(/^Publicat .+, la 12:00 · rămâne pe pagină până .+, la \d{2}:\d{2}$/);
     // 23 November 2026 at 12:00 in Brașov (UTC+2), and thirty days after the end of the race (the start, with no end saved).
     expect(line).toContain("23 nov. 2026");
     expect(line).toContain("12:00");
@@ -231,9 +261,14 @@ describe("§NNN «Clasament» on the event page — in Romanian", () => {
   it("has a column header for every cell, a stacked shape's word before the number and the time, and no caption for the eye", async () => {
     await publishedRace();
     const html = await section();
-    for (const word of ["Loc", "Nr.", "Nume", "Timp", "Categorie"]) expect(html).toContain(`>${word}<`);
-    expect(html).toContain('data-label="Nr."');
+    // The number's word is the start list's («BIB»): one word for one thing on one page.
+    for (const word of ["Loc", "BIB", "Nume", "Timp", "Categorie"]) expect(html).toContain(`>${word}<`);
+    expect(html).toContain('data-label="BIB"');
     expect(html).toContain('data-label="Timp"');
+    // A finisher's time cell carries the word before it on a phone; a runner who did not finish has the status word alone, never «Timp Abandon».
+    const timeCell = (bib: number) => new RegExp(`data-bib="${bib}"[\\s\\S]*?<td data-col="time"([^>]*)>`).exec(html)![1];
+    expect(timeCell(101)).toContain('data-label="Timp"');
+    for (const bib of [104, 105, 106]) expect(timeCell(bib)).not.toContain("data-label");
     expect(html).toContain('id="results-table"');
     // The names stay out of search snippets, as the start list's do.
     expect(html).toMatch(/<section[^>]*data-nosnippet/);
@@ -248,8 +283,20 @@ describe("§NNN «Clasament» on the event page — in Romanian", () => {
     const chips = [...html.matchAll(/data-testid="results-category-chip"[^>]*>[\s\S]*?<\/label>/g)].map((match) => match[0].replace(/<[^>]+>/g, "").replace(/^[^>]*>/, "").trim());
     expect(chips).toEqual(["Toate", "Feminin, 30-39 ani", "Feminin, 40-49 ani", "Feminin, 50-59 ani", "Masculin, 30-39 ani"]);
     expect(html).toMatch(/type="radio"/);
+    // Each chip wears a glyph before its words, like the listing's (the sex of the category; «Toate» a group).
+    const chipHtml = [...html.matchAll(/data-testid="results-category-chip"[^>]*>[\s\S]*?<\/label>/g)].map((match) => match[0]);
+    expect(chipHtml).toHaveLength(5);
+    for (const chip of chipHtml) expect(chip).toMatch(/<svg[^>]*aria-hidden="true"/);
     expect(html).toContain("Caută după număr");
     expect(html).toMatch(/inputMode="numeric"|inputmode="numeric"/);
+  });
+
+  it("leaves the filter out when scripts are off: the controls would tick and narrow nothing", async () => {
+    await publishedRace();
+    const event = { ...(await eventRow()) };
+    const node = await atTheClock(AFTER_THE_RACE, () => ResultsSection({ event }));
+    const raw = renderToStaticMarkup(withClientWords(node as ReactNode, language));
+    expect(raw).toMatch(/@media \(scripting: ?none\)/);
   });
 
   it("writes the number as the event writes it: «pad3» gives «Participant #102» and a column of three digits", async () => {
@@ -259,6 +306,8 @@ describe("§NNN «Clasament» on the event page — in Romanian", () => {
     const html = await section(AFTER_THE_RACE, { raceNumberFormat: "pad3" });
     const seven = rowsOf(html).find((row) => row.bib === 7)!;
     expect(seven.name).toBe("Participant #007");
+    // The backoffice's «Pe site» line is the same string.
+    expect(anonymousResultLabel("ro", 7, "pad3")).toBe(seven.name);
     expect(html).toMatch(/data-testid="result-number"[^>]*>007</);
   });
 });
@@ -280,7 +329,7 @@ describe("§NNN «Clasament» on the event page — in English", () => {
     expect(/data-testid="results-published"[^>]*>([^<]*)</.exec(html)![1]).toMatch(/^Published .+ · on this page until .+/);
     expect(html).toContain("I want to appear on the participants &amp; results list");
     expect(html).toContain("Search by number");
-    for (const word of ["Place", "No.", "Name", "Time", "Category"]) expect(html).toContain(`>${word}<`);
+    for (const word of ["Place", "BIB", "Name", "Time", "Category"]) expect(html).toContain(`>${word}<`);
   });
 });
 
@@ -352,8 +401,34 @@ describe("§NNN the listing card's «Clasament» chip", () => {
     const published = await rowOf();
     await approveTerms(db, { results: false });
     expect([...(await eventsWithResultsChip([published], AFTER_THE_RACE))]).toEqual([]);
+    // A page with no published race asks no gate at all: not the period, not the two verdicts, not the first notice.
+    state.gateReads = 0;
     expect([...(await eventsWithResultsChip([{ ...published, resultsPublished: false }], AFTER_THE_RACE))]).toEqual([]);
     expect([...(await eventsWithResultsChip([], AFTER_THE_RACE))]).toEqual([]);
+    expect(state.gateReads).toBe(0);
+  });
+
+  it("is not for a published race with no result row: the section draws nothing there, so the chip must not point at it", async () => {
+    await approveResultsTexts(db);
+    await db.update(events).set({ resultsPublished: true, resultsPublishedAt: AFTER_THE_RACE }).where(eq(events.id, raceId));
+    // The public read (`PUBLIC_COLUMNS`) carries «published and has a row», the one fact the chip, the holds and the section read.
+    expect((await eventRow()).resultsPublished).toBe(false);
+    expect([...(await eventsWithResultsChip([await eventRow()], AFTER_THE_RACE))]).toEqual([]);
+    await publishedRace({ texts: false });
+    expect((await eventRow()).resultsPublished).toBe(true);
+  });
+
+  it("holds the page to the race's start and to the period's end, for the chip and for the section alike", async () => {
+    await publishedRace();
+    const event = await eventRow();
+    // Thirty days after the start (no end saved): the period's end.
+    const closes = new Date(RACE_STARTS_AT.getTime() + 30 * 86_400_000);
+    state.holds = [];
+    await eventsWithResultsChip([event], AFTER_THE_RACE);
+    expect(state.holds).toEqual([[RACE_STARTS_AT, closes]]);
+    state.holds = [];
+    await atTheClock(AFTER_THE_RACE, () => ResultsSection({ event }));
+    expect(state.holds).toEqual([[RACE_STARTS_AT, closes]]);
   });
 
   it("is drawn by the card as a link to the page's #clasament, 44 pixels tall around the small chip — and not drawn without the flag", async () => {

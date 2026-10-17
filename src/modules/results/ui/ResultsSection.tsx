@@ -10,9 +10,10 @@ import { DISCLOSURE_OPEN_ARROW, DISCLOSURE_SUMMARY_SX, FOLD_GLYPH_INLINE_SX } fr
 import { SR_ONLY_SX } from "@/shared/ui/sr-only";
 import { DENSITY } from "@/theme/density";
 import { categoryLabeller } from "../category-labels";
+import { anonymousResultLabel } from "../domain/public-name";
 import { formatResultTime } from "../domain/result-time";
 import { readEventResultsForPage } from "../public-page";
-import { categoriesPresent } from "./results-filter";
+import { categoriesPresent, categoryGlyphOf } from "./results-filter";
 import ResultsFilter from "./ResultsFilter";
 
 /** What the table's number and time cells say for a row with none: the backoffice's and the start list's own dash (§548). */
@@ -67,11 +68,11 @@ async function resultsSectionOrThrow({ event }: { event: ResultsEvent }) {
   const categoryLabel = await categoryLabeller(locale);
 
   const { rows } = results;
-  const categories = categoriesPresent(rows.map((row) => row.categoryKey)).map((key) => ({ key, label: categoryLabel(key) }));
+  const categories = categoriesPresent(rows.map((row) => row.categoryKey)).map((key) => ({ key, label: categoryLabel(key), glyph: categoryGlyphOf(key) }));
   const day = (date: Date, withTime: boolean) => formatDay(date, { locale, timeZone: CLUB_TIME_ZONE, style: "short", position: "inline", withTime });
   const line = results.publishedAt
-    ? t("results.published", { published: day(results.publishedAt, true), until: day(results.closesAt, false) })
-    : t("results.until", { until: day(results.closesAt, false) });
+    ? t("results.published", { published: day(results.publishedAt, true), until: day(results.closesAt, true) })
+    : t("results.until", { until: day(results.closesAt, true) });
   const numberOf = (bibNumber: number) => formatRaceNumber(bibNumber, event.raceNumberFormat);
 
   return (
@@ -166,9 +167,9 @@ async function resultsSectionOrThrow({ event }: { event: ResultsEvent }) {
               <th scope="col" data-col="place">
                 {t("results.columnPlace")}
               </th>
-              <th scope="col" data-col="number" aria-label={t("results.columnNumberFull")}>
-                <Box component="abbr" title={t("results.columnNumberFull")} sx={{ textDecoration: "none" }}>
-                  {t("results.columnNumber")}
+              <th scope="col" data-col="number" aria-label={t("startList.columnNumberFull")}>
+                <Box component="abbr" title={t("startList.columnNumberFull")} sx={{ textDecoration: "none" }}>
+                  {t("startList.columnNumber")}
                 </Box>
               </th>
               <th scope="col" data-col="name">
@@ -204,14 +205,15 @@ async function resultsSectionOrThrow({ event }: { event: ResultsEvent }) {
                       row.name
                     ) : (
                       <Box component="span" sx={{ color: "text.secondary", fontStyle: "italic" }}>
-                        {t("results.anonymous", { bib: numberOf(row.bibNumber) })}
+                        {anonymousResultLabel(locale, row.bibNumber, event.raceNumberFormat)}
                       </Box>
                     )}
                   </td>
-                  <td data-col="number" data-label={t("results.columnNumber")} data-testid="result-number">
+                  <td data-col="number" data-label={t("startList.columnNumber")} data-testid="result-number">
                     {numberOf(row.bibNumber)}
                   </td>
-                  <td data-col="time" data-label={t("results.columnTime")} data-testid="result-time">
+                  {/* A runner who did not finish has a word in this cell, not a time: the phone must not print «Timp» before «Abandon». */}
+                  <td data-col="time" data-label={finished ? t("results.columnTime") : undefined} data-testid="result-time">
                     {finished ? (
                       <>
                         <span>{row.gunTimeMs !== null ? formatResultTime(row.gunTimeMs) : NO_VALUE}</span>

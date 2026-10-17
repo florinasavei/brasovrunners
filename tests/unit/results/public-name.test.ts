@@ -56,4 +56,10 @@ describe("§NNN anonymousResultLabel", () => {
     expect(anonymousResultLabel("ro", 123)).toBe("Participant #123");
     expect(anonymousResultLabel("en", 7)).toBe("Participant #7");
   });
+
+  it("writes the number as the event writes it, so the site and the backoffice's «Pe site» line say one string", () => {
+    expect(anonymousResultLabel("ro", 7, "pad3")).toBe("Participant #007");
+    expect(anonymousResultLabel("en", 42, "pad4")).toBe("Participant #0042");
+    expect(anonymousResultLabel("ro", 7, "plain")).toBe("Participant #7");
+  });
 });

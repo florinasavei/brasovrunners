@@ -22,6 +22,7 @@ import {
 } from "@/modules/content/events/repository";
 import { canReadContent, canReadRegistrations } from "@/modules/staff-identity/domain/roles";
 import { eventPageTodos } from "@/modules/content/events/domain/page-todos";
+import { resultsRowFor } from "@/modules/results/public-page";
 import { countOpenEventTodos } from "@/modules/event-todos/event-todos";
 import { listApprovedRaceDeclarations } from "@/modules/legal-documents/repository";
 import { isStorageConfigured } from "@/modules/media/storage";
@@ -185,8 +186,9 @@ export default async function AdminEventsPage({ params, searchParams }: Props) {
   const approvedDeclarationIds = new Set(approvedDeclarations.map((declaration) => declaration.id));
   const typedTodos = eventsAndTodos.typed;
   const storageConfigured = isStorageConfigured();
+  const resultsRow = await resultsRowFor(staffUser.role, now);
   const todoCount = (row: (typeof events)[number]) =>
-    eventPageTodos(row.event, row.translations, { now, locales: routing.locales, storageConfigured, approvedDeclarationIds, publicListDays: deadlines.publicListDays }).length +
+    eventPageTodos(row.event, row.translations, { now, locales: routing.locales, storageConfigured, approvedDeclarationIds, publicListDays: deadlines.publicListDays, resultsRow }).length +
     (typedTodos.get(row.event.id) ?? 0);
 
   // Race day, give or take: from the day before the start to the day after (§83).

@@ -9,6 +9,7 @@ import {
 import { holdPageUntil } from "@/modules/public-cache/page-lifetime";
 import { eventTakesResults } from "./domain/event-type";
 import { resultsClockInstants, resultsOnShow, type ResultsOpenEvent } from "./domain/results-open";
+import { canEnterResults, type StaffRole } from "@/modules/staff-identity/domain/roles";
 import type { PublicEventResults } from "./results";
 
 /**
@@ -73,4 +74,15 @@ export async function readEventResultsForPage(event: ResultsOpenEvent & { id: st
   const results = await cachedPublicEventResults(event.id, gates);
   if (!results || now.getTime() > results.closesAt.getTime()) return null;
   return results;
+}
+
+/**
+ * `PageTodoContext.resultsRow` (§NNN): whether the editor's «Cursa s-a terminat și clasamentul nu e publicat» row is for this
+ * viewer — they may open the results page, and the notice and the terms in force describe `{{results}}`, so the Administrator's
+ * publish would be accepted. Cached verdicts, the same ones the public page reads.
+ */
+export async function resultsRowFor(role: StaffRole, now: Date): Promise<boolean> {
+  if (!canEnterResults(role)) return false;
+  const [noticeDescribes, termsDescribe] = await Promise.all([cachedResultsDescribed(now), cachedResultsTermsDescribed(now)]);
+  return noticeDescribes && termsDescribe;
 }

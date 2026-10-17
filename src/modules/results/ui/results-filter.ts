@@ -49,3 +49,11 @@ export function rowMatches(row: ResultsFilterRow, state: ResultsFilterState): bo
   const query = bibQuery(state.bib);
   return query === null || String(row.bib).includes(query);
 }
+
+/** The glyph a category chip wears, by name (§370: names cross the boundary, never elements): the sex of the key, «Toate» wears `all`. */
+export type CategoryGlyph = "all" | "female" | "male";
+
+export function categoryGlyphOf(key: string): CategoryGlyph {
+  const sex = key.split(":")[0];
+  return sex === "FEMALE" ? "female" : sex === "MALE" ? "male" : "all";
+}

@@ -9,7 +9,9 @@ import { type Deadlines, publicListClosesAt, publicListStillOpen } from "@/modul
 import { findFirstResultsNoticeVersion, noticeDescribesResults, termsDescribeResults } from "@/modules/legal-documents/repository";
 import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import { ageOnRaceDay, dayIn } from "@/modules/registrations/domain/age";
+import { RACE_NUMBER_FORMAT } from "@/modules/events/repository";
 import { hiddenListShownPublicly } from "@/modules/registrations/domain/hidden-list";
+import type { RaceNumberFormat } from "@/modules/registrations/domain/race-number";
 import { type SexChoice, sexShown } from "@/modules/registrations/domain/sex";
 import { canEnterResults, canPublishResults } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
@@ -95,6 +97,8 @@ type EventFacts = {
   resultsPublishedAt: Date | null;
   hiddenListEnabled: boolean;
   hiddenListPublic: boolean;
+  /** How the event writes its race numbers (§735): «Participant #007» on the backoffice's «Pe site» line as on the page. */
+  raceNumberFormat: RaceNumberFormat;
 };
 
 function assertMayEnter(actor: Actor): void {
@@ -118,6 +122,7 @@ async function loadEvent<T extends Record<string, unknown>>(db: Database<T>, eve
       resultsPublishedAt: events.resultsPublishedAt,
       hiddenListEnabled: events.hiddenListEnabled,
       hiddenListPublic: events.hiddenListPublic,
+      raceNumberFormat: RACE_NUMBER_FORMAT,
     })
     .from(events)
     .where(eq(events.id, eventId))
@@ -784,6 +789,7 @@ export async function readPublicEventResults<T extends Record<string, unknown>>(
       resultsPublishedAt: events.resultsPublishedAt,
       hiddenListEnabled: events.hiddenListEnabled,
       hiddenListPublic: events.hiddenListPublic,
+      raceNumberFormat: RACE_NUMBER_FORMAT,
     })
     .from(events)
     .where(eq(events.id, eventId))

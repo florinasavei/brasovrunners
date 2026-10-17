@@ -179,7 +179,7 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
     present: runner.checkedIn,
     // What the published list would say of the runner — `publicResultName`'s own answer (the tick, a confirmed registration, a notice that
     // described the results), never a guess from the tick alone.
-    publicLine: runner.named ? t("results.publicLine.named") : t("results.publicLine.anonymous", { label: anonymousResultLabel(locale, runner.bibNumber) }),
+    publicLine: runner.named ? t("results.publicLine.named") : t("results.publicLine.anonymous", { label: anonymousResultLabel(locale, runner.bibNumber, event.raceNumberFormat) }),
     values: valuesOf(runner),
     place: placeOf(runner),
     hasResult: runner.result !== null,

@@ -67,6 +67,7 @@ const context: PageTodoContext = {
   storageConfigured: true,
   approvedDeclarationIds: new Set([DECLARATION]),
   publicListDays: 30,
+  resultsRow: true,
 };
 
 const rules = (todos: PageTodo[]) => todos.map((todo) => todo.id);
@@ -215,6 +216,29 @@ describe("§749 eventPageTodos", () => {
       expect(eventPageTodos(complete({ ...over, editorialStatus: "ARCHIVED" }), texts, context)).toEqual([]);
       expect(eventPageTodos(complete({ ...over, editorialStatus: "DRAFT" }), texts, context)).toEqual([]);
       expect(eventPageTodos(complete({ ...over, dateToBeAnnounced: true }), texts, context)).toEqual([]);
+    });
+
+    it("says the results cannot show while the hour of a race that is over was never announced — published or not — and not for a date still to come", () => {
+      const heldBack = { ...over, timeToBeAnnounced: true };
+      for (const resultsPublished of [false, true]) {
+        const todos = eventPageTodos(complete({ ...heldBack, resultsPublished }), texts, context);
+        expect(rules(todos), String(resultsPublished)).toEqual(["resultsStart"]);
+        expect(only(todos, "resultsStart")).toMatchObject({ priority: "HIGH", anchor: "box-when", locale: null });
+      }
+      // The date itself still to be announced: the existing «startTime» rule speaks, this one does not.
+      expect(eventPageTodos(complete({ ...heldBack, dateToBeAnnounced: true }), texts, context)).toEqual([]);
+      // After the period nothing is left to say; a draft or a cancelled race has no page.
+      expect(eventPageTodos(complete(heldBack), texts, { ...context, now: new Date("2026-11-09T13:00:00.000Z") })).toEqual([]);
+      expect(eventPageTodos(complete({ ...heldBack, editorialStatus: "DRAFT" }), texts, context)).toEqual([]);
+      expect(eventPageTodos(complete({ ...heldBack, eventStatus: "CANCELLED" }), texts, context)).toEqual([]);
+      // A race to come with its hour to be announced keeps the plain «startTime» row, not this one.
+      expect(rules(eventPageTodos(complete({ timeToBeAnnounced: true }), texts, context))).not.toContain("resultsStart");
+    });
+
+    it("is not raised for a viewer who cannot open the results page, or while the notice or the terms in force do not describe the results", () => {
+      expect(eventPageTodos(complete(over), texts, { ...context, resultsRow: false })).toEqual([]);
+      // The hour never announced is the event's own fault to fix, whoever reads it.
+      expect(rules(eventPageTodos(complete({ ...over, timeToBeAnnounced: true }), texts, { ...context, resultsRow: false }))).toEqual(["resultsStart"]);
     });
 
     it("is a race the club marked completed too, and stops when the public list's period is over — publishing would show nothing", () => {

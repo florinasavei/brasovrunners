@@ -1,5 +1,8 @@
 "use client";
 
+import FemaleIcon from "@mui/icons-material/Female";
+import GroupsIcon from "@mui/icons-material/Groups";
+import MaleIcon from "@mui/icons-material/Male";
 import SearchIcon from "@mui/icons-material/Search";
 import Box from "@mui/material/Box";
 import InputAdornment from "@mui/material/InputAdornment";
@@ -8,7 +11,10 @@ import Typography from "@mui/material/Typography";
 import { useId, useState } from "react";
 import { FILTER_OPTION_SX } from "@/modules/events/ui/filter-chip-sx";
 import { SR_ONLY_SX } from "@/shared/ui/sr-only";
-import { rowMatches } from "./results-filter";
+import { type CategoryGlyph, rowMatches } from "./results-filter";
+
+/** The chip glyphs by the names the server passes (§370): «Toate» a group, the two sexes their signs. */
+const CATEGORY_GLYPH = { all: GroupsIcon, female: FemaleIcon, male: MaleIcon } as const satisfies Record<CategoryGlyph, unknown>;
 
 /**
  * The «Clasament» section's filter: a chip per category present and a box for the race number (§NNN, race results part 2).
@@ -31,7 +37,7 @@ export default function ResultsFilter({
   /** The `id` of the `<table>` whose rows this narrows; its rows carry `data-bib` and `data-category`. */
   tableId: string;
   /** The categories present, in reading order, each as its stored key and its words. Empty or one: no chips. */
-  categories: readonly { key: string; label: string }[];
+  categories: readonly { key: string; label: string; glyph: CategoryGlyph }[];
   words: { label: string; category: string; all: string; search: string; none: string };
 }) {
   const group = useId();
@@ -53,29 +59,39 @@ export default function ResultsFilter({
   };
 
   return (
-    <Box data-testid="results-filter" role="group" aria-label={words.label} sx={{ mb: 1 }}>
+    <Box
+      data-testid="results-filter"
+      role="group"
+      aria-label={words.label}
+      // Without a script the controls would tick and narrow nothing while every row stays: they are left out then (the house's script-only rows).
+      sx={{ mb: 1, "@media (scripting: none)": { display: "none" } }}
+    >
       {categories.length > 1 && (
         <Box component="fieldset" sx={{ border: 0, m: 0, mb: 0.5, p: 0, minInlineSize: 0, display: "flex", flexWrap: "wrap", columnGap: 1 }}>
           <Box component="legend" sx={SR_ONLY_SX}>
             {words.category}
           </Box>
-          {[{ key: null, label: words.all }, ...categories].map((option) => (
-            <Box component="label" key={option.key ?? "all"} sx={FILTER_OPTION_SX} data-testid="results-category-chip">
-              <span>
-                <input
-                  type="radio"
-                  name={group}
-                  value={option.key ?? ""}
-                  checked={category === option.key}
-                  onChange={() => {
-                    setCategory(option.key);
-                    apply(option.key, bib);
-                  }}
-                />
-                {option.label}
-              </span>
-            </Box>
-          ))}
+          {[{ key: null, label: words.all, glyph: "all" as const }, ...categories].map((option) => {
+            const Glyph = CATEGORY_GLYPH[option.glyph];
+            return (
+              <Box component="label" key={option.key ?? "all"} sx={FILTER_OPTION_SX} data-testid="results-category-chip">
+                <span>
+                  <input
+                    type="radio"
+                    name={group}
+                    value={option.key ?? ""}
+                    checked={category === option.key}
+                    onChange={() => {
+                      setCategory(option.key);
+                      apply(option.key, bib);
+                    }}
+                  />
+                  <Glyph aria-hidden="true" />
+                  {option.label}
+                </span>
+              </Box>
+            );
+          })}
         </Box>
       )}
       <TextField

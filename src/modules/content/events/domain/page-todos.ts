@@ -53,6 +53,7 @@ export const PAGE_TODO_RULES = [
   "bibDesign",
   "declaration",
   "results",
+  "resultsStart",
 ] as const;
 export type PageTodoRule = (typeof PAGE_TODO_RULES)[number];
 
@@ -123,6 +124,13 @@ export type PageTodoContext = {
   approvedDeclarationIds: ReadonlySet<string>;
   /** "Termene": the days after an event its public list, and with it its results, stay on the page (`publicListDays`, §421). */
   publicListDays: number;
+  /**
+   * Whether the «results» row may be raised for this viewer (§NNN): they may open the results page (`canEnterResults`, the page 404s
+   * otherwise) and publishing would be accepted — the privacy notice and the terms in force both describe `{{results}}`. Otherwise the
+   * row would promise a step they cannot take; the gap in the texts is `/admin/tasks`' to say. The «resultsStart» row is not gated:
+   * it is about the event's own start, which the editor's reader can fix.
+   */
+  resultsRow: boolean;
 };
 
 /** Over, cancelled or archived: the page has nothing left to be finished for. */
@@ -140,9 +148,25 @@ function isOver(event: PageTodoEvent, now: Date): boolean {
  * It is high: the people who ran are waiting for it. It links to the results page, not to a card (`page-results`).
  */
 function resultsOverdue(event: PageTodoEvent, context: PageTodoContext): boolean {
-  if (!eventTakesResults(event.type) || event.resultsPublished) return false;
+  if (!context.resultsRow || event.resultsPublished) return false;
+  if (event.timeToBeAnnounced) return false;
+  return raceOverInPeriod(event, context);
+}
+
+/**
+ * «Ora startului încă se anunță: clasamentul nu poate apărea pe pagină» (§NNN): a race whose day has passed but whose hour was never
+ * announced. The public pages keep a held-back start out of the picture (`startHeldBack`, `startsAt` NULL), so the «Clasament» can
+ * never show for it — published or not — and the row says so instead of asking for a publication that would change nothing.
+ */
+function resultsStartMissing(event: PageTodoEvent, context: PageTodoContext): boolean {
+  return event.timeToBeAnnounced && raceOverInPeriod(event, context);
+}
+
+/** A race published on the site, not cancelled or archived, with its day announced, whose end has passed and whose period is still open. */
+function raceOverInPeriod(event: PageTodoEvent, context: PageTodoContext): boolean {
+  if (!eventTakesResults(event.type)) return false;
   if (event.editorialStatus !== "PUBLISHED" || event.eventStatus === "CANCELLED") return false;
-  if (event.dateToBeAnnounced || event.timeToBeAnnounced) return false;
+  if (event.dateToBeAnnounced) return false;
   const DAY = 24 * 60 * 60_000;
   const over = event.endsAt ?? new Date(event.startsAt.getTime() + DAY);
   if (over.getTime() >= context.now.getTime()) return false;
@@ -157,6 +181,7 @@ export function eventPageTodos(event: PageTodoEvent, translations: readonly Page
     found.push({ id: locale ? `${rule}:${locale}` : rule, rule, locale, priority, anchor });
   // The exception to "nothing left once it is over": the results still to publish (§NNN). Said before the early return.
   if (resultsOverdue(event, context)) add("results", "HIGH", "page-results");
+  if (resultsStartMissing(event, context)) add("resultsStart", "HIGH", "box-when");
   if (isOver(event, context.now)) return found;
   const isRace = event.type === "RACE";
 
