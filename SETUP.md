@@ -2404,8 +2404,20 @@ enter them; **only the Administrator and the Superadministrator make them public
    only works **after the race has started** (you may type the results before) and under the notice and terms of step 1. The public read —
    `readPublicEventResults` — shows a name **only for a registered runner who ticked, whose registration is confirmed, who is not a special
    guest the event hides, and who registered under a notice that described the results**; a runner the club typed by hand is named only while
-   the staff's record of their agreement stands (step 3), and otherwise appears as «Participant #număr». **The event's page draws the ranking in the
-   next release** (the lane that follows this one); until it ships, the tick records the decision and nothing more.
+   the staff's record of their agreement stands (step 3), and otherwise appears as «Participant #număr». **What the event's page shows, and when.** Under «Cine vine» a card **«Clasament»**
+   (`#clasament`, open when the page opens) with one row per result: the place, the race number, the name or «Participant #număr», the time (the chip
+   time in a line under it, when you typed one) and the category with the place in it; the runners who did not finish come last, with «Abandon»,
+   «Neprezentat» or «Descalificat» and no place. A line says when it was published and until when it stays on the page (the day and the hour) — the same period as the public
+   list, counted from the end of the race («Setări» → «Termene»). A visitor can tick a category or type part of a race number to narrow the table
+   (the table shows every row without a script). The card appears **only while all of these hold** — the tick is on, the race has started, the notice and
+   the terms in force name `{{results}}` in both languages, **the race's start hour was announced** (a race still saved with «Ora se anunță» has no
+   start for the public pages, so it shows no «Clasament» and no chip, whatever the tick says), **at least one result is saved** and the period has not passed —
+   and otherwise the page has no heading and no sentence about it at all. On the events listing, a finished race's card wears a **«Clasament»** chip that leads to it. Taking the tick off removes both at once.
+   Not built, to be decided later: an email to each runner with their result, result columns in the registrations Excel, and a timing provider.
+   **The race's editor reminds you:** once the race is over and the results are not public, its «De făcut pentru pagina evenimentului» lists
+   «Cursa s-a terminat și clasamentul nu e publicat» (high, with a link to «Clasament»), until the period ends — and only for a colleague who may open
+   «Clasament», and while the notice and the terms in force name `{{results}}` (before that, `/admin/tasks` says what is missing). A race over whose hour was
+   never announced shows «Ora startului încă se anunță: clasamentul nu poate apărea pe pagină» instead, with a link to «Când și unde»: fill the hour in.
 6. **What stays where.** The audit trail names the race number, the state and the times, never a runner. Erasing a registration leaves its result,
    nameless, with its number, its time and its overall place, and clears the category and the places by sex and by category that described the
    person, so the other runners' overall places do not move. The typed runners' names and their agreements go with the rows. **Three years after the race the sweep deletes the race's results with its registrations**

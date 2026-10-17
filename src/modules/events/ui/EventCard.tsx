@@ -23,6 +23,7 @@ import EventKindChips from "./EventKindChips";
 import type { PreviewDoor } from "./registration-door";
 import GlyphChip from "./GlyphChip";
 import PartnerChip from "./PartnerChip";
+import ResultsChip from "@/modules/results/ui/ResultsChip";
 import { repeatTooltip, rhythmLabel } from "./series-sentence";
 
 /**
@@ -77,6 +78,7 @@ export default async function EventCard({
   seriesDates,
   previewDoor,
   titleAs = "h2",
+  resultsChip = false,
 }: {
   /** Undated only in the listing's «Data se anunță» section (§533): no countdown, «Când» says so. */
   event: PublicEventPage;
@@ -99,6 +101,12 @@ export default async function EventCard({
   previewDoor?: PreviewDoor;
   /** The title's heading level: `h2` on the listing; `h3` under a section's own `h2` (the home page). */
   titleAs?: "h2" | "h3";
+  /**
+   * «Clasament» (§NNN, race results part 2): this race's results are on show, so the chip links to the page's `#clasament`. The listing
+   * works it out once for the whole page (`eventsWithResultsChip`) and hands each card a boolean; a card never asks the database.
+   * Absent on every card but a finished race's — a group run, an upcoming race, the home page's, the preview's.
+   */
+  resultsChip?: boolean;
 }) {
   const tEvent = await getTranslations("Event");
   const locale = (await getLocale()) as Locale;
@@ -143,6 +151,8 @@ export default async function EventCard({
           {event.membersOnly && <GlyphChip glyph="membersOnly" color="primary" label={tEvent("membersOnly")} />}
           {/* Held with a partner (§367, amended §375, §379): the handshake and the generic "Colaborare" / "Partnership". */}
           <PartnerChip event={event} />
+          {/* The results are on the event's page (§NNN): a link to them, 44 pixels tall around the small chip. */}
+          {resultsChip && <ResultsChip href={`${page}#clasament`} label={tEvent("results.title")} />}
           {/* BR-REQ-020-01 criterion 2: a cancelled event stays listed and says so. */}
           {event.eventStatus === "CANCELLED" && <Chip size="small" color="error" label={tEvent("cancelled")} />}
           {event.eventStatus === "COMPLETED" && <Chip size="small" label={tEvent("completed")} />}

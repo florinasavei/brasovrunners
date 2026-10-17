@@ -13,6 +13,7 @@ import { getPathname, Link } from "@/i18n/navigation";
 import { type Locale, routing } from "@/i18n/routing";
 import { findEventForEditing, findEventTitle, listSeriesDates } from "@/modules/content/events/repository";
 import { eventPageTodos } from "@/modules/content/events/domain/page-todos";
+import { resultsRowFor } from "@/modules/results/public-page";
 import { eventCheckpointContext, listCheckpoints } from "@/modules/event-checkpoints/checkpoints";
 import { offerableProposals } from "@/modules/event-checkpoints/domain/gpx-waypoints";
 import { canEditCheckpoints } from "@/modules/event-checkpoints/domain/checkpoint";
@@ -378,6 +379,8 @@ export default async function EditEventPage({ params, searchParams }: Props) {
     locales: routing.locales,
     storageConfigured: isStorageConfigured(),
     approvedDeclarationIds: new Set(declarations.map((declaration) => declaration.id)),
+    publicListDays: deadlines.publicListDays,
+    resultsRow: await resultsRowFor(staffUser.role, now),
   });
   /*
     «Puncte de control» (§757): the route's points as saved, the route's length they are measured

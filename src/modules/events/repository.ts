@@ -3,6 +3,7 @@ import { readRaceNumberFormat, type RaceNumberFormat } from "@/modules/registrat
 import { type AnyColumn, and, asc, desc, eq, gte, inArray, isNull, lt, or, type SQL, sql } from "drizzle-orm";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import type { PgliteDatabase } from "drizzle-orm/pglite";
+import { eventResults } from "@/db/schema/event-results";
 import { eventTranslations, events } from "@/db/schema/events";
 import { mediaAssets } from "@/db/schema/gallery";
 import type { EventType } from "@/modules/events/domain/event-type";
@@ -256,6 +257,11 @@ const PUBLIC_COLUMNS = {
   // «Clubul pe lista publică» (§753): what the list's «Club» column says — read by `StartList` through
   // `publicListClubOf`, and by the cached reads that make its rows.
   publicListClub: events.publicListClub,
+  // «Clasamentul e public pe pagina evenimentului» (§NNN): one boolean, so the listing's «Clasament» chip and the event page know
+  // whether to ask for the results at all, with no query of their own. Never a time, a name or a row of the results. It is true only
+  // when the Administrator's tick is on **and** the race has at least one result row: a published race with an empty sheet draws no
+  // section (`ResultsSection`), so it must not wear a chip that links to one — the chip, the hold and the section read this one fact.
+  resultsPublished: sql<boolean>`(${events.resultsPublished} AND EXISTS (SELECT 1 FROM ${eventResults} WHERE ${eventResults.eventId} = ${events.id}))`.mapWith(Boolean),
   // The meeting point is one fact on the event row (`DECISIONS.md` §36); its *name* is read in
   // the page's language when the club gave it one (migration `0058`), else in the club's own
   // words as before. Never the other language's: a blank name reads the event, not the other

@@ -1,3 +1,4 @@
+import { formatRaceNumber, type RaceNumberFormat } from "@/modules/registrations/domain/race-number";
 import en from "../../../../messages/en.json";
 import ro from "../../../../messages/ro.json";
 
@@ -62,9 +63,10 @@ export function publicResultName(runner: PublicNameInput): string | null {
 /**
  * «Participant #123» in the reader's language, for a result with no name to show: read from the catalogue the
  * public page's table reads (`Event.results.anonymous`, `{bib}` filled here), outside a request like the notice's
- * own words, so the cached read and the page cannot say it two ways.
+ * own words, so the cached read and the page cannot say it two ways. The number is written as the event writes it (`pad3`, §735):
+ * the site, the backoffice's «Pe site: …» line and the test all pass the event's format, so «Participant #007» is one string.
  */
-export function anonymousResultLabel(locale: string, bibNumber: number): string {
+export function anonymousResultLabel(locale: string, bibNumber: number, format?: RaceNumberFormat | null): string {
   const template = locale === "en" ? en.Event.results.anonymous : ro.Event.results.anonymous;
-  return template.replace("{bib}", String(bibNumber));
+  return template.replace("{bib}", formatRaceNumber(bibNumber, format));
 }

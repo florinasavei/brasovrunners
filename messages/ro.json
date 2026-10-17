@@ -763,7 +763,32 @@
     },
     "results": {
       "title": "Clasament",
-      "anonymous": "Participant #{bib}"
+      "anonymous": "Participant #{bib}",
+      "published": "Publicat {published} · rămâne pe pagină până {until}",
+      "until": "Rămâne pe pagină până {until}",
+      "caption": "Clasamentul cursei: întâi cei care au terminat, în ordinea sosirii, apoi cei care nu au terminat.",
+      "columnPlace": "Loc",
+      "columnName": "Nume",
+      "columnTime": "Timp",
+      "columnCategory": "Categorie",
+      "chipTime": "Timp cip: {time}",
+      "categoryPlace": "loc {position}",
+      "noCategory": "Fără categorie",
+      "noPlace": "Fără loc",
+      "status": {
+        "FINISHED": "Sosit",
+        "DNF": "Abandon",
+        "DNS": "Neprezentat",
+        "DSQ": "Descalificat"
+      },
+      "note": "Numele apare doar pentru cei care au bifat „Vreau să apar pe lista de participanți & rezultate” la o înscriere confirmată, făcută după ce nota de confidențialitate a început să descrie clasamentul. Ceilalți apar ca „Participant #număr”, cu locul, timpul și categoria.",
+      "filter": {
+        "label": "Filtrează clasamentul",
+        "category": "Categorie",
+        "all": "Toate",
+        "search": "Caută după număr",
+        "none": "Niciun rând nu se potrivește."
+      }
     }
   },
   "Admin": {
@@ -5262,6 +5287,8 @@
       "groupOwn": "Sarcini",
       "fill": "Deschide câmpul",
       "fillRow": "Deschide câmpul: {text}",
+      "openResults": "Deschide clasamentul",
+      "openResultsRow": "Deschide clasamentul: {text}",
       "filterLabel": "Ce rânduri arăt",
       "filterAll": "Toate",
       "filterMine": "Ale mele",
@@ -5321,7 +5348,9 @@
         "difficulty": "Nivelul de dificultate nu e ales; pagina nu arată nicio etichetă.",
         "capacity": "Cursa cu înscriere pe site nu are număr de locuri (acum fără limită).",
         "bibDesign": "Numerele de concurs n-au un aspect ales: se tipăresc în varianta simplă.",
-        "declaration": "Declarația semnată de participanți nu e aprobată: nimeni nu se poate înscrie."
+        "declaration": "Declarația semnată de participanți nu e aprobată: nimeni nu se poate înscrie.",
+        "results": "Cursa s-a terminat și clasamentul nu e publicat.",
+        "resultsStart": "Ora startului încă se anunță: clasamentul nu poate apărea pe pagină."
       },
       "fold": {
         "pageRows": {
