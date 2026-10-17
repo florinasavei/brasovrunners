@@ -1493,7 +1493,7 @@ describe("§757 the route's checkpoints travel in the file", () => {
   });
 });
 
-// --- «Arată profilul traseului pe pagină» (§802, amended) ---------------------------------------------
+// --- «Arată profilul traseului pe pagină» (§802, §NNN) ---------------------------------------------
 
 describe("§802 the event's tick «Arată profilul traseului pe pagină» travels in the file", () => {
   it("is exported as it is, written in the downloaded text only when it is off, and the file's version stays 3", async () => {

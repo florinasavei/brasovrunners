@@ -156,7 +156,7 @@ describe("the event file's reader", () => {
     expect(serializeEventFile(file)).not.toContain("onProfile");
   });
 
-  it("writes the route's profile tick only when it is off, reads «not written» as on, and keeps the version (§802, amended)", () => {
+  it("writes the route's profile tick only when it is off, reads «not written» as on, and keeps the version (§802, §NNN)", () => {
     const file = sampleFile();
     expect(file.version).toBe(3);
     expect(serializeEventFile(file)).not.toContain("showRouteProfile");

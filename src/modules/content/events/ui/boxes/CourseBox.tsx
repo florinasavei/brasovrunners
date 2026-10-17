@@ -265,7 +265,7 @@ export default async function CourseBox({
           maxRows={4}
           {...textFieldConstraints(eventInputConstraints("routeStrava"), { spellCheck: false, autoCapitalize: "off", autoCorrect: "off" })}
         />
-        {/* «Arată profilul traseului pe pagină» (§802, amended): the event's own switch for the elevation chart the GPX
+        {/* «Arată profilul traseului pe pagină» (§802, §NNN): the event's own switch for the elevation chart the GPX
             gives; the checkpoints' ticks and the race number's design tick are other settings. Read by the save only
             with its marker, as «Informații medicale» (§557): a form without the card is never "off". Kept enabled with no
             file, so a file uploaded in «Linkuri și fișiere» in the same sitting is drawn as the club chose. */}

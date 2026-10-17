@@ -308,7 +308,7 @@ export default async function EventPageView({
         kindLabels={linkKindLabels}
         mapWords={t.raw("routeMaps") as RouteMapWords}
         profile={
-          // «Arată profilul traseului pe pagină» (§802, amended): the chart needs the club's tick as well as a GPX that parses.
+          // «Arată profilul traseului pe pagină» (§802, §NNN): the chart needs the club's tick as well as a GPX that parses.
           elevation && event.showRouteProfile
             ? {
                 data: elevation,

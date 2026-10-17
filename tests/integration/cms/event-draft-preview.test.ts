@@ -549,3 +549,70 @@ describe("§579 the preview draws what the save stores", () => {
     expect(await markup(before.card)).toBe(await markup(after.card));
   });
 });
+
+describe("§802 the event's tick «Arată profilul traseului pe pagină» in the preview and on the page", () => {
+  /** The event with a stored GPX that has altitudes, as the editor's upload leaves it. */
+  async function withGpx() {
+    const { getStorage } = await import("@/modules/media/storage");
+    const { storeRouteGpx } = await import("@/modules/content/events/route-gpx");
+    const { elevationGpx } = await import("../../helpers/elevation-gpx");
+    const gpx = await storeRouteGpx(getStorage(), { bytes: Buffer.from(elevationGpx()), name: "traseu.gpx", environment: "test", now: NOW });
+    await db.update(events).set({ routeGpx: gpx }).where(eq(events.id, eventId));
+  }
+
+  /** The editor's «Traseul» card as it posts the tick. */
+  const tick = (state: "on" | "off" | "absent") => (form: FormData) => {
+    if (state === "absent") return;
+    form.set("event.showRouteProfile.present", "1");
+    if (state === "on") form.set("event.showRouteProfile", "on");
+  };
+
+  it("draws the chart under the maps when the tick is on, and none when it is off — the preview reads the draft's own tick", async () => {
+    await withGpx();
+    for (const [state, drawn] of [
+      ["on", true],
+      ["absent", true],
+      ["off", false],
+    ] as const) {
+      const answer = await preview(await editorForm(tick(state)), "ro");
+      expect(answer.outcome).toBe("ready");
+      if (answer.outcome !== "ready") return;
+      const page = await markup(answer.page);
+      expect(page.includes('data-testid="route-elevation"'), `tick ${state}`).toBe(drawn);
+      // The route section itself stays: the GPX download is there either way.
+      expect(page).toContain('data-testid="route-gpx-download"');
+    }
+  });
+
+  it("the page's own gate: the chart needs the tick as well as a GPX that parses", async () => {
+    await withGpx();
+    const answer = await preview(await editorForm(tick("on")), "ro");
+    if (answer.outcome !== "ready") throw new Error("the preview was not ready");
+    const { default: EventPageView } = await import("@/modules/events/ui/EventPageView");
+    const { parseGpxElevation } = await import("@/modules/routes/elevation/parse");
+    const { elevationGpx } = await import("../../helpers/elevation-gpx");
+    const props = ((answer.page as { props: { children: { props: Record<string, unknown> } } }).props.children).props as Parameters<typeof EventPageView>[0];
+    const profile = parseGpxElevation(elevationGpx())!;
+    const draw = (showRouteProfile: boolean, elevation: typeof profile | null) => markup(createElement(EventPageView, { ...props, event: { ...props.event, showRouteProfile }, elevation }));
+    expect(await draw(true, profile)).toContain('data-testid="route-elevation"');
+    expect(await draw(false, profile)).not.toContain('data-testid="route-elevation"');
+    expect(await draw(true, null)).not.toContain('data-testid="route-elevation"');
+    // Off, the maps' section and the GPX stay, in English too.
+    const off = await draw(false, profile);
+    expect(off).toContain('data-testid="route-gpx-download"');
+  });
+
+  it("is on in the page the public read gives, for an event that says nothing of it", async () => {
+    const created = await createEventAndPublish(db, {
+      actor: admin,
+      fields: { ...FIELDS, translations: { ro: { ...WORDS.ro, slug: "cu-profil", title: "Cu profil", excerpt: "Un profil." }, en: { ...WORDS.en, slug: "with-profile", title: "With profile", excerpt: "A profile." } } },
+      publish: true,
+      now: NOW,
+    });
+    const row = await findPublishedEventBySlug(db, "ro", "cu-profil");
+    expect(row?.id).toBe(created.event.id);
+    expect(row?.showRouteProfile).toBe(true);
+    await db.update(events).set({ showRouteProfile: false }).where(eq(events.id, created.event.id));
+    expect((await findPublishedEventBySlug(db, "ro", "cu-profil"))?.showRouteProfile).toBe(false);
+  });
+});
