@@ -9746,7 +9746,7 @@
       "gpx": {
         "take": "Take the points from the GPX",
         "title": "The points in the GPX file",
-        "intro": "The file's points, each with its kilometre along the track. The file's name goes in the Romanian box: write the English one for every ticked point. What is already listed is not added again.",
+        "intro": "The file's points, each with its kilometre along the track. The file's name is in the Romanian box: write or translate the English one for each ticked point. What is already listed is not added again.",
         "row": "{km} km — {name} ({kinds})",
         "noKinds": "no type",
         "already": "{km} km — {name}: already on the list",

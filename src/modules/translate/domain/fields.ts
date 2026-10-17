@@ -34,6 +34,9 @@
  *   «Nu e nimic de tradus» over a Romanian text already written.
  *
  * - «Cine e membru al grupului» (§789): the sentence behind the member tick's «?» (`memberDefinitionEn`, plain);
+ * - An event's checkpoints (§757): a point's English name and note in the editor's «Puncte de control» list (`cp[<n>].nameEn`,
+ *   `cp[<n>].noteEn`) and the English name of each point the GPX's preview offers (`gp[<n>].nameEn`) — the preview's boxes are
+ *   `gp[…]` so that a name belongs to one box on the page, the list's saved rows standing beside it under `cp[…]`;
  * - An event's volunteer roles (§765, §791): the «Roluri» card is one form for every role, so each role's boxes carry its key —
  *   `roles[<key>].nameEn` and the description, a rich text, `roles[<key>].descriptionRoBody` / `roles[<key>].descriptionEnBody`
  *   (`role-rows.ts`); a category's name (`nameEn`, below) is its own small form;
@@ -102,6 +105,9 @@ const ENGLISH_FIELD_PATTERNS: readonly RegExp[] = [
   /^nameEn$/,
   // An event's volunteer roles (§765, §791): the card is one form for every role, each box named by its role's key.
   /^roles\[[\w-]{1,80}\]\.(nameEn|descriptionEnBody)$/,
+  // An event's checkpoints (§757): the list's rows (a name and a note) and the GPX preview's rows (a name).
+  /^cp\[\d{1,3}\]\.(name|note)En$/,
+  /^gp\[\d{1,3}\]\.nameEn$/,
 ];
 
 /** The newsletter composer's body (§550): a rich text posting as `newsletterBodyRo` / `newsletterBodyEn`. */

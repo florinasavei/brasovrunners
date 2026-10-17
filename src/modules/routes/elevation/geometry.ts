@@ -35,7 +35,7 @@ import type { ElevationProfileData } from "./parse";
 /** What a checkpoint's pin shows: one glyph, or a plain dot. */
 export type ElevationGlyph = "water" | "food" | "firstAid" | "timing" | "direction" | "none";
 
-/** The glyph a point's kinds give it, most useful to a runner first: water, food, first aid, timing, direction. */
+/** The glyph a point's kinds give it, most useful to a runner first: water, food, first aid, timing, direction (the race number's strip, §804). */
 const GLYPH_OF_KIND: ReadonlyArray<readonly [string, ElevationGlyph]> = [
   ["WATER", "water"],
   ["FOOD", "food"],
@@ -44,8 +44,20 @@ const GLYPH_OF_KIND: ReadonlyArray<readonly [string, ElevationGlyph]> = [
   ["DIRECTION", "direction"],
 ];
 
-export function glyphForKinds(kinds: readonly string[]): ElevationGlyph {
-  for (const [kind, glyph] of GLYPH_OF_KIND) if (kinds.includes(kind)) return glyph;
+/**
+ * The page's order (§802, amended; the owner, 2026-10-17: «dacă am apă și hrană, trebuie arătată iconița de hrană, pentru
+ * că aia e mai valoroasă; apa e cumva implicită dacă avem mâncare»): food, water, first aid, timing, direction — the fork
+ * wins over the drop, the other kinds keep their places.
+ */
+const GLYPH_OF_KIND_FOOD_FIRST: ReadonlyArray<readonly [string, ElevationGlyph]> = [GLYPH_OF_KIND[1], GLYPH_OF_KIND[0], ...GLYPH_OF_KIND.slice(2)];
+
+/**
+ * The one glyph a pin draws for a point with several kinds. `foodBeforeWater` is the event page's chart and the editor's
+ * preview (food implies water, so the fork says more); it is off by default because the race number's strip draws from this
+ * same core and its pictures are versioned (`BIB_DRAWING_VERSION`) — it follows at its next drawing version.
+ */
+export function glyphForKinds(kinds: readonly string[], foodBeforeWater = false): ElevationGlyph {
+  for (const [kind, glyph] of foodBeforeWater ? GLYPH_OF_KIND_FOOD_FIRST : GLYPH_OF_KIND) if (kinds.includes(kind)) return glyph;
   return "none";
 }
 
@@ -148,6 +160,8 @@ export type ElevationOptions = {
   pinRadius?: number;
   /** A small picture: no marker labels, at most two altitude ticks, only the highest extreme. */
   compact?: boolean;
+  /** The pin of a point that offers food and water draws the fork, not the drop (the page's chart, §802); off by default — the race number's strip keeps its glyphs. */
+  foodBeforeWater?: boolean;
 };
 
 /** The round steps an altitude scale is cut in, metres. */
@@ -301,7 +315,7 @@ export function elevationGeometry(profile: ElevationProfileData, markers: readon
       index: item.index,
       x: round(item.x),
       y: round(item.y),
-      glyph: glyphForKinds(item.marker.kinds),
+      glyph: glyphForKinds(item.marker.kinds, options.foodBeforeWater === true),
       headX: round(item.x),
       headY: round(Math.max(pinRadius, normal.top - pinGap - pinRadius - row * rowStep)),
       raised: row,

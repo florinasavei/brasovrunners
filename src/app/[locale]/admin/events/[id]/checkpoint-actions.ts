@@ -6,8 +6,8 @@ import { getDb } from "@/db/client";
 import { getPathname } from "@/i18n/navigation";
 import { type Locale, routing } from "@/i18n/routing";
 import { changeCheckpoints, type CheckpointRequest } from "@/modules/event-checkpoints/checkpoints";
-import { CheckpointRefusal, checkpointBox } from "@/modules/event-checkpoints/domain/checkpoint";
-import { postedCheckpoints } from "@/modules/event-checkpoints/posted";
+import { CheckpointRefusal } from "@/modules/event-checkpoints/domain/checkpoint";
+import { gpxPreviewFields, postedCheckpoints, postedGpxPicks } from "@/modules/event-checkpoints/posted";
 import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { isDomainError } from "@/shared/errors/domain-error";
@@ -82,16 +82,13 @@ export async function saveCheckpointsAction(_previous: FormOutcome | null, form:
 export async function addGpxCheckpointsAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   let changed: boolean;
   try {
-    // Each ticked proposal with the two names the preview's boxes hold for it (`cp[<at>].nameRo`, `cp[<at>].nameEn`).
-    const picked = form
-      .getAll("pick")
-      .filter((value): value is string => typeof value === "string" && /^\d{1,3}$/.test(value))
-      .map(Number)
-      .map((at) => ({ at, nameRo: field(form, checkpointBox(at, "nameRo")), nameEn: field(form, checkpointBox(at, "nameEn")) }));
-    changed = (await run({ kind: "addFromGpx", eventId: eventIdOf(form), gpxKey: field(form, "gpxKey"), picked })).changed;
+    // Each ticked proposal with the two names the preview's boxes hold for it (`gp[<at>].nameRo`, `gp[<at>].nameEn`).
+    changed = (await run({ kind: "addFromGpx", eventId: eventIdOf(form), gpxKey: field(form, "gpxKey"), picked: postedGpxPicks(form) })).changed;
   } catch (error) {
     if (!isDomainError(error)) throw error;
-    return refusal(error, form);
+    // The service names a row's boxes `cp[<at>]…`; the preview's are `gp[<at>]…` (the two forms share a page), so the summary links to them.
+    const outcome = refusal(error, form);
+    return { ...outcome, fields: gpxPreviewFields(outcome.fields) };
   }
   return backToCard(form, changed ? "checkpointsAdded" : "checkpointsUnchanged");
 }

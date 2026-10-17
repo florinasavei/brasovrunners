@@ -20,6 +20,19 @@ export function checkpointStart(event: { startsAt: Date; raceStartsAt: Date | nu
 }
 
 /**
+ * The start a **clock** is counted from (§757, amended: the owner, 2026-10-17, of a race whose start is not set: «Asta nu e
+ * corect pentru că încă nu știm exact la ce oră dăm startul cursei»): `checkpointStart`, except that **a race whose gun
+ * time is not set** (`race_starts_at` null — the editor's «Startul cursei nu e stabilit», §590) has none. The event's start
+ * is then the meeting time, not the gun, so «se închide la 12:00» counted from it would be a wrong promise; the duration
+ * from the gun is all the club knows, and the page says only that. A race whose gun time equals the event's start has it
+ * set, and keeps its clocks; any other event type has no gun, its start being the event's own.
+ */
+export function cutoffClockStart(event: { type: string; startsAt: Date; raceStartsAt: Date | null; timezone: string }): Date | null {
+  if (event.type === "RACE" && !event.raceStartsAt) return null;
+  return checkpointStart(event);
+}
+
+/**
  * A race's «Timp limită» in whole minutes (§757; the owner, 2026-10-13: «trebuie să pot pune timp
  * limită»): from the gun — else the event's start — to the event's end, the instant the editor's box
  * stores (`content/events/duration.ts#durationBase`). Null for any other type, whose «Durata» is how
@@ -37,8 +50,9 @@ export function raceTimeLimitMinutes(event: { type: string; startsAt: Date; race
  * The finish row of the page's table: the route's length when the club typed one, and — **for a race
  * with a time limit** — the time the finish closes, the event's end as `HH:MM` on the event's own clock,
  * and the limit itself in minutes from the start (`minutes`, the race's «Timp limită», §770), when the
- * start has an hour and the end is after it. Every other event's end is when it finishes, not a limit
- * anyone is held to, so its table has no finish row (`limit` and `minutes` null).
+ * start has an hour and the end is after it. **The clock (`limit`) is there only once the race's gun time is
+ * set** (`cutoffClockStart`); until then the finish row says the duration alone. Every other event's end is
+ * when it finishes, not a limit anyone is held to, so its table has no finish row (`limit` and `minutes` null).
  */
 export function checkpointFinish(event: {
   type: string;
@@ -52,7 +66,7 @@ export function checkpointFinish(event: {
   const end = event.type === "RACE" && start && event.endsAt && event.endsAt.getTime() > start.getTime() ? event.endsAt : null;
   return {
     km: event.distanceMeters && event.distanceMeters > 0 ? Math.round(event.distanceMeters / 10) / 100 : null,
-    limit: end ? toWallTimeInput(end, event.timezone).slice(11, 16) : null,
+    limit: end && cutoffClockStart(event) ? toWallTimeInput(end, event.timezone).slice(11, 16) : null,
     minutes: end && start ? Math.round((end.getTime() - start.getTime()) / 60_000) : null,
   };
 }
@@ -73,17 +87,18 @@ export function cutoffClockOf(start: Date, minutes: number, timezone: string): s
 /**
  * The clock of each limit of an event, for a reader that has the event it draws: a function from a
  * point's minutes to its `HH:MM`, or to null while the event's start has no date or hour (nothing to
- * count from) or the point has no limit. One place for the page, its staff preview and the bib.
+ * count from), while a race's gun time is not set (`cutoffClockStart`) or the point has no limit. One
+ * place for the page, its staff preview, the editor's card and the bib.
  */
-export function checkpointClock(event: { startsAt: Date; raceStartsAt: Date | null; timezone: string }): (minutes: number | null) => string | null {
-  const start = checkpointStart(event);
+export function checkpointClock(event: { type: string; startsAt: Date; raceStartsAt: Date | null; timezone: string }): (minutes: number | null) => string | null {
+  const start = cutoffClockStart(event);
   return (minutes) => (start && minutes !== null ? cutoffClockOf(start, minutes, event.timezone) : null);
 }
 
 /** The checkpoints with the clock each limit closes at, for the event a reader draws (`checkpointClock`). */
 export function withCutoffClocks<T extends { cutoffMinutes: number | null }>(
   checkpoints: readonly T[],
-  event: { startsAt: Date; raceStartsAt: Date | null; timezone: string } | null,
+  event: { type: string; startsAt: Date; raceStartsAt: Date | null; timezone: string } | null,
 ): (T & { cutoffClock: string | null })[] {
   const clockOf = event ? checkpointClock(event) : () => null;
   return checkpoints.map((row) => ({ ...row, cutoffClock: clockOf(row.cutoffMinutes) }));

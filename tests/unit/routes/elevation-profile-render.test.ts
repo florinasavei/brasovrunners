@@ -10,8 +10,8 @@ import { elevationGpx } from "../../helpers/elevation-gpx";
 
 /**
  * §802 — the elevation profile widget (`routes/elevation/ElevationProfile.tsx`) as the event page and the editor's preview
- * draw it: its two sizes, the words, the pins of the checkpoints the club left ticked and the glyph of each kind, and
- * nothing outside its box.
+ * draw it: its three sizes spanning the section's width, the words, the pins of the checkpoints the club left ticked and the
+ * glyph of each kind (food before water), the dotted line at each one's kilometre, and nothing outside its box.
  */
 const PROFILE = parseGpxElevation(elevationGpx())!;
 const wordsOf = (locale: "ro" | "en") => (locale === "ro" ? ro : en).Event.profile as ElevationProfileWords;
@@ -47,28 +47,53 @@ const chartsIn = (html: string) =>
 describe("§802 the elevation profile widget: the page", () => {
   const html = render("page");
 
-  it("draws a narrow chart and a wide one, the right one shown by CSS alone, both role=img with the same label", () => {
+  it("draws a narrow chart, a wide one and a full one, the right one shown by CSS alone, all role=img with the same label", () => {
     const charts = chartsIn(html);
-    expect(charts.map((chart) => chart.size)).toEqual(["narrow", "wide"]);
-    expect(charts.map((chart) => `${chart.width}x${chart.height}`)).toEqual(["360x240", "1000x280"]);
+    expect(charts.map((chart) => chart.size)).toEqual(["narrow", "wide", "full"]);
+    expect(charts.map((chart) => `${chart.width}x${chart.height}`)).toEqual(["360x240", "1000x280", "1600x320"]);
     for (const chart of charts) expect(chart.tag).toContain('role="img"');
     const label = /role="img" aria-label="([^"]+)"/.exec(html)![1];
     expect(label).toMatch(/^Profilul traseului: 9,0 km, de la 6\d\d la 8\d\d m$/);
-    expect(html.match(new RegExp(label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g"))).toHaveLength(2);
+    expect(html.match(new RegExp(label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g"))).toHaveLength(3);
     expect(html).toContain("min-width:700px");
   });
 
-  it("keeps its labels at 11 px or more on a 320 px phone and from 700 px of screen up", () => {
-    const [narrow, wide] = chartsIn(html);
-    // The page's inner width at 320 px: the 16 px gutters take 32. The wide chart is shown from 700 px, gutters likewise.
+  it("spans the section's whole width: no 1000 px cap on the wide chart, none on the full one, the phone's 480 px cap kept", () => {
+    const rules = [...html.matchAll(/<style[^>]*>([^<]*)<\/style>/g)].map((match) => match[1]);
+    const ruleOf = (size: string) => {
+      const class_ = new RegExp(`class="[^"]*?(css-\\w+)"[^>]*data-size="${size}"`).exec(html);
+      const name = class_?.[1];
+      return rules.find((rule) => rule.startsWith(`.${name}{`)) ?? "";
+    };
+    expect(ruleOf("narrow")).toContain("max-width:480px");
+    for (const size of ["wide", "full"]) {
+      expect(ruleOf(size), size).toContain("width:100%");
+      expect(ruleOf(size), size).not.toMatch(/[;{]max-width:\d/);
+    }
+    expect(html).not.toContain("max-width:1000px");
+    // One chart at a time: the wide from 700 px up to the full one's 1100 px, the full beyond, the narrow below 700 px.
+    expect(ruleOf("narrow")).toContain("@media (min-width:700px){");
+    expect(ruleOf("wide")).toContain("@media (min-width:700px) and (not (min-width:1100px))");
+    expect(ruleOf("full")).toContain("@media (min-width:1100px)");
+  });
+
+  it("keeps its labels at 11 px or more on a 320 px phone and from 700 px of screen up, and between 12 and 24 px on a desktop", () => {
+    const [narrow, wide, full] = chartsIn(html);
+    // The page's inner width at 320 px: the 16 px gutters take 32. The wide chart is shown from 700 px, gutters (24 px a side from 600 px) likewise.
     expect((narrow.fontSize * (320 - 32)) / narrow.width).toBeGreaterThanOrEqual(11);
-    expect((wide.fontSize * (700 - 32)) / wide.width).toBeGreaterThanOrEqual(11);
+    expect((wide.fontSize * (700 - 48)) / wide.width).toBeGreaterThanOrEqual(11);
+    expect((wide.fontSize * (1099 - 48)) / wide.width).toBeLessThanOrEqual(24);
+    expect((full.fontSize * (1100 - 48)) / full.width).toBeGreaterThanOrEqual(11);
+    // 1280 and 1920 px of screen, and the container's cap (2040 px: the theme's `xl`).
+    expect((full.fontSize * (1280 - 48)) / full.width).toBeCloseTo(14.6, 1);
+    expect((full.fontSize * (1920 - 48)) / full.width).toBeCloseTo(22.2, 1);
+    expect((full.fontSize * (2040 - 48)) / full.width).toBeLessThanOrEqual(24);
   });
 
   it("pins only the checkpoints it is handed — the unticked one is not on the chart — one pin per chart and a glyph per kind", () => {
     const pins = [...html.matchAll(/<g data-testid="elevation-pin" data-glyph="(\w+)">/g)].map((match) => match[1]);
-    // Three ticked points in each of the two charts.
-    expect(pins).toEqual(["water", "food", "water", "water", "food", "water"]);
+    // Three ticked points in each of the three charts; the point with water and food pins the fork, food being the more valuable (the owner, 2026-10-17).
+    expect(pins).toEqual(["water", "food", "food", "water", "food", "food", "water", "food", "food"]);
     expect(html).toContain("<title>Punct izvor</title>");
     expect(html).toContain("<title>Punct sosire</title>");
     expect(html).not.toContain("Punct ascuns");
@@ -82,6 +107,50 @@ describe("§802 the elevation profile widget: the page", () => {
     });
     expect(glyphs.map((entry) => entry.glyph)).toEqual(["water", "food", "firstAid", "timing", "direction", "none"]);
     expect(new Set(glyphs.map((entry) => entry.path)).size).toBe(6);
+  });
+
+  it("draws one dotted line per checkpoint from the pin down to the axis at the point's exact kilometre, under the curve, on the narrow, the wide and the full chart", () => {
+    for (const chart of chartsIn(html)) {
+      const start = html.indexOf(chart.tag);
+      const part = html.slice(start, html.indexOf("</svg>", start));
+      const guides = [...part.matchAll(/<line data-testid="elevation-guide" x1="([\d.]+)" x2="([\d.]+)" y1="([\d.]+)" y2="([\d.]+)" stroke-width="1" stroke-dasharray="([^"]+)" vector-effect="non-scaling-stroke" style="([^"]+)"/g)];
+      expect(guides, chart.size).toHaveLength(3);
+      const pins = [...part.matchAll(/<circle cx="([\d.]+)" cy="([\d.]+)" r="3.2"/g)].map((match) => ({ x: Number(match[1]), y: Number(match[2]) }));
+      const heads = [...part.matchAll(/<circle cx="([\d.]+)" cy="([\d.]+)" r="(?!3\.2")([\d.]+)"/g)].map((match) => ({ x: Number(match[1]), y: Number(match[2]), r: Number(match[3]) }));
+      const axis = /<line x1="[\d.]+" x2="[\d.]+" y1="([\d.]+)" y2="\1" style="stroke:var\(--mui-palette-text-secondary\)" stroke-width="1"\/>/.exec(part);
+      expect(pins).toHaveLength(3);
+      guides.forEach((guide, index) => {
+        const [x1, x2, y1, y2] = guide.slice(1, 5).map(Number);
+        // Vertical, at the point's x on the curve and the pin's own x.
+        expect(x1).toBe(x2);
+        expect(x1).toBeCloseTo(pins[index].x, 1);
+        expect(x1).toBeCloseTo(heads[index].x, 1);
+        // From the pin head's base down to the plot's foot — below the curve's point, which it passes through.
+        expect(y1).toBeCloseTo(heads[index].y + heads[index].r, 1);
+        expect(y2).toBeGreaterThan(pins[index].y);
+        expect(y2).toBeGreaterThan(y1);
+        if (axis) expect(y2).toBe(Number(axis[1]));
+        // Dots, one pixel thin, in the pin's muted colour: the theme's, never a literal.
+        expect(guide[5]).toBe("2 3");
+        expect(guide[6]).toContain("var(--mui-palette-text-secondary)");
+      });
+      // Under the curve's tint and line, so they stay readable; the pin and the dot stay above.
+      const lastGuide = part.lastIndexOf('data-testid="elevation-guide"');
+      expect(lastGuide).toBeLessThan(part.indexOf('fill-opacity:0.16'));
+      expect(part.indexOf('data-testid="elevation-pin"')).toBeGreaterThan(part.indexOf('fill-opacity:0.16'));
+      // The pin no longer has its own short stem: the dotted line is it.
+      expect(part).not.toMatch(/<g data-testid="elevation-pin"[^>]*>(?:<title>[^<]*<\/title>)?<line/);
+    }
+  });
+
+  it("draws one dotted line where two pins stand at the same kilometre, and none without a pin", () => {
+    const same = render("page", "ro", [
+      { km: 4, kinds: ["WATER"], name: "a" },
+      { km: 4, kinds: ["FOOD"], name: "b" },
+    ]);
+    expect(same.match(/data-testid="elevation-guide"/g)).toHaveLength(3);
+    expect(same.match(/data-testid="elevation-pin"/g)).toHaveLength(6);
+    expect(render("page", "ro", [])).not.toContain("elevation-guide");
   });
 
   it("says «Alt» at the axis, «km» once after the last kilometre, and the altitudes and kilometres as the axes", () => {
@@ -147,7 +216,7 @@ describe("§802 the elevation profile widget: the page", () => {
     expect(none).not.toContain("elevation-pin");
     expect(none.match(/<li>/g)).toHaveLength(2);
     expect(none).toContain("<path");
-    expect(chartsIn(none)).toHaveLength(2);
+    expect(chartsIn(none)).toHaveLength(3);
   });
 
   it("spans the typed distance: the kilometre axis runs to it, and the label says it", () => {
@@ -185,8 +254,14 @@ describe("§802 the elevation profile widget: the editor's preview", () => {
     expect(html).toContain("max-width:300px");
   });
 
-  it("pins the same checkpoints as the page", () => {
-    expect([...html.matchAll(/data-glyph="(\w+)"/g)].map((match) => match[1])).toEqual(["water", "food", "water"]);
+  it("pins the same checkpoints as the page, the fork over the drop for water and food", () => {
+    expect([...html.matchAll(/data-glyph="(\w+)"/g)].map((match) => match[1])).toEqual(["water", "food", "food"]);
+  });
+
+  it("has no dotted line (its pins keep their short stem down to the curve)", () => {
+    expect(html).not.toContain("elevation-guide");
+    expect(html).not.toContain("stroke-dasharray");
+    expect(html.match(/<g data-testid="elevation-pin"[^>]*>(?:<title>[^<]*<\/title>)?<line /g)).toHaveLength(3);
   });
 });
 
@@ -231,7 +306,7 @@ describe("§802 the altitude axis's room and the «Alt» caption", () => {
   it("keeps the «Alt» caption clear of every other word, on a chart with no pins whose top tick is near the top", () => {
     const html = renderTall("page", []);
     const charts = chartsIn(html);
-    expect(charts.length).toBe(2);
+    expect(charts.length).toBe(3);
     for (const chart of charts) {
       const texts = textsOf(html, chart);
       const caption = texts.find((entry) => entry.text === "Alt")!;
