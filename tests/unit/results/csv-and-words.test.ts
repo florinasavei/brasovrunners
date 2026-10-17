@@ -94,10 +94,14 @@ describe("§NNN resultsFingerprint", () => {
 
   it("moves with every column a person typed, and with nothing else", () => {
     const base = resultsFingerprint([row(1)]);
-    for (const change of [{ gunTimeMs: 3_000_001 }, { status: "DNF", gunTimeMs: null }, { chipTimeMs: 1 }, { note: "x" }, { displayName: "Ion" }, { sex: "MALE" }, { birthDate: "1990-01-01" }, { registrationId: "r" }]) {
+    for (const change of [{ gunTimeMs: 3_000_001 }, { status: "DNF", gunTimeMs: null }, { chipTimeMs: 1 }, { note: "x" }, { displayName: "Ion" }, { sex: "MALE" }, { birthDate: "1990-01-01" }, { registrationId: "r" }, { nameAgreedAt: new Date("2026-11-23T10:00:00Z") }]) {
       expect(resultsFingerprint([row(1, change as never)]), JSON.stringify(change)).not.toBe(base);
     }
     expect(resultsFingerprint([])).not.toBe(base);
+    // The agreement's moment is part of it: a form drawn before a colleague ticked or unticked a typed line is stale.
+    const agreed = resultsFingerprint([row(1, { nameAgreedAt: new Date("2026-11-23T10:00:00Z") })]);
+    expect(resultsFingerprint([row(1, { nameAgreedAt: new Date("2026-11-23T10:00:01Z") })])).not.toBe(agreed);
+    expect(resultsFingerprint([row(1, { nameAgreedAt: null })])).toBe(base);
     // Two rows that differ only in where the field boundary falls are two lists.
     expect(resultsFingerprint([row(1, { displayName: "ab", note: "c" })])).not.toBe(resultsFingerprint([row(1, { displayName: "a", note: "bc" })]));
   });

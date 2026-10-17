@@ -19,8 +19,11 @@ import { isResultStatus, RESULT_NAME_MAX, RESULT_NOTE_MAX, type ResultStatus } f
  *    question), a **sex** blank or one of the registration form's two answers, and a **birth date** blank or a day that is not after
  *    the race's.
  *
+ * 6. for a typed runner, the **agreement tick** («A acceptat să apară cu numele în clasament», §NNN) needs a name to show: ticked with the
+ *    name left blank is `agreedNameMissing`. A registered runner's row ignores the tick — their name follows their own.
+ *
  * A row with every box empty is not a result and is `blank`: the table draws a line for every registered runner, and most lines
- * stay empty until the runner finishes.
+ * stay empty until the runner finishes. A tick alone on an otherwise empty typed line is no result either: it is blank.
  */
 
 /** What is wrong with a row, in the words the page's sentence picks (`Admin.results.problems.<problem>`). */
@@ -37,6 +40,7 @@ export type ResultRowProblem =
   | "note"
   | "nameMissing"
   | "nameLong"
+  | "agreedNameMissing"
   | "sex"
   | "birthDate"
   | "tooMany";
@@ -52,9 +56,11 @@ export type RowBoxes = {
   status: string;
   chip: string;
   note: string;
+  /** "on" when the typed line's agreement tick was posted; anything else (or nothing) is unticked. Ignored for a registered row. */
+  agreed?: string;
 };
 
-/** A row, read: the values the save compares and writes. `name`, `sex` and `birthDate` count only if no registration holds the bib. */
+/** A row, read: the values the save compares and writes. `name`, `sex`, `birthDate` and `nameAgreed` count only if no registration holds the bib. */
 export type ReadRow = {
   bibNumber: number;
   status: ResultStatus;
@@ -64,6 +70,8 @@ export type ReadRow = {
   name: string | null;
   sex: SexChoice | null;
   birthDate: string | null;
+  /** A typed row: the staff recorded that the person agreed to appear by name in the public ranking. Always false for a registered row. */
+  nameAgreed: boolean;
 };
 
 export type ReadResult = { kind: "blank" } | { kind: "row"; row: ReadRow } | { kind: "refused"; problem: ResultRowProblem; boxes: readonly string[] };
@@ -91,6 +99,8 @@ export function readResultRow(boxes: RowBoxes, eventDay: string): ReadResult {
   const name = boxes.name.trim();
   const sexText = boxes.sex.trim();
   const birthText = boxes.birthDate.trim();
+  // The tick of a registered row means nothing (their name follows their own tick on the form): only a typed row has one.
+  const agreed = typed && (boxes.agreed ?? "").trim() === "on";
 
   const everyBoxEmpty = status === "" && time === "" && chip === "" && note === "" && (!typed || (bibText === "" && name === "" && sexText === "" && birthText === ""));
   if (everyBoxEmpty) return { kind: "blank" };
@@ -124,6 +134,7 @@ export function readResultRow(boxes: RowBoxes, eventDay: string): ReadResult {
   let birthDate: string | null = null;
   if (typed) {
     if (name.length > RESULT_NAME_MAX) return refuse("nameLong", "name");
+    if (agreed && name === "") return refuse("agreedNameMissing", "name");
     const read = readSex(sexText);
     if (read === undefined) return refuse("sex", "sex");
     sex = read;
@@ -137,6 +148,6 @@ export function readResultRow(boxes: RowBoxes, eventDay: string): ReadResult {
 
   return {
     kind: "row",
-    row: { bibNumber, status: resolved, gunTimeMs, chipTimeMs, note: note === "" ? null : note, name: name === "" ? null : name, sex, birthDate },
+    row: { bibNumber, status: resolved, gunTimeMs, chipTimeMs, note: note === "" ? null : note, name: name === "" ? null : name, sex, birthDate, nameAgreed: agreed },
   };
 }

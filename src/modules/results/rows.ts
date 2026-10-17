@@ -13,8 +13,12 @@
  * names a refused box all spell them one way.
  */
 
-/** The boxes of a registered runner's row and, with the first four, of a typed runner's. */
-export const RESULT_ROW_BOXES = ["bib", "name", "sex", "birthDate", "time", "status", "chip", "note"] as const;
+/**
+ * The boxes of a registered runner's row and, with the first four and `agreed`, of a typed runner's. `agreed` is the one tick box of a
+ * line — «A acceptat să apară cu numele în clasament» (§NNN) — posted as `on` when ticked and not at all when not; a registered line
+ * draws none and a forged one is ignored.
+ */
+export const RESULT_ROW_BOXES = ["bib", "name", "sex", "birthDate", "time", "status", "chip", "note", "agreed"] as const;
 export type ResultRowBox = (typeof RESULT_ROW_BOXES)[number];
 
 /** The name one box of one row posts under: `r[101].time`, `n[0].name`. */
@@ -47,6 +51,8 @@ export type PostedResultRow = {
   status: string;
   chip: string;
   note: string;
+  /** "on" when a typed line's agreement tick was posted; absent or "" otherwise (a script that does not know the box posts none). */
+  agreed?: string;
 };
 
 const ROW_NAME = /^(r|n)\[(\d{1,6})\]\.(\w{1,20})$/;
@@ -66,12 +72,14 @@ export function postedResultRows(entries: Iterable<readonly [string, unknown]>):
     const key = `${kind}[${match[2]}]`;
     let row = rows.get(key);
     if (!row) {
-      row = { key, bib: kind === "r" ? match[2] : "", name: "", sex: "", birthDate: "", time: "", status: "", chip: "", note: "" };
+      row = { key, bib: kind === "r" ? match[2] : "", name: "", sex: "", birthDate: "", time: "", status: "", chip: "", note: "", agreed: "" };
       rows.set(key, row);
     }
     const box = match[3] as ResultRowBox;
     // A registered row's number is its key's: a forged `r[101].bib` cannot move the row to another runner.
     if (kind === "r" && box === "bib") continue;
+    // The agreement is a typed line's: a registered runner's name follows their own tick, never a staff mark (§NNN).
+    if (kind === "r" && box === "agreed") continue;
     row[box] = value;
   }
   return [...rows.values()];

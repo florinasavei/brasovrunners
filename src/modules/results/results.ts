@@ -34,7 +34,8 @@ import { type PostedResultRow, resultBox } from "./rows";
  *
  * **One race, one list.** Only a `RACE` takes results (`RESULTS_NOT_OPEN` for any other type). A row is a race number: found among
  * the event's **confirmed** registrations (never a test row) it is that runner's, taking the registration's name, sex and age at read;
- * not found, it is a runner the club typed by hand and needs a name. A number a registration holds that is not confirmed (cancelled,
+ * not found, it is a runner the club typed by hand and needs a name — and, to stand **by name** in the public ranking, the staff's tick that
+ * the person agreed to it (`name_agreed_at`, §NNN: the desk's paper declaration has the same shape — the participant agrees, a staff member records it). A number a registration holds that is not confirmed (cancelled,
  * expired) is refused (`bibNotConfirmed`), never attached silently and never a typed name thrown away. A stored result follows its
  * **registration**, not the number it was saved under: when the desk changes a runner's number the row moves with it. «Salvează tot clasamentul» is the whole list — a row left out is a
  * result removed — saved in **one transaction** or not at all: the first refused row refuses the save, naming it (`ResultRowError`,
@@ -233,8 +234,13 @@ export type ResultRunner = {
   registered: boolean;
   /** The registration's tick, null for a typed runner (who has none). */
   ticked: boolean | null;
-  /** Whether the published results would name this runner (`publicResultName`: the tick, a confirmed registration, not hidden, made under a notice that described the results); null for a typed runner, who is never named. */
-  named: boolean | null;
+  /**
+   * Whether the published results would name this runner (`publicResultName`): a registered one by their tick, a confirmed registration, not hidden,
+   * made under a notice that described the results; a typed one by the staff-recorded agreement, a name to show and a notice that described them.
+   */
+  named: boolean;
+  /** A typed runner: the staff recorded that the person agreed to appear by name (§NNN); null for a registered runner, whose own tick answers. */
+  nameAgreed: boolean | null;
   checkedIn: boolean;
   sex: SexChoice | null;
   /** A typed runner's birth date, `YYYY-MM-DD` — what the box shows; null for a registered one, whose registration answers. */
@@ -319,7 +325,10 @@ export async function readEventResults<T extends Record<string, unknown>>(db: Da
           hidden: runner.outsideCapacity && !hiddenShown,
           noticeVersion: runner.noticeVersion,
           firstResultsNoticeVersion,
+          typedNameAgreed: false,
+          typedDisplayName: null,
         }) !== null,
+      nameAgreed: null,
       checkedIn: runner.checkedIn,
       sex: runner.sex,
       birthDate: null,
@@ -337,7 +346,19 @@ export async function readEventResults<T extends Record<string, unknown>>(db: Da
       name: row.displayName,
       registered: false,
       ticked: null,
-      named: null,
+      named:
+        publicResultName({
+          registered: false,
+          ticked: false,
+          displayName: null,
+          confirmed: false,
+          hidden: false,
+          noticeVersion: null,
+          firstResultsNoticeVersion,
+          typedNameAgreed: row.nameAgreedAt !== null,
+          typedDisplayName: row.displayName,
+        }) !== null,
+      nameAgreed: row.nameAgreedAt !== null,
       checkedIn: false,
       sex: sexShown(row.sex),
       birthDate: row.birthDate,
@@ -379,6 +400,7 @@ function changedBoxesOf(before: EventResultRow, after: ReadRow & { registrationI
   if (before.sex !== after.sex) changed.push("sex");
   if (before.birthDate !== after.birthDate) changed.push("birthDate");
   if (before.registrationId !== after.registrationId) changed.push("registration");
+  if ((before.nameAgreedAt !== null) !== after.nameAgreed) changed.push("nameAgreed");
   return changed;
 }
 
@@ -414,7 +436,7 @@ export async function saveEventResults<T extends Record<string, unknown>>(db: Da
     const prepared = new Map<number, Prepared>();
     for (const posted of request.rows) {
       const registeredKey = posted.key.startsWith("r[");
-      const read = readResultRow({ kind: registeredKey ? "registered" : "typed", bib: posted.bib, name: posted.name, sex: posted.sex, birthDate: posted.birthDate, time: posted.time, status: posted.status, chip: posted.chip, note: posted.note }, eventDay);
+      const read = readResultRow({ kind: registeredKey ? "registered" : "typed", bib: posted.bib, name: posted.name, sex: posted.sex, birthDate: posted.birthDate, time: posted.time, status: posted.status, chip: posted.chip, note: posted.note, agreed: posted.agreed }, eventDay);
       if (read.kind === "blank") continue;
       if (read.kind === "refused") throw new ResultRowError(read.problem, boxesOf(posted.key, read.boxes), Number(posted.bib) > 0 ? Number(posted.bib) : null, runners.byBib.get(Number(posted.bib))?.displayName ?? null);
       const { row } = read;
@@ -429,8 +451,9 @@ export async function saveEventResults<T extends Record<string, unknown>>(db: Da
         if (claim.attached) {
           // A number a confirmed registration holds is that runner's: a line typed by hand for it has nowhere to put its name.
           if (!registeredKey) refuse("bibRegistered", "bib");
-          // A registered runner's name, sex and birth date are the registration's: nothing typed about them is kept.
-          prepared.set(row.bibNumber, { ...row, registrationId: runner.registrationId, displayName: null, sex: null, birthDate: null, before: claim.row });
+          // A registered runner's name, sex and birth date are the registration's: nothing typed about them is kept, and a staff mark of agreement
+          // is not theirs to give (their name follows their own tick on the form): a typed row a registration takes over loses it here.
+          prepared.set(row.bibNumber, { ...row, registrationId: runner.registrationId, displayName: null, sex: null, birthDate: null, nameAgreed: false, before: claim.row });
           continue;
         }
         // A registration that is not confirmed holds the number, and nothing of it is stored: attaching a result would file it under a
@@ -442,7 +465,8 @@ export async function saveEventResults<T extends Record<string, unknown>>(db: Da
       const existing = index.freeByBib.get(row.bibNumber);
       const keepsNoName = existing !== undefined && existing.displayName === null;
       if (row.name === null && !keepsNoName) refuse("nameMissing", registeredKey ? "time" : "name");
-      prepared.set(row.bibNumber, { ...row, registrationId: null, displayName: row.name, sex: row.sex, birthDate: row.birthDate, before: existing });
+      // `readResultRow` already refused an agreement with no name (`agreedNameMissing`), so a row that stands by name has one to show.
+      prepared.set(row.bibNumber, { ...row, registrationId: null, displayName: row.name, sex: row.sex, birthDate: row.birthDate, nameAgreed: row.nameAgreed, before: existing });
     }
 
     // ---- 2. The rankings of the list as it will be ------------------------------------------------------
@@ -482,6 +506,8 @@ export async function saveEventResults<T extends Record<string, unknown>>(db: Da
           displayName: row.displayName,
           sex: row.sex,
           birthDate: row.birthDate,
+          nameAgreedAt: row.nameAgreed ? now : null,
+          nameAgreedByStaffUserId: row.nameAgreed ? actor.id : null,
           status: row.status,
           gunTimeMs: row.gunTimeMs,
           chipTimeMs: row.chipTimeMs,
@@ -495,7 +521,8 @@ export async function saveEventResults<T extends Record<string, unknown>>(db: Da
           updatedByStaffUserId: actor.id,
         });
         created += 1;
-        await audit("event_result.created", { bibNumber, status: row.status, gunTimeMs: row.gunTimeMs, chipTimeMs: row.chipTimeMs });
+        // An agreement recorded with the line is named in the trail (who is the audit row's actor, when its time) — never the name.
+        await audit("event_result.created", { bibNumber, status: row.status, gunTimeMs: row.gunTimeMs, chipTimeMs: row.chipTimeMs, ...(row.nameAgreed ? { nameAgreed: true } : {}) });
         continue;
       }
       const changedBoxes = changedBoxesOf(before, { ...row, bibNumber });
@@ -513,6 +540,8 @@ export async function saveEventResults<T extends Record<string, unknown>>(db: Da
           displayName: row.displayName,
           sex: row.sex,
           birthDate: row.birthDate,
+          // Turned on: the moment and the actor; turned off (or the registration took the row): both cleared; unchanged: left as they are.
+          ...(changedBoxes.includes("nameAgreed") ? { nameAgreedAt: row.nameAgreed ? now : null, nameAgreedByStaffUserId: row.nameAgreed ? actor.id : null } : {}),
           status: row.status,
           gunTimeMs: row.gunTimeMs,
           chipTimeMs: row.chipTimeMs,
@@ -526,7 +555,15 @@ export async function saveEventResults<T extends Record<string, unknown>>(db: Da
         .where(eq(eventResults.id, before.id));
       if (changedBoxes.length > 0) {
         updated += 1;
-        await audit("event_result.updated", { bibNumber, status: row.status, gunTimeMs: row.gunTimeMs, chipTimeMs: row.chipTimeMs, changed: changedBoxes });
+        await audit("event_result.updated", {
+          bibNumber,
+          status: row.status,
+          gunTimeMs: row.gunTimeMs,
+          chipTimeMs: row.chipTimeMs,
+          changed: changedBoxes,
+          // The agreement's new state, when it moved: who recorded it is the audit row's actor, when its time — never the name.
+          ...(changedBoxes.includes("nameAgreed") ? { nameAgreed: row.nameAgreed } : {}),
+        });
       } else rewritten += 1;
     }
 
@@ -728,7 +765,10 @@ export async function exportEventResults<T extends Record<string, unknown>>(db: 
 /** One row of the public results (§NNN): a number, a name only for a runner who ticked, the times, the positions and the category. Never an address, a phone, a document, a note or a registration's id. */
 export type PublicResultRow = {
   bibNumber: number;
-  /** The registration's display name — only for a registered runner who ticked the list's box; null otherwise, and the page says «Participant #bib» (`anonymousResultLabel`). */
+  /**
+   * The registration's display name — only for a registered runner who ticked the list's box — or the typed name of a runner the club entered by hand
+   * **and recorded as having agreed** (§NNN); null otherwise, and the page says «Participant #bib» (`anonymousResultLabel`).
+   */
   name: string | null;
   status: ResultStatus;
   gunTimeMs: number | null;
@@ -757,7 +797,8 @@ export type PublicEventResults = {
  * period has not passed (`publicListStillOpen`, §421, checked here at request time because a date passing is no write). Then every
  * stored row, in the sheet's order, ranked from the live answers, with a name **only** for a runner `publicResultName` names: the
  * public list's own conditions (confirmed, ticked, not a hidden special guest, §743) and a registration made under a notice that
- * described the results (`firstResultsNoticeVersion`, §421's line) — everyone else is «Participant #bib». Never an address, a phone
+ * described the results (`firstResultsNoticeVersion`, §421's line), or a runner typed by hand whom the staff recorded as agreeing to appear by name
+ * under a notice that described the results — everyone else is «Participant #bib». Never an address, a phone
  * number, a document, a note or a registration's id: the select names its columns.
  */
 export async function readPublicEventResults<T extends Record<string, unknown>>(
@@ -805,6 +846,8 @@ export async function readPublicEventResults<T extends Record<string, unknown>>(
       noticeVersion: registrations.privacyNoticeVersion,
       registeredSex: registrations.sex,
       typedSex: eventResults.sex,
+      typedName: eventResults.displayName,
+      typedNameAgreedAt: eventResults.nameAgreedAt,
       status: eventResults.status,
       gunTimeMs: eventResults.gunTimeMs,
       chipTimeMs: eventResults.chipTimeMs,
@@ -826,6 +869,9 @@ export async function readPublicEventResults<T extends Record<string, unknown>>(
         hidden: row.outsideCapacity === true && !hiddenShown,
         noticeVersion: row.noticeVersion,
         firstResultsNoticeVersion: options.firstResultsNoticeVersion,
+        // A runner the club typed by hand: the staff-recorded agreement (§NNN), on a row no registration holds (the database's check says the same).
+        typedNameAgreed: row.registrationId === null && row.typedNameAgreedAt !== null,
+        typedDisplayName: row.typedName,
       }),
       status: row.status,
       gunTimeMs: row.gunTimeMs,

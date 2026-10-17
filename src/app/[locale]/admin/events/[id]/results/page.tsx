@@ -151,6 +151,8 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
     nameless: t("results.nameless"),
     addRow: t("results.addRow"),
     typedRow: t("results.typedRow"),
+    agreed: t("results.agreed"),
+    agreedHelp: t("results.agreedHelp"),
     noPlace: t("results.noPlace"),
     noPlaceSettled: t("results.noPlaceSettled"),
   };
@@ -192,6 +194,7 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
       birthDate: runner.birthDate ? runner.birthDate.split("-").reverse().join(".") : "",
       ...valuesOf(runner),
     },
+    agreed: runner.nameAgreed === true,
     place: placeOf(runner),
     hasResult: true,
   }));
@@ -208,6 +211,7 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
   labels["n[].name"] = words.name;
   labels["n[].sex"] = words.sex;
   labels["n[].birthDate"] = words.birthDate;
+  labels["n[].agreed"] = words.agreed;
   const boxes = await refusalMessages(labels);
   const publishBoxes = await refusalMessages({ published: t("results.publish.label") });
   const confirm = await confirmWords();

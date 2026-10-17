@@ -18,8 +18,9 @@ export const eventResultStatus = pgEnum("event_result_status", ["FINISHED", "DNF
  * CSV, by bib. A runner who registered is found by the bib (`registration_id`) and **takes the registration's
  * name, sex and birth date at read** — nothing about them is copied here, so a correction on the registration
  * is the correction on the result. A runner the club typed by hand (a bib with no registration) carries a
- * `display_name`, and optionally a sex and a birth date, for a category; nothing public ever shows that name
- * (`modules/results/domain/public-name.ts`).
+ * `display_name`, and optionally a sex and a birth date, for a category; the public ranking shows that name only while the staff
+ * recorded that the person agreed (`name_agreed_at`, the actor beside it — the paper declaration's shape, §67), and otherwise
+ * «Participant #bib» (`modules/results/domain/public-name.ts`).
  *
  * The times are whole milliseconds from the gun (`gun_time_ms`, required for `FINISHED`, absent for the other
  * three), and the chip's own (`chip_time_ms`, optional). The three positions and the category are **computed on
@@ -53,6 +54,15 @@ export const eventResults = pgTable(
     /** A typed runner's sex and birth date, for a category; null for a registered one, whose registration answers. */
     sex: registrationSex("sex"),
     birthDate: date("birth_date", { mode: "string" }),
+    /**
+     * When the staff recorded that a runner typed by hand agreed to appear **by name** in the public ranking (§NNN, amending the
+     * results decision: the owner, 2026-10-17: «ar trebui să-l putem adăuga totuși în sistem manual … să-l punem în rezultat»). Null
+     * is no agreement. Only a row with no registration carries one — a registered runner's name follows their own tick on the form,
+     * never a staff mark — and only with a name to show.
+     */
+    nameAgreedAt: timestamp("name_agreed_at", { withTimezone: true }),
+    /** The staff member who recorded the agreement (the paper declaration's shape, §67); null when none, or when that account was removed. */
+    nameAgreedByStaffUserId: uuid("name_agreed_by_staff_user_id").references(() => staffUsers.id, { onDelete: "set null" }),
     status: eventResultStatus("status").notNull(),
     gunTimeMs: integer("gun_time_ms"),
     chipTimeMs: integer("chip_time_ms"),
@@ -81,6 +91,11 @@ export const eventResults = pgTable(
     check("event_results_chip_only_finished", sql`${t.chipTimeMs} IS NULL OR ${t.status} = 'FINISHED'`),
     check("event_results_note_length", sql`${t.note} IS NULL OR char_length(${t.note}) BETWEEN 1 AND 200`),
     check("event_results_name_length", sql`${t.displayName} IS NULL OR char_length(btrim(${t.displayName})) BETWEEN 1 AND 120`),
+    // The staff mark of a typed runner's agreement (§NNN): the actor only with the moment (the account may be removed, `SET NULL`, the moment stays),
+    // on a row no registration holds, and with a name to show.
+    check("event_results_name_agreed_actor", sql`${t.nameAgreedByStaffUserId} IS NULL OR ${t.nameAgreedAt} IS NOT NULL`),
+    check("event_results_name_agreed_typed_only", sql`${t.nameAgreedAt} IS NULL OR ${t.registrationId} IS NULL`),
+    check("event_results_name_agreed_needs_name", sql`${t.nameAgreedAt} IS NULL OR ${t.displayName} IS NOT NULL`),
     // Only a finisher is placed.
     check(
       "event_results_positions_finished",

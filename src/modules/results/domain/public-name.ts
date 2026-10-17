@@ -16,10 +16,16 @@ import ro from "../../../../messages/ro.json";
  *   or above `firstResultsNoticeVersion`, §421's line for the states): a tick given under the older notice — «Rezultate cu nume nu
  *   publicăm încă», with terms that promised to ask separately first — agreed to a list, not to a ranking by name.
  *
- * Every other row — an unticked runner, a runner the club typed by hand (who ticked nothing, and whose consent no staff member may
- * give for them), one whose registration was erased, cancelled or hidden, or one who registered before the notice — is «Participant
- * #bib»: the position, the number, the time and the category, with no name. Pure, so the page that draws it, the backoffice that
- * previews it and the test that pins it read one rule.
+ * **A runner the club typed by hand** (no registration, so no form and no tick) is named under a rule of its own (§NNN, amending the
+ * above; the owner, 2026-10-17: «ar trebui să-l putem adăuga totuși în sistem manual … să-l punem în rezultat»): only while a staff
+ * member **recorded that the person agreed** to appear by name (`event_results.name_agreed_at`, the actor and the moment kept — the
+ * race-day desk's paper declaration has the same shape, §67: the participant agrees, a staff member records it), the typed name is not
+ * blank, and the notice in force describes the results (`firstResultsNoticeVersion` is not null: the person agreed to the words the
+ * staff read to them, the notice's own). A registered runner's row ignores the staff mark entirely: their name follows their own tick.
+ *
+ * Every other row — an unticked runner, a typed runner nobody recorded an agreement for, one whose registration was erased, cancelled or
+ * hidden, or one who registered before the notice — is «Participant #bib»: the position, the number, the time and the category, with no
+ * name. Pure, so the page that draws it, the backoffice that previews it and the test that pins it read one rule.
  */
 export type PublicNameInput = {
   registered: boolean;
@@ -33,10 +39,20 @@ export type PublicNameInput = {
   noticeVersion: number | null;
   /** The first approved notice that described the results (`findFirstResultsNoticeVersion`); null when none did. */
   firstResultsNoticeVersion: number | null;
+  /** A runner typed by hand: the staff recorded that the person agreed to appear by name (`name_agreed_at` is set). Ignored for a registered runner. */
+  typedNameAgreed: boolean;
+  /** A runner typed by hand: the name the club typed; null for a registered one, whose registration's `displayName` answers. */
+  typedDisplayName: string | null | undefined;
 };
 
 export function publicResultName(runner: PublicNameInput): string | null {
-  if (!runner.registered || !runner.ticked || !runner.confirmed || runner.hidden) return null;
+  if (!runner.registered) {
+    // The staff-recorded agreement of a runner typed by hand: under a notice that describes the results, with a name to show.
+    if (!runner.typedNameAgreed || runner.firstResultsNoticeVersion === null) return null;
+    const typed = runner.typedDisplayName?.trim();
+    return typed ? typed : null;
+  }
+  if (!runner.ticked || !runner.confirmed || runner.hidden) return null;
   if (runner.firstResultsNoticeVersion === null || runner.noticeVersion === null || runner.noticeVersion < runner.firstResultsNoticeVersion) return null;
   const name = runner.displayName?.trim();
   return name ? name : null;
