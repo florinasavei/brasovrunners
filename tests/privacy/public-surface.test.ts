@@ -1,13 +1,16 @@
 import { readFileSync } from "node:fs";
 import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { eventResults } from "@/db/schema/event-results";
 import { events, eventTranslations } from "@/db/schema/events";
 import { legalDocuments } from "@/db/schema/legal-documents";
 import { computeContentHash, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
 import { findFirstStatesNoticeVersion, insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
 import { participants } from "@/db/schema/participants";
 import { registrations } from "@/db/schema/registrations";
+import { DEFAULT_DEADLINES } from "@/modules/deadlines/domain/deadlines";
 import { findPublishedEventBySlug } from "@/modules/events/repository";
+import { readPublicEventResults } from "@/modules/results/results";
 import {
   countAnonymousStartListEntries,
   countPublicStartList,
@@ -598,19 +601,56 @@ describe("BR-REQ-070-01 the public event query", () => {
   });
 });
 
-describe("§NNN what a race's public results may contain — a name only for a runner who ticked, nothing else about anybody", () => {
-  it("names no address, phone, document, health note, identity, note or registration id in its select, and leaves the typed name out of it", () => {
+describe("§NNN what a race's public results may contain — a name only for a runner who agreed, nothing else about anybody", () => {
+  /** The code of readPublicEventResults, without its comments: the select list it guards and the mapping of its rows. */
+  function publicReadCode(): string {
     const source = readFileSync("src/modules/results/results.ts", "utf8");
     const start = "export async function readPublicEventResults<";
     const at = source.indexOf(start);
     expect(at).toBeGreaterThan(-1);
     const next = source.slice(at + start.length).search(/\n(export )?(async )?function /);
     const body = next === -1 ? source.slice(at) : source.slice(at, at + start.length + next);
-    const code = body.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
+    return body.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
+  }
+
+  it("names no address, phone, document, health note, identity, note or registration id in its select", () => {
+    const code = publicReadCode();
     // The select list it guards is in the slice: a slice that missed the query would prove nothing.
     expect(code).toMatch(/\.select\(/);
-    for (const forbidden of ["email", "phone", "identityDocument", "healthNote", "emergency", "birthDate", "participantId", "declaration", "stravaUrl", "instagram", "note:", "displayName: eventResults"]) {
+    for (const forbidden of ["email", "phone", "identityDocument", "healthNote", "emergency", "birthDate", "participantId", "declaration", "stravaUrl", "instagram", "note:"]) {
       expect(code, forbidden).not.toContain(forbidden);
     }
+  });
+
+  it("selects the typed name only beside the staff's record of the agreement, and lets it reach a row only through publicResultName", () => {
+    const code = publicReadCode();
+    // The column is read under one alias and the agreement is read beside it: a name selected without its mark is a name nobody checked.
+    expect(code.match(/eventResults\.displayName/g) ?? [], "the typed name is selected once").toHaveLength(1);
+    expect(code).toMatch(/typedName: eventResults\.displayName,\s*typedNameAgreedAt: eventResults\.nameAgreedAt,/);
+    // The alias is read once, as the rule's input; the one "name:" of the mapped row is fed by the rule alone.
+    expect(code.match(/row\.typedName\b/g) ?? [], "the alias is read once").toHaveLength(1);
+    expect(code).toMatch(/typedDisplayName: row\.typedName,/);
+    expect(code.match(/\bname:/g) ?? [], "one name in the mapped row").toHaveLength(1);
+    expect(code).toMatch(/name: publicResultName\(\{/);
+    // And the typed agreement is read from the row, never assumed.
+    expect(code).toMatch(/typedNameAgreed: [^,]*row\.typedNameAgreedAt !== null/);
+  });
+
+  it("returns a null name for a typed runner nobody recorded an agreement for, and the typed name only for one with the record", async () => {
+    const [race] = await db
+      .insert(events)
+      .values({ type: "RACE", startsAt: new Date("2026-11-21T07:00:00.000Z"), registrationMode: "INTERNAL", resultsPublished: true, resultsPublishedAt: new Date("2026-11-21T12:00:00.000Z") })
+      .returning();
+    await db.insert(eventResults).values([
+      { eventId: race.id, bibNumber: 900, displayName: "Ion Vasile", status: "FINISHED", gunTimeMs: 2_520_000 },
+      { eventId: race.id, bibNumber: 901, displayName: "Maria Pop", status: "FINISHED", gunTimeMs: 2_580_000, nameAgreedAt: new Date("2026-11-21T12:30:00.000Z") },
+    ]);
+    const options = { now: new Date("2026-11-23T10:00:00.000Z"), deadlines: DEFAULT_DEADLINES, noticeDescribes: true, termsDescribe: true, firstResultsNoticeVersion: 1 as number | null };
+    const named = await readPublicEventResults(db, race.id, options);
+    expect(named?.rows.map((row) => [row.bibNumber, row.name])).toEqual([[900, null], [901, "Maria Pop"]]);
+    expect(JSON.stringify(named)).not.toContain("Ion Vasile");
+    // Even the record names nobody while no notice in force has described the results.
+    const none = await readPublicEventResults(db, race.id, { ...options, firstResultsNoticeVersion: null });
+    expect(none?.rows.map((row) => row.name)).toEqual([null, null]);
   });
 });

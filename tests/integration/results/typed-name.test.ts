@@ -147,6 +147,23 @@ describe("§NNN the save records, keeps and withdraws the agreement", () => {
     expect((await resultsTrail()).at(-1)?.metadataJson).toEqual({ bibNumber: 900, status: "FINISHED", gunTimeMs: 41 * 60_000 + 30_000, chipTimeMs: null, changed: ["time"] });
   });
 
+  it("records the agreement again when the name changes beside a tick that stays on: the new person is on the saver's record, in the trail, never the name", async () => {
+    await save([ion()], null, staff.MODERATOR!);
+    await save([ion({ name: "Maria Pop" })], null, staff.ADMIN!);
+    const at = new Date(NOW.getTime() + ticks * 1000);
+    expect(await byBib(900)).toMatchObject({ displayName: "Maria Pop", nameAgreedAt: at, nameAgreedByStaffUserId: staff.ADMIN!.id });
+    const updated = (await resultsTrail()).at(-1);
+    expect(updated).toMatchObject({ action: "event_result.updated", actorStaffUserId: staff.ADMIN!.id, metadataJson: { bibNumber: 900, changed: ["name", "nameAgreed"], nameAgreed: true } });
+    expect(JSON.stringify(updated?.metadataJson)).not.toMatch(/Ion|Maria/);
+  });
+
+  it("does not record anything for a new name beside a tick that is off", async () => {
+    await save([ion({ agreed: "" })]);
+    await save([ion({ name: "Maria Pop", agreed: "" })]);
+    expect(await byBib(900)).toMatchObject({ displayName: "Maria Pop", nameAgreedAt: null, nameAgreedByStaffUserId: null });
+    expect((await resultsTrail()).at(-1)?.metadataJson).toMatchObject({ changed: ["name"] });
+  });
+
   it("withdraws the agreement when the tick is taken off: both columns cleared, one audit row, the name stays for the club", async () => {
     await save([ion()]);
     await save([ion({ agreed: "" })], null, staff.MODERATOR!);
@@ -290,6 +307,21 @@ describe("§NNN the public read: a typed runner is named only while the staff's 
     await setResultsPublished(db, staff.ADMIN!, raceId, true, NOW);
     const result = await readPublicEventResults(db, raceId, options);
     expect(result?.rows.map((row) => [row.bibNumber, row.name])).toEqual([[101, null], [102, "Bia Marin"]]);
+  });
+
+  it("does not name a typed runner whose number a confirmed registration took since: until the next save, the line is the registered runner's", async () => {
+    await published([ion()]);
+    await registerRunner(db, raceId, { name: "Ion Vasile", bibNumber: 900, ticked: false });
+    // No save in between: the stored row still carries the staff mark and no registration.
+    expect(await byBib(900)).toMatchObject({ registrationId: null, nameAgreedAt: expect.any(Date) });
+    expect((await readPublicEventResults(db, raceId, options))?.rows.map((row) => [row.bibNumber, row.name])).toEqual([[900, null]]);
+  });
+
+  it("a typed row without the mark returns a null name from the real read, whatever name was typed", async () => {
+    await published([ion({ agreed: "" })]);
+    const result = await readPublicEventResults(db, raceId, options);
+    expect(result?.rows[0].name).toBeNull();
+    expect(JSON.stringify(result)).not.toContain("Ion");
   });
 
   it("never names a test registration's row: the join does not return it, and the database refuses a mark on it", async () => {

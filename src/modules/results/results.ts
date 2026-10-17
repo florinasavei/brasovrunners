@@ -219,9 +219,9 @@ function rankingOf(
 }
 
 /** The rankings of the event's stored rows read from the live answers — what every page and file shows, whatever the last save stored — by stored number. */
-async function loadLiveRanking<T extends Record<string, unknown>>(db: Database<T>, event: EventFacts): Promise<Map<number, Ranked>> {
+async function loadLiveRanking<T extends Record<string, unknown>>(db: Database<T>, event: EventFacts): Promise<{ ranking: Map<number, Ranked>; runners: Runners }> {
   const [runners, stored] = await Promise.all([loadRegisteredRunners(db, event.id), loadStored(db, event.id, false)]);
-  return rankingOf(stored, runners.byRegistration, event);
+  return { ranking: rankingOf(stored, runners.byRegistration, event), runners };
 }
 
 // ---- Reading for the backoffice ------------------------------------------------------------------------
@@ -526,6 +526,9 @@ export async function saveEventResults<T extends Record<string, unknown>>(db: Da
         continue;
       }
       const changedBoxes = changedBoxesOf(before, { ...row, bibNumber });
+      // A new name beside a tick that stays on is a new person on an old record: whoever saves it records the agreement again (the moment and
+      // the actor are theirs, the trail says so), exactly as a changed number — a new row — already does.
+      if (row.nameAgreed && before.nameAgreedAt !== null && changedBoxes.includes("name") && !changedBoxes.includes("nameAgreed")) changedBoxes.push("nameAgreed");
       const rankMoved =
         before.positionOverall !== ranked.positionOverall ||
         before.positionSex !== ranked.positionSex ||
@@ -540,7 +543,7 @@ export async function saveEventResults<T extends Record<string, unknown>>(db: Da
           displayName: row.displayName,
           sex: row.sex,
           birthDate: row.birthDate,
-          // Turned on: the moment and the actor; turned off (or the registration took the row): both cleared; unchanged: left as they are.
+          // Turned on, or on beside a new name: the moment and the actor; turned off (or the registration took the row): both cleared; unchanged: left as they are.
           ...(changedBoxes.includes("nameAgreed") ? { nameAgreedAt: row.nameAgreed ? now : null, nameAgreedByStaffUserId: row.nameAgreed ? actor.id : null } : {}),
           status: row.status,
           gunTimeMs: row.gunTimeMs,
@@ -561,7 +564,7 @@ export async function saveEventResults<T extends Record<string, unknown>>(db: Da
           gunTimeMs: row.gunTimeMs,
           chipTimeMs: row.chipTimeMs,
           changed: changedBoxes,
-          // The agreement's new state, when it moved: who recorded it is the audit row's actor, when its time — never the name.
+          // The agreement's new state, when it moved or was recorded again for a new name: who recorded it is the audit row's actor, when its time — never the name.
           ...(changedBoxes.includes("nameAgreed") ? { nameAgreed: row.nameAgreed } : {}),
         });
       } else rewritten += 1;
@@ -833,7 +836,7 @@ export async function readPublicEventResults<T extends Record<string, unknown>>(
   if (options.now.getTime() < event.startsAt.getTime()) return null;
   if (!publicListStillOpen(event, options.now, options.deadlines)) return null;
 
-  const ranking = await loadLiveRanking(db, event);
+  const { ranking, runners } = await loadLiveRanking(db, event);
   const hiddenShown = hiddenListShownPublicly(event);
   const rows = await db
     .select({
@@ -869,8 +872,10 @@ export async function readPublicEventResults<T extends Record<string, unknown>>(
         hidden: row.outsideCapacity === true && !hiddenShown,
         noticeVersion: row.noticeVersion,
         firstResultsNoticeVersion: options.firstResultsNoticeVersion,
-        // A runner the club typed by hand: the staff-recorded agreement (§NNN), on a row no registration holds (the database's check says the same).
-        typedNameAgreed: row.registrationId === null && row.typedNameAgreedAt !== null,
+        // A runner the club typed by hand: the staff-recorded agreement (§NNN), on a row no registration holds (the database's check says the same)
+        // and whose number no confirmed registration has taken since: the backoffice already draws that number as the registered runner's, whose
+        // name follows their own tick and never a staff mark, so until the next save re-files the row the line is «Participant #bib».
+        typedNameAgreed: row.registrationId === null && row.typedNameAgreedAt !== null && runners.byBib.get(row.bibNumber)?.status !== "CONFIRMED",
         typedDisplayName: row.typedName,
       }),
       status: row.status,
