@@ -307,6 +307,30 @@ describe("§802 the markers", () => {
     for (const glyph of ["water", "food", "firstAid", "timing", "direction", "none"] as const) expect(ELEVATION_GLYPH_PATHS[glyph]).toMatch(/^M/);
   });
 
+  // §802 amended (the owner, 2026-10-17: «apa e cumva implicită dacă avem mâncare»): the page's chart pins the fork for food + water.
+  it("pins the fork, not the drop, for a point with food and water when the page asks for it — the other kinds keep their order", () => {
+    expect(glyphForKinds(["WATER", "FOOD"], true)).toBe("food");
+    expect(glyphForKinds(["FOOD", "WATER"], true)).toBe("food");
+    expect(glyphForKinds(["WATER"], true)).toBe("water");
+    expect(glyphForKinds(["FOOD"], true)).toBe("food");
+    // Food first, then water, first aid, timing, direction.
+    expect(glyphForKinds(["FIRST_AID", "WATER"], true)).toBe("water");
+    expect(glyphForKinds(["FIRST_AID", "FOOD", "TIMING"], true)).toBe("food");
+    expect(glyphForKinds(["TIMING", "FIRST_AID"], true)).toBe("firstAid");
+    expect(glyphForKinds(["DIRECTION", "TIMING"], true)).toBe("timing");
+    expect(glyphForKinds(["DIRECTION"], true)).toBe("direction");
+    expect(glyphForKinds([], true)).toBe("none");
+    // Off — the default, and what the race number's strip draws with — the old order stands.
+    expect(glyphForKinds(["WATER", "FOOD"], false)).toBe("water");
+    const markers: ElevationMarkerInput[] = [{ km: 5, kinds: ["WATER", "FOOD"] }];
+    expect(elevationGeometry(ramp(10, 600, 800), markers, WIDE).markers[0].glyph).toBe("water");
+    expect(elevationGeometry(ramp(10, 600, 800), markers, { ...WIDE, foodBeforeWater: true }).markers[0].glyph).toBe("food");
+    // Nothing but the glyph moves.
+    const strip = elevationGeometry(ramp(10, 600, 800), markers, WIDE).markers[0];
+    const page = elevationGeometry(ramp(10, 600, 800), markers, { ...WIDE, foodBeforeWater: true }).markers[0];
+    expect({ ...page, glyph: "water" }).toEqual(strip);
+  });
+
   it("keeps a pin in the band above the plot, at the first row, when no two touch", () => {
     const g = elevationGeometry(ramp(10), [point(2), point(8)], WIDE);
     expect(g.pinRows).toBe(1);

@@ -249,7 +249,7 @@ test.describe("§750 §759 the designer's sections: header, footer, the profile 
     await expect(profilePicture).toBeVisible();
     await expect(scale).toBeHidden();
     // The recommended shape, said before any upload (§804): both shapes, the strip beside the figures (380 × 36 points) and the whole one.
-    await expect(profilePicture).toContainText("Cu cifrele lângă profil: 10,6 la 1, adică 1580 × 150 px la 300 dpi");
+    await expect(profilePicture).toContainText("Cu cifrele în dreapta profilului: 10,6 la 1, adică 1580 × 150 px la 300 dpi");
     // Its own sub-card with its «Calitate» row, and never a crop box: the picture is fitted whole.
     await expect(profilePicture.getByTestId("image-quality")).toBeVisible();
     // A wide strip, at least 200 pixels on each side: the upload's own floor for any picture (`media/limits.ts`).
@@ -259,7 +259,7 @@ test.describe("§750 §759 the designer's sections: header, footer, the profile 
     await expect(page.getByTestId("bib-picture-profile-crop")).toHaveCount(0);
 
     // The figures beside it: on by default, off takes the whole width.
-    const figures = extras.getByRole("checkbox", { name: "Arată distanța și diferența de nivel lângă profil" });
+    const figures = extras.getByRole("checkbox", { name: "Arată distanța și diferența de nivel" });
     await expect(figures).toBeChecked();
     await expect(preview).toHaveAttribute("src", /[?&]showProfileFigures=1(&|$)/);
     await figures.uncheck();

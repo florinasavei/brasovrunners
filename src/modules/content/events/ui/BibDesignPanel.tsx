@@ -21,6 +21,7 @@ import {
   BIB_MEMBER_STYLES,
   BIB_NAME_POSITIONS,
   BIB_NUMBER_SCALES,
+  BIB_PROFILE_FIGURES_PLACES,
   BIB_PROFILE_ORIENTATIONS,
   BIB_PROFILE_SOURCES,
   BIB_SPONSOR_PLACES,
@@ -34,6 +35,7 @@ import { CLUB_NAME, HEADER_CLEARANCE_PX, LOGO } from "@/theme/brand";
 import { bibPreviewUrl } from "@/modules/registrations/bib-design-query";
 import { BIB_FOOTER_TEXT_MAX, bibWebsiteHost } from "@/modules/registrations/bib-footer";
 import { BIB_PICTURE_PRINT_DPI, BIB_PICTURE_RATIO, type BibPictureSlot, bibProfilePictureExample, bibProfilePictureRatio } from "@/modules/registrations/bib-picture-frame";
+import { bibFiguresBeside, bibHeaderCarriesWords } from "@/modules/registrations/bib-profile-row";
 import { readBibPictureFacts } from "@/modules/registrations/bib-pictures";
 import { env } from "@/shared/config/env";
 import { ACTION_ICONS } from "@/shared/ui/action-icons";
@@ -53,6 +55,7 @@ const RouteGlyph = ACTION_ICONS.route;
 const PictureGlyph = ACTION_ICONS.picture;
 const UprightGlyph = ACTION_ICONS.upright;
 const TurnedGlyph = ACTION_ICONS.turned;
+const FIGURES_PLACE_GLYPHS = { right: ACTION_ICONS.figuresRight, below: ACTION_ICONS.figuresBelow, header: ACTION_ICONS.figuresHeader } as const;
 const PROFILE_SOURCE_GLYPHS = { gpx: RouteGlyph, picture: PictureGlyph } as const;
 const ORIENTATION_GLYPHS = { normal: UprightGlyph, turned: TurnedGlyph } as const;
 
@@ -256,7 +259,7 @@ export default async function BibDesignPanel({
       shape: t(`editor.bibDesign.picture.shape.${slot}`, {
         ratio:
           slot === "profile"
-            ? profileRatioWords.format(bibProfilePictureRatio(design.showProfileFigures))
+            ? profileRatioWords.format(bibProfilePictureRatio(bibFiguresBeside(design)))
             : (card ? cardRatioWords : ratioWords).format(BIB_PICTURE_RATIO[slot]),
       }),
       chosen: rich.imageChosen,
@@ -307,8 +310,14 @@ export default async function BibDesignPanel({
       : hasRouteGpx
         ? t("editor.bibDesign.profileSources.gpx")
         : t("editor.bibDesign.sectionSummary.gpxMissing");
+  // The same rule the drawing follows (`bibProfileRow`): «În antet» with a picture for a header stands under the profile.
+  const figuresPlace = design.profileFiguresPlace === "header" && !bibHeaderCarriesWords(design) ? "below" : design.profileFiguresPlace;
   const profileAside =
-    words(profileWords, bibEmergencyLine(design, "x") !== null && t("editor.bibDesign.sectionSummary.phone")) ||
+    words(
+      profileWords,
+      design.showProfile && design.showProfileFigures && t(`editor.bibDesign.sectionSummary.figures.${figuresPlace}`),
+      bibEmergencyLine(design, "x") !== null && t("editor.bibDesign.sectionSummary.phone"),
+    ) ||
     t("editor.bibDesign.sectionSummary.nothing");
   const membersAside = design.member.enabled
     ? words(t("editor.bibDesign.sectionSummary.membersOn"), design.member.mark && t(`editor.bibDesign.member.markShapes.${design.member.markShape}`))
@@ -477,6 +486,26 @@ export default async function BibDesignPanel({
                     {t("editor.bibDesign.showProfileFigures")}
                   </Box>
                 </CheckboxField>
+                {/* «Unde stau cifrele» (§804): at the strip's right, under it, or in the header under the date — offered while the tick above is on (hidden, still posted, so the choice survives unticking). */}
+                <OnlyWhenTicked name="event.bibDesign.showProfileFigures" initiallyTicked={design.showProfileFigures}>
+                  <Box component="fieldset" sx={{ border: 0, p: 0, m: 0, minWidth: 0 }} data-testid="bib-profile-figures-place">
+                    <Legend>{t("editor.bibDesign.profileFiguresPlace")}</Legend>
+                    {BIB_PROFILE_FIGURES_PLACES.map((place) => {
+                      const Glyph = FIGURES_PLACE_GLYPHS[place];
+                      return (
+                        <RadioField key={place} name="event.bibDesign.profileFiguresPlace" value={place} defaultChecked={design.profileFiguresPlace === place}>
+                          <Box component="span" sx={{ display: "inline-flex", alignItems: "center", gap: 0.75 }}>
+                            <Glyph aria-hidden fontSize="small" sx={{ color: "text.secondary" }} />
+                            {t(`editor.bibDesign.profileFiguresPlaces.${place}`)}
+                          </Box>
+                        </RadioField>
+                      );
+                    })}
+                    <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
+                      {t("editor.bibDesign.profileFiguresPlaceHelp")}
+                    </Typography>
+                  </Box>
+                </OnlyWhenTicked>
                 {/* «Orientarea profilului» (§759): normal, or turned half a circle for the runner — with the phone, as one block, when it is turned too. */}
                 <Box component="fieldset" sx={{ border: 0, p: 0, m: 0, minWidth: 0 }} data-testid="bib-profile-orientation">
                   <Legend>{t("editor.bibDesign.profileOrientation")}</Legend>

@@ -1,11 +1,14 @@
-import { createTranslator } from "next-intl";
+import { createTranslator, NextIntlClientProvider } from "next-intl";
+import { type ComponentProps, createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
-import type { Checkpoint } from "@/modules/event-checkpoints/domain/checkpoint";
+import { type Checkpoint, checkpointBox } from "@/modules/event-checkpoints/domain/checkpoint";
 import type { GpxProposal } from "@/modules/event-checkpoints/domain/gpx-waypoints";
 import { parseGpxElevation } from "@/modules/routes/elevation/parse";
+import { isTranslatableEnglishField, romanianTwinCandidates } from "@/modules/translate/domain/fields";
+import TranslateProvider, { type TranslateOffer } from "@/modules/translate/ui/TranslateProvider";
 import { withClientWords } from "../../helpers/client-words";
 import { elevationGpx } from "../../helpers/elevation-gpx";
 
@@ -58,9 +61,17 @@ const proposal = (name: string, km: number, over: Partial<GpxProposal> = {}): Gp
 
 const base = { locale: "ro" as const, eventId: EVENT, checkpoints: [] as Checkpoint[], mayEdit: true, routeKm: 21.1 as number | null, profile: null, distanceMeters: null, gpx: null, previewOpen: false };
 
-async function render(props: Partial<Parameters<typeof CheckpointsCard>[0]> = {}) {
-  return renderToStaticMarkup(withClientWords(await CheckpointsCard({ ...base, ...props }), language));
+/** The editor's layout hands the buttons what the deployment offers (§464): none here unless a test asks. */
+async function render(props: Partial<Parameters<typeof CheckpointsCard>[0]> = {}, offer: TranslateOffer | null = null) {
+  const card = await CheckpointsCard({ ...base, ...props });
+  if (!offer) return renderToStaticMarkup(withClientWords(card, language));
+  // The words a client island reads for itself (§353), and a zone, which next-intl asks for once a client component formats anything.
+  const intl = { locale: language, messages: messages[language], timeZone: "Europe/Bucharest" } as unknown as ComponentProps<typeof NextIntlClientProvider>;
+  return renderToStaticMarkup(createElement(NextIntlClientProvider, intl, createElement(TranslateProvider, { offer } as ComponentProps<typeof TranslateProvider>, card)));
 }
+
+const TRANSLATES: TranslateOffer = { action: async () => ({ ok: false, reason: "notConfigured" }), setupHref: null };
+const NO_KEY: TranslateOffer = { action: null, setupHref: null };
 
 describe("§757 the card «Puncte de control»", () => {
   it("is a named card of «Traseul» (§763): closed by default, a level-3 heading, its closed line saying there is none", async () => {
@@ -309,6 +320,80 @@ describe("§802 the profile's tick and preview on the card", () => {
   });
 });
 
+/** The boxes' names a «Tradu din română» in the markup is for, in the order drawn. */
+const translateTargets = (html: string) => [...html.matchAll(/data-translate-for="([^"]+)"/g)].map((match) => match[1]);
+const inputNames = (html: string) => new Set([...html.matchAll(/<(?:input|textarea)\b[^>]*\sname="([^"]+)"/g)].map((match) => match[1]));
+
+describe("§464, §757 «Tradu din română» beside the English names", () => {
+  const gpx = (offered: GpxProposal[]) => ({ key: "test/route-gpx/00000000-0000-4000-8000-000000000000/t.gpx", offered, ignored: 0 });
+
+  it("draws one under every ticked preview row's English name — and none under a row already on the list", async () => {
+    const html = await render(
+      { previewOpen: true, checkpoints: [point("Izvor", 0.8, { nameRo: "Izvor", nameEn: "Izvor" })], gpx: gpx([proposal("Izvor", 0.8), proposal("Cabana", 1.56), proposal("Vârf", 3.1)]) },
+      TRANSLATES,
+    );
+    const preview = html.slice(html.indexOf('id="box-checkpoints-gpx"'), html.indexOf('data-testid="checkpoints-fields"'));
+    // Two rows to add (the first is already there): proposals 1 and 2, in the preview's own numbering.
+    expect(translateTargets(preview)).toEqual(["gp[1].nameEn", "gp[2].nameEn"]);
+    expect(preview.match(/Tradu din română/g)).toHaveLength(2);
+    expect(preview.match(/data-testid="checkpoints-gpx-row"/g)).toHaveLength(3);
+  });
+
+  it("draws one under the English name and one under the English note of every saved and every spare row of the list", async () => {
+    const html = await render({ checkpoints: [point("a", 5), point("b", 9)] }, TRANSLATES);
+    // Two saved rows and three spare ones, each with its name and its note.
+    const expected = [0, 1, 2, 3, 4].flatMap((index) => [checkpointBox(index, "nameEn"), checkpointBox(index, "noteEn")]);
+    expect(translateTargets(html)).toEqual(expected);
+    expect(html.match(/Tradu din română/g)).toHaveLength(10);
+  });
+
+  it("is beside each English box, never in another's place: the button's box and its Romanian twin are both boxes of the card, found by the pair's spelling", async () => {
+    const html = await render(
+      { previewOpen: true, checkpoints: [point("a", 5)], gpx: gpx([proposal("Izvor", 0.8), proposal("Cabana", 1.56)]) },
+      TRANSLATES,
+    );
+    const names = inputNames(html);
+    const targets = translateTargets(html);
+    expect(targets.length).toBeGreaterThan(4);
+    for (const target of targets) {
+      expect(isTranslatableEnglishField(target), target).toBe(true);
+      expect(names.has(target), `the English box ${target}`).toBe(true);
+      expect(names.has(romanianTwinCandidates(target)[0]), `the Romanian twin of ${target}`).toBe(true);
+    }
+    // One box, one name: no name is on the page twice (a button finds its box by name, and the preview and the list share the page).
+    const all = [...html.matchAll(/<(?:input|textarea)\b[^>]*\sname="([^"]+)"/g)].map((match) => match[1]).filter((name) => /\.(nameRo|nameEn|noteRo|noteEn)$/.test(name));
+    expect(new Set(all).size).toBe(all.length);
+  });
+
+  it("is absent where the deployment offers no translation (no DeepL key), and where no provider is mounted", async () => {
+    const props = { previewOpen: true, checkpoints: [point("a", 5)], gpx: gpx([proposal("Izvor", 0.8)]) };
+    for (const offer of [NO_KEY, null]) {
+      const html = await render(props, offer);
+      expect(translateTargets(html)).toEqual([]);
+      expect(html).not.toContain("Tradu din română");
+    }
+  });
+
+  it("says «Translate from Romanian» in English, and is not drawn for a role that only reads the list", async () => {
+    language = "en";
+    try {
+      const html = await render({ locale: "en", checkpoints: [point("a", 5)] }, TRANSLATES);
+      expect(html).toContain("Translate from Romanian");
+      expect(html).not.toContain("Tradu din română");
+      expect(await render({ locale: "en", mayEdit: false, checkpoints: [point("a", 5)] }, TRANSLATES)).not.toContain("Translate from Romanian");
+    } finally {
+      language = "ro";
+    }
+  });
+
+  it("keeps every box of the preview in the preview's form and every box of the list in the list's", async () => {
+    const html = await render({ previewOpen: true, checkpoints: [point("a", 5)], gpx: gpx([proposal("Izvor", 0.8)]) }, TRANSLATES);
+    for (const match of html.matchAll(/<input\b[^>]*\sname="(gp\[[^"]+|cp\[[^"]+)"[^>]*>/g)) {
+      expect(match[0], match[1]).toContain(match[1].startsWith("gp[") ? 'form="checkpoints-gpx-form"' : 'form="checkpoints-form"');
+    }
+  });
+});
+
 describe("§757 «Ia punctele din GPX» on the card", () => {
   const gpx = (offered: GpxProposal[], ignored = 0) => ({ key: "test/route-gpx/00000000-0000-4000-8000-000000000000/t.gpx", offered, ignored });
 
@@ -343,10 +428,12 @@ describe("§757 «Ia punctele din GPX» on the card", () => {
 
   it("asks a name in each language for every point: the file's name in the Romanian box, the English box empty for the club", async () => {
     const html = await render({ previewOpen: true, gpx: gpx([proposal("Izvor", 0.8)]) });
-    expect(html).toMatch(/name="cp\[0\]\.nameRo"[^>]*value="Izvor"|value="Izvor"[^>]*name="cp\[0\]\.nameRo"/);
-    expect(html).toMatch(/name="cp\[0\]\.nameEn"/);
-    expect(html).not.toMatch(/name="cp\[0\]\.nameEn"[^>]*value="Izvor"|value="Izvor"[^>]*name="cp\[0\]\.nameEn"/);
-    expect(html).toContain("scrie-l și în engleză");
+    // `gp[…]`, not `cp[…]`: the list's saved rows stand on the same page, and a translate button finds its box by name.
+    expect(html).toMatch(/name="gp\[0\]\.nameRo"[^>]*value="Izvor"|value="Izvor"[^>]*name="gp\[0\]\.nameRo"/);
+    expect(html).toMatch(/name="gp\[0\]\.nameEn"/);
+    expect(html).not.toMatch(/name="gp\[0\]\.nameEn"[^>]*value="Izvor"|value="Izvor"[^>]*name="gp\[0\]\.nameEn"/);
+    expect(html).not.toMatch(/name="cp\[0\]\.nameRo"[^>]*value="Izvor"|value="Izvor"[^>]*name="cp\[0\]\.nameRo"/);
+    expect(html).toContain("scrie-l sau tradu-l în engleză");
   });
 
   it("counts the points past the route's end, with the route's length, apart from the ones off the track", async () => {

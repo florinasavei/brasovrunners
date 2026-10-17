@@ -362,12 +362,17 @@ test.describe("§802 the route's elevation profile", () => {
     await page.goto(`/ro/evenimente/${race.slug}`);
     await hydrated(page);
 
-    // One chart is on screen: the narrow one on a phone, the wide one on a desktop.
+    // One chart is on screen: the narrow one on a phone, the full one on a desktop (1280 px: from 1100 px the full chart, §802 amended 2026-10-17).
     const section = page.getByTestId("route-elevation");
     await expect(section).toBeVisible();
     const chart = section.locator('[data-testid="elevation-chart"]:visible');
     await expect(chart).toHaveCount(1);
-    await expect(chart).toHaveAttribute("data-size", project === "mobile" ? "narrow" : "wide");
+    await expect(chart).toHaveAttribute("data-size", project === "mobile" ? "narrow" : "full");
+    // It spans the section's whole width — no 1000 px cap — and the phone's chart its section too (a 390 px phone is under the 480 px cap).
+    const sectionWidth = (await section.boundingBox())!.width;
+    const chartWidth = (await chart.boundingBox())!.width;
+    expect(Math.abs(chartWidth - sectionWidth)).toBeLessThanOrEqual(1);
+    if (project !== "mobile") expect(chartWidth).toBeGreaterThan(1100);
     await expect(chart).toHaveAttribute("aria-label", /^Profilul traseului: 9,0 km, de la \d+ la \d+ m$/);
 
     // The pins: the three ticked points, a glyph each; the first-aid point the club unticked is not on the chart.
@@ -377,6 +382,16 @@ test.describe("§802 the route's elevation profile", () => {
     await expect(pins.nth(1)).toHaveAttribute("data-glyph", "food");
     await expect(pins.nth(2)).toHaveAttribute("data-glyph", "water");
     await expect(section).not.toContainText("Punct ascuns");
+    // A dotted line at each ticked point's kilometre, from its pin down through the dot on the curve to the axis.
+    const guides = chart.getByTestId("elevation-guide");
+    await expect(guides).toHaveCount(3);
+    for (const index of [0, 1, 2]) {
+      const guide = (await guides.nth(index).boundingBox())!;
+      const dot = (await pins.nth(index).locator("circle").first().boundingBox())!;
+      expect(Math.abs(guide.x + guide.width / 2 - (dot.x + dot.width / 2))).toBeLessThan(1.5);
+      expect(guide.y).toBeLessThan(dot.y);
+      expect(guide.y + guide.height).toBeGreaterThan(dot.y + dot.height);
+    }
     await expect(chart.locator("text", { hasText: "Alt" })).toHaveCount(1);
     await expect(chart.locator("text", { hasText: /^km$/ })).toHaveCount(1);
 

@@ -8,6 +8,10 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V3.54-2026-10-17
+
+- **Where the race number's distance and gain stand** — the club chooses: beside the profile as before, under it on one line, or in the header under the date; the preview shows it at once. §806.
+- **Checkpoints and the elevation profile, five small asks** — «Tradu din română» beside the GPX points' English names (and the list's names and notes); the profile spans the page's width; a dotted line marks each checkpoint's kilometre; no «se închide la» while the race's start is not set; a point with food and water shows the fork. §807.
 ## BR-V3.53-2026-10-17
 
 - **Show the route profile on the page — or not** — the event editor's «Traseul» card has a tick «Arată profilul traseului pe pagină» (on for every event): unticked, the page draws no elevation chart from the GPX, while the maps, the GPX download and the table «Puncte de control» stay; the checkpoints' card still previews the chart and says it is off on the page; the event JSON file, «Duplică» and a series carry it. §805.

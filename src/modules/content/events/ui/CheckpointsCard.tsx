@@ -16,6 +16,7 @@ import {
   CHECKPOINTS_MAX,
   type Checkpoint,
   checkpointBox,
+  gpxProposalBox,
   profileMarkers,
 } from "@/modules/event-checkpoints/domain/checkpoint";
 import ElevationProfile, { type ElevationProfileWords } from "@/modules/routes/elevation/ElevationProfile";
@@ -30,6 +31,7 @@ import GlyphButtonLink from "@/shared/ui/GlyphButtonLink";
 import GlyphSubmitButton from "@/shared/ui/GlyphSubmitButton";
 import { PANEL_GLYPHS } from "@/shared/ui/panel-glyphs";
 import Panel from "@/shared/ui/Panel";
+import TranslateFieldButton from "@/modules/translate/ui/TranslateFieldButton";
 import DurationBoxes from "./DurationBoxes";
 
 /** The glyph before «Scoate»: the delete verb's, by name from the verbs' registry (§318). */
@@ -70,6 +72,9 @@ export async function CheckpointForms({ locale, eventId, mayEdit, children }: { 
     "cp[].cutoffMinutesPart": t("checkpoints.field.cutoff"),
     "cp[].noteRo": t("checkpoints.field.noteRo"),
     "cp[].noteEn": t("checkpoints.field.noteEn"),
+    // The GPX preview's own boxes (`gp[…]`, not `cp[…]`: the two forms stand on one page, and a translate button finds its box by name).
+    "gp[].nameRo": t("checkpoints.field.nameRo"),
+    "gp[].nameEn": t("checkpoints.field.nameEn"),
   });
   const hidden = (
     <>
@@ -163,14 +168,17 @@ export default async function CheckpointsCard({ locale, eventId, checkpoints, ma
           sx={{ flex: 1 }}
           slotProps={{ htmlInput: { maxLength: CHECKPOINT_NAME_MAX } }}
         />
-        <RecallField
-          name={checkpointBox(index, "nameEn")}
-          label={t("checkpoints.field.nameEn")}
-          defaultValue={saved?.nameEn ?? ""}
-          size="small"
-          sx={{ flex: 1 }}
-          slotProps={{ htmlInput: { maxLength: CHECKPOINT_NAME_MAX } }}
-        />
+        {/* «Tradu din română» (§464): the English name from the Romanian one, a draft the save stores. */}
+        <Stack spacing={0.5} sx={{ flex: 1 }}>
+          <RecallField
+            name={checkpointBox(index, "nameEn")}
+            label={t("checkpoints.field.nameEn")}
+            defaultValue={saved?.nameEn ?? ""}
+            size="small"
+            slotProps={{ htmlInput: { maxLength: CHECKPOINT_NAME_MAX } }}
+          />
+          <TranslateFieldButton en={checkpointBox(index, "nameEn")} />
+        </Stack>
       </Stack>
       <Box>
         <Typography variant="caption" component="p" color="text.secondary" sx={{ m: 0 }}>
@@ -213,14 +221,16 @@ export default async function CheckpointsCard({ locale, eventId, checkpoints, ma
           sx={{ flex: 1 }}
           slotProps={{ htmlInput: { maxLength: CHECKPOINT_NOTE_MAX } }}
         />
-        <RecallField
-          name={checkpointBox(index, "noteEn")}
-          label={t("checkpoints.field.noteEn")}
-          defaultValue={saved?.noteEn ?? ""}
-          size="small"
-          sx={{ flex: 1 }}
-          slotProps={{ htmlInput: { maxLength: CHECKPOINT_NOTE_MAX } }}
-        />
+        <Stack spacing={0.5} sx={{ flex: 1 }}>
+          <RecallField
+            name={checkpointBox(index, "noteEn")}
+            label={t("checkpoints.field.noteEn")}
+            defaultValue={saved?.noteEn ?? ""}
+            size="small"
+            slotProps={{ htmlInput: { maxLength: CHECKPOINT_NOTE_MAX } }}
+          />
+          <TranslateFieldButton en={checkpointBox(index, "noteEn")} />
+        </Stack>
       </Stack>
       {/* «Arată pe profilul traseului» (§802): on for a new point and for any saved one the club has not unticked; an unticked box posts nothing. */}
       <input type="hidden" name={checkpointBox(index, "onProfileShown")} value="1" form={CHECKPOINTS_FORM} />
@@ -309,24 +319,28 @@ export default async function CheckpointsCard({ locale, eventId, checkpoints, ma
                           kinds: proposal.kinds.map((kind) => t(`checkpoints.kinds.${kind}`)).join(", ") || t("checkpoints.gpx.noKinds"),
                         })}
                       </CheckboxField>
-                      {/* A name in each language (§352): the file's one name goes in the Romanian box, the English one is the club's to write. */}
+                      {/* A name in each language (§352): the file's one name goes in the Romanian box, the English one is the club's to write —
+                          or to translate from it with «Tradu din română» (§464). The boxes are `gp[<at>].…`, not `cp[…]`: the list's saved rows
+                          stand on the same page under `cp[…]`, and a translate button finds its boxes by name. */}
                       <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} sx={{ pl: { sm: 4 } }}>
                         <RecallField
-                          name={checkpointBox(at, "nameRo")}
+                          name={gpxProposalBox(at, "nameRo")}
                           label={t("checkpoints.field.nameRo")}
                           defaultValue={proposal.name}
                           size="small"
                           sx={{ flex: 1 }}
                           slotProps={{ htmlInput: { maxLength: CHECKPOINT_NAME_MAX } }}
                         />
-                        <RecallField
-                          name={checkpointBox(at, "nameEn")}
-                          label={t("checkpoints.field.nameEn")}
-                          defaultValue=""
-                          size="small"
-                          sx={{ flex: 1 }}
-                          slotProps={{ htmlInput: { maxLength: CHECKPOINT_NAME_MAX } }}
-                        />
+                        <Stack spacing={0.5} sx={{ flex: 1 }}>
+                          <RecallField
+                            name={gpxProposalBox(at, "nameEn")}
+                            label={t("checkpoints.field.nameEn")}
+                            defaultValue=""
+                            size="small"
+                            slotProps={{ htmlInput: { maxLength: CHECKPOINT_NAME_MAX } }}
+                          />
+                          <TranslateFieldButton en={gpxProposalBox(at, "nameEn")} />
+                        </Stack>
                       </Stack>
                     </Stack>
                   )}
