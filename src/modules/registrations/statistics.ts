@@ -237,10 +237,18 @@ const CATEGORY_ORDER: readonly CategoryKey[] = [
   "none",
 ];
 
+/**
+ * A category's key from its two answers: the sex and the band of the age on the event's day (`ageOnRaceDay`), or
+ * null when either is missing. The one definition of a category — the Excel's footer counts by it, and the
+ * race results rank by it (§NNN), so the two can never disagree about who is in which band.
+ */
+export function categoryKeyOf(sex: SexChoice | null | undefined, age: number | null | undefined): `${SexChoice}:${StatisticsBandKey}` | null {
+  const band = ageBandOf(age);
+  return sex && band ? `${sex}:${band}` : null;
+}
+
 function categoryOf(row: StatisticsRow): CategoryKey {
-  const sex = sexOfCell(row.sex);
-  const band = ageBandOf(row.ageOnRaceDay);
-  return sex && band ? `${sex}:${band}` : "none";
+  return categoryKeyOf(sexOfCell(row.sex), row.ageOnRaceDay) ?? "none";
 }
 
 export type StatisticsCategory = {

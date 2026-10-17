@@ -58,6 +58,8 @@ export type TaskId =
   | "listStatesNotice"
   | "listSocialsNotice"
   | "listNumbersNotice"
+  | "resultsNotice"
+  | "resultsTerms"
   | "invitationsNotice"
   | "promoNotice"
   | "sponsorNotice"
@@ -112,6 +114,8 @@ export const TASK_KIND: Record<TaskId, TaskKind> = {
   listStatesNotice: "text",
   listSocialsNotice: "text",
   listNumbersNotice: "text",
+  resultsNotice: "text",
+  resultsTerms: "text",
   invitationsNotice: "text",
   promoNotice: "text",
   sponsorNotice: "text",
@@ -237,6 +241,18 @@ export type OwnerTaskInputs = {
    * on the public list (§613, `noticeDescribesListNumbers`)? Until it does, the list shows no number.
    */
   listNumbersDescribed: boolean;
+  /**
+   * Does the notice in force, in every language, describe a race's published results (§NNN,
+   * `noticeDescribesResults`)? Until it does, an Administrator cannot make a race's results public and the event
+   * page shows none; the club may enter and rank them in the backoffice meanwhile.
+   */
+  resultsDescribed: boolean;
+  /**
+   * Do the terms in force, in every language, describe a race's published results (§NNN, `termsDescribeResults`)? The older terms
+   * promised «te vom întreba separat» before any named result, so until the club approves terms that name `{{results}}` an Administrator
+   * cannot make a race's results public either; entering and ranking them stays open.
+   */
+  resultsTermsDescribed: boolean;
   /**
    * Does the notice in force, in every language, describe the club's invitations by email (§647,
    * `noticeDescribesEventInvitations`)? The club may invite meanwhile (§389's precedent); the row says
@@ -573,6 +589,15 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
       state: input.listNumbersDescribed ? "done" : "open",
     });
     /*
+      A race's published results (§NNN), the same shape: open, never blocking — the club may enter, import and
+      rank the results meanwhile, and only making them public is refused — and done by itself the day a notice
+      naming `{{results}}` takes effect.
+    */
+    push("resultsNotice", {
+      owner: "club",
+      state: input.resultsDescribed ? "done" : "open",
+    });
+    /*
       The invitations by email (§647), the same shape: open, never blocking — nothing is refused, the
       club may invite while the notice is the older one, as it registers another person on one's own
       address (§389) — and done by itself the day a notice naming `{{eventInvitations}}` takes effect.
@@ -766,6 +791,18 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
     push("refusalTerms", {
       owner: "club",
       state: input.refusalDescribed ? "done" : "open",
+    });
+  }
+
+  /*
+    A race's published results, in the terms (§NNN): the same shape as the notice's row — open, never blocking, done by itself the day
+    terms naming `{{results}}` take effect in every language. Its own gate, the terms in force: the older terms promised to ask separately
+    before a named result, and publishing waits until they say what the notice says.
+  */
+  if (input.hasApprovedTerms) {
+    push("resultsTerms", {
+      owner: "club",
+      state: input.resultsTermsDescribed ? "done" : "open",
     });
   }
 

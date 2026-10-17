@@ -300,6 +300,18 @@ export const events = pgTable(
      */
     showRouteProfile: boolean("show_route_profile").notNull().default(true),
 
+    /**
+     * «Clasamentul e public pe pagina evenimentului» (§NNN, race results part 1): whether the event page shows the
+     * results entered in the backoffice (`event_results`). Off for every event that exists and every one created
+     * after this column — results are a disclosure, like the public participant list (`participant_list_visibility`):
+     * only an Administrator switches it on, and only while the privacy notice in force describes the results
+     * (`{{results}}`, `describesResults`). `results_published_at` is the moment it was last switched on, null while
+     * off. **Never carried by a duplicate, a repeat or a JSON file**: a copy of an event has no results, and a
+     * disclosure is decided for the one race it is about.
+     */
+    resultsPublished: boolean("results_published").notNull().default(false),
+    resultsPublishedAt: timestamp("results_published_at", { withTimezone: true }),
+
     // No `video_url` / `video_poster_url` here any more (§481, §491): a film is a `youtube` node in
     // the description (§266), carrying its own stored poster (§403); migration 0092 moved every
     // stored film there. BR-V2.10 stopped declaring the two columns and `events_video_url_is_https`;

@@ -516,6 +516,22 @@ export type AuditAction =
    */
   | "event_checkpoints.changed"
   /**
+   * A race's results (§NNN), entity `event`: one row per result created, changed or deleted by «Salvează tot clasamentul» or the
+   * row's own «Șterge» — the race number, the state, the times and, for a change, the names of the boxes that changed — never a
+   * runner's name, sex, birth date or note, so an erased person leaves nothing of themselves in the trail. The rankings the
+   * save recomputes are not audited row by row: they follow from the rows that are.
+   */
+  | "event_result.created"
+  | "event_result.updated"
+  | "event_result.deleted"
+  /**
+   * «Clasamentul e public pe pagina evenimentului» (§NNN), entity `event`: the Administrator made a race's results public or took
+   * them off, and «Descarcă clasamentul (CSV)» — the file has the names, so who downloaded it and how many rows are recorded.
+   */
+  | "event_results.published"
+  | "event_results.unpublished"
+  | "event_results.exported"
+  /**
    * The volunteer agreement (§758), entity `event`: an organizer's «Trimite linkul contractului» (requested),
    * the person's acceptance from the link (accepted, no actor) and a paper acceptance recorded at the desk
    * (recorded). The metadata holds the volunteer's id, the version and the way — never the person's words.
