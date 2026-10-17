@@ -174,6 +174,13 @@ export const checkpointBox = (
   field: "id" | "nameRo" | "nameEn" | "km" | "kinds" | "cutoffHours" | "cutoffMinutesPart" | "noteRo" | "noteEn" | "onProfile" | "onProfileShown" | "remove",
 ): string => `cp[${index}].${field}`;
 
+/**
+ * The names of the GPX preview's two name boxes (§757): `gp[2].nameRo`, `gp[2].nameEn` — the proposal's own number in the offered list.
+ * Not `cp[…]`: the preview and the list's saved rows are on one page in two forms, and «Tradu din română» (§464) finds a box by its name,
+ * so a name used by both would translate into whichever stands first. The action that adds the ticked points reads these.
+ */
+export const gpxProposalBox = (at: number, field: "nameRo" | "nameEn"): string => `gp[${at}].${field}`;
+
 /** The whole of a row's text, folded: one line, no run of spaces. */
 const oneLine = (value: string): string => value.replace(/\s+/g, " ").trim();
 
