@@ -178,6 +178,11 @@ test.describe("§NNN «Clasament» on the race's page", () => {
     await expect(page.getByText(`Bia Marin ${tag}`)).toHaveCount(0);
     await expect(row(page, 101).getByTestId("result-chip-time")).toHaveText("Timp cip: 0:49:58");
     await expect(row(page, 104).getByTestId("result-status")).toHaveText("Abandon");
+    // The phone prints a cell's column word before it (`data-label`): a finisher's time reads «Timp 0:50:00», and the runner who dropped
+    // out reads «Abandon» alone, never «Timp Abandon».
+    const before = (bib: number) => row(page, bib).getByTestId("result-time").evaluate((cell) => getComputedStyle(cell, "::before").content);
+    expect(await before(104)).toMatch(/^(none|normal)$/);
+    if ((page.viewportSize()?.width ?? 1280) < 600) expect(await before(101)).toBe('"Timp "');
     await expect(row(page, 102).getByTestId("result-place")).toContainText("1");
     await expect(row(page, 102).getByTestId("result-category")).toContainText("Feminin, 40-49 ani · loc 1");
     await expect(row(page, 104).getByTestId("result-place")).toContainText("Fără loc");
