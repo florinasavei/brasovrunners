@@ -9746,7 +9746,7 @@
       "gpx": {
         "take": "Ia punctele din GPX",
         "title": "Punctele din fișierul GPX",
-        "intro": "Punctele din fișier, cu kilometrul calculat pe traseu. Numele din fișier e pus la română: scrie-l și în engleză pentru fiecare punct bifat. Ce e deja pe listă nu se adaugă din nou.",
+        "intro": "Punctele din fișier, cu kilometrul calculat pe traseu. Numele din fișier e pus la română: scrie-l sau tradu-l în engleză pentru fiecare punct bifat. Ce e deja pe listă nu se adaugă din nou.",
         "row": "{km} km — {name} ({kinds})",
         "noKinds": "fără tip",
         "already": "{km} km — {name}: deja pe listă",

@@ -181,8 +181,9 @@ function ProfileSvg({
           x2={x}
           y1={from}
           y2={g.plot.bottom}
-          strokeWidth={1.25}
-          strokeDasharray="1.5 3.5"
+          strokeWidth={1}
+          strokeDasharray="2 3"
+          vectorEffect="non-scaling-stroke"
           style={{ stroke: "var(--mui-palette-text-secondary)" }}
         />
       ))}
@@ -291,7 +292,7 @@ export default function ElevationProfile({
   });
   // The one chart that fits, by CSS alone: narrow under 700 px, wide from 700 up to the full one's 1100, full beyond.
   const fromWide = `@media (min-width:${WIDE_FROM_PX}px)`;
-  const wideRange = `@media (min-width:${WIDE_FROM_PX}px) and (max-width:${FULL_FROM_PX - 0.05}px)`;
+  const wideRange = `@media (min-width:${WIDE_FROM_PX}px) and (not (min-width:${FULL_FROM_PX}px))`;
   const fromFull = `@media (min-width:${FULL_FROM_PX}px)`;
   return (
     <Box component="figure" data-testid="elevation-profile" data-variant="page" data-pins={markers.length} sx={{ m: 0 }}>

@@ -73,7 +73,7 @@ describe("§802 the elevation profile widget: the page", () => {
     expect(html).not.toContain("max-width:1000px");
     // One chart at a time: the wide from 700 px up to the full one's 1100 px, the full beyond, the narrow below 700 px.
     expect(ruleOf("narrow")).toContain("@media (min-width:700px){");
-    expect(ruleOf("wide")).toContain("@media (min-width:700px) and (max-width:1099.95px)");
+    expect(ruleOf("wide")).toContain("@media (min-width:700px) and (not (min-width:1100px))");
     expect(ruleOf("full")).toContain("@media (min-width:1100px)");
   });
 
@@ -113,7 +113,7 @@ describe("§802 the elevation profile widget: the page", () => {
     for (const chart of chartsIn(html)) {
       const start = html.indexOf(chart.tag);
       const part = html.slice(start, html.indexOf("</svg>", start));
-      const guides = [...part.matchAll(/<line data-testid="elevation-guide" x1="([\d.]+)" x2="([\d.]+)" y1="([\d.]+)" y2="([\d.]+)" stroke-width="1.25" stroke-dasharray="([^"]+)" style="([^"]+)"/g)];
+      const guides = [...part.matchAll(/<line data-testid="elevation-guide" x1="([\d.]+)" x2="([\d.]+)" y1="([\d.]+)" y2="([\d.]+)" stroke-width="1" stroke-dasharray="([^"]+)" vector-effect="non-scaling-stroke" style="([^"]+)"/g)];
       expect(guides, chart.size).toHaveLength(3);
       const pins = [...part.matchAll(/<circle cx="([\d.]+)" cy="([\d.]+)" r="3.2"/g)].map((match) => ({ x: Number(match[1]), y: Number(match[2]) }));
       const heads = [...part.matchAll(/<circle cx="([\d.]+)" cy="([\d.]+)" r="(?!3\.2")([\d.]+)"/g)].map((match) => ({ x: Number(match[1]), y: Number(match[2]), r: Number(match[3]) }));
@@ -131,7 +131,7 @@ describe("§802 the elevation profile widget: the page", () => {
         expect(y2).toBeGreaterThan(y1);
         if (axis) expect(y2).toBe(Number(axis[1]));
         // Dots, one pixel thin, in the pin's muted colour: the theme's, never a literal.
-        expect(guide[5]).toBe("1.5 3.5");
+        expect(guide[5]).toBe("2 3");
         expect(guide[6]).toContain("var(--mui-palette-text-secondary)");
       });
       // Under the curve's tint and line, so they stay readable; the pin and the dot stay above.

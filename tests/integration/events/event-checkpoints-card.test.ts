@@ -433,7 +433,7 @@ describe("§757 «Ia punctele din GPX» on the card", () => {
     expect(html).toMatch(/name="gp\[0\]\.nameEn"/);
     expect(html).not.toMatch(/name="gp\[0\]\.nameEn"[^>]*value="Izvor"|value="Izvor"[^>]*name="gp\[0\]\.nameEn"/);
     expect(html).not.toMatch(/name="cp\[0\]\.nameRo"[^>]*value="Izvor"|value="Izvor"[^>]*name="cp\[0\]\.nameRo"/);
-    expect(html).toContain("scrie-l și în engleză");
+    expect(html).toContain("scrie-l sau tradu-l în engleză");
   });
 
   it("counts the points past the route's end, with the route's length, apart from the ones off the track", async () => {
