@@ -2657,7 +2657,7 @@
           "below": "Under the profile, on one line",
           "header": "In the header, under the date"
         },
-        "profileFiguresPlaceHelp": "At the right the profile is narrowed; under the profile or in the header the figures fit on one line, and the profile or the picture takes the whole width.",
+        "profileFiguresPlaceHelp": "Under the profile or in the header the figures take one line and the profile takes the whole width; with a picture in place of the header, they go under the profile.",
         "profileOrientation": "The profile's orientation",
         "profileOrientations": {
           "normal": "Normal",

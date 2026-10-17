@@ -2657,7 +2657,7 @@
           "below": "Sub profil, pe un rând",
           "header": "În antet, sub dată"
         },
-        "profileFiguresPlaceHelp": "În dreapta, profilul se îngustează; sub profil sau în antet, cifrele încap pe un singur rând, iar profilul sau poza ocupă toată lățimea.",
+        "profileFiguresPlaceHelp": "Sub profil sau în antet cifrele încap pe un rând și profilul ocupă toată lățimea; cu o imagine în loc de antet, ele trec sub profil.",
         "profileOrientation": "Orientarea profilului",
         "profileOrientations": {
           "normal": "Normal",

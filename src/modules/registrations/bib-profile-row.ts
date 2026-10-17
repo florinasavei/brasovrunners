@@ -25,7 +25,9 @@ export type BibProfileFigures = BibProfileFigureLines & { place: BibProfileFigur
  * Either way the figures stand where «Unde stau cifrele» says (§804, amended; default `right`, the strip's
  * right, as before) only while «Arată distanța și diferența de nivel» is on and there is something to say;
  * the chart or the picture is narrowed for them (`bibProfileChartWidth`) at the right only — under the profile
- * and in the header it takes the whole width. Null when nothing can be drawn: the tick off, no GPX to draw,
+ * and in the header it takes the whole width. «În antet» needs a header with words: while the header (the
+ * event's, or the members') is the club's picture, no race or date is printed on it (§755) and the figures stand
+ * under the profile instead (`bibHeaderCarriesWords`). Null when nothing can be drawn: the tick off, no GPX to draw,
  * or a picture the route could not read — the row then takes no height, as on every number before it.
  *
  * Pure: `extras` is what `bib-extras.ts` read, `pictureLoaded` whether the renderer really holds the
@@ -37,12 +39,13 @@ export type BibProfileRow =
 
 export function bibProfileRow(
   design: Pick<BibDesign, "showProfile" | "profileSource" | "showProfileFigures"> &
-    Partial<Pick<BibDesign, "showProfileScale" | "showCheckpoints" | "showCheckpointTimes" | "profileFiguresPlace">>,
+    Partial<Pick<BibDesign, "showProfileScale" | "showCheckpoints" | "showCheckpointTimes" | "profileFiguresPlace" | "headerImageSrc" | "member">>,
   extras: { profile: BibProfileDrawing | null; profileFigures: BibProfileFigureLines | null },
   pictureLoaded: boolean,
 ): BibProfileRow | null {
   if (!design.showProfile) return null;
-  const place = design.profileFiguresPlace ?? "right";
+  const chosen = design.profileFiguresPlace ?? "right";
+  const place = chosen === "header" && !bibHeaderCarriesWords(design) ? "below" : chosen;
   if (design.profileSource === "picture") {
     if (!pictureLoaded) return null;
     const figures = placedFigures(design.showProfileFigures ? extras.profileFigures : null, place);
@@ -58,6 +61,18 @@ export function bibProfileRow(
     showTimes: design.showCheckpointTimes === true,
   });
   return { kind: "gpx", drawing: extras.profile, chartWidth, figures, strip };
+}
+
+/**
+ * Whether every header the design draws has the race and its date on it — the words the figures ride with (§755, §804):
+ * the event's header, unless it is the club's picture (`headerImageSrc`, on which no words are printed), and, while the
+ * members' bib is on, theirs too — a band, or the whole card (the words are on it), unless their header is a picture.
+ * A design that does not say (a test's partial one) has the band.
+ */
+export function bibHeaderCarriesWords(design: Partial<Pick<BibDesign, "headerImageSrc" | "member">>): boolean {
+  if (design.headerImageSrc) return false;
+  const member = design.member;
+  return !(member?.enabled && member.style !== "card" && member.headerImageSrc);
 }
 
 /**
