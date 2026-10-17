@@ -605,6 +605,18 @@ describe("§757 the picture stamp covers the checkpoints", () => {
     return row.stamp;
   };
 
+  it("changes for a race whose gun time is not set — its limits have no clock — and not for another type with the same rows (§757)", async () => {
+    await db.insert(eventTranslations).values({ eventId, locale: "ro", slug: "cursa", title: "Cursa" });
+    await save([WATER]);
+    const race = await stamp();
+    // The same rows on an event with no gun: the address a race with no gun time had before the clocks went.
+    await db.update(events).set({ type: "HIKE" }).where(eq(events.id, eventId));
+    const hike = await stamp();
+    expect(hike).not.toBe(race);
+    await db.update(events).set({ type: "RACE", raceStartsAt: new Date("2026-11-21T07:00:00.000Z") }).where(eq(events.id, eventId));
+    expect(await stamp()).not.toBe(race);
+  });
+
   it("changes with a point added, moved, retimed or given another kind, and not with a name", async () => {
     await db.insert(eventTranslations).values({ eventId, locale: "ro", slug: "cursa", title: "Cursa" });
     const none = await stamp();
