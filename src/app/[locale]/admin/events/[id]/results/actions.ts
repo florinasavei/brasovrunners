@@ -59,27 +59,27 @@ async function backToPage(form: FormData, outcome: { saved?: string; error?: str
  * from, because only the action knows which row and why.
  */
 async function rowRefusal(error: ResultRowError, form: FormData): Promise<FormOutcome> {
-  const t = await getTranslations({ locale: localeOf(form), namespace: "Admin.results" });
+  const t = await getTranslations({ locale: localeOf(form), namespace: "Admin" });
   const max = { note: RESULT_NOTE_MAX, nameLong: RESULT_NAME_MAX } as const;
-  const bib = error.bibNumber === null ? t("problems.noNumber") : `#${error.bibNumber}`;
+  const bib = error.bibNumber === null ? t("results.problems.noNumber") : `#${error.bibNumber}`;
   return {
     ...refused(error, form),
     errorValues: {
       runner: error.runnerName ? `${bib} ${error.runnerName}` : bib,
-      problem: t(`problems.${error.problem}`, { max: String((max as Record<string, number>)[error.problem] ?? 0) }),
+      problem: t(`results.problems.${error.problem}`, { max: String((max as Record<string, number>)[error.problem] ?? 0) }),
     },
   };
 }
 
 /** What a refused CSV says: the line and the problem, or the problem alone for a file refused as a whole. */
 async function importRefusal(error: ResultsCsvError, form: FormData): Promise<FormOutcome> {
-  const t = await getTranslations({ locale: localeOf(form), namespace: "Admin.results" });
+  const t = await getTranslations({ locale: localeOf(form), namespace: "Admin" });
   return {
     // The pasted text stays in its box: what is wrong with it is said by line, and the club corrects it where it is.
     ...refused(error, form),
     errorValues: {
-      where: error.line > 0 ? t("csvWhere", { line: String(error.line) }) : "",
-      problem: t(`csvProblems.${error.problem}`, { max: String(RESULTS_CSV_MAX_CHARS) }),
+      where: error.line > 0 ? t("results.csvWhere", { line: String(error.line) }) : "",
+      problem: t(`results.csvProblems.${error.problem}`, { max: String(RESULTS_CSV_MAX_CHARS) }),
     },
   };
 }

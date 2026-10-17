@@ -151,10 +151,9 @@ function columnsOf(header: readonly string[]): Columns | null {
 
 const BIB_CELL = /^#?\s*(\d{1,6})$/;
 
-/** Whether a first cell is a bib, so the line is data; anything else is taken for a header. */
-function isBibCell(cell: string): boolean {
-  const match = BIB_CELL.exec(cell.trim());
-  return match !== null && Number(match[1]) > 0;
+/** Whether a first cell is a number, so the line is data (a bad number is that line's refusal, not a header's); anything else is taken for a header. */
+function isNumberCell(cell: string): boolean {
+  return /^#?\s*\d+$/.test(cell.trim());
 }
 
 /**
@@ -172,7 +171,7 @@ export function parseResultsCsv(text: string): ParsedResultRow[] {
 
   const separator = separatorOf(lines[0].raw);
   const firstCells = splitLine(lines[0].raw, separator);
-  const hasHeader = !isBibCell(firstCells[0] ?? "");
+  const hasHeader = !isNumberCell(firstCells[0] ?? "");
   let columns: Columns = { bib: 0, time: 1, chip: 2, status: 3 };
   if (hasHeader) {
     const named = columnsOf(firstCells);

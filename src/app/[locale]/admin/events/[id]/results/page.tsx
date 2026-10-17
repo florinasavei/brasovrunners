@@ -92,7 +92,7 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
   const { event } = view;
   const title = (await findEventTitle(db, id, locale)) ?? "";
   const t = await getTranslations("Admin");
-  const tStatistics = await getTranslations("Admin.registrations.statistics");
+  
   const now = new Date();
   const takes = eventTakesResults(event.type);
   const mayPublish = canPublishResults(actor.role);
@@ -139,8 +139,8 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
     statusOptions,
     sexOptions: [
       { value: "", label: t("results.col.sexNone") },
-      { value: "FEMALE", label: tStatistics("sexFemale") },
-      { value: "MALE", label: tStatistics("sexMale") },
+      { value: "FEMALE", label: t("registrations.statistics.sexFemale") },
+      { value: "MALE", label: t("registrations.statistics.sexMale") },
     ],
     deleteFor: t("results.deleteFor", { runner: "{runner}" }),
     delete: t("results.delete"),
@@ -151,7 +151,7 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
     noPlace: t("results.noPlace"),
   };
   // The category in the Excel footer's own words (§787): the template «{sex}, {band}» read raw, filled by the label.
-  const categoryLabel = (key: string | null) => categoryLabelOf(key, (statisticsKey) => tStatistics.raw(statisticsKey) as string);
+  const categoryLabel = (key: string | null) => categoryLabelOf(key, (statisticsKey) => t.raw(`registrations.statistics.${statisticsKey}`) as string);
 
   const placeOf = (runner: ResultRunner): PlaceView | null => {
     const result = runner.result;
@@ -271,7 +271,7 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
             </Stack>
           </Panel>
 
-          <Panel glyph="registrations" level={3} title={t("results.registered.title")} aside={t("results.registered.aside", { count: String(registered.length) })} id="box-results-registered" data-testid="results-registered">
+          <Panel glyph="results" level={3} title={t("results.registered.title")} aside={t("results.registered.aside", { count: String(registered.length) })} id="box-results-registered" data-testid="results-registered">
             {registered.length === 0 ? (
               <Typography variant="body2" color="text.secondary" data-testid="results-registered-empty">
                 {t("results.registered.empty")}
@@ -329,7 +329,17 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
             </Alert>
           )}
           {mayPublish ? (
-            <ActionForm action={setResultsPublishedAction} scope="publish" messages={publishBoxes} data-testid="results-publish-form">
+            <ActionForm
+              action={setResultsPublishedAction}
+              scope="publish"
+              messages={publishBoxes}
+              // Making the ranking public, and taking it off the site, ask first (§384): the first spec asks when the box is ticked, the second — no `when` — otherwise.
+              confirm={[
+                { when: [{ field: "published", equals: "on" }], title: t("results.publish.confirmOnTitle"), body: t("results.publish.confirmOnBody"), confirmLabel: t("results.publish.save"), cancelLabel: confirm.cancel },
+                { title: t("results.publish.confirmOffTitle"), body: t("results.publish.confirmOffBody"), confirmLabel: t("results.publish.save"), cancelLabel: confirm.cancel },
+              ]}
+              data-testid="results-publish-form"
+            >
               <input type="hidden" name="uiLocale" value={locale} />
               <input type="hidden" name="eventId" value={id} />
               <Stack spacing={1.5}>

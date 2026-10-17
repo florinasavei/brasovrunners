@@ -159,7 +159,8 @@ describe("the declaration's merge fields", () => {
         // And by the volunteers' minors in that paragraph: fourteen to seventeen, the guardian's boxes, why and how (§768).
         // And by two sentences in section 5 for the minor who signs a group run's declaration beside a parent (§769).
         // And the race declaration by five clauses and the typed name's sentence, the notice by the signature's trace in four paragraphs (§771).
-        const ceiling = key === "EVENT_DECLARATION" || key === "EVENT_DECLARATION_ROAD" ? 11700 : key === "PRIVACY_NOTICE" ? 39500 + 1500 : key === "TERMS" ? 12000 : 11000;
+        // And the notice by two paragraphs in section 4 for a race's published results: what they show, whose name, how long, and where the typed names go (§NNN).
+        const ceiling = key === "EVENT_DECLARATION" || key === "EVENT_DECLARATION_ROAD" ? 11700 : key === "PRIVACY_NOTICE" ? 39500 + 1500 + 1000 : key === "TERMS" ? 12000 : 11000;
         expect(text.length, `${key} ${locale}`).toBeGreaterThan(key === "EVENT_DECLARATION" ? 1500 : 2500);
         expect(text.length, `${key} ${locale}`).toBeLessThan(ceiling);
       }

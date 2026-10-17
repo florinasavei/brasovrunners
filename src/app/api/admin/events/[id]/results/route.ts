@@ -46,21 +46,20 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
     throw error;
   }
 
-  const t = await getTranslations({ locale, namespace: "Admin.results" });
-  const tStatistics = await getTranslations({ locale, namespace: "Admin.registrations.statistics" });
+  const t = await getTranslations({ locale, namespace: "Admin" });
   const csv = buildResultsCsv(
     {
-      position: t("csvColumns.position"),
-      positionSex: t("csvColumns.positionSex"),
-      positionCategory: t("csvColumns.positionCategory"),
-      bib: t("csvColumns.bib"),
-      name: t("csvColumns.name"),
-      sex: t("csvColumns.sex"),
-      category: t("csvColumns.category"),
-      status: t("csvColumns.status"),
-      time: t("csvColumns.time"),
-      chip: t("csvColumns.chip"),
-      note: t("csvColumns.note"),
+      position: t("results.csvColumns.position"),
+      positionSex: t("results.csvColumns.positionSex"),
+      positionCategory: t("results.csvColumns.positionCategory"),
+      bib: t("results.csvColumns.bib"),
+      name: t("results.csvColumns.name"),
+      sex: t("results.csvColumns.sex"),
+      category: t("results.csvColumns.category"),
+      status: t("results.csvColumns.status"),
+      time: t("results.csvColumns.time"),
+      chip: t("results.csvColumns.chip"),
+      note: t("results.csvColumns.note"),
     },
     data.rows.map((row) => ({
       position: row.positionOverall,
@@ -70,8 +69,8 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
       name: row.name,
       sex: sexCell(row.sex),
       // The footer's own words (§787): `category` is the template «{sex}, {band}», read raw so its placeholders are filled by the label, not the formatter.
-      category: categoryLabelOf(row.categoryKey, (key) => tStatistics.raw(key) as string),
-      status: t(`status.${row.status}`),
+      category: categoryLabelOf(row.categoryKey, (key) => t.raw(`registrations.statistics.${key}`) as string),
+      status: t(`results.status.${row.status}`),
       time: formatResultTime(row.gunTimeMs),
       chip: formatResultTime(row.chipTimeMs),
       note: row.note,
