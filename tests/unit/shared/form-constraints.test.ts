@@ -63,7 +63,7 @@ const NOT_A_BOX = new Set([
   "waitlistMode",
   // «Regulamentul» › «Condiții de participare» › «Informații medicale» (§557, §799): a tick in «Participare, înscrieri și regulament».
   "askHealthNote",
-  // «Arată profilul traseului pe pagină» (§802, §NNN): a tick in «Traseul», under the maps.
+  // «Arată profilul traseului pe pagină» (§802, §805): a tick in «Traseul», under the maps.
   "showRouteProfile",
   // «Estimativ» beside «Diferență de nivel (m)» (§585): a tick in «Traseu».
   "elevationGainEstimated",

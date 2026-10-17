@@ -196,7 +196,7 @@ export const eventConfigSchema = z
         gpx: z.object({ name: text(120), url: text(2048) }).strict().nullable(),
         /** The checkpoints along the route, by distance (§757): a file made before they existed has none. */
         checkpoints: z.array(checkpointSchema).max(CHECKPOINTS_MAX).default([]),
-        /** «Arată profilul traseului pe pagină» (§802, §NNN): a file made before the tick existed has none: on. */
+        /** «Arată profilul traseului pe pagină» (§802, §805): a file made before the tick existed has none: on. */
         showRouteProfile: z.boolean().default(true),
       })
       .strict(),
@@ -422,7 +422,7 @@ export function upgradeCheckpoints(file: EventFile): { file: EventFile; notes: F
  * A checkpoint's tick «Arată pe profilul traseului» (`onProfile`, §802) is written only when it is **off**: «on» is what a
  * file without it means, and leaving it out keeps a file whose points are all ticked readable by the release before the tick
  * existed (its checkpoint schema refuses a key it does not know) — QA ships a day before production, and its files travel.
- * The same for the route's `showRouteProfile` (§802, §NNN): written only when it is **off**; the file's version stays 3,
+ * The same for the route's `showRouteProfile` (§802, §805): written only when it is **off**; the file's version stays 3,
  * because a reader without the key reads «on» and a file with it, when off, is the only one an older release would refuse.
  */
 export const serializeEventFile = (file: EventFile): string =>

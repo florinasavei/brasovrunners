@@ -101,7 +101,7 @@ type Props = {
   profile: ElevationProfileData | null;
   /** The route's length as the club typed it, in metres, or null: the preview spans it as the page does. */
   distanceMeters: number | null;
-  /** «Arată profilul traseului pe pagină» as saved (§802, §NNN): off, the preview still draws what it would show and says the page does not. Absent is on. */
+  /** «Arată profilul traseului pe pagină» as saved (§802, §805): off, the preview still draws what it would show and says the page does not. Absent is on. */
   profileShown?: boolean;
   /**
    * The route's GPX waypoints that can be placed on its track, or null while the file has none (or
@@ -402,7 +402,7 @@ export default async function CheckpointsCard({ locale, eventId, checkpoints, ma
         {/* «Așa apare pe pagină» (§802): the page's own chart, small, from the saved file and the saved rows — drawn on the server at page load, so it follows a save and not the typing. */}
         <Panel glyph="routeProfile" static level={4} title={t("checkpoints.preview.title")} intro={mayEdit ? t("checkpoints.preview.help") : undefined} data-testid="checkpoints-preview">
           <Stack spacing={1.5}>
-            {/* The event's tick is off (§802, §NNN): the chart below is what the page would show, and the page does not. */}
+            {/* The event's tick is off (§802, §805): the chart below is what the page would show, and the page does not. */}
             {!profileShown && (
               <Typography variant="body2" sx={{ fontWeight: 600 }} data-testid="checkpoints-preview-off">
                 {t("checkpoints.preview.off")}

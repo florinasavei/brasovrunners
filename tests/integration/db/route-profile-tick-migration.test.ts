@@ -8,7 +8,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { auditMigration } from "../../../scripts/migration-check.mjs";
 
 /**
- * Migration `0165_route_profile_tick` (§802, §NNN), proven on real PostgreSQL (PGlite): `events.show_route_profile` is the
+ * Migration `0165_route_profile_tick` (§802, §805), proven on real PostgreSQL (PGlite): `events.show_route_profile` is the
  * event's own «Arată profilul traseului pe pagină», a boolean NOT NULL that is true by default — so every event that had a GPX
  * before it keeps its chart and a new one starts with the chart on — and the file only expands (a column with a default never
  * rewrites a reader).

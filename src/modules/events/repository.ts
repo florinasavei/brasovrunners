@@ -174,7 +174,7 @@ const PUBLIC_COLUMNS = {
   // through `readRouteMaps` and `readRouteGpx`.
   routeMaps: events.routeMaps,
   routeGpx: events.routeGpx,
-  // «Arată profilul traseului pe pagină» (§802, §NNN): whether the page draws the GPX's chart.
+  // «Arată profilul traseului pe pagină» (§802, §805): whether the page draws the GPX's chart.
   showRouteProfile: events.showRouteProfile,
   // No `video_url` / `video_poster_url` (§481): a film is a figure in the description, where
   // migration `0092` moved every stored link (BR-REQ-011-01 criterion 9), and the two columns

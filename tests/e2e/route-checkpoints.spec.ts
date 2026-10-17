@@ -553,7 +553,7 @@ test.describe("§802 the route's elevation profile", () => {
   });
 
   /*
-    §802, §NNN (the owner, 2026-10-17: «vreau și bifă pentru „arată profilul cursei”»): the event's own tick in «Traseul»,
+    §802, §805 (the owner, 2026-10-17: «vreau și bifă pentru „arată profilul cursei”»): the event's own tick in «Traseul»,
     «Arată profilul traseului pe pagină», on for every event. Unticked and saved, the page draws no chart — the table «Puncte
     de control» stays — and the editor's card still previews the chart, with the sentence that the page does not show it.
   */

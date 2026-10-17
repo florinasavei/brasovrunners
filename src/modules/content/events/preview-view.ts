@@ -44,7 +44,7 @@ export function previewPageOf(event: EditableEvent, translation: EditableTransla
     // «Traseul»'s maps and GPX (§718), drawn in the preview as on the page.
     routeMaps: event.routeMaps,
     routeGpx: event.routeGpx,
-    // «Arată profilul traseului pe pagină» (§802, §NNN): the draft's own tick, so the preview draws the chart as the save would.
+    // «Arată profilul traseului pe pagină» (§802, §805): the draft's own tick, so the preview draws the chart as the save would.
     showRouteProfile: event.showRouteProfile,
     stravaEventUrl: event.stravaEventUrl,
     facebookEventUrl: event.facebookEventUrl,

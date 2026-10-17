@@ -10,7 +10,7 @@ import { parseGpxElevation } from "@/modules/routes/elevation/parse";
 import { elevationGpx } from "../../helpers/elevation-gpx";
 
 /**
- * §802 (§NNN; the owner, 2026-10-17: «vreau și bifă pentru „arată profilul cursei”») — the event's own tick in «Traseul»,
+ * §802 (§805; the owner, 2026-10-17: «vreau și bifă pentru „arată profilul cursei”») — the event's own tick in «Traseul»,
  * «Arată profilul traseului pe pagină», as the editor draws it: a real tick box (never a toggle button) posted with its marker
  * `event.showRouteProfile.present` — as «Informații medicale» (§557) — checked for an event that says nothing, unchecked when the
  * club switched it off, its help under it, a note when there is no GPX file yet, both languages; nothing of it for a role that

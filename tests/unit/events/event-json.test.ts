@@ -124,7 +124,7 @@ function sampleFile(): EventFile {
     format: EVENT_FILE_FORMAT,
     version: EVENT_FILE_VERSION,
     exportedAt: "2026-10-13T10:00:00.000Z",
-    exportedFrom: { environment: "production", baseline: "BR-V3.52-2026-10-17" },
+    exportedFrom: { environment: "production", baseline: "BR-V3.53-2026-10-17" },
     series: { partOfASeries: false, rule: null },
     event: sampleConfig(),
     // The volunteers' categories and roles (§774): none in the sample; the round trip with some is in the integration test.
@@ -156,7 +156,7 @@ describe("the event file's reader", () => {
     expect(serializeEventFile(file)).not.toContain("onProfile");
   });
 
-  it("writes the route's profile tick only when it is off, reads «not written» as on, and keeps the version (§802, §NNN)", () => {
+  it("writes the route's profile tick only when it is off, reads «not written» as on, and keeps the version (§802, §805)", () => {
     const file = sampleFile();
     expect(file.version).toBe(3);
     expect(serializeEventFile(file)).not.toContain("showRouteProfile");

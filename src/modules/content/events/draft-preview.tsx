@@ -124,7 +124,7 @@ export async function renderEventDraftPreview<T extends Record<string, unknown>>
   // Only this environment's file, as the save asks (`assertRouteGpxOfThisEnvironment`): a forged post must not make this site read another environment's file.
   const postedKey = routeGpxKeyOf(view.routeGpx);
   const gpxKey = postedKey?.startsWith(`${env.APP_ENV}/route-gpx/`) ? postedKey : null;
-  // Off by the draft's own tick (§802, §NNN): the preview then draws no chart, as the page will not.
+  // Off by the draft's own tick (§802, §805): the preview then draws no chart, as the page will not.
   const elevation = gpxKey && view.showRouteProfile !== false ? await readRouteElevation(gpxKey).catch(() => null) : null;
 
   return {
