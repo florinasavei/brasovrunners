@@ -23,6 +23,7 @@ import {
   DEADLINE_MERGE_FIELDS,
   deadlineMergeValues,
   LIST_NUMBERS_MERGE_FIELD,
+  RESULTS_MERGE_FIELD,
   GMAIL_FALLBACK_MERGE_FIELD,
   GROUP_RUN_ALONE_MERGE_FIELD,
   GROUP_RUN_MINOR_AGE_MERGE_FIELD,
@@ -42,6 +43,7 @@ import { eventInvitationsClause } from "@/modules/registrations/invitation-words
 import { feedbackFormsClause, feedbackFormsNamedClause, feedbackSafetyGmailClause, relayQueueClause } from "@/modules/feedback/notice-words";
 import { membersShopClause } from "@/modules/content/shop/notice-words";
 import { volunteerAgreementClause, volunteerMinorsClause, volunteerProfileClause, volunteersClause } from "@/modules/volunteers/notice-words";
+import { resultsClause } from "@/modules/results/notice-words";
 
 /**
  * The declaration's merge fields, in one list (`DECISIONS.md` §190).
@@ -194,6 +196,13 @@ export const DECLARATION_TOKENS: readonly DeclarationToken[] = [
     token: `{{${LIST_NUMBERS_MERGE_FIELD}}}`,
     messageKey: LIST_NUMBERS_MERGE_FIELD,
     example: inBoth((locale) => listNumbersClause(locale)),
+  },
+  // The privacy notice's marker for a race's published results (§808): filled with the public section's own name,
+  // and the switch that lets an Administrator publish them and the page show them (`describesResults`).
+  {
+    token: `{{${RESULTS_MERGE_FIELD}}}`,
+    messageKey: RESULTS_MERGE_FIELD,
+    example: inBoth((locale) => resultsClause(locale)),
   },
   // The privacy notice's marker for the newsletter (§445): filled with the pop-up's topics, and the
   // switch that lets the contact page offer it (`describesNewsletter`).

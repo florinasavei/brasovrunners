@@ -71,6 +71,7 @@ import {
 } from "./service";
 import { listMemberTickCandidates, type MemberTickCandidate, type MemberTickScope } from "./member-ticks";
 import { ANSWERS_UNCHANGED } from "./answers";
+import { rerankEventResults } from "@/modules/results/results";
 
 /**
  * Admin resend (AGENTS.md §15.8; BR-REQ-060-01, BR-REQ-070-01). Administrator only — §10.2
@@ -1545,6 +1546,7 @@ async function eraseRegistration<T extends Record<string, unknown>>(
     now,
   });
 
+  let reranked = 0;
   await db.transaction(async (tx) => {
     /*
       The trail forgets whom, in the same transaction as the delete (§322): every earlier row
@@ -1558,6 +1560,12 @@ async function eraseRegistration<T extends Record<string, unknown>>(
     await scrubRegistrationFromAudit(tx, current.id);
     await tx.delete(declarationAcceptances).where(eq(declarationAcceptances.registrationId, current.id));
     await tx.delete(registrations).where(eq(registrations.id, current.id));
+    /*
+      A result entered for the person (§808) stays, nameless, on its bib (`ON DELETE SET NULL`), and nothing that describes the person
+      stays with it: the sex, the age band and the positions by sex and by category it carried are cleared and the others' places are
+      counted again without it, in this transaction (`rerankEventResults`).
+    */
+    reranked = await rerankEventResults(tx, current.eventId);
     // Erased means gone (`DECISIONS.md` §88): when this was the person's last registration,
     // the participant row goes too — and with it, by cascade, their action tokens and outbox
     // rows (the address). The audit row above keeps `participant_id` as null from here, which
@@ -1580,6 +1588,8 @@ async function eraseRegistration<T extends Record<string, unknown>>(
     §12.12). Telling it twice costs nothing.
   */
   revalidatePublicContent("places");
+  // The event page shows a race's results only when the club published them; the page read is told when a place moved.
+  if (reranked > 0) revalidatePublicContent("events");
 }
 
 // --- The emergency details, and withdrawing consent (§322) --------------------------------------

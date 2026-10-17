@@ -295,6 +295,24 @@ export default async function PersonDataPage({ params, searchParams }: Props) {
                 )}
               </Box>
               <Divider />
+              {/* The results entered for this person's registrations (§808): every column, the positions and the category as stored. */}
+              <Box component="section" data-testid="person-results">
+                <Typography variant="h3" sx={{ fontSize: "1rem", mb: 1 }}>
+                  {t("person.results", { count: data.results.length })}
+                </Typography>
+                {data.results.length === 0 ? (
+                  <Typography variant="body2">{t("person.none")}</Typography>
+                ) : (
+                  <Stack spacing={2}>
+                    {data.results.map((result, index) => (
+                      <Box key={index} sx={{ border: 1, borderColor: "divider", borderRadius: 1, p: 1.5 }}>
+                        {fields(result)}
+                      </Box>
+                    ))}
+                  </Stack>
+                )}
+              </Box>
+              <Divider />
               <Box component="section">
                 <Typography variant="h3" sx={{ fontSize: "1rem", mb: 1 }}>
                   {t("person.audit", { count: data.auditTrail.length })}

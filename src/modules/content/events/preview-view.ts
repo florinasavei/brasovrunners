@@ -84,6 +84,9 @@ export function previewPageOf(event: EditableEvent, translation: EditableTransla
     hiddenListCounted: event.hiddenListCounted,
     hiddenListPublic: event.hiddenListPublic,
     publicListClub: event.publicListClub,
+    // «Clasament» (§809): a draft has no results on show. The preview draws no `visit`, so `EventPageView` leaves the section out, and its card
+    // takes the chip from its own prop, never from this row — `false` says so, whatever the saved row holds.
+    resultsPublished: false,
     // The place's name in this language (§362), else the event's, exactly as `PUBLIC_COLUMNS`
     // reads it — one rule, `placeNameIn`; the address and the rest from the event row (§36).
     locationName: placeLater ? null : placeNameIn(event, translation.locationName),

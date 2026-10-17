@@ -8,6 +8,11 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V3.55-2026-10-17
+
+- **«Clasament» for a race, in the backoffice** — times typed or imported from a CSV by race number, ranked overall, by sex and by category, one «Salvează tot clasamentul»; made public by an Administrator only after the race has started and once the privacy notice **and the terms** describe the results (a new section 4 paragraph, a row each on «Sarcini»), with a name only for those who ticked the list under a notice that described the results. §808.
+- **«Clasament» on the race's page** — after the race, once an Administrator has published it, the results appear under the start list (place, number, name or «Participant #număr», time, category) with a filter by category and a search by race number; a finished race's card on the listing wears a «Clasament» chip; and the editor's «De făcut» lists «Cursa s-a terminat și clasamentul nu e publicat» (or says the start hour must be announced first). §809.
+- **A runner entered by hand can stand by name in the ranking** — on «Clasament», a typed runner's line has a tick «A acceptat să apară cu numele în clasament» (for a minor, the parent or guardian told you); ticked by whoever enters results (who and when are kept in the log, never the name; a new name on the line is recorded again by whoever saves it), the public ranking shows the typed name, otherwise «Participant #număr»; the line says what the site will print for it; the privacy notice's and the terms' templates say so (migration `0167`). §810.
 ## BR-V3.54-2026-10-17
 
 - **Where the race number's distance and gain stand** — the club chooses: beside the profile as before, under it on one line, or in the header under the date; the preview shows it at once. §806.

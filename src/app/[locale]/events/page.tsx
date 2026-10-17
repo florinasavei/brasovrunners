@@ -28,6 +28,8 @@ import { clubNightEvent } from "@/modules/events/night-event";
 import { readRegistrationDoors } from "@/modules/events/ui/registration-door";
 import ListingFilterPanel from "@/modules/events/ui/ListingFilterPanel";
 import { readWithLastGood } from "@/modules/resilience/last-good";
+import { readOrWhileAway } from "@/modules/resilience/optional-read";
+import { eventsWithResultsChip } from "@/modules/results/public-page";
 import { CLUB_TIME_ZONE } from "@/i18n/dates";
 import { nextWallMidnight } from "@/modules/events/domain/page-clock";
 import { holdPageUntil } from "@/modules/public-cache/page-lifetime";
@@ -184,6 +186,9 @@ export default async function EventsPage({ params, query: asked }: Props) {
   // internal event among these rows, the entry its card and its page read too, and nothing for any
   // other row (`readRegistrationDoor`, §409).
   const facts: FilterFacts<PublicEventPage> = { night: isNight, door: await readRegistrationDoors([...events, ...pastRows], now) };
+  // «Clasament» (§809, race results part 2): which of these races have results on show, worked out once for the page from the cached
+  // gates and the rows' own columns — no query per card — and nothing at all while the database is away.
+  const withResults = await readOrWhileAway(() => eventsWithResultsChip([...events, ...pastRows], now), new Set<string>());
   // The undated section under the cards, narrowed by the same filters: when it shows something, a
   // filter that empties the dated cards is not "nothing to show".
   const undatedShown = undatedRows.filter((event) => matchesListingFilter(event, filter, facts));
@@ -229,7 +234,7 @@ export default async function EventsPage({ params, query: asked }: Props) {
           front page is for "what is on next" and a grid of squares is what somebody planning a
           month wants. `modules/events/ui/CalendarSection.tsx` renders it there. */}
 
-      <ListingBody events={events} hasUpcoming={hasUpcoming} filter={filter} facts={facts} now={now} undatedBelow={undatedShown.length > 0} />
+      <ListingBody events={events} hasUpcoming={hasUpcoming} filter={filter} facts={facts} now={now} undatedBelow={undatedShown.length > 0} withResults={withResults} />
 
       {/* The events whose date is to be announced (§533): under the dated ones, never in a month. */}
       <UndatedEvents rows={undatedShown} now={now} />
@@ -244,6 +249,7 @@ export default async function EventsPage({ params, query: asked }: Props) {
         locale={locale}
         keep={layout === "list" ? { view: "list" } : {}}
         carry={listingFilterQuery(filter, "upcoming")}
+        withResults={withResults}
       />
     </Container>
   );
@@ -404,6 +410,7 @@ async function ListingBody({
   facts,
   now,
   undatedBelow = false,
+  withResults,
 }: Listing & {
   /** The filters the address names (§413), the same the panel was given. */
   filter: ListingFilter;
@@ -411,6 +418,8 @@ async function ListingBody({
   now: Date;
   /** The «Data se anunță» section (§533) shows something under this grid: no "nothing" sentence then. */
   undatedBelow?: boolean;
+  /** The races whose «Clasament» is on show (§809): between seasons the last race is an ordinary card, and wears the chip. */
+  withResults: ReadonlySet<string>;
 }) {
   const t = await getTranslations("Events");
   const filtered = activeFilterCount(filter) > 0;
@@ -466,6 +475,7 @@ async function ListingBody({
           now={now}
           weather={weatherOf(series.members[0])}
           seriesDates={seriesOf(series.members[0])}
+          resultsChip={series.members.length === 1 && withResults.has(series.members[0].id)}
         />
       ))}
     </Box>

@@ -21,6 +21,7 @@ import { eventInvitationsMergeValues } from "@/modules/registrations/invitation-
 import { feedbackFormsMergeValues } from "@/modules/feedback/notice-words";
 import { membersShopMergeValues } from "@/modules/content/shop/notice-words";
 import { volunteersMergeValues } from "@/modules/volunteers/notice-words";
+import { resultsMergeValues } from "@/modules/results/notice-words";
 import { newsletterMergeValues } from "@/modules/newsletter/topic-words";
 import { cachedCurrentApprovedDocument, cachedDeadlines } from "@/modules/public-cache/reads";
 import { env } from "@/shared/config/env";
@@ -103,7 +104,7 @@ export default async function PrivacyNoticePage({ params }: Props) {
               itself, and the public list's three state words (§396), from the catalogue the list reads. */}
           <LegalDocumentBody
             body={document.body}
-            values={{ ...deadlineMergeValues(locale, await cachedDeadlines()), ...listStatesMergeValues(locale), ...listSocialsMergeValues(locale), ...listNumbersMergeValues(locale), ...gmailFallbackMergeValues(locale), ...eventInvitationsMergeValues(locale), ...feedbackFormsMergeValues(locale), ...membersShopMergeValues(locale), ...volunteersMergeValues(locale), ...promotionalMaterialsMergeValues(locale), ...newsletterMergeValues(locale), ...teamPageMergeValues(locale) }}
+            values={{ ...deadlineMergeValues(locale, await cachedDeadlines()), ...listStatesMergeValues(locale), ...listSocialsMergeValues(locale), ...listNumbersMergeValues(locale), ...gmailFallbackMergeValues(locale), ...eventInvitationsMergeValues(locale), ...feedbackFormsMergeValues(locale), ...membersShopMergeValues(locale), ...volunteersMergeValues(locale), ...resultsMergeValues(locale), ...promotionalMaterialsMergeValues(locale), ...newsletterMergeValues(locale), ...teamPageMergeValues(locale) }}
             emphasizeFilled={false}
           />
         </>

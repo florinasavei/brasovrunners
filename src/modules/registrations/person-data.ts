@@ -2,8 +2,9 @@ import { and, asc, desc, eq, inArray, isNull, or } from "drizzle-orm";
 import { auditLogs } from "@/db/schema/audit-logs";
 import { type DeclarationAcceptance, declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import { emailOutbox } from "@/db/schema/email-outbox";
+import { eventResults } from "@/db/schema/event-results";
 import { eventVolunteerCategories, eventVolunteerRoleChoices, eventVolunteerRoles, eventVolunteers } from "@/db/schema/event-volunteers";
-import { eventTranslations } from "@/db/schema/events";
+import { events, eventTranslations } from "@/db/schema/events";
 import { groupRunDeclarations } from "@/db/schema/group-run-declarations";
 import { legalDocuments } from "@/db/schema/legal-documents";
 import { type Participant, participants } from "@/db/schema/participants";
@@ -164,6 +165,28 @@ export type PersonData = {
     acceptedAt: Date;
     ip: string | null;
     userAgent: string | null;
+  }>;
+  /**
+   * The results of a race entered for this person's registrations (§808; art. 15 GDPR): the race number, how the race ended, the times,
+   * the positions and the category as the platform stores them, the club's note, and whether the race's results are public. Found through
+   * the registration, so it is the person's own; a result row of a typed runner holds a name only the club wrote, and is not here.
+   */
+  results: Array<{
+    registrationId: string;
+    eventId: string;
+    eventTitle: string | null;
+    bibNumber: number;
+    status: (typeof eventResults.$inferSelect)["status"];
+    gunTimeMs: number | null;
+    chipTimeMs: number | null;
+    positionOverall: number | null;
+    positionSex: number | null;
+    positionCategory: number | null;
+    categoryKey: string | null;
+    note: string | null;
+    /** The race's results are public on the event's page (`events.results_published`): the name shows only with the tick, but the row is public. */
+    published: boolean;
+    updatedAt: Date;
   }>;
   /**
    * The internal notes the organizers kept on this person's registrations (§777; art. 15 GDPR: an access request
@@ -330,6 +353,33 @@ async function collectPersonData<T extends Record<string, unknown>>(
 
   const groupRuns = await groupRunDeclarationsOf(db, canonicalEmail);
 
+  // The results entered for these registrations (§808): this person's own rows, by their registrations.
+  const results =
+    registrationIds.length > 0
+      ? await db
+          .select({
+            registrationId: eventResults.registrationId,
+            eventId: eventResults.eventId,
+            eventTitle: eventTranslations.title,
+            bibNumber: eventResults.bibNumber,
+            status: eventResults.status,
+            gunTimeMs: eventResults.gunTimeMs,
+            chipTimeMs: eventResults.chipTimeMs,
+            positionOverall: eventResults.positionOverall,
+            positionSex: eventResults.positionSex,
+            positionCategory: eventResults.positionCategory,
+            categoryKey: eventResults.categoryKey,
+            note: eventResults.note,
+            published: events.resultsPublished,
+            updatedAt: eventResults.updatedAt,
+          })
+          .from(eventResults)
+          .innerJoin(events, eq(events.id, eventResults.eventId))
+          .leftJoin(eventTranslations, and(eq(eventTranslations.eventId, eventResults.eventId), eq(eventTranslations.locale, "ro")))
+          .where(inArray(eventResults.registrationId, registrationIds))
+          .orderBy(asc(eventResults.createdAt), asc(eventResults.id))
+      : [];
+
   // The internal notes on these registrations (§777): live ones only, oldest first as the rest of this page, the
   // author as a role. `registrationIds` is this person's own registrations, so nobody else's note is read.
   const noteRows =
@@ -386,6 +436,7 @@ async function collectPersonData<T extends Record<string, unknown>>(
     announcementRequests,
     volunteerOffers,
     groupRunDeclarations: groupRuns,
+    results: results.map((row) => ({ ...row, registrationId: row.registrationId as string })),
     notes,
     auditTrail,
   };
@@ -484,6 +535,7 @@ export async function exportPersonData<T extends Record<string, unknown>>(
       announcementRequests: data.announcementRequests.length,
       volunteerOffers: data.volunteerOffers.length,
       groupRunDeclarations: data.groupRunDeclarations.length,
+      results: data.results.length,
       notes: data.notes.length,
       auditRows: data.auditTrail.length,
     },

@@ -13,6 +13,7 @@ import { getPathname, Link } from "@/i18n/navigation";
 import { type Locale, routing } from "@/i18n/routing";
 import { findEventForEditing, findEventTitle, listSeriesDates } from "@/modules/content/events/repository";
 import { eventPageTodos } from "@/modules/content/events/domain/page-todos";
+import { resultsRowFor } from "@/modules/results/public-page";
 import { eventCheckpointContext, listCheckpoints } from "@/modules/event-checkpoints/checkpoints";
 import { offerableProposals } from "@/modules/event-checkpoints/domain/gpx-waypoints";
 import { canEditCheckpoints } from "@/modules/event-checkpoints/domain/checkpoint";
@@ -64,6 +65,7 @@ import RepeatFields from "@/modules/content/events/ui/RepeatFields";
 import RepeatToggle from "@/modules/content/events/ui/RepeatToggle";
 import { TranslationHiddenFields } from "@/modules/content/events/ui/TranslationFields";
 import { EVENT_NOTICE_TEXT_MAX } from "@/modules/events/domain/event-changes";
+import { eventTakesResults } from "@/modules/results/domain/event-type";
 import { countEventThanksRecipients } from "@/modules/notifications/event-mail";
 import { countEventNoticeRecipients, countRealNoticeRecipientsByEvent } from "@/modules/notifications/event-notices";
 import { readEmailVolumeToday } from "@/modules/notifications/volume";
@@ -75,6 +77,7 @@ import {
   canEditEventFields,
   eventEditorTransitions,
   canEditTranslation,
+  canEnterResults,
   canManageRegistrations,
   canMessageParticipants,
   canTransferEvents,
@@ -376,6 +379,8 @@ export default async function EditEventPage({ params, searchParams }: Props) {
     locales: routing.locales,
     storageConfigured: isStorageConfigured(),
     approvedDeclarationIds: new Set(declarations.map((declaration) => declaration.id)),
+    publicListDays: deadlines.publicListDays,
+    resultsRow: await resultsRowFor(staffUser.role, now),
   });
   /*
     «Puncte de control» (§757): the route's points as saved, the route's length they are measured
@@ -1252,6 +1257,19 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                             data-testid="participant-message-link"
                           >
                             {t("participantMessages.link")}
+                          </GlyphButton>
+                        )}
+                        {/* «Clasament» (§808): a race's results, entered or imported by race number — for a race that has started, to whoever enters them. */}
+                        {canEnterResults(staffUser.role) && eventTakesResults(event.type) && event.startsAt.getTime() <= now.getTime() && (
+                          <GlyphButton
+                            icon="results"
+                            href={getPathname({ locale, href: { pathname: "/admin/events/[id]/results", params: { id: event.id } } })}
+                            variant="outlined"
+                            size="small"
+                            sx={{ minHeight: 44 }}
+                            data-testid="results-link"
+                          >
+                            {t("results.link")}
                           </GlyphButton>
                         )}
                         {/* The emergency sheet (§322): the Organizer is the one on the course with it. */}

@@ -10,6 +10,7 @@ import EventBusyIcon from "@mui/icons-material/EventBusy";
 import GroupsIcon from "@mui/icons-material/Groups";
 import HandshakeIcon from "@mui/icons-material/Handshake";
 import HikingIcon from "@mui/icons-material/Hiking";
+import LeaderboardIcon from "@mui/icons-material/Leaderboard";
 import LocalCafeIcon from "@mui/icons-material/LocalCafe";
 import LocalOfferIcon from "@mui/icons-material/LocalOffer";
 import MedicalServicesIcon from "@mui/icons-material/MedicalServices";
@@ -174,6 +175,9 @@ export const GLYPHS = {
   planned: ScheduleIcon,
   // «Toate evenimentele» on the calendar's kind chips (`KindChips.tsx`, public); the backoffice's «placed by the club» chip draws it through `StatusChip` (§707).
   club: GroupsIcon,
+  // «Clasament» on a finished race's card (§809): a ranked list, the way the results are drawn — not a trophy, which says one winner
+  // where the table has every finisher (the chequered flag is the race itself, above). Always beside its word.
+  results: LeaderboardIcon,
 };
 
 export type GlyphName = keyof typeof GLYPHS;

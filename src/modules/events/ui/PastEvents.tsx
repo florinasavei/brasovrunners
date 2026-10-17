@@ -74,6 +74,7 @@ export default async function PastEvents({
   locale,
   keep = {},
   carry = {},
+  withResults,
 }: {
   /** The page's past window (§413), newest first, read beside the listing's own rows. */
   rows: readonly PublicEvent[];
@@ -88,6 +89,8 @@ export default async function PastEvents({
   keep?: Record<string, string>;
   /** The cards ahead's ticks, as query parameters: the panel's form and links keep them. */
   carry?: Record<string, string | string[]>;
+  /** The events whose «Clasament» is on show (§809, `eventsWithResultsChip`), worked out once for the page: their cards wear the chip. */
+  withResults?: ReadonlySet<string>;
 }) {
   const filtered = activeFilterCount(filter) > 0;
   // The rows the section can show: the window, the lead's row left out (§167).
@@ -148,7 +151,7 @@ export default async function PastEvents({
             series.members.length > 1 ? (
               <SeriesCard key={series.key} members={series.members} index={index} now={now} />
             ) : (
-              <EventCard key={series.key} event={series.members[0]} index={index} now={now} seriesDates={seriesOf(series.members[0])} />
+              <EventCard key={series.key} event={series.members[0]} index={index} now={now} seriesDates={seriesOf(series.members[0])} resultsChip={withResults?.has(series.members[0].id) ?? false} />
             ),
           )}
         </Box>

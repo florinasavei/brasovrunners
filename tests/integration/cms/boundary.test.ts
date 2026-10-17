@@ -191,6 +191,8 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       "/admin/events/[id]/erase",
       // The organizer's own message to the event's participants (§364): written by hand, per send.
       "/admin/events/[id]/mesaje",
+      // A race's results (§808), entered or imported by race number and ranked: by hand, like the pages beside it.
+      "/admin/events/[id]/results",
       // The emergency sheet (§322), printed and carried on race day: by hand, like the rest.
       "/admin/events/[id]/urgente",
       "/admin/events/import",

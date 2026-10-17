@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.54-2026-10-17 -->
+<!-- PROJECT_BASELINE: BR-V3.55-2026-10-17 -->
 
 # Brașov Runners — Business Guide
 
-**Baseline `BR-V3.54-2026-10-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.55-2026-10-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Club organizers, event coordinators, content contributors, sponsors, and other non-technical stakeholders.
@@ -767,7 +767,13 @@ Rules:
   contact, and the results are republished;
 - the consent is collected from the first registration onward (M1), even though results are
   published only from M2, because it cannot be gathered afterwards;
-- the default for the choice is an owner decision recorded in section 9.
+- the default for the choice is an owner decision recorded in section 9;
+- one exception, for a runner the club enters by hand who never registered (no form, so no choice at
+  registration): the name appears only while a staff member has recorded that the person agreed to appear
+  by name, the record naming who recorded it and when (audited), under a privacy notice that describes it;
+  for a minor it is the parent or guardian who tells the organizers; without that record the entry is
+  anonymous, like a participant who declines. A registered participant's own choice is never replaced by
+  a staff record, and the agreement can be withdrawn at any time by writing to the club.
 
 ### BR-BUS-080 — Transactional email
 

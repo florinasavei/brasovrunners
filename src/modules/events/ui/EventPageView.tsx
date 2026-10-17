@@ -56,6 +56,7 @@ import RegistrationCta from "./RegistrationCta";
 import type { PreviewDoor } from "./registration-door";
 import ShareLinks from "./ShareLinks";
 import EventFeedbackButton from "@/modules/feedback/ui/EventFeedbackButton";
+import ResultsSection from "@/modules/results/ui/ResultsSection";
 import StartList from "./StartList";
 
 /**
@@ -426,6 +427,13 @@ export default async function EventPageView({
       {/* Nor a members' event (§552): the public list is a public disclosure (§32), and this page is not public. */}
       {/* Nor in the preview (§579): the list reads the public cache, and a draft has nobody on it. */}
       {dated && !membersOnly && visit && <StartList event={dated} page={visit.lista} />}
+
+      {/* «Clasament» (§809, race results part 2), under `#clasament`, right after the start list: a race's published results, and
+          nothing at all — no heading, no «în curând» — unless the Administrator published them, the notice and the terms in force
+          describe them, the race has started and the public list's period is not over (`readEventResultsForPage`). The same three
+          conditions as the list above, and not in the preview before saving (§579): a draft has no results, and the section reads
+          the public cache. Nor a members' event (§552): the results are a public disclosure, and this page is not public. */}
+      {dated && !membersOnly && visit && <ResultsSection event={dated} />}
     </>
   );
 }

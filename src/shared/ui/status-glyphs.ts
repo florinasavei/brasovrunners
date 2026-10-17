@@ -3,10 +3,12 @@ import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import ConstructionIcon from "@mui/icons-material/Construction";
 import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
+import DoNotDisturbIcon from "@mui/icons-material/DoNotDisturb";
 import ErrorOutlinedIcon from "@mui/icons-material/ErrorOutlined";
 import EventBusyIcon from "@mui/icons-material/EventBusy";
 import EventRepeatIcon from "@mui/icons-material/EventRepeat";
 import FamilyRestroomIcon from "@mui/icons-material/FamilyRestroom";
+import FlagIcon from "@mui/icons-material/Flag";
 import GroupsIcon from "@mui/icons-material/Groups";
 import HelpIcon from "@mui/icons-material/Help";
 import HistoryIcon from "@mui/icons-material/History";
@@ -71,6 +73,9 @@ export const STATUS_GLYPHS = {
   otherRoad: SwapHorizIcon,
   wordsKept: LockClockIcon,
   wordsGone: DeleteForeverIcon,
+  // A runner's race that did not end in a time (§808): did not start, dropped out. A disqualified runner wears `failed`.
+  didNotStart: DoNotDisturbIcon,
+  droppedOut: FlagIcon,
 } satisfies Record<string, ComponentType<SvgIconProps>>;
 
 export type StatusGlyphName = keyof typeof STATUS_GLYPHS;
