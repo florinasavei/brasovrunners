@@ -2051,7 +2051,9 @@
       "VOLUNTEER_ROLE_INVALID": "“{role}” in “{category}”: {problem}. Nothing was saved.",
       "RESULT_ROW_INVALID": "“{runner}”: {problem}. Nothing was saved.",
       "RESULTS_IMPORT_INVALID": "The CSV file cannot be read: {where}{problem}. Nothing was imported.",
-      "RESULTS_NOTICE": "The privacy notice in force does not describe the ranking yet. Approve a new one from the template in «Legal documents»; «Tasks» says how.",
+      "RESULTS_NOTICE": "The privacy notice in force does not describe the results yet. Approve a new one from the template in «Legal documents»; «Tasks» says how.",
+      "RESULTS_TERMS": "The terms in force do not describe the results yet: the older ones promised to ask first. Approve new terms from the template in «Legal documents»; «Tasks» says how.",
+      "RESULTS_NOT_STARTED": "The results can be made public after the race has started. You can type them already.",
       "RESULTS_NOT_OPEN": "Only a race has results."
     },
     "editor": {
@@ -3508,7 +3510,7 @@
         "volunteerProfile": "Privacy notice only: the volunteers' form boxes about the person, in quotes. Without it in the notice in force, the form asks only the minimum-age tick",
         "volunteerGuardian": "Only in the volunteer agreement: the name of a minor volunteer's parent or guardian. For an adult the sentence is left out. Without it in the agreement in force, no minors are taken",
         "volunteerMinors": "Only in the privacy notice: the parent's boxes of the volunteers' form, in quotation marks; without it, the club takes no volunteers under 18",
-        "results": "Only in the privacy notice: the name of the section “Results”, in quotation marks. With it in the notice in force, an administrator can publish a race's ranking and the race's page shows it"
+        "results": "In the privacy notice and in the terms: the name of the section “Results”, in quotation marks. With it in both texts in force, an administrator can publish a race's results and the race's page shows them"
       },
       "removeBlockedReferenced": "Can neither be withdrawn nor deleted permanently: {signatures}, {events} and {acknowledgements} depend on it. “Delete” on its row takes it off the list.",
       "removeBlockedCurrent": "In force right now — it can neither be withdrawn nor deleted. Approve its successor first; then this one can go.",
@@ -3720,7 +3722,8 @@
         "reason": "The reason: {reason}",
         "read": "Read the text"
       },
-      "resultsMissing": "The notice in force does not describe the races' ranking yet, so no ranking can be published. Approve a new notice from the template."
+      "resultsMissing": "The notice in force does not describe the races' results yet, so no results can be published. Approve a new notice from the template.",
+      "resultsTermsMissing": "The terms in force do not describe the races' results yet, so no results can be published. Approve new terms from the template."
     },
     "tasks": {
       "title": "What is still to do",
@@ -4521,16 +4524,26 @@
             "Decide the periods; for the personal data of past events, ask a lawyer first. Until then nothing changes."
           ]
         },
-        "resultsNotice": {
-          "title": "Privacy notice: the races' ranking",
-          "todo": "The notice in force does not describe the ranking yet, so no ranking can be published on a race's page. You can write and work it out in the backoffice meanwhile.",
-          "done": "The notice in force describes the ranking: an administrator can publish it on the race's page. The name appears only for those who ticked the participants & results list.",
+        "resultsTerms": {
+          "title": "Terms: the races' results",
+          "todo": "The terms in force do not describe the results yet: the older ones promised to ask separately before results with names. Until the club approves terms from the template, no results can be published on a race's page.",
+          "done": "The terms in force describe the results, so publishing no longer waits for them.",
           "how": [
-            "Before approving, read the template's paragraph with a lawyer: what the ranking shows (the place, the number, the time, the category), who appears with a name and until when.",
-            "/admin/legal → the “GDPR” card → “Regenerate from the template” → confirm. The section on the public list describes the ranking too.",
+            "/admin/legal → the “Terms” card (it says «New template») → “Regenerate from the template” → confirm. Section 7 says how the results are published.",
+            "A lawyer reads the results paragraph of section 7 first. Then open the draft, fill in what is left, “Save the draft”, then “Approve and publish”.",
+            "Once in force, in both languages, an administrator can publish the results, provided the notice describes them too (the row above)."
+          ]
+        },
+        "resultsNotice": {
+          "title": "Privacy notice: the races' results",
+          "todo": "The notice in force does not describe the results yet, so no results can be published on a race's page. You can type and rank them in the backoffice meanwhile.",
+          "done": "The notice in force describes the results: an administrator can publish them on the race's page. The name appears only for those who ticked the participants & results list, under this notice or a later one.",
+          "how": [
+            "Before approving, read the template's paragraph with a lawyer: what the results show (the place, the number, the time, the category), who appears with a name and until when.",
+            "/admin/legal → the “GDPR” card → “Regenerate from the template” → confirm. The section on the public list describes the results too.",
             "Open the draft, read it, fill in what is left, “Save draft”, then “Approve and publish”.",
-            "Approve the terms from the template as well, so they say the same about the ranking.",
-            "After the race: /admin/events → the race → “Results”. Type the times or import a CSV, press “Save the whole ranking” and tick “The ranking is public on the event's page”."
+            "Approve the terms from the template as well: publishing waits for them too (the next row).",
+            "After the race: /admin/events → the race → “Results”. Type the times or import a CSV, press “Save all the results” and tick “The results are public on the event's page”."
           ]
         }
       },
@@ -6092,6 +6105,7 @@
       "interests": "“Tell me” requests ({count})",
       "volunteers": "Volunteer offers ({count})",
       "groupRuns": "Group-run declarations ({count})",
+      "results": "Race results ({count})",
       "traceVolunteer": "The volunteer's signature trace: IP {ip} · browser {browser}",
       "traceGuardian": "The parent's or guardian's signature trace: IP {ip} · browser {browser}",
       "notes": "Internal notes ({count})",
@@ -9967,7 +9981,7 @@
         "DSQ": "Disqualified: {count}"
       },
       "status": {
-        "none": "No result",
+        "none": "From the time (Finished / Did not start)",
         "FINISHED": "Finished",
         "DNF": "Dropped out",
         "DNS": "Did not start",
@@ -9976,10 +9990,13 @@
       "import": {
         "title": "Import from CSV",
         "aside": "a file or pasted text",
-        "intro": "Paste the text of a CSV or choose the file. The rows read go into the table; nothing is saved until you press “Save the whole ranking”.",
+        "intro": "Paste the text of a CSV or choose the file. The rows read go into the table; nothing is saved until you press “Save all the results”.",
         "more": "One row per runner: number, time, then chip time and status, if any. Commas, semicolons or tabs work, with or without a header row. A number with no registration becomes a new row.",
         "textLabel": "CSV text",
         "fileLabel": "Or choose a file (CSV, TSV)",
+        "fileChoose": "Choose a file",
+        "fileChooseAgain": "Choose another file",
+        "fileNone": "No file chosen.",
         "button": "Import from CSV",
         "pending": "Reading…"
       },
@@ -10001,7 +10018,7 @@
         "bib": "No.",
         "name": "Name",
         "sex": "Sex",
-        "sexNone": "No sex",
+        "sexNone": "Not given",
         "birthDate": "Date of birth",
         "place": "Place"
       },
@@ -10016,35 +10033,38 @@
       "addRow": "Add a runner who did not register",
       "typedRow": "Unregistered runner",
       "noPlace": "no place yet",
+      "noPlaceSettled": "no place",
       "place": {
         "sex": "by sex: {position}",
         "category": "in the category ({category}): {position}"
       },
-      "save": "Save the whole ranking",
+      "save": "Save all the results",
       "saving": "Saving…",
-      "slow": "A big ranking takes a few seconds. Do not press again.",
+      "slow": "A long list of results takes a few seconds. Do not press again.",
       "delete": "Delete",
       "deleteFor": "Delete the result: {runner}",
       "deleteTitle": "Delete the result?",
-      "deleteBody": "The result of the runner with number {bibNumber} leaves the ranking. The others' places are worked out again.",
+      "deleteBody": "The result of the runner with number {bibNumber} leaves the results. The others' places are worked out again.",
       "publish": {
         "title": "On the event's page",
-        "label": "The ranking is public on the event's page",
+        "label": "The results are public on the event's page",
         "help": "The page shows place, number, time and category. A name appears only for those who ticked “I want to appear on the participants & results list”; the rest are “Participant #number”.",
-        "confirmOnTitle": "Make the ranking public?",
-        "confirmOnBody": "Anyone can read the ranking on the event's page, with the name only of those who ticked.",
-        "confirmOffTitle": "Take the ranking off the site?",
-        "confirmOffBody": "The event's page no longer shows the ranking. The results stay saved.",
-        "gate": "The privacy notice in force does not describe the ranking yet, so you cannot publish it.",
+        "confirmOnTitle": "Make the results public?",
+        "confirmOnBody": "Anyone can read the results on the event's page, with the name only of those who ticked.",
+        "confirmOffTitle": "Take the results off the site?",
+        "confirmOffBody": "The event's page no longer shows the results. They stay saved.",
+        "gate": "The privacy notice in force does not describe the results yet, so you cannot publish them.",
+        "gateTerms": "The terms in force do not describe the results yet: the older ones promised to ask first. Approve new terms to publish.",
+        "gateStart": "You can publish the results after the race has started.",
         "gateLink": "Legal documents",
-        "adminOnly": "Only an administrator can publish the ranking.",
+        "adminOnly": "Only an administrator can publish the results.",
         "empty": "No result is saved yet.",
         "save": "Save",
         "saving": "Saving…",
         "stateOn": "Public",
         "stateOff": "Not public"
       },
-      "export": "Download the ranking (CSV)",
+      "export": "Download the results (CSV)",
       "csvColumns": {
         "position": "Place",
         "positionSex": "Place by sex",
@@ -10062,6 +10082,8 @@
         "noNumber": "(no number)",
         "bib": "the race number is not a whole number",
         "bibDuplicate": "the same number is on two rows",
+        "bibNotConfirmed": "the number belongs to a registration that is not confirmed (cancelled or expired): a result cannot be filed under it",
+        "bibRegistered": "the number belongs to a confirmed registration: type its time on that runner's line, under “Registered runners”",
         "status": "the status is not one of the four",
         "time": "the time is not in a readable form (h:mm:ss, mm:ss or mm:ss.t)",
         "timeMissing": "a runner who finished needs a time",
@@ -12061,7 +12083,9 @@
         "few": "Saved {count} results.",
         "other": "Saved {count} results."
       },
-      "resultsUnchanged": "Nothing to change in the ranking.",
+      "resultsUnchanged": "Nothing to change in the results.",
+      "resultsRecalculated": "No result changed; the places were worked out again.",
+      "resultsRowAdded": "Added a blank line under “Runners who did not register”.",
       "resultsImported": {
         "one": "Read {count} row from the CSV and put it in the table. Nothing is saved yet.",
         "few": "Read {count} rows from the CSV and put them in the table. Nothing is saved yet.",
@@ -12073,8 +12097,8 @@
         "other": "Read {count} rows from the CSV. Numbers with no registration ({new}) are new rows: write their names. Nothing is saved yet."
       },
       "resultDeleted": "Result deleted. The others' places were worked out again.",
-      "resultsPublished": "The ranking is now public on the event's page.",
-      "resultsUnpublished": "The ranking is no longer public on the event's page.",
+      "resultsPublished": "The results are now public on the event's page.",
+      "resultsUnpublished": "The results are no longer public on the event's page.",
       "resultsPublicUnchanged": "It was already so; nothing to change."
     }
   },

@@ -25,12 +25,18 @@ export const eventResultStatus = pgEnum("event_result_status", ["FINISHED", "DNF
  * three), and the chip's own (`chip_time_ms`, optional). The three positions and the category are **computed on
  * save and stored** (`modules/results/domain/ranking.ts`): overall among the finishers by gun time, by sex, by
  * category (the sex and the age band on the event's day, the Excel's own bands, §787); a runner who did not
- * finish has none.
+ * finish has none. **The stored positions and category are a cache, not the answer**: the sex and the age
+ * they are made of belong to the registration (or the typed row), and a correction, a moved race day or an erasure
+ * changes them outside a results save, so every page and file ranks again from the live answers when it reads
+ * (`loadLiveRanking`), a save rewrites what moved, and erasing a registration re-ranks the event in the same
+ * transaction (`rerankEventResults`).
  *
  * The rows go with the event (`ON DELETE CASCADE`). **Erasing a registration leaves its result row, nameless**
- * (`ON DELETE SET NULL`): the bib, the time and the positions stay — the other runners' positions do not move
- * under them — and nothing that names or describes the person does, since the name, the sex and the birth date
- * were only ever the registration's. A staff account that is removed leaves the row, which then names nobody.
+ * (`ON DELETE SET NULL`): the bib, the time and the overall place stay — the other runners' places do not move
+ * under them — and nothing that names or describes the person does: the name, the sex and the birth date were
+ * only ever the registration's, and the category and the places by sex and by category, which describe them, are
+ * cleared by the same transaction (`rerankEventResults`). A race's rows are deleted three years after it, with its
+ * registrations (`jobs/retention.ts`). A staff account that is removed leaves the row, which then names nobody.
  */
 export const eventResults = pgTable(
   "event_results",

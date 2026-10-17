@@ -7,7 +7,7 @@ import { useRecall } from "@/shared/forms/recall";
 import { openFoldsAround } from "@/shared/ui/fold";
 import GlyphButton from "@/shared/ui/GlyphButton";
 import StatusChip from "@/shared/ui/StatusChip";
-import { RESULT_ROW_BOXES, resultBox, type ResultRowBox, typedRowCountOf, typedRowKey } from "../rows";
+import { EXTRA_ROWS, RESULT_ROW_BOXES, resultBox, type ResultRowBox, typedRowCountOf, typedRowKey } from "../rows";
 import { RESULT_NAME_MAX, RESULT_NOTE_MAX } from "../domain/ranking";
 
 /**
@@ -52,8 +52,10 @@ export type ResultWords = {
   addRow: string;
   /** The title of a typed runner's line, and its hint. */
   typedRow: string;
-  /** «Fără rezultat încă» in place of a position. */
+  /** «fără loc încă» in place of a position, on a line with no result yet. */
   noPlace: string;
+  /** «fără loc» on a line whose saved result has none — a runner who dropped out, did not start or was disqualified. */
+  noPlaceSettled: string;
 };
 
 /** The boxes of a line, as strings, exactly as the form would post them. */
@@ -163,7 +165,8 @@ function LineBox({
     sx: BOX_SX,
   };
   return (
-    <Box sx={span ? { gridColumn: "1 / -1" } : undefined}>
+    // On a phone the note takes the whole line; from the medium width it is the sixth column the header names, beside the others.
+    <Box sx={span ? { gridColumn: { xs: "1 / -1", md: "auto" } } : undefined}>
       <Typography variant="caption" sx={CAPTION_SX} aria-hidden="true">
         {caption}
       </Typography>
@@ -199,8 +202,11 @@ function LineBox({
   );
 }
 
-/** The place cell: «3» and, under it, the position by sex and by category; or the quiet «fără rezultat». */
-function PlaceCell({ place, words }: { place: PlaceView | null; words: ResultWords }) {
+/**
+ * The place cell: «3» and, under it, the position by sex and by category; or a quiet «fără loc» — «încă» only for a line with no result
+ * yet (`settled` false): a saved Abandon, Neprezentat or Descalificat will never have one.
+ */
+function PlaceCell({ place, words, settled }: { place: PlaceView | null; words: ResultWords; settled: boolean }) {
   return (
     <Box sx={{ gridColumn: { xs: "1 / -1", md: "auto" }, minHeight: { md: 44 }, display: "flex", alignItems: { md: "center" }, gap: 1, flexWrap: "wrap" }} data-testid="result-place">
       <Typography variant="caption" sx={{ ...CAPTION_SX, mb: 0 }} aria-hidden="true">
@@ -219,7 +225,7 @@ function PlaceCell({ place, words }: { place: PlaceView | null; words: ResultWor
         </>
       ) : (
         <Typography component="span" variant="caption" color="text.secondary">
-          {words.noPlace}
+          {settled ? words.noPlaceSettled : words.noPlace}
         </Typography>
       )}
     </Box>
@@ -278,7 +284,7 @@ export function RegisteredResultLines({ lines, words }: { lines: readonly Regist
                 </Typography>
               </Box>
             </Box>
-            <PlaceCell place={line.place} words={words} />
+            <PlaceCell place={line.place} words={words} settled={line.hasResult} />
             <CommonBoxes rowKey={`r[${line.bibNumber}]`} values={line.values} words={words} runner={runner} />
             {line.hasResult && (
               <Box sx={{ gridColumn: "1 / -1" }}>
@@ -305,6 +311,9 @@ export function TypedResultLines({ lines, words }: { lines: readonly TypedLine[]
 
 function TypedLinesOf({ lines, words }: { lines: readonly TypedLine[]; words: ResultWords }) {
   const recall = useRecall();
+  // The lines asked for by «Adaugă un alergător neînscris»: with scripts on, counted here; with scripts off, the press posts and the
+  // answer comes back with one more in `extraRows`, which the hidden box below posts again (so a second press adds a second line).
+  const requested = Number(recall.value(EXTRA_ROWS) ?? "0") || 0;
   const [extra, setExtra] = useState(0);
   // The lines the form posted that hold anything: the blank one at the end, posted empty, is not one — or every press would add another.
   const named = typedRowCountOf(recall.names());
@@ -312,7 +321,7 @@ function TypedLinesOf({ lines, words }: { lines: readonly TypedLine[]; words: Re
   for (let index = 0; index < named; index += 1) {
     if (RESULT_ROW_BOXES.some((box) => (recall.value(resultBox(typedRowKey(index), box)) ?? "").trim() !== "")) posted = index + 1;
   }
-  const count = Math.max(lines.length, posted) + 1 + extra;
+  const count = Math.max(lines.length, posted) + 1 + requested + extra;
   const container = useRef<HTMLDivElement>(null);
   // An import that added a number no registration holds puts a line here with the name left to write: the fold around it opens by itself
   // (§336 — a closed fold hides what needs doing), so the line is on the screen when the notice says it is there.
@@ -342,7 +351,7 @@ function TypedLinesOf({ lines, words }: { lines: readonly TypedLine[]; words: Re
                   </Typography>
                 )}
               </Box>
-              <PlaceCell place={line?.place ?? null} words={words} />
+              <PlaceCell place={line?.place ?? null} words={words} settled={line?.hasResult === true} />
               <CommonBoxes rowKey={key} values={initial} words={words} runner={runner} />
               {/* «Șterge» removes the stored result of the number the line was drawn with, whatever has been typed in the box since. */}
               {line?.hasResult && Number(initial.bib) > 0 && (
@@ -354,7 +363,22 @@ function TypedLinesOf({ lines, words }: { lines: readonly TypedLine[]; words: Re
           );
         })}
       </Box>
-      <GlyphButton icon="addPerson" variant="outlined" size="small" sx={{ minHeight: 44, mt: 1 }} onClick={() => setExtra((current) => current + 1)} data-testid="typed-add">
+      <input type="hidden" name={EXTRA_ROWS} value={String(requested + extra)} />
+      {/* A submit, so the button works with scripts off (`intent=addRow` answers with one more line); with scripts on it adds the line here and posts nothing. */}
+      <GlyphButton
+        type="submit"
+        name="intent"
+        value="addRow"
+        icon="addPerson"
+        variant="outlined"
+        size="small"
+        sx={{ minHeight: 44, mt: 1 }}
+        onClick={(event) => {
+          event.preventDefault();
+          setExtra((current) => current + 1);
+        }}
+        data-testid="typed-add"
+      >
         {words.addRow}
       </GlyphButton>
     </Box>

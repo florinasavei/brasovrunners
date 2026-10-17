@@ -1,4 +1,6 @@
 import { DomainError } from "@/shared/errors/domain-error";
+import en from "../../../../messages/en.json";
+import ro from "../../../../messages/ro.json";
 import { parseResultTime } from "./result-time";
 import { isResultStatus, RESULTS_MAX, type ResultStatus } from "./ranking";
 
@@ -73,7 +75,21 @@ const TIME_HEADERS: ReadonlySet<string> = new Set(["time", "timp", "guntime", "g
 const CHIP_HEADERS: ReadonlySet<string> = new Set(["chip", "cip", "chiptime", "timpcip", "net", "nettime", "timpnet"]);
 const STATUS_HEADERS: ReadonlySet<string> = new Set(["status", "stare"]);
 
+/**
+ * The words the backoffice itself writes for the four states, in both languages, folded: the file «Descarcă clasamentul (CSV)» writes
+ * (`t("results.status.<state>")`) can be imported again whatever the language it was downloaded in — read from the catalogues, so the
+ * words on the page and the words the importer knows cannot drift apart.
+ */
+function catalogueStatusWords(): Record<string, ResultStatus> {
+  const words: Record<string, ResultStatus> = {};
+  for (const catalogue of [ro, en]) {
+    for (const [status, word] of Object.entries(catalogue.Admin.results.status)) if (isResultStatus(status)) words[fold(word)] = status;
+  }
+  return words;
+}
+
 const STATUS_WORDS: Readonly<Record<string, ResultStatus>> = {
+  ...catalogueStatusWords(),
   finished: "FINISHED",
   finish: "FINISHED",
   fin: "FINISHED",

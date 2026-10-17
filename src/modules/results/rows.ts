@@ -22,6 +22,9 @@ export function resultBox(key: string, box: ResultRowBox): string {
   return `${key}.${box}`;
 }
 
+/** The box that carries how many blank typed lines «Adaugă un alergător neînscris» asked for, posted with the form so a script-less press can add another. */
+export const EXTRA_ROWS = "extraRows";
+
 /** A registered runner's row key, by the race number. */
 export function registeredRowKey(bibNumber: number): string {
   return `r[${bibNumber}]`;

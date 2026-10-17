@@ -10,11 +10,12 @@ import { getDb } from "@/db/client";
 import { getPathname, Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { findEventTitle } from "@/modules/content/events/repository";
-import { noticeDescribesResults } from "@/modules/legal-documents/repository";
+import { noticeDescribesResults, termsDescribeResults } from "@/modules/legal-documents/repository";
 import { categoryLabelOf } from "@/modules/results/category-words";
 import { formatResultTime } from "@/modules/results/domain/result-time";
 import { RESULT_STATUSES } from "@/modules/results/domain/ranking";
 import { anonymousResultLabel } from "@/modules/results/domain/public-name";
+import ImportFilePicker from "@/modules/results/ui/ImportFilePicker";
 import { eventTakesResults } from "@/modules/results/domain/event-type";
 import { readEventResults, type ResultRunner } from "@/modules/results/results";
 import {
@@ -49,13 +50,16 @@ type Props = {
   searchParams: Promise<{ resultsError?: string }>;
 };
 
+/** The chip glyph of each state in the summary (`status-glyphs.ts`): done, did not start, dropped out, disqualified. */
+const SUMMARY_GLYPH = { FINISHED: "done", DNS: "didNotStart", DNF: "droppedOut", DSQ: "failed" } as const;
+
 /** Reads the stored rows and is returned to right after a save. */
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = { robots: { index: false, follow: false } };
 
 /** The codes the page's banner says: a one-button form that has no boxes to keep redirects with `?resultsError=`. */
-const BANNER_ERRORS = ["FORBIDDEN", "NOT_FOUND", "RESULTS_NOT_OPEN", "RESULTS_NOTICE"] as const;
+const BANNER_ERRORS = ["FORBIDDEN", "NOT_FOUND", "RESULTS_NOT_OPEN", "RESULTS_NOTICE", "RESULTS_TERMS", "RESULTS_NOT_STARTED"] as const;
 
 /**
  * «Clasament» (`DECISIONS.md` §NNN; the owner, 2026-10-17: «Aș vrea să pot pune și clasament la final după cursă»): one race's results, on
@@ -97,6 +101,8 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
   const takes = eventTakesResults(event.type);
   const mayPublish = canPublishResults(actor.role);
   const noticeDescribes = takes ? await noticeDescribesResults(db, now) : false;
+  const termsDescribe = takes ? await termsDescribeResults(db, now) : false;
+  const started = event.startsAt.getTime() <= now.getTime();
   const errorCode = BANNER_ERRORS.find((code) => code === resultsError);
 
   const eventPath = { pathname: "/admin/events/[id]", params: { id } } as const;
@@ -149,6 +155,7 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
     addRow: t("results.addRow"),
     typedRow: t("results.typedRow"),
     noPlace: t("results.noPlace"),
+    noPlaceSettled: t("results.noPlaceSettled"),
   };
   // The category in the Excel footer's own words (§787): the template «{sex}, {band}» read raw, filled by the label.
   const categoryLabel = (key: string | null) => categoryLabelOf(key, (statisticsKey) => t.raw(`registrations.statistics.${statisticsKey}`) as string);
@@ -173,8 +180,9 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
     bibNumber: runner.bibNumber,
     name: runner.name ?? "",
     present: runner.checkedIn,
-    // What the published list would say of the runner — the tick, never a guess (`publicResultName`).
-    publicLine: runner.ticked ? t("results.publicLine.named") : t("results.publicLine.anonymous", { label: anonymousResultLabel(locale, runner.bibNumber) }),
+    // What the published list would say of the runner — `publicResultName`'s own answer (the tick, a confirmed registration, a notice that
+    // described the results), never a guess from the tick alone.
+    publicLine: runner.named ? t("results.publicLine.named") : t("results.publicLine.anonymous", { label: anonymousResultLabel(locale, runner.bibNumber) }),
     values: valuesOf(runner),
     place: placeOf(runner),
     hasResult: runner.result !== null,
@@ -219,11 +227,11 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
       </Typography>
       <Stack direction="row" sx={{ flexWrap: "wrap", gap: 1, alignItems: "center" }} data-testid="results-summary">
         {RESULT_STATUSES.map((status) => (
-          <StatusChip key={status} glyph={status === "FINISHED" ? "done" : status === "DNS" ? "planned" : status === "DNF" ? "cancelled" : "open"} variant="outlined" label={t(`results.summary.${status}`, { count: String(view.counts[status]) })} />
+          <StatusChip key={status} glyph={SUMMARY_GLYPH[status]} variant="outlined" label={t(`results.summary.${status}`, { count: String(view.counts[status]) })} />
         ))}
         <StatusChip glyph={event.resultsPublished ? "visible" : "hidden"} color={event.resultsPublished ? "success" : "default"} label={event.resultsPublished ? t("results.publish.stateOn") : t("results.publish.stateOff")} testId="results-published-chip" />
       </Stack>
-      {event.startsAt.getTime() > now.getTime() && (
+      {!started && (
         <Alert severity="info" data-testid="results-not-started">
           {t("results.notStarted")}
         </Alert>
@@ -259,12 +267,8 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
                 defaultValue=""
                 slotProps={{ htmlInput: { spellCheck: false, autoComplete: "off", "data-testid": "results-import-text" } }}
               />
-              <Box>
-                <Typography component="label" htmlFor="results-import-file" variant="body2" sx={{ display: "block", mb: 0.5 }}>
-                  {t("results.import.fileLabel")}
-                </Typography>
-                <Box component="input" id="results-import-file" type="file" name="importFile" accept=".csv,.tsv,.txt,text/csv,text/plain" sx={{ minHeight: 44, maxWidth: "100%" }} data-testid="results-import-file" />
-              </Box>
+              <Typography variant="body2">{t("results.import.fileLabel")}</Typography>
+              <ImportFilePicker words={{ choose: t("results.import.fileChoose"), chooseAgain: t("results.import.fileChooseAgain"), none: t("results.import.fileNone") }} />
               <Box>
                 <GlyphSubmitButton icon="upload" variant="outlined" name="intent" value="import" label={t("results.import.button")} pendingLabel={t("results.import.pending")} />
               </Box>
@@ -328,6 +332,17 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
               <Link href="/admin/legal">{t("results.publish.gateLink")}</Link>
             </Alert>
           )}
+          {!termsDescribe && (
+            <Alert severity="info" data-testid="results-terms-missing">
+              {t("results.publish.gateTerms")}{" "}
+              <Link href="/admin/legal">{t("results.publish.gateLink")}</Link>
+            </Alert>
+          )}
+          {!started && (
+            <Alert severity="info" data-testid="results-publish-not-started">
+              {t("results.publish.gateStart")}
+            </Alert>
+          )}
           {mayPublish ? (
             <ActionForm
               action={setResultsPublishedAction}
@@ -364,9 +379,12 @@ export default async function EventResultsPage({ params, searchParams }: Props) 
           {t("results.export")}
         </GlyphButton>
       </Box>
-      <Typography variant="body2">
-        <Link href={`${getPathname({ locale, href: "/admin/registrations" })}?eventId=${id}` as never}>{t("results.registrationsLink")}</Link>
-      </Typography>
+      <Box>
+        {/* The path is `getPathname`'s own, with the query after it: a string href goes through the localizer again, so it is a button on a plain `href`. */}
+        <GlyphButton icon="registrations" href={`${getPathname({ locale, href: "/admin/registrations" })}?eventId=${id}`} variant="text" size="small" sx={{ minHeight: 44 }} data-testid="results-registrations-link">
+          {t("results.registrationsLink")}
+        </GlyphButton>
+      </Box>
     </Stack>
   );
 }

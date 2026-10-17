@@ -21,6 +21,7 @@ import {
   noticeDescribesPromotionalMaterials,
   noticeDescribesPromotionalMaterialsShared,
   termsDescribeRefusal,
+  termsDescribeResults,
 } from "@/modules/legal-documents/repository";
 import { clubFactsFromEnv } from "@/modules/legal-documents/templates/club-facts";
 import { shownContactAddresses } from "@/modules/contact/shown-address";
@@ -233,6 +234,8 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
   const listNumbersMissing = !missingKeys.includes("PRIVACY_NOTICE") && !(await noticeDescribesListNumbers(getDb(), now));
   // §NNN: a race's results can be made public only once the notice in force names `{{results}}`.
   const resultsMissing = !missingKeys.includes("PRIVACY_NOTICE") && !(await noticeDescribesResults(getDb(), now));
+  // …and once the terms in force name it too: the older terms promised to ask separately before any named result.
+  const resultsTermsMissing = !missingKeys.includes("TERMS") && !(await termsDescribeResults(getDb(), now));
   // The same for the offers and benefits (§562): no form offers the box, and nothing is kept,
   // until the notice in force names `{{promotionalMaterials}}`.
   const promoMissing = !missingKeys.includes("PRIVACY_NOTICE") && !(await noticeDescribesPromotionalMaterials(getDb(), now));
@@ -882,6 +885,11 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
       {resultsMissing && (
         <Alert severity="info" data-testid="legal-results-missing">
           {t("legal.resultsMissing")}
+        </Alert>
+      )}
+      {resultsTermsMissing && (
+        <Alert severity="info" data-testid="legal-results-terms-missing">
+          {t("legal.resultsTermsMissing")}
         </Alert>
       )}
       {promoMissing && (

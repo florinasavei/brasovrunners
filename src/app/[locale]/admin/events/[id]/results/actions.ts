@@ -9,7 +9,7 @@ import { type Locale, routing } from "@/i18n/routing";
 import { ResultsCsvError } from "@/modules/results/domain/import-csv";
 import { mergeImportedRows } from "@/modules/results/import-merge";
 import { deleteEventResult, importResultsCsv, ResultRowError, saveEventResults, setResultsPublished } from "@/modules/results/results";
-import { postedResultRows } from "@/modules/results/rows";
+import { EXTRA_ROWS, postedResultRows } from "@/modules/results/rows";
 import { RESULT_NAME_MAX, RESULT_NOTE_MAX } from "@/modules/results/domain/ranking";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { DomainError, isDomainError } from "@/shared/errors/domain-error";
@@ -122,6 +122,17 @@ async function importIntoForm(form: FormData): Promise<FormOutcome> {
 }
 
 /**
+ * «Adaugă un alergător neînscris», pressed with scripts off: the page's boxes come back as they stand with one more blank typed line asked
+ * for (`extraRows`, which the page posts again, so a second press adds a second line). Saves nothing. With scripts on the button adds the
+ * line in the page and never posts.
+ */
+function addRowToForm(form: FormData): FormOutcome {
+  const values = keptValuesOf(form, [EXTRA_ROWS]);
+  const asked = Number(field(form, EXTRA_ROWS)) || 0;
+  return { fields: [], values: { ...values, [EXTRA_ROWS]: [String(Math.min(Math.max(asked, 0) + 1, 50))] }, notice: { kind: "info", key: "resultsRowAdded" } };
+}
+
+/**
  * «Salvează tot clasamentul» (the owner, 2026-10-17: «să pot pune și clasament la final după cursă»; one save, §791's model): every row of
  * the page — the registered runners' lines, the runners typed by hand, each with its boxes — in one post, saved in one transaction
  * (`saveEventResults`) or, when any row is refused, none: the sentence names the runner, the boxes name what to correct, and every
@@ -130,6 +141,7 @@ async function importIntoForm(form: FormData): Promise<FormOutcome> {
  */
 export async function saveEventResultsAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   if (field(form, "intent") === "import") return importIntoForm(form);
+  if (field(form, "intent") === "addRow") return addRowToForm(form);
   let saved;
   try {
     const actor = await requireStaff();
@@ -141,7 +153,9 @@ export async function saveEventResultsAction(_previous: FormOutcome | null, form
     return backToPage(form, { error: error.code });
   }
   const count = saved.created + saved.updated + saved.deleted;
-  return backToPage(form, saved.changed || saved.rewritten > 0 ? { saved: "resultsSaved", count: String(count) } : { saved: "resultsUnchanged" });
+  // A save that only moved places (a corrected answer changed a category) wrote no result: it says the places were counted again, not «0 rezultate».
+  if (!saved.changed && saved.rewritten > 0) return backToPage(form, { saved: "resultsRecalculated" });
+  return backToPage(form, saved.changed ? { saved: "resultsSaved", count: String(count) } : { saved: "resultsUnchanged" });
 }
 
 /** The row's own «Șterge»: asks first (§384) — a deleted result is gone, and the audit row keeps its number and state, never a name. */
@@ -161,8 +175,9 @@ export async function deleteEventResultAction(_previous: FormOutcome | null, for
 /**
  * «Clasamentul e public pe pagina evenimentului»: the Administrator's tick (a box and one button, never a toggle), saved on its own —
  * the disclosure has its own gate and its own audit row, and does not ride on a save of the rows. The state the box shows is the state
- * wanted, so two presses end where the second aimed. Switching it on is refused while the privacy notice in force does not name
- * `{{results}}` (`RESULTS_NOTICE`): the summary says so, the box comes back unticked, and the page's note links «Documente legale».
+ * wanted, so two presses end where the second aimed. Switching it on is refused before the race has started (`RESULTS_NOT_STARTED`) and
+ * while the privacy notice or the terms in force do not name `{{results}}` (`RESULTS_NOTICE`, `RESULTS_TERMS`): the summary says so, the
+ * box comes back unticked, and the page's note links «Documente legale».
  */
 export async function setResultsPublishedAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
   const on = field(form, "published") === "on";
@@ -171,7 +186,7 @@ export async function setResultsPublishedAction(_previous: FormOutcome | null, f
     const actor = await requireStaff();
     changed = (await setResultsPublished(getDb(), actor, eventIdOf(form), on, new Date())).changed;
   } catch (error) {
-    if (isDomainError(error) && (error.code === "RESULTS_NOTICE" || error.code === "RESULTS_NOT_OPEN")) return refused(error, form, { never: ["published"] });
+    if (isDomainError(error) && (error.code === "RESULTS_NOTICE" || error.code === "RESULTS_TERMS" || error.code === "RESULTS_NOT_STARTED" || error.code === "RESULTS_NOT_OPEN")) return refused(error, form, { never: ["published"] });
     if (!isDomainError(error)) throw error;
     return backToPage(form, { error: error.code });
   }
