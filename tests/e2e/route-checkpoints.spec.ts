@@ -586,7 +586,7 @@ test.describe("§802 the route's elevation profile", () => {
     await expect(again.getByRole("checkbox", { name: "Arată profilul traseului pe pagină" })).not.toBeChecked();
     const checkpoints = await openEditorBox(page, "Puncte de control");
     const preview = checkpoints.getByTestId("checkpoints-preview");
-    await expect(preview.getByTestId("checkpoints-preview-off")).toHaveText("Profilul e oprit pe pagină («Traseul» → «Arată profilul traseului pe pagină»).");
+    await expect(preview.getByTestId("checkpoints-preview-off")).toHaveText("Profilul e oprit pe pagină: vezi „Arată profilul traseului pe pagină” în «Traseul».");
     await expect(preview.getByTestId("elevation-pin")).toHaveCount(3);
 
     // The page, once published: no chart, the table with every point, the maps' section and the GPX download as before.

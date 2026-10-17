@@ -164,11 +164,11 @@ describe("§802 the «Puncte de control» card's preview when the tick is off", 
     const off = await card({ profileShown: false });
     expect(off).toContain('data-testid="elevation-chart"');
     expect(off).toContain('data-testid="checkpoints-preview-off"');
-    expect(off).toContain("Profilul e oprit pe pagină («Traseul» → «Arată profilul traseului pe pagină»).");
+    expect(off).toContain("Profilul e oprit pe pagină: vezi „Arată profilul traseului pe pagină” în «Traseul».");
     language = "en";
     const english = await html(createElement(CheckpointForms, { locale: "en", eventId: EVENT_ID, mayEdit: true }, await CheckpointsCard({ ...base, locale: "en", profileShown: false })));
     expect(english).toContain('data-testid="elevation-chart"');
-    expect(english).toContain("The profile is off on the page («The course» → «Show the route profile on the page»).");
+    expect(english).toContain("The profile is off on the page: see “Show the route profile on the page” in «The course».");
     language = "ro";
   });
 

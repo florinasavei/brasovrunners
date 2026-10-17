@@ -9721,7 +9721,7 @@
         "title": "Așa apare pe pagină",
         "help": "Se schimbă după „Salvează punctele”, nu în timp ce scrii.",
         "none": "Profilul apare pe pagină când traseul are un fișier GPX cu altitudini.",
-        "off": "Profilul e oprit pe pagină («Traseul» → «Arată profilul traseului pe pagină»)."
+        "off": "Profilul e oprit pe pagină: vezi „Arată profilul traseului pe pagină” în «Traseul»."
       },
       "kinds": {
         "WATER": "Apă",

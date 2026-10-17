@@ -9721,7 +9721,7 @@
         "title": "How it appears on the page",
         "help": "It changes after “Save the points”, not while you type.",
         "none": "The profile appears on the page once the route has a GPX file with altitudes.",
-        "off": "The profile is off on the page («The course» → «Show the route profile on the page»)."
+        "off": "The profile is off on the page: see “Show the route profile on the page” in «The course»."
       },
       "kinds": {
         "WATER": "Water",
