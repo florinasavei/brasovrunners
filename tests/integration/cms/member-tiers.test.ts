@@ -507,6 +507,11 @@ describe("§NNN the member tiers", () => {
       expect(await seen(second.id)).toEqual(["TOTI", "FONDATOR", "AMBELE"]);
       expect(await seen(null)).toEqual(["TOTI"]);
       expect(await seen(other.memberTierId)).toEqual(["TOTI"]);
+      // An account that cannot hold a level (a colleague opening the zone, §524) reads every code: decided by the kind of account.
+      const colleague = (await listDiscountCodesForMembers(db, NOW, null, true)).map((code) => code.code);
+      expect(colleague).toEqual(["TOTI", "MEMBRU", "FONDATOR", "AMBELE"]);
+      const { canHoldMemberTier } = await import("@/modules/staff-identity/domain/roles");
+      expect([canHoldMemberTier("MEMBER"), canHoldMemberTier("ADMIN"), canHoldMemberTier("MODERATOR")]).toEqual([true, false, false]);
       // The read carries each limited code's levels so the zone can name them; the backoffice reads them too.
       expect((await listDiscountCodesForMembers(db, NOW, first.id)).map((code) => code.tierIds)).toEqual([null, [first.id], [first.id, second.id]]);
       expect((await listDiscountCodesForAdmin(db)).map((code) => code.tierIds?.length ?? 0)).toEqual([0, 1, 1, 2]);
@@ -521,13 +526,29 @@ describe("§NNN the member tiers", () => {
     it("changes nothing a member may do: a tier is read by no door, only by the lists of benefits", async () => {
       const { first } = await twoTiers();
       await setMemberTier(db, admin, { targetId: member.id, tierId: first.id, now: NOW });
-      const { canOpenMembersZone, canManageStaff, canWorkTheDesk, canManageShop, isBackofficeRole } = await import("@/modules/staff-identity/domain/roles");
+      const roles = await import("@/modules/staff-identity/domain/roles");
       const [held] = await db.select().from(staffUsers).where(eq(staffUsers.id, member.id));
       const [bare] = await db.insert(staffUsers).values({ email: "gol@dev.test", displayName: "Fără nivel", role: "MEMBER" }).returning();
-      for (const predicate of [canOpenMembersZone, canManageStaff, canWorkTheDesk, isBackofficeRole]) {
-        expect(predicate(held.role)).toBe(predicate(bare.role));
+      expect(held.memberTierId).toBe(first.id);
+      expect(bare.memberTierId).toBeNull();
+      // The WHOLE row goes in, not its role: a predicate that read the level off the account would differ here. Every
+      // one-argument export of the roles file is asked, so a predicate added tomorrow is held to the same rule.
+      const answer = (fn: (subject: never) => unknown, subject: unknown) => {
+        try {
+          return { value: fn(subject as never) };
+        } catch (error) {
+          return { threw: String(error) };
+        }
+      };
+      let asked = 0;
+      for (const [name, fn] of Object.entries(roles)) {
+        if (typeof fn !== "function" || fn.length !== 1) continue;
+        asked += 1;
+        const heldAnswer = answer(fn as (subject: never) => unknown, { ...held, permissions: new Set() });
+        const bareAnswer = answer(fn as (subject: never) => unknown, { ...bare, permissions: new Set() });
+        expect(heldAnswer, name).toEqual(bareAnswer);
       }
-      expect(canManageShop({ ...held, permissions: new Set() })).toBe(canManageShop({ ...bare, permissions: new Set() }));
+      expect(asked).toBeGreaterThan(20);
     });
   });
 

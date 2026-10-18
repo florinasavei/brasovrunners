@@ -228,8 +228,8 @@ export function canManageMemberTiers(subject: StaffSubject): boolean {
 }
 
 /**
- * Whether an account can hold a member tier (§NNN): a club member's, and nobody else's — a colleague is no
- * member, and a level is a label, not a role. Asked where a level is given or kept; it answers about the
+ * Whether an account can hold a member tier (§NNN): a club member's, and nobody else's — a colleague's account
+ * holds no level, and a level is a label, not a role. Asked where a level is given or kept; it answers about the
  * account's kind and never reads the level.
  */
 export function canHoldMemberTier(subject: StaffSubject): boolean {
