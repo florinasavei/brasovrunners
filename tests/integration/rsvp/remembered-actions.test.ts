@@ -99,7 +99,7 @@ describe("§NNN the remembered browser's one tap", () => {
     expect(row).toMatchObject({ canonicalEmail: "ana@example.test", showName: false, confirmedAt: expect.any(Date) });
     expect(await db.select().from(emailOutbox)).toHaveLength(0);
     // Counted on another event too, with no email round-trip, at the very next tap.
-    expect((await rsvpGoAction(otherSlug, "ro", false)).count).toBe(1);
+    expect(await rsvpGoAction(otherSlug, "ro", false)).toMatchObject({ going: true, count: 1 });
     expect(await answers()).toHaveLength(2);
   });
 

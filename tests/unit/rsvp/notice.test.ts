@@ -13,7 +13,7 @@ import { rsvpClause, rsvpMergeValues } from "@/modules/rsvp/notice-words";
  * button's own name; the template's paragraphs in both languages; the tasks row; the terms left alone (nothing is bought, booked or
  * signed by an answer).
  */
-const sentences = (body: { sections: { paragraphs: string[] }[] }) => body.sections.flatMap((section) => section.paragraphs);
+const sentences = (body: { sections: readonly { paragraphs: readonly string[] }[] }) => body.sections.flatMap((section) => section.paragraphs);
 
 describe("§NNN {{rsvp}} is a merge field, the notice's switch, and the button's name", () => {
   it("is known to the editor and filled with the button's own name in each language", () => {

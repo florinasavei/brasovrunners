@@ -78,7 +78,8 @@ const box = async (outcome: ComponentProps<typeof RsvpBox>["outcome"] = null, lo
 };
 const count = async (locale: "ro" | "en" = "ro") => {
   state.language = locale;
-  return html(await RsvpCount({ eventId: "11111111-1111-4111-8111-111111111111" }));
+  const element = await RsvpCount({ eventId: "11111111-1111-4111-8111-111111111111" });
+  return element === null ? "" : html(element);
 };
 
 beforeEach(() => {
