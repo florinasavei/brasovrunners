@@ -392,7 +392,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
   const sweepOpen = mayManage && memberSweep === "1";
   const sweepRows = sweepOpen ? await previewMemberTickSweep(db, actor, { eventId: filters.eventId }, new Date()) : [];
   const sweepEvent = filters.eventId ? (events.find((event) => event.id === filters.eventId)?.title ?? filters.eventId) : null;
-  // «Clasament» (§808): a race that is published or has started, before its start too — a group run has none to enter.
+  // «Clasament» (§808, §NNN): a race that is published or has started, before its start too — a group run has none to enter.
   const chosenEvent = filters.eventId ? events.find((event) => event.id === filters.eventId) : undefined;
   const resultsOpen = chosenEvent !== undefined && resultsDoorOpen(chosenEvent, deadlinesNow);
   // The sweep's dialog counts the rows still ticked at the press (`bodyCount`, §532's shape).
@@ -1042,7 +1042,7 @@ export default async function AdminRegistrationsPage({ params, searchParams }: P
               {t("participantMessages.link")}
             </GlyphButton>
           )}
-          {/* With one race chosen that is published or has started, its results (§808): the other door to «Clasament», beside the file of the people. */}
+          {/* With one race chosen that is published or has started, its results (§808, §NNN): the other door to «Clasament», beside the file of the people. */}
           {filters.eventId && canEnterResults(actor.role) && resultsOpen && (
             <GlyphButton
               icon="results"

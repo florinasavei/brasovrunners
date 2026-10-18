@@ -1446,7 +1446,7 @@ export async function listEventsWithRegistrations<T extends Record<string, unkno
   db: Database<T>,
 ): Promise<Array<{ id: string; title: string | null; featured: boolean; membersOnly: boolean; type: string; startsAt: Date; editorialStatus: string }>> {
   return db
-    // `membersOnly` (§552): the list's «Membri» chip on an event for the members alone. `type`, `startsAt` and `editorialStatus` (§808):
+    // `membersOnly` (§552): the list's «Membri» chip on an event for the members alone. `type`, `startsAt` and `editorialStatus` (§808, §NNN):
     // the header's «Clasament» link, for a published race or one that has started (`resultsDoorOpen`).
     .selectDistinct({
       id: events.id,

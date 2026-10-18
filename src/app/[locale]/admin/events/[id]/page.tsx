@@ -1264,7 +1264,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                             {t("participantMessages.link")}
                           </GlyphButton>
                         )}
-                        {/* «Clasament» (§808): a race's results, entered or imported by race number — to whoever enters them, for a published race or one that has started: the page behind it opens before the start too. */}
+                        {/* «Clasament» (§808, §NNN): a race's results, entered or imported by race number — to whoever enters them, for a published race or one that has started: the page behind it opens before the start too. */}
                         {canEnterResults(staffUser.role) && resultsDoorOpen(event, now) && (
                           <GlyphButton
                             icon="results"
