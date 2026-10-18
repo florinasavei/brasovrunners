@@ -816,7 +816,22 @@
       "cancel": "Nu mai vin",
       "notMe": "Nu sunt eu",
       "help": "Browserul tău rămâne recunoscut un an după „Da, vin” sau „Nu mai vin”; „Nu sunt eu” îl uită.",
-      "failed": "Nu am putut trimite răspunsul. Încearcă din nou."
+      "failed": "Nu am putut trimite răspunsul. Încearcă din nou.",
+      "calendar": {
+        "link": "Vin!",
+        "count": {
+          "one": "{count} vine până acum",
+          "few": "{count} vin până acum",
+          "other": "{count} vin până acum"
+        },
+        "empty": "Fii primul care spune că vine."
+      },
+      "chip": {
+        "one": "{count} vine",
+        "few": "{count} vin",
+        "other": "{count} vin",
+        "go": "spune dacă vii"
+      }
     }
   },
   "Admin": {

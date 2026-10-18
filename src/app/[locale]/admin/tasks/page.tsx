@@ -66,7 +66,7 @@ import {
   TASK_OWNERS,
   type TaskState,
 } from "@/modules/diagnostics/owner-tasks";
-import { defaultTaskPanel, resolveTaskPanel, type TaskPanel, visibleTaskPanels } from "@/modules/diagnostics/domain/task-panels";
+import { defaultTaskPanel, resolveTaskPanel, TASK_PANELS, type TaskPanel } from "@/modules/diagnostics/domain/task-panels";
 import { readClubTodo } from "@/modules/club-todo/club-todo";
 import { canEditClubTodo, openClubTodoCount, resolveClubTodoOwner } from "@/modules/club-todo/domain/club-todo";
 import ClubTodoPanel from "@/modules/club-todo/ui/ClubTodoPanel";
@@ -104,7 +104,7 @@ import { readClubMailboxRejections } from "@/modules/notifications/club-mailbox-
 import { clubMailboxesToFix } from "@/modules/notifications/domain/club-mailbox-rejections";
 import { readDeliveryEvidence } from "@/modules/notifications/delivery-evidence";
 import { countNeedingEmailActionByEvent } from "@/modules/registrations/email-state";
-import SubNav from "@/shared/ui/SubNav";
+import TasksSubNav from "@/modules/diagnostics/ui/TasksSubNav";
 import { BOXED_DISCLOSURE_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 import { CLUB_NAME } from "@/theme/brand";
 
@@ -221,15 +221,15 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
   const openTodo = openClubTodoCount(clubTodo.items);
   // «Club», «De făcut», then «Sistem» (the link to `/devs`) and «Aplicația» after it (§397);
   // «Anti-robot» and «Costuri» are «Setări» tabs since §516. Each role sees the panels its own
-  // gates open (`task-panels.ts`).
-  const subNavItems = visibleTaskPanels(actor.role).flatMap((name) => [
-    ...(name === "app" ? [{ href: devsPath, label: t("panel.system") }] : []),
-    {
-      href: panelHref(name),
-      label: name === "todo" && openTodo > 0 ? t("panel.todoCount", { count: openTodo }) : t(`panel.${name}`),
-      active: panel === name,
-    },
-  ]);
+  // gates open (`task-panels.ts`). The row, with a glyph before each tab (§318 as amended), is
+  // `TasksSubNav`, drawn once per panel below from these props.
+  const subNav = {
+    role: actor.role,
+    active: panel,
+    openTodo,
+    panelHref: Object.fromEntries(TASK_PANELS.map((name) => [name, panelHref(name)])) as Record<TaskPanel, string>,
+    devsPath,
+  };
 
   /**
    * «De făcut»: the club's own checklist (§438). Like «Aplicația», it needs none of the system
@@ -247,7 +247,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
             {t("title")}
           </Typography>
         </Box>
-        <SubNav label={t("title")} items={subNavItems} />
+        <TasksSubNav {...subNav} />
         <ClubTodoPanel
           locale={locale}
           items={clubTodo.items}
@@ -281,7 +281,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
             {t("title")}
           </Typography>
         </Box>
-        <SubNav label={t("title")} items={subNavItems} />
+        <TasksSubNav {...subNav} />
         {doc ? (
           <>
             <Typography variant="body2" color="text.secondary">
@@ -662,7 +662,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
       {/* The panels (§265), and the system's own screen beside them: `/devs` answers "is it
           working" and this one answers "what do we still owe", which are two halves of one
           question the club asks together. */}
-      <SubNav label={t("title")} items={subNavItems} />
+      <TasksSubNav {...subNav} />
 
       {panel === "club" && (
         <>
