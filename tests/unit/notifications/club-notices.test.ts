@@ -166,6 +166,8 @@ describe("BR-REQ-033-02 criterion 12 the club's hidden copy of every participant
       // The link to a minor volunteer's parent or guardian (§768): to an address nobody confirmed, no registration behind it.
       "VOLUNTEER_GUARDIAN_REQUEST",
       "REGISTRATION_OPENED",
+      // «Vin!» (§811): to the address typed under the answer, no registration behind it.
+      "RSVP_CONFIRM",
       // An invitation (§647): to an address the club named, before any registration.
       "EVENT_INVITATION",
       // The newsletter's three (§445): to a subscriber, never about a registration.

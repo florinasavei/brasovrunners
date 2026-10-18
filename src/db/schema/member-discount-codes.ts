@@ -36,6 +36,13 @@ export const memberDiscountCodes = pgTable(
     position: integer("position").notNull(),
     /** Kept but not shown to the members. A new code is shown at once: the zone is not public. */
     hidden: boolean("hidden").notNull().default(false),
+    /**
+     * Which member tiers see the code (§811): null or empty is every member; else only a member who
+     * holds one of these tiers (`member_tiers.id`). An array of ids, not a join table — a club has a
+     * handful of tiers. No foreign key an array can carry: deleting a tier is refused while a code is
+     * limited to it alone (`content/member-tiers/service.ts`), and removes the id from the others.
+     */
+    tierIds: uuid("tier_ids").array(),
 
     createdByStaffUserId: uuid("created_by_staff_user_id").references(() => staffUsers.id, { onDelete: "set null" }),
     updatedByStaffUserId: uuid("updated_by_staff_user_id").references(() => staffUsers.id, { onDelete: "set null" }),

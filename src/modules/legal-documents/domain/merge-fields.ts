@@ -127,6 +127,18 @@ export const LIST_NUMBERS_MERGE_FIELD = "participantListNumbers";
 export const RESULTS_MERGE_FIELD = "results";
 
 /**
+ * The privacy notice's marker for the answer «Vin!» on a turn-up event (§811, «Vin!» part 1; the owner, 2026-10-18:
+ * «how do I mark myself as "Going"?»). The same two-in-one as the results above: filled, when the notice is shown, with
+ * the answer's own name, quoted (`rsvp/notice-words.ts`) — «Vin!» / “I'm coming!” — in the paragraph that says what the
+ * answer publishes (how many come, and the name only of those who ticked «Vreau să apar cu numele»), what is kept and for
+ * how long, the two links by email and the remembered browser's cookie; and the switch: the event page offers the answer,
+ * and the service takes one, only while the notice in force, in every language, names it (`describesRsvp`). A notice
+ * approved before it does not, and the club's tick stays on in the editor, doing nothing; `/admin/tasks` carries the row
+ * `rsvpNotice`.
+ */
+export const RSVP_MERGE_FIELD = "rsvp";
+
+/**
  * The privacy notice's marker for the club's invitations by email (§647): the backoffice section's own
  * name, quoted (`registrations/invitation-words.ts`) — «Invitații» / “Invitations” — in the sentence
  * that says the club may enter an invited person's name and address to send one invitation. Like the
@@ -526,6 +538,7 @@ export const MERGE_FIELDS = [
   LIST_SOCIALS_MERGE_FIELD,
   LIST_NUMBERS_MERGE_FIELD,
   RESULTS_MERGE_FIELD,
+  RSVP_MERGE_FIELD,
   NEWSLETTER_MERGE_FIELD,
   TEAM_PAGE_MERGE_FIELD,
   PROMOTIONAL_MATERIALS_MERGE_FIELD,
@@ -711,6 +724,16 @@ export function describesListNumbers(body: unknown): boolean {
  */
 export function describesResults(body: unknown): boolean {
   return mergeFieldsIn(body).has(RESULTS_MERGE_FIELD);
+}
+
+/**
+ * Whether a privacy notice describes the answer «Vin!» (§811): it names `{{rsvp}}`. The gate for offering the answer and
+ * for showing the count and the names (`rsvp/domain/offered.ts`) — the club's approval of such a text is the switch, as
+ * for the results (§808) — and what `/admin/tasks`' row `rsvpNotice` reads. Pure; the caller asks it of the notice in
+ * force, in every language.
+ */
+export function describesRsvp(body: unknown): boolean {
+  return mergeFieldsIn(body).has(RSVP_MERGE_FIELD);
 }
 
 /**

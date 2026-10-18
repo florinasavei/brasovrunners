@@ -4,8 +4,11 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { unstable_rethrow } from "next/navigation";
 import { getDb } from "@/db/client";
+import { canHoldMemberTier } from "@/modules/staff-identity/domain/roles";
 import { listDiscountCodesForMembers, type MembersDiscountCode } from "@/modules/content/member-codes/repository";
 import MemberCodes from "@/modules/content/member-codes/ui/MemberCodes";
+import { listAllMemberTiers, type TierView, tierViewOf } from "@/modules/content/member-tiers/repository";
+import type { Locale } from "@/i18n/routing";
 import { isDatabaseAwayError } from "@/modules/resilience/domain/database-away";
 import ZoneFrame, { frameParts, openZone } from "./zone";
 
@@ -19,10 +22,23 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-/** The partners' codes (§552): read here, per request, behind the account — never through the shared public cache. `"away"` while the database is (§447). */
-async function codesOrAway(now: Date): Promise<MembersDiscountCode[] | "away"> {
+/**
+ * The partners' codes (§552) for this member's level (§811): read here, per request, behind the account — never through the shared
+ * public cache. The codes for everyone and those limited to the member's level (`tierId`; none, the first alone), and the levels'
+ * names the limited ones' chips say, the hidden ones' left out unless the member holds them (hidden is «not advertised»). An account that
+ * cannot hold a level (a colleague opening the zone, §524) reads every code and every chip: decided by the kind of account, never by a
+ * level. `"away"` while the database is (§447).
+ */
+async function codesOrAway(
+  now: Date,
+  account: { role: Parameters<typeof canHoldMemberTier>[0]; memberTierId: string | null },
+  locale: Locale,
+): Promise<{ codes: MembersDiscountCode[]; tiers: TierView[] } | "away"> {
   try {
-    return await listDiscountCodesForMembers(getDb(), now);
+    const db = getDb();
+    const everyCode = !canHoldMemberTier(account.role);
+    const [codes, tiers] = await Promise.all([listDiscountCodesForMembers(db, now, account.memberTierId, everyCode), listAllMemberTiers(db)]);
+    return { codes, tiers: tiers.filter((tier) => everyCode || !tier.hidden || tier.id === account.memberTierId).map((tier) => tierViewOf(tier, locale)) };
   } catch (error) {
     unstable_rethrow(error);
     if (!isDatabaseAwayError(error)) throw error;
@@ -49,15 +65,15 @@ export default async function MembersAreaPage({ params }: Props) {
   const { locale, account } = opened;
   const t = await getTranslations("Members");
   const now = new Date();
-  const [codes, parts] = await Promise.all([codesOrAway(now), frameParts(account, locale, now)]);
+  const [found, parts] = await Promise.all([codesOrAway(now, account, locale), frameParts(account, locale, now)]);
   return (
     <ZoneFrame t={t} locale={locale} account={account} active="codes" parts={parts}>
-      {codes === "away" ? (
+      {found === "away" ? (
         <Alert severity="info" sx={{ mb: 3 }}>
           {t("zoneAway")}
         </Alert>
-      ) : codes.length > 0 ? (
-        <MemberCodes codes={codes} locale={locale} />
+      ) : found.codes.length > 0 ? (
+        <MemberCodes codes={found.codes} tiers={found.tiers} locale={locale} />
       ) : (
         <Typography variant="body1" sx={{ mb: 3 }} data-testid="members-codes-empty">
           {t("codesEmpty")}

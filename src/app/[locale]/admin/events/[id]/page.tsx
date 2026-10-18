@@ -122,6 +122,7 @@ import { previewDeclarationResend } from "@/modules/registrations/bulk-resend";
 import { countAddressRefusingMail } from "@/modules/registrations/email-state";
 import { previewWindowHolds } from "@/modules/registrations/window-holds";
 import { countBibs, spareCardState } from "@/modules/registrations/bibs";
+import { countRsvpsForAdmin, listRsvpsForAdmin } from "@/modules/rsvp/rsvp";
 import { SPARE_BIBS_PER_PRINT, spareRangeOfQuery } from "@/modules/registrations/domain/spare-bibs";
 import { countInterests } from "@/modules/registrations/interest";
 import { computeOccupied } from "@/modules/registrations/domain/capacity";
@@ -238,6 +239,9 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   const internal = event.registrationMode === "INTERNAL";
   // How many numbers this event has, and how many wait for the printer, for the bib card.
   const bibCounts = canReadRegistrations(staffUser.role) && internal ? await countBibs(db, event.id) : null;
+  // «Răspunsuri „Vin!”» (§811): the counts for every role of the editor, the rows (with addresses) only for a role that reads the registrations (BR-REQ-060-01).
+  const rsvpCounts = await countRsvpsForAdmin(db, event.id);
+  const rsvpRows = canReadRegistrations(staffUser.role) && rsvpCounts.confirmed + rsvpCounts.unconfirmed > 0 ? await listRsvpsForAdmin(db, event.id) : null;
   // The desk's spares (§444): what is reserved, how much of it is free, where the next print starts.
   const spareState = bibCounts ? await spareCardState(db, event.id) : null;
   const spares = spareState
@@ -1111,6 +1115,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                     declarations={declarations}
                     waiting={waiting}
                     bibCounts={bibCounts}
+                    rsvp={{ counts: rsvpCounts, rows: rsvpRows }}
                     locale={locale}
                     now={now}
                     clubDeadlines={deadlines}

@@ -70,6 +70,7 @@ export default async function AdminDeadlinesPage({ params, searchParams }: Props
         state={deadlines}
         mayEdit={canManageClubSettings(actor.role)}
         openWhen={{ primary: true, saved: saved === "deadlines" || saved === "addressCap" || saved === "deliveryTiming" }}
+        saved={saved}
         addressCap={addressCap}
         deliveryTiming={deliveryTiming}
         scheduledWait={outboxDelivery.scheduledWait}

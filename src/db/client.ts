@@ -14,6 +14,7 @@ import * as faqSchema from "./schema/faq";
 import * as jobRunsSchema from "./schema/job-runs";
 import * as legalDocumentsSchema from "./schema/legal-documents";
 import * as memberDiscountCodesSchema from "./schema/member-discount-codes";
+import * as memberTiersSchema from "./schema/member-tiers";
 import * as newsletterSchema from "./schema/newsletter";
 import * as pagesSchema from "./schema/pages";
 import * as gallerySchema from "./schema/gallery";
@@ -47,6 +48,7 @@ export const schema = {
   ...teamSchema,
   ...faqSchema,
   ...memberDiscountCodesSchema,
+  ...memberTiersSchema,
 };
 type Schema = typeof schema;
 

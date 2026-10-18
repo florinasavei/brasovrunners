@@ -12,6 +12,7 @@ import CardMembershipIcon from "@mui/icons-material/CardMembership";
 import CategoryIcon from "@mui/icons-material/Category";
 import CheckroomIcon from "@mui/icons-material/Checkroom";
 import ChecklistIcon from "@mui/icons-material/Checklist";
+import CloudOffIcon from "@mui/icons-material/CloudOff";
 import ConfirmationNumberIcon from "@mui/icons-material/ConfirmationNumber";
 import ContactMailIcon from "@mui/icons-material/ContactMail";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
@@ -58,6 +59,7 @@ import PeopleAltIcon from "@mui/icons-material/PeopleAlt";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import PhoneIcon from "@mui/icons-material/Phone";
 import EventAvailableIcon from "@mui/icons-material/EventAvailable";
+import PhotoAlbumIcon from "@mui/icons-material/PhotoAlbum";
 import PlaceIcon from "@mui/icons-material/Place";
 import PlaylistAddCheckIcon from "@mui/icons-material/PlaylistAddCheck";
 import PrintIcon from "@mui/icons-material/Print";
@@ -69,6 +71,8 @@ import SaveIcon from "@mui/icons-material/Save";
 import ScheduleIcon from "@mui/icons-material/Schedule";
 import ScheduleSendIcon from "@mui/icons-material/ScheduleSend";
 import ScienceIcon from "@mui/icons-material/Science";
+import SettingsIcon from "@mui/icons-material/Settings";
+import ShieldIcon from "@mui/icons-material/Shield";
 import StickyNote2Icon from "@mui/icons-material/StickyNote2";
 import ShareIcon from "@mui/icons-material/Share";
 import SpeedIcon from "@mui/icons-material/Speed";
@@ -86,6 +90,7 @@ import VerticalAlignBottomIcon from "@mui/icons-material/VerticalAlignBottom";
 import VerticalAlignTopIcon from "@mui/icons-material/VerticalAlignTop";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VolunteerActivismIcon from "@mui/icons-material/VolunteerActivism";
+import WorkspacePremiumIcon from "@mui/icons-material/WorkspacePremium";
 import type { SvgIconProps } from "@mui/material/SvgIcon";
 import type { ComponentType } from "react";
 
@@ -99,7 +104,7 @@ import type { ComponentType } from "react";
  * verb acts on, the two share the picture (the bibs are the ticket on both, printing is the
  * printer), so the screen reads as one system.
  *
- * **Read by `Panel` alone, and `Panel` is a Server Component** that no client file imports
+ * **Read by `Panel` and by `SettingsSubNav` (the glyph before each tab of «Setări»), both Server Components** that no client file imports
  * (`tests/unit/shared/glyph-on-every-button-and-fold.test.ts` holds it): the lookup by name
  * happens on the server and only the drawn `<svg>` reaches the browser, so this table costs a
  * visitor nothing and the backoffice nothing but the paths it draws. One file per glyph, never
@@ -201,6 +206,8 @@ export const PANEL_GLYPHS = {
   plan: CardMembershipIcon,
   transport: HubIcon,
   deadlines: TimerIcon,
+  // «Când site-ul nu răspunde» (§657) on «Termene»: the fold of the outage grace — the cloud that cannot be reached.
+  outage: CloudOffIcon,
   newsletter: NewspaperIcon,
   // The club and the platform.
   legal: GavelIcon,
@@ -210,7 +217,12 @@ export const PANEL_GLYPHS = {
   members: GroupAddIcon,
   // «Cine e membru al grupului» (§789): the card on «Membri» that says what being a member means.
   memberDefinition: CardMembershipIcon,
+  // «Niveluri de membru» (§811): the levels the club names for its members, on «Membri».
+  memberTiers: WorkspacePremiumIcon,
   appearance: PaletteIcon,
+  // «Setări»' row of tabs (§318 as amended, 2026-10-18) names the two it has no card for: the anti-robot check, a shield, and «Configurație», the platform's own screen, a gear.
+  antiBot: ShieldIcon,
+  configuration: SettingsIcon,
   // «Pagina principală» (§714): the home page at the site's root, under «Aspect».
   home: HomeIcon,
   textSize: FormatSizeIcon,
@@ -220,11 +232,15 @@ export const PANEL_GLYPHS = {
   limits: DataUsageIcon,
   jobs: UpdateIcon,
   pictures: ImageIcon,
+  // «Galerie»' two tabs (§813): the albums, and every stored picture above.
+  albums: PhotoAlbumIcon,
   translation: TranslateIcon,
   // «Ordinea meniului» (§571): the site menu's entries, one under the other, in the club's order.
   menuOrder: ReorderIcon,
   // «Previzualizare» (§579): the event's card and page as a visitor will see them, before saving.
   preview: VisibilityIcon,
+  // «Răspunsuri „Vin!”» (§811): who said they come to a turn-up event, on the event editor's registration card.
+  rsvp: EventAvailableIcon,
   // «Clasament» (§808): a race's results page, its cards and the link to it from the event editor — and its «Importă din CSV» card, the file going up.
   results: LeaderboardIcon,
   importCsv: UploadFileIcon,

@@ -546,6 +546,9 @@ describe("BR-REQ-060-01 every capability × every role", () => {
     canPublishMembersPage: /* */ [false, false, false, false, false, true, true],
     // §552: the members' discount codes are the Administrator's; their words the Membri texts' rule.
     canManageDiscountCodes: /**/ [false, false, false, false, false, true, true],
+    // The member tiers (§811): named and deleted by an Administrator; held by a club member's account alone.
+    canManageMemberTiers: /**/ [false, false, false, false, false, true, true],
+    canHoldMemberTier: /**/ [true, false, false, false, false, false, false],
     canEditDiscountCodeWords: [false, false, true, false, false, true, true],
     // §683: the members' shop — the Administrator writes, the Organizer reads; Tehnic and the Redactor nothing.
     canManageShop: /*         */ [false, false, false, false, false, true, true],

@@ -416,7 +416,10 @@ test.describe("§389 the limit per address, set and stated", () => {
     const panel = main.getByTestId("deadlines");
     await openFold(panel);
     const cap = panel.getByTestId("address-cap");
-    await expect(cap).toContainText("Maxim de înscrieri pe o adresă (pe eveniment)");
+    // A card of its own inside «Termene», shut like the folds beside it (§377 amended): its line says the limit.
+    await expect(cap.locator(":scope > summary")).toContainText("Maxim de înscrieri pe o adresă (pe eveniment)");
+    await expect(cap.locator(":scope > summary")).toContainText("cel mult 4 persoane pe adresă");
+    await openFold(cap);
     const box = cap.locator('input[name="registrationsPerAddress"]');
     await expect(box).toHaveValue("4");
 
@@ -446,6 +449,7 @@ test.describe("§389 the limit per address, set and stated", () => {
     await page.goto("/ro/admin/settings/deadlines");
     const again = page.locator("#main").getByTestId("deadlines");
     await openFold(again);
+    await openFold(again.getByTestId("address-cap"));
     await again.getByTestId("address-cap").locator('input[name="registrationsPerAddress"]').fill("4");
     await again.getByTestId("address-cap").getByRole("button", { name: "Salvează maximul" }).click();
     await confirmDialog(page, "Salvezi limita pe adresă?");
@@ -457,6 +461,7 @@ test.describe("§389 the limit per address, set and stated", () => {
     await page.goto("/ro/admin/settings/deadlines");
     const panel = page.locator("#main").getByTestId("deadlines");
     await openFold(panel);
+    await openFold(panel.getByTestId("address-cap"));
     await expect(panel.getByTestId("address-cap-value")).toHaveText("Pe o adresă se pot înscrie cel mult 4 persoane la un eveniment.");
     await expect(panel.getByTestId("address-cap").locator("input")).toHaveCount(0);
   });

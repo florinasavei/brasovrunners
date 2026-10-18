@@ -6,6 +6,7 @@ import { recordAuditEvent } from "@/modules/audit/repository";
 import { canEditDiscountCodeWords, canManageDiscountCodes } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
 import { isUuid } from "@/shared/ids";
+import { existingTierIdsShared } from "@/modules/content/member-tiers/repository";
 import { type DiscountCodeFields, discountCodeFieldsSchema } from "./fields";
 
 /**
@@ -19,7 +20,8 @@ import { type DiscountCodeFields, discountCodeFieldsSchema } from "./fields";
  *   keeps everything else as it was, whatever was posted.
  *
  * Every write leaves an `audit_logs` row in its own transaction, naming the code by id and the staff
- * member who acted — never the code or the partner (§12.12). Nothing here expires the public cache:
+ * member who acted — never the code or the partner (§12.12). The limit to some member tiers (§811) is
+ * the code's own, so an Administrator's: a Redactor's save keeps it as stored. Nothing here expires the public cache:
  * the codes are on no public page (`repository.ts`).
  */
 
@@ -49,6 +51,19 @@ function assertMayManage(actor: Actor): void {
   }
 }
 
+/**
+ * Every id of the limit names a member tier (§811), read under a share lock so a tier cannot be deleted
+ * between this check and the write (`member-tiers/service.ts#deleteMemberTier` locks the tier first). An id
+ * that names none is a refusal on the chips' box, `tierIds`.
+ */
+async function assertTiersExist<T extends Record<string, unknown>>(db: Database<T>, ids: readonly string[]): Promise<void> {
+  const known = await existingTierIdsShared(db, ids);
+  if (ids.some((id) => !known.has(id))) throw new DomainError("VALIDATION_ERROR", "a limit names a member tier that does not exist", ["tierIds"]);
+}
+
+/** The limit as stored: no tier ticked is `null`, every member. */
+const storedTierIds = (ids: readonly string[]): string[] | null => (ids.length > 0 ? [...ids] : null);
+
 /** Add a code at the end of the list. Shown at once: the members' zone is not public. */
 export async function createDiscountCode<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -58,6 +73,7 @@ export async function createDiscountCode<T extends Record<string, unknown>>(
   const fields = parseOrThrow(input.fields);
   const now = input.now ?? new Date();
   return db.transaction(async (tx) => {
+    await assertTiersExist(tx, fields.tierIds);
     const [last] = await tx
       .select({ position: sql<number>`coalesce(max(${memberDiscountCodes.position}), 0)`.mapWith(Number) })
       .from(memberDiscountCodes);
@@ -65,6 +81,7 @@ export async function createDiscountCode<T extends Record<string, unknown>>(
       .insert(memberDiscountCodes)
       .values({
         ...fields,
+        tierIds: storedTierIds(fields.tierIds),
         position: (last?.position ?? 0) + 1,
         hidden: false,
         createdByStaffUserId: input.actor.id,
@@ -78,7 +95,7 @@ export async function createDiscountCode<T extends Record<string, unknown>>(
       action: "member_code.created",
       entityType: "member_discount_code",
       entityId: row.id,
-      metadata: { link: fields.link !== null, validUntil: fields.validUntil !== null },
+      metadata: { link: fields.link !== null, validUntil: fields.validUntil !== null, tiers: fields.tierIds.length },
       now,
     });
     return row;
@@ -106,16 +123,20 @@ export async function saveDiscountCode<T extends Record<string, unknown>>(
   // for whatever was posted, so the same schema checks what the Redactor did write.
   const posted = (input.fields ?? {}) as Record<string, unknown>;
   const fields = parseOrThrow(
-    manage ? posted : { ...posted, code: current.code, link: current.link ?? "", validUntil: current.validUntil ?? "" },
+    manage
+      ? // A caller that posts no limit at all (a script, a test) keeps the one stored; the form always posts it, none ticked being every member.
+        { ...posted, tierIds: posted.tierIds ?? current.tierIds ?? [] }
+      : { ...posted, code: current.code, link: current.link ?? "", validUntil: current.validUntil ?? "", tierIds: current.tierIds ?? [] },
   );
   const row = await db.transaction(async (tx) => {
+    if (manage) await assertTiersExist(tx, fields.tierIds);
     const [updated] = await tx
       .update(memberDiscountCodes)
       .set({
         partnerName: fields.partnerName,
         descriptionRo: fields.descriptionRo,
         descriptionEn: fields.descriptionEn,
-        ...(manage ? { code: fields.code, link: fields.link, validUntil: fields.validUntil } : {}),
+        ...(manage ? { code: fields.code, link: fields.link, validUntil: fields.validUntil, tierIds: storedTierIds(fields.tierIds) } : {}),
         updatedByStaffUserId: input.actor.id,
         version: input.expectedVersion + 1,
         updatedAt: now,
@@ -128,7 +149,7 @@ export async function saveDiscountCode<T extends Record<string, unknown>>(
       action: "member_code.saved",
       entityType: "member_discount_code",
       entityId: updated.id,
-      metadata: { version: updated.version, wordsOnly: !manage },
+      metadata: { version: updated.version, wordsOnly: !manage, ...(manage ? { tiers: fields.tierIds.length } : {}) },
       now,
     });
     return updated;

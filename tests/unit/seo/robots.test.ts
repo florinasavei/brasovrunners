@@ -37,6 +37,11 @@ describe("§549 robots.txt on production", () => {
     "/ro/calendar/2027",
     "/ro/evenimente/crosul-aniversar?lista=2",
     "/en/events/anniversary-cross?interest=1",
+    // The «Vii?» box's outcome (§811) and the «Vin!» message's two links.
+    "/ro/evenimente/crosul-aniversar?vin=1",
+    "/en/events/anniversary-cross?foo=1&vin=invalid",
+    "/ro/vin/abc",
+    "/en/coming/abc",
     "/en/events/anniversary-cross?since=1727500000",
     "/ro/evenimente/crosul-aniversar?declaratie=abc",
     "/ro/evenimente/crosul-aniversar?fbclid=x&lista=3",

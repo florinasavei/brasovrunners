@@ -1,12 +1,24 @@
 import { getTranslations } from "next-intl/server";
 import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
+import { PANEL_GLYPHS, type PanelGlyphName } from "@/shared/ui/panel-glyphs";
 import SubNav from "@/shared/ui/SubNav";
 
 /**
  * The Galerie tab's two halves: the albums and every stored picture. The shared `SubNav` (§360);
- * hrefs resolved on the server because `SubNav` takes strings.
+ * hrefs resolved on the server because `SubNav` takes strings. Each tab wears its picture, drawn here
+ * on the server into `SubNav`, a Server Component end to end (§318 as amended, §813).
  */
+const TAB_GLYPH = {
+  albums: { glyph: "albums" },
+  pictures: { glyph: "pictures" },
+} as const satisfies Record<"albums" | "pictures", { glyph: PanelGlyphName }>;
+
+function drawGlyph(tab: "albums" | "pictures") {
+  const Glyph = PANEL_GLYPHS[TAB_GLYPH[tab].glyph];
+  return <Glyph />;
+}
+
 export default async function GallerySubNav({ locale, active }: { locale: Locale; active: "albums" | "pictures" }) {
   const t = await getTranslations("Admin");
 
@@ -14,8 +26,8 @@ export default async function GallerySubNav({ locale, active }: { locale: Locale
     <SubNav
       label={t("gallery.title")}
       items={[
-        { href: getPathname({ locale, href: "/admin/gallery" }), label: t("gallery.tabAlbums"), active: active === "albums" },
-        { href: getPathname({ locale, href: "/admin/gallery/pictures" }), label: t("gallery.tabPictures"), active: active === "pictures" },
+        { href: getPathname({ locale, href: "/admin/gallery" }), label: t("gallery.tabAlbums"), active: active === "albums", glyph: drawGlyph("albums") },
+        { href: getPathname({ locale, href: "/admin/gallery/pictures" }), label: t("gallery.tabPictures"), active: active === "pictures", glyph: drawGlyph("pictures") },
       ]}
     />
   );

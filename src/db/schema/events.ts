@@ -738,6 +738,16 @@ export const events = pgTable(
     minAge: integer("min_age").notNull().default(14),
 
     registrationMode: registrationMode("registration_mode").notNull().default("NONE"),
+
+    /**
+     * «Acceptă răspunsuri „Vin!" din pagină, calendar și email» (§811, «Vin!» part 1): the club's tick for a turn-up
+     * event — one that asks for no registration (`registration_mode = NONE`). While it is on, and the event is
+     * published, not cancelled and still ahead, and the privacy notice in force describes «Vin!» (`{{rsvp}}`), the
+     * page offers a person the answer «Vin!» (`modules/rsvp/domain/offered.ts`, the one rule) and shows how many come.
+     * Off for every event that exists and every one created after this column. Carried by a series, a duplicate and
+     * the JSON file like the route's profile tick (§805); the answers themselves (`event_rsvps`) are never carried.
+     */
+    rsvpEnabled: boolean("rsvp_enabled").notNull().default(false),
     registrationOpensAt: timestamp("registration_opens_at", { withTimezone: true }),
     /**
      * «Înscrierile se deschid în curând» — announced, with no date yet (§451). While true, an

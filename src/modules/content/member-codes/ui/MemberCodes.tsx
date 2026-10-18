@@ -7,6 +7,8 @@ import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import { formatCalendarDay } from "@/i18n/dates";
 import type { Locale } from "@/i18n/routing";
+import TierBadge from "@/modules/content/member-tiers/ui/TierBadge";
+import type { TierView } from "@/modules/content/member-tiers/repository";
 import type { MembersDiscountCode } from "../repository";
 import CopyCodeButton from "./CopyCodeButton";
 
@@ -17,9 +19,19 @@ import CopyCodeButton from "./CopyCodeButton";
  * până …» through the one date helper (§349). The read already left out a hidden code and one past
  * its last day. Nothing when there is none: the zone says nothing about codes it does not have.
  */
-export default async function MemberCodes({ codes, locale }: { codes: readonly MembersDiscountCode[]; locale: Locale }) {
+export default async function MemberCodes({
+  codes,
+  tiers = [],
+  locale,
+}: {
+  codes: readonly MembersDiscountCode[];
+  /** The levels' names in the reader's language (§811): a code limited to some levels wears one small chip for each. */
+  tiers?: readonly TierView[];
+  locale: Locale;
+}) {
   if (codes.length === 0) return null;
   const t = await getTranslations("Members");
+  const tierById = new Map(tiers.map((tier) => [tier.id, tier]));
   return (
     <Box component="section" aria-labelledby="members-codes-title" sx={{ mb: 3 }} data-testid="members-codes">
       <Typography id="members-codes-title" variant="h2" sx={{ fontSize: "1.25rem", mb: 1, display: "flex", alignItems: "center", gap: 0.75 }}>
@@ -34,6 +46,15 @@ export default async function MemberCodes({ codes, locale }: { codes: readonly M
               <Typography variant="subtitle1" component="h3" sx={{ fontWeight: 700, overflowWrap: "anywhere" }}>
                 {code.partnerName}
               </Typography>
+              {/* «Pentru nivelul …» (§811): a code limited to some levels names them, one small chip each; a code for everyone says nothing. */}
+              {(code.tierIds ?? []).length > 0 && (
+                <Stack direction="row" role="group" aria-label={t("codeForTiers")} sx={{ alignItems: "center", gap: 0.5, mt: 0.5, flexWrap: "wrap" }} data-testid="member-code-tiers">
+                  {(code.tierIds ?? []).flatMap((id) => {
+                    const tier = tierById.get(id);
+                    return tier ? [<TierBadge key={id} tier={tier} help={false} color="default" testId="member-code-tier" />] : [];
+                  })}
+                </Stack>
+              )}
               <Stack direction="row" sx={{ alignItems: "center", gap: 1, mt: 1, flexWrap: "wrap" }}>
                 <Box
                   component="code"

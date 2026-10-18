@@ -66,6 +66,7 @@ import {
   inviteStaffUser,
   resendStaffInvitation,
   revokeStaffUser,
+  setMemberTier,
   setStaffPermission,
 } from "@/modules/staff-identity/service";
 import { env } from "@/shared/config/env";
@@ -342,6 +343,7 @@ function eventFieldsFrom(form: FormData) {
     // «Arată profilul traseului pe pagină» (§802, §805): a checkbox, read only when the form carried its marker
     // — a form without the card is "not editing it" (a reader who may not change the settings), never "off".
     showRouteProfile: form.get("event.showRouteProfile.present") === "1" ? form.get("event.showRouteProfile") === "on" : undefined,
+    rsvpEnabled: form.get("event.rsvpEnabled.present") === "1" ? form.get("event.rsvpEnabled") === "on" : undefined,
     distanceMeters: value("distanceMeters"),
     // «Aproximativ» (§598): a checkbox beside the distance; `service.ts` drops it when the distance is empty.
     distanceEstimated: form.get("event.distanceEstimated") === "on",
@@ -1351,7 +1353,13 @@ export async function inviteMembersAction(_previous: FormOutcome | null, form: F
   let toast: Record<string, string | undefined>;
   try {
     const actor = await requireStaffCapability(canManageStaff);
-    const { added, existing } = await inviteMembers(getDb(), actor, { rows, preferredLocale: toLocale(form.get("preferredLocale")) });
+    // «Nivel» (§811): one level for every member this press adds; none by default.
+    const tierId = text(form, "tierId").trim();
+    const { added, existing } = await inviteMembers(getDb(), actor, {
+      rows,
+      preferredLocale: toLocale(form.get("preferredLocale")),
+      tierId: tierId === "" ? null : tierId,
+    });
     const lines: MemberAccountLine[] =
       env.STAFF_AUTH_MODE === "provider"
         ? await createMemberAccounts([...added, ...existing], (member) =>
@@ -1364,7 +1372,7 @@ export async function inviteMembersAction(_previous: FormOutcome | null, form: F
       action: "staff.members_invited",
       entityType: "staff_user",
       entityId: null,
-      metadata: { added: added.length, existing: existing.length, ...counts, accounts: lines },
+      metadata: { added: added.length, existing: existing.length, ...(tierId !== "" ? { tierId } : {}), ...counts, accounts: lines },
       now: new Date(),
     });
     outcome = {
@@ -1491,6 +1499,28 @@ export async function changeStaffRoleAction(_previous: FormOutcome | null, form:
     const actor = await requireStaffCapability(canManageStaff);
     await changeStaffRole(getDb(), actor, text(form, "staffUserId"), text(form, "role") as StaffRole);
     outcome = { saved: "role" };
+  } catch (error) {
+    outcome = outcomeOf(error);
+  }
+
+  return backTo(path, outcome);
+}
+
+/**
+ * «Nivel» on a club member's row of «Echipa» (§811): the level given, or cleared with the empty choice, asked first and then
+ * a toast. The Administrator's (`canManageStaff`); the service asserts it again and refuses a row that is not a member's, a
+ * level that is not there and a hidden one (BR-REQ-060-01). A label and its benefits — it opens and refuses nothing.
+ */
+export async function setMemberTierAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const locale = toLocale(form.get("uiLocale"));
+  const path = getPathname({ locale, href: "/admin/staff" });
+  const tierId = text(form, "tierId").trim();
+
+  let outcome: { error?: string; saved?: string };
+  try {
+    const actor = await requireStaffCapability(canManageStaff);
+    const { changed } = await setMemberTier(getDb(), actor, { targetId: text(form, "staffUserId"), tierId: tierId === "" ? null : tierId });
+    outcome = { saved: !changed ? "memberTierUnchanged" : tierId === "" ? "memberTierCleared" : "memberTierSet" };
   } catch (error) {
     outcome = outcomeOf(error);
   }
