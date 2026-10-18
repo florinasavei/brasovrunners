@@ -123,6 +123,37 @@ export const DEADLINE_RULES: Record<DeadlineKey, DeadlineRule> = {
   outageGraceMaxHours: { unit: "hours", min: 0, max: 168, default: 48 },
 };
 
+/**
+ * «Termene» in named folds (§377 amended; the owner, 2026-10-18, of thirteen boxes in one column:
+ * «partea asta de termene trebuie grupată mai bine»): which fold each deadline sits in, in the
+ * order the screen draws them, by what the deadline is about — the participant's address, the
+ * place and the offer, the days before the start, after the event, a series, a family, an outage.
+ *
+ * **Data here, words in the catalogue** (`Admin.emails.deadlines.groups.<key>`): a fold's title,
+ * its sentence and the short label of each field in its closed line. Every deadline is in exactly
+ * one group (`tests/unit/deadlines/deadline-groups.test.ts`), so a fourteenth deadline cannot be
+ * saved without a fold to sit in. Nothing here is saved or validated: the grouping is only how
+ * the boxes are laid out.
+ */
+export const DEADLINE_GROUPS = [
+  { key: "confirmation", fields: ["confirmationHours", "verificationRetryHours", "verificationRetries"] },
+  { key: "hold", fields: ["holdMinutes", "offerHours"] },
+  { key: "beforeStart", fields: ["reminderHours", "lastCallHours", "selfCheckinHours", "raceWeekDays"] },
+  { key: "afterEvent", fields: ["publicListDays"] },
+  { key: "series", fields: ["seriesHorizonDays"] },
+  { key: "family", fields: ["familySittingMinutes"] },
+  { key: "outage", fields: ["outageGraceMaxHours"] },
+] as const satisfies readonly { key: string; fields: readonly DeadlineKey[] }[];
+
+export type DeadlineGroupKey = (typeof DEADLINE_GROUPS)[number]["key"];
+
+/** The fold a deadline sits in. */
+export function deadlineGroupOf(key: DeadlineKey): DeadlineGroupKey {
+  const group = DEADLINE_GROUPS.find((candidate) => (candidate.fields as readonly DeadlineKey[]).includes(key));
+  // Unreachable while the test holds every key in exactly one group; the first fold is the honest fallback.
+  return group ? group.key : DEADLINE_GROUPS[0].key;
+}
+
 export type Deadlines = Record<DeadlineKey, number>;
 
 export const DEFAULT_DEADLINES: Deadlines = Object.freeze(

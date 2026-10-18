@@ -11,6 +11,7 @@ import CampaignIcon from "@mui/icons-material/Campaign";
 import CardMembershipIcon from "@mui/icons-material/CardMembership";
 import CategoryIcon from "@mui/icons-material/Category";
 import CheckroomIcon from "@mui/icons-material/Checkroom";
+import CloudOffIcon from "@mui/icons-material/CloudOff";
 import ChecklistIcon from "@mui/icons-material/Checklist";
 import ConfirmationNumberIcon from "@mui/icons-material/ConfirmationNumber";
 import ContactMailIcon from "@mui/icons-material/ContactMail";
@@ -201,6 +202,8 @@ export const PANEL_GLYPHS = {
   plan: CardMembershipIcon,
   transport: HubIcon,
   deadlines: TimerIcon,
+  // «Când site-ul nu răspunde» (§657) on «Termene»: the fold of the outage grace — the cloud that cannot be reached.
+  outage: CloudOffIcon,
   newsletter: NewspaperIcon,
   // The club and the platform.
   legal: GavelIcon,

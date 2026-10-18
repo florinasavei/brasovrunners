@@ -6846,6 +6846,64 @@
         "saving": "Saving…",
         "saved": "The deadlines were saved; they apply from now on.",
         "differs": "differs from recommended",
+        "differsCount": {
+          "one": "{count} differs from recommended",
+          "few": "{count} differ from recommended",
+          "other": "{count} differ from recommended"
+        },
+        "short": {
+          "confirmationHours": "link {value}",
+          "verificationRetryHours": "re-sent after {value}",
+          "verificationRetries": "re-sends: {value}",
+          "holdMinutes": "place held {value}",
+          "offerHours": "offer {value}",
+          "reminderHours": "reminder {value}",
+          "lastCallHours": "last call {value}",
+          "selfCheckinHours": "“I have arrived” from {value} before",
+          "raceWeekDays": "countdown {value} before",
+          "seriesHorizonDays": "dates created {value} ahead",
+          "publicListDays": "public list {value}",
+          "familySittingMinutes": "email waits {value}",
+          "outageGraceMaxHours": "moves by {value} at most"
+        },
+        "shortZero": {
+          "verificationRetries": "no re-sends",
+          "reminderHours": "no reminder",
+          "lastCallHours": "no last call",
+          "raceWeekDays": "countdown on race day only",
+          "familySittingMinutes": "email leaves at once",
+          "outageGraceMaxHours": "no moving"
+        },
+        "groups": {
+          "confirmation": {
+            "title": "Address confirmation",
+            "intro": "How long the link in the first email stays valid, and when it is re-sent by itself to whoever has not confirmed."
+          },
+          "hold": {
+            "title": "The held place and the offer",
+            "intro": "How long the site holds a place for signing the declaration, and how long a waiting-list offer stays open."
+          },
+          "beforeStart": {
+            "title": "Before the start",
+            "intro": "What goes out and what opens before the start: the reminder, the last call to sign, “I have arrived” and the countdown."
+          },
+          "afterEvent": {
+            "title": "After the event",
+            "intro": "How long the public participant list stays on the site after the event."
+          },
+          "series": {
+            "title": "Series",
+            "intro": "How far ahead a series of events keeps its dates created."
+          },
+          "family": {
+            "title": "Family registration",
+            "intro": "How long the email of a family registered on one address waits before it leaves once, for everybody."
+          },
+          "outage": {
+            "title": "When the site does not answer",
+            "intro": "How far the deadlines that were running move while the site could not be reached."
+          }
+        },
         "fillRecommended": "Fill in the recommended values",
         "readOnly": "The Administrator changes the deadlines; you see the values in force."
       },
@@ -6911,6 +6969,7 @@
         "intro": "How many people may register with the same email address for one event, a family for instance. Each person signs their own declaration.",
         "field": "Registrations per address (per event)",
         "help": "Only the address's active registrations for the event count; a cancelled one frees its slot.",
+        "aside": "at most {people} per address",
         "value": "One address may register at most {people} for an event.",
         "save": "Save the limit",
         "saved": "The limit of registrations per address was saved.",
@@ -7018,6 +7077,10 @@
         "intro": "On the scheduled round (the default), emails leave at the next check: within {day} by day and {night} at night. «Right after the request» sends them within seconds. No email is lost.",
         "field": "Emails leave",
         "help": "A waiting-list offer leaves at once either way. However long an email waits, its deadline runs from when it leaves: the held place, the offer and the links lose nothing.",
+        "aside": {
+          "scheduled": "on the scheduled round, within {wait}",
+          "immediate": "right after the request"
+        },
         "option": {
           "scheduled": "On the scheduled round (within {wait}; recommended)",
           "immediate": "Right after the request"

@@ -6846,6 +6846,64 @@
         "saving": "Se salvează…",
         "saved": "Termenele au fost salvate; se aplică de acum înainte.",
         "differs": "diferit de recomandat",
+        "differsCount": {
+          "one": "{count} diferit de recomandat",
+          "few": "{count} diferite de recomandat",
+          "other": "{count} diferite de recomandat"
+        },
+        "short": {
+          "confirmationHours": "link {value}",
+          "verificationRetryHours": "retrimis după {value}",
+          "verificationRetries": "retrimiteri: {value}",
+          "holdMinutes": "loc ținut {value}",
+          "offerHours": "ofertă {value}",
+          "reminderHours": "reminder {value}",
+          "lastCallHours": "ultima chemare {value}",
+          "selfCheckinHours": "„Am ajuns” de la {value} înainte",
+          "raceWeekDays": "numărătoare inversă {value} înainte",
+          "seriesHorizonDays": "datele create cu {value} înainte",
+          "publicListDays": "lista publică {value}",
+          "familySittingMinutes": "emailul așteaptă {value}",
+          "outageGraceMaxHours": "mutare cel mult {value}"
+        },
+        "shortZero": {
+          "verificationRetries": "fără retrimiteri",
+          "reminderHours": "fără reminder",
+          "lastCallHours": "fără ultimă chemare",
+          "raceWeekDays": "numărătoare inversă doar în ziua cursei",
+          "familySittingMinutes": "emailul pleacă imediat",
+          "outageGraceMaxHours": "fără mutare"
+        },
+        "groups": {
+          "confirmation": {
+            "title": "Confirmarea adresei",
+            "intro": "Cât stă valabil linkul din primul email și când se retrimite singur, către cine nu a confirmat."
+          },
+          "hold": {
+            "title": "Locul ținut și oferta",
+            "intro": "Cât ține site-ul un loc pentru semnarea declarației și cât stă deschisă o ofertă de pe lista de așteptare."
+          },
+          "beforeStart": {
+            "title": "Înainte de start",
+            "intro": "Ce pleacă și ce se deschide înainte de start: reminderul, ultima chemare la semnat, „Am ajuns” și numărătoarea inversă."
+          },
+          "afterEvent": {
+            "title": "După eveniment",
+            "intro": "Cât rămâne pe site lista publică de participanți după eveniment."
+          },
+          "series": {
+            "title": "Seriile",
+            "intro": "Cât de departe înainte își creează o serie de evenimente datele."
+          },
+          "family": {
+            "title": "Înscrierea de familie",
+            "intro": "Cât așteaptă emailul unei familii înscrise pe aceeași adresă, înainte să plece o singură dată."
+          },
+          "outage": {
+            "title": "Când site-ul nu răspunde",
+            "intro": "Cât se mută termenele care curgeau cât site-ul nu putea fi accesat."
+          }
+        },
         "fillRecommended": "Completează valorile recomandate",
         "readOnly": "Termenele le schimbă Administratorul; tu vezi valorile în vigoare."
       },
@@ -6911,6 +6969,7 @@
         "intro": "Câte persoane se pot înscrie cu aceeași adresă de email la un eveniment, de exemplu o familie. Fiecare persoană își semnează singură declarația.",
         "field": "Maxim de înscrieri pe o adresă (pe eveniment)",
         "help": "Se numără doar înscrierile active ale adresei la eveniment; una anulată eliberează locul.",
+        "aside": "cel mult {people} pe adresă",
         "value": "Pe o adresă se pot înscrie cel mult {people} la un eveniment.",
         "save": "Salvează maximul",
         "saved": "Maximul de înscrieri pe o adresă a fost salvat.",
@@ -7018,6 +7077,10 @@
         "intro": "La trecerea programată (implicit), emailurile pleacă la următoarea verificare: în cel mult {day} ziua și {night} noaptea. «Imediat după cerere» le trimite în câteva secunde. Niciun email nu se pierde.",
         "field": "Emailurile pleacă",
         "help": "O ofertă de pe lista de așteptare pleacă oricum imediat. Oricât ar aștepta un email, termenul curge de când pleacă: locul ținut, oferta și linkurile nu pierd nimic.",
+        "aside": {
+          "scheduled": "la trecerea programată, în cel mult {wait}",
+          "immediate": "imediat după cerere"
+        },
         "option": {
           "scheduled": "La trecerea programată (în cel mult {wait}; recomandat)",
           "immediate": "Imediat după cerere"

@@ -1,5 +1,5 @@
 import { countForm, type CountForm } from "@/i18n/count-form";
-import type { Deadlines } from "./deadlines";
+import type { DeadlineKey, Deadlines } from "./deadlines";
 
 /**
  * A number of minutes, hours, days or weeks as words, in both languages (§377) — so that every
@@ -113,4 +113,37 @@ export function deadlineWords(
     checkin: leadPhrase(locale, deadlines.selfCheckinHours),
     horizon: daysPhrase(locale, deadlines.seriesHorizonDays),
   };
+}
+
+/**
+ * One deadline's current value in the house's words, for the closed line of its fold on «Termene»
+ * (§377 amended): "48 de ore", "30 de minute", "2 zile", "8 săptămâni" — the unit the deadline is
+ * counted in, said the way the sentences that state it say it (`hoursPhrase` for what runs against
+ * a clock, `leadPhrase` for a lead before the start, `daysPhrase` for a span of days).
+ *
+ * Zero is not a duration here: it means "none" for the deadlines that allow it and "race day only"
+ * for race week, which the catalogue words (`deadlines.shortZero`), so this returns `null` and the
+ * caller picks them. `verificationRetries` is a count of times, not a duration: its words agree
+ * with the number in the catalogue (`retryTimes`), so it is outside this function's keys.
+ */
+export function deadlineDuration(locale: string, key: Exclude<DeadlineKey, "verificationRetries">, value: number): string | null {
+  if (value === 0) return null;
+  switch (key) {
+    case "confirmationHours":
+    case "offerHours":
+    case "verificationRetryHours":
+    case "outageGraceMaxHours":
+      return hoursPhrase(locale, value);
+    case "holdMinutes":
+    case "familySittingMinutes":
+      return minutesPhrase(locale, value);
+    case "reminderHours":
+    case "lastCallHours":
+    case "selfCheckinHours":
+      return leadPhrase(locale, value);
+    case "raceWeekDays":
+    case "seriesHorizonDays":
+    case "publicListDays":
+      return daysPhrase(locale, value);
+  }
 }
