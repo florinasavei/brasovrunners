@@ -8,9 +8,9 @@ import { staffUsers } from "./staff-users";
  * row each. A member (`staff_users.member_tier_id`) holds at most one.
  *
  * **A label and its benefits, never a permission.** No door, no verb and no role reads a tier (the
- * owner's 2026-10-10 rule: grants are per person, not by a level). A tier is shown on the member's own
- * zone, on the public members' page, and it limits which of the partners' discount codes a member sees
- * (`member_discount_codes.tier_ids`) — nothing else.
+ * owner's 2026-10-10 rule: grants are per person, not by a level). A tier is the staff's label on the
+ * member's row (§NNN): only the staff see it, and it limits which of the partners' discount codes a member
+ * sees (`member_discount_codes.tier_ids`) — nothing else. No member and no visitor is shown a level.
  *
  * A name in each language and a description in each, both languages or neither (§352, checked in
  * `content/member-tiers/fields.ts`); `glyph` is a name from the tier glyph table
@@ -34,7 +34,7 @@ export const memberTiers = pgTable(
 
     /** Where the tier sits in the club's list, lowest first, from 1. */
     position: integer("position").notNull(),
-    /** Not offered when giving a tier and not on the public page; members who hold it keep it. */
+    /** Not offered when giving a tier; members who hold it keep it. */
     hidden: boolean("hidden").notNull().default(false),
 
     updatedByStaffUserId: uuid("updated_by_staff_user_id").references(() => staffUsers.id, { onDelete: "set null" }),

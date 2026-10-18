@@ -11,11 +11,9 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound, unstable_rethrow } from "next/navigation";
 import { routing, type Locale } from "@/i18n/routing";
 import type { PublicMembersPage } from "@/modules/content/members/page-settings";
-import type { TierView } from "@/modules/content/member-tiers/repository";
-import TiersSection from "@/modules/content/member-tiers/ui/TiersSection";
 import RichText from "@/modules/content/rich-text/ui/RichText";
 import { teamMetaDescription } from "@/modules/content/team/meta-description";
-import { cachedMembersPage, cachedMemberTiers } from "@/modules/public-cache/reads";
+import { cachedMembersPage } from "@/modules/public-cache/reads";
 import { pageAlternates, staticRouteUrls } from "@/modules/seo/alternates";
 import { canOpenMembersZone } from "@/modules/staff-identity/domain/roles";
 import { getCurrentAccount } from "@/modules/staff-identity/session";
@@ -47,17 +45,6 @@ async function pageOrNull(locale: Locale): Promise<PublicMembersPage | null> {
     unstable_rethrow(error);
     console.error("[members] the page did not answer; it stands with the platform's words", error);
     return null;
-  }
-}
-
-/** The levels the club named (§811), or none when the database cannot say: the page stands without the section, never without itself. */
-async function tiersOrNone(locale: Locale): Promise<readonly TierView[]> {
-  try {
-    return await cachedMemberTiers(locale);
-  } catch (error) {
-    unstable_rethrow(error);
-    console.error("[members] the levels did not answer; the page stands without them", error);
-    return [];
   }
 }
 
@@ -103,6 +90,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
  * rather than a door that opens on nothing. Accounts are made by the club, never here: a
  * participant never gets one (AGENTS.md §10.3), and a member is somebody the club added.
  *
+ * The page says nothing about member levels (§NNN): a level is the staff's label, which only decides
+ * which discount codes a member sees in the zone.
+ *
  * A Server Component with no island of its own but the button.
  */
 export default async function MembersPage({ params }: Props) {
@@ -113,7 +103,6 @@ export default async function MembersPage({ params }: Props) {
   const t = await getTranslations("Members");
   const page = await pageOrNull(locale);
   if (page && !page.published) notFound();
-  const tiers = await tiersOrNone(locale);
   const signInOpen = env.STAFF_AUTH_MODE !== "disabled";
   const signedIn = signInOpen && (await signedInMember());
 
@@ -133,9 +122,6 @@ export default async function MembersPage({ params }: Props) {
           {t("lead", { club: CLUB_NAME })}
         </Typography>
       )}
-
-      {/* «Nivelurile de membru» (§811): after the benefits, before the door; nothing while the club named no level. */}
-      <TiersSection tiers={tiers} />
 
       <Paper variant="outlined" component="section" aria-labelledby="members-door" sx={{ p: { xs: DENSITY.cardPadTop, sm: 2 } }} data-testid="members-door">
         <Stack spacing={1.5} sx={{ alignItems: "flex-start" }}>
