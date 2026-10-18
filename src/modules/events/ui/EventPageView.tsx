@@ -30,6 +30,8 @@ import DeclarationOffer from "@/modules/group-run-declarations/ui/DeclarationOff
 import GroupRunSafetyRules from "@/modules/group-run-declarations/ui/GroupRunSafetyRules";
 import { confirmationWindow } from "@/modules/registrations/domain/hold-deadlines";
 import type { parseInterestOutcome } from "@/modules/registrations/interest-box";
+import type { RsvpOutcome } from "@/modules/rsvp/rsvp-box";
+import RsvpBox from "@/modules/rsvp/ui/RsvpBox";
 import VolunteerCallout from "@/modules/volunteers/ui/VolunteerCallout";
 import RegistrationInterestForm from "@/modules/registrations/ui/RegistrationInterestForm";
 import RegistrationSteps from "@/modules/registrations/ui/RegistrationSteps";
@@ -69,6 +71,13 @@ export type EventPageVisit = {
   interestOutcome: ReturnType<typeof parseInterestOutcome>;
   /** When the render a corrected address is timed from was made (§146). */
   interestRenderedAt: Date;
+  /**
+   * «Vii?» (§NNN, «Vin!» part 1): whether the page offers the answer — `rsvpOffered`, decided by the page from the one rule — and
+   * how the typed form answered (`?vin=`). Absent in the preview before saving (§579): it takes an address and reads the public cache.
+   */
+  rsvpBox?: boolean;
+  rsvpOutcome?: RsvpOutcome | null;
+  rsvpRenderedAt?: Date;
   declaratie?: string;
   lista?: string;
   /**
@@ -233,6 +242,12 @@ export default async function EventPageView({
       {/* The way in to the registration lifecycle, or the sentence saying why there is none. */}
       {/* In the preview before saving (§579) the draft's door, its button disabled. */}
       <RegistrationCta event={event} now={now} previewDoor={previewDoor} />
+
+      {/* «Vii?» and «Vin (N)» (§NNN), where the registration card would stand on a turn-up event, at `#vin`: only while the page
+          decided the answer is offered (`rsvpOffered`), and never in the preview before saving (§579) or on a members' event (§552). */}
+      {visit?.rsvpBox && !membersOnly && (
+        <RsvpBox locale={locale} slug={slug} eventId={event.id} renderedAt={visit.rsvpRenderedAt ?? now} outcome={visit.rsvpOutcome ?? null} />
+      )}
 
       {/* "Tell me when registration opens" (§146), under the date, only while the window is ahead
           and the notice that describes it is approved. A corrected address is timed from the
