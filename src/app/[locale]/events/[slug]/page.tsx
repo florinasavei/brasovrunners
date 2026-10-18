@@ -16,10 +16,13 @@ import {
   cachedPublishedEventBySlug,
   cachedPublishedTranslations,
   cachedRouteElevation,
+  cachedRsvpDescribed,
 } from "@/modules/public-cache/reads";
 import { readRouteGpx } from "@/modules/events/domain/route-gpx";
 import { isStorageConfigured } from "@/modules/media/storage";
 import { parseInterestOutcome, parseInterestSince } from "@/modules/registrations/interest-box";
+import { rsvpOffered } from "@/modules/rsvp/domain/offered";
+import { parseRsvpOutcome } from "@/modules/rsvp/rsvp-box";
 import { openRoleNames } from "@/modules/volunteers/domain/volunteer";
 import { readVolunteerOffer } from "@/modules/volunteers/offer";
 import { CLUB_TIME_ZONE } from "@/i18n/dates";
@@ -62,6 +65,8 @@ type PublishedEvent = NonNullable<Awaited<ReturnType<typeof cachedPublishedEvent
 
 type EventQuery = {
   interest?: string | string[];
+  /** The «Vii?» box's outcome (§811): the typed answer's redirect. */
+  vin?: string | string[];
   since?: string | string[];
   lista?: string | string[];
   declaratie?: string | string[];
@@ -136,7 +141,7 @@ export default async function EventDetailPage({ params, query, canEdit = false, 
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
   const asked: EventQuery = (await query) ?? {};
-  const [interest, since, lista, declaratie] = [one(asked.interest), one(asked.since), one(asked.lista), one(asked.declaratie)];
+  const [interest, since, lista, declaratie, vin] = [one(asked.interest), one(asked.since), one(asked.lista), one(asked.declaratie), one(asked.vin)];
 
   const now = new Date();
   // The countdown and the day's words (§76, §78): the static page is made again at midnight (§549).
@@ -153,7 +158,7 @@ export default async function EventDetailPage({ params, query, canEdit = false, 
     `event:${locale}:${slug}`,
     async () => {
       const found = await cachedPublishedEventBySlug(locale, slug);
-      if (!found) return { event: null, interestBox: false };
+      if (!found) return { event: null, interestBox: false, rsvpBox: false };
       // "Tell me when registration opens" (§146) takes an address, and an address is taken only
       // under an approved privacy notice — the registration form's own rule (BR-REQ-053-01). One
       // read, only while there is a box to show. The box's own action asks the database again
@@ -162,7 +167,12 @@ export default async function EventDetailPage({ params, query, canEdit = false, 
         found.registrationMode === "INTERNAL" &&
         registrationState(found, now) === "NOT_YET_OPEN" &&
         (await cachedCurrentApprovedDocument("PRIVACY_NOTICE", locale, now)) !== undefined;
-      return { event: found, interestBox };
+      /*
+        «Vii?» (§811): offered only where `rsvpOffered` says so — the one rule the action asks again before it keeps an
+        address. The notice's description is read (cached, keyed by the clock) only for an event the club ticked; otherwise no read.
+      */
+      const rsvpBox = found.registrationMode === "NONE" && found.rsvpEnabled === true && rsvpOffered(found, now, await cachedRsvpDescribed(now));
+      return { event: found, interestBox, rsvpBox };
     },
     now,
   );
@@ -177,6 +187,9 @@ export default async function EventDetailPage({ params, query, canEdit = false, 
   const event = read.value.event ?? membersEvent ?? null;
   // No «Anunță-mă» on a members' event: its box is a public form, and a member is told by the zone.
   const interestBox = membersEvent ? false : read.value.interestBox;
+  // Nor «Vii?» on a members' event: its box is a public form (§552). A last good copy made before the field existed carries none.
+  // The start is asked here with the request's own clock, outside the loader: a copy made before the start must not draw the box after it.
+  const rsvpBox = membersEvent ? false : read.value.rsvpBox === true && event !== null && event.startsAt !== null && event.startsAt.getTime() > now.getTime();
   const membersOnly = membersEvent !== undefined;
   // An unknown slug, or one whose translation is still Draft or In review, is a 404 — never a
   // redirect to the other locale (BR-REQ-020-01 criterion 1, BR-REQ-040-02).
@@ -186,6 +199,9 @@ export default async function EventDetailPage({ params, query, canEdit = false, 
   await holdPageUntil([nextWallMidnight(now, event.timezone)], now);
 
   const interestOutcome = parseInterestOutcome(interest);
+  const rsvpOutcome = parseRsvpOutcome(vin);
+  // The box goes away at the start (the gate says "ahead"), not at the end: the static page is made again then (§549).
+  if (rsvpBox) await holdPageUntil([event.startsAt], now);
   /*
     «Căutăm voluntari: …» and «Vreau să fiu voluntar» (§754, §768): a short box that links to the volunteers' own page
     (`/evenimente/<slug>/voluntari`), drawn only where that page would answer 200 — the event takes volunteers, a role still
@@ -255,6 +271,10 @@ export default async function EventDetailPage({ params, query, canEdit = false, 
           interestOutcome,
           // A corrected address is timed from the render the person is correcting, not from the redirect.
           interestRenderedAt: (interestOutcome === "invalid" && parseInterestSince(since, now)) || now,
+          rsvpBox,
+          rsvpOutcome,
+          // A corrected address is timed from the render the person is correcting, as the interest box's is.
+          rsvpRenderedAt: ((rsvpOutcome === "invalid" || rsvpOutcome === "captcha") && parseInterestSince(since, now)) || now,
           declaratie,
           lista,
           volunteers: volunteerRoleNames.length > 0 ? { roleNames: volunteerRoleNames } : null,

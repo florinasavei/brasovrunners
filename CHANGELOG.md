@@ -8,6 +8,11 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V3.56-2026-10-18
+
+- **Member tiers («Niveluri de membru»)** — the club names its membership levels in «Pagini» → «Membri» (a name and a description in both languages, a symbol, an order, hidden or not, one «Salvează toate nivelurile»), gives each member one on «Echipa» (or one for all the members it adds), the zone shows the member's level under their name, the public members' page lists the levels, and a partner's discount code may be for some levels only; a level is a label and what the member gets, never a permission. Migration 0169. §811.
+- **«Vin!» on the events people turn up to** — the club ticks it on a weekly run (or any event with «Fără înscrieri»); a person types an address, presses «Da, vin» in one email, and from then on «Vin!» is one tap in that browser; the page shows how many come and the names of those who asked to be seen. Closed until the privacy notice describes it (`/admin/tasks`). §812.
+- **«Termene» in seven named folds, a glyph on every settings sub-tab** — the thirteen deadlines sit in «Confirmarea adresei», «Locul ținut și oferta», «Înainte de start», «După eveniment», «Seriile», «Înscrierea de familie» and «Când site-ul nu răspunde», each closed with its values in words and how many differ from the recommendation, one save under them; the limit per address and «Când pleacă emailurile» are cards of their own; «Emailuri», «Termene», «Aspect», «Costuri», «Anti-robot» and «Configurație» each have an icon, as do «Albume» and «Poze» in the gallery. §813.
 ## BR-V3.55-2026-10-17
 
 - **«Clasament» for a race, in the backoffice** — times typed or imported from a CSV by race number, ranked overall, by sex and by category, one «Salvează tot clasamentul»; made public by an Administrator only after the race has started and once the privacy notice **and the terms** describe the results (a new section 4 paragraph, a row each on «Sarcini»), with a name only for those who ticked the list under a notice that described the results. §808.

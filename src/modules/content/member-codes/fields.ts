@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { MEMBER_TIERS_MAX } from "@/modules/content/member-tiers/fields";
 import { refuseOneLanguage } from "@/shared/forms/both-languages";
 
 /**
@@ -69,6 +70,16 @@ export const discountCodeFieldsSchema = z
       .transform((value) => value.trim())
       .refine((value) => value === "" || isCalendarDay(value), "not a day")
       .transform((value) => (value === "" ? null : value)),
+    // «Pentru nivelurile» (§811): the member tiers that see the code; none ticked is every member. Ids only —
+    // whether each names a tier is the service's question, asked under a lock.
+    tierIds: z
+      .array(z.string())
+      .max(MEMBER_TIERS_MAX)
+      .optional()
+      .default([])
+      .transform((ids) => [...new Set(ids.map((id) => id.trim().toLowerCase()))])
+      // One issue on the chips' box, whichever id is wrong.
+      .refine((ids) => ids.every((id) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(id)), "not a member tier"),
   })
   .superRefine((fields, ctx) => {
     refuseOneLanguage(ctx, { ro: fields.descriptionRo, en: fields.descriptionEn }, { ro: ["descriptionRo"], en: ["descriptionEn"] }, "the description");

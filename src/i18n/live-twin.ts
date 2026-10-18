@@ -51,7 +51,7 @@ export const LIVE_SEGMENT = "live";
     (`?declaratie=`, §523), which the page judges itself.
 */
 /** An event page's own questions: the keys `EventDetailPage` reads. */
-const EVENT_PAGE_KEYS = ["lista", "interest", "since", "declaratie"] as const;
+const EVENT_PAGE_KEYS = ["lista", "interest", "since", "declaratie", "vin"] as const;
 /** The bare calendar's keys from before its period moved into the path: its twin still reads them. */
 const LEGACY_CALENDAR_KEYS = ["month", "year", "view"] as const;
 

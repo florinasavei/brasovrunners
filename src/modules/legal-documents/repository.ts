@@ -37,6 +37,7 @@ import {
   describesPromotionalMaterials,
   describesPromotionalMaterialsShared,
   describesResults,
+  describesRsvp,
   describesTeamPage,
   MINIMUM_AGE_MERGE_FIELD,
   mergeFieldsIn,
@@ -388,6 +389,17 @@ export async function noticeDescribesResults<T extends Record<string, unknown>>(
 }
 
 /**
+ * Whether the privacy notice in force describes the answer «Vin!» (§811, `describesRsvp`) — in every language, like
+ * `noticeDescribesResults`: one event page serves both languages, and a person in either was told only what their language's
+ * notice says. For the service, which asks again at every answer, and `/admin/tasks`; the event page reads the cached twin
+ * (`cachedRsvpDescribed`).
+ */
+export async function noticeDescribesRsvp<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<boolean> {
+  const notices = await Promise.all(routing.locales.map((locale) => findCurrentApprovedDocument(db, "PRIVACY_NOTICE", locale, now)));
+  return notices.every((notice) => notice !== undefined && describesRsvp(notice.body));
+}
+
+/**
  * Whether the privacy notice in force describes what a volunteer says about themselves (§765,
  * `describesVolunteerProfile`) — in every language, like `noticeDescribesVolunteers`. For the public sign-up (which
  * form it takes, asked again at every post), the editor's card and `/admin/tasks`; the event page reads the cached
@@ -635,6 +647,16 @@ async function findFirstNoticeVersionDescribing<T extends Record<string, unknown
  */
 export async function findFirstResultsNoticeVersion<T extends Record<string, unknown>>(db: Database<T>): Promise<number | null> {
   return findFirstNoticeVersionDescribing(db, describesResults);
+}
+
+/**
+ * The lowest version of an approved, not withdrawn privacy notice that describes the answer «Vin!» in **every** language
+ * (`describesRsvp`), or null when none does — `findFirstResultsNoticeVersion`'s twin (§811, the §421 rule). An answer records
+ * the notice it was given under (`event_rsvps.privacy_notice_version`); a name is shown only for one given under this version
+ * or a later one — a tick under an older notice agreed to nothing that described «Vin!».
+ */
+export async function findFirstRsvpNoticeVersion<T extends Record<string, unknown>>(db: Database<T>): Promise<number | null> {
+  return findFirstNoticeVersionDescribing(db, describesRsvp);
 }
 
 /**

@@ -119,7 +119,7 @@ export async function listStaffUsers<T extends Record<string, unknown>>(
 
 export async function insertStaffUser<T extends Record<string, unknown>>(
   db: Database<T>,
-  input: { email: string; displayName: string; role: StaffRole; preferredLocale?: "ro" | "en" },
+  input: { email: string; displayName: string; role: StaffRole; preferredLocale?: "ro" | "en"; memberTierId?: string | null },
 ): Promise<StaffUser> {
   const [row] = await db
     .insert(staffUsers)
@@ -128,6 +128,7 @@ export async function insertStaffUser<T extends Record<string, unknown>>(
       displayName: input.displayName,
       role: input.role,
       preferredLocale: input.preferredLocale ?? "ro",
+      memberTierId: input.memberTierId ?? null,
     })
     .returning();
   return row;
@@ -222,6 +223,27 @@ export async function recordFirstSignIn<T extends Record<string, unknown>>(
     .where(eq(staffUsers.id, id))
     .returning();
   return row;
+}
+
+/**
+ * A row's role and member tier, read under the row's lock in the caller's transaction (§811): giving or
+ * clearing a level and a role change (which clears it) take the same lock, so they run one after the other.
+ */
+export async function lockStaffUserTier<T extends Record<string, unknown>>(
+  db: Database<T>,
+  id: string,
+): Promise<Pick<StaffUser, "id" | "role" | "memberTierId"> | undefined> {
+  const [row] = await db
+    .select({ id: staffUsers.id, role: staffUsers.role, memberTierId: staffUsers.memberTierId })
+    .from(staffUsers)
+    .where(eq(staffUsers.id, id))
+    .for("update");
+  return row;
+}
+
+/** A member's level given or cleared (`null`). The caller holds the row's lock and has checked the role and the level. */
+export async function setStaffUserTier<T extends Record<string, unknown>>(db: Database<T>, id: string, memberTierId: string | null, now: Date): Promise<void> {
+  await db.update(staffUsers).set({ memberTierId, updatedAt: now }).where(eq(staffUsers.id, id));
 }
 
 /**

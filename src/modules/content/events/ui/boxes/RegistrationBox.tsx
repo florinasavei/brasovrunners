@@ -47,11 +47,13 @@ import {
 } from "../box-summaries";
 import { countForm } from "@/i18n/count-form";
 import OnlyForMode from "../OnlyForMode";
+import OnlyForTurnUp from "../OnlyForTurnUp";
 import OnlyForType from "../OnlyForType";
 import WaitlistLimitOnly from "../WaitlistLimitOnly";
 import WallTimeField from "../WallTimeField";
 import { BoxNote, type BoxProps, type LanguageEntry, RiskLine, SettingsReadOnly, summaryWords } from "./box-kit";
 import { asksHealthNoteOnForm } from "./ConditionsGroup";
+import RsvpAnswersCard, { type RsvpAnswerRow } from "./RsvpAnswersCard";
 import DeclarationCard, { declarationLine } from "./DeclarationCard";
 import ProgrammeBox from "./ProgrammeBox";
 import StartListBox from "./StartListBox";
@@ -124,7 +126,13 @@ export default async function RegistrationBox({
   now,
   clubDeadlines,
   windowHolds = null,
+  rsvp = null,
 }: BoxProps & {
+  /**
+   * «Răspunsuri „Vin!”» (§811): the event's answers, read by the page for this role — the counts always, the rows (with the addresses)
+   * only for a role that reads the registrations. Null on the create form, which has none.
+   */
+  rsvp?: { counts: { confirmed: number; unconfirmed: number }; rows: readonly RsvpAnswerRow[] | null } | null;
   /** Every language's row, for the programme's and the rules' texts (§760: their cards are in here). */
   languages: readonly LanguageEntry[];
   /**
@@ -482,6 +490,22 @@ export default async function RegistrationBox({
               </OnlyForMode>
             </Stack>
           </OnlyForType>
+
+          {/*
+            «Acceptă răspunsuri „Vin!” din pagină, calendar și email» (§811, «Vin!» part 1): the club's tick on an event one simply
+            turns up to — a type that takes no registration, or one that does with «Fără înscrieri» chosen (`OnlyForTurnUp`). The
+            marker says the form carried the box, so an unticked one reads as «off», not as «not edited» (§554). The notice must
+            describe the answers before the page offers them (`/admin/tasks`, `rsvpNotice`): the tick stays on meanwhile.
+          */}
+          <OnlyForTurnUp registeringTypes={EVENT_TYPES.filter(takesRegistrations)} initialType={initialType} initialMode={initialMode}>
+            <Stack spacing={1}>
+              <input type="hidden" name="event.rsvpEnabled.present" value="1" />
+              <CheckboxField name="event.rsvpEnabled" defaultChecked={event?.rsvpEnabled ?? false}>
+                {t("editor.rsvpEnabled")}
+              </CheckboxField>
+              <BoxNote>{t("editor.rsvpEnabledHelp")}</BoxNote>
+            </Stack>
+          </OnlyForTurnUp>
         </Stack>
   );
 
@@ -568,6 +592,8 @@ export default async function RegistrationBox({
       <Stack spacing={2}>
         {/* 6.1 — how people register, and the registration's life. A reader is told once that the settings are not theirs (§358). */}
         {mayEditSettings ? registrationFields : <SettingsReadOnly />}
+        {/* Right under the «Vin!» tick, which ends the block above (§811): who said they come — read-only, only when there are answers. */}
+        {rsvp && <RsvpAnswersCard counts={rsvp.counts} rows={rsvp.rows} locale={locale} timeZone={zone} />}
         {/* 6.2 — what a participant agrees to: the rules, with the minimum age and what the form asks, then the declaration (§505, §448, §557, §799). */}
         {rules}
         {declarationCard}

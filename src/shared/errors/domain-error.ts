@@ -65,7 +65,11 @@ export type DomainErrorCode =
   // «Clasamentul e public» ticked before the race has started (§808): the notice says the results appear only after the race. Entering them stays open.
   | "RESULTS_NOT_STARTED"
   // Results entered, imported or published for an event that is not a race (§808): the page says so, and so does the save.
-  | "RESULTS_NOT_OPEN";
+  | "RESULTS_NOT_OPEN"
+  // A member tier deleted while members hold it (§811): give them another level first. The action adds how many.
+  | "MEMBER_TIER_HAS_MEMBERS"
+  // A member tier deleted while a discount code is for that tier alone (§811): an empty limit means every member, so the code would open to all.
+  | "MEMBER_TIER_IN_CODES";
 
 export class DomainError extends Error {
   readonly code: DomainErrorCode;

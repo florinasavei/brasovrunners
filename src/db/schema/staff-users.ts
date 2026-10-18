@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm";
-import { check, pgEnum, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { type AnyPgColumn, check, pgEnum, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import { locale } from "./locale";
+import { memberTiers } from "./member-tiers";
 
 /**
  * The three staff roles of AGENTS.md §10.2. A database enum, so a row with role `SUPERUSER`
@@ -44,6 +45,13 @@ export const staffUsers = pgTable(
     displayName: text("display_name").notNull(),
     preferredLocale: locale("preferred_locale").notNull().default("ro"),
     role: staffRole("role").notNull(),
+
+    /**
+     * The member's level (§811, «Niveluri de membru»): a label and its benefits, never a permission —
+     * no role, door or verb reads it. Null is simply «Membru». Given to a `MEMBER` row only (the
+     * service refuses the rest); a deleted tier is refused while anyone holds it, `SET NULL` the net.
+     */
+    memberTierId: uuid("member_tier_id").references((): AnyPgColumn => memberTiers.id, { onDelete: "set null" }),
 
     /** When an Administrator added this person. The invitation is the row itself. */
     invitedAt: timestamp("invited_at", { withTimezone: true }).notNull().defaultNow(),

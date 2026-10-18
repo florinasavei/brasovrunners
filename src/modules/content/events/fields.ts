@@ -808,6 +808,12 @@ export const eventFieldsSchema = z
      */
     showRouteProfile: z.boolean().optional(),
     /**
+     * «Acceptă răspunsuri „Vin!” din pagină, calendar și email» (§811): whether a turn-up event takes the answer «Vin!». Absent
+     * means this caller is not editing it (the kit's discipline, §554); the editor posts it with a marker. Written off by any
+     * registration mode but "Fără înscrieri" (`service.ts#hiddenByMode`).
+     */
+    rsvpEnabled: z.boolean().optional(),
+    /**
      * «Traseul»'s GPX (§718): the editor's hidden input — the JSON the upload answered
      * (`/api/admin/route-gpx`), or "" after «Scoate». Absent means this caller is not editing it.
      * Anything that is not a GPX the upload wrote is refused; the save also asks that it be this

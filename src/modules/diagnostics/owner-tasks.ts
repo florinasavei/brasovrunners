@@ -59,6 +59,7 @@ export type TaskId =
   | "listSocialsNotice"
   | "listNumbersNotice"
   | "resultsNotice"
+  | "rsvpNotice"
   | "resultsTerms"
   | "invitationsNotice"
   | "promoNotice"
@@ -115,6 +116,7 @@ export const TASK_KIND: Record<TaskId, TaskKind> = {
   listSocialsNotice: "text",
   listNumbersNotice: "text",
   resultsNotice: "text",
+  rsvpNotice: "text",
   resultsTerms: "text",
   invitationsNotice: "text",
   promoNotice: "text",
@@ -247,6 +249,13 @@ export type OwnerTaskInputs = {
    * page shows none; the club may enter and rank them in the backoffice meanwhile.
    */
   resultsDescribed: boolean;
+  /**
+   * Does the notice in force, in every language, describe the answer «Vin!» (§811, `noticeDescribesRsvp`)? Until it does, no event page
+   * offers the answer or shows a count, whatever the club ticked.
+   */
+  rsvpDescribed: boolean;
+  /** How many upcoming turn-up events the club ticked «Acceptă răspunsuri „Vin!”» on (`countRsvpEvents`): the row waits only while there is one. */
+  rsvpEvents: number;
   /**
    * Do the terms in force, in every language, describe a race's published results (§808, `termsDescribeResults`)? The older terms
    * promised «te vom întreba separat» before any named result, so until the club approves terms that name `{{results}}` an Administrator
@@ -597,6 +606,17 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
       owner: "club",
       state: input.resultsDescribed ? "done" : "open",
     });
+    /*
+      The answer «Vin!» on a turn-up event (§811), the volunteers' shape: open while an upcoming event is ticked and the notice in force
+      does not name `{{rsvp}}` (the club ticked the box and the page shows nothing: it must hear why), done by itself the day a notice
+      naming it takes effect, and absent while no event is ticked and the notice is silent. Never blocking: the tick stays on.
+    */
+    if (input.rsvpDescribed || input.rsvpEvents > 0) {
+      push("rsvpNotice", {
+        owner: "club",
+        state: input.rsvpDescribed ? "done" : "open",
+      });
+    }
     /*
       The invitations by email (§647), the same shape: open, never blocking — nothing is refused, the
       club may invite while the notice is the older one, as it registers another person on one's own

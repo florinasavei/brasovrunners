@@ -8,6 +8,8 @@ import { emailOutbox } from "@/db/schema/email-outbox";
 import { eventInvitations } from "@/db/schema/event-invitations";
 import { eventCheckpoints } from "@/db/schema/event-checkpoints";
 import { eventResults } from "@/db/schema/event-results";
+import { eventRsvps } from "@/db/schema/event-rsvps";
+import { personSessions } from "@/db/schema/person-sessions";
 import { eventTodos } from "@/db/schema/event-todos";
 import { eventVolunteerCategories, eventVolunteerRoles, eventVolunteers } from "@/db/schema/event-volunteers";
 import { eventTranslations, events } from "@/db/schema/events";
@@ -32,6 +34,7 @@ import { staffUsers } from "@/db/schema/staff-users";
 import { teamMembers, teamPageBoxes } from "@/db/schema/team";
 import { faqQuestions } from "@/db/schema/faq";
 import { memberDiscountCodes } from "@/db/schema/member-discount-codes";
+import { memberTiers } from "@/db/schema/member-tiers";
 import { shopOrders, shopProducts, shopProductVariants } from "@/db/schema/shop";
 import { unreachableWindows } from "@/db/schema/unreachable-windows";
 import { forgetCachedDeadlines } from "@/modules/deadlines/memo";
@@ -121,6 +124,8 @@ export async function resetTables(db: TestDatabase): Promise<void> {
   await db.delete(faqQuestions);
   // The members' discount codes (§552) reference only staff rows.
   await db.delete(memberDiscountCodes);
+  // The member tiers (§811): staff rows point at them with SET NULL, so they go with the codes, before the staff.
+  await db.delete(memberTiers);
   // The members' shop (§683): orders name a variant and a product; products reference a photo — all before the assets.
   await db.delete(shopOrders);
   await db.delete(shopProductVariants);
@@ -132,6 +137,9 @@ export async function resetTables(db: TestDatabase): Promise<void> {
   await db.delete(mediaAssets);
   // An event's results (§808) cascade from it and point at its registrations: before both.
   await db.delete(eventResults);
+  // The answers «Vin!» (§811) cascade from their event, their links from them; the remembered browsers reference nothing.
+  await db.delete(eventRsvps);
+  await db.delete(personSessions);
   // An event's own to-dos (§749) cascade from it; deleted first like the translations.
   await db.delete(eventTodos);
   // An event's volunteers (§754) cascade from it, and their role is `RESTRICT`: the people first, then the roles.

@@ -25,6 +25,7 @@ import {
   noticeDescribesEventInvitations,
   noticeDescribesListNumbers,
   noticeDescribesResults,
+  noticeDescribesRsvp,
   noticeDescribesListSocials,
   noticeDescribesGmailFallback,
   noticeDescribesPromotionalMaterials,
@@ -52,6 +53,7 @@ import {
 import { branchesSwitchedOn } from "@/modules/feedback/domain/branches";
 import { readFeedbackSettings } from "@/modules/feedback/settings";
 import { countVisibleProducts } from "@/modules/content/shop/repository";
+import { countRsvpEvents } from "@/modules/rsvp/rsvp";
 import { countVolunteeringEvents } from "@/modules/volunteers/volunteers";
 import {
   countTasks,
@@ -483,6 +485,9 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
       listNumbersDescribed: await noticeDescribesListNumbers(db, now),
       // §808: a race's published results, described by the notice in force; only making them public waits for it.
       resultsDescribed: await noticeDescribesResults(db, now),
+      // §811: the answer «Vin!», described by the notice in force; nothing is refused, the page simply shows nothing until then.
+      rsvpDescribed: await noticeDescribesRsvp(db, now),
+      rsvpEvents: await countRsvpEvents(db, now),
       // §808: the terms in force describe them too — the older ones promised to ask separately before a named result.
       resultsTermsDescribed: await termsDescribeResults(db, now),
       // §647: the invitations by email, described by the notice in force; nothing waits for it.

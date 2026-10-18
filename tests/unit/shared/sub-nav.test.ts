@@ -119,6 +119,9 @@ describe("§360 one look for every backoffice sub-navigation", () => {
     const gallery = read("src/modules/content/gallery/ui/GallerySubNav.tsx");
     expect(gallery).toContain('from "@/shared/ui/SubNav"');
     expect(gallery).not.toContain("GlyphButtonLink");
+    // Each of its two tabs wears a picture (§318 as amended), by name from the cards' table.
+    expect(gallery).toContain('glyph: "albums"');
+    expect(gallery).toContain('glyph: "pictures"');
     for (const file of [
       "src/app/[locale]/admin/tasks/page.tsx",
       "src/modules/notifications/ui/ParticipantEmailsPanel.tsx",

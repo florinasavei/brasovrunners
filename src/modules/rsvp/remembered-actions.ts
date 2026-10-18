@@ -1,0 +1,95 @@
+"use server";
+
+import { cookies } from "next/headers";
+import { getDb } from "@/db/client";
+import type { Locale } from "@/i18n/routing";
+import { findPublishedEventBySlug } from "@/modules/events/repository";
+import { noticeDescribesRsvp } from "@/modules/legal-documents/repository";
+import { forgetPerson, readRememberedPerson, refreshPerson } from "@/modules/person-session/session";
+import { identityOf } from "./domain/identity";
+import { rsvpOffered } from "./domain/offered";
+import { answerRsvp, countRsvps, hasConfirmedRsvp, withdrawRsvp } from "./rsvp";
+
+/**
+ * The remembered browser's one-tap «Vin!» (§811, «Vin!» part 1; the owner, 2026-10-18: «I want the flow to be super easy»).
+ *
+ * The event page is static for everybody (§333, §549); the one island that knows a browser is remembered
+ * (`ui/RsvpRemembered.tsx`) calls these. Each reads the `httpOnly` cookie itself (`person-session/`): the island never sees
+ * the secret, only what these return — and a press is only ever as strong as that cookie. An identity from the cookie is
+ * `source: "remembered"`, verified (`domain/identity.ts`), so the answer is counted at once, no email.
+ *
+ * A "use server" file exports only async functions; the shapes are in `RsvpIslandState`'s own module.
+ */
+
+export type RsvpIslandState =
+  /** The cookie is missing, expired or forgotten: the typed form stands. */
+  | { remembered: false }
+  /** Remembered, but the event takes no answers now (or the page is stale): the island draws nothing. */
+  | { remembered: true; offered: false }
+  | { remembered: true; offered: true; going: boolean; count: number };
+
+async function stateFor(slug: string, locale: Locale, now: Date): Promise<RsvpIslandState> {
+  const db = getDb();
+  const jar = await cookies();
+  const person = await readRememberedPerson(db, jar, now);
+  if (!person) return { remembered: false };
+  const event = await findPublishedEventBySlug(db, locale, slug);
+  if (!event || !rsvpOffered(event, now, await noticeDescribesRsvp(db, now))) return { remembered: true, offered: false };
+  return {
+    remembered: true,
+    offered: true,
+    going: await hasConfirmedRsvp(db, event.id, person.canonicalEmail),
+    count: await countRsvps(db, event.id),
+  };
+}
+
+function localeOf(value: string): Locale {
+  return value === "en" ? "en" : "ro";
+}
+
+/** What the island asks when it mounts with a hint cookie: whether this browser is still remembered, and where it stands. */
+export async function rsvpStateAction(slug: string, locale: string): Promise<RsvpIslandState> {
+  return stateFor(slug, localeOf(locale), new Date());
+}
+
+/** «Vin!» in one tap: the remembered address's answer, counted at once. `showName` is the person's tick on this press. */
+export async function rsvpGoAction(slug: string, locale: string, showName: boolean): Promise<RsvpIslandState> {
+  const now = new Date();
+  const lang = localeOf(locale);
+  const db = getDb();
+  const jar = await cookies();
+  const person = await readRememberedPerson(db, jar, now);
+  if (!person) return { remembered: false };
+  const event = await findPublishedEventBySlug(db, lang, slug);
+  if (!event || !rsvpOffered(event, now, await noticeDescribesRsvp(db, now))) return { remembered: true, offered: false };
+  await answerRsvp(
+    db,
+    event.id,
+    identityOf("remembered", { email: person.email, displayName: person.displayName, showName: showName && person.displayName !== null, locale: lang }),
+    now,
+  );
+  // An answering browser is good for another year.
+  await refreshPerson(db, jar, person, now);
+  return stateFor(slug, lang, now);
+}
+
+/** «Nu mai vin» in one tap. Never gated by the notice or the tick (a person may always take an answer back). */
+export async function rsvpLeaveAction(slug: string, locale: string): Promise<RsvpIslandState> {
+  const now = new Date();
+  const lang = localeOf(locale);
+  const db = getDb();
+  const jar = await cookies();
+  const person = await readRememberedPerson(db, jar, now);
+  if (!person) return { remembered: false };
+  const event = await findPublishedEventBySlug(db, lang, slug);
+  if (event) {
+    await withdrawRsvp(db, { eventId: event.id, identity: identityOf("remembered", { email: person.email, showName: false, locale: lang }) }, now);
+    await refreshPerson(db, jar, person, now);
+  }
+  return stateFor(slug, lang, now);
+}
+
+/** «Nu sunt eu»: this browser is forgotten (its row deleted, both cookies cleared) and the typed form comes back. */
+export async function rsvpForgetAction(): Promise<void> {
+  await forgetPerson(getDb(), await cookies());
+}

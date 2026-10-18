@@ -228,6 +228,12 @@ export type AuditAction =
    * (§322) — the answer to an access request (art. 15 GDPR). Counts only in the metadata.
    */
   | "participant.data_exported"
+  /**
+   * The answers «Vin!» and the remembered browsers of one address erased by an Administrator on the person's request (§811, art. 17
+   * GDPR) — `{ answers, browsers }`, the counts, never the address or a name. The only audit row «Vin!» has: nothing else here is
+   * something the staff did (a person answers and withdraws on their own).
+   */
+  | "participant.rsvps_erased"
   /** The outbox drained by hand from the backoffice, within the day's allowance (`DECISIONS.md` §80). */
   | "outbox.sent_by_staff"
   /**
@@ -652,6 +658,17 @@ export type AuditAction =
   | "member_code.moved"
   | "member_code.deleted"
   /**
+   * «Niveluri de membru» (§811): a level added, written (which parts, never the words), moved,
+   * hidden or shown again, or deleted; and a member given a level or freed of it. The row's id and the
+   * shape of the change — never a name, a description or a member's name or address.
+   */
+  | "member_tier.added"
+  | "member_tier.edited"
+  | "member_tier.moved"
+  | "member_tier.deleted"
+  | "staff.member_tier.set"
+  | "staff.member_tier.cleared"
+  /**
    * «Magazin» — the members' shop (§683): a product added, written, moved, archived (it had orders)
    * or deleted; the shop's settings saved; an order placed by a member, marked paid, handed over or
    * cancelled; the orders' CSV downloaded. The row's id and the shape of the change — never a title,
@@ -726,6 +743,8 @@ export type RecordAuditInput = {
     | "staff_user"
     // `member_discount_code` for a code of the members' zone (§552).
     | "member_discount_code"
+    // `member_tier` for a level of the members' zone (§811).
+    | "member_tier"
     // `team_page_box` for a box under the chart of «Echipa» (§691).
     | "team_page_box"
     // `shop_product` and `shop_order` for the members' shop (§683).

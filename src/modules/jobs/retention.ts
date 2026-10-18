@@ -4,6 +4,7 @@ import { declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import { emailActionTokens } from "@/db/schema/email-action-tokens";
 import { eventInvitations } from "@/db/schema/event-invitations";
 import { eventResults } from "@/db/schema/event-results";
+import { eventRsvps } from "@/db/schema/event-rsvps";
 import { eventVolunteers } from "@/db/schema/event-volunteers";
 import { events } from "@/db/schema/events";
 import { participants } from "@/db/schema/participants";
@@ -12,6 +13,7 @@ import { emailOutbox } from "@/db/schema/email-outbox";
 import { groupRunDeclarations } from "@/db/schema/group-run-declarations";
 import { jobRuns } from "@/db/schema/job-runs";
 import { newsletterSubscribers, newsletterTokens } from "@/db/schema/newsletter";
+import { personSessions } from "@/db/schema/person-sessions";
 import { rateLimitBuckets } from "@/db/schema/rate-limit";
 import type { Database } from "@/db/types";
 import { scrubCorrectedAnswerValues, scrubRegistrationsFromAudit } from "@/modules/audit/repository";
@@ -41,6 +43,8 @@ import { RETENTION_PERIODS } from "./domain/retention-periods";
  *     unconfirmed registrations        30 days after the address lapsed unconfirmed
  *     registrations and declarations   3 years after the event's start, then the participant
  *     a race's results                 3 years after the race, with its registrations (§808)
+ *     an answer «Vin!»                 30 days after the event's end; 7 days unconfirmed; at once if cancelled (§811)
+ *     a remembered browser             1 year from its last answer (§811)
  *     audit log                        3 years
  *
  * **`privacy-notice.ts` §7 states these; change both together.** The notice is what the club
@@ -148,6 +152,10 @@ export const RETENTION = {
   groupRunIdDocumentDaysAfterEvent: GROUP_RUN_DECLARATION_ID_DOCUMENT_DAYS,
   /** A volunteer's offer goes thirty days after the event's start (§754); the privacy notice says exactly this. */
   volunteerDaysAfterEvent: RETENTION_PERIODS.volunteerDaysAfterEvent,
+  /** An answer «Vin!» goes thirty days after the event's end (§811); the privacy notice says exactly this. */
+  rsvpDaysAfterEvent: RETENTION_PERIODS.rsvpDaysAfterEvent,
+  /** …and seven days after it was typed when its address never used the emailed link. */
+  rsvpUnconfirmedDays: RETENTION_PERIODS.rsvpUnconfirmedDays,
   /** The log of staff actions: three years, as the notice says. */
   auditLogYears: 3,
 } as const;
@@ -180,6 +188,10 @@ export type PruneCounts = {
   volunteers: number;
   /** A race's results rows deleted with its registrations, three years after the race (§808). */
   results: number;
+  /** Answers «Vin!» gone: thirty days after the event, seven unconfirmed, a cancelled event's at once (§811). */
+  rsvps: number;
+  /** Remembered browsers past their year (§811). */
+  personSessions: number;
 };
 
 /**
@@ -202,6 +214,8 @@ export const PRUNE_STEPS = [
   "invitations",
   "volunteers",
   "event-results",
+  "rsvps",
+  "person-sessions",
 ] as const;
 export type PruneStep = (typeof PRUNE_STEPS)[number];
 
@@ -280,6 +294,8 @@ export async function pruneExpiredRows<T extends Record<string, unknown>>(
     invitations: 0,
     volunteers: 0,
     results: 0,
+    rsvps: 0,
+    personSessions: 0,
   };
   const failures: PruneFailure[] = [];
 
@@ -660,6 +676,37 @@ export async function pruneExpiredRows<T extends Record<string, unknown>>(
     counts.results = deleted.length;
   });
 
+  /*
+    The answer «Vin!» (§811): an address and, if the person ticked it, a name — kept to count and show who comes, and for nothing else.
+    Three windows, one statement (`event_rsvp_tokens` go with their answer, `on delete cascade`): thirty days after the event's end (its
+    start when it has none), seven days after the typing for an answer whose address never used the emailed link, and at once — at the next
+    run — for an event that was cancelled. The privacy notice's section 7 says exactly this. The row's own age is NOT asked for the
+    first window, unlike the volunteers': an answer can only be given before the start, so it is never newer than the event. Nothing
+    public shows a cancelled or finished event's count (the gate is closed), so no cache needs telling.
+  */
+  await step("rsvps", async (tx) => {
+    const finished = tx
+      .select({ id: events.id })
+      .from(events)
+      .where(or(eq(events.eventStatus, "CANCELLED"), sql`coalesce(${events.endsAt}, ${events.startsAt}) < ${daysBefore(now, RETENTION.rsvpDaysAfterEvent).toISOString()}::timestamptz`));
+    const deleted = await tx
+      .delete(eventRsvps)
+      .where(
+        or(
+          inArray(eventRsvps.eventId, finished),
+          and(isNull(eventRsvps.confirmedAt), lt(eventRsvps.createdAt, daysBefore(now, RETENTION.rsvpUnconfirmedDays))),
+        ),
+      )
+      .returning({ id: eventRsvps.id });
+    counts.rsvps = deleted.length;
+  });
+
+  /* A remembered browser (§811) is good for a year from its last answer; past it the row is a hash nobody can present any more. */
+  await step("person-sessions", async (tx) => {
+    const deleted = await tx.delete(personSessions).where(lt(personSessions.expiresAt, now)).returning({ id: personSessions.id });
+    counts.personSessions = deleted.length;
+  });
+
   return { ...counts, failures };
 }
 
@@ -683,7 +730,9 @@ export function totalPruned(counts: PruneCounts): number {
     counts.newsletter +
     counts.invitations +
     counts.volunteers +
-    counts.results
+    counts.results +
+    counts.rsvps +
+    counts.personSessions
   );
 }
 

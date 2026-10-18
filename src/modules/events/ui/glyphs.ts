@@ -35,6 +35,7 @@ import type { ComponentType } from "react";
 import type { CheckpointKind } from "@/modules/event-checkpoints/domain/checkpoint";
 import type { EventSurface, EventType } from "../domain/event-type";
 import { DIFFICULTY_ICONS, DIFFICULTY_LEVEL_ICONS } from "./difficulty-glyphs";
+import { TIER_GLYPH } from "./tier-glyphs";
 import type { DifficultyBand } from "../domain/difficulty";
 import RoadIcon from "./RoadIcon";
 
@@ -146,6 +147,8 @@ export const GLYPHS = {
   ...prefixed("difficulty", DIFFICULTY_LEVEL_ICONS),
   ...prefixed("cost", COST_GLYPH),
   ...prefixed("checkpoint", CHECKPOINT_GLYPH),
+  // A member's level (§811), the club's pick from a closed set: `tier:star`, `tier:medal`… (`tier-glyphs.ts`).
+  ...prefixed("tier", TIER_GLYPH),
   special: AutoAwesomeIcon,
   // The repeat chip on a listing card (§486) — the single date of a series, the series card and
   // the featured card alike: a wheel of arrows, «ca o rotiță» (the owner), not the calendar

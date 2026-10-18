@@ -1142,6 +1142,20 @@
       "when": 1792255034313,
       "tag": "0167_event_results_name_agreed",
       "breakpoints": true
+    },
+    {
+      "idx": 163,
+      "version": "7",
+      "when": 1792317999595,
+      "tag": "0168_rsvp_core",
+      "breakpoints": true
+    },
+    {
+      "idx": 164,
+      "version": "7",
+      "when": 1792319896409,
+      "tag": "0169_member_tiers",
+      "breakpoints": true
     }
   ]
 }

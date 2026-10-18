@@ -152,7 +152,8 @@ export async function listGroupRunDeclarations<T extends Record<string, unknown>
     .from(groupRunDeclarations)
     .leftJoin(staffUsers, eq(staffUsers.id, groupRunDeclarations.retentionHoldByStaffUserId))
     .where(inArray(groupRunDeclarations.eventId, dates))
-    .orderBy(asc(groupRunDeclarations.acceptedAt));
+    // Two signatures accepted at the same instant are listed by name, then by id: the tie was left to the planner, and a wider `staff_users` row (§811) turned the join around.
+    .orderBy(asc(groupRunDeclarations.acceptedAt), asc(groupRunDeclarations.typedName), asc(groupRunDeclarations.id));
   return rows.map(({ seriesKey: key, ...row }) => ({ ...row, series: key !== null }));
 }
 

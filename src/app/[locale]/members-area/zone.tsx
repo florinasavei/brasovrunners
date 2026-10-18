@@ -18,6 +18,8 @@ import { canOpenMembersZone } from "@/modules/staff-identity/domain/roles";
 import { getCurrentAccount } from "@/modules/staff-identity/session";
 import { isDatabaseAwayError } from "@/modules/resilience/domain/database-away";
 import { readMembersZone } from "@/modules/content/members/page-settings";
+import { findMemberTier, type TierView, tierViewOf } from "@/modules/content/member-tiers/repository";
+import TierBadge from "@/modules/content/member-tiers/ui/TierBadge";
 import type { RichTextDoc } from "@/modules/content/rich-text/domain/schema";
 import RichText from "@/modules/content/rich-text/ui/RichText";
 import { memberHasOrders } from "@/modules/content/shop/repository";
@@ -108,17 +110,33 @@ async function shopTabShown(accountId: string, now: Date): Promise<boolean> {
   }
 }
 
-/** What the frame shows around a part: the club's words above the tabs, and whether «Magazin» is one of them. */
-export type FrameParts = { words: RichTextDoc | null | "away"; shop: boolean };
+/**
+ * The member's own level (§811) in this language, or null: no level, a level deleted since, or the database away (§447).
+ * A label and its benefits — read to draw a badge and to filter the codes, never to open or refuse anything.
+ */
+async function tierOrNone(tierId: string | null, locale: Locale): Promise<TierView | null> {
+  if (tierId === null) return null;
+  try {
+    const tier = await findMemberTier(getDb(), tierId);
+    return tier ? tierViewOf(tier, locale) : null;
+  } catch (error) {
+    unstable_rethrow(error);
+    if (!isDatabaseAwayError(error)) throw error;
+    return null;
+  }
+}
+
+/** What the frame shows around a part: the club's words above the tabs, whether «Magazin» is one of them, and the member's level. */
+export type FrameParts = { words: RichTextDoc | null | "away"; shop: boolean; tier: TierView | null };
 
 /**
  * Read once per page, by the page, because the frame is drawn synchronously: the club's words for
  * its members (every tab shows them) and the tab list. The shop's own page passes `shop`: it reads
  * what decides the tab itself, in the same round as these (§715), so the frame does not ask twice.
  */
-export async function frameParts(account: Pick<Account, "id">, locale: Locale, now: Date, shop?: boolean): Promise<FrameParts> {
-  const [words, shown] = await Promise.all([zoneOrAway(locale), shop ?? shopTabShown(account.id, now)]);
-  return { words, shop: shown };
+export async function frameParts(account: Pick<Account, "id" | "memberTierId">, locale: Locale, now: Date, shop?: boolean): Promise<FrameParts> {
+  const [words, shown, tier] = await Promise.all([zoneOrAway(locale), shop ?? shopTabShown(account.id, now), tierOrNone(account.memberTierId, locale)]);
+  return { words, shop: shown, tier };
 }
 
 /** The zone's title, the greeting, the club's words, the tabs, then the part, then the sign-out. */
@@ -144,9 +162,15 @@ export default function ZoneFrame({
       <Typography variant="h1" gutterBottom sx={headingRule}>
         {t("zoneTitle")}
       </Typography>
-      <Typography variant="body1" color="text.secondary" sx={{ mb: 1 }} data-testid="members-greeting">
+      <Typography variant="body1" color="text.secondary" sx={{ mb: parts.tier ? 0.5 : 1 }} data-testid="members-greeting">
         {t("zoneGreeting", { name: account.displayName })}
       </Typography>
+      {/* The member's level (§811) under the name: a glyph, the level's name and its description behind the «?». None, nothing: a member with no level is simply «Membru». */}
+      {parts.tier && (
+        <Box role="group" aria-label={t("tierYours")} sx={{ mb: 1 }} data-testid="members-tier">
+          <TierBadge tier={parts.tier} />
+        </Box>
+      )}
       {parts.words === "away" ? null : parts.words ? (
         // The club's words, through the renderer's allowlist, never markup the club did not type (§11.3).
         <Box sx={{ mb: { xs: DENSITY.sectionGap, sm: 3 }, "& > :last-child": { mb: 0 } }} data-testid="members-zone">

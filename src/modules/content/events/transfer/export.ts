@@ -177,6 +177,7 @@ export function configFromRows(event: EditableEvent, rows: readonly EditableTran
       external: { provider: event.externalProvider, url: event.externalRegistrationUrl },
       kitShirt: event.kitShirt,
       askHealthNote: event.askHealthNote,
+      rsvpEnabled: event.rsvpEnabled,
     },
     publicList: {
       names: event.participantListVisibility === "NAMES",
