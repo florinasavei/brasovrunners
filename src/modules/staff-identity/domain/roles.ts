@@ -228,6 +228,16 @@ export function canManageMemberTiers(subject: StaffSubject): boolean {
 }
 
 /**
+ * Whether an account can hold a member tier (§NNN): a club member's, and nobody else's — a colleague is no
+ * member, and a level is a label, not a role. Asked where a level is given or kept; it answers about the
+ * account's kind and never reads the level.
+ */
+export function canHoldMemberTier(subject: StaffSubject): boolean {
+  const role = roleOf(subject);
+  return !isBackofficeRole(role);
+}
+
+/**
  * The words around a code (§552) — the partner's name and the description in both languages — the
  * rule of the Membri texts (`canEditMembersPage`, §524): the Redactor's and the Administrator's.
  */

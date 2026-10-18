@@ -10,6 +10,7 @@ import { DomainError } from "@/shared/errors/domain-error";
 import {
   canAssignRole,
   canGrantPermission,
+  canHoldMemberTier,
   canHoldPermission,
   canManageMember,
   canManageStaff,
@@ -195,7 +196,7 @@ export async function setMemberTier<T extends Record<string, unknown>>(
   return db.transaction(async (tx) => {
     const target = await lockStaffUserTier(tx, input.targetId);
     if (!target) throw new DomainError("NOT_FOUND", "no such staff user");
-    if (target.role !== "MEMBER") throw new DomainError("VALIDATION_ERROR", "a level is given to a club member's account only", ["tierId"]);
+    if (!canHoldMemberTier(target.role)) throw new DomainError("VALIDATION_ERROR", "a level is given to a club member's account only", ["tierId"]);
     if (input.tierId !== null && input.tierId !== target.memberTierId) {
       const tier = await findMemberTierShared(tx, input.tierId);
       if (!tier) throw new DomainError("VALIDATION_ERROR", "no such member tier", ["tierId"]);
@@ -440,7 +441,7 @@ export async function changeStaffRole<T extends Record<string, unknown>>(
     if (!updated) throw new DomainError("NOT_FOUND", "no such staff user");
     // A level belongs to a club member's account (§NNN): a colleague made of a member holds none, as no grant (§687) either. Audited.
     // The level re-read under the row's lock the update just took: one given between the first read and here is cleared too.
-    const held = role !== "MEMBER" ? (await lockStaffUserTier(tx, targetId))?.memberTierId ?? null : null;
+    const held = !canHoldMemberTier(role) ? (await lockStaffUserTier(tx, targetId))?.memberTierId ?? null : null;
     if (held !== null) {
       await setStaffUserTier(tx, targetId, null, now);
       await recordAuditEvent(tx, {

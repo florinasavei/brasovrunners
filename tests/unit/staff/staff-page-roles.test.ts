@@ -36,6 +36,11 @@ vi.mock("@/modules/staff-identity/service", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/modules/staff-identity/service")>()),
   listStaff: async () => team,
 }));
+// The levels the club named (§NNN): the page reads them; none here.
+vi.mock("@/modules/content/member-tiers/repository", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/modules/content/member-tiers/repository")>()),
+  listAllMemberTiers: async () => [],
+}));
 vi.mock("@/modules/staff-identity/zitadel-users", () => ({ isZitadelInviteConfigured: () => false }));
 vi.mock("@/modules/diagnostics/invite-key", () => ({
   checkInviteKey: async () => ({ kind: "inapplicable" }),
@@ -54,6 +59,7 @@ vi.mock("@/app/[locale]/admin/actions", () => ({
   resendStaffInviteAction: vi.fn(),
   revokeStaffAction: vi.fn(),
   sendStaffPasswordResetAction: vi.fn(),
+  setMemberTierAction: vi.fn(),
   setStaffAccountActiveAction: vi.fn(),
   setStaffPermissionAction: vi.fn(),
 }));

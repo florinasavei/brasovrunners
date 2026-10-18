@@ -32,6 +32,7 @@ import { staffUsers } from "@/db/schema/staff-users";
 import { teamMembers, teamPageBoxes } from "@/db/schema/team";
 import { faqQuestions } from "@/db/schema/faq";
 import { memberDiscountCodes } from "@/db/schema/member-discount-codes";
+import { memberTiers } from "@/db/schema/member-tiers";
 import { shopOrders, shopProducts, shopProductVariants } from "@/db/schema/shop";
 import { unreachableWindows } from "@/db/schema/unreachable-windows";
 import { forgetCachedDeadlines } from "@/modules/deadlines/memo";
@@ -121,6 +122,8 @@ export async function resetTables(db: TestDatabase): Promise<void> {
   await db.delete(faqQuestions);
   // The members' discount codes (§552) reference only staff rows.
   await db.delete(memberDiscountCodes);
+  // The member tiers (§NNN): staff rows point at them with SET NULL, so they go with the codes, before the staff.
+  await db.delete(memberTiers);
   // The members' shop (§683): orders name a variant and a product; products reference a photo — all before the assets.
   await db.delete(shopOrders);
   await db.delete(shopProductVariants);

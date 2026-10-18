@@ -17,7 +17,7 @@ import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
 import { getPathname } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
-import { assignableRoles, canGrantPermission, canManageMember, canManageStaff, holdsGrant, impliesPermission } from "@/modules/staff-identity/domain/roles";
+import { assignableRoles, canGrantPermission, canHoldMemberTier, canManageMember, canManageStaff, holdsGrant, impliesPermission } from "@/modules/staff-identity/domain/roles";
 import { STAFF_ROLE_LABEL } from "@/modules/staff-identity/domain/staff-labels";
 import { requireStaff } from "@/modules/staff-identity/session";
 import { listStaff } from "@/modules/staff-identity/service";
@@ -184,7 +184,7 @@ export default async function StaffPage({ params, searchParams }: Props) {
           <Chip size="small" label={STAFF_ROLE_LABEL[member.role]} />
           {/* A club member's level (§NNN): its glyph and name, beside the role — a label, not a permission. */}
           {(() => {
-            const level = member.role === "MEMBER" ? tierOf(member.memberTierId) : undefined;
+            const level = canHoldMemberTier(member.role) ? tierOf(member.memberTierId) : undefined;
             return level && <TierBadge tier={level} help={false} color="default" testId="staff-member-tier" />;
           })()}
           {/* «Gestionează magazinul» given on top of the role (§687) — only where it means something. */}
@@ -506,7 +506,7 @@ export default async function StaffPage({ params, searchParams }: Props) {
                 holds, and «—» for none. Only a member's row: a colleague is no member and holds no level. A press that asks first
                 and then toasts, like the row's other verbs. A label and its benefits: it opens and refuses nothing.
               */}
-              {member.role === "MEMBER" && tiers.length > 0 && (
+              {canHoldMemberTier(member.role) && tiers.length > 0 && (
                 <ActionForm
                   action={setMemberTierAction}
                   messages={tierBoxes}
