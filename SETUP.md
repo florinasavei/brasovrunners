@@ -2384,8 +2384,9 @@ enter them; **only the Administrator and the Superadministrator make them public
    Until a notice **and** terms naming `{{results}}` are in force in **both** languages, ticking «Clasamentul e public pe pagina
    evenimentului» is refused with a sentence and a link here, and `/admin/tasks` shows the rows «Nota de confidențialitate: clasamentul
    curselor» and «Termenii: clasamentul curselor». Entering, importing and ranking work meanwhile.
-2. **After the race, open «Clasament».** The race's editor → the card «Înscrieri» → «Clasament», or the registrations list with the race
-   chosen (both links are drawn for a race that has started; a typed address works for any race). The page has a line for every
+2. **After the race, open «Clasament» — or before it.** The race's editor → the card «Înscrieri» → «Clasament», or the registrations list with the race
+   chosen (both links are drawn for a published race and for one that has started, before the start too; the page then says the race has not begun
+   and lets you write from now on; a typed address works for any race). The page has a line for every
    registered runner who holds a race number — the checked-in first, then by number — with four boxes: **«Timp»** (`h:mm:ss`, `mm:ss` or
    `mm:ss.t`), **«Stare»** (Sosit, Abandon, Neprezentat, Descalificat), **«Timp cip»** (optional) and **«Notă»**. A line with every box empty is
    no result. The blank choice of «Stare» reads «Din timp (Sosit / Neprezentat)» because it is exactly that: a time typed with no state is

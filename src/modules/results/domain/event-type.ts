@@ -8,3 +8,19 @@ export const RESULT_EVENT_TYPES: readonly string[] = ["RACE"];
 export function eventTakesResults(type: string): boolean {
   return RESULT_EVENT_TYPES.includes(type);
 }
+
+/**
+ * Whether a «Clasament» door is drawn for this event (§808, amended by §NNN: the owner, 2026-10-18, «unde găsesc clasamentul?»).
+ *
+ * A door should not hide a page that answers. The results page opens before the race starts and says so itself («Cursa nu a început
+ * încă. Poți scrie rezultate de pe acum.»), so the editor's button and the registrations list's header read this one rule, which has
+ * no start condition: the event is a race (`eventTakesResults`) and either published or already started. The one exception is a race
+ * still ahead that is not public (a draft, in review, archived): it is not expected to have results typed before its start, so no
+ * link is drawn, though the typed address still works. Once the start has passed the door is open whatever the editorial state,
+ * because results may be typed for a race that was unpublished afterwards. The page and the service keep their own answers; this
+ * only decides whether a link is drawn, and the role is asked beside it (`canEnterResults`).
+ */
+export function resultsDoorOpen(event: { type: string; editorialStatus: string; startsAt: Date }, now: Date): boolean {
+  if (!eventTakesResults(event.type)) return false;
+  return event.editorialStatus === "PUBLISHED" || event.startsAt.getTime() <= now.getTime();
+}

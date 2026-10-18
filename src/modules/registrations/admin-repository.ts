@@ -1444,11 +1444,19 @@ export async function listOutboxHistory<T extends Record<string, unknown>>(
  */
 export async function listEventsWithRegistrations<T extends Record<string, unknown>>(
   db: Database<T>,
-): Promise<Array<{ id: string; title: string | null; featured: boolean; membersOnly: boolean; type: string; startsAt: Date }>> {
+): Promise<Array<{ id: string; title: string | null; featured: boolean; membersOnly: boolean; type: string; startsAt: Date; editorialStatus: string }>> {
   return db
-    // `membersOnly` (§552): the list's «Membri» chip on an event for the members alone. `type` and `startsAt` (§808): the header's
-    // «Clasament» link, for a race that has started.
-    .selectDistinct({ id: events.id, title: eventTranslations.title, featured: events.featured, membersOnly: events.membersOnly, type: events.type, startsAt: events.startsAt })
+    // `membersOnly` (§552): the list's «Membri» chip on an event for the members alone. `type`, `startsAt` and `editorialStatus` (§808, §NNN):
+    // the header's «Clasament» link, for a published race or one that has started (`resultsDoorOpen`).
+    .selectDistinct({
+      id: events.id,
+      title: eventTranslations.title,
+      featured: events.featured,
+      membersOnly: events.membersOnly,
+      type: events.type,
+      startsAt: events.startsAt,
+      editorialStatus: events.editorialStatus,
+    })
     .from(events)
     .leftJoin(registrations, eq(registrations.eventId, events.id))
     .leftJoin(
