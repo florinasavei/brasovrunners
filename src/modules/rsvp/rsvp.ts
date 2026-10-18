@@ -225,8 +225,6 @@ export async function requestWithdrawLink<T extends Record<string, unknown>>(
   });
 }
 
-/** A token's purpose, as the message and the pages name it. */
-export type RsvpLinkPurpose = EventRsvpTokenPurpose;
 type EventRsvpTokenPurpose = (typeof eventRsvpTokens.$inferSelect)["purpose"];
 
 /**
@@ -523,21 +521,4 @@ export async function countRsvpsForAdmin<T extends Record<string, unknown>>(db: 
     .where(eq(eventRsvps.eventId, eventId))
     .groupBy(sql`${eventRsvps.confirmedAt} IS NOT NULL`);
   return { confirmed: rows.find((row) => row.confirmed)?.n ?? 0, unconfirmed: rows.find((row) => !row.confirmed)?.n ?? 0 };
-}
-
-/** Every answer of one canonical address, across events — the person's own data (`registrations/person-data.ts`). */
-export async function listRsvpsOfAddress<T extends Record<string, unknown>>(db: Database<T>, canonicalEmail: string) {
-  return db
-    .select({
-      id: eventRsvps.id,
-      eventId: eventRsvps.eventId,
-      deliveryEmail: eventRsvps.deliveryEmail,
-      displayName: eventRsvps.displayName,
-      showName: eventRsvps.showName,
-      confirmedAt: eventRsvps.confirmedAt,
-      createdAt: eventRsvps.createdAt,
-    })
-    .from(eventRsvps)
-    .where(eq(eventRsvps.canonicalEmail, canonicalEmail))
-    .orderBy(asc(eventRsvps.createdAt));
 }

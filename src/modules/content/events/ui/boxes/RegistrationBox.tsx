@@ -592,6 +592,8 @@ export default async function RegistrationBox({
       <Stack spacing={2}>
         {/* 6.1 — how people register, and the registration's life. A reader is told once that the settings are not theirs (§358). */}
         {mayEditSettings ? registrationFields : <SettingsReadOnly />}
+        {/* Right under the «Vin!» tick, which ends the block above (§NNN): who said they come — read-only, only when there are answers. */}
+        {rsvp && <RsvpAnswersCard counts={rsvp.counts} rows={rsvp.rows} locale={locale} timeZone={zone} />}
         {/* 6.2 — what a participant agrees to: the rules, with the minimum age and what the form asks, then the declaration (§505, §448, §557, §799). */}
         {rules}
         {declarationCard}
@@ -605,8 +607,6 @@ export default async function RegistrationBox({
             bibPrint}
         {/* 6.4 — the public list, last, where the page draws it (§406, §512). */}
         {startList}
-        {/* 6.5 — who said they come (§NNN): read-only, only when there are answers. */}
-        {rsvp && <RsvpAnswersCard counts={rsvp.counts} rows={rsvp.rows} locale={locale} timeZone={zone} />}
       </Stack>
     </Panel>
   );

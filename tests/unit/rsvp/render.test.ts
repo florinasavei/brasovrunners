@@ -299,6 +299,21 @@ describe("§NNN the editor's tick «Acceptă răspunsuri „Vin!” din pagină,
     }
   });
 
+  it("has the read-only fold of answers right under it, for the roles that read addresses and for the rest alike — and none while there are no answers", async () => {
+    const rows = [{ email: "ana@example.test", displayName: "Ana", showName: true, confirmedAt: new Date("2026-10-20T10:00:00Z"), createdAt: new Date("2026-10-20T09:00:00Z") }];
+    const withRows = await registrationCard(event({ rsvpEnabled: true }), "ro", { rsvp: { counts: { confirmed: 1, unconfirmed: 0 }, rows } });
+    expect(withRows.indexOf('data-testid="rsvp-answers-card"')).toBeGreaterThan(withRows.indexOf('name="event.rsvpEnabled"'));
+    expect(withRows).toContain("ana@example.test");
+    // The count alone for a role that does not read the registrations: the address is not in the page.
+    const countOnly = await registrationCard(event({ rsvpEnabled: true }), "ro", { rsvp: { counts: { confirmed: 1, unconfirmed: 0 }, rows: null } });
+    expect(countOnly).toContain('data-testid="rsvp-answers-count-only"');
+    expect(countOnly).not.toContain("ana@example.test");
+    // …and a reader who may not change the settings still sees the fold (it is not a setting).
+    expect(await registrationCard(event(), "ro", { rsvp: { counts: { confirmed: 2, unconfirmed: 1 }, rows: null } }, false)).toContain('data-testid="rsvp-answers-card"');
+    expect(await registrationCard(event(), "ro", { rsvp: { counts: { confirmed: 0, unconfirmed: 0 }, rows: [] } })).not.toContain('data-testid="rsvp-answers-card"');
+    expect(await registrationCard(null)).not.toContain('data-testid="rsvp-answers-card"');
+  });
+
   it("is not drawn for a reader who may only read the settings", async () => {
     expect(await registrationCard(event(), "ro", {}, false)).not.toContain('name="event.rsvpEnabled"');
   });

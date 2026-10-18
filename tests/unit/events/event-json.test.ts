@@ -176,6 +176,34 @@ describe("the event file's reader", () => {
     expect(written).not.toContain("onProfile");
   });
 
+  it("writes the registration block's «Vin!» tick only when it is ON, reads «not written» as off, and keeps the version (§NNN)", () => {
+    const file = sampleFile();
+    expect(file.version).toBe(3);
+    expect(file.event.registration.rsvpEnabled).toBe(false);
+    // «Off» is what a file without the key means: left out, so a release before the tick still reads the file (its registration block is strict).
+    expect(serializeEventFile(file)).not.toContain("rsvpEnabled");
+    const readOff = readEventFile(serializeEventFile(file));
+    if (!readOff.ok) throw new Error("the file did not read back");
+    expect(readOff.file.event.registration.rsvpEnabled).toBe(false);
+
+    file.event.registration.rsvpEnabled = true;
+    const written = serializeEventFile(file);
+    expect((JSON.parse(written) as { event: { registration: Record<string, unknown> } }).event.registration).toHaveProperty("rsvpEnabled", true);
+    const read = readEventFile(written);
+    if (!read.ok) throw new Error("the file did not read back");
+    expect(read.file.event.registration.rsvpEnabled).toBe(true);
+    expect(read.file.version).toBe(3);
+    // Neither the route's tick nor the checkpoints' is touched by it.
+    expect(written).not.toContain("showRouteProfile");
+    expect(written).not.toContain("onProfile");
+  });
+
+  it("refuses a «Vin!» tick that is not true or false", () => {
+    const bad = JSON.parse(serializeEventFile(sampleFile())) as { event: { registration: Record<string, unknown> } };
+    bad.event.registration.rsvpEnabled = "yes";
+    expect(readEventFile(JSON.stringify(bad)).ok).toBe(false);
+  });
+
   it("refuses what is not one of ours, saying which of the five reasons it is", () => {
     const refusal = (raw: string) => {
       const read = readEventFile(raw);
