@@ -4,8 +4,8 @@ import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
 import type { EmailMessageType } from "@/db/schema/email-outbox";
 import type { FoldOpenWhen } from "@/shared/ui/fold";
+import Flag, { LANGUAGE_FLAG } from "@/shared/ui/Flag";
 import Panel from "@/shared/ui/Panel";
-import { PANEL_GLYPHS, type PanelGlyphName } from "@/shared/ui/panel-glyphs";
 import SubNav, { type SubNavItem } from "@/shared/ui/SubNav";
 
 /** One message, already rendered and translated: this component decides only the shape. */
@@ -48,17 +48,14 @@ export type ParticipantEmailCard = {
 };
 
 /**
- * The picture before each language of the switch (§318 as amended: a glyph before every tab): the
- * house's translation glyph (`panel-glyphs.ts`), by name, written as an object so the table's own
- * test finds it. Never a flag — the entries differ by their words, «Română» and «English». Drawn
- * here, on the server, into `SubNav`, a Server Component end to end, never handed to a client
- * island (`action-icons.ts`).
+ * The picture before each language of the switch: the language's flag, as the editors' language tabs
+ * and the header's switcher draw it (`LocaleTabPanels`, §572). The locale is the one the entry's link
+ * names (`?lang=en`). Drawn here, on the server, into `SubNav`, never handed to a client island.
  */
-const LANGUAGE_GLYPH = { glyph: "translation" } as const satisfies { glyph: PanelGlyphName };
-
-function languageGlyph() {
-  const Glyph = PANEL_GLYPHS[LANGUAGE_GLYPH.glyph];
-  return <Glyph />;
+function languageFlag(href: string) {
+  const locale = /[?&]lang=(\w+)/.exec(href)?.[1] as keyof typeof LANGUAGE_FLAG | undefined;
+  const flag = locale ? LANGUAGE_FLAG[locale] : undefined;
+  return flag ? <Flag code={flag} width={16} /> : undefined;
 }
 
 type Props = {
@@ -99,7 +96,7 @@ export default function ParticipantEmailsPanel({ title, intro, aside, languageLa
         <Typography variant="body2" sx={{ fontWeight: 500, mb: 1 }}>
           {languageLabel}
         </Typography>
-        <SubNav label={languageLabel} items={languages.map((language) => ({ ...language, glyph: language.glyph ?? languageGlyph() }))} />
+        <SubNav label={languageLabel} items={languages.map((language) => ({ ...language, glyph: language.glyph ?? languageFlag(language.href) }))} />
       </Box>
       <Stack spacing={1}>
         {messages.map((message) => (
