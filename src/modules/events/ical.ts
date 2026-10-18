@@ -48,7 +48,8 @@ function qaMarked(value: string): string {
  * notice first, the meeting point with its address and map, the short description and the
  * start of the long one, the times and the facts in one line each, where registration stands
  * and the link to it, the page, the rules, the programme, the route, the film, the Strava and
- * Facebook events, the programme's rows and text, what to bring and the co-host — as plain
+ * Facebook events, the programme's rows and text, what to bring and the co-host — and, for an
+ * event the page offers «Vii?» to, «Vin! → <page>#vin» with how many come (§812) — as plain
  * text in `DESCRIPTION`, where Apple and Google make the bare addresses tappable (which is
  * why the plain twin writes `words — address`), and the same as minimal HTML in `X-ALT-DESC`,
  * which Outlook renders with the words as the links.
