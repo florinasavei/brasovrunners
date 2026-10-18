@@ -371,7 +371,20 @@ async function slugOf<T extends Record<string, unknown>>(tx: Database<T>, eventI
  * link was not live (a second press, an expired or superseded link). A link spent after the event started changes nothing.
  */
 export async function confirmRsvp<T extends Record<string, unknown>>(db: Database<T>, secret: string, now: Date): Promise<RsvpProved | null> {
+  if (!isWellFormedTokenSecret(secret)) return null;
   const proved = await db.transaction(async (tx) => {
+    /*
+      The event as it is now, before the link is spent: an organizer may have cancelled the event or moved its start since the
+      message left, and a link to an event that is no longer ahead counts nobody (and is not spent, so the page can still say why).
+    */
+    const [event] = await tx
+      .select({ status: events.eventStatus, startsAt: events.startsAt })
+      .from(eventRsvpTokens)
+      .innerJoin(eventRsvps, eq(eventRsvps.id, eventRsvpTokens.rsvpId))
+      .innerJoin(events, eq(events.id, eventRsvps.eventId))
+      .where(eq(eventRsvpTokens.tokenHash, hashTokenSecret(secret)))
+      .limit(1);
+    if (!event || event.status !== "SCHEDULED" || event.startsAt === null || event.startsAt.getTime() <= now.getTime()) return null;
     const rsvpId = await consumeRsvpToken(tx, secret, "RSVP_CONFIRM", now);
     if (!rsvpId) return null;
     const [row] = await tx
