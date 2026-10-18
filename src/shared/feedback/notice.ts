@@ -143,6 +143,9 @@ const NOTHING_HAPPENED: ReadonlySet<string> = new Set([
   "volunteerUnchanged",
   // «Salvează toate rolurile» with every role as it was (§791).
   "volunteerRolesUnchanged",
+  // «Salvează tot nivelurile» with every member level as it was, and «Nivel» on a member's row left as it was (§NNN).
+  "memberTiersUnchanged",
+  "memberTierUnchanged",
   // «Salvează punctele» with the list as it was (§757).
   "checkpointsUnchanged",
   // «Salvează tot clasamentul» with every result as it was, and the publish tick pressed as it already stood (§808).

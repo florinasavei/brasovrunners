@@ -1895,6 +1895,8 @@
       "interestWithdrawBody": "The address typed is removed from “Notify me” and no longer receives the announcement that registration opened.",
       "inviteStaffTitle": "Add the person to the team?",
       "inviteStaffBody": "They receive the sign-in invitation by email, with the chosen role, and can enter as soon as they set a password: the backoffice, or — as a Member — only the members' area on the site.",
+      "memberTierTitle": "Change the level?",
+      "memberTierBody": "{name} sees the new level in the members' zone, on the next page they open.",
       "changeRoleTitle": "Change the role?",
       "changeRoleBody": "{name} gets the chosen role from the next page they open.",
       "approvePlatformTitle": "Approve the missing templates ({count} of {total})?",
@@ -2108,7 +2110,9 @@
       "RESULTS_NOTICE": "The privacy notice in force does not describe the results yet. Approve a new one from the template in «Legal documents»; «Tasks» says how.",
       "RESULTS_TERMS": "The terms in force do not describe the results yet: the older ones promised to ask first. Approve new terms from the template in «Legal documents»; «Tasks» says how.",
       "RESULTS_NOT_STARTED": "The results can be made public after the race has started. You can type them already.",
-      "RESULTS_NOT_OPEN": "Only a race has results."
+      "RESULTS_NOT_OPEN": "Only a race has results.",
+      "MEMBER_TIER_HAS_MEMBERS": "The level was not deleted. Members with this level: {count}. Give them another level first, on “Team”.",
+      "MEMBER_TIER_IN_CODES": "The level was not deleted. Discount codes for it alone: {count}. Change their levels first."
     },
     "editor": {
       "draftPreview": {
@@ -3331,6 +3335,12 @@
       "inviteAsideSends": "the account and the invitation, in one step",
       "inviteAsideManual": "the list and the invitation; the account, in Zitadel's console",
       "superadminRow": "Only a Superadministrator changes a Superadministrator's role and access.",
+      "memberTier": "Level",
+      "memberTierNone": "—",
+      "memberTierSave": "Save the level",
+      "memberTierSaving": "Saving the level…",
+      "memberTierBulkHelp": "The level of the members added now. Anyone who was a member already keeps their level.",
+      "memberTierHiddenOption": "{name} (hidden)",
       "membersTitle": "Add several members",
       "membersAside": "one address per row, the Member role",
       "membersRows": "The members, one per row",
@@ -9373,6 +9383,67 @@
         "en": "Who is a member (English)",
         "help": "One sentence, at most {max} characters, in both languages or in neither. Left empty, the forms say the standard text shown in the boxes."
       },
+      "tiers": {
+        "heading": "Member levels",
+        "count": {
+          "one": "{count} level",
+          "few": "{count} levels",
+          "other": "{count} levels"
+        },
+        "intro": "The levels you give your members. A level is a label and what the member gets, not a right.",
+        "introMore": "A level opens and closes nothing on the site. The member sees it in their zone, the public page “Members' benefits” lists them, and a discount code can be for some levels only. You give each member a level on “Team”.",
+        "empty": "You have no level yet. Until then, members are simply “Member”.",
+        "rowsIntro": "Write a level in the empty row at the end and press “Save all levels”. The order is the one in “Position”.",
+        "listLabel": "The member levels, in the club's order",
+        "newRow": "New level",
+        "newRowHint": "Write the name in Romanian and in English. An empty row does nothing.",
+        "nameRo": "Name (Română)",
+        "nameEn": "Name (English)",
+        "descriptionRo": "Description (Română)",
+        "descriptionEn": "Description (English)",
+        "descriptionHelp": "What the member gets with this level, in short (at most {max} characters).",
+        "bothOrNeither": "In both languages or in neither.",
+        "glyph": "Symbol",
+        "glyphs": {
+          "star": "Star",
+          "medal": "Medal",
+          "trophy": "Trophy",
+          "diamond": "Diamond",
+          "heart": "Heart",
+          "bolt": "Bolt",
+          "shield": "Shield",
+          "runner": "Runner",
+          "flag": "Flag",
+          "flame": "Flame",
+          "verified": "Seal",
+          "mountain": "Mountain"
+        },
+        "position": "Position",
+        "positionLast": "last",
+        "language": {
+          "ro": "Română",
+          "en": "English"
+        },
+        "hidden": "Hidden",
+        "hiddenHelp": "A hidden level is no longer given and is not on the public page. Members who have it keep it.",
+        "hiddenChip": "Hidden",
+        "hiddenOption": "{name} (hidden)",
+        "members": {
+          "one": "{count} member",
+          "few": "{count} members",
+          "other": "{count} members"
+        },
+        "codes": {
+          "one": "{count} code",
+          "few": "{count} codes",
+          "other": "{count} codes"
+        },
+        "save": "Save all levels",
+        "delete": "Delete the level",
+        "deleteTitle": "Delete the level {name}?",
+        "deleteBody": "The level is gone for good. It can be deleted only when no member has it.",
+        "adminOnly": "An administrator changes the levels."
+      },
       "codes": {
         "heading": "Discount codes",
         "count": {
@@ -9421,6 +9492,10 @@
         "linkHelp": "Where the code is used, with https://.",
         "validUntil": "Valid until (optional)",
         "validUntilHelp": "The last day members see it. Empty: no end.",
+        "forTiers": "For the levels",
+        "forTiersHelp": "Nothing ticked: the code is for every member.",
+        "forTiersChip": "For: {tiers}",
+        "forEveryone": "For every member",
         "createTitle": "Add the code?",
         "createBody": "Members see it in their area as soon as you add it."
       },
@@ -12101,6 +12176,12 @@
       "memberCodeShown": "The code is shown to members again.",
       "memberCodeMoved": "The order of the codes was changed.",
       "memberCodeDeleted": "The code was deleted.",
+      "memberTiersSaved": "The levels were saved.",
+      "memberTiersUnchanged": "Nothing to save: the levels are as they were.",
+      "memberTierDeleted": "The level was deleted.",
+      "memberTierSet": "The member's level was changed.",
+      "memberTierCleared": "The member has no level any more.",
+      "memberTierUnchanged": "The member had this level already.",
       "declarationHeld": "The declaration is kept. It is not deleted until you remove the keep.",
       "declarationReleased": "The keep was removed.",
       "menuOrder": "The menu order was saved.",
@@ -12496,6 +12577,9 @@
     "upcomingEmpty": "No run is announced right now.",
     "upcomingAll": "Every event",
     "eventsTitle": "Events for members",
+    "tiersTitle": "Member levels",
+    "tierYours": "Your level",
+    "codeForTiers": "The code is for the levels",
     "codesTitle": "Discount codes",
     "tabsLabel": "Parts of the members' zone",
     "tabs": {
