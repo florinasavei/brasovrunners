@@ -45,6 +45,10 @@ export function calendarPartFor(input: {
       return invites ? "REQUEST" : "file";
     case "GROUP_RUN_DECLARATION_SIGNED":
       return invites ? "REQUEST" : null;
+    // «Vin!» (§NNN): the event's published file, whatever the club's calendar-answers address — a person who has only said
+    // they come holds no place, and the calendar must not ask «Vii?» of them a second time.
+    case "RSVP_CONFIRM":
+      return "file";
     case "EVENT_UPDATE_NOTICE":
       return invites && changesTheCalendar(input.changes ?? []) ? "REQUEST" : null;
     case "EVENT_CANCELLED":

@@ -342,6 +342,7 @@ function eventFieldsFrom(form: FormData) {
     // «Arată profilul traseului pe pagină» (§802, §805): a checkbox, read only when the form carried its marker
     // — a form without the card is "not editing it" (a reader who may not change the settings), never "off".
     showRouteProfile: form.get("event.showRouteProfile.present") === "1" ? form.get("event.showRouteProfile") === "on" : undefined,
+    rsvpEnabled: form.get("event.rsvpEnabled.present") === "1" ? form.get("event.rsvpEnabled") === "on" : undefined,
     distanceMeters: value("distanceMeters"),
     // «Aproximativ» (§598): a checkbox beside the distance; `service.ts` drops it when the distance is empty.
     distanceEstimated: form.get("event.distanceEstimated") === "on",

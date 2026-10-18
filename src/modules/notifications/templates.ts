@@ -1096,6 +1096,14 @@ export type TemplateData = {
    */
   familyDeclineUrl?: string;
   /**
+   * «Confirmă că vii» (§NNN, «Vin!» part 1), which of its three shapes this send is: `confirm` — the button counts the person and
+   * `rsvpWithdrawUrl` is the quieter «Nu vin» under it; `counted` — the address is already counted, the one button takes the answer
+   * back; `withdraw` — the person asked, from the page, to take it back. Absent is `confirm` (the editor's starting text).
+   */
+  rsvpStage?: "confirm" | "counted" | "withdraw";
+  /** The `RSVP_WITHDRAW` link of the same send (§NNN), under the confirm button as «Nu vin». Minted at the send, never stored. */
+  rsvpWithdrawUrl?: string;
+  /**
    * A family sitting's one message (§519): everybody the sitting sent the form for and nobody
    * confirmed yet, by full name and birth date ("YYYY-MM-DD"), in the order sent — read at send time.
    * Set, the message is the family's: its subject, its facts box, its button and its words.
@@ -1554,6 +1562,40 @@ const T = {
       ],
       action: "Confirmă locul",
       emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]], actionAfter: b[0] }),
+    },
+    // «Vin!» (§NNN): the one message of an answer typed on a turn-up event's page. Three shapes by `rsvpStage`; the club's own words
+    // apply to the first alone (a statement about the answer's state is the platform's, like the address's limit, §389).
+    rsvpConfirm: {
+      subject: (d: TemplateData) =>
+        d.rsvpStage === "counted"
+          ? `Ești numărat la ${d.eventTitle ?? "eveniment"}`
+          : d.rsvpStage === "withdraw"
+            ? `Nu mai vii la ${d.eventTitle ?? "eveniment"}?`
+            : `Confirmă că vii la ${d.eventTitle ?? "eveniment"}${d.eventStartsAtFormatted ? ` — ${d.eventStartsAtFormatted}` : ""}`,
+      greeting: () => "Salut,",
+      facts: (d: TemplateData) => eventFacts(d, { map: "Harta punctului de întâlnire", strava: "Evenimentul pe Strava" }),
+      body: (d: TemplateData) =>
+        d.rsvpStage === "counted"
+          ? [
+              `Ești deja numărat printre cei care vin la ${d.eventTitle ?? "eveniment"}. Dacă nu mai poți veni, apasă butonul de mai jos și răspunsul tău se șterge.`,
+              "Primești acest mesaj pentru că cineva a scris adresa ta la „Vin!” pe pagina evenimentului.",
+            ]
+          : d.rsvpStage === "withdraw"
+            ? [
+                `Ai cerut să nu mai vii la ${d.eventTitle ?? "eveniment"}. Apasă butonul de mai jos și răspunsul tău se șterge.`,
+                "Dacă nu ai cerut tu, nu apăsa nimic: răspunsul rămâne cum e.",
+              ]
+            : [
+                `Apasă butonul de mai jos ca să confirmi că vii la ${d.eventTitle ?? "eveniment"}.`,
+                "Fără confirmare nu te numărăm: cineva ar fi putut scrie adresa ta din greșeală. Linkul e valabil doar pentru tine, se folosește o singură dată și expiră la start.",
+                "Dacă nu ai scris tu adresa sau nu mai poți veni, apasă „Nu vin” și răspunsul se șterge.",
+              ],
+      action: (d: TemplateData) => (d.rsvpStage === "counted" || d.rsvpStage === "withdraw" ? "Nu mai vin" : "Da, vin"),
+      emphasis: (d: TemplateData, b: readonly string[]): Emphasis =>
+        d.rsvpStage === "counted" || d.rsvpStage === "withdraw"
+          ? { highlight: [b[0]], actionAfter: b[0], quiet: [b[1]] }
+          : { highlight: [b[0]], actionAfter: b[0], quiet: [b[1], b[2]] },
+      links: (d: TemplateData) => [...(d.eventUrl ? [{ label: "Pagina evenimentului", url: d.eventUrl }] : [])],
     },
     registrationConfirmed: {
       subject: "Înscrierea este confirmată",
@@ -2262,6 +2304,8 @@ const T = {
     },
     /** The family link's second button (§468): the kept form deleted, nobody registered. */
     familyDecline: "Nu înscriu această persoană",
+    /** «Vin!» (§NNN): the quieter button under «Da, vin» — the same message's other link. */
+    rsvpNo: "Nu vin",
     /** «Nu mai pot ajunge» (§558; the owner's words), and its one sentence under the button. */
     cannotCome: {
       label: "Nu mai pot ajunge",
@@ -2349,6 +2393,9 @@ const T = {
     /** The same for "registration is open" (§146), which answers a request, not a registration. */
     privacyFooterInterest: (club: string) =>
       `Primești acest mesaj de la ${club} pentru că ai cerut să fii anunțat. Cum folosim datele tale:`,
+    /** «Vin!» (§NNN): the person typed their address under the answer on an event's page; the club sends this once. */
+    privacyFooterRsvp: (club: string) =>
+      `Primești acest mesaj de la ${club} pentru că cineva a scris această adresă la „Vin!” pe pagina unui eveniment. Cum folosim datele tale:`,
     /** An invitation (§647): the club typed the name and the address to send it; nobody asked yet. */
     privacyFooterInvitation: (club: string) =>
       `Primești acest mesaj pentru că ${club} ți-a trecut numele și adresa ca să te invite la acest eveniment. Cum folosim datele tale:`,
@@ -2696,6 +2743,38 @@ const T = {
         ...(d.eventRulesUrl ? [{ label: "The event's rules", url: d.eventRulesUrl }] : []),
       ],
     },
+    rsvpConfirm: {
+      subject: (d: TemplateData) =>
+        d.rsvpStage === "counted"
+          ? `You're counted for ${d.eventTitle ?? "the event"}`
+          : d.rsvpStage === "withdraw"
+            ? `Not coming to ${d.eventTitle ?? "the event"} any more?`
+            : `Confirm you're coming to ${d.eventTitle ?? "the event"}${d.eventStartsAtFormatted ? ` — ${d.eventStartsAtFormatted}` : ""}`,
+      greeting: () => "Hello,",
+      facts: (d: TemplateData) => eventFacts(d, { map: "Map of the meeting point", strava: "The event on Strava" }),
+      body: (d: TemplateData) =>
+        d.rsvpStage === "counted"
+          ? [
+              `You are already counted among those coming to ${d.eventTitle ?? "the event"}. If you can't come any more, press the button below and your answer is deleted.`,
+              "You are getting this because someone typed your address under “I'm coming!” on the event's page.",
+            ]
+          : d.rsvpStage === "withdraw"
+            ? [
+                `You asked not to come to ${d.eventTitle ?? "the event"} any more. Press the button below and your answer is deleted.`,
+                "If it wasn't you, press nothing: your answer stays as it is.",
+              ]
+            : [
+                `Press the button below to confirm you're coming to ${d.eventTitle ?? "the event"}.`,
+                "Without a confirmation we don't count you: someone may have typed your address by mistake. The link is for you only, works once and expires at the start.",
+                "If you didn't type the address or can't come any more, press “I'm not coming” and the answer is deleted.",
+              ],
+      action: (d: TemplateData) => (d.rsvpStage === "counted" || d.rsvpStage === "withdraw" ? "I'm not coming any more" : "Yes, I'm coming"),
+      emphasis: (d: TemplateData, b: readonly string[]): Emphasis =>
+        d.rsvpStage === "counted" || d.rsvpStage === "withdraw"
+          ? { highlight: [b[0]], actionAfter: b[0], quiet: [b[1]] }
+          : { highlight: [b[0]], actionAfter: b[0], quiet: [b[1], b[2]] },
+      links: (d: TemplateData) => [...(d.eventUrl ? [{ label: "The event's page", url: d.eventUrl }] : [])],
+    },
     registrationConfirmed: {
       subject: "Your registration is confirmed",
       facts: (d: TemplateData) => eventFacts(d, { map: "Map of the meeting point", strava: "The event on Strava" }),
@@ -2993,6 +3072,7 @@ const T = {
       action: "All my registrations",
     },
     familyDecline: "I am not registering this person",
+    rsvpNo: "I'm not coming",
     cannotCome: {
       label: "I can't make it any more",
       note: "Your place goes to someone else.",
@@ -3052,6 +3132,8 @@ const T = {
         : `The declaration is the minor ${minor}'s: the minor signed it for themselves, and you signed it as parent or legal guardian. The copy is for both of you.`,
     privacyFooter: (club: string) => `You are receiving this message from ${club} about a registration made with this email address. How we use the data:`,
     privacyFooterInterest: (club: string) => `This message comes from ${club} because you asked to be told. How we use your data:`,
+    privacyFooterRsvp: (club: string) =>
+      `This message comes from ${club} because someone typed this address under “I'm coming!” on an event's page. How we use your data:`,
     privacyFooterInvitation: (club: string) => `This message comes because ${club} entered your name and address to invite you to this event. How we use your data:`,
     privacyFooterVolunteer: (club: string) => `This message comes from ${club} because you offered, on the club's website, to help as a volunteer. How we use your data:`,
     privacyFooterVolunteerAgreement: (club: string) => `This message comes from ${club} because you are on the volunteers' list of one of the club's events. How we use your data:`,
@@ -3088,6 +3170,7 @@ const KEY_BY_MESSAGE_TYPE: Record<Exclude<EmailMessageType, RelayMessageType>, k
   BIB_ASSIGNED: "bibAssigned",
   STAFF_INVITATION: "staffInvitation",
   REGISTRATION_OPENED: "registrationOpened",
+  RSVP_CONFIRM: "rsvpConfirm",
   CLUB_CONFIRMATION_NOTICE: "clubConfirmationNotice",
   EVENT_UPDATE_NOTICE: "eventUpdateNotice",
   EVENT_CANCELLED: "eventCancelled",
@@ -3380,8 +3463,10 @@ export function buildTemplateContent(
     the address's state, like the limit above: the club's words for this message ask to confirm.
   */
   const newsletterState = messageType === "NEWSLETTER" || (messageType === "NEWSLETTER_CONFIRM" && data.newsletterAlready === true);
+  // «Vin!» (§NNN): the shapes that are about the answer's state — already counted, or taken back — are the platform's sentence alone.
+  const rsvpState = messageType === "RSVP_CONFIRM" && data.rsvpStage !== undefined && data.rsvpStage !== "confirm";
   const written =
-    messageType === "ORGANIZER_MESSAGE" || atAddressCap || familyGone || familySittingShape || familyConfirmedShape || lapsedOffer || newsletterState
+    messageType === "ORGANIZER_MESSAGE" || atAddressCap || familyGone || familySittingShape || familyConfirmedShape || lapsedOffer || newsletterState || rsvpState
       ? null
       : copyFor(overrides, messageType, locale);
   const writtenBody = written?.body ? readEmailBody(written.body) : null;
@@ -3728,7 +3813,10 @@ export function buildTemplateContent(
     secondaryAction:
       messageType === "REGISTER_ANOTHER_PERSON" && !atAddressCap && !familyGone && entry.action && actionUrl && data.familyDeclineUrl
         ? { label: copy.familyDecline, url: data.familyDeclineUrl }
-        : undefined,
+        : // «Vin!» (§NNN): «Nu vin» under «Da, vin», the same send's other link — only beside the confirm button.
+          messageType === "RSVP_CONFIRM" && (data.rsvpStage === undefined || data.rsvpStage === "confirm") && entry.action && actionUrl && data.rsvpWithdrawUrl
+          ? { label: copy.rsvpNo, url: data.rsvpWithdrawUrl }
+          : undefined,
     /*
       «Nu mai pot ajunge» (§558): only on a message about a live registration, and only with the link
       the renderer minted for this send — never on a club copy, whose data lost it above (§320).
@@ -3811,6 +3899,8 @@ export function buildTemplateContent(
           // itself and its alerts name the way out that sits under their button (§445).
           text: (messageType === "REGISTRATION_OPENED" || messageType === "NEWSLETTER_CONFIRM"
             ? copy.privacyFooterInterest
+            : messageType === "RSVP_CONFIRM"
+              ? copy.privacyFooterRsvp
             : messageType === "GROUP_RUN_DECLARATION_SIGNED"
               ? copy.privacyFooterDeclaration
               : messageType === "EVENT_INVITATION"
@@ -3893,6 +3983,8 @@ const EVENT_FACTS_MESSAGES: ReadonlySet<EmailMessageType> = new Set([
   "EVENT_REMINDER",
   "COMPLETE_DECLARATION",
   "NEW_EVENT_ALERT",
+  // «Vin!» (§NNN): the person deciding whether to come reads the same when and where as the others.
+  "RSVP_CONFIRM",
 ]);
 
 /**

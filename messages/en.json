@@ -789,6 +789,35 @@
         "search": "Search by number",
         "none": "No row matches."
       }
+    },
+    "rsvp": {
+      "heading": "Coming?",
+      "intro": "Tell us you're coming and see who else is.",
+      "email": "Your email address",
+      "name": "Your name (optional)",
+      "showName": "I want my name to show",
+      "submit": "I'm coming!",
+      "submitting": "Sending…",
+      "note": "We email you a confirmation button so we can count you.",
+      "privacy": "Details in the privacy notice.",
+      "done": "We've emailed you: press “Yes, I'm coming” so we can count you.",
+      "invalid": "That email address does not look valid. Check it and try again.",
+      "captcha": "The anti-bot check did not pass. Tick the “I am not a robot” box again and resend.",
+      "withdrawSummary": "I'm not coming any more",
+      "withdrawIntro": "Type the address you said you were coming with. We email you a link that deletes your answer.",
+      "withdrawSubmit": "Send the link",
+      "withdrawSubmitting": "Sending…",
+      "withdrawDone": "If that address said it was coming, we've emailed it a link.",
+      "countHeading": "Coming ({count})",
+      "countEmpty": "Be the first to say you're coming.",
+      "countOthers": "and {count} more",
+      "rememberedAs": "Answering as {who}",
+      "going": "You're coming",
+      "goingAs": "You're coming, as {who}",
+      "cancel": "I'm not coming any more",
+      "notMe": "Not me",
+      "help": "Your browser stays recognised for a year after “Yes, I'm coming”; “Not me” forgets it.",
+      "failed": "We could not send your answer. Try again."
     }
   },
   "Admin": {
@@ -3200,7 +3229,27 @@
       "durationRace": "Time limit",
       "durationRaceHelp": "How long the runners have from the start until the finish closes — 2 hours 30 minutes, say. Leave empty if there is none.",
       "durationOther": "How long the event lasts",
-      "durationOtherHelp": "From the start to the end — 1 hour 45 minutes, say. The end is worked out from it. Leave empty if none was announced."
+      "durationOtherHelp": "From the start to the end — 1 hour 45 minutes, say. The end is worked out from it. Leave empty if none was announced.",
+      "rsvpEnabled": "Accept “I'm coming!” answers from the page, calendar and email",
+      "rsvpEnabledHelp": "Anyone can leave their address and say they're coming; you see how many are coming here and on the page. The privacy notice must describe the “I'm coming!” answers — see Tasks.",
+      "rsvpAnswers": {
+        "title": "“I'm coming!” answers ({count})",
+        "summary": "{confirmed} confirmed, {unconfirmed} unconfirmed",
+        "summaryNone": "No answers yet",
+        "email": "Email",
+        "name": "Name",
+        "withName": "With name",
+        "state": "State",
+        "when": "When",
+        "yes": "yes",
+        "no": "no",
+        "confirmed": "Confirmed",
+        "unconfirmed": "Unconfirmed",
+        "empty": "Nobody has answered yet.",
+        "note": "Read-only. A person takes their answer back with their own “I'm not coming any more” link; unconfirmed ones are deleted after 7 days.",
+        "countOnly": "Administrators and Organizers see the addresses; you only see how many answered.",
+        "countLine": "{confirmed} confirmed, {unconfirmed} unconfirmed."
+      }
     },
     "preview": {
       "notice": "Staff preview. The status of this text is: {status}. This page is not public and is not indexed.",
@@ -3547,7 +3596,8 @@
         "volunteerProfile": "Privacy notice only: the volunteers' form boxes about the person, in quotes. Without it in the notice in force, the form asks only the minimum-age tick",
         "volunteerGuardian": "Only in the volunteer agreement: the name of a minor volunteer's parent or guardian. For an adult the sentence is left out. Without it in the agreement in force, no minors are taken",
         "volunteerMinors": "Only in the privacy notice: the parent's boxes of the volunteers' form, in quotation marks; without it, the club takes no volunteers under 18",
-        "results": "In the privacy notice and the terms: the name of the section “Results”, in quotation marks. With it in both texts in force, an administrator can publish the results and the race's page shows them"
+        "results": "In the privacy notice and the terms: the name of the section “Results”, in quotation marks. With it in both texts in force, an administrator can publish the results and the race's page shows them",
+        "rsvp": "Only in the privacy notice: the “I'm coming!” button's name, in quotes. With it in the notice in force, the pages of ticked events take “I'm coming!” answers and show how many are coming"
       },
       "removeBlockedReferenced": "Can neither be withdrawn nor deleted permanently: {signatures}, {events} and {acknowledgements} depend on it. “Delete” on its row takes it off the list.",
       "removeBlockedCurrent": "In force right now — it can neither be withdrawn nor deleted. Approve its successor first; then this one can go.",
@@ -4581,6 +4631,17 @@
             "Open the draft, read it, fill in what is left, “Save draft”, then “Approve and publish”.",
             "Approve the terms from the template as well: publishing waits for them too (the next row).",
             "After the race: /admin/events → the race → “Results”. Type the times or import a CSV, press “Save all the results” and tick “The results are public on the event's page”."
+          ]
+        },
+        "rsvpNotice": {
+          "title": "Privacy notice: the “I'm coming!” answers",
+          "todo": "An event takes “I'm coming!” answers, but the notice in force does not describe them yet, so its page shows no box and no count.",
+          "done": "The notice in force describes the “I'm coming!” answers: the pages of ticked events take them and show how many are coming. A name shows only for those who ticked “I want my name to show”.",
+          "how": [
+            "Before approving, read the template's paragraph with a lawyer: what “I'm coming!” publishes (how many are coming, the name only of those who tick), how long the address is kept and what the recognised browser's one-year cookie does.",
+            "/admin/legal → the “GDPR” card → “Regenerate from the template” → confirm. Sections 4, 5 and 7 describe the “I'm coming!” answers.",
+            "Open the draft, read it, fill in what is left, “Save draft”, then “Approve and publish”, in both languages.",
+            "The terms do not change: “I'm coming!” buys, books and signs nothing."
           ]
         }
       },
@@ -6298,7 +6359,8 @@
         "VOLUNTEER_AGREEMENT_REQUEST": "The volunteer agreement",
         "VOLUNTEER_AGREEMENT_ACCEPTED": "You accepted the volunteer agreement",
         "VOLUNTEER_ROLE_ASSIGNED": "Your volunteer role",
-        "VOLUNTEER_GUARDIAN_REQUEST": "Your consent for a young volunteer"
+        "VOLUNTEER_GUARDIAN_REQUEST": "Your consent for a young volunteer",
+        "RSVP_CONFIRM": "Confirm you're coming (“I'm coming!”)"
       },
       "typesShort": {
         "VERIFY_REGISTRATION_EMAIL": "Confirm your address",
@@ -6367,7 +6429,8 @@
         "VOLUNTEER_AGREEMENT_REQUEST": "When an organizer presses “Send the agreement link” for a volunteer who has not accepted it yet: the agreement and the link to accept it.",
         "VOLUNTEER_AGREEMENT_ACCEPTED": "When a volunteer accepts the agreement from the link, or an organizer presses “Signed on paper”: their copy, with the agreement attached as a PDF.",
         "VOLUNTEER_ROLE_ASSIGNED": "When the organizers give a volunteer a role, from the event's «Volunteers» card: a short message naming the role, the date and the place. Nothing to press.",
-        "VOLUNTEER_GUARDIAN_REQUEST": "When a volunteer under 18 offers, or an organizer presses “Send the parent's link”: the agreement and the link where the parent accepts it in their own name."
+        "VOLUNTEER_GUARDIAN_REQUEST": "When a volunteer under 18 offers, or an organizer presses “Send the parent's link”: the agreement and the link where the parent accepts it in their own name.",
+        "RSVP_CONFIRM": "When someone types an address under “I'm coming!” on an event's page (at most one message per address every ten minutes): the “Yes, I'm coming” button, which counts them, and “I'm not coming” under it. The page's “I'm not coming any more” sends the same message with only the withdraw link."
       },
       "whenShort": {
         "VERIFY_REGISTRATION_EMAIL": "after the form is sent",
@@ -6411,7 +6474,8 @@
         "VOLUNTEER_AGREEMENT_REQUEST": "on “Send the agreement link”",
         "VOLUNTEER_AGREEMENT_ACCEPTED": "after the link or “Signed on paper”",
         "VOLUNTEER_ROLE_ASSIGNED": "when the organizers give a role",
-        "VOLUNTEER_GUARDIAN_REQUEST": "when a volunteer under 18 offers"
+        "VOLUNTEER_GUARDIAN_REQUEST": "when a volunteer under 18 offers",
+        "RSVP_CONFIRM": "when someone says “I'm coming!”, to their address"
       },
       "clubNotices": {
         "title": "The club's copies",
@@ -7057,7 +7121,8 @@
         "VOLUNTEER_AGREEMENT_REQUEST": "The role and the event are added by themselves. The link is for this person only, works once, and a new one replaces the old.",
         "VOLUNTEER_AGREEMENT_ACCEPTED": "The role and the event are added by themselves. The PDF shows the accepted text, with the name, the role, the moment and its fingerprint.",
         "VOLUNTEER_ROLE_ASSIGNED": "The role and the event's date and place are added by themselves, however you write the text. The message has no link that does anything.",
-        "VOLUNTEER_GUARDIAN_REQUEST": "The volunteer and the event are added by themselves. The link is for the parent or guardian only, works once, and a new one replaces the old."
+        "VOLUNTEER_GUARDIAN_REQUEST": "The volunteer and the event are added by themselves. The link is for the parent or guardian only, works once, and a new one replaces the old.",
+        "RSVP_CONFIRM": "The links are for this address only, work once, and a new message replaces the old ones. Someone already counted gets only the “I'm not coming any more” link."
       },
       "confirmationRetry": "To whoever has not confirmed, the link goes again by itself {retry} after the last email, at most {times}; “Resend” counts too. The deadline does not move.",
       "confirmationRetryOff": "It is not re-sent by itself: in “Deadlines”, the number of resends is 0.",
@@ -8677,7 +8742,8 @@
             "url": "External registration link"
           },
           "kitShirt": "T-shirt in the kit",
-          "askHealthNote": "Health note asked"
+          "askHealthNote": "Health note asked",
+          "rsvpEnabled": "“I'm coming!” answers are taken"
         },
         "publicList": {
           "names": "Public participant list",
@@ -12609,5 +12675,24 @@
         "typedName": "Write your full name: it is your signature."
       }
     }
+  },
+  "Rsvp": {
+    "confirmTitle": "Confirm you're coming",
+    "confirmIntro": "Are you coming to {event}?",
+    "confirmAlready": "You are already counted for {event}.",
+    "confirmButton": "Yes, I'm coming",
+    "confirmPending": "Sending…",
+    "confirmDone": "Done, we're counting you in for {event}.",
+    "confirmDoneBody": "Your browser stays recognised for a year: at the next event, “I'm coming!” is one press, with no email. On the page, “Not me” forgets it.",
+    "withdrawTitle": "Not coming any more?",
+    "withdrawIntro": "Are you not coming to {event} any more? Your answer is deleted.",
+    "withdrawButton": "I'm not coming any more",
+    "withdrawPending": "Sending…",
+    "withdrawDone": "Done, your answer for {event} is deleted.",
+    "linkInvalid": "This link does not work any more",
+    "invalidBody": "It has been used or has expired. If you want to say you're coming, you can do it from the event's page.",
+    "invalidOver": "The event has started or is over, so we no longer take answers.",
+    "eventLink": "The event's page",
+    "eventsLink": "All events"
   }
 }

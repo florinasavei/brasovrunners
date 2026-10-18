@@ -129,6 +129,7 @@ export function eventFieldsFromConfig(context: PostedFieldsContext): Record<stri
     kitShirt: config.registration.kitShirt,
     waitlistAutoOffer: config.registration.waitlistAutoOffer,
     askHealthNote: config.registration.askHealthNote,
+    rsvpEnabled: config.registration.rsvpEnabled,
     bibStartNumber: String(config.bib.startNumber),
     bibColour: asText(config.bib.colour),
     ...(context.includeBibDesign ? { bibDesign: config.bib.design } : {}),
