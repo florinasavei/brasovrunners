@@ -4,7 +4,6 @@ import { memberTiers } from "@/db/schema/member-tiers";
 import type { StaffUser } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
 import { recordAuditEvent } from "@/modules/audit/repository";
-import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import { canManageMemberTiers } from "@/modules/staff-identity/domain/roles";
 import { DomainError } from "@/shared/errors/domain-error";
 import { isUuid } from "@/shared/ids";
@@ -29,8 +28,8 @@ import { tierUsage } from "./admin-repository";
  *   shared with other levels loses the id in the same transaction.
  *
  * Every change leaves an `audit_logs` row naming the level by id and the parts that changed — never a
- * name or a description. Both writes expire the public members' page (`pages`), which lists the
- * visible levels.
+ * name or a description. No public page or public read carries a level (§NNN: the level is the staff's label
+ * alone), so neither write expires the public cache.
  */
 
 type Actor = Pick<StaffUser, "id" | "role">;
@@ -213,8 +212,6 @@ export async function saveMemberTiers<T extends Record<string, unknown>>(
     }
     return { changed: edited + moved + created > 0, created, edited, moved };
   });
-  // The public members' page lists the visible levels: its cached copy goes with any change.
-  if (result.changed) revalidatePublicContent("pages");
   return result;
 }
 
@@ -258,5 +255,4 @@ export async function deleteMemberTier<T extends Record<string, unknown>>(
       now,
     });
   });
-  revalidatePublicContent("pages");
 }

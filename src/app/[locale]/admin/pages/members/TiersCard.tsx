@@ -4,13 +4,9 @@ import Typography from "@mui/material/Typography";
 import type { getTranslations } from "next-intl/server";
 import { countForm } from "@/i18n/count-form";
 import type { Locale } from "@/i18n/routing";
-import GlyphSelect from "@/modules/content/events/ui/GlyphSelect";
 import { TIER_DESCRIPTION_MAX, TIER_NAME_MAX } from "@/modules/content/member-tiers/fields";
-import { DEFAULT_TIER_GLYPH, TIER_GLYPH_KEYS } from "@/modules/content/member-tiers/glyph-keys";
 import type { AdminMemberTier } from "@/modules/content/member-tiers/admin-repository";
-import { glyphOf } from "@/modules/content/member-tiers/repository";
 import { NEW_TIER_ROW_KEY, tierBox } from "@/modules/content/member-tiers/tier-rows";
-import { tierGlyphName } from "@/modules/events/ui/tier-glyphs";
 import TranslateCardButton from "@/modules/translate/ui/TranslateCardButton";
 import TranslateFieldButton from "@/modules/translate/ui/TranslateFieldButton";
 import ActionForm, { type RefusalMessages } from "@/shared/forms/ActionForm";
@@ -32,10 +28,12 @@ const deleteFormId = (id: string) => `delete-tier-${id}`;
 /**
  * «Niveluri de membru» (§811; the owner, 2026-10-18: «Also for the member zone I want member Tiers»): the levels
  * the club names for its members, one fold on «Pagini» → «Membri», closed until opened (§336), the count on its
- * line. A tier is a label and its benefits, never a permission — the card says so under its title.
+ * line. A level is the staff's label, never a permission and never shown to a member (§NNN; the owner: «Doar adminii
+ * văd nivelul de membru, scopul e ca să bifăm ce membru poate vedea ce cod de reducere») — the card says what it is for
+ * under its title.
  *
  * ONE form, ONE «Salvează toate nivelurile» (§791's roles editor is the model): a row per level — its name and its
- * description as one Română | English strip (§572), the glyph, «Poziția» (the club's order, from 1), «Ascuns» —
+ * note for the administrators as one Română | English strip (§572), «Poziția» (the club's order, from 1), «Ascuns» —
  * and the blank row at the end that adds a level. A level that only moved over is never audited as edited. «Șterge
  * nivelul» is its own confirmed action outside the form (forms do not nest): a small hidden form beside the big one
  * that the row's button names (`form=`); refused while a member holds the level or a code is for it alone.
@@ -43,8 +41,9 @@ const deleteFormId = (id: string) => `delete-tier-${id}`;
  * (`data-translate-scope`, §514 adapted for a card with no tab row of its own).
  *
  * The Administrator's (`canManageMemberTiers`); the others see the list and the counts, no box — the service asserts
- * the role again (BR-REQ-060-01). Server Component over the house's `Panel`, `LocaleTabPanels`, `GlyphSelect`,
- * `CheckboxField`, `StatusChip` and `QuietHelp`: nothing here is new but the card.
+ * the role again (BR-REQ-060-01). Server Component over the house's `Panel`, `LocaleTabPanels`,
+ * `CheckboxField`, `StatusChip` and `QuietHelp`: nothing here is new but the card. There is no glyph box: the `glyph`
+ * column stays as it was (a later contract migration drops it) and a save leaves it as it is.
  */
 export default function TiersCard({
   tiers,
@@ -65,7 +64,6 @@ export default function TiersCard({
   saved?: string;
 }) {
   const count = t(`members.tiers.count.${countForm(tiers.length, locale)}`, { count: tiers.length });
-  const glyphOptions = TIER_GLYPH_KEYS.map((key) => ({ value: key, label: t(`members.tiers.glyphs.${key}`), glyph: tierGlyphName(key) }));
 
   /** One level's row, or the blank one at the end (`tier` null): every box named by its row's key (`tier-rows.ts`), all posted by the card's one form. */
   const rowOf = (tier: AdminMemberTier | null, index: number) => {
@@ -130,25 +128,18 @@ export default function TiersCard({
         {/* What the form was drawn with: the place the level was at, which «Poziția» is compared with — a typed number that differs is a move. */}
         {tier && <input type="hidden" name={box("was")} value={index + 1} />}
         <Stack spacing={1.5} role="group" aria-label={title}>
-          <Box sx={{ display: "grid", gap: 1.5, alignItems: "start", gridTemplateColumns: { xs: "minmax(0, 1fr)", sm: "minmax(0, 2fr) minmax(0, 1fr)" } }}>
-            <GlyphSelect
-              name={box("glyph")}
-              label={t("members.tiers.glyph")}
-              defaultValue={tier ? glyphOf(tier.tier.glyph) : DEFAULT_TIER_GLYPH}
-              options={glyphOptions}
-            />
-            {/* «Poziția»: the level's place in the club's list, from 1; the blank row's is the last. */}
-            <RecallField
-              name={box("position")}
-              type="number"
-              label={t("members.tiers.position")}
-              defaultValue={tier ? String(index + 1) : ""}
-              size="small"
-              slotProps={{ htmlInput: { inputMode: "numeric", step: "any" }, inputLabel: { shrink: true } }}
-              placeholder={tier ? undefined : t("members.tiers.positionLast")}
-            />
-          </Box>
-          {/* One strip for the level's words (§572): name and description in Română, then in English — both languages or neither (§352). */}
+          {/* «Poziția»: the level's place in the club's list, from 1; the blank row's is the last. */}
+          <RecallField
+            name={box("position")}
+            type="number"
+            label={t("members.tiers.position")}
+            defaultValue={tier ? String(index + 1) : ""}
+            size="small"
+            sx={{ maxWidth: { sm: 220 } }}
+            slotProps={{ htmlInput: { inputMode: "numeric", step: "any" }, inputLabel: { shrink: true } }}
+            placeholder={tier ? undefined : t("members.tiers.positionLast")}
+          />
+          {/* One strip for the level's words (§572): the name and the administrators' note in Română, then in English — both languages or neither (§352). */}
           <LocaleTabPanels
             idPrefix={`tier-${key}`}
             watch={{ names: [`tiers[${key}].name{Locale}`], rule: tier ? "required" : "parity" }}

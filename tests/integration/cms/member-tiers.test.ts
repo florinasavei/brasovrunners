@@ -37,7 +37,7 @@ vi.mock("next-intl/server", () => ({
 
 const { saveMemberTiers, deleteMemberTier } = await import("@/modules/content/member-tiers/service");
 const { listMemberTiersForAdmin, tierUsage } = await import("@/modules/content/member-tiers/admin-repository");
-const { listAllMemberTiers, listVisibleMemberTiers, readPublicMemberTiers, tierViewOf } = await import("@/modules/content/member-tiers/repository");
+const { listAllMemberTiers, tierViewOf } = await import("@/modules/content/member-tiers/repository");
 const { postedTierRows, tierBox, orderTierRows } = await import("@/modules/content/member-tiers/tier-rows");
 const { TIER_GLYPH_KEYS, isTierGlyphKey } = await import("@/modules/content/member-tiers/glyph-keys");
 const { tierFieldsSchema } = await import("@/modules/content/member-tiers/fields");
@@ -222,11 +222,10 @@ describe("§811 the member tiers", () => {
     it("hides and shows a level by the tick, and a row with its words and no tick says not hidden", async () => {
       const { first } = await twoTiers();
       await saveMemberTiers(db, { actor: admin, rows: rowsOf({ [first.id]: { ...unchanged(first, 1), hidden: "on" } }), now: NOW });
-      expect((await listVisibleMemberTiers(db)).map((tier) => tier.nameRo)).toEqual(["Fondator"]);
-      expect((await readPublicMemberTiers(db, "en")).map((tier) => tier.name)).toEqual(["Founder"]);
+      expect((await listAllMemberTiers(db)).map((tier) => [tier.nameRo, tier.hidden])).toEqual([["Membru", true], ["Fondator", false]]);
       const shown = await saveMemberTiers(db, { actor: admin, rows: rowsOf({ [first.id]: unchanged({ ...first, hidden: false }, 1) }), now: NOW });
       expect(shown.edited).toBe(1);
-      expect((await listVisibleMemberTiers(db)).map((tier) => tier.nameRo)).toEqual(["Membru", "Fondator"]);
+      expect((await listAllMemberTiers(db)).map((tier) => [tier.nameRo, tier.hidden])).toEqual([["Membru", false], ["Fondator", false]]);
       const audit = await db.select().from(auditLogs).where(eq(auditLogs.action, "member_tier.edited"));
       expect(audit.map((row) => row.metadataJson)).toEqual([
         { parts: ["hidden"], hidden: true },
@@ -578,6 +577,25 @@ describe("§811 the member tiers", () => {
       expect(tierFieldsSchema.safeParse({ nameRo: "Membru", nameEn: "Member", glyph: "nope" }).success).toBe(false);
       const [row] = await db.insert(memberTiers).values({ nameRo: "Vechi", nameEn: "Old", glyph: "from-sql", position: 1 }).returning();
       expect(tierViewOf(row, "ro").glyph).toBe("star");
+    });
+
+    it("is left as it is by the card's save, which posts no glyph box (§NNN): the column stays for a later contract migration", async () => {
+      const { first, second } = await twoTiers();
+      expect(second.glyph).toBe("trophy");
+      // The card posts no glyph box: the rows the save receives carry none.
+      const withoutGlyph = (tier: typeof memberTiers.$inferSelect, place: number) => Object.fromEntries(Object.entries(unchanged(tier, place)).filter(([box]) => box !== "glyph"));
+      const withoutFirst = withoutGlyph(first, 1);
+      const withoutSecond = withoutGlyph(second, 2);
+      await saveMemberTiers(db, {
+        actor: admin,
+        rows: rowsOf({ [first.id]: withoutFirst, [second.id]: { ...withoutSecond, descriptionRo: "Notă nouă.", descriptionEn: "A new note." }, new: { nameRo: "Nou", nameEn: "New" } }),
+        now: NOW,
+      });
+      const after = await listAllMemberTiers(db);
+      expect(after.map((tier) => [tier.nameRo, tier.glyph])).toEqual([["Membru", "star"], ["Fondator", "trophy"], ["Nou", "star"]]);
+      expect(after[1].descriptionRo).toBe("Notă nouă.");
+      const audit = await db.select().from(auditLogs).where(eq(auditLogs.action, "member_tier.edited"));
+      expect(audit.map((row) => row.metadataJson)).toEqual([{ parts: ["description"], hidden: false }]);
     });
   });
 

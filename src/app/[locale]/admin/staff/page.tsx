@@ -185,7 +185,7 @@ export default async function StaffPage({ params, searchParams }: Props) {
           {/* A club member's level (§811): its glyph and name, beside the role — a label, not a permission. */}
           {(() => {
             const level = canHoldMemberTier(member.role) ? tierOf(member.memberTierId) : undefined;
-            return level && <TierBadge tier={level} help={false} color="default" testId="staff-member-tier" />;
+            return level && <TierBadge tier={level} testId="staff-member-tier" />;
           })()}
           {/* «Gestionează magazinul» given on top of the role (§687) — only where it means something. */}
           {holdsGrant(member, "shop.manage") && (

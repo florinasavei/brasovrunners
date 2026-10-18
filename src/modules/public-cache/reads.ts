@@ -35,7 +35,6 @@ import {
 import { readPublicFaqPage } from "@/modules/content/faq/repository";
 import { memberDefinitionFor, parseMemberDefinition, readMemberDefinition } from "@/modules/content/members/member-definition";
 import { readPublicMembersPage } from "@/modules/content/members/page-settings";
-import { readPublicMemberTiers } from "@/modules/content/member-tiers/repository";
 import { readPublicTeamPage } from "@/modules/content/team/repository";
 import { listCheckpoints } from "@/modules/event-checkpoints/checkpoints";
 import type { ElevationProfileData } from "@/modules/routes/elevation/parse";
@@ -909,15 +908,6 @@ export async function cachedFaqPage(locale: Locale) {
  */
 export async function cachedMembersPage(locale: Locale) {
   return publicRead(["members.page", locale], ["pages"], () => readPublicMembersPage(getDb(), locale));
-}
-
-/**
- * `readPublicMemberTiers`: «Nivelurile de membru» (§811) — the visible levels, in the club's order and the
- * reader's language, for the members' page. Nothing about a person. Filed under `pages` with the page that
- * lists them: a save of the levels expires that kind (`content/member-tiers/service.ts`).
- */
-export async function cachedMemberTiers(locale: Locale) {
-  return publicRead(["members.tiers", locale], ["pages"], () => readPublicMemberTiers(getDb(), locale));
 }
 
 /** The sitemap's standing pages: the address, the last change and the alternates — `cachedSitemapEvents`' shape. */
