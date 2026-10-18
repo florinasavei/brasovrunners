@@ -11,6 +11,7 @@ import { countForm } from "@/i18n/count-form";
 import type { Locale } from "@/i18n/routing";
 import { CODE_DESCRIPTION_MAX, CODE_LINK_MAX, CODE_MAX, CODE_PARTNER_MAX, codeShownToMembers } from "@/modules/content/member-codes/fields";
 import type { AdminDiscountCode } from "@/modules/content/member-codes/repository";
+import TierChips from "@/modules/content/member-tiers/ui/TierChips";
 import ActionForm, { type RefusalMessages } from "@/shared/forms/ActionForm";
 import DateField from "@/shared/forms/pickers/DateField";
 import RecallField, { RecallHidden } from "@/shared/forms/recall";
@@ -26,6 +27,9 @@ import {
 } from "./actions";
 
 type Words = Awaited<ReturnType<typeof getTranslations<"Admin">>>;
+
+/** A member tier as the codes' card names it (§NNN): its id and its name in the reader's language; a hidden one is still named, it may hold a code's limit. */
+export type CodeTier = { id: string; name: string; hidden: boolean };
 
 /**
  * «Coduri de reducere» (§552): the members' discount codes, one fold on «Pagini» → «Membri», closed
@@ -44,8 +48,11 @@ export default function CodesCard({
   messages,
   mayManage,
   mayEditWords,
+  tiers,
 }: {
   codes: readonly AdminDiscountCode[];
+  /** The member tiers, in the club's order (§NNN): the chips «Pentru nivelurile» of each code, and the names of the limit on its line. */
+  tiers: readonly CodeTier[];
   /** The club's calendar day, `YYYY-MM-DD`: a code past its last day is marked as not shown. */
   today: string;
   locale: Locale;
@@ -86,7 +93,7 @@ export default function CodesCard({
               confirm={{ title: t("members.codes.createTitle"), body: t("members.codes.createBody"), confirmLabel: t("members.codes.create"), cancelLabel: cancel }}
             >
               <input type="hidden" name="uiLocale" value={locale} />
-              <CodeFields code={null} words={t} mayManage />
+              <CodeFields code={null} words={t} mayManage tiers={tiers} />
               <Box sx={{ mt: 2 }}>
                 <GlyphSubmitButton label={t("members.codes.create")} pendingLabel={t("editor.saving")} icon="add" size="medium" />
               </Box>
@@ -113,6 +120,7 @@ export default function CodesCard({
                 messages={messages}
                 mayManage={mayManage}
                 mayEditWords={mayEditWords}
+                tiers={tiers}
               />
             ))}
           </Stack>
@@ -133,6 +141,7 @@ function CodeRow({
   messages,
   mayManage,
   mayEditWords,
+  tiers,
 }: {
   code: AdminDiscountCode;
   first: boolean;
@@ -144,8 +153,11 @@ function CodeRow({
   messages: RefusalMessages;
   mayManage: boolean;
   mayEditWords: boolean;
+  tiers: readonly CodeTier[];
 }) {
   const shown = codeShownToMembers(code, today);
+  // The levels the code is limited to, named (§NNN); an id whose level is gone is not named (deleting a level takes it off the codes).
+  const limited = (code.tierIds ?? []).flatMap((id) => tiers.find((tier) => tier.id === id)?.name ?? []);
   const expired = !code.hidden && !shown;
   const hidden = (
     <>
@@ -170,6 +182,12 @@ function CodeRow({
         {code.validUntil && (
           <Chip size="small" variant="outlined" label={t("members.codes.until", { day: formatCalendarDay(code.validUntil, { locale, position: "inline" }) })} />
         )}
+        <Chip
+          size="small"
+          variant="outlined"
+          label={limited.length > 0 ? t("members.codes.forTiersChip", { tiers: limited.join(", ") }) : t("members.codes.forEveryone")}
+          data-testid="code-tiers-chip"
+        />
         {(code.descriptionRo === null) !== (code.descriptionEn === null) && (
           <Chip size="small" variant="outlined" color="warning" label={t("members.codes.oneLanguage")} />
         )}
@@ -233,7 +251,7 @@ function CodeRow({
           >
             {hidden}
             <RecallHidden name="expectedVersion" value={code.version} />
-            <CodeFields code={code} words={t} mayManage={mayManage} />
+            <CodeFields code={code} words={t} mayManage={mayManage} tiers={tiers} />
             <Box sx={{ mt: 2 }}>
               <GlyphSubmitButton label={t("editor.save")} pendingLabel={t("editor.saving")} icon="save" size="medium" />
             </Box>
@@ -246,11 +264,11 @@ function CodeRow({
 
 /**
  * The boxes of a code, for adding one and for writing one: the partner and the code, the description
- * Română and English side by side from `sm` — both or neither (§352) — the link and the last day. A
- * role that writes the words alone sees the code, the link and the day as text, not as boxes: the
- * service keeps them as stored whatever is posted.
+ * Română and English side by side from `sm` — both or neither (§352) — the link, the last day and the
+ * chips «Pentru nivelurile» (§NNN). A role that writes the words alone sees the code as text, and the
+ * link, the day and the chips not at all: the service keeps them as stored whatever is posted.
  */
-function CodeFields({ code, words: t, mayManage }: { code: AdminDiscountCode | null; words: Words; mayManage: boolean }) {
+function CodeFields({ code, words: t, mayManage, tiers }: { code: AdminDiscountCode | null; words: Words; mayManage: boolean; tiers: readonly CodeTier[] }) {
   const pairSx = { display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 2 } as const;
   return (
     <Stack spacing={2}>
@@ -312,6 +330,16 @@ function CodeFields({ code, words: t, mayManage }: { code: AdminDiscountCode | n
             slotProps={{ htmlInput: { maxLength: CODE_LINK_MAX } }}
           />
           <DateField name="validUntil" label={t("members.codes.validUntil")} defaultValue={code?.validUntil ?? ""} helperText={t("members.codes.validUntilHelp")} />
+          {/* «Pentru nivelurile» (§NNN): chips with the native tick; none ticked is every member. Only once the club named a level. */}
+          {tiers.length > 0 && (
+            <TierChips
+              name="tierIds"
+              legend={t("members.codes.forTiers")}
+              hint={t("members.codes.forTiersHelp")}
+              tiers={tiers.map((tier) => ({ id: tier.id, label: tier.hidden ? t("members.tiers.hiddenOption", { name: tier.name }) : tier.name }))}
+              checkedIds={code?.tierIds ?? []}
+            />
+          )}
         </>
       )}
     </Stack>

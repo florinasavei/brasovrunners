@@ -14,6 +14,7 @@ import { getDb } from "@/db/client";
 import { getPathname } from "@/i18n/navigation";
 import { routing, type Locale } from "@/i18n/routing";
 import { readMemberDefinition } from "@/modules/content/members/member-definition";
+import { listMemberTiersForAdmin } from "@/modules/content/member-tiers/repository";
 import {
   MEMBERS_TEXT_MAX,
   type MembersPageSettings,
@@ -29,6 +30,7 @@ import {
   canEditDiscountCodeWords,
   canEditMembersPage,
   canManageDiscountCodes,
+  canManageMemberTiers,
   canManageStaff,
   canPublishMembersPage,
   canReadContent,
@@ -47,10 +49,11 @@ import LocaleTabPanels from "@/shared/ui/LocaleTabPanels";
 import { saveMembersTextAction, setMembersPagePublishedAction } from "./actions";
 import CodesCard from "./CodesCard";
 import DefinitionCard from "./DefinitionCard";
+import TiersCard from "./TiersCard";
 
 type Props = {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ saved?: string; error?: string }>;
+  searchParams: Promise<{ saved?: string; error?: string; count?: string }>;
 };
 
 export const dynamic = "force-dynamic";
@@ -85,15 +88,16 @@ export default async function AdminMembersPage({ params, searchParams }: Props) 
   if (!canReadContent(actor.role)) notFound();
 
   const query = await searchParams;
-  const { saved, error } = query;
+  const { saved, error, count: errorCount } = query;
   const t = await getTranslations("Admin");
   const words = await confirmWords();
   const db = getDb();
-  const [settings, members, codes, definition] = await Promise.all([
+  const [settings, members, codes, definition, tiers] = await Promise.all([
     readMembersPageSettings(db),
     countMembers(db),
     listDiscountCodesForAdmin(db),
     readMemberDefinition(db),
+    listMemberTiersForAdmin(db),
   ]);
   // The platform's own sentence, each language's, shown in the boxes while the club wrote none (§789).
   const platformWords = {
@@ -118,6 +122,10 @@ export default async function AdminMembersPage({ params, searchParams }: Props) 
     descriptionEn: t("members.codes.descriptionEn"),
     link: t("members.codes.link"),
     validUntil: t("members.codes.validUntil"),
+    tierIds: t("members.codes.forTiers"),
+    // «Niveluri de membru» (§NNN): a refused box of the one form is named by its level, `tiers[<key>]`.
+    ...Object.fromEntries(tiers.map((row) => [`tiers[${row.tier.id}]`, row.tier.nameRo])),
+    "tiers[new]": t("members.tiers.newRow"),
   });
 
   return (
@@ -126,7 +134,7 @@ export default async function AdminMembersPage({ params, searchParams }: Props) 
 
       <Box id="admin-alert" tabIndex={-1} sx={{ scrollMarginTop: 16 }}>
         {saved && <Alert severity="success">{t("saved")}</Alert>}
-        {error && <Alert severity="error">{t(`errors.${error}`)}</Alert>}
+        {error && <Alert severity="error">{t(`errors.${error}`, { count: errorCount ?? "0" })}</Alert>}
       </Box>
 
       <Stack spacing={1}>
@@ -164,6 +172,17 @@ export default async function AdminMembersPage({ params, searchParams }: Props) 
       {/* «Cine e membru» (§789): the sentence behind the «?» of the member tick on the two public forms; saved whatever the page's state. */}
       <DefinitionCard definition={definition} platformWords={platformWords} locale={locale} words={t} messages={messages} mayEdit={mayEdit} saved={saved} />
 
+      {/* «Niveluri de membru» (§NNN): the levels the club names for its members; a label and its benefits, never a permission. */}
+      <TiersCard
+        tiers={tiers}
+        locale={locale}
+        words={t}
+        cancel={words.cancel}
+        messages={messages}
+        mayManage={canManageMemberTiers(actor.role)}
+        saved={saved}
+      />
+
       {/* «Coduri de reducere» (§552): shown only inside the members' zone, never on a public page. */}
       <CodesCard
         codes={codes}
@@ -174,6 +193,7 @@ export default async function AdminMembersPage({ params, searchParams }: Props) 
         messages={messages}
         mayManage={canManageDiscountCodes(actor.role)}
         mayEditWords={canEditDiscountCodeWords(actor.role)}
+        tiers={tiers.map((row) => ({ id: row.tier.id, name: locale === "en" ? row.tier.nameEn : row.tier.nameRo, hidden: row.tier.hidden }))}
       />
 
       {/*

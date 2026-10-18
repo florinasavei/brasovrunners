@@ -6,6 +6,8 @@ import { unstable_rethrow } from "next/navigation";
 import { getDb } from "@/db/client";
 import { listDiscountCodesForMembers, type MembersDiscountCode } from "@/modules/content/member-codes/repository";
 import MemberCodes from "@/modules/content/member-codes/ui/MemberCodes";
+import { listAllMemberTiers, type TierView, tierViewOf } from "@/modules/content/member-tiers/repository";
+import type { Locale } from "@/i18n/routing";
 import { isDatabaseAwayError } from "@/modules/resilience/domain/database-away";
 import ZoneFrame, { frameParts, openZone } from "./zone";
 
@@ -19,10 +21,16 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-/** The partners' codes (§552): read here, per request, behind the account — never through the shared public cache. `"away"` while the database is (§447). */
-async function codesOrAway(now: Date): Promise<MembersDiscountCode[] | "away"> {
+/**
+ * The partners' codes (§552) for this member's level (§NNN): read here, per request, behind the account — never through the shared
+ * public cache. The codes for everyone and those limited to the member's level (`tierId`; none, the first alone), and the levels'
+ * names the limited ones' chips say. `"away"` while the database is (§447).
+ */
+async function codesOrAway(now: Date, tierId: string | null, locale: Locale): Promise<{ codes: MembersDiscountCode[]; tiers: TierView[] } | "away"> {
   try {
-    return await listDiscountCodesForMembers(getDb(), now);
+    const db = getDb();
+    const [codes, tiers] = await Promise.all([listDiscountCodesForMembers(db, now, tierId), listAllMemberTiers(db)]);
+    return { codes, tiers: tiers.map((tier) => tierViewOf(tier, locale)) };
   } catch (error) {
     unstable_rethrow(error);
     if (!isDatabaseAwayError(error)) throw error;
@@ -49,15 +57,15 @@ export default async function MembersAreaPage({ params }: Props) {
   const { locale, account } = opened;
   const t = await getTranslations("Members");
   const now = new Date();
-  const [codes, parts] = await Promise.all([codesOrAway(now), frameParts(account, locale, now)]);
+  const [found, parts] = await Promise.all([codesOrAway(now, account.memberTierId, locale), frameParts(account, locale, now)]);
   return (
     <ZoneFrame t={t} locale={locale} account={account} active="codes" parts={parts}>
-      {codes === "away" ? (
+      {found === "away" ? (
         <Alert severity="info" sx={{ mb: 3 }}>
           {t("zoneAway")}
         </Alert>
-      ) : codes.length > 0 ? (
-        <MemberCodes codes={codes} locale={locale} />
+      ) : found.codes.length > 0 ? (
+        <MemberCodes codes={found.codes} tiers={found.tiers} locale={locale} />
       ) : (
         <Typography variant="body1" sx={{ mb: 3 }} data-testid="members-codes-empty">
           {t("codesEmpty")}

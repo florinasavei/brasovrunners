@@ -35,3 +35,8 @@ export const TIER_GLYPH: Record<TierGlyphKey, ComponentType<SvgIconProps>> = {
   verified: VerifiedIcon,
   mountain: TerrainIcon,
 };
+
+/** The name `GlyphChip` takes for a tier's glyph: `tier:star`, `tier:medal`… — a key of `GLYPHS` (`glyphs.ts` registers the table with this prefix). */
+export function tierGlyphName(key: TierGlyphKey): `tier:${TierGlyphKey}` {
+  return `tier:${key}`;
+}

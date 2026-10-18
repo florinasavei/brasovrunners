@@ -35,6 +35,7 @@ import {
   resendStaffInviteAction,
   revokeStaffAction,
   sendStaffPasswordResetAction,
+  setMemberTierAction,
   setStaffAccountActiveAction,
   setStaffPermissionAction,
 } from "../actions";
@@ -46,6 +47,8 @@ import { refusedInvitations } from "@/modules/notifications/delivery-evidence";
 import { causeLabel } from "@/modules/registrations/ui/rejected-email-words";
 import { env } from "@/shared/config/env";
 import { findAuditEvent } from "@/modules/audit/repository";
+import { listAllMemberTiers, tierViewOf } from "@/modules/content/member-tiers/repository";
+import TierBadge from "@/modules/content/member-tiers/ui/TierBadge";
 import { MEMBER_ROWS_MAX } from "@/modules/staff-identity/domain/member-rows";
 import type { MemberAccountLine } from "@/modules/staff-identity/member-accounts";
 
@@ -99,6 +102,11 @@ export default async function StaffPage({ params, searchParams }: Props) {
   const t = await getTranslations("Admin");
   const words = await confirmWords();
   const staff = await listStaff(getDb(), actor);
+  // The levels the club named (§NNN), in its order and this language: the select of a member's row and of «Adaugă mai mulți membri». Hidden ones are no longer given.
+  const tiers = (await listAllMemberTiers(getDb())).map((tier) => ({ ...tierViewOf(tier, locale), hidden: tier.hidden }));
+  const givableTiers = tiers.filter((tier) => !tier.hidden);
+  const tierBoxes = await refusalMessages({ tierId: t("staff.memberTier") });
+  const tierOf = (id: string | null) => (id === null ? undefined : tiers.find((tier) => tier.id === id));
   // «Retrimite invitația» asks «Trimite acum» or «Pune la coadă» (§540), under the scheduled timing only.
   const sendNow = await sendNowChoiceFor(getDb(), locale);
   /**
@@ -174,6 +182,11 @@ export default async function StaffPage({ params, searchParams }: Props) {
       render: (member) => (
         <Stack direction="row" sx={{ alignItems: "center", flexWrap: "wrap", gap: 0.5 }}>
           <Chip size="small" label={STAFF_ROLE_LABEL[member.role]} />
+          {/* A club member's level (§NNN): its glyph and name, beside the role — a label, not a permission. */}
+          {(() => {
+            const level = member.role === "MEMBER" ? tierOf(member.memberTierId) : undefined;
+            return level && <TierBadge tier={level} help={false} color="default" testId="staff-member-tier" />;
+          })()}
           {/* «Gestionează magazinul» given on top of the role (§687) — only where it means something. */}
           {holdsGrant(member, "shop.manage") && (
             <Chip size="small" variant="outlined" color="secondary" label={t("staff.permissions.chipShop")} data-testid="staff-permission-shop" />
@@ -353,7 +366,7 @@ export default async function StaffPage({ params, searchParams }: Props) {
       <Panel glyph="members" title={t("staff.membersTitle")} aside={t("staff.membersAside")} collapsible id="staff-members" data-testid="staff-members">
         <ActionForm
           action={inviteMembersAction}
-          messages={await refusalMessages({ members: t("staff.membersRows"), preferredLocale: t("staff.preferredLocale") })}
+          messages={await refusalMessages({ members: t("staff.membersRows"), preferredLocale: t("staff.preferredLocale"), tierId: t("staff.memberTier") })}
           confirm={{ title: t("confirm.inviteMembersTitle"), body: t("confirm.inviteMembersBody"), confirmLabel: t("staff.membersInvite"), cancelLabel: words.cancel }}
           data-testid="staff-members-form"
         >
@@ -374,6 +387,25 @@ export default async function StaffPage({ params, searchParams }: Props) {
                 </MenuItem>
               ))}
             </RecallField>
+            {/* «Nivel» (§NNN): one level for every member this press adds — the club's visible levels, or none. Only once the club named one. */}
+            {givableTiers.length > 0 && (
+              <RecallField
+                name="tierId"
+                label={t("staff.memberTier")}
+                select
+                defaultValue=""
+                helperText={t("staff.memberTierBulkHelp")}
+                slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}
+                data-testid="staff-members-tier"
+              >
+                <option value="">{t("staff.memberTierNone")}</option>
+                {givableTiers.map((tier) => (
+                  <option key={tier.id} value={tier.id}>
+                    {tier.name}
+                  </option>
+                ))}
+              </RecallField>
+            )}
             <Box>
               <GlyphSubmitButton
                 label={t("staff.membersInvite")}
@@ -468,6 +500,44 @@ export default async function StaffPage({ params, searchParams }: Props) {
                   />
                 </Stack>
               </ActionForm>
+
+              {/*
+                «Nivel» (§NNN): a club member's level, given or cleared on the row — the visible levels and the one the member
+                holds, and «—» for none. Only a member's row: a colleague is no member and holds no level. A press that asks first
+                and then toasts, like the row's other verbs. A label and its benefits: it opens and refuses nothing.
+              */}
+              {member.role === "MEMBER" && tiers.length > 0 && (
+                <ActionForm
+                  action={setMemberTierAction}
+                  messages={tierBoxes}
+                  confirm={{ title: t("confirm.memberTierTitle"), body: t("confirm.memberTierBody", { name: member.displayName }), confirmLabel: t("staff.memberTierSave"), cancelLabel: words.cancel }}
+                  data-testid="staff-member-tier-form"
+                >
+                  <input type="hidden" name="uiLocale" value={locale} />
+                  <input type="hidden" name="staffUserId" value={member.id} />
+                  <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
+                    <TextField
+                      name="tierId"
+                      label={t("staff.memberTier")}
+                      defaultValue={member.memberTierId ?? ""}
+                      select
+                      size="small"
+                      sx={{ minWidth: 150 }}
+                      slotProps={{ select: { native: true }, inputLabel: { shrink: true } }}
+                    >
+                      <option value="">{t("staff.memberTierNone")}</option>
+                      {tiers
+                        .filter((tier) => !tier.hidden || tier.id === member.memberTierId)
+                        .map((tier) => (
+                          <option key={tier.id} value={tier.id}>
+                            {tier.hidden ? t("staff.memberTierHiddenOption", { name: tier.name }) : tier.name}
+                          </option>
+                        ))}
+                    </TextField>
+                    <GlyphSubmitButton label={t("staff.memberTierSave")} pendingLabel={t("staff.memberTierSaving")} icon="save" variant="outlined" />
+                  </Stack>
+                </ActionForm>
+              )}
 
               {/*
                 «Gestionează magazinul» (§687): a permission on top of the role, after the role

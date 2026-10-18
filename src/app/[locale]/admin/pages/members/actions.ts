@@ -13,7 +13,10 @@ import {
   saveDiscountCode,
   setDiscountCodeHidden,
 } from "@/modules/content/member-codes/service";
-import { canEditMembersPage, canPublishMembersPage } from "@/modules/staff-identity/domain/roles";
+import { tierUsage } from "@/modules/content/member-tiers/repository";
+import { deleteMemberTier, saveMemberTiers } from "@/modules/content/member-tiers/service";
+import { postedTierRows } from "@/modules/content/member-tiers/tier-rows";
+import { canEditMembersPage, canManageMemberTiers, canPublishMembersPage } from "@/modules/staff-identity/domain/roles";
 import { requireStaff, requireStaffCapability } from "@/modules/staff-identity/session";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { flashOutcome } from "@/shared/feedback/flash";
@@ -99,6 +102,53 @@ export async function setMembersPagePublishedAction(_previous: FormOutcome | nul
   redirect(`${screen(form)}${query}#${outcome.error ? "admin-alert" : "members-page"}`);
 }
 
+// --- «Niveluri de membru» (§NNN) ---------------------------------------------------------------
+
+/**
+ * «Salvează tot nivelurile»: every row of the card in one save (the volunteers' «Roluri» rule, §791). A refused row refuses
+ * the whole save, naming its boxes, and every box comes back as typed (§315); a success redirects to the card with a toast.
+ * The door is the Administrator's (`canManageMemberTiers`), asked again in the service (BR-REQ-060-01).
+ */
+export async function saveMemberTiersAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  let saved: { changed: boolean };
+  try {
+    const actor = await requireStaffCapability(canManageMemberTiers);
+    saved = await saveMemberTiers(getDb(), { actor, rows: postedTierRows(form.entries()) });
+  } catch (error) {
+    return refused(error, form);
+  }
+  await flashOutcome({ saved: saved.changed ? "memberTiersSaved" : "memberTiersUnchanged" });
+  redirect(`${screen(form)}?saved=${saved.changed ? "memberTiersSaved" : "memberTiersUnchanged"}#members-tiers`);
+}
+
+/**
+ * «Șterge nivelul»: asks first (§384). A level a member holds, or a code is for alone, is refused, naming why and how many —
+ * the count rides on the redirect (`count`), read back by the page.
+ */
+export async function deleteMemberTierAction(_previous: FormOutcome | null, form: FormData): Promise<FormOutcome | null> {
+  const tierId = text(form, "tierId");
+  let outcome: { error?: string; saved?: string; count?: string };
+  try {
+    const actor = await requireStaffCapability(canManageMemberTiers);
+    try {
+      await deleteMemberTier(getDb(), { actor, tierId });
+      outcome = { saved: "memberTierDeleted" };
+    } catch (error) {
+      if (!isDomainError(error)) throw error;
+      const usage = error.code === "MEMBER_TIER_HAS_MEMBERS" || error.code === "MEMBER_TIER_IN_CODES" ? await tierUsage(getDb(), tierId) : null;
+      outcome = {
+        error: error.code,
+        ...(usage ? { count: String(error.code === "MEMBER_TIER_HAS_MEMBERS" ? usage.members : usage.codesOnlyForIt) } : {}),
+      };
+    }
+  } catch (error) {
+    return refused(error, form);
+  }
+  await flashOutcome(outcome);
+  const query = new URLSearchParams(outcome.error ? { error: outcome.error, ...(outcome.count ? { count: outcome.count } : {}) } : { saved: outcome.saved ?? "1" });
+  redirect(`${screen(form)}?${query.toString()}#${outcome.error ? "admin-alert" : "members-tiers"}`);
+}
+
 // --- «Coduri de reducere» (§552) ----------------------------------------------------------------
 
 /**
@@ -115,6 +165,8 @@ function codeFieldsOf(form: FormData) {
     descriptionEn: text(form, "descriptionEn"),
     link: text(form, "link"),
     validUntil: text(form, "validUntil"),
+    // «Pentru nivelurile» (§NNN): one id per ticked chip; none ticked is every member.
+    tierIds: form.getAll("tierIds").filter((value): value is string => typeof value === "string"),
   };
 }
 

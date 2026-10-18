@@ -1,4 +1,4 @@
-import { asc, eq, sql } from "drizzle-orm";
+import { asc, eq, inArray, sql } from "drizzle-orm";
 import { memberDiscountCodes } from "@/db/schema/member-discount-codes";
 import { type MemberTier, memberTiers } from "@/db/schema/member-tiers";
 import { staffUsers } from "@/db/schema/staff-users";
@@ -71,6 +71,23 @@ export async function findMemberTier<T extends Record<string, unknown>>(db: Data
 /** The levels the public members' page lists, in one language: visible ones, in order, nothing about a person. */
 export async function readPublicMemberTiers<T extends Record<string, unknown>>(db: Database<T>, locale: Locale): Promise<TierView[]> {
   return (await listVisibleMemberTiers(db)).map((tier) => tierViewOf(tier, locale));
+}
+
+/**
+ * The ids among `ids` that are tiers, read with a share lock (§NNN): a code limited to a level (or a member
+ * given one) holds the level's row against its deletion until the transaction ends, so the delete — which locks
+ * the row first and then counts — sees what this write did.
+ */
+export async function existingTierIdsShared<T extends Record<string, unknown>>(db: Database<T>, ids: readonly string[]): Promise<Set<string>> {
+  if (ids.length === 0) return new Set();
+  const rows = await db.select({ id: memberTiers.id }).from(memberTiers).where(inArray(memberTiers.id, [...ids])).for("share");
+  return new Set(rows.map((row) => row.id));
+}
+
+/** One tier by id, read with a share lock (§NNN): giving it to a member holds its row against deletion until the transaction ends. */
+export async function findMemberTierShared<T extends Record<string, unknown>>(db: Database<T>, id: string): Promise<MemberTier | undefined> {
+  const [row] = await db.select().from(memberTiers).where(eq(memberTiers.id, id)).limit(1).for("share");
+  return row;
 }
 
 /** How many members hold a tier, and how many codes are for it alone: what stops its deletion. */

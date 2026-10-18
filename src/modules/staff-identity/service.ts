@@ -20,6 +20,8 @@ import {
   type StaffPermission,
   type StaffRole,
 } from "./domain/roles";
+import { findMemberTier, findMemberTierShared } from "@/modules/content/member-tiers/repository";
+import { isUuid } from "@/shared/ids";
 import { MEMBER_ROWS_MAX, type MemberRow } from "./domain/member-rows";
 import { STAFF_ROLE_LABEL } from "./domain/staff-labels";
 import {
@@ -34,6 +36,8 @@ import {
   listStaffPermissions,
   listStaffUsers,
   lockStaffUserRole,
+  lockStaffUserTier,
+  setStaffUserTier,
   normalizeStaffEmail,
   type StaffAccount,
   updateStaffUserRole,
@@ -166,6 +170,51 @@ export async function setStaffPermission<T extends Record<string, unknown>>(
   });
 }
 
+/**
+ * A member's level given, or cleared with `tierId: null` (§NNN): «Nivel» on a member's row of «Echipa».
+ *
+ * The Administrator's (`canManageStaff`), asserted here whatever the page offered. A level is given to a
+ * club member's account only (`MEMBER`): a colleague is no member, and a level is a label, not a role.
+ * The level must exist and not be hidden — a hidden level is no longer given — unless the member already
+ * holds it (saving a row that did not change anything is not a refusal). Idempotent: the same level again
+ * writes and audits nothing. The row and the level are locked (the row for update, the level for share) so
+ * a role change or a deleted level runs before or after, never between. The audit row names the row, the
+ * level and the one it replaces by id — never a name or an address.
+ *
+ * A label and its benefits, never a permission: no function that decides what a person may do reads it.
+ */
+export async function setMemberTier<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: StaffUser,
+  input: { targetId: string; tierId: string | null; now?: Date },
+): Promise<{ changed: boolean }> {
+  assertAdministrator(actor);
+  if (!isUuid(input.targetId)) throw new DomainError("NOT_FOUND", "no such staff user");
+  if (input.tierId !== null && !isUuid(input.tierId)) throw new DomainError("VALIDATION_ERROR", "no such member tier", ["tierId"]);
+  const now = input.now ?? new Date();
+  return db.transaction(async (tx) => {
+    const target = await lockStaffUserTier(tx, input.targetId);
+    if (!target) throw new DomainError("NOT_FOUND", "no such staff user");
+    if (target.role !== "MEMBER") throw new DomainError("VALIDATION_ERROR", "a level is given to a club member's account only", ["tierId"]);
+    if (input.tierId !== null && input.tierId !== target.memberTierId) {
+      const tier = await findMemberTierShared(tx, input.tierId);
+      if (!tier) throw new DomainError("VALIDATION_ERROR", "no such member tier", ["tierId"]);
+      if (tier.hidden) throw new DomainError("VALIDATION_ERROR", "a hidden level is no longer given", ["tierId"]);
+    }
+    if (target.memberTierId === input.tierId) return { changed: false };
+    await setStaffUserTier(tx, target.id, input.tierId, now);
+    await recordAuditEvent(tx, {
+      actorStaffUserId: actor.id,
+      action: input.tierId === null ? "staff.member_tier.cleared" : "staff.member_tier.set",
+      entityType: "staff_user",
+      entityId: target.id,
+      metadata: { staffUserId: target.id, tierId: input.tierId, previousTierId: target.memberTierId, reason: "row" },
+      now,
+    });
+    return { changed: true };
+  });
+}
+
 export async function inviteStaffUser<T extends Record<string, unknown>>(
   db: Database<T>,
   actor: StaffUser,
@@ -222,10 +271,21 @@ export async function inviteStaffUser<T extends Record<string, unknown>>(
 export async function inviteMembers<T extends Record<string, unknown>>(
   db: Database<T>,
   actor: StaffUser,
-  input: { rows: readonly MemberRow[]; preferredLocale: "ro" | "en" },
+  input: { rows: readonly MemberRow[]; preferredLocale: "ro" | "en"; tierId?: string | null },
 ): Promise<{ added: StaffUser[]; existing: StaffUser[] }> {
   assertAdministrator(actor);
   assertMayAssign(actor, "MEMBER");
+  /*
+    «Nivel» (§NNN): one level for every member this press adds, or none. A level that is not there, or is
+    hidden, refuses the press before any row is written, naming the box. It is given to the rows ADDED
+    only: an address that was already a member keeps the level it has — pressing again to retry an
+    account must not change somebody's level.
+  */
+  const tierId = input.tierId ?? null;
+  if (tierId !== null) {
+    const tier = isUuid(tierId) ? await findMemberTier(db, tierId) : undefined;
+    if (!tier || tier.hidden) throw new DomainError("VALIDATION_ERROR", "no such member tier to give", ["tierId"]);
+  }
 
   if (input.rows.length === 0) throw new DomainError("VALIDATION_ERROR", "no member rows", ["members"]);
   if (input.rows.length > MEMBER_ROWS_MAX) throw new DomainError("VALIDATION_ERROR", `more than ${MEMBER_ROWS_MAX} member rows`, ["members"]);
@@ -247,11 +307,13 @@ export async function inviteMembers<T extends Record<string, unknown>>(
 
   const now = new Date();
   const added = await db.transaction(async (tx) => {
+    // The level held for share while the rows are written: a delete of it waits, then counts these members.
+    if (tierId !== null && !(await findMemberTierShared(tx, tierId))) throw new DomainError("VALIDATION_ERROR", "no such member tier to give", ["tierId"]);
     const members: StaffUser[] = [];
     for (const invite of invites) {
       const email = normalizeStaffEmail(invite.email);
       if (existing.has(email)) continue;
-      const member = await insertStaffUser(tx, { ...invite, email });
+      const member = await insertStaffUser(tx, { ...invite, email, memberTierId: tierId });
       await enqueueStaffInvitation(tx, actor, member, now);
       members.push(member);
     }
@@ -376,6 +438,20 @@ export async function changeStaffRole<T extends Record<string, unknown>>(
   return db.transaction(async (tx) => {
     const updated = await updateStaffUserRole(tx, targetId, role);
     if (!updated) throw new DomainError("NOT_FOUND", "no such staff user");
+    // A level belongs to a club member's account (§NNN): a colleague made of a member holds none, as no grant (§687) either. Audited.
+    // The level re-read under the row's lock the update just took: one given between the first read and here is cleared too.
+    const held = role !== "MEMBER" ? (await lockStaffUserTier(tx, targetId))?.memberTierId ?? null : null;
+    if (held !== null) {
+      await setStaffUserTier(tx, targetId, null, now);
+      await recordAuditEvent(tx, {
+        actorStaffUserId: actor.id,
+        action: "staff.member_tier.cleared",
+        entityType: "staff_user",
+        entityId: targetId,
+        metadata: { staffUserId: targetId, tierId: null, previousTierId: held, reason: "role_change" },
+        now,
+      });
+    }
     for (const permission of STAFF_PERMISSIONS) {
       if (canHoldPermission(role, permission)) continue;
       const removed = await deleteStaffPermissions(tx, targetId, permission);
