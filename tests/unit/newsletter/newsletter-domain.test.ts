@@ -25,7 +25,7 @@ const DAY = 24 * 60 * 60_000;
 /** §445 — the newsletter's pure rules: topics, alerts, words, the reserve, the notice's switch, the messages. */
 describe("§445 the newsletter's topics", () => {
   it("offers the brief's topics but the retired discount codes (§517), in its order, 'all the news' first, every name and hint in both languages", () => {
-    expect(NEWSLETTER_TOPICS).toEqual(["ALL", "BIG_EVENTS", "GEAR_TESTING", "SPECIAL_EVENTS", "WEEKLY_RUNS", "VOLUNTEERING", "RESULTS_PHOTOS"]);
+    expect(NEWSLETTER_TOPICS).toEqual(["ALL", "BIG_EVENTS", "GEAR_TESTING", "SPECIAL_EVENTS", "WEEKLY_RUNS", "VOLUNTEERING", "RESULTS_PHOTOS", "RSVP_ASK"]);
     expect(RETIRED_TOPICS).toEqual(["DISCOUNTS"]);
     expect(ro.Newsletter.topics).toMatchObject({
       ALL: "Toate noutățile",
@@ -36,6 +36,7 @@ describe("§445 the newsletter's topics", () => {
       WEEKLY_RUNS: "Alergările săptămânale",
       VOLUNTEERING: "Voluntariat",
       RESULTS_PHOTOS: "Rezultate și poze",
+      RSVP_ASK: "Întrebarea „Vii?” înaintea alergărilor",
     });
     for (const catalogue of [ro, en]) {
       // Every value keeps its name — an old send's row may still say DISCOUNTS — and every offered one a hint.
