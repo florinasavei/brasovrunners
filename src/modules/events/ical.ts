@@ -49,7 +49,7 @@ function qaMarked(value: string): string {
  * start of the long one, the times and the facts in one line each, where registration stands
  * and the link to it, the page, the rules, the programme, the route, the film, the Strava and
  * Facebook events, the programme's rows and text, what to bring and the co-host — and, for an
- * event the page offers «Vii?» to, «Vin! → <page>#vin» with how many come (§812) — as plain
+ * event the page offers «Vii?» to, «Vin! → <page>#vin» with how many come (§NNN) — as plain
  * text in `DESCRIPTION`, where Apple and Google make the bare addresses tappable (which is
  * why the plain twin writes `words — address`), and the same as minimal HTML in `X-ALT-DESC`,
  * which Outlook renders with the words as the links.
@@ -148,7 +148,7 @@ export type CalendarEvent = {
    */
   registration?: CalendarRegistration | null;
   /**
-   * «Vin!» (§812): the page offers the answer to this event (`rsvpOffered`, decided by `readComing`, never here), and this many have
+   * «Vin!» (§NNN): the page offers the answer to this event (`rsvpOffered`, decided by `readComing`, never here), and this many have
    * said they come. Two lines of the description — «Vin! → <page>#vin» and the count — and nothing else: a calendar cannot take
    * the answer, so the link is the whole feature. Absent when the page offers none, which is the file byte for byte as before.
    */
@@ -384,7 +384,7 @@ function difficultyLine(event: CalendarEvent, t: CalendarLabels["t"]): string {
 }
 
 /**
- * «Vin!» in the description (§812): «Vin! → <page>#vin» and «N vin până acum» (none: «Fii primul care spune că vine.»), the page's
+ * «Vin!» in the description (§NNN): «Vin! → <page>#vin» and «N vin până acum» (none: «Fii primul care spune că vine.»), the page's
  * own words for the count. The address is the event's page and the card's anchor (`RSVP_BOX_ID`), never a hostname written here. The
  * count's noun follows the number the house's way (`countForm`: «1 vine», «5 vin»). Nothing for an event the page does not offer.
  */
@@ -526,7 +526,7 @@ function descriptionGroups(event: CalendarEvent, labels: CalendarLabels): Line[]
     // pack, read on the morning of a dark evening's run, not one more word lost among the route's.
     [times, facts, nightLine].filter((text) => text.length > 0).map((text) => ({ text })),
     registration ? [registration] : [],
-    // «Vin!» (§812): the link into the page's «Vii?» card and how many come — right under the times and the registration line,
+    // «Vin!» (§NNN): the link into the page's «Vii?» card and how many come — right under the times and the registration line,
     // where a reader of the entry looks for what to do about it. The link is the address Google and Apple make tappable.
     comingLines(event, labels),
     links,

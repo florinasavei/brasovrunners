@@ -10,7 +10,7 @@ import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §812, «Vin!» part 2 (BR-REQ-041-01 criterion 6) — the listing card's «N vin» chip: drawn by the event card for an event it is told
+ * §NNN (BR-REQ-041-01 criterion 6) — the listing card's «N vin» chip: drawn by the event card for an event it is told
  * has confirmed answers, a link to the page's `#vin`, 44 pixels tall around the small chip, in the house's plural; not drawn for none,
  * and never by a series card. The conditions that give a card its number are `readComing`'s (tested beside it); this file holds the markup.
  */
@@ -81,12 +81,14 @@ async function markup(node: ReactNode): Promise<string> {
 }
 const withoutStyles = (html: string) => html.replace(/<style[^>]*>[\s\S]*?<\/style>/g, "");
 
-describe("§812 the listing card's «N vin» chip", () => {
+describe("§NNN the listing card's «N vin» chip", () => {
   it("is a link to the page's #vin that says how many come, in the house's plural", async () => {
     const event = await seed("alergarea-de-joi");
     const five = withoutStyles(await markup(createElement(EventCard, { event, index: 0, now: NOW, comingCount: 5 })));
     expect(five).toMatch(/<a[^>]*href="\/ro\/evenimente\/alergarea-de-joi#vin"[^>]*data-testid="coming-chip"|<a[^>]*data-testid="coming-chip"[^>]*href="\/ro\/evenimente\/alergarea-de-joi#vin"/);
     expect(five).toMatch(/data-testid="coming-chip"[\s\S]*?5 vin</);
+    // The link names where it leads, for a screen reader only: the count, then «— spune dacă vii» (the visible chip is the count alone).
+    expect(five).toMatch(/data-testid="coming-chip"[\s\S]*?5 vin[\s\S]*? — spune dacă vii</);
     const one = withoutStyles(await markup(createElement(EventCard, { event, index: 0, now: NOW, comingCount: 1 })));
     expect(one).toMatch(/data-testid="coming-chip"[\s\S]*?1 vine</);
     const twentyOne = withoutStyles(await markup(createElement(EventCard, { event, index: 0, now: NOW, comingCount: 21 })));
@@ -110,6 +112,7 @@ describe("§812 the listing card's «N vin» chip", () => {
     const html = withoutStyles(await markup(createElement(EventCard, { event, index: 0, now: NOW, comingCount: 4 })));
     expect(html).toMatch(/href="\/en\/evenimente\/alergarea-de-joi-en#vin"/);
     expect(html).toMatch(/data-testid="coming-chip"[\s\S]*?4 coming</);
+    expect(html).toMatch(/data-testid="coming-chip"[\s\S]*?4 coming[\s\S]*? — say if you&#x27;re coming</);
   });
 
   it("is not drawn for none, or without a number: a card of an event nobody answered says nothing", async () => {

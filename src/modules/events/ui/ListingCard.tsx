@@ -20,7 +20,7 @@ export type ListingCardProps = {
   titleAs?: "h2" | "h3";
   /** «Clasament» (§809): a single date's results are on show, so its card wears the chip (`EventCard`'s `resultsChip`). A series card never does: a series of dates is a run, and runs have no results. */
   resultsChip?: boolean;
-  /** «N vin» (§812): how many confirmed they come to a single date the page offers the answer to (`EventCard`'s `comingCount`). A series card never wears it: its dates do. */
+  /** «N vin» (§NNN): how many confirmed they come to a single date the page offers the answer to (`EventCard`'s `comingCount`). A series card never wears it: its dates do. */
   comingCount?: number;
 };
 

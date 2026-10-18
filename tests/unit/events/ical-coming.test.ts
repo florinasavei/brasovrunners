@@ -12,7 +12,7 @@ import {
 import { RSVP_BOX_ID } from "@/modules/rsvp/rsvp-box";
 
 /**
- * §812, «Vin!» part 2 (BR-REQ-020-01 criterion 7; amends §107 and §159) — what the calendar's description says about «Vin!»: one line
+ * §NNN (BR-REQ-020-01 criterion 7; amends §107 and §159) — what the calendar's description says about «Vin!»: one line
  * that links the page's «Vii?» card and one that counts who comes. The gate is not decided here (`readComing` does, tested beside it);
  * this file holds that an event given `coming` says both lines, in the page's words in either language, from the event's own address,
  * and that an event without it reads exactly as it did.
@@ -41,7 +41,7 @@ const labelsEn: CalendarLabels = { locale: "en", t: translator(en) };
 
 const withComing = (count: number): CalendarEvent => ({ ...event, coming: { count } });
 
-describe("§812 the calendar's «Vin!» lines", () => {
+describe("§NNN the calendar's «Vin!» lines", () => {
   it("says the link to the page's #vin and how many come, in Romanian, from the event's own address", () => {
     const text = calendarDescription(withComing(5), labelsRo);
     expect(text).toContain(`Vin! → ${event.url}#${RSVP_BOX_ID}`);

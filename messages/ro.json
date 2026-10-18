@@ -829,7 +829,8 @@
       "chip": {
         "one": "{count} vine",
         "few": "{count} vin",
-        "other": "{count} vin"
+        "other": "{count} vin",
+        "go": "spune dacă vii"
       }
     }
   },

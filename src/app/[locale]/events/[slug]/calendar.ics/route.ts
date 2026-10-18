@@ -22,7 +22,7 @@ import { env } from "@/shared/config/env";
  * until the event's own clock changes what its description says. A literal, as Next requires:
  * `PUBLIC_PAGE_CEILING_SECONDS` (a test holds them together).
  *
- * **«Vin!» in the description** (§812): where the page offers the answer, «Vin! → <page>#vin» and how many come, from the cached
+ * **«Vin!» in the description** (§NNN): where the page offers the answer, «Vin! → <page>#vin» and how many come, from the cached
  * count the feed reads (`readPublicComing`) — expired by a confirmation or a withdrawal, so this file is made again once per write to
  * "places", never per request. The count in a file saved to a calendar is the day's; the link is what stays true.
  */

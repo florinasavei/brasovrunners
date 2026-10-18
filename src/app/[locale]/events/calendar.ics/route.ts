@@ -25,7 +25,7 @@ import { env } from "@/shared/config/env";
  * says where registration stands). A subscriber's app asking a few times a day no longer starts a
  * function for each ask.
  *
- * **«Vin!» in the description** (§812): for an event whose page offers the answer, «Vin! → <page>#vin» and how many come.
+ * **«Vin!» in the description** (§NNN): for an event whose page offers the answer, «Vin! → <page>#vin» and how many come.
  * The count is a cached read filed under "places" (`cachedRsvpCounts`), the tag a confirmation or a withdrawal expires, so the
  * feed is made again after each write to "places" (an answer, a registration) — once per write, never per poll, §549's rule
  * kept — and, with no ticked event ahead, the feed reads nothing it did not read before. While the database is away the lines are left out and the file is kept a minute.
@@ -67,7 +67,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ loc
   // Kept until the window's day turns, or an event's door or start changes what the file says (§549).
   await holdPageUntil([new Date(startOfUtcDay(now.getTime()) + DAY), ...events.flatMap((event) => eventClockInstants(event))], now);
   const t = await getTranslations({ locale: known, namespace: "Event" });
-  // «Vin!» (§812): which of these the page offers the answer to, with how many come — one read for the whole feed.
+  // «Vin!» (§NNN): which of these the page offers the answer to, with how many come — one read for the whole feed.
   const coming = await readOrWhileAway(() => readPublicComing(events, now), new Map<string, number>());
   const body = buildCalendar({
     // Every detail the page has, in the description (§159); where registration stands is read against `now`.

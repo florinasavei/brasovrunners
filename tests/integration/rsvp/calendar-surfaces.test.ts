@@ -14,7 +14,7 @@ import { atTheClock } from "../../helpers/clock";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §812, «Vin!» part 2 (BR-REQ-020-01 criterion 7; amends §107, §159) — the calendar carries the answer's door: the feed, the event's
+ * §NNN (BR-REQ-020-01 criterion 7; amends §107, §159) — the calendar carries the answer's door: the feed, the event's
  * `.ics` and the emails' attachment say «Vin! → <page>#vin» and how many come, for an event the page offers «Vii?» to and for no
  * other; the count is one cached read filed under "places", so a confirmation or a withdrawal makes the feed say the new number
  * and a poll does not read the database. Real database (PGlite), the real routes called directly, the real catalogue.
@@ -149,7 +149,7 @@ async function fileText(slug: string, locale: "ro" | "en" = "ro"): Promise<strin
   return response.status === 200 ? unfold(await response.text()) : null;
 }
 
-describe("§812 the feed and the event's file say «Vin!»", () => {
+describe("§NNN the feed and the event's file say «Vin!»", () => {
   it("carries «Vin! → <page>#vin» and the count in the feed and in the event's own file, in Romanian", async () => {
     const event = await seedEvent();
     await answerRsvp(db, event.id, answered("ana@example.test"), NOW);
@@ -225,7 +225,7 @@ describe("§812 the feed and the event's file say «Vin!»", () => {
   });
 });
 
-describe("§812 the count is one cached read, expired by the answer that changes it", () => {
+describe("§NNN the count is one cached read, expired by the answer that changes it", () => {
   it("is filed under the tag a confirmation and a withdrawal expire, and read once for the whole feed", async () => {
     const [a, b, c] = [await seedEvent({}, "a"), await seedEvent({}, "b"), await seedEvent({}, "c")];
     await answerRsvp(db, a.id, answered("ana@example.test"), NOW);
@@ -297,7 +297,7 @@ describe("§812 the count is one cached read, expired by the answer that changes
   });
 });
 
-describe("§812 the emails' calendar attachment says «Vin!» too", () => {
+describe("§NNN the emails' calendar attachment says «Vin!» too", () => {
   const attendee = { email: "runner@example.test" };
 
   it("carries the two lines in the `.ics` attached to a message, read from the database itself", async () => {

@@ -4,9 +4,9 @@ import { countRsvpsForEvents } from "./counts";
 import { type RsvpGateInput, rsvpOffered } from "./domain/offered";
 
 /**
- * Which events say «Vin!» outside their own page, and how many come to each (§812, «Vin!» part 2): the calendar's feed, the
+ * Which events say «Vin!» outside their own page, and how many come to each (§NNN): the calendar's feed, the
  * `.ics` files, the emails' calendar attachment and the listing's cards all ask this, so none of them can draw the gate
- * differently from the page's «Vii?» card (`rsvpOffered`, §811 — the one rule).
+ * differently from the page's «Vii?» card (`rsvpOffered`, §812 — the one rule).
  *
  * **A map from id to count, and absence is the answer "not offered".** An event is in the map exactly when the page would draw the
  * card — published, scheduled, no registration, ahead, ticked, and the notice in force describing «Vin!» — with the number of
@@ -51,7 +51,7 @@ export async function readComing(events: readonly ComingEvent[], now: Date, read
   return new Map(offered.map((event) => [event.id, counts[event.id] ?? 0]));
 }
 
-/** `readComing` over the database itself, never the public cache: the outbox renderer's (§812), which runs without a request. */
+/** `readComing` over the database itself, never the public cache: the outbox renderer's (§NNN), which runs without a request. */
 export function readComingFromDb<T extends Record<string, unknown>>(db: Database<T>, events: readonly ComingEvent[], now: Date): Promise<ReadonlyMap<string, number>> {
   return readComing(events, now, {
     described: (at) => noticeDescribesRsvp(db, at),
