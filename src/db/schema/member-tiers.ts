@@ -9,7 +9,7 @@ import { staffUsers } from "./staff-users";
  *
  * **A label and its benefits, never a permission.** No door, no verb and no role reads a tier (the
  * owner's 2026-10-10 rule: grants are per person, not by a level). A tier is the staff's label on the
- * member's row (§NNN): only the staff see it, and it limits which of the partners' discount codes a member
+ * member's row (§817): only the staff see it, and it limits which of the partners' discount codes a member
  * sees (`member_discount_codes.tier_ids`) — nothing else. No member and no visitor is shown a level.
  *
  * A name in each language and a description in each, both languages or neither (§352, checked in

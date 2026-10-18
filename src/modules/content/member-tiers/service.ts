@@ -28,7 +28,7 @@ import { tierUsage } from "./admin-repository";
  *   shared with other levels loses the id in the same transaction.
  *
  * Every change leaves an `audit_logs` row naming the level by id and the parts that changed — never a
- * name or a description. No public page or public read carries a level (§NNN: the level is the staff's label
+ * name or a description. No public page or public read carries a level (§817: the level is the staff's label
  * alone), so neither write expires the public cache.
  */
 
@@ -93,7 +93,7 @@ export async function saveMemberTiers<T extends Record<string, unknown>>(
         nameEn: row.fields.nameEn ?? current?.nameEn ?? "",
         descriptionRo: row.fields.descriptionRo ?? current?.descriptionRo ?? "",
         descriptionEn: row.fields.descriptionEn ?? current?.descriptionEn ?? "",
-        // The card posts no glyph box (§NNN): a level without one keeps the symbol it has, even one the closed set no longer names, so the save is not refused on a box the form does not draw.
+        // The card posts no glyph box (§817): a level without one keeps the symbol it has, even one the closed set no longer names, so the save is not refused on a box the form does not draw.
         glyph: row.fields.glyph ?? "",
       };
       const check = tierFieldsSchema.safeParse(merged);

@@ -12,7 +12,7 @@ import { DEFAULT_TIER_GLYPH, isTierGlyphKey, type TierGlyphKey } from "./glyph-k
  *   (the backoffice's counts are `admin-repository.ts`, which meets the members' and the codes' tables);
  * - a level by id — checked when «Echipa» gives it to a member.
  *
- * The level is the staff's label alone (§NNN): no member and no visitor is shown it, so nothing here is read by the
+ * The level is the staff's label alone (§817): no member and no visitor is shown it, so nothing here is read by the
  * zone or by a public page, and nothing is filed in the public cache.
  */
 

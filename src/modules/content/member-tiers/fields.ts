@@ -6,7 +6,7 @@ import { DEFAULT_TIER_GLYPH, isTierGlyphKey } from "./glyph-keys";
  * What the club types for one member tier (§811).
  *
  * A name in Romanian **and** English — a level without a name in either language cannot be shown — at
- * most `TIER_NAME_MAX` characters, one line. The description is the administrators' note (§NNN: what the level is for, which
+ * most `TIER_NAME_MAX` characters, one line. The description is the administrators' note (§817: what the level is for, which
  * codes; nothing public reads it), plain words, in both
  * languages or in neither (§352), at most `TIER_DESCRIPTION_MAX`. A glyph from the closed set
  * (`glyph-keys.ts`), `star` when none is posted. One side of a pair written and the other empty is

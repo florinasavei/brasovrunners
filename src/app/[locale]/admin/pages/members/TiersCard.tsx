@@ -28,7 +28,7 @@ const deleteFormId = (id: string) => `delete-tier-${id}`;
 /**
  * «Niveluri de membru» (§811; the owner, 2026-10-18: «Also for the member zone I want member Tiers»): the levels
  * the club names for its members, one fold on «Pagini» → «Membri», closed until opened (§336), the count on its
- * line. A level is the staff's label, never a permission and never shown to a member (§NNN; the owner: «Doar adminii
+ * line. A level is the staff's label, never a permission and never shown to a member (§817; the owner: «Doar adminii
  * văd nivelul de membru, scopul e ca să bifăm ce membru poate vedea ce cod de reducere») — the card says what it is for
  * under its title.
  *

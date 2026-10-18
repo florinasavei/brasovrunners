@@ -8,6 +8,9 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V3.58-2026-10-18
+
+- **Member levels are the staff's label alone** — a member no longer sees their level (the zone's badge is gone), the public members' page no longer lists the levels, and the codes in the zone no longer name the levels they are for; the level only decides which discount codes a member sees. The levels' editor loses its symbol box, and the description becomes «Notă (o văd doar administratorii)». No migration. §817.
 ## BR-V3.57-2026-10-18
 
 - **A picture before every tab of «Sarcini» and before «Română» / «English» on «Emailuri» (the language's flag, like the editor's language tabs, §572)** — the last backoffice `SubNav` rows to get one («Setări» and «Galerie» had theirs from §813). §814.

@@ -108,7 +108,7 @@ async function shopTabShown(accountId: string, now: Date): Promise<boolean> {
   }
 }
 
-/** What the frame shows around a part: the club's words above the tabs and whether «Magazin» is one of them. The member's level is not here: only the staff see it (§NNN). */
+/** What the frame shows around a part: the club's words above the tabs and whether «Magazin» is one of them. The member's level is not here: only the staff see it (§817). */
 export type FrameParts = { words: RichTextDoc | null | "away"; shop: boolean };
 
 /**

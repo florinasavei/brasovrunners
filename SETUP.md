@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.57-2026-10-18 -->
+<!-- PROJECT_BASELINE: BR-V3.58-2026-10-18 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V3.57-2026-10-18`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.58-2026-10-18`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -2116,7 +2116,7 @@ with its cards in the order you fill them.
    column «Adăugată de». Whoever runs the shop may do it: an Administrator, or the colleague given
    «Gestionează magazinul» in step 6.
 
-**Member levels** (optional, any time; `DECISIONS.md` §811, amended by §NNN). A level is the staff's own label on a
+**Member levels** (optional, any time; `DECISIONS.md` §811, amended by §817). A level is the staff's own label on a
 member, and its one use is to decide **which member sees which discount code**. An Administrator **names the levels**
 on «Pagini» → «Membri» → «Niveluri de membru» (a name in both languages, a note for the administrators in both
 languages — or in neither — the order in «Poziția», «Ascuns» for a level no longer given) and presses the one
@@ -2131,7 +2131,7 @@ and in the editors. A level is never a permission: it opens and closes nothing, 
 migration drops it.)
 The privacy notice's template names the level among what the club keeps about a member (section 12): approve the notice
 from the new template on production, a lawyer reading that clause first, before giving members levels; the clause says only the
-administrators see the level (§NNN), so a notice approved from the first version of the template, which also named the member, is
+administrators see the level (§817), so a notice approved from the first version of the template, which also named the member, is
 approved once more. An Administrator
 or a colleague who opens the zone sees every code, so they can check what the club has; a member sees the codes for
 everyone and for their own level.

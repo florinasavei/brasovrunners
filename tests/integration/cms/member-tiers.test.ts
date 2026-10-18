@@ -580,7 +580,7 @@ describe("§811 the member tiers", () => {
       expect(tierViewOf(row, "ro").glyph).toBe("star");
     });
 
-    it("a stored symbol the closed set does not name does not stop a save that posts no glyph box, and is left as it is (§NNN)", async () => {
+    it("a stored symbol the closed set does not name does not stop a save that posts no glyph box, and is left as it is (§817)", async () => {
       const [odd] = await db.insert(memberTiers).values({ nameRo: "Vechi", nameEn: "Old", glyph: "from-sql", position: 1 }).returning();
       const withoutGlyph = Object.fromEntries(Object.entries(unchanged(odd, 1)).filter(([box]) => box !== "glyph"));
       const result = await saveMemberTiers(db, {
@@ -593,7 +593,7 @@ describe("§811 the member tiers", () => {
       expect([after.nameRo, after.glyph]).toEqual(["Nou", "from-sql"]);
     });
 
-    it("is left as it is by the card's save, which posts no glyph box (§NNN): the column stays for a later contract migration", async () => {
+    it("is left as it is by the card's save, which posts no glyph box (§817): the column stays for a later contract migration", async () => {
       const { first, second } = await twoTiers();
       expect(second.glyph).toBe("trophy");
       // The card posts no glyph box: the rows the save receives carry none.

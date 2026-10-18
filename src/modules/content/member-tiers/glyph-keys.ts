@@ -1,5 +1,5 @@
 /**
- * The glyphs a member tier may wear (§811): a closed set of names, never a typed one. Since §NNN the card no
+ * The glyphs a member tier may wear (§811): a closed set of names, never a typed one. Since §817 the card no
  * longer offers the choice: the `glyph` column is a leftover (default `star`), drawn only on «Echipa»'s chip,
  * for a later contract migration to drop. The names only — no icon is imported here, so a service
  * that validates a posted name does not load a picture. The pictures are in

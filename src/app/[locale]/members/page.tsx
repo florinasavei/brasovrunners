@@ -90,7 +90,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
  * rather than a door that opens on nothing. Accounts are made by the club, never here: a
  * participant never gets one (AGENTS.md §10.3), and a member is somebody the club added.
  *
- * The page says nothing about member levels (§NNN): a level is the staff's label, which only decides
+ * The page says nothing about member levels (§817): a level is the staff's label, which only decides
  * which discount codes a member sees in the zone.
  *
  * A Server Component with no island of its own but the button.

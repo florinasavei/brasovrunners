@@ -17,7 +17,7 @@ import CopyCodeButton from "./CopyCodeButton";
  * până …» through the one date helper (§349). The read already left out a hidden code and one past
  * its last day. Nothing when there is none: the zone says nothing about codes it does not have.
  *
- * No card says why it is there (§NNN): a code limited to some levels reaches the member whose level it is
+ * No card says why it is there (§817): a code limited to some levels reaches the member whose level it is
  * for, and the level is the staff's label alone — the member is never told it, so no chip names it.
  */
 export default async function MemberCodes({

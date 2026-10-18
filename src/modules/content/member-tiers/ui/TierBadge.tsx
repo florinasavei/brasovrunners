@@ -4,7 +4,7 @@ import { tierGlyphName } from "@/modules/events/ui/tier-glyphs";
 import type { TierView } from "../repository";
 
 /**
- * A member tier as a small chip (§811, §NNN): the level's glyph and name on the house's `GlyphChip` (the glyph
+ * A member tier as a small chip (§811, §817): the level's glyph and name on the house's `GlyphChip` (the glyph
  * travels as a name, never an element — a Server Component hands it a string). Drawn for the staff alone,
  * on «Echipa»'s member rows: the member and the visitor are never shown a level.
  *

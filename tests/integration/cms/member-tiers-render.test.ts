@@ -8,7 +8,7 @@ import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §811, amended by §NNN — where a member's level does NOT show, and what it decides, read from a real database and drawn by the
+ * §811, amended by §817 — where a member's level does NOT show, and what it decides, read from a real database and drawn by the
  * real pages: the zone draws no badge and names no level (the level is the staff's label alone), the public members' page has no
  * section of levels, the zone's «Coduri de reducere» tab lists the codes for everyone and those of the member's level with no
  * mark saying why a code is there — and the codes' editor, which gives each code the chips «Pentru nivelurile».

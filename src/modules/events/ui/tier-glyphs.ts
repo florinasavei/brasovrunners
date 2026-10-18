@@ -15,7 +15,7 @@ import type { ComponentType } from "react";
 import type { TierGlyphKey } from "@/modules/content/member-tiers/glyph-keys";
 
 /**
- * The pictures of the member tiers' glyphs (§811), by the names of `member-tiers/glyph-keys.ts`. Since §NNN
+ * The pictures of the member tiers' glyphs (§811), by the names of `member-tiers/glyph-keys.ts`. Since §817
  * a leftover column (the card no longer offers the choice; the default is `star`): `GlyphChip` draws it as
  * `tier:<name>` only on «Echipa»'s level chip, for the staff. Registered in the public table
  * (`glyphs.ts` adds the prefix). One file per

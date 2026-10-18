@@ -21,7 +21,7 @@ export const metadata: Metadata = {
 };
 
 /**
- * The partners' codes (§552) for this member's level (§811, §NNN): read here, per request, behind the account — never through the shared
+ * The partners' codes (§552) for this member's level (§811, §817): read here, per request, behind the account — never through the shared
  * public cache. The codes for everyone and those limited to the member's level (`tierId`; none, the first alone). The member is never
  * told the level, nor why a code is among theirs: the level is the staff's label, and its one use is this filter. An account that
  * cannot hold a level (a colleague opening the zone, §524) reads every code: decided by the kind of account, never by a level.

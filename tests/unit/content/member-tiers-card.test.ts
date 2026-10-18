@@ -7,7 +7,7 @@ import { TIER_DESCRIPTION_MAX, TIER_NAME_MAX } from "@/modules/content/member-ti
 import TranslateProvider, { type TranslateAction } from "@/modules/translate/ui/TranslateProvider";
 
 /**
- * §811, amended by §NNN — «Pagini» → «Membri» → «Niveluri de membru» as the server draws it: a named card (the house's `Panel`, its glyph and its count
+ * §811, amended by §817 — «Pagini» → «Membri» → «Niveluri de membru» as the server draws it: a named card (the house's `Panel`, its glyph and its count
  * on the line, closed until opened) whose intro says what a level is for, ONE form around every level with ONE «Salvează toate nivelurile», each
  * level a row whose boxes are named by its key (no glyph box; the description is the administrators' note), the blank row at the end that adds a
  * level, «Șterge nivelul» a button that names a small form of its own, and for a reader who may not manage the levels the list and no box.

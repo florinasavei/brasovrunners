@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.57-2026-10-18 -->
+<!-- PROJECT_BASELINE: BR-V3.58-2026-10-18 -->
 
 # Brașov Runners — Requirements and Acceptance Criteria
 
-**Baseline `BR-V3.57-2026-10-18`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.58-2026-10-18`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 **Audience:** Product owner, project manager, QA, developers, and AI agents.
@@ -443,6 +443,7 @@ passes, and the milestone's slice of `docs/PRACTICES.md` § Launch checklist is 
 236. Given a member who holds a level, when the member opens the members' zone, then the zone shows the level's symbol and name under the greeting with its description behind a «?», nothing when the member holds none, and at 320 px the badge and its «?» stay inside the page without scrolling sideways; an account that cannot hold a level (a colleague) sees every code in the zone, a member only the codes for everyone and for their level (2026-10-18, `DECISIONS.md` §811).
 237. Every sub-tab of «Setări»' row, «Configurație» and the panels of `/devs` included, carries a glyph before its words, `aria-hidden`, and at 320 px the row scrolls inside itself with the current tab in view and the page does not widen; the seven folds of «Termene», opened, fit the width with a 44-pixel bar each (2026-10-18, `DECISIONS.md` §813).
 238. Given an event the page offers «Vii?» to with at least one confirmed answer, when the listing draws its single-date card, then it wears a «N vin» chip — the people glyph and the count in the house's plural — that is a link to the page's `#vin`, 44 pixels tall around the small chip; a series card, a card of an event nobody has answered and every card of an event the page does not offer the answer to wear none, and the counts and the notice are read once for the page, never per card (2026-10-18, `DECISIONS.md` §815).
+239. Given a member who holds a level and one who holds none, when each opens the members' zone, then neither is shown a level: the zone draws no badge, no symbol and no description under the greeting, and no level's name appears anywhere on any of its tabs; the member with a level sees the codes for everyone and for their level, the member with none the codes for everyone alone, and no code card says why it is there. This replaces criterion 236's badge, symbol and «?» under the greeting (2026-10-18, `DECISIONS.md` §817).
 
 **Verification:** e2e `registration-form.spec.ts` and `registration-entry.spec.ts` under both Playwright viewport projects, `event-pages.spec.ts` (criterion 12); unit `registrations/form-errors.test.ts`, `events/listing.test.ts`, `theme/brand.test.ts`; release check on a real device
 
@@ -2290,6 +2291,7 @@ way through every step, and none of them is a way around the allocator.
 181. Given «Pagini» → «Membri», when the Administrator opens «Niveluri de membru», then it is one form with one «Salvează toate nivelurile», a row per level (its name and description in Română | English tabs, a symbol from a closed set of twelve, «Poziția», «Ascuns») and a blank row that adds one, «Șterge nivelul» asks first and is refused while a member holds the level, and the public members' page lists the visible levels after «Beneficiile membrilor» (2026-10-18, `DECISIONS.md` §811).
 182. The event editor's tick «Acceptă răspunsuri „Vin!” din pagină, calendar și email» is saved by its marker, written off by any registration mode but «Fără înscrieri», carried by a series, «Duplică» and the event's file, and its fold of answers shows addresses only to the roles that read the registrations and the counts to the rest (2026-10-18, `DECISIONS.md` §812).
 183. Given a published race that has not started yet, when an Organizer or an Administrator opens its editor or the registrations list with it chosen, then the «Clasament» door is drawn and leads to the page, which says the race has not started; a group run, and a race still ahead that is not published, show none (2026-10-18, `DECISIONS.md` §816).
+184. Given «Pagini» → «Membri», when the Administrator opens «Niveluri de membru», then the card's intro says a level decides which discount codes a member sees and that members do not see their level, each level's row has a name, «Notă (o văd doar administratorii)», «Poziția» and «Ascuns» and no symbol box, and the public members' page has no section of levels and names none, in either language. This replaces criterion 181's symbol box and the public members' page's list of levels (2026-10-18, `DECISIONS.md` §817).
 - only the lines with a date whose title, page address or place contains every typed word in either language (accents and case ignored) and whose state matches are listed;
 - the state is an editorial state, «Anulat» (the event's own status), «Viitoare» or «Trecute»;
 - a series is narrowed to its matching dates before it is grouped;
@@ -3119,6 +3121,7 @@ format was what stood in the way (`DECISIONS.md` §58, following §51 and §46).
 166. The member tiers are named, saved in one transaction, ordered, hidden and deleted by an Administrator or a Superadministrator only — a Redactor, a volunteer and a member are refused every write; the first refused row refuses the whole save and writes nothing; a level is refused deletion while a member holds it or a code is for it alone; and no function that decides what a person may do reads a member's level (2026-10-18, `DECISIONS.md` §811).
 167. A member's level is given, changed or cleared on the member's row of «Echipa» by an Administrator only, to a `MEMBER` account only and never a hidden level to a member who does not hold it; «Adaugă mai mulți membri» gives one level to the rows it adds and leaves an existing member's alone; a role change away from `MEMBER` clears it; every change is audited by ids, never a name or an address (2026-10-18, `DECISIONS.md` §811).
 168. A discount code ticked for some member levels is shown in the members' zone to a member who holds one of them and to nobody else, with one chip per level it names; a code with no level ticked is shown to every member, and a member with no level sees only those; a Redactor's save keeps the limit as stored, and deleting a level takes its id off the codes it shares (2026-10-18, `DECISIONS.md` §811).
+169. A discount code ticked for some member levels is shown in the members' zone to a member who holds one of them and to nobody else, with no chip or other mark naming the level; saving the levels' card leaves a level's stored symbol as it was, and neither a save nor a delete of a level expires any public page, because no public page carries one. This replaces criterion 168's chip per level (2026-10-18, `DECISIONS.md` §817).
 
 **Verification:** integration `auth/role-boundaries.test.ts`, `cms/crud.test.ts`, `registrations/test-kind.test.ts`; unit `staff/roles.test.ts`, `staff/zitadel-users.test.ts`, `registrations/row-verbs.test.ts`; e2e `cms-publish.spec.ts`
 

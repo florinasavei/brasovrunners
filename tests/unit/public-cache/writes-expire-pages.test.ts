@@ -119,7 +119,7 @@ const WRITES: Record<string, Expected> = {
   "src/modules/content/member-codes/service.ts#setDiscountCodeHidden": MEMBERS_ZONE_ONLY,
   "src/modules/content/member-codes/service.ts#moveDiscountCode": MEMBERS_ZONE_ONLY,
   "src/modules/content/member-codes/service.ts#deleteDiscountCode": MEMBERS_ZONE_ONLY,
-  // «Niveluri de membru» (§811, §NNN): a level is the staff's label, read only in the backoffice and as the members' codes filter,
+  // «Niveluri de membru» (§811, §817): a level is the staff's label, read only in the backoffice and as the members' codes filter,
   // per request behind the account — no public page lists it, so no public read carries one.
   "src/modules/content/member-tiers/service.ts#saveMemberTiers": MEMBER_TIERS_STAFF_ONLY,
   "src/modules/content/member-tiers/service.ts#deleteMemberTier": MEMBER_TIERS_STAFF_ONLY,
