@@ -1,6 +1,7 @@
 import { and, eq, inArray } from "drizzle-orm";
 import type { EmailActionTokenPurpose } from "@/db/schema/email-action-tokens";
 import type { EmailMessageType } from "@/db/schema/email-outbox";
+import { eventRsvps } from "@/db/schema/event-rsvps";
 import { participants } from "@/db/schema/participants";
 import { type Registration, registrations } from "@/db/schema/registrations";
 import { CLUB_TIME_ZONE, formatDay, formatTime } from "@/i18n/dates";
@@ -33,7 +34,7 @@ import {
 import { seriesRhythmPhrase } from "@/modules/group-run-declarations/series";
 import { generateTokenSecret, hashTokenSecret } from "@/modules/action-tokens/domain/token-secret";
 import { bulkCopyRecipients, declarationPdfAudience, isClubCopy, isParticipantMessage } from "./domain/club-notices";
-import { calendarPartFor } from "./domain/calendar-part";
+import { type CalendarPart, calendarPartFor } from "./domain/calendar-part";
 import { renderCalendarPart } from "./calendar-part";
 import { calendarRsvpToForSending } from "./calendar-rsvp";
 import { CANNOT_COME_MESSAGES, cannotComeApplies, cannotComeUrlOf } from "./domain/cannot-come";
@@ -62,6 +63,7 @@ import { eventInvitations } from "@/db/schema/event-invitations";
 import { eventVolunteers } from "@/db/schema/event-volunteers";
 import { renderVolunteerAgreementPdf, VOLUNTEER_AGREEMENT_PDF_NAME } from "@/modules/volunteers/agreement-pdf";
 import { canonicalOrNull, mintVolunteerAgreementLink, tasksWords, volunteerRoles } from "@/modules/volunteers/agreement";
+import { mintRsvpLinks } from "@/modules/rsvp/rsvp";
 import { isVolunteerMinor, roleLabel, volunteerContactsOf } from "@/modules/volunteers/domain/volunteer";
 import { mintVolunteerGuardianLink } from "@/modules/volunteers/guardian";
 import { shopOrders } from "@/db/schema/shop";
@@ -347,6 +349,7 @@ async function renderRow(
   // A volunteer's two messages (§754) name their event the same way: the payload's id, no registration behind them.
   const payloadEventId =
     row.messageType === "REGISTRATION_OPENED" ||
+    row.messageType === "RSVP_CONFIRM" ||
     row.messageType === "VOLUNTEER_RECEIVED" ||
     row.messageType === "VOLUNTEER_CLUB_NOTICE" ||
     row.messageType === "VOLUNTEER_AGREEMENT_REQUEST" ||
@@ -1013,6 +1016,48 @@ async function renderRow(
     payloadActionUrl = `${env.APP_BASE_URL}${getPathname({ locale, href: { pathname: "/events/[slug]/register", params: { slug: eventDetails.slug } } })}`;
   }
   /*
+    «Vin!» (§NNN): the one message of an answer typed on a turn-up event's page — no participant, no registration. The answer is
+    read now (`payload.rsvpId`): one taken back, an address changed, or an event cancelled, started or gone since the press is
+    withdrawn (`OutboxMessageWithdrawn`) — nothing to confirm (§331's rule at the moment of sending). Its shape follows the
+    answer: still unconfirmed → «Da, vin» with «Nu vin» under it; already counted → only «Nu mai vin»; asked from the page's
+    small fold (`payload.request = "withdraw"`) → «Nu mai vin». Both links are minted here (§14.5): the secrets are in this email
+    alone, the rows keep their hashes, and a newer message's links replace these.
+  */
+  if (row.messageType === "RSVP_CONFIRM") {
+    const payload = row.payloadJson as { rsvpId?: unknown; request?: unknown } | null;
+    const rsvpId = payload?.rsvpId;
+    const [answer] =
+      typeof rsvpId === "string" && isUuid(rsvpId)
+        ? await db
+            .select({ id: eventRsvps.id, eventId: eventRsvps.eventId, canonicalEmail: eventRsvps.canonicalEmail, confirmedAt: eventRsvps.confirmedAt, showName: eventRsvps.showName, displayName: eventRsvps.displayName })
+            .from(eventRsvps)
+            .where(eq(eventRsvps.id, rsvpId))
+            .limit(1)
+        : [];
+    if (!answer) throw new OutboxMessageWithdrawn("the answer was taken back or erased");
+    if (canonicalOrNull(row.recipientEmail) !== answer.canonicalEmail) throw new OutboxMessageWithdrawn("the answer's address changed since the message was queued");
+    if (!eventDetails || eventDetails.eventStatus !== "SCHEDULED" || eventDetails.startsAt.getTime() <= now.getTime()) {
+      throw new OutboxMessageWithdrawn("the event was cancelled or has started");
+    }
+    // The tick off, or a registration given to the event since the press: the event no longer takes answers, so nothing to confirm.
+    const [gate] = await db.select({ mode: events.registrationMode, enabled: events.rsvpEnabled }).from(events).where(eq(events.id, answer.eventId)).limit(1);
+    if (!gate || gate.mode !== "NONE" || !gate.enabled) throw new OutboxMessageWithdrawn("the event no longer takes «Vin!» answers");
+    const stage = payload?.request === "withdraw" ? "withdraw" : answer.confirmedAt ? "counted" : "confirm";
+    const links = await mintRsvpLinks(db, { rsvpId: answer.id, startsAt: eventDetails.startsAt, confirm: stage === "confirm", now });
+    if (!links) throw new OutboxMessageWithdrawn("the event has started");
+    const linkUrl = (pathname: "/vin/[token]", secret: string) =>
+      `${env.APP_BASE_URL}${getPathname({ locale, href: { pathname, params: { token: secret } } })}`;
+    data.rsvpStage = stage;
+    // The name the press would make public, said before it is pressed (the person who typed the address chose it, not the one who presses).
+    if (stage === "confirm" && answer.showName && answer.displayName) data.rsvpShownName = answer.displayName;
+    if (stage === "confirm" && links.confirm) {
+      payloadActionUrl = linkUrl("/vin/[token]", links.confirm);
+      data.rsvpWithdrawUrl = linkUrl("/vin/[token]", links.withdraw);
+    } else {
+      payloadActionUrl = linkUrl("/vin/[token]", links.withdraw);
+    }
+  }
+  /*
     `DECLARATION_HOLD_EXPIRED` (§638): the deadline that passed, from the payload `expireStaleHolds`
     wrote (the row's own column otherwise), each half in its own words (§377: a stated deadline says
     the date); whether the place went to the waiting list, a fact of the release; and what the person
@@ -1461,10 +1506,14 @@ async function renderRow(
     (row.messageType === "REGISTRATION_CONFIRMED" ||
       row.messageType === "EVENT_REMINDER" ||
       row.messageType === "EVENT_UPDATE_NOTICE" ||
-      row.messageType === "EVENT_CANCELLED");
+      row.messageType === "EVENT_CANCELLED" ||
+      // «Vin!» (§NNN): the event's file, so the day is in the person's calendar — not on the message that only takes the answer back.
+      (row.messageType === "RSVP_CONFIRM" && data.rsvpStage !== "withdraw"));
   if (mayCarryCalendar && eventDetails?.slug) {
     const rsvpTo = await calendarRsvpToForSending(db);
-    const part = calendarPartFor({ messageType: row.messageType, clubCopy, rsvpTo, confirmed: confirmedHere, changes: updateChanges });
+    // «Vin!» (§NNN) is the one message outside `calendarPartFor`'s four: it carries the event's published file whatever the club's
+    // calendar-answers address says — a person who only said they come holds no place, and the calendar must not ask «Vii?» of them twice.
+    const part: CalendarPart | null = row.messageType === "RSVP_CONFIRM" ? "file" : calendarPartFor({ messageType: row.messageType, clubCopy, rsvpTo, confirmed: confirmedHere, changes: updateChanges });
     if (part) {
       const carried = await renderCalendarPart(db, {
         part,

@@ -228,6 +228,12 @@ export type AuditAction =
    * (§322) — the answer to an access request (art. 15 GDPR). Counts only in the metadata.
    */
   | "participant.data_exported"
+  /**
+   * The answers «Vin!» and the remembered browsers of one address erased by an Administrator on the person's request (§NNN, art. 17
+   * GDPR) — `{ answers, browsers }`, the counts, never the address or a name. The only audit row «Vin!» has: nothing else here is
+   * something the staff did (a person answers and withdraws on their own).
+   */
+  | "participant.rsvps_erased"
   /** The outbox drained by hand from the backoffice, within the day's allowance (`DECISIONS.md` §80). */
   | "outbox.sent_by_staff"
   /**

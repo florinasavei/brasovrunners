@@ -65,6 +65,8 @@ const NOT_A_BOX = new Set([
   "askHealthNote",
   // «Arată profilul traseului pe pagină» (§802, §805): a tick in «Traseul», under the maps.
   "showRouteProfile",
+  // «Acceptă răspunsuri „Vin!”» (§NNN): a tick in «Participare, înscrieri și regulament», for an event one simply turns up to.
+  "rsvpEnabled",
   // «Estimativ» beside «Diferență de nivel (m)» (§585): a tick in «Traseu».
   "elevationGainEstimated",
   // «Aproximativ» beside «Distanță (m)» (§598): a tick in «Traseu».

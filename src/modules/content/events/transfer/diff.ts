@@ -163,6 +163,7 @@ export const FIELD_LABELS = [
   "registration.external.url",
   "registration.kitShirt",
   "registration.askHealthNote",
+  "registration.rsvpEnabled",
   "publicList.names",
   "publicList.waitlist",
   "publicList.waitlistCount",

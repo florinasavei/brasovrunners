@@ -22,6 +22,7 @@ import { feedbackFormsMergeValues } from "@/modules/feedback/notice-words";
 import { membersShopMergeValues } from "@/modules/content/shop/notice-words";
 import { volunteersMergeValues } from "@/modules/volunteers/notice-words";
 import { resultsMergeValues } from "@/modules/results/notice-words";
+import { rsvpMergeValues } from "@/modules/rsvp/notice-words";
 import { newsletterMergeValues } from "@/modules/newsletter/topic-words";
 import { cachedAddressCap, cachedCurrentApprovedDocument, cachedDeadlines } from "@/modules/public-cache/reads";
 import { env } from "@/shared/config/env";
@@ -88,7 +89,7 @@ export default async function TermsPage({ params }: Props) {
             })}
           </Typography>
           {/* The club's deadlines in the text's merge fields (§377), from the data cache like the text itself. */}
-          <LegalDocumentBody body={document.body} values={{ ...deadlineMergeValues(locale, await cachedDeadlines()), ...addressCapMergeValues(locale, (await cachedAddressCap()).registrationsPerAddress), ...listStatesMergeValues(locale), ...listSocialsMergeValues(locale), ...listNumbersMergeValues(locale), ...gmailFallbackMergeValues(locale), ...eventInvitationsMergeValues(locale), ...feedbackFormsMergeValues(locale), ...membersShopMergeValues(locale), ...volunteersMergeValues(locale), ...resultsMergeValues(locale), ...promotionalMaterialsMergeValues(locale), ...newsletterMergeValues(locale), ...teamPageMergeValues(locale) }} emphasizeFilled={false} />
+          <LegalDocumentBody body={document.body} values={{ ...deadlineMergeValues(locale, await cachedDeadlines()), ...addressCapMergeValues(locale, (await cachedAddressCap()).registrationsPerAddress), ...listStatesMergeValues(locale), ...listSocialsMergeValues(locale), ...listNumbersMergeValues(locale), ...gmailFallbackMergeValues(locale), ...eventInvitationsMergeValues(locale), ...feedbackFormsMergeValues(locale), ...membersShopMergeValues(locale), ...volunteersMergeValues(locale), ...resultsMergeValues(locale), ...rsvpMergeValues(locale), ...promotionalMaterialsMergeValues(locale), ...newsletterMergeValues(locale), ...teamPageMergeValues(locale) }} emphasizeFilled={false} />
         </>
       ) : (
         <>

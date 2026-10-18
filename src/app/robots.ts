@@ -15,7 +15,7 @@ import { env } from "@/shared/config/env";
  * inventing a policy would misrepresent the club.
  */
 /** The query keys an event page reads, each of which makes it the live twin's render (`i18n/live-twin.ts`, §549). */
-const EVENT_PAGE_QUERY_KEYS = ["lista", "interest", "since", "declaratie"] as const;
+const EVENT_PAGE_QUERY_KEYS = ["lista", "interest", "since", "declaratie", "vin"] as const;
 
 export default function robots(): MetadataRoute.Robots {
   if (env.APP_ENV !== "production") {
@@ -97,6 +97,9 @@ export default function robots(): MetadataRoute.Robots {
           "/ro/inscrieri/",
           "/ro/noutati/",
           "/en/newsletter/",
+          // The «Vin!» message's links (§NNN) carry a secret.
+          "/ro/vin/",
+          "/en/coming/",
           "/*/share-image?",
         ],
       },

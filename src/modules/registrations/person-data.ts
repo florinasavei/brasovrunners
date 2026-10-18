@@ -3,17 +3,20 @@ import { auditLogs } from "@/db/schema/audit-logs";
 import { type DeclarationAcceptance, declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import { emailOutbox } from "@/db/schema/email-outbox";
 import { eventResults } from "@/db/schema/event-results";
+import { eventRsvps } from "@/db/schema/event-rsvps";
 import { eventVolunteerCategories, eventVolunteerRoleChoices, eventVolunteerRoles, eventVolunteers } from "@/db/schema/event-volunteers";
 import { events, eventTranslations } from "@/db/schema/events";
 import { groupRunDeclarations } from "@/db/schema/group-run-declarations";
 import { legalDocuments } from "@/db/schema/legal-documents";
 import { type Participant, participants } from "@/db/schema/participants";
+import { personSessions } from "@/db/schema/person-sessions";
 import { registrationInterests } from "@/db/schema/registration-interests";
 import { registrationNotes } from "@/db/schema/registration-notes";
 import { type Registration, registrations } from "@/db/schema/registrations";
 import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
 import { recordAuditEvent } from "@/modules/audit/repository";
+import { revalidatePublicContent } from "@/modules/public-cache/cache";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
 import { roleLabel } from "@/modules/volunteers/domain/volunteer";
 import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
@@ -94,6 +97,27 @@ export type PersonData = {
     laterDeliveredAt: Date | null;
   }>;
   announcementRequests: Array<{ eventId: string; eventTitle: string | null; deliveryEmail: string; locale: string; createdAt: Date }>;
+  /**
+   * The answers «Vin!» given with this address (§NNN, art. 15 GDPR): the event, the address and the name as typed, the person's own tick
+   * «Vreau să apar cu numele», the language, the privacy notice's version they were given under, and when they were given and
+   * confirmed — every column of the row. Gone thirty days after the event, or sooner at the person's own link.
+   */
+  rsvpAnswers: Array<{
+    eventId: string;
+    eventTitle: string | null;
+    deliveryEmail: string;
+    displayName: string | null;
+    showName: boolean;
+    locale: string;
+    privacyNoticeVersion: number;
+    confirmedAt: Date | null;
+    createdAt: Date;
+  }>;
+  /**
+   * The browsers remembered for this address (§NNN): when each was remembered, last used and expires — never the secret or its
+   * fingerprint, which prove nothing to the person and are of no use to the club.
+   */
+  rememberedBrowsers: Array<{ deliveryEmail: string; displayName: string | null; createdAt: Date; lastUsedAt: Date; expiresAt: Date }>;
   /**
    * What the person offered as a volunteer (§754): the event, the role, the state, where it came from and
    * what was typed — name, address, telephone number, their message and the organizers' note, every column
@@ -273,6 +297,35 @@ async function collectPersonData<T extends Record<string, unknown>>(
     .where(eq(registrationInterests.canonicalEmail, canonicalEmail))
     .orderBy(asc(registrationInterests.createdAt));
 
+  // The answers «Vin!» (§NNN) and the browsers remembered for them, found by the same canonical address.
+  const rsvpAnswers = await db
+    .select({
+      eventId: eventRsvps.eventId,
+      eventTitle: eventTranslations.title,
+      deliveryEmail: eventRsvps.deliveryEmail,
+      displayName: eventRsvps.displayName,
+      showName: eventRsvps.showName,
+      locale: eventRsvps.locale,
+      privacyNoticeVersion: eventRsvps.privacyNoticeVersion,
+      confirmedAt: eventRsvps.confirmedAt,
+      createdAt: eventRsvps.createdAt,
+    })
+    .from(eventRsvps)
+    .leftJoin(eventTranslations, and(eq(eventTranslations.eventId, eventRsvps.eventId), eq(eventTranslations.locale, eventRsvps.locale)))
+    .where(eq(eventRsvps.canonicalEmail, canonicalEmail))
+    .orderBy(asc(eventRsvps.createdAt));
+  const rememberedBrowsers = await db
+    .select({
+      deliveryEmail: personSessions.deliveryEmail,
+      displayName: personSessions.displayName,
+      createdAt: personSessions.createdAt,
+      lastUsedAt: personSessions.lastUsedAt,
+      expiresAt: personSessions.expiresAt,
+    })
+    .from(personSessions)
+    .where(eq(personSessions.canonicalEmail, canonicalEmail))
+    .orderBy(asc(personSessions.createdAt));
+
   // The offers to volunteer (§754), found by the same canonical address: the event's title in Romanian, the role as the club wrote it.
   const offerRows = await db
     .select({
@@ -434,6 +487,8 @@ async function collectPersonData<T extends Record<string, unknown>>(
     declarationAcceptances: acceptances,
     messages,
     announcementRequests,
+    rsvpAnswers,
+    rememberedBrowsers,
     volunteerOffers,
     groupRunDeclarations: groupRuns,
     results: results.map((row) => ({ ...row, registrationId: row.registrationId as string })),
@@ -479,6 +534,38 @@ async function groupRunDeclarationsOf<T extends Record<string, unknown>>(db: Dat
     .leftJoin(eventTranslations, and(eq(eventTranslations.eventId, groupRunDeclarations.eventId), eq(eventTranslations.locale, "ro")))
     .where(inArray(groupRunDeclarations.id, ids))
     .orderBy(asc(groupRunDeclarations.acceptedAt));
+}
+
+/**
+ * Erase the answers «Vin!» and the remembered browsers of one canonical address (§NNN, art. 17 GDPR): the person asked, and an Administrator
+ * — the role that reads everything held about a person (`assertAdministrator`) — presses. The rows go whole, the links with them
+ * (`on delete cascade`), the public count is expired, and one audit row keeps the counts (`participant.rsvps_erased`), never the
+ * address. Registrations, declarations and the rest are not touched: they have their own erase (BR-REQ-037-06).
+ */
+export async function eraseRsvpsOfPerson<T extends Record<string, unknown>>(
+  db: Database<T>,
+  actor: Pick<StaffUser, "id" | "role">,
+  canonicalEmail: string,
+  now: Date,
+): Promise<{ answers: number; browsers: number }> {
+  assertAdministrator(actor);
+  const counts = await db.transaction(async (tx) => {
+    const answers = await tx.delete(eventRsvps).where(eq(eventRsvps.canonicalEmail, canonicalEmail)).returning({ id: eventRsvps.id });
+    const browsers = await tx.delete(personSessions).where(eq(personSessions.canonicalEmail, canonicalEmail)).returning({ id: personSessions.id });
+    const result = { answers: answers.length, browsers: browsers.length };
+    await recordAuditEvent(tx, {
+      actorStaffUserId: actor.id,
+      participantId: null,
+      action: "participant.rsvps_erased",
+      entityType: "participant",
+      entityId: null,
+      metadata: result,
+      now,
+    });
+    return result;
+  });
+  if (counts.answers > 0) revalidatePublicContent("places");
+  return counts;
 }
 
 /**
@@ -533,6 +620,8 @@ export async function exportPersonData<T extends Record<string, unknown>>(
       declarationAcceptances: data.declarationAcceptances.length,
       messages: data.messages.length,
       announcementRequests: data.announcementRequests.length,
+      rsvpAnswers: data.rsvpAnswers.length,
+      rememberedBrowsers: data.rememberedBrowsers.length,
       volunteerOffers: data.volunteerOffers.length,
       groupRunDeclarations: data.groupRunDeclarations.length,
       results: data.results.length,

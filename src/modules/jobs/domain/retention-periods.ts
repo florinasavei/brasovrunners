@@ -32,4 +32,11 @@ export const RETENTION_PERIODS = {
    * thank people and settle what was promised, and the privacy notice says exactly this (section 7).
    */
   volunteerDaysAfterEvent: 30,
+  /**
+   * An answer «Vin!» (§NNN): an address and, when the person ticked it, a name, kept to count and show who comes. Thirty days after the
+   * event's end, and the privacy notice's section 7 says exactly this; sooner for an answer never confirmed and for a cancelled event.
+   */
+  rsvpDaysAfterEvent: 30,
+  /** An answer «Vin!» whose address never used the emailed link: seven days from the typing, then it is a stranger's typing, not an answer. */
+  rsvpUnconfirmedDays: 7,
 } as const;

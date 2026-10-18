@@ -2424,3 +2424,55 @@ enter them; **only the Administrator and the Superadministrator make them public
    (a registration held for a dispute keeps its result until the hold is cleared), as section 7 of the notice says; the results file you download is a
    copy the sweep cannot reach, so delete it within the same period. «Toate datele unei persoane» lists a person's results and its file carries them.
    The Excel of the registrations is unchanged.
+
+
+## 46. Răspunsurile „Vin!” — let people say they are coming to a turn-up event, and show how many
+
+The answer «Vin!» (`DECISIONS.md` §NNN; the owner, 2026-10-18: «how do I mark myself as "Going"?») is for the events people simply
+turn up to — the weekly group run, and any hike, coffee or meetup saved with «Fără înscrieri». It is **not a registration**: it holds no
+place, signs no declaration and makes no participant. It is **closed until the privacy notice describes it**, and it is a tick the club
+turns on event by event. Two steps are the club's.
+
+1. **Approve a privacy notice that names «Vin!» — a lawyer reads it first.** `/admin/legal` → the «GDPR» card → «Regenerează din șablon»
+   → confirm. Four paragraphs gain the answer (the marker `{{rsvp}}` is the button's own name, „Vin!” / “I'm coming!”):
+   - **section 4** — what the page publishes: how many come, and the name **only of those who ticked «Vreau să apar cu numele»**
+     (consent, art. 6(1)(a)); everyone else is only counted; an answer is not a registration;
+   - **section 5** — what is kept (the address, the name if written, the tick, the page's language, the notice's version, the moment),
+     the one message with its two buttons («Da, vin» counts, «Nu vin» deletes), at most one every ten minutes per address, the links
+     valid for that person only, once, until the event starts; the basis (the person's request and the club's legitimate interest,
+     art. 6(1)(f));
+   - **section 7** — thirty days after the event's end, seven days for an answer never confirmed, a cancelled event's at once, the
+     remembered browser a year from its last answer;
+   - **section 10** — the remembered browser's two cookies (see step 3): *strictly necessary for a function the person asked for*
+     (Legea nr. 506/2004, art. 4(6)). **The lawyer reads that sentence first**, and the IP-free, tracking-free description of the two cookies.
+
+   Until the notice in force names `{{rsvp}}` in **both** languages, no event page shows the box, the count or a sentence about it, and the
+   service refuses an answer; the club's tick stays on in the editor, doing nothing. `/admin/tasks` carries the row «Nota de
+   confidențialitate: răspunsurile „Vin!”» (open while an upcoming event is ticked and the notice is silent, done by itself the day a
+   notice naming it takes effect), and `/admin/legal` says it in a line. **The terms do not change**: an answer buys, books and signs nothing.
+2. **Tick the event.** `/admin/events` → the event → «Participare, înscrieri și regulament» → **«Acceptă răspunsuri „Vin!” din pagină,
+   calendar și email»**. It is shown for a type that takes no registration (a group run) and for any other type saved with «Fără înscrieri»;
+   any other mode writes it off. A weekly run's tick travels with the series (a «de acum încolo» save carries it to the later dates, a new
+   date copies it), «Duplică» keeps it, and the event's JSON file writes it **only when it is on** (a file without it reads «off», and an older
+   release still reads every file that has it off). **The answers themselves are never carried** by a duplicate, a repeat or a file.
+3. **What a visitor sees.** On the event's page, where the registration card would stand, a card **«Vii?»** (`#vin`): the address, an optional
+   name, the tick «Vreau să apar cu numele» and the button **«Vin!»** (the same honeypot, timing check and Turnstile as the «Anunță-mă» box). The
+   page says one sentence whatever the address meant — «Ți-am trimis un email: apasă „Da, vin” ca să te numărăm.» — and the email brings the event's
+   facts, the day as a calendar file, **«Da, vin»** and, under it, **«Nu vin»**. The buttons open `/vin/<link>` (`/en/coming/<link>`), whose GET only
+   shows the event and one button: the press is a POST. A link works once: «Da, vin» for 48 hours (never past the start), «Nu vin» until the event starts (the event's start as it is then, so a moved event keeps its links). Under the card, **«Vin (N)»** —
+   the confirmed count and the names of those who ticked, «și încă N» for the rest. Under the form, the fold **«Nu mai vin»** (an address; the link by
+   email; it never says whether the address answered).
+   **The remembered browser.** The «Da, vin» (or «Nu mai vin») press also makes the browser *remembered* for a year: two cookies, `br_person` (a
+   random secret, readable only by the server, its fingerprint kept) and `br_person_hint` (the masked address and the name, no secret). On any other event that
+   takes answers the page then says «Răspunzi ca an…@gmail.com» and **«Vin!»** is one tap, counted at once, no email; **«Nu mai vin»** is one tap
+   too, and **«Nu sunt eu»** forgets the browser. Without JavaScript the typed form stands. This is not a login and opens nothing else.
+4. **What the club sees.** In the editor, under the registration card, a fold **«Răspunsuri „Vin!” (N)»** (read-only: no file, no button) lists the email, the
+   name, whether the person asked to be named, confirmed or not, and when — **for the Organizer, the Administrator and the Superadministrator**; every other
+   role sees only the counts. The preview before saving and `/previzualizare` show nothing of it.
+5. **Erasing, and what the sweep does.** Thirty days after the event's end the answers go (seven days for one never confirmed; a cancelled event's at the next
+   run; a remembered browser a year after its last answer). «Toate datele unei persoane» (`/admin/registrations/person`) lists a person's answers and
+   browsers, counts them in the JSON export, and an Administrator can **«Șterge răspunsurile „Vin!” și browserele»** on request — one audit row with the
+   counts, never the address.
+6. **Not built here.** The links in the calendar feed, the `.ics` files and the listing card; the «Vii?» email before each event with a personal
+   «Vin» / «Nu vin»; the one-tap answer from the members' zone. They call the same service (`answerRsvp` with an identity of source `link` or `account`)
+   and the same gate (`rsvpOffered`).

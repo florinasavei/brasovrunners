@@ -298,6 +298,8 @@ describe("BR-REQ-050-01 the CMS edits event fields and nothing else", () => {
       "/sign-in",
       // «Echipa» (§459): a platform page like the contact form, never one the CMS makes.
       "/team",
+      // The «Vin!» message's two links (§NNN): read, then one press.
+      "/vin/[token]",
       // The volunteer agreement's link (§758): read, then one press.
       "/volunteers/agreement/[token]",
       "/volunteers/guardian/[token]",

@@ -77,6 +77,7 @@ import {
   describesPromotionalMaterials,
   describesPromotionalMaterialsShared,
   describesResults,
+  describesRsvp,
   describesVolunteerAgreement,
   describesVolunteerMinors,
   describesVolunteerProfile,
@@ -85,7 +86,8 @@ import {
 } from "@/modules/legal-documents/domain/merge-fields";
 import { readPublicVolunteerRoles } from "@/modules/volunteers/volunteers";
 import { describesRefusal } from "@/modules/legal-documents/domain/refusal-clause";
-import { findCurrentApprovedDocument, findFirstResultsNoticeVersion, findFirstStatesNoticeVersion, listEffectiveDates } from "@/modules/legal-documents/repository";
+import { findCurrentApprovedDocument, findFirstResultsNoticeVersion, findFirstRsvpNoticeVersion, findFirstStatesNoticeVersion, listEffectiveDates } from "@/modules/legal-documents/repository";
+import { type PublicRsvps, readPublicRsvps } from "@/modules/rsvp/rsvp";
 import { DEFAULT_BOT_CHECK, readBotCheck } from "@/modules/registrations/bot-check";
 import { DEFAULT_PUBLIC_LIST_CLUB } from "@/modules/registrations/domain/public-list-club";
 import {
@@ -663,6 +665,35 @@ export async function cachedVolunteersDescribed(now: Date): Promise<boolean> {
 export async function cachedResultsDescribed(now: Date): Promise<boolean> {
   const notices = await Promise.all(routing.locales.map((locale) => cachedCurrentApprovedDocument("PRIVACY_NOTICE", locale, now)));
   return notices.every((notice) => notice !== undefined && describesResults(notice.body));
+}
+
+/**
+ * Whether an event page may offer the answer «Vin!» and show who comes (§NNN): the privacy notice in force describes it
+ * (`describesRsvp`), in every language — `cachedResultsDescribed`'s reading, so an approval opens the box the moment the
+ * notice itself changes. `noticeDescribesRsvp` is the uncached twin the service asks again at every answer.
+ */
+export async function cachedRsvpDescribed(now: Date): Promise<boolean> {
+  const notices = await Promise.all(routing.locales.map((locale) => cachedCurrentApprovedDocument("PRIVACY_NOTICE", locale, now)));
+  return notices.every((notice) => notice !== undefined && describesRsvp(notice.body));
+}
+
+/**
+ * The first approved privacy notice that described «Vin!» (`findFirstRsvpNoticeVersion`, §NNN), or null — the line below which a
+ * tick «Vreau să apar cu numele» was given under a notice that said nothing about it: those answers are counted and never named.
+ * Expired with every legal text, like the results' twin.
+ */
+export async function cachedFirstRsvpNoticeVersion(): Promise<number | null> {
+  return publicRead(["legal.first-rsvp-notice"], ["legal"], () => findFirstRsvpNoticeVersion(getDb()));
+}
+
+/**
+ * How many come to an event and the names of those who ticked «Vreau să apar cu numele» (`readPublicRsvps`, §NNN). Filed under
+ * "places" — a confirmation or a withdrawal expires it at once (`revalidatePublicContent("places")`), and never served from a
+ * saved copy: a withdrawn name must not outlive its owner's answer (§281, as the start list). The notice's first version is in
+ * the key, so a list made without the gate is never served with it.
+ */
+export async function cachedPublicRsvps(eventId: string, firstRsvpNoticeVersion: number | null): Promise<PublicRsvps> {
+  return publicRead(["places.rsvps", eventId, firstRsvpNoticeVersion ?? "none"], ["places"], () => readPublicRsvps(getDb(), eventId, { firstRsvpNoticeVersion }));
 }
 
 /**

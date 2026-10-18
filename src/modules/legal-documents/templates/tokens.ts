@@ -24,6 +24,7 @@ import {
   deadlineMergeValues,
   LIST_NUMBERS_MERGE_FIELD,
   RESULTS_MERGE_FIELD,
+  RSVP_MERGE_FIELD,
   GMAIL_FALLBACK_MERGE_FIELD,
   GROUP_RUN_ALONE_MERGE_FIELD,
   GROUP_RUN_MINOR_AGE_MERGE_FIELD,
@@ -44,6 +45,7 @@ import { feedbackFormsClause, feedbackFormsNamedClause, feedbackSafetyGmailClaus
 import { membersShopClause } from "@/modules/content/shop/notice-words";
 import { volunteerAgreementClause, volunteerMinorsClause, volunteerProfileClause, volunteersClause } from "@/modules/volunteers/notice-words";
 import { resultsClause } from "@/modules/results/notice-words";
+import { rsvpClause } from "@/modules/rsvp/notice-words";
 
 /**
  * The declaration's merge fields, in one list (`DECISIONS.md` §190).
@@ -203,6 +205,13 @@ export const DECLARATION_TOKENS: readonly DeclarationToken[] = [
     token: `{{${RESULTS_MERGE_FIELD}}}`,
     messageKey: RESULTS_MERGE_FIELD,
     example: inBoth((locale) => resultsClause(locale)),
+  },
+  // The privacy notice's marker for the answer «Vin!» (§NNN): filled with the button's own name, and the switch that
+  // lets the event page offer it and the service take it (`describesRsvp`).
+  {
+    token: `{{${RSVP_MERGE_FIELD}}}`,
+    messageKey: RSVP_MERGE_FIELD,
+    example: inBoth((locale) => rsvpClause(locale)),
   },
   // The privacy notice's marker for the newsletter (§445): filled with the pop-up's topics, and the
   // switch that lets the contact page offer it (`describesNewsletter`).

@@ -134,6 +134,7 @@ const HIGHLIGHTED: ReadonlyArray<{ type: EmailMessageType; ro: readonly string[]
   { type: "DECLARATION_SIGNED", ro: ["Păstreaz-o: este copia ta."], en: ["Keep it: it is your copy."] },
   { type: "BIB_ASSIGNED", ro: ["numărul 42", "codul EXAMPL"], en: ["number 42", "the code EXAMPL"] },
   { type: "REGISTRATION_OPENED", ro: ["s-au deschis"], en: ["is open"], button: true },
+  { type: "RSVP_CONFIRM", ro: ["Apasă butonul de mai jos ca să confirmi"], en: ["Press the button below to confirm"], button: true },
   { type: "REGISTRATION_CANCELLED", ro: ["a fost anulată", "Locul a fost eliberat."], en: ["has been cancelled", "The place has been released."] },
   { type: "WAITLIST_OFFER_EXPIRED", ro: ["a expirat", "Rămâi pe lista de așteptare"], en: ["has expired", "You remain on the waiting list"] },
   { type: "REGISTRATION_MANAGE_LINK", ro: ["Iată linkul"], en: ["Here is the link"], button: true },

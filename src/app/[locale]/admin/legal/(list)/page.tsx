@@ -16,6 +16,7 @@ import {
   findCurrentApprovedDocument,
   noticeDescribesListNumbers,
   noticeDescribesResults,
+  noticeDescribesRsvp,
   noticeDescribesListSocials,
   noticeDescribesListStates,
   noticeDescribesPromotionalMaterials,
@@ -234,6 +235,8 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
   const listNumbersMissing = !missingKeys.includes("PRIVACY_NOTICE") && !(await noticeDescribesListNumbers(getDb(), now));
   // §808: a race's results can be made public only once the notice in force names `{{results}}`.
   const resultsMissing = !missingKeys.includes("PRIVACY_NOTICE") && !(await noticeDescribesResults(getDb(), now));
+  // §NNN: the answer «Vin!» is offered on an event page only once the notice in force names `{{rsvp}}`.
+  const rsvpMissing = !missingKeys.includes("PRIVACY_NOTICE") && !(await noticeDescribesRsvp(getDb(), now));
   // …and once the terms in force name it too: the older terms promised to ask separately before any named result.
   const resultsTermsMissing = !missingKeys.includes("TERMS") && !(await termsDescribeResults(getDb(), now));
   // The same for the offers and benefits (§562): no form offers the box, and nothing is kept,
@@ -885,6 +888,11 @@ export default async function LegalDocumentsPage({ params, searchParams }: Props
       {resultsMissing && (
         <Alert severity="info" data-testid="legal-results-missing">
           {t("legal.resultsMissing")}
+        </Alert>
+      )}
+      {rsvpMissing && (
+        <Alert severity="info" data-testid="legal-rsvp-missing">
+          {t("legal.rsvpMissing")}
         </Alert>
       )}
       {resultsTermsMissing && (

@@ -25,6 +25,8 @@ export type RateLimitScope =
   | "newsletter-subscribe"
   | "volunteer-signup"
   | "volunteer-event"
+  | "rsvp-confirm"
+  | "rsvp-event"
   | "content-translate"
   | "bot-check-signal";
 
@@ -102,6 +104,17 @@ export const RATE_LIMITS: Record<RateLimitScope, { limit: number; windowMs: numb
    * club gets in a season, and a refused post is told plainly, because a person is not a bot.
    */
   "volunteer-event": { limit: 60, windowMs: 60 * 60_000 },
+  /**
+   * «Vin!» (§NNN), hashed canonical address and event: each typed answer mails an unproven address once, and the withdraw
+   * link's request spends the same bucket. One message per address and event in ten minutes — the form says the same sentence
+   * when it is refused, so it cannot be used to learn whether an address answered.
+   */
+  "rsvp-confirm": { limit: 1, windowMs: 10 * 60_000 },
+  /**
+   * The same form, keyed on the event's id: every typed answer mails a stranger, so this bounds how many messages one event's
+   * page can cause an hour whatever the addresses typed. Two hundred is more than a club's turn-up run gets in a season.
+   */
+  "rsvp-event": { limit: 200, windowMs: 60 * 60_000 },
   /** «Tradu din română» (§464), per staff id; the daily character budget bounds the cost. */
   "content-translate": { limit: 60, windowMs: 60 * 60_000 },
   /**

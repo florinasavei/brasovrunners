@@ -150,6 +150,11 @@ export const emailMessageType = pgEnum("email_message_type", [
   // message could not be delivered in a day and its words are deleted. Composed when it is queued, carried by
   // the same worker as the two above; names a road and a count, never a visitor's words or address.
   "RELAY_NOTICE",
+  // «Confirmă că vii la …» (§NNN, «Vin!» part 1): the one message of an unverified answer «Vin!» on a turn-up event —
+  // «Da, vin» confirms it, «Nu vin / Nu mai vin» takes it back — or, asked from the page's small fold, the withdraw
+  // link alone. To an address nobody has confirmed, about no registration. The answer's id in the payload; both
+  // links are minted at the send and only their hashes kept (`event_rsvp_tokens`, §12.8).
+  "RSVP_CONFIRM",
 ]);
 
 export type EmailMessageType = (typeof emailMessageType.enumValues)[number];
