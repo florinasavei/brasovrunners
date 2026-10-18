@@ -325,6 +325,9 @@ describe("§NNN «Vii mâine la …?»", () => {
       expect(message.text).toContain("Vin");
       expect(message.text).toContain("Nu vin");
       expect(message.text).toContain("Are you coming to Sunday run tomorrow?");
+      // The press needs two taps (a GET never counts): the email says so, and names the topic that brought it.
+      expect(message.text).toContain("Apasă „Vin”, apoi „Da, vin” pe pagina care se deschide");
+      expect(message.text).toContain("Primești noutățile clubului despre: „Întrebarea «Vii?» înaintea alergărilor”.");
       expect(message.text.indexOf("Alergarea de duminică")).toBeLessThan(message.text.indexOf("Sunday run"));
       // The event's facts block (§392): the place and the day.
       expect(message.text).toContain("Parcul Tractorul");
