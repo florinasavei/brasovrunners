@@ -203,6 +203,29 @@ describe("§619 the pages that wait for an email point at Spam and Promotions, v
     }
   });
 
+  it("the newsletter pop-up draws the «Vii?» topic's box only once the notice in force describes the question (§NNN)", async () => {
+    const render = async (askOffered: boolean) => {
+      lang.current = "ro";
+      return markup(
+        (await NewsletterSignup({
+          locale: "ro",
+          askOffered,
+          outcome: null,
+          refused: [],
+          typed: {},
+          siteKey: undefined,
+          renderedAt: new Date().toISOString(),
+          attempt: "a",
+          leaveOutcome: null,
+          leaveTyped: undefined,
+        })) as ReactElement,
+      );
+    };
+    expect(await render(false)).not.toContain('data-testid="newsletter-topic-RSVP_ASK"');
+    expect(await render(false)).toContain('data-testid="newsletter-topic-BIG_EVENTS"');
+    expect(await render(true)).toContain('data-testid="newsletter-topic-RSVP_ASK"');
+  });
+
   it("the family's confirmation page shows it under both answers, and the group run's done page too", async () => {
     for (const locale of ["ro", "en"] as const) {
       lang.current = locale;

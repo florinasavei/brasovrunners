@@ -15,7 +15,7 @@ import { requestNewsletterManageLinkAction, submitNewsletterAction } from "@/app
 import { getPathname, Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { minutesPhrase } from "@/modules/deadlines/domain/duration-words";
-import { cachedEmailWaitMinutes, cachedRsvpAskDescribed } from "@/modules/public-cache/reads";
+import { cachedEmailWaitMinutes } from "@/modules/public-cache/reads";
 import BotCheck from "@/modules/registrations/ui/BotCheck";
 import { spamHintWords } from "@/modules/registrations/ui/link-wait-words";
 import { emailDelayNotice } from "@/modules/registrations/ui/email-delay-notice";
@@ -41,6 +41,8 @@ const NEWSLETTER_LEAVE_ERROR_ID = "newsletter-leave-errors";
 
 type Props = {
   locale: Locale;
+  /** The notice in force describes the day-before question (`cachedRsvpAskDescribed`, §NNN): the topic «Întrebarea «Vii?» …» is a box only then. */
+  askOffered?: boolean;
   outcome: NewsletterOutcome | null;
   /** The boxes a refusal named (`?nfields=`). */
   refused: readonly NewsletterBox[];
@@ -77,7 +79,7 @@ type Props = {
  * The page draws this only while the privacy notice in force describes the newsletter
  * (`cachedNewsletterOffered`): nothing is collected before the club's approved text says why.
  */
-export default async function NewsletterSignup({ locale, outcome, refused, typed, siteKey, renderedAt, attempt, leaveOutcome, leaveTyped }: Props) {
+export default async function NewsletterSignup({ locale, askOffered = false, outcome, refused, typed, siteKey, renderedAt, attempt, leaveOutcome, leaveTyped }: Props) {
   const t = await getTranslations("Newsletter");
   const contactPath = getPathname({ locale, href: "/contact" });
   const open = newsletterDialogOpen(outcome);
@@ -86,8 +88,6 @@ export default async function NewsletterSignup({ locale, outcome, refused, typed
   const inlineLink = { display: "inline-flex", alignItems: "center", minHeight: TAP_TARGET.minHeight } as const;
   // The confirmation link leaves on the scheduler's tick by default (§513): the sentence says that
   // wait, or "a few minutes" when the club sends right after the request. Read only on "sent".
-  // The topic «Întrebarea «Vii?» …» (§NNN) is offered only once the notice in force describes the question (`cachedRsvpAskDescribed`).
-  const askOffered = await cachedRsvpAskDescribed(new Date());
   const topicChoices = NEWSLETTER_TOPICS.filter((topic) => topic !== "RSVP_ASK" || askOffered);
   const waitMinutes = outcome === "sent" ? await cachedEmailWaitMinutes(new Date()) : null;
   // Spam and Promotions, the box every page that waits for an email shows (§619): read only when one is waited for.
