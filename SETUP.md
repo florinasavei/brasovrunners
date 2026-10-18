@@ -2486,6 +2486,10 @@ turns on event by event. Two steps are the club's.
    run; a remembered browser a year after its last answer). «Toate datele unei persoane» (`/admin/registrations/person`) lists a person's answers and
    browsers, counts them in the JSON export, and an Administrator can **«Șterge răspunsurile „Vin!” și browserele»** on request — one audit row with the
    counts, never the address.
-6. **Not built here.** The links in the calendar feed, the `.ics` files and the listing card; the «Vii?» email before each event with a personal
-   «Vin» / «Nu vin»; the one-tap answer from the members' zone. They call the same service (`answerRsvp` with an identity of source `link` or `account`)
-   and the same gate (`rsvpOffered`).
+6. **Not built here.** The links in the calendar feed, the `.ics` files and the listing card; the one-tap answer from the members' zone. They call
+   the same service (`answerRsvp` with an identity of source `account`) and the same gate (`rsvpOffered`).
+7. **The «Vii?» email (`DECISIONS.md` §NNN).** Nothing to set up: a newsletter subscriber who ticks the topic **«Întrebarea „Vii?” înaintea alergărilor»** (or «Toate noutățile») gets, the day
+   before a ticked event, from 08:00 club time, one email «Vii mâine la …?» with the two buttons **«Vin»** (counts them at once, no second email) and **«Nu vin»** (counts nobody) —
+   once per event, only while the notice in force names «Vin!», never for an event ticked only on its own day, and never to someone already counted. The topic is
+   chosen in the newsletter's pop-up and on the subscriber's own page; no organizer writes for it, and a notice approved before this topic existed does not name it:
+   approve the notice again from the template (a lawyer reads the newsletter paragraph first).
