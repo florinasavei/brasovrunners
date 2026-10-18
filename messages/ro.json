@@ -9391,7 +9391,7 @@
           "other": "{count} de niveluri"
         },
         "intro": "Nivelurile pe care le dai membrilor. Un nivel e o etichetă și ce primește membrul, nu un drept.",
-        "introMore": "Un nivel nu deschide și nu închide nimic pe site. Membrul îl vede în zona lui, pagina publică „Beneficiile membrilor” le înșiră, iar un cod de reducere poate fi doar pentru unele niveluri. Nivelul se dă fiecărui membru în „Echipa”.",
+        "introMore": "Un nivel nu schimbă ce poate face cineva pe site. Membrul îl vede în zona lui, pagina publică îl înșiră, iar un cod de reducere poate fi doar pentru unele niveluri.",
         "empty": "Nu ai încă niciun nivel. Până atunci, membrii sunt pur și simplu „Membru”.",
         "rowsIntro": "Scrie un nivel în rândul gol de la sfârșit și apasă „Salvează tot nivelurile”. Ordinea e cea din „Poziția”.",
         "listLabel": "Nivelurile de membru, în ordinea clubului",

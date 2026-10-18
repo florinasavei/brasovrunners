@@ -9391,7 +9391,7 @@
           "other": "{count} levels"
         },
         "intro": "The levels you give your members. A level is a label and what the member gets, not a right.",
-        "introMore": "A level opens and closes nothing on the site. The member sees it in their zone, the public page “Members' benefits” lists them, and a discount code can be for some levels only. You give each member a level on “Team”.",
+        "introMore": "A level changes nothing a person may do on the site. The member sees it in their zone, the public page lists it, and a discount code can be for some levels only.",
         "empty": "You have no level yet. Until then, members are simply “Member”.",
         "rowsIntro": "Write a level in the empty row at the end and press “Save all levels”. The order is the one in “Position”.",
         "listLabel": "The member levels, in the club's order",
