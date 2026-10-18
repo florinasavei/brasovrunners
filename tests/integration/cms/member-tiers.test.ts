@@ -11,7 +11,7 @@ import { TIER_GLYPH } from "@/modules/events/ui/tier-glyphs";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — «Niveluri de membru»: the levels the club names for its members, the level each member holds, and the partners'
+ * §811 — «Niveluri de membru»: the levels the club names for its members, the level each member holds, and the partners'
  * codes limited to some levels. A level is a label and its benefits, never a permission.
  *
  * Proven on real PostgreSQL (PGlite): the one save of every row (add through the blank row, edit, reorder by the numbers
@@ -86,7 +86,7 @@ const CODE = {
   validUntil: "",
 };
 
-describe("§NNN the member tiers", () => {
+describe("§811 the member tiers", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   let admin: StaffUser;

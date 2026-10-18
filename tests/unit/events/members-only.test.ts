@@ -159,7 +159,7 @@ describe("§552 no public read path meets a members' row or a code (source walk)
         path.startsWith("src/app/[locale]/admin/") ||
           path === "src/app/[locale]/members-area/page.tsx" ||
           path.startsWith("src/modules/content/member-codes/") ||
-          // The member tiers' counts and the delete's check meet the codes' limit (§NNN): the backoffice's files, never a public read (`repository.ts` there does not).
+          // The member tiers' counts and the delete's check meet the codes' limit (§811): the backoffice's files, never a public read (`repository.ts` there does not).
           path === "src/modules/content/member-tiers/admin-repository.ts" ||
           path === "src/modules/content/member-tiers/service.ts" ||
           path === "src/db/client.ts",

@@ -36,7 +36,7 @@ vi.mock("@/modules/staff-identity/service", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/modules/staff-identity/service")>()),
   listStaff: async () => team,
 }));
-// The levels the club named (§NNN): the page reads them; none here.
+// The levels the club named (§811): the page reads them; none here.
 vi.mock("@/modules/content/member-tiers/repository", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/modules/content/member-tiers/repository")>()),
   listAllMemberTiers: async () => [],

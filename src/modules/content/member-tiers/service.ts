@@ -14,7 +14,7 @@ import { NEW_TIER_ROW_KEY, orderTierRows, type PostedTierRow, tierBox, type Tier
 import { tierUsage } from "./admin-repository";
 
 /**
- * «Niveluri de membru» (§NNN): the levels the club names for its members. Every write is asserted
+ * «Niveluri de membru» (§811): the levels the club names for its members. Every write is asserted
  * here, on the server, whatever the screen offered (BR-REQ-060-01): the Administrator's and the
  * Superadministrator's (`canManageMemberTiers`), who runs the club (§450). A tier is a label and its
  * benefits, never a permission — nothing below grants or refuses anything to a member.

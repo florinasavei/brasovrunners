@@ -211,7 +211,7 @@ const PUBLIC_COLUMNS = {
   // The group run's optional self-declaration (§393): the button under the route's pills.
   offersGroupRunDeclaration: events.offersGroupRunDeclaration,
   registrationMode: events.registrationMode,
-  // «Acceptă răspunsuri „Vin!"» (§NNN): the club's tick on a turn-up event; `rsvpOffered` adds the rest of the gate.
+  // «Acceptă răspunsuri „Vin!"» (§811): the club's tick on a turn-up event; `rsvpOffered` adds the rest of the gate.
   rsvpEnabled: events.rsvpEnabled,
   registrationOpensAt: events.registrationOpensAt,
   registrationOpensSoon: events.registrationOpensSoon,
@@ -789,7 +789,7 @@ export async function findPublishedEventBySlug<T extends Record<string, unknown>
 }
 
 /**
- * One published event by its id, in a language (§NNN): the public read — never a members' event (§552) — for a caller that
+ * One published event by its id, in a language (§811): the public read — never a members' event (§552) — for a caller that
  * holds the id and not the slug, the «Vin!» service. Undefined when it is not published in that language.
  */
 export async function findPublishedEventById<T extends Record<string, unknown>>(db: GenericDatabase<T>, locale: Locale, id: string) {

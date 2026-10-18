@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { ShownWhen, useSelectedValue } from "./OnlyForType";
 
 /**
- * Shows its children while the event asks for no registration (§NNN, «Vin!» part 1): a type that takes none (a group run,
+ * Shows its children while the event asks for no registration (§811, «Vin!» part 1): a type that takes none (a group run,
  * §111) **or** a type that does, with «Fără înscrieri» chosen. The editor's «Acceptă răspunsuri „Vin!”» tick belongs to exactly
  * that — an event one simply turns up to — and is written off by any other mode (`service.ts#hiddenByMode`).
  *

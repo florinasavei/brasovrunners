@@ -147,7 +147,7 @@ export const GLYPHS = {
   ...prefixed("difficulty", DIFFICULTY_LEVEL_ICONS),
   ...prefixed("cost", COST_GLYPH),
   ...prefixed("checkpoint", CHECKPOINT_GLYPH),
-  // A member's level (§NNN), the club's pick from a closed set: `tier:star`, `tier:medal`… (`tier-glyphs.ts`).
+  // A member's level (§811), the club's pick from a closed set: `tier:star`, `tier:medal`… (`tier-glyphs.ts`).
   ...prefixed("tier", TIER_GLYPH),
   special: AutoAwesomeIcon,
   // The repeat chip on a listing card (§486) — the single date of a series, the series card and

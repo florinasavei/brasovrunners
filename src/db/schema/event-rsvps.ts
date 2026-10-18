@@ -4,7 +4,7 @@ import { events } from "./events";
 import { locale } from "./locale";
 
 /**
- * «Vin!» (§NNN, «Vin!» part 1; the owner, 2026-10-18: «how do I mark myself as "Going"?»).
+ * «Vin!» (§811, «Vin!» part 1; the owner, 2026-10-18: «how do I mark myself as "Going"?»).
  *
  * A person's answer «I am coming» to a turn-up event the club ticked (`events.rsvp_enabled`): an address,
  * optionally a name to show, and — once the person has used the link emailed to them, or answered as somebody
@@ -60,7 +60,7 @@ export type EventRsvp = typeof eventRsvps.$inferSelect;
 export const eventRsvpTokenPurpose = pgEnum("event_rsvp_token_purpose", ["RSVP_CONFIRM", "RSVP_WITHDRAW"]);
 
 /**
- * The «Vin!» links (§NNN) — the same secret and the same stored hash as every email action link (AGENTS.md
+ * The «Vin!» links (§811) — the same secret and the same stored hash as every email action link (AGENTS.md
  * §12.8, §13.2; `action-tokens/domain/token-secret.ts`), in a table of their own because they belong to an
  * answer, which is not a participant (the newsletter's `newsletter_tokens` is the precedent, §445).
  *

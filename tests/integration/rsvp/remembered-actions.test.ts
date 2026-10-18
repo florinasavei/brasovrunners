@@ -31,11 +31,11 @@ const NOW = new Date();
 const DAY = 24 * 60 * 60_000;
 
 /**
- * §NNN («Vin!» part 1) — the one-tap actions the island calls: a remembered browser answers as its address, verified, counted at
+ * §811 («Vin!» part 1) — the one-tap actions the island calls: a remembered browser answers as its address, verified, counted at
  * once with no email, on any event that takes answers; takes the answer back in one tap; and «Nu sunt eu» forgets it. The cookie is
  * read by the action alone (the island never sees the secret), and nothing is done for a browser the server does not know.
  */
-describe("§NNN the remembered browser's one tap", () => {
+describe("§811 the remembered browser's one tap", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   let slug: string;

@@ -1,5 +1,5 @@
 /**
- * The names the «Niveluri de membru» card posts under (§NNN): one form for every level, so every box
+ * The names the «Niveluri de membru» card posts under (§811): one form for every level, so every box
  * carries the level it belongs to — `tiers[<key>].nameRo` — the way the volunteers' «Roluri» card does
  * (`volunteers/role-rows.ts`, §791).
  *

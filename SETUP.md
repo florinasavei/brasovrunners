@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.55-2026-10-17 -->
+<!-- PROJECT_BASELINE: BR-V3.56-2026-10-18 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V3.55-2026-10-17`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.56-2026-10-18`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -2116,7 +2116,7 @@ with its cards in the order you fill them.
    column «Adăugată de». Whoever runs the shop may do it: an Administrator, or the colleague given
    «Gestionează magazinul» in step 6.
 
-**Member levels** (optional, any time; `DECISIONS.md` §NNN). The members' zone can tell a founder from a supporter.
+**Member levels** (optional, any time; `DECISIONS.md` §811). The members' zone can tell a founder from a supporter.
 An Administrator **names the levels** on «Pagini» → «Membri» → «Niveluri de membru» (a name and a description in
 both languages, a symbol, the order in «Poziția», «Ascuns» for a level no longer given) and presses the one
 «Salvează toate nivelurile»; **gives each member one** on «Echipa», in «Nivel» on the member's row — or one for all
@@ -2441,7 +2441,7 @@ enter them; **only the Administrator and the Superadministrator make them public
 
 ## 46. Răspunsurile „Vin!” — let people say they are coming to a turn-up event, and show how many
 
-The answer «Vin!» (`DECISIONS.md` §NNN; the owner, 2026-10-18: «how do I mark myself as "Going"?») is for the events people simply
+The answer «Vin!» (`DECISIONS.md` §811; the owner, 2026-10-18: «how do I mark myself as "Going"?») is for the events people simply
 turn up to — the weekly group run, and any hike, coffee or meetup saved with «Fără înscrieri». It is **not a registration**: it holds no
 place, signs no declaration and makes no participant. It is **closed until the privacy notice describes it**, and it is a tick the club
 turns on event by event. Two steps are the club's.

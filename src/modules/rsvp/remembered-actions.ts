@@ -11,7 +11,7 @@ import { rsvpOffered } from "./domain/offered";
 import { answerRsvp, countRsvps, hasConfirmedRsvp, withdrawRsvp } from "./rsvp";
 
 /**
- * The remembered browser's one-tap «Vin!» (§NNN, «Vin!» part 1; the owner, 2026-10-18: «I want the flow to be super easy»).
+ * The remembered browser's one-tap «Vin!» (§811, «Vin!» part 1; the owner, 2026-10-18: «I want the flow to be super easy»).
  *
  * The event page is static for everybody (§333, §549); the one island that knows a browser is remembered
  * (`ui/RsvpRemembered.tsx`) calls these. Each reads the `httpOnly` cookie itself (`person-session/`): the island never sees

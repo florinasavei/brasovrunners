@@ -12,7 +12,7 @@ import { RSVP_BOX_ID } from "@/modules/rsvp/rsvp-box";
 import { withdrawnProof } from "@/modules/rsvp/withdrawn-proof";
 
 /**
- * The two buttons of a «Vin!» message's page (§NNN, «Vin!» part 1): «Da, vin» and «Nu mai vin». Each spends its link — single
+ * The two buttons of a «Vin!» message's page (§811, «Vin!» part 1): «Da, vin» and «Nu mai vin». Each spends its link — single
  * use, one statement, one winner (AGENTS.md §12.8) — and each remembers the browser, because a link used from an inbox proves the
  * address as much as the first one did (`person-session/`): the next press on any event that takes answers is one tap. The GET
  * of the page changed nothing; only these do.

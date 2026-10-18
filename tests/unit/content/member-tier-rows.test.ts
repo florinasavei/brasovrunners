@@ -4,10 +4,10 @@ import { NEW_TIER_ROW_KEY, orderTierRows, postedTierRows, TIER_ROW_BOXES, tierBo
 import { isRichTextField, isTranslatableEnglishField, romanianTwinCandidates } from "@/modules/translate/domain/fields";
 
 /**
- * §NNN — the pure parts of «Niveluri de membru»: the names the card's one form posts under, the ordering rule of §791 for a
+ * §811 — the pure parts of «Niveluri de membru»: the names the card's one form posts under, the ordering rule of §791 for a
  * list without categories, the typed number, what a level's boxes must hold, and the translate allowlist's entry for them.
  */
-describe("§NNN the card's posted names", () => {
+describe("§811 the card's posted names", () => {
   it("groups the boxes by their level's key, in the order the first box appears, and leaves other names alone", () => {
     const rows = postedTierRows([
       ["uiLocale", "ro"],
@@ -44,7 +44,7 @@ describe("§NNN the card's posted names", () => {
   });
 });
 
-describe("§NNN the order the numbers typed ask for (§791's rule)", () => {
+describe("§811 the order the numbers typed ask for (§791's rule)", () => {
   const rows = (typed: Record<string, number | null>, extra: { key: string; typed: number | null }[] = []) => [
     ...["a", "b", "c"].map((key, index) => ({ key, was: index + 1, typed: typed[key] ?? null })),
     ...extra.map((row) => ({ ...row, was: null })),
@@ -80,7 +80,7 @@ describe("§NNN the order the numbers typed ask for (§791's rule)", () => {
   });
 });
 
-describe("§NNN a typed «Poziția»", () => {
+describe("§811 a typed «Poziția»", () => {
   it("is a whole number from 1, or nothing", () => {
     expect(parseTierPosition(undefined)).toEqual({ ok: true, value: null });
     expect(parseTierPosition("  ")).toEqual({ ok: true, value: null });
@@ -90,7 +90,7 @@ describe("§NNN a typed «Poziția»", () => {
   });
 });
 
-describe("§NNN what a level's boxes must hold", () => {
+describe("§811 what a level's boxes must hold", () => {
   const ok = { nameRo: "Membru", nameEn: "Member" };
 
   it("needs a name in each language, one line, at most forty characters", () => {
@@ -113,7 +113,7 @@ describe("§NNN what a level's boxes must hold", () => {
   });
 });
 
-describe("§NNN «Tradu din română» on a level's English boxes", () => {
+describe("§811 «Tradu din română» on a level's English boxes", () => {
   it("may fill the name and the description of a level, by the key the card posts them under, and nothing else of the row", () => {
     for (const name of ["tiers[11111111-1111-4111-8111-111111111111].nameEn", "tiers[new].nameEn", "tiers[a].descriptionEn"]) {
       expect(isTranslatableEnglishField(name), name).toBe(true);

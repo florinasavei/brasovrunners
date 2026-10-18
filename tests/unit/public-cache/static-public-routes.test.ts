@@ -111,7 +111,7 @@ const PER_REQUEST: Record<string, string> = {
   "src/app/[locale]/registrations/mine/[token]/page.tsx": TOKEN_PAGE,
   "src/app/[locale]/newsletter/confirm/[token]/page.tsx": TOKEN_PAGE,
   "src/app/[locale]/newsletter/manage/[token]/page.tsx": TOKEN_PAGE,
-  // The «Vin!» message's two buttons (§NNN): «Da, vin» and «Nu mai vin» share one page, which reads the link to know which.
+  // The «Vin!» message's two buttons (§811): «Da, vin» and «Nu mai vin» share one page, which reads the link to know which.
   "src/app/[locale]/vin/[token]/page.tsx": TOKEN_PAGE,
   "src/app/[locale]/live/events/[slug]/calendar.ics/route.ts": "a members' event's .ics: it asks the account and reads the event live, private, no-store (§552)",
   "src/app/[locale]/events/[slug]/share-image/route.ts": "?shape= — a shared cache keeps it an hour instead",

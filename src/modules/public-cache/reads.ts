@@ -669,7 +669,7 @@ export async function cachedResultsDescribed(now: Date): Promise<boolean> {
 }
 
 /**
- * Whether an event page may offer the answer «Vin!» and show who comes (§NNN): the privacy notice in force describes it
+ * Whether an event page may offer the answer «Vin!» and show who comes (§811): the privacy notice in force describes it
  * (`describesRsvp`), in every language — `cachedResultsDescribed`'s reading, so an approval opens the box the moment the
  * notice itself changes. `noticeDescribesRsvp` is the uncached twin the service asks again at every answer.
  */
@@ -679,7 +679,7 @@ export async function cachedRsvpDescribed(now: Date): Promise<boolean> {
 }
 
 /**
- * The first approved privacy notice that described «Vin!» (`findFirstRsvpNoticeVersion`, §NNN), or null — the line below which a
+ * The first approved privacy notice that described «Vin!» (`findFirstRsvpNoticeVersion`, §811), or null — the line below which a
  * tick «Vreau să apar cu numele» was given under a notice that said nothing about it: those answers are counted and never named.
  * Expired with every legal text, like the results' twin.
  */
@@ -688,7 +688,7 @@ export async function cachedFirstRsvpNoticeVersion(): Promise<number | null> {
 }
 
 /**
- * How many come to an event and the names of those who ticked «Vreau să apar cu numele» (`readPublicRsvps`, §NNN). Filed under
+ * How many come to an event and the names of those who ticked «Vreau să apar cu numele» (`readPublicRsvps`, §811). Filed under
  * "places" — a confirmation or a withdrawal expires it at once (`revalidatePublicContent("places")`), and never served from a
  * saved copy: a withdrawn name must not outlive its owner's answer (§281, as the start list). The notice's first version is in
  * the key, so a list made without the gate is never served with it.
@@ -898,7 +898,7 @@ export async function cachedMembersPage(locale: Locale) {
 }
 
 /**
- * `readPublicMemberTiers`: «Nivelurile de membru» (§NNN) — the visible levels, in the club's order and the
+ * `readPublicMemberTiers`: «Nivelurile de membru» (§811) — the visible levels, in the club's order and the
  * reader's language, for the members' page. Nothing about a person. Filed under `pages` with the page that
  * lists them: a save of the levels expires that kind (`content/member-tiers/service.ts`).
  */

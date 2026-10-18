@@ -7,7 +7,7 @@ import SubNav from "@/shared/ui/SubNav";
 /**
  * The Galerie tab's two halves: the albums and every stored picture. The shared `SubNav` (§360);
  * hrefs resolved on the server because `SubNav` takes strings. Each tab wears its picture, drawn here
- * on the server into `SubNav`, a Server Component end to end (§318 as amended, §NNN).
+ * on the server into `SubNav`, a Server Component end to end (§318 as amended, §813).
  */
 const TAB_GLYPH = {
   albums: { glyph: "albums" },

@@ -39,7 +39,7 @@ export const EMAIL_AUDIENCE = {
   BIB_ASSIGNED: "participant",
   STAFF_INVITATION: "staff",
   REGISTRATION_OPENED: "public",
-  // «Confirmă că vii» (§NNN, «Vin!»): to an address nobody has confirmed, about no registration — the public's road, like an invitation's.
+  // «Confirmă că vii» (§811, «Vin!»): to an address nobody has confirmed, about no registration — the public's road, like an invitation's.
   RSVP_CONFIRM: "public",
   CLUB_CONFIRMATION_NOTICE: "club",
   EVENT_UPDATE_NOTICE: "participant",

@@ -1016,7 +1016,7 @@ async function renderRow(
     payloadActionUrl = `${env.APP_BASE_URL}${getPathname({ locale, href: { pathname: "/events/[slug]/register", params: { slug: eventDetails.slug } } })}`;
   }
   /*
-    «Vin!» (§NNN): the one message of an answer typed on a turn-up event's page — no participant, no registration. The answer is
+    «Vin!» (§811): the one message of an answer typed on a turn-up event's page — no participant, no registration. The answer is
     read now (`payload.rsvpId`): one taken back, an address changed, or an event cancelled, started or gone since the press is
     withdrawn (`OutboxMessageWithdrawn`) — nothing to confirm (§331's rule at the moment of sending). Its shape follows the
     answer: still unconfirmed → «Da, vin» with «Nu vin» under it; already counted → only «Nu mai vin»; asked from the page's
@@ -1507,11 +1507,11 @@ async function renderRow(
       row.messageType === "EVENT_REMINDER" ||
       row.messageType === "EVENT_UPDATE_NOTICE" ||
       row.messageType === "EVENT_CANCELLED" ||
-      // «Vin!» (§NNN): the event's file, so the day is in the person's calendar — not on the message that only takes the answer back.
+      // «Vin!» (§811): the event's file, so the day is in the person's calendar — not on the message that only takes the answer back.
       (row.messageType === "RSVP_CONFIRM" && data.rsvpStage !== "withdraw"));
   if (mayCarryCalendar && eventDetails?.slug) {
     const rsvpTo = await calendarRsvpToForSending(db);
-    // «Vin!» (§NNN) is the one message outside `calendarPartFor`'s four: it carries the event's published file whatever the club's
+    // «Vin!» (§811) is the one message outside `calendarPartFor`'s four: it carries the event's published file whatever the club's
     // calendar-answers address says — a person who only said they come holds no place, and the calendar must not ask «Vii?» of them twice.
     const part: CalendarPart | null = row.messageType === "RSVP_CONFIRM" ? "file" : calendarPartFor({ messageType: row.messageType, clubCopy, rsvpTo, confirmed: confirmedHere, changes: updateChanges });
     if (part) {

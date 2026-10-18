@@ -23,7 +23,7 @@ import { rsvpForgetAction, rsvpGoAction, rsvpLeaveAction, rsvpStateAction } from
 import RsvpRemembered from "./RsvpRemembered";
 
 /**
- * «Vii?» (§NNN, «Vin!» part 1; the owner, 2026-10-18: «how do I mark myself as "Going"?») — the answer «Vin!» on a turn-up event
+ * «Vii?» (§811, «Vin!» part 1; the owner, 2026-10-18: «how do I mark myself as "Going"?») — the answer «Vin!» on a turn-up event
  * the club ticked, and under it «Vin (N)»: who comes. Drawn by `EventPageView` where the registration card would stand, with the
  * anchor `#vin`, **only while `rsvpOffered` says so** (the page decides, from the one rule): otherwise the page shows nothing — no
  * box, no count, no sentence.

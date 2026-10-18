@@ -8,7 +8,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { auditMigration } from "../../../scripts/migration-check.mjs";
 
 /**
- * Migration `0169_member_tiers` (§NNN; the owner, 2026-10-18: «Also for the member zone I want member Tiers»),
+ * Migration `0169_member_tiers` (§811; the owner, 2026-10-18: «Also for the member zone I want member Tiers»),
  * proven on real PostgreSQL (PGlite): one new table, `member_tiers`, and two nullable columns that expand and
  * nothing else — `staff_users.member_tier_id` (a member's level, `ON DELETE SET NULL`) and
  * `member_discount_codes.tier_ids` (a code's limit to some levels, null being every member). A member and a

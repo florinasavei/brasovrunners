@@ -70,7 +70,7 @@ export const discountCodeFieldsSchema = z
       .transform((value) => value.trim())
       .refine((value) => value === "" || isCalendarDay(value), "not a day")
       .transform((value) => (value === "" ? null : value)),
-    // «Pentru nivelurile» (§NNN): the member tiers that see the code; none ticked is every member. Ids only —
+    // «Pentru nivelurile» (§811): the member tiers that see the code; none ticked is every member. Ids only —
     // whether each names a tier is the service's question, asked under a lock.
     tierIds: z
       .array(z.string())

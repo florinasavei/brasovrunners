@@ -7,7 +7,7 @@ import { createEvent, duplicateEvent, repeatEvent, saveEventAndTranslations } fr
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN («Vin!» part 1) — the editor's tick «Acceptă răspunsuri „Vin!” din pagină, calendar și email» (`events.rsvp_enabled`), the
+ * §811 («Vin!» part 1) — the editor's tick «Acceptă răspunsuri „Vin!” din pagină, calendar și email» (`events.rsvp_enabled`), the
  * kit's pattern (§554, §557, §802): off for every event until the club ticks it, saved through the editor's real action by its marker (a
  * form without the card never switches it off), written off by any registration mode but «Fără înscrieri», carried to every date a
  * series makes and by a "following" edit, kept by a duplicate — while the answers themselves are never carried. The session and
@@ -121,7 +121,7 @@ const wordsFor = (row: { slug: string; title: string; excerpt: string | null }) 
   seoDescription: "",
 });
 
-describe("§NNN «Acceptă răspunsuri „Vin!”» on the event", () => {
+describe("§811 «Acceptă răspunsuri „Vin!”» on the event", () => {
   it("starts off, for an event that says nothing of it, and is written when the caller says so", async () => {
     const plain = await createEvent(db, { actor: admin, fields: { ...FIELDS, translations: TRANSLATIONS }, now: NOW });
     expect((await reloadEvent(plain.id)).rsvpEnabled).toBe(false);

@@ -129,7 +129,7 @@ export default async function RegistrationBox({
   rsvp = null,
 }: BoxProps & {
   /**
-   * «Răspunsuri „Vin!”» (§NNN): the event's answers, read by the page for this role — the counts always, the rows (with the addresses)
+   * «Răspunsuri „Vin!”» (§811): the event's answers, read by the page for this role — the counts always, the rows (with the addresses)
    * only for a role that reads the registrations. Null on the create form, which has none.
    */
   rsvp?: { counts: { confirmed: number; unconfirmed: number }; rows: readonly RsvpAnswerRow[] | null } | null;
@@ -492,7 +492,7 @@ export default async function RegistrationBox({
           </OnlyForType>
 
           {/*
-            «Acceptă răspunsuri „Vin!” din pagină, calendar și email» (§NNN, «Vin!» part 1): the club's tick on an event one simply
+            «Acceptă răspunsuri „Vin!” din pagină, calendar și email» (§811, «Vin!» part 1): the club's tick on an event one simply
             turns up to — a type that takes no registration, or one that does with «Fără înscrieri» chosen (`OnlyForTurnUp`). The
             marker says the form carried the box, so an unticked one reads as «off», not as «not edited» (§554). The notice must
             describe the answers before the page offers them (`/admin/tasks`, `rsvpNotice`): the tick stays on meanwhile.
@@ -592,7 +592,7 @@ export default async function RegistrationBox({
       <Stack spacing={2}>
         {/* 6.1 — how people register, and the registration's life. A reader is told once that the settings are not theirs (§358). */}
         {mayEditSettings ? registrationFields : <SettingsReadOnly />}
-        {/* Right under the «Vin!» tick, which ends the block above (§NNN): who said they come — read-only, only when there are answers. */}
+        {/* Right under the «Vin!» tick, which ends the block above (§811): who said they come — read-only, only when there are answers. */}
         {rsvp && <RsvpAnswersCard counts={rsvp.counts} rows={rsvp.rows} locale={locale} timeZone={zone} />}
         {/* 6.2 — what a participant agrees to: the rules, with the minimum age and what the form asks, then the declaration (§505, §448, §557, §799). */}
         {rules}

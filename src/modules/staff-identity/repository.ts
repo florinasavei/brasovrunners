@@ -226,7 +226,7 @@ export async function recordFirstSignIn<T extends Record<string, unknown>>(
 }
 
 /**
- * A row's role and member tier, read under the row's lock in the caller's transaction (§NNN): giving or
+ * A row's role and member tier, read under the row's lock in the caller's transaction (§811): giving or
  * clearing a level and a role change (which clears it) take the same lock, so they run one after the other.
  */
 export async function lockStaffUserTier<T extends Record<string, unknown>>(

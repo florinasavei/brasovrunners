@@ -389,7 +389,7 @@ export async function noticeDescribesResults<T extends Record<string, unknown>>(
 }
 
 /**
- * Whether the privacy notice in force describes the answer «Vin!» (§NNN, `describesRsvp`) — in every language, like
+ * Whether the privacy notice in force describes the answer «Vin!» (§811, `describesRsvp`) — in every language, like
  * `noticeDescribesResults`: one event page serves both languages, and a person in either was told only what their language's
  * notice says. For the service, which asks again at every answer, and `/admin/tasks`; the event page reads the cached twin
  * (`cachedRsvpDescribed`).
@@ -651,7 +651,7 @@ export async function findFirstResultsNoticeVersion<T extends Record<string, unk
 
 /**
  * The lowest version of an approved, not withdrawn privacy notice that describes the answer «Vin!» in **every** language
- * (`describesRsvp`), or null when none does — `findFirstResultsNoticeVersion`'s twin (§NNN, the §421 rule). An answer records
+ * (`describesRsvp`), or null when none does — `findFirstResultsNoticeVersion`'s twin (§811, the §421 rule). An answer records
  * the notice it was given under (`event_rsvps.privacy_notice_version`); a name is shown only for one given under this version
  * or a later one — a tick under an older notice agreed to nothing that described «Vin!».
  */

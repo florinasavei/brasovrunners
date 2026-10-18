@@ -78,11 +78,11 @@ const HOUR = 60 * 60_000;
 const DAY = 24 * HOUR;
 
 /**
- * §NNN («Vin!» part 1) — the page a message's two buttons open, and the two buttons' actions. The GET changes nothing (BR-REQ-036-02
+ * §811 («Vin!» part 1) — the page a message's two buttons open, and the two buttons' actions. The GET changes nothing (BR-REQ-036-02
  * criterion 4: a link scanner opens every link before its owner); the POST spends the link once, counts or deletes, remembers the
  * browser, and lands where the person can see it.
  */
-describe("§NNN the page of a «Vin!» link", () => {
+describe("§811 the page of a «Vin!» link", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   let eventId: string;

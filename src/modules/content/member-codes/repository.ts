@@ -27,7 +27,7 @@ export function clubToday(now: Date): string {
 }
 
 /**
- * Whether a code is for a member who holds `tierId` (or none, `null`) — the limit in words (§NNN): a code with
+ * Whether a code is for a member who holds `tierId` (or none, `null`) — the limit in words (§811): a code with
  * no limit is for every member; a limited one only for a member who holds one of its tiers, so a member with
  * no tier sees the unlimited codes alone. The same rule as the read in SQL below, for the tests.
  */

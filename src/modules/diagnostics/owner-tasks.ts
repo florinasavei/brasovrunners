@@ -250,7 +250,7 @@ export type OwnerTaskInputs = {
    */
   resultsDescribed: boolean;
   /**
-   * Does the notice in force, in every language, describe the answer «Vin!» (§NNN, `noticeDescribesRsvp`)? Until it does, no event page
+   * Does the notice in force, in every language, describe the answer «Vin!» (§811, `noticeDescribesRsvp`)? Until it does, no event page
    * offers the answer or shows a count, whatever the club ticked.
    */
   rsvpDescribed: boolean;
@@ -607,7 +607,7 @@ export function ownerTasks(input: OwnerTaskInputs): OwnerTask[] {
       state: input.resultsDescribed ? "done" : "open",
     });
     /*
-      The answer «Vin!» on a turn-up event (§NNN), the volunteers' shape: open while an upcoming event is ticked and the notice in force
+      The answer «Vin!» on a turn-up event (§811), the volunteers' shape: open while an upcoming event is ticked and the notice in force
       does not name `{{rsvp}}` (the club ticked the box and the page shows nothing: it must hear why), done by itself the day a notice
       naming it takes effect, and absent while no event is ticked and the notice is silent. Never blocking: the tick stays on.
     */

@@ -327,7 +327,7 @@ export function placeholdersUsedBy(messageType: EmailMessageType, locale: EmailL
 // The newsletter's three messages (§445) go to an address too, never to a named person.
 const NO_PERSON: ReadonlySet<EmailMessageType> = new Set([
   "REGISTRATION_OPENED",
-  // «Vin!» (§NNN): to an address that typed itself under the answer; the greeting names nobody.
+  // «Vin!» (§811): to an address that typed itself under the answer; the greeting names nobody.
   "RSVP_CONFIRM",
   "REGISTER_ANOTHER_PERSON",
   "NEWSLETTER_CONFIRM",
@@ -380,7 +380,7 @@ const NO_REGISTRATION: ReadonlySet<EmailMessageType> = new Set([
   // The guardian's link (§768): the same.
   "VOLUNTEER_GUARDIAN_REQUEST",
   "REGISTRATION_OPENED",
-  // «Vin!» (§NNN): an answer to a turn-up event, never a registration.
+  // «Vin!» (§811): an answer to a turn-up event, never a registration.
   "RSVP_CONFIRM",
   // An invitation (§647): to an address, before any registration exists.
   "EVENT_INVITATION",

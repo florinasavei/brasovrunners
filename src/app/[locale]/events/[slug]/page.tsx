@@ -65,7 +65,7 @@ type PublishedEvent = NonNullable<Awaited<ReturnType<typeof cachedPublishedEvent
 
 type EventQuery = {
   interest?: string | string[];
-  /** The «Vii?» box's outcome (§NNN): the typed answer's redirect. */
+  /** The «Vii?» box's outcome (§811): the typed answer's redirect. */
   vin?: string | string[];
   since?: string | string[];
   lista?: string | string[];
@@ -168,7 +168,7 @@ export default async function EventDetailPage({ params, query, canEdit = false, 
         registrationState(found, now) === "NOT_YET_OPEN" &&
         (await cachedCurrentApprovedDocument("PRIVACY_NOTICE", locale, now)) !== undefined;
       /*
-        «Vii?» (§NNN): offered only where `rsvpOffered` says so — the one rule the action asks again before it keeps an
+        «Vii?» (§811): offered only where `rsvpOffered` says so — the one rule the action asks again before it keeps an
         address. The notice's description is read (cached, keyed by the clock) only for an event the club ticked; otherwise no read.
       */
       const rsvpBox = found.registrationMode === "NONE" && found.rsvpEnabled === true && rsvpOffered(found, now, await cachedRsvpDescribed(now));

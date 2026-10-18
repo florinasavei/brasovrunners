@@ -485,7 +485,7 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
       listNumbersDescribed: await noticeDescribesListNumbers(db, now),
       // §808: a race's published results, described by the notice in force; only making them public waits for it.
       resultsDescribed: await noticeDescribesResults(db, now),
-      // §NNN: the answer «Vin!», described by the notice in force; nothing is refused, the page simply shows nothing until then.
+      // §811: the answer «Vin!», described by the notice in force; nothing is refused, the page simply shows nothing until then.
       rsvpDescribed: await noticeDescribesRsvp(db, now),
       rsvpEvents: await countRsvpEvents(db, now),
       // §808: the terms in force describe them too — the older ones promised to ask separately before a named result.

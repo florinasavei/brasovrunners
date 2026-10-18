@@ -229,7 +229,7 @@ export type AuditAction =
    */
   | "participant.data_exported"
   /**
-   * The answers «Vin!» and the remembered browsers of one address erased by an Administrator on the person's request (§NNN, art. 17
+   * The answers «Vin!» and the remembered browsers of one address erased by an Administrator on the person's request (§811, art. 17
    * GDPR) — `{ answers, browsers }`, the counts, never the address or a name. The only audit row «Vin!» has: nothing else here is
    * something the staff did (a person answers and withdraws on their own).
    */
@@ -658,7 +658,7 @@ export type AuditAction =
   | "member_code.moved"
   | "member_code.deleted"
   /**
-   * «Niveluri de membru» (§NNN): a level added, written (which parts, never the words), moved,
+   * «Niveluri de membru» (§811): a level added, written (which parts, never the words), moved,
    * hidden or shown again, or deleted; and a member given a level or freed of it. The row's id and the
    * shape of the change — never a name, a description or a member's name or address.
    */
@@ -743,7 +743,7 @@ export type RecordAuditInput = {
     | "staff_user"
     // `member_discount_code` for a code of the members' zone (§552).
     | "member_discount_code"
-    // `member_tier` for a level of the members' zone (§NNN).
+    // `member_tier` for a level of the members' zone (§811).
     | "member_tier"
     // `team_page_box` for a box under the chart of «Echipa» (§691).
     | "team_page_box"

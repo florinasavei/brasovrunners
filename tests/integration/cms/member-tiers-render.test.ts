@@ -8,7 +8,7 @@ import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN — where a member's level shows, read from a real database and drawn by the real pages: under the member's name in the
+ * §811 — where a member's level shows, read from a real database and drawn by the real pages: under the member's name in the
  * zone (a badge, the description behind a «?»), after «Beneficiile membrilor» on the public members' page (the visible levels, in
  * the club's order), and on the zone's «Coduri de reducere» tab (the codes for everyone and those of the member's level, each
  * limited code wearing its levels' names) — and the codes' editor, which gives each code the chips «Pentru nivelurile».
@@ -67,7 +67,7 @@ function rowsOf(spec: Record<string, Record<string, string>>) {
   return postedTierRows(entries);
 }
 
-describe("§NNN where the member's level shows", () => {
+describe("§811 where the member's level shows", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   let admin: StaffUser;

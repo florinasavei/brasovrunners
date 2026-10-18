@@ -72,7 +72,7 @@ export type EventPageVisit = {
   /** When the render a corrected address is timed from was made (§146). */
   interestRenderedAt: Date;
   /**
-   * «Vii?» (§NNN, «Vin!» part 1): whether the page offers the answer — `rsvpOffered`, decided by the page from the one rule — and
+   * «Vii?» (§811, «Vin!» part 1): whether the page offers the answer — `rsvpOffered`, decided by the page from the one rule — and
    * how the typed form answered (`?vin=`). Absent in the preview before saving (§579): it takes an address and reads the public cache.
    */
   rsvpBox?: boolean;
@@ -243,7 +243,7 @@ export default async function EventPageView({
       {/* In the preview before saving (§579) the draft's door, its button disabled. */}
       <RegistrationCta event={event} now={now} previewDoor={previewDoor} />
 
-      {/* «Vii?» and «Vin (N)» (§NNN), where the registration card would stand on a turn-up event, at `#vin`: only while the page
+      {/* «Vii?» and «Vin (N)» (§811), where the registration card would stand on a turn-up event, at `#vin`: only while the page
           decided the answer is offered (`rsvpOffered`), and never in the preview before saving (§579) or on a members' event (§552). */}
       {visit?.rsvpBox && !membersOnly && (
         <RsvpBox locale={locale} slug={slug} eventId={event.id} renderedAt={visit.rsvpRenderedAt ?? now} outcome={visit.rsvpOutcome ?? null} />

@@ -18,11 +18,11 @@ const NOW = new Date("2026-11-30T12:00:00.000Z");
 const DAY = 24 * 60 * 60_000;
 
 /**
- * §NNN («Vin!» part 1) — what the sweep takes and when (30 days after the event's end, 7 days unconfirmed, a cancelled event's at
+ * §811 («Vin!» part 1) — what the sweep takes and when (30 days after the event's end, 7 days unconfirmed, a cancelled event's at
  * the next run, a remembered browser past its year), what «Toate datele unei persoane» shows of an address's answers and browsers
  * (art. 15), and the Administrator's erase of them (art. 17) — one audit row with counts, never the address.
  */
-describe("§NNN the answers «Vin!» in the sweep and in everything held about a person", () => {
+describe("§811 the answers «Vin!» in the sweep and in everything held about a person", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   beforeAll(async () => {

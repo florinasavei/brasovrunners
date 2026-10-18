@@ -10,13 +10,13 @@ import { RSVP_CONFIRM_HOURS } from "@/modules/rsvp/domain/link-life";
 import { rsvpClause, rsvpMergeValues } from "@/modules/rsvp/notice-words";
 
 /**
- * §NNN («Vin!» part 1) — the privacy notice's `{{rsvp}}`: the switch the page, the service and the tasks list read, filled with the
+ * §811 («Vin!» part 1) — the privacy notice's `{{rsvp}}`: the switch the page, the service and the tasks list read, filled with the
  * button's own name; the template's paragraphs in both languages; the tasks row; the terms left alone (nothing is bought, booked or
  * signed by an answer).
  */
 const sentences = (body: { sections: readonly { paragraphs: readonly string[] }[] }) => body.sections.flatMap((section) => section.paragraphs);
 
-describe("§NNN {{rsvp}} is a merge field, the notice's switch, and the button's name", () => {
+describe("§811 {{rsvp}} is a merge field, the notice's switch, and the button's name", () => {
   it("is known to the editor and filled with the button's own name in each language", () => {
     expect(MERGE_FIELDS).toContain(RSVP_MERGE_FIELD);
     expect(rsvpClause("ro")).toBe(`„${ro.Event.rsvp.submit}”`);
@@ -44,7 +44,7 @@ describe("§NNN {{rsvp}} is a merge field, the notice's switch, and the button's
   });
 });
 
-describe("§NNN the template says what «Vin!» publishes, keeps, mails and remembers — in both languages", () => {
+describe("§811 the template says what «Vin!» publishes, keeps, mails and remembers — in both languages", () => {
   it("names the marker in the notice's four paragraphs of each language", () => {
     for (const body of [privacyNoticeRo, privacyNoticeEn]) {
       expect(mergeFieldsIn(body).has(RSVP_MERGE_FIELD)).toBe(true);
@@ -79,7 +79,7 @@ describe("§NNN the template says what «Vin!» publishes, keeps, mails and reme
   });
 });
 
-describe("§NNN the row on /admin/tasks", () => {
+describe("§811 the row on /admin/tasks", () => {
   it("has its words and its steps in both languages, pointing at /admin/legal", () => {
     for (const catalogue of [ro, en]) {
       const item = catalogue.Admin.tasks.items.rsvpNotice;
@@ -90,7 +90,7 @@ describe("§NNN the row on /admin/tasks", () => {
   });
 });
 
-describe("§NNN the notice says what the links and the clean-up really do", () => {
+describe("§812 the notice says what the links and the clean-up really do", () => {
   const ro5 = sentences(privacyNoticeRo).find((text) => text.startsWith("Răspunsul {{rsvp}}: dacă scrii"))!;
   const en5 = sentences(privacyNoticeEn).find((text) => text.startsWith("The {{rsvp}} answer: if you type"))!;
 

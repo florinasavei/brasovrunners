@@ -97,7 +97,7 @@ export default function robots(): MetadataRoute.Robots {
           "/ro/inscrieri/",
           "/ro/noutati/",
           "/en/newsletter/",
-          // The «Vin!» message's links (§NNN) carry a secret.
+          // The «Vin!» message's links (§811) carry a secret.
           "/ro/vin/",
           "/en/coming/",
           "/*/share-image?",

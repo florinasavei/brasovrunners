@@ -69,7 +69,7 @@ export const EMAIL_GROUP_OF: Readonly<Record<Exclude<EmailMessageType, RelayMess
   EVENT_CANCELLED: "announcements",
   ORGANIZER_MESSAGE: "announcements",
   REGISTRATION_OPENED: "announcements",
-  // «Confirmă că vii» (§NNN, «Vin!»): the person's own answer to a turn-up event, mailed once to the typed address; paced with the club's announcements.
+  // «Confirmă că vii» (§811, «Vin!»): the person's own answer to a turn-up event, mailed once to the typed address; paced with the club's announcements.
   RSVP_CONFIRM: "announcements",
   DECLARATION_ARCHIVE: "club",
   GROUP_RUN_DECLARATION_ARCHIVE: "club",

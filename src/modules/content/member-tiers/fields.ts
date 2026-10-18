@@ -3,7 +3,7 @@ import { refuseOneLanguage } from "@/shared/forms/both-languages";
 import { DEFAULT_TIER_GLYPH, isTierGlyphKey } from "./glyph-keys";
 
 /**
- * What the club types for one member tier (§NNN).
+ * What the club types for one member tier (§811).
  *
  * A name in Romanian **and** English — a level without a name in either language cannot be shown — at
  * most `TIER_NAME_MAX` characters, one line. A description of what the level gives, plain words, in both

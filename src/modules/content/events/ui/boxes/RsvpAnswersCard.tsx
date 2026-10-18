@@ -11,7 +11,7 @@ import { BoxNote } from "./box-kit";
 export type RsvpAnswerRow = { email: string; displayName: string | null; showName: boolean; confirmedAt: Date | null; createdAt: Date };
 
 /**
- * «Răspunsuri „Vin!” (N)» (§NNN, «Vin!» part 1): the event's answers, **read-only** — no CSV, no verb: a person takes their answer
+ * «Răspunsuri „Vin!” (N)» (§811, «Vin!» part 1): the event's answers, **read-only** — no CSV, no verb: a person takes their answer
  * back with their own «Nu mai vin» link, and the club has nothing to correct. The addresses are for the roles that read the
  * registrations (`canReadRegistrations`: the Organizer, the Administrator, the Superadministrator); every other role of the editor
  * sees only the count, and the rows never reach its page (`rows` is null — asserted by the page that loads them, BR-REQ-060-01).

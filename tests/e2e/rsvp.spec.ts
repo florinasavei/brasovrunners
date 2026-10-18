@@ -5,7 +5,7 @@ import { languagePanel, languageTab, openEditorBox, openFold } from "./support/f
 import { mintRsvpLink, rememberedBrowsers, rsvpCount, rsvpMessages, rsvpRow, withDatabase } from "./support/rsvp-link";
 
 /**
- * §NNN («Vin!» part 1), end to end, on the phone and the desktop: the club ticks «Acceptă răspunsuri „Vin!”» on a group run, a visitor types an
+ * §811 («Vin!» part 1), end to end, on the phone and the desktop: the club ticks «Acceptă răspunsuri „Vin!”» on a group run, a visitor types an
  * address and a name and ticks «Vreau să apar cu numele», the link of the email (the setup, not the subject: `support/rsvp-link.ts`) opens a
  * page that changes nothing, «Da, vin» counts the answer and remembers the browser — and then, on a SECOND ticked event in the same browser,
  * «Vin!» is one tap, counted at once with no email; «Nu mai vin» is one tap; «Nu sunt eu» brings the typed form back.
@@ -33,7 +33,7 @@ async function noSidewaysScroll(page: Page) {
 
 const eventUrl = (locale: "ro" | "en", which: string) => (locale === "ro" ? `/ro/evenimente/${which}` : `/en/events/${which}`);
 
-test.describe.serial("§NNN «Vin!» on a turn-up event", () => {
+test.describe.serial("§811 «Vin!» on a turn-up event", () => {
   test.afterAll(async () => {
     // Give the shared database back: the spec's events (and, with them, its answers) and the browsers it remembered.
     await withDatabase(async (client) => {

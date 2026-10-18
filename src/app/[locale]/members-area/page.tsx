@@ -23,7 +23,7 @@ export const metadata: Metadata = {
 };
 
 /**
- * The partners' codes (§552) for this member's level (§NNN): read here, per request, behind the account — never through the shared
+ * The partners' codes (§552) for this member's level (§811): read here, per request, behind the account — never through the shared
  * public cache. The codes for everyone and those limited to the member's level (`tierId`; none, the first alone), and the levels'
  * names the limited ones' chips say, the hidden ones' left out unless the member holds them (hidden is «not advertised»). An account that
  * cannot hold a level (a colleague opening the zone, §524) reads every code and every chip: decided by the kind of account, never by a

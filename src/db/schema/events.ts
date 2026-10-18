@@ -740,7 +740,7 @@ export const events = pgTable(
     registrationMode: registrationMode("registration_mode").notNull().default("NONE"),
 
     /**
-     * «Acceptă răspunsuri „Vin!" din pagină, calendar și email» (§NNN, «Vin!» part 1): the club's tick for a turn-up
+     * «Acceptă răspunsuri „Vin!" din pagină, calendar și email» (§811, «Vin!» part 1): the club's tick for a turn-up
      * event — one that asks for no registration (`registration_mode = NONE`). While it is on, and the event is
      * published, not cancelled and still ahead, and the privacy notice in force describes «Vin!» (`{{rsvp}}`), the
      * page offers a person the answer «Vin!» (`modules/rsvp/domain/offered.ts`, the one rule) and shows how many come.

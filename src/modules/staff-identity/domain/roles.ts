@@ -217,7 +217,7 @@ export function canManageDiscountCodes(subject: StaffSubject): boolean {
 }
 
 /**
- * The member tiers (§NNN): naming the club's levels, putting them in order, hiding and deleting them —
+ * The member tiers (§811): naming the club's levels, putting them in order, hiding and deleting them —
  * the Administrator's (and the Superadministrator's), who runs the club (§450). Giving a member a
  * level is the team page's, so `canManageStaff`'s. A tier is a label and benefits, never a permission:
  * no function in this file reads a member's tier.
@@ -228,7 +228,7 @@ export function canManageMemberTiers(subject: StaffSubject): boolean {
 }
 
 /**
- * Whether an account can hold a member tier (§NNN): a club member's, and nobody else's — a colleague's account
+ * Whether an account can hold a member tier (§811): a club member's, and nobody else's — a colleague's account
  * holds no level, and a level is a label, not a role. Asked where a level is given or kept; it answers about the
  * account's kind and never reads the level.
  */

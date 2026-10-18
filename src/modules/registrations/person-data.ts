@@ -98,7 +98,7 @@ export type PersonData = {
   }>;
   announcementRequests: Array<{ eventId: string; eventTitle: string | null; deliveryEmail: string; locale: string; createdAt: Date }>;
   /**
-   * The answers «Vin!» given with this address (§NNN, art. 15 GDPR): the event, the address and the name as typed, the person's own tick
+   * The answers «Vin!» given with this address (§811, art. 15 GDPR): the event, the address and the name as typed, the person's own tick
    * «Vreau să apar cu numele», the language, the privacy notice's version they were given under, and when they were given and
    * confirmed — every column of the row. Gone thirty days after the event, or sooner at the person's own link.
    */
@@ -114,7 +114,7 @@ export type PersonData = {
     createdAt: Date;
   }>;
   /**
-   * The browsers remembered for this address (§NNN): when each was remembered, last used and expires — never the secret or its
+   * The browsers remembered for this address (§811): when each was remembered, last used and expires — never the secret or its
    * fingerprint, which prove nothing to the person and are of no use to the club.
    */
   rememberedBrowsers: Array<{ deliveryEmail: string; displayName: string | null; createdAt: Date; lastUsedAt: Date; expiresAt: Date }>;
@@ -297,7 +297,7 @@ async function collectPersonData<T extends Record<string, unknown>>(
     .where(eq(registrationInterests.canonicalEmail, canonicalEmail))
     .orderBy(asc(registrationInterests.createdAt));
 
-  // The answers «Vin!» (§NNN) and the browsers remembered for them, found by the same canonical address.
+  // The answers «Vin!» (§811) and the browsers remembered for them, found by the same canonical address.
   const rsvpAnswers = await db
     .select({
       eventId: eventRsvps.eventId,
@@ -537,7 +537,7 @@ async function groupRunDeclarationsOf<T extends Record<string, unknown>>(db: Dat
 }
 
 /**
- * Erase the answers «Vin!» and the remembered browsers of one canonical address (§NNN, art. 17 GDPR): the person asked, and an Administrator
+ * Erase the answers «Vin!» and the remembered browsers of one canonical address (§811, art. 17 GDPR): the person asked, and an Administrator
  * — the role that reads everything held about a person (`assertAdministrator`) — presses. The rows go whole, the links with them
  * (`on delete cascade`), the public count is expired, and one audit row keeps the counts (`participant.rsvps_erased`), never the
  * address. Registrations, declarations and the rest are not touched: they have their own erase (BR-REQ-037-06).

@@ -39,12 +39,12 @@ const DAY = 24 * HOUR;
 const STARTS_AT = new Date(NOW.getTime() + 2 * DAY + 6 * HOUR);
 
 /**
- * §NNN («Vin!» part 1) — the service: not a registration (no place, no participant), one row per event and canonical identity, the
+ * §811 («Vin!» part 1) — the service: not a registration (no place, no participant), one row per event and canonical identity, the
  * gate asked again at every answer, an unverified answer waiting for the emailed link and a verified one counted at once, the links
  * minted at the send and spent once, a GET that changes nothing, withdrawal by the link and by a verified identity, and the public
  * count that names only those who ticked.
  */
-describe("§NNN «Vin!» — the service", () => {
+describe("§811 «Vin!» — the service", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
 

@@ -172,7 +172,7 @@ export async function setStaffPermission<T extends Record<string, unknown>>(
 }
 
 /**
- * A member's level given, or cleared with `tierId: null` (§NNN): «Nivel» on a member's row of «Echipa».
+ * A member's level given, or cleared with `tierId: null` (§811): «Nivel» on a member's row of «Echipa».
  *
  * The Administrator's (`canManageStaff`), asserted here whatever the page offered. A level is given to a
  * club member's account only (`MEMBER`): a colleague is no member, and a level is a label, not a role.
@@ -279,7 +279,7 @@ export async function inviteMembers<T extends Record<string, unknown>>(
   assertAdministrator(actor);
   assertMayAssign(actor, "MEMBER");
   /*
-    «Nivel» (§NNN): one level for every member this press adds, or none. A level that is not there, or is
+    «Nivel» (§811): one level for every member this press adds, or none. A level that is not there, or is
     hidden, refuses the press before any row is written, naming the box. It is given to the rows ADDED
     only: an address that was already a member keeps the level it has — pressing again to retry an
     account must not change somebody's level.
@@ -441,7 +441,7 @@ export async function changeStaffRole<T extends Record<string, unknown>>(
   return db.transaction(async (tx) => {
     const updated = await updateStaffUserRole(tx, targetId, role);
     if (!updated) throw new DomainError("NOT_FOUND", "no such staff user");
-    // A level belongs to a club member's account (§NNN): a colleague made of a member holds none, as no grant (§687) either. Audited.
+    // A level belongs to a club member's account (§811): a colleague made of a member holds none, as no grant (§687) either. Audited.
     // The level re-read under the row's lock the update just took: one given between the first read and here is cleared too.
     const held = !canHoldMemberTier(role) ? (await lockStaffUserTier(tx, targetId))?.memberTierId ?? null : null;
     if (held !== null) {

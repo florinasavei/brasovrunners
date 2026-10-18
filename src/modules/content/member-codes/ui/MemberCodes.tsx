@@ -25,7 +25,7 @@ export default async function MemberCodes({
   locale,
 }: {
   codes: readonly MembersDiscountCode[];
-  /** The levels' names in the reader's language (§NNN): a code limited to some levels wears one small chip for each. */
+  /** The levels' names in the reader's language (§811): a code limited to some levels wears one small chip for each. */
   tiers?: readonly TierView[];
   locale: Locale;
 }) {
@@ -46,7 +46,7 @@ export default async function MemberCodes({
               <Typography variant="subtitle1" component="h3" sx={{ fontWeight: 700, overflowWrap: "anywhere" }}>
                 {code.partnerName}
               </Typography>
-              {/* «Pentru nivelul …» (§NNN): a code limited to some levels names them, one small chip each; a code for everyone says nothing. */}
+              {/* «Pentru nivelul …» (§811): a code limited to some levels names them, one small chip each; a code for everyone says nothing. */}
               {(code.tierIds ?? []).length > 0 && (
                 <Stack direction="row" role="group" aria-label={t("codeForTiers")} sx={{ alignItems: "center", gap: 0.5, mt: 0.5, flexWrap: "wrap" }} data-testid="member-code-tiers">
                   {(code.tierIds ?? []).flatMap((id) => {

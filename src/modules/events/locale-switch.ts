@@ -121,7 +121,7 @@ export async function resolveLocaleSwitch(
     // The newsletter's two link pages (§445), the same rule.
     parsed.route === "/newsletter/confirm/[token]" ||
     parsed.route === "/newsletter/manage/[token]" ||
-    // The «Vin!» message's two links (§NNN), the same rule.
+    // The «Vin!» message's two links (§811), the same rule.
     parsed.route === "/vin/[token]" ||
     parsed.route === "/registrations/family/[token]" ||
     // An invitation's link (§647), the same rule.

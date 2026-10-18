@@ -9,7 +9,7 @@ import { CHOICE_CARD_SX, CHOICE_INPUT_SX } from "@/shared/ui/choice-card";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 
 /**
- * «Pentru nivelurile» (§NNN): a discount code's limit to some member tiers, as chips — one pill per level,
+ * «Pentru nivelurile» (§811): a discount code's limit to some member tiers, as chips — one pill per level,
  * the native checkbox visible in it (`CHOICE_CARD_SX` and `CHOICE_INPUT_SX`, the house's selectable pill that
  * the volunteers' role chips draw, §780): the tick is the state, never the colour alone, and the whole pill is
  * its label, 44 pixels tall. Posts `name` once per ticked chip; **none ticked is every member**, which the line

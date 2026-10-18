@@ -31,7 +31,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = { robots: { index: false, follow: false } };
 
 /**
- * The page a «Vin!» message's two buttons open (§NNN, «Vin!» part 1): «Da, vin» (`RSVP_CONFIRM`) or «Nu mai vin» (`RSVP_WITHDRAW`) —
+ * The page a «Vin!» message's two buttons open (§811, «Vin!» part 1): «Da, vin» (`RSVP_CONFIRM`) or «Nu mai vin» (`RSVP_WITHDRAW`) —
  * one route, because the link itself says which it is.
  *
  * **The GET changes nothing** (AGENTS.md §12.8, BR-REQ-036-02 criterion 4): a mail client's link scanner opens every link before

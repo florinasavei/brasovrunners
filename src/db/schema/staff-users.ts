@@ -47,7 +47,7 @@ export const staffUsers = pgTable(
     role: staffRole("role").notNull(),
 
     /**
-     * The member's level (§NNN, «Niveluri de membru»): a label and its benefits, never a permission —
+     * The member's level (§811, «Niveluri de membru»): a label and its benefits, never a permission —
      * no role, door or verb reads it. Null is simply «Membru». Given to a `MEMBER` row only (the
      * service refuses the rest); a deleted tier is refused while anyone holds it, `SET NULL` the net.
      */

@@ -3,7 +3,7 @@ import { boolean, check, index, integer, pgTable, text, timestamp, uuid } from "
 import { staffUsers } from "./staff-users";
 
 /**
- * «Niveluri de membru» (§NNN; the owner, 2026-10-18: «Also for the member zone I want member
+ * «Niveluri de membru» (§811; the owner, 2026-10-18: «Also for the member zone I want member
  * Tiers»): the levels the club names for its members — «Membru», «Membru fondator», «Sprijinitor» — one
  * row each. A member (`staff_users.member_tier_id`) holds at most one.
  *

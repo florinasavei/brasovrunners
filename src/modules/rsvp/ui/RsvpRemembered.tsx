@@ -64,7 +64,7 @@ function clearHint(): void {
 }
 
 /**
- * The one client island of «Vin!» (§NNN, «Vin!» part 1): it earns its place because the event page is static and the same for
+ * The one client island of «Vin!» (§811, «Vin!» part 1): it earns its place because the event page is static and the same for
  * everybody (§333, §549), while "this browser is remembered" is one browser's. It reads the hint cookie
  * (`person-session/domain/hint.ts` — the masked address and the name, **no secret**), and:
  *

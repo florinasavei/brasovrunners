@@ -5,7 +5,7 @@ import { staffUsers } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
 
 /**
- * The member tiers (§NNN) as the backoffice counts them. Apart from `repository.ts` on purpose: these
+ * The member tiers (§811) as the backoffice counts them. Apart from `repository.ts` on purpose: these
  * reads meet the members' table and the discount codes' — «how many members hold this level», «how
  * many codes are for it alone» — and the public members' page and the zone's frame read the other
  * file, which meets neither (`tests/unit/events/members-only.test.ts` holds the codes to the zone and

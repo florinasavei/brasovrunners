@@ -1,5 +1,5 @@
 /**
- * The id of the «Vii?» box on the event page (§NNN, «Vin!» part 1): the anchor the action's redirect lands on, the one
+ * The id of the «Vii?» box on the event page (§811, «Vin!» part 1): the anchor the action's redirect lands on, the one
  * the calendar's feed, the listing card and the «Vii?» message link (lanes 57 and 58), and what the box's result sentence
  * is read under. Kept out of the action's module because a "use server" file may export only async functions.
  */

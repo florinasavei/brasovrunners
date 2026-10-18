@@ -242,7 +242,7 @@ export default async function PersonDataPage({ params, searchParams }: Props) {
                 )}
               </Box>
               <Divider />
-              {/* The answers «Vin!» and the browsers remembered for them (§NNN): every column of the row (art. 15 GDPR), erased on request (art. 17). */}
+              {/* The answers «Vin!» and the browsers remembered for them (§811): every column of the row (art. 15 GDPR), erased on request (art. 17). */}
               <Box component="section" data-testid="person-rsvps">
                 <Typography variant="h3" sx={{ fontSize: "1rem", mb: 1 }}>
                   {t("person.rsvps", { count: data.rsvpAnswers.length })}

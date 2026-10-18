@@ -102,7 +102,7 @@ export async function setMembersPagePublishedAction(_previous: FormOutcome | nul
   redirect(`${screen(form)}${query}#${outcome.error ? "admin-alert" : "members-page"}`);
 }
 
-// --- «Niveluri de membru» (§NNN) ---------------------------------------------------------------
+// --- «Niveluri de membru» (§811) ---------------------------------------------------------------
 
 /**
  * «Salvează toate nivelurile»: every row of the card in one save (the volunteers' «Roluri» rule, §791). A refused row refuses
@@ -162,7 +162,7 @@ function codeFieldsOf(form: FormData) {
     descriptionEn: text(form, "descriptionEn"),
     link: text(form, "link"),
     validUntil: text(form, "validUntil"),
-    // «Pentru nivelurile» (§NNN): one id per ticked chip; none ticked is every member.
+    // «Pentru nivelurile» (§811): one id per ticked chip; none ticked is every member.
     tierIds: form.getAll("tierIds").filter((value): value is string => typeof value === "string"),
   };
 }

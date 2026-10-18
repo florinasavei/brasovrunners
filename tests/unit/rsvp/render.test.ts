@@ -7,7 +7,7 @@ import type { EditableEvent } from "@/modules/content/events/repository";
 import { PANEL_GLYPHS } from "@/shared/ui/panel-glyphs";
 
 /**
- * §NNN («Vin!» part 1) — what the page and the editor draw: the box «Vii?» (the typed form, its outcomes, the small fold «Nu mai vin»,
+ * §811 («Vin!» part 1) — what the page and the editor draw: the box «Vii?» (the typed form, its outcomes, the small fold «Nu mai vin»,
  * the anti-bot widget only when the club switched it on), the count «Vin (N)» with the names that may be shown and none of the addresses,
  * the club's tick in the registration card (a real tick box, never a toggle), and the read-only fold of answers by role. The service
  * and the gate are proved in `tests/integration/rsvp/` and `domain.test.ts`; the whole journey in `tests/e2e/rsvp.spec.ts`.
@@ -88,7 +88,7 @@ beforeEach(() => {
   state.rsvps = { count: 0, names: [], others: 0 };
 });
 
-describe("§NNN the box «Vii?» — the typed form", () => {
+describe("§811 the box «Vii?» — the typed form", () => {
   it("is a named card at #vin: the heading, the one line, the address, the optional name, the tick, the button — in Română", async () => {
     const markup = await box();
     expect(markup).toContain('id="vin"');
@@ -186,7 +186,7 @@ describe("§NNN the box «Vii?» — the typed form", () => {
   });
 });
 
-describe("§NNN the card «Vin (N)»", () => {
+describe("§811 the card «Vin (N)»", () => {
   it("says only «Fii primul care spune că vine.» while nobody has answered — no empty count", async () => {
     const markup = await count();
     expect(markup).toContain("Fii primul care spune că vine.");
@@ -232,7 +232,7 @@ describe("§NNN the card «Vin (N)»", () => {
   });
 });
 
-describe("§NNN the editor's tick «Acceptă răspunsuri „Vin!” din pagină, calendar și email»", () => {
+describe("§811 the editor's tick «Acceptă răspunsuri „Vin!” din pagină, calendar și email»", () => {
   const event = (over: Record<string, unknown> = {}) =>
     ({
       id: "11111111-1111-1111-1111-111111111111",
@@ -323,7 +323,7 @@ describe("§NNN the editor's tick «Acceptă răspunsuri „Vin!” din pagină,
   });
 });
 
-describe("§NNN the fold «Răspunsuri „Vin!” (N)» — read-only, addresses by role", () => {
+describe("§811 the fold «Răspunsuri „Vin!” (N)» — read-only, addresses by role", () => {
   const rows = [
     { email: "ana@example.test", displayName: "Ana", showName: true, confirmedAt: new Date("2026-10-20T10:00:00Z"), createdAt: new Date("2026-10-20T09:00:00Z") },
     { email: "ion@example.test", displayName: null, showName: false, confirmedAt: null, createdAt: new Date("2026-10-20T11:00:00Z") },

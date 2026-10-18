@@ -97,7 +97,7 @@ const EXPECTED: Record<EditedType, EmailCopyPlaceholder[]> = {
   VOLUNTEER_ROLE_ASSIGNED: ["eventTitle"],
   VOLUNTEER_GUARDIAN_REQUEST: ["eventTitle"],
   REGISTRATION_OPENED: ["eventTitle"],
-  // «Vin!» (§NNN): the event, and its start in the subject.
+  // «Vin!» (§811): the event, and its start in the subject.
   RSVP_CONFIRM: ["eventTitle", "eventStartsAtFormatted"],
   // An invitation (§647): the event, its start and until when the place is kept.
   EVENT_INVITATION: ["eventTitle", "eventStartsAtFormatted", "holdExpiresAtFormatted"],

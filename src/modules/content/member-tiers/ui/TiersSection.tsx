@@ -6,7 +6,7 @@ import type { TierView } from "../repository";
 import TierBadge from "./TierBadge";
 
 /**
- * «Nivelurile de membru» on the public members' page (§NNN): the levels the club named, visible ones
+ * «Nivelurile de membru» on the public members' page (§811): the levels the club named, visible ones
  * in the club's order, each with its glyph, its name and its description in the reader's language. After
  * «Beneficiile membrilor», before the door. Nothing when the club named no level: the page then says
  * nothing about levels it does not have.

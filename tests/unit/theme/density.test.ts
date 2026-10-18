@@ -230,7 +230,7 @@ const CONVERTED_SITES: Array<{ file: string; prop: string; step: DensityStep; sm
   // subscriber's own page (its "unsubscribed" state is a container of its own).
   { file: "src/app/[locale]/newsletter/confirm/[token]/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2 },
   { file: "src/app/[locale]/newsletter/manage/[token]/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2, count: 2 },
-  // The «Vin!» message's link page (§NNN), born on the scale: the confirm/withdraw page, and the sentence after «Nu mai vin».
+  // The «Vin!» message's link page (§811), born on the scale: the confirm/withdraw page, and the sentence after «Nu mai vin».
   { file: "src/app/[locale]/vin/[token]/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2, count: 2 },
   { file: "src/app/[locale]/sign-in/page.tsx", prop: "py", step: "pagePadY", sm: 3, xsBefore: 2 },
   // The listing.

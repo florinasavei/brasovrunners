@@ -159,7 +159,7 @@ export const routing = defineRouting({
     "/newsletter/confirm/[token]": { ro: "/noutati/confirmare/[token]", en: "/newsletter/confirm/[token]" },
     "/newsletter/manage/[token]": { ro: "/noutati/abonament/[token]", en: "/newsletter/manage/[token]" },
     /**
-     * The two links of a «Vin!» message (§NNN): «Da, vin» and «Nu vin / Nu mai vin» share one page, which reads the link to know which
+     * The two links of a «Vin!» message (§811): «Da, vin» and «Nu vin / Nu mai vin» share one page, which reads the link to know which
      * it is. The secret in the path, like every emailed link; nothing about the person.
      */
     "/vin/[token]": { ro: "/vin/[token]", en: "/coming/[token]" },

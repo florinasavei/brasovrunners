@@ -39,7 +39,7 @@ describe("liveTwinPathname", () => {
     expect(liveTwinPathname("/ro/calendar/2027", search("surface=TRAIL"), true)).toBe(`/ro/${LIVE_SEGMENT}/calendar/2027`);
   });
 
-  it("sends an event page's own questions to the twin: ?lista=, ?interest=, ?declaratie=, and the «Vii?» box's ?vin= (§NNN)", () => {
+  it("sends an event page's own questions to the twin: ?lista=, ?interest=, ?declaratie=, and the «Vii?» box's ?vin= (§811)", () => {
     for (const query of ["lista=2", "interest=1", "interest=invalid&since=2026-11-20T10:00:00.000Z", "declaratie=abc", "vin=1", "vin=invalid&since=2026-11-20T10:00:00.000Z", "vin=retras"]) {
       expect(liveTwinPathname("/ro/events/crosul", search(query), false)).toBe(`/ro/${LIVE_SEGMENT}/events/crosul`);
     }

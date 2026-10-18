@@ -5,7 +5,7 @@ import type { Locale } from "@/i18n/routing";
 import { DEFAULT_TIER_GLYPH, isTierGlyphKey, type TierGlyphKey } from "./glyph-keys";
 
 /**
- * The member tiers (§NNN), read. A tier is a label and its benefits, never a permission: nothing here
+ * The member tiers (§811), read. A tier is a label and its benefits, never a permission: nothing here
  * decides what anybody may do. The reads:
  *
  * - every level, in the club's order, and the visible ones — «Niveluri de membru»'s chips and the team page's select
@@ -57,7 +57,7 @@ export async function readPublicMemberTiers<T extends Record<string, unknown>>(d
 }
 
 /**
- * The ids among `ids` that are tiers, read with a share lock (§NNN): a code limited to a level (or a member
+ * The ids among `ids` that are tiers, read with a share lock (§811): a code limited to a level (or a member
  * given one) holds the level's row against its deletion until the transaction ends, so the delete — which locks
  * the row first and then counts — sees what this write did.
  */
@@ -67,7 +67,7 @@ export async function existingTierIdsShared<T extends Record<string, unknown>>(d
   return new Set(rows.map((row) => row.id));
 }
 
-/** One tier by id, read with a share lock (§NNN): giving it to a member holds its row against deletion until the transaction ends. */
+/** One tier by id, read with a share lock (§811): giving it to a member holds its row against deletion until the transaction ends. */
 export async function findMemberTierShared<T extends Record<string, unknown>>(db: Database<T>, id: string): Promise<MemberTier | undefined> {
   const [row] = await db.select().from(memberTiers).where(eq(memberTiers.id, id)).limit(1).for("share");
   return row;

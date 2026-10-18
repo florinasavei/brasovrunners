@@ -15,7 +15,7 @@ import type { ComponentType } from "react";
 import type { TierGlyphKey } from "@/modules/content/member-tiers/glyph-keys";
 
 /**
- * The pictures of the member tiers' glyphs (§NNN), by the names of `member-tiers/glyph-keys.ts`: the
+ * The pictures of the member tiers' glyphs (§811), by the names of `member-tiers/glyph-keys.ts`: the
  * club chooses one for each level in «Niveluri de membru», and `GlyphChip` draws it as `tier:<name>`
  * on the member's zone, the public members' page and the discount codes' chips. In the public table
  * (`glyphs.ts` registers them with the prefix) because a visitor sees the members' page. One file per

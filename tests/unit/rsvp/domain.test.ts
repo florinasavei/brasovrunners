@@ -6,7 +6,7 @@ import { publicRsvpName } from "@/modules/rsvp/domain/public-name";
 import { parseRsvpOutcome, RSVP_BOX_ID, RSVP_OUTCOME_QUERY } from "@/modules/rsvp/rsvp-box";
 
 /**
- * §NNN («Vin!» part 1) — the pure rules: the one gate, the identity's sources, the name a public count may carry, the box's outcomes.
+ * §811 («Vin!» part 1) — the pure rules: the one gate, the identity's sources, the name a public count may carry, the box's outcomes.
  * The service that uses them is proved in `tests/integration/rsvp/`.
  */
 const NOW = new Date("2026-10-20T10:00:00.000Z");
@@ -19,7 +19,7 @@ const offered: RsvpGateInput = {
   rsvpEnabled: true,
 };
 
-describe("§NNN rsvpOffered — the one gate", () => {
+describe("§811 rsvpOffered — the one gate", () => {
   it("offers «Vin!» on a published, scheduled, upcoming turn-up event the club ticked, under a notice that describes it", () => {
     expect(rsvpOffered(offered, NOW, true)).toBe(true);
   });
@@ -48,7 +48,7 @@ describe("§NNN rsvpOffered — the one gate", () => {
   });
 });
 
-describe("§NNN the identity — a source and a verified flag, never a bare address", () => {
+describe("§811 the identity — a source and a verified flag, never a bare address", () => {
   const parts = { email: "ana@example.test", showName: false, locale: "ro" as const };
 
   it("knows four sources, and only the typed form proves nothing", () => {
@@ -78,7 +78,7 @@ describe("§NNN the identity — a source and a verified flag, never a bare addr
   });
 });
 
-describe("§NNN publicRsvpName — a public name is a disclosure (§143, §396)", () => {
+describe("§811 publicRsvpName — a public name is a disclosure (§143, §396)", () => {
   const confirmed = { confirmed: true, showName: true, displayName: "Ana Popescu", privacyNoticeVersion: 3, firstRsvpNoticeVersion: 3 };
 
   it("names a confirmed answer whose person ticked, under the first notice that described «Vin!» or a later one", () => {
@@ -99,7 +99,7 @@ describe("§NNN publicRsvpName — a public name is a disclosure (§143, §396)"
   });
 });
 
-describe("§NNN which face the island shows", () => {
+describe("§812 which face the island shows", () => {
   it("falls back to the typed form without a hint, when the state could not be read, or when the server no longer backs the browser", () => {
     expect(islandFace({ hasHint: false, readFailed: false, state: null })).toBe("typed");
     expect(islandFace({ hasHint: true, readFailed: true, state: null })).toBe("typed");
@@ -113,7 +113,7 @@ describe("§NNN which face the island shows", () => {
   });
 });
 
-describe("§NNN the island's heading and the box's outcomes", () => {
+describe("§811 the island's heading and the box's outcomes", () => {
   it("answers as the masked address, the name first when the person gave one", () => {
     expect(rememberedHeading({ masked: "an…@gmail.com", name: null })).toBe("an…@gmail.com");
     expect(rememberedHeading({ masked: "an…@gmail.com", name: "Ana" })).toBe("Ana · an…@gmail.com");

@@ -172,7 +172,7 @@
  * `{{teamPage}}` in section 4 (§459) is the team page's name in the reader's language and the
  * marker `/admin/tasks` reads: a notice that names it describes the page's cards and photographs.
  *
- * `{{rsvp}}` (§NNN, «Vin!» part 1; the owner, 2026-10-18: «how do I mark myself as "Going"?») is the answer «Vin!» on a turn-up
+ * `{{rsvp}}` (§811, «Vin!» part 1; the owner, 2026-10-18: «how do I mark myself as "Going"?») is the answer «Vin!» on a turn-up
  * event, quoted — „Vin!” / “I'm coming!” (`rsvp/notice-words.ts`) — in four paragraphs: section 4 (what the page publishes: how many
  * come, and the name only of those who ticked «Vreau să apar cu numele»), section 5 (what is kept, the one message with its two
  * links, the basis), section 7 (30 days from the event's end, 7 days unconfirmed, a cancelled event's at once, the browser a year)

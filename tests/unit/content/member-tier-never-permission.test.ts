@@ -3,7 +3,7 @@ import { join, relative, sep } from "node:path";
 import { describe, expect, it } from "vitest";
 
 /**
- * §NNN, BR-REQ-060-01 — a member's level is a label and what the member gets, never a permission: the source-walk that
+ * §811, BR-REQ-060-01 — a member's level is a label and what the member gets, never a permission: the source-walk that
  * holds it. Only the files that give, keep, show or filter by a level may mention one; no domain file, session, door or
  * module that decides what a person may do names it. A new file that reads a level fails here until someone puts it in
  * the list below on purpose.
@@ -33,7 +33,7 @@ const MAY_NAME_A_LEVEL: RegExp[] = [
   /^src\/app\/\[locale\]\/members-area\/(page|zone)\.tsx$/,
 ];
 
-describe("§NNN a level is read by no door", () => {
+describe("§811 a level is read by no door", () => {
   const naming = FILES.filter((file) => TOKEN.test(file.text));
 
   it("is named only by the files that give, keep, show or filter by it", () => {

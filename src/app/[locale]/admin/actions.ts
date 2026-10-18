@@ -1353,7 +1353,7 @@ export async function inviteMembersAction(_previous: FormOutcome | null, form: F
   let toast: Record<string, string | undefined>;
   try {
     const actor = await requireStaffCapability(canManageStaff);
-    // «Nivel» (§NNN): one level for every member this press adds; none by default.
+    // «Nivel» (§811): one level for every member this press adds; none by default.
     const tierId = text(form, "tierId").trim();
     const { added, existing } = await inviteMembers(getDb(), actor, {
       rows,
@@ -1507,7 +1507,7 @@ export async function changeStaffRoleAction(_previous: FormOutcome | null, form:
 }
 
 /**
- * «Nivel» on a club member's row of «Echipa» (§NNN): the level given, or cleared with the empty choice, asked first and then
+ * «Nivel» on a club member's row of «Echipa» (§811): the level given, or cleared with the empty choice, asked first and then
  * a toast. The Administrator's (`canManageStaff`); the service asserts it again and refuses a row that is not a member's, a
  * level that is not there and a hidden one (BR-REQ-060-01). A label and its benefits — it opens and refuses nothing.
  */

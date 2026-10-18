@@ -2,7 +2,7 @@ import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 
 /**
- * What the privacy notice's `{{rsvp}}` becomes (§NNN, «Vin!» part 1): the answer's own button on an event's page,
+ * What the privacy notice's `{{rsvp}}` becomes (§811, «Vin!» part 1): the answer's own button on an event's page,
  * quoted, in that language — „Vin!” / “I'm coming!” — read from the catalogue the page's button reads
  * (`Event.rsvp.submit`), so the approved sentence names what a visitor presses. Outside a request, like
  * `results/notice-words.ts`, for the legal pages, the declaration and the token legend.

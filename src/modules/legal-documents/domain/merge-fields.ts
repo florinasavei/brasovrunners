@@ -127,7 +127,7 @@ export const LIST_NUMBERS_MERGE_FIELD = "participantListNumbers";
 export const RESULTS_MERGE_FIELD = "results";
 
 /**
- * The privacy notice's marker for the answer «Vin!» on a turn-up event (§NNN, «Vin!» part 1; the owner, 2026-10-18:
+ * The privacy notice's marker for the answer «Vin!» on a turn-up event (§811, «Vin!» part 1; the owner, 2026-10-18:
  * «how do I mark myself as "Going"?»). The same two-in-one as the results above: filled, when the notice is shown, with
  * the answer's own name, quoted (`rsvp/notice-words.ts`) — «Vin!» / “I'm coming!” — in the paragraph that says what the
  * answer publishes (how many come, and the name only of those who ticked «Vreau să apar cu numele»), what is kept and for
@@ -727,7 +727,7 @@ export function describesResults(body: unknown): boolean {
 }
 
 /**
- * Whether a privacy notice describes the answer «Vin!» (§NNN): it names `{{rsvp}}`. The gate for offering the answer and
+ * Whether a privacy notice describes the answer «Vin!» (§811): it names `{{rsvp}}`. The gate for offering the answer and
  * for showing the count and the names (`rsvp/domain/offered.ts`) — the club's approval of such a text is the switch, as
  * for the results (§808) — and what `/admin/tasks`' row `rsvpNotice` reads. Pure; the caller asks it of the notice in
  * force, in every language.

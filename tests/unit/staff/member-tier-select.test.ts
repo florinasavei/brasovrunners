@@ -4,7 +4,7 @@ import type { StaffUser } from "@/db/schema/staff-users";
 import type { StaffRole } from "@/modules/staff-identity/domain/roles";
 
 /**
- * §NNN — «Nivel» on «Echipa» (BR-REQ-060-01): a member's row carries a select of the levels the club named, a colleague's row
+ * §811 — «Nivel» on «Echipa» (BR-REQ-060-01): a member's row carries a select of the levels the club named, a colleague's row
  * none; «Adaugă mai mulți membri» carries one select for all the rows it adds. The page is a Server Component, so it is called
  * and its element tree walked (a native select's `<option>`s are in the tree; a closed menu would not be).
  *
@@ -110,7 +110,7 @@ const options = (tree: ReactElement<Props>[]) =>
     .filter((element) => element.props.name === "tierId" && element.props.select === true)
     .map((select) => elements(select.props.children).filter((child) => child.type === "option").map((option) => [String(option.props.value), String(option.props.children)]));
 
-describe("§NNN «Nivel» on the team page", () => {
+describe("§811 «Nivel» on the team page", () => {
   beforeEach(() => {
     tiers = [tier("t-new", "Membru", "Member"), tier("t-old", "Fondator", "Founder", true, "trophy"), tier("t-sup", "Sprijinitor", "Supporter", false, "heart")];
   });

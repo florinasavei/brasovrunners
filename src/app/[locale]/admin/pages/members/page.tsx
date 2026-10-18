@@ -123,7 +123,7 @@ export default async function AdminMembersPage({ params, searchParams }: Props) 
     link: t("members.codes.link"),
     validUntil: t("members.codes.validUntil"),
     tierIds: t("members.codes.forTiers"),
-    // «Niveluri de membru» (§NNN): a refused box of the one form is named by its level, `tiers[<key>]`.
+    // «Niveluri de membru» (§811): a refused box of the one form is named by its level, `tiers[<key>]`.
     ...Object.fromEntries(tiers.map((row) => [`tiers[${row.tier.id}]`, locale === "en" ? row.tier.nameEn : row.tier.nameRo])),
     "tiers[new]": t("members.tiers.newRow"),
   });
@@ -172,7 +172,7 @@ export default async function AdminMembersPage({ params, searchParams }: Props) 
       {/* «Cine e membru» (§789): the sentence behind the «?» of the member tick on the two public forms; saved whatever the page's state. */}
       <DefinitionCard definition={definition} platformWords={platformWords} locale={locale} words={t} messages={messages} mayEdit={mayEdit} saved={saved} />
 
-      {/* «Niveluri de membru» (§NNN): the levels the club names for its members; a label and its benefits, never a permission. */}
+      {/* «Niveluri de membru» (§811): the levels the club names for its members; a label and its benefits, never a permission. */}
       <TiersCard
         tiers={tiers}
         locale={locale}

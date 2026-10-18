@@ -19,7 +19,7 @@ import { rsvpOffered } from "./domain/offered";
 import { publicRsvpName } from "./domain/public-name";
 
 /**
- * «Vin!» (§NNN, «Vin!» part 1; the owner, 2026-10-18: «how do I mark myself as "Going"?») — a person's answer «I am coming»
+ * «Vin!» (§811, «Vin!» part 1; the owner, 2026-10-18: «how do I mark myself as "Going"?») — a person's answer «I am coming»
  * to a turn-up event the club ticked: an address, optionally a name to show, and — once the address is proved — a place in
  * the count «Vin (N)».
  *

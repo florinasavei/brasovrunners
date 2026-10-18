@@ -15,7 +15,7 @@ import {
 } from "./domain/hint";
 
 /**
- * The remembered browser (§NNN, «Vin!» part 1; the owner, 2026-10-18: «I want the flow to be super easy, also later to
+ * The remembered browser (§811, «Vin!» part 1; the owner, 2026-10-18: «I want the flow to be super easy, also later to
  * integrate with the member zone») — a small module of its own, so the members' zone reuses it for its one-tap answers.
  *
  * After a person has proved an address once (the «Da, vin» link), their browser carries `br_person`, a secret whose

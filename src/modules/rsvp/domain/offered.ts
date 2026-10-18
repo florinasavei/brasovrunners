@@ -1,7 +1,7 @@
 import { startHeldBack } from "@/modules/events/domain/dated";
 
 /**
- * Whether «Vin!» is offered on an event page (§NNN, «Vin!» part 1) — **the one rule**, asked by the page, by the
+ * Whether «Vin!» is offered on an event page (§811, «Vin!» part 1) — **the one rule**, asked by the page, by the
  * action that takes an answer, by the one-tap island's server action and by every surface that later links to the
  * answer (the calendar's feed, the listing card, the «Vii?» message), so no two of them can draw it differently.
  *

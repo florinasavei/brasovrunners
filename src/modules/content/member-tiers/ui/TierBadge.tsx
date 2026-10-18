@@ -5,7 +5,7 @@ import QuietHelp from "@/shared/ui/QuietHelp";
 import type { TierView } from "../repository";
 
 /**
- * A member tier as a badge (§NNN): the level's glyph and name on the house's `GlyphChip` (the glyph
+ * A member tier as a badge (§811): the level's glyph and name on the house's `GlyphChip` (the glyph
  * travels as a name, never an element — a Server Component hands it a string), and, when the club
  * wrote one, the level's description behind the discreet «?» (`QuietHelp`). Drawn under the member's
  * name in the zone and as the small «<tier>» chip on a discount code limited to some levels.

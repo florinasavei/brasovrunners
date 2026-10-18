@@ -102,7 +102,7 @@ export default async function StaffPage({ params, searchParams }: Props) {
   const t = await getTranslations("Admin");
   const words = await confirmWords();
   const staff = await listStaff(getDb(), actor);
-  // The levels the club named (§NNN), in its order and this language: the select of a member's row and of «Adaugă mai mulți membri». Hidden ones are no longer given.
+  // The levels the club named (§811), in its order and this language: the select of a member's row and of «Adaugă mai mulți membri». Hidden ones are no longer given.
   const tiers = (await listAllMemberTiers(getDb())).map((tier) => ({ ...tierViewOf(tier, locale), hidden: tier.hidden }));
   const givableTiers = tiers.filter((tier) => !tier.hidden);
   const tierBoxes = await refusalMessages({ tierId: t("staff.memberTier") });
@@ -182,7 +182,7 @@ export default async function StaffPage({ params, searchParams }: Props) {
       render: (member) => (
         <Stack direction="row" sx={{ alignItems: "center", flexWrap: "wrap", gap: 0.5 }}>
           <Chip size="small" label={STAFF_ROLE_LABEL[member.role]} />
-          {/* A club member's level (§NNN): its glyph and name, beside the role — a label, not a permission. */}
+          {/* A club member's level (§811): its glyph and name, beside the role — a label, not a permission. */}
           {(() => {
             const level = canHoldMemberTier(member.role) ? tierOf(member.memberTierId) : undefined;
             return level && <TierBadge tier={level} help={false} color="default" testId="staff-member-tier" />;
@@ -387,7 +387,7 @@ export default async function StaffPage({ params, searchParams }: Props) {
                 </MenuItem>
               ))}
             </RecallField>
-            {/* «Nivel» (§NNN): one level for every member this press adds — the club's visible levels, or none. Only once the club named one. */}
+            {/* «Nivel» (§811): one level for every member this press adds — the club's visible levels, or none. Only once the club named one. */}
             {givableTiers.length > 0 && (
               <RecallField
                 name="tierId"
@@ -502,7 +502,7 @@ export default async function StaffPage({ params, searchParams }: Props) {
               </ActionForm>
 
               {/*
-                «Nivel» (§NNN): a club member's level, given or cleared on the row — the visible levels and the one the member
+                «Nivel» (§811): a club member's level, given or cleared on the row — the visible levels and the one the member
                 holds, and «—» for none. Only a member's row: a colleague is no member and holds no level. A press that asks first
                 and then toasts, like the row's other verbs. A label and its benefits: it opens and refuses nothing.
               */}

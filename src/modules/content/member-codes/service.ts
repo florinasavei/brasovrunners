@@ -20,7 +20,7 @@ import { type DiscountCodeFields, discountCodeFieldsSchema } from "./fields";
  *   keeps everything else as it was, whatever was posted.
  *
  * Every write leaves an `audit_logs` row in its own transaction, naming the code by id and the staff
- * member who acted — never the code or the partner (§12.12). The limit to some member tiers (§NNN) is
+ * member who acted — never the code or the partner (§12.12). The limit to some member tiers (§811) is
  * the code's own, so an Administrator's: a Redactor's save keeps it as stored. Nothing here expires the public cache:
  * the codes are on no public page (`repository.ts`).
  */
@@ -52,7 +52,7 @@ function assertMayManage(actor: Actor): void {
 }
 
 /**
- * Every id of the limit names a member tier (§NNN), read under a share lock so a tier cannot be deleted
+ * Every id of the limit names a member tier (§811), read under a share lock so a tier cannot be deleted
  * between this check and the write (`member-tiers/service.ts#deleteMemberTier` locks the tier first). An id
  * that names none is a refusal on the chips' box, `tierIds`.
  */

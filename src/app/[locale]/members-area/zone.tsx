@@ -111,7 +111,7 @@ async function shopTabShown(accountId: string, now: Date): Promise<boolean> {
 }
 
 /**
- * The member's own level (§NNN) in this language, or null: no level, a level deleted since, or the database away (§447).
+ * The member's own level (§811) in this language, or null: no level, a level deleted since, or the database away (§447).
  * A label and its benefits — read to draw a badge and to filter the codes, never to open or refuse anything.
  */
 async function tierOrNone(tierId: string | null, locale: Locale): Promise<TierView | null> {
@@ -165,7 +165,7 @@ export default function ZoneFrame({
       <Typography variant="body1" color="text.secondary" sx={{ mb: parts.tier ? 0.5 : 1 }} data-testid="members-greeting">
         {t("zoneGreeting", { name: account.displayName })}
       </Typography>
-      {/* The member's level (§NNN) under the name: a glyph, the level's name and its description behind the «?». None, nothing: a member with no level is simply «Membru». */}
+      {/* The member's level (§811) under the name: a glyph, the level's name and its description behind the «?». None, nothing: a member with no level is simply «Membru». */}
       {parts.tier && (
         <Box role="group" aria-label={t("tierYours")} sx={{ mb: 1 }} data-testid="members-tier">
           <TierBadge tier={parts.tier} />

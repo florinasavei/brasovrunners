@@ -28,7 +28,7 @@ import {
 
 type Words = Awaited<ReturnType<typeof getTranslations<"Admin">>>;
 
-/** A member tier as the codes' card names it (§NNN): its id and its name in the reader's language; a hidden one is still named, it may hold a code's limit. */
+/** A member tier as the codes' card names it (§811): its id and its name in the reader's language; a hidden one is still named, it may hold a code's limit. */
 export type CodeTier = { id: string; name: string; hidden: boolean };
 
 /**
@@ -51,7 +51,7 @@ export default function CodesCard({
   tiers,
 }: {
   codes: readonly AdminDiscountCode[];
-  /** The member tiers, in the club's order (§NNN): the chips «Pentru nivelurile» of each code, and the names of the limit on its line. */
+  /** The member tiers, in the club's order (§811): the chips «Pentru nivelurile» of each code, and the names of the limit on its line. */
   tiers: readonly CodeTier[];
   /** The club's calendar day, `YYYY-MM-DD`: a code past its last day is marked as not shown. */
   today: string;
@@ -156,7 +156,7 @@ function CodeRow({
   tiers: readonly CodeTier[];
 }) {
   const shown = codeShownToMembers(code, today);
-  // The levels the code is limited to, named (§NNN); an id whose level is gone is not named (deleting a level takes it off the codes).
+  // The levels the code is limited to, named (§811); an id whose level is gone is not named (deleting a level takes it off the codes).
   const limited = (code.tierIds ?? []).flatMap((id) => tiers.find((tier) => tier.id === id)?.name ?? []);
   const expired = !code.hidden && !shown;
   const hidden = (
@@ -268,7 +268,7 @@ function CodeRow({
 /**
  * The boxes of a code, for adding one and for writing one: the partner and the code, the description
  * Română and English side by side from `sm` — both or neither (§352) — the link, the last day and the
- * chips «Pentru nivelurile» (§NNN). A role that writes the words alone sees the code as text, and the
+ * chips «Pentru nivelurile» (§811). A role that writes the words alone sees the code as text, and the
  * link, the day and the chips not at all: the service keeps them as stored whatever is posted.
  */
 function CodeFields({ code, words: t, mayManage, tiers }: { code: AdminDiscountCode | null; words: Words; mayManage: boolean; tiers: readonly CodeTier[] }) {
@@ -333,7 +333,7 @@ function CodeFields({ code, words: t, mayManage, tiers }: { code: AdminDiscountC
             slotProps={{ htmlInput: { maxLength: CODE_LINK_MAX } }}
           />
           <DateField name="validUntil" label={t("members.codes.validUntil")} defaultValue={code?.validUntil ?? ""} helperText={t("members.codes.validUntilHelp")} />
-          {/* «Pentru nivelurile» (§NNN): chips with the native tick; none ticked is every member. Only once the club named a level. */}
+          {/* «Pentru nivelurile» (§811): chips with the native tick; none ticked is every member. Only once the club named a level. */}
           {tiers.length > 0 && (
             <TierChips
               name="tierIds"

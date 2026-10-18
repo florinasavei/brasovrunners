@@ -808,7 +808,7 @@ export const eventFieldsSchema = z
      */
     showRouteProfile: z.boolean().optional(),
     /**
-     * «Acceptă răspunsuri „Vin!” din pagină, calendar și email» (§NNN): whether a turn-up event takes the answer «Vin!». Absent
+     * «Acceptă răspunsuri „Vin!” din pagină, calendar și email» (§811): whether a turn-up event takes the answer «Vin!». Absent
      * means this caller is not editing it (the kit's discipline, §554); the editor posts it with a marker. Written off by any
      * registration mode but "Fără înscrieri" (`service.ts#hiddenByMode`).
      */

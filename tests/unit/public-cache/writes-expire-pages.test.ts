@@ -117,7 +117,7 @@ const WRITES: Record<string, Expected> = {
   "src/modules/content/member-codes/service.ts#setDiscountCodeHidden": MEMBERS_ZONE_ONLY,
   "src/modules/content/member-codes/service.ts#moveDiscountCode": MEMBERS_ZONE_ONLY,
   "src/modules/content/member-codes/service.ts#deleteDiscountCode": MEMBERS_ZONE_ONLY,
-  // «Niveluri de membru» (§NNN): the public members' page lists the visible levels (`cachedMemberTiers`, kind `pages`).
+  // «Niveluri de membru» (§811): the public members' page lists the visible levels (`cachedMemberTiers`, kind `pages`).
   "src/modules/content/member-tiers/service.ts#saveMemberTiers": ["pages"],
   "src/modules/content/member-tiers/service.ts#deleteMemberTier": ["pages"],
   // The members' shop (§683): read only in the members' zone and the backoffice, per request behind the

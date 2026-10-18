@@ -239,7 +239,7 @@ export default async function EditEventPage({ params, searchParams }: Props) {
   const internal = event.registrationMode === "INTERNAL";
   // How many numbers this event has, and how many wait for the printer, for the bib card.
   const bibCounts = canReadRegistrations(staffUser.role) && internal ? await countBibs(db, event.id) : null;
-  // «Răspunsuri „Vin!”» (§NNN): the counts for every role of the editor, the rows (with addresses) only for a role that reads the registrations (BR-REQ-060-01).
+  // «Răspunsuri „Vin!”» (§811): the counts for every role of the editor, the rows (with addresses) only for a role that reads the registrations (BR-REQ-060-01).
   const rsvpCounts = await countRsvpsForAdmin(db, event.id);
   const rsvpRows = canReadRegistrations(staffUser.role) && rsvpCounts.confirmed + rsvpCounts.unconfirmed > 0 ? await listRsvpsForAdmin(db, event.id) : null;
   // The desk's spares (§444): what is reserved, how much of it is free, where the next print starts.

@@ -1,5 +1,5 @@
 /**
- * Who answers «Vin!» (§NNN, «Vin!» part 1): an **identity with a source and a verified flag**, never a bare address —
+ * Who answers «Vin!» (§811, «Vin!» part 1): an **identity with a source and a verified flag**, never a bare address —
  * so the same service takes an answer from the event page, from a remembered browser, from a signed-in member of the
  * members' zone (lane 59) and from a personal link in an email (lane 58) without any of them being able to claim more
  * than it proved.

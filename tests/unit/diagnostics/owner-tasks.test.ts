@@ -121,7 +121,7 @@ describe("owner tasks", () => {
   });
 
   /**
-   * §NNN — the answer «Vin!» waits on the club's notice, the volunteers' shape: open while an upcoming event is ticked and the notice in
+   * §811 — the answer «Vin!» waits on the club's notice, the volunteers' shape: open while an upcoming event is ticked and the notice in
    * force does not name `{{rsvp}}`, done once it does, absent while no event is ticked and the notice is silent — never blocking.
    */
   it("keeps the «Vin!» row open while a ticked event waits for the notice, done once it describes it, and absent when nothing is ticked", () => {

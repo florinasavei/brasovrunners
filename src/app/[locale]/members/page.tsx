@@ -50,7 +50,7 @@ async function pageOrNull(locale: Locale): Promise<PublicMembersPage | null> {
   }
 }
 
-/** The levels the club named (§NNN), or none when the database cannot say: the page stands without the section, never without itself. */
+/** The levels the club named (§811), or none when the database cannot say: the page stands without the section, never without itself. */
 async function tiersOrNone(locale: Locale): Promise<readonly TierView[]> {
   try {
     return await cachedMemberTiers(locale);
@@ -134,7 +134,7 @@ export default async function MembersPage({ params }: Props) {
         </Typography>
       )}
 
-      {/* «Nivelurile de membru» (§NNN): after the benefits, before the door; nothing while the club named no level. */}
+      {/* «Nivelurile de membru» (§811): after the benefits, before the door; nothing while the club named no level. */}
       <TiersSection tiers={tiers} />
 
       <Paper variant="outlined" component="section" aria-labelledby="members-door" sx={{ p: { xs: DENSITY.cardPadTop, sm: 2 } }} data-testid="members-door">

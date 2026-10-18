@@ -33,7 +33,7 @@ export const RETENTION_PERIODS = {
    */
   volunteerDaysAfterEvent: 30,
   /**
-   * An answer «Vin!» (§NNN): an address and, when the person ticked it, a name, kept to count and show who comes. Thirty days after the
+   * An answer «Vin!» (§811): an address and, when the person ticked it, a name, kept to count and show who comes. Thirty days after the
    * event's end, and the privacy notice's section 7 says exactly this; sooner for an answer never confirmed and for a cancelled event.
    */
   rsvpDaysAfterEvent: 30,

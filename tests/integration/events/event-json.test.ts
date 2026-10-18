@@ -1569,13 +1569,13 @@ describe("§802 the event's tick «Arată profilul traseului pe pagină» travel
   });
 });
 
-// --- «Acceptă răspunsuri „Vin!”» (§NNN) ---------------------------------------------------------------
+// --- «Acceptă răspunsuri „Vin!”» (§811) ---------------------------------------------------------------
 
 /** A hike one simply turns up to: the shape the tick belongs to (no places, no declaration, no window). */
 const TURN_UP = { type: "HIKE", registrationMode: "NONE", capacity: "", participantListVisibility: "HIDDEN", declarationDocumentId: "", externalProvider: "", externalRegistrationUrl: "", hiddenListEnabled: false, hiddenListBibStart: "" };
 const OTHER_TEXTS = { ro: { slug: "tura-vin-doi", title: "Altă tură" }, en: { slug: "another-hike-coming", title: "Another hike" } };
 
-describe("§NNN the event's tick «Acceptă răspunsuri „Vin!”» travels in the file — the answers never do", () => {
+describe("§811 the event's tick «Acceptă răspunsuri „Vin!”» travels in the file — the answers never do", () => {
   it("is exported as it is, written in the downloaded text only when it is ON, and the file's version stays 3", async () => {
     const { event } = await seedRace({ ...TURN_UP, rsvpEnabled: true }, {}, false);
     const on = await fileOf(event.id);

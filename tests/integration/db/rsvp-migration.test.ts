@@ -8,7 +8,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { auditMigration } from "../../../scripts/migration-check.mjs";
 
 /**
- * Migration `0168_rsvp_core` («Vin!» part 1, §NNN), proven on real PostgreSQL (PGlite): `events.rsvp_enabled` is the club's tick, a boolean
+ * Migration `0168_rsvp_core` («Vin!» part 1, §811), proven on real PostgreSQL (PGlite): `events.rsvp_enabled` is the club's tick, a boolean
  * NOT NULL false by default — so every event that exists, and every one created without it, takes no answers; `event_rsvps` is one row
  * per event and canonical identity; `event_rsvp_tokens` keeps only a SHA-256; `person_sessions` keeps only a SHA-256 too; `RSVP_CONFIRM`
  * is a message type; and the file only expands — nothing dropped, nothing rewritten.

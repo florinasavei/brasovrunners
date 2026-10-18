@@ -105,7 +105,7 @@ export const RATE_LIMITS: Record<RateLimitScope, { limit: number; windowMs: numb
    */
   "volunteer-event": { limit: 60, windowMs: 60 * 60_000 },
   /**
-   * «Vin!» (§NNN), hashed canonical address and event: each typed answer mails an unproven address once, and the withdraw
+   * «Vin!» (§811), hashed canonical address and event: each typed answer mails an unproven address once, and the withdraw
    * link's request spends the same bucket. One message per address and event in ten minutes — the form says the same sentence
    * when it is refused, so it cannot be used to learn whether an address answered.
    */

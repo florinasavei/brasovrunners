@@ -561,7 +561,7 @@ function eventColumnsFrom(fields: EventFieldsInput, times: ResolvedTimes, option
     // «Arată profilul traseului pe pagină» (§802, §805), by the same discipline: a caller that did not post the
     // tick writes nothing, so no save takes the chart off a page by not mentioning it.
     ...(fields.showRouteProfile === undefined ? {} : { showRouteProfile: fields.showRouteProfile }),
-    // «Acceptă răspunsuri „Vin!”» (§NNN), by the same discipline: a caller that did not post the tick writes nothing, so no save
+    // «Acceptă răspunsuri „Vin!”» (§811), by the same discipline: a caller that did not post the tick writes nothing, so no save
     // takes the answers off a page by not mentioning it. Only an event that asks for no registration keeps it (`hiddenByMode`).
     ...(fields.rsvpEnabled === undefined ? {} : { rsvpEnabled: fields.rsvpEnabled }),
     // No `video_url` (§481): a film is a figure in the description (§266); the column is unread
@@ -782,7 +782,7 @@ function hiddenByMode(mode: "NONE" | "INTERNAL" | "EXTERNAL") {
   return {
     ...(mode === "INTERNAL" ? {} : INTERNAL_ONLY_FIELDS),
     ...(mode === "EXTERNAL" ? {} : EXTERNAL_ONLY_FIELDS),
-    // «Vin!» (§NNN) belongs to an event that asks for no registration: with a registration of either kind the tick is not shown, and is written off.
+    // «Vin!» (§811) belongs to an event that asks for no registration: with a registration of either kind the tick is not shown, and is written off.
     ...(mode === "NONE" ? {} : NO_RSVP_FIELDS),
   };
 }
@@ -1872,7 +1872,7 @@ const SERIES_COLUMNS = [
   "routeGpx",
   // Whether the page draws the GPX's profile (§802, §805) travels with the file it draws.
   "showRouteProfile",
-  // Whether the weekly run takes «Vin!» answers (§NNN) is a property of the series: every date of it does, or none.
+  // Whether the weekly run takes «Vin!» answers (§811) is a property of the series: every date of it does, or none.
   "rsvpEnabled",
   "coHosts",
   // Not `locationName` and `locationAddress`: the place travels by what each language's page
@@ -3587,7 +3587,7 @@ function copiedEventValues(source: EventRow, actor: Actor, now: Date) {
     routeGpx: source.routeGpx,
     // The profile's switch travels with the file it draws (§802, §805).
     showRouteProfile: source.showRouteProfile,
-    // «Acceptă răspunsuri „Vin!”» (§NNN) travels with the event it is the tick of; the answers themselves never do.
+    // «Acceptă răspunsuri „Vin!”» (§811) travels with the event it is the tick of; the answers themselves never do.
     rsvpEnabled: source.rsvpEnabled,
     // «Copertă» (§709), like the route: every date of a repeat wears the series' cover, and a
     // duplicate starts with last year's until the club picks this year's.

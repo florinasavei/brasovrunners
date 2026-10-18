@@ -125,7 +125,7 @@ function sampleFile(): EventFile {
     format: EVENT_FILE_FORMAT,
     version: EVENT_FILE_VERSION,
     exportedAt: "2026-10-13T10:00:00.000Z",
-    exportedFrom: { environment: "production", baseline: "BR-V3.55-2026-10-17" },
+    exportedFrom: { environment: "production", baseline: "BR-V3.56-2026-10-18" },
     series: { partOfASeries: false, rule: null },
     event: sampleConfig(),
     // The volunteers' categories and roles (§774): none in the sample; the round trip with some is in the integration test.
@@ -176,7 +176,7 @@ describe("the event file's reader", () => {
     expect(written).not.toContain("onProfile");
   });
 
-  it("writes the registration block's «Vin!» tick only when it is ON, reads «not written» as off, and keeps the version (§NNN)", () => {
+  it("writes the registration block's «Vin!» tick only when it is ON, reads «not written» as off, and keeps the version (§811)", () => {
     const file = sampleFile();
     expect(file.version).toBe(3);
     expect(file.event.registration.rsvpEnabled).toBe(false);

@@ -1,5 +1,5 @@
 /**
- * The remembered browser's two cookies, and what the readable one holds (§NNN, «Vin!» part 1).
+ * The remembered browser's two cookies, and what the readable one holds (§811, «Vin!» part 1).
  *
  *   `br_person`       the secret. `httpOnly`, `SameSite=Lax`, path `/`, one year. Only the server reads it, and only its
  *                     SHA-256 is stored (`person_sessions.secret_hash`).

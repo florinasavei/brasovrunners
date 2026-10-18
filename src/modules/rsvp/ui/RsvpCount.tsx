@@ -8,7 +8,7 @@ import { FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 import { DENSITY } from "@/theme/density";
 
 /**
- * «Vin (N)» (§NNN, «Vin!» part 1): how many come to a turn-up event the club ticked, and the names of those who ticked
+ * «Vin (N)» (§811, «Vin!» part 1): how many come to a turn-up event the club ticked, and the names of those who ticked
  * «Vreau să apar cu numele» — in the shape of the start list's rows (`events/ui/StartList.tsx`), one name to a row, «și încă N»
  * for the rest. **A name is a disclosure** (§143, §396): the rule is `rsvp/domain/public-name.ts`, applied by the cached read
  * (`readPublicRsvps`), so a name that is not to be shown is not even in this component's props. Nobody has answered: only the

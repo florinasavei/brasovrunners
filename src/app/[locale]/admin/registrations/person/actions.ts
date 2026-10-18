@@ -32,7 +32,7 @@ export async function lookUpPersonAction(form: FormData): Promise<void> {
 }
 
 /**
- * «Șterge răspunsurile „Vin!”» (§NNN, art. 17 GDPR): the answers and the remembered browsers of the address the page was opened for.
+ * «Șterge răspunsurile „Vin!”» (§811, art. 17 GDPR): the answers and the remembered browsers of the address the page was opened for.
  * The address comes back through the same sealed lookup the page was opened with — never typed again, never in the URL in the clear —
  * and goes no further than the Administrator who pressed (`requireStaffCapability`, asserted again in the service).
  */

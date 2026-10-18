@@ -217,7 +217,7 @@ export const PANEL_GLYPHS = {
   members: GroupAddIcon,
   // «Cine e membru al grupului» (§789): the card on «Membri» that says what being a member means.
   memberDefinition: CardMembershipIcon,
-  // «Niveluri de membru» (§NNN): the levels the club names for its members, on «Membri».
+  // «Niveluri de membru» (§811): the levels the club names for its members, on «Membri».
   memberTiers: WorkspacePremiumIcon,
   appearance: PaletteIcon,
   // «Setări»' row of tabs (§318 as amended, 2026-10-18) names the two it has no card for: the anti-robot check, a shield, and «Configurație», the platform's own screen, a gear.
@@ -232,14 +232,14 @@ export const PANEL_GLYPHS = {
   limits: DataUsageIcon,
   jobs: UpdateIcon,
   pictures: ImageIcon,
-  // «Galerie»' two tabs (§NNN): the albums, and every stored picture above.
+  // «Galerie»' two tabs (§813): the albums, and every stored picture above.
   albums: PhotoAlbumIcon,
   translation: TranslateIcon,
   // «Ordinea meniului» (§571): the site menu's entries, one under the other, in the club's order.
   menuOrder: ReorderIcon,
   // «Previzualizare» (§579): the event's card and page as a visitor will see them, before saving.
   preview: VisibilityIcon,
-  // «Răspunsuri „Vin!”» (§NNN): who said they come to a turn-up event, on the event editor's registration card.
+  // «Răspunsuri „Vin!”» (§811): who said they come to a turn-up event, on the event editor's registration card.
   rsvp: EventAvailableIcon,
   // «Clasament» (§808): a race's results page, its cards and the link to it from the event editor — and its «Importă din CSV» card, the file going up.
   results: LeaderboardIcon,

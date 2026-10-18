@@ -2,7 +2,7 @@ import { sql } from "drizzle-orm";
 import { check, index, integer, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 
 /**
- * A remembered browser (§NNN, «Vin!» part 1; the owner, 2026-10-18: «I want the flow to be super easy, also later to
+ * A remembered browser (§811, «Vin!» part 1; the owner, 2026-10-18: «I want the flow to be super easy, also later to
  * integrate with the member zone»).
  *
  * After a person uses a «Da, vin» link, their browser carries a long-lived cookie (`br_person`, `httpOnly`) whose

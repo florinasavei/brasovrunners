@@ -1097,15 +1097,15 @@ export type TemplateData = {
    */
   familyDeclineUrl?: string;
   /**
-   * «Confirmă că vii» (§NNN, «Vin!» part 1), which of its three shapes this send is: `confirm` — the button counts the person and
+   * «Confirmă că vii» (§811, «Vin!» part 1), which of its three shapes this send is: `confirm` — the button counts the person and
    * `rsvpWithdrawUrl` is the quieter «Nu vin» under it; `counted` — the address is already counted, the one button takes the answer
    * back; `withdraw` — the person asked, from the page, to take it back. Absent is `confirm` (the editor's starting text).
    */
   rsvpStage?: "confirm" | "counted" | "withdraw";
-  /** The `RSVP_WITHDRAW` link of the same send (§NNN), under the confirm button as «Nu vin». Minted at the send, never stored. */
+  /** The `RSVP_WITHDRAW` link of the same send (§811), under the confirm button as «Nu vin». Minted at the send, never stored. */
   rsvpWithdrawUrl?: string;
   /**
-   * The name the answer asks to show on the event's page (§NNN), on the `confirm` shape only: whoever typed the address chose it, so the person who
+   * The name the answer asks to show on the event's page (§811), on the `confirm` shape only: whoever typed the address chose it, so the person who
    * presses «Da, vin» is told which name their press makes public, and can press «Nu vin» instead. A line the platform adds after the body
    * whoever wrote it, like the waiting list's standing.
    */
@@ -1570,7 +1570,7 @@ const T = {
       action: "Confirmă locul",
       emphasis: (_d: TemplateData, b: readonly string[]): Emphasis => ({ highlight: [b[0]], actionAfter: b[0] }),
     },
-    // «Vin!» (§NNN): the one message of an answer typed on a turn-up event's page. Three shapes by `rsvpStage`; the club's own words
+    // «Vin!» (§811): the one message of an answer typed on a turn-up event's page. Three shapes by `rsvpStage`; the club's own words
     // apply to the first alone (a statement about the answer's state is the platform's, like the address's limit, §389).
     rsvpConfirm: {
       subject: (d: TemplateData) =>
@@ -2311,9 +2311,9 @@ const T = {
     },
     /** The family link's second button (§468): the kept form deleted, nobody registered. */
     familyDecline: "Nu înscriu această persoană",
-    /** «Vin!» (§NNN): the quieter button under «Da, vin» — the same message's other link. */
+    /** «Vin!» (§811): the quieter button under «Da, vin» — the same message's other link. */
     rsvpNo: "Nu vin",
-    /** «Vin!» (§NNN): which name the press makes public, since whoever typed the address chose it. */
+    /** «Vin!» (§811): which name the press makes public, since whoever typed the address chose it. */
     rsvpShownName: (name: string) => `Dacă apeși „Da, vin”, pe pagina evenimentului va apărea numele „${name}”: cine a scris adresa a bifat că vrea să apară cu numele. Dacă nu vrei, apasă „Nu vin”.`,
     /** «Nu mai pot ajunge» (§558; the owner's words), and its one sentence under the button. */
     cannotCome: {
@@ -2402,7 +2402,7 @@ const T = {
     /** The same for "registration is open" (§146), which answers a request, not a registration. */
     privacyFooterInterest: (club: string) =>
       `Primești acest mesaj de la ${club} pentru că ai cerut să fii anunțat. Cum folosim datele tale:`,
-    /** «Vin!» (§NNN): the person typed their address under the answer on an event's page; the club sends this once. */
+    /** «Vin!» (§811): the person typed their address under the answer on an event's page; the club sends this once. */
     privacyFooterRsvp: (club: string) =>
       `Primești acest mesaj de la ${club} pentru că cineva a scris această adresă la „Vin!” pe pagina unui eveniment. Cum folosim datele tale:`,
     /** An invitation (§647): the club typed the name and the address to send it; nobody asked yet. */
@@ -3473,7 +3473,7 @@ export function buildTemplateContent(
     the address's state, like the limit above: the club's words for this message ask to confirm.
   */
   const newsletterState = messageType === "NEWSLETTER" || (messageType === "NEWSLETTER_CONFIRM" && data.newsletterAlready === true);
-  // «Vin!» (§NNN): the shapes that are about the answer's state — already counted, or taken back — are the platform's sentence alone.
+  // «Vin!» (§811): the shapes that are about the answer's state — already counted, or taken back — are the platform's sentence alone.
   const rsvpState = messageType === "RSVP_CONFIRM" && data.rsvpStage !== undefined && data.rsvpStage !== "confirm";
   const written =
     messageType === "ORGANIZER_MESSAGE" || atAddressCap || familyGone || familySittingShape || familyConfirmedShape || lapsedOffer || newsletterState || rsvpState
@@ -3725,7 +3725,7 @@ export function buildTemplateContent(
       ...(messageType === "COMPLETE_DECLARATION" && data.familyToSign && data.familyToSign.length > 0
         ? [copy.familyToSign(data.familyToSign)]
         : []),
-      // «Vin!» (§NNN): the name the press would make public, after the body whoever wrote it — only on the shape that counts the person.
+      // «Vin!» (§811): the name the press would make public, after the body whoever wrote it — only on the shape that counts the person.
       ...(messageType === "RSVP_CONFIRM" && data.rsvpShownName && (data.rsvpStage === undefined || data.rsvpStage === "confirm") ? [copy.rsvpShownName(data.rsvpShownName)] : []),
       // Where the person stood in the line when this was rendered (§629), after the body whoever wrote it.
       ...(messageType === "WAITLIST_JOINED" && data.waitlistStanding ? [copy.waitlistPosition(data.waitlistStanding)] : []),
@@ -3825,7 +3825,7 @@ export function buildTemplateContent(
     secondaryAction:
       messageType === "REGISTER_ANOTHER_PERSON" && !atAddressCap && !familyGone && entry.action && actionUrl && data.familyDeclineUrl
         ? { label: copy.familyDecline, url: data.familyDeclineUrl }
-        : // «Vin!» (§NNN): «Nu vin» under «Da, vin», the same send's other link — only beside the confirm button.
+        : // «Vin!» (§811): «Nu vin» under «Da, vin», the same send's other link — only beside the confirm button.
           messageType === "RSVP_CONFIRM" && (data.rsvpStage === undefined || data.rsvpStage === "confirm") && entry.action && actionUrl && data.rsvpWithdrawUrl
           ? { label: copy.rsvpNo, url: data.rsvpWithdrawUrl }
           : undefined,
@@ -3995,7 +3995,7 @@ const EVENT_FACTS_MESSAGES: ReadonlySet<EmailMessageType> = new Set([
   "EVENT_REMINDER",
   "COMPLETE_DECLARATION",
   "NEW_EVENT_ALERT",
-  // «Vin!» (§NNN): the person deciding whether to come reads the same when and where as the others.
+  // «Vin!» (§811): the person deciding whether to come reads the same when and where as the others.
   "RSVP_CONFIRM",
 ]);
 

@@ -3,10 +3,10 @@ import { decodeHint, encodeHint, maskAddress, PERSON_COOKIE, PERSON_HINT_COOKIE,
 import { generateTokenSecret } from "@/modules/action-tokens/domain/token-secret";
 
 /**
- * §NNN («Vin!» part 1) — the remembered browser's readable half. The hint cookie is read by a script on a page the CDN serves to
+ * §811 («Vin!» part 1) — the remembered browser's readable half. The hint cookie is read by a script on a page the CDN serves to
  * everybody, so it must hold nothing a stranger could use: the address masked, the name the person gave, and never the secret.
  */
-describe("§NNN the remembered browser's hint", () => {
+describe("§811 the remembered browser's hint", () => {
   it("names its two cookies and lives a year", () => {
     expect(PERSON_COOKIE).toBe("br_person");
     expect(PERSON_HINT_COOKIE).toBe("br_person_hint");

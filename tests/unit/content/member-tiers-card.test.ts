@@ -8,7 +8,7 @@ import { TIER_GLYPH_KEYS } from "@/modules/content/member-tiers/glyph-keys";
 import TranslateProvider, { type TranslateAction } from "@/modules/translate/ui/TranslateProvider";
 
 /**
- * §NNN — «Pagini» → «Membri» → «Niveluri de membru» as the server draws it: a named card (the house's `Panel`, its glyph and its count
+ * §811 — «Pagini» → «Membri» → «Niveluri de membru» as the server draws it: a named card (the house's `Panel`, its glyph and its count
  * on the line, closed until opened), ONE form around every level with ONE «Salvează toate nivelurile», each level a row whose boxes are
  * named by its key, the blank row at the end that adds a level, «Șterge nivelul» a button that names a small form of its own, and for a
  * reader who may not manage the levels the list and no box. In Romanian and in English.
@@ -68,7 +68,7 @@ async function draw(over: Partial<ComponentProps<typeof TiersCard>> = {}, locale
 /** One element's opening tag by its name. */
 const tagOf = (page: string, element: "input" | "textarea", name: string) => new RegExp(`<${element}\\b[^>]*\\bname="${name.replace(/[[\]]/g, "\\$&")}"[^>]*>`).exec(page)?.[0] ?? "";
 
-describe("§NNN the «Niveluri de membru» card on «Membri»", () => {
+describe("§811 the «Niveluri de membru» card on «Membri»", () => {
   it("is a named card with its glyph, its count and its helper sentence, closed until opened", async () => {
     const page = await draw();
     expect(page).toContain('data-testid="members-tiers"');

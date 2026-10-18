@@ -27,11 +27,11 @@ function jar(initial: Record<string, string> = {}) {
 }
 
 /**
- * §NNN («Vin!» part 1) — the remembered browser, the small module the members' zone reuses: a secret in an `httpOnly` cookie whose
+ * §811 («Vin!» part 1) — the remembered browser, the small module the members' zone reuses: a secret in an `httpOnly` cookie whose
  * SHA-256 is the only thing stored, a readable hint that holds no secret, a year's life, a forged or stale cookie refused, «Nu sunt
  * eu» forgetting it, and the sweep taking what has expired.
  */
-describe("§NNN the remembered browser (person-session)", () => {
+describe("§811 the remembered browser (person-session)", () => {
   let db: TestDatabase;
   let close: () => Promise<void>;
   beforeAll(async () => {

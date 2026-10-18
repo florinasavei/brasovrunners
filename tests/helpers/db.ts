@@ -124,7 +124,7 @@ export async function resetTables(db: TestDatabase): Promise<void> {
   await db.delete(faqQuestions);
   // The members' discount codes (§552) reference only staff rows.
   await db.delete(memberDiscountCodes);
-  // The member tiers (§NNN): staff rows point at them with SET NULL, so they go with the codes, before the staff.
+  // The member tiers (§811): staff rows point at them with SET NULL, so they go with the codes, before the staff.
   await db.delete(memberTiers);
   // The members' shop (§683): orders name a variant and a product; products reference a photo — all before the assets.
   await db.delete(shopOrders);
@@ -137,7 +137,7 @@ export async function resetTables(db: TestDatabase): Promise<void> {
   await db.delete(mediaAssets);
   // An event's results (§808) cascade from it and point at its registrations: before both.
   await db.delete(eventResults);
-  // The answers «Vin!» (§NNN) cascade from their event, their links from them; the remembered browsers reference nothing.
+  // The answers «Vin!» (§811) cascade from their event, their links from them; the remembered browsers reference nothing.
   await db.delete(eventRsvps);
   await db.delete(personSessions);
   // An event's own to-dos (§749) cascade from it; deleted first like the translations.

@@ -83,7 +83,7 @@ export async function registerInterestAction(form: FormData): Promise<void> {
 }
 
 /**
- * «Vin!» (§NNN, «Vin!» part 1): the typed answer on a turn-up event's page, and the interest box's twin in every rule that
+ * «Vin!» (§811, «Vin!» part 1): the typed answer on a turn-up event's page, and the interest box's twin in every rule that
  * matters — the same honeypot, timing check and Turnstile, answered with the same silence, and **the same sentence whatever
  * the address turned out to mean** (a new one, one already counted, a message the throttle held back: BR-REQ-031-01 criterion 3).
  * The answer is never verified here (`source: "page"`): it waits for the emailed «Da, vin».
@@ -135,7 +135,7 @@ export async function answerRsvpAction(form: FormData): Promise<void> {
 }
 
 /**
- * «Nu mai vin» under the box (§NNN): the address typed, the withdraw link by email — and the same sentence whether or not the
+ * «Nu mai vin» under the box (§811): the address typed, the withdraw link by email — and the same sentence whether or not the
  * address had answered. The same spam defences as the answer.
  */
 export async function requestRsvpWithdrawAction(form: FormData): Promise<void> {
