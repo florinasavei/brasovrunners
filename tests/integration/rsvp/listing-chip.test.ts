@@ -3,6 +3,7 @@ import { createElement, type ReactNode } from "react";
 import { renderToReadableStream } from "react-dom/server";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { eventTranslations, events } from "@/db/schema/events";
+import { datedOrNull } from "@/modules/events/domain/dated";
 import { findPublishedEventBySlug } from "@/modules/events/repository";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
@@ -67,8 +68,9 @@ async function seed(slug: string, startsAt = new Date(NOW.getTime() + 2 * DAY)) 
     { eventId: event.id, locale: "en", slug: `${slug}-en`, title: "Thursday run" },
   ]);
   const found = await findPublishedEventBySlug(db, language, language === "ro" ? slug : `${slug}-en`);
-  if (!found) throw new Error("the event did not publish");
-  return found;
+  const dated = found ? datedOrNull(found) : null;
+  if (!dated) throw new Error("the event did not publish");
+  return dated;
 }
 
 /** A card suspends on its client islands; the stream is read to its end. Emotion's rules are kept: the 44 pixels are one of them. */
