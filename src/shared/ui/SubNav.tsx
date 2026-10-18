@@ -41,9 +41,9 @@ const ROW_SX = {
 const LIST_SX = { display: "flex", flexWrap: "nowrap", m: 0, p: 0, listStyle: "none" } as const;
 
 /**
- * One entry, drawn as a secondary tab (§360): the words and nothing else — no border box, no
- * fill, no shadow — a size smaller than the main tab bar and without its glyphs, so the two rows
- * read as a section and its parts rather than as two rows of the same thing.
+ * One entry, drawn as a secondary tab (§360): the words, with their glyph when the row gives one,
+ * and nothing else — no border box, no fill, no shadow — a size smaller than the main tab bar, so
+ * the two rows read as a section and its parts rather than as two rows of the same thing.
  *
  * **The current entry is styled from `aria-current`, never from a second prop**, so what the eye
  * sees and what a screen reader hears cannot disagree: the primary colour, 600 weight and a 2-px
@@ -117,10 +117,10 @@ const GLYPH_SX = { display: "inline-flex", mr: 0.75, "& svg": { fontSize: 18 } }
  * `role="tab"`: every entry changes the address, and a tab widget promises arrow keys and a panel
  * in the same document that these do not have.
  *
- * No glyphs by default: the main tab bar carries the pictures, and a row of one-word labels under
- * it is lighter without them. A row whose entries are kinds of things — «Pagini» (§524) — gives
- * each its glyph and each run its caption (`SubNavItem.glyph`, `.group`); the elements stay on
- * the server, so the defect `shared/ui/action-icons.ts` documents cannot happen here.
+ * A glyph is optional per entry. A row whose entries are kinds of things — «Pagini» (§524) — gives
+ * each its glyph and each run its caption (`SubNavItem.glyph`, `.group`), and «Setări»' row gives
+ * each of its tabs one (§318 as amended: a picture before every tab; the owner, 2026-10-18). The
+ * elements stay on the server, so the defect `shared/ui/action-icons.ts` documents cannot happen here.
  *
  * The href is a string rather than a typed route because a panel is a query parameter, and
  * because one of these rows deliberately points at the neighbouring page: the anti-bot switch

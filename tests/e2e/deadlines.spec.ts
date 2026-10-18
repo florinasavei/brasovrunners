@@ -1,8 +1,8 @@
 import { existsSync } from "node:fs";
-import { expect, test, type Browser } from "@playwright/test";
+import { expect, test, type Browser, type Locator } from "@playwright/test";
 import pg from "pg";
 import { confirmDialog } from "./support/confirm";
-import { signIn } from "./support/featured-event";
+import { hydrated, signIn } from "./support/featured-event";
 import { openFold } from "./support/fold";
 
 /**
@@ -14,7 +14,22 @@ import { openFold } from "./support/fold";
  * `afterEach`, whatever happened in the test — a failure halfway must not leave every later spec
  * on this database reading three-day reminders. Desktop only, like the Mailgun plan beside it: one
  * `platform_settings` row, two projects, one database.
+ *
+ * The thirteen boxes sit in seven named folds, closed on arrival (§377 amended, 2026-10-18): a spec
+ * that types into a box opens the fold that holds it first, the way a person does. The one save and
+ * the fill button are under the folds, outside them.
  */
+
+/** The seven folds of «Termene» (`DEADLINE_GROUPS`), in the order the screen draws them. */
+const GROUPS = ["confirmation", "hold", "beforeStart", "afterEvent", "series", "family", "outage"] as const;
+
+/** One fold of the seven, by its group. */
+const group = (panel: Locator, key: (typeof GROUPS)[number]) => panel.getByTestId(`deadline-group-${key}`);
+
+/** Every fold of the seven opened, the way a person does it (`openFold`). */
+async function openGroups(panel: Locator): Promise<void> {
+  for (const key of GROUPS) await openFold(group(panel, key));
+}
 
 function databaseUrl(): string {
   if (!process.env.DATABASE_URL && existsSync(".env.local")) process.loadEnvFile(".env.local");
@@ -37,6 +52,7 @@ async function restoreDefaults(browser: Browser, defaults: Record<string, string
     await page.goto("/ro/admin/settings/deadlines");
     const panel = page.locator("#main").getByTestId("deadlines");
     await openFold(panel);
+    await openGroups(panel);
     for (const [name, value] of Object.entries(defaults)) await panel.locator(`input[name="${name}"]`).fill(value);
     await panel.getByRole("button", { name: "Salvează termenele" }).click();
     await confirmDialog(page, "Salvezi termenele?");
@@ -93,6 +109,22 @@ test.describe("§377 the club's deadlines on «Setări» → «Termene»", () =>
     await expect(panel).toHaveAttribute("open", "");
     await expect(panel.locator(":scope > summary")).toContainText("Link 48 de ore · loc ținut 30 de minute · ofertă 24 de ore · reminder 2 zile");
     await openFold(panel);
+
+    // Seven named folds, all closed, each with its closed line in words; the one save and the fill
+    // button are under them, outside them, and so in view with every fold shut.
+    for (const key of GROUPS) await expect(group(panel, key), key).not.toHaveAttribute("open", "");
+    await expect(group(panel, "confirmation").locator(":scope > summary")).toContainText("Confirmarea adresei");
+    await expect(group(panel, "confirmation").locator(":scope > summary")).toContainText("link 48 de ore · retrimis după 20 de ore · retrimiteri: o dată");
+    await expect(group(panel, "hold").locator(":scope > summary")).toContainText("loc ținut 30 de minute · ofertă 24 de ore");
+    await expect(group(panel, "beforeStart").locator(":scope > summary")).toContainText("reminder 2 zile");
+    await expect(group(panel, "outage").locator(":scope > summary")).toContainText("mutare cel mult 48 de ore");
+    await expect(panel.getByRole("button", { name: "Salvează termenele" })).toBeVisible();
+    await expect(panel.getByRole("button", { name: "Completează valorile recomandate" })).toBeVisible();
+    // A fold opens on its own and leaves the others shut.
+    await openFold(group(panel, "hold"));
+    await expect(group(panel, "beforeStart")).not.toHaveAttribute("open", "");
+
+    await openGroups(panel);
     for (const [name, value] of Object.entries(DEFAULTS)) await expect(panel.locator(`input[name="${name}"]`)).toHaveValue(value);
 
     // Three days for the reminder.
@@ -105,6 +137,10 @@ test.describe("§377 the club's deadlines on «Setări» → «Termene»", () =>
     await expect(main.getByText("Termenele au fost salvate", { exact: false })).toBeVisible();
     await expect(panel).toHaveAttribute("open", "");
     await expect(panel.locator(":scope > summary")).toContainText("reminder 3 zile");
+    // Its fold stays shut after the save, and says the new lead on its closed line, with the count of what differs.
+    await expect(group(panel, "beforeStart")).not.toHaveAttribute("open", "");
+    await expect(group(panel, "beforeStart").locator(":scope > summary")).toContainText("reminder 3 zile");
+    await expect(group(panel, "beforeStart").locator(":scope > summary")).toContainText("1 diferit de recomandat");
     // The reminder's card, one tab over on «Emailuri», says the new lead before it is opened.
     await main.getByRole("navigation", { name: "Setări" }).getByRole("link", { name: "Emailuri" }).click();
     await expect(page).toHaveURL(/\/ro\/admin\/settings\/emails/);
@@ -113,14 +149,33 @@ test.describe("§377 the club's deadlines on «Setări» → «Termene»", () =>
     await expect(page).toHaveURL(/\/ro\/admin\/settings\/deadlines/);
 
     // A number outside its bounds is refused, naming the box, and nothing is saved.
+    const hold = group(panel, "hold");
+    await openFold(hold);
     await panel.locator('input[name="holdMinutes"]').fill("5");
     await panel.locator('input[name="holdMinutes"]').evaluate((input: HTMLInputElement) => input.removeAttribute("min"));
+    // The fold shut again before the save: the refusal opens the fold around the box it names (`revealField`).
+    await hold.locator(":scope > summary").press("Enter");
+    await expect(hold).not.toHaveAttribute("open", "");
     await panel.getByRole("button", { name: "Salvează termenele" }).click();
     await confirmDialog(page, "Salvezi termenele?");
     await expect(panel.getByTestId("form-refusal")).toContainText("Locul e ținut pentru semnarea declarației (minute)");
-    // The box comes back as typed (§315); the saved line still says three days.
+    await expect(hold).toHaveAttribute("open", "");
+    // The box comes back as typed (§315); the saved line still says thirty minutes.
     await expect(panel.locator('input[name="holdMinutes"]')).toHaveValue("5");
     await expect(panel.locator(":scope > summary")).toContainText("loc ținut 30 de minute");
+    await expect(hold.locator(":scope > summary")).toContainText("loc ținut 30 de minute");
+
+    // «Completează valorile recomandate» fills the boxes — saving nothing — and opens the folds around
+    // what it changed (the reminder is 72 now), leaving the others shut.
+    await page.goto("/ro/admin/settings/deadlines");
+    await hydrated(page);
+    const again = page.locator("#main").getByTestId("deadlines");
+    await openFold(again);
+    await expect(group(again, "beforeStart")).not.toHaveAttribute("open", "");
+    await again.getByRole("button", { name: "Completează valorile recomandate" }).click();
+    await expect(group(again, "beforeStart")).toHaveAttribute("open", "");
+    await expect(again.locator('input[name="reminderHours"]')).toHaveValue("48");
+    await expect(group(again, "hold")).not.toHaveAttribute("open", "");
   });
 
   test("an Organizer reads the numbers in force and is offered no form", async ({ page }) => {
@@ -129,8 +184,55 @@ test.describe("§377 the club's deadlines on «Setări» → «Termene»", () =>
     const panel = page.locator("#main").getByTestId("deadlines");
     await openFold(panel);
     await expect(panel.getByText("Termenele le schimbă Administratorul", { exact: false })).toBeVisible();
+    // The same seven folds, with the values in them and no box.
+    for (const key of GROUPS) await expect(group(panel, key), key).toHaveCount(1);
+    await openFold(group(panel, "hold"));
     await expect(panel.getByTestId("deadline-holdMinutes")).toHaveText("30");
+    await expect(group(panel, "hold").locator(":scope > summary")).toContainText("loc ținut 30 de minute");
     await expect(panel.getByRole("button", { name: "Salvează termenele" })).toHaveCount(0);
     await expect(panel.locator("input")).toHaveCount(0);
+  });
+});
+
+/**
+ * §377 (amended) at 320 px, the narrowest viewport BR-REQ-041-01 names: «Setări»' row of six tabs,
+ * each now with its glyph, scrolls sideways inside itself and never widens the page; the seven
+ * folds, opened, fit the width and keep a thumb's 44 px; the one save is in view. Reads and opens
+ * only — nothing is saved, so it needs no restore.
+ */
+test.describe("§377 «Termene» at 320 px", () => {
+  test.beforeEach(() => {
+    test.skip(test.info().project.name !== "mobile", "the 320 px viewport is the mobile project's");
+  });
+
+  test("the tab row scrolls inside itself, the folds fit, and the page does not overflow", async ({ page }) => {
+    await signIn(page, "Dev Administrator");
+    await page.goto("/ro/admin/settings/deadlines");
+    const main = page.locator("#main");
+    const panel = main.getByTestId("deadlines");
+    await openFold(panel);
+
+    // Six tabs, each with a glyph before its words; the current one is in view (`SubNavCurrent`).
+    const row = main.getByRole("navigation", { name: "Setări" });
+    const tabs = row.getByRole("link");
+    await expect(tabs).toHaveText(["Emailuri", "Termene", "Aspect", "Costuri", "Anti-robot", "Configurație"]);
+    for (let index = 0; index < 6; index += 1) await expect(tabs.nth(index).locator("svg")).toHaveCount(1);
+    await expect(row.getByRole("link", { name: "Termene" })).toHaveAttribute("aria-current", "page");
+    await expect(row.getByRole("link", { name: "Termene" })).toBeInViewport();
+    // The row is wider than the screen by design (§731), and scrolls in its own box.
+    const geometry = await row.evaluate((nav) => ({ client: nav.clientWidth, scroll: nav.scrollWidth, page: document.documentElement.scrollWidth, view: document.documentElement.clientWidth }));
+    expect(geometry.client).toBeLessThanOrEqual(geometry.view);
+    expect(geometry.page).toBeLessThanOrEqual(geometry.view);
+
+    // The seven folds, shut: each a full-width bar a thumb can press.
+    for (const key of GROUPS) {
+      const box = await group(panel, key).locator(":scope > summary").boundingBox();
+      expect(box?.height ?? 0, key).toBeGreaterThanOrEqual(44);
+      expect((box?.x ?? 0) + (box?.width ?? 0), key).toBeLessThanOrEqual(320);
+    }
+    await openGroups(panel);
+    await expect(panel.getByRole("button", { name: "Salvează termenele" })).toBeVisible();
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+    expect(overflow).toBeLessThanOrEqual(0);
   });
 });
