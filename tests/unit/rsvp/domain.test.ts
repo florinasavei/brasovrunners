@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { cleanDisplayName, identityOf, isConsistent, isVerifiedSource, RSVP_NAME_MAX, RSVP_SOURCES, type RsvpIdentity } from "@/modules/rsvp/domain/identity";
-import { rememberedHeading } from "@/modules/rsvp/domain/island";
+import { islandFace, rememberedHeading } from "@/modules/rsvp/domain/island";
 import { type RsvpGateInput, rsvpOffered } from "@/modules/rsvp/domain/offered";
 import { publicRsvpName } from "@/modules/rsvp/domain/public-name";
 import { parseRsvpOutcome, RSVP_BOX_ID, RSVP_OUTCOME_QUERY } from "@/modules/rsvp/rsvp-box";
@@ -96,6 +96,20 @@ describe("§NNN publicRsvpName — a public name is a disclosure (§143, §396)"
     ["the name is blank", { ...confirmed, displayName: "   " }],
   ])("shows no name when %s", (_why, row) => {
     expect(publicRsvpName(row)).toBeNull();
+  });
+});
+
+describe("§NNN which face the island shows", () => {
+  it("falls back to the typed form without a hint, when the state could not be read, or when the server no longer backs the browser", () => {
+    expect(islandFace({ hasHint: false, readFailed: false, state: null })).toBe("typed");
+    expect(islandFace({ hasHint: true, readFailed: true, state: null })).toBe("typed");
+    expect(islandFace({ hasHint: true, readFailed: false, state: { remembered: false } })).toBe("typed");
+    expect(islandFace({ hasHint: true, readFailed: false, state: { remembered: true, offered: false } })).toBe("typed");
+  });
+
+  it("stays on the one-tap face while the state is pending and once it is known — a failed PRESS is not a reason to leave it, so its alert can be seen", () => {
+    expect(islandFace({ hasHint: true, readFailed: false, state: null })).toBe("onetap");
+    expect(islandFace({ hasHint: true, readFailed: false, state: { remembered: true, offered: true } })).toBe("onetap");
   });
 });
 

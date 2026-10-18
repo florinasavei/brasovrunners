@@ -115,6 +115,29 @@ describe("§NNN the remembered browser's one tap", () => {
     expect(ion.showName).toBe(false);
   });
 
+  it("never lets a one-tap press inherit the name and tick a stranger typed on the same address (§143, §396)", async () => {
+    // Mallory typed Ana's address with a name and the tick; the row waits unconfirmed.
+    const { answerRsvp } = await import("@/modules/rsvp/rsvp");
+    const { identityOf } = await import("@/modules/rsvp/domain/identity");
+    const target = (await db.select().from(events))[0];
+    await answerRsvp(db, target.id, identityOf("page", { email: "ana@example.test", displayName: "Mallory", showName: true, locale: "ro" }), NOW);
+    expect((await answers())[0]).toMatchObject({ showName: true, confirmedAt: null });
+
+    // Ana's remembered browser, with no name of its own, taps «Vin!» with no tick: counted, and nothing Mallory typed is public.
+    await remember("ana@example.test", null);
+    await rsvpGoAction(slug, "ro", false);
+    const [row] = await answers();
+    expect(row).toMatchObject({ showName: false, displayName: null, confirmedAt: expect.any(Date) });
+
+    // Ana with a name of her own: the name that shows is hers, and only when she ticks.
+    state.jar.clear();
+    await db.delete(eventRsvps);
+    await answerRsvp(db, target.id, identityOf("page", { email: "ana@example.test", displayName: "Mallory", showName: true, locale: "ro" }), NOW);
+    await remember("ana@example.test", "Ana");
+    await rsvpGoAction(slug, "ro", false);
+    expect((await answers())[0]).toMatchObject({ showName: false, displayName: "Ana" });
+  });
+
   it("takes the answer back in one tap, whatever the notice or the tick say now", async () => {
     await remember();
     await rsvpGoAction(slug, "ro", false);

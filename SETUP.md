@@ -2459,7 +2459,7 @@ turns on event by event. Two steps are the club's.
    name, the tick «Vreau să apar cu numele» and the button **«Vin!»** (the same honeypot, timing check and Turnstile as the «Anunță-mă» box). The
    page says one sentence whatever the address meant — «Ți-am trimis un email: apasă „Da, vin” ca să te numărăm.» — and the email brings the event's
    facts, the day as a calendar file, **«Da, vin»** and, under it, **«Nu vin»**. The buttons open `/vin/<link>` (`/en/coming/<link>`), whose GET only
-   shows the event and one button: the press is a POST. A link works once and stops working when the event starts. Under the card, **«Vin (N)»** —
+   shows the event and one button: the press is a POST. A link works once: «Da, vin» for 48 hours (never past the start), «Nu vin» until the event starts (the event's start as it is then, so a moved event keeps its links). Under the card, **«Vin (N)»** —
    the confirmed count and the names of those who ticked, «și încă N» for the rest. Under the form, the fold **«Nu mai vin»** (an address; the link by
    email; it never says whether the address answered).
    **The remembered browser.** The «Da, vin» (or «Nu mai vin») press also makes the browser *remembered* for a year: two cookies, `br_person` (a

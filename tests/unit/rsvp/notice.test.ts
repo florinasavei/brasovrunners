@@ -6,6 +6,7 @@ import { privacyNoticeEn, privacyNoticeRo } from "@/modules/legal-documents/temp
 import { termsEn, termsRo } from "@/modules/legal-documents/templates/terms";
 import { DECLARATION_TOKENS } from "@/modules/legal-documents/templates/tokens";
 import { TASK_TARGETS } from "@/modules/diagnostics/domain/task-targets";
+import { RSVP_CONFIRM_HOURS } from "@/modules/rsvp/domain/link-life";
 import { rsvpClause, rsvpMergeValues } from "@/modules/rsvp/notice-words";
 
 /**
@@ -86,5 +87,31 @@ describe("§NNN the row on /admin/tasks", () => {
       expect(item.how.join("\n")).toContain("/admin/legal");
     }
     expect(TASK_TARGETS.rsvpNotice).toEqual({ kind: "section", section: "legal" });
+  });
+});
+
+describe("§NNN the notice says what the links and the clean-up really do", () => {
+  const ro5 = sentences(privacyNoticeRo).find((text) => text.startsWith("Răspunsul {{rsvp}}: dacă scrii"))!;
+  const en5 = sentences(privacyNoticeEn).find((text) => text.startsWith("The {{rsvp}} answer: if you type"))!;
+
+  it("states the «Da, vin» link's life from the constant the service mints it with, and «Nu vin» until the start", () => {
+    expect(RSVP_CONFIRM_HOURS).toBe(48);
+    expect(ro5).toContain(`„Da, vin” merge ${RSVP_CONFIRM_HOURS} de ore (cel târziu până la începutul evenimentului), „Nu vin”, până la începutul evenimentului`);
+    expect(en5).toContain(`“Yes, I'm coming” works for ${RSVP_CONFIRM_HOURS} hours (at the latest until the event starts), “I'm not coming” until the event starts`);
+    expect(ro5).not.toContain("expiră la începutul evenimentului");
+  });
+
+  it("says the throttle is per address AND event, and that «Nu mai vin» also recognises the browser", () => {
+    expect(ro5).toContain("pentru aceeași adresă și același eveniment");
+    expect(en5).toContain("for the same address and event");
+    expect(ro5).toContain("recunoscut prin „Da, vin” sau „Nu mai vin” (secțiunea 10)");
+    expect(en5).toContain("recognised by “Yes, I'm coming” or “I'm not coming any more” (section 10)");
+  });
+
+  it("deletes a cancelled event's answers at the next clean-up, not with the cancellation", () => {
+    const all = (body: { sections: readonly { paragraphs: readonly string[] }[] }) => sentences(body).join("\n");
+    expect(all(privacyNoticeRo)).toContain("la următoarea curățare automată după anulare");
+    expect(all(privacyNoticeEn)).toContain("at the next automatic clean-up after the cancellation");
+    expect(all(privacyNoticeRo)).not.toContain("odată cu anularea");
   });
 });

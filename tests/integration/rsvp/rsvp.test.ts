@@ -213,13 +213,14 @@ describe("§NNN «Vin!» — the service", () => {
     it("sends at most one message per address and event in ten minutes — the answer is the same either way", async () => {
       const event = await seedEvent();
       await answerRsvp(db, event.id, typed("ana@example.test", { displayName: "Ana" }), NOW);
-      // Typed again at once, with another name: the row is refreshed, no second message.
+      // Typed again at once, with another name: no second message, so the row stays as the first email will show it.
       expect(await answerRsvp(db, event.id, typed("ana@example.test", { displayName: "Ana Maria" }), new Date(NOW.getTime() + 60_000))).toEqual({ counted: false });
       expect(await outbox()).toHaveLength(1);
-      expect((await rowsOf(event.id))[0].displayName).toBe("Ana Maria");
-      // Ten minutes later it may be sent again.
+      expect((await rowsOf(event.id))[0].displayName).toBe("Ana");
+      // Ten minutes later it may be sent again, and the row is refreshed with the message that supersedes the old link.
       await answerRsvp(db, event.id, typed("ana@example.test", { displayName: "Ana Maria" }), new Date(NOW.getTime() + 11 * 60_000));
       expect(await outbox()).toHaveLength(2);
+      expect((await rowsOf(event.id))[0].displayName).toBe("Ana Maria");
       // Another address at the same event is its own bucket.
       await answerRsvp(db, event.id, typed("ion@example.test"), new Date(NOW.getTime() + 60_000));
       expect(await outbox()).toHaveLength(3);
@@ -255,9 +256,33 @@ describe("§NNN «Vin!» — the service", () => {
       expect(await hasConfirmedRsvp(db, event.id, "ana@example.test")).toBe(true);
     });
 
-    it("confirms an answer typed earlier, keeping the name and adding what the press shows", async () => {
+    it("never publishes what a stranger typed: a verified press on an unconfirmed row replaces the name and the tick with the press's own", async () => {
       const event = await seedEvent();
-      await answerRsvp(db, event.id, typed("ana@example.test", { displayName: "Ana" }), NOW);
+      // Mallory types Ana's address with a name and the tick; Ana's remembered browser then taps «Vin!» without a name or a tick.
+      await answerRsvp(db, event.id, typed("ana@example.test", { displayName: "Mallory", showName: true }), NOW);
+      const [emailed] = linksOf((await renderOutboxMessage((await outbox())[0], db, NOW)).text);
+      await answerRsvp(db, event.id, remembered("ana@example.test"), new Date(NOW.getTime() + HOUR));
+      const [row] = await rowsOf(event.id);
+      expect(row.confirmedAt).not.toBeNull();
+      expect(row.showName).toBe(false);
+      expect(row.displayName).toBeNull();
+      expect(await readPublicRsvps(db, event.id, { firstRsvpNoticeVersion: 1 })).toEqual({ count: 1, names: [], others: 1 });
+      // The stranger's emailed link died with the stranger's values.
+      expect(await readRsvpLink(db, emailed, new Date(NOW.getTime() + HOUR))).toMatchObject({ state: "used" });
+    });
+
+    it("shows the name of the press itself, when the person ticked it, whatever was typed before", async () => {
+      const event = await seedEvent();
+      await answerRsvp(db, event.id, typed("ana@example.test", { displayName: "Mallory", showName: true }), NOW);
+      await answerRsvp(db, event.id, remembered("ana@example.test", { displayName: "Ana", showName: true }), new Date(NOW.getTime() + HOUR));
+      const [row] = await rowsOf(event.id);
+      expect(row.displayName).toBe("Ana");
+      expect(await readPublicRsvps(db, event.id, { firstRsvpNoticeVersion: 1 })).toMatchObject({ names: ["Ana"] });
+    });
+
+    it("keeps a CONFIRMED row's name and adds what a later press shows", async () => {
+      const event = await seedEvent();
+      await answerRsvp(db, event.id, remembered("ana@example.test", { displayName: "Ana" }), NOW);
       await answerRsvp(db, event.id, remembered("ana@example.test", { showName: true }), new Date(NOW.getTime() + HOUR));
       const [row] = await rowsOf(event.id);
       expect(row.confirmedAt).not.toBeNull();
@@ -288,6 +313,9 @@ describe("§NNN «Vin!» — the service", () => {
       // Both languages in one message, the row's first (§96).
       expect(message.text).toContain("Thursday run");
       expect(message.text).toContain("Yes, I'm coming");
+      // The links' lives as the code has them (RSVP_CONFIRM_HOURS), not "expires at the start".
+      expect(message.text).toContain("„Da, vin” timp de 48 de ore (cel târziu până la start), „Nu vin” până la start");
+      expect(message.text).toContain("“Yes, I'm coming” for 48 hours (at the latest until the start)");
       // The event\'s file rides along, as the house\'s other messages carry it.
       expect(message.attachments?.some((file) => file.filename.endsWith(".ics")) || message.calendar !== undefined).toBe(true);
 
@@ -370,9 +398,73 @@ describe("§NNN «Vin!» — the service", () => {
       const message = await renderOutboxMessage(await typedAnswer(event), db, NOW);
       const [confirm, withdraw] = linksOf(message.text);
       const tokens = await db.select().from(eventRsvpTokens);
-      for (const token of tokens) expect(token.expiresAt.getTime()).toBeLessThanOrEqual(event.startsAt.getTime());
-      expect(await readRsvpLink(db, confirm, new Date(NOW.getTime() + 5 * HOUR))).toMatchObject({ state: "expired" });
+      // The «Da, vin» link never outlives the start; «Nu vin» is decided by the start as it is when pressed (it can move).
+      for (const token of tokens.filter((candidate) => candidate.purpose === "RSVP_CONFIRM")) expect(token.expiresAt.getTime()).toBeLessThanOrEqual(event.startsAt.getTime());
+      expect(await readRsvpLink(db, confirm, new Date(NOW.getTime() + 5 * HOUR))).toMatchObject({ state: "over" });
+      expect(await withdrawRsvp(db, { token: withdraw }, new Date(NOW.getTime() + 5 * HOUR))).toBeNull();
       expect(await readRsvpLink(db, withdraw, new Date(NOW.getTime() + 4 * HOUR))).toMatchObject({ state: "live" });
+    });
+
+    it("tells a link past its own life from an event that started: the first can answer again from the page, the second cannot", async () => {
+      const event = await seedEvent({ startsAt: new Date(NOW.getTime() + 10 * DAY) });
+      const [confirm] = linksOf((await renderOutboxMessage(await typedAnswer(event), db, NOW)).text);
+      expect(await readRsvpLink(db, confirm, new Date(NOW.getTime() + 49 * HOUR))).toMatchObject({ state: "expired" });
+      expect(await readRsvpLink(db, confirm, new Date(NOW.getTime() + 10 * DAY + HOUR))).toMatchObject({ state: "over" });
+    });
+
+    it("keeps «Nu vin» working to a MOVED start, and refuses it at the start as it is then", async () => {
+      const event = await seedEvent({ startsAt: new Date(NOW.getTime() + 5 * HOUR) });
+      const [, withdraw] = linksOf((await renderOutboxMessage(await typedAnswer(event), db, NOW)).text);
+      await db.update(events).set({ startsAt: new Date(NOW.getTime() + 3 * DAY) }).where(eq(events.id, event.id));
+      const afterOldStart = new Date(NOW.getTime() + 6 * HOUR);
+      expect(await readRsvpLink(db, withdraw, afterOldStart)).toMatchObject({ state: "live" });
+      await db.update(events).set({ startsAt: new Date(NOW.getTime() + HOUR) }).where(eq(events.id, event.id));
+      expect(await withdrawRsvp(db, { token: withdraw }, afterOldStart)).toBeNull();
+      expect(await rowsOf(event.id)).toHaveLength(1);
+    });
+
+    it("keeps the row as the emailed «Da, vin» link showed it when a retyping falls inside the throttle: no new name, no new tick", async () => {
+      const event = await seedEvent();
+      await answerRsvp(db, event.id, typed("ana@example.test"), NOW);
+      const [first] = linksOf((await renderOutboxMessage((await outbox())[0], db, NOW)).text);
+      // Two minutes later, inside the ten-minute throttle, a stranger retypes the address with a name and the tick: no new message.
+      const retyped = new Date(NOW.getTime() + 2 * 60_000);
+      await answerRsvp(db, event.id, typed("ana@example.test", { displayName: "Mallory", showName: true }), retyped);
+      expect(await outbox()).toHaveLength(1);
+      const [row] = await rowsOf(event.id);
+      expect(row.showName).toBe(false);
+      expect(row.displayName).toBeNull();
+      // The first email still confirms the row as it showed it: no name, no tick.
+      expect(await confirmRsvp(db, first, retyped)).toMatchObject({ displayName: null });
+      expect(await readPublicRsvps(db, event.id, { firstRsvpNoticeVersion: 1 })).toEqual({ count: 1, names: [], others: 1 });
+    });
+
+    it("kills the old «Da, vin» link when a retyping that DOES send a new message changes the name or the tick", async () => {
+      const event = await seedEvent();
+      await answerRsvp(db, event.id, typed("ana@example.test"), NOW);
+      const [first] = linksOf((await renderOutboxMessage((await outbox())[0], db, NOW)).text);
+      const later = new Date(NOW.getTime() + 15 * 60_000);
+      await answerRsvp(db, event.id, typed("ana@example.test", { displayName: "Ana", showName: true }), later);
+      // Between the queueing and the send the old link is already dead.
+      expect(await confirmRsvp(db, first, later)).toBeNull();
+      expect((await rowsOf(event.id))[0]).toMatchObject({ displayName: "Ana", showName: true, confirmedAt: null });
+    });
+
+    it("withdraws the message when the club switched the tick off or gave the event a registration since the press", async () => {
+      const event = await seedEvent();
+      const row = await typedAnswer(event);
+      await db.update(events).set({ rsvpEnabled: false }).where(eq(events.id, event.id));
+      await expect(renderOutboxMessage(row, db, NOW)).rejects.toBeInstanceOf(OutboxMessageWithdrawn);
+      await db.update(events).set({ rsvpEnabled: true, registrationMode: "INTERNAL" }).where(eq(events.id, event.id));
+      await expect(renderOutboxMessage(row, db, NOW)).rejects.toBeInstanceOf(OutboxMessageWithdrawn);
+    });
+
+    it("counts nobody when «Da, vin» is pressed after the club switched the tick off", async () => {
+      const event = await seedEvent();
+      const [confirm] = linksOf((await renderOutboxMessage(await typedAnswer(event), db, NOW)).text);
+      await db.update(events).set({ rsvpEnabled: false }).where(eq(events.id, event.id));
+      expect(await confirmRsvp(db, confirm, NOW)).toBeNull();
+      expect((await rowsOf(event.id))[0].confirmedAt).toBeNull();
     });
 
     it("supersedes the earlier message's links when a newer one is sent", async () => {
@@ -474,6 +566,15 @@ describe("§NNN «Vin!» — the service", () => {
       expect(await outbox()).toHaveLength(before + 1);
       const bad = await requestWithdrawLink(db, event.id, { email: "nope", locale: "ro" }, NOW).catch((e: unknown) => e);
       expect(isDomainError(bad) && bad.code).toBe("VALIDATION_ERROR");
+    });
+
+    it("does the same work for an address with no answer as for one with an answer: the per-address throttle is spent either way", async () => {
+      const event = await seedEvent();
+      await requestWithdrawLink(db, event.id, { email: "nobody@example.test", locale: "ro" }, NOW);
+      // The bucket was spent by the request alone, so an answer typed a minute later waits out the ten minutes, like any second request.
+      await answerRsvp(db, event.id, typed("nobody@example.test"), new Date(NOW.getTime() + 60_000));
+      expect(await outbox()).toHaveLength(0);
+      expect(await rowsOf(event.id)).toHaveLength(1);
     });
 
     it("is never gated by the notice or the tick: a person can always take an answer back", async () => {

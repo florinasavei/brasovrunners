@@ -13,7 +13,7 @@ import { decodeHint, PERSON_HINT_COOKIE } from "@/modules/person-session/domain/
 import CheckboxField from "@/shared/ui/CheckboxField";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import type { RsvpIslandState } from "../remembered-actions";
-import { rememberedHeading } from "../domain/island";
+import { islandFace, rememberedHeading } from "../domain/island";
 
 /** The words the island draws, handed over by the Server Component as strings: the island carries no messages of its own. */
 export type RsvpIslandLabels = {
@@ -107,7 +107,7 @@ export default function RsvpRemembered({ slug, locale, labels, actions, children
   }, [masked, slug, locale]);
 
   // The typed form: no hint, no JavaScript, a stale hint, an event that takes no answer from this browser, or a server that failed.
-  if (!hint || readFailed || (state !== null && (!state.remembered || !state.offered))) return <>{children}</>;
+  if (islandFace({ hasHint: hint !== null, readFailed, state }) === "typed" || !hint) return <>{children}</>;
 
   const who = rememberedHeading(hint);
 

@@ -15,6 +15,7 @@ import { PERSON_COOKIE, PERSON_HINT_COOKIE } from "@/modules/person-session/doma
 import { renderOutboxMessage } from "@/modules/notifications/render";
 import { identityOf } from "@/modules/rsvp/domain/identity";
 import { answerRsvp } from "@/modules/rsvp/rsvp";
+import { withdrawnProof } from "@/modules/rsvp/withdrawn-proof";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 const state = vi.hoisted(() => ({
@@ -120,7 +121,7 @@ describe("§NNN the page of a «Vin!» link", () => {
     await stream.allReady;
     return (await new Response(stream).text()).replace(/<style[^>]*>[\s\S]*?<\/style>/g, "").replace(/<script[^>]*>[\s\S]*?<\/script>/g, "");
   }
-  const page = async (token: string, query: { invalid?: string; retras?: string } = {}, locale: "ro" | "en" = "ro") => {
+  const page = async (token: string, query: { invalid?: string; retras?: string; ok?: string } = {}, locale: "ro" | "en" = "ro") => {
     state.language = locale;
     return html(await RsvpLinkPage({ params: Promise.resolve({ locale, token }), searchParams: Promise.resolve(query) }));
   };
@@ -207,23 +208,40 @@ describe("§NNN the page of a «Vin!» link", () => {
     expect(await db.select().from(personSessions)).toHaveLength(1);
 
     const markup = await page(confirm);
-    expect(markup).toContain("Linkul nu mai merge");
-    expect(markup).toContain("A fost folosit sau a expirat");
+    // The answer is counted: the page says so, rather than sending the person to answer again.
+    expect(markup).toContain("Ești deja numărat la Alergarea de joi.");
+    expect(markup).not.toContain("A fost folosit sau a expirat");
     expect(markup).toContain(`href="/ro/evenimente/${slug}"`);
     expect(markup).not.toContain("<form");
+  });
+
+  it("titles a dead «Nu vin» link as the question it was, and a link nobody knows as dead", async () => {
+    const { withdraw } = await sendLinks();
+    await db.update(eventRsvpTokens).set({ invalidatedAt: NOW }).where(eq(eventRsvpTokens.purpose, "RSVP_WITHDRAW"));
+    const dead = await page(withdraw);
+    expect(dead).toMatch(/<h1[^>]*>Nu mai vii\?<\/h1>/);
+    expect(dead).not.toContain("Confirmă că vii");
+    expect(await page("x".repeat(43))).toMatch(/<h1[^>]*>Linkul nu mai merge<\/h1>/);
   });
 
   it("deletes the answer on «Nu mai vin», remembers the browser and says so by name", async () => {
     const { withdraw } = await sendLinks();
     const target = await press(withdrawRsvpAction, form(withdraw));
-    expect(target).toBe(`/ro/vin/${withdraw}?retras=${slug}`);
+    expect(target).toBe(`/ro/vin/${withdraw}?retras=${slug}&ok=${withdrawnProof(withdraw, slug)}`);
     expect(await db.select().from(eventRsvps)).toHaveLength(0);
     expect(state.jar.has(PERSON_COOKIE)).toBe(true);
 
-    const done = await page(withdraw, { retras: slug });
+    const done = await page(withdraw, { retras: slug, ok: withdrawnProof(withdraw, slug) });
+    expect(done).toMatch(/<h1[^>]*>Răspuns șters<\/h1>/);
     expect(done).toContain("ți-am șters răspunsul de la Alergarea de joi");
     expect(done).toContain(`href="/ro/evenimente/${slug}"`);
-    expect(await page(withdraw, { retras: "no-such-event" })).toContain("Gata, ți-am șters răspunsul.");
+    expect(await page(withdraw, { retras: "no-such-event", ok: withdrawnProof(withdraw, "no-such-event") })).toContain("Gata, ți-am șters răspunsul.");
+    // Nobody can have the club's page claim a deletion: a made-up address, or a proof for another link, names no event.
+    for (const forged of [{ retras: slug }, { retras: slug, ok: "0".repeat(32) }, { retras: slug, ok: withdrawnProof("y".repeat(43), slug) }]) {
+      const text = await page(withdraw, forged);
+      expect(text).toContain("Gata, ți-am șters răspunsul.");
+      expect(text).not.toContain("Alergarea de joi");
+    }
     // And the link, now that the answer is gone, is an unknown one.
     expect(await page(withdraw)).toContain("Linkul nu mai merge");
   });
@@ -235,6 +253,21 @@ describe("§NNN the page of a «Vin!» link", () => {
       expect(markup).toContain('href="/ro/evenimente"');
       expect(markup).not.toContain("<form");
     }
+  });
+
+  it("says the link's own time ran out — not that the event is over — while the event is still ahead, and sends the person to answer again", async () => {
+    const { confirm } = await sendLinks();
+    await db.update(eventRsvpTokens).set({ createdAt: new Date(NOW.getTime() - 3 * HOUR), expiresAt: new Date(NOW.getTime() - HOUR) }).where(eq(eventRsvpTokens.purpose, "RSVP_CONFIRM"));
+    const markup = await page(confirm);
+    expect(markup).toContain("Linkul a fost valabil doar un timp");
+    expect(markup).not.toContain("Evenimentul a început sau a trecut");
+    expect(markup).toContain(`href="/ro/evenimente/${slug}"`);
+    expect(markup).not.toContain("<form");
+  });
+
+  it("tells the person who is saying no that the browser is remembered", async () => {
+    const { withdraw } = await sendLinks();
+    expect(await page(withdraw)).toContain("Și după „Nu mai vin”, browserul tău rămâne recunoscut un an");
   });
 
   it("says the event is over for a link past the start, without drawing a button", async () => {
