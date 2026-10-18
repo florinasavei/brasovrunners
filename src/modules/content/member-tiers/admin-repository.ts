@@ -17,9 +17,10 @@ export async function listMemberTiersForAdmin<T extends Record<string, unknown>>
   return db
     .select({
       tier: memberTiers,
-      members: sql<number>`(select count(*) from ${staffUsers} where ${staffUsers.memberTierId} = ${memberTiers.id})`.mapWith(Number),
-      codesOnlyForIt: sql<number>`(select count(*) from ${memberDiscountCodes} where ${memberDiscountCodes.tierIds} = array[${memberTiers.id}])`.mapWith(Number),
-      codesForIt: sql<number>`(select count(*) from ${memberDiscountCodes} where ${memberTiers.id} = any(${memberDiscountCodes.tierIds}))`.mapWith(Number),
+      // Qualified by hand: a select over one table drops the table's name from its columns, and inside a subquery a bare `id` would mean the other table's.
+      members: sql<number>`(select count(*) from staff_users where staff_users.member_tier_id = member_tiers.id)`.mapWith(Number),
+      codesOnlyForIt: sql<number>`(select count(*) from member_discount_codes where member_discount_codes.tier_ids = array[member_tiers.id])`.mapWith(Number),
+      codesForIt: sql<number>`(select count(*) from member_discount_codes where member_tiers.id = any(member_discount_codes.tier_ids))`.mapWith(Number),
     })
     .from(memberTiers)
     .orderBy(asc(memberTiers.position), asc(memberTiers.createdAt));

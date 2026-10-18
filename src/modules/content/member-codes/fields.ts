@@ -73,11 +73,13 @@ export const discountCodeFieldsSchema = z
     // «Pentru nivelurile» (§NNN): the member tiers that see the code; none ticked is every member. Ids only —
     // whether each names a tier is the service's question, asked under a lock.
     tierIds: z
-      .array(z.string().trim().toLowerCase().pipe(z.uuid()))
+      .array(z.string())
       .max(MEMBER_TIERS_MAX)
       .optional()
       .default([])
-      .transform((ids) => [...new Set(ids)]),
+      .transform((ids) => [...new Set(ids.map((id) => id.trim().toLowerCase()))])
+      // One issue on the chips' box, whichever id is wrong.
+      .refine((ids) => ids.every((id) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(id)), "not a member tier"),
   })
   .superRefine((fields, ctx) => {
     refuseOneLanguage(ctx, { ro: fields.descriptionRo, en: fields.descriptionEn }, { ro: ["descriptionRo"], en: ["descriptionEn"] }, "the description");

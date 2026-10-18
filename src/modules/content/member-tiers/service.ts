@@ -96,15 +96,10 @@ export async function saveMemberTiers<T extends Record<string, unknown>>(
         glyph: row.fields.glyph ?? current?.glyph ?? "",
       };
       const check = tierFieldsSchema.safeParse(merged);
-      if (!check.success) {
-        for (const issue of check.error.issues) refused.add(boxOf(row.key, String(issue.path[0] ?? "nameRo")));
-        continue;
-      }
+      if (!check.success) for (const issue of check.error.issues) refused.add(boxOf(row.key, String(issue.path[0] ?? "nameRo")));
       const position = parseTierPosition(row.fields.position);
-      if (!position.ok) {
-        refused.add(boxOf(row.key, "position"));
-        continue;
-      }
+      if (!position.ok) refused.add(boxOf(row.key, "position"));
+      if (!check.success || !position.ok) continue;
       const drawn = /^\d{1,3}$/.test((row.fields.was ?? "").trim()) ? Number(row.fields.was) : null;
       parsed.push({
         row,
