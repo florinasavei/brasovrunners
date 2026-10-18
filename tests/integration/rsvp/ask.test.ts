@@ -230,6 +230,7 @@ describe("§NNN «Vii mâine la …?»", () => {
       ["it is a draft", { editorialStatus: "DRAFT" as const }],
       ["it is for the members alone", { membersOnly: true }],
       ["its date is to be announced", { dateToBeAnnounced: true }],
+      ["its time is to be announced", { timeToBeAnnounced: true }],
     ])("never asks when %s — and writes no row, so it is asked once it is on", async (_label, overrides) => {
       const event = await seedEvent(overrides);
       await subscribe("ana@example.test", ["RSVP_ASK"]);
@@ -299,6 +300,8 @@ describe("§NNN «Vii mâine la …?»", () => {
       await seedEvent({ eventStatus: "CANCELLED" });
       await seedEvent({ registrationMode: "INTERNAL" });
       await seedEvent({ membersOnly: true });
+      await seedEvent({ dateToBeAnnounced: true });
+      await seedEvent({ timeToBeAnnounced: true });
       expect(await nextMaintenanceWork(db, new Date("2026-10-15T09:00:00.000Z"))).toBeNull();
     });
   });

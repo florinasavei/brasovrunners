@@ -444,9 +444,10 @@ async function slugOf<T extends Record<string, unknown>>(tx: Database<T>, eventI
  * link was not live (a second press, an expired or superseded link). A link spent after the event started changes nothing.
  *
  * **The «Vii?» email's «Vin» (§NNN) is this press.** The link was minted for the subscriber's own address and nobody else holds it, so
- * the press is a verified one (the `link` source of `identity.ts`): counted at once, no second email. That row has no name — the
+ * the press is a verified one: counted at once, no second email (it calls this function with the token's own proof, not `answerRsvp`, so
+ * the `link` source of `identity.ts` stays free for a later surface). That row has no name — the
  * newsletter's row never had one, and a name nobody typed is never made up — so the page offers the optional `name` and the tick
- * `showName` under the one button, and they are taken here **only** for a row the email made (`asked_at`), still unconfirmed and
+ * `showName` above the one button, and they are taken here **only** for a row the email made (`asked_at`), still unconfirmed and
  * still nameless: a name typed by whoever typed an address on the page is never replaced, and a counted row is never renamed by a
  * second press. The tick counts only beside a name, and a name shows publicly only under the notice that described it (`public-name.ts`),
  * so the row takes the version in force.

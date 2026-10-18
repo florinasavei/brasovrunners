@@ -3,7 +3,7 @@ import { RSVP_ASK_CLOCK, RSVP_ASK_HOUR, rsvpAskDue, rsvpAskNextLook, rsvpAskWind
 import { AUTOMATIC_TOPICS, isSendableTopic, NEWSLETTER_TOPICS, normalizeTopics, receives, SENDABLE_TOPICS } from "@/modules/newsletter/domain/topics";
 
 /**
- * §NNN (amends §812, §513, §775) — «Vii mâine la …?»: WHEN the question goes (the club's calendar day before, from 08:00 club time, until
+ * §NNN (builds on §812, amends §775) — «Vii mâine la …?»: WHEN the question goes (the club's calendar day before, from 08:00 club time, until
  * the midnight that opens the event's day, across both changes of the clock) and WHO is asked (the subscribers of the topic and of
  * "everything" — the one `receives` rule — and nobody through the composer).
  *
