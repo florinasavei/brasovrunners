@@ -17,13 +17,15 @@ import { canManageRegistrations } from "@/modules/staff-identity/domain/roles";
 import { STAFF_ROLE_LABEL } from "@/modules/staff-identity/domain/staff-labels";
 import { requireStaff } from "@/modules/staff-identity/session";
 import VolunteerAnswers from "@/modules/volunteers/ui/VolunteerAnswers";
-import { lookUpPersonAction } from "./actions";
+import { eraseRsvpsAction, lookUpPersonAction } from "./actions";
+import { confirmWords } from "@/shared/feedback/confirm-words";
+import ConfirmSubmitButton from "@/shared/ui/ConfirmSubmitButton";
 import { actionKeyOf } from "@/shared/forms/action-key";
 import GlyphButton from "@/shared/ui/GlyphButton";
 
 type Props = {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ q?: string; error?: string }>;
+  searchParams: Promise<{ q?: string; error?: string; erased?: string }>;
 };
 
 export const dynamic = "force-dynamic";
@@ -48,7 +50,8 @@ export default async function PersonDataPage({ params, searchParams }: Props) {
   const actor = await requireStaff();
   if (!canManageRegistrations(actor.role)) notFound();
 
-  const { q, error } = await searchParams;
+  const { q, error, erased } = await searchParams;
+  const words = await confirmWords();
   const t = await getTranslations("Admin");
   const now = new Date();
   const canonicalEmail = q ? openPersonLookup(q, now) : null;
@@ -91,6 +94,7 @@ export default async function PersonDataPage({ params, searchParams }: Props) {
 
       <Box id="admin-alert" tabIndex={-1} sx={{ scrollMarginTop: 16 }}>
         {error && <Alert severity="error">{t(`errors.${error}`)}</Alert>}
+        {erased && <Alert severity="success" data-testid="person-rsvps-erased">{t("person.rsvpsErased")}</Alert>}
         {q && !canonicalEmail && <Alert severity="warning">{t("person.expired", { minutes: PERSON_LOOKUP_MINUTES })}</Alert>}
       </Box>
 
@@ -127,7 +131,7 @@ export default async function PersonDataPage({ params, searchParams }: Props) {
             </GlyphButton>
           </Stack>
 
-          {!data.participant && data.announcementRequests.length === 0 && data.volunteerOffers.length === 0 && data.groupRunDeclarations.length === 0 ? (
+          {!data.participant && data.announcementRequests.length === 0 && data.rsvpAnswers.length === 0 && data.rememberedBrowsers.length === 0 && data.volunteerOffers.length === 0 && data.groupRunDeclarations.length === 0 ? (
             <Alert severity="info">{t("person.notFound")}</Alert>
           ) : (
             <>
@@ -235,6 +239,53 @@ export default async function PersonDataPage({ params, searchParams }: Props) {
                       {show(request.createdAt)} · {request.eventTitle ?? request.eventId} · {request.deliveryEmail} · {request.locale}
                     </Typography>
                   ))
+                )}
+              </Box>
+              <Divider />
+              {/* The answers «Vin!» and the browsers remembered for them (§NNN): every column of the row (art. 15 GDPR), erased on request (art. 17). */}
+              <Box component="section" data-testid="person-rsvps">
+                <Typography variant="h3" sx={{ fontSize: "1rem", mb: 1 }}>
+                  {t("person.rsvps", { count: data.rsvpAnswers.length })}
+                </Typography>
+                {data.rsvpAnswers.length === 0 ? (
+                  <Typography variant="body2">{t("person.none")}</Typography>
+                ) : (
+                  data.rsvpAnswers.map((answer, index) => (
+                    <Typography key={index} variant="body2" color="text.secondary" sx={{ overflowWrap: "anywhere" }}>
+                      {show(answer.createdAt)} · {answer.eventTitle ?? answer.eventId} · {answer.deliveryEmail} · {show(answer.displayName)} ·{" "}
+                      {answer.showName ? t("person.rsvpNameShown") : t("person.rsvpNameHidden")} · {answer.locale} · {t("person.rsvpNotice", { version: answer.privacyNoticeVersion })} ·{" "}
+                      {answer.confirmedAt ? t("person.rsvpConfirmedAt", { when: show(answer.confirmedAt) }) : t("person.rsvpUnconfirmed")}
+                    </Typography>
+                  ))
+                )}
+                <Typography variant="h3" sx={{ fontSize: "1rem", mt: 2, mb: 1 }}>
+                  {t("person.browsers", { count: data.rememberedBrowsers.length })}
+                </Typography>
+                {data.rememberedBrowsers.length === 0 ? (
+                  <Typography variant="body2">{t("person.none")}</Typography>
+                ) : (
+                  data.rememberedBrowsers.map((browser, index) => (
+                    <Typography key={index} variant="body2" color="text.secondary" sx={{ overflowWrap: "anywhere" }}>
+                      {show(browser.createdAt)} · {browser.deliveryEmail} · {show(browser.displayName)} · {t("person.browserUsed", { when: show(browser.lastUsedAt) })} · {t("person.browserUntil", { when: show(browser.expiresAt) })}
+                    </Typography>
+                  ))
+                )}
+                {(data.rsvpAnswers.length > 0 || data.rememberedBrowsers.length > 0) && (
+                  <form action={eraseRsvpsAction} style={{ marginTop: 12 }}>
+                    <input type="hidden" name="uiLocale" value={locale} />
+                    <input type="hidden" name="q" value={q ?? ""} />
+                    <ConfirmSubmitButton
+                      label={t("person.rsvpsErase")}
+                      icon="erase"
+                      title={t("person.rsvpsEraseTitle")}
+                      body={t("person.rsvpsEraseBody")}
+                      confirmLabel={t("person.rsvpsErase")}
+                      cancelLabel={words.cancel}
+                      color="error"
+                      variant="outlined"
+                      size="small"
+                    />
+                  </form>
                 )}
               </Box>
               <Divider />

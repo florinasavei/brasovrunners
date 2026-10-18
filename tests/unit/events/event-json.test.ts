@@ -107,6 +107,7 @@ function sampleConfig(): EventConfig {
       reminderHoursBefore: null,
       declaration: { key: "EVENT_DECLARATION" },
       external: { provider: null, url: null },
+      rsvpEnabled: false,
       kitShirt: false,
       askHealthNote: false,
     },

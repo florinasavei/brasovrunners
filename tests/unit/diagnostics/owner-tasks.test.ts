@@ -29,6 +29,8 @@ const LAUNCHED: OwnerTaskInputs = {
   listSocialsDescribed: true,
   listNumbersDescribed: true,
   resultsDescribed: true,
+  rsvpDescribed: true,
+  rsvpEvents: 0,
   resultsTermsDescribed: true,
   invitationsDescribed: true,
   promoDescribed: true,

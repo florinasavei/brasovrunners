@@ -3809,7 +3809,8 @@
         "read": "Read the text"
       },
       "resultsMissing": "The notice in force does not describe the races' results yet, so no results can be published. Approve a new notice from the template.",
-      "resultsTermsMissing": "The terms in force do not describe the races' results yet, so no results can be published. Approve new terms from the template."
+      "resultsTermsMissing": "The terms in force do not describe the races' results yet, so no results can be published. Approve new terms from the template.",
+      "rsvpMissing": "The notice in force does not describe the “I'm coming!” answers yet, so the page of a ticked event does not take them. Approve a new notice from the template."
     },
     "tasks": {
       "title": "What is still to do",
@@ -6214,7 +6215,20 @@
       "noteAuthorGone": "account removed",
       "audit": "Audit trail ({count})",
       "none": "None.",
-      "newSearch": "Another lookup"
+      "newSearch": "Another lookup",
+      "rsvps": "“I'm coming!” answers ({count})",
+      "browsers": "Remembered browsers ({count})",
+      "rsvpNameShown": "name shown on the page",
+      "rsvpNameHidden": "counted only",
+      "rsvpNotice": "notice v{version}",
+      "rsvpConfirmedAt": "confirmed {when}",
+      "rsvpUnconfirmed": "unconfirmed",
+      "browserUsed": "used {when}",
+      "browserUntil": "until {when}",
+      "rsvpsErase": "Erase the “I'm coming!” answers and browsers",
+      "rsvpsEraseTitle": "Erase this person's “I'm coming!” answers?",
+      "rsvpsEraseBody": "The “I'm coming!” answers and the remembered browsers of this address are erased; registrations are not. This cannot be undone.",
+      "rsvpsErased": "The “I'm coming!” answers and remembered browsers of this address were erased."
     },
     "desk": {
       "title": "Number pickup desk",

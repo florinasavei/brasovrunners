@@ -470,6 +470,27 @@ export async function readPublicRsvps<T extends Record<string, unknown>>(
   return { count: rows.length, names, others: rows.length - names.length };
 }
 
+/**
+ * How many upcoming turn-up events the club ticked «Acceptă răspunsuri „Vin!”» on: published, scheduled, asking no registration and
+ * not yet started. What `/admin/tasks` reads for its row `rsvpNotice`, which waits only while there is one.
+ */
+export async function countRsvpEvents<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<number> {
+  const [row] = await db
+    .select({ n: count() })
+    .from(events)
+    .where(
+      and(
+        eq(events.rsvpEnabled, true),
+        eq(events.registrationMode, "NONE"),
+        eq(events.eventStatus, "SCHEDULED"),
+        eq(events.editorialStatus, "PUBLISHED"),
+        eq(events.membersOnly, false),
+        gt(events.startsAt, now),
+      ),
+    );
+  return row?.n ?? 0;
+}
+
 /** One event's answers for the backoffice's fold (Administrator and Organizer see addresses; the others only the count). */
 export type RsvpAdminRow = { email: string; displayName: string | null; showName: boolean; confirmedAt: Date | null; createdAt: Date };
 

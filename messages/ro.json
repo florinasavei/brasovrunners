@@ -3809,7 +3809,8 @@
         "read": "Citește textul"
       },
       "resultsMissing": "Nota în vigoare nu descrie încă clasamentul curselor, deci niciun clasament nu poate fi publicat. Aprobă o notă nouă din șablon.",
-      "resultsTermsMissing": "Termenii în vigoare nu descriu încă clasamentul curselor, deci niciun clasament nu poate fi publicat. Aprobă termeni noi din șablon."
+      "resultsTermsMissing": "Termenii în vigoare nu descriu încă clasamentul curselor, deci niciun clasament nu poate fi publicat. Aprobă termeni noi din șablon.",
+      "rsvpMissing": "Nota în vigoare nu descrie încă răspunsurile „Vin!”, deci pagina unui eveniment bifat nu le primește. Aprobă o notă nouă din șablon."
     },
     "tasks": {
       "title": "Ce mai este de făcut",
@@ -6214,7 +6215,20 @@
       "noteAuthorGone": "cont șters",
       "audit": "Jurnal ({count})",
       "none": "Niciuna.",
-      "newSearch": "Altă căutare"
+      "newSearch": "Altă căutare",
+      "rsvps": "Răspunsuri „Vin!” ({count})",
+      "browsers": "Browsere recunoscute ({count})",
+      "rsvpNameShown": "cu numele pe pagină",
+      "rsvpNameHidden": "doar numărat",
+      "rsvpNotice": "nota v{version}",
+      "rsvpConfirmedAt": "confirmat {when}",
+      "rsvpUnconfirmed": "neconfirmat",
+      "browserUsed": "folosit {when}",
+      "browserUntil": "până {when}",
+      "rsvpsErase": "Șterge răspunsurile „Vin!” și browserele",
+      "rsvpsEraseTitle": "Ștergi răspunsurile „Vin!” ale acestei persoane?",
+      "rsvpsEraseBody": "Se șterg răspunsurile „Vin!” și browserele recunoscute pentru această adresă, nu și înscrierile. Ștergerea nu se poate anula.",
+      "rsvpsErased": "Răspunsurile „Vin!” și browserele recunoscute ale acestei adrese au fost șterse."
     },
     "desk": {
       "title": "Masa de ridicare a numerelor",
