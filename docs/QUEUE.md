@@ -14,15 +14,15 @@ decision or a click only the club can make · **released** — on production, wi
 The owner, 2026-10-10: «Soon I need to start a new session from the laptop … You need to save and document everything».
 This section replaces the plan of 2026-09-30; it is what a session with none of today's conversation needs to carry on.
 
-- **Production: `BR-V3.56`** (2026-10-18 16:20: §811 member tiers, §812 «Vin!» on the events people turn up to, §813 «Termene»
-  in seven folds and glyphs on the settings tabs; **migrations `0168` + `0169`**). Waiting for «prod»: `BR-V3.57` (below — no
-  migration; released through the PR's `ship` label on GitHub).
-- **QA: `BR-V3.57`** — the calendar feed, the `.ics` files and the email attachments carry «Vin! → link» and «N vin»; the
-  listing card wears «N vin»; glyphs on the last three sub-tab rows («Sarcini», «Galerie», the RO/EN switch — the language's
-  flag); the «Clasament» door opens for a published race before its start, like the page behind it.
-- **Building:** `feat/rsvp-ask-email` (the day before a ticked run, the newsletter's subscribers get «Vii?» with one-tap
-  «Vin» / «Nu vin» links; **migration `0170`**; nine commits pushed, its review stopped with the laptop — resume with
-  `br-lane.js` in finish mode on `.claude/worktrees/rsvp-ask-email`) → `BR-V3.58`. Then, small: the home page's run cards
+- **Production: `BR-V3.57`** (2026-10-18 20:50, released through the PR's `ship` label: §814 glyphs on the last sub-tab rows,
+  §815 «Vin!» from the calendar, §816 the «Clasament» door before the start; no migration). Waiting for «prod»: `BR-V3.58`
+  (below — no migration; the `ship` label again).
+- **QA: `BR-V3.58`** — member levels are the staff's label alone (amending §811): they decide which discount codes a member
+  sees; the zone's badge, the public page's section and the code's level chip are gone; the level's description is the
+  administrators' note; the `glyph` column stays unused until a contract migration.
+- **Building:** nothing on the laptop. `feat/rsvp-ask-email` (the day before a ticked run, the newsletter's subscribers get
+  «Vii?» with one-tap «Vin» / «Nu vin» links; **migration `0170`**) is pushed with its review half done — resume with
+  `br-lane.js` in finish mode on `.claude/worktrees/rsvp-ask-email` → `BR-V3.59`. Then, small: the home page's run cards
   wear «N vin», the event page's Google/Outlook add-links carry the «Vin!» lines; a signed-in member answers «Vin» from the
   zone's «Alergări» tab (the `account` identity source exists for it). The owner's decisions from §803 (retention periods,
   December on Hobby or Pro, the Basic build machine, QA's region/Node) are open.
@@ -141,6 +141,7 @@ way into the backoffice, not even to a colleague (§684).
 
 | Baseline | What |
 | --- | --- |
+| `BR-V3.58` | member levels are the staff's label alone: they decide which discount codes a member sees, and nothing shows them to members or visitors (§817) |
 | `BR-V3.57` | glyphs on the last three sub-tab rows: «Sarcini», «Galerie», the RO/EN switch (§814) · the calendar feed, the .ics files and the email attachments carry «Vin! → link» and how many come; the listing card wears «N vin» (§815) · the «Clasament» door opens before the race starts, like the page behind it (§816) |
 | `BR-V3.56` | member tiers: the club names its levels, each member gets one, the zone and the members' page show it, a partner's code may be for some tiers only (§811) · «Vin!» on the events the club ticks: an email once, then one tap — how many come and the names of those who want to be seen (§812) · «Termene» in seven named folds with summaries; a glyph on every settings sub-tab (§813) |
 | `BR-V3.55` | race results, part 1: entered or imported by bib in the backoffice, ranked overall, by sex and by category, published only when the notice says so (§808) · race results, part 2: the public «Clasament» on the event page after the race, with a category filter and a bib search, the listing chip and the editor's «De făcut» row (§809) · race results: a runner entered by hand stands by name in the public ranking once the staff record that they agreed (§810) |

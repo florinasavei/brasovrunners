@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.57-2026-10-18 -->
+<!-- PROJECT_BASELINE: BR-V3.58-2026-10-18 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V3.57-2026-10-18`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.58-2026-10-18`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -27321,3 +27321,23 @@ Baseline `BR-V3.57-2026-10-18`.
 **Proof.** `tests/unit/results/csv-and-words.test.ts` (the rule: a published race ahead, a race that has started, a type that takes none, an unpublished race ahead), `tests/integration/registrations/list-events-filter.test.ts` (the read carries the type, the start and the editorial state), `tests/integration/registrations/results-door.test.ts` (the registrations list draws the door for a published race ahead, for the Organizer, for a race that has started, and not for a group run or an unpublished race ahead).
 
 Baseline `BR-V3.57-2026-10-18`.
+
+## 817. A member's level is the staff's label: it decides which discount codes a member sees, and nothing shows it to members or visitors
+
+**The owner, 2026-10-18 21:00**, after §811 shipped the tiers: «Doar adminii văd nivelul de membru, scopul e ca să bifăm ce membru poate vedea ce cod de reducere.»
+
+**Decision (amends §811).** A member's level is an internal label on the member's row. Only the staff see it — on «Echipa»'s member rows and in the editors on «Pagini» → «Membri» — and its one purpose is to decide **which member sees which partner's discount code**: the administrator ticks the levels on each code («Pentru nivelurile»), gives each member a level on «Echipa», and the zone's «Coduri de reducere» lists the codes for everyone plus those for the member's own level (a member with no level sees the codes for everyone alone; an account that cannot hold a level, a colleague opening the zone, still reads every code). The filter, the editors, the delete guards, the audit and the migration `0169` are §811's and unchanged.
+
+- **Dropped, because it told the member or the visitor a level.** (1) The zone's badge under the greeting (`TierBadge` in `members-area/zone.tsx`, `frameParts`'s tier read — the frame now reads the club's words and the shop tab and nothing about a level; `FrameParts` lost `tier`). (2) The public members' page's section «Nivelurile de membru» (`TiersSection`, deleted) and, since nothing else read them, the cached read `cachedMemberTiers`, the repository's `readPublicMemberTiers` and `listVisibleMemberTiers`, and the `pages`-kind expiry the tier saves and deletes made: no public page or public read carries a level any more, and the write-expiry test classifies both verbs as «nothing public». (3) The small «<level>» chips on a limited code in the zone's codes tab (and their `aria-label` «Codul e pentru nivelurile»): they named the level to the member; a code the member sees now looks like any other, and `codesOrAway` no longer reads the levels at all. (4) The glyph select in the editor: no member-facing badge draws a symbol any more.
+- **Changed.** The tier's `description` is the administrators' note: the editor's boxes read «Notă (o văd doar administratorii)» (Română | English, both or neither, as before), their help says the member does not see it, and the card's intro says what a level is for — «Un nivel decide ce coduri de reducere vede membrul; membrii nu-și văd nivelul.» — with the longer sentence under the «?». «Ascuns» now means *no longer given* only (members who hold it keep it and its codes stay). The confirmation on «Echipa» («Schimbi nivelul?») no longer promises a change in the zone's frame.
+- **No migration.** The `glyph` column of `member_tiers` stays as it is, default `star`: the card posts no glyph box, the service keeps «a box a caller leaves out keeps what the tier has» (a save leaves the stored glyph and writes no `glyph` part into the audit), and «Echipa»'s small chip still draws the stored symbol. A later **contract** migration may drop the column, together with `glyph-keys.ts`, `tier-glyphs.ts` and the `tier:` entries of the public glyph table, once the owner is sure the symbols will not return; nothing was dropped here because a contract change does not belong in the same release as the code that stops writing it.
+
+**Refused:** showing the level to its own holder «so they know what they have» (the owner's word is that the staff's label decides the codes, nothing more); keeping the public section for the visible levels; keeping the chips on a limited code but hiding the unlimited ones; deleting the column in this change; a new setting to choose whether members see their level.
+
+**The privacy notice's template says the same.** Its section 12 said the level is seen «doar membrul și administratorii» (§811, a few hours older than this decision, so a notice from that template was most likely not yet approved); it now says «doar administratorii» in both languages, so the owner's next approval of the notice puts the true sentence in force. If a notice from the §811 template was already approved on production, one more approval is owed (`SETUP.md` §43 already has a lawyer read that clause first).
+
+**An old, unlisted symbol does not block a save.** A level whose stored `glyph` is outside the closed set (only hand-written SQL can put one there) is saved by the card, which posts no symbol box, without being refused on a box the form does not draw; the stored value stays.
+
+Amends §811 (where the level shows) and, through it, §524 (the zone names the member's level), §517 and §552 (the codes' chips).
+
+Baseline `BR-V3.58-2026-10-18`.

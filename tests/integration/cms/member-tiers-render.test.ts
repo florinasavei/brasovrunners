@@ -8,11 +8,11 @@ import { type StaffUser, staffUsers } from "@/db/schema/staff-users";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §811 — where a member's level shows, read from a real database and drawn by the real pages: under the member's name in the
- * zone (a badge, the description behind a «?»), after «Beneficiile membrilor» on the public members' page (the visible levels, in
- * the club's order), and on the zone's «Coduri de reducere» tab (the codes for everyone and those of the member's level, each
- * limited code wearing its levels' names) — and the codes' editor, which gives each code the chips «Pentru nivelurile».
- * A level is a label and its benefits: the zone opens for a member with a level exactly as for one with none.
+ * §811, amended by §817 — where a member's level does NOT show, and what it decides, read from a real database and drawn by the
+ * real pages: the zone draws no badge and names no level (the level is the staff's label alone), the public members' page has no
+ * section of levels, the zone's «Coduri de reducere» tab lists the codes for everyone and those of the member's level with no
+ * mark saying why a code is there — and the codes' editor, which gives each code the chips «Pentru nivelurile».
+ * A level is a label: the zone opens for a member with a level exactly as for one with none.
  */
 const state = vi.hoisted(() => ({ db: undefined as unknown, cookie: undefined as string | undefined, locale: "ro" as "ro" | "en" }));
 const messages = { ro, en } as const;
@@ -105,53 +105,40 @@ describe("§811 where the member's level shows", () => {
   };
 
   describe("the members' zone", () => {
-    it("names the member's level under their name: the glyph, the name and the description behind a «?»", async () => {
+    it("draws no badge and names no level, with a level and without one — the zone opens for both", async () => {
       await setMemberTier(db, admin, { targetId: member.id, tierId: founders.id, now: NOW });
-      const html = await zone();
-      expect(html).toContain("Bun venit, Ana Membru.");
-      expect(html).toContain('data-testid="members-tier"');
-      expect(html).toContain(`aria-label="${ro.Members.tierYours}"`);
-      expect(html).toMatch(/data-testid="member-tier-badge"/);
-      expect(html).toContain("Fondator");
-      expect(html).toContain("EmojiEventsIcon");
-      expect(html).toMatch(/<button[^>]*aria-label="Printre cei dintâi\."[^>]*data-testid="member-tier-help"/);
-      // The greeting comes first, the badge right under it, then the tabs.
-      expect(html.indexOf("Bun venit")).toBeLessThan(html.indexOf('data-testid="members-tier"'));
-      expect(html.indexOf('data-testid="members-tier"')).toBeLessThan(html.indexOf('data-testid="members-tabs"'));
+      const withLevel = await zone();
+      expect(withLevel).toContain("Bun venit, Ana Membru.");
+      expect(withLevel).toContain('data-testid="members-tabs"');
+      for (const trace of ['data-testid="members-tier"', "member-tier-badge", "member-tier-help", "EmojiEventsIcon", "Fondator", "Printre cei dintâi.", "Nivelul tău"]) {
+        expect(withLevel, trace).not.toContain(trace);
+      }
+      state.cookie = bare.id;
+      const without = await zone();
+      expect(without).toContain("Bun venit, Mihai Fără Nivel.");
+      expect(without).toContain('data-testid="members-tabs"');
+      expect(without).not.toContain("member-tier");
     });
 
-    it("says it in English for an English reader", async () => {
+    it("says nothing of the level in English either", async () => {
       await setMemberTier(db, admin, { targetId: member.id, tierId: founders.id, now: NOW });
       const html = await zone("en");
-      expect(html).toContain("Founder");
-      expect(html).toContain("Among the first.");
-      expect(html).not.toContain("Fondator");
-      expect(html).toContain(`aria-label="${en.Members.tierYours}"`);
+      expect(html).toContain("Welcome, Ana Membru.");
+      for (const trace of ["Founder", "Among the first.", "Your level", "member-tier"]) expect(html, trace).not.toContain(trace);
     });
 
-    it("draws no badge for a member with no level — simply «Membru» — and the zone opens all the same", async () => {
-      state.cookie = bare.id;
-      const html = await zone();
-      expect(html).toContain("Bun venit, Mihai Fără Nivel.");
-      expect(html).not.toContain('data-testid="members-tier"');
-      expect(html).not.toContain("member-tier-badge");
-      expect(html).toContain('data-testid="members-tabs"');
-    });
-
-    it("keeps a hidden level on the member who holds it, and a level deleted since is no badge", async () => {
+    it("keeps a hidden level on the member who holds it, and the zone draws the same whether the level is deleted or not", async () => {
       const hidden = (await (await import("@/modules/content/member-tiers/repository")).listAllMemberTiers(db))[2];
       await setMemberTier(db, admin, { targetId: member.id, tierId: plain.id, now: NOW });
       await saveMemberTiers(db, { actor: admin, rows: rowsOf({ [plain.id]: { nameRo: "Membru", nameEn: "Member", glyph: "star", hidden: "on" } }), now: NOW });
-      expect(await zone()).toContain("Membru");
-      expect(await zone()).toContain('data-testid="members-tier"');
-      // The level deleted: nobody holds it any more, so there is nothing to draw.
+      expect(await zone()).not.toContain("member-tier");
       await setMemberTier(db, admin, { targetId: member.id, tierId: null, now: NOW });
       const { deleteMemberTier } = await import("@/modules/content/member-tiers/service");
       await deleteMemberTier(db, { actor: admin, tierId: hidden.id, now: NOW });
-      expect(await zone()).not.toContain('data-testid="members-tier"');
+      expect(await zone()).not.toContain("member-tier");
     });
 
-    it("shows the codes for everyone and those of the member's level, each limited code with its levels' names", async () => {
+    it("shows the codes for everyone and those of the member's level, with no mark saying why a code is there", async () => {
       await createDiscountCode(db, { actor: admin, fields: { ...CODE, code: "TOTI", partnerName: "Pentru toți" }, now: NOW });
       await createDiscountCode(db, { actor: admin, fields: { ...CODE, code: "SIMPLU", partnerName: "Doar nivelul simplu", tierIds: [plain.id] }, now: NOW });
       await createDiscountCode(db, { actor: admin, fields: { ...CODE, code: "FONDAT", partnerName: "Doar fondatorii", tierIds: [founders.id] }, now: NOW });
@@ -164,13 +151,8 @@ describe("§811 where the member's level shows", () => {
       expect(html).toContain("FONDAT");
       expect(html).toContain("AMBELE");
       expect(html).not.toContain("SIMPLU");
-      // The code for everyone says nothing about levels; the others name theirs, one small chip each.
-      const cards = html.split('data-testid="member-code"').slice(1);
-      expect(cards[0]).not.toContain("member-code-tiers");
-      expect(cards[1]).toContain('data-testid="member-code-tiers"');
-      expect(cards[1].match(/data-testid="member-code-tier"/g)).toHaveLength(1);
-      expect(cards[2].match(/data-testid="member-code-tier"/g)).toHaveLength(2);
-      expect(cards[2]).toContain(`aria-label="${ro.Members.codeForTiers}"`);
+      // The code for everyone and the limited ones look alike: no chip, no group, no level's name on any card.
+      for (const trace of ["member-code-tier", "member-code-tiers", "Codul e pentru nivelurile", "Fondator", "Membru</"]) expect(html, trace).not.toContain(trace);
 
       // A member with no level sees the code for everyone alone.
       state.cookie = bare.id;
@@ -202,56 +184,16 @@ describe("§811 where the member's level shows", () => {
       state.cookie = undefined;
     });
 
-    it("lists the visible levels after the benefits, in the club's order, each with its glyph, name and description", async () => {
-      const html = await publicPage();
-      expect(html).toContain('data-testid="members-tiers"');
-      expect(html).toContain(ro.Members.tiersTitle);
-      expect(html.match(/data-testid="members-tier"/g)).toHaveLength(2);
-      expect(html.indexOf("Membru")).toBeLessThan(html.indexOf("Fondator"));
-      expect(html).toContain("Printre cei dintâi.");
-      expect(html).toContain("EmojiEventsIcon");
-      expect(html).toContain("StarIcon");
-      // The hidden level is not advertised.
-      expect(html).not.toContain("Vechi");
-      expect(html).not.toContain("Nu se mai dă.");
-      // After the benefits' place and before the door.
-      expect(html.indexOf('data-testid="members-tiers"')).toBeLessThan(html.indexOf('data-testid="members-door"'));
-    });
-
-    it("lists them in English for an English reader", async () => {
-      const html = await publicPage("en");
-      expect(html).toContain(en.Members.tiersTitle);
-      expect(html).toContain("Founder");
-      expect(html).toContain("Among the first.");
-      expect(html).not.toContain("Fondator");
-    });
-
-    it("follows the order the club saves, and is silent about the codes, the members and their levels", async () => {
-      await saveMemberTiers(db, {
-        actor: admin,
-        rows: rowsOf({ [plain.id]: { nameRo: "Membru", nameEn: "Member", position: "2", was: "1" }, [founders.id]: { nameRo: "Fondator", nameEn: "Founder", descriptionRo: "Printre cei dintâi.", descriptionEn: "Among the first.", glyph: "trophy", position: "1", was: "2" } }),
-        now: NOW,
-      });
+    it("has no section of levels and names none, however many the club has, in either language", async () => {
       await createDiscountCode(db, { actor: admin, fields: { ...CODE, code: "SECRET", tierIds: [plain.id] }, now: NOW });
       await setMemberTier(db, admin, { targetId: member.id, tierId: plain.id, now: NOW });
-      const html = await publicPage();
-      expect(html.indexOf("Fondator")).toBeLessThan(html.indexOf("Membru</"));
-      expect(html).not.toContain("SECRET");
-      expect(html).not.toContain("Ana Membru");
-      expect(html).not.toContain("membru@dev.test");
-    });
-
-    it("draws no section while the club named no visible level", async () => {
-      const { listAllMemberTiers } = await import("@/modules/content/member-tiers/repository");
-      const all = await listAllMemberTiers(db);
-      await saveMemberTiers(db, {
-        actor: admin,
-        rows: rowsOf(Object.fromEntries(all.map((tier, index) => [tier.id, { nameRo: tier.nameRo, nameEn: tier.nameEn, glyph: tier.glyph, hidden: "on", was: String(index + 1) }]))),
-        now: NOW,
-      });
-      const html = await publicPage();
-      expect(html).not.toContain('data-testid="members-tiers"');
-      expect(html).toContain('data-testid="members-door"');
+      for (const locale of ["ro", "en"] as const) {
+        const html = await publicPage(locale);
+        expect(html, locale).toContain('data-testid="members-door"');
+        for (const trace of ['data-testid="members-tiers"', 'data-testid="members-tier"', "Nivelurile de membru", "Member levels", "Fondator", "Founder", "Printre cei dintâi.", "Among the first.", "Vechi", "SECRET", "Ana Membru", "membru@dev.test"]) {
+          expect(html, `${locale} ${trace}`).not.toContain(trace);
+        }
+      }
     });
   });
 
