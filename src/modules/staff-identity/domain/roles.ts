@@ -217,6 +217,17 @@ export function canManageDiscountCodes(subject: StaffSubject): boolean {
 }
 
 /**
+ * The member tiers (§NNN): naming the club's levels, putting them in order, hiding and deleting them —
+ * the Administrator's (and the Superadministrator's), who runs the club (§450). Giving a member a
+ * level is the team page's, so `canManageStaff`'s. A tier is a label and benefits, never a permission:
+ * no function in this file reads a member's tier.
+ */
+export function canManageMemberTiers(subject: StaffSubject): boolean {
+  const role = roleOf(subject);
+  return atLeast(role, "ADMIN");
+}
+
+/**
  * The words around a code (§552) — the partner's name and the description in both languages — the
  * rule of the Membri texts (`canEditMembersPage`, §524): the Redactor's and the Administrator's.
  */
