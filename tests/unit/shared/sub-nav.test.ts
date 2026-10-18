@@ -123,7 +123,7 @@ describe("§360 one look for every backoffice sub-navigation", () => {
     expect(gallery).toContain('glyph: "albums"');
     expect(gallery).toContain('glyph: "pictures"');
     for (const file of [
-      "src/app/[locale]/admin/tasks/page.tsx",
+      "src/modules/diagnostics/ui/TasksSubNav.tsx",
       "src/modules/notifications/ui/ParticipantEmailsPanel.tsx",
       // «Setări»'s tab row (§516).
       "src/modules/staff-identity/ui/SettingsSubNav.tsx",
@@ -135,6 +135,34 @@ describe("§360 one look for every backoffice sub-navigation", () => {
     expect(devs).toContain("<SettingsSubNav");
     expect(devs).toContain("configurationPanels=");
     expect(devs).not.toMatch(/<SubNav\b/);
+  });
+
+  it("gives every row a glyph for each of its entries — the list of rows is complete (§318 as amended)", () => {
+    // Every file that draws a `<SubNav` hands it glyphs. The owner's 2026-10-18 «vreau și la subtaburi să am
+    // iconițe» named four rows (Setări, Galerie, Sarcini, the RO/EN switch of Emailuri); Pagini, Magazin and the
+    // members' zone had theirs already. The composer's preview tabs (an MUI `Tabs`, no `SubNav`) are not walked here.
+    const rows: string[] = [];
+    const walk = (directory: string) => {
+      for (const entry of readdirSync(path.join(ROOT, directory), { withFileTypes: true })) {
+        const relative = `${directory}/${entry.name}`;
+        if (entry.isDirectory()) walk(relative);
+        else if (/\.tsx$/.test(entry.name) && /<SubNav\b/.test(read(relative))) rows.push(relative);
+      }
+    };
+    walk("src");
+    expect(rows.sort()).toEqual(
+      [
+        "src/app/[locale]/members-area/zone.tsx",
+        "src/modules/content/gallery/ui/GallerySubNav.tsx",
+        "src/modules/content/pages/ui/PagesSubNav.tsx",
+        "src/modules/content/shop/ui/ShopTabs.tsx",
+        "src/modules/diagnostics/ui/TasksSubNav.tsx",
+        "src/modules/notifications/ui/ParticipantEmailsPanel.tsx",
+        "src/modules/staff-identity/ui/SettingsSubNav.tsx",
+      ].sort(),
+    );
+    // A glyph handed to an entry (`glyph: …` / `glyph,`), not a mention of the word: `<Panel glyph="email"` on a card is not one.
+    for (const file of rows) expect(read(file), file).toMatch(/\bglyph\s*[:,]/);
   });
 
   it("leaves no pill-button navigation behind: no current entry drawn as a filled button", () => {
