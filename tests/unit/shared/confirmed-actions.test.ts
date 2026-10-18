@@ -60,6 +60,8 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   deleteEventAction: [],
   removeTestRegistrationsAction: [],
   withdrawInterestAction: [],
+  // The answers «Vin!» and the remembered browsers of one address erased (§NNN, art. 17): the person page's own button asks first.
+  eraseRsvpsAction: [],
   // A group run's self-declaration erased (§393), from its fold: handed to the panel as `eraseAction`.
   eraseGroupRunDeclarationAction: ["eraseAction"],
   eraseGroupRunDeclarationsAction: ["batchEraseAction"],
