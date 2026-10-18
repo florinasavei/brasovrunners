@@ -70,6 +70,14 @@ describe("§456 the recommended deadlines", () => {
     expect(save).not.toHaveBeenCalled();
   });
 
+  it("says which boxes it changed, so the folds around them can open (§377 amended)", () => {
+    const boxes: Record<string, { value: string }> = Object.fromEntries(DEADLINE_KEYS.map((k) => [k, { value: String(RECOMMENDED[k]) }]));
+    boxes.holdMinutes = { value: "60" };
+    boxes.offerHours = { value: "12" };
+    expect(fillRecommended({ namedItem: (name) => boxes[name] ?? null }, RECOMMENDED).sort()).toEqual(["holdMinutes", "offerHours"]);
+    expect(fillRecommended({ namedItem: (name) => boxes[name] ?? null }, RECOMMENDED)).toEqual([]);
+  });
+
   it("keeps the numbers out of the catalogues", () => {
     for (const words of [ro.Admin.emails.deadlines, en.Admin.emails.deadlines]) {
       for (const key of ["differs", "fillRecommended", "bounds"] as const) expect(words[key], key).not.toMatch(/\d/);

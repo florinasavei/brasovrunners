@@ -67,6 +67,8 @@ import ReorderIcon from "@mui/icons-material/Reorder";
 import RouteIcon from "@mui/icons-material/Route";
 import RuleIcon from "@mui/icons-material/Rule";
 import SaveIcon from "@mui/icons-material/Save";
+import SettingsIcon from "@mui/icons-material/Settings";
+import ShieldIcon from "@mui/icons-material/Shield";
 import ScheduleIcon from "@mui/icons-material/Schedule";
 import ScheduleSendIcon from "@mui/icons-material/ScheduleSend";
 import ScienceIcon from "@mui/icons-material/Science";
@@ -100,7 +102,7 @@ import type { ComponentType } from "react";
  * verb acts on, the two share the picture (the bibs are the ticket on both, printing is the
  * printer), so the screen reads as one system.
  *
- * **Read by `Panel` alone, and `Panel` is a Server Component** that no client file imports
+ * **Read by `Panel` and by `SettingsSubNav` (the glyph before each tab of «Setări»), both Server Components** that no client file imports
  * (`tests/unit/shared/glyph-on-every-button-and-fold.test.ts` holds it): the lookup by name
  * happens on the server and only the drawn `<svg>` reaches the browser, so this table costs a
  * visitor nothing and the backoffice nothing but the paths it draws. One file per glyph, never
@@ -214,6 +216,9 @@ export const PANEL_GLYPHS = {
   // «Cine e membru al grupului» (§789): the card on «Membri» that says what being a member means.
   memberDefinition: CardMembershipIcon,
   appearance: PaletteIcon,
+  // «Setări»' row of tabs (§318 as amended, 2026-10-18) names the two it has no card for: the anti-robot check, a shield, and «Configurație», the platform's own screen, a gear.
+  antiBot: ShieldIcon,
+  configuration: SettingsIcon,
   // «Pagina principală» (§714): the home page at the site's root, under «Aspect».
   home: HomeIcon,
   textSize: FormatSizeIcon,

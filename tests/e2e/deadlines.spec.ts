@@ -2,7 +2,7 @@ import { existsSync } from "node:fs";
 import { expect, test, type Browser, type Locator } from "@playwright/test";
 import pg from "pg";
 import { confirmDialog } from "./support/confirm";
-import { signIn } from "./support/featured-event";
+import { hydrated, signIn } from "./support/featured-event";
 import { openFold } from "./support/fold";
 
 /**
@@ -164,6 +164,18 @@ test.describe("§377 the club's deadlines on «Setări» → «Termene»", () =>
     await expect(panel.locator('input[name="holdMinutes"]')).toHaveValue("5");
     await expect(panel.locator(":scope > summary")).toContainText("loc ținut 30 de minute");
     await expect(hold.locator(":scope > summary")).toContainText("loc ținut 30 de minute");
+
+    // «Completează valorile recomandate» fills the boxes — saving nothing — and opens the folds around
+    // what it changed (the reminder is 72 now), leaving the others shut.
+    await page.goto("/ro/admin/settings/deadlines");
+    await hydrated(page);
+    const again = page.locator("#main").getByTestId("deadlines");
+    await openFold(again);
+    await expect(group(again, "beforeStart")).not.toHaveAttribute("open", "");
+    await again.getByRole("button", { name: "Completează valorile recomandate" }).click();
+    await expect(group(again, "beforeStart")).toHaveAttribute("open", "");
+    await expect(again.locator('input[name="reminderHours"]')).toHaveValue("48");
+    await expect(group(again, "hold")).not.toHaveAttribute("open", "");
   });
 
   test("an Organizer reads the numbers in force and is offered no form", async ({ page }) => {
