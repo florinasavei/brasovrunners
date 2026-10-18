@@ -12,7 +12,7 @@ import { type ReactNode, useEffect, useMemo, useState, useSyncExternalStore } fr
 import { decodeHint, PERSON_HINT_COOKIE } from "@/modules/person-session/domain/hint";
 import CheckboxField from "@/shared/ui/CheckboxField";
 import SubmitButton from "@/shared/ui/SubmitButton";
-import { rsvpForgetAction, rsvpGoAction, rsvpLeaveAction, rsvpStateAction, type RsvpIslandState } from "../remembered-actions";
+import type { RsvpIslandState } from "../remembered-actions";
 import { rememberedHeading } from "../domain/island";
 
 /** The words the island draws, handed over by the Server Component as strings: the island carries no messages of its own. */
@@ -20,8 +20,6 @@ export type RsvpIslandLabels = {
   /** With `{who}`: «Răspunzi ca {who}». */
   rememberedAs: string;
   going: string;
-  /** With `{who}`: «Tu vii, ca {who}». */
-  goingAs: string;
   cancel: string;
   cancelling: string;
   notMe: string;
@@ -30,6 +28,18 @@ export type RsvpIslandLabels = {
   submit: string;
   submitting: string;
   showName: string;
+};
+
+/**
+ * The server's four actions, handed over by the Server Component as props (`RsvpBox`): an island that imported them would take their
+ * whole chain — the service, the configuration, Zod — into a visitor's bundle (§489, `public-islands-weight.test.ts`). A Server Action
+ * crosses the boundary as a prop, and runs on the server whatever the island does with it.
+ */
+export type RsvpIslandActions = {
+  state: (slug: string, locale: string) => Promise<RsvpIslandState>;
+  go: (slug: string, locale: string, showName: boolean) => Promise<RsvpIslandState>;
+  leave: (slug: string, locale: string) => Promise<RsvpIslandState>;
+  forget: () => Promise<void>;
 };
 
 const HINT_EVENT = "br-person-hint";
@@ -65,7 +75,7 @@ function clearHint(): void {
  * A press is a Server Action that reads the `httpOnly` cookie itself (`remembered-actions.ts`): the island never sees the
  * secret, and the hint proves nothing. After an answer the page is refreshed, so «Vin (N)» under it counts the person.
  */
-export default function RsvpRemembered({ slug, locale, labels, children }: { slug: string; locale: string; labels: RsvpIslandLabels; children: ReactNode }) {
+export default function RsvpRemembered({ slug, locale, labels, actions, children }: { slug: string; locale: string; labels: RsvpIslandLabels; actions: RsvpIslandActions; children: ReactNode }) {
   const router = useRouter();
   const raw = useSyncExternalStore(subscribe, () => readCookie(PERSON_HINT_COOKIE), () => "");
   const hint = useMemo(() => decodeHint(raw || null), [raw]);
@@ -76,7 +86,7 @@ export default function RsvpRemembered({ slug, locale, labels, children }: { slu
   useEffect(() => {
     if (!masked) return;
     let alive = true;
-    rsvpStateAction(slug, locale).then(
+    actions.state(slug, locale).then(
       (next) => {
         if (!alive) return;
         // A hint the server no longer backs (forgotten elsewhere, expired): drop it and show the typed form.
@@ -90,6 +100,8 @@ export default function RsvpRemembered({ slug, locale, labels, children }: { slu
     return () => {
       alive = false;
     };
+    // The actions are the server's, handed over afresh at every refresh of the page: the state is asked once per address and page, not once per refresh.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [masked, slug, locale]);
 
   // The typed form: no hint, no JavaScript, a stale hint, an event that takes no answer from this browser, or a server that failed.
@@ -122,7 +134,7 @@ export default function RsvpRemembered({ slug, locale, labels, children }: { slu
             <CheckCircleIcon aria-hidden color="success" sx={{ fontSize: "1.4em" }} />
             {labels.going}
           </Typography>
-          <form action={() => run(rsvpLeaveAction.bind(null, slug, locale))}>
+          <form action={() => run(() => actions.leave(slug, locale))}>
             <SubmitButton label={labels.cancel} pendingLabel={labels.cancelling} variant="outlined" size="large">
               <EventBusyIcon />
             </SubmitButton>
@@ -130,7 +142,7 @@ export default function RsvpRemembered({ slug, locale, labels, children }: { slu
         </>
       ) : (
         <form
-          action={(form: FormData) => run(rsvpGoAction.bind(null, slug, locale, form.get("showName") === "on"))}
+          action={(form: FormData) => run(() => actions.go(slug, locale, form.get("showName") === "on"))}
         >
           <Stack spacing={1.5}>
             {/* A tick only for somebody who gave a name before: with no name there is nothing to show. */}
@@ -150,7 +162,7 @@ export default function RsvpRemembered({ slug, locale, labels, children }: { slu
 
       <form
         action={async () => {
-          await rsvpForgetAction();
+          await actions.forget();
           clearHint();
           setState(null);
           router.refresh();

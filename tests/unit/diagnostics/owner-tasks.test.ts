@@ -29,6 +29,8 @@ const LAUNCHED: OwnerTaskInputs = {
   listSocialsDescribed: true,
   listNumbersDescribed: true,
   resultsDescribed: true,
+  rsvpDescribed: true,
+  rsvpEvents: 0,
   resultsTermsDescribed: true,
   invitationsDescribed: true,
   promoDescribed: true,
@@ -116,6 +118,17 @@ describe("owner tasks", () => {
       expect(item.title && item.todo && item.done && item.how.length > 0).toBeTruthy();
       expect(item.how.join("\n")).toContain("/admin/legal");
     }
+  });
+
+  /**
+   * §NNN — the answer «Vin!» waits on the club's notice, the volunteers' shape: open while an upcoming event is ticked and the notice in
+   * force does not name `{{rsvp}}`, done once it does, absent while no event is ticked and the notice is silent — never blocking.
+   */
+  it("keeps the «Vin!» row open while a ticked event waits for the notice, done once it describes it, and absent when nothing is ticked", () => {
+    expect(stateOf({ ...LAUNCHED, rsvpDescribed: false, rsvpEvents: 2 }, "rsvpNotice")).toBe("open");
+    expect(stateOf({ ...LAUNCHED, rsvpDescribed: true, rsvpEvents: 2 }, "rsvpNotice")).toBe("done");
+    expect(stateOf({ ...LAUNCHED, rsvpDescribed: true, rsvpEvents: 0 }, "rsvpNotice")).toBe("done");
+    expect(ownerTasks({ ...LAUNCHED, rsvpDescribed: false, rsvpEvents: 0 }).some((task) => task.id === "rsvpNotice")).toBe(false);
   });
 
   /** §808 — a race's published results wait on the club's notice: open until it names `{{results}}`, never blocking, and no row without a notice at all. */
@@ -558,6 +571,7 @@ describe("owner tasks", () => {
       "listSocialsNotice",
       "listNumbersNotice",
       "resultsNotice",
+      "rsvpNotice",
       "invitationsNotice",
       "promoNotice",
       "sponsorNotice",

@@ -1104,6 +1104,12 @@ export type TemplateData = {
   /** The `RSVP_WITHDRAW` link of the same send (§NNN), under the confirm button as «Nu vin». Minted at the send, never stored. */
   rsvpWithdrawUrl?: string;
   /**
+   * The name the answer asks to show on the event's page (§NNN), on the `confirm` shape only: whoever typed the address chose it, so the person who
+   * presses «Da, vin» is told which name their press makes public, and can press «Nu vin» instead. A line the platform adds after the body
+   * whoever wrote it, like the waiting list's standing.
+   */
+  rsvpShownName?: string;
+  /**
    * A family sitting's one message (§519): everybody the sitting sent the form for and nobody
    * confirmed yet, by full name and birth date ("YYYY-MM-DD"), in the order sent — read at send time.
    * Set, the message is the family's: its subject, its facts box, its button and its words.
@@ -2306,6 +2312,8 @@ const T = {
     familyDecline: "Nu înscriu această persoană",
     /** «Vin!» (§NNN): the quieter button under «Da, vin» — the same message's other link. */
     rsvpNo: "Nu vin",
+    /** «Vin!» (§NNN): which name the press makes public, since whoever typed the address chose it. */
+    rsvpShownName: (name: string) => `Dacă apeși „Da, vin”, pe pagina evenimentului va apărea numele „${name}”: cine a scris adresa a bifat că vrea să apară cu numele. Dacă nu vrei, apasă „Nu vin”.`,
     /** «Nu mai pot ajunge» (§558; the owner's words), and its one sentence under the button. */
     cannotCome: {
       label: "Nu mai pot ajunge",
@@ -3073,6 +3081,7 @@ const T = {
     },
     familyDecline: "I am not registering this person",
     rsvpNo: "I'm not coming",
+    rsvpShownName: (name: string) => `If you press “Yes, I'm coming”, the name “${name}” will show on the event's page: whoever typed the address ticked that they want their name to show. If you don't, press “I'm not coming”.`,
     cannotCome: {
       label: "I can't make it any more",
       note: "Your place goes to someone else.",
@@ -3715,6 +3724,8 @@ export function buildTemplateContent(
       ...(messageType === "COMPLETE_DECLARATION" && data.familyToSign && data.familyToSign.length > 0
         ? [copy.familyToSign(data.familyToSign)]
         : []),
+      // «Vin!» (§NNN): the name the press would make public, after the body whoever wrote it — only on the shape that counts the person.
+      ...(messageType === "RSVP_CONFIRM" && data.rsvpShownName && (data.rsvpStage === undefined || data.rsvpStage === "confirm") ? [copy.rsvpShownName(data.rsvpShownName)] : []),
       // Where the person stood in the line when this was rendered (§629), after the body whoever wrote it.
       ...(messageType === "WAITLIST_JOINED" && data.waitlistStanding ? [copy.waitlistPosition(data.waitlistStanding)] : []),
       // The members' shop (§683): how to pay (the member's two) and the order's note, after the body whoever wrote it.

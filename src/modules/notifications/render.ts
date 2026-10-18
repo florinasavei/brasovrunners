@@ -34,7 +34,7 @@ import {
 import { seriesRhythmPhrase } from "@/modules/group-run-declarations/series";
 import { generateTokenSecret, hashTokenSecret } from "@/modules/action-tokens/domain/token-secret";
 import { bulkCopyRecipients, declarationPdfAudience, isClubCopy, isParticipantMessage } from "./domain/club-notices";
-import { calendarPartFor } from "./domain/calendar-part";
+import { type CalendarPart, calendarPartFor } from "./domain/calendar-part";
 import { renderCalendarPart } from "./calendar-part";
 import { calendarRsvpToForSending } from "./calendar-rsvp";
 import { CANNOT_COME_MESSAGES, cannotComeApplies, cannotComeUrlOf } from "./domain/cannot-come";
@@ -1029,7 +1029,7 @@ async function renderRow(
     const [answer] =
       typeof rsvpId === "string" && isUuid(rsvpId)
         ? await db
-            .select({ id: eventRsvps.id, canonicalEmail: eventRsvps.canonicalEmail, confirmedAt: eventRsvps.confirmedAt })
+            .select({ id: eventRsvps.id, canonicalEmail: eventRsvps.canonicalEmail, confirmedAt: eventRsvps.confirmedAt, showName: eventRsvps.showName, displayName: eventRsvps.displayName })
             .from(eventRsvps)
             .where(eq(eventRsvps.id, rsvpId))
             .limit(1)
@@ -1045,6 +1045,8 @@ async function renderRow(
     const linkUrl = (pathname: "/vin/[token]", secret: string) =>
       `${env.APP_BASE_URL}${getPathname({ locale, href: { pathname, params: { token: secret } } })}`;
     data.rsvpStage = stage;
+    // The name the press would make public, said before it is pressed (the person who typed the address chose it, not the one who presses).
+    if (stage === "confirm" && answer.showName && answer.displayName) data.rsvpShownName = answer.displayName;
     if (stage === "confirm" && links.confirm) {
       payloadActionUrl = linkUrl("/vin/[token]", links.confirm);
       data.rsvpWithdrawUrl = linkUrl("/vin/[token]", links.withdraw);
@@ -1506,7 +1508,9 @@ async function renderRow(
       (row.messageType === "RSVP_CONFIRM" && data.rsvpStage !== "withdraw"));
   if (mayCarryCalendar && eventDetails?.slug) {
     const rsvpTo = await calendarRsvpToForSending(db);
-    const part = calendarPartFor({ messageType: row.messageType, clubCopy, rsvpTo, confirmed: confirmedHere, changes: updateChanges });
+    // «Vin!» (§NNN) is the one message outside `calendarPartFor`'s four: it carries the event's published file whatever the club's
+    // calendar-answers address says — a person who only said they come holds no place, and the calendar must not ask «Vii?» of them twice.
+    const part: CalendarPart | null = row.messageType === "RSVP_CONFIRM" ? "file" : calendarPartFor({ messageType: row.messageType, clubCopy, rsvpTo, confirmed: confirmedHere, changes: updateChanges });
     if (part) {
       const carried = await renderCalendarPart(db, {
         part,

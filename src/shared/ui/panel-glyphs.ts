@@ -228,6 +228,8 @@ export const PANEL_GLYPHS = {
   menuOrder: ReorderIcon,
   // «Previzualizare» (§579): the event's card and page as a visitor will see them, before saving.
   preview: VisibilityIcon,
+  // «Răspunsuri „Vin!”» (§NNN): who said they come to a turn-up event, on the event editor's registration card.
+  rsvp: EventAvailableIcon,
   // «Clasament» (§808): a race's results page, its cards and the link to it from the event editor — and its «Importă din CSV» card, the file going up.
   results: LeaderboardIcon,
   importCsv: UploadFileIcon,

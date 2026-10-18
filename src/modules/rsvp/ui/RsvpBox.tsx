@@ -19,6 +19,7 @@ import SubmitButton from "@/shared/ui/SubmitButton";
 import { DENSITY } from "@/theme/density";
 import { RSVP_BOX_ID, type RsvpOutcome } from "../rsvp-box";
 import RsvpCount from "./RsvpCount";
+import { rsvpForgetAction, rsvpGoAction, rsvpLeaveAction, rsvpStateAction } from "../remembered-actions";
 import RsvpRemembered from "./RsvpRemembered";
 
 /**
@@ -55,7 +56,6 @@ export default async function RsvpBox({
   const labels = {
     rememberedAs: t.raw("rsvp.rememberedAs") as string,
     going: t("rsvp.going"),
-    goingAs: t.raw("rsvp.goingAs") as string,
     cancel: t("rsvp.cancel"),
     cancelling: t("rsvp.submitting"),
     notMe: t("rsvp.notMe"),
@@ -95,7 +95,7 @@ export default async function RsvpBox({
             </Alert>
           </>
         ) : (
-          <RsvpRemembered slug={slug} locale={locale} labels={labels}>
+          <RsvpRemembered slug={slug} locale={locale} labels={labels} actions={{ state: rsvpStateAction, go: rsvpGoAction, leave: rsvpLeaveAction, forget: rsvpForgetAction }}>
             {outcome === "withdrawSent" && (
               <Alert severity="info" role="status" sx={{ mb: 1.5 }} data-testid="rsvp-withdraw-sent">
                 {t("rsvp.withdrawDone")}

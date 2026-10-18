@@ -1568,3 +1568,90 @@ describe("§802 the event's tick «Arată profilul traseului pe pagină» travel
     expect(after.changes.map((candidate) => candidate.key)).not.toContain("route.showRouteProfile");
   });
 });
+
+// --- «Acceptă răspunsuri „Vin!”» (§NNN) ---------------------------------------------------------------
+
+/** A hike one simply turns up to: the shape the tick belongs to (no places, no declaration, no window). */
+const TURN_UP = { type: "HIKE", registrationMode: "NONE", capacity: "", participantListVisibility: "HIDDEN", declarationDocumentId: "", externalProvider: "", externalRegistrationUrl: "", hiddenListEnabled: false, hiddenListBibStart: "" };
+const OTHER_TEXTS = { ro: { slug: "tura-vin-doi", title: "Altă tură" }, en: { slug: "another-hike-coming", title: "Another hike" } };
+
+describe("§NNN the event's tick «Acceptă răspunsuri „Vin!”» travels in the file — the answers never do", () => {
+  it("is exported as it is, written in the downloaded text only when it is ON, and the file's version stays 3", async () => {
+    const { event } = await seedRace({ ...TURN_UP, rsvpEnabled: true }, {}, false);
+    const on = await fileOf(event.id);
+    expect(on.version).toBe(3);
+    expect(on.event.registration.mode).toBe("NONE");
+    expect(on.event.registration.rsvpEnabled).toBe(true);
+    expect(serializeEventFile(on)).toContain('"rsvpEnabled": true');
+
+    await db.update(events).set({ rsvpEnabled: false }).where(eq(events.id, event.id));
+    const off = await fileOf(event.id);
+    expect(off.event.registration.rsvpEnabled).toBe(false);
+    // «Off» is what a file without the key means: left out, so an older release still reads the file.
+    expect(serializeEventFile(off)).not.toContain("rsvpEnabled");
+  });
+
+  it("is imported as new as it was, and the round trip is the same", async () => {
+    const { event } = await seedRace({ ...TURN_UP, rsvpEnabled: true }, {}, false);
+    const file = await fileOf(event.id);
+    const created = await importEventAsNew(db, { actor: admin, file, fetchImpl: serving(), now: NOW });
+    expect((await reload(created.eventId)).rsvpEnabled).toBe(true);
+    const back = await fileOf(created.eventId);
+    expect(diffConfigs(back.event, file.event).map((change) => change.key).sort()).toEqual(["translations.en.slug", "translations.ro.slug"]);
+
+    // An event that is off comes back off.
+    const { event: quiet } = await seedRace(TURN_UP, OTHER_TEXTS, false);
+    const copy = await importEventAsNew(db, { actor: admin, file: await fileOf(quiet.id), fetchImpl: serving(), now: NOW });
+    expect((await reload(copy.eventId)).rsvpEnabled).toBe(false);
+  });
+
+  it("reads a file made before the tick existed — no `rsvpEnabled` — as off, and imports it so", async () => {
+    const { event } = await seedRace({ ...TURN_UP, rsvpEnabled: true }, {}, false);
+    const old = JSON.parse(serializeEventFile(await fileOf(event.id))) as { event: { registration: Record<string, unknown> } };
+    delete old.event.registration.rsvpEnabled;
+    expect(JSON.stringify(old)).not.toContain("rsvpEnabled");
+    const read = readEventFile(JSON.stringify(old));
+    if (!read.ok) throw new Error(`a file without the tick did not read: ${read.refusal} ${read.detail ?? ""}`);
+    expect(read.file.event.registration.rsvpEnabled).toBe(false);
+    const created = await importEventAsNew(db, { actor: admin, file: read.file, fetchImpl: serving(), now: NOW });
+    expect((await reload(created.eventId)).rsvpEnabled).toBe(false);
+  });
+
+  it("sees a changed tick in the diff, and writes the file's tick over an event — both ways", async () => {
+    const { event } = await seedRace({ ...TURN_UP, rsvpEnabled: true }, {}, false);
+    const { event: target } = await seedRace(TURN_UP, OTHER_TEXTS, false);
+    // The file's is on, the target's off: the diff names it, the import turns it on.
+    const on = await fileOf(event.id);
+    // The page addresses are the target's own: a draft takes the file's, and two events never share one.
+    on.event.translations.ro.slug = OTHER_TEXTS.ro.slug;
+    on.event.translations.en.slug = OTHER_TEXTS.en.slug;
+    const diff = await diffEventImport(db, { actor: admin, file: on, eventId: target.id });
+    const change = diff.changes.find((candidate) => candidate.key === "registration.rsvpEnabled");
+    expect(change).toMatchObject({ label: "registration.rsvpEnabled", from: { type: "boolean", value: false }, to: { type: "boolean", value: true } });
+    await importEventOver(db, await overInput(on, target.id));
+    expect((await reload(target.id)).rsvpEnabled).toBe(true);
+
+    // The other way: the file's off, the target's on.
+    await db.update(events).set({ rsvpEnabled: false }).where(eq(events.id, event.id));
+    const off = await fileOf(event.id);
+    off.event.translations.ro.slug = OTHER_TEXTS.ro.slug;
+    off.event.translations.en.slug = OTHER_TEXTS.en.slug;
+    await importEventOver(db, await overInput(off, target.id));
+    expect((await reload(target.id)).rsvpEnabled).toBe(false);
+    const after = await diffEventImport(db, { actor: admin, file: off, eventId: target.id });
+    expect(after.changes.map((candidate) => candidate.key)).not.toContain("registration.rsvpEnabled");
+  });
+
+  it("carries no answer: the file has no key for one, and an import over an event leaves its answers where they are", async () => {
+    const { event } = await seedRace({ ...TURN_UP, rsvpEnabled: true }, {}, false);
+    const file = await fileOf(event.id);
+    file.event.translations.ro.slug = OTHER_TEXTS.ro.slug;
+    file.event.translations.en.slug = OTHER_TEXTS.en.slug;
+    expect(JSON.stringify(file)).not.toMatch(/canonical|delivery_email|event_rsvps|displayName/);
+    const { event: target } = await seedRace(TURN_UP, OTHER_TEXTS, false);
+    const { eventRsvps } = await import("@/db/schema/event-rsvps");
+    await db.insert(eventRsvps).values({ eventId: target.id, deliveryEmail: "ana@example.test", canonicalEmail: "ana@example.test", canonicalizationVersion: 2, locale: "ro", privacyNoticeVersion: 1, confirmedAt: NOW });
+    await importEventOver(db, await overInput(file, target.id));
+    expect(await db.select().from(eventRsvps).where(eq(eventRsvps.eventId, target.id))).toHaveLength(1);
+  });
+});

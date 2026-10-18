@@ -39,8 +39,8 @@ describe("liveTwinPathname", () => {
     expect(liveTwinPathname("/ro/calendar/2027", search("surface=TRAIL"), true)).toBe(`/ro/${LIVE_SEGMENT}/calendar/2027`);
   });
 
-  it("sends an event page's own questions to the twin: ?lista=, ?interest=, ?declaratie=", () => {
-    for (const query of ["lista=2", "interest=1", "interest=invalid&since=2026-11-20T10:00:00.000Z", "declaratie=abc"]) {
+  it("sends an event page's own questions to the twin: ?lista=, ?interest=, ?declaratie=, and the «Vii?» box's ?vin= (§NNN)", () => {
+    for (const query of ["lista=2", "interest=1", "interest=invalid&since=2026-11-20T10:00:00.000Z", "declaratie=abc", "vin=1", "vin=invalid&since=2026-11-20T10:00:00.000Z", "vin=retras"]) {
       expect(liveTwinPathname("/ro/events/crosul", search(query), false)).toBe(`/ro/${LIVE_SEGMENT}/events/crosul`);
     }
   });
@@ -101,7 +101,7 @@ describe("§577 the twin answers only the questions the page itself reads", () =
   });
 
   it("keeps an event page's four keys whatever their value, and the session's twin", () => {
-    for (const query of ["lista=", "lista=2", "interest=done", "since=x", "declaratie=abc", "foo=1&lista=3"]) {
+    for (const query of ["lista=", "lista=2", "interest=done", "since=x", "declaratie=abc", "vin=", "foo=1&vin=1", "foo=1&lista=3"]) {
       expect(liveTwinPathname("/ro/events/crosul", search(query), false), query).toBe(`/ro/${LIVE_SEGMENT}/events/crosul`);
     }
     expect(liveTwinPathname("/ro/events/crosul", search("foo=1"), true)).toBe(`/ro/${LIVE_SEGMENT}/events/crosul`);

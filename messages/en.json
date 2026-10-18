@@ -813,7 +813,6 @@
       "countOthers": "and {count} more",
       "rememberedAs": "Answering as {who}",
       "going": "You're coming",
-      "goingAs": "You're coming, as {who}",
       "cancel": "I'm not coming any more",
       "notMe": "Not me",
       "help": "Your browser stays recognised for a year after “Yes, I'm coming”; “Not me” forgets it.",
@@ -3820,7 +3819,8 @@
         "read": "Read the text"
       },
       "resultsMissing": "The notice in force does not describe the races' results yet, so no results can be published. Approve a new notice from the template.",
-      "resultsTermsMissing": "The terms in force do not describe the races' results yet, so no results can be published. Approve new terms from the template."
+      "resultsTermsMissing": "The terms in force do not describe the races' results yet, so no results can be published. Approve new terms from the template.",
+      "rsvpMissing": "The notice in force does not describe the “I'm coming!” answers yet, so the page of a ticked event does not take them. Approve a new notice from the template."
     },
     "tasks": {
       "title": "What is still to do",
@@ -4648,7 +4648,7 @@
           "todo": "An event takes “I'm coming!” answers, but the notice in force does not describe them yet, so its page shows no box and no count.",
           "done": "The notice in force describes the “I'm coming!” answers: the pages of ticked events take them and show how many are coming. A name shows only for those who ticked “I want my name to show”.",
           "how": [
-            "Before approving, read the template's paragraph with a lawyer: what “I'm coming!” publishes (how many are coming, the name only of those who tick), how long the address is kept and what the recognised browser's one-year cookie does.",
+            "Before approving, read the template's paragraph with a lawyer: what “I'm coming!” publishes, how long the address is kept and what the recognised browser's one-year cookie does.",
             "/admin/legal → the “GDPR” card → “Regenerate from the template” → confirm. Sections 4, 5 and 7 describe the “I'm coming!” answers.",
             "Open the draft, read it, fill in what is left, “Save draft”, then “Approve and publish”, in both languages.",
             "The terms do not change: “I'm coming!” buys, books and signs nothing."
@@ -6225,7 +6225,20 @@
       "noteAuthorGone": "account removed",
       "audit": "Audit trail ({count})",
       "none": "None.",
-      "newSearch": "Another lookup"
+      "newSearch": "Another lookup",
+      "rsvps": "“I'm coming!” answers ({count})",
+      "browsers": "Remembered browsers ({count})",
+      "rsvpNameShown": "name shown on the page",
+      "rsvpNameHidden": "counted only",
+      "rsvpNotice": "notice v{version}",
+      "rsvpConfirmedAt": "confirmed {when}",
+      "rsvpUnconfirmed": "unconfirmed",
+      "browserUsed": "used {when}",
+      "browserUntil": "until {when}",
+      "rsvpsErase": "Erase the “I'm coming!” answers and browsers",
+      "rsvpsEraseTitle": "Erase this person's “I'm coming!” answers?",
+      "rsvpsEraseBody": "The “I'm coming!” answers and the remembered browsers of this address are erased; registrations are not. This cannot be undone.",
+      "rsvpsErased": "The “I'm coming!” answers and remembered browsers of this address were erased."
     },
     "desk": {
       "title": "Number pickup desk",
@@ -6440,7 +6453,7 @@
         "VOLUNTEER_AGREEMENT_ACCEPTED": "When a volunteer accepts the agreement from the link, or an organizer presses “Signed on paper”: their copy, with the agreement attached as a PDF.",
         "VOLUNTEER_ROLE_ASSIGNED": "When the organizers give a volunteer a role, from the event's «Volunteers» card: a short message naming the role, the date and the place. Nothing to press.",
         "VOLUNTEER_GUARDIAN_REQUEST": "When a volunteer under 18 offers, or an organizer presses “Send the parent's link”: the agreement and the link where the parent accepts it in their own name.",
-        "RSVP_CONFIRM": "When someone types an address under “I'm coming!” on an event's page (at most one message per address every ten minutes): the “Yes, I'm coming” button, which counts them, and “I'm not coming” under it. The page's “I'm not coming any more” sends the same message with only the withdraw link."
+        "RSVP_CONFIRM": "When someone types an address under “I'm coming!” on an event's page: “Yes, I'm coming” counts them, “I'm not coming” takes it back. The page's “not coming any more” sends only the withdraw link."
       },
       "whenShort": {
         "VERIFY_REGISTRATION_EMAIL": "after the form is sent",
@@ -7132,7 +7145,7 @@
         "VOLUNTEER_AGREEMENT_ACCEPTED": "The role and the event are added by themselves. The PDF shows the accepted text, with the name, the role, the moment and its fingerprint.",
         "VOLUNTEER_ROLE_ASSIGNED": "The role and the event's date and place are added by themselves, however you write the text. The message has no link that does anything.",
         "VOLUNTEER_GUARDIAN_REQUEST": "The volunteer and the event are added by themselves. The link is for the parent or guardian only, works once, and a new one replaces the old.",
-        "RSVP_CONFIRM": "The links are for this address only, work once, and a new message replaces the old ones. Someone already counted gets only the “I'm not coming any more” link."
+        "RSVP_CONFIRM": "At most one message per address every ten minutes. The links are for this address only, work once and are replaced by a newer message. Someone already counted gets only the withdraw link."
       },
       "confirmationRetry": "To whoever has not confirmed, the link goes again by itself {retry} after the last email, at most {times}; “Resend” counts too. The deadline does not move.",
       "confirmationRetryOff": "It is not re-sent by itself: in “Deadlines”, the number of resends is 0.",
@@ -12766,8 +12779,6 @@
     "confirmAlready": "You are already counted for {event}.",
     "confirmButton": "Yes, I'm coming",
     "confirmPending": "Sending…",
-    "confirmDone": "Done, we're counting you in for {event}.",
-    "confirmDoneBody": "Your browser stays recognised for a year: at the next event, “I'm coming!” is one press, with no email. On the page, “Not me” forgets it.",
     "withdrawTitle": "Not coming any more?",
     "withdrawIntro": "Are you not coming to {event} any more? Your answer is deleted.",
     "withdrawButton": "I'm not coming any more",
@@ -12777,6 +12788,8 @@
     "invalidBody": "It has been used or has expired. If you want to say you're coming, you can do it from the event's page.",
     "invalidOver": "The event has started or is over, so we no longer take answers.",
     "eventLink": "The event's page",
-    "eventsLink": "All events"
+    "eventsLink": "All events",
+    "rememberNote": "Your browser stays recognised for a year: at the next event, “I'm coming!” is one press, with no email. On the event's page, “Not me” forgets it.",
+    "withdrawDoneNoEvent": "Done, your answer is deleted."
   }
 }

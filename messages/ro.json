@@ -813,7 +813,6 @@
       "countOthers": "și încă {count}",
       "rememberedAs": "Răspunzi ca {who}",
       "going": "Tu vii",
-      "goingAs": "Tu vii, ca {who}",
       "cancel": "Nu mai vin",
       "notMe": "Nu sunt eu",
       "help": "Browserul tău rămâne recunoscut un an după „Da, vin”; „Nu sunt eu” îl uită.",
@@ -3820,7 +3819,8 @@
         "read": "Citește textul"
       },
       "resultsMissing": "Nota în vigoare nu descrie încă clasamentul curselor, deci niciun clasament nu poate fi publicat. Aprobă o notă nouă din șablon.",
-      "resultsTermsMissing": "Termenii în vigoare nu descriu încă clasamentul curselor, deci niciun clasament nu poate fi publicat. Aprobă termeni noi din șablon."
+      "resultsTermsMissing": "Termenii în vigoare nu descriu încă clasamentul curselor, deci niciun clasament nu poate fi publicat. Aprobă termeni noi din șablon.",
+      "rsvpMissing": "Nota în vigoare nu descrie încă răspunsurile „Vin!”, deci pagina unui eveniment bifat nu le primește. Aprobă o notă nouă din șablon."
     },
     "tasks": {
       "title": "Ce mai este de făcut",
@@ -4648,7 +4648,7 @@
           "todo": "Un eveniment primește răspunsuri „Vin!”, dar nota în vigoare nu le descrie încă, așa că pagina lui nu arată nicio casetă și niciun număr.",
           "done": "Nota în vigoare descrie răspunsurile „Vin!”: paginile evenimentelor bifate le primesc și arată câți vin. Numele apare doar la cine a bifat „Vreau să apar cu numele”.",
           "how": [
-            "Înainte de aprobare, citește cu un avocat paragraful din șablon: ce publică „Vin!” (câți vin, numele doar al celor care bifează), cât se păstrează adresa și ce face cookie-ul de un an al browserului recunoscut.",
+            "Înainte de aprobare, citește cu un avocat paragraful din șablon: ce publică „Vin!”, cât se păstrează adresa și ce face cookie-ul de un an al browserului recunoscut.",
             "/admin/legal → cardul „GDPR” → „Regenerează din șablon” → confirmă. Secțiunile 4, 5 și 7 descriu răspunsurile „Vin!”.",
             "Deschide ciorna, citește, completează ce a rămas, „Salvează ciorna”, apoi „Aprobă și publică”, în ambele limbi.",
             "Termenii nu se schimbă: „Vin!” nu cumpără, nu rezervă și nu semnează nimic."
@@ -6225,7 +6225,20 @@
       "noteAuthorGone": "cont șters",
       "audit": "Jurnal ({count})",
       "none": "Niciuna.",
-      "newSearch": "Altă căutare"
+      "newSearch": "Altă căutare",
+      "rsvps": "Răspunsuri „Vin!” ({count})",
+      "browsers": "Browsere recunoscute ({count})",
+      "rsvpNameShown": "cu numele pe pagină",
+      "rsvpNameHidden": "doar numărat",
+      "rsvpNotice": "nota v{version}",
+      "rsvpConfirmedAt": "confirmat {when}",
+      "rsvpUnconfirmed": "neconfirmat",
+      "browserUsed": "folosit {when}",
+      "browserUntil": "până {when}",
+      "rsvpsErase": "Șterge răspunsurile „Vin!” și browserele",
+      "rsvpsEraseTitle": "Ștergi răspunsurile „Vin!” ale acestei persoane?",
+      "rsvpsEraseBody": "Se șterg răspunsurile „Vin!” și browserele recunoscute pentru această adresă, nu și înscrierile. Ștergerea nu se poate anula.",
+      "rsvpsErased": "Răspunsurile „Vin!” și browserele recunoscute ale acestei adrese au fost șterse."
     },
     "desk": {
       "title": "Masa de ridicare a numerelor",
@@ -6440,7 +6453,7 @@
         "VOLUNTEER_AGREEMENT_ACCEPTED": "Când un voluntar acceptă contractul din link sau un organizator apasă „Semnat pe hârtie”: copia lui, cu contractul atașat ca PDF.",
         "VOLUNTEER_ROLE_ASSIGNED": "Când organizatorii îi dau unui voluntar un rol, din cardul «Voluntari» al evenimentului: un mesaj scurt care numește rolul, data și locul. Nimic de apăsat.",
         "VOLUNTEER_GUARDIAN_REQUEST": "Când un voluntar sub 18 ani se oferă, sau un organizator apasă „Trimite linkul părintelui”: contractul și linkul prin care părintele îl acceptă în nume propriu.",
-        "RSVP_CONFIRM": "Când cineva scrie o adresă la „Vin!” pe pagina unui eveniment (cel mult un mesaj la zece minute pe adresă): butonul „Da, vin”, care îl numără, și dedesubt „Nu vin”. La „Nu mai vin” de pe pagină pleacă același mesaj, doar cu linkul de retragere."
+        "RSVP_CONFIRM": "Când cineva scrie o adresă la „Vin!” pe pagina unui eveniment: butonul „Da, vin”, care îl numără, și dedesubt „Nu vin”. La „Nu mai vin” de pe pagină pleacă același mesaj, doar cu linkul de retragere."
       },
       "whenShort": {
         "VERIFY_REGISTRATION_EMAIL": "după trimiterea formularului",
@@ -7132,7 +7145,7 @@
         "VOLUNTEER_AGREEMENT_ACCEPTED": "Rolul și evenimentul se adaugă singure. PDF-ul arată textul acceptat, cu numele, rolul, momentul și amprenta lui.",
         "VOLUNTEER_ROLE_ASSIGNED": "Rolul, data și locul evenimentului se adaugă singure, oricum ai scrie textul. Mesajul nu are niciun link care să facă ceva.",
         "VOLUNTEER_GUARDIAN_REQUEST": "Voluntarul și evenimentul se adaugă singure. Linkul e doar pentru părinte sau tutore, se folosește o singură dată, iar unul nou îl înlocuiește pe cel vechi.",
-        "RSVP_CONFIRM": "Linkurile sunt doar pentru adresa aceasta, se folosesc o singură dată, iar un mesaj nou le înlocuiește pe cele vechi. Cine e deja numărat primește doar linkul „Nu mai vin”."
+        "RSVP_CONFIRM": "Cel mult un mesaj la 10 minute pe adresă. Linkurile sunt doar pentru această adresă, merg o singură dată și le înlocuiește mesajul nou. Cine e deja numărat primește doar „Nu mai vin”."
       },
       "confirmationRetry": "Cui nu a confirmat, linkul pleacă singur din nou la {retry} după ultimul email, cel mult {times}; se socotește și «Retrimite». Termenul nu se mută.",
       "confirmationRetryOff": "Nu se retrimite singur: în „Termene”, numărul de retrimiteri e 0.",
@@ -12766,8 +12779,6 @@
     "confirmAlready": "Ești deja numărat la {event}.",
     "confirmButton": "Da, vin",
     "confirmPending": "Se trimite…",
-    "confirmDone": "Gata, te numărăm la {event}.",
-    "confirmDoneBody": "Browserul tău rămâne recunoscut un an: la următorul eveniment, „Vin!” e o singură apăsare, fără email. Pe pagină, „Nu sunt eu” îl uită.",
     "withdrawTitle": "Nu mai vii?",
     "withdrawIntro": "Nu mai vii la {event}? Răspunsul tău se șterge.",
     "withdrawButton": "Nu mai vin",
@@ -12777,6 +12788,8 @@
     "invalidBody": "A fost folosit sau a expirat. Dacă vrei să spui că vii, poți face asta de pe pagina evenimentului.",
     "invalidOver": "Evenimentul a început sau a trecut, așa că nu mai primim răspunsuri.",
     "eventLink": "Pagina evenimentului",
-    "eventsLink": "Toate evenimentele"
+    "eventsLink": "Toate evenimentele",
+    "rememberNote": "Browserul tău rămâne recunoscut un an: la următorul eveniment, „Vin!” e o singură apăsare, fără email. Pe pagina evenimentului, „Nu sunt eu” îl uită.",
+    "withdrawDoneNoEvent": "Gata, ți-am șters răspunsul."
   }
 }

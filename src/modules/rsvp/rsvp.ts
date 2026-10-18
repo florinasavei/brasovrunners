@@ -225,8 +225,6 @@ export async function requestWithdrawLink<T extends Record<string, unknown>>(
   });
 }
 
-/** A token's purpose, as the message and the pages name it. */
-export type RsvpLinkPurpose = EventRsvpTokenPurpose;
 type EventRsvpTokenPurpose = (typeof eventRsvpTokens.$inferSelect)["purpose"];
 
 /**
@@ -347,7 +345,23 @@ async function consumeRsvpToken<T extends Record<string, unknown>>(
 }
 
 /** Who a used link proved: the address and name on the answer, for the caller to remember the browser as. */
-export type RsvpProved = { eventId: string; locale: "ro" | "en"; email: string; displayName: string | null };
+export type RsvpProved = {
+  eventId: string;
+  locale: "ro" | "en";
+  /** The event page's slug in the answer's language, for the redirect that lands on `#vin`; null if the translation is gone. */
+  slug: string | null;
+  email: string;
+  displayName: string | null;
+};
+
+async function slugOf<T extends Record<string, unknown>>(tx: Database<T>, eventId: string, locale: "ro" | "en"): Promise<string | null> {
+  const [row] = await tx
+    .select({ slug: eventTranslations.slug })
+    .from(eventTranslations)
+    .where(and(eq(eventTranslations.eventId, eventId), eq(eventTranslations.locale, locale)))
+    .limit(1);
+  return row?.slug ?? null;
+}
 
 /**
  * The «Da, vin» button's POST: spends the `RSVP_CONFIRM` link and counts the answer, in one transaction — and expires the
@@ -355,7 +369,20 @@ export type RsvpProved = { eventId: string; locale: "ro" | "en"; email: string; 
  * link was not live (a second press, an expired or superseded link). A link spent after the event started changes nothing.
  */
 export async function confirmRsvp<T extends Record<string, unknown>>(db: Database<T>, secret: string, now: Date): Promise<RsvpProved | null> {
+  if (!isWellFormedTokenSecret(secret)) return null;
   const proved = await db.transaction(async (tx) => {
+    /*
+      The event as it is now, before the link is spent: an organizer may have cancelled the event or moved its start since the
+      message left, and a link to an event that is no longer ahead counts nobody (and is not spent, so the page can still say why).
+    */
+    const [event] = await tx
+      .select({ status: events.eventStatus, startsAt: events.startsAt })
+      .from(eventRsvpTokens)
+      .innerJoin(eventRsvps, eq(eventRsvps.id, eventRsvpTokens.rsvpId))
+      .innerJoin(events, eq(events.id, eventRsvps.eventId))
+      .where(eq(eventRsvpTokens.tokenHash, hashTokenSecret(secret)))
+      .limit(1);
+    if (!event || event.status !== "SCHEDULED" || event.startsAt === null || event.startsAt.getTime() <= now.getTime()) return null;
     const rsvpId = await consumeRsvpToken(tx, secret, "RSVP_CONFIRM", now);
     if (!rsvpId) return null;
     const [row] = await tx
@@ -363,7 +390,7 @@ export async function confirmRsvp<T extends Record<string, unknown>>(db: Databas
       .set({ confirmedAt: sql`coalesce(${eventRsvps.confirmedAt}, ${now})` })
       .where(eq(eventRsvps.id, rsvpId))
       .returning();
-    return row ? { eventId: row.eventId, locale: row.locale, email: row.deliveryEmail, displayName: row.displayName } : null;
+    return row ? { eventId: row.eventId, locale: row.locale, slug: await slugOf(tx, row.eventId, row.locale), email: row.deliveryEmail, displayName: row.displayName } : null;
   });
   if (proved) revalidatePublicContent("places");
   return proved;
@@ -374,6 +401,8 @@ export async function confirmRsvp<T extends Record<string, unknown>>(db: Databas
  * tap of a remembered browser, a signed-in member). Never gated by the notice or the tick. Returns who the link proved (a
  * token) or whether a row went (an identity); expires the public count.
  */
+export async function withdrawRsvp<T extends Record<string, unknown>>(db: Database<T>, who: { token: string }, now: Date): Promise<RsvpProved | null>;
+export async function withdrawRsvp<T extends Record<string, unknown>>(db: Database<T>, who: { eventId: string; identity: RsvpIdentity }, now: Date): Promise<boolean>;
 export async function withdrawRsvp<T extends Record<string, unknown>>(
   db: Database<T>,
   who: { token: string } | { eventId: string; identity: RsvpIdentity },
@@ -384,7 +413,7 @@ export async function withdrawRsvp<T extends Record<string, unknown>>(
       const rsvpId = await consumeRsvpToken(tx, who.token, "RSVP_WITHDRAW", now);
       if (!rsvpId) return null;
       const [row] = await tx.delete(eventRsvps).where(eq(eventRsvps.id, rsvpId)).returning();
-      return row ? { eventId: row.eventId, locale: row.locale, email: row.deliveryEmail, displayName: row.displayName } : null;
+      return row ? { eventId: row.eventId, locale: row.locale, slug: await slugOf(tx, row.eventId, row.locale), email: row.deliveryEmail, displayName: row.displayName } : null;
     });
     if (proved) revalidatePublicContent("places");
     return proved;
@@ -452,6 +481,27 @@ export async function readPublicRsvps<T extends Record<string, unknown>>(
   return { count: rows.length, names, others: rows.length - names.length };
 }
 
+/**
+ * How many upcoming turn-up events the club ticked «Acceptă răspunsuri „Vin!”» on: published, scheduled, asking no registration and
+ * not yet started. What `/admin/tasks` reads for its row `rsvpNotice`, which waits only while there is one.
+ */
+export async function countRsvpEvents<T extends Record<string, unknown>>(db: Database<T>, now: Date): Promise<number> {
+  const [row] = await db
+    .select({ n: count() })
+    .from(events)
+    .where(
+      and(
+        eq(events.rsvpEnabled, true),
+        eq(events.registrationMode, "NONE"),
+        eq(events.eventStatus, "SCHEDULED"),
+        eq(events.editorialStatus, "PUBLISHED"),
+        eq(events.membersOnly, false),
+        gt(events.startsAt, now),
+      ),
+    );
+  return row?.n ?? 0;
+}
+
 /** One event's answers for the backoffice's fold (Administrator and Organizer see addresses; the others only the count). */
 export type RsvpAdminRow = { email: string; displayName: string | null; showName: boolean; confirmedAt: Date | null; createdAt: Date };
 
@@ -471,21 +521,4 @@ export async function countRsvpsForAdmin<T extends Record<string, unknown>>(db: 
     .where(eq(eventRsvps.eventId, eventId))
     .groupBy(sql`${eventRsvps.confirmedAt} IS NOT NULL`);
   return { confirmed: rows.find((row) => row.confirmed)?.n ?? 0, unconfirmed: rows.find((row) => !row.confirmed)?.n ?? 0 };
-}
-
-/** Every answer of one canonical address, across events — the person's own data (`registrations/person-data.ts`). */
-export async function listRsvpsOfAddress<T extends Record<string, unknown>>(db: Database<T>, canonicalEmail: string) {
-  return db
-    .select({
-      id: eventRsvps.id,
-      eventId: eventRsvps.eventId,
-      deliveryEmail: eventRsvps.deliveryEmail,
-      displayName: eventRsvps.displayName,
-      showName: eventRsvps.showName,
-      confirmedAt: eventRsvps.confirmedAt,
-      createdAt: eventRsvps.createdAt,
-    })
-    .from(eventRsvps)
-    .where(eq(eventRsvps.canonicalEmail, canonicalEmail))
-    .orderBy(asc(eventRsvps.createdAt));
 }
