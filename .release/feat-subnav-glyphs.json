@@ -1,0 +1,9 @@
+{
+  "branch": "feat/subnav-glyphs",
+  "decisionsTitle": "A glyph on the last three sub-tab rows",
+  "decisionsSection": "**The owner, 2026-10-18 02:25:** «vreau și la subtaburi să am iconițe».\n\n**Decision.** No new decision: one sentence under §318 (a glyph before every button, fold and tab). Every backoffice sub-tab row now carries glyphs, and the list is complete. «Setări»' six tabs had theirs since §813; this adds the three rows that had none: «Sarcini» (the checklist for «Club», the club's own lines for «De făcut», the gear of «Configurație» for «Sistem», a wrench for «Aplicația»), «Galerie» (the album and the picture, by names from `panel-glyphs.ts`) and the RO/EN switch inside «Emailurile trimise participanților» (the house's translation glyph, never a flag: the entries differ by their words). Each is drawn on the server into `SubNav` by name from the cards' table, as «Setări»' row does; «Sarcini»' row is one component the page draws on its three panels. `tests/unit/shared/sub-nav.test.ts` lists every row that draws a `SubNav` and fails on a new one without a glyph.",
+  "changelogLine": "- **A picture before every tab of «Sarcini» and «Galerie», and before «Română» / «English» on «Emailuri»** — the last backoffice sub-tab rows to get one; the list of rows is now complete. §318.",
+  "specsCriteria": [],
+  "docsNotes": "",
+  "batchLine": "glyphs on the last three sub-tab rows: «Sarcini», «Galerie», the RO/EN switch"
+}

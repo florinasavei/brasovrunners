@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 import type { EmailMessageType } from "@/db/schema/email-outbox";
 import type { FoldOpenWhen } from "@/shared/ui/fold";
 import Panel from "@/shared/ui/Panel";
+import { PANEL_GLYPHS, type PanelGlyphName } from "@/shared/ui/panel-glyphs";
 import SubNav, { type SubNavItem } from "@/shared/ui/SubNav";
 
 /** One message, already rendered and translated: this component decides only the shape. */
@@ -46,6 +47,20 @@ export type ParticipantEmailCard = {
   editor?: ReactNode;
 };
 
+/**
+ * The picture before each language of the switch (§318 as amended: a glyph before every tab): the
+ * house's translation glyph (`panel-glyphs.ts`), by name, written as an object so the table's own
+ * test finds it. Never a flag — the entries differ by their words, «Română» and «English». Drawn
+ * here, on the server, into `SubNav`, a Server Component end to end, never handed to a client
+ * island (`action-icons.ts`).
+ */
+const LANGUAGE_GLYPH = { glyph: "translation" } as const satisfies { glyph: PanelGlyphName };
+
+function languageGlyph() {
+  const Glyph = PANEL_GLYPHS[LANGUAGE_GLYPH.glyph];
+  return <Glyph />;
+}
+
 type Props = {
   title: string;
   intro: string;
@@ -84,7 +99,7 @@ export default function ParticipantEmailsPanel({ title, intro, aside, languageLa
         <Typography variant="body2" sx={{ fontWeight: 500, mb: 1 }}>
           {languageLabel}
         </Typography>
-        <SubNav label={languageLabel} items={languages} />
+        <SubNav label={languageLabel} items={languages.map((language) => ({ ...language, glyph: language.glyph ?? languageGlyph() }))} />
       </Box>
       <Stack spacing={1}>
         {messages.map((message) => (

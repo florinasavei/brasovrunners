@@ -117,6 +117,21 @@ describe("§336 the emails participants receive: one card of cards", () => {
     expect(html).toMatch(/aria-current="page"[^>]*>Română|>Română<\/a>/);
   });
 
+  it("draws a picture before each language of the switch, the house's translation glyph, never a flag (§318 as amended)", () => {
+    const html = render([card("VERIFY_REGISTRATION_EMAIL")]);
+    const nav = html.slice(html.indexOf("<nav"), html.indexOf("</nav>"));
+    const entries = [...nav.matchAll(/<a [^>]*>([\s\S]*?)<\/a>/g)].map((match) => ({ inner: match[1], text: match[1].replace(/<[^>]+>/g, "") }));
+    expect(entries.map((entry) => entry.text)).toEqual(["Română", "English"]);
+    for (const entry of entries) {
+      // An `aria-hidden` picture, one per entry, before the words that stay the link's name.
+      expect(entry.inner, entry.text).toMatch(/^<span[^>]*aria-hidden="true"[^>]*><svg[^>]*aria-hidden="true"/);
+      expect(entry.inner.match(/<svg/g), entry.text).toHaveLength(1);
+      expect(entry.inner, entry.text).toContain('data-testid="TranslateIcon"');
+      expect(entry.inner, entry.text).not.toContain("<img");
+    }
+    expect(nav).not.toContain("/flags/");
+  });
+
   it("opens the card, and only the message whose words were just saved", () => {
     const html = render([card("VERIFY_REGISTRATION_EMAIL"), card("EVENT_REMINDER", true), card("EVENT_THANKS")], { saved: true });
     const folds = foldTags(html);
