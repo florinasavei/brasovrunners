@@ -58,6 +58,7 @@ import { readOutboxDelivery } from "@/modules/notifications/outbox-delivery";
 import { readNeonBudget } from "@/modules/diagnostics/neon-budget";
 import { countForm } from "@/i18n/count-form";
 import { LEGAL_TEMPLATES_DIGEST_CLOCK } from "@/modules/legal-documents/domain/templates-notice";
+import { RSVP_ASK_CLOCK } from "@/modules/rsvp/domain/ask";
 import { canOpenSettingsTab } from "@/modules/staff-identity/domain/settings-tabs";
 import { requireStaff } from "@/modules/staff-identity/session";
 import MovedFragmentHop from "@/modules/staff-identity/ui/MovedFragmentHop";
@@ -222,6 +223,8 @@ export default async function EmailTemplatesPage({ params, searchParams }: Props
     reminder: pageWords.reminder ?? "",
     // The hour the legal templates' digest opens at (§775), from the one constant the email reads too.
     digestHour: LEGAL_TEMPLATES_DIGEST_CLOCK,
+    // The hour the «Vii mâine?» question opens at (§NNN), from the one constant the job reads too.
+    askHour: RSVP_ASK_CLOCK,
     // The club's limit per address, for the one message that states it (§389).
     people: t(`emails.addressCap.people.${countForm(perAddress, locale)}`, { count: perAddress }),
   };

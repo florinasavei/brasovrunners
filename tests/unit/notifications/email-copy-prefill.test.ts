@@ -99,6 +99,7 @@ const EXPECTED: Record<EditedType, EmailCopyPlaceholder[]> = {
   REGISTRATION_OPENED: ["eventTitle"],
   // «Vin!» (§811): the event, and its start in the subject.
   RSVP_CONFIRM: ["eventTitle", "eventStartsAtFormatted"],
+  RSVP_ASK: ["eventTitle"],
   // An invitation (§647): the event, its start and until when the place is kept.
   EVENT_INVITATION: ["eventTitle", "eventStartsAtFormatted", "holdExpiresAtFormatted"],
   CLUB_CONFIRMATION_NOTICE: ["participantName", "eventTitle", "eventStartsAtFormatted", "bibNumber"],

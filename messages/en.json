@@ -6381,7 +6381,8 @@
         "VOLUNTEER_AGREEMENT_ACCEPTED": "You accepted the volunteer agreement",
         "VOLUNTEER_ROLE_ASSIGNED": "Your volunteer role",
         "VOLUNTEER_GUARDIAN_REQUEST": "Your consent for a young volunteer",
-        "RSVP_CONFIRM": "Confirm you're coming (“I'm coming!”)"
+        "RSVP_CONFIRM": "Confirm you're coming (“I'm coming!”)",
+        "RSVP_ASK": "Coming tomorrow? (“I'm coming” / “I'm not coming”)"
       },
       "typesShort": {
         "VERIFY_REGISTRATION_EMAIL": "Confirm your address",
@@ -6451,7 +6452,8 @@
         "VOLUNTEER_AGREEMENT_ACCEPTED": "When a volunteer accepts the agreement from the link, or an organizer presses “Signed on paper”: their copy, with the agreement attached as a PDF.",
         "VOLUNTEER_ROLE_ASSIGNED": "When the organizers give a volunteer a role, from the event's «Volunteers» card: a short message naming the role, the date and the place. Nothing to press.",
         "VOLUNTEER_GUARDIAN_REQUEST": "When a volunteer under 18 offers, or an organizer presses “Send the parent's link”: the agreement and the link where the parent accepts it in their own name.",
-        "RSVP_CONFIRM": "When someone types an address under “I'm coming!” on an event's page: “Yes, I'm coming” counts them, “I'm not coming” takes it back. The page's “not coming any more” sends only the withdraw link."
+        "RSVP_CONFIRM": "When someone types an address under “I'm coming!” on an event's page: “Yes, I'm coming” counts them, “I'm not coming” takes it back. The page's “not coming any more” sends only the withdraw link.",
+        "RSVP_ASK": "The day before an event where the club counts who comes, from {askHour}: one email to the subscribers of the topic “The ‘Coming?’ question before runs” and to those who chose “All the news”, with “I'm coming”, which counts them, and “I'm not coming”, which counts nobody. Anyone who has answered already is not asked."
       },
       "whenShort": {
         "VERIFY_REGISTRATION_EMAIL": "after the form is sent",
@@ -6496,7 +6498,8 @@
         "VOLUNTEER_AGREEMENT_ACCEPTED": "after the link or “Signed on paper”",
         "VOLUNTEER_ROLE_ASSIGNED": "when the organizers give a role",
         "VOLUNTEER_GUARDIAN_REQUEST": "when a volunteer under 18 offers",
-        "RSVP_CONFIRM": "when someone says “I'm coming!”, to their address"
+        "RSVP_CONFIRM": "when someone says “I'm coming!”, to their address",
+        "RSVP_ASK": "the day before, from {askHour}, to the topic's subscribers"
       },
       "clubNotices": {
         "title": "The club's copies",
@@ -7206,7 +7209,8 @@
         "VOLUNTEER_AGREEMENT_ACCEPTED": "The role and the event are added by themselves. The PDF shows the accepted text, with the name, the role, the moment and its fingerprint.",
         "VOLUNTEER_ROLE_ASSIGNED": "The role and the event's date and place are added by themselves, however you write the text. The message has no link that does anything.",
         "VOLUNTEER_GUARDIAN_REQUEST": "The volunteer and the event are added by themselves. The link is for the parent or guardian only, works once, and a new one replaces the old.",
-        "RSVP_CONFIRM": "At most one message per address every ten minutes. The links are for this address only, work once and are replaced by a newer message. Someone already counted gets only the withdraw link."
+        "RSVP_CONFIRM": "At most one message per address every ten minutes. The links are for this address only, work once and are replaced by a newer message. Someone already counted gets only the withdraw link.",
+        "RSVP_ASK": "Once per event; one ticked only on its own day is not asked. The links are for this address only, work once, and “I'm coming” asks for no name. It leaves by the announcements' road, not the newsletter's, so it does not wait for the day's allowance."
       },
       "confirmationRetry": "To whoever has not confirmed, the link goes again by itself {retry} after the last email, at most {times}; “Resend” counts too. The deadline does not move.",
       "confirmationRetryOff": "It is not re-sent by itself: in “Deadlines”, the number of resends is 0.",
@@ -12436,7 +12440,8 @@
       "SPECIAL_EVENTS": "Special events",
       "WEEKLY_RUNS": "The weekly runs",
       "VOLUNTEERING": "Volunteering",
-      "RESULTS_PHOTOS": "Results and photos"
+      "RESULTS_PHOTOS": "Results and photos",
+      "RSVP_ASK": "The “Coming?” question before runs"
     },
     "topicHints": {
       "ALL": "Every topic below, and any we add later.",
@@ -12445,7 +12450,8 @@
       "SPECIAL_EVENTS": "Special editions, themed runs, events held with other organizers and other organizers' events.",
       "WEEKLY_RUNS": "An announcement when a new series of weekly runs starts — once per series, not for every run.",
       "VOLUNTEERING": "When we need help at our races: the kit desk, the course, photographs.",
-      "RESULTS_PHOTOS": "Results and photo albums after the events."
+      "RESULTS_PHOTOS": "Results and photo albums after the events.",
+      "RSVP_ASK": "The day before an event where the club counts who comes, one email with two buttons: “I'm coming” or “I'm not coming”."
     },
     "heading": "The club's news by email",
     "intro": "Pick the topics you care about and we write to you about those alone.",
@@ -12854,6 +12860,13 @@
     "withdrawDoneNoEvent": "Done, your answer is deleted.",
     "withdrawnTitle": "Answer deleted",
     "invalidExpired": "The link was valid for a limited time, and that time has passed. The event has not started yet: you can answer again from its page.",
-    "withdrawRememberNote": "After “I'm not coming any more” too, your browser stays recognised for a year: at other events, “I'm coming!” is one press. On the event's page, “Not me” forgets it."
+    "withdrawRememberNote": "After “I'm not coming any more” too, your browser stays recognised for a year: at other events, “I'm coming!” is one press. On the event's page, “Not me” forgets it.",
+    "askTitle": "Coming?",
+    "askIntro": "Are you coming to {event}? One press and you're counted. The name below is optional.",
+    "askNoTitle": "Not coming?",
+    "askNoIntro": "Not coming to {event}? Press the button and we don't count you.",
+    "askNoButton": "I'm not coming",
+    "askNoDoneTitle": "Understood",
+    "askNoDone": "Okay, we won't count you. You can answer differently until the start."
   }
 }

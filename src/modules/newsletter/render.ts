@@ -12,7 +12,9 @@ import { bulkCopyRecipients, isClubCopy } from "@/modules/notifications/domain/c
 import { DEFAULT_TOKEN_HOURS } from "@/modules/notifications/domain/token-lifetime";
 import { emailEventFacts } from "@/modules/notifications/event-facts-row";
 import { readEmailCopyForSending } from "@/modules/notifications/email-copy";
+import { renderCalendarPart } from "@/modules/notifications/calendar-part";
 import { type EmailRenderer, OutboxMessageWithdrawn, type OutboxRow } from "@/modules/notifications/outbox";
+import { prepareRsvpAsk, type PreparedRsvpAsk } from "@/modules/rsvp/ask";
 import { buildOutgoingEmail, type TemplateData } from "@/modules/notifications/templates";
 import { env } from "@/shared/config/env";
 import { readNewsletterWords } from "./domain/message";
@@ -36,6 +38,11 @@ type RendererDb = Parameters<EmailRenderer>[1];
  * month for the allowance, and an event cancelled, taken down or started in the meantime is no
  * news — the row is withdrawn (`OutboxMessageWithdrawn`), not failed (§331: a cancelled event goes quiet).
  *
+ * **«Vii mâine la …?» (§NNN)** is the fourth message here: to a subscriber, about an event, with two personal links instead of one
+ * button. The renderer makes the subscriber's «Vin!» row and mints both links (`prepareRsvpAsk`, §14.5), writes the event's facts as
+ * the alert does, and carries the event's calendar file as the confirmation of an answer does. It has no club copy and no allowance
+ * rule: it is the question of one day, and a send that arrives after the start is withdrawn.
+ *
  * The club's one copy of a send (`clubCopy`, §419's shape) has no subscriber: the same words, the
  * count, no topics line and no link of anybody's.
  *
@@ -52,6 +59,8 @@ export async function renderNewsletterRow(
   const locale = row.locale as Locale;
   const other: Locale = locale === "ro" ? "en" : "ro";
   const payload = (row.payloadJson ?? {}) as { subscriberId?: unknown; sendId?: unknown; eventId?: unknown };
+  let asked: PreparedRsvpAsk | null = null;
+  let attachments: OutgoingEmail["attachments"];
   const clubCopy = isClubCopy(row.payloadJson) && row.messageType !== "NEWSLETTER_CONFIRM";
   const eventId = typeof payload.eventId === "string" ? payload.eventId : null;
 
@@ -75,6 +84,11 @@ export async function renderNewsletterRow(
   }
 
   const subscriberId = typeof payload.subscriberId === "string" ? payload.subscriberId : null;
+  // «Vii mâine la …?»: the row, the links and every reason to drop the message are one step (`rsvp/ask.ts`), before any word is written.
+  if (row.messageType === "RSVP_ASK") {
+    if (!eventId || !subscriberId) throw new Error("rsvp ask: the message names no event or no subscriber");
+    asked = await prepareRsvpAsk(db, { eventId, subscriberId, recipientEmail: row.recipientEmail, now });
+  }
   const [subscriber] = !clubCopy && subscriberId
     ? await db.select().from(newsletterSubscribers).where(eq(newsletterSubscribers.id, subscriberId)).limit(1)
     : [];
@@ -181,6 +195,25 @@ export async function renderNewsletterRow(
     if (otherDetails) data.eventFactsOther = emailEventFacts(otherDetails, pageOf(other, otherDetails.slug));
     actionUrl = data.eventUrl;
     data.newsletterManageUrl = await manageUrl();
+    if (asked) {
+      // The two buttons are the answer's own links: «Vin» (the confirm link) and, under it, «Nu vin» (the withdraw link).
+      const tokenPage = (secret: string) => `${env.APP_BASE_URL}${getPathname({ locale, href: { pathname: "/vin/[token]", params: { token: secret } } })}`;
+      actionUrl = tokenPage(asked.confirm);
+      data.rsvpWithdrawUrl = tokenPage(asked.withdraw);
+      // The event in the person's calendar, the same file the event's page offers (§174): so the day is there whichever they answer.
+      if (details.slug) {
+        const carried = await renderCalendarPart(db, {
+          part: "file",
+          locale,
+          slug: details.slug,
+          now,
+          rsvpTo: null,
+          sequence: details.calendarSequence,
+          attendee: { email: row.recipientEmail },
+        });
+        attachments = carried.attachments;
+      }
+    }
   }
 
   return buildOutgoingEmail({
@@ -190,6 +223,7 @@ export async function renderNewsletterRow(
     messageType: row.messageType,
     data,
     actionUrl,
+    attachments,
     overrides: await readEmailCopyForSending(db, now),
   });
 }

@@ -47,7 +47,8 @@ export async function confirmRsvpAction(form: FormData): Promise<void> {
   const db = getDb();
   const now = new Date();
   if (!(await tokenAttemptAllowed(db, token, now))) redirect(`${pageOf(locale, token)}?invalid=1`);
-  const proved = await confirmRsvp(db, token, now);
+  // The email's «Vin» (§NNN) may carry the name and the tick; for any other link the service ignores them.
+  const proved = await confirmRsvp(db, token, now, { displayName: String(form.get("name") ?? ""), showName: form.get("showName") === "on" });
   if (!proved) redirect(`${pageOf(locale, token)}?invalid=1`);
   await remember(proved, now);
   redirect(eventPageOf(proved, `#${RSVP_BOX_ID}`));
@@ -65,5 +66,7 @@ export async function withdrawRsvpAction(form: FormData): Promise<void> {
   await remember(proved, now);
   // The slug travels as the page's own address, never a value of the person's (§14.5): where the sentence's link goes.
   const slug = proved.slug ?? "";
-  redirect(`${pageOf(proved.locale, token)}?retras=${encodeURIComponent(slug)}&ok=${withdrawnProof(token, slug)}`);
+  // `nu`: the «Nu vin» of the «Vii?» email (§NNN) — only its sentence changes (nobody was counted), the proof is the same.
+  const asked = form.get("asked") === "1" ? "&nu=1" : "";
+  redirect(`${pageOf(proved.locale, token)}?retras=${encodeURIComponent(slug)}&ok=${withdrawnProof(token, slug)}${asked}`);
 }

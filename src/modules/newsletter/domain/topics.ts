@@ -20,25 +20,36 @@ export const RETIRED_TOPICS = ["DISCOUNTS"] as const satisfies readonly Newslett
 
 type RetiredTopic = (typeof RETIRED_TOPICS)[number];
 
+/**
+ * Topics only the platform writes for (§NNN): «Întrebarea „Vii?” înaintea alergărilor» — the one email the day before a turn-up event
+ * the club ticked «Vin!» on (`rsvp/ask.ts`). A subscriber chooses it like any other, but no organizer composes a newsletter for it:
+ * what they chose is a question with two answers, and a free-text letter under that name would be a promise broken.
+ */
+export const AUTOMATIC_TOPICS = ["RSVP_ASK"] as const satisfies readonly NewsletterTopic[];
+
+type AutomaticTopic = (typeof AUTOMATIC_TOPICS)[number];
+
 /** A topic a subscriber may choose today. */
 export type OfferedTopic = Exclude<NewsletterTopic, RetiredTopic>;
 
 /** A topic a message may be written for. */
-export type SendableTopic = Exclude<OfferedTopic, "ALL">;
+export type SendableTopic = Exclude<OfferedTopic, "ALL" | AutomaticTopic>;
 
 export const NEWSLETTER_TOPICS: readonly OfferedTopic[] = newsletterTopic.enumValues.filter(
   (topic): topic is OfferedTopic => !(RETIRED_TOPICS as readonly string[]).includes(topic),
 );
 
 /** The topics a message is written for: every one but `ALL`, which is a subscriber's choice, not a subject. */
-export const SENDABLE_TOPICS: readonly SendableTopic[] = NEWSLETTER_TOPICS.filter((topic): topic is SendableTopic => topic !== "ALL");
+export const SENDABLE_TOPICS: readonly SendableTopic[] = NEWSLETTER_TOPICS.filter(
+  (topic): topic is SendableTopic => topic !== "ALL" && !(AUTOMATIC_TOPICS as readonly string[]).includes(topic),
+);
 
 export function isNewsletterTopic(value: unknown): value is OfferedTopic {
   return typeof value === "string" && (NEWSLETTER_TOPICS as readonly string[]).includes(value);
 }
 
 export function isSendableTopic(value: unknown): value is SendableTopic {
-  return isNewsletterTopic(value) && value !== "ALL";
+  return (SENDABLE_TOPICS as readonly unknown[]).includes(value);
 }
 
 /**

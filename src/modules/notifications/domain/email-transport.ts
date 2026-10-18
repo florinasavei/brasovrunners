@@ -71,6 +71,9 @@ export const EMAIL_GROUP_OF: Readonly<Record<Exclude<EmailMessageType, RelayMess
   REGISTRATION_OPENED: "announcements",
   // «Confirmă că vii» (§811, «Vin!»): the person's own answer to a turn-up event, mailed once to the typed address; paced with the club's announcements.
   RSVP_CONFIRM: "announcements",
+  // «Vii mâine la …?» (§NNN): a question that is worth something only the day before, so NOT the newsletter's bulk road (which waits for
+  // the allowance, last in line, and can arrive after the start); paced with the club's announcements, like the answer it asks for.
+  RSVP_ASK: "announcements",
   DECLARATION_ARCHIVE: "club",
   GROUP_RUN_DECLARATION_ARCHIVE: "club",
   CLUB_CONFIRMATION_NOTICE: "club",

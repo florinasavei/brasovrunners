@@ -306,6 +306,14 @@ export type RsvpLink = {
   startsAt: Date | null;
   /** The answer is already counted (a confirm link opened after another route confirmed it). */
   confirmed: boolean;
+  /**
+   * The answer was made by the «Vii?» email (§NNN) and nobody has pressed yet: the page of its two links offers the optional name
+   * under the «Vin» button, and says «Bine, nu te numărăm» after «Nu vin». False for an answer typed on the event's page and for one
+   * already counted.
+   */
+  asked: boolean;
+  /** The answer has a name already (typed on the page): the box is then not offered, and the press changes nothing about it. */
+  named: boolean;
 };
 
 /**
@@ -327,6 +335,8 @@ export async function readRsvpLink<T extends Record<string, unknown>>(
         eventId: eventRsvps.eventId,
         locale: eventRsvps.locale,
         confirmedAt: eventRsvps.confirmedAt,
+        askedAt: eventRsvps.askedAt,
+        displayName: eventRsvps.displayName,
         title: eventTranslations.title,
         slug: eventTranslations.slug,
         startsAt: events.startsAt,
@@ -354,6 +364,8 @@ export async function readRsvpLink<T extends Record<string, unknown>>(
       slug: row.slug,
       startsAt: row.startsAt,
       confirmed: row.confirmedAt !== null,
+      asked: row.askedAt !== null && row.confirmedAt === null,
+      named: row.displayName !== null,
     } satisfies RsvpLink;
   });
 }
@@ -416,8 +428,21 @@ async function slugOf<T extends Record<string, unknown>>(tx: Database<T>, eventI
  * The «Da, vin» button's POST: spends the `RSVP_CONFIRM` link and counts the answer, in one transaction — and expires the
  * event's public count. Returns who the link proved, so the caller can remember the browser (`person-session/`); null when the
  * link was not live (a second press, an expired or superseded link). A link spent after the event started changes nothing.
+ *
+ * **The «Vii?» email's «Vin» (§NNN) is this press.** The link was minted for the subscriber's own address and nobody else holds it, so
+ * the press is a verified one (the `link` source of `identity.ts`): counted at once, no second email. That row has no name — the
+ * newsletter's row never had one, and a name nobody typed is never made up — so the page offers the optional `name` and the tick
+ * `showName` under the one button, and they are taken here **only** for a row the email made (`asked_at`), still unconfirmed and
+ * still nameless: a name typed by whoever typed an address on the page is never replaced, and a counted row is never renamed by a
+ * second press. The tick counts only beside a name, and a name shows publicly only under the notice that described it (`public-name.ts`),
+ * so the row takes the version in force.
  */
-export async function confirmRsvp<T extends Record<string, unknown>>(db: Database<T>, secret: string, now: Date): Promise<RsvpProved | null> {
+export async function confirmRsvp<T extends Record<string, unknown>>(
+  db: Database<T>,
+  secret: string,
+  now: Date,
+  options: { displayName?: string | null; showName?: boolean } = {},
+): Promise<RsvpProved | null> {
   if (!isWellFormedTokenSecret(secret)) return null;
   const proved = await db.transaction(async (tx) => {
     /*
@@ -436,9 +461,16 @@ export async function confirmRsvp<T extends Record<string, unknown>>(db: Databas
     if (event.mode !== "NONE" || !event.enabled) return null;
     const rsvpId = await consumeRsvpToken(tx, secret, "RSVP_CONFIRM", now);
     if (!rsvpId) return null;
+    const [before] = await tx.select().from(eventRsvps).where(eq(eventRsvps.id, rsvpId)).for("update");
+    const typedName = cleanDisplayName(options.displayName);
+    const takesName = before !== undefined && typedName !== null && before.askedAt !== null && before.confirmedAt === null && before.displayName === null;
+    const notice = takesName ? await findCurrentApprovedDocument(tx, "PRIVACY_NOTICE", before.locale, now) : undefined;
     const [row] = await tx
       .update(eventRsvps)
-      .set({ confirmedAt: sql`coalesce(${eventRsvps.confirmedAt}, ${now})` })
+      .set({
+        confirmedAt: sql`coalesce(${eventRsvps.confirmedAt}, ${now})`,
+        ...(takesName ? { displayName: typedName, showName: options.showName === true, ...(notice ? { privacyNoticeVersion: notice.version } : {}) } : {}),
+      })
       .where(eq(eventRsvps.id, rsvpId))
       .returning();
     return row ? { eventId: row.eventId, locale: row.locale, slug: await slugOf(tx, row.eventId, row.locale), email: row.deliveryEmail, displayName: row.displayName } : null;

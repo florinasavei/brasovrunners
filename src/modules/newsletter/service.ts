@@ -420,7 +420,7 @@ export async function unsubscribeNewsletterSubscriber<T extends Record<string, u
 }
 
 /** `receives` (`domain/topics.ts`) as SQL: the subscriber asked for everything, or for one of these topics. */
-function receivesSql(topics: readonly NewsletterTopic[]) {
+export function receivesSql(topics: readonly NewsletterTopic[]) {
   const wanted = ["ALL", ...topics];
   return sql`${newsletterSubscribers.topics} && ARRAY[${sql.join(
     wanted.map((topic) => sql`${topic}`),
