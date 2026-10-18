@@ -2116,6 +2116,15 @@ with its cards in the order you fill them.
    column «Adăugată de». Whoever runs the shop may do it: an Administrator, or the colleague given
    «Gestionează magazinul» in step 6.
 
+**Member levels** (optional, any time; `DECISIONS.md` §NNN). The members' zone can tell a founder from a supporter.
+An Administrator **names the levels** on «Pagini» → «Membri» → «Niveluri de membru» (a name and a description in
+both languages, a symbol, the order in «Poziția», «Ascuns» for a level no longer given) and presses the one
+«Salvează tot nivelurile»; **gives each member one** on «Echipa», in «Nivel» on the member's row — or one for all
+the people added at once in «Adaugă mai mulți membri» — and the zone shows it under the member's name while the
+public «Beneficiile membrilor» page lists the visible levels; and **limits a code** with the chips «Pentru
+nivelurile» in «Coduri de reducere» (nothing ticked is every member). A level is a label and what the member
+gets, never a permission: it opens and closes nothing, and the shop does not read it.
+
 ## 44. Voluntari — register the people who help at a race
 
 The event's volunteers (`DECISIONS.md` §754) are built and closed: no event page offers «Vreau să fiu

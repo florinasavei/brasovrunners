@@ -142,6 +142,9 @@ export const CONFIRMED_ACTIONS: Readonly<Record<string, readonly string[]>> = {
   saveDiscountCodeAction: [],
   setDiscountCodeHiddenAction: [],
   deleteDiscountCodeAction: [],
+  // The member levels (§NNN): a level deleted for good, and a member's level changed (what the member sees in the zone).
+  deleteMemberTierAction: [],
+  setMemberTierAction: [],
   // «Magazin» (§683): every write the members see — a product added, written, deleted or archived; the
   // payment words and the orders' address; an order marked paid (which emails the member), handed over or cancelled.
   createShopProductAction: [],
@@ -260,6 +263,7 @@ export const NOT_CONFIRMED: Readonly<Record<string, string>> = {
   saveTeamPageIntroAction: "an editorial save of the page's introduction; publishing the page asks",
   saveMemberDefinitionAction: "an editorial save of one sentence (§789), like the members' pages' words beside it; nothing is sent or published by it",
   saveMembersTextAction: "an editorial save of the members' pages' words (§524), like a page's; publishing the page asks",
+  saveMemberTiersAction: "an editorial save of every row of the levels' card at once (§NNN), like the volunteers' «Salvează toate rolurile» (§791); the delete beside it asks, and a level is a label that opens nothing",
   createLegalVersionAction: "a draft, never in force until approved, which asks",
   updateLegalVersionAction: "a draft, never in force until approved, which asks",
   markBibsPrintedAction: "a mark for the club's own pile of bibs, undone by the same button",
