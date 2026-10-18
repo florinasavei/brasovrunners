@@ -11,7 +11,7 @@ import { isUuid } from "@/shared/ids";
 import { MEMBER_TIERS_MAX, parseTierPosition, tierFieldsSchema } from "./fields";
 import { DEFAULT_TIER_GLYPH } from "./glyph-keys";
 import { NEW_TIER_ROW_KEY, orderTierRows, type PostedTierRow, tierBox, type TierRowBox } from "./tier-rows";
-import { tierUsage } from "./repository";
+import { tierUsage } from "./admin-repository";
 
 /**
  * «Niveluri de membru» (§NNN): the levels the club names for its members. Every write is asserted

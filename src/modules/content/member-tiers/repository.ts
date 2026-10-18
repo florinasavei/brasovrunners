@@ -1,7 +1,5 @@
-import { asc, eq, inArray, sql } from "drizzle-orm";
-import { memberDiscountCodes } from "@/db/schema/member-discount-codes";
+import { asc, eq, inArray } from "drizzle-orm";
 import { type MemberTier, memberTiers } from "@/db/schema/member-tiers";
-import { staffUsers } from "@/db/schema/staff-users";
 import type { Database } from "@/db/types";
 import type { Locale } from "@/i18n/routing";
 import { DEFAULT_TIER_GLYPH, isTierGlyphKey, type TierGlyphKey } from "./glyph-keys";
@@ -10,8 +8,8 @@ import { DEFAULT_TIER_GLYPH, isTierGlyphKey, type TierGlyphKey } from "./glyph-k
  * The member tiers (§NNN), read. A tier is a label and its benefits, never a permission: nothing here
  * decides what anybody may do. The reads:
  *
- * - the backoffice's whole list with how many members hold each and how many discount codes are for
- *   it alone — «Niveluri de membru» and the team page's select;
+ * - every level, in the club's order, and the visible ones — «Niveluri de membru»'s chips and the team page's select
+ *   (the backoffice's counts are `admin-repository.ts`, which meets the members' and the codes' tables);
  * - the visible levels, in the club's order — what «Echipa» offers when giving a level;
  * - a level by id — the member's own badge in the zone;
  * - the public members' page's levels, in one language — through the public cache (§333), so a save
@@ -36,21 +34,6 @@ export function tierViewOf(tier: Pick<MemberTier, "id" | "nameRo" | "nameEn" | "
     glyph: glyphOf(tier.glyph),
   };
 }
-
-/** Every tier, in the club's order, for «Niveluri de membru»: with the members who hold it and the codes for it alone. */
-export async function listMemberTiersForAdmin<T extends Record<string, unknown>>(db: Database<T>) {
-  return db
-    .select({
-      tier: memberTiers,
-      members: sql<number>`(select count(*) from ${staffUsers} where ${staffUsers.memberTierId} = ${memberTiers.id})`.mapWith(Number),
-      codesOnlyForIt: sql<number>`(select count(*) from ${memberDiscountCodes} where ${memberDiscountCodes.tierIds} = array[${memberTiers.id}])`.mapWith(Number),
-      codesForIt: sql<number>`(select count(*) from ${memberDiscountCodes} where ${memberTiers.id} = any(${memberDiscountCodes.tierIds}))`.mapWith(Number),
-    })
-    .from(memberTiers)
-    .orderBy(asc(memberTiers.position), asc(memberTiers.createdAt));
-}
-
-export type AdminMemberTier = Awaited<ReturnType<typeof listMemberTiersForAdmin>>[number];
 
 /** Every tier with no counts, in the club's order — the codes' chips name them, hidden ones included. */
 export async function listAllMemberTiers<T extends Record<string, unknown>>(db: Database<T>): Promise<MemberTier[]> {
@@ -88,14 +71,4 @@ export async function existingTierIdsShared<T extends Record<string, unknown>>(d
 export async function findMemberTierShared<T extends Record<string, unknown>>(db: Database<T>, id: string): Promise<MemberTier | undefined> {
   const [row] = await db.select().from(memberTiers).where(eq(memberTiers.id, id)).limit(1).for("share");
   return row;
-}
-
-/** How many members hold a tier, and how many codes are for it alone: what stops its deletion. */
-export async function tierUsage<T extends Record<string, unknown>>(db: Database<T>, id: string): Promise<{ members: number; codesOnlyForIt: number }> {
-  const [members] = await db.select({ n: sql<number>`count(*)`.mapWith(Number) }).from(staffUsers).where(eq(staffUsers.memberTierId, id));
-  const [codes] = await db
-    .select({ n: sql<number>`count(*)`.mapWith(Number) })
-    .from(memberDiscountCodes)
-    .where(sql`${memberDiscountCodes.tierIds} = array[${id}]::uuid[]`);
-  return { members: members?.n ?? 0, codesOnlyForIt: codes?.n ?? 0 };
 }

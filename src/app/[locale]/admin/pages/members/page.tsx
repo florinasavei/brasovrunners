@@ -14,7 +14,7 @@ import { getDb } from "@/db/client";
 import { getPathname } from "@/i18n/navigation";
 import { routing, type Locale } from "@/i18n/routing";
 import { readMemberDefinition } from "@/modules/content/members/member-definition";
-import { listMemberTiersForAdmin } from "@/modules/content/member-tiers/repository";
+import { listMemberTiersForAdmin } from "@/modules/content/member-tiers/admin-repository";
 import {
   MEMBERS_TEXT_MAX,
   type MembersPageSettings,

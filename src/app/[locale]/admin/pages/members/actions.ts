@@ -13,7 +13,7 @@ import {
   saveDiscountCode,
   setDiscountCodeHidden,
 } from "@/modules/content/member-codes/service";
-import { tierUsage } from "@/modules/content/member-tiers/repository";
+import { tierUsage } from "@/modules/content/member-tiers/admin-repository";
 import { deleteMemberTier, saveMemberTiers } from "@/modules/content/member-tiers/service";
 import { postedTierRows } from "@/modules/content/member-tiers/tier-rows";
 import { canEditMembersPage, canManageMemberTiers, canPublishMembersPage } from "@/modules/staff-identity/domain/roles";
