@@ -11,8 +11,8 @@ import CampaignIcon from "@mui/icons-material/Campaign";
 import CardMembershipIcon from "@mui/icons-material/CardMembership";
 import CategoryIcon from "@mui/icons-material/Category";
 import CheckroomIcon from "@mui/icons-material/Checkroom";
-import CloudOffIcon from "@mui/icons-material/CloudOff";
 import ChecklistIcon from "@mui/icons-material/Checklist";
+import CloudOffIcon from "@mui/icons-material/CloudOff";
 import ConfirmationNumberIcon from "@mui/icons-material/ConfirmationNumber";
 import ContactMailIcon from "@mui/icons-material/ContactMail";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
@@ -59,6 +59,7 @@ import PeopleAltIcon from "@mui/icons-material/PeopleAlt";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import PhoneIcon from "@mui/icons-material/Phone";
 import EventAvailableIcon from "@mui/icons-material/EventAvailable";
+import PhotoAlbumIcon from "@mui/icons-material/PhotoAlbum";
 import PlaceIcon from "@mui/icons-material/Place";
 import PlaylistAddCheckIcon from "@mui/icons-material/PlaylistAddCheck";
 import PrintIcon from "@mui/icons-material/Print";
@@ -67,11 +68,11 @@ import ReorderIcon from "@mui/icons-material/Reorder";
 import RouteIcon from "@mui/icons-material/Route";
 import RuleIcon from "@mui/icons-material/Rule";
 import SaveIcon from "@mui/icons-material/Save";
-import SettingsIcon from "@mui/icons-material/Settings";
-import ShieldIcon from "@mui/icons-material/Shield";
 import ScheduleIcon from "@mui/icons-material/Schedule";
 import ScheduleSendIcon from "@mui/icons-material/ScheduleSend";
 import ScienceIcon from "@mui/icons-material/Science";
+import SettingsIcon from "@mui/icons-material/Settings";
+import ShieldIcon from "@mui/icons-material/Shield";
 import StickyNote2Icon from "@mui/icons-material/StickyNote2";
 import ShareIcon from "@mui/icons-material/Share";
 import SpeedIcon from "@mui/icons-material/Speed";
@@ -228,6 +229,8 @@ export const PANEL_GLYPHS = {
   limits: DataUsageIcon,
   jobs: UpdateIcon,
   pictures: ImageIcon,
+  // «Galerie»' two tabs (§NNN): the albums, and every stored picture above.
+  albums: PhotoAlbumIcon,
   translation: TranslateIcon,
   // «Ordinea meniului» (§571): the site menu's entries, one under the other, in the club's order.
   menuOrder: ReorderIcon,

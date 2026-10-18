@@ -127,19 +127,25 @@ export default async function DeadlinesPanel({ locale, state, mayEdit, openWhen,
   const labels = Object.fromEntries(DEADLINE_KEYS.map((key) => [key, t(`emails.deadlines.fields.${key}`)]));
 
   /** One fold of the seven: its card, with its boxes (or, for a reader, their values) inside. */
-  const group = (entry: (typeof DEADLINE_GROUPS)[number], body: (key: DeadlineKey) => ReactNode) => (
+  const group = (entry: (typeof DEADLINE_GROUPS)[number], body: (key: DeadlineKey) => ReactNode, asList = false) => (
     <Panel
       key={entry.key}
       {...GROUP_GLYPH[entry.key]}
       level={3}
       collapsible
       title={t(`emails.deadlines.groups.${entry.key}.title`)}
-      intro={t(`emails.deadlines.groups.${entry.key}.intro`)}
+      intro={entry.fields.length > 1 ? t(`emails.deadlines.groups.${entry.key}.intro`) : undefined}
       aside={groupSummary(t, locale, entry.fields, deadlines)}
       id={`deadlines-${entry.key}`}
       data-testid={`deadline-group-${entry.key}`}
     >
-      <Stack spacing={1.5}>{entry.fields.map((key) => body(key))}</Stack>
+      {asList ? (
+        <Box component="dl" sx={{ m: 0, display: "grid", rowGap: 1.5 }}>
+          {entry.fields.map((key) => body(key))}
+        </Box>
+      ) : (
+        <Stack spacing={1.5}>{entry.fields.map((key) => body(key))}</Stack>
+      )}
     </Panel>
   );
 
@@ -173,16 +179,20 @@ export default async function DeadlinesPanel({ locale, state, mayEdit, openWhen,
         {!mayEdit ? (
           <>
             {DEADLINE_GROUPS.map((entry) =>
-              group(entry, (key) => (
-                <Box key={key} sx={{ display: "flex", flexWrap: "wrap", columnGap: 1 }}>
-                  <Typography component="span" variant="body2" color="text.secondary">
-                    {labels[key]}:
-                  </Typography>
-                  <Typography component="span" variant="body2" sx={{ fontWeight: 600 }} data-testid={`deadline-${key}`}>
-                    {deadlines[key]}
-                  </Typography>
-                </Box>
-              )),
+              group(
+                entry,
+                (key) => (
+                  <Box key={key} sx={{ display: "flex", flexWrap: "wrap", columnGap: 1 }}>
+                    <Typography component="dt" variant="body2" color="text.secondary">
+                      {labels[key]}:
+                    </Typography>
+                    <Typography component="dd" variant="body2" sx={{ fontWeight: 600, m: 0 }} data-testid={`deadline-${key}`}>
+                      {deadlines[key]}
+                    </Typography>
+                  </Box>
+                ),
+                true,
+              ),
             )}
             <Typography variant="body2" color="text.secondary">
               {t("emails.deadlines.readOnly")}

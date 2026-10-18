@@ -147,13 +147,6 @@ export const DEADLINE_GROUPS = [
 
 export type DeadlineGroupKey = (typeof DEADLINE_GROUPS)[number]["key"];
 
-/** The fold a deadline sits in. */
-export function deadlineGroupOf(key: DeadlineKey): DeadlineGroupKey {
-  const group = DEADLINE_GROUPS.find((candidate) => (candidate.fields as readonly DeadlineKey[]).includes(key));
-  // Unreachable while the test holds every key in exactly one group; the first fold is the honest fallback.
-  return group ? group.key : DEADLINE_GROUPS[0].key;
-}
-
 export type Deadlines = Record<DeadlineKey, number>;
 
 export const DEFAULT_DEADLINES: Deadlines = Object.freeze(

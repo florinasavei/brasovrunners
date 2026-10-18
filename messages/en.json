@@ -6858,7 +6858,7 @@
           "holdMinutes": "place held {value}",
           "offerHours": "offer {value}",
           "reminderHours": "reminder {value}",
-          "lastCallHours": "last call {value}",
+          "lastCallHours": "last call {value} before the deadline",
           "selfCheckinHours": "“I have arrived” from {value} before",
           "raceWeekDays": "countdown {value} before",
           "seriesHorizonDays": "dates created {value} ahead",

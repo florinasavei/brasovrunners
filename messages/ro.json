@@ -6858,7 +6858,7 @@
           "holdMinutes": "loc ținut {value}",
           "offerHours": "ofertă {value}",
           "reminderHours": "reminder {value}",
-          "lastCallHours": "ultima chemare {value}",
+          "lastCallHours": "ultima chemare cu {value} înaintea termenului",
           "selfCheckinHours": "„Am ajuns” de la {value} înainte",
           "raceWeekDays": "numărătoare inversă {value} înainte",
           "seriesHorizonDays": "datele create cu {value} înainte",

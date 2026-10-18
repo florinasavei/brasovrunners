@@ -5,8 +5,6 @@ import {
   DEADLINE_GROUPS,
   DEADLINE_KEYS,
   DEADLINE_RULES,
-  type DeadlineKey,
-  deadlineGroupOf,
 } from "@/modules/deadlines/domain/deadlines";
 import { deadlineDuration } from "@/modules/deadlines/domain/duration-words";
 
@@ -47,9 +45,6 @@ describe("§377 the deadline groups", () => {
       family: ["familySittingMinutes"],
       outage: ["outageGraceMaxHours"],
     });
-    expect(deadlineGroupOf("selfCheckinHours")).toBe("beforeStart");
-    expect(deadlineGroupOf("outageGraceMaxHours")).toBe("outage");
-    for (const key of DEADLINE_KEYS) expect(DEADLINE_GROUPS.find((group) => (group.fields as readonly DeadlineKey[]).includes(key))?.key, key).toBe(deadlineGroupOf(key));
   });
 
   it("has a title and a sentence for every group, and a short line for every deadline, in both catalogues", () => {
@@ -58,9 +53,12 @@ describe("§377 the deadline groups", () => {
       for (const group of DEADLINE_GROUPS) {
         const words = deadlines.groups[group.key];
         expect(words.title, group.key).toBeTruthy();
-        expect(words.intro, group.key).toBeTruthy();
-        // One sentence of plain words (the plain-words test's 200 characters).
-        expect(words.intro.length, group.key).toBeLessThanOrEqual(200);
+        // A fold of one box has no sentence of its own: its label and help already say it (the screen passes an intro only for two boxes or more).
+        if (group.fields.length > 1) {
+          expect(words.intro, group.key).toBeTruthy();
+          // One sentence of plain words (the plain-words test's 200 characters).
+          expect(words.intro.length, group.key).toBeLessThanOrEqual(200);
+        }
       }
       for (const key of DEADLINE_KEYS) expect(deadlines.short[key], key).toContain("{value}");
       for (const form of ["one", "few", "other"] as const) expect(deadlines.differsCount[form], form).toContain("{count}");

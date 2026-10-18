@@ -84,7 +84,7 @@ describe("§377 «Termene» in seven folds", () => {
     expect(summaryOf(html, "deadline-group-confirmation")).toContain("link 48 de ore · retrimis după 20 de ore · retrimiteri: o dată");
     expect(summaryOf(html, "deadline-group-hold")).toContain("loc ținut 30 de minute · ofertă 24 de ore");
     expect(summaryOf(html, "deadline-group-beforeStart")).toContain(
-      "reminder 2 zile · ultima chemare 2 zile · „Am ajuns” de la o zi înainte · numărătoare inversă o săptămână înainte",
+      "reminder 2 zile · ultima chemare cu 2 zile înaintea termenului · „Am ajuns” de la o zi înainte · numărătoare inversă o săptămână înainte",
     );
     expect(summaryOf(html, "deadline-group-afterEvent")).toContain("lista publică 30 de zile");
     expect(summaryOf(html, "deadline-group-series")).toContain("datele create cu 8 săptămâni înainte");
@@ -98,7 +98,7 @@ describe("§377 «Termene» in seven folds", () => {
     const html = await render("en");
     expect(summaryOf(html, "deadline-group-confirmation")).toContain("link 48 hours · re-sent after 20 hours · re-sends: once");
     expect(summaryOf(html, "deadline-group-hold")).toContain("place held 30 minutes · offer 24 hours");
-    expect(summaryOf(html, "deadline-group-beforeStart")).toContain("reminder 2 days · last call 2 days · “I have arrived” from one day before · countdown one week before");
+    expect(summaryOf(html, "deadline-group-beforeStart")).toContain("reminder 2 days · last call 2 days before the deadline · “I have arrived” from one day before · countdown one week before");
     expect(summaryOf(html, "deadline-group-series")).toContain("dates created 8 weeks ahead");
     expect(summaryOf(html, "deadline-group-outage")).toContain("moves by 48 hours at most");
     expect(summaryOf(html, "deadline-group-outage")).toContain(en.Admin.emails.deadlines.groups.outage.title);
@@ -179,6 +179,19 @@ describe("§377 «Termene» in seven folds", () => {
     expect(html).toMatch(/data-testid="deadline-holdMinutes"[^>]*>20</);
     expect(summaryOf(html, "deadline-group-hold")).toContain("loc ținut 20 de minute");
     expect(html).toContain(ro.Admin.emails.deadlines.readOnly);
+    // A reader's values stay a description list: a screen reader hears each label with its value.
+    const hold = fold(html, "deadline-group-hold");
+    expect(hold).toMatch(/<dl/);
+    expect(hold.match(/<dt/g)).toHaveLength(2);
+    expect(hold.match(/<dd/g)).toHaveLength(2);
+  });
+
+  it("gives a fold of one box no sentence of its own, and a fold of several its sentence", async () => {
+    const html = await render("ro");
+    for (const group of DEADLINE_GROUPS) {
+      const intro = ro.Admin.emails.deadlines.groups[group.key].intro;
+      expect(html.includes(intro), group.key).toBe(group.fields.length > 1);
+    }
   });
 
   it("keeps the catalogues' keys for both languages in step", () => {
