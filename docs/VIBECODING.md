@@ -49,6 +49,8 @@ request and `.github/workflows/release.yml` lands and ships it
 | --- | --- |
 | A page a visitor sees | `src/app/[locale]/…/page.tsx` (Server Component; `"use client"` islands only where a click needs JS) |
 | A deadline (hold, offer, link, reminder, check-in, race week, horizon) | `src/modules/deadlines/`; the words via `duration-words.ts` (§377) |
+| Which fold of «Setări» → «Termene» a deadline sits in, and a fold's closed line | `DEADLINE_GROUPS` beside `DEADLINE_KEYS` in `src/modules/deadlines/domain/deadlines.ts` (seven groups; a test keeps every deadline in exactly one); the fold is a level-3 `Panel` drawn by `ui/DeadlinesPanel.tsx` (`groupSummary`: the values in `duration-words.ts#deadlineDuration`, then «N diferit de recomandat»); words `Admin.emails.deadlines.{groups,short,shortZero,differsCount}`. A new deadline is a key, a rule, a group and its words — a test fails until all four exist (§NNN) |
+| A glyph on a tab of «Setări»' row | `TAB_GLYPH` in `src/modules/staff-identity/ui/SettingsSubNav.tsx` (an element per tab, as `PagesSubNav` does — `SubNav` is a Server Component end to end; never an element handed to a client island); a new tab is a key of `SettingsRowEntry` there and the type refuses it without a glyph (§NNN) |
 | The words on it | `messages/ro.json` and `messages/en.json` — both, same keys, no ICU plurals |
 | A backoffice screen | `src/app/[locale]/admin/…`; its Server Actions in the sibling `actions.ts` |
 | A route handler (PDF, image, API) | `src/app/api/…/route.ts` |
