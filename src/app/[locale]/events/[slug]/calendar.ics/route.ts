@@ -7,6 +7,8 @@ import { datedOrNull } from "@/modules/events/domain/dated";
 import { eventClockInstants } from "@/modules/events/domain/page-clock";
 import { holdPageUntil } from "@/modules/public-cache/page-lifetime";
 import { eventBySlugWithLastGood } from "@/modules/resilience/event-copy";
+import { readOrWhileAway } from "@/modules/resilience/optional-read";
+import { readPublicComing } from "@/modules/rsvp/public-page";
 import { env } from "@/shared/config/env";
 
 /**
@@ -19,6 +21,10 @@ import { env } from "@/shared/config/env";
  * until a save of the event expires the row it was made from (the row's tag files the file too), or
  * until the event's own clock changes what its description says. A literal, as Next requires:
  * `PUBLIC_PAGE_CEILING_SECONDS` (a test holds them together).
+ *
+ * **«Vin!» in the description** (§NNN): where the page offers the answer, «Vin! → <page>#vin» and how many come, from the cached
+ * count the feed reads (`readPublicComing`) — expired by a confirmation or a withdrawal, so this file is made again once per write to
+ * "places", never per request. The count in a file saved to a calendar is the day's; the link is what stays true.
  */
 export const dynamic = "force-static";
 export const revalidate = 86400;
@@ -39,9 +45,10 @@ export async function GET(_request: Request, { params }: { params: Promise<{ loc
   // Where registration stands is in the description (§159): kept until the door's next change (§549).
   await holdPageUntil(eventClockInstants(event), now);
   const t = await getTranslations({ locale: known, namespace: "Event" });
+  const coming = await readOrWhileAway(() => readPublicComing([event], now), new Map<string, number>());
   const body = buildCalendar({
     // Every detail the page has, in the description (§159).
-    events: [toCalendarEvent(event, known, now)],
+    events: [toCalendarEvent(event, known, now, { coming })],
     baseUrl: env.APP_BASE_URL,
     name: event.title,
     labels: { locale: known, t },
