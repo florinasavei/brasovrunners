@@ -4638,7 +4638,7 @@
           "todo": "An event takes “I'm coming!” answers, but the notice in force does not describe them yet, so its page shows no box and no count.",
           "done": "The notice in force describes the “I'm coming!” answers: the pages of ticked events take them and show how many are coming. A name shows only for those who ticked “I want my name to show”.",
           "how": [
-            "Before approving, read the template's paragraph with a lawyer: what “I'm coming!” publishes (how many are coming, the name only of those who tick), how long the address is kept and what the recognised browser's one-year cookie does.",
+            "Before approving, read the template's paragraph with a lawyer: what “I'm coming!” publishes, how long the address is kept and what the recognised browser's one-year cookie does.",
             "/admin/legal → the “GDPR” card → “Regenerate from the template” → confirm. Sections 4, 5 and 7 describe the “I'm coming!” answers.",
             "Open the draft, read it, fill in what is left, “Save draft”, then “Approve and publish”, in both languages.",
             "The terms do not change: “I'm coming!” buys, books and signs nothing."
@@ -6443,7 +6443,7 @@
         "VOLUNTEER_AGREEMENT_ACCEPTED": "When a volunteer accepts the agreement from the link, or an organizer presses “Signed on paper”: their copy, with the agreement attached as a PDF.",
         "VOLUNTEER_ROLE_ASSIGNED": "When the organizers give a volunteer a role, from the event's «Volunteers» card: a short message naming the role, the date and the place. Nothing to press.",
         "VOLUNTEER_GUARDIAN_REQUEST": "When a volunteer under 18 offers, or an organizer presses “Send the parent's link”: the agreement and the link where the parent accepts it in their own name.",
-        "RSVP_CONFIRM": "When someone types an address under “I'm coming!” on an event's page (at most one message per address every ten minutes): the “Yes, I'm coming” button, which counts them, and “I'm not coming” under it. The page's “I'm not coming any more” sends the same message with only the withdraw link."
+        "RSVP_CONFIRM": "When someone types an address under “I'm coming!” on an event's page: “Yes, I'm coming” counts them, “I'm not coming” takes it back. The page's “not coming any more” sends only the withdraw link."
       },
       "whenShort": {
         "VERIFY_REGISTRATION_EMAIL": "after the form is sent",
@@ -7135,7 +7135,7 @@
         "VOLUNTEER_AGREEMENT_ACCEPTED": "The role and the event are added by themselves. The PDF shows the accepted text, with the name, the role, the moment and its fingerprint.",
         "VOLUNTEER_ROLE_ASSIGNED": "The role and the event's date and place are added by themselves, however you write the text. The message has no link that does anything.",
         "VOLUNTEER_GUARDIAN_REQUEST": "The volunteer and the event are added by themselves. The link is for the parent or guardian only, works once, and a new one replaces the old.",
-        "RSVP_CONFIRM": "The links are for this address only, work once, and a new message replaces the old ones. Someone already counted gets only the “I'm not coming any more” link."
+        "RSVP_CONFIRM": "At most one message per address every ten minutes. The links are for this address only, work once and are replaced by a newer message. Someone already counted gets only the withdraw link."
       },
       "confirmationRetry": "To whoever has not confirmed, the link goes again by itself {retry} after the last email, at most {times}; “Resend” counts too. The deadline does not move.",
       "confirmationRetryOff": "It is not re-sent by itself: in “Deadlines”, the number of resends is 0.",
