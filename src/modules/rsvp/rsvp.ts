@@ -14,6 +14,7 @@ import { consumeRateLimit } from "@/modules/rate-limit/service";
 import { emailBucketKey } from "@/modules/rate-limit/domain/key";
 import { DomainError } from "@/shared/errors/domain-error";
 import { cleanDisplayName, isConsistent, type RsvpIdentity } from "./domain/identity";
+import { RSVP_CONFIRM_HOURS } from "./domain/link-life";
 import { rsvpOffered } from "./domain/offered";
 import { publicRsvpName } from "./domain/public-name";
 
@@ -42,8 +43,10 @@ import { publicRsvpName } from "./domain/public-name";
  * Nothing here writes an audit row: nothing is something the staff did.
  */
 
-/** A confirm link lives 48 hours (and never past the event's start). */
-export const RSVP_CONFIRM_HOURS = 48;
+export { RSVP_CONFIRM_HOURS };
+
+/** A withdraw link outlives the start it was sent with by this much; the event's start at the press decides (a moved event keeps its links). */
+const WITHDRAW_LINK_GRACE_DAYS = 60;
 
 /** One message per address and event in this window — the form answers the same sentence either way. */
 const CONFIRM_THROTTLE_SCOPE = "rsvp-confirm" as const;
@@ -72,6 +75,14 @@ function canonicalOf(email: string) {
 /** The 10-minute bucket a confirm message's idempotency key belongs to, so a retried queueing is one row. */
 function messageWindow(now: Date): number {
   return Math.floor(now.getTime() / (10 * 60_000));
+}
+
+/** Kill the row's live «Da, vin» links: what they would confirm is no longer what their email showed. */
+async function invalidateConfirmLinks<T extends Record<string, unknown>>(tx: Transaction<T>, rsvpId: string, now: Date): Promise<void> {
+  await tx
+    .update(eventRsvpTokens)
+    .set({ invalidatedAt: now })
+    .where(and(eq(eventRsvpTokens.rsvpId, rsvpId), eq(eventRsvpTokens.purpose, "RSVP_CONFIRM"), isNull(eventRsvpTokens.usedAt), isNull(eventRsvpTokens.invalidatedAt)));
 }
 
 /**
@@ -137,22 +148,43 @@ export async function answerRsvp<T extends Record<string, unknown>>(
       if (!existing) throw new DomainError("CONFLICT", "the answer could not be written");
       row = existing;
       if (identity.verified) {
-        // The person's own press: confirmed now, keeping whatever they showed before unless this press shows more.
-        const showName = identity.showName || existing.showName;
+        /*
+          The person's own press. A row already confirmed is theirs: keep what they showed before unless this press shows more.
+          A row still UNCONFIRMED is not theirs — it holds whatever a stranger typed for this address, a name and a tick the owner
+          never gave — so the verified identity's own values replace it whole (§143, §396): a name is public only for the person who
+          ticked it.
+        */
+        const owned = existing.confirmedAt !== null;
         const [updated] = await tx
           .update(eventRsvps)
-          .set({
-            confirmedAt: existing.confirmedAt ?? now,
-            showName,
-            displayName: displayName ?? existing.displayName,
-            deliveryEmail: who.deliveryEmail,
-            ...(existing.confirmedAt === null || identity.showName ? { privacyNoticeVersion: notice.version } : {}),
-          })
+          .set(
+            owned
+              ? {
+                  showName: identity.showName || existing.showName,
+                  displayName: displayName ?? existing.displayName,
+                  deliveryEmail: who.deliveryEmail,
+                  ...(identity.showName ? { privacyNoticeVersion: notice.version } : {}),
+                }
+              : {
+                  confirmedAt: now,
+                  showName: identity.showName,
+                  displayName,
+                  locale,
+                  deliveryEmail: who.deliveryEmail,
+                  privacyNoticeVersion: notice.version,
+                },
+          )
           .where(eq(eventRsvps.id, existing.id))
           .returning();
         row = updated;
-      } else if (existing.confirmedAt === null) {
-        // Not yet public, not yet the owner's: a later typing refreshes it (and the request's moment).
+        if (!owned) await invalidateConfirmLinks(tx, existing.id, now);
+      } else if (existing.confirmedAt === null && mail) {
+        /*
+          Not yet public, not yet the owner's: a later typing refreshes it (and the request's moment) — but only when it sends a
+          new message, whose links replace the old ones. Inside the throttle the first email stays the one the person has, so the
+          row must keep what that email showed. And the live «Da, vin» link of the old message dies here, so it cannot confirm a
+          name and a tick it never named.
+        */
         const [updated] = await tx
           .update(eventRsvps)
           .set({
@@ -166,8 +198,9 @@ export async function answerRsvp<T extends Record<string, unknown>>(
           .where(eq(eventRsvps.id, existing.id))
           .returning();
         row = updated;
+        await invalidateConfirmLinks(tx, existing.id, now);
       }
-      // else: confirmed, typed by whoever: nothing changes.
+      // else: confirmed, typed by whoever — or unconfirmed inside the throttle: nothing changes.
     }
     if (!identity.verified && mail) {
       await enqueueEmail(tx, {
@@ -200,16 +233,17 @@ export async function requestWithdrawLink<T extends Record<string, unknown>>(
   const parsed = answerSchema.safeParse(input);
   if (!parsed.success) throw new DomainError("VALIDATION_ERROR", "the address is not valid", ["email"]);
   const who = canonicalOf(parsed.data.email);
+  // The throttle is spent before the lookup whether or not the address answered, and the lookup is the same one statement: an
+  // address on the list and one that is not cost the same work, so the response's timing says nothing (BR-REQ-031-01 criterion 3).
+  const allowed =
+    (await consumeRateLimit(db, CONFIRM_THROTTLE_SCOPE, emailBucketKey(CONFIRM_THROTTLE_SCOPE, `${who.canonicalEmail}:${eventId}`), now)).allowed &&
+    (await consumeRateLimit(db, EVENT_THROTTLE_SCOPE, eventId, now)).allowed;
   const [row] = await db
     .select()
     .from(eventRsvps)
     .where(and(eq(eventRsvps.eventId, eventId), eq(eventRsvps.canonicalEmail, who.canonicalEmail)))
     .limit(1);
-  if (!row) return;
-  const allowed =
-    (await consumeRateLimit(db, CONFIRM_THROTTLE_SCOPE, emailBucketKey(CONFIRM_THROTTLE_SCOPE, `${who.canonicalEmail}:${eventId}`), now)).allowed &&
-    (await consumeRateLimit(db, EVENT_THROTTLE_SCOPE, eventId, now)).allowed;
-  if (!allowed) return;
+  if (!row || !allowed) return;
   await db.transaction(async (tx) => {
     await enqueueEmail(tx, {
       participantId: null,
@@ -250,7 +284,8 @@ export async function mintRsvpLinks<T extends Record<string, unknown>>(
     };
     return {
       confirm: params.confirm ? await mint("RSVP_CONFIRM", confirmExpires) : null,
-      withdraw: await mint("RSVP_WITHDRAW", params.startsAt),
+      // The start can move after the message left: the link lives generously and `consumeRsvpToken` asks the event's start as it is then.
+      withdraw: await mint("RSVP_WITHDRAW", new Date(params.startsAt.getTime() + WITHDRAW_LINK_GRACE_DAYS * 86_400_000)),
     };
   });
 }
@@ -258,8 +293,11 @@ export async function mintRsvpLinks<T extends Record<string, unknown>>(
 /** What a link's page needs: the answer's event, in the language the answer was given in, and what the link would do. */
 export type RsvpLink = {
   purpose: EventRsvpTokenPurpose;
-  /** `live`: pressing the button would act. `used`: spent, or replaced by a newer email. `expired`: past its life, or the event has started. */
-  state: "live" | "used" | "expired";
+  /**
+   * `live`: pressing the button would act. `used`: spent, or replaced by a newer email. `expired`: the link's own life ran out while
+   * the event is still ahead (the person can answer again from the page). `over`: the event has started, so no answer is taken.
+   */
+  state: "live" | "used" | "expired" | "over";
   rsvpId: string;
   eventId: string;
   locale: "ro" | "en";
@@ -305,7 +343,7 @@ export async function readRsvpLink<T extends Record<string, unknown>>(
       .limit(1);
     if (!row) return null;
     const over = row.startsAt !== null && row.startsAt.getTime() <= now.getTime();
-    const state = row.usedAt !== null || row.invalidatedAt !== null ? "used" : row.expiresAt.getTime() <= now.getTime() || over ? "expired" : "live";
+    const state = row.usedAt !== null || row.invalidatedAt !== null ? "used" : over ? "over" : row.expiresAt.getTime() <= now.getTime() ? "expired" : "live";
     return {
       purpose: row.purpose,
       state,
@@ -328,6 +366,17 @@ async function consumeRsvpToken<T extends Record<string, unknown>>(
   now: Date,
 ): Promise<string | null> {
   if (!isWellFormedTokenSecret(secret)) return null;
+  if (purpose === "RSVP_WITHDRAW") {
+    // «Nu mai vin» works until the event's start as it is now — not as it was when the email left (a moved event moves its links).
+    const [event] = await tx
+      .select({ startsAt: events.startsAt })
+      .from(eventRsvpTokens)
+      .innerJoin(eventRsvps, eq(eventRsvps.id, eventRsvpTokens.rsvpId))
+      .innerJoin(events, eq(events.id, eventRsvps.eventId))
+      .where(eq(eventRsvpTokens.tokenHash, hashTokenSecret(secret)))
+      .limit(1);
+    if (event?.startsAt && event.startsAt.getTime() <= now.getTime()) return null;
+  }
   const [spent] = await tx
     .update(eventRsvpTokens)
     .set({ usedAt: now })
@@ -376,13 +425,15 @@ export async function confirmRsvp<T extends Record<string, unknown>>(db: Databas
       message left, and a link to an event that is no longer ahead counts nobody (and is not spent, so the page can still say why).
     */
     const [event] = await tx
-      .select({ status: events.eventStatus, startsAt: events.startsAt })
+      .select({ status: events.eventStatus, startsAt: events.startsAt, mode: events.registrationMode, enabled: events.rsvpEnabled })
       .from(eventRsvpTokens)
       .innerJoin(eventRsvps, eq(eventRsvps.id, eventRsvpTokens.rsvpId))
       .innerJoin(events, eq(events.id, eventRsvps.eventId))
       .where(eq(eventRsvpTokens.tokenHash, hashTokenSecret(secret)))
       .limit(1);
     if (!event || event.status !== "SCHEDULED" || event.startsAt === null || event.startsAt.getTime() <= now.getTime()) return null;
+    // The club may have switched the tick off, or given the event a registration, since the message left: nothing is counted then.
+    if (event.mode !== "NONE" || !event.enabled) return null;
     const rsvpId = await consumeRsvpToken(tx, secret, "RSVP_CONFIRM", now);
     if (!rsvpId) return null;
     const [row] = await tx

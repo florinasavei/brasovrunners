@@ -9,6 +9,7 @@ import { tokenAttemptAllowed } from "@/modules/action-tokens/throttle";
 import { rememberPerson } from "@/modules/person-session/session";
 import { confirmRsvp, withdrawRsvp, type RsvpProved } from "@/modules/rsvp/rsvp";
 import { RSVP_BOX_ID } from "@/modules/rsvp/rsvp-box";
+import { withdrawnProof } from "@/modules/rsvp/withdrawn-proof";
 
 /**
  * The two buttons of a «Vin!» message's page (§NNN, «Vin!» part 1): «Da, vin» and «Nu mai vin». Each spends its link — single
@@ -63,5 +64,6 @@ export async function withdrawRsvpAction(form: FormData): Promise<void> {
   if (!proved) redirect(`${pageOf(locale, token)}?invalid=1`);
   await remember(proved, now);
   // The slug travels as the page's own address, never a value of the person's (§14.5): where the sentence's link goes.
-  redirect(`${pageOf(proved.locale, token)}?retras=${encodeURIComponent(proved.slug ?? "")}`);
+  const slug = proved.slug ?? "";
+  redirect(`${pageOf(proved.locale, token)}?retras=${encodeURIComponent(slug)}&ok=${withdrawnProof(token, slug)}`);
 }

@@ -807,7 +807,7 @@
       "withdrawIntro": "Type the address you said you were coming with. We email you a link that deletes your answer.",
       "withdrawSubmit": "Send the link",
       "withdrawSubmitting": "Sending…",
-      "withdrawDone": "If that address said it was coming, we've emailed it a link.",
+      "withdrawDone": "If your address is among those coming, we've emailed you a link.",
       "countHeading": "Coming ({count})",
       "countEmpty": "Be the first to say you're coming.",
       "countOthers": "and {count} more",
@@ -815,7 +815,7 @@
       "going": "You're coming",
       "cancel": "I'm not coming any more",
       "notMe": "Not me",
-      "help": "Your browser stays recognised for a year after “Yes, I'm coming”; “Not me” forgets it.",
+      "help": "Your browser stays recognised for a year after “Yes, I'm coming” or “I'm not coming any more”; “Not me” forgets it.",
       "failed": "We could not send your answer. Try again."
     }
   },
@@ -3234,7 +3234,6 @@
       "rsvpAnswers": {
         "title": "“I'm coming!” answers ({count})",
         "summary": "{confirmed} confirmed, {unconfirmed} unconfirmed",
-        "summaryNone": "No answers yet",
         "email": "Email",
         "name": "Name",
         "withName": "With name",
@@ -3244,7 +3243,6 @@
         "no": "no",
         "confirmed": "Confirmed",
         "unconfirmed": "Unconfirmed",
-        "empty": "Nobody has answered yet.",
         "note": "Read-only. A person takes their answer back with their own “I'm not coming any more” link; unconfirmed ones are deleted after 7 days.",
         "countOnly": "Administrators and Organizers see the addresses; you only see how many answered.",
         "countLine": "{confirmed} confirmed, {unconfirmed} unconfirmed."
@@ -4639,7 +4637,7 @@
           "done": "The notice in force describes the “I'm coming!” answers: the pages of ticked events take them and show how many are coming. A name shows only for those who ticked “I want my name to show”.",
           "how": [
             "Before approving, read the template's paragraph with a lawyer: what “I'm coming!” publishes, how long the address is kept and what the recognised browser's one-year cookie does.",
-            "/admin/legal → the “GDPR” card → “Regenerate from the template” → confirm. Sections 4, 5 and 7 describe the “I'm coming!” answers.",
+            "/admin/legal → the “GDPR” card → “Regenerate from the template” → confirm. Sections 4, 5, 7 and 10 describe the “I'm coming!” answers and the recognised browser.",
             "Open the draft, read it, fill in what is left, “Save draft”, then “Approve and publish”, in both languages.",
             "The terms do not change: “I'm coming!” buys, books and signs nothing."
           ]
@@ -12706,6 +12704,9 @@
     "eventLink": "The event's page",
     "eventsLink": "All events",
     "rememberNote": "Your browser stays recognised for a year: at the next event, “I'm coming!” is one press, with no email. On the event's page, “Not me” forgets it.",
-    "withdrawDoneNoEvent": "Done, your answer is deleted."
+    "withdrawDoneNoEvent": "Done, your answer is deleted.",
+    "withdrawnTitle": "Answer deleted",
+    "invalidExpired": "The link was valid for a limited time, and that time has passed. The event has not started yet: you can answer again from its page.",
+    "withdrawRememberNote": "After “I'm not coming any more” too, your browser stays recognised for a year: at other events, “I'm coming!” is one press. On the event's page, “Not me” forgets it."
   }
 }

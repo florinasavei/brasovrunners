@@ -15,6 +15,7 @@ import { routing } from "@/i18n/routing";
 import { tokenAttemptAllowed } from "@/modules/action-tokens/throttle";
 import { findPublishedEventBySlug } from "@/modules/events/repository";
 import { readRsvpLink } from "@/modules/rsvp/rsvp";
+import { isWithdrawnProof } from "@/modules/rsvp/withdrawn-proof";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { DENSITY } from "@/theme/density";
@@ -22,7 +23,7 @@ import { confirmRsvpAction, withdrawRsvpAction } from "./actions";
 
 type Props = {
   params: Promise<{ locale: string; token: string }>;
-  searchParams: Promise<{ invalid?: string; retras?: string }>;
+  searchParams: Promise<{ invalid?: string; retras?: string; ok?: string }>;
 };
 
 export const dynamic = "force-dynamic";
@@ -43,19 +44,23 @@ export default async function RsvpLinkPage({ params, searchParams }: Props) {
   const { locale, token } = await params;
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
-  const { invalid, retras } = await searchParams;
+  const { invalid, retras, ok } = await searchParams;
   const t = await getTranslations("Rsvp");
   const db = getDb();
   const now = new Date();
   const inlineLink = { display: "inline-flex", alignItems: "center", minHeight: TAP_TARGET.minHeight } as const;
 
-  // After «Nu mai vin» (the answer and its links are gone): the sentence, and the event\'s page when it is known.
+  /*
+    After «Nu mai vin» (the answer and its links are gone): the sentence, and the event's page when it is known. The row is gone, so
+    the database cannot say the press happened: the redirect carries a keyed proof (`withdrawn-proof.ts`), and without it (an address
+    somebody typed) the page names no event and claims nothing.
+  */
   if (retras !== undefined && invalid === undefined) {
-    const event = retras ? await findPublishedEventBySlug(db, locale, retras) : undefined;
+    const event = retras && isWithdrawnProof(ok, token, retras) ? await findPublishedEventBySlug(db, locale, retras) : undefined;
     return (
       <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
         <Typography variant="h1" gutterBottom sx={{ fontSize: "1.5rem" }}>
-          {t("withdrawTitle")}
+          {t("withdrawnTitle")}
         </Typography>
         <Stack spacing={1.5}>
           <Alert severity="success" role="status" data-testid="rsvp-withdrawn">
@@ -83,14 +88,20 @@ export default async function RsvpLinkPage({ params, searchParams }: Props) {
   return (
     <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
       <Typography variant="h1" gutterBottom sx={{ fontSize: "1.5rem" }}>
-        {live?.purpose === "RSVP_WITHDRAW" ? t("withdrawTitle") : t("confirmTitle")}
+        {!link ? t("linkInvalid") : link.purpose === "RSVP_WITHDRAW" ? t("withdrawTitle") : t("confirmTitle")}
       </Typography>
 
       {!live ? (
         <Stack spacing={1.5} data-testid="rsvp-link-invalid">
           <Alert severity="warning">
             <AlertTitle>{t("linkInvalid")}</AlertTitle>
-            {link?.state === "expired" ? t("invalidOver") : t("invalidBody")}
+            {link?.state === "over"
+              ? t("invalidOver")
+              : link?.state === "expired"
+                ? t("invalidExpired")
+                : link?.state === "used" && link.confirmed && link.purpose === "RSVP_CONFIRM"
+                  ? t("confirmAlready", { event: link.title })
+                  : t("invalidBody")}
           </Alert>
           <Typography variant="body2">
             {link ? (
@@ -128,6 +139,9 @@ export default async function RsvpLinkPage({ params, searchParams }: Props) {
               <EventBusyIcon />
             </SubmitButton>
           </form>
+          <Typography variant="body2" color="text.secondary" data-testid="rsvp-withdraw-remember">
+            {t("withdrawRememberNote")}
+          </Typography>
         </Stack>
       )}
     </Container>

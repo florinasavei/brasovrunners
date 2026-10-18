@@ -1029,7 +1029,7 @@ async function renderRow(
     const [answer] =
       typeof rsvpId === "string" && isUuid(rsvpId)
         ? await db
-            .select({ id: eventRsvps.id, canonicalEmail: eventRsvps.canonicalEmail, confirmedAt: eventRsvps.confirmedAt, showName: eventRsvps.showName, displayName: eventRsvps.displayName })
+            .select({ id: eventRsvps.id, eventId: eventRsvps.eventId, canonicalEmail: eventRsvps.canonicalEmail, confirmedAt: eventRsvps.confirmedAt, showName: eventRsvps.showName, displayName: eventRsvps.displayName })
             .from(eventRsvps)
             .where(eq(eventRsvps.id, rsvpId))
             .limit(1)
@@ -1039,6 +1039,9 @@ async function renderRow(
     if (!eventDetails || eventDetails.eventStatus !== "SCHEDULED" || eventDetails.startsAt.getTime() <= now.getTime()) {
       throw new OutboxMessageWithdrawn("the event was cancelled or has started");
     }
+    // The tick off, or a registration given to the event since the press: the event no longer takes answers, so nothing to confirm.
+    const [gate] = await db.select({ mode: events.registrationMode, enabled: events.rsvpEnabled }).from(events).where(eq(events.id, answer.eventId)).limit(1);
+    if (!gate || gate.mode !== "NONE" || !gate.enabled) throw new OutboxMessageWithdrawn("the event no longer takes «Vin!» answers");
     const stage = payload?.request === "withdraw" ? "withdraw" : answer.confirmedAt ? "counted" : "confirm";
     const links = await mintRsvpLinks(db, { rsvpId: answer.id, startsAt: eventDetails.startsAt, confirm: stage === "confirm", now });
     if (!links) throw new OutboxMessageWithdrawn("the event has started");

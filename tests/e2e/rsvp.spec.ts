@@ -286,7 +286,7 @@ test.describe.serial("§NNN «Vin!» on a turn-up event", () => {
     await page.waitForTimeout(1_500);
     await fold.getByRole("button", { name: "Trimite linkul" }).click();
     await page.waitForURL(/vin=retras/);
-    await expect(page.getByTestId("rsvp-withdraw-sent")).toHaveText("Dacă adresa a spus că vine, i-am trimis un link pe email.");
+    await expect(page.getByTestId("rsvp-withdraw-sent")).toHaveText("Dacă adresa ta e printre cei care vin, ți-am trimis pe email un link.");
   });
 
   test("the «Nu mai vin» link deletes the answer, and says so", async ({ page }) => {

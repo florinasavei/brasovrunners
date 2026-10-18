@@ -168,7 +168,7 @@ describe("§NNN the box «Vii?» — the typed form", () => {
     expect(captcha).toContain("Verificarea anti-bot nu a reușit");
     const withdrawn = await box("withdrawSent");
     expect(withdrawn).toContain('data-testid="rsvp-withdraw-sent"');
-    expect(withdrawn).toContain("Dacă adresa a spus că vine, i-am trimis un link pe email.");
+    expect(withdrawn).toContain("Dacă adresa ta e printre cei care vin, ți-am trimis pe email un link.");
     expect(withdrawn).toContain('name="email"');
   });
 

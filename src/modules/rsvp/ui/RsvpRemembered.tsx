@@ -80,7 +80,9 @@ export default function RsvpRemembered({ slug, locale, labels, actions, children
   const raw = useSyncExternalStore(subscribe, () => readCookie(PERSON_HINT_COOKIE), () => "");
   const hint = useMemo(() => decodeHint(raw || null), [raw]);
   const [state, setState] = useState<RsvpIslandState | null>(null);
-  const [failed, setFailed] = useState(false);
+  // Two failures, two behaviours: a state that could not be read falls back to the typed form; a press that failed keeps the one-tap state and says so.
+  const [readFailed, setReadFailed] = useState(false);
+  const [pressFailed, setPressFailed] = useState(false);
   const masked = hint?.masked ?? null;
 
   useEffect(() => {
@@ -94,7 +96,7 @@ export default function RsvpRemembered({ slug, locale, labels, actions, children
         setState(next);
       },
       () => {
-        if (alive) setFailed(true);
+        if (alive) setReadFailed(true);
       },
     );
     return () => {
@@ -105,20 +107,19 @@ export default function RsvpRemembered({ slug, locale, labels, actions, children
   }, [masked, slug, locale]);
 
   // The typed form: no hint, no JavaScript, a stale hint, an event that takes no answer from this browser, or a server that failed.
-  if (!hint || failed || (state !== null && (!state.remembered || !state.offered))) return <>{children}</>;
+  if (!hint || readFailed || (state !== null && (!state.remembered || !state.offered))) return <>{children}</>;
 
   const who = rememberedHeading(hint);
 
   const run = async (call: () => Promise<RsvpIslandState>) => {
     try {
-      setFailed(false);
+      setPressFailed(false);
       const next = await call();
       if (!next.remembered) clearHint();
       setState(next);
       router.refresh();
     } catch {
-      setState((previous) => previous);
-      setFailed(true);
+      setPressFailed(true);
     }
   };
 
@@ -154,7 +155,7 @@ export default function RsvpRemembered({ slug, locale, labels, actions, children
         </form>
       )}
 
-      {failed && (
+      {pressFailed && (
         <Alert severity="error" role="alert" data-testid="rsvp-failed">
           {labels.failed}
         </Alert>

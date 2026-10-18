@@ -188,7 +188,8 @@ export default async function EventDetailPage({ params, query, canEdit = false, 
   // No «Anunță-mă» on a members' event: its box is a public form, and a member is told by the zone.
   const interestBox = membersEvent ? false : read.value.interestBox;
   // Nor «Vii?» on a members' event: its box is a public form (§552). A last good copy made before the field existed carries none.
-  const rsvpBox = membersEvent ? false : read.value.rsvpBox === true;
+  // The start is asked here with the request's own clock, outside the loader: a copy made before the start must not draw the box after it.
+  const rsvpBox = membersEvent ? false : read.value.rsvpBox === true && event !== null && event.startsAt !== null && event.startsAt.getTime() > now.getTime();
   const membersOnly = membersEvent !== undefined;
   // An unknown slug, or one whose translation is still Draft or In review, is a 404 — never a
   // redirect to the other locale (BR-REQ-020-01 criterion 1, BR-REQ-040-02).

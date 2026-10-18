@@ -807,7 +807,7 @@
       "withdrawIntro": "Scrie adresa cu care ai spus că vii. Îți trimitem pe email un link care îți șterge răspunsul.",
       "withdrawSubmit": "Trimite linkul",
       "withdrawSubmitting": "Se trimite…",
-      "withdrawDone": "Dacă adresa a spus că vine, i-am trimis un link pe email.",
+      "withdrawDone": "Dacă adresa ta e printre cei care vin, ți-am trimis pe email un link.",
       "countHeading": "Vin ({count})",
       "countEmpty": "Fii primul care spune că vine.",
       "countOthers": "și încă {count}",
@@ -815,7 +815,7 @@
       "going": "Tu vii",
       "cancel": "Nu mai vin",
       "notMe": "Nu sunt eu",
-      "help": "Browserul tău rămâne recunoscut un an după „Da, vin”; „Nu sunt eu” îl uită.",
+      "help": "Browserul tău rămâne recunoscut un an după „Da, vin” sau „Nu mai vin”; „Nu sunt eu” îl uită.",
       "failed": "Nu am putut trimite răspunsul. Încearcă din nou."
     }
   },
@@ -3234,7 +3234,6 @@
       "rsvpAnswers": {
         "title": "Răspunsuri „Vin!” ({count})",
         "summary": "{confirmed} confirmate, {unconfirmed} neconfirmate",
-        "summaryNone": "Niciun răspuns încă",
         "email": "Email",
         "name": "Nume",
         "withName": "Cu numele",
@@ -3244,7 +3243,6 @@
         "no": "nu",
         "confirmed": "Confirmat",
         "unconfirmed": "Neconfirmat",
-        "empty": "Încă nu a răspuns nimeni.",
         "note": "Doar de citit. Un om își retrage răspunsul prin linkul lui „Nu mai vin”; cele neconfirmate se șterg după 7 zile.",
         "countOnly": "Adresele le văd Administratorul și Organizatorul; tu vezi doar câți au răspuns.",
         "countLine": "{confirmed} confirmate, {unconfirmed} neconfirmate."
@@ -4639,7 +4637,7 @@
           "done": "Nota în vigoare descrie răspunsurile „Vin!”: paginile evenimentelor bifate le primesc și arată câți vin. Numele apare doar la cine a bifat „Vreau să apar cu numele”.",
           "how": [
             "Înainte de aprobare, citește cu un avocat paragraful din șablon: ce publică „Vin!”, cât se păstrează adresa și ce face cookie-ul de un an al browserului recunoscut.",
-            "/admin/legal → cardul „GDPR” → „Regenerează din șablon” → confirmă. Secțiunile 4, 5 și 7 descriu răspunsurile „Vin!”.",
+            "/admin/legal → cardul „GDPR” → „Regenerează din șablon” → confirmă. Secțiunile 4, 5, 7 și 10 descriu răspunsurile „Vin!” și browserul recunoscut.",
             "Deschide ciorna, citește, completează ce a rămas, „Salvează ciorna”, apoi „Aprobă și publică”, în ambele limbi.",
             "Termenii nu se schimbă: „Vin!” nu cumpără, nu rezervă și nu semnează nimic."
           ]
@@ -12706,6 +12704,9 @@
     "eventLink": "Pagina evenimentului",
     "eventsLink": "Toate evenimentele",
     "rememberNote": "Browserul tău rămâne recunoscut un an: la următorul eveniment, „Vin!” e o singură apăsare, fără email. Pe pagina evenimentului, „Nu sunt eu” îl uită.",
-    "withdrawDoneNoEvent": "Gata, ți-am șters răspunsul."
+    "withdrawDoneNoEvent": "Gata, ți-am șters răspunsul.",
+    "withdrawnTitle": "Răspuns șters",
+    "invalidExpired": "Linkul a fost valabil doar un timp, iar acesta a trecut. Evenimentul nu a început încă: poți răspunde din nou de pe pagina lui.",
+    "withdrawRememberNote": "Și după „Nu mai vin”, browserul tău rămâne recunoscut un an: la alte evenimente, „Vin!” e o singură apăsare. Pe pagina evenimentului, „Nu sunt eu” îl uită."
   }
 }

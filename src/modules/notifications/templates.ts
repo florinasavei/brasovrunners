@@ -1,4 +1,5 @@
 import type { EmailLocale, OutgoingEmail } from "@/infrastructure/email/adapter";
+import { RSVP_CONFIRM_HOURS } from "@/modules/rsvp/domain/link-life";
 import type { EmailMessageType } from "@/db/schema/email-outbox";
 import type { RegistrationCancelReasonKind } from "@/db/schema/registrations";
 import { emailBodyParts, newsletterBodyParts, readEmailBody, type EmailBodyPart } from "./domain/email-rich-text";
@@ -1593,7 +1594,7 @@ const T = {
               ]
             : [
                 `Apasă butonul de mai jos ca să confirmi că vii la ${d.eventTitle ?? "eveniment"}.`,
-                "Fără confirmare nu te numărăm: cineva ar fi putut scrie adresa ta din greșeală. Linkul e valabil doar pentru tine, se folosește o singură dată și expiră la start.",
+                `Fără confirmare nu te numărăm: cineva ar fi putut scrie adresa ta din greșeală. Linkurile sunt doar pentru tine și merg o singură dată: „Da, vin” timp de ${RSVP_CONFIRM_HOURS} de ore (cel târziu până la start), „Nu vin” până la start.`,
                 "Dacă nu ai scris tu adresa sau nu mai poți veni, apasă „Nu vin” și răspunsul se șterge.",
               ],
       action: (d: TemplateData) => (d.rsvpStage === "counted" || d.rsvpStage === "withdraw" ? "Nu mai vin" : "Da, vin"),
@@ -2768,12 +2769,12 @@ const T = {
             ]
           : d.rsvpStage === "withdraw"
             ? [
-                `You asked not to come to ${d.eventTitle ?? "the event"} any more. Press the button below and your answer is deleted.`,
+                `You said you're not coming to ${d.eventTitle ?? "the event"} any more. Press the button below and your answer is deleted.`,
                 "If it wasn't you, press nothing: your answer stays as it is.",
               ]
             : [
                 `Press the button below to confirm you're coming to ${d.eventTitle ?? "the event"}.`,
-                "Without a confirmation we don't count you: someone may have typed your address by mistake. The link is for you only, works once and expires at the start.",
+                `Without a confirmation we don't count you: someone may have typed your address by mistake. The links are for you only and work once: “Yes, I'm coming” for ${RSVP_CONFIRM_HOURS} hours (at the latest until the start), “I'm not coming” until the start.`,
                 "If you didn't type the address or can't come any more, press “I'm not coming” and the answer is deleted.",
               ],
       action: (d: TemplateData) => (d.rsvpStage === "counted" || d.rsvpStage === "withdraw" ? "I'm not coming any more" : "Yes, I'm coming"),
