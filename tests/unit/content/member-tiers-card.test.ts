@@ -95,7 +95,7 @@ describe("§NNN the «Niveluri de membru» card on «Membri»", () => {
     expect(page.match(/data-testid="member-tier"/g)).toHaveLength(2);
     expect(page.match(/data-testid="member-tier-new"/g)).toHaveLength(1);
     expect(page.indexOf('data-testid="member-tier-new"')).toBeGreaterThan(page.lastIndexOf('data-testid="member-tier"'));
-    expect(page).toContain("Nivel nou");
+    expect(page).toContain("Adaugă un nivel");
   });
 
   it("names every box by its level's key, with the place the level was drawn at, and the numbers from 1", async () => {
@@ -178,7 +178,7 @@ describe("§NNN the «Niveluri de membru» card on «Membri»", () => {
     expect(page).toContain("Member levels");
     expect(page).toContain("2 levels");
     expect(page).toContain("Save all levels");
-    expect(page).toContain("New level");
+    expect(page).toContain("Add a level");
     expect(page).toContain("Delete the level");
     expect(page).toContain("12 members");
     expect(page).toContain('name="uiLocale" value="en"');

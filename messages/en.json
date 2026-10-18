@@ -9395,7 +9395,7 @@
         "empty": "You have no level yet. Until then, members are simply “Member”.",
         "rowsIntro": "Write a level in the empty row at the end and press “Save all levels”. The order is the one in “Position”.",
         "listLabel": "The member levels, in the club's order",
-        "newRow": "New level",
+        "newRow": "Add a level",
         "newRowHint": "Write the name in Romanian and in English. An empty row does nothing.",
         "nameRo": "Name (Română)",
         "nameEn": "Name (English)",

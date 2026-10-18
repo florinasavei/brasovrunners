@@ -130,19 +130,16 @@ export async function deleteMemberTierAction(_previous: FormOutcome | null, form
   let outcome: { error?: string; saved?: string; count?: string };
   try {
     const actor = await requireStaffCapability(canManageMemberTiers);
-    try {
-      await deleteMemberTier(getDb(), { actor, tierId });
-      outcome = { saved: "memberTierDeleted" };
-    } catch (error) {
-      if (!isDomainError(error)) throw error;
-      const usage = error.code === "MEMBER_TIER_HAS_MEMBERS" || error.code === "MEMBER_TIER_IN_CODES" ? await tierUsage(getDb(), tierId) : null;
-      outcome = {
-        error: error.code,
-        ...(usage ? { count: String(error.code === "MEMBER_TIER_HAS_MEMBERS" ? usage.members : usage.codesOnlyForIt) } : {}),
-      };
-    }
+    await deleteMemberTier(getDb(), { actor, tierId });
+    outcome = { saved: "memberTierDeleted" };
   } catch (error) {
-    return refused(error, form);
+    // The form is a small hidden one beside the card's, so a refusal cannot be returned to it: every answer is a redirect to the card.
+    if (!isDomainError(error)) throw error;
+    const usage = error.code === "MEMBER_TIER_HAS_MEMBERS" || error.code === "MEMBER_TIER_IN_CODES" ? await tierUsage(getDb(), tierId) : null;
+    outcome = {
+      error: error.code,
+      ...(usage ? { count: String(error.code === "MEMBER_TIER_HAS_MEMBERS" ? usage.members : usage.codesOnlyForIt) } : {}),
+    };
   }
   await flashOutcome(outcome);
   const query = new URLSearchParams(outcome.error ? { error: outcome.error, ...(outcome.count ? { count: outcome.count } : {}) } : { saved: outcome.saved ?? "1" });
