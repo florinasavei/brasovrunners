@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.56-2026-10-18 -->
+<!-- PROJECT_BASELINE: BR-V3.57-2026-10-18 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V3.56-2026-10-18`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.57-2026-10-18`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -2384,8 +2384,9 @@ enter them; **only the Administrator and the Superadministrator make them public
    Until a notice **and** terms naming `{{results}}` are in force in **both** languages, ticking «Clasamentul e public pe pagina
    evenimentului» is refused with a sentence and a link here, and `/admin/tasks` shows the rows «Nota de confidențialitate: clasamentul
    curselor» and «Termenii: clasamentul curselor». Entering, importing and ranking work meanwhile.
-2. **After the race, open «Clasament».** The race's editor → the card «Înscrieri» → «Clasament», or the registrations list with the race
-   chosen (both links are drawn for a race that has started; a typed address works for any race). The page has a line for every
+2. **After the race, open «Clasament» — or before it.** The race's editor → the card «Înscrieri» → «Clasament», or the registrations list with the race
+   chosen (both links are drawn for a published race and for one that has started, before the start too; the page then says the race has not begun
+   and lets you write from now on; a typed address works for any race). The page has a line for every
    registered runner who holds a race number — the checked-in first, then by number — with four boxes: **«Timp»** (`h:mm:ss`, `mm:ss` or
    `mm:ss.t`), **«Stare»** (Sosit, Abandon, Neprezentat, Descalificat), **«Timp cip»** (optional) and **«Notă»**. A line with every box empty is
    no result. The blank choice of «Stare» reads «Din timp (Sosit / Neprezentat)» because it is exactly that: a time typed with no state is
@@ -2479,6 +2480,13 @@ turns on event by event. Two steps are the club's.
    random secret, readable only by the server, its fingerprint kept) and `br_person_hint` (the masked address and the name, no secret). On any other event that
    takes answers the page then says «Răspunzi ca an…@gmail.com» and **«Vin!»** is one tap, counted at once, no email; **«Nu mai vin»** is one tap
    too, and **«Nu sunt eu»** forgets the browser. Without JavaScript the typed form stands. This is not a login and opens nothing else.
+   **From a calendar (§815).** For an event that offers the answer, the club's calendar feed, the event's `.ics` file and the file attached to the
+   emails say **«Vin! → <the event's page>#vin»** and under it **«N vin până acum»** (nobody yet: «Fii primul care spune că vine.»). Google and Apple make
+   the link tappable, and it lands on the «Vii?» card — one more tap in a remembered browser, an email once in any other. A calendar cannot take the
+   answer itself (a feed subscribed from an address is read-only in Google), so the link is all of it. The feed is made again with every confirmation or
+   withdrawal, never at each poll; a file saved earlier keeps the day's number and a link that stays true. On the listing, a single date wears
+   **«N vin»** (the people glyph), a 44-pixel link to the same card, once at least one person has confirmed; a series card never does, its dates do.
+   Nothing to set up: all of it follows the tick and the notice, and says nothing for an event that does not offer the answer.
 4. **What the club sees.** In the editor, under the registration card, a fold **«Răspunsuri „Vin!” (N)»** (read-only: no file, no button) lists the email, the
    name, whether the person asked to be named, confirmed or not, and when — **for the Organizer, the Administrator and the Superadministrator**; every other
    role sees only the counts. The preview before saving and `/previzualizare` show nothing of it.
@@ -2486,6 +2494,6 @@ turns on event by event. Two steps are the club's.
    run; a remembered browser a year after its last answer). «Toate datele unei persoane» (`/admin/registrations/person`) lists a person's answers and
    browsers, counts them in the JSON export, and an Administrator can **«Șterge răspunsurile „Vin!” și browserele»** on request — one audit row with the
    counts, never the address.
-6. **Not built here.** The links in the calendar feed, the `.ics` files and the listing card; the «Vii?» email before each event with a personal
+6. **Not built here.** The «Vii?» email before each event with a personal
    «Vin» / «Nu vin»; the one-tap answer from the members' zone. They call the same service (`answerRsvp` with an identity of source `link` or `account`)
    and the same gate (`rsvpOffered`).

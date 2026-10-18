@@ -10,7 +10,9 @@ import { type ProgrammeRow, programmeLines } from "./domain/schedule";
 import { whenTimes } from "./domain/when-times";
 import { clubNightEvent, nightLine as nightWords } from "./night-event";
 import { env } from "@/shared/config/env";
+import { countForm } from "@/i18n/count-form";
 import { CLUB_TIME_ZONE, formatDay, formatTime } from "@/i18n/dates";
+import { RSVP_BOX_ID } from "@/modules/rsvp/rsvp-box";
 import { CLUB_NAME } from "@/theme/brand";
 
 /**
@@ -46,7 +48,8 @@ function qaMarked(value: string): string {
  * notice first, the meeting point with its address and map, the short description and the
  * start of the long one, the times and the facts in one line each, where registration stands
  * and the link to it, the page, the rules, the programme, the route, the film, the Strava and
- * Facebook events, the programme's rows and text, what to bring and the co-host — as plain
+ * Facebook events, the programme's rows and text, what to bring and the co-host — and, for an
+ * event the page offers «Vii?» to, «Vin! → <page>#vin» with how many come (§815) — as plain
  * text in `DESCRIPTION`, where Apple and Google make the bare addresses tappable (which is
  * why the plain twin writes `words — address`), and the same as minimal HTML in `X-ALT-DESC`,
  * which Outlook renders with the words as the links.
@@ -144,6 +147,12 @@ export type CalendarEvent = {
    * Nothing when the event takes no registration.
    */
   registration?: CalendarRegistration | null;
+  /**
+   * «Vin!» (§815): the page offers the answer to this event (`rsvpOffered`, decided by `readComing`, never here), and this many have
+   * said they come. Two lines of the description — «Vin! → <page>#vin» and the count — and nothing else: a calendar cannot take
+   * the answer, so the link is the whole feature. Absent when the page offers none, which is the file byte for byte as before.
+   */
+  coming?: { count: number } | null;
   /** The event's public page, absolute. */
   url: string;
   /**
@@ -374,6 +383,21 @@ function difficultyLine(event: CalendarEvent, t: CalendarLabels["t"]): string {
   return difficultyWords(level, t).plain;
 }
 
+/**
+ * «Vin!» in the description (§815): «Vin! → <page>#vin» and «N vin până acum» (none: «Fii primul care spune că vine.»), the page's
+ * own words for the count. The address is the event's page and the card's anchor (`RSVP_BOX_ID`), never a hostname written here. The
+ * count's noun follows the number the house's way (`countForm`: «1 vine», «5 vin»). Nothing for an event the page does not offer.
+ */
+function comingLines(event: CalendarEvent, labels: CalendarLabels): Line[] {
+  if (!event.coming) return [];
+  const { t } = labels;
+  const count = Math.max(0, Math.trunc(event.coming.count));
+  return [
+    { text: t("rsvp.calendar.link"), url: `${event.url}#${RSVP_BOX_ID}`, separator: " → " },
+    { text: count === 0 ? t("rsvp.calendar.empty") : t(`rsvp.calendar.count.${countForm(count, labels.locale ?? "ro")}`, { count }) },
+  ];
+}
+
 function descriptionGroups(event: CalendarEvent, labels: CalendarLabels): Line[][] {
   const { t } = labels;
   const locale = labels.locale ?? "ro";
@@ -502,6 +526,9 @@ function descriptionGroups(event: CalendarEvent, labels: CalendarLabels): Line[]
     // pack, read on the morning of a dark evening's run, not one more word lost among the route's.
     [times, facts, nightLine].filter((text) => text.length > 0).map((text) => ({ text })),
     registration ? [registration] : [],
+    // «Vin!» (§815): the link into the page's «Vii?» card and how many come — right under the times and the registration line,
+    // where a reader of the entry looks for what to do about it. The link is the address Google and Apple make tappable.
+    comingLines(event, labels),
     links,
     programme.length > 0 ? [{ text: `${t("schedule")}:` }, ...programme.map((text) => ({ text }))] : [],
     checklist ? [{ text: `${t("calendar.checklist")}: ${checklist}` }] : [],

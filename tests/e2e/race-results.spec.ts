@@ -116,7 +116,7 @@ test.describe("§808 a race's results", () => {
     const { eventId } = await seedRace(tag);
     await signIn(page, "Dev Administrator");
 
-    // The registrations list and the event editor both open the page for a race that has started (BR-REQ-050-02).
+    // The registrations list and the event editor both open the page for a race that has started, or a published one ahead (BR-REQ-050-02).
     await page.goto(`/ro/admin/registrations?eventId=${eventId}`);
     await hydrated(page);
     await expect(page.getByTestId("results-link").first()).toBeVisible();

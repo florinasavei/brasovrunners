@@ -65,7 +65,7 @@ import RepeatFields from "@/modules/content/events/ui/RepeatFields";
 import RepeatToggle from "@/modules/content/events/ui/RepeatToggle";
 import { TranslationHiddenFields } from "@/modules/content/events/ui/TranslationFields";
 import { EVENT_NOTICE_TEXT_MAX } from "@/modules/events/domain/event-changes";
-import { eventTakesResults } from "@/modules/results/domain/event-type";
+import { resultsDoorOpen } from "@/modules/results/domain/event-type";
 import { countEventThanksRecipients } from "@/modules/notifications/event-mail";
 import { countEventNoticeRecipients, countRealNoticeRecipientsByEvent } from "@/modules/notifications/event-notices";
 import { readEmailVolumeToday } from "@/modules/notifications/volume";
@@ -1264,8 +1264,8 @@ export default async function EditEventPage({ params, searchParams }: Props) {
                             {t("participantMessages.link")}
                           </GlyphButton>
                         )}
-                        {/* «Clasament» (§808): a race's results, entered or imported by race number — for a race that has started, to whoever enters them. */}
-                        {canEnterResults(staffUser.role) && eventTakesResults(event.type) && event.startsAt.getTime() <= now.getTime() && (
+                        {/* «Clasament» (§808, §816): a race's results, entered or imported by race number — to whoever enters them, for a published race or one that has started: the page behind it opens before the start too. */}
+                        {canEnterResults(staffUser.role) && resultsDoorOpen(event, now) && (
                           <GlyphButton
                             icon="results"
                             href={getPathname({ locale, href: { pathname: "/admin/events/[id]/results", params: { id: event.id } } })}
