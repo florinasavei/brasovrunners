@@ -27,8 +27,8 @@ import { env } from "@/shared/config/env";
  *
  * **«Vin!» in the description** (§812): for an event whose page offers the answer, «Vin! → <page>#vin» and how many come.
  * The count is a cached read filed under "places" (`cachedRsvpCounts`), the tag a confirmation or a withdrawal expires, so the
- * feed is made again once per answer that changes it — never per poll, §549's rule kept — and, with no ticked event ahead, the
- * feed reads nothing it did not read before. While the database is away the lines are left out and the file is kept a minute.
+ * feed is made again after each write to "places" (an answer, a registration) — once per write, never per poll, §549's rule
+ * kept — and, with no ticked event ahead, the feed reads nothing it did not read before. While the database is away the lines are left out and the file is kept a minute.
  */
 export const dynamic = "force-static";
 /** A literal, as Next requires: `PUBLIC_PAGE_CEILING_SECONDS` (a test holds them together). */
