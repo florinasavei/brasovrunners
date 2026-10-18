@@ -239,7 +239,7 @@ test.describe.serial("§NNN «Vin!» on a turn-up event", () => {
     await expect(remembered).toContainText("Răspunzi ca");
     await expect(remembered).toContainText("an…@example.test");
     await expect(remembered.locator('input[name="email"]')).toHaveCount(0);
-    await expect(remembered).toContainText("Browserul tău rămâne recunoscut un an după „Da, vin”; „Nu sunt eu” îl uită.");
+    await expect(remembered).toContainText("Browserul tău rămâne recunoscut un an după „Da, vin” sau „Nu mai vin”; „Nu sunt eu” îl uită.");
     const go = remembered.getByRole("button", { name: "Vin!", exact: true });
     expect((await go.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
     await noSidewaysScroll(page);
