@@ -86,6 +86,7 @@ import VerticalAlignBottomIcon from "@mui/icons-material/VerticalAlignBottom";
 import VerticalAlignTopIcon from "@mui/icons-material/VerticalAlignTop";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VolunteerActivismIcon from "@mui/icons-material/VolunteerActivism";
+import WorkspacePremiumIcon from "@mui/icons-material/WorkspacePremium";
 import type { SvgIconProps } from "@mui/material/SvgIcon";
 import type { ComponentType } from "react";
 
@@ -210,6 +211,8 @@ export const PANEL_GLYPHS = {
   members: GroupAddIcon,
   // «Cine e membru al grupului» (§789): the card on «Membri» that says what being a member means.
   memberDefinition: CardMembershipIcon,
+  // «Niveluri de membru» (§NNN): the levels the club names for its members, on «Membri».
+  memberTiers: WorkspacePremiumIcon,
   appearance: PaletteIcon,
   // «Pagina principală» (§714): the home page at the site's root, under «Aspect».
   home: HomeIcon,

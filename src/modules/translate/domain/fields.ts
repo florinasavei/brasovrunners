@@ -41,6 +41,9 @@
  *   `roles[<key>].nameEn` and the description, a rich text, `roles[<key>].descriptionRoBody` / `roles[<key>].descriptionEnBody`
  *   (`role-rows.ts`); a category's name (`nameEn`, below) is its own small form;
  *
+ * - The member levels (§NNN, «Niveluri de membru» on «Membri»): the card is one form for every level, so each level's boxes carry
+ *   its key — `tiers[<key>].nameEn` and `tiers[<key>].descriptionEn`, both plain (`member-tiers/tier-rows.ts`);
+ *
  * **Deliberately not on it:** a page's address (`slug` — an address, not words); anything under
  * `/admin/legal` (counsel-reviewed, §418, and the legal editor posts other names anyway); and
  * every registration, participant and staff field. None of those has a button, and a request
@@ -105,6 +108,8 @@ const ENGLISH_FIELD_PATTERNS: readonly RegExp[] = [
   /^nameEn$/,
   // An event's volunteer roles (§765, §791): the card is one form for every role, each box named by its role's key.
   /^roles\[[\w-]{1,80}\]\.(nameEn|descriptionEnBody)$/,
+  // The member levels (§NNN): the card is one form for every level, each box named by its level's key; plain words.
+  /^tiers\[[\w-]{1,80}\]\.(nameEn|descriptionEn)$/,
   // An event's checkpoints (§757): the list's rows (a name and a note) and the GPX preview's rows (a name).
   /^cp\[\d{1,3}\]\.(name|note)En$/,
   /^gp\[\d{1,3}\]\.nameEn$/,

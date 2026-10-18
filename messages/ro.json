@@ -1894,6 +1894,8 @@
       "interestWithdrawBody": "Adresa scrisă este ștearsă de la „Anunță-mă” și nu mai primește anunțul deschiderii înscrierilor.",
       "inviteStaffTitle": "Adaugi persoana în echipă?",
       "inviteStaffBody": "Primește pe email invitația de intrare, cu rolul ales, și poate intra de îndată ce își pune parola: în backoffice, sau — ca Membru — doar în zona membrilor de pe site.",
+      "memberTierTitle": "Schimbi nivelul?",
+      "memberTierBody": "Nivelul lui {name} se schimbă în zona membrilor, la următoarea pagină pe care o deschide.",
       "changeRoleTitle": "Schimbi rolul?",
       "changeRoleBody": "{name} primește rolul ales de la următoarea pagină pe care o deschide.",
       "approvePlatformTitle": "Aprobi șabloanele care lipsesc ({count} din {total})?",
@@ -2107,7 +2109,9 @@
       "RESULTS_NOTICE": "Nota de confidențialitate în vigoare nu descrie încă clasamentul. Aprobă o notă nouă din șablon, în «Documente legale»; «Sarcini» spune cum.",
       "RESULTS_TERMS": "Termenii în vigoare nu descriu încă clasamentul: cei vechi promiteau că te întreabă înainte. Aprobă termeni noi din șablon, în «Documente legale»; «Sarcini» spune cum.",
       "RESULTS_NOT_STARTED": "Clasamentul se poate publica după ce a început cursa. Îl poți scrie de pe acum.",
-      "RESULTS_NOT_OPEN": "Doar o cursă are clasament."
+      "RESULTS_NOT_OPEN": "Doar o cursă are clasament.",
+      "MEMBER_TIER_HAS_MEMBERS": "Nivelul nu s-a șters. Membri cu acest nivel: {count}. Dă-le alt nivel întâi, în „Echipa”.",
+      "MEMBER_TIER_IN_CODES": "Nivelul nu s-a șters. Coduri de reducere doar pentru el: {count}. Schimbă-le nivelurile întâi."
     },
     "editor": {
       "draftPreview": {
@@ -3328,6 +3332,12 @@
       "inviteAsideSends": "contul și invitația, într-un pas",
       "inviteAsideManual": "lista și invitația; contul, din consola Zitadel",
       "superadminRow": "Rolul și accesul unui Superadministrator le schimbă doar un Superadministrator.",
+      "memberTier": "Nivel",
+      "memberTierNone": "—",
+      "memberTierSave": "Salvează nivelul",
+      "memberTierSaving": "Se salvează nivelul…",
+      "memberTierBulkHelp": "Nivelul membrilor adăugați acum. Cine era deja membru își păstrează nivelul.",
+      "memberTierHiddenOption": "{name} (ascuns)",
       "membersTitle": "Adaugă mai mulți membri",
       "membersAside": "o adresă pe rând, rolul Membru",
       "membersRows": "Membrii, câte unul pe rând",
@@ -9384,6 +9394,67 @@
         "en": "Cine e membru (engleză)",
         "help": "O propoziție, cel mult {max} de caractere, în ambele limbi sau în niciuna. Nescrisă, formularele spun textul de bază, cel din căsuțe."
       },
+      "tiers": {
+        "heading": "Niveluri de membru",
+        "count": {
+          "one": "{count} nivel",
+          "few": "{count} niveluri",
+          "other": "{count} de niveluri"
+        },
+        "intro": "Nivelurile pe care le dai membrilor. Un nivel e o etichetă și ce primește membrul, nu un drept.",
+        "introMore": "Un nivel nu schimbă ce poate face cineva pe site. Membrul îl vede în zona lui, pagina publică îl înșiră, iar un cod de reducere poate fi doar pentru unele niveluri.",
+        "empty": "Nu ai încă niciun nivel. Până atunci, membrii sunt pur și simplu „Membru”.",
+        "rowsIntro": "Scrie un nivel în rândul gol de la sfârșit și apasă „Salvează toate nivelurile”. Ordinea e cea din „Poziția”.",
+        "listLabel": "Nivelurile de membru, în ordinea clubului",
+        "newRow": "Adaugă un nivel",
+        "newRowHint": "Scrie numele în română și în engleză. Un rând gol nu face nimic.",
+        "nameRo": "Nume (Română)",
+        "nameEn": "Nume (English)",
+        "descriptionRo": "Descriere (Română)",
+        "descriptionEn": "Descriere (English)",
+        "descriptionHelp": "Ce primește membrul cu acest nivel, pe scurt (cel mult {max} de caractere).",
+        "bothOrNeither": "În ambele limbi sau în niciuna.",
+        "glyph": "Simbol",
+        "glyphs": {
+          "star": "Stea",
+          "medal": "Medalie",
+          "trophy": "Trofeu",
+          "diamond": "Diamant",
+          "heart": "Inimă",
+          "bolt": "Fulger",
+          "shield": "Scut",
+          "runner": "Alergător",
+          "flag": "Steag",
+          "flame": "Flacără",
+          "verified": "Sigiliu",
+          "mountain": "Munte"
+        },
+        "position": "Poziția",
+        "positionLast": "ultima",
+        "language": {
+          "ro": "Română",
+          "en": "English"
+        },
+        "hidden": "Ascuns",
+        "hiddenHelp": "Un nivel ascuns nu se mai dă și nu apare pe pagina publică. Membrii care îl au îl păstrează.",
+        "hiddenChip": "Ascuns",
+        "hiddenOption": "{name} (ascuns)",
+        "members": {
+          "one": "{count} membru",
+          "few": "{count} membri",
+          "other": "{count} de membri"
+        },
+        "codes": {
+          "one": "{count} cod",
+          "few": "{count} coduri",
+          "other": "{count} de coduri"
+        },
+        "save": "Salvează toate nivelurile",
+        "delete": "Șterge nivelul",
+        "deleteTitle": "Ștergi nivelul {name}?",
+        "deleteBody": "Nivelul dispare de tot. Se poate șterge doar dacă niciun membru nu îl are și niciun cod nu e doar pentru el.",
+        "adminOnly": "Nivelurile le schimbă un administrator."
+      },
       "codes": {
         "heading": "Coduri de reducere",
         "count": {
@@ -9432,6 +9503,10 @@
         "linkHelp": "Unde se folosește codul, cu https://.",
         "validUntil": "Valabil până la (opțional)",
         "validUntilHelp": "Ultima zi în care membrii îl văd. Gol: fără termen.",
+        "forTiers": "Pentru nivelurile",
+        "forTiersHelp": "Nimic bifat: codul e pentru toți membrii.",
+        "forTiersChip": "Pentru: {tiers}",
+        "forEveryone": "Pentru toți membrii",
         "createTitle": "Adaugi codul?",
         "createBody": "Membrii îl văd în zona lor de îndată ce îl adaugi."
       },
@@ -12112,6 +12187,12 @@
       "memberCodeShown": "Codul este din nou vizibil membrilor.",
       "memberCodeMoved": "Ordinea codurilor a fost schimbată.",
       "memberCodeDeleted": "Codul a fost șters.",
+      "memberTiersSaved": "Nivelurile au fost salvate.",
+      "memberTiersUnchanged": "Nimic de salvat: nivelurile sunt cum erau.",
+      "memberTierDeleted": "Nivelul a fost șters.",
+      "memberTierSet": "Nivelul membrului a fost schimbat.",
+      "memberTierCleared": "Membrul nu mai are niciun nivel.",
+      "memberTierUnchanged": "Membrul avea deja acest nivel.",
       "declarationHeld": "Declarația e păstrată. Nu se mai șterge până scoți păstrarea.",
       "declarationReleased": "Păstrarea a fost scoasă.",
       "menuOrder": "Ordinea meniului a fost salvată.",
@@ -12507,6 +12588,9 @@
     "upcomingEmpty": "Nicio alergare anunțată acum.",
     "upcomingAll": "Toate alergările",
     "eventsTitle": "Evenimente pentru membri",
+    "tiersTitle": "Nivelurile de membru",
+    "tierYours": "Nivelul tău",
+    "codeForTiers": "Codul e pentru nivelurile",
     "codesTitle": "Coduri de reducere",
     "tabsLabel": "Părțile zonei membrilor",
     "tabs": {

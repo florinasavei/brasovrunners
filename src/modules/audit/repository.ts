@@ -658,6 +658,17 @@ export type AuditAction =
   | "member_code.moved"
   | "member_code.deleted"
   /**
+   * «Niveluri de membru» (§NNN): a level added, written (which parts, never the words), moved,
+   * hidden or shown again, or deleted; and a member given a level or freed of it. The row's id and the
+   * shape of the change — never a name, a description or a member's name or address.
+   */
+  | "member_tier.added"
+  | "member_tier.edited"
+  | "member_tier.moved"
+  | "member_tier.deleted"
+  | "staff.member_tier.set"
+  | "staff.member_tier.cleared"
+  /**
    * «Magazin» — the members' shop (§683): a product added, written, moved, archived (it had orders)
    * or deleted; the shop's settings saved; an order placed by a member, marked paid, handed over or
    * cancelled; the orders' CSV downloaded. The row's id and the shape of the change — never a title,
@@ -732,6 +743,8 @@ export type RecordAuditInput = {
     | "staff_user"
     // `member_discount_code` for a code of the members' zone (§552).
     | "member_discount_code"
+    // `member_tier` for a level of the members' zone (§NNN).
+    | "member_tier"
     // `team_page_box` for a box under the chart of «Echipa» (§691).
     | "team_page_box"
     // `shop_product` and `shop_order` for the members' shop (§683).
