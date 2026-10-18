@@ -9,7 +9,7 @@ import { tokenAttemptAllowed } from "@/modules/action-tokens/throttle";
 import { rememberPerson } from "@/modules/person-session/session";
 import { confirmRsvp, withdrawRsvp, type RsvpProved } from "@/modules/rsvp/rsvp";
 import { RSVP_BOX_ID } from "@/modules/rsvp/rsvp-box";
-import { withdrawnProof } from "@/modules/rsvp/withdrawn-proof";
+import { WITHDRAWN_ASKED_SUFFIX, withdrawnProof } from "@/modules/rsvp/withdrawn-proof";
 
 /**
  * The two buttons of a «Vin!» message's page (§811, «Vin!» part 1): «Da, vin» and «Nu mai vin». Each spends its link — single
@@ -54,7 +54,7 @@ export async function confirmRsvpAction(form: FormData): Promise<void> {
   redirect(eventPageOf(proved, `#${RSVP_BOX_ID}`));
 }
 
-/** «Nu mai vin»: deletes the answer, remembers the browser, and says so on the same address (the row and its links are gone). */
+/** «Nu mai vin»: deletes the answer, remembers the browser (not after the email's unanswered question), and says so on the same address (the row and its links are gone). */
 export async function withdrawRsvpAction(form: FormData): Promise<void> {
   const locale = toLocale(form.get("locale"));
   const token = String(form.get("token") ?? "");
@@ -63,10 +63,15 @@ export async function withdrawRsvpAction(form: FormData): Promise<void> {
   if (!(await tokenAttemptAllowed(db, token, now))) redirect(`${pageOf(locale, token)}?invalid=1`);
   const proved = await withdrawRsvp(db, { token }, now);
   if (!proved) redirect(`${pageOf(locale, token)}?invalid=1`);
-  await remember(proved, now);
+  /*
+    «Nu vin» of the «Vii?» email (§NNN): the person declined a question they never started, so nothing they asked for needs the
+    browser recognised — no cookie (the notice justifies the cookies as strictly necessary to a function the person asked for). The
+    row says which it was (`unanswered`, read from the deleted row), never the page's form; «Nu mai vin» after an answer remembers, as before.
+  */
+  if (!proved.unanswered) await remember(proved, now);
   // The slug travels as the page's own address, never a value of the person's (§14.5): where the sentence's link goes.
   const slug = proved.slug ?? "";
-  // `nu`: the «Nu vin» of the «Vii?» email (§NNN) — only its sentence changes (nobody was counted), the proof is the same.
-  const asked = form.get("asked") === "1" ? "&nu=1" : "";
-  redirect(`${pageOf(proved.locale, token)}?retras=${encodeURIComponent(slug)}&ok=${withdrawnProof(token, slug)}${asked}`);
+  // `nu`: the sentence of the email's «Nu vin» (nobody was counted). The server's reading of the row, folded into the proof.
+  const proof = withdrawnProof(token, proved.unanswered ? `${slug}${WITHDRAWN_ASKED_SUFFIX}` : slug);
+  redirect(`${pageOf(proved.locale, token)}?retras=${encodeURIComponent(slug)}&ok=${proof}${proved.unanswered ? "&nu=1" : ""}`);
 }

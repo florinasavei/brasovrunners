@@ -167,7 +167,7 @@ export function emailSampleData(locale: EmailLocale): TemplateData {
     newsletterBody: sample.newsletterBody,
     newsletterBodyOther: other.newsletterBody,
     newsletterManageUrl: `${base}/${locale}/EXAMPLE-newsletter`,
-    // «Vin!» and «Vii mâine?» (§811, §NNN): the quieter «Nu vin» under the button, so the preview draws both.
+    // «Vin!» and «Vii mâine?» (§812, §NNN): the quieter «Nu vin» under the button, so the preview draws both.
     rsvpWithdrawUrl: `${base}/${locale}/EXAMPLE-rsvp-no`,
   };
 }

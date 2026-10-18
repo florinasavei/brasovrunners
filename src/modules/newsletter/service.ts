@@ -1,6 +1,7 @@
 import { and, asc, count, desc, eq, inArray, isNotNull, isNull, sql } from "drizzle-orm";
 import { z } from "zod";
 import { emailOutbox } from "@/db/schema/email-outbox";
+import { eventRsvps } from "@/db/schema/event-rsvps";
 import { events } from "@/db/schema/events";
 import { type NewsletterTopic, newsletterSends, newsletterSubscribers } from "@/db/schema/newsletter";
 import { platformSettings } from "@/db/schema/platform-settings";
@@ -345,6 +346,14 @@ async function deleteSubscriberIn<T extends Record<string, unknown>>(tx: Databas
         sql`${emailOutbox.payloadJson}->>'subscriberId' = ${subscriberId}`,
       ),
     );
+  // The «Vii?» question's unanswered «Vin!» row (§NNN) holds this address too: it goes "pe loc" with the subscription, not at its seven days.
+  await tx.delete(eventRsvps).where(
+    and(
+      isNotNull(eventRsvps.askedAt),
+      isNull(eventRsvps.confirmedAt),
+      inArray(eventRsvps.canonicalEmail, tx.select({ canonicalEmail: newsletterSubscribers.canonicalEmail }).from(newsletterSubscribers).where(eq(newsletterSubscribers.id, subscriberId))),
+    ),
+  );
   await tx.delete(newsletterSubscribers).where(eq(newsletterSubscribers.id, subscriberId));
 }
 

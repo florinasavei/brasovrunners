@@ -24,6 +24,7 @@ import {
   deadlineMergeValues,
   LIST_NUMBERS_MERGE_FIELD,
   RESULTS_MERGE_FIELD,
+  RSVP_ASK_MERGE_FIELD,
   RSVP_MERGE_FIELD,
   GMAIL_FALLBACK_MERGE_FIELD,
   GROUP_RUN_ALONE_MERGE_FIELD,
@@ -45,7 +46,7 @@ import { feedbackFormsClause, feedbackFormsNamedClause, feedbackSafetyGmailClaus
 import { membersShopClause } from "@/modules/content/shop/notice-words";
 import { volunteerAgreementClause, volunteerMinorsClause, volunteerProfileClause, volunteersClause } from "@/modules/volunteers/notice-words";
 import { resultsClause } from "@/modules/results/notice-words";
-import { rsvpClause } from "@/modules/rsvp/notice-words";
+import { rsvpAskClause, rsvpClause } from "@/modules/rsvp/notice-words";
 
 /**
  * The declaration's merge fields, in one list (`DECISIONS.md` §190).
@@ -212,6 +213,13 @@ export const DECLARATION_TOKENS: readonly DeclarationToken[] = [
     token: `{{${RSVP_MERGE_FIELD}}}`,
     messageKey: RSVP_MERGE_FIELD,
     example: inBoth((locale) => rsvpClause(locale)),
+  },
+  // The privacy notice's marker for the day-before question (§NNN): filled with the newsletter topic's own name, and the switch
+  // that lets the question be queued, sent and offered as a topic (`describesRsvpAsk`).
+  {
+    token: `{{${RSVP_ASK_MERGE_FIELD}}}`,
+    messageKey: RSVP_ASK_MERGE_FIELD,
+    example: inBoth((locale) => rsvpAskClause(locale)),
   },
   // The privacy notice's marker for the newsletter (§445): filled with the pop-up's topics, and the
   // switch that lets the contact page offer it (`describesNewsletter`).

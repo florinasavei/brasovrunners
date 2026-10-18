@@ -26,6 +26,7 @@ import {
   noticeDescribesListNumbers,
   noticeDescribesResults,
   noticeDescribesRsvp,
+  noticeDescribesRsvpAsk,
   noticeDescribesListSocials,
   noticeDescribesGmailFallback,
   noticeDescribesPromotionalMaterials,
@@ -487,6 +488,8 @@ export default async function AdminTasksPage({ params, searchParams }: Props) {
       resultsDescribed: await noticeDescribesResults(db, now),
       // §811: the answer «Vin!», described by the notice in force; nothing is refused, the page simply shows nothing until then.
       rsvpDescribed: await noticeDescribesRsvp(db, now),
+      // §NNN: the day-before question, described by the notice in force; nobody is asked until then.
+      rsvpAskDescribed: await noticeDescribesRsvpAsk(db, now),
       rsvpEvents: await countRsvpEvents(db, now),
       // §808: the terms in force describe them too — the older ones promised to ask separately before a named result.
       resultsTermsDescribed: await termsDescribeResults(db, now),

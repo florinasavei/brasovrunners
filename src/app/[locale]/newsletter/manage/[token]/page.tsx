@@ -13,6 +13,7 @@ import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
 import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
+import { noticeDescribesRsvpAsk } from "@/modules/legal-documents/repository";
 import { NEWSLETTER_TOPICS } from "@/modules/newsletter/domain/topics";
 import { readNewsletterSubscription } from "@/modules/newsletter/service";
 import SubmitButton from "@/shared/ui/SubmitButton";
@@ -61,6 +62,9 @@ export default async function NewsletterManagePage({ params, searchParams }: Pro
   }
 
   const subscription = invalid ? null : await readNewsletterSubscription(getDb(), token, new Date());
+  // The topic «Întrebarea «Vii?» …» (§NNN) is offered once the notice in force describes the question — and kept visible for someone who already ticked it.
+  const askOffered = subscription ? await noticeDescribesRsvpAsk(getDb(), new Date()) : false;
+  const topicChoices = NEWSLETTER_TOPICS.filter((topic) => topic !== "RSVP_ASK" || askOffered || subscription?.topics.includes(topic));
 
   return (
     <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
@@ -100,7 +104,7 @@ export default async function NewsletterManagePage({ params, searchParams }: Pro
                 {topicsRefused ? t("manage.topicsRefused") : t("topicsHelp")}
               </Typography>
               <Stack spacing={0.5} sx={{ mb: 2 }}>
-                {NEWSLETTER_TOPICS.map((topic) => (
+                {topicChoices.map((topic) => (
                   <Box
                     component="label"
                     key={topic}

@@ -2142,15 +2142,16 @@ const T = {
     /**
      * «Vii mâine la …?» (§NNN), from the maintenance job the day before a ticked turn-up event, to the newsletter's subscribers of its
      * topics. Two buttons: «Vin» counts the person at once (the personal link is the proof of the address) and «Nu vin», under it, counts
-     * nobody. The club's own words do not apply: the question and its two answers are the platform's, like «Vin!»'s states.
+     * nobody. The club may reword it in `/admin/emails` like the rest (`copyFor`); the buttons' targets, the facts and the newsletter's lines
+     * (the topics, the way out) are the platform's.
      */
     rsvpAsk: {
       subject: (d: TemplateData) => `Vii mâine la ${d.eventTitle ?? "eveniment"}?`,
       greeting: () => "Salut,",
       facts: (d: TemplateData) => eventFacts(d, { map: "Harta punctului de întâlnire", strava: "Evenimentul pe Strava" }),
       body: (d: TemplateData) => [
-        `Vii mâine la ${d.eventTitle ?? "eveniment"}? Răspunzi dintr-o apăsare, fără cont și fără alt pas.`,
-        "„Vin” te numără printre cei care vin. „Nu vin” nu te numără și nu te mai întrebăm; poți răspunde altfel, de pe pagina evenimentului, până la start.",
+        `Vii mâine la ${d.eventTitle ?? "eveniment"}? Apasă „Vin”, apoi „Da, vin” pe pagina care se deschide — fără cont.`,
+        "„Da, vin” te numără printre cei care vin. „Nu vin” nu te numără și nu te mai întrebăm pentru acest eveniment; poți răspunde altfel, de pe pagina evenimentului, până la start.",
         "Linkurile sunt doar pentru tine și merg o singură dată. Primești întrebarea pentru că ești abonat la noutățile clubului.",
       ],
       action: "Vin",
@@ -2984,8 +2985,8 @@ const T = {
       greeting: () => "Hello,",
       facts: (d: TemplateData) => eventFacts(d, { map: "Map of the meeting point", strava: "The event on Strava" }),
       body: (d: TemplateData) => [
-        `Are you coming to ${d.eventTitle ?? "the event"} tomorrow? Answer with one press, with no account and no other step.`,
-        "“I'm coming” counts you among those coming. “I'm not coming” counts you out and we don't ask again; you can answer differently, from the event's page, until the start.",
+        `Are you coming to ${d.eventTitle ?? "the event"} tomorrow? Press “I'm coming”, then “Yes, I'm coming” on the page that opens — no account.`,
+        "“Yes, I'm coming” counts you among those coming. “I'm not coming” counts you out and we don't ask again for this event; you can answer differently, from the event's page, until the start.",
         "The links are for you only and work once. You get this question because you subscribed to the club's news.",
       ],
       action: "I'm coming",
@@ -3270,7 +3271,7 @@ function newsletterLines(messageType: EmailMessageType, locale: EmailLocale, dat
   const words = T[locale].newsletterWords;
   const confirming = messageType === "NEWSLETTER_CONFIRM" && data.newsletterAlready !== true;
   return [
-    ...(data.newsletterTopics && (confirming || messageType === "NEW_EVENT_ALERT") ? [words.topics(data.newsletterTopics)] : []),
+    ...(data.newsletterTopics && (confirming || messageType === "NEW_EVENT_ALERT" || messageType === "RSVP_ASK") ? [words.topics(data.newsletterTopics)] : []),
     ...(confirming ? [words.link(data.confirmationHours ?? hoursPhrase(locale, DEFAULT_DEADLINES.confirmationHours))] : []),
   ];
 }
@@ -3858,7 +3859,7 @@ export function buildTemplateContent(
     secondaryAction:
       messageType === "REGISTER_ANOTHER_PERSON" && !atAddressCap && !familyGone && entry.action && actionUrl && data.familyDeclineUrl
         ? { label: copy.familyDecline, url: data.familyDeclineUrl }
-        : // «Vin!» (§811): «Nu vin» under «Da, vin», the same send's other link — only beside the confirm button. «Vii mâine?» (§NNN) has the same two.
+        : // «Vin!» (§812): «Nu vin» under «Da, vin», the same send's other link — only beside the confirm button. «Vii mâine?» (§NNN) has the same two.
           (messageType === "RSVP_ASK" || (messageType === "RSVP_CONFIRM" && (data.rsvpStage === undefined || data.rsvpStage === "confirm"))) && entry.action && actionUrl && data.rsvpWithdrawUrl
           ? { label: copy.rsvpNo, url: data.rsvpWithdrawUrl }
           : undefined,

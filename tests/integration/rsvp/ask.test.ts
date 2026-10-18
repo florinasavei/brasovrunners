@@ -32,7 +32,7 @@ const STARTS_AT = new Date("2026-10-18T07:00:00.000Z");
 
 /**
  * §NNN (amends §812, §513, §775) — «Vii mâine la …?»: the day before a ticked turn-up event, from 08:00 club time, the newsletter's
- * subscribers of the topic «Întrebarea „Vii?” înaintea alergărilor» (and of "everything") get ONE email with two personal links, once
+ * subscribers of the topic «Întrebarea «Vii?» înaintea alergărilor» (and of "everything") get ONE email with two personal links, once
  * per event. «Vin» counts them at once; «Nu vin» counts nobody. Not a registration: nothing here touches a place or a participant.
  */
 describe("§NNN «Vii mâine la …?»", () => {

@@ -36,7 +36,7 @@ describe("§445 the newsletter's topics", () => {
       WEEKLY_RUNS: "Alergările săptămânale",
       VOLUNTEERING: "Voluntariat",
       RESULTS_PHOTOS: "Rezultate și poze",
-      RSVP_ASK: "Întrebarea „Vii?” înaintea alergărilor",
+      RSVP_ASK: "Întrebarea «Vii?» înaintea alergărilor",
     });
     for (const catalogue of [ro, en]) {
       // Every value keeps its name — an old send's row may still say DISCOUNTS — and every offered one a hint.

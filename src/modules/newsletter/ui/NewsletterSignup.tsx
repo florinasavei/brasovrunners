@@ -15,7 +15,7 @@ import { requestNewsletterManageLinkAction, submitNewsletterAction } from "@/app
 import { getPathname, Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { minutesPhrase } from "@/modules/deadlines/domain/duration-words";
-import { cachedEmailWaitMinutes } from "@/modules/public-cache/reads";
+import { cachedEmailWaitMinutes, cachedRsvpAskDescribed } from "@/modules/public-cache/reads";
 import BotCheck from "@/modules/registrations/ui/BotCheck";
 import { spamHintWords } from "@/modules/registrations/ui/link-wait-words";
 import { emailDelayNotice } from "@/modules/registrations/ui/email-delay-notice";
@@ -86,6 +86,9 @@ export default async function NewsletterSignup({ locale, outcome, refused, typed
   const inlineLink = { display: "inline-flex", alignItems: "center", minHeight: TAP_TARGET.minHeight } as const;
   // The confirmation link leaves on the scheduler's tick by default (§513): the sentence says that
   // wait, or "a few minutes" when the club sends right after the request. Read only on "sent".
+  // The topic «Întrebarea «Vii?» …» (§NNN) is offered only once the notice in force describes the question (`cachedRsvpAskDescribed`).
+  const askOffered = await cachedRsvpAskDescribed(new Date());
+  const topicChoices = NEWSLETTER_TOPICS.filter((topic) => topic !== "RSVP_ASK" || askOffered);
   const waitMinutes = outcome === "sent" ? await cachedEmailWaitMinutes(new Date()) : null;
   // Spam and Promotions, the box every page that waits for an email shows (§619): read only when one is waited for.
   const spamHint = outcome === "sent" || leaveOutcome === "sent" ? await spamHintWords() : null;
@@ -275,7 +278,7 @@ export default async function NewsletterSignup({ locale, outcome, refused, typed
                 {invalid.has("topics") ? t("errors.topics") : t("topicsHelp")}
               </Typography>
               <Stack spacing={0.5}>
-                {NEWSLETTER_TOPICS.map((topic) => (
+                {topicChoices.map((topic) => (
                   <Box
                     component="label"
                     key={topic}

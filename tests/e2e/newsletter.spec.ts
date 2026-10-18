@@ -170,7 +170,7 @@ test.describe("§445 the newsletter pop-up on the contact page", () => {
     // A real modal: the browser's own, over the page.
     expect(await dialog.evaluate((element) => element.matches(":modal"))).toBe(true);
     await expect(dialog.getByRole("heading", { name: "Abonează-te la noutățile clubului" })).toBeVisible();
-    // «Întrebarea „Vii?” înaintea alergărilor» (§NNN) is a topic like the others in the pop-up — and absent from the composer above.
+    // «Întrebarea «Vii?» înaintea alergărilor» (§NNN) is a topic like the others in the pop-up — and absent from the composer above.
     for (const topic of ["ALL", "BIG_EVENTS", "GEAR_TESTING", "SPECIAL_EVENTS", "WEEKLY_RUNS", "VOLUNTEERING", "RESULTS_PHOTOS", "RSVP_ASK"]) {
       const row = dialog.getByTestId(`newsletter-topic-${topic}`);
       await expect(row).toBeVisible();

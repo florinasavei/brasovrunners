@@ -4,7 +4,8 @@ import { events } from "@/db/schema/events";
 import { newsletterSubscribers } from "@/db/schema/newsletter";
 import type { Database } from "@/db/types";
 import { findPublishedEventById } from "@/modules/events/repository";
-import { findCurrentApprovedDocument, noticeDescribesRsvp } from "@/modules/legal-documents/repository";
+import { findCurrentApprovedDocument, noticeDescribesRsvpAsk } from "@/modules/legal-documents/repository";
+import { receives } from "@/modules/newsletter/domain/topics";
 import { receivesSql } from "@/modules/newsletter/service";
 import { drainOutboxAfterResponse } from "@/modules/notifications/drain";
 import { enqueueEmail, OutboxMessageWithdrawn } from "@/modules/notifications/outbox";
@@ -15,7 +16,7 @@ import { mintRsvpLinks } from "./rsvp";
 
 /**
  * «Vii mâine la …?» (§NNN; the owner, 2026-10-18: «I need this "Going" to be via email or something … super easy») — the day before an
- * event the club ticked «Vin!» on, the newsletter's subscribers who chose the topic «Întrebarea „Vii?” înaintea alergărilor» get ONE
+ * event the club ticked «Vin!» on, the newsletter's subscribers who chose the topic «Întrebarea «Vii?» înaintea alergărilor» get ONE
  * email with two personal links: **«Vin»** counts them at once (the link is the proof of the address, and it is theirs alone), **«Nu vin»**
  * counts nobody. Nobody opens the site to say «Vin»; the email asks and one tap answers. It builds on «Vin!» (§812) and changes none of
  * its rules: an answer is still not a registration (no place, no declaration, no participant), the count and the names still follow
@@ -75,8 +76,12 @@ export async function queueRsvpAsks<T extends Record<string, unknown>>(db: Datab
     .orderBy(asc(events.startsAt), asc(events.id));
   const due = candidates.filter((event) => rsvpAskDue(event.startsAt, now));
   if (due.length === 0) return 0;
-  // The notice in force must describe «Vin!» in every language — the one rule of the page and the service (`rsvpOffered`).
-  const described = await noticeDescribesRsvp(db, now);
+  /*
+    The notice in force must describe «Vin!» AND this question, in every language (`noticeDescribesRsvpAsk`): the question writes a
+    «Vin!» row from the subscriber's address, which neither the newsletter's paragraph nor «Vin!»'s alone says. `{{newsletterTopics}}`
+    names the topic in a notice at once; the club's approval of `{{rsvpAsk}}` is the switch. The same answer is `rsvpOffered`'s notice flag.
+  */
+  const described = await noticeDescribesRsvpAsk(db, now);
   if (!described) return 0;
 
   let queued = 0;
@@ -139,9 +144,9 @@ export type PreparedRsvpAsk = { rsvpId: string; startsAt: Date; confirm: string;
 /**
  * At the send (AGENTS.md §14.5: the secrets exist in the email alone): make the subscriber's «Vin!» row for this event, unconfirmed,
  * with no name and no tick, and mint its two links. Throws `OutboxMessageWithdrawn` — the message is dropped, not failed (§331) —
- * when there is nothing to ask any more: the subscriber unsubscribed or never confirmed, the address on the row is not theirs, the
- * event was cancelled, unticked, handed a registration, made the members' or started, the notice stopped describing «Vin!», or the
- * address already has a counted answer.
+ * when there is nothing to ask any more: the subscriber unsubscribed, never confirmed or unticked the topic, the address on the row is not theirs, the
+ * event was cancelled, unticked, handed a registration, made the members' or moved out of «tomorrow» (or started), the notice stopped
+ * describing «Vin!» or the question, or the address already has a counted answer.
  *
  * A row that already exists UNCONFIRMED (the address was typed on the page and its own message not yet used) is taken over: the
  * name and the tick on it were typed by whoever typed the address, and this link's press is the subscriber's own, so they are cleared —
@@ -163,12 +168,21 @@ export async function prepareRsvpAsk<T extends Record<string, unknown>>(
   }
   if (canonical !== subscriber.canonicalEmail) throw new OutboxMessageWithdrawn("rsvp ask: the address is not the subscriber's");
 
+  // Still on the topic: unticking «Întrebarea «Vii?» …» (or «Toate noutățile») after the morning's queue stops the question, and no row is written.
+  if (!receives(subscriber.topics, ASK_TOPICS)) throw new OutboxMessageWithdrawn("rsvp ask: the subscriber no longer receives the topic");
+
   const locale = subscriber.locale;
   const [stored] = await db.select({ membersOnly: events.membersOnly }).from(events).where(eq(events.id, eventId)).limit(1);
   const event = await findPublishedEventById(db, locale, eventId);
-  if (!stored || stored.membersOnly || !event || !rsvpOffered(event, now, await noticeDescribesRsvp(db, now)) || event.startsAt === null) {
-    throw new OutboxMessageWithdrawn("rsvp ask: the event no longer takes «Vin!» answers");
+  if (!stored || stored.membersOnly || !event || !rsvpOffered(event, now, await noticeDescribesRsvpAsk(db, now)) || event.startsAt === null) {
+    throw new OutboxMessageWithdrawn("rsvp ask: the event no longer takes «Vin!» answers, or the notice stopped describing the question");
   }
+  /*
+    The window as it is at the SEND, not only at the queue: a send held past midnight (a failure, the hourly pace, a pause), or an
+    event moved a day later since, would still say «mâine». The question is then dropped; the page's «Vin!» and the calendar still take
+    the answer. (An event moved after its question was queued is not asked again for its new day: the queue is once per event.)
+  */
+  if (!rsvpAskDue(event.startsAt, now)) throw new OutboxMessageWithdrawn("rsvp ask: the window of «tomorrow» is closed");
   const notice = await findCurrentApprovedDocument(db, "PRIVACY_NOTICE", locale, now);
   if (!notice) throw new OutboxMessageWithdrawn("rsvp ask: no approved privacy notice");
   const startsAt = event.startsAt;

@@ -21,7 +21,7 @@ export const RETIRED_TOPICS = ["DISCOUNTS"] as const satisfies readonly Newslett
 type RetiredTopic = (typeof RETIRED_TOPICS)[number];
 
 /**
- * Topics only the platform writes for (§NNN): «Întrebarea „Vii?” înaintea alergărilor» — the one email the day before a turn-up event
+ * Topics only the platform writes for (§NNN): «Întrebarea «Vii?» înaintea alergărilor» — the one email the day before a turn-up event
  * the club ticked «Vin!» on (`rsvp/ask.ts`). A subscriber chooses it like any other, but no organizer composes a newsletter for it:
  * what they chose is a question with two answers, and a free-text letter under that name would be a promise broken.
  */

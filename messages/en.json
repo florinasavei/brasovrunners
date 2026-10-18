@@ -4651,6 +4651,16 @@
             "Open the draft, read it, fill in what is left, “Save draft”, then “Approve and publish”, in both languages.",
             "The terms do not change: “I'm coming!” buys, books and signs nothing."
           ]
+        },
+        "rsvpAskNotice": {
+          "title": "Privacy notice: the “Coming tomorrow?” question",
+          "todo": "An event takes “I'm coming!” answers, but the notice in force does not describe the day-before question yet, so no subscriber is asked and the topic's box does not show when subscribing.",
+          "done": "The notice in force describes the day-before question: the topic's subscribers and those of “All the news” get one email with “I'm coming” and “I'm not coming”.",
+          "how": [
+            "Before approving, read the template's two paragraphs in section 5 with a lawyer: the “I'm coming!” one (the subscriber's address becomes an unconfirmed answer when the question is sent) and the newsletter's.",
+            "/admin/legal → the “GDPR” card → “Regenerate from the template” → confirm. The topic shows in the notice in force, through the list of topics, from the release; the question goes out only after the new notice.",
+            "Open the draft, read it, “Save draft”, then “Approve and publish”, in both languages."
+          ]
         }
       },
       "freeVerdict": {
@@ -7210,7 +7220,7 @@
         "VOLUNTEER_ROLE_ASSIGNED": "The role and the event's date and place are added by themselves, however you write the text. The message has no link that does anything.",
         "VOLUNTEER_GUARDIAN_REQUEST": "The volunteer and the event are added by themselves. The link is for the parent or guardian only, works once, and a new one replaces the old.",
         "RSVP_CONFIRM": "At most one message per address every ten minutes. The links are for this address only, work once and are replaced by a newer message. Someone already counted gets only the withdraw link.",
-        "RSVP_ASK": "Once per event; one ticked only on its own day is not asked. The links work once. It leaves by the announcements' road, not the newsletter's."
+        "RSVP_ASK": "Once per event; one ticked only on its own day is not asked. The links work once. Sent through “Newsletter”, last in line like the new-event alert. If it has not left by midnight, it is dropped."
       },
       "confirmationRetry": "To whoever has not confirmed, the link goes again by itself {retry} after the last email, at most {times}; “Resend” counts too. The deadline does not move.",
       "confirmationRetryOff": "It is not re-sent by itself: in “Deadlines”, the number of resends is 0.",
@@ -12441,7 +12451,7 @@
       "WEEKLY_RUNS": "The weekly runs",
       "VOLUNTEERING": "Volunteering",
       "RESULTS_PHOTOS": "Results and photos",
-      "RSVP_ASK": "The “Coming?” question before runs"
+      "RSVP_ASK": "The ‘Coming?’ question before runs"
     },
     "topicHints": {
       "ALL": "Every topic below, and any we add later.",
@@ -12862,12 +12872,11 @@
     "invalidExpired": "The link was valid for a limited time, and that time has passed. The event has not started yet: you can answer again from its page.",
     "withdrawRememberNote": "After “I'm not coming any more” too, your browser stays recognised for a year: at other events, “I'm coming!” is one press. On the event's page, “Not me” forgets it.",
     "askTitle": "Coming?",
-    "askIntro": "Are you coming to {event}? One press and you're counted. The name below is optional.",
+    "askIntro": "Are you coming to {event}? One press and you're counted.",
     "askNoTitle": "Not coming?",
     "askNoIntro": "Not coming to {event}? Press the button and we don't count you.",
     "askNoButton": "I'm not coming",
     "askNoDoneTitle": "Understood",
-    "askNoDone": "Okay, we won't count you. You can answer differently until the start.",
-    "askNoRememberNote": "After “I'm not coming” too, your browser stays recognised for a year: at other events, “I'm coming!” is one press. On the event's page, “Not me” forgets it."
+    "askNoDone": "Okay, we won't count you. You can answer differently until the start."
   }
 }

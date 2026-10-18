@@ -33,7 +33,7 @@ export const newsletterTopic = pgEnum("newsletter_topic", [
   "VOLUNTEERING",
   // Results and photo albums after an event (§66).
   "RESULTS_PHOTOS",
-  // «Întrebarea „Vii?” înaintea alergărilor» (§NNN): the day before a turn-up event the club ticked «Vin!» on, one email asks the
+  // «Întrebarea «Vii?» înaintea alergărilor» (§NNN): the day before a turn-up event the club ticked «Vin!» on, one email asks the
   // subscriber «Vii?» with two links. Written by the platform alone — no composer choice. An existing subscription to `ALL` receives it.
   "RSVP_ASK",
 ]);

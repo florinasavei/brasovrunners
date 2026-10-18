@@ -139,6 +139,17 @@ export const RESULTS_MERGE_FIELD = "results";
 export const RSVP_MERGE_FIELD = "rsvp";
 
 /**
+ * The privacy notice's marker for the day-before question «Vii mâine?» (§NNN, `rsvp/ask.ts`): filled, when the notice is shown, with
+ * the newsletter topic's own name, quoted (`rsvp/notice-words.ts`) — „Întrebarea «Vii?» înaintea alergărilor” — in two paragraphs of
+ * section 5: the newsletter's (the automatic question the day before a ticked event, to the subscribers of that topic and of «Toate
+ * noutățile») and «Vin!»'s (the subscriber's address is written into the answers when the question is sent, unconfirmed, and deleted
+ * after 7 days or at «Nu vin»). It is also the switch: the question is queued and sent, and the topic offered, only while the notice in
+ * force, in every language, names it AND «Vin!» (`describesRsvpAsk`). `{{newsletterTopics}}` names the topic in a notice at once, as it
+ * is filled when the notice is shown; this marker is what the club approves. `/admin/tasks` carries the row `rsvpAskNotice`.
+ */
+export const RSVP_ASK_MERGE_FIELD = "rsvpAsk";
+
+/**
  * The privacy notice's marker for the club's invitations by email (§647): the backoffice section's own
  * name, quoted (`registrations/invitation-words.ts`) — «Invitații» / “Invitations” — in the sentence
  * that says the club may enter an invited person's name and address to send one invitation. Like the
@@ -539,6 +550,7 @@ export const MERGE_FIELDS = [
   LIST_NUMBERS_MERGE_FIELD,
   RESULTS_MERGE_FIELD,
   RSVP_MERGE_FIELD,
+  RSVP_ASK_MERGE_FIELD,
   NEWSLETTER_MERGE_FIELD,
   TEAM_PAGE_MERGE_FIELD,
   PROMOTIONAL_MATERIALS_MERGE_FIELD,
@@ -734,6 +746,15 @@ export function describesResults(body: unknown): boolean {
  */
 export function describesRsvp(body: unknown): boolean {
   return mergeFieldsIn(body).has(RSVP_MERGE_FIELD);
+}
+
+/**
+ * Whether a privacy notice describes the day-before question «Vii mâine?» (§NNN): it names `{{rsvpAsk}}`. One half of the gate for
+ * the question — the other is `describesRsvp`, which the caller also asks, because the question writes a «Vin!» row — and what
+ * `/admin/tasks`' row `rsvpAskNotice` reads. Pure; the caller asks it of the notice in force, in every language.
+ */
+export function describesRsvpAsk(body: unknown): boolean {
+  return mergeFieldsIn(body).has(RSVP_ASK_MERGE_FIELD);
 }
 
 /**
