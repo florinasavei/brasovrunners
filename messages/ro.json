@@ -3604,7 +3604,8 @@
         "volunteerGuardian": "Doar în contractul de voluntariat: numele părintelui sau tutorelui unui voluntar minor. La un adult, propoziția dispare. Fără el în contractul în vigoare, nu se primesc minori",
         "volunteerMinors": "Doar în nota de confidențialitate: casetele părintelui din formularul de voluntari, între ghilimele; fără el, clubul nu primește voluntari sub 18 ani",
         "results": "Numele secțiunii „Clasament”, între ghilimele, în nota de confidențialitate și în termeni. Cu el în ambele texte în vigoare, un administrator poate publica clasamentul, iar pagina cursei îl arată",
-        "rsvp": "Doar în nota de confidențialitate: numele butonului „Vin!”, între ghilimele. Cu el în nota în vigoare, paginile evenimentelor bifate primesc răspunsuri „Vin!” și arată câți vin"
+        "rsvp": "Doar în nota de confidențialitate: numele butonului „Vin!”, între ghilimele. Cu el în nota în vigoare, paginile evenimentelor bifate primesc răspunsuri „Vin!” și arată câți vin",
+        "rsvpAsk": "Doar în nota de confidențialitate: numele temei „Întrebarea «Vii?» înaintea alergărilor”, între ghilimele. Cu ea în nota în vigoare, abonații temei primesc ziua dinainte întrebarea „Vii?”."
       },
       "removeBlockedReferenced": "Nu se poate nici retrage, nici șterge definitiv: {signatures}, {events} și {acknowledgements} depind de ea. «Șterge» de pe rândul ei o scoate din listă.",
       "removeBlockedCurrent": "În vigoare acum — nu se poate nici retrage, nici șterge. Aprobă întâi versiunea următoare; apoi aceasta se poate scoate.",
@@ -6241,6 +6242,7 @@
       "rsvpNotice": "nota v{version}",
       "rsvpConfirmedAt": "confirmat {when}",
       "rsvpUnconfirmed": "neconfirmat",
+      "rsvpAsked": "întrebat {when}, fără răspuns",
       "browserUsed": "folosit {when}",
       "browserUntil": "până {when}",
       "rsvpsErase": "Șterge răspunsurile „Vin!” și browserele",
@@ -7220,7 +7222,7 @@
         "VOLUNTEER_ROLE_ASSIGNED": "Rolul, data și locul evenimentului se adaugă singure, oricum ai scrie textul. Mesajul nu are niciun link care să facă ceva.",
         "VOLUNTEER_GUARDIAN_REQUEST": "Voluntarul și evenimentul se adaugă singure. Linkul e doar pentru părinte sau tutore, se folosește o singură dată, iar unul nou îl înlocuiește pe cel vechi.",
         "RSVP_CONFIRM": "Cel mult un mesaj la 10 minute pe adresă. Linkurile sunt doar pentru această adresă, merg o singură dată și le înlocuiește mesajul nou. Cine e deja numărat primește doar „Nu mai vin”.",
-        "RSVP_ASK": "O singură dată pe eveniment; unul bifat abia în ziua lui nu se mai întreabă. Linkurile merg o singură dată. Pleacă prin „Newsletter”, la coada rândului, ca anunțul pentru evenimentele noi. Dacă nu a plecat până la miezul nopții, se renunță la el."
+        "RSVP_ASK": "O singură dată pe eveniment; unul bifat abia în ziua lui nu se mai întreabă. Pleacă prin „Newsletter”, la coada rândului; ce n-a plecat până la miezul nopții se anulează."
       },
       "confirmationRetry": "Cui nu a confirmat, linkul pleacă singur din nou la {retry} după ultimul email, cel mult {times}; se socotește și «Retrimite». Termenul nu se mută.",
       "confirmationRetryOff": "Nu se retrimite singur: în „Termene”, numărul de retrimiteri e 0.",

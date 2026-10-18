@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { emailOutbox } from "@/db/schema/email-outbox";
 import { eventRsvpAsks, eventRsvps, eventRsvpTokens } from "@/db/schema/event-rsvps";
@@ -9,13 +9,27 @@ import { pruneExpiredRows, RETENTION } from "@/modules/jobs/retention";
 import { computeContentHash, type LegalDocumentTranslationInput } from "@/modules/legal-documents/domain/content-hash";
 import { insertLegalDocumentVersion } from "@/modules/legal-documents/repository";
 import { privacyNoticeEn, privacyNoticeRo } from "@/modules/legal-documents/templates/privacy-notice";
-import { OutboxMessageWithdrawn } from "@/modules/notifications/outbox";
+import type { OutgoingEmail } from "@/infrastructure/email/adapter";
+import type { EmailSender } from "@/infrastructure/email/delivery";
+import { OutboxMessageWithdrawn, processOutboxBatch } from "@/modules/notifications/outbox";
 import { renderOutboxMessage } from "@/modules/notifications/render";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
 import { queueRsvpAsks } from "@/modules/rsvp/ask";
 import { identityOf } from "@/modules/rsvp/domain/identity";
-import { answerRsvp, confirmRsvp, countRsvps, readPublicRsvps, readRsvpLink, withdrawRsvp } from "@/modules/rsvp/rsvp";
+import {
+  answerRsvp,
+  confirmRsvp,
+  countRsvps,
+  countRsvpsForAdmin,
+  listRsvpsForAdmin,
+  readPublicRsvps,
+  readRsvpLink,
+  requestWithdrawLink,
+  withdrawRsvp,
+} from "@/modules/rsvp/rsvp";
 import { runRegistrationMaintenance } from "@/modules/registrations/maintenance";
+import { unsubscribeNewsletterSubscriber } from "@/modules/newsletter/service";
+import { staffUsers } from "@/db/schema/staff-users";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 vi.mock("@/modules/public-cache/cache", async (importOriginal) => ({
@@ -31,7 +45,7 @@ const NOW = new Date("2026-10-17T06:00:00.000Z");
 const STARTS_AT = new Date("2026-10-18T07:00:00.000Z");
 
 /**
- * §NNN (amends §812, §513, §775) — «Vii mâine la …?»: the day before a ticked turn-up event, from 08:00 club time, the newsletter's
+ * §NNN (builds on §812, amends §445 and §775) — «Vii mâine la …?»: the day before a ticked turn-up event, from 08:00 club time, the newsletter's
  * subscribers of the topic «Întrebarea «Vii?» înaintea alergărilor» (and of "everything") get ONE email with two personal links, once
  * per event. «Vin» counts them at once; «Nu vin» counts nobody. Not a registration: nothing here touches a place or a participant.
  */
@@ -48,11 +62,14 @@ describe("§NNN «Vii mâine la …?»", () => {
     await approveNotice(1, true);
   });
 
-  async function approveNotice(version: number, describes: boolean) {
+  /** The template's text with `{{rsvpAsk}}` taken out: a notice that describes «Vin!» and says nothing of the question. */
+  const withoutAsk = (body: unknown) => JSON.parse(JSON.stringify(body).replaceAll("{{rsvpAsk}}", "")) as typeof privacyNoticeRo;
+
+  async function approveNotice(version: number, describes: boolean, describesAsk = true) {
     const translations: LegalDocumentTranslationInput[] = describes
       ? [
-          { locale: "ro", title: "Confidențialitate", body: privacyNoticeRo },
-          { locale: "en", title: "Privacy", body: privacyNoticeEn },
+          { locale: "ro", title: "Confidențialitate", body: describesAsk ? privacyNoticeRo : withoutAsk(privacyNoticeRo) },
+          { locale: "en", title: "Privacy", body: describesAsk ? privacyNoticeEn : withoutAsk(privacyNoticeEn) },
         ]
       : [
           { locale: "ro", title: "Confidențialitate", body: { sections: [{ heading: "1", paragraphs: ["Nimic despre răspunsuri."] }] } },
@@ -230,6 +247,17 @@ describe("§NNN «Vii mâine la …?»", () => {
       expect(await queueRsvpAsks(db, NOW)).toBe(0);
       expect(await askRows()).toHaveLength(0);
       await approveNotice(2, true);
+      expect(await queueRsvpAsks(db, new Date(NOW.getTime() + HOUR))).toBe(1);
+    });
+
+    it("never asks under a notice that describes «Vin!» but not the question (`{{rsvpAsk}}`), and asks when the club approves one that does", async () => {
+      await resetTables(db);
+      await approveNotice(1, true, false);
+      await seedEvent();
+      await subscribe("ana@example.test", ["RSVP_ASK"]);
+      expect(await queueRsvpAsks(db, NOW)).toBe(0);
+      expect(await askRows()).toHaveLength(0);
+      await approveNotice(2, true, true);
       expect(await queueRsvpAsks(db, new Date(NOW.getTime() + HOUR))).toBe(1);
     });
 
@@ -442,6 +470,44 @@ describe("§NNN «Vii mâine la …?»", () => {
       await expect(renderOutboxMessage(row, db, NOW)).rejects.toBeInstanceOf(OutboxMessageWithdrawn);
     });
 
+    it("is withdrawn, and writes no row, when the notice in force stops naming the question (`{{rsvpAsk}}`) before it is sent", async () => {
+      const { event, row } = await asked();
+      await approveNotice(2, true, false);
+      await expect(renderOutboxMessage(row, db, NOW)).rejects.toBeInstanceOf(OutboxMessageWithdrawn);
+      expect(await rowsOf(event.id)).toHaveLength(0);
+    });
+
+    it("is withdrawn when the subscriber unticked the topic after the morning's queue — and no row carries their address", async () => {
+      const { event, subscriber, row } = await asked();
+      await db.update(newsletterSubscribers).set({ topics: ["WEEKLY_RUNS"] }).where(eq(newsletterSubscribers.id, subscriber.id));
+      await expect(renderOutboxMessage(row, db, NOW)).rejects.toBeInstanceOf(OutboxMessageWithdrawn);
+      expect(await rowsOf(event.id)).toHaveLength(0);
+      // «Toate noutățile» still receives it.
+      await db.update(newsletterSubscribers).set({ topics: ["ALL"] }).where(eq(newsletterSubscribers.id, subscriber.id));
+      await expect(renderOutboxMessage(row, db, NOW)).resolves.toBeDefined();
+    });
+
+    it("is withdrawn when the send is held past midnight into the event's day, and when the event moved out of «tomorrow»", async () => {
+      const { event, row } = await asked();
+      // 00:05 club time on Sunday (21:05Z on Saturday): the day itself, where «mâine» would be a lie.
+      await expect(renderOutboxMessage(row, db, new Date("2026-10-17T21:05:00.000Z"))).rejects.toBeInstanceOf(OutboxMessageWithdrawn);
+      expect(await rowsOf(event.id)).toHaveLength(0);
+      // Still fine at 23:55 on Saturday.
+      await expect(renderOutboxMessage(row, db, new Date("2026-10-17T20:55:00.000Z"))).resolves.toBeDefined();
+      // The event moved a day later after the queue: «tomorrow» is no longer Sunday.
+      await db.update(events).set({ startsAt: new Date(STARTS_AT.getTime() + DAY) }).where(eq(events.id, event.id));
+      await expect(renderOutboxMessage(row, db, NOW)).rejects.toBeInstanceOf(OutboxMessageWithdrawn);
+    });
+
+    it("draws the two buttons as the HTML links they are: «Vin» to the confirm token's page, «Nu vin» to the withdraw token's", async () => {
+      const { row } = await asked();
+      const message = await renderOutboxMessage(row, db, NOW);
+      const [yes, no] = linksOf(message.text);
+      const hrefOf = (label: string) => message.html.match(new RegExp(`<a[^>]*href="([^"]+)"[^>]*>\\s*${label}\\s*</a>`))?.[1];
+      expect(hrefOf("Vin")).toContain(`/ro/vin/${yes}`);
+      expect(hrefOf("Nu vin")).toContain(`/ro/vin/${no}`);
+    });
+
     it("re-renders to a fresh pair of links, the older pair dying with it (a retried send)", async () => {
       const { row } = await asked();
       const [yes1] = linksOf((await renderOutboxMessage(row, db, NOW)).text);
@@ -450,6 +516,120 @@ describe("§NNN «Vii mâine la …?»", () => {
       expect(await readRsvpLink(db, yes1, new Date(NOW.getTime() + 60_000))).toMatchObject({ state: "used" });
       expect(await readRsvpLink(db, yes2, new Date(NOW.getTime() + 60_000))).toMatchObject({ state: "live" });
       expect((await rowsOf((await db.select().from(eventRsvps))[0].eventId))).toHaveLength(1);
+    });
+  });
+
+  describe("an unanswered question is not an answer", () => {
+    async function askedAndSent() {
+      const event = await seedEvent();
+      await subscribe("ana@example.test", ["RSVP_ASK"]);
+      await queueRsvpAsks(db, NOW);
+      const [row] = await asks();
+      const message = await renderOutboxMessage(row, db, NOW);
+      return { event, message };
+    }
+
+    it("stays out of the editor's fold and counts, until the person presses «Vin»", async () => {
+      const { event, message } = await askedAndSent();
+      expect(await rowsOf(event.id)).toHaveLength(1);
+      expect(await countRsvpsForAdmin(db, event.id)).toEqual({ confirmed: 0, unconfirmed: 0 });
+      expect(await listRsvpsForAdmin(db, event.id)).toEqual([]);
+      await confirmRsvp(db, linksOf(message.text)[0], NOW);
+      expect(await countRsvpsForAdmin(db, event.id)).toEqual({ confirmed: 1, unconfirmed: 0 });
+      expect((await listRsvpsForAdmin(db, event.id)).map((entry) => entry.email)).toEqual(["ana@example.test"]);
+    });
+
+    it("keeps an address typed on the page in the fold as unconfirmed — only the email's question is left out", async () => {
+      const event = await seedEvent();
+      await answerRsvp(db, event.id, identityOf("page", { email: "dan@example.test", showName: false, locale: "ro" }), NOW);
+      expect(await countRsvpsForAdmin(db, event.id)).toEqual({ confirmed: 0, unconfirmed: 1 });
+    });
+
+    it("sends no withdraw link from «Nu mai vin» on the page for an address that only has the question, and does for a typed one", async () => {
+      const { event } = await askedAndSent();
+      const before = (await db.select().from(emailOutbox).where(eq(emailOutbox.messageType, "RSVP_CONFIRM"))).length;
+      await requestWithdrawLink(db, event.id, { email: "ana@example.test", locale: "ro" }, NOW);
+      expect(await db.select().from(emailOutbox).where(eq(emailOutbox.messageType, "RSVP_CONFIRM"))).toHaveLength(before);
+      // A typed answer is the person's: the withdraw link goes.
+      await answerRsvp(db, event.id, identityOf("page", { email: "dan@example.test", showName: false, locale: "ro" }), NOW);
+      const typed = (await db.select().from(emailOutbox).where(eq(emailOutbox.messageType, "RSVP_CONFIRM"))).length;
+      await requestWithdrawLink(db, event.id, { email: "dan@example.test", locale: "ro" }, new Date(NOW.getTime() + 11 * 60_000));
+      expect((await db.select().from(emailOutbox).where(eq(emailOutbox.messageType, "RSVP_CONFIRM"))).length).toBe(typed + 1);
+    });
+
+    it("becomes the page's own answer when the address is typed there afterwards: its links no longer open the «Vii?» wording", async () => {
+      const { event } = await askedAndSent();
+      await answerRsvp(db, event.id, identityOf("page", { email: "ana@example.test", displayName: "Ana", showName: false, locale: "ro" }), new Date(NOW.getTime() + 11 * 60_000));
+      const [answer] = await rowsOf(event.id);
+      expect(answer.askedAt).toBeNull();
+      const typed = (await db.select().from(emailOutbox).where(and(eq(emailOutbox.messageType, "RSVP_CONFIRM"), eq(emailOutbox.recipientEmail, "ana@example.test"))))[0];
+      const [yes] = linksOf((await renderOutboxMessage(typed, db, new Date(NOW.getTime() + 12 * 60_000))).text);
+      expect(await readRsvpLink(db, yes, new Date(NOW.getTime() + 12 * 60_000))).toMatchObject({ purpose: "RSVP_CONFIRM", state: "live", asked: false });
+    });
+
+    it("tells a declined question from a taken-back answer: «Nu vin» on the unanswered row says unanswered", async () => {
+      const { message } = await askedAndSent();
+      const [, no] = linksOf(message.text);
+      expect(await withdrawRsvp(db, { token: no }, NOW)).toMatchObject({ email: "ana@example.test", unanswered: true });
+    });
+
+    it("…and «Nu mai vin» after «Vin» does not: the person answered, so it is a taken-back answer", async () => {
+      const { message } = await askedAndSent();
+      const [yes, no] = linksOf(message.text);
+      await confirmRsvp(db, yes, NOW);
+      expect(await withdrawRsvp(db, { token: no }, NOW)).toMatchObject({ email: "ana@example.test", unanswered: false });
+    });
+
+    it("is deleted at once, with its link, when the subscriber unsubscribes", async () => {
+      const { event } = await askedAndSent();
+      const [admin] = await db
+        .insert(staffUsers)
+        .values({ email: "admin@example.test", displayName: "Admin", role: "ADMIN" })
+        .returning();
+      const [subscriber] = await db.select().from(newsletterSubscribers);
+      expect(await rowsOf(event.id)).toHaveLength(1);
+      expect(await unsubscribeNewsletterSubscriber(db, admin, subscriber.id, NOW)).toBe(true);
+      expect(await rowsOf(event.id)).toHaveLength(0);
+      expect(await db.select().from(eventRsvpTokens)).toHaveLength(0);
+    });
+  });
+
+  describe("the road: last in line, with the reserve kept for registrations' links", () => {
+    function recordingSender(): EmailSender & { calls: OutgoingEmail[] } {
+      const calls: OutgoingEmail[] = [];
+      return {
+        calls,
+        async send(message) {
+          calls.push(message);
+          return { outcome: "sent", providerMessageId: "provider:x" };
+        },
+      };
+    }
+
+    it("holds the questions back when the day's allowance is under the reserve, and leaves them untouched, not failed", async () => {
+      await seedEvent();
+      for (let index = 0; index < 8; index += 1) await subscribe(`s${index}@example.test`, ["RSVP_ASK"]);
+      expect(await queueRsvpAsks(db, NOW)).toBe(8);
+      // Mailgun Free, 100 a day: 53 sent today leaves 47, under the 50 kept for registrations' links.
+      for (let index = 0; index < 53; index += 1) {
+        await db.insert(emailOutbox).values({
+          participantId: null,
+          registrationId: null,
+          messageType: "STAFF_INVITATION",
+          locale: "ro",
+          recipientEmail: `sent${index}@example.test`,
+          payloadJson: {},
+          idempotencyKey: `sent:${index}`,
+          status: "SENT",
+          sentAt: new Date(NOW.getTime() - 60_000),
+          createdAt: new Date(NOW.getTime() - HOUR),
+        });
+      }
+      const sender = recordingSender();
+      await processOutboxBatch(db, { sender, render: renderOutboxMessage, now: new Date(NOW.getTime() + 2000) });
+      expect(sender.calls).toHaveLength(0);
+      const held = await asks();
+      expect(held.every((row) => row.status === "PENDING" && row.attemptCount === 0)).toBe(true);
     });
   });
 

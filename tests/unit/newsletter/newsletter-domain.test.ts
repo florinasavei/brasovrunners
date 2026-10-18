@@ -15,6 +15,7 @@ import { BULK_MESSAGE_TYPES, bulkBudget, isBulkMessage } from "@/modules/notific
 import { isCopiedPerMessage, isParticipantMessage } from "@/modules/notifications/domain/club-notices";
 import { emailSampleActionUrl, emailSampleFor } from "@/modules/notifications/email-copy-fields";
 import { renderBilingual } from "@/modules/notifications/templates";
+import { rsvpMergeValues } from "@/modules/rsvp/notice-words";
 import { canSendNewsletter } from "@/modules/staff-identity/domain/roles";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
@@ -168,7 +169,7 @@ describe("§445 the reserve the outbox keeps for everything else", () => {
   });
 
   it("treats the newsletter and the alert as bulk, and nothing a participant is waiting for", () => {
-    expect([...BULK_MESSAGE_TYPES].sort()).toEqual(["NEWSLETTER", "NEW_EVENT_ALERT"]);
+    expect([...BULK_MESSAGE_TYPES].sort()).toEqual(["NEWSLETTER", "NEW_EVENT_ALERT", "RSVP_ASK"]);
     expect(isBulkMessage("NEWSLETTER_CONFIRM")).toBe(false);
     expect(isBulkMessage("VERIFY_REGISTRATION_EMAIL")).toBe(false);
   });
@@ -199,7 +200,7 @@ describe("§445 the privacy notice is the switch", () => {
       expect(describesNewsletter(notice), locale).toBe(true);
       const section = notice.sections.find((candidate) => candidate.heading?.startsWith("5."));
       const paragraph = section?.paragraphs.find((text) => text.includes("{{newsletterTopics}}")) ?? "";
-      const merged = mergeText(paragraph, { ...newsletterMergeValues(locale), ...deadlineMergeValues(locale, DEFAULT_DEADLINES) });
+      const merged = mergeText(paragraph, { ...newsletterMergeValues(locale), ...rsvpMergeValues(locale), ...deadlineMergeValues(locale, DEFAULT_DEADLINES) });
       expect(merged).not.toContain("{{");
       expect(merged).not.toContain("…………");
       expect(merged).toContain(locale === "ro" ? "6(1)(a)" : "6(1)(a)");

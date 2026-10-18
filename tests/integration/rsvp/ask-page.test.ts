@@ -18,7 +18,7 @@ import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email
 import { prepareRsvpAsk } from "@/modules/rsvp/ask";
 import { identityOf } from "@/modules/rsvp/domain/identity";
 import { answerRsvp } from "@/modules/rsvp/rsvp";
-import { withdrawnProof } from "@/modules/rsvp/withdrawn-proof";
+import { WITHDRAWN_ASKED_SUFFIX, withdrawnProof } from "@/modules/rsvp/withdrawn-proof";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 const state = vi.hoisted(() => ({
@@ -76,7 +76,12 @@ vi.mock("@/modules/public-cache/cache", async (importOriginal) => ({
 const { default: RsvpLinkPage } = await import("@/app/[locale]/vin/[token]/page");
 const { confirmRsvpAction, withdrawRsvpAction } = await import("@/app/[locale]/vin/[token]/actions");
 
-const NOW = new Date();
+/**
+ * A fixed Saturday, 09:00 club time: inside the window of Sunday's question (08:00 the day before to midnight). The send re-checks the
+ * window (`prepareRsvpAsk`), so a test on the real clock would fail between midnight and 08:00. Only `Date` is faked: the actions read
+ * their own `new Date()`, and the links they spend were minted at this same instant.
+ */
+const NOW = new Date("2026-10-17T06:00:00.000Z");
 const HOUR = 60 * 60_000;
 const DAY = 24 * HOUR;
 
@@ -92,10 +97,15 @@ describe("§NNN the page of the «Vii?» email's links", () => {
   let slug: string;
 
   beforeAll(async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(NOW);
     ({ db, close } = await createTestDatabase());
     state.db = db;
   });
-  afterAll(async () => close());
+  afterAll(async () => {
+    vi.useRealTimers();
+    await close();
+  });
   beforeEach(async () => {
     await resetTables(db);
     state.jar.clear();
@@ -108,7 +118,7 @@ describe("§NNN the page of the «Vii?» email's links", () => {
     await insertLegalDocumentVersion(db, { key: "PRIVACY_NOTICE", version: 1, effectiveAt: new Date(NOW.getTime() - 400 * DAY), isApproved: true, contentSha256: computeContentHash(translations), translations, now: NOW });
     const [event] = await db
       .insert(events)
-      .values({ type: "GROUP_RUN", startsAt: new Date(NOW.getTime() + 2 * DAY), registrationMode: "NONE", rsvpEnabled: true, editorialStatus: "PUBLISHED", publishedAt: new Date(NOW.getTime() - DAY) })
+      .values({ type: "GROUP_RUN", startsAt: new Date(NOW.getTime() + DAY + HOUR), registrationMode: "NONE", rsvpEnabled: true, editorialStatus: "PUBLISHED", publishedAt: new Date(NOW.getTime() - DAY) })
       .returning();
     eventId = event.id;
     slug = `alergare-${event.id.slice(0, 8)}`;
@@ -168,6 +178,8 @@ describe("§NNN the page of the «Vii?» email's links", () => {
       expect(markup).toContain("Numele tău (opțional)");
       expect(markup).toContain('name="showName"');
       expect(markup).toContain("Vreau să apar cu numele");
+      // The name is personal data that may go public: the notice is linked beside the box, as on the event page's card.
+      expect(markup).toContain("Detalii în nota de confidențialitate.");
       expect(markup).not.toContain("required");
     }
     expect(await db.select().from(eventRsvps)).toEqual(rowsBefore);
@@ -216,11 +228,21 @@ describe("§NNN the page of the «Vii?» email's links", () => {
     expect(markup).not.toContain("Nu mai vin");
     expect(await db.select().from(eventRsvps)).toHaveLength(1);
 
-    const target = await press(withdrawRsvpAction, form(withdraw, "ro", { asked: "1" }));
-    expect(target).toBe(`/ro/vin/${withdraw}?retras=${slug}&ok=${withdrawnProof(withdraw, slug)}&nu=1`);
-    expect(await db.select().from(eventRsvps)).toHaveLength(0);
+    // No note about a recognised browser: declining the question remembers nothing (nothing the person asked for needs it).
+    expect(markup).not.toContain("rsvp-withdraw-remember");
 
-    const done = await page(withdraw, { retras: slug, ok: withdrawnProof(withdraw, slug), nu: "1" });
+    // The server reads from the deleted row that it was the question; the form says nothing.
+    const target = await press(withdrawRsvpAction, form(withdraw));
+    const proof = withdrawnProof(withdraw, `${slug}${WITHDRAWN_ASKED_SUFFIX}`);
+    expect(target).toBe(`/ro/vin/${withdraw}?retras=${slug}&ok=${proof}&nu=1`);
+    expect(await db.select().from(eventRsvps)).toHaveLength(0);
+    expect(state.jar.has(PERSON_COOKIE)).toBe(false);
+    expect(await db.select().from(personSessions)).toHaveLength(0);
+
+    // `nu` alone proves nothing: with the plain proof the page claims only what it always did.
+    const forged = await page(withdraw, { retras: slug, ok: withdrawnProof(withdraw, slug), nu: "1" });
+    expect(forged).not.toContain("Bine, nu te numărăm");
+    const done = await page(withdraw, { retras: slug, ok: proof, nu: "1" });
     expect(done).toContain("Bine, nu te numărăm. Poți răspunde altfel până la start.");
     expect(done).toContain(`href="/ro/evenimente/${slug}"`);
     expect(done).not.toContain("ți-am șters răspunsul");
@@ -232,6 +254,10 @@ describe("§NNN the page of the «Vii?» email's links", () => {
     const markup = await page(withdraw);
     expect(markup).toContain("Nu mai vii la Alergarea de joi? Răspunsul tău se șterge.");
     expect(markup).toContain("Nu mai vin");
+    // An answer was given, so the browser's year is still said and still done.
+    expect(markup).toContain("rsvp-withdraw-remember");
+    await press(withdrawRsvpAction, form(withdraw));
+    expect(await db.select().from(personSessions)).toHaveLength(1);
   });
 
   it("says the same in English, on the /coming/ page", async () => {
@@ -243,7 +269,7 @@ describe("§NNN the page of the «Vii?» email's links", () => {
     const no = await page(withdraw, {}, "en");
     expect(no).toContain("Not coming to Thursday run? Press the button and we don&#x27;t count you.");
     expect(no).toContain("I&#x27;m not coming");
-    const done = await page(withdraw, { retras: slug, ok: withdrawnProof(withdraw, slug), nu: "1" }, "en");
+    const done = await page(withdraw, { retras: slug, ok: withdrawnProof(withdraw, `${slug}${WITHDRAWN_ASKED_SUFFIX}`), nu: "1" }, "en");
     expect(done).toContain("Okay, we won&#x27;t count you. You can answer differently until the start.");
   });
 });

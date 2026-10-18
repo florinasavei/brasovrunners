@@ -3604,7 +3604,8 @@
         "volunteerGuardian": "Only in the volunteer agreement: the name of a minor volunteer's parent or guardian. For an adult the sentence is left out. Without it in the agreement in force, no minors are taken",
         "volunteerMinors": "Only in the privacy notice: the parent's boxes of the volunteers' form, in quotation marks; without it, the club takes no volunteers under 18",
         "results": "In the privacy notice and the terms: the name of the section “Results”, in quotation marks. With it in both texts in force, an administrator can publish the results and the race's page shows them",
-        "rsvp": "Only in the privacy notice: the “I'm coming!” button's name, in quotes. With it in the notice in force, the pages of ticked events take “I'm coming!” answers and show how many are coming"
+        "rsvp": "Only in the privacy notice: the “I'm coming!” button's name, in quotes. With it in the notice in force, the pages of ticked events take “I'm coming!” answers and show how many are coming",
+        "rsvpAsk": "Only in the privacy notice: the name of the topic “The ‘Coming?’ question before runs”, in quotes. With it in the notice in force, its subscribers get the “Coming?” question the day before."
       },
       "removeBlockedReferenced": "Can neither be withdrawn nor deleted permanently: {signatures}, {events} and {acknowledgements} depend on it. “Delete” on its row takes it off the list.",
       "removeBlockedCurrent": "In force right now — it can neither be withdrawn nor deleted. Approve its successor first; then this one can go.",
@@ -4657,8 +4658,8 @@
           "todo": "An event takes “I'm coming!” answers, but the notice in force does not describe the day-before question yet, so no subscriber is asked and the topic's box does not show when subscribing.",
           "done": "The notice in force describes the day-before question: the topic's subscribers and those of “All the news” get one email with “I'm coming” and “I'm not coming”.",
           "how": [
-            "Before approving, read the template's two paragraphs in section 5 with a lawyer: the “I'm coming!” one (the subscriber's address becomes an unconfirmed answer when the question is sent) and the newsletter's.",
-            "/admin/legal → the “GDPR” card → “Regenerate from the template” → confirm. The topic shows in the notice in force, through the list of topics, from the release; the question goes out only after the new notice.",
+            "Before approving, have a lawyer read section 5's two paragraphs: the “I'm coming!” one (the address becomes an unconfirmed answer) and the newsletter's.",
+            "/admin/legal → the “GDPR” card → “Regenerate from the template” → confirm. The topic already shows in the notice in force; the question goes out only after the new one.",
             "Open the draft, read it, “Save draft”, then “Approve and publish”, in both languages."
           ]
         }
@@ -6241,6 +6242,7 @@
       "rsvpNotice": "notice v{version}",
       "rsvpConfirmedAt": "confirmed {when}",
       "rsvpUnconfirmed": "unconfirmed",
+      "rsvpAsked": "asked {when}, no answer",
       "browserUsed": "used {when}",
       "browserUntil": "until {when}",
       "rsvpsErase": "Erase the “I'm coming!” answers and browsers",
