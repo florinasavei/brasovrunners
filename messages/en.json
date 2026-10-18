@@ -12867,6 +12867,7 @@
     "askNoIntro": "Not coming to {event}? Press the button and we don't count you.",
     "askNoButton": "I'm not coming",
     "askNoDoneTitle": "Understood",
-    "askNoDone": "Okay, we won't count you. You can answer differently until the start."
+    "askNoDone": "Okay, we won't count you. You can answer differently until the start.",
+    "askNoRememberNote": "After “I'm not coming” too, your browser stays recognised for a year: at other events, “I'm coming!” is one press. On the event's page, “Not me” forgets it."
   }
 }

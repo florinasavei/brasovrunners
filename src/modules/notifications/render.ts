@@ -217,8 +217,8 @@ async function renderRow(
   if (row.messageType === "GROUP_RUN_DECLARATION_SIGNED" || row.messageType === "GROUP_RUN_DECLARATION_ARCHIVE") {
     return renderGroupRunDeclarationRow(row, db, now, eventRows, replyTo);
   }
-  // The newsletter (§445) is about a subscriber, never a registration: its own path too.
-  if (row.messageType === "NEWSLETTER_CONFIRM" || row.messageType === "NEWSLETTER" || row.messageType === "NEW_EVENT_ALERT") {
+  // The newsletter (§445) is about a subscriber, never a registration: its own path too — and so is «Vii mâine la …?» (§NNN), asked of a subscriber.
+  if (row.messageType === "NEWSLETTER_CONFIRM" || row.messageType === "NEWSLETTER" || row.messageType === "NEW_EVENT_ALERT" || row.messageType === "RSVP_ASK") {
     return renderNewsletterRow(row, db, now, eventRows, replyTo);
   }
   // An invitation (§647) is about an invitation, before any registration: its own path, its own link.

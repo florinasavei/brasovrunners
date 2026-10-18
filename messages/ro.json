@@ -12867,6 +12867,7 @@
     "askNoIntro": "Nu vii la {event}? Apasă butonul și nu te numărăm.",
     "askNoButton": "Nu vin",
     "askNoDoneTitle": "Am înțeles",
-    "askNoDone": "Bine, nu te numărăm. Poți răspunde altfel până la start."
+    "askNoDone": "Bine, nu te numărăm. Poți răspunde altfel până la start.",
+    "askNoRememberNote": "Și după „Nu vin”, browserul tău rămâne recunoscut un an: la alte evenimente, „Vin!” e o singură apăsare. Pe pagina evenimentului, „Nu sunt eu” îl uită."
   }
 }

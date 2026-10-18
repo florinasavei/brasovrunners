@@ -159,7 +159,7 @@ export default async function RsvpLinkPage({ params, searchParams }: Props) {
             </SubmitButton>
           </form>
           <Typography variant="body2" color="text.secondary" data-testid="rsvp-withdraw-remember">
-            {t("withdrawRememberNote")}
+            {live.asked ? t("askNoRememberNote") : t("withdrawRememberNote")}
           </Typography>
         </Stack>
       )}
