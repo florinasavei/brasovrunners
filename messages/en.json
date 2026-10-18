@@ -816,7 +816,21 @@
       "cancel": "I'm not coming any more",
       "notMe": "Not me",
       "help": "Your browser stays recognised for a year after “Yes, I'm coming” or “I'm not coming any more”; “Not me” forgets it.",
-      "failed": "We could not send your answer. Try again."
+      "failed": "We could not send your answer. Try again.",
+      "calendar": {
+        "link": "I'm coming!",
+        "count": {
+          "one": "{count} person coming so far",
+          "few": "{count} people coming so far",
+          "other": "{count} people coming so far"
+        },
+        "empty": "Be the first to say you're coming."
+      },
+      "chip": {
+        "one": "{count} coming",
+        "few": "{count} coming",
+        "other": "{count} coming"
+      }
     }
   },
   "Admin": {

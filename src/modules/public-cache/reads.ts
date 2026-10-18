@@ -88,6 +88,7 @@ import {
 import { readPublicVolunteerRoles } from "@/modules/volunteers/volunteers";
 import { describesRefusal } from "@/modules/legal-documents/domain/refusal-clause";
 import { findCurrentApprovedDocument, findFirstResultsNoticeVersion, findFirstRsvpNoticeVersion, findFirstStatesNoticeVersion, listEffectiveDates } from "@/modules/legal-documents/repository";
+import { countRsvpsForEvents } from "@/modules/rsvp/counts";
 import { type PublicRsvps, readPublicRsvps } from "@/modules/rsvp/rsvp";
 import { DEFAULT_BOT_CHECK, readBotCheck } from "@/modules/registrations/bot-check";
 import { DEFAULT_PUBLIC_LIST_CLUB } from "@/modules/registrations/domain/public-list-club";
@@ -695,6 +696,19 @@ export async function cachedFirstRsvpNoticeVersion(): Promise<number | null> {
  */
 export async function cachedPublicRsvps(eventId: string, firstRsvpNoticeVersion: number | null): Promise<PublicRsvps> {
   return publicRead(["places.rsvps", eventId, firstRsvpNoticeVersion ?? "none"], ["places"], () => readPublicRsvps(getDb(), eventId, { firstRsvpNoticeVersion }));
+}
+
+/**
+ * How many come to each of these events (`countRsvpsForEvents`, §812): the number the calendar's feed, the `.ics` files and the
+ * listing's «N vin» chip say, for every offered event of the page at once. Filed under "places" like `cachedPublicRsvps` — the
+ * tag a confirmation or a withdrawal expires (`revalidatePublicContent("places")`, §811) — so the static feed and the listing,
+ * which are filed under the tags of what they read, are made again once per write and never per poll (§549). No saved copy (a
+ * count of people is not a thing to serve stale, §281), so a caller takes it through `readOrWhileAway`. The ids are sorted into
+ * the key: the same events are the same entry whatever order a page asks in.
+ */
+export async function cachedRsvpCounts(eventIds: readonly string[]): Promise<Record<string, number>> {
+  const ids = [...new Set(eventIds)].sort();
+  return publicRead(["places.rsvp-counts", ...ids], ["places"], () => countRsvpsForEvents(getDb(), ids));
 }
 
 /**

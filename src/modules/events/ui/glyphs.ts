@@ -181,6 +181,9 @@ export const GLYPHS = {
   // «Clasament» on a finished race's card (§809): a ranked list, the way the results are drawn — not a trophy, which says one winner
   // where the table has every finisher (the chequered flag is the race itself, above). Always beside its word.
   results: LeaderboardIcon,
+  // «N vin» on an upcoming turn-up event's card (§812): the group of people the page's own count «Vin (N)» draws (`RsvpCount`) — the
+  // same glyph for the same number. Always beside its word.
+  coming: GroupsIcon,
 };
 
 export type GlyphName = keyof typeof GLYPHS;

@@ -3,6 +3,7 @@ import Card from "@mui/material/Card";
 import Chip from "@mui/material/Chip";
 import Typography from "@mui/material/Typography";
 import { getLocale, getTranslations } from "next-intl/server";
+import { countForm } from "@/i18n/count-form";
 import { formatDay } from "@/i18n/dates";
 import { getPathname, Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
@@ -24,6 +25,8 @@ import type { PreviewDoor } from "./registration-door";
 import GlyphChip from "./GlyphChip";
 import PartnerChip from "./PartnerChip";
 import ResultsChip from "@/modules/results/ui/ResultsChip";
+import ComingChip from "@/modules/rsvp/ui/ComingChip";
+import { RSVP_BOX_ID } from "@/modules/rsvp/rsvp-box";
 import { repeatTooltip, rhythmLabel } from "./series-sentence";
 
 /**
@@ -79,6 +82,7 @@ export default async function EventCard({
   previewDoor,
   titleAs = "h2",
   resultsChip = false,
+  comingCount = 0,
 }: {
   /** Undated only in the listing's «Data se anunță» section (§533): no countdown, «Când» says so. */
   event: PublicEventPage;
@@ -107,6 +111,13 @@ export default async function EventCard({
    * Absent on every card but a finished race's — a group run, an upcoming race, the home page's, the preview's.
    */
   resultsChip?: boolean;
+  /**
+   * «N vin» (§812, «Vin!» part 2): how many confirmed they come, for an event the page offers the answer to (`readPublicComing`) —
+   * the chip links to the page's `#vin`. The listing works it out once for the whole page and hands each card a number; a card never
+   * asks the database. 0 or absent is no chip: the card of an event nobody has answered yet says nothing, and so does every
+   * card of an event the page does not offer the answer to — a group run's series card never gets one, its dates do.
+   */
+  comingCount?: number;
 }) {
   const tEvent = await getTranslations("Event");
   const locale = (await getLocale()) as Locale;
@@ -153,6 +164,10 @@ export default async function EventCard({
           <PartnerChip event={event} />
           {/* The results are on the event's page (§809): a link to them, 44 pixels tall around the small chip. */}
           {resultsChip && <ResultsChip href={`${page}#clasament`} label={tEvent("results.title")} />}
+          {/* How many come (§812): a link to the page's «Vii?» card, 44 pixels tall around the small chip. */}
+          {comingCount >= 1 && (
+            <ComingChip href={`${page}#${RSVP_BOX_ID}`} label={tEvent(`rsvp.chip.${countForm(comingCount, locale)}`, { count: comingCount })} />
+          )}
           {/* BR-REQ-020-01 criterion 2: a cancelled event stays listed and says so. */}
           {event.eventStatus === "CANCELLED" && <Chip size="small" color="error" label={tEvent("cancelled")} />}
           {event.eventStatus === "COMPLETED" && <Chip size="small" label={tEvent("completed")} />}
