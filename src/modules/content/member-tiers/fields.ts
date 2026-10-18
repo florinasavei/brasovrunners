@@ -6,7 +6,8 @@ import { DEFAULT_TIER_GLYPH, isTierGlyphKey } from "./glyph-keys";
  * What the club types for one member tier (§811).
  *
  * A name in Romanian **and** English — a level without a name in either language cannot be shown — at
- * most `TIER_NAME_MAX` characters, one line. A description of what the level gives, plain words, in both
+ * most `TIER_NAME_MAX` characters, one line. The description is the administrators' note (§NNN: what the level is for, which
+ * codes; nothing public reads it), plain words, in both
  * languages or in neither (§352), at most `TIER_DESCRIPTION_MAX`. A glyph from the closed set
  * (`glyph-keys.ts`), `star` when none is posted. One side of a pair written and the other empty is
  * refused on the empty box, every other box kept (§315).
@@ -56,7 +57,7 @@ export const tierFieldsSchema = z
       .refine(isTierGlyphKey, "not a glyph of the tiers' table"),
   })
   .superRefine((fields, ctx) => {
-    // The name is owed in both languages: the zone and the public page draw it in the reader's own.
+    // The name is owed in both languages: the staff read it in their own language.
     if (fields.nameRo === "") ctx.addIssue({ code: "custom", path: ["nameRo"], message: "the name is required in Romanian" });
     if (fields.nameEn === "") ctx.addIssue({ code: "custom", path: ["nameEn"], message: "the name is required in English" });
     refuseOneLanguage(ctx, { ro: fields.descriptionRo, en: fields.descriptionEn }, { ro: ["descriptionRo"], en: ["descriptionEn"] }, "the description");

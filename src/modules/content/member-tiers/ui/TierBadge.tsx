@@ -10,20 +10,10 @@ import type { TierView } from "../repository";
  *
  * A label, never a permission: the chip opens nothing and decides nothing.
  */
-export default function TierBadge({
-  tier,
-  variant = "outlined",
-  color = "default",
-  testId = "member-tier-badge",
-}: {
-  tier: TierView;
-  variant?: "filled" | "outlined";
-  color?: "default" | "primary" | "secondary";
-  testId?: string;
-}) {
+export default function TierBadge({ tier, testId = "member-tier-badge" }: { tier: TierView; testId?: string }) {
   return (
     <Box component="span" sx={{ display: "inline-flex", alignItems: "center", minWidth: 0, maxWidth: "100%" }}>
-      <GlyphChip glyph={tierGlyphName(tier.glyph)} label={tier.name} color={color} variant={variant} testId={testId} />
+      <GlyphChip glyph={tierGlyphName(tier.glyph)} label={tier.name} color="default" variant="outlined" testId={testId} />
     </Box>
   );
 }

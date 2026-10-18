@@ -73,7 +73,8 @@ export async function saveMemberTiers<T extends Record<string, unknown>>(
     const refused = new Set<string>();
     const parsed: {
       row: PostedTierRow;
-      fields: ReturnType<typeof tierFieldsSchema.parse>;
+      // `glyph` is a plain string: a level the card saves without a symbol box keeps whatever it has stored.
+      fields: Omit<ReturnType<typeof tierFieldsSchema.parse>, "glyph"> & { glyph: string };
       hidden: boolean;
       typed: number | null;
       drawnAt: number | null;
@@ -92,7 +93,8 @@ export async function saveMemberTiers<T extends Record<string, unknown>>(
         nameEn: row.fields.nameEn ?? current?.nameEn ?? "",
         descriptionRo: row.fields.descriptionRo ?? current?.descriptionRo ?? "",
         descriptionEn: row.fields.descriptionEn ?? current?.descriptionEn ?? "",
-        glyph: row.fields.glyph ?? current?.glyph ?? "",
+        // The card posts no glyph box (§NNN): a level without one keeps the symbol it has, even one the closed set no longer names, so the save is not refused on a box the form does not draw.
+        glyph: row.fields.glyph ?? "",
       };
       const check = tierFieldsSchema.safeParse(merged);
       if (!check.success) for (const issue of check.error.issues) refused.add(boxOf(row.key, String(issue.path[0] ?? "nameRo")));
@@ -102,7 +104,7 @@ export async function saveMemberTiers<T extends Record<string, unknown>>(
       const drawn = /^\d{1,3}$/.test((row.fields.was ?? "").trim()) ? Number(row.fields.was) : null;
       parsed.push({
         row,
-        fields: check.data,
+        fields: row.fields.glyph === undefined && current ? { ...check.data, glyph: current.glyph } : check.data,
         hidden: "hidden" in row.fields ? row.fields.hidden === "on" : (current?.hidden ?? false),
         typed: position.value,
         drawnAt: drawn,

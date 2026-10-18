@@ -9480,7 +9480,7 @@
           "other": "{count} de niveluri"
         },
         "intro": "Un nivel decide ce coduri de reducere vede membrul; membrii nu-și văd nivelul.",
-        "introMore": "Nivelul e eticheta voastră: îl văd doar administratorii. Îl dai fiecărui membru în „Echipa”, apoi bifezi la fiecare cod pentru ce niveluri e. Nu schimbă ce poate face cineva pe site.",
+        "introMore": "Nivelul e eticheta ta: îl văd doar administratorii. Îl dai fiecărui membru în „Echipa”, apoi bifezi la fiecare cod pentru ce niveluri e. Nu schimbă ce poate face cineva pe site.",
         "empty": "Nu ai încă niciun nivel. Până atunci, un membru vede doar codurile de reducere pentru toți.",
         "rowsIntro": "Scrie un nivel în rândul gol de la sfârșit și apasă „Salvează toate nivelurile”. Ordinea e cea din „Poziția”.",
         "listLabel": "Nivelurile de membru, în ordinea clubului",
@@ -9490,7 +9490,7 @@
         "nameEn": "Nume (English)",
         "descriptionRo": "Notă (o văd doar administratorii)",
         "descriptionEn": "Notă (o văd doar administratorii)",
-        "descriptionHelp": "Pentru voi: la ce folosește nivelul, ce coduri primește (cel mult {max} de caractere). Membrul nu o vede.",
+        "descriptionHelp": "Pentru tine: la ce folosește nivelul, ce coduri primește (cel mult {max} de caractere). Membrul nu o vede.",
         "bothOrNeither": "În ambele limbi sau în niciuna.",
         "position": "Poziția",
         "positionLast": "ultima",

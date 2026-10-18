@@ -2130,7 +2130,9 @@ and in the editors. A level is never a permission: it opens and closes nothing, 
 `glyph` column of the levels is a leftover of the first version, no longer shown or edited; a later contract
 migration drops it.)
 The privacy notice's template names the level among what the club keeps about a member (section 12): approve the notice
-from the new template on production, a lawyer reading that clause first, before giving members levels. An Administrator
+from the new template on production, a lawyer reading that clause first, before giving members levels; the clause says only the
+administrators see the level (§NNN), so a notice approved from the first version of the template, which also named the member, is
+approved once more. An Administrator
 or a colleague who opens the zone sees every code, so they can check what the club has; a member sees the codes for
 everyone and for their own level.
 

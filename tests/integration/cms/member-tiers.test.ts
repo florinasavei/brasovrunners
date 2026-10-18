@@ -519,8 +519,9 @@ describe("§811 the member tiers", () => {
       expect(colleague).toEqual(["TOTI", "MEMBRU", "FONDATOR", "AMBELE"]);
       const { canHoldMemberTier } = await import("@/modules/staff-identity/domain/roles");
       expect([canHoldMemberTier("MEMBER"), canHoldMemberTier("ADMIN"), canHoldMemberTier("MODERATOR")]).toEqual([true, false, false]);
-      // The read carries each limited code's levels so the zone can name them; the backoffice reads them too.
-      expect((await listDiscountCodesForMembers(db, NOW, first.id)).map((code) => code.tierIds)).toEqual([null, [first.id], [first.id, second.id]]);
+      // The members' read carries no level (the zone names none); only the backoffice's read does.
+      expect((await listDiscountCodesForMembers(db, NOW, first.id)).map((code) => code.code)).toEqual(["TOTI", "MEMBRU", "AMBELE"]);
+      expect(Object.keys((await listDiscountCodesForMembers(db, NOW, first.id))[0])).not.toContain("tierIds");
       expect((await listDiscountCodesForAdmin(db)).map((code) => code.tierIds?.length ?? 0)).toEqual([0, 1, 1, 2]);
       // The same rule in words, for the tests and the screens.
       expect(codeIsForTier({ tierIds: null }, null)).toBe(true);
@@ -577,6 +578,19 @@ describe("§811 the member tiers", () => {
       expect(tierFieldsSchema.safeParse({ nameRo: "Membru", nameEn: "Member", glyph: "nope" }).success).toBe(false);
       const [row] = await db.insert(memberTiers).values({ nameRo: "Vechi", nameEn: "Old", glyph: "from-sql", position: 1 }).returning();
       expect(tierViewOf(row, "ro").glyph).toBe("star");
+    });
+
+    it("a stored symbol the closed set does not name does not stop a save that posts no glyph box, and is left as it is (§NNN)", async () => {
+      const [odd] = await db.insert(memberTiers).values({ nameRo: "Vechi", nameEn: "Old", glyph: "from-sql", position: 1 }).returning();
+      const withoutGlyph = Object.fromEntries(Object.entries(unchanged(odd, 1)).filter(([box]) => box !== "glyph"));
+      const result = await saveMemberTiers(db, {
+        actor: admin,
+        rows: rowsOf({ [odd.id]: { ...withoutGlyph, nameRo: "Nou", nameEn: "New" } }),
+        now: NOW,
+      });
+      expect(result.edited).toBe(1);
+      const [after] = await listAllMemberTiers(db);
+      expect([after.nameRo, after.glyph]).toEqual(["Nou", "from-sql"]);
     });
 
     it("is left as it is by the card's save, which posts no glyph box (§NNN): the column stays for a later contract migration", async () => {
