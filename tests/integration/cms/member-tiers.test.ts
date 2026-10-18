@@ -241,7 +241,10 @@ describe("§NNN the member tiers", () => {
         now: NOW,
       });
       await expect(refused).rejects.toMatchObject({ code: "VALIDATION_ERROR" });
-      const error = await refused.catch((caught: unknown) => caught as { fields: string[] });
+      const error = (await refused.then(
+        () => null,
+        (caught: unknown) => caught,
+      )) as { fields: string[] };
       expect([...error.fields].sort()).toEqual(
         [tierBox(second.id, "descriptionEn"), tierBox(second.id, "glyph"), tierBox(second.id, "position"), tierBox("new", "nameEn")].sort(),
       );
