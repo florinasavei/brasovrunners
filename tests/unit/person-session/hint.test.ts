@@ -32,19 +32,26 @@ describe("§NNN the remembered browser's hint", () => {
     expect(masked).not.toContain("tag");
   });
 
-  it("round-trips the masked address and the name, URI-encoded so a cookie header carries it", () => {
+  it("round-trips the masked address and the name as the browser gives them back: encoded once, on the wire, by the framework", () => {
     const value = encodeHint({ masked: "an…@gmail.com", name: "Ana Pop" });
-    expect(value).not.toMatch(/[;,\s]/);
+    // The value is plain JSON: `cookies().set` encodes it for the header (a second encoding would be unreadable to the island).
+    expect(value).toBe('{"m":"an…@gmail.com","n":"Ana Pop"}');
+    const onTheWire = encodeURIComponent(value);
+    expect(onTheWire).not.toMatch(/[;,\s]/);
+    expect(decodeHint(onTheWire)).toEqual({ masked: "an…@gmail.com", name: "Ana Pop" });
+    expect(decodeHint(encodeURIComponent(encodeHint({ masked: "an…@gmail.com", name: null })))).toEqual({ masked: "an…@gmail.com", name: null });
+    // A jar that kept the value as it was set (a test's) reads too.
     expect(decodeHint(value)).toEqual({ masked: "an…@gmail.com", name: "Ana Pop" });
-    expect(decodeHint(encodeHint({ masked: "an…@gmail.com", name: null }))).toEqual({ masked: "an…@gmail.com", name: null });
+    // …and a name with a percent sign is not mistaken for an escape.
+    expect(decodeHint(encodeURIComponent(encodeHint({ masked: "an…@gmail.com", name: "100% Ana" })))?.name).toBe("100% Ana");
   });
 
   it("holds no secret: a hint built from a person's data carries neither the full address nor anything token-shaped", () => {
     const secret = generateTokenSecret();
     const hint = encodeHint({ masked: maskAddress("ana.popescu@gmail.com"), name: "Ana" });
-    expect(decodeURIComponent(hint)).not.toContain("popescu");
+    expect(hint).not.toContain("popescu");
     expect(hint).not.toContain(secret);
-    expect(decodeURIComponent(hint)).not.toMatch(/[A-Za-z0-9_-]{43}/);
+    expect(hint).not.toMatch(/[A-Za-z0-9_-]{43}/);
   });
 
   it.each([undefined, null, "", "not json", "%7B", "[]", "null", encodeURIComponent(JSON.stringify({ m: 5 })), encodeURIComponent(JSON.stringify({ m: "" })), encodeURIComponent(JSON.stringify({ n: "Ana" }))])(

@@ -262,14 +262,17 @@ test.describe.serial("§NNN «Vin!» on a turn-up event", () => {
     expect(await rsvpCount(guest)).toBe(1);
     await expect(page.getByTestId("rsvp-count-empty")).toHaveText("Fii primul care spune că vine.");
 
-    // And «Nu sunt eu»: the typed form is back, the row and both cookies are gone.
+    // And «Nu sunt eu»: the typed form is back, this browser's row and both its cookies are gone (the previous test's browser, which is
+    // another one, stays remembered: one row each).
+    const browsersBefore = await rememberedBrowsers(guest);
+    expect(browsersBefore).toBe(2);
     await page.getByRole("button", { name: "Nu sunt eu" }).click();
     await expect(page.getByTestId("rsvp-box").locator('input[name="email"]')).toBeVisible();
     await expect(page.getByTestId("rsvp-remembered")).toHaveCount(0);
     const left = (await context.cookies()).map((cookie) => cookie.name);
     expect(left).not.toContain("br_person");
     expect(left).not.toContain("br_person_hint");
-    expect(await rememberedBrowsers(guest)).toBe(0);
+    expect(await rememberedBrowsers(guest)).toBe(browsersBefore - 1);
     // What was answered stays answered on the first event.
     expect(await rsvpCount(guest)).toBe(1);
   });
@@ -305,6 +308,8 @@ test.describe.serial("§NNN «Vin!» on a turn-up event", () => {
     await hydrated(page);
     await openEditorBox(page, "Participare, înscrieri și regulament");
     await page.getByRole("checkbox", { name: "Acceptă răspunsuri „Vin!” din pagină, calendar și email" }).uncheck();
+    // A published event is saved only once its editor says they understand it is live (§384).
+    await page.getByRole("checkbox", { name: /Am înțeles că modific conținut publicat/ }).check();
     await page.getByRole("button", { name: "Salvează", exact: true }).click();
     await page.waitForURL(/saved=event/);
 

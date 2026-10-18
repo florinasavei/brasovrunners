@@ -1029,7 +1029,7 @@ async function renderRow(
     const [answer] =
       typeof rsvpId === "string" && isUuid(rsvpId)
         ? await db
-            .select({ id: eventRsvps.id, canonicalEmail: eventRsvps.canonicalEmail, confirmedAt: eventRsvps.confirmedAt })
+            .select({ id: eventRsvps.id, canonicalEmail: eventRsvps.canonicalEmail, confirmedAt: eventRsvps.confirmedAt, showName: eventRsvps.showName, displayName: eventRsvps.displayName })
             .from(eventRsvps)
             .where(eq(eventRsvps.id, rsvpId))
             .limit(1)
@@ -1045,6 +1045,8 @@ async function renderRow(
     const linkUrl = (pathname: "/vin/[token]", secret: string) =>
       `${env.APP_BASE_URL}${getPathname({ locale, href: { pathname, params: { token: secret } } })}`;
     data.rsvpStage = stage;
+    // The name the press would make public, said before it is pressed (the person who typed the address chose it, not the one who presses).
+    if (stage === "confirm" && answer.showName && answer.displayName) data.rsvpShownName = answer.displayName;
     if (stage === "confirm" && links.confirm) {
       payloadActionUrl = linkUrl("/vin/[token]", links.confirm);
       data.rsvpWithdrawUrl = linkUrl("/vin/[token]", links.withdraw);

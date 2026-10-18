@@ -389,6 +389,22 @@ describe("§NNN «Vin!» — the service", () => {
       expect(await confirmRsvp(db, newConfirm, later)).not.toBeNull();
     });
 
+    it("tells the person who presses which name their press makes public — whoever typed the address chose it — on the confirm shape only", async () => {
+      const event = await seedEvent();
+      await answerRsvp(db, event.id, typed("ana@example.test", { displayName: "Numele Altcuiva", showName: true }), NOW);
+      await answerRsvp(db, event.id, typed("ion@example.test", { displayName: "Ion", showName: false }), NOW);
+      const [first, second] = await outbox();
+      const named = await renderOutboxMessage(first, db, NOW);
+      expect(named.text).toContain("pe pagina evenimentului va apărea numele „Numele Altcuiva”");
+      expect(named.text).toContain("the name “Numele Altcuiva” will show on the event's page");
+      // A name nobody asked to show is not announced; and an already-counted address is told no such thing.
+      expect((await renderOutboxMessage(second, db, NOW)).text).not.toMatch(/va apărea numele|will show on the event/);
+      await answerRsvp(db, event.id, remembered("zoe@example.test", { displayName: "Zoe", showName: true }), NOW);
+      await answerRsvp(db, event.id, typed("zoe@example.test", { displayName: "Not Zoe", showName: true }), new Date(NOW.getTime() + HOUR));
+      const counted = await renderOutboxMessage((await outbox()).at(-1)!, db, new Date(NOW.getTime() + HOUR));
+      expect(counted.text).not.toMatch(/va apărea numele|will show on the event/);
+    });
+
     it("sends to an address already counted only the «Nu mai vin» link — no confirm token is minted", async () => {
       const event = await seedEvent();
       await answerRsvp(db, event.id, remembered("ana@example.test"), NOW);

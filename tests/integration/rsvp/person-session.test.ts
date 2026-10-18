@@ -63,7 +63,7 @@ describe("§NNN the remembered browser (person-session)", () => {
     expect(browser.options.get(PERSON_HINT_COOKIE)).toMatchObject({ httpOnly: false, sameSite: "lax", path: "/", maxAge: PERSON_SESSION_SECONDS });
     expect(decodeHint(hint)).toEqual({ masked: "An…@gmail.com", name: "Ana" });
     expect(hint).not.toContain(secret);
-    expect(decodeURIComponent(hint)).not.toContain("Pop@");
+    expect(hint).not.toContain("Pop@");
   });
 
   it("recognises the browser by its cookie, bumps the last use, and gives the identity the answer is made as", async () => {

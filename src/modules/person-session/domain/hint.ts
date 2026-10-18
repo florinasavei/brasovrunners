@@ -34,16 +34,28 @@ export function maskAddress(email: string): string {
 
 export type PersonHint = { masked: string; name: string | null };
 
-/** The hint as the cookie keeps it: URI-encoded JSON, short. */
+/**
+ * The hint as the cookie's value: short JSON. It is NOT URI-encoded here: Next's `cookies().set` encodes a value on the wire itself, so
+ * encoding it twice would hand the browser `%257B…` and leave the island unable to read it (found by the end-to-end spec).
+ */
 export function encodeHint(hint: PersonHint): string {
-  return encodeURIComponent(JSON.stringify({ m: hint.masked, n: hint.name }));
+  return JSON.stringify({ m: hint.masked, n: hint.name });
 }
 
-/** The hint from a cookie's value, or null when it is missing or not ours: the island then draws nothing. */
+/**
+ * The hint from a cookie's value, or null when it is missing or not ours: the island then draws nothing. `document.cookie` gives the
+ * value as it travels — URI-encoded once — so it is decoded once; a value that is not a valid URI escape is read as it stands.
+ */
 export function decodeHint(value: string | undefined | null): PersonHint | null {
   if (!value) return null;
   try {
-    const parsed: unknown = JSON.parse(decodeURIComponent(value));
+    let text = value;
+    try {
+      text = decodeURIComponent(value);
+    } catch {
+      // Not a URI escape: the value as it stands.
+    }
+    const parsed: unknown = JSON.parse(text);
     if (!parsed || typeof parsed !== "object") return null;
     const { m, n } = parsed as { m?: unknown; n?: unknown };
     if (typeof m !== "string" || m === "" || m.length > 400) return null;
