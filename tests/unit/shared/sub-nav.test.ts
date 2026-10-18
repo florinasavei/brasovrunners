@@ -138,8 +138,9 @@ describe("§360 one look for every backoffice sub-navigation", () => {
   });
 
   it("gives every row a glyph for each of its entries — the list of rows is complete (§318 as amended)", () => {
-    // Every file that draws a `<SubNav` hands it glyphs; the first four are the rows the owner's
-    // 2026-10-18 «vreau și la subtaburi să am iconițe» named, the others had theirs already.
+    // Every file that draws a `<SubNav` hands it glyphs. The owner's 2026-10-18 «vreau și la subtaburi să am
+    // iconițe» named four rows (Setări, Galerie, Sarcini, the RO/EN switch of Emailuri); Pagini, Magazin and the
+    // members' zone had theirs already. The composer's preview tabs (an MUI `Tabs`, no `SubNav`) are not walked here.
     const rows: string[] = [];
     const walk = (directory: string) => {
       for (const entry of readdirSync(path.join(ROOT, directory), { withFileTypes: true })) {
@@ -160,7 +161,8 @@ describe("§360 one look for every backoffice sub-navigation", () => {
         "src/modules/staff-identity/ui/SettingsSubNav.tsx",
       ].sort(),
     );
-    for (const file of rows) expect(read(file), file).toMatch(/\bglyph\b/);
+    // A glyph handed to an entry (`glyph: …` / `glyph,`), not a mention of the word: `<Panel glyph="email"` on a card is not one.
+    for (const file of rows) expect(read(file), file).toMatch(/\bglyph\s*[:,]/);
   });
 
   it("leaves no pill-button navigation behind: no current entry drawn as a filled button", () => {
