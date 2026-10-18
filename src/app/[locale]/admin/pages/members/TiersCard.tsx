@@ -34,7 +34,7 @@ const deleteFormId = (id: string) => `delete-tier-${id}`;
  * the club names for its members, one fold on «Pagini» → «Membri», closed until opened (§336), the count on its
  * line. A tier is a label and its benefits, never a permission — the card says so under its title.
  *
- * ONE form, ONE «Salvează tot nivelurile» (§791's roles editor is the model): a row per level — its name and its
+ * ONE form, ONE «Salvează toate nivelurile» (§791's roles editor is the model): a row per level — its name and its
  * description as one Română | English strip (§572), the glyph, «Poziția» (the club's order, from 1), «Ascuns» —
  * and the blank row at the end that adds a level. A level that only moved over is never audited as edited. «Șterge
  * nivelul» is its own confirmed action outside the form (forms do not nest): a small hidden form beside the big one
@@ -71,7 +71,9 @@ export default function TiersCard({
   const rowOf = (tier: AdminMemberTier | null, index: number) => {
     const key = tier ? tier.tier.id : NEW_TIER_ROW_KEY;
     const box = (name: Parameters<typeof tierBox>[1]) => tierBox(key, name);
-    const title = tier ? tier.tier.nameRo : t("members.tiers.newRow");
+    // The name in the Administrator's own language, as the read-only list below and the codes card draw it.
+    const shownName = tier ? (locale === "en" ? tier.tier.nameEn : tier.tier.nameRo) : "";
+    const title = tier ? shownName : t("members.tiers.newRow");
     // One language's name and description, for the strip's panel; the English panel carries «Tradu din română» under each box (§464).
     const languagePanel = (language: "ro" | "en") => {
       const side = language === "ro" ? "Ro" : "En";
@@ -172,7 +174,7 @@ export default function TiersCard({
                 variant="outlined"
                 size="small"
                 sx={{ minHeight: 44, ml: "auto" }}
-                aria-label={`${t("members.tiers.delete")}: ${tier.tier.nameRo}`}
+                aria-label={`${t("members.tiers.delete")}: ${shownName}`}
                 data-testid="member-tier-delete"
               >
                 {t("members.tiers.delete")}
@@ -188,7 +190,7 @@ export default function TiersCard({
     <Panel
       glyph="memberTiers"
       collapsible
-      openWhen={{ saved: saved === "memberTiersSaved" }}
+      openWhen={{ saved: saved === "memberTiersSaved" || saved === "memberTierDeleted" }}
       title={t("members.tiers.heading")}
       aside={count}
       intro={t("members.tiers.intro")}
@@ -203,7 +205,7 @@ export default function TiersCard({
       )}
       {mayManage ? (
         <>
-          {/* ONE form around every level: its rows, the blank row and the one «Salvează tot nivelurile». «Șterge nivelul» is not in it: each level's delete is a small form beside it. */}
+          {/* ONE form around every level: its rows, the blank row and the one «Salvează toate nivelurile». «Șterge nivelul» is not in it: each level's delete is a small form beside it. */}
           <ActionForm action={saveMemberTiersAction} scope="tiers" messages={messages} data-testid="member-tiers-form">
             <input type="hidden" name="uiLocale" value={locale} />
             <Box data-translate-scope={t("members.tiers.heading")}>
@@ -229,7 +231,7 @@ export default function TiersCard({
               action={deleteMemberTierAction}
               hidden
               confirm={{
-                title: t("members.tiers.deleteTitle", { name: tier.tier.nameRo }),
+                title: t("members.tiers.deleteTitle", { name: locale === "en" ? tier.tier.nameEn : tier.tier.nameRo }),
                 body: t("members.tiers.deleteBody"),
                 confirmLabel: t("members.tiers.delete"),
                 cancelLabel: cancel,

@@ -124,7 +124,7 @@ export default async function AdminMembersPage({ params, searchParams }: Props) 
     validUntil: t("members.codes.validUntil"),
     tierIds: t("members.codes.forTiers"),
     // «Niveluri de membru» (§NNN): a refused box of the one form is named by its level, `tiers[<key>]`.
-    ...Object.fromEntries(tiers.map((row) => [`tiers[${row.tier.id}]`, row.tier.nameRo])),
+    ...Object.fromEntries(tiers.map((row) => [`tiers[${row.tier.id}]`, locale === "en" ? row.tier.nameEn : row.tier.nameRo])),
     "tiers[new]": t("members.tiers.newRow"),
   });
 

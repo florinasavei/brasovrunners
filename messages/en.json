@@ -1896,7 +1896,7 @@
       "inviteStaffTitle": "Add the person to the team?",
       "inviteStaffBody": "They receive the sign-in invitation by email, with the chosen role, and can enter as soon as they set a password: the backoffice, or — as a Member — only the members' area on the site.",
       "memberTierTitle": "Change the level?",
-      "memberTierBody": "{name} sees the new level in the members' zone, on the next page they open.",
+      "memberTierBody": "{name}'s level changes in the members' zone, on the next page they open.",
       "changeRoleTitle": "Change the role?",
       "changeRoleBody": "{name} gets the chosen role from the next page they open.",
       "approvePlatformTitle": "Approve the missing templates ({count} of {total})?",
@@ -9441,7 +9441,7 @@
         "save": "Save all levels",
         "delete": "Delete the level",
         "deleteTitle": "Delete the level {name}?",
-        "deleteBody": "The level is gone for good. It can be deleted only when no member has it.",
+        "deleteBody": "The level is gone for good. It can be deleted only when no member has it and no code is for it alone.",
         "adminOnly": "An administrator changes the levels."
       },
       "codes": {

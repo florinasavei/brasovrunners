@@ -63,7 +63,7 @@ export async function readPublicMemberTiers<T extends Record<string, unknown>>(d
  */
 export async function existingTierIdsShared<T extends Record<string, unknown>>(db: Database<T>, ids: readonly string[]): Promise<Set<string>> {
   if (ids.length === 0) return new Set();
-  const rows = await db.select({ id: memberTiers.id }).from(memberTiers).where(inArray(memberTiers.id, [...ids])).for("share");
+  const rows = await db.select({ id: memberTiers.id }).from(memberTiers).where(inArray(memberTiers.id, [...ids])).orderBy(asc(memberTiers.position), asc(memberTiers.createdAt)).for("share");
   return new Set(rows.map((row) => row.id));
 }
 

@@ -19,7 +19,7 @@ import { tierUsage } from "./admin-repository";
  * Superadministrator's (`canManageMemberTiers`), who runs the club (§450). A tier is a label and its
  * benefits, never a permission — nothing below grants or refuses anything to a member.
  *
- * - **Salvează tot nivelurile** (`saveMemberTiers`): every row of the card in one transaction, the
+ * - **Salvează toate nivelurile** (`saveMemberTiers`): every row of the card in one transaction, the
  *   volunteers' «Roluri» rule (§791): the first refused row refuses the whole save, naming its boxes,
  *   and nothing is written; a blank row with no word in it does nothing; the club's order is the
  *   numbers typed, rewritten 1 … n at the end, which also closes the gaps a delete left.
@@ -165,7 +165,12 @@ export async function saveMemberTiers<T extends Record<string, unknown>>(
         });
         edited += 1;
       } else if (place !== tier.position) {
-        await tx.update(memberTiers).set({ position: place }).where(eq(memberTiers.id, tier.id));
+        // A tier whose number the person typed carries who moved it and when; one that only gave way to another is rewritten silently.
+        const typed = entries.find((candidate) => candidate.key === tier.id)?.typed ?? null;
+        await tx
+          .update(memberTiers)
+          .set(typed === null ? { position: place } : { position: place, updatedByStaffUserId: input.actor.id, updatedAt: now })
+          .where(eq(memberTiers.id, tier.id));
       }
       // A tier whose number the person typed is audited as moved; one that only gave way to another is rewritten silently.
       const typedMove = entries.find((candidate) => candidate.key === tier.id)?.typed ?? null;
@@ -226,9 +231,10 @@ export async function deleteMemberTier<T extends Record<string, unknown>>(
   if (!isUuid(input.tierId)) throw new DomainError("NOT_FOUND", "no such member tier");
   const now = input.now ?? new Date();
   await db.transaction(async (tx) => {
-    // The tier locked first: a member given this level meanwhile waits here, and is counted below.
-    const [locked] = await tx.select({ id: memberTiers.id }).from(memberTiers).where(eq(memberTiers.id, input.tierId)).for("update");
-    if (!locked) throw new DomainError("NOT_FOUND", "no such member tier");
+    // Every tier locked, in the order every writer takes (the save's, the code's share lock): two writers never wait on each other
+    // crosswise. A member given this level meanwhile waits here, and is counted below.
+    const everyTier = await tx.select({ id: memberTiers.id }).from(memberTiers).orderBy(asc(memberTiers.position), asc(memberTiers.createdAt)).for("update");
+    if (!everyTier.some((tier) => tier.id === input.tierId)) throw new DomainError("NOT_FOUND", "no such member tier");
     const usage = await tierUsage(tx, input.tierId);
     if (usage.members > 0) throw new DomainError("MEMBER_TIER_HAS_MEMBERS", "give the members another level first");
     if (usage.codesOnlyForIt > 0) throw new DomainError("MEMBER_TIER_IN_CODES", "change the codes that are for this level alone first");

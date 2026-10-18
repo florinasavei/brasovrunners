@@ -1896,7 +1896,7 @@
       "inviteStaffTitle": "Adaugi persoana în echipă?",
       "inviteStaffBody": "Primește pe email invitația de intrare, cu rolul ales, și poate intra de îndată ce își pune parola: în backoffice, sau — ca Membru — doar în zona membrilor de pe site.",
       "memberTierTitle": "Schimbi nivelul?",
-      "memberTierBody": "{name} vede noul nivel în zona membrilor, la următoarea pagină pe care o deschide.",
+      "memberTierBody": "Nivelul lui {name} se schimbă în zona membrilor, la următoarea pagină pe care o deschide.",
       "changeRoleTitle": "Schimbi rolul?",
       "changeRoleBody": "{name} primește rolul ales de la următoarea pagină pe care o deschide.",
       "approvePlatformTitle": "Aprobi șabloanele care lipsesc ({count} din {total})?",
@@ -9393,7 +9393,7 @@
         "intro": "Nivelurile pe care le dai membrilor. Un nivel e o etichetă și ce primește membrul, nu un drept.",
         "introMore": "Un nivel nu schimbă ce poate face cineva pe site. Membrul îl vede în zona lui, pagina publică îl înșiră, iar un cod de reducere poate fi doar pentru unele niveluri.",
         "empty": "Nu ai încă niciun nivel. Până atunci, membrii sunt pur și simplu „Membru”.",
-        "rowsIntro": "Scrie un nivel în rândul gol de la sfârșit și apasă „Salvează tot nivelurile”. Ordinea e cea din „Poziția”.",
+        "rowsIntro": "Scrie un nivel în rândul gol de la sfârșit și apasă „Salvează toate nivelurile”. Ordinea e cea din „Poziția”.",
         "listLabel": "Nivelurile de membru, în ordinea clubului",
         "newRow": "Adaugă un nivel",
         "newRowHint": "Scrie numele în română și în engleză. Un rând gol nu face nimic.",
@@ -9438,10 +9438,10 @@
           "few": "{count} coduri",
           "other": "{count} de coduri"
         },
-        "save": "Salvează tot nivelurile",
+        "save": "Salvează toate nivelurile",
         "delete": "Șterge nivelul",
         "deleteTitle": "Ștergi nivelul {name}?",
-        "deleteBody": "Nivelul dispare de tot. Se poate șterge doar dacă niciun membru nu îl are.",
+        "deleteBody": "Nivelul dispare de tot. Se poate șterge doar dacă niciun membru nu îl are și niciun cod nu e doar pentru el.",
         "adminOnly": "Nivelurile le schimbă un administrator."
       },
       "codes": {

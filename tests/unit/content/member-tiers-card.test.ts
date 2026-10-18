@@ -9,7 +9,7 @@ import TranslateProvider, { type TranslateAction } from "@/modules/translate/ui/
 
 /**
  * §NNN — «Pagini» → «Membri» → «Niveluri de membru» as the server draws it: a named card (the house's `Panel`, its glyph and its count
- * on the line, closed until opened), ONE form around every level with ONE «Salvează tot nivelurile», each level a row whose boxes are
+ * on the line, closed until opened), ONE form around every level with ONE «Salvează toate nivelurile», each level a row whose boxes are
  * named by its key, the blank row at the end that adds a level, «Șterge nivelul» a button that names a small form of its own, and for a
  * reader who may not manage the levels the list and no box. In Romanian and in English.
  */
@@ -83,14 +83,15 @@ describe("§NNN the «Niveluri de membru» card on «Membri»", () => {
 
   it("opens by itself after its own save, and not after another card's", async () => {
     expect(/<details[^>]*id="members-tiers"[^>]*\sopen/.test(await draw({ saved: "memberTiersSaved" }))).toBe(true);
+    expect(/<details[^>]*id="members-tiers"[^>]*\sopen/.test(await draw({ saved: "memberTierDeleted" }))).toBe(true);
     expect(/<details[^>]*id="members-tiers"[^>]*\sopen/.test(await draw({ saved: "memberCodeSaved" }))).toBe(false);
   });
 
-  it("draws ONE form around every level, with ONE «Salvează tot nivelurile» and the blank row last", async () => {
+  it("draws ONE form around every level, with ONE «Salvează toate nivelurile» and the blank row last", async () => {
     const page = await draw();
     expect(page.match(/data-testid="member-tiers-form"/g)).toHaveLength(1);
     // One button (its label ends the element); the intro names it in quotes, which is not a second one.
-    expect(page.match(/Salvează tot nivelurile</g)).toHaveLength(1);
+    expect(page.match(/Salvează toate nivelurile</g)).toHaveLength(1);
     expect(page).toContain('name="uiLocale" value="ro"');
     expect(page.match(/data-testid="member-tier"/g)).toHaveLength(2);
     expect(page.match(/data-testid="member-tier-new"/g)).toHaveLength(1);
@@ -183,6 +184,9 @@ describe("§NNN the «Niveluri de membru» card on «Membri»", () => {
     expect(page).toContain("12 members");
     expect(page).toContain('name="uiLocale" value="en"');
     expect(page).not.toContain("Salvează");
+    // The Administrator's own language names the level in its heading and its delete button, not the Romanian one.
+    expect(page).toContain('aria-label="Delete the level: Founder"');
+    expect(page).not.toContain("Delete the level: Fondator");
     expect(tagOf(page, "input", "tiers[new].position")).toContain('placeholder="last"');
   });
 
@@ -202,7 +206,7 @@ describe("§NNN the «Niveluri de membru» card on «Membri»", () => {
     expect(page).toContain("12 membri");
     expect(page).toContain(ro.Admin.members.tiers.adminOnly);
     expect(page).not.toContain("<form");
-    expect(page).not.toContain("Salvează tot nivelurile");
+    expect(page).not.toContain("Salvează toate nivelurile");
     expect(page).not.toContain("tiers[");
   });
 

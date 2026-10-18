@@ -477,7 +477,7 @@ export default async function StaffPage({ params, searchParams }: Props) {
               >
                 <input type="hidden" name="uiLocale" value={locale} />
                 <input type="hidden" name="staffUserId" value={member.id} />
-                <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
+                <Stack direction="row" sx={{ alignItems: "center", flexWrap: "wrap", gap: 1 }}>
                   <TextField
                     name="role"
                     label={t("staff.role")}
@@ -515,7 +515,7 @@ export default async function StaffPage({ params, searchParams }: Props) {
                 >
                   <input type="hidden" name="uiLocale" value={locale} />
                   <input type="hidden" name="staffUserId" value={member.id} />
-                  <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
+                  <Stack direction="row" sx={{ alignItems: "center", flexWrap: "wrap", gap: 1 }}>
                     <TextField
                       name="tierId"
                       label={t("staff.memberTier")}

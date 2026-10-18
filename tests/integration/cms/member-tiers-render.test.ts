@@ -296,6 +296,9 @@ describe("§NNN where the member's level shows", () => {
       const html = await editor(true);
       expect(html).not.toContain("tier-chips");
       expect(html).not.toContain('name="tierIds"');
+      // …and no line says «for everyone» either: before any level exists the chip would say nothing.
+      expect(html).not.toContain("code-tiers-chip");
+      expect(html).not.toContain(ro.Admin.members.codes.forEveryone);
     });
 
     it("shows the chips to the Administrator alone: the Redactor, who writes the words, sees none", async () => {

@@ -192,24 +192,26 @@ export async function setMemberTier<T extends Record<string, unknown>>(
   assertAdministrator(actor);
   if (!isUuid(input.targetId)) throw new DomainError("NOT_FOUND", "no such staff user");
   if (input.tierId !== null && !isUuid(input.tierId)) throw new DomainError("VALIDATION_ERROR", "no such member tier", ["tierId"]);
+  // `isUuid` is case-insensitive; the stored ids are lower case, so an id posted in capitals is the same level, not a change.
+  const tierId = input.tierId?.toLowerCase() ?? null;
   const now = input.now ?? new Date();
   return db.transaction(async (tx) => {
     const target = await lockStaffUserTier(tx, input.targetId);
     if (!target) throw new DomainError("NOT_FOUND", "no such staff user");
     if (!canHoldMemberTier(target.role)) throw new DomainError("VALIDATION_ERROR", "a level is given to a club member's account only", ["tierId"]);
-    if (input.tierId !== null && input.tierId !== target.memberTierId) {
-      const tier = await findMemberTierShared(tx, input.tierId);
+    if (tierId !== null && tierId !== target.memberTierId) {
+      const tier = await findMemberTierShared(tx, tierId);
       if (!tier) throw new DomainError("VALIDATION_ERROR", "no such member tier", ["tierId"]);
       if (tier.hidden) throw new DomainError("VALIDATION_ERROR", "a hidden level is no longer given", ["tierId"]);
     }
-    if (target.memberTierId === input.tierId) return { changed: false };
-    await setStaffUserTier(tx, target.id, input.tierId, now);
+    if (target.memberTierId === tierId) return { changed: false };
+    await setStaffUserTier(tx, target.id, tierId, now);
     await recordAuditEvent(tx, {
       actorStaffUserId: actor.id,
-      action: input.tierId === null ? "staff.member_tier.cleared" : "staff.member_tier.set",
+      action: tierId === null ? "staff.member_tier.cleared" : "staff.member_tier.set",
       entityType: "staff_user",
       entityId: target.id,
-      metadata: { staffUserId: target.id, tierId: input.tierId, previousTierId: target.memberTierId, reason: "row" },
+      metadata: { staffUserId: target.id, tierId, previousTierId: target.memberTierId, reason: "row" },
       now,
     });
     return { changed: true };

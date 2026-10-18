@@ -50,6 +50,7 @@ const { setMemberTierAction } = await import("@/app/[locale]/admin/actions");
 const { parseMemberRows } = await import("@/modules/staff-identity/domain/member-rows");
 
 const NOW = new Date("2026-10-18T09:00:00.000Z");
+const LATER = new Date("2026-10-18T09:30:00.000Z");
 
 /** The posted rows of a form: `{ <key>: { <box>: value } }` as `tiers[<key>].<box>`. */
 function rowsOf(spec: Record<string, Record<string, string>>) {
@@ -133,7 +134,7 @@ describe("§NNN the member tiers", () => {
     ...(tier.hidden ? { hidden: "on" } : {}),
   });
 
-  describe("«Salvează tot nivelurile»", () => {
+  describe("«Salvează toate nivelurile»", () => {
     it("adds a level through the blank row, last, with the star by default, and says nothing of a blank row left alone", async () => {
       const blank = rowsOf({ new: { nameRo: "", nameEn: "", descriptionRo: "", descriptionEn: "", glyph: "star", position: "" } });
       expect(await saveMemberTiers(db, { actor: admin, rows: blank, now: NOW })).toEqual({ changed: false, created: 0, edited: 0, moved: 0 });
@@ -184,13 +185,17 @@ describe("§NNN the member tiers", () => {
       const up = await saveMemberTiers(db, {
         actor: admin,
         rows: rowsOf({ [first.id]: place(first, 1), [second.id]: place(second, 2), [third.id]: { ...place(third, 3), position: "1" } }),
-        now: NOW,
+        now: LATER,
       });
       expect(up).toMatchObject({ changed: true, edited: 0, moved: 1 });
       expect(await names()).toEqual(["Sprijinitor", "Membru", "Fondator"]);
       expect((await listAllMemberTiers(db)).map((tier) => tier.position)).toEqual([1, 2, 3]);
       const moved = await db.select().from(auditLogs).where(eq(auditLogs.action, "member_tier.moved"));
       expect(moved.map((row) => row.entityId)).toEqual([third.id]);
+      // The level moved by hand carries when it was moved; one that only gave way keeps its own stamp.
+      const stamps = new Map((await listAllMemberTiers(db)).map((tier) => [tier.id, tier.updatedAt.getTime()]));
+      expect(stamps.get(third.id)).toBe(LATER.getTime());
+      expect(stamps.get(first.id)).not.toBe(LATER.getTime());
 
       // 3 typed on the first (now second): it goes after the one holding 3.
       const fresh = await listAllMemberTiers(db);
@@ -374,7 +379,10 @@ describe("§NNN the member tiers", () => {
       expect(await setMemberTier(db, admin, { targetId: member.id, tierId: first.id, now: NOW })).toEqual({ changed: true });
       expect((await db.select().from(staffUsers).where(eq(staffUsers.id, member.id)))[0].memberTierId).toBe(first.id);
       expect(await setMemberTier(db, admin, { targetId: member.id, tierId: first.id, now: NOW })).toEqual({ changed: false });
-      await setMemberTier(db, admin, { targetId: member.id, tierId: second.id, now: NOW });
+      // The same id in capitals is the same level, not a change: nothing is written or audited.
+      expect(await setMemberTier(db, admin, { targetId: member.id, tierId: first.id.toUpperCase(), now: NOW })).toEqual({ changed: false });
+      await setMemberTier(db, admin, { targetId: member.id, tierId: second.id.toUpperCase(), now: NOW });
+      expect((await db.select().from(staffUsers).where(eq(staffUsers.id, member.id)))[0].memberTierId).toBe(second.id);
       expect(await setMemberTier(db, admin, { targetId: member.id, tierId: null, now: NOW })).toEqual({ changed: true });
       expect(await setMemberTier(db, admin, { targetId: member.id, tierId: null, now: NOW })).toEqual({ changed: false });
       const trail = await db.select().from(auditLogs).where(eq(auditLogs.entityId, member.id)).orderBy(asc(auditLogs.createdAt));

@@ -182,12 +182,15 @@ function CodeRow({
         {code.validUntil && (
           <Chip size="small" variant="outlined" label={t("members.codes.until", { day: formatCalendarDay(code.validUntil, { locale, position: "inline" }) })} />
         )}
-        <Chip
-          size="small"
-          variant="outlined"
-          label={limited.length > 0 ? t("members.codes.forTiersChip", { tiers: limited.join(", ") }) : t("members.codes.forEveryone")}
-          data-testid="code-tiers-chip"
-        />
+        {/* Said only once the club has named a level: before that every code is for everyone and the chip would say nothing. */}
+        {tiers.length > 0 && (
+          <Chip
+            size="small"
+            variant="outlined"
+            label={limited.length > 0 ? t("members.codes.forTiersChip", { tiers: limited.join(", ") }) : t("members.codes.forEveryone")}
+            data-testid="code-tiers-chip"
+          />
+        )}
         {(code.descriptionRo === null) !== (code.descriptionEn === null) && (
           <Chip size="small" variant="outlined" color="warning" label={t("members.codes.oneLanguage")} />
         )}

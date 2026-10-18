@@ -105,7 +105,7 @@ export async function setMembersPagePublishedAction(_previous: FormOutcome | nul
 // --- «Niveluri de membru» (§NNN) ---------------------------------------------------------------
 
 /**
- * «Salvează tot nivelurile»: every row of the card in one save (the volunteers' «Roluri» rule, §791). A refused row refuses
+ * «Salvează toate nivelurile»: every row of the card in one save (the volunteers' «Roluri» rule, §791). A refused row refuses
  * the whole save, naming its boxes, and every box comes back as typed (§315); a success redirects to the card with a toast.
  * The door is the Administrator's (`canManageMemberTiers`), asked again in the service (BR-REQ-060-01).
  */
