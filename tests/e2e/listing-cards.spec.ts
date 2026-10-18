@@ -466,7 +466,8 @@ test.describe("BR-REQ-041-01 the listing's cards (§366)", () => {
       await expect(title).toHaveCount(1);
       const href = await title.getAttribute("href");
       expect(href).toMatch(/^\/ro\/evenimente\/[^/]+$/);
-      expect(await card.getByRole("link").first().getAttribute("href")).toBe(href);
+      // The chips «Clasament» (§809) and «N vin» (§812) lead to anchors of the same page and sit in the row above the title; they are not "the card's link".
+      expect(await card.locator("a:not([data-testid=results-chip]):not([data-testid=coming-chip])").first().getAttribute("href")).toBe(href);
       expect(await card.getByRole("link", { name: "Descrierea completă a evenimentului" }).getAttribute("href")).toBe(href);
     }
   });
