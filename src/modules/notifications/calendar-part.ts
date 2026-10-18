@@ -44,7 +44,7 @@ export async function renderCalendarPart<T extends Record<string, unknown>>(
   const found = await findPublishedEventBySlug(db, input.locale, input.slug, "members");
   const published = found ? datedOrNull(found) : null;
   if (!published) return {};
-  // «Vin!» (§NNN): the same two lines the feed carries, read from the database itself — the renderer has no request and no public cache.
+  // «Vin!» (§815): the same two lines the feed carries, read from the database itself — the renderer has no request and no public cache.
   const coming = await readComingFromDb(db, [published], input.now);
   const events = [toCalendarEvent(published, input.locale, input.now, { coming })];
   const labels = calendarLabels(input.locale);

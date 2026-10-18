@@ -212,7 +212,7 @@ test.describe.serial("§811 «Vin!» on a turn-up event", () => {
     await expect(page.getByTestId("rsvp-remembered-as")).toContainText("an…@example.test");
     await expect(page.getByTestId("rsvp-count-heading")).toContainText("Vin (1)");
     await expect(page.getByTestId("rsvp-name")).toHaveText(NAME);
-    // §NNN: the event's calendar file now carries the door and the count — the confirmation expired the file that was made without them.
+    // §815: the event's calendar file now carries the door and the count — the confirmation expired the file that was made without them.
     const ics = await page.request.get(`/ro/events/${slug}/calendar.ics`);
     expect((await ics.text()).replace(/\r\n /g, "").replace(/\\n/g, "\n")).toMatch(new RegExp(`Vin! → \\S+/ro/evenimente/${slug}#vin\\n1 vine până acum`));
     // …and the address is nowhere on the page.

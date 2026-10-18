@@ -3,7 +3,7 @@ import { cachedRsvpCounts, cachedRsvpDescribed } from "@/modules/public-cache/re
 import { type ComingEvent, readComing } from "./coming";
 
 /**
- * What the public pages ask of «Vin!» beyond the event's own page (§NNN): the calendar's feed, the event's `.ics`
+ * What the public pages ask of «Vin!» beyond the event's own page (§815): the calendar's feed, the event's `.ics`
  * and the listing's «N vin» chip, through the public cache — `readComing` with the cached reads (`public-cache/reads.ts`), asked
  * once per request however many cards or entries need them, and nothing at all for events none of which could be offered.
  *

@@ -10,7 +10,7 @@ import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * §NNN (BR-REQ-041-01 criterion 6) — the listing card's «N vin» chip: drawn by the event card for an event it is told
+ * §815 (BR-REQ-041-01 criterion 6) — the listing card's «N vin» chip: drawn by the event card for an event it is told
  * has confirmed answers, a link to the page's `#vin`, 44 pixels tall around the small chip, in the house's plural; not drawn for none,
  * and never by a series card. The conditions that give a card its number are `readComing`'s (tested beside it); this file holds the markup.
  */
@@ -81,7 +81,7 @@ async function markup(node: ReactNode): Promise<string> {
 }
 const withoutStyles = (html: string) => html.replace(/<style[^>]*>[\s\S]*?<\/style>/g, "");
 
-describe("§NNN the listing card's «N vin» chip", () => {
+describe("§815 the listing card's «N vin» chip", () => {
   it("is a link to the page's #vin that says how many come, in the house's plural", async () => {
     const event = await seed("alergarea-de-joi");
     const five = withoutStyles(await markup(createElement(EventCard, { event, index: 0, now: NOW, comingCount: 5 })));

@@ -1,9 +1,0 @@
-{
-  "branch": "feat/subnav-glyphs",
-  "decisionsTitle": "A glyph on the «Sarcini» tabs and the RO/EN switch of «Emailuri» (amending §318 and §813)",
-  "decisionsSection": "**The owner, 2026-10-18 02:25:** «vreau și la subtaburi să am iconițe».\n\n**Decision.** Every backoffice `SubNav` row carries a glyph before each entry (extends §318 as amended; amends §813). «Setări»' six tabs and «Galerie»' two («Albume», «Poze») had theirs since §813; this adds the two rows that had none: «Sarcini» (the checklist for «Club», the club's own lines for «De făcut», the gear of «Configurație» for «Sistem», a wrench for «Aplicația»; one component the page draws on its three panels) and the RO/EN switch inside «Emailurile trimise participanților». That switch was left bare on purpose in §813 («a language choice, not a kind of thing … a later pass may give them theirs»); this is that pass. It draws the language's flag before «Română» and «English», as the editors' language tabs do (§572), not a translation glyph. Each glyph is drawn on the server into `SubNav` by name from the cards' table, as «Setări»' row does. `tests/unit/shared/sub-nav.test.ts` lists every file that draws a `SubNav` and fails on a new one, or on one that hands its entries no glyph. Not covered: the two-tab RO/EN preview row in the message composer is an MUI `Tabs`, not a `SubNav`, and still has no glyph; a later pass.",
-  "changelogLine": "- **A picture before every tab of «Sarcini» and before «Română» / «English» on «Emailuri» (the language's flag, like the editor's language tabs, §572)** — the last backoffice `SubNav` rows to get one («Setări» and «Galerie» had theirs from §813). §NNN.",
-  "specsCriteria": [],
-  "docsNotes": "",
-  "batchLine": "glyphs on the last three sub-tab rows: «Sarcini», «Galerie», the RO/EN switch"
-}

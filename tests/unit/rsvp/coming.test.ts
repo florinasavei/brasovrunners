@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { type ComingEvent, type ComingReads, couldBeOffered, readComing } from "@/modules/rsvp/coming";
 
 /**
- * §NNN — which events say «Vin!» outside their own page: the page's gate (`rsvpOffered`, the one rule) over a list, with
+ * §815 — which events say «Vin!» outside their own page: the page's gate (`rsvpOffered`, the one rule) over a list, with
  * the reads counted so that a page with nothing to say asks nothing. Pure: the reads are fakes.
  */
 const NOW = new Date("2026-10-20T10:00:00.000Z");
@@ -33,7 +33,7 @@ function reads(options: { described?: boolean; counts?: Record<string, number> }
   return { fake, calls };
 }
 
-describe("§NNN which events say «Vin!»", () => {
+describe("§815 which events say «Vin!»", () => {
   it("maps an offered event to how many confirmed they come — none included", async () => {
     const { fake } = reads({ counts: { a: 3 } });
     const coming = await readComing([turnUp("a"), turnUp("b")], NOW, fake);

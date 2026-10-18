@@ -699,7 +699,7 @@ export async function cachedPublicRsvps(eventId: string, firstRsvpNoticeVersion:
 }
 
 /**
- * How many come to each of these events (`countRsvpsForEvents`, §NNN): the number the calendar's feed, the `.ics` files and the
+ * How many come to each of these events (`countRsvpsForEvents`, §815): the number the calendar's feed, the `.ics` files and the
  * listing's «N vin» chip say, for every offered event of the page at once. Filed under "places" like `cachedPublicRsvps` — the
  * tag a confirmation or a withdrawal expires (`revalidatePublicContent("places")`, §812) — so the static feed and the listing,
  * which are filed under the tags of what they read, are made again after a write to "places" and never at each poll (§549). No saved copy (a

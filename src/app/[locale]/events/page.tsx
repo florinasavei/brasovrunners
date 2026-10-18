@@ -191,7 +191,7 @@ export default async function EventsPage({ params, query: asked }: Props) {
   // gates and the rows' own columns — no query per card — and nothing at all while the database is away.
   const withResults = await readOrWhileAway(() => eventsWithResultsChip([...events, ...pastRows], now), new Set<string>());
   /*
-    «N vin» (§NNN): how many confirmed they come, for the events ahead whose page offers the answer — worked out once
+    «N vin» (§815): how many confirmed they come, for the events ahead whose page offers the answer — worked out once
     for the page from the cached notice flag and the one cached count read, never per card, and nothing read at all while no event
     ahead is ticked. Only the cards ahead: `rsvpOffered` wants a start still ahead, so a past event is in no such map, and the
     past section is not handed one. The page is held until the first offered event starts (`readPublicComing`), when its chip goes.
@@ -430,7 +430,7 @@ async function ListingBody({
   undatedBelow?: boolean;
   /** The races whose «Clasament» is on show (§809): between seasons the last race is an ordinary card, and wears the chip. */
   withResults: ReadonlySet<string>;
-  /** «N vin» (§NNN): the events ahead whose page offers «Vii?», with how many confirmed they come. */
+  /** «N vin» (§815): the events ahead whose page offers «Vii?», with how many confirmed they come. */
   coming: ReadonlyMap<string, number>;
 }) {
   const t = await getTranslations("Events");

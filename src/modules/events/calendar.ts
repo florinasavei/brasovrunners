@@ -14,7 +14,7 @@ type Locale = "ro" | "en";
  * carry. One function for the feed, the event's own file and Google's add-event link, so the
  * three never drift apart. Nothing is queried: every fact is on the row already.
  *
- * **«Vin!» is the one fact that is not on the row** (§NNN): how many say they come. A caller that has it — the feed, the
+ * **«Vin!» is the one fact that is not on the row** (§815): how many say they come. A caller that has it — the feed, the
  * event's file, the emails' attachment — passes `coming` (`readComing`: id → count, present exactly where the page draws
  * «Vii?»), and the description gains «Vin! → <page>#vin» and the count. The entry's stamp then moves to `now`: the
  * count changed with no write to the row, and a subscribed app that re-reads an entry only when its stamp moves would keep

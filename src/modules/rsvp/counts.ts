@@ -3,7 +3,7 @@ import { eventRsvps } from "@/db/schema/event-rsvps";
 import type { Database } from "@/db/types";
 
 /**
- * How many confirmed «Vin!» answers each of these events has, in one query (§NNN): what the calendar's feed,
+ * How many confirmed «Vin!» answers each of these events has, in one query (§815): what the calendar's feed,
  * the `.ics` files, the emails' attachment and the listing's cards say, for every event they hold at once — never one query
  * per event, never per card. The same count `countRsvps` gives for one (`isNotNull(confirmedAt)`: an answer waiting for its
  * emailed link is not counted), as a plain object so the public cache can store it as JSON.

@@ -8,6 +8,11 @@ own tags once code exists (`README.md` § Versioning).
 Format: one entry per baseline, three parts: what changed, which documents, why (pointing at
 the `DECISIONS.md` section). Keep entries short; the detail lives in `DECISIONS.md`.
 
+## BR-V3.57-2026-10-18
+
+- **A picture before every tab of «Sarcini» and before «Română» / «English» on «Emailuri» (the language's flag, like the editor's language tabs, §572)** — the last backoffice `SubNav` rows to get one («Setări» and «Galerie» had theirs from §813). §814.
+- **«Vin!» from the calendar** — the calendar feed, the event's `.ics` and the emails' attachment say «Vin! → <page>#vin» and how many come for an event that takes the answer, and its listing card wears «N vin»; the feed is remade after a write, never at a poll. §815.
+- **«Clasament» before the race starts** — the button on the event editor and the link on the registrations list are there for a published race ahead too, like the page behind them; a group run still has none. §816.
 ## BR-V3.56-2026-10-18
 
 - **Member tiers («Niveluri de membru»)** — the club names its membership levels in «Pagini» → «Membri» (a name and a description in both languages, a symbol, an order, hidden or not, one «Salvează toate nivelurile»), gives each member one on «Echipa» (or one for all the members it adds), the zone shows the member's level under their name, the public members' page lists the levels, and a partner's discount code may be for some levels only; a level is a label and what the member gets, never a permission. Migration 0169. §811.

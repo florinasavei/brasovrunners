@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.56-2026-10-18 -->
+<!-- PROJECT_BASELINE: BR-V3.57-2026-10-18 -->
 
 # Brașov Runners — Repository and Platform Setup
 
-**Baseline `BR-V3.56-2026-10-18`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.57-2026-10-18`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > Step-by-step setup for the repository, QA/production flow, staff authentication, CMS, participant email actions, registration, waiting list, and providers.
@@ -2480,7 +2480,7 @@ turns on event by event. Two steps are the club's.
    random secret, readable only by the server, its fingerprint kept) and `br_person_hint` (the masked address and the name, no secret). On any other event that
    takes answers the page then says «Răspunzi ca an…@gmail.com» and **«Vin!»** is one tap, counted at once, no email; **«Nu mai vin»** is one tap
    too, and **«Nu sunt eu»** forgets the browser. Without JavaScript the typed form stands. This is not a login and opens nothing else.
-   **From a calendar (§NNN).** For an event that offers the answer, the club's calendar feed, the event's `.ics` file and the file attached to the
+   **From a calendar (§815).** For an event that offers the answer, the club's calendar feed, the event's `.ics` file and the file attached to the
    emails say **«Vin! → <the event's page>#vin»** and under it **«N vin până acum»** (nobody yet: «Fii primul care spune că vine.»). Google and Apple make
    the link tappable, and it lands on the «Vii?» card — one more tap in a remembered browser, an email once in any other. A calendar cannot take the
    answer itself (a feed subscribed from an address is read-only in Google), so the link is all of it. The feed is made again with every confirmation or

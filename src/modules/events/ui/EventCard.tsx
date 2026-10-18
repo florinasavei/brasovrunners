@@ -112,7 +112,7 @@ export default async function EventCard({
    */
   resultsChip?: boolean;
   /**
-   * «N vin» (§NNN): how many confirmed they come, for an event the page offers the answer to (`readPublicComing`) —
+   * «N vin» (§815): how many confirmed they come, for an event the page offers the answer to (`readPublicComing`) —
    * the chip links to the page's `#vin`. The listing works it out once for the whole page and hands each card a number; a card never
    * asks the database. 0 or absent is no chip: the card of an event nobody has answered yet says nothing, and so does every
    * card of an event the page does not offer the answer to — a group run's series card never gets one, its dates do.
@@ -164,7 +164,7 @@ export default async function EventCard({
           <PartnerChip event={event} />
           {/* The results are on the event's page (§809): a link to them, 44 pixels tall around the small chip. */}
           {resultsChip && <ResultsChip href={`${page}#clasament`} label={tEvent("results.title")} />}
-          {/* How many come (§NNN): a link to the page's «Vii?» card, 44 pixels tall around the small chip. */}
+          {/* How many come (§815): a link to the page's «Vii?» card, 44 pixels tall around the small chip. */}
           {comingCount >= 1 && (
             <ComingChip
               href={`${page}#${RSVP_BOX_ID}`}

@@ -7,7 +7,7 @@ import ro from "../../../messages/ro.json";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
 /**
- * BR-REQ-050-02 (§808, amended by §NNN): the registrations list draws the «Clasament» door with one race chosen when the race is
+ * BR-REQ-050-02 (§808, amended by §816): the registrations list draws the «Clasament» door with one race chosen when the race is
  * published, before its start too, like the page behind it; a group run, and a race ahead that is not published, get none.
  *
  * The page is a Server Component, so it is called and its element trees walked.
@@ -115,7 +115,7 @@ beforeEach(async () => {
   await resetTables(db);
 });
 
-describe("BR-REQ-050-02: the list's «Clasament» door (§808, §NNN)", () => {
+describe("BR-REQ-050-02: the list's «Clasament» door (§808, §816)", () => {
   it("is drawn for a published race still ahead, and leads to the results page", async () => {
     state.actor = await staff("ADMIN");
     const race = await createEvent("Crosul", {});

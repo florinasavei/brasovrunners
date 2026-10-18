@@ -3,7 +3,7 @@ import GlyphChip from "@/modules/events/ui/GlyphChip";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 
 /**
- * The «N vin» chip on an upcoming turn-up event's card (§NNN): the people glyph and the count, a link to the event
+ * The «N vin» chip on an upcoming turn-up event's card (§815): the people glyph and the count, a link to the event
  * page's «Vii?» card (`#vin`, `RSVP_BOX_ID`). Drawn only for an event the page offers the answer to and at least one person has
  * confirmed (`readPublicComing`, the same rule the card applies) — a card of an event with nobody yet says nothing, since «0 vin» is
  * not an invitation and the page has the sentence for it.

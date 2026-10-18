@@ -10,7 +10,7 @@ export function eventTakesResults(type: string): boolean {
 }
 
 /**
- * Whether a «Clasament» door is drawn for this event (§808, amended by §NNN: the owner, 2026-10-18, «unde găsesc clasamentul?»).
+ * Whether a «Clasament» door is drawn for this event (§808, amended by §816: the owner, 2026-10-18, «unde găsesc clasamentul?»).
  *
  * A door should not hide a page that answers. The results page opens before the race starts and says so itself («Cursa nu a început
  * încă. Poți scrie rezultate de pe acum.»), so the editor's button and the registrations list's header read this one rule, which has

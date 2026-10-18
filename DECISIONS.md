@@ -1,8 +1,8 @@
-<!-- PROJECT_BASELINE: BR-V3.56-2026-10-18 -->
+<!-- PROJECT_BASELINE: BR-V3.57-2026-10-18 -->
 
 # Brașov Runners — Decision History and Agent Handoff
 
-**Baseline `BR-V3.56-2026-10-18`** · versioned with the whole set · [changelog](./CHANGELOG.md)
+**Baseline `BR-V3.57-2026-10-18`** · versioned with the whole set · [changelog](./CHANGELOG.md)
 
 
 > This file summarizes the decisions made during planning so a freelancer or AI agent can understand **why** the current repository baseline looks the way it does. It is context, not a competing specification. If this file conflicts with `BUSINESS.md`, `SPECS.md`, `AGENTS.md`, or `SETUP.md`, the current authoritative documents win.
@@ -27289,3 +27289,35 @@ Baseline `BR-V3.56-2026-10-18`.
 **Refused.** Moving the folds' words into code (the sentences stay in the catalogue, only the numbers' phrases are code); a fold per box (a single box in a fold of its own is three of the seven, kept because each is a different subject the club looks for by name); a save per fold (one list of boxes keeps one save, the owner's rule of 2026-10-16); a new tab or a renamed tab.
 
 Baseline `BR-V3.56-2026-10-18`.
+
+## 814. A glyph on the «Sarcini» tabs and the RO/EN switch of «Emailuri» (amending §318 and §813)
+
+**The owner, 2026-10-18 02:25:** «vreau și la subtaburi să am iconițe».
+
+**Decision.** Every backoffice `SubNav` row carries a glyph before each entry (extends §318 as amended; amends §813). «Setări»' six tabs and «Galerie»' two («Albume», «Poze») had theirs since §813; this adds the two rows that had none: «Sarcini» (the checklist for «Club», the club's own lines for «De făcut», the gear of «Configurație» for «Sistem», a wrench for «Aplicația»; one component the page draws on its three panels) and the RO/EN switch inside «Emailurile trimise participanților». That switch was left bare on purpose in §813 («a language choice, not a kind of thing … a later pass may give them theirs»); this is that pass. It draws the language's flag before «Română» and «English», as the editors' language tabs do (§572), not a translation glyph. Each glyph is drawn on the server into `SubNav` by name from the cards' table, as «Setări»' row does. `tests/unit/shared/sub-nav.test.ts` lists every file that draws a `SubNav` and fails on a new one, or on one that hands its entries no glyph. Not covered: the two-tab RO/EN preview row in the message composer is an MUI `Tabs`, not a `SubNav`, and still has no glyph; a later pass.
+
+Baseline `BR-V3.57-2026-10-18`.
+
+## 815. «Vin!» from the calendar: the feed, the .ics files and the emails' attachment carry the link and the count, and the listing card wears «N vin»
+
+**The owner, 2026-10-18 01:00–01:20,** after subscribing the club's Google Calendar to the public feed (§107; read-only in Google): «I need this "Going" to be via email or something» and «super easy». §812 built the answer on the site; this makes it reachable from where the club's people already look at the run.
+
+**Decision.** A calendar cannot take the answer, so it carries the door: for an event the page offers «Vii?» to (`rsvpOffered`, §812 — the one rule, asked through `readComing` so no surface draws it differently), the description of the calendar's feed, of the event's `.ics` and of the file attached to the emails gains one group of two lines, right after the times and the registration line (amends §107 and §159): **«Vin! → <the event's page>#vin»** — the address from `APP_BASE_URL`, which Google and Apple make tappable and Outlook shows as the words' link — and **«N vin până acum»** (none yet: «Fii primul care spune că vine.»; the noun follows the house's plural, «1 vine», «5 vin»), in the page's words in either language (`Event.rsvp.calendar.*`). One builder serves the three (`descriptionGroups`, set by `toCalendarEvent(…, { coming })`), so they cannot drift. The link lands on the page's «Vii?» card: one more tap in a remembered browser, one email in any other (§812's flow, unchanged — no new identity and no new message). The same page's card, on the listing, wears **«N vin»** (the people glyph, a 44-pixel link to the card's `#vin`, `ResultsChip`'s shape) for a single date with at least one confirmed answer; a series card never does, its dates do, and the past section is handed none (a past event is never offered).
+
+**The count is one cached read, and the feed stays static.** `cachedRsvpCounts(eventIds)` answers every offered event at once from one grouped query, filed under `places` — the tag a confirmation or a withdrawal already expires (§812) — so the static feed and the event's file (§549) are made again after each write to `places` (an answer, a registration), never at a poll; with no ticked event ahead nothing new is read at all (`couldBeOffered` rules events out by their columns before the notice or a count is asked). The page is held to the first offered event's start, when the lines and the chip go. A subscribed app that reads an entry only when its stamp moves needs the stamp to move: an entry that carries a count is stamped with the moment it was made. While the database is away the lines are left out and the file is kept a minute (§281, §447). The emails' attachment reads the same two facts from the database itself (`readComingFromDb`): the renderer has a database and no request. A file saved to a calendar keeps the day's number and a link that stays true. Never on a members' event (§552): its page draws no «Vii?».
+
+**Refused.** An answer made in the calendar itself (Google's RSVP: the feed is read-only, §812); a count read per poll or per card; the line on Google's «add event» link of the event page (the card is on that page already); «0 vin» on a card (the page has the sentence for none).
+
+Baseline `BR-V3.57-2026-10-18`.
+
+## 816. The «Clasament» door opens before the race starts, like the page behind it
+
+**The owner, 2026-10-18:** «unde găsesc clasamentul?» — the 21 November race had not started, and the button was not there.
+
+**What was wrong.** §808 drew the two doors to «Clasament» — the event editor's button in the card «Înscrieri» and the registrations list's header link with one race chosen — only once the race had started. The page behind them (`/admin/events/[id]/results`) has always opened before the start and says «Cursa nu a început încă. Poți scrie rezultate de pe acum.»: a door hid a page that answers.
+
+**Decision.** Amends §808: the «Clasament» door opens for any race the club may enter results for, before the start too. One pure rule, `resultsDoorOpen(event, now)` in `results/domain/event-type.ts`, beside `eventTakesResults`, is read by both doors, with the role asked beside it (`canEnterResults`): the event is a race and is either PUBLISHED or has already started. A group run, a hike or any other type has no door, as before. A race still ahead that is a draft, in review or archived has no door either: a race not yet public is not expected to have results typed before its start, and the typed address still works; once its start has passed the door opens whatever its editorial state, for results typed after an unpublishing. The page keeps its own «Cursa nu a început încă» sentence, and publishing the results stays refused before the start (`RESULTS_NOT_STARTED`). The registrations list's event read now carries `editorialStatus` for the rule.
+
+**Proof.** `tests/unit/results/csv-and-words.test.ts` (the rule: a published race ahead, a race that has started, a type that takes none, an unpublished race ahead), `tests/integration/registrations/list-events-filter.test.ts` (the read carries the type, the start and the editorial state), `tests/integration/registrations/results-door.test.ts` (the registrations list draws the door for a published race ahead, for the Organizer, for a race that has started, and not for a group run or an unpublished race ahead).
+
+Baseline `BR-V3.57-2026-10-18`.
