@@ -4,14 +4,14 @@ import { describe, expect, it, vi } from "vitest";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 import { TIER_DESCRIPTION_MAX, TIER_NAME_MAX } from "@/modules/content/member-tiers/fields";
-import { TIER_GLYPH_KEYS } from "@/modules/content/member-tiers/glyph-keys";
 import TranslateProvider, { type TranslateAction } from "@/modules/translate/ui/TranslateProvider";
 
 /**
- * §811 — «Pagini» → «Membri» → «Niveluri de membru» as the server draws it: a named card (the house's `Panel`, its glyph and its count
- * on the line, closed until opened), ONE form around every level with ONE «Salvează toate nivelurile», each level a row whose boxes are
- * named by its key, the blank row at the end that adds a level, «Șterge nivelul» a button that names a small form of its own, and for a
- * reader who may not manage the levels the list and no box. In Romanian and in English.
+ * §811, amended by §817 — «Pagini» → «Membri» → «Niveluri de membru» as the server draws it: a named card (the house's `Panel`, its glyph and its count
+ * on the line, closed until opened) whose intro says what a level is for, ONE form around every level with ONE «Salvează toate nivelurile», each
+ * level a row whose boxes are named by its key (no glyph box; the description is the administrators' note), the blank row at the end that adds a
+ * level, «Șterge nivelul» a button that names a small form of its own, and for a reader who may not manage the levels the list and no box.
+ * In Romanian and in English.
  */
 const messages = { ro, en } as const;
 
@@ -76,6 +76,7 @@ describe("§811 the «Niveluri de membru» card on «Membri»", () => {
     expect(page).toContain("Niveluri de membru");
     expect(page).toContain("2 niveluri");
     expect(page).toContain(ro.Admin.members.tiers.intro);
+    expect(ro.Admin.members.tiers.intro).toBe("Un nivel decide ce coduri de reducere vede membrul; membrii nu-și văd nivelul.");
     expect(page).toMatch(/<svg[^>]*aria-hidden="true"[^>]*data-testid="WorkspacePremiumIcon"/);
     expect(page).toMatch(/<details[^>]*id="members-tiers"/);
     expect(/<details[^>]*id="members-tiers"[^>]*\sopen/.test(page)).toBe(false);
@@ -102,7 +103,7 @@ describe("§811 the «Niveluri de membru» card on «Membri»", () => {
   it("names every box by its level's key, with the place the level was drawn at, and the numbers from 1", async () => {
     const page = await draw();
     for (const key of [A, B, "new"]) {
-      for (const box of ["nameRo", "nameEn", "descriptionRo", "descriptionEn", "glyph", "position"]) expect(tagOf(page, box.startsWith("description") ? "textarea" : "input", `tiers[${key}].${box}`), `${key} ${box}`).not.toBe("");
+      for (const box of ["nameRo", "nameEn", "descriptionRo", "descriptionEn", "position"]) expect(tagOf(page, box.startsWith("description") ? "textarea" : "input", `tiers[${key}].${box}`), `${key} ${box}`).not.toBe("");
     }
     expect(tagOf(page, "input", `tiers[${A}].was`)).toContain('value="1"');
     expect(tagOf(page, "input", `tiers[${B}].was`)).toContain('value="2"');
@@ -130,11 +131,23 @@ describe("§811 the «Niveluri de membru» card on «Membri»", () => {
     expect(page).toContain(ro.Admin.members.tiers.descriptionHelp.replace("{max}", String(TIER_DESCRIPTION_MAX)));
   });
 
-  it("draws the glyph as the chosen one's name, a tick «Ascuns» that is ticked only where the level is hidden", async () => {
+  it("labels the description as the administrators' note, in both languages, and draws no glyph box", async () => {
     const page = await draw();
-    expect(tagOf(page, "input", `tiers[${A}].glyph`)).toContain('value="star"');
-    expect(tagOf(page, "input", `tiers[${B}].glyph`)).toContain('value="trophy"');
-    expect(tagOf(page, "input", "tiers[new].glyph")).toContain('value="star"');
+    expect(page).toContain("Notă (o văd doar administratorii)");
+    expect(page).not.toContain("Descriere (");
+    // The glyph column stays untouched: the card neither draws nor posts a glyph, so a save leaves it as it is.
+    for (const key of [A, B, "new"]) expect(page, key).not.toContain(`tiers[${key}].glyph`);
+    for (const trace of ["Simbol", "Stea", "Trofeu", "Medalie"]) expect(page, trace).not.toContain(trace);
+    const english = await draw({}, "en");
+    expect(english).toContain("Note (only administrators see it)");
+    expect(english).toContain(en.Admin.members.tiers.intro);
+    expect(en.Admin.members.tiers.intro).toBe("A level decides which discount codes a member sees; members do not see their level.");
+    expect(english).not.toContain("Symbol");
+    expect(english).not.toContain("Description (");
+  });
+
+  it("draws a tick «Ascuns» that is ticked only where the level is hidden", async () => {
+    const page = await draw();
     expect(tagOf(page, "input", `tiers[${A}].hidden`)).not.toContain("checked");
     expect(tagOf(page, "input", `tiers[${B}].hidden`)).toContain("checked");
     expect(tagOf(page, "input", `tiers[${B}].hidden`)).toContain('type="checkbox"');
@@ -210,11 +223,12 @@ describe("§811 the «Niveluri de membru» card on «Membri»", () => {
     expect(page).not.toContain("tiers[");
   });
 
-  it("has a name, a description, a glyph and a word for every glyph the table holds, in both languages", () => {
+  it("has a word for every box and button of the card, in both languages, and none for a glyph", () => {
     for (const language of [ro, en]) {
       const tiers = language.Admin.members.tiers;
-      expect(Object.keys(tiers.glyphs).sort()).toEqual([...TIER_GLYPH_KEYS].sort());
-      for (const key of ["heading", "intro", "introMore", "empty", "rowsIntro", "newRow", "nameRo", "nameEn", "descriptionRo", "descriptionEn", "glyph", "position", "hidden", "save", "delete", "deleteTitle", "deleteBody"]) {
+      expect("glyphs" in tiers).toBe(false);
+      expect("glyph" in tiers).toBe(false);
+      for (const key of ["heading", "intro", "introMore", "empty", "rowsIntro", "newRow", "nameRo", "nameEn", "descriptionRo", "descriptionEn", "descriptionHelp", "position", "hidden", "save", "delete", "deleteTitle", "deleteBody"]) {
         expect(typeof (tiers as Record<string, unknown>)[key], key).toBe("string");
       }
       for (const form of ["one", "few", "other"] as const) {

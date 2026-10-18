@@ -49,6 +49,8 @@ const DRAFT = { nothingPublic: "creates a draft, which is on no public page unti
 
 const SHOP_ONLY = { nothingPublic: "the members' shop is read only in the members' zone and the backoffice, per request behind the account (§683)" } as const;
 
+const MEMBER_TIERS_STAFF_ONLY = { nothingPublic: "a member level is the staff's label: read in the backoffice and as the zone's codes filter, never by a public page or a public read" } as const;
+
 const MEMBERS_ZONE_ONLY = { nothingPublic: "a discount code is read only in the members' zone, per request behind the account; no public page or public read carries one" } as const;
 
 /**
@@ -117,9 +119,10 @@ const WRITES: Record<string, Expected> = {
   "src/modules/content/member-codes/service.ts#setDiscountCodeHidden": MEMBERS_ZONE_ONLY,
   "src/modules/content/member-codes/service.ts#moveDiscountCode": MEMBERS_ZONE_ONLY,
   "src/modules/content/member-codes/service.ts#deleteDiscountCode": MEMBERS_ZONE_ONLY,
-  // «Niveluri de membru» (§811): the public members' page lists the visible levels (`cachedMemberTiers`, kind `pages`).
-  "src/modules/content/member-tiers/service.ts#saveMemberTiers": ["pages"],
-  "src/modules/content/member-tiers/service.ts#deleteMemberTier": ["pages"],
+  // «Niveluri de membru» (§811, §817): a level is the staff's label, read only in the backoffice and as the members' codes filter,
+  // per request behind the account — no public page lists it, so no public read carries one.
+  "src/modules/content/member-tiers/service.ts#saveMemberTiers": MEMBER_TIERS_STAFF_ONLY,
+  "src/modules/content/member-tiers/service.ts#deleteMemberTier": MEMBER_TIERS_STAFF_ONLY,
   // The members' shop (§683): read only in the members' zone and the backoffice, per request behind the
   // account — never a public page, the public cache, a feed or a sitemap.
   "src/modules/content/shop/service.ts#createProduct": SHOP_ONLY,

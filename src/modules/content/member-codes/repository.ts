@@ -39,10 +39,10 @@ export function codeIsForTier(code: { tierIds: readonly string[] | null }, tierI
  * The codes a member sees at `now`, in the list's order: not hidden, not past their last day
  * on the club's calendar (`codeShownToMembers`, the same rule in words), and for the member's tier
  * (`codeIsForTier`; `tierId` is the member's level or `null` for none). Exactly the columns the
- * zone's cards draw — never who wrote them or when. A tier is a label, not a permission: this
- * filters a list of benefits and gates nothing else. `everyCode` is for an account that cannot hold a level
- * (`canHoldMemberTier`: a colleague opening the zone, §524): it reads every code, as before levels existed, and the
- * chips still say which are limited. It is decided by the kind of account and never reads a level.
+ * zone's cards draw — never who wrote them, when, or for which levels. A tier is a label, not a permission: this
+ * filters a list of benefits and gates nothing else, and the zone never says why a code is among the member's (§817).
+ * `everyCode` is for an account that cannot hold a level (`canHoldMemberTier`: a colleague opening the zone, §524):
+ * it reads every code, as before levels existed. It is decided by the kind of account and never reads a level.
  */
 export async function listDiscountCodesForMembers<T extends Record<string, unknown>>(
   db: Database<T>,
@@ -59,7 +59,6 @@ export async function listDiscountCodesForMembers<T extends Record<string, unkno
       descriptionEn: memberDiscountCodes.descriptionEn,
       link: memberDiscountCodes.link,
       validUntil: memberDiscountCodes.validUntil,
-      tierIds: memberDiscountCodes.tierIds,
     })
     .from(memberDiscountCodes)
     .where(
