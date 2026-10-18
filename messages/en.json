@@ -813,7 +813,6 @@
       "countOthers": "and {count} more",
       "rememberedAs": "Answering as {who}",
       "going": "You're coming",
-      "goingAs": "You're coming, as {who}",
       "cancel": "I'm not coming any more",
       "notMe": "Not me",
       "help": "Your browser stays recognised for a year after “Yes, I'm coming”; “Not me” forgets it.",
@@ -12682,8 +12681,6 @@
     "confirmAlready": "You are already counted for {event}.",
     "confirmButton": "Yes, I'm coming",
     "confirmPending": "Sending…",
-    "confirmDone": "Done, we're counting you in for {event}.",
-    "confirmDoneBody": "Your browser stays recognised for a year: at the next event, “I'm coming!” is one press, with no email. On the page, “Not me” forgets it.",
     "withdrawTitle": "Not coming any more?",
     "withdrawIntro": "Are you not coming to {event} any more? Your answer is deleted.",
     "withdrawButton": "I'm not coming any more",
@@ -12693,6 +12690,8 @@
     "invalidBody": "It has been used or has expired. If you want to say you're coming, you can do it from the event's page.",
     "invalidOver": "The event has started or is over, so we no longer take answers.",
     "eventLink": "The event's page",
-    "eventsLink": "All events"
+    "eventsLink": "All events",
+    "rememberNote": "Your browser stays recognised for a year: at the next event, “I'm coming!” is one press, with no email. On the event's page, “Not me” forgets it.",
+    "withdrawDoneNoEvent": "Done, your answer is deleted."
   }
 }

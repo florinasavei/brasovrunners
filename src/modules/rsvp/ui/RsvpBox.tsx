@@ -55,7 +55,6 @@ export default async function RsvpBox({
   const labels = {
     rememberedAs: t.raw("rsvp.rememberedAs") as string,
     going: t("rsvp.going"),
-    goingAs: t.raw("rsvp.goingAs") as string,
     cancel: t("rsvp.cancel"),
     cancelling: t("rsvp.submitting"),
     notMe: t("rsvp.notMe"),

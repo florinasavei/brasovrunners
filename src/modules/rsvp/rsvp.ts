@@ -347,7 +347,23 @@ async function consumeRsvpToken<T extends Record<string, unknown>>(
 }
 
 /** Who a used link proved: the address and name on the answer, for the caller to remember the browser as. */
-export type RsvpProved = { eventId: string; locale: "ro" | "en"; email: string; displayName: string | null };
+export type RsvpProved = {
+  eventId: string;
+  locale: "ro" | "en";
+  /** The event page's slug in the answer's language, for the redirect that lands on `#vin`; null if the translation is gone. */
+  slug: string | null;
+  email: string;
+  displayName: string | null;
+};
+
+async function slugOf<T extends Record<string, unknown>>(tx: Database<T>, eventId: string, locale: "ro" | "en"): Promise<string | null> {
+  const [row] = await tx
+    .select({ slug: eventTranslations.slug })
+    .from(eventTranslations)
+    .where(and(eq(eventTranslations.eventId, eventId), eq(eventTranslations.locale, locale)))
+    .limit(1);
+  return row?.slug ?? null;
+}
 
 /**
  * The «Da, vin» button's POST: spends the `RSVP_CONFIRM` link and counts the answer, in one transaction — and expires the
@@ -363,7 +379,7 @@ export async function confirmRsvp<T extends Record<string, unknown>>(db: Databas
       .set({ confirmedAt: sql`coalesce(${eventRsvps.confirmedAt}, ${now})` })
       .where(eq(eventRsvps.id, rsvpId))
       .returning();
-    return row ? { eventId: row.eventId, locale: row.locale, email: row.deliveryEmail, displayName: row.displayName } : null;
+    return row ? { eventId: row.eventId, locale: row.locale, slug: await slugOf(tx, row.eventId, row.locale), email: row.deliveryEmail, displayName: row.displayName } : null;
   });
   if (proved) revalidatePublicContent("places");
   return proved;
@@ -374,6 +390,8 @@ export async function confirmRsvp<T extends Record<string, unknown>>(db: Databas
  * tap of a remembered browser, a signed-in member). Never gated by the notice or the tick. Returns who the link proved (a
  * token) or whether a row went (an identity); expires the public count.
  */
+export async function withdrawRsvp<T extends Record<string, unknown>>(db: Database<T>, who: { token: string }, now: Date): Promise<RsvpProved | null>;
+export async function withdrawRsvp<T extends Record<string, unknown>>(db: Database<T>, who: { eventId: string; identity: RsvpIdentity }, now: Date): Promise<boolean>;
 export async function withdrawRsvp<T extends Record<string, unknown>>(
   db: Database<T>,
   who: { token: string } | { eventId: string; identity: RsvpIdentity },
@@ -384,7 +402,7 @@ export async function withdrawRsvp<T extends Record<string, unknown>>(
       const rsvpId = await consumeRsvpToken(tx, who.token, "RSVP_WITHDRAW", now);
       if (!rsvpId) return null;
       const [row] = await tx.delete(eventRsvps).where(eq(eventRsvps.id, rsvpId)).returning();
-      return row ? { eventId: row.eventId, locale: row.locale, email: row.deliveryEmail, displayName: row.displayName } : null;
+      return row ? { eventId: row.eventId, locale: row.locale, slug: await slugOf(tx, row.eventId, row.locale), email: row.deliveryEmail, displayName: row.displayName } : null;
     });
     if (proved) revalidatePublicContent("places");
     return proved;

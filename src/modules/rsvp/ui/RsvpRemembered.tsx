@@ -20,8 +20,6 @@ export type RsvpIslandLabels = {
   /** With `{who}`: «Răspunzi ca {who}». */
   rememberedAs: string;
   going: string;
-  /** With `{who}`: «Tu vii, ca {who}». */
-  goingAs: string;
   cancel: string;
   cancelling: string;
   notMe: string;
