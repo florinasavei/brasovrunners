@@ -57,8 +57,6 @@ export type RsvpIslandLabels = {
   memberOff: string;
   memberClosed: string;
   memberFact: string;
-  /** The tick is offered only while the notice in force describes the mark (`cachedRsvpMemberDescribed`); a tick already given stays visible, so it can be taken back. */
-  memberOffered: boolean;
 };
 
 /**
@@ -110,7 +108,22 @@ function clearHint(): void {
  * A press is a Server Action that reads the `httpOnly` cookie itself (`remembered-actions.ts`): the island never sees the
  * secret, and the hint proves nothing. After an answer the page is refreshed, so «Cine vine (N)» under it counts the person.
  */
-export default function RsvpRemembered({ slug, locale, labels, actions, children }: { slug: string; locale: string; labels: RsvpIslandLabels; actions: RsvpIslandActions; children: ReactNode }) {
+export default function RsvpRemembered({
+  slug,
+  locale,
+  labels,
+  actions,
+  memberOffered = false,
+  children,
+}: {
+  slug: string;
+  locale: string;
+  labels: RsvpIslandLabels;
+  actions: RsvpIslandActions;
+  /** The member tick is offered only while the notice in force describes the mark (`cachedRsvpMemberDescribed`, §829); a tick already given stays visible, so it can be taken back. */
+  memberOffered?: boolean;
+  children: ReactNode;
+}) {
   const router = useRouter();
   const raw = useSyncExternalStore(subscribe, () => readCookie(PERSON_HINT_COOKIE), () => "");
   const hint = useMemo(() => decodeHint(raw || null), [raw]);
@@ -272,7 +285,7 @@ export default function RsvpRemembered({ slug, locale, labels, actions, children
               {labels.memberFact}
             </Typography>
           ) : (
-            (labels.memberOffered || state.clubMember !== null) && (
+            (memberOffered || state.clubMember !== null) && (
               <form
                 key={`member-${memberRefusals}`}
                 action={(form: FormData) => runMember(form.get("clubMember") === "on")}
@@ -308,7 +321,7 @@ export default function RsvpRemembered({ slug, locale, labels, actions, children
             {/* A tick only for somebody who gave a name before: with no name there is nothing to show. */}
             {hint.name !== null && <CheckboxField name="showName">{labels.showName}</CheckboxField>}
             {/* The declared member tick (§829): off by default, while the notice in force describes the mark; the club's sentence behind its «?». */}
-            {labels.memberOffered && (
+            {memberOffered && (
               <CheckboxField name="clubMember" help={labels.memberHelp}>
                 {labels.memberTick}
                 <Hint text={labels.memberHint} />

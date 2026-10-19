@@ -780,19 +780,21 @@ export async function hasConfirmedRsvp<T extends Record<string, unknown>>(db: Da
  * The person's own confirmed answer, as the tick «Numele meu apare la „Cine vine"» needs it (§827): whether the name shows (the tick AND a
  * name) and the name the row holds, which the tick would show — handed only to the browser the cookie proves is the person's, never the
  * address. Null when there is no confirmed answer of this address. The remembered browser's state. And, since §829, the member mark the answer holds
- * (`clubMember`): what the island draws ticked, or as a fact when it is an account's.
+ * (`clubMember`, present only when it holds one): what the island draws ticked, or as a fact when it is an account's.
  */
 export async function readOwnRsvpName<T extends Record<string, unknown>>(
   db: Database<T>,
   eventId: string,
   canonicalEmail: string,
-): Promise<{ showName: boolean; name: string | null; clubMember: ClubMemberKind | null } | null> {
+): Promise<{ showName: boolean; name: string | null; clubMember?: ClubMemberKind } | null> {
   const [row] = await db
     .select({ showName: eventRsvps.showName, displayName: eventRsvps.displayName, clubMember: eventRsvps.clubMember })
     .from(eventRsvps)
     .where(and(eq(eventRsvps.eventId, eventId), eq(eventRsvps.canonicalEmail, canonicalEmail), isNotNull(eventRsvps.confirmedAt)))
     .limit(1);
-  return row ? { showName: row.showName && row.displayName !== null, name: row.displayName, clubMember: parseClubMember(row.clubMember) } : null;
+  if (!row) return null;
+  const clubMember = parseClubMember(row.clubMember);
+  return { showName: row.showName && row.displayName !== null, name: row.displayName, ...(clubMember !== null ? { clubMember } : {}) };
 }
 
 /** What the page's card «Cine vine (N)» draws: the count, the names that may be shown, and how many are only counted. */
@@ -887,12 +889,13 @@ export async function listRsvpsForAdmin<T extends Record<string, unknown>>(db: D
 }
 
 /** How many answers an event has, confirmed and not (the backoffice's fold title) — the «Vii?» email's unanswered questions are neither (`ASKED_UNANSWERED`). */
-export async function countRsvpsForAdmin<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<{ confirmed: number; unconfirmed: number; members: number }> {
+export async function countRsvpsForAdmin<T extends Record<string, unknown>>(db: Database<T>, eventId: string): Promise<{ confirmed: number; unconfirmed: number; members?: number }> {
   const rows = await db
     .select({ confirmed: sql<boolean>`${eventRsvps.confirmedAt} IS NOT NULL`, n: count(), members: sql<number>`count(*) FILTER (WHERE ${eventRsvps.clubMember} IS NOT NULL)`.mapWith(Number) })
     .from(eventRsvps)
     .where(and(eq(eventRsvps.eventId, eventId), sql`NOT ${ASKED_UNANSWERED}`))
     .groupBy(sql`${eventRsvps.confirmedAt} IS NOT NULL`);
-  // `members` (§829): the confirmed answers that say they are a member, declared or from an account — the editor's «M membri confirmați», whatever notice they were given under.
-  return { confirmed: rows.find((row) => row.confirmed)?.n ?? 0, unconfirmed: rows.find((row) => !row.confirmed)?.n ?? 0, members: rows.find((row) => row.confirmed)?.members ?? 0 };
+  // `members` (§829, present only when there is one): the confirmed answers that say they are a member, declared or from an account — the editor's «M membri confirmați», whatever notice they were given under.
+  const members = rows.find((row) => row.confirmed)?.members ?? 0;
+  return { confirmed: rows.find((row) => row.confirmed)?.n ?? 0, unconfirmed: rows.find((row) => !row.confirmed)?.n ?? 0, ...(members > 0 ? { members } : {}) };
 }

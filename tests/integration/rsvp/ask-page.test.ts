@@ -171,13 +171,17 @@ describe("§818 the page of the «Vii?» email's links", () => {
       const markup = await page(confirm);
       expect(markup).toContain("Vii la Alergarea de joi? O apăsare și te numărăm.");
       expect(markup).toMatch(/<h1[^>]*>Vii\?<\/h1>/);
-      expect(markup.match(/<button/g)).toHaveLength(1);
+      // ONE button that acts; the «?» behind the member tick (§829) is a help button that submits nothing.
+      expect(markup.match(/<button[^>]*type="submit"/g)).toHaveLength(1);
       expect(markup).toContain("Da, vin");
       // The event page card's own box and tick, optional.
       expect(markup).toContain('name="name"');
       expect(markup).toContain("Numele tău (opțional)");
       expect(markup).toContain('name="showName"');
       expect(markup).toContain("Vreau să apar cu numele");
+      // §829: the declared member tick, while the notice in force describes the mark (the template does).
+      expect(markup).toContain('name="clubMember"');
+      expect(markup).toContain("Sunt membru al grupului");
       // The name is personal data that may go public: the notice is linked beside the box, as on the event page's card.
       expect(markup).toContain("Detalii în nota de confidențialitate.");
       expect(markup).not.toContain("required");

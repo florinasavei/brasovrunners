@@ -86,7 +86,7 @@ async function rsvpsOrNone(account: { email: string }, all: readonly PublicEvent
     const ids = shown.filter((event) => coming.has(event.id)).map((event) => event.id);
     if (ids.length === 0) return new Map();
     const answered = await answeredByAccount(getDb(), account.email, ids);
-    return new Map(ids.map((id) => [id, { count: coming.get(id) ?? 0, going: answered.has(id), showName: answered.get(id)?.showName ?? false, name: answered.get(id)?.name ?? null, clubMember: answered.get(id)?.clubMember ?? null }]));
+    return new Map(ids.map((id) => [id, { count: coming.get(id) ?? 0, going: answered.has(id), showName: answered.get(id)?.showName ?? false, name: answered.get(id)?.name ?? null, clubMember: answered.get(id)?.clubMember }]));
   } catch (error) {
     unstable_rethrow(error);
     if (!isDatabaseAwayError(error)) throw error;

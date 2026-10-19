@@ -35,9 +35,9 @@ export async function countRsvpsForEvents<T extends Record<string, unknown>>(db:
  * A map, not a set (§827): each answered event carries the state of the person's own tick «Numele meu apare la „Cine vine"» — `showName`
  * as it stands (the tick AND a name: a tick with no name shows nothing and is not drawn ticked), and `name`, the name the row holds, which
  * the zone prefills in its box so a stored name is never published unseen (§812). The signed-in account's own answers, never the address. And, since §829,
- * `clubMember`: the mark the answer holds — `ACCOUNT` is what the zone says as the fact «Membru».
+ * `clubMember`, present only when the answer holds one: `ACCOUNT` is what the zone says as the fact «Membru».
  */
-export type AccountAnswer = { showName: boolean; name: string | null; clubMember: ClubMemberKind | null };
+export type AccountAnswer = { showName: boolean; name: string | null; clubMember?: ClubMemberKind };
 
 export async function answeredByAccount<T extends Record<string, unknown>>(db: Database<T>, email: string, eventIds: readonly string[]): Promise<Map<string, AccountAnswer>> {
   if (eventIds.length === 0) return new Map();
@@ -51,5 +51,10 @@ export async function answeredByAccount<T extends Record<string, unknown>>(db: D
     .select({ eventId: eventRsvps.eventId, showName: eventRsvps.showName, displayName: eventRsvps.displayName, clubMember: eventRsvps.clubMember })
     .from(eventRsvps)
     .where(and(eq(eventRsvps.canonicalEmail, canonicalEmail), inArray(eventRsvps.eventId, [...eventIds]), isNotNull(eventRsvps.confirmedAt)));
-  return new Map(rows.map((row) => [row.eventId, { showName: row.showName && row.displayName !== null, name: row.displayName, clubMember: parseClubMember(row.clubMember) }]));
+  return new Map(
+    rows.map((row) => {
+      const clubMember = parseClubMember(row.clubMember);
+      return [row.eventId, { showName: row.showName && row.displayName !== null, name: row.displayName, ...(clubMember !== null ? { clubMember } : {}) }];
+    }),
+  );
 }

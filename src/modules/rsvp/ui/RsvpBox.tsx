@@ -126,7 +126,6 @@ export default async function RsvpBox({
     memberOff: t("rsvp.memberOutcome.off"),
     memberClosed: t("rsvp.memberOutcome.closed"),
     memberFact: t("rsvp.memberFact"),
-    memberOffered,
   };
 
   return (
@@ -164,7 +163,7 @@ export default async function RsvpBox({
               </Alert>
             </>
           ) : (
-            <RsvpRemembered slug={slug} locale={locale} labels={labels} actions={{ state: rsvpStateAction, go: rsvpGoAction, leave: rsvpLeaveAction, forget: rsvpForgetAction, showName: rsvpShowNameAction, member: rsvpMemberAction }}>
+            <RsvpRemembered slug={slug} locale={locale} labels={labels} memberOffered={memberOffered} actions={{ state: rsvpStateAction, go: rsvpGoAction, leave: rsvpLeaveAction, forget: rsvpForgetAction, showName: rsvpShowNameAction, member: rsvpMemberAction }}>
               {outcome === "withdrawSent" && (
                 <Alert severity="info" role="status" sx={{ mb: 1.5 }} data-testid="rsvp-withdraw-sent">
                   {t("rsvp.withdrawDone")}

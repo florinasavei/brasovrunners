@@ -32,7 +32,7 @@ export type RsvpIslandState =
    * their answer holds — the island shows it beside the tick and posts it, so a name is never published unseen (§812). It is handed only to
    * the browser whose `httpOnly` cookie proves it is the person's, and never the address. `false` and null while not `going`.
    */
-  | { remembered: true; offered: true; going: boolean; showName: boolean; name: string | null; clubMember: ClubMemberKind | null; count: number };
+  | { remembered: true; offered: true; going: boolean; showName: boolean; name: string | null; clubMember?: ClubMemberKind; count: number };
 
 /** What the member tick says back (§829): the state as it stands, and why nothing was written (a sentence of the island's own), or null. */
 export type RsvpMemberResult = { state: RsvpIslandState; refused: "none" | "closed" | null };
@@ -54,8 +54,8 @@ async function stateFor(slug: string, locale: Locale, now: Date): Promise<RsvpIs
     going: own !== null,
     showName: own?.showName ?? false,
     name: own?.name ?? null,
-    // The member mark the answer holds (§829): `DECLARED` is the box ticked, `ACCOUNT` a fact the island says, null nothing. `null` while not going.
-    clubMember: own?.clubMember ?? null,
+    // The member mark the answer holds (§829), present only when it holds one: `DECLARED` is the box ticked, `ACCOUNT` a fact the island says.
+    ...(own?.clubMember ? { clubMember: own.clubMember } : {}),
     count: await countRsvps(db, event.id),
   };
 }
