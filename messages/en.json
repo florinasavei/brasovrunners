@@ -12802,7 +12802,7 @@
     "upcomingEmpty": "No run is announced right now.",
     "upcomingAll": "Every event",
     "rsvp": {
-      "nameHelp": "On the run's page you show as “{name}”.",
+      "nameHelp": "If you tick it, the run's page shows you as “{name}”.",
       "outcome": {
         "went": "Noted: you're coming.",
         "left": "Answer removed: you're not coming any more.",

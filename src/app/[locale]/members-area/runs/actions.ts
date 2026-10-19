@@ -5,10 +5,11 @@ import { getDb } from "@/db/client";
 import { getPathname } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { accountIdentity } from "@/modules/rsvp/domain/account-identity";
-import { type ZoneRsvpOutcome, zoneRsvpAnchor } from "@/modules/rsvp/domain/zone-outcome";
+import { ZONE_RSVP_OUTCOME_ANCHOR, type ZoneRsvpOutcome, zoneRsvpAnchor } from "@/modules/rsvp/domain/zone-outcome";
 import { answerRsvp, withdrawRsvp } from "@/modules/rsvp/rsvp";
 import { canOpenMembersZone } from "@/modules/staff-identity/domain/roles";
 import { getCurrentAccount } from "@/modules/staff-identity/session";
+import { env } from "@/shared/config/env";
 import { isDomainError } from "@/shared/errors/domain-error";
 import { isUuid } from "@/shared/ids";
 
@@ -35,14 +36,25 @@ function text(form: FormData, name: string): string {
   return typeof value === "string" ? value : "";
 }
 
-/** The zone again, with what happened said once, at the row that was pressed. */
-function back(locale: Locale, outcome: ZoneRsvpOutcome, eventId: string): never {
-  const anchor = isUuid(eventId) ? `#${zoneRsvpAnchor(eventId)}` : "";
-  redirect(`${getPathname({ locale, href: { pathname: "/members-area/runs", query: { vin: outcome } } })}${anchor}`);
+/**
+ * The zone again, with what happened said once. At the pressed row — unless the run no longer takes answers (`closed`): its row is
+ * gone, so the page lands on the sentence itself. With no outcome (nothing was taken back) the zone is simply shown again.
+ */
+function back(locale: Locale, outcome: ZoneRsvpOutcome | null, eventId: string): never {
+  const path = getPathname({ locale, href: outcome ? { pathname: "/members-area/runs", query: { vin: outcome } } : "/members-area/runs" });
+  const anchor = outcome === "closed" ? `#${ZONE_RSVP_OUTCOME_ANCHOR}` : isUuid(eventId) ? `#${zoneRsvpAnchor(eventId)}` : "";
+  redirect(`${path}${anchor}`);
+}
+
+/** The service's own refusal, «the run takes no answers» (CONFLICT), is the page's sentence; anything else is a real error and surfaces. */
+function closedOrThrow(error: unknown): void {
+  if (!isDomainError(error) || error.code !== "CONFLICT") throw error;
 }
 
 /** The signed-in account that may open the zone — or the sign-in, or the 404 (the page's own door, asserted again by the verb). */
 async function memberOrSignIn(locale: Locale) {
+  // The page's door says 404 where this deployment has no sign-in (`openZone`); a forged post gets the same, not a sign-in to nowhere.
+  if (env.STAFF_AUTH_MODE === "disabled") notFound();
   const account = await getCurrentAccount();
   if (!account) redirect(getPathname({ locale, href: { pathname: "/sign-in", query: { to: "members" } } }));
   if (!canOpenMembersZone(account.role)) notFound();
@@ -60,8 +72,8 @@ export async function answerAsMemberAction(form: FormData): Promise<void> {
       await answerRsvp(getDb(), eventId, accountIdentity(account, locale, form.get("showName") === "on"), new Date());
       outcome = "went";
     } catch (error) {
-      // CONFLICT: not offered (any more). VALIDATION_ERROR: the account's address is not one the service can keep.
-      if (!isDomainError(error)) throw error;
+      // CONFLICT: not offered (any more). VALIDATION_ERROR (an address the service cannot keep) is not «closed»: it surfaces.
+      closedOrThrow(error);
     }
   }
   back(locale, outcome, eventId);
@@ -72,8 +84,15 @@ export async function leaveAsMemberAction(form: FormData): Promise<void> {
   const locale = toLocale(form.get("uiLocale"));
   const eventId = text(form, "eventId");
   const account = await memberOrSignIn(locale);
+  // «left» only when an answer was there to take back; a stale page's second press, or a malformed event, says nothing.
+  let outcome: ZoneRsvpOutcome | null = null;
   if (isUuid(eventId)) {
-    await withdrawRsvp(getDb(), { eventId, identity: accountIdentity(account, locale, false) }, new Date());
+    try {
+      if (await withdrawRsvp(getDb(), { eventId, identity: accountIdentity(account, locale, false) }, new Date())) outcome = "left";
+    } catch (error) {
+      closedOrThrow(error);
+      outcome = "closed";
+    }
   }
-  back(locale, "left", eventId);
+  back(locale, outcome, eventId);
 }

@@ -37,6 +37,33 @@ vi.mock("@/db/client", () => ({ getDb: () => state.db }));
 vi.mock("@/app/[locale]/admin/actions", () => ({ signOutAction: async () => {} }));
 vi.mock("@/modules/diagnostics/budget-level", () => ({ peekNeonBudgetLevel: () => "unknown", lastKnownBudget: () => null }));
 const request = vi.hoisted(() => ({ reads: new Map<string, Promise<unknown>>() }));
+// The two reads the page makes for «Vin!»: wrapped, not replaced, so they still run for real — the test counts the calls and, once, makes the database go away.
+const spied = vi.hoisted(() => ({ answered: [] as string[][], away: false, noSignIn: false }));
+// A deployment with no sign-in at all (`STAFF_AUTH_MODE=disabled`): the one value the test flips, read live.
+vi.mock("@/shared/config/env", async (original) => {
+  const real = await original<typeof import("@/shared/config/env")>();
+  return { ...real, env: new Proxy(real.env, { get: (target, key, receiver) => (key === "STAFF_AUTH_MODE" && spied.noSignIn ? "disabled" : Reflect.get(target, key, receiver)) }) };
+});
+vi.mock("@/modules/rsvp/counts", async (original) => {
+  const real = await original<typeof import("@/modules/rsvp/counts")>();
+  return {
+    ...real,
+    answeredByAccount: (...args: Parameters<typeof real.answeredByAccount>) => {
+      spied.answered.push([...args[2]]);
+      return real.answeredByAccount(...args);
+    },
+  };
+});
+vi.mock("@/modules/rsvp/public-page", async (original) => {
+  const real = await original<typeof import("@/modules/rsvp/public-page")>();
+  return {
+    ...real,
+    readPublicComing: (...args: Parameters<typeof real.readPublicComing>) => {
+      if (spied.away) throw Object.assign(new Error("connect ECONNREFUSED 10.0.0.1:5432"), { code: "ECONNREFUSED" });
+      return real.readPublicComing(...args);
+    },
+  };
+});
 vi.mock("@/modules/public-cache/request-memo", () => ({ thisRequestsReads: () => request.reads }));
 vi.mock("next-intl/server", () => ({
   setRequestLocale: () => {},
@@ -68,6 +95,9 @@ beforeEach(async () => {
   await resetTables(db);
   fakeNextCache.reset();
   request.reads.clear();
+  spied.answered.length = 0;
+  spied.away = false;
+  spied.noSignIn = false;
   state.cookie = undefined;
   state.language = "ro";
   vi.stubEnv("NODE_ENV", "production");
@@ -164,7 +194,8 @@ describe("§NNN the zone's «Vin!» — who answers is the session's", () => {
     expect(to).toBe(`/ro/zona-membri/alergari?vin=went#vin-${eventId}`);
 
     const [row] = await answers();
-    expect(row).toMatchObject({ eventId, canonicalEmail: "membru@dev.test", showName: false });
+    // Unticked, the account's name is not stored either: it is the person's to show, never to keep (§143, §396).
+    expect(row).toMatchObject({ eventId, canonicalEmail: "membru@dev.test", showName: false, displayName: null });
     expect(row.confirmedAt).not.toBeNull();
     // Counted at once and no message of any kind: the account's address is already proved.
     expect(await mails()).toHaveLength(0);
@@ -199,6 +230,17 @@ describe("§NNN the zone's «Vin!» — who answers is the session's", () => {
     expect((await answers())[0].locale).toBe("en");
   });
 
+  it("never swaps a name the person typed for the account's: an unticked press keeps «Ana» (a stale tab)", async () => {
+    const eventId = await seed("Alergarea de joi");
+    await answerRsvp(db, eventId, identityOf("link", { email: member.email, displayName: "Ana", showName: true, locale: "ro" }), new Date());
+    state.cookie = member.id;
+    await redirectedTo(answerAsMemberAction(press(eventId)));
+    const rows = await answers();
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({ showName: true, displayName: "Ana" });
+    expect(await readPublicRsvps(db, eventId, { firstRsvpNoticeVersion: await findFirstRsvpNoticeVersion(db) })).toEqual({ count: 1, names: ["Ana"], others: 0 });
+  });
+
   it("is idempotent for one account and keeps a name once shown: a second press shows no less", async () => {
     const eventId = await seed("Alergarea de joi");
     state.cookie = member.id;
@@ -218,7 +260,8 @@ describe("§NNN the zone's «Vin!» — who answers is the session's", () => {
     const membersOnly = await seed("Doar membri", { membersOnly: true });
     for (const eventId of [notTicked, started, cancelled, registration, membersOnly, "11111111-1111-4111-8111-111111111111", "not-a-uuid", ""]) {
       const to = await redirectedTo(answerAsMemberAction(press(eventId)));
-      expect(to, eventId).toMatch(/^\/ro\/zona-membri\/alergari\?vin=closed/);
+      // The run's row is not drawn any more, so the page lands on the sentence, not on a row that is gone.
+      expect(to, eventId).toBe("/ro/zona-membri/alergari?vin=closed#vin-outcome");
     }
     expect(await answers()).toHaveLength(0);
   });
@@ -242,8 +285,8 @@ describe("§NNN the zone's «Vin!» — who answers is the session's", () => {
     const rows = await answers();
     expect(rows).toHaveLength(1);
     expect(rows[0].canonicalEmail).toBe("alt.membru@dev.test");
-    // Taking back what was never given is not an error.
-    expect(await redirectedTo(leaveAsMemberAction(press(eventId)))).toMatch(/vin=left/);
+    // Taking back what was never given is not an error — and not «left» either: nothing was taken back.
+    expect(await redirectedTo(leaveAsMemberAction(press(eventId)))).toBe(`/ro/zona-membri/alergari#vin-${eventId}`);
     expect(await answers()).toHaveLength(1);
   });
 
@@ -252,9 +295,23 @@ describe("§NNN the zone's «Vin!» — who answers is the session's", () => {
     state.cookie = member.id;
     await redirectedTo(answerAsMemberAction(press(eventId)));
     await approveNotice(false, 2);
-    expect(await redirectedTo(leaveAsMemberAction(press("not-a-uuid")))).toMatch(/vin=left$/);
+    expect(await redirectedTo(leaveAsMemberAction(press("not-a-uuid")))).toBe("/ro/zona-membri/alergari");
     expect(await answers()).toHaveLength(1);
-    await redirectedTo(leaveAsMemberAction(press(eventId)));
+    expect(await redirectedTo(leaveAsMemberAction(press(eventId)))).toMatch(/vin=left#vin-/);
+    expect(await answers()).toHaveLength(0);
+  });
+
+  it("answers a forged post where this deployment has no sign-in with the page's own 404, not a sign-in", async () => {
+    const eventId = await seed("Alergarea de joi");
+    state.cookie = member.id;
+    spied.noSignIn = true;
+    for (const action of [answerAsMemberAction, leaveAsMemberAction]) {
+      const digest = await action(press(eventId)).then(
+        () => "",
+        (error: { digest?: string }) => error.digest ?? "",
+      );
+      expect(digest).toMatch(/NEXT_HTTP_ERROR_FALLBACK;404|NEXT_NOT_FOUND/);
+    }
     expect(await answers()).toHaveLength(0);
   });
 });
@@ -294,7 +351,7 @@ describe("§NNN «Alergări» draws the row only under a run that takes answers"
     expect(row).toContain("Vin!");
     expect(row).toContain('name="showName"');
     expect(row).not.toMatch(/name="showName"[^>]*checked/);
-    expect(row).toContain("Pe pagina alergării apari ca „Ana Membru”.");
+    expect(row).toContain("Dacă bifezi, pe pagina alergării apari ca „Ana Membru”.");
     // Never the other member's name or address: the row says a number.
     expect(html).not.toContain("alt.membru");
     expect(html).not.toContain("Dan Altul");
@@ -335,6 +392,22 @@ describe("§NNN «Alergări» draws the row only under a run that takes answers"
     await approveNotice(false, 2);
     fakeNextCache.reset();
     expect(await runs()).not.toContain(`id="vin-${ticked}"`);
+  });
+
+  it("reads the account's own answers in ONE query for all the shown runs, and draws nothing while the database is away", async () => {
+    const ids = [await seed("Prima", {}, 2), await seed("A doua", {}, 3), await seed("A treia", {}, 4)];
+    state.cookie = member.id;
+    const html = await runs();
+    expect(spied.answered).toHaveLength(1);
+    expect([...spied.answered[0]].sort()).toEqual([...ids].sort());
+    for (const id of ids) expect(rowOf(html, id)).not.toBeNull();
+
+    // A «Vin!» that cannot be told from «Tu vii» is worse than none: with the counts' read down, no row at all.
+    spied.away = true;
+    fakeNextCache.reset();
+    const away = await runs();
+    expect(away).not.toContain('data-testid="zone-rsvp"');
+    expect(away).toContain("Prima");
   });
 
   it("draws no tick for an account whose name is empty, in English too", async () => {

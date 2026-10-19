@@ -17,3 +17,9 @@ export function parseZoneRsvpOutcome(value: string | string[] | undefined): Zone
 
 /** The anchor of an event's row in the zone: where a press lands again, so the phone's page does not jump to the top. */
 export const zoneRsvpAnchor = (eventId: string) => `vin-${eventId}`;
+
+/** The id of a run's title link: the name of the row's forms, so a screen reader's list of forms says which run each «Vin!» belongs to. */
+export const zoneRsvpTitleId = (eventId: string) => `vin-title-${eventId}`;
+
+/** Where a refused press lands: the run is no longer offered, so its row (the anchor above) is gone and the sentence is what is left to find. */
+export const ZONE_RSVP_OUTCOME_ANCHOR = "vin-outcome";

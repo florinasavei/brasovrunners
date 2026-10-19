@@ -28,6 +28,8 @@ import { zoneRsvpAnchor } from "../domain/zone-outcome";
 export type ZoneRsvpProps = {
   locale: Locale;
   eventId: string;
+  /** The id of the run's title link (`zoneRsvpTitleId`): it names the row's forms for a screen reader. */
+  titleId: string;
   /** This account has a confirmed answer (`answeredByAccount`). */
   going: boolean;
   /** Confirmed answers, this account's included (0: «Fii primul care spune că vine.»). */
@@ -36,7 +38,7 @@ export type ZoneRsvpProps = {
   publicName: string | null;
 };
 
-export default async function ZoneRsvp({ locale, eventId, going, count, publicName }: ZoneRsvpProps) {
+export default async function ZoneRsvp({ locale, eventId, titleId, going, count, publicName }: ZoneRsvpProps) {
   const t = await getTranslations("Event");
   const tZone = await getTranslations("Members");
   const hidden = (
@@ -71,7 +73,7 @@ export default async function ZoneRsvp({ locale, eventId, going, count, publicNa
           <Typography component="span" data-testid="zone-rsvp-going" sx={{ fontWeight: 700 }}>
             {`${t("rsvp.going")} ✓`}
           </Typography>
-          <form action={leaveAsMemberAction}>
+          <form action={leaveAsMemberAction} aria-labelledby={titleId}>
             {hidden}
             <SubmitButton label={t("rsvp.cancel")} pendingLabel={t("rsvp.submitting")} variant="outlined">
               <EventBusyIcon />
@@ -79,7 +81,7 @@ export default async function ZoneRsvp({ locale, eventId, going, count, publicNa
           </form>
         </>
       ) : (
-        <form action={answerAsMemberAction}>
+        <form action={answerAsMemberAction} aria-labelledby={titleId}>
           {hidden}
           <Stack direction="row" useFlexGap spacing={1.5} sx={{ flexWrap: "wrap", alignItems: "center" }}>
             <SubmitButton label={t("rsvp.submit")} pendingLabel={t("rsvp.submitting")}>

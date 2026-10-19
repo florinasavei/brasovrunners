@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import en from "../../../messages/en.json";
 import ro from "../../../messages/ro.json";
 import { accountIdentity, accountPublicName } from "@/modules/rsvp/domain/account-identity";
-import { parseZoneRsvpOutcome, ZONE_RSVP_OUTCOMES, zoneRsvpAnchor } from "@/modules/rsvp/domain/zone-outcome";
+import { parseZoneRsvpOutcome, ZONE_RSVP_OUTCOMES, zoneRsvpAnchor, zoneRsvpTitleId } from "@/modules/rsvp/domain/zone-outcome";
 
 /**
  * §NNN («Vin!» in the members' zone; amends §812) — what the row under a run in «Alergări» draws, in both languages, and the pure rules
@@ -35,7 +35,7 @@ async function html(element: ReactElement): Promise<string> {
 
 const row = async (props: { going?: boolean; count?: number; publicName?: string | null }, locale: "ro" | "en" = "ro") => {
   state.language = locale;
-  return html(await ZoneRsvp({ locale, eventId: EVENT_ID, going: false, count: 0, publicName: "Ana Membru", ...props }));
+  return html(await ZoneRsvp({ locale, eventId: EVENT_ID, titleId: zoneRsvpTitleId(EVENT_ID), going: false, count: 0, publicName: "Ana Membru", ...props }));
 };
 
 beforeEach(() => {
@@ -46,6 +46,8 @@ describe("§NNN the zone's row under a run that takes answers", () => {
   it("offers «Vin!» and the unticked tick «Vreau să apar cu numele» with the name it would show, in Română", async () => {
     const markup = await row({ count: 3 });
     expect(markup).toContain(`id="${zoneRsvpAnchor(EVENT_ID)}"`);
+    // Each form is named by the run's title link, so a list of forms says which «Vin!» is which.
+    expect(markup).toContain(`aria-labelledby="${zoneRsvpTitleId(EVENT_ID)}"`);
     expect(markup).toContain('data-testid="zone-rsvp"');
     expect(markup).toContain('data-going="false"');
     expect(markup).toContain("3 vin");
@@ -54,7 +56,7 @@ describe("§NNN the zone's row under a run that takes answers", () => {
     expect(markup).toMatch(/<input[^>]*type="checkbox"[^>]*name="showName"|<input[^>]*name="showName"[^>]*type="checkbox"/);
     expect(markup).not.toMatch(/<input[^>]*name="showName"[^>]*checked/);
     expect(markup).toContain("Vreau să apar cu numele");
-    expect(markup).toContain("Pe pagina alergării apari ca „Ana Membru”.");
+    expect(markup).toContain("Dacă bifezi, pe pagina alergării apari ca „Ana Membru”.");
     // The form posts the event and the language, and nothing of the person's: no address, no name, no role.
     expect(markup).toContain(`name="eventId" value="${EVENT_ID}"`);
     expect(markup).toContain('name="uiLocale" value="ro"');
@@ -67,7 +69,7 @@ describe("§NNN the zone's row under a run that takes answers", () => {
     expect(markup).toContain("1 coming");
     expect(markup).toContain("I&#x27;m coming!");
     expect(markup).toContain("I want my name to show");
-    expect(markup).toContain("On the run&#x27;s page you show as “Ana Membru”.");
+    expect(markup).toContain("If you tick it, the run&#x27;s page shows you as “Ana Membru”.");
     expect(markup).toContain('name="uiLocale" value="en"');
   });
 
@@ -101,7 +103,9 @@ describe("§NNN the identity the zone answers as (§812's source `account`)", ()
   const account = { email: "ana@example.test", displayName: "  Ana   Membru " };
 
   it("is verified and made from the account alone: its address, its name cleaned, the language of the page", () => {
-    expect(accountIdentity(account, "ro", false)).toEqual({ email: "ana@example.test", displayName: "Ana Membru", showName: false, locale: "ro", source: "account", verified: true });
+    // Unticked, the name is not even kept: the account's name is the person's to show, never to store (§143, §396).
+    expect(accountIdentity(account, "ro", false)).toEqual({ email: "ana@example.test", displayName: null, showName: false, locale: "ro", source: "account", verified: true });
+    expect(accountIdentity(account, "ro", true)).toMatchObject({ displayName: "Ana Membru", showName: true });
     expect(accountIdentity(account, "en", true)).toMatchObject({ source: "account", verified: true, locale: "en" });
   });
 

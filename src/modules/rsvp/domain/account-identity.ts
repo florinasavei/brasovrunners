@@ -19,5 +19,8 @@ export function accountPublicName(account: Pick<RsvpAccount, "displayName">): st
 /** The account's identity for one press: `tick` is the person's «Vreau să apar cu numele», off unless the form carried it. */
 export function accountIdentity(account: RsvpAccount, locale: "ro" | "en", tick: boolean): RsvpIdentity {
   const name = accountPublicName(account);
-  return identityOf("account", { email: account.email, displayName: name, showName: tick && name !== null, locale });
+  // The account's name is the person's to show, never to keep: it is taken only with the tick (§143, §396), so an unticked press stores
+  // none, and a stale tab cannot swap a name the person typed on the event's own page for the one an Administrator typed in «Echipa».
+  const shown = tick && name !== null;
+  return identityOf("account", { email: account.email, displayName: shown ? name : null, showName: shown, locale });
 }

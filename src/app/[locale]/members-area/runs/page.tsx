@@ -19,7 +19,7 @@ import { cachedUpcomingEvents } from "@/modules/public-cache/reads";
 import { isDatabaseAwayError } from "@/modules/resilience/domain/database-away";
 import { answeredByAccount } from "@/modules/rsvp/counts";
 import { accountPublicName } from "@/modules/rsvp/domain/account-identity";
-import { parseZoneRsvpOutcome } from "@/modules/rsvp/domain/zone-outcome";
+import { parseZoneRsvpOutcome, ZONE_RSVP_OUTCOME_ANCHOR, zoneRsvpTitleId } from "@/modules/rsvp/domain/zone-outcome";
 import { readPublicComing } from "@/modules/rsvp/public-page";
 import ZoneRsvp from "@/modules/rsvp/ui/ZoneRsvp";
 import { DENSITY } from "@/theme/density";
@@ -167,7 +167,7 @@ export default async function MembersAreaPage({ params, searchParams }: Props) {
           {t("upcomingTitle")}
         </Typography>
         {vin !== null && (
-          <Alert severity={vin === "closed" ? "warning" : "success"} role="status" sx={{ mb: 1.5 }} data-testid="zone-rsvp-outcome">
+          <Alert id={ZONE_RSVP_OUTCOME_ANCHOR} severity={vin === "closed" ? "warning" : "success"} role="status" sx={{ mb: 1.5, scrollMarginTop: 16 }} data-testid="zone-rsvp-outcome">
             {t(`rsvp.outcome.${vin}`)}
           </Alert>
         )}
@@ -180,6 +180,7 @@ export default async function MembersAreaPage({ params, searchParams }: Props) {
             {upcoming.map((event) => (
               <Box component="li" key={event.id} sx={{ mb: 0.5 }}>
                 <MuiLink
+                  id={zoneRsvpTitleId(event.id)}
                   href={getPathname({ locale, href: { pathname: "/events/[slug]", params: { slug: event.slug } } })}
                   sx={{ display: "inline-flex", alignItems: "center", minHeight: 44, fontWeight: 600 }}
                 >
@@ -190,7 +191,7 @@ export default async function MembersAreaPage({ params, searchParams }: Props) {
                   {formatDay(event.startsAt, { locale, timeZone: event.timezone, withTime: true })}
                 </Typography>
                 {/* «Vin!» (§NNN): only a run that takes answers, with this account's own state; a members' event has none (its page draws no «Vii?»). */}
-                {rsvps.has(event.id) && <ZoneRsvp locale={locale} eventId={event.id} going={rsvps.get(event.id)!.going} count={rsvps.get(event.id)!.count} publicName={publicName} />}
+                {rsvps.has(event.id) && <ZoneRsvp locale={locale} eventId={event.id} titleId={zoneRsvpTitleId(event.id)} going={rsvps.get(event.id)!.going} count={rsvps.get(event.id)!.count} publicName={publicName} />}
               </Box>
             ))}
           </Box>

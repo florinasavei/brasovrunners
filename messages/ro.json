@@ -12802,7 +12802,7 @@
     "upcomingEmpty": "Nicio alergare anunțată acum.",
     "upcomingAll": "Toate alergările",
     "rsvp": {
-      "nameHelp": "Pe pagina alergării apari ca „{name}”.",
+      "nameHelp": "Dacă bifezi, pe pagina alergării apari ca „{name}”.",
       "outcome": {
         "went": "Am notat că vii.",
         "left": "Am șters răspunsul: nu mai vii.",
