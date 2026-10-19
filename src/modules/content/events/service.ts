@@ -1903,6 +1903,10 @@ const SERIES_COLUMNS = [
   "offersGroupRunDeclaration",
   // Who sees the event (§552): "from this date" makes a weekly run the members' on every later date.
   "membersOnly",
+  // «Cine se poate oferi» (§NNN): the club's standing rule for who helps. The «Voluntari» card saves it on its own, so no event save changes it
+  // today; listed so that a save which ever does carries it like the other rules of a series, and so that every date a repeat makes starts with it
+  // (`copiedEventValues`).
+  "volunteersAccess",
   // «Copertă» (§709), like the route (§49): the Wednesday run wears one cover every Wednesday, and
   // "from this date" or "all" carries a new one — the picture and its crop together.
   "coverMediaAssetId",

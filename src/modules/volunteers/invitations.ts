@@ -124,6 +124,9 @@ export async function sendVolunteerInvitations<T extends Record<string, unknown>
   if (parsed.addresses.length > VOLUNTEER_INVITATION_BATCH_MAX) throw new VolunteerInvitationRefusal("VINVITE_TOO_MANY");
 
   return db.transaction(async (tx) => {
+    // Two sends for one event take turns (NO KEY UPDATE conflicts with itself, not with a sign-up's foreign-key check): the same address typed
+    // in both is then asked once, not refused by the table's unique key halfway through.
+    await tx.select({ id: events.id }).from(events).where(eq(events.id, input.eventId)).for("no key update").limit(1);
     const { event, closed } = await eventOfferClosed(tx, input.eventId, now);
     if (event.volunteersAccess !== "INVITED") throw new VolunteerInvitationRefusal("VINVITE_NOT_INVITED_ONLY");
     if (closed) throw new VolunteerInvitationRefusal("VINVITE_EVENT_CLOSED");
