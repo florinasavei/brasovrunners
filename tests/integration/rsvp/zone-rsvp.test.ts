@@ -38,7 +38,7 @@ vi.mock("@/app/[locale]/admin/actions", () => ({ signOutAction: async () => {} }
 vi.mock("@/modules/diagnostics/budget-level", () => ({ peekNeonBudgetLevel: () => "unknown", lastKnownBudget: () => null }));
 const request = vi.hoisted(() => ({ reads: new Map<string, Promise<unknown>>() }));
 // The two reads the page makes for «Vin!»: wrapped, not replaced, so they still run for real — the test counts the calls and, once, makes the database go away.
-const spied = vi.hoisted(() => ({ answered: [] as string[][], away: false, noSignIn: false }));
+const spied = vi.hoisted(() => ({ answered: [] as string[][], away: false, noSignIn: false, notice: 0, publicReads: [] as string[], gathered: [] as string[][] }));
 // A deployment with no sign-in at all (`STAFF_AUTH_MODE=disabled`): the one value the test flips, read live.
 vi.mock("@/shared/config/env", async (original) => {
   const real = await original<typeof import("@/shared/config/env")>();
@@ -62,6 +62,25 @@ vi.mock("@/modules/rsvp/public-page", async (original) => {
       if (spied.away) throw Object.assign(new Error("connect ECONNREFUSED 10.0.0.1:5432"), { code: "ECONNREFUSED" });
       return real.readPublicComing(...args);
     },
+    readPublicRsvpsFor: (...args: Parameters<typeof real.readPublicRsvpsFor>) => {
+      spied.gathered.push([...args[0]]);
+      return real.readPublicRsvpsFor(...args);
+    },
+  };
+});
+// «Cine vine» under each run (§715 amended): the notice's version and each run's public read, counted — one gathering for the page, never one per card.
+vi.mock("@/modules/public-cache/reads", async (original) => {
+  const real = await original<typeof import("@/modules/public-cache/reads")>();
+  return {
+    ...real,
+    cachedFirstRsvpNoticeVersion: (...args: Parameters<typeof real.cachedFirstRsvpNoticeVersion>) => {
+      spied.notice += 1;
+      return real.cachedFirstRsvpNoticeVersion(...args);
+    },
+    cachedPublicRsvps: (...args: Parameters<typeof real.cachedPublicRsvps>) => {
+      spied.publicReads.push(args[0]);
+      return real.cachedPublicRsvps(...args);
+    },
   };
 });
 vi.mock("@/modules/public-cache/request-memo", () => ({ thisRequestsReads: () => request.reads }));
@@ -78,7 +97,8 @@ vi.mock("next-intl/server", () => ({
 }));
 
 const { answerAsMemberAction, leaveAsMemberAction, setNameAsMemberAction } = await import("@/app/[locale]/members-area/runs/actions");
-const { default: RunsPage } = await import("@/app/[locale]/members-area/runs/page");
+// «Alergări» is the zone's own address since the zone opens on the runs (§715 amended).
+const { default: RunsPage } = await import("@/app/[locale]/members-area/page");
 
 const DAY = 86_400_000;
 let db: TestDatabase;
@@ -98,6 +118,9 @@ beforeEach(async () => {
   spied.answered.length = 0;
   spied.away = false;
   spied.noSignIn = false;
+  spied.notice = 0;
+  spied.publicReads.length = 0;
+  spied.gathered.length = 0;
   state.cookie = undefined;
   state.language = "ro";
   vi.stubEnv("NODE_ENV", "production");
@@ -191,7 +214,7 @@ describe("§822 the zone's «Vin!» — who answers is the session's", () => {
     const eventId = await seed("Alergarea de joi");
     state.cookie = member.id;
     const to = await redirectedTo(answerAsMemberAction(press(eventId)));
-    expect(to).toBe(`/ro/zona-membri/alergari?vin=went#vin-${eventId}`);
+    expect(to).toBe(`/ro/zona-membri?vin=went#vin-${eventId}`);
 
     const [row] = await answers();
     // Unticked, the account's name is not stored either: it is the person's to show, never to keep (§143, §396).
@@ -226,7 +249,7 @@ describe("§822 the zone's «Vin!» — who answers is the session's", () => {
   it("answers in the page's language: the address goes back to the zone in that language", async () => {
     const eventId = await seed("Alergarea de joi");
     state.cookie = member.id;
-    expect(await redirectedTo(answerAsMemberAction(formOf({ uiLocale: "en", eventId })))).toBe(`/en/members-area/runs?vin=went#vin-${eventId}`);
+    expect(await redirectedTo(answerAsMemberAction(formOf({ uiLocale: "en", eventId })))).toBe(`/en/members-area?vin=went#vin-${eventId}`);
     expect((await answers())[0].locale).toBe("en");
   });
 
@@ -261,7 +284,7 @@ describe("§822 the zone's «Vin!» — who answers is the session's", () => {
     for (const eventId of [notTicked, started, cancelled, registration, membersOnly, "11111111-1111-4111-8111-111111111111", "not-a-uuid", ""]) {
       const to = await redirectedTo(answerAsMemberAction(press(eventId)));
       // The run's row is not drawn any more, so the page lands on the sentence, not on a row that is gone.
-      expect(to, eventId).toBe("/ro/zona-membri/alergari?vin=closed#vin-outcome");
+      expect(to, eventId).toBe("/ro/zona-membri?vin=closed#vin-outcome");
     }
     expect(await answers()).toHaveLength(0);
   });
@@ -281,12 +304,12 @@ describe("§822 the zone's «Vin!» — who answers is the session's", () => {
     await redirectedTo(answerAsMemberAction(press(eventId)));
     expect(await answers()).toHaveLength(2);
 
-    expect(await redirectedTo(leaveAsMemberAction(press(eventId)))).toBe(`/ro/zona-membri/alergari?vin=left#vin-${eventId}`);
+    expect(await redirectedTo(leaveAsMemberAction(press(eventId)))).toBe(`/ro/zona-membri?vin=left#vin-${eventId}`);
     const rows = await answers();
     expect(rows).toHaveLength(1);
     expect(rows[0].canonicalEmail).toBe("alt.membru@dev.test");
     // Taking back what was never given is not an error — and not «left» either: nothing was taken back.
-    expect(await redirectedTo(leaveAsMemberAction(press(eventId)))).toBe(`/ro/zona-membri/alergari#vin-${eventId}`);
+    expect(await redirectedTo(leaveAsMemberAction(press(eventId)))).toBe(`/ro/zona-membri#vin-${eventId}`);
     expect(await answers()).toHaveLength(1);
   });
 
@@ -295,7 +318,7 @@ describe("§822 the zone's «Vin!» — who answers is the session's", () => {
     state.cookie = member.id;
     await redirectedTo(answerAsMemberAction(press(eventId)));
     await approveNotice(false, 2);
-    expect(await redirectedTo(leaveAsMemberAction(press("not-a-uuid")))).toBe("/ro/zona-membri/alergari");
+    expect(await redirectedTo(leaveAsMemberAction(press("not-a-uuid")))).toBe("/ro/zona-membri");
     expect(await answers()).toHaveLength(1);
     expect(await redirectedTo(leaveAsMemberAction(press(eventId)))).toMatch(/vin=left#vin-/);
     expect(await answers()).toHaveLength(0);
@@ -459,7 +482,7 @@ describe("§827 the zone's name tick", () => {
   it("shows the account's name on the tick — recorded under the notice in force — and lands on the row with «shown»", async () => {
     const eventId = await answered();
     await approveNotice(true, 2);
-    expect(await redirectedTo(setNameAsMemberAction(tick(eventId, true)))).toBe(`/ro/zona-membri/alergari?vin=shown#vin-${eventId}`);
+    expect(await redirectedTo(setNameAsMemberAction(tick(eventId, true)))).toBe(`/ro/zona-membri?vin=shown#vin-${eventId}`);
     expect((await answers())[0]).toMatchObject({ showName: true, displayName: "Ana Membru", privacyNoticeVersion: 2 });
     expect(await publicRead(eventId)).toEqual({ count: 1, names: ["Ana Membru"], others: 0 });
     // The row now draws the tick ticked, and the box «Numele tău» prefilled with the name the answer holds: the person is shown what it publishes.
@@ -472,14 +495,14 @@ describe("§827 the zone's name tick", () => {
   it("hides it on the untick, keeps the name stored and says «hidden» — and the next tick shows it again", async () => {
     const eventId = await answered();
     await redirectedTo(setNameAsMemberAction(tick(eventId, true)));
-    expect(await redirectedTo(setNameAsMemberAction(tick(eventId, false)))).toBe(`/ro/zona-membri/alergari?vin=hidden#vin-${eventId}`);
+    expect(await redirectedTo(setNameAsMemberAction(tick(eventId, false)))).toBe(`/ro/zona-membri?vin=hidden#vin-${eventId}`);
     expect((await answers())[0]).toMatchObject({ showName: false, displayName: "Ana Membru" });
     expect(await publicRead(eventId)).toEqual({ count: 1, names: [], others: 1 });
     const row = rowOf(await runs(), eventId)!;
     expect(row).not.toMatch(/<input[^>]*name="showName"[^>]*checked/);
     expect(row).toContain("numele rămâne păstrat");
     // The next tick posts what the prefilled box holds; a bare one would publish a name not shown (§812), and is refused.
-    expect(await redirectedTo(setNameAsMemberAction(tick(eventId, true)))).toBe("/ro/zona-membri/alergari?vin=name#vin-outcome");
+    expect(await redirectedTo(setNameAsMemberAction(tick(eventId, true)))).toBe("/ro/zona-membri?vin=name#vin-outcome");
     expect((await publicRead(eventId)).names).toEqual([]);
     await redirectedTo(setNameAsMemberAction(tick(eventId, true, { name: "Ana Membru" })));
     expect((await publicRead(eventId)).names).toEqual(["Ana Membru"]);
@@ -490,11 +513,11 @@ describe("§827 the zone's name tick", () => {
     const eventId = await answered();
     const row = rowOf(await runs(), eventId)!;
     expect(row).toContain('name="name"');
-    expect(await redirectedTo(setNameAsMemberAction(tick(eventId, true)))).toBe("/ro/zona-membri/alergari?vin=name#vin-outcome");
+    expect(await redirectedTo(setNameAsMemberAction(tick(eventId, true)))).toBe("/ro/zona-membri?vin=name#vin-outcome");
     expect((await answers())[0]).toMatchObject({ showName: false, displayName: null });
     expect(await runs({ vin: "name" })).toContain("Scrie numele cu care vrei să apari.");
     // With a typed name it goes through.
-    expect(await redirectedTo(setNameAsMemberAction(tick(eventId, true, { name: "  Ana  M. " })))).toBe(`/ro/zona-membri/alergari?vin=shown#vin-${eventId}`);
+    expect(await redirectedTo(setNameAsMemberAction(tick(eventId, true, { name: "  Ana  M. " })))).toBe(`/ro/zona-membri?vin=shown#vin-${eventId}`);
     expect((await answers())[0]).toMatchObject({ showName: true, displayName: "Ana M." });
   });
 
@@ -507,7 +530,7 @@ describe("§827 the zone's name tick", () => {
     expect(row).toMatch(/<input[^>]*name="name"[^>]*value="Ana"|<input[^>]*value="Ana"[^>]*name="name"/);
     expect(row).toContain("Cu bifa apari ca „Ana”");
     // A stale tab's bare tick: refused, nothing public, the account's name not lent.
-    expect(await redirectedTo(setNameAsMemberAction(tick(eventId, true)))).toBe("/ro/zona-membri/alergari?vin=name#vin-outcome");
+    expect(await redirectedTo(setNameAsMemberAction(tick(eventId, true)))).toBe("/ro/zona-membri?vin=name#vin-outcome");
     expect((await answers())[0]).toMatchObject({ showName: false, displayName: "Ana" });
     await redirectedTo(setNameAsMemberAction(tick(eventId, true, { name: "Ana" })));
     expect((await answers())[0]).toMatchObject({ showName: true, displayName: "Ana" });
@@ -534,15 +557,15 @@ describe("§827 the zone's name tick", () => {
   it("says «none» for an account with no answer (a stale page) or a malformed event, and «closed» once the run stops taking answers — but never refuses an untick", async () => {
     const eventId = await seed("Alergarea de joi");
     state.cookie = member.id;
-    expect(await redirectedTo(setNameAsMemberAction(tick(eventId, true)))).toBe("/ro/zona-membri/alergari?vin=none#vin-outcome");
-    expect(await redirectedTo(setNameAsMemberAction(tick("not-a-uuid", true)))).toBe("/ro/zona-membri/alergari?vin=none#vin-outcome");
+    expect(await redirectedTo(setNameAsMemberAction(tick(eventId, true)))).toBe("/ro/zona-membri?vin=none#vin-outcome");
+    expect(await redirectedTo(setNameAsMemberAction(tick("not-a-uuid", true)))).toBe("/ro/zona-membri?vin=none#vin-outcome");
     await redirectedTo(answerAsMemberAction(press(eventId)));
     await redirectedTo(setNameAsMemberAction(tick(eventId, true)));
     await db.update(events).set({ rsvpEnabled: false }).where(eq(events.id, eventId));
     // An untick always works, even for a run the club has since unticked.
-    expect(await redirectedTo(setNameAsMemberAction(tick(eventId, false)))).toBe(`/ro/zona-membri/alergari?vin=hidden#vin-${eventId}`);
+    expect(await redirectedTo(setNameAsMemberAction(tick(eventId, false)))).toBe(`/ro/zona-membri?vin=hidden#vin-${eventId}`);
     // Turning it on again: closed, nothing written.
-    expect(await redirectedTo(setNameAsMemberAction(tick(eventId, true, { name: "Ana Membru" })))).toBe("/ro/zona-membri/alergari?vin=closed#vin-outcome");
+    expect(await redirectedTo(setNameAsMemberAction(tick(eventId, true, { name: "Ana Membru" })))).toBe("/ro/zona-membri?vin=closed#vin-outcome");
     expect((await answers())[0].showName).toBe(false);
   });
 
@@ -554,5 +577,131 @@ describe("§827 the zone's name tick", () => {
     expect(await runs({ vin: "none" })).toContain("Nu găsim un răspuns „Vin!” de-al tău aici.");
     expect(await runs({ vin: "shown" }, "en")).toContain("Done: your name shows under “Who&#x27;s coming”.");
     expect(await runs({ vin: "name" }, "en")).toContain("Type the name you want to appear with.");
+  });
+});
+
+/**
+ * §715 amended (the owner, 2026-10-19: «And it should be a lot easier for BVR members to see this») — the zone opens on «Alergări», and under
+ * each run that takes answers «Cine vine (N)» is open, not a fold: the names of those who ticked and «și încă N». The same disclosure as the
+ * event page (§143, §812) — being a member shows no more. The next run is the first card and featured; the page reads the answers once.
+ */
+describe("§715 «Cine vine» open under each run, the next run first", () => {
+  const come = (eventId: string, email: string, displayName: string, showName: boolean) =>
+    answerRsvp(db, eventId, identityOf("account", { email, displayName, showName, locale: "ro" }), new Date());
+  const cardOf = (html: string, eventId: string) => {
+    const start = html.indexOf(`id="vin-title-${eventId}"`);
+    if (start === -1) return null;
+    const next = html.indexOf('id="vin-title-', start + 10);
+    return html.slice(start, next === -1 ? undefined : next);
+  };
+
+  it("lists the names of those who ticked and «și încă N» for the rest, open under «Vin!», in Română", async () => {
+    const eventId = await seed("Alergarea de joi");
+    await come(eventId, other.email, "Dan Altul", true);
+    await come(eventId, "ascuns@dev.test", "Persoană Secretă", false);
+    state.cookie = member.id;
+    await redirectedTo(answerAsMemberAction(press(eventId)));
+    const card = cardOf(await runs(), eventId)!;
+    // Three answered; one name is shown; the other two are counted, never named — the member's own included.
+    expect(card).toContain("Cine vine (3)");
+    expect(card).toContain('data-testid="rsvp-who"');
+    expect(card).toContain('data-open="true"');
+    expect(card).toContain("Dan Altul");
+    expect(card).toContain("și încă 2");
+    expect(card).not.toContain("Persoană Secretă");
+    expect(card).not.toContain("ascuns@dev.test");
+    // Open and always showing: a heading and a list, never a fold.
+    expect(card).not.toContain("<details");
+    expect(card).not.toContain("<summary");
+    expect(card).toMatch(/<h3[^>]*data-testid="rsvp-who-heading"/);
+    // Under «Vin!» / «Tu vii ✓», in the same card.
+    expect(card.indexOf('data-testid="zone-rsvp"')).toBeLessThan(card.indexOf('data-testid="rsvp-who"'));
+    expect(card.indexOf("Tu vii ✓")).toBeLessThan(card.indexOf("Cine vine (3)"));
+  });
+
+  it("says it in English", async () => {
+    const eventId = await seed("Alergarea de joi");
+    await come(eventId, other.email, "Dan Altul", true);
+    state.cookie = member.id;
+    const card = cardOf(await runs({}, "en"), eventId)!;
+    expect(card).toContain("Who&#x27;s coming (1)");
+    expect(card).toContain("Dan Altul");
+    expect(card).not.toContain("and 0 more");
+    expect(card).not.toContain("<details");
+  });
+
+  it("names nobody who did not tick, whoever is looking: being a member widens nothing (§143)", async () => {
+    const eventId = await seed("Alergarea de joi");
+    await come(eventId, other.email, "Dan Altul", false);
+    state.cookie = member.id;
+    const html = await runs();
+    expect(html).not.toContain("Dan Altul");
+    expect(cardOf(html, eventId)).toContain("Cine vine (1)");
+    expect(cardOf(html, eventId)).toContain("și încă 1");
+    // A colleague opening the zone sees the same: the staff read the lists in the backoffice, not here.
+    const [admin] = await db.insert(staffUsers).values({ email: "admin@dev.test", displayName: "Admin Test", role: "ADMIN" }).returning();
+    state.cookie = admin.id;
+    expect(await runs()).not.toContain("Dan Altul");
+  });
+
+  it("draws no «Cine vine» for a run nobody has answered (the row above already invites the first), and none for a run that takes no answers", async () => {
+    const empty = await seed("Fără răspunsuri");
+    const closed = await seed("Netickuit", { rsvpEnabled: false }, 3);
+    state.cookie = member.id;
+    const html = await runs();
+    expect(cardOf(html, empty)).not.toContain("rsvp-who");
+    expect(cardOf(html, empty)).toContain("Fii primul care spune că vine.");
+    expect(cardOf(html, closed)).not.toContain("rsvp-who");
+    expect(cardOf(html, closed)).not.toContain('data-testid="zone-rsvp"');
+  });
+
+  it("draws the soonest run that takes answers first and featured, and the others after it by date", async () => {
+    const soonestClosed = await seed("Mai întâi fără «Vin!»", { rsvpEnabled: false }, 1);
+    const next = await seed("Următoarea", {}, 2);
+    const later = await seed("Mai târziu", {}, 5);
+    state.cookie = member.id;
+    const html = await runs();
+    // One featured card, the next run's, with its label; it is drawn before every other.
+    expect(html.match(/data-featured="true"/g)).toHaveLength(1);
+    expect(html.match(/data-testid="members-next-run"/g)).toHaveLength(1);
+    expect(html.match(/data-testid="members-next-run-label"[^>]*>Următoarea alergare</g)).toHaveLength(1);
+    const at = (id: string) => html.indexOf(`id="vin-title-${id}"`);
+    expect(at(next)).toBeGreaterThan(-1);
+    expect(at(next)).toBeLessThan(at(soonestClosed));
+    expect(at(soonestClosed)).toBeLessThan(at(later));
+    expect(html.indexOf('data-testid="members-next-run"')).toBeLessThan(at(next));
+    expect(await runs({}, "en")).toContain("The next run");
+  });
+
+  it("features no card while no run takes answers: the order is the date's", async () => {
+    await seed("Prima", { rsvpEnabled: false }, 1);
+    await seed("A doua", { rsvpEnabled: false }, 2);
+    state.cookie = member.id;
+    const html = await runs();
+    expect(html).not.toContain('data-featured="true"');
+    expect(html).not.toContain("members-next-run");
+    expect(html.indexOf("Prima")).toBeLessThan(html.indexOf("A doua"));
+  });
+
+  it("reads the answers ONCE for the whole page: one notice read and one public read per offered run, gathered in one call", async () => {
+    const ids = [await seed("Prima", {}, 2), await seed("A doua", {}, 3), await seed("A treia", {}, 4), await seed("Netickuit", { rsvpEnabled: false }, 5)];
+    await come(ids[0], other.email, "Dan Altul", true);
+    state.cookie = member.id;
+    const html = await runs();
+    expect(spied.gathered).toHaveLength(1);
+    expect([...spied.gathered[0]].sort()).toEqual([...ids.slice(0, 3)].sort());
+    expect(spied.notice).toBe(1);
+    expect([...spied.publicReads].sort()).toEqual([...ids.slice(0, 3)].sort());
+    expect(cardOf(html, ids[0])).toContain("Dan Altul");
+  });
+
+  it("draws no list while the database is away, and none before the notice describes «Vin!»", async () => {
+    const eventId = await seed("Alergarea de joi");
+    await come(eventId, other.email, "Dan Altul", true);
+    state.cookie = member.id;
+    await approveNotice(false, 2);
+    fakeNextCache.reset();
+    expect(await runs()).not.toContain("Dan Altul");
+    expect(spied.gathered).toHaveLength(0);
   });
 });

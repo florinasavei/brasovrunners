@@ -106,6 +106,7 @@ async function rsvpsOrNone(account: { email: string }, all: readonly PublicEvent
  * while the database is away (`readOrWhileAway`): a card with no list rather than a list of zero.
  */
 async function whoComesOrNone(runIds: readonly string[]): Promise<ReadonlyMap<string, PublicRsvps>> {
+  if (runIds.length === 0) return new Map();
   return readOrWhileAway(() => readPublicRsvpsFor(runIds), new Map<string, PublicRsvps>());
 }
 
