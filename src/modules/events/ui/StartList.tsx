@@ -21,7 +21,7 @@ import { hiddenListCounting, hiddenListShownPublicly } from "@/modules/registrat
 import { publicListClubOf } from "@/modules/registrations/domain/public-list-club";
 import { LIST_STATE_KEYS, type PublicListGroup } from "@/modules/registrations/domain/public-list-states";
 import { START_LIST_PAGE_SIZE, startListPage } from "@/modules/registrations/domain/start-list-page";
-import { DISCLOSURE_OPEN_ARROW, DISCLOSURE_SUMMARY_SX, FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
+import { DISCLOSURE_OPEN_ARROW, DISCLOSURE_SUMMARY_SX, FOLD_GLYPH_INLINE_SX } from "@/shared/ui/disclosure";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
 import { DENSITY } from "@/theme/density";
 import type { PublicEvent } from "../repository";
@@ -43,7 +43,12 @@ const NO_NUMBER = "—";
  * for everybody else.
  *
  * A native disclosure, closed, with the count in its summary: a page whose bottom third is a
- * list of names reads like a list of names, and the event page is about the event.
+ * list of names reads like a list of names, and the event page is about the event. **The same fold as
+ * «Condiții de participare» and the «Vii?» card** (§498, §812; the owner, 2026-10-19: «Cine vine
+ * collapsed»): its bar is a real `h2` in the `<summary>`, «Cine vine (N)» on its line (just «Cine
+ * vine» when the count is not public), the table, the legend and the notes inside. It opens by itself
+ * only on a pager page (`?lista=2`), or for the fragment `#start-list-title`. «Clasament» (§809) is
+ * not a fold: after a race the results are the point of the page.
  *
  * ## A table, and why it is one (§250)
  *
@@ -359,11 +364,16 @@ async function startListOrThrow({ event, page: requestedPage }: StartListProps) 
         ...DISCLOSURE_OPEN_ARROW,
       }}
     >
-      <Typography component="summary" id="start-list-title" variant="h2" sx={{ fontSize: "1.25rem" }}>
-        <GroupsIcon aria-hidden sx={FOLD_GLYPH_SX} />
-        {/* «Arată public numărătoarea» off (§647): the title without its number. */}
-        {countPublic ? t("startList.titleCount", { count: headline.count }) : t("startList.title")}
-      </Typography>
+      {/* The fold's bar, the shape of «Condiții de participare» (§498, §812): a real h2 inside the summary, so the heading
+          stays in a screen reader's list while the fold is shut, and `#start-list-title` — the pager's anchor — names the h2:
+          the browser reveals the fold around it, and `OpenFoldFromHash` (mounted by the page) does for the rest. */}
+      <Box component="summary">
+        <Typography component="h2" id="start-list-title" variant="h2" sx={{ fontSize: "1.25rem" }}>
+          <GroupsIcon aria-hidden sx={FOLD_GLYPH_INLINE_SX} />
+          {/* «Arată public numărătoarea» off (§647): the title without its number. */}
+          {countPublic ? t("startList.titleCount", { count: headline.count }) : t("startList.title")}
+        </Typography>
+      </Box>
 
       {view.total === 0 ? (
         <>

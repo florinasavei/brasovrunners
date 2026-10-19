@@ -14,6 +14,7 @@ import CheckboxField from "@/shared/ui/CheckboxField";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import type { RsvpIslandState } from "../remembered-actions";
 import { islandFace, rememberedHeading } from "../domain/island";
+import { setRsvpGoing } from "./going-store";
 
 /** The words the island draws, handed over by the Server Component as strings: the island carries no messages of its own. */
 export type RsvpIslandLabels = {
@@ -105,6 +106,12 @@ export default function RsvpRemembered({ slug, locale, labels, actions, children
     // The actions are the server's, handed over afresh at every refresh of the page: the state is asked once per address and page, not once per refresh.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [masked, slug, locale]);
+
+  // The closed fold's line says «Tu vii ✓» (§812) as soon as this browser's state is known, and drops it when the answer or the browser is forgotten.
+  const going = state !== null && state.remembered && state.offered && state.going;
+  useEffect(() => {
+    setRsvpGoing(slug, going);
+  }, [slug, going]);
 
   // The typed form: no hint, no JavaScript, a stale hint, an event that takes no answer from this browser, or a server that failed.
   if (islandFace({ hasHint: hint !== null, readFailed, state }) === "typed" || !hint) return <>{children}</>;

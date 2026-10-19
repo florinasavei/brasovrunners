@@ -15,6 +15,7 @@ import { routing } from "@/i18n/routing";
 import { tokenAttemptAllowed } from "@/modules/action-tokens/throttle";
 import { findPublishedEventBySlug } from "@/modules/events/repository";
 import { readRsvpLink } from "@/modules/rsvp/rsvp";
+import AutoConfirm from "@/modules/rsvp/ui/AutoConfirm";
 import { isWithdrawnProof } from "@/modules/rsvp/withdrawn-proof";
 import SubmitButton from "@/shared/ui/SubmitButton";
 import { TAP_TARGET } from "@/shared/ui/tap-target";
@@ -39,6 +40,13 @@ export const metadata: Metadata = { robots: { index: false, follow: false } };
  * (`actions.ts`) that spends the link. A link already used, replaced or past its life says so in one sentence and points at the
  * event's page; one that is unknown says so and points at the listing. The read is throttled per link, as every token page is
  * (§19.4, `tokenAttemptAllowed`).
+ *
+ * **«Da, vin» presses itself in a browser** (§812, amending §811; the owner, 2026-10-19: «Asta ar trebui să se auto-bifeze când
+ * deschid»). The page above is unchanged — the sentence, the POST form, the button — and, for a live `RSVP_CONFIRM` link whose answer
+ * is not counted yet, the form is wrapped in the one island that presses that button once a person is looking at the page
+ * (`AutoConfirm`). This GET still writes nothing and does not know whether the island will run: a scanner that fetches the link sees
+ * the button and counts nobody. A spent, expired, withdrawn or already-counted link has no island, and `RSVP_WITHDRAW` is always a press
+ * (it takes something away).
  */
 export default async function RsvpLinkPage({ params, searchParams }: Props) {
   const { locale, token } = await params;
@@ -84,6 +92,16 @@ export default async function RsvpLinkPage({ params, searchParams }: Props) {
 
   const link = invalid !== undefined || !(await tokenAttemptAllowed(db, token, now)) ? null : await readRsvpLink(db, token, now);
   const live = link?.state === "live" ? link : null;
+  // «Da, vin»: a POST, so the GET above counts nobody (§12.8); the island may press it, a person always can.
+  const confirmForm = (
+    <form action={confirmRsvpAction}>
+      <input type="hidden" name="locale" value={locale} />
+      <input type="hidden" name="token" value={token} />
+      <SubmitButton label={t("confirmButton")} pendingLabel={t("confirmPending")} size="large">
+        <EventAvailableIcon />
+      </SubmitButton>
+    </form>
+  );
 
   return (
     <Container id="main" component="main" maxWidth="sm" sx={{ py: { xs: DENSITY.pagePadY, sm: 3 } }}>
@@ -118,13 +136,13 @@ export default async function RsvpLinkPage({ params, searchParams }: Props) {
       ) : live.purpose === "RSVP_CONFIRM" ? (
         <Stack spacing={2} sx={{ alignItems: "flex-start" }}>
           <Typography data-testid="rsvp-confirm-intro">{live.confirmed ? t("confirmAlready", { event: live.title }) : t("confirmIntro", { event: live.title })}</Typography>
-          <form action={confirmRsvpAction}>
-            <input type="hidden" name="locale" value={locale} />
-            <input type="hidden" name="token" value={token} />
-            <SubmitButton label={t("confirmButton")} pendingLabel={t("confirmPending")} size="large">
-              <EventAvailableIcon />
-            </SubmitButton>
-          </form>
+          {/* The island only where there is something to count: an answer already counted keeps its button and its sentence. */}
+          {live.confirmed ? confirmForm : <AutoConfirm>{confirmForm}</AutoConfirm>}
+          {!live.confirmed && (
+            <Typography variant="body2" data-testid="rsvp-confirm-auto">
+              {t("confirmAutoNote")}
+            </Typography>
+          )}
           <Typography variant="body2" color="text.secondary">
             {t("rememberNote")}
           </Typography>

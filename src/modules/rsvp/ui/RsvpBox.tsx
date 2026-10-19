@@ -7,6 +7,7 @@ import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import { answerRsvpAction, requestRsvpWithdrawAction } from "@/app/[locale]/events/[slug]/actions";
+import { countForm } from "@/i18n/count-form";
 import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { BOT_CHECK_SLOT_SX } from "@/modules/registrations/domain/turnstile-widget";
@@ -18,7 +19,8 @@ import { DISCLOSURE_OPEN_ARROW, DISCLOSURE_SUMMARY_SX, FOLD_GLYPH_INLINE_SX } fr
 import SubmitButton from "@/shared/ui/SubmitButton";
 import { DENSITY } from "@/theme/density";
 import { RSVP_BOX_ID, type RsvpOutcome } from "../rsvp-box";
-import RsvpCount from "./RsvpCount";
+import RsvpCount, { readRsvpsOf } from "./RsvpCount";
+import RsvpSummary from "./RsvpSummary";
 import { rsvpForgetAction, rsvpGoAction, rsvpLeaveAction, rsvpStateAction } from "../remembered-actions";
 import RsvpRemembered from "./RsvpRemembered";
 
@@ -32,6 +34,14 @@ import RsvpRemembered from "./RsvpRemembered";
  * it works — a Server Component around a Server Action, the honeypot and the rendering time riding along as hidden fields, the
  * Turnstile widget when the club switched it on, the answer a sentence after a redirect, **the same sentence whatever the address
  * turned out to mean** — plus a tick, «Vreau să apar cu numele», which is the person's own consent to a public name (§143, §396).
+ *
+ * **A closed fold since §812** (the owner, 2026-10-19: «Asta ar trebui să fie collapsed, ca și condițiile de participare»): the same
+ * `<details>` as «Condiții de participare» (`EventPageView`) — the 44-pixel bar, the glyph, a real `h2` in the summary — closed on
+ * arrival, with what a reader decides by on its line: «Vii? · 3 vin», «Vii? · Fii primul care spune că vine.» when nobody has answered,
+ * «Vii? · Tu vii ✓ · 3 vin» once the island knows this browser did (`RsvpSummary`, `domain/summary.ts`). Opened: the form (or the one-tap
+ * state), its help, «Nu mai vin», then «Vin (N)» with the names. The anchor `#vin` is the fold's own id, so a link to it — the
+ * calendar's «Vin! →», the listing's chip, the link page's landing — opens it (`OpenFoldFromHash`, mounted by the page), and the answer
+ * a post leaves in the address (`?vin=…`) opens it on the server, or the sentence would sit behind a closed bar.
  *
  * Without JavaScript the typed form stands and works. The one client island (`RsvpRemembered`) wraps it: a browser that used a
  * «Da, vin» link carries a hint cookie, and the island swaps the typed form for one tap. The page stays static for everybody.
@@ -52,6 +62,13 @@ export default async function RsvpBox({
 }) {
   const t = await getTranslations("Event");
   const siteKey = turnstileSiteKey();
+  // Read once: the closed line and the count card inside say the same number, and a database that is away says neither (§281).
+  const rsvps = await readRsvpsOf(eventId);
+  const summaryWords = {
+    countText: rsvps !== null && rsvps.count > 0 ? t(`rsvp.chip.${countForm(rsvps.count, locale)}`, { count: rsvps.count }) : null,
+    emptyText: t("rsvp.countEmpty"),
+    goingText: t("rsvp.going"),
+  };
 
   const labels = {
     rememberedAs: t.raw("rsvp.rememberedAs") as string,
@@ -67,114 +84,130 @@ export default async function RsvpBox({
   };
 
   return (
-    <>
+    <Box component="section" aria-labelledby={`${RSVP_BOX_ID}-heading`} sx={{ mt: { xs: DENSITY.gapSm, sm: 3 } }}>
       <Box
+        component="details"
         id={RSVP_BOX_ID}
-        component="section"
-        aria-labelledby={`${RSVP_BOX_ID}-heading`}
         data-testid="rsvp-box"
-        sx={{ mt: { xs: DENSITY.gapSm, sm: 3 }, p: 2, border: 1, borderColor: "divider", borderRadius: 2, maxWidth: 480, scrollMarginTop: 16 }}
+        // Closed on arrival, like «Condiții de participare»; open when the address carries an answer to read (`?vin=…`).
+        open={outcome !== null || undefined}
+        sx={{
+          border: 1,
+          borderColor: "divider",
+          borderRadius: 2,
+          px: 2,
+          scrollMarginTop: 16,
+          "& > summary": { ...DISCLOSURE_SUMMARY_SX, py: 1.5 },
+          ...DISCLOSURE_OPEN_ARROW,
+          "&[open]": { pb: 2 },
+        }}
       >
-        <Typography id={`${RSVP_BOX_ID}-heading`} variant="h3" component="h2" sx={{ fontSize: "1rem", fontWeight: 700, mb: 0.5 }}>
-          {t("rsvp.heading")}
-        </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
-          {t("rsvp.intro")}
-        </Typography>
+        <Box component="summary">
+          <Typography id={`${RSVP_BOX_ID}-heading`} component="h2" variant="h2" sx={{ fontSize: "1.25rem" }}>
+            <EventAvailableIcon aria-hidden sx={FOLD_GLYPH_INLINE_SX} />
+            {t("rsvp.heading")}
+            <RsvpSummary slug={slug} words={summaryWords} countKnown={rsvps !== null} />
+          </Typography>
+        </Box>
+        <Box sx={{ maxWidth: 480 }}>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+            {t("rsvp.intro")}
+          </Typography>
 
-        {outcome === "sent" ? (
-          // The same sentence whether the address was new, already counted or held back by the throttle (BR-REQ-031-01
-          // criterion 3): the box is not an oracle for who answered.
-          <>
-            <Alert severity="success" role="status" data-testid="rsvp-sent">
-              {t("rsvp.done")}
-            </Alert>
-            {/* The email is still to come: where to look for it (§619). */}
-            <Alert severity="info" sx={{ mt: 1.5 }} data-testid="spam-hint">
-              {await spamHintWords()}
-            </Alert>
-          </>
-        ) : (
-          <RsvpRemembered slug={slug} locale={locale} labels={labels} actions={{ state: rsvpStateAction, go: rsvpGoAction, leave: rsvpLeaveAction, forget: rsvpForgetAction }}>
-            {outcome === "withdrawSent" && (
-              <Alert severity="info" role="status" sx={{ mb: 1.5 }} data-testid="rsvp-withdraw-sent">
-                {t("rsvp.withdrawDone")}
+          {outcome === "sent" ? (
+            // The same sentence whether the address was new, already counted or held back by the throttle (BR-REQ-031-01
+            // criterion 3): the box is not an oracle for who answered.
+            <>
+              <Alert severity="success" role="status" data-testid="rsvp-sent">
+                {t("rsvp.done")}
               </Alert>
-            )}
-            <form action={answerRsvpAction}>
-              <Stack spacing={1.5}>
-                <input type="hidden" name="locale" value={locale} />
-                <input type="hidden" name="slug" value={slug} />
-                {/* Bots fill every field; a human never sees or fills this one. */}
-                <input type="text" name="honeypot" autoComplete="off" tabIndex={-1} aria-hidden="true" style={{ position: "absolute", left: "-9999px", width: 1, height: 1 }} />
-                <input type="hidden" name="renderedAt" value={renderedAt.toISOString()} />
-
-                {(outcome === "invalid" || outcome === "captcha") && (
-                  <Alert severity="error" role="alert">
-                    {t(`rsvp.${outcome}`)}
-                  </Alert>
-                )}
-
-                <TextField
-                  name="email"
-                  type="email"
-                  label={t("rsvp.email")}
-                  required
-                  fullWidth
-                  autoComplete="email"
-                  slotProps={{ htmlInput: { maxLength: 320 } }}
-                  error={outcome === "invalid"}
-                />
-                <TextField name="name" label={t("rsvp.name")} fullWidth autoComplete="name" slotProps={{ htmlInput: { maxLength: 80 } }} />
-                <CheckboxField name="showName">{t("rsvp.showName")}</CheckboxField>
-
-                {/* Cloudflare Turnstile, when the club switched it on (§97): the same explicit widget as every other form (§185, §518, §577). */}
-                {siteKey && (
-                  <Box sx={BOT_CHECK_SLOT_SX}>
-                    <BotCheck siteKey={siteKey} locale={locale} attempt={renderedAt.toISOString()} notice />
-                  </Box>
-                )}
-
-                <SubmitButton label={t("rsvp.submit")} pendingLabel={t("rsvp.submitting")} size="large">
-                  <EventAvailableIcon />
-                </SubmitButton>
-
-                <Typography variant="body2" color="text.secondary">
-                  {t("rsvp.note")} <Link href="/legal/privacy">{t("rsvp.privacy")}</Link>
-                </Typography>
-              </Stack>
-            </form>
-
-            {/* «Nu mai vin»: the withdraw link by email, never saying whether the address is on the list (BR-REQ-031-01 criterion 3). */}
-            <Box
-              component="details"
-              data-testid="rsvp-withdraw"
-              sx={{ mt: 1.5, "& > summary": { ...DISCLOSURE_SUMMARY_SX, minHeight: 44, py: 0.5, fontSize: "0.9375rem" }, ...DISCLOSURE_OPEN_ARROW }}
-            >
-              <Box component="summary">
-                <EventBusyIcon aria-hidden sx={FOLD_GLYPH_INLINE_SX} />
-                {t("rsvp.withdrawSummary")}
-              </Box>
-              <form action={requestRsvpWithdrawAction}>
-                <Stack spacing={1.5} sx={{ pt: 1, pb: 0.5 }}>
+              {/* The email is still to come: where to look for it (§619). */}
+              <Alert severity="info" sx={{ mt: 1.5 }} data-testid="spam-hint">
+                {await spamHintWords()}
+              </Alert>
+            </>
+          ) : (
+            <RsvpRemembered slug={slug} locale={locale} labels={labels} actions={{ state: rsvpStateAction, go: rsvpGoAction, leave: rsvpLeaveAction, forget: rsvpForgetAction }}>
+              {outcome === "withdrawSent" && (
+                <Alert severity="info" role="status" sx={{ mb: 1.5 }} data-testid="rsvp-withdraw-sent">
+                  {t("rsvp.withdrawDone")}
+                </Alert>
+              )}
+              <form action={answerRsvpAction}>
+                <Stack spacing={1.5}>
                   <input type="hidden" name="locale" value={locale} />
                   <input type="hidden" name="slug" value={slug} />
+                  {/* Bots fill every field; a human never sees or fills this one. */}
                   <input type="text" name="honeypot" autoComplete="off" tabIndex={-1} aria-hidden="true" style={{ position: "absolute", left: "-9999px", width: 1, height: 1 }} />
                   <input type="hidden" name="renderedAt" value={renderedAt.toISOString()} />
-                  <Typography variant="body2" color="text.secondary">
-                    {t("rsvp.withdrawIntro")}
-                  </Typography>
-                  <TextField name="withdrawEmail" type="email" label={t("rsvp.email")} required fullWidth autoComplete="email" slotProps={{ htmlInput: { maxLength: 320 } }} />
-                  <SubmitButton label={t("rsvp.withdrawSubmit")} pendingLabel={t("rsvp.withdrawSubmitting")} variant="outlined">
-                    <EventBusyIcon />
+
+                  {(outcome === "invalid" || outcome === "captcha") && (
+                    <Alert severity="error" role="alert">
+                      {t(`rsvp.${outcome}`)}
+                    </Alert>
+                  )}
+
+                  <TextField
+                    name="email"
+                    type="email"
+                    label={t("rsvp.email")}
+                    required
+                    fullWidth
+                    autoComplete="email"
+                    slotProps={{ htmlInput: { maxLength: 320 } }}
+                    error={outcome === "invalid"}
+                  />
+                  <TextField name="name" label={t("rsvp.name")} fullWidth autoComplete="name" slotProps={{ htmlInput: { maxLength: 80 } }} />
+                  <CheckboxField name="showName">{t("rsvp.showName")}</CheckboxField>
+
+                  {/* Cloudflare Turnstile, when the club switched it on (§97): the same explicit widget as every other form (§185, §518, §577). */}
+                  {siteKey && (
+                    <Box sx={BOT_CHECK_SLOT_SX}>
+                      <BotCheck siteKey={siteKey} locale={locale} attempt={renderedAt.toISOString()} notice />
+                    </Box>
+                  )}
+
+                  <SubmitButton label={t("rsvp.submit")} pendingLabel={t("rsvp.submitting")} size="large">
+                    <EventAvailableIcon />
                   </SubmitButton>
+
+                  <Typography variant="body2" color="text.secondary">
+                    {t("rsvp.note")} <Link href="/legal/privacy">{t("rsvp.privacy")}</Link>
+                  </Typography>
                 </Stack>
               </form>
-            </Box>
-          </RsvpRemembered>
-        )}
+
+              {/* «Nu mai vin»: the withdraw link by email, never saying whether the address is on the list (BR-REQ-031-01 criterion 3). */}
+              <Box
+                component="details"
+                data-testid="rsvp-withdraw"
+                sx={{ mt: 1.5, "& > summary": { ...DISCLOSURE_SUMMARY_SX, minHeight: 44, py: 0.5, fontSize: "0.9375rem" }, ...DISCLOSURE_OPEN_ARROW }}
+              >
+                <Box component="summary">
+                  <EventBusyIcon aria-hidden sx={FOLD_GLYPH_INLINE_SX} />
+                  {t("rsvp.withdrawSummary")}
+                </Box>
+                <form action={requestRsvpWithdrawAction}>
+                  <Stack spacing={1.5} sx={{ pt: 1, pb: 0.5 }}>
+                    <input type="hidden" name="locale" value={locale} />
+                    <input type="hidden" name="slug" value={slug} />
+                    <input type="text" name="honeypot" autoComplete="off" tabIndex={-1} aria-hidden="true" style={{ position: "absolute", left: "-9999px", width: 1, height: 1 }} />
+                    <input type="hidden" name="renderedAt" value={renderedAt.toISOString()} />
+                    <Typography variant="body2" color="text.secondary">
+                      {t("rsvp.withdrawIntro")}
+                    </Typography>
+                    <TextField name="withdrawEmail" type="email" label={t("rsvp.email")} required fullWidth autoComplete="email" slotProps={{ htmlInput: { maxLength: 320 } }} />
+                    <SubmitButton label={t("rsvp.withdrawSubmit")} pendingLabel={t("rsvp.withdrawSubmitting")} variant="outlined">
+                      <EventBusyIcon />
+                    </SubmitButton>
+                  </Stack>
+                </form>
+              </Box>
+            </RsvpRemembered>
+          )}
+          <RsvpCount eventId={eventId} rsvps={rsvps} />
+        </Box>
       </Box>
-      <RsvpCount eventId={eventId} />
-    </>
+    </Box>
   );
 }

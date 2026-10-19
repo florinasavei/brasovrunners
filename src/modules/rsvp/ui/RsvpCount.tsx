@@ -4,6 +4,7 @@ import Typography from "@mui/material/Typography";
 import { getTranslations } from "next-intl/server";
 import { cachedFirstRsvpNoticeVersion, cachedPublicRsvps } from "@/modules/public-cache/reads";
 import { readOrWhileAway } from "@/modules/resilience/optional-read";
+import type { PublicRsvps } from "@/modules/rsvp/rsvp";
 import { FOLD_GLYPH_SX } from "@/shared/ui/disclosure";
 import { DENSITY } from "@/theme/density";
 
@@ -17,10 +18,18 @@ import { DENSITY } from "@/theme/density";
  * A Server Component on the static event page (§549): the read is the public cache's, filed under "places", and a confirmation
  * or a withdrawal expires it at once. While the database is away it draws nothing (§281) — a count that cannot be asked is not
  * a count of zero. The wrapper carries `data-nosnippet`, as the start list's does: names stay out of search snippets.
+ *
+ * **Inside the «Vii?» fold since §812** (the owner, 2026-10-19: «collapsed, ca și condițiile de participare»), under the form, a named
+ * sub-card whose heading is an `h3` under the fold's `h2`. `RsvpBox` reads the answers once — the fold's closed line says the
+ * same count — and hands them here as `rsvps`; read alone (no `rsvps`), it asks the cache itself.
  */
-export default async function RsvpCount({ eventId }: { eventId: string }) {
+export async function readRsvpsOf(eventId: string): Promise<PublicRsvps | null> {
+  return readOrWhileAway(async () => cachedPublicRsvps(eventId, await cachedFirstRsvpNoticeVersion()), null);
+}
+
+export default async function RsvpCount({ eventId, rsvps: given }: { eventId: string; rsvps?: PublicRsvps | null }) {
   const t = await getTranslations("Event");
-  const rsvps = await readOrWhileAway(async () => cachedPublicRsvps(eventId, await cachedFirstRsvpNoticeVersion()), null);
+  const rsvps = given === undefined ? await readRsvpsOf(eventId) : given;
   if (rsvps === null) return null;
 
   return (
@@ -29,7 +38,7 @@ export default async function RsvpCount({ eventId }: { eventId: string }) {
       data-nosnippet=""
       data-testid="rsvp-count"
       aria-labelledby="rsvp-count-title"
-      sx={{ mt: { xs: DENSITY.gapSm, sm: 2 }, p: 2, border: 1, borderColor: "divider", borderRadius: 2, maxWidth: 480 }}
+      sx={{ mt: { xs: DENSITY.gapSm, sm: 2 }, p: 2, border: 1, borderColor: "divider", borderRadius: 2 }}
     >
       {rsvps.count === 0 ? (
         <Typography id="rsvp-count-title" variant="body1" data-testid="rsvp-count-empty" sx={{ fontWeight: 600 }}>
@@ -37,7 +46,7 @@ export default async function RsvpCount({ eventId }: { eventId: string }) {
         </Typography>
       ) : (
         <>
-          <Typography id="rsvp-count-title" component="h2" variant="h3" data-testid="rsvp-count-heading" sx={{ fontSize: "1.0625rem", fontWeight: 700, display: "flex", alignItems: "center", gap: 1 }}>
+          <Typography id="rsvp-count-title" component="h3" variant="h3" data-testid="rsvp-count-heading" sx={{ fontSize: "1.0625rem", fontWeight: 700, display: "flex", alignItems: "center", gap: 1 }}>
             <GroupsIcon aria-hidden sx={FOLD_GLYPH_SX} />
             {t("rsvp.countHeading", { count: rsvps.count })}
           </Typography>
