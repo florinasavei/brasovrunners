@@ -14,7 +14,8 @@ import { consumeRateLimit } from "@/modules/rate-limit/service";
 import { emailBucketKey } from "@/modules/rate-limit/domain/key";
 import { DomainError } from "@/shared/errors/domain-error";
 import { cleanDisplayName, isConsistent, type RsvpIdentity } from "./domain/identity";
-import { RSVP_CONFIRM_HOURS } from "./domain/link-life";
+import { RSVP_CONFIRM_HOURS, RSVP_LINK_GRACE_DAYS } from "./domain/link-life";
+import { readRefuseLink } from "./ask-refusal";
 import { rsvpOffered } from "./domain/offered";
 import { publicRsvpName } from "./domain/public-name";
 
@@ -44,9 +45,6 @@ import { publicRsvpName } from "./domain/public-name";
  */
 
 export { RSVP_CONFIRM_HOURS };
-
-/** A withdraw link outlives the start it was sent with by this much; the event's start at the press decides (a moved event keeps its links). */
-const WITHDRAW_LINK_GRACE_DAYS = 60;
 
 /** One message per address and event in this window — the form answers the same sentence either way. */
 const CONFIRM_THROTTLE_SCOPE = "rsvp-confirm" as const;
@@ -273,15 +271,21 @@ type EventRsvpTokenPurpose = (typeof eventRsvpTokens.$inferSelect)["purpose"];
 /**
  * Mint the links of one `RSVP_CONFIRM` message, at the send (§14.5): the secret goes into that email and nowhere else, and a
  * newer link of the same purpose supersedes the older. `confirm` is minted only when asked (the "confirm" message of a row
- * still unconfirmed); `withdraw` always, valid until the event's start; `refuse` (§NNN, «Nu mă mai întreba la seria aceasta») only
- * in the «Vii?» question an earlier answerer receives, with the withdraw link's life. Null when the event has started: nothing to answer.
+ * still unconfirmed); `withdraw` always, valid until the event's start. Null when the event has started: nothing to answer.
+ *
+ * `confirmUntilStart` (§NNN) is the «Vii?» question's «Vin»: the club may now send the question up to seven days ahead, so its button lives
+ * until the event's start instead of the 48 hours of a confirmation message — a person who presses it the evening before is counted by
+ * the one tap the question exists for, not sent to type their address again. (The refusal link is not minted here: `ask-refusal.ts`,
+ * a table of its own, so it outlives the answer.)
  */
 export async function mintRsvpLinks<T extends Record<string, unknown>>(
   db: Database<T>,
-  params: { rsvpId: string; startsAt: Date; confirm: boolean; refuse?: boolean; now: Date },
-): Promise<{ confirm: string | null; withdraw: string; refuse: string | null } | null> {
+  params: { rsvpId: string; startsAt: Date; confirm: boolean; confirmUntilStart?: boolean; now: Date },
+): Promise<{ confirm: string | null; withdraw: string } | null> {
   if (params.startsAt.getTime() <= params.now.getTime()) return null;
-  const confirmExpires = new Date(Math.min(params.now.getTime() + RSVP_CONFIRM_HOURS * 3_600_000, params.startsAt.getTime()));
+  const confirmExpires = params.confirmUntilStart
+    ? params.startsAt
+    : new Date(Math.min(params.now.getTime() + RSVP_CONFIRM_HOURS * 3_600_000, params.startsAt.getTime()));
   return db.transaction(async (tx) => {
     const mint = async (purpose: EventRsvpTokenPurpose, expiresAt: Date): Promise<string> => {
       const secret = generateTokenSecret();
@@ -292,25 +296,25 @@ export async function mintRsvpLinks<T extends Record<string, unknown>>(
       await tx.insert(eventRsvpTokens).values({ rsvpId: params.rsvpId, purpose, tokenHash: hashTokenSecret(secret), expiresAt, createdAt: params.now });
       return secret;
     };
-    const lives = new Date(params.startsAt.getTime() + WITHDRAW_LINK_GRACE_DAYS * 86_400_000);
+    const lives = new Date(params.startsAt.getTime() + RSVP_LINK_GRACE_DAYS * 86_400_000);
     return {
       confirm: params.confirm ? await mint("RSVP_CONFIRM", confirmExpires) : null,
       // The start can move after the message left: the link lives generously and `consumeRsvpToken` asks the event's start as it is then.
       withdraw: await mint("RSVP_WITHDRAW", lives),
-      refuse: params.refuse ? await mint("RSVP_REFUSE", lives) : null,
     };
   });
 }
 
 /** What a link's page needs: the answer's event, in the language the answer was given in, and what the link would do. */
 export type RsvpLink = {
-  purpose: EventRsvpTokenPurpose;
+  /** `RSVP_REFUSE` (§NNN) is the question's «Nu mă mai întreba la seria aceasta»: not an answer's link (`rsvp_refuse_tokens`), so no answer row stands behind it. */
+  purpose: EventRsvpTokenPurpose | "RSVP_REFUSE";
   /**
    * `live`: pressing the button would act. `used`: spent, or replaced by a newer email. `expired`: the link's own life ran out while
    * the event is still ahead (the person can answer again from the page). `over`: the event has started, so no answer is taken.
    */
   state: "live" | "used" | "expired" | "over";
-  rsvpId: string;
+  rsvpId: string | null;
   eventId: string;
   locale: "ro" | "en";
   title: string;
@@ -363,7 +367,8 @@ export async function readRsvpLink<T extends Record<string, unknown>>(
       .innerJoin(eventTranslations, and(eq(eventTranslations.eventId, events.id), eq(eventTranslations.locale, eventRsvps.locale)))
       .where(eq(eventRsvpTokens.tokenHash, hashTokenSecret(secret)))
       .limit(1);
-    if (!row) return null;
+    // Not one of the answer's links: perhaps the question's refusal link, which has a table of its own (§NNN).
+    if (!row) return readRefuseLink(tx, secret, now);
     const over = row.startsAt !== null && row.startsAt.getTime() <= now.getTime();
     const state = row.usedAt !== null || row.invalidatedAt !== null ? "used" : over ? "over" : row.expiresAt.getTime() <= now.getTime() ? "expired" : "live";
     return {
@@ -390,8 +395,8 @@ export async function consumeRsvpToken<T extends Record<string, unknown>>(
   now: Date,
 ): Promise<string | null> {
   if (!isWellFormedTokenSecret(secret)) return null;
-  if (purpose === "RSVP_WITHDRAW" || purpose === "RSVP_REFUSE") {
-    // «Nu mai vin» (and «Nu mă mai întreba», §NNN) work until the event's start as it is now — not as it was when the email left (a moved event moves its links).
+  if (purpose === "RSVP_WITHDRAW") {
+    // «Nu mai vin» works until the event's start as it is now — not as it was when the email left (a moved event moves its links).
     const [event] = await tx
       .select({ startsAt: events.startsAt })
       .from(eventRsvpTokens)

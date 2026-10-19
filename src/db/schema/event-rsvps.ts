@@ -47,11 +47,15 @@ export const eventRsvps = pgTable(
     // Set when the row was made by the «Vii?» email (§818) for a newsletter subscriber, before any press: the page of its two
     // links then offers the optional name and says «Bine, nu te numărăm» for «Nu vin». Null for an answer typed on the page.
     askedAt: timestamp("asked_at", { withTimezone: true }),
+    // Whom the question was sent as (§NNN): `SUBSCRIBER` (a newsletter subscriber of the topic) or `ANSWERER` (an earlier answerer). Null for an
+    // answer typed on the page. A «Vin» pressed in a subscriber's question is an earlier answer only while that address still receives the topic.
+    askedBasis: text("asked_basis"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
     unique("event_rsvps_event_canonical_email_unique").on(t.eventId, t.canonicalEmail),
     check("event_rsvps_display_name_length", sql`${t.displayName} IS NULL OR char_length(${t.displayName}) <= 80`),
+    check("event_rsvps_asked_basis_known", sql`${t.askedBasis} IS NULL OR ${t.askedBasis} IN ('SUBSCRIBER', 'ANSWERER')`),
     // The retention sweep's and the person's-data reads: by identity, across events.
     index("event_rsvps_canonical_email_idx").on(t.canonicalEmail),
   ],
@@ -60,11 +64,12 @@ export const eventRsvps = pgTable(
 export type EventRsvp = typeof eventRsvps.$inferSelect;
 
 /** The two links of the message: «Da, vin» confirms the answer; «Nu vin / Nu mai vin» takes it back. */
-export const eventRsvpTokenPurpose = pgEnum("event_rsvp_token_purpose", ["RSVP_CONFIRM", "RSVP_WITHDRAW", "RSVP_REFUSE"]);
+export const eventRsvpTokenPurpose = pgEnum("event_rsvp_token_purpose", ["RSVP_CONFIRM", "RSVP_WITHDRAW"]);
 
 /**
- * (`RSVP_REFUSE`, §NNN, is a third link, minted only in the «Vii?» question an earlier answerer receives: «Nu mă mai întreba la seria
- * aceasta», lives until the event's start like «Nu vin».)
+ * (The third link of the «Vii?» question an earlier answerer receives, «Nu mă mai întreba la seria aceasta», is NOT in this table: it must
+ * outlive the answer row — «Nu vin» deletes that row, and a link that went with it would break the promise that a person may object at any
+ * time. It is `rsvp_refuse_tokens`, below, §NNN.)
  *
  * The «Vin!» links (§811) — the same secret and the same stored hash as every email action link (AGENTS.md
  * §12.8, §13.2; `action-tokens/domain/token-secret.ts`), in a table of their own because they belong to an
@@ -127,7 +132,7 @@ export type EventRsvpAsk = typeof eventRsvpAsks.$inferSelect;
 
 /**
  * «Nu mă mai întreba la seria aceasta» (§NNN): a person's refusal of the day-before question for a SERIES of events — the one press of
- * the link an earlier answerer's question carries (`RSVP_REFUSE`). **By canonical address and series, not by event**: the club's
+ * the link an earlier answerer's question carries (`rsvp_refuse_tokens`). **By canonical address and series, not by event**: the club's
  * «Vin!» answers are asked again at every date of a weekly run, so a refusal for one date would be asked again next week.
  * `series_key` is the key the listing groups by (`events/domain/series.ts#seriesKey`: the type and the default-language title, as
  * §523's declarations record it), so renaming a date takes it out of the series on purpose. UNIQUE on (address, series): the press
@@ -149,3 +154,41 @@ export const rsvpAskRefusals = pgTable(
 );
 
 export type RsvpAskRefusal = typeof rsvpAskRefusals.$inferSelect;
+
+/**
+ * The link «Nu mă mai întreba la seria aceasta» (§NNN) of the question an earlier answerer receives. **A table of its own, with no key to
+ * the answer**: the question made an answer row, and «Nu vin» in the same email deletes it — a link that went with the row would have been
+ * dead after the person's first press, and the notice promises the objection «oricând». So the token carries what the refusal needs
+ * (the address's canonical form, its canonicalizer's version, the series key, the event and the language for the page) and nothing else.
+ * Hashed at rest like every link (AGENTS.md §12.8; the same secret and SHA-256), single use (one UPDATE, one winner), a GET never writes. It
+ * lives **until sixty days after the event's start**, never until the start itself: a person reading the email after the run may still
+ * object. No newer link supersedes an older one (last week's email keeps its button; the press is idempotent). Swept once expired or
+ * spent (`jobs/retention.ts`), erased with the person's data, and gone with the event.
+ */
+export const rsvpRefuseTokens = pgTable(
+  "rsvp_refuse_tokens",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    eventId: uuid("event_id")
+      .notNull()
+      .references(() => events.id, { onDelete: "cascade" }),
+    locale: locale("locale").notNull(),
+    canonicalEmail: text("canonical_email").notNull(),
+    canonicalizationVersion: integer("canonicalization_version").notNull(),
+    seriesKey: text("series_key").notNull(),
+    // SHA-256 of the base64url secret, hex encoded. Never the secret.
+    tokenHash: text("token_hash").notNull().unique(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    // Set once, by the single-use consume statement.
+    usedAt: timestamp("used_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    check("rsvp_refuse_tokens_hash_is_sha256_hex", sql`${t.tokenHash} ~ '^[0-9a-f]{64}$'`),
+    check("rsvp_refuse_tokens_expiry_after_creation", sql`${t.expiresAt} > ${t.createdAt}`),
+    // The person's-data reads and the erase: by identity.
+    index("rsvp_refuse_tokens_canonical_email_idx").on(t.canonicalEmail),
+  ],
+);
+
+export type RsvpRefuseToken = typeof rsvpRefuseTokens.$inferSelect;

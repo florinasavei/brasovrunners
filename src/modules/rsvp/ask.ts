@@ -20,6 +20,7 @@ import { drainOutboxAfterResponse } from "@/modules/notifications/drain";
 import { enqueueEmail, OutboxMessageWithdrawn } from "@/modules/notifications/outbox";
 import { canonicalizeEmail } from "@/modules/participants/domain/canonical-email";
 import { readRsvpAskAudienceSetting } from "./ask-audience";
+import { mintRefuseLink } from "./ask-refusal";
 import { rsvpAskDaysAway, rsvpAskDue, rsvpAskLookAheadMs } from "./domain/ask";
 import { asksAnswerers, asksSubscribers, mergeAskRecipients } from "./domain/ask-audience";
 import { rsvpOffered } from "./domain/offered";
@@ -72,6 +73,27 @@ import { mintRsvpLinks } from "./rsvp";
 
 /** The topic the question is a message of; the subscribers of `ALL` receive it too (`receivesSql`). */
 const ASK_TOPICS = ["RSVP_ASK"] as const;
+
+/**
+ * Which of these addresses are, today, subscribers who receive the question's topic under a notice that named it (§NNN). A «Vin» pressed in
+ * a SUBSCRIBER's question (`asked_basis`) is an earlier answer only while this holds: whoever unticked «Întrebarea „Vii?”» or unsubscribed
+ * withdrew from exactly this email, and is not asked again through the back door of the answerers' list.
+ */
+async function stillOnTopic<T extends Record<string, unknown>>(db: Database<T>, canonicals: string[], firstAskNotice: number | null): Promise<Set<string>> {
+  if (canonicals.length === 0 || firstAskNotice === null) return new Set();
+  const rows = await db
+    .select({ canonicalEmail: newsletterSubscribers.canonicalEmail })
+    .from(newsletterSubscribers)
+    .where(
+      and(
+        isNotNull(newsletterSubscribers.confirmedAt),
+        receivesSql(ASK_TOPICS),
+        gte(newsletterSubscribers.privacyNoticeVersion, firstAskNotice),
+        inArray(newsletterSubscribers.canonicalEmail, canonicals),
+      ),
+    );
+  return new Set(rows.map((row) => row.canonicalEmail));
+}
 
 /** Whether anyone ever refused a series (§NNN): while nobody has, a subscribers-only question never needs to read the series at all. */
 async function anyRefusal<T extends Record<string, unknown>>(db: Database<T>): Promise<boolean> {
@@ -167,14 +189,21 @@ export async function queueRsvpAsks<T extends Record<string, unknown>>(db: Datab
             .orderBy(asc(newsletterSubscribers.createdAt), asc(newsletterSubscribers.id))
         : [];
       // The most recent counted answer of each address at an earlier date, under a notice that named this use; one per address (the merge keeps the first).
-      const answerers =
+      const answererRows =
         answerersOn && series.key !== null && earlierDates.length > 0
           ? await tx
-              .select({ id: eventRsvps.id, locale: eventRsvps.locale, email: eventRsvps.deliveryEmail, canonicalEmail: eventRsvps.canonicalEmail })
+              .select({ id: eventRsvps.id, locale: eventRsvps.locale, email: eventRsvps.deliveryEmail, canonicalEmail: eventRsvps.canonicalEmail, askedBasis: eventRsvps.askedBasis })
               .from(eventRsvps)
               .where(and(inArray(eventRsvps.eventId, earlierDates), isNotNull(eventRsvps.confirmedAt), gte(eventRsvps.privacyNoticeVersion, firstAnswerersNotice)))
               .orderBy(desc(eventRsvps.confirmedAt), asc(eventRsvps.id))
           : [];
+      // An answer the question made for a subscriber counts only while that address still receives the topic (a withdrawal from this email holds).
+      const subscribed = await stillOnTopic(
+        tx,
+        answererRows.filter((row) => row.askedBasis === "SUBSCRIBER").map((row) => row.canonicalEmail),
+        await findFirstRsvpAskNoticeVersion(tx),
+      );
+      const answerers = answererRows.filter((row) => row.askedBasis !== "SUBSCRIBER" || subscribed.has(row.canonicalEmail));
       const asked = mergeAskRecipients({ audience, subscribers, answerers, refused, answered });
       let count = 0;
       for (const subscriber of asked.subscribers) {
@@ -298,6 +327,10 @@ export async function checkRsvpAsk<T extends Record<string, unknown>>(db: Databa
     if (series.key === null || !sourceDate || !thisDate || sourceDate.startsAt.getTime() >= thisDate.startsAt.getTime()) {
       throw new OutboxMessageWithdrawn("rsvp ask: the answer is not from an earlier date of this event's series");
     }
+    // A «Vin» pressed in a subscriber's question counts only while the address still receives the topic (the queue's rule again).
+    if (source.askedBasis === "SUBSCRIBER" && !(await stillOnTopic(db, [source.canonicalEmail], await findFirstRsvpAskNoticeVersion(db))).has(source.canonicalEmail)) {
+      throw new OutboxMessageWithdrawn("rsvp ask: the earlier answer came from a subscriber's question and the address no longer receives the topic");
+    }
     seriesKey = series.key;
     recipient = { deliveryEmail: source.deliveryEmail, canonicalEmail: source.canonicalEmail, canonicalizationVersion: source.canonicalizationVersion };
     locale = source.locale;
@@ -379,6 +412,7 @@ export async function makeRsvpAsk<T extends Record<string, unknown>>(db: Databas
       privacyNoticeVersion: noticeVersion,
       confirmedAt: null,
       askedAt: now,
+      askedBasis: checked.kind,
       createdAt: now,
     };
     const [inserted] = await tx.insert(eventRsvps).values(values).onConflictDoNothing({ target: [eventRsvps.eventId, eventRsvps.canonicalEmail] }).returning({ id: eventRsvps.id });
@@ -410,7 +444,7 @@ export async function makeRsvpAsk<T extends Record<string, unknown>>(db: Databas
     }
     await tx
       .update(eventRsvps)
-      .set({ deliveryEmail: recipient.deliveryEmail, displayName: null, showName: false, locale, privacyNoticeVersion: noticeVersion, askedAt: now, createdAt: now })
+      .set({ deliveryEmail: recipient.deliveryEmail, displayName: null, showName: false, locale, privacyNoticeVersion: noticeVersion, askedAt: now, askedBasis: checked.kind, createdAt: now })
       .where(eq(eventRsvps.id, existing.id));
     return { id: existing.id };
   });
@@ -419,9 +453,15 @@ export async function makeRsvpAsk<T extends Record<string, unknown>>(db: Databas
   }
   const rsvpId = written.id;
 
-  const links = await mintRsvpLinks(db, { rsvpId, startsAt, confirm: true, refuse: checked.kind === "ANSWERER", now });
+  // The question's «Vin» lives until the start: the club may send it a week ahead, and 48 hours would leave the last days with a dead button (§NNN).
+  const links = await mintRsvpLinks(db, { rsvpId, startsAt, confirm: true, confirmUntilStart: true, now });
   if (!links || links.confirm === null) throw new OutboxMessageWithdrawn("rsvp ask: the event has started");
-  return { rsvpId, startsAt, confirm: links.confirm, withdraw: links.withdraw, refuse: links.refuse, locale };
+  // The refusal link has a table of its own, so it outlives the row «Nu vin» deletes (§NNN).
+  const refuse =
+    checked.kind === "ANSWERER"
+      ? await mintRefuseLink(db, { eventId, locale, canonicalEmail: recipient.canonicalEmail, canonicalizationVersion: recipient.canonicalizationVersion, startsAt, now })
+      : null;
+  return { rsvpId, startsAt, confirm: links.confirm, withdraw: links.withdraw, refuse, locale };
 }
 
 /** Both halves, for a caller with nothing to do between them (the renderer calls them apart, so a failure in between leaves nothing written). */
