@@ -135,7 +135,7 @@ export default async function PersonDataPage({ params, searchParams }: Props) {
             </GlyphButton>
           </Stack>
 
-          {!data.participant && data.announcementRequests.length === 0 && data.rsvpAnswers.length === 0 && data.rememberedBrowsers.length === 0 && data.volunteerOffers.length === 0 && data.volunteerInvitations.length === 0 && data.groupRunDeclarations.length === 0 ? (
+          {!data.participant && data.announcementRequests.length === 0 && data.rsvpAnswers.length === 0 && data.askRefusals.length === 0 && data.rememberedBrowsers.length === 0 && data.volunteerOffers.length === 0 && data.volunteerInvitations.length === 0 && data.groupRunDeclarations.length === 0 ? (
             <Alert severity="info">{t("person.notFound")}</Alert>
           ) : (
             <>
@@ -261,6 +261,23 @@ export default async function PersonDataPage({ params, searchParams }: Props) {
                       {answer.confirmedAt ? t("person.rsvpConfirmedAt", { when: show(answer.confirmedAt) }) : answer.askedAt ? t("person.rsvpAsked", { when: show(answer.askedAt) }) : t("person.rsvpUnconfirmed")}
                     </Typography>
                   ))
+                )}
+                <Typography variant="h3" sx={{ fontSize: "1rem", mt: 2, mb: 1 }}>
+                  {t("person.askRefusals", { count: data.askRefusals.length })}
+                </Typography>
+                {data.askRefusals.length === 0 ? (
+                  <Typography variant="body2">{t("person.none")}</Typography>
+                ) : (
+                  <>
+                    {data.askRefusals.map((refusal, index) => (
+                      <Typography key={index} variant="body2" color="text.secondary" sx={{ overflowWrap: "anywhere" }}>
+                        {show(refusal.createdAt)} · {refusal.seriesKey.replace("\n", " · ")}
+                      </Typography>
+                    ))}
+                    <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
+                      {t("person.askRefusalsKept")}
+                    </Typography>
+                  </>
                 )}
                 <Typography variant="h3" sx={{ fontSize: "1rem", mt: 2, mb: 1 }}>
                   {t("person.browsers", { count: data.rememberedBrowsers.length })}

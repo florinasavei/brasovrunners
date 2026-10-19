@@ -3,7 +3,7 @@ import { auditLogs } from "@/db/schema/audit-logs";
 import { type DeclarationAcceptance, declarationAcceptances } from "@/db/schema/declaration-acceptances";
 import { emailOutbox } from "@/db/schema/email-outbox";
 import { eventResults } from "@/db/schema/event-results";
-import { eventRsvps } from "@/db/schema/event-rsvps";
+import { eventRsvps, rsvpAskRefusals } from "@/db/schema/event-rsvps";
 import { eventVolunteerInvitations } from "@/db/schema/event-volunteer-invitations";
 import { eventVolunteerCategories, eventVolunteerRoleChoices, eventVolunteerRoles, eventVolunteers } from "@/db/schema/event-volunteers";
 import { events, eventTranslations } from "@/db/schema/events";
@@ -116,6 +116,12 @@ export type PersonData = {
     askedAt: Date | null;
     createdAt: Date;
   }>;
+  /**
+   * The series this address refused the «Vii?» question for («Nu mă mai întreba la seria aceasta», §NNN, art. 15 GDPR): the series' key (the
+   * event type and the default-language title, one line) and when, every column of the row but the address itself. Not erased with the
+   * answers: the row is the objection, and forgetting it would ask the person again; it goes a year after the series' last date.
+   */
+  askRefusals: Array<{ seriesKey: string; canonicalizationVersion: number; createdAt: Date }>;
   /**
    * The browsers remembered for this address (§811): when each was remembered, last used and expires — never the secret or its
    * fingerprint, which prove nothing to the person and are of no use to the club.
@@ -341,6 +347,11 @@ async function collectPersonData<T extends Record<string, unknown>>(
     .leftJoin(eventTranslations, and(eq(eventTranslations.eventId, eventRsvps.eventId), eq(eventTranslations.locale, eventRsvps.locale)))
     .where(eq(eventRsvps.canonicalEmail, canonicalEmail))
     .orderBy(asc(eventRsvps.createdAt));
+  const askRefusals = await db
+    .select({ seriesKey: rsvpAskRefusals.seriesKey, canonicalizationVersion: rsvpAskRefusals.canonicalizationVersion, createdAt: rsvpAskRefusals.createdAt })
+    .from(rsvpAskRefusals)
+    .where(eq(rsvpAskRefusals.canonicalEmail, canonicalEmail))
+    .orderBy(asc(rsvpAskRefusals.createdAt));
   const rememberedBrowsers = await db
     .select({
       deliveryEmail: personSessions.deliveryEmail,
@@ -537,6 +548,7 @@ async function collectPersonData<T extends Record<string, unknown>>(
     messages,
     announcementRequests,
     rsvpAnswers,
+    askRefusals,
     rememberedBrowsers,
     volunteerInvitations,
     volunteerOffers,
@@ -704,6 +716,7 @@ export async function exportPersonData<T extends Record<string, unknown>>(
       messages: data.messages.length,
       announcementRequests: data.announcementRequests.length,
       rsvpAnswers: data.rsvpAnswers.length,
+      askRefusals: data.askRefusals.length,
       rememberedBrowsers: data.rememberedBrowsers.length,
       volunteerOffers: data.volunteerOffers.length,
       volunteerInvitations: data.volunteerInvitations.length,

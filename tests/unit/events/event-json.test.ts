@@ -108,6 +108,7 @@ function sampleConfig(): EventConfig {
       declaration: { key: "EVENT_DECLARATION" },
       external: { provider: null, url: null },
       rsvpEnabled: false,
+      rsvpAskEnabled: true,
       kitShirt: false,
       askHealthNote: false,
     },
@@ -174,6 +175,27 @@ describe("the event file's reader", () => {
     expect(read.file.version).toBe(3);
     // The checkpoints' own tick is a different key and is not touched by it.
     expect(written).not.toContain("onProfile");
+  });
+
+  it("writes the «Vii?» question's tick only when it is OFF, reads «not written» as on, and keeps the version (§NNN)", () => {
+    const file = sampleFile();
+    expect(file.version).toBe(3);
+    expect(file.event.registration.rsvpAskEnabled).toBe(true);
+    // «On» is what a file without the key means: left out, so a release before the tick still reads the file (its registration block is strict).
+    expect(serializeEventFile(file)).not.toContain("rsvpAskEnabled");
+    const readOn = readEventFile(serializeEventFile(file));
+    if (!readOn.ok) throw new Error("the file did not read back");
+    expect(readOn.file.event.registration.rsvpAskEnabled).toBe(true);
+
+    file.event.registration.rsvpAskEnabled = false;
+    const written = serializeEventFile(file);
+    expect((JSON.parse(written) as { event: { registration: Record<string, unknown> } }).event.registration).toHaveProperty("rsvpAskEnabled", false);
+    const read = readEventFile(written);
+    if (!read.ok) throw new Error("the file did not read back");
+    expect(read.file.event.registration.rsvpAskEnabled).toBe(false);
+    expect(read.file.version).toBe(3);
+    // The «Vin!» tick is its own key and is not touched by it.
+    expect(written).not.toContain("rsvpEnabled");
   });
 
   it("writes the registration block's «Vin!» tick only when it is ON, reads «not written» as off, and keeps the version (§811)", () => {

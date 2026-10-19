@@ -31,6 +31,8 @@ const LAUNCHED: OwnerTaskInputs = {
   resultsDescribed: true,
   rsvpDescribed: true,
   rsvpAskDescribed: true,
+  rsvpAskAnswerersChosen: false,
+  rsvpAskAnswerersDescribed: true,
   rsvpEvents: 0,
   resultsTermsDescribed: true,
   invitationsDescribed: true,
@@ -140,6 +142,23 @@ describe("owner tasks", () => {
     expect(stateOf({ ...LAUNCHED, rsvpAskDescribed: true, rsvpEvents: 2 }, "rsvpAskNotice")).toBe("done");
     expect(stateOf({ ...LAUNCHED, rsvpAskDescribed: true, rsvpEvents: 0 }, "rsvpAskNotice")).toBe("done");
     expect(ownerTasks({ ...LAUNCHED, rsvpAskDescribed: false, rsvpEvents: 0 }).some((task) => task.id === "rsvpAskNotice")).toBe(false);
+  });
+
+  /**
+   * §NNN — the question's second audience (the people who answered «Vin!» at an earlier date of the series): the row exists only while the club
+   * CHOSE it, is open until the notice names `{{rsvpAskAnswerers}}`, done once it does, and never blocking — the choice then does nothing.
+   */
+  it("keeps the earlier answerers' row open while the club chose that audience and the notice is silent, and absent while it asks subscribers only", () => {
+    expect(ownerTasks(LAUNCHED).some((task) => task.id === "rsvpAskAnswerersNotice")).toBe(false);
+    expect(ownerTasks({ ...LAUNCHED, rsvpAskAnswerersChosen: false, rsvpAskAnswerersDescribed: false }).some((task) => task.id === "rsvpAskAnswerersNotice")).toBe(false);
+    expect(stateOf({ ...LAUNCHED, rsvpAskAnswerersChosen: true, rsvpAskAnswerersDescribed: false }, "rsvpAskAnswerersNotice")).toBe("open");
+    expect(stateOf({ ...LAUNCHED, rsvpAskAnswerersChosen: true, rsvpAskAnswerersDescribed: true }, "rsvpAskAnswerersNotice")).toBe("done");
+    expect(ownerTasks({ ...LAUNCHED, rsvpAskAnswerersChosen: true, rsvpAskAnswerersDescribed: false }).some((task) => task.state === "blocking")).toBe(false);
+    for (const catalogue of [ro, en]) {
+      const item = catalogue.Admin.tasks.items.rsvpAskAnswerersNotice;
+      expect(item.title && item.todo && item.done && item.how.length > 0).toBeTruthy();
+      expect(item.how.join("\n")).toContain("/admin/legal");
+    }
   });
 
   /** §808 — a race's published results wait on the club's notice: open until it names `{{results}}`, never blocking, and no row without a notice at all. */

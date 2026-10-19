@@ -3662,7 +3662,7 @@
         "results": "In the privacy notice and the terms: the name of the section “Results”, in quotation marks. With it in both texts in force, an administrator can publish the results and the race's page shows them",
         "rsvp": "Only in the privacy notice: the “I'm coming!” button's name, in quotes. With it in the notice in force, the pages of ticked events take “I'm coming!” answers and show how many are coming",
         "rsvpAsk": "Only in the privacy notice: the name of the topic “The ‘Coming?’ question before runs”, in quotes. With it in the notice in force, its subscribers get the “Coming?” question the day before",
-        "rsvpAskAnswerers": "Only in the privacy notice: the name of the button “Don't ask me again for this series”, in quotes. With it in the notice in force, the club may ask “Coming?” of those who answered “I'm coming!” at an earlier date of the series too"
+        "rsvpAskAnswerers": "Only in the privacy notice: the name of the button “Don't ask me again for this series”, in quotes. With it in the notice in force, those who answered “I'm coming!” before are asked too"
       },
       "removeBlockedReferenced": "Can neither be withdrawn nor deleted permanently: {signatures}, {events} and {acknowledgements} depend on it. “Delete” on its row takes it off the list.",
       "removeBlockedCurrent": "In force right now — it can neither be withdrawn nor deleted. Approve its successor first; then this one can go.",
@@ -4732,10 +4732,10 @@
         },
         "rsvpAskAnswerersNotice": {
           "title": "Privacy notice: the “Coming?” question for those who answered “I'm coming!” before",
-          "todo": "You chose to ask the people who answered “I'm coming!” at an earlier date of the series too, but the notice in force does not describe that yet, so none of them is asked; the newsletter's subscribers are asked as before.",
-          "done": "The notice in force describes this group too: whoever answered “I'm coming!” under it (or a newer one) at an earlier date of the series gets the question, with the button “Don't ask me again for this series”.",
+          "todo": "You chose to ask those who answered “I'm coming!” before too, but the notice in force does not describe it, so none is asked. Subscribers are asked as before.",
+          "done": "The notice in force describes this group: whoever answered “I'm coming!” under it or a newer one gets the question, with “Don't ask me again for this series”.",
           "how": [
-            "Before approving, read with a lawyer the new sentence in the template, in section 5, in the “I'm coming!” paragraph: who is asked, where we get the address, for how long, what we keep after “Don't ask me again” and the basis (legitimate interest, the right to object).",
+            "Read with a lawyer the new sentences in the template, section 5, the “I'm coming!” paragraph: who is asked, for how long, what we keep after a refusal and the basis.",
             "/admin/legal → the “GDPR” card → “Regenerate from the template” → confirm. The question goes only to those whose answer was given under the new notice or a newer one.",
             "Open the draft, read it, “Save draft”, then “Approve and publish”, in both languages. If you do not want this group, in “Settings” → “Emails” choose “The newsletter's subscribers” again."
           ]
@@ -6374,6 +6374,8 @@
       "newSearch": "Another lookup",
       "rsvps": "“I'm coming!” answers ({count})",
       "browsers": "Remembered browsers ({count})",
+      "askRefusals": "“Coming?” refusals by series ({count})",
+      "askRefusalsKept": "A refusal is not deleted with the answers: it is the refusal, and without it the person would be asked again. It goes one year after the series' last date.",
       "rsvpNameShown": "name shown on the page",
       "rsvpNameHidden": "counted only",
       "rsvpNotice": "notice v{version}",
@@ -6740,7 +6742,7 @@
           "BOTH": "In force: the question goes to the topic's subscribers and to those who answered “I'm coming!” at an earlier date of the series."
         },
         "option": {
-          "SUBSCRIBERS": "The newsletter's subscribers (the question's topic or “All the news”)",
+          "SUBSCRIBERS": "The newsletter's subscribers: the question's topic or “All the news”",
           "ANSWERERS": "Those who answered “I'm coming” at an earlier date of the same series",
           "BOTH": "Both"
         },
@@ -7415,7 +7417,7 @@
         "VOLUNTEER_GUARDIAN_REQUEST": "The volunteer and the event are added by themselves. The link is for the parent or guardian only, works once, and a new one replaces the old.",
         "VOLUNTEER_INVITATION": "The event, the roles wanted and the club's message are added by themselves. The link is for the invited person only, works once, and a new one replaces the old.",
         "RSVP_CONFIRM": "At most one message per address every ten minutes. The links are for this address only, work once and are replaced by a newer message. Someone already counted gets only the withdraw link.",
-        "RSVP_ASK": "Once per event, and only if the event has not unticked “Send the ‘Coming?’ question before this event” in the editor. An event ticked after the window opened is asked on the job's first run; one ticked only on its own day is not. Sent through “Newsletter”, last in line like the new-event alert. If it has not left by the midnight before the event, it is dropped."
+        "RSVP_ASK": "Once per event, if it is not unticked in the editor. Ticked after the window opened, it is asked on the job's first run; ticked only on its own day, it is not. What has not left by the midnight before is dropped."
       },
       "confirmationRetry": "To whoever has not confirmed, the link goes again by itself {retry} after the last email, at most {times}; “Resend” counts too. The deadline does not move.",
       "confirmationRetryOff": "It is not re-sent by itself: in “Deadlines”, the number of resends is 0.",
@@ -7460,7 +7462,7 @@
       "rsvpAskWho": {
         "long": {
           "SUBSCRIBERS": "subscribers of the topic “The ‘Coming?’ question before runs” and of “All the news”",
-          "ANSWERERS": "those who answered “I'm coming!” at an earlier date of the same series (with “Don't ask me again for this series”)",
+          "ANSWERERS": "those who answered “I'm coming!” at an earlier date of the same series, with the button “Don't ask me again for this series”",
           "BOTH": "the topic's subscribers, those of “All the news” and those who answered “I'm coming!” at an earlier date of the series"
         },
         "short": {
@@ -9052,7 +9054,8 @@
           },
           "kitShirt": "T-shirt in the kit",
           "askHealthNote": "Health note asked",
-          "rsvpEnabled": "“I'm coming!” answers are taken"
+          "rsvpEnabled": "“I'm coming!” answers are taken",
+          "rsvpAskEnabled": "The “Coming?” question is sent"
         },
         "publicList": {
           "names": "Public participant list",
