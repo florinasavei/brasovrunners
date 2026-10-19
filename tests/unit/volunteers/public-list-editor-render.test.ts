@@ -216,9 +216,10 @@ describe("§NNN the club's tick — «Lista voluntarilor e publică pe pagina ev
     expect(form).toContain('name="on" value="0"');
   });
 
-  it("says nothing of the notice while the list is private, and says the card is not shown — with the way to the legal texts — while it is public but undescribed", async () => {
-    expect(await drawCard({ volunteersListPublic: false, listDescribed: false })).not.toContain('data-testid="volunteer-list-notice-off"');
+  it("says the card is not shown — with the way to the legal texts — while the notice does not describe the list, ticked or not, and nothing once it does", async () => {
     expect(await drawCard({ volunteersListPublic: true, listDescribed: true })).not.toContain('data-testid="volunteer-list-notice-off"');
+    expect(await drawCard({ volunteersListPublic: false, listDescribed: true })).not.toContain('data-testid="volunteer-list-notice-off"');
+    expect(await drawCard({ volunteersListPublic: false, listDescribed: false })).toContain('data-testid="volunteer-list-notice-off"');
     const page = await drawCard({ volunteersListPublic: true, listDescribed: false });
     const alert = /<div[^>]*data-testid="volunteer-list-notice-off"[\s\S]*?<\/a>/.exec(page)?.[0] ?? "";
     expect(alert).toContain("nota de confidențialitate în vigoare nu descrie lista publică a voluntarilor");
@@ -273,6 +274,20 @@ describe("§NNN the organizers' record of a person's tick", () => {
     const english = await drawCard({ listDescribed: true, volunteers: [person({ listOptIn: true })] }, "en");
     expect(english).toContain("On the public list");
     expect(english).toContain("Wants to appear on the public list of volunteers");
+  });
+});
+
+describe("§NNN «Toate datele unei persoane» says the tick among what is kept", () => {
+  it("adds «Pe lista publică» to the offer's line when the row holds the tick, and nothing when it does not", async () => {
+    const { default: VolunteerAnswers } = await import("@/modules/volunteers/ui/VolunteerAnswers");
+    const base = { age: null, dateOfBirth: null, sex: null, city: null, volunteeredBefore: false, clubMember: false, shirtSize: null, guardianName: null, guardianEmail: null, guardianAcceptedAt: null, guardianMethod: null };
+    locale = "ro";
+    expect(await html(createElement("p", null, (await VolunteerAnswers({ offer: { ...base, listOptIn: true } })) as ReactElement))).toBe("<p> · Pe lista publică</p>");
+    expect(await html(createElement("p", null, (await VolunteerAnswers({ offer: { ...base, listOptIn: false } })) as ReactElement))).toBe("<p></p>");
+    // A caller that predates the tick draws what it always drew.
+    expect(await html(createElement("p", null, (await VolunteerAnswers({ offer: base })) as ReactElement))).toBe("<p></p>");
+    locale = "en";
+    expect(await html(createElement("p", null, (await VolunteerAnswers({ offer: { ...base, listOptIn: true } })) as ReactElement))).toBe("<p> · On the public list</p>");
   });
 });
 

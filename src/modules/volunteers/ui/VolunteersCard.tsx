@@ -1450,8 +1450,8 @@ export default async function VolunteersCard({
           </Box>
           {/* «Lista voluntarilor e publică pe pagina evenimentului» (§NNN; the owner, 2026-10-19: «private vs public lists of volunteers»): the same tick as the three
               above — the house's `TickButton`, a submit drawn as the checkbox that posts the state it wants. Off (the default), the list is the team's alone; on, the event's
-              page names only the confirmed volunteers who ticked, under a notice that describes it. While the notice does not, the page shows nothing and the form asks
-              no tick: the sentence says so and links the legal texts. */}
+              page names only the confirmed volunteers who ticked, under a notice that describes it. While the notice does not — ticked or not, so the club hears it
+              before it ticks — the page shows nothing and the form asks no tick: the sentence says so and links the legal texts. */}
           <Box component="form" action={switchVolunteersListAction} data-testid="volunteer-list-form">
             {hidden}
             <input type="hidden" name="on" value={volunteersListPublic ? "0" : "1"} />
@@ -1462,7 +1462,7 @@ export default async function VolunteersCard({
               {t("volunteers.list.help")}
             </Typography>
           </Box>
-          {volunteersListPublic && !listDescribed && (
+          {!listDescribed && (
             <Alert severity="info" data-testid="volunteer-list-notice-off">
               {t("volunteers.list.noticeOff")}{" "}
               <Link href="/admin/legal">{t("volunteers.list.noticeLink")}</Link>

@@ -11,6 +11,7 @@ import { computeContentHash, type LegalDocumentTranslationInput } from "@/module
 import { findFirstVolunteersListNoticeVersion, insertLegalDocumentVersion, noticeDescribesVolunteersList } from "@/modules/legal-documents/repository";
 import { LEGAL_TEMPLATES } from "@/modules/legal-documents/templates/catalogue";
 import { countVolunteersListEvents, readPublicVolunteersList, setVolunteersListPublic } from "@/modules/volunteers/public-list";
+import { viewPersonData } from "@/modules/registrations/person-data";
 import { changeVolunteer, listVolunteers, submitVolunteer } from "@/modules/volunteers/volunteers";
 import { createTestDatabase, resetTables, type TestDatabase } from "../../helpers/db";
 
@@ -259,6 +260,15 @@ describe("§NNN the volunteers' public list", () => {
       const role = await seedRole(event.id);
       await expect(changeVolunteer(db, technician, { kind: "add", eventId: event.id, fields: staffEntry(role.id, { listOptIn: true }) }, NOW)).rejects.toMatchObject({ code: "FORBIDDEN" });
       expect(await rows(event.id)).toEqual([]);
+    });
+
+    it("a person who asks for their data sees the tick among what is kept about the offer (art. 15 GDPR)", async () => {
+      await approveNotice(WITH, 1);
+      const event = await seedEvent();
+      const role = await seedRole(event.id);
+      await changeVolunteer(db, admin, { kind: "add", eventId: event.id, fields: staffEntry(role.id, { listOptIn: true }) }, NOW);
+      const data = await viewPersonData(db, admin, "ion@example.test", NOW);
+      expect(data.volunteerOffers.map((offer) => offer.listOptIn)).toEqual([true]);
     });
 
     it("the card's list carries the tick, so a row can say «Pe lista publică»", async () => {

@@ -170,6 +170,8 @@ export type PersonData = {
     city: string | null;
     volunteeredBefore: boolean;
     clubMember: boolean;
+    /** «Vreau să apar pe lista publică a voluntarilor» (§NNN): the person's tick, or the organizers' record of it — what the event's page may name them by (art. 15 GDPR). */
+    listOptIn: boolean;
     shirtSize: (typeof eventVolunteers.$inferSelect)["shirtSize"];
     privacyNoticeVersion: number | null;
     createdAt: Date;
@@ -389,6 +391,7 @@ async function collectPersonData<T extends Record<string, unknown>>(
       city: eventVolunteers.city,
       volunteeredBefore: eventVolunteers.volunteeredBefore,
       clubMember: eventVolunteers.clubMember,
+      listOptIn: eventVolunteers.listOptIn,
       shirtSize: eventVolunteers.shirtSize,
       privacyNoticeVersion: eventVolunteers.privacyNoticeVersion,
       createdAt: eventVolunteers.createdAt,
