@@ -396,15 +396,15 @@ test.describe.serial("§811 «Vin!» on a turn-up event", () => {
     await expect(row).toHaveAttribute("data-going", "true");
     await expect(row.getByTestId("zone-rsvp-going")).toHaveText("Tu vii ✓");
     await expect(row.getByTestId("zone-rsvp-count")).toContainText("1 vine");
-    // Counted at once, and unnamed: the member did not tick the box.
+    // Counted at once, unnamed and no name kept: the member did not tick the box.
     const written = await withDatabase(async (client) => {
-      const { rows } = await client.query<{ confirmed: boolean; showName: boolean }>(
-        `SELECT confirmed_at IS NOT NULL AS confirmed, show_name AS "showName" FROM event_rsvps WHERE event_id = $1`,
+      const { rows } = await client.query<{ confirmed: boolean; showName: boolean; displayName: string | null }>(
+        `SELECT confirmed_at IS NOT NULL AS confirmed, show_name AS "showName", display_name AS "displayName" FROM event_rsvps WHERE event_id = $1`,
         [eventId],
       );
       return rows;
     });
-    expect(written).toEqual([{ confirmed: true, showName: false }]);
+    expect(written).toEqual([{ confirmed: true, showName: false, displayName: null }]);
     await noSidewaysScroll(member);
 
     // The event's page counts it: the «Vii?» fold's line and its count card say one, and name nobody.
