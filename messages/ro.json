@@ -3331,9 +3331,21 @@
       "durationOther": "Cât durează evenimentul",
       "durationOtherHelp": "De la start până la final — de exemplu 1 oră și 45 de minute. Sfârșitul se calculează singur. Lasă gol dacă nu s-a anunțat.",
       "rsvpEnabled": "Acceptă răspunsuri „Vin!” din pagină, calendar și email",
-      "rsvpEnabledHelp": "Oricine își poate lăsa adresa și spune că vine; vezi câți vin aici și pe pagină. Nota de confidențialitate trebuie să descrie răspunsurile „Vin!” — vezi Sarcini.",
-      "rsvpAskEnabled": "Trimite întrebarea „Vii?” înainte de acest eveniment",
-      "rsvpAskEnabledHelp": "Cu bifa, cei care trebuie întrebați primesc un email înainte de dată; cât timp înainte și cui, alegi în Setări. Debifat, nu pleacă nicio întrebare pentru această dată.",
+      "rsvpEnabledHelp": "Oricine își lasă adresa și spune că vine; vezi câți vin aici și pe pagină, și, dacă bifezi mai jos, un email înainte. Nota de confidențialitate trebuie să descrie „Vin!” — vezi Sarcini.",
+      "rsvpAskEnabled": "Trimite emailul „Vii?” înainte de această dată",
+      "rsvpAskEnabledHelp": "Cu bifa, {who} primesc cu {days} înainte, de la {hour}, emailul „Vii {day} la …?” cu „Vin” și „Nu vin”.",
+      "rsvpAskEnabledHelpTopics": "Abonații sunt cei care au ales „{topic}” sau „{all}”.",
+      "rsvpAskEnabledHelpUnticked": "Debifat, emailul nu pleacă pentru această dată; răspunsurile din pagină nu se schimbă.",
+      "rsvpAskEnabledHelpSilent": "Emailul nu pleacă încă: nota de confidențialitate nu-l descrie — vezi Sarcini. Răspunsurile din pagină nu se schimbă.",
+      "rsvpAskEnabledHelpOff": "Emailul „Vii?” e oprit din Setări → „Termene” (0 zile înainte): nu pleacă pentru nicio dată. Bifa de aici se păstrează; răspunsurile din pagină merg oricum.",
+      "rsvpAskChange": "Schimbă în Setări:",
+      "rsvpAskDeadlinesLink": "Termene (când și la ce oră)",
+      "rsvpAskEmailsLink": "Emailuri (cui)",
+      "rsvpAskWho": {
+        "SUBSCRIBERS": "abonații newsletterului",
+        "ANSWERERS": "cei care au spus „Vin!” la o dată anterioară a seriei",
+        "BOTH": "abonații newsletterului și cei care au spus „Vin!” la o dată anterioară a seriei"
+      },
       "rsvpAnswers": {
         "title": "Răspunsuri „Vin!” ({count})",
         "summary": "{confirmed} confirmate, {unconfirmed} neconfirmate",
@@ -9127,7 +9139,7 @@
           "kitShirt": "Tricou în kit",
           "askHealthNote": "Se cer informații medicale",
           "rsvpEnabled": "Răspunsurile „Vin!” sunt primite",
-          "rsvpAskEnabled": "Întrebarea „Vii?” se trimite"
+          "rsvpAskEnabled": "Emailul „Vii?” se trimite"
         },
         "publicList": {
           "names": "Lista publică a participanților",

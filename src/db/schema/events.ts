@@ -783,7 +783,7 @@ export const events = pgTable(
      */
     rsvpEnabled: boolean("rsvp_enabled").notNull().default(false),
     /**
-     * «Trimite întrebarea „Vii?" înainte de acest eveniment» (§823; the owner, 2026-10-19: «I need to set how these emails are
+     * «Trimite emailul „Vii?” înainte de această dată» (§823; the owner, 2026-10-19: «I need to set how these emails are
      * sent»): under «Acceptă răspunsuri „Vin!"», whether the day-before question (§818) is sent for THIS event. On for every event
      * that exists and every one created after this column — the question goes out, as it did, unless the club unticks it for one
      * date. It decides nothing else: «Vin!» on the page, the calendar and the count follow `rsvp_enabled` alone. Carried by a

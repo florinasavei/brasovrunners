@@ -39,7 +39,7 @@ import { mintRsvpLinks } from "./rsvp";
  *     of the club's clock (eight by default); `domain/ask.ts` holds the window, the queue and the send both read it;
  *   - **who** — «Emailuri» → «Cui îi trimitem întrebarea „Vii?"»: the subscribers of the topic (the default), the people who answered
  *     «Vin!» at an earlier date of the same series, or both (`ask-audience.ts`);
- *   - **which events** — the tick «Trimite întrebarea „Vii?" înainte de acest eveniment» in the editor's «Vin!» block (\`events.rsvp_ask_enabled\`,
+ *   - **which events** — the tick «Trimite emailul „Vii?” înainte de această dată» in the editor's «Vin!» block (\`events.rsvp_ask_enabled\`,
  *     on by default, carried by a series, «Duplică» and the JSON file); an event with it off is never asked.
  *
  * **Who is asked.** *Subscribers* (audience `SUBSCRIBERS` or `BOTH`): the confirmed ones whose topics include `RSVP_ASK` or `ALL`
