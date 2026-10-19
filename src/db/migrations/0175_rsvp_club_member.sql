@@ -1,0 +1,2 @@
+ALTER TABLE "event_rsvps" ADD COLUMN "club_member" text;--> statement-breakpoint
+ALTER TABLE "event_rsvps" ADD CONSTRAINT "event_rsvps_club_member_known" CHECK ("event_rsvps"."club_member" IS NULL OR "event_rsvps"."club_member" IN ('DECLARED', 'ACCOUNT'));

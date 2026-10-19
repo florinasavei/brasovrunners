@@ -27,6 +27,7 @@ import {
   RESULTS_MERGE_FIELD,
   RSVP_ASK_ANSWERERS_MERGE_FIELD,
   RSVP_ASK_MERGE_FIELD,
+  RSVP_MEMBER_MERGE_FIELD,
   RSVP_MERGE_FIELD,
   GMAIL_FALLBACK_MERGE_FIELD,
   GROUP_RUN_ALONE_MERGE_FIELD,
@@ -48,7 +49,7 @@ import { feedbackFormsClause, feedbackFormsNamedClause, feedbackSafetyGmailClaus
 import { membersShopClause } from "@/modules/content/shop/notice-words";
 import { volunteerAgreementClause, volunteerMinorsClause, volunteerProfileClause, volunteersClause, volunteersListClause } from "@/modules/volunteers/notice-words";
 import { resultsClause } from "@/modules/results/notice-words";
-import { rsvpAskAnswerersClause, rsvpAskClause, rsvpClause } from "@/modules/rsvp/notice-words";
+import { rsvpAskAnswerersClause, rsvpAskClause, rsvpClause, rsvpMemberClause } from "@/modules/rsvp/notice-words";
 
 /**
  * The declaration's merge fields, in one list (`DECISIONS.md` §190).
@@ -229,6 +230,13 @@ export const DECLARATION_TOKENS: readonly DeclarationToken[] = [
     token: `{{${RSVP_ASK_ANSWERERS_MERGE_FIELD}}}`,
     messageKey: RSVP_ASK_ANSWERERS_MERGE_FIELD,
     example: inBoth((locale) => rsvpAskAnswerersClause(locale)),
+  },
+  // The privacy notice's marker for the member mark on «Cine vine» (§829): filled with the mark's own word, and the switch that lets the form
+  // offer the tick «Sunt membru» and the list show the mark and count the members (`describesRsvpMember`).
+  {
+    token: `{{${RSVP_MEMBER_MERGE_FIELD}}}`,
+    messageKey: RSVP_MEMBER_MERGE_FIELD,
+    example: inBoth((locale) => rsvpMemberClause(locale)),
   },
   // The privacy notice's marker for the newsletter (§445): filled with the pop-up's topics, and the
   // switch that lets the contact page offer it (`describesNewsletter`).

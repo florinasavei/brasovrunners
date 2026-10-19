@@ -824,6 +824,11 @@
         "one": "{count} coming · see who",
         "few": "{count} coming · see who",
         "other": "{count} coming · see who"
+      },
+      "withMembers": {
+        "one": "{count} coming · {members} · see who",
+        "few": "{count} coming · {members} · see who",
+        "other": "{count} coming · {members} · see who"
       }
     },
     "rsvp": {
@@ -867,6 +872,22 @@
         "closed": "This event no longer takes “I'm coming!” answers, so the name can't be shown now.",
         "wait": "Too many changes in an hour. Try again later; “I'm not coming any more” works any time."
       },
+      "memberMark": "BVR",
+      "memberLabel": "{club} member",
+      "memberHelp": "The tick is your own word; the club does not check it. “BVR” shows beside the name you show; with no name you are only counted among the members.",
+      "memberFact": "Member",
+      "memberFactHelp": "Your account is a member's: “BVR” shows beside the name you show.",
+      "memberOutcome": {
+        "on": "Done: you are counted among the members. “BVR” shows only beside a name you show.",
+        "off": "Done: you are no longer counted among the members.",
+        "closed": "This event no longer takes “I'm coming!” answers, so the member tick can't be set now."
+      },
+      "members": {
+        "one": "{count} member",
+        "few": "{count} members",
+        "other": "{count} members"
+      },
+      "whoMembers": "Of them: {members}.",
       "calendar": {
         "link": "I'm coming!",
         "count": {
@@ -3327,7 +3348,15 @@
         "unconfirmed": "Unconfirmed",
         "note": "Read-only. A person takes their answer back with their own “I'm not coming any more” link; unconfirmed ones are deleted after 7 days.",
         "countOnly": "Administrators and Organizers see the addresses; you only see how many answered.",
-        "countLine": "{confirmed} confirmed, {unconfirmed} unconfirmed."
+        "countLine": "{confirmed} confirmed, {unconfirmed} unconfirmed.",
+        "member": "Member",
+        "memberDeclaredHint": "Ticked on “I'm coming!”; the club has not checked.",
+        "memberAccountHint": "Answered from the members' zone, with their account.",
+        "members": {
+          "one": "{count} member confirmed",
+          "few": "{count} members confirmed",
+          "other": "{count} members confirmed"
+        }
       }
     },
     "preview": {
@@ -3686,7 +3715,8 @@
         "results": "In the privacy notice and the terms: the name of the section “Results”, in quotation marks. With it in both texts in force, an administrator can publish the results and the race's page shows them",
         "rsvp": "Only in the privacy notice: the “I'm coming!” button's name, in quotes. With it in the notice in force, the pages of ticked events take “I'm coming!” answers and show how many are coming",
         "rsvpAsk": "Only in the privacy notice: the name of the topic “The ‘Coming?’ question before runs”, in quotes. With it in the notice in force, its subscribers get the “Coming?” question before the event",
-        "rsvpAskAnswerers": "Only in the privacy notice: the name of the button “Don't ask me again for this series”, in quotes. With it in the notice in force, those who answered “I'm coming!” before are asked too"
+        "rsvpAskAnswerers": "Only in the privacy notice: the name of the button “Don't ask me again for this series”, in quotes. With it in the notice in force, those who answered “I'm coming!” before are asked too",
+        "rsvpMember": "Only in the privacy notice: the mark “BVR”, in quotes. With it in the notice in force, “I'm coming!” has the tick “I am a member”, and “Who's coming” shows the mark beside the shown names of members"
       },
       "removeBlockedReferenced": "Can neither be withdrawn nor deleted permanently: {signatures}, {events} and {acknowledgements} depend on it. “Delete” on its row takes it off the list.",
       "removeBlockedCurrent": "In force right now — it can neither be withdrawn nor deleted. Approve its successor first; then this one can go.",
@@ -4751,6 +4781,16 @@
           "how": [
             "Before approving, have a lawyer read section 5's two paragraphs: the “I'm coming!” one (the address becomes an unconfirmed answer) and the newsletter's, with the sentence about when it is sent.",
             "/admin/legal → the “GDPR” card → “Regenerate from the template” → confirm. The question goes out only after the new one, and only to those who chose the topic (or “All the news”) under it.",
+            "Open the draft, read it, “Save draft”, then “Approve and publish”, in both languages."
+          ]
+        },
+        "rsvpMemberNotice": {
+          "title": "Privacy notice: the member mark on “Who's coming”",
+          "todo": "An event takes “I'm coming!” answers, but the notice in force does not describe the member mark yet: the form has no “I am a member” tick, and “Who's coming” shows no mark and does not count members.",
+          "done": "The notice in force describes the member mark: whoever ticks “I am a member” (or answers from a member account) under it shows with “BVR” beside the name they show, and members are counted.",
+          "how": [
+            "Before approving, a lawyer reads from the template, in section 4, the sentence about the “BVR” mark beside a name and about the number of members.",
+            "/admin/legal → the “GDPR” card → “Regenerate from the template” → confirm. The mark shows only for answers given under the new notice or a newer one; earlier ones stay unmarked.",
             "Open the draft, read it, “Save draft”, then “Approve and publish”, in both languages."
           ]
         },
